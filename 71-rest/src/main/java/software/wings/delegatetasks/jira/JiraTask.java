@@ -277,6 +277,15 @@ public class JiraTask extends AbstractDelegateRunnableTask {
       try {
         Issue issue = jiraClient.getIssue(issueId);
 
+        if (!issue.getProject().getKey().equals(parameters.getProject())) {
+          return JiraExecutionData.builder()
+              .executionStatus(ExecutionStatus.FAILED)
+              .errorMessage(String.format(
+                  "Provided issue identifier: \"%s\" does not correspond to Project: \"%s\". Please, provide valid key or id.",
+                  issueId, parameters.getProject()))
+              .build();
+        }
+
         boolean fieldsUpdated = false;
         FluentUpdate update = issue.update();
 
