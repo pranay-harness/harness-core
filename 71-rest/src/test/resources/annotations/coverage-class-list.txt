@@ -1,6 +1,7 @@
 12-commons/src/main/java/io/harness/expression/EngineExpressionEvaluator.java
 12-commons/src/main/java/io/harness/expression/EngineVariableResolver.java
 12-commons/src/main/java/io/harness/expression/ExpressionEvaluatorUtils.java
+12-commons/src/main/java/io/harness/expression/ResolveObjectResponse.java
 12-commons/src/main/java/io/harness/registries/exceptions/DuplicateRegistryException.java
 12-commons/src/main/java/io/harness/registries/exceptions/UnregisteredKeyAccessException.java
 15-api-services/src/main/java/io/harness/artifacts/docker/beans/DockerImageManifestResponse.java

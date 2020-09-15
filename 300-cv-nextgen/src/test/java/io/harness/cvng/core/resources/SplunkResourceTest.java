@@ -2,6 +2,7 @@ package io.harness.cvng.core.resources;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.rule.OwnerRule.KAMAL;
+import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
@@ -79,12 +80,17 @@ public class SplunkResourceTest extends CvNextGenTest {
                             .queryParam("requestGuid", generateUuid())
                             .queryParam("orgIdentifier", "orgIdentifier")
                             .queryParam("projectIdentifier", "project")
+                            .queryParam("query", null)
                             .request(MediaType.APPLICATION_JSON_TYPE)
                             .get();
     assertThat(response.getStatus()).isEqualTo(400);
     List<ValidationError> validationError = response.readEntity(new GenericType<List<ValidationError>>() {});
+    assertThat(validationError).hasSize(2);
     assertThat(validationError.get(0).getField()).isEqualTo("query");
-    assertThat(validationError.get(0).getMessage()).isEqualTo("may not be null");
+    assertThat(validationError.get(1).getField()).isEqualTo("query");
+
+    assertThat(asList(validationError.get(0).getMessage(), validationError.get(1).getMessage()))
+        .containsAll(asList("may not be null", "may not be empty"));
   }
 
   @Test
