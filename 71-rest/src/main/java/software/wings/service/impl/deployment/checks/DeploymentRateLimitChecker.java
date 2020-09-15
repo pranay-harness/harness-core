@@ -6,6 +6,9 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import io.harness.configuration.DeployMode;
+import io.harness.eraro.ErrorCode;
+import io.harness.eraro.Level;
+import io.harness.exception.WingsException;
 import io.harness.limits.Action;
 import io.harness.limits.ActionType;
 import io.harness.limits.LimitCheckerFactory;
@@ -68,13 +71,15 @@ public class DeploymentRateLimitChecker implements PreDeploymentChecker {
         if (null != shortDurationChecker && !shortDurationChecker.checkAndConsume()) {
           logger.info("Short Duration Deployment Limit Reached. accountId={}, Limit: {}", accountId,
               shortDurationChecker.getLimit());
-          throw new UsageLimitExceededException(shortDurationChecker.getLimit(), accountId);
+          throw new UsageLimitExceededException(ErrorCode.USAGE_LIMITS_EXCEEDED, Level.ERROR, WingsException.USER,
+              shortDurationChecker.getLimit(), accountId);
         }
 
         if (!checker.checkAndConsume()) {
           RateLimit limit = checker.getLimit();
           logger.info("Deployment Limit Reached. accountId={}, Limit: {}", accountId, limit.getCount());
-          throw new UsageLimitExceededException(limit, accountId);
+          throw new UsageLimitExceededException(
+              ErrorCode.USAGE_LIMITS_EXCEEDED, Level.ERROR, WingsException.USER, limit, accountId);
         }
 
         RateLimitVicinityChecker vicinityChecker = (RateLimitVicinityChecker) checker;

@@ -2,6 +2,9 @@ package io.harness.limits;
 
 import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
 
+import io.harness.eraro.ErrorCode;
+import io.harness.eraro.Level;
+import io.harness.exception.WingsException;
 import io.harness.limits.checker.StaticLimitCheckerWithDecrement;
 import io.harness.limits.checker.UsageLimitExceededException;
 import io.harness.logging.AccountLogContext;
@@ -33,7 +36,8 @@ public class LimitEnforcementUtils {
       boolean allowed = checker.checkAndConsume();
       if (!allowed) {
         log.info("Resource Usage Limit Reached. Limit: {}", checker.getLimit());
-        throw new UsageLimitExceededException(checker.getLimit(), checker.getAction().getAccountId());
+        throw new UsageLimitExceededException(ErrorCode.USAGE_LIMITS_EXCEEDED, Level.ERROR, WingsException.USER,
+            checker.getLimit(), checker.getAction().getAccountId());
       }
 
       try {
