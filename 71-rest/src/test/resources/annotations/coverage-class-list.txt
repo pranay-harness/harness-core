@@ -10,6 +10,7 @@
 15-api-services/src/main/java/io/harness/artifacts/docker/service/DockerPublicRegistryProcessor.java
 15-api-services/src/main/java/io/harness/artifacts/docker/service/DockerRegistryServiceImpl.java
 15-api-services/src/main/java/io/harness/artifacts/docker/service/DockerRegistryUtils.java
+19-delegate-tasks-beans/src/main/java/io/harness/delegate/task/manifests/request/ManifestCollectionPTaskClientParams.java
 21-persistence/src/main/java/io/harness/cache/SpringCacheEntity.java
 22-timeout-engine/src/main/java/io/harness/registrars/TimeoutEngineTimeoutRegistrar.java
 22-timeout-engine/src/main/java/io/harness/registries/TimeoutEngineRegistryModule.java
@@ -293,7 +294,6 @@
 71-rest/src/main/java/io/harness/execution/export/request/ExportExecutionsRequestService.java
 71-rest/src/main/java/io/harness/execution/export/request/ExportExecutionsRequestSummary.java
 71-rest/src/main/java/io/harness/execution/export/request/ExportExecutionsUserParams.java
-71-rest/src/main/java/io/harness/manifest/ManifestCollectionPTaskClientParams.java
 71-rest/src/main/java/io/harness/manifest/ManifestCollectionPTaskServiceClient.java
 71-rest/src/main/java/io/harness/redesign/advisers/HttpResponseCodeSwitchAdviser.java
 71-rest/src/main/java/io/harness/redesign/advisers/HttpResponseCodeSwitchAdviserParameters.java
