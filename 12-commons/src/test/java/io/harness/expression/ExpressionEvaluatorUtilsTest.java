@@ -10,7 +10,6 @@ import com.google.common.collect.ImmutableSet;
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
-import io.harness.utils.ParameterField;
 import lombok.Builder;
 import lombok.Data;
 import lombok.Value;
@@ -19,7 +18,6 @@ import org.apache.commons.lang3.tuple.Pair;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
-import java.util.function.Function;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -93,18 +91,18 @@ public class ExpressionEvaluatorUtilsTest extends CategoryTest {
     dummyBInternal.setObj(dummyB);
 
     DummyC dummyC1 = DummyC.builder()
-                         .dummyC(ParameterField.createExpressionField(true, "random", null))
-                         .strVal1(ParameterField.createValueField(original))
+                         .dummyC(DummyField.createExpressionField("random"))
+                         .strVal1(DummyField.createValueField(original))
                          .strVal2(original)
-                         .intVal1(ParameterField.createExpressionField(true, originalInt1, null))
+                         .intVal1(DummyField.createExpressionField(originalInt1))
                          .intVal2(15)
                          .build();
-    dummyB.setDummyC1(ParameterField.createExpressionField(true, originalObject, null));
+    dummyB.setDummyC1(DummyField.createExpressionField(originalObject));
 
     DummyC dummyC2 = DummyC.builder()
-                         .strVal1(ParameterField.createValueField(original))
+                         .strVal1(DummyField.createValueField(original))
                          .strVal2(original)
-                         .intVal1(ParameterField.createExpressionField(true, originalInt2, null))
+                         .intVal1(DummyField.createExpressionField(originalInt2))
                          .intVal2(20)
                          .build();
     dummyB.setDummyC2(dummyC2);
@@ -172,11 +170,11 @@ public class ExpressionEvaluatorUtilsTest extends CategoryTest {
 
     @Override
     public boolean hasVariables(String str) {
-      if (context == null) {
-        return false;
-      }
       if ("random".equals(str)) {
         return true;
+      }
+      if (context == null) {
+        return false;
       }
 
       for (Map.Entry<String, Object> entry : context.entrySet()) {
@@ -189,12 +187,12 @@ public class ExpressionEvaluatorUtilsTest extends CategoryTest {
 
     @Override
     public ResolveObjectResponse processObject(Object o) {
-      if (!(o instanceof ParameterField)) {
+      if (!(o instanceof DummyField)) {
         return new ResolveObjectResponse(false, false);
       }
 
-      ParameterField parameterField = (ParameterField) o;
-      boolean updated = parameterField.process(this);
+      DummyField field = (DummyField) o;
+      boolean updated = field.process(this);
       return new ResolveObjectResponse(true, updated);
     }
   }
@@ -202,7 +200,7 @@ public class ExpressionEvaluatorUtilsTest extends CategoryTest {
   @Data
   @Builder
   private static class DummyB {
-    ParameterField<DummyC> dummyC1;
+    DummyField<DummyC> dummyC1;
     DummyC dummyC2;
     List<Pair<String, String>> pairs;
     Map<String, Object> map;
@@ -217,10 +215,10 @@ public class ExpressionEvaluatorUtilsTest extends CategoryTest {
   @Value
   @Builder
   private static class DummyC {
-    ParameterField<DummyC> dummyC;
-    ParameterField<String> strVal1;
+    DummyField<DummyC> dummyC;
+    DummyField<String> strVal1;
     String strVal2;
-    ParameterField<Integer> intVal1;
+    DummyField<Integer> intVal1;
     int intVal2;
   }
 }

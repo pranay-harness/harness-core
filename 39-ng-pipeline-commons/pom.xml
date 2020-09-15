@@ -29,5 +29,10 @@
             <artifactId>29-orchestration-beans</artifactId>
             <version>${project.parent.version}</version>
         </dependency>
+        <dependency>
+            <groupId>software.wings</groupId>
+            <artifactId>31-orchestration</artifactId>
+            <version>${project.parent.version}</version>
+        </dependency>
     </dependencies>
 </project>

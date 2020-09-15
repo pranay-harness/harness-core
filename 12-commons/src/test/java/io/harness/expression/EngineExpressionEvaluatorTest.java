@@ -10,7 +10,6 @@ import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.rule.Owner;
-import io.harness.utils.ParameterField;
 import lombok.Builder;
 import lombok.Value;
 import org.junit.Test;
@@ -42,29 +41,29 @@ public class EngineExpressionEvaluatorTest extends CategoryTest {
   public void testWithoutExpressions() {
     DummyB dummyB1 = DummyB.builder()
                          .cVal1(DummyC.builder().strVal("c11").build())
-                         .cVal2(ParameterField.createValueField(DummyC.builder().strVal("c12").build()))
+                         .cVal2(DummyField.createValueField(DummyC.builder().strVal("c12").build()))
                          .strVal1("b11")
-                         .strVal2(ParameterField.createValueField("b12"))
+                         .strVal2(DummyField.createValueField("b12"))
                          .intVal1(11)
-                         .intVal2(ParameterField.createValueField(12))
+                         .intVal2(DummyField.createValueField(12))
                          .build();
     DummyB dummyB2 = DummyB.builder()
                          .cVal1(DummyC.builder().strVal("c21").build())
-                         .cVal2(ParameterField.createValueField(DummyC.builder().strVal("c22").build()))
+                         .cVal2(DummyField.createValueField(DummyC.builder().strVal("c22").build()))
                          .strVal1("b21")
-                         .strVal2(ParameterField.createValueField("b22"))
+                         .strVal2(DummyField.createValueField("b22"))
                          .intVal1(21)
-                         .intVal2(ParameterField.createValueField(22))
+                         .intVal2(DummyField.createValueField(22))
                          .build();
     DummyA dummyA = DummyA.builder()
                         .bVal1(dummyB1)
-                        .bVal2(ParameterField.createValueField(dummyB2))
+                        .bVal2(DummyField.createValueField(dummyB2))
                         .strVal1("a1")
-                        .strVal2(ParameterField.createValueField("a2"))
+                        .strVal2(DummyField.createValueField("a2"))
                         .build();
 
     EngineExpressionEvaluator evaluator =
-        prepareEngineExpressionEvaluator(ImmutableMap.of("obj", ParameterField.createValueField(dummyA)));
+        prepareEngineExpressionEvaluator(ImmutableMap.of("obj", DummyField.createValueField(dummyA)));
 
     validateExpression(evaluator, "bVal1.cVal1.strVal", "c11");
     validateExpression(evaluator, "bVal1.cVal2.strVal", "c12");
@@ -88,30 +87,30 @@ public class EngineExpressionEvaluatorTest extends CategoryTest {
   public void testWithExpressions() {
     DummyB dummyB1 = DummyB.builder()
                          .cVal1(DummyC.builder().strVal("c11").build())
-                         .cVal2(ParameterField.createExpressionField(true, "${c12}", null))
+                         .cVal2(DummyField.createExpressionField("${c12}"))
                          .strVal1("b11")
-                         .strVal2(ParameterField.createValueField("b12"))
+                         .strVal2(DummyField.createValueField("b12"))
                          .intVal1(11)
-                         .intVal2(ParameterField.createValueField(12))
+                         .intVal2(DummyField.createValueField(12))
                          .build();
     DummyB dummyB2 = DummyB.builder()
                          .cVal1(DummyC.builder().strVal("c21").build())
-                         .cVal2(ParameterField.createExpressionField(true, "${c22}", null))
+                         .cVal2(DummyField.createExpressionField("${c22}"))
                          .strVal1("${b21}")
-                         .strVal2(ParameterField.createExpressionField(true, "${b22}", null))
+                         .strVal2(DummyField.createExpressionField("${b22}"))
                          .intVal1(21)
-                         .intVal2(ParameterField.createExpressionField(true, "${i22}", null))
+                         .intVal2(DummyField.createExpressionField("${i22}"))
                          .build();
     DummyA dummyA = DummyA.builder()
                         .bVal1(dummyB1)
-                        .bVal2(ParameterField.createValueField(dummyB2))
+                        .bVal2(DummyField.createValueField(dummyB2))
                         .strVal1("a1")
-                        .strVal2(ParameterField.createValueField("a2"))
+                        .strVal2(DummyField.createValueField("a2"))
                         .build();
 
     EngineExpressionEvaluator evaluator =
         prepareEngineExpressionEvaluator(new ImmutableMap.Builder<String, Object>()
-                                             .put("obj", ParameterField.createValueField(dummyA))
+                                             .put("obj", DummyField.createValueField(dummyA))
                                              .put("c12", "finalC12")
                                              .put("c22", "finalC22")
                                              .put("b21", "finalB21")
@@ -228,20 +227,20 @@ public class EngineExpressionEvaluatorTest extends CategoryTest {
   @Builder
   public static class DummyA {
     DummyB bVal1;
-    ParameterField<DummyB> bVal2;
+    DummyField<DummyB> bVal2;
     String strVal1;
-    ParameterField<String> strVal2;
+    DummyField<String> strVal2;
   }
 
   @Value
   @Builder
   public static class DummyB {
     DummyC cVal1;
-    ParameterField<DummyC> cVal2;
+    DummyField<DummyC> cVal2;
     String strVal1;
-    ParameterField<String> strVal2;
+    DummyField<String> strVal2;
     int intVal1;
-    ParameterField<Integer> intVal2;
+    DummyField<Integer> intVal2;
   }
 
   @Value
@@ -281,8 +280,8 @@ public class EngineExpressionEvaluatorTest extends CategoryTest {
     @Override
     protected Object evaluateInternal(String expression, EngineJexlContext ctx) {
       Object value = super.evaluateInternal(expression, ctx);
-      if (value instanceof ParameterField) {
-        ParameterField<?> field = (ParameterField<?>) value;
+      if (value instanceof DummyField) {
+        DummyField<?> field = (DummyField<?>) value;
         return field.isExpression() ? field.getExpressionValue() : field.getValue();
       }
       return value;
