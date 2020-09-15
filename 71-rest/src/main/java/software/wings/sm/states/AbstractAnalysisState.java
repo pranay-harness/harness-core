@@ -113,7 +113,7 @@ public abstract class AbstractAnalysisState extends State {
 
   private static final int DEFAULT_VERIFICATION_STATE_TIMEOUT_MILLIS = 3 * 60 * 60 * 1000; // 3 hours
   private static final int TIMEOUT_BUFFER = 150; // 150 Minutes.
-  private static final int MAX_WORKFLOW_TIMEOUT = 4 * 60; // 4 hours
+  protected static final int MAX_WORKFLOW_TIMEOUT = 4 * 60; // 4 hours
 
   @Inject protected WorkflowExecutionService workflowExecutionService;
   @Inject protected WaitNotifyEngine waitNotifyEngine;
@@ -387,7 +387,8 @@ public abstract class AbstractAnalysisState extends State {
 
   @Override
   @SchemaIgnore
-  public Integer getTimeoutMillis() {
+  public Integer getTimeoutMillis(ExecutionContext context) {
+    timeDuration = getTimeDuration(context);
     if (!isEmpty(timeDuration)) {
       return 60 * 1000 * (Integer.parseInt(timeDuration) + TIMEOUT_BUFFER);
     }
@@ -396,11 +397,6 @@ public abstract class AbstractAnalysisState extends State {
 
   @Override
   public Map<String, String> validateFields() {
-    if (!isEmpty(timeDuration) && Integer.parseInt(timeDuration) > MAX_WORKFLOW_TIMEOUT) {
-      return new HashMap<String, String>() {
-        { put("timeDuration", "Time duration cannot be more than 4 hours."); }
-      };
-    }
     return null;
   }
 
