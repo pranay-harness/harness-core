@@ -9,6 +9,8 @@ import static org.mockito.Mockito.when;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 
+import io.harness.OrchestrationGuiceRunner;
+import io.harness.OrchestrationModuleListProvider;
 import io.harness.OrchestrationTest;
 import io.harness.ambiance.Ambiance;
 import io.harness.category.element.UnitTests;
@@ -17,17 +19,21 @@ import io.harness.engine.executions.plan.PlanExecutionService;
 import io.harness.engine.expressions.AmbianceExpressionEvaluator;
 import io.harness.expression.field.dummy.DummyOrchestrationField;
 import io.harness.rule.Owner;
+import io.harness.runners.ModuleProvider;
 import lombok.Builder;
 import lombok.Value;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
+import org.junit.runner.RunWith;
 import org.mockito.Mock;
 
 import java.util.List;
 import java.util.Map;
 import javax.validation.constraints.NotNull;
 
+@RunWith(OrchestrationGuiceRunner.class)
+@ModuleProvider(OrchestrationModuleListProvider.class)
 public class AmbianceExpressionEvaluatorTest extends OrchestrationTest {
   @Mock private PlanExecutionService planExecutionService;
 

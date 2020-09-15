@@ -16,6 +16,7 @@ import io.harness.engine.outputs.ExecutionSweepingOutputServiceImplTest;
 import io.harness.expression.AmbianceExpressionEvaluatorTest;
 import io.harness.runners.GuiceSuiteRunner;
 import io.harness.runners.ModuleProvider;
+import io.harness.runners.ModuleRunner;
 import org.junit.runner.RunWith;
 import org.junit.runners.Suite;
 
@@ -26,4 +27,5 @@ import org.junit.runners.Suite;
     InterruptServiceImplTest.class, OutcomeServiceImplTest.class, ExecutionSweepingOutputServiceImplTest.class,
     OrchestrationEngineTest.class, AmbianceExpressionEvaluatorTest.class})
 @ModuleProvider(OrchestrationModuleListProvider.class)
+@ModuleRunner(OrchestrationGuiceRunner.class)
 public class OrchestrationTestSuite {}

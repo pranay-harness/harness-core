@@ -25,7 +25,7 @@ public class GuiceSuiteRunner extends Suite {
         Arrays.stream(suiteClasses)
             .map(sc -> {
               try {
-                return new GuiceRunner(sc, getInjector(sc));
+                return getRunner(klass, sc);
               } catch (Exception e) {
                 return null;
               }
@@ -60,5 +60,17 @@ public class GuiceSuiteRunner extends Suite {
     }
     ModuleListProvider moduleListProvider = annotation.value().newInstance();
     return moduleListProvider.modules();
+  }
+
+  private static GuiceRunner getRunner(Class<?> klass, Class<?> sc) throws Exception {
+    final ModuleRunner annotation = klass.getAnnotation(ModuleRunner.class);
+    if (annotation == null) {
+      final String message =
+          String.format("Missing ModuleProvider annotation for HarnessTestSuite Class '%s'", klass.getName());
+      throw new InitializationError(message);
+    }
+    Class<?> moduleRunner = annotation.value();
+    return (GuiceRunner) moduleRunner.getDeclaredConstructor(Class.class, Injector.class)
+        .newInstance(sc, getInjector(sc));
   }
 }

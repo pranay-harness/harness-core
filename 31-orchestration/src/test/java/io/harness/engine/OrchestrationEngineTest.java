@@ -10,6 +10,8 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
 
+import io.harness.OrchestrationGuiceRunner;
+import io.harness.OrchestrationModuleListProvider;
 import io.harness.OrchestrationTest;
 import io.harness.adviser.Advise;
 import io.harness.adviser.Adviser;
@@ -34,6 +36,7 @@ import io.harness.plan.PlanNode;
 import io.harness.registries.adviser.AdviserRegistry;
 import io.harness.registries.state.StepRegistry;
 import io.harness.rule.Owner;
+import io.harness.runners.ModuleProvider;
 import io.harness.state.Step;
 import io.harness.state.StepType;
 import io.harness.state.io.StepInputPackage;
@@ -45,10 +48,13 @@ import io.harness.utils.steps.TestStepParameters;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
+import org.junit.runner.RunWith;
 
 import java.time.Duration;
 import java.util.Map;
 
+@RunWith(OrchestrationGuiceRunner.class)
+@ModuleProvider(OrchestrationModuleListProvider.class)
 public class OrchestrationEngineTest extends OrchestrationTest {
   @Inject private AdviserRegistry adviserRegistry;
   @Inject private StepRegistry stepRegistry;
@@ -62,9 +68,7 @@ public class OrchestrationEngineTest extends OrchestrationTest {
 
   @Before
   public void setUp() {
-    adviserRegistry.register(TEST_ADVISER_TYPE, TestHttpResponseCodeSwitchAdviser.class);
-    stepRegistry.register(TEST_STEP_TYPE, TestSyncStep.class);
-    stepRegistry.register(ASYNC_STEP_TYPE, TestAsyncStep.class);
+
   }
 
   @Test
@@ -72,6 +76,9 @@ public class OrchestrationEngineTest extends OrchestrationTest {
   @Owner(developers = ALEXEI)
   @Category(UnitTests.class)
   public void shouldStartOneNodeExecution() {
+    adviserRegistry.register(TEST_ADVISER_TYPE, TestHttpResponseCodeSwitchAdviser.class);
+    stepRegistry.register(TEST_STEP_TYPE, TestSyncStep.class);
+    stepRegistry.register(ASYNC_STEP_TYPE, TestAsyncStep.class);
     String testNodeId = generateUuid();
     Plan oneNodePlan =
         Plan.builder()

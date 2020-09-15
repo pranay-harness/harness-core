@@ -10,11 +10,10 @@ import org.junit.runners.model.InitializationError;
 import java.util.List;
 
 public class GuiceRunner extends BlockJUnit4ClassRunner {
-  private final transient Injector injector;
+  protected final transient Injector injector;
 
   public GuiceRunner(final Class<?> klass, Injector injector) throws Exception {
     super(klass);
-
     this.injector = injector;
   }
 
@@ -30,7 +29,7 @@ public class GuiceRunner extends BlockJUnit4ClassRunner {
     return clazz;
   }
 
-  private List<Module> getModulesFor(Class<?> klass)
+  protected List<Module> getModulesFor(Class<?> klass)
       throws InitializationError, IllegalAccessException, InstantiationException {
     final ModuleProvider annotation = klass.getAnnotation(ModuleProvider.class);
     if (annotation == null) {
