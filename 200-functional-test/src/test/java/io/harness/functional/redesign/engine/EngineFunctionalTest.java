@@ -1,5 +1,6 @@
 package io.harness.functional.redesign.engine;
 
+import static io.harness.execution.status.Status.EXPIRED;
 import static io.harness.execution.status.Status.FAILED;
 import static io.harness.execution.status.Status.SUCCEEDED;
 import static io.harness.rule.OwnerRule.ALEXEI;
@@ -288,6 +289,15 @@ public class EngineFunctionalTest extends AbstractFunctionalTest {
         + "echo \"sectionChild.f2 = v212\"\n"
         + "echo \"sectionChild.f2 = v212\"\n";
     assertThat(shellScript2).isEqualTo(expectedShellScript2);
+  }
+
+  @Test
+  @Owner(developers = GARVIT)
+  @Category(FunctionalTests.class)
+  public void shouldExecuteSimpleTimeoutPlan() {
+    PlanExecution timeoutResponse =
+        executePlan(bearerToken, application.getAccountId(), application.getAppId(), "simple-timeout");
+    assertThat(timeoutResponse.getStatus()).isEqualTo(EXPIRED);
   }
 
   @Test
