@@ -71,6 +71,7 @@
 29-orchestration-beans/src/main/java/io/harness/references/OutcomeRefObject.java
 29-orchestration-beans/src/main/java/io/harness/references/RefType.java
 29-orchestration-beans/src/main/java/io/harness/references/SweepingOutputRefObject.java
+29-orchestration-beans/src/main/java/io/harness/registrars/OrchestrationBeansFieldRegistrar.java
 29-orchestration-beans/src/main/java/io/harness/registrars/OrchestrationBeansTimeoutRegistrar.java
 29-orchestration-beans/src/main/java/io/harness/registries/OrchestrationRegistryModule.java
 29-orchestration-beans/src/main/java/io/harness/registries/RegistryType.java

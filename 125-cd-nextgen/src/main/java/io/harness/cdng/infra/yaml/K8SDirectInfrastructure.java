@@ -1,10 +1,10 @@
 package io.harness.cdng.infra.yaml;
 
 import com.fasterxml.jackson.annotation.JsonTypeName;
+import io.harness.beans.ParameterField;
 import io.harness.cdng.infra.beans.InfraMapping;
 import io.harness.cdng.infra.beans.K8sDirectInfraMapping;
 import io.harness.cdng.visitor.helpers.pipelineinfrastructure.K8SDirectInfrastructureVisitorHelper;
-import io.harness.utils.ParameterField;
 import io.harness.walktree.visitor.SimpleVisitorHelper;
 import io.harness.walktree.visitor.Visitable;
 import lombok.Builder;

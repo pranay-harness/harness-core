@@ -1,8 +1,8 @@
 package io.harness.cdng.service.beans;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import io.harness.beans.ParameterField;
 import io.harness.cdng.visitor.helpers.serviceconfig.ServiceConfigVisitorHelper;
-import io.harness.utils.ParameterField;
 import io.harness.walktree.beans.VisitableChildren;
 import io.harness.walktree.visitor.SimpleVisitorHelper;
 import io.harness.walktree.visitor.Visitable;

@@ -4,6 +4,7 @@ import static io.harness.rule.OwnerRule.ARCHIT;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.CategoryTest;
+import io.harness.beans.ParameterField;
 import io.harness.category.element.UnitTests;
 import io.harness.cdng.manifest.state.ManifestStep;
 import io.harness.cdng.manifest.state.ManifestStepParameters;
@@ -18,7 +19,6 @@ import io.harness.delegate.beans.storeconfig.FetchType;
 import io.harness.execution.status.Status;
 import io.harness.rule.Owner;
 import io.harness.state.io.StepResponse;
-import io.harness.utils.ParameterField;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 

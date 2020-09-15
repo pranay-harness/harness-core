@@ -2,10 +2,10 @@ package io.harness.cdng.pipeline;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonTypeName;
+import io.harness.beans.ParameterField;
 import io.harness.cdng.service.beans.ServiceConfig;
 import io.harness.cdng.variables.StageVariables;
 import io.harness.cdng.visitor.helpers.deploymentstage.DeploymentStageVisitorHelper;
-import io.harness.utils.ParameterField;
 import io.harness.walktree.beans.VisitableChildren;
 import io.harness.walktree.visitor.SimpleVisitorHelper;
 import io.harness.walktree.visitor.Visitable;

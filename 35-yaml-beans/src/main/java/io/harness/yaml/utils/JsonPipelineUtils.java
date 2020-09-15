@@ -12,7 +12,7 @@ import com.fasterxml.jackson.datatype.jdk8.Jdk8Module;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import io.harness.serializer.AnnotationAwareJsonSubtypeResolver;
 import io.harness.serializer.JsonSubtypeResolver;
-import io.harness.serializer.jackson.HarnessJacksonModule;
+import io.harness.serializer.jackson.NGHarnessJacksonModule;
 import lombok.experimental.UtilityClass;
 
 import java.io.IOException;
@@ -39,7 +39,7 @@ public class JsonPipelineUtils {
     mapper.registerModule(new Jdk8Module());
     mapper.registerModule(new GuavaModule());
     mapper.registerModule(new JavaTimeModule());
-    mapper.registerModule(new HarnessJacksonModule());
+    mapper.registerModule(new NGHarnessJacksonModule());
   }
 
   /**

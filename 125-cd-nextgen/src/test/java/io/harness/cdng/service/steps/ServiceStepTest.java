@@ -9,6 +9,7 @@ import static org.mockito.Mockito.mock;
 
 import io.harness.CategoryTest;
 import io.harness.ambiance.Ambiance;
+import io.harness.beans.ParameterField;
 import io.harness.category.element.UnitTests;
 import io.harness.cdng.common.beans.SetupAbstractionKeys;
 import io.harness.cdng.manifest.yaml.GitStore;
@@ -33,7 +34,6 @@ import io.harness.state.io.StepResponse;
 import io.harness.state.io.StepResponse.StepOutcome;
 import io.harness.state.io.StepResponseNotifyData;
 import io.harness.tasks.ResponseData;
-import io.harness.utils.ParameterField;
 import org.joor.Reflect;
 import org.junit.Rule;
 import org.junit.Test;

@@ -1,10 +1,10 @@
 package io.harness.cdng.manifest.yaml;
 
 import com.fasterxml.jackson.annotation.JsonTypeName;
+import io.harness.beans.ParameterField;
 import io.harness.cdng.manifest.ManifestStoreType;
 import io.harness.cdng.visitor.helper.GitStoreVisitorHelper;
 import io.harness.delegate.beans.storeconfig.FetchType;
-import io.harness.utils.ParameterField;
 import io.harness.walktree.beans.VisitableChildren;
 import io.harness.walktree.visitor.SimpleVisitorHelper;
 import io.harness.walktree.visitor.Visitable;

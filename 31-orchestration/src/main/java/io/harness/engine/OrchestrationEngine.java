@@ -233,9 +233,9 @@ public class OrchestrationEngine {
     StepParameters resolvedStepParameters = nodeExecution.getResolvedStepParameters();
     List<TimeoutObtainment> timeoutObtainmentList;
     if (resolvedStepParameters != null) {
-      timeoutObtainmentList = resolvedStepParameters.getTimeouts();
+      timeoutObtainmentList = resolvedStepParameters.fetchTimeouts();
     } else {
-      timeoutObtainmentList = new StepParameters() {}.getTimeouts();
+      timeoutObtainmentList = new StepParameters() {}.fetchTimeouts();
     }
 
     List<String> timeoutInstanceIds = new ArrayList<>();

@@ -17,7 +17,7 @@ import java.util.List;
 public interface StepParameters {
   Duration DEFAULT_TIMEOUT = Duration.ofDays(10);
 
-  default List<TimeoutObtainment> getTimeouts() {
+  default List<TimeoutObtainment> fetchTimeouts() {
     return Collections.singletonList(
         TimeoutObtainment.builder()
             .type(AbsoluteTimeoutTrackerFactory.DIMENSION)
