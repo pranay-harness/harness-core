@@ -37,14 +37,12 @@ import java.util.List;
 
 public interface SecretManagerClient {
   String SECRETS_API = "ng/secrets";
+  String SECRETS_API_V2 = "v2/ng/secrets";
   String SECRET_FILES_API = "ng/secret-files";
   String SECRET_MANAGERS_API = "ng/secret-managers";
 
   // create secret
-  @KryoRequest
-  @KryoResponse
-  @POST(SECRETS_API)
-  Call<RestResponse<EncryptedDataDTO>> createSecret(@Body SecretTextDTO secretText);
+  @KryoRequest @POST(SECRETS_API) Call<RestResponse<EncryptedDataDTO>> createSecret(@Body SecretTextDTO secretText);
 
   // create secret file
   @Multipart
@@ -96,12 +94,10 @@ public interface SecretManagerClient {
   // create secret manager
   @POST(SECRET_MANAGERS_API)
   @KryoRequest
-  @KryoResponse
   Call<RestResponse<SecretManagerConfigDTO>> createSecretManager(@Body SecretManagerConfigDTO secretManagerConfig);
 
   // update secret manager
   @PUT(SECRET_MANAGERS_API + "/{identifier}")
-  @KryoResponse
   @KryoRequest
   Call<RestResponse<SecretManagerConfigDTO>> updateSecretManager(@Path("identifier") String identifier,
       @Query(ACCOUNT_KEY) String accountIdentifier, @Query(ORG_KEY) String orgIdentifier,

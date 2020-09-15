@@ -42,7 +42,7 @@ public class SecretManagerResourceNG {
   @Inject private NGSecretManagerService ngSecretManagerService;
 
   @POST
-  @Produces("application/x-kryo")
+  @Produces("application/json")
   @Consumes("application/x-kryo")
   public RestResponse<SecretManagerConfigDTO> createSecretManager(SecretManagerConfigDTO dto) {
     SecretManagerConfig secretManagerConfig = SecretManagerConfigMapper.fromDTO(dto);
@@ -82,7 +82,7 @@ public class SecretManagerResourceNG {
 
   @PUT
   @Path("/{identifier}")
-  @Produces("application/x-kryo")
+  @Produces("application/json")
   @Consumes("application/x-kryo")
   public RestResponse<SecretManagerConfigDTO> updateSecretManager(@PathParam(IDENTIFIER_KEY) String identifier,
       @QueryParam(ACCOUNT_KEY) @NotNull String accountIdentifier, @QueryParam(ORG_KEY) String orgIdentifier,

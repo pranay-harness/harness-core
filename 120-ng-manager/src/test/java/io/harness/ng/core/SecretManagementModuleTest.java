@@ -2,6 +2,8 @@ package io.harness.ng.core;
 
 import static io.harness.rule.OwnerRule.VIKAS;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.mock;
+import static org.mockito.MockitoAnnotations.initMocks;
 
 import com.google.inject.Guice;
 import com.google.inject.Injector;
@@ -18,6 +20,7 @@ import io.harness.ng.core.api.NGSecretManagerService;
 import io.harness.ng.core.api.NGSecretService;
 import io.harness.ng.core.api.impl.NGSecretManagerServiceImpl;
 import io.harness.ng.core.api.impl.NGSecretServiceImpl;
+import io.harness.ng.core.api.repositories.spring.SecretRepository;
 import io.harness.ng.remote.client.ServiceHttpClientConfig;
 import io.harness.rule.Owner;
 import io.harness.secretmanagerclient.SecretManagementClientModule;
@@ -25,8 +28,10 @@ import io.harness.secretmanagerclient.services.SecretManagerClientServiceImpl;
 import io.harness.secretmanagerclient.services.api.SecretManagerClientService;
 import io.harness.serializer.KryoRegistrar;
 import io.harness.serializer.NextGenRegistrars;
+import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
+import org.mockito.Mock;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -36,6 +41,12 @@ public class SecretManagementModuleTest extends CategoryTest {
   private SecretManagementModule secretManagementModule;
   private SecretManagementClientModule secretManagementClientModule;
   private EntityReferenceClientModule entityReferenceClientModule;
+  @Mock private SecretRepository secretRepository;
+
+  @Before
+  public void setup() {
+    initMocks(this);
+  }
 
   @Test
   @Owner(developers = VIKAS)
@@ -56,6 +67,13 @@ public class SecretManagementModuleTest extends CategoryTest {
       @Singleton
       Set<Class<? extends KryoRegistrar>> registrars() {
         return NextGenRegistrars.kryoRegistrars;
+      }
+    });
+    modules.add(new ProviderModule() {
+      @Provides
+      @Singleton
+      SecretRepository repository() {
+        return mock(SecretRepository.class);
       }
     });
     modules.add(secretManagementModule);

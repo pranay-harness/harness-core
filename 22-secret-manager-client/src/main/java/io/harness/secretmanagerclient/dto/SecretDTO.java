@@ -13,7 +13,7 @@ import java.util.List;
 @NoArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public abstract class SecretDTO {
-  String account; // TODO{phoenikx} remove this and get from context
+  String account;
   String org;
   String project;
   String identifier;

@@ -4,26 +4,38 @@ import software.wings.settings.SettingVariableTypes;
 
 public enum SecretType {
   SecretFile,
-  SecretText;
+  SecretText,
+  SSHKey;
 
   public static SettingVariableTypes toSettingVariableType(SecretType secretType) {
     if (secretType == null) {
       return null;
     }
-    if (secretType == SecretType.SecretFile) {
-      return SettingVariableTypes.CONFIG_FILE;
-    } else if (secretType == SecretType.SecretText) {
-      return SettingVariableTypes.SECRET_TEXT;
+    switch (secretType) {
+      case SecretFile:
+        return SettingVariableTypes.CONFIG_FILE;
+      case SecretText:
+        return SettingVariableTypes.SECRET_TEXT;
+      case SSHKey:
+        return SettingVariableTypes.SSH_SESSION_CONFIG;
+      default:
+        throw new IllegalArgumentException("SecretType " + secretType + " cannot be converted to settingVariableType");
     }
-    throw new IllegalArgumentException("SecretType " + secretType + " cannot be converted to settingVariableType");
   }
 
   public static SecretType fromSettingVariableType(SettingVariableTypes type) {
-    if (type == SettingVariableTypes.SECRET_TEXT) {
-      return SecretType.SecretText;
-    } else if (type == SettingVariableTypes.CONFIG_FILE) {
-      return SecretType.SecretFile;
+    if (type == null) {
+      return null;
     }
-    throw new IllegalArgumentException("Setting variable type " + type + " cannot be converted to SecretType");
+    switch (type) {
+      case SECRET_TEXT:
+        return SecretType.SecretText;
+      case CONFIG_FILE:
+        return SecretType.SecretFile;
+      case SSH_SESSION_CONFIG:
+        return SecretType.SSHKey;
+      default:
+        throw new IllegalArgumentException("Setting variable type " + type + " cannot be converted to SecretType");
+    }
   }
 }

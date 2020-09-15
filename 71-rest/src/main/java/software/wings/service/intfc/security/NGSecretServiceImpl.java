@@ -25,6 +25,7 @@ import io.harness.secretmanagerclient.dto.SecretTextUpdateDTO;
 import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.security.encryption.EncryptedRecordData;
 import lombok.AllArgsConstructor;
+import org.apache.commons.lang3.StringUtils;
 import org.mongodb.morphia.query.Query;
 import software.wings.beans.GcpKmsConfig;
 import software.wings.beans.LocalEncryptionConfig;
@@ -96,7 +97,7 @@ public class NGSecretServiceImpl implements NGSecretService {
     if (get(metadata.getAccountIdentifier(), metadata.getOrgIdentifier(), metadata.getProjectIdentifier(),
             metadata.getIdentifier())
             .isPresent()) {
-      throw new SecretManagementException(ErrorCode.SECRET_MANAGEMENT_ERROR, "Duplicate secret text present", USER);
+      throw new SecretManagementException(ErrorCode.SECRET_MANAGEMENT_ERROR, "Duplicate secret present", USER);
     }
 
     // Fetch secret manager with which this secret will be saved
@@ -118,12 +119,14 @@ public class NGSecretServiceImpl implements NGSecretService {
       data.setEncryptionType(secretManagerConfig.getEncryptionType());
       data.getNgMetadata().setSecretManagerName(secretManagerConfig.getName()); // TODO{phoenikx} remove this
 
-      // send task to delegate for saving secret
-      EncryptedData encryptedData = encrypt(data, dto.getValue(), secretManagerConfig);
+      if (!StringUtils.isEmpty(dto.getValue())) {
+        // send task to delegate for saving secret
+        EncryptedData encryptedData = encrypt(data, dto.getValue(), secretManagerConfig);
 
-      // set fields and save secret in DB
-      data.setEncryptionKey(encryptedData.getEncryptionKey());
-      data.setEncryptedValue(encryptedData.getEncryptedValue());
+        // set fields and save secret in DB
+        data.setEncryptionKey(encryptedData.getEncryptionKey());
+        data.setEncryptedValue(encryptedData.getEncryptedValue());
+      }
       secretManager.saveEncryptedData(data);
       return data;
     } else {
@@ -201,11 +204,14 @@ public class NGSecretServiceImpl implements NGSecretService {
         encryptedData.getNgMetadata().setDraft(dto.isDraft());
 
         // send to delegate to create/update secret
-        EncryptedData updatedEncryptedData = encrypt(encryptedData, dto.getValue(), secretManagerConfigOptional.get());
+        if (!StringUtils.isEmpty(dto.getValue())) {
+          EncryptedData updatedEncryptedData =
+              encrypt(encryptedData, dto.getValue(), secretManagerConfigOptional.get());
 
-        // set encryption key and value and save secret in DB
-        encryptedData.setEncryptionKey(updatedEncryptedData.getEncryptionKey());
-        encryptedData.setEncryptedValue(updatedEncryptedData.getEncryptedValue());
+          // set encryption key and value and save secret in DB
+          encryptedData.setEncryptionKey(updatedEncryptedData.getEncryptionKey());
+          encryptedData.setEncryptedValue(updatedEncryptedData.getEncryptedValue());
+        }
         secretManager.saveEncryptedData(encryptedData);
         return true;
       }

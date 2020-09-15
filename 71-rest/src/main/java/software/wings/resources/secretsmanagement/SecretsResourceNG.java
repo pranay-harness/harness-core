@@ -69,7 +69,7 @@ public class SecretsResourceNG {
   }
 
   @POST
-  @Produces("application/x-kryo")
+  @Produces("application/json")
   @Consumes("application/x-kryo")
   public RestResponse<EncryptedDataDTO> createSecret(SecretTextDTO dto) {
     EncryptedData createdEncryptedData = ngSecretService.createSecretText(dto);
