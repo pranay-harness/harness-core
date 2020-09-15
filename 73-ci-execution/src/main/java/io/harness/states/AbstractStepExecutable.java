@@ -6,22 +6,26 @@ import com.google.inject.Inject;
 
 import io.harness.ambiance.Ambiance;
 import io.harness.beans.steps.CIStepInfo;
+import io.harness.beans.steps.CiStepOutcome;
 import io.harness.beans.sweepingoutputs.StepTaskDetails;
 import io.harness.delegate.task.stepstatus.StepExecutionStatus;
 import io.harness.delegate.task.stepstatus.StepStatus;
 import io.harness.delegate.task.stepstatus.StepStatusTaskResponseData;
 import io.harness.engine.outputs.ExecutionSweepingOutputService;
+import io.harness.exception.FailureType;
 import io.harness.execution.status.Status;
 import io.harness.facilitator.modes.async.AsyncExecutable;
 import io.harness.facilitator.modes.async.AsyncExecutableResponse;
 import io.harness.managerclient.ManagerCIResource;
 import io.harness.references.SweepingOutputRefObject;
 import io.harness.state.Step;
+import io.harness.state.io.FailureInfo;
 import io.harness.state.io.StepInputPackage;
 import io.harness.state.io.StepResponse;
 import io.harness.tasks.ResponseData;
 import lombok.extern.slf4j.Slf4j;
 
+import java.util.EnumSet;
 import java.util.List;
 import java.util.Map;
 
@@ -50,10 +54,19 @@ public abstract class AbstractStepExecutable implements Step, AsyncExecutable<CI
     if (stepStatus.getStepExecutionStatus() == StepExecutionStatus.SUCCESS) {
       return StepResponse.builder()
           .status(Status.SUCCEEDED)
-          .stepOutcome(StepResponse.StepOutcome.builder().build())
+          .stepOutcome(StepResponse.StepOutcome.builder()
+                           .outcome(CiStepOutcome.builder().output(stepStatus.getOutput()).build())
+                           .name(stepParameters.getIdentifier())
+                           .build())
           .build();
     } else {
-      return StepResponse.builder().status(Status.FAILED).build();
+      return StepResponse.builder()
+          .status(Status.FAILED)
+          .failureInfo(FailureInfo.builder()
+                           .errorMessage(stepStatus.getError())
+                           .failureTypes(EnumSet.of(FailureType.APPLICATION_ERROR))
+                           .build())
+          .build();
     }
   }
 
