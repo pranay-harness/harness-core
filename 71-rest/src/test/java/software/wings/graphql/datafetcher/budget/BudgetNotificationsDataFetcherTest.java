@@ -3,7 +3,12 @@ package software.wings.graphql.datafetcher.budget;
 import static io.harness.ccm.budget.entities.BudgetType.SPECIFIED_AMOUNT;
 import static io.harness.rule.OwnerRule.SHUBHANSHU;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.Matchers.anyString;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
+
+import com.google.inject.Inject;
 
 import io.harness.category.element.UnitTests;
 import io.harness.ccm.budget.BudgetService;
@@ -12,24 +17,40 @@ import io.harness.ccm.budget.entities.AlertThresholdBase;
 import io.harness.ccm.budget.entities.ApplicationBudgetScope;
 import io.harness.ccm.budget.entities.Budget;
 import io.harness.ccm.budget.entities.BudgetType;
+import io.harness.exception.InvalidRequestException;
 import io.harness.rule.Owner;
+import io.harness.timescaledb.TimeScaleDBService;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.stubbing.Answer;
 import software.wings.graphql.datafetcher.AbstractDataFetcherTest;
 import software.wings.graphql.datafetcher.DataFetcherUtils;
-import software.wings.graphql.schema.query.QLBudgetQueryParameters;
+import software.wings.graphql.schema.type.aggregation.QLTimeFilter;
+import software.wings.graphql.schema.type.aggregation.QLTimeOperator;
+import software.wings.graphql.schema.type.aggregation.billing.QLBillingDataFilter;
 import software.wings.graphql.schema.type.aggregation.budget.QLBudgetNotificationsData;
 
+import java.sql.Connection;
+import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Statement;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
 
 public class BudgetNotificationsDataFetcherTest extends AbstractDataFetcherTest {
+  @Mock TimeScaleDBService timeScaleDBService;
   @Mock BudgetService budgetService;
   @Mock private DataFetcherUtils utils;
-  @InjectMocks BudgetNotificationsDataFetcher budgetNotificationsDataFetcher;
+  @InjectMocks BudgetTimescaleQueryHelper queryHelper;
+  @Inject @InjectMocks BudgetNotificationsDataFetcher budgetNotificationsDataFetcher;
+
+  @Mock Statement statement;
+  @Mock ResultSet resultSet;
 
   private String accountId = "ACCOUNT_ID";
   private String applicationId1 = "APPLICATION_ID_1";
@@ -40,10 +61,10 @@ public class BudgetNotificationsDataFetcherTest extends AbstractDataFetcherTest 
   private BudgetType budgetType = BudgetType.SPECIFIED_AMOUNT;
   private double budgetAmount = 25000.0;
   private Double[] alertAt = {0.5};
+  final int[] count = {0};
 
   private AlertThreshold alertThreshold;
   private Budget budget;
-  private QLBudgetQueryParameters queryParameters;
 
   @Before
   public void setup() throws SQLException {
@@ -61,16 +82,65 @@ public class BudgetNotificationsDataFetcherTest extends AbstractDataFetcherTest 
                  .budgetAmount(budgetAmount)
                  .alertThresholds(new AlertThreshold[] {alertThreshold})
                  .build();
-    queryParameters = new QLBudgetQueryParameters(budgetId);
     when(budgetService.list(accountId)).thenReturn(Arrays.asList(budget));
+    mockResultSet();
+  }
+
+  @Test
+  @Owner(developers = SHUBHANSHU)
+  @Category(UnitTests.class)
+  public void testGetBillingTrendWhenDbIsInvalid() {
+    when(timeScaleDBService.isValid()).thenReturn(false);
+    assertThatThrownBy(()
+                           -> budgetNotificationsDataFetcher.fetch(accountId, null, Collections.emptyList(),
+                               Collections.emptyList(), Collections.emptyList()))
+        .isInstanceOf(InvalidRequestException.class);
   }
 
   @Test
   @Owner(developers = SHUBHANSHU)
   @Category(UnitTests.class)
   public void testFetch() {
-    QLBudgetNotificationsData data = budgetNotificationsDataFetcher.fetch(queryParameters, accountId);
+    List<QLBillingDataFilter> timeFilters = new ArrayList<>();
+    long currentTime = System.currentTimeMillis();
+    timeFilters.add(makeStartTimeFilter(currentTime - 86400000L));
+    timeFilters.add(makeEndTimeFilter(currentTime));
+    QLBudgetNotificationsData data = (QLBudgetNotificationsData) budgetNotificationsDataFetcher.fetch(
+        accountId, null, timeFilters, Collections.emptyList(), Collections.emptyList());
     assertThat(data).isNotNull();
-    assertThat(data.getData().getCount()).isEqualTo(1);
+    assertThat(data.getData().getCount()).isEqualTo(100L);
+  }
+
+  public QLBillingDataFilter makeStartTimeFilter(Long filterTime) {
+    QLTimeFilter timeFilter = QLTimeFilter.builder().operator(QLTimeOperator.AFTER).value(filterTime).build();
+    return QLBillingDataFilter.builder().startTime(timeFilter).build();
+  }
+
+  public QLBillingDataFilter makeEndTimeFilter(Long filterTime) {
+    QLTimeFilter timeFilter = QLTimeFilter.builder().operator(QLTimeOperator.BEFORE).value(filterTime).build();
+    return QLBillingDataFilter.builder().endTime(timeFilter).build();
+  }
+
+  private void mockResultSet() throws SQLException {
+    Connection connection = mock(Connection.class);
+    statement = mock(Statement.class);
+    resultSet = mock(ResultSet.class);
+    when(timeScaleDBService.getDBConnection()).thenReturn(connection);
+    when(timeScaleDBService.isValid()).thenReturn(true);
+    when(connection.createStatement()).thenReturn(statement);
+    when(statement.executeQuery(anyString())).thenReturn(resultSet);
+
+    when(resultSet.getLong("COUNT")).thenAnswer((Answer<Long>) invocation -> 100L);
+    returnResultSet(1);
+  }
+
+  private void returnResultSet(int limit) throws SQLException {
+    when(resultSet.next()).then((Answer<Boolean>) invocation -> {
+      if (count[0] < limit) {
+        count[0]++;
+        return true;
+      }
+      return false;
+    });
   }
 }

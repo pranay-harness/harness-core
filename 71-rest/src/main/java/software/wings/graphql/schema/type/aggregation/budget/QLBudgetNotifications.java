@@ -12,5 +12,5 @@ import software.wings.security.annotations.Scope;
 @Scope(PermissionAttribute.ResourceType.BUDGET)
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class QLBudgetNotifications {
-  int count;
+  long count;
 }
