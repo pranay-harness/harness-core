@@ -1,10 +1,10 @@
-resource "google_logging_metric" "ce_failed_batch_job" {
-  name        = join("_", [local.name_prefix, "ce_failed_batch_jobs"])
-  description = "Number of failed batch jobs. Owner: CE"
+resource "google_logging_metric" "ce_delayed_batch_job" {
+  name        = join("_", [local.name_prefix, "ce_delayed_batch_jobs"])
+  description = "Number of delayed batch jobs. Owner: CE"
   filter = join("\n", [
     local.filter_prefix,
     "jsonPayload.logger=\"io.harness.batch.processing.schedule.BatchJobRunner\"",
-    "jsonPayload.message:\"Error while running batch job\""
+    "jsonPayload.message:\"Batch job is delayed for account\""
   ])
   metric_descriptor {
     metric_kind = "DELTA"
@@ -26,18 +26,18 @@ resource "google_logging_metric" "ce_failed_batch_job" {
   }
 }
 
-resource "google_monitoring_alert_policy" "ce_failed_batch_job_alert_policy" {
+resource "google_monitoring_alert_policy" "ce_delayed_batch_job_alert_policy" {
   notification_channels = ((var.deployment == "prod" || var.deployment == "freemium" || var.deployment == "prod_failover") ? ["${local.slack_prod_channel}"] :
     ((var.deployment == "qa" || var.deployment == "qa_free") ? ["${local.slack_qa_channel}"] :
   ["${local.slack_dev_channel}"]))
 
-  display_name = join("_", [local.name_prefix, "ce_failed_batch_jobs"])
+  display_name = join("_", [local.name_prefix, "ce_delayed_batch_jobs"])
   combiner     = "OR"
   conditions {
-    display_name = "ce_failed_batch_jobs_per_account"
+    display_name = "ce_delayed_batch_jobs_per_account"
     condition_threshold {
       threshold_value = 0
-      filter          = "resource.type=\"k8s_container\" AND metric.type=\"logging.googleapis.com/user/${google_logging_metric.ce_failed_batch_job.id}\""
+      filter          = "resource.type=\"k8s_container\" AND metric.type=\"logging.googleapis.com/user/${google_logging_metric.ce_delayed_batch_job.id}\""
       duration        = "180s"
       comparison      = "COMPARISON_GT"
       aggregations {
@@ -49,10 +49,10 @@ resource "google_monitoring_alert_policy" "ce_failed_batch_job_alert_policy" {
     }
   }
   conditions {
-    display_name = "ce_failed_batch_jobs_per_type"
+    display_name = "ce_delayed_batch_jobs_per_type"
     condition_threshold {
       threshold_value = 0
-      filter          = "resource.type=\"k8s_container\" AND metric.type=\"logging.googleapis.com/user/${google_logging_metric.ce_failed_batch_job.id}\""
+      filter          = "resource.type=\"k8s_container\" AND metric.type=\"logging.googleapis.com/user/${google_logging_metric.ce_delayed_batch_job.id}\""
       duration        = "180s"
       comparison      = "COMPARISON_GT"
       aggregations {
