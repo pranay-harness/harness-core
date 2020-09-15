@@ -247,7 +247,6 @@ public class DeleteAccountHelperTest extends WingsBaseTest {
     wingsPersistence.save(usageBucket1);
     wingsPersistence.save(featureFlag);
 
-    FeatureFlag updatedFeatureFlag = featureFlagService.getFeatureFlag(featureName).get();
     assertThat(wingsPersistence.get(Account.class, ACCOUNT_ID)).isNotNull();
     assertThat(wingsPersistence.get(ServiceTemplate.class, serviceTemplate.getUuid())).isNotNull();
     assertThat(wingsPersistence.get(Application.class, application.getUuid())).isNotNull();
@@ -256,6 +255,10 @@ public class DeleteAccountHelperTest extends WingsBaseTest {
     assertThat(wingsPersistence.get(Application.class, application.getUuid())).isNull();
     assertThat(wingsPersistence.get(Account.class, ACCOUNT_ID)).isNotNull();
     assertThat(wingsPersistence.get(UsageBucket.class, USAGE_BUCKET_KEY_1)).isNull();
+
+    // It is not a proper use to take the FeatureFlag and keep it. It should be always obtained from the service
+    // right before it is used.
+    FeatureFlag updatedFeatureFlag = featureFlagService.getFeatureFlag(featureName).get();
     assertThat(updatedFeatureFlag.getAccountIds()).containsExactly("abc", "def", "ghi");
   }
 
