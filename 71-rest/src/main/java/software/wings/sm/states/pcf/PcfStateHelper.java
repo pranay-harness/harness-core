@@ -76,7 +76,6 @@ import software.wings.beans.Activity.ActivityBuilder;
 import software.wings.beans.Activity.Type;
 import software.wings.beans.Application;
 import software.wings.beans.Environment;
-import software.wings.beans.FeatureName;
 import software.wings.beans.GitFetchFilesTaskParams;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.Log;
@@ -450,29 +449,22 @@ public class PcfStateHelper {
 
     Service service = serviceResourceService.get(serviceElement.getUuid());
     notNullCheck("Service does not exists", service);
-    boolean pcfManifestRedesign = featureFlagService.isEnabled(FeatureName.INFRA_MAPPING_REFACTOR, app.getAccountId());
 
-    if (pcfManifestRedesign) {
-      PcfSetupStateExecutionData pcfSetupStateExecutionData =
-          (PcfSetupStateExecutionData) context.getStateExecutionData();
+    PcfSetupStateExecutionData pcfSetupStateExecutionData =
+        (PcfSetupStateExecutionData) context.getStateExecutionData();
 
-      GitFetchFilesFromMultipleRepoResult filesFromMultipleRepoResult = null;
-      // Null means locally hosted files
-      if (pcfSetupStateExecutionData != null) {
-        filesFromMultipleRepoResult = pcfSetupStateExecutionData.getFetchFilesResult();
-        appManifestMap = pcfSetupStateExecutionData.getAppManifestMap();
-      }
-
-      pcfManifestsPackage = getFinalManifestFilesMap(appManifestMap, filesFromMultipleRepoResult);
-      String manifestYml = pcfManifestsPackage.getManifestYml();
-      notNullCheck("Application Manifest Can not be null/blank", manifestYml);
-      evaluateExpressionsInManifestTypes(context, pcfManifestsPackage);
-      return pcfManifestsPackage;
+    GitFetchFilesFromMultipleRepoResult filesFromMultipleRepoResult = null;
+    // Null means locally hosted files
+    if (pcfSetupStateExecutionData != null) {
+      filesFromMultipleRepoResult = pcfSetupStateExecutionData.getFetchFilesResult();
+      appManifestMap = pcfSetupStateExecutionData.getAppManifestMap();
     }
 
-    String applicationManifestYmlContent = fetchManifestYmlString(context, serviceElement);
-    notNullCheck("Application Manifest Can not be Null Or Blank", applicationManifestYmlContent);
-    return PcfManifestsPackage.builder().manifestYml(applicationManifestYmlContent).build();
+    pcfManifestsPackage = getFinalManifestFilesMap(appManifestMap, filesFromMultipleRepoResult);
+    String manifestYml = pcfManifestsPackage.getManifestYml();
+    notNullCheck("Application Manifest Can not be null/blank", manifestYml);
+    evaluateExpressionsInManifestTypes(context, pcfManifestsPackage);
+    return pcfManifestsPackage;
   }
 
   @VisibleForTesting

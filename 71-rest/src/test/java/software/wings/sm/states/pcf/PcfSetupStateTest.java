@@ -21,7 +21,6 @@ import static org.mockito.Matchers.anyList;
 import static org.mockito.Matchers.anyMap;
 import static org.mockito.Matchers.anyObject;
 import static org.mockito.Matchers.anyString;
-import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.times;
@@ -121,7 +120,6 @@ import software.wings.common.InfrastructureConstants;
 import software.wings.common.VariableProcessor;
 import software.wings.expression.ManagerExpressionEvaluator;
 import software.wings.helpers.ext.k8s.request.K8sValuesLocation;
-import software.wings.helpers.ext.pcf.request.PcfCommandRequest;
 import software.wings.helpers.ext.pcf.request.PcfCommandRequest.PcfCommandType;
 import software.wings.helpers.ext.pcf.request.PcfCommandSetupRequest;
 import software.wings.helpers.ext.pcf.response.PcfSetupCommandResponse;
@@ -356,10 +354,16 @@ public class PcfSetupStateTest extends WingsBaseTest {
   @Owner(developers = ADWAIT)
   @Category(UnitTests.class)
   public void testExecute() {
-    doReturn(MANIFEST_YAML_CONTENT).when(pcfStateHelper).fetchManifestYmlString(any(), any());
     on(context).set("serviceTemplateService", serviceTemplateService);
     pcfSetupState.setUseCurrentRunningCount(false);
     pcfSetupState.setMaxInstances(2);
+
+    ArgumentCaptor<DelegateTask> captor = ArgumentCaptor.forClass(DelegateTask.class);
+    // With workflowV2 flag = true
+    doReturn(PcfManifestsPackage.builder().manifestYml(MANIFEST_YAML_CONTENT).build())
+        .when(pcfStateHelper)
+        .generateManifestMap(any(), anyMap(), any(), any());
+
     ExecutionResponse executionResponse = pcfSetupState.execute(context);
     assertThat(executionResponse.getExecutionStatus()).isEqualTo(ExecutionStatus.SUCCESS);
 
@@ -367,42 +371,6 @@ public class PcfSetupStateTest extends WingsBaseTest {
         (PcfSetupStateExecutionData) executionResponse.getStateExecutionData();
     assertThat(stateExecutionData.getCommandName()).isEqualTo("PCF Setup");
     PcfCommandSetupRequest pcfCommandSetupRequest = (PcfCommandSetupRequest) stateExecutionData.getPcfCommandRequest();
-    assertThat(pcfCommandSetupRequest.getReleaseNamePrefix()).isEqualTo("APP_NAME__SERVICE_NAME__ENV_NAME");
-    assertThat(pcfCommandSetupRequest.getPcfCommandType()).isEqualTo(PcfCommandType.SETUP);
-    assertThat(pcfCommandSetupRequest.getPcfConfig().getEndpointUrl()).isEqualTo(URL);
-    assertThat(pcfCommandSetupRequest.getPcfConfig().getUsername()).isEqualTo(USER_NAME_DECRYPTED);
-    assertThat(pcfCommandSetupRequest.getOrganization()).isEqualTo(ORG);
-    assertThat(pcfCommandSetupRequest.getSpace()).isEqualTo(SPACE);
-    assertThat(pcfCommandSetupRequest.getMaxCount()).isEqualTo(2);
-
-    ArgumentCaptor<DelegateTask> captor = ArgumentCaptor.forClass(DelegateTask.class);
-    verify(delegateService).queueTask(captor.capture());
-    DelegateTask delegateTask = captor.getValue();
-
-    PcfCommandRequest pcfCommandRequest = (PcfCommandRequest) delegateTask.getData().getParameters()[0];
-    assertThat(pcfCommandRequest).isNotNull();
-    assertThat(pcfCommandRequest).isInstanceOf(PcfCommandSetupRequest.class);
-    pcfCommandSetupRequest = (PcfCommandSetupRequest) stateExecutionData.getPcfCommandRequest();
-    assertThat(pcfCommandSetupRequest.getReleaseNamePrefix()).isEqualTo("APP_NAME__SERVICE_NAME__ENV_NAME");
-    assertThat(pcfCommandSetupRequest.getPcfCommandType()).isEqualTo(PcfCommandType.SETUP);
-    assertThat(pcfCommandSetupRequest.getPcfConfig().getEndpointUrl()).isEqualTo(URL);
-    assertThat(pcfCommandSetupRequest.getPcfConfig().getUsername()).isEqualTo(USER_NAME_DECRYPTED);
-    assertThat(pcfCommandSetupRequest.getOrganization()).isEqualTo(ORG);
-    assertThat(pcfCommandSetupRequest.getSpace()).isEqualTo(SPACE);
-    assertThat(pcfCommandSetupRequest.getMaxCount()).isEqualTo(2);
-
-    // With workflowV2 flag = true
-    doReturn(true).when(featureFlagService).isEnabled(eq(FeatureName.INFRA_MAPPING_REFACTOR), anyString());
-    doReturn(PcfManifestsPackage.builder().manifestYml(MANIFEST_YAML_CONTENT).build())
-        .when(pcfStateHelper)
-        .generateManifestMap(any(), anyMap(), any(), any());
-
-    executionResponse = pcfSetupState.execute(context);
-    assertThat(executionResponse.getExecutionStatus()).isEqualTo(ExecutionStatus.SUCCESS);
-
-    stateExecutionData = (PcfSetupStateExecutionData) executionResponse.getStateExecutionData();
-    assertThat(stateExecutionData.getCommandName()).isEqualTo("PCF Setup");
-    pcfCommandSetupRequest = (PcfCommandSetupRequest) stateExecutionData.getPcfCommandRequest();
     assertThat(pcfCommandSetupRequest.getReleaseNamePrefix()).isEqualTo("appName");
     assertThat(pcfCommandSetupRequest.getPcfCommandType()).isEqualTo(PcfCommandType.SETUP);
     assertThat(pcfCommandSetupRequest.getPcfConfig().getEndpointUrl()).isEqualTo(URL);
@@ -577,13 +545,12 @@ public class PcfSetupStateTest extends WingsBaseTest {
     PcfManifestsPackage pcfManifestsPackage = PcfManifestsPackage.builder().manifestYml(MANIFEST_YAML_LEGACY).build();
     String appName = "applicationName";
     pcfSetupState.setPcfAppName(appName);
-    String appPrefix =
-        pcfSetupState.generateAppNamePrefix(context, app, serviceElement, env, false, pcfManifestsPackage);
+    String appPrefix = pcfSetupState.generateAppNamePrefix(context, app, serviceElement, env, pcfManifestsPackage);
     assertThat(appPrefix).isNotNull();
     assertThat(appPrefix).isEqualTo(appName);
 
     pcfSetupState.setPcfAppName(null);
-    appPrefix = pcfSetupState.generateAppNamePrefix(context, app, serviceElement, env, false, pcfManifestsPackage);
+    appPrefix = pcfSetupState.generateAppNamePrefix(context, app, serviceElement, env, pcfManifestsPackage);
     assertThat(appPrefix).isNotNull();
     assertThat(appPrefix).isEqualTo(APP_NAME + "__" + SERVICE_NAME + "__" + ENV_NAME);
 
@@ -591,7 +558,7 @@ public class PcfSetupStateTest extends WingsBaseTest {
     appName = "appName";
     doReturn(appName).when(pcfStateHelper).fetchPcfApplicationName(any(), anyString());
     pcfManifestsPackage.setManifestYml(MANIFEST_YAML_CONTENT);
-    appPrefix = pcfSetupState.generateAppNamePrefix(context, app, serviceElement, env, true, pcfManifestsPackage);
+    appPrefix = pcfSetupState.generateAppNamePrefix(context, app, serviceElement, env, pcfManifestsPackage);
     assertThat(appPrefix).isNotNull();
     assertThat(appPrefix).isEqualTo("appName");
   }
@@ -601,43 +568,66 @@ public class PcfSetupStateTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void testShouldUseOriginalRoute() {
     PcfSetupState state = new PcfSetupState("");
-    assertThat(state.shouldUseOriginalRoute(false)).isTrue();
+    assertThat(state.shouldUseOriginalRoute()).isTrue();
 
     state.setRoute(INFRA_ROUTE);
-    assertThat(state.shouldUseOriginalRoute(false)).isTrue();
+    assertThat(state.shouldUseOriginalRoute()).isTrue();
 
     state.setRoute(PCF_INFRA_ROUTE);
-    assertThat(state.shouldUseOriginalRoute(false)).isTrue();
+    assertThat(state.shouldUseOriginalRoute()).isTrue();
 
     state.setRoute(INFRA_ROUTE);
     state.setBlueGreen(true);
-    assertThat(state.shouldUseOriginalRoute(false)).isFalse();
+    assertThat(state.shouldUseOriginalRoute()).isFalse();
 
     state.setRoute(PCF_INFRA_ROUTE);
     state.setBlueGreen(true);
-    assertThat(state.shouldUseOriginalRoute(false)).isFalse();
+    assertThat(state.shouldUseOriginalRoute()).isFalse();
 
     state.setRoute(WorkflowServiceHelper.INFRA_TEMP_ROUTE_PCF);
     state.setBlueGreen(false);
-    assertThat(state.shouldUseOriginalRoute(false)).isFalse();
+    assertThat(state.shouldUseOriginalRoute()).isFalse();
 
     state.setRoute(WorkflowServiceHelper.INFRA_TEMP_ROUTE_PCF);
     state.setBlueGreen(true);
-    assertThat(state.shouldUseOriginalRoute(false)).isFalse();
+    assertThat(state.shouldUseOriginalRoute()).isFalse();
   }
 
   @Test
   @Owner(developers = ADWAIT)
   @Category(UnitTests.class)
   public void testFetchMaxCount() {
-    pcfSetupState.setMaxInstances(0);
-    assertThat(pcfSetupState.fetchMaxCount(false, null)).isEqualTo(0);
+    String manifestYamlContent;
+    manifestYamlContent = "applications:\n"
+        + "- name: \"AppName\"\n"
+        + "  memory: 1\n"
+        + "  INSTANCES : 0\n"
+        + "  path: /vars/foo\n"
+        + "  ROUTES:\n"
+        + "  - route: /hello/my-route";
+    assertThat(pcfSetupState.fetchMaxCount(PcfManifestsPackage.builder().manifestYml(manifestYamlContent).build()))
+        .isEqualTo(0);
 
-    pcfSetupState.setMaxInstances(3);
-    assertThat(pcfSetupState.fetchMaxCount(false, null)).isEqualTo(3);
+    manifestYamlContent = "applications:\n"
+        + "- name: \"AppName\"\n"
+        + "  memory: 1\n"
+        + "  INSTANCES : 5\n"
+        + "  path: /vars/foo\n"
+        + "  ROUTES:\n"
+        + "  - route: /hello/my-route";
+    assertThat(pcfSetupState.fetchMaxCount(PcfManifestsPackage.builder().manifestYml(manifestYamlContent).build()))
+        .isEqualTo(5);
 
+    manifestYamlContent = "applications:\n"
+        + "- name: \"AppName\"\n"
+        + "  memory: 1\n"
+        + "  INSTANCES : 2\n"
+        + "  path: /vars/foo\n"
+        + "  ROUTES:\n"
+        + "  - route: /hello/my-route";
     doReturn(2).when(pcfStateHelper).fetchMaxCountFromManifest(any(), any());
-    assertThat(pcfSetupState.fetchMaxCount(true, null)).isEqualTo(2);
+    assertThat(pcfSetupState.fetchMaxCount(PcfManifestsPackage.builder().manifestYml(manifestYamlContent).build()))
+        .isEqualTo(2);
   }
 
   @Test
