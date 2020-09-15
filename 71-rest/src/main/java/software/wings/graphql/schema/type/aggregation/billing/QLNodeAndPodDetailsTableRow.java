@@ -18,6 +18,7 @@ public class QLNodeAndPodDetailsTableRow {
   String workload;
   String clusterName;
   String node;
+  String nodePoolName;
   double totalCost;
   double idleCost;
   double systemCost;

@@ -417,6 +417,7 @@ type NodeAndPodDataPoint {
   workload: String
   clusterName: String
   node: String
+  nodePoolName: String
   totalCost: Number
   idleCost: Number
   systemCost: Number

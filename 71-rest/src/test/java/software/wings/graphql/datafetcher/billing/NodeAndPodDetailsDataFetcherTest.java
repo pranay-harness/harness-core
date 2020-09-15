@@ -85,6 +85,7 @@ public class NodeAndPodDetailsDataFetcherTest extends AbstractDataFetcherTest {
   private static final String NAMESPACE = "namespace";
   private static final String WORKLOAD = "workload_name";
   private static final String PARENT_RESOURCE_ID = "parent_resource_id";
+  private static final String NODE_POOL_NAME = "node_pool_name";
   private static final Integer LIMIT = 10;
   private static final Integer OFFSET = 0;
 
@@ -164,6 +165,7 @@ public class NodeAndPodDetailsDataFetcherTest extends AbstractDataFetcherTest {
     assertThat(data.getData().get(0).getInstanceCategory()).isEqualTo("SPOT");
     assertThat(data.getData().get(0).getCpuAllocatable()).isEqualTo(CPU_UNITS / 1024);
     assertThat(data.getData().get(0).getCreateTime()).isEqualTo(USAGE_START_TIME.toEpochMilli());
+    assertThat(data.getData().get(0).getNodePoolName()).isEqualTo("pool-ui-pr-non-preemptible");
   }
 
   @Test
@@ -196,6 +198,7 @@ public class NodeAndPodDetailsDataFetcherTest extends AbstractDataFetcherTest {
     assertThat(data.getData().get(0).getMemoryRequested()).isEqualTo(MEMORY_MB / 1024);
     assertThat(data.getData().get(0).getCpuRequested()).isEqualTo(CPU_UNITS / 1024);
     assertThat(data.getData().get(0).getCreateTime()).isEqualTo(USAGE_START_TIME.toEpochMilli());
+    assertThat(data.getData().get(0).getNodePoolName()).isEqualTo("pool-ui-pr-non-preemptible");
   }
 
   private void mockResultSet() throws SQLException {
@@ -233,6 +236,7 @@ public class NodeAndPodDetailsDataFetcherTest extends AbstractDataFetcherTest {
     metaData.put(NAMESPACE, "namespace");
     metaData.put(WORKLOAD, "workload");
     metaData.put(PARENT_RESOURCE_ID, parentInstanceId);
+    metaData.put(NODE_POOL_NAME, "pool-ui-pr-non-preemptible");
 
     return InstanceData.builder()
         .uuid(UUID)
