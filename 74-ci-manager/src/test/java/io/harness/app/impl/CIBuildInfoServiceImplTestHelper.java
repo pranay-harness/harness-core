@@ -1,8 +1,12 @@
 package io.harness.app.impl;
 
+import io.harness.app.beans.dto.CIBuildFilterDTO;
 import io.harness.app.beans.dto.CIBuildResponseDTO;
 import io.harness.app.beans.entities.CIBuildPipeline;
+import io.harness.beans.CIPipeline;
 import io.harness.ci.beans.entities.CIBuild;
+
+import java.util.Arrays;
 
 public class CIBuildInfoServiceImplTestHelper {
   public static final String ACCOUNT_ID = "ACCOUNT_ID";
@@ -10,6 +14,10 @@ public class CIBuildInfoServiceImplTestHelper {
   public static final String PROJECT_ID = "PROJECT_ID";
   public static final Long BUILD_ID = 4L;
   public static final String PIPELINE_ID = "123";
+  public static final String PIPELINE_NAME = "test";
+  public static final String USER_ID = "foo";
+  public static final String BRANCH = "master";
+  public static final String TAG = "foo";
 
   public static CIBuild getBasicBuild() {
     return CIBuild.builder()
@@ -25,6 +33,21 @@ public class CIBuildInfoServiceImplTestHelper {
     return CIBuildResponseDTO.builder()
         .id(BUILD_ID)
         .pipeline(CIBuildPipeline.builder().id(PIPELINE_ID).build())
+        .build();
+  }
+
+  public static CIPipeline getPipeline() {
+    return CIPipeline.builder().identifier(PIPELINE_ID).name(PIPELINE_NAME).build();
+  }
+
+  public static CIBuildFilterDTO getBuildFilter() {
+    return CIBuildFilterDTO.builder()
+        .accountIdentifier(ACCOUNT_ID)
+        .orgIdentifier(ORG_ID)
+        .projectIdentifier(PROJECT_ID)
+        .userIdentifier(USER_ID)
+        .branch(BRANCH)
+        .tags(Arrays.asList(TAG))
         .build();
   }
 }

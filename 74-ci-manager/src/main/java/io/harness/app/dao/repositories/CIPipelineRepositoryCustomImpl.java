@@ -25,4 +25,10 @@ public class CIPipelineRepositoryCustomImpl implements CIPipelineRepositoryCusto
     return PageableExecutionUtils.getPage(
         projects, pageable, () -> mongoTemplate.count(Query.of(query).limit(-1).skip(-1), CIPipeline.class));
   }
+
+  @Override
+  public List<CIPipeline> findAllWithCriteria(Criteria criteria) {
+    Query query = new Query(criteria);
+    return mongoTemplate.find(query, CIPipeline.class);
+  }
 }

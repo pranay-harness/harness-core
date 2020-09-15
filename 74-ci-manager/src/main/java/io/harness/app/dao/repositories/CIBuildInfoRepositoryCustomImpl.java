@@ -44,14 +44,7 @@ public class CIBuildInfoRepositoryCustomImpl implements CIBuildInfoRepositoryCus
   }
 
   @Override
-  public Page<CIBuild> getBuilds(
-      String accountIdentifier, String orgIdentifier, String projectIdentifier, Criteria criteria, Pageable pageable) {
-    criteria = criteria.and(CIBuild.Build.accountIdentifier)
-                   .is(accountIdentifier)
-                   .and(CIBuild.Build.orgIdentifier)
-                   .is(orgIdentifier)
-                   .and(CIBuild.Build.projectIdentifier)
-                   .is(projectIdentifier);
+  public Page<CIBuild> getBuilds(Criteria criteria, Pageable pageable) {
     return findAll(criteria, pageable);
   }
 }

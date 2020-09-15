@@ -1,6 +1,7 @@
 package io.harness.app.impl;
 
 import static io.harness.rule.OwnerRule.ALEKSANDAR;
+import static io.harness.rule.OwnerRule.SHUBHAM;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.verify;
@@ -8,6 +9,7 @@ import static org.mockito.Mockito.when;
 
 import com.google.inject.Inject;
 
+import io.harness.app.beans.dto.CIPipelineFilterDTO;
 import io.harness.app.dao.repositories.CIPipelineRepository;
 import io.harness.app.yaml.YAML;
 import io.harness.beans.CIPipeline;
@@ -23,6 +25,8 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 
+import java.util.Arrays;
+import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Scanner;
@@ -33,6 +37,7 @@ public class CIPipelineServiceImplTest extends CIManagerTest {
   private final String ACCOUNT_ID = "ACCOUNT_ID";
   private final String ORG_ID = "ORG_ID";
   private final String PROJECT_ID = "PROJECT_ID";
+  private final String TAG = "foo";
   private YAML yaml;
   private CIPipeline pipeline;
 
@@ -46,6 +51,15 @@ public class CIPipelineServiceImplTest extends CIManagerTest {
     yaml = YAML.builder().pipelineYAML(yamlString).build();
     pipeline =
         CIPipeline.builder().identifier("testIdentifier").description("testDescription").uuid("testUUID").build();
+  }
+
+  private CIPipelineFilterDTO getPipelineFilter() {
+    return CIPipelineFilterDTO.builder()
+        .accountIdentifier(ACCOUNT_ID)
+        .orgIdentifier(ORG_ID)
+        .projectIdentifier(PROJECT_ID)
+        .tags(Arrays.asList(TAG))
+        .build();
   }
 
   @Test
@@ -100,13 +114,28 @@ public class CIPipelineServiceImplTest extends CIManagerTest {
   @Owner(developers = ALEKSANDAR)
   @Category(UnitTests.class)
   public void readPipeline() {
-    ArgumentCaptor<CIPipeline> pipelineCaptor = ArgumentCaptor.forClass(CIPipeline.class);
     when(ciPipelineRepository.findByAccountIdAndOrganizationIdAndProjectIdAndIdentifier(
              ACCOUNT_ID, ORG_ID, PROJECT_ID, "testId"))
         .thenReturn(Optional.ofNullable(pipeline));
 
     CIPipeline ciPipeline = ciPipelineService.readPipeline("testId", ACCOUNT_ID, ORG_ID, PROJECT_ID);
 
+    assertThat(ciPipeline.getIdentifier()).isEqualTo("testIdentifier");
+    assertThat(ciPipeline.getDescription()).isEqualTo("testDescription");
+    assertThat(ciPipeline.getUuid()).isEqualTo("testUUID");
+  }
+
+  @Test
+  @Owner(developers = SHUBHAM)
+  @Category(UnitTests.class)
+  public void getPipelines() {
+    CIPipelineFilterDTO ciPipelineFilterDTO = getPipelineFilter();
+    when(ciPipelineRepository.findAllWithCriteria(any())).thenReturn(Arrays.asList(pipeline));
+
+    List<CIPipeline> ciPipelineList = ciPipelineService.getPipelines(ciPipelineFilterDTO);
+    assertThat(ciPipelineList).isNotEmpty();
+
+    CIPipeline ciPipeline = ciPipelineList.get(0);
     assertThat(ciPipeline.getIdentifier()).isEqualTo("testIdentifier");
     assertThat(ciPipeline.getDescription()).isEqualTo("testDescription");
     assertThat(ciPipeline.getUuid()).isEqualTo("testUUID");
