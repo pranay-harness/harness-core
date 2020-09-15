@@ -104,7 +104,11 @@ public class ConnectorServiceImpl implements ConnectorService {
   @Override
   public ConnectorValidationResult testConnection(
       String accountIdentifier, String orgIdentifier, String projectIdentifier, String connectorIdentifier) {
-    return defaultConnectorService.testConnection(
-        accountIdentifier, orgIdentifier, projectIdentifier, connectorIdentifier);
+    Optional<ConnectorDTO> connectorDTO = get(accountIdentifier, orgIdentifier, projectIdentifier, connectorIdentifier);
+    if (connectorDTO.isPresent()) {
+      return getConnectorService(connectorDTO.get().getConnectorType())
+          .testConnection(accountIdentifier, orgIdentifier, projectIdentifier, connectorIdentifier);
+    }
+    throw new InvalidRequestException("No such connector found", USER);
   }
 }

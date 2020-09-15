@@ -139,7 +139,7 @@ public class GcpSecretsManagerServiceImpl extends AbstractSecretServiceImpl impl
 
   private String saveOrUpdateInternal(GcpKmsConfig gcpKmsConfig, GcpKmsConfig oldKmsConfig, boolean validate) {
     if (validate) {
-      validateSecretsManagerConfig(gcpKmsConfig);
+      validateSecretsManagerConfig(gcpKmsConfig.getAccountId(), gcpKmsConfig);
     }
     EncryptedData credentialEncryptedData = getEncryptedDataForSecretField(gcpKmsConfig, gcpKmsConfig.getCredentials());
     gcpKmsConfig.setCredentials(null);
@@ -294,10 +294,10 @@ public class GcpSecretsManagerServiceImpl extends AbstractSecretServiceImpl impl
   }
 
   @Override
-  public void validateSecretsManagerConfig(GcpKmsConfig gcpKmsConfig) {
+  public void validateSecretsManagerConfig(String accountId, GcpKmsConfig gcpKmsConfig) {
     String randomString = UUIDGenerator.generateUuid();
     try {
-      gcpKmsService.encrypt(randomString, gcpKmsConfig.getAccountId(), gcpKmsConfig, null);
+      gcpKmsService.encrypt(randomString, accountId, gcpKmsConfig, null);
     } catch (Exception e) {
       String message = "Was not able to encrypt using given credentials. Please check your credentials and try again";
       throw new SecretManagementException(GCP_KMS_OPERATION_ERROR, message, e, USER);

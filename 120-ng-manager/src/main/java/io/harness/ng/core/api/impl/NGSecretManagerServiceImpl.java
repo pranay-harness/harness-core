@@ -51,6 +51,12 @@ public class NGSecretManagerServiceImpl implements NGSecretManagerService {
   }
 
   @Override
+  public boolean validate(String accountIdentifier, String orgIdentifier, String projectIdentifier, String identifier) {
+    return getResponse(
+        secretManagerClient.validateSecretManager(identifier, accountIdentifier, orgIdentifier, projectIdentifier));
+  }
+
+  @Override
   public boolean deleteSecretManager(
       String accountIdentifier, String orgIdentifier, String projectIdentifier, String identifier) {
     return getResponse(

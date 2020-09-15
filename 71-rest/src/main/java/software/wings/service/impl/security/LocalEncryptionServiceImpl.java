@@ -4,6 +4,8 @@ import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.data.encoding.EncodingUtils.encodeBase64ToByteArray;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.delegate.service.DelegateAgentFileService.FileBucket.CONFIGS;
+import static io.harness.eraro.ErrorCode.SECRET_MANAGEMENT_ERROR;
+import static io.harness.exception.WingsException.USER;
 import static io.harness.security.SimpleEncryption.CHARSET;
 import static io.harness.security.encryption.EncryptionType.LOCAL;
 
@@ -114,5 +116,16 @@ public class LocalEncryptionServiceImpl implements LocalEncryptionService {
   public String saveLocalEncryptionConfig(String accountId, LocalEncryptionConfig localEncryptionConfig) {
     localEncryptionConfig.setAccountId(accountId);
     return secretManagerConfigService.save(localEncryptionConfig);
+  }
+
+  @Override
+  public void validateLocalEncryptionConfig(String accountId, LocalEncryptionConfig localEncryptionConfig) {
+    String randomString = generateUuid();
+    try {
+      encrypt(randomString.toCharArray(), accountId, localEncryptionConfig);
+    } catch (Exception e) {
+      String message = "Contact Harness Support, not able to encrypt using the local secret manager.";
+      throw new SecretManagementException(SECRET_MANAGEMENT_ERROR, message, e, USER);
+    }
   }
 }

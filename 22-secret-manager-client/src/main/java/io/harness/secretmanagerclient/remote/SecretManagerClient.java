@@ -96,6 +96,12 @@ public interface SecretManagerClient {
   @KryoRequest
   Call<RestResponse<SecretManagerConfigDTO>> createSecretManager(@Body SecretManagerConfigDTO secretManagerConfig);
 
+  // validate secret manager
+  @GET(SECRET_MANAGERS_API + "/{identifier}/validate")
+  Call<RestResponse<Boolean>> validateSecretManager(@Path(value = "identifier") String identifier,
+      @Query(value = ACCOUNT_KEY) String accountIdentifier, @Query(ORG_KEY) String orgIdentifier,
+      @Query(PROJECT_KEY) String projectIdentifier);
+
   // update secret manager
   @PUT(SECRET_MANAGERS_API + "/{identifier}")
   @KryoRequest

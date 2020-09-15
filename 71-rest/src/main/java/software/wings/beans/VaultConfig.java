@@ -112,6 +112,7 @@ public class VaultConfig extends SecretManagerConfig implements ExecutionCapabil
                                           .isReadOnly(isReadOnly())
                                           .basePath(getBasePath())
                                           .secretEngineName(getSecretEngineName())
+                                          .secretEngineVersion(getSecretEngineVersion())
                                           .renewIntervalHours(getRenewIntervalHours())
                                           .vaultUrl(getVaultUrl())
                                           .build();
