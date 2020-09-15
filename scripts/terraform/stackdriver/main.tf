@@ -47,3 +47,9 @@ module "mongo-dashboards" {
   source = "./mongo"
   deployment = var.deployment
 }
+
+module "ce-graphql" {
+  source = "./ce-graphql"
+  deployment = var.deployment
+  projectId = var.projectId
+}
