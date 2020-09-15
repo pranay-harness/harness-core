@@ -17,6 +17,8 @@ import io.harness.delegate.task.artifacts.docker.DockerArtifactDelegateRequest;
 import io.harness.delegate.task.artifacts.docker.DockerArtifactDelegateResponse;
 import io.harness.delegate.task.artifacts.request.ArtifactTaskParameters;
 import io.harness.delegate.task.artifacts.response.ArtifactTaskResponse;
+import io.harness.delegate.task.gcp.request.GcpValidationRequest;
+import io.harness.delegate.task.gcp.response.GcpValidationTaskResponse;
 import io.harness.delegate.task.spotinst.request.SpotInstDeployTaskParameters;
 import io.harness.delegate.task.spotinst.request.SpotInstSetupTaskParameters;
 import io.harness.delegate.task.spotinst.request.SpotInstSwapRoutesTaskParameters;
@@ -55,5 +57,7 @@ public class DelegateTasksBeansMorphiaRegistrar implements MorphiaRegistrar {
     h.put("delegate.task.artifacts.response.ArtifactTaskResponse", ArtifactTaskResponse.class);
     h.put("delegate.task.artifacts.request.ArtifactTaskParameters", ArtifactTaskParameters.class);
     h.put("delegate.task.artifacts.docker.DockerArtifactDelegateRequest", DockerArtifactDelegateRequest.class);
+    h.put("delegate.task.gcp.request.GcpValidationRequest", GcpValidationRequest.class);
+    h.put("delegate.task.gcp.response.GcpValidationTaskResponse", GcpValidationTaskResponse.class);
   }
 }

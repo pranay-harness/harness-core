@@ -45,18 +45,23 @@ public class GcpConfig extends SettingValue implements EncryptableSetting, Cloud
 
   @JsonView(JsonViews.Internal.class) @SchemaIgnore private String encryptedServiceAccountKeyFileContent;
 
+  private boolean useDelegate;
+  private String delegateSelector;
+
   public GcpConfig() {
     super(GCP.name());
   }
 
   public GcpConfig(char[] serviceAccountKeyFileContent, String accountId, CCMConfig ccmConfig,
-      String encryptedServiceAccountKeyFileContent) {
+      String encryptedServiceAccountKeyFileContent, boolean useDelegate, String delegateSelector) {
     this();
     this.serviceAccountKeyFileContent =
         serviceAccountKeyFileContent == null ? null : serviceAccountKeyFileContent.clone();
     this.accountId = accountId;
     this.ccmConfig = ccmConfig;
     this.encryptedServiceAccountKeyFileContent = encryptedServiceAccountKeyFileContent;
+    this.delegateSelector = delegateSelector;
+    this.useDelegate = useDelegate;
   }
 
   @Override
@@ -74,12 +79,16 @@ public class GcpConfig extends SettingValue implements EncryptableSetting, Cloud
   @EqualsAndHashCode(callSuper = true)
   public static final class Yaml extends CloudProviderYaml {
     private String serviceAccountKeyFileContent;
+    private boolean useDelegate;
+    private String delegateSelector;
 
     @Builder
     public Yaml(String type, String harnessApiVersion, String serviceAccountKeyFileContent,
-        UsageRestrictions.Yaml usageRestrictions) {
+        UsageRestrictions.Yaml usageRestrictions, boolean useDelegate, String delegateSelector) {
       super(type, harnessApiVersion, usageRestrictions);
       this.serviceAccountKeyFileContent = serviceAccountKeyFileContent;
+      this.delegateSelector = delegateSelector;
+      this.useDelegate = useDelegate;
     }
   }
 }

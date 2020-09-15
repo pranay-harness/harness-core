@@ -47,14 +47,6 @@ public class GcpHelperService {
   @Inject private EncryptionService encryptionService;
 
   /**
-   * Validate credential.
-   *
-   */
-  public void validateCredential(GcpConfig gcpConfig, List<EncryptedDataDetail> encryptedDataDetails) {
-    getGkeContainerService(gcpConfig, encryptedDataDetails);
-  }
-
-  /**
    * Gets a GCP container service.
    *
    * @return the gke container service
@@ -156,15 +148,21 @@ public class GcpHelperService {
     if (isNotEmpty(encryptedDataDetails)) {
       encryptionService.decrypt(gcpConfig, encryptedDataDetails);
     }
-    if (isEmpty(gcpConfig.getServiceAccountKeyFileContent())) {
-      throw new InvalidRequestException("Empty service key found. Unable to validate", USER);
-    }
+
+    validateServiceAccountKey(gcpConfig);
+
     GoogleCredential credential = GoogleCredential.fromStream(
         IOUtils.toInputStream(String.valueOf(gcpConfig.getServiceAccountKeyFileContent()), Charset.defaultCharset()));
     if (credential.createScopedRequired()) {
       credential = credential.createScoped(Collections.singletonList(ContainerScopes.CLOUD_PLATFORM));
     }
     return credential;
+  }
+
+  private void validateServiceAccountKey(GcpConfig gcpConfig) {
+    if (isEmpty(gcpConfig.getServiceAccountKeyFileContent())) {
+      throw new InvalidRequestException("Empty service key found. Unable to validate", USER);
+    }
   }
 
   /**
