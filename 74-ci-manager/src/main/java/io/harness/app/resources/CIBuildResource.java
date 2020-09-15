@@ -1,5 +1,6 @@
 package io.harness.app.resources;
 
+import static io.harness.utils.PageUtils.getNGPageResponse;
 import static io.harness.utils.PageUtils.getPageRequest;
 
 import com.google.inject.Inject;
@@ -7,16 +8,16 @@ import com.google.inject.Inject;
 import com.codahale.metrics.annotation.ExceptionMetered;
 import com.codahale.metrics.annotation.Timed;
 import io.harness.app.RestQueryFilterParser;
+import io.harness.app.beans.dto.CIBuildFilterDTO;
 import io.harness.app.beans.dto.CIBuildResponseDTO;
 import io.harness.app.intfc.CIBuildInfoService;
-import io.harness.ci.beans.entities.CIBuild;
+import io.harness.beans.NGPageResponse;
 import io.harness.ng.core.dto.ResponseDTO;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
-import org.springframework.data.mongodb.core.query.Criteria;
 
 import java.util.List;
 import javax.validation.constraints.NotNull;
@@ -53,13 +54,21 @@ public class CIBuildResource {
   @Timed
   @ExceptionMetered
   @ApiOperation(value = "Get builds list", nickname = "getBuilds")
-  public ResponseDTO<Page<CIBuildResponseDTO>> getBuilds(@NotNull @QueryParam("accountIdentifier") String accountId,
-      @QueryParam("orgIdentifier") String orgId, @NotNull @QueryParam("projectIdentifier") String projectId,
-      @QueryParam("filter") String filterQuery, @QueryParam("page") @DefaultValue("0") int page,
-      @QueryParam("size") @DefaultValue("10") int size, @QueryParam("sort") List<String> sort) {
-    Criteria criteria = restQueryFilterParser.getCriteriaFromFilterQuery(filterQuery, CIBuild.class);
-    Page<CIBuildResponseDTO> builds =
-        ciBuildInfoService.getBuilds(accountId, orgId, projectId, criteria, getPageRequest(page, size, sort));
-    return ResponseDTO.newResponse(builds);
+  public ResponseDTO<NGPageResponse<CIBuildResponseDTO>> getBuilds(
+      @NotNull @QueryParam("accountIdentifier") String accountId, @QueryParam("orgIdentifier") String orgId,
+      @NotNull @QueryParam("projectIdentifier") String projectId, @QueryParam("userIdentifier") String userId,
+      @QueryParam("branch") String branch, @QueryParam("tags") List<String> tags,
+      @QueryParam("page") @DefaultValue("0") int page, @QueryParam("size") @DefaultValue("10") int size,
+      @QueryParam("sort") List<String> sort) {
+    CIBuildFilterDTO ciBuildFilterDTO = CIBuildFilterDTO.builder()
+                                            .accountIdentifier(accountId)
+                                            .orgIdentifier(orgId)
+                                            .projectIdentifier(projectId)
+                                            .userIdentifier(userId)
+                                            .branch(branch)
+                                            .tags(tags)
+                                            .build();
+    Page<CIBuildResponseDTO> builds = ciBuildInfoService.getBuilds(ciBuildFilterDTO, getPageRequest(page, size, sort));
+    return ResponseDTO.newResponse(getNGPageResponse(builds));
   }
 }
