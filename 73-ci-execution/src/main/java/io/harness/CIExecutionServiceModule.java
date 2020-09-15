@@ -1,6 +1,8 @@
 package io.harness;
 
 import com.google.inject.AbstractModule;
+import com.google.inject.Provides;
+import com.google.inject.Singleton;
 import com.google.inject.multibindings.MapBinder;
 
 import io.harness.core.ci.services.CIBuildService;
@@ -23,14 +25,20 @@ public class CIExecutionServiceModule extends AbstractModule {
 
   @Override
   protected void configure() {
-    install(OrchestrationModule.getInstance(OrchestrationModuleConfig.builder()
-                                                .expressionEvaluatorProvider(new AmbianceExpressionEvaluatorProvider())
-                                                .build()));
+    install(OrchestrationModule.getInstance());
     install(OrchestrationStepsModule.getInstance());
     bind(CIBuildService.class).to(CIBuildServiceImpl.class);
     bind(CIPipelineExecutionService.class).to(CIPipelineExecutionServiceImpl.class);
     MapBinder<String, StepRegistrar> stepRegistrarMapBinder =
         MapBinder.newMapBinder(binder(), String.class, StepRegistrar.class);
     stepRegistrarMapBinder.addBinding(ExecutionRegistrar.class.getName()).to(ExecutionRegistrar.class);
+  }
+
+  @Provides
+  @Singleton
+  public OrchestrationModuleConfig orchestrationModuleConfig() {
+    return OrchestrationModuleConfig.builder()
+        .expressionEvaluatorProvider(new AmbianceExpressionEvaluatorProvider())
+        .build();
   }
 }

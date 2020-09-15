@@ -755,9 +755,7 @@ public class WingsModule extends AbstractModule implements ServersModule {
   protected void configure() {
     install(VersionModule.getInstance());
     install(TimeModule.getInstance());
-    install(OrchestrationModule.getInstance(OrchestrationModuleConfig.builder()
-                                                .expressionEvaluatorProvider(new AmbianceExpressionEvaluatorProvider())
-                                                .build()));
+    install(OrchestrationModule.getInstance());
     install(DelegateServiceDriverModule.getInstance());
     install(new DelegateServiceDriverGrpcClientModule(configuration.getPortal().getJwtNextGenManagerSecret(),
         configuration.getGrpcDelegateServiceClientConfig().getTarget(),
@@ -1352,6 +1350,14 @@ public class WingsModule extends AbstractModule implements ServersModule {
             StandardCharsets.UTF_8);
 
     return new YamlUtils().read(featureRestrictions, FeatureRestrictions.class);
+  }
+
+  @Provides
+  @Singleton
+  public OrchestrationModuleConfig orchestrationModuleConfig() {
+    return OrchestrationModuleConfig.builder()
+        .expressionEvaluatorProvider(new AmbianceExpressionEvaluatorProvider())
+        .build();
   }
 
   @Override

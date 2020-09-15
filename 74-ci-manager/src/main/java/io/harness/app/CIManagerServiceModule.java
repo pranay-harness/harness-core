@@ -114,10 +114,7 @@ public class CIManagerServiceModule extends AbstractModule {
         binder(), new TypeLiteral<String>() {}, new TypeLiteral<TaskExecutor<HDelegateTask>>() {});
     taskExecutorMap.addBinding(TaskMode.DELEGATE_TASK_V3.name()).to(CIDelegateTaskExecutor.class);
 
-    install(OrchestrationModule.getInstance(OrchestrationModuleConfig.builder()
-                                                .expressionEvaluatorProvider(new AmbianceExpressionEvaluatorProvider())
-                                                .publisherName(OrchestrationNotifyEventListener.ORCHESTRATION)
-                                                .build()));
+    install(OrchestrationModule.getInstance());
     install(OrchestrationStepsModule.getInstance());
     install(DelegateServiceDriverModule.getInstance());
     install(new DelegateServiceDriverGrpcClientModule(ciManagerConfiguration.getManagerServiceSecret(),
@@ -126,5 +123,14 @@ public class CIManagerServiceModule extends AbstractModule {
                                             .target(ciManagerConfiguration.getManagerTarget())
                                             .authority(ciManagerConfiguration.getManagerAuthority())
                                             .build()));
+  }
+
+  @Provides
+  @Singleton
+  public OrchestrationModuleConfig orchestrationModuleConfig() {
+    return OrchestrationModuleConfig.builder()
+        .expressionEvaluatorProvider(new AmbianceExpressionEvaluatorProvider())
+        .publisherName(OrchestrationNotifyEventListener.ORCHESTRATION)
+        .build();
   }
 }

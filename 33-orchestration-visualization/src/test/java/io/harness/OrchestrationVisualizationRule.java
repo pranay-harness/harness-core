@@ -94,6 +94,14 @@ public class OrchestrationVisualizationRule implements MethodRule, InjectorRuleM
             .addAll(OrchestrationVisualizationModuleRegistrars.aliasRegistrars)
             .build();
       }
+
+      @Provides
+      @Singleton
+      public OrchestrationModuleConfig orchestrationModuleConfig() {
+        return OrchestrationModuleConfig.builder()
+            .expressionEvaluatorProvider(new AmbianceExpressionEvaluatorProvider())
+            .build();
+      }
     });
 
     modules.add(mongoTypeModule(annotations));
@@ -125,10 +133,7 @@ public class OrchestrationVisualizationRule implements MethodRule, InjectorRuleM
     modules.add(new VersionModule());
     modules.add(TimeModule.getInstance());
     modules.add(new OrchestrationVisualizationPersistenceTestModule());
-    modules.add(
-        OrchestrationModule.getInstance(OrchestrationModuleConfig.builder()
-                                            .expressionEvaluatorProvider(new AmbianceExpressionEvaluatorProvider())
-                                            .build()));
+    modules.add(OrchestrationModule.getInstance());
     modules.add(OrchestrationVisualizationModule.getInstance());
     return modules;
   }

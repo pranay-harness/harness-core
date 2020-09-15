@@ -203,10 +203,7 @@ public class NextGenModule extends AbstractModule {
       }
     });
 
-    install(OrchestrationModule.getInstance(OrchestrationModuleConfig.builder()
-                                                .expressionEvaluatorProvider(new CDExpressionEvaluatorProvider())
-                                                .publisherName(NgOrchestrationNotifyEventListener.NG_ORCHESTRATION)
-                                                .build()));
+    install(OrchestrationModule.getInstance());
     install(OrchestrationStepsModule.getInstance());
     install(OrchestrationVisualizationModule.getInstance());
     install(ExecutionPlanModule.getInstance());
@@ -227,6 +224,15 @@ public class NextGenModule extends AbstractModule {
     bind(ConnectorService.class)
         .annotatedWith(Names.named(SECRET_MANAGER_CONNECTOR_SERVICE))
         .to(SecretManagerConnectorServiceImpl.class);
+  }
+
+  @Provides
+  @Singleton
+  public OrchestrationModuleConfig orchestrationModuleConfig() {
+    return OrchestrationModuleConfig.builder()
+        .expressionEvaluatorProvider(new CDExpressionEvaluatorProvider())
+        .publisherName(NgOrchestrationNotifyEventListener.NG_ORCHESTRATION)
+        .build();
   }
 
   private ValidatorFactory getValidatorFactory() {
