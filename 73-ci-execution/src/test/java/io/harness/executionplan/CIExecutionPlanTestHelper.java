@@ -13,6 +13,8 @@ import io.harness.beans.environment.K8BuildJobEnvInfo;
 import io.harness.beans.environment.pod.PodSetupInfo;
 import io.harness.beans.environment.pod.container.ContainerDefinitionInfo;
 import io.harness.beans.environment.pod.container.ContainerImageDetails;
+import io.harness.beans.executionargs.CIExecutionArgs;
+import io.harness.beans.executionargs.ExecutionArgs;
 import io.harness.beans.script.ScriptInfo;
 import io.harness.beans.stages.IntegrationStage;
 import io.harness.beans.steps.stepinfo.BuildEnvSetupStepInfo;
@@ -30,6 +32,7 @@ import io.harness.beans.yaml.extended.connector.GitConnectorYaml;
 import io.harness.beans.yaml.extended.container.Container;
 import io.harness.beans.yaml.extended.infrastrucutre.K8sDirectInfraYaml;
 import io.harness.common.CIExecutionConstants;
+import io.harness.executionplan.core.impl.ExecutionPlanCreationContextImpl;
 import io.harness.k8s.model.ImageDetails;
 import io.harness.yaml.core.ExecutionElement;
 import io.harness.yaml.core.ParallelStepElement;
@@ -401,5 +404,11 @@ public class CIExecutionPlanTestHelper {
     envVars.put("VAR1", EncryptedVariableWithType.builder().build());
     envVars.put("VAR2", EncryptedVariableWithType.builder().build());
     return envVars;
+  }
+
+  public ExecutionPlanCreationContextImpl getExecutionPlanCreationContextWithExecutionArgs() {
+    ExecutionPlanCreationContextImpl context = ExecutionPlanCreationContextImpl.builder().build();
+    context.addAttribute(ExecutionArgs.EXEC_ARGS, CIExecutionArgs.builder().build());
+    return context;
   }
 }
