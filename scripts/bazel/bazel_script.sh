@@ -28,7 +28,7 @@ build_bazel_module() {
 
   if [ "${RUN_BAZEL_TESTS}" == "true" ]
   then
-    bazel --bazelrc=${bazelrc} test //${module}/... ${GCP} ${BAZEL_ARGUMENTS}
+    bazel --bazelrc=${bazelrc} test //${module}/... ${GCP} ${BAZEL_ARGUMENTS} || true
   fi
 
   mvn -B install:install-file \
