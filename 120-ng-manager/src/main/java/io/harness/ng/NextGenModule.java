@@ -39,6 +39,8 @@ import io.harness.ng.core.CoreModule;
 import io.harness.ng.core.InviteModule;
 import io.harness.ng.core.NgAsyncTaskGrpcServerModule;
 import io.harness.ng.core.SecretManagementModule;
+import io.harness.ng.core.api.NGSecretServiceV2;
+import io.harness.ng.core.api.NGSecretServiceV2Impl;
 import io.harness.ng.core.gitsync.GitSyncManagerInterface;
 import io.harness.ng.core.impl.OrganizationServiceImpl;
 import io.harness.ng.core.impl.ProjectServiceImpl;
@@ -216,6 +218,7 @@ public class NextGenModule extends AbstractModule {
 
     bind(ProjectService.class).to(ProjectServiceImpl.class);
     bind(OrganizationService.class).to(OrganizationServiceImpl.class);
+    bind(NGSecretServiceV2.class).to(NGSecretServiceV2Impl.class);
     bind(GitSyncManagerInterface.class).to(GitSyncManagerInterfaceImpl.class);
     bind(ScheduledExecutorService.class)
         .annotatedWith(Names.named("taskPollExecutor"))

@@ -64,36 +64,6 @@ public class NGSecretFileResource {
   private final FileUploadLimit fileUploadLimit;
 
   @POST
-  @ApiOperation(value = "Create a secret file", nickname = "postSecretFile")
-  @Consumes(MediaType.MULTIPART_FORM_DATA)
-  public ResponseDTO<EncryptedDataDTO> create(@NotNull @FormDataParam(FILE_KEY) InputStream uploadedInputStream,
-      @FormDataParam(TAGS_KEY) String tagsString, @NotNull @FormDataParam(NAME_KEY) String name,
-      @NotNull @FormDataParam(ACCOUNT_KEY) String account,
-      @SecretTypeAllowedValues(allowedValues = {SecretFile}) @NotNull @FormDataParam(TYPE_KEY) SecretType secretType,
-      @FormDataParam(ORG_KEY) String org, @FormDataParam(PROJECT_KEY) String project,
-      @NotNull @FormDataParam(SECRET_MANAGER_KEY) String secretManager,
-      @NotNull @EntityIdentifier @FormDataParam(IDENTIFIER_KEY) String identifier,
-      @FormDataParam(DESCRIPTION_KEY) String description) {
-    List<String> tags = new ArrayList<>();
-    if (!StringUtils.isEmpty(tagsString)) {
-      tags = Arrays.asList(tagsString.trim().split("\\s*,\\s*"));
-    }
-    SecretFileDTO dto = SecretFileDTO.builder()
-                            .account(account)
-                            .org(org)
-                            .project(project)
-                            .identifier(identifier)
-                            .secretManager(secretManager)
-                            .description(description)
-                            .name(name)
-                            .tags(tags)
-                            .type(secretType)
-                            .build();
-    return ResponseDTO.newResponse(toDTO(ngSecretFileService.create(
-        dto, new BoundedInputStream(uploadedInputStream, fileUploadLimit.getEncryptedFileLimit()))));
-  }
-
-  @POST
   @Path("/yaml")
   @ApiOperation(value = "Create a secret file via yaml", nickname = "postSecretFileViaYaml")
   @Consumes({"application/yaml"})
