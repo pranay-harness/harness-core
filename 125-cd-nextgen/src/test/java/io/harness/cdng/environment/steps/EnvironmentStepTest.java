@@ -6,6 +6,7 @@ import static org.mockito.Mockito.doReturn;
 
 import io.harness.CategoryTest;
 import io.harness.ambiance.Ambiance;
+import io.harness.beans.ParameterField;
 import io.harness.category.element.UnitTests;
 import io.harness.cdng.common.beans.SetupAbstractionKeys;
 import io.harness.cdng.environment.yaml.EnvironmentYaml;
@@ -14,7 +15,6 @@ import io.harness.ng.core.environment.beans.EnvironmentType;
 import io.harness.ng.core.environment.services.EnvironmentService;
 import io.harness.rule.Owner;
 import io.harness.state.io.StepResponse;
-import io.harness.utils.ParameterField;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;

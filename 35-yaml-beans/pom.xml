@@ -17,6 +17,10 @@
             <artifactId>guava</artifactId>
         </dependency>
         <dependency>
+            <groupId>com.smoketurner</groupId>
+            <artifactId>dropwizard-swagger</artifactId>
+        </dependency>
+        <dependency>
             <groupId>junit</groupId>
             <artifactId>junit</artifactId>
         </dependency>
@@ -43,7 +47,12 @@
         </dependency>
         <dependency>
             <groupId>software.wings</groupId>
-            <artifactId>43-walktree-visitor</artifactId>
+            <artifactId>29-orchestration-beans</artifactId>
+            <version>${project.parent.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>software.wings</groupId>
+            <artifactId>34-walktree-visitor</artifactId>
             <version>${project.parent.version}</version>
         </dependency>
         <dependency>

@@ -7,6 +7,7 @@ import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 
 import io.harness.CategoryTest;
 import io.harness.ambiance.Ambiance;
+import io.harness.beans.ParameterField;
 import io.harness.category.element.UnitTests;
 import io.harness.cdng.artifact.bean.ArtifactConfig;
 import io.harness.cdng.artifact.bean.DockerArtifactOutcome;
@@ -28,7 +29,6 @@ import io.harness.state.io.StepResponse;
 import io.harness.state.io.StepResponse.StepOutcome;
 import io.harness.tasks.ResponseData;
 import io.harness.tasks.Task;
-import io.harness.utils.ParameterField;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;

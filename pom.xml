@@ -39,10 +39,10 @@
         <module>31-orchestration</module>
         <module>32-orchestration-steps</module>
         <module>33-orchestration-visualization</module>
+        <module>34-walktree-visitor</module>
         <module>35-yaml-beans</module>
         <module>38-execution-plan</module>
         <module>39-ng-pipeline-commons</module>
-        <module>43-walktree-visitor</module>
         <module>50-delegate-task-grpc-service</module>
         <module>57-command-library-common</module>
         <module>64-events-framework</module>

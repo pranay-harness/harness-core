@@ -1,11 +1,11 @@
 package io.harness.cdng.environment.yaml;
 
+import io.harness.beans.ParameterField;
 import io.harness.cdng.visitor.helpers.pipelineinfrastructure.EnvironmentYamlVisitorHelper;
 import io.harness.data.Outcome;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.ng.core.common.beans.Tag;
 import io.harness.ng.core.environment.beans.EnvironmentType;
-import io.harness.utils.ParameterField;
 import io.harness.walktree.visitor.SimpleVisitorHelper;
 import io.harness.walktree.visitor.Visitable;
 import io.harness.yaml.core.intfc.OverridesApplier;

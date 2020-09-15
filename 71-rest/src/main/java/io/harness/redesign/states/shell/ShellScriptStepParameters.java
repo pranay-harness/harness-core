@@ -59,7 +59,7 @@ public class ShellScriptStepParameters implements StepParameters {
   @Attributes(title = "Publish Variable Scope") String sweepingOutputScope;
 
   @Override
-  public List<TimeoutObtainment> getTimeouts() {
+  public List<TimeoutObtainment> fetchTimeouts() {
     long timeoutMillis = 3600000;
     if (EmptyPredicate.isNotEmpty(timeoutSecs)) {
       timeoutMillis = Long.parseLong(timeoutSecs) * 1000;

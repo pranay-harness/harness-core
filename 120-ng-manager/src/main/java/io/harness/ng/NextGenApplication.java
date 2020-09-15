@@ -23,13 +23,13 @@ import io.federecio.dropwizard.swagger.SwaggerBundleConfiguration;
 import io.harness.cdng.executionplan.ExecutionPlanCreatorRegistrar;
 import io.harness.gitsync.core.runnable.GitChangeSetRunnable;
 import io.harness.maintenance.MaintenanceController;
+import io.harness.ng.common.NGPipelineObjectMapperHelper;
 import io.harness.ng.core.CorrelationFilter;
 import io.harness.ng.core.exceptionmappers.GenericExceptionMapperV2;
 import io.harness.ng.core.exceptionmappers.JerseyViolationExceptionMapperV2;
 import io.harness.ng.core.exceptionmappers.WingsExceptionMapperV2;
 import io.harness.ng.core.invites.ext.mail.EmailNotificationListener;
 import io.harness.ng.core.perpetualtask.sample.SampleRemotePTaskServiceClient;
-import io.harness.ng.remote.NGObjectMapperHelper;
 import io.harness.perpetualtask.remote.RemotePerpetualTaskServiceClientRegistry;
 import io.harness.perpetualtask.remote.RemotePerpetualTaskType;
 import io.harness.persistence.HPersistence;
@@ -97,7 +97,7 @@ public class NextGenApplication extends Application<NextGenConfiguration> {
     });
   }
   public static void configureObjectMapper(final ObjectMapper mapper) {
-    NGObjectMapperHelper.configureNGObjectMapper(mapper);
+    NGPipelineObjectMapperHelper.configureNGObjectMapper(mapper);
   }
 
   @Override

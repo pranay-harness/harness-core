@@ -21,7 +21,7 @@ public class BarrierStepParameters implements StepParameters {
   long timeoutInMillis;
 
   @Override
-  public List<TimeoutObtainment> getTimeouts() {
+  public List<TimeoutObtainment> fetchTimeouts() {
     return Collections.singletonList(
         TimeoutObtainment.builder()
             .type(AbsoluteTimeoutTrackerFactory.DIMENSION)

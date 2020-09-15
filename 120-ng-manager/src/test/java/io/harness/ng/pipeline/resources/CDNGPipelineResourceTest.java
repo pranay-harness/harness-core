@@ -64,10 +64,10 @@ public class CDNGPipelineResourceTest extends CategoryTest {
     File file = new File(classLoader.getResource("pipeline.yaml").getFile());
     CDPipeline cdPipeline = YamlPipelineUtils.read(file.toURL(), CDPipeline.class);
     cdngPipelineResource = new CDNGPipelineResource(pipelineService, restQueryFilterParser, ngPipelineExecutionService);
-    cdPipelineRequestDTO = cdPipelineRequestDTO.builder().cdPipeline(cdPipeline).build();
+    cdPipelineRequestDTO = CDPipelineRequestDTO.builder().cdPipeline(cdPipeline).build();
     cdPipelineResponseDTO =
-        cdPipelineResponseDTO.builder().cdPipeline(cdPipeline).executionsPlaceHolder(new ArrayList<>()).build();
-    cdPipelineEntity = cdPipelineEntity.builder()
+        CDPipelineResponseDTO.builder().cdPipeline(cdPipeline).executionsPlaceHolder(new ArrayList<>()).build();
+    cdPipelineEntity = CDPipelineEntity.builder()
                            .accountId("ACCOUNT_ID")
                            .projectIdentifier("PROJECT_ID")
                            .orgIdentifier("ORG_ID")
