@@ -44,6 +44,7 @@ public class ArtifactStreamResourceServiceTest extends WingsBaseTest {
                                                                   .settingId("JENKINS_SETTING_ID")
                                                                   .serviceId(SERVICE_ID)
                                                                   .artifactPaths(asList("dist/svr-*.war"))
+                                                                  .metadataOnly(true)
                                                                   .build();
 
   @Inject HPersistence persistence;

@@ -50,6 +50,7 @@ public class JenkinsArtifactStreamStreamsGenerator implements ArtifactStreamsGen
             .jobname("harness-samples")
             .artifactPaths(asList("echo/target/echo.war"))
             .settingId(settingAttribute.getUuid())
+            .metadataOnly(true)
             .build(),
         owners);
   }
