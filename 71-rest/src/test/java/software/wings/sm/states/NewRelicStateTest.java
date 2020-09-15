@@ -135,7 +135,7 @@ public class NewRelicStateTest extends APMStateVerificationTestBase {
 
     newRelicState = new NewRelicState("NewRelicState");
     newRelicState.setApplicationId("30444");
-    newRelicState.setTimeDuration("6000");
+    newRelicState.setTimeDuration("10");
 
     AccountService accountService = mock(AccountService.class);
     when(accountService.getAccountType(anyString())).thenReturn(Optional.of(AccountType.PAID));

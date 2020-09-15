@@ -140,6 +140,11 @@ public abstract class AbstractMetricAnalysisState extends AbstractAnalysisState 
               "Your license type does not support running this verification. Skipping Analysis");
         }
 
+        if (!isEmpty(getTimeDuration()) && Integer.parseInt(getTimeDuration()) > MAX_WORKFLOW_TIMEOUT) {
+          return generateAnalysisResponse(
+              analysisContext, ExecutionStatus.SUCCESS, "Time duration cannot be more than 4 hours. Skipping Analysis");
+        }
+
         if (unresolvedHosts(analysisContext)) {
           return generateAnalysisResponse(analysisContext, ExecutionStatus.FAILED,
               "The expression " + hostnameTemplate + " could not be resolved for hosts");
