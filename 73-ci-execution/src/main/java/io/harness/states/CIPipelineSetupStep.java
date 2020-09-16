@@ -1,9 +1,15 @@
 package io.harness.states;
 
 import static io.harness.cdng.orchestration.StepUtils.createStepResponseFromChildResponse;
+import static io.harness.resolvers.ResolverUtils.GLOBAL_GROUP_SCOPE;
+
+import com.google.inject.Inject;
 
 import io.harness.ambiance.Ambiance;
 import io.harness.beans.CIPipelineSetupParameters;
+import io.harness.ci.stdvars.BuildStandardVariables;
+import io.harness.ci.utils.CIPipelineStandardVariablesUtils;
+import io.harness.engine.outputs.ExecutionSweepingOutputService;
 import io.harness.execution.status.Status;
 import io.harness.facilitator.PassThroughData;
 import io.harness.facilitator.modes.child.ChildExecutable;
@@ -22,11 +28,18 @@ import java.util.Map;
 @Slf4j
 public class CIPipelineSetupStep implements Step, ChildExecutable<CIPipelineSetupParameters>, SyncExecutable {
   public static final StepType STEP_TYPE = StepType.builder().type("CI_PIPELINE_SETUP").build();
+  @Inject ExecutionSweepingOutputService executionSweepingOutputResolver;
 
   @Override
   public ChildExecutableResponse obtainChild(
       Ambiance ambiance, CIPipelineSetupParameters ciPipelineSetupParameters, StepInputPackage inputPackage) {
     logger.info("starting execution for ci pipeline [{}]", ciPipelineSetupParameters);
+
+    BuildStandardVariables buildStandardVariables =
+        CIPipelineStandardVariablesUtils.fetchBuildStandardVariables(ciPipelineSetupParameters.getCiExecutionArgs());
+
+    executionSweepingOutputResolver.consume(
+        ambiance, BuildStandardVariables.BUILD_VARIABLE, buildStandardVariables, GLOBAL_GROUP_SCOPE);
 
     final Map<String, String> fieldToExecutionNodeIdMap = ciPipelineSetupParameters.getFieldToExecutionNodeIdMap();
     final String stagesNodeId = fieldToExecutionNodeIdMap.get("stages");

@@ -1,6 +1,5 @@
 package io.harness.stateutils.buildstate;
 
-import static io.harness.common.CIExecutionConstants.DEBUG_PREFIX;
 import static io.harness.common.CIExecutionConstants.INPUT_ARG_PREFIX;
 import static io.harness.common.CIExecutionConstants.LITE_ENGINE_COMMAND;
 import static io.harness.common.CIExecutionConstants.LOG_PATH;
@@ -46,7 +45,6 @@ public class LiteEngineTaskUtils {
       args.add(PORTS_PREFIX);
       args.addAll(ports);
     }
-    args.add(DEBUG_PREFIX);
     return args;
   }
 

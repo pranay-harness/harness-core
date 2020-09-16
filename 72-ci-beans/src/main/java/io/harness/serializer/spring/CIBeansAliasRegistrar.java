@@ -32,6 +32,7 @@ import io.harness.beans.yaml.extended.connector.GitConnectorYaml;
 import io.harness.beans.yaml.extended.container.Container;
 import io.harness.beans.yaml.extended.infrastrucutre.K8sDirectInfraYaml;
 import io.harness.ci.beans.entities.BuildNumber;
+import io.harness.ci.stdvars.BuildStandardVariables;
 import io.harness.spring.AliasRegistrar;
 
 import java.util.Map;
@@ -50,6 +51,7 @@ public class CIBeansAliasRegistrar implements AliasRegistrar {
     orchestrationElements.put("integrationStageStepParameters", IntegrationStageStepParameters.class);
     orchestrationElements.put("k8PodDetails", K8PodDetails.class);
     orchestrationElements.put("stepTaskDetails", StepTaskDetails.class);
+    orchestrationElements.put("buildStandardVariables", BuildStandardVariables.class);
     orchestrationElements.put("liteEngineTaskStepInfo", LiteEngineTaskStepInfo.class);
     orchestrationElements.put("publishStepInfo", PublishStepInfo.class);
     orchestrationElements.put("runStepInfo", RunStepInfo.class);

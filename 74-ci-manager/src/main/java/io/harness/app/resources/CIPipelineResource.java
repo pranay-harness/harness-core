@@ -77,8 +77,8 @@ public class CIPipelineResource {
       buildNumberService.increaseBuildNumber(
           ciPipeline.getAccountId(), ciPipeline.getOrganizationId(), ciPipeline.getProjectId());
       // TODO create manual execution source
-      CIExecutionArgs ciExecutionArgs = CIExecutionArgs.builder().build();
-      ciPipelineExecutionService.executePipeline(ciPipeline, ciExecutionArgs, null);
+      CIExecutionArgs ciExecutionArgs = CIExecutionArgs.builder().buildNumber(1L).build();
+      ciPipelineExecutionService.executePipeline(ciPipeline, ciExecutionArgs, 1L);
     } catch (Exception e) {
       logger.error("Failed to run input pipeline ", e);
     }
