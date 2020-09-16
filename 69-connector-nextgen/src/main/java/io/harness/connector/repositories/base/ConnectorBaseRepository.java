@@ -11,5 +11,5 @@ import java.util.Optional;
 @NoRepositoryBean
 public interface ConnectorBaseRepository<T extends Connector> extends PagingAndSortingRepository<T, String> {
   Optional<T> findByFullyQualifiedIdentifierAndDeletedNot(String fullyQualifiedIdentifier, boolean notDeleted);
-  boolean existsByFullyQualifiedIdentifierAndDeletedNot(String fullyQualifiedIdentifier, boolean notDeleted);
+  boolean existsByFullyQualifiedIdentifier(String fullyQualifiedIdentifier);
 }
