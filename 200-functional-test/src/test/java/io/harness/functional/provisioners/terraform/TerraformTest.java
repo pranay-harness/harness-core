@@ -1,6 +1,7 @@
 package io.harness.functional.provisioners.terraform;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
+import static io.harness.rule.OwnerRule.TMACARI;
 import static io.harness.rule.OwnerRule.YOGESH;
 import static org.assertj.core.api.Assertions.assertThat;
 import static software.wings.beans.CanaryOrchestrationWorkflow.CanaryOrchestrationWorkflowBuilder.aCanaryOrchestrationWorkflow;
@@ -8,6 +9,7 @@ import static software.wings.beans.PhaseStep.PhaseStepBuilder.aPhaseStep;
 import static software.wings.beans.PhaseStepType.POST_DEPLOYMENT;
 import static software.wings.beans.PhaseStepType.PRE_DEPLOYMENT;
 import static software.wings.beans.Workflow.WorkflowBuilder.aWorkflow;
+import static software.wings.utils.CryptoUtils.secureRandAlphaNumString;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
@@ -41,6 +43,7 @@ import org.junit.experimental.categories.Category;
 import software.wings.beans.Application;
 import software.wings.beans.Environment;
 import software.wings.beans.ExecutionArgs;
+import software.wings.beans.FeatureName;
 import software.wings.beans.GraphNode;
 import software.wings.beans.InfrastructureProvisioner;
 import software.wings.beans.NameValuePair;
@@ -50,6 +53,7 @@ import software.wings.beans.SettingAttribute;
 import software.wings.beans.TerraformInfrastructureProvisioner;
 import software.wings.beans.Workflow;
 import software.wings.beans.WorkflowExecution;
+import software.wings.service.intfc.FeatureFlagService;
 import software.wings.sm.StateType;
 
 import java.util.ArrayList;
@@ -72,6 +76,7 @@ public class TerraformTest extends AbstractFunctionalTest {
   @Inject private ScmSecret scmSecret;
   @Inject private WorkflowUtils workflowUtils;
   @Inject private WorkflowGenerator workflowGenerator;
+  @Inject FeatureFlagService featureFlagService;
 
   private Application application;
   private Service service;
@@ -86,7 +91,15 @@ public class TerraformTest extends AbstractFunctionalTest {
   @Before
   public void setUp() throws Exception {
     owners = ownerManager.create();
-    ensurePredefinedStuff();
+  }
+
+  private void setupStuff(Applications applicationType, Services serviceType, Environments environmentType,
+      Settings settings) throws Exception {
+    ensurePredefinedStuff(applicationType, serviceType, environmentType, settings);
+
+    if (!featureFlagService.isEnabled(FeatureName.GIT_ACCOUNT_SUPPORT, application.getAccountId())) {
+      featureFlagService.enableAccount(FeatureName.GIT_ACCOUNT_SUPPORT, application.getAccountId());
+    }
 
     resetCache(application.getAccountId());
     terraformInfrastructureProvisioner = buildProvisionerObject();
@@ -101,7 +114,10 @@ public class TerraformTest extends AbstractFunctionalTest {
   @Test
   @Owner(developers = YOGESH, intermittent = true)
   @Category(FunctionalTests.class)
-  public void shouldRunTerraformWorkflow() {
+  public void shouldRunTerraformWorkflow() throws Exception {
+    setupStuff(Applications.FUNCTIONAL_TEST, Services.FUNCTIONAL_TEST, Environments.FUNCTIONAL_TEST,
+        Settings.TERRAFORM_MAIN_GIT_REPO);
+
     ExecutionArgs executionArgs = prepareExecutionArgs(workflow);
     WorkflowExecution workflowExecution =
         runWorkflow(bearerToken, application.getUuid(), environment.getUuid(), executionArgs);
@@ -112,6 +128,9 @@ public class TerraformTest extends AbstractFunctionalTest {
   @Owner(developers = YOGESH, intermittent = true)
   @Category(FunctionalTests.class)
   public void shouldFetchTerraformTargets() throws Exception {
+    setupStuff(Applications.FUNCTIONAL_TEST, Services.FUNCTIONAL_TEST, Environments.FUNCTIONAL_TEST,
+        Settings.TERRAFORM_MAIN_GIT_REPO);
+
     final String accountId = terraformInfrastructureProvisioner.getAccountId();
     final String appId = terraformInfrastructureProvisioner.getAppId();
     final String provisonerId = terraformInfrastructureProvisioner.getUuid();
@@ -124,6 +143,9 @@ public class TerraformTest extends AbstractFunctionalTest {
   @Owner(developers = YOGESH, intermittent = true)
   @Category(FunctionalTests.class)
   public void shouldFetchTerraformVariables() throws Exception {
+    setupStuff(Applications.FUNCTIONAL_TEST, Services.FUNCTIONAL_TEST, Environments.FUNCTIONAL_TEST,
+        Settings.TERRAFORM_MAIN_GIT_REPO);
+
     final String accountId = terraformInfrastructureProvisioner.getAccountId();
     final String appId = terraformInfrastructureProvisioner.getAppId();
     final String scmSettingId = terraformInfrastructureProvisioner.getSourceRepoSettingId();
@@ -132,16 +154,65 @@ public class TerraformTest extends AbstractFunctionalTest {
 
     resetCache(accountId);
 
-    final List<NameValuePair> terraformVariables =
-        InfraProvisionerRestUtils.getTerraformVariables(accountId, appId, bearerToken, scmSettingId, branch, path);
+    final List<NameValuePair> terraformVariables = InfraProvisionerRestUtils.getTerraformVariables(
+        accountId, appId, bearerToken, scmSettingId, branch, path, null);
     assertThat(terraformVariables).isNotEmpty();
   }
 
-  private void ensurePredefinedStuff() {
-    application = applicationGenerator.ensurePredefined(seed, owners, Applications.FUNCTIONAL_TEST);
-    service = serviceGenerator.ensurePredefined(seed, owners, Services.FUNCTIONAL_TEST);
-    environment = environmentGenerator.ensurePredefined(seed, owners, Environments.FUNCTIONAL_TEST);
-    settingAttribute = settingGenerator.ensurePredefined(seed, owners, Settings.TERRAFORM_MAIN_GIT_REPO);
+  @Test
+  @Owner(developers = TMACARI)
+  @Category(FunctionalTests.class)
+  public void shouldFetchTerraformVariablesWithAccountGitConnector() throws Exception {
+    setupStuff(
+        Applications.GENERIC_TEST, Services.GENERIC_TEST, Environments.GENERIC_TEST, Settings.TERRAFORM_MAIN_GIT_AC);
+
+    final String accountId = terraformInfrastructureProvisioner.getAccountId();
+    final String appId = terraformInfrastructureProvisioner.getAppId();
+    final String scmSettingId = terraformInfrastructureProvisioner.getSourceRepoSettingId();
+    final String branch = terraformInfrastructureProvisioner.getSourceRepoBranch();
+    final String path = terraformInfrastructureProvisioner.getPath();
+
+    resetCache(accountId);
+
+    final List<NameValuePair> terraformVariables = InfraProvisionerRestUtils.getTerraformVariables(
+        accountId, appId, bearerToken, scmSettingId, branch, path, "terraform");
+    assertThat(terraformVariables).isNotEmpty();
+  }
+
+  @Test
+  @Owner(developers = TMACARI)
+  @Category(FunctionalTests.class)
+  public void shouldFetchTerraformTargetsWithAccountGitConnector() throws Exception {
+    setupStuff(
+        Applications.GENERIC_TEST, Services.GENERIC_TEST, Environments.GENERIC_TEST, Settings.TERRAFORM_MAIN_GIT_AC);
+
+    final String accountId = terraformInfrastructureProvisioner.getAccountId();
+    final String appId = terraformInfrastructureProvisioner.getAppId();
+    final String provisonerId = terraformInfrastructureProvisioner.getUuid();
+    final List<String> terraformVariables =
+        InfraProvisionerRestUtils.getTerraformTargets(accountId, appId, bearerToken, provisonerId);
+    assertThat(terraformVariables).containsExactlyInAnyOrder("local_file.foo");
+  }
+
+  @Test
+  @Owner(developers = TMACARI)
+  @Category(FunctionalTests.class)
+  public void shouldRunTerraformWorkflowWithAccountGitConnector() throws Exception {
+    setupStuff(
+        Applications.GENERIC_TEST, Services.GENERIC_TEST, Environments.GENERIC_TEST, Settings.TERRAFORM_MAIN_GIT_AC);
+
+    ExecutionArgs executionArgs = prepareExecutionArgs(workflow);
+    WorkflowExecution workflowExecution =
+        runWorkflow(bearerToken, application.getUuid(), environment.getUuid(), executionArgs);
+    assertThat(workflowExecution.getStatus()).isEqualTo(ExecutionStatus.SUCCESS);
+  }
+
+  private void ensurePredefinedStuff(
+      Applications applicationType, Services serviceType, Environments environmentType, Settings settings) {
+    application = applicationGenerator.ensurePredefined(seed, owners, applicationType);
+    service = serviceGenerator.ensurePredefined(seed, owners, serviceType);
+    environment = environmentGenerator.ensurePredefined(seed, owners, environmentType);
+    settingAttribute = settingGenerator.ensurePredefined(seed, owners, settings);
     secretKeyValue = secretGenerator.ensureStored(owners, SecretName.builder().value(secretKeyName).build());
   }
 
@@ -181,8 +252,7 @@ public class TerraformTest extends AbstractFunctionalTest {
         .build();
   }
   private GraphNode buildTerraformProvisionStep(String provisionerId) throws Exception {
-    InfrastructureProvisioner provisioner =
-        InfraProvisionerRestUtils.getProvisioner(application.getUuid(), bearerToken, provisionerId);
+    InfrastructureProvisioner provisioner = terraformInfrastructureProvisioner;
     provisioner = InfraProvisionerUtils.setValuesToProvisioner(provisioner, scmSecret, secretKeyValue);
     List<Map<String, String>> variables = new ArrayList<>();
     provisioner.getVariables().forEach(var -> variables.add(new HashMap<String, String>() {
@@ -209,7 +279,8 @@ public class TerraformTest extends AbstractFunctionalTest {
             NameValuePair.builder().name("secret_key").valueType(Type.ENCRYPTED_TEXT.toString()).build());
     return TerraformInfrastructureProvisioner.builder()
         .appId(application.getAppId())
-        .name("Terraform Test")
+        .name("Terraform Test" + secureRandAlphaNumString(5))
+        .repoName("terraform")
         .sourceRepoSettingId(settingAttribute.getUuid())
         .sourceRepoBranch("master")
         .path("functionalTest/")
