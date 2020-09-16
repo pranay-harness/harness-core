@@ -9,6 +9,7 @@ import static org.mockito.MockitoAnnotations.initMocks;
 import com.google.inject.Inject;
 
 import io.harness.category.element.UnitTests;
+import io.harness.connector.apis.dto.ConnectorDTO;
 import io.harness.cvng.beans.DataCollectionConnectorBundle;
 import io.harness.cvng.perpetualtask.CVDataCollectionTaskService;
 import io.harness.delegate.beans.connector.appdynamicsconnector.AppDynamicsConnectorDTO;
@@ -62,7 +63,10 @@ public class CVDataCollectionTaskServiceImplTest extends WingsBaseTest {
                                                           .passwordRef(secretRefData)
                                                           .build();
     DataCollectionConnectorBundle bundle =
-        DataCollectionConnectorBundle.builder().params(params).connectorConfigDTO(appDynamicsConnectorDTO).build();
+        DataCollectionConnectorBundle.builder()
+            .params(params)
+            .connectorDTO(ConnectorDTO.builder().connectorConfig(appDynamicsConnectorDTO).build())
+            .build();
     String taskId = dataCollectionTaskService.create(accountId, orgIdentifier, projectIdentifier, bundle);
     assertThat(taskId).isNotNull();
     PerpetualTaskRecord perpetualTaskRecord = perpetualTaskService.getTaskRecord(taskId);
@@ -93,7 +97,10 @@ public class CVDataCollectionTaskServiceImplTest extends WingsBaseTest {
                                                           .passwordRef(secretRefData)
                                                           .build();
     DataCollectionConnectorBundle bundle =
-        DataCollectionConnectorBundle.builder().params(params).connectorConfigDTO(appDynamicsConnectorDTO).build();
+        DataCollectionConnectorBundle.builder()
+            .params(params)
+            .connectorDTO(ConnectorDTO.builder().connectorConfig(appDynamicsConnectorDTO).build())
+            .build();
     String taskId = dataCollectionTaskService.create(accountId, orgIdentifier, projectIdentifier, bundle);
     assertThat(taskId).isNotNull();
     dataCollectionTaskService.delete(accountId, "some-other-id");
