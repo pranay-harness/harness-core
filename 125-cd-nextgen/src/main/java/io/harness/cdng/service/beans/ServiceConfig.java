@@ -3,10 +3,12 @@ package io.harness.cdng.service.beans;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import io.harness.beans.ParameterField;
 import io.harness.cdng.visitor.helpers.serviceconfig.ServiceConfigVisitorHelper;
+import io.harness.common.SwaggerConstants;
 import io.harness.walktree.beans.VisitableChildren;
 import io.harness.walktree.visitor.SimpleVisitorHelper;
 import io.harness.walktree.visitor.Visitable;
 import io.harness.yaml.core.intfc.OverridesApplier;
+import io.swagger.annotations.ApiModelProperty;
 import lombok.Builder;
 import lombok.Data;
 import lombok.experimental.Wither;
@@ -18,9 +20,9 @@ import javax.validation.constraints.NotNull;
 @SimpleVisitorHelper(helperClass = ServiceConfigVisitorHelper.class)
 public class ServiceConfig implements OverridesApplier<ServiceConfig>, Visitable {
   @Wither private ServiceUseFromStage useFromStage;
-  @NotNull private ParameterField<String> identifier;
-  @Wither private ParameterField<String> name;
-  @Wither private ParameterField<String> description;
+  @ApiModelProperty(dataType = SwaggerConstants.STRING_CLASSPATH) @NotNull private ParameterField<String> identifier;
+  @ApiModelProperty(dataType = SwaggerConstants.STRING_CLASSPATH) @Wither private ParameterField<String> name;
+  @ApiModelProperty(dataType = SwaggerConstants.STRING_CLASSPATH) @Wither private ParameterField<String> description;
   private ServiceDefinition serviceDefinition;
   @Wither private StageOverridesConfig stageOverrides;
 

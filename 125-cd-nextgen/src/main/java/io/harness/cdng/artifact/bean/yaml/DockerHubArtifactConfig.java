@@ -5,11 +5,13 @@ import io.harness.beans.ParameterField;
 import io.harness.cdng.artifact.bean.ArtifactConfig;
 import io.harness.cdng.artifact.utils.ArtifactUtils;
 import io.harness.cdng.visitor.helpers.artifact.DockerHubArtifactConfigVisitorHelper;
+import io.harness.common.SwaggerConstants;
 import io.harness.data.validator.EntityIdentifier;
 import io.harness.delegate.task.artifacts.ArtifactSourceConstants;
 import io.harness.delegate.task.artifacts.ArtifactSourceType;
 import io.harness.walktree.visitor.SimpleVisitorHelper;
 import io.harness.walktree.visitor.Visitable;
+import io.swagger.annotations.ApiModelProperty;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -33,19 +35,19 @@ public class DockerHubArtifactConfig implements ArtifactConfig, Visitable {
   /**
    * Docker hub registry connector.
    */
-  @Wither ParameterField<String> dockerhubConnector;
+  @ApiModelProperty(dataType = SwaggerConstants.STRING_CLASSPATH) @Wither ParameterField<String> dockerhubConnector;
   /**
    * Images in repos need to be referenced via a path.
    */
-  @Wither ParameterField<String> imagePath;
+  @ApiModelProperty(dataType = SwaggerConstants.STRING_CLASSPATH) @Wither ParameterField<String> imagePath;
   /**
    * Tag refers to exact tag number.
    */
-  @Wither ParameterField<String> tag;
+  @ApiModelProperty(dataType = SwaggerConstants.STRING_CLASSPATH) @Wither ParameterField<String> tag;
   /**
    * Tag regex is used to get latest build from builds matching regex.
    */
-  @Wither ParameterField<String> tagRegex;
+  @ApiModelProperty(dataType = SwaggerConstants.STRING_CLASSPATH) @Wither ParameterField<String> tagRegex;
   /**
    * Identifier for artifact.
    */

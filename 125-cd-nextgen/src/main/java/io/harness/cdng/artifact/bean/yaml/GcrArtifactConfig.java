@@ -5,11 +5,13 @@ import io.harness.beans.ParameterField;
 import io.harness.cdng.artifact.bean.ArtifactConfig;
 import io.harness.cdng.artifact.utils.ArtifactUtils;
 import io.harness.cdng.visitor.helpers.artifact.GcrArtifactConfigVisitorHelper;
+import io.harness.common.SwaggerConstants;
 import io.harness.data.validator.EntityIdentifier;
 import io.harness.delegate.task.artifacts.ArtifactSourceConstants;
 import io.harness.delegate.task.artifacts.ArtifactSourceType;
 import io.harness.walktree.visitor.SimpleVisitorHelper;
 import io.harness.walktree.visitor.Visitable;
+import io.swagger.annotations.ApiModelProperty;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -31,15 +33,15 @@ public class GcrArtifactConfig implements ArtifactConfig, Visitable {
   /**
    * GCP connector to connect to Google Container Registry.
    */
-  @Wither ParameterField<String> gcrConnector;
+  @ApiModelProperty(dataType = SwaggerConstants.STRING_CLASSPATH) @Wither ParameterField<String> gcrConnector;
   /**
    * Registry where the artifact source is located.
    */
-  @Wither ParameterField<String> registryHostname;
+  @ApiModelProperty(dataType = SwaggerConstants.STRING_CLASSPATH) @Wither ParameterField<String> registryHostname;
   /**
    * Images in repos need to be referenced via a path.
    */
-  @Wither ParameterField<String> imagePath;
+  @ApiModelProperty(dataType = SwaggerConstants.STRING_CLASSPATH) @Wither ParameterField<String> imagePath;
   /**
    * Identifier for artifact.
    */
