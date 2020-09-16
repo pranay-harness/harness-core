@@ -90,7 +90,7 @@ def calculate_coverage(coverage_file_path):
 
 
 def export_file(data, teamName):
-    with open("out_" + "teamName" + ".csv", 'w') as csvfile:
+    with open("out_" + teamName + ".csv", 'w') as csvfile:
         csv_writer = csv.writer(csvfile)
         csv_writer.writerow(
             ["File", "Coverage(%)", "Lines To Cover", "Branch Coverage(%)", "Conditions To Cover"])
