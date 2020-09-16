@@ -71,18 +71,10 @@ public class PerpetualTaskLifecycleManager {
       perpetualTaskResponse =
           perpetualTaskExecutor.runOnce(taskId, params, HTimestamps.toInstant(context.getHeartbeatTimestamp()));
     } catch (UncheckedTimeoutException tex) {
-      perpetualTaskResponse = PerpetualTaskResponse.builder()
-                                  .responseCode(408)
-                                  .perpetualTaskState(PerpetualTaskState.TASK_RUN_FAILED)
-                                  .responseMessage(PerpetualTaskState.TASK_RUN_FAILED.name())
-                                  .build();
+      perpetualTaskResponse = PerpetualTaskResponse.builder().responseCode(408).responseMessage("failed").build();
       logger.warn("Timed out starting task", tex);
     } catch (Exception ex) {
-      perpetualTaskResponse = PerpetualTaskResponse.builder()
-                                  .responseCode(500)
-                                  .perpetualTaskState(PerpetualTaskState.TASK_RUN_FAILED)
-                                  .responseMessage(PerpetualTaskState.TASK_RUN_FAILED.name())
-                                  .build();
+      perpetualTaskResponse = PerpetualTaskResponse.builder().responseCode(500).responseMessage("failed").build();
       logger.error("Exception is ", ex);
     }
     String perpetualTaskId = taskId.getId();

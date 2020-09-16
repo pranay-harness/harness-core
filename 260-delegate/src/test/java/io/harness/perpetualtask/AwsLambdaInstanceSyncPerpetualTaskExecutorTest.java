@@ -93,15 +93,13 @@ public class AwsLambdaInstanceSyncPerpetualTaskExecutorTest extends DelegateTest
 
     final AwsLambdaDetailsMetricsResponse awsResponse = captor.getValue();
 
-    verifyAwsCall(perpetualTaskResponse, awsResponse, SUCCESS, PerpetualTaskState.TASK_RUN_SUCCEEDED.name(),
-        PerpetualTaskState.TASK_RUN_SUCCEEDED);
+    verifyAwsCall(perpetualTaskResponse, awsResponse, SUCCESS, "success");
 
     doThrow(new RuntimeException("Failed to publish execution result")).when(call).execute();
     perpetualTaskResponse =
         executor.runOnce(PerpetualTaskId.newBuilder().setId("id").build(), getPerpetualTaskParams(), Instant.now());
 
-    verifyAwsCall(perpetualTaskResponse, awsResponse, SUCCESS, PerpetualTaskState.TASK_RUN_SUCCEEDED.name(),
-        PerpetualTaskState.TASK_RUN_SUCCEEDED);
+    verifyAwsCall(perpetualTaskResponse, awsResponse, SUCCESS, "success");
   }
 
   @Test
@@ -129,15 +127,13 @@ public class AwsLambdaInstanceSyncPerpetualTaskExecutorTest extends DelegateTest
 
     final AwsLambdaDetailsMetricsResponse awsResponse = captor.getValue();
 
-    verifyAwsCall(perpetualTaskResponse, awsResponse, SUCCESS, PerpetualTaskState.TASK_RUN_SUCCEEDED.name(),
-        PerpetualTaskState.TASK_RUN_SUCCEEDED);
+    verifyAwsCall(perpetualTaskResponse, awsResponse, SUCCESS, "success");
 
     doThrow(new RuntimeException("Failed to publish execution result")).when(call).execute();
     perpetualTaskResponse =
         executor.runOnce(PerpetualTaskId.newBuilder().setId("id").build(), getPerpetualTaskParams(), Instant.now());
 
-    verifyAwsCall(perpetualTaskResponse, awsResponse, SUCCESS, PerpetualTaskState.TASK_RUN_SUCCEEDED.name(),
-        PerpetualTaskState.TASK_RUN_SUCCEEDED);
+    verifyAwsCall(perpetualTaskResponse, awsResponse, SUCCESS, "success");
   }
 
   @Test
@@ -161,15 +157,13 @@ public class AwsLambdaInstanceSyncPerpetualTaskExecutorTest extends DelegateTest
 
     final AwsLambdaDetailsMetricsResponse awsResponse = captor.getValue();
 
-    verifyAwsCall(perpetualTaskResponse, awsResponse, FAILED, "Failed to execute lambda function",
-        PerpetualTaskState.TASK_RUN_FAILED);
+    verifyAwsCall(perpetualTaskResponse, awsResponse, FAILED, "Failed to execute lambda function");
 
     doThrow(new RuntimeException("Failed to publish execution result")).when(call).execute();
     perpetualTaskResponse =
         executor.runOnce(PerpetualTaskId.newBuilder().setId("id").build(), getPerpetualTaskParams(), Instant.now());
 
-    verifyAwsCall(perpetualTaskResponse, awsResponse, FAILED, "Failed to execute lambda function",
-        PerpetualTaskState.TASK_RUN_FAILED);
+    verifyAwsCall(perpetualTaskResponse, awsResponse, FAILED, "Failed to execute lambda function");
   }
 
   @Test
@@ -180,8 +174,8 @@ public class AwsLambdaInstanceSyncPerpetualTaskExecutorTest extends DelegateTest
   }
 
   private void verifyAwsCall(PerpetualTaskResponse perpetualTaskResponse, AwsLambdaDetailsMetricsResponse awsResponse,
-      ExecutionStatus executionStatus, String message, PerpetualTaskState perpetualTaskState) {
-    if (PerpetualTaskState.TASK_RUN_SUCCEEDED.name().equals(message)) {
+      ExecutionStatus executionStatus, String message) {
+    if ("success".equals(message)) {
       assertThat(awsResponse.getErrorMessage()).isNull();
     } else {
       assertThat(awsResponse.getErrorMessage()).isEqualTo(message);
@@ -190,7 +184,6 @@ public class AwsLambdaInstanceSyncPerpetualTaskExecutorTest extends DelegateTest
 
     assertThat(perpetualTaskResponse.getResponseMessage()).isEqualTo(message);
     assertThat(perpetualTaskResponse.getResponseCode()).isEqualTo(Response.SC_OK);
-    assertThat(perpetualTaskResponse.getPerpetualTaskState()).isEqualTo(perpetualTaskState);
   }
 
   private PerpetualTaskExecutionParams getPerpetualTaskParams() {

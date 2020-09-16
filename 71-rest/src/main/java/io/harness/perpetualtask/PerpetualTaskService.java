@@ -32,5 +32,5 @@ public interface PerpetualTaskService {
 
   void appointDelegate(String accountId, String taskId, String delegateId, long lastContextUpdated);
 
-  void setTaskState(String taskId, PerpetualTaskState state);
+  void updateTaskUnassignedReason(String taskId, PerpetualTaskUnassignedReason reason);
 }

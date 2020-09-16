@@ -14,6 +14,7 @@ import io.harness.mongo.index.Field;
 import io.harness.perpetualtask.PerpetualTaskClientContext;
 import io.harness.perpetualtask.PerpetualTaskClientContext.PerpetualTaskClientContextKeys;
 import io.harness.perpetualtask.PerpetualTaskState;
+import io.harness.perpetualtask.PerpetualTaskUnassignedReason;
 import io.harness.persistence.AccountAccess;
 import io.harness.persistence.CreatedAtAware;
 import io.harness.persistence.PersistentEntity;
@@ -41,7 +42,7 @@ import java.util.List;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @Entity(value = "perpetualTask", noClassnameStored = true)
 @CdIndex(name = "assignerIterator",
-    fields = { @Field(PerpetualTaskRecordKeys.delegateId)
+    fields = { @Field(PerpetualTaskRecordKeys.state)
                , @Field(PerpetualTaskRecordKeys.assignerIterations) })
 @HarnessEntity(exportable = false)
 @Slf4j
@@ -53,9 +54,10 @@ public class PerpetualTaskRecord implements PersistentEntity, UuidAware, Persist
   PerpetualTaskClientContext clientContext;
   long intervalSeconds;
   long timeoutMillis;
-  String delegateId;
+  @FdIndex String delegateId;
   String taskDescription;
   PerpetualTaskState state;
+  PerpetualTaskUnassignedReason unassignedReason;
   long lastHeartbeat;
 
   List<Long> assignerIterations;

@@ -29,7 +29,6 @@ message ObtainPerpetualTaskExecutionParamsResponse {
 }
 
 message PerpetualTaskExecutionResponse {
-  string task_state = 1;
   int32 response_code = 2;
   string response_message = 3;
 }

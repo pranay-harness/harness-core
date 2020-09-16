@@ -123,9 +123,8 @@ public class ContainerInstanceSyncPerpetualTaskExecutorTest extends DelegateTest
     K8sInstanceSyncResponse taskResp = (K8sInstanceSyncResponse) k8sTaskExecutionResponse.getK8sTaskResponse();
     assertThat(taskResp.getK8sPodInfoList()).containsExactly(pod);
 
-    assertThat(perpetualTaskResponse.getResponseMessage()).isEqualTo("TASK_RUN_SUCCEEDED");
+    assertThat(perpetualTaskResponse.getResponseMessage()).isEqualTo("success");
     assertThat(perpetualTaskResponse.getResponseCode()).isEqualTo(Response.SC_OK);
-    assertThat(perpetualTaskResponse.getPerpetualTaskState()).isEqualTo(PerpetualTaskState.TASK_RUN_SUCCEEDED);
   }
 
   @Test
@@ -170,7 +169,6 @@ public class ContainerInstanceSyncPerpetualTaskExecutorTest extends DelegateTest
 
     assertThat(perpetualTaskResponse.getResponseMessage()).isEqualTo("Failed to retrieve pod list");
     assertThat(perpetualTaskResponse.getResponseCode()).isEqualTo(Response.SC_OK);
-    assertThat(perpetualTaskResponse.getPerpetualTaskState()).isEqualTo(PerpetualTaskState.TASK_RUN_FAILED);
   }
 
   @Test
@@ -211,9 +209,8 @@ public class ContainerInstanceSyncPerpetualTaskExecutorTest extends DelegateTest
     assertThat(containerSyncResponse.getContainerInfoList()).containsExactly(containerInfo);
     assertThat(containerSyncResponse.getControllerName()).isEqualTo("service");
 
-    assertThat(perpetualTaskResponse.getResponseMessage()).isEqualTo("TASK_RUN_SUCCEEDED");
+    assertThat(perpetualTaskResponse.getResponseMessage()).isEqualTo("success");
     assertThat(perpetualTaskResponse.getResponseCode()).isEqualTo(Response.SC_OK);
-    assertThat(perpetualTaskResponse.getPerpetualTaskState()).isEqualTo(PerpetualTaskState.TASK_RUN_SUCCEEDED);
   }
 
   @Test
@@ -254,7 +251,6 @@ public class ContainerInstanceSyncPerpetualTaskExecutorTest extends DelegateTest
 
     assertThat(perpetualTaskResponse.getResponseMessage()).isEqualTo("Failed to retrieve container info");
     assertThat(perpetualTaskResponse.getResponseCode()).isEqualTo(Response.SC_OK);
-    assertThat(perpetualTaskResponse.getPerpetualTaskState()).isEqualTo(PerpetualTaskState.TASK_RUN_FAILED);
   }
 
   @Test

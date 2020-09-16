@@ -22,7 +22,6 @@ import io.harness.managerclient.ManagerClient;
 import io.harness.perpetualtask.PerpetualTaskExecutionParams;
 import io.harness.perpetualtask.PerpetualTaskId;
 import io.harness.perpetualtask.PerpetualTaskResponse;
-import io.harness.perpetualtask.PerpetualTaskState;
 import io.harness.rest.RestResponse;
 import io.harness.rule.Owner;
 import io.harness.rule.OwnerRule;
@@ -74,7 +73,7 @@ public class ArtifactPerpetualTaskExecutorTest extends DelegateTest {
   @Owner(developers = OwnerRule.SRINIVAS)
   @Category(UnitTests.class)
   public void shouldRunArtifactCollection() throws IOException {
-    assertThat(runOnce(false).getPerpetualTaskState()).isEqualTo(PerpetualTaskState.TASK_RUN_SUCCEEDED);
+    assertThat(runOnce(false).getResponseCode()).isEqualTo(org.eclipse.jetty.server.Response.SC_OK);
 
     // Artifact collection is done once as there are no unpublished build details initially.
     verify(artifactRepositoryService, times(1)).publishCollectedArtifacts(any(BuildSourceParameters.class));
@@ -89,7 +88,7 @@ public class ArtifactPerpetualTaskExecutorTest extends DelegateTest {
   @Owner(developers = OwnerRule.SRINIVAS)
   @Category(UnitTests.class)
   public void testExceptionInPublishToManager() throws IOException {
-    assertThat(runOnce(true).getPerpetualTaskState()).isEqualTo(PerpetualTaskState.TASK_RUN_SUCCEEDED);
+    assertThat(runOnce(true).getResponseCode()).isEqualTo(org.eclipse.jetty.server.Response.SC_OK);
 
     // Artifact collection is done once as there are no unpublished build details initially.
     verify(artifactRepositoryService, times(1)).publishCollectedArtifacts(any(BuildSourceParameters.class));

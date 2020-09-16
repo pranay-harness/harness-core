@@ -81,21 +81,12 @@ public class PcfInstanceSyncDelegateExecutor implements PerpetualTaskExecutor {
 
   private PerpetualTaskResponse getPerpetualTaskResponse(
       PcfCommandExecutionResponse pcfCommandExecutionResponse, CommandExecutionStatus commandExecutionStatus) {
-    PerpetualTaskState taskState;
-    String message;
+    String message = "success";
     if (CommandExecutionStatus.FAILURE == commandExecutionStatus) {
-      taskState = PerpetualTaskState.TASK_RUN_FAILED;
       message = pcfCommandExecutionResponse.getErrorMessage();
-    } else {
-      taskState = PerpetualTaskState.TASK_RUN_SUCCEEDED;
-      message = PerpetualTaskState.TASK_RUN_SUCCEEDED.name();
     }
 
-    return PerpetualTaskResponse.builder()
-        .responseCode(Response.SC_OK)
-        .perpetualTaskState(taskState)
-        .responseMessage(message)
-        .build();
+    return PerpetualTaskResponse.builder().responseCode(Response.SC_OK).responseMessage(message).build();
   }
 
   @Override

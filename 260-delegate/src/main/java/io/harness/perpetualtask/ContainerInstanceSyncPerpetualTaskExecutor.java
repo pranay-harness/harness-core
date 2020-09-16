@@ -3,8 +3,6 @@ package io.harness.perpetualtask;
 import static io.harness.logging.CommandExecutionStatus.FAILURE;
 import static io.harness.logging.CommandExecutionStatus.SUCCESS;
 import static io.harness.network.SafeHttpCall.execute;
-import static io.harness.perpetualtask.PerpetualTaskState.TASK_RUN_FAILED;
-import static io.harness.perpetualtask.PerpetualTaskState.TASK_RUN_SUCCEEDED;
 import static io.harness.state.StateConstants.DEFAULT_STEADY_STATE_TIMEOUT;
 import static software.wings.service.impl.ContainerMetadataType.K8S;
 
@@ -71,8 +69,7 @@ public class ContainerInstanceSyncPerpetualTaskExecutor implements PerpetualTask
     boolean isFailureResponse = FAILURE == responseData.getCommandExecutionStatus();
     return PerpetualTaskResponse.builder()
         .responseCode(Response.SC_OK)
-        .perpetualTaskState(isFailureResponse ? TASK_RUN_FAILED : TASK_RUN_SUCCEEDED)
-        .responseMessage(isFailureResponse ? responseData.getErrorMessage() : TASK_RUN_SUCCEEDED.name())
+        .responseMessage(isFailureResponse ? responseData.getErrorMessage() : "success")
         .build();
   }
 
@@ -130,8 +127,7 @@ public class ContainerInstanceSyncPerpetualTaskExecutor implements PerpetualTask
     boolean isFailureResponse = FAILURE == responseData.getCommandExecutionStatus();
     return PerpetualTaskResponse.builder()
         .responseCode(Response.SC_OK)
-        .perpetualTaskState(isFailureResponse ? TASK_RUN_FAILED : TASK_RUN_SUCCEEDED)
-        .responseMessage(isFailureResponse ? responseData.getErrorMessage() : TASK_RUN_SUCCEEDED.name())
+        .responseMessage(isFailureResponse ? responseData.getErrorMessage() : "success")
         .build();
   }
 
