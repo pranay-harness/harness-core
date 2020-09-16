@@ -13,7 +13,7 @@ import static software.wings.beans.LogHelper.color;
 import static software.wings.beans.LogHelper.doneColoring;
 import static software.wings.beans.command.CommandUnitDetails.CommandUnitType.CUSTOM_DEPLOYMENT_FETCH_INSTANCES;
 import static software.wings.sm.InstanceStatusSummary.InstanceStatusSummaryBuilder.anInstanceStatusSummary;
-import static software.wings.sm.states.customdeployment.InstanceElementMapperUtils.getHostnameFieldName;
+import static software.wings.sm.states.customdeployment.InstanceMapperUtils.getHostnameFieldName;
 
 import com.google.inject.Inject;
 
@@ -41,6 +41,7 @@ import lombok.experimental.FieldNameConstants;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.ObjectUtils;
 import org.apache.commons.lang3.StringUtils;
+import software.wings.api.HostElement;
 import software.wings.api.InfraMappingElement;
 import software.wings.api.InstanceElement;
 import software.wings.api.InstanceElementListParam;
@@ -71,6 +72,7 @@ import software.wings.sm.State;
 import software.wings.sm.StateExecutionContext;
 import software.wings.sm.StateType;
 import software.wings.sm.states.ManagerExecutionLogCallback;
+import software.wings.sm.states.customdeployment.InstanceMapperUtils.HostProperties;
 import software.wings.sm.states.utils.StateTimeoutUtils;
 import software.wings.stencils.DefaultValue;
 
@@ -99,19 +101,23 @@ public class InstanceFetchState extends State {
   @Getter @Setter @DefaultValue("10") String stateTimeoutInMinutes;
   @Getter @Setter private List<String> tags;
 
-  static Function<String, InstanceElement> instanceElementMapper = hostName
-      -> anInstanceElement()
-             .uuid(UUIDGenerator.generateUuid())
-             .hostName(hostName)
-             .displayName(hostName)
-             .newInstance(true)
-             .build();
+  static Function<HostProperties, InstanceElement> instanceElementMapper = hostProperties -> {
+    HostElement hostElement = HostElement.builder().properties(hostProperties.getOtherPropeties()).build();
+    return anInstanceElement()
+        .uuid(UUIDGenerator.generateUuid())
+        .hostName(hostProperties.getHostName())
+        .host(hostElement)
+        .displayName(hostProperties.getHostName())
+        .newInstance(true)
+        .build();
+  };
 
-  static Function<String, InstanceDetails> instanceDetailsMapper = hostName
+  static Function<HostProperties, InstanceDetails> instanceDetailsMapper = hostProperties
       -> InstanceDetails.builder()
              .newInstance(true)
-             .hostName(hostName)
-             .physicalHost(InstanceDetails.PHYSICAL_HOST.builder().instanceId(hostName).build())
+             .hostName(hostProperties.getHostName())
+             .properties(hostProperties.getOtherPropeties())
+             .physicalHost(InstanceDetails.PHYSICAL_HOST.builder().instanceId(hostProperties.getHostName()).build())
              .build();
 
   public InstanceFetchState(String name) {
@@ -254,9 +260,9 @@ public class InstanceFetchState extends State {
     } else if (SUCCESS == executionData.getExecutionStatus()) {
       String output = executionData.getOutput();
       try {
-        instanceElements = InstanceElementMapperUtils.mapJsonToInstanceElements(stateExecutionData.getHostAttributes(),
+        instanceElements = InstanceMapperUtils.mapJsonToInstanceElements(stateExecutionData.getHostAttributes(),
             stateExecutionData.getHostObjectArrayPath(), output, instanceElementMapper);
-        instanceDetails = InstanceElementMapperUtils.mapJsonToInstanceElements(stateExecutionData.getHostAttributes(),
+        instanceDetails = InstanceMapperUtils.mapJsonToInstanceElements(stateExecutionData.getHostAttributes(),
             stateExecutionData.getHostObjectArrayPath(), output, instanceDetailsMapper);
         validateInstanceElements(instanceElements, output, stateExecutionData, logCallback);
       } catch (Exception ex) {
@@ -295,7 +301,7 @@ public class InstanceFetchState extends State {
         instanceElements.stream().map(InstanceElement::getHostName).anyMatch(StringUtils::isBlank);
     if (elementWithoutHostnameExists) {
       logCallback.saveExecutionLog(
-          InstanceElementMapperUtils.prettyJson(output, stateExecutionData.getHostObjectArrayPath()), LogLevel.ERROR);
+          InstanceMapperUtils.prettyJson(output, stateExecutionData.getHostObjectArrayPath()), LogLevel.ERROR);
       throw new InvalidRequestException(format("Could not find \"%s\" field from Json Array",
                                             getHostnameFieldName(stateExecutionData.getHostAttributes())),
           WingsException.USER);
