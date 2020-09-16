@@ -42,7 +42,7 @@ public class TimeSeriesResource {
   @Path("/metric-group-data")
   @Timed
   @ExceptionMetered
-  public RestResponse<TimeSeriesTestDataDTO> getMetricDefinitions(@QueryParam("accountId") @NotNull String accountId,
+  public RestResponse<TimeSeriesTestDataDTO> getTimeSeriesData(@QueryParam("accountId") @NotNull String accountId,
       @QueryParam("cvConfigId") @NotNull String cvConfigId,
       @QueryParam("startTimeEpochMillis") @NotNull Long startTimeEpochMillis,
       @QueryParam("endTimeEpochMillis") @NotNull Long endTimeEpochMillis,
@@ -51,5 +51,15 @@ public class TimeSeriesResource {
     return new RestResponse<>(
         timeSeriesService.getMetricGroupDataForRange(cvConfigId, Instant.ofEpochMilli(startTimeEpochMillis),
             Instant.ofEpochMilli(endTimeEpochMillis), metricName, groupNameList));
+  }
+
+  @GET
+  @Path("/anomalous-metric-data")
+  @Timed
+  @ExceptionMetered
+  public RestResponse<TimeSeriesTestDataDTO> getAnomalousMetricData(@QueryParam("accountId") @NotNull String accountId,
+      @QueryParam("cvConfigId") @NotNull String cvConfigId, @QueryParam("startTime") @NotNull Long startTimeEpochMillis,
+      @QueryParam("endTime") @NotNull Long endTimeEpochMillis) {
+    return new RestResponse<>(null);
   }
 }

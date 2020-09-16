@@ -57,8 +57,10 @@ import io.harness.cvng.core.services.impl.VerificationTaskServiceImpl;
 import io.harness.cvng.core.services.impl.WebhookServiceImpl;
 import io.harness.cvng.dashboard.services.api.AnomalyService;
 import io.harness.cvng.dashboard.services.api.HeatMapService;
+import io.harness.cvng.dashboard.services.api.TimeSeriesDashboardService;
 import io.harness.cvng.dashboard.services.impl.AnomalyServiceImpl;
 import io.harness.cvng.dashboard.services.impl.HeatMapServiceImpl;
+import io.harness.cvng.dashboard.services.impl.TimeSeriesDashboardServiceImpl;
 import io.harness.cvng.statemachine.services.AnalysisStateMachineServiceImpl;
 import io.harness.cvng.statemachine.services.OrchestrationServiceImpl;
 import io.harness.cvng.statemachine.services.intfc.AnalysisStateMachineService;
@@ -152,6 +154,7 @@ public class CVServiceModule extends AbstractModule {
       bind(LogRecordService.class).to(LogRecordServiceImpl.class);
       bind(VerificationJobInstanceService.class).to(VerificationJobInstanceServiceImpl.class);
       bind(VerificationTaskService.class).to(VerificationTaskServiceImpl.class);
+      bind(TimeSeriesDashboardService.class).to(TimeSeriesDashboardServiceImpl.class);
       bind(ActivityService.class).to(ActivityServiceImpl.class);
       bind(WebhookService.class).to(WebhookServiceImpl.class);
       bind(DeploymentTimeSeriesAnalysisService.class).to(DeploymentTimeSeriesAnalysisServiceImpl.class);
