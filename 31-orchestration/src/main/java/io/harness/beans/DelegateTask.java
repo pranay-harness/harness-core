@@ -69,7 +69,7 @@ public class DelegateTask
   private boolean capabilityFrameworkEnabled;
 
   @NotNull private TaskData data;
-  private List<ExecutionCapability> executionCapabilities;
+  @Singular private List<ExecutionCapability> executionCapabilities;
 
   @Id private String uuid;
   @NotEmpty private String accountId;

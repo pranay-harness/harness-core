@@ -5,6 +5,7 @@ import com.google.inject.Singleton;
 
 import io.harness.beans.DelegateTask;
 import lombok.extern.slf4j.Slf4j;
+import org.atmosphere.cpr.Broadcaster;
 import org.atmosphere.cpr.BroadcasterFactory;
 import software.wings.beans.DelegateTaskBroadcast;
 import software.wings.dl.WingsPersistence;
@@ -43,15 +44,17 @@ public class DelegateTaskBroadcastHelper {
     if (delegateTask == null) {
       return;
     }
-    broadcasterFactory.lookup(STREAM_DELEGATE_PATH + delegateTask.getAccountId(), true)
-        .broadcast(DelegateTaskBroadcast.builder()
-                       .version(delegateTask.getVersion())
-                       .accountId(delegateTask.getAccountId())
-                       .taskId(delegateTask.getUuid())
-                       .async(delegateTask.getData().isAsync())
-                       .preAssignedDelegateId(delegateTask.getPreAssignedDelegateId())
-                       .alreadyTriedDelegates(delegateTask.getAlreadyTriedDelegates())
-                       .build());
+    DelegateTaskBroadcast delegateTaskBroadcast = DelegateTaskBroadcast.builder()
+                                                      .version(delegateTask.getVersion())
+                                                      .accountId(delegateTask.getAccountId())
+                                                      .taskId(delegateTask.getUuid())
+                                                      .async(delegateTask.getData().isAsync())
+                                                      .preAssignedDelegateId(delegateTask.getPreAssignedDelegateId())
+                                                      .alreadyTriedDelegates(delegateTask.getAlreadyTriedDelegates())
+                                                      .build();
+
+    Broadcaster broadcaster = broadcasterFactory.lookup(STREAM_DELEGATE_PATH + delegateTask.getAccountId(), true);
+    broadcaster.broadcast(delegateTaskBroadcast);
   }
 
   public long findNextBroadcastTimeForTask(DelegateTask delegateTask) {
