@@ -347,6 +347,7 @@ import software.wings.service.impl.analysis.TimeSeriesMLAnalysisRecordServiceImp
 import software.wings.service.impl.analysis.VerificationServiceImpl;
 import software.wings.service.impl.apm.ApmVerificationServiceImpl;
 import software.wings.service.impl.appdynamics.AppdynamicsServiceImpl;
+import software.wings.service.impl.applicationmanifest.HelmChartServiceImpl;
 import software.wings.service.impl.artifact.ArtifactCleanupServiceAsyncImpl;
 import software.wings.service.impl.artifact.ArtifactCollectionServiceAsyncImpl;
 import software.wings.service.impl.artifact.ArtifactCollectionServiceImpl;
@@ -564,6 +565,7 @@ import software.wings.service.intfc.analysis.LogVerificationServiceImpl;
 import software.wings.service.intfc.analysis.TimeSeriesMLAnalysisRecordService;
 import software.wings.service.intfc.apm.ApmVerificationService;
 import software.wings.service.intfc.appdynamics.AppdynamicsService;
+import software.wings.service.intfc.applicationmanifest.HelmChartService;
 import software.wings.service.intfc.artifact.CustomBuildSourceService;
 import software.wings.service.intfc.aws.delegate.AwsEcrHelperServiceDelegate;
 import software.wings.service.intfc.aws.manager.AwsAsgHelperServiceManager;
@@ -1192,6 +1194,7 @@ public class WingsModule extends AbstractModule implements ServersModule {
     adviserRegistrarMapBinder.addBinding(WingsAdviserRegistrar.class.getName()).to(WingsAdviserRegistrar.class);
 
     bind(CVDataCollectionTaskService.class).to(CVDataCollectionTaskServiceImpl.class);
+    bind(HelmChartService.class).to(HelmChartServiceImpl.class);
   }
 
   private void bindFeatures() {
