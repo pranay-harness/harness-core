@@ -4,10 +4,12 @@ import com.fasterxml.jackson.annotation.JsonTypeName;
 import io.harness.beans.ParameterField;
 import io.harness.cdng.manifest.ManifestStoreType;
 import io.harness.cdng.visitor.helper.GitStoreVisitorHelper;
+import io.harness.common.SwaggerConstants;
 import io.harness.delegate.beans.storeconfig.FetchType;
 import io.harness.walktree.beans.VisitableChildren;
 import io.harness.walktree.visitor.SimpleVisitorHelper;
 import io.harness.walktree.visitor.Visitable;
+import io.swagger.annotations.ApiModelProperty;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -21,11 +23,17 @@ import java.util.List;
 @JsonTypeName(ManifestStoreType.GIT)
 @SimpleVisitorHelper(helperClass = GitStoreVisitorHelper.class)
 public class GitStore implements StoreConfig, Visitable {
-  @Wither private ParameterField<String> connectorIdentifier;
+  @ApiModelProperty(dataType = SwaggerConstants.STRING_CLASSPATH)
+  @Wither
+  private ParameterField<String> connectorIdentifier;
+
   @Wither private FetchType gitFetchType;
-  @Wither private ParameterField<String> branch;
-  @Wither private ParameterField<String> commitId;
-  @Wither private ParameterField<List<String>> paths;
+  @ApiModelProperty(dataType = SwaggerConstants.STRING_CLASSPATH) @Wither private ParameterField<String> branch;
+  @ApiModelProperty(dataType = SwaggerConstants.STRING_CLASSPATH) @Wither private ParameterField<String> commitId;
+
+  @ApiModelProperty(dataType = SwaggerConstants.STRING_LIST_CLASSPATH)
+  @Wither
+  private ParameterField<List<String>> paths;
 
   // For Visitor Framework Impl
   String metadata;

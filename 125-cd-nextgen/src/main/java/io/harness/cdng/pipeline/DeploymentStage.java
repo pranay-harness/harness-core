@@ -6,10 +6,12 @@ import io.harness.beans.ParameterField;
 import io.harness.cdng.service.beans.ServiceConfig;
 import io.harness.cdng.variables.StageVariables;
 import io.harness.cdng.visitor.helpers.deploymentstage.DeploymentStageVisitorHelper;
+import io.harness.common.SwaggerConstants;
 import io.harness.walktree.beans.VisitableChildren;
 import io.harness.walktree.visitor.SimpleVisitorHelper;
 import io.harness.walktree.visitor.Visitable;
 import io.harness.yaml.core.ExecutionElement;
+import io.swagger.annotations.ApiModelProperty;
 import lombok.Builder;
 import lombok.Data;
 import lombok.Getter;
@@ -26,7 +28,7 @@ public class DeploymentStage implements CDStage, Visitable {
   PipelineInfrastructure infrastructure;
   ExecutionElement execution;
   StageVariables stageVariables;
-  ParameterField<String> skipCondition;
+  @ApiModelProperty(dataType = SwaggerConstants.STRING_CLASSPATH) ParameterField<String> skipCondition;
 
   // For Visitor Framework Impl
   String metadata;
