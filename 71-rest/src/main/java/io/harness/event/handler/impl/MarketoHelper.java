@@ -13,10 +13,10 @@ import io.harness.event.handler.marketo.MarketoRestClient;
 import io.harness.event.model.marketo.Error;
 import io.harness.event.model.marketo.GetLeadResponse;
 import io.harness.event.model.marketo.GetLeadResponse.Result;
+import io.harness.event.model.marketo.Lead;
+import io.harness.event.model.marketo.Lead.LeadBuilder;
 import io.harness.event.model.marketo.LeadRequestWithEmail;
 import io.harness.event.model.marketo.LeadRequestWithId;
-import io.harness.event.model.marketo.LeadRequestWithId.Lead;
-import io.harness.event.model.marketo.LeadRequestWithId.Lead.LeadBuilder;
 import io.harness.event.model.marketo.LoginResponse;
 import io.harness.event.model.marketo.Response;
 import lombok.extern.slf4j.Slf4j;
@@ -100,48 +100,11 @@ public class MarketoHelper {
       String userInviteUrl, String accessToken, String oauthProvider, UtmInfo utmInfo, UserInvite userInvite)
       throws IOException {
     logger.info("Creating lead with email: {} in marketo with oauth provider {}", email, oauthProvider);
-    LeadRequestWithEmail.Lead.LeadBuilder leadBuilderWithEmail = LeadRequestWithEmail.Lead.builder();
-    leadBuilderWithEmail.email(email)
-        .firstName(utils.getFirstName(userName, email))
-        .lastName(utils.getLastName(userName, email));
 
-    if (account != null) {
-      if (isNotEmpty(oauthProvider)) {
-        // In case of sso, make the company name null because it's populated by harness using email.
-        leadBuilderWithEmail.company(null).Harness_Account_ID__c_lead(account.getUuid());
-      } else {
-        leadBuilderWithEmail.company(account.getCompanyName()).Harness_Account_ID__c_lead(account.getUuid());
-      }
-      LicenseInfo licenseInfo = account.getLicenseInfo();
-      if (licenseInfo != null) {
-        leadBuilderWithEmail.Free_Trial_Status__c(licenseInfo.getAccountStatus())
-            .Days_Left_in_Trial__c(utils.getDaysLeft(licenseInfo.getExpiryTime()));
-      }
-    } else if (userInvite != null) {
-      leadBuilderWithEmail.company(userInvite.getCompanyName());
-    }
+    Lead lead = buildLead(email, userName, account, userInviteUrl, oauthProvider, utmInfo, userInvite);
 
-    if (isNotEmpty(userInviteUrl)) {
-      leadBuilderWithEmail.Freemium_Invite_URL__c(userInviteUrl);
-    }
-
-    if (isNotEmpty(oauthProvider)) {
-      leadBuilderWithEmail.SSO_Freemium_Type__c(oauthProvider);
-    }
-
-    if (utmInfo != null) {
-      leadBuilderWithEmail.UTM_Source__c(utmInfo.getUtmSource());
-      leadBuilderWithEmail.UTM_Content__c(utmInfo.getUtmContent());
-      leadBuilderWithEmail.UTM_Medium__c(utmInfo.getUtmMedium());
-      leadBuilderWithEmail.UTM_Term__c(utmInfo.getUtmTerm());
-      leadBuilderWithEmail.UTM__c(utmInfo.getUtmCampaign());
-    }
-
-    LeadRequestWithEmail leadRequestWithEmail = LeadRequestWithEmail.builder()
-                                                    .action("createOrUpdate")
-                                                    .lookupField("email")
-                                                    .input(Arrays.asList(leadBuilderWithEmail.build()))
-                                                    .build();
+    LeadRequestWithEmail leadRequestWithEmail =
+        LeadRequestWithEmail.builder().action("createOrUpdate").lookupField("email").input(Arrays.asList(lead)).build();
 
     retrofit2.Response<Response> response =
         retrofit.create(MarketoRestClient.class).createLead(accessToken, leadRequestWithEmail).execute();
@@ -154,53 +117,63 @@ public class MarketoHelper {
       UserInvite userInvite) throws IOException {
     logger.info("Updating lead {} to marketo", existingLeadId);
 
-    LeadBuilder leadBuilderWithId = Lead.builder();
-    leadBuilderWithId.id(existingLeadId);
-    leadBuilderWithId.email(email)
+    Lead lead = buildLead(email, userName, account, userInviteUrl, oauthProvider, utmInfo, userInvite);
+
+    LeadRequestWithId leadRequestWithId =
+        LeadRequestWithId.builder().action("createOrUpdate").lookupField("id").input(Arrays.asList(lead)).build();
+    retrofit2.Response<Response> response =
+        retrofit.create(MarketoRestClient.class).updateLead(accessToken, leadRequestWithId).execute();
+    logger.info("Updated lead {} to marketo", existingLeadId);
+    return response;
+  }
+
+  private Lead buildLead(String email, String userName, Account account, String userInviteUrl, String oauthProvider,
+      UtmInfo utmInfo, UserInvite userInvite) {
+    LeadBuilder leadBuilder = Lead.builder();
+    leadBuilder.email(email)
         .firstName(utils.getFirstName(userName, email))
         .lastName(utils.getLastName(userName, email));
 
     if (account != null) {
       if (isNotEmpty(oauthProvider)) {
         // In case of sso, make the company name null because it's populated by harness using email.
-        leadBuilderWithId.company(null).Harness_Account_ID__c_lead(account.getUuid());
+        leadBuilder.company(null).Harness_Account_ID__c_lead(account.getUuid());
       } else {
-        leadBuilderWithId.company(account.getCompanyName()).Harness_Account_ID__c_lead(account.getUuid());
+        leadBuilder.company(account.getCompanyName()).Harness_Account_ID__c_lead(account.getUuid());
       }
       LicenseInfo licenseInfo = account.getLicenseInfo();
       if (licenseInfo != null) {
-        leadBuilderWithId.Free_Trial_Status__c(licenseInfo.getAccountStatus())
+        leadBuilder.Free_Trial_Status__c(licenseInfo.getAccountStatus())
             .Days_Left_in_Trial__c(utils.getDaysLeft(licenseInfo.getExpiryTime()));
       }
     } else if (userInvite != null) {
-      leadBuilderWithId.company(userInvite.getCompanyName());
+      leadBuilder.company(userInvite.getCompanyName());
     }
 
     if (isNotEmpty(userInviteUrl)) {
-      leadBuilderWithId.Freemium_Invite_URL__c(userInviteUrl);
+      leadBuilder.Freemium_Invite_URL__c(userInviteUrl);
     }
 
     if (isNotEmpty(oauthProvider)) {
-      leadBuilderWithId.SSO_Freemium_Type__c(oauthProvider);
+      leadBuilder.SSO_Freemium_Type__c(oauthProvider);
     }
 
     if (utmInfo != null) {
-      leadBuilderWithId.UTM_Source__c(utmInfo.getUtmSource());
-      leadBuilderWithId.UTM_Content__c(utmInfo.getUtmContent());
-      leadBuilderWithId.UTM_Medium__c(utmInfo.getUtmMedium());
-      leadBuilderWithId.UTM_Term__c(utmInfo.getUtmTerm());
-      leadBuilderWithId.UTM__c(utmInfo.getUtmCampaign());
+      leadBuilder.UTM_Source__c(utmInfo.getUtmSource());
+      leadBuilder.UTM_Content__c(utmInfo.getUtmContent());
+      leadBuilder.UTM_Medium__c(utmInfo.getUtmMedium());
+      leadBuilder.UTM_Term__c(utmInfo.getUtmTerm());
+      leadBuilder.UTM__c(utmInfo.getUtmCampaign());
     }
 
-    LeadRequestWithId leadRequestWithId = LeadRequestWithId.builder()
-                                              .action("createOrUpdate")
-                                              .lookupField("id")
-                                              .input(Arrays.asList(leadBuilderWithId.build()))
-                                              .build();
-    retrofit2.Response<Response> response =
-        retrofit.create(MarketoRestClient.class).updateLead(accessToken, leadRequestWithId).execute();
-    logger.info("Updated lead {} to marketo", existingLeadId);
-    return response;
+    if (userInvite != null && isNotEmpty(userInvite.getFreemiumProducts())) {
+      leadBuilder.freemiumProducts(userInvite.getFreemiumProducts());
+    }
+
+    if (userInvite != null && userInvite.getFreemiumAssistedOption() != null) {
+      leadBuilder.freemiumAssistedOption(userInvite.getFreemiumAssistedOption());
+    }
+    return leadBuilder.build();
   }
 
   private long processLeadResponse(retrofit2.Response<Response> response) {
