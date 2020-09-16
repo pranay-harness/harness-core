@@ -85,7 +85,9 @@ public class K8sYamlToDelegateDTOMapper {
         KubernetesOpenIdConnectDTO openIdConnectDTO = (KubernetesOpenIdConnectDTO) authDTO.getCredentials();
 
         kubernetesConfigBuilder.oidcClientId(openIdConnectDTO.getOidcClientIdRef().getDecryptedValue());
-        kubernetesConfigBuilder.oidcSecret(openIdConnectDTO.getOidcSecretRef().getDecryptedValue());
+        kubernetesConfigBuilder.oidcSecret(openIdConnectDTO.getOidcSecretRef() != null
+                ? openIdConnectDTO.getOidcSecretRef().getDecryptedValue()
+                : null);
         kubernetesConfigBuilder.oidcUsername(openIdConnectDTO.getOidcUsername());
         kubernetesConfigBuilder.oidcPassword(openIdConnectDTO.getOidcPasswordRef().getDecryptedValue());
         kubernetesConfigBuilder.oidcGrantType(OidcGrantType.password);

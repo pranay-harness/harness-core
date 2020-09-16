@@ -21,7 +21,7 @@ public class KubernetesOpenIdConnectDTO extends KubernetesAuthCredentialDTO {
 
   @ApiModelProperty(dataType = "string") @NotNull @SecretReference SecretRefData oidcPasswordRef;
 
-  @ApiModelProperty(dataType = "string") @NotNull @SecretReference SecretRefData oidcSecretRef;
+  @ApiModelProperty(dataType = "string") @SecretReference SecretRefData oidcSecretRef;
 
   String oidcScopes;
 }
