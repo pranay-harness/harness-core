@@ -2,6 +2,8 @@ package io.harness.batch.processing.schedule;
 
 import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
 
+import com.google.common.collect.ImmutableSet;
+
 import io.harness.batch.processing.billing.timeseries.service.impl.BillingDataServiceImpl;
 import io.harness.batch.processing.billing.timeseries.service.impl.K8sUtilizationGranularDataServiceImpl;
 import io.harness.batch.processing.billing.timeseries.service.impl.WeeklyReportServiceImpl;
@@ -154,6 +156,11 @@ public class EventJobScheduler {
   private void runJob(String accountId, Job job, boolean runningMode) {
     try {
       BatchJobType batchJobType = BatchJobType.fromJob(job);
+      if (BatchJobType.ANOMALY_DETECTION == batchJobType
+          && !ImmutableSet.of("wFHXHD0RRQWoO8tIZT5YVw", "kmpySmUISimoRrJL6NL73w", "zEaak-FLS425IEO7OLzMUg")
+                  .contains(accountId)) {
+        return;
+      }
       if (BatchJobType.CLUSTER_DATA_TO_BIG_QUERY == batchJobType && !accountId.equals("zEaak-FLS425IEO7OLzMUg")) {
         return;
       }

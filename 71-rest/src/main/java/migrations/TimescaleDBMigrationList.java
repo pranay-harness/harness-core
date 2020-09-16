@@ -21,6 +21,7 @@ import migrations.timescaledb.AddSystemCostBillingData;
 import migrations.timescaledb.AddingToCVDeploymentMetrics;
 import migrations.timescaledb.AlterCEUtilizationDataTables;
 import migrations.timescaledb.ChangeToTimeStampTZ;
+import migrations.timescaledb.CreateAnomaliesData;
 import migrations.timescaledb.CreateBillingData;
 import migrations.timescaledb.CreateBillingDataHourly;
 import migrations.timescaledb.CreateBudgetAlerts;
@@ -73,6 +74,7 @@ public class TimescaleDBMigrationList {
         .add(Pair.of(29, AddNonComputeCostColumnToBillingData.class))
         .add(Pair.of(30, CreateBudgetAlerts.class))
         .add(Pair.of(31, CreatePodCountTable.class))
+        .add(Pair.of(32, CreateAnomaliesData.class))
         .build();
   }
 }
