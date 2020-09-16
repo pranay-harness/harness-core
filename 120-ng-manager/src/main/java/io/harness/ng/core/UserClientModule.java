@@ -8,7 +8,7 @@ import io.harness.ng.core.user.remote.UserClient;
 import io.harness.ng.core.user.remote.UserHttpClientFactory;
 import io.harness.ng.core.user.services.api.NgUserService;
 import io.harness.ng.core.user.services.api.impl.NgUserServiceImpl;
-import io.harness.ng.remote.client.ServiceHttpClientConfig;
+import io.harness.remote.client.ServiceHttpClientConfig;
 import io.harness.security.ServiceTokenGenerator;
 import io.harness.serializer.kryo.KryoConverterFactory;
 

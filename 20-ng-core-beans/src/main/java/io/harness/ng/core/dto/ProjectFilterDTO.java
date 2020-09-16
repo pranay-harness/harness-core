@@ -1,6 +1,6 @@
 package io.harness.ng.core.dto;
 
-import io.harness.ng.ModuleType;
+import io.harness.ModuleType;
 import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Data;

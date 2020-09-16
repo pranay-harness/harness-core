@@ -11,7 +11,7 @@ import io.harness.cvng.core.NGManagerServiceConfig;
 import io.harness.exception.GeneralException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.network.Http;
-import io.harness.ng.remote.NGObjectMapperHelper;
+import io.harness.remote.NGObjectMapperHelper;
 import io.harness.security.ServiceTokenGenerator;
 import io.harness.serializer.kryo.KryoConverterFactory;
 import lombok.AccessLevel;

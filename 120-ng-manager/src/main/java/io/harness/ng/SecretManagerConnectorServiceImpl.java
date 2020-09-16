@@ -1,10 +1,10 @@
 package io.harness.ng;
 
+import static io.harness.NGConstants.HARNESS_SECRET_MANAGER_IDENTIFIER;
 import static io.harness.connector.ConnectorModule.DEFAULT_CONNECTOR_SERVICE;
 import static io.harness.eraro.ErrorCode.SECRET_MANAGEMENT_ERROR;
 import static io.harness.exception.WingsException.SRE;
 import static io.harness.exception.WingsException.USER;
-import static io.harness.ng.NGConstants.HARNESS_SECRET_MANAGER_IDENTIFIER;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;

@@ -1,4 +1,4 @@
-package io.harness.ng.remote.client;
+package io.harness.remote.client;
 
 import static com.fasterxml.jackson.databind.DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES;
 

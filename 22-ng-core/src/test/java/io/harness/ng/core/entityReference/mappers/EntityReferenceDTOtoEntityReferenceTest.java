@@ -3,8 +3,8 @@ package io.harness.ng.core.entityReference.mappers;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.CategoryTest;
+import io.harness.EntityType;
 import io.harness.category.element.UnitTests;
-import io.harness.ng.EntityType;
 import io.harness.ng.core.entityReference.dto.EntityReferenceDTO;
 import io.harness.ng.core.entityReference.entity.EntityReference;
 import io.harness.rule.Owner;

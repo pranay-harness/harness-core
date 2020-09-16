@@ -1,13 +1,13 @@
 package io.harness.ng.core.api.impl;
 
-import static io.harness.ng.NGConstants.ENTITY_REFERENCE_LOG_PREFIX;
+import static io.harness.NGConstants.ENTITY_REFERENCE_LOG_PREFIX;
 import static io.harness.ng.core.RestCallToNGManagerClientUtils.execute;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
+import io.harness.EntityType;
 import io.harness.entityreferenceclient.remote.EntityReferenceClient;
-import io.harness.ng.EntityType;
 import io.harness.ng.core.entityReference.EntityReferenceHelper;
 import io.harness.ng.core.entityReference.dto.EntityReferenceDTO;
 import io.harness.secretmanagerclient.dto.EncryptedDataDTO;

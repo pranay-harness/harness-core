@@ -1,8 +1,8 @@
 package io.harness.ng;
 
+import static io.harness.NGConstants.HARNESS_SECRET_MANAGER_IDENTIFIER;
 import static io.harness.connector.ConnectorModule.DEFAULT_CONNECTOR_SERVICE;
 import static io.harness.exception.WingsException.USER;
-import static io.harness.ng.NGConstants.HARNESS_SECRET_MANAGER_IDENTIFIER;
 import static io.harness.ng.NextGenModule.SECRET_MANAGER_CONNECTOR_SERVICE;
 
 import com.google.inject.Inject;

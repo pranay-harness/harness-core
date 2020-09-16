@@ -1,7 +1,7 @@
 package io.harness.ng.core.api.impl;
 
-import static io.harness.ng.EntityType.CONNECTORS;
-import static io.harness.ng.EntityType.SECRETS;
+import static io.harness.EntityType.CONNECTORS;
+import static io.harness.EntityType.SECRETS;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.times;

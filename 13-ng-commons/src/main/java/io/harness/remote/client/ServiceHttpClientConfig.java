@@ -1,4 +1,4 @@
-package io.harness.ng.remote.client;
+package io.harness.remote.client;
 
 import lombok.AccessLevel;
 import lombok.Builder;

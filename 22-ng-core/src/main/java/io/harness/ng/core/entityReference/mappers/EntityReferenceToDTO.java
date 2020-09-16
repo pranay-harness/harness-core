@@ -2,7 +2,7 @@ package io.harness.ng.core.entityReference.mappers;
 
 import com.google.inject.Singleton;
 
-import io.harness.ng.EntityType;
+import io.harness.EntityType;
 import io.harness.ng.core.entityReference.dto.EntityReferenceDTO;
 import io.harness.ng.core.entityReference.entity.EntityReference;
 

@@ -1,6 +1,6 @@
 package io.harness.gitsync.common.dtos;
 
-import io.harness.ng.EntityType;
+import io.harness.EntityType;
 import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Data;

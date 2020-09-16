@@ -5,6 +5,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import com.google.inject.Inject;
 
+import io.harness.EntityType;
+import io.harness.ModuleType;
 import io.harness.beans.NGPageResponse;
 import io.harness.category.element.UnitTests;
 import io.harness.encryption.Scope;
@@ -14,8 +16,6 @@ import io.harness.gitsync.common.dtos.GitSyncEntityListDTO;
 import io.harness.gitsync.common.dtos.GitSyncProductDTO;
 import io.harness.gitsync.common.impl.GitEntityServiceImpl;
 import io.harness.gitsync.core.dao.api.repositories.GitFileLocation.GitFileLocationRepository;
-import io.harness.ng.EntityType;
-import io.harness.ng.Product;
 import io.harness.ng.core.dto.ResponseDTO;
 import io.harness.rule.Owner;
 import org.junit.Before;
@@ -51,7 +51,8 @@ public class GitEntityResourceTest extends GitSyncBaseTest {
     final GitFileLocation gitFileLocation1 = buildGitFileLocation(repo, branch, accountId, connector, id1);
     gitFileLocationRepository.saveAll(Arrays.asList(gitFileLocation, gitFileLocation, gitFileLocation1));
 
-    final ResponseDTO<GitSyncProductDTO> gitSyncEntities = gitEntityResource.list(null, null, accountId, 5, Product.CD);
+    final ResponseDTO<GitSyncProductDTO> gitSyncEntities =
+        gitEntityResource.list(null, null, accountId, 5, ModuleType.CD);
     final GitSyncProductDTO data = gitSyncEntities.getData();
 
     assertThat(data).isNotNull();
@@ -59,7 +60,7 @@ public class GitEntityResourceTest extends GitSyncBaseTest {
                    .stream()
                    .map(GitSyncEntityListDTO::getEntityType)
                    .collect(Collectors.toList()))
-        .isEqualTo(gitEntityService.getEntityTypesFromProduct(Product.CD));
+        .isEqualTo(gitEntityService.getEntityTypesFromProduct(ModuleType.CD));
     assertThat(data.getGitSyncEntityListDTOList()
                    .stream()
                    .flatMap(gitSyncEntityListDTO -> gitSyncEntityListDTO.getGitSyncEntities().stream())

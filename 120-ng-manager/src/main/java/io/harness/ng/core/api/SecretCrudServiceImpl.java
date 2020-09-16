@@ -6,7 +6,7 @@ import static io.harness.exception.WingsException.USER;
 import static io.harness.ng.core.SecretManagementModule.SECRET_FILE_SERVICE;
 import static io.harness.ng.core.SecretManagementModule.SECRET_TEXT_SERVICE;
 import static io.harness.ng.core.SecretManagementModule.SSH_SECRET_SERVICE;
-import static io.harness.ng.remote.client.RestClientUtils.getResponse;
+import static io.harness.remote.client.RestClientUtils.getResponse;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.common.io.ByteStreams;

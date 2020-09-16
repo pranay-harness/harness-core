@@ -13,7 +13,7 @@ import io.harness.grpc.server.GrpcServerConfig;
 import io.harness.mongo.MongoConfig;
 import io.harness.ng.core.NextGenConfig;
 import io.harness.ng.core.invites.ext.mail.SmtpConfig;
-import io.harness.ng.remote.client.ServiceHttpClientConfig;
+import io.harness.remote.client.ServiceHttpClientConfig;
 import lombok.Getter;
 import org.reflections.Reflections;
 

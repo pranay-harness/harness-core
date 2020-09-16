@@ -1,4 +1,4 @@
-package io.harness.ng.remote;
+package io.harness.remote;
 
 import static io.harness.data.structure.CollectionUtils.emptyIfNull;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;

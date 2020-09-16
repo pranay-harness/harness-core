@@ -1,8 +1,8 @@
 package software.wings.service.impl.security;
 
+import static io.harness.NGConstants.HARNESS_SECRET_MANAGER_IDENTIFIER;
 import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.delegate.service.DelegateAgentFileService.FileBucket.CONFIGS;
-import static io.harness.ng.NGConstants.HARNESS_SECRET_MANAGER_IDENTIFIER;
 import static io.harness.persistence.UpdatedAtAware.LAST_UPDATED_AT_KEY;
 import static io.harness.security.SimpleEncryption.CHARSET;
 import static io.harness.security.encryption.EncryptionType.GCP_KMS;

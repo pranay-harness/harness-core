@@ -14,7 +14,7 @@ import io.harness.ng.core.invites.repositories.spring.UserProjectMapRepository;
 import io.harness.ng.core.user.User;
 import io.harness.ng.core.user.remote.UserClient;
 import io.harness.ng.core.user.services.api.NgUserService;
-import io.harness.ng.remote.client.RestClientUtils;
+import io.harness.remote.client.RestClientUtils;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;

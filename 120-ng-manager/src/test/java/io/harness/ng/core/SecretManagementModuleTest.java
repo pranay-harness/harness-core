@@ -21,7 +21,7 @@ import io.harness.ng.core.api.NGSecretService;
 import io.harness.ng.core.api.impl.NGSecretManagerServiceImpl;
 import io.harness.ng.core.api.impl.NGSecretServiceImpl;
 import io.harness.ng.core.api.repositories.spring.SecretRepository;
-import io.harness.ng.remote.client.ServiceHttpClientConfig;
+import io.harness.remote.client.ServiceHttpClientConfig;
 import io.harness.rule.Owner;
 import io.harness.secretmanagerclient.SecretManagementClientModule;
 import io.harness.secretmanagerclient.services.SecretManagerClientServiceImpl;

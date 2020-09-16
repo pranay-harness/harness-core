@@ -16,7 +16,7 @@ import io.harness.delegate.beans.connector.k8Connector.KubernetesClusterDetailsD
 import io.harness.delegate.beans.connector.k8Connector.KubernetesUserNamePasswordDTO;
 import io.harness.encryption.Scope;
 import io.harness.encryption.SecretRefData;
-import io.harness.ng.remote.NGObjectMapperHelper;
+import io.harness.remote.NGObjectMapperHelper;
 import io.harness.rule.Owner;
 import io.harness.rule.OwnerRule;
 import lombok.extern.slf4j.Slf4j;

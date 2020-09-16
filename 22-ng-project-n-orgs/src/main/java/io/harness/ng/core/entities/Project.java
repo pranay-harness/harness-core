@@ -1,12 +1,12 @@
 package io.harness.ng.core.entities;
 
+import io.harness.ModuleType;
 import io.harness.data.validator.EntityIdentifier;
 import io.harness.data.validator.EntityName;
 import io.harness.data.validator.Trimmed;
 import io.harness.mongo.index.CdIndex;
 import io.harness.mongo.index.CdUniqueIndex;
 import io.harness.mongo.index.Field;
-import io.harness.ng.ModuleType;
 import io.harness.ng.RsqlQueryable;
 import io.harness.ng.core.NGAccountAccess;
 import io.harness.ng.core.entities.Project.ProjectKeys;

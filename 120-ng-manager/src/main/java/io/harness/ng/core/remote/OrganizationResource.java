@@ -1,8 +1,8 @@
 package io.harness.ng.core.remote;
 
-import static io.harness.ng.NGConstants.ACCOUNT_KEY;
-import static io.harness.ng.NGConstants.IDENTIFIER_KEY;
-import static io.harness.ng.NGConstants.SEARCH_TERM_KEY;
+import static io.harness.NGConstants.ACCOUNT_KEY;
+import static io.harness.NGConstants.IDENTIFIER_KEY;
+import static io.harness.NGConstants.SEARCH_TERM_KEY;
 import static io.harness.ng.core.remote.OrganizationMapper.writeDto;
 import static io.harness.utils.PageUtils.getNGPageResponse;
 import static io.harness.utils.PageUtils.getPageRequest;
