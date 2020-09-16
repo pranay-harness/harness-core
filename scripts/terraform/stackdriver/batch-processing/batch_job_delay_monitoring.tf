@@ -28,7 +28,7 @@ resource "google_logging_metric" "ce_delayed_batch_job" {
 
 resource "google_monitoring_alert_policy" "ce_delayed_batch_job_alert_policy" {
   notification_channels = ((var.deployment == "prod" || var.deployment == "freemium" || var.deployment == "prod_failover") ? ["${local.slack_prod_channel}"] :
-    ((var.deployment == "qa" || var.deployment == "qa_free") ? ["${local.slack_qa_channel}"] :
+    ((var.deployment == "qa" || var.deployment == "qa_free" || var.deployment == "stress") ? ["${local.slack_qa_channel}"] :
   ["${local.slack_dev_channel}"]))
 
   display_name = join("_", [local.name_prefix, "ce_delayed_batch_jobs"])

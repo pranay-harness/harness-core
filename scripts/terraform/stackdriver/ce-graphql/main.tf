@@ -62,7 +62,7 @@ locals {
           (var.deployment == "prod" ? local.prod_filter_prefix :
             (var.deployment == "freemium" ? local.prod_freemium_filter_prefix :
               (var.deployment == "prod-failover" ? local.prod_failover_filter_prefix :
-  local.dev_filter_prefix)))))))
+  local.qa_filter_prefix)))))))
 
   name_prefix = join("_", ["x", var.deployment])
 
