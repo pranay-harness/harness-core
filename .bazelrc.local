@@ -1,3 +1,0 @@
-import .bazelrc.common
-
-try-import user.bazelrc

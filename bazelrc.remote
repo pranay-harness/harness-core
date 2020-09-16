@@ -1,0 +1,9 @@
+import bazelrc.common
+
+# Add properties that are specif for ci build system
+
+startup --output_base=/tmp
+build --define=ABSOLUTE_JAVABASE=/etc/alternatives/java_sdk_1.8.0_openjdk
+
+# TODO: remove from here when remote cache is enabled for developers
+build --remote_cache=https://storage.googleapis.com/harness-bazel-cache

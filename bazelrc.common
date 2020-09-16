@@ -1,3 +1,10 @@
+# Add properties that are shared between developers and ci build system
+
+build --action_env=HARNESS_GENERATION_PASSPHRASE
+
+# TODO: enable remote cache for developers
+# build --remote_cache=https://storage.googleapis.com/bazel-cache-java
+
 build --javabase=@bazel_tools//tools/jdk:absolute_javabase
 build --host_javabase=@bazel_tools//tools/jdk:absolute_javabase
 build --host_java_toolchain=@bazel_tools//tools/jdk:toolchain_vanilla

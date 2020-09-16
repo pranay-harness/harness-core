@@ -1,20 +1,14 @@
 set -e
 
-set -x
-
-bazelrc=.bazelrc.local
 local_repo=${HOME}/.m2/repository
-BAZEL_ARGUMENTS="--action_env=HARNESS_GENERATION_PASSPHRASE=${HARNESS_GENERATION_PASSPHRASE}"
+BAZEL_ARGUMENTS=
 if [ "${PLATFORM}" == "jenkins" ]
 then
   GCP="--google_credentials=${GCP_KEY}"
-  bazelrc=.bazelrc.remote
+  bazelrc=--bazelrc=bazelrc.remote
   local_repo=/root/.m2/repository
   BAZEL_ARGUMENTS="${BAZEL_ARGUMENTS} --action_env=DISTRIBUTE_TESTING_WORKER=${DISTRIBUTE_TESTING_WORKER}"
   BAZEL_ARGUMENTS="${BAZEL_ARGUMENTS} --action_env=DISTRIBUTE_TESTING_WORKERS=${DISTRIBUTE_TESTING_WORKERS}"
-else
-  bazelrc=.bazelrc.local
-  BAZEL_ARGUMENTS="${BAZEL_ARGUMENTS} --define=ABSOLUTE_JAVABASE=${JAVA_HOME}"
 fi
 
 if [[ ! -z "${OVERRIDE_LOCAL_M2}" ]]; then
@@ -24,11 +18,11 @@ fi
 
 build_bazel_module() {
   module=$1
-  bazel --bazelrc=${bazelrc} build //${module}:module ${GCP} ${BAZEL_ARGUMENTS}
+  bazel ${bazelrc} build //${module}:module ${GCP} ${BAZEL_ARGUMENTS}
 
   if [ "${RUN_BAZEL_TESTS}" == "true" ]
   then
-    bazel --bazelrc=${bazelrc} test //${module}/... ${GCP} ${BAZEL_ARGUMENTS} || true
+    bazel ${bazelrc} test //${module}/... ${GCP} ${BAZEL_ARGUMENTS} || true
   fi
 
   mvn -B install:install-file \
@@ -52,7 +46,7 @@ build_java_proto_module() {
 build_proto_module() {
   module=$1
   modulePath=$2
-  bazel --bazelrc=${bazelrc} build //${modulePath}/... ${GCP} ${BAZEL_ARGUMENTS} --javacopt=' -XepDisableAllChecks'
+  bazel ${bazelrc} build //${modulePath}/... ${GCP} ${BAZEL_ARGUMENTS} --javacopt=' -XepDisableAllChecks'
 
   bazel_library=`echo ${module} | tr '-' '_'`
 

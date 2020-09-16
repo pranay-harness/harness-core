@@ -1,5 +1,0 @@
-import .bazelrc.common
-
-startup --output_base=/tmp
-build --define=ABSOLUTE_JAVABASE=/etc/alternatives/java_sdk_1.8.0_openjdk
-build --remote_cache=https://storage.googleapis.com/harness-bazel-cache
