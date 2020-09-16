@@ -216,3 +216,7 @@ organizationManagerClient:
   readTimeOutSeconds: 15
 
 ngManagerAvailable: false
+
+grpcDelegateServiceClientConfig:
+  target: localhost:9880
+  authority: localhost
