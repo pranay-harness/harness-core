@@ -1,11 +1,9 @@
 extend type Mutation {
-  # Beta
+  # Creates a new Connector and returns it
   createConnector(input: CreateConnectorInput!): CreateConnectorPayload @dataFetcher(name: createConnector)
-
-  # Beta
+  # Updates a Connector and returns it.
   updateConnector(input: UpdateConnectorInput!): UpdateConnectorPayload @dataFetcher(name: updateConnector)
-
-  # Beta
+  # Deletes a Connector.
   deleteConnector(input: DeleteConnectorInput!): DeleteConnectorPayload @dataFetcher(name: deleteConnector)
 }
 
@@ -13,13 +11,15 @@ input CreateConnectorInput {
   clientMutationId: String
   connectorType: ConnectorType!
   gitConnector: GitConnectorInput
+  dockerConnector: DockerConnectorInput
 }
 
 input UpdateConnectorInput {
   clientMutationId: String
   connectorId: String!
   connectorType: ConnectorType!
-  gitConnector: UpdateGitConnectorInput
+  gitConnector: GitConnectorInput
+  dockerConnector: DockerConnectorInput
 }
 
 input DeleteConnectorInput {
@@ -41,12 +41,6 @@ type DeleteConnectorPayload {
   clientMutationId: String
 }
 
-input CustomCommitDetailsInput {
-  authorName: String
-  authorEmailId: String
-  commitMessage: String
-}
-
 input GitConnectorInput {
   name: String!
   userName: String
@@ -59,13 +53,15 @@ input GitConnectorInput {
   customCommitDetails: CustomCommitDetailsInput
 }
 
-input UpdateGitConnectorInput {
-  name: String
+input CustomCommitDetailsInput {
+  authorName: String
+  authorEmailId: String
+  commitMessage: String
+}
+
+input DockerConnectorInput {
+  name: String!
+  URL: String!
   userName: String
-  URL: String
-  branch: String
   passwordSecretId: String
-  sshSettingId: String
-  generateWebhookUrl: Boolean
-  customCommitDetails: CustomCommitDetailsInput
 }

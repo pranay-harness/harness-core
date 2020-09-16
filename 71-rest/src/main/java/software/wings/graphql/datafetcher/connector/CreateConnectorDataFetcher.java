@@ -1,7 +1,5 @@
 package software.wings.graphql.datafetcher.connector;
 
-import static software.wings.graphql.schema.type.QLConnectorType.GIT;
-
 import com.google.inject.Inject;
 
 import io.harness.exception.InvalidRequestException;
@@ -10,8 +8,9 @@ import software.wings.beans.Application;
 import software.wings.beans.SettingAttribute;
 import software.wings.graphql.datafetcher.BaseMutatorDataFetcher;
 import software.wings.graphql.datafetcher.MutationContext;
-import software.wings.graphql.schema.mutation.connector.input.QLCreateConnectorInput;
-import software.wings.graphql.schema.mutation.connector.input.QLGitConnectorInput;
+import software.wings.graphql.datafetcher.connector.types.Connector;
+import software.wings.graphql.datafetcher.connector.types.ConnectorFactory;
+import software.wings.graphql.schema.mutation.connector.input.QLConnectorInput;
 import software.wings.graphql.schema.mutation.connector.payload.QLCreateConnectorPayload;
 import software.wings.graphql.schema.mutation.connector.payload.QLCreateConnectorPayload.QLCreateConnectorPayloadBuilder;
 import software.wings.graphql.schema.type.connector.QLConnectorBuilder;
@@ -25,42 +24,35 @@ import software.wings.utils.ConstraintViolationHandlerUtils;
 import javax.validation.ConstraintViolationException;
 
 @Slf4j
-public class CreateConnectorDataFetcher
-    extends BaseMutatorDataFetcher<QLCreateConnectorInput, QLCreateConnectorPayload> {
+public class CreateConnectorDataFetcher extends BaseMutatorDataFetcher<QLConnectorInput, QLCreateConnectorPayload> {
   @Inject private SettingsService settingsService;
   @Inject private SettingServiceHelper settingServiceHelper;
-  @Inject private GitDataFetcherHelper gitDataFetcherHelper;
   @Inject private ConnectorsController connectorsController;
   @Inject private SecretManager secretManager;
 
   public CreateConnectorDataFetcher() {
-    super(QLCreateConnectorInput.class, QLCreateConnectorPayload.class);
+    super(QLConnectorInput.class, QLCreateConnectorPayload.class);
   }
 
   @Override
   @AuthRule(permissionType = PermissionAttribute.PermissionType.MANAGE_CONNECTORS)
-  protected QLCreateConnectorPayload mutateAndFetch(QLCreateConnectorInput input, MutationContext mutationContext) {
+  protected QLCreateConnectorPayload mutateAndFetch(QLConnectorInput input, MutationContext mutationContext) {
+    String accountId = mutationContext.getAccountId();
+
     QLCreateConnectorPayloadBuilder builder =
         QLCreateConnectorPayload.builder().clientMutationId(input.getClientMutationId());
 
     if (input.getConnectorType() == null) {
-      throw new InvalidRequestException("Invalid connector provided in the request");
+      throw new InvalidRequestException("Invalid connector type provided");
     }
 
-    SettingAttribute settingAttribute;
-    if (GIT == input.getConnectorType()) {
-      connectorsController.checkIfInputIsNotPresent(input.getConnectorType(), input.getGitConnector());
-      checkSecrets(input.getGitConnector(), mutationContext.getAccountId());
-
-      settingAttribute =
-          gitDataFetcherHelper.toSettingAttribute(input.getGitConnector(), mutationContext.getAccountId());
-    } else {
-      throw new InvalidRequestException("Invalid connector Type");
-    }
+    Connector connector = ConnectorFactory.getConnector(input, connectorsController, secretManager, settingsService);
+    connector.checkInputExists(input);
+    connector.checkSecrets(input, accountId);
+    SettingAttribute settingAttribute = connector.getSettingAttribute(input, accountId);
 
     try {
-      settingAttribute =
-          settingsService.saveWithPruning(settingAttribute, Application.GLOBAL_APP_ID, mutationContext.getAccountId());
+      settingAttribute = settingsService.saveWithPruning(settingAttribute, Application.GLOBAL_APP_ID, accountId);
     } catch (ConstraintViolationException exception) {
       String errorMessages = String.join(", ", ConstraintViolationHandlerUtils.getErrorMessages(exception));
       throw new InvalidRequestException(errorMessages, exception);
@@ -71,44 +63,5 @@ public class CreateConnectorDataFetcher
     QLConnectorBuilder qlGitConnectorBuilder = connectorsController.getConnectorBuilder(settingAttribute);
     return builder.connector(connectorsController.populateConnector(settingAttribute, qlGitConnectorBuilder).build())
         .build();
-  }
-
-  private void checkSecrets(QLGitConnectorInput gitConnectorInput, String accountId) {
-    boolean passwordSecretIsPresent = false;
-    boolean sshSettingIdIsPresent = false;
-    if (gitConnectorInput.getPasswordSecretId().isPresent()
-        && gitConnectorInput.getPasswordSecretId().getValue().isPresent()) {
-      if (!gitConnectorInput.getUserName().isPresent() || !gitConnectorInput.getUserName().getValue().isPresent()) {
-        throw new InvalidRequestException("userName should be specified");
-      }
-      passwordSecretIsPresent = true;
-    }
-    if (gitConnectorInput.getSshSettingId().isPresent()) {
-      sshSettingIdIsPresent = gitConnectorInput.getSshSettingId().getValue().isPresent();
-    }
-    if (!passwordSecretIsPresent && !sshSettingIdIsPresent) {
-      throw new InvalidRequestException("No secretId provided with the request for connector");
-    }
-    if (passwordSecretIsPresent && sshSettingIdIsPresent) {
-      throw new InvalidRequestException("Just one secretId should be specified");
-    }
-    if (passwordSecretIsPresent) {
-      checkIfSecretExists(accountId, gitConnectorInput.getPasswordSecretId().getValue().get());
-    }
-    if (sshSettingIdIsPresent) {
-      checkIfSshSettingExists(accountId, gitConnectorInput.getSshSettingId().getValue().get());
-    }
-  }
-
-  private void checkIfSecretExists(String accountId, String secretId) {
-    if (secretManager.getSecretById(accountId, secretId) == null) {
-      throw new InvalidRequestException("Secret does not exist");
-    }
-  }
-
-  private void checkIfSshSettingExists(String accountId, String secretId) {
-    if (settingsService.getByAccount(accountId, secretId) == null) {
-      throw new InvalidRequestException("Secret does not exist");
-    }
   }
 }
