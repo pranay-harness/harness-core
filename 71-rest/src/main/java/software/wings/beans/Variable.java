@@ -22,6 +22,7 @@ public class Variable {
   private String name;
   private String description;
   private boolean mandatory;
+  private transient Boolean runtimeInput;
   private String value;
   private boolean fixed;
   private String allowedValues;

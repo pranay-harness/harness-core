@@ -18,10 +18,12 @@ import io.harness.exception.ExplanationException;
 import io.harness.exception.HintException;
 import io.harness.exception.InvalidRequestException;
 import org.jetbrains.annotations.NotNull;
+import software.wings.beans.EntityType;
 import software.wings.beans.Pipeline;
 import software.wings.beans.PipelineStage;
 import software.wings.beans.PipelineStage.PipelineStageElement;
 import software.wings.beans.RuntimeInputsConfig;
+import software.wings.beans.Variable;
 import software.wings.service.intfc.UserGroupService;
 import software.wings.sm.states.ApprovalState;
 
@@ -34,7 +36,14 @@ import java.util.Map;
 public class PipelineServiceValidator {
   @Inject UserGroupService userGroupService;
 
-  public void validateRuntimeInputsConfig(RuntimeInputsConfig runtimeInputsConfig, String accountId) {
+  public boolean validateRuntimeInputsConfig(
+      PipelineStageElement pipelineStageElement, String accountId, List<Variable> workflowVariables) {
+    RuntimeInputsConfig runtimeInputsConfig = pipelineStageElement.getRuntimeInputsConfig();
+    if (isEmpty(pipelineStageElement.getWorkflowVariables()) || runtimeInputsConfig == null
+        || pipelineStageElement.checkDisableAssertion()) {
+      return true;
+    }
+
     if (isNotEmpty(runtimeInputsConfig.getRuntimeInputVariables())) {
       if (runtimeInputsConfig.getTimeout() < 1000) {
         throw new InvalidRequestException("Timeout value should be greater than 1 secs", USER);
@@ -51,6 +60,44 @@ public class PipelineServiceValidator {
       for (String uid : userGroupIds) {
         if (userGroupService.get(accountId, uid) == null) {
           throw new InvalidRequestException("User group not found for given Id: " + uid, USER);
+        }
+      }
+      validatePipelineStageRuntimeVariables(pipelineStageElement, workflowVariables);
+    }
+    return true;
+  }
+
+  private void validatePipelineStageRuntimeVariables(
+      PipelineStageElement pipelineStageElement, List<Variable> workflowVariables) {
+    Map<String, String> pseVariableValues = pipelineStageElement.getWorkflowVariables();
+    List<String> runtimeVariables = pipelineStageElement.getRuntimeInputsConfig().getRuntimeInputVariables();
+    for (Map.Entry<String, String> variable : pseVariableValues.entrySet()) {
+      String variableName = variable.getKey();
+      if (runtimeVariables.contains(variableName)) {
+        Variable workflowVar =
+            workflowVariables.stream().filter(t -> t.getName().equals(variableName)).findFirst().orElse(null);
+        if (workflowVar != null) {
+          EntityType entityType = workflowVar.obtainEntityType();
+          if (entityType != null) {
+            if (!matchesVariablePattern(variable.getValue())) {
+              throw new InvalidRequestException(
+                  String.format("Variable %s is marked runtime but the value isnt a valid expression", variableName));
+            }
+
+            if (EntityType.SERVICE != entityType && EntityType.INFRASTRUCTURE_DEFINITION != entityType) {
+              String relatedField = workflowVar.obtainRelatedField();
+              if (isNotEmpty(relatedField) && !runtimeVariables.contains(relatedField)) {
+                throw new InvalidRequestException(
+                    String.format("Variable %s should be runtime as %s is marked runtime", relatedField, variableName));
+              }
+            }
+          } else {
+            if (isNotEmpty(variable.getValue()) && !matchesVariablePattern(variable.getValue())) {
+              throw new InvalidRequestException(String.format(
+                  "Non entity var %s is marked Runtime, the value can either be blank or a valid expression",
+                  variableName));
+            }
+          }
         }
       }
     }
