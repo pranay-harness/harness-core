@@ -101,7 +101,13 @@ public class CIManagerRule implements MethodRule, InjectorRuleMixin, MongoRuleMi
       }
     });
     modules.add(new CIManagerPersistenceTestModule());
-    modules.add(new CIManagerServiceModule(CIManagerConfiguration.builder().build(), null));
+    modules.add(new CIManagerServiceModule(
+        CIManagerConfiguration.builder()
+            .managerAuthority("localhost")
+            .managerTarget("localhost:9880")
+            .managerServiceSecret("IC04LYMBf1lDP5oeY4hupxd4HJhLmN6azUku3xEbeE3SUx5G3ZYzhbiwVtK4i7AmqyU9OZkwB4v8E9qM")
+            .build(),
+        null));
     return modules;
   }
 
