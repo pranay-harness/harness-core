@@ -89,15 +89,15 @@ def calculate_coverage(coverage_file_path):
     return [coverage_file_path, coverage, lines_to_cover, branch_coverage, conditions_to_cover]
 
 
-def export_file(data):
-    with open("out.csv", 'w') as csvfile:
+def export_file(data, teamName):
+    with open("out_" + "teamName" + ".csv", 'w') as csvfile:
         csv_writer = csv.writer(csvfile)
         csv_writer.writerow(
             ["File", "Coverage(%)", "Lines To Cover", "Branch Coverage(%)", "Conditions To Cover"])
         csv_writer.writerows(data)
 
 
-def main(list_file_path):
+def main(list_file_path, teamName):
     rows = []
     with open(list_file_path) as fp:
         files = [line.strip() for line in fp]
@@ -110,12 +110,13 @@ def main(list_file_path):
                 rows.append(row)
         except Exception as e:
             print("Error in processing file {}, Error: {}".format(coverage_file, str(e)))
-    export_file(rows)
+    export_file(rows, teamName)
 
 
 if __name__ == "__main__":
     file_path = sys.argv[1]
-    if file_path:
-        main(file_path)
+    teamName = sys.argv[2]
+    if file_path and teamName:
+        main(file_path, teamName)
     else:
         raise Exception("Not A valid File Path")

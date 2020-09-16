@@ -1,0 +1,4 @@
+69-connector-nextgen
+136-git-sync-manager
+22-ng-core-clients/src/main/java/io/harness/entityreferenceclient/EntityReferenceClientModule.java
+22-ng-core-clients/src/main/java/io/harness/entityreferenceclient/remote/EntityReferenceHttpClientFactory.java
