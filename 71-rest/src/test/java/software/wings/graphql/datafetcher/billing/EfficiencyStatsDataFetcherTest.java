@@ -101,6 +101,9 @@ public class EfficiencyStatsDataFetcherTest extends AbstractDataFetcherTest {
     doCallRealMethod().when(billingDataHelper).getEndTimeFilter(filters);
     doCallRealMethod().when(billingDataHelper).isYearRequired(any(), any());
     doCallRealMethod().when(billingDataHelper).getTotalCostFormattedDate(any(), anyBoolean());
+    doCallRealMethod().when(billingDataHelper).calculateEfficiencyScore(anyObject());
+    doCallRealMethod().when(billingDataHelper).calculateTrendPercentage(anyDouble(), anyDouble());
+    doCallRealMethod().when(billingDataHelper).calculateTrendPercentage((BigDecimal) anyObject(), anyObject());
   }
 
   @Test
@@ -120,8 +123,8 @@ public class EfficiencyStatsDataFetcherTest extends AbstractDataFetcherTest {
     assertThat(data.getEfficiencyBreakdown().getIdle()).isEqualTo(60.0);
     assertThat(data.getEfficiencyBreakdown().getUtilized()).isEqualTo(100.0);
     assertThat(data.getEfficiencyBreakdown().getUnallocated()).isEqualTo(40.0);
-    assertThat(data.getEfficiencyData().getTrend()).isEqualTo(-17.39);
-    assertThat(data.getEfficiencyData().getEfficiencyScore()).isEqualTo(76);
+    assertThat(data.getEfficiencyData().getTrend()).isEqualTo(-16.3);
+    assertThat(data.getEfficiencyData().getEfficiencyScore()).isEqualTo(77);
   }
 
   @Test
