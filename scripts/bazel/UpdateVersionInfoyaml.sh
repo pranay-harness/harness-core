@@ -1,9 +1,10 @@
 set -x
 
-if [ "${PLATFORM}" != "jenkins" ]
-  then
-    exit 0
+if [[ "$BUILD_TAG" == *pr-portal-*-tests* || "${PLATFORM}" != jenkins ]]
+then
+  exit 0
 fi
+
 function getProperty () {
    FILENAME=$1
    PROP_KEY=$2
