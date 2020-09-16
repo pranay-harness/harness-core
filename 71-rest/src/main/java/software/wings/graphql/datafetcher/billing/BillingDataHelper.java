@@ -16,6 +16,7 @@ import software.wings.graphql.schema.type.aggregation.billing.QLBillingDataFilte
 import software.wings.graphql.schema.type.aggregation.billing.QLBillingSortCriteria;
 import software.wings.graphql.schema.type.aggregation.billing.QLCCMEntityGroupBy;
 import software.wings.graphql.schema.type.aggregation.billing.QLCCMTimeSeriesAggregation;
+import software.wings.graphql.schema.type.aggregation.billing.QLStatsBreakdownInfo;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
@@ -54,6 +55,8 @@ public class BillingDataHelper {
   private static final long ONE_DAY_MILLIS = 86400000;
   private static final long OBSERVATION_PERIOD = 29 * ONE_DAY_MILLIS;
   private static final int MAX_RETRY = 3;
+  private static final int IDLE_COST_BASELINE = 30;
+  private static final int UNALLOCATED_COST_BASELINE = 5;
 
   protected double roundingDoubleFieldValue(BillingDataMetaDataFields field, ResultSet resultSet) throws SQLException {
     return Math.round(resultSet.getDouble(field.getFieldName()) * 100D) / 100D;
@@ -450,5 +453,27 @@ public class BillingDataHelper {
     LocalDate today = LocalDate.now(zoneId);
     ZonedDateTime zdtStart = today.atStartOfDay(zoneId);
     return zdtStart.toEpochSecond() * 1000;
+  }
+
+  /**
+   *  Efficiency Score rounded to nearest Integer
+   * @param  costStats
+   * @return int
+   */
+  public int calculateEfficiencyScore(QLStatsBreakdownInfo costStats) {
+    int utilizedBaseline = 100 - IDLE_COST_BASELINE - UNALLOCATED_COST_BASELINE;
+    double utilized = costStats.getUtilized().doubleValue();
+    double total = costStats.getTotal().doubleValue();
+    double utilizedPercentage = utilized / total * 100;
+    int efficiencyScore = (int) Math.round((1 - ((utilizedBaseline - utilizedPercentage) / utilizedBaseline)) * 100);
+    return Math.min(efficiencyScore, 100);
+  }
+
+  public BigDecimal calculateTrendPercentage(BigDecimal current, BigDecimal previous) {
+    return current.subtract(previous).multiply(BigDecimal.valueOf(100)).divide(previous, 2, RoundingMode.HALF_UP);
+  }
+
+  public Double calculateTrendPercentage(Double current, Double previous) {
+    return calculateTrendPercentage(BigDecimal.valueOf(current), BigDecimal.valueOf(previous)).doubleValue();
   }
 }

@@ -22,7 +22,6 @@ import software.wings.security.PermissionAttribute;
 import software.wings.security.annotations.AuthRule;
 
 import java.math.BigDecimal;
-import java.math.RoundingMode;
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -42,8 +41,6 @@ public class EfficiencyStatsDataFetcher extends AbstractStatsDataFetcherWithAggr
   @Inject BillingDataHelper billingDataHelper;
 
   private static final String TOTAL_COST_DESCRIPTION = "Total Cost between %s - %s";
-  private static int idleCostBaseline = 30;
-  private static int unallocatedCostBaseline = 5;
 
   @Override
   @AuthRule(permissionType = PermissionAttribute.PermissionType.LOGGED_IN)
@@ -178,7 +175,7 @@ public class EfficiencyStatsDataFetcher extends AbstractStatsDataFetcherWithAggr
 
   private QLEfficiencyScoreInfo getEfficiencyData(
       QLStatsBreakdownInfo costStats, QLBillingAmountData prevBillingAmountData) {
-    int efficiencyScore = calculateEfficiencyScore(costStats);
+    int efficiencyScore = billingDataHelper.calculateEfficiencyScore(costStats);
     BigDecimal trendPercentage = BigDecimal.ZERO;
     if (prevBillingAmountData != null && prevBillingAmountData.getCost() != null
         && prevBillingAmountData.getIdleCost() != null && prevBillingAmountData.getUnallocatedCost() != null) {
@@ -190,27 +187,15 @@ public class EfficiencyStatsDataFetcher extends AbstractStatsDataFetcherWithAggr
       double prevUtilizedCost = billingDataHelper.getRoundedDoubleValue(prevCostStats.getTotal().doubleValue()
           - prevCostStats.getIdle().doubleValue() - prevCostStats.getUnallocated().doubleValue());
       prevCostStats.setUtilized(prevUtilizedCost);
-      int oldEfficiencyScore = calculateEfficiencyScore(prevCostStats);
-
-      BigDecimal effScoreDiff = BigDecimal.valueOf((long) efficiencyScore - (long) oldEfficiencyScore);
-
-      trendPercentage = effScoreDiff.multiply(BigDecimal.valueOf(100))
-                            .divide(BigDecimal.valueOf(oldEfficiencyScore), 2, RoundingMode.HALF_UP);
+      int oldEfficiencyScore = billingDataHelper.calculateEfficiencyScore(prevCostStats);
+      trendPercentage = billingDataHelper.calculateTrendPercentage(
+          BigDecimal.valueOf((long) efficiencyScore), BigDecimal.valueOf((long) oldEfficiencyScore));
     }
 
     return QLEfficiencyScoreInfo.builder()
         .efficiencyScore(efficiencyScore)
         .trend(billingDataHelper.getRoundedDoubleValue(trendPercentage))
         .build();
-  }
-
-  private int calculateEfficiencyScore(QLStatsBreakdownInfo costStats) {
-    int utilizedBaseline = 100 - idleCostBaseline - unallocatedCostBaseline;
-    double utilized = costStats.getUtilized().doubleValue();
-    double total = costStats.getTotal().doubleValue();
-    double utilizedPercentage = utilized / total * 100;
-    int efficiencyScore = (int) ((1 - ((utilizedBaseline - utilizedPercentage) / utilizedBaseline)) * 100);
-    return efficiencyScore > 100 ? 100 : efficiencyScore;
   }
 
   @Override
