@@ -71,10 +71,7 @@ public class PerpetualTaskLifecycleManagerTest extends CategoryTest {
   @Owner(developers = HITESH)
   @Category(UnitTests.class)
   public void testRunOnceWhenResponseIsSuccess() {
-    PerpetualTaskResponse perpetualTaskResponse = PerpetualTaskResponse.builder()
-                                                      .responseCode(200)
-                                                      .perpetualTaskState(PerpetualTaskState.TASK_RUN_SUCCEEDED)
-                                                      .build();
+    PerpetualTaskResponse perpetualTaskResponse = PerpetualTaskResponse.builder().responseCode(200).build();
     when(perpetualTaskExecutor.runOnce(any(), any(), any())).thenReturn(perpetualTaskResponse);
     perpetualTaskLifecycleManager.call();
     verify(perpetualTaskServiceGrpcClient)
@@ -88,11 +85,8 @@ public class PerpetualTaskLifecycleManagerTest extends CategoryTest {
   @Owner(developers = HITESH)
   @Category(UnitTests.class)
   public void testRunOnceWhenTimeout() {
-    PerpetualTaskResponse perpetualTaskResponse = PerpetualTaskResponse.builder()
-                                                      .responseCode(408)
-                                                      .perpetualTaskState(PerpetualTaskState.TASK_RUN_FAILED)
-                                                      .responseMessage(PerpetualTaskState.TASK_RUN_FAILED.name())
-                                                      .build();
+    PerpetualTaskResponse perpetualTaskResponse =
+        PerpetualTaskResponse.builder().responseCode(408).responseMessage("failed").build();
     when(perpetualTaskExecutor.runOnce(any(), any(), any())).thenThrow(UncheckedTimeoutException.class);
     perpetualTaskLifecycleManager.call();
     verify(perpetualTaskServiceGrpcClient)
@@ -106,11 +100,8 @@ public class PerpetualTaskLifecycleManagerTest extends CategoryTest {
   @Owner(developers = HITESH)
   @Category(UnitTests.class)
   public void testRunOnceWhenExceptionWhileExecuting() {
-    PerpetualTaskResponse perpetualTaskResponse = PerpetualTaskResponse.builder()
-                                                      .responseCode(500)
-                                                      .perpetualTaskState(PerpetualTaskState.TASK_RUN_FAILED)
-                                                      .responseMessage(PerpetualTaskState.TASK_RUN_FAILED.name())
-                                                      .build();
+    PerpetualTaskResponse perpetualTaskResponse =
+        PerpetualTaskResponse.builder().responseCode(500).responseMessage("failed").build();
     when(perpetualTaskExecutor.runOnce(any(), any(), any())).thenThrow(Exception.class);
     perpetualTaskLifecycleManager.call();
     verify(perpetualTaskServiceGrpcClient)

@@ -122,6 +122,7 @@ import migrations.all.OauthEnabledFieldMigration;
 import migrations.all.OverrideDefaultLimits;
 import migrations.all.PcfServiceDeploymentMigration;
 import migrations.all.PcfServiceSpecificationToManifestFileMigration;
+import migrations.all.PerpetualTaskMigration;
 import migrations.all.PipelineWorkflowExecutionActionMigration;
 import migrations.all.PipelineWorkflowExecutionActionQlMigration;
 import migrations.all.PreferenceUserIdRemoveDollarSignMigration;
@@ -393,6 +394,7 @@ public class MigrationList {
         .add(Pair.of(340, ManageDeploymentFreezePermissionMigration.class))
         .add(Pair.of(341, ManagePipelineGovernancePermissionMigration.class))
         .add(Pair.of(342, RemoveDeprecatedTagManagementPermission.class))
+        .add(Pair.of(343, PerpetualTaskMigration.class))
         .build();
   }
 }

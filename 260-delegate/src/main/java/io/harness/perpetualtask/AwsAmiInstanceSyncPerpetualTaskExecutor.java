@@ -75,21 +75,12 @@ public class AwsAmiInstanceSyncPerpetualTaskExecutor implements PerpetualTaskExe
   }
 
   private PerpetualTaskResponse getPerpetualTaskResponse(AwsAsgListInstancesResponse response) {
-    PerpetualTaskState taskState;
-    String message;
+    String message = "success";
     if (ExecutionStatus.FAILED == response.getExecutionStatus()) {
-      taskState = PerpetualTaskState.TASK_RUN_FAILED;
       message = response.getErrorMessage();
-    } else {
-      taskState = PerpetualTaskState.TASK_RUN_SUCCEEDED;
-      message = PerpetualTaskState.TASK_RUN_SUCCEEDED.name();
     }
 
-    return PerpetualTaskResponse.builder()
-        .responseCode(Response.SC_OK)
-        .perpetualTaskState(taskState)
-        .responseMessage(message)
-        .build();
+    return PerpetualTaskResponse.builder().responseCode(Response.SC_OK).responseMessage(message).build();
   }
 
   @Override

@@ -51,7 +51,6 @@ public class PerpetualTaskServiceGrpcClient {
                        .setId(taskId.getId())
                        .setHeartbeatTimestamp(HTimestamps.fromInstant(taskStartTime))
                        .setResponseCode(perpetualTaskResponse.getResponseCode())
-                       .setTaskState(perpetualTaskResponse.getPerpetualTaskState().name())
                        .setResponseMessage(perpetualTaskResponse.getResponseMessage())
                        .build());
   }

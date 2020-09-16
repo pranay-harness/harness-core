@@ -37,9 +37,8 @@ message PerpetualTaskContextResponse {
 message HeartbeatRequest {
   string id = 1;
   google.protobuf.Timestamp heartbeat_timestamp = 2;
-  string task_state = 3;
-  int32 response_code = 4;
-  string response_message = 5;
+  int32 response_code = 3;
+  string response_message = 4;
 }
 
 message HeartbeatResponse {

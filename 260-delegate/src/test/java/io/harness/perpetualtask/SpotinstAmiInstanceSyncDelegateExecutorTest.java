@@ -97,8 +97,7 @@ public class SpotinstAmiInstanceSyncDelegateExecutorTest extends DelegateTest {
     SpotInstTaskExecutionResponse sentTaskExecutionResponse = argumentCaptor.getValue();
 
     assertThat(perpetualTaskResponse.getResponseCode()).isEqualTo(Response.SC_OK);
-    assertThat(perpetualTaskResponse.getPerpetualTaskState()).isEqualTo(PerpetualTaskState.TASK_RUN_SUCCEEDED);
-    assertThat(perpetualTaskResponse.getResponseMessage()).isEqualTo("TASK_RUN_SUCCEEDED");
+    assertThat(perpetualTaskResponse.getResponseMessage()).isEqualTo("success");
     assertThat(sentTaskExecutionResponse.getCommandExecutionStatus()).isEqualTo(CommandExecutionStatus.SUCCESS);
     assertThat(sentTaskExecutionResponse.getSpotInstTaskResponse())
         .isInstanceOf(SpotInstListElastigroupInstancesResponse.class);
@@ -131,7 +130,6 @@ public class SpotinstAmiInstanceSyncDelegateExecutorTest extends DelegateTest {
         .publishInstanceSyncResult(eq("task-id"), eq("accountId"), argumentCaptor.capture());
     SpotInstTaskExecutionResponse sentTaskExecutionResponse = argumentCaptor.getValue();
 
-    assertThat(perpetualTaskResponse.getPerpetualTaskState()).isEqualTo(PerpetualTaskState.TASK_RUN_FAILED);
     assertThat(perpetualTaskResponse.getResponseMessage()).isEqualTo("Unable to list instances");
     assertThat(sentTaskExecutionResponse.getCommandExecutionStatus()).isEqualTo(CommandExecutionStatus.FAILURE);
     assertThat(sentTaskExecutionResponse.getErrorMessage()).isEqualTo("Unable to list instances");
@@ -157,7 +155,6 @@ public class SpotinstAmiInstanceSyncDelegateExecutorTest extends DelegateTest {
         .publishInstanceSyncResult(eq("task-id"), eq("accountId"), argumentCaptor.capture());
     SpotInstTaskExecutionResponse sentTaskExecutionResponse = argumentCaptor.getValue();
 
-    assertThat(perpetualTaskResponse.getPerpetualTaskState()).isEqualTo(PerpetualTaskState.TASK_RUN_FAILED);
     assertThat(perpetualTaskResponse.getResponseMessage()).isEqualTo("Unable to fetch instance list");
     assertThat(sentTaskExecutionResponse.getCommandExecutionStatus()).isEqualTo(CommandExecutionStatus.FAILURE);
     assertThat(sentTaskExecutionResponse.getErrorMessage()).isEqualTo("Unable to fetch instance list");

@@ -56,21 +56,12 @@ public class CustomDeploymentPerpetualTaskExecutor implements PerpetualTaskExecu
   }
 
   private PerpetualTaskResponse getPerpetualTaskResponse(ShellScriptProvisionExecutionData response) {
-    final PerpetualTaskState taskState;
-    final String message;
+    String message = "success";
     if (ExecutionStatus.FAILED == response.getExecutionStatus()) {
-      taskState = PerpetualTaskState.TASK_RUN_FAILED;
       message = response.getErrorMsg();
-    } else {
-      taskState = PerpetualTaskState.TASK_RUN_SUCCEEDED;
-      message = PerpetualTaskState.TASK_RUN_SUCCEEDED.name();
     }
 
-    return PerpetualTaskResponse.builder()
-        .responseCode(Response.SC_OK)
-        .perpetualTaskState(taskState)
-        .responseMessage(message)
-        .build();
+    return PerpetualTaskResponse.builder().responseCode(Response.SC_OK).responseMessage(message).build();
   }
 
   private ShellScriptProvisionExecutionData executeScript(

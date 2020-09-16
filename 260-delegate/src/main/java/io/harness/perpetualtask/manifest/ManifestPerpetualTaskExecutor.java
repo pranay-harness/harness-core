@@ -15,7 +15,6 @@ import io.harness.perpetualtask.PerpetualTaskExecutionParams;
 import io.harness.perpetualtask.PerpetualTaskExecutor;
 import io.harness.perpetualtask.PerpetualTaskId;
 import io.harness.perpetualtask.PerpetualTaskResponse;
-import io.harness.perpetualtask.PerpetualTaskState;
 import io.harness.perpetualtask.artifact.ArtifactsPublishedCache;
 import io.harness.serializer.KryoSerializer;
 import lombok.extern.slf4j.Slf4j;
@@ -52,11 +51,7 @@ public class ManifestPerpetualTaskExecutor implements PerpetualTaskExecutor {
     // TODO: Implement perpetual task collection, caching and sending back the response to manager
 
     logger.info("Published manifest successfully for app manifest: {}", manifestCollectionParams.getAppManifestId());
-    return PerpetualTaskResponse.builder()
-        .responseCode(200)
-        .perpetualTaskState(PerpetualTaskState.TASK_RUN_SUCCEEDED)
-        .responseMessage(PerpetualTaskState.TASK_RUN_SUCCEEDED.name())
-        .build();
+    return PerpetualTaskResponse.builder().responseCode(200).responseMessage("success").build();
   }
 
   @Override

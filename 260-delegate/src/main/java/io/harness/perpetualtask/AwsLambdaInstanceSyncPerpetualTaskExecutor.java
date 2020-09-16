@@ -4,8 +4,6 @@ import static io.harness.beans.ExecutionStatus.FAILED;
 import static io.harness.beans.ExecutionStatus.SUCCESS;
 import static io.harness.data.structure.CollectionUtils.emptyIfNull;
 import static io.harness.network.SafeHttpCall.execute;
-import static io.harness.perpetualtask.PerpetualTaskState.TASK_RUN_FAILED;
-import static io.harness.perpetualtask.PerpetualTaskState.TASK_RUN_SUCCEEDED;
 import static java.lang.Boolean.TRUE;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
@@ -233,8 +231,7 @@ public class AwsLambdaInstanceSyncPerpetualTaskExecutor implements PerpetualTask
     boolean failed = FAILED == response.getExecutionStatus();
     return PerpetualTaskResponse.builder()
         .responseCode(Response.SC_OK)
-        .perpetualTaskState(failed ? TASK_RUN_FAILED : TASK_RUN_SUCCEEDED)
-        .responseMessage(failed ? response.getErrorMessage() : TASK_RUN_SUCCEEDED.name())
+        .responseMessage(failed ? response.getErrorMessage() : "success")
         .build();
   }
 

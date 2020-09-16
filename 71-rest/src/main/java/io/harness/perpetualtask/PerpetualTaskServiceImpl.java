@@ -224,18 +224,12 @@ public class PerpetualTaskServiceImpl implements PerpetualTaskService, DelegateO
 
   @Override
   public boolean triggerCallback(String taskId, long heartbeatMillis, PerpetualTaskResponse perpetualTaskResponse) {
-    PerpetualTaskRecord taskRecord = perpetualTaskRecordDao.getTask(taskId);
-    if (null == taskRecord || taskRecord.getLastHeartbeat() > heartbeatMillis) {
-      return false;
-    }
-    boolean heartbeatUpdated = perpetualTaskRecordDao.saveHeartbeat(taskRecord, heartbeatMillis);
-    perpetualTaskRecordDao.setTaskState(taskId, perpetualTaskResponse.getPerpetualTaskState());
-    return heartbeatUpdated;
+    return perpetualTaskRecordDao.saveHeartbeat(taskId, heartbeatMillis);
   }
 
   @Override
-  public void setTaskState(String taskId, PerpetualTaskState state) {
-    perpetualTaskRecordDao.setTaskState(taskId, state);
+  public void updateTaskUnassignedReason(String taskId, PerpetualTaskUnassignedReason reason) {
+    perpetualTaskRecordDao.updateTaskUnassignedReason(taskId, reason);
   }
 
   @Override

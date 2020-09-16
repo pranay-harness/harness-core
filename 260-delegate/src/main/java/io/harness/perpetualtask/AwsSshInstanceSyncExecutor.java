@@ -73,21 +73,12 @@ public class AwsSshInstanceSyncExecutor implements PerpetualTaskExecutor {
   }
 
   private PerpetualTaskResponse getPerpetualTaskResponse(AwsEc2ListInstancesResponse awsResponse) {
-    PerpetualTaskState taskState;
-    String message;
+    String message = "success";
     if (ExecutionStatus.FAILED == awsResponse.getExecutionStatus()) {
-      taskState = PerpetualTaskState.TASK_RUN_FAILED;
       message = awsResponse.getErrorMessage();
-    } else {
-      taskState = PerpetualTaskState.TASK_RUN_SUCCEEDED;
-      message = PerpetualTaskState.TASK_RUN_SUCCEEDED.name();
     }
 
-    return PerpetualTaskResponse.builder()
-        .responseCode(Response.SC_OK)
-        .perpetualTaskState(taskState)
-        .responseMessage(message)
-        .build();
+    return PerpetualTaskResponse.builder().responseCode(Response.SC_OK).responseMessage(message).build();
   }
 
   @SuppressWarnings("unchecked")
