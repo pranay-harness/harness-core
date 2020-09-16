@@ -17,6 +17,7 @@ public interface CVConfigService {
   void update(List<CVConfig> cvConfigs);
   @Nullable CVConfig get(String cvConfigId);
   void delete(String cvConfigId);
+
   void deleteByGroupId(String accountId, String connectorIdentifier, String productName, String groupId);
   List<CVConfig> list(String accountId, String connectorIdentifier);
   List<CVConfig> list(String accountId, String connectorIdentifier, String productName);

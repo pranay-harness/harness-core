@@ -1,4 +1,4 @@
-package io.harness.cvng.dashboard.services.resources;
+package io.harness.cvng.dashboard.resources;
 
 import com.google.inject.Inject;
 

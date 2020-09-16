@@ -13,7 +13,9 @@ import com.google.inject.Inject;
 import io.harness.cvng.analysis.beans.TimeSeriesRecordDTO;
 import io.harness.cvng.analysis.beans.TimeSeriesTestDataDTO;
 import io.harness.cvng.analysis.beans.TimeSeriesTestDataDTO.MetricData;
+import io.harness.cvng.analysis.entities.TimeSeriesRiskSummary;
 import io.harness.cvng.beans.HostRecordDTO;
+
 import io.harness.cvng.beans.TimeSeriesDataCollectionRecord;
 import io.harness.cvng.core.beans.TimeSeriesMetricDefinition;
 import io.harness.cvng.core.entities.CVConfig;
@@ -84,6 +86,7 @@ public class TimeSeriesServiceImpl implements TimeSeriesService {
     saveHosts(dataRecords);
     return true;
   }
+
   @Value
   @Builder
   private static class TimeSeriesRecordBucketKey {
@@ -159,6 +162,38 @@ public class TimeSeriesServiceImpl implements TimeSeriesService {
       });
     });
     return rv;
+  }
+
+  @Override
+  public boolean updateRiskScores(String cvConfigId, TimeSeriesRiskSummary riskSummary) {
+    Set<String> metricNames = riskSummary.getTransactionMetricRiskList()
+                                  .stream()
+                                  .map(TimeSeriesRiskSummary.TransactionMetricRisk::getMetricName)
+                                  .collect(Collectors.toSet());
+    List<TimeSeriesRecord> records =
+        hPersistence.createQuery(TimeSeriesRecord.class)
+            .filter(TimeSeriesRecordKeys.cvConfigId, riskSummary.getCvConfigId())
+            .filter(TimeSeriesRecordKeys.bucketStartTime, riskSummary.getAnalysisStartTime())
+            .field(TimeSeriesRecordKeys.metricName)
+            .in(metricNames)
+            .asList();
+
+    Map<String, TimeSeriesRecord> metricNameRecordMap = new HashMap<>();
+    records.forEach(record -> metricNameRecordMap.put(record.getMetricName(), record));
+
+    riskSummary.getTransactionMetricRiskList().forEach(metricRisk -> {
+      TimeSeriesRecord record = metricNameRecordMap.get(metricRisk.getMetricName());
+      String groupName = metricRisk.getTransactionName();
+      record.getTimeSeriesGroupValues().forEach(groupValue -> {
+        if (groupName.equals(groupValue.getGroupName())) {
+          groupValue.setRiskScore(metricRisk.getMetricRisk());
+        }
+      });
+    });
+    logger.info("Updating the risk in {} timeseries records", records.size());
+    hPersistence.save(records);
+
+    return false;
   }
 
   @Override
@@ -379,5 +414,26 @@ public class TimeSeriesServiceImpl implements TimeSeriesService {
           .build();
     }
     return null;
+  }
+
+  @Override
+  public List<TimeSeriesRecord> getTimeSeriesRecordsForConfigs(
+      List<String> cvConfigIds, Instant startTime, Instant endTime, boolean anomalousOnly) {
+    Query<TimeSeriesRecord> timeSeriesRecordQuery = hPersistence.createQuery(TimeSeriesRecord.class)
+                                                        .field(TimeSeriesRecordKeys.cvConfigId)
+                                                        .in(cvConfigIds)
+
+                                                        .field(TimeSeriesRecordKeys.bucketStartTime)
+                                                        .greaterThanOrEq(startTime)
+                                                        .field(TimeSeriesRecordKeys.bucketStartTime)
+                                                        .lessThan(endTime);
+
+    if (anomalousOnly) {
+      timeSeriesRecordQuery = timeSeriesRecordQuery
+                                  .field(TimeSeriesRecordKeys.timeSeriesGroupValues + "."
+                                      + TimeSeriesGroupValue.TimeSeriesValueKeys.riskScore)
+                                  .greaterThan(0);
+    }
+    return timeSeriesRecordQuery.asList();
   }
 }

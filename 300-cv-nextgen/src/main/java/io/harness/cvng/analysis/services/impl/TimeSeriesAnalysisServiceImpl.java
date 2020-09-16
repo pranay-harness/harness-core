@@ -365,6 +365,7 @@ public class TimeSeriesAnalysisServiceImpl implements TimeSeriesAnalysisService 
           cvConfig.getServiceIdentifier(), cvConfig.getEnvIdentifier(), cvConfig.getCategory(), endTime, risk);
 
       handleAnomalyOpenOrClose(cvConfig.getAccountId(), cvConfigId, startTime, endTime, risk, riskSummary);
+      timeSeriesService.updateRiskScores(cvConfigId, riskSummary);
     }
   }
 

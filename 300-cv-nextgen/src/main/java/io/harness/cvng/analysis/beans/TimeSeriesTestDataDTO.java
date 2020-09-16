@@ -19,5 +19,6 @@ public class TimeSeriesTestDataDTO {
   public static class MetricData {
     private long timestamp;
     private double value;
+    private int risk;
   }
 }
