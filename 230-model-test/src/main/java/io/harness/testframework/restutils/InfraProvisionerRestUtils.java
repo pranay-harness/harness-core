@@ -8,6 +8,7 @@ import io.harness.rest.RestResponse;
 import io.harness.testframework.framework.Setup;
 import io.restassured.http.ContentType;
 import io.restassured.mapper.ObjectMapperType;
+import io.restassured.specification.RequestSpecification;
 import software.wings.beans.InfrastructureProvisioner;
 import software.wings.beans.NameValuePair;
 
@@ -109,18 +110,24 @@ public class InfraProvisionerRestUtils {
   }
 
   public static List<NameValuePair> getTerraformVariables(String accountId, String appId, String bearerToken,
-      String scmSettingId, String branch, String path) throws EmptyRestResponseException {
+      String scmSettingId, String branch, String path, String repoName) throws EmptyRestResponseException {
     GenericType<RestResponse<List<NameValuePair>>> provisioner =
         new GenericType<RestResponse<List<NameValuePair>>>() {};
-    RestResponse<List<NameValuePair>> response = Setup.portal()
-                                                     .auth()
-                                                     .oauth2(bearerToken)
-                                                     .queryParam("appId", appId)
-                                                     .queryParam("accountId", accountId)
-                                                     .queryParam("sourceRepoSettingId", scmSettingId)
-                                                     .queryParam("branch", branch)
-                                                     .queryParam("path", path)
-                                                     .contentType(ContentType.JSON)
+
+    RequestSpecification requestSpecification = Setup.portal()
+                                                    .auth()
+                                                    .oauth2(bearerToken)
+                                                    .queryParam("appId", appId)
+                                                    .queryParam("accountId", accountId)
+                                                    .queryParam("sourceRepoSettingId", scmSettingId)
+                                                    .queryParam("branch", branch)
+                                                    .queryParam("path", path)
+                                                    .contentType(ContentType.JSON);
+
+    if (repoName != null) {
+      requestSpecification.queryParam("repoName", repoName);
+    }
+    RestResponse<List<NameValuePair>> response = requestSpecification
                                                      .get("/infrastructure-provisioners/terraform"
                                                          + "-variables")
                                                      .as(provisioner.getType());

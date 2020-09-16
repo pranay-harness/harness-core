@@ -96,6 +96,7 @@ public class SettingGenerator {
 
   @Inject AccountGenerator accountGenerator;
   @Inject ScmSecret scmSecret;
+  @Inject SecretGenerator secretGenerator;
 
   @Inject SettingsService settingsService;
   @Inject WingsPersistence wingsPersistence;
@@ -112,6 +113,7 @@ public class SettingGenerator {
     GITHUB_TEST_CONNECTOR,
     TERRAFORM_CITY_GIT_REPO,
     TERRAFORM_MAIN_GIT_REPO,
+    TERRAFORM_MAIN_GIT_AC,
     HARNESS_BAMBOO_CONNECTOR,
     HARNESS_NEXUS_CONNECTOR,
     HARNESS_NEXUS2_CONNECTOR,
@@ -183,6 +185,8 @@ public class SettingGenerator {
         return ensureWinRmTestConnector(seed, owners);
       case TERRAFORM_MAIN_GIT_REPO:
         return ensureTerraformMainGitRepo(seed, owners);
+      case TERRAFORM_MAIN_GIT_AC:
+        return ensureTerraformMainGitAc(seed, owners);
       case PAID_EMAIL_SMTP_CONNECTOR:
         return ensurePaidSMTPSettings(seed, owners);
       case HELM_CHART_REPO_CONNECTOR:
@@ -287,6 +291,14 @@ public class SettingGenerator {
     SettingAttribute githubKey = ensurePredefined(seed, owners, GITHUB_TEST_CONNECTOR);
 
     char[] password = scmSecret.decryptToCharArray(new SecretName("terraform_password"));
+    SettingAttribute settingAttribute = createTerraformMainGitRepoSetting(githubKey, password);
+    return ensureSettingAttribute(seed, settingAttribute, owners);
+  }
+
+  private SettingAttribute ensureTerraformMainGitAc(Seed seed, Owners owners) {
+    SettingAttribute githubKey = ensurePredefined(seed, owners, GITHUB_TEST_CONNECTOR);
+
+    String password = secretGenerator.ensureStored(owners, new SecretName("terraform_password"));
     SettingAttribute settingAttribute = createTerraformMainGitRepoSetting(githubKey, password);
     return ensureSettingAttribute(seed, settingAttribute, owners);
   }
