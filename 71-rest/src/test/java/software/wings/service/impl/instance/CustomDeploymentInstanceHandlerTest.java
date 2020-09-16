@@ -309,7 +309,11 @@ public class CustomDeploymentInstanceHandlerTest extends WingsBaseTest {
               .envId(ENV_ID)
               .envType(NON_PROD)
               .hostInstanceKey(HostInstanceKey.builder().hostName(hostName).infraMappingId(INFRA_MAPPING_ID).build())
-              .instanceInfo(PhysicalHostInstanceInfo.builder().hostName(hostName).hostId(hostName).build())
+              .instanceInfo(PhysicalHostInstanceInfo.builder()
+                                .hostName(hostName)
+                                .hostId(hostName)
+                                .properties(ImmutableMap.of("hostname", hostName))
+                                .build())
               .build());
     }
     return instances;
