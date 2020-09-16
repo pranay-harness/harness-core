@@ -6,7 +6,7 @@ import static org.mockito.MockitoAnnotations.initMocks;
 
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
-import io.harness.ng.remote.client.ServiceHttpClientConfig;
+import io.harness.remote.client.ServiceHttpClientConfig;
 import io.harness.rule.Owner;
 import io.harness.secretmanagerclient.remote.SecretManagerClient;
 import io.harness.secretmanagerclient.remote.SecretManagerHttpClientFactory;

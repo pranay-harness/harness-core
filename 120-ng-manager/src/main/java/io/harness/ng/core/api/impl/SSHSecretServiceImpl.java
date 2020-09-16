@@ -1,7 +1,7 @@
 package io.harness.ng.core.api.impl;
 
-import static io.harness.ng.NGConstants.HARNESS_SECRET_MANAGER_IDENTIFIER;
-import static io.harness.ng.remote.client.RestClientUtils.getResponse;
+import static io.harness.NGConstants.HARNESS_SECRET_MANAGER_IDENTIFIER;
+import static io.harness.remote.client.RestClientUtils.getResponse;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;

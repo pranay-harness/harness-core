@@ -1,4 +1,4 @@
-package io.harness.ng;
+package io.harness;
 
 public class NGConstants {
   private NGConstants() {}

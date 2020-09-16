@@ -1,7 +1,7 @@
 package io.harness.gitsync.common.dtos;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import io.harness.ng.EntityType;
+import io.harness.EntityType;
 import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Data;

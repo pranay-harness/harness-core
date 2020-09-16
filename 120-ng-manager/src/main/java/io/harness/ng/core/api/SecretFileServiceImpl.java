@@ -1,7 +1,7 @@
 package io.harness.ng.core.api;
 
 import static io.harness.exception.WingsException.USER;
-import static io.harness.ng.remote.client.RestClientUtils.getResponse;
+import static io.harness.remote.client.RestClientUtils.getResponse;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;

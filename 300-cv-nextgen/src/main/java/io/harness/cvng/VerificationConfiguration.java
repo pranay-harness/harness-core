@@ -16,7 +16,7 @@ import io.dropwizard.server.ServerFactory;
 import io.federecio.dropwizard.swagger.SwaggerBundleConfiguration;
 import io.harness.cvng.core.NGManagerServiceConfig;
 import io.harness.mongo.MongoConfig;
-import io.harness.ng.remote.client.ServiceHttpClientConfig;
+import io.harness.remote.client.ServiceHttpClientConfig;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import org.glassfish.jersey.server.model.Resource;

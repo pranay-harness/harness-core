@@ -6,9 +6,9 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import cz.jirutka.rsql.parser.RSQLParserException;
 import io.harness.CategoryTest;
+import io.harness.ModuleType;
 import io.harness.category.element.UnitTests;
 import io.harness.exception.UnsupportedOperationException;
-import io.harness.ng.ModuleType;
 import io.harness.ng.core.entities.Project;
 import io.harness.rule.Owner;
 import org.bson.Document;

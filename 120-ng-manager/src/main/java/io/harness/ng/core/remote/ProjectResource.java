@@ -1,19 +1,19 @@
 package io.harness.ng.core.remote;
 
-import static io.harness.ng.NGConstants.ACCOUNT_KEY;
-import static io.harness.ng.NGConstants.IDENTIFIER_KEY;
-import static io.harness.ng.NGConstants.MODULE_TYPE_KEY;
-import static io.harness.ng.NGConstants.ORG_KEY;
-import static io.harness.ng.NGConstants.SEARCH_TERM_KEY;
+import static io.harness.NGConstants.ACCOUNT_KEY;
+import static io.harness.NGConstants.IDENTIFIER_KEY;
+import static io.harness.NGConstants.MODULE_TYPE_KEY;
+import static io.harness.NGConstants.ORG_KEY;
+import static io.harness.NGConstants.SEARCH_TERM_KEY;
 import static io.harness.ng.core.remote.ProjectMapper.writeDTO;
 import static io.harness.utils.PageUtils.getNGPageResponse;
 import static io.harness.utils.PageUtils.getPageRequest;
 
 import com.google.inject.Inject;
 
+import io.harness.ModuleType;
 import io.harness.beans.NGPageRequest;
 import io.harness.beans.NGPageResponse;
-import io.harness.ng.ModuleType;
 import io.harness.ng.core.dto.ErrorDTO;
 import io.harness.ng.core.dto.FailureDTO;
 import io.harness.ng.core.dto.ProjectDTO;

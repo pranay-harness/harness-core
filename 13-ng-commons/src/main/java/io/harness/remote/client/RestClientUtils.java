@@ -1,4 +1,4 @@
-package io.harness.ng.remote.client;
+package io.harness.remote.client;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import io.harness.eraro.ResponseMessage;

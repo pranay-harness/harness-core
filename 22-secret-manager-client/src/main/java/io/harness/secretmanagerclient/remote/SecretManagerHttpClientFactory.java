@@ -3,8 +3,8 @@ package io.harness.secretmanagerclient.remote;
 import com.google.inject.Provider;
 import com.google.inject.Singleton;
 
-import io.harness.ng.remote.client.AbstractHttpClientFactory;
-import io.harness.ng.remote.client.ServiceHttpClientConfig;
+import io.harness.remote.client.AbstractHttpClientFactory;
+import io.harness.remote.client.ServiceHttpClientConfig;
 import io.harness.security.ServiceTokenGenerator;
 import io.harness.serializer.kryo.KryoConverterFactory;
 import lombok.AccessLevel;

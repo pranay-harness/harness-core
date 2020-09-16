@@ -1,4 +1,4 @@
-package io.harness.ng;
+package io.harness;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -10,12 +10,12 @@ import java.util.stream.Collectors;
 // todo(abhinav): refactor/adapt this according to needs later depending on how service registration comes in
 // one more enum might come in here for product types.
 public enum EntityType {
-  @JsonProperty("projects") PROJECTS(Product.CORE),
-  @JsonProperty("pipelines") PIPELINES(Product.CD),
-  @JsonProperty("connectors") CONNECTORS(Product.CORE),
-  @JsonProperty("secrets") SECRETS(Product.CORE);
+  @JsonProperty("projects") PROJECTS(ModuleType.CORE),
+  @JsonProperty("pipelines") PIPELINES(ModuleType.CD),
+  @JsonProperty("connectors") CONNECTORS(ModuleType.CORE),
+  @JsonProperty("secrets") SECRETS(ModuleType.CORE);
 
-  private final Product product;
+  private final ModuleType moduleType;
 
   @JsonCreator
   public static EntityType fromString(@JsonProperty("entityType") String entityType) {
@@ -27,9 +27,9 @@ public enum EntityType {
     throw new IllegalArgumentException("Invalid value: " + entityType);
   }
 
-  public static List<EntityType> getEntityTypes(Product product) {
+  public static List<EntityType> getEntityTypes(ModuleType moduleType) {
     return Arrays.stream(EntityType.values())
-        .filter(entityType -> entityType.product.name().equalsIgnoreCase(product.name()))
+        .filter(entityType -> entityType.moduleType.name().equalsIgnoreCase(moduleType.name()))
         .collect(Collectors.toList());
   }
 
@@ -37,12 +37,12 @@ public enum EntityType {
     return EntityType.valueOf(entityType.toUpperCase());
   }
 
-  public Product getEntityProduct() {
-    return this.product;
+  public ModuleType getEntityProduct() {
+    return this.moduleType;
   }
 
-  EntityType(Product product) {
-    this.product = product;
+  EntityType(ModuleType moduleType) {
+    this.moduleType = moduleType;
   }
 
   public String getEntityDisplayName() {
