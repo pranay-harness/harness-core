@@ -14,7 +14,7 @@ resource "google_logging_metric" "ce_failed_data_pipeline_jobs" {
 
 resource "google_monitoring_alert_policy" "ce_failed_data_pipeline_jobs" {
   notification_channels = ((var.deployment == "prod" || var.deployment == "freemium" || var.deployment == "prod_failover") ? ["${local.slack_prod_channel}"] :
-    ((var.deployment == "qa" || var.deployment == "qa_free") ? ["${local.slack_qa_channel}"] :
+    ((var.deployment == "qa" || var.deployment == "qa_free" || var.deployment == "stress") ? ["${local.slack_qa_channel}"] :
   ["${local.slack_dev_channel}"]))
 
   display_name = join("_", [local.name_prefix, "ce_failed_data_pipeline_jobs"])
