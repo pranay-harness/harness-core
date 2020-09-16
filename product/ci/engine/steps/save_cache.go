@@ -18,13 +18,14 @@ import (
 
 const (
 	saveCacheMaxRetries = 5
+	outputKey           = "key"
 )
 
 //go:generate mockgen -source save_cache.go -package=steps -destination mocks/save_cache_mock.go SaveCacheStep
 
 // SaveCacheStep represents interface to execute a save cache step
 type SaveCacheStep interface {
-	Run(ctx context.Context) error
+	Run(ctx context.Context) (*output.StepOutput, error)
 }
 
 type saveCacheStep struct {
@@ -110,10 +111,10 @@ func (s *saveCacheStep) resolveExpression(ctx context.Context) error {
 	return nil
 }
 
-func (s *saveCacheStep) Run(ctx context.Context) error {
+func (s *saveCacheStep) Run(ctx context.Context) (*output.StepOutput, error) {
 	start := time.Now()
 	if err := s.resolveExpression(ctx); err != nil {
-		return err
+		return nil, err
 	}
 
 	tmpArchivePath := filepath.Join(s.tmpFilePath, s.id)
@@ -126,7 +127,7 @@ func (s *saveCacheStep) Run(ctx context.Context) error {
 			"elapsed_time_ms", utils.TimeSince(start),
 			zap.Error(err),
 		)
-		return err
+		return nil, err
 	}
 
 	xxhashSum, err := getFileXXHash(tmpArchivePath, s.fs, s.log)
@@ -137,7 +138,7 @@ func (s *saveCacheStep) Run(ctx context.Context) error {
 			"elapsed_time_ms", utils.TimeSince(start),
 			zap.Error(err),
 		)
-		return err
+		return nil, err
 	}
 
 	err = s.uploadWithRetries(ctx, xxhashSum, tmpArchivePath)
@@ -148,7 +149,7 @@ func (s *saveCacheStep) Run(ctx context.Context) error {
 			"elapsed_time_ms", utils.TimeSince(start),
 			zap.Error(err),
 		)
-		return err
+		return nil, err
 	}
 
 	s.log.Infow(
@@ -156,7 +157,10 @@ func (s *saveCacheStep) Run(ctx context.Context) error {
 		"key", s.key,
 		"elapsed_time_ms", utils.TimeSince(start),
 	)
-	return nil
+	o := &output.StepOutput{
+		Output: map[string]string{outputKey: s.key},
+	}
+	return o, nil
 }
 
 // Archive the files

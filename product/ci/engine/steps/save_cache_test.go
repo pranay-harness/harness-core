@@ -78,7 +78,7 @@ func TestSaveCacheRunWithArchiveErr(t *testing.T) {
 
 	archiver.EXPECT().Archive(paths, gomock.Any()).Return(os.ErrExist)
 
-	err := s.Run(ctx)
+	_, err := s.Run(ctx)
 	assert.NotEqual(t, err, nil)
 }
 
@@ -111,7 +111,7 @@ func TestSaveCacheRunWithXXHashErr(t *testing.T) {
 
 	archiver.EXPECT().Archive(paths, gomock.Any()).Return(nil)
 	fs.EXPECT().Open(filePath).Return(nil, os.ErrExist)
-	err := s.Run(ctx)
+	_, err := s.Run(ctx)
 	assert.NotEqual(t, err, nil)
 }
 
@@ -149,7 +149,7 @@ func TestSaveCacheRunWithMinioClientErr(t *testing.T) {
 	mockFile.EXPECT().Close().Return(nil)
 	mockBackOff.EXPECT().Reset()
 	mockBackOff.EXPECT().NextBackOff().Return(backoff.Stop)
-	err := s.Run(ctx)
+	_, err := s.Run(ctx)
 	assert.NotEqual(t, err, nil)
 }
 
@@ -197,7 +197,7 @@ func TestSaveCacheRunWithUploadFailure(t *testing.T) {
 	mockMinio.EXPECT().Stat(key).Return("", nil, nil)
 	mockMinio.EXPECT().UploadWithOpts(ctx, key, filePath, gomock.Any(), true, gomock.Any()).Return(os.ErrNotExist)
 	mockBackOff.EXPECT().NextBackOff().Return(backoff.Stop)
-	err := s.Run(ctx)
+	_, err := s.Run(ctx)
 	assert.NotEqual(t, err, nil)
 }
 
@@ -244,8 +244,9 @@ func TestSaveCacheRunWithUploadSuccess(t *testing.T) {
 	mockBackOff.EXPECT().Reset()
 	mockMinio.EXPECT().Stat(key).Return("", nil, nil)
 	mockMinio.EXPECT().UploadWithOpts(ctx, key, filePath, gomock.Any(), true, gomock.Any()).Return(nil)
-	err := s.Run(ctx)
+	o, err := s.Run(ctx)
 	assert.Equal(t, err, nil)
+	assert.Equal(t, o.Output, map[string]string{outputKey: key})
 }
 
 func TestSaveCacheRunWithSameKeyExists(t *testing.T) {
@@ -293,8 +294,9 @@ func TestSaveCacheRunWithSameKeyExists(t *testing.T) {
 	mockFile.EXPECT().Close().Return(nil)
 	mockBackOff.EXPECT().Reset()
 	mockMinio.EXPECT().Stat(key).Return("", metadata, nil)
-	err := s.Run(ctx)
+	o, err := s.Run(ctx)
 	assert.Equal(t, err, nil)
+	assert.Equal(t, o.Output, map[string]string{outputKey: key})
 }
 
 func TestSaveCacheResolveJEXL(t *testing.T) {
