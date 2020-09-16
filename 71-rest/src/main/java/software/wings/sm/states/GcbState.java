@@ -1,6 +1,7 @@
 package software.wings.sm.states;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
+import static io.harness.beans.ExecutionStatus.DISCONTINUING;
 import static io.harness.beans.ExecutionStatus.FAILED;
 import static io.harness.beans.ExecutionStatus.RUNNING;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
@@ -59,6 +60,7 @@ import software.wings.beans.command.GcbTaskParams;
 import software.wings.beans.template.TemplateUtils;
 import software.wings.common.TemplateExpressionProcessor;
 import software.wings.helpers.ext.gcb.models.GcbBuildDetails;
+import software.wings.helpers.ext.gcb.models.GcbBuildStatus;
 import software.wings.service.intfc.ActivityService;
 import software.wings.service.intfc.DelegateService;
 import software.wings.service.intfc.SettingsService;
@@ -86,6 +88,7 @@ import java.util.stream.Stream;
 @OwnedBy(CDC)
 public class GcbState extends State implements SweepingOutputStateMixin {
   public static final String GCB_LOGS = "GCB Output";
+  public static final String BUILD_NO = "buildNo";
 
   @Getter @Setter private GcbOptions gcbOptions;
   @Getter @Setter private String sweepingOutputName;
@@ -251,6 +254,10 @@ public class GcbState extends State implements SweepingOutputStateMixin {
     }
 
     GcbDelegateResponse delegateResponse = (GcbDelegateResponse) notifyResponseData;
+
+    if (delegateResponse.isInterrupted()) {
+      return ExecutionResponse.builder().executionStatus(DISCONTINUING).build();
+    }
     if (delegateResponse.isWorking()) {
       return startPollTask(context, delegateResponse);
     }
@@ -299,19 +306,34 @@ public class GcbState extends State implements SweepingOutputStateMixin {
                   (GcpConfig) settingsService.get(((GcbExecutionData) context.getStateExecutionData()).getGcpConfigId())
                       .getValue())
               .accountId(context.getAccountId())
-              .buildId(String.valueOf(context.getStateExecutionData().getExecutionDetails().get("buildNo").getValue()))
+              .buildId(String.valueOf(context.getStateExecutionData().getExecutionDetails().get(BUILD_NO).getValue()))
               .encryptedDataDetails(secretManager.getEncryptionDetails(
                   (GcpConfig) settingsService.get(((GcbExecutionData) context.getStateExecutionData()).getGcpConfigId())
                       .getValue(),
                   context.getAppId(), context.getWorkflowExecutionId()))
               .build();
-      delegateService.queueTask(
-          delegateTaskOf(((GcbExecutionData) context.getStateExecutionData()).getActivityId(), context, params));
-      ((GcbExecutionData) context.getStateExecutionData()).setBuildStatus(CANCELLED);
-      ((GcbExecutionData) context.getStateExecutionData())
-          .setErrorMsg("Build with number: "
-              + (context.getStateExecutionData().getExecutionDetails().get("buildNo").getValue()
-                    + " has been successfully cancelled"));
+      GcbDelegateResponse delegateResponse = null;
+      try {
+        delegateResponse = delegateService.executeTask(
+            delegateTaskOf(((GcbExecutionData) context.getStateExecutionData()).getActivityId(), context, params));
+      } catch (InterruptedException e) {
+        Thread.currentThread().interrupt();
+      }
+      if (delegateResponse != null && delegateResponse.getBuild() != null
+          && delegateResponse.getBuild().getStatus() != null) {
+        GcbBuildStatus buildStatus = delegateResponse.getBuild().getStatus();
+        if (buildStatus == CANCELLED) {
+          context.getStateExecutionData().setErrorMsg(
+              String.format("Build with number: %s has been successfully cancelled",
+                  context.getStateExecutionData().getExecutionDetails().get(BUILD_NO).getValue()));
+          ((GcbExecutionData) context.getStateExecutionData()).setBuildStatus(CANCELLED);
+        } else {
+          context.getStateExecutionData().setErrorMsg(String.format("Failed to cancel build with number: %s",
+              context.getStateExecutionData().getExecutionDetails().get(BUILD_NO).getValue()));
+          context.getStateExecutionData().setStatus(FAILED);
+          ((GcbExecutionData) context.getStateExecutionData()).setBuildStatus(buildStatus);
+        }
+      }
     }
   }
 
@@ -355,15 +377,20 @@ public class GcbState extends State implements SweepingOutputStateMixin {
     @NotNull private final GcbTaskParams params;
     @Nullable private DelegateMetaInfo delegateMetaInfo;
     @Nullable private final String errorMsg;
+    private final boolean interrupted;
 
     @NotNull
     public static GcbDelegateResponse gcbDelegateResponseOf(
         @NotNull final GcbTaskParams params, @NotNull final GcbBuildDetails build) {
-      return new GcbDelegateResponse(build.getStatus().getExecutionStatus(), build, params, null);
+      return new GcbDelegateResponse(build.getStatus().getExecutionStatus(), build, params, null, false);
     }
 
     public static GcbDelegateResponse failedGcbTaskResponse(@NotNull final GcbTaskParams params, String errorMsg) {
-      return new GcbDelegateResponse(FAILED, null, params, errorMsg);
+      return new GcbDelegateResponse(FAILED, null, params, errorMsg, false);
+    }
+
+    public static GcbDelegateResponse interruptedGcbTask(@NotNull final GcbTaskParams params) {
+      return new GcbDelegateResponse(DISCONTINUING, null, params, null, true);
     }
 
     public boolean isWorking() {
