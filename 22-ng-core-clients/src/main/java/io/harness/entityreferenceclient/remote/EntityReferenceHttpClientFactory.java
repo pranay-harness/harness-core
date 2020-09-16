@@ -1,9 +1,12 @@
 package io.harness.entityreferenceclient.remote;
 
+import static io.harness.annotations.dev.HarnessTeam.DX;
+
 import com.google.inject.Provider;
 import com.google.inject.Singleton;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.entityreferenceclient.NGManagerClientConfig;
 import io.harness.exception.GeneralException;
 import io.harness.exception.InvalidRequestException;
@@ -26,6 +29,7 @@ import javax.validation.constraints.NotNull;
 
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @Singleton
+@OwnedBy(DX)
 public class EntityReferenceHttpClientFactory implements Provider<EntityReferenceClient> {
   public static final String NG_MANAGER_CIRCUIT_BREAKER = "ng-manager";
   private final NGManagerClientConfig ngManagerClientConfig;

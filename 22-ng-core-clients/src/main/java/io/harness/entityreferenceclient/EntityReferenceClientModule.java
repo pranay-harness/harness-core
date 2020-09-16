@@ -1,14 +1,18 @@
 package io.harness.entityreferenceclient;
 
+import static io.harness.annotations.dev.HarnessTeam.DX;
+
 import com.google.inject.AbstractModule;
 import com.google.inject.Provides;
 import com.google.inject.Scopes;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.entityreferenceclient.remote.EntityReferenceClient;
 import io.harness.entityreferenceclient.remote.EntityReferenceHttpClientFactory;
 import io.harness.security.ServiceTokenGenerator;
 import io.harness.serializer.kryo.KryoConverterFactory;
 
+@OwnedBy(DX)
 public class EntityReferenceClientModule extends AbstractModule {
   private final NGManagerClientConfig ngManagerClientConfig;
   private final String serviceSecret;
