@@ -40,4 +40,8 @@ public enum ExecutionMode {
   public static boolean isParentMode(ExecutionMode mode) {
     return PARENT_MODES.contains(mode);
   }
+
+  public static boolean isChainMode(ExecutionMode mode) {
+    return CHAIN_MODES.contains(mode);
+  }
 }

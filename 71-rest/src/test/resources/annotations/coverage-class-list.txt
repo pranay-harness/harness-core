@@ -242,10 +242,12 @@
 33-orchestration-visualization/src/main/java/io/harness/beans/Graph.java
 33-orchestration-visualization/src/main/java/io/harness/beans/GraphVertex.java
 33-orchestration-visualization/src/main/java/io/harness/beans/OrchestrationAdjacencyList.java
-33-orchestration-visualization/src/main/java/io/harness/beans/OrchestrationGraphInternal.java
+33-orchestration-visualization/src/main/java/io/harness/beans/OrchestrationAdjacencyListInternal.java
 33-orchestration-visualization/src/main/java/io/harness/beans/Subgraph.java
 33-orchestration-visualization/src/main/java/io/harness/dto/OrchestrationGraph.java
+33-orchestration-visualization/src/main/java/io/harness/event/NodeExecutionStatusUpdateEventHandler.java
 33-orchestration-visualization/src/main/java/io/harness/generator/GraphGenerator.java
+33-orchestration-visualization/src/main/java/io/harness/registrars/OrchestrationVisualizationModuleEventHandlerRegistrar.java
 33-orchestration-visualization/src/main/java/io/harness/serializer/OrchestrationVisualizationModuleRegistrars.java
 33-orchestration-visualization/src/main/java/io/harness/service/impl/GraphGenerationServiceImpl.java
 71-rest/src/main/java/io/harness/artifact/ArtifactCollectionPTaskClientParams.java

@@ -7,7 +7,6 @@ import static org.springframework.data.mongodb.core.query.Criteria.where;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
-import com.mongodb.DuplicateKeyException;
 import com.mongodb.ErrorCategory;
 import com.mongodb.MongoCommandException;
 import io.harness.cache.SpringCacheEntity.SpringCacheEntityKeys;
@@ -15,6 +14,7 @@ import io.harness.data.structure.EmptyPredicate;
 import io.harness.govern.IgnoreThrowable;
 import io.harness.serializer.KryoSerializer;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.dao.DuplicateKeyException;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.query.Update;

@@ -7,36 +7,32 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.cache.Distributable;
 import io.harness.cache.Ordinal;
-import io.harness.execution.status.Status;
 import lombok.Builder;
 import lombok.Value;
+import lombok.experimental.Wither;
 
 import java.io.ObjectStreamClass;
 import java.util.List;
+import java.util.Map;
 
 @OwnedBy(CDC)
 @Value
 @Builder
 @JsonIgnoreProperties(ignoreUnknown = true)
 @JsonInclude(JsonInclude.Include.NON_NULL)
-public class OrchestrationGraphInternal implements Distributable, Ordinal {
+public class OrchestrationAdjacencyListInternal implements Distributable, Ordinal {
   public static final long STRUCTURE_HASH =
-      ObjectStreamClass.lookup(OrchestrationGraphInternal.class).getSerialVersionUID();
+      ObjectStreamClass.lookup(OrchestrationAdjacencyListInternal.class).getSerialVersionUID();
   public static final long ALGORITHM_ID = 2;
 
   // cache variables
-  long cacheContextOrder;
-  String cacheKey;
-  List<String> cacheParams;
+  @Wither long cacheContextOrder;
+  @Wither String cacheKey;
+  @Wither List<String> cacheParams;
   long lastUpdatedAt = System.currentTimeMillis();
 
-  String planExecutionId;
-  Long startTs;
-  Long endTs;
-  Status status;
-
-  String rootNodeId;
-  OrchestrationAdjacencyList adjacencyList;
+  Map<String, GraphVertex> graphVertexMap;
+  Map<String, EdgeList> adjacencyList;
 
   @Override
   public long structureHash() {
