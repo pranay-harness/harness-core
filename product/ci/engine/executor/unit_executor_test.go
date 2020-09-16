@@ -154,7 +154,7 @@ func TestStepSaveCacheError(t *testing.T) {
 	}
 
 	mockStep := msteps.NewMockSaveCacheStep(ctrl)
-	mockStep.EXPECT().Run(ctx).Return(errors.New("caching failed"))
+	mockStep.EXPECT().Run(ctx).Return(nil, errors.New("caching failed"))
 
 	oldStep := saveCacheStep
 	defer func() { saveCacheStep = oldStep }()
@@ -176,11 +176,12 @@ func TestStepSaveCacheSuccess(t *testing.T) {
 	taskID := "taskID"
 	callbackToken := "token"
 	tmpFilePath := "/tmp"
+	key := "key"
 	stepProto := &pb.UnitStep{
 		Id: "test2",
 		Step: &pb.UnitStep_SaveCache{
 			SaveCache: &pb.SaveCacheStep{
-				Key:   "key",
+				Key:   key,
 				Paths: []string{"/tmp/m2"},
 			},
 		},
@@ -188,6 +189,10 @@ func TestStepSaveCacheSuccess(t *testing.T) {
 		TaskId:        taskID,
 	}
 	logPath := "/a/b"
+	o := &output.StepOutput{
+		Output: map[string]string{"key": key},
+	}
+
 	log, _ := logs.GetObservedLogger(zap.InfoLevel)
 	mockStep := msteps.NewMockSaveCacheStep(ctrl)
 
@@ -205,7 +210,7 @@ func TestStepSaveCacheSuccess(t *testing.T) {
 		return mockStep
 	}
 
-	mockStep.EXPECT().Run(ctx).Return(nil)
+	mockStep.EXPECT().Run(ctx).Return(o, nil)
 
 	e := NewUnitExecutor(logPath, tmpFilePath, log.Sugar())
 	_, err := e.Run(ctx, stepProto, nil, accountID)

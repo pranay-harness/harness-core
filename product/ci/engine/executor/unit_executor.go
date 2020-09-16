@@ -110,7 +110,8 @@ func (e *unitExecutor) execute(ctx context.Context, step *pb.UnitStep,
 		}
 	case *pb.UnitStep_SaveCache:
 		e.log.Infow("Save cache step info", "step", x.SaveCache.String())
-		if err = saveCacheStep(step, e.tmpFilePath, so, fs, e.log).Run(ctx); err != nil {
+		stepOutput, err = saveCacheStep(step, e.tmpFilePath, so, fs, e.log).Run(ctx)
+		if err != nil {
 			return nil, numRetries, err
 		}
 	case *pb.UnitStep_RestoreCache:
