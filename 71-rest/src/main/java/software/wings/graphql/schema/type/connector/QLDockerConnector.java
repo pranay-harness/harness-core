@@ -19,5 +19,9 @@ public class QLDockerConnector implements QLConnector {
   private Long createdAt;
   private QLUser createdBy;
 
+  private String userName;
+  private String URL;
+  private String passwordSecretId;
+
   public static class QLDockerConnectorBuilder implements QLConnectorBuilder {}
 }

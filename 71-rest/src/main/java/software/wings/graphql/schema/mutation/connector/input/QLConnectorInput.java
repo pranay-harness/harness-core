@@ -12,9 +12,10 @@ import software.wings.security.annotations.Scope;
 @Builder
 @Scope(PermissionAttribute.ResourceType.SETTING)
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class QLUpdateConnectorInput implements QLMutationInput {
+public class QLConnectorInput implements QLMutationInput {
   private String clientMutationId;
   private String connectorId;
   private QLConnectorType connectorType;
-  private QLUpdateGitConnectorInput gitConnector;
+  private QLGitConnectorInput gitConnector;
+  private QLDockerConnectorInput dockerConnector;
 }

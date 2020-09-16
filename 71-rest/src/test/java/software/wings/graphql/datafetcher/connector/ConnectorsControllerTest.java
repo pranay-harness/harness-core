@@ -106,6 +106,6 @@ public class ConnectorsControllerTest extends CategoryTest {
   @Owner(developers = TMACARI)
   @Category(UnitTests.class)
   public void testCheckIfInputIsNotPresent() {
-    connectorsController.checkIfInputIsNotPresent(QLConnectorType.GIT, null);
+    connectorsController.checkInputExists(QLConnectorType.GIT, null);
   }
 }
