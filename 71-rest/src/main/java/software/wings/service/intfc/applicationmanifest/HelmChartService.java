@@ -4,7 +4,6 @@ import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
-import software.wings.beans.appmanifest.ApplicationManifest;
 import software.wings.beans.appmanifest.HelmChart;
 import software.wings.service.intfc.ownership.OwnedByApplicationManifest;
 
@@ -16,7 +15,7 @@ public interface HelmChartService extends OwnedByApplicationManifest {
 
   PageResponse<HelmChart> listHelmChartsForService(PageRequest<HelmChart> pageRequest);
 
-  HelmChart get(String accountId, String helmChartId);
+  HelmChart get(String appId, String helmChartId);
 
-  void deleteByAppManifest(ApplicationManifest applicationManifest);
+  void deleteByAppManifest(String appId, String applicationManifestId);
 }

@@ -50,6 +50,7 @@ public class ApplicationManifestYamlHandler extends BaseYamlHandler<Yaml, Applic
         .gitFileConfig(getGitFileConfigForToYaml(applicationManifest))
         .helmChartConfig(getHelmChartConfigForToYaml(applicationManifest))
         .kustomizeConfig(applicationManifest.getKustomizeConfig())
+        .pollForChanges(applicationManifest.getPollForChanges())
         .build();
   }
 
@@ -106,6 +107,7 @@ public class ApplicationManifestYamlHandler extends BaseYamlHandler<Yaml, Applic
                                        .helmChartConfig(helmChartConfig)
                                        .kind(kind)
                                        .kustomizeConfig(kustomizeConfig)
+                                       .pollForChanges(yaml.getPollForChanges())
                                        .build();
 
     manifest.setAppId(appId);

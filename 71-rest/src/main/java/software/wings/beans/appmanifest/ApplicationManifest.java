@@ -73,12 +73,13 @@ public class ApplicationManifest extends Base implements AccountAccess {
 
     @Builder
     public Yaml(String type, String harnessApiVersion, String storeType, GitFileConfig gitFileConfig,
-        HelmChartConfig helmChartConfig, KustomizeConfig kustomizeConfig) {
+        HelmChartConfig helmChartConfig, KustomizeConfig kustomizeConfig, Boolean pollForChanges) {
       super(type, harnessApiVersion);
       this.storeType = storeType;
       this.gitFileConfig = gitFileConfig;
       this.helmChartConfig = helmChartConfig;
       this.kustomizeConfig = kustomizeConfig;
+      this.pollForChanges = pollForChanges;
     }
   }
 }
