@@ -8,6 +8,7 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
+import com.hazelcast.core.RuntimeInterruptedException;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.network.Http;
 import io.harness.security.encryption.EncryptedDataDetail;
@@ -30,6 +31,7 @@ import software.wings.helpers.ext.gcs.GcsRestClient;
 import software.wings.service.impl.GcpHelperService;
 
 import java.io.IOException;
+import java.io.InterruptedIOException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -61,6 +63,9 @@ public class GcbServiceImpl implements GcbService {
         throw new GcbClientException(extractErrorMessage(response));
       }
       return response.body();
+    } catch (InterruptedIOException e) {
+      logger.error("Failed to create GCB build due to: ", e);
+      throw new RuntimeInterruptedException();
     } catch (IOException e) {
       throw new GcbClientException(GCP_ERROR_MESSAGE, e);
     }
@@ -78,6 +83,9 @@ public class GcbServiceImpl implements GcbService {
         throw new GcbClientException(extractErrorMessage(response));
       }
       return response.body();
+    } catch (InterruptedIOException e) {
+      logger.error("Failed to fetch GCB build due to: ", e);
+      throw new RuntimeInterruptedException();
     } catch (IOException e) {
       throw new GcbClientException(GCP_ERROR_MESSAGE, e);
     }
@@ -95,6 +103,9 @@ public class GcbServiceImpl implements GcbService {
         return response.body();
       }
       throw new GcbClientException(extractErrorMessage(response));
+    } catch (InterruptedIOException e) {
+      logger.error("Failed to run GCB trigger due to: ", e);
+      throw new RuntimeInterruptedException();
     } catch (IOException e) {
       throw new GcbClientException(GCP_ERROR_MESSAGE, e);
     }
@@ -113,6 +124,9 @@ public class GcbServiceImpl implements GcbService {
         throw new GcbClientException(extractErrorMessage(response));
       }
       return response.body().string();
+    } catch (InterruptedIOException e) {
+      logger.error("Failed to fetch GCB build logs due to: ", e);
+      throw new RuntimeInterruptedException();
     } catch (IOException e) {
       throw new GcbClientException(GCP_ERROR_MESSAGE, e);
     }
