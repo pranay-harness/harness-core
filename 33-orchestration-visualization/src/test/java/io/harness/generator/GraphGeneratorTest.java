@@ -12,8 +12,10 @@ import com.google.inject.Inject;
 import io.harness.OrchestrationVisualizationTest;
 import io.harness.ambiance.Ambiance;
 import io.harness.ambiance.Level;
+import io.harness.beans.EdgeList;
 import io.harness.beans.GraphVertex;
-import io.harness.beans.OrchestrationAdjacencyList;
+import io.harness.beans.OrchestrationAdjacencyListInternal;
+import io.harness.beans.converter.GraphVertexConverter;
 import io.harness.category.element.UnitTests;
 import io.harness.engine.outcomes.OutcomeService;
 import io.harness.exception.UnexpectedException;
@@ -32,8 +34,11 @@ import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 
+import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 /**
@@ -336,7 +341,7 @@ public class GraphGeneratorTest extends OrchestrationVisualizationTest {
   @Test
   @Owner(developers = ALEXEI)
   @Category(UnitTests.class)
-  public void shouldGenerateOrchestrationAdjacencyListWithSection() {
+  public void shouldGenerateOrchestrationAdjacencyListInternalWithSection() {
     NodeExecution dummyStart =
         NodeExecution.builder()
             .uuid("node1")
@@ -391,8 +396,8 @@ public class GraphGeneratorTest extends OrchestrationVisualizationTest {
             .build();
     List<NodeExecution> nodeExecutions = Lists.newArrayList(dummyStart, section, sectionChild);
 
-    OrchestrationAdjacencyList adjacencyList =
-        graphGenerator.generateAdjacencyList(dummyStart.getUuid(), nodeExecutions);
+    OrchestrationAdjacencyListInternal adjacencyList =
+        graphGenerator.generateAdjacencyList(dummyStart.getUuid(), nodeExecutions, false);
 
     assertThat(adjacencyList).isNotNull();
 
@@ -411,7 +416,7 @@ public class GraphGeneratorTest extends OrchestrationVisualizationTest {
   @Test
   @Owner(developers = ALEXEI)
   @Category(UnitTests.class)
-  public void shouldGenerateOrchestrationAdjacencyListWithChildChain() {
+  public void shouldGenerateOrchestrationAdjacencyListInternalWithChildChain() {
     String dummyNode1Uuid = "dummyNode1";
     String dummyNode2Uuid = "dummyNode2";
 
@@ -518,8 +523,8 @@ public class GraphGeneratorTest extends OrchestrationVisualizationTest {
     List<NodeExecution> nodeExecutions =
         Lists.newArrayList(sectionChainParentNode, sectionChain1, sectionChain2, dummyNode1, dummyNode2);
 
-    OrchestrationAdjacencyList adjacencyList =
-        graphGenerator.generateAdjacencyList(sectionChainParentNode.getUuid(), nodeExecutions);
+    OrchestrationAdjacencyListInternal adjacencyList =
+        graphGenerator.generateAdjacencyList(sectionChainParentNode.getUuid(), nodeExecutions, true);
     assertThat(adjacencyList).isNotNull();
 
     assertThat(adjacencyList.getGraphVertexMap().size()).isEqualTo(5);
@@ -599,7 +604,8 @@ public class GraphGeneratorTest extends OrchestrationVisualizationTest {
             .build();
     List<NodeExecution> nodeExecutions = Lists.newArrayList(fork, parallelNode1, parallelNode2);
 
-    OrchestrationAdjacencyList adjacencyList = graphGenerator.generateAdjacencyList(fork.getUuid(), nodeExecutions);
+    OrchestrationAdjacencyListInternal adjacencyList =
+        graphGenerator.generateAdjacencyList(fork.getUuid(), nodeExecutions, false);
     assertThat(adjacencyList).isNotNull();
 
     assertThat(adjacencyList.getGraphVertexMap().size()).isEqualTo(3);
@@ -694,8 +700,8 @@ public class GraphGeneratorTest extends OrchestrationVisualizationTest {
             .build();
     List<NodeExecution> nodeExecutions = Lists.newArrayList(fork, parallelNode1, parallelNode2, dummyNode1);
 
-    OrchestrationAdjacencyList adjacencyList =
-        graphGenerator.generateAdjacencyList(parallelNode2.getUuid(), nodeExecutions);
+    OrchestrationAdjacencyListInternal adjacencyList =
+        graphGenerator.generateAdjacencyList(parallelNode2.getUuid(), nodeExecutions, true);
     assertThat(adjacencyList).isNotNull();
 
     assertThat(adjacencyList.getGraphVertexMap().size()).isEqualTo(2);
@@ -707,5 +713,326 @@ public class GraphGeneratorTest extends OrchestrationVisualizationTest {
 
     assertThat(adjacencyList.getAdjacencyList().get(dummyNode1.getUuid()).getEdges()).isEmpty();
     assertThat(adjacencyList.getAdjacencyList().get(dummyNode1.getUuid()).getNext()).isNull();
+  }
+
+  @Test
+  @Owner(developers = ALEXEI)
+  @Category(UnitTests.class)
+  public void shouldTestPopulateAdjacencyListWhenNextIdIsPresent() {
+    NodeExecution dummyNode1 =
+        NodeExecution.builder()
+            .uuid("dummy_node_1")
+            .ambiance(Ambiance.builder()
+                          .planExecutionId(PLAN_EXECUTION_ID)
+                          .levels(Collections.singletonList(Level.builder().setupId("dummy_plan_node_1").build()))
+                          .build())
+            .mode(ExecutionMode.SYNC)
+            .node(PlanNode.builder()
+                      .uuid("dummy_plan_node_1")
+                      .name("dummy_node_1")
+                      .stepType(DUMMY_STEP_TYPE)
+                      .identifier("dummy_node_1")
+                      .build())
+            .createdAt(System.currentTimeMillis())
+            .lastUpdatedAt(System.currentTimeMillis())
+            .build();
+    NodeExecution dummyNode2 =
+        NodeExecution.builder()
+            .uuid("dummy_node_2")
+            .ambiance(Ambiance.builder()
+                          .planExecutionId(PLAN_EXECUTION_ID)
+                          .levels(Collections.singletonList(Level.builder().setupId("dummy_plan_node_2").build()))
+                          .build())
+            .mode(ExecutionMode.SYNC)
+            .node(PlanNode.builder()
+                      .uuid("dummy_plan_node_2")
+                      .name("dummy_node_2")
+                      .stepType(DUMMY_STEP_TYPE)
+                      .identifier("dummy_node_2")
+                      .build())
+            .nextId("someNextId")
+            .createdAt(System.currentTimeMillis())
+            .lastUpdatedAt(System.currentTimeMillis())
+            .build();
+
+    Map<String, GraphVertex> graphVertexMap = new HashMap<>();
+    graphVertexMap.put(dummyNode1.getUuid(), GraphVertexConverter.convertFrom(dummyNode1));
+
+    Map<String, EdgeList> adjacencyListMap = new HashMap<>();
+    adjacencyListMap.put(dummyNode1.getUuid(), EdgeList.builder().edges(new ArrayList<>()).next(null).build());
+
+    OrchestrationAdjacencyListInternal adjacencyListInternal = OrchestrationAdjacencyListInternal.builder()
+                                                                   .graphVertexMap(graphVertexMap)
+                                                                   .adjacencyList(adjacencyListMap)
+                                                                   .build();
+
+    graphGenerator.populateAdjacencyList(adjacencyListInternal, Lists.newArrayList(dummyNode2));
+
+    assertThat(adjacencyListInternal).isNotNull();
+    assertThat(adjacencyListInternal.getGraphVertexMap().size()).isEqualTo(2);
+    assertThat(adjacencyListInternal.getAdjacencyList().get(dummyNode1.getUuid()).getNext()).isNull();
+    assertThat(adjacencyListInternal.getAdjacencyList().get(dummyNode2.getUuid()).getNext())
+        .isEqualTo(dummyNode2.getNextId());
+  }
+
+  @Test
+  @Owner(developers = ALEXEI)
+  @Category(UnitTests.class)
+  public void shouldTestPopulateAdjacencyListWhenPreviousIdIsPresent() {
+    NodeExecution dummyNode1 =
+        NodeExecution.builder()
+            .uuid("dummy_node_1")
+            .ambiance(Ambiance.builder()
+                          .planExecutionId(PLAN_EXECUTION_ID)
+                          .levels(Collections.singletonList(Level.builder().setupId("dummy_plan_node_1").build()))
+                          .build())
+            .mode(ExecutionMode.SYNC)
+            .node(PlanNode.builder()
+                      .uuid("dummy_plan_node_1")
+                      .name("dummy_node_1")
+                      .stepType(DUMMY_STEP_TYPE)
+                      .identifier("dummy_node_1")
+                      .build())
+            .createdAt(System.currentTimeMillis())
+            .lastUpdatedAt(System.currentTimeMillis())
+            .build();
+    NodeExecution dummyNode2 =
+        NodeExecution.builder()
+            .uuid("dummy_node_2")
+            .ambiance(Ambiance.builder()
+                          .planExecutionId(PLAN_EXECUTION_ID)
+                          .levels(Collections.singletonList(Level.builder().setupId("dummy_plan_node_2").build()))
+                          .build())
+            .mode(ExecutionMode.SYNC)
+            .node(PlanNode.builder()
+                      .uuid("dummy_plan_node_2")
+                      .name("dummy_node_2")
+                      .stepType(DUMMY_STEP_TYPE)
+                      .identifier("dummy_node_2")
+                      .build())
+            .previousId(dummyNode1.getUuid())
+            .createdAt(System.currentTimeMillis())
+            .lastUpdatedAt(System.currentTimeMillis())
+            .build();
+
+    Map<String, GraphVertex> graphVertexMap = new HashMap<>();
+    graphVertexMap.put(dummyNode1.getUuid(), GraphVertexConverter.convertFrom(dummyNode1));
+
+    Map<String, EdgeList> adjacencyListMap = new HashMap<>();
+    adjacencyListMap.put(dummyNode1.getUuid(), EdgeList.builder().edges(new ArrayList<>()).next(null).build());
+
+    OrchestrationAdjacencyListInternal adjacencyListInternal = OrchestrationAdjacencyListInternal.builder()
+                                                                   .graphVertexMap(graphVertexMap)
+                                                                   .adjacencyList(adjacencyListMap)
+                                                                   .build();
+
+    graphGenerator.populateAdjacencyList(adjacencyListInternal, Lists.newArrayList(dummyNode2));
+
+    assertThat(adjacencyListInternal).isNotNull();
+    assertThat(adjacencyListInternal.getGraphVertexMap().size()).isEqualTo(2);
+
+    assertThat(adjacencyListInternal.getAdjacencyList().get(dummyNode1.getUuid()).getNext())
+        .isEqualTo(dummyNode2.getUuid());
+    assertThat(adjacencyListInternal.getAdjacencyList().get(dummyNode1.getUuid()).getEdges()).isEmpty();
+
+    assertThat(adjacencyListInternal.getAdjacencyList().get(dummyNode2.getUuid()).getNext()).isNull();
+    assertThat(adjacencyListInternal.getAdjacencyList().get(dummyNode2.getUuid()).getEdges()).isEmpty();
+  }
+
+  @Test
+  @Owner(developers = ALEXEI)
+  @Category(UnitTests.class)
+  public void shouldTestPopulateAdjacencyListForChain() {
+    String dummyNode1Uuid = "dummyNode1 ";
+    NodeExecution sectionChainParentNode = NodeExecution.builder()
+                                               .uuid("section_chain_start")
+                                               .ambiance(Ambiance.builder().planExecutionId(PLAN_EXECUTION_ID).build())
+                                               .mode(ExecutionMode.CHILD_CHAIN)
+                                               .node(PlanNode.builder()
+                                                         .uuid("section_chain_plan_node")
+                                                         .name("name_section_chain")
+                                                         .identifier("name_section_chain")
+                                                         .stepType(StepType.builder().type("SECTION_CHAIN").build())
+                                                         .build())
+                                               .createdAt(System.currentTimeMillis())
+                                               .lastUpdatedAt(System.currentTimeMillis())
+                                               .build();
+
+    NodeExecution sectionChain1 = NodeExecution.builder()
+                                      .uuid("section_chain_child1")
+                                      .ambiance(Ambiance.builder().planExecutionId(PLAN_EXECUTION_ID).build())
+                                      .mode(ExecutionMode.TASK)
+                                      .node(PlanNode.builder()
+                                                .uuid("section_chain_child1_plan_node")
+                                                .name("name_section_chain_child1_plan_node")
+                                                .identifier("name_section_chain_child1_plan_node")
+                                                .stepType(StepType.builder().type("DUMMY").build())
+                                                .build())
+                                      .createdAt(System.currentTimeMillis())
+                                      .lastUpdatedAt(System.currentTimeMillis())
+                                      .parentId(sectionChainParentNode.getUuid())
+                                      .nextId(dummyNode1Uuid)
+                                      .build();
+
+    NodeExecution sectionChain2 = NodeExecution.builder()
+                                      .uuid("section_chain_child2")
+                                      .ambiance(Ambiance.builder().planExecutionId(PLAN_EXECUTION_ID).build())
+                                      .mode(ExecutionMode.TASK)
+                                      .node(PlanNode.builder()
+                                                .uuid("section_chain_child2_plan_node")
+                                                .name("name_section_chain_child2_plan_node")
+                                                .identifier("name_section_chain_child2_plan_node")
+                                                .stepType(StepType.builder().type("DUMMY").build())
+                                                .build())
+                                      .createdAt(System.currentTimeMillis())
+                                      .lastUpdatedAt(System.currentTimeMillis())
+                                      .parentId(sectionChainParentNode.getUuid())
+                                      .build();
+
+    NodeExecution dummyNode1 = NodeExecution.builder()
+                                   .uuid(dummyNode1Uuid)
+                                   .ambiance(Ambiance.builder().planExecutionId(PLAN_EXECUTION_ID).build())
+                                   .mode(ExecutionMode.SYNC)
+                                   .node(PlanNode.builder()
+                                             .uuid("dummy_plan_node_1")
+                                             .name("name_dummy_node_1")
+                                             .stepType(StepType.builder().type("DUMMY").build())
+                                             .identifier("name_dummy_node_1")
+                                             .build())
+                                   .createdAt(System.currentTimeMillis())
+                                   .lastUpdatedAt(System.currentTimeMillis())
+                                   .parentId(sectionChainParentNode.getUuid())
+                                   .previousId(sectionChain1.getUuid())
+                                   .build();
+
+    Map<String, GraphVertex> graphVertexMap = new HashMap<>();
+    graphVertexMap.put(sectionChainParentNode.getUuid(), GraphVertexConverter.convertFrom(sectionChainParentNode));
+    graphVertexMap.put(sectionChain1.getUuid(), GraphVertexConverter.convertFrom(sectionChain1));
+    graphVertexMap.put(dummyNode1.getUuid(), GraphVertexConverter.convertFrom(dummyNode1));
+
+    Map<String, EdgeList> adjacencyListMap = new HashMap<>();
+    adjacencyListMap.put(sectionChainParentNode.getUuid(),
+        EdgeList.builder().edges(Lists.newArrayList(sectionChain1.getUuid())).next(null).build());
+    adjacencyListMap.put(
+        sectionChain1.getUuid(), EdgeList.builder().edges(new ArrayList<>()).next(dummyNode1.getUuid()).build());
+    adjacencyListMap.put(dummyNode1.getUuid(), EdgeList.builder().edges(new ArrayList<>()).next(null).build());
+
+    OrchestrationAdjacencyListInternal adjacencyListInternal = OrchestrationAdjacencyListInternal.builder()
+                                                                   .graphVertexMap(graphVertexMap)
+                                                                   .adjacencyList(adjacencyListMap)
+                                                                   .build();
+
+    graphGenerator.populateAdjacencyList(adjacencyListInternal, Lists.newArrayList(sectionChain2));
+
+    assertThat(adjacencyListInternal).isNotNull();
+
+    assertThat(adjacencyListInternal.getGraphVertexMap().size()).isEqualTo(4);
+    assertThat(adjacencyListInternal.getGraphVertexMap().keySet())
+        .containsExactlyInAnyOrder(
+            sectionChainParentNode.getUuid(), sectionChain1.getUuid(), sectionChain2.getUuid(), dummyNode1.getUuid());
+
+    assertThat(adjacencyListInternal.getAdjacencyList().size()).isEqualTo(4);
+    assertThat(adjacencyListInternal.getAdjacencyList().get(sectionChainParentNode.getUuid()).getEdges())
+        .containsExactlyInAnyOrder(sectionChain1.getUuid());
+    assertThat(adjacencyListInternal.getAdjacencyList().get(sectionChain1.getUuid()).getNext())
+        .isEqualTo(dummyNode1.getUuid());
+    assertThat(adjacencyListInternal.getAdjacencyList().get(dummyNode1.getUuid()).getNext())
+        .isEqualTo(sectionChain2.getUuid());
+    assertThat(adjacencyListInternal.getAdjacencyList().get(sectionChain2.getUuid()).getNext()).isNull();
+  }
+
+  @Test
+  @Owner(developers = ALEXEI)
+  @Category(UnitTests.class)
+  public void shouldTestPopulateAdjacencyListForFork() {
+    StepParameters forkStepParams =
+        DummyForkStepParameters.builder().parallelNodeId("parallel_node_1").parallelNodeId("parallel_node_2").build();
+    NodeExecution fork =
+        NodeExecution.builder()
+            .uuid("node1")
+            .ambiance(
+                Ambiance.builder()
+                    .planExecutionId(PLAN_EXECUTION_ID)
+                    .levels(Collections.singletonList(Level.builder().setupId(STARTING_EXECUTION_NODE_ID).build()))
+                    .build())
+            .mode(ExecutionMode.CHILDREN)
+            .node(PlanNode.builder()
+                      .uuid(STARTING_EXECUTION_NODE_ID)
+                      .name("name1")
+                      .stepType(StepType.builder().type("DUMMY_FORK").build())
+                      .identifier("identifier1")
+                      .stepParameters(forkStepParams)
+                      .build())
+            .resolvedStepParameters(forkStepParams)
+            .createdAt(System.currentTimeMillis())
+            .lastUpdatedAt(System.currentTimeMillis())
+            .build();
+    NodeExecution parallelNode1 =
+        NodeExecution.builder()
+            .uuid("parallel_node_1")
+            .ambiance(Ambiance.builder()
+                          .planExecutionId(PLAN_EXECUTION_ID)
+                          .levels(Collections.singletonList(Level.builder().setupId("parallel_plan_node_1").build()))
+                          .build())
+            .mode(ExecutionMode.SYNC)
+            .node(PlanNode.builder()
+                      .uuid("parallel_plan_node_1")
+                      .name("name_children_1")
+                      .stepType(DUMMY_STEP_TYPE)
+                      .identifier("name_children_1")
+                      .build())
+            .parentId(fork.getUuid())
+            .createdAt(System.currentTimeMillis())
+            .lastUpdatedAt(System.currentTimeMillis())
+            .build();
+    NodeExecution parallelNode2 =
+        NodeExecution.builder()
+            .uuid("parallel_node_2")
+            .ambiance(Ambiance.builder()
+                          .planExecutionId(PLAN_EXECUTION_ID)
+                          .levels(Collections.singletonList(Level.builder().setupId("parallel_plan_node_2").build()))
+                          .build())
+            .mode(ExecutionMode.SYNC)
+            .node(PlanNode.builder()
+                      .uuid("parallel_plan_node_2")
+                      .name("name_children_2")
+                      .stepType(DUMMY_STEP_TYPE)
+                      .identifier("name_children_2")
+                      .build())
+            .parentId(fork.getUuid())
+            .createdAt(System.currentTimeMillis())
+            .lastUpdatedAt(System.currentTimeMillis())
+            .build();
+
+    Map<String, GraphVertex> graphVertexMap = new HashMap<>();
+    graphVertexMap.put(fork.getUuid(), GraphVertexConverter.convertFrom(fork));
+    graphVertexMap.put(parallelNode1.getUuid(), GraphVertexConverter.convertFrom(parallelNode1));
+
+    Map<String, EdgeList> adjacencyListMap = new HashMap<>();
+    adjacencyListMap.put(
+        fork.getUuid(), EdgeList.builder().edges(Lists.newArrayList(parallelNode1.getUuid())).next(null).build());
+    adjacencyListMap.put(parallelNode1.getUuid(), EdgeList.builder().edges(new ArrayList<>()).next(null).build());
+
+    OrchestrationAdjacencyListInternal adjacencyListInternal = OrchestrationAdjacencyListInternal.builder()
+                                                                   .graphVertexMap(graphVertexMap)
+                                                                   .adjacencyList(adjacencyListMap)
+                                                                   .build();
+
+    graphGenerator.populateAdjacencyList(adjacencyListInternal, Lists.newArrayList(parallelNode2));
+
+    assertThat(adjacencyListInternal).isNotNull();
+
+    assertThat(adjacencyListInternal.getGraphVertexMap().size()).isEqualTo(3);
+    assertThat(adjacencyListInternal.getGraphVertexMap().keySet())
+        .containsExactlyInAnyOrder(fork.getUuid(), parallelNode1.getUuid(), parallelNode2.getUuid());
+
+    Map<String, EdgeList> adjacencyList = adjacencyListInternal.getAdjacencyList();
+    assertThat(adjacencyList).isNotNull();
+    assertThat(adjacencyList.get(fork.getUuid()).getEdges())
+        .containsExactlyInAnyOrder(parallelNode1.getUuid(), parallelNode2.getUuid());
+    assertThat(adjacencyList.get(parallelNode1.getUuid()).getEdges()).isEmpty();
+    assertThat(adjacencyList.get(parallelNode1.getUuid()).getNext()).isNull();
+    assertThat(adjacencyList.get(parallelNode2.getUuid()).getEdges()).isEmpty();
+    assertThat(adjacencyList.get(parallelNode2.getUuid()).getNext()).isNull();
   }
 }

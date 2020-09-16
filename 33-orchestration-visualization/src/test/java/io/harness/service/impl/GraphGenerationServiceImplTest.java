@@ -5,6 +5,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.when;
 
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
@@ -12,9 +13,13 @@ import com.google.inject.name.Named;
 import io.harness.OrchestrationVisualizationTest;
 import io.harness.ambiance.Ambiance;
 import io.harness.ambiance.Level;
+import io.harness.beans.EdgeList;
 import io.harness.beans.EmbeddedUser;
 import io.harness.beans.Graph;
 import io.harness.beans.GraphVertex;
+import io.harness.beans.OrchestrationAdjacencyList;
+import io.harness.beans.OrchestrationAdjacencyListInternal;
+import io.harness.beans.converter.GraphVertexConverter;
 import io.harness.cache.SpringMongoStore;
 import io.harness.category.element.UnitTests;
 import io.harness.dto.OrchestrationGraph;
@@ -41,8 +46,11 @@ import org.mockito.Mock;
 import org.mockito.stubbing.Answer;
 
 import java.time.Duration;
+import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.stream.Collectors;
 
@@ -192,7 +200,7 @@ public class GraphGenerationServiceImplTest extends OrchestrationVisualizationTe
   @RealMongo
   @Owner(developers = ALEXEI)
   @Category(UnitTests.class)
-  public void shouldTReturnOrchestrationGraph() {
+  public void shouldReturnOrchestrationGraph() {
     PlanExecution planExecution = planExecutionService.save(PlanExecution.builder().createdBy(createdBy()).build());
     NodeExecution dummyStart =
         NodeExecution.builder()
@@ -220,6 +228,120 @@ public class GraphGenerationServiceImplTest extends OrchestrationVisualizationTe
         .isNull();
     assertThat(graphResponse.getAdjacencyList().getAdjacencyList().get(graphResponse.getRootNodeId()).getEdges())
         .isEmpty();
+  }
+
+  @Test
+  @RealMongo
+  @Owner(developers = ALEXEI)
+  @Category(UnitTests.class)
+  public void shouldReturnOrchestrationGraphWithCachedAdjList() {
+    PlanExecution planExecution = planExecutionService.save(PlanExecution.builder().createdBy(createdBy()).build());
+    NodeExecution dummyStart =
+        NodeExecution.builder()
+            .ambiance(Ambiance.builder()
+                          .planExecutionId(planExecution.getUuid())
+                          .levels(Collections.singletonList(Level.builder().setupId("node1_plan").build()))
+                          .build())
+            .mode(ExecutionMode.SYNC)
+            .node(PlanNode.builder()
+                      .uuid("node1_plan")
+                      .name("name")
+                      .stepType(StepType.builder().type("DUMMY").build())
+                      .identifier("identifier1")
+                      .build())
+            .build();
+    nodeExecutionRepository.save(dummyStart);
+
+    OrchestrationAdjacencyListInternal adjacencyListInternal =
+        OrchestrationAdjacencyListInternal.builder()
+            .cacheKey(planExecution.getUuid())
+            .graphVertexMap(ImmutableMap.of(dummyStart.getUuid(), GraphVertexConverter.convertFrom(dummyStart)))
+            .adjacencyList(
+                ImmutableMap.of(dummyStart.getUuid(), EdgeList.builder().edges(new ArrayList<>()).next(null).build()))
+            .build();
+    mongoStore.upsert(adjacencyListInternal, Duration.ofDays(10));
+
+    OrchestrationGraph graphResponse = graphGenerationService.generateOrchestrationGraph(planExecution.getUuid());
+    assertThat(graphResponse).isNotNull();
+    assertThat(graphResponse.getAdjacencyList()).isNotNull();
+    assertThat(graphResponse.getAdjacencyList().getGraphVertexMap()).isNotEmpty();
+    assertThat(graphResponse.getAdjacencyList().getGraphVertexMap().size()).isEqualTo(1);
+    assertThat(graphResponse.getAdjacencyList().getAdjacencyList().get(graphResponse.getRootNodeId())).isNotNull();
+    assertThat(graphResponse.getAdjacencyList().getAdjacencyList().get(graphResponse.getRootNodeId()).getNext())
+        .isNull();
+    assertThat(graphResponse.getAdjacencyList().getAdjacencyList().get(graphResponse.getRootNodeId()).getEdges())
+        .isEmpty();
+  }
+
+  @Test
+  @RealMongo
+  @Owner(developers = ALEXEI)
+  @Category(UnitTests.class)
+  public void shouldReturnOrchestrationGraphWithCachedAdjListWithNewAddedNodes() {
+    PlanExecution planExecution = planExecutionService.save(PlanExecution.builder().createdBy(createdBy()).build());
+    NodeExecution dummyStart =
+        NodeExecution.builder()
+            .ambiance(Ambiance.builder()
+                          .planExecutionId(planExecution.getUuid())
+                          .levels(Collections.singletonList(Level.builder().setupId("node1_plan").build()))
+                          .build())
+            .mode(ExecutionMode.SYNC)
+            .node(PlanNode.builder()
+                      .uuid("node1_plan")
+                      .name("name")
+                      .stepType(StepType.builder().type("DUMMY").build())
+                      .identifier("identifier1")
+                      .build())
+            .build();
+    nodeExecutionRepository.save(dummyStart);
+
+    NodeExecution dummyEnd =
+        NodeExecution.builder()
+            .ambiance(Ambiance.builder()
+                          .planExecutionId(planExecution.getUuid())
+                          .levels(Collections.singletonList(Level.builder().setupId("node2_plan").build()))
+                          .build())
+            .mode(ExecutionMode.SYNC)
+            .node(PlanNode.builder()
+                      .uuid("node2_plan")
+                      .name("nam2")
+                      .stepType(StepType.builder().type("DUMMY").build())
+                      .identifier("identifier2")
+                      .build())
+            .previousId(dummyStart.getUuid())
+            .build();
+    nodeExecutionRepository.save(dummyEnd);
+
+    Map<String, GraphVertex> graphVertexMap = new HashMap<>();
+    graphVertexMap.put(dummyStart.getUuid(), GraphVertexConverter.convertFrom(dummyStart));
+    Map<String, EdgeList> adjacencyListMap = new HashMap<>();
+    adjacencyListMap.put(dummyStart.getUuid(), EdgeList.builder().edges(new ArrayList<>()).next(null).build());
+
+    OrchestrationAdjacencyListInternal adjacencyListInternal = OrchestrationAdjacencyListInternal.builder()
+                                                                   .cacheKey(planExecution.getUuid())
+                                                                   .graphVertexMap(graphVertexMap)
+                                                                   .adjacencyList(adjacencyListMap)
+                                                                   .build();
+    mongoStore.upsert(adjacencyListInternal, Duration.ofDays(10));
+
+    OrchestrationGraph graphResponse = graphGenerationService.generateOrchestrationGraph(planExecution.getUuid());
+    assertThat(graphResponse).isNotNull();
+
+    OrchestrationAdjacencyList orchestrationAdjacencyList = graphResponse.getAdjacencyList();
+    assertThat(orchestrationAdjacencyList).isNotNull();
+
+    Map<String, GraphVertex> graphVertexMapResponse = orchestrationAdjacencyList.getGraphVertexMap();
+    assertThat(graphVertexMapResponse).isNotEmpty();
+    assertThat(graphVertexMapResponse.size()).isEqualTo(2);
+
+    Map<String, EdgeList> adjacencyList = orchestrationAdjacencyList.getAdjacencyList();
+    assertThat(adjacencyList.get(graphResponse.getRootNodeId())).isNotNull();
+    assertThat(adjacencyList.get(graphResponse.getRootNodeId()).getNext()).isNotNull();
+    assertThat(adjacencyList.get(graphResponse.getRootNodeId()).getNext()).isEqualTo(dummyEnd.getUuid());
+    assertThat(adjacencyList.get(graphResponse.getRootNodeId()).getEdges()).isEmpty();
+
+    assertThat(adjacencyList.get(dummyEnd.getUuid()).getNext()).isNull();
+    assertThat(adjacencyList.get(dummyEnd.getUuid()).getEdges()).isEmpty();
   }
 
   @Test

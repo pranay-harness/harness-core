@@ -116,4 +116,8 @@ public enum Status {
     }
     return nodeAllowedStartSet(status);
   }
+
+  public static boolean isFinalStatus(Status status) {
+    return FINAL_STATUSES.contains(status);
+  }
 }
