@@ -10,6 +10,8 @@ import static io.harness.event.handler.impl.Constants.CATEGORY;
 import static io.harness.event.handler.impl.Constants.COMPANY_NAME;
 import static io.harness.event.handler.impl.Constants.CUSTOM_EVENT_NAME;
 import static io.harness.event.handler.impl.Constants.EMAIL_ID;
+import static io.harness.event.handler.impl.Constants.FREEMIUM_ASSISTED_OPTION;
+import static io.harness.event.handler.impl.Constants.FREEMIUM_PRODUCTS;
 import static io.harness.event.handler.impl.Constants.TECH_CATEGORY_NAME;
 import static io.harness.event.handler.impl.Constants.TECH_NAME;
 import static io.harness.event.handler.impl.Constants.USER_INVITE_ID;
@@ -53,6 +55,7 @@ import software.wings.beans.Pipeline;
 import software.wings.beans.TechStack;
 import software.wings.beans.User;
 import software.wings.beans.User.UserKeys;
+import software.wings.beans.UserInvite;
 import software.wings.beans.Workflow;
 import software.wings.beans.WorkflowExecution;
 import software.wings.beans.WorkflowExecution.WorkflowExecutionKeys;
@@ -547,15 +550,14 @@ public class EventPublishHelper {
     publishEvent(EventType.COMPLETE_USER_REGISTRATION, properties);
   }
 
-  public void publishTrialUserSignupEvent(
-      UtmInfo utmInfo, String email, String userName, String inviteId, String companyName) {
+  public void publishTrialUserSignupEvent(String inviteId, String email, UserInvite userInvite) {
     if (isEmpty(email)) {
       return;
     }
 
-    Map<String, String> properties = getProperties(null, email, userName, inviteId, companyName);
+    Map<String, String> properties = getProperties(email, inviteId, userInvite);
 
-    setUTMDataToProperties(properties, utmInfo);
+    setUTMDataToProperties(properties, userInvite.getUtmInfo());
     publishEvent(EventType.NEW_TRIAL_SIGNUP, properties);
   }
 
@@ -901,6 +903,26 @@ public class EventPublishHelper {
     properties.put(USER_NAME, userName);
     properties.put(USER_INVITE_ID, userInviteId);
     properties.put(COMPANY_NAME, companyName);
+    return properties;
+  }
+
+  private Map<String, String> getProperties(String userEmail, String userInviteId, UserInvite userInvite) {
+    Map<String, String> properties = new HashMap<>();
+    properties.put(ACCOUNT_ID, null);
+    properties.put(EMAIL_ID, userEmail);
+    properties.put(USER_NAME, userInvite.getEmail());
+    properties.put(USER_INVITE_ID, userInviteId);
+    properties.put(COMPANY_NAME, userInvite.getCompanyName());
+
+    List<String> freemiumProducts = userInvite.getFreemiumProducts();
+    if (isNotEmpty(freemiumProducts)) {
+      properties.put(FREEMIUM_PRODUCTS, String.join(", ", freemiumProducts));
+    }
+
+    Boolean freemiumAssistedOption = userInvite.getFreemiumAssistedOption();
+    if (freemiumAssistedOption != null) {
+      properties.put(FREEMIUM_ASSISTED_OPTION, String.valueOf(freemiumAssistedOption));
+    }
     return properties;
   }
 

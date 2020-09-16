@@ -24,4 +24,6 @@ public interface Constants {
   String ACCOUNT_EVENT = "account_event";
   String TECH_CATEGORY_NAME = "tech_category";
   String ORIGINAL_TIMESTAMP_NAME = "originalTimestamp";
+  String FREEMIUM_PRODUCTS = "freemiumProducts";
+  String FREEMIUM_ASSISTED_OPTION = "freemiumAssistedOption";
 }

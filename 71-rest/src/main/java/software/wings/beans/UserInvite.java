@@ -56,6 +56,10 @@ public class UserInvite extends Base implements AccountAccess {
 
   private String familyName;
 
+  @Getter @Setter private List<String> freemiumProducts;
+
+  @Getter @Setter private Boolean freemiumAssistedOption;
+
   @Getter @Setter @Transient private char[] password;
   @JsonIgnore private String passwordHash;
 
@@ -66,6 +70,7 @@ public class UserInvite extends Base implements AccountAccess {
   private String marketPlaceToken;
 
   private boolean importedByScim;
+
   private UtmInfo utmInfo;
 
   @Override
@@ -281,11 +286,23 @@ public class UserInvite extends Base implements AccountAccess {
     private UtmInfo utmInfo;
     private String givenName;
     private String familyName;
+    private List<String> freemiumProducts;
+    private boolean freemiumAssistedOption;
 
     private UserInviteBuilder() {}
 
     public static UserInviteBuilder anUserInvite() {
       return new UserInviteBuilder();
+    }
+
+    public UserInviteBuilder withFreemiumProducts(List<String> freemiumProducts) {
+      this.freemiumProducts = freemiumProducts;
+      return this;
+    }
+
+    public UserInviteBuilder withFreemiumAssistedOption(boolean freemiumAssistedOption) {
+      this.freemiumAssistedOption = freemiumAssistedOption;
+      return this;
     }
 
     public UserInviteBuilder withAccountId(String accountId) {
@@ -422,6 +439,8 @@ public class UserInvite extends Base implements AccountAccess {
       userInvite.setUtmInfo(utmInfo);
       userInvite.setFamilyName(familyName);
       userInvite.setGivenName(givenName);
+      userInvite.setFreemiumAssistedOption(freemiumAssistedOption);
+      userInvite.setFreemiumProducts(freemiumProducts);
 
       return userInvite;
     }
