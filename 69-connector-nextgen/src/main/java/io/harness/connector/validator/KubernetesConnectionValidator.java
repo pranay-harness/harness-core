@@ -10,6 +10,7 @@ import io.harness.delegate.beans.connector.k8Connector.KubernetesClusterConfigDT
 import io.harness.delegate.beans.connector.k8Connector.KubernetesClusterDetailsDTO;
 import io.harness.delegate.beans.connector.k8Connector.KubernetesConnectionTaskParams;
 import io.harness.delegate.beans.connector.k8Connector.KubernetesConnectionTaskResponse;
+import io.harness.delegate.beans.connector.k8Connector.KubernetesCredentialType;
 import io.harness.ng.core.BaseNGAccess;
 import io.harness.ng.core.NGAccess;
 import io.harness.secretmanagerclient.services.api.SecretManagerClientService;
@@ -31,15 +32,17 @@ public class KubernetesConnectionValidator implements ConnectionValidator<Kubern
 
   public ConnectorValidationResult validate(KubernetesClusterConfigDTO kubernetesClusterConfig,
       String accountIdentifier, String orgIdentifier, String projectIdentifier) {
-    KubernetesAuthCredentialDTO kubernetesAuthCredential =
-        getKubernetesAuthCredential((KubernetesClusterDetailsDTO) kubernetesClusterConfig.getConfig());
-    NGAccess basicNGAccessObject = BaseNGAccess.builder()
-                                       .accountIdentifier(accountIdentifier)
-                                       .orgIdentifier(orgIdentifier)
-                                       .projectIdentifier(projectIdentifier)
-                                       .build();
-    List<EncryptedDataDetail> encryptedDataDetailList =
-        ngSecretService.getEncryptionDetails(basicNGAccessObject, kubernetesAuthCredential);
+    List<EncryptedDataDetail> encryptedDataDetailList = null;
+    if (kubernetesClusterConfig.getKubernetesCredentialType() == KubernetesCredentialType.MANUAL_CREDENTIALS) {
+      KubernetesAuthCredentialDTO kubernetesAuthCredential =
+          getKubernetesAuthCredential((KubernetesClusterDetailsDTO) kubernetesClusterConfig.getConfig());
+      NGAccess basicNGAccessObject = BaseNGAccess.builder()
+                                         .accountIdentifier(accountIdentifier)
+                                         .orgIdentifier(orgIdentifier)
+                                         .projectIdentifier(projectIdentifier)
+                                         .build();
+      encryptedDataDetailList = ngSecretService.getEncryptionDetails(basicNGAccessObject, kubernetesAuthCredential);
+    }
     DelegateTaskRequest delegateTaskRequest = DelegateTaskRequest.builder()
                                                   .accountId(accountIdentifier)
                                                   .taskType("VALIDATE_KUBERNETES_CONFIG")
