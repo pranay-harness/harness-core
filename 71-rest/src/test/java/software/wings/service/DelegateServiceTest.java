@@ -99,6 +99,7 @@ import io.harness.delegate.beans.RemoteMethodReturnValueData;
 import io.harness.delegate.beans.TaskData;
 import io.harness.delegate.service.DelegateAgentFileService.FileBucket;
 import io.harness.delegate.task.http.HttpTaskParameters;
+import io.harness.delegate.task.mixin.HttpConnectionExecutionCapabilityGenerator;
 import io.harness.exception.WingsException;
 import io.harness.persistence.HPersistence;
 import io.harness.rule.Cache;
@@ -159,6 +160,7 @@ import software.wings.processingcontrollers.DelegateProcessingController;
 import software.wings.security.encryption.EncryptedData;
 import software.wings.service.impl.AuditServiceHelper;
 import software.wings.service.impl.DelegateConnectionDao;
+import software.wings.service.impl.DelegateTaskBroadcastHelper;
 import software.wings.service.impl.EventEmitter;
 import software.wings.service.impl.EventEmitter.Channel;
 import software.wings.service.impl.infra.InfraDownloadService;
@@ -219,6 +221,7 @@ public class DelegateServiceTest extends WingsBaseTest {
   @Rule public WireMockRule wireMockRule = new WireMockRule(8888);
   @Rule public ExpectedException thrown = ExpectedException.none();
 
+  @InjectMocks @Inject private DelegateTaskBroadcastHelper delegateTaskBroadcastHelper;
   @InjectMocks @Inject private DelegateService delegateService;
   @Mock private UsageLimitedFeature delegatesFeature;
 
@@ -1071,23 +1074,26 @@ public class DelegateServiceTest extends WingsBaseTest {
   @Owner(developers = GEORGE)
   @Category(UnitTests.class)
   public void shouldSaveDelegateTask() {
-    DelegateTask delegateTask = DelegateTask.builder()
-                                    .uuid(generateUuid())
-                                    .accountId(ACCOUNT_ID)
-                                    .waitId(generateUuid())
-                                    .setupAbstraction(Cd1SetupFields.APP_ID_FIELD, APP_ID)
-                                    .setupAbstraction(Cd1SetupFields.ENV_ID_FIELD, ENV_ID)
-                                    .setupAbstraction(Cd1SetupFields.INFRASTRUCTURE_MAPPING_ID_FIELD, INFRA_MAPPING_ID)
-                                    .setupAbstraction(Cd1SetupFields.SERVICE_TEMPLATE_ID_FIELD, SERVICE_TEMPLATE_ID)
-                                    .setupAbstraction(Cd1SetupFields.ARTIFACT_STREAM_ID_FIELD, ARTIFACT_STREAM_ID)
-                                    .version(VERSION)
-                                    .data(TaskData.builder()
-                                              .async(true)
-                                              .taskType(TaskType.HTTP.name())
-                                              .parameters(new Object[] {})
-                                              .timeout(DEFAULT_ASYNC_CALL_TIMEOUT)
-                                              .build())
-                                    .build();
+    DelegateTask delegateTask =
+        DelegateTask.builder()
+            .uuid(generateUuid())
+            .accountId(ACCOUNT_ID)
+            .executionCapability(
+                HttpConnectionExecutionCapabilityGenerator.buildHttpConnectionExecutionCapability("http://www.url.com"))
+            .waitId(generateUuid())
+            .setupAbstraction(Cd1SetupFields.APP_ID_FIELD, APP_ID)
+            .setupAbstraction(Cd1SetupFields.ENV_ID_FIELD, ENV_ID)
+            .setupAbstraction(Cd1SetupFields.INFRASTRUCTURE_MAPPING_ID_FIELD, INFRA_MAPPING_ID)
+            .setupAbstraction(Cd1SetupFields.SERVICE_TEMPLATE_ID_FIELD, SERVICE_TEMPLATE_ID)
+            .setupAbstraction(Cd1SetupFields.ARTIFACT_STREAM_ID_FIELD, ARTIFACT_STREAM_ID)
+            .version(VERSION)
+            .data(TaskData.builder()
+                      .async(true)
+                      .taskType(TaskType.HTTP.name())
+                      .parameters(new Object[] {})
+                      .timeout(DEFAULT_ASYNC_CALL_TIMEOUT)
+                      .build())
+            .build();
     when(delegateProcessingController.canProcessAccount(ACCOUNT_ID)).thenReturn(true);
     delegateService.queueTask(delegateTask);
     assertThat(

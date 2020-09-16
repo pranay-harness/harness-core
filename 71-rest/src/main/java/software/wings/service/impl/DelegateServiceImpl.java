@@ -55,7 +55,7 @@ import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 import static software.wings.beans.Application.GLOBAL_APP_ID;
 import static software.wings.beans.DelegateSequenceConfig.Builder.aDelegateSequenceBuilder;
 import static software.wings.beans.Event.Builder.anEvent;
-import static software.wings.beans.FeatureName.DELEGATE_CAPABILITY_FRAMEWORK_PHASE_ENABLE;
+import static software.wings.beans.FeatureName.DISABLE_DELEGATE_CAPABILITY_FRAMEWORK;
 import static software.wings.beans.FeatureName.USE_CDN_FOR_STORAGE_FILES;
 import static software.wings.beans.alert.AlertType.NoEligibleDelegates;
 
@@ -2109,7 +2109,7 @@ public class DelegateServiceImpl implements DelegateService {
   // TODO: Required right now, as at delegateSide based on capabilities are present or not,
   // TODO: either new CapabilityCheckController or existing ValidationClass is used.
   private void generateCapabilitiesForTaskIfFeatureEnabled(DelegateTask task) {
-    boolean enabled = featureFlagService.isEnabled(DELEGATE_CAPABILITY_FRAMEWORK_PHASE_ENABLE, task.getAccountId());
+    boolean enabled = !featureFlagService.isEnabled(DISABLE_DELEGATE_CAPABILITY_FRAMEWORK, task.getAccountId());
 
     if (!enabled) {
       return;
@@ -2252,7 +2252,7 @@ public class DelegateServiceImpl implements DelegateService {
       wingsPersistence.update(updateQuery, updateOperations);
 
       // If all delegate task capabilities were evaluated and they were ok, we can assign the task
-      if ((!featureFlagService.isEnabled(DELEGATE_CAPABILITY_FRAMEWORK_PHASE_ENABLE, delegateTask.getAccountId())
+      if ((featureFlagService.isEnabled(DISABLE_DELEGATE_CAPABILITY_FRAMEWORK, delegateTask.getAccountId())
               || size(delegateTask.getExecutionCapabilities()) == size(results))
           && results.stream().allMatch(DelegateConnectionResult::isValidated)) {
         return assignTask(delegateId, taskId, delegateTask);
