@@ -11,4 +11,5 @@ import lombok.Value;
 @Builder
 public class ApiKeyAuditDetails {
   private String apiKeyId;
+  private String apiKeyName;
 }

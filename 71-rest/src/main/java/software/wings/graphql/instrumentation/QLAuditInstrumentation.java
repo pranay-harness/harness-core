@@ -165,7 +165,7 @@ public class QLAuditInstrumentation extends SimpleInstrumentation {
     }
     final ApiKeyEntry apiKeyEntry = apiKeyService.getByKey(headerValue, accountId, false);
     if (apiKeyEntry != null) {
-      return ApiKeyAuditDetails.builder().apiKeyId(apiKeyEntry.getUuid()).build();
+      return ApiKeyAuditDetails.builder().apiKeyId(apiKeyEntry.getUuid()).apiKeyName(apiKeyEntry.getName()).build();
     }
     return null;
   }
