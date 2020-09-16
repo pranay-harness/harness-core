@@ -48,4 +48,7 @@ public interface AwsConstants {
 
   String PROD_LISTENER = "Prod Listener";
   String STAGE_LISTENER = "Stage Listener";
+
+  String CONTEXT_NEW_ASG_NAME_EXPR = "ami.newAsgName";
+  String CONTEXT_OLD_ASG_NAME_EXPR = "ami.oldAsgName";
 }

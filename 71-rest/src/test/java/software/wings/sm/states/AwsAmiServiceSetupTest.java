@@ -83,7 +83,10 @@ import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.LogService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.SettingsService;
+import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.service.intfc.security.SecretManager;
+import software.wings.service.intfc.sweepingoutput.SweepingOutputInquiry;
+import software.wings.service.intfc.sweepingoutput.SweepingOutputInquiry.SweepingOutputInquiryBuilder;
 import software.wings.service.intfc.sweepingoutput.SweepingOutputService;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionContextImpl;
@@ -105,7 +108,7 @@ public class AwsAmiServiceSetupTest extends WingsBaseTest {
   @Mock private SpotInstStateHelper mockSpotinstStateHelper;
   @Mock private SweepingOutputService mockSweepingOutputService;
   @Mock private AwsAmiServiceStateHelper mockAwsAmiServiceStateHelper;
-
+  @Mock private WorkflowExecutionService workflowExecutionService;
   @InjectMocks private AwsAmiServiceSetup state = new AwsAmiServiceSetup("stateName");
 
   @Test
@@ -254,8 +257,15 @@ public class AwsAmiServiceSetupTest extends WingsBaseTest {
     AwsAmiSetupExecutionData stateData = AwsAmiSetupExecutionData.builder().build();
     doReturn(stateData).when(mockContext).getStateExecutionData();
     doReturn("test").when(mockAwsAmiServiceStateHelper).getSweepingOutputName(any(), any());
-    doReturn(SweepingOutputInstance.builder()).when(mockContext).prepareSweepingOutputBuilder(any());
+    doReturn(SweepingOutputInstance.builder())
+        .doReturn(SweepingOutputInstance.builder())
+        .when(mockContext)
+        .prepareSweepingOutputBuilder(any());
     String newAsgName = "foo__2";
+
+    SweepingOutputInquiryBuilder builder = SweepingOutputInquiry.builder();
+    doReturn(builder).when(mockContext).prepareSweepingOutputInquiryBuilder();
+
     AwsAmiServiceSetupResponse delegateResponse = AwsAmiServiceSetupResponse.builder()
                                                       .executionStatus(SUCCESS)
                                                       .newAsgName(newAsgName)
@@ -264,7 +274,7 @@ public class AwsAmiServiceSetupTest extends WingsBaseTest {
                                                       .desiredInstances(1)
                                                       .build();
     ExecutionResponse response = state.handleAsyncResponse(mockContext, ImmutableMap.of(ACTIVITY_ID, delegateResponse));
-    verify(mockSweepingOutputService, times(1)).save(any());
+    verify(mockSweepingOutputService, times(2)).save(any());
     assertThat(response).isNotNull();
     assertThat(response.getNotifyElements()).isNotNull();
     assertThat(response.getNotifyElements().size()).isEqualTo(0);

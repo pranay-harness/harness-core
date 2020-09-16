@@ -41,6 +41,7 @@ import software.wings.api.AmiStepExecutionSummary;
 import software.wings.api.ApprovalStateExecutionData;
 import software.wings.api.ArtifactCollectionExecutionData;
 import software.wings.api.AwsAmiDeployStateExecutionData;
+import software.wings.api.AwsAmiInfoVariables;
 import software.wings.api.AwsAmiSetupExecutionData;
 import software.wings.api.AwsAmiSwitchRoutesStateExecutionData;
 import software.wings.api.AwsAmiTrafficShiftAlbStateExecutionData;
@@ -1762,5 +1763,6 @@ public class ManagerKryoRegistrar implements KryoRegistrar {
     kryo.register(HostAliasParams.class, 8057);
 
     kryo.register(HelmChartCollectionParams.class, 8058);
+    kryo.register(AwsAmiInfoVariables.class, 8059);
   }
 }

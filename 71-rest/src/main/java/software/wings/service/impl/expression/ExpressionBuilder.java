@@ -29,6 +29,8 @@ import static software.wings.common.Constants.HARNESS_KUBE_CONFIG_PATH;
 import static software.wings.common.PathConstants.WINGS_BACKUP_PATH;
 import static software.wings.common.PathConstants.WINGS_RUNTIME_PATH;
 import static software.wings.common.PathConstants.WINGS_STAGING_PATH;
+import static software.wings.service.impl.aws.model.AwsConstants.CONTEXT_NEW_ASG_NAME_EXPR;
+import static software.wings.service.impl.aws.model.AwsConstants.CONTEXT_OLD_ASG_NAME_EXPR;
 import static software.wings.service.impl.workflow.WorkflowServiceHelper.INFRA_ROUTE_PCF;
 import static software.wings.service.impl.workflow.WorkflowServiceHelper.INFRA_TEMP_ROUTE_PCF;
 import static software.wings.service.intfc.ServiceVariableService.EncryptedFieldMode.MASKED;
@@ -284,6 +286,14 @@ public abstract class ExpressionBuilder {
 
       case K8S_DELETE:
         expressions.add(canaryWorkload);
+        break;
+
+      case AWS_AMI_SERVICE_SETUP:
+      case AWS_AMI_SERVICE_DEPLOY:
+      case AWS_AMI_SWITCH_ROUTES:
+      case AWS_AMI_SERVICE_ROLLBACK:
+      case AWS_AMI_ROLLBACK_SWITCH_ROUTES:
+        expressions.addAll(asList(CONTEXT_NEW_ASG_NAME_EXPR, CONTEXT_OLD_ASG_NAME_EXPR));
         break;
 
       default:
