@@ -10,8 +10,10 @@ import static org.mockito.Mockito.when;
 import static software.wings.beans.EntityType.USER_GROUP;
 import static software.wings.beans.PipelineStage.PipelineStageElement;
 import static software.wings.beans.PipelineStage.PipelineStageElement.builder;
+import static software.wings.beans.Variable.VariableBuilder.aVariable;
 import static software.wings.service.impl.pipeline.PipelineServiceValidator.validateTemplateExpressions;
 
+import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
 
 import io.harness.category.element.FunctionalTests;
@@ -24,6 +26,7 @@ import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import software.wings.WingsBaseTest;
+import software.wings.beans.EntityType;
 import software.wings.beans.Pipeline;
 import software.wings.beans.PipelineStage;
 import software.wings.beans.RuntimeInputsConfig;
@@ -33,6 +36,7 @@ import software.wings.service.intfc.UserGroupService;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 
 public class PipelineServiceValidatorTest extends WingsBaseTest {
@@ -107,26 +111,49 @@ public class PipelineServiceValidatorTest extends WingsBaseTest {
   @Owner(developers = POOJA)
   @Category(FunctionalTests.class)
   public void validateRuntimeInputsConfig() {
+    PipelineStageElement pse1 = builder().build();
+    assertThat(pipelineServiceValidator.validateRuntimeInputsConfig(pse1, "ACCOUNT_ID", Collections.emptyList()))
+        .isTrue();
+
+    pse1.setWorkflowVariables(ImmutableMap.of("var1", "${abc}"));
+    assertThat(pipelineServiceValidator.validateRuntimeInputsConfig(pse1, "ACCOUNT_ID", Collections.emptyList()))
+        .isTrue();
+
+    pse1.setDisableAssertion("true");
+    assertThat(pipelineServiceValidator.validateRuntimeInputsConfig(pse1, "ACCOUNT_ID", Collections.emptyList()))
+        .isTrue();
+
+    PipelineStageElement pipelineStageElement = builder().workflowVariables(ImmutableMap.of("var1", "${abc}")).build();
     RuntimeInputsConfig runtimeInputsConfig = RuntimeInputsConfig.builder().build();
-    pipelineServiceValidator.validateRuntimeInputsConfig(runtimeInputsConfig, "ACCOUNT_ID");
+    pipelineStageElement.setRuntimeInputsConfig(runtimeInputsConfig);
+    pipelineServiceValidator.validateRuntimeInputsConfig(pipelineStageElement, "ACCOUNT_ID", Collections.emptyList());
     RuntimeInputsConfig runtimeInputsConfig2 =
         RuntimeInputsConfig.builder().runtimeInputVariables(asList("var1", "var2")).build();
-    assertThatThrownBy(
-        () -> { pipelineServiceValidator.validateRuntimeInputsConfig(runtimeInputsConfig2, "ACCOUNT_ID"); })
+    pipelineStageElement.setRuntimeInputsConfig(runtimeInputsConfig2);
+
+    assertThatThrownBy(() -> {
+      pipelineServiceValidator.validateRuntimeInputsConfig(pipelineStageElement, "ACCOUNT_ID", Collections.emptyList());
+    })
         .isInstanceOf(InvalidRequestException.class)
         .hasMessage("Timeout value should be greater than 1 secs");
 
     RuntimeInputsConfig runtimeInputsConfig3 =
         RuntimeInputsConfig.builder().runtimeInputVariables(asList("var1", "var2")).timeout(950L).build();
-    assertThatThrownBy(
-        () -> { pipelineServiceValidator.validateRuntimeInputsConfig(runtimeInputsConfig3, "ACCOUNT_ID"); })
+    pipelineStageElement.setRuntimeInputsConfig(runtimeInputsConfig3);
+
+    assertThatThrownBy(() -> {
+      pipelineServiceValidator.validateRuntimeInputsConfig(pipelineStageElement, "ACCOUNT_ID", Collections.emptyList());
+    })
         .isInstanceOf(InvalidRequestException.class)
         .hasMessage("Timeout value should be greater than 1 secs");
 
     RuntimeInputsConfig runtimeInputsConfig4 =
         RuntimeInputsConfig.builder().runtimeInputVariables(asList("var1", "var2")).timeout(2000L).build();
-    assertThatThrownBy(
-        () -> { pipelineServiceValidator.validateRuntimeInputsConfig(runtimeInputsConfig4, "ACCOUNT_ID"); })
+    pipelineStageElement.setRuntimeInputsConfig(runtimeInputsConfig4);
+
+    assertThatThrownBy(() -> {
+      pipelineServiceValidator.validateRuntimeInputsConfig(pipelineStageElement, "ACCOUNT_ID", Collections.emptyList());
+    })
         .isInstanceOf(InvalidRequestException.class)
         .hasMessage("Timeout Action cannot be null");
 
@@ -135,8 +162,11 @@ public class PipelineServiceValidatorTest extends WingsBaseTest {
                                                    .timeout(2000L)
                                                    .timeoutAction(RepairActionCode.END_EXECUTION)
                                                    .build();
-    assertThatThrownBy(
-        () -> { pipelineServiceValidator.validateRuntimeInputsConfig(runtimeInputsConfig7, "ACCOUNT_ID"); })
+    pipelineStageElement.setRuntimeInputsConfig(runtimeInputsConfig7);
+
+    assertThatThrownBy(() -> {
+      pipelineServiceValidator.validateRuntimeInputsConfig(pipelineStageElement, "ACCOUNT_ID", Collections.emptyList());
+    })
         .isInstanceOf(InvalidRequestException.class)
         .hasMessage("User groups should be present for Notification");
 
@@ -147,8 +177,11 @@ public class PipelineServiceValidatorTest extends WingsBaseTest {
                                                    .userGroupIds(asList("UG_ID"))
                                                    .timeoutAction(RepairActionCode.END_EXECUTION)
                                                    .build();
-    assertThatThrownBy(
-        () -> { pipelineServiceValidator.validateRuntimeInputsConfig(runtimeInputsConfig5, "ACCOUNT_ID"); })
+    pipelineStageElement.setRuntimeInputsConfig(runtimeInputsConfig5);
+
+    assertThatThrownBy(() -> {
+      pipelineServiceValidator.validateRuntimeInputsConfig(pipelineStageElement, "ACCOUNT_ID", Collections.emptyList());
+    })
         .isInstanceOf(InvalidRequestException.class)
         .hasMessage("User group not found for given Id: UG_ID");
 
@@ -159,6 +192,73 @@ public class PipelineServiceValidatorTest extends WingsBaseTest {
                                                    .userGroupIds(asList("UG_ID"))
                                                    .timeoutAction(RepairActionCode.END_EXECUTION)
                                                    .build();
-    pipelineServiceValidator.validateRuntimeInputsConfig(runtimeInputsConfig6, "ACCOUNT_ID");
+    pipelineStageElement.setRuntimeInputsConfig(runtimeInputsConfig6);
+
+    pipelineServiceValidator.validateRuntimeInputsConfig(
+        pipelineStageElement, "ACCOUNT_ID", Collections.singletonList(aVariable().name("var1").build()));
+  }
+
+  @Test
+  @Owner(developers = POOJA)
+  @Category(FunctionalTests.class)
+  public void validateRuntimeInputsConfigVariableValuesEntityType() {
+    PipelineStageElement pipelineStageElement = builder().workflowVariables(ImmutableMap.of("var1", "abc")).build();
+    RuntimeInputsConfig runtimeInputsConfig = RuntimeInputsConfig.builder()
+                                                  .runtimeInputVariables(asList("var1", "var2"))
+                                                  .timeout(2000L)
+                                                  .userGroupIds(asList("UG_ID"))
+                                                  .timeoutAction(RepairActionCode.END_EXECUTION)
+                                                  .build();
+    pipelineStageElement.setRuntimeInputsConfig(runtimeInputsConfig);
+    when(userGroupService.get(any(), any())).thenReturn(UserGroup.builder().build());
+    assertThatThrownBy(() -> {
+      pipelineServiceValidator.validateRuntimeInputsConfig(pipelineStageElement, "ACCOUNT_ID",
+          Collections.singletonList(aVariable().name("var1").entityType(EntityType.ENVIRONMENT).build()));
+    })
+        .isInstanceOf(InvalidRequestException.class)
+        .hasMessage("Variable var1 is marked runtime but the value isnt a valid expression");
+  }
+
+  @Test
+  @Owner(developers = POOJA)
+  @Category(FunctionalTests.class)
+  public void validateRuntimeInputsConfigVariableValuesNonEntityType() {
+    PipelineStageElement pipelineStageElement = builder().workflowVariables(ImmutableMap.of("var1", "abc")).build();
+    RuntimeInputsConfig runtimeInputsConfig = RuntimeInputsConfig.builder()
+                                                  .runtimeInputVariables(asList("var1", "var2"))
+                                                  .timeout(2000L)
+                                                  .userGroupIds(asList("UG_ID"))
+                                                  .timeoutAction(RepairActionCode.END_EXECUTION)
+                                                  .build();
+    pipelineStageElement.setRuntimeInputsConfig(runtimeInputsConfig);
+    when(userGroupService.get(any(), any())).thenReturn(UserGroup.builder().build());
+    assertThatThrownBy(() -> {
+      pipelineServiceValidator.validateRuntimeInputsConfig(
+          pipelineStageElement, "ACCOUNT_ID", Collections.singletonList(aVariable().name("var1").build()));
+    })
+        .isInstanceOf(InvalidRequestException.class)
+        .hasMessage("Non entity var var1 is marked Runtime, the value can either be blank or a valid expression");
+  }
+
+  @Test
+  @Owner(developers = POOJA)
+  @Category(FunctionalTests.class)
+  public void validateRuntimeInputsConfigVariableRelatedFieldRuntime() {
+    PipelineStageElement pipelineStageElement = builder().workflowVariables(ImmutableMap.of("var1", "${abc}")).build();
+    RuntimeInputsConfig runtimeInputsConfig = RuntimeInputsConfig.builder()
+                                                  .runtimeInputVariables(asList("var1"))
+                                                  .timeout(2000L)
+                                                  .userGroupIds(asList("UG_ID"))
+                                                  .timeoutAction(RepairActionCode.END_EXECUTION)
+                                                  .build();
+    pipelineStageElement.setRuntimeInputsConfig(runtimeInputsConfig);
+    when(userGroupService.get(any(), any())).thenReturn(UserGroup.builder().build());
+    assertThatThrownBy(() -> {
+      pipelineServiceValidator.validateRuntimeInputsConfig(pipelineStageElement, "ACCOUNT_ID",
+          Collections.singletonList(
+              aVariable().name("var1").relatedField("var2").entityType(EntityType.ENVIRONMENT).build()));
+    })
+        .isInstanceOf(InvalidRequestException.class)
+        .hasMessage("Variable var2 should be runtime as var1 is marked runtime");
   }
 }
