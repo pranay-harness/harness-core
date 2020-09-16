@@ -7,7 +7,6 @@ import com.google.protobuf.ByteString;
 import com.google.protobuf.Message;
 
 import io.harness.beans.DelegateTask;
-import io.harness.cvng.beans.DataCollectionConnectorBundle;
 import io.harness.delegate.beans.TaskData;
 import io.harness.perpetualtask.PerpetualTaskClientContext;
 import io.harness.perpetualtask.PerpetualTaskServiceClient;
@@ -30,16 +29,7 @@ public class DataCollectionPerpetualTaskServiceClient implements PerpetualTaskSe
     String accountId = clientParams.get("accountId");
     String cvConfigId = clientParams.get("cvConfigId");
     String dataCollectionWorkerId = clientParams.get("dataCollectionWorkerId");
-
-    DataCollectionConnectorBundle bundle =
-        (DataCollectionConnectorBundle) kryoSerializer.asObject(clientContext.getExecutionBundle());
-
-    CVDataCollectionInfo cvDataCollectionInfo = CVDataCollectionInfo.builder()
-                                                    .connectorConfigDTO(bundle.getConnectorConfigDTO())
-                                                    .encryptedDataDetails(bundle.getDetails())
-                                                    .build();
-
-    ByteString bytes = ByteString.copyFrom(kryoSerializer.asBytes(cvDataCollectionInfo));
+    ByteString bytes = ByteString.copyFrom(clientContext.getExecutionBundle());
     DataCollectionPerpetualTaskParams.Builder params = DataCollectionPerpetualTaskParams.newBuilder()
                                                            .setAccountId(accountId)
                                                            .setDataCollectionInfo(bytes)
