@@ -1,0 +1,4 @@
+import bazelrc.common
+
+# Add properties that are shared between developers but are specific to local bazel build
+build --remote_upload_local_results=false

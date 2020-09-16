@@ -57,10 +57,10 @@ eventQueue
 **/*.tfstate.backup
 **/tfplan
 **/*.lock.info\
-user.bazelrc
-.bazelrc
 profile
 profile.result
 
 bazel-*
+.bazelrc
+
 **/vendor
