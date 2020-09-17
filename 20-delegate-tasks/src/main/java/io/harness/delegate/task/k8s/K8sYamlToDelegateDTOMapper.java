@@ -62,7 +62,6 @@ public class K8sYamlToDelegateDTOMapper {
         KubernetesUserNamePasswordDTO userNamePasswordDTO = (KubernetesUserNamePasswordDTO) authDTO.getCredentials();
         kubernetesConfigBuilder.username(userNamePasswordDTO.getUsername().toCharArray());
         kubernetesConfigBuilder.password(userNamePasswordDTO.getPasswordRef().getDecryptedValue());
-        kubernetesConfigBuilder.caCert(userNamePasswordDTO.getCaCertRef().getDecryptedValue());
         break;
 
       case CLIENT_KEY_CERT:
@@ -72,6 +71,8 @@ public class K8sYamlToDelegateDTOMapper {
         kubernetesConfigBuilder.clientKey(clientKeyCertDTO.getClientKeyRef().getDecryptedValue());
         kubernetesConfigBuilder.clientKeyPassphrase(clientKeyCertDTO.getClientKeyPassphraseRef().getDecryptedValue());
         kubernetesConfigBuilder.clientKeyAlgo(clientKeyCertDTO.getClientKeyAlgo());
+        kubernetesConfigBuilder.caCert(
+            clientKeyCertDTO.getCaCertRef() != null ? clientKeyCertDTO.getCaCertRef().getDecryptedValue() : null);
         break;
 
       case SERVICE_ACCOUNT:

@@ -65,10 +65,9 @@ public class KubernetesConfigSummaryMapperTest extends CategoryTest {
     SecretRefData secretRefDataCACert = SecretRefData.builder().identifier(cacert).scope(Scope.ACCOUNT).build();
     SecretRefData passwordSecretRef =
         SecretRefData.builder().identifier(passwordIdentifier).scope(Scope.ACCOUNT).build();
-    String caCertRef = "acc" + SECRET_DELIMINITER + cacertIdentifier;
     String passwordRef = "acc" + SECRET_DELIMINITER + passwordIdentifier;
     K8sUserNamePassword k8sUserNamePassword =
-        K8sUserNamePassword.builder().userName(userName).passwordRef(passwordRef).caCertRef(caCertRef).build();
+        K8sUserNamePassword.builder().userName(userName).passwordRef(passwordRef).build();
     KubernetesClusterDetails kubernetesClusterDetails = KubernetesClusterDetails.builder()
                                                             .masterUrl(masterURL)
                                                             .authType(KubernetesAuthType.USER_PASSWORD)

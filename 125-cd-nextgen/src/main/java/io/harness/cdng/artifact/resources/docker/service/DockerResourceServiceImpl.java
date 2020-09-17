@@ -173,8 +173,7 @@ public class DockerResourceServiceImpl implements DockerResourceService {
 
   private List<EncryptedDataDetail> getEncryptionDetails(
       @Nonnull DockerConnectorDTO dockerConnectorDTO, @Nonnull NGAccess ngAccess) {
-    return secretManagerClientService.getEncryptionDetails(
-        ngAccess, dockerConnectorDTO.getAuthScheme().getCredentials());
+    return secretManagerClientService.getEncryptionDetails(ngAccess, dockerConnectorDTO.getAuth().getCredentials());
   }
 
   private ArtifactTaskExecutionResponse executeSyncTask(DockerArtifactDelegateRequest dockerRequest,

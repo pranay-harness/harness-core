@@ -36,7 +36,7 @@ public class DockerTestConnectionDelegateTask extends AbstractDelegateRunnableTa
     DockerTestConnectionTaskParams dockerConnectionTaskResponse = (DockerTestConnectionTaskParams) parameters;
     DockerConnectorDTO dockerConnectorDTO = dockerConnectionTaskResponse.getDockerConnector();
     DockerAuthCredentialsDTO dockerAuthCredentialsDTO =
-        dockerConnectorDTO.getAuthScheme() != null ? dockerConnectorDTO.getAuthScheme().getCredentials() : null;
+        dockerConnectorDTO.getAuth() != null ? dockerConnectorDTO.getAuth().getCredentials() : null;
     if (dockerAuthCredentialsDTO != null) {
       secretDecryptionService.decrypt(dockerAuthCredentialsDTO, dockerConnectionTaskResponse.getEncryptionDetails());
     }

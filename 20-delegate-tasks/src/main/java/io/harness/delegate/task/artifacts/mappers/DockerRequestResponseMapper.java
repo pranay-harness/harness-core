@@ -19,9 +19,9 @@ public class DockerRequestResponseMapper {
   public DockerInternalConfig toDockerInternalConfig(DockerArtifactDelegateRequest request) {
     String password = "";
     String username = "";
-    if (request.getDockerConnectorDTO().getAuthScheme() != null) {
+    if (request.getDockerConnectorDTO().getAuth() != null) {
       DockerUserNamePasswordDTO credentials =
-          (DockerUserNamePasswordDTO) request.getDockerConnectorDTO().getAuthScheme().getCredentials();
+          (DockerUserNamePasswordDTO) request.getDockerConnectorDTO().getAuth().getCredentials();
       if (credentials.getPasswordRef() != null) {
         password = EmptyPredicate.isNotEmpty(credentials.getPasswordRef().getDecryptedValue())
             ? new String(credentials.getPasswordRef().getDecryptedValue())

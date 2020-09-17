@@ -16,10 +16,10 @@ public class DockerConnectorToDockerInternalConfigMapper {
   public DockerInternalConfig toDockerInternalConfig(DockerConnectorDTO dockerConnectorDTO) {
     DockerInternalConfigBuilder dockerInternalConfigBuilder =
         DockerInternalConfig.builder().dockerRegistryUrl(dockerConnectorDTO.getDockerRegistryUrl());
-    if (dockerConnectorDTO.getAuthScheme() != null
-        && dockerConnectorDTO.getAuthScheme().getAuthType() == DockerAuthType.USER_PASSWORD) {
+    if (dockerConnectorDTO.getAuth() != null
+        && dockerConnectorDTO.getAuth().getAuthType() == DockerAuthType.USER_PASSWORD) {
       DockerUserNamePasswordDTO dockerAuthCredentialsDTO =
-          (DockerUserNamePasswordDTO) dockerConnectorDTO.getAuthScheme().getCredentials();
+          (DockerUserNamePasswordDTO) dockerConnectorDTO.getAuth().getCredentials();
       dockerInternalConfigBuilder.username(dockerAuthCredentialsDTO.getUsername())
           .password(getDecryptedValueWithNullCheck(dockerAuthCredentialsDTO.getPasswordRef()));
     }

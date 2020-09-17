@@ -47,7 +47,7 @@ public class DockerConnectorToDockerInternalConfigMapperTest extends CategoryTes
     DockerAuthenticationDTO dockerAuthenticationDTO =
         DockerAuthenticationDTO.builder().authType(USER_PASSWORD).credentials(dockerUserNamePasswordDTO).build();
     DockerConnectorDTO dockerConnectorDTO =
-        DockerConnectorDTO.builder().dockerRegistryUrl(dockerRegistryUrl).authScheme(dockerAuthenticationDTO).build();
+        DockerConnectorDTO.builder().dockerRegistryUrl(dockerRegistryUrl).auth(dockerAuthenticationDTO).build();
     DockerInternalConfig dockerConector =
         dockerConnectorToDockerInternalConfigMapper.toDockerInternalConfig(dockerConnectorDTO);
     assertThat(dockerConector).isNotNull();

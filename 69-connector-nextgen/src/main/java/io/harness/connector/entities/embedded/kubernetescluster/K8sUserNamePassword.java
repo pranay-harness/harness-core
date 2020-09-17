@@ -10,5 +10,4 @@ import org.springframework.data.annotation.TypeAlias;
 public class K8sUserNamePassword implements KubernetesAuth {
   String userName;
   String passwordRef;
-  String caCertRef;
 }

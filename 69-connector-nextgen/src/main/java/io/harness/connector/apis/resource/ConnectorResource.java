@@ -7,8 +7,9 @@ import com.google.inject.name.Named;
 
 import io.harness.beans.NGPageResponse;
 import io.harness.connector.apis.dto.ConnectorDTO;
-import io.harness.connector.apis.dto.ConnectorRequestDTO;
+import io.harness.connector.apis.dto.ConnectorRequestWrapper;
 import io.harness.connector.apis.dto.ConnectorSummaryDTO;
+import io.harness.connector.apis.dto.ConnectorWrapper;
 import io.harness.connector.services.ConnectorService;
 import io.harness.delegate.beans.connector.ConnectorCategory;
 import io.harness.delegate.beans.connector.ConnectorType;
@@ -47,11 +48,12 @@ public class ConnectorResource {
   @GET
   @Path("{connectorIdentifier}")
   @ApiOperation(value = "Get Connector", nickname = "getConnector")
-  public ResponseDTO<Optional<ConnectorDTO>> get(@NotEmpty @PathParam("accountIdentifier") String accountIdentifier,
+  public ResponseDTO<ConnectorWrapper> get(@NotEmpty @PathParam("accountIdentifier") String accountIdentifier,
       @QueryParam("orgIdentifier") String orgIdentifier, @QueryParam("projectIdentifier") String projectIdentifier,
       @PathParam("connectorIdentifier") String connectorIdentifier) {
-    return ResponseDTO.newResponse(
-        connectorService.get(accountIdentifier, orgIdentifier, projectIdentifier, connectorIdentifier));
+    Optional<ConnectorDTO> connectorDTO =
+        connectorService.get(accountIdentifier, orgIdentifier, projectIdentifier, connectorIdentifier);
+    return ResponseDTO.newResponse(createConnectorWrapper(connectorDTO.orElse(null)));
   }
 
   @GET
@@ -79,16 +81,25 @@ public class ConnectorResource {
 
   @POST
   @ApiOperation(value = "Creates a Connector", nickname = "createConnector")
-  public ResponseDTO<ConnectorDTO> create(@NotNull @Valid ConnectorRequestDTO connectorRequestDTO,
+  public ResponseDTO<ConnectorWrapper> create(@NotNull @Valid ConnectorRequestWrapper connectorRequestDTO,
       @NotEmpty @PathParam("accountIdentifier") String accountIdentifier) {
-    return ResponseDTO.newResponse(connectorService.create(connectorRequestDTO, accountIdentifier));
+    ConnectorDTO connectorDTO = connectorService.create(connectorRequestDTO.getConnector(), accountIdentifier);
+    return ResponseDTO.newResponse(createConnectorWrapper(connectorDTO));
   }
 
   @PUT
   @ApiOperation(value = "Updates a Connector", nickname = "updateConnector")
-  public ResponseDTO<ConnectorDTO> update(@NotNull @Valid ConnectorRequestDTO connectorRequestDTO,
+  public ResponseDTO<ConnectorWrapper> update(@NotNull @Valid ConnectorRequestWrapper connectorRequestDTO,
       @NotEmpty @PathParam("accountIdentifier") String accountIdentifier) {
-    return ResponseDTO.newResponse(connectorService.update(connectorRequestDTO, accountIdentifier));
+    ConnectorDTO connectorDTO = connectorService.update(connectorRequestDTO.getConnector(), accountIdentifier);
+    return ResponseDTO.newResponse(createConnectorWrapper(connectorDTO));
+  }
+
+  private ConnectorWrapper createConnectorWrapper(ConnectorDTO connectorDTO) {
+    if (connectorDTO != null) {
+      return ConnectorWrapper.builder().connector(connectorDTO).build();
+    }
+    return null;
   }
 
   @DELETE
@@ -106,8 +117,8 @@ public class ConnectorResource {
   @Deprecated
   @ApiOperation(value = "Get the connectivity status of the Connector", nickname = "getConnectorStatus")
   public ResponseDTO<ConnectorValidationResult> validate(
-      ConnectorRequestDTO connectorDTO, @PathParam("accountIdentifier") String accountIdentifier) {
-    return ResponseDTO.newResponse(connectorService.validate(connectorDTO, accountIdentifier));
+      ConnectorRequestWrapper connectorDTO, @PathParam("accountIdentifier") String accountIdentifier) {
+    return ResponseDTO.newResponse(connectorService.validate(connectorDTO.getConnector(), accountIdentifier));
   }
 
   @GET

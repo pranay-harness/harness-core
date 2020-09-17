@@ -83,14 +83,12 @@ public class DefaultConnectorServiceImplTest extends ConnectorsBaseTest {
   }
 
   private ConnectorRequestDTO createKubernetesConnectorRequestDTO(String connectorIdentifier) {
-    KubernetesAuthDTO kubernetesAuthDTO = KubernetesAuthDTO.builder()
-                                              .authType(KubernetesAuthType.USER_PASSWORD)
-                                              .credentials(KubernetesUserNamePasswordDTO.builder()
-                                                               .username(userName)
-                                                               .passwordRef(passwordSecretRef)
-                                                               .caCertRef(secretRefDataCACert)
-                                                               .build())
-                                              .build();
+    KubernetesAuthDTO kubernetesAuthDTO =
+        KubernetesAuthDTO.builder()
+            .authType(KubernetesAuthType.USER_PASSWORD)
+            .credentials(
+                KubernetesUserNamePasswordDTO.builder().username(userName).passwordRef(passwordSecretRef).build())
+            .build();
     KubernetesClusterConfigDTO connectorDTOWithDelegateCreds =
         KubernetesClusterConfigDTO.builder()
             .kubernetesCredentialType(MANUAL_CREDENTIALS)
@@ -130,14 +128,12 @@ public class DefaultConnectorServiceImplTest extends ConnectorsBaseTest {
     SecretRefData secretRefDataCACert = SecretRefData.builder().identifier(updatedCACert).scope(Scope.ACCOUNT).build();
     SecretRefData passwordRefData =
         SecretRefData.builder().identifier(updatedPasswordIdentifier).scope(Scope.ACCOUNT).build();
-    KubernetesAuthDTO kubernetesAuthDTO = KubernetesAuthDTO.builder()
-                                              .authType(KubernetesAuthType.USER_PASSWORD)
-                                              .credentials(KubernetesUserNamePasswordDTO.builder()
-                                                               .username(updatedUserName)
-                                                               .passwordRef(passwordRefData)
-                                                               .caCertRef(secretRefDataCACert)
-                                                               .build())
-                                              .build();
+    KubernetesAuthDTO kubernetesAuthDTO =
+        KubernetesAuthDTO.builder()
+            .authType(KubernetesAuthType.USER_PASSWORD)
+            .credentials(
+                KubernetesUserNamePasswordDTO.builder().username(updatedUserName).passwordRef(passwordRefData).build())
+            .build();
     KubernetesClusterConfigDTO connectorDTOWithUserNamePwdCreds =
         KubernetesClusterConfigDTO.builder()
             .kubernetesCredentialType(MANUAL_CREDENTIALS)
@@ -168,7 +164,6 @@ public class DefaultConnectorServiceImplTest extends ConnectorsBaseTest {
         (KubernetesUserNamePasswordDTO) credentialDTO.getAuth().getCredentials();
     assertThat(userNamePasswordDTO.getUsername()).isEqualTo(updatedUserName);
     assertThat(userNamePasswordDTO.getPasswordRef()).isEqualTo(passwordRefData);
-    assertThat(userNamePasswordDTO.getCaCertRef()).isEqualTo(secretRefDataCACert);
   }
 
   @Test
@@ -231,7 +226,6 @@ public class DefaultConnectorServiceImplTest extends ConnectorsBaseTest {
         (KubernetesUserNamePasswordDTO) credentialDTO.getAuth().getCredentials();
     assertThat(kubernetesUserNamePasswordDTO.getUsername()).isEqualTo(userName);
     assertThat(kubernetesUserNamePasswordDTO.getPasswordRef()).isEqualTo(passwordSecretRef);
-    assertThat(kubernetesUserNamePasswordDTO.getCaCertRef()).isEqualTo(secretRefDataCACert);
   }
 
   @Test
@@ -268,7 +262,6 @@ public class DefaultConnectorServiceImplTest extends ConnectorsBaseTest {
                 KubernetesUserNamePasswordDTO.builder()
                     .username(userName)
                     .passwordRef(SecretRefData.builder().identifier(passwordIdentifier).scope(Scope.ACCOUNT).build())
-                    .caCertRef(secretRefDataCACert)
                     .build())
             .build();
     KubernetesClusterConfigDTO connectorDTOWithDelegateCreds =

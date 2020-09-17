@@ -32,7 +32,7 @@ public class DockerEntityToDTO implements ConnectorEntityToDTOMapper<DockerConne
 
     return DockerConnectorDTO.builder()
         .dockerRegistryUrl(dockerConnector.getUrl())
-        .authScheme(dockerAuthenticationDTO)
+        .auth(dockerAuthenticationDTO)
         .build();
   }
 }
