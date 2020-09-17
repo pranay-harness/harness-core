@@ -432,22 +432,24 @@ public class EcsServiceSetup extends State {
       ApplicationManifest applicationManifest =
           ecsSetupStateExecutionData.getApplicationManifestMap().get(K8sValuesLocation.ServiceOverride);
       GitFileConfig gitFileConfig = applicationManifest.getGitFileConfig();
-      if (gitFileConfig != null && gitFileConfig.getServiceSpecFilePath() != null
-          && gitFileConfig.getTaskSpecFilePath() != null) {
-        String containerTaskFilePath = applicationManifest.getGitFileConfig().getTaskSpecFilePath();
-        String serviceSpecFilePath = applicationManifest.getGitFileConfig().getServiceSpecFilePath();
+      if (gitFileConfig != null
+          && (gitFileConfig.getServiceSpecFilePath() != null || gitFileConfig.getTaskSpecFilePath() != null)) {
         List<GitFile> gitFiles = ecsSetupStateExecutionData.getFetchFilesResult()
                                      .getFilesFromMultipleRepo()
                                      .get("ServiceOverride")
                                      .getFiles();
 
+        String containerTaskFilePath = applicationManifest.getGitFileConfig().getTaskSpecFilePath();
         String containerSpec = getFileContentByPathFromGitFiles(gitFiles, containerTaskFilePath);
-        String serviceSpec = getFileContentByPathFromGitFiles(gitFiles, serviceSpecFilePath);
-        ecsServiceSpecification.setServiceSpecJson(executionContext.renderExpression(serviceSpec));
         containerTask.setAdvancedConfig(executionContext.renderExpression(containerSpec));
-
-        ecsSetUpDataBag.setServiceSpecification(ecsServiceSpecification);
         ecsSetUpDataBag.setContainerTask(containerTask);
+
+        if (!applicationManifest.getGitFileConfig().isUseInlineServiceDefinition()) {
+          String serviceSpecFilePath = applicationManifest.getGitFileConfig().getServiceSpecFilePath();
+          String serviceSpec = getFileContentByPathFromGitFiles(gitFiles, serviceSpecFilePath);
+          ecsServiceSpecification.setServiceSpecJson(executionContext.renderExpression(serviceSpec));
+          ecsSetUpDataBag.setServiceSpecification(ecsServiceSpecification);
+        }
       } else {
         logger.error("Manifest does not contain the proper git file config, git fetch files response can not be read.");
         throw new InvalidRequestException("Manifest does not contain the proper git file config");
