@@ -1165,7 +1165,18 @@ load("//tools/sonarqube:repositories.bzl", "bazel_sonarqube_repositories")
 bazel_sonarqube_repositories()
 
 http_archive(
-    name = "openjdk8u242_darwin_archive",
+    name = "openjdk8u242_darwin_archive_mac",
+    build_file_content = """
+java_runtime(name = 'runtime', srcs =  glob(['**']), java='//:Contents/Home/bin/java', visibility = ['//visibility:public'])
+exports_files(["WORKSPACE"], visibility = ["//visibility:public"])
+""",
+    sha256 = "06675b7d65bce0313ee1f2e888dd44267e8afeced75e0b39b5ad1f5fdff54e0b",
+    strip_prefix = "jdk8u242-b08",
+    urls = ["https://github.com/AdoptOpenJDK/openjdk8-binaries/releases/download/jdk8u242-b08/OpenJDK8U-jdk_x64_mac_hotspot_8u242b08.tar.gz"],
+)
+
+http_archive(
+    name = "openjdk8u242_darwin_archive_linux",
     build_file_content = """
 java_runtime(name = 'runtime', srcs =  glob(['**']), java='//:bin/java', visibility = ['//visibility:public'])
 exports_files(["WORKSPACE"], visibility = ["//visibility:public"])

@@ -72,6 +72,9 @@ sonarqube(
     targets = [],
     modules = {
         "//990-commons-test:sq_mycomponent": "990-commons-test",
+        "//12-commons:sq_mycomponent":"12-commons",
+        "//13-grpc-api:sq_mycomponent":"13-grpc-api",
+        "//14-api-services-beans:sq_mycomponent":"14-api-services-beans",
     },
     coverage_report = ":coverage_report",
     scm_info = [":git"],

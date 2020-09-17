@@ -32,13 +32,15 @@ def _build_sonar_project_properties(ctx, sq_properties_file):
 
         for t in ctx.attr.test_targets:
             test_target = ctx.label.relative(t)
-            sq_test_report = ctx.actions.declare_file("%s/TEST-%s.xml" % (test_reports_path, test_target.name))
             bazel_test_report_path = "bazel-testlogs/" + test_target.package + "/" + test_target.name + "/test.xml"
-            bazel_test_report = [t for t in ctx.files.test_reports if t.short_path == bazel_test_report_path][0] or fail("Expected Bazel test report for %s with path %s" % (test_target, bazel_test_report_path))
-
+            bazel_test_report = [t for t in ctx.files.test_reports if t.short_path == bazel_test_report_path]#[0] or fail("Expected Bazel test report for %s with path %s" % (test_target, bazel_test_report_path))
+            bazel_test_report.append(None)
+            if bazel_test_report[0] == None:
+                continue
+            sq_test_report = ctx.actions.declare_file("%s/TEST-%s.xml" % (test_reports_path, test_target.name))
             ctx.actions.symlink(
                 output = sq_test_report,
-                target_file = bazel_test_report,
+                target_file = bazel_test_report[0],
             )
             test_reports_runfiles.append(sq_test_report)
     else:
@@ -68,6 +70,7 @@ def _build_sonar_project_properties(ctx, sq_properties_file):
             "{MODULES}": ",".join(ctx.attr.modules.values()),
             "{TEST_REPORTS}": test_reports_path,
             "{COVERAGE_REPORT}": coverage_report_path,
+            "{CHECKSTYLE_REPORT_PATH}": ctx.attr.checkstyle_report_path,
         },
         is_executable = False,
     )
@@ -159,6 +162,9 @@ _COMMON_ATTRS = dict(dict(), **{
         doc = """Template file for sonar-project.properties.""",
     ),
     "sq_properties": attr.output(),
+    "checkstyle_report_path":attr.string(
+        default = ""
+    )
 })
 
 _sonarqube = rule(
@@ -201,7 +207,8 @@ def sonarqube(
         sonar_scanner = None,
         sq_properties_template = None,
         tags = [],
-        visibility = []):
+        visibility = [],
+        checkstyle_report_path = ""):
     _sonarqube(
         name = name,
         project_key = project_key,
@@ -220,6 +227,7 @@ def sonarqube(
         sq_properties = "sonar-project.properties",
         tags = tags,
         visibility = visibility,
+        checkstyle_report_path = checkstyle_report_path,
     )
 
 def _sq_project_impl(ctx):
@@ -247,7 +255,8 @@ def sq_project(
         modules = {},
         sq_properties_template = None,
         tags = [],
-        visibility = []):
+        visibility = [],
+        checkstyle_report_path = ""):
     _sq_project(
         name = name,
         project_key = project_key,
@@ -263,5 +272,6 @@ def sq_project(
         sq_properties = "sonar-project.properties",
         tags = tags,
         visibility = visibility,
+        checkstyle_report_path = checkstyle_report_path
     )
 

@@ -18,9 +18,12 @@ def sources(visibility = None):
        visibility = visibility,
     )
 
-def test_targets_list():
-    test_files=native.glob(["src/test/java/**/*.java"])
+def test_targets_list(exclude=[]):
+    test_files=native.glob(["src/test/java/**/*Test.java"],exclude = exclude)
     return [file.split('/')[-1][:-5] for file in test_files]
+
+def getCheckstyleReportPathForSonar():
+    return "../../../"+native.package_name()+"/checkstyle.xml"
 
 def sonarqube_test(
         name,
@@ -61,4 +64,5 @@ def sonarqube_test(
         test_reports = test_reports,
         tags = tags,
         visibility = visibility,
+        checkstyle_report_path = getCheckstyleReportPathForSonar()
     )

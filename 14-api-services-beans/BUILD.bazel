@@ -2,13 +2,16 @@ load("@rules_java//java:defs.bzl", "java_binary")
 load("//:GenTestRules.bzl", "run_tests")
 load("//tools/checkstyle:rules.bzl", "checkstyle")
 load("//:macros.bzl", "sources")
+load("//:macros.bzl","sonarqube_test")
 
 sources()
 
 java_library(
     name = "maven_deps",
     exports = [
+            "//990-commons-test:module",
             "//12-commons:maven_deps",
+            "//12-commons:module",
             "@maven//:com_amazonaws_aws_java_sdk_ec2",
             "@maven//:com_esotericsoftware_yamlbeans_yamlbeans",
             "@maven//:com_google_apis_google_api_services_monitoring",
@@ -21,11 +24,19 @@ java_library(
             "@maven//:io_kubernetes_client_java_api",
             "@maven//:org_json_json",
             "@maven//:org_mongodb_mongo_java_driver",
+            "@maven//:org_slf4j_log4j_over_slf4j",
+            "@maven//:com_amazonaws_aws_java_sdk_core"
         ],
     visibility = ["//visibility:public"],
 )
 
-
+java_library(
+    name = "test_deps",
+    exports = [
+        "@maven//:org_assertj_assertj_core",
+        "@maven//:junit_junit"
+    ]
+)
 
 java_library(
     name = "module",
@@ -33,7 +44,6 @@ java_library(
     deps = [
         "maven_deps",
         "//:lombok",
-        "//12-commons:module",
     ],
    resources = [
            "//14-api-services-beans/src/test/resources:resource",
@@ -48,7 +58,7 @@ java_library(
         "maven_deps",
         "module",
         "//:lombok",
-        "//990-commons-test:module"
+        "test_deps"
     ],
    visibility = ["//visibility:public"],
 )
@@ -59,7 +69,8 @@ run_tests(
         "module",
         "maven_deps",
         "//:lombok",
-        "tests"
+        "tests",
+        "test_deps"
     ],
     runtime_deps = [
             "//14-api-services-beans/src/test/resources:resources",
@@ -70,3 +81,11 @@ run_tests(
 
 checkstyle()
 
+sonarqube_test(
+    name="sq_mycomponent",
+    srcs = ["sources"],
+    targets = [
+        ":maven_deps",
+        ":module",
+    ],
+)
