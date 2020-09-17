@@ -464,16 +464,25 @@ public class BillingDataHelper {
     int utilizedBaseline = 100 - IDLE_COST_BASELINE - UNALLOCATED_COST_BASELINE;
     double utilized = costStats.getUtilized().doubleValue();
     double total = costStats.getTotal().doubleValue();
-    double utilizedPercentage = utilized / total * 100;
-    int efficiencyScore = (int) Math.round((1 - ((utilizedBaseline - utilizedPercentage) / utilizedBaseline)) * 100);
-    return Math.min(efficiencyScore, 100);
+    if (total > 0.0) {
+      double utilizedPercentage = utilized / total * 100;
+      int efficiencyScore = (int) Math.round((1 - ((utilizedBaseline - utilizedPercentage) / utilizedBaseline)) * 100);
+      return Math.min(efficiencyScore, 100);
+    }
+    return BillingStatsDefaultKeys.EFFICIENCY_SCORE;
   }
 
   public BigDecimal calculateTrendPercentage(BigDecimal current, BigDecimal previous) {
-    return current.subtract(previous).multiply(BigDecimal.valueOf(100)).divide(previous, 2, RoundingMode.HALF_UP);
+    if (previous.compareTo(BigDecimal.ZERO) > 0) {
+      return current.subtract(previous).multiply(BigDecimal.valueOf(100)).divide(previous, 2, RoundingMode.HALF_UP);
+    }
+    return BigDecimal.valueOf(BillingStatsDefaultKeys.EFFICIENCY_SCORE_TREND);
   }
 
   public Double calculateTrendPercentage(Double current, Double previous) {
-    return calculateTrendPercentage(BigDecimal.valueOf(current), BigDecimal.valueOf(previous)).doubleValue();
+    if (previous > 0.0) {
+      return calculateTrendPercentage(BigDecimal.valueOf(current), BigDecimal.valueOf(previous)).doubleValue();
+    }
+    return (double) BillingStatsDefaultKeys.EFFICIENCY_SCORE_TREND;
   }
 }

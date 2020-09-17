@@ -198,6 +198,10 @@ public class BillingDataHelperTest extends AbstractDataFetcherTest {
   public void testCalculateTrendPercentage() {
     assertThat(billingDataHelper.calculateTrendPercentage(BigDecimal.valueOf(100), BigDecimal.valueOf(50)))
         .isEqualTo(new BigDecimal("100.00"));
+    assertThat(billingDataHelper.calculateTrendPercentage(BigDecimal.valueOf(100), BigDecimal.valueOf(0)))
+        .isEqualTo(new BigDecimal("-1"));
+    assertThat(billingDataHelper.calculateTrendPercentage(Double.valueOf(100), Double.valueOf(50)))
+        .isEqualTo(Double.valueOf(100.00));
     assertThat(billingDataHelper.calculateTrendPercentage(Double.valueOf(100), Double.valueOf(50)))
         .isEqualTo(Double.valueOf(100.00));
   }
