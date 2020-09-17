@@ -89,7 +89,7 @@ public class ServiceStep implements Step, ChildrenExecutable<ServiceStepParamete
           ? serviceStepParameters.getService().applyOverrides(serviceStepParameters.getServiceOverrides())
           : serviceStepParameters.getService();
       responseBuilder.stepOutcome(StepResponse.StepOutcome.builder()
-                                      .name(OutcomeExpressionConstants.SERVICE.getName())
+                                      .name(OutcomeExpressionConstants.SERVICE)
                                       .outcome(createServiceOutcome(serviceConfig, responseNotifyDataList))
                                       .group(StepOutcomeGroup.STAGE.name())
                                       .build());

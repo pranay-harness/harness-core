@@ -3,7 +3,10 @@ package io.harness.cdng.environment.steps;
 import com.google.inject.Inject;
 
 import io.harness.ambiance.Ambiance;
+import io.harness.cdng.environment.EnvironmentMapper;
+import io.harness.cdng.environment.EnvironmentOutcome;
 import io.harness.cdng.environment.yaml.EnvironmentYaml;
+import io.harness.cdng.stepsdependency.constants.OutcomeExpressionConstants;
 import io.harness.execution.status.Status;
 import io.harness.executionplan.plancreator.beans.StepOutcomeGroup;
 import io.harness.facilitator.PassThroughData;
@@ -28,12 +31,13 @@ public class EnvironmentStep implements Step, SyncExecutable<EnvironmentStepPara
         : environmentStepParameters.getEnvironment();
     Environment environment = getEnvironmentObject(environmentYaml, ambiance);
     environmentService.upsert(environment);
+    EnvironmentOutcome environmentOutcome = EnvironmentMapper.toOutcome(environmentYaml);
     return StepResponse.builder()
         .status(Status.SUCCEEDED)
         .stepOutcome(StepResponse.StepOutcome.builder()
-                         .name("environment")
+                         .name(OutcomeExpressionConstants.ENVIRONMENT)
                          .group(StepOutcomeGroup.STAGE.name())
-                         .outcome(environmentYaml)
+                         .outcome(environmentOutcome)
                          .build())
         .build();
   }

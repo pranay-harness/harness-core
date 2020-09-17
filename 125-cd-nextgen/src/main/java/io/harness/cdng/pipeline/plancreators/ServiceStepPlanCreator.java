@@ -125,7 +125,7 @@ public class ServiceStepPlanCreator
     OutcomeRefStepDependencyInstructor instructor = OutcomeRefStepDependencyInstructor.builder()
                                                         .key(CDStepDependencyUtils.getServiceKey(context))
                                                         .providerPlanNodeId(serviceNodeUid)
-                                                        .outcomeExpression(OutcomeExpressionConstants.SERVICE.getName())
+                                                        .outcomeExpression(OutcomeExpressionConstants.SERVICE)
                                                         .build();
     stepDependencyService.registerStepDependencyInstructor(instructor, context);
     return planNodeBuilder.build();

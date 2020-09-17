@@ -8,8 +8,8 @@ import static org.mockito.Mockito.doReturn;
 import io.harness.CategoryTest;
 import io.harness.ambiance.Ambiance;
 import io.harness.category.element.UnitTests;
-import io.harness.cdng.infra.yaml.Infrastructure;
-import io.harness.cdng.infra.yaml.K8SDirectInfrastructure;
+import io.harness.cdng.infra.beans.InfrastructureOutcome;
+import io.harness.cdng.infra.beans.K8sDirectInfrastructureOutcome;
 import io.harness.cdng.k8s.K8sRollingOutcome;
 import io.harness.cdng.service.beans.ServiceOutcome;
 import io.harness.data.Outcome;
@@ -134,13 +134,13 @@ public class CDStepDependencyUtilsTest extends CategoryTest {
     StepInputPackage inputPackage = StepInputPackage.builder().build();
     StepParameters stepParameters = DummyStepParameters.builder().build();
     Ambiance ambiance = Ambiance.builder().build();
-    Infrastructure infrastructureOutcome = K8SDirectInfrastructure.builder().build();
+    InfrastructureOutcome infrastructureOutcome = K8sDirectInfrastructureOutcome.builder().build();
 
     StepDependencyResolverContext resolverContext =
         CDStepDependencyUtils.getStepDependencyResolverContext(inputPackage, stepParameters, ambiance);
 
     doReturn(Optional.of(infrastructureOutcome)).when(dependencyService).resolve(spec, resolverContext);
-    Infrastructure infrastructure =
+    InfrastructureOutcome infrastructure =
         CDStepDependencyUtils.getInfrastructure(dependencyService, spec, inputPackage, stepParameters, ambiance);
     assertThat(infrastructure).isEqualTo(infrastructureOutcome);
 

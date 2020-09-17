@@ -3,7 +3,6 @@ package io.harness.cdng.environment.yaml;
 import io.harness.beans.ParameterField;
 import io.harness.cdng.visitor.helpers.pipelineinfrastructure.EnvironmentYamlVisitorHelper;
 import io.harness.common.SwaggerConstants;
-import io.harness.data.Outcome;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.ng.core.common.beans.Tag;
 import io.harness.ng.core.environment.beans.EnvironmentType;
@@ -20,7 +19,7 @@ import java.util.List;
 @Data
 @Builder
 @SimpleVisitorHelper(helperClass = EnvironmentYamlVisitorHelper.class)
-public class EnvironmentYaml implements Outcome, OverridesApplier<EnvironmentYaml>, Visitable {
+public class EnvironmentYaml implements OverridesApplier<EnvironmentYaml>, Visitable {
   @ApiModelProperty(dataType = SwaggerConstants.STRING_CLASSPATH) @Wither ParameterField<String> name;
   @ApiModelProperty(dataType = SwaggerConstants.STRING_CLASSPATH) @Wither ParameterField<String> identifier;
   @Wither EnvironmentType type;

@@ -10,8 +10,8 @@ import com.google.inject.name.Named;
 
 import io.harness.ambiance.Ambiance;
 import io.harness.beans.IdentifierRef;
-import io.harness.cdng.infra.yaml.Infrastructure;
-import io.harness.cdng.infra.yaml.K8SDirectInfrastructure;
+import io.harness.cdng.infra.beans.InfrastructureOutcome;
+import io.harness.cdng.infra.beans.K8sDirectInfrastructureOutcome;
 import io.harness.cdng.manifest.ManifestStoreType;
 import io.harness.cdng.manifest.yaml.GitStore;
 import io.harness.cdng.manifest.yaml.StoreConfig;
@@ -56,11 +56,11 @@ public class K8sStepHelper {
   @Named(DEFAULT_CONNECTOR_SERVICE) @Inject private ConnectorService connectorService;
   @Inject private SecretManagerClientService secretManagerClientService;
 
-  String getReleaseName(Infrastructure infrastructure) {
+  String getReleaseName(InfrastructureOutcome infrastructure) {
     switch (infrastructure.getKind()) {
       case KUBERNETES_DIRECT:
-        K8SDirectInfrastructure k8SDirectInfrastructure = (K8SDirectInfrastructure) infrastructure;
-        return k8SDirectInfrastructure.getReleaseName().getValue();
+        K8sDirectInfrastructureOutcome k8SDirectInfrastructure = (K8sDirectInfrastructureOutcome) infrastructure;
+        return k8SDirectInfrastructure.getReleaseName();
       default:
         throw new UnsupportedOperationException(
             String.format("Unknown infrastructure type: [%s]", infrastructure.getKind()));
@@ -84,18 +84,18 @@ public class K8sStepHelper {
     return secretManagerClientService.getEncryptionDetails(encryptableSetting);
   }
 
-  K8sClusterConfig getK8sClusterConfig(Infrastructure infrastructure, Ambiance ambiance) {
+  K8sClusterConfig getK8sClusterConfig(InfrastructureOutcome infrastructure, Ambiance ambiance) {
     K8sClusterConfigBuilder k8sClusterConfigBuilder = K8sClusterConfig.builder();
 
     switch (infrastructure.getKind()) {
       case KUBERNETES_DIRECT:
-        K8SDirectInfrastructure k8SDirectInfrastructure = (K8SDirectInfrastructure) infrastructure;
+        K8sDirectInfrastructureOutcome k8SDirectInfrastructure = (K8sDirectInfrastructureOutcome) infrastructure;
         SettingAttribute cloudProvider =
-            getSettingAttribute(k8SDirectInfrastructure.getConnectorIdentifier().getValue(), ambiance);
+            getSettingAttribute(k8SDirectInfrastructure.getConnectorIdentifier(), ambiance);
         List<EncryptedDataDetail> encryptionDetails =
             getEncryptedDataDetails((KubernetesClusterConfig) cloudProvider.getValue());
         k8sClusterConfigBuilder.cloudProvider(cloudProvider.getValue())
-            .namespace(k8SDirectInfrastructure.getNamespace().getValue())
+            .namespace(k8SDirectInfrastructure.getNamespace())
             .cloudProviderEncryptionDetails(encryptionDetails)
             .cloudProviderName(cloudProvider.getName());
         return k8sClusterConfigBuilder.build();
@@ -204,14 +204,14 @@ public class K8sStepHelper {
     }
   }
 
-  public K8sInfraDelegateConfig getK8sInfraDelegateConfig(Infrastructure infrastructure, Ambiance ambiance) {
+  public K8sInfraDelegateConfig getK8sInfraDelegateConfig(InfrastructureOutcome infrastructure, Ambiance ambiance) {
     switch (infrastructure.getKind()) {
       case KUBERNETES_DIRECT:
-        K8SDirectInfrastructure k8SDirectInfrastructure = (K8SDirectInfrastructure) infrastructure;
-        ConnectorDTO connectorDTO = getConnector(k8SDirectInfrastructure.getConnectorIdentifier().getValue(), ambiance);
+        K8sDirectInfrastructureOutcome k8SDirectInfrastructure = (K8sDirectInfrastructureOutcome) infrastructure;
+        ConnectorDTO connectorDTO = getConnector(k8SDirectInfrastructure.getConnectorIdentifier(), ambiance);
 
         return DirectK8sInfraDelegateConfig.builder()
-            .namespace(k8SDirectInfrastructure.getNamespace().getValue())
+            .namespace(k8SDirectInfrastructure.getNamespace())
             .kubernetesClusterConfigDTO((KubernetesClusterConfigDTO) connectorDTO.getConnectorConfig())
             .encryptionDataDetails(getEncryptionDataDetails(connectorDTO, AmbianceHelper.getNgAccess(ambiance)))
             .build();

@@ -86,7 +86,7 @@ public class K8sRollingStepInfo extends K8sRollingStepParameters implements CDSt
         OutcomeRefStepDependencyInstructor.builder()
             .key(ParentPathInfoUtils.getParentPath(context) + "." + CDStepDependencyKey.K8S_ROLL_OUT.name())
             .providerPlanNodeId(nodeId)
-            .outcomeExpression(OutcomeExpressionConstants.K8S_ROLL_OUT.getName())
+            .outcomeExpression(OutcomeExpressionConstants.K8S_ROLL_OUT)
             .build();
     stepDependencyService.registerStepDependencyInstructor(instructor, context);
   }
