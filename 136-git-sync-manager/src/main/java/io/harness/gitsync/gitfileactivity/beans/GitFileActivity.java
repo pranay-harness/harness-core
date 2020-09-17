@@ -14,11 +14,8 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.experimental.FieldNameConstants;
 import org.mongodb.morphia.annotations.Entity;
-import org.mongodb.morphia.annotations.Transient;
 import org.springframework.data.annotation.TypeAlias;
 import org.springframework.data.mongodb.core.mapping.Document;
-
-import javax.ws.rs.DefaultValue;
 
 @Data
 @Builder
@@ -51,9 +48,6 @@ public class GitFileActivity implements PersistentEntity, UuidAware, CreatedAtAw
   private String repo;
   private String rootFolder;
   private String branchName;
-
-  @Transient private String connectorName;
-  @Transient @DefaultValue("false") private boolean userDoesNotHavePermForFile;
 
   public enum Status { SUCCESS, FAILED, DISCARDED, EXPIRED, SKIPPED, QUEUED }
 

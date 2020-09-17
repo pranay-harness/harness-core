@@ -3,6 +3,7 @@ package io.harness.gitsync.gitsyncerror.beans;
 import io.harness.annotation.HarnessEntity;
 import io.harness.beans.EmbeddedUser;
 import io.harness.encryption.Scope;
+import io.harness.git.model.ChangeType;
 import io.harness.gitsync.gitsyncerror.GitSyncErrorStatus;
 import io.harness.gitsync.gitsyncerror.beans.GitToHarnessErrorDetails.GitToHarnessErrorDetailsKeys;
 import io.harness.gitsync.gitsyncerror.beans.HarnessToGitErrorDetails.HarnessToGitErrorDetailsKeys;
@@ -51,7 +52,7 @@ public class GitSyncError
   private String projectId;
   private String organizationId;
   private String yamlFilePath;
-  private String changeType;
+  private ChangeType changeType;
   private String failureReason;
   @Setter @FdIndex private Long nextIteration;
   private boolean fullSyncPath;
@@ -73,8 +74,8 @@ public class GitSyncError
   @LastModifiedDate private long lastUpdatedAt;
 
   @Builder
-  public GitSyncError(String accountId, String organizationId, String projectId, String yamlFilePath, String changeType,
-      String failureReason, String gitConnectorId, String branchName, String yamlGitConfigId,
+  public GitSyncError(String accountId, String organizationId, String projectId, String yamlFilePath,
+      ChangeType changeType, String failureReason, String gitConnectorId, String branchName, String yamlGitConfigId,
       GitSyncErrorDetails additionalErrorDetails, GitSyncDirection gitSyncDirection, GitSyncErrorStatus status,
       boolean userDoesNotHavePermForFile, boolean fullSyncPath, Scope errorEntityType, String repo, String rootFolder) {
     this.accountId = accountId;

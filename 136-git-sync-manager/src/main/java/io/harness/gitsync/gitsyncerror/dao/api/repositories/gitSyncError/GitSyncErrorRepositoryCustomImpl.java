@@ -86,9 +86,10 @@ public class GitSyncErrorRepositoryCustomImpl implements GitSyncErrorRepositoryC
                             .and(GitSyncErrorKeys.repo)
                             .is(repo)
                             .and(GitSyncErrorKeys.gitConnectorId)
-                            .is(gitConnectorId)
-                            .and(GitSyncErrorKeys.rootFolder)
-                            .is(rootFolder);
+                            .is(gitConnectorId);
+    if (rootFolder != null) {
+      criteria.and(GitSyncErrorKeys.rootFolder).is(rootFolder);
+    }
 
     return mongoTemplate.find(query(criteria), GitSyncError.class);
   }

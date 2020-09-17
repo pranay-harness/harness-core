@@ -4,6 +4,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @Data
@@ -12,7 +13,7 @@ public class DiffResult extends GitBaseResult {
   private String repoName;
   private String branch;
   private String commitId;
-  private List<GitFileChange> gitFileChanges;
+  private List<GitFileChange> gitFileChanges = new ArrayList<>();
   private Long commitTimeMs;
   private String commitMessage;
 
@@ -26,5 +27,9 @@ public class DiffResult extends GitBaseResult {
     this.gitFileChanges = gitFileChanges;
     this.commitTimeMs = commitTimeMs;
     this.commitMessage = commitMessage;
+  }
+
+  public void addChangeFile(GitFileChange gitFileChange) {
+    gitFileChanges.add(gitFileChange);
   }
 }

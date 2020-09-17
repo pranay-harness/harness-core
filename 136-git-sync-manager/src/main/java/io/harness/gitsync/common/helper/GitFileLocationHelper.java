@@ -1,9 +1,10 @@
-package io.harness.gitsync.common;
+package io.harness.gitsync.common.helper;
 
 import static io.harness.gitsync.common.YamlConstants.EXTENSION_SEPARATOR;
 import static io.harness.gitsync.common.YamlConstants.PATH_DELIMITER;
 import static io.harness.gitsync.common.YamlConstants.YAML_EXTENSION;
 
+import io.harness.EntityType;
 import lombok.experimental.UtilityClass;
 import lombok.extern.slf4j.Slf4j;
 
@@ -22,5 +23,11 @@ public class GitFileLocationHelper {
       logger.error("Not able to find root path for {}", filePath);
       return "";
     }
+  }
+
+  public static EntityType getEntityType(String filePath) {
+    final String pathWithoutIdentifier = filePath.substring(0, filePath.lastIndexOf(PATH_DELIMITER));
+    final String stringType = pathWithoutIdentifier.substring(pathWithoutIdentifier.lastIndexOf(PATH_DELIMITER) + 1);
+    return EntityType.getEntityDisplayName(stringType);
   }
 }
