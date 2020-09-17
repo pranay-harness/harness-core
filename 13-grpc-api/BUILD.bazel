@@ -2,13 +2,16 @@ load("@rules_java//java:defs.bzl", "java_binary")
 load("//:GenTestRules.bzl", "run_tests")
 load("//tools/checkstyle:rules.bzl", "checkstyle")
 load("//:macros.bzl", "sources")
+load("//:macros.bzl","sonarqube_test")
 
 sources()
 
 java_library(
     name = "maven_deps",
     exports = [
+                "//990-commons-test:module",
                "//12-commons:maven_deps",
+               "//12-commons:module",
                "@maven//:com_google_code_findbugs_annotations",
                "@maven//:com_google_protobuf_protobuf_java",
                "@maven//:com_google_protobuf_protobuf_java_util",
@@ -23,7 +26,18 @@ java_library(
                "@maven//:junit_junit",
                "@maven//:org_awaitility_awaitility",
                "@maven//:org_mockito_mockito_core",
+               "@maven//:net_openhft_chronicle_wire",
+               "@maven//:io_grpc_grpc_context",
+               "@maven//:joda_time_joda_time"
+
     ],
+)
+
+java_library(
+    name = "test_deps",
+    exports = [
+        "@maven//:org_assertj_assertj_core"
+    ]
 )
 
 java_library(
@@ -32,7 +46,6 @@ java_library(
     deps = [
         "maven_deps",
         "//:lombok",
-        "//12-commons:module",
         "//13-grpc-api/src/main/proto:13_grpc_api_proto",
         "//13-grpc-api/src/main/proto:13_grpc_api_java_proto",
     ],
@@ -46,7 +59,9 @@ java_library(
         "module",
         "maven_deps",
         "//:lombok",
-        "//990-commons-test:module"
+        "test_deps",
+        "//13-grpc-api/src/main/proto:13_grpc_api_proto",
+        "//13-grpc-api/src/main/proto:13_grpc_api_java_proto",
     ]
 )
 run_tests(
@@ -56,6 +71,9 @@ run_tests(
         "tests",
         "maven_deps",
         "//:lombok",
+        "test_deps",
+        "//13-grpc-api/src/main/proto:13_grpc_api_proto",
+        "//13-grpc-api/src/main/proto:13_grpc_api_java_proto",
     ],
     runtime_deps = [
         "@maven//:javax_ws_rs_javax_ws_rs_api",
@@ -63,3 +81,12 @@ run_tests(
 )
 
 checkstyle()
+
+sonarqube_test(
+    name="sq_mycomponent",
+    srcs = ["sources"],
+    targets = [
+        ":maven_deps",
+        ":module",
+    ],
+)

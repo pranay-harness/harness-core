@@ -2,6 +2,8 @@ load("@rules_java//java:defs.bzl", "java_binary")
 load("//:GenTestRules.bzl", "run_tests")
 load("//tools/checkstyle:rules.bzl", "checkstyle")
 load("//:macros.bzl", "sources")
+load("//:macros.bzl", "sonarqube_test")
+load("//:macros.bzl","test_targets_list")
 
 sources()
 
@@ -64,8 +66,25 @@ java_library(
             "@maven//:io_github_resilience4j_resilience4j_circuitbreaker",
             "@maven//:io_github_resilience4j_resilience4j_retrofit",
             "@maven//:io_github_resilience4j_resilience4j_retry",
+            "@maven//:com_fasterxml_jackson_datatype_jackson_datatype_jsr310",
+            "@maven//:com_fasterxml_jackson_datatype_jackson_datatype_guava",
+            "@maven//:org_objenesis_objenesis",
+            "@maven//:com_fasterxml_jackson_datatype_jackson_datatype_jdk8",
+            "@maven//:io_dropwizard_metrics_metrics_core",
+            "@maven//:com_google_auth_google_auth_library_oauth2_http",
+            "@maven//:com_google_cloud_google_cloud_core",
+            "@maven//:org_apache_httpcomponents_httpcore",
+            "@maven//:com_squareup_okhttp3_okhttp",
+            "@maven//:ch_qos_logback_logback_core",
+            "@maven//:ch_qos_logback_logback_classic",
+            "@maven//:ch_qos_logback_contrib_logback_json_core",
             "@maven//:com_google_http_client_google_http_client",
-            "@maven//:javax_validation_validation_api"
+            "@maven//:commons_logging_commons_logging",
+            "@maven//:commons_collections_commons_collections",
+            "@maven//:org_hibernate_hibernate_validator",
+            "@maven//:javax_validation_validation_api",
+            "@maven//:commons_io_commons_io",
+            "@maven//:com_google_code_gson_gson",
         ],
     visibility = ["//visibility:public"],
 )
@@ -87,6 +106,16 @@ java_library(
 )
 
 java_library(
+    name = "test_deps",
+    exports = [
+        "@maven//:org_powermock_powermock_module_junit4",
+        "@maven//:org_mockito_mockito_core",
+        "@maven//:org_assertj_assertj_core",
+        "@maven//:junit_junit"
+    ]
+)
+
+java_library(
     name = "tests",
     srcs = glob(["src/test/**/*.java"]),
     deps = [
@@ -94,6 +123,7 @@ java_library(
         "module",
         "//990-commons-test:module",
         "//:lombok",
+        "test_deps",
     ],
    visibility = ["//visibility:public"],
 )
@@ -106,7 +136,8 @@ run_tests(
         "module",
     	"//990-commons-test:module",
         "//:lombok",
-        "tests"
+        "tests",
+        "test_deps",
     ],
     runtime_deps = [
         "//12-commons/src/main/resources:resources",
@@ -119,3 +150,13 @@ run_tests(
 )
 
 checkstyle()
+
+sonarqube_test(
+    name="sq_mycomponent",
+    srcs = ["sources"],
+    targets = [
+        ":maven_deps",
+        ":module",
+    ],
+#    test_targets = test_targets_list(["**/CommonsTest.java"])
+)
