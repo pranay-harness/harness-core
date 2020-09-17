@@ -45,7 +45,7 @@ public class GetArtifactSourcesInServiceFunctionalTest extends AbstractFunctiona
   }
 
   @Test
-  @Owner(developers = POOJA)
+  @Owner(developers = POOJA, intermittent = true)
   @Category(FunctionalTests.class)
   public void shouldGetArtifactByIdWithArtifactSources() {
     String serviceId = service.getUuid();
