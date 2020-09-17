@@ -2,6 +2,9 @@ package io.harness.cvng;
 
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.google.inject.AbstractModule;
+import com.google.inject.Provides;
+import com.google.inject.Singleton;
+import com.google.inject.name.Named;
 import com.google.inject.name.Names;
 
 import io.harness.cvng.analysis.services.api.DeploymentLogAnalysisService;
@@ -57,9 +60,11 @@ import io.harness.cvng.core.services.impl.VerificationTaskServiceImpl;
 import io.harness.cvng.core.services.impl.WebhookServiceImpl;
 import io.harness.cvng.dashboard.services.api.AnomalyService;
 import io.harness.cvng.dashboard.services.api.HeatMapService;
+import io.harness.cvng.dashboard.services.api.LogDashboardService;
 import io.harness.cvng.dashboard.services.api.TimeSeriesDashboardService;
 import io.harness.cvng.dashboard.services.impl.AnomalyServiceImpl;
 import io.harness.cvng.dashboard.services.impl.HeatMapServiceImpl;
+import io.harness.cvng.dashboard.services.impl.LogDashboardServiceImpl;
 import io.harness.cvng.dashboard.services.impl.TimeSeriesDashboardServiceImpl;
 import io.harness.cvng.statemachine.services.AnalysisStateMachineServiceImpl;
 import io.harness.cvng.statemachine.services.OrchestrationServiceImpl;
@@ -156,6 +161,7 @@ public class CVServiceModule extends AbstractModule {
       bind(VerificationTaskService.class).to(VerificationTaskServiceImpl.class);
       bind(TimeSeriesDashboardService.class).to(TimeSeriesDashboardServiceImpl.class);
       bind(ActivityService.class).to(ActivityServiceImpl.class);
+      bind(LogDashboardService.class).to(LogDashboardServiceImpl.class);
       bind(WebhookService.class).to(WebhookServiceImpl.class);
       bind(DeploymentTimeSeriesAnalysisService.class).to(DeploymentTimeSeriesAnalysisServiceImpl.class);
       bind(NextGenService.class).to(NextGenServiceImpl.class);
@@ -164,5 +170,15 @@ public class CVServiceModule extends AbstractModule {
     } catch (IOException e) {
       throw new IllegalStateException("Could not load versionInfo.yaml", e);
     }
+  }
+
+  @Provides
+  @Singleton
+  @Named("cvParallelExecutor")
+  public ExecutorService cvParallelExecutor() {
+    ExecutorService cvParallelExecutor = ThreadPool.create(4, 10, 5, TimeUnit.SECONDS,
+        new ThreadFactoryBuilder().setNameFormat("cvParallelExecutor-%d").setPriority(Thread.MIN_PRIORITY).build());
+    Runtime.getRuntime().addShutdownHook(new Thread(() -> { cvParallelExecutor.shutdownNow(); }));
+    return cvParallelExecutor;
   }
 }
