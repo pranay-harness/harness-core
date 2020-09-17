@@ -1,7 +1,6 @@
 package io.harness.gitsync.gitfileactivity.beans;
 
 import io.harness.annotation.HarnessEntity;
-import io.harness.encryption.Scope;
 import io.harness.gitsync.core.beans.GitCommit;
 import io.harness.ng.core.OrganizationAccess;
 import io.harness.ng.core.ProjectAccess;
@@ -15,7 +14,6 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.experimental.FieldNameConstants;
 import org.mongodb.morphia.annotations.Entity;
-import org.mongodb.morphia.annotations.Transient;
 import org.springframework.data.annotation.TypeAlias;
 import org.springframework.data.mongodb.core.mapping.Document;
 
@@ -35,7 +33,7 @@ public class GitFileActivitySummary implements PersistentEntity, UuidAware, Crea
   private String projectId;
   private String commitId;
   private String branchName;
-  private String repoUrl;
+  private String repo;
   private String gitConnectorId;
   private long createdAt;
   private String commitMessage;
@@ -43,6 +41,4 @@ public class GitFileActivitySummary implements PersistentEntity, UuidAware, Crea
   private Boolean gitToHarness;
   private GitCommit.Status status;
   private GitFileProcessingSummary fileProcessingSummary;
-  private Scope scope;
-  @Transient private String connectorName;
 }

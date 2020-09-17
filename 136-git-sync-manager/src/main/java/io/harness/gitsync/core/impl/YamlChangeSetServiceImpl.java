@@ -48,6 +48,7 @@ public class YamlChangeSetServiceImpl implements YamlChangeSetService {
   @Inject private YamlGitService yamlGitService;
   @Inject private YamlSuccessfulChangeService yamlSuccessfulChangeService;
   @Inject private YamlChangeSetRepository yamlChangeSetRepository;
+
   private static final Integer MAX_RETRY_COUNT = 3;
 
   @Override
@@ -94,7 +95,7 @@ public class YamlChangeSetServiceImpl implements YamlChangeSetService {
 
   @NotNull
   private List<YamlGitConfigDTO> getYamlGitConfig(YamlChangeSet yamlChangeSet) {
-    return yamlChangeSet.isGitToHarness() ? null // TODO(abhinav): add git to harness logic
+    return yamlChangeSet.isGitToHarness() ? getYamlGitConfigForGitToHarness(yamlChangeSet)
                                           : Collections.singletonList(getYamlGitConfigForHarnessToGit(yamlChangeSet));
   }
 
@@ -116,6 +117,21 @@ public class YamlChangeSetServiceImpl implements YamlChangeSetService {
           .build();
     }
     return yamlGitConfig;
+  }
+
+  @NotNull
+  private List<YamlGitConfigDTO> getYamlGitConfigForGitToHarness(YamlChangeSet yamlChangeSet) {
+    final List<YamlGitConfigDTO> yamlGitConfigs =
+        yamlGitService.getYamlGitConfigsForGitToHarnessChangeSet(yamlChangeSet);
+    if (isEmpty(yamlGitConfigs)) {
+      throw NoResultFoundException.newBuilder()
+          .message(format(
+              "unable to find yamlGitConfig for git to harness changeset for account =[%s], git connector id =[%s], branch=[%s]. Git Sync might not have been configured",
+              yamlChangeSet.getAccountId(), yamlChangeSet.getGitWebhookRequestAttributes().getGitConnectorId(),
+              yamlChangeSet.getGitWebhookRequestAttributes().getBranchName()))
+          .build();
+    }
+    return yamlGitConfigs;
   }
 
   private boolean isGitSyncConfiguredForChangeSet(YamlChangeSet yamlChangeSet) {
@@ -209,7 +225,6 @@ public class YamlChangeSetServiceImpl implements YamlChangeSetService {
   private boolean anyChangeSetRunningFoQueueKey(String accountId, String queueKey) {
     return yamlChangeSetRepository.countByAccountIdAndStatusAndQueueKey(accountId, RUNNING, queueKey) > 0;
   }
-
   @Override
   public boolean updateStatus(String accountId, String changeSetId, Status newStatus) {
     Optional<YamlChangeSet> yamlChangeSet = get(accountId, changeSetId);

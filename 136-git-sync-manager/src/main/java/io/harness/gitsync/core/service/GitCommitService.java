@@ -8,6 +8,8 @@ import java.util.Optional;
 public interface GitCommitService {
   GitCommit save(GitCommit gitCommit);
 
+  GitCommit upsertWithYamlGitConfigIdAddition(GitCommit gitCommit);
+
   Optional<GitCommit> findByAccountIdAndCommitIdAndRepoAndBranchNameAndStatus(
       String accountId, String commitId, String repo, String branchName, List<GitCommit.Status> status);
 
@@ -18,4 +20,6 @@ public interface GitCommitService {
 
   Optional<GitCommit> findByAccountIdAndCommitIdAndRepoAndBranchName(
       String accountId, String repo, String branchName, List<GitCommit.Status> status);
+
+  boolean isCommitAlreadyProcessed(String accountId, String headCommit, String repo, String branch);
 }
