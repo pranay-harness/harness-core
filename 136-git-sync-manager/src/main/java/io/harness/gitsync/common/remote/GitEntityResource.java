@@ -34,7 +34,7 @@ public class GitEntityResource {
   @ApiOperation(value = "List Git Sync Entity by product", nickname = "listGitSyncEntitiesByProduct")
   public ResponseDTO<GitSyncProductDTO> list(@QueryParam("projectId") String projectId,
       @QueryParam("organizationId") String organizationId, @QueryParam("accountId") @NotEmpty String accountId,
-      @QueryParam("size") int size, @QueryParam("product") ModuleType moduleType) {
+      @QueryParam("size") int size, @QueryParam("moduleType") ModuleType moduleType) {
     return ResponseDTO.newResponse(gitEntityService.list(projectId, organizationId, accountId, moduleType, size));
   }
 
@@ -44,8 +44,8 @@ public class GitEntityResource {
   public ResponseDTO<NGPageResponse<GitSyncEntityListDTO>> listByType(@QueryParam("projectId") String projectId,
       @QueryParam("organizationId") String organizationId, @QueryParam("accountId") @NotEmpty String accountId,
       @PathParam("entityType") EntityType entityType, @QueryParam("page") @DefaultValue("0") int page,
-      @QueryParam("size") int size, @QueryParam("product") String moduleType) {
-    // Added product for now if in future we want to support product filter in entities as well.
+      @QueryParam("size") int size, @QueryParam("moduleType") String moduleType) {
+    // Added moduleType for now if in future we want to support product filter in entities as well.
     return ResponseDTO.newResponse(
         gitEntityService.getPageByType(projectId, organizationId, accountId, entityType, page, size));
   }

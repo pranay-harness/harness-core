@@ -4,19 +4,20 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 public enum ModuleType {
-  @JsonProperty("cd") CD,
-  @JsonProperty("ci") CI,
-  @JsonProperty("core") CORE,
-  @JsonProperty("cv") CV;
+  @JsonProperty("CD") CD,
+  @JsonProperty("CI") CI,
+  @JsonProperty("CORE") CORE,
+  @JsonProperty("CV") CV,
+  @JsonProperty("CF") CF,
+  @JsonProperty("CE") CE;
 
-  // todo(abhinav): change product to module type for json creater
   @JsonCreator
-  public static ModuleType fromString(@JsonProperty("product") String product) {
+  public static ModuleType fromString(String moduleType) {
     for (ModuleType moduleEnum : ModuleType.values()) {
-      if (moduleEnum.name().equalsIgnoreCase(product)) {
+      if (moduleEnum.name().equalsIgnoreCase(moduleType)) {
         return moduleEnum;
       }
     }
-    throw new IllegalArgumentException("Invalid value: " + product);
+    throw new IllegalArgumentException("Invalid value: " + moduleType);
   }
 }
