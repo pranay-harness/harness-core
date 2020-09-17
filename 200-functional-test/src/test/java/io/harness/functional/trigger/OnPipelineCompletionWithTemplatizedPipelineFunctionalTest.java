@@ -25,6 +25,7 @@ import io.harness.testframework.restutils.GraphQLRestUtils;
 import io.harness.testframework.restutils.PipelineRestUtils;
 import io.harness.testframework.restutils.WorkflowRestUtils;
 import org.jetbrains.annotations.NotNull;
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -38,6 +39,8 @@ import software.wings.beans.Service;
 import software.wings.beans.Workflow;
 import software.wings.infra.InfrastructureDefinition;
 import software.wings.service.intfc.FeatureFlagService;
+import software.wings.service.intfc.PipelineService;
+import software.wings.service.intfc.WorkflowService;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -55,12 +58,15 @@ public class OnPipelineCompletionWithTemplatizedPipelineFunctionalTest extends A
   @Inject private FeatureFlagService featureFlagService;
   @Inject private WorkflowUtils workflowUtils;
   @Inject private InfrastructureDefinitionGenerator infrastructureDefinitionGenerator;
+  @Inject private WorkflowService workflowService;
+  @Inject private PipelineService pipelineService;
 
   private Application application;
   private Service service;
   private Environment environment;
   private InfrastructureDefinition infrastructureDefinition;
   private Pipeline templatisedPipeline;
+  private Workflow templatizedWorkflow;
 
   @Before
   public void setUp() {
@@ -91,7 +97,7 @@ public class OnPipelineCompletionWithTemplatizedPipelineFunctionalTest extends A
     savedWorkflow.setTemplateExpressions(Arrays.asList(getTemplateExpressionsForEnv(),
         getTemplateExpressionsForService(), getTemplateExpressionsForInfraDefinition("${InfraDefinition_Kubernetes}")));
 
-    Workflow templatizedWorkflow =
+    templatizedWorkflow =
         WorkflowRestUtils.updateWorkflow(bearerToken, application.getAccountId(), application.getUuid(), savedWorkflow);
     assertThat(templatizedWorkflow.isEnvTemplatized()).isTrue();
     assertThat(templatizedWorkflow.isTemplatized()).isTrue();
@@ -122,7 +128,7 @@ public class OnPipelineCompletionWithTemplatizedPipelineFunctionalTest extends A
   }
 
   @Test
-  @Owner(developers = MILAN)
+  @Owner(developers = MILAN, intermittent = true)
   @Category(FunctionalTests.class)
   public void shouldCRUDTrigger() {
     // CREATE
@@ -360,5 +366,11 @@ variableValue: {
       variableInputs.add(queryVariableInput);
     }
     return "[" + String.join(",", variableInputs) + "]";
+  }
+
+  @After
+  public void destroy() {
+    pipelineService.deletePipeline(application.getUuid(), templatisedPipeline.getUuid());
+    workflowService.deleteWorkflow(application.getUuid(), templatizedWorkflow.getUuid());
   }
 }

@@ -16,6 +16,7 @@ import io.harness.generator.ServiceGenerator;
 import io.harness.rule.Owner;
 import io.harness.testframework.restutils.GraphQLRestUtils;
 import io.harness.testframework.restutils.WorkflowRestUtils;
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -24,6 +25,7 @@ import software.wings.beans.FeatureName;
 import software.wings.beans.Service;
 import software.wings.beans.Workflow;
 import software.wings.service.intfc.FeatureFlagService;
+import software.wings.service.intfc.WorkflowService;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -38,6 +40,7 @@ public class OnCustomWebhookTriggerFunctionalTest extends AbstractFunctionalTest
   @Inject private FeatureFlagService featureFlagService;
   @Inject private WorkflowUtils workflowUtils;
   @Inject private ServiceGenerator serviceGenerator;
+  @Inject private WorkflowService workflowService;
 
   private Application application;
   private Service service;
@@ -63,7 +66,7 @@ public class OnCustomWebhookTriggerFunctionalTest extends AbstractFunctionalTest
   }
 
   @Test
-  @Owner(developers = MILAN)
+  @Owner(developers = MILAN, intermittent = true)
   @Category(FunctionalTests.class)
   public void shouldCRUDTrigger() {
     // CREATE
@@ -241,5 +244,10 @@ triggerId: "%s"
 clientMutationId
 }
 }*/ clientMutationId, applicationId, triggerId);
+  }
+
+  @After
+  public void destroy() {
+    workflowService.deleteWorkflow(application.getUuid(), savedWorkflow.getUuid());
   }
 }

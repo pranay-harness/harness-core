@@ -73,7 +73,7 @@ public class TriggerFunctionalTest extends AbstractFunctionalTest {
   }
 
   @Test
-  @Owner(developers = SRINIVAS)
+  @Owner(developers = SRINIVAS, intermittent = true)
   @Category(FunctionalTests.class)
   public void shouldCreateWebHookTriggerForWorkflow() {
     owners.obtainService(() -> serviceGenerator.ensurePredefined(seed, owners, Services.GENERIC_TEST));

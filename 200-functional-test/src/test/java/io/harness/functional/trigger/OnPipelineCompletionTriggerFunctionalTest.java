@@ -18,6 +18,7 @@ import io.harness.rule.Owner;
 import io.harness.testframework.restutils.GraphQLRestUtils;
 import io.harness.testframework.restutils.PipelineRestUtils;
 import io.harness.testframework.restutils.WorkflowRestUtils;
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -29,6 +30,8 @@ import software.wings.beans.Service;
 import software.wings.beans.Workflow;
 import software.wings.infra.InfrastructureDefinition;
 import software.wings.service.intfc.FeatureFlagService;
+import software.wings.service.intfc.PipelineService;
+import software.wings.service.intfc.WorkflowService;
 
 import java.util.List;
 import java.util.Map;
@@ -43,6 +46,8 @@ public class OnPipelineCompletionTriggerFunctionalTest extends AbstractFunctiona
   @Inject private FeatureFlagService featureFlagService;
   @Inject private WorkflowUtils workflowUtils;
   @Inject private InfrastructureDefinitionGenerator infrastructureDefinitionGenerator;
+  @Inject private WorkflowService workflowService;
+  @Inject private PipelineService pipelineService;
 
   private Application application;
   private Service service;
@@ -82,7 +87,7 @@ public class OnPipelineCompletionTriggerFunctionalTest extends AbstractFunctiona
   }
 
   @Test
-  @Owner(developers = MILAN)
+  @Owner(developers = MILAN, intermittent = true)
   @Category(FunctionalTests.class)
   public void shouldCRUDTrigger() {
     // CREATE
@@ -287,5 +292,11 @@ mutation {
     clientMutationId
   }
 }*/ clientMutationId, applicationId, triggerId);
+  }
+
+  @After
+  public void destroy() {
+    pipelineService.deletePipeline(application.getUuid(), savedPipeline.getUuid());
+    workflowService.deleteWorkflow(application.getUuid(), savedWorkflow.getUuid());
   }
 }

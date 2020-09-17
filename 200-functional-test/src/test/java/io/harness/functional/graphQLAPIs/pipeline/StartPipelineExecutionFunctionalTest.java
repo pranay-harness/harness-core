@@ -26,6 +26,7 @@ import io.harness.testframework.restutils.GraphQLRestUtils;
 import io.harness.testframework.restutils.PipelineRestUtils;
 import io.harness.testframework.restutils.WorkflowRestUtils;
 import org.jetbrains.annotations.NotNull;
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -40,6 +41,8 @@ import software.wings.beans.Workflow;
 import software.wings.beans.artifact.Artifact;
 import software.wings.infra.InfrastructureDefinition;
 import software.wings.service.intfc.FeatureFlagService;
+import software.wings.service.intfc.PipelineService;
+import software.wings.service.intfc.WorkflowService;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -57,9 +60,12 @@ public class StartPipelineExecutionFunctionalTest extends AbstractFunctionalTest
   private Application application;
   private Service service;
   private Environment environment;
+  private String workflowId;
   private Pipeline savedPipeline;
   private InfrastructureDefinition infrastructureDefinition;
   @Inject private FeatureFlagService featureFlagService;
+  @Inject private WorkflowService workflowService;
+  @Inject private PipelineService pipelineService;
 
   final Randomizer.Seed seed = new Randomizer.Seed(0);
   OwnerManager.Owners owners;
@@ -93,6 +99,7 @@ public class StartPipelineExecutionFunctionalTest extends AbstractFunctionalTest
         WorkflowRestUtils.updateWorkflow(bearerToken, application.getAccountId(), application.getUuid(), savedWorkflow);
     assertThat(templatizedWorkflow.isEnvTemplatized()).isTrue();
     assertThat(templatizedWorkflow.isTemplatized()).isTrue();
+    workflowId = templatizedWorkflow.getUuid();
 
     String pipelineName = "GraphQLAPI Test - " + System.currentTimeMillis();
 
@@ -198,7 +205,7 @@ execution {
   }
 
   @Test
-  @Owner(developers = POOJA)
+  @Owner(developers = POOJA, intermittent = true)
   @Category(FunctionalTests.class)
   public void getExecutionInputsPipeline() {
     ImmutableMap<String, String> pipelineVariables = ImmutableMap.<String, String>builder()
@@ -240,5 +247,11 @@ variableInputs: %s
     }
   }
 }*/ pipelineId, appId, variableInputsQuery);
+  }
+
+  @After
+  public void destroy() {
+    pipelineService.deletePipeline(application.getUuid(), savedPipeline.getUuid());
+    workflowService.deleteWorkflow(application.getUuid(), workflowId);
   }
 }
