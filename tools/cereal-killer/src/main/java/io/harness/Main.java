@@ -1,6 +1,10 @@
-package io.harness.checks;
+package io.harness;
 
+import io.harness.checks.FlakeFinder;
+import io.harness.checks.ReportFinder;
+import io.harness.checks.ReportProcessor;
 import io.harness.checks.buildpulse.client.BuildPulseClient;
+import io.harness.monitoring.GoogleCloudMonitoring;
 import lombok.extern.slf4j.Slf4j;
 import okhttp3.OkHttpClient;
 import org.xml.sax.SAXException;
@@ -15,8 +19,6 @@ import java.util.Set;
 import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.transform.TransformerException;
 import javax.xml.xpath.XPathExpressionException;
-
-import static java.util.Arrays.asList;
 
 @Slf4j
 public class Main {
@@ -42,10 +44,27 @@ public class Main {
   public static void main(String[] args)
       throws IOException, ParserConfigurationException, SAXException, XPathExpressionException, TransformerException {
     String phase = args[0];
-    if (phase.equals("check")) {
-      check(args);
-    } else {
-      suppressFlakes(args);
+    switch (phase) {
+      case "check":
+        check(args);
+        break;
+      case "suppressFlakes":
+        suppressFlakes(args);
+        break;
+      case "uploadMetrics":
+        uploadMetrics(args);
+        break;
+      default:
+        throw new UnsupportedOperationException("Unknown operation " + phase);
+    }
+  }
+
+  private static void uploadMetrics(String[] args) {
+    try {
+      // java -jar cereal-killer.jar uploadMetrics dev-disruption
+      GoogleCloudMonitoring.uploadMetrics(args);
+    } catch (Exception ex) {
+      logger.error(String.format("Exception while uploading metrics: [%s]", ex.getMessage()), ex);
     }
   }
 
