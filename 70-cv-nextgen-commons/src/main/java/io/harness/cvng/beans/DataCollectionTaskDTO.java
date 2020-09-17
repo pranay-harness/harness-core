@@ -20,7 +20,7 @@ public class DataCollectionTaskDTO {
   @Builder
   public static class DataCollectionTaskResult {
     String dataCollectionTaskId;
-    ExecutionStatus status;
+    DataCollectionExecutionStatus status;
     String exception;
     String stacktrace;
   }

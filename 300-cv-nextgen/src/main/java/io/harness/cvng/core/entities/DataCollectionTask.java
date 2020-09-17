@@ -6,8 +6,8 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.annotation.HarnessEntity;
+import io.harness.cvng.beans.DataCollectionExecutionStatus;
 import io.harness.cvng.beans.DataCollectionInfo;
-import io.harness.cvng.beans.ExecutionStatus;
 import io.harness.mongo.index.FdIndex;
 import io.harness.mongo.index.FdTtlIndex;
 import io.harness.persistence.AccountAccess;
@@ -44,7 +44,7 @@ public class DataCollectionTask implements PersistentEntity, UuidAware, CreatedA
   @FdIndex private String dataCollectionWorkerId;
   @Getter(AccessLevel.NONE) @Builder.Default private boolean queueAnalysis = true;
   private String nextTaskId;
-  @FdIndex @NonNull private ExecutionStatus status;
+  @FdIndex @NonNull private DataCollectionExecutionStatus status;
 
   private long createdAt;
   @FdIndex private long lastUpdatedAt;

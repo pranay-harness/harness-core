@@ -9,8 +9,8 @@ import static io.harness.persistence.HQuery.excludeAuthority;
 import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
 
-import io.harness.cvng.analysis.beans.ExecutionStatus;
 import io.harness.cvng.analysis.entities.LearningEngineTask;
+import io.harness.cvng.analysis.entities.LearningEngineTask.ExecutionStatus;
 import io.harness.cvng.analysis.entities.LearningEngineTask.LearningEngineTaskKeys;
 import io.harness.cvng.analysis.entities.LearningEngineTask.LearningEngineTaskType;
 import io.harness.cvng.analysis.exceptions.ServiceGuardAnalysisException;

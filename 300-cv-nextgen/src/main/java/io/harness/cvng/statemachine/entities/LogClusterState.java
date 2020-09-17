@@ -5,11 +5,12 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import com.google.inject.Inject;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import io.harness.cvng.analysis.beans.ExecutionStatus;
 import io.harness.cvng.analysis.beans.LogClusterLevel;
+import io.harness.cvng.analysis.entities.LearningEngineTask.ExecutionStatus;
 import io.harness.cvng.analysis.services.api.LogClusterService;
 import io.harness.cvng.statemachine.beans.AnalysisInput;
 import io.harness.cvng.statemachine.beans.AnalysisState;
+import io.harness.cvng.statemachine.beans.AnalysisStatus;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 
