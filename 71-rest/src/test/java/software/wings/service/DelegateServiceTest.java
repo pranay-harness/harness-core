@@ -1078,8 +1078,9 @@ public class DelegateServiceTest extends WingsBaseTest {
         DelegateTask.builder()
             .uuid(generateUuid())
             .accountId(ACCOUNT_ID)
-            .executionCapability(
-                HttpConnectionExecutionCapabilityGenerator.buildHttpConnectionExecutionCapability("http://www.url.com"))
+            .executionCapabilities(
+                asList(HttpConnectionExecutionCapabilityGenerator.buildHttpConnectionExecutionCapability(
+                    "http://www.url.com")))
             .waitId(generateUuid())
             .setupAbstraction(Cd1SetupFields.APP_ID_FIELD, APP_ID)
             .setupAbstraction(Cd1SetupFields.ENV_ID_FIELD, ENV_ID)
@@ -1105,24 +1106,28 @@ public class DelegateServiceTest extends WingsBaseTest {
   @Owner(developers = MARKO)
   @Category(UnitTests.class)
   public void shouldSaveDelegateTaskWhenRankLimitIsNotReached() {
-    DelegateTask delegateTask = DelegateTask.builder()
-                                    .uuid(generateUuid())
-                                    .accountId(ACCOUNT_ID)
-                                    .rank(DelegateTaskRank.OPTIONAL)
-                                    .waitId(generateUuid())
-                                    .setupAbstraction(Cd1SetupFields.APP_ID_FIELD, APP_ID)
-                                    .setupAbstraction(Cd1SetupFields.ENV_ID_FIELD, ENV_ID)
-                                    .setupAbstraction(Cd1SetupFields.INFRASTRUCTURE_MAPPING_ID_FIELD, INFRA_MAPPING_ID)
-                                    .setupAbstraction(Cd1SetupFields.SERVICE_TEMPLATE_ID_FIELD, SERVICE_TEMPLATE_ID)
-                                    .setupAbstraction(Cd1SetupFields.ARTIFACT_STREAM_ID_FIELD, ARTIFACT_STREAM_ID)
-                                    .version(VERSION)
-                                    .data(TaskData.builder()
-                                              .async(true)
-                                              .taskType(TaskType.HTTP.name())
-                                              .parameters(new Object[] {})
-                                              .timeout(DEFAULT_ASYNC_CALL_TIMEOUT)
-                                              .build())
-                                    .build();
+    DelegateTask delegateTask =
+        DelegateTask.builder()
+            .uuid(generateUuid())
+            .accountId(ACCOUNT_ID)
+            .executionCapabilities(
+                asList(HttpConnectionExecutionCapabilityGenerator.buildHttpConnectionExecutionCapability(
+                    "http://www.url.com")))
+            .rank(DelegateTaskRank.OPTIONAL)
+            .waitId(generateUuid())
+            .setupAbstraction(Cd1SetupFields.APP_ID_FIELD, APP_ID)
+            .setupAbstraction(Cd1SetupFields.ENV_ID_FIELD, ENV_ID)
+            .setupAbstraction(Cd1SetupFields.INFRASTRUCTURE_MAPPING_ID_FIELD, INFRA_MAPPING_ID)
+            .setupAbstraction(Cd1SetupFields.SERVICE_TEMPLATE_ID_FIELD, SERVICE_TEMPLATE_ID)
+            .setupAbstraction(Cd1SetupFields.ARTIFACT_STREAM_ID_FIELD, ARTIFACT_STREAM_ID)
+            .version(VERSION)
+            .data(TaskData.builder()
+                      .async(true)
+                      .taskType(TaskType.HTTP.name())
+                      .parameters(new Object[] {})
+                      .timeout(DEFAULT_ASYNC_CALL_TIMEOUT)
+                      .build())
+            .build();
     when(delegateProcessingController.canProcessAccount(ACCOUNT_ID)).thenReturn(true);
 
     PortalConfig portalConfig = new PortalConfig();
