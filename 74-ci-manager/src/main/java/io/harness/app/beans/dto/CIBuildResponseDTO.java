@@ -8,6 +8,7 @@ import io.harness.app.beans.entities.CIBuildAuthor;
 import io.harness.app.beans.entities.CIBuildBranchHook;
 import io.harness.app.beans.entities.CIBuildPRHook;
 import io.harness.app.beans.entities.CIBuildPipeline;
+import io.harness.beans.Graph;
 import lombok.Builder;
 import lombok.Data;
 
@@ -27,4 +28,5 @@ public class CIBuildResponseDTO {
   private CIBuildAuthor author;
   private CIBuildBranchHook branch;
   private CIBuildPRHook pullRequest;
+  private Graph graph;
 }
