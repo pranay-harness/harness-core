@@ -2,6 +2,7 @@ package io.harness.app.mappers;
 
 import static java.lang.String.format;
 
+import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import io.harness.app.beans.dto.CIBuildResponseDTO;
@@ -11,6 +12,7 @@ import io.harness.app.beans.entities.CIBuildCommit;
 import io.harness.app.beans.entities.CIBuildPRHook;
 import io.harness.app.beans.entities.CIBuildPipeline;
 import io.harness.beans.CIPipeline;
+import io.harness.beans.Graph;
 import io.harness.beans.execution.BranchWebhookEvent;
 import io.harness.beans.execution.CommitDetails;
 import io.harness.beans.execution.ExecutionSource;
@@ -19,6 +21,7 @@ import io.harness.beans.execution.WebhookEvent;
 import io.harness.beans.execution.WebhookExecutionSource;
 import io.harness.beans.execution.WebhookGitUser;
 import io.harness.ci.beans.entities.CIBuild;
+import io.harness.service.GraphGenerationService;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -30,6 +33,8 @@ public class BuildDtoMapper {
   private static final String PR_MERGED = "merged";
   private static final String PR = "pullRequest";
   private static final String BRANCH = "branch";
+
+  @Inject private GraphGenerationService graphGenerationService;
 
   public CIBuildResponseDTO writeBuildDto(CIBuild ciBuild, CIPipeline ciPipeline) throws InternalError {
     if (ciPipeline == null) {
@@ -59,6 +64,10 @@ public class BuildDtoMapper {
         }
       }
     }
+
+    // TODO - CI-192 these values should be masked while sending to UI
+    Graph graph = graphGenerationService.generateGraph(ciBuild.getExecutionId());
+    ciBuildResponseDTO.setGraph(graph);
     return ciBuildResponseDTO;
   }
 
