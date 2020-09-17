@@ -2,7 +2,6 @@ package io.harness.cvng.analysis.entities;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import io.harness.annotation.HarnessEntity;
-import io.harness.cvng.analysis.beans.ExecutionStatus;
 import io.harness.persistence.CreatedAtAware;
 import io.harness.persistence.PersistentEntity;
 import io.harness.persistence.UpdatedAtAware;
@@ -53,4 +52,6 @@ public abstract class LearningEngineTask implements PersistentEntity, UuidAware,
     TIME_SERIES_CANARY,
     SERVICE_GUARD_FEEDBACK_ANALYSIS
   }
+
+  public enum ExecutionStatus { QUEUED, RUNNING, FAILED, SUCCESS, TIMEOUT }
 }

@@ -2,6 +2,7 @@ package io.harness.cvng.statemachine.entities;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import io.harness.annotation.HarnessEntity;
+import io.harness.cvng.statemachine.beans.AnalysisStatus;
 import io.harness.mongo.index.FdIndex;
 import io.harness.mongo.index.FdTtlIndex;
 import io.harness.persistence.CreatedAtAware;

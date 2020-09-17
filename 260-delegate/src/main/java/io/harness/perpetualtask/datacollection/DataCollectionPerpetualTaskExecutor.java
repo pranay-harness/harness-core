@@ -1,7 +1,7 @@
 package io.harness.perpetualtask.datacollection;
 
-import static io.harness.cvng.beans.ExecutionStatus.FAILED;
-import static io.harness.cvng.beans.ExecutionStatus.SUCCESS;
+import static io.harness.cvng.beans.DataCollectionExecutionStatus.FAILED;
+import static io.harness.cvng.beans.DataCollectionExecutionStatus.SUCCESS;
 
 import com.google.inject.Inject;
 import com.google.inject.name.Named;

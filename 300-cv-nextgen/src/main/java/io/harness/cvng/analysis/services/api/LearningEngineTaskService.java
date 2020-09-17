@@ -1,7 +1,7 @@
 package io.harness.cvng.analysis.services.api;
 
-import io.harness.cvng.analysis.beans.ExecutionStatus;
 import io.harness.cvng.analysis.entities.LearningEngineTask;
+import io.harness.cvng.analysis.entities.LearningEngineTask.ExecutionStatus;
 import io.harness.cvng.analysis.entities.LearningEngineTask.LearningEngineTaskType;
 
 import java.util.List;
