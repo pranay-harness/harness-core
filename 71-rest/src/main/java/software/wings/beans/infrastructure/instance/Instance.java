@@ -96,6 +96,8 @@ public class Instance extends Base implements AccountAccess, ApplicationAccess {
   @FdIndex private boolean isDeleted;
   private long deletedAt;
 
+  @FdIndex private boolean needRetry;
+
   @Builder
   public Instance(String uuid, String appId, EmbeddedUser createdBy, long createdAt, EmbeddedUser lastUpdatedBy,
       long lastUpdatedAt, String entityYamlPath, InstanceType instanceType, HostInstanceKey hostInstanceKey,
@@ -106,7 +108,7 @@ public class Instance extends Base implements AccountAccess, ApplicationAccess {
       String lastArtifactSourceName, String lastArtifactBuildNum, String lastDeployedById, String lastDeployedByName,
       long lastDeployedAt, String lastWorkflowExecutionId, String lastWorkflowExecutionName,
       String lastPipelineExecutionId, String lastPipelineExecutionName, InstanceInfo instanceInfo, boolean isDeleted,
-      long deletedAt) {
+      long deletedAt, boolean needRetry) {
     super(uuid, appId, createdBy, createdAt, lastUpdatedBy, lastUpdatedAt, entityYamlPath);
     this.instanceType = instanceType;
     this.hostInstanceKey = hostInstanceKey;
@@ -140,6 +142,7 @@ public class Instance extends Base implements AccountAccess, ApplicationAccess {
     this.instanceInfo = instanceInfo;
     this.isDeleted = isDeleted;
     this.deletedAt = deletedAt;
+    this.needRetry = needRetry;
   }
 
   @UtilityClass

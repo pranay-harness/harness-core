@@ -1,5 +1,8 @@
 package software.wings.service;
 
+import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
+import static io.harness.beans.SearchFilter.Operator.IN;
+import static io.harness.rule.OwnerRule.ABHINAV;
 import static io.harness.rule.OwnerRule.RAMA;
 import static junit.framework.TestCase.assertEquals;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -12,7 +15,6 @@ import static software.wings.utils.WingsTestConstants.INFRA_MAPPING_ID;
 import com.google.common.collect.Sets;
 import com.google.inject.Inject;
 
-import io.harness.beans.PageRequest.PageRequestBuilder;
 import io.harness.beans.PageResponse;
 import io.harness.beans.SearchFilter.Operator;
 import io.harness.category.element.UnitTests;
@@ -26,6 +28,7 @@ import org.mockito.Mock;
 import software.wings.WingsBaseTest;
 import software.wings.beans.Account;
 import software.wings.beans.infrastructure.instance.Instance;
+import software.wings.beans.infrastructure.instance.Instance.InstanceKeys;
 import software.wings.beans.infrastructure.instance.InstanceType;
 import software.wings.beans.infrastructure.instance.info.KubernetesContainerInfo;
 import software.wings.beans.infrastructure.instance.key.ContainerInstanceKey;
@@ -34,7 +37,11 @@ import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.instance.InstanceService;
 
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
+import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
 /**
  *
@@ -73,7 +80,7 @@ public class InstanceServiceTest extends WingsBaseTest {
   @Owner(developers = RAMA)
   @Category(UnitTests.class)
   public void testSaveAndRead() {
-    Instance instance = buildInstance();
+    Instance instance = buildInstance(instanceId, false, System.currentTimeMillis(), false);
     Instance savedInstance = instanceService.save(instance);
     compare(instance, savedInstance);
 
@@ -81,9 +88,9 @@ public class InstanceServiceTest extends WingsBaseTest {
     compare(savedInstance, instanceFromGet);
   }
 
-  private Instance buildInstance() {
+  private Instance buildInstance(String uuid, boolean isDeleted, Long deletedAt, boolean needRetry) {
     return Instance.builder()
-        .uuid(instanceId)
+        .uuid(uuid)
         .instanceInfo(KubernetesContainerInfo.builder()
                           .clusterName(clusterName)
                           .controllerName(controllerName)
@@ -96,6 +103,9 @@ public class InstanceServiceTest extends WingsBaseTest {
         .appId(GLOBAL_APP_ID)
         .infraMappingId(INFRA_MAPPING_ID)
         .containerInstanceKey(ContainerInstanceKey.builder().containerId(containerId).build())
+        .deletedAt(deletedAt)
+        .needRetry(needRetry)
+        .isDeleted(isDeleted)
         .build();
   }
 
@@ -103,7 +113,7 @@ public class InstanceServiceTest extends WingsBaseTest {
   @Owner(developers = RAMA)
   @Category(UnitTests.class)
   public void testList() {
-    Instance instance1 = buildInstance();
+    Instance instance1 = buildInstance(instanceId, false, System.currentTimeMillis(), false);
 
     Instance savedInstance1 = instanceService.save(instance1);
 
@@ -124,8 +134,8 @@ public class InstanceServiceTest extends WingsBaseTest {
                              .build();
     Instance savedInstance2 = instanceService.save(instance2);
 
-    PageResponse<Instance> pageResponse = instanceService.list(
-        PageRequestBuilder.aPageRequest().addFilter("accountId", Operator.EQ, GLOBAL_ACCOUNT_ID).build());
+    PageResponse<Instance> pageResponse =
+        instanceService.list(aPageRequest().addFilter("accountId", Operator.EQ, GLOBAL_ACCOUNT_ID).build());
     assertThat(pageResponse).isNotNull();
     List<Instance> instanceList = pageResponse.getResponse();
     assertThat(instanceList).isNotNull();
@@ -141,7 +151,7 @@ public class InstanceServiceTest extends WingsBaseTest {
   @Owner(developers = RAMA)
   @Category(UnitTests.class)
   public void testUpdateAndRead() {
-    Instance instance = buildInstance();
+    Instance instance = buildInstance(instanceId, false, System.currentTimeMillis(), false);
     Instance savedInstance = instanceService.save(instance);
     compare(instance, savedInstance);
 
@@ -161,7 +171,7 @@ public class InstanceServiceTest extends WingsBaseTest {
   @Owner(developers = RAMA)
   @Category(UnitTests.class)
   public void testDelete() {
-    Instance instance = buildInstance();
+    Instance instance = buildInstance(instanceId, false, System.currentTimeMillis(), false);
     instanceService.save(instance);
 
     instanceService.delete(Sets.newHashSet(instanceId));
@@ -182,5 +192,32 @@ public class InstanceServiceTest extends WingsBaseTest {
     assertThat(rhs.getAppId()).isEqualTo(lhs.getAppId());
     assertThat(rhs.getInstanceType()).isEqualTo(lhs.getInstanceType());
     assertThat(rhs.getInstanceType()).isEqualTo(lhs.getInstanceType());
+  }
+
+  @Test
+  @Owner(developers = ABHINAV)
+  @Category(UnitTests.class)
+  public void testListInstancesNotRemovedFully() {
+    List<Instance> instances = new ArrayList<>();
+    instances.add(
+        instanceService.save(buildInstance(UUIDGenerator.generateUuid(), false, System.currentTimeMillis(), false)));
+    instances.add(
+        instanceService.save(buildInstance(UUIDGenerator.generateUuid(), false, System.currentTimeMillis(), true)));
+    instances.add(
+        instanceService.save(buildInstance(UUIDGenerator.generateUuid(), true, System.currentTimeMillis(), false)));
+    instances.add(
+        instanceService.save(buildInstance(UUIDGenerator.generateUuid(), true, System.currentTimeMillis(), true)));
+
+    instanceService.save(
+        buildInstance(instanceId, true, System.currentTimeMillis() - TimeUnit.DAYS.toMillis(10), false));
+    instanceService.save(buildInstance(instanceId, true, 0L, false));
+
+    final PageResponse<Instance> response = instanceService.listInstancesNotRemovedFully(
+        aPageRequest().addFilter(InstanceKeys.accountId, IN, GLOBAL_ACCOUNT_ID).build());
+    final Set<String> uuidsInResponse =
+        response.getResponse().stream().map(Instance::getUuid).collect(Collectors.toSet());
+    final Set<String> uuidsExpected = instances.stream().map(Instance::getUuid).collect(Collectors.toSet());
+    assertThat(uuidsInResponse.size()).isEqualTo(4);
+    assertThat(uuidsInResponse.iterator().next()).isIn(uuidsExpected);
   }
 }
