@@ -56,7 +56,7 @@ public class MainDashboardFunctionalTests extends AbstractFunctionalTest {
   }
 
   @Test
-  @Owner(developers = SHUBHANSHU)
+  @Owner(developers = SHUBHANSHU, intermittent = true)
   @Category(FunctionalTests.class)
   public void dashboardUpdateTest() {
     // REST API.
