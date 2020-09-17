@@ -114,12 +114,11 @@ public class InfraPlanCreator implements SupportDefinedExecutorPlanCreator<Pipel
                                        .build());
 
     // Add step dependency provider.
-    OutcomeRefStepDependencyInstructor instructor =
-        OutcomeRefStepDependencyInstructor.builder()
-            .key(CDStepDependencyUtils.getInfraKey(context))
-            .providerPlanNodeId(infraNodeId)
-            .outcomeExpression(OutcomeExpressionConstants.INFRASTRUCTURE.getName())
-            .build();
+    OutcomeRefStepDependencyInstructor instructor = OutcomeRefStepDependencyInstructor.builder()
+                                                        .key(CDStepDependencyUtils.getInfraKey(context))
+                                                        .providerPlanNodeId(infraNodeId)
+                                                        .outcomeExpression(OutcomeExpressionConstants.INFRASTRUCTURE)
+                                                        .build();
     stepDependencyService.registerStepDependencyInstructor(instructor, context);
     return planNodeBuilder.build();
   }

@@ -4,7 +4,7 @@ import com.google.common.annotations.VisibleForTesting;
 
 import io.harness.ambiance.Ambiance;
 import io.harness.cdng.executionplan.CDStepDependencyKey;
-import io.harness.cdng.infra.yaml.Infrastructure;
+import io.harness.cdng.infra.beans.InfrastructureOutcome;
 import io.harness.cdng.k8s.K8sRollingOutcome;
 import io.harness.cdng.service.beans.ServiceOutcome;
 import io.harness.exception.InvalidArgumentsException;
@@ -59,11 +59,11 @@ public class CDStepDependencyUtils {
     return resolve.orElseThrow(() -> new InvalidArgumentsException("Service Dependency is not available."));
   }
 
-  public Infrastructure getInfrastructure(StepDependencyService dependencyService, StepDependencySpec infraSpec,
+  public InfrastructureOutcome getInfrastructure(StepDependencyService dependencyService, StepDependencySpec infraSpec,
       StepInputPackage stepInputPackage, StepParameters stepParameters, Ambiance ambiance) {
     StepDependencyResolverContext resolverContext =
         getStepDependencyResolverContext(stepInputPackage, stepParameters, ambiance);
-    Optional<Infrastructure> resolve = dependencyService.resolve(infraSpec, resolverContext);
+    Optional<InfrastructureOutcome> resolve = dependencyService.resolve(infraSpec, resolverContext);
     return resolve.orElseThrow(() -> new InvalidArgumentsException("Infrastructure Dependency is not available."));
   }
 

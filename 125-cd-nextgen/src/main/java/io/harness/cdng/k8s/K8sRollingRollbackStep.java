@@ -4,7 +4,7 @@ import com.google.inject.Inject;
 
 import io.harness.ambiance.Ambiance;
 import io.harness.cdng.executionplan.CDStepDependencyKey;
-import io.harness.cdng.infra.yaml.Infrastructure;
+import io.harness.cdng.infra.beans.InfrastructureOutcome;
 import io.harness.cdng.orchestration.StepUtils;
 import io.harness.cdng.stepsdependency.utils.CDStepDependencyUtils;
 import io.harness.data.structure.UUIDGenerator;
@@ -45,7 +45,7 @@ public class K8sRollingRollbackStep implements Step, TaskExecutable<K8sRollingRo
 
     StepDependencySpec infraSpec =
         stepParameters.getStepDependencySpecs().get(CDStepDependencyKey.INFRASTRUCTURE.name());
-    Infrastructure infrastructure = CDStepDependencyUtils.getInfrastructure(
+    InfrastructureOutcome infrastructure = CDStepDependencyUtils.getInfrastructure(
         stepDependencyService, infraSpec, inputPackage, stepParameters, ambiance);
 
     K8sRollingDeployRollbackTaskParameters taskParameters =

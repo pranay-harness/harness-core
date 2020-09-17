@@ -73,7 +73,7 @@ public class ArtifactForkStep implements Step, ChildrenExecutable<ForkStepParame
           FailureInfo.builder().errorMessage(String.join(",", errorMessages)).failureTypes(failureTypes).build());
     } else {
       responseBuilder.stepOutcome(StepResponse.StepOutcome.builder()
-                                      .name(OutcomeExpressionConstants.ARTIFACTS.getName())
+                                      .name(OutcomeExpressionConstants.ARTIFACTS)
                                       .outcome(createArtifactsOutcome(responseNotifyDataList))
                                       .build());
     }
