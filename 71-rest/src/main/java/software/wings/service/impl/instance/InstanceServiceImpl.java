@@ -1,6 +1,7 @@
 package software.wings.service.impl.instance;
 
 import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
+import static io.harness.beans.PageResponse.PageResponseBuilder.aPageResponse;
 import static io.harness.beans.SearchFilter.Operator.EQ;
 import static io.harness.mongo.MongoUtils.setUnset;
 import static io.harness.validation.Validator.nullCheck;
@@ -47,6 +48,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 import javax.validation.Valid;
 
@@ -279,6 +281,15 @@ public class InstanceServiceImpl implements InstanceService {
   }
 
   @Override
+  public PageResponse<Instance> listInstancesNotRemovedFully(PageRequest<Instance> pageRequest) {
+    Query<Instance> query = wingsPersistence.convertToQuery(Instance.class, pageRequest);
+    long sevenDaysOldTimeInMills = System.currentTimeMillis() - TimeUnit.DAYS.toMillis(7);
+    query.and(query.or(query.criteria(InstanceKeys.deletedAt).greaterThanOrEq(sevenDaysOldTimeInMills),
+        query.criteria(InstanceKeys.isDeleted).equal(false), query.criteria(InstanceKeys.needRetry).equal(true)));
+    return aPageResponse().withResponse(query.asList()).build();
+  }
+
+  @Override
   public void updateSyncSuccess(
       String appId, String serviceId, String envId, String infraMappingId, String infraMappingName, long timestamp) {
     SyncStatus syncStatus = getSyncStatus(appId, serviceId, envId, infraMappingId);
@@ -387,7 +398,7 @@ public class InstanceServiceImpl implements InstanceService {
     PageRequest<Instance> pageRequest = new PageRequest<>();
     pageRequest.addFilter("infraMappingId", Operator.EQ, infraMappingId);
     pageRequest.addFilter("appId", Operator.EQ, appId);
-    PageResponse<Instance> pageResponse = list(pageRequest);
+    PageResponse<Instance> pageResponse = listInstancesNotRemovedFully(pageRequest);
     return pageResponse.getResponse();
   }
 
