@@ -133,8 +133,6 @@ public class EcsServiceSetupTest extends WingsBaseTest {
     doReturn(bag).when(mockEcsStateHelper).prepareBagForEcsSetUp(any(), anyInt(), any(), any(), any(), any(), any());
     Activity activity = Activity.builder().uuid(ACTIVITY_ID).build();
     doReturn(activity).when(mockEcsStateHelper).createActivity(any(), anyString(), anyString(), any(), any());
-    //    doReturn(false).when(mockFeatureFlagService).isEnabled(FeatureName.ECS_REMOTE_MANIFEST,
-    //    mockContext.getAccountId());
     doReturn(null)
         .when(mockApplicationManifestUtils)
         .getApplicationManifests(mockContext, AppManifestKind.K8S_MANIFEST);

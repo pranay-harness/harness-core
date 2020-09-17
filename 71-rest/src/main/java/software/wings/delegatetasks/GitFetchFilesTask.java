@@ -136,9 +136,11 @@ public class GitFetchFilesTask extends AbstractDelegateRunnableTask {
 
     List<String> filePathsToFetch = new ArrayList<>();
     if (EmptyPredicate.isNotEmpty(gitFileConfig.getTaskSpecFilePath())
-        && EmptyPredicate.isNotEmpty(gitFileConfig.getServiceSpecFilePath())) {
+        || EmptyPredicate.isNotEmpty(gitFileConfig.getServiceSpecFilePath())) {
       filePathsToFetch.add(gitFileConfig.getTaskSpecFilePath());
-      filePathsToFetch.add(gitFileConfig.getServiceSpecFilePath());
+      if (!gitFileConfig.isUseInlineServiceDefinition()) {
+        filePathsToFetch.add(gitFileConfig.getServiceSpecFilePath());
+      }
       executionLogCallback.saveExecutionLog("\nFetching following Task and Service Spec files :");
       gitFetchFilesTaskHelper.printFileNamesInExecutionLogs(filePathsToFetch, executionLogCallback);
     } else if (EmptyPredicate.isNotEmpty(gitFileConfig.getFilePathList())) {

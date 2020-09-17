@@ -28,5 +28,6 @@ public class GitFileConfig {
   @Trimmed @Nullable private String serviceSpecFilePath;
   @Trimmed @Nullable private String taskSpecFilePath;
   private boolean useBranch;
+  private boolean useInlineServiceDefinition;
   @Transient @JsonInclude(Include.NON_EMPTY) private String connectorName;
 }
