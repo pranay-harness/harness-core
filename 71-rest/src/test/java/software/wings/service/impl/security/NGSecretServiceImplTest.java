@@ -127,6 +127,6 @@ public class NGSecretServiceImplTest extends WingsBaseTest {
     List<EncryptedDataDetail> detailList =
         ngSecretService.getEncryptionDetails(random(BaseNGAccess.class), decryptableEntity);
     assertThat(detailList).isNotEmpty();
-    verify(secretManagerConfigService, times(3)).decryptEncryptionConfigSecrets(any(), any(), anyBoolean());
+    verify(secretManagerConfigService, times(4)).decryptEncryptionConfigSecrets(any(), any(), anyBoolean());
   }
 }

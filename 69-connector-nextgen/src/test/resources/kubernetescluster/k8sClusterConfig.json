@@ -6,7 +6,6 @@
       "type" : "UsernamePassword",
       "spec" : {
         "username" : "userName",
-        "caCertRef" : "acc.caCertRef",
         "passwordRef" : "acc.passwordRef"
       }
     }

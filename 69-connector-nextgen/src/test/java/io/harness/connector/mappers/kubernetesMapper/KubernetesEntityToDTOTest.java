@@ -85,13 +85,9 @@ public class KubernetesEntityToDTOTest extends CategoryTest {
     String masterURL = "masterURL";
     String userName = "userName";
     String passwordIdentifier = "passwordIdentifier";
-    String cacertIdentifier = "cacertIdentifier";
     String passwordRef = "acc" + SECRET_DELIMINITER + passwordIdentifier;
-    String caCertRef = "acc" + SECRET_DELIMINITER + cacertIdentifier;
-    SecretRefData secretRefDataCACert =
-        SecretRefData.builder().identifier(cacertIdentifier).scope(Scope.ACCOUNT).build();
     K8sUserNamePassword k8sUserNamePassword =
-        K8sUserNamePassword.builder().userName(userName).passwordRef(passwordRef).caCertRef(caCertRef).build();
+        K8sUserNamePassword.builder().userName(userName).passwordRef(passwordRef).build();
     KubernetesClusterDetails kubernetesClusterDetails = KubernetesClusterDetails.builder()
                                                             .masterUrl(masterURL)
                                                             .authType(KubernetesAuthType.USER_PASSWORD)
@@ -112,15 +108,9 @@ public class KubernetesEntityToDTOTest extends CategoryTest {
     String masterURL = "masterURL";
     String userName = "userName";
     String passwordIdentifier = "passwordIdentifier";
-    String cacertIdentifier = "cacertIdentifier";
     String passwordRef = "acc" + SECRET_DOT_DELIMINITER + passwordIdentifier;
-    String caCertRef = "acc" + SECRET_DOT_DELIMINITER + cacertIdentifier;
-    SecretRefData secretRefDataCACert =
-        SecretRefData.builder().identifier(cacertIdentifier).scope(Scope.ACCOUNT).build();
-    SecretRefData passwordSecretRefData =
-        SecretRefData.builder().identifier(passwordIdentifier).scope(Scope.ACCOUNT).build();
     K8sUserNamePassword k8sUserNamePassword =
-        K8sUserNamePassword.builder().userName(userName).passwordRef(passwordRef).caCertRef(caCertRef).build();
+        K8sUserNamePassword.builder().userName(userName).passwordRef(passwordRef).build();
     KubernetesClusterDetails kubernetesClusterDetails = KubernetesClusterDetails.builder()
                                                             .masterUrl(masterURL)
                                                             .authType(KubernetesAuthType.USER_PASSWORD)
@@ -143,7 +133,6 @@ public class KubernetesEntityToDTOTest extends CategoryTest {
     assertThat(kubernetesUserNamePasswordDTO.getUsername()).isEqualTo(userName);
     assertThat(kubernetesUserNamePasswordDTO.getPasswordRef())
         .isEqualTo(SecretRefData.builder().identifier(passwordIdentifier).scope(Scope.ACCOUNT).build());
-    assertThat(kubernetesUserNamePasswordDTO.getCaCertRef()).isEqualTo(secretRefDataCACert);
   }
 
   @Test
@@ -158,12 +147,18 @@ public class KubernetesEntityToDTOTest extends CategoryTest {
     String clientKeyRef = "acc" + SECRET_DOT_DELIMINITER + clientKeyIdentifer;
     String clientCertRef = "acc" + SECRET_DOT_DELIMINITER + clientCertIdentifer;
     String clientKeyPassPhraseRef = "acc" + SECRET_DOT_DELIMINITER + clientKeyPhraseIdenfiter;
+    String cacertIdentifier = "cacertIdentifier";
+    String caCertRef = "acc" + SECRET_DOT_DELIMINITER + cacertIdentifier;
+    SecretRefData secretRefDataCACert =
+        SecretRefData.builder().identifier(cacertIdentifier).scope(Scope.ACCOUNT).build();
     SecretRefData clientKeySecret = SecretRefData.builder().identifier(clientKeyIdentifer).scope(Scope.ACCOUNT).build();
     SecretRefData clientCertSecret =
         SecretRefData.builder().identifier(clientCertIdentifer).scope(Scope.ACCOUNT).build();
     SecretRefData clientKeyPassPhraseSecret =
         SecretRefData.builder().identifier(clientKeyPhraseIdenfiter).scope(Scope.ACCOUNT).build();
+    SecretRefData caCertSecretRef = SecretRefData.builder().identifier(caCertRef).scope(Scope.ACCOUNT).build();
     K8sClientKeyCert k8sClientKeyCert = K8sClientKeyCert.builder()
+                                            .caCertRef(caCertRef)
                                             .clientKeyRef(clientKeyRef)
                                             .clientCertRef(clientCertRef)
                                             .clientKeyPassphraseRef(clientKeyPassPhraseRef)
@@ -192,6 +187,7 @@ public class KubernetesEntityToDTOTest extends CategoryTest {
     assertThat(kubernetesClientKeyCertDTO.getClientCertRef()).isEqualTo(clientCertSecret);
     assertThat(kubernetesClientKeyCertDTO.getClientKeyPassphraseRef()).isEqualTo(clientKeyPassPhraseSecret);
     assertThat(kubernetesClientKeyCertDTO.getClientKeyAlgo()).isEqualTo(clientKeyAlgo);
+    assertThat(kubernetesClientKeyCertDTO.getCaCertRef()).isEqualTo(secretRefDataCACert);
   }
 
   @Test

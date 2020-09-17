@@ -70,7 +70,7 @@ public class DockerArtifactTaskHelper {
   }
 
   private void decryptRequestDTOs(DockerArtifactDelegateRequest dockerRequest) {
-    secretDecryptionService.decrypt(dockerRequest.getDockerConnectorDTO().getAuthScheme().getCredentials(),
-        dockerRequest.getEncryptedDataDetails());
+    secretDecryptionService.decrypt(
+        dockerRequest.getDockerConnectorDTO().getAuth().getCredentials(), dockerRequest.getEncryptedDataDetails());
   }
 }

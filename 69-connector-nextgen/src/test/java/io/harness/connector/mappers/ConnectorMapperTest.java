@@ -65,14 +65,12 @@ public class ConnectorMapperTest extends CategoryTest {
     when(kubernetesConfigCastHelper.castToManualKubernetesCredentials(any())).thenCallRealMethod();
     when(kubernetesDTOToEntity.toConnectorEntity(any())).thenCallRealMethod();
 
-    KubernetesAuthDTO kubernetesAuthDTO = KubernetesAuthDTO.builder()
-                                              .authType(KubernetesAuthType.USER_PASSWORD)
-                                              .credentials(KubernetesUserNamePasswordDTO.builder()
-                                                               .username(userName)
-                                                               .passwordRef(passwordSecretRefData)
-                                                               .caCertRef(secretRefDataCACert)
-                                                               .build())
-                                              .build();
+    KubernetesAuthDTO kubernetesAuthDTO =
+        KubernetesAuthDTO.builder()
+            .authType(KubernetesAuthType.USER_PASSWORD)
+            .credentials(
+                KubernetesUserNamePasswordDTO.builder().username(userName).passwordRef(passwordSecretRefData).build())
+            .build();
     KubernetesClusterConfigDTO connectorDTOWithUserNamePassword =
         KubernetesClusterConfigDTO.builder()
             .kubernetesCredentialType(MANUAL_CREDENTIALS)
@@ -88,12 +86,7 @@ public class ConnectorMapperTest extends CategoryTest {
     KubernetesAuthDTO kubernetesAuthDTO =
         KubernetesAuthDTO.builder()
             .authType(KubernetesAuthType.USER_PASSWORD)
-            .credentials(
-                KubernetesUserNamePasswordDTO.builder()
-                    .username(userName)
-                    .passwordRef(SecretRefData.builder().identifier(passwordIdentifier).scope(Scope.ACCOUNT).build())
-                    .caCertRef(secretRefDataCACert)
-                    .build())
+            .credentials(KubernetesUserNamePasswordDTO.builder().username(userName).build())
             .build();
     KubernetesClusterConfigDTO connectorDTOWithDelegateCreds =
         KubernetesClusterConfigDTO.builder()
@@ -128,7 +121,7 @@ public class ConnectorMapperTest extends CategoryTest {
     SecretRefData secretRefDataCACert =
         SecretRefData.builder().identifier(cacertIdentifier).scope(Scope.ACCOUNT).build();
     K8sUserNamePassword k8sUserNamePassword =
-        K8sUserNamePassword.builder().userName(userName).passwordRef(passwordRef).caCertRef(caCertRef).build();
+        K8sUserNamePassword.builder().userName(userName).passwordRef(passwordRef).build();
     KubernetesClusterDetails kubernetesClusterDetails = KubernetesClusterDetails.builder()
                                                             .masterUrl(masterURL)
                                                             .authType(KubernetesAuthType.USER_PASSWORD)

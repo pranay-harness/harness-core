@@ -99,14 +99,12 @@ public class KubernetesDTOToEntityTest extends CategoryTest {
     SecretRefData passwordSecretRefData =
         SecretRefData.builder().identifier(passwordIdentifier).scope(Scope.ACCOUNT).build();
     String masterUrl = "https://abc.com";
-    KubernetesAuthDTO kubernetesAuthDTO = KubernetesAuthDTO.builder()
-                                              .authType(KubernetesAuthType.USER_PASSWORD)
-                                              .credentials(KubernetesUserNamePasswordDTO.builder()
-                                                               .username(userName)
-                                                               .passwordRef(passwordSecretRefData)
-                                                               .caCertRef(secretRefDataCACert)
-                                                               .build())
-                                              .build();
+    KubernetesAuthDTO kubernetesAuthDTO =
+        KubernetesAuthDTO.builder()
+            .authType(KubernetesAuthType.USER_PASSWORD)
+            .credentials(
+                KubernetesUserNamePasswordDTO.builder().username(userName).passwordRef(passwordSecretRefData).build())
+            .build();
     KubernetesClusterConfigDTO connectorDTOWithUserNamePasswordCreds =
         KubernetesClusterConfigDTO.builder()
             .kubernetesCredentialType(MANUAL_CREDENTIALS)
@@ -122,7 +120,6 @@ public class KubernetesDTOToEntityTest extends CategoryTest {
     K8sUserNamePassword kubernetesCredential = (K8sUserNamePassword) kubernetesClusterDetails.getAuth();
     assertThat(kubernetesCredential.getUserName()).isEqualTo(userName);
     assertThat(kubernetesCredential.getPasswordRef()).isEqualTo(passwordSecretRefData.toSecretRefStringValue());
-    assertThat(kubernetesCredential.getCaCertRef()).isEqualTo(secretRefDataCACert.toSecretRefStringValue());
   }
 
   @Test

@@ -32,7 +32,7 @@ public class DockerConnectionValidator implements ConnectionValidator<DockerConn
   public ConnectorValidationResult validate(
       DockerConnectorDTO dockerConnector, String accountIdentifier, String orgIdentifier, String projectIdentifier) {
     DockerAuthCredentialsDTO dockerAuthCredentials =
-        dockerConnector.getAuthScheme() != null ? dockerConnector.getAuthScheme().getCredentials() : null;
+        dockerConnector.getAuth() != null ? dockerConnector.getAuth().getCredentials() : null;
     NGAccess basicNGAccessObject = BaseNGAccess.builder()
                                        .accountIdentifier(accountIdentifier)
                                        .orgIdentifier(orgIdentifier)
