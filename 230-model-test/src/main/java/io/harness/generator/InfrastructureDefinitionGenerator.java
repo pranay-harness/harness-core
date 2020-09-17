@@ -302,6 +302,7 @@ public class InfrastructureDefinitionGenerator {
                                 .region("us-east-1")
                                 .launchType("EC2")
                                 .assignPublicIp(false)
+                                .clusterName("Q-FUNCTIONAL-TESTS-DO-NOT-DELETE")
                                 .build())
             .deploymentType(DeploymentType.ECS)
             .cloudProviderType(CloudProviderType.AWS)

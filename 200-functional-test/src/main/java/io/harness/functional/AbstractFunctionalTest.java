@@ -1,6 +1,7 @@
 package io.harness.functional;
 
 import static io.harness.persistence.HQuery.excludeAuthority;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.data.domain.Sort.Direction;
 import static org.springframework.data.mongodb.core.query.Criteria.where;
 import static org.springframework.data.mongodb.core.query.Query.query;
@@ -29,6 +30,7 @@ import io.harness.testframework.framework.DelegateExecutor;
 import io.harness.testframework.framework.Setup;
 import io.harness.testframework.framework.utils.FileUtils;
 import io.harness.testframework.graphql.GraphQLTestMixin;
+import io.harness.testframework.restutils.ArtifactStreamRestUtils;
 import io.harness.testframework.restutils.PipelineRestUtils;
 import io.harness.testframework.restutils.WorkflowRestUtils;
 import io.restassured.RestAssured;
@@ -51,6 +53,7 @@ import software.wings.beans.ExecutionCredential.ExecutionType;
 import software.wings.beans.FeatureName;
 import software.wings.beans.SSHExecutionCredential;
 import software.wings.beans.User;
+import software.wings.beans.Workflow;
 import software.wings.beans.WorkflowExecution;
 import software.wings.beans.artifact.Artifact;
 import software.wings.beans.security.UserGroup;
@@ -291,5 +294,44 @@ public abstract class AbstractFunctionalTest extends CategoryTest implements Gra
         logger.info("[ENABLED_FEATURE_FLAG]: {}", featureName);
       }
     }
+  }
+
+  protected void assertExecution(Workflow savedWorkflow, String appId, String envId) {
+    ExecutionArgs executionArgs = new ExecutionArgs();
+    executionArgs.setWorkflowType(savedWorkflow.getWorkflowType());
+
+    String artifactId = ArtifactStreamRestUtils.getArtifactStreamId(
+        bearerToken, appId, savedWorkflow.getEnvId(), savedWorkflow.getServiceId());
+    Artifact artifact = new Artifact();
+    artifact.setUuid(artifactId);
+
+    executionArgs.setArtifacts(Arrays.asList(artifact));
+    executionArgs.setOrchestrationId(savedWorkflow.getUuid());
+    executionArgs.setExecutionCredential(
+        SSHExecutionCredential.Builder.aSSHExecutionCredential().withExecutionType(ExecutionType.SSH).build());
+
+    logger.info("Invoking workflow execution");
+
+    WorkflowExecution workflowExecution = WorkflowRestUtils.startWorkflow(bearerToken, appId, envId, executionArgs);
+    assertThat(workflowExecution).isNotNull();
+    logger.info("Waiting for execution to finish");
+
+    Awaitility.await()
+        .atMost(600, TimeUnit.SECONDS)
+        .pollInterval(15, TimeUnit.SECONDS)
+        .until(()
+                   -> Setup.portal()
+                          .auth()
+                          .oauth2(bearerToken)
+                          .queryParam("appId", appId)
+                          .get("/executions/" + workflowExecution.getUuid())
+                          .jsonPath()
+                          .<String>getJsonObject("resource.status")
+                          .equals(ExecutionStatus.SUCCESS.name()));
+
+    WorkflowExecution completedWorkflowExecution =
+        workflowExecutionService.getExecutionDetails(appId, workflowExecution.getUuid(), true);
+    logger.info("ECs Execution status: " + completedWorkflowExecution.getStatus());
+    assertThat(ExecutionStatus.SUCCESS == completedWorkflowExecution.getStatus());
   }
 }

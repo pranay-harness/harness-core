@@ -14,6 +14,8 @@ import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
 import static software.wings.beans.SettingAttribute.SettingCategory.CONNECTOR;
 import static software.wings.utils.UsageRestrictionsUtils.getAllAppAllEnvUsageRestrictions;
 
+import io.harness.scm.ScmSecret;
+import io.harness.scm.SecretName;
 import software.wings.beans.GitConfig;
 import software.wings.beans.JiraConfig;
 import software.wings.beans.SettingAttribute;
@@ -69,6 +71,25 @@ public class SettingUtils {
                        .branch("master")
                        .accountId(githubKey.getAccountId())
                        .build())
+        .withUsageRestrictions(getAllAppAllEnvUsageRestrictions())
+        .build();
+  }
+
+  public static SettingAttribute createEcsFunctionalTestGitRepoSetting(SettingAttribute githubKey) {
+    return aSettingAttribute()
+        .withCategory(CONNECTOR)
+        .withName("ecs-git-ops-functional-test")
+        .withAppId(githubKey.getAppId())
+        .withEnvId(githubKey.getEnvId())
+        .withAccountId(githubKey.getAccountId())
+        .withValue(
+            GitConfig.builder()
+                .repoUrl("https://github.com/wings-software/arvind-test.git")
+                .username(String.valueOf(new ScmSecret().decryptToCharArray(new SecretName("git_automation_username"))))
+                .password(new ScmSecret().decryptToCharArray(new SecretName("git_automation_password")))
+                .branch("master")
+                .accountId(githubKey.getAccountId())
+                .build())
         .withUsageRestrictions(getAllAppAllEnvUsageRestrictions())
         .build();
   }
