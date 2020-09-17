@@ -1,5 +1,7 @@
 package io.harness.batch.processing.tasklet;
 
+import static io.harness.ccm.cluster.entities.K8sWorkload.encodeDotsInKey;
+
 import com.google.common.collect.ImmutableSet;
 
 import io.harness.batch.processing.ccm.CCMJobConstants;
@@ -111,7 +113,7 @@ public class K8sPVInfoTasklet implements Tasklet {
         .instanceState(InstanceState.INITIALIZING)
         .storageResource(resource)
         .metaData(metaData)
-        .labels(labelsMap)
+        .labels(encodeDotsInKey(labelsMap))
         .build();
   }
 }
