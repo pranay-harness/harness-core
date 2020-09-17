@@ -52,6 +52,7 @@ import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
 
 public class LogAnalysisServiceImplTest extends CvNextGenTest {
@@ -211,6 +212,74 @@ public class LogAnalysisServiceImplTest extends CvNextGenTest {
     Mockito.verify(learningEngineTaskService).getTaskStatus(anySet());
   }
 
+  @Test
+  @Owner(developers = PRAVEEN)
+  @Category(UnitTests.class)
+  public void testGetAnalysisClusters() {
+    List<LogAnalysisCluster> clusters = buildAnalysisClusters(1234l, 23456l);
+    clusters.forEach(cluster -> cluster.setCvConfigId(cvConfigId));
+    hPersistence.save(clusters);
+
+    List<LogAnalysisCluster> clustersReturned =
+        logAnalysisService.getAnalysisClusters(cvConfigId, new HashSet<>(Arrays.asList(1234l, 23456l)));
+
+    assertThat(clustersReturned).containsExactlyInAnyOrderElementsOf(clusters);
+  }
+
+  @Test
+  @Owner(developers = PRAVEEN)
+  @Category(UnitTests.class)
+  public void testGetAnalysisResults() {
+    Instant start = Instant.now().minus(10, ChronoUnit.MINUTES).truncatedTo(ChronoUnit.MINUTES);
+    Instant end = start.plus(5, ChronoUnit.MINUTES);
+    LogAnalysisResult result = LogAnalysisResult.builder()
+                                   .cvConfigId(cvConfigId)
+                                   .logAnalysisResults(getResults(1234l, 23456l))
+                                   .analysisStartTime(start)
+                                   .analysisEndTime(end)
+                                   .build();
+    hPersistence.save(result);
+    LogAnalysisResult result2 = LogAnalysisResult.builder()
+                                    .cvConfigId(cvConfigId)
+                                    .logAnalysisResults(getResults(1234l, 23456l))
+                                    .analysisStartTime(end)
+                                    .analysisEndTime(end.plus(5, ChronoUnit.MINUTES))
+                                    .build();
+    hPersistence.save(result2);
+
+    List<LogAnalysisResult> analysisResults = logAnalysisService.getAnalysisResults(
+        cvConfigId, Arrays.asList(LogAnalysisResult.LogAnalysisTag.UNKNOWN), start, end);
+
+    assertThat(analysisResults.size()).isEqualTo(1);
+  }
+
+  @Test
+  @Owner(developers = PRAVEEN)
+  @Category(UnitTests.class)
+  public void testGetAnalysisResults_validateOnlyUnknownIsReturned() {
+    Instant start = Instant.now().minus(10, ChronoUnit.MINUTES).truncatedTo(ChronoUnit.MINUTES);
+    Instant end = start.plus(5, ChronoUnit.MINUTES);
+    LogAnalysisResult result = LogAnalysisResult.builder()
+                                   .cvConfigId(cvConfigId)
+                                   .logAnalysisResults(getResults(1235l))
+                                   .analysisStartTime(start)
+                                   .analysisEndTime(end)
+                                   .build();
+    hPersistence.save(result);
+    LogAnalysisResult result2 = LogAnalysisResult.builder()
+                                    .cvConfigId(cvConfigId)
+                                    .logAnalysisResults(getResults(1234l, 23456l))
+                                    .analysisStartTime(start)
+                                    .analysisEndTime(end)
+                                    .build();
+    hPersistence.save(result2);
+
+    List<LogAnalysisResult> analysisResults = logAnalysisService.getAnalysisResults(
+        cvConfigId, Arrays.asList(LogAnalysisResult.LogAnalysisTag.UNKNOWN), start, end);
+
+    assertThat(analysisResults.size()).isEqualTo(1);
+  }
+
   private List<ClusteredLog> createClusteredLogRecords(Instant startTime, Instant endTime) {
     List<ClusteredLog> logRecords = new ArrayList<>();
 
@@ -257,7 +326,11 @@ public class LogAnalysisServiceImplTest extends CvNextGenTest {
     List<AnalysisResult> results = new ArrayList<>();
     for (int i = 0; i < labels.length; i++) {
       AnalysisResult analysisResult =
-          AnalysisResult.builder().count(3).label(labels[i]).tag(i % 2 == 0 ? "KNOWN" : "UNKNOWN").build();
+          AnalysisResult.builder()
+              .count(3)
+              .label(labels[i])
+              .tag(i % 2 == 0 ? LogAnalysisResult.LogAnalysisTag.KNOWN : LogAnalysisResult.LogAnalysisTag.UNKNOWN)
+              .build();
       results.add(analysisResult);
     }
     return results;

@@ -2649,6 +2649,7 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
           stateExecutionMap.get(stateExecutionInstance.getDisplayName()).getClass().getName());
       return VerificationStateAnalysisExecutionData.builder().stateExecutionInstanceId(stateExecutionId).build();
     }
+
     final VerificationStateAnalysisExecutionData stateAnalysisExecutionData =
         (VerificationStateAnalysisExecutionData) stateExecutionMap.get(stateExecutionInstance.getDisplayName());
     if (ExecutionStatus.isFinalStatus(stateExecutionInstance.getStatus())) {

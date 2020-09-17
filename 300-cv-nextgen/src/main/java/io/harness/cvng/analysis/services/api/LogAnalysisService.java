@@ -5,12 +5,15 @@ import io.harness.cvng.analysis.beans.ExecutionStatus;
 import io.harness.cvng.analysis.beans.LogAnalysisDTO;
 import io.harness.cvng.analysis.beans.LogClusterDTO;
 import io.harness.cvng.analysis.entities.LogAnalysisCluster;
+import io.harness.cvng.analysis.entities.LogAnalysisResult;
+import io.harness.cvng.analysis.entities.LogAnalysisResult.LogAnalysisTag;
 import io.harness.cvng.statemachine.beans.AnalysisInput;
 import io.harness.cvng.statemachine.entities.AnalysisStatus;
 
 import java.time.Instant;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 public interface LogAnalysisService {
   String scheduleServiceGuardLogAnalysisTask(AnalysisInput input);
@@ -20,6 +23,11 @@ public interface LogAnalysisService {
   List<LogAnalysisCluster> getPreviousAnalysis(String cvConfigId, Instant analysisStartTime, Instant analysisEndTime);
   void saveAnalysis(String cvConfigId, String taskId, Instant analysisStartTime, Instant analysisEndTime,
       LogAnalysisDTO analysisBody);
+
+  List<LogAnalysisCluster> getAnalysisClusters(String cvConfigId, Set<Long> labels);
+  List<LogAnalysisResult> getAnalysisResults(
+      String cvConfigId, List<LogAnalysisTag> tags, Instant startTime, Instant endTime);
+
   void saveAnalysis(String learningEngineTaskId, DeploymentLogAnalysisDTO deploymentLogAnalysisDTO);
 
   void logDeploymentVerificationProgress(AnalysisInput inputs, AnalysisStatus finalStatus);
