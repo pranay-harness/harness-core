@@ -60,7 +60,7 @@ public class GitEntityResourceTest extends GitSyncBaseTest {
                    .stream()
                    .map(GitSyncEntityListDTO::getEntityType)
                    .collect(Collectors.toList()))
-        .isEqualTo(gitEntityService.getEntityTypesFromProduct(ModuleType.CD));
+        .isEqualTo(gitEntityService.getEntityTypesFromModuleType(ModuleType.CD));
     assertThat(data.getGitSyncEntityListDTOList()
                    .stream()
                    .flatMap(gitSyncEntityListDTO -> gitSyncEntityListDTO.getGitSyncEntities().stream())

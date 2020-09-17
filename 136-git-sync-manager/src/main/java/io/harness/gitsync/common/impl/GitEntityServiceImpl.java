@@ -44,7 +44,7 @@ public class GitEntityServiceImpl implements GitEntityService {
 
   @Override
   public GitSyncProductDTO list(String projectId, String orgId, String accountId, ModuleType moduleType, int size) {
-    final List<EntityType> entityTypes = getEntityTypesFromProduct(moduleType);
+    final List<EntityType> entityTypes = getEntityTypesFromModuleType(moduleType);
     final Scope scope = getScope(accountId, orgId, projectId);
     final List<GitSyncEntityListDTO> gitSyncEntityListDTOs =
         entityTypes.stream()
@@ -55,7 +55,7 @@ public class GitEntityServiceImpl implements GitEntityService {
               return buildGitSyncEntityListDTO(entityType, totalCount, gitSyncEntityDTOs);
             })
             .collect(Collectors.toList());
-    return GitSyncProductDTO.builder().gitSyncEntityListDTOList(gitSyncEntityListDTOs).productName(moduleType).build();
+    return GitSyncProductDTO.builder().gitSyncEntityListDTOList(gitSyncEntityListDTOs).moduleType(moduleType).build();
   }
 
   private GitSyncEntityListDTO buildGitSyncEntityListDTO(
@@ -181,7 +181,7 @@ public class GitEntityServiceImpl implements GitEntityService {
 
   @NotNull
   @VisibleForTesting
-  public List<EntityType> getEntityTypesFromProduct(ModuleType moduleType) {
+  public List<EntityType> getEntityTypesFromModuleType(ModuleType moduleType) {
     return new ArrayList<>(EntityType.getEntityTypes(moduleType));
   }
 }

@@ -12,6 +12,6 @@ import java.util.List;
 @Builder
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class GitSyncProductDTO {
-  private ModuleType productName;
+  private ModuleType moduleType;
   private List<GitSyncEntityListDTO> gitSyncEntityListDTOList;
 }
