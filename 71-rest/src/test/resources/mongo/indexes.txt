@@ -356,6 +356,7 @@ instance {"name": "instance_index7", "background": true} {"accountId": 1, "creat
 instance {"name": "instance_index8", "background": true} {"appId": 1, "serviceId": 1, "isDeleted": 1}
 instance {"name": "instance_index9", "background": true} {"accountId": 1, "isDeleted": 1, "deletedAt": 1}
 instance {"name": "isDeleted_1", "background": true} {"isDeleted": 1}
+instance {"name": "needRetry_1", "background": true} {"needRetry": 1}
 instanceChangeQueue {"name": "earliestGet_1", "background": true, "expireAfterSeconds": 86400} {"earliestGet": 1}
 instanceChangeQueue {"name": "next4", "background": true} {"topic": 1, "earliestGet": 1}
 instanceData {"name": "accountId_clusterId_instanceId", "background": true} {"accountId": 1, "clusterId": 1, "instanceId": 1}

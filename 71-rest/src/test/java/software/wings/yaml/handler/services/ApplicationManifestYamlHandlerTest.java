@@ -85,6 +85,7 @@ public class ApplicationManifestYamlHandlerTest extends BaseYamlHandlerTest {
       + "  connectorName: CONNECTOR_NAME\n"
       + "  filePath: ABC/\n"
       + "  useBranch: true\n"
+      + "  useInlineServiceDefinition: false\n"
       + "storeType: Remote";
 
   private String validYamlFilePath = "Setup/Applications/APP_NAME/Services/SERVICE_NAME/Manifests/Index.yaml";
@@ -100,6 +101,7 @@ public class ApplicationManifestYamlHandlerTest extends BaseYamlHandlerTest {
       + "  connectorName: CONNECTOR_NAME\n"
       + "  filePath: ABC/\n"
       + "  useBranch: true\n"
+      + "  useInlineServiceDefinition: false\n"
       + "storeType: Remote";
   private String envOverrideValidYamlFilePath = "Setup/Applications/APP_NAME/Environments/ENV_NAME/Values/Index.yaml";
 
@@ -113,6 +115,7 @@ public class ApplicationManifestYamlHandlerTest extends BaseYamlHandlerTest {
       + "  connectorName: CONNECTOR_NAME\n"
       + "  filePath: ABC/\n"
       + "  useBranch: true\n"
+      + "  useInlineServiceDefinition: false\n"
       + "storeType: Remote";
   private String envServiceOverrideValidYamlFilePath =
       "Setup/Applications/APP_NAME/Environments/ENV_NAME/Values/Services/SERVICE_NAME/Index.yaml";
