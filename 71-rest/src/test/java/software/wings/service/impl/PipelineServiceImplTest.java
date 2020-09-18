@@ -7,6 +7,7 @@ import static io.harness.rule.OwnerRule.PRABU;
 import static io.harness.rule.OwnerRule.SRINIVAS;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
@@ -1018,7 +1019,7 @@ public class PipelineServiceImplTest extends WingsBaseTest {
     assertThat(pipelineVariables.get(0).getName()).isEqualTo("User_Group");
   }
 
-  @Test(expected = InvalidRequestException.class)
+  @Test
   @Owner(developers = POOJA)
   @Category(UnitTests.class)
   public void testValidateMultipleValues() {
@@ -1029,7 +1030,9 @@ public class PipelineServiceImplTest extends WingsBaseTest {
     pipelineVariables.add(infraVar);
     Map<String, String> values = ImmutableMap.of("infraVar", "pcf, pcf2");
     pipeline.setPipelineVariables(pipelineVariables);
-    pipelineServiceImpl.validateMultipleValuesAllowed(pipeline, values);
+    assertThatCode(() -> pipelineServiceImpl.validateMultipleValuesAllowed(pipeline, values))
+        .isInstanceOf(InvalidRequestException.class)
+        .hasMessage("variable infraVar cannot take multiple values");
   }
 
   @Test

@@ -3,6 +3,7 @@ package software.wings.service.impl.security;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.rule.OwnerRule.UTKARSH;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.mock;
@@ -88,7 +89,7 @@ public class SecretManagementDelegateServiceTest extends CategoryTest {
     secretManagementDelegateService.validateCyberArkConfig(cyberArkConfig);
   }
 
-  @Test(expected = SecretManagementDelegateException.class)
+  @Test
   @Owner(developers = UTKARSH)
   @Category(UnitTests.class)
   public void testCyberArkConfigValidation_shouldFail() throws IOException {
@@ -107,7 +108,10 @@ public class SecretManagementDelegateServiceTest extends CategoryTest {
     when(CyberArkRestClientFactory.create(cyberArkConfig)).thenReturn(cyberArkRestClient);
     when(cyberArkRestClient.readSecret(anyString(), anyString())).thenReturn(cyberArkReadResponseCall);
     when(cyberArkReadResponseCall.execute()).thenReturn(cyberArkReadResponseResponse);
-    secretManagementDelegateService.validateCyberArkConfig(cyberArkConfig);
+
+    assertThatCode(() -> secretManagementDelegateService.validateCyberArkConfig(cyberArkConfig))
+        .isInstanceOf(SecretManagementDelegateException.class)
+        .hasMessage("Failed to query the CyberArk REST endpoint. Please check your configurations and try again");
   }
 
   @Test
@@ -121,17 +125,19 @@ public class SecretManagementDelegateServiceTest extends CategoryTest {
     assertThat(secret).isEqualTo("value".toCharArray());
   }
 
-  @Test(expected = SecretManagementDelegateException.class)
+  @Test
   @Owner(developers = UTKARSH)
   @Category(UnitTests.class)
   public void test_customSecretsManagerConfig_decrypt_shouldFailWithRetry() {
     EncryptedData data = mock(EncryptedData.class);
     CustomSecretsManagerConfig config = mock(CustomSecretsManagerConfig.class);
     when(customSecretsManagerDelegateService.fetchSecret(data, config)).thenThrow(CommandExecutionException.class);
-    secretManagementDelegateService.decrypt(data, config);
+    assertThatCode(() -> secretManagementDelegateService.decrypt(data, config))
+        .isInstanceOf(SecretManagementDelegateException.class)
+        .hasMessage("Decryption failed after 3 retries");
   }
 
-  @Test(expected = SecretManagementDelegateException.class)
+  @Test
   @Owner(developers = UTKARSH)
   @Category(UnitTests.class)
   public void test_azureVault_decrypt_shouldFail() {
@@ -147,7 +153,8 @@ public class SecretManagementDelegateServiceTest extends CategoryTest {
     when(KeyVaultADALAuthenticator.getClient(azureVaultConfig.getClientId(), azureVaultConfig.getSecretKey()))
         .thenReturn(keyVaultClient);
     when(keyVaultClient.getSecret(any(), any(), any())).thenThrow(KeyVaultErrorException.class);
-    secretManagementDelegateService.decrypt(encryptedRecord, azureVaultConfig);
+    assertThatCode(() -> secretManagementDelegateService.decrypt(encryptedRecord, azureVaultConfig))
+        .isInstanceOf(SecretManagementDelegateException.class);
   }
 
   private CyberArkConfig getCyberArkConfig(String url) {
