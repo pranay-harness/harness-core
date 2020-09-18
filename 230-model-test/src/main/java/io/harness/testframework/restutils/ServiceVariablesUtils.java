@@ -19,7 +19,7 @@ public class ServiceVariablesUtils {
             .auth()
             .oauth2(bearerToken)
             .queryParam("appId", serviceVariable.getAppId())
-            .body(serviceVariable, ObjectMapperType.GSON)
+            .body(serviceVariable, ObjectMapperType.JACKSON_2)
             .contentType(ContentType.JSON)
             .post("/service-variables")
             .as(new GenericType<RestResponse<ServiceVariable>>() {}.getType());

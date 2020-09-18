@@ -166,6 +166,7 @@ public class InfrastructureDefinitionGenerator {
     K8S_BLUE_GREEN_TEST,
     MULTI_ARTIFACT_AWS_SSH_FUNCTIONAL_TEST,
     AZURE_HELM,
+    GCP_HELM,
     PIPELINE_RBAC_QA_AWS_SSH_TEST,
     PIPELINE_RBAC_PROD_AWS_SSH_TEST,
     AWS_WINRM_DOWNLOAD,
@@ -203,6 +204,8 @@ public class InfrastructureDefinitionGenerator {
         return ensureMultiArtifactAwsSshFunctionalTest(seed, owners);
       case AZURE_HELM:
         return ensureAzureHelmInfraDef(seed, owners);
+      case GCP_HELM:
+        return ensureGcpHelmInfraDef(seed, owners, "fn-test-helm");
       case PIPELINE_RBAC_QA_AWS_SSH_TEST:
         return ensurePipelineRbacQaK8sTest(seed, owners);
       case PIPELINE_RBAC_PROD_AWS_SSH_TEST:
@@ -240,6 +243,32 @@ public class InfrastructureDefinitionGenerator {
                                               .deploymentType(DeploymentType.HELM)
                                               .cloudProviderType(CloudProviderType.AZURE)
                                               .build());
+  }
+
+  private InfrastructureDefinition ensureGcpHelmInfraDef(Seed seed, Owners owners, String namespace) {
+    Environment environment = owners.obtainEnvironment();
+    if (environment == null) {
+      environment = environmentGenerator.ensurePredefined(seed, owners, Environments.FUNCTIONAL_TEST);
+      owners.add(environment);
+    }
+
+    final SettingAttribute gcpCloudProvider = settingGenerator.ensurePredefined(seed, owners, GCP_PLAYGROUND);
+
+    InfrastructureDefinition infrastructureDefinition =
+        InfrastructureDefinition.builder()
+            .name("harness-test-helm-" + namespace)
+            .infrastructure(GoogleKubernetesEngine.builder()
+                                .cloudProviderId(gcpCloudProvider.getUuid())
+                                .clusterName("us-central1-a/harness-test")
+                                .namespace(namespace)
+                                .build())
+            .deploymentType(DeploymentType.HELM)
+            .cloudProviderType(CloudProviderType.GCP)
+            .envId(environment.getUuid())
+            .appId(owners.obtainApplication().getUuid())
+            .build();
+
+    return ensureInfrastructureDefinition(infrastructureDefinition);
   }
 
   private InfrastructureDefinition ensureAzureWinRMTest(Randomizer.Seed seed, Owners owners) {
