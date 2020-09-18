@@ -66,6 +66,7 @@ import io.harness.service.DelegateServiceModule;
 import io.harness.spring.AliasRegistrar;
 import io.harness.testlib.RealMongo;
 import io.harness.testlib.module.MongoRuleMixin;
+import io.harness.testlib.module.TestMongoModule;
 import io.harness.threading.CurrentThreadExecutor;
 import io.harness.threading.ExecutorModule;
 import io.harness.waiter.NotifierScheduledExecutorService;
@@ -336,6 +337,7 @@ public class WingsRule implements MethodRule, InjectorRuleMixin, MongoRuleMixin 
 
     modules.add(new LicenseModule());
     modules.add(new ValidationModule(validatorFactory));
+    modules.add(TestMongoModule.getInstance());
     modules.add(new WingsPersistenceTestModule());
     modules.add(new DelegateServiceModule());
     modules.add(new WingsModule((MainConfiguration) configuration));

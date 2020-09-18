@@ -40,6 +40,7 @@ import io.harness.serializer.morphia.TestPersistenceMorphiaRegistrar;
 import io.harness.service.DelegateServiceModule;
 import io.harness.spring.AliasRegistrar;
 import io.harness.testlib.module.MongoRuleMixin;
+import io.harness.testlib.module.TestMongoModule;
 import io.harness.threading.CurrentThreadExecutor;
 import io.harness.threading.ExecutorModule;
 import io.harness.time.TimeModule;
@@ -140,6 +141,7 @@ public class GraphQLRule implements MethodRule, InjectorRuleMixin, MongoRuleMixi
 
     modules.add(VersionModule.getInstance());
     modules.add(TimeModule.getInstance());
+    modules.add(TestMongoModule.getInstance());
     modules.add(new GraphQLPersistenceTestModule());
     modules.add(new ProviderModule() {
       @Provides

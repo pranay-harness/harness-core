@@ -89,6 +89,7 @@ import io.harness.manifest.ManifestCollectionPTaskServiceClient;
 import io.harness.marketplace.gcp.GcpMarketplaceSubscriberService;
 import io.harness.metrics.HarnessMetricRegistry;
 import io.harness.metrics.MetricRegistryModule;
+import io.harness.mongo.MongoModule;
 import io.harness.mongo.QuartzCleaner;
 import io.harness.morphia.MorphiaRegistrar;
 import io.harness.perpetualtask.AwsAmiInstanceSyncPerpetualTaskClient;
@@ -353,6 +354,7 @@ public class WingsApplication extends Application<MainConfiguration> {
       }
     });
 
+    modules.add(MongoModule.getInstance());
     modules.add(new WingsPersistenceModule());
 
     ValidatorFactory validatorFactory = Validation.byDefaultProvider()

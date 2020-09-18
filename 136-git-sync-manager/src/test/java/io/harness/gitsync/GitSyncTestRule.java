@@ -26,6 +26,7 @@ import io.harness.serializer.KryoModule;
 import io.harness.serializer.KryoRegistrar;
 import io.harness.spring.AliasRegistrar;
 import io.harness.testlib.module.MongoRuleMixin;
+import io.harness.testlib.module.TestMongoModule;
 import io.harness.waiter.WaiterModule;
 import org.junit.rules.MethodRule;
 import org.junit.runners.model.FrameworkMethod;
@@ -82,6 +83,7 @@ public class GitSyncTestRule implements InjectorRuleMixin, MethodRule, MongoRule
     modules.add(KryoModule.getInstance());
     modules.add(GitSyncModule.getInstance());
     modules.add(mongoTypeModule(annotations));
+    modules.add(TestMongoModule.getInstance());
     modules.add(new GitSyncPersistenceTestConfig());
     modules.add(NGCoreModule.getInstance());
     modules.add(new WaiterModule());

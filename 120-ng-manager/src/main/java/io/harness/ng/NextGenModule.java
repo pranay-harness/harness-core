@@ -35,6 +35,7 @@ import io.harness.grpc.DelegateServiceDriverGrpcClientModule;
 import io.harness.grpc.DelegateServiceGrpcClient;
 import io.harness.manage.ManagedScheduledExecutorService;
 import io.harness.mongo.MongoConfig;
+import io.harness.mongo.MongoModule;
 import io.harness.morphia.MorphiaRegistrar;
 import io.harness.ng.core.CoreModule;
 import io.harness.ng.core.InviteModule;
@@ -152,6 +153,7 @@ public class NextGenModule extends AbstractModule {
     taskExecutorMap.addBinding(TaskMode.DELEGATE_TASK_V2.name()).to(NgDelegateTaskExecutor.class);
     taskExecutorMap.addBinding(TaskMode.DELEGATE_TASK_V3.name()).to(NgDelegate2TaskExecutor.class);
     install(new ValidationModule(getValidatorFactory()));
+    install(MongoModule.getInstance());
     install(new NextGenPersistenceModule());
     install(new CoreModule());
     install(new InviteModule(

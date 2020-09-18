@@ -27,6 +27,7 @@ import io.harness.secretmanagerclient.services.api.SecretManagerClientService;
 import io.harness.serializer.KryoModule;
 import io.harness.serializer.KryoRegistrar;
 import io.harness.testlib.module.MongoRuleMixin;
+import io.harness.testlib.module.TestMongoModule;
 import org.junit.rules.MethodRule;
 import org.junit.runners.model.FrameworkMethod;
 import org.junit.runners.model.Statement;
@@ -62,6 +63,7 @@ public class ConnectorTestRule implements InjectorRuleMixin, MethodRule, MongoRu
       }
     });
     modules.add(mongoTypeModule(annotations));
+    modules.add(TestMongoModule.getInstance());
     modules.add(new ConnectorPersistenceTestModule());
     modules.add(new ConnectorModule());
     modules.add(KryoModule.getInstance());
