@@ -36,6 +36,7 @@ import io.harness.serializer.kryo.TestPersistenceKryoRegistrar;
 import io.harness.serializer.morphia.TestPersistenceMorphiaRegistrar;
 import io.harness.spring.AliasRegistrar;
 import io.harness.testlib.module.MongoRuleMixin;
+import io.harness.testlib.module.TestMongoModule;
 import io.harness.threading.CurrentThreadExecutor;
 import io.harness.threading.ExecutorModule;
 import io.harness.time.TimeModule;
@@ -112,6 +113,7 @@ public class CDNGTestRule implements InjectorRuleMixin, MethodRule, MongoRuleMix
     });
     modules.add(TimeModule.getInstance());
     modules.add(NGModule.getInstance());
+    modules.add(TestMongoModule.getInstance());
     modules.add(new CDNGPersistenceTestModule());
     modules.add(OrchestrationModule.getInstance());
     modules.add(new ExecutionPlanModule());

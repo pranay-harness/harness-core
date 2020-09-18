@@ -31,6 +31,7 @@ import io.harness.serializer.kryo.TestPersistenceKryoRegistrar;
 import io.harness.serializer.morphia.TestPersistenceMorphiaRegistrar;
 import io.harness.spring.AliasRegistrar;
 import io.harness.testlib.module.MongoRuleMixin;
+import io.harness.testlib.module.TestMongoModule;
 import io.harness.threading.CurrentThreadExecutor;
 import io.harness.threading.ExecutorModule;
 import io.harness.time.TimeModule;
@@ -131,6 +132,7 @@ public class OrchestrationStepsRule implements MethodRule, InjectorRuleMixin, Mo
     });
 
     modules.add(new VersionModule());
+    modules.add(TestMongoModule.getInstance());
     modules.add(TimeModule.getInstance());
     modules.add(new OrchestrationStepsPersistenceTestModule());
     modules.add(OrchestrationModule.getInstance());

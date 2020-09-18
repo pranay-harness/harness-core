@@ -1,4 +1,4 @@
-package io.harness.rule;
+package io.harness;
 
 import static io.harness.waiter.OrchestrationNotifyEventListener.ORCHESTRATION;
 
@@ -11,8 +11,6 @@ import com.google.inject.Provides;
 import com.google.inject.Singleton;
 import com.google.inject.TypeLiteral;
 
-import io.harness.OrchestrationModule;
-import io.harness.OrchestrationModuleConfig;
 import io.harness.delay.DelayEventListener;
 import io.harness.engine.expressions.AmbianceExpressionEvaluatorProvider;
 import io.harness.factory.ClosingFactory;
@@ -25,6 +23,7 @@ import io.harness.persistence.HPersistence;
 import io.harness.queue.QueueController;
 import io.harness.queue.QueueListenerController;
 import io.harness.queue.QueuePublisher;
+import io.harness.rule.InjectorRuleMixin;
 import io.harness.serializer.KryoModule;
 import io.harness.serializer.KryoRegistrar;
 import io.harness.serializer.OrchestrationRegistrars;
@@ -34,6 +33,7 @@ import io.harness.serializer.morphia.TestPersistenceMorphiaRegistrar;
 import io.harness.serializer.spring.OrchestrationTestSpringAliasRegistrar;
 import io.harness.spring.AliasRegistrar;
 import io.harness.testlib.module.MongoRuleMixin;
+import io.harness.testlib.module.TestMongoModule;
 import io.harness.threading.CurrentThreadExecutor;
 import io.harness.threading.ExecutorModule;
 import io.harness.time.TimeModule;
@@ -138,6 +138,7 @@ public class OrchestrationRule implements MethodRule, InjectorRuleMixin, MongoRu
     });
     modules.add(new VersionModule());
     modules.add(TimeModule.getInstance());
+    modules.add(TestMongoModule.getInstance());
     modules.add(new OrchestrationPersistenceTestModule());
     modules.add(OrchestrationModule.getInstance());
     return modules;

@@ -30,6 +30,7 @@ import io.harness.exception.WingsException;
 import io.harness.govern.ProviderModule;
 import io.harness.maintenance.MaintenanceController;
 import io.harness.manage.GlobalContextManager;
+import io.harness.mongo.MongoModule;
 import io.harness.morphia.MorphiaRegistrar;
 import io.harness.persistence.HPersistence;
 import io.harness.serializer.KryoRegistrar;
@@ -96,6 +97,7 @@ public class DataGenApplication extends Application<MainConfiguration> {
     ExecutorModule.getInstance().setExecutorService(ThreadPool.create(20, 1000, 500L, TimeUnit.MILLISECONDS));
 
     List<Module> modules = new ArrayList<>();
+    modules.add(MongoModule.getInstance());
     modules.add(new DataGenPersistenceModule());
     modules.add(new ProviderModule() {
       @Provides

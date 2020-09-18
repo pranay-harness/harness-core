@@ -24,6 +24,7 @@ import io.harness.serializer.KryoRegistrar;
 import io.harness.serializer.NextGenRegistrars;
 import io.harness.spring.AliasRegistrar;
 import io.harness.testlib.module.MongoRuleMixin;
+import io.harness.testlib.module.TestMongoModule;
 import io.harness.threading.CurrentThreadExecutor;
 import io.harness.threading.ExecutorModule;
 import lombok.extern.slf4j.Slf4j;
@@ -62,6 +63,7 @@ public class NgManagerRule implements MethodRule, InjectorRuleMixin, MongoRuleMi
     });
     modules.add(mongoTypeModule(annotations));
     modules.add(new CoreModule());
+    modules.add(TestMongoModule.getInstance());
     modules.add(new CorePersistenceTestModule());
     modules.add(KryoModule.getInstance());
     modules.add(new SecretManagementModule());

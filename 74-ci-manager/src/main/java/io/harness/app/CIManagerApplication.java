@@ -31,6 +31,7 @@ import io.harness.executionplan.ExecutionPlanModule;
 import io.harness.govern.ProviderModule;
 import io.harness.maintenance.MaintenanceController;
 import io.harness.mongo.MongoConfig;
+import io.harness.mongo.MongoModule;
 import io.harness.morphia.MorphiaRegistrar;
 import io.harness.persistence.HPersistence;
 import io.harness.persistence.Store;
@@ -152,6 +153,7 @@ public class CIManagerApplication extends Application<CIManagerConfiguration> {
       }
     });
 
+    modules.add(MongoModule.getInstance());
     modules.add(new CIPersistenceModule());
     addGuiceValidationModule(modules);
     modules.add(new CIManagerServiceModule(configuration, configuration.getManagerUrl()));
