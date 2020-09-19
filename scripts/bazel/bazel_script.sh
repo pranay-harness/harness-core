@@ -15,6 +15,10 @@ if [[ ! -z "${OVERRIDE_LOCAL_M2}" ]]; then
   local_repo=${OVERRIDE_LOCAL_M2}
 fi
 
+if [ "${STEP}" == "dockerization" ]
+then
+  GCP=""
+fi
 
 build_bazel_module() {
   module=$1
