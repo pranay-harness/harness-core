@@ -3,12 +3,14 @@ package io.harness.queue;
 import static io.harness.rule.OwnerRule.BRETT;
 import static io.harness.rule.OwnerRule.GEORGE;
 import static io.harness.threading.Morpheus.sleep;
+import static java.lang.String.format;
 import static java.time.Duration.ZERO;
 import static java.time.Duration.ofMillis;
 import static java.time.Duration.ofSeconds;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
+import static org.assertj.core.api.Assertions.fail;
 import static org.joor.Reflect.on;
 
 import com.google.inject.Inject;
@@ -102,15 +104,24 @@ public class MongoQueueTest extends PersistenceTest {
   @Owner(developers = GEORGE)
   @Category(UnitTests.class)
   public void shouldNotGetMessageBeforeEarliestGet() throws InterruptedException {
-    TestTopicQueuableObject message = new TestTopicQueuableObject(1);
-    message.setEarliestGet(new Date(System.currentTimeMillis() + 400));
-    topicProducer.send(message);
+    long delay = 100;
+    for (int i = 0; i < 5; i++) {
+      TestTopicQueuableObject message = new TestTopicQueuableObject(1);
+      message.setEarliestGet(new Date(System.currentTimeMillis() + delay));
+      topicProducer.send(message);
 
-    assertThat(queue.get(Duration.ZERO, Duration.ZERO)).isNull();
+      if (queue.get(Duration.ZERO, Duration.ZERO) != null) {
+        delay *= 2;
+        continue;
+      }
 
-    sleep(ofMillis(401));
+      sleep(ofMillis(delay + 1));
 
-    assertThat(queue.get(DEFAULT_WAIT, DEFAULT_POLL)).isNotNull();
+      assertThat(queue.get(DEFAULT_WAIT, DEFAULT_POLL)).isNotNull();
+      return;
+    }
+
+    fail(format("Something seems wrong with this test. Delay %d should be enough.", delay));
   }
 
   @Test
