@@ -1,10 +1,9 @@
 package io.harness.connector.validator;
 
 import com.google.common.collect.Lists;
-import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
-import io.harness.beans.DelegateTaskRequest;
+import io.harness.delegate.beans.connector.ConnectorConfigDTO;
 import io.harness.delegate.beans.connector.ConnectorValidationResult;
 import io.harness.delegate.beans.connector.gitconnector.GitAuthenticationDTO;
 import io.harness.delegate.beans.connector.gitconnector.GitConfigDTO;
@@ -13,33 +12,22 @@ import io.harness.delegate.beans.git.GitCommandExecutionResponse;
 import io.harness.delegate.beans.git.GitCommandExecutionResponse.GitCommandStatus;
 import io.harness.delegate.beans.git.GitCommandParams;
 import io.harness.delegate.beans.git.GitCommandType;
+import io.harness.delegate.task.TaskParameters;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.UnknownEnumTypeException;
-import io.harness.ng.core.BaseNGAccess;
-import io.harness.ng.core.NGAccess;
-import io.harness.secretmanagerclient.services.api.SecretManagerClientService;
-import io.harness.security.encryption.EncryptedDataDetail;
-import io.harness.service.DelegateGrpcClientWrapper;
-import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
-import java.time.Duration;
-import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 
-@AllArgsConstructor(onConstructor = @__({ @Inject }))
 @Slf4j
 @Singleton
-public class GitConnectorValidator implements ConnectionValidator<GitConfigDTO> {
-  private DelegateGrpcClientWrapper delegateClient;
-  private SecretManagerClientService ngSecretService;
-
+public class GitConnectorValidator extends AbstractConnectorValidator implements ConnectionValidator<GitConfigDTO> {
   public ConnectorValidationResult validate(
-      GitConfigDTO gitConfig, String accountIdentifier, String orgIdentifier, String projectIdentifie) {
+      GitConfigDTO gitConfig, String accountIdentifier, String orgIdentifier, String projectIdentifier) {
     validateFieldsPresent(gitConfig);
-    GitCommandExecutionResponse gitCommandExecutionResponse =
-        createValidationDelegateTask(gitConfig, accountIdentifier, orgIdentifier, projectIdentifie);
+    GitCommandExecutionResponse gitCommandExecutionResponse = (GitCommandExecutionResponse) super.validateConnector(
+        gitConfig, accountIdentifier, orgIdentifier, projectIdentifier);
     return buildConnectorValidationResult(gitCommandExecutionResponse);
   }
 
@@ -73,30 +61,25 @@ public class GitConnectorValidator implements ConnectionValidator<GitConfigDTO> 
     }
   }
 
-  private GitCommandExecutionResponse createValidationDelegateTask(
-      GitConfigDTO gitConfig, String accountIdentifier, String orgIdentifier, String projectIdentifier) {
-    GitAuthenticationDTO gitAuthenticationDecryptableEntity = gitConfig.getGitAuth();
-    NGAccess basicNGAccessObject = BaseNGAccess.builder()
-                                       .accountIdentifier(accountIdentifier)
-                                       .orgIdentifier(orgIdentifier)
-                                       .projectIdentifier(projectIdentifier)
-                                       .build();
-    List<EncryptedDataDetail> encryptedDataDetailList =
-        ngSecretService.getEncryptionDetails(basicNGAccessObject, gitAuthenticationDecryptableEntity);
-    DelegateTaskRequest delegateTaskRequest = DelegateTaskRequest.builder()
-                                                  .accountId(accountIdentifier)
-                                                  .taskType("NG_GIT_COMMAND")
-                                                  .taskParameters(GitCommandParams.builder()
-                                                                      .gitConfig(gitConfig)
-                                                                      .gitCommandType(GitCommandType.VALIDATE)
-                                                                      .encryptionDetails(encryptedDataDetailList)
-                                                                      .build())
-                                                  .executionTimeout(Duration.ofMinutes(1))
-                                                  .build();
-    return (GitCommandExecutionResponse) delegateClient.executeSyncTask(delegateTaskRequest);
-  }
-
   private void validateRequiredFieldsPresent(Object... fields) {
     Lists.newArrayList(fields).forEach(field -> Objects.requireNonNull(field, "One of the required fields is null."));
+  }
+
+  @Override
+  public <T extends ConnectorConfigDTO> TaskParameters getTaskParameters(
+      T connectorConfig, String accountIdentifier, String orgIdentifier, String projectIdentifier) {
+    GitConfigDTO gitConfig = (GitConfigDTO) connectorConfig;
+    GitAuthenticationDTO gitAuthentication = gitConfig.getGitAuth();
+    return GitCommandParams.builder()
+        .gitConfig(gitConfig)
+        .gitCommandType(GitCommandType.VALIDATE)
+        .encryptionDetails(
+            super.getEncryptionDetail(gitAuthentication, accountIdentifier, orgIdentifier, projectIdentifier))
+        .build();
+  }
+
+  @Override
+  public String getTaskType() {
+    return "NG_GIT_COMMAND";
   }
 }
