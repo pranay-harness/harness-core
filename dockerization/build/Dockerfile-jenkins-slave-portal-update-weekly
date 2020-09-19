@@ -6,6 +6,8 @@ ENV OVERRIDE_LOCAL_M2 /root/.m2/repository
 
 ARG GITHUB_USERNAME=?
 ARG GITHUB_PASSWORD=?
+ARG PLATFORM=jenkins
+ARG STEP=dockerization
 
 RUN cd /root \
     && git clone https://${GITHUB_USERNAME}:${GITHUB_PASSWORD}@github.com/wings-software/portal.git \
@@ -14,7 +16,8 @@ RUN cd /root \
     && mvn -B -T 2C -Dmaven.repo.local=/root/.m2/repository -s /root/.m2/settings.xml \
        compile test-compile dependency:go-offline \
     && rm -rf `find . -type d -name target` \
-    && rm -rf /home/jenkins/.cache
+    && rm -rf /root/.m2/repository/software/wings
 
+ARG STEP=RUN
 
 ENTRYPOINT ["jenkins-slave"]
