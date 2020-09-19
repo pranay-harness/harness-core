@@ -26,7 +26,6 @@ import io.harness.delegate.beans.connector.ConnectorType;
 import io.harness.delegate.beans.connector.ConnectorValidationResult;
 import io.harness.exception.DuplicateFieldException;
 import io.harness.exception.InvalidRequestException;
-import io.harness.secretmanagerclient.services.api.SecretManagerClientService;
 import io.harness.utils.FullyQualifiedIdentifierHelper;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -50,7 +49,6 @@ public class DefaultConnectorServiceImpl implements ConnectorService {
   private final ConnectorFilterHelper connectorFilterHelper;
   private ConnectorScopeHelper connectorScopeHelper;
   private Map<String, ConnectionValidator> connectionValidatorMap;
-  private SecretManagerClientService secretManagerClientService;
 
   @Override
   public Optional<ConnectorDTO> get(
@@ -59,10 +57,7 @@ public class DefaultConnectorServiceImpl implements ConnectorService {
         accountIdentifier, orgIdentifier, projectIdentifier, connectorIdentifier);
     Optional<Connector> connector =
         connectorRepository.findByFullyQualifiedIdentifierAndDeletedNot(fullyQualifiedIdentifier, true);
-    if (connector.isPresent()) {
-      return Optional.of(connectorMapper.writeDTO(connector.get()));
-    }
-    return Optional.empty();
+    return connector.map(connectorMapper::writeDTO);
   }
 
   private String createConnectorNotFoundMessage(

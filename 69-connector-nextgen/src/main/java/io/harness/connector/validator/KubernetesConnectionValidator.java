@@ -1,9 +1,8 @@
 package io.harness.connector.validator;
 
-import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
-import io.harness.beans.DelegateTaskRequest;
+import io.harness.delegate.beans.connector.ConnectorConfigDTO;
 import io.harness.delegate.beans.connector.ConnectorValidationResult;
 import io.harness.delegate.beans.connector.k8Connector.KubernetesAuthCredentialDTO;
 import io.harness.delegate.beans.connector.k8Connector.KubernetesClusterConfigDTO;
@@ -11,49 +10,20 @@ import io.harness.delegate.beans.connector.k8Connector.KubernetesClusterDetailsD
 import io.harness.delegate.beans.connector.k8Connector.KubernetesConnectionTaskParams;
 import io.harness.delegate.beans.connector.k8Connector.KubernetesConnectionTaskResponse;
 import io.harness.delegate.beans.connector.k8Connector.KubernetesCredentialType;
-import io.harness.ng.core.BaseNGAccess;
-import io.harness.ng.core.NGAccess;
-import io.harness.secretmanagerclient.services.api.SecretManagerClientService;
+import io.harness.delegate.task.TaskParameters;
 import io.harness.security.encryption.EncryptedDataDetail;
-import io.harness.service.DelegateGrpcClientWrapper;
-import lombok.AccessLevel;
-import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
-import java.time.Duration;
 import java.util.List;
 
-@AllArgsConstructor(access = AccessLevel.PRIVATE, onConstructor = @__({ @Inject }))
 @Slf4j
 @Singleton
-public class KubernetesConnectionValidator implements ConnectionValidator<KubernetesClusterConfigDTO> {
-  private final DelegateGrpcClientWrapper delegateGrpcClientWrapper;
-  private final SecretManagerClientService ngSecretService;
-
+public class KubernetesConnectionValidator
+    extends AbstractConnectorValidator implements ConnectionValidator<KubernetesClusterConfigDTO> {
   public ConnectorValidationResult validate(KubernetesClusterConfigDTO kubernetesClusterConfig,
       String accountIdentifier, String orgIdentifier, String projectIdentifier) {
-    List<EncryptedDataDetail> encryptedDataDetailList = null;
-    if (kubernetesClusterConfig.getKubernetesCredentialType() == KubernetesCredentialType.MANUAL_CREDENTIALS) {
-      KubernetesAuthCredentialDTO kubernetesAuthCredential =
-          getKubernetesAuthCredential((KubernetesClusterDetailsDTO) kubernetesClusterConfig.getConfig());
-      NGAccess basicNGAccessObject = BaseNGAccess.builder()
-                                         .accountIdentifier(accountIdentifier)
-                                         .orgIdentifier(orgIdentifier)
-                                         .projectIdentifier(projectIdentifier)
-                                         .build();
-      encryptedDataDetailList = ngSecretService.getEncryptionDetails(basicNGAccessObject, kubernetesAuthCredential);
-    }
-    DelegateTaskRequest delegateTaskRequest = DelegateTaskRequest.builder()
-                                                  .accountId(accountIdentifier)
-                                                  .taskType("VALIDATE_KUBERNETES_CONFIG")
-                                                  .taskParameters(KubernetesConnectionTaskParams.builder()
-                                                                      .kubernetesClusterConfig(kubernetesClusterConfig)
-                                                                      .encryptionDetails(encryptedDataDetailList)
-                                                                      .build())
-                                                  .executionTimeout(Duration.ofMinutes(1))
-                                                  .build();
-    KubernetesConnectionTaskResponse responseData =
-        (KubernetesConnectionTaskResponse) delegateGrpcClientWrapper.executeSyncTask(delegateTaskRequest);
+    KubernetesConnectionTaskResponse responseData = (KubernetesConnectionTaskResponse) super.validateConnector(
+        kubernetesClusterConfig, accountIdentifier, orgIdentifier, projectIdentifier);
     return ConnectorValidationResult.builder()
         .valid(responseData.getConnectionSuccessFul())
         .errorMessage(responseData.getErrorMessage())
@@ -63,5 +33,27 @@ public class KubernetesConnectionValidator implements ConnectionValidator<Kubern
   private KubernetesAuthCredentialDTO getKubernetesAuthCredential(
       KubernetesClusterDetailsDTO kubernetesClusterConfigDTO) {
     return kubernetesClusterConfigDTO.getAuth().getCredentials();
+  }
+
+  @Override
+  public <T extends ConnectorConfigDTO> TaskParameters getTaskParameters(
+      T connectorConfig, String accountIdentifier, String orgIdentifier, String projectIdentifier) {
+    List<EncryptedDataDetail> encryptedDataDetailList = null;
+    KubernetesClusterConfigDTO kubernetesClusterConfig = (KubernetesClusterConfigDTO) connectorConfig;
+    if (kubernetesClusterConfig.getKubernetesCredentialType() == KubernetesCredentialType.MANUAL_CREDENTIALS) {
+      KubernetesAuthCredentialDTO kubernetesAuthCredential =
+          getKubernetesAuthCredential((KubernetesClusterDetailsDTO) kubernetesClusterConfig.getConfig());
+      encryptedDataDetailList =
+          super.getEncryptionDetail(kubernetesAuthCredential, accountIdentifier, orgIdentifier, projectIdentifier);
+    }
+    return KubernetesConnectionTaskParams.builder()
+        .kubernetesClusterConfig(kubernetesClusterConfig)
+        .encryptionDetails(encryptedDataDetailList)
+        .build();
+  }
+
+  @Override
+  public String getTaskType() {
+    return "VALIDATE_KUBERNETES_CONFIG";
   }
 }
