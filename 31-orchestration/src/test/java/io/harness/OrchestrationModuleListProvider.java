@@ -65,6 +65,14 @@ public class OrchestrationModuleListProvider implements ModuleListProvider {
             .add(OrchestrationTestSpringAliasRegistrar.class)
             .build();
       }
+
+      @Provides
+      @Singleton
+      public OrchestrationModuleConfig orchestrationModuleConfig() {
+        return OrchestrationModuleConfig.builder()
+            .expressionEvaluatorProvider(new AmbianceExpressionEvaluatorProvider())
+            .build();
+      }
     });
 
     modules.add(new ProviderModule() {
@@ -101,10 +109,7 @@ public class OrchestrationModuleListProvider implements ModuleListProvider {
     modules.add(new VersionModule());
     modules.add(TimeModule.getInstance());
     modules.add(new OrchestrationPersistenceTestModule());
-    modules.add(
-        OrchestrationModule.getInstance(OrchestrationModuleConfig.builder()
-                                            .expressionEvaluatorProvider(new AmbianceExpressionEvaluatorProvider())
-                                            .build()));
+    modules.add(OrchestrationModule.getInstance());
     return modules;
   }
 }

@@ -28,7 +28,6 @@ import java.util.Collections;
 import java.util.concurrent.TimeUnit;
 
 public class OrchestrationGuiceRunner extends GuiceRunner {
-
   private transient ClosingFactory closingFactory;
 
   public OrchestrationGuiceRunner(Class<?> klass, Injector injector) throws Exception {
@@ -65,16 +64,16 @@ public class OrchestrationGuiceRunner extends GuiceRunner {
     });
 
     final QueuePublisher<NotifyEvent> publisher =
-            injector.getInstance(Key.get(new TypeLiteral<QueuePublisher<NotifyEvent>>() {}));
+        injector.getInstance(Key.get(new TypeLiteral<QueuePublisher<NotifyEvent>>() {}));
     final NotifyQueuePublisherRegister notifyQueuePublisherRegister =
-            injector.getInstance(NotifyQueuePublisherRegister.class);
+        injector.getInstance(NotifyQueuePublisherRegister.class);
     notifyQueuePublisherRegister.register(
-            ORCHESTRATION, payload -> publisher.send(Collections.singletonList(ORCHESTRATION), payload));
+        ORCHESTRATION, payload -> publisher.send(Collections.singletonList(ORCHESTRATION), payload));
 
     NotifierScheduledExecutorService notifierScheduledExecutorService =
-            injector.getInstance(NotifierScheduledExecutorService.class);
+        injector.getInstance(NotifierScheduledExecutorService.class);
     notifierScheduledExecutorService.scheduleWithFixedDelay(
-            injector.getInstance(NotifyResponseCleaner.class), 0L, 1000L, TimeUnit.MILLISECONDS);
+        injector.getInstance(NotifyResponseCleaner.class), 0L, 1000L, TimeUnit.MILLISECONDS);
     closingFactory.addServer(new Closeable() {
       @Override
       public void close() throws IOException {
@@ -82,5 +81,4 @@ public class OrchestrationGuiceRunner extends GuiceRunner {
       }
     });
   }
-
 }

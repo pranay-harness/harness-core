@@ -67,9 +67,7 @@ public class OrchestrationEngineTest extends OrchestrationTest {
   private static final StepType DUMMY_STEP_TYPE = StepType.builder().type("DUMMY").build();
 
   @Before
-  public void setUp() {
-
-  }
+  public void setUp() {}
 
   @Test
   @RealMongo
