@@ -3,13 +3,14 @@ syntax = "proto3";
 package io.harness.perpetualtask;
 
 option java_multiple_files = true;
+option go_package = "21_delegate_agent_beans";
 
 import "google/protobuf/timestamp.proto";
 
-import "io/harness/delegate/delegate.proto";
+import "20-delegate-beans/src/main/proto/io/harness/delegate/delegate.proto";
+import "20-delegate-beans/src/main/proto/io/harness/perpetualtask/perpetual_task.proto";
 
-import "io/harness/perpetualtask/perpetual_task.proto";
-import "io/harness/perpetualtask/perpetual_task_execution.proto";
+import "21-delegate-agent-beans/src/main/proto/io/harness/perpetualtask/perpetual_task_execution.proto";
 
 service PerpetualTaskService {
   rpc PerpetualTaskList(PerpetualTaskListRequest) returns (PerpetualTaskListResponse);
@@ -36,9 +37,8 @@ message PerpetualTaskContextResponse {
 message HeartbeatRequest {
   string id = 1;
   google.protobuf.Timestamp heartbeat_timestamp = 2;
-  string task_state = 3;
-  int32 response_code = 4;
-  string response_message = 5;
+  int32 response_code = 3;
+  string response_message = 4;
 }
 
 message HeartbeatResponse {

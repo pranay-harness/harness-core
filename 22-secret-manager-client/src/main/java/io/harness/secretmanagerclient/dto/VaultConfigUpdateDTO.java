@@ -22,6 +22,7 @@ public class VaultConfigUpdateDTO extends SecretManagerConfigUpdateDTO {
   private boolean isReadOnly;
   private int renewIntervalHours;
   private String secretEngineName;
+  private int secretEngineVersion;
   private String appRoleId;
   private String secretId;
 }

@@ -577,7 +577,7 @@ public class VaultServiceImpl extends AbstractSecretServiceImpl implements Vault
         .getVaultSecretChangeLogs(encryptedData, vaultConfig);
   }
 
-  private void validateVaultConfig(String accountId, VaultConfig vaultConfig) {
+  public void validateVaultConfig(String accountId, VaultConfig vaultConfig) {
     if (isEmpty(vaultConfig.getSecretEngineName()) || vaultConfig.getSecretEngineVersion() == 0) {
       throw new SecretManagementException(
           VAULT_OPERATION_ERROR, "Secret engine or secret engine version was not specified", USER);

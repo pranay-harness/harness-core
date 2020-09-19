@@ -9,6 +9,7 @@ import static io.harness.generator.constants.SettingsGeneratorConstants.PCF_END_
 import static io.harness.generator.constants.SettingsGeneratorConstants.PCF_KEY;
 import static io.harness.generator.constants.SettingsGeneratorConstants.PCF_USERNAME;
 import static io.harness.govern.Switch.unhandled;
+import static io.harness.testframework.framework.utils.SettingUtils.createEcsFunctionalTestGitRepoSetting;
 import static io.harness.testframework.framework.utils.SettingUtils.createGitHubRepoSetting;
 import static io.harness.testframework.framework.utils.SettingUtils.createPCFFunctionalTestGitRepoSetting;
 import static io.harness.testframework.framework.utils.SettingUtils.createTerraformCityGitRepoSetting;
@@ -43,6 +44,7 @@ import software.wings.beans.DockerConfig;
 import software.wings.beans.ElkConfig;
 import software.wings.beans.GcpConfig;
 import software.wings.beans.GitConfig;
+import software.wings.beans.HostConnectionAttributes;
 import software.wings.beans.JenkinsConfig;
 import software.wings.beans.PcfConfig;
 import software.wings.beans.PhysicalDataCenterConfig;
@@ -84,6 +86,7 @@ public class SettingGenerator {
   private static final String PCF_CONNECTOR = "Harness PCF";
   private static final String HARNESS_AZURE_ARTIFACTS = "Harness Azure Artifacts";
   private static final String ELK_CONNECTOR = "Elk Connector";
+  private static final String HARNESS_ACCOUNT_GIT_CONNECTOR = "Harness Account Git Connector";
 
   private static final String HELM_CHART_REPO_URL = "http://storage.googleapis.com/kubernetes-charts/";
   private static final String HELM_CHART_REPO = "Helm Chart Repo";
@@ -96,6 +99,7 @@ public class SettingGenerator {
 
   @Inject AccountGenerator accountGenerator;
   @Inject ScmSecret scmSecret;
+  @Inject SecretGenerator secretGenerator;
 
   @Inject SettingsService settingsService;
   @Inject WingsPersistence wingsPersistence;
@@ -112,6 +116,7 @@ public class SettingGenerator {
     GITHUB_TEST_CONNECTOR,
     TERRAFORM_CITY_GIT_REPO,
     TERRAFORM_MAIN_GIT_REPO,
+    TERRAFORM_MAIN_GIT_AC,
     HARNESS_BAMBOO_CONNECTOR,
     HARNESS_NEXUS_CONNECTOR,
     HARNESS_NEXUS2_CONNECTOR,
@@ -129,8 +134,10 @@ public class SettingGenerator {
     PCF_CONNECTOR,
     AZURE_ARTIFACTS_CONNECTOR,
     PCF_FUNCTIONAL_TEST_GIT_REPO,
+    ECS_FUNCTIONAL_TEST_GIT_REPO,
     HELM_S3_CONNECTOR,
-    ELK
+    ELK,
+    ACCOUNT_LEVEL_GIT_CONNECTOR,
   }
 
   public void ensureAllPredefined(Randomizer.Seed seed, Owners owners) {
@@ -183,6 +190,8 @@ public class SettingGenerator {
         return ensureWinRmTestConnector(seed, owners);
       case TERRAFORM_MAIN_GIT_REPO:
         return ensureTerraformMainGitRepo(seed, owners);
+      case TERRAFORM_MAIN_GIT_AC:
+        return ensureTerraformMainGitAc(seed, owners);
       case PAID_EMAIL_SMTP_CONNECTOR:
         return ensurePaidSMTPSettings(seed, owners);
       case HELM_CHART_REPO_CONNECTOR:
@@ -195,10 +204,14 @@ public class SettingGenerator {
         return ensureAzureArtifactsSetting(seed, owners);
       case PCF_FUNCTIONAL_TEST_GIT_REPO:
         return ensurePCFGitRepo(seed, owners);
+      case ECS_FUNCTIONAL_TEST_GIT_REPO:
+        return ensureEcsGitRepo(seed, owners);
       case HELM_S3_CONNECTOR:
         return ensureHelmS3Connector(seed, owners);
       case ELK:
         return ensureElkConnector(seed, owners);
+      case ACCOUNT_LEVEL_GIT_CONNECTOR:
+        return ensureAccountLevelGitConnector(seed, owners);
       default:
         unhandled(predefined);
     }
@@ -287,6 +300,14 @@ public class SettingGenerator {
     SettingAttribute githubKey = ensurePredefined(seed, owners, GITHUB_TEST_CONNECTOR);
 
     char[] password = scmSecret.decryptToCharArray(new SecretName("terraform_password"));
+    SettingAttribute settingAttribute = createTerraformMainGitRepoSetting(githubKey, password);
+    return ensureSettingAttribute(seed, settingAttribute, owners);
+  }
+
+  private SettingAttribute ensureTerraformMainGitAc(Seed seed, Owners owners) {
+    SettingAttribute githubKey = ensurePredefined(seed, owners, GITHUB_TEST_CONNECTOR);
+
+    String password = secretGenerator.ensureStored(owners, new SecretName("terraform_password"));
     SettingAttribute settingAttribute = createTerraformMainGitRepoSetting(githubKey, password);
     return ensureSettingAttribute(seed, settingAttribute, owners);
   }
@@ -475,6 +496,12 @@ public class SettingGenerator {
     return ensureSettingAttribute(seed, settingAttribute, owners);
   }
 
+  private SettingAttribute ensureEcsGitRepo(Randomizer.Seed seed, Owners owners) {
+    SettingAttribute githubKey = ensurePredefined(seed, owners, GITHUB_TEST_CONNECTOR);
+    SettingAttribute settingAttribute = createEcsFunctionalTestGitRepoSetting(githubKey);
+    return ensureSettingAttribute(seed, settingAttribute, owners);
+  }
+
   private SettingAttribute ensureHarnessJenkins(Randomizer.Seed seed, Owners owners) {
     final Account account = accountGenerator.ensurePredefined(seed, owners, Accounts.GENERIC_TEST);
 
@@ -528,7 +555,7 @@ public class SettingGenerator {
     SettingAttribute bambooSettingAttribute =
         aSettingAttribute()
             .withName(HARNESS_BAMBOO)
-            .withCategory(SettingCategory.CONNECTOR)
+            .withCategory(CONNECTOR)
             .withAccountId(account.getUuid())
             .withValue(BambooConfig.builder()
                            .accountId(account.getUuid())
@@ -546,7 +573,7 @@ public class SettingGenerator {
     SettingAttribute nexusSettingAttribute =
         aSettingAttribute()
             .withName(HARNESS_NEXUS)
-            .withCategory(SettingCategory.CONNECTOR)
+            .withCategory(CONNECTOR)
             .withAccountId(account.getUuid())
             .withValue(NexusConfig.builder()
                            .accountId(account.getUuid())
@@ -564,7 +591,7 @@ public class SettingGenerator {
     SettingAttribute nexusSettingAttribute =
         aSettingAttribute()
             .withName(HARNESS_NEXUS_2)
-            .withCategory(SettingCategory.CONNECTOR)
+            .withCategory(CONNECTOR)
             .withAccountId(account.getUuid())
             .withValue(NexusConfig.builder()
                            .accountId(account.getUuid())
@@ -582,7 +609,7 @@ public class SettingGenerator {
     SettingAttribute nexus3SettingAttribute =
         aSettingAttribute()
             .withName(HARNESS_NEXUS_THREE)
-            .withCategory(SettingCategory.CONNECTOR)
+            .withCategory(CONNECTOR)
             .withAccountId(account.getUuid())
             .withValue(NexusConfig.builder()
                            .accountId(account.getUuid())
@@ -601,7 +628,7 @@ public class SettingGenerator {
     SettingAttribute artifactorySettingAttribute =
         aSettingAttribute()
             .withName(HARNESS_ARTIFACTORY)
-            .withCategory(SettingCategory.CONNECTOR)
+            .withCategory(CONNECTOR)
             .withAccountId(account.getUuid())
             .withValue(ArtifactoryConfig.builder()
                            .accountId(account.getUuid())
@@ -619,7 +646,7 @@ public class SettingGenerator {
     SettingAttribute dockerSettingAttribute =
         aSettingAttribute()
             .withName(HARNESS_DOCKER_REGISTRY)
-            .withCategory(SettingCategory.CONNECTOR)
+            .withCategory(CONNECTOR)
             .withAccountId(account.getUuid())
             .withValue(DockerConfig.builder()
                            .accountId(account.getUuid())
@@ -660,7 +687,7 @@ public class SettingGenerator {
                                 .build();
 
     SettingAttribute emailSettingAttribute = aSettingAttribute()
-                                                 .withCategory(SettingCategory.CONNECTOR)
+                                                 .withCategory(CONNECTOR)
                                                  .withName("EMAIL")
                                                  .withAccountId(account.getUuid())
                                                  .withValue(smtpConfig)
@@ -716,6 +743,29 @@ public class SettingGenerator {
                            .build())
             .withUsageRestrictions(getAllAppAllEnvUsageRestrictions())
             .build();
+    return ensureSettingAttribute(seed, settingAttribute, owners);
+  }
+
+  private SettingAttribute ensureAccountLevelGitConnector(Seed seed, Owners owners) {
+    final Account account = accountGenerator.ensurePredefined(seed, owners, Accounts.GENERIC_TEST);
+
+    SettingAttribute settingAttribute =
+        aSettingAttribute()
+            .withCategory(CONNECTOR)
+            .withName(HARNESS_ACCOUNT_GIT_CONNECTOR)
+            .withAccountId(account.getUuid())
+            .withValue(GitConfig.builder()
+                           .accountId(account.getUuid())
+                           .repoUrl("https://github.com/wings-software/")
+                           .urlType(GitConfig.UrlType.ACCOUNT)
+                           .generateWebhookUrl(true)
+                           .authenticationScheme(HostConnectionAttributes.AuthenticationScheme.HTTP_PASSWORD)
+                           .username(String.valueOf(
+                               new ScmSecret().decryptToCharArray(new SecretName("git_automation_username"))))
+                           .password(new ScmSecret().decryptToCharArray(new SecretName("git_automation_password")))
+                           .build())
+            .build();
+
     return ensureSettingAttribute(seed, settingAttribute, owners);
   }
 

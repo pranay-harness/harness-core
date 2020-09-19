@@ -28,7 +28,6 @@ import static software.wings.beans.EntityType.ARTIFACT;
 import static software.wings.beans.EntityType.ELK_CONFIGID;
 import static software.wings.beans.EntityType.ENVIRONMENT;
 import static software.wings.beans.EntityType.INFRASTRUCTURE_DEFINITION;
-import static software.wings.beans.EntityType.INFRASTRUCTURE_MAPPING;
 import static software.wings.beans.EntityType.NEWRELIC_CONFIGID;
 import static software.wings.beans.EntityType.NEWRELIC_MARKER_CONFIGID;
 import static software.wings.beans.EntityType.SERVICE;
@@ -87,7 +86,6 @@ import software.wings.beans.Pipeline;
 import software.wings.beans.Pipeline.PipelineKeys;
 import software.wings.beans.PipelineStage;
 import software.wings.beans.PipelineStage.PipelineStageElement;
-import software.wings.beans.RuntimeInputsConfig;
 import software.wings.beans.Service;
 import software.wings.beans.Variable;
 import software.wings.beans.VariableType;
@@ -771,7 +769,7 @@ public class PipelineServiceImpl implements PipelineService {
         } else if (ENV_STATE.name().equals(pse.getType())) {
           String workflowId = (String) pse.getProperties().get("workflowId");
           Workflow workflow = getWorkflow(pipeline, infraRefactor, workflowCache, workflowId);
-          setPipelineVariables(workflow, pse, pipelineVariables, true, infraRefactor);
+          setPipelineVariables(workflow, pse, pipelineVariables, true);
         } else if (APPROVAL.name().equals(pse.getType())) {
           setPipelineVariablesApproval(pse, pipelineVariables, pipelineStage.getName());
         }
@@ -823,7 +821,7 @@ public class PipelineServiceImpl implements PipelineService {
             }
 
             validateWorkflowVariables(workflow, pse, pipelineStage, invalidStages);
-            setPipelineVariables(workflow, pse, pipelineVariables, withFinalValuesOnly, infraRefactor);
+            setPipelineVariables(workflow, pse, pipelineVariables, withFinalValuesOnly);
             if (!pipelineParameterized) {
               pipelineParameterized = checkPipelineEntityParameterized(pse.getWorkflowVariables(), workflow);
             }
@@ -944,7 +942,7 @@ public class PipelineServiceImpl implements PipelineService {
 
           validateWorkflowVariables(workflow, pse, pipelineStage, invalidStages);
 
-          setPipelineVariables(workflow, pse, pipelineVariables, false, infraRefactor);
+          setPipelineVariables(workflow, pse, pipelineVariables, false);
           if (!templatized && isNotEmpty(pse.getWorkflowVariables())) {
             templatized = true;
           }
@@ -971,8 +969,8 @@ public class PipelineServiceImpl implements PipelineService {
   }
 
   @VisibleForTesting
-  void setPipelineVariables(Workflow workflow, PipelineStageElement pse, List<Variable> pipelineVariables,
-      boolean withFinalValuesOnly, boolean infraRefator) {
+  void setPipelineVariables(
+      Workflow workflow, PipelineStageElement pse, List<Variable> pipelineVariables, boolean withFinalValuesOnly) {
     List<Variable> workflowVariables = workflow.getOrchestrationWorkflow().getUserVariables();
     if (isEmpty(workflowVariables)) {
       return;
@@ -995,11 +993,19 @@ public class PipelineServiceImpl implements PipelineService {
     }
     int infraVarsCount = Math.toIntExact(
         workflowVariables.stream().filter(t -> INFRASTRUCTURE_DEFINITION == t.obtainEntityType()).count());
+    List<String> runtimeVariables = pse.getRuntimeInputsConfig() != null
+        ? pse.getRuntimeInputsConfig().getRuntimeInputVariables()
+        : new ArrayList<>();
+    boolean runtimeInputs = featureFlagService.isEnabled(FeatureName.RUNTIME_INPUT_PIPELINE, workflow.getAccountId());
     for (Variable variable : workflowVariables) {
       notEmptyCheck("Empty variable name", variable.getName());
       String value = pseWorkflowVariables.get(variable.getName());
+      boolean isRuntime = false;
+      if (runtimeInputs && isNotEmpty(runtimeVariables) && runtimeVariables.contains(variable.getName())) {
+        isRuntime = true;
+      }
       if (variable.obtainEntityType() == null) {
-        handleNonEntityVariables(pipelineVariables, variable, value);
+        handleNonEntityVariables(pipelineVariables, variable, value, isRuntime);
       } else {
         boolean allowMulti = false;
         if ((featureFlagService.isEnabled(FeatureName.MULTISELECT_INFRA_PIPELINE, workflow.getAccountId())
@@ -1008,8 +1014,8 @@ public class PipelineServiceImpl implements PipelineService {
           allowMulti = true;
         }
         // Entity variables.
-        handleEntityVariables(pipelineVariables, withFinalValuesOnly, infraRefator, workflowVariables,
-            pseWorkflowVariables, variable, allowMulti);
+        handleEntityVariables(pipelineVariables, withFinalValuesOnly, workflowVariables, pseWorkflowVariables, variable,
+            allowMulti, isRuntime);
       }
     }
   }
@@ -1079,8 +1085,8 @@ public class PipelineServiceImpl implements PipelineService {
   }
 
   private void handleEntityVariables(List<Variable> pipelineVariables, boolean withFinalValuesOnly,
-      boolean infraRefactor, List<Variable> workflowVariables, Map<String, String> pseWorkflowVariables,
-      Variable variable, boolean allowMulti) {
+      List<Variable> workflowVariables, Map<String, String> pseWorkflowVariables, Variable variable, boolean allowMulti,
+      boolean isRuntime) {
     String value = pseWorkflowVariables.get(variable.getName());
     if (isNotEmpty(value)) {
       String variableName = matchesVariablePattern(value) ? getName(value) : null;
@@ -1090,8 +1096,7 @@ public class PipelineServiceImpl implements PipelineService {
         pipelineVariable.setName(variableName);
         EntityType entityType = pipelineVariable.obtainEntityType();
 
-        setParentAndRelatedFields(
-            infraRefactor, workflowVariables, pseWorkflowVariables, variable, pipelineVariable, entityType);
+        setParentAndRelatedFields(workflowVariables, pseWorkflowVariables, variable, pipelineVariable, entityType);
         if (!contains(pipelineVariables, variableName)) {
           // Variable is an expression so prompt for the value at runtime.
           if (withFinalValuesOnly) {
@@ -1102,55 +1107,80 @@ public class PipelineServiceImpl implements PipelineService {
             pipelineVariable.setValue(variable.getName());
           }
           pipelineVariable.setAllowMultipleValues(allowMulti);
+          pipelineVariable.setRuntimeInput(isRuntime);
           pipelineVariables.add(pipelineVariable);
         } else {
-          updateStoredVariable(pipelineVariables, infraRefactor, workflowVariables, pseWorkflowVariables,
-              pipelineVariable, variableName, allowMulti);
+          updateStoredVariable(pipelineVariables, workflowVariables, pseWorkflowVariables, pipelineVariable,
+              variableName, allowMulti, isRuntime);
         }
       }
     }
   }
 
-  private void setParentAndRelatedFields(boolean infraRefator, List<Variable> workflowVariables,
-      Map<String, String> pseWorkflowVariables, Variable variable, Variable pipelineVariable, EntityType entityType) {
+  private void setParentAndRelatedFields(List<Variable> workflowVariables, Map<String, String> pseWorkflowVariables,
+      Variable variable, Variable pipelineVariable, EntityType entityType) {
     if (ENVIRONMENT == entityType) {
-      setRelatedFieldEnvironment(infraRefator, workflowVariables, pseWorkflowVariables, pipelineVariable);
+      setRelatedFieldEnvironment(workflowVariables, pseWorkflowVariables, pipelineVariable);
     } else {
       cloneRelatedFieldName(pseWorkflowVariables, pipelineVariable);
     }
     populateParentFields(pipelineVariable, entityType, workflowVariables, variable.getName(), pseWorkflowVariables);
   }
 
-  private void handleNonEntityVariables(List<Variable> pipelineVariables, Variable variable, String value) {
+  private void handleNonEntityVariables(
+      List<Variable> pipelineVariables, Variable variable, String value, boolean isRuntime) {
     // Non-entity variables. Here we can handle values like ${myTeam} for non entity variables
     if (!variable.isFixed()) {
+      Variable newVar = null;
+      String variableName = variable.getName();
       if (isEmpty(value)) {
-        if (!contains(pipelineVariables, variable.getName())) {
-          pipelineVariables.add(variable.cloneInternal());
-        }
+        newVar = variable.cloneInternal();
       } else if (matchesVariablePattern(value) && !value.contains(".")) {
-        String variableName = getName(value);
+        variableName = getName(value);
+        newVar = variable.cloneInternal();
+        newVar.setName(variableName);
+      }
+
+      if (newVar != null) {
         if (!contains(pipelineVariables, variableName)) {
-          Variable newVar = variable.cloneInternal();
-          newVar.setName(variableName);
           pipelineVariables.add(newVar);
+          newVar.setRuntimeInput(isRuntime);
+        } else {
+          String finalVariableName = variableName;
+          Variable existingVar =
+              pipelineVariables.stream().filter(t -> t.getName().equals(finalVariableName)).findFirst().orElse(null);
+          if (existingVar != null) {
+            if (existingVar.getRuntimeInput() == null) {
+              existingVar.setRuntimeInput(isRuntime);
+            } else if (existingVar.getRuntimeInput() != isRuntime) {
+              throw new InvalidRequestException(
+                  String.format("Variable %s is not marked as runtime in all pipeline stages", variable.getName()));
+            }
+          }
         }
       }
     }
   }
 
   @VisibleForTesting
-  void updateStoredVariable(List<Variable> pipelineVariables, boolean infraRefator, List<Variable> workflowVariables,
-      Map<String, String> pseWorkflowVariables, Variable variable, String variableName, boolean allowMulti) {
+  void updateStoredVariable(List<Variable> pipelineVariables, List<Variable> workflowVariables,
+      Map<String, String> pseWorkflowVariables, Variable variable, String variableName, boolean allowMulti,
+      boolean isRuntime) {
     Variable storedVar = getContainedVariable(pipelineVariables, variableName);
     if (storedVar != null) {
       if (ENVIRONMENT == storedVar.obtainEntityType()) {
-        updateRelatedFieldEnvironment(infraRefator, workflowVariables, pseWorkflowVariables, storedVar);
+        updateRelatedFieldEnvironment(workflowVariables, pseWorkflowVariables, storedVar);
       } else if (SERVICE == storedVar.obtainEntityType()) {
         mergeMetadataServiceVariable(variable, storedVar);
       } else if (INFRASTRUCTURE_DEFINITION == storedVar.obtainEntityType()) {
         storedVar.setAllowMultipleValues(allowMulti && storedVar.isAllowMultipleValues());
         mergeMetadataInfraVariable(variable, storedVar);
+      }
+      if (storedVar.getRuntimeInput() == null) {
+        storedVar.setRuntimeInput(isRuntime);
+      } else if (storedVar.getRuntimeInput() != isRuntime) {
+        throw new InvalidRequestException(
+            String.format("Variable %s is not marked as runtime in all pipeline stages", variable.getName()));
       }
     }
   }
@@ -1482,45 +1512,19 @@ public class PipelineServiceImpl implements PipelineService {
     }
   }
 
-  private void setRelatedFieldEnvironment(boolean infraRefactor, List<Variable> workflowVariables,
-      Map<String, String> pseWorkflowVariables, Variable pipelineVariable) {
-    if (infraRefactor) {
-      pipelineVariable.getMetadata().put(
-          "relatedField", join(",", getInfraDefVariables(workflowVariables, pseWorkflowVariables)));
-
-    } else {
-      pipelineVariable.getMetadata().put(
-          "relatedField", join(",", getInfraVariables(workflowVariables, pseWorkflowVariables)));
-    }
+  private void setRelatedFieldEnvironment(
+      List<Variable> workflowVariables, Map<String, String> pseWorkflowVariables, Variable pipelineVariable) {
+    pipelineVariable.getMetadata().put(
+        "relatedField", join(",", getInfraDefVariables(workflowVariables, pseWorkflowVariables)));
   }
 
   // Need to check. Might cause regression
-  void updateRelatedFieldEnvironment(boolean infraRefactor, List<Variable> workflowVariables,
-      Map<String, String> pseWorkflowVariables, Variable pipelineVariable) {
-    if (infraRefactor) {
-      String currentRelatedFields = (String) pipelineVariable.getMetadata().get("relatedField");
-      pipelineVariable.getMetadata().put("relatedField",
-          StringUtils.join(
-              currentRelatedFields, ",", join(",", getInfraDefVariables(workflowVariables, pseWorkflowVariables))));
-
-    } else {
-      String currentRelatedFields = (String) pipelineVariable.getMetadata().get("relatedField");
-      pipelineVariable.getMetadata().put("relatedField",
-          StringUtils.join(
-              currentRelatedFields, ",", join(",", getInfraVariables(workflowVariables, pseWorkflowVariables))));
-    }
-  }
-
-  private List<String> getInfraVariables(List<Variable> workflowVariables, Map<String, String> pseWorkflowVariables) {
-    List<Variable> infraMappingVariable =
-        workflowVariables.stream()
-            .filter(t -> t.obtainEntityType() != null && t.obtainEntityType() == INFRASTRUCTURE_MAPPING)
-            .collect(toList());
-    List<String> infraVarNames = new ArrayList<>();
-    for (Variable variable : infraMappingVariable) {
-      infraVarNames.add(getName(pseWorkflowVariables.get(variable.getName())));
-    }
-    return infraVarNames;
+  void updateRelatedFieldEnvironment(
+      List<Variable> workflowVariables, Map<String, String> pseWorkflowVariables, Variable pipelineVariable) {
+    String currentRelatedFields = (String) pipelineVariable.getMetadata().get("relatedField");
+    pipelineVariable.getMetadata().put("relatedField",
+        StringUtils.join(
+            currentRelatedFields, ",", join(",", getInfraDefVariables(workflowVariables, pseWorkflowVariables))));
   }
 
   private List<String> getInfraDefVariables(
@@ -1902,12 +1906,6 @@ public class PipelineServiceImpl implements PipelineService {
           }
 
           String accountId = pipeline.getAccountId();
-          if (featureFlagService.isEnabled(FeatureName.RUNTIME_INPUT_PIPELINE, accountId)
-              && stageElement.getRuntimeInputsConfig() != null) {
-            RuntimeInputsConfig runtimeInputsConfig = stageElement.getRuntimeInputsConfig();
-            pipelineServiceValidator.validateRuntimeInputsConfig(runtimeInputsConfig, accountId);
-          }
-
           if (!ENV_STATE.name().equals(stageElement.getType())) {
             continue;
           }
@@ -1923,7 +1921,11 @@ public class PipelineServiceImpl implements PipelineService {
           keywords.add(workflow.getDescription());
           List<Service> resolvedServiceForWorkflow =
               resolveServices(services, serviceIds, stageElement.getWorkflowVariables(), workflow);
-
+          if (featureFlagService.isEnabled(FeatureName.RUNTIME_INPUT_PIPELINE, accountId)
+              && stageElement.getRuntimeInputsConfig() != null) {
+            pipelineServiceValidator.validateRuntimeInputsConfig(
+                stageElement, accountId, workflow.getOrchestrationWorkflow().getUserVariables());
+          }
           if (workflow.getOrchestrationWorkflow().getOrchestrationWorkflowType() == ROLLING) {
             for (Service service : emptyIfNull(resolvedServiceForWorkflow)) {
               if (service.getDeploymentType() == DeploymentType.KUBERNETES && !service.isK8sV2()) {

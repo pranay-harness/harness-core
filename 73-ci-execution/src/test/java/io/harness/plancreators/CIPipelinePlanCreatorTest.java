@@ -12,9 +12,9 @@ import io.harness.category.element.UnitTests;
 import io.harness.executionplan.CIExecutionPlanCreatorRegistrar;
 import io.harness.executionplan.CIExecutionPlanTestHelper;
 import io.harness.executionplan.CIExecutionTest;
-import io.harness.executionplan.core.ExecutionPlanCreationContext;
 import io.harness.executionplan.core.ExecutionPlanCreatorResponse;
 import io.harness.executionplan.core.PlanCreatorSearchContext;
+import io.harness.executionplan.core.impl.ExecutionPlanCreationContextImpl;
 import io.harness.plan.PlanNode;
 import io.harness.rule.Owner;
 import org.junit.Before;
@@ -29,7 +29,6 @@ public class CIPipelinePlanCreatorTest extends CIExecutionTest {
   @Inject private CIExecutionPlanTestHelper ciExecutionPlanTestHelper;
   @Inject private CIExecutionPlanCreatorRegistrar ciExecutionPlanCreatorRegistrar;
 
-  @Mock private ExecutionPlanCreationContext executionPlanCreationContext;
   @Mock private PlanCreatorSearchContext<CIPipeline> planCreatorSearchContext;
   private CIPipeline ciPipeline;
   @Before
@@ -42,7 +41,10 @@ public class CIPipelinePlanCreatorTest extends CIExecutionTest {
   @Owner(developers = ALEKSANDAR)
   @Category(UnitTests.class)
   public void createPlan() {
-    ExecutionPlanCreatorResponse plan = ciPipelinePlanCreator.createPlan(ciPipeline, executionPlanCreationContext);
+    ExecutionPlanCreationContextImpl executionPlanCreationContextWithExecutionArgs =
+        ciExecutionPlanTestHelper.getExecutionPlanCreationContextWithExecutionArgs();
+    ExecutionPlanCreatorResponse plan =
+        ciPipelinePlanCreator.createPlan(ciPipeline, executionPlanCreationContextWithExecutionArgs);
     assertThat(plan.getPlanNodes()).isNotNull();
     List<PlanNode> planNodes = plan.getPlanNodes();
     assertThat(

@@ -110,6 +110,9 @@ import io.harness.delegate.task.azure.response.AzureVMSSSetupTaskResponse;
 import io.harness.delegate.task.azure.response.AzureVMSSSwitchRoutesResponse;
 import io.harness.delegate.task.azure.response.AzureVMSSTaskExecutionResponse;
 import io.harness.delegate.task.azure.response.AzureVMSSTaskResponse;
+import io.harness.delegate.task.gcp.request.GcpRequest;
+import io.harness.delegate.task.gcp.request.GcpValidationRequest;
+import io.harness.delegate.task.gcp.response.GcpValidationTaskResponse;
 import io.harness.delegate.task.git.GitFetchFilesConfig;
 import io.harness.delegate.task.git.GitFetchRequest;
 import io.harness.delegate.task.git.GitFetchResponse;
@@ -308,5 +311,8 @@ public class DelegateTasksBeansKryoRegister implements KryoRegistrar {
     kryo.register(StepMapOutput.class, 19332);
     kryo.register(StepExecutionStatus.class, 19333);
     kryo.register(GitConnectionNGCapability.class, 19334);
+    kryo.register(GcpRequest.RequestType.class, 19335);
+    kryo.register(GcpValidationRequest.class, 19336);
+    kryo.register(GcpValidationTaskResponse.class, 19337);
   }
 }

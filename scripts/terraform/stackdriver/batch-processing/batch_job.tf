@@ -1,6 +1,6 @@
 resource "google_logging_metric" "ce_failed_batch_job" {
-  name = join("_", [local.name_prefix, "ce_failed_batch_jobs"])
-  description = "Number of failed batch job. Owner: CE"
+  name        = join("_", [local.name_prefix, "ce_failed_batch_jobs"])
+  description = "Number of failed batch jobs. Owner: CE"
   filter = join("\n", [
     local.filter_prefix,
     "jsonPayload.logger=\"io.harness.batch.processing.schedule.BatchJobRunner\"",
@@ -8,35 +8,68 @@ resource "google_logging_metric" "ce_failed_batch_job" {
   ])
   metric_descriptor {
     metric_kind = "DELTA"
-    value_type = "INT64"
+    value_type  = "INT64"
     labels {
-      key = "accountId"
-      value_type = "STRING"
-      description = "The accountId"
+      key         = "accountId"
+      value_type  = "STRING"
+      description = "CE accountId"
+    }
+    labels {
+      key         = "batchJobType"
+      value_type  = "STRING"
+      description = "CE Batch Job Type"
     }
   }
   label_extractors = {
-    "accountId" : "EXTRACT(jsonPayload.harness.accountId)"
+    "accountId" : "EXTRACT(jsonPayload.harness.accountId)",
+    "batchJobType" : "EXTRACT(jsonPayload.harness.batchJobType)"
   }
 }
 
-resource "google_monitoring_alert_policy" "ce_failed_batch_job" {
-  count = var.deployment == "prod" ? 1 : 0
-  enabled = var.deployment == "prod" ? true: false
-  notification_channels = var.deployment == "prod" ? ["projects/${var.projectId}/notificationChannels/10185135917587539827"] : []
-  display_name = join("_", [local.name_prefix, "ce_failed_batch_job"])
-  combiner = "OR"
+resource "google_monitoring_alert_policy" "ce_failed_batch_job_alert_policy" {
+  notification_channels = ((var.deployment == "prod" || var.deployment == "freemium" || var.deployment == "prod_failover") ? ["${local.slack_prod_channel}"] :
+    ((var.deployment == "qa" || var.deployment == "qa_free" || var.deployment == "stress") ? ["${local.slack_qa_channel}"] :
+  ["${local.slack_dev_channel}"]))
+
+  display_name = join("_", [local.name_prefix, "ce_failed_batch_jobs"])
+  combiner     = "OR"
   conditions {
-    display_name = "ce_failed_batch_job"
+    display_name = "ce_failed_batch_jobs_per_account"
     condition_threshold {
-      filter =  "resource.type=\"global\" AND metric.type=\"logging.googleapis.com/user/${google_logging_metric.ce_failed_batch_job.id}\""
-      duration = "60s"
-      comparison = "COMPARISON_GT"
+      threshold_value = 0
+      filter          = "resource.type=\"k8s_container\" AND metric.type=\"logging.googleapis.com/user/${google_logging_metric.ce_failed_batch_job.id}\""
+      duration        = "180s"
+      comparison      = "COMPARISON_GT"
       aggregations {
-        group_by_fields = ["metric.labels.accountId"]
-        alignment_period = "60s"
-        per_series_aligner = "ALIGN_COUNT"
+        group_by_fields      = ["metric.labels.accountId"]
+        alignment_period     = "300s"
+        per_series_aligner   = "ALIGN_SUM"
+        cross_series_reducer = "REDUCE_SUM"
       }
     }
   }
+  conditions {
+    display_name = "ce_failed_batch_jobs_per_type"
+    condition_threshold {
+      threshold_value = 0
+      filter          = "resource.type=\"k8s_container\" AND metric.type=\"logging.googleapis.com/user/${google_logging_metric.ce_failed_batch_job.id}\""
+      duration        = "180s"
+      comparison      = "COMPARISON_GT"
+      aggregations {
+        group_by_fields      = ["metric.labels.batchJobType"]
+        alignment_period     = "300s"
+        per_series_aligner   = "ALIGN_SUM"
+        cross_series_reducer = "REDUCE_SUM"
+      }
+    }
+  }
+
+  documentation {
+    content = <<EOF
+    To troubleshoot: https://harness.atlassian.net/wiki/spaces/CE/pages/962724257/CE+Troubleshooting
+    EOF
+
+    mime_type = "text/markdown"
+  }
+
 }

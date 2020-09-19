@@ -6,6 +6,8 @@ import io.harness.beans.sweepingoutputs.K8PodDetails;
 import io.harness.beans.sweepingoutputs.StepTaskDetails;
 import io.harness.ci.beans.entities.BuildNumber;
 import io.harness.ci.beans.entities.CIBuild;
+import io.harness.ci.stdvars.BuildStandardVariables;
+import io.harness.ci.stdvars.GitVariables;
 import io.harness.morphia.MorphiaRegistrar;
 import io.harness.morphia.MorphiaRegistrarHelperPut;
 
@@ -19,6 +21,8 @@ public class CIBeansMorphiaRegistrar implements MorphiaRegistrar {
     set.add(CIBuild.class);
     set.add(K8PodDetails.class);
     set.add(StepTaskDetails.class);
+    set.add(BuildStandardVariables.class);
+    set.add(GitVariables.class);
     set.add(ContextElement.class);
   }
 

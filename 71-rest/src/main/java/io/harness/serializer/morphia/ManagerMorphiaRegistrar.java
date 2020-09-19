@@ -47,6 +47,7 @@ import software.wings.api.AmiStepExecutionSummary;
 import software.wings.api.ApprovalStateExecutionData;
 import software.wings.api.ArtifactCollectionExecutionData;
 import software.wings.api.AwsAmiDeployStateExecutionData;
+import software.wings.api.AwsAmiInfoVariables;
 import software.wings.api.AwsAmiSetupExecutionData;
 import software.wings.api.AwsAmiSwitchRoutesStateExecutionData;
 import software.wings.api.AwsAutoScalingGroupDeploymentInfo;
@@ -1641,6 +1642,7 @@ public class ManagerMorphiaRegistrar implements MorphiaRegistrar {
     w.put("api.InstanceFetchStateExecutionSummary", InstanceFetchStateExecutionSummary.class);
     w.put("api.CustomDeploymentTypeInfo", CustomDeploymentTypeInfo.class);
     w.put("beans.command.FetchInstancesCommandUnit", FetchInstancesCommandUnit.class);
+    w.put("api.AwsAmiInfoVariables", AwsAmiInfoVariables.class);
 
     MorphiaRegistrarHelperPut sm = (name, clazz) -> w.put("sm.states.spotinst." + name, clazz);
 

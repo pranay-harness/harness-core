@@ -69,6 +69,9 @@ public class K8sPVEventTasklet implements Tasklet {
       case EVENT_TYPE_STOP:
         type = InstanceEvent.EventType.STOP;
         break;
+      case EVENT_TYPE_EXPANSION:
+        // not implemented yet
+        return InstanceEvent.builder().build();
       default:
         break;
     }

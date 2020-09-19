@@ -15,6 +15,7 @@ import migrations.accountpermission.ManageDeploymentFreezePermissionMigration;
 import migrations.accountpermission.ManageIPWhitelistPermissionMigration;
 import migrations.accountpermission.ManagePipelineGovernancePermissionMigration;
 import migrations.accountpermission.ManageTagsMigration;
+import migrations.accountpermission.RemoveDeprecatedApplicationsCreatePermission;
 import migrations.accountpermission.RemoveDeprecatedTagManagementPermission;
 import migrations.all.AddAccountIdToAppEntities;
 import migrations.all.AddAccountIdToArtifactStreamsMigration;
@@ -122,6 +123,7 @@ import migrations.all.OauthEnabledFieldMigration;
 import migrations.all.OverrideDefaultLimits;
 import migrations.all.PcfServiceDeploymentMigration;
 import migrations.all.PcfServiceSpecificationToManifestFileMigration;
+import migrations.all.PerpetualTaskMigration;
 import migrations.all.PipelineWorkflowExecutionActionMigration;
 import migrations.all.PipelineWorkflowExecutionActionQlMigration;
 import migrations.all.PreferenceUserIdRemoveDollarSignMigration;
@@ -393,6 +395,8 @@ public class MigrationList {
         .add(Pair.of(340, ManageDeploymentFreezePermissionMigration.class))
         .add(Pair.of(341, ManagePipelineGovernancePermissionMigration.class))
         .add(Pair.of(342, RemoveDeprecatedTagManagementPermission.class))
+        .add(Pair.of(343, PerpetualTaskMigration.class))
+        .add(Pair.of(344, RemoveDeprecatedApplicationsCreatePermission.class))
         .build();
   }
 }

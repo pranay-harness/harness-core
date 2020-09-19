@@ -103,7 +103,6 @@ public class KubernetesEntityToDTO implements ConnectorEntityToDTOMapper<Kuberne
         KubernetesUserNamePasswordDTO.builder()
             .username(userNamePasswordCredential.getUserName())
             .passwordRef(SecretRefHelper.createSecretRef(userNamePasswordCredential.getPasswordRef()))
-            .caCertRef(SecretRefHelper.createSecretRef(userNamePasswordCredential.getCaCertRef()))
             .build();
     return KubernetesAuthDTO.builder().authType(USER_PASSWORD).credentials(kubernetesUserNamePasswordDTO).build();
   }
@@ -115,6 +114,7 @@ public class KubernetesEntityToDTO implements ConnectorEntityToDTOMapper<Kuberne
             .clientCertRef(SecretRefHelper.createSecretRef(k8SClientKeyCert.getClientCertRef()))
             .clientKeyPassphraseRef(SecretRefHelper.createSecretRef(k8SClientKeyCert.getClientKeyPassphraseRef()))
             .clientKeyAlgo(k8SClientKeyCert.getClientKeyAlgo())
+            .caCertRef(SecretRefHelper.createSecretRef(k8SClientKeyCert.getCaCertRef()))
             .build();
     return KubernetesAuthDTO.builder().authType(CLIENT_KEY_CERT).credentials(kubernetesClientKeyCertDTO).build();
   }

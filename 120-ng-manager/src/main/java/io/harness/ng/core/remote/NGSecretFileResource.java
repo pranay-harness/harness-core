@@ -1,15 +1,15 @@
 package io.harness.ng.core.remote;
 
-import static io.harness.ng.NGConstants.ACCOUNT_KEY;
-import static io.harness.ng.NGConstants.DESCRIPTION_KEY;
-import static io.harness.ng.NGConstants.FILE_KEY;
-import static io.harness.ng.NGConstants.IDENTIFIER_KEY;
-import static io.harness.ng.NGConstants.NAME_KEY;
-import static io.harness.ng.NGConstants.ORG_KEY;
-import static io.harness.ng.NGConstants.PROJECT_KEY;
-import static io.harness.ng.NGConstants.SECRET_MANAGER_KEY;
-import static io.harness.ng.NGConstants.TAGS_KEY;
-import static io.harness.ng.NGConstants.TYPE_KEY;
+import static io.harness.NGConstants.ACCOUNT_KEY;
+import static io.harness.NGConstants.DESCRIPTION_KEY;
+import static io.harness.NGConstants.FILE_KEY;
+import static io.harness.NGConstants.IDENTIFIER_KEY;
+import static io.harness.NGConstants.NAME_KEY;
+import static io.harness.NGConstants.ORG_KEY;
+import static io.harness.NGConstants.PROJECT_KEY;
+import static io.harness.NGConstants.SECRET_MANAGER_KEY;
+import static io.harness.NGConstants.TAGS_KEY;
+import static io.harness.NGConstants.TYPE_KEY;
 import static io.harness.secretmanagerclient.SecretType.SecretFile;
 import static software.wings.resources.secretsmanagement.EncryptedDataMapper.toDTO;
 
@@ -62,36 +62,6 @@ import javax.ws.rs.core.MediaType;
 public class NGSecretFileResource {
   private final NGSecretFileService ngSecretFileService;
   private final FileUploadLimit fileUploadLimit;
-
-  @POST
-  @ApiOperation(value = "Create a secret file", nickname = "postSecretFile")
-  @Consumes(MediaType.MULTIPART_FORM_DATA)
-  public ResponseDTO<EncryptedDataDTO> create(@NotNull @FormDataParam(FILE_KEY) InputStream uploadedInputStream,
-      @FormDataParam(TAGS_KEY) String tagsString, @NotNull @FormDataParam(NAME_KEY) String name,
-      @NotNull @FormDataParam(ACCOUNT_KEY) String account,
-      @SecretTypeAllowedValues(allowedValues = {SecretFile}) @NotNull @FormDataParam(TYPE_KEY) SecretType secretType,
-      @FormDataParam(ORG_KEY) String org, @FormDataParam(PROJECT_KEY) String project,
-      @NotNull @FormDataParam(SECRET_MANAGER_KEY) String secretManager,
-      @NotNull @EntityIdentifier @FormDataParam(IDENTIFIER_KEY) String identifier,
-      @FormDataParam(DESCRIPTION_KEY) String description) {
-    List<String> tags = new ArrayList<>();
-    if (!StringUtils.isEmpty(tagsString)) {
-      tags = Arrays.asList(tagsString.trim().split("\\s*,\\s*"));
-    }
-    SecretFileDTO dto = SecretFileDTO.builder()
-                            .account(account)
-                            .org(org)
-                            .project(project)
-                            .identifier(identifier)
-                            .secretManager(secretManager)
-                            .description(description)
-                            .name(name)
-                            .tags(tags)
-                            .type(secretType)
-                            .build();
-    return ResponseDTO.newResponse(toDTO(ngSecretFileService.create(
-        dto, new BoundedInputStream(uploadedInputStream, fileUploadLimit.getEncryptedFileLimit()))));
-  }
 
   @POST
   @Path("/yaml")

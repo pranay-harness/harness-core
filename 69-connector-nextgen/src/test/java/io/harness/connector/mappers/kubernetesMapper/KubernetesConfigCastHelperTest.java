@@ -47,12 +47,10 @@ public class KubernetesConfigCastHelperTest extends CategoryTest {
   public void castManualCredentialToKubernetesDelegateCredentialTest() {
     String masterURL = "masterURL";
     String userName = "userName";
-    String cacertIdentifier = "cacertIdentifier";
     String passwordIdentifier = "passwordIdentifier";
-    String caCertRef = "acc" + SECRET_DELIMINITER + cacertIdentifier;
     String passwordRef = "acc" + SECRET_DELIMINITER + passwordIdentifier;
     K8sUserNamePassword k8sUserNamePassword =
-        K8sUserNamePassword.builder().userName(userName).passwordRef(passwordRef).caCertRef(caCertRef).build();
+        K8sUserNamePassword.builder().userName(userName).passwordRef(passwordRef).build();
     KubernetesClusterDetails kubernetesClusterDetails = KubernetesClusterDetails.builder()
                                                             .masterUrl(masterURL)
                                                             .authType(KubernetesAuthType.USER_PASSWORD)
@@ -68,13 +66,10 @@ public class KubernetesConfigCastHelperTest extends CategoryTest {
   public void castToManualKubernetesCredentialsTest() {
     String masterURL = "masterURL";
     String userName = "userName";
-    String cacert = "caCertRef";
-    String cacertIdentifier = "cacertIdentifier";
     String passwordIdentifier = "passwordIdentifier";
-    String caCertRef = "acc" + SECRET_DELIMINITER + cacertIdentifier;
     String passwordRef = "acc" + SECRET_DELIMINITER + passwordIdentifier;
     K8sUserNamePassword k8sUserNamePassword =
-        K8sUserNamePassword.builder().userName(userName).passwordRef(passwordRef).caCertRef(caCertRef).build();
+        K8sUserNamePassword.builder().userName(userName).passwordRef(passwordRef).build();
     KubernetesClusterDetails kubernetesClusterDetails = KubernetesClusterDetails.builder()
                                                             .masterUrl(masterURL)
                                                             .authType(KubernetesAuthType.USER_PASSWORD)

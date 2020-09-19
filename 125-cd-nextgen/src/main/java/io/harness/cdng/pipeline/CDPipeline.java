@@ -1,18 +1,20 @@
 package io.harness.cdng.pipeline;
 
+import io.harness.beans.ParameterField;
 import io.harness.cdng.pipeline.CDPipeline.CDPipelineKeys;
 import io.harness.cdng.visitor.helpers.cdpipeline.CDPipelineVisitorHelper;
+import io.harness.common.SwaggerConstants;
 import io.harness.data.validator.EntityIdentifier;
 import io.harness.data.validator.EntityName;
 import io.harness.mongo.index.Field;
 import io.harness.ng.RsqlQueryable;
-import io.harness.utils.ParameterField;
 import io.harness.walktree.beans.VisitableChildren;
 import io.harness.walktree.visitor.SimpleVisitorHelper;
 import io.harness.walktree.visitor.Visitable;
 import io.harness.yaml.core.Tag;
 import io.harness.yaml.core.auxiliary.intfc.StageElementWrapper;
 import io.harness.yaml.core.intfc.Pipeline;
+import io.swagger.annotations.ApiModelProperty;
 import lombok.Builder;
 import lombok.Data;
 import lombok.Singular;
@@ -33,7 +35,7 @@ import java.util.List;
 public class CDPipeline implements Pipeline, Visitable {
   @EntityName String name;
   @EntityIdentifier String identifier;
-  ParameterField<String> description;
+  @ApiModelProperty(dataType = SwaggerConstants.STRING_CLASSPATH) ParameterField<String> description;
   List<Tag> tags;
   @Singular List<StageElementWrapper> stages;
 

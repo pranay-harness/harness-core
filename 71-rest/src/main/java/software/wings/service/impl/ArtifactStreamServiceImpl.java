@@ -458,6 +458,9 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
 
     // Set metadata-only field for nexus and azure artifacts.
     setMetadataOnly(artifactStream);
+    if (!artifactStream.isMetadataOnly()) {
+      throw new InvalidRequestException("Artifact Stream's metadata-only property cannot be set to false", USER);
+    }
     handleArtifactoryDockerSupportForPcf(artifactStream);
     // Add keywords.
     artifactStream.setKeywords(trimmedLowercaseSet(artifactStream.generateKeywords()));
@@ -633,8 +636,8 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
     }
 
     setMetadataOnly(artifactStream);
-    if (artifactStream.isMetadataOnly() != existingArtifactStream.isMetadataOnly()) {
-      throw new InvalidRequestException("Artifact Stream's metadata-only property cannot be changed", USER);
+    if (!artifactStream.isMetadataOnly() && existingArtifactStream.isMetadataOnly()) {
+      throw new InvalidRequestException("Artifact Stream's metadata-only property cannot be changed to false", USER);
     }
 
     artifactStream.setSourceName(artifactStream.generateSourceName());

@@ -55,19 +55,19 @@ load("@com_google_protobuf//:protobuf_deps.bzl", "protobuf_deps")
 
 protobuf_deps()
 
-#http_archive(
-#    name = "rules_proto_grpc",
-#    urls = ["https://github.com/rules-proto-grpc/rules_proto_grpc/archive/1.0.2.tar.gz"],
-#    sha256 = "5f0f2fc0199810c65a2de148a52ba0aff14d631d4e8202f41aff6a9d590a471b",
-#    strip_prefix = "rules_proto_grpc-1.0.2",
-#)
-
-git_repository(
+http_archive(
     name = "rules_proto_grpc",
-    remote = "https://github.com/wings-software/rules_proto_grpc.git",
-    commit = "7508bee4e4c09edc5934098e65ef6ea4e4aa5bff",
-    shallow_since = "1590812925 -0700",
+    urls = ["https://github.com/rules-proto-grpc/rules_proto_grpc/archive/1.0.2.tar.gz"],
+    sha256 = "5f0f2fc0199810c65a2de148a52ba0aff14d631d4e8202f41aff6a9d590a471b",
+    strip_prefix = "rules_proto_grpc-1.0.2",
 )
+
+#git_repository(
+#    name = "rules_proto_grpc",
+#    remote = "https://github.com/wings-software/rules_proto_grpc.git",
+#    commit = "7508bee4e4c09edc5934098e65ef6ea4e4aa5bff",
+#    shallow_since = "1590812925 -0700",
+#)
 
 load("@rules_proto_grpc//:repositories.bzl", "rules_proto_grpc_toolchains", "rules_proto_grpc_repos")
 
@@ -954,7 +954,7 @@ go_repository(
 )
 
 
-##############################################################################################################################################################################################
+###########################################################################################
 # ######################################   Java code ######################################
 
 load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_jar")
@@ -1159,11 +1159,24 @@ go_repository(
     sum = "h1:KUf9gEaCDzhsE/V7hpFz7nmTisuR0gXJz3+D946ggLk=",
     version = "v1.7.0",
 )
+
 load("//tools/sonarqube:repositories.bzl", "bazel_sonarqube_repositories")
 
 bazel_sonarqube_repositories()
+
 http_archive(
-    name = "openjdk8u242_darwin_archive",
+    name = "openjdk8u242_darwin_archive_mac",
+    build_file_content = """
+java_runtime(name = 'runtime', srcs =  glob(['**']), java='//:Contents/Home/bin/java', visibility = ['//visibility:public'])
+exports_files(["WORKSPACE"], visibility = ["//visibility:public"])
+""",
+    sha256 = "06675b7d65bce0313ee1f2e888dd44267e8afeced75e0b39b5ad1f5fdff54e0b",
+    strip_prefix = "jdk8u242-b08",
+    urls = ["https://github.com/AdoptOpenJDK/openjdk8-binaries/releases/download/jdk8u242-b08/OpenJDK8U-jdk_x64_mac_hotspot_8u242b08.tar.gz"],
+)
+
+http_archive(
+    name = "openjdk8u242_darwin_archive_linux",
     build_file_content = """
 java_runtime(name = 'runtime', srcs =  glob(['**']), java='//:bin/java', visibility = ['//visibility:public'])
 exports_files(["WORKSPACE"], visibility = ["//visibility:public"])

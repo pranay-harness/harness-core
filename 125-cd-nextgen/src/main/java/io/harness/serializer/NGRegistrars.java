@@ -15,6 +15,7 @@ public class NGRegistrars {
       ImmutableSet.<Class<? extends KryoRegistrar>>builder()
           .addAll(ManagerRegistrars.kryoRegistrars)
           .addAll(NGCoreRegistrars.kryoRegistrars)
+          .addAll(NGPipelineRegistrars.kryoRegistrars)
           .add(NGKryoRegistrar.class)
           .build();
 
@@ -28,6 +29,7 @@ public class NGRegistrars {
   public static final ImmutableSet<Class<? extends AliasRegistrar>> aliasRegistrars =
       ImmutableSet.<Class<? extends AliasRegistrar>>builder()
           .addAll(ManagerRegistrars.aliasRegistrars)
+          .addAll(NGPipelineRegistrars.aliasRegistrars)
           .add(NgAliasRegistrar.class)
           .build();
 }

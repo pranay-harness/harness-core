@@ -18,6 +18,7 @@ import io.harness.yaml.core.nonyaml.WithNonYamlInfo;
 import lombok.Builder;
 import lombok.Data;
 import lombok.Getter;
+import lombok.experimental.FieldNameConstants;
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Id;
 import org.springframework.data.annotation.Version;
@@ -29,6 +30,7 @@ import javax.validation.constraints.NotNull;
 
 @Data
 @Builder
+@FieldNameConstants(innerTypeName = "Pipeline")
 @Entity(value = "cipipeline", noClassnameStored = true)
 @HarnessEntity(exportable = true)
 @JsonIgnoreProperties(ignoreUnknown = true)

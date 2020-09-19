@@ -30,7 +30,6 @@ import io.harness.grpc.utils.HTimestamps;
 import io.harness.perpetualtask.PerpetualTaskExecutionParams;
 import io.harness.perpetualtask.PerpetualTaskId;
 import io.harness.perpetualtask.PerpetualTaskResponse;
-import io.harness.perpetualtask.PerpetualTaskState;
 import io.harness.perpetualtask.ecs.support.EcsMetricClient;
 import io.harness.rule.Owner;
 import io.harness.security.encryption.EncryptedDataDetail;
@@ -187,7 +186,6 @@ public class EcsPerpetualTaskExecutorTest extends DelegateTest {
     PerpetualTaskId perpetualTaskId = PerpetualTaskId.newBuilder().setId(PERPETUAL_TASK_ID).build();
     PerpetualTaskResponse perpetualTaskResponse =
         ecsPerpetualTaskExecutor.runOnce(perpetualTaskId, params, heartBeatTime);
-    assertThat(perpetualTaskResponse.getPerpetualTaskState()).isEqualTo(PerpetualTaskState.TASK_RUN_SUCCEEDED);
     assertThat(perpetualTaskResponse.getResponseCode()).isEqualTo(200);
   }
 

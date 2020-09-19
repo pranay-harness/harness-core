@@ -8,6 +8,7 @@ import io.harness.redesign.states.shell.ShellScriptStepParameters;
 import io.harness.redesign.states.shell.ShellScriptVariablesSweepingOutput;
 import io.harness.redesign.states.wait.WaitStepParameters;
 import io.harness.spring.AliasRegistrar;
+import software.wings.api.AwsAmiInfoVariables;
 import software.wings.api.ContainerRollbackRequestElement;
 import software.wings.api.ContainerServiceElement;
 import software.wings.api.HttpStateExecutionData;
@@ -75,5 +76,6 @@ public class WingsAliasRegistrar implements AliasRegistrar {
     orchestrationElements.put("ecsBGSetupData", EcsBGSetupData.class);
     orchestrationElements.put("pcfAppSetupTimeDetails", PcfAppSetupTimeDetails.class);
     orchestrationElements.put("pcfCommandRequest", PcfCommandRequest.class);
+    orchestrationElements.put("awsAmiInfoVariables", AwsAmiInfoVariables.class);
   }
 }

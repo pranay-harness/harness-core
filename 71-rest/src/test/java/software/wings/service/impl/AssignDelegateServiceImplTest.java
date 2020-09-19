@@ -2,6 +2,7 @@ package software.wings.service.impl;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.delegate.beans.TaskData.DEFAULT_ASYNC_CALL_TIMEOUT;
+import static io.harness.delegate.task.mixin.HttpConnectionExecutionCapabilityGenerator.buildHttpConnectionExecutionCapability;
 import static io.harness.rule.OwnerRule.ANSHUL;
 import static io.harness.rule.OwnerRule.BRETT;
 import static io.harness.rule.OwnerRule.GEORGE;
@@ -10,6 +11,7 @@ import static io.harness.rule.OwnerRule.PRASHANT;
 import static io.harness.rule.OwnerRule.PUNEET;
 import static io.harness.rule.OwnerRule.SANJA;
 import static io.harness.rule.OwnerRule.VUK;
+import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.emptySet;
 import static java.util.Collections.singletonList;
@@ -23,10 +25,13 @@ import static software.wings.beans.Delegate.Status.ENABLED;
 import static software.wings.beans.Environment.Builder.anEnvironment;
 import static software.wings.beans.Environment.EnvironmentType.NON_PROD;
 import static software.wings.beans.Environment.EnvironmentType.PROD;
+import static software.wings.beans.FeatureName.DISABLE_DELEGATE_CAPABILITY_FRAMEWORK;
 import static software.wings.beans.FeatureName.INFRA_MAPPING_REFACTOR;
 import static software.wings.beans.GcpKubernetesInfrastructureMapping.Builder.aGcpKubernetesInfrastructureMapping;
 import static software.wings.service.impl.AssignDelegateServiceImpl.ERROR_MESSAGE;
 import static software.wings.service.impl.AssignDelegateServiceImpl.MAX_DELEGATE_LAST_HEARTBEAT;
+import static software.wings.service.impl.AssignDelegateServiceImplTest.CriteriaType.MATCHING_CRITERIA;
+import static software.wings.service.impl.AssignDelegateServiceImplTest.CriteriaType.NOT_MATCHING_CRITERIA;
 import static software.wings.service.impl.instance.InstanceSyncTestConstants.COMPUTE_PROVIDER_SETTING_ID;
 import static software.wings.service.impl.instance.InstanceSyncTestConstants.INFRA_MAPPING_ID;
 import static software.wings.service.impl.instance.InstanceSyncTestConstants.SERVICE_ID;
@@ -66,7 +71,6 @@ import software.wings.beans.Delegate;
 import software.wings.beans.Delegate.DelegateBuilder;
 import software.wings.beans.DelegateScope;
 import software.wings.beans.Environment;
-import software.wings.beans.FeatureName;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.InfrastructureMappingType;
 import software.wings.beans.TaskType;
@@ -85,7 +89,6 @@ import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -241,8 +244,8 @@ public class AssignDelegateServiceImplTest extends WingsBaseTest {
     scopingRulesMap2.put("k2", new HashSet<>(singletonList("yy")));
 
     Map<String, Set<String>> scopingRulesMap3 = new HashMap<>();
-    scopingRulesMap3.put("k1", new HashSet<>(Arrays.asList("v11", "v12", "v13")));
-    scopingRulesMap3.put("k2", new HashSet<>(Arrays.asList("v21", "v22")));
+    scopingRulesMap3.put("k1", new HashSet<>(asList("v11", "v12", "v13")));
+    scopingRulesMap3.put("k2", new HashSet<>(asList("v21", "v22")));
     scopingRulesMap3.put("k3", new HashSet<>(singletonList("v31")));
 
     Map<String, Set<String>> scopingRulesMap4 = new HashMap<>();
@@ -285,10 +288,10 @@ public class AssignDelegateServiceImplTest extends WingsBaseTest {
                                .setupAbstraction("k1", "v1")
                                .data(TaskData.builder().async(true).timeout(DEFAULT_ASYNC_CALL_TIMEOUT).build())
                                .build())
-                     .scopingRules(Arrays.asList(DelegateProfileScopingRule.builder()
-                                                     .description("rule1")
-                                                     .scopingEntities(scopingRulesMap1)
-                                                     .build()))
+                     .scopingRules(asList(DelegateProfileScopingRule.builder()
+                                              .description("rule1")
+                                              .scopingEntities(scopingRulesMap1)
+                                              .build()))
                      .assignable(false)
                      .build())
             .add(DelegateProfileScopeTestData.builder()
@@ -302,10 +305,10 @@ public class AssignDelegateServiceImplTest extends WingsBaseTest {
                                .setupAbstraction("k1", "v1")
                                .data(TaskData.builder().async(true).timeout(DEFAULT_ASYNC_CALL_TIMEOUT).build())
                                .build())
-                     .scopingRules(Arrays.asList(DelegateProfileScopingRule.builder()
-                                                     .description("rule2")
-                                                     .scopingEntities(scopingRulesMap2)
-                                                     .build()))
+                     .scopingRules(asList(DelegateProfileScopingRule.builder()
+                                              .description("rule2")
+                                              .scopingEntities(scopingRulesMap2)
+                                              .build()))
                      .assignable(true)
                      .build())
             .add(DelegateProfileScopeTestData.builder()
@@ -320,10 +323,10 @@ public class AssignDelegateServiceImplTest extends WingsBaseTest {
                                .setupAbstraction("k2", "v22")
                                .data(TaskData.builder().async(true).timeout(DEFAULT_ASYNC_CALL_TIMEOUT).build())
                                .build())
-                     .scopingRules(Arrays.asList(DelegateProfileScopingRule.builder()
-                                                     .description("rule3")
-                                                     .scopingEntities(scopingRulesMap2)
-                                                     .build(),
+                     .scopingRules(asList(DelegateProfileScopingRule.builder()
+                                              .description("rule3")
+                                              .scopingEntities(scopingRulesMap2)
+                                              .build(),
                          DelegateProfileScopingRule.builder()
                              .description("rule4")
                              .scopingEntities(scopingRulesMap3)
@@ -341,10 +344,10 @@ public class AssignDelegateServiceImplTest extends WingsBaseTest {
                                .setupAbstraction("k1", "v13")
                                .data(TaskData.builder().async(true).timeout(DEFAULT_ASYNC_CALL_TIMEOUT).build())
                                .build())
-                     .scopingRules(Arrays.asList(DelegateProfileScopingRule.builder()
-                                                     .description("rule5")
-                                                     .scopingEntities(scopingRulesMap4)
-                                                     .build()))
+                     .scopingRules(asList(DelegateProfileScopingRule.builder()
+                                              .description("rule5")
+                                              .scopingEntities(scopingRulesMap4)
+                                              .build()))
                      .assignable(true)
                      .build())
             .build();
@@ -574,8 +577,8 @@ public class AssignDelegateServiceImplTest extends WingsBaseTest {
   public void assignByNames() {
     when(delegateService.retrieveDelegateSelectors(any(Delegate.class)))
         .thenReturn(emptySet())
-        .thenReturn(new HashSet<>(Arrays.asList("A")))
-        .thenReturn(new HashSet<>(Arrays.asList("a", "b")));
+        .thenReturn(new HashSet<>(asList("A")))
+        .thenReturn(new HashSet<>(asList("a", "b")));
 
     List<NameTestData> tests =
         ImmutableList.<NameTestData>builder()
@@ -694,24 +697,7 @@ public class AssignDelegateServiceImplTest extends WingsBaseTest {
   @Owner(developers = BRETT)
   @Category(UnitTests.class)
   public void shouldNotBeWhitelistedDiffCriteria() {
-    wingsPersistence.save(DelegateConnectionResult.builder()
-                              .accountId(ACCOUNT_ID)
-                              .delegateId(DELEGATE_ID)
-                              .criteria("criteria")
-                              .validated(true)
-                              .build());
-    Object[] params = {HttpTaskParameters.builder().url("criteria-other").build()};
-
-    DelegateTask delegateTask = DelegateTask.builder()
-                                    .accountId(ACCOUNT_ID)
-                                    .data(TaskData.builder()
-                                              .async(true)
-                                              .taskType(TaskType.HTTP.name())
-                                              .parameters(params)
-                                              .timeout(DEFAULT_ASYNC_CALL_TIMEOUT)
-                                              .build())
-                                    .build();
-
+    DelegateTask delegateTask = createDelegateTask(true, NOT_MATCHING_CRITERIA);
     assertThat(assignDelegateService.isWhitelisted(delegateTask, DELEGATE_ID)).isFalse();
   }
 
@@ -719,24 +705,7 @@ public class AssignDelegateServiceImplTest extends WingsBaseTest {
   @Owner(developers = BRETT)
   @Category(UnitTests.class)
   public void shouldNotBeWhitelistedWhenNotValidated() {
-    wingsPersistence.save(DelegateConnectionResult.builder()
-                              .accountId(ACCOUNT_ID)
-                              .delegateId(DELEGATE_ID)
-                              .criteria("criteria")
-                              .validated(false)
-                              .build());
-    Object[] params = {HttpTaskParameters.builder().url("criteria").build()};
-
-    DelegateTask delegateTask = DelegateTask.builder()
-                                    .accountId(ACCOUNT_ID)
-                                    .data(TaskData.builder()
-                                              .async(true)
-                                              .taskType(TaskType.HTTP.name())
-                                              .parameters(params)
-                                              .timeout(DEFAULT_ASYNC_CALL_TIMEOUT)
-                                              .build())
-                                    .build();
-
+    DelegateTask delegateTask = createDelegateTask(false, MATCHING_CRITERIA);
     assertThat(assignDelegateService.isWhitelisted(delegateTask, DELEGATE_ID)).isFalse();
   }
 
@@ -744,15 +713,16 @@ public class AssignDelegateServiceImplTest extends WingsBaseTest {
   @Owner(developers = BRETT)
   @Category(UnitTests.class)
   public void shouldGetConnectedWhitelistedDelegates() {
-    DelegateTask delegateTask = createDelegateTask(true, "criteria");
-
+    DelegateTask delegateTask = createDelegateTask(true, MATCHING_CRITERIA);
     List<String> delegateIds = assignDelegateService.connectedWhitelistedDelegates(delegateTask);
 
     assertThat(delegateIds.size()).isEqualTo(1);
     assertThat(delegateIds.get(0)).isEqualTo(DELEGATE_ID);
   }
 
-  private DelegateTask createDelegateTask(boolean b, String criteria) {
+  enum CriteriaType { MATCHING_CRITERIA, NOT_MATCHING_CRITERIA }
+
+  private DelegateTask createDelegateTask(boolean validated, CriteriaType criteria) {
     Delegate delegate = Delegate.builder()
                             .accountId(ACCOUNT_ID)
                             .uuid(DELEGATE_ID)
@@ -760,15 +730,23 @@ public class AssignDelegateServiceImplTest extends WingsBaseTest {
                             .lastHeartBeat(clock.millis())
                             .build();
     wingsPersistence.save(delegate);
+
+    HttpConnectionExecutionCapability matchingExecutionCapability =
+        buildHttpConnectionExecutionCapability("http//www.matching.com");
+
     wingsPersistence.save(DelegateConnectionResult.builder()
                               .accountId(ACCOUNT_ID)
                               .delegateId(DELEGATE_ID)
-                              .criteria("criteria")
-                              .validated(b)
+                              .criteria(matchingExecutionCapability.fetchCapabilityBasis())
+                              .validated(validated)
                               .build());
     when(delegateService.get(ACCOUNT_ID, DELEGATE_ID, false)).thenReturn(delegate);
 
-    Object[] params = {HttpTaskParameters.builder().url(criteria).build()};
+    HttpConnectionExecutionCapability executionCapability = criteria == MATCHING_CRITERIA
+        ? matchingExecutionCapability
+        : buildHttpConnectionExecutionCapability("http//www.not-matching.com");
+
+    Object[] params = {HttpTaskParameters.builder().url(executionCapability.getUrl()).build()};
     return DelegateTask.builder()
         .accountId(ACCOUNT_ID)
         .data(TaskData.builder()
@@ -777,6 +755,8 @@ public class AssignDelegateServiceImplTest extends WingsBaseTest {
                   .parameters(params)
                   .timeout(DEFAULT_ASYNC_CALL_TIMEOUT)
                   .build())
+        .capabilityFrameworkEnabled(true)
+        .executionCapabilities(asList(executionCapability))
         .build();
   }
 
@@ -784,7 +764,7 @@ public class AssignDelegateServiceImplTest extends WingsBaseTest {
   @Owner(developers = BRETT)
   @Category(UnitTests.class)
   public void shouldNotGetConnectedWhitelistedDelegatesNotValidated() {
-    DelegateTask delegateTask = createDelegateTask(false, "criteria");
+    DelegateTask delegateTask = createDelegateTask(false, MATCHING_CRITERIA);
 
     List<String> delegateIds = assignDelegateService.connectedWhitelistedDelegates(delegateTask);
 
@@ -830,7 +810,7 @@ public class AssignDelegateServiceImplTest extends WingsBaseTest {
   @Owner(developers = BRETT)
   @Category(UnitTests.class)
   public void shouldNotGetConnectedWhitelistedDelegatesOtherCriteria() {
-    DelegateTask delegateTask = createDelegateTask(true, "criteria-other");
+    DelegateTask delegateTask = createDelegateTask(true, NOT_MATCHING_CRITERIA);
 
     List<String> delegateIds = assignDelegateService.connectedWhitelistedDelegates(delegateTask);
 
@@ -841,8 +821,7 @@ public class AssignDelegateServiceImplTest extends WingsBaseTest {
   @Owner(developers = SANJA)
   @Category(UnitTests.class)
   public void shouldGetWhitelistedDelegatesWithoutCriteriaCapabilityFramework() {
-    when(featureFlagService.isEnabled(FeatureName.DELEGATE_CAPABILITY_FRAMEWORK_PHASE_ENABLE, ACCOUNT_ID))
-        .thenReturn(true);
+    when(featureFlagService.isEnabled(DISABLE_DELEGATE_CAPABILITY_FRAMEWORK, ACCOUNT_ID)).thenReturn(false);
     TaskData taskData = TaskData.builder().taskType(TaskType.SPOTINST_COMMAND_TASK.name()).build();
     DelegateTask delegateTask =
         DelegateTask.builder().accountId(ACCOUNT_ID).data(taskData).executionCapabilities(emptyList()).build();
@@ -882,7 +861,7 @@ public class AssignDelegateServiceImplTest extends WingsBaseTest {
   @Owner(developers = PUNEET)
   @Category(UnitTests.class)
   public void shouldGetFirstAttemptDelegate() {
-    DelegateTask delegateTask = createDelegateTask(true, "criteria");
+    DelegateTask delegateTask = createDelegateTask(true, MATCHING_CRITERIA);
 
     String delegateId = assignDelegateService.pickFirstAttemptDelegate(delegateTask);
 
@@ -1025,7 +1004,7 @@ public class AssignDelegateServiceImplTest extends WingsBaseTest {
     SelectorCapability selectorCapability1 = SelectorCapability.builder().selectors(selectors1).build();
     SelectorCapability selectorCapability2 = SelectorCapability.builder().selectors(selectors2).build();
 
-    List<ExecutionCapability> executionCapabilityList = Arrays.asList(selectorCapability1, selectorCapability2);
+    List<ExecutionCapability> executionCapabilityList = asList(selectorCapability1, selectorCapability2);
 
     DelegateTask delegateTask =
         DelegateTask.builder().accountId(ACCOUNT_ID).executionCapabilities(executionCapabilityList).build();
@@ -1044,7 +1023,7 @@ public class AssignDelegateServiceImplTest extends WingsBaseTest {
     HttpConnectionExecutionCapability httpConnectionExecutionCapability =
         HttpConnectionExecutionCapability.builder().port(80).build();
 
-    List<ExecutionCapability> executionCapabilityList = Arrays.asList(httpConnectionExecutionCapability);
+    List<ExecutionCapability> executionCapabilityList = asList(httpConnectionExecutionCapability);
 
     DelegateTask delegateTask =
         DelegateTask.builder().accountId(ACCOUNT_ID).executionCapabilities(executionCapabilityList).build();
@@ -1058,7 +1037,7 @@ public class AssignDelegateServiceImplTest extends WingsBaseTest {
   @Owner(developers = VUK)
   @Category(UnitTests.class)
   public void shouldExtractSelectorFromTaskSelectors() {
-    List<String> tagsList = Arrays.asList("a", "b", "c");
+    List<String> tagsList = asList("a", "b", "c");
 
     DelegateTask delegateTask = DelegateTask.builder().accountId(ACCOUNT_ID).tags(tagsList).build();
 
@@ -1074,11 +1053,11 @@ public class AssignDelegateServiceImplTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void shouldExtractSelectorMerged() {
     Set<String> selectors = Stream.of("a", "d").collect(Collectors.toSet());
-    List<String> tagsList = Arrays.asList("a", "b", "c");
+    List<String> tagsList = asList("a", "b", "c");
 
     SelectorCapability selectorCapability = SelectorCapability.builder().selectors(selectors).build();
 
-    List<ExecutionCapability> executionCapabilityList = Arrays.asList(selectorCapability);
+    List<ExecutionCapability> executionCapabilityList = asList(selectorCapability);
 
     DelegateTask delegateTask = DelegateTask.builder()
                                     .accountId(ACCOUNT_ID)
@@ -1152,14 +1131,14 @@ public class AssignDelegateServiceImplTest extends WingsBaseTest {
         createDelegateBuilder().accountId(accountId).uuid(generateUuid()).status(Delegate.Status.DELETED).build();
 
     wingsPersistence.save(
-        Arrays.asList(activeDelegate1, activeDelegate2, disconnectedDelegate, wapprDelegate, deletedDelegate));
+        asList(activeDelegate1, activeDelegate2, disconnectedDelegate, wapprDelegate, deletedDelegate));
 
     BatchDelegateSelectionLog batch = BatchDelegateSelectionLog.builder().taskId(generateUuid()).build();
 
     List<String> activeDelegates = assignDelegateService.retrieveActiveDelegates(accountId, batch);
     assertThat(activeDelegates).isNotNull();
     assertThat(activeDelegates.size()).isEqualTo(2);
-    assertThat(activeDelegates.containsAll(Arrays.asList(activeDelegate1Id, activeDelegate2Id))).isTrue();
+    assertThat(activeDelegates.containsAll(asList(activeDelegate1Id, activeDelegate2Id))).isTrue();
 
     Set<String> disconnectedDelegates = new HashSet<>();
     disconnectedDelegates.add(disconnectedDelegate.getUuid());
@@ -1180,14 +1159,12 @@ public class AssignDelegateServiceImplTest extends WingsBaseTest {
         HttpConnectionExecutionCapability.builder().url("localhost").build();
     SelectorCapability selectorCapability = SelectorCapability.builder().selectors(selectors).build();
 
-    List<ExecutionCapability> executionCapabilityList =
-        Arrays.asList(selectorCapability, connectionExecutionCapability);
+    List<ExecutionCapability> executionCapabilityList = asList(selectorCapability, connectionExecutionCapability);
 
     DelegateTask delegateTask =
         DelegateTask.builder().accountId(ACCOUNT_ID).executionCapabilities(executionCapabilityList).build();
 
-    when(featureFlagService.isEnabled(FeatureName.DELEGATE_CAPABILITY_FRAMEWORK_PHASE_ENABLE, ACCOUNT_ID))
-        .thenReturn(true);
+    when(featureFlagService.isEnabled(DISABLE_DELEGATE_CAPABILITY_FRAMEWORK, ACCOUNT_ID)).thenReturn(false);
     List<String> criteria = assignDelegateService.fetchCriteria(delegateTask);
 
     assertThat(criteria).containsExactly("localhost");
@@ -1200,10 +1177,9 @@ public class AssignDelegateServiceImplTest extends WingsBaseTest {
     HttpTaskParameters parameters = HttpTaskParameters.builder().url("localhost").build();
     TaskData taskData = TaskData.builder().taskType(TaskType.HTTP.name()).parameters(new Object[] {parameters}).build();
     DelegateTask delegateTask =
-        DelegateTask.builder().accountId(ACCOUNT_ID).data(taskData).tags(Arrays.asList("a", "b")).build();
+        DelegateTask.builder().accountId(ACCOUNT_ID).data(taskData).tags(asList("a", "b")).build();
 
-    when(featureFlagService.isEnabled(FeatureName.DELEGATE_CAPABILITY_FRAMEWORK_PHASE_ENABLE, ACCOUNT_ID))
-        .thenReturn(false);
+    when(featureFlagService.isEnabled(DISABLE_DELEGATE_CAPABILITY_FRAMEWORK, ACCOUNT_ID)).thenReturn(true);
     List<String> criteria = assignDelegateService.fetchCriteria(delegateTask);
 
     assertThat(criteria).containsExactly("localhost");
@@ -1228,7 +1204,7 @@ public class AssignDelegateServiceImplTest extends WingsBaseTest {
                                                           .message("testMessage")
                                                           .build();
 
-    List<DelegateSelectionLogParams> delegateSelectionLogs = Arrays.asList(delegateSelectionLog);
+    List<DelegateSelectionLogParams> delegateSelectionLogs = asList(delegateSelectionLog);
 
     when(delegateSelectionLogsService.fetchTaskSelectionLogs(accountId, uuid)).thenReturn(delegateSelectionLogs);
 

@@ -3,6 +3,9 @@ package io.harness.states;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.rule.OwnerRule.HARSH;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.joor.Reflect.on;
+import static org.mockito.Matchers.any;
+import static org.mockito.Mockito.when;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
@@ -10,7 +13,9 @@ import com.google.inject.Inject;
 import io.harness.ambiance.Ambiance;
 import io.harness.beans.CIPipeline;
 import io.harness.beans.CIPipelineSetupParameters;
+import io.harness.beans.executionargs.CIExecutionArgs;
 import io.harness.category.element.UnitTests;
+import io.harness.engine.outputs.ExecutionSweepingOutputService;
 import io.harness.execution.status.Status;
 import io.harness.executionplan.CIExecutionPlanTestHelper;
 import io.harness.executionplan.CIExecutionTest;
@@ -23,6 +28,7 @@ import io.harness.tasks.ResponseData;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
+import org.mockito.Mock;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -30,6 +36,7 @@ import java.util.Map;
 public class CIPipelineSetupStepTest extends CIExecutionTest {
   @Inject private CIPipelineSetupStep ciPipelineSetupStep;
   @Inject private CIExecutionPlanTestHelper ciExecutionPlanTestHelper;
+  @Mock ExecutionSweepingOutputService executionSweepingOutputResolver;
   private CIPipeline ciPipeline;
 
   private static final String CHILD_ID = generateUuid();
@@ -37,16 +44,19 @@ public class CIPipelineSetupStepTest extends CIExecutionTest {
   @Before
   public void setUp() {
     ciPipeline = ciExecutionPlanTestHelper.getCIPipeline();
+    on(ciPipelineSetupStep).set("executionSweepingOutputResolver", executionSweepingOutputResolver);
   }
   @Test
   @Owner(developers = HARSH)
   @Category(UnitTests.class)
   public void shouldObtainChild() {
     Ambiance ambiance = Ambiance.builder().build();
+    when(executionSweepingOutputResolver.consume(any(), any(), any(), any())).thenReturn("namespace");
     Map<String, String> fieldToExecutionNodeIdMap = new HashMap<>();
     fieldToExecutionNodeIdMap.put("stages", CHILD_ID);
     CIPipelineSetupParameters stateParameters = CIPipelineSetupParameters.builder()
                                                     .ciPipeline(ciPipeline)
+                                                    .ciExecutionArgs(CIExecutionArgs.builder().buildNumber(1L).build())
                                                     .fieldToExecutionNodeIdMap(fieldToExecutionNodeIdMap)
                                                     .build();
     ChildExecutableResponse childExecutableResponse =

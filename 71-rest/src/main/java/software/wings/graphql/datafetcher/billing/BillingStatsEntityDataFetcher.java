@@ -24,10 +24,12 @@ import software.wings.graphql.schema.type.aggregation.billing.QLCCMTimeSeriesAgg
 import software.wings.graphql.schema.type.aggregation.billing.QLEntityTableData;
 import software.wings.graphql.schema.type.aggregation.billing.QLEntityTableData.QLEntityTableDataBuilder;
 import software.wings.graphql.schema.type.aggregation.billing.QLEntityTableListData;
+import software.wings.graphql.schema.type.aggregation.billing.QLStatsBreakdownInfo;
 import software.wings.graphql.utils.nameservice.NameService;
 import software.wings.security.PermissionAttribute.PermissionType;
 import software.wings.security.annotations.AuthRule;
 
+import java.math.BigDecimal;
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -158,6 +160,8 @@ public class BillingStatsEntityDataFetcher
       Double unallocatedCost = BillingStatsDefaultKeys.UNALLOCATEDCOST;
       // Used to recalculate cost trend in case of group by labels or tags
       Double prevBillingAmount = BillingStatsDefaultKeys.TOTALCOST;
+      int efficiencyScore = BillingStatsDefaultKeys.EFFICIENCY_SCORE;
+      int efficiencyScoreTrendPercentage = BillingStatsDefaultKeys.EFFICIENCY_SCORE_TREND;
 
       for (BillingDataMetaDataFields field : queryData.getFieldNames()) {
         switch (field) {
@@ -247,10 +251,37 @@ public class BillingStatsEntityDataFetcher
         }
       }
 
+      if (totalCost > 0.0) {
+        efficiencyScore =
+            billingDataHelper.calculateEfficiencyScore(QLStatsBreakdownInfo.builder()
+                                                           .total(totalCost)
+                                                           .idle(idleCost)
+                                                           .unallocated(unallocatedCost)
+                                                           .utilized(totalCost - idleCost - unallocatedCost)
+                                                           .build());
+      }
+
       if (entityIdToPrevBillingAmountData != null && entityIdToPrevBillingAmountData.containsKey(entityId)) {
-        costTrend =
-            billingDataHelper.getCostTrendForEntity(resultSet, entityIdToPrevBillingAmountData.get(entityId), filters);
-        prevBillingAmount = entityIdToPrevBillingAmountData.get(entityId).getCost().doubleValue();
+        QLBillingAmountData prevBillingAmountData = entityIdToPrevBillingAmountData.get(entityId);
+        costTrend = billingDataHelper.getCostTrendForEntity(resultSet, prevBillingAmountData, filters);
+        if (prevBillingAmountData != null && prevBillingAmountData.getCost() != null
+            && prevBillingAmountData.getCost().compareTo(BigDecimal.ZERO) > 0
+            && prevBillingAmountData.getIdleCost() != null && prevBillingAmountData.getUnallocatedCost() != null) {
+          QLStatsBreakdownInfo prevCostStats = QLStatsBreakdownInfo.builder()
+                                                   .total(prevBillingAmountData.getCost())
+                                                   .idle(prevBillingAmountData.getIdleCost())
+                                                   .unallocated(prevBillingAmountData.getUnallocatedCost())
+                                                   .build();
+          double prevUtilizedCost = billingDataHelper.getRoundedDoubleValue(prevCostStats.getTotal().doubleValue()
+              - prevCostStats.getIdle().doubleValue() - prevCostStats.getUnallocated().doubleValue());
+          prevCostStats.setUtilized(prevUtilizedCost);
+          int oldEfficiencyScore = billingDataHelper.calculateEfficiencyScore(prevCostStats);
+          efficiencyScoreTrendPercentage =
+              billingDataHelper
+                  .calculateTrendPercentage(BigDecimal.valueOf(efficiencyScore), BigDecimal.valueOf(oldEfficiencyScore))
+                  .intValue();
+          prevBillingAmount = prevBillingAmountData.getCost().doubleValue();
+        }
       }
 
       final QLEntityTableDataBuilder entityTableDataBuilder = QLEntityTableData.builder();
@@ -280,6 +311,8 @@ public class BillingStatsEntityDataFetcher
           .avgCpuUtilization(avgCpuUtilization)
           .avgMemoryUtilization(avgMemoryUtilization)
           .unallocatedCost(unallocatedCost)
+          .efficiencyScore(efficiencyScore)
+          .efficiencyScoreTrendPercentage(efficiencyScoreTrendPercentage)
           .prevBillingAmount(prevBillingAmount);
 
       entityTableListData.add(entityTableDataBuilder.build());

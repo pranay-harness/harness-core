@@ -46,7 +46,12 @@ import io.harness.delegate.task.artifacts.ArtifactSourceDelegateRequest;
 import io.harness.delegate.task.artifacts.DelegateArtifactTaskHandler;
 import io.harness.delegate.task.artifacts.docker.DockerArtifactDelegateRequest;
 import io.harness.delegate.task.artifacts.docker.DockerArtifactTaskHandler;
+import io.harness.delegate.task.gcp.request.GcpRequest;
+import io.harness.delegate.task.gcp.taskHandlers.GcpValidationTaskHandler;
+import io.harness.delegate.task.gcp.taskHandlers.TaskHandler;
 import io.harness.delegate.task.k8s.K8sTaskType;
+import io.harness.gcp.client.GcpClient;
+import io.harness.gcp.impl.GcpClientImpl;
 import io.harness.git.GitClientV2;
 import io.harness.git.GitClientV2Impl;
 import io.harness.k8s.K8sGlobalConfigService;
@@ -686,6 +691,7 @@ public class DelegateModule extends AbstractModule {
     bind(AzureNetworkClient.class).to(AzureNetworkClientImpl.class);
     bind(AzureMonitorClient.class).to(AzureMonitorClientImpl.class);
     bind(NGGitService.class).to(NGGitServiceImpl.class);
+    bind(GcpClient.class).to(GcpClientImpl.class);
 
     // NG Delegate
     MapBinder<String, K8sRequestHandler> k8sTaskTypeToRequestHandler =
@@ -701,5 +707,9 @@ public class DelegateModule extends AbstractModule {
                 new TypeLiteral<Class<? extends DelegateArtifactTaskHandler>>() {});
     artifactServiceMapBinder.addBinding(DockerArtifactDelegateRequest.class)
         .toInstance(DockerArtifactTaskHandler.class);
+
+    MapBinder<GcpRequest.RequestType, TaskHandler> gcpTaskTypeToTaskHandlerMap =
+        MapBinder.newMapBinder(binder(), GcpRequest.RequestType.class, TaskHandler.class);
+    gcpTaskTypeToTaskHandlerMap.addBinding(GcpRequest.RequestType.VALIDATE).to(GcpValidationTaskHandler.class);
   }
 }

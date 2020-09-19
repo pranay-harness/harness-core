@@ -1,16 +1,12 @@
 package io.harness.cdng.stepsdependency.constants;
 
-import lombok.Getter;
+import lombok.experimental.UtilityClass;
 
-public enum OutcomeExpressionConstants {
-  SERVICE("service"),
-  INFRASTRUCTURE("infrastructure"),
-  ARTIFACTS("ARTIFACTS"),
-  K8S_ROLL_OUT("rollingOutcome");
-
-  @Getter private final String name;
-
-  OutcomeExpressionConstants(String name) {
-    this.name = name;
-  }
+@UtilityClass
+public class OutcomeExpressionConstants {
+  public final String SERVICE = "service";
+  public final String INFRASTRUCTURE = "infrastructure";
+  public final String ARTIFACTS = "ARTIFACTS";
+  public final String K8S_ROLL_OUT = "rollingOutcome";
+  public final String ENVIRONMENT = "environment";
 }

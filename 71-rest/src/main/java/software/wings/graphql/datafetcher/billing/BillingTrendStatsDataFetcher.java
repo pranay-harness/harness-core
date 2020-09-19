@@ -14,6 +14,7 @@ import software.wings.graphql.schema.type.aggregation.billing.QLBillingSortCrite
 import software.wings.graphql.schema.type.aggregation.billing.QLBillingStatsInfo;
 import software.wings.graphql.schema.type.aggregation.billing.QLBillingTrendStats;
 import software.wings.graphql.schema.type.aggregation.billing.QLCCMGroupBy;
+import software.wings.graphql.schema.type.aggregation.billing.QLStatsBreakdownInfo;
 import software.wings.security.PermissionAttribute.PermissionType;
 import software.wings.security.annotations.AuthRule;
 
@@ -56,6 +57,7 @@ public class BillingTrendStatsDataFetcher extends AbstractStatsDataFetcherWithAg
   private static final String COST_VALUE = "$%s";
   private static final String EMPTY_VALUE = "-";
   private static final String NA_VALUE = "NA";
+  private static final String EFFICIENCY_SCORE_LABEL = "Efficiency Score";
 
   @Override
   @AuthRule(permissionType = PermissionType.LOGGED_IN)
@@ -96,10 +98,70 @@ public class BillingTrendStatsDataFetcher extends AbstractStatsDataFetcherWithAg
           .utilizedCost(getUtilizedCostStats(billingAmountData.getIdleCostData(), billingAmountData.getTotalCostData(),
               billingAmountData.getUnallocatedCostData()))
           .systemCost(getSystemCostStats(billingAmountData.getSystemCostData(), billingAmountData.getTotalCostData()))
+          .efficiencyScore(getEfficiencyScore(accountId, billingAmountData, aggregateFunction, filters))
           .build();
     } else {
       return QLBillingTrendStats.builder().build();
     }
+  }
+
+  private QLBillingStatsInfo getEfficiencyScore(String accountId, QLTrendStatsCostData currentBillingAmount,
+      List<QLCCMAggregationFunction> aggregateFunction, List<QLBillingDataFilter> filters) {
+    int currentEfficiencyScore = BillingStatsDefaultKeys.EFFICIENCY_SCORE;
+    int previousEfficiencyScore;
+    int efficiencyTrend = BillingStatsDefaultKeys.EFFICIENCY_SCORE_TREND;
+
+    if (currentBillingAmount.getTotalCostData() != null
+        && currentBillingAmount.getTotalCostData().getCost().compareTo(BigDecimal.ZERO) > 0
+        && currentBillingAmount.getIdleCostData() != null && currentBillingAmount.getUnallocatedCostData() != null) {
+      QLStatsBreakdownInfo currentCostStats =
+          QLStatsBreakdownInfo.builder()
+              .idle(currentBillingAmount.getIdleCostData().getCost())
+              .total(currentBillingAmount.getTotalCostData().getCost())
+              .unallocated(currentBillingAmount.getUnallocatedCostData().getCost())
+              .utilized(currentBillingAmount.getTotalCostData()
+                            .getCost()
+                            .subtract(currentBillingAmount.getUnallocatedCostData().getCost())
+                            .subtract(currentBillingAmount.getIdleCostData().getCost()))
+              .build();
+
+      currentEfficiencyScore = billingDataHelper.calculateEfficiencyScore(currentCostStats);
+    }
+
+    List<QLBillingDataFilter> trendFilters = billingDataHelper.getTrendFilter(
+        filters, billingDataHelper.getStartInstant(filters), billingDataHelper.getEndInstant(filters));
+    QLTrendStatsCostData prevBillingAmountData = getBillingAmountData(accountId, aggregateFunction, trendFilters);
+
+    if (prevBillingAmountData != null && prevBillingAmountData.getTotalCostData() != null
+        && prevBillingAmountData.getIdleCostData() != null && prevBillingAmountData.getUnallocatedCostData() != null
+        && prevBillingAmountData.getTotalCostData().getCost().compareTo(BigDecimal.ZERO) > 0
+        && prevBillingAmountData.getIdleCostData().getCost().compareTo(BigDecimal.ZERO) >= 0
+        && prevBillingAmountData.getUnallocatedCostData().getCost().compareTo(BigDecimal.ZERO) >= 0) {
+      QLStatsBreakdownInfo previousCostStats =
+          QLStatsBreakdownInfo.builder()
+              .idle(prevBillingAmountData.getIdleCostData().getCost())
+              .total(prevBillingAmountData.getTotalCostData().getCost())
+              .unallocated(prevBillingAmountData.getUnallocatedCostData().getCost())
+              .utilized(prevBillingAmountData.getTotalCostData()
+                            .getCost()
+                            .subtract(prevBillingAmountData.getUnallocatedCostData().getCost())
+                            .subtract(prevBillingAmountData.getIdleCostData().getCost()))
+              .build();
+
+      previousEfficiencyScore = billingDataHelper.calculateEfficiencyScore(previousCostStats);
+      if (previousEfficiencyScore > 0) {
+        efficiencyTrend = billingDataHelper
+                              .calculateTrendPercentage(BigDecimal.valueOf(currentEfficiencyScore),
+                                  BigDecimal.valueOf(previousEfficiencyScore))
+                              .intValue();
+      }
+    }
+    return QLBillingStatsInfo.builder()
+        .statsLabel(EFFICIENCY_SCORE_LABEL)
+        .statsDescription(null)
+        .statsValue(String.valueOf(currentEfficiencyScore))
+        .statsTrend(efficiencyTrend)
+        .build();
   }
 
   private QLBillingStatsInfo getForecastBillingStats(
@@ -222,7 +284,6 @@ public class BillingTrendStatsDataFetcher extends AbstractStatsDataFetcherWithAg
         .statsValue(utilizedCostValue)
         .build();
   }
-
   private QLBillingStatsInfo getBillingTrend(String accountId, BigDecimal totalBillingAmount,
       List<QLCCMAggregationFunction> aggregateFunction, List<QLBillingDataFilter> filters) {
     List<QLBillingDataFilter> trendFilters = billingDataHelper.getTrendFilter(

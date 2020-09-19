@@ -26,6 +26,7 @@ import io.harness.serializer.morphia.CIBeansMorphiaRegistrar;
 import io.harness.serializer.morphia.TestPersistenceMorphiaRegistrar;
 import io.harness.spring.AliasRegistrar;
 import io.harness.testlib.module.MongoRuleMixin;
+import io.harness.testlib.module.TestMongoModule;
 import io.harness.threading.CurrentThreadExecutor;
 import io.harness.threading.ExecutorModule;
 import org.junit.rules.MethodRule;
@@ -100,8 +101,15 @@ public class CIManagerRule implements MethodRule, InjectorRuleMixin, MongoRuleMi
         });
       }
     });
+    modules.add(TestMongoModule.getInstance());
     modules.add(new CIManagerPersistenceTestModule());
-    modules.add(new CIManagerServiceModule(CIManagerConfiguration.builder().build(), null));
+    modules.add(new CIManagerServiceModule(
+        CIManagerConfiguration.builder()
+            .managerAuthority("localhost")
+            .managerTarget("localhost:9880")
+            .managerServiceSecret("IC04LYMBf1lDP5oeY4hupxd4HJhLmN6azUku3xEbeE3SUx5G3ZYzhbiwVtK4i7AmqyU9OZkwB4v8E9qM")
+            .build(),
+        null));
     return modules;
   }
 

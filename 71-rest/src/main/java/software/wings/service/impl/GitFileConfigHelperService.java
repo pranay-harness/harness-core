@@ -70,6 +70,7 @@ public class GitFileConfigHelperService {
         .filePath(gitFileConfig.getFilePath())
         .commitId(gitFileConfig.getCommitId())
         .useBranch(gitFileConfig.isUseBranch())
+        .useInlineServiceDefinition(gitFileConfig.isUseInlineServiceDefinition())
         .serviceSpecFilePath(gitFileConfig.getServiceSpecFilePath())
         .taskSpecFilePath(gitFileConfig.getTaskSpecFilePath())
         .connectorName(gitFileConfig.getConnectorName())

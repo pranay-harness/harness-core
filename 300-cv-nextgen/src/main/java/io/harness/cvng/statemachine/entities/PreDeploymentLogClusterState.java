@@ -5,6 +5,7 @@ import com.google.common.base.Preconditions;
 import io.harness.cvng.analysis.beans.LogClusterLevel;
 import io.harness.cvng.statemachine.beans.AnalysisInput;
 import io.harness.cvng.statemachine.beans.AnalysisState;
+import io.harness.cvng.statemachine.beans.AnalysisStatus;
 import lombok.Builder;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;

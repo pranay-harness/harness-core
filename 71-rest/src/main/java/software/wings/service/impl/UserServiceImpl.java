@@ -353,8 +353,7 @@ public class UserServiceImpl implements UserService {
       // Send an email invitation for the trial user to finish up the sign-up with additional information
       // such as password, account/company name information.
       sendVerificationEmail(userInvite, url, params);
-      eventPublishHelper.publishTrialUserSignupEvent(
-          userInvite.getUtmInfo(), emailAddress, userInvite.getName(), inviteId, userInvite.getCompanyName());
+      eventPublishHelper.publishTrialUserSignupEvent(inviteId, emailAddress, userInvite);
     } else if (userInviteInDB.isCompleted()) {
       if (spamChecker.isSpam(userInviteInDB)) {
         return false;

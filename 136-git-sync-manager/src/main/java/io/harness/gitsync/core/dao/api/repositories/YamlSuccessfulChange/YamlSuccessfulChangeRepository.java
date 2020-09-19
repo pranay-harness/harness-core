@@ -11,5 +11,6 @@ import java.util.Optional;
 @HarnessRepo
 @OwnedBy(HarnessTeam.DX)
 public interface YamlSuccessfulChangeRepository extends CrudRepository<YamlSuccessfulChange, String> {
-  Optional<YamlSuccessfulChange> findByAccountIdAndYamlFilePath(String accountId, String yamlFilePath);
+  Optional<YamlSuccessfulChange> findByAccountIdAndOrganizationIdAndProjectIdAndYamlFilePath(
+      String accountId, String orgId, String projectId, String yamlFilePath);
 }

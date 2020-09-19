@@ -32,6 +32,7 @@ import io.harness.serializer.kryo.TestPersistenceKryoRegistrar;
 import io.harness.serializer.morphia.TestPersistenceMorphiaRegistrar;
 import io.harness.spring.AliasRegistrar;
 import io.harness.testlib.module.MongoRuleMixin;
+import io.harness.testlib.module.TestMongoModule;
 import io.harness.threading.CurrentThreadExecutor;
 import io.harness.threading.ExecutorModule;
 import io.harness.time.TimeModule;
@@ -94,6 +95,14 @@ public class OrchestrationVisualizationRule implements MethodRule, InjectorRuleM
             .addAll(OrchestrationVisualizationModuleRegistrars.aliasRegistrars)
             .build();
       }
+
+      @Provides
+      @Singleton
+      public OrchestrationModuleConfig orchestrationModuleConfig() {
+        return OrchestrationModuleConfig.builder()
+            .expressionEvaluatorProvider(new AmbianceExpressionEvaluatorProvider())
+            .build();
+      }
     });
 
     modules.add(mongoTypeModule(annotations));
@@ -124,11 +133,9 @@ public class OrchestrationVisualizationRule implements MethodRule, InjectorRuleM
 
     modules.add(new VersionModule());
     modules.add(TimeModule.getInstance());
+    modules.add(TestMongoModule.getInstance());
     modules.add(new OrchestrationVisualizationPersistenceTestModule());
-    modules.add(
-        OrchestrationModule.getInstance(OrchestrationModuleConfig.builder()
-                                            .expressionEvaluatorProvider(new AmbianceExpressionEvaluatorProvider())
-                                            .build()));
+    modules.add(OrchestrationModule.getInstance());
     modules.add(OrchestrationVisualizationModule.getInstance());
     return modules;
   }

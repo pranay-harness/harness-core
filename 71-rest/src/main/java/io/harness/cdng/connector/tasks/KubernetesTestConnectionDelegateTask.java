@@ -9,6 +9,7 @@ import io.harness.delegate.beans.connector.k8Connector.KubernetesClusterConfigDT
 import io.harness.delegate.beans.connector.k8Connector.KubernetesClusterDetailsDTO;
 import io.harness.delegate.beans.connector.k8Connector.KubernetesConnectionTaskParams;
 import io.harness.delegate.beans.connector.k8Connector.KubernetesConnectionTaskResponse;
+import io.harness.delegate.beans.connector.k8Connector.KubernetesCredentialType;
 import io.harness.delegate.task.AbstractDelegateRunnableTask;
 import io.harness.delegate.task.TaskParameters;
 import io.harness.delegate.task.k8s.K8sYamlToDelegateDTOMapper;
@@ -37,9 +38,11 @@ public class KubernetesTestConnectionDelegateTask extends AbstractDelegateRunnab
   public KubernetesConnectionTaskResponse run(TaskParameters parameters) {
     KubernetesConnectionTaskParams kubernetesConnectionTaskParams = (KubernetesConnectionTaskParams) parameters;
     KubernetesClusterConfigDTO kubernetesClusterConfig = kubernetesConnectionTaskParams.getKubernetesClusterConfig();
-    KubernetesAuthCredentialDTO kubernetesCredentialAuth =
-        getKubernetesCredentialsAuth((KubernetesClusterDetailsDTO) kubernetesClusterConfig.getConfig());
-    secretDecryptionService.decrypt(kubernetesCredentialAuth, kubernetesConnectionTaskParams.getEncryptionDetails());
+    if (kubernetesClusterConfig.getKubernetesCredentialType() == KubernetesCredentialType.MANUAL_CREDENTIALS) {
+      KubernetesAuthCredentialDTO kubernetesCredentialAuth =
+          getKubernetesCredentialsAuth((KubernetesClusterDetailsDTO) kubernetesClusterConfig.getConfig());
+      secretDecryptionService.decrypt(kubernetesCredentialAuth, kubernetesConnectionTaskParams.getEncryptionDetails());
+    }
     Exception execptionInProcessing = null;
     boolean validCredentials = false;
     KubernetesConfig kubernetesConfig =

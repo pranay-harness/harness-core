@@ -27,10 +27,10 @@ locals {
     "labels.app=\"delegate\""
   ])
 
-  filter_prefix = (var.deployment == "qa"     ? local.qa_filter_prefix :
-                  (var.deployment == "stress" ? local.stress_filter_prefix :
-                  (var.deployment == "prod"   ? local.prod_filter_prefix :
-                                                local.freemium_filter_prefix)))
+  filter_prefix = (var.deployment == "qa" ? local.qa_filter_prefix :
+    (var.deployment == "stress" ? local.stress_filter_prefix :
+      (var.deployment == "prod" ? local.prod_filter_prefix :
+  local.freemium_filter_prefix)))
 
   name_prefix = join("_", ["x", var.deployment, "agent"])
 }

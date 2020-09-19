@@ -1,0 +1,19 @@
+package io.harness.ng.core.dto.secrets;
+
+import com.fasterxml.jackson.annotation.JsonSubTypes;
+import com.fasterxml.jackson.annotation.JsonTypeInfo;
+import io.harness.ng.core.models.SecretSpec;
+
+@JsonTypeInfo(
+    use = JsonTypeInfo.Id.NAME, include = JsonTypeInfo.As.EXTERNAL_PROPERTY, property = "type", visible = true)
+@JsonSubTypes(value =
+    {
+      @JsonSubTypes.Type(value = SecretTextSpecDTO.class, name = "SecretText")
+      , @JsonSubTypes.Type(value = SecretFileSpecDTO.class, name = "SecretFile"),
+          @JsonSubTypes.Type(value = SSHKeySpecDTO.class, name = "SSHKey"),
+    })
+public abstract class SecretSpecDTO {
+  public abstract boolean isValidYaml();
+
+  public abstract SecretSpec toEntity();
+}

@@ -153,9 +153,10 @@ public class DefaultConnectorServiceImpl implements ConnectorService {
       String accountIdentifier, String orgIdentifier, String projectIdentifier, String connectorIdentifier) {
     String fullyQualifiedIdentifier = FullyQualifiedIdentifierHelper.getFullyQualifiedIdentifier(
         accountIdentifier, orgIdentifier, projectIdentifier, connectorIdentifier);
-    return !connectorRepository.existsByFullyQualifiedIdentifierAndDeletedNot(fullyQualifiedIdentifier, true);
+    return !connectorRepository.existsByFullyQualifiedIdentifier(fullyQualifiedIdentifier);
   }
 
+  @Override
   public ConnectorValidationResult testConnection(
       String accountIdentifier, String orgIdentifier, String projectIdentifier, String connectorIdentifier) {
     String fullyQualifiedIdentifier = FullyQualifiedIdentifierHelper.getFullyQualifiedIdentifier(

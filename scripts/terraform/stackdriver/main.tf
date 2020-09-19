@@ -34,6 +34,7 @@ module "delegate-watcher" {
 module "event-service" {
   source = "./event-service"
   deployment = var.deployment
+  projectId = var.projectId
 }
 
 module "batch-processing" {
@@ -45,4 +46,10 @@ module "batch-processing" {
 module "mongo-dashboards" {
   source = "./mongo"
   deployment = var.deployment
+}
+
+module "ce-graphql" {
+  source = "./ce-graphql"
+  deployment = var.deployment
+  projectId = var.projectId
 }

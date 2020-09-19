@@ -27,6 +27,7 @@ import io.harness.ccm.config.CCMConfig;
 import io.harness.ccm.config.CCMSettingService;
 import io.harness.perpetualtask.PerpetualTaskService;
 import io.harness.perpetualtask.PerpetualTaskState;
+import io.harness.perpetualtask.PerpetualTaskUnassignedReason;
 import io.harness.perpetualtask.internal.PerpetualTaskRecord;
 import io.harness.rule.Owner;
 import io.harness.time.FakeClock;
@@ -117,7 +118,7 @@ public class HealthStatusServiceImplTest extends CategoryTest {
                         .perpetualTaskIds(perpetualTaskIds)
                         .build();
 
-    taskRecord = getPerpetualTaskRecord(delegateId, PerpetualTaskState.TASK_RUN_SUCCEEDED);
+    taskRecord = buildPerpetualTaskRecord(delegateId, PerpetualTaskState.TASK_ASSIGNED, null);
     currentInstant = Instant.now();
 
     when(billingDataPipelineRecordDao.fetchBillingPipelineRecord(accountId, awsConnectorId))
@@ -139,8 +140,9 @@ public class HealthStatusServiceImplTest extends CategoryTest {
             LastReceivedPublishedMessage.builder().lastReceivedAt(Instant.now(fakeClock).toEpochMilli()).build());
   }
 
-  private PerpetualTaskRecord getPerpetualTaskRecord(String delegateId, PerpetualTaskState state) {
-    return PerpetualTaskRecord.builder().delegateId(delegateId).state(state).build();
+  private PerpetualTaskRecord buildPerpetualTaskRecord(
+      String delegateId, PerpetualTaskState state, PerpetualTaskUnassignedReason reason) {
+    return PerpetualTaskRecord.builder().delegateId(delegateId).state(state).unassignedReason(reason).build();
   }
 
   @Test
@@ -156,7 +158,8 @@ public class HealthStatusServiceImplTest extends CategoryTest {
   @Owner(developers = HANTANG)
   @Category(UnitTests.class)
   public void shouldReturnUnhealthyWhenDelegateDisconnected() {
-    PerpetualTaskRecord taskRecord = getPerpetualTaskRecord(null, PerpetualTaskState.NO_DELEGATE_AVAILABLE);
+    PerpetualTaskRecord taskRecord = buildPerpetualTaskRecord(
+        null, PerpetualTaskState.TASK_UNASSIGNED, PerpetualTaskUnassignedReason.NO_DELEGATE_AVAILABLE);
     when(perpetualTaskService.getTaskRecord(anyString())).thenReturn(taskRecord);
     CEHealthStatus status = healthStatusService.getHealthStatus(cloudProviderId);
     assertThat(status.isHealthy()).isFalse();
@@ -166,7 +169,8 @@ public class HealthStatusServiceImplTest extends CategoryTest {
   @Owner(developers = SANJA)
   @Category(UnitTests.class)
   public void shouldReturnUnhealthyWhenNoInstalledDelegate() {
-    PerpetualTaskRecord taskRecord = getPerpetualTaskRecord(null, PerpetualTaskState.NO_DELEGATE_INSTALLED);
+    PerpetualTaskRecord taskRecord = buildPerpetualTaskRecord(
+        null, PerpetualTaskState.TASK_UNASSIGNED, PerpetualTaskUnassignedReason.NO_DELEGATE_INSTALLED);
     when(perpetualTaskService.getTaskRecord(anyString())).thenReturn(taskRecord);
     CEHealthStatus status = healthStatusService.getHealthStatus(cloudProviderId);
     assertThat(status.isHealthy()).isFalse();

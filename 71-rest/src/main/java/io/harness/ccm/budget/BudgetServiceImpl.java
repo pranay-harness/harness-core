@@ -99,6 +99,8 @@ public class BudgetServiceImpl implements BudgetService {
                              .budgetAmount(budget.getBudgetAmount())
                              .alertThresholds(budget.getAlertThresholds())
                              .userGroupIds(budget.getUserGroupIds())
+                             .emailAddresses(budget.getEmailAddresses())
+                             .notifyOnSlack(budget.isNotifyOnSlack())
                              .build();
     return create(cloneBudget);
   }

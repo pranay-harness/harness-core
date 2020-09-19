@@ -9,6 +9,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import software.wings.api.AwsAmiInfoVariables.AwsAmiInfoVariablesBuilder;
 import software.wings.beans.ResizeStrategy;
 import software.wings.service.impl.aws.model.AwsAmiPreDeploymentData;
 import software.wings.sm.ContextElement;
@@ -51,6 +52,17 @@ public class AmiServiceSetupElement implements ContextElement, SweepingOutput {
     map.put("newAsgName", newAutoScalingGroupName);
     map.put("oldAsgName", oldAutoScalingGroupName);
     return ImmutableMap.of("ami", map);
+  }
+
+  public AwsAmiInfoVariables fetchPcfVariableInfo() {
+    AwsAmiInfoVariablesBuilder builder = AwsAmiInfoVariables.builder();
+    if (newAutoScalingGroupName != null) {
+      builder.newAsgName(newAutoScalingGroupName);
+    }
+    if (oldAutoScalingGroupName != null) {
+      builder.oldAsgName(oldAutoScalingGroupName);
+    }
+    return builder.build();
   }
 
   @Override

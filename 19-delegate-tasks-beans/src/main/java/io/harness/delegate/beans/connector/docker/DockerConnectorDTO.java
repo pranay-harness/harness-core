@@ -19,5 +19,5 @@ import lombok.experimental.FieldDefaults;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class DockerConnectorDTO extends ConnectorConfigDTO {
   String dockerRegistryUrl;
-  DockerAuthenticationDTO authScheme;
+  DockerAuthenticationDTO auth;
 }

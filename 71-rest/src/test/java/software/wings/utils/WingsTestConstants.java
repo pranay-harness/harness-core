@@ -315,6 +315,10 @@ public interface WingsTestConstants {
 
   String USER_GROUP_ID = "USER_GROUP_ID";
 
+  String MANIFEST_ID = "MANIFEST_ID";
+
+  String PERPETUAL_TASK_ID = "PERPETUAL_TASK_ID";
+
   int INTEGER_DEFAULT_VALUE = Integer.MAX_VALUE;
 
   long LONG_DEFAULT_VALUE = Long.MAX_VALUE;

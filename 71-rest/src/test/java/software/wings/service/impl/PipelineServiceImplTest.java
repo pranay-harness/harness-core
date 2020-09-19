@@ -7,6 +7,7 @@ import static io.harness.rule.OwnerRule.PRABU;
 import static io.harness.rule.OwnerRule.SRINIVAS;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
@@ -63,6 +64,7 @@ import software.wings.beans.FeatureName;
 import software.wings.beans.Pipeline;
 import software.wings.beans.PipelineStage;
 import software.wings.beans.PipelineStage.PipelineStageElement;
+import software.wings.beans.RuntimeInputsConfig;
 import software.wings.beans.Variable;
 import software.wings.beans.VariableType;
 import software.wings.beans.Workflow;
@@ -312,27 +314,6 @@ public class PipelineServiceImplTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = POOJA)
-  @Category(UnitTests.class)
-  public void testUpdateRelatedFieldsEnvironmentInfraMapping() throws Exception {
-    List<Variable> workflowVariables = asList(aVariable().entityType(SERVICE).name("Service").build(),
-        aVariable().entityType(ENVIRONMENT).name("Environment").build(),
-        aVariable().entityType(INFRASTRUCTURE_MAPPING).name("ServiceInfra_ECS").value("${infra}").build());
-
-    Map<String, Object> metadata = new HashMap<>();
-    metadata.put(Variable.RELATED_FIELD, "infra");
-    metadata.put(Variable.ENTITY_TYPE, ENVIRONMENT);
-    Variable pipelineVariable = aVariable().entityType(ENVIRONMENT).name("Environment").metadata(metadata).build();
-    Map<String, String> pseWorkflowVariables = new HashMap<>();
-    pseWorkflowVariables.put("Service", "Service 2");
-    pseWorkflowVariables.put("Environment", "Environment");
-    pseWorkflowVariables.put("ServiceInfra_ECS", "${infra2}");
-
-    pipelineServiceImpl.updateRelatedFieldEnvironment(false, workflowVariables, pseWorkflowVariables, pipelineVariable);
-    assertThat(pipelineVariable.getMetadata().get("relatedField")).isEqualTo("infra,infra2");
-  }
-
-  @Test
   @Owner(developers = ABHINAV)
   @Category(UnitTests.class)
   public void testUniquePipelineName() throws Exception {
@@ -479,7 +460,7 @@ public class PipelineServiceImplTest extends WingsBaseTest {
     pseWorkflowVariables.put("Environment", "${env}");
     pseWorkflowVariables.put("Infrastructure_KUBERNETES", "${infra2}");
     pipelineServiceImpl.updateStoredVariable(
-        pipelineVariables, true, workflowVariables, pseWorkflowVariables, envWorkflowVariable, "env", false);
+        pipelineVariables, workflowVariables, pseWorkflowVariables, envWorkflowVariable, "env", false, false);
     assertThat(envVarStored.getMetadata().get(Variable.RELATED_FIELD)).isEqualTo("infra1,infra2");
   }
 
@@ -516,7 +497,7 @@ public class PipelineServiceImplTest extends WingsBaseTest {
     pseWorkflowVariables.put("Service", "${srv}");
     pseWorkflowVariables.put("Infrastructure_KUBERNETES", "${infra2}");
     pipelineServiceImpl.updateStoredVariable(
-        pipelineVariables, true, workflowVariables, pseWorkflowVariables, serviceWorkflowVariable, "srv", false);
+        pipelineVariables, workflowVariables, pseWorkflowVariables, serviceWorkflowVariable, "srv", false, false);
     assertThat(serviceVarStored.getMetadata().get(Variable.RELATED_FIELD)).isEqualTo("infra1,infra2");
   }
 
@@ -542,7 +523,7 @@ public class PipelineServiceImplTest extends WingsBaseTest {
                                            .build();
 
     pipelineServiceImpl.updateStoredVariable(
-        pipelineVariables, true, new ArrayList<>(), new HashMap<>(), serviceVariableNewPhase, "srv", false);
+        pipelineVariables, new ArrayList<>(), new HashMap<>(), serviceVariableNewPhase, "srv", false, false);
     assertThat(serviceVarStored.getMetadata().get(Variable.RELATED_FIELD)).isEqualTo("infra2");
     assertThat(serviceVarStored.getMetadata().get(Variable.INFRA_ID)).isEqualTo("infra_id_1");
   }
@@ -568,7 +549,7 @@ public class PipelineServiceImplTest extends WingsBaseTest {
                                                Variable.INFRA_ID, "infra_id_2", Variable.ENTITY_TYPE, SERVICE))
                                            .build();
     pipelineServiceImpl.updateStoredVariable(
-        pipelineVariables, true, new ArrayList<>(), new HashMap<>(), serviceVariableNewPhase, "srv", false);
+        pipelineVariables, new ArrayList<>(), new HashMap<>(), serviceVariableNewPhase, "srv", false, false);
     assertThat(serviceVarStored.getMetadata().get(Variable.INFRA_ID)).isEqualTo("infra_id_1,infra_id_2");
   }
 
@@ -593,8 +574,8 @@ public class PipelineServiceImplTest extends WingsBaseTest {
                                            .build();
 
     assertThatThrownBy(()
-                           -> pipelineServiceImpl.updateStoredVariable(pipelineVariables, true, new ArrayList<>(),
-                               new HashMap<>(), serviceVariableNewPhase, "srv", false))
+                           -> pipelineServiceImpl.updateStoredVariable(pipelineVariables, new ArrayList<>(),
+                               new HashMap<>(), serviceVariableNewPhase, "srv", false, false))
         .isInstanceOf(InvalidRequestException.class)
         .hasMessageContaining(
             "The same Workflow variable name srv cannot be used for Services using different Artifact types. Change the name of the variable in one or more Workflow.");
@@ -621,8 +602,8 @@ public class PipelineServiceImplTest extends WingsBaseTest {
                                          .build();
 
     assertThatThrownBy(()
-                           -> pipelineServiceImpl.updateStoredVariable(pipelineVariables, true, new ArrayList<>(),
-                               new HashMap<>(), infraVariableNewPhase, "infra", false))
+                           -> pipelineServiceImpl.updateStoredVariable(pipelineVariables, new ArrayList<>(),
+                               new HashMap<>(), infraVariableNewPhase, "infra", false, false))
         .isInstanceOf(InvalidRequestException.class)
         .hasMessageContaining(
             "The same Workflow variable name infra cannot be used for InfraDefinitions using different Environment. Change the name of the variable in one or more Workflow.");
@@ -653,7 +634,7 @@ public class PipelineServiceImplTest extends WingsBaseTest {
                                          .build();
 
     pipelineServiceImpl.updateStoredVariable(
-        pipelineVariables, true, new ArrayList<>(), new HashMap<>(), infraVariableNewPhase, "infra", true);
+        pipelineVariables, new ArrayList<>(), new HashMap<>(), infraVariableNewPhase, "infra", true, false);
     assertThat(infraVarStored.getMetadata().get(Variable.RELATED_FIELD)).isEqualTo("srv1,srv2");
     assertThat(infraVarStored.isAllowMultipleValues()).isFalse();
   }
@@ -683,7 +664,7 @@ public class PipelineServiceImplTest extends WingsBaseTest {
                                          .build();
 
     pipelineServiceImpl.updateStoredVariable(
-        pipelineVariables, true, new ArrayList<>(), new HashMap<>(), infraVariableNewPhase, "infra", false);
+        pipelineVariables, new ArrayList<>(), new HashMap<>(), infraVariableNewPhase, "infra", false, false);
     assertThat(infraVarStored.getMetadata().get(Variable.RELATED_FIELD)).isEqualTo("srv1");
     assertThat(infraVarStored.getMetadata().get(Variable.SERVICE_ID)).isEqualTo("service_id_2");
     assertThat(infraVarStored.isAllowMultipleValues()).isFalse();
@@ -710,7 +691,7 @@ public class PipelineServiceImplTest extends WingsBaseTest {
                                          .build();
 
     pipelineServiceImpl.updateStoredVariable(
-        pipelineVariables, true, new ArrayList<>(), new HashMap<>(), infraVariableNewPhase, "infra", true);
+        pipelineVariables, new ArrayList<>(), new HashMap<>(), infraVariableNewPhase, "infra", true, false);
     assertThat(infraVarStored.getMetadata().get(Variable.SERVICE_ID)).isEqualTo("serviceID_1,serviceID_2");
   }
 
@@ -755,8 +736,8 @@ public class PipelineServiceImplTest extends WingsBaseTest {
     PipelineStageElement pse2 =
         PipelineStageElement.builder().workflowVariables(pse2WorkflowVariables).type("ENV_STATE").build();
 
-    pipelineServiceImpl.setPipelineVariables(workflow, pse, pipelineVariables, false, true);
-    pipelineServiceImpl.setPipelineVariables(workflow, pse2, pipelineVariables, false, true);
+    pipelineServiceImpl.setPipelineVariables(workflow, pse, pipelineVariables, false);
+    pipelineServiceImpl.setPipelineVariables(workflow, pse2, pipelineVariables, false);
 
     assertThat(pipelineVariables).isNotEmpty();
     assertThat(pipelineVariables.get(0).getName()).isEqualTo("env");
@@ -782,30 +763,30 @@ public class PipelineServiceImplTest extends WingsBaseTest {
     PipelineStageElement pse =
         PipelineStageElement.builder().workflowVariables(pseWorkflowVariables).type("ENV_STATE").build();
 
-    pipelineServiceImpl.setPipelineVariables(workflow, pse, pipelineVariables, false, true);
+    pipelineServiceImpl.setPipelineVariables(workflow, pse, pipelineVariables, false);
     assertThat(pipelineVariables).isNotEmpty();
     assertThat(pipelineVariables.get(0).getName()).isEqualTo("customVar");
     assertThat(pipelineVariables.get(0).getType()).isEqualTo(VariableType.TEXT);
 
     pseWorkflowVariables.put("customVar", "val1");
     pipelineVariables = new ArrayList<>();
-    pipelineServiceImpl.setPipelineVariables(workflow, pse, pipelineVariables, false, true);
+    pipelineServiceImpl.setPipelineVariables(workflow, pse, pipelineVariables, false);
     assertThat(pipelineVariables).isEmpty();
 
     pseWorkflowVariables.put("customVar", "${service.name}");
     pipelineVariables = new ArrayList<>();
-    pipelineServiceImpl.setPipelineVariables(workflow, pse, pipelineVariables, false, true);
+    pipelineServiceImpl.setPipelineVariables(workflow, pse, pipelineVariables, false);
     assertThat(pipelineVariables).isEmpty();
 
     pseWorkflowVariables.put("customVar", "${abc}");
-    pipelineServiceImpl.setPipelineVariables(workflow, pse, pipelineVariables, false, true);
+    pipelineServiceImpl.setPipelineVariables(workflow, pse, pipelineVariables, false);
     assertThat(pipelineVariables).isNotEmpty();
     assertThat(pipelineVariables.get(0).getName()).isEqualTo("abc");
     assertThat(pipelineVariables.get(0).getType()).isEqualTo(VariableType.TEXT);
 
     pseWorkflowVariables.remove("customVar");
     pipelineVariables = new ArrayList<>();
-    pipelineServiceImpl.setPipelineVariables(workflow, pse, pipelineVariables, false, true);
+    pipelineServiceImpl.setPipelineVariables(workflow, pse, pipelineVariables, false);
     assertThat(pipelineVariables).isNotEmpty();
     assertThat(pipelineVariables.get(0).getName()).isEqualTo("customVar");
     assertThat(pipelineVariables.get(0).getType()).isEqualTo(VariableType.TEXT);
@@ -863,8 +844,8 @@ public class PipelineServiceImplTest extends WingsBaseTest {
     PipelineStageElement pse2 =
         PipelineStageElement.builder().workflowVariables(pse2WorkflowVariables).type("ENV_STATE").build();
 
-    pipelineServiceImpl.setPipelineVariables(workflow, pse, pipelineVariables, false, true);
-    pipelineServiceImpl.setPipelineVariables(workflow, pse2, pipelineVariables, false, true);
+    pipelineServiceImpl.setPipelineVariables(workflow, pse, pipelineVariables, false);
+    pipelineServiceImpl.setPipelineVariables(workflow, pse2, pipelineVariables, false);
 
     assertThat(pipelineVariables).isNotEmpty();
     assertThat(pipelineVariables.get(0).getName()).isEqualTo("srv");
@@ -1038,7 +1019,7 @@ public class PipelineServiceImplTest extends WingsBaseTest {
     assertThat(pipelineVariables.get(0).getName()).isEqualTo("User_Group");
   }
 
-  @Test(expected = InvalidRequestException.class)
+  @Test
   @Owner(developers = POOJA)
   @Category(UnitTests.class)
   public void testValidateMultipleValues() {
@@ -1049,7 +1030,9 @@ public class PipelineServiceImplTest extends WingsBaseTest {
     pipelineVariables.add(infraVar);
     Map<String, String> values = ImmutableMap.of("infraVar", "pcf, pcf2");
     pipeline.setPipelineVariables(pipelineVariables);
-    pipelineServiceImpl.validateMultipleValuesAllowed(pipeline, values);
+    assertThatCode(() -> pipelineServiceImpl.validateMultipleValuesAllowed(pipeline, values))
+        .isInstanceOf(InvalidRequestException.class)
+        .hasMessage("variable infraVar cannot take multiple values");
   }
 
   @Test
@@ -1067,5 +1050,107 @@ public class PipelineServiceImplTest extends WingsBaseTest {
     Map<String, String> values = ImmutableMap.of("infraVar", "pcf, pcf2");
     pipeline.setPipelineVariables(pipelineVariables);
     pipelineServiceImpl.validateMultipleValuesAllowed(pipeline, values);
+  }
+
+  @Test
+  @Owner(developers = POOJA)
+  @Category(UnitTests.class)
+  public void testRuntimeInputNewVars() {
+    PipelineStageElement pipelineStageElement =
+        PipelineStageElement.builder()
+            .workflowVariables(ImmutableMap.of("nonEntity", "${nonEntityVal}", "entity", "${entityVal}"))
+            .runtimeInputsConfig(
+                RuntimeInputsConfig.builder().runtimeInputVariables(asList("nonEntity", "entity")).build())
+            .build();
+
+    List<Variable> userVariables = new ArrayList<>();
+    Variable nonEntityVar = aVariable().name("nonEntity").build();
+    Variable entittyVar = aVariable().name("entity").entityType(ENVIRONMENT).build();
+    userVariables.add(nonEntityVar);
+    userVariables.add(entittyVar);
+    Workflow workflow =
+        aWorkflow()
+            .accountId(ACCOUNT_ID)
+            .orchestrationWorkflow(aCanaryOrchestrationWorkflow().withUserVariables(userVariables).build())
+            .build();
+
+    when(featureFlagService.isEnabled(FeatureName.RUNTIME_INPUT_PIPELINE, ACCOUNT_ID)).thenReturn(true);
+    List<Variable> pipelineVars = new ArrayList<>();
+    pipelineServiceImpl.setPipelineVariables(workflow, pipelineStageElement, pipelineVars, false);
+    assertThat(pipelineVars).isNotEmpty();
+    assertThat(pipelineVars.get(0).getRuntimeInput()).isTrue();
+    assertThat(pipelineVars.get(1).getRuntimeInput()).isTrue();
+  }
+
+  @Test
+  @Owner(developers = POOJA)
+  @Category(UnitTests.class)
+  public void testRuntimeInputExistingVarsNOnEntityException() {
+    PipelineStageElement pipelineStageElement =
+        PipelineStageElement.builder()
+            .workflowVariables(ImmutableMap.of("nonEntity", "${nonEntityVal}", "entity", "${entityVal}"))
+            .runtimeInputsConfig(
+                RuntimeInputsConfig.builder().runtimeInputVariables(asList("nonEntity", "entity")).build())
+            .build();
+
+    List<Variable> userVariables = new ArrayList<>();
+    Variable nonEntityVar = aVariable().name("nonEntity").build();
+    Variable entittyVar = aVariable().name("entity").entityType(ENVIRONMENT).build();
+    userVariables.add(nonEntityVar);
+    userVariables.add(entittyVar);
+    Workflow workflow =
+        aWorkflow()
+            .accountId(ACCOUNT_ID)
+            .orchestrationWorkflow(aCanaryOrchestrationWorkflow().withUserVariables(userVariables).build())
+            .build();
+
+    when(featureFlagService.isEnabled(FeatureName.RUNTIME_INPUT_PIPELINE, ACCOUNT_ID)).thenReturn(true);
+    List<Variable> pipelineVars = new ArrayList<>();
+    Variable existNonEntityVar = aVariable().name("nonEntityVal").build();
+    existNonEntityVar.setRuntimeInput(false);
+    Variable existEntityVar = aVariable().name("entityVal").entityType(ENVIRONMENT).build();
+    existEntityVar.setRuntimeInput(true);
+    pipelineVars.add(existNonEntityVar);
+    pipelineVars.add(existEntityVar);
+    assertThatThrownBy(
+        () -> pipelineServiceImpl.setPipelineVariables(workflow, pipelineStageElement, pipelineVars, false))
+        .isInstanceOf(InvalidRequestException.class)
+        .hasMessage("Variable nonEntity is not marked as runtime in all pipeline stages");
+  }
+
+  @Test
+  @Owner(developers = POOJA)
+  @Category(UnitTests.class)
+  public void testRuntimeInputExistingVarsEntityException() {
+    PipelineStageElement pipelineStageElement =
+        PipelineStageElement.builder()
+            .workflowVariables(ImmutableMap.of("nonEntity", "${nonEntityVal}", "entity", "${entityVal}"))
+            .runtimeInputsConfig(
+                RuntimeInputsConfig.builder().runtimeInputVariables(asList("nonEntity", "entity")).build())
+            .build();
+
+    List<Variable> userVariables = new ArrayList<>();
+    Variable nonEntityVar = aVariable().name("nonEntity").build();
+    Variable entittyVar = aVariable().name("entity").entityType(ENVIRONMENT).build();
+    userVariables.add(nonEntityVar);
+    userVariables.add(entittyVar);
+    Workflow workflow =
+        aWorkflow()
+            .accountId(ACCOUNT_ID)
+            .orchestrationWorkflow(aCanaryOrchestrationWorkflow().withUserVariables(userVariables).build())
+            .build();
+
+    when(featureFlagService.isEnabled(FeatureName.RUNTIME_INPUT_PIPELINE, ACCOUNT_ID)).thenReturn(true);
+    List<Variable> pipelineVars = new ArrayList<>();
+    Variable existNonEntityVar = aVariable().name("nonEntityVal").build();
+    existNonEntityVar.setRuntimeInput(true);
+    Variable existEntityVar = aVariable().name("entityVal").entityType(ENVIRONMENT).build();
+    existEntityVar.setRuntimeInput(false);
+    pipelineVars.add(existNonEntityVar);
+    pipelineVars.add(existEntityVar);
+    assertThatThrownBy(
+        () -> pipelineServiceImpl.setPipelineVariables(workflow, pipelineStageElement, pipelineVars, false))
+        .isInstanceOf(InvalidRequestException.class)
+        .hasMessage("Variable entityVal is not marked as runtime in all pipeline stages");
   }
 }

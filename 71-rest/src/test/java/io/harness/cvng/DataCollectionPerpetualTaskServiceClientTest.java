@@ -10,7 +10,6 @@ import com.google.inject.Inject;
 import com.google.protobuf.ByteString;
 
 import io.harness.category.element.UnitTests;
-import io.harness.cvng.beans.DataCollectionConnectorBundle;
 import io.harness.cvng.perpetualtask.CVDataCollectionInfo;
 import io.harness.cvng.perpetualtask.DataCollectionPerpetualTaskServiceClient;
 import io.harness.delegate.beans.connector.appdynamicsconnector.AppDynamicsConnectorDTO;
@@ -63,22 +62,18 @@ public class DataCollectionPerpetualTaskServiceClientTest extends WingsBaseTest 
                                                .controllerUrl("url")
                                                .passwordRef(secretRefData)
                                                .build();
-
-    DataCollectionConnectorBundle bundle = DataCollectionConnectorBundle.builder()
-                                               .connectorConfigDTO(connectorDTO)
-                                               .details(Lists.newArrayList(encryptedDataDetail))
-                                               .build();
-    byte[] bundleBytes = kryoSerializer.asBytes(bundle);
+    CVDataCollectionInfo cvDataCollectionInfo = CVDataCollectionInfo.builder()
+                                                    .connectorConfigDTO(connectorDTO)
+                                                    .encryptedDataDetails(Lists.newArrayList(encryptedDataDetail))
+                                                    .build();
+    byte[] bundleBytes = kryoSerializer.asBytes(cvDataCollectionInfo);
     PerpetualTaskClientContext clientContext =
         PerpetualTaskClientContext.builder().clientParams(clientParamMap).executionBundle(bundleBytes).build();
     DataCollectionPerpetualTaskParams dataCollectionInfo =
         (DataCollectionPerpetualTaskParams) dataCollectionPerpetualTaskServiceClient.getTaskParams(clientContext);
     assertThat(dataCollectionInfo.getAccountId()).isEqualTo(accountId);
     assertThat(dataCollectionInfo.getCvConfigId()).isEqualTo(cvConfigId);
-    CVDataCollectionInfo cvDataCollectionInfo = CVDataCollectionInfo.builder()
-                                                    .connectorConfigDTO(bundle.getConnectorConfigDTO())
-                                                    .encryptedDataDetails(bundle.getDetails())
-                                                    .build();
+
     assertThat(dataCollectionInfo.getDataCollectionInfo())
         .isEqualTo(ByteString.copyFrom(kryoSerializer.asBytes(cvDataCollectionInfo)));
   }

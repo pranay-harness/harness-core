@@ -55,7 +55,7 @@ import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 import static software.wings.beans.Application.GLOBAL_APP_ID;
 import static software.wings.beans.DelegateSequenceConfig.Builder.aDelegateSequenceBuilder;
 import static software.wings.beans.Event.Builder.anEvent;
-import static software.wings.beans.FeatureName.DELEGATE_CAPABILITY_FRAMEWORK_PHASE_ENABLE;
+import static software.wings.beans.FeatureName.DISABLE_DELEGATE_CAPABILITY_FRAMEWORK;
 import static software.wings.beans.FeatureName.USE_CDN_FOR_STORAGE_FILES;
 import static software.wings.beans.alert.AlertType.NoEligibleDelegates;
 
@@ -492,7 +492,7 @@ public class DelegateServiceImpl implements DelegateService {
 
     return DelegateStatus.builder()
         .publishedVersions(delegateConfiguration.getDelegateVersions())
-        .delegates(buildInnerDelegates(delegates, perDelegateConnections))
+        .delegates(buildInnerDelegates(delegates, perDelegateConnections, false))
         .build();
   }
 
@@ -510,7 +510,7 @@ public class DelegateServiceImpl implements DelegateService {
     return DelegateStatus.builder()
         .publishedVersions(delegateConfiguration.getDelegateVersions())
         .scalingGroups(scalingGroups)
-        .delegates(buildInnerDelegates(delegatesWithoutScalingGroup, activeDelegateConnections))
+        .delegates(buildInnerDelegates(delegatesWithoutScalingGroup, activeDelegateConnections, false))
         .build();
   }
 
@@ -523,8 +523,6 @@ public class DelegateServiceImpl implements DelegateService {
                                          .exists()
                                          .field(DelegateKeys.status)
                                          .hasAnyOf(Arrays.asList(Status.ENABLED, Status.WAITING_FOR_APPROVAL))
-                                         .field(DelegateKeys.uuid)
-                                         .hasAnyOf(activeDelegateConnections.keySet())
                                          .asList();
 
     return activeDelegates.stream()
@@ -534,7 +532,7 @@ public class DelegateServiceImpl implements DelegateService {
         .map(entry
             -> DelegateScalingGroup.builder()
                    .groupName(entry.getKey())
-                   .delegates(buildInnerDelegates(entry.getValue(), activeDelegateConnections))
+                   .delegates(buildInnerDelegates(entry.getValue(), activeDelegateConnections, true))
                    .build())
         .collect(toList());
   }
@@ -551,8 +549,10 @@ public class DelegateServiceImpl implements DelegateService {
 
   @NotNull
   private List<DelegateStatus.DelegateInner> buildInnerDelegates(List<Delegate> delegates,
-      Map<String, List<DelegateStatus.DelegateInner.DelegateConnectionInner>> perDelegateConnections) {
+      Map<String, List<DelegateStatus.DelegateInner.DelegateConnectionInner>> perDelegateConnections,
+      boolean filterInactiveDelegates) {
     return delegates.stream()
+        .filter(delegate -> !filterInactiveDelegates || perDelegateConnections.containsKey(delegate.getUuid()))
         .map(delegate
             -> DelegateStatus.DelegateInner.builder()
                    .uuid(delegate.getUuid())
@@ -2109,7 +2109,7 @@ public class DelegateServiceImpl implements DelegateService {
   // TODO: Required right now, as at delegateSide based on capabilities are present or not,
   // TODO: either new CapabilityCheckController or existing ValidationClass is used.
   private void generateCapabilitiesForTaskIfFeatureEnabled(DelegateTask task) {
-    boolean enabled = featureFlagService.isEnabled(DELEGATE_CAPABILITY_FRAMEWORK_PHASE_ENABLE, task.getAccountId());
+    boolean enabled = !featureFlagService.isEnabled(DISABLE_DELEGATE_CAPABILITY_FRAMEWORK, task.getAccountId());
 
     if (!enabled) {
       return;
@@ -2252,7 +2252,7 @@ public class DelegateServiceImpl implements DelegateService {
       wingsPersistence.update(updateQuery, updateOperations);
 
       // If all delegate task capabilities were evaluated and they were ok, we can assign the task
-      if ((!featureFlagService.isEnabled(DELEGATE_CAPABILITY_FRAMEWORK_PHASE_ENABLE, delegateTask.getAccountId())
+      if ((featureFlagService.isEnabled(DISABLE_DELEGATE_CAPABILITY_FRAMEWORK, delegateTask.getAccountId())
               || size(delegateTask.getExecutionCapabilities()) == size(results))
           && results.stream().allMatch(DelegateConnectionResult::isValidated)) {
         return assignTask(delegateId, taskId, delegateTask);

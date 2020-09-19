@@ -230,21 +230,23 @@ public class HealthStatusServiceImpl implements HealthStatusService {
       PerpetualTaskRecord perpetualTaskRecord = perpetualTaskService.getTaskRecord(taskId);
       String delegateId = perpetualTaskRecord.getDelegateId();
       if (isNullOrEmpty(delegateId)) {
-        switch (perpetualTaskRecord.getState()) {
-          case TASK_UNASSIGNED:
-            errors.add(PERPETUAL_TASK_NOT_ASSIGNED);
-            break;
-          case NO_DELEGATE_AVAILABLE:
-            errors.add(DELEGATE_NOT_AVAILABLE);
-            break;
-          case NO_ELIGIBLE_DELEGATES:
-            errors.add(NO_ELIGIBLE_DELEGATE);
-            break;
-          case NO_DELEGATE_INSTALLED:
-            errors.add(DELEGATE_NOT_INSTALLED);
-            break;
-          default:
-            logger.warn("Unexpected perpetual task state:{} for empty delegate id", perpetualTaskRecord.getState());
+        if (perpetualTaskRecord.getUnassignedReason() == null) {
+          errors.add(PERPETUAL_TASK_NOT_ASSIGNED);
+        } else {
+          switch (perpetualTaskRecord.getUnassignedReason()) {
+            case NO_DELEGATE_AVAILABLE:
+              errors.add(DELEGATE_NOT_AVAILABLE);
+              break;
+            case NO_ELIGIBLE_DELEGATES:
+              errors.add(NO_ELIGIBLE_DELEGATE);
+              break;
+            case NO_DELEGATE_INSTALLED:
+              errors.add(DELEGATE_NOT_INSTALLED);
+              break;
+            default:
+              logger.warn("Unexpected perpetual task state:{} for empty delegate id",
+                  perpetualTaskRecord.getUnassignedReason());
+          }
         }
         continue;
       }

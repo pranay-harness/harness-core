@@ -10,6 +10,7 @@
 15-api-services/src/main/java/io/harness/artifacts/docker/service/DockerPublicRegistryProcessor.java
 15-api-services/src/main/java/io/harness/artifacts/docker/service/DockerRegistryServiceImpl.java
 15-api-services/src/main/java/io/harness/artifacts/docker/service/DockerRegistryUtils.java
+19-delegate-tasks-beans/src/main/java/io/harness/delegate/task/manifests/request/ManifestCollectionPTaskClientParams.java
 21-persistence/src/main/java/io/harness/cache/SpringCacheEntity.java
 22-timeout-engine/src/main/java/io/harness/registrars/TimeoutEngineTimeoutRegistrar.java
 22-timeout-engine/src/main/java/io/harness/registries/TimeoutEngineRegistryModule.java
@@ -71,6 +72,7 @@
 29-orchestration-beans/src/main/java/io/harness/references/OutcomeRefObject.java
 29-orchestration-beans/src/main/java/io/harness/references/RefType.java
 29-orchestration-beans/src/main/java/io/harness/references/SweepingOutputRefObject.java
+29-orchestration-beans/src/main/java/io/harness/registrars/OrchestrationBeansFieldRegistrar.java
 29-orchestration-beans/src/main/java/io/harness/registrars/OrchestrationBeansTimeoutRegistrar.java
 29-orchestration-beans/src/main/java/io/harness/registries/OrchestrationRegistryModule.java
 29-orchestration-beans/src/main/java/io/harness/registries/RegistryType.java
@@ -240,10 +242,12 @@
 33-orchestration-visualization/src/main/java/io/harness/beans/Graph.java
 33-orchestration-visualization/src/main/java/io/harness/beans/GraphVertex.java
 33-orchestration-visualization/src/main/java/io/harness/beans/OrchestrationAdjacencyList.java
-33-orchestration-visualization/src/main/java/io/harness/beans/OrchestrationGraphInternal.java
+33-orchestration-visualization/src/main/java/io/harness/beans/OrchestrationAdjacencyListInternal.java
 33-orchestration-visualization/src/main/java/io/harness/beans/Subgraph.java
 33-orchestration-visualization/src/main/java/io/harness/dto/OrchestrationGraph.java
+33-orchestration-visualization/src/main/java/io/harness/event/NodeExecutionStatusUpdateEventHandler.java
 33-orchestration-visualization/src/main/java/io/harness/generator/GraphGenerator.java
+33-orchestration-visualization/src/main/java/io/harness/registrars/OrchestrationVisualizationModuleEventHandlerRegistrar.java
 33-orchestration-visualization/src/main/java/io/harness/serializer/OrchestrationVisualizationModuleRegistrars.java
 33-orchestration-visualization/src/main/java/io/harness/service/impl/GraphGenerationServiceImpl.java
 71-rest/src/main/java/io/harness/artifact/ArtifactCollectionPTaskClientParams.java
@@ -292,6 +296,7 @@
 71-rest/src/main/java/io/harness/execution/export/request/ExportExecutionsRequestService.java
 71-rest/src/main/java/io/harness/execution/export/request/ExportExecutionsRequestSummary.java
 71-rest/src/main/java/io/harness/execution/export/request/ExportExecutionsUserParams.java
+71-rest/src/main/java/io/harness/manifest/ManifestCollectionPTaskServiceClient.java
 71-rest/src/main/java/io/harness/redesign/advisers/HttpResponseCodeSwitchAdviser.java
 71-rest/src/main/java/io/harness/redesign/advisers/HttpResponseCodeSwitchAdviserParameters.java
 71-rest/src/main/java/io/harness/redesign/services/CustomExecutionProvider.java
@@ -679,6 +684,7 @@
 71-rest/src/main/java/software/wings/helpers/ext/gcb/models/Volume.java
 71-rest/src/main/java/software/wings/helpers/ext/gcr/GcrServiceImpl.java
 71-rest/src/main/java/software/wings/helpers/ext/gcs/GcsServiceImpl.java
+71-rest/src/main/java/software/wings/helpers/ext/helm/request/HelmChartCollectionParams.java
 71-rest/src/main/java/software/wings/helpers/ext/jenkins/CustomJenkinsHttpClient.java
 71-rest/src/main/java/software/wings/helpers/ext/jenkins/CustomJenkinsServer.java
 71-rest/src/main/java/software/wings/helpers/ext/jenkins/JenkinsImpl.java
@@ -733,8 +739,10 @@
 71-rest/src/main/java/software/wings/service/impl/WorkflowExecutionUpdate.java
 71-rest/src/main/java/software/wings/service/impl/WorkflowLogContext.java
 71-rest/src/main/java/software/wings/service/impl/WorkflowPreDeploymentValidator.java
-71-rest/src/main/java/software/wings/service/impl/applicationmanifest/ApplicationManifestServiceObserverImpl.java
+71-rest/src/main/java/software/wings/service/impl/applicationmanifest/AppManifestPTaskHelper.java
 71-rest/src/main/java/software/wings/service/impl/applicationmanifest/HelmChartServiceImpl.java
+71-rest/src/main/java/software/wings/service/impl/applicationmanifest/ManifestCollectionUtils.java
+71-rest/src/main/java/software/wings/service/impl/applicationmanifest/ManifestPerpetualTaskManger.java
 71-rest/src/main/java/software/wings/service/impl/artifact/ArtifactCollectionServiceAsyncImpl.java
 71-rest/src/main/java/software/wings/service/impl/artifact/ArtifactCollectionServiceImpl.java
 71-rest/src/main/java/software/wings/service/impl/artifact/ArtifactCollectionUtils.java

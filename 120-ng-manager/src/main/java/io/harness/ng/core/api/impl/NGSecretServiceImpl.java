@@ -2,7 +2,7 @@ package io.harness.ng.core.api.impl;
 
 import static io.harness.exception.WingsException.USER;
 import static io.harness.ng.core.utils.NGUtils.verifyValuesNotChanged;
-import static io.harness.ng.remote.client.RestClientUtils.getResponse;
+import static io.harness.remote.client.RestClientUtils.getResponse;
 import static io.harness.secretmanagerclient.SecretType.toSettingVariableType;
 import static software.wings.resources.secretsmanagement.EncryptedDataMapper.fromDTO;
 

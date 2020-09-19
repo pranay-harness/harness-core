@@ -11,6 +11,9 @@ import com.google.inject.Singleton;
 
 import io.harness.beans.CIPipeline;
 import io.harness.beans.CIPipelineSetupParameters;
+import io.harness.beans.executionargs.CIExecutionArgs;
+import io.harness.beans.executionargs.ExecutionArgs;
+import io.harness.exception.InvalidRequestException;
 import io.harness.executionplan.core.ExecutionPlanCreationContext;
 import io.harness.executionplan.core.ExecutionPlanCreator;
 import io.harness.executionplan.core.ExecutionPlanCreatorResponse;
@@ -37,9 +40,16 @@ public class CIPipelinePlanCreator implements SupportDefinedExecutorPlanCreator<
   @Override
   public ExecutionPlanCreatorResponse createPlan(CIPipeline ciPipeline, ExecutionPlanCreationContext context) {
     addArgumentsToContext(ciPipeline, context);
+
+    CIExecutionArgs ciExecutionArgs =
+        (CIExecutionArgs) context.getAttribute(ExecutionArgs.EXEC_ARGS)
+            .orElseThrow(()
+                             -> new InvalidRequestException(
+                                 "Execution arguments are empty for pipeline execution " + context.getAccountId()));
+
     final ExecutionPlanCreatorResponse planForStages = createPlanForStages(ciPipeline.getStages(), context);
 
-    final PlanNode pipelineExecutionNode = preparePipelineNode(ciPipeline, planForStages);
+    final PlanNode pipelineExecutionNode = preparePipelineNode(ciPipeline, planForStages, ciExecutionArgs);
 
     return ExecutionPlanCreatorResponse.builder()
         .planNode(pipelineExecutionNode)
@@ -52,7 +62,8 @@ public class CIPipelinePlanCreator implements SupportDefinedExecutorPlanCreator<
     context.addAttribute("CI_PIPELINE_CONFIG", pipeline);
   }
 
-  private PlanNode preparePipelineNode(CIPipeline pipeline, ExecutionPlanCreatorResponse planForStages) {
+  private PlanNode preparePipelineNode(
+      CIPipeline pipeline, ExecutionPlanCreatorResponse planForStages, CIExecutionArgs ciExecutionArgs) {
     final String pipelineSetupNodeId = generateUuid();
 
     return PlanNode.builder()
@@ -62,6 +73,7 @@ public class CIPipelinePlanCreator implements SupportDefinedExecutorPlanCreator<
         .stepType(CIPipelineSetupStep.STEP_TYPE)
         .stepParameters(CIPipelineSetupParameters.builder()
                             .ciPipeline(pipeline)
+                            .ciExecutionArgs(ciExecutionArgs)
                             .fieldToExecutionNodeIdMap(ImmutableMap.of("stages", planForStages.getStartingNodeId()))
                             .build())
         .facilitatorObtainment(

@@ -8,19 +8,19 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
+import io.harness.EntityType;
+import io.harness.ModuleType;
 import io.harness.beans.NGPageResponse;
 import io.harness.encryption.Scope;
-import io.harness.gitsync.common.GitFileLocationHelper;
 import io.harness.gitsync.common.beans.GitFileLocation;
 import io.harness.gitsync.common.beans.GitFileLocation.GitFileLocationKeys;
 import io.harness.gitsync.common.dtos.GitSyncEntityDTO;
 import io.harness.gitsync.common.dtos.GitSyncEntityListDTO;
 import io.harness.gitsync.common.dtos.GitSyncProductDTO;
 import io.harness.gitsync.common.dtos.RepoProviders;
+import io.harness.gitsync.common.helper.GitFileLocationHelper;
 import io.harness.gitsync.common.service.GitEntityService;
 import io.harness.gitsync.core.dao.api.repositories.GitFileLocation.GitFileLocationRepository;
-import io.harness.ng.EntityType;
-import io.harness.ng.Product;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
@@ -43,8 +43,8 @@ public class GitEntityServiceImpl implements GitEntityService {
   private GitFileLocationRepository gitFileLocationRepository;
 
   @Override
-  public GitSyncProductDTO list(String projectId, String orgId, String accountId, Product product, int size) {
-    final List<EntityType> entityTypes = getEntityTypesFromProduct(product);
+  public GitSyncProductDTO list(String projectId, String orgId, String accountId, ModuleType moduleType, int size) {
+    final List<EntityType> entityTypes = getEntityTypesFromModuleType(moduleType);
     final Scope scope = getScope(accountId, orgId, projectId);
     final List<GitSyncEntityListDTO> gitSyncEntityListDTOs =
         entityTypes.stream()
@@ -55,7 +55,7 @@ public class GitEntityServiceImpl implements GitEntityService {
               return buildGitSyncEntityListDTO(entityType, totalCount, gitSyncEntityDTOs);
             })
             .collect(Collectors.toList());
-    return GitSyncProductDTO.builder().gitSyncEntityListDTOList(gitSyncEntityListDTOs).productName(product).build();
+    return GitSyncProductDTO.builder().gitSyncEntityListDTOList(gitSyncEntityListDTOs).moduleType(moduleType).build();
   }
 
   private GitSyncEntityListDTO buildGitSyncEntityListDTO(
@@ -181,7 +181,7 @@ public class GitEntityServiceImpl implements GitEntityService {
 
   @NotNull
   @VisibleForTesting
-  public List<EntityType> getEntityTypesFromProduct(Product product) {
-    return new ArrayList<>(EntityType.getEntityTypes(product));
+  public List<EntityType> getEntityTypesFromModuleType(ModuleType moduleType) {
+    return new ArrayList<>(EntityType.getEntityTypes(moduleType));
   }
 }

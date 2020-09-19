@@ -126,7 +126,7 @@ public class AppDynamicsStateTest extends APMStateVerificationTestBase {
     appDynamicsState = new AppDynamicsState("AppDynamicsState");
     appDynamicsState.setApplicationId(applicationId);
     appDynamicsState.setTierId(tierId);
-    appDynamicsState.setTimeDuration("6000");
+    appDynamicsState.setTimeDuration("10");
 
     when(appdynamicsService.getTiers(anyString(), anyLong(), anyString(), anyString(), any()))
         .thenReturn(Sets.newHashSet(AppdynamicsTier.builder().id(Long.parseLong(tierId)).name("tier").build()));

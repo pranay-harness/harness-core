@@ -8,22 +8,26 @@ import static io.harness.cvng.analysis.CVAnalysisConstants.PREVIOUS_LOG_ANALYSIS
 import static io.harness.cvng.analysis.CVAnalysisConstants.TEST_DATA_PATH;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
+import static io.harness.persistence.HQuery.excludeAuthority;
 
 import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
 
 import io.harness.cvng.analysis.beans.DeploymentLogAnalysisDTO;
-import io.harness.cvng.analysis.beans.ExecutionStatus;
 import io.harness.cvng.analysis.beans.LogAnalysisDTO;
 import io.harness.cvng.analysis.beans.LogClusterDTO;
 import io.harness.cvng.analysis.beans.LogClusterLevel;
 import io.harness.cvng.analysis.entities.DeploymentLogAnalysis;
 import io.harness.cvng.analysis.entities.LearningEngineTask;
+import io.harness.cvng.analysis.entities.LearningEngineTask.ExecutionStatus;
 import io.harness.cvng.analysis.entities.LearningEngineTask.LearningEngineTaskType;
 import io.harness.cvng.analysis.entities.LogAnalysisCluster;
 import io.harness.cvng.analysis.entities.LogAnalysisCluster.LogAnalysisClusterKeys;
 import io.harness.cvng.analysis.entities.LogAnalysisRecord.LogAnalysisRecordKeys;
 import io.harness.cvng.analysis.entities.LogAnalysisResult;
+import io.harness.cvng.analysis.entities.LogAnalysisResult.AnalysisResult.AnalysisResultKeys;
+import io.harness.cvng.analysis.entities.LogAnalysisResult.LogAnalysisResultKeys;
+import io.harness.cvng.analysis.entities.LogAnalysisResult.LogAnalysisTag;
 import io.harness.cvng.analysis.entities.LogCanaryAnalysisLearningEngineTask;
 import io.harness.cvng.analysis.entities.ServiceGuardLogAnalysisTask;
 import io.harness.cvng.analysis.services.api.DeploymentLogAnalysisService;
@@ -40,7 +44,7 @@ import io.harness.cvng.core.services.api.VerificationTaskService;
 import io.harness.cvng.core.utils.DateTimeUtils;
 import io.harness.cvng.dashboard.services.api.HeatMapService;
 import io.harness.cvng.statemachine.beans.AnalysisInput;
-import io.harness.cvng.statemachine.entities.AnalysisStatus;
+import io.harness.cvng.statemachine.beans.AnalysisStatus;
 import io.harness.cvng.verificationjob.entities.VerificationJobInstance;
 import io.harness.cvng.verificationjob.entities.VerificationJobInstance.ProgressLog;
 import io.harness.cvng.verificationjob.services.api.VerificationJobInstanceService;
@@ -280,5 +284,28 @@ public class LogAnalysisServiceImpl implements LogAnalysisService {
   @Override
   public Map<String, ExecutionStatus> getTaskStatus(List<String> taskIds) {
     return learningEngineTaskService.getTaskStatus(new HashSet<>(taskIds));
+  }
+
+  @Override
+  public List<LogAnalysisCluster> getAnalysisClusters(String cvConfigId, Set<Long> labels) {
+    return hPersistence.createQuery(LogAnalysisCluster.class, excludeAuthority)
+        .filter(LogAnalysisClusterKeys.cvConfigId, cvConfigId)
+        .field(LogAnalysisClusterKeys.label)
+        .in(labels)
+        .asList();
+  }
+
+  @Override
+  public List<LogAnalysisResult> getAnalysisResults(
+      String cvConfigId, List<LogAnalysisTag> tags, Instant startTime, Instant endTime) {
+    return hPersistence.createQuery(LogAnalysisResult.class, excludeAuthority)
+        .filter(LogAnalysisResultKeys.cvConfigId, cvConfigId)
+        .field(LogAnalysisResultKeys.analysisStartTime)
+        .greaterThanOrEq(startTime)
+        .field(LogAnalysisResultKeys.analysisEndTime)
+        .lessThanOrEq(endTime)
+        .field(LogAnalysisResultKeys.logAnalysisResults + "." + AnalysisResultKeys.tag)
+        .in(tags)
+        .asList();
   }
 }

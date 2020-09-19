@@ -17,11 +17,11 @@ import io.harness.ng.core.invites.api.impl.InvitesServiceImpl;
 import io.harness.ng.core.invites.ext.mail.EmailData;
 import io.harness.ng.core.invites.ext.mail.EmailNotificationListener;
 import io.harness.ng.core.invites.ext.mail.SmtpConfig;
-import io.harness.ng.remote.client.ServiceHttpClientConfig;
 import io.harness.persistence.HPersistence;
 import io.harness.queue.QueueConsumer;
 import io.harness.queue.QueueListener;
 import io.harness.queue.QueuePublisher;
+import io.harness.remote.client.ServiceHttpClientConfig;
 
 public class InviteModule extends AbstractModule {
   private final ServiceHttpClientConfig serviceHttpClientConfig;

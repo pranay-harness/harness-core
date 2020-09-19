@@ -85,7 +85,7 @@ pipeline:
                         identifier: HttpValidation
                         type: Http
                         spec:
-                          timeout: 30000
+                          socketTimeoutMillis: 30000
                           url: http://httpstat.us/500
               - step:
                   name: http step 1

@@ -1,6 +1,6 @@
 package io.harness.gitsync.common.dtos;
 
-import io.harness.ng.Product;
+import io.harness.ModuleType;
 import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Data;
@@ -12,6 +12,6 @@ import java.util.List;
 @Builder
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class GitSyncProductDTO {
-  private Product productName;
+  private ModuleType moduleType;
   private List<GitSyncEntityListDTO> gitSyncEntityListDTOList;
 }

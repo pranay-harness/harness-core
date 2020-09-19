@@ -9,7 +9,6 @@ import io.harness.perpetualtask.PerpetualTaskExecutionParams;
 import io.harness.perpetualtask.PerpetualTaskExecutor;
 import io.harness.perpetualtask.PerpetualTaskId;
 import io.harness.perpetualtask.PerpetualTaskResponse;
-import io.harness.perpetualtask.PerpetualTaskState;
 import lombok.extern.slf4j.Slf4j;
 
 import java.time.Instant;
@@ -32,8 +31,7 @@ public class SamplePerpetualTaskExecutor implements PerpetualTaskExecutor {
     logger.info("The country {} has a population of {}", sampleParams.getCountry(), sampleParams.getPopulation());
     return PerpetualTaskResponse.builder()
         .responseCode(ThreadLocalRandom.current().nextInt(1, 200))
-        .perpetualTaskState(PerpetualTaskState.TASK_RUN_SUCCEEDED)
-        .responseMessage(PerpetualTaskState.TASK_RUN_SUCCEEDED.name())
+        .responseMessage("success")
         .build();
   }
 

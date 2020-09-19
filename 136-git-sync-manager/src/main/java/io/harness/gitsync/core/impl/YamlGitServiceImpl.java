@@ -40,10 +40,12 @@ import io.harness.exception.ExceptionUtils;
 import io.harness.exception.GeneralException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.git.model.CommitAndPushRequest;
+import io.harness.git.model.DiffRequest;
 import io.harness.git.model.GitFileChange;
 import io.harness.gitsync.common.YamlProcessingLogContext;
 import io.harness.gitsync.common.beans.YamlChangeSet;
 import io.harness.gitsync.common.service.YamlGitConfigService;
+import io.harness.gitsync.core.beans.ChangeWithErrorMsg;
 import io.harness.gitsync.core.beans.GitCommit;
 import io.harness.gitsync.core.beans.GitWebhookRequestAttributes;
 import io.harness.gitsync.core.callback.GitCommandCallback;
@@ -284,7 +286,8 @@ public class YamlGitServiceImpl implements YamlGitService {
 
       String headCommitId = obtainCommitIdFromPayload(yamlWebHookPayload, headers);
 
-      if (isNotEmpty(headCommitId) && isCommitAlreadyProcessed(accountId, headCommitId, repoName.get(), branchName)) {
+      if (isNotEmpty(headCommitId)
+          && gitCommitService.isCommitAlreadyProcessed(accountId, headCommitId, repoName.get(), branchName)) {
         logger.info(GIT_YAML_LOG_PREFIX + "CommitId: [{}] already processed.", headCommitId);
         return "Commit already processed";
       }
@@ -366,7 +369,8 @@ public class YamlGitServiceImpl implements YamlGitService {
       logger.info(
           GIT_YAML_LOG_PREFIX + "Started handling Git -> harness changeset with headCommit Id =[{}]", headCommitId);
 
-      if (isNotEmpty(headCommitId) && isCommitAlreadyProcessed(accountId, headCommitId, repo, branchName)) {
+      if (isNotEmpty(headCommitId)
+          && gitCommitService.isCommitAlreadyProcessed(accountId, headCommitId, repo, branchName)) {
         logger.info(GIT_YAML_LOG_PREFIX + "CommitId: [{}] already processed.", headCommitId);
         yamlChangeSetService.updateStatus(accountId, yamlChangeSet.getUuid(), YamlChangeSet.Status.SKIPPED);
         return;
@@ -384,7 +388,8 @@ public class YamlGitServiceImpl implements YamlGitService {
       final String processedCommit = lastProcessedGitCommitId.map(GitCommit::getCommitId).orElse(null);
       logger.info(GIT_YAML_LOG_PREFIX + "Last processed git commit found =[{}]", processedCommit);
 
-      String taskId = createDelegateTaskForDiff(yamlChangeSet, accountId, yamlGitConfigs);
+      String taskId =
+          createDelegateTaskForDiff(yamlChangeSet, accountId, yamlGitConfigs, processedCommit, headCommitId);
 
       try (ProcessTimeLogContext ignore2 = new ProcessTimeLogContext(stopwatch.elapsed(MILLISECONDS), OVERRIDE_ERROR)) {
         logger.info(
@@ -400,8 +405,8 @@ public class YamlGitServiceImpl implements YamlGitService {
     }
   }
 
-  private String createDelegateTaskForDiff(
-      YamlChangeSet yamlChangeSet, String accountId, List<YamlGitConfigDTO> yamlGitConfigs) {
+  private String createDelegateTaskForDiff(YamlChangeSet yamlChangeSet, String accountId,
+      List<YamlGitConfigDTO> yamlGitConfigs, String lastProcessedCommitId, String endCommitId) {
     YamlGitConfigDTO yamlGitConfig = yamlGitConfigs.get(0);
     final Optional<ConnectorDTO> connector = getGitConnector(yamlGitConfig);
 
@@ -413,7 +418,7 @@ public class YamlGitServiceImpl implements YamlGitService {
 
     logger.info(GIT_YAML_LOG_PREFIX + "Creating DIFF git delegate task for entity");
     TaskData taskData = getTaskDataForDiff(yamlChangeSet, yamlGitConfig, connector.get(), accountId,
-        yamlChangeSet.getOrganizationId(), yamlChangeSet.getProjectId());
+        yamlChangeSet.getOrganizationId(), yamlChangeSet.getProjectId(), lastProcessedCommitId, endCommitId);
     Map<String, String> setupAbstractions = ImmutableMap.of("accountId", accountId);
     String taskId = managerDelegateServiceDriver.sendTaskAsync(accountId, setupAbstractions, taskData);
 
@@ -429,7 +434,8 @@ public class YamlGitServiceImpl implements YamlGitService {
   }
 
   private TaskData getTaskDataForDiff(YamlChangeSet yamlChangeSet, YamlGitConfigDTO yamlGitConfig,
-      ConnectorDTO connector, String accountIdentifier, String orgIdentifier, String projectIdentifier) {
+      ConnectorDTO connector, String accountIdentifier, String orgIdentifier, String projectIdentifier,
+      String lastCommitId, String currentCommit) {
     GitConfigDTO gitConfig = (GitConfigDTO) connector.getConnectorConfig();
     GitAuthenticationDTO gitAuthenticationDecryptableEntity = gitConfig.getGitAuth();
     NGAccess basicNGAccessObject = BaseNGAccess.builder()
@@ -439,10 +445,12 @@ public class YamlGitServiceImpl implements YamlGitService {
                                        .build();
     List<EncryptedDataDetail> encryptedDataDetailList =
         ngSecretService.getEncryptionDetails(basicNGAccessObject, gitAuthenticationDecryptableEntity);
-    // todo(abhinav): add git diff req
+    final DiffRequest diffRequest =
+        DiffRequest.builder().lastProcessedCommitId(lastCommitId).endCommitId(currentCommit).build();
     GitCommandParams gitCommandParams = GitCommandParams.builder()
                                             .encryptionDetails(encryptedDataDetailList)
                                             .gitCommandType(DIFF)
+                                            .gitCommandRequest(diffRequest)
                                             .gitConfig(gitConfig)
                                             .build();
     return TaskData.builder()
@@ -463,18 +471,6 @@ public class YamlGitServiceImpl implements YamlGitService {
                                             .putIfNotNull(CHANGESET_ID, yamlChangeSetId)
                                             .build(),
         OVERRIDE_ERROR);
-  }
-
-  @Override
-  public boolean isCommitAlreadyProcessed(String accountId, String headCommit, String repo, String branch) {
-    final Optional<GitCommit> gitCommit =
-        gitCommitService.findGitCommitWithProcessedStatus(accountId, headCommit, repo, branch);
-    if (gitCommit.isPresent()) {
-      logger.info(GIT_YAML_LOG_PREFIX + "Commit [id:{}] already processed [status:{}] on [date:{}]",
-          gitCommit.get().getCommitId(), gitCommit.get().getStatus(), gitCommit.get().getLastUpdatedAt());
-      return true;
-    }
-    return false;
   }
 
   private String obtainCommitIdFromPayload(String yamlWebHookPayload, HttpHeaders headers) {
@@ -536,5 +532,15 @@ public class YamlGitServiceImpl implements YamlGitService {
 
   private Optional<GitCommit> fetchLastProcessedGitCommitId(String accountId, String repo, String branch) {
     return gitCommitService.findLastProcessedGitCommit(accountId, repo, branch);
+  }
+
+  @Override
+  public void processFailedChanges(String accountId, List<ChangeWithErrorMsg> failedChangesWithErrorMsg,
+      YamlGitConfigDTO yamlGitConfig, boolean gitToHarness, boolean fullSync) {
+    if (failedChangesWithErrorMsg != null) {
+      failedChangesWithErrorMsg.forEach(failedChangeWithErrorMsg
+          -> gitSyncErrorService.upsertGitSyncErrors(failedChangeWithErrorMsg.getChange(),
+              failedChangeWithErrorMsg.getErrorMsg(), fullSync, yamlGitConfig, gitToHarness));
+    }
   }
 }

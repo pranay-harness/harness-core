@@ -9,6 +9,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import io.harness.connector.apis.dto.ConnectorRequestDTO;
+import io.harness.connector.apis.dto.ConnectorRequestWrapper;
 import io.harness.delegate.beans.connector.k8Connector.KubernetesAuthDTO;
 import io.harness.delegate.beans.connector.k8Connector.KubernetesAuthType;
 import io.harness.delegate.beans.connector.k8Connector.KubernetesClusterConfigDTO;
@@ -16,7 +17,7 @@ import io.harness.delegate.beans.connector.k8Connector.KubernetesClusterDetailsD
 import io.harness.delegate.beans.connector.k8Connector.KubernetesUserNamePasswordDTO;
 import io.harness.encryption.Scope;
 import io.harness.encryption.SecretRefData;
-import io.harness.ng.remote.NGObjectMapperHelper;
+import io.harness.remote.NGObjectMapperHelper;
 import io.harness.rule.Owner;
 import io.harness.rule.OwnerRule;
 import lombok.extern.slf4j.Slf4j;
@@ -51,14 +52,12 @@ public class KubernetesClusterConfigSerializationDeserializationTest extends Cat
   private KubernetesClusterConfigDTO createKubernetesConnectorRequestDTO() {
     SecretRefData secretRefDataCACert = SecretRefData.builder().identifier("caCertRef").scope(Scope.ACCOUNT).build();
     SecretRefData passwordSecretRef = SecretRefData.builder().identifier("passwordRef").scope(Scope.ACCOUNT).build();
-    KubernetesAuthDTO kubernetesAuthDTO = KubernetesAuthDTO.builder()
-                                              .authType(KubernetesAuthType.USER_PASSWORD)
-                                              .credentials(KubernetesUserNamePasswordDTO.builder()
-                                                               .username(userName)
-                                                               .passwordRef(passwordSecretRef)
-                                                               .caCertRef(secretRefDataCACert)
-                                                               .build())
-                                              .build();
+    KubernetesAuthDTO kubernetesAuthDTO =
+        KubernetesAuthDTO.builder()
+            .authType(KubernetesAuthType.USER_PASSWORD)
+            .credentials(
+                KubernetesUserNamePasswordDTO.builder().username(userName).passwordRef(passwordSecretRef).build())
+            .build();
     return KubernetesClusterConfigDTO.builder()
         .kubernetesCredentialType(MANUAL_CREDENTIALS)
         .config(KubernetesClusterDetailsDTO.builder().masterUrl(masterUrl).auth(kubernetesAuthDTO).build())
@@ -93,9 +92,11 @@ public class KubernetesClusterConfigSerializationDeserializationTest extends Cat
   @Category(UnitTests.class)
   public void testSerializationOfK8sConnector() {
     ConnectorRequestDTO connectorRequestDTO = createConnectorRequestDTOForK8sConnector();
+    ConnectorRequestWrapper connectorRequestWrapper =
+        ConnectorRequestWrapper.builder().connector(connectorRequestDTO).build();
     String connectorString = "";
     try {
-      connectorString = objectMapper.writeValueAsString(connectorRequestDTO);
+      connectorString = objectMapper.writeValueAsString(connectorRequestWrapper);
     } catch (Exception ex) {
       Assert.fail("Encountered exception while serializing k8s connector " + ex.getMessage());
     }
@@ -116,13 +117,16 @@ public class KubernetesClusterConfigSerializationDeserializationTest extends Cat
   @Category(UnitTests.class)
   public void testDeserializationOfK8sConnector() {
     String connectorInput = readFileAsString("src/test/resources/kubernetescluster/k8sConnector.json");
-    ConnectorRequestDTO inputConnector = null;
+    ConnectorRequestWrapper inputConnector = null;
     try {
-      inputConnector = objectMapper.readValue(connectorInput, ConnectorRequestDTO.class);
+      inputConnector = objectMapper.readValue(connectorInput, ConnectorRequestWrapper.class);
     } catch (Exception ex) {
       Assert.fail("Encountered exception while deserializing k8s connector " + ex.getMessage());
     }
-    assertThat(inputConnector).isEqualTo(createConnectorRequestDTOForK8sConnector());
+    ConnectorRequestDTO connectorRequestDTO = createConnectorRequestDTOForK8sConnector();
+    ConnectorRequestWrapper connectorRequestWrapper =
+        ConnectorRequestWrapper.builder().connector(connectorRequestDTO).build();
+    assertThat(inputConnector).isEqualTo(connectorRequestWrapper);
   }
 
   @Test

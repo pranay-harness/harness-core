@@ -1,5 +1,6 @@
 package io.harness.batch.processing.tasklet;
 
+import static io.harness.batch.processing.tasklet.util.InstanceMetaDataUtils.populateNodePoolNameFromLabel;
 import static io.harness.ccm.cluster.entities.K8sWorkload.encodeDotsInKey;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 
@@ -140,6 +141,7 @@ public class K8sPodInfoTasklet implements Tasklet {
       if (null != instanceData.getCloudProviderInstanceId()) {
         metaData.put(InstanceMetaDataConstants.CLOUD_PROVIDER_INSTANCE_ID, instanceData.getCloudProviderInstanceId());
       }
+      populateNodePoolNameFromLabel(nodeMetaData, metaData);
     } else {
       logger.warn("Node detail not found settingId {} node name {} podid {} podname {}", podInfo.getCloudProviderId(),
           podInfo.getNodeName(), podUid, podInfo.getPodName());

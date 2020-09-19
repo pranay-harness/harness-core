@@ -1,12 +1,14 @@
 package io.harness.app.mappers;
 
 import io.harness.beans.CIPipeline;
+import io.harness.beans.Graph;
 import io.harness.beans.execution.BranchWebhookEvent;
 import io.harness.beans.execution.CommitDetails;
 import io.harness.beans.execution.PRWebhookEvent;
 import io.harness.beans.execution.WebhookExecutionSource;
 import io.harness.beans.execution.WebhookGitUser;
 import io.harness.ci.beans.entities.CIBuild;
+import io.harness.execution.status.Status;
 
 import java.util.Arrays;
 
@@ -14,6 +16,7 @@ public class BuildDtoMapperTestHelper {
   public static final String ACCOUNT_ID = "ACCOUNT_ID";
   public static final String ORG_ID = "ORG_ID";
   public static final String PROJECT_ID = "PROJECT_ID";
+  public static final String EXECUTION_ID = "executionId";
   public static final Long BUILD_ID = 4L;
   public static final String PIPELINE_ID = "123";
   public static final String PIPELINE_NAME = "test";
@@ -32,6 +35,7 @@ public class BuildDtoMapperTestHelper {
         .projectIdentifier(PROJECT_ID)
         .pipelineIdentifier(PIPELINE_ID)
         .executionSource(executionSource)
+        .executionId(EXECUTION_ID)
         .build();
   }
 
@@ -58,5 +62,9 @@ public class BuildDtoMapperTestHelper {
 
   public static CIPipeline getPipeline() {
     return CIPipeline.builder().identifier(PIPELINE_ID).name(PIPELINE_NAME).build();
+  }
+
+  public static Graph getGraph() {
+    return Graph.builder().planExecutionId(EXECUTION_ID).status(Status.SUCCEEDED).build();
   }
 }

@@ -194,6 +194,8 @@ type BillingEntityDataPoint {
   avgMemoryUtilization: Number
   unallocatedCost: Number
   networkCost: Number
+  efficiencyScore: Number
+  efficiencyScoreTrend: Number
 }
 
 type GcpBillingEntityDataPoint {
@@ -281,6 +283,7 @@ type BillingStatsData {
   utilizedCost: BillingStatsInfo
   unallocatedCost: BillingStatsInfo
   systemCost: BillingStatsInfo
+  efficiencyScore: BillingStatsInfo
 }
 
 type EfficiencyStatsData {
@@ -417,6 +420,7 @@ type NodeAndPodDataPoint {
   workload: String
   clusterName: String
   node: String
+  nodePoolName: String
   totalCost: Number
   idleCost: Number
   systemCost: Number

@@ -1,5 +1,6 @@
 package software.wings.graphql.datafetcher.billing;
 
+import static io.harness.rule.OwnerRule.SANDESH;
 import static io.harness.rule.OwnerRule.SHUBHANSHU;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.anyString;
@@ -24,6 +25,7 @@ import software.wings.graphql.schema.type.aggregation.QLTimeFilter;
 import software.wings.graphql.schema.type.aggregation.QLTimeOperator;
 import software.wings.graphql.schema.type.aggregation.billing.QLBillingDataFilter;
 import software.wings.graphql.schema.type.aggregation.billing.QLCCMEntityGroupBy;
+import software.wings.graphql.schema.type.aggregation.billing.QLStatsBreakdownInfo;
 import software.wings.security.UserThreadLocal;
 
 import java.math.BigDecimal;
@@ -179,6 +181,29 @@ public class BillingDataHelperTest extends AbstractDataFetcherTest {
             ACCOUNT1_ID, aggregationFunction, filters, groupBy, null, null);
     assertThat(entityIdToPrevBillingAmountData).isNotNull();
     assertThat(entityIdToPrevBillingAmountData.containsKey(SERVICE1_ID_APP1_ACCOUNT1)).isTrue();
+  }
+
+  @Test
+  @Owner(developers = SANDESH)
+  @Category(UnitTests.class)
+  public void testCalculateEfficiencyScore() {
+    QLStatsBreakdownInfo costStats =
+        QLStatsBreakdownInfo.builder().unallocated(30.0).utilized(50.0).idle(20.0).total(100.0).build();
+    assertThat(billingDataHelper.calculateEfficiencyScore(costStats)).isEqualTo(77);
+  }
+
+  @Test
+  @Owner(developers = SANDESH)
+  @Category(UnitTests.class)
+  public void testCalculateTrendPercentage() {
+    assertThat(billingDataHelper.calculateTrendPercentage(BigDecimal.valueOf(100), BigDecimal.valueOf(50)))
+        .isEqualTo(new BigDecimal("100.00"));
+    assertThat(billingDataHelper.calculateTrendPercentage(BigDecimal.valueOf(100), BigDecimal.valueOf(0)))
+        .isEqualTo(new BigDecimal("-1"));
+    assertThat(billingDataHelper.calculateTrendPercentage(Double.valueOf(100), Double.valueOf(50)))
+        .isEqualTo(Double.valueOf(100.00));
+    assertThat(billingDataHelper.calculateTrendPercentage(Double.valueOf(100), Double.valueOf(50)))
+        .isEqualTo(Double.valueOf(100.00));
   }
 
   public QLCCMAggregationFunction makeBillingAmtAggregation() {

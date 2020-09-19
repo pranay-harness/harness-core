@@ -102,9 +102,8 @@ public class AwsCodeDeployInstanceSyncExecutorTest extends DelegateTest {
     assertThat(response.getInstances()).isNotEmpty();
     assertThat(response.getErrorMessage()).isNull();
 
-    assertThat(taskResponse.getPerpetualTaskState()).isEqualTo(PerpetualTaskState.TASK_RUN_SUCCEEDED);
     assertThat(taskResponse.getResponseCode()).isEqualTo(Response.SC_OK);
-    assertThat(taskResponse.getResponseMessage()).contains("TASK_RUN_SUCCEEDED");
+    assertThat(taskResponse.getResponseMessage()).contains("success");
   }
 
   @Test
@@ -138,7 +137,6 @@ public class AwsCodeDeployInstanceSyncExecutorTest extends DelegateTest {
     assertThat(response.getInstances()).isNullOrEmpty();
     assertThat(response.getErrorMessage()).isEqualTo("Invalid deployment id");
 
-    assertThat(taskResponse.getPerpetualTaskState()).isEqualTo(PerpetualTaskState.TASK_RUN_FAILED);
     assertThat(taskResponse.getResponseCode()).isEqualTo(Response.SC_OK);
     assertThat(taskResponse.getResponseMessage()).contains("Invalid deployment id");
   }

@@ -1,11 +1,10 @@
 package io.harness.ng;
 
+import static io.harness.NGConstants.HARNESS_SECRET_MANAGER_IDENTIFIER;
 import static io.harness.connector.ConnectorModule.DEFAULT_CONNECTOR_SERVICE;
 import static io.harness.eraro.ErrorCode.SECRET_MANAGEMENT_ERROR;
 import static io.harness.exception.WingsException.SRE;
 import static io.harness.exception.WingsException.USER;
-import static io.harness.ng.NGConstants.HARNESS_SECRET_MANAGER_IDENTIFIER;
-import static io.harness.ng.remote.client.RestClientUtils.getResponse;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -18,9 +17,9 @@ import io.harness.connector.services.ConnectorService;
 import io.harness.delegate.beans.connector.ConnectorCategory;
 import io.harness.delegate.beans.connector.ConnectorType;
 import io.harness.delegate.beans.connector.ConnectorValidationResult;
+import io.harness.ng.core.api.NGSecretManagerService;
 import io.harness.secretmanagerclient.dto.SecretManagerConfigDTO;
 import io.harness.secretmanagerclient.dto.SecretManagerConfigUpdateDTO;
-import io.harness.secretmanagerclient.remote.SecretManagerClient;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import software.wings.service.impl.security.SecretManagementException;
@@ -32,13 +31,13 @@ import javax.validation.Valid;
 @Slf4j
 public class SecretManagerConnectorServiceImpl implements ConnectorService {
   private final ConnectorService defaultConnectorService;
-  private final SecretManagerClient secretManagerClient;
+  private final NGSecretManagerService ngSecretManagerService;
 
   @Inject
   public SecretManagerConnectorServiceImpl(@Named(DEFAULT_CONNECTOR_SERVICE) ConnectorService defaultConnectorService,
-      SecretManagerClient secretManagerClient) {
+      NGSecretManagerService ngSecretManagerService) {
     this.defaultConnectorService = defaultConnectorService;
-    this.secretManagerClient = secretManagerClient;
+    this.ngSecretManagerService = ngSecretManagerService;
   }
 
   @Override
@@ -50,7 +49,7 @@ public class SecretManagerConnectorServiceImpl implements ConnectorService {
   @Override
   public Optional<ConnectorDTO> get(
       String accountIdentifier, String orgIdentifier, String projectIdentifier, String connectorIdentifier) {
-    throw new UnsupportedOperationException("This operation is not supported for secret manager");
+    return defaultConnectorService.get(accountIdentifier, orgIdentifier, projectIdentifier, connectorIdentifier);
   }
 
   @Override
@@ -80,42 +79,40 @@ public class SecretManagerConnectorServiceImpl implements ConnectorService {
   private ConnectorDTO createSecretManagerConnector(ConnectorRequestDTO connector, String accountIdentifier) {
     SecretManagerConfigDTO secretManagerConfigDTO =
         SecretManagerConfigDTOMapper.fromConnectorDTO(accountIdentifier, connector, connector.getConnectorConfig());
-    SecretManagerConfigDTO createdSecretManager =
-        getResponse(secretManagerClient.createSecretManager(secretManagerConfigDTO));
+    SecretManagerConfigDTO createdSecretManager = ngSecretManagerService.createSecretManager(secretManagerConfigDTO);
     if (Optional.ofNullable(createdSecretManager).isPresent()) {
       try {
         return defaultConnectorService.create(connector, accountIdentifier);
       } catch (Exception ex) {
-        logger.error("Error occurred while creating secret manager in 71 rest", ex);
-        secretManagerClient.deleteSecretManager(connector.getIdentifier(), accountIdentifier,
-            connector.getOrgIdentifier(), connector.getProjectIdentifier());
+        logger.error("Error occurred while creating secret manager in 120 ng, trying to delete in 71 rest", ex);
+        ngSecretManagerService.deleteSecretManager(accountIdentifier, connector.getOrgIdentifier(),
+            connector.getProjectIdentifier(), connector.getIdentifier());
         throw new SecretManagementException(
             SECRET_MANAGEMENT_ERROR, "Exception occurred while saving secret manager", USER);
       }
     }
     throw new SecretManagementException(
-        SECRET_MANAGEMENT_ERROR, "Error occurred while saving secret manager in 71 rest manager", SRE);
+        SECRET_MANAGEMENT_ERROR, "Error occurred while saving secret manager in 71 rest.", SRE);
   }
 
   @Override
   public ConnectorDTO update(ConnectorRequestDTO connector, String accountIdentifier) {
     SecretManagerConfigUpdateDTO dto =
         SecretManagerConfigUpdateDTOMapper.fromConnectorDTO(connector, connector.getConnectorConfig());
-    SecretManagerConfigDTO updatedSecretManagerConfig =
-        getResponse(secretManagerClient.updateSecretManager(connector.getIdentifier(), accountIdentifier,
-            connector.getOrgIdentifier(), connector.getProjectIdentifier(), dto));
+    SecretManagerConfigDTO updatedSecretManagerConfig = ngSecretManagerService.updateSecretManager(accountIdentifier,
+        connector.getOrgIdentifier(), connector.getProjectIdentifier(), connector.getIdentifier(), dto);
     if (Optional.ofNullable(updatedSecretManagerConfig).isPresent()) {
       return defaultConnectorService.update(connector, accountIdentifier);
     }
     throw new SecretManagementException(
-        SECRET_MANAGEMENT_ERROR, "Error occurred while updating secret manager in 71 rest manager", SRE);
+        SECRET_MANAGEMENT_ERROR, "Error occurred while updating secret manager in 71 rest.", SRE);
   }
 
   @Override
   public boolean delete(
       String accountIdentifier, String orgIdentifier, String projectIdentifier, String connectorIdentifier) {
-    boolean success = getResponse(secretManagerClient.deleteSecretManager(
-        connectorIdentifier, accountIdentifier, orgIdentifier, projectIdentifier));
+    boolean success = ngSecretManagerService.deleteSecretManager(
+        accountIdentifier, orgIdentifier, projectIdentifier, connectorIdentifier);
     if (success) {
       return defaultConnectorService.delete(accountIdentifier, orgIdentifier, projectIdentifier, connectorIdentifier);
     }
@@ -125,17 +122,20 @@ public class SecretManagerConnectorServiceImpl implements ConnectorService {
   @Override
   public boolean validateTheIdentifierIsUnique(
       String accountIdentifier, String orgIdentifier, String projectIdentifier, String connectorIdentifier) {
-    throw new UnsupportedOperationException("This operation is not supported for secret manager");
+    return defaultConnectorService.validateTheIdentifierIsUnique(
+        accountIdentifier, orgIdentifier, projectIdentifier, connectorIdentifier);
   }
 
   @Override
   public ConnectorValidationResult validate(ConnectorRequestDTO connector, String accountIdentifier) {
-    throw new UnsupportedOperationException("This operation is not supported for secret manager");
+    throw new UnsupportedOperationException("Cannot validate secret manager, use test connection API instead");
   }
 
   @Override
   public ConnectorValidationResult testConnection(
       String accountIdentifier, String orgIdentifier, String projectIdentifier, String connectorIdentifier) {
-    throw new UnsupportedOperationException("This operation is not supported for secret manager");
+    boolean success =
+        ngSecretManagerService.validate(accountIdentifier, orgIdentifier, projectIdentifier, connectorIdentifier);
+    return ConnectorValidationResult.builder().valid(success).build();
   }
 }

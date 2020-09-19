@@ -1,13 +1,13 @@
 resource "google_logging_metric" "perpetual_task_delay" {
-  name = join("_", [local.name_prefix, "perpetual_task_delay"])
+  name        = join("_", [local.name_prefix, "perpetual_task_delay"])
   description = "Owner: Platform commons"
   filter = join("\n",
     [local.filter_prefix,
-      "\"first poll from this delegate for task\" OR \"update for task\""])
+  "\"first poll from this delegate for task\" OR \"update for task\""])
   metric_descriptor {
     metric_kind = "DELTA"
-    value_type = "DISTRIBUTION"
-    unit = "ms"
+    value_type  = "DISTRIBUTION"
+    unit        = "ms"
   }
   value_extractor = "EXTRACT(jsonPayload.harness.delay)"
   bucket_options {

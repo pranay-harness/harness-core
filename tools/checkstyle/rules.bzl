@@ -17,7 +17,10 @@ def impl_checkstyle(name, tags, srcs=[],
             "-f xml",
             "--",
             "$(SRCS)",
-            "| tee \"$@\"",
+            "> \"$@\"",
+            "&& sed -Ei.bak 's|sandbox/darwin-sandbox/[0-9]+/execroot|execroot/harness_monorepo/bazel-out/darwin-fastbuild/bin/sq.runfiles|g'  \"$@\"",
+            "&& sed -Ei.bak 's|sandbox/[a-zA-Z]+-sandbox/[0-9]+/execroot|execroot/harness_monorepo/bazel-out/k8-fastbuild/bin/sq.runfiles|g' \"$@\"",
+            "&& cat \"$@\""
         ]),
         tools = [
             checkstyle_xml,

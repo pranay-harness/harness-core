@@ -10,15 +10,18 @@ import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static software.wings.beans.Log.Builder.aLog;
 import static software.wings.sm.states.GcbState.GcbDelegateResponse.failedGcbTaskResponse;
 import static software.wings.sm.states.GcbState.GcbDelegateResponse.gcbDelegateResponseOf;
+import static software.wings.sm.states.GcbState.GcbDelegateResponse.interruptedGcbTask;
 import static software.wings.sm.states.gcbconfigs.GcbRemoteBuildSpec.RemoteFileSource.BRANCH;
 
 import com.google.inject.Inject;
 
+import com.hazelcast.core.RuntimeInterruptedException;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.delegate.beans.DelegateTaskPackage;
 import io.harness.delegate.beans.DelegateTaskResponse;
 import io.harness.delegate.task.AbstractDelegateRunnableTask;
 import io.harness.delegate.task.TaskParameters;
+import io.harness.exception.InterruptedRuntimeException;
 import io.harness.exception.UnsupportedOperationException;
 import io.harness.logging.CommandExecutionStatus;
 import io.harness.serializer.JsonUtils;
@@ -30,6 +33,7 @@ import software.wings.beans.Log;
 import software.wings.beans.command.GcbTaskParams;
 import software.wings.beans.yaml.GitFetchFilesRequest;
 import software.wings.beans.yaml.GitFetchFilesResult;
+import software.wings.exception.GcbClientException;
 import software.wings.helpers.ext.gcb.GcbService;
 import software.wings.helpers.ext.gcb.models.BuildOperationDetails;
 import software.wings.helpers.ext.gcb.models.GcbBuildDetails;
@@ -94,17 +98,22 @@ public class GcbTask extends AbstractDelegateRunnableTask {
   }
 
   protected GcbDelegateResponse pollGcbBuild(final @NotNull GcbTaskParams params) {
-    GcbBuildDetails build;
-    do {
-      sleep(Duration.ofSeconds(params.getPollFrequency()));
-      build = gcbService.getBuild(params.getGcpConfig(), params.getEncryptedDataDetails(), params.getBuildId());
-      String gcbOutput = gcbService.fetchBuildLogs(
-          params.getGcpConfig(), params.getEncryptedDataDetails(), build.getLogsBucket(), params.getBuildId());
+    try {
+      GcbBuildDetails build;
+      do {
+        sleep(Duration.ofSeconds(params.getPollFrequency()));
+        build = gcbService.getBuild(params.getGcpConfig(), params.getEncryptedDataDetails(), params.getBuildId());
+        String gcbOutput = gcbService.fetchBuildLogs(
+            params.getGcpConfig(), params.getEncryptedDataDetails(), build.getLogsBucket(), params.getBuildId());
 
-      saveConsoleLogs(alreadyLogged, params.getActivityId(), params.getUnitName(),
-          build.getStatus().getCommandExecutionStatus(), params.getAppId(), gcbOutput);
-    } while (build.isWorking());
-    return gcbDelegateResponseOf(params, build);
+        saveConsoleLogs(alreadyLogged, params.getActivityId(), params.getUnitName(),
+            build.getStatus().getCommandExecutionStatus(), params.getAppId(), gcbOutput);
+      } while (build.isWorking());
+      return gcbDelegateResponseOf(params, build);
+    } catch (RuntimeInterruptedException | InterruptedRuntimeException e) {
+      logger.error("GCB poll task failed due to: ", e);
+      return interruptedGcbTask(params);
+    }
   }
 
   protected GcbDelegateResponse startGcbBuild(final @NotNull GcbTaskParams params) {
@@ -116,8 +125,16 @@ public class GcbTask extends AbstractDelegateRunnableTask {
   }
 
   protected GcbDelegateResponse cancelBuild(final @NotNull GcbTaskParams params) {
+    try {
+      gcbService.cancelBuild(params.getGcpConfig(), params.getEncryptedDataDetails(), params.getBuildId());
+    } catch (GcbClientException e) {
+      logger.error("Failed to cancel GCB build due to: ", e);
+      return gcbDelegateResponseOf(
+          params, gcbService.getBuild(params.getGcpConfig(), params.getEncryptedDataDetails(), params.getBuildId()));
+    }
+    sleep(Duration.ofSeconds(10));
     GcbBuildDetails build =
-        gcbService.cancelBuild(params.getGcpConfig(), params.getEncryptedDataDetails(), params.getBuildId());
+        gcbService.getBuild(params.getGcpConfig(), params.getEncryptedDataDetails(), params.getBuildId());
     return gcbDelegateResponseOf(params, build);
   }
 

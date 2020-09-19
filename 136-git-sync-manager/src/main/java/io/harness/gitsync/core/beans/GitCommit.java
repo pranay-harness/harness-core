@@ -3,7 +3,6 @@ package io.harness.gitsync.core.beans;
 import com.google.common.collect.ImmutableList;
 
 import io.harness.beans.EmbeddedUser;
-import io.harness.git.model.GitBaseResult;
 import io.harness.gitsync.gitfileactivity.beans.GitFileProcessingSummary;
 import io.harness.mongo.index.FdIndex;
 import io.harness.persistence.AccountAccess;
@@ -18,6 +17,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
+import lombok.Singular;
 import lombok.experimental.FieldNameConstants;
 import org.mongodb.morphia.annotations.Entity;
 import org.springframework.data.annotation.CreatedBy;
@@ -42,18 +42,18 @@ public class GitCommit implements PersistentEntity, UuidAware, CreatedAtAware, C
                                   UpdatedByAware, AccountAccess {
   @org.springframework.data.annotation.Id @org.mongodb.morphia.annotations.Id private String uuid;
   private String accountId;
-  private List<String> yamlGitConfigId;
+  @Singular("yamlGitConfigIds") private List<String> yamlGitConfigIds;
   private String commitId;
   private String yamlChangeSetId;
-  private GitBaseResult gitCommandResult;
   @FdIndex private Status status;
   private FailureReason failureReason;
-  private String yamlChangeSetsProcessed;
   private GitFileProcessingSummary fileProcessingSummary;
   private String commitMessage;
   private String gitConnectorId;
   private String repo;
   private String branchName;
+  private String projectId;
+  private String organizationId;
   @CreatedBy private EmbeddedUser createdBy;
   @CreatedDate private long createdAt;
   @LastModifiedBy private EmbeddedUser lastUpdatedBy;

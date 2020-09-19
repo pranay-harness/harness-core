@@ -3,8 +3,10 @@ package software.wings.sm.states.customdeployment;
 import static io.harness.beans.ExecutionStatus.FAILED;
 import static io.harness.beans.ExecutionStatus.SUCCESS;
 import static io.harness.beans.SweepingOutputInstance.Scope.WORKFLOW;
+import static io.harness.rule.OwnerRule.TATHAGAT;
 import static io.harness.rule.OwnerRule.YOGESH;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.assertj.core.api.Assertions.fail;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyList;
@@ -34,6 +36,7 @@ import io.harness.rule.Owner;
 import io.harness.tasks.Cd1SetupFields;
 import io.harness.tasks.ResponseData;
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -41,6 +44,7 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import software.wings.WingsBaseTest;
+import software.wings.api.HostElement;
 import software.wings.api.InfraMappingElement;
 import software.wings.api.InfraMappingElement.Custom;
 import software.wings.api.InstanceElement;
@@ -261,12 +265,12 @@ public class InstanceFetchStateTest extends WingsBaseTest {
     String output = readFile("Instances.json");
 
     final List<InstanceElement> instanceElements =
-        InstanceElementMapperUtils.mapJsonToInstanceElements(executionData.getHostAttributes(),
+        InstanceMapperUtils.mapJsonToInstanceElements(executionData.getHostAttributes(),
             executionData.getHostObjectArrayPath(), output, InstanceFetchState.instanceElementMapper);
 
-    assertThat(instanceElements).hasSize(2);
+    assertThat(instanceElements).hasSize(3);
     assertThat(instanceElements.stream().map(InstanceElement::getHostName).collect(Collectors.toList()))
-        .containsExactlyInAnyOrder("10.244.12.15", "10.244.12.13");
+        .containsExactlyInAnyOrder("10.244.12.15", "10.244.12.13", "10.244.12.17");
   }
 
   /*
@@ -276,20 +280,28 @@ public class InstanceFetchStateTest extends WingsBaseTest {
   @Owner(developers = YOGESH)
   @Category(UnitTests.class)
   public void testMapJsonToInstanceElementsNestedAttributes() throws IOException {
-    InstanceFetchStateExecutionData executionData = InstanceFetchStateExecutionData.builder()
-                                                        .hostObjectArrayPath("items")
-                                                        .hostAttributes(ImmutableMap.of("hostname", "metadata.name"))
-                                                        .build();
+    InstanceFetchStateExecutionData executionData =
+        InstanceFetchStateExecutionData.builder()
+            .hostObjectArrayPath("items")
+            .hostAttributes(ImmutableMap.of("hostname", "metadata.name", "uuid", "metadata.uid"))
+            .build();
     String output = readFile("NestedAttributesInstance.json");
 
     final List<InstanceElement> instanceElements =
-        InstanceElementMapperUtils.mapJsonToInstanceElements(executionData.getHostAttributes(),
+        InstanceMapperUtils.mapJsonToInstanceElements(executionData.getHostAttributes(),
             executionData.getHostObjectArrayPath(), output, InstanceFetchState.instanceElementMapper);
 
     assertThat(instanceElements).hasSize(5);
     assertThat(instanceElements.stream().map(InstanceElement::getHostName).collect(Collectors.toList()))
         .containsExactlyInAnyOrder(
             "cd-statefulset-0", "cd-statefulset-1", "k8sv2-statefulset-0", "statefulset-test-0", "statefulset-test-1");
+    assertThat(instanceElements.stream()
+                   .map(InstanceElement::getHost)
+                   .map(HostElement ::getProperties)
+                   .map(propertiesMap -> propertiesMap.get("uuid")))
+        .containsExactlyInAnyOrder("1a86e740-32b3-467d-a3fa-e6c4af8bab7a", "2a3e8a66-439a-4a82-ac9a-e2e53e577266",
+            "3af21535-c9fd-4b0d-98a5-06a0cb692803", "3c800ea6-7f46-4281-a351-1c436858b563",
+            "cdff119a-790d-4f32-95eb-56a41c363856");
   }
 
   /*
@@ -304,9 +316,8 @@ public class InstanceFetchStateTest extends WingsBaseTest {
                                                         .hostAttributes(ImmutableMap.of("hostname", "listenAddress"))
                                                         .build();
     String output = readFile("Weblogic.json");
-
     final List<InstanceElement> instanceElements =
-        InstanceElementMapperUtils.mapJsonToInstanceElements(executionData.getHostAttributes(),
+        InstanceMapperUtils.mapJsonToInstanceElements(executionData.getHostAttributes(),
             executionData.getHostObjectArrayPath(), output, InstanceFetchState.instanceElementMapper);
 
     assertThat(instanceElements).hasSize(1);
@@ -323,5 +334,57 @@ public class InstanceFetchStateTest extends WingsBaseTest {
     }
     assertThat(file).isNotNull();
     return FileUtils.readFileToString(file, "UTF-8");
+  }
+
+  @Test
+  @Owner(developers = TATHAGAT)
+  @Category(UnitTests.class)
+  public void testMapJsonToInstanceElementsWithEmptyOrNullProperties() throws IOException {
+    InstanceFetchStateExecutionData executionData = InstanceFetchStateExecutionData.builder()
+                                                        .hostObjectArrayPath("hosts.value")
+                                                        .hostAttributes(ImmutableMap.of("hostname", "access_ip_v4",
+                                                            "ipv6", "access_ip_v6", "adminPass", "admin_pass"))
+                                                        .build();
+
+    String output = readFile("Instances.json");
+
+    final List<InstanceElement> instanceElements =
+        InstanceMapperUtils.mapJsonToInstanceElements(executionData.getHostAttributes(),
+            executionData.getHostObjectArrayPath(), output, InstanceFetchState.instanceElementMapper);
+
+    assertThat(instanceElements.get(0).getHost().getProperties()).hasSize(3);
+    assertThat(instanceElements.get(0).getHost().getProperties().keySet())
+        .containsExactlyInAnyOrder("hostname", "ipv6", "adminPass");
+    assertThat(instanceElements.stream()
+                   .map(InstanceElement::getHost)
+                   .map(HostElement::getProperties)
+                   .map(v -> v.get("adminPass"))
+                   .collect(Collectors.toList()))
+        .containsOnly((String) null);
+    assertThat(instanceElements.stream()
+                   .map(InstanceElement::getHost)
+                   .map(HostElement::getProperties)
+                   .map(v -> v.get("ipv6"))
+                   .collect(Collectors.toList()))
+        .containsExactlyInAnyOrder(StringUtils.EMPTY, StringUtils.EMPTY, "10.20.30.40");
+  }
+
+  @Test
+  @Owner(developers = TATHAGAT)
+  @Category(UnitTests.class)
+  public void testMapJsonToInstanceElementsWithPathNotFoundinJsonFail() throws IOException {
+    InstanceFetchStateExecutionData executionData =
+        InstanceFetchStateExecutionData.builder()
+            .hostObjectArrayPath("hosts.value")
+            .hostAttributes(ImmutableMap.of("hostname", "access_ip_v4", "name", "name"))
+            .build();
+
+    String output = readFile("Instances.json");
+
+    assertThatThrownBy(
+        ()
+            -> InstanceMapperUtils.mapJsonToInstanceElements(executionData.getHostAttributes(),
+                executionData.getHostObjectArrayPath(), output, InstanceFetchState.instanceElementMapper))
+        .hasMessage("No results for path: $['name']");
   }
 }

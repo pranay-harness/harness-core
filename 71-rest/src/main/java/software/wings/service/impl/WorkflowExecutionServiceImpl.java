@@ -1532,14 +1532,17 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
       // set startTs before starting the actual execution, because after the starting event
       // we can have FAILED status in stateExecutionInstance (ex.: ApprovalState)
       setWorkflowExecutionStartTs(workflowExecution);
+      // Multiple calls because of ISSUE - https://harness.atlassian.net/browse/CDC-9129
+      savedWorkflowExecution = wingsPersistence.getWithAppId(
+          WorkflowExecution.class, workflowExecution.getAppId(), workflowExecution.getUuid());
+      if (workflowExecution.getWorkflowType() == PIPELINE) {
+        savePipelineSweepingOutPut(workflowExecution, pipeline, savedWorkflowExecution);
+      }
       stateMachineExecutor.startExecution(stateMachine, stateExecutionInstance);
       updateStartStatus(workflowExecution.getAppId(), workflowExecution.getUuid(), RUNNING, false);
       savedWorkflowExecution = wingsPersistence.getWithAppId(
           WorkflowExecution.class, workflowExecution.getAppId(), workflowExecution.getUuid());
       executionUpdate.publish(savedWorkflowExecution);
-      if (workflowExecution.getWorkflowType() == PIPELINE) {
-        savePipelineSweepingOutPut(workflowExecution, pipeline, savedWorkflowExecution);
-      }
     } else {
       // create queue event
       executionEventQueue.send(ExecutionEvent.builder()

@@ -15,6 +15,7 @@ public final class PerpetualTaskType {
   public static final String CUSTOM_DEPLOYMENT_INSTANCE_SYNC = "CUSTOM_DEPLOYMENT_INSTANCE_SYNC";
   public static final String DATA_COLLECTION_TASK = "DATA_COLLECTION_TASK";
   public static final String AZURE_VMSS_INSTANCE_SYNC = "AZURE_VMSS_INSTANCE_SYNC";
+  public static final String MANIFEST_COLLECTION = "MANIFEST_COLLECTION";
 
   private PerpetualTaskType() {}
 }

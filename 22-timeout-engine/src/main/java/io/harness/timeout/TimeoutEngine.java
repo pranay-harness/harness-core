@@ -4,6 +4,7 @@ import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
 import static io.harness.mongo.iterator.MongoPersistenceIterator.SchedulingType.REGULAR;
+import static java.lang.String.format;
 
 import com.google.inject.Inject;
 import com.google.inject.Injector;
@@ -45,6 +46,9 @@ public class TimeoutEngine implements Handler<TimeoutInstance> {
         TimeoutInstance.builder().uuid(generateUuid()).tracker(timeoutTracker).callback(timeoutCallback).build();
     timeoutInstance.resetNextIteration();
     TimeoutInstance savedTimeoutInstance = timeoutInstanceRepository.save(timeoutInstance);
+    logger.info(format("Registered timeout with uuid: %s, currentTime: %d, expiryTime: %d, diff: %d",
+        timeoutInstance.getUuid(), System.currentTimeMillis(), timeoutInstance.getNextIteration(),
+        timeoutInstance.getNextIteration() - System.currentTimeMillis()));
     if (iterator != null) {
       iterator.wakeup();
     }

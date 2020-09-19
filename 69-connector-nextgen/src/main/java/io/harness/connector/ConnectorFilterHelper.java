@@ -1,7 +1,7 @@
 package io.harness.connector;
 
-import static io.harness.ng.NGConstants.IDENTIFIER_KEY;
-import static io.harness.ng.NGConstants.TAGS_KEY;
+import static io.harness.NGConstants.IDENTIFIER_KEY;
+import static io.harness.NGConstants.TAGS_KEY;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.springframework.data.mongodb.core.query.Criteria.where;
 

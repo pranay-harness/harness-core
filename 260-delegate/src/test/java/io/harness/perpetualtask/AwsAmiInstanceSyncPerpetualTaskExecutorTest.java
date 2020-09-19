@@ -100,9 +100,8 @@ public class AwsAmiInstanceSyncPerpetualTaskExecutorTest extends DelegateTest {
     assertThat(awsResponse.getAsgName()).isEqualTo("asg-1");
     assertThat(awsResponse.getInstances()).containsExactly(instance);
 
-    assertThat(perpetualTaskResponse.getResponseMessage()).isEqualTo("TASK_RUN_SUCCEEDED");
+    assertThat(perpetualTaskResponse.getResponseMessage()).isEqualTo("success");
     assertThat(perpetualTaskResponse.getResponseCode()).isEqualTo(Response.SC_OK);
-    assertThat(perpetualTaskResponse.getPerpetualTaskState()).isEqualTo(PerpetualTaskState.TASK_RUN_SUCCEEDED);
   }
 
   @Test
@@ -143,7 +142,6 @@ public class AwsAmiInstanceSyncPerpetualTaskExecutorTest extends DelegateTest {
 
     assertThat(perpetualTaskResponse.getResponseMessage()).isEqualTo("exception message");
     assertThat(perpetualTaskResponse.getResponseCode()).isEqualTo(Response.SC_OK);
-    assertThat(perpetualTaskResponse.getPerpetualTaskState()).isEqualTo(PerpetualTaskState.TASK_RUN_FAILED);
   }
 
   @Test

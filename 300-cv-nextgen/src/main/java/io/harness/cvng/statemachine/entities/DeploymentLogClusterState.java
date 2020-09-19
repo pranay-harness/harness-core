@@ -4,6 +4,7 @@ import static io.harness.cvng.analysis.beans.LogClusterLevel.L2;
 
 import io.harness.cvng.statemachine.beans.AnalysisInput;
 import io.harness.cvng.statemachine.beans.AnalysisState;
+import io.harness.cvng.statemachine.beans.AnalysisStatus;
 import io.harness.cvng.statemachine.exception.AnalysisStateMachineException;
 import lombok.Builder;
 import lombok.Data;

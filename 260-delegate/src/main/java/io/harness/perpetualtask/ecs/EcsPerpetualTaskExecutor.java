@@ -50,7 +50,6 @@ import io.harness.perpetualtask.PerpetualTaskExecutor;
 import io.harness.perpetualtask.PerpetualTaskId;
 import io.harness.perpetualtask.PerpetualTaskLogContext;
 import io.harness.perpetualtask.PerpetualTaskResponse;
-import io.harness.perpetualtask.PerpetualTaskState;
 import io.harness.perpetualtask.ecs.support.EcsMetricClient;
 import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.serializer.KryoSerializer;
@@ -156,11 +155,7 @@ public class EcsPerpetualTaskExecutor implements PerpetualTaskExecutor {
           logger.error("Failed to publish failure from {} to the Event Server.", taskId, ex);
         }
       }
-      return PerpetualTaskResponse.builder()
-          .responseCode(200)
-          .perpetualTaskState(PerpetualTaskState.TASK_RUN_SUCCEEDED)
-          .responseMessage(PerpetualTaskState.TASK_RUN_SUCCEEDED.name())
-          .build();
+      return PerpetualTaskResponse.builder().responseCode(200).responseMessage("success").build();
     }
   }
 

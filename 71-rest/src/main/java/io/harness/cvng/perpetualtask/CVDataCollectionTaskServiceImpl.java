@@ -33,8 +33,13 @@ public class CVDataCollectionTaskServiceImpl implements CVDataCollectionTaskServ
     List<EncryptedDataDetail> encryptedDataDetailList = ngSecretService.getEncryptionDetails(basicNGAccessObject,
         bundle.getConnectorConfigDTO() instanceof DecryptableEntity ? (DecryptableEntity) bundle.getConnectorConfigDTO()
                                                                     : null);
-    bundle.setDetails(encryptedDataDetailList);
-    byte[] executionBundle = kryoSerializer.asBytes(bundle);
+
+    CVDataCollectionInfo cvDataCollectionInfo = CVDataCollectionInfo.builder()
+                                                    .connectorConfigDTO(bundle.getConnectorConfigDTO())
+                                                    .encryptedDataDetails(encryptedDataDetailList)
+                                                    .build();
+
+    byte[] executionBundle = kryoSerializer.asBytes(cvDataCollectionInfo);
     PerpetualTaskClientContext clientContext =
         PerpetualTaskClientContext.builder().clientParams(bundle.getParams()).executionBundle(executionBundle).build();
     PerpetualTaskSchedule schedule = PerpetualTaskSchedule.newBuilder()

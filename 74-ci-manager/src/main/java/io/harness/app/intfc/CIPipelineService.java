@@ -1,10 +1,12 @@
 package io.harness.app.intfc;
 
+import io.harness.app.beans.dto.CIPipelineFilterDTO;
 import io.harness.app.yaml.YAML;
 import io.harness.beans.CIPipeline;
 import io.harness.validation.Create;
 import ru.vyarus.guice.validator.group.annotation.ValidationGroups;
 
+import java.util.List;
 import javax.validation.Valid;
 
 public interface CIPipelineService {
@@ -15,4 +17,6 @@ public interface CIPipelineService {
   CIPipeline readPipeline(String pipelineId);
 
   CIPipeline createPipelineFromYAML(YAML yaml, String accountId, String orgId, String projectId);
+
+  List<CIPipeline> getPipelines(CIPipelineFilterDTO ciPipelineFilterDTO);
 }

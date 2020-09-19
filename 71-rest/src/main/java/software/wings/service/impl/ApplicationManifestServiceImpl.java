@@ -5,6 +5,7 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.govern.Switch.unhandled;
+import static io.harness.persistence.HQuery.excludeAuthority;
 import static io.harness.validation.PersistenceValidator.duplicateCheck;
 import static io.harness.validation.Validator.notNullCheck;
 import static java.lang.String.format;
@@ -38,13 +39,18 @@ import io.harness.delegate.beans.TaskData;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
+import io.harness.observer.Subject;
 import io.harness.tasks.Cd1SetupFields;
+import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.query.Query;
+import org.mongodb.morphia.query.UpdateOperations;
+import org.mongodb.morphia.query.UpdateResults;
 import software.wings.api.DeploymentType;
 import software.wings.beans.Application;
 import software.wings.beans.Application.ApplicationKeys;
 import software.wings.beans.Event.Type;
+import software.wings.beans.FeatureName;
 import software.wings.beans.GitFetchFilesTaskParams;
 import software.wings.beans.GitFileConfig;
 import software.wings.beans.GitFileConfig.GitFileConfigKeys;
@@ -70,6 +76,8 @@ import software.wings.service.intfc.ApplicationManifestService;
 import software.wings.service.intfc.DelegateService;
 import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.ServiceResourceService;
+import software.wings.service.intfc.applicationmanifest.ApplicationManifestServiceObserver;
+import software.wings.service.intfc.applicationmanifest.HelmChartService;
 import software.wings.service.intfc.yaml.YamlDirectoryService;
 import software.wings.service.intfc.yaml.YamlPushService;
 import software.wings.utils.ApplicationManifestUtils;
@@ -87,6 +95,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import javax.annotation.Nonnull;
+import javax.validation.constraints.NotNull;
 import javax.validation.executable.ValidateOnExecution;
 
 @ValidateOnExecution
@@ -104,6 +113,8 @@ public class ApplicationManifestServiceImpl implements ApplicationManifestServic
   @Inject private ApplicationManifestUtils applicationManifestUtils;
   @Inject private GitFileConfigHelperService gitFileConfigHelperService;
   @Inject private FeatureFlagService featureFlagService;
+  @Inject @Getter private Subject<ApplicationManifestServiceObserver> subject = new Subject<>();
+  @Inject private HelmChartService helmChartService;
 
   private static long MAX_MANIFEST_FILES_PER_APPLICATION_MANIFEST = 50L;
 
@@ -162,11 +173,17 @@ public class ApplicationManifestServiceImpl implements ApplicationManifestServic
       return;
     }
 
+    String accountId = appService.getAccountIdByAppId(applicationManifest.getAppId());
+    if (featureFlagService.isEnabled(FeatureName.HELM_CHART_AS_ARTIFACT, accountId)
+        && Boolean.TRUE.equals(applicationManifest.getPollForChanges())) {
+      helmChartService.deleteByAppManifest(applicationManifest.getAppId(), applicationManifest.getUuid());
+      deletePerpetualTask(applicationManifest);
+    }
+
     deleteManifestFiles(applicationManifest.getAppId(), applicationManifest, applicationManifest.isSyncFromGit());
 
     wingsPersistence.delete(applicationManifest);
 
-    String accountId = appService.getAccountIdByAppId(applicationManifest.getAppId());
     yamlPushService.pushYamlChangeSet(
         accountId, applicationManifest, null, Type.DELETE, applicationManifest.isSyncFromGit(), false);
   }
@@ -312,6 +329,120 @@ public class ApplicationManifestServiceImpl implements ApplicationManifestServic
     return query.get();
   }
 
+  @Override
+  public boolean detachPerpetualTask(String perpetualTaskId) {
+    Query<ApplicationManifest> query = wingsPersistence.createQuery(ApplicationManifest.class, excludeAuthority)
+                                           .filter(ApplicationManifestKeys.perpetualTaskId, perpetualTaskId);
+    UpdateOperations<ApplicationManifest> updateOperations =
+        wingsPersistence.createUpdateOperations(ApplicationManifest.class)
+            .unset(ApplicationManifestKeys.perpetualTaskId);
+    UpdateResults updateResults = wingsPersistence.update(query, updateOperations);
+
+    return updateResults.getUpdatedCount() >= 1;
+  }
+
+  @Override
+  public boolean attachPerpetualTask(String accountId, String appManifestId, String perpetualTaskId) {
+    // NOTE: Before using this method, ensure that perpetualTaskId does not exist for application manifest, otherwise
+    // we'll have an extra perpetual task running for this.
+    Query<ApplicationManifest> query = wingsPersistence.createQuery(ApplicationManifest.class)
+                                           .filter(ApplicationManifestKeys.accountId, accountId)
+                                           .filter(ApplicationManifest.ID_KEY, appManifestId)
+                                           .field(ApplicationManifestKeys.perpetualTaskId)
+                                           .doesNotExist();
+    UpdateOperations<ApplicationManifest> updateOperations =
+        wingsPersistence.createUpdateOperations(ApplicationManifest.class)
+            .set(ApplicationManifestKeys.perpetualTaskId, perpetualTaskId);
+    UpdateResults updateResults = wingsPersistence.update(query, updateOperations);
+
+    return updateResults.getUpdatedCount() == 1;
+  }
+
+  void createPerpetualTask(@NotNull ApplicationManifest applicationManifest) {
+    try {
+      subject.fireInform(ApplicationManifestServiceObxxxxxxxx:onSaved, applicationManifest);
+    } catch (Exception e) {
+      logger.error("Encountered exception while informing the observers of Application Manifest on save", e);
+    }
+  }
+
+  void resetPerpetualTask(@NotNull ApplicationManifest applicationManifest) {
+    try {
+      subject.fireInform(ApplicationManifestServiceObxxxxxxxx:onUpdated, applicationManifest);
+    } catch (Exception e) {
+      logger.error("Encountered exception while informing the observers of Application Manifest on reset", e);
+    }
+  }
+
+  void deletePerpetualTask(@NotNull ApplicationManifest applicationManifest) {
+    try {
+      subject.fireInform(ApplicationManifestServiceObxxxxxxxx:onDeleted, applicationManifest);
+    } catch (Exception e) {
+      logger.error("Encountered exception while informing the observers of Application Manifest on delete", e);
+    }
+  }
+
+  @VisibleForTesting
+  boolean isHelmRepoOrChartNameChanged(ApplicationManifest oldAppManifest, ApplicationManifest newAppManifest) {
+    if (newAppManifest.getStoreType() == HelmChartRepo) {
+      HelmChartConfig oldHelmChartConfig = oldAppManifest.getHelmChartConfig();
+      HelmChartConfig newHelmChartConfig = newAppManifest.getHelmChartConfig();
+      return !oldHelmChartConfig.getConnectorId().equals(newHelmChartConfig.getConnectorId())
+          || !oldHelmChartConfig.getChartName().equals(newHelmChartConfig.getChartName());
+    }
+    return false;
+  }
+
+  @VisibleForTesting
+  void checkForUpdates(ApplicationManifest applicationManifest) {
+    ApplicationManifest savedAppManifest = getById(applicationManifest.getAppId(), applicationManifest.getUuid());
+
+    Boolean oldPollForChanges = savedAppManifest.getPollForChanges();
+    Boolean curPollForChanges = applicationManifest.getPollForChanges();
+
+    if (curPollForChanges == null) {
+      if (Boolean.TRUE.equals(oldPollForChanges)) {
+        helmChartService.deleteByAppManifest(savedAppManifest.getAppId(), savedAppManifest.getUuid());
+        deletePerpetualTask(savedAppManifest);
+      }
+    } else if (Boolean.TRUE.equals(curPollForChanges)) {
+      if (isNotEmpty(applicationManifest.getHelmChartConfig().getChartVersion())) {
+        throw new InvalidRequestException(
+            "No Helm Chart version is required when Poll for Manifest option is enabled.");
+      }
+      if (oldPollForChanges == null || Boolean.FALSE.equals(oldPollForChanges)) {
+        createPerpetualTask(applicationManifest);
+      } else {
+        if (isHelmRepoOrChartNameChanged(savedAppManifest, applicationManifest)) {
+          helmChartService.deleteByAppManifest(savedAppManifest.getAppId(), savedAppManifest.getUuid());
+          resetPerpetualTask(applicationManifest);
+        }
+      }
+    } else {
+      if (Boolean.TRUE.equals(oldPollForChanges)) {
+        helmChartService.deleteByAppManifest(savedAppManifest.getAppId(), savedAppManifest.getUuid());
+        deletePerpetualTask(savedAppManifest);
+      }
+    }
+  }
+
+  @VisibleForTesting
+  void handlePollForChangesToggle(ApplicationManifest applicationManifest, boolean isCreate, String accountId) {
+    if (featureFlagService.isEnabled(FeatureName.HELM_CHART_AS_ARTIFACT, accountId)) {
+      if (Boolean.TRUE.equals(applicationManifest.getPollForChanges())
+          && applicationManifest.getStoreType() != HelmChartRepo) {
+        throw new InvalidRequestException(
+            applicationManifest.getStoreType() + " Manifest format doesn't support poll for changes option.");
+      }
+      if (isCreate && Boolean.TRUE.equals(applicationManifest.getPollForChanges())) {
+        createPerpetualTask(applicationManifest);
+      }
+      if (!isCreate) {
+        checkForUpdates(applicationManifest);
+      }
+    }
+  }
+
   private ApplicationManifest upsertApplicationManifest(ApplicationManifest applicationManifest, boolean isCreate) {
     validateApplicationManifest(applicationManifest);
     sanitizeApplicationManifestConfigs(applicationManifest);
@@ -337,11 +468,17 @@ public class ApplicationManifestServiceImpl implements ApplicationManifestServic
       resetReadOnlyProperties(applicationManifest);
     }
 
+    String appId = applicationManifest.getAppId();
+    String accountId = appService.getAccountIdByAppId(appId);
+
+    if (isEmpty(applicationManifest.getAccountId())) {
+      applicationManifest.setAccountId(accountId);
+    }
+
+    handlePollForChangesToggle(applicationManifest, isCreate, accountId);
+
     ApplicationManifest savedApplicationManifest =
         wingsPersistence.saveAndGet(ApplicationManifest.class, applicationManifest);
-
-    String appId = savedApplicationManifest.getAppId();
-    String accountId = appService.getAccountIdByAppId(appId);
 
     Type type = isCreate ? Type.CREATE : Type.UPDATE;
     yamlPushService.pushYamlChangeSet(accountId, isCreate ? null : savedApplicationManifest, savedApplicationManifest,
@@ -362,6 +499,7 @@ public class ApplicationManifestServiceImpl implements ApplicationManifestServic
   void resetReadOnlyProperties(ApplicationManifest applicationManifest) {
     ApplicationManifest savedAppManifest = getById(applicationManifest.getAppId(), applicationManifest.getUuid());
     applicationManifest.setKind(savedAppManifest.getKind());
+    applicationManifest.setPerpetualTaskId(savedAppManifest.getPerpetualTaskId());
   }
 
   private void validateManifestFileName(ManifestFile manifestFile) {

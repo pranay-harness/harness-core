@@ -4,7 +4,6 @@ import io.harness.cdng.environment.yaml.EnvironmentYaml;
 import io.harness.cdng.infra.InfrastructureDef;
 import io.harness.cdng.infra.beans.InfraUseFromStage;
 import io.harness.cdng.visitor.helpers.pipelineinfrastructure.PipelineInfrastructureVisitorHelper;
-import io.harness.data.Outcome;
 import io.harness.state.Step;
 import io.harness.walktree.beans.VisitableChildren;
 import io.harness.walktree.visitor.SimpleVisitorHelper;
@@ -18,7 +17,7 @@ import java.util.List;
 @Data
 @Builder
 @SimpleVisitorHelper(helperClass = PipelineInfrastructureVisitorHelper.class)
-public class PipelineInfrastructure implements Outcome, Visitable {
+public class PipelineInfrastructure implements Visitable {
   private InfrastructureDef infrastructureDefinition;
   @Wither private InfraUseFromStage useFromStage;
   private EnvironmentYaml environment;

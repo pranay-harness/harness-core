@@ -2,6 +2,8 @@ package io.harness.batch.processing.schedule;
 
 import com.google.common.collect.ImmutableSet;
 
+import com.github.benmanes.caffeine.cache.Cache;
+import com.github.benmanes.caffeine.cache.Caffeine;
 import io.harness.batch.processing.ccm.BatchJobType;
 import io.harness.batch.processing.ccm.CCMJobConstants;
 import io.harness.batch.processing.service.intfc.BatchJobIntervalService;
@@ -9,6 +11,7 @@ import io.harness.batch.processing.service.intfc.BatchJobScheduledDataService;
 import io.harness.batch.processing.service.intfc.CustomBillingMetaDataService;
 import io.harness.ccm.cluster.entities.BatchJobInterval;
 import io.harness.ccm.cluster.entities.BatchJobScheduledData;
+import lombok.Value;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.batch.core.BatchStatus;
 import org.springframework.batch.core.Job;
@@ -26,6 +29,7 @@ import java.time.Duration;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 @Slf4j
 @Service
@@ -34,6 +38,15 @@ public class BatchJobRunner {
   @Autowired private BatchJobIntervalService batchJobIntervalService;
   @Autowired private BatchJobScheduledDataService batchJobScheduledDataService;
   @Autowired private CustomBillingMetaDataService customBillingMetaDataService;
+
+  private Cache<CacheKey, Boolean> logErrorCache = Caffeine.newBuilder().expireAfterWrite(24, TimeUnit.HOURS).build();
+
+  @Value
+  private static class CacheKey {
+    private String accountId;
+    private BatchJobType batchJobType;
+    private Instant startInstant;
+  }
 
   /**
    * Runs the batch job from previous end time and save the job logs
@@ -85,8 +98,7 @@ public class BatchJobRunner {
             batchJobScheduledDataService.create(batchJobScheduledData);
             startInstant = endInstant;
           } else {
-            logger.error("Error while running batch job for account {} type {} status {} time range {} - {}", accountId,
-                batchJobType, status, startInstant, endInstant);
+            logJobErrors(accountId, batchJobType, status, startInstant, endInstant);
             break;
           }
         } else {
@@ -96,6 +108,19 @@ public class BatchJobRunner {
       } else {
         break;
       }
+    }
+  }
+
+  private void logJobErrors(
+      String accountId, BatchJobType batchJobType, BatchStatus status, Instant startInstant, Instant endInstant) {
+    CacheKey cacheKey = new CacheKey(accountId, batchJobType, startInstant);
+    if (logErrorCache.getIfPresent(cacheKey) == null) {
+      logger.error("Error while running batch job for account {} type {} status {} time range {} - {}", accountId,
+          batchJobType, status, startInstant, endInstant);
+      logErrorCache.put(cacheKey, Boolean.TRUE);
+    } else {
+      logger.error("Error in running batch job retry for account {} type {} status {} time range {} - {}", accountId,
+          batchJobType, status, startInstant, endInstant);
     }
   }
 

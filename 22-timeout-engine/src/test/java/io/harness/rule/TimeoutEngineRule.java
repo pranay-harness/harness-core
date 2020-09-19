@@ -21,6 +21,7 @@ import io.harness.serializer.TimeoutEngineRegistrars;
 import io.harness.serializer.kryo.TestPersistenceKryoRegistrar;
 import io.harness.serializer.morphia.TestPersistenceMorphiaRegistrar;
 import io.harness.testlib.module.MongoRuleMixin;
+import io.harness.testlib.module.TestMongoModule;
 import io.harness.threading.CurrentThreadExecutor;
 import io.harness.threading.ExecutorModule;
 import lombok.extern.slf4j.Slf4j;
@@ -76,7 +77,7 @@ public class TimeoutEngineRule implements MethodRule, InjectorRuleMixin, MongoRu
         bind(HPersistence.class).to(MongoPersistence.class);
       }
     });
-
+    modules.add(TestMongoModule.getInstance());
     modules.add(new TimeoutEnginePersistenceTestModule());
     modules.add(new TimeoutEngineModule());
     return modules;

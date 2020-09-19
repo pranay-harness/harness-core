@@ -8,10 +8,11 @@ import static org.mockito.Matchers.anyList;
 import static org.mockito.Mockito.when;
 
 import io.harness.category.element.UnitTests;
-import io.harness.cvng.analysis.beans.ExecutionStatus;
+import io.harness.cvng.analysis.entities.LearningEngineTask.ExecutionStatus;
 import io.harness.cvng.analysis.services.api.LogAnalysisService;
 import io.harness.cvng.statemachine.beans.AnalysisInput;
 import io.harness.cvng.statemachine.beans.AnalysisState;
+import io.harness.cvng.statemachine.beans.AnalysisStatus;
 import io.harness.rule.Owner;
 import org.junit.Before;
 import org.junit.Test;

@@ -103,6 +103,7 @@ public enum Status {
       case ERRORED:
       case SUSPENDED:
       case FAILED:
+      case EXPIRED:
         return FINALIZABLE_STATUSES;
       default:
         throw new IllegalStateException("Unexpected value: " + status);
@@ -114,5 +115,9 @@ public enum Status {
       return EnumSet.of(RUNNING);
     }
     return nodeAllowedStartSet(status);
+  }
+
+  public static boolean isFinalStatus(Status status) {
+    return FINAL_STATUSES.contains(status);
   }
 }

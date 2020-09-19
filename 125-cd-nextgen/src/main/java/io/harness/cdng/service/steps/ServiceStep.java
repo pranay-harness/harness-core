@@ -14,7 +14,6 @@ import io.harness.cdng.service.beans.ServiceOutcome;
 import io.harness.cdng.service.beans.ServiceOutcome.ArtifactsOutcome;
 import io.harness.cdng.service.beans.ServiceOutcome.ServiceOutcomeBuilder;
 import io.harness.cdng.stepsdependency.constants.OutcomeExpressionConstants;
-import io.harness.common.AmbianceHelper;
 import io.harness.data.Outcome;
 import io.harness.engine.outcomes.OutcomeService;
 import io.harness.exception.FailureType;
@@ -23,6 +22,7 @@ import io.harness.executionplan.plancreator.beans.StepOutcomeGroup;
 import io.harness.facilitator.modes.children.ChildrenExecutable;
 import io.harness.facilitator.modes.children.ChildrenExecutableResponse;
 import io.harness.facilitator.modes.children.ChildrenExecutableResponse.ChildrenExecutableResponseBuilder;
+import io.harness.ng.common.AmbianceHelper;
 import io.harness.ng.core.service.entity.ServiceEntity;
 import io.harness.ng.core.service.services.ServiceEntityService;
 import io.harness.state.Step;
@@ -89,7 +89,7 @@ public class ServiceStep implements Step, ChildrenExecutable<ServiceStepParamete
           ? serviceStepParameters.getService().applyOverrides(serviceStepParameters.getServiceOverrides())
           : serviceStepParameters.getService();
       responseBuilder.stepOutcome(StepResponse.StepOutcome.builder()
-                                      .name(OutcomeExpressionConstants.SERVICE.getName())
+                                      .name(OutcomeExpressionConstants.SERVICE)
                                       .outcome(createServiceOutcome(serviceConfig, responseNotifyDataList))
                                       .group(StepOutcomeGroup.STAGE.name())
                                       .build());

@@ -21,6 +21,7 @@ import io.harness.generator.ServiceGenerator;
 import io.harness.rule.Owner;
 import io.harness.testframework.restutils.GraphQLRestUtils;
 import io.harness.testframework.restutils.WorkflowRestUtils;
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -32,6 +33,7 @@ import software.wings.beans.Service;
 import software.wings.beans.Workflow;
 import software.wings.infra.InfrastructureDefinition;
 import software.wings.service.intfc.FeatureFlagService;
+import software.wings.service.intfc.WorkflowService;
 
 import java.util.Arrays;
 import java.util.HashMap;
@@ -46,6 +48,7 @@ public class GetWorkflowByIdAndNameFunctionalTest extends AbstractFunctionalTest
   @Inject private InfrastructureDefinitionGenerator infrastructureDefinitionGenerator;
   @Inject private WorkflowUtils workflowUtils;
   @Inject private FeatureFlagService featureFlagService;
+  @Inject private WorkflowService workflowService;
 
   private Application application;
   private Workflow templatizedWorkflow;
@@ -87,7 +90,7 @@ public class GetWorkflowByIdAndNameFunctionalTest extends AbstractFunctionalTest
   }
 
   @Test
-  @Owner(developers = POOJA)
+  @Owner(developers = POOJA, intermittent = true)
   @Category(FunctionalTests.class)
   public void shouldGetTemplatisedWorkflowWithVariableById() {
     String query = getGraphQLQueryById(templatizedWorkflow.getUuid());
@@ -97,8 +100,8 @@ public class GetWorkflowByIdAndNameFunctionalTest extends AbstractFunctionalTest
   }
 
   @Test
-  @Owner(developers = POOJA)
-  @Category(FunctionalTests.class)
+  @Owner(developers = POOJA, intermittent = true)
+  @Category({FunctionalTests.class})
   public void shouldGetTemplatisedWorkflowWithVariableByName() {
     String query = getGraphQLQueryByName(templatizedWorkflow.getName(), templatizedWorkflow.getAppId());
     Map<Object, Object> response = GraphQLRestUtils.executeGraphQLQuery(bearerToken, application.getAccountId(), query);
@@ -159,5 +162,10 @@ workflowVariables {
 }
 }
 }*/ workflowName, appId);
+  }
+
+  @After
+  public void destroy() {
+    workflowService.deleteWorkflow(application.getUuid(), templatizedWorkflow.getUuid());
   }
 }

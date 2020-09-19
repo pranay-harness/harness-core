@@ -318,6 +318,7 @@ helmChartSpecifications {"name": "createdAt_1", "background": true} {"createdAt"
 helmChartSpecifications {"name": "serviceId_1", "unique": true} {"serviceId": 1}
 helmCharts {"name": "accountId_1", "background": true} {"accountId": 1}
 helmCharts {"name": "appId_serviceId", "background": true} {"appId": 1, "serviceId": 1}
+helmCharts {"name": "applicationManifestId_1", "background": true} {"applicationManifestId": 1}
 hosts {"name": "appId_1", "background": true} {"appId": 1}
 hosts {"name": "app_inframappingid", "background": true} {"appId": 1, "infraMappingId": 1}
 hosts {"name": "createdAt_1", "background": true} {"createdAt": 1}
@@ -355,6 +356,7 @@ instance {"name": "instance_index7", "background": true} {"accountId": 1, "creat
 instance {"name": "instance_index8", "background": true} {"appId": 1, "serviceId": 1, "isDeleted": 1}
 instance {"name": "instance_index9", "background": true} {"accountId": 1, "isDeleted": 1, "deletedAt": 1}
 instance {"name": "isDeleted_1", "background": true} {"isDeleted": 1}
+instance {"name": "needRetry_1", "background": true} {"needRetry": 1}
 instanceChangeQueue {"name": "earliestGet_1", "background": true, "expireAfterSeconds": 86400} {"earliestGet": 1}
 instanceChangeQueue {"name": "next4", "background": true} {"topic": 1, "earliestGet": 1}
 instanceData {"name": "accountId_clusterId_instanceId", "background": true} {"accountId": 1, "clusterId": 1, "instanceId": 1}
@@ -494,7 +496,8 @@ permits {"name": "createdAt_1", "background": true} {"createdAt": 1}
 permits {"name": "expireAt_1", "background": true, "expireAfterSeconds": 0} {"expireAt": 1}
 permits {"name": "key_1", "unique": true} {"key": 1}
 perpetualTask {"name": "accountId_1", "background": true} {"accountId": 1}
-perpetualTask {"name": "assignerIterator", "background": true} {"delegateId": 1, "assignerIterations": 1}
+perpetualTask {"name": "assignerIterator", "background": true} {"state": 1, "assignerIterations": 1}
+perpetualTask {"name": "delegateId_1", "background": true} {"delegateId": 1}
 perpetualTask {"name": "resetterIteration_1", "background": true} {"resetterIteration": 1}
 personalization {"name": "identification", "unique": true} {"accountId": 1, "userId": 1}
 pipelineExecutions {"name": "appId_1", "background": true} {"appId": 1}

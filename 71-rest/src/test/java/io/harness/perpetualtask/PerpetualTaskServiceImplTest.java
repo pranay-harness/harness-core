@@ -1,5 +1,6 @@
 package io.harness.perpetualtask;
 
+import static io.harness.rule.OwnerRule.GEORGE;
 import static io.harness.rule.OwnerRule.HITESH;
 import static io.harness.rule.OwnerRule.VUK;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -180,22 +181,6 @@ public class PerpetualTaskServiceImplTest extends WingsBaseTest {
   @Test
   @Owner(developers = VUK)
   @Category(UnitTests.class)
-  public void testSetTaskState() {
-    PerpetualTaskClientContext clientContext = clientContext();
-    PerpetualTaskRecord perpetualTaskRecord = perpetualTaskRecord();
-    perpetualTaskRecord.setClientContext(clientContext);
-
-    String taskId = perpetualTaskService.createTask(
-        PerpetualTaskType.ECS_CLUSTER, ACCOUNT_ID, clientContext, perpetualTaskSchedule(), false, TASK_DESCRIPTION);
-
-    perpetualTaskService.setTaskState(taskId, PerpetualTaskState.TASK_ASSIGNED);
-
-    // TODO: this test seems unfinished
-  }
-
-  @Test
-  @Owner(developers = VUK)
-  @Category(UnitTests.class)
   public void testGetTaskRecord() {
     String accountId = UUIDGenerator.generateUuid();
     String delegateId = UUIDGenerator.generateUuid();
@@ -242,17 +227,28 @@ public class PerpetualTaskServiceImplTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = HITESH)
+  @Owner(developers = GEORGE)
   @Category(UnitTests.class)
-  public void testUpdateHeartbeat() {
+  public void testUpdateHeartbeatUnassigned() {
     String taskId = perpetualTaskService.createTask(
         PerpetualTaskType.ECS_CLUSTER, ACCOUNT_ID, clientContext(), perpetualTaskSchedule(), false, TASK_DESCRIPTION);
+    boolean updateHeartbeat = perpetualTaskService.triggerCallback(taskId, HEARTBEAT_MILLIS, perpetualTaskResponse());
+    assertThat(updateHeartbeat).isFalse();
+  }
+
+  @Test
+  @Owner(developers = GEORGE)
+  @Category(UnitTests.class)
+  public void testUpdateHeartbeatAssigned() {
+    String taskId = perpetualTaskService.createTask(
+        PerpetualTaskType.ECS_CLUSTER, ACCOUNT_ID, clientContext(), perpetualTaskSchedule(), false, TASK_DESCRIPTION);
+    perpetualTaskService.appointDelegate(ACCOUNT_ID, taskId, DELEGATE_ID, 0);
     boolean updateHeartbeat = perpetualTaskService.triggerCallback(taskId, HEARTBEAT_MILLIS, perpetualTaskResponse());
     assertThat(updateHeartbeat).isTrue();
   }
 
   private PerpetualTaskResponse perpetualTaskResponse() {
-    return PerpetualTaskResponse.builder().perpetualTaskState(PerpetualTaskState.TASK_RUN_SUCCEEDED).build();
+    return PerpetualTaskResponse.builder().responseCode(200).build();
   }
 
   @Test

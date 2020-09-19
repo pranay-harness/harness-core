@@ -8,7 +8,6 @@ import io.harness.exception.NoResultFoundException;
 import io.harness.ng.core.remote.server.grpc.perpetualtask.RemotePerpetualTaskServiceClientManager;
 import io.harness.perpetualtask.PerpetualTaskExecutionResponse;
 import io.harness.perpetualtask.PerpetualTaskResponse;
-import io.harness.perpetualtask.PerpetualTaskState;
 import io.harness.perpetualtask.RemotePerpetualTaskClientContext;
 import io.harness.perpetualtask.remote.RemotePerpetualTaskServiceClient;
 import io.harness.perpetualtask.remote.RemotePerpetualTaskServiceClientRegistry;
@@ -47,7 +46,6 @@ public class RemotePerpetualTaskServiceClientManagerImpl implements RemotePerpet
     return PerpetualTaskResponse.builder()
         .responseCode(executionResponse.getResponseCode())
         .responseMessage(executionResponse.getResponseMessage())
-        .perpetualTaskState(PerpetualTaskState.valueOf(executionResponse.getTaskState()))
         .build();
   }
 

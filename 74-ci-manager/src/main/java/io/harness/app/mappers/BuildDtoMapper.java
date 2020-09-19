@@ -1,5 +1,7 @@
 package io.harness.app.mappers;
 
+import static java.lang.String.format;
+
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
@@ -9,8 +11,8 @@ import io.harness.app.beans.entities.CIBuildBranchHook;
 import io.harness.app.beans.entities.CIBuildCommit;
 import io.harness.app.beans.entities.CIBuildPRHook;
 import io.harness.app.beans.entities.CIBuildPipeline;
-import io.harness.app.intfc.CIPipelineService;
 import io.harness.beans.CIPipeline;
+import io.harness.beans.Graph;
 import io.harness.beans.execution.BranchWebhookEvent;
 import io.harness.beans.execution.CommitDetails;
 import io.harness.beans.execution.ExecutionSource;
@@ -19,6 +21,7 @@ import io.harness.beans.execution.WebhookEvent;
 import io.harness.beans.execution.WebhookExecutionSource;
 import io.harness.beans.execution.WebhookGitUser;
 import io.harness.ci.beans.entities.CIBuild;
+import io.harness.service.GraphGenerationService;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -31,15 +34,18 @@ public class BuildDtoMapper {
   private static final String PR = "pullRequest";
   private static final String BRANCH = "branch";
 
-  @Inject private CIPipelineService ciPipelineService;
+  @Inject private GraphGenerationService graphGenerationService;
 
-  public CIBuildResponseDTO writeBuildDto(CIBuild ciBuild, String accountId, String orgId, String projectId) {
-    CIBuildResponseDTO ciBuildResponseDTO =
-        CIBuildResponseDTO.builder()
-            .id(ciBuild.getBuildNumber())
-            .startTime(ciBuild.getCreatedAt())
-            .pipeline(convertPipeline(ciBuild.getPipelineIdentifier(), accountId, orgId, projectId))
-            .build();
+  public CIBuildResponseDTO writeBuildDto(CIBuild ciBuild, CIPipeline ciPipeline) throws InternalError {
+    if (ciPipeline == null) {
+      throw new InternalError(
+          format("pipeline:% for build:%s", ciBuild.getPipelineIdentifier(), ciBuild.getBuildNumber()));
+    }
+    CIBuildResponseDTO ciBuildResponseDTO = CIBuildResponseDTO.builder()
+                                                .id(ciBuild.getBuildNumber())
+                                                .startTime(ciBuild.getCreatedAt())
+                                                .pipeline(convertPipeline(ciPipeline))
+                                                .build();
 
     ExecutionSource executionSource = ciBuild.getExecutionSource();
     if (executionSource != null) {
@@ -58,6 +64,10 @@ public class BuildDtoMapper {
         }
       }
     }
+
+    // TODO - CI-192 these values should be masked while sending to UI
+    Graph graph = graphGenerationService.generateGraph(ciBuild.getExecutionId());
+    ciBuildResponseDTO.setGraph(graph);
     return ciBuildResponseDTO;
   }
 
@@ -79,8 +89,7 @@ public class BuildDtoMapper {
         .build();
   }
 
-  private CIBuildPipeline convertPipeline(String pipelineId, String accountId, String orgId, String projectId) {
-    CIPipeline ciPipeline = ciPipelineService.readPipeline(pipelineId, accountId, orgId, projectId);
+  private CIBuildPipeline convertPipeline(CIPipeline ciPipeline) {
     return CIBuildPipeline.builder()
         .id(ciPipeline.getIdentifier())
         .name(ciPipeline.getName())

@@ -22,7 +22,8 @@ public enum QLBillingDataFilterType {
   ParentInstanceId(BillingDataMetaDataFields.PARENTINSTANCEID),
   Tag(null),
   Label(null),
-  EnvironmentType(null);
+  EnvironmentType(null),
+  AlertTime(null);
 
   private QLDataType dataType;
   private BillingDataMetaDataFields metaDataFields;

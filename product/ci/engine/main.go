@@ -18,6 +18,7 @@ const (
 
 var (
 	executeStage     = executor.ExecuteStage
+	executeStep      = executor.ExecuteStep
 	liteEngineServer = grpc.NewLiteEngineServer
 )
 
@@ -80,7 +81,7 @@ func main() {
 	case args.Stage != nil:
 		executeStage(args.Stage.Input, args.Stage.LogPath, args.Stage.TmpFilePath, args.Stage.WorkerPorts, args.Stage.Debug, log)
 	case args.Step != nil:
-		executor.ExecuteStep(args.Step.Input, args.Step.LogPath, args.Step.TmpFilePath, log)
+		executeStep(args.Step.Input, args.Step.LogPath, args.Step.TmpFilePath, log)
 	case args.Server != nil:
 		s, err := liteEngineServer(args.Server.Port, args.Server.LogPath, args.Server.TmpFilePath, log)
 		if err != nil {

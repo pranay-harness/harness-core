@@ -15,6 +15,7 @@ import io.harness.executionplan.CIExecutionTest;
 import io.harness.executionplan.core.ExecutionPlanCreationContext;
 import io.harness.executionplan.core.ExecutionPlanCreatorResponse;
 import io.harness.executionplan.core.PlanCreatorSearchContext;
+import io.harness.executionplan.core.impl.ExecutionPlanCreationContextImpl;
 import io.harness.plan.PlanNode;
 import io.harness.rule.Owner;
 import org.junit.Before;
@@ -41,8 +42,10 @@ public class IntegrationStagePlanCreatorTest extends CIExecutionTest {
   @Owner(developers = ALEKSANDAR)
   @Category(UnitTests.class)
   public void createPlan() {
+    ExecutionPlanCreationContextImpl executionPlanCreationContextWithExecutionArgs =
+        ciExecutionPlanTestHelper.getExecutionPlanCreationContextWithExecutionArgs();
     ExecutionPlanCreatorResponse plan =
-        integrationStagePlanCreator.createPlan(integrationStage, executionPlanCreationContext);
+        integrationStagePlanCreator.createPlan(integrationStage, executionPlanCreationContextWithExecutionArgs);
     assertThat(plan.getPlanNodes()).isNotNull();
     List<PlanNode> planNodes = plan.getPlanNodes();
     assertThat(planNodes.get(0).getIdentifier()).isEqualTo(integrationStage.getIdentifier());

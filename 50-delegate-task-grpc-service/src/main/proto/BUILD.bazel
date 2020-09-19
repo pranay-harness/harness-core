@@ -1,22 +1,9 @@
 load("@rules_proto_grpc//java:defs.bzl", "java_grpc_library")
 
-proto_library(
-    name = "50_delegate_task_grpc_service_proto",
-    srcs = glob(["**/*.proto"]),
-    strip_import_prefix = "",
-    deps = [
-        "@com_google_protobuf//:duration_proto",
-        "//20-delegate-beans/src/main/proto:20_delegate_beans_proto",
-        "//22-delegate-service-beans/src/main/proto:22_delegate_service_beans_proto",
-
-    ],
-    visibility = ["//visibility:public"],
-)
-
 java_grpc_library(
     name = "50_delegate_task_grpc_service_java_proto",
     deps = [
-        ":50_delegate_task_grpc_service_proto",
+        "//50-delegate-task-grpc-service/src/main/proto/io/harness/task/service:50_delegate_task_grpc_service_proto",
     ],
     visibility = ["//visibility:public"],
 )

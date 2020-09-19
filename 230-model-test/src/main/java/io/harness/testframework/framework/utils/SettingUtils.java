@@ -3,6 +3,7 @@ package io.harness.testframework.framework.utils;
 import static io.harness.generator.SettingGenerator.HARNESS_JIRA;
 import static io.harness.generator.SettingGenerator.Settings.GITHUB_TEST_CONNECTOR;
 import static io.harness.generator.SettingGenerator.Settings.TERRAFORM_CITY_GIT_REPO;
+import static io.harness.generator.SettingGenerator.Settings.TERRAFORM_MAIN_GIT_AC;
 import static io.harness.generator.SettingGenerator.Settings.TERRAFORM_MAIN_GIT_REPO;
 import static software.wings.beans.Application.GLOBAL_APP_ID;
 import static software.wings.beans.Environment.GLOBAL_ENV_ID;
@@ -13,6 +14,8 @@ import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
 import static software.wings.beans.SettingAttribute.SettingCategory.CONNECTOR;
 import static software.wings.utils.UsageRestrictionsUtils.getAllAppAllEnvUsageRestrictions;
 
+import io.harness.scm.ScmSecret;
+import io.harness.scm.SecretName;
 import software.wings.beans.GitConfig;
 import software.wings.beans.JiraConfig;
 import software.wings.beans.SettingAttribute;
@@ -72,6 +75,25 @@ public class SettingUtils {
         .build();
   }
 
+  public static SettingAttribute createEcsFunctionalTestGitRepoSetting(SettingAttribute githubKey) {
+    return aSettingAttribute()
+        .withCategory(CONNECTOR)
+        .withName("ecs-git-ops-functional-test")
+        .withAppId(githubKey.getAppId())
+        .withEnvId(githubKey.getEnvId())
+        .withAccountId(githubKey.getAccountId())
+        .withValue(
+            GitConfig.builder()
+                .repoUrl("https://github.com/wings-software/arvind-test.git")
+                .username(String.valueOf(new ScmSecret().decryptToCharArray(new SecretName("git_automation_username"))))
+                .password(new ScmSecret().decryptToCharArray(new SecretName("git_automation_password")))
+                .branch("master")
+                .accountId(githubKey.getAccountId())
+                .build())
+        .withUsageRestrictions(getAllAppAllEnvUsageRestrictions())
+        .build();
+  }
+
   public static SettingAttribute createTerraformMainGitRepoSetting(SettingAttribute githubKey, char[] password) {
     return aSettingAttribute()
         .withCategory(CONNECTOR)
@@ -83,6 +105,25 @@ public class SettingUtils {
                        .repoUrl("https://github.com/wings-software/terraform.git")
                        .username("bot-harness")
                        .password(password)
+                       .branch("master")
+                       .accountId(githubKey.getAccountId())
+                       .build())
+        .withUsageRestrictions(getAllAppAllEnvUsageRestrictions())
+        .build();
+  }
+
+  public static SettingAttribute createTerraformMainGitRepoSetting(SettingAttribute githubKey, String password) {
+    return aSettingAttribute()
+        .withCategory(CONNECTOR)
+        .withName(TERRAFORM_MAIN_GIT_AC.name())
+        .withAppId(githubKey.getAppId())
+        .withEnvId(githubKey.getEnvId())
+        .withAccountId(githubKey.getAccountId())
+        .withValue(GitConfig.builder()
+                       .urlType(GitConfig.UrlType.ACCOUNT)
+                       .repoUrl("https://github.com/wings-software/")
+                       .username("bot-harness")
+                       .encryptedPassword(password)
                        .branch("master")
                        .accountId(githubKey.getAccountId())
                        .build())

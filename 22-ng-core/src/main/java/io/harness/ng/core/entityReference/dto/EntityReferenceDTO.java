@@ -1,6 +1,6 @@
 package io.harness.ng.core.entityReference.dto;
 
-import io.harness.ng.EntityType;
+import io.harness.EntityType;
 import lombok.Builder;
 import lombok.Value;
 import org.hibernate.validator.constraints.NotBlank;

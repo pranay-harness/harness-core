@@ -1,6 +1,6 @@
 package io.harness.ng.core.remote;
 
-import static io.harness.ng.NGConstants.HARNESS_BLUE;
+import static io.harness.NGConstants.HARNESS_BLUE;
 import static java.util.Collections.emptyList;
 
 import com.fasterxml.jackson.databind.ObjectMapper;

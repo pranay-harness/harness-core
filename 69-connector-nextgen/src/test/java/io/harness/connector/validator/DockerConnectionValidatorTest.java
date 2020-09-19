@@ -53,7 +53,7 @@ public class DockerConnectionValidatorTest extends CategoryTest {
     DockerAuthenticationDTO dockerAuthenticationDTO =
         DockerAuthenticationDTO.builder().authType(USER_PASSWORD).credentials(dockerUserNamePasswordDTO).build();
     DockerConnectorDTO dockerConnectorDTO =
-        DockerConnectorDTO.builder().dockerRegistryUrl(dockerRegistryUrl).authScheme(dockerAuthenticationDTO).build();
+        DockerConnectorDTO.builder().dockerRegistryUrl(dockerRegistryUrl).auth(dockerAuthenticationDTO).build();
     when(ngSecretService.getEncryptionDetails(any(), any())).thenReturn(null);
     when(delegateGrpcClientWrapper.executeSyncTask(any()))
         .thenReturn(DockerTestConnectionTaskResponse.builder().connectionSuccessFul(true).build());

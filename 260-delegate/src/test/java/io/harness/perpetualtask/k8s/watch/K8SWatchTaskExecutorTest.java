@@ -32,7 +32,6 @@ import io.harness.k8s.model.KubernetesConfig;
 import io.harness.perpetualtask.PerpetualTaskExecutionParams;
 import io.harness.perpetualtask.PerpetualTaskId;
 import io.harness.perpetualtask.PerpetualTaskResponse;
-import io.harness.perpetualtask.PerpetualTaskState;
 import io.harness.perpetualtask.k8s.metrics.client.impl.DefaultK8sMetricsClient;
 import io.harness.perpetualtask.k8s.metrics.client.model.Usage;
 import io.harness.perpetualtask.k8s.metrics.client.model.node.NodeMetrics;
@@ -190,7 +189,7 @@ public class K8SWatchTaskExecutorTest extends DelegateTest {
         PerpetualTaskExecutionParams.newBuilder().setCustomizedParams(Any.pack(k8sWatchTaskParams)).build();
     PerpetualTaskId perpetualTaskId = PerpetualTaskId.newBuilder().setId(PERPETUAL_TASK_ID).build();
     PerpetualTaskResponse perpetualTaskResponse = k8SWatchTaskExecutor.runOnce(perpetualTaskId, params, heartBeatTime);
-    assertThat(perpetualTaskResponse.getPerpetualTaskState()).isEqualTo(PerpetualTaskState.TASK_RUN_SUCCEEDED);
+    assertThat(perpetualTaskResponse.getResponseCode()).isEqualTo(200);
   }
 
   private K8sWatchTaskParams getK8sWatchTaskParams() {

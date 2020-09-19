@@ -18,7 +18,6 @@ import com.google.inject.Inject;
 
 import io.harness.CvNextGenTest;
 import io.harness.category.element.UnitTests;
-import io.harness.cvng.analysis.beans.ExecutionStatus;
 import io.harness.cvng.beans.CVMonitoringCategory;
 import io.harness.cvng.beans.DataSourceType;
 import io.harness.cvng.client.VerificationManagerService;
@@ -28,12 +27,13 @@ import io.harness.cvng.core.entities.SplunkCVConfig;
 import io.harness.cvng.core.services.api.CVConfigService;
 import io.harness.cvng.core.services.api.DataCollectionTaskService;
 import io.harness.cvng.models.VerificationType;
-import io.harness.cvng.statemachine.entities.AnalysisStatus;
+import io.harness.cvng.statemachine.beans.AnalysisStatus;
 import io.harness.cvng.verificationjob.beans.CanaryVerificationJobDTO;
 import io.harness.cvng.verificationjob.beans.Sensitivity;
 import io.harness.cvng.verificationjob.beans.VerificationJobDTO;
 import io.harness.cvng.verificationjob.beans.VerificationJobInstanceDTO;
 import io.harness.cvng.verificationjob.entities.VerificationJobInstance;
+import io.harness.cvng.verificationjob.entities.VerificationJobInstance.ExecutionStatus;
 import io.harness.cvng.verificationjob.entities.VerificationJobInstance.ProgressLog;
 import io.harness.cvng.verificationjob.services.api.VerificationJobInstanceService;
 import io.harness.cvng.verificationjob.services.api.VerificationJobService;
@@ -210,7 +210,7 @@ public class VerificationJobInstanceServiceImplTest extends CvNextGenTest {
     assertThat(firstTask.getEndTime()).isEqualTo(Instant.parse("2020-07-27T10:44:00Z"));
     assertThat(firstTask.getValidAfter())
         .isEqualTo(Instant.parse("2020-07-27T10:44:00Z").plus(DATA_COLLECTION_DELAY).toEpochMilli());
-    assertThat(updated.getExecutionStatus()).isEqualTo(io.harness.cvng.analysis.beans.ExecutionStatus.RUNNING);
+    assertThat(updated.getExecutionStatus()).isEqualTo(ExecutionStatus.RUNNING);
   }
 
   @Test
@@ -235,8 +235,7 @@ public class VerificationJobInstanceServiceImplTest extends CvNextGenTest {
     assertThat(verificationJobInstance.getProgressLogs().get(0).getAnalysisStatus()).isEqualTo(AnalysisStatus.SUCCESS);
     assertThat(verificationJobInstance.getProgressLogs().get(0).getLog()).isEqualTo("time series analysis done");
 
-    assertThat(verificationJobInstance.getExecutionStatus())
-        .isEqualTo(io.harness.cvng.analysis.beans.ExecutionStatus.QUEUED);
+    assertThat(verificationJobInstance.getExecutionStatus()).isEqualTo(ExecutionStatus.QUEUED);
     progressLog = ProgressLog.builder()
                       .startTime(verificationJobInstance.getEndTime().minus(Duration.ofMinutes(1)))
                       .endTime(verificationJobInstance.getEndTime())
@@ -281,8 +280,7 @@ public class VerificationJobInstanceServiceImplTest extends CvNextGenTest {
     verificationJobInstance = verificationJobInstanceService.getVerificationJobInstance(verificationJobInstanceId);
     assertThat(verificationJobInstance.getProgressLogs()).hasSize(1);
     assertThat(verificationJobInstance.getProgressLogs().get(0).getAnalysisStatus()).isEqualTo(AnalysisStatus.FAILED);
-    assertThat(verificationJobInstance.getExecutionStatus())
-        .isEqualTo(io.harness.cvng.analysis.beans.ExecutionStatus.FAILED);
+    assertThat(verificationJobInstance.getExecutionStatus()).isEqualTo(ExecutionStatus.FAILED);
   }
 
   @Test

@@ -4,6 +4,7 @@ import com.google.inject.Inject;
 
 import io.harness.connector.apis.dto.ConnectorDTO;
 import io.harness.connector.apis.dto.ConnectorRequestDTO;
+import io.harness.connector.apis.dto.ConnectorWrapper;
 import io.harness.ng.core.environment.dto.EnvironmentResponseDTO;
 import io.harness.ng.core.service.dto.ServiceResponseDTO;
 
@@ -21,9 +22,11 @@ public class NextGenServiceImpl implements NextGenService {
   @Override
   public Optional<ConnectorDTO> get(
       String accountIdentifier, String connectorIdentifier, String orgIdentifier, String projectIdentifier) {
-    return requestExecutor
-        .execute(nextGenClient.get(accountIdentifier, connectorIdentifier, orgIdentifier, projectIdentifier))
-        .getData();
+    ConnectorWrapper connectorWrapper =
+        requestExecutor
+            .execute(nextGenClient.get(accountIdentifier, connectorIdentifier, orgIdentifier, projectIdentifier))
+            .getData();
+    return connectorWrapper != null ? Optional.of(connectorWrapper.getConnector()) : Optional.empty();
   }
 
   @Override

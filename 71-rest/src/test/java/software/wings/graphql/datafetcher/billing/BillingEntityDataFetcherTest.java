@@ -8,7 +8,9 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyDouble;
 import static org.mockito.Matchers.anyList;
+import static org.mockito.Matchers.anyObject;
 import static org.mockito.Matchers.anyString;
+import static org.mockito.Mockito.doCallRealMethod;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -141,6 +143,9 @@ public class BillingEntityDataFetcherTest extends AbstractDataFetcherTest {
         .thenAnswer(
             i -> Math.round(resultSet.getDouble(BillingDataMetaDataFields.NETWORKCOST.getFieldName()) * 100D) / 100D);
     when(billingDataHelper.getRoundedDoubleValue(anyDouble())).thenAnswer(i -> i.getArguments()[0]);
+    doCallRealMethod().when(billingDataHelper).calculateEfficiencyScore(anyObject());
+    doCallRealMethod().when(billingDataHelper).calculateTrendPercentage(anyDouble(), anyDouble());
+    doCallRealMethod().when(billingDataHelper).calculateTrendPercentage((BigDecimal) anyObject(), anyObject());
   }
 
   @Test
@@ -186,6 +191,8 @@ public class BillingEntityDataFetcherTest extends AbstractDataFetcherTest {
     assertThat(data.getData().get(0).getRegion()).isEqualTo(BillingStatsDefaultKeys.REGION);
     assertThat(data.getData().get(0).getClusterType()).isEqualTo(CLUSTER_TYPE1);
     assertThat(data.getData().get(0).getTotalCost()).isEqualTo(10.0);
+    assertThat(data.getData().get(0).getEfficiencyScore()).isEqualTo(100);
+    assertThat(data.getData().get(1).getEfficiencyScore()).isEqualTo(100);
     assertThat(data.getData().get(1).getTotalCost()).isEqualTo(11.0);
     assertThat(data.getData().get(2).getTotalCost()).isEqualTo(12.0);
     assertThat(data.getData().get(3).getTotalCost()).isEqualTo(13.0);
@@ -280,6 +287,8 @@ public class BillingEntityDataFetcherTest extends AbstractDataFetcherTest {
     assertThat(data.getData().get(0).getClusterType()).isEqualTo(BillingStatsDefaultKeys.CLUSTERTYPE);
     assertThat(data.getData().get(0).getTotalCost()).isEqualTo(10.0);
     assertThat(data.getData().get(0).getIdleCost()).isEqualTo(5.0);
+    assertThat(data.getData().get(0).getEfficiencyScoreTrendPercentage())
+        .isEqualTo(BillingStatsDefaultKeys.EFFICIENCY_SCORE_TREND);
   }
 
   @Test

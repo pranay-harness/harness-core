@@ -1,7 +1,7 @@
 package io.harness.ng.core.impl;
 
 import static io.github.benas.randombeans.api.EnhancedRandom.random;
-import static io.harness.ng.ModuleType.CD;
+import static io.harness.ModuleType.CD;
 import static io.harness.ng.core.remote.ProjectMapper.toProject;
 import static io.harness.rule.OwnerRule.KARAN;
 import static io.harness.security.encryption.EncryptionType.GCP_KMS;

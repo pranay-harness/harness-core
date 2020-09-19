@@ -40,6 +40,8 @@ public class YamlSuccessfulChange implements PersistentEntity, UuidAware, Create
   private Long changeProcessedTS;
   private ChangeSource changeSource;
   private SuccessfulChangeDetail changeDetail;
+  private String projectId;
+  private String organizationId;
   @CreatedBy private EmbeddedUser createdBy;
   @CreatedDate private long createdAt;
   @LastModifiedBy private EmbeddedUser lastUpdatedBy;

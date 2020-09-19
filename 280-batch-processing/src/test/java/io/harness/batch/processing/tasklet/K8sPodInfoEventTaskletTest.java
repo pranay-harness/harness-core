@@ -76,6 +76,7 @@ public class K8sPodInfoEventTaskletTest extends CategoryTest {
 
   private static final String POD_UID = "pod_uid";
   private static final String POD_NAME = "pod_name";
+  private static final String NODE_POOL_NAME = "manager-pool";
   private static final String NAMESPACE = "namespace";
   private static final String KUBE_SYSTEM_NAMESPACE = "kube-system";
   private static final String KUBE_PROXY_POD_NAME = "kube-proxy-pod";
@@ -262,6 +263,7 @@ public class K8sPodInfoEventTaskletTest extends CategoryTest {
         .isEqualTo(CLOUD_PROVIDER_INSTANCE_ID);
     assertThat(metaData.get(InstanceMetaDataConstants.PARENT_RESOURCE_CPU))
         .isEqualTo(String.valueOf((double) CPU_AMOUNT));
+    assertThat(metaData.get(InstanceMetaDataConstants.NODE_POOL_NAME)).isEqualTo(NODE_POOL_NAME);
     assertThat(instanceInfo.getNamespaceLabels()).isEqualTo(encodeDotsInKey(NAMESPACE_LABELS));
     assertThat(instanceInfo.getNamespaceLabels()).isNotEqualTo(NAMESPACE_LABELS);
     verify(workloadRepository).savePodWorkload(ACCOUNT_ID, (PodInfo) k8sPodInfoMessage.getMessage());
@@ -314,6 +316,7 @@ public class K8sPodInfoEventTaskletTest extends CategoryTest {
     nodeMetaData.put(InstanceMetaDataConstants.REGION, InstanceMetaDataConstants.REGION);
     nodeMetaData.put(InstanceMetaDataConstants.INSTANCE_FAMILY, InstanceMetaDataConstants.INSTANCE_FAMILY);
     nodeMetaData.put(InstanceMetaDataConstants.OPERATING_SYSTEM, InstanceMetaDataConstants.OPERATING_SYSTEM);
+    nodeMetaData.put(K8sCCMConstants.GKE_NODE_POOL_KEY, NODE_POOL_NAME);
     io.harness.batch.processing.ccm.Resource instanceResource = io.harness.batch.processing.ccm.Resource.builder()
                                                                     .cpuUnits((double) CPU_AMOUNT)
                                                                     .memoryMb((double) MEMORY_AMOUNT)

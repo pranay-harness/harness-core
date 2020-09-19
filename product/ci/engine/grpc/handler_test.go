@@ -25,15 +25,18 @@ func Test_ExecuteStep(t *testing.T) {
 	ctrl, ctx := gomock.WithContext(context.Background(), t)
 	defer ctrl.Finish()
 
+	accountID := "test"
 	mockExecutor := mexecutor.NewMockUnitExecutor(ctrl)
 
-	in := &pb.ExecuteStepRequest{}
+	in := &pb.ExecuteStepRequest{
+		AccountId: accountID,
+	}
 	tmpPath := "/tmp"
 	log, _ := logs.GetObservedLogger(zap.InfoLevel)
 	stopCh := make(chan bool)
 	h := &handler{tmpPath, tmpPath, stopCh, mockExecutor, log.Sugar()}
 
-	mockExecutor.EXPECT().Run(ctx, in.GetStep(), gomock.Any()).Return(nil, nil)
+	mockExecutor.EXPECT().Run(ctx, in.GetStep(), gomock.Any(), accountID).Return(nil, nil)
 	_, err := h.ExecuteStep(ctx, in)
 	assert.Nil(t, err)
 }

@@ -1,7 +1,9 @@
 package io.harness.cdng.infra.steps;
 
 import io.harness.ambiance.Ambiance;
+import io.harness.cdng.infra.InfrastructureMapper;
 import io.harness.cdng.infra.beans.InfraMapping;
+import io.harness.cdng.infra.beans.InfrastructureOutcome;
 import io.harness.cdng.infra.yaml.Infrastructure;
 import io.harness.cdng.stepsdependency.constants.OutcomeExpressionConstants;
 import io.harness.execution.status.Status;
@@ -29,12 +31,12 @@ public class InfrastructureStep implements Step, SyncExecutable<InfraStepParamet
     Infrastructure infrastructure = infraStepParameters.getInfrastructureOverrides() != null
         ? infraStepParameters.getInfrastructure().applyOverrides(infraStepParameters.getInfrastructureOverrides())
         : infraStepParameters.getInfrastructure();
-    // TODO: render variables later
+    InfrastructureOutcome infrastructureOutcome = InfrastructureMapper.toOutcome(infrastructure);
     return StepResponse.builder()
         .status(Status.SUCCEEDED)
         .stepOutcome(StepOutcome.builder()
-                         .outcome(infrastructure)
-                         .name(OutcomeExpressionConstants.INFRASTRUCTURE.getName())
+                         .outcome(infrastructureOutcome)
+                         .name(OutcomeExpressionConstants.INFRASTRUCTURE)
                          .group(StepOutcomeGroup.STAGE.name())
                          .build())
         .build();

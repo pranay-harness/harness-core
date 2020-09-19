@@ -33,10 +33,8 @@ public class VerificationManagerServiceImpl implements VerificationManagerServic
     params.put(DataCollectionTaskKeys.cvConfigId, cvConfigId);
     params.put(CVConfigKeys.connectorIdentifier, connectorIdentifier);
 
-    DataCollectionConnectorBundle bundle = DataCollectionConnectorBundle.builder()
-                                               .connectorConfigDTO(connectorDTO.get().getConnectorConfig())
-                                               .params(params)
-                                               .build();
+    DataCollectionConnectorBundle bundle =
+        DataCollectionConnectorBundle.builder().connectorDTO(connectorDTO.get()).params(params).build();
 
     return requestExecutor
         .execute(verificationManagerClient.createDataCollectionPerpetualTask(
@@ -58,10 +56,8 @@ public class VerificationManagerServiceImpl implements VerificationManagerServic
     params.put(DataCollectionTaskKeys.dataCollectionWorkerId, dataCollectionWorkerId);
     params.put(CVConfigKeys.connectorIdentifier, connectorIdentifier);
 
-    DataCollectionConnectorBundle bundle = DataCollectionConnectorBundle.builder()
-                                               .connectorConfigDTO(connectorDTO.get().getConnectorConfig())
-                                               .params(params)
-                                               .build();
+    DataCollectionConnectorBundle bundle =
+        DataCollectionConnectorBundle.builder().connectorDTO(connectorDTO.get()).params(params).build();
 
     return requestExecutor
         .execute(verificationManagerClient.createDataCollectionPerpetualTask(

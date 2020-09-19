@@ -4,6 +4,7 @@ gitFileConfig:
   branch: BRANCH
   connectorName: CONNECTOR_NAME
   useBranch: true
+  useInlineServiceDefinition: false
 kustomizeConfig:
   kustomizeDirPath: a
   pluginRootDir: b

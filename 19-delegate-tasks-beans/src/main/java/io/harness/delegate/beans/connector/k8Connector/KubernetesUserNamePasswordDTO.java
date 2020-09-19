@@ -16,7 +16,5 @@ import javax.validation.constraints.NotNull;
 public class KubernetesUserNamePasswordDTO extends KubernetesAuthCredentialDTO {
   @NotBlank String username;
 
-  @ApiModelProperty(dataType = "string") @SecretReference SecretRefData caCertRef;
-
   @ApiModelProperty(dataType = "string") @NotNull @SecretReference SecretRefData passwordRef;
 }

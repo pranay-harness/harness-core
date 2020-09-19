@@ -12,6 +12,9 @@ import java.util.List;
 @OwnedBy(HarnessTeam.DX)
 public interface GitSyncErrorRepository
     extends PagingAndSortingRepository<GitSyncError, String>, GitSyncErrorRepositoryCustom {
+  GitSyncError findByAccountIdAndYamlFilePathAndGitSyncDirection(
+      String accountId, String yamlFilePath, GitSyncError.GitSyncDirection direction);
+
   Long removeByAccountIdAndOrganizationIdAndProjectIdAndYamlFilePathIn(
       String accountId, String orgId, String projectId, List<String> yamlFilePath);
 }

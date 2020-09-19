@@ -1,0 +1,11 @@
+# Add properties that are shared between developers and ci build system
+
+build --action_env=HARNESS_GENERATION_PASSPHRASE
+
+# TODO: enable remote cache for developers
+# build --remote_cache=https://storage.googleapis.com/harness-bazel-cache
+
+build --java_header_compilation=false
+build --test_env=LC_ALL="en_US.UTF-8"
+build --test_output=all
+build --javacopt=-XepDisableAllChecks

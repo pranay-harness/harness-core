@@ -23,7 +23,6 @@ import io.harness.perpetualtask.PerpetualTaskExecutor;
 import io.harness.perpetualtask.PerpetualTaskId;
 import io.harness.perpetualtask.PerpetualTaskLogContext;
 import io.harness.perpetualtask.PerpetualTaskResponse;
-import io.harness.perpetualtask.PerpetualTaskState;
 import io.harness.perpetualtask.k8s.informer.ClusterDetails;
 import io.harness.perpetualtask.k8s.metrics.client.impl.DefaultK8sMetricsClient;
 import io.harness.perpetualtask.k8s.metrics.collector.K8sMetricCollector;
@@ -124,11 +123,7 @@ public class K8SWatchTaskExecutor implements PerpetualTaskExecutor {
       } catch (Exception ex) {
         logger.error("Unknown error occured from {} while collecting metrics.", taskId, ex);
       }
-      return PerpetualTaskResponse.builder()
-          .responseCode(200)
-          .perpetualTaskState(PerpetualTaskState.TASK_RUN_SUCCEEDED)
-          .responseMessage(PerpetualTaskState.TASK_RUN_SUCCEEDED.name())
-          .build();
+      return PerpetualTaskResponse.builder().responseCode(200).responseMessage("success").build();
     }
   }
 

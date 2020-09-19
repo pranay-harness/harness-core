@@ -75,16 +75,24 @@ func TestMainEmptyStep(t *testing.T) {
 		args.Step = nil
 	}()
 
-	step := &pb.UnitStep{
-		Id: "test",
+	r := &pb.ExecuteStepRequest{
+		Step: &pb.UnitStep{
+			Id: "test",
+		},
+		AccountId: "test",
 	}
-	data, err := proto.Marshal(step)
+	data, err := proto.Marshal(r)
 	if err != nil {
 		t.Fatalf("marshaling error: %v", err)
 	}
 	encoded := base64.StdEncoding.EncodeToString(data)
 	logPath := "/a/b"
 	tmpPath := "/tmp"
+
+	oldExecuteStep := executeStep
+	defer func() { executeStep = oldExecuteStep }()
+	executeStep = func(input, logpath, tmpFilePath string, log *zap.SugaredLogger) {
+	}
 
 	os.Args = []string{"engine", "step", "--input", encoded, "--logpath", logPath, "--tmppath", tmpPath}
 	main()

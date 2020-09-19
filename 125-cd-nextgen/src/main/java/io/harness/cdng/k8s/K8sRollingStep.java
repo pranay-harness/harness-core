@@ -9,7 +9,7 @@ import com.google.inject.Inject;
 
 import io.harness.ambiance.Ambiance;
 import io.harness.cdng.executionplan.CDStepDependencyKey;
-import io.harness.cdng.infra.yaml.Infrastructure;
+import io.harness.cdng.infra.beans.InfrastructureOutcome;
 import io.harness.cdng.manifest.ManifestStoreType;
 import io.harness.cdng.manifest.ManifestType;
 import io.harness.cdng.manifest.yaml.GitStore;
@@ -21,7 +21,6 @@ import io.harness.cdng.manifest.yaml.kinds.ValuesManifest;
 import io.harness.cdng.service.beans.ServiceOutcome;
 import io.harness.cdng.stepsdependency.constants.OutcomeExpressionConstants;
 import io.harness.cdng.stepsdependency.utils.CDStepDependencyUtils;
-import io.harness.common.AmbianceHelper;
 import io.harness.connector.apis.dto.ConnectorDTO;
 import io.harness.delegate.beans.TaskData;
 import io.harness.delegate.beans.connector.gitconnector.GitConfigDTO;
@@ -46,6 +45,7 @@ import io.harness.facilitator.modes.chain.task.TaskChainResponse;
 import io.harness.git.model.FetchFilesResult;
 import io.harness.git.model.GitFile;
 import io.harness.logging.CommandExecutionStatus;
+import io.harness.ng.common.AmbianceHelper;
 import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.state.Step;
 import io.harness.state.StepType;
@@ -84,7 +84,7 @@ public class K8sRollingStep implements Step, TaskChainExecutable<K8sRollingStepP
     StepDependencySpec infraSpec =
         k8sRollingStepParameters.getStepDependencySpecs().get(CDStepDependencyKey.INFRASTRUCTURE.name());
 
-    Infrastructure infrastructure = CDStepDependencyUtils.getInfrastructure(
+    InfrastructureOutcome infrastructureOutcome = CDStepDependencyUtils.getInfrastructure(
         stepDependencyService, infraSpec, inputPackage, k8sRollingStepParameters, ambiance);
 
     List<ManifestAttributes> manifests = serviceOutcome.getManifests();
@@ -94,21 +94,22 @@ public class K8sRollingStep implements Step, TaskChainExecutable<K8sRollingStepP
     List<ValuesManifest> aggregatedValuesManifests = getAggregatedValuesManifests(manifests);
 
     if (isEmpty(aggregatedValuesManifests)) {
-      return executeK8sTask(k8sManifest, ambiance, k8sRollingStepParameters, Collections.emptyList(), infrastructure);
+      return executeK8sTask(
+          k8sManifest, ambiance, k8sRollingStepParameters, Collections.emptyList(), infrastructureOutcome);
     }
 
     if (!isAnyRemoteStore(aggregatedValuesManifests)) {
       List<String> valuesFileContentsForLocalStore = getValuesFileContentsForLocalStore(aggregatedValuesManifests);
       return executeK8sTask(
-          k8sManifest, ambiance, k8sRollingStepParameters, valuesFileContentsForLocalStore, infrastructure);
+          k8sManifest, ambiance, k8sRollingStepParameters, valuesFileContentsForLocalStore, infrastructureOutcome);
     }
 
     return executeValuesFetchTask(
-        ambiance, k8sRollingStepParameters, infrastructure, k8sManifest, aggregatedValuesManifests);
+        ambiance, k8sRollingStepParameters, infrastructureOutcome, k8sManifest, aggregatedValuesManifests);
   }
 
   private TaskChainResponse executeValuesFetchTask(Ambiance ambiance, K8sRollingStepParameters k8sRollingStepParameters,
-      Infrastructure infrastructure, K8sManifest k8sManifest, List<ValuesManifest> aggregatedValuesManifests) {
+      InfrastructureOutcome infrastructure, K8sManifest k8sManifest, List<ValuesManifest> aggregatedValuesManifests) {
     List<GitFetchFilesConfig> gitFetchFilesConfigs = new ArrayList<>();
 
     for (ValuesManifest valuesManifest : aggregatedValuesManifests) {
@@ -160,7 +161,7 @@ public class K8sRollingStep implements Step, TaskChainExecutable<K8sRollingStepP
   }
 
   private TaskChainResponse executeK8sTask(K8sManifest k8sManifest, Ambiance ambiance,
-      K8sRollingStepParameters stepParameters, List<String> valuesFileContents, Infrastructure infrastructure) {
+      K8sRollingStepParameters stepParameters, List<String> valuesFileContents, InfrastructureOutcome infrastructure) {
     List<String> renderedValuesList = renderValues(ambiance, valuesFileContents);
     StoreConfig storeConfig = k8sManifest.getStoreConfigWrapper().getStoreConfig();
 
@@ -310,7 +311,7 @@ public class K8sRollingStep implements Step, TaskChainExecutable<K8sRollingStepP
     K8sDeployResponse k8sTaskExecutionResponse = (K8sDeployResponse) responseDataMap.values().iterator().next();
 
     if (k8sTaskExecutionResponse.getCommandExecutionStatus() == CommandExecutionStatus.SUCCESS) {
-      Infrastructure infrastructure = (Infrastructure) passThroughData;
+      InfrastructureOutcome infrastructure = (InfrastructureOutcome) passThroughData;
       K8sRollingDeployResponse k8sTaskResponse =
           (K8sRollingDeployResponse) k8sTaskExecutionResponse.getK8sNGTaskResponse();
 
@@ -322,7 +323,7 @@ public class K8sRollingStep implements Step, TaskChainExecutable<K8sRollingStepP
       return StepResponse.builder()
           .status(Status.SUCCEEDED)
           .stepOutcome(StepResponse.StepOutcome.builder()
-                           .name(OutcomeExpressionConstants.K8S_ROLL_OUT.getName())
+                           .name(OutcomeExpressionConstants.K8S_ROLL_OUT)
                            .outcome(k8sRollingOutcome)
                            .build())
           .build();

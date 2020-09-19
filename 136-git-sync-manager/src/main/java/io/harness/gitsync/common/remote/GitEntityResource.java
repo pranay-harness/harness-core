@@ -2,12 +2,12 @@ package io.harness.gitsync.common.remote;
 
 import com.google.inject.Inject;
 
+import io.harness.EntityType;
+import io.harness.ModuleType;
 import io.harness.beans.NGPageResponse;
 import io.harness.gitsync.common.dtos.GitSyncEntityListDTO;
 import io.harness.gitsync.common.dtos.GitSyncProductDTO;
 import io.harness.gitsync.common.service.GitEntityService;
-import io.harness.ng.EntityType;
-import io.harness.ng.Product;
 import io.harness.ng.core.dto.ResponseDTO;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
@@ -34,8 +34,8 @@ public class GitEntityResource {
   @ApiOperation(value = "List Git Sync Entity by product", nickname = "listGitSyncEntitiesByProduct")
   public ResponseDTO<GitSyncProductDTO> list(@QueryParam("projectId") String projectId,
       @QueryParam("organizationId") String organizationId, @QueryParam("accountId") @NotEmpty String accountId,
-      @QueryParam("size") int size, @QueryParam("product") Product product) {
-    return ResponseDTO.newResponse(gitEntityService.list(projectId, organizationId, accountId, product, size));
+      @QueryParam("size") int size, @QueryParam("moduleType") ModuleType moduleType) {
+    return ResponseDTO.newResponse(gitEntityService.list(projectId, organizationId, accountId, moduleType, size));
   }
 
   @GET
@@ -44,8 +44,8 @@ public class GitEntityResource {
   public ResponseDTO<NGPageResponse<GitSyncEntityListDTO>> listByType(@QueryParam("projectId") String projectId,
       @QueryParam("organizationId") String organizationId, @QueryParam("accountId") @NotEmpty String accountId,
       @PathParam("entityType") EntityType entityType, @QueryParam("page") @DefaultValue("0") int page,
-      @QueryParam("size") int size, @QueryParam("product") String product) {
-    // Added product for now if in future we want to support product filter in entities as well.
+      @QueryParam("size") int size, @QueryParam("moduleType") String moduleType) {
+    // Added moduleType for now if in future we want to support product filter in entities as well.
     return ResponseDTO.newResponse(
         gitEntityService.getPageByType(projectId, organizationId, accountId, entityType, page, size));
   }

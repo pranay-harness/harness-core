@@ -3,7 +3,7 @@
 # gazelle:exclude vendor
 # gazelle:exclude build
 # gazelle:exclude */target
-# gazelle:exclude {990-commons-test,13-grpc-api,19-delegate-tasks-beans,20-delegate-beans,21-delegate-agent-beans,22-delegate-service-beans,22-ng-delegate-service-beans,24-manager-delegate-service-beans,24-ng-manager-service-beans,50-delegate-task-grpc-service,71-rest}
+# gazelle:exclude {990-commons-test,12-commons,13-grpc-api,14-api-services-beans,19-delegate-tasks-beans,22-ng-delegate-service-beans,24-manager-delegate-service-beans,24-ng-manager-service-beans,71-rest}
 
 # gazelle:exclude .git/
 # gazelle:exclude pkg/
@@ -22,9 +22,9 @@ nogo(
     visibility = ["//visibility:public"],
 )
 
-    ########################################################################################################
+########################################################################################################
 ####################################################  JAVA Starts Here    ####################################################
-    ########################################################################################################
+########################################################################################################
 
 load("//tools/sonarqube:defs.bzl", "sonarqube")
 
@@ -64,7 +64,6 @@ filegroup(
     visibility = ["//visibility:public"],
 )
 
-
 sonarqube(
     name = "sq",
     project_key = "portal_bazel",
@@ -73,6 +72,9 @@ sonarqube(
     targets = [],
     modules = {
         "//990-commons-test:sq_mycomponent": "990-commons-test",
+        "//12-commons:sq_mycomponent":"12-commons",
+        "//13-grpc-api:sq_mycomponent":"13-grpc-api",
+        "//14-api-services-beans:sq_mycomponent":"14-api-services-beans",
     },
     coverage_report = ":coverage_report",
     scm_info = [":git"],

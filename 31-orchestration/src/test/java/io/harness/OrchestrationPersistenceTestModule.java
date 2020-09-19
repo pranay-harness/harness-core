@@ -1,9 +1,9 @@
 package io.harness;
 
+import io.harness.springdata.PersistenceModule;
 import io.harness.springdata.SpringPersistenceConfig;
-import io.harness.testlib.PersistenceTestModule;
 
-public class OrchestrationPersistenceTestModule extends PersistenceTestModule {
+public class OrchestrationPersistenceTestModule extends PersistenceModule {
   @Override
   protected Class<? extends SpringPersistenceConfig>[] getConfigClasses() {
     return new Class[] {TimeoutEnginePersistenceConfig.class, OrchestrationPersistenceConfig.class};

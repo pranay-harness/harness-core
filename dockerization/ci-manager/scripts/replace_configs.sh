@@ -41,6 +41,14 @@ if [[ "" != "$MONGO_URI" ]]; then
   yq write -i $CONFIG_FILE harness-mongo.uri "${MONGO_URI//\\&/&}"
 fi
 
+if [[ "" != "$MANAGER_TARGET" ]]; then
+  yq write -i $CONFIG_FILE managerTarget $MANAGER_TARGET
+fi
+
+if [[ "" != "$MANAGER_AUTHORITY" ]]; then
+  yq write -i $CONFIG_FILE managerAuthority $MANAGER_AUTHORITY
+fi
+
 if [[ "" != "$CIMANAGER_MONGO_URI" ]]; then
   yq write -i $CONFIG_FILE cimanager-mongo.uri "$CIMANAGER_MONGO_URI"
 fi

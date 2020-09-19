@@ -37,7 +37,8 @@ import software.wings.service.InstanceSyncPerpetualTaskCreator;
 import software.wings.service.intfc.customdeployment.CustomDeploymentTypeService;
 import software.wings.sm.PhaseStepExecutionSummary;
 import software.wings.sm.StepExecutionSummary;
-import software.wings.sm.states.customdeployment.InstanceElementMapperUtils;
+import software.wings.sm.states.customdeployment.InstanceMapperUtils;
+import software.wings.sm.states.customdeployment.InstanceMapperUtils.HostProperties;
 
 import java.util.List;
 import java.util.Map;
@@ -53,8 +54,12 @@ public class CustomDeploymentInstanceHandler extends InstanceHandler implements 
   @Inject private CustomDeploymentInstanceSyncPTCreator perpetualTaskCreator;
   @Inject private CustomDeploymentTypeService customDeploymentTypeService;
 
-  static Function<String, PhysicalHostInstanceInfo> jsonMapper =
-      hostName -> PhysicalHostInstanceInfo.builder().hostId(hostName).hostName(hostName).build();
+  static Function<HostProperties, PhysicalHostInstanceInfo> jsonMapper = hostProperties
+      -> PhysicalHostInstanceInfo.builder()
+             .hostId(hostProperties.getHostName())
+             .hostName(hostProperties.getHostName())
+             .properties(hostProperties.getOtherPropeties())
+             .build();
 
   @Override
   public void syncInstances(String appId, String infraMappingId, InstanceSyncFlow instanceSyncFlow) {
@@ -80,7 +85,7 @@ public class CustomDeploymentInstanceHandler extends InstanceHandler implements 
     Validator.notEmptyCheck("Instance Fetch Script Must Have Some Output", scriptOutput);
 
     final List<PhysicalHostInstanceInfo> latestHostInfos =
-        InstanceElementMapperUtils.mapJsonToInstanceElements(deploymentTypeTemplate.getHostAttributes(),
+        InstanceMapperUtils.mapJsonToInstanceElements(deploymentTypeTemplate.getHostAttributes(),
             deploymentTypeTemplate.getHostObjectArrayPath(), scriptOutput, jsonMapper);
 
     processDbInstanceUpdates(instancesInDb, latestHostInfos, newDeploymentSummaries, infrastructureMapping);

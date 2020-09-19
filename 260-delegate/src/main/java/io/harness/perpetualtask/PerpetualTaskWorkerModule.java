@@ -32,6 +32,8 @@ import io.harness.perpetualtask.k8s.watch.K8sWatchTaskParams;
 import io.harness.perpetualtask.k8s.watch.NodeWatcher;
 import io.harness.perpetualtask.k8s.watch.PodWatcher;
 import io.harness.perpetualtask.k8s.watch.WatcherFactory;
+import io.harness.perpetualtask.manifest.ManifestCollectionTaskParams;
+import io.harness.perpetualtask.manifest.ManifestPerpetualTaskExecutor;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
@@ -64,6 +66,7 @@ public class PerpetualTaskWorkerModule extends AbstractModule {
         .to(DataCollectionPerpetualTaskExecutor.class);
     mapBinder.addBinding(CustomDeploymentInstanceSyncTaskParams.class.getSimpleName())
         .to(CustomDeploymentPerpetualTaskExecutor.class);
+    mapBinder.addBinding(ManifestCollectionTaskParams.class.getSimpleName()).to(ManifestPerpetualTaskExecutor.class);
 
     install(new FactoryModuleBuilder()
                 .implement(PodWatcher.class, PodWatcher.class)

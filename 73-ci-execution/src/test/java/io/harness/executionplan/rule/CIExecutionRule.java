@@ -9,11 +9,9 @@ import com.google.inject.Provides;
 import com.google.inject.Singleton;
 import com.google.inject.TypeLiteral;
 
-import io.harness.CIBeansModule;
 import io.harness.CIExecutionServiceModule;
 import io.harness.CIExecutionTestModule;
 import io.harness.callback.DelegateCallbackToken;
-import io.harness.executionplan.ExecutionPlanModule;
 import io.harness.factory.ClosingFactory;
 import io.harness.factory.ClosingFactoryModule;
 import io.harness.govern.ServersModule;
@@ -24,6 +22,7 @@ import io.harness.rule.InjectorRuleMixin;
 import io.harness.serializer.CiExecutionRegistrars;
 import io.harness.spring.AliasRegistrar;
 import io.harness.testlib.module.MongoRuleMixin;
+import io.harness.testlib.module.TestMongoModule;
 import io.harness.threading.CurrentThreadExecutor;
 import io.harness.threading.ExecutorModule;
 import org.junit.Rule;
@@ -89,6 +88,7 @@ public class CIExecutionRule implements MethodRule, InjectorRuleMixin, MongoRule
             .build();
       }
     });
+    modules.add(TestMongoModule.getInstance());
     modules.add(new CIExecutionPersistenceTestModule());
     modules.add(new CIExecutionServiceModule());
     modules.add(new AbstractModule() {
@@ -98,8 +98,6 @@ public class CIExecutionRule implements MethodRule, InjectorRuleMixin, MongoRule
             .toInstance(Suppliers.ofInstance(DelegateCallbackToken.newBuilder().build()));
       }
     });
-    modules.add(new CIBeansModule());
-    modules.add(new ExecutionPlanModule());
     return modules;
   }
 

@@ -16,6 +16,7 @@ import io.harness.generator.ServiceGenerator;
 import io.harness.rule.Owner;
 import io.harness.testframework.restutils.GraphQLRestUtils;
 import io.harness.testframework.restutils.WorkflowRestUtils;
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -26,6 +27,7 @@ import software.wings.beans.Service;
 import software.wings.beans.Workflow;
 import software.wings.infra.InfrastructureDefinition;
 import software.wings.service.intfc.FeatureFlagService;
+import software.wings.service.intfc.WorkflowService;
 
 import java.util.List;
 import java.util.Map;
@@ -40,6 +42,7 @@ public class OnTimeScheduleTriggerFunctionalTest extends AbstractFunctionalTest 
   @Inject private WorkflowUtils workflowUtils;
   @Inject private ServiceGenerator serviceGenerator;
   @Inject private InfrastructureDefinitionGenerator infrastructureDefinitionGenerator;
+  @Inject private WorkflowService workflowService;
 
   private Application application;
   private Service service;
@@ -60,6 +63,7 @@ public class OnTimeScheduleTriggerFunctionalTest extends AbstractFunctionalTest 
     InfrastructureDefinition infrastructureDefinition = infrastructureDefinitionGenerator.ensurePredefined(
         seed, owners, InfrastructureType.GCP_KUBERNETES_ENGINE, bearerToken);
 
+    resetCache(application.getAccountId());
     Workflow workflow =
         workflowUtils.getRollingK8sWorkflow("gcp-k8s-templatized-pooja-", service, infrastructureDefinition);
     savedWorkflow =
@@ -253,5 +257,10 @@ triggerId: "%s"
 clientMutationId
 }
 }*/ clientMutationId, applicationId, triggerId);
+  }
+
+  @After
+  public void destroy() {
+    workflowService.deleteWorkflow(application.getUuid(), savedWorkflow.getUuid());
   }
 }

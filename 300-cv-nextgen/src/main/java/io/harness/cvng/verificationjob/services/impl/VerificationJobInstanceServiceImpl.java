@@ -1,6 +1,6 @@
 package io.harness.cvng.verificationjob.services.impl;
 
-import static io.harness.cvng.beans.ExecutionStatus.QUEUED;
+import static io.harness.cvng.beans.DataCollectionExecutionStatus.QUEUED;
 import static io.harness.cvng.core.utils.DateTimeUtils.roundDownTo1MinBoundary;
 
 import com.google.common.base.Charsets;
@@ -10,7 +10,6 @@ import com.google.inject.Injector;
 import com.google.inject.Key;
 import com.google.inject.name.Names;
 
-import io.harness.cvng.analysis.beans.ExecutionStatus;
 import io.harness.cvng.beans.DataCollectionInfo;
 import io.harness.cvng.client.VerificationManagerService;
 import io.harness.cvng.core.beans.TimeRange;
@@ -22,10 +21,11 @@ import io.harness.cvng.core.services.api.DataCollectionInfoMapper;
 import io.harness.cvng.core.services.api.DataCollectionTaskService;
 import io.harness.cvng.core.services.api.MetricPackService;
 import io.harness.cvng.core.services.api.VerificationTaskService;
-import io.harness.cvng.statemachine.entities.AnalysisStatus;
+import io.harness.cvng.statemachine.beans.AnalysisStatus;
 import io.harness.cvng.verificationjob.beans.VerificationJobInstanceDTO;
 import io.harness.cvng.verificationjob.entities.VerificationJob;
 import io.harness.cvng.verificationjob.entities.VerificationJobInstance;
+import io.harness.cvng.verificationjob.entities.VerificationJobInstance.ExecutionStatus;
 import io.harness.cvng.verificationjob.entities.VerificationJobInstance.ProgressLog;
 import io.harness.cvng.verificationjob.entities.VerificationJobInstance.VerificationJobInstanceKeys;
 import io.harness.cvng.verificationjob.services.api.VerificationJobInstanceService;
@@ -114,8 +114,8 @@ public class VerificationJobInstanceServiceImpl implements VerificationJobInstan
             .addToSet(VerificationJobInstanceKeys.progressLogs, progressLog);
     if ((progressLog.getEndTime().equals(verificationJobInstance.getEndTime()) && progressLog.isFinalState())
         || AnalysisStatus.getFailedStatuses().contains(progressLog.getAnalysisStatus())) {
-      verificationJobInstanceUpdateOperations.set(
-          VerificationJobInstanceKeys.executionStatus, mapToExecutionStatus(progressLog.getAnalysisStatus()));
+      verificationJobInstanceUpdateOperations.set(VerificationJobInstanceKeys.executionStatus,
+          AnalysisStatus.mapToVerificationJobExecutionStatus(progressLog.getAnalysisStatus()));
     }
     UpdateOptions options = new UpdateOptions();
     options.upsert(true);
@@ -139,21 +139,6 @@ public class VerificationJobInstanceServiceImpl implements VerificationJobInstan
     VerificationJobInstance verificationJobInstance = getVerificationJobInstance(verificationJobInstanceId);
     VerificationJob verificationJob = verificationJobService.get(verificationJobInstance.getVerificationJobId());
     return verificationJob.getPreDeploymentTimeRange(verificationJobInstance.getDeploymentStartTime());
-  }
-
-  private ExecutionStatus mapToExecutionStatus(AnalysisStatus analysisStatus) {
-    // TODO: do we need a uniform single status for both of these?
-    switch (analysisStatus) {
-      case SUCCESS:
-        return ExecutionStatus.SUCCESS;
-      case FAILED:
-        return ExecutionStatus.FAILED;
-      case TIMEOUT:
-        return ExecutionStatus.TIMEOUT;
-      default:
-        throw new IllegalStateException("AnalysisStatus " + analysisStatus
-            + " should be one of final status. Mapping to executionStatus not defined.");
-    }
   }
 
   private String getDataCollectionWorkerId(VerificationJobInstance verificationJobInstance, String connectorId) {

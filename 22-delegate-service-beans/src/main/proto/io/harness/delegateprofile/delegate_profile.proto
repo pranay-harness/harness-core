@@ -3,8 +3,9 @@ syntax = "proto3";
 package io.harness.delegateprofile;
 
 option java_multiple_files = true;
+option go_package = "22_delegate_service_beans";
 
-import "io/harness/delegate/account.proto";
+import "20-delegate-beans/src/main/proto/io/harness/delegate/account.proto";
 
 // Profile global unique identifier
 message ProfileId {

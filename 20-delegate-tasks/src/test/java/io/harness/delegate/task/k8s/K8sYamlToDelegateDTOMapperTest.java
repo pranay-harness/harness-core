@@ -46,23 +46,17 @@ public class K8sYamlToDelegateDTOMapperTest extends CategoryTest {
     String password = "password";
     String masterUrl = "https://abc.com/";
     String passwordIdentifier = "passwordIdentifer";
-    String passwordRef = "acc:" + passwordIdentifier;
-    String cacert = "caCertRef";
-    SecretRefData passwordSecretRefData =
-        SecretRefData.builder().identifier(cacert).scope(Scope.ACCOUNT).decryptedValue(password.toCharArray()).build();
-    SecretRefData secretRefDataCACert = SecretRefData.builder()
-                                            .identifier(passwordIdentifier)
-                                            .scope(Scope.ACCOUNT)
-                                            .decryptedValue(cacert.toCharArray())
-                                            .build();
-    KubernetesAuthDTO kubernetesAuthDTO = KubernetesAuthDTO.builder()
-                                              .authType(KubernetesAuthType.USER_PASSWORD)
-                                              .credentials(KubernetesUserNamePasswordDTO.builder()
-                                                               .username(userName)
-                                                               .passwordRef(passwordSecretRefData)
-                                                               .caCertRef(secretRefDataCACert)
-                                                               .build())
+    SecretRefData passwordSecretRefData = SecretRefData.builder()
+                                              .identifier(passwordIdentifier)
+                                              .scope(Scope.ACCOUNT)
+                                              .decryptedValue(password.toCharArray())
                                               .build();
+    KubernetesAuthDTO kubernetesAuthDTO =
+        KubernetesAuthDTO.builder()
+            .authType(KubernetesAuthType.USER_PASSWORD)
+            .credentials(
+                KubernetesUserNamePasswordDTO.builder().username(userName).passwordRef(passwordSecretRefData).build())
+            .build();
     KubernetesClusterConfigDTO connectorDTOWithUserNamePassword =
         KubernetesClusterConfigDTO.builder()
             .kubernetesCredentialType(MANUAL_CREDENTIALS)
@@ -74,7 +68,6 @@ public class K8sYamlToDelegateDTOMapperTest extends CategoryTest {
     assertThat(config.getMasterUrl()).isEqualTo(masterUrl);
     assertThat(config.getUsername()).isEqualTo(userName.toCharArray());
     assertThat(config.getPassword()).isEqualTo(password.toCharArray());
-    assertThat(config.getCaCert()).isEqualTo(cacert.toCharArray());
   }
 
   @Test
@@ -90,6 +83,13 @@ public class K8sYamlToDelegateDTOMapperTest extends CategoryTest {
     String clientKeyAlgo = "clientKeyAlgo";
     String masterUrl = "https://abc.com/";
     String namespace = "namespace";
+    String caCertIdentifier = "caCertIdentifier";
+    String caCert = "caCert";
+    SecretRefData caCertSecretRef = SecretRefData.builder()
+                                        .identifier(caCertIdentifier)
+                                        .scope(Scope.ACCOUNT)
+                                        .decryptedValue(caCert.toCharArray())
+                                        .build();
     SecretRefData clientKeySecret = SecretRefData.builder()
                                         .identifier(clientKeyIdentifier)
                                         .scope(Scope.ACCOUNT)
@@ -108,6 +108,7 @@ public class K8sYamlToDelegateDTOMapperTest extends CategoryTest {
     KubernetesAuthDTO kubernetesAuthDTO = KubernetesAuthDTO.builder()
                                               .authType(CLIENT_KEY_CERT)
                                               .credentials(KubernetesClientKeyCertDTO.builder()
+                                                               .caCertRef(caCertSecretRef)
                                                                .clientKeyRef(clientKeySecret)
                                                                .clientCertRef(clientCertSecret)
                                                                .clientKeyPassphraseRef(clientKeyPassPhraseSecret)

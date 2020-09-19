@@ -105,9 +105,8 @@ public class AwsSshInstanceSyncExecutorTest extends DelegateTest {
     assertThat(response.getExecutionStatus()).isEqualTo(ExecutionStatus.SUCCESS);
     assertThat(response.getErrorMessage()).isNull();
 
-    assertThat(perpetualTaskResponse.getPerpetualTaskState()).isEqualTo(PerpetualTaskState.TASK_RUN_SUCCEEDED);
     assertThat(perpetualTaskResponse.getResponseCode()).isEqualTo(Response.SC_OK);
-    assertThat(perpetualTaskResponse.getResponseMessage()).contains("TASK_RUN_SUCCEEDED");
+    assertThat(perpetualTaskResponse.getResponseMessage()).contains("success");
   }
 
   @Test
@@ -148,7 +147,6 @@ public class AwsSshInstanceSyncExecutorTest extends DelegateTest {
     assertThat(response.getExecutionStatus()).isEqualTo(ExecutionStatus.FAILED);
     assertThat(response.getErrorMessage()).contains("invalid credentials");
 
-    assertThat(perpetualTaskResponse.getPerpetualTaskState()).isEqualTo(PerpetualTaskState.TASK_RUN_FAILED);
     assertThat(perpetualTaskResponse.getResponseCode()).isEqualTo(Response.SC_OK);
     assertThat(perpetualTaskResponse.getResponseMessage()).contains("invalid credentials");
   }

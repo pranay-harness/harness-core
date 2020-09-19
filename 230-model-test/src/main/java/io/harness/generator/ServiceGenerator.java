@@ -2,6 +2,7 @@ package io.harness.generator;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.generator.ServiceGenerator.Services.KUBERNETES_GENERIC_TEST;
+import static io.harness.generator.SettingGenerator.Settings.ECS_FUNCTIONAL_TEST_GIT_REPO;
 import static io.harness.generator.SettingGenerator.Settings.PCF_FUNCTIONAL_TEST_GIT_REPO;
 import static io.harness.govern.Switch.unhandled;
 import static software.wings.beans.Service.ServiceBuilder;
@@ -270,6 +271,37 @@ public class ServiceGenerator {
         artifactStreamManager.ensurePredefined(seed, owners, ArtifactStreams.HARNESS_SAMPLE_DOCKER);
     Service service = owners.obtainService();
     service.setArtifactStreamIds(new ArrayList<>(Arrays.asList(artifactStream.getUuid())));
+    return service;
+  }
+
+  public Service ensureEcsRemoteTest(Randomizer.Seed seed, Owners owners, String name, StoreType storeType) {
+    owners.obtainApplication(() -> applicationGenerator.ensurePredefined(seed, owners, Applications.GENERIC_TEST));
+    owners.add(ensureService(seed, owners,
+        builder().name(name).artifactType(ArtifactType.DOCKER).deploymentType(DeploymentType.ECS).build()));
+    ArtifactStream artifactStream =
+        artifactStreamManager.ensurePredefined(seed, owners, ArtifactStreams.HARNESS_SAMPLE_DOCKER);
+    Service service = owners.obtainService();
+    service.setArtifactStreamIds(new ArrayList<>(Arrays.asList(artifactStream.getUuid())));
+
+    final ApplicationManifest applicationManifest = ApplicationManifest.builder()
+                                                        .serviceId(service.getUuid())
+                                                        .kind(AppManifestKind.K8S_MANIFEST)
+                                                        .storeType(storeType)
+                                                        .build();
+    if (storeType == StoreType.Remote) {
+      final SettingAttribute gitConnectorSetting =
+          settingGenerator.ensurePredefined(seed, owners, ECS_FUNCTIONAL_TEST_GIT_REPO);
+      applicationManifest.setGitFileConfig(GitFileConfig.builder()
+                                               .connectorId(gitConnectorSetting.getUuid())
+                                               .branch("master")
+                                               .useBranch(true)
+                                               .serviceSpecFilePath("ecsgitops/servicespec.json")
+                                               .taskSpecFilePath("ecsgitops/containerspec.json")
+                                               .build());
+    }
+
+    applicationManifest.setAppId(service.getAppId());
+    upsertApplicationManifest(applicationManifest);
     return service;
   }
 

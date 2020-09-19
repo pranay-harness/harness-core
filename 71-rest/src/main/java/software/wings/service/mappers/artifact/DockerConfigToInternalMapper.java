@@ -10,6 +10,7 @@ public class DockerConfigToInternalMapper {
   public DockerInternalConfig toDockerInternalConfig(DockerConfig dockerConfig) {
     String password =
         EmptyPredicate.isNotEmpty(dockerConfig.getPassword()) ? new String(dockerConfig.getPassword()) : null;
+
     return DockerInternalConfig.builder()
         .dockerRegistryUrl(dockerConfig.getDockerRegistryUrl())
         .username(dockerConfig.getUsername())

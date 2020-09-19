@@ -1,6 +1,6 @@
 package io.harness.ng.core.api.impl;
 
-import static io.harness.ng.remote.client.RestClientUtils.getResponse;
+import static io.harness.remote.client.RestClientUtils.getResponse;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -48,6 +48,12 @@ public class NGSecretManagerServiceImpl implements NGSecretManagerService {
   @Override
   public SecretManagerConfigDTO getGlobalSecretManager(String accountIdentifier) {
     return getResponse(secretManagerClient.getGlobalSecretManager(accountIdentifier));
+  }
+
+  @Override
+  public boolean validate(String accountIdentifier, String orgIdentifier, String projectIdentifier, String identifier) {
+    return getResponse(
+        secretManagerClient.validateSecretManager(identifier, accountIdentifier, orgIdentifier, projectIdentifier));
   }
 
   @Override

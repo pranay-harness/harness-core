@@ -54,7 +54,7 @@ public class GitFileActivityRepositoryCustomImpl implements GitFileActivityRepos
   }
 
   @Override
-  public <C> AggregationResults aggregate(Aggregation aggregation, Class<C> castClass) {
+  public <C> AggregationResults<C> aggregate(Aggregation aggregation, Class<C> castClass) {
     return mongoTemplate.aggregate(aggregation, GitFileActivity.class, castClass);
   }
 }

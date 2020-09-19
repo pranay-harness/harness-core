@@ -1,5 +1,6 @@
 package io.harness.gitsync.gitsyncerror.beans;
 
+import io.harness.git.model.ChangeType;
 import lombok.Builder;
 import lombok.Data;
 import lombok.experimental.FieldNameConstants;
@@ -27,7 +28,7 @@ public class GitToHarnessErrorDetails implements GitSyncErrorDetails {
   @Builder
   private static class LatestErrorDetailForFile {
     private String gitCommitId;
-    private String changeType;
+    private ChangeType changeType;
     private String failureReason;
   }
 

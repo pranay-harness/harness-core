@@ -11,6 +11,5 @@ public interface CIBuildInfoRepositoryCustom {
   Page<CIBuild> findAll(Criteria criteria, Pageable pageable);
   Optional<CIBuild> getBuildById(
       String accountIdentifier, String orgIdentifier, String projectIdentifier, Long buildIdentifier);
-  Page<CIBuild> getBuilds(
-      String accountIdentifier, String orgIdentifier, String projectIdentifier, Criteria criteria, Pageable pageable);
+  Page<CIBuild> getBuilds(Criteria criteria, Pageable pageable);
 }

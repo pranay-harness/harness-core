@@ -13,6 +13,7 @@ import static io.harness.execution.status.Status.SUCCEEDED;
 import static io.harness.execution.status.Status.positiveStatuses;
 import static io.harness.execution.status.Status.resumableStatuses;
 import static io.harness.springdata.SpringDataMongoUtils.setUnset;
+import static java.lang.String.format;
 
 import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
@@ -232,9 +233,9 @@ public class OrchestrationEngine {
     StepParameters resolvedStepParameters = nodeExecution.getResolvedStepParameters();
     List<TimeoutObtainment> timeoutObtainmentList;
     if (resolvedStepParameters != null) {
-      timeoutObtainmentList = resolvedStepParameters.getTimeouts();
+      timeoutObtainmentList = resolvedStepParameters.fetchTimeouts();
     } else {
-      timeoutObtainmentList = new StepParameters() {}.getTimeouts();
+      timeoutObtainmentList = new StepParameters() {}.fetchTimeouts();
     }
 
     List<String> timeoutInstanceIds = new ArrayList<>();
@@ -250,6 +251,7 @@ public class OrchestrationEngine {
       TimeoutInstance instance = timeoutEngine.registerTimeout(timeoutTracker, timeoutCallback);
       timeoutInstanceIds.add(instance.getUuid());
     }
+    logger.info(format("Registered node execution timeouts: %s", timeoutInstanceIds.toString()));
     return timeoutInstanceIds;
   }
 

@@ -12,6 +12,7 @@ import io.harness.cdng.pipeline.service.NgPipelineExecutionService;
 import io.harness.cdng.pipeline.service.NgPipelineExecutionServiceImpl;
 import io.harness.cdng.pipeline.service.PipelineService;
 import io.harness.cdng.pipeline.service.PipelineServiceImpl;
+import io.harness.ng.NGPipelineCommonsModule;
 import io.harness.ng.core.NGCoreModule;
 
 import java.util.concurrent.atomic.AtomicReference;
@@ -29,6 +30,7 @@ public class NGModule extends AbstractModule {
   @Override
   protected void configure() {
     install(NGCoreModule.getInstance());
+    install(NGPipelineCommonsModule.getInstance());
 
     bind(ArtifactSourceService.class).to(ArtifactSourceServiceImpl.class);
     bind(PipelineService.class).to(PipelineServiceImpl.class);

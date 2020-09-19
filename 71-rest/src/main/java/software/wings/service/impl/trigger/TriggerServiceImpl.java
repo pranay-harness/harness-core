@@ -140,6 +140,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Objects;
 import java.util.concurrent.ExecutorService;
 import java.util.regex.PatternSyntaxException;
 import java.util.stream.Collectors;
@@ -1219,6 +1220,27 @@ public class TriggerServiceImpl implements TriggerService {
     }
   }
 
+  private boolean validateWebhookTriggerCondition(Trigger trigger, Trigger existingTrigger) {
+    if (existingTrigger == null) {
+      return true;
+    }
+
+    WebHookTriggerCondition webHookTriggerCondition = (WebHookTriggerCondition) trigger.getCondition();
+    if (existingTrigger.getCondition().getConditionType() != WEBHOOK) {
+      return !webHookTriggerCondition.isCheckFileContentChanged() && webHookTriggerCondition.getGitConnectorId() == null
+          && webHookTriggerCondition.getBranchName() == null && webHookTriggerCondition.getFilePaths() == null;
+    }
+
+    WebHookTriggerCondition existingWebHookTriggerCondition = (WebHookTriggerCondition) existingTrigger.getCondition();
+
+    return webHookTriggerCondition.isCheckFileContentChanged()
+        == existingWebHookTriggerCondition.isCheckFileContentChanged()
+        && Objects.equals(
+               webHookTriggerCondition.getGitConnectorId(), existingWebHookTriggerCondition.getGitConnectorId())
+        && Objects.equals(webHookTriggerCondition.getBranchName(), existingWebHookTriggerCondition.getBranchName())
+        && Objects.equals(webHookTriggerCondition.getFilePaths(), existingWebHookTriggerCondition.getFilePaths());
+  }
+
   private void validateAndSetTriggerCondition(Trigger trigger, Trigger existingTrigger) {
     switch (trigger.getCondition().getConditionType()) {
       case NEW_ARTIFACT:
@@ -1238,6 +1260,10 @@ public class TriggerServiceImpl implements TriggerService {
           throw new InvalidRequestException("Actions not supported for Bit Bucket", USER);
         }
         trigger.setWebHookToken(webHookTriggerCondition.getWebHookToken().getWebHookToken());
+        if (!validateWebhookTriggerCondition(trigger, existingTrigger)) {
+          throw new InvalidRequestException(
+              "Deploy if files has changed, Git Connector, Branch Name, and File Paths cannot be changed on updating Trigger");
+        }
         if (webHookTriggerCondition.isCheckFileContentChanged()) {
           logger.info("File paths to watch selected");
           List<String> filePaths = trimStrings(webHookTriggerCondition.getFilePaths());

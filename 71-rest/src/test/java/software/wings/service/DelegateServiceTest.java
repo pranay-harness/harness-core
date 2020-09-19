@@ -99,6 +99,7 @@ import io.harness.delegate.beans.RemoteMethodReturnValueData;
 import io.harness.delegate.beans.TaskData;
 import io.harness.delegate.service.DelegateAgentFileService.FileBucket;
 import io.harness.delegate.task.http.HttpTaskParameters;
+import io.harness.delegate.task.mixin.HttpConnectionExecutionCapabilityGenerator;
 import io.harness.exception.WingsException;
 import io.harness.persistence.HPersistence;
 import io.harness.rule.Cache;
@@ -159,6 +160,7 @@ import software.wings.processingcontrollers.DelegateProcessingController;
 import software.wings.security.encryption.EncryptedData;
 import software.wings.service.impl.AuditServiceHelper;
 import software.wings.service.impl.DelegateConnectionDao;
+import software.wings.service.impl.DelegateTaskBroadcastHelper;
 import software.wings.service.impl.EventEmitter;
 import software.wings.service.impl.EventEmitter.Channel;
 import software.wings.service.impl.infra.InfraDownloadService;
@@ -219,6 +221,7 @@ public class DelegateServiceTest extends WingsBaseTest {
   @Rule public WireMockRule wireMockRule = new WireMockRule(8888);
   @Rule public ExpectedException thrown = ExpectedException.none();
 
+  @InjectMocks @Inject private DelegateTaskBroadcastHelper delegateTaskBroadcastHelper;
   @InjectMocks @Inject private DelegateService delegateService;
   @Mock private UsageLimitedFeature delegatesFeature;
 
@@ -369,6 +372,7 @@ public class DelegateServiceTest extends WingsBaseTest {
     deletedDelegate.setAccountId(accountId);
     deletedDelegate.setStatus(Status.DELETED);
 
+    // these three delegates should be returned
     Delegate delegateWithScalingGroup1 = createDelegateBuilder().build();
     delegateWithScalingGroup1.setAccountId(accountId);
     delegateWithScalingGroup1.setDelegateGroupName("test1");
@@ -378,12 +382,17 @@ public class DelegateServiceTest extends WingsBaseTest {
     Delegate delegateWithScalingGroup3 = createDelegateBuilder().build();
     delegateWithScalingGroup3.setAccountId(accountId);
     delegateWithScalingGroup3.setDelegateGroupName("test2");
+    // these two delegates should not appear.
     Delegate delegateWithScalingGroup4 = createDelegateBuilder().build();
     delegateWithScalingGroup4.setAccountId(accountId);
     delegateWithScalingGroup4.setDelegateGroupName("test2");
+    // this delegate should cause an empty group to be returned
+    Delegate delegateWithScalingGroup5 = createDelegateBuilder().build();
+    delegateWithScalingGroup5.setAccountId(accountId);
+    delegateWithScalingGroup5.setDelegateGroupName("test3");
 
     wingsPersistence.save(Arrays.asList(deletedDelegate, delegateWithScalingGroup1, delegateWithScalingGroup2,
-        delegateWithScalingGroup3, delegateWithScalingGroup4));
+        delegateWithScalingGroup3, delegateWithScalingGroup4, delegateWithScalingGroup5));
     delegateService.registerHeartbeat(accountId, delegateWithScalingGroup1.getUuid(),
         DelegateConnectionHeartbeat.builder().delegateConnectionId(generateUuid()).version(VERSION).build(),
         ConnectionMode.POLLING);
@@ -398,10 +407,10 @@ public class DelegateServiceTest extends WingsBaseTest {
 
     assertThat(delegateStatus.getPublishedVersions()).hasSize(1).contains(VERSION);
 
-    assertThat(delegateStatus.getScalingGroups()).hasSize(2);
+    assertThat(delegateStatus.getScalingGroups()).hasSize(3);
     assertThat(delegateStatus.getScalingGroups())
         .extracting(DelegateScalingGroup::getGroupName)
-        .containsOnly("test1", "test2");
+        .containsOnly("test1", "test2", "test3");
 
     for (DelegateScalingGroup group : delegateStatus.getScalingGroups()) {
       if (group.getGroupName().equals("test1")) {
@@ -412,6 +421,8 @@ public class DelegateServiceTest extends WingsBaseTest {
       } else if (group.getGroupName().equals("test2")) {
         assertThat(group.getDelegates()).hasSize(1);
         assertThat(group.getDelegates().get(0).getUuid()).isEqualTo(delegateWithScalingGroup3.getUuid());
+      } else if (group.getGroupName().equals("test3")) {
+        assertThat(group.getDelegates()).hasSize(0);
       }
     }
   }
@@ -1063,23 +1074,27 @@ public class DelegateServiceTest extends WingsBaseTest {
   @Owner(developers = GEORGE)
   @Category(UnitTests.class)
   public void shouldSaveDelegateTask() {
-    DelegateTask delegateTask = DelegateTask.builder()
-                                    .uuid(generateUuid())
-                                    .accountId(ACCOUNT_ID)
-                                    .waitId(generateUuid())
-                                    .setupAbstraction(Cd1SetupFields.APP_ID_FIELD, APP_ID)
-                                    .setupAbstraction(Cd1SetupFields.ENV_ID_FIELD, ENV_ID)
-                                    .setupAbstraction(Cd1SetupFields.INFRASTRUCTURE_MAPPING_ID_FIELD, INFRA_MAPPING_ID)
-                                    .setupAbstraction(Cd1SetupFields.SERVICE_TEMPLATE_ID_FIELD, SERVICE_TEMPLATE_ID)
-                                    .setupAbstraction(Cd1SetupFields.ARTIFACT_STREAM_ID_FIELD, ARTIFACT_STREAM_ID)
-                                    .version(VERSION)
-                                    .data(TaskData.builder()
-                                              .async(true)
-                                              .taskType(TaskType.HTTP.name())
-                                              .parameters(new Object[] {})
-                                              .timeout(DEFAULT_ASYNC_CALL_TIMEOUT)
-                                              .build())
-                                    .build();
+    DelegateTask delegateTask =
+        DelegateTask.builder()
+            .uuid(generateUuid())
+            .accountId(ACCOUNT_ID)
+            .executionCapabilities(
+                asList(HttpConnectionExecutionCapabilityGenerator.buildHttpConnectionExecutionCapability(
+                    "http://www.url.com")))
+            .waitId(generateUuid())
+            .setupAbstraction(Cd1SetupFields.APP_ID_FIELD, APP_ID)
+            .setupAbstraction(Cd1SetupFields.ENV_ID_FIELD, ENV_ID)
+            .setupAbstraction(Cd1SetupFields.INFRASTRUCTURE_MAPPING_ID_FIELD, INFRA_MAPPING_ID)
+            .setupAbstraction(Cd1SetupFields.SERVICE_TEMPLATE_ID_FIELD, SERVICE_TEMPLATE_ID)
+            .setupAbstraction(Cd1SetupFields.ARTIFACT_STREAM_ID_FIELD, ARTIFACT_STREAM_ID)
+            .version(VERSION)
+            .data(TaskData.builder()
+                      .async(true)
+                      .taskType(TaskType.HTTP.name())
+                      .parameters(new Object[] {})
+                      .timeout(DEFAULT_ASYNC_CALL_TIMEOUT)
+                      .build())
+            .build();
     when(delegateProcessingController.canProcessAccount(ACCOUNT_ID)).thenReturn(true);
     delegateService.queueTask(delegateTask);
     assertThat(
@@ -1091,24 +1106,28 @@ public class DelegateServiceTest extends WingsBaseTest {
   @Owner(developers = MARKO)
   @Category(UnitTests.class)
   public void shouldSaveDelegateTaskWhenRankLimitIsNotReached() {
-    DelegateTask delegateTask = DelegateTask.builder()
-                                    .uuid(generateUuid())
-                                    .accountId(ACCOUNT_ID)
-                                    .rank(DelegateTaskRank.OPTIONAL)
-                                    .waitId(generateUuid())
-                                    .setupAbstraction(Cd1SetupFields.APP_ID_FIELD, APP_ID)
-                                    .setupAbstraction(Cd1SetupFields.ENV_ID_FIELD, ENV_ID)
-                                    .setupAbstraction(Cd1SetupFields.INFRASTRUCTURE_MAPPING_ID_FIELD, INFRA_MAPPING_ID)
-                                    .setupAbstraction(Cd1SetupFields.SERVICE_TEMPLATE_ID_FIELD, SERVICE_TEMPLATE_ID)
-                                    .setupAbstraction(Cd1SetupFields.ARTIFACT_STREAM_ID_FIELD, ARTIFACT_STREAM_ID)
-                                    .version(VERSION)
-                                    .data(TaskData.builder()
-                                              .async(true)
-                                              .taskType(TaskType.HTTP.name())
-                                              .parameters(new Object[] {})
-                                              .timeout(DEFAULT_ASYNC_CALL_TIMEOUT)
-                                              .build())
-                                    .build();
+    DelegateTask delegateTask =
+        DelegateTask.builder()
+            .uuid(generateUuid())
+            .accountId(ACCOUNT_ID)
+            .executionCapabilities(
+                asList(HttpConnectionExecutionCapabilityGenerator.buildHttpConnectionExecutionCapability(
+                    "http://www.url.com")))
+            .rank(DelegateTaskRank.OPTIONAL)
+            .waitId(generateUuid())
+            .setupAbstraction(Cd1SetupFields.APP_ID_FIELD, APP_ID)
+            .setupAbstraction(Cd1SetupFields.ENV_ID_FIELD, ENV_ID)
+            .setupAbstraction(Cd1SetupFields.INFRASTRUCTURE_MAPPING_ID_FIELD, INFRA_MAPPING_ID)
+            .setupAbstraction(Cd1SetupFields.SERVICE_TEMPLATE_ID_FIELD, SERVICE_TEMPLATE_ID)
+            .setupAbstraction(Cd1SetupFields.ARTIFACT_STREAM_ID_FIELD, ARTIFACT_STREAM_ID)
+            .version(VERSION)
+            .data(TaskData.builder()
+                      .async(true)
+                      .taskType(TaskType.HTTP.name())
+                      .parameters(new Object[] {})
+                      .timeout(DEFAULT_ASYNC_CALL_TIMEOUT)
+                      .build())
+            .build();
     when(delegateProcessingController.canProcessAccount(ACCOUNT_ID)).thenReturn(true);
 
     PortalConfig portalConfig = new PortalConfig();

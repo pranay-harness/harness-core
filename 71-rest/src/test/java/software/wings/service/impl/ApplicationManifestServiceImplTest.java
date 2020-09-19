@@ -2,6 +2,7 @@ package software.wings.service.impl;
 
 import static io.harness.rule.OwnerRule.ADWAIT;
 import static io.harness.rule.OwnerRule.ARVIND;
+import static io.harness.rule.OwnerRule.INDER;
 import static io.harness.rule.OwnerRule.VAIBHAV_SI;
 import static io.harness.rule.OwnerRule.YOGESH;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -12,8 +13,10 @@ import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
 import static software.wings.beans.appmanifest.AppManifestKind.K8S_MANIFEST;
 import static software.wings.beans.appmanifest.StoreType.HelmChartRepo;
@@ -22,6 +25,9 @@ import static software.wings.beans.appmanifest.StoreType.KustomizeSourceRepo;
 import static software.wings.beans.appmanifest.StoreType.Local;
 import static software.wings.beans.appmanifest.StoreType.OC_TEMPLATES;
 import static software.wings.beans.appmanifest.StoreType.Remote;
+import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
+import static software.wings.utils.WingsTestConstants.APP_ID;
+import static software.wings.utils.WingsTestConstants.SERVICE_ID;
 
 import com.google.inject.Inject;
 
@@ -39,6 +45,7 @@ import org.mockito.Mock;
 import org.mockito.Spy;
 import software.wings.WingsBaseTest;
 import software.wings.beans.Event;
+import software.wings.beans.FeatureName;
 import software.wings.beans.GitConfig;
 import software.wings.beans.GitFileConfig;
 import software.wings.beans.HelmChartConfig;
@@ -49,7 +56,9 @@ import software.wings.beans.appmanifest.ApplicationManifest;
 import software.wings.dl.WingsPersistence;
 import software.wings.helpers.ext.kustomize.KustomizeConfig;
 import software.wings.service.intfc.AppService;
+import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.SettingsService;
+import software.wings.service.intfc.applicationmanifest.HelmChartService;
 import software.wings.service.intfc.yaml.YamlPushService;
 
 public class ApplicationManifestServiceImplTest extends WingsBaseTest {
@@ -60,6 +69,8 @@ public class ApplicationManifestServiceImplTest extends WingsBaseTest {
   @Mock private YamlPushService yamlPushService;
   @Mock private SettingsService settingsService;
   @Inject private WingsPersistence wingsPersistence;
+  @Mock private FeatureFlagService featureFlagService;
+  @Mock private HelmChartService helmChartService;
 
   @Before
   public void setup() {
@@ -242,6 +253,7 @@ public class ApplicationManifestServiceImplTest extends WingsBaseTest {
     doNothing().when(applicationManifestServiceImpl).sanitizeApplicationManifestConfigs(any(ApplicationManifest.class));
     doReturn(false).when(applicationManifestServiceImpl).exists(any(ApplicationManifest.class));
     doReturn("accountId").when(appService).getAccountIdByAppId(anyString());
+    doReturn(false).when(featureFlagService).isEnabled(FeatureName.HELM_CHART_AS_ARTIFACT, "accountId");
 
     ApplicationManifest manifest = buildKustomizeAppManifest();
     ApplicationManifest savedApplicationManifest = applicationManifestServiceImpl.create(manifest);
@@ -262,6 +274,7 @@ public class ApplicationManifestServiceImplTest extends WingsBaseTest {
     doNothing().when(applicationManifestServiceImpl).resetReadOnlyProperties(any(ApplicationManifest.class));
     doReturn(true).when(applicationManifestServiceImpl).exists(any(ApplicationManifest.class));
     doReturn("accountId").when(appService).getAccountIdByAppId(anyString());
+    doReturn(false).when(featureFlagService).isEnabled(FeatureName.HELM_CHART_AS_ARTIFACT, "accountId");
 
     ApplicationManifest manifest = buildKustomizeAppManifest();
     ApplicationManifest savedApplicationManifest = applicationManifestServiceImpl.update(manifest);
@@ -441,5 +454,227 @@ public class ApplicationManifestServiceImplTest extends WingsBaseTest {
 
     gitFileConfig.setRepoName("repo-name");
     applicationManifestServiceImpl.validateApplicationManifest(applicationManifest);
+  }
+
+  @Test
+  @Owner(developers = INDER)
+  @Category(UnitTests.class)
+  public void testIsHelmRepoOrChartNameChanged() {
+    ApplicationManifest applicationManifest =
+        ApplicationManifest.builder()
+            .kind(AppManifestKind.HELM_CHART_OVERRIDE)
+            .helmChartConfig(HelmChartConfig.builder().chartName("n").connectorId("c").build())
+            .storeType(HelmChartRepo)
+            .envId("envId")
+            .build();
+
+    ApplicationManifest applicationManifest1 =
+        ApplicationManifest.builder()
+            .kind(AppManifestKind.HELM_CHART_OVERRIDE)
+            .helmChartConfig(HelmChartConfig.builder().chartName("n1").connectorId("c").build())
+            .storeType(HelmChartRepo)
+            .envId("envId")
+            .build();
+
+    assertThat(applicationManifestServiceImpl.isHelmRepoOrChartNameChanged(applicationManifest, applicationManifest))
+        .isFalse();
+    assertThat(applicationManifestServiceImpl.isHelmRepoOrChartNameChanged(applicationManifest1, applicationManifest))
+        .isTrue();
+
+    HelmChartConfig helmChartConfig = HelmChartConfig.builder().chartVersion("n").connectorId("c1").build();
+    applicationManifest1.setHelmChartConfig(helmChartConfig);
+    assertThat(applicationManifestServiceImpl.isHelmRepoOrChartNameChanged(applicationManifest1, applicationManifest))
+        .isTrue();
+
+    helmChartConfig.setChartName("n1");
+    applicationManifest1.setHelmChartConfig(helmChartConfig);
+    assertThat(applicationManifestServiceImpl.isHelmRepoOrChartNameChanged(applicationManifest1, applicationManifest))
+        .isTrue();
+  }
+
+  private void enableFeatureFlag() {
+    when(featureFlagService.isEnabled(FeatureName.HELM_CHART_AS_ARTIFACT, ACCOUNT_ID)).thenReturn(true);
+  }
+
+  private void disableFeatureFlag() {
+    when(featureFlagService.isEnabled(FeatureName.HELM_CHART_AS_ARTIFACT, ACCOUNT_ID)).thenReturn(false);
+  }
+
+  @Test
+  @Owner(developers = INDER)
+  @Category(UnitTests.class)
+  public void testHandlePollForChangesToggle() {
+    ApplicationManifest applicationManifest =
+        ApplicationManifest.builder()
+            .kind(AppManifestKind.HELM_CHART_OVERRIDE)
+            .storeType(HelmSourceRepo)
+            .envId("envId")
+            .helmChartConfig(HelmChartConfig.builder().chartName("n").connectorId("c").build())
+            .pollForChanges(true)
+            .build();
+
+    enableFeatureFlag();
+    assertThatThrownBy(
+        () -> applicationManifestServiceImpl.handlePollForChangesToggle(applicationManifest, true, ACCOUNT_ID))
+        .isInstanceOf(InvalidRequestException.class);
+
+    applicationManifest.setStoreType(HelmChartRepo);
+
+    disableFeatureFlag();
+    applicationManifestServiceImpl.handlePollForChangesToggle(applicationManifest, true, ACCOUNT_ID);
+    verify(applicationManifestServiceImpl, never()).createPerpetualTask(applicationManifest);
+
+    enableFeatureFlag();
+    applicationManifestServiceImpl.handlePollForChangesToggle(applicationManifest, true, ACCOUNT_ID);
+    verify(applicationManifestServiceImpl, times(1)).createPerpetualTask(applicationManifest);
+
+    when(applicationManifestServiceImpl.getById(anyString(), anyString())).thenReturn(applicationManifest);
+    applicationManifestServiceImpl.handlePollForChangesToggle(applicationManifest, false, ACCOUNT_ID);
+    verify(applicationManifestServiceImpl, times(1)).checkForUpdates(applicationManifest);
+  }
+
+  private ApplicationManifest getHelmChartApplicationManifest() {
+    return ApplicationManifest.builder()
+        .kind(K8S_MANIFEST)
+        .serviceId(SERVICE_ID)
+        .storeType(HelmChartRepo)
+        .helmChartConfig(HelmChartConfig.builder().chartName("n").connectorId("c").build())
+        .build();
+  }
+
+  @Test
+  @Owner(developers = INDER)
+  @Category(UnitTests.class)
+  public void testCheckForUpdatesWithSavedManifestTrueAndNewManifestNull() {
+    ApplicationManifest applicationManifest = getHelmChartApplicationManifest();
+    ApplicationManifest savedAppManifest = getHelmChartApplicationManifest();
+
+    savedAppManifest.setPollForChanges(true);
+
+    when(applicationManifestServiceImpl.getById(anyString(), anyString())).thenReturn(savedAppManifest);
+
+    // savedAppManifest -> True, applicationManifest -> null
+    applicationManifestServiceImpl.checkForUpdates(applicationManifest);
+    verify(applicationManifestServiceImpl, times(1)).deletePerpetualTask(savedAppManifest);
+    verify(helmChartService, times(1)).deleteByAppManifest(anyString(), anyString());
+  }
+
+  @Test
+  @Owner(developers = INDER)
+  @Category(UnitTests.class)
+  public void testCheckForUpdatesWithSavedManifestTrueAndNewManifestTrueWithDifferentHelmConfig() {
+    ApplicationManifest applicationManifest = getHelmChartApplicationManifest();
+    ApplicationManifest savedAppManifest = getHelmChartApplicationManifest();
+
+    savedAppManifest.setPollForChanges(true);
+    applicationManifest.setPollForChanges(true);
+    applicationManifest.setHelmChartConfig(HelmChartConfig.builder().connectorId("c1").build());
+
+    // savedAppManifest -> True, applicationManifest -> True with different connector id
+    when(applicationManifestServiceImpl.getById(anyString(), anyString())).thenReturn(savedAppManifest);
+
+    applicationManifestServiceImpl.checkForUpdates(applicationManifest);
+    verify(helmChartService, times(1)).deleteByAppManifest(anyString(), anyString());
+    verify(applicationManifestServiceImpl, times(1)).resetPerpetualTask(applicationManifest);
+  }
+
+  @Test
+  @Owner(developers = INDER)
+  @Category(UnitTests.class)
+  public void testCheckForUpdatesWithSavedManifestTrueAndNewManifestTrueWithSameHelmConfig() {
+    ApplicationManifest applicationManifest = getHelmChartApplicationManifest();
+    ApplicationManifest savedAppManifest = getHelmChartApplicationManifest();
+
+    savedAppManifest.setPollForChanges(true);
+    applicationManifest.setPollForChanges(true);
+
+    // savedAppManifest -> True, applicationManifest -> True with same connector id and chart name
+    when(applicationManifestServiceImpl.getById(anyString(), anyString())).thenReturn(savedAppManifest);
+    applicationManifestServiceImpl.checkForUpdates(applicationManifest);
+    verify(helmChartService, never()).deleteByAppManifest(anyString(), anyString());
+    verify(applicationManifestServiceImpl, never()).resetPerpetualTask(applicationManifest);
+  }
+
+  @Test
+  @Owner(developers = INDER)
+  @Category(UnitTests.class)
+  public void testCheckForUpdatesWithSavedManifestTrueAndNewManifestFalse() {
+    ApplicationManifest applicationManifest = getHelmChartApplicationManifest();
+    ApplicationManifest savedAppManifest = getHelmChartApplicationManifest();
+
+    when(applicationManifestServiceImpl.getById(anyString(), anyString())).thenReturn(savedAppManifest);
+    savedAppManifest.setPollForChanges(true);
+    applicationManifest.setPollForChanges(false);
+
+    // savedAppManifest -> True, applicationManifest -> False
+    applicationManifestServiceImpl.checkForUpdates(applicationManifest);
+    verify(helmChartService, times(1)).deleteByAppManifest(anyString(), anyString());
+    verify(applicationManifestServiceImpl, times(1)).deletePerpetualTask(savedAppManifest);
+  }
+
+  @Test
+  @Owner(developers = INDER)
+  @Category(UnitTests.class)
+  public void testCheckForUpdatesWithSavedManifestFalseAndNewManifestTrue() {
+    ApplicationManifest applicationManifest = getHelmChartApplicationManifest();
+    ApplicationManifest savedAppManifest = getHelmChartApplicationManifest();
+
+    when(applicationManifestServiceImpl.getById(anyString(), anyString())).thenReturn(savedAppManifest);
+    savedAppManifest.setPollForChanges(false);
+    applicationManifest.setPollForChanges(true);
+
+    // savedAppManifest -> False, applicationManifest -> True
+    applicationManifestServiceImpl.checkForUpdates(applicationManifest);
+    verify(applicationManifestServiceImpl, times(1)).createPerpetualTask(applicationManifest);
+  }
+
+  @Test
+  @Owner(developers = INDER)
+  @Category(UnitTests.class)
+  public void testCheckForUpdatesWithSavedManifestNullAndNewManifestTrue() {
+    ApplicationManifest applicationManifest = getHelmChartApplicationManifest();
+    ApplicationManifest savedAppManifest = getHelmChartApplicationManifest();
+
+    when(applicationManifestServiceImpl.getById(anyString(), anyString())).thenReturn(savedAppManifest);
+    savedAppManifest.setPollForChanges(null);
+    applicationManifest.setPollForChanges(true);
+
+    // savedAppManifest -> null, applicationManifest -> True
+    applicationManifestServiceImpl.checkForUpdates(applicationManifest);
+    verify(applicationManifestServiceImpl, times(1)).createPerpetualTask(applicationManifest);
+  }
+
+  @Test
+  @Owner(developers = INDER)
+  @Category(UnitTests.class)
+  public void shouldDeleteHelmChartsOnAppManifestDelete() {
+    enableFeatureFlag();
+    ApplicationManifest applicationManifest = getHelmChartApplicationManifest();
+    applicationManifest.setAccountId(ACCOUNT_ID);
+    applicationManifest.setAppId(APP_ID);
+    applicationManifest.setPollForChanges(true);
+    wingsPersistence.save(applicationManifest);
+    when(appService.getAccountIdByAppId(APP_ID)).thenReturn(ACCOUNT_ID);
+
+    applicationManifestServiceImpl.deleteAppManifest(APP_ID, applicationManifest.getUuid());
+    verify(applicationManifestServiceImpl, times(1)).deleteAppManifest(applicationManifest);
+    verify(helmChartService, times(1)).deleteByAppManifest(APP_ID, applicationManifest.getUuid());
+  }
+
+  @Test
+  @Owner(developers = INDER)
+  @Category(UnitTests.class)
+  public void shouldNotUpdateWithPollForChangesEnabledAndChartVersionGiven() {
+    ApplicationManifest applicationManifest = getHelmChartApplicationManifest();
+    ApplicationManifest savedAppManifest = getHelmChartApplicationManifest();
+
+    when(applicationManifestServiceImpl.getById(anyString(), anyString())).thenReturn(savedAppManifest);
+    savedAppManifest.setPollForChanges(true);
+    applicationManifest.setPollForChanges(true);
+    applicationManifest.setHelmChartConfig(HelmChartConfig.builder().chartVersion("v1").build());
+
+    assertThatThrownBy(() -> applicationManifestServiceImpl.checkForUpdates(applicationManifest))
+        .isInstanceOf(InvalidRequestException.class)
+        .hasMessageContaining("No Helm Chart version is required when Poll for Manifest option is enabled.");
   }
 }

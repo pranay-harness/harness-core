@@ -3,6 +3,7 @@ package io.harness.gitsync.core.service;
 import io.harness.delegate.beans.git.YamlGitConfigDTO;
 import io.harness.git.model.GitFileChange;
 import io.harness.gitsync.common.beans.YamlChangeSet;
+import io.harness.gitsync.core.beans.ChangeWithErrorMsg;
 
 import java.util.List;
 import javax.ws.rs.core.HttpHeaders;
@@ -24,7 +25,8 @@ public interface YamlGitService {
   String validateAndQueueWebhookRequest(
       String accountId, String webhookToken, String yamlWebHookPayload, HttpHeaders headers);
 
-  boolean isCommitAlreadyProcessed(String accountId, String headCommit, String repo, String branch);
+  void processFailedChanges(String accountId, List<ChangeWithErrorMsg> failedChangesWithErrorMsg,
+      YamlGitConfigDTO yamlGitConfig, boolean gitToHarness, boolean fullSync);
 
   List<YamlGitConfigDTO> getYamlGitConfigsForGitToHarnessChangeSet(YamlChangeSet gitToHarnessChangeSet);
 }

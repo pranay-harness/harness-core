@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"net"
 	"testing"
+	"time"
 
 	"github.com/golang/mock/gomock"
 	"github.com/golang/protobuf/proto"
@@ -18,6 +19,7 @@ import (
 	addonpb "github.com/wings-software/portal/product/ci/addon/proto"
 	cengine "github.com/wings-software/portal/product/ci/engine/grpc/client"
 	emgrpc "github.com/wings-software/portal/product/ci/engine/grpc/client/mocks"
+	"github.com/wings-software/portal/product/ci/engine/output"
 	pb "github.com/wings-software/portal/product/ci/engine/proto"
 	"go.uber.org/zap"
 	"google.golang.org/grpc"
@@ -144,6 +146,13 @@ func TestStageRun(t *testing.T) {
 			logPath:      logPath,
 			expectedErr:  true,
 		},
+	}
+
+	oldSendStepStatus := sendStepStatus
+	defer func() { sendStepStatus = oldSendStepStatus }()
+	sendStepStatus = func(ctx context.Context, accountID, callbackToken, taskID string, numRetries int32, timeTaken time.Duration,
+		stepOutput *output.StepOutput, stepErr error, log *zap.SugaredLogger) error {
+		return nil
 	}
 
 	oldClient := newAddonClient

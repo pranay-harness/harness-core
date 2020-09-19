@@ -1,10 +1,10 @@
 package software.wings.resources.secretsmanagement;
 
+import static io.harness.NGConstants.ACCOUNT_KEY;
+import static io.harness.NGConstants.IDENTIFIER_KEY;
+import static io.harness.NGConstants.ORG_KEY;
+import static io.harness.NGConstants.PROJECT_KEY;
 import static io.harness.exception.WingsException.USER;
-import static io.harness.ng.NGConstants.ACCOUNT_KEY;
-import static io.harness.ng.NGConstants.IDENTIFIER_KEY;
-import static io.harness.ng.NGConstants.ORG_KEY;
-import static io.harness.ng.NGConstants.PROJECT_KEY;
 
 import com.google.inject.Inject;
 
@@ -42,11 +42,19 @@ public class SecretManagerResourceNG {
   @Inject private NGSecretManagerService ngSecretManagerService;
 
   @POST
-  @Produces("application/x-kryo")
+  @Produces("application/json")
   @Consumes("application/x-kryo")
   public RestResponse<SecretManagerConfigDTO> createSecretManager(SecretManagerConfigDTO dto) {
     SecretManagerConfig secretManagerConfig = SecretManagerConfigMapper.fromDTO(dto);
     return new RestResponse<>(ngSecretManagerService.createSecretManager(secretManagerConfig).toDTO(true));
+  }
+
+  @GET
+  @Path("{identifier}/validate")
+  public RestResponse<Boolean> validateSecretManager(@PathParam("identifier") String identifier,
+      @QueryParam(ACCOUNT_KEY) String account, @QueryParam(ORG_KEY) String org,
+      @QueryParam(PROJECT_KEY) String project) {
+    return new RestResponse<>(ngSecretManagerService.validate(account, org, project, identifier));
   }
 
   @GET
@@ -82,7 +90,7 @@ public class SecretManagerResourceNG {
 
   @PUT
   @Path("/{identifier}")
-  @Produces("application/x-kryo")
+  @Produces("application/json")
   @Consumes("application/x-kryo")
   public RestResponse<SecretManagerConfigDTO> updateSecretManager(@PathParam(IDENTIFIER_KEY) String identifier,
       @QueryParam(ACCOUNT_KEY) @NotNull String accountIdentifier, @QueryParam(ORG_KEY) String orgIdentifier,

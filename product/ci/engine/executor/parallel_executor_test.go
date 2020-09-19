@@ -8,14 +8,11 @@ import (
 	"github.com/golang/mock/gomock"
 	"github.com/pkg/errors"
 	"github.com/stretchr/testify/assert"
-	"github.com/wings-software/portal/commons/go/lib/filesystem"
 	"github.com/wings-software/portal/commons/go/lib/logs"
+	mexecutor "github.com/wings-software/portal/product/ci/engine/executor/mocks"
 	cengine "github.com/wings-software/portal/product/ci/engine/grpc/client"
 	emgrpc "github.com/wings-software/portal/product/ci/engine/grpc/client/mocks"
-	"github.com/wings-software/portal/product/ci/engine/output"
 	pb "github.com/wings-software/portal/product/ci/engine/proto"
-	"github.com/wings-software/portal/product/ci/engine/steps"
-	emsteps "github.com/wings-software/portal/product/ci/engine/steps/mocks"
 	"go.uber.org/zap"
 	"google.golang.org/grpc"
 )
@@ -41,18 +38,10 @@ func TestParallelExecutorRun(t *testing.T) {
 	ctrl, ctx := gomock.WithContext(context.Background(), t)
 	defer ctrl.Finish()
 
+	accountID := "test"
 	tmpFilePath := "/tmp"
 	logPath := "/tmp"
 	log, _ := logs.GetObservedLogger(zap.InfoLevel)
-	errSaveCacheStep := &pb.UnitStep{
-		Step: &pb.UnitStep_SaveCache{
-			SaveCache: &pb.SaveCacheStep{
-				Key:   "key",
-				Paths: []string{"/tmp/m2"},
-			},
-		},
-	}
-
 	tests := []struct {
 		name        string
 		step        *pb.ParallelStep
@@ -85,36 +74,59 @@ func TestParallelExecutorRun(t *testing.T) {
 			},
 			expectedErr: false,
 		},
-		{
-			name: "main-only parallel with error in non-run unit steps",
-			step: &pb.ParallelStep{
-				Id: "ptest4",
-				Steps: []*pb.UnitStep{
-					testGetRunStep("ptest3_1", []string{"ls"}),
-					errSaveCacheStep,
-					testGetRunStep("ptest3_3", []string{"l"})},
-			},
-			expectedErr: true,
-		},
 	}
 
 	// Mock out unit Executor run step
-	oldRunStep := runStep
-	defer func() { runStep = oldRunStep }()
-	mockedRunStep := emsteps.NewMockRunStep(ctrl)
-	mockedRunStep.EXPECT().Run(ctx).Return(nil, nil).AnyTimes()
+	mockUnitExecutor := mexecutor.NewMockUnitExecutor(ctrl)
+	mockUnitExecutor.EXPECT().Run(ctx, gomock.Any(), gomock.Any(), accountID).Return(nil, nil).AnyTimes()
 
-	runStep = func(step *pb.UnitStep, stepLogPath string, tmpFilePath string,
-		so output.StageOutput, fs filesystem.FileSystem, log *zap.SugaredLogger) steps.RunStep {
-		return mockedRunStep
-	}
 	for _, tc := range tests {
-		e := NewParallelExecutor(logPath, tmpFilePath, nil, log.Sugar())
-		_, got := e.Run(ctx, tc.step, nil)
+		e := &parallelExecutor{
+			unitExecutor: mockUnitExecutor,
+			stepLogPath:  logPath,
+			tmpFilePath:  tmpFilePath,
+			mainOnly:     true,
+			workerPorts:  nil,
+			log:          log.Sugar(),
+		}
+		_, got := e.Run(ctx, tc.step, nil, accountID)
 		if tc.expectedErr == (got == nil) {
 			t.Fatalf("%s: expected error: %v, got: %v", tc.name, tc.expectedErr, got)
 		}
 	}
+}
+
+func TestParallelExecutorUnitStepErr(t *testing.T) {
+	ctrl, ctx := gomock.WithContext(context.Background(), t)
+	defer ctrl.Finish()
+
+	accountID := "test"
+	tmpFilePath := "/tmp"
+	logPath := "/tmp"
+	log, _ := logs.GetObservedLogger(zap.InfoLevel)
+	unitStepErr := fmt.Errorf("failed to execute step")
+
+	step := &pb.ParallelStep{
+		Id: "ptest",
+		Steps: []*pb.UnitStep{
+			testGetRunStep("ptest3_1", []string{"la"}),
+			testGetRunStep("ptest3_3", []string{"l"})},
+	}
+
+	// Mock out unit Executor run step
+	mockUnitExecutor := mexecutor.NewMockUnitExecutor(ctrl)
+	e := &parallelExecutor{
+		unitExecutor: mockUnitExecutor,
+		stepLogPath:  logPath,
+		tmpFilePath:  tmpFilePath,
+		mainOnly:     true,
+		workerPorts:  nil,
+		log:          log.Sugar(),
+	}
+	mockUnitExecutor.EXPECT().Run(ctx, gomock.Any(), gomock.Any(), accountID).Return(nil, unitStepErr).AnyTimes()
+
+	_, got := e.Run(ctx, step, nil, accountID)
+	assert.NotEqual(t, got, nil)
 }
 
 func TestParallelExecutorGetWorkers(t *testing.T) {
@@ -138,6 +150,7 @@ func TestRemoteStepClientCreateErr(t *testing.T) {
 	ctrl, ctx := gomock.WithContext(context.Background(), t)
 	defer ctrl.Finish()
 
+	accountID := "test"
 	tmpFilePath := "/tmp"
 	logPath := "/tmp"
 	ports := []uint{9000, 9001}
@@ -156,7 +169,7 @@ func TestRemoteStepClientCreateErr(t *testing.T) {
 		return nil, errors.New("Could not create client")
 	}
 
-	_, err := e.executeRemoteStep(ctx, worker{}, nil, nil)
+	_, err := e.executeRemoteStep(ctx, worker{}, nil, nil, accountID)
 	assert.NotNil(t, err)
 }
 
@@ -164,6 +177,7 @@ func TestRemoteStepClientErr(t *testing.T) {
 	ctrl, ctx := gomock.WithContext(context.Background(), t)
 	defer ctrl.Finish()
 
+	accountID := "test"
 	conn, err := grpc.DialContext(ctx, "bufnet", grpc.WithContextDialer(bufDialer), grpc.WithInsecure())
 	if err != nil {
 		t.Fatalf("Failed to dial bufnet: %v", err)
@@ -191,6 +205,6 @@ func TestRemoteStepClientErr(t *testing.T) {
 		workerPorts: ports,
 		log:         log.Sugar(),
 	}
-	_, err = e.executeRemoteStep(ctx, worker{}, nil, nil)
+	_, err = e.executeRemoteStep(ctx, worker{}, nil, nil, accountID)
 	assert.NotNil(t, err)
 }

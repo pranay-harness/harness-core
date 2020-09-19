@@ -1,10 +1,13 @@
 package io.harness.perpetualtask.internal;
 
+import static io.harness.perpetualtask.PerpetualTaskState.TASK_ASSIGNED;
+
 import com.google.inject.Inject;
 
 import io.harness.perpetualtask.PerpetualTaskClientContext;
 import io.harness.perpetualtask.PerpetualTaskExecutionBundle;
 import io.harness.perpetualtask.PerpetualTaskState;
+import io.harness.perpetualtask.PerpetualTaskUnassignedReason;
 import io.harness.perpetualtask.internal.PerpetualTaskRecord.PerpetualTaskRecordKeys;
 import io.harness.persistence.HIterator;
 import lombok.extern.slf4j.Slf4j;
@@ -32,14 +35,21 @@ public class PerpetualTaskRecordDao {
     UpdateOperations<PerpetualTaskRecord> updateOperations =
         persistence.createUpdateOperations(PerpetualTaskRecord.class)
             .set(PerpetualTaskRecordKeys.delegateId, delegateId)
-            .set(PerpetualTaskRecordKeys.state, PerpetualTaskState.TASK_ASSIGNED)
+            .set(PerpetualTaskRecordKeys.state, TASK_ASSIGNED)
+            .unset(PerpetualTaskRecordKeys.unassignedReason)
             .unset(PerpetualTaskRecordKeys.assignerIterations)
             .set(PerpetualTaskRecordKeys.client_context_last_updated, lastContextUpdated);
     persistence.update(query, updateOperations);
   }
 
-  public void setTaskState(String taskId, PerpetualTaskState state) {
-    persistence.updateField(PerpetualTaskRecord.class, taskId, PerpetualTaskRecordKeys.state, state);
+  public void updateTaskUnassignedReason(String taskId, PerpetualTaskUnassignedReason reason) {
+    Query<PerpetualTaskRecord> query = persistence.createQuery(PerpetualTaskRecord.class)
+                                           .filter(PerpetualTaskRecordKeys.uuid, taskId)
+                                           .filter(PerpetualTaskRecordKeys.state, PerpetualTaskState.TASK_UNASSIGNED);
+    UpdateOperations<PerpetualTaskRecord> updateOperations =
+        persistence.createUpdateOperations(PerpetualTaskRecord.class)
+            .set(PerpetualTaskRecordKeys.unassignedReason, reason);
+    persistence.update(query, updateOperations);
   }
 
   public boolean resetDelegateIdForTask(
@@ -52,6 +62,7 @@ public class PerpetualTaskRecordDao {
         persistence.createUpdateOperations(PerpetualTaskRecord.class)
             .set(PerpetualTaskRecordKeys.delegateId, "")
             .set(PerpetualTaskRecordKeys.state, PerpetualTaskState.TASK_UNASSIGNED)
+            .unset(PerpetualTaskRecordKeys.unassignedReason)
             .unset(PerpetualTaskRecordKeys.assignerIterations);
 
     if (taskExecutionBundle != null) {
@@ -147,11 +158,17 @@ public class PerpetualTaskRecordDao {
     return Optional.ofNullable(perpetualTaskRecordQuery.get());
   }
 
-  public boolean saveHeartbeat(PerpetualTaskRecord task, long heartbeatMillis) {
+  public boolean saveHeartbeat(String taskId, long heartbeatMillis) {
+    // TODO: make sure that the heartbeat is coming from the right assignment. There is a race
+    //       that could register heartbeat comming from wrong assignment
+    Query<PerpetualTaskRecord> query = persistence.createQuery(PerpetualTaskRecord.class)
+                                           .filter(PerpetualTaskRecordKeys.uuid, taskId)
+                                           .filter(PerpetualTaskRecordKeys.state, TASK_ASSIGNED);
+
     UpdateOperations<PerpetualTaskRecord> taskUpdateOperations =
         persistence.createUpdateOperations(PerpetualTaskRecord.class)
             .set(PerpetualTaskRecordKeys.lastHeartbeat, heartbeatMillis);
-    UpdateResults update = persistence.update(task, taskUpdateOperations);
+    UpdateResults update = persistence.update(query, taskUpdateOperations);
     return update.getUpdatedCount() > 0;
   }
 
@@ -164,6 +181,7 @@ public class PerpetualTaskRecordDao {
         persistence.createUpdateOperations(PerpetualTaskRecord.class)
             .set(PerpetualTaskRecordKeys.delegateId, "")
             .set(PerpetualTaskRecordKeys.state, PerpetualTaskState.TASK_UNASSIGNED)
+            .unset(PerpetualTaskRecordKeys.unassignedReason)
             .unset(PerpetualTaskRecordKeys.assignerIterations);
 
     persistence.update(query, updateOperations);

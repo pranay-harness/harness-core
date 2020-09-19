@@ -4,7 +4,7 @@ import com.google.inject.AbstractModule;
 import com.google.inject.Provides;
 import com.google.inject.Scopes;
 
-import io.harness.ng.remote.client.ServiceHttpClientConfig;
+import io.harness.remote.client.ServiceHttpClientConfig;
 import io.harness.secretmanagerclient.remote.SecretManagerClient;
 import io.harness.secretmanagerclient.remote.SecretManagerHttpClientFactory;
 import io.harness.secretmanagerclient.services.SecretManagerClientServiceImpl;

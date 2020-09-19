@@ -1,7 +1,7 @@
 package io.harness.perpetualtask.datacollection;
 
-import static io.harness.cvng.beans.ExecutionStatus.FAILED;
-import static io.harness.cvng.beans.ExecutionStatus.SUCCESS;
+import static io.harness.cvng.beans.DataCollectionExecutionStatus.FAILED;
+import static io.harness.cvng.beans.DataCollectionExecutionStatus.SUCCESS;
 
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
@@ -25,7 +25,6 @@ import io.harness.perpetualtask.PerpetualTaskExecutionParams;
 import io.harness.perpetualtask.PerpetualTaskExecutor;
 import io.harness.perpetualtask.PerpetualTaskId;
 import io.harness.perpetualtask.PerpetualTaskResponse;
-import io.harness.perpetualtask.PerpetualTaskState;
 import io.harness.security.encryption.SecretDecryptionService;
 import io.harness.serializer.KryoSerializer;
 import io.harness.verificationclient.CVNextGenServiceClient;
@@ -87,11 +86,7 @@ public class DataCollectionPerpetualTaskExecutor implements PerpetualTaskExecuto
       throw new IllegalStateException(e);
     }
 
-    return PerpetualTaskResponse.builder()
-        .responseCode(200)
-        .perpetualTaskState(PerpetualTaskState.TASK_RUN_SUCCEEDED)
-        .responseMessage(PerpetualTaskState.TASK_RUN_SUCCEEDED.name())
-        .build();
+    return PerpetualTaskResponse.builder().responseCode(200).responseMessage("success").build();
   }
 
   private DataCollectionTaskDTO getNextDataCollectionTask(DataCollectionPerpetualTaskParams taskParams)

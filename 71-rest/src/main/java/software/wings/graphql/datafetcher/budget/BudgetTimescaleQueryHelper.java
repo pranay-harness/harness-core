@@ -241,6 +241,35 @@ public class BudgetTimescaleQueryHelper {
     return queryMetaDataBuilder.build();
   }
 
+  protected BillingDataQueryMetadata formBudgetAlertsCountQuery(String accountId, List<QLBillingDataFilter> filters) {
+    BillingDataQueryMetadataBuilder queryMetaDataBuilder = BillingDataQueryMetadata.builder();
+    SelectQuery selectQuery = new SelectQuery();
+    BillingDataQueryMetadata.ResultType resultType;
+    resultType = BillingDataQueryMetadata.ResultType.STACKED_TIME_SERIES;
+
+    queryMetaDataBuilder.resultType(resultType);
+    List<BillingDataMetaDataFields> fieldNames = new ArrayList<>();
+
+    selectQuery.addCustomFromTable(schema.getBudgetAlertsTable());
+
+    selectQuery.addCustomColumns(
+        Converter.toColumnSqlObject(FunctionCall.count().addColumnParams(schema.getAlertTime()).setIsDistinct(true),
+            BillingDataMetaDataFields.COUNT.getFieldName()));
+    fieldNames.add(BillingDataMetaDataFields.COUNT);
+
+    if (!Lists.isNullOrEmpty(filters)) {
+      addFilters(selectQuery, getAlertTimeFilters(filters));
+    }
+
+    addAccountFilter(selectQuery, accountId);
+
+    selectQuery.getWhereClause().setDisableParens(true);
+    queryMetaDataBuilder.fieldNames(fieldNames);
+    queryMetaDataBuilder.query(selectQuery.toString());
+    queryMetaDataBuilder.filters(filters);
+    return queryMetaDataBuilder.build();
+  }
+
   private void addAggregation(SelectQuery selectQuery, QLCCMAggregationFunction aggregationFunction,
       List<BillingDataMetaDataFields> fieldNames) {
     if (aggregationFunction != null && aggregationFunction.getOperationType() == QLCCMAggregateOperation.SUM) {
@@ -311,6 +340,8 @@ public class BudgetTimescaleQueryHelper {
         return billingDataTableSchema.getClusterId();
       case InstanceType:
         return billingDataTableSchema.getInstanceType();
+      case AlertTime:
+        return schema.getAlertTime();
       default:
         throw new InvalidRequestException("Filter type not supported " + type);
     }
@@ -334,5 +365,29 @@ public class BudgetTimescaleQueryHelper {
 
   private void addAccountFilter(SelectQuery selectQuery, String accountId) {
     selectQuery.addCondition(BinaryCondition.equalTo(schema.getAccountId(), accountId));
+  }
+
+  // To change start time and end time filters to alert time filters for budget alerts
+  private List<QLBillingDataFilter> getAlertTimeFilters(List<QLBillingDataFilter> filters) {
+    List<QLBillingDataFilter> alertTimeFilters = new ArrayList<>();
+    for (QLBillingDataFilter filter : filters) {
+      if (filter.getStartTime() != null) {
+        alertTimeFilters.add(QLBillingDataFilter.builder()
+                                 .alertTime(QLTimeFilter.builder()
+                                                .operator(filter.getStartTime().getOperator())
+                                                .value(filter.getStartTime().getValue())
+                                                .build())
+                                 .build());
+      }
+      if (filter.getEndTime() != null) {
+        alertTimeFilters.add(QLBillingDataFilter.builder()
+                                 .alertTime(QLTimeFilter.builder()
+                                                .operator(filter.getEndTime().getOperator())
+                                                .value(filter.getEndTime().getValue())
+                                                .build())
+                                 .build());
+      }
+    }
+    return alertTimeFilters;
   }
 }

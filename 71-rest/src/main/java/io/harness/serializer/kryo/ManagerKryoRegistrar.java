@@ -41,6 +41,7 @@ import software.wings.api.AmiStepExecutionSummary;
 import software.wings.api.ApprovalStateExecutionData;
 import software.wings.api.ArtifactCollectionExecutionData;
 import software.wings.api.AwsAmiDeployStateExecutionData;
+import software.wings.api.AwsAmiInfoVariables;
 import software.wings.api.AwsAmiSetupExecutionData;
 import software.wings.api.AwsAmiSwitchRoutesStateExecutionData;
 import software.wings.api.AwsAmiTrafficShiftAlbStateExecutionData;
@@ -484,6 +485,7 @@ import software.wings.helpers.ext.gcb.models.SubstitutionOption;
 import software.wings.helpers.ext.gcb.models.TimeSpan;
 import software.wings.helpers.ext.gcb.models.VerifyOption;
 import software.wings.helpers.ext.helm.HelmCommandExecutionResponse;
+import software.wings.helpers.ext.helm.request.HelmChartCollectionParams;
 import software.wings.helpers.ext.helm.request.HelmChartConfigParams;
 import software.wings.helpers.ext.helm.request.HelmCommandRequest;
 import software.wings.helpers.ext.helm.request.HelmInstallCommandRequest;
@@ -1759,5 +1761,8 @@ public class ManagerKryoRegistrar implements KryoRegistrar {
     kryo.register(ListNotifyResponseData.class, 5133);
     kryo.register(CIK8ServicePodParams.class, 8056);
     kryo.register(HostAliasParams.class, 8057);
+
+    kryo.register(HelmChartCollectionParams.class, 8058);
+    kryo.register(AwsAmiInfoVariables.class, 8059);
   }
 }

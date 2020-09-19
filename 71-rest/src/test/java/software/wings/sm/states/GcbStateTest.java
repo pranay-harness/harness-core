@@ -193,10 +193,14 @@ public class GcbStateTest extends CategoryTest {
   @Test
   @Owner(developers = VGLIJIN)
   @Category(UnitTests.class)
-  public void handleAbortEventShouldSetCancelledStatus() {
+  public void handleAbortEventShouldSetCancelledStatus() throws InterruptedException {
     GcbExecutionData gcbExecutionData = mock(GcbExecutionData.class);
+    GcbDelegateResponse response =
+        new GcbDelegateResponse(RUNNING, GcbBuildDetails.builder().status(GcbBuildStatus.CANCELLED).build(),
+            GcbTaskParams.builder().build(), null, false);
     SettingAttribute settingAttribute = new SettingAttribute();
     settingAttribute.setValue(new GcpConfig());
+    when(delegateService.executeTask(any())).thenReturn(response);
     when(settingService.get(anyString())).thenReturn(settingAttribute);
     when(secretManager.getEncryptionDetails(any(GcpConfig.class), anyString(), anyString())).thenReturn(emptyList());
     when(context.getStateExecutionData()).thenReturn(gcbExecutionData);

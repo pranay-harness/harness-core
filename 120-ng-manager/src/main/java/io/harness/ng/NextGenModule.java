@@ -7,6 +7,7 @@ import com.google.inject.AbstractModule;
 import com.google.inject.Provides;
 import com.google.inject.Singleton;
 import com.google.inject.multibindings.MapBinder;
+import com.google.inject.multibindings.Multibinder;
 import com.google.inject.name.Named;
 import com.google.inject.name.Names;
 
@@ -34,18 +35,25 @@ import io.harness.grpc.DelegateServiceDriverGrpcClientModule;
 import io.harness.grpc.DelegateServiceGrpcClient;
 import io.harness.manage.ManagedScheduledExecutorService;
 import io.harness.mongo.MongoConfig;
+import io.harness.mongo.MongoModule;
 import io.harness.morphia.MorphiaRegistrar;
 import io.harness.ng.core.CoreModule;
 import io.harness.ng.core.InviteModule;
 import io.harness.ng.core.NgAsyncTaskGrpcServerModule;
 import io.harness.ng.core.SecretManagementModule;
+import io.harness.ng.core.api.NGSecretServiceV2;
+import io.harness.ng.core.api.NGSecretServiceV2Impl;
+import io.harness.ng.core.gitsync.GitChangeProcessorService;
 import io.harness.ng.core.gitsync.GitSyncManagerInterface;
+import io.harness.ng.core.gitsync.YamlHandler;
 import io.harness.ng.core.impl.OrganizationServiceImpl;
 import io.harness.ng.core.impl.ProjectServiceImpl;
 import io.harness.ng.core.remote.server.grpc.perpetualtask.RemotePerpetualTaskServiceClientManager;
 import io.harness.ng.core.remote.server.grpc.perpetualtask.impl.RemotePerpetualTaskServiceClientManagerImpl;
 import io.harness.ng.core.services.OrganizationService;
 import io.harness.ng.core.services.ProjectService;
+import io.harness.ng.gitsync.NgCoreGitChangeSetProcessorServiceImpl;
+import io.harness.ng.gitsync.handlers.ConnectorYamlHandler;
 import io.harness.ng.orchestration.NgDelegate2TaskExecutor;
 import io.harness.ng.orchestration.NgDelegateTaskExecutor;
 import io.harness.queue.QueueController;
@@ -145,6 +153,7 @@ public class NextGenModule extends AbstractModule {
     taskExecutorMap.addBinding(TaskMode.DELEGATE_TASK_V2.name()).to(NgDelegateTaskExecutor.class);
     taskExecutorMap.addBinding(TaskMode.DELEGATE_TASK_V3.name()).to(NgDelegate2TaskExecutor.class);
     install(new ValidationModule(getValidatorFactory()));
+    install(MongoModule.getInstance());
     install(new NextGenPersistenceModule());
     install(new CoreModule());
     install(new InviteModule(
@@ -203,10 +212,7 @@ public class NextGenModule extends AbstractModule {
       }
     });
 
-    install(OrchestrationModule.getInstance(OrchestrationModuleConfig.builder()
-                                                .expressionEvaluatorProvider(new CDExpressionEvaluatorProvider())
-                                                .publisherName(NgOrchestrationNotifyEventListener.NG_ORCHESTRATION)
-                                                .build()));
+    install(OrchestrationModule.getInstance());
     install(OrchestrationStepsModule.getInstance());
     install(OrchestrationVisualizationModule.getInstance());
     install(ExecutionPlanModule.getInstance());
@@ -219,6 +225,7 @@ public class NextGenModule extends AbstractModule {
 
     bind(ProjectService.class).to(ProjectServiceImpl.class);
     bind(OrganizationService.class).to(OrganizationServiceImpl.class);
+    bind(NGSecretServiceV2.class).to(NGSecretServiceV2Impl.class);
     bind(GitSyncManagerInterface.class).to(GitSyncManagerInterfaceImpl.class);
     bind(ScheduledExecutorService.class)
         .annotatedWith(Names.named("taskPollExecutor"))
@@ -227,6 +234,17 @@ public class NextGenModule extends AbstractModule {
     bind(ConnectorService.class)
         .annotatedWith(Names.named(SECRET_MANAGER_CONNECTOR_SERVICE))
         .to(SecretManagerConnectorServiceImpl.class);
+    bind(GitChangeProcessorService.class).to(NgCoreGitChangeSetProcessorServiceImpl.class);
+    bindYamlHandlers();
+  }
+
+  @Provides
+  @Singleton
+  public OrchestrationModuleConfig orchestrationModuleConfig() {
+    return OrchestrationModuleConfig.builder()
+        .expressionEvaluatorProvider(new CDExpressionEvaluatorProvider())
+        .publisherName(NgOrchestrationNotifyEventListener.NG_ORCHESTRATION)
+        .build();
   }
 
   private ValidatorFactory getValidatorFactory() {
@@ -234,5 +252,10 @@ public class NextGenModule extends AbstractModule {
         .configure()
         .parameterNameProvider(new ReflectionParameterNameProvider())
         .buildValidatorFactory();
+  }
+
+  private void bindYamlHandlers() {
+    final Multibinder<YamlHandler> yamlHandlerMultiBinder = Multibinder.newSetBinder(binder(), YamlHandler.class);
+    yamlHandlerMultiBinder.addBinding().to(ConnectorYamlHandler.class);
   }
 }

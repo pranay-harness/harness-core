@@ -1,13 +1,13 @@
 package io.harness.ng.core.entityReference.impl;
 
-import static io.harness.ng.EntityType.CONNECTORS;
-import static io.harness.ng.EntityType.SECRETS;
+import static io.harness.EntityType.CONNECTORS;
+import static io.harness.EntityType.SECRETS;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.google.inject.Inject;
 
+import io.harness.EntityType;
 import io.harness.category.element.UnitTests;
-import io.harness.ng.EntityType;
 import io.harness.ng.core.NGCoreBaseTest;
 import io.harness.ng.core.entityReference.dto.EntityReferenceDTO;
 import io.harness.ng.core.entityReference.service.EntityReferenceService;

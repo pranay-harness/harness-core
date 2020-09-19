@@ -497,8 +497,7 @@ public class UserServiceTest extends WingsBaseTest {
     when(authenticationUtils.getDefaultAccount(any())).thenReturn(anAccount().withUuid(ACCOUNT_ID).build());
     when(authenticationUtils.buildAbsoluteUrl(anyString(), anyString(), any())).thenReturn(new URI(StringUtils.EMPTY));
     userService.trialSignup(userInvite);
-    verify(eventPublishHelper)
-        .publishTrialUserSignupEvent(utmInfo, email, userName, inviteId, userInvite.getCompanyName());
+    verify(eventPublishHelper).publishTrialUserSignupEvent(inviteId, email, userInvite);
   }
 
   @Test

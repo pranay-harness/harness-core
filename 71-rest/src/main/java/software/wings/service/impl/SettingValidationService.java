@@ -85,6 +85,7 @@ import software.wings.dl.WingsPersistence;
 import software.wings.helpers.ext.azure.AzureHelperService;
 import software.wings.helpers.ext.mail.SmtpConfig;
 import software.wings.service.impl.analysis.ElkConnector;
+import software.wings.service.impl.gcp.GcpHelperServiceManager;
 import software.wings.service.impl.servicenow.ServiceNowServiceImpl;
 import software.wings.service.impl.spotinst.SpotinstHelperServiceManager;
 import software.wings.service.intfc.AppService;
@@ -141,6 +142,7 @@ public class SettingValidationService {
   @Inject private SpotinstHelperServiceManager spotinstHelperServiceManager;
   @Inject private CCMSettingService ccmSettingService;
   @Inject private AWSCEConfigValidationService awsceConfigValidationService;
+  @Inject private GcpHelperServiceManager gcpHelperServiceManager;
 
   public ValidationResult validateConnectivity(SettingAttribute settingAttribute) {
     SettingValue settingValue = settingAttribute.getValue();
@@ -222,7 +224,7 @@ public class SettingValidationService {
     List<EncryptedDataDetail> encryptedDataDetails = fetchEncryptionDetails(settingValue);
 
     if (settingValue instanceof GcpConfig) {
-      gcpHelperService.validateCredential((GcpConfig) settingValue, encryptedDataDetails);
+      gcpHelperServiceManager.validateCredential((GcpConfig) settingValue, encryptedDataDetails);
     } else if (settingValue instanceof AzureConfig) {
       azureHelperService.validateAzureAccountCredential((AzureConfig) settingValue, encryptedDataDetails);
     } else if (settingValue instanceof PcfConfig) {

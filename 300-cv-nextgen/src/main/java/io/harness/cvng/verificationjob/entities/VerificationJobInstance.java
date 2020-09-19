@@ -1,9 +1,10 @@
 package io.harness.cvng.verificationjob.entities;
 
+import com.google.common.collect.Lists;
+
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import io.harness.annotation.HarnessEntity;
-import io.harness.cvng.analysis.beans.ExecutionStatus;
-import io.harness.cvng.statemachine.entities.AnalysisStatus;
+import io.harness.cvng.statemachine.beans.AnalysisStatus;
 import io.harness.cvng.verificationjob.beans.VerificationJobInstanceDTO;
 import io.harness.iterator.PersistentRegularIterable;
 import io.harness.mongo.index.FdIndex;
@@ -120,5 +121,17 @@ public class VerificationJobInstance
     Instant endTime;
     boolean isFinalState;
     String log;
+  }
+
+  public enum ExecutionStatus {
+    QUEUED,
+    RUNNING,
+    FAILED,
+    SUCCESS,
+    TIMEOUT;
+
+    public static List<ExecutionStatus> finalStatuses() {
+      return Lists.newArrayList(SUCCESS, FAILED, TIMEOUT);
+    }
   }
 }

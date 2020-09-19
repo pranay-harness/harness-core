@@ -40,6 +40,7 @@ import io.harness.perpetualtask.PerpetualTaskService;
 import io.harness.perpetualtask.PerpetualTaskServiceClient;
 import io.harness.perpetualtask.PerpetualTaskServiceClientRegistry;
 import io.harness.perpetualtask.PerpetualTaskState;
+import io.harness.perpetualtask.PerpetualTaskUnassignedReason;
 import io.harness.perpetualtask.internal.PerpetualTaskRecord.PerpetualTaskRecordKeys;
 import io.harness.serializer.KryoSerializer;
 import io.harness.workers.background.AccountStatusBasedEntityProcessController;
@@ -101,11 +102,7 @@ public class PerpetualTaskRecordHandler implements Handler<PerpetualTaskRecord>,
             .acceptableNoAlertDelay(ofSeconds(45))
             .acceptableExecutionTime(ofSeconds(30))
             .handler(this)
-            .filterExpander(query
-                -> query.field(PerpetualTaskRecordKeys.delegateId)
-                       .equal("")
-                       .field(PerpetualTaskRecordKeys.state)
-                       .notEqual(PerpetualTaskState.TASK_PAUSED))
+            .filterExpander(query -> query.filter(PerpetualTaskRecordKeys.state, PerpetualTaskState.TASK_UNASSIGNED))
             .entityProcessController(new AccountStatusBasedEntityProcessController<>(accountService))
             .schedulingType(IRREGULAR_SKIP_MISSED)
             .persistenceProvider(persistenceProvider)
@@ -128,7 +125,8 @@ public class PerpetualTaskRecordHandler implements Handler<PerpetualTaskRecord>,
             boolean isAbleToExecutePerpetualTask =
                 ((PerpetualTaskCapabilityCheckResponse) response).isAbleToExecutePerpetualTask();
             if (!isAbleToExecutePerpetualTask) {
-              perpetualTaskService.setTaskState(taskId, PerpetualTaskState.NO_ELIGIBLE_DELEGATES);
+              perpetualTaskService.updateTaskUnassignedReason(
+                  taskId, PerpetualTaskUnassignedReason.NO_ELIGIBLE_DELEGATES);
 
               raiseAlert(
                   taskRecord, format(NO_ELIGIBLE_DELEGATE_TO_HANDLE_PERPETUAL_TASK, taskRecord.getPerpetualTaskType()));
@@ -151,7 +149,7 @@ public class PerpetualTaskRecordHandler implements Handler<PerpetualTaskRecord>,
 
         } else if ((response instanceof RemoteMethodReturnValueData)
             && (((RemoteMethodReturnValueData) response).getException() instanceof InvalidRequestException)) {
-          perpetualTaskService.setTaskState(taskId, PerpetualTaskState.NO_ELIGIBLE_DELEGATES);
+          perpetualTaskService.updateTaskUnassignedReason(taskId, PerpetualTaskUnassignedReason.NO_ELIGIBLE_DELEGATES);
 
           raiseAlert(
               taskRecord, format(NO_ELIGIBLE_DELEGATE_TO_HANDLE_PERPETUAL_TASK, taskRecord.getPerpetualTaskType()));
@@ -163,11 +161,11 @@ public class PerpetualTaskRecordHandler implements Handler<PerpetualTaskRecord>,
         }
       } catch (NoInstalledDelegatesException exception) {
         ignoredOnPurpose(exception);
-        perpetualTaskService.setTaskState(taskId, PerpetualTaskState.NO_DELEGATE_INSTALLED);
+        perpetualTaskService.updateTaskUnassignedReason(taskId, PerpetualTaskUnassignedReason.NO_DELEGATE_INSTALLED);
         raiseAlert(taskRecord, NO_DELEGATES_INSTALLED_TO_HANDLE_PERPETUAL_TASK);
       } catch (NoAvailableDelegatesException exception) {
         ignoredOnPurpose(exception);
-        perpetualTaskService.setTaskState(taskId, PerpetualTaskState.NO_DELEGATE_AVAILABLE);
+        perpetualTaskService.updateTaskUnassignedReason(taskId, PerpetualTaskUnassignedReason.NO_DELEGATE_AVAILABLE);
         raiseAlert(
             taskRecord, format(NO_DELEGATE_AVAILABLE_TO_HANDLE_PERPETUAL_TASK, taskRecord.getPerpetualTaskType()));
       } catch (WingsException exception) {

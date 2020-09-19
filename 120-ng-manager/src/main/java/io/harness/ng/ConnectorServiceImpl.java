@@ -1,8 +1,8 @@
 package io.harness.ng;
 
+import static io.harness.NGConstants.HARNESS_SECRET_MANAGER_IDENTIFIER;
 import static io.harness.connector.ConnectorModule.DEFAULT_CONNECTOR_SERVICE;
 import static io.harness.exception.WingsException.USER;
-import static io.harness.ng.NGConstants.HARNESS_SECRET_MANAGER_IDENTIFIER;
 import static io.harness.ng.NextGenModule.SECRET_MANAGER_CONNECTOR_SERVICE;
 
 import com.google.inject.Inject;
@@ -104,7 +104,11 @@ public class ConnectorServiceImpl implements ConnectorService {
   @Override
   public ConnectorValidationResult testConnection(
       String accountIdentifier, String orgIdentifier, String projectIdentifier, String connectorIdentifier) {
-    return defaultConnectorService.testConnection(
-        accountIdentifier, orgIdentifier, projectIdentifier, connectorIdentifier);
+    Optional<ConnectorDTO> connectorDTO = get(accountIdentifier, orgIdentifier, projectIdentifier, connectorIdentifier);
+    if (connectorDTO.isPresent()) {
+      return getConnectorService(connectorDTO.get().getConnectorType())
+          .testConnection(accountIdentifier, orgIdentifier, projectIdentifier, connectorIdentifier);
+    }
+    throw new InvalidRequestException("No such connector found", USER);
   }
 }
