@@ -14,6 +14,7 @@ import com.google.inject.Singleton;
 import com.google.inject.name.Named;
 
 import com.mongodb.DBCollection;
+import com.mongodb.DBObject;
 import com.mongodb.DuplicateKeyException;
 import com.mongodb.WriteResult;
 import io.harness.exception.InvalidArgumentsException;
@@ -183,6 +184,12 @@ public class MongoPersistence implements HPersistence {
   @Override
   public <T extends PersistentEntity> UpdateOperations<T> createUpdateOperations(Class<T> cls) {
     return getDatastore(cls).createUpdateOperations(cls);
+  }
+
+  @Override
+  public <T extends PersistentEntity> T convertToEntity(Class<T> cls, DBObject dbObject) {
+    AdvancedDatastore advancedDatastore = getDatastore(cls);
+    return morphia.fromDBObject(advancedDatastore, cls, dbObject);
   }
 
   private <T extends PersistentEntity> void onEntityUpdate(T entity, long currentTime) {
