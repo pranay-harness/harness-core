@@ -46,16 +46,40 @@ public class AzureVMSSDeployTaskHandler extends AzureVMSSTaskHandler {
       final AzureVMSSTaskParameters azureVMSSTaskParameters, final AzureConfig azureConfig) {
     AzureVMSSDeployTaskParameters deployTaskParameters = (AzureVMSSDeployTaskParameters) azureVMSSTaskParameters;
     try {
-      String newVirtualMachineScaleSetName = deployTaskParameters.getNewVirtualMachineScaleSetName();
-      String oldVirtualMachineScaleSetName = deployTaskParameters.getOldVirtualMachineScaleSetName();
-
-      AzureVMSSDeployTaskResponse deployTaskResponse = resizeVirtualMachineScaleSet(
-          azureConfig, deployTaskParameters, newVirtualMachineScaleSetName, oldVirtualMachineScaleSetName);
-
+      AzureVMSSDeployTaskResponse deployTaskResponse = resizeVirtualMachineScaleSet(azureConfig, deployTaskParameters);
       return logAndGenerateSuccessResponse(deployTaskResponse, deployTaskParameters);
     } catch (Exception ex) {
       return logAndGenerateSFailureResponse(ex, deployTaskParameters);
     }
+  }
+
+  protected AzureVMSSResizeDetail getScaleSetDetailsForUpSizing(AzureVMSSDeployTaskParameters deployTaskParameters) {
+    String scaleSetNameForUpSize = deployTaskParameters.getNewVirtualMachineScaleSetName();
+    int currentDesiredCountForUpSize =
+        deployTaskParameters.getNewDesiredCount() != null ? deployTaskParameters.getNewDesiredCount() : 0;
+    List<String> baseScalingPolicyJSONs = deployTaskParameters.getBaseScalingPolicyJSONs();
+    int desiredInstances = deployTaskParameters.getDesiredInstances();
+    boolean attachScalingPolicy = currentDesiredCountForUpSize >= desiredInstances;
+
+    return AzureVMSSResizeDetail.builder()
+        .scaleSetName(scaleSetNameForUpSize)
+        .desiredCount(currentDesiredCountForUpSize)
+        .scalingPolicyJSONs(baseScalingPolicyJSONs)
+        .attachScalingPolicy(attachScalingPolicy)
+        .build();
+  }
+
+  protected AzureVMSSResizeDetail getScaleSetDetailsForDownSizing(AzureVMSSDeployTaskParameters deployTaskParameters) {
+    String scaleSetNameForDownSize = deployTaskParameters.getOldVirtualMachineScaleSetName();
+    int desiredCountForDownSize =
+        deployTaskParameters.getOldDesiredCount() != null ? deployTaskParameters.getOldDesiredCount() : 0;
+    List<String> baseScalingPolicyJSONs = deployTaskParameters.getPreDeploymentData().getScalingPolicyJSON();
+    return AzureVMSSResizeDetail.builder()
+        .scaleSetName(scaleSetNameForDownSize)
+        .desiredCount(desiredCountForDownSize)
+        .scalingPolicyJSONs(baseScalingPolicyJSONs)
+        .attachScalingPolicy(false)
+        .build();
   }
 
   protected Optional<VirtualMachineScaleSet> getScaleSet(
@@ -64,35 +88,19 @@ public class AzureVMSSDeployTaskHandler extends AzureVMSSTaskHandler {
         deployTaskParameters.getResourceGroupName(), scaleSetName);
   }
 
-  private AzureVMSSDeployTaskResponse resizeVirtualMachineScaleSet(AzureConfig azureConfig,
-      AzureVMSSDeployTaskParameters deployTaskParameters, String newVirtualMachineScaleSetName,
-      String oldVirtualMachineScaleSetName) {
-    int newDesiredCount =
-        deployTaskParameters.getNewDesiredCount() != null ? deployTaskParameters.getNewDesiredCount() : 0;
-    List<String> baseScaleSetScalingPolicyJSONs = deployTaskParameters.getBaseScalingPolicyJSONs();
-
-    int oldDesiredCount =
-        deployTaskParameters.getOldDesiredCount() != null ? deployTaskParameters.getOldDesiredCount() : 0;
-    List<String> oldActiveScaleSetScalingPolicyJSONs =
-        deployTaskParameters.getPreDeploymentData().getScalingPolicyJSON();
-
+  private AzureVMSSDeployTaskResponse resizeVirtualMachineScaleSet(
+      AzureConfig azureConfig, AzureVMSSDeployTaskParameters deployTaskParameters) {
     if (deployTaskParameters.isResizeNewFirst()) {
-      resizeScaleSet(azureConfig, deployTaskParameters, UP_SCALE_COMMAND_UNIT, UP_SCALE_STEADY_STATE_WAIT_COMMAND_UNIT,
-          newVirtualMachineScaleSetName, newDesiredCount, baseScaleSetScalingPolicyJSONs);
-      resizeScaleSet(azureConfig, deployTaskParameters, DOWN_SCALE_COMMAND_UNIT,
-          DOWN_SCALE_STEADY_STATE_WAIT_COMMAND_UNIT, oldVirtualMachineScaleSetName, oldDesiredCount,
-          oldActiveScaleSetScalingPolicyJSONs);
+      upSizeScaleSet(azureConfig, deployTaskParameters);
+      downSizeScaleSet(azureConfig, deployTaskParameters);
     } else {
-      resizeScaleSet(azureConfig, deployTaskParameters, DOWN_SCALE_COMMAND_UNIT,
-          DOWN_SCALE_STEADY_STATE_WAIT_COMMAND_UNIT, oldVirtualMachineScaleSetName, oldDesiredCount,
-          oldActiveScaleSetScalingPolicyJSONs);
-      resizeScaleSet(azureConfig, deployTaskParameters, UP_SCALE_COMMAND_UNIT, UP_SCALE_STEADY_STATE_WAIT_COMMAND_UNIT,
-          newVirtualMachineScaleSetName, newDesiredCount, baseScaleSetScalingPolicyJSONs);
+      downSizeScaleSet(azureConfig, deployTaskParameters);
+      upSizeScaleSet(azureConfig, deployTaskParameters);
     }
     List<AzureVMInstanceData> instancesAdded =
-        getInstances(azureConfig, newVirtualMachineScaleSetName, deployTaskParameters);
+        getInstances(azureConfig, deployTaskParameters.getNewVirtualMachineScaleSetName(), deployTaskParameters);
     List<AzureVMInstanceData> existingInstancesForOldScaleSet =
-        getInstances(azureConfig, oldVirtualMachineScaleSetName, deployTaskParameters);
+        getInstances(azureConfig, deployTaskParameters.getOldVirtualMachineScaleSetName(), deployTaskParameters);
 
     return AzureVMSSDeployTaskResponse.builder()
         .vmInstancesAdded(instancesAdded)
@@ -100,20 +108,35 @@ public class AzureVMSSDeployTaskHandler extends AzureVMSSTaskHandler {
         .build();
   }
 
+  private void upSizeScaleSet(AzureConfig azureConfig, AzureVMSSDeployTaskParameters deployTaskParameters) {
+    AzureVMSSResizeDetail scaleSetDetailsForUpSize = getScaleSetDetailsForUpSizing(deployTaskParameters);
+    resizeScaleSet(azureConfig, deployTaskParameters, UP_SCALE_COMMAND_UNIT, UP_SCALE_STEADY_STATE_WAIT_COMMAND_UNIT,
+        scaleSetDetailsForUpSize);
+  }
+
+  private void downSizeScaleSet(AzureConfig azureConfig, AzureVMSSDeployTaskParameters deployTaskParameters) {
+    AzureVMSSResizeDetail scaleSetDetailsForDownSizing = getScaleSetDetailsForDownSizing(deployTaskParameters);
+    resizeScaleSet(azureConfig, deployTaskParameters, DOWN_SCALE_COMMAND_UNIT,
+        DOWN_SCALE_STEADY_STATE_WAIT_COMMAND_UNIT, scaleSetDetailsForDownSizing);
+  }
+
   private void resizeScaleSet(AzureConfig azureConfig, AzureVMSSDeployTaskParameters deployTaskParameters,
-      String scaleCommandUnit, String waitCommandUnit, String scaleSetName, int desiredCount,
-      List<String> scalingPolicyJSONs) {
+      String scaleCommandUnit, String waitCommandUnit, AzureVMSSResizeDetail azureVMSSResizeDetail) {
+    String scaleSetName = azureVMSSResizeDetail.getScaleSetName();
     Optional<VirtualMachineScaleSet> scaleSet = getScaleSet(azureConfig, deployTaskParameters, scaleSetName);
     if (!scaleSet.isPresent()) {
       handleNonPresenceOfScaleSet(deployTaskParameters, scaleSetName, scaleCommandUnit, waitCommandUnit);
       return;
     }
+
     VirtualMachineScaleSet virtualMachineScaleSet = scaleSet.get();
+    int desiredCount = azureVMSSResizeDetail.getDesiredCount();
     ExecutionLogCallback logCallBack = getLogCallBack(deployTaskParameters, scaleCommandUnit);
+
     clearScalingPolicy(azureConfig, virtualMachineScaleSet, deployTaskParameters, logCallBack);
     updateScaleSetCapacity(
         azureConfig, deployTaskParameters, scaleSetName, desiredCount, scaleCommandUnit, waitCommandUnit);
-    attachScalingPolicy(azureConfig, virtualMachineScaleSet, deployTaskParameters, scalingPolicyJSONs);
+    attachScalingPolicy(azureConfig, virtualMachineScaleSet, deployTaskParameters, azureVMSSResizeDetail);
   }
 
   private void clearScalingPolicy(AzureConfig azureConfig, VirtualMachineScaleSet scaleSet,
@@ -138,12 +161,17 @@ public class AzureVMSSDeployTaskHandler extends AzureVMSSTaskHandler {
   }
 
   private void attachScalingPolicy(AzureConfig azureConfig, VirtualMachineScaleSet scaleSet,
-      AzureVMSSDeployTaskParameters deployTaskParameters, List<String> scalingPolicyJSONs) {
+      AzureVMSSDeployTaskParameters deployTaskParameters, AzureVMSSResizeDetail azureVMSSResizeDetail) {
+    if (!azureVMSSResizeDetail.isAttachScalingPolicy()) {
+      return;
+    }
+
     String scaleSetId = scaleSet.id();
     String resourceGroupName = deployTaskParameters.getResourceGroupName();
     String minimum = String.valueOf(deployTaskParameters.getMinInstances());
     String maximum = String.valueOf(deployTaskParameters.getMaxInstances());
     String desired = String.valueOf(deployTaskParameters.getDesiredInstances());
+    List<String> scalingPolicyJSONs = azureVMSSResizeDetail.getScalingPolicyJSONs();
     ScaleCapacity capacity = new ScaleCapacity();
     capacity.withMinimum(minimum).withMinimum(maximum).withDefaultProperty(desired);
 

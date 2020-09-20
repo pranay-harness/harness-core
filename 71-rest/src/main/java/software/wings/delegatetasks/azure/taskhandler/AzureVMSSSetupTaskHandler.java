@@ -13,7 +13,6 @@ import static io.harness.azure.model.AzureConstants.VMSS_AUTH_TYPE_SSH_PUBLIC_KE
 import static io.harness.azure.model.AzureConstants.VMSS_CREATED_TIME_STAMP_TAG_NAME;
 import static io.harness.azure.utility.AzureResourceUtility.getRevisionFromTag;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.logging.CommandExecutionStatus.FAILURE;
 import static io.harness.logging.CommandExecutionStatus.SUCCESS;
 import static io.harness.logging.LogLevel.ERROR;
 import static io.harness.logging.LogLevel.INFO;
@@ -65,13 +64,6 @@ public class AzureVMSSSetupTaskHandler extends AzureVMSSTaskHandler {
   @Override
   protected AzureVMSSTaskExecutionResponse executeTaskInternal(
       AzureVMSSTaskParameters azureVMSSTaskParameters, AzureConfig azureConfig) {
-    if (!(azureVMSSTaskParameters instanceof AzureVMSSSetupTaskParameters)) {
-      String message = format("Parameters of unrecognized class: [%s] found while executing setup step.",
-          azureVMSSTaskParameters.getClass().getSimpleName());
-      logger.error(message);
-      return AzureVMSSTaskExecutionResponse.builder().commandExecutionStatus(FAILURE).errorMessage(message).build();
-    }
-
     AzureVMSSSetupTaskParameters setupTaskParameters = (AzureVMSSSetupTaskParameters) azureVMSSTaskParameters;
     ExecutionLogCallback logCallback = getLogCallBack(azureVMSSTaskParameters, SETUP_COMMAND_UNIT);
 
