@@ -21,6 +21,7 @@ import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import software.wings.beans.command.ExecutionLogCallback;
 
+import java.util.List;
 import java.util.Optional;
 
 @Singleton
@@ -32,19 +33,52 @@ public class AzureVMSSRollbackTaskHandler extends AzureVMSSDeployTaskHandler {
       final AzureVMSSTaskParameters azureVMSSTaskParameters, final AzureConfig azureConfig) {
     AzureVMSSDeployTaskParameters deployTaskParameters = (AzureVMSSDeployTaskParameters) azureVMSSTaskParameters;
     try {
-      deployTaskParameters.setResizeNewFirst(false);
-      AzureVMSSTaskExecutionResponse azureVMSSTaskExecutionResponse =
-          super.executeTaskInternal(deployTaskParameters, azureConfig);
-      if (isSuccess(azureVMSSTaskExecutionResponse)) {
-        deleteNewScaleSetIfPresent(azureConfig, deployTaskParameters);
-      }
-      return azureVMSSTaskExecutionResponse;
+      AzureVMSSTaskExecutionResponse response = performRollBack(azureConfig, deployTaskParameters);
+      deleteNewScaleSet(azureConfig, deployTaskParameters, response);
+      return response;
     } catch (Exception ex) {
       return rollBackFailureResponse(deployTaskParameters, ex);
     }
   }
 
-  private void deleteNewScaleSetIfPresent(AzureConfig azureConfig, AzureVMSSDeployTaskParameters deployTaskParameters) {
+  @Override
+  protected AzureVMSSResizeDetail getScaleSetDetailsForUpSizing(AzureVMSSDeployTaskParameters deployTaskParameters) {
+    String scaleSetNameForUpSize = deployTaskParameters.getOldVirtualMachineScaleSetName();
+    int desiredCountForUpSize = deployTaskParameters.getPreDeploymentData().getDesiredCapacity();
+    List<String> baseScalingPolicyJSONs = deployTaskParameters.getPreDeploymentData().getScalingPolicyJSON();
+    return AzureVMSSResizeDetail.builder()
+        .scaleSetName(scaleSetNameForUpSize)
+        .desiredCount(desiredCountForUpSize)
+        .scalingPolicyJSONs(baseScalingPolicyJSONs)
+        .attachScalingPolicy(true)
+        .build();
+  }
+
+  @Override
+  protected AzureVMSSResizeDetail getScaleSetDetailsForDownSizing(AzureVMSSDeployTaskParameters deployTaskParameters) {
+    String scaleSetNameForDownSize = deployTaskParameters.getNewVirtualMachineScaleSetName();
+    int desiredCountForDownSize = 0;
+    List<String> baseScalingPolicyJSONs = deployTaskParameters.getBaseScalingPolicyJSONs();
+    return AzureVMSSResizeDetail.builder()
+        .scaleSetName(scaleSetNameForDownSize)
+        .desiredCount(desiredCountForDownSize)
+        .scalingPolicyJSONs(baseScalingPolicyJSONs)
+        .attachScalingPolicy(false)
+        .build();
+  }
+
+  private AzureVMSSTaskExecutionResponse performRollBack(
+      AzureConfig azureConfig, AzureVMSSDeployTaskParameters deployTaskParameters) {
+    deployTaskParameters.setResizeNewFirst(true);
+    return super.executeTaskInternal(deployTaskParameters, azureConfig);
+  }
+
+  private void deleteNewScaleSet(AzureConfig azureConfig, AzureVMSSDeployTaskParameters deployTaskParameters,
+      AzureVMSSTaskExecutionResponse response) {
+    if (rollBackFailed(response)) {
+      return;
+    }
+
     Optional<VirtualMachineScaleSet> scaleSet =
         getScaleSet(azureConfig, deployTaskParameters, deployTaskParameters.getNewVirtualMachineScaleSetName());
 
@@ -57,8 +91,8 @@ public class AzureVMSSRollbackTaskHandler extends AzureVMSSDeployTaskHandler {
     }
   }
 
-  private boolean isSuccess(AzureVMSSTaskExecutionResponse azureVMSSTaskExecutionResponse) {
-    return azureVMSSTaskExecutionResponse.getCommandExecutionStatus() == SUCCESS;
+  private boolean rollBackFailed(AzureVMSSTaskExecutionResponse azureVMSSTaskExecutionResponse) {
+    return azureVMSSTaskExecutionResponse.getCommandExecutionStatus() == FAILURE;
   }
 
   private AzureVMSSTaskExecutionResponse rollBackFailureResponse(

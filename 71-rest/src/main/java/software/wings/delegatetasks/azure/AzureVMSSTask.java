@@ -1,5 +1,7 @@
 package software.wings.delegatetasks.azure;
 
+import static io.harness.azure.model.AzureConstants.UNRECOGNIZED_PARAMETERS;
+import static io.harness.azure.model.AzureConstants.UNRECOGNIZED_TASK;
 import static io.harness.logging.CommandExecutionStatus.FAILURE;
 import static java.lang.String.format;
 
@@ -56,8 +58,7 @@ public class AzureVMSSTask extends AbstractDelegateRunnableTask {
   @Override
   public AzureVMSSTaskExecutionResponse run(TaskParameters parameters) {
     if (!(parameters instanceof AzureVMSSCommandRequest)) {
-      String message =
-          format("Unrecognized task params while running azure vmss task: [%s]", parameters.getClass().getSimpleName());
+      String message = format(UNRECOGNIZED_TASK, parameters.getClass().getSimpleName());
       logger.error(message);
       return AzureVMSSTaskExecutionResponse.builder().commandExecutionStatus(FAILURE).errorMessage(message).build();
     }
@@ -72,19 +73,16 @@ public class AzureVMSSTask extends AbstractDelegateRunnableTask {
     } else {
       switch (azureVMSSTaskParameters.getCommandType()) {
         case AZURE_VMSS_SETUP: {
+          if (!(azureVMSSTaskParameters instanceof AzureVMSSSetupTaskParameters)) {
+            return failureResponse(azureVMSSTaskParameters);
+          }
           handler = setupTaskHandler;
           break;
         }
 
         case AZURE_VMSS_DEPLOY: {
           if (!(azureVMSSTaskParameters instanceof AzureVMSSDeployTaskParameters)) {
-            String message = format("Parameters of unrecognized class: [%s] found while executing deploy step",
-                azureVMSSTaskParameters.getClass().getSimpleName());
-            logger.error(message);
-            return AzureVMSSTaskExecutionResponse.builder()
-                .commandExecutionStatus(FAILURE)
-                .errorMessage(message)
-                .build();
+            return failureResponse(azureVMSSTaskParameters);
           }
           AzureVMSSDeployTaskParameters deployTaskParameters = (AzureVMSSDeployTaskParameters) azureVMSSTaskParameters;
           handler = deployTaskParameters.isRollback() ? rollbackTaskHandler : deployTaskHandler;
@@ -93,22 +91,14 @@ public class AzureVMSSTask extends AbstractDelegateRunnableTask {
 
         case AZURE_VMSS_SWITCH_ROUTE: {
           if (!(azureVMSSTaskParameters instanceof AzureVMSSSwitchRouteTaskParameters)) {
-            String message = format("Parameters of unrecognized class: [%s] found while executing deploy step",
-                azureVMSSTaskParameters.getClass().getSimpleName());
-            logger.error(message);
-            return AzureVMSSTaskExecutionResponse.builder()
-                .commandExecutionStatus(FAILURE)
-                .errorMessage(message)
-                .build();
+            return failureResponse(azureVMSSTaskParameters);
           }
-
           handler = switchRouteTaskHandler;
           break;
         }
 
         default: {
-          String message = format("Unrecognized task params type running azure vmss task: [%s].",
-              azureVMSSTaskParameters.getCommandType().name());
+          String message = format(UNRECOGNIZED_TASK, azureVMSSTaskParameters.getCommandType().name());
           logger.error(message);
           return AzureVMSSTaskExecutionResponse.builder().commandExecutionStatus(FAILURE).errorMessage(message).build();
         }
@@ -151,5 +141,11 @@ public class AzureVMSSTask extends AbstractDelegateRunnableTask {
         setupTaskParameters.setPassword(String.valueOf(azureVMAuthDTO.getKey()));
       }
     }
+  }
+
+  private AzureVMSSTaskExecutionResponse failureResponse(AzureVMSSTaskParameters azureVMSSTaskParameters) {
+    String message = format(UNRECOGNIZED_PARAMETERS, azureVMSSTaskParameters.getClass().getSimpleName());
+    logger.error(message);
+    return AzureVMSSTaskExecutionResponse.builder().commandExecutionStatus(FAILURE).errorMessage(message).build();
   }
 }

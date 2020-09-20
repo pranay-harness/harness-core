@@ -92,4 +92,6 @@ public interface AzureConstants {
   String OLD_VMSS_NAME_NULL_VALIDATION_MSG = "Parameter oldVMSSName is required and cannot be null";
   String AZURE_LOAD_BALANCER_DETAIL_NULL_VALIDATION_MSG =
       "Parameter azureLoadBalancerDetail is required and cannot be null";
+  String UNRECOGNIZED_PARAMETERS = "Parameters of unrecognized class: [%s] found while executing deploy step.";
+  String UNRECOGNIZED_TASK = "Unrecognized task params while running azure vmss task: [%s]";
 }

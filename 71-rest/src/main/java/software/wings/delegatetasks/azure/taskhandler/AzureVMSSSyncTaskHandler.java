@@ -198,7 +198,7 @@ public class AzureVMSSSyncTaskHandler extends AzureVMSSTaskHandler {
   @NotNull
   private Function<VirtualMachineScaleSetVM, AzureVMData> toVMData() {
     return vm -> {
-      String id = vm.id();
+      String id = vm.inner().id();
       Optional<PublicIPAddressInner> publicIPAddressOp = azureComputeClient.getVMPublicIPAddress(vm);
       String publicIp = publicIPAddressOp.map(PublicIPAddressInner::ipAddress).orElse(EMPTY);
       String publicDnsName =

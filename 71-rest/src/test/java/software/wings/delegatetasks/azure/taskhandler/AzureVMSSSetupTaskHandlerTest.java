@@ -4,7 +4,6 @@ import static io.harness.azure.model.AzureConstants.HARNESS_AUTOSCALING_GROUP_TA
 import static io.harness.azure.model.AzureConstants.VMSS_AUTH_TYPE_SSH_PUBLIC_KEY;
 import static io.harness.azure.model.AzureConstants.VMSS_CREATED_TIME_STAMP_TAG_NAME;
 import static io.harness.delegate.task.azure.request.AzureVMSSTaskParameters.AzureVMSSTaskType.AZURE_VMSS_SETUP;
-import static io.harness.logging.CommandExecutionStatus.FAILURE;
 import static io.harness.rule.OwnerRule.IVAN;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
@@ -32,9 +31,7 @@ import io.harness.azure.model.AzureConfig;
 import io.harness.azure.model.AzureUserAuthVMInstanceData;
 import io.harness.azure.utility.AzureResourceUtility;
 import io.harness.category.element.UnitTests;
-import io.harness.delegate.task.azure.request.AzureVMSSDeployTaskParameters;
 import io.harness.delegate.task.azure.request.AzureVMSSSetupTaskParameters;
-import io.harness.delegate.task.azure.request.AzureVMSSTaskParameters;
 import io.harness.delegate.task.azure.response.AzureVMSSSetupTaskResponse;
 import io.harness.delegate.task.azure.response.AzureVMSSTaskExecutionResponse;
 import io.harness.delegate.task.azure.response.AzureVMSSTaskResponse;
@@ -246,19 +243,5 @@ public class AzureVMSSSetupTaskHandlerTest extends WingsBaseTest {
     assertThat(setupResponse.getPreDeploymentData().getOldVmssName()).isEqualTo("mostRecentActiveVMSSName");
     assertThat(setupResponse.getPreDeploymentData().getScalingPolicyJSON())
         .isEqualTo(Collections.singletonList("{mostRecentScalingPolicies: {...}}"));
-  }
-
-  @Test
-  @Owner(developers = IVAN)
-  @Category(UnitTests.class)
-  public void testExecuteTaskInternalWithNotValidRequest() throws Exception {
-    AzureConfig azureConfig = AzureConfig.builder().build();
-    AzureVMSSTaskParameters azureVMSSDeployTaskParameters = AzureVMSSDeployTaskParameters.builder().build();
-
-    AzureVMSSTaskExecutionResponse response =
-        azureVMSSSetupTaskHandler.executeTaskInternal(azureVMSSDeployTaskParameters, azureConfig);
-    assertThat(response).isNotNull();
-    assertThat(response.getCommandExecutionStatus()).isEqualTo(FAILURE);
-    assertThat(response.getErrorMessage()).isNotNull();
   }
 }
