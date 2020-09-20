@@ -183,7 +183,7 @@ public class GraphQLRule implements MethodRule, InjectorRuleMixin, MongoRuleMixi
       cacheConfigBuilder.cacheBackend(NOOP);
     }
     CacheModule cacheModule = new CacheModule(cacheConfigBuilder.build());
-    modules.addAll(0, cacheModule.cumulativeDependencies());
+    modules.add(0, cacheModule);
 
     modules.add(new AbstractModule() {
       @Override
