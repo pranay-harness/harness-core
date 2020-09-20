@@ -16,18 +16,12 @@ import org.bson.BsonDocumentReader;
 import org.bson.Document;
 import org.bson.codecs.Codec;
 import org.bson.codecs.DecoderContext;
-import org.mongodb.morphia.AdvancedDatastore;
-import org.mongodb.morphia.mapping.Mapper;
-import org.mongodb.morphia.mapping.cache.EntityCache;
 import software.wings.dl.WingsPersistence;
-import software.wings.search.framework.SearchEntityUtils;
 import software.wings.search.framework.changestreams.ChangeEvent.ChangeEventBuilder;
 
 @OwnedBy(PL)
 class ChangeEventFactory {
   @Inject private WingsPersistence wingsPersistence;
-  private static final Mapper mapper = SearchEntityUtils.getMapper();
-  private static final EntityCache entityCache = SearchEntityUtils.getEntityCache();
 
   private static Document convertBsonDocumentToDocument(BsonDocument bsonDocument) {
     Codec<Document> codec = MongoClient.getDefaultCodecRegistry().get(Document.class);
@@ -57,14 +51,9 @@ class ChangeEventFactory {
     return convertBsonDocumentToDBObject(changesBsonDocument);
   }
 
-  private <T extends PersistentEntity> T convertToEntity(DBObject dbObject, Class<T> entityClass) {
-    AdvancedDatastore advancedDatastore = wingsPersistence.getDatastore(entityClass);
-    return mapper.fromDBObject(advancedDatastore, entityClass, dbObject, entityCache);
-  }
-
   private <T extends PersistentEntity> ChangeEvent<T> buildInsertChangeEvent(
       ChangeEventBuilder<T> changeEventBuilder, DBObject fullDocument, Class<T> entityClass) {
-    T entityObject = convertToEntity(fullDocument, entityClass);
+    T entityObject = wingsPersistence.convertToEntity(entityClass, fullDocument);
     changeEventBuilder.fullDocument(entityObject);
     changeEventBuilder.changes(null);
     changeEventBuilder.changeType(ChangeType.INSERT);
@@ -73,7 +62,7 @@ class ChangeEventFactory {
 
   private <T extends PersistentEntity> ChangeEvent<T> buildUpdateChangeEvent(ChangeEventBuilder<T> changeEventBuilder,
       ChangeStreamDocument<DBObject> changeStreamDocument, Class<T> entityClass) {
-    T fullDocument = convertToEntity(changeStreamDocument.getFullDocument(), entityClass);
+    T fullDocument = wingsPersistence.convertToEntity(entityClass, changeStreamDocument.getFullDocument());
     DBObject dbObject = getChangeDocumentfromChangeStream(changeStreamDocument);
     changeEventBuilder.fullDocument(fullDocument);
     changeEventBuilder.changes(dbObject);

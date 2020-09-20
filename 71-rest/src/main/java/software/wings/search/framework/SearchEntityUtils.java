@@ -11,11 +11,8 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.mongo.HObjectFactory;
 import lombok.experimental.UtilityClass;
 import lombok.extern.slf4j.Slf4j;
-import org.mongodb.morphia.mapping.Mapper;
-import org.mongodb.morphia.mapping.cache.EntityCache;
 
 import java.util.Collections;
 import java.util.List;
@@ -36,19 +33,6 @@ import java.util.concurrent.TimeUnit;
 @UtilityClass
 @Slf4j
 public final class SearchEntityUtils {
-  private static final Mapper mapper = new Mapper();
-  private static final EntityCache entityCache = new NoopEntityCache();
-  private static final HObjectFactory hObjectFactory = new HObjectFactory();
-
-  public static Mapper getMapper() {
-    mapper.getOptions().setObjectFactory(hObjectFactory);
-    return mapper;
-  }
-
-  public static EntityCache getEntityCache() {
-    return entityCache;
-  }
-
   static String mergeSettings(String baseSettingsString, String entitySettingsString) {
     JsonObject entitySettings = new JsonParser().parse(entitySettingsString).getAsJsonObject();
     JsonObject baseSettings = new JsonParser().parse(baseSettingsString).getAsJsonObject();

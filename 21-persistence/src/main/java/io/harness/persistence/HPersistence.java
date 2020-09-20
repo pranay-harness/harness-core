@@ -1,6 +1,7 @@
 package io.harness.persistence;
 
 import com.mongodb.DBCollection;
+import com.mongodb.DBObject;
 import com.mongodb.MongoSocketOpenException;
 import com.mongodb.MongoSocketReadException;
 import io.harness.annotation.StoreIn;
@@ -163,6 +164,14 @@ public interface HPersistence extends HealthMonitor {
    * @return the update operations
    */
   <T extends PersistentEntity> UpdateOperations<T> createUpdateOperations(Class<T> cls);
+
+  /**
+   * Convert DBObject to java entity.
+   *
+   * @param cls the cls
+   * @return the update operations
+   */
+  <T extends PersistentEntity> T convertToEntity(Class<T> cls, DBObject dbObject);
 
   /**
    * Save.
