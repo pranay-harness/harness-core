@@ -206,7 +206,7 @@ public class WingsRule implements MethodRule, InjectorRuleMixin, MongoRuleMixin 
       cacheConfigBuilder.cacheBackend(NOOP);
     }
     CacheModule cacheModule = new CacheModule(cacheConfigBuilder.build());
-    modules.addAll(0, cacheModule.cumulativeDependencies());
+    modules.add(0, cacheModule);
 
     injector = Guice.createInjector(modules);
     registerListeners(annotations.stream().filter(Listeners.class ::isInstance).findFirst());

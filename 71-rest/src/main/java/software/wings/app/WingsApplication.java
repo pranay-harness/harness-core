@@ -363,7 +363,7 @@ public class WingsApplication extends Application<MainConfiguration> {
                                             .buildValidatorFactory();
 
     CacheModule cacheModule = new CacheModule(configuration.getCacheConfig());
-    modules.addAll(cacheModule.cumulativeDependencies());
+    modules.add(cacheModule);
     modules.add(new ProviderModule() {
       @Provides
       @Singleton

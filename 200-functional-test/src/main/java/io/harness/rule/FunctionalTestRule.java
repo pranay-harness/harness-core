@@ -229,7 +229,7 @@ public class FunctionalTestRule implements MethodRule, InjectorRuleMixin, MongoR
                                                   .disabledCaches(new HashSet<>())
                                                   .cacheNamespace("harness-cache")
                                                   .build());
-    modules.addAll(0, cacheModule.cumulativeDependencies());
+    modules.add(0, cacheModule);
 
     modules.add(new AbstractModule() {
       @Override

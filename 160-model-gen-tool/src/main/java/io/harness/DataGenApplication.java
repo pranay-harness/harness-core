@@ -129,7 +129,7 @@ public class DataGenApplication extends Application<MainConfiguration> {
                                             .buildValidatorFactory();
 
     CacheModule cacheModule = new CacheModule(CacheConfig.builder().cacheBackend(NOOP).build());
-    modules.addAll(cacheModule.cumulativeDependencies());
+    modules.add(cacheModule);
     modules.add(new ProviderModule() {
       @Provides
       @Singleton

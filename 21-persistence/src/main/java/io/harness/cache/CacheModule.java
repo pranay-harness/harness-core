@@ -5,6 +5,7 @@ import static io.harness.cache.CacheBackend.REDIS;
 import static javax.cache.Caching.getCachingProvider;
 
 import com.google.common.io.Files;
+import com.google.inject.AbstractModule;
 import com.google.inject.Injector;
 import com.google.inject.Provider;
 import com.google.inject.Provides;
@@ -17,7 +18,6 @@ import com.google.inject.name.Named;
 import com.hazelcast.cache.HazelcastCachingProvider;
 import com.hazelcast.core.HazelcastInstance;
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.govern.DependencyModule;
 import io.harness.govern.ServersModule;
 import io.harness.hazelcast.HazelcastModule;
 import io.harness.redis.RedissonKryoCodec;
@@ -41,7 +41,6 @@ import java.nio.charset.StandardCharsets;
 import java.util.Collections;
 import java.util.List;
 import java.util.Properties;
-import java.util.Set;
 import java.util.function.Function;
 import java.util.function.Supplier;
 import javax.cache.Cache;
@@ -114,7 +113,7 @@ import javax.cache.spi.CachingProvider;
  */
 @OwnedBy(PL)
 @Slf4j
-public class CacheModule extends DependencyModule implements ServersModule {
+public class CacheModule extends AbstractModule implements ServersModule {
   private static final String CACHING_PROVIDER_CLASSPATH = "javax.cache.spi.CachingProvider";
   private CacheManager cacheManager;
   private CacheConfig cacheConfig;
@@ -223,11 +222,6 @@ public class CacheModule extends DependencyModule implements ServersModule {
     requestInjection(cacheRemoveAllInterceptor);
     bindInterceptor(Matchers.annotatedWith(CacheRemoveAll.class), Matchers.any(), cacheRemoveAllInterceptor);
     bindInterceptor(Matchers.any(), Matchers.annotatedWith(CacheRemoveAll.class), cacheRemoveAllInterceptor);
-  }
-
-  @Override
-  public Set<DependencyModule> dependencies() {
-    return Collections.emptySet();
   }
 
   @Override
