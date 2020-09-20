@@ -45,8 +45,14 @@ public class DelegateProfileManagerServiceImpl implements DelegateProfileManager
 
   @Override
   public DelegateProfileDetails get(String accountId, String delegateProfileId) {
-    logger.info("Get delegate profile");
-    throw new UnsupportedOperationException("not implemented");
+    DelegateProfileGrpc delegateProfileGrpc = delegateProfileServiceGrpcClient.getProfile(
+        AccountId.newBuilder().setId(accountId).build(), ProfileId.newBuilder().setId(delegateProfileId).build());
+
+    if (delegateProfileGrpc == null) {
+      return null;
+    }
+
+    return convert(delegateProfileGrpc);
   }
 
   @Override

@@ -54,9 +54,26 @@ public class DelegateProfileManagerServiceTest extends WingsBaseTest {
   @Owner(developers = OwnerRule.SANJA)
   @Category(UnitTests.class)
   public void shouldGet() {
-    thrown.expect(UnsupportedOperationException.class);
-    thrown.expectMessage("not implemented");
-    delegateProfileManagerService.get(ACCOUNT_ID, DELEGATE_PROFILE_ID);
+    DelegateProfileGrpc delegateProfileGrpc = DelegateProfileGrpc.newBuilder()
+                                                  .setAccountId(AccountId.newBuilder().setId(generateUuid()).build())
+                                                  .setProfileId(ProfileId.newBuilder().setId(generateUuid()).build())
+                                                  .build();
+
+    when(delegateProfileServiceGrpcClient.getProfile(any(AccountId.class), any(ProfileId.class)))
+        .thenReturn(null)
+        .thenReturn(delegateProfileGrpc);
+
+    DelegateProfileDetails updatedDelegateProfileDetails =
+        delegateProfileManagerService.get(ACCOUNT_ID, delegateProfileGrpc.getProfileId().getId());
+    Assertions.assertThat(updatedDelegateProfileDetails).isNull();
+
+    updatedDelegateProfileDetails =
+        delegateProfileManagerService.get(ACCOUNT_ID, delegateProfileGrpc.getProfileId().getId());
+    Assertions.assertThat(updatedDelegateProfileDetails).isNotNull();
+    Assertions.assertThat(updatedDelegateProfileDetails.getUuid())
+        .isEqualTo(delegateProfileGrpc.getProfileId().getId());
+    Assertions.assertThat(updatedDelegateProfileDetails.getAccountId())
+        .isEqualTo(delegateProfileGrpc.getAccountId().getId());
   }
 
   @Test
