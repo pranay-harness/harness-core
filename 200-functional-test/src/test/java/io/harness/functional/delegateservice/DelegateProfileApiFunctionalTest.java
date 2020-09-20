@@ -2,6 +2,7 @@ package io.harness.functional.delegateservice;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.rule.OwnerRule.MARKO;
+import static io.harness.rule.OwnerRule.VUK;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.google.inject.Inject;
@@ -69,5 +70,27 @@ public class DelegateProfileApiFunctionalTest extends AbstractFunctionalTest {
         .containsExactlyInAnyOrder("env1", "env2");
     assertThat(updateScopingRulesRestResponse.getResource().getScopingRules().get(0).getServiceIds())
         .containsExactlyInAnyOrder("srv1", "srv2");
+  }
+
+  @Test
+  @Owner(developers = VUK)
+  @Category(FunctionalTests.class)
+  public void testGetProfile() {
+    String delegateProfileId =
+        wingsPersistence.save(DelegateProfile.builder().accountId(getAccount().getUuid()).name(generateUuid()).build());
+
+    // Get profile
+    RestResponse<DelegateProfileDetails> updateScopingRulesRestResponse =
+        Setup.portal()
+            .auth()
+            .oauth2(bearerToken)
+            .pathParam(DelegateKeys.delegateProfileId, delegateProfileId)
+            .queryParam(DelegateKeys.accountId, getAccount().getUuid())
+            .get("/delegate-profiles/v2/{delegateProfileId}")
+            .as(new GenericType<RestResponse<DelegateProfileDetails>>() {}.getType());
+
+    assertThat(updateScopingRulesRestResponse.getResource()).isNotNull();
+    assertThat(updateScopingRulesRestResponse.getResource().getUuid()).isEqualTo(delegateProfileId);
+    assertThat(updateScopingRulesRestResponse.getResource().getAccountId()).isEqualTo(getAccount().getUuid());
   }
 }
