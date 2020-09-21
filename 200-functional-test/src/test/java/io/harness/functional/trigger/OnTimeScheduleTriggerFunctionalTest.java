@@ -72,7 +72,7 @@ public class OnTimeScheduleTriggerFunctionalTest extends AbstractFunctionalTest 
   }
 
   @Test
-  @Owner(developers = MILAN)
+  @Owner(developers = MILAN, intermittent = true)
   @Category(FunctionalTests.class)
   public void shouldCRUDTrigger() {
     // CREATE
