@@ -592,11 +592,13 @@ public class YamlHandlerFactory {
         "AmiArtifactStream", "AmazonS3ArtifactStream", "AcrArtifactStream", "HelmChartSpecification",
         "EcsServiceSpecification", "PcfServiceSpecification", "LambdaSpecification", "UserDataSpecification",
         "EcsContainerTask", "KubernetesContainerTask", "ConfigFile", "SettingAttribute", "ServiceCommand",
-        "ManifestFile", "ApplicationManifest", "CustomArtifactStream", "AppDynamicsCVServiceConfiguration",
-        "CloudWatchCVServiceConfiguration", "NewRelicCVServiceConfiguration", "DatadogCVServiceConfiguration",
-        "DatadogLogCVConfiguration", "InstanaCVConfiguration", "PrometheusCVServiceConfiguration",
-        "BugsnagCVConfiguration", "ElkCVConfiguration", "LogsCVConfiguration", "AzureInfrastructureMapping",
-        "InfrastructureDefinition", "ShellScriptInfrastructureProvisioner", "Template");
+        "ManifestFile", "ApplicationManifest", "CustomArtifactStream", "APMCVServiceConfiguration",
+        "AppDynamicsCVServiceConfiguration", "CloudWatchCVServiceConfiguration", "NewRelicCVServiceConfiguration",
+        "DatadogCVServiceConfiguration", "DynaTraceCVServiceConfiguration", "DatadogLogCVConfiguration",
+        "InstanaCVConfiguration", "PrometheusCVServiceConfiguration", "StackDriverMetricCVConfiguration",
+        "BugsnagCVConfiguration", "ElkCVConfiguration", "LogsCVConfiguration", "SplunkCVConfiguration",
+        "StackdriverCVConfiguration", "AzureInfrastructureMapping", "InfrastructureDefinition",
+        "ShellScriptInfrastructureProvisioner", "Template");
   }
 
   private static List<String> obtainLeafEntitiesWithFeatureFlag() {
@@ -611,10 +613,11 @@ public class YamlHandlerFactory {
         "AmiArtifactStream", "AmazonS3ArtifactStream", "AcrArtifactStream", "HelmChartSpecification",
         "EcsServiceSpecification", "PcfServiceSpecification", "LambdaSpecification", "UserDataSpecification",
         "EcsContainerTask", "KubernetesContainerTask", "ConfigFile", "ServiceCommand", "ManifestFile",
-        "ApplicationManifest", "CustomArtifactStream", "AppDynamicsCVServiceConfiguration",
+        "ApplicationManifest", "CustomArtifactStream", "APMCVServiceConfiguration", "AppDynamicsCVServiceConfiguration",
         "CloudWatchCVServiceConfiguration", "NewRelicCVServiceConfiguration", "DatadogCVServiceConfiguration",
-        "DatadogLogCVConfiguration", "InstanaCVConfiguration", "PrometheusCVServiceConfiguration",
-        "BugsnagCVConfiguration", "ElkCVConfiguration", "LogsCVConfiguration", "AzureInfrastructureMapping",
-        "InfrastructureDefinition", "ShellScriptInfrastructureProvisioner", "Template");
+        "DynaTraceCVServiceConfiguration", "DatadogLogCVConfiguration", "InstanaCVConfiguration",
+        "PrometheusCVServiceConfiguration", "StackDriverMetricCVConfiguration", "BugsnagCVConfiguration",
+        "ElkCVConfiguration", "LogsCVConfiguration", "SplunkCVConfiguration", "StackdriverCVConfiguration",
+        "AzureInfrastructureMapping", "InfrastructureDefinition", "ShellScriptInfrastructureProvisioner", "Template");
   }
 }
