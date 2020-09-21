@@ -78,12 +78,13 @@ public class PipelineServiceValidator {
             workflowVariables.stream().filter(t -> t.getName().equals(variableName)).findFirst().orElse(null);
         if (workflowVar != null) {
           EntityType entityType = workflowVar.obtainEntityType();
-          if (entityType != null) {
-            if (!matchesVariablePattern(variable.getValue())) {
-              throw new InvalidRequestException(
-                  String.format("Variable %s is marked runtime but the value isnt a valid expression", variableName));
-            }
 
+          if (!matchesVariablePattern(variable.getValue())) {
+            throw new InvalidRequestException(
+                String.format("Variable %s is marked runtime but the value isnt a valid expression", variableName));
+          }
+
+          if (entityType != null) {
             if (EntityType.SERVICE != entityType && EntityType.INFRASTRUCTURE_DEFINITION != entityType) {
               String relatedField = workflowVar.obtainRelatedField();
               if (isNotEmpty(relatedField) && !runtimeVariables.contains(relatedField)) {
@@ -92,10 +93,9 @@ public class PipelineServiceValidator {
               }
             }
           } else {
-            if (isNotEmpty(variable.getValue()) && !matchesVariablePattern(variable.getValue())) {
+            if (variable.getValue().contains(".")) {
               throw new InvalidRequestException(String.format(
-                  "Non entity var %s is marked Runtime, the value can either be blank or a valid expression",
-                  variableName));
+                  "Non entity var %s is marked Runtime, the value should be a new variable expression", variableName));
             }
           }
         }

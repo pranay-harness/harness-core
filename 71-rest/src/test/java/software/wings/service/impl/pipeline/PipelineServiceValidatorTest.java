@@ -237,7 +237,18 @@ public class PipelineServiceValidatorTest extends WingsBaseTest {
           pipelineStageElement, "ACCOUNT_ID", Collections.singletonList(aVariable().name("var1").build()));
     })
         .isInstanceOf(InvalidRequestException.class)
-        .hasMessage("Non entity var var1 is marked Runtime, the value can either be blank or a valid expression");
+        .hasMessage("Variable var1 is marked runtime but the value isnt a valid expression");
+
+    PipelineStageElement pipelineStageElement2 =
+        builder().workflowVariables(ImmutableMap.of("var1", "${app.name}")).build();
+    pipelineStageElement2.setRuntimeInputsConfig(runtimeInputsConfig);
+
+    assertThatThrownBy(() -> {
+      pipelineServiceValidator.validateRuntimeInputsConfig(
+          pipelineStageElement2, "ACCOUNT_ID", Collections.singletonList(aVariable().name("var1").build()));
+    })
+        .isInstanceOf(InvalidRequestException.class)
+        .hasMessage("Non entity var var1 is marked Runtime, the value should be a new variable expression");
   }
 
   @Test
