@@ -15,6 +15,8 @@ import org.apache.commons.lang3.StringUtils;
 import org.bson.Document;
 import org.bson.conversions.Bson;
 
+import java.util.Objects;
+
 public class MongoDelegateCallbackService implements DelegateCallbackService {
   private static final String SYNC_TASK_COLLECTION_NAME_SUFFIX = "delegateSyncTaskResponses";
   private static final String ASYNC_TASK_COLLECTION_NAME_SUFFIX = "delegateAsyncTaskResponses";
@@ -25,8 +27,9 @@ public class MongoDelegateCallbackService implements DelegateCallbackService {
 
   MongoDelegateCallbackService(MongoDatabase mongoDatabase) {
     String connectionString = mongoDatabase.getConnection();
-    mongoClient = new MongoClient(new MongoClientURI(connectionString));
-    database = mongoClient.getDatabase(connectionString.substring(connectionString.lastIndexOf('/') + 1));
+    MongoClientURI mongoClientURI = new MongoClientURI(connectionString);
+    mongoClient = new MongoClient(mongoClientURI);
+    database = mongoClient.getDatabase(Objects.requireNonNull(mongoClientURI.getDatabase()));
 
     String syncTaskResponseCollectionName = StringUtils.isBlank(mongoDatabase.getCollectionNamePrefix())
         ? SYNC_TASK_COLLECTION_NAME_SUFFIX
