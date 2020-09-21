@@ -18,7 +18,7 @@ const (
 
 //AddonServer implements a GRPC server that listens to messages from lite engine
 type AddonServer interface {
-	Start()
+	Start() error
 	Stop()
 }
 
@@ -49,12 +49,14 @@ func NewAddonServer(port uint, log *zap.SugaredLogger) (AddonServer, error) {
 }
 
 //Start signals the GRPC server to begin serving on the configured port
-func (s *addonServer) Start() {
+func (s *addonServer) Start() error {
 	pb.RegisterAddonServer(s.grpcServer, NewAddonHandler(s.stopCh, s.log))
 	err := s.grpcServer.Serve(s.listener)
 	if err != nil {
-		s.log.Fatalw("error starting gRPC server", zap.Error(err))
+		s.log.Errorw("error starting gRPC server", "error_msg", zap.Error(err))
+		return err
 	}
+	return nil
 }
 
 //Stop method waits for signal to stop the server and stops GRPC server upon receiving it

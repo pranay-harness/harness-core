@@ -953,6 +953,12 @@ go_repository(
     version = "v1.0.9",
 )
 
+go_repository(
+    name = "com_github_wings-software_log-service",
+    commit = "b2562185bcb6d11b16aba713d1afaee60855e4a2",
+    importpath = "github.com/wings-software/log-service",
+)
+
 
 ###########################################################################################
 # ######################################   Java code ######################################

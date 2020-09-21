@@ -7,9 +7,11 @@ package main
 		3) streams data, metrics through a stream-processing service(to be decided)
 */
 import (
+	"os"
+
 	"github.com/alexflint/go-arg"
-	"github.com/wings-software/portal/commons/go/lib/logs"
 	"github.com/wings-software/portal/product/ci/addon/grpc"
+	logger "github.com/wings-software/portal/product/ci/logger/util"
 	"go.uber.org/zap"
 )
 
@@ -19,7 +21,10 @@ const (
 	port            = 8001
 )
 
-var addonServer = grpc.NewAddonServer
+var (
+	addonServer     = grpc.NewAddonServer
+	newRemoteLogger = logger.GetRemoteLogger
+)
 
 var args struct {
 	Verbose bool `arg:"--verbose" help:"enable verbose logging mode"`
@@ -45,19 +50,29 @@ func init() {
 func main() {
 	parseArgs()
 
-	// build initial log
-	logBuilder := logs.NewBuilder().Verbose(args.Verbose).WithDeployment(args.Deployment).
-		WithFields("deployable", deployable,
-			"application_name", applicationName)
-	logger := logBuilder.MustBuild().Sugar()
-
-	logger.Infow("Starting CI addon server", "port", args.Port)
-	s, err := addonServer(args.Port, logger)
+	// Build initial log
+	// Addon logs not part of a step go to addon_stage_logs
+	key := "addon_stage_logs"
+	remoteLogger, err := newRemoteLogger(key)
 	if err != nil {
-		logger.Fatalw("error while running CI addon server", "port", args.Port, zap.Error(err))
+		// Could not create a logger
+		panic(err)
+	}
+	log := remoteLogger.BaseLogger
+	defer remoteLogger.Writer.Close() // upload the logs to object storage and close the log stream
+
+	log.Infow("Starting CI addon server", "port", args.Port)
+	s, err := addonServer(args.Port, log)
+	if err != nil {
+		log.Errorw("error while running CI addon server", "port", args.Port, "error_msg", zap.Error(err))
+		remoteLogger.Writer.Close()
+		os.Exit(1) // Exit addon with exit code 1
 	}
 
 	// Wait for stop signal and shutdown the server upon receiving it in a separate goroutine
 	go s.Stop()
-	s.Start()
+	if err := s.Start(); err != nil {
+		remoteLogger.Writer.Close()
+		os.Exit(1) // Exit addon with exit code 1
+	}
 }

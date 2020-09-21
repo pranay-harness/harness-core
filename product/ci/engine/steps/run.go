@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"context"
 	"fmt"
+	"io"
 	"os/exec"
 	"strings"
 	"time"
@@ -47,12 +48,13 @@ type runStep struct {
 	relLogPath    string
 	stageOutput   output.StageOutput
 	log           *zap.SugaredLogger
+	procWriter    io.Writer
 	fs            filesystem.FileSystem
 }
 
 // NewRunStep creates a run step executor
 func NewRunStep(step *pb.UnitStep, relLogPath string, tmpFilePath string,
-	so output.StageOutput, fs filesystem.FileSystem, log *zap.SugaredLogger) RunStep {
+	so output.StageOutput, fs filesystem.FileSystem, log *zap.SugaredLogger, w io.Writer) RunStep {
 	r := step.GetRun()
 	timeoutSecs := r.GetContext().GetExecutionTimeoutSecs()
 	if timeoutSecs == 0 {
@@ -75,6 +77,7 @@ func NewRunStep(step *pb.UnitStep, relLogPath string, tmpFilePath string,
 		stageOutput:   so,
 		log:           log,
 		fs:            fs,
+		procWriter:    w,
 	}
 }
 
@@ -173,6 +176,7 @@ func (e *runStep) execute(ctx context.Context, retryCount int32) (*output.StepOu
 
 	commands := fmt.Sprintf("set -e; %s", strings.Join(inputCommands[:], ";"))
 	cmdArgs := []string{"-c", commands}
+	// TODO: (vistaar) Remove file path from run step
 	logFilePath := fmt.Sprintf("%s/%s-%d.log", e.relLogPath, e.id, retryCount)
 	logFile, err := e.fs.Create(logFilePath)
 	if err != nil {
@@ -181,15 +185,9 @@ func (e *runStep) execute(ctx context.Context, retryCount int32) (*output.StepOu
 	}
 	defer logFile.Close()
 
-	m := make(map[string]string)
-	m["step_id"] = e.id
-	m["owner"] = "user" // Show RUN step logs to the user
-
-	startTailFn(ctx, e.log, logFilePath, m)
-
 	cmd := execCmdCtx(ctx, "sh", cmdArgs...)
-	cmd.Stdout = logFile
-	cmd.Stderr = logFile
+	cmd.Stdout = e.procWriter
+	cmd.Stderr = e.procWriter
 	e.log.Infow(fmt.Sprintf("Executing %s", commands), "owner", "user")
 	err = cmd.Run()
 	if ctxErr := ctx.Err(); ctxErr == context.DeadlineExceeded {
@@ -201,8 +199,6 @@ func (e *runStep) execute(ctx context.Context, retryCount int32) (*output.StepOu
 		logCommandExecWarning(e.log, "error encountered while executing run step", e.id, commands, retryCount, start, err)
 		return nil, err
 	}
-
-	stopTailFn(ctx, e.log, logFilePath, true)
 
 	var stepOutput *output.StepOutput
 	if e.envVarOutputs != nil {

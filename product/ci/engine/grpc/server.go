@@ -18,7 +18,7 @@ const (
 
 //LiteEngineServer implements a GRPC server that listens to messages from main lite engine
 type LiteEngineServer interface {
-	Start()
+	Start() error
 	Stop()
 }
 
@@ -36,6 +36,10 @@ type liteEngineServer struct {
 func NewLiteEngineServer(port uint, stepLogPath, tmpFilePath string, log *zap.SugaredLogger) (LiteEngineServer, error) {
 	listener, err := net.Listen("tcp", fmt.Sprintf(":%d", port))
 	if err != nil {
+		log.Errorw("error while running CI lite engine server",
+			"port", port,
+			"error_msg", zap.Error(err),
+		)
 		return nil, err
 	}
 
@@ -53,12 +57,14 @@ func NewLiteEngineServer(port uint, stepLogPath, tmpFilePath string, log *zap.Su
 }
 
 //Start signals the GRPC server to begin serving on the configured port
-func (s *liteEngineServer) Start() {
+func (s *liteEngineServer) Start() error {
 	pb.RegisterLiteEngineServer(s.grpcServer, NewLiteEngineHandler(s.stepLogPath, s.tmpFilePath, s.stopCh, s.log))
 	err := s.grpcServer.Serve(s.listener)
 	if err != nil {
-		s.log.Fatalw("error starting gRPC server", zap.Error(err))
+		s.log.Errorw("error starting gRPC server", "error_msg", zap.Error(err))
+		return err
 	}
+	return nil
 }
 
 //Stop method waits for signal to stop the server and stops GRPC server upon receiving it

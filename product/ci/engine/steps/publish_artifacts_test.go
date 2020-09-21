@@ -115,51 +115,6 @@ func createPublishArtifactsStep() *enginepb.UnitStep {
 	}
 }
 
-func TestCreatePublishArtifacts_Success(t *testing.T) {
-	ctx := context.Background()
-	ctrl, _ := gomock.WithContext(context.Background(), t)
-	defer ctrl.Finish()
-
-	log, _ := logs.GetObservedLogger(zap.InfoLevel)
-
-	conn, err := grpc.DialContext(ctx, "bufnet", grpc.WithContextDialer(bufDialer), grpc.WithInsecure())
-	if err != nil {
-		t.Fatalf("Failed to dial bufnet: %v", err)
-	}
-	defer conn.Close()
-
-	// Create a valid PublishArtifacts step
-	x := []*addonpb.BuildPublishImage{}
-	publishArtifactsStep := &enginepb.UnitStep_PublishArtifacts{
-		PublishArtifacts: &enginepb.PublishArtifactsStep{
-			Images: x,
-		},
-	}
-
-	step := &enginepb.UnitStep{
-		Id:          "xyz",
-		DisplayName: "publishing",
-		Step:        publishArtifactsStep,
-	}
-
-	client := addonpb.NewAddonClient(conn)
-
-	oldClient := newAddonClient
-	defer func() { newAddonClient = oldClient }()
-	// Initialize a mock CI addon
-	mockClient := mgrpc.NewMockAddonClient(ctrl)
-	mockClient.EXPECT().Client().Return(client)
-	mockClient.EXPECT().CloseConn().Return(nil)
-	newAddonClient = func(port uint, log *zap.SugaredLogger) (caddon.AddonClient, error) {
-		return mockClient, nil
-	}
-
-	testPublishStep := NewPublishArtifactsStep(step, nil, log.Sugar())
-	err = testPublishStep.Run(ctx)
-
-	assert.Nil(t, err)
-}
-
 func TestCreatePublishArtifacts_Invalid(t *testing.T) {
 	ctx := context.Background()
 	ctrl, _ := gomock.WithContext(context.Background(), t)

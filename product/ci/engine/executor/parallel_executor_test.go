@@ -41,6 +41,12 @@ func TestParallelExecutorRun(t *testing.T) {
 	accountID := "test"
 	tmpFilePath := "/tmp"
 	logPath := "/tmp"
+	oldLogger := newRemoteLogger
+	defer func() { newRemoteLogger = oldLogger }()
+	newRemoteLogger = func(key string) (rl *logs.RemoteLogger, err error) {
+		log, _ := logs.GetObservedLogger(zap.InfoLevel)
+		return &logs.RemoteLogger{BaseLogger: log.Sugar(), Writer: logs.NopWriter()}, nil
+	}
 	log, _ := logs.GetObservedLogger(zap.InfoLevel)
 	tests := []struct {
 		name        string
@@ -135,6 +141,13 @@ func TestParallelExecutorGetWorkers(t *testing.T) {
 	ports := []uint{9000, 9001}
 	numRunSteps := 3
 	log, _ := logs.GetObservedLogger(zap.InfoLevel)
+
+	oldLogger := newRemoteLogger
+	defer func() { newRemoteLogger = oldLogger }()
+	newRemoteLogger = func(key string) (rl *logs.RemoteLogger, err error) {
+		log, _ := logs.GetObservedLogger(zap.InfoLevel)
+		return &logs.RemoteLogger{BaseLogger: log.Sugar(), Writer: logs.NopWriter()}, nil
+	}
 
 	e := &parallelExecutor{
 		stepLogPath: logPath,

@@ -8,10 +8,12 @@ import (
 
 	"github.com/golang/protobuf/proto"
 	"github.com/wings-software/portal/commons/go/lib/filesystem"
+	"github.com/wings-software/portal/commons/go/lib/logs"
 	"github.com/wings-software/portal/product/ci/engine/output"
 	pb "github.com/wings-software/portal/product/ci/engine/proto"
 	"github.com/wings-software/portal/product/ci/engine/status"
 	"github.com/wings-software/portal/product/ci/engine/steps"
+	logger "github.com/wings-software/portal/product/ci/logger/util"
 	"go.uber.org/zap"
 )
 
@@ -21,6 +23,7 @@ var (
 	publishArtifactsStep = steps.NewPublishArtifactsStep
 	runStep              = steps.NewRunStep
 	sendStepStatus       = status.SendStepStatus
+	newRemoteLogger      = logger.GetRemoteLogger
 )
 
 //go:generate mockgen -source unit_executor.go -package=executor -destination mocks/unit_executor_mock.go UnitExecutor
@@ -93,6 +96,7 @@ func (e *unitExecutor) Run(ctx context.Context, step *pb.UnitStep, so output.Sta
 func (e *unitExecutor) execute(ctx context.Context, step *pb.UnitStep,
 	so output.StageOutput) (*output.StepOutput, int32, error) {
 	numRetries := int32(1)
+	var rl *logs.RemoteLogger
 	var err error
 	var stepOutput *output.StepOutput
 
@@ -103,23 +107,39 @@ func (e *unitExecutor) execute(ctx context.Context, step *pb.UnitStep,
 
 	switch x := step.GetStep().(type) {
 	case *pb.UnitStep_Run:
+		rl, err = newRemoteLogger(step.GetId())
+		if err != nil {
+			return nil, numRetries, err
+		}
+		defer rl.Writer.Close()
 		e.log.Infow("Run step info", "step", x.Run.String())
-		stepOutput, numRetries, err = runStep(step, e.stepLogPath, e.tmpFilePath, so, fs, e.log).Run(ctx)
+		stepOutput, numRetries, err = runStep(step, e.stepLogPath, e.tmpFilePath, so, fs, rl.BaseLogger, rl.Writer).Run(ctx)
 		if err != nil {
 			return nil, numRetries, err
 		}
 	case *pb.UnitStep_SaveCache:
+		rl, err = newRemoteLogger(step.GetId())
+		if err != nil {
+			return nil, numRetries, err
+		}
+		defer rl.Writer.Close()
 		e.log.Infow("Save cache step info", "step", x.SaveCache.String())
-		stepOutput, err = saveCacheStep(step, e.tmpFilePath, so, fs, e.log).Run(ctx)
+		stepOutput, err = saveCacheStep(step, e.tmpFilePath, so, fs, rl.BaseLogger).Run(ctx)
 		if err != nil {
 			return nil, numRetries, err
 		}
 	case *pb.UnitStep_RestoreCache:
+		rl, err = newRemoteLogger(step.GetId())
+		if err != nil {
+			return nil, numRetries, err
+		}
+		defer rl.Writer.Close()
 		e.log.Infow("Restore cache step info", "step", x.RestoreCache.String())
-		if err = restoreCacheStep(step, e.tmpFilePath, so, fs, e.log).Run(ctx); err != nil {
+		if err = restoreCacheStep(step, e.tmpFilePath, so, fs, rl.BaseLogger).Run(ctx); err != nil {
 			return nil, numRetries, err
 		}
 	case *pb.UnitStep_PublishArtifacts:
+		// Publish artifact logs will be generated on addon
 		e.log.Infow("Publishing artifact info", "step", x.PublishArtifacts.String())
 		if err = publishArtifactsStep(step, so, e.log).Run(ctx); err != nil {
 			return nil, numRetries, err
@@ -153,16 +173,17 @@ func decodeExecuteStepRequest(encodedStep string, log *zap.SugaredLogger) (*pb.E
 }
 
 // ExecuteStep executes a unit step of a stage
-func ExecuteStep(input, logpath, tmpFilePath string, log *zap.SugaredLogger) {
+func ExecuteStep(input, logpath, tmpFilePath string, log *zap.SugaredLogger) error {
 	r, err := decodeExecuteStepRequest(input, log)
 	if err != nil {
-		log.Fatalw(
+		log.Errorw(
 			"error while executing step",
 			"embedded_stage", input,
 			"log_path", logpath,
 			"step_id", r.GetStep().GetId(),
-			zap.Error(err),
+			"error_msg", zap.Error(err),
 		)
+		return err
 	}
 
 	ctx := context.Background()
@@ -173,12 +194,14 @@ func ExecuteStep(input, logpath, tmpFilePath string, log *zap.SugaredLogger) {
 		stageOutput[stepOutput.GetStepId()] = &output.StepOutput{Output: stepOutput.GetOutput()}
 	}
 	if _, err := executor.Run(ctx, r.GetStep(), stageOutput, r.GetAccountId()); err != nil {
-		log.Fatalw(
+		log.Errorw(
 			"error while executing step",
 			"step", r.GetStep().String(),
 			"log_path", logpath,
 			"step_id", r.GetStep().GetId(),
-			zap.Error(err),
+			"error_msg", zap.Error(err),
 		)
+		return err
 	}
+	return nil
 }

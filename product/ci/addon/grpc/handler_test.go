@@ -15,6 +15,13 @@ func Test_handler_PublishArtifacts(t *testing.T) {
 	ctrl, ctx := gomock.WithContext(context.Background(), t)
 	defer ctrl.Finish()
 
+	oldLogger := newRemoteLogger
+	defer func() { newRemoteLogger = oldLogger }()
+	newRemoteLogger = func(key string) (rl *logs.RemoteLogger, err error) {
+		log, _ := logs.GetObservedLogger(zap.InfoLevel)
+		return &logs.RemoteLogger{BaseLogger: log.Sugar(), Writer: logs.NopWriter()}, nil
+	}
+
 	stopCh := make(chan bool)
 	log, _ := logs.GetObservedLogger(zap.InfoLevel)
 	h := NewAddonHandler(stopCh, log.Sugar())
