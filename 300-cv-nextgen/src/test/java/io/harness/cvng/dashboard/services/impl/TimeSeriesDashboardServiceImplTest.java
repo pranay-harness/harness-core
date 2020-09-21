@@ -5,6 +5,7 @@ import static io.harness.rule.OwnerRule.PRAVEEN;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyBoolean;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import com.google.gson.Gson;
@@ -44,6 +45,7 @@ public class TimeSeriesDashboardServiceImplTest extends CvNextGenTest {
   @Inject private TimeSeriesDashboardService timeSeriesDashboardService;
 
   private String projectIdentifier;
+  private String orgIdentifier;
   private String serviceIdentifier;
   private String envIdentifier;
   private String accountId;
@@ -55,6 +57,7 @@ public class TimeSeriesDashboardServiceImplTest extends CvNextGenTest {
   @Before
   public void setUp() throws Exception {
     projectIdentifier = generateUuid();
+    orgIdentifier = generateUuid();
     serviceIdentifier = generateUuid();
     envIdentifier = generateUuid();
     accountId = generateUuid();
@@ -76,13 +79,17 @@ public class TimeSeriesDashboardServiceImplTest extends CvNextGenTest {
     List<String> cvConfigs = Arrays.asList(cvConfigId);
     AppDynamicsCVConfig cvConfig = new AppDynamicsCVConfig();
     cvConfig.setUuid(cvConfigId);
-    when(cvConfigService.list(accountId, envIdentifier, serviceIdentifier, CVMonitoringCategory.PERFORMANCE))
+    when(cvConfigService.list(accountId, orgIdentifier, projectIdentifier, envIdentifier, serviceIdentifier,
+             CVMonitoringCategory.PERFORMANCE))
         .thenReturn(Arrays.asList(cvConfig));
 
     NGPageResponse<TimeSeriesMetricDataDTO> response =
-        timeSeriesDashboardService.getSortedMetricData(accountId, projectIdentifier, generateUuid(), envIdentifier,
+        timeSeriesDashboardService.getSortedMetricData(accountId, projectIdentifier, orgIdentifier, envIdentifier,
             serviceIdentifier, CVMonitoringCategory.PERFORMANCE, start.toEpochMilli(), end.toEpochMilli(), 0, 10);
 
+    verify(cvConfigService)
+        .list(accountId, orgIdentifier, projectIdentifier, envIdentifier, serviceIdentifier,
+            CVMonitoringCategory.PERFORMANCE);
     assertThat(response).isNotNull();
     assertThat(response.getContent()).isNotEmpty();
   }
@@ -99,16 +106,50 @@ public class TimeSeriesDashboardServiceImplTest extends CvNextGenTest {
     List<String> cvConfigs = Arrays.asList(cvConfigId);
     AppDynamicsCVConfig cvConfig = new AppDynamicsCVConfig();
     cvConfig.setUuid(cvConfigId);
-    when(cvConfigService.list(accountId, envIdentifier, serviceIdentifier, CVMonitoringCategory.PERFORMANCE))
+    when(cvConfigService.list(accountId, orgIdentifier, projectIdentifier, envIdentifier, serviceIdentifier,
+             CVMonitoringCategory.PERFORMANCE))
         .thenReturn(Arrays.asList(cvConfig));
 
     NGPageResponse<TimeSeriesMetricDataDTO> response = timeSeriesDashboardService.getSortedAnomalousMetricData(
-        accountId, projectIdentifier, generateUuid(), envIdentifier, serviceIdentifier,
-        CVMonitoringCategory.PERFORMANCE, start.toEpochMilli(), end.toEpochMilli(), 0, 10);
+        accountId, projectIdentifier, orgIdentifier, envIdentifier, serviceIdentifier, CVMonitoringCategory.PERFORMANCE,
+        start.toEpochMilli(), end.toEpochMilli(), 0, 10);
+    verify(cvConfigService)
+        .list(accountId, orgIdentifier, projectIdentifier, envIdentifier, serviceIdentifier,
+            CVMonitoringCategory.PERFORMANCE);
+    assertThat(response).isNotNull();
+    assertThat(response.getContent()).isNotEmpty();
+    assertThat(response.getContent().size()).isEqualTo(response.getPageSize());
+    response.getContent().forEach(timeSeriesMetricDataDTO -> {
+      assertThat(timeSeriesMetricDataDTO.getMetricDataList()).isNotEmpty();
+      timeSeriesMetricDataDTO.getMetricDataList().forEach(metricData -> {
+        assertThat(metricData.getRisk().name()).isNotEqualTo(TimeSeriesMetricDataDTO.TimeSeriesRisk.LOW_RISK.name());
+      });
+    });
+  }
+
+  @Test
+  @Owner(developers = PRAVEEN)
+  @Category(UnitTests.class)
+  public void testGetSortedAnomalousMetricData_noCategory() throws Exception {
+    Instant start = Instant.parse("2020-07-07T02:40:00.000Z");
+    Instant end = start.plus(5, ChronoUnit.MINUTES);
+    String cvConfigId = generateUuid();
+    when(timeSeriesService.getTimeSeriesRecordsForConfigs(any(), any(), any(), anyBoolean()))
+        .thenReturn(getTimeSeriesRecords(cvConfigId, true));
+    List<String> cvConfigs = Arrays.asList(cvConfigId);
+    AppDynamicsCVConfig cvConfig = new AppDynamicsCVConfig();
+    cvConfig.setUuid(cvConfigId);
+    when(cvConfigService.list(accountId, orgIdentifier, projectIdentifier, envIdentifier, serviceIdentifier, null))
+        .thenReturn(Arrays.asList(cvConfig));
+
+    NGPageResponse<TimeSeriesMetricDataDTO> response =
+        timeSeriesDashboardService.getSortedAnomalousMetricData(accountId, projectIdentifier, orgIdentifier,
+            envIdentifier, serviceIdentifier, null, start.toEpochMilli(), end.toEpochMilli(), 0, 10);
 
     assertThat(response).isNotNull();
     assertThat(response.getContent()).isNotEmpty();
     assertThat(response.getContent().size()).isEqualTo(response.getPageSize());
+    verify(cvConfigService).list(accountId, orgIdentifier, projectIdentifier, envIdentifier, serviceIdentifier, null);
     response.getContent().forEach(timeSeriesMetricDataDTO -> {
       assertThat(timeSeriesMetricDataDTO.getMetricDataList()).isNotEmpty();
       timeSeriesMetricDataDTO.getMetricDataList().forEach(metricData -> {
@@ -129,7 +170,8 @@ public class TimeSeriesDashboardServiceImplTest extends CvNextGenTest {
     List<String> cvConfigs = Arrays.asList(cvConfigId);
     AppDynamicsCVConfig cvConfig = new AppDynamicsCVConfig();
     cvConfig.setUuid(cvConfigId);
-    when(cvConfigService.list(accountId, envIdentifier, serviceIdentifier, CVMonitoringCategory.PERFORMANCE))
+    when(cvConfigService.list(accountId, orgIdentifier, projectIdentifier, envIdentifier, serviceIdentifier,
+             CVMonitoringCategory.PERFORMANCE))
         .thenReturn(Arrays.asList(cvConfig));
 
     NGPageResponse<TimeSeriesMetricDataDTO> response = timeSeriesDashboardService.getSortedAnomalousMetricData(

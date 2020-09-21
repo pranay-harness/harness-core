@@ -39,12 +39,13 @@ public class LogDashboardResource {
       @NotNull @QueryParam("orgIdentifier") String orgIdentifier,
       @QueryParam("environmentIdentifier") String environmentIdentifier,
       @QueryParam("serviceIdentifier") String serviceIdentifier,
-      @NotNull @QueryParam("monitoringCategory") String monitoringCategory,
+      @QueryParam("monitoringCategory") String monitoringCategory,
       @NotNull @QueryParam("startTime") Long startTimeMillis, @NotNull @QueryParam("endTime") Long endTimeMillis,
       @QueryParam("page") @DefaultValue("0") int page, @QueryParam("size") @DefaultValue("10") int size) {
-    return new RestResponse<>(logDashboardService.getAnomalousLogs(accountId, projectIdentifier, orgIdentifier,
-        serviceIdentifier, environmentIdentifier, CVMonitoringCategory.valueOf(monitoringCategory), startTimeMillis,
-        endTimeMillis, page, size));
+    return new RestResponse<>(
+        logDashboardService.getAnomalousLogs(accountId, projectIdentifier, orgIdentifier, serviceIdentifier,
+            environmentIdentifier, monitoringCategory != null ? CVMonitoringCategory.valueOf(monitoringCategory) : null,
+            startTimeMillis, endTimeMillis, page, size));
   }
 
   @GET
@@ -57,12 +58,13 @@ public class LogDashboardResource {
       @NotNull @QueryParam("orgIdentifier") String orgIdentifier,
       @QueryParam("environmentIdentifier") String environmentIdentifier,
       @QueryParam("serviceIdentifier") String serviceIdentifier,
-      @NotNull @QueryParam("monitoringCategory") String monitoringCategory,
+      @QueryParam("monitoringCategory") String monitoringCategory,
       @NotNull @QueryParam("startTime") Long startTimeMillis, @NotNull @QueryParam("endTime") Long endTimeMillis,
       @QueryParam("page") @DefaultValue("0") int page, @QueryParam("size") @DefaultValue("10") int size) {
-    return new RestResponse<>(logDashboardService.getAllLogs(accountId, projectIdentifier, orgIdentifier,
-        serviceIdentifier, environmentIdentifier, CVMonitoringCategory.valueOf(monitoringCategory), startTimeMillis,
-        endTimeMillis, page, size));
+    return new RestResponse<>(
+        logDashboardService.getAllLogs(accountId, projectIdentifier, orgIdentifier, serviceIdentifier,
+            environmentIdentifier, monitoringCategory != null ? CVMonitoringCategory.valueOf(monitoringCategory) : null,
+            startTimeMillis, endTimeMillis, page, size));
   }
 
   @GET
@@ -75,10 +77,11 @@ public class LogDashboardResource {
       @NotNull @QueryParam("orgIdentifier") String orgIdentifier,
       @QueryParam("environmentIdentifier") String environmentIdentifier,
       @QueryParam("serviceIdentifier") String serviceIdentifier,
-      @NotNull @QueryParam("monitoringCategory") String monitoringCategory,
+      @QueryParam("monitoringCategory") String monitoringCategory,
       @NotNull @QueryParam("startTime") Long startTimeMillis, @NotNull @QueryParam("endTime") Long endTimeMillis) {
     return new RestResponse<>(
         logDashboardService.getLogCountByTag(accountId, projectIdentifier, orgIdentifier, serviceIdentifier,
-            environmentIdentifier, CVMonitoringCategory.valueOf(monitoringCategory), startTimeMillis, endTimeMillis));
+            environmentIdentifier, monitoringCategory != null ? CVMonitoringCategory.valueOf(monitoringCategory) : null,
+            startTimeMillis, endTimeMillis));
   }
 }

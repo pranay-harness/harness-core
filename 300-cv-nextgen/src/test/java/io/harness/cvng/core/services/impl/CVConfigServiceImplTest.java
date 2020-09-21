@@ -264,18 +264,44 @@ public class CVConfigServiceImplTest extends CvNextGenTest {
   @Owner(developers = PRAVEEN)
   @Category(UnitTests.class)
   public void testList_withServiceEnvironmentCategory() {
-    List<CVConfig> cvConfigs = createCVConfigs(2);
+    List<CVConfig> cvConfigs = createCVConfigs(4);
     String serviceIdentifier = generateUuid();
     String envIdentifier = generateUuid();
     CVMonitoringCategory category = CVMonitoringCategory.PERFORMANCE;
-    cvConfigs.forEach(cvConfig -> {
+    int index = 0;
+    for (CVConfig cvConfig : cvConfigs) {
+      cvConfig.setOrgIdentifier(orgIdentifier);
+      cvConfig.setProjectIdentifier(projectIdentifier);
       cvConfig.setServiceIdentifier(serviceIdentifier);
       cvConfig.setEnvIdentifier(envIdentifier);
-      cvConfig.setCategory(category);
-    });
+      cvConfig.setCategory(index++ % 2 == 0 ? CVMonitoringCategory.PERFORMANCE : CVMonitoringCategory.QUALITY);
+    }
     save(cvConfigs);
-    assertThat(cvConfigService.list(accountId, envIdentifier, serviceIdentifier, CVMonitoringCategory.PERFORMANCE))
+    assertThat(cvConfigService.list(accountId, orgIdentifier, projectIdentifier, envIdentifier, serviceIdentifier,
+                   CVMonitoringCategory.PERFORMANCE))
         .hasSize(2);
+  }
+
+  @Test
+  @Owner(developers = PRAVEEN)
+  @Category(UnitTests.class)
+  public void testList_withNullCategory() {
+    List<CVConfig> cvConfigs = createCVConfigs(4);
+    String serviceIdentifier = generateUuid();
+    String envIdentifier = generateUuid();
+    CVMonitoringCategory category = CVMonitoringCategory.PERFORMANCE;
+    int index = 0;
+    for (CVConfig cvConfig : cvConfigs) {
+      cvConfig.setOrgIdentifier(orgIdentifier);
+      cvConfig.setProjectIdentifier(projectIdentifier);
+      cvConfig.setServiceIdentifier(serviceIdentifier);
+      cvConfig.setEnvIdentifier(envIdentifier);
+      cvConfig.setCategory(index++ % 2 == 0 ? CVMonitoringCategory.PERFORMANCE : CVMonitoringCategory.QUALITY);
+    }
+    save(cvConfigs);
+    assertThat(
+        cvConfigService.list(accountId, orgIdentifier, projectIdentifier, envIdentifier, serviceIdentifier, null))
+        .hasSize(4);
   }
 
   @Test

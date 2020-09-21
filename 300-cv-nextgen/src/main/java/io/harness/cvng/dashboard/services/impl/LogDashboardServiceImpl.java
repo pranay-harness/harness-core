@@ -70,7 +70,8 @@ public class LogDashboardServiceImpl implements LogDashboardService {
 
     Instant startTime = Instant.ofEpochMilli(startTimeMillis);
     Instant endTime = Instant.ofEpochMilli(endTimeMillis);
-    List<CVConfig> configs = cvConfigService.list(accountId, environmentIdentifer, serviceIdentifier, category);
+    List<CVConfig> configs = cvConfigService.list(
+        accountId, orgIdentifier, projectIdentifier, environmentIdentifer, serviceIdentifier, category);
     List<String> cvConfigIds = configs.stream().map(CVConfig::getUuid).collect(Collectors.toList());
     for (String cvConfigId : cvConfigIds) {
       List<LogAnalysisResult> analysisResults =
@@ -106,7 +107,8 @@ public class LogDashboardServiceImpl implements LogDashboardService {
     List<LogData> logDataToBeReturned = Collections.synchronizedList(new ArrayList<>());
     Instant startTime = Instant.ofEpochMilli(startTimeMillis);
     Instant endTime = Instant.ofEpochMilli(endTimeMillis);
-    List<CVConfig> configs = cvConfigService.list(accountId, environmentIdentifer, serviceIdentifier, category);
+    List<CVConfig> configs = cvConfigService.list(
+        accountId, orgIdentifier, projectIdentifier, environmentIdentifer, serviceIdentifier, category);
     List<String> cvConfigIds = configs.stream().map(CVConfig::getUuid).collect(Collectors.toList());
 
     // for each cvConfigId, get the list of unknown and unexpected analysis results.

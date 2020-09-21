@@ -36,12 +36,13 @@ public class TimeseriesDashboardResource {
       @NotNull @QueryParam("orgIdentifier") String orgIdentifier,
       @QueryParam("environmentIdentifier") String environmentIdentifier,
       @QueryParam("serviceIdentifier") String serviceIdentifier,
-      @NotNull @QueryParam("monitoringCategory") String monitoringCategory,
+      @QueryParam("monitoringCategory") String monitoringCategory,
       @NotNull @QueryParam("startTime") Long startTimeMillis, @NotNull @QueryParam("endTime") Long endTimeMillis,
       @QueryParam("page") @DefaultValue("0") int page, @QueryParam("size") @DefaultValue("10") int size) {
     return new RestResponse<>(timeSeriesDashboardService.getSortedAnomalousMetricData(accountId, projectIdentifier,
-        orgIdentifier, environmentIdentifier, serviceIdentifier, CVMonitoringCategory.valueOf(monitoringCategory),
-        startTimeMillis, endTimeMillis, page, size));
+        orgIdentifier, environmentIdentifier, serviceIdentifier,
+        monitoringCategory != null ? CVMonitoringCategory.valueOf(monitoringCategory) : null, startTimeMillis,
+        endTimeMillis, page, size));
   }
 
   @GET
@@ -58,7 +59,8 @@ public class TimeseriesDashboardResource {
       @NotNull @QueryParam("startTime") Long startTimeMillis, @NotNull @QueryParam("endTime") Long endTimeMillis,
       @QueryParam("page") @DefaultValue("0") int page, @QueryParam("size") @DefaultValue("10") int size) {
     return new RestResponse<>(timeSeriesDashboardService.getSortedMetricData(accountId, projectIdentifier,
-        orgIdentifier, environmentIdentifier, serviceIdentifier, CVMonitoringCategory.valueOf(monitoringCategory),
-        startTimeMillis, endTimeMillis, page, size));
+        orgIdentifier, environmentIdentifier, serviceIdentifier,
+        monitoringCategory != null ? CVMonitoringCategory.valueOf(monitoringCategory) : null, startTimeMillis,
+        endTimeMillis, page, size));
   }
 }

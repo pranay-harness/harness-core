@@ -22,8 +22,8 @@ public interface CVConfigService {
   List<CVConfig> list(String accountId, String connectorIdentifier);
   List<CVConfig> list(String accountId, String connectorIdentifier, String productName);
   List<CVConfig> list(String accountId, String connectorIdentifier, String productName, String groupId);
-  List<CVConfig> list(String accountId, String environmentIdentifier, String serviceIdentifier,
-      CVMonitoringCategory monitoringCategory);
+  List<CVConfig> list(String accountId, String orgIdentifier, String projectIdentifier, String environmentIdentifier,
+      String serviceIdentifier, CVMonitoringCategory monitoringCategory);
   List<String> getProductNames(String accountId, String connectorIdentifier);
 
   void setCollectionTaskId(String uuid, String dataCollectionTaskId);
