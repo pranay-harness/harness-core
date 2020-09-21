@@ -3,6 +3,7 @@ package io.harness.cvng.analysis.services.impl;
 import com.google.inject.Inject;
 
 import io.harness.beans.NGPageResponse;
+import io.harness.cvng.analysis.beans.LogAnalysisClusterChartDTO;
 import io.harness.cvng.analysis.beans.LogAnalysisClusterDTO;
 import io.harness.cvng.analysis.entities.DeploymentLogAnalysis;
 import io.harness.cvng.analysis.entities.DeploymentLogAnalysis.DeploymentLogAnalysisKeys;
@@ -34,6 +35,34 @@ public class DeploymentLogAnalysisServiceImpl implements DeploymentLogAnalysisSe
   }
 
   @Override
+  public List<LogAnalysisClusterChartDTO> getLogAnalysisClusters(String accountId, String verificationJobInstanceId) {
+    Set<String> verificationTaskIds =
+        verificationTaskService.getVerificationTaskIds(accountId, verificationJobInstanceId);
+
+    DeploymentLogAnalysis latestDeploymentLogAnalysis = getLatestDeploymentLogAnalysis(verificationTaskIds);
+    if (latestDeploymentLogAnalysis == null) {
+      return Collections.emptyList();
+    }
+    List<LogAnalysisClusterChartDTO> logAnalysisClusterChartDTOList = new ArrayList();
+
+    latestDeploymentLogAnalysis.getClusters().forEach(cluster
+        -> latestDeploymentLogAnalysis.getResultSummary()
+               .getTestClusterSummaries()
+               .stream()
+               .filter(clusterSummary -> cluster.getLabel() == clusterSummary.getLabel())
+               .findFirst()
+               .ifPresent(clusterSummary
+                   -> logAnalysisClusterChartDTOList.add(LogAnalysisClusterChartDTO.builder()
+                                                             .label(cluster.getLabel())
+                                                             .x(cluster.getX())
+                                                             .y(cluster.getY())
+                                                             .text(cluster.getText())
+                                                             .risk(clusterSummary.getRisk())
+                                                             .build())));
+
+    return logAnalysisClusterChartDTOList;
+  }
+
   public NGPageResponse<LogAnalysisClusterDTO> getLogAnalysisResult(
       String accountId, String verificationJobInstanceId, Integer label, int pageNumber) {
     Set<String> verificationTaskIds =
