@@ -49,7 +49,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.stream.Collectors;
 import javax.validation.constraints.NotNull;
 
 @Slf4j
@@ -313,8 +312,8 @@ public class CeClusterBillingDataDataFetcher extends AbstractStatsDataFetcherWit
 
     if (!workloads.isEmpty() && !selectedLabels.isEmpty()) {
       List<K8sWorkload> k8sWorkloads = dao.list(accountId, workloads);
-      Map<String, Map<String, String>> labelsForWorkload =
-          k8sWorkloads.stream().collect(Collectors.toMap(K8sWorkload::getName, K8sWorkload::getLabels));
+      Map<String, Map<String, String>> labelsForWorkload = new HashMap<>();
+      k8sWorkloads.forEach(k8sWorkload -> labelsForWorkload.put(k8sWorkload.getName(), k8sWorkload.getLabels()));
 
       dataEntries.forEach(entry -> {
         Map<String, String> labels = new HashMap<>();

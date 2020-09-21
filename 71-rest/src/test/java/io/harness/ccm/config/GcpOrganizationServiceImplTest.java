@@ -80,7 +80,7 @@ public class GcpOrganizationServiceImplTest extends CategoryTest {
   @Owner(developers = HANTANG)
   @Category(UnitTests.class)
   public void shouldThrowIfUpsertBeyondLimit() {
-    when(gcpOrganizationDao.count(eq(accountId))).thenReturn(1L);
+    when(gcpOrganizationDao.count(eq(accountId))).thenReturn(2L);
     gcpOrganizationService.upsert(gcpOrganization1);
     gcpOrganizationService.upsert(gcpOrganization1);
   }

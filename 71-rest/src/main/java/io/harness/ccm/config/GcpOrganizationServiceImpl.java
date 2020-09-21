@@ -45,7 +45,7 @@ public class GcpOrganizationServiceImpl implements GcpOrganizationService {
 
   @Override
   public GcpOrganization upsert(GcpOrganization organization) {
-    if (gcpOrganizationDao.count(organization.getAccountId()) > 0) {
+    if (gcpOrganizationDao.count(organization.getAccountId()) > 1) {
       throw new InvalidRequestException("Cannot enable Continuous Efficiency for more than one GCP cloud account.");
     }
     GcpServiceAccount gcpServiceAccount = ceGcpServiceAccountService.getByAccountId(organization.getAccountId());
