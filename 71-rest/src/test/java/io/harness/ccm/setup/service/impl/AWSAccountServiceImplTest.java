@@ -109,7 +109,7 @@ public class AWSAccountServiceImplTest extends CategoryTest {
     CEAwsConfig ceAwsConfig = getCEAwsConfig();
     SettingAttribute settingAttribute =
         SettingAttribute.Builder.aSettingAttribute().withAccountId(ACCOUNT_ID).withValue(ceAwsConfig).build();
-    when(settingsService.getById(ACCOUNT_ID, SETTING_ID)).thenReturn(settingAttribute);
+    when(settingsService.getByAccountAndId(ACCOUNT_ID, SETTING_ID)).thenReturn(settingAttribute);
 
     CECloudAccount ceCloudAccount = getCECloudAccount(ACCOUNT_NAME, ACCOUNT_ARN, AWS_ACCOUNT_ID);
     List<CECloudAccount> infraAccounts = ImmutableList.of(ceCloudAccount);

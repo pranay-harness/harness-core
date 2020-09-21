@@ -65,7 +65,7 @@ public interface SettingsService extends OwnedByAccount, OwnedBySettingAttribute
 
   SettingAttribute getByAccount(String accountId, String varId);
 
-  SettingAttribute getById(String accountId, String settingId);
+  SettingAttribute getByAccountAndId(String accountId, String settingId);
 
   SettingAttribute getOnlyConnectivityError(String settingId);
 
