@@ -32,6 +32,17 @@ public class VisitorFieldRegistryTest extends WalkTreeBaseTest {
 
     assertThatThrownBy(() -> visitorFieldRegistry.obtain(VisitorFieldType.builder().type("IGNORE").build()))
         .isInstanceOf(UnregisteredKeyAccessException.class);
+
+    visitorFieldRegistry.registerFieldTypes(DummyVisitorField.class, visitorField.getVisitorFieldType());
+    VisitorFieldType fieldType = visitorFieldRegistry.obtainFieldType(DummyVisitorField.class);
+    assertThat(fieldType).isEqualTo(visitorField.getVisitorFieldType());
+
+    assertThatThrownBy(
+        () -> visitorFieldRegistry.registerFieldTypes(DummyVisitorField.class, visitorField.getVisitorFieldType()))
+        .isInstanceOf(DuplicateRegistryException.class);
+
+    assertThatThrownBy(() -> visitorFieldRegistry.obtainFieldType(VisitorFieldWrapper.class))
+        .isInstanceOf(UnregisteredKeyAccessException.class);
   }
 
   @Test

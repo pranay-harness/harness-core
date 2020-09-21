@@ -9,6 +9,7 @@ import io.harness.walktree.registries.registrars.VisitableFieldRegistrar;
 import io.harness.walktree.registries.visitorfield.VisitableFieldProcessor;
 import io.harness.walktree.registries.visitorfield.VisitorFieldRegistry;
 import io.harness.walktree.registries.visitorfield.VisitorFieldType;
+import io.harness.walktree.registries.visitorfield.VisitorFieldWrapper;
 import org.apache.commons.lang3.tuple.Pair;
 
 import java.util.HashSet;
@@ -39,6 +40,16 @@ public class VisitorRegistryModule extends AbstractModule {
           (Pair<VisitorFieldType, Class<? extends VisitableFieldProcessor<?>>>) pair;
       visitorFieldRegistry.register(orchestrationFieldPair.getLeft(), orchestrationFieldPair.getRight());
     });
+
+    Set fieldTypeClasses = new HashSet<>();
+    visitableFieldRegistrarMap.values().forEach(
+        visitableFieldRegistrar -> { visitableFieldRegistrar.registerFieldTypes(fieldTypeClasses); });
+    classes.forEach(pair -> {
+      Pair<Class<? extends VisitorFieldWrapper>, VisitorFieldType> fieldTypePair =
+          (Pair<Class<? extends VisitorFieldWrapper>, VisitorFieldType>) pair;
+      visitorFieldRegistry.registerFieldTypes(fieldTypePair.getLeft(), fieldTypePair.getRight());
+    });
+
     return visitorFieldRegistry;
   }
 }
