@@ -7,6 +7,7 @@ extend type Query {
     aggregateFunction: [ceAggregation]
     groupBy: [ceGroupBy]
     sortCriteria: [ceSort]
+    select: [ceSelect]
   ): ceClusterBillingData @dataFetcher(name: ceClusterBillingData)
 }
 
@@ -154,6 +155,12 @@ type ceK8sEntity {
   namespace: String
   node: String
   pod: String
+  selectedLabels: [ceK8sLabels]
+}
+
+type ceK8sLabels {
+  name: String
+  value: String
 }
 
 type ceEcsEntity {
@@ -166,4 +173,8 @@ type ceHarnessEntity {
   service: String
   application: String
   environment: String
+}
+
+input ceSelect {
+  labels: [String]
 }

@@ -1,9 +1,13 @@
 package software.wings.graphql.datafetcher.ce.exportData;
 
+import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import graphql.schema.DataFetchingEnvironment;
 import graphql.schema.SelectedField;
+import io.harness.ccm.cluster.dao.K8sWorkloadDao;
+import io.harness.ccm.cluster.entities.K8sWorkload;
 import io.harness.exception.InvalidRequestException;
 import io.harness.timescaledb.DBUtils;
 import io.harness.timescaledb.TimeScaleDBService;
@@ -23,7 +27,9 @@ import software.wings.graphql.datafetcher.ce.exportData.dto.QLCEFilter;
 import software.wings.graphql.datafetcher.ce.exportData.dto.QLCEGroupBy;
 import software.wings.graphql.datafetcher.ce.exportData.dto.QLCEHarnessEntity;
 import software.wings.graphql.datafetcher.ce.exportData.dto.QLCEK8sEntity;
+import software.wings.graphql.datafetcher.ce.exportData.dto.QLCEK8sLabels;
 import software.wings.graphql.datafetcher.ce.exportData.dto.QLCELabelAggregation;
+import software.wings.graphql.datafetcher.ce.exportData.dto.QLCESelect;
 import software.wings.graphql.datafetcher.ce.exportData.dto.QLCESort;
 import software.wings.graphql.datafetcher.ce.exportData.dto.QLCETagAggregation;
 import software.wings.graphql.datafetcher.ce.exportData.dto.QLCETagType;
@@ -37,9 +43,13 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
 import javax.validation.constraints.NotNull;
 
 @Slf4j
@@ -48,7 +58,10 @@ public class CeClusterBillingDataDataFetcher extends AbstractStatsDataFetcherWit
   @Inject private TimeScaleDBService timeScaleDBService;
   @Inject CEExportDataQueryBuilder queryBuilder;
   @Inject QLBillingStatsHelper statsHelper;
+  @Inject K8sWorkloadDao dao;
   private static final int LIMIT_THRESHOLD = 100;
+  private static final String SELECT = "select";
+  private static final String DEFAULT_SELECTED_LABEL = "-";
 
   @Override
   @AuthRule(permissionType = PermissionAttribute.PermissionType.LOGGED_IN)
@@ -67,7 +80,9 @@ public class CeClusterBillingDataDataFetcher extends AbstractStatsDataFetcherWit
     try {
       if (timeScaleDBService.isValid()) {
         List<String> selectedFields = getSelectedFields(dataFetchingEnvironment);
-        return getData(accountId, filters, aggregateFunction, groupBy, sort, limit, offset, selectedFields);
+        List<String> selectedLabels = getSelectedLabelColumns(dataFetchingEnvironment);
+        return getData(
+            accountId, filters, aggregateFunction, groupBy, sort, limit, offset, selectedFields, selectedLabels);
       } else {
         throw new InvalidRequestException("Cannot process request in CeClusterBillingDataDataFetcher");
       }
@@ -78,7 +93,7 @@ public class CeClusterBillingDataDataFetcher extends AbstractStatsDataFetcherWit
 
   protected QLCEData getData(@NotNull String accountId, List<QLCEFilter> filters,
       List<QLCEAggregation> aggregateFunction, List<QLCEGroupBy> groupByList, List<QLCESort> sortCriteria,
-      Integer limit, Integer offset, List<String> selectedFields) {
+      Integer limit, Integer offset, List<String> selectedFields, List<String> selectedLabels) {
     CEExportDataQueryMetadata queryData;
     ResultSet resultSet = null;
     boolean successful = false;
@@ -95,6 +110,7 @@ public class CeClusterBillingDataDataFetcher extends AbstractStatsDataFetcherWit
     List<QLCELabelAggregation> groupByLabelList = getGroupByLabel(groupByList);
     QLCETimeAggregation groupByTime = queryBuilder.getGroupByTime(groupByList);
 
+    // Getting group by tags/labels
     if (!groupByTagList.isEmpty()) {
       groupByEntityList = getGroupByEntityListFromTags(groupByList, groupByEntityList, groupByTagList);
     } else if (!groupByLabelList.isEmpty()) {
@@ -117,7 +133,7 @@ public class CeClusterBillingDataDataFetcher extends AbstractStatsDataFetcherWit
            Statement statement = connection.createStatement()) {
         resultSet = statement.executeQuery(queryData.getQuery());
         successful = true;
-        return generateData(queryData, resultSet);
+        return generateData(queryData, resultSet, accountId, selectedLabels);
       } catch (SQLException e) {
         retryCount++;
         if (retryCount >= MAX_RETRY) {
@@ -136,8 +152,10 @@ public class CeClusterBillingDataDataFetcher extends AbstractStatsDataFetcherWit
     return null;
   }
 
-  private QLCEData generateData(CEExportDataQueryMetadata queryData, ResultSet resultSet) throws SQLException {
+  private QLCEData generateData(CEExportDataQueryMetadata queryData, ResultSet resultSet, String accountId,
+      List<String> selectedLabels) throws SQLException {
     List<QLCEDataEntry> dataEntries = new ArrayList<>();
+    Set<String> workloads = new HashSet<>();
     while (resultSet != null && resultSet.next()) {
       Double totalCost = null;
       Double idleCost = null;
@@ -209,6 +227,7 @@ public class CeClusterBillingDataDataFetcher extends AbstractStatsDataFetcherWit
             break;
           case WORKLOADNAME:
             workload = resultSet.getString(field.getFieldName());
+            workloads.add(workload);
             break;
           case NAMESPACE:
             namespace
@@ -292,6 +311,26 @@ public class CeClusterBillingDataDataFetcher extends AbstractStatsDataFetcherWit
       dataEntries.add(dataEntryBuilder.build());
     }
 
+    if (!workloads.isEmpty() && !selectedLabels.isEmpty()) {
+      List<K8sWorkload> k8sWorkloads = dao.list(accountId, workloads);
+      Map<String, Map<String, String>> labelsForWorkload =
+          k8sWorkloads.stream().collect(Collectors.toMap(K8sWorkload::getName, K8sWorkload::getLabels));
+
+      dataEntries.forEach(entry -> {
+        Map<String, String> labels = new HashMap<>();
+        List<QLCEK8sLabels> labelValues = new ArrayList<>();
+        selectedLabels.forEach(label -> labels.put(label, DEFAULT_SELECTED_LABEL));
+        Map<String, String> workloadLabels = labelsForWorkload.getOrDefault(entry.getK8s().getWorkload(), null);
+        if (workloadLabels != null) {
+          selectedLabels.forEach(
+              label -> labels.put(label, workloadLabels.getOrDefault(label, DEFAULT_SELECTED_LABEL)));
+        }
+        selectedLabels.forEach(
+            label -> labelValues.add(QLCEK8sLabels.builder().name(label).value(labels.get(label)).build()));
+        entry.getK8s().setSelectedLabels(labelValues);
+      });
+    }
+
     return QLCEData.builder().data(dataEntries).build();
   }
 
@@ -300,6 +339,25 @@ public class CeClusterBillingDataDataFetcher extends AbstractStatsDataFetcherWit
     List<SelectedField> selectionSet = dataFetchingEnvironment.getSelectionSet().getFields();
     selectionSet.forEach(field -> selectedFields.add(field.getName()));
     return new ArrayList<>(selectedFields);
+  }
+
+  private List<String> getSelectedLabelColumns(DataFetchingEnvironment dataFetchingEnvironment) {
+    Object object = dataFetchingEnvironment.getArguments().get(SELECT);
+    if (object == null) {
+      return new ArrayList<>();
+    }
+    Collection returnCollection = Lists.newArrayList();
+    Collection collection = (Collection) object;
+    collection.forEach(item -> returnCollection.add(convertToObject(item)));
+    List<QLCESelect> selectedLabels = (List<QLCESelect>) returnCollection;
+    Set<String> labels = new HashSet<>();
+    selectedLabels.forEach(entry -> labels.addAll(entry.getLabels()));
+    return new ArrayList<>(labels);
+  }
+
+  private QLCESelect convertToObject(Object fromValue) {
+    ObjectMapper mapper = new ObjectMapper();
+    return mapper.convertValue(fromValue, QLCESelect.class);
   }
 
   @Override

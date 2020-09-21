@@ -65,17 +65,19 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 public class CeClusterBillingDataDataFetcherTest extends AbstractDataFetcherTest {
   @Mock TimeScaleDBService timeScaleDBService;
   @Mock private DataFetcherUtils utils;
   @Mock TagHelper tagHelper;
   @Mock private DataFetchingEnvironment environment;
+  @Mock private K8sWorkloadDao k8sWorkloadDao;
   @InjectMocks CEExportDataQueryBuilder queryBuilder;
   @Inject @InjectMocks CeClusterBillingDataDataFetcher ceClusterBillingDataDataFetcher;
-  @Inject private K8sWorkloadDao k8sWorkloadDao;
 
   @Mock Statement statement;
   @Mock ResultSet resultSet;
@@ -89,13 +91,18 @@ public class CeClusterBillingDataDataFetcherTest extends AbstractDataFetcherTest
   private static boolean INCLUDE_OTHERS = true;
   private static long ONE_DAY_MILLIS = 86400000;
   private List<String> selectedFields = new ArrayList<>();
+  private static final String SELECT = "select";
 
   private static final DataFetchingFieldSelectionSet mockSelectionSet = new DataFetchingFieldSelectionSet() {
     public MergedSelectionSet get() {
       return MergedSelectionSet.newMergedSelectionSet().build();
     }
     public Map<String, Map<String, Object>> getArguments() {
-      return Collections.emptyMap();
+      Map<String, Map<String, Object>> returnArguments = new HashMap<>();
+      Map<String, Object> selectedLabels = new HashMap<>();
+      selectedLabels.put("labels", Collections.singleton(LABEL_NAME));
+      returnArguments.put(SELECT, selectedLabels);
+      return returnArguments;
     }
     public Map<String, GraphQLFieldDefinition> getDefinitions() {
       return Collections.emptyMap();
@@ -125,6 +132,10 @@ public class CeClusterBillingDataDataFetcherTest extends AbstractDataFetcherTest
     Map<String, String> labels = new HashMap<>();
     labels.put(LABEL_NAME, LABEL_VALUE);
     k8sWorkloadDao.save(getTestWorkload(WORKLOAD_NAME_ACCOUNT1, labels));
+    Set<String> workloadNames = new HashSet<>();
+    workloadNames.add(WORKLOAD_NAME_ACCOUNT1);
+    when(k8sWorkloadDao.list(ACCOUNT1_ID, workloadNames))
+        .thenReturn(Collections.singletonList(getTestWorkload(WORKLOAD_NAME_ACCOUNT1, labels)));
     populateSelectedFields(selectedFields);
     Connection mockConnection = mock(Connection.class);
     Statement mockStatement = mock(Statement.class);
@@ -266,7 +277,7 @@ public class CeClusterBillingDataDataFetcherTest extends AbstractDataFetcherTest
         Arrays.asList(makeSortingCriteria(QLSortOrder.DESCENDING, QLCESortType.UNALLOCATEDCOST));
 
     QLCEData data = ceClusterBillingDataDataFetcher.getData(ACCOUNT1_ID, filters, aggregationFunction,
-        Collections.emptyList(), sortCriteria, LIMIT, OFFSET, selectedFields);
+        Collections.emptyList(), sortCriteria, LIMIT, OFFSET, selectedFields, Collections.emptyList());
 
     assertThat(data).isNotNull();
     assertThat(data.getData().get(0).getCluster()).isEqualTo(CLUSTER1_ID);
@@ -335,7 +346,36 @@ public class CeClusterBillingDataDataFetcherTest extends AbstractDataFetcherTest
         ACCOUNT1_ID, groupBy, aggregationFunction, sortCriteria, data, LIMIT, INCLUDE_OTHERS);
     assertThat(data).isNotNull();
     assertThat(data.getData().get(0).getLabelName()).isEqualTo(LABEL_NAME);
-    assertThat(data.getData().get(0).getLabelValue()).isEqualTo(LABEL_VALUE);
+  }
+
+  @Test
+  @Owner(developers = SHUBHANSHU)
+  @Category(UnitTests.class)
+  public void testFetchMethodForSelectLabelsInBillingDataDataFetcher() {
+    Long filterTime = 0L;
+
+    List<QLCEAggregation> aggregationFunction = new ArrayList<>();
+    aggregationFunction.add(makeCostAggregation(QLCECost.TOTALCOST));
+    List<QLCEFilter> filters = new ArrayList<>();
+    filters.add(makeStartTimeFilter(filterTime));
+    filters.add(makeEndTimeFilter(ONE_DAY_MILLIS));
+    filters.add(makeEntityFilter(new String[] {NAMESPACE1}, QLCEFilterType.Namespace));
+    filters.add(makeEntityFilter(new String[] {WORKLOAD_NAME_ACCOUNT1}, QLCEFilterType.Workload));
+
+    List<QLCEGroupBy> groupBy =
+        Arrays.asList(makeEntityGroupBy(QLCEEntityGroupBy.Namespace), makeEntityGroupBy(QLCEEntityGroupBy.Workload));
+    List<QLCESort> sortCriteria = Arrays.asList(makeSortingCriteria(QLSortOrder.DESCENDING, QLCESortType.TOTALCOST));
+
+    QLCEData data = ceClusterBillingDataDataFetcher.getData(ACCOUNT1_ID, filters, aggregationFunction, groupBy,
+        sortCriteria, LIMIT, OFFSET, Collections.emptyList(), Collections.singletonList(LABEL_NAME));
+
+    assertThat(data).isNotNull();
+    assertThat(data.getData().get(0).getK8s().getNamespace()).isEqualTo(NAMESPACE1);
+    assertThat(data.getData().get(0).getK8s().getWorkload()).isEqualTo(WORKLOAD_NAME_ACCOUNT1);
+    assertThat(data.getData().get(0).getK8s().getSelectedLabels().get(0).getName()).isEqualTo(LABEL_NAME);
+    assertThat(data.getData().get(0).getK8s().getSelectedLabels().get(0).getValue()).isEqualTo(LABEL_VALUE);
+    assertThat(data.getData().get(0).getK8s().getNode()).isEqualTo("");
+    assertThat(data.getData().get(0).getTotalCost()).isEqualTo(10.0);
   }
 
   private void mockResultSet() throws SQLException {
