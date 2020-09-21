@@ -1,10 +1,7 @@
 package io.harness.delegate.configuration;
 
-import io.harness.grpc.server.Connector;
 import lombok.Builder;
 import lombok.Data;
-
-import java.util.List;
 
 /**
  * Created by peeyushaggarwal on 11/29/16.
@@ -42,8 +39,7 @@ public class DelegateConfiguration {
   private String helm3Path;
 
   private boolean grpcServiceEnabled;
-  private List<Connector> grpcServiceConnectors;
-  private String grpcServiceTokenSecret;
+  private Integer grpcServiceConnectorPort;
 
   private String managerServiceSecret;
 }

@@ -66,7 +66,7 @@ public class CIManagerServiceModule extends AbstractModule {
   @Singleton
   @Named("serviceSecret")
   String serviceSecret() {
-    return ciManagerConfiguration.getDelegateGrpcServiceTokenSecret();
+    return ciManagerConfiguration.getManagerServiceSecret();
   }
 
   @Provides

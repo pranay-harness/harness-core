@@ -184,7 +184,7 @@ public class DelegateApplication {
 
     if (configuration.isGrpcServiceEnabled()) {
       modules.add(new DelegateGrpcServiceModule(
-          configuration.getGrpcServiceConnectors(), configuration.getGrpcServiceTokenSecret()));
+          configuration.getGrpcServiceConnectorPort(), configuration.getManagerServiceSecret()));
     }
 
     Injector injector = Guice.createInjector(modules);

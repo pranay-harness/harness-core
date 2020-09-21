@@ -25,7 +25,6 @@ public class CIManagerConfiguration extends Configuration implements AssetsBundl
 
   private ScmConnectionConfig scmConnectionConfig;
   private String managerUrl;
-  private String delegateGrpcServiceTokenSecret;
   private String managerServiceSecret;
   private String managerTarget;
   private String managerAuthority;
