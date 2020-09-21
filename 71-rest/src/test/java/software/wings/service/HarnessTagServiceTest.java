@@ -3,6 +3,7 @@ package software.wings.service;
 import static io.harness.beans.SearchFilter.Operator.EQ;
 import static io.harness.rule.OwnerRule.AADITI;
 import static io.harness.rule.OwnerRule.ANSHUL;
+import static io.harness.rule.OwnerRule.HINGER;
 import static io.harness.rule.OwnerRule.PUNEET;
 import static junit.framework.TestCase.fail;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -10,6 +11,7 @@ import static org.mockito.Mockito.when;
 import static software.wings.beans.Account.Builder.anAccount;
 import static software.wings.beans.EntityType.SERVICE;
 import static software.wings.beans.EntityType.WORKFLOW;
+import static software.wings.security.PermissionAttribute.PermissionType.MANAGE_TAGS;
 import static software.wings.utils.WingsTestConstants.APP_ID;
 
 import com.google.common.collect.ImmutableSet;
@@ -36,6 +38,8 @@ import software.wings.beans.HarnessTag;
 import software.wings.beans.HarnessTagLink;
 import software.wings.beans.ResourceLookup;
 import software.wings.dl.WingsPersistence;
+import software.wings.resources.HarnessTagResource;
+import software.wings.security.annotations.AuthRule;
 import software.wings.service.impl.EntityNameCache;
 import software.wings.service.impl.HarnessTagServiceImpl;
 import software.wings.service.intfc.AccountService;
@@ -43,6 +47,7 @@ import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.ResourceLookupService;
 import software.wings.utils.WingsTestConstants;
 
+import java.lang.reflect.Method;
 import java.util.Collections;
 import java.util.HashSet;
 
@@ -757,5 +762,32 @@ public class HarnessTagServiceTest extends WingsBaseTest {
       assertThat(exception.getParams().get("message"))
           .isEqualTo("Pipeline defaults cannot be used as tags in workflow");
     }
+  }
+
+  @Test
+  @Owner(developers = HINGER)
+  @Category(UnitTests.class)
+  public void checkIfPermissionCorrectForCreate() throws NoSuchMethodException {
+    Method method = HarnessTagResource.class.getDeclaredMethod("create", String.class, HarnessTag.class);
+    AuthRule annotation = method.getAnnotation(AuthRule.class);
+    assertThat(annotation.permissionType()).isEqualTo(MANAGE_TAGS);
+  }
+
+  @Test
+  @Owner(developers = HINGER)
+  @Category(UnitTests.class)
+  public void checkIfPermissionCorrectForUpdate() throws NoSuchMethodException {
+    Method method = HarnessTagResource.class.getDeclaredMethod("update", String.class, String.class, HarnessTag.class);
+    AuthRule annotation = method.getAnnotation(AuthRule.class);
+    assertThat(annotation.permissionType()).isEqualTo(MANAGE_TAGS);
+  }
+
+  @Test
+  @Owner(developers = HINGER)
+  @Category(UnitTests.class)
+  public void checkIfPermissionCorrectForDelete() throws NoSuchMethodException {
+    Method method = HarnessTagResource.class.getDeclaredMethod("delete", String.class, String.class);
+    AuthRule annotation = method.getAnnotation(AuthRule.class);
+    assertThat(annotation.permissionType()).isEqualTo(MANAGE_TAGS);
   }
 }
