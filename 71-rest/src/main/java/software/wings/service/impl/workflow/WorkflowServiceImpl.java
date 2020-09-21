@@ -1179,6 +1179,9 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
 
       workflowServiceTemplateHelper.populatePropertiesFromWorkflow(workflow);
 
+      if (isEmpty(workflow.getAccountId())) {
+        workflow.setAccountId(accountId);
+      }
       StateMachine stateMachine = new StateMachine(workflow, workflow.getDefaultVersion(),
           ((CustomOrchestrationWorkflow) orchestrationWorkflow).getGraph(), stencilMap(workflow.getAppId()),
           infraRefactor, migration);

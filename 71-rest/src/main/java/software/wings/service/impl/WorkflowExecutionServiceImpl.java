@@ -1164,6 +1164,9 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
       }
     }
 
+    if (isEmpty(pipeline.getAccountId())) {
+      pipeline.setAccountId(accountId);
+    }
     StateMachine stateMachine = new StateMachine(pipeline, workflowService.stencilMap(pipeline.getAppId()));
     stateMachine.setOrchestrationWorkflow(null);
 
@@ -1289,6 +1292,9 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
           workflowConcurrencyHelper.enhanceWithConcurrencySteps(workflow, executionArgs.getWorkflowVariables()));
     }
 
+    if (isEmpty(workflow.getAccountId())) {
+      workflow.setAccountId(accountId);
+    }
     StateMachine stateMachine = new StateMachine(workflow, workflow.getDefaultVersion(),
         ((CustomOrchestrationWorkflow) workflow.getOrchestrationWorkflow()).getGraph(),
         workflowService.stencilMap(appId), infraRefactor, false);
