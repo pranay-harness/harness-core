@@ -6,7 +6,9 @@ import static com.fasterxml.jackson.annotation.JsonTypeInfo.Id.NAME;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import io.harness.cdng.infra.yaml.Infrastructure;
+import io.harness.cdng.visitor.LevelNodeQualifierName;
 import io.harness.cdng.visitor.helpers.pipelineinfrastructure.InfrastructureDefVisitorHelper;
+import io.harness.walktree.beans.LevelNode;
 import io.harness.walktree.beans.VisitableChildren;
 import io.harness.walktree.visitor.SimpleVisitorHelper;
 import io.harness.walktree.visitor.Visitable;
@@ -38,5 +40,10 @@ public class InfrastructureDef implements Visitable {
     VisitableChildren children = VisitableChildren.builder().build();
     children.add("infrastructure", infrastructure);
     return children;
+  }
+
+  @Override
+  public LevelNode getLevelNode() {
+    return LevelNode.builder().qualifierName(LevelNodeQualifierName.INFRASTRUCTURE_DEF).build();
   }
 }

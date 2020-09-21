@@ -6,8 +6,10 @@ import static com.fasterxml.jackson.annotation.JsonTypeInfo.Id.NAME;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.fasterxml.jackson.annotation.JsonTypeName;
+import io.harness.cdng.visitor.LevelNodeQualifierName;
 import io.harness.cdng.visitor.helpers.manifest.ManifestConfigVisitorHelper;
 import io.harness.data.validator.EntityIdentifier;
+import io.harness.walktree.beans.LevelNode;
 import io.harness.walktree.beans.VisitableChildren;
 import io.harness.walktree.visitor.SimpleVisitorHelper;
 import io.harness.walktree.visitor.Visitable;
@@ -53,5 +55,10 @@ public class ManifestConfig implements ManifestConfigWrapper, Visitable {
     VisitableChildren children = VisitableChildren.builder().build();
     children.add("manifestAttributes", manifestAttributes);
     return children;
+  }
+
+  @Override
+  public LevelNode getLevelNode() {
+    return LevelNode.builder().qualifierName(LevelNodeQualifierName.MANIFEST_CONFIG).build();
   }
 }

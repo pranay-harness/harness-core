@@ -4,15 +4,18 @@ import com.google.inject.Injector;
 import com.google.inject.Key;
 
 import io.harness.walktree.beans.VisitElementResult;
+import lombok.Getter;
 
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 
 public abstract class SimpleVisitor<T> extends Visitor {
-  private final Injector injector;
-  Map<String, Object> contextMap = new ConcurrentHashMap<>();
+  private Injector injector;
+  @Getter Map<String, Object> contextMap = new ConcurrentHashMap<>();
+  @Getter Map<Object, Object> elementToDummyElementMap = new HashMap<>();
 
   public SimpleVisitor(Injector injector) {
     this.injector = injector;

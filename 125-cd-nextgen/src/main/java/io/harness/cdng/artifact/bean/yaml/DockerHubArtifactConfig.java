@@ -1,14 +1,17 @@
 package io.harness.cdng.artifact.bean.yaml;
 
+import static io.harness.delegate.task.artifacts.ArtifactSourceConstants.DOCKER_HUB_NAME;
+
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import io.harness.beans.ParameterField;
 import io.harness.cdng.artifact.bean.ArtifactConfig;
 import io.harness.cdng.artifact.utils.ArtifactUtils;
+import io.harness.cdng.visitor.LevelNodeQualifierName;
 import io.harness.cdng.visitor.helpers.artifact.DockerHubArtifactConfigVisitorHelper;
 import io.harness.common.SwaggerConstants;
 import io.harness.data.validator.EntityIdentifier;
-import io.harness.delegate.task.artifacts.ArtifactSourceConstants;
 import io.harness.delegate.task.artifacts.ArtifactSourceType;
+import io.harness.walktree.beans.LevelNode;
 import io.harness.walktree.visitor.SimpleVisitorHelper;
 import io.harness.walktree.visitor.Visitable;
 import io.swagger.annotations.ApiModelProperty;
@@ -29,7 +32,7 @@ import java.util.List;
 @Builder
 @AllArgsConstructor
 @EqualsAndHashCode(callSuper = false)
-@JsonTypeName(ArtifactSourceConstants.DOCKER_HUB_NAME)
+@JsonTypeName(DOCKER_HUB_NAME)
 @SimpleVisitorHelper(helperClass = DockerHubArtifactConfigVisitorHelper.class)
 public class DockerHubArtifactConfig implements ArtifactConfig, Visitable {
   /**
@@ -86,5 +89,10 @@ public class DockerHubArtifactConfig implements ArtifactConfig, Visitable {
       resultantConfig = resultantConfig.withTagRegex(dockerHubArtifactConfig.getTagRegex());
     }
     return resultantConfig;
+  }
+
+  @Override
+  public LevelNode getLevelNode() {
+    return LevelNode.builder().qualifierName(LevelNodeQualifierName.DOCKER_HUB_NAME).build();
   }
 }

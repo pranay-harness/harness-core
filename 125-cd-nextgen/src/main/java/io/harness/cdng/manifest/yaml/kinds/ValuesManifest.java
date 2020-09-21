@@ -6,7 +6,9 @@ import io.harness.cdng.manifest.ManifestType;
 import io.harness.cdng.manifest.yaml.ManifestAttributes;
 import io.harness.cdng.manifest.yaml.StoreConfig;
 import io.harness.cdng.manifest.yaml.StoreConfigWrapper;
+import io.harness.cdng.visitor.LevelNodeQualifierName;
 import io.harness.cdng.visitor.helpers.manifest.ValuesManifestVisitorHelper;
+import io.harness.walktree.beans.LevelNode;
 import io.harness.walktree.beans.VisitableChildren;
 import io.harness.walktree.visitor.SimpleVisitorHelper;
 import io.harness.walktree.visitor.Visitable;
@@ -53,5 +55,10 @@ public class ValuesManifest implements ManifestAttributes, Visitable {
     VisitableChildren children = VisitableChildren.builder().build();
     children.add("storeConfigWrapper", storeConfigWrapper);
     return children;
+  }
+
+  @Override
+  public LevelNode getLevelNode() {
+    return LevelNode.builder().qualifierName(LevelNodeQualifierName.VALUE_MANIFEST).build();
   }
 }

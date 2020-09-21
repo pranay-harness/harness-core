@@ -7,7 +7,7 @@ import io.harness.walktree.visitor.validation.ValidationVisitor;
 public class DeploymentStageVisitorHelper implements ConfigValidator {
   @Override
   public void validate(Object object, ValidationVisitor visitor) {
-    // Nothing to validate.
+    // Nothing to validate
   }
 
   @Override

@@ -2,8 +2,10 @@ package io.harness.cdng.service.beans;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import io.harness.beans.ParameterField;
+import io.harness.cdng.visitor.LevelNodeQualifierName;
 import io.harness.cdng.visitor.helpers.serviceconfig.ServiceConfigVisitorHelper;
 import io.harness.common.SwaggerConstants;
+import io.harness.walktree.beans.LevelNode;
 import io.harness.walktree.beans.VisitableChildren;
 import io.harness.walktree.visitor.SimpleVisitorHelper;
 import io.harness.walktree.visitor.Visitable;
@@ -20,6 +22,7 @@ import javax.validation.constraints.NotNull;
 @SimpleVisitorHelper(helperClass = ServiceConfigVisitorHelper.class)
 public class ServiceConfig implements OverridesApplier<ServiceConfig>, Visitable {
   @Wither private ServiceUseFromStage useFromStage;
+
   @ApiModelProperty(dataType = SwaggerConstants.STRING_CLASSPATH) @NotNull private ParameterField<String> identifier;
   @ApiModelProperty(dataType = SwaggerConstants.STRING_CLASSPATH) @Wither private ParameterField<String> name;
   @ApiModelProperty(dataType = SwaggerConstants.STRING_CLASSPATH) @Wither private ParameterField<String> description;
@@ -51,5 +54,10 @@ public class ServiceConfig implements OverridesApplier<ServiceConfig>, Visitable
     VisitableChildren children = VisitableChildren.builder().build();
     children.add("serviceDefinition", serviceDefinition);
     return children;
+  }
+
+  @Override
+  public LevelNode getLevelNode() {
+    return LevelNode.builder().qualifierName(LevelNodeQualifierName.SERVICE_CONFIG).build();
   }
 }

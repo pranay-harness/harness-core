@@ -55,6 +55,10 @@ public abstract class Visitor {
                                             .map(VisitableChild::getValue)
                                             .collect(Collectors.toList());
           for (Object child : childrenToWalk) {
+            // if child is null then we should not visit it
+            if (child == null) {
+              continue;
+            }
             VisitElementResult childVisitResult = walkElementTree(child);
             if (childVisitResult == VisitElementResult.TERMINATE) {
               return childVisitResult;
