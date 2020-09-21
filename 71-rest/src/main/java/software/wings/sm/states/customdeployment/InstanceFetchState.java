@@ -30,6 +30,7 @@ import io.harness.deployment.InstanceDetails;
 import io.harness.exception.ExceptionUtils;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
+import io.harness.expression.ExpressionEvaluator;
 import io.harness.logging.CommandExecutionStatus;
 import io.harness.logging.LogCallback;
 import io.harness.logging.LogLevel;
@@ -97,6 +98,7 @@ public class InstanceFetchState extends State {
   @Inject private ActivityHelperService activityHelperService;
   @Inject private SweepingOutputService sweepingOutputService;
   @Inject private LogService logService;
+  @Inject private ExpressionEvaluator expressionEvaluator;
 
   @Getter @Setter @DefaultValue("10") String stateTimeoutInMinutes;
   @Getter @Setter private List<String> tags;
@@ -148,20 +150,20 @@ public class InstanceFetchState extends State {
         accountId, infrastructureMapping.getCustomDeploymentTemplateId(),
         infrastructureMapping.getDeploymentTypeTemplateVersion());
 
-    String safeRenderedScriptString = getRenderedScriptExceptSecrets(
+    String scriptString = replaceInfraVariables(
         deploymentTypeTemplate.getFetchInstanceScript(), infraMappingElement.getCustom().getVars());
 
     final ManagerExecutionLogCallback logCallback =
         buildLogcallBack(appId, activityId, CUSTOM_DEPLOYMENT_FETCH_INSTANCES.getName());
 
     logCallback.saveExecutionLog("Dispatching script to delegate for fetching instances", LogLevel.INFO, RUNNING);
-    logCallback.saveExecutionLog(safeRenderedScriptString);
+    logCallback.saveExecutionLog(scriptString);
 
     ShellScriptProvisionParameters taskParameters = ShellScriptProvisionParameters.builder()
                                                         .accountId(accountId)
                                                         .appId(appId)
                                                         .activityId(activityId)
-                                                        .scriptBody(safeRenderedScriptString)
+                                                        .scriptBody(scriptString)
                                                         .textVariables(infraMappingElement.getCustom().getVars())
                                                         .commandUnit(CUSTOM_DEPLOYMENT_FETCH_INSTANCES.getName())
                                                         .outputPathKey(OUTPUT_PATH_KEY)
@@ -205,7 +207,7 @@ public class InstanceFetchState extends State {
                                 .activityId(activityId)
                                 .hostObjectArrayPath(deploymentTypeTemplate.getHostObjectArrayPath())
                                 .hostAttributes(deploymentTypeTemplate.getHostAttributes())
-                                .instanceFetchScript(safeRenderedScriptString)
+                                .instanceFetchScript(getRenderedScriptExceptSecrets(taskParameters.getScriptBody()))
                                 .build())
         .build();
   }
@@ -331,10 +333,14 @@ public class InstanceFetchState extends State {
         .getUuid();
   }
 
-  private String getRenderedScriptExceptSecrets(String script, Map<String, String> contextMap) {
+  private String replaceInfraVariables(String script, Map<String, String> contextMap) {
+    return expressionEvaluator.substitute(script, Collections.unmodifiableMap(contextMap));
+  }
+
+  private String getRenderedScriptExceptSecrets(String script) {
     ManagerPreviewExpressionEvaluator previewExpressionEvaluator =
         ManagerPreviewExpressionEvaluator.evaluatorWithSecretExpressionFormat();
-    return previewExpressionEvaluator.substitute(script, Collections.<String, Object>unmodifiableMap(contextMap));
+    return previewExpressionEvaluator.substitute(script, Collections.emptyMap());
   }
 
   void saveInstanceInfoToSweepingOutput(

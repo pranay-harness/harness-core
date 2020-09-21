@@ -137,7 +137,6 @@ public class CustomDeploymentFunctionalTest extends AbstractFunctionalTest {
   public void testCustomDeploymentWorkflowSuccess() throws IOException {
     final String accountId = owners.obtainAccount().getUuid();
     resetCache(accountId);
-    logFeatureFlagsEnabled(accountId);
 
     CustomDeploymentTypeTemplate customDeploymentTypeTemplate =
         CustomDeploymentTypeTemplate.builder()

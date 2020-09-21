@@ -10,6 +10,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.assertj.core.api.Assertions.fail;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyList;
+import static org.mockito.Matchers.anyMap;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.doAnswer;
@@ -32,6 +33,7 @@ import io.harness.beans.SweepingOutputInstance;
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.beans.TaskData;
 import io.harness.delegate.beans.TaskData.TaskDataKeys;
+import io.harness.expression.ExpressionEvaluator;
 import io.harness.rule.Owner;
 import io.harness.tasks.Cd1SetupFields;
 import io.harness.tasks.ResponseData;
@@ -80,6 +82,7 @@ public class InstanceFetchStateTest extends WingsBaseTest {
   @Mock private CustomDeploymentTypeService customDeploymentTypeService;
   @Mock private InfrastructureMappingService infrastructureMappingService;
   @Mock private DelegateService delegateService;
+  @Mock private ExpressionEvaluator expressionEvaluator;
   @Mock private SweepingOutputService sweepingOutputService;
 
   @InjectMocks private InstanceFetchState state = new InstanceFetchState("Fetch Instances");
@@ -120,6 +123,9 @@ public class InstanceFetchStateTest extends WingsBaseTest {
         .when(context)
         .renderExpression(anyString(), any(StateExecutionContext.class));
     doReturn("5").when(context).renderExpression(timeoutExpr);
+    doAnswer(invocation -> invocation.getArgumentAt(0, String.class))
+        .when(expressionEvaluator)
+        .substitute(anyString(), anyMap());
   }
 
   @Test
@@ -156,6 +162,7 @@ public class InstanceFetchStateTest extends WingsBaseTest {
                                                 .build())
                                       .build();
     verify(delegateService).queueTask(captor.capture());
+    verify(expressionEvaluator, times(1)).substitute(anyString(), anyMap());
 
     final DelegateTask task = captor.getValue();
     assertThat(task).isEqualToIgnoringGivenFields(expected, DelegateTaskKeys.data, DelegateTaskKeys.validUntil);
