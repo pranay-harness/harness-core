@@ -4,11 +4,14 @@ package main
 	CI lite engine executes steps of stage provided as an input.
 */
 import (
+	"fmt"
+	"os"
+	"strconv"
+
 	"github.com/alexflint/go-arg"
-	"github.com/wings-software/portal/commons/go/lib/logs"
 	"github.com/wings-software/portal/product/ci/engine/executor"
 	"github.com/wings-software/portal/product/ci/engine/grpc"
-	"go.uber.org/zap"
+	logger "github.com/wings-software/portal/product/ci/logger/util"
 )
 
 const (
@@ -20,6 +23,7 @@ var (
 	executeStage     = executor.ExecuteStage
 	executeStep      = executor.ExecuteStep
 	liteEngineServer = grpc.NewLiteEngineServer
+	newRemoteLogger  = logger.GetRemoteLogger
 )
 
 // schema for executing a stage
@@ -70,32 +74,56 @@ func init() {
 func main() {
 	parseArgs()
 
-	// build initial log
-	log := logs.NewBuilder().Verbose(args.Verbose).WithDeployment(args.Deployment).
-		WithFields("deployable", deployable,
-			"application_name", applicationName).
-		MustBuild().Sugar()
+	// Build initial log
+	// Lite engine logs that are not part of any step are logged with ID engine_state_logs-engineID
+	engineID := "main"
+	if args.Server != nil {
+		engineID = strconv.Itoa(int(args.Server.Port))
+	}
+	key := fmt.Sprintf("engine_stage_logs-%s", engineID)
+	remoteLogger, err := newRemoteLogger(key)
+	if err != nil {
+		// Could not create a logger
+		panic(err)
+	}
+	log := remoteLogger.BaseLogger
+	defer remoteLogger.Writer.Close() // upload the logs to object store and close the stream
 
 	log.Infow("CI lite engine is starting")
+
 	switch {
 	case args.Stage != nil:
-		executeStage(args.Stage.Input, args.Stage.LogPath, args.Stage.TmpFilePath, args.Stage.WorkerPorts, args.Stage.Debug, log)
+		err := executeStage(args.Stage.Input, args.Stage.LogPath, args.Stage.TmpFilePath, args.Stage.WorkerPorts, args.Stage.Debug, log)
+		if err != nil {
+			remoteLogger.Writer.Close()
+			os.Exit(1) // Exit the lite engine with status code of 1
+		}
 	case args.Step != nil:
-		executeStep(args.Step.Input, args.Step.LogPath, args.Step.TmpFilePath, log)
+		err := executeStep(args.Step.Input, args.Step.LogPath, args.Step.TmpFilePath, log)
+		if err != nil {
+			remoteLogger.Writer.Close()
+			os.Exit(1) // Exit the lite engine with status code of 1
+		}
 	case args.Server != nil:
 		s, err := liteEngineServer(args.Server.Port, args.Server.LogPath, args.Server.TmpFilePath, log)
 		if err != nil {
-			log.Fatalw("error while running CI lite engine server", "port", args.Server.Port, zap.Error(err))
+			remoteLogger.Writer.Close()
+			os.Exit(1) // Exit the lite engine with status code of 1
 		}
 
 		// Wait for stop signal and shutdown the server upon receiving it in a separate goroutine
 		go s.Stop()
-		s.Start()
+		if err := s.Start(); err != nil {
+			remoteLogger.Writer.Close()
+			os.Exit(1) // Exit the lite engine with status code of 1
+		}
 	default:
-		log.Fatalw(
+		log.Errorw(
 			"One of stage or step needs to be specified",
 			"args", args,
 		)
+		remoteLogger.Writer.Close()
+		os.Exit(1) // Exit the lite engine with status code of 1
 	}
 	log.Infow("CI lite engine completed execution, now exiting")
 }

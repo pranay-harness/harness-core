@@ -28,6 +28,7 @@ type StageExecutor interface {
 // NewStageExecutor creates a stage executor
 func NewStageExecutor(encodedStage, stepLogPath, tmpFilePath string, workerPorts []uint, debug bool,
 	log *zap.SugaredLogger) StageExecutor {
+	// TODO: (vistaar) remove step log path.
 	o := make(output.StageOutput)
 	unitExecutor := NewUnitExecutor(stepLogPath, tmpFilePath, log)
 	parallelExecutor := NewParallelExecutor(stepLogPath, tmpFilePath, workerPorts, log)
@@ -147,14 +148,15 @@ func (e *stageExecutor) decodeStage(encodedStage string) (*pb.Execution, error) 
 }
 
 // ExecuteStage executes a stage of the pipeline
-func ExecuteStage(input, logpath, tmpFilePath string, workerPorts []uint, debug bool, log *zap.SugaredLogger) {
+func ExecuteStage(input, logpath, tmpFilePath string, workerPorts []uint, debug bool, log *zap.SugaredLogger) error {
 	executor := NewStageExecutor(input, logpath, tmpFilePath, workerPorts, debug, log)
 	if err := executor.Run(); err != nil {
-		log.Fatalw(
+		log.Errorw(
 			"error while executing steps in a stage",
 			"embedded_stage", input,
-			"log_path", logpath,
 			zap.Error(err),
 		)
+		return err
 	}
+	return nil
 }

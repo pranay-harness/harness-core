@@ -12,6 +12,7 @@ go_library(
         "//product/ci/addon/proto:go_default_library",
         "//product/ci/addon/tail:go_default_library",
         "//product/ci/addon/tasks:go_default_library",
+        "//product/ci/logger/util:go_default_library",
         "@org_golang_google_grpc//:go_default_library",
         "@org_golang_google_grpc//codes:go_default_library",
         "@org_golang_google_grpc//status:go_default_library",

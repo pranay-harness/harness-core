@@ -35,6 +35,13 @@ func TestStepRun(t *testing.T) {
 	accountID := "test"
 	callbackToken := "token"
 	taskID := "taskID"
+	oldLogger := newRemoteLogger
+	defer func() { newRemoteLogger = oldLogger }()
+	newRemoteLogger = func(key string) (rl *logs.RemoteLogger, err error) {
+		log, _ := logs.GetObservedLogger(zap.InfoLevel)
+		return &logs.RemoteLogger{BaseLogger: log.Sugar(), Writer: logs.NopWriter()}, nil
+	}
+
 	tmpFilePath := "/tmp"
 	stepProto1 := &pb.UnitStep{
 		Step: &pb.UnitStep_Run{
@@ -131,6 +138,13 @@ func TestStepSaveCacheError(t *testing.T) {
 	accountID := "test"
 	callbackToken := "token"
 	taskID := "taskID"
+	oldLogger := newRemoteLogger
+	defer func() { newRemoteLogger = oldLogger }()
+	newRemoteLogger = func(key string) (rl *logs.RemoteLogger, err error) {
+		log, _ := logs.GetObservedLogger(zap.InfoLevel)
+		return &logs.RemoteLogger{BaseLogger: log.Sugar(), Writer: logs.NopWriter()}, nil
+	}
+
 	tmpFilePath := "/tmp"
 	stepProto := &pb.UnitStep{
 		Id: "test2",
@@ -175,6 +189,13 @@ func TestStepSaveCacheSuccess(t *testing.T) {
 	accountID := "test"
 	taskID := "taskID"
 	callbackToken := "token"
+	oldLogger := newRemoteLogger
+	defer func() { newRemoteLogger = oldLogger }()
+	newRemoteLogger = func(key string) (rl *logs.RemoteLogger, err error) {
+		log, _ := logs.GetObservedLogger(zap.InfoLevel)
+		return &logs.RemoteLogger{BaseLogger: log.Sugar(), Writer: logs.NopWriter()}, nil
+	}
+
 	tmpFilePath := "/tmp"
 	key := "key"
 	stepProto := &pb.UnitStep{
@@ -224,6 +245,13 @@ func TestStepRestoreCacheErr(t *testing.T) {
 	accountID := "test"
 	taskID := "taskID"
 	callbackToken := "token"
+	oldLogger := newRemoteLogger
+	defer func() { newRemoteLogger = oldLogger }()
+	newRemoteLogger = func(key string) (rl *logs.RemoteLogger, err error) {
+		log, _ := logs.GetObservedLogger(zap.InfoLevel)
+		return &logs.RemoteLogger{BaseLogger: log.Sugar(), Writer: logs.NopWriter()}, nil
+	}
+
 	tmpFilePath := "/tmp"
 	stepProto := &pb.UnitStep{
 		Id: "test3",
@@ -267,6 +295,13 @@ func TestStepRestoreCacheSuccess(t *testing.T) {
 	accountID := "test"
 	taskID := "taskID"
 	callbackToken := "token"
+	oldLogger := newRemoteLogger
+	defer func() { newRemoteLogger = oldLogger }()
+	newRemoteLogger = func(key string) (rl *logs.RemoteLogger, err error) {
+		log, _ := logs.GetObservedLogger(zap.InfoLevel)
+		return &logs.RemoteLogger{BaseLogger: log.Sugar(), Writer: logs.NopWriter()}, nil
+	}
+
 	tmpFilePath := "/tmp"
 	stepProto := &pb.UnitStep{
 		Id: "test3",
@@ -310,6 +345,13 @@ func TestPublishArtifactsSuccess(t *testing.T) {
 	accountID := "test"
 	taskID := "taskID"
 	callbackToken := "token"
+	oldLogger := newRemoteLogger
+	defer func() { newRemoteLogger = oldLogger }()
+	newRemoteLogger = func(key string) (rl *logs.RemoteLogger, err error) {
+		log, _ := logs.GetObservedLogger(zap.InfoLevel)
+		return &logs.RemoteLogger{BaseLogger: log.Sugar(), Writer: logs.NopWriter()}, nil
+	}
+
 	tmpFilePath := "/tmp"
 	stepProto := &pb.UnitStep{
 		Id: "test3",
@@ -354,6 +396,13 @@ func TestPublishArtifactsErr(t *testing.T) {
 	accountID := "test"
 	taskID := "taskID"
 	callbackToken := "token"
+	oldLogger := newRemoteLogger
+	defer func() { newRemoteLogger = oldLogger }()
+	newRemoteLogger = func(key string) (rl *logs.RemoteLogger, err error) {
+		log, _ := logs.GetObservedLogger(zap.InfoLevel)
+		return &logs.RemoteLogger{BaseLogger: log.Sugar(), Writer: logs.NopWriter()}, nil
+	}
+
 	tmpFilePath := "/tmp"
 	stepProto := &pb.UnitStep{
 		Id: "test3",
@@ -406,6 +455,14 @@ func TestExecuteStep(t *testing.T) {
 		},
 		AccountId: accountID,
 	}
+
+	oldLogger := newRemoteLogger
+	defer func() { newRemoteLogger = oldLogger }()
+	newRemoteLogger = func(key string) (rl *logs.RemoteLogger, err error) {
+		log, _ := logs.GetObservedLogger(zap.InfoLevel)
+		return &logs.RemoteLogger{BaseLogger: log.Sugar(), Writer: logs.NopWriter()}, nil
+	}
+
 	emptyStep := getEncodedExecuteStepProto(t, r)
 	log, _ := logs.GetObservedLogger(zap.InfoLevel)
 

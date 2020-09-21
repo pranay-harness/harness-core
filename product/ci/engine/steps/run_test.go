@@ -1,6 +1,7 @@
 package steps
 
 import (
+	"bytes"
 	"context"
 	"fmt"
 	"os"
@@ -350,7 +351,8 @@ func TestRunValidateErr(t *testing.T) {
 	fs := filesystem.NewMockFileSystem(ctrl)
 	log, _ := logs.GetObservedLogger(zap.InfoLevel)
 
-	executor := NewRunStep(nil, logFilePath, tmpPath, nil, fs, log.Sugar())
+	var buf bytes.Buffer
+	executor := NewRunStep(nil, logFilePath, tmpPath, nil, fs, log.Sugar(), &buf)
 	o, numRetries, err := executor.Run(ctx)
 	assert.NotNil(t, err)
 	assert.Nil(t, o)
@@ -375,7 +377,8 @@ func TestRunExecuteErr(t *testing.T) {
 
 	fs.EXPECT().Create(gomock.Any()).Return(nil, os.ErrPermission)
 
-	executor := NewRunStep(step, logFilePath, tmpPath, nil, fs, log.Sugar())
+	var buf bytes.Buffer
+	executor := NewRunStep(step, logFilePath, tmpPath, nil, fs, log.Sugar(), &buf)
 	o, numRetries, err := executor.Run(ctx)
 	assert.NotNil(t, err)
 	assert.Nil(t, o)

@@ -6,6 +6,7 @@ import (
 	pb "github.com/wings-software/portal/product/ci/addon/proto"
 	"github.com/wings-software/portal/product/ci/addon/tail"
 	"github.com/wings-software/portal/product/ci/addon/tasks"
+	logger "github.com/wings-software/portal/product/ci/logger/util"
 	"go.uber.org/zap"
 	"golang.org/x/net/context"
 	"google.golang.org/grpc/codes"
@@ -17,6 +18,10 @@ type handler struct {
 	stopCh chan bool
 	log    *zap.SugaredLogger
 }
+
+var (
+	newRemoteLogger = logger.GetRemoteLogger
+)
 
 // NewAddonHandler returns a GRPC handler that implements pb.AddonServer
 func NewAddonHandler(stopCh chan bool, log *zap.SugaredLogger) pb.AddonServer {
@@ -30,10 +35,15 @@ func (h *handler) PublishArtifacts(ctx context.Context, in *pb.PublishArtifactsR
 		return nil, status.Error(codes.InvalidArgument, "task id is not set")
 	}
 
-	l := h.log.With(zap.String("task_id", taskID), zap.String("step_id", in.GetStepId()))
+	step := in.GetStepId()
+	rl, err := newRemoteLogger(step)
+	if err != nil {
+		return nil, err
+	}
+	defer rl.Writer.Close()
 
-	t := tasks.NewPublishArtifactsTask(l)
-	err := t.Publish(ctx, in)
+	t := tasks.NewPublishArtifactsTask(rl.BaseLogger)
+	err = t.Publish(ctx, in)
 	return &pb.PublishArtifactsResponse{}, err
 }
 

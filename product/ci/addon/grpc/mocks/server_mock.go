@@ -33,9 +33,11 @@ func (m *MockAddonServer) EXPECT() *MockAddonServerMockRecorder {
 }
 
 // Start mocks base method.
-func (m *MockAddonServer) Start() {
+func (m *MockAddonServer) Start() error {
 	m.ctrl.T.Helper()
-	m.ctrl.Call(m, "Start")
+	ret := m.ctrl.Call(m, "Start")
+	ret0, _ := ret[0].(error)
+	return ret0
 }
 
 // Start indicates an expected call of Start.
