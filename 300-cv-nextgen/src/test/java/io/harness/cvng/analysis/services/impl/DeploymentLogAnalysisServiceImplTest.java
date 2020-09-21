@@ -11,6 +11,7 @@ import io.harness.CvNextGenTest;
 import io.harness.beans.NGPageResponse;
 import io.harness.category.element.UnitTests;
 import io.harness.cvng.analysis.beans.DeploymentLogAnalysisDTO;
+import io.harness.cvng.analysis.beans.LogAnalysisClusterChartDTO;
 import io.harness.cvng.analysis.beans.LogAnalysisClusterDTO;
 import io.harness.cvng.analysis.entities.DeploymentLogAnalysis;
 import io.harness.cvng.analysis.services.api.DeploymentLogAnalysisService;
@@ -27,7 +28,7 @@ import java.util.Arrays;
 import java.util.List;
 
 public class DeploymentLogAnalysisServiceImplTest extends CvNextGenTest {
-  @Inject VerificationTaskService verificationTaskService;
+  @Inject private VerificationTaskService verificationTaskService;
   @Inject private DeploymentLogAnalysisService deploymentLogAnalysisService;
 
   private String accountId;
@@ -44,6 +45,18 @@ public class DeploymentLogAnalysisServiceImplTest extends CvNextGenTest {
   @Test
   @Owner(developers = NEMANJA)
   @Category(UnitTests.class)
+  public void testGetLogAnalysisClusters() {
+    String verificationTaskId = verificationTaskService.create(accountId, cvConfigId, verificationJobInstanceId);
+    deploymentLogAnalysisService.save(createDeploymentLogAnalysis(verificationTaskId));
+    List<LogAnalysisClusterChartDTO> logAnalysisClusterChartDTOlist =
+        deploymentLogAnalysisService.getLogAnalysisClusters(accountId, verificationJobInstanceId);
+
+    assertThat(logAnalysisClusterChartDTOlist).isNotNull();
+    assertThat(logAnalysisClusterChartDTOlist.size()).isEqualTo(3);
+  }
+  @Test
+  @Owner(developers = NEMANJA)
+  @Category(UnitTests.class)
   public void testGetLogAnalysisResult() {
     String verificationTaskId = verificationTaskService.create(accountId, cvConfigId, verificationJobInstanceId);
     DeploymentLogAnalysis deploymentLogAnalysis = createDeploymentLogAnalysis(verificationTaskId);
@@ -57,6 +70,16 @@ public class DeploymentLogAnalysisServiceImplTest extends CvNextGenTest {
     assertThat(pageResponse.getContent()).isNotNull();
     assertThat(pageResponse.getContent().size()).isEqualTo(3);
     assertThat(pageResponse.getContent().get(0).getLabel()).isEqualTo(3);
+  }
+
+  @Test
+  @Owner(developers = NEMANJA)
+  @Category(UnitTests.class)
+  public void testGetLogAnalysisClusters_withNoDeploymentLogAnalysis() {
+    verificationTaskService.create(accountId, cvConfigId, verificationJobInstanceId);
+    List<LogAnalysisClusterChartDTO> logAnalysisClusterChartDTOList =
+        deploymentLogAnalysisService.getLogAnalysisClusters(accountId, verificationJobInstanceId);
+    assertThat(logAnalysisClusterChartDTOList).isEmpty();
   }
 
   @Test
