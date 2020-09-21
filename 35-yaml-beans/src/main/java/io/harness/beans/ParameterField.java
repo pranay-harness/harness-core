@@ -5,59 +5,67 @@ import io.harness.expression.ExpressionEvaluatorUtils;
 import io.harness.expression.NotExpression;
 import io.harness.expression.field.OrchestrationField;
 import io.harness.expression.field.OrchestrationFieldType;
+import io.harness.walktree.registries.visitorfield.VisitorFieldType;
+import io.harness.walktree.registries.visitorfield.VisitorFieldWrapper;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 @Getter
 @NoArgsConstructor
-public class ParameterField<T> implements OrchestrationField {
+public class ParameterField<T> implements OrchestrationField, VisitorFieldWrapper {
   public static final OrchestrationFieldType ORCHESTRATION_FIELD_TYPE =
       OrchestrationFieldType.builder().type("PARAMETER_FIELD").build();
+
+  public static final VisitorFieldType VISITOR_FIELD_TYPE = VisitorFieldType.builder().type("PARAMETER_FIELD").build();
 
   @NotExpression private String expressionValue;
   private boolean isExpression;
   private T value;
+  private boolean isTypeString;
+
   // This field is set when runtime input with validation is given.
   private InputSetValidator inputSetValidator;
 
   // Below 2 fields are when caller wants to set String field instead of T like for some errors, input set merge, etc.
-  private boolean isResponseFieldString;
+  private boolean isJsonResponseField;
   private String responseField;
 
   private static final ParameterField<?> EMPTY = new ParameterField<>(null, false, null, null, false, null);
 
   public static <T> ParameterField<T> createExpressionField(
-      boolean isExpression, String expressionValue, InputSetValidator inputSetValidator) {
-    return new ParameterField<>(null, isExpression, expressionValue, inputSetValidator);
+      boolean isExpression, String expressionValue, InputSetValidator inputSetValidator, boolean isTypeString) {
+    return new ParameterField<>(null, isExpression, expressionValue, inputSetValidator, isTypeString);
   }
 
   public static <T> ParameterField<T> createValueField(T value) {
-    return new ParameterField<>(value, false, null, null);
+    return new ParameterField<>(value, false, null, null, value.getClass().equals(String.class));
   }
 
-  public static <T> ParameterField<T> createStringResponseField(String responseField) {
+  public static <T> ParameterField<T> createJsonResponseField(String responseField) {
     return new ParameterField<>(true, responseField);
   }
 
-  private ParameterField(T value, boolean isExpression, String expressionValue, InputSetValidator inputSetValidator) {
+  private ParameterField(T value, boolean isExpression, String expressionValue, InputSetValidator inputSetValidator,
+      boolean isTypeString) {
     this.value = value;
     this.isExpression = isExpression;
     this.expressionValue = expressionValue;
     this.inputSetValidator = inputSetValidator;
+    this.isTypeString = isTypeString;
   }
 
   private ParameterField(String expressionValue, boolean isExpression, T value, InputSetValidator inputSetValidator,
-      boolean isResponseFieldString, String responseField) {
+      boolean isJsonResponseField, String responseField) {
     this.expressionValue = expressionValue;
     this.isExpression = isExpression;
     this.value = value;
     this.inputSetValidator = inputSetValidator;
-    this.isResponseFieldString = isResponseFieldString;
+    this.isJsonResponseField = isJsonResponseField;
     this.responseField = responseField;
   }
 
-  private ParameterField(boolean isResponseFieldString, String responseField) {
-    this.isResponseFieldString = isResponseFieldString;
+  private ParameterField(boolean isJsonResponseField, String responseField) {
+    this.isJsonResponseField = isJsonResponseField;
     this.responseField = responseField;
   }
 
@@ -92,7 +100,7 @@ public class ParameterField<T> implements OrchestrationField {
       }
       return result.toString();
     } else {
-      return isResponseFieldString ? responseField : value;
+      return isJsonResponseField ? responseField : value;
     }
   }
 
@@ -104,5 +112,10 @@ public class ParameterField<T> implements OrchestrationField {
   @Override
   public Object getFinalValue() {
     return isExpression ? expressionValue : value;
+  }
+
+  @Override
+  public VisitorFieldType getVisitorFieldType() {
+    return VISITOR_FIELD_TYPE;
   }
 }

@@ -1,9 +1,9 @@
-package io.harness.ng.expressions.functors;
+package io.harness.expressions.functors;
 
 import io.harness.ambiance.Ambiance;
+import io.harness.common.AmbianceHelper;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.expression.LateBindingValue;
-import io.harness.ng.common.AmbianceHelper;
 import io.harness.ng.core.services.OrganizationService;
 
 public class OrgFunctor implements LateBindingValue {

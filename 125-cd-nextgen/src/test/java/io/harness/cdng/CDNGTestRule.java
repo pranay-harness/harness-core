@@ -116,7 +116,7 @@ public class CDNGTestRule implements InjectorRuleMixin, MethodRule, MongoRuleMix
     modules.add(TestMongoModule.getInstance());
     modules.add(new CDNGPersistenceTestModule());
     modules.add(OrchestrationModule.getInstance());
-    modules.add(new ExecutionPlanModule());
+    modules.add(ExecutionPlanModule.getInstance());
     modules.add(mongoTypeModule(annotations));
 
     modules.add(new AbstractModule() {

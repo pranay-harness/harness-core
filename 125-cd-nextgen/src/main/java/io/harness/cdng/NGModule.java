@@ -2,6 +2,7 @@ package io.harness.cdng;
 
 import com.google.inject.AbstractModule;
 
+import io.harness.NGPipelineCommonsModule;
 import io.harness.cdng.artifact.resources.docker.service.DockerResourceService;
 import io.harness.cdng.artifact.resources.docker.service.DockerResourceServiceImpl;
 import io.harness.cdng.artifact.service.ArtifactSourceService;
@@ -12,7 +13,6 @@ import io.harness.cdng.pipeline.service.NgPipelineExecutionService;
 import io.harness.cdng.pipeline.service.NgPipelineExecutionServiceImpl;
 import io.harness.cdng.pipeline.service.PipelineService;
 import io.harness.cdng.pipeline.service.PipelineServiceImpl;
-import io.harness.ng.NGPipelineCommonsModule;
 import io.harness.ng.core.NGCoreModule;
 
 import java.util.concurrent.atomic.AtomicReference;

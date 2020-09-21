@@ -33,6 +33,7 @@ public class EnvironmentFilterHelper {
     update.set(EnvironmentKeys.projectIdentifier, environment.getProjectIdentifier());
     update.set(EnvironmentKeys.identifier, environment.getIdentifier());
     update.set(EnvironmentKeys.name, environment.getName());
+    update.set(EnvironmentKeys.description, environment.getDescription());
     update.set(EnvironmentKeys.type, environment.getType());
     update.set(EnvironmentKeys.deleted, false);
     return update;

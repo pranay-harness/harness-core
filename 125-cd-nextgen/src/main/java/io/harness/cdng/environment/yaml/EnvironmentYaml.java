@@ -22,6 +22,7 @@ import java.util.List;
 public class EnvironmentYaml implements OverridesApplier<EnvironmentYaml>, Visitable {
   @ApiModelProperty(dataType = SwaggerConstants.STRING_CLASSPATH) @Wither ParameterField<String> name;
   @ApiModelProperty(dataType = SwaggerConstants.STRING_CLASSPATH) @Wither ParameterField<String> identifier;
+  @ApiModelProperty(dataType = SwaggerConstants.STRING_CLASSPATH) @Wither private ParameterField<String> description;
   @Wither EnvironmentType type;
   @Wither List<Tag> tags;
 
@@ -36,6 +37,9 @@ public class EnvironmentYaml implements OverridesApplier<EnvironmentYaml>, Visit
     }
     if (overrideConfig.getIdentifier() != null) {
       resultant = resultant.withIdentifier(overrideConfig.getIdentifier());
+    }
+    if (overrideConfig.getDescription() != null) {
+      resultant = resultant.withDescription(overrideConfig.getDescription());
     }
     if (overrideConfig.getType() != null) {
       resultant = resultant.withType(overrideConfig.getType());

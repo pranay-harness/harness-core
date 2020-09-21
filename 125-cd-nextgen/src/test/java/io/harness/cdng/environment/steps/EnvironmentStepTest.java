@@ -61,6 +61,7 @@ public class EnvironmentStepTest extends CategoryTest {
     EnvironmentOutcome environmentOutcome = EnvironmentOutcome.builder()
                                                 .identifier("test-id")
                                                 .name("test-id")
+                                                .description("")
                                                 .type(EnvironmentType.PreProduction)
                                                 .tags(Collections.emptyList())
                                                 .build();

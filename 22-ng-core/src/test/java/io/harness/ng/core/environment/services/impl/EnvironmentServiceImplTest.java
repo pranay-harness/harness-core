@@ -70,6 +70,7 @@ public class EnvironmentServiceImplTest extends NGCoreBaseTest {
                                                .orgIdentifier("ORG_ID")
                                                .projectIdentifier("PROJECT_ID")
                                                .name("UPDATED_ENV")
+                                               .description("NEW_DESCRIPTION")
                                                .build();
 
     Environment updatedEnvironment = environmentService.update(updateEnvironmentRequest);
@@ -79,6 +80,7 @@ public class EnvironmentServiceImplTest extends NGCoreBaseTest {
     assertThat(updatedEnvironment.getProjectIdentifier()).isEqualTo(updateEnvironmentRequest.getProjectIdentifier());
     assertThat(updatedEnvironment.getIdentifier()).isEqualTo(updateEnvironmentRequest.getIdentifier());
     assertThat(updatedEnvironment.getName()).isEqualTo(updateEnvironmentRequest.getName());
+    assertThat(updatedEnvironment.getDescription()).isEqualTo(updateEnvironmentRequest.getDescription());
 
     updateEnvironmentRequest.setIdentifier("NEW_ENV");
     assertThatThrownBy(() -> environmentService.update(updateEnvironmentRequest))
@@ -92,6 +94,7 @@ public class EnvironmentServiceImplTest extends NGCoreBaseTest {
                                                .orgIdentifier("ORG_ID")
                                                .projectIdentifier("NEW_PROJECT")
                                                .name("UPSERTED_ENV")
+                                               .description("NEW_DESCRIPTION")
                                                .build();
     Environment upsertEnv = environmentService.upsert(upsertEnvironmentRequest);
     assertThat(upsertEnv).isNotNull();
@@ -100,6 +103,7 @@ public class EnvironmentServiceImplTest extends NGCoreBaseTest {
     assertThat(upsertEnv.getProjectIdentifier()).isEqualTo(upsertEnvironmentRequest.getProjectIdentifier());
     assertThat(upsertEnv.getIdentifier()).isEqualTo(upsertEnvironmentRequest.getIdentifier());
     assertThat(upsertEnv.getName()).isEqualTo(upsertEnvironmentRequest.getName());
+    assertThat(upsertEnv.getDescription()).isEqualTo(upsertEnvironmentRequest.getDescription());
 
     // List services operations.
     Criteria criteriaFromFilter =

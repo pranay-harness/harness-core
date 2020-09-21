@@ -7,7 +7,7 @@ import lombok.experimental.UtilityClass;
 import java.util.regex.Pattern;
 
 @UtilityClass
-public class YamlBeansExpressionUtils {
+public class NGExpressionUtils {
   private static final Pattern InputSetVariablePattern = Pattern.compile("\\$\\{input}.*");
   public static final String DEFAULT_INPUT_SET_EXPRESSION = "${input}";
 
@@ -15,7 +15,14 @@ public class YamlBeansExpressionUtils {
     if (isEmpty(expression)) {
       return false;
     }
-    return YamlBeansExpressionUtils.InputSetVariablePattern.matcher(expression).matches();
+    return NGExpressionUtils.InputSetVariablePattern.matcher(expression).matches();
+  }
+
+  public boolean matchesPattern(Pattern pattern, String expression) {
+    if (isEmpty(expression)) {
+      return false;
+    }
+    return pattern.matcher(expression).matches();
   }
 
   // Function which matches pattern on given expression.

@@ -15,7 +15,7 @@ import com.fasterxml.jackson.databind.jsontype.TypeDeserializer;
 import io.harness.beans.InputSetValidator;
 import io.harness.beans.InputSetValidatorType;
 import io.harness.beans.ParameterField;
-import io.harness.common.YamlBeansExpressionUtils;
+import io.harness.common.NGExpressionUtils;
 import io.harness.exception.InvalidArgumentsException;
 
 import java.io.IOException;
@@ -76,13 +76,14 @@ public class ParameterFieldDeserializer extends StdDeserializer<ParameterField<?
   @Override
   public ParameterField<?> deserialize(JsonParser p, DeserializationContext ctxt) throws IOException {
     String text = p.getText().trim();
+    boolean isTypeString = this.referenceType.getRawClass().equals(String.class);
 
-    if (YamlBeansExpressionUtils.matchesInputSetPattern(text)) {
+    if (NGExpressionUtils.matchesInputSetPattern(text)) {
       return ParameterField.createExpressionField(
-          true, YamlBeansExpressionUtils.DEFAULT_INPUT_SET_EXPRESSION, getInputSetValidator(text));
+          true, NGExpressionUtils.DEFAULT_INPUT_SET_EXPRESSION, getInputSetValidator(text), isTypeString);
     }
     if (matchesVariablePattern(text)) {
-      return ParameterField.createExpressionField(true, text, null);
+      return ParameterField.createExpressionField(true, text, null, isTypeString);
     }
 
     Object refd = (valueTypeDeserializer == null)
@@ -108,7 +109,7 @@ public class ParameterFieldDeserializer extends StdDeserializer<ParameterField<?
 
   private InputSetValidator getInputSetValidator(String field) {
     for (InputSetValidatorTypeWithPattern validatorTypeWithPattern : inputSetValidationPatternList) {
-      if (YamlBeansExpressionUtils.containsPattern(validatorTypeWithPattern.validatorPattern, field)) {
+      if (NGExpressionUtils.containsPattern(validatorTypeWithPattern.validatorPattern, field)) {
         // This will get the content inside the validation pattern.
         String validationParameters = validatorTypeWithPattern.validatorPattern.split(field)[1];
         return new InputSetValidator(validatorTypeWithPattern.validatorType,
@@ -116,7 +117,7 @@ public class ParameterFieldDeserializer extends StdDeserializer<ParameterField<?
       }
     }
     // If the flow reaches here, then there is no validator, then value should match ${input}
-    if (!field.equals(YamlBeansExpressionUtils.DEFAULT_INPUT_SET_EXPRESSION)) {
+    if (!field.equals(NGExpressionUtils.DEFAULT_INPUT_SET_EXPRESSION)) {
       throw new InvalidArgumentsException("Unsupported Input Set value");
     }
     return null;
@@ -125,7 +126,7 @@ public class ParameterFieldDeserializer extends StdDeserializer<ParameterField<?
   private List<InputSetValidatorTypeWithPattern> initialiseInputSetValidationPatternList() {
     List<InputSetValidatorTypeWithPattern> validatorTypeWithPatterns = new LinkedList<>();
     for (InputSetValidatorType value : InputSetValidatorType.values()) {
-      String pattern = YamlBeansExpressionUtils.getInputSetValidatorPattern(value.getYamlName());
+      String pattern = NGExpressionUtils.getInputSetValidatorPattern(value.getYamlName());
       validatorTypeWithPatterns.add(new InputSetValidatorTypeWithPattern(value, Pattern.compile(pattern)));
     }
     return validatorTypeWithPatterns;

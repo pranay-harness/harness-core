@@ -13,6 +13,7 @@ import java.util.List;
 public class EnvironmentOutcome implements Outcome {
   String name;
   String identifier;
+  String description;
   EnvironmentType type;
   List<Tag> tags;
 }
