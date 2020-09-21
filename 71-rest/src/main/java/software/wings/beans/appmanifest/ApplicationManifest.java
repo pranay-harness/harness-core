@@ -54,6 +54,7 @@ public class ApplicationManifest extends Base implements AccountAccess {
                                        .kind(this.kind)
                                        .helmChartConfig(helmChartConfig)
                                        .kustomizeConfig(KustomizeConfig.cloneFrom(this.kustomizeConfig))
+                                       .pollForChanges(this.pollForChanges)
                                        .build();
     manifest.setAppId(this.appId);
     return manifest;
