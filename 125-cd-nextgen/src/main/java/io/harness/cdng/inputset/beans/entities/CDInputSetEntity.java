@@ -4,6 +4,7 @@ import io.harness.annotation.HarnessEntity;
 import io.harness.cdng.inputset.beans.entities.CDInputSetEntity.CDInputSetEntityKeys;
 import io.harness.cdng.inputset.beans.yaml.CDInputSet;
 import io.harness.data.validator.EntityIdentifier;
+import io.harness.data.validator.EntityName;
 import io.harness.data.validator.Trimmed;
 import io.harness.mongo.index.CdIndex;
 import io.harness.mongo.index.CdUniqueIndex;
@@ -46,6 +47,8 @@ public class CDInputSetEntity implements PersistentEntity {
   @Trimmed @NotEmpty private String orgIdentifier;
   @Trimmed @NotEmpty private String projectIdentifier;
   @Trimmed @NotEmpty private String pipelineIdentifier;
+
+  @EntityName private String name;
 
   private CDInputSet cdInputSet;
   @NotEmpty private String inputSetYaml;

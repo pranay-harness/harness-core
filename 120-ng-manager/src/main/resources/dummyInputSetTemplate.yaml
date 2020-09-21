@@ -1,0 +1,14 @@
+pipeline:
+  identifier: Deployment_fo_K8
+  stages:
+    - stage:
+        identifier: Login_service
+        type: Deployment
+        spec:
+          infrastructure:
+            infrastructureDefinition:
+              type: KubernetesDirect
+              spec:
+                connectorIdentifier: ${input}
+                namespace: ${input}
+                releaseName: ${input}

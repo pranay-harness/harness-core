@@ -12,6 +12,7 @@ import lombok.Data;
 @JsonDeserialize(using = CDInputSetDeserializer.class)
 public class CDInputSet implements InputSet {
   String identifier;
+  String name;
   String description;
   CDPipeline pipeline;
 

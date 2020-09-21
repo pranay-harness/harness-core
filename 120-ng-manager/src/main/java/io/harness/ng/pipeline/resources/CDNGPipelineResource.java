@@ -10,9 +10,12 @@ import io.harness.beans.EmbeddedUser;
 import io.harness.beans.ExecutionStrategyType;
 import io.harness.cdng.pipeline.CDPipeline;
 import io.harness.cdng.pipeline.StepCategory;
+import io.harness.cdng.pipeline.beans.CDPipelineValidationInfo;
 import io.harness.cdng.pipeline.beans.dto.CDPipelineRequestDTO;
 import io.harness.cdng.pipeline.beans.dto.CDPipelineResponseDTO;
 import io.harness.cdng.pipeline.beans.dto.CDPipelineSummaryResponseDTO;
+import io.harness.cdng.pipeline.beans.dto.CDPipelineValidationInfoDTO;
+import io.harness.cdng.pipeline.mappers.PipelineValidationMapper;
 import io.harness.cdng.pipeline.service.NgPipelineExecutionService;
 import io.harness.cdng.pipeline.service.PipelineService;
 import io.harness.cdng.service.beans.ServiceDefinitionType;
@@ -117,6 +120,24 @@ public class CDNGPipelineResource {
       @PathParam("pipelineIdentifier") String pipelineId, @NotNull String yaml) {
     logger.info("Updating pipeline");
     return ResponseDTO.newResponse(ngPipelineService.updatePipeline(yaml, accountId, orgId, projectId, pipelineId));
+  }
+
+  @GET
+  @Path("/validate")
+  @Timed
+  @ExceptionMetered
+  @ApiOperation(value = "Validate a Pipeline", nickname = "validatePipeline")
+  public ResponseDTO<CDPipelineValidationInfoDTO> validatePipeline(
+      @NotNull @QueryParam("accountIdentifier") String accountId, @QueryParam("orgIdentifier") String orgId,
+      @NotNull @QueryParam("projectIdentifier") String projectId, @QueryParam("pipelineIdentifier") String pipelineId)
+      throws IOException {
+    logger.info("Validating pipeline");
+    CDPipelineValidationInfo cdPipelineValidationInfo =
+        ngPipelineService.validatePipeline(pipelineId, accountId, orgId, projectId).orElse(null);
+    if (cdPipelineValidationInfo == null) {
+      return ResponseDTO.newResponse(null);
+    }
+    return ResponseDTO.newResponse(PipelineValidationMapper.writePipelineValidationDto(cdPipelineValidationInfo));
   }
 
   @POST

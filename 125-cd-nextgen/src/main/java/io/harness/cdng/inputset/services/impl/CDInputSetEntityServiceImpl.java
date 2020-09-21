@@ -11,6 +11,7 @@ import io.harness.cdng.inputset.beans.entities.CDInputSetEntity;
 import io.harness.cdng.inputset.beans.entities.CDInputSetEntity.CDInputSetEntityKeys;
 import io.harness.cdng.inputset.repository.spring.CDInputSetRepository;
 import io.harness.cdng.inputset.services.CDInputSetEntityService;
+import io.harness.data.structure.EmptyPredicate;
 import io.harness.exception.DuplicateFieldException;
 import io.harness.exception.InvalidRequestException;
 import lombok.AllArgsConstructor;
@@ -43,6 +44,7 @@ public class CDInputSetEntityServiceImpl implements CDInputSetEntityService {
       validatePresenceOfRequiredFields(cdInputSetEntity.getAccountId(), cdInputSetEntity.getOrgIdentifier(),
           cdInputSetEntity.getProjectIdentifier(), cdInputSetEntity.getPipelineIdentifier(),
           cdInputSetEntity.getIdentifier());
+      setName(cdInputSetEntity);
       return cdInputSetRepository.save(cdInputSetEntity);
     } catch (DuplicateKeyException ex) {
       throw new DuplicateFieldException(
@@ -134,6 +136,12 @@ public class CDInputSetEntityServiceImpl implements CDInputSetEntityService {
     return true;
   }
 
+  private void setName(CDInputSetEntity cdInputSetEntity) {
+    if (EmptyPredicate.isEmpty(cdInputSetEntity.getName())) {
+      cdInputSetEntity.setName(cdInputSetEntity.getIdentifier());
+    }
+  }
+
   private Criteria getInputSetEqualityCriteria(@Valid CDInputSetEntity requestCDInputSet, boolean deleted) {
     return Criteria.where(CDInputSetEntityKeys.accountId)
         .is(requestCDInputSet.getAccountId())
@@ -141,8 +149,8 @@ public class CDInputSetEntityServiceImpl implements CDInputSetEntityService {
         .is(requestCDInputSet.getOrgIdentifier())
         .and(CDInputSetEntityKeys.projectIdentifier)
         .is(requestCDInputSet.getProjectIdentifier())
-        .and(requestCDInputSet.getPipelineIdentifier())
-        .is(CDInputSetEntityKeys.pipelineIdentifier)
+        .and(CDInputSetEntityKeys.pipelineIdentifier)
+        .is(requestCDInputSet.getPipelineIdentifier())
         .and(CDInputSetEntityKeys.identifier)
         .is(requestCDInputSet.getIdentifier())
         .and(CDInputSetEntityKeys.deleted)

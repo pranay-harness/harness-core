@@ -38,6 +38,7 @@ public class CDInputSetFilterHelper {
     update.set(CDInputSetEntityKeys.identifier, cdInputSetEntity.getIdentifier());
     update.set(CDInputSetEntityKeys.cdInputSet, cdInputSetEntity.getCdInputSet());
     update.set(CDInputSetEntityKeys.inputSetYaml, cdInputSetEntity.getInputSetYaml());
+    update.set(CDInputSetEntityKeys.name, cdInputSetEntity.getName());
     update.set(CDInputSetEntityKeys.description, cdInputSetEntity.getDescription());
     update.set(CDInputSetEntityKeys.deleted, false);
     return update;
