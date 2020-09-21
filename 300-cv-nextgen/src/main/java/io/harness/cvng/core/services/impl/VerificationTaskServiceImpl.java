@@ -4,16 +4,20 @@ package io.harness.cvng.core.services.impl;
 import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
 
+import io.harness.cvng.CVConstants;
 import io.harness.cvng.core.entities.VerificationTask;
 import io.harness.cvng.core.entities.VerificationTask.VerificationTaskKeys;
 import io.harness.cvng.core.services.api.VerificationTaskService;
 import io.harness.persistence.HPersistence;
 
+import java.time.Clock;
+import java.util.Date;
 import java.util.Set;
 import java.util.stream.Collectors;
 
 public class VerificationTaskServiceImpl implements VerificationTaskService {
   @Inject private HPersistence hPersistence;
+  @Inject private Clock clock;
   // TODO: optimize this and add caching support. Since this collection is immutable
   @Override
   public String create(String accountId, String cvConfigId) {
@@ -27,11 +31,13 @@ public class VerificationTaskServiceImpl implements VerificationTaskService {
   public String create(String accountId, String cvConfigId, String verificationJobInstanceId) {
     Preconditions.checkNotNull(cvConfigId, "cvConfigId can not be null");
     Preconditions.checkNotNull(verificationJobInstanceId, "verificationJobInstanceId can not be null");
-    VerificationTask verificationTask = VerificationTask.builder()
-                                            .accountId(accountId)
-                                            .cvConfigId(cvConfigId)
-                                            .verificationJobInstanceId(verificationJobInstanceId)
-                                            .build();
+    VerificationTask verificationTask =
+        VerificationTask.builder()
+            .accountId(accountId)
+            .cvConfigId(cvConfigId)
+            .validUntil(Date.from(clock.instant().plus(CVConstants.VERIFICATION_JOB_INSTANCE_EXPIRY_DURATION)))
+            .verificationJobInstanceId(verificationJobInstanceId)
+            .build();
     hPersistence.save(verificationTask);
     return verificationTask.getUuid();
   }
@@ -55,13 +61,16 @@ public class VerificationTaskServiceImpl implements VerificationTaskService {
 
   @Override
   public Set<String> getVerificationTaskIds(String accountId, String verificationJobInstanceId) {
-    return hPersistence.createQuery(VerificationTask.class)
-        .filter(VerificationTaskKeys.accountId, accountId)
-        .filter(VerificationTaskKeys.verificationJobInstanceId, verificationJobInstanceId)
-        .asList()
-        .stream()
-        .map(VerificationTask::getUuid)
-        .collect(Collectors.toSet());
+    Set<String> results = hPersistence.createQuery(VerificationTask.class)
+                              .filter(VerificationTaskKeys.accountId, accountId)
+                              .filter(VerificationTaskKeys.verificationJobInstanceId, verificationJobInstanceId)
+                              .asList()
+                              .stream()
+                              .map(VerificationTask::getUuid)
+                              .collect(Collectors.toSet());
+    Preconditions.checkState(!results.isEmpty(), "No verification task mapping exist for verificationJobInstanceId %s",
+        verificationJobInstanceId);
+    return results;
   }
 
   @Override
@@ -81,5 +90,11 @@ public class VerificationTaskServiceImpl implements VerificationTaskService {
   public boolean isServiceGuardId(String verificationTaskId) {
     VerificationTask verificationTask = get(verificationTaskId);
     return verificationTask.getCvConfigId() != null && verificationTask.getVerificationJobInstanceId() == null;
+  }
+
+  @Override
+  public void removeCVConfigMappings(String cvConfigId) {
+    hPersistence.delete(
+        hPersistence.createQuery(VerificationTask.class).filter(VerificationTaskKeys.cvConfigId, cvConfigId));
   }
 }

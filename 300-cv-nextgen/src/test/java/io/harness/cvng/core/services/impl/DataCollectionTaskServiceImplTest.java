@@ -413,7 +413,7 @@ public class DataCollectionTaskServiceImplTest extends CvNextGenTest {
     String taskId = generateUuid();
     VerificationManagerService verificationManagerService = mock(VerificationManagerService.class);
     FieldUtils.writeField(dataCollectionTaskService, "verificationManagerService", verificationManagerService, true);
-    dataCollectionTaskService.deleteDataCollectionTask(accountId, taskId);
+    dataCollectionTaskService.deletePerpetualTasks(accountId, taskId);
     verify(verificationManagerService, times(1)).deletePerpetualTask(accountId, taskId);
   }
 
