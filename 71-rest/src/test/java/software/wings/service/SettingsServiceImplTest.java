@@ -4,6 +4,7 @@ import static com.google.common.collect.Sets.newHashSet;
 import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
 import static io.harness.beans.PageResponse.PageResponseBuilder.aPageResponse;
 import static io.harness.rule.OwnerRule.ANUBHAW;
+import static io.harness.rule.OwnerRule.ARVIND;
 import static io.harness.rule.OwnerRule.DEEPAK;
 import static io.harness.rule.OwnerRule.GARVIT;
 import static io.harness.rule.OwnerRule.GEORGE;
@@ -58,8 +59,10 @@ import static software.wings.utils.WingsTestConstants.HOST_NAME;
 import static software.wings.utils.WingsTestConstants.JENKINS_URL;
 import static software.wings.utils.WingsTestConstants.JOB_NAME;
 import static software.wings.utils.WingsTestConstants.PASSWORD;
+import static software.wings.utils.WingsTestConstants.REPOSITORY_NAME;
 import static software.wings.utils.WingsTestConstants.SECRET_KEY;
 import static software.wings.utils.WingsTestConstants.SETTING_ID;
+import static software.wings.utils.WingsTestConstants.SETTING_NAME;
 import static software.wings.utils.WingsTestConstants.TARGET_APP_ID;
 import static software.wings.utils.WingsTestConstants.USER_ID;
 import static software.wings.utils.WingsTestConstants.USER_NAME;
@@ -94,6 +97,7 @@ import software.wings.beans.Application;
 import software.wings.beans.AwsConfig;
 import software.wings.beans.BastionConnectionAttributes;
 import software.wings.beans.GcpConfig;
+import software.wings.beans.GitConfig;
 import software.wings.beans.HostConnectionAttributes;
 import software.wings.beans.HostConnectionAttributes.AccessType;
 import software.wings.beans.JenkinsConfig;
@@ -118,6 +122,7 @@ import software.wings.security.UserRequestContext;
 import software.wings.security.UserThreadLocal;
 import software.wings.security.WorkflowFilter;
 import software.wings.service.impl.AwsHelperService;
+import software.wings.service.impl.GitConfigHelperService;
 import software.wings.service.impl.SettingServiceHelper;
 import software.wings.service.impl.SettingValidationService;
 import software.wings.service.impl.security.auth.AuthHandler;
@@ -161,6 +166,7 @@ public class SettingsServiceImplTest extends WingsBaseTest {
   @Mock private CCMSettingService ccmSettingService;
   @Mock private AccountService accountService;
   @Mock private SettingServiceHelper settingServiceHelper;
+  @Mock private GitConfigHelperService gitConfigHelperService;
 
   @InjectMocks @Inject private SettingsService settingsService;
 
@@ -314,6 +320,37 @@ public class SettingsServiceImplTest extends WingsBaseTest {
 
     settingsService.delete(APP_ID, SETTING_ID);
     verify(mockWingsPersistence).delete(any(SettingAttribute.class));
+  }
+
+  /**
+   * Should delete without decryption.
+   */
+  @Test
+  @Owner(developers = ARVIND)
+  @Category(UnitTests.class)
+  public void shouldDeleteWithoutCheck() throws IllegalAccessException {
+    mockWingsPersistence = spy(wingsPersistence);
+    FieldUtils.writeField(settingsService, "wingsPersistence", mockWingsPersistence, true);
+    SettingAttribute settingAttribute = aSettingAttribute()
+                                            .withAppId(APP_ID)
+                                            .withAccountId(ACCOUNT_ID)
+                                            .withName(SETTING_NAME)
+                                            .withCategory(SettingCategory.CONNECTOR)
+                                            .withValue(GitConfig.builder()
+                                                           .repoUrl(REPOSITORY_NAME)
+                                                           .accountId(ACCOUNT_ID)
+                                                           .sshSettingId("setting-id-1")
+                                                           .keyAuth(true)
+                                                           .build())
+                                            .build();
+    when(mockWingsPersistence.get(SettingAttribute.class, SETTING_ID)).thenReturn(settingAttribute);
+    when(artifactStreamService.list(any(PageRequest.class))).thenReturn(aPageResponse().build());
+    when(settingServiceHelper.userHasPermissionsToChangeEntity(eq(settingAttribute), anyString(), any()))
+        .thenReturn(true);
+
+    settingsService.delete(APP_ID, SETTING_ID);
+    verify(mockWingsPersistence).delete(any(SettingAttribute.class));
+    verify(gitConfigHelperService, times(0)).setSshKeySettingAttributeIfNeeded(any());
   }
 
   /**

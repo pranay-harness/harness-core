@@ -75,7 +75,7 @@ public class AWSAccountServiceImpl implements AWSAccountService {
 
   @Override
   public void updateAccountPermission(String accountId, String settingId) {
-    updateAccountPermission(settingsService.getById(accountId, settingId));
+    updateAccountPermission(settingsService.getByAccountAndId(accountId, settingId));
   }
 
   @Override

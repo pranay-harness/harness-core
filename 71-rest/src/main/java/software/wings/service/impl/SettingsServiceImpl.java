@@ -865,9 +865,13 @@ public class SettingsServiceImpl implements SettingsService {
    */
   @Override
   public SettingAttribute get(String varId) {
-    SettingAttribute settingAttribute = wingsPersistence.get(SettingAttribute.class, varId);
+    SettingAttribute settingAttribute = getById(varId);
     setInternal(settingAttribute);
     return settingAttribute;
+  }
+
+  private SettingAttribute getById(String varId) {
+    return wingsPersistence.get(SettingAttribute.class, varId);
   }
 
   @Override
@@ -881,7 +885,7 @@ public class SettingsServiceImpl implements SettingsService {
   }
 
   @Override
-  public SettingAttribute getById(String accountId, String settingId) {
+  public SettingAttribute getByAccountAndId(String accountId, String settingId) {
     return wingsPersistence.createQuery(SettingAttribute.class)
         .filter(SettingAttributeKeys.uuid, settingId)
         .filter(SettingAttributeKeys.accountId, accountId)
@@ -1013,7 +1017,7 @@ public class SettingsServiceImpl implements SettingsService {
 
     wingsPersistence.updateFields(SettingAttribute.class, settingAttribute.getUuid(), fields.build(), fieldsToRemove);
 
-    SettingAttribute updatedSettingAttribute = wingsPersistence.get(SettingAttribute.class, settingAttribute.getUuid());
+    SettingAttribute updatedSettingAttribute = getById(settingAttribute.getUuid());
     if (referencesSecrets && settingAttribute.getValue().getSettingType() == SettingVariableTypes.APM_VERIFICATION) {
       apmVerificationService.updateParents(updatedSettingAttribute, existingSecretRefsForApm);
     }
@@ -1126,7 +1130,7 @@ public class SettingsServiceImpl implements SettingsService {
    */
   @Override
   public void delete(String appId, String varId, boolean pushToGit, boolean syncFromGit) {
-    SettingAttribute settingAttribute = get(varId);
+    SettingAttribute settingAttribute = getById(varId);
     notNullCheck("Setting Value", settingAttribute, USER);
     String accountId = settingAttribute.getAccountId();
     if (!settingServiceHelper.userHasPermissionsToChangeEntity(
@@ -1710,7 +1714,7 @@ public class SettingsServiceImpl implements SettingsService {
 
   @Override
   public String getSSHKeyName(String sshSettingId) {
-    SettingAttribute settingAttribute = wingsPersistence.get(SettingAttribute.class, sshSettingId);
+    SettingAttribute settingAttribute = getById(sshSettingId);
     return settingAttribute.getName();
   }
 
