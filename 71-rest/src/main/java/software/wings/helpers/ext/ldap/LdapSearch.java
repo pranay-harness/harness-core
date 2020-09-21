@@ -71,6 +71,8 @@ public class LdapSearch implements LdapValidator {
       request.setReferralHandler(new SearchReferralHandler(maxReferralHops));
     }
 
+    logger.info("LdapSearchRequest : [{}]", request);
+
     try (Connection connection = connectionFactory.getConnection()) {
       connection.open();
       SearchOperation search = new SearchOperation(connection);
