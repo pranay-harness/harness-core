@@ -17,6 +17,8 @@ public class VisitorFieldRegistry implements Registry<VisitorFieldType, Class<? 
   @Inject private Injector injector;
 
   private final Map<VisitorFieldType, Class<? extends VisitableFieldProcessor<?>>> registry = new ConcurrentHashMap<>();
+  private final Map<Class<? extends VisitorFieldWrapper>, VisitorFieldType> fieldTypesRegistry =
+      new ConcurrentHashMap<>();
 
   @Override
   public void register(
@@ -28,13 +30,30 @@ public class VisitorFieldRegistry implements Registry<VisitorFieldType, Class<? 
     registry.put(visitorFieldType, processor);
   }
 
+  public void registerFieldTypes(
+      @NonNull Class<? extends VisitorFieldWrapper> fieldWrapper, @NonNull VisitorFieldType fieldType) {
+    if (fieldTypesRegistry.containsKey(fieldWrapper)) {
+      throw new DuplicateRegistryException(
+          getType(), "Visitor Field Wrapper Already Registered with this class: " + fieldWrapper);
+    }
+    fieldTypesRegistry.put(fieldWrapper, fieldType);
+  }
+
   @Override
-  public VisitableFieldProcessor<?> obtain(VisitorFieldType visitorFieldType) {
+  public VisitableFieldProcessor<?> obtain(@NonNull VisitorFieldType visitorFieldType) {
     if (registry.containsKey(visitorFieldType)) {
       return injector.getInstance(registry.get(visitorFieldType));
     }
     throw new UnregisteredKeyAccessException(
         getType(), "No Visitor Field Processor registered for type: " + visitorFieldType);
+  }
+
+  public VisitorFieldType obtainFieldType(@NonNull Class<? extends VisitorFieldWrapper> fieldWrapper) {
+    if (fieldTypesRegistry.containsKey(fieldWrapper)) {
+      return fieldTypesRegistry.get(fieldWrapper);
+    }
+    throw new UnregisteredKeyAccessException(
+        getType(), "No Visitor Field Wrapper registered for class: " + fieldWrapper);
   }
 
   @Override
