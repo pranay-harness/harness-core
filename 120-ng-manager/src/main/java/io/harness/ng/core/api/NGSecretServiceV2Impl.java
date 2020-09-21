@@ -6,15 +6,17 @@ import com.google.inject.Singleton;
 import io.harness.ng.core.api.repositories.spring.SecretRepository;
 import io.harness.ng.core.dto.secrets.SecretDTOV2;
 import io.harness.ng.core.models.Secret;
+import io.harness.ng.core.models.Secret.SecretKeys;
 import io.harness.ng.core.remote.SecretValidationMetaData;
 import io.harness.ng.core.remote.SecretValidationResultDTO;
 import io.harness.secretmanagerclient.SecretType;
+import io.harness.utils.PageUtils;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.data.mongodb.core.query.Criteria;
 
+import java.util.Collections;
 import java.util.Optional;
 
 @Singleton
@@ -78,6 +80,7 @@ public class NGSecretServiceV2Impl implements NGSecretServiceV2 {
 
   @Override
   public Page<Secret> list(Criteria criteria, int page, int size) {
-    return secretRepository.findAll(criteria, PageRequest.of(page, size));
+    return secretRepository.findAll(
+        criteria, PageUtils.getPageRequest(page, size, Collections.singletonList(SecretKeys.createdAt + ",desc")));
   }
 }

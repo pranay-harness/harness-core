@@ -203,7 +203,8 @@ public class SecretCrudServiceImpl implements SecretCrudService {
             getRequestBody(ByteStreams.toByteArray(
                 new BoundedInputStream(inputStream, fileUploadLimit.getEncryptedFileLimit())))));
     if (Optional.ofNullable(encryptedData).isPresent()) {
-      return create(accountIdentifier, dto);
+      secretEntityReferenceHelper.createEntityReferenceForSecret(encryptedData);
+      return ngSecretService.create(accountIdentifier, dto).toDTO();
     }
     throw new SecretManagementException(SECRET_MANAGEMENT_ERROR, "Unable to create secret file remotely", USER);
   }

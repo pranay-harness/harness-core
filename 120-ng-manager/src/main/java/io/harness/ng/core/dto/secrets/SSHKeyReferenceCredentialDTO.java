@@ -20,14 +20,14 @@ import javax.validation.constraints.NotNull;
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class SSHKeyReferenceCredentialDTO extends SSHCredentialSpecDTO {
   @NotNull private String userName;
-  @NotNull private String keyPath;
+  @NotNull private String key;
   @ApiModelProperty(dataType = "string") @SecretReference private SecretRefData encryptedPassphrase;
 
   @Override
   public SSHCredentialSpec toEntity() {
     return SSHKeyCredential.builder()
         .userName(getUserName())
-        .keyPath(getKeyPath())
+        .keyPath(getKey())
         .userName(getUserName())
         .encryptedPassphrase(getEncryptedPassphrase())
         .build();
