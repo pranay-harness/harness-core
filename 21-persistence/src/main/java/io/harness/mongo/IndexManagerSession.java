@@ -494,6 +494,57 @@ public class IndexManagerSession {
     return created;
   }
 
+  public boolean processCollection(MappedClass mc, DBCollection collection) {
+    AtomicBoolean actionPerformed = new AtomicBoolean(false);
+    try {
+      Map<String, IndexCreator> creators = indexCreators(mc, collection);
+      // We should be attempting to drop indexes only if we successfully created all new ones
+      int created = createNewIndexes(createCollectionSession(collection), creators);
+      if (created > 0) {
+        actionPerformed.set(true);
+      }
+
+      boolean okToDropIndexes = created == 0;
+
+      Map<String, Accesses> accesses = fetchIndexAccesses(collection);
+
+      if (okToDropIndexes) {
+        IndexManagerCollectionSession collectionSession = createCollectionSession(collection);
+        List<String> obsoleteIndexes = collectionSession.obsoleteIndexes(creators.keySet());
+        if (isNotEmpty(obsoleteIndexes)) {
+          // Make sure that all indexes that we have are operational, we check that they have being seen since
+          // at least a day
+          Date tooNew = tooNew();
+          okToDropIndexes = collectionSession.isOkToDropIndexes(tooNew, accesses);
+
+          if (okToDropIndexes) {
+            obsoleteIndexes.forEach(name -> {
+              try (AutoLogContext ignore2 = new IndexLogContext(name, OVERRIDE_ERROR)) {
+                dropIndex(collection, name);
+                actionPerformed.set(true);
+              } catch (RuntimeException ex) {
+                logger.error("Failed to drop index", ex);
+              }
+            });
+          }
+        }
+      }
+
+      if (mc.getClazz().getAnnotation(IgnoreUnusedIndex.class) == null) {
+        createCollectionSession(collection).checkForUnusedIndexes(accesses);
+      }
+    } catch (MongoCommandException exception) {
+      if (exception.getErrorCode() == 13) {
+        throw new IndexManagerReadOnlyException();
+      }
+      logger.error("", exception);
+    } catch (RuntimeException exception) {
+      logger.error("", exception);
+    }
+
+    return actionPerformed.get();
+  }
+
   public boolean ensureIndexes(Morphia morphia) {
     // Morphia auto creates embedded/nested Entity indexes with the parent Entity indexes.
     // There is no way to override this behavior.
@@ -502,50 +553,8 @@ public class IndexManagerSession {
     AtomicBoolean actionPerformed = new AtomicBoolean(false);
 
     Set<String> processedCollections = processIndexes(datastore, morphia, (mc, collection) -> {
-      try {
-        Map<String, IndexCreator> creators = indexCreators(mc, collection);
-        // We should be attempting to drop indexes only if we successfully created all new ones
-        int created = createNewIndexes(createCollectionSession(collection), creators);
-        if (created > 0) {
-          actionPerformed.set(true);
-        }
-
-        boolean okToDropIndexes = created == 0;
-
-        Map<String, Accesses> accesses = fetchIndexAccesses(collection);
-
-        if (okToDropIndexes) {
-          IndexManagerCollectionSession collectionSession = createCollectionSession(collection);
-          List<String> obsoleteIndexes = collectionSession.obsoleteIndexes(creators.keySet());
-          if (isNotEmpty(obsoleteIndexes)) {
-            // Make sure that all indexes that we have are operational, we check that they have being seen since
-            // at least a day
-            Date tooNew = tooNew();
-            okToDropIndexes = collectionSession.isOkToDropIndexes(tooNew, accesses);
-
-            if (okToDropIndexes) {
-              obsoleteIndexes.forEach(name -> {
-                try (AutoLogContext ignore2 = new IndexLogContext(name, OVERRIDE_ERROR)) {
-                  dropIndex(collection, name);
-                  actionPerformed.set(true);
-                } catch (RuntimeException ex) {
-                  logger.error("Failed to drop index", ex);
-                }
-              });
-            }
-          }
-        }
-
-        if (mc.getClazz().getAnnotation(IgnoreUnusedIndex.class) == null) {
-          createCollectionSession(collection).checkForUnusedIndexes(accesses);
-        }
-      } catch (MongoCommandException exception) {
-        if (exception.getErrorCode() == 13) {
-          throw new IndexManagerReadOnlyException();
-        }
-        logger.error("", exception);
-      } catch (RuntimeException exception) {
-        logger.error("", exception);
+      if (processCollection(mc, collection)) {
+        actionPerformed.set(true);
       }
     });
 

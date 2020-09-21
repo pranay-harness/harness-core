@@ -38,6 +38,7 @@ import org.mongodb.morphia.AdvancedDatastore;
 import org.mongodb.morphia.FindAndModifyOptions;
 import org.mongodb.morphia.InsertOptions;
 import org.mongodb.morphia.Morphia;
+import org.mongodb.morphia.mapping.MappedClass;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
 import org.mongodb.morphia.query.UpdateOpsImpl;
@@ -135,14 +136,9 @@ public class MongoPersistence implements HPersistence {
   @Override
   public void ensureIndexForTesting(Class cls) {
     AdvancedDatastore datastore = getDatastore(cls);
-    Morphia locMorphia = new Morphia();
-    locMorphia.getMapper().getOptions().setObjectFactory(new HObjectFactory());
-
-    Set<Class> classSet = new HashSet<>();
-    classSet.add(cls);
-    locMorphia.map(classSet);
-
-    indexManager.ensureIndexes(AUTO, datastore, locMorphia);
+    MappedClass mappedClass = morphia.getMapper().getMCMap().get(cls.getName());
+    IndexManagerSession session = new IndexManagerSession(datastore, null, AUTO);
+    session.processCollection(mappedClass, getCollection(cls));
   }
 
   @Override
