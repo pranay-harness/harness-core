@@ -563,7 +563,9 @@ public class PipelineServiceImpl implements PipelineService {
 
     // checking pipeline for loops and replacing looped states with multiple parallel states.
     if (featureFlagService.isEnabled(FeatureName.MULTISELECT_INFRA_PIPELINE, pipeline.getAccountId())) {
-      PipelineServiceHelper.updatePipelineWithLoopedState(pipeline);
+      boolean isRuntimeEnabled =
+          featureFlagService.isEnabled(FeatureName.RUNTIME_INPUT_PIPELINE, pipeline.getAccountId());
+      PipelineServiceHelper.updatePipelineWithLoopedState(pipeline, isRuntimeEnabled);
     }
     return pipeline;
   }
@@ -587,7 +589,9 @@ public class PipelineServiceImpl implements PipelineService {
         readPipelineWithResolvedVariables(appId, pipelineId, pipelineVariables, preExecutionChecks, null);
     // checking pipeline for loops and replacing looped states with multiple parallel states.
     if (featureFlagService.isEnabled(FeatureName.MULTISELECT_INFRA_PIPELINE, pipeline.getAccountId())) {
-      PipelineServiceHelper.updatePipelineWithLoopedState(pipeline);
+      boolean isRuntimeEnabled =
+          featureFlagService.isEnabled(FeatureName.RUNTIME_INPUT_PIPELINE, pipeline.getAccountId());
+      PipelineServiceHelper.updatePipelineWithLoopedState(pipeline, isRuntimeEnabled);
     }
     return pipeline;
   }
@@ -634,10 +638,12 @@ public class PipelineServiceImpl implements PipelineService {
           pipelineStage.setValidationMessage(workflow.getOrchestrationWorkflow().getValidationMessage());
         }
 
+        boolean isRuntimeEnabled =
+            featureFlagService.isEnabled(FeatureName.RUNTIME_INPUT_PIPELINE, pipeline.getAccountId());
         if (preExecutionChecks) {
-          WorkflowServiceHelper.checkWorkflowVariablesOverrides(pipelineStageElement.getName(),
+          WorkflowServiceHelper.checkWorkflowVariablesOverrides(pipelineStageElement,
               workflow.getOrchestrationWorkflow().getUserVariables(), pipelineStageElement.getWorkflowVariables(),
-              pipelineVariables);
+              pipelineVariables, isRuntimeEnabled);
         }
 
         Map<String, String> resolvedWorkflowStepVariables =
@@ -646,7 +652,7 @@ public class PipelineServiceImpl implements PipelineService {
         pipelineStageElement.setWorkflowVariables(resolvedWorkflowStepVariables);
 
         if (featureFlagService.isEnabled(FeatureName.MULTISELECT_INFRA_PIPELINE, pipeline.getAccountId())) {
-          PipelineServiceHelper.updateLoopingInfo(pipelineStage, workflow, infraDefinitionIds);
+          PipelineServiceHelper.updateLoopingInfo(pipelineStage, workflow, infraDefinitionIds, isRuntimeEnabled);
         }
 
         if (BUILD != workflow.getOrchestrationWorkflow().getOrchestrationWorkflowType()) {

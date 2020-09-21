@@ -121,6 +121,7 @@ import software.wings.beans.OrchestrationWorkflow;
 import software.wings.beans.PhaseStep;
 import software.wings.beans.PhaseStepType;
 import software.wings.beans.PhysicalInfrastructureMappingBase;
+import software.wings.beans.PipelineStage.PipelineStageElement;
 import software.wings.beans.Service;
 import software.wings.beans.TemplateExpression;
 import software.wings.beans.Variable;
@@ -2639,8 +2640,8 @@ public class WorkflowServiceHelper {
     return service != null && service.isK8sV2();
   }
 
-  public static void checkWorkflowVariablesOverrides(String stageElementName, List<Variable> variables,
-      Map<String, String> workflowStepVariables, Map<String, String> pipelineVariables) {
+  public static void checkWorkflowVariablesOverrides(PipelineStageElement stageElement, List<Variable> variables,
+      Map<String, String> workflowStepVariables, Map<String, String> pipelineVariables, boolean isRuntimeEnabled) {
     if (isEmpty(variables)) {
       return;
     }
@@ -2651,10 +2652,14 @@ public class WorkflowServiceHelper {
       return;
     }
 
+    List<String> runtimeVars = stageElement.getRuntimeInputsConfig() != null
+        ? stageElement.getRuntimeInputsConfig().getRuntimeInputVariables()
+        : new ArrayList<>();
     for (Variable variable : requiredVariables) {
       boolean isEntity = variable.obtainEntityType() != null;
       String workflowVariableValue = extractMapValue(workflowStepVariables, variable.getName());
       String finalValue;
+      boolean isRuntimeVar = isRuntimeEnabled && isNotEmpty(runtimeVars) && runtimeVars.contains(variable.getName());
       if (isEmpty(workflowVariableValue)) {
         finalValue = extractMapValue(pipelineVariables, variable.getName());
       } else {
@@ -2669,12 +2674,12 @@ public class WorkflowServiceHelper {
       }
 
       String prefix = isEntity ? "Templatized" : "Required";
-      if (isEmpty(finalValue)) {
+      if (isEmpty(finalValue) && !isRuntimeVar) {
         throw new InvalidRequestException(
-            format("%s variable %s is not set for stage %s", prefix, variable.getName(), stageElementName));
+            format("%s variable %s is not set for stage %s", prefix, variable.getName(), stageElement.getName()));
       } else if (ExpressionEvaluator.matchesVariablePattern(finalValue) && (isEntity || !finalValue.contains("."))) {
         throw new InvalidRequestException(format("%s variable %s for stage %s cannot be left as an expression", prefix,
-            variable.getName(), stageElementName));
+            variable.getName(), stageElement.getName()));
       }
     }
   }

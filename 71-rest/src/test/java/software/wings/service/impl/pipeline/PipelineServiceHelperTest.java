@@ -22,6 +22,7 @@ import software.wings.beans.OrchestrationWorkflow;
 import software.wings.beans.Pipeline;
 import software.wings.beans.PipelineStage;
 import software.wings.beans.PipelineStage.PipelineStageElement;
+import software.wings.beans.RuntimeInputsConfig;
 import software.wings.beans.Variable;
 import software.wings.beans.Workflow;
 import software.wings.sm.StateType;
@@ -48,12 +49,39 @@ public class PipelineServiceHelperTest extends WingsBaseTest {
 
     PipelineStage pipelineStage = PipelineStage.builder().pipelineStageElements(asList(pipelineStageElement)).build();
     List<String> infraDefIds = new ArrayList<>();
-    PipelineServiceHelper.updateLoopingInfo(pipelineStage, workflow, infraDefIds);
+    PipelineServiceHelper.updateLoopingInfo(pipelineStage, workflow, infraDefIds, false);
     assertThat(pipelineStage.isLooped()).isEqualTo(true);
     assertThat(pipelineStage.getLoopedVarName()).isEqualTo("infra1");
     assertThat(infraDefIds.size()).isEqualTo(2);
     assertThat(infraDefIds.contains("testVal1")).isTrue();
     assertThat(infraDefIds.contains("testVal2")).isTrue();
+  }
+
+  @Test
+  @Owner(developers = POOJA)
+  @Category(UnitTests.class)
+  public void testUpdateLoopingInfoWhenLoopedRuntimeInfra() {
+    List<Variable> userVariables = new ArrayList<>();
+    Variable infraVar1 = aVariable().entityType(INFRASTRUCTURE_DEFINITION).name("infra1").build();
+    userVariables.add(infraVar1);
+    OrchestrationWorkflow orchestrationWorkflow =
+        aCanaryOrchestrationWorkflow().withUserVariables(userVariables).build();
+    Workflow workflow = aWorkflow().orchestrationWorkflow(orchestrationWorkflow).build();
+    Map<String, String> workflowVariable = ImmutableMap.of("infra1", "${infraVal}");
+    PipelineStageElement pipelineStageElement =
+        PipelineStageElement.builder()
+            .workflowVariables(workflowVariable)
+            .runtimeInputsConfig(RuntimeInputsConfig.builder().runtimeInputVariables(asList("infra1")).build())
+            .name("test step")
+            .type("ENV_STATE")
+            .build();
+
+    PipelineStage pipelineStage = PipelineStage.builder().pipelineStageElements(asList(pipelineStageElement)).build();
+    List<String> infraDefIds = new ArrayList<>();
+    PipelineServiceHelper.updateLoopingInfo(pipelineStage, workflow, infraDefIds, true);
+    assertThat(pipelineStage.isLooped()).isEqualTo(true);
+    assertThat(pipelineStage.getLoopedVarName()).isEqualTo("infra1");
+    assertThat(infraDefIds.size()).isEqualTo(0);
   }
 
   @Test
@@ -70,7 +98,7 @@ public class PipelineServiceHelperTest extends WingsBaseTest {
 
     PipelineStage pipelineStage = PipelineStage.builder().pipelineStageElements(asList(pipelineStageElement)).build();
     List<String> infraDefIds = new ArrayList<>();
-    PipelineServiceHelper.updateLoopingInfo(pipelineStage, workflow, infraDefIds);
+    PipelineServiceHelper.updateLoopingInfo(pipelineStage, workflow, infraDefIds, false);
     assertThat(pipelineStage.isLooped()).isEqualTo(false);
     assertThat(pipelineStage.getLoopedVarName()).isEqualTo(null);
     assertThat(infraDefIds.size()).isEqualTo(0);
@@ -78,7 +106,7 @@ public class PipelineServiceHelperTest extends WingsBaseTest {
     Variable envVar1 = aVariable().entityType(ENVIRONMENT).name("env1").build();
     userVariables.add(envVar1);
 
-    PipelineServiceHelper.updateLoopingInfo(pipelineStage, workflow, infraDefIds);
+    PipelineServiceHelper.updateLoopingInfo(pipelineStage, workflow, infraDefIds, false);
     assertThat(pipelineStage.isLooped()).isEqualTo(false);
     assertThat(pipelineStage.getLoopedVarName()).isEqualTo(null);
     assertThat(infraDefIds.size()).isEqualTo(0);
@@ -89,7 +117,7 @@ public class PipelineServiceHelperTest extends WingsBaseTest {
     userVariables.add(infraVar1);
     userVariables.add(infraVar2);
 
-    PipelineServiceHelper.updateLoopingInfo(pipelineStage, workflow, infraDefIds);
+    PipelineServiceHelper.updateLoopingInfo(pipelineStage, workflow, infraDefIds, false);
     assertThat(pipelineStage.isLooped()).isEqualTo(false);
     assertThat(pipelineStage.getLoopedVarName()).isEqualTo(null);
     assertThat(infraDefIds.size()).isEqualTo(0);
@@ -111,7 +139,7 @@ public class PipelineServiceHelperTest extends WingsBaseTest {
     PipelineStage pipelineStage = PipelineStage.builder().pipelineStageElements(asList(pipelineStageElement)).build();
     List<String> infraDefIds = new ArrayList<>();
 
-    assertThatThrownBy(() -> PipelineServiceHelper.updateLoopingInfo(pipelineStage, workflow, infraDefIds))
+    assertThatThrownBy(() -> PipelineServiceHelper.updateLoopingInfo(pipelineStage, workflow, infraDefIds, false))
         .isInstanceOf(InvalidRequestException.class)
         .hasMessage("No value supplied in pipeline for infra variable: infra1");
   }
@@ -133,7 +161,7 @@ public class PipelineServiceHelperTest extends WingsBaseTest {
                                       .looped(true)
                                       .build();
     Pipeline pipeline = Pipeline.builder().name("Test pipeline").pipelineStages(asList(pipelineStage)).build();
-    PipelineServiceHelper.updatePipelineWithLoopedState(pipeline);
+    PipelineServiceHelper.updatePipelineWithLoopedState(pipeline, false);
     assertThat(pipeline.getPipelineStages().get(0).getPipelineStageElements().get(0).getType())
         .isEqualTo(StateType.ENV_LOOP_STATE.getType());
     Map<String, Object> properties =
@@ -149,6 +177,67 @@ public class PipelineServiceHelperTest extends WingsBaseTest {
   @Test
   @Owner(developers = POOJA)
   @Category(UnitTests.class)
+  public void testUpdatePipelineWithLoopedStateRuntimeVariableNoValue() {
+    Map<String, String> workflowVariable = ImmutableMap.of("infra1", "testVal1");
+    PipelineStageElement pipelineStageElement =
+        PipelineStageElement.builder()
+            .workflowVariables(workflowVariable)
+            .properties(new HashMap<>())
+            .runtimeInputsConfig(RuntimeInputsConfig.builder().runtimeInputVariables(asList("infra1")).build())
+            .name("test step")
+            .type("ENV_STATE")
+            .build();
+    PipelineStage pipelineStage = PipelineStage.builder()
+                                      .pipelineStageElements(asList(pipelineStageElement))
+                                      .loopedVarName("infra1")
+                                      .looped(true)
+                                      .build();
+    Pipeline pipeline = Pipeline.builder().name("Test pipeline").pipelineStages(asList(pipelineStage)).build();
+    PipelineServiceHelper.updatePipelineWithLoopedState(pipeline, true);
+    assertThat(pipeline.getPipelineStages().get(0).getPipelineStageElements().get(0).getType())
+        .isEqualTo(StateType.ENV_LOOP_STATE.getType());
+    Map<String, Object> properties =
+        pipeline.getPipelineStages().get(0).getPipelineStageElements().get(0).getProperties();
+    assertThat(properties.get("loopedValues")).isNotNull();
+    List<String> values = (List<String>) properties.get("loopedValues");
+    assertThat(values.size()).isEqualTo(1);
+    assertThat(values.contains("testVal1")).isTrue();
+    assertThat(properties.get("loopedVarName")).isEqualTo("infra1");
+  }
+
+  @Test
+  @Owner(developers = POOJA)
+  @Category(UnitTests.class)
+  public void testUpdatePipelineWithLoopedStateRuntimeVariableDefaultValue() {
+    Map<String, String> workflowVariable = ImmutableMap.of();
+    PipelineStageElement pipelineStageElement =
+        PipelineStageElement.builder()
+            .workflowVariables(workflowVariable)
+            .properties(new HashMap<>())
+            .runtimeInputsConfig(RuntimeInputsConfig.builder().runtimeInputVariables(asList("infra1")).build())
+            .name("test step")
+            .type("ENV_STATE")
+            .build();
+    PipelineStage pipelineStage = PipelineStage.builder()
+                                      .pipelineStageElements(asList(pipelineStageElement))
+                                      .loopedVarName("infra1")
+                                      .looped(true)
+                                      .build();
+    Pipeline pipeline = Pipeline.builder().name("Test pipeline").pipelineStages(asList(pipelineStage)).build();
+    PipelineServiceHelper.updatePipelineWithLoopedState(pipeline, true);
+    assertThat(pipeline.getPipelineStages().get(0).getPipelineStageElements().get(0).getType())
+        .isEqualTo(StateType.ENV_LOOP_STATE.getType());
+    Map<String, Object> properties =
+        pipeline.getPipelineStages().get(0).getPipelineStageElements().get(0).getProperties();
+    assertThat(properties.get("loopedValues")).isNotNull();
+    List<String> values = (List<String>) properties.get("loopedValues");
+    assertThat(values.size()).isEqualTo(0);
+    assertThat(properties.get("loopedVarName")).isEqualTo("infra1");
+  }
+
+  @Test
+  @Owner(developers = POOJA)
+  @Category(UnitTests.class)
   public void testUpdatePipelineWithLoopedStateInvalid() {
     PipelineStageElement pipelineStageElement =
         PipelineStageElement.builder().properties(new HashMap<>()).name("test step").type("ENV_STATE").build();
@@ -158,21 +247,21 @@ public class PipelineServiceHelperTest extends WingsBaseTest {
                                       .looped(true)
                                       .build();
     Pipeline pipeline = Pipeline.builder().name("Test pipeline").pipelineStages(asList(pipelineStage)).build();
-    assertThatThrownBy(() -> PipelineServiceHelper.updatePipelineWithLoopedState(pipeline))
+    assertThatThrownBy(() -> PipelineServiceHelper.updatePipelineWithLoopedState(pipeline, false))
         .isInstanceOf(InvalidRequestException.class)
         .hasMessage("Pipeline stage marked as loop, but doesnt have looping config");
 
     Map<String, String> workflowVariable = ImmutableMap.of("infra2", "testVal1,testVal2");
     pipelineStageElement.setWorkflowVariables(workflowVariable);
 
-    assertThatThrownBy(() -> PipelineServiceHelper.updatePipelineWithLoopedState(pipeline))
+    assertThatThrownBy(() -> PipelineServiceHelper.updatePipelineWithLoopedState(pipeline, false))
         .isInstanceOf(InvalidRequestException.class)
         .hasMessage("Pipeline stage marked as loop, but doesnt have looping config");
 
     workflowVariable = ImmutableMap.of("infra1", "testVal1");
     pipelineStageElement.setWorkflowVariables(workflowVariable);
 
-    assertThatThrownBy(() -> PipelineServiceHelper.updatePipelineWithLoopedState(pipeline))
+    assertThatThrownBy(() -> PipelineServiceHelper.updatePipelineWithLoopedState(pipeline, false))
         .isInstanceOf(InvalidRequestException.class)
         .hasMessage("Pipeline stage marked as loop, but doesnt have looping config");
   }
