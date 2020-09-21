@@ -11,10 +11,13 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.experimental.FieldNameConstants;
 import org.mongodb.morphia.annotations.Entity;
+import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.Id;
+import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.mongodb.core.mapping.Document;
 
 import java.util.Map;
+import java.util.Optional;
 
 @Data
 @Builder
@@ -41,6 +44,8 @@ public class Secret {
   @JsonTypeInfo(
       use = JsonTypeInfo.Id.NAME, include = JsonTypeInfo.As.EXTERNAL_PROPERTY, property = "type", visible = true)
   SecretSpec secretSpec;
+  @CreatedDate Long createdAt;
+  @LastModifiedDate Long lastModifiedAt;
 
   public SecretDTOV2 toDTO() {
     return SecretDTOV2.builder()
@@ -51,7 +56,9 @@ public class Secret {
         .description(getDescription())
         .tags(getTags())
         .type(getType())
-        .spec(getSecretSpec().toDTO())
+        .spec(Optional.ofNullable(getSecretSpec()).map(SecretSpec::toDTO).orElse(null))
+        .lastModifiedAt(getLastModifiedAt())
+        .createdAt(getCreatedAt())
         .build();
   }
 }

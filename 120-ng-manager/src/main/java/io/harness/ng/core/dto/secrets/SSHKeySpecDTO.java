@@ -12,6 +12,7 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 
+import java.util.Optional;
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 
@@ -48,7 +49,7 @@ public class SSHKeySpecDTO extends SecretSpecDTO {
     return SSHExecutionCredentialSpec.builder()
         .authScheme(getAuthScheme())
         .port(getPort())
-        .sshSpec(getSpec().toEntity())
+        .sshSpec(Optional.ofNullable(getSpec()).map(BaseSSHSpecDTO::toEntity).orElse(null))
         .build();
   }
 }

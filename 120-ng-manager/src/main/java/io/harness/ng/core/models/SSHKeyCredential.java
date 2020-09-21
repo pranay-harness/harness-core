@@ -21,7 +21,7 @@ public class SSHKeyCredential extends SSHCredentialSpec {
   public SSHCredentialSpecDTO toDTO() {
     return SSHKeyReferenceCredentialDTO.builder()
         .userName(getUserName())
-        .keyPath(getKeyPath())
+        .key(getKeyPath())
         .encryptedPassphrase(getEncryptedPassphrase())
         .build();
   }
