@@ -205,6 +205,7 @@ public class LdapDelegateServiceImpl implements LdapDelegateService {
       // If there are no entries in the group.
       LdapEntry group = groups.getEntries().isEmpty() ? null : groups.getEntries().iterator().next();
       if (null == group) {
+        logger.info("No entries found in group");
         return null;
       }
 
