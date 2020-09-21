@@ -30,8 +30,12 @@ import org.mongodb.morphia.annotations.Id;
 import javax.validation.constraints.NotNull;
 
 @CdIndex(name = "env_service_category_index",
-    fields = { @Field("accountId")
-               , @Field("envIdentifier"), @Field(value = "serviceIdentifier") })
+    fields =
+    {
+      @Field("accountId")
+      , @Field("orgIdentifier"), @Field(value = "projectIdentifier"), @Field("envIdentifier"),
+          @Field(value = "serviceIdentifier")
+    })
 @Data
 @FieldNameConstants(innerTypeName = "CVConfigKeys")
 @NoArgsConstructor

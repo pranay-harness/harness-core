@@ -53,8 +53,8 @@ public class TimeSeriesDashboardServiceImpl implements TimeSeriesDashboardServic
     Instant endTime = Instant.ofEpochMilli(endTimeMillis);
 
     // get all the cvConfigs that belong to
-    List<CVConfig> cvConfigList =
-        cvConfigService.list(accountId, environmentIdentifier, serviceIdentifier, monitoringCategory);
+    List<CVConfig> cvConfigList = cvConfigService.list(
+        accountId, orgIdentifier, projectIdentifier, environmentIdentifier, serviceIdentifier, monitoringCategory);
     List<String> cvConfigIds = cvConfigList.stream().map(CVConfig::getUuid).collect(Collectors.toList());
 
     List<TimeSeriesRecord> timeSeriesRecordsfromDB =

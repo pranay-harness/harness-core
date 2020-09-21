@@ -6,6 +6,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyList;
 import static org.mockito.Matchers.anyString;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import com.google.inject.Inject;
@@ -75,7 +76,8 @@ public class LogDashboardServiceImplTest extends CvNextGenTest {
     Instant endTime = Instant.now().minus(5, ChronoUnit.MINUTES);
     List<Long> labelList = Arrays.asList(1234l, 12345l, 123455l, 12334l);
     List<LogAnalysisResult> resultList = buildLogAnalysisResults(cvConfigId, true, startTime, endTime, labelList);
-    when(mockCvConfigService.list(accountId, envIdentifier, serviceIdentifier, CVMonitoringCategory.PERFORMANCE))
+    when(mockCvConfigService.list(accountId, orgIdentifier, projectIdentifier, envIdentifier, serviceIdentifier,
+             CVMonitoringCategory.PERFORMANCE))
         .thenReturn(Arrays.asList(createCvConfig(cvConfigId, serviceIdentifier)));
     when(mockLogAnalysisService.getAnalysisResults(anyString(), anyList(), any(), any())).thenReturn(resultList);
     when(mockLogAnalysisService.getAnalysisClusters(cvConfigId, new HashSet<>(labelList)))
@@ -84,6 +86,9 @@ public class LogDashboardServiceImplTest extends CvNextGenTest {
     NGPageResponse<AnalyzedLogDataDTO> pageResponse =
         logDashboardService.getAnomalousLogs(accountId, projectIdentifier, orgIdentifier, serviceIdentifier,
             envIdentifier, CVMonitoringCategory.PERFORMANCE, startTime.toEpochMilli(), endTime.toEpochMilli(), 0, 10);
+    verify(mockCvConfigService)
+        .list(accountId, orgIdentifier, projectIdentifier, envIdentifier, serviceIdentifier,
+            CVMonitoringCategory.PERFORMANCE);
     assertThat(pageResponse).isNotNull();
     assertThat(pageResponse.getContent()).isNotEmpty();
     pageResponse.getContent().forEach(analyzedLogDataDTO -> {
@@ -110,7 +115,8 @@ public class LogDashboardServiceImplTest extends CvNextGenTest {
     Instant endTime = Instant.now().minus(5, ChronoUnit.MINUTES);
     List<Long> labelList = Arrays.asList(1234l, 12345l, 123455l, 12334l);
     List<LogAnalysisResult> resultList = buildLogAnalysisResults(cvConfigId, true, startTime, endTime, labelList);
-    when(mockCvConfigService.list(accountId, envIdentifier, serviceIdentifier, CVMonitoringCategory.PERFORMANCE))
+    when(mockCvConfigService.list(accountId, orgIdentifier, projectIdentifier, envIdentifier, serviceIdentifier,
+             CVMonitoringCategory.PERFORMANCE))
         .thenReturn(Arrays.asList(createCvConfig(cvConfigId, serviceIdentifier)));
     when(mockLogAnalysisService.getAnalysisResults(anyString(), anyList(), any(), any())).thenReturn(resultList);
     when(mockLogAnalysisService.getAnalysisClusters(cvConfigId, new HashSet<>(labelList)))
@@ -119,6 +125,9 @@ public class LogDashboardServiceImplTest extends CvNextGenTest {
     NGPageResponse<AnalyzedLogDataDTO> pageResponse =
         logDashboardService.getAnomalousLogs(accountId, projectIdentifier, orgIdentifier, serviceIdentifier,
             envIdentifier, CVMonitoringCategory.PERFORMANCE, startTime.toEpochMilli(), endTime.toEpochMilli(), 0, 1);
+    verify(mockCvConfigService)
+        .list(accountId, orgIdentifier, projectIdentifier, envIdentifier, serviceIdentifier,
+            CVMonitoringCategory.PERFORMANCE);
     assertThat(pageResponse).isNotNull();
     assertThat(pageResponse.getContent()).isNotEmpty();
     assertThat(pageResponse.getItemCount()).isEqualTo(1);
@@ -139,7 +148,8 @@ public class LogDashboardServiceImplTest extends CvNextGenTest {
     Instant endTime = Instant.now().minus(5, ChronoUnit.MINUTES);
     List<Long> labelList = Arrays.asList(1234l, 12345l, 123455l, 12334l);
     List<LogAnalysisResult> resultList = buildLogAnalysisResults(cvConfigId, true, startTime, endTime, labelList);
-    when(mockCvConfigService.list(accountId, envIdentifier, serviceIdentifier, CVMonitoringCategory.PERFORMANCE))
+    when(mockCvConfigService.list(accountId, orgIdentifier, projectIdentifier, envIdentifier, serviceIdentifier,
+             CVMonitoringCategory.PERFORMANCE))
         .thenReturn(new ArrayList<>());
     when(mockLogAnalysisService.getAnalysisResults(anyString(), anyList(), any(), any())).thenReturn(resultList);
     when(mockLogAnalysisService.getAnalysisClusters(cvConfigId, new HashSet<>(labelList)))
@@ -148,6 +158,9 @@ public class LogDashboardServiceImplTest extends CvNextGenTest {
     NGPageResponse<AnalyzedLogDataDTO> pageResponse =
         logDashboardService.getAnomalousLogs(accountId, projectIdentifier, orgIdentifier, serviceIdentifier,
             envIdentifier, CVMonitoringCategory.PERFORMANCE, startTime.toEpochMilli(), endTime.toEpochMilli(), 0, 1);
+    verify(mockCvConfigService)
+        .list(accountId, orgIdentifier, projectIdentifier, envIdentifier, serviceIdentifier,
+            CVMonitoringCategory.PERFORMANCE);
     assertThat(pageResponse).isNotNull();
     assertThat(pageResponse.getContent()).isNullOrEmpty();
   }
@@ -161,7 +174,8 @@ public class LogDashboardServiceImplTest extends CvNextGenTest {
     Instant endTime = Instant.now().minus(5, ChronoUnit.MINUTES);
     List<Long> labelList = Arrays.asList(1234l, 12345l, 123455l, 12334l);
     List<LogAnalysisResult> resultList = buildLogAnalysisResults(cvConfigId, false, startTime, endTime, labelList);
-    when(mockCvConfigService.list(accountId, envIdentifier, serviceIdentifier, CVMonitoringCategory.PERFORMANCE))
+    when(mockCvConfigService.list(accountId, orgIdentifier, projectIdentifier, envIdentifier, serviceIdentifier,
+             CVMonitoringCategory.PERFORMANCE))
         .thenReturn(Arrays.asList(createCvConfig(cvConfigId, serviceIdentifier)));
     when(mockLogAnalysisService.getAnalysisResults(anyString(), anyList(), any(), any())).thenReturn(resultList);
     when(mockLogAnalysisService.getAnalysisClusters(cvConfigId, new HashSet<>(labelList)))
@@ -170,6 +184,41 @@ public class LogDashboardServiceImplTest extends CvNextGenTest {
     NGPageResponse<AnalyzedLogDataDTO> pageResponse =
         logDashboardService.getAllLogs(accountId, projectIdentifier, orgIdentifier, serviceIdentifier, envIdentifier,
             CVMonitoringCategory.PERFORMANCE, startTime.toEpochMilli(), endTime.toEpochMilli(), 0, 10);
+    verify(mockCvConfigService)
+        .list(accountId, orgIdentifier, projectIdentifier, envIdentifier, serviceIdentifier,
+            CVMonitoringCategory.PERFORMANCE);
+    assertThat(pageResponse).isNotNull();
+    assertThat(pageResponse.getContent()).isNotEmpty();
+    boolean containsKnown = false;
+    for (AnalyzedLogDataDTO analyzedLogDataDTO : pageResponse.getContent()) {
+      if (analyzedLogDataDTO.getLogData().getTag().equals(LogAnalysisTag.KNOWN)) {
+        containsKnown = true;
+        break;
+      }
+    }
+    assertThat(containsKnown).isTrue();
+  }
+
+  @Test
+  @Owner(developers = PRAVEEN)
+  @Category(UnitTests.class)
+  public void testGetAllLogs_noCategory() {
+    String cvConfigId = generateUuid();
+    Instant startTime = Instant.now().minus(10, ChronoUnit.MINUTES);
+    Instant endTime = Instant.now().minus(5, ChronoUnit.MINUTES);
+    List<Long> labelList = Arrays.asList(1234l, 12345l, 123455l, 12334l);
+    List<LogAnalysisResult> resultList = buildLogAnalysisResults(cvConfigId, false, startTime, endTime, labelList);
+    when(mockCvConfigService.list(accountId, orgIdentifier, projectIdentifier, envIdentifier, serviceIdentifier, null))
+        .thenReturn(Arrays.asList(createCvConfig(cvConfigId, serviceIdentifier)));
+    when(mockLogAnalysisService.getAnalysisResults(anyString(), anyList(), any(), any())).thenReturn(resultList);
+    when(mockLogAnalysisService.getAnalysisClusters(cvConfigId, new HashSet<>(labelList)))
+        .thenReturn(buildLogAnalysisClusters(labelList));
+
+    NGPageResponse<AnalyzedLogDataDTO> pageResponse = logDashboardService.getAllLogs(accountId, projectIdentifier,
+        orgIdentifier, serviceIdentifier, envIdentifier, null, startTime.toEpochMilli(), endTime.toEpochMilli(), 0, 10);
+
+    verify(mockCvConfigService)
+        .list(accountId, orgIdentifier, projectIdentifier, envIdentifier, serviceIdentifier, null);
     assertThat(pageResponse).isNotNull();
     assertThat(pageResponse.getContent()).isNotEmpty();
     boolean containsKnown = false;
@@ -192,7 +241,8 @@ public class LogDashboardServiceImplTest extends CvNextGenTest {
     List<Long> labelList = Arrays.asList(1234l, 12345l, 123455l, 12334l);
     List<LogAnalysisResult> resultList = buildLogAnalysisResults(cvConfigId, false, startTime, endTime, labelList);
 
-    when(mockCvConfigService.list(accountId, envIdentifier, serviceIdentifier, CVMonitoringCategory.PERFORMANCE))
+    when(mockCvConfigService.list(accountId, orgIdentifier, projectIdentifier, envIdentifier, serviceIdentifier,
+             CVMonitoringCategory.PERFORMANCE))
         .thenReturn(Arrays.asList(createCvConfig(cvConfigId, serviceIdentifier)));
     when(mockLogAnalysisService.getAnalysisResults(
              cvConfigId, Arrays.asList(LogAnalysisTag.values()), startTime, endTime))
@@ -218,7 +268,8 @@ public class LogDashboardServiceImplTest extends CvNextGenTest {
     List<Long> labelList = Arrays.asList(1234l, 12345l, 123455l, 12334l);
     List<LogAnalysisResult> resultList = buildLogAnalysisResults(cvConfigId, false, startTime, endTime, labelList);
 
-    when(mockCvConfigService.list(accountId, envIdentifier, serviceIdentifier, CVMonitoringCategory.PERFORMANCE))
+    when(mockCvConfigService.list(accountId, orgIdentifier, projectIdentifier, envIdentifier, serviceIdentifier,
+             CVMonitoringCategory.PERFORMANCE))
         .thenReturn(Arrays.asList(createCvConfig(cvConfigId, serviceIdentifier)));
     when(mockLogAnalysisService.getAnalysisResults(
              cvConfigId, Arrays.asList(LogAnalysisTag.values()), startTime, endTime))

@@ -215,16 +215,20 @@ public class CVConfigServiceImpl implements CVConfigService {
   }
 
   @Override
-  public List<CVConfig> list(String accountId, String environmentIdentifier, String serviceIdentifier,
-      CVMonitoringCategory monitoringCategory) {
+  public List<CVConfig> list(String accountId, String orgIdentifier, String projectIdentifier,
+      String environmentIdentifier, String serviceIdentifier, CVMonitoringCategory monitoringCategory) {
     Query<CVConfig> query = hPersistence.createQuery(CVConfig.class)
                                 .filter(CVConfigKeys.accountId, accountId)
-                                .filter(CVConfigKeys.category, monitoringCategory);
+                                .filter(CVConfigKeys.orgIdentifier, orgIdentifier)
+                                .filter(CVConfigKeys.projectIdentifier, projectIdentifier);
     if (isNotEmpty(environmentIdentifier)) {
       query = query.filter(CVConfigKeys.envIdentifier, environmentIdentifier);
     }
     if (isNotEmpty(serviceIdentifier)) {
       query = query.filter(CVConfigKeys.serviceIdentifier, serviceIdentifier);
+    }
+    if (monitoringCategory != null) {
+      query = query.filter(CVConfigKeys.category, monitoringCategory);
     }
     return query.asList();
   }
