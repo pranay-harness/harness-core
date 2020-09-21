@@ -93,6 +93,7 @@ public class ParameterFieldDeserializerTest extends CategoryTest implements Mult
   static class Infrastructure {
     private ParameterField<String> inner1;
     private ParameterField<List<String>> inner2;
+    private ParameterField<String> innerNull;
     private ParameterField<Double> inner3;
     private ParameterField<String> inner4;
     private ParameterField<String> inner5;

@@ -2,6 +2,8 @@ package io.harness;
 
 import com.google.inject.AbstractModule;
 
+import io.harness.walktree.registries.VisitorRegistryModule;
+
 public class WalkTreeModule extends AbstractModule {
   private static volatile WalkTreeModule instance;
 
@@ -14,6 +16,6 @@ public class WalkTreeModule extends AbstractModule {
 
   @Override
   protected void configure() {
-    // Nothing to register.
+    install(VisitorRegistryModule.getInstance());
   }
 }

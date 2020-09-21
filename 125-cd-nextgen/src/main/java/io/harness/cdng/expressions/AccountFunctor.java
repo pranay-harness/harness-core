@@ -1,9 +1,9 @@
 package io.harness.cdng.expressions;
 
 import io.harness.ambiance.Ambiance;
+import io.harness.common.AmbianceHelper;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.expression.LateBindingValue;
-import io.harness.ng.common.AmbianceHelper;
 import software.wings.service.intfc.AccountService;
 
 public class AccountFunctor implements LateBindingValue {

@@ -1,4 +1,4 @@
-package io.harness.ng.common;
+package io.harness.common;
 
 import static io.harness.data.structure.CollectionUtils.emptyIfNull;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;

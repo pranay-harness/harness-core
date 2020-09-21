@@ -14,6 +14,7 @@ public class EnvironmentMapper {
         .orgIdentifier(environmentRequestDTO.getOrgIdentifier())
         .projectIdentifier(environmentRequestDTO.getProjectIdentifier())
         .name(environmentRequestDTO.getName())
+        .description(environmentRequestDTO.getDescription())
         .type(environmentRequestDTO.getType())
         .build();
   }
@@ -25,6 +26,7 @@ public class EnvironmentMapper {
         .projectIdentifier(environment.getProjectIdentifier())
         .identifier(environment.getIdentifier())
         .name(environment.getName())
+        .description(environment.getDescription())
         .type(environment.getType())
         .deleted(environment.getDeleted())
         .build();

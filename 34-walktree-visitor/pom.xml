@@ -35,7 +35,7 @@
         </dependency>
         <dependency>
             <groupId>software.wings</groupId>
-            <artifactId>12-commons</artifactId>
+            <artifactId>13-ng-commons</artifactId>
             <version>${project.parent.version}</version>
         </dependency>
         <dependency>

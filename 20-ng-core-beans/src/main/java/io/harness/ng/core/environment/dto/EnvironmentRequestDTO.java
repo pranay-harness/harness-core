@@ -25,5 +25,6 @@ public class EnvironmentRequestDTO {
   @ApiModelProperty(required = true) @NotEmpty @EntityIdentifier String identifier;
 
   @EntityName String name;
+  String description;
   @ApiModelProperty(required = true) EnvironmentType type;
 }

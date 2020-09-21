@@ -1,4 +1,4 @@
-package io.harness.ng.common;
+package io.harness.common;
 
 import io.harness.ambiance.Ambiance;
 import io.harness.ng.core.BaseNGAccess;

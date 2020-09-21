@@ -1,5 +1,6 @@
 package io.harness.cdng;
 
+import io.harness.NGPipelinePersistenceConfig;
 import io.harness.OrchestrationPersistenceConfig;
 import io.harness.TimeoutEnginePersistenceConfig;
 import io.harness.connector.ConnectorPersistenceConfig;
@@ -11,6 +12,7 @@ public class CDNGPersistenceTestModule extends PersistenceModule {
   @Override
   protected Class<? extends SpringPersistenceConfig>[] getConfigClasses() {
     return new Class[] {NGCorePersistenceConfig.class, TimeoutEnginePersistenceConfig.class,
-        OrchestrationPersistenceConfig.class, ConnectorPersistenceConfig.class, CDNGPersistenceConfig.class};
+        OrchestrationPersistenceConfig.class, NGPipelinePersistenceConfig.class, ConnectorPersistenceConfig.class,
+        CDNGPersistenceConfig.class};
   }
 }

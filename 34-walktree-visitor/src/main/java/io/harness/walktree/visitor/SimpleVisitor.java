@@ -1,6 +1,5 @@
 package io.harness.walktree.visitor;
 
-import com.google.inject.Inject;
 import com.google.inject.Injector;
 import com.google.inject.Key;
 
@@ -15,7 +14,6 @@ public abstract class SimpleVisitor<T> extends Visitor {
   private final Injector injector;
   Map<String, Object> contextMap = new ConcurrentHashMap<>();
 
-  @Inject
   public SimpleVisitor(Injector injector) {
     this.injector = injector;
   }

@@ -50,6 +50,7 @@ public class Environment implements PersistentEntity {
 
   @NotEmpty @EntityIdentifier private String identifier;
   @EntityName private String name;
+  @Size(max = 1024) String description;
   @NotEmpty private EnvironmentType type;
   @NotNull @Singular @Size(max = 128) private List<Tag> tags;
 
