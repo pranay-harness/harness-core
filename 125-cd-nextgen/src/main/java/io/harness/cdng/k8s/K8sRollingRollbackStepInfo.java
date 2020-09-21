@@ -8,12 +8,14 @@ import io.harness.cdng.executionplan.utils.PlanCreatorFacilitatorUtils;
 import io.harness.cdng.pipeline.CDStepInfo;
 import io.harness.cdng.pipeline.stepinfo.StepSpecType;
 import io.harness.cdng.stepsdependency.utils.CDStepDependencyUtils;
+import io.harness.cdng.visitor.LevelNodeQualifierName;
 import io.harness.cdng.visitor.helpers.cdstepinfo.K8sRollingRollbackStepInfoVisitorHelper;
 import io.harness.executionplan.core.ExecutionPlanCreationContext;
 import io.harness.executionplan.stepsdependency.StepDependencySpec;
 import io.harness.executionplan.stepsdependency.bean.KeyAwareStepDependencySpec;
 import io.harness.executionplan.utils.ParentPathInfoUtils;
 import io.harness.state.StepType;
+import io.harness.walktree.beans.LevelNode;
 import io.harness.walktree.visitor.SimpleVisitorHelper;
 import io.harness.walktree.visitor.Visitable;
 import lombok.Builder;
@@ -78,5 +80,10 @@ public class K8sRollingRollbackStepInfo extends K8sRollingRollbackStepParameters
   @Override
   public String getIdentifier() {
     return identifier;
+  }
+
+  @Override
+  public LevelNode getLevelNode() {
+    return LevelNode.builder().qualifierName(LevelNodeQualifierName.K8S_ROLLING_ROLLBACK).build();
   }
 }

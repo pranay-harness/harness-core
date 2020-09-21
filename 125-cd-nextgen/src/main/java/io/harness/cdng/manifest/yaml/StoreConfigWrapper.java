@@ -5,7 +5,9 @@ import static com.fasterxml.jackson.annotation.JsonTypeInfo.Id.NAME;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
+import io.harness.cdng.visitor.LevelNodeQualifierName;
 import io.harness.cdng.visitor.helpers.manifest.StoreConfigWrapperVisitorHelper;
+import io.harness.walktree.beans.LevelNode;
 import io.harness.walktree.beans.VisitableChildren;
 import io.harness.walktree.visitor.SimpleVisitorHelper;
 import io.harness.walktree.visitor.Visitable;
@@ -48,5 +50,10 @@ public class StoreConfigWrapper implements OverridesApplier<StoreConfigWrapper>,
     VisitableChildren children = VisitableChildren.builder().build();
     children.add("storeConfig", storeConfig);
     return children;
+  }
+
+  @Override
+  public LevelNode getLevelNode() {
+    return LevelNode.builder().qualifierName(LevelNodeQualifierName.STORE_CONFIG_WRAPPER).build();
   }
 }

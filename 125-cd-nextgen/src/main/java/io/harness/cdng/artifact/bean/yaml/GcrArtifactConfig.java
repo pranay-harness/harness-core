@@ -1,14 +1,17 @@
 package io.harness.cdng.artifact.bean.yaml;
 
+import static io.harness.delegate.task.artifacts.ArtifactSourceConstants.GCR_NAME;
+
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import io.harness.beans.ParameterField;
 import io.harness.cdng.artifact.bean.ArtifactConfig;
 import io.harness.cdng.artifact.utils.ArtifactUtils;
+import io.harness.cdng.visitor.LevelNodeQualifierName;
 import io.harness.cdng.visitor.helpers.artifact.GcrArtifactConfigVisitorHelper;
 import io.harness.common.SwaggerConstants;
 import io.harness.data.validator.EntityIdentifier;
-import io.harness.delegate.task.artifacts.ArtifactSourceConstants;
 import io.harness.delegate.task.artifacts.ArtifactSourceType;
+import io.harness.walktree.beans.LevelNode;
 import io.harness.walktree.visitor.SimpleVisitorHelper;
 import io.harness.walktree.visitor.Visitable;
 import io.swagger.annotations.ApiModelProperty;
@@ -27,7 +30,7 @@ import java.util.List;
 @Data
 @Builder
 @EqualsAndHashCode(callSuper = false)
-@JsonTypeName(ArtifactSourceConstants.GCR_NAME)
+@JsonTypeName(GCR_NAME)
 @SimpleVisitorHelper(helperClass = GcrArtifactConfigVisitorHelper.class)
 public class GcrArtifactConfig implements ArtifactConfig, Visitable {
   /**
@@ -79,5 +82,10 @@ public class GcrArtifactConfig implements ArtifactConfig, Visitable {
       resultantConfig = resultantConfig.withRegistryHostname(gcrArtifactSpecConfig.getRegistryHostname());
     }
     return resultantConfig;
+  }
+
+  @Override
+  public LevelNode getLevelNode() {
+    return LevelNode.builder().qualifierName(LevelNodeQualifierName.GCR_ARTIFACT_CONFIG).build();
   }
 }

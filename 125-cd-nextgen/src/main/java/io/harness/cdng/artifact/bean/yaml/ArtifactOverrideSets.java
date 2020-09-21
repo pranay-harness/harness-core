@@ -2,7 +2,9 @@ package io.harness.cdng.artifact.bean.yaml;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonTypeName;
+import io.harness.cdng.visitor.LevelNodeQualifierName;
 import io.harness.data.validator.EntityIdentifier;
+import io.harness.walktree.beans.LevelNode;
 import io.harness.walktree.beans.VisitableChildren;
 import io.harness.walktree.visitor.Visitable;
 import io.harness.yaml.core.intfc.OverrideSetsWrapper;
@@ -22,5 +24,9 @@ public class ArtifactOverrideSets implements OverrideSetsWrapper, Visitable {
     VisitableChildren children = VisitableChildren.builder().build();
     children.add("artifacts", artifacts);
     return children;
+  }
+  @Override
+  public LevelNode getLevelNode() {
+    return LevelNode.builder().qualifierName(LevelNodeQualifierName.ARTIFACT_OVERRIDE_SETS).build();
   }
 }

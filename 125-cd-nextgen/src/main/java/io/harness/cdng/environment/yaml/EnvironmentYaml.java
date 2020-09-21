@@ -1,11 +1,13 @@
 package io.harness.cdng.environment.yaml;
 
 import io.harness.beans.ParameterField;
+import io.harness.cdng.visitor.LevelNodeQualifierName;
 import io.harness.cdng.visitor.helpers.pipelineinfrastructure.EnvironmentYamlVisitorHelper;
 import io.harness.common.SwaggerConstants;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.ng.core.common.beans.Tag;
 import io.harness.ng.core.environment.beans.EnvironmentType;
+import io.harness.walktree.beans.LevelNode;
 import io.harness.walktree.visitor.SimpleVisitorHelper;
 import io.harness.walktree.visitor.Visitable;
 import io.harness.yaml.core.intfc.OverridesApplier;
@@ -48,5 +50,10 @@ public class EnvironmentYaml implements OverridesApplier<EnvironmentYaml>, Visit
       resultant = resultant.withTags(overrideConfig.getTags());
     }
     return resultant;
+  }
+
+  @Override
+  public LevelNode getLevelNode() {
+    return LevelNode.builder().qualifierName(LevelNodeQualifierName.ENVIRONMENT_YAML).build();
   }
 }

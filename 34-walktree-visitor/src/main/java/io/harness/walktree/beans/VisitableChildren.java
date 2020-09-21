@@ -14,4 +14,8 @@ public class VisitableChildren {
   public void add(String fieldName, Object value) {
     visitableChildList.add(VisitableChild.builder().fieldName(fieldName).value(value).build());
   }
+
+  public boolean isEmpty() {
+    return visitableChildList.isEmpty();
+  }
 }

@@ -9,8 +9,10 @@ import io.harness.cdng.manifest.ValuesPathProvider;
 import io.harness.cdng.manifest.yaml.ManifestAttributes;
 import io.harness.cdng.manifest.yaml.StoreConfig;
 import io.harness.cdng.manifest.yaml.StoreConfigWrapper;
+import io.harness.cdng.visitor.LevelNodeQualifierName;
 import io.harness.cdng.visitor.helpers.manifest.K8sManifestVisitorHelper;
 import io.harness.data.validator.EntityIdentifier;
+import io.harness.walktree.beans.LevelNode;
 import io.harness.walktree.beans.VisitableChildren;
 import io.harness.walktree.visitor.SimpleVisitorHelper;
 import io.harness.walktree.visitor.Visitable;
@@ -72,5 +74,10 @@ public class K8sManifest implements ManifestAttributes, ValuesPathProvider, Visi
     VisitableChildren children = VisitableChildren.builder().build();
     children.add("storeConfigWrapper", storeConfigWrapper);
     return children;
+  }
+
+  @Override
+  public LevelNode getLevelNode() {
+    return LevelNode.builder().qualifierName(LevelNodeQualifierName.K8S_MANIFEST).build();
   }
 }

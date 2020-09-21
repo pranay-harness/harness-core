@@ -11,9 +11,13 @@ import io.harness.common.SwaggerConstants;
 import io.harness.data.validator.EntityIdentifier;
 import io.harness.data.validator.EntityName;
 import io.harness.visitor.helpers.stage.StageElementHelper;
+import io.harness.walktree.beans.LevelNode;
 import io.harness.walktree.beans.VisitableChildren;
 import io.harness.walktree.visitor.SimpleVisitorHelper;
 import io.harness.walktree.visitor.Visitable;
+import io.harness.walktree.visitor.validation.annotations.Required;
+import io.harness.walktree.visitor.validation.modes.PostInputSet;
+import io.harness.walktree.visitor.validation.modes.PreInputSet;
 import io.harness.yaml.core.auxiliary.intfc.StageElementWrapper;
 import io.harness.yaml.core.intfc.StageType;
 import io.harness.yaml.core.intfc.WithIdentifier;
@@ -22,12 +26,14 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import javax.validation.constraints.NotNull;
+
 @Data
 @NoArgsConstructor
 @JsonTypeName("stage")
 @SimpleVisitorHelper(helperClass = StageElementHelper.class)
 public class StageElement implements StageElementWrapper, WithIdentifier, Visitable {
-  @EntityIdentifier String identifier;
+  @NotNull(groups = PreInputSet.class) @Required(groups = PostInputSet.class) @EntityIdentifier String identifier;
   @EntityName String name;
   @ApiModelProperty(dataType = SwaggerConstants.STRING_CLASSPATH) ParameterField<String> description;
   String type;
@@ -69,5 +75,10 @@ public class StageElement implements StageElementWrapper, WithIdentifier, Visita
     VisitableChildren children = VisitableChildren.builder().build();
     children.add("stageType", stageType);
     return children;
+  }
+
+  @Override
+  public LevelNode getLevelNode() {
+    return LevelNode.builder().qualifierName(LevelNodeQualifierName.STAGE_ELEMENT).build();
   }
 }

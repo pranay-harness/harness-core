@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import io.harness.visitor.helpers.executionelement.ParallelStepElementVisitorHelper;
+import io.harness.walktree.beans.LevelNode;
 import io.harness.walktree.beans.VisitableChildren;
 import io.harness.walktree.visitor.SimpleVisitorHelper;
 import io.harness.walktree.visitor.Visitable;
@@ -40,5 +41,10 @@ public class ParallelStepElement implements ExecutionWrapper, Visitable {
       visitableChildren.add("sections", section);
     }
     return visitableChildren;
+  }
+
+  @Override
+  public LevelNode getLevelNode() {
+    return LevelNode.builder().qualifierName(LevelNodeQualifierName.PARALLEL_STEP_ELEMENT).build();
   }
 }

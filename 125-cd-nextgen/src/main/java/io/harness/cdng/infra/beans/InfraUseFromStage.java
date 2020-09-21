@@ -2,8 +2,10 @@ package io.harness.cdng.infra.beans;
 
 import io.harness.cdng.environment.yaml.EnvironmentYaml;
 import io.harness.cdng.infra.InfrastructureDef;
+import io.harness.cdng.visitor.LevelNodeQualifierName;
 import io.harness.cdng.visitor.helpers.pipelineinfrastructure.InfraUseFromOverridesVisitorHelper;
 import io.harness.cdng.visitor.helpers.pipelineinfrastructure.InfraUseFromStageVisitorHelper;
+import io.harness.walktree.beans.LevelNode;
 import io.harness.walktree.beans.VisitableChildren;
 import io.harness.walktree.visitor.SimpleVisitorHelper;
 import io.harness.walktree.visitor.Visitable;
@@ -25,6 +27,11 @@ public class InfraUseFromStage implements Serializable, Visitable {
   // For Visitor Framework Impl
   String metadata;
 
+  @Override
+  public LevelNode getLevelNode() {
+    return LevelNode.builder().qualifierName(LevelNodeQualifierName.INFRA_USE_FROM_STAGE).build();
+  }
+
   @Data
   @Builder
   @ApiModel(value = "InfraOverrides")
@@ -39,6 +46,11 @@ public class InfraUseFromStage implements Serializable, Visitable {
       children.add("infrastructureDefinition", infrastructureDefinition);
       children.add("environment", environment);
       return children;
+    }
+
+    @Override
+    public LevelNode getLevelNode() {
+      return LevelNode.builder().qualifierName(LevelNodeQualifierName.INFRA_USE_FROM_STAGE_OVERRIDES).build();
     }
   }
 }

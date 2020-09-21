@@ -6,6 +6,7 @@ import io.harness.cdng.manifest.ManifestStoreType;
 import io.harness.cdng.visitor.helper.GitStoreVisitorHelper;
 import io.harness.common.SwaggerConstants;
 import io.harness.delegate.beans.storeconfig.FetchType;
+import io.harness.walktree.beans.LevelNode;
 import io.harness.walktree.beans.VisitableChildren;
 import io.harness.walktree.visitor.SimpleVisitorHelper;
 import io.harness.walktree.visitor.Visitable;
@@ -78,5 +79,10 @@ public class GitStore implements StoreConfig, Visitable {
   @Override
   public VisitableChildren getChildrenToWalk() {
     return VisitableChildren.builder().build();
+  }
+
+  @Override
+  public LevelNode getLevelNode() {
+    return LevelNode.builder().qualifierName(ManifestStoreType.GIT).build();
   }
 }

@@ -2,6 +2,7 @@ package io.harness.yaml.core;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import io.harness.visitor.helpers.executionelement.GraphVisitorHelper;
+import io.harness.walktree.beans.LevelNode;
 import io.harness.walktree.beans.VisitableChildren;
 import io.harness.walktree.visitor.SimpleVisitorHelper;
 import io.harness.walktree.visitor.Visitable;
@@ -32,5 +33,10 @@ public class Graph implements ExecutionWrapper, Visitable {
     VisitableChildren visitableChildren = VisitableChildren.builder().build();
     sections.forEach(step -> { visitableChildren.add("sections", step); });
     return visitableChildren;
+  }
+
+  @Override
+  public LevelNode getLevelNode() {
+    return LevelNode.builder().qualifierName(LevelNodeQualifierName.GRAPH).build();
   }
 }
