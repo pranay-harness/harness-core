@@ -10,6 +10,7 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.configuration.DeployMode;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.exception.InvalidRequestException;
 import lombok.extern.slf4j.Slf4j;
@@ -63,6 +64,7 @@ public class TriggerConditionController {
 
   public QLTriggerCondition populateTriggerCondition(Trigger trigger, String accountId) {
     QLTriggerCondition condition = null;
+    String webhookUrl = null;
 
     switch (trigger.getCondition().getConditionType()) {
       case NEW_ARTIFACT:
@@ -105,12 +107,17 @@ public class TriggerConditionController {
           webhookSource = QLWebhookSource.valueOf(webHookTriggerCondition.getWebhookSource().toString());
         }
 
-        String webhookUrl = mainConfiguration.getPortal().getUrl().trim();
-        if (!webhookUrl.endsWith("/")) {
-          webhookUrl += "/";
-        }
-        if (!webhookUrl.contains("gateway")) {
-          webhookUrl += "gateway";
+        webhookUrl = mainConfiguration.getPortal().getUrl().trim();
+        // There is no gateway for On-prem
+        // For SAAS, all calls should be routed via gateway:
+        // https://harness.atlassian.net/browse/CDC-8897?focusedCommentId=126140
+        if (mainConfiguration.getDeployMode() != DeployMode.ONPREM) {
+          if (!webhookUrl.endsWith("/")) {
+            webhookUrl += "/";
+          }
+          if (!webhookUrl.contains("gateway")) {
+            webhookUrl += "gateway";
+          }
         }
 
         webhookUrl +=
