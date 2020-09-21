@@ -562,12 +562,18 @@ public abstract class AbstractStatsDataFetcherWithAggregationListAndTags<A, F, G
 
       QLCEDataEntry existingDataPoint = labelNameDataPointMap.get(label);
       if (existingDataPoint != null) {
-        existingDataPoint.setTotalCost(
-            billingDataHelper.getRoundedDoubleValue(existingDataPoint.getTotalCost() + dataPoint.getTotalCost()));
-        existingDataPoint.setIdleCost(
-            billingDataHelper.getRoundedDoubleValue(existingDataPoint.getIdleCost() + dataPoint.getIdleCost()));
-        existingDataPoint.setUnallocatedCost(billingDataHelper.getRoundedDoubleValue(
-            existingDataPoint.getUnallocatedCost() + dataPoint.getUnallocatedCost()));
+        if (existingDataPoint.getTotalCost() != null) {
+          existingDataPoint.setTotalCost(
+              billingDataHelper.getRoundedDoubleValue(existingDataPoint.getTotalCost() + dataPoint.getTotalCost()));
+        }
+        if (existingDataPoint.getIdleCost() != null) {
+          existingDataPoint.setIdleCost(
+              billingDataHelper.getRoundedDoubleValue(existingDataPoint.getIdleCost() + dataPoint.getIdleCost()));
+        }
+        if (existingDataPoint.getUnallocatedCost() != null) {
+          existingDataPoint.setUnallocatedCost(billingDataHelper.getRoundedDoubleValue(
+              existingDataPoint.getUnallocatedCost() + dataPoint.getUnallocatedCost()));
+        }
         return true;
       }
 
