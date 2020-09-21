@@ -5,6 +5,7 @@ import com.google.inject.Inject;
 import io.harness.cvng.core.entities.DeletedCVConfig;
 import io.harness.cvng.core.services.api.DataCollectionTaskService;
 import io.harness.cvng.core.services.api.DeletedCVConfigService;
+import io.harness.cvng.core.services.api.VerificationTaskService;
 import io.harness.persistence.HPersistence;
 import lombok.extern.slf4j.Slf4j;
 
@@ -15,6 +16,7 @@ import javax.validation.constraints.NotNull;
 public class DeletedCVConfigServiceImpl implements DeletedCVConfigService {
   @Inject private HPersistence hPersistence;
   @Inject private DataCollectionTaskService dataCollectionTaskService;
+  @Inject private VerificationTaskService verificationTaskService;
 
   @Override
   public DeletedCVConfig save(DeletedCVConfig deletedCVConfig) {
@@ -30,8 +32,9 @@ public class DeletedCVConfigServiceImpl implements DeletedCVConfigService {
 
   @Override
   public void triggerCleanup(DeletedCVConfig deletedCVConfig) {
-    dataCollectionTaskService.deleteDataCollectionTask(
+    dataCollectionTaskService.deletePerpetualTasks(
         deletedCVConfig.getAccountId(), deletedCVConfig.getPerpetualTaskId());
+    verificationTaskService.removeCVConfigMappings(deletedCVConfig.getCvConfig().getUuid());
     logger.info("Deleting DeletedCVConfig {}", deletedCVConfig.getUuid());
     delete(deletedCVConfig.getUuid());
     logger.info("Deletion of DeletedCVConfig {} was successful", deletedCVConfig.getUuid());

@@ -14,7 +14,7 @@ public interface DataCollectionTaskService {
   Optional<DataCollectionTaskDTO> getNextTaskDTO(String accountId, String dataCollectionWorkerId);
   DataCollectionTask getDataCollectionTask(String dataCollectionTaskId);
   void updateTaskStatus(DataCollectionTaskResult dataCollectionTaskResult);
-  void deleteDataCollectionTask(String accountId, String dataCollectionTaskId);
+  void deletePerpetualTasks(String accountId, String perpetualTaskId);
   String enqueueFirstTask(CVConfig cvConfig);
   List<String> createSeqTasks(List<DataCollectionTask> dataCollectionTasks);
 }

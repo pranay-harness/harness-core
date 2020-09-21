@@ -4,6 +4,7 @@ import com.google.common.collect.Lists;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import io.harness.annotation.HarnessEntity;
+import io.harness.cvng.CVConstants;
 import io.harness.cvng.statemachine.beans.AnalysisStatus;
 import io.harness.cvng.verificationjob.beans.VerificationJobInstanceDTO;
 import io.harness.iterator.PersistentRegularIterable;
@@ -59,7 +60,10 @@ public class VerificationJobInstance
   private Integer newHostsTrafficSplitPercentage;
   private Duration duration;
   private List<ProgressLog> progressLogs;
-  @Builder.Default @FdTtlIndex private Date validUntil = Date.from(OffsetDateTime.now().plusDays(31).toInstant());
+  @Builder.Default
+  @FdTtlIndex
+  private Date validUntil =
+      Date.from(OffsetDateTime.now().plus(CVConstants.VERIFICATION_JOB_INSTANCE_EXPIRY_DURATION).toInstant());
   @Override
   public void updateNextIteration(String fieldName, long nextIteration) {
     if (VerificationJobInstanceKeys.dataCollectionTaskIteration.equals(fieldName)) {
