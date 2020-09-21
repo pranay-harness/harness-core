@@ -12,6 +12,8 @@ import org.apache.commons.lang3.StringUtils;
 import org.bson.Document;
 import org.bson.types.Binary;
 
+import java.util.Objects;
+
 public class MongoDelegateTaskResultsProviderImpl implements DelegateTaskResultsProvider {
   private static final String ASYNC_TASK_COLLECTION_NAME_SUFFIX = "delegateAsyncTaskResponses";
   private final MongoClient mongoClient;
@@ -19,9 +21,10 @@ public class MongoDelegateTaskResultsProviderImpl implements DelegateTaskResults
 
   MongoDelegateTaskResultsProviderImpl(MongoDatabase mongoDatabase) {
     String connectionString = mongoDatabase.getConnection();
-    mongoClient = new MongoClient(new MongoClientURI(connectionString));
+    MongoClientURI mongoClientURI = new MongoClientURI(connectionString);
+    mongoClient = new MongoClient(mongoClientURI);
     com.mongodb.client.MongoDatabase database =
-        mongoClient.getDatabase(connectionString.substring(connectionString.lastIndexOf('/') + 1));
+        mongoClient.getDatabase(Objects.requireNonNull(mongoClientURI.getDatabase()));
 
     String asyncTaskResponseCollectionName = StringUtils.isBlank(mongoDatabase.getCollectionNamePrefix())
         ? ASYNC_TASK_COLLECTION_NAME_SUFFIX
