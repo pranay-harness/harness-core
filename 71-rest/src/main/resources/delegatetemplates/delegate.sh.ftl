@@ -163,6 +163,24 @@ else
   sed -i.bak "s|^cdnUrl:.*$|cdnUrl: ${cdnUrl}|" config-delegate.yml
 fi
 
+if ! `grep grpcServiceEnabled config-delegate.yml > /dev/null`; then
+  echo "grpcServiceEnabled: $GRPC_SERVICE_ENABLED" >> config-delegate.yml
+else
+  sed -i.bak "s|^grpcServiceEnabled:.*$|grpcServiceEnabled: $GRPC_SERVICE_ENABLED|" config-delegate.yml
+fi
+
+if ! `grep grpcServiceConnectorPort config-delegate.yml > /dev/null`; then
+  echo "grpcServiceConnectorPort: $GRPC_SERVICE_CONNECTOR_PORT" >> config-delegate.yml
+else
+  sed -i.bak "s|^grpcServiceConnectorPort:.*$|grpcServiceConnectorPort: $GRPC_SERVICE_CONNECTOR_PORT|" config-delegate.yml
+fi
+
+if ! `grep managerServiceSecret config-delegate.yml > /dev/null`; then
+  echo "managerServiceSecret: $MANAGER_SERVICE_SECRET" >> config-delegate.yml
+else
+  sed -i.bak "s|^managerServiceSecret:.*$|managerServiceSecret: $MANAGER_SERVICE_SECRET|" config-delegate.yml
+fi
+
 rm -f -- *.bak
 
 export KUBECTL_VERSION=${kubectlVersion}

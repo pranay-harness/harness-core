@@ -22,17 +22,18 @@ import io.harness.grpc.server.GrpcServerModule;
 import io.harness.task.service.TaskServiceGrpc;
 import io.harness.task.service.impl.TaskServiceImpl;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 
 public class DelegateGrpcServiceModule extends AbstractModule {
   private static final String SERVICE_ID = "delegate-grpc-service";
-  private final List<Connector> connectors;
+  private final int servicePort;
   private final String serviceSecret;
 
   @Inject
-  public DelegateGrpcServiceModule(List<Connector> connectors, String serviceSecret) {
-    this.connectors = connectors;
+  public DelegateGrpcServiceModule(int servicePort, String serviceSecret) {
+    this.servicePort = servicePort;
     this.serviceSecret = serviceSecret;
   }
 
@@ -51,7 +52,7 @@ public class DelegateGrpcServiceModule extends AbstractModule {
     stringServiceInfoMapBinder.addBinding(TaskServiceGrpc.SERVICE_NAME)
         .toInstance(ServiceInfo.builder().id(SERVICE_ID).secret(serviceSecret).build());
 
-    install(new GrpcServerModule(connectors, getProvider(Key.get(new TypeLiteral<Set<BindableService>>() {})),
+    install(new GrpcServerModule(getConnectors(), getProvider(Key.get(new TypeLiteral<Set<BindableService>>() {})),
         getProvider(Key.get(new TypeLiteral<Set<ServerInterceptor>>() {}))));
   }
 
@@ -59,5 +60,11 @@ public class DelegateGrpcServiceModule extends AbstractModule {
   @Singleton
   public ServiceManager serviceManager(Set<Service> services) {
     return new ServiceManager(services);
+  }
+
+  private List<Connector> getConnectors() {
+    List<Connector> connectors = new ArrayList<>();
+    connectors.add(Connector.builder().port(servicePort).build());
+    return connectors;
   }
 }

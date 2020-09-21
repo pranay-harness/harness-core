@@ -243,6 +243,17 @@ if [ ! -z "$HELM_PATH" ] && ! `grep helmPath config-delegate.yml > /dev/null` ; 
   echo "helmPath: $HELM_PATH" >> config-delegate.yml
 fi
 
+if [ ! -z "$GRPC_SERVICE_ENABLED" ] && ! `grep grpcServiceEnabled config-delegate.yml > /dev/null` ; then
+  echo "grpcServiceEnabled: $GRPC_SERVICE_ENABLED" >> config-delegate.yml
+fi
+
+if [ ! -z "$GRPC_SERVICE_CONNECTOR_PORT" ] && ! `grep grpcServiceConnectorPort config-delegate.yml > /dev/null` ; then
+  echo "grpcServiceConnectorPort: $GRPC_SERVICE_CONNECTOR_PORT" >> config-delegate.yml
+fi
+
+if [ ! -z "$MANAGER_SERVICE_SECRET" ] && ! `grep managerServiceSecret config-delegate.yml > /dev/null` ; then
+  echo "managerServiceSecret: $MANAGER_SERVICE_SECRET" >> config-delegate.yml
+fi
 
 rm -f -- *.bak
 

@@ -19,6 +19,7 @@ import static io.harness.delegate.beans.DelegateType.ECS;
 import static io.harness.delegate.beans.TaskData.DEFAULT_ASYNC_CALL_TIMEOUT;
 import static io.harness.delegate.message.ManagerMessageConstants.SELF_DESTRUCT;
 import static io.harness.obfuscate.Obfuscator.obfuscate;
+import static io.harness.rule.OwnerRule.ALEKSANDAR;
 import static io.harness.rule.OwnerRule.ANKIT;
 import static io.harness.rule.OwnerRule.ANSHUL;
 import static io.harness.rule.OwnerRule.BRETT;
@@ -129,6 +130,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import software.wings.WingsBaseTest;
+import software.wings.app.DelegateGrpcConfig;
 import software.wings.app.FileUploadLimit;
 import software.wings.app.MainConfiguration;
 import software.wings.app.PortalConfig;
@@ -215,6 +217,8 @@ public class DelegateServiceTest extends WingsBaseTest {
   @Mock private ConfigurationController configurationController;
   @Mock private AuditServiceHelper auditServiceHelper;
   @Mock private DelegateProcessingController delegateProcessingController;
+  @Mock private DelegateGrpcConfig delegateGrpcConfig;
+
   @Inject private DelegateConnectionDao delegateConnectionDao;
   @Inject private KryoSerializer kryoSerializer;
 
@@ -256,7 +260,9 @@ public class DelegateServiceTest extends WingsBaseTest {
 
     PortalConfig portalConfig = new PortalConfig();
     portalConfig.setCriticalDelegateTaskRejectAtLimit(100000);
+    portalConfig.setJwtNextGenManagerSecret("**********");
     when(mainConfiguration.getPortal()).thenReturn(portalConfig);
+    when(delegateGrpcConfig.getPort()).thenReturn(8080);
 
     when(accountService.getDelegateConfiguration(anyString()))
         .thenReturn(DelegateConfiguration.builder().delegateVersions(singletonList("0.0.0")).build());
@@ -1549,6 +1555,32 @@ public class DelegateServiceTest extends WingsBaseTest {
       assertThat(new String(buffer))
           .isEqualTo(CharStreams.toString(
               new InputStreamReader(getClass().getResourceAsStream("/expectedHarnessDelegate.yaml"))));
+
+      file = (TarArchiveEntry) tarArchiveInputStream.getNextEntry();
+      assertThat(file).extracting(TarArchiveEntry::getName).isEqualTo(KUBERNETES_DELEGATE + "/README.txt");
+    }
+  }
+
+  @Test
+  @Owner(developers = ALEKSANDAR)
+  @Category(UnitTests.class)
+  public void shouldDownloadKubernetesWithCiEnabled() throws IOException, TemplateException {
+    when(accountService.get(ACCOUNT_ID))
+        .thenReturn(anAccount().withAccountKey("ACCOUNT_KEY").withUuid(ACCOUNT_ID).build());
+    File gzipFile = delegateService.downloadKubernetes(
+        "https://localhost:9090", "https://localhost:7070", ACCOUNT_ID, "harness-delegate", "", true);
+    File tarFile = File.createTempFile(DELEGATE_DIR, ".tar");
+    uncompressGzipFile(gzipFile, tarFile);
+    try (TarArchiveInputStream tarArchiveInputStream = new TarArchiveInputStream(new FileInputStream(tarFile))) {
+      assertThat(tarArchiveInputStream.getNextEntry().getName()).isEqualTo(KUBERNETES_DELEGATE + "/");
+
+      TarArchiveEntry file = (TarArchiveEntry) tarArchiveInputStream.getNextEntry();
+      assertThat(file).extracting(ArchiveEntry::getName).isEqualTo(KUBERNETES_DELEGATE + "/harness-delegate.yaml");
+      byte[] buffer = new byte[(int) file.getSize()];
+      IOUtils.read(tarArchiveInputStream, buffer);
+      assertThat(new String(buffer))
+          .isEqualTo(CharStreams.toString(
+              new InputStreamReader(getClass().getResourceAsStream("/expectedHarnessDelegateWithCiEnabled.yaml"))));
 
       file = (TarArchiveEntry) tarArchiveInputStream.getNextEntry();
       assertThat(file).extracting(TarArchiveEntry::getName).isEqualTo(KUBERNETES_DELEGATE + "/README.txt");

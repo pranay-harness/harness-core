@@ -45,13 +45,13 @@ public class CIExecutionConstants {
   public static final String DELEGATE_SERVICE_ENDPOINT_VARIABLE = "DELEGATE_SERVICE_ENDPOINT";
   public static final String DELEGATE_SERVICE_ID_VARIABLE = "DELEGATE_SERVICE_ID";
   public static final String DELEGATE_SERVICE_ID_VARIABLE_VALUE = "delegate-grpc-service";
-  public static final String DELEGATE_SERVICE_ENDPOINT_VARIABLE_VALUE = "localhost:8080";
+  public static final String DELEGATE_SERVICE_ENDPOINT_VARIABLE_VALUE = "delegate-service";
 
   public static final String ENDPOINT_MINIO_VARIABLE_VALUE = "35.224.85.116:9000";
   public static final String BUCKET_MINIO_VARIABLE_VALUE = "test";
 
   public static final String LITE_ENGINE_IMAGE_NAME = "harness/ci-lite-engine";
-  public static final String LITE_ENGINE_IMAGE_TAG = "v0.6.1-alpha";
+  public static final String LITE_ENGINE_IMAGE_TAG = "test-v0.7.1";
   public static final String LITE_ENGINE_CONTAINER_NAME = "setup-lite-engine";
   public static final String LITE_ENGINE_ARGS =
       "mkdir -p /step-exec/workspace; mkdir -p /step-exec/.harness/bin; mkdir -p /step-exec/.harness/logs; mkdir -p /step-exec/.harness/tmp; cp /usr/local/bin/ci-lite-engine-linux-amd64 /step-exec/.harness/bin/ci-lite-engine; chmod +x /step-exec/.harness/bin/ci-lite-engine;";

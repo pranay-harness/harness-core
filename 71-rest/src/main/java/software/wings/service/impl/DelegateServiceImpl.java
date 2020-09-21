@@ -44,6 +44,7 @@ import static java.util.Collections.emptyMap;
 import static java.util.Collections.emptySet;
 import static java.util.Comparator.comparingInt;
 import static java.util.Comparator.naturalOrder;
+import static java.util.Objects.nonNull;
 import static java.util.stream.Collectors.groupingBy;
 import static java.util.stream.Collectors.joining;
 import static java.util.stream.Collectors.toList;
@@ -899,6 +900,10 @@ public class DelegateServiceImpl implements DelegateService {
     boolean useCDN =
         featureFlagService.isEnabled(USE_CDN_FOR_STORAGE_FILES, inquiry.getAccountId()) && cdnConfig != null;
 
+    boolean isCiEnabled = inquiry.isCiEnabled()
+        && isNotEmpty(mainConfiguration.getPortal().getJwtNextGenManagerSecret())
+        && nonNull(delegateGrpcConfig.getPort());
+
     try {
       String delegateMetadataUrl = subdomainUrlHelper.getDelegateMetadataUrl(
           inquiry.getAccountId(), inquiry.getManagerHost(), mainConfiguration.getDeployMode().name());
@@ -983,7 +988,7 @@ public class DelegateServiceImpl implements DelegateService {
               .put("delegateStorageUrl", delegateStorageUrl)
               .put("delegateCheckLocation", delegateCheckLocation)
               .put("deployMode", mainConfiguration.getDeployMode().name())
-              .put("ciEnabled", String.valueOf(inquiry.isCiEnabled()))
+              .put("ciEnabled", String.valueOf(isCiEnabled))
               .put("kubectlVersion", mainConfiguration.getKubectlVersion())
               .put("delegateGrpcServicePort", String.valueOf(delegateGrpcConfig.getPort()))
               .put("kubernetesAccountLabel", getAccountIdentifier(inquiry.getAccountId()));
@@ -1001,6 +1006,15 @@ public class DelegateServiceImpl implements DelegateService {
 
       if (inquiry.getDelegateType() != null) {
         params.put("delegateType", inquiry.getDelegateType());
+      }
+
+      params.put("grpcServiceEnabled", String.valueOf(isCiEnabled));
+      if (isCiEnabled) {
+        params.put("grpcServiceConnectorPort", String.valueOf(delegateGrpcConfig.getPort()));
+        params.put("managerServiceSecret", String.valueOf(mainConfiguration.getPortal().getJwtNextGenManagerSecret()));
+      } else {
+        params.put("grpcServiceConnectorPort", String.valueOf(0));
+        params.put("managerServiceSecret", "null");
       }
 
       params.put("useCdn", String.valueOf(useCDN));

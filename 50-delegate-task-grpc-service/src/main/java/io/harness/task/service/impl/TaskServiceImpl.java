@@ -49,6 +49,8 @@ public class TaskServiceImpl extends TaskServiceGrpc.TaskServiceImplBase {
   @Override
   public void executeParkedTask(
       ExecuteParkedTaskRequest request, StreamObserver<ExecuteParkedTaskResponse> responseObserver) {
+    logger.info("Received fetchParkedTaskStatus call, accountId:{}, taskId:{}", request.getAccountId().getId(),
+        request.getTaskId().getId());
     try {
       delegateServiceGrpcLiteClient.executeParkedTask(request.getAccountId(), request.getTaskId());
       responseObserver.onNext(ExecuteParkedTaskResponse.newBuilder().setTaskId(request.getTaskId()).build());
@@ -61,6 +63,8 @@ public class TaskServiceImpl extends TaskServiceGrpc.TaskServiceImplBase {
 
   @Override
   public void taskProgress(TaskProgressRequest request, StreamObserver<TaskProgressResponse> responseObserver) {
+    logger.info("Received fetchParkedTaskStatus call, accountId:{}, taskId:{}", request.getAccountId().getId(),
+        request.getTaskId().getId());
     try {
       TaskExecutionStage taskExecutionStage =
           delegateServiceGrpcLiteClient.taskProgress(request.getAccountId(), request.getTaskId());
@@ -75,6 +79,8 @@ public class TaskServiceImpl extends TaskServiceGrpc.TaskServiceImplBase {
   @Override
   public void fetchParkedTaskStatus(
       FetchParkedTaskStatusRequest request, StreamObserver<FetchParkedTaskStatusResponse> responseObserver) {
+    logger.info("Received fetchParkedTaskStatus call, accountId:{}, taskId:{}, callbackToken:{}",
+        request.getAccountId().getId(), request.getTaskId().getId(), request.getCallbackToken().getToken());
     try {
       io.harness.delegate.FetchParkedTaskStatusResponse fetchParkedTaskStatusResponse =
           delegateServiceGrpcLiteClient.fetchParkedTaskStatus(
@@ -121,6 +127,8 @@ public class TaskServiceImpl extends TaskServiceGrpc.TaskServiceImplBase {
 
   @Override
   public void sendTaskStatus(SendTaskStatusRequest request, StreamObserver<SendTaskStatusResponse> responseObserver) {
+    logger.info("Received sendTaskStatus call, accountId:{}, taskId:{}, callbackToken:{}",
+        request.getAccountId().getId(), request.getTaskId().getId(), request.getCallbackToken().getToken());
     try {
       TaskStatusData taskStatusData = request.getTaskStatusData();
       if (taskStatusData.hasStepStatus()) {

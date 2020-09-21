@@ -150,6 +150,12 @@ spec:
           value: ""
         - name: ENABlE_CE
           value: "${enableCE}"
+        - name: GRPC_SERVICE_ENABLED
+          value: "${grpcServiceEnabled}"
+        - name: GRPC_SERVICE_CONNECTOR_PORT
+          value: "${grpcServiceConnectorPort}"
+        - name: MANAGER_SERVICE_SECRET
+          value: "${managerServiceSecret}"
       restartPolicy: Always
 
 <#if ciEnabled == "true">
@@ -159,6 +165,7 @@ apiVersion: v1
 kind: Service
 metadata:
   name: delegate-service
+  namespace: harness-delegate
 spec:
   type: ClusterIP
   selector:
