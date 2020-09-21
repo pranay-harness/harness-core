@@ -2,6 +2,7 @@ package io.harness.ng.core.inputset.resources;
 
 import static io.harness.utils.PageUtils.getNGPageResponse;
 
+import com.google.common.io.Resources;
 import com.google.inject.Inject;
 
 import com.codahale.metrics.annotation.ExceptionMetered;
@@ -9,8 +10,11 @@ import com.codahale.metrics.annotation.Timed;
 import io.harness.beans.NGPageResponse;
 import io.harness.cdng.inputset.beans.entities.CDInputSetEntity;
 import io.harness.cdng.inputset.beans.entities.CDInputSetEntity.CDInputSetEntityKeys;
-import io.harness.cdng.inputset.beans.resource.InputSetRequestDTO;
 import io.harness.cdng.inputset.beans.resource.InputSetResponseDTO;
+import io.harness.cdng.inputset.beans.resource.InputSetSummaryResponseDTO;
+import io.harness.cdng.inputset.beans.resource.InputSetTemplateResponseDTO;
+import io.harness.cdng.inputset.beans.resource.MergeInputSetRequestDTO;
+import io.harness.cdng.inputset.beans.resource.MergeInputSetResponseDTO;
 import io.harness.cdng.inputset.mappers.CDInputSetElementMapper;
 import io.harness.cdng.inputset.mappers.CDInputSetFilterHelper;
 import io.harness.cdng.inputset.services.CDInputSetEntityService;
@@ -31,7 +35,10 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.mongodb.core.query.Criteria;
 
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
@@ -65,9 +72,10 @@ public class InputSetResource {
   @ExceptionMetered
   @ApiOperation(value = "Gets an InputSet by identifier", nickname = "getInputSetForPipeline")
   public ResponseDTO<InputSetResponseDTO> get(@PathParam("inputSetIdentifier") String inputSetIdentifier,
-      @QueryParam("accountId") String accountId, @QueryParam("orgIdentifier") String orgIdentifier,
-      @QueryParam("projectIdentifier") String projectIdentifier,
-      @QueryParam("pipelineIdentifier") String pipelineIdentifier,
+      @NotNull @QueryParam("accountIdentifier") String accountId,
+      @NotNull @QueryParam("orgIdentifier") String orgIdentifier,
+      @NotNull @QueryParam("projectIdentifier") String projectIdentifier,
+      @NotNull @QueryParam("pipelineIdentifier") String pipelineIdentifier,
       @QueryParam("deleted") @DefaultValue("false") boolean deleted) {
     Optional<CDInputSetEntity> cdInputSetEntity = cdInputSetEntityService.get(
         accountId, orgIdentifier, projectIdentifier, pipelineIdentifier, inputSetIdentifier, deleted);
@@ -78,24 +86,28 @@ public class InputSetResource {
   @Timed
   @ExceptionMetered
   @ApiOperation(value = "Create an InputSet For Pipeline", nickname = "createInputSetForPipeline")
-  public ResponseDTO<InputSetResponseDTO> create(@QueryParam("accountId") String accountId,
-      @QueryParam("orgIdentifier") String orgIdentifier, @QueryParam("projectIdentifier") String projectIdentifier,
-      @NotNull @Valid InputSetRequestDTO inputSetRequestDTO) {
-    CDInputSetEntity cdInputSetEntity =
-        CDInputSetElementMapper.toCDInputSetEntity(accountId, orgIdentifier, projectIdentifier, inputSetRequestDTO);
+  public ResponseDTO<InputSetResponseDTO> create(@NotNull @QueryParam("accountIdentifier") String accountId,
+      @NotNull @QueryParam("orgIdentifier") String orgIdentifier,
+      @NotNull @QueryParam("projectIdentifier") String projectIdentifier,
+      @NotNull @QueryParam("pipelineIdentifier") String pipelineIdentifier, @NotNull String yaml) {
+    CDInputSetEntity cdInputSetEntity = CDInputSetElementMapper.toCDInputSetEntity(
+        accountId, orgIdentifier, projectIdentifier, pipelineIdentifier, yaml);
     CDInputSetEntity createdEntity = cdInputSetEntityService.create(cdInputSetEntity);
     return ResponseDTO.newResponse(CDInputSetElementMapper.writeResponseDTO(createdEntity));
   }
 
   @PUT
+  @Path("{inputSetIdentifier}")
   @Timed
   @ExceptionMetered
   @ApiOperation(value = "Update an InputSet by identifier", nickname = "updateInputSetForPipeline")
-  public ResponseDTO<InputSetResponseDTO> update(@QueryParam("accountId") String accountId,
-      @QueryParam("orgIdentifier") String orgIdentifier, @QueryParam("projectIdentifier") String projectIdentifier,
-      @NotNull @Valid InputSetRequestDTO inputSetRequestDTO) {
-    CDInputSetEntity requestInputSetEntity =
-        CDInputSetElementMapper.toCDInputSetEntity(accountId, orgIdentifier, projectIdentifier, inputSetRequestDTO);
+  public ResponseDTO<InputSetResponseDTO> update(@PathParam("inputSetIdentifier") String inputSetIdentifier,
+      @NotNull @QueryParam("accountIdentifier") String accountId,
+      @NotNull @QueryParam("orgIdentifier") String orgIdentifier,
+      @NotNull @QueryParam("projectIdentifier") String projectIdentifier,
+      @NotNull @QueryParam("pipelineIdentifier") String pipelineIdentifier, @NotNull String yaml) {
+    CDInputSetEntity requestInputSetEntity = CDInputSetElementMapper.toCDInputSetEntityWithIdentifier(
+        accountId, orgIdentifier, projectIdentifier, pipelineIdentifier, inputSetIdentifier, yaml);
     CDInputSetEntity updatedInputSetEntity = cdInputSetEntityService.update(requestInputSetEntity);
     return ResponseDTO.newResponse(CDInputSetElementMapper.writeResponseDTO(updatedInputSetEntity));
   }
@@ -106,23 +118,26 @@ public class InputSetResource {
   @ExceptionMetered
   @ApiOperation(value = "Delete an inputSet by identifier", nickname = "deleteInputSetForPipeline")
   public ResponseDTO<Boolean> delete(@PathParam("inputSetIdentifier") String inputSetIdentifier,
-      @QueryParam("accountId") String accountId, @QueryParam("orgIdentifier") String orgIdentifier,
-      @QueryParam("projectIdentifier") String projectIdentifier,
-      @QueryParam("pipelineIdentifier") String pipelineIdentifier) {
+      @NotNull @QueryParam("accountIdentifier") String accountId,
+      @NotNull @QueryParam("orgIdentifier") String orgIdentifier,
+      @NotNull @QueryParam("projectIdentifier") String projectIdentifier,
+      @NotNull @QueryParam("pipelineIdentifier") String pipelineIdentifier) {
     return ResponseDTO.newResponse(cdInputSetEntityService.delete(
         accountId, orgIdentifier, projectIdentifier, pipelineIdentifier, inputSetIdentifier));
   }
 
   @PUT
-  @Path("upsert")
+  @Path("{inputSetIdentifier}/upsert")
   @Timed
   @ExceptionMetered
   @ApiOperation(value = "Upsert an inputSet by identifier", nickname = "upsertInputSetForPipeline")
-  public ResponseDTO<InputSetResponseDTO> upsert(@QueryParam("accountId") String accountId,
-      @QueryParam("orgIdentifier") String orgIdentifier, @QueryParam("projectIdentifier") String projectIdentifier,
-      @NotNull @Valid InputSetRequestDTO inputSetRequestDTO) {
-    CDInputSetEntity cdInputSetEntity =
-        CDInputSetElementMapper.toCDInputSetEntity(accountId, orgIdentifier, projectIdentifier, inputSetRequestDTO);
+  public ResponseDTO<InputSetResponseDTO> upsert(@PathParam("inputSetIdentifier") String inputSetIdentifier,
+      @NotNull @QueryParam("accountIdentifier") String accountId,
+      @NotNull @QueryParam("orgIdentifier") String orgIdentifier,
+      @NotNull @QueryParam("projectIdentifier") String projectIdentifier,
+      @NotNull @QueryParam("pipelineIdentifier") String pipelineIdentifier, @NotNull String yaml) {
+    CDInputSetEntity cdInputSetEntity = CDInputSetElementMapper.toCDInputSetEntityWithIdentifier(
+        accountId, orgIdentifier, projectIdentifier, pipelineIdentifier, inputSetIdentifier, yaml);
     CDInputSetEntity upsertedInputSetEntity = cdInputSetEntityService.upsert(cdInputSetEntity);
     return ResponseDTO.newResponse(CDInputSetElementMapper.writeResponseDTO(upsertedInputSetEntity));
   }
@@ -131,11 +146,12 @@ public class InputSetResource {
   @Timed
   @ExceptionMetered
   @ApiOperation(value = "Gets InputSets list for a pipeline", nickname = "getInputSetsListForPipeline")
-  public ResponseDTO<NGPageResponse<InputSetResponseDTO>> listInputSetsForPipeline(
+  public ResponseDTO<NGPageResponse<InputSetSummaryResponseDTO>> listInputSetsForPipeline(
       @QueryParam("page") @DefaultValue("0") int page, @QueryParam("size") @DefaultValue("100") int size,
-      @QueryParam("accountId") String accountId, @QueryParam("orgIdentifier") String orgIdentifier,
-      @QueryParam("projectIdentifier") String projectIdentifier,
-      @QueryParam("pipelineIdentifier") String pipelineIdentifier, @QueryParam("sort") List<String> sort) {
+      @NotNull @QueryParam("accountIdentifier") String accountId,
+      @NotNull @QueryParam("orgIdentifier") String orgIdentifier,
+      @NotNull @QueryParam("projectIdentifier") String projectIdentifier,
+      @NotNull @QueryParam("pipelineIdentifier") String pipelineIdentifier, @QueryParam("sort") List<String> sort) {
     Criteria criteria = CDInputSetFilterHelper.createCriteriaForGetList(
         accountId, orgIdentifier, projectIdentifier, pipelineIdentifier, false);
     Pageable pageRequest;
@@ -144,8 +160,57 @@ public class InputSetResource {
     } else {
       pageRequest = PageUtils.getPageRequest(page, size, sort);
     }
-    Page<InputSetResponseDTO> inputSetList =
-        cdInputSetEntityService.list(criteria, pageRequest).map(CDInputSetElementMapper::writeResponseDTO);
+    Page<InputSetSummaryResponseDTO> inputSetList =
+        cdInputSetEntityService.list(criteria, pageRequest).map(CDInputSetElementMapper::writeSummaryResponseDTO);
     return ResponseDTO.newResponse(getNGPageResponse(inputSetList));
+  }
+
+  @GET
+  @Path("template")
+  @Timed
+  @ExceptionMetered
+  @ApiOperation(value = "Get template from a pipeline yaml", nickname = "getTemplateFromPipeline")
+  public ResponseDTO<InputSetTemplateResponseDTO> getTemplateFromPipeline(
+      @NotNull @QueryParam("accountIdentifier") String accountId,
+      @NotNull @QueryParam("orgIdentifier") String orgIdentifier,
+      @NotNull @QueryParam("projectIdentifier") String projectIdentifier,
+      @NotNull @QueryParam("pipelineIdentifier") String pipelineIdentifier) {
+    // currently returning a dummy response
+    String dummyFilename = "dummyInputSetTemplate.yaml";
+    ClassLoader classLoader = this.getClass().getClassLoader();
+    String content = null;
+    try {
+      content =
+          Resources.toString(Objects.requireNonNull(classLoader.getResource(dummyFilename)), StandardCharsets.UTF_8);
+    } catch (IOException e) {
+      // do nothing
+    }
+    return ResponseDTO.newResponse(InputSetTemplateResponseDTO.builder().inputSetTemplateYaml(content).build());
+  }
+
+  @POST
+  @Path("merge")
+  @Timed
+  @ExceptionMetered
+  @ApiOperation(
+      value = "Merges given input sets list on pipeline and return input set template format of applied pipeline",
+      nickname = "getMergeInputSetFromPipelineTemplate")
+  public ResponseDTO<MergeInputSetResponseDTO>
+  getMergeInputSetFromPipelineTemplate(@NotNull @QueryParam("accountIdentifier") String accountId,
+      @NotNull @QueryParam("orgIdentifier") String orgIdentifier,
+      @NotNull @QueryParam("projectIdentifier") String projectIdentifier,
+      @NotNull @QueryParam("pipelineIdentifier") String pipelineIdentifier,
+      @NotNull @Valid MergeInputSetRequestDTO mergeInputSetRequestDTO) {
+    // currently returning a dummy response
+    String dummyFilename = "dummyInputSetTemplate.yaml";
+    ClassLoader classLoader = this.getClass().getClassLoader();
+    String content = null;
+    try {
+      content =
+          Resources.toString(Objects.requireNonNull(classLoader.getResource(dummyFilename)), StandardCharsets.UTF_8);
+    } catch (IOException e) {
+      // do nothing
+    }
+    return ResponseDTO.newResponse(MergeInputSetResponseDTO.builder().pipelineYaml(content).build());
   }
 }

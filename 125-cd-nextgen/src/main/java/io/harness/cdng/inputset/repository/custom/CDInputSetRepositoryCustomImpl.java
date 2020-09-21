@@ -5,7 +5,6 @@ import com.google.inject.Inject;
 import com.mongodb.client.result.UpdateResult;
 import io.harness.cdng.inputset.beans.entities.CDInputSetEntity;
 import io.harness.cdng.inputset.mappers.CDInputSetFilterHelper;
-import io.harness.ng.core.service.mappers.ServiceFilterHelper;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -60,7 +59,7 @@ public class CDInputSetRepositoryCustomImpl implements CDInputSetRepositoryCusto
   @Override
   public UpdateResult delete(Criteria criteria) {
     Query query = new Query(criteria);
-    Update updateOperationsForDelete = ServiceFilterHelper.getUpdateOperationsForDelete();
+    Update updateOperationsForDelete = CDInputSetFilterHelper.getUpdateOperationsForDelete();
     RetryPolicy<Object> retryPolicy = getRetryPolicy(
         "[Retrying]: Failed deleting Service; attempt: {}", "[Failed]: Failed deleting Service; attempt: {}");
     return Failsafe.with(retryPolicy)

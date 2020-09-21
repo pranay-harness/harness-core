@@ -13,8 +13,9 @@ public class InputSetResponseDTO {
   String orgIdentifier;
   String projectIdentifier;
   String pipelineIdentifier;
-  String inputSetIdentifier;
+  String identifier;
   String inputSetYaml;
+  String name;
   String description;
-  // Add Tags
+  // Add tags
 }

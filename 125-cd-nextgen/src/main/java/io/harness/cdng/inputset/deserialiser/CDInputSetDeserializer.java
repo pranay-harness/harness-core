@@ -30,10 +30,11 @@ public class CDInputSetDeserializer extends StdDeserializer<CDInputSet> {
 
     CDPipeline cdPipeline = YamlPipelineUtils.read(YamlPipelineUtils.writeString(pipelineNode), CDPipeline.class);
     String identifier = getValueFromJsonNode(parentJsonNode, "identifier");
+    String name = getValueFromJsonNode(parentJsonNode, "name");
     String description = getValueFromJsonNode(parentJsonNode, "description");
     // Add Tags
 
-    return CDInputSet.builder().identifier(identifier).description(description).pipeline(cdPipeline).build();
+    return CDInputSet.builder().identifier(identifier).description(description).pipeline(cdPipeline).name(name).build();
   }
 
   private String getValueFromJsonNode(JsonNode parentJsonNode, String fieldName) {

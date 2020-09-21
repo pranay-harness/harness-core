@@ -2,6 +2,7 @@ package io.harness.cdng.pipeline.service;
 
 import io.harness.beans.ExecutionStrategyType;
 import io.harness.cdng.pipeline.StepCategory;
+import io.harness.cdng.pipeline.beans.CDPipelineValidationInfo;
 import io.harness.cdng.pipeline.beans.dto.CDPipelineResponseDTO;
 import io.harness.cdng.pipeline.beans.dto.CDPipelineSummaryResponseDTO;
 import io.harness.cdng.service.beans.ServiceDefinitionType;
@@ -26,4 +27,6 @@ public interface PipelineService {
   List<ServiceDefinitionType> getServiceDefinitionTypes();
   StepCategory getSteps(ServiceDefinitionType serviceDefinitionType);
   boolean deletePipeline(String accountId, String orgId, String projectId, String pipelineId);
+  Optional<CDPipelineValidationInfo> validatePipeline(
+      String pipelineId, String accountId, String orgId, String projectId);
 }

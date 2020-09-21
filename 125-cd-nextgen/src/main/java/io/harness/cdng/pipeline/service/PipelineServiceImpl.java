@@ -6,6 +6,7 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
+import com.google.common.collect.Lists;
 import com.google.common.io.Resources;
 import com.google.inject.Inject;
 
@@ -14,6 +15,7 @@ import io.harness.cdng.pipeline.CDPipeline;
 import io.harness.cdng.pipeline.NGStepType;
 import io.harness.cdng.pipeline.StepCategory;
 import io.harness.cdng.pipeline.StepData;
+import io.harness.cdng.pipeline.beans.CDPipelineValidationInfo;
 import io.harness.cdng.pipeline.beans.dto.CDPipelineResponseDTO;
 import io.harness.cdng.pipeline.beans.dto.CDPipelineSummaryResponseDTO;
 import io.harness.cdng.pipeline.beans.entities.CDPipelineEntity;
@@ -24,6 +26,9 @@ import io.harness.exception.DuplicateFieldException;
 import io.harness.exception.GeneralException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.PipelineDoesNotExistException;
+import io.harness.walktree.visitor.ErrorResponse;
+import io.harness.walktree.visitor.ErrorResponseWrapper;
+import io.harness.yaml.core.StageElement;
 import io.harness.yaml.utils.YamlPipelineUtils;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.data.domain.Page;
@@ -33,6 +38,7 @@ import org.springframework.data.mongodb.core.query.Criteria;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
@@ -183,6 +189,37 @@ public class PipelineServiceImpl implements PipelineService {
       // ignore exception
     }
     return true;
+  }
+
+  /**
+   * Todo: Proper implementation will be after merging validation framework.
+   * @param pipelineId
+   * @param accountId
+   * @param orgId
+   * @param projectId
+   * @return
+   */
+  @Override
+  public Optional<CDPipelineValidationInfo> validatePipeline(
+      String pipelineId, String accountId, String orgId, String projectId) {
+    Map<String, ErrorResponseWrapper> uuidToErrorResponse = new HashMap<>();
+    ErrorResponse errorResponse = ErrorResponse.builder().fieldName("identifier").message("cannot be null").build();
+    uuidToErrorResponse.put(
+        "pipeline.identifier", ErrorResponseWrapper.builder().errors(Lists.newArrayList(errorResponse)).build());
+    uuidToErrorResponse.put(
+        "pipeline.stage.identifier", ErrorResponseWrapper.builder().errors(Lists.newArrayList(errorResponse)).build());
+    CDPipeline cdPipeline =
+        CDPipeline.builder()
+            .identifier("pipeline.identifier")
+            .name("dummyPipeline")
+            .stage(StageElement.builder().name("dummyStage").identifier("pipeline.stage.identifier").build())
+            .build();
+    CDPipelineValidationInfo cdPipelineValidationInfo = CDPipelineValidationInfo.builder()
+                                                            .uuidToValidationErrors(uuidToErrorResponse)
+                                                            .cdPipeline(cdPipeline)
+                                                            .isError(true)
+                                                            .build();
+    return Optional.of(cdPipelineValidationInfo);
   }
 
   private CDPipelineEntity get(String pipelineId, String accountId, String orgId, String projectId) {

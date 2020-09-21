@@ -5,21 +5,17 @@ import static com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.AccessLevel;
 import lombok.Builder;
+import lombok.NonNull;
 import lombok.Value;
 import lombok.experimental.FieldDefaults;
+import org.hibernate.validator.constraints.NotEmpty;
 
-import javax.validation.constraints.NotNull;
+import java.util.List;
 
 @Value
 @Builder
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @JsonInclude(NON_NULL)
-public class InputSetRequestDTO {
-  @NotNull String identifier;
-  @NotNull String yaml;
-  String description;
-
-  @NotNull String pipelineIdentifier;
-
-  // Add Tags
+public class MergeInputSetRequestDTO {
+  @NonNull @NotEmpty List<String> inputSetIdentifierList;
 }
