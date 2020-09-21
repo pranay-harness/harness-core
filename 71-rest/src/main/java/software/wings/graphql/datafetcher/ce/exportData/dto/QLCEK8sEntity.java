@@ -1,10 +1,12 @@
 package software.wings.graphql.datafetcher.ce.exportData.dto;
 
 import lombok.Builder;
-import lombok.Value;
+import lombok.Data;
 import lombok.experimental.FieldNameConstants;
 
-@Value
+import java.util.List;
+
+@Data
 @Builder
 @FieldNameConstants(innerTypeName = "CEK8sEntityKeys")
 public class QLCEK8sEntity {
@@ -12,4 +14,5 @@ public class QLCEK8sEntity {
   String workload;
   String node;
   String pod;
+  List<QLCEK8sLabels> selectedLabels;
 }

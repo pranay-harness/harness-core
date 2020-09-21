@@ -62,6 +62,25 @@ public class K8sWorkloadDao {
     return fetchWorkloads(query.fetch().iterator());
   }
 
+  // to get the list of workloads having workload names in the given set
+  public List<K8sWorkload> list(String accountId, Set<String> workloadNames) {
+    Query<K8sWorkload> query = persistence.createQuery(K8sWorkload.class, excludeValidate)
+                                   .field(K8sWorkloadKeys.accountId)
+                                   .equal(accountId)
+                                   .field(K8sWorkloadKeys.name)
+                                   .in(workloadNames);
+    return fetchWorkloads(query.fetch().iterator());
+  }
+
+  public List<K8sWorkload> list(String accountId, String workloadName) {
+    Query<K8sWorkload> query = persistence.createQuery(K8sWorkload.class, excludeValidate)
+                                   .field(K8sWorkloadKeys.accountId)
+                                   .equal(accountId)
+                                   .field(K8sWorkloadKeys.name)
+                                   .equal(workloadName);
+    return fetchWorkloads(query.fetch().iterator());
+  }
+
   public List<K8sWorkload> list(Query<K8sWorkload> query) {
     return fetchWorkloads(query.fetch().iterator());
   }
