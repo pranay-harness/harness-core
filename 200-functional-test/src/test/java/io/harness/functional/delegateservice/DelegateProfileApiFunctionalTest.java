@@ -160,4 +160,21 @@ public class DelegateProfileApiFunctionalTest extends AbstractFunctionalTest {
     assertThat(updateSelectorsRestResponse.getResource().getSelectors().get(0)).isEqualTo("selector1");
     assertThat(updateSelectorsRestResponse.getResource().getSelectors()).containsExactly("selector1", "selector2");
   }
+  @Test
+  @Owner(developers = SANJA)
+  @Category(FunctionalTests.class)
+  public void testDeleteProfile() {
+    String delegateProfileId =
+        wingsPersistence.save(DelegateProfile.builder().accountId(getAccount().getUuid()).name(generateUuid()).build());
+    Setup.portal()
+        .auth()
+        .oauth2(bearerToken)
+        .pathParam(DelegateKeys.delegateProfileId, delegateProfileId)
+        .queryParam(DelegateKeys.accountId, getAccount().getUuid())
+        .delete("/delegate-profiles/v2/{delegateProfileId}")
+        .as(new GenericType<RestResponse<Void>>() {}.getType());
+
+    DelegateProfile profile = wingsPersistence.get(DelegateProfile.class, delegateProfileId);
+    assertThat(profile).isNull();
+  }
 }

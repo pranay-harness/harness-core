@@ -62,12 +62,6 @@ public class DelegateProfileManagerServiceImpl implements DelegateProfileManager
   }
 
   @Override
-  public void delete(String accountId, String delegateProfileId) {
-    logger.info("Delete delegate profile");
-    throw new UnsupportedOperationException("not implemented");
-  }
-
-  @Override
   public DelegateProfileDetails updateScopingRules(
       String accountId, String delegateProfileId, List<ScopingRuleDetails> scopingRules) {
     List<ProfileScopingRule> grpcScopingRules = convert(scopingRules);
@@ -107,6 +101,12 @@ public class DelegateProfileManagerServiceImpl implements DelegateProfileManager
     }
 
     return convert(delegateProfileGrpc);
+  }
+
+  @Override
+  public void delete(String accountId, String delegateProfileId) {
+    delegateProfileServiceGrpcClient.deleteProfile(
+        AccountId.newBuilder().setId(accountId).build(), ProfileId.newBuilder().setId(delegateProfileId).build());
   }
 
   private List<ProfileSelector> convertToProfileSelector(List<String> selectors) {

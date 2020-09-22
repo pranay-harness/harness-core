@@ -5,6 +5,9 @@ import static io.harness.delegate.beans.ScopingRuleDetails.ScopingRuleDetailsKey
 import static java.util.Arrays.asList;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyList;
+import static org.mockito.Matchers.eq;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import com.google.inject.Inject;
@@ -168,9 +171,11 @@ public class DelegateProfileManagerServiceTest extends WingsBaseTest {
   @Owner(developers = OwnerRule.SANJA)
   @Category(UnitTests.class)
   public void shouldDelete() {
-    thrown.expect(UnsupportedOperationException.class);
-    thrown.expectMessage("not implemented");
     delegateProfileManagerService.delete(ACCOUNT_ID, DELEGATE_PROFILE_ID);
+
+    AccountId accountId = AccountId.newBuilder().setId(ACCOUNT_ID).build();
+    ProfileId profileId = ProfileId.newBuilder().setId(DELEGATE_PROFILE_ID).build();
+    verify(delegateProfileServiceGrpcClient, times(1)).deleteProfile(eq(accountId), eq(profileId));
   }
 
   @Test
