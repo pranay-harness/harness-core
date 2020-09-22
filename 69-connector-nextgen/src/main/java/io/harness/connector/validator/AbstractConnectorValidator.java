@@ -27,7 +27,7 @@ public abstract class AbstractConnectorValidator {
             .accountId(accountIdentifier)
             .taskType(getTaskType())
             .taskParameters(getTaskParameters(connectorConfig, accountIdentifier, orgIdentifier, projectIdentifier))
-            .executionTimeout(Duration.ofMinutes(1))
+            .executionTimeout(Duration.ofMinutes(2))
             .build();
 
     return delegateGrpcClientWrapper.executeSyncTask(delegateTaskRequest);
