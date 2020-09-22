@@ -2,6 +2,7 @@ package io.harness.perpetualtask;
 
 public enum PerpetualTaskState {
   TASK_UNASSIGNED,
+  TASK_TO_REBALANCE,
   TASK_PAUSED,
   TASK_ASSIGNED,
 
