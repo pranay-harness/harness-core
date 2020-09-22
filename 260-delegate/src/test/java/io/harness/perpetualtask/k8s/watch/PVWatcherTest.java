@@ -55,6 +55,7 @@ public class PVWatcherTest extends CategoryTest {
 
   final DateTime TIMESTAMP = DateTime.now();
   final DateTime DELETION_TIMESTAMP = TIMESTAMP.plusMinutes(5);
+  private static final String DEFAULT_STORAGE_CLASS_TYPE = "default";
   private static final String SC_URL = "^/apis/storage.k8s.io/v1/storageclasses/";
 
   ArgumentCaptor<Message> captor = ArgumentCaptor.forClass(Message.class);
@@ -114,6 +115,7 @@ public class PVWatcherTest extends CategoryTest {
                  .setPvName(samplePV.getMetadata().getName())
                  .putAllLabels(Collections.emptyMap())
                  .setCapacity(K8sResourceUtils.getStorageCapacity(samplePV.getSpec()))
+                 .setStorageClassType(DEFAULT_STORAGE_CLASS_TYPE)
                  .setClusterId(clusterDetails.getClusterId())
                  .setClusterName(clusterDetails.getClusterName())
                  .setCloudProviderId(clusterDetails.getCloudProviderId())
@@ -193,13 +195,45 @@ public class PVWatcherTest extends CategoryTest {
   public void testGetStorageType() throws Exception {
     V1StorageClass storageClass = new V1StorageClassBuilder().withParameters(ImmutableMap.of("type", "pd-ssd")).build();
 
-    stubFor(get(urlMatching(SC_URL + "default.*"))
+    stubFor(get(urlMatching(SC_URL + "standard.*"))
                 .willReturn(aResponse()
                                 .withStatus(200)
                                 .withHeader("Content-Type", "application/json")
                                 .withBody(new JSON().serialize(storageClass))));
 
-    assertThat(pvWatcher.getStorageType("default")).isEqualTo("pd-ssd");
-    WireMock.verify(1, getRequestedFor(urlMatching(SC_URL + "default.*")));
+    assertThat(pvWatcher.getStorageType(samplePV)).isEqualTo("pd-ssd");
+    WireMock.verify(1, getRequestedFor(urlMatching(SC_URL + "standard.*")));
+  }
+
+  @Test
+  @Owner(developers = UTSAV)
+  @Category(UnitTests.class)
+  public void testGetStorageTypeWithNullStorageType() throws Exception {
+    V1StorageClass storageClass = new V1StorageClassBuilder().withParameters(ImmutableMap.of()).build();
+
+    stubFor(get(urlMatching(SC_URL + "standard.*"))
+                .willReturn(aResponse()
+                                .withStatus(200)
+                                .withHeader("Content-Type", "application/json")
+                                .withBody(new JSON().serialize(storageClass))));
+
+    assertThat(pvWatcher.getStorageType(samplePV)).isEqualTo(DEFAULT_STORAGE_CLASS_TYPE);
+    WireMock.verify(1, getRequestedFor(urlMatching(SC_URL + "standard.*")));
+  }
+
+  @Test
+  @Owner(developers = UTSAV)
+  @Category(UnitTests.class)
+  public void testGetStorageTypeWithNullParams() throws Exception {
+    V1StorageClass storageClass = new V1StorageClassBuilder().build();
+
+    stubFor(get(urlMatching(SC_URL + "standard.*"))
+                .willReturn(aResponse()
+                                .withStatus(200)
+                                .withHeader("Content-Type", "application/json")
+                                .withBody(new JSON().serialize(storageClass))));
+
+    assertThat(pvWatcher.getStorageType(samplePV)).isEqualTo(DEFAULT_STORAGE_CLASS_TYPE);
+    WireMock.verify(1, getRequestedFor(urlMatching(SC_URL + "standard.*")));
   }
 }
