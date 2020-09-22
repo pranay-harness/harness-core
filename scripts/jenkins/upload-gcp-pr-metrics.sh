@@ -13,4 +13,4 @@ export CHECK_EXECUTION_TIME="$(($END_TIME-$START_TIME))"
 
 export CHECK_TOTAL_TIME="$(($END_TIME-$COMMIT_TIME))"
 
-. scripts/jenkins/upload-gcp-metrics.sh dev-disruption
+. scripts/jenkins/upload-gcp-metrics.sh pr

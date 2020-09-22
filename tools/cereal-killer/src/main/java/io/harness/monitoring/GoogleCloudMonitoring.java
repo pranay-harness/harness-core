@@ -28,9 +28,9 @@ public class GoogleCloudMonitoring {
   private static final String METRIC_TYPE_PREFIX = "custom.googleapis.com";
   private static final String PROJECT_ID = "platform-205701";
 
-  private static final String DEV_DISRUPTION_OPTION = "dev-disruption";
-  private static final String CHECK_TOTAL_TIME_METRIC_NAME = "/bnt/prs/devDisruption/checkTotalTime";
-  private static final String CHECK_EXECUTION_TIME_METRIC_NAME = "/bnt/prs/devDisruption/checkExecutionTime";
+  private static final String PR = "pr";
+  private static final String CHECK_TOTAL_TIME_METRIC_NAME = "/bnt/pr/checkTotalTime";
+  private static final String CHECK_EXECUTION_TIME_METRIC_NAME = "/bnt/pr/checkExecutionTime";
   private static final String CHECK_TOTAL_TIME_KEY = "CHECK_TOTAL_TIME";
   private static final String CHECK_EXECUTION_TIME_KEY = "CHECK_EXECUTION_TIME";
   private static final String CHECK_KEY = "CHECK";
@@ -91,7 +91,7 @@ public class GoogleCloudMonitoring {
       throw new UnsupportedOperationException("Need upload operation metrics");
     }
     switch (args[1]) {
-      case DEV_DISRUPTION_OPTION: {
+      case PR: {
         logger.info("Uploading: " + CHECK_EXECUTION_TIME_KEY);
         addBnTDevDisruptionVariables(CHECK_EXECUTION_TIME_METRIC_NAME, CHECK_EXECUTION_TIME_KEY);
         logger.info("Uploading: " + CHECK_TOTAL_TIME_KEY);
