@@ -23,6 +23,7 @@ public class NGRegistrars {
       ImmutableSet.<Class<? extends MorphiaRegistrar>>builder()
           .addAll(ManagerRegistrars.morphiaRegistrars)
           .addAll(NGCoreRegistrars.morphiaRegistrars)
+          .addAll(NGPipelineRegistrars.morphiaRegistrars)
           .add(NGMorphiaRegistrar.class)
           .build();
 

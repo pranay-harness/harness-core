@@ -3,6 +3,8 @@ package io.harness;
 import com.google.inject.AbstractModule;
 import com.google.inject.multibindings.MapBinder;
 
+import io.harness.ngpipeline.overlayinputset.services.OverlayInputSetEntityService;
+import io.harness.ngpipeline.overlayinputset.services.impl.OverlayInputSetEntityServiceImpl;
 import io.harness.registrars.NGPipelineOrchestrationFieldRegistrar;
 import io.harness.registrars.NGPipelineVisitorFieldRegistrar;
 import io.harness.registries.registrar.OrchestrationFieldRegistrar;
@@ -33,5 +35,7 @@ public class NGPipelineCommonsModule extends AbstractModule {
         MapBinder.newMapBinder(binder(), String.class, VisitableFieldRegistrar.class);
     visitableFieldRegistrarMapBinder.addBinding(NGPipelineVisitorFieldRegistrar.class.getName())
         .to(NGPipelineVisitorFieldRegistrar.class);
+
+    bind(OverlayInputSetEntityService.class).to(OverlayInputSetEntityServiceImpl.class);
   }
 }
