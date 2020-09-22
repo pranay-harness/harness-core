@@ -52,7 +52,7 @@ public class PrometheusAnalysisServiceImplTest extends WingsBaseTest {
 
     for (int i = 0; i < numOfTimeSeries; i++) {
       final List<APMMetricInfo> metricInfos = apmMetricEndPointsFetchInfo.get(
-          "/api/v1/query_range?start=${start_time_seconds}&end=${end_time_seconds}&step=60s&query=url-" + i);
+          "api/v1/query_range?start=${start_time_seconds}&end=${end_time_seconds}&step=60s&query=url-" + i);
       assertThat(metricInfos.size()).isEqualTo(1);
 
       final int index = i;
@@ -99,7 +99,7 @@ public class PrometheusAnalysisServiceImplTest extends WingsBaseTest {
     timeSeriesList.add(
         TimeSeries.builder()
             .url(
-                "/api/v1/query_range?start=$startTime&end=$endTime&step=60s&query=container_memory_usage_bytes{container_name=\"POD\", pod_name=\"${host}\"}")
+                "api/v1/query_range?start=$startTime&end=$endTime&step=60s&query=container_memory_usage_bytes{container_name=\"POD\", pod_name=\"${host}\"}")
             .metricType(MetricType.INFRA.name())
             .txnName(generateUuid())
             .metricName(generateUuid())
@@ -111,6 +111,6 @@ public class PrometheusAnalysisServiceImplTest extends WingsBaseTest {
     renderFetchQueries.forEach(
         (url, apmMetricInfos)
             -> assertThat(url).isEqualTo(
-                "/api/v1/query_range?start=${start_time_seconds}&end=${end_time_seconds}&step=60s&query=container_memory_usage_bytes{container_name=\"POD\", pod_name=\"${host}\"}"));
+                "api/v1/query_range?start=${start_time_seconds}&end=${end_time_seconds}&step=60s&query=container_memory_usage_bytes{container_name=\"POD\", pod_name=\"${host}\"}"));
   }
 }

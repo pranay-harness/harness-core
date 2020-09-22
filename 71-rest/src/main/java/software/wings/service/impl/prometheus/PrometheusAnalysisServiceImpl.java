@@ -199,7 +199,7 @@ public class PrometheusAnalysisServiceImpl implements PrometheusAnalysisService 
         .filter(timeSeries -> !timeSeries.getUrl().contains("api/v1/query_range"))
         .forEach(timeSeries
             -> timeSeries.setUrl(
-                "/api/v1/query_range?start=${start_time_seconds}&end=${end_time_seconds}&step=60s&query="
+                "api/v1/query_range?start=${start_time_seconds}&end=${end_time_seconds}&step=60s&query="
                 + timeSeries.getUrl()));
 
     timeSeriesToAnalyze.forEach(timeSeries
