@@ -2,6 +2,7 @@ package io.harness.functional.delegateservice;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.rule.OwnerRule.MARKO;
+import static io.harness.rule.OwnerRule.SANJA;
 import static io.harness.rule.OwnerRule.VUK;
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -92,5 +93,44 @@ public class DelegateProfileApiFunctionalTest extends AbstractFunctionalTest {
     assertThat(updateScopingRulesRestResponse.getResource()).isNotNull();
     assertThat(updateScopingRulesRestResponse.getResource().getUuid()).isEqualTo(delegateProfileId);
     assertThat(updateScopingRulesRestResponse.getResource().getAccountId()).isEqualTo(getAccount().getUuid());
+  }
+
+  @Test
+  @Owner(developers = SANJA)
+  @Category(FunctionalTests.class)
+  public void testAddDelegateProfile() {
+    DelegateProfileDetails delegateProfileDetails =
+        DelegateProfileDetails.builder().accountId(getAccount().getUuid()).name(generateUuid()).build();
+    delegateProfileDetails.setScopingRules(
+        Arrays.asList(ScopingRuleDetails.builder()
+                          .description("desc")
+                          .applicationId("appId")
+                          .environmentIds(new HashSet<>(Arrays.asList("env1", "env2")))
+                          .serviceIds(new HashSet<>(Arrays.asList("srv1", "srv2")))
+                          .build()));
+    delegateProfileDetails.setSelectors(Arrays.asList("selector1", "selector2"));
+
+    RestResponse<DelegateProfileDetails> addProfileRestResponse =
+        Setup.portal()
+            .auth()
+            .oauth2(bearerToken)
+            .queryParam(DelegateKeys.accountId, getAccount().getUuid())
+            .body(delegateProfileDetails)
+            .post("/delegate-profiles/v2")
+            .as(new GenericType<RestResponse<DelegateProfileDetails>>() {}.getType());
+
+    assertThat(addProfileRestResponse.getResource()).isNotNull();
+    assertThat(addProfileRestResponse.getResource().getUuid()).isNotNull();
+    assertThat(addProfileRestResponse.getResource().getAccountId()).isEqualTo(getAccount().getUuid());
+    assertThat(addProfileRestResponse.getResource().getScopingRules()).isNotEmpty();
+    assertThat(addProfileRestResponse.getResource().getScopingRules().get(0)).isNotNull();
+    assertThat(addProfileRestResponse.getResource().getScopingRules().get(0).getDescription()).isEqualTo("desc");
+    assertThat(addProfileRestResponse.getResource().getScopingRules().get(0).getApplicationId()).isEqualTo("appId");
+    assertThat(addProfileRestResponse.getResource().getScopingRules().get(0).getEnvironmentIds()).isNotEmpty();
+    assertThat(addProfileRestResponse.getResource().getScopingRules().get(0).getEnvironmentIds())
+        .containsExactlyInAnyOrder("env1", "env2");
+    assertThat(addProfileRestResponse.getResource().getScopingRules().get(0).getServiceIds())
+        .containsExactlyInAnyOrder("srv1", "srv2");
+    assertThat(addProfileRestResponse.getResource().getSelectors()).containsExactlyInAnyOrder("selector1", "selector2");
   }
 }

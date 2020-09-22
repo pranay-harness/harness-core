@@ -1,6 +1,7 @@
 package software.wings.service;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
+import static io.harness.delegate.beans.ScopingRuleDetails.ScopingRuleDetailsKeys;
 import static java.util.Arrays.asList;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyList;
@@ -14,6 +15,8 @@ import io.harness.delegate.beans.DelegateProfileDetails;
 import io.harness.delegate.beans.ScopingRuleDetails;
 import io.harness.delegateprofile.DelegateProfileGrpc;
 import io.harness.delegateprofile.ProfileId;
+import io.harness.delegateprofile.ProfileScopingRule;
+import io.harness.delegateprofile.ScopingValues;
 import io.harness.exception.UnsupportedOperationException;
 import io.harness.grpc.DelegateProfileServiceGrpcClient;
 import io.harness.rule.Owner;
@@ -29,7 +32,10 @@ import software.wings.WingsBaseTest;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.impl.DelegateProfileManagerServiceImpl;
 
+import java.util.Arrays;
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Map;
 
 public class DelegateProfileManagerServiceTest extends WingsBaseTest {
   private static final String ACCOUNT_ID = generateUuid();
@@ -91,10 +97,40 @@ public class DelegateProfileManagerServiceTest extends WingsBaseTest {
   @Owner(developers = OwnerRule.SANJA)
   @Category(UnitTests.class)
   public void shouldAdd() {
-    thrown.expect(UnsupportedOperationException.class);
-    thrown.expectMessage("not implemented");
-    DelegateProfileDetails profileDetail = DelegateProfileDetails.builder().accountId(ACCOUNT_ID).name("test").build();
-    delegateProfileManagerService.add(profileDetail);
+    Map<String, ScopingValues> scopingEntities = new HashMap<>();
+    scopingEntities.put(ScopingRuleDetailsKeys.applicationId, ScopingValues.newBuilder().addValue("appId").build());
+    scopingEntities.put(ScopingRuleDetailsKeys.environmentIds,
+        ScopingValues.newBuilder().addAllValue(Arrays.asList("env1", "env2")).build());
+
+    DelegateProfileDetails profileDetail = DelegateProfileDetails.builder()
+                                               .accountId(ACCOUNT_ID)
+                                               .name("test")
+                                               .description("description")
+                                               .startupScript("startupScript")
+                                               .build();
+    ScopingRuleDetails scopingRuleDetail = ScopingRuleDetails.builder()
+                                               .description("test")
+                                               .environmentIds(new HashSet(Arrays.asList("env1", "env2")))
+                                               .applicationId("appId")
+                                               .build();
+    profileDetail.setScopingRules(Arrays.asList(scopingRuleDetail));
+
+    DelegateProfileGrpc delegateProfileGrpc =
+        DelegateProfileGrpc.newBuilder()
+            .setName("test")
+            .setDescription("description")
+            .setStartupScript("startupScript")
+            .setAccountId(AccountId.newBuilder().setId(ACCOUNT_ID).build())
+            .addScopingRules(
+                ProfileScopingRule.newBuilder().setDescription("test").putAllScopingEntities(scopingEntities).build())
+            .setProfileId(ProfileId.newBuilder().setId(generateUuid()).build())
+            .build();
+
+    when(delegateProfileServiceGrpcClient.addProfile(any(DelegateProfileGrpc.class))).thenReturn(delegateProfileGrpc);
+
+    DelegateProfileDetails result = delegateProfileManagerService.add(profileDetail);
+    Assertions.assertThat(result).isNotNull();
+    Assertions.assertThat(result).isEqualToIgnoringGivenFields(profileDetail, "uuid");
   }
 
   @Test
