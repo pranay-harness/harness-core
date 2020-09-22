@@ -261,9 +261,9 @@ public class DelegateProfileResourceTest {
 
     RestResponse<DelegateProfileDetails> restResponse =
         RESOURCES.client()
-            .target("/delegate-profiles/v2/" + ID_KEY + "/selectors?accountId=" + ACCOUNT_ID + "&selectors=xxx")
+            .target("/delegate-profiles/v2/" + ID_KEY + "/selectors?accountId=" + ACCOUNT_ID)
             .request()
-            .put(entity(delegateProfileDetails, MediaType.APPLICATION_JSON),
+            .put(entity(profileSelectors, MediaType.APPLICATION_JSON),
                 new GenericType<RestResponse<DelegateProfileDetails>>() {});
     verify(delegateProfileManagerService, atLeastOnce()).updateSelectors(ACCOUNT_ID, ID_KEY, profileSelectors);
 

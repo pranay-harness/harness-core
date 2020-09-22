@@ -181,7 +181,7 @@ public class DelegateProfileResource {
   @AuthRule(permissionType = MANAGE_DELEGATE_PROFILES)
   public RestResponse<DelegateProfileDetails> updateSelectorsV2(
       @PathParam("delegateProfileId") @NotEmpty String delegateProfileId,
-      @QueryParam("accountId") @NotEmpty String accountId, @QueryParam("selectors") List<String> selectors) {
+      @QueryParam("accountId") @NotEmpty String accountId, List<String> selectors) {
     return new RestResponse<>(delegateProfileManagerService.updateSelectors(accountId, delegateProfileId, selectors));
   }
 }

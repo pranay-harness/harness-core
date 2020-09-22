@@ -133,4 +133,31 @@ public class DelegateProfileApiFunctionalTest extends AbstractFunctionalTest {
         .containsExactlyInAnyOrder("srv1", "srv2");
     assertThat(addProfileRestResponse.getResource().getSelectors()).containsExactlyInAnyOrder("selector1", "selector2");
   }
+
+  @Test
+  @Owner(developers = VUK)
+  @Category(FunctionalTests.class)
+  public void testUpdateProfileSelectors() {
+    String delegateProfileId =
+        wingsPersistence.save(DelegateProfile.builder().accountId(getAccount().getUuid()).name(generateUuid()).build());
+
+    // Update Selectors
+    RestResponse<DelegateProfileDetails> updateSelectorsRestResponse =
+        Setup.portal()
+            .auth()
+            .oauth2(bearerToken)
+            .pathParam(DelegateKeys.delegateProfileId, delegateProfileId)
+            .queryParam(DelegateKeys.accountId, getAccount().getUuid())
+            .body(Arrays.asList("selector1", "selector2"))
+            .put("/delegate-profiles/v2/{delegateProfileId}/selectors")
+            .as(new GenericType<RestResponse<DelegateProfileDetails>>() {}.getType());
+
+    assertThat(updateSelectorsRestResponse.getResource()).isNotNull();
+    assertThat(updateSelectorsRestResponse.getResource().getUuid()).isEqualTo(delegateProfileId);
+    assertThat(updateSelectorsRestResponse.getResource().getAccountId()).isEqualTo(getAccount().getUuid());
+    assertThat(updateSelectorsRestResponse.getResource().getSelectors()).isNotEmpty();
+    assertThat(updateSelectorsRestResponse.getResource().getSelectors().get(0)).isNotNull();
+    assertThat(updateSelectorsRestResponse.getResource().getSelectors().get(0)).isEqualTo("selector1");
+    assertThat(updateSelectorsRestResponse.getResource().getSelectors()).containsExactly("selector1", "selector2");
+  }
 }

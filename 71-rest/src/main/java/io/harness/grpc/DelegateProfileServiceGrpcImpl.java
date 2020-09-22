@@ -128,10 +128,16 @@ public class DelegateProfileServiceGrpcImpl extends DelegateProfileServiceImplBa
         selectors = request.getSelectorsList().stream().map(ProfileSelector::getSelector).collect(Collectors.toList());
       }
 
-      delegateProfileService.updateDelegateProfileSelectors(
+      DelegateProfile updatedDelegateProfile = delegateProfileService.updateDelegateProfileSelectors(
           request.getProfileId().getId(), request.getAccountId().getId(), selectors);
 
-      responseObserver.onNext(UpdateProfileSelectorsResponse.newBuilder().build());
+      if (updatedDelegateProfile != null) {
+        responseObserver.onNext(
+            UpdateProfileSelectorsResponse.newBuilder().setProfile(convert(updatedDelegateProfile)).build());
+      } else {
+        responseObserver.onNext(UpdateProfileSelectorsResponse.newBuilder().build());
+      }
+
       responseObserver.onCompleted();
     } catch (Exception ex) {
       logger.error("Unexpected error occurred while processing update profile selectors request.", ex);

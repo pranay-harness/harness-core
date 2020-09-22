@@ -35,6 +35,7 @@ import software.wings.service.impl.DelegateProfileManagerServiceImpl;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 
 public class DelegateProfileManagerServiceTest extends WingsBaseTest {
@@ -173,11 +174,31 @@ public class DelegateProfileManagerServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = OwnerRule.MARKO)
+  @Owner(developers = OwnerRule.VUK)
   @Category(UnitTests.class)
   public void shouldUpdateSelectors() {
-    thrown.expect(UnsupportedOperationException.class);
-    thrown.expectMessage("not implemented");
-    delegateProfileManagerService.updateSelectors(ACCOUNT_ID, DELEGATE_PROFILE_ID, asList("selector"));
+    DelegateProfileGrpc delegateProfileGrpc = DelegateProfileGrpc.newBuilder()
+                                                  .setAccountId(AccountId.newBuilder().setId(generateUuid()).build())
+                                                  .setProfileId(ProfileId.newBuilder().setId(generateUuid()).build())
+                                                  .build();
+
+    List<String> selectors = Arrays.asList("selectors");
+
+    when(delegateProfileServiceGrpcClient.updateProfileSelectors(any(AccountId.class), any(ProfileId.class), anyList()))
+        .thenReturn(null)
+        .thenReturn(delegateProfileGrpc);
+
+    DelegateProfileDetails updatedDelegateProfileDetails = delegateProfileManagerService.updateSelectors(
+        ACCOUNT_ID, delegateProfileGrpc.getProfileId().getId(), selectors);
+    Assertions.assertThat(updatedDelegateProfileDetails).isNull();
+
+    updatedDelegateProfileDetails = delegateProfileManagerService.updateSelectors(
+        ACCOUNT_ID, delegateProfileGrpc.getProfileId().getId(), selectors);
+
+    Assertions.assertThat(updatedDelegateProfileDetails).isNotNull();
+    Assertions.assertThat(updatedDelegateProfileDetails.getUuid())
+        .isEqualTo(delegateProfileGrpc.getProfileId().getId());
+    Assertions.assertThat(updatedDelegateProfileDetails.getAccountId())
+        .isEqualTo(delegateProfileGrpc.getAccountId().getId());
   }
 }

@@ -22,6 +22,7 @@ import io.harness.delegateprofile.UpdateProfileResponse;
 import io.harness.delegateprofile.UpdateProfileScopingRulesRequest;
 import io.harness.delegateprofile.UpdateProfileScopingRulesResponse;
 import io.harness.delegateprofile.UpdateProfileSelectorsRequest;
+import io.harness.delegateprofile.UpdateProfileSelectorsResponse;
 import io.harness.exception.DelegateServiceDriverException;
 import lombok.extern.slf4j.Slf4j;
 
@@ -95,17 +96,26 @@ public class DelegateProfileServiceGrpcClient {
     }
   }
 
-  public void updateProfileSelectors(AccountId accountId, ProfileId profileId, List<ProfileSelector> selectors) {
+  public DelegateProfileGrpc updateProfileSelectors(
+      AccountId accountId, ProfileId profileId, List<ProfileSelector> selectors) {
     try {
       if (selectors == null) {
         selectors = Collections.emptyList();
       }
 
-      delegateProfileServiceBlockingStub.updateProfileSelectors(UpdateProfileSelectorsRequest.newBuilder()
-                                                                    .setAccountId(accountId)
-                                                                    .setProfileId(profileId)
-                                                                    .addAllSelectors(selectors)
-                                                                    .build());
+      UpdateProfileSelectorsResponse updateProfileSelectorsResponse =
+          delegateProfileServiceBlockingStub.updateProfileSelectors(UpdateProfileSelectorsRequest.newBuilder()
+                                                                        .setAccountId(accountId)
+                                                                        .setProfileId(profileId)
+                                                                        .addAllSelectors(selectors)
+                                                                        .build());
+
+      if (!updateProfileSelectorsResponse.hasProfile()) {
+        return null;
+      }
+
+      return updateProfileSelectorsResponse.getProfile();
+
     } catch (StatusRuntimeException ex) {
       throw new DelegateServiceDriverException("Unexpected error occurred while updating profile selectors.", ex);
     }
