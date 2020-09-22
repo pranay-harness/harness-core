@@ -2,6 +2,8 @@ workspace(name = "harness_monorepo")
 
 load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
 load("@bazel_tools//tools/build_defs/repo:git.bzl", "git_repository")
+load("//tools/pmd:dependencies.bzl","rules_pmd_dependencies")
+rules_pmd_dependencies()
 
 # Download the Go rules
 http_archive(
@@ -1199,3 +1201,6 @@ exports_files(["WORKSPACE"], visibility = ["//visibility:public"])
     strip_prefix = "jdk8u242-b08",
     urls = ["https://github.com/AdoptOpenJDK/openjdk8-binaries/releases/download/jdk8u242-b08/OpenJDK8U-jdk_x64_linux_hotspot_8u242b08.tar.gz"],
 )
+
+load("//tools/pmd:toolchains.bzl", "rules_pmd_toolchains")
+rules_pmd_toolchains()
