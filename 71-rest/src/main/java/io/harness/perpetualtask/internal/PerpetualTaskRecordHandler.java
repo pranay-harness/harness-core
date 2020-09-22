@@ -5,7 +5,6 @@ import static io.harness.exception.WingsException.ExecutionContext.MANAGER;
 import static io.harness.govern.IgnoreThrowable.ignoredOnPurpose;
 import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
 import static io.harness.mongo.iterator.MongoPersistenceIterator.SchedulingType.IRREGULAR_SKIP_MISSED;
-import static io.harness.mongo.iterator.MongoPersistenceIterator.SchedulingType.REGULAR;
 import static java.lang.String.format;
 import static java.time.Duration.ofMinutes;
 import static java.time.Duration.ofSeconds;
@@ -33,6 +32,7 @@ import io.harness.logging.AccountLogContext;
 import io.harness.logging.AutoLogContext;
 import io.harness.logging.ExceptionLogger;
 import io.harness.mongo.iterator.MongoPersistenceIterator;
+import io.harness.mongo.iterator.MongoPersistenceIterator.Handler;
 import io.harness.mongo.iterator.filter.MorphiaFilterExpander;
 import io.harness.mongo.iterator.provider.MorphiaPersistenceProvider;
 import io.harness.perpetualtask.PerpetualTaskExecutionBundle;
@@ -58,7 +58,7 @@ import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 @Slf4j
-public class PerpetualTaskRecordHandler implements PerpetualTaskCrudObserver {
+public class PerpetualTaskRecordHandler implements Handler<PerpetualTaskRecord>, PerpetualTaskCrudObserver {
   public static final String NO_DELEGATE_AVAILABLE_TO_HANDLE_PERPETUAL_TASK =
       "No delegate available to handle perpetual task of %s task type";
 
@@ -84,15 +84,13 @@ public class PerpetualTaskRecordHandler implements PerpetualTaskCrudObserver {
   @Inject private transient AlertService alertService;
   @Inject private AccountService accountService;
   @Inject private KryoSerializer kryoSerializer;
-  @Inject private PerpetualTaskRecordDao perpetualTaskRecordDao;
 
-  PersistenceIterator<PerpetualTaskRecord> assignmentIterator;
-  PersistenceIterator<PerpetualTaskRecord> rebalanceIterator;
+  PersistenceIterator<PerpetualTaskRecord> iterator;
 
   public void registerIterators() {
-    assignmentIterator = persistenceIteratorFactory.createPumpIteratorWithDedicatedThreadPool(
+    iterator = persistenceIteratorFactory.createPumpIteratorWithDedicatedThreadPool(
         PumpExecutorOptions.builder()
-            .name("PerpetualTaskAssignment")
+            .name("PerpetualTaskRecordProcessor")
             .poolSize(5)
             .interval(ofMinutes(PERPETUAL_TASK_ASSIGNMENT_INTERVAL_MINUTE))
             .build(),
@@ -103,34 +101,16 @@ public class PerpetualTaskRecordHandler implements PerpetualTaskCrudObserver {
             .targetInterval(ofMinutes(PERPETUAL_TASK_ASSIGNMENT_INTERVAL_MINUTE))
             .acceptableNoAlertDelay(ofSeconds(45))
             .acceptableExecutionTime(ofSeconds(30))
-            .handler(this ::assign)
+            .handler(this)
             .filterExpander(query -> query.filter(PerpetualTaskRecordKeys.state, PerpetualTaskState.TASK_UNASSIGNED))
             .entityProcessController(new AccountStatusBasedEntityProcessController<>(accountService))
             .schedulingType(IRREGULAR_SKIP_MISSED)
             .persistenceProvider(persistenceProvider)
             .redistribute(true));
-    rebalanceIterator = persistenceIteratorFactory.createPumpIteratorWithDedicatedThreadPool(
-        PumpExecutorOptions.builder()
-            .name("PerpetualTaskRebalance")
-            .poolSize(5)
-            .interval(ofMinutes(PERPETUAL_TASK_ASSIGNMENT_INTERVAL_MINUTE))
-            .build(),
-        PerpetualTaskRecordHandler.class,
-        MongoPersistenceIterator.<PerpetualTaskRecord, MorphiaFilterExpander<PerpetualTaskRecord>>builder()
-            .clazz(PerpetualTaskRecord.class)
-            .fieldName(PerpetualTaskRecordKeys.rebalanceIteration)
-            .targetInterval(ofMinutes(PERPETUAL_TASK_ASSIGNMENT_INTERVAL_MINUTE))
-            .acceptableNoAlertDelay(ofSeconds(45))
-            .acceptableExecutionTime(ofSeconds(30))
-            .handler(this ::rebalance)
-            .filterExpander(query -> query.filter(PerpetualTaskRecordKeys.state, PerpetualTaskState.TASK_TO_REBALANCE))
-            .entityProcessController(new AccountStatusBasedEntityProcessController<>(accountService))
-            .schedulingType(REGULAR)
-            .persistenceProvider(persistenceProvider)
-            .redistribute(true));
   }
 
-  public void assign(PerpetualTaskRecord taskRecord) {
+  @Override
+  public void handle(PerpetualTaskRecord taskRecord) {
     try (AutoLogContext ignore0 = new AccountLogContext(taskRecord.getAccountId(), OVERRIDE_ERROR)) {
       String taskId = taskRecord.getUuid();
       logger.info("Assigning Delegate to the inactive {} perpetual task with id={}.", taskRecord.getPerpetualTaskType(),
@@ -201,15 +181,6 @@ public class PerpetualTaskRecordHandler implements PerpetualTaskCrudObserver {
     }
   }
 
-  public void rebalance(PerpetualTaskRecord taskRecord) {
-    if (delegateService.checkDelegateConnected(taskRecord.getAccountId(), taskRecord.getDelegateId())) {
-      perpetualTaskRecordDao.appointDelegate(
-          taskRecord.getUuid(), taskRecord.getDelegateId(), taskRecord.getClientContext().getLastContextUpdated());
-      return;
-    }
-    assign(taskRecord);
-  }
-
   protected DelegateTask getValidationTask(PerpetualTaskRecord taskRecord) {
     if (isNotEmpty(taskRecord.getClientContext().getClientParams())) {
       PerpetualTaskServiceClient client = clientRegistry.getClient(taskRecord.getPerpetualTaskType());
@@ -262,15 +233,8 @@ public class PerpetualTaskRecordHandler implements PerpetualTaskCrudObserver {
 
   @Override
   public void onPerpetualTaskCreated() {
-    if (assignmentIterator != null) {
-      assignmentIterator.wakeup();
-    }
-  }
-
-  @Override
-  public void onRebalanceRequired() {
-    if (rebalanceIterator != null) {
-      rebalanceIterator.wakeup();
+    if (iterator != null) {
+      iterator.wakeup();
     }
   }
 }

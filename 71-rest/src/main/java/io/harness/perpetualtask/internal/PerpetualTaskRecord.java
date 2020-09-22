@@ -61,7 +61,7 @@ public class PerpetualTaskRecord implements PersistentEntity, UuidAware, Persist
   long lastHeartbeat;
 
   List<Long> assignerIterations;
-  @FdIndex long rebalanceIteration;
+  @FdIndex long resetterIteration;
 
   long createdAt;
   long lastUpdatedAt;
@@ -71,8 +71,8 @@ public class PerpetualTaskRecord implements PersistentEntity, UuidAware, Persist
     if (PerpetualTaskRecordKeys.assignerIterations.equals(fieldName)) {
       return isEmpty(assignerIterations) ? null : assignerIterations.get(0);
     }
-    if (PerpetualTaskRecordKeys.rebalanceIteration.equals(fieldName)) {
-      return rebalanceIteration;
+    if (PerpetualTaskRecordKeys.resetterIteration.equals(fieldName)) {
+      return resetterIteration;
     }
     throw new IllegalArgumentException("Invalid fieldName " + fieldName);
   }
@@ -92,8 +92,8 @@ public class PerpetualTaskRecord implements PersistentEntity, UuidAware, Persist
 
   @Override
   public void updateNextIteration(String fieldName, long nextIteration) {
-    if (PerpetualTaskRecordKeys.rebalanceIteration.equals(fieldName)) {
-      this.rebalanceIteration = nextIteration;
+    if (PerpetualTaskRecordKeys.resetterIteration.equals(fieldName)) {
+      this.resetterIteration = nextIteration;
       return;
     }
     throw new IllegalArgumentException("Invalid fieldName " + fieldName);
