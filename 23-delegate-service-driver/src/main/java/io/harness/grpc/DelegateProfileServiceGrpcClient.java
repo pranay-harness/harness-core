@@ -81,6 +81,10 @@ public class DelegateProfileServiceGrpcClient {
       UpdateProfileResponse updateProfileResponse = delegateProfileServiceBlockingStub.updateProfile(
           UpdateProfileRequest.newBuilder().setProfile(delegateProfileGrpc).build());
 
+      if (!updateProfileResponse.hasProfile()) {
+        return null;
+      }
+
       return updateProfileResponse.getProfile();
     } catch (StatusRuntimeException ex) {
       throw new DelegateServiceDriverException("Unexpected error occurred while updating profile.", ex);

@@ -99,8 +99,14 @@ public class DelegateProfileServiceGrpcImpl extends DelegateProfileServiceImplBa
     try {
       DelegateProfile delegateProfile = delegateProfileService.update(convert(request.getProfile()));
 
-      responseObserver.onNext(UpdateProfileResponse.newBuilder().setProfile(convert(delegateProfile)).build());
+      if (delegateProfile != null) {
+        responseObserver.onNext(UpdateProfileResponse.newBuilder().setProfile(convert(delegateProfile)).build());
+      } else {
+        responseObserver.onNext(UpdateProfileResponse.newBuilder().build());
+      }
+
       responseObserver.onCompleted();
+
     } catch (Exception ex) {
       logger.error("Unexpected error occurred while processing update profile request.", ex);
       responseObserver.onError(io.grpc.Status.INTERNAL.withDescription(ex.getMessage()).asRuntimeException());
