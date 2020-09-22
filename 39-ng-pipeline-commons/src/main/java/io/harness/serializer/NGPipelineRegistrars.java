@@ -6,6 +6,7 @@ import io.harness.morphia.MorphiaRegistrar;
 import io.harness.serializer.kryo.NGPipelineKryoRegistrar;
 import io.harness.serializer.kryo.ProjectAndOrgKryoRegistrar;
 import io.harness.serializer.morphia.InvitesMorphiaRegistrar;
+import io.harness.serializer.morphia.NGPipelineMorphiaRegistrar;
 import io.harness.serializer.morphia.ProjectAndOrgMorphiaRegistrar;
 import io.harness.serializer.spring.NGPipelineAliasRegistrar;
 import io.harness.spring.AliasRegistrar;
@@ -32,5 +33,6 @@ public class NGPipelineRegistrars {
           .addAll(OrchestrationRegistrars.morphiaRegistrars)
           .add(InvitesMorphiaRegistrar.class)
           .add(ProjectAndOrgMorphiaRegistrar.class)
+          .add(NGPipelineMorphiaRegistrar.class)
           .build();
 }
