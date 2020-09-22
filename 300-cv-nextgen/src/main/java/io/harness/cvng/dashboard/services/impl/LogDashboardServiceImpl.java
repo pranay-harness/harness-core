@@ -4,6 +4,7 @@ import com.google.inject.Inject;
 
 import io.harness.beans.NGPageResponse;
 import io.harness.cvng.analysis.entities.LogAnalysisCluster;
+import io.harness.cvng.analysis.entities.LogAnalysisCluster.Frequency;
 import io.harness.cvng.analysis.entities.LogAnalysisResult;
 import io.harness.cvng.analysis.entities.LogAnalysisResult.AnalysisResult;
 import io.harness.cvng.analysis.entities.LogAnalysisResult.LogAnalysisTag;
@@ -13,7 +14,7 @@ import io.harness.cvng.core.entities.CVConfig;
 import io.harness.cvng.core.services.api.CVConfigService;
 import io.harness.cvng.core.utils.CVParallelExecutor;
 import io.harness.cvng.dashboard.beans.AnalyzedLogDataDTO;
-import io.harness.cvng.dashboard.beans.AnalyzedLogDataDTO.Frequency;
+import io.harness.cvng.dashboard.beans.AnalyzedLogDataDTO.FrequencyDTO;
 import io.harness.cvng.dashboard.beans.AnalyzedLogDataDTO.LogData;
 import io.harness.cvng.dashboard.beans.LogDataByTag;
 import io.harness.cvng.dashboard.beans.LogDataByTag.CountByTag;
@@ -37,7 +38,6 @@ import java.util.concurrent.Callable;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
-import java.util.stream.IntStream;
 
 @Slf4j
 public class LogDashboardServiceImpl implements LogDashboardService {
@@ -185,7 +185,8 @@ public class LogDashboardServiceImpl implements LogDashboardService {
     List<LogData> logDataList = new ArrayList<>();
 
     analysisClusters.forEach(cluster -> {
-      Map<Long, Integer> trendMap = zipToMap(cluster.getTrend().getTimestamp(), cluster.getTrend().getCount());
+      Map<Long, Integer> trendMap =
+          cluster.getFrequencyTrend().stream().collect(Collectors.toMap(Frequency::getTimestamp, Frequency::getCount));
 
       // filter and keep only those within the timerange we want.
       trendMap = trendMap.entrySet()
@@ -195,10 +196,10 @@ public class LogDashboardServiceImpl implements LogDashboardService {
                              && e.getKey() <= TimeUnit.MILLISECONDS.toMinutes(end.toEpochMilli()))
                      .collect(Collectors.toMap(x -> TimeUnit.MINUTES.toMillis(x.getKey()), x -> x.getValue()));
 
-      List<Frequency> frequencies = new ArrayList<>();
+      List<FrequencyDTO> frequencies = new ArrayList<>();
 
       trendMap.forEach(
-          (timestamp, count) -> frequencies.add(Frequency.builder().timestamp(timestamp).count(count).build()));
+          (timestamp, count) -> frequencies.add(FrequencyDTO.builder().timestamp(timestamp).count(count).build()));
 
       LogData data = LogData.builder()
                          .text(cluster.getText())
@@ -210,10 +211,6 @@ public class LogDashboardServiceImpl implements LogDashboardService {
       logDataList.add(data);
     });
     return logDataList;
-  }
-
-  private <K, V> Map<K, V> zipToMap(List<K> keys, List<V> values) {
-    return IntStream.range(0, keys.size()).boxed().collect(Collectors.toMap(keys::get, values::get));
   }
 
   private NGPageResponse<AnalyzedLogDataDTO> formPageResponse(

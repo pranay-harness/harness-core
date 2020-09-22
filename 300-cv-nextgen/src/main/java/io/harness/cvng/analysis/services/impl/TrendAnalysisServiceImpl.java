@@ -1,0 +1,379 @@
+package io.harness.cvng.analysis.services.impl;
+
+import static io.harness.cvng.CVConstants.SERVICE_BASE_URL;
+import static io.harness.cvng.analysis.CVAnalysisConstants.CUMULATIVE_SUMS_URL;
+import static io.harness.cvng.analysis.CVAnalysisConstants.LOG_METRIC_TEMPLATE_FILE;
+import static io.harness.cvng.analysis.CVAnalysisConstants.PREVIOUS_ANOMALIES_URL;
+import static io.harness.cvng.analysis.CVAnalysisConstants.SERVICE_GUARD_SHORT_TERM_HISTORY_URL;
+import static io.harness.cvng.analysis.CVAnalysisConstants.TIMESERIES_ANALYSIS_RESOURCE;
+import static io.harness.cvng.analysis.CVAnalysisConstants.TREND_ANALYSIS_RESOURCE;
+import static io.harness.cvng.analysis.CVAnalysisConstants.TREND_ANALYSIS_SAVE_PATH;
+import static io.harness.cvng.analysis.CVAnalysisConstants.TREND_ANALYSIS_TEST_DATA;
+import static io.harness.cvng.analysis.CVAnalysisConstants.TREND_METRIC_NAME;
+import static io.harness.cvng.analysis.CVAnalysisConstants.TREND_METRIC_TEMPLATE;
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.UUIDGenerator.generateUuid;
+import static io.harness.persistence.HQuery.excludeAuthority;
+
+import com.google.common.base.Preconditions;
+import com.google.inject.Inject;
+
+import com.fasterxml.jackson.core.type.TypeReference;
+import io.harness.cvng.analysis.beans.ServiceGuardMetricAnalysisDTO;
+import io.harness.cvng.analysis.beans.ServiceGuardTxnMetricAnalysisDataDTO;
+import io.harness.cvng.analysis.beans.TimeSeriesAnomalies;
+import io.harness.cvng.analysis.entities.LearningEngineTask;
+import io.harness.cvng.analysis.entities.LearningEngineTask.ExecutionStatus;
+import io.harness.cvng.analysis.entities.LearningEngineTask.LearningEngineTaskType;
+import io.harness.cvng.analysis.entities.LogAnalysisCluster;
+import io.harness.cvng.analysis.entities.LogAnalysisCluster.Frequency;
+import io.harness.cvng.analysis.entities.LogAnalysisCluster.LogAnalysisClusterKeys;
+import io.harness.cvng.analysis.entities.TimeSeriesAnomalousPatterns;
+import io.harness.cvng.analysis.entities.TimeSeriesAnomalousPatterns.TimeSeriesAnomalousPatternsKeys;
+import io.harness.cvng.analysis.entities.TimeSeriesCumulativeSums;
+import io.harness.cvng.analysis.entities.TimeSeriesCumulativeSums.MetricSum;
+import io.harness.cvng.analysis.entities.TimeSeriesCumulativeSums.TransactionMetricSums;
+import io.harness.cvng.analysis.entities.TimeSeriesLearningEngineTask;
+import io.harness.cvng.analysis.entities.TimeSeriesRiskSummary;
+import io.harness.cvng.analysis.entities.TimeSeriesShortTermHistory;
+import io.harness.cvng.analysis.entities.TimeSeriesShortTermHistory.TimeSeriesShortTermHistoryKeys;
+import io.harness.cvng.analysis.services.api.LearningEngineTaskService;
+import io.harness.cvng.analysis.services.api.TrendAnalysisService;
+import io.harness.cvng.core.beans.TimeSeriesMetricDefinition;
+import io.harness.cvng.core.services.api.CVConfigService;
+import io.harness.cvng.core.services.api.VerificationTaskService;
+import io.harness.cvng.core.utils.DateTimeUtils;
+import io.harness.cvng.statemachine.beans.AnalysisInput;
+import io.harness.eraro.ErrorCode;
+import io.harness.exception.VerificationOperationException;
+import io.harness.persistence.HPersistence;
+import io.harness.serializer.YamlUtils;
+import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.io.IOUtils;
+import org.apache.http.client.utils.URIBuilder;
+
+import java.io.IOException;
+import java.io.InputStream;
+import java.net.URISyntaxException;
+import java.nio.charset.StandardCharsets;
+import java.time.Duration;
+import java.time.Instant;
+import java.time.temporal.ChronoUnit;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
+
+@Slf4j
+public class TrendAnalysisServiceImpl implements TrendAnalysisService {
+  @Inject private HPersistence hPersistence;
+  @Inject private LearningEngineTaskService learningEngineTaskService;
+  @Inject private VerificationTaskService verificationTaskService;
+  @Inject private CVConfigService cvConfigService;
+
+  @Override
+  public Map<String, ExecutionStatus> getTaskStatus(List<String> taskIds) {
+    return learningEngineTaskService.getTaskStatus(new HashSet<>(taskIds));
+  }
+
+  @Override
+  public String scheduleTrendAnalysisTask(AnalysisInput input) {
+    TimeSeriesLearningEngineTask task = createTrendAnalysisTask(input);
+    logger.info("Scheduling ServiceGuardLogAnalysisTask {}", task);
+    return learningEngineTaskService.createLearningEngineTask(task);
+  }
+
+  private TimeSeriesLearningEngineTask createTrendAnalysisTask(AnalysisInput input) {
+    String taskId = generateUuid();
+    int length = (int) Duration
+                     .between(input.getStartTime().truncatedTo(ChronoUnit.SECONDS),
+                         input.getEndTime().truncatedTo(ChronoUnit.SECONDS))
+                     .toMinutes();
+
+    TimeSeriesLearningEngineTask timeSeriesLearningEngineTask =
+        TimeSeriesLearningEngineTask.builder()
+            .cumulativeSumsUrl(createCumulativeSumsUrl(input))
+            .dataLength(length)
+            .metricTemplateUrl(createMetricTemplateUrl())
+            .previousAnalysisUrl(createPreviousAnalysisUrl(input))
+            .previousAnomaliesUrl(createAnomaliesUrl(input))
+            .testDataUrl(createTestDataUrl(input))
+            .build();
+    timeSeriesLearningEngineTask.setVerificationTaskId(input.getVerificationTaskId());
+    timeSeriesLearningEngineTask.setAnalysisType(LearningEngineTaskType.SERVICE_GUARD_TIME_SERIES);
+    timeSeriesLearningEngineTask.setAnalysisStartTime(input.getStartTime());
+    timeSeriesLearningEngineTask.setAnalysisEndTime(input.getEndTime());
+    timeSeriesLearningEngineTask.setAnalysisEndEpochMinute(
+        TimeUnit.MILLISECONDS.toMinutes(input.getEndTime().toEpochMilli()));
+    timeSeriesLearningEngineTask.setAnalysisSaveUrl(createAnalysisSaveUrl(taskId));
+    timeSeriesLearningEngineTask.setFailureUrl(learningEngineTaskService.createFailureUrl(taskId));
+    timeSeriesLearningEngineTask.setUuid(taskId);
+
+    return timeSeriesLearningEngineTask;
+  }
+
+  private String createAnalysisSaveUrl(String taskId) {
+    URIBuilder uriBuilder = new URIBuilder();
+    uriBuilder.setPath(SERVICE_BASE_URL + "/" + TREND_ANALYSIS_RESOURCE + "/" + TREND_ANALYSIS_SAVE_PATH);
+    uriBuilder.addParameter("taskId", taskId);
+    return getUriString(uriBuilder);
+  }
+
+  private String createPreviousAnalysisUrl(AnalysisInput input) {
+    URIBuilder uriBuilder = new URIBuilder();
+    uriBuilder.setPath(
+        SERVICE_BASE_URL + "/" + TIMESERIES_ANALYSIS_RESOURCE + "/" + SERVICE_GUARD_SHORT_TERM_HISTORY_URL);
+    uriBuilder.addParameter("verificationTaskId", input.getVerificationTaskId());
+    return getUriString(uriBuilder);
+  }
+
+  private String createCumulativeSumsUrl(AnalysisInput input) {
+    URIBuilder uriBuilder = new URIBuilder();
+    uriBuilder.setPath(SERVICE_BASE_URL + "/" + TIMESERIES_ANALYSIS_RESOURCE + "/" + CUMULATIVE_SUMS_URL);
+    uriBuilder.addParameter("verificationTaskId", input.getVerificationTaskId());
+    uriBuilder.addParameter("analysisStartTime", input.getStartTime().toString());
+    uriBuilder.addParameter("analysisEndTime", input.getEndTime().toString());
+    return getUriString(uriBuilder);
+  }
+
+  private String createAnomaliesUrl(AnalysisInput input) {
+    URIBuilder uriBuilder = new URIBuilder();
+    uriBuilder.setPath(SERVICE_BASE_URL + "/" + TIMESERIES_ANALYSIS_RESOURCE + "/" + PREVIOUS_ANOMALIES_URL);
+    uriBuilder.addParameter("verificationTaskId", input.getVerificationTaskId());
+    return getUriString(uriBuilder);
+  }
+
+  private String createTestDataUrl(AnalysisInput input) {
+    Instant startForTestData = input.getEndTime().truncatedTo(ChronoUnit.SECONDS).minus(125, ChronoUnit.MINUTES);
+
+    URIBuilder uriBuilder = new URIBuilder();
+    uriBuilder.setPath(SERVICE_BASE_URL + "/" + TREND_ANALYSIS_RESOURCE + "/" + TREND_ANALYSIS_TEST_DATA);
+    uriBuilder.addParameter("verificationTaskId", input.getVerificationTaskId());
+    uriBuilder.addParameter("analysisStartTime", startForTestData.toString());
+    uriBuilder.addParameter("analysisEndTime", input.getEndTime().toString());
+    return getUriString(uriBuilder);
+  }
+
+  private String createMetricTemplateUrl() {
+    URIBuilder uriBuilder = new URIBuilder();
+    uriBuilder.setPath(SERVICE_BASE_URL + "/" + TREND_ANALYSIS_RESOURCE + "/" + TREND_METRIC_TEMPLATE);
+    return getUriString(uriBuilder);
+  }
+
+  private String getUriString(URIBuilder uriBuilder) {
+    try {
+      return uriBuilder.build().toString();
+    } catch (URISyntaxException e) {
+      throw new IllegalStateException(e);
+    }
+  }
+
+  @Override
+  public Map<String, Map<String, List<Double>>> getTestData(
+      String verificationTaskId, Instant startTime, Instant endTime) {
+    List<LogAnalysisCluster> logAnalysisClusters = hPersistence.createQuery(LogAnalysisCluster.class, excludeAuthority)
+                                                       .filter(LogAnalysisClusterKeys.cvConfigId, verificationTaskId)
+                                                       .filter(LogAnalysisClusterKeys.isEvicted, Boolean.FALSE)
+                                                       .asList();
+    if (isEmpty(logAnalysisClusters)) {
+      return new HashMap<>();
+    }
+
+    Map<String, Map<String, List<Double>>> testData = new HashMap<>();
+    logAnalysisClusters.forEach(logAnalysisCluster -> {
+      List<Double> testDataForCluster = getTestDataForCluster(logAnalysisCluster, startTime, endTime);
+      String groupName = String.valueOf(logAnalysisCluster.getLabel());
+      testData.put(groupName, new HashMap<>());
+      testData.get(groupName).put(TREND_METRIC_NAME, testDataForCluster);
+    });
+    return testData;
+  }
+
+  private List<Double> getTestDataForCluster(LogAnalysisCluster cluster, Instant startTime, Instant endTime) {
+    List<Double> testData = new ArrayList<>();
+    int index = cluster.getFrequencyTrend().size() - 1;
+    while (index >= 0) {
+      Frequency frequency = cluster.getFrequencyTrend().get(index);
+      Instant timestamp = DateTimeUtils.epochMinuteToInstant(frequency.getTimestamp());
+      if (timestamp.isBefore(startTime)) {
+        break;
+      }
+      if (timestamp.isBefore(endTime)) {
+        testData.add(Double.valueOf(frequency.getCount()));
+      }
+      index--;
+    }
+    return testData;
+  }
+
+  @Override
+  public void saveAnalysis(String taskId, ServiceGuardMetricAnalysisDTO analysis) {
+    LearningEngineTask learningEngineTask = learningEngineTaskService.get(taskId);
+    Preconditions.checkNotNull(learningEngineTask, "Needs to be a valid LE task.");
+    Instant startTime = learningEngineTask.getAnalysisStartTime();
+    Instant endTime = learningEngineTask.getAnalysisEndTime();
+
+    TimeSeriesShortTermHistory shortTermHistory = buildShortTermHistory(analysis);
+    TimeSeriesCumulativeSums cumulativeSums = buildCumulativeSums(analysis, startTime, endTime);
+    TimeSeriesRiskSummary riskSummary = buildRiskSummary(analysis, startTime, endTime);
+
+    saveRisk(analysis, startTime, endTime, learningEngineTask.getVerificationTaskId());
+    saveShortTermHistory(shortTermHistory);
+    saveAnomalousPatterns(analysis, learningEngineTask.getVerificationTaskId());
+    hPersistence.save(cumulativeSums);
+    hPersistence.save(riskSummary);
+    logger.info("Saving analysis for verification task Id: {}", learningEngineTask.getVerificationTaskId());
+    learningEngineTaskService.markCompleted(taskId);
+  }
+
+  private void saveRisk(
+      ServiceGuardMetricAnalysisDTO analysis, Instant startTime, Instant endTime, String verificationTaskId) {
+    List<LogAnalysisCluster> logAnalysisClusters = hPersistence.createQuery(LogAnalysisCluster.class, excludeAuthority)
+                                                       .filter(LogAnalysisClusterKeys.cvConfigId, verificationTaskId)
+                                                       .filter(LogAnalysisClusterKeys.isEvicted, Boolean.FALSE)
+                                                       .asList();
+    Map<Long, LogAnalysisCluster> logAnalysisClusterMap =
+        logAnalysisClusters.stream().collect(Collectors.toMap(LogAnalysisCluster::getLabel, cluster -> cluster));
+    for (Map.Entry<String, Map<String, ServiceGuardTxnMetricAnalysisDataDTO>> txnMetricAnalysis :
+        analysis.getTxnMetricAnalysisData().entrySet()) {
+      String txnName = txnMetricAnalysis.getKey();
+      ServiceGuardTxnMetricAnalysisDataDTO analysisDataDTO = txnMetricAnalysis.getValue().get(TREND_METRIC_NAME);
+      LogAnalysisCluster cluster = logAnalysisClusterMap.get(Long.valueOf(txnName));
+
+      int index = cluster.getFrequencyTrend().size() - 1;
+      while (index >= 0) {
+        Frequency frequency = cluster.getFrequencyTrend().get(index);
+        Instant timestamp = DateTimeUtils.epochMinuteToInstant(frequency.getTimestamp());
+        if (timestamp.isBefore(startTime)) {
+          break;
+        }
+        if (timestamp.isBefore(endTime)) {
+          frequency.setRiskScore(analysisDataDTO.getScore());
+        }
+        index--;
+      }
+    }
+    hPersistence.save(new ArrayList<>(logAnalysisClusterMap.values()));
+  }
+
+  private TimeSeriesRiskSummary buildRiskSummary(
+      ServiceGuardMetricAnalysisDTO analysisDTO, Instant startTime, Instant endTime) {
+    List<TimeSeriesRiskSummary.TransactionMetricRisk> metricRiskList = new ArrayList<>();
+    analysisDTO.getTxnMetricAnalysisData().forEach(
+        (txnName, metricMap) -> metricMap.forEach((metricName, metricData) -> {
+          TimeSeriesRiskSummary.TransactionMetricRisk metricRisk = TimeSeriesRiskSummary.TransactionMetricRisk.builder()
+                                                                       .transactionName(txnName)
+                                                                       .metricName(metricName)
+                                                                       .metricRisk(metricData.getRisk())
+                                                                       .metricScore(metricData.getScore())
+                                                                       .lastSeenTime(metricData.getLastSeenTime())
+                                                                       .longTermPattern(metricData.isLongTermPattern())
+                                                                       .build();
+          metricRiskList.add(metricRisk);
+        }));
+    return TimeSeriesRiskSummary.builder()
+        .cvConfigId(analysisDTO.getCvConfigId())
+        .verificationTaskId(analysisDTO.getVerificationTaskId())
+        .analysisStartTime(startTime)
+        .analysisEndTime(endTime)
+        .transactionMetricRiskList(metricRiskList)
+        .build();
+  }
+
+  private void saveAnomalousPatterns(ServiceGuardMetricAnalysisDTO analysis, String verificationTaskId) {
+    TimeSeriesAnomalousPatterns patternsToSave = buildAnomalies(analysis);
+    // change the filter to verificationTaskId
+    TimeSeriesAnomalousPatterns patternsFromDB =
+        hPersistence.createQuery(TimeSeriesAnomalousPatterns.class, excludeAuthority)
+            .filter(TimeSeriesAnomalousPatternsKeys.verificationTaskId, verificationTaskId)
+            .get();
+
+    if (patternsFromDB != null) {
+      patternsToSave.setUuid(patternsFromDB.getUuid());
+    }
+    hPersistence.save(patternsToSave);
+  }
+
+  private void saveShortTermHistory(TimeSeriesShortTermHistory shortTermHistory) {
+    TimeSeriesShortTermHistory historyFromDB =
+        hPersistence.createQuery(TimeSeriesShortTermHistory.class, excludeAuthority)
+            .filter(TimeSeriesShortTermHistoryKeys.verificationTaskId, shortTermHistory.getVerificationTaskId())
+            .get();
+    if (historyFromDB != null) {
+      shortTermHistory.setUuid(historyFromDB.getUuid());
+    }
+    hPersistence.save(shortTermHistory);
+  }
+
+  private TimeSeriesCumulativeSums buildCumulativeSums(
+      ServiceGuardMetricAnalysisDTO analysisDTO, Instant startTime, Instant endTime) {
+    Map<String, Map<String, MetricSum>> cumulativeSumsMap = new HashMap<>();
+    analysisDTO.getTxnMetricAnalysisData().forEach((txnName, metricMap) -> {
+      cumulativeSumsMap.put(txnName, new HashMap<>());
+      metricMap.forEach((metricName, metricSums) -> {
+        TimeSeriesCumulativeSums.MetricSum sums = metricSums.getCumulativeSums();
+        sums.setMetricName(metricName);
+        cumulativeSumsMap.get(txnName).put(metricName, sums);
+      });
+    });
+
+    List<TransactionMetricSums> transactionMetricSums =
+        TimeSeriesCumulativeSums.convertMapToTransactionMetricSums(cumulativeSumsMap);
+
+    return TimeSeriesCumulativeSums.builder()
+        .cvConfigId(analysisDTO.getCvConfigId())
+        .verificationTaskId(analysisDTO.getVerificationTaskId())
+        .transactionMetricSums(transactionMetricSums)
+        .analysisStartTime(startTime)
+        .analysisEndTime(endTime)
+        .build();
+  }
+
+  private TimeSeriesShortTermHistory buildShortTermHistory(ServiceGuardMetricAnalysisDTO analysisDTO) {
+    Map<String, Map<String, List<Double>>> shortTermHistoryMap = new HashMap<>();
+    analysisDTO.getTxnMetricAnalysisData().forEach((txnName, metricMap) -> {
+      shortTermHistoryMap.put(txnName, new HashMap<>());
+      metricMap.forEach(
+          (metricName,
+              txnMetricData) -> shortTermHistoryMap.get(txnName).put(metricName, txnMetricData.getShortTermHistory()));
+    });
+
+    return TimeSeriesShortTermHistory.builder()
+        .cvConfigId(analysisDTO.getCvConfigId())
+        .verificationTaskId(analysisDTO.getVerificationTaskId())
+        .transactionMetricHistories(TimeSeriesShortTermHistory.convertFromMap(shortTermHistoryMap))
+        .build();
+  }
+
+  private TimeSeriesAnomalousPatterns buildAnomalies(ServiceGuardMetricAnalysisDTO analysisDTO) {
+    Map<String, Map<String, List<TimeSeriesAnomalies>>> anomaliesMap = new HashMap<>();
+    analysisDTO.getTxnMetricAnalysisData().forEach((txnName, metricMap) -> {
+      anomaliesMap.put(txnName, new HashMap<>());
+      metricMap.forEach(
+          (metricName,
+              txnMetricData) -> anomaliesMap.get(txnName).put(metricName, txnMetricData.getAnomalousPatterns()));
+    });
+
+    return TimeSeriesAnomalousPatterns.builder()
+        .cvConfigId(analysisDTO.getCvConfigId())
+        .anomalies(TimeSeriesAnomalousPatterns.convertFromMap(anomaliesMap))
+        .build();
+  }
+
+  @Override
+  public List<TimeSeriesMetricDefinition> getTimeSeriesMetricDefinitions() {
+    InputStream url = getClass().getResourceAsStream(LOG_METRIC_TEMPLATE_FILE);
+    try {
+      String metricDefinitionYaml = IOUtils.toString(url, StandardCharsets.UTF_8);
+      YamlUtils yamlUtils = new YamlUtils();
+      return yamlUtils.read(metricDefinitionYaml, new TypeReference<List<TimeSeriesMetricDefinition>>() {});
+    } catch (IOException e) {
+      logger.error("Exception while reading metric template yaml file", e);
+      throw new VerificationOperationException(
+          ErrorCode.FILE_READ_FAILED, "Exception when fetching metric template from yaml file");
+    }
+  }
+}

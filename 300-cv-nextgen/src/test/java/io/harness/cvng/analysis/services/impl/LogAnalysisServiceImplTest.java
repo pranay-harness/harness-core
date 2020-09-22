@@ -22,6 +22,7 @@ import io.harness.cvng.analysis.entities.LearningEngineTask;
 import io.harness.cvng.analysis.entities.LearningEngineTask.ExecutionStatus;
 import io.harness.cvng.analysis.entities.LearningEngineTask.LearningEngineTaskType;
 import io.harness.cvng.analysis.entities.LogAnalysisCluster;
+import io.harness.cvng.analysis.entities.LogAnalysisCluster.Frequency;
 import io.harness.cvng.analysis.entities.LogAnalysisCluster.LogAnalysisClusterKeys;
 import io.harness.cvng.analysis.entities.LogAnalysisResult;
 import io.harness.cvng.analysis.entities.LogAnalysisResult.AnalysisResult;
@@ -338,16 +339,17 @@ public class LogAnalysisServiceImplTest extends CvNextGenTest {
 
   private List<LogAnalysisCluster> buildAnalysisClusters(long... labels) {
     List<LogAnalysisCluster> clusters = new ArrayList<>();
-    for (int i = 0; i < labels.length; i++) {
-      LogAnalysisCluster cluster = LogAnalysisCluster.builder()
-                                       .label(labels[i])
-                                       .isEvicted(false)
-                                       .text("exception message")
-                                       .trend(LogAnalysisCluster.Trend.builder()
-                                                  .count(Arrays.asList(1, 2, 3, 4))
-                                                  .timestamp(Arrays.asList(12353453l, 132312l, 132213l))
-                                                  .build())
-                                       .build();
+    for (long label : labels) {
+      LogAnalysisCluster cluster =
+          LogAnalysisCluster.builder()
+              .label(label)
+              .isEvicted(false)
+              .text("exception message")
+              .frequencyTrend(Arrays.asList(Frequency.builder().count(1).timestamp(12353453L).build(),
+                  Frequency.builder().count(2).timestamp(12353453L).build(),
+                  Frequency.builder().count(3).timestamp(12353453L).build(),
+                  Frequency.builder().count(4).timestamp(12353453L).build()))
+              .build();
       clusters.add(cluster);
     }
     return clusters;

@@ -30,4 +30,7 @@ public class DateTimeUtils {
   public static long instantToEpochMinute(Instant instant) {
     return TimeUnit.MILLISECONDS.toMinutes(instant.toEpochMilli());
   }
+  public static Instant epochMinuteToInstant(long epochMinute) {
+    return Instant.ofEpochSecond(TimeUnit.MINUTES.toSeconds(epochMinute));
+  }
 }

@@ -1,42 +1,42 @@
 package io.harness.cvng.statemachine.entities;
 
-import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import io.harness.cvng.analysis.entities.LearningEngineTask.ExecutionStatus;
-import io.harness.cvng.analysis.services.api.LogAnalysisService;
-import io.harness.cvng.statemachine.beans.AnalysisInput;
+import io.harness.cvng.analysis.services.api.TrendAnalysisService;
 import io.harness.cvng.statemachine.beans.AnalysisState;
 import io.harness.cvng.statemachine.beans.AnalysisStatus;
 import io.harness.cvng.statemachine.exception.AnalysisStateMachineException;
+import lombok.Builder;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 import lombok.extern.slf4j.Slf4j;
 
-import java.util.Arrays;
+import java.util.Collections;
 import java.util.Map;
 
 @Data
+@Builder
+@EqualsAndHashCode(callSuper = true)
 @Slf4j
-public abstract class LogAnalysisState extends AnalysisState {
-  @JsonIgnore @Inject protected transient LogAnalysisService logAnalysisService;
-  protected String workerTaskId;
+public class ServiceGuardTrendAnalysisState extends AnalysisState {
+  @JsonIgnore @Inject private transient TrendAnalysisService trendAnalysisService;
+  private String workerTaskId;
 
   @Override
   public AnalysisState execute() {
-    workerTaskId = scheduleAnalysis(getInputs());
-    Preconditions.checkNotNull(workerTaskId, "workerId can not be null");
+    workerTaskId = trendAnalysisService.scheduleTrendAnalysisTask(getInputs());
     this.setStatus(AnalysisStatus.RUNNING);
-    logger.info("Executing service guard log analysis for {}", getInputs());
+    logger.info("Executing service guard trend analysis for {}", getInputs());
     return this;
   }
-
-  protected abstract String scheduleAnalysis(AnalysisInput analysisInput);
 
   @Override
   public AnalysisStatus getExecutionStatus() {
     if (getStatus() != AnalysisStatus.SUCCESS) {
-      Map<String, ExecutionStatus> taskStatuses = logAnalysisService.getTaskStatus(Arrays.asList(workerTaskId));
+      Map<String, ExecutionStatus> taskStatuses =
+          trendAnalysisService.getTaskStatus(Collections.singletonList(workerTaskId));
       ExecutionStatus taskStatus = taskStatuses.get(workerTaskId);
       // This could be common code for all states.
       switch (taskStatus) {
@@ -50,7 +50,7 @@ public abstract class LogAnalysisState extends AnalysisState {
           return AnalysisStatus.RUNNING;
         default:
           throw new AnalysisStateMachineException(
-              "Unknown worker state when executing service guard log analysis: " + taskStatus);
+              "Unknown worker state when executing service guard trend analysis: " + taskStatus);
       }
     }
     return AnalysisStatus.SUCCESS;
@@ -60,9 +60,8 @@ public abstract class LogAnalysisState extends AnalysisState {
   public AnalysisState handleRerun() {
     // increment the retryCount without caring for the max
     // clean up state in underlying worker and then execute
-
     this.setRetryCount(getRetryCount() + 1);
-    logger.info("In serviceguard log analysis for Inputs {}, cleaning up worker task. Old taskID: {}", getInputs(),
+    logger.info("In service guard trend analysis for Inputs {}, cleaning up worker task. Old taskID: {}", getInputs(),
         workerTaskId);
     workerTaskId = null;
     this.execute();
@@ -92,7 +91,7 @@ public abstract class LogAnalysisState extends AnalysisState {
       this.setStatus(AnalysisStatus.FAILED);
     } else {
       setRetryCount(getRetryCount() + 1);
-      logger.info("In serviceguard log analysis state, for Inputs {}, cleaning up worker task. Old taskID: {}",
+      logger.info("In service guard trend analysis state, for Inputs {}, cleaning up worker task. Old taskID: {}",
           getInputs(), workerTaskId);
       workerTaskId = null;
       execute();

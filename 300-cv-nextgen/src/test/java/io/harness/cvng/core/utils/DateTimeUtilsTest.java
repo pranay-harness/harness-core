@@ -1,6 +1,7 @@
 package io.harness.cvng.core.utils;
 
 import static io.harness.rule.OwnerRule.KAMAL;
+import static io.harness.rule.OwnerRule.SOWMYA;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
@@ -52,5 +53,13 @@ public class DateTimeUtilsTest extends CategoryTest {
     assertThatThrownBy(() -> DateTimeUtils.roundDownToMinBoundary(Instant.parse("2020-04-22T10:26:00Z"), 60))
         .isInstanceOf(IllegalArgumentException.class)
         .hasMessage("Minute boundary need to be between 1 to 59");
+  }
+
+  @Test
+  @Owner(developers = SOWMYA)
+  @Category(UnitTests.class)
+  public void testEpochMinuteToInstant() {
+    assertThat(DateTimeUtils.epochMinuteToInstant(242245)).isEqualTo(Instant.parse("1970-06-18T05:25:00Z"));
+    assertThat(DateTimeUtils.epochMinuteToInstant(24224535)).isEqualTo(Instant.parse("2016-01-22T14:15:00Z"));
   }
 }

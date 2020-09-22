@@ -167,7 +167,7 @@ public class LogAnalysisServiceImpl implements LogAnalysisService {
                                                     .project(LogAnalysisClusterKeys.analysisMinute, true)
                                                     .project(LogAnalysisClusterKeys.label, true)
                                                     .project(LogAnalysisClusterKeys.text, true)
-                                                    .project(LogAnalysisClusterKeys.trend, true)
+                                                    .project(LogAnalysisClusterKeys.frequencyTrend, true)
                                                     .asList();
     if (isNotEmpty(analysisClusters)) {
       return analysisClusters;
