@@ -57,8 +57,14 @@ public class DelegateProfileManagerServiceImpl implements DelegateProfileManager
 
   @Override
   public DelegateProfileDetails update(DelegateProfileDetails delegateProfile) {
-    logger.info("Update delegate profile");
-    throw new UnsupportedOperationException("not implemented");
+    DelegateProfileGrpc updateDelegateProfileGrpc =
+        delegateProfileServiceGrpcClient.updateProfile(convert(delegateProfile));
+
+    if (updateDelegateProfileGrpc == null) {
+      return null;
+    }
+
+    return convert(updateDelegateProfileGrpc);
   }
 
   @Override

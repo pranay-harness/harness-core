@@ -81,7 +81,7 @@ public class DelegateProfileApiFunctionalTest extends AbstractFunctionalTest {
         wingsPersistence.save(DelegateProfile.builder().accountId(getAccount().getUuid()).name(generateUuid()).build());
 
     // Get profile
-    RestResponse<DelegateProfileDetails> updateScopingRulesRestResponse =
+    RestResponse<DelegateProfileDetails> getProfileRestResponse =
         Setup.portal()
             .auth()
             .oauth2(bearerToken)
@@ -90,9 +90,54 @@ public class DelegateProfileApiFunctionalTest extends AbstractFunctionalTest {
             .get("/delegate-profiles/v2/{delegateProfileId}")
             .as(new GenericType<RestResponse<DelegateProfileDetails>>() {}.getType());
 
-    assertThat(updateScopingRulesRestResponse.getResource()).isNotNull();
-    assertThat(updateScopingRulesRestResponse.getResource().getUuid()).isEqualTo(delegateProfileId);
-    assertThat(updateScopingRulesRestResponse.getResource().getAccountId()).isEqualTo(getAccount().getUuid());
+    assertThat(getProfileRestResponse.getResource()).isNotNull();
+    assertThat(getProfileRestResponse.getResource().getUuid()).isEqualTo(delegateProfileId);
+    assertThat(getProfileRestResponse.getResource().getAccountId()).isEqualTo(getAccount().getUuid());
+  }
+
+  @Test
+  @Owner(developers = VUK)
+  @Category(FunctionalTests.class)
+  public void testUpdateDelegateProfile() {
+    String delegateProfileId =
+        wingsPersistence.save(DelegateProfile.builder().accountId(getAccount().getUuid()).name(generateUuid()).build());
+
+    // Update profile
+    DelegateProfileDetails delegateProfileDetails =
+        DelegateProfileDetails.builder().accountId(getAccount().getUuid()).name(generateUuid()).build();
+    delegateProfileDetails.setScopingRules(
+        Arrays.asList(ScopingRuleDetails.builder()
+                          .description("desc")
+                          .applicationId("appId")
+                          .environmentIds(new HashSet<>(Arrays.asList("env1", "env2")))
+                          .serviceIds(new HashSet<>(Arrays.asList("srv1", "srv2")))
+                          .build()));
+    delegateProfileDetails.setSelectors(Arrays.asList("selector1", "selector2"));
+
+    RestResponse<DelegateProfileDetails> updateProfileRestResponse =
+        Setup.portal()
+            .auth()
+            .oauth2(bearerToken)
+            .pathParam(DelegateKeys.delegateProfileId, delegateProfileId)
+            .queryParam(DelegateKeys.accountId, getAccount().getUuid())
+            .body(delegateProfileDetails)
+            .put("/delegate-profiles/v2/{delegateProfileId}")
+            .as(new GenericType<RestResponse<DelegateProfileDetails>>() {}.getType());
+
+    assertThat(updateProfileRestResponse.getResource()).isNotNull();
+    assertThat(updateProfileRestResponse.getResource().getUuid()).isNotNull();
+    assertThat(updateProfileRestResponse.getResource().getAccountId()).isEqualTo(getAccount().getUuid());
+    assertThat(updateProfileRestResponse.getResource().getScopingRules()).isNotEmpty();
+    assertThat(updateProfileRestResponse.getResource().getScopingRules().get(0)).isNotNull();
+    assertThat(updateProfileRestResponse.getResource().getScopingRules().get(0).getDescription()).isEqualTo("desc");
+    assertThat(updateProfileRestResponse.getResource().getScopingRules().get(0).getApplicationId()).isEqualTo("appId");
+    assertThat(updateProfileRestResponse.getResource().getScopingRules().get(0).getEnvironmentIds()).isNotEmpty();
+    assertThat(updateProfileRestResponse.getResource().getScopingRules().get(0).getEnvironmentIds())
+        .containsExactlyInAnyOrder("env1", "env2");
+    assertThat(updateProfileRestResponse.getResource().getScopingRules().get(0).getServiceIds())
+        .containsExactlyInAnyOrder("srv1", "srv2");
+    assertThat(updateProfileRestResponse.getResource().getSelectors())
+        .containsExactlyInAnyOrder("selector1", "selector2");
   }
 
   @Test
