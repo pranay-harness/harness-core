@@ -60,6 +60,11 @@ public class EventJobScheduler {
     runCloudEfficiencyEventJobs(BatchJobBucket.IN_CLUSTER, true);
   }
 
+  @Scheduled(cron = "0 */15 * * * ?")
+  public void runCloudEfficiencyInClusterBillingJobs() {
+    runCloudEfficiencyEventJobs(BatchJobBucket.IN_CLUSTER_BILLING, true);
+  }
+
   @Scheduled(cron = "0 0 * ? * *")
   public void runCloudEfficiencyOutOfClusterJobs() {
     runCloudEfficiencyEventJobs(BatchJobBucket.OUT_OF_CLUSTER, true);
