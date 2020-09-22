@@ -5,6 +5,7 @@ import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
 import static software.wings.beans.Application.GLOBAL_APP_ID;
 import static software.wings.security.PermissionAttribute.PermissionType.ACCOUNT_MANAGEMENT;
 import static software.wings.security.PermissionAttribute.PermissionType.LOGGED_IN;
+import static software.wings.security.PermissionAttribute.PermissionType.MANAGE_AUTHENTICATION_SETTINGS;
 import static software.wings.utils.Utils.urlDecode;
 
 import com.google.inject.Inject;
@@ -443,6 +444,7 @@ public class AccountResource {
 
   @GET
   @Path("{accountId}/whitelisted-domains")
+  @AuthRule(permissionType = MANAGE_AUTHENTICATION_SETTINGS)
   public RestResponse<Set<String>> getWhitelistedDomains(@PathParam("accountId") @NotEmpty String accountId) {
     return new RestResponse<>(accountService.getWhitelistedDomains(accountId));
   }
