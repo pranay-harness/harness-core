@@ -1,13 +1,19 @@
 package io.harness.k8s;
 
 import static io.harness.k8s.KubernetesContainerServiceImpl.METRICS_SERVER_ABSENT;
-import static io.harness.rule.OwnerRule.ANSHUL;
 import static io.harness.rule.OwnerRule.UTSAV;
+import static io.harness.rule.OwnerRule.YOGESH;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatCode;
+import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyBoolean;
+import static org.mockito.Matchers.anyString;
+import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -20,6 +26,9 @@ import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import io.harness.exception.InvalidRequestException;
 import io.harness.k8s.apiclient.ApiClientFactoryImpl;
+import io.harness.k8s.kubectl.GetCommand;
+import io.harness.k8s.kubectl.Kubectl;
+import io.harness.k8s.model.Kind;
 import io.harness.k8s.model.KubernetesConfig;
 import io.harness.rule.Owner;
 import io.kubernetes.client.openapi.ApiClient;
@@ -32,11 +41,14 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.Spy;
+import org.mockito.Mockito;
 import org.mockito.junit.MockitoJUnit;
 import org.mockito.junit.MockitoRule;
+import org.zeroturnaround.exec.ProcessResult;
 
+import java.io.OutputStream;
 import java.time.Clock;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
@@ -49,7 +61,8 @@ public class KubernetesContainerServiceTest extends CategoryTest {
   @Mock private K8sGlobalConfigService k8sGlobalConfigService;
   @Mock private K8sResourceValidatorImpl k8sResourceValidator;
 
-  @InjectMocks @Spy private KubernetesContainerServiceImpl kubernetesContainerService;
+  @InjectMocks
+  private KubernetesContainerServiceImpl kubernetesContainerService = spy(new KubernetesContainerServiceImpl());
   @Rule public MockitoRule mockitoRule = MockitoJUnit.rule();
   @Rule public KubernetesServer server = new KubernetesServer(true, true);
 
@@ -120,9 +133,111 @@ public class KubernetesContainerServiceTest extends CategoryTest {
   }
 
   @Test
-  @Owner(developers = ANSHUL)
+  @Owner(developers = YOGESH)
   @Category(UnitTests.class)
-  public void shouldValidate() {
-    assertThatCode(() -> kubernetesContainerService.validate(KUBERNETES_CONFIG)).doesNotThrowAnyException();
+  public void validate() throws Exception {
+    validateIfCanGetReplicaSets();
+    validateIfCanGetStatefulSets();
+    validateIfCanGetDaemonSets();
+    validateIfCanGetDeployments();
+    throwIfCannotGetAnyWorkloadKind();
+  }
+
+  private void throwIfCannotGetAnyWorkloadKind() throws Exception {
+    final Kubectl client = Kubectl.client("kubectl", "kubeconfig");
+    Kubectl mockClient = Mockito.spy(client);
+    GetCommand mockGetCommand = Mockito.spy(client.get());
+    doReturn(mockClient).when(kubernetesContainerService).getKubectlClient();
+    doReturn(mockGetCommand).when(mockClient).get();
+    doReturn(new ProcessResult(1, null))
+        .when(mockGetCommand)
+        .execute(anyString(), any(OutputStream.class), any(OutputStream.class), anyBoolean());
+    KubernetesConfig kubernetesConfig = KubernetesConfig.builder().namespace("harness").build();
+
+    assertThatExceptionOfType(InvalidRequestException.class)
+        .isThrownBy(() -> kubernetesContainerService.validate(kubernetesConfig));
+  }
+
+  private void validateIfCanGetDeployments() throws Exception {
+    final Kubectl client = Kubectl.client("kubectl", "kubeconfig");
+    Kubectl mockClient = Mockito.spy(client);
+    GetCommand mockGetCommand = Mockito.spy(client.get());
+    doReturn(mockClient).when(kubernetesContainerService).getKubectlClient();
+    doReturn(mockGetCommand).when(mockClient).get();
+    List<String> executeCommands = new ArrayList<>();
+    setupGetCommand(mockGetCommand, executeCommands, Kind.Deployment);
+    KubernetesConfig kubernetesConfig = KubernetesConfig.builder().namespace("harness").build();
+
+    kubernetesContainerService.validate(kubernetesConfig);
+
+    assertThat(executeCommands).contains("kubectl --kubeconfig=kubeconfig get StatefulSet --namespace=harness");
+    assertThat(executeCommands).contains("kubectl --kubeconfig=kubeconfig get ReplicaSet --namespace=harness");
+    assertThat(executeCommands).contains("kubectl --kubeconfig=kubeconfig get DaemonSet --namespace=harness");
+    assertThat(executeCommands).contains("kubectl --kubeconfig=kubeconfig get Deployment --namespace=harness");
+  }
+
+  private void validateIfCanGetDaemonSets() throws Exception {
+    final Kubectl client = Kubectl.client("kubectl", "kubeconfig");
+    Kubectl mockClient = Mockito.spy(client);
+    GetCommand mockGetCommand = Mockito.spy(client.get());
+    doReturn(mockClient).when(kubernetesContainerService).getKubectlClient();
+    doReturn(mockGetCommand).when(mockClient).get();
+    List<String> executeCommands = new ArrayList<>();
+    setupGetCommand(mockGetCommand, executeCommands, Kind.DaemonSet);
+    KubernetesConfig kubernetesConfig = KubernetesConfig.builder().namespace("harness").build();
+
+    kubernetesContainerService.validate(kubernetesConfig);
+
+    assertThat(executeCommands).contains("kubectl --kubeconfig=kubeconfig get StatefulSet --namespace=harness");
+    assertThat(executeCommands).contains("kubectl --kubeconfig=kubeconfig get ReplicaSet --namespace=harness");
+    assertThat(executeCommands).contains("kubectl --kubeconfig=kubeconfig get DaemonSet --namespace=harness");
+  }
+
+  private void validateIfCanGetStatefulSets() throws Exception {
+    final Kubectl client = Kubectl.client("kubectl", "kubeconfig");
+    Kubectl mockClient = Mockito.spy(client);
+    GetCommand mockGetCommand = Mockito.spy(client.get());
+    doReturn(mockClient).when(kubernetesContainerService).getKubectlClient();
+    doReturn(mockGetCommand).when(mockClient).get();
+    List<String> executeCommands = new ArrayList<>();
+    setupGetCommand(mockGetCommand, executeCommands, Kind.StatefulSet);
+    KubernetesConfig kubernetesConfig = KubernetesConfig.builder().namespace("harness").build();
+
+    kubernetesContainerService.validate(kubernetesConfig);
+
+    assertThat(executeCommands).contains("kubectl --kubeconfig=kubeconfig get StatefulSet --namespace=harness");
+    assertThat(executeCommands).contains("kubectl --kubeconfig=kubeconfig get ReplicaSet --namespace=harness");
+  }
+
+  private void validateIfCanGetReplicaSets() throws Exception {
+    final Kubectl client = Kubectl.client("kubectl", "kubeconfig");
+    Kubectl mockClient = Mockito.spy(client);
+    GetCommand mockGetCommand = Mockito.spy(client.get());
+    doReturn(mockClient).when(kubernetesContainerService).getKubectlClient();
+    doReturn(mockGetCommand).when(mockClient).get();
+    List<String> executeCommands = new ArrayList<>();
+    setupGetCommand(mockGetCommand, executeCommands, Kind.ReplicaSet);
+    doReturn(new ProcessResult(0, null))
+        .when(mockGetCommand)
+        .execute(anyString(), any(OutputStream.class), any(OutputStream.class), anyBoolean());
+    KubernetesConfig kubernetesConfig = KubernetesConfig.builder().namespace("harness").build();
+
+    kubernetesContainerService.validate(kubernetesConfig);
+
+    assertThat(mockGetCommand.command())
+        .isEqualTo("kubectl --kubeconfig=kubeconfig get ReplicaSet --namespace=harness");
+  }
+
+  private void setupGetCommand(GetCommand mockGetCommand, List<String> executeCommands, Kind kind) throws Exception {
+    doAnswer(invocation -> {
+      String command = mockGetCommand.command();
+      executeCommands.add(command);
+      if (command.contains(kind.name())) {
+        return new ProcessResult(0, null);
+      }
+      return new ProcessResult(1, null);
+    })
+        .when(mockGetCommand)
+        .execute(anyString(), any(OutputStream.class), any(OutputStream.class), anyBoolean());
   }
 }
