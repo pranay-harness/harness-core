@@ -77,6 +77,7 @@ public class CIExecutionPlanTestHelper {
                                                 .gitConnectorIdentifier("testGitConnector")
                                                 .usePVC(true)
                                                 .steps(getExpectedExecutionElement())
+                                                .accountId("accountId")
                                                 .build())
                               .build());
 
@@ -91,6 +92,7 @@ public class CIExecutionPlanTestHelper {
         .gitConnectorIdentifier("testGitConnector")
         .usePVC(true)
         .steps(getExecutionElement())
+        .accountId("accountId")
         .build();
   }
 
@@ -100,6 +102,7 @@ public class CIExecutionPlanTestHelper {
         .buildJobEnvInfo(getCIBuildJobEnvInfoOnOtherPods())
         .usePVC(true)
         .steps(getExecutionElement())
+        .accountId("accountId")
         .build();
   }
 

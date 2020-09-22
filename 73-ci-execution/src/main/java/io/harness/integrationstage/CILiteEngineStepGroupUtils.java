@@ -33,7 +33,7 @@ public class CILiteEngineStepGroupUtils {
   private static final SecureRandom random = new SecureRandom();
 
   public List<ExecutionWrapper> createExecutionWrapperWithLiteEngineSteps(
-      IntegrationStage integrationStage, String branchName, String gitConnectorIdentifier) {
+      IntegrationStage integrationStage, String branchName, String gitConnectorIdentifier, String accountId) {
     String buildNumber = BUILD_NUMBER + random.nextInt(100000); // TODO Have incremental build number
 
     List<ExecutionWrapper> mainEngineExecutionSections = new ArrayList<>();
@@ -57,7 +57,7 @@ public class CILiteEngineStepGroupUtils {
           liteEngineCounter++;
           ExecutionWrapper liteEngineStepExecutionWrapper =
               fetchLiteEngineStepExecutionWrapper(liteEngineExecutionSections, liteEngineCounter, integrationStage,
-                  branchName, gitConnectorIdentifier, buildNumber, usePVC);
+                  branchName, gitConnectorIdentifier, buildNumber, usePVC, accountId);
 
           mainEngineExecutionSections.add(liteEngineStepExecutionWrapper);
           // Also execute each lite engine step individually on main engine
@@ -73,7 +73,7 @@ public class CILiteEngineStepGroupUtils {
     if (isNotEmpty(liteEngineExecutionSections)) {
       liteEngineCounter++;
       ExecutionWrapper liteEngineStepExecutionWrapper = fetchLiteEngineStepExecutionWrapper(liteEngineExecutionSections,
-          liteEngineCounter, integrationStage, branchName, gitConnectorIdentifier, buildNumber, usePVC);
+          liteEngineCounter, integrationStage, branchName, gitConnectorIdentifier, buildNumber, usePVC, accountId);
 
       mainEngineExecutionSections.add(liteEngineStepExecutionWrapper);
       // Also execute each lite engine step individually on main engine
@@ -85,11 +85,11 @@ public class CILiteEngineStepGroupUtils {
 
   private ExecutionWrapper fetchLiteEngineStepExecutionWrapper(List<ExecutionWrapper> liteEngineExecutionSections,
       Integer liteEngineCounter, IntegrationStage integrationStage, String branchName, String gitConnectorIdentifier,
-      String buildNumber, boolean usePVC) {
+      String buildNumber, boolean usePVC, String accountId) {
     Integer parallelism = calculateParallelism(liteEngineExecutionSections);
     LiteEngineTaskStepInfo liteEngineTaskStepInfo = liteEngineTaskStepGenerator.createLiteEngineTaskStepInfo(
         ExecutionElement.builder().steps(liteEngineExecutionSections).build(), branchName, gitConnectorIdentifier,
-        integrationStage, buildNumber, parallelism, liteEngineCounter, usePVC);
+        integrationStage, buildNumber, parallelism, liteEngineCounter, usePVC, accountId);
 
     return StepElement.builder()
         .identifier(LITE_ENGINE_TASK + liteEngineCounter)

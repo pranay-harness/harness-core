@@ -28,7 +28,7 @@ public class CILiteEngineStepGroupUtilsTest extends CIExecutionTest {
   public void createExecutionWrapperWithLiteEngineSteps() {
     List<ExecutionWrapper> executionWrapperWithLiteEngineSteps =
         ciLiteEngineStepGroupUtils.createExecutionWrapperWithLiteEngineSteps(
-            ciExecutionPlanTestHelper.getIntegrationStage(), "master", "testGitConnector");
+            ciExecutionPlanTestHelper.getIntegrationStage(), "master", "testGitConnector", "accountId");
 
     List<ExecutionWrapper> expectedExecutionWrapper = ciExecutionPlanTestHelper.getExpectedExecutionWrappers();
     expectedExecutionWrapper.addAll(ciExecutionPlanTestHelper.getIntegrationStage().getExecution().getSteps());
