@@ -27,6 +27,9 @@ nogo(
 ########################################################################################################
 
 load("//tools/sonarqube:defs.bzl", "sonarqube")
+load("//tools/sonarqube:defs.bzl", "get_sonar_targets")
+load("//tools/checkstyle:rules.bzl","get_checkstyle_targets")
+load("//tools/pmd:defs.bzl","get_pmd_targets")
 
 java_plugin(
     name = "lombok_plugin",
@@ -41,6 +44,13 @@ java_library(
     exported_plugins = [":lombok_plugin"],
     visibility = ["//visibility:public"],
 )
+
+modules = [
+    "//990-commons-test",
+    "//12-commons",
+    "//13-grpc-api",
+    "//14-api-services-beans"
+]
 
 filegroup(
     name = "git",
@@ -70,13 +80,18 @@ sonarqube(
     project_name = "Bazel Portal",
     srcs = [],
     targets = [],
-    modules = {
-        "//990-commons-test:sq_mycomponent": "990-commons-test",
-        "//12-commons:sq_mycomponent":"12-commons",
-        "//13-grpc-api:sq_mycomponent":"13-grpc-api",
-        "//14-api-services-beans:sq_mycomponent":"14-api-services-beans",
-    },
+    modules = get_sonar_targets(modules),
     coverage_report = ":coverage_report",
     scm_info = [":git"],
     tags = ["manual"],
+)
+
+filegroup(
+    name = "checkstyle",
+    srcs = get_checkstyle_targets(modules),
+)
+
+filegroup(
+    name = "pmd",
+    srcs = get_pmd_targets(modules)
 )

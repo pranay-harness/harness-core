@@ -8,6 +8,7 @@ def impl_checkstyle(name, tags, srcs=[],
         srcs = srcs,
         tags = tags,
         outs = ["checkstyle.xml"],
+        visibility = ["//visibility:public"],
         cmd = " ".join([
             "java -classpath $(location //tools/checkstyle:checkstyle_deploy.jar)",
             "-Dorg.checkstyle.google.suppressionfilter.config=$(location " + checkstyle_suppressions + ")",
@@ -34,3 +35,9 @@ def checkstyle(name="checkstyle", srcs = None,tags = ["manual","no-ide"]):
     if srcs == None:
         srcs = ["//"+native.package_name()+":sources"]
     impl_checkstyle(name=name, srcs=srcs, tags=tags)
+
+def get_checkstyle_targets(modules = []):
+        _targets = []
+        for f in modules:
+            _targets.append(f+":checkstyle")
+        return _targets

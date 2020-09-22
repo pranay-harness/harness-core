@@ -4,6 +4,7 @@ load("//tools/checkstyle:rules.bzl", "checkstyle")
 load("//:macros.bzl", "sources")
 load("//:macros.bzl", "sonarqube_test")
 load("//:macros.bzl","test_targets_list")
+load("//tools/pmd:defs.bzl","pmd")
 
 sources()
 
@@ -160,3 +161,5 @@ sonarqube_test(
     ],
 #    test_targets = test_targets_list(["**/CommonsTest.java"])
 )
+
+pmd()

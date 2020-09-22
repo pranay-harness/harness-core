@@ -11,7 +11,7 @@ def resources(name = "resources", runtime_deps=[], testonly = 0, visibility=None
 
 def sources(visibility = None):
     if visibility == None:
-      visibility = ["//"+native.package_name()+":__pkg__"]
+      visibility = ["//"+native.package_name()+":__pkg__","//:__pkg__"]
     native.filegroup(
        name = "sources",
        srcs = native.glob(["src/main/**/*.java"]),

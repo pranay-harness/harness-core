@@ -275,3 +275,8 @@ def sq_project(
         checkstyle_report_path = checkstyle_report_path
     )
 
+def get_sonar_targets(modules = []):
+    _targets = dict()
+    for f in modules:
+        _targets.update({f+":sq_mycomponent":f[2:]})
+    return _targets
