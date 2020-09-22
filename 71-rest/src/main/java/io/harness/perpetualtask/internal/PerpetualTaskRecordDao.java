@@ -1,8 +1,6 @@
 package io.harness.perpetualtask.internal;
 
 import static io.harness.perpetualtask.PerpetualTaskState.TASK_ASSIGNED;
-import static io.harness.perpetualtask.PerpetualTaskState.TASK_UNASSIGNED;
-import static java.util.Arrays.asList;
 
 import com.google.inject.Inject;
 
@@ -45,15 +43,12 @@ public class PerpetualTaskRecordDao {
   }
 
   public void updateTaskUnassignedReason(String taskId, PerpetualTaskUnassignedReason reason) {
-    Query<PerpetualTaskRecord> query =
-        persistence.createQuery(PerpetualTaskRecord.class)
-            .filter(PerpetualTaskRecordKeys.uuid, taskId)
-            .field(PerpetualTaskRecordKeys.state)
-            .in(asList(PerpetualTaskState.TASK_UNASSIGNED, PerpetualTaskState.TASK_TO_REBALANCE));
+    Query<PerpetualTaskRecord> query = persistence.createQuery(PerpetualTaskRecord.class)
+                                           .filter(PerpetualTaskRecordKeys.uuid, taskId)
+                                           .filter(PerpetualTaskRecordKeys.state, PerpetualTaskState.TASK_UNASSIGNED);
     UpdateOperations<PerpetualTaskRecord> updateOperations =
         persistence.createUpdateOperations(PerpetualTaskRecord.class)
-            .set(PerpetualTaskRecordKeys.unassignedReason, reason)
-            .set(PerpetualTaskRecordKeys.state, TASK_UNASSIGNED);
+            .set(PerpetualTaskRecordKeys.unassignedReason, reason);
     persistence.update(query, updateOperations);
   }
 
@@ -177,14 +172,17 @@ public class PerpetualTaskRecordDao {
     return update.getUpdatedCount() > 0;
   }
 
-  public void markAllTasksOnDelegateForReassignment(String accountId, String delegateId) {
+  public void detachTaskFromDelegate(String accountId, String delegateId) {
     Query<PerpetualTaskRecord> query = persistence.createQuery(PerpetualTaskRecord.class)
                                            .filter(PerpetualTaskRecordKeys.accountId, accountId)
                                            .filter(PerpetualTaskRecordKeys.delegateId, delegateId);
 
     UpdateOperations<PerpetualTaskRecord> updateOperations =
         persistence.createUpdateOperations(PerpetualTaskRecord.class)
-            .set(PerpetualTaskRecordKeys.state, PerpetualTaskState.TASK_TO_REBALANCE);
+            .set(PerpetualTaskRecordKeys.delegateId, "")
+            .set(PerpetualTaskRecordKeys.state, PerpetualTaskState.TASK_UNASSIGNED)
+            .unset(PerpetualTaskRecordKeys.unassignedReason)
+            .unset(PerpetualTaskRecordKeys.assignerIterations);
 
     persistence.update(query, updateOperations);
   }

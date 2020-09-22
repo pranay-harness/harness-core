@@ -5,7 +5,6 @@ import static io.harness.perpetualtask.internal.PerpetualTaskRecordHandler.NO_DE
 import static io.harness.perpetualtask.internal.PerpetualTaskRecordHandler.NO_DELEGATE_AVAILABLE_TO_HANDLE_PERPETUAL_TASK;
 import static io.harness.perpetualtask.internal.PerpetualTaskRecordHandler.PERPETUAL_TASK_FAILED_TO_BE_ASSIGNED_TO_ANY_DELEGATE;
 import static io.harness.rule.OwnerRule.HANTANG;
-import static io.harness.rule.OwnerRule.MATT;
 import static io.harness.rule.OwnerRule.SANJA;
 import static io.harness.rule.OwnerRule.VUK;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -61,7 +60,6 @@ public class PerpetualTaskRecordHandlerTest extends CategoryTest {
   @Mock PerpetualTaskServiceClientRegistry clientRegistry;
   @Mock DelegateService delegateService;
   @Mock PerpetualTaskService perpetualTaskService;
-  @Mock PerpetualTaskRecordDao perpetualTaskRecordDao;
   @Mock AlertService alertService;
   @InjectMocks PerpetualTaskRecordHandler perpetualTaskRecordHandler;
   @Rule public MockitoRule mockitoRule = MockitoJUnit.rule();
@@ -92,7 +90,7 @@ public class PerpetualTaskRecordHandlerTest extends CategoryTest {
                                                   .delegateMetaInfo(DelegateMetaInfo.builder().id(delegateId).build())
                                                   .build();
     when(delegateService.executeTask(isA(DelegateTask.class))).thenReturn(response);
-    perpetualTaskRecordHandler.assign(record);
+    perpetualTaskRecordHandler.handle(record);
     verify(perpetualTaskService).appointDelegate(eq(accountId), anyString(), eq(delegateId), anyLong());
     verify(alertService, times(1))
         .closeAlert(eq(accountId), eq(null), eq(AlertType.PerpetualTaskAlert),
@@ -135,7 +133,7 @@ public class PerpetualTaskRecordHandlerTest extends CategoryTest {
   public void shouldNotHandle() throws InterruptedException {
     RemoteMethodReturnValueData response = RemoteMethodReturnValueData.builder().build();
     when(delegateService.executeTask(isA(DelegateTask.class))).thenReturn(response);
-    perpetualTaskRecordHandler.assign(record);
+    perpetualTaskRecordHandler.handle(record);
     verify(perpetualTaskService, times(0)).appointDelegate(eq(accountId), anyString(), eq(delegateId), anyLong());
   }
 
@@ -144,7 +142,7 @@ public class PerpetualTaskRecordHandlerTest extends CategoryTest {
   @Category(UnitTests.class)
   public void shouldNotHandle_NoDelegateAvailableToHandlePerpetualTask() throws InterruptedException {
     when(delegateService.executeTask(isA(DelegateTask.class))).thenThrow(new NoAvailableDelegatesException());
-    perpetualTaskRecordHandler.assign(record);
+    perpetualTaskRecordHandler.handle(record);
     String expectedMessage =
         String.format(NO_DELEGATE_AVAILABLE_TO_HANDLE_PERPETUAL_TASK, record.getPerpetualTaskType());
     verify(alertService, times(1))
@@ -161,7 +159,7 @@ public class PerpetualTaskRecordHandlerTest extends CategoryTest {
   @Category(UnitTests.class)
   public void shouldNotHandle_ServiceUnavailableNoDelegateInstalledToHandlePT() throws InterruptedException {
     when(delegateService.executeTask(isA(DelegateTask.class))).thenThrow(new NoInstalledDelegatesException());
-    perpetualTaskRecordHandler.assign(record);
+    perpetualTaskRecordHandler.handle(record);
     String expectedMessage =
         String.format(NO_DELEGATES_INSTALLED_TO_HANDLE_PERPETUAL_TASK, record.getPerpetualTaskType());
     verify(alertService, times(1))
@@ -178,7 +176,7 @@ public class PerpetualTaskRecordHandlerTest extends CategoryTest {
   @Category(UnitTests.class)
   public void shouldNotHandle_PerpetualTaskFailedToBeAssignedToAnyDelegate() throws InterruptedException {
     when(delegateService.executeTask(isA(DelegateTask.class))).thenThrow(new WingsException(""));
-    perpetualTaskRecordHandler.assign(record);
+    perpetualTaskRecordHandler.handle(record);
     String expectedMessage =
         String.format(PERPETUAL_TASK_FAILED_TO_BE_ASSIGNED_TO_ANY_DELEGATE, record.getPerpetualTaskType());
     verify(alertService, times(1))
@@ -195,7 +193,7 @@ public class PerpetualTaskRecordHandlerTest extends CategoryTest {
   @Category(UnitTests.class)
   public void shouldNotHandle_FailToAssignAnyDelegateToPerpetualTask() throws InterruptedException {
     when(delegateService.executeTask(isA(DelegateTask.class))).thenThrow(new RuntimeException());
-    perpetualTaskRecordHandler.assign(record);
+    perpetualTaskRecordHandler.handle(record);
     String expectedMessage =
         String.format(FAIL_TO_ASSIGN_ANY_DELEGATE_TO_PERPETUAL_TASK, record.getPerpetualTaskType());
     verify(alertService, times(1))
@@ -205,21 +203,5 @@ public class PerpetualTaskRecordHandlerTest extends CategoryTest {
                     .perpetualTaskType(PerpetualTaskType.K8S_WATCH)
                     .message(expectedMessage)
                     .build()));
-  }
-
-  @Test
-  @Owner(developers = MATT)
-  @Category(UnitTests.class)
-  public void testReassign() {
-    record = PerpetualTaskRecord.builder()
-                 .accountId(accountId)
-                 .delegateId(delegateId)
-                 .uuid(taskId)
-                 .perpetualTaskType(PerpetualTaskType.K8S_WATCH)
-                 .clientContext(PerpetualTaskClientContext.builder().build())
-                 .build();
-    when(delegateService.checkDelegateConnected(accountId, delegateId)).thenReturn(true);
-    perpetualTaskRecordHandler.rebalance(record);
-    verify(perpetualTaskRecordDao, times(1)).appointDelegate(eq(taskId), eq(delegateId), anyLong());
   }
 }

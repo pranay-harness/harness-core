@@ -498,7 +498,7 @@ permits {"name": "key_1", "unique": true} {"key": 1}
 perpetualTask {"name": "accountId_1", "background": true} {"accountId": 1}
 perpetualTask {"name": "assignerIterator", "background": true} {"state": 1, "assignerIterations": 1}
 perpetualTask {"name": "delegateId_1", "background": true} {"delegateId": 1}
-perpetualTask {"name": "rebalanceIteration_1", "background": true} {"rebalanceIteration": 1}
+perpetualTask {"name": "resetterIteration_1", "background": true} {"resetterIteration": 1}
 personalization {"name": "identification", "unique": true} {"accountId": 1, "userId": 1}
 pipelineExecutions {"name": "appId_1", "background": true} {"appId": 1}
 pipelineExecutions {"name": "createdAt_1", "background": true} {"createdAt": 1}

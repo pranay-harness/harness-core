@@ -1,6 +1,3 @@
 package software.wings.service.intfc.perpetualtask;
 
-public interface PerpetualTaskCrudObserver {
-  void onPerpetualTaskCreated();
-  void onRebalanceRequired();
-}
+public interface PerpetualTaskCrudObserver { void onPerpetualTaskCreated(); }
