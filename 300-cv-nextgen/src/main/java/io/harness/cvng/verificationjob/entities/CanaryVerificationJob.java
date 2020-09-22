@@ -3,6 +3,7 @@ package io.harness.cvng.verificationjob.entities;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
 import static io.harness.cvng.core.utils.ErrorMessageUtils.generateErrorMessageFromParam;
+import static io.harness.cvng.verificationjob.CVVerificationJobConstants.SENSITIVITY_KEY;
 
 import io.harness.cvng.core.beans.TimeRange;
 import io.harness.cvng.verificationjob.beans.CanaryVerificationJobDTO;
@@ -17,6 +18,7 @@ import lombok.experimental.FieldNameConstants;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 @Data
@@ -26,11 +28,29 @@ import java.util.Optional;
 public class CanaryVerificationJob extends VerificationJob {
   public static final Duration PRE_DEPLOYMENT_DATA_COLLECTION_DURATION = Duration.ofMinutes(15);
   // TODO: move sensitivity to common base class.
-  private Sensitivity sensitivity;
+  private RuntimeParameter sensitivity;
   private Integer trafficSplitPercentage;
   @Override
   public VerificationJobType getType() {
     return VerificationJobType.CANARY;
+  }
+
+  public Sensitivity getSensitivity() {
+    if (sensitivity.isRuntimeParam()) {
+      return null;
+    }
+    return Sensitivity.valueOf(sensitivity.getValue());
+  }
+
+  public void setSensitivity(String sensitivity, boolean isRuntimeParam) {
+    this.sensitivity = sensitivity == null
+        ? null
+        : RuntimeParameter.builder().isRuntimeParam(isRuntimeParam).value(sensitivity).build();
+  }
+
+  public void setSensitivity(Sensitivity sensitivity) {
+    this.sensitivity =
+        sensitivity == null ? null : RuntimeParameter.builder().isRuntimeParam(false).value(sensitivity.name()).build();
   }
 
   @Override
@@ -60,5 +80,18 @@ public class CanaryVerificationJob extends VerificationJob {
   @Override
   public List<TimeRange> getDataCollectionTimeRanges(Instant startTime) {
     return getTimeRangesForDuration(startTime);
+  }
+
+  @Override
+  public void resolveJobParams(Map<String, String> runtimeParameters) {
+    runtimeParameters.keySet().forEach(key -> {
+      switch (key) {
+        case SENSITIVITY_KEY:
+          this.setSensitivity(runtimeParameters.get(key), false);
+          break;
+        default:
+          break;
+      }
+    });
   }
 }

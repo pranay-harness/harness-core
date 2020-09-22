@@ -1,5 +1,6 @@
 package io.harness.cvng.core.beans;
 
+import com.fasterxml.jackson.annotation.JsonTypeName;
 import io.harness.cvng.core.entities.Activity;
 import io.harness.cvng.core.entities.Activity.ActivityType;
 import io.harness.cvng.core.entities.DeploymentActivity;
@@ -12,6 +13,7 @@ import java.util.Set;
 
 @Value
 @Builder
+@JsonTypeName("DEPLOYMENT")
 @AllArgsConstructor
 public class DeploymentActivityDTO extends ActivityDTO {
   Long dataCollectionDelayMs;
@@ -26,12 +28,13 @@ public class DeploymentActivityDTO extends ActivityDTO {
 
   @Override
   public Activity toEntity() {
-    DeploymentActivity deploymentActivity = DeploymentActivity.builder()
-                                                .dataCollectionDelayMs(dataCollectionDelayMs)
-                                                .oldVersionHosts(new HashSet<>(oldVersionHosts))
-                                                .newVersionHosts(new HashSet<>(newVersionHosts))
-                                                .newHostsTrafficSplitPercentage(newHostsTrafficSplitPercentage)
-                                                .build();
+    DeploymentActivity deploymentActivity =
+        DeploymentActivity.builder()
+            .dataCollectionDelayMs(dataCollectionDelayMs)
+            .oldVersionHosts(oldVersionHosts == null ? null : new HashSet<>(oldVersionHosts))
+            .newVersionHosts(newVersionHosts == null ? null : new HashSet<>(newVersionHosts))
+            .newHostsTrafficSplitPercentage(newHostsTrafficSplitPercentage)
+            .build();
     super.addCommonDataFields(deploymentActivity);
     return deploymentActivity;
   }

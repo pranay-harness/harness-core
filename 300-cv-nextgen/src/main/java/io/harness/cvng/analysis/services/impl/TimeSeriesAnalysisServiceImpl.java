@@ -109,8 +109,7 @@ public class TimeSeriesAnalysisServiceImpl implements TimeSeriesAnalysisService 
     String taskId = generateUuid();
     VerificationJobInstance verificationJobInstance = verificationJobInstanceService.getVerificationJobInstance(
         verificationTaskService.getVerificationJobInstanceId(input.getVerificationTaskId()));
-    CanaryVerificationJob verificationJob =
-        (CanaryVerificationJob) verificationJobService.get(verificationJobInstance.getVerificationJobId());
+    CanaryVerificationJob verificationJob = (CanaryVerificationJob) verificationJobInstance.getResolvedJob();
     Preconditions.checkNotNull(verificationJobInstance, "verificationJobInstance can not be null");
     TimeSeriesCanaryLearningEngineTask timeSeriesLearningEngineTask =
         TimeSeriesCanaryLearningEngineTask.builder()

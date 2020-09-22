@@ -33,6 +33,8 @@ import io.harness.cvng.verificationjob.beans.CanaryVerificationJobDTO;
 import io.harness.cvng.verificationjob.beans.Sensitivity;
 import io.harness.cvng.verificationjob.beans.VerificationJobDTO;
 import io.harness.cvng.verificationjob.beans.VerificationJobInstanceDTO;
+import io.harness.cvng.verificationjob.entities.VerificationJob;
+import io.harness.cvng.verificationjob.entities.VerificationJobInstance;
 import io.harness.cvng.verificationjob.services.api.VerificationJobInstanceService;
 import io.harness.cvng.verificationjob.services.api.VerificationJobService;
 import io.harness.persistence.HPersistence;
@@ -149,11 +151,19 @@ public class LogClusterServiceImplTest extends CvNextGenTest {
     Instant start = now.truncatedTo(ChronoUnit.MINUTES);
     Instant end = start.plus(15, ChronoUnit.MINUTES);
     String accountId = generateUuid();
-    VerificationJobDTO verificationJob = newVerificationJob();
-    verificationJobService.upsert(accountId, verificationJob);
+    // TODO: remove later. we shouldn't be doing any of this in this test. This needs to be mocked.
+    VerificationJob verificationJob = newVerificationJob().getVerificationJob();
+    verificationJob.setIdentifier(verificationJobIdentifier);
+    verificationJob.setAccountId(accountId);
+    verificationJob.setUuid(verificationJobIdentifier);
+    hPersistence.save(verificationJob);
     VerificationJobInstanceDTO verificationJobInstanceDTO = newVerificationJobInstanceDTO();
     String verificationJobInstanceId = verificationJobInstanceService.create(accountId, verificationJobInstanceDTO);
+    VerificationJobInstance instance = hPersistence.get(VerificationJobInstance.class, verificationJobInstanceId);
+    instance.setResolvedJob(verificationJob);
+    hPersistence.save(instance);
     String verificationTaskId = verificationTaskService.create(accountId, cvConfigId, verificationJobInstanceId);
+
     List<ClusteredLog> logRecords = createClusteredLogRecords(verificationTaskId, 5, start, end);
     hPersistence.save(logRecords);
     AnalysisInput input =
@@ -320,12 +330,12 @@ public class LogClusterServiceImplTest extends CvNextGenTest {
     canaryVerificationJobDTO.setIdentifier(verificationJobIdentifier);
     canaryVerificationJobDTO.setJobName(generateUuid());
     canaryVerificationJobDTO.setDataSources(Lists.newArrayList(DataSourceType.SPLUNK));
-    canaryVerificationJobDTO.setSensitivity(Sensitivity.MEDIUM);
+    canaryVerificationJobDTO.setSensitivity(Sensitivity.MEDIUM.name());
     canaryVerificationJobDTO.setServiceIdentifier(generateUuid());
     canaryVerificationJobDTO.setOrgIdentifier(generateUuid());
     canaryVerificationJobDTO.setProjectIdentifier(generateUuid());
     canaryVerificationJobDTO.setEnvIdentifier(generateUuid());
-    canaryVerificationJobDTO.setSensitivity(Sensitivity.MEDIUM);
+    canaryVerificationJobDTO.setSensitivity(Sensitivity.MEDIUM.name());
     canaryVerificationJobDTO.setDuration("15m");
     return canaryVerificationJobDTO;
   }

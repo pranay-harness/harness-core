@@ -16,6 +16,7 @@ import lombok.experimental.FieldNameConstants;
 
 import java.time.Instant;
 import java.util.List;
+import java.util.Map;
 
 @Data
 @FieldNameConstants(innerTypeName = "TestVerificationJobKeys")
@@ -52,4 +53,7 @@ public class TestVerificationJob extends VerificationJob {
   public List<TimeRange> getDataCollectionTimeRanges(Instant startTime) {
     return getTimeRangesForDuration(startTime);
   }
+
+  @Override
+  public void resolveJobParams(Map<String, String> runtimeParameters) {}
 }

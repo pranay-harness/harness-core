@@ -46,8 +46,9 @@ public class VerificationJobInstance
   private long createdAt;
   private long lastUpdatedAt;
   private ExecutionStatus executionStatus;
-  private String verificationJobId;
+
   private String verificationJobIdentifier;
+
   private Instant deploymentStartTime;
   private Instant startTime;
   @FdIndex private Long dataCollectionTaskIteration;
@@ -60,10 +61,14 @@ public class VerificationJobInstance
   private Integer newHostsTrafficSplitPercentage;
   private Duration duration;
   private List<ProgressLog> progressLogs;
+
+  private VerificationJob resolvedJob;
+
   @Builder.Default
   @FdTtlIndex
   private Date validUntil =
       Date.from(OffsetDateTime.now().plus(CVConstants.VERIFICATION_JOB_INSTANCE_EXPIRY_DURATION).toInstant());
+
   @Override
   public void updateNextIteration(String fieldName, long nextIteration) {
     if (VerificationJobInstanceKeys.dataCollectionTaskIteration.equals(fieldName)) {
