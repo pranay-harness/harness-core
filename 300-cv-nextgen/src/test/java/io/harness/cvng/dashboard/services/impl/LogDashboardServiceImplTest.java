@@ -9,12 +9,14 @@ import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 
 import io.harness.CvNextGenTest;
 import io.harness.beans.NGPageResponse;
 import io.harness.category.element.UnitTests;
 import io.harness.cvng.analysis.entities.LogAnalysisCluster;
+import io.harness.cvng.analysis.entities.LogAnalysisCluster.Frequency;
 import io.harness.cvng.analysis.entities.LogAnalysisResult;
 import io.harness.cvng.analysis.entities.LogAnalysisResult.AnalysisResult;
 import io.harness.cvng.analysis.entities.LogAnalysisResult.LogAnalysisTag;
@@ -316,15 +318,13 @@ public class LogDashboardServiceImplTest extends CvNextGenTest {
                           .isEvicted(false)
                           .label(label)
                           .text("This is a dummy text for label " + label)
-                          .trend(LogAnalysisCluster.Trend.builder()
-                                     .count(Arrays.asList(1, 2, 3, 4))
-                                     .timestamp(Arrays.asList(12353453l, 132312l, 132213l))
-                                     .build())
+                          .frequencyTrend(Lists.newArrayList(Frequency.builder().timestamp(12353453L).count(1).build(),
+                              Frequency.builder().timestamp(132312L).count(2).build(),
+                              Frequency.builder().timestamp(132213L).count(3).build()))
                           .build());
     });
     return clusterList;
   }
-
   private CVConfig createCvConfig(String cvConfigId, String serviceIdentifier) {
     SplunkCVConfig splunkCVConfig = new SplunkCVConfig();
     splunkCVConfig.setUuid(cvConfigId);

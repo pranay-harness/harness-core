@@ -47,7 +47,7 @@ public class LogAnalysisCluster implements PersistentEntity, UuidAware, CreatedA
   @FdIndex private String accountId;
   private long analysisMinute;
   private long label;
-  private Trend trend;
+  private List<Frequency> frequencyTrend;
   private String text;
   private boolean isEvicted;
 
@@ -55,9 +55,10 @@ public class LogAnalysisCluster implements PersistentEntity, UuidAware, CreatedA
 
   @Data
   @Builder
-  public static class Trend {
-    private List<Integer> count;
-    private List<Long> timestamp;
+  public static class Frequency {
+    Integer count;
+    Long timestamp;
+    Double riskScore;
   }
 
   @PrePersist

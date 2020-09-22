@@ -24,13 +24,13 @@ public class AnalyzedLogDataDTO implements Comparable<AnalyzedLogDataDTO> {
     String text;
     Long label;
     int count;
-    List<Frequency> trend;
+    List<FrequencyDTO> trend;
     LogAnalysisTag tag;
   }
 
   @Data
   @Builder
-  public static class Frequency {
+  public static class FrequencyDTO {
     private long timestamp;
     private int count;
   }

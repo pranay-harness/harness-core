@@ -74,7 +74,7 @@ public class ServiceGuardLogAnalysisStateTest {
 
     AnalysisStatus status = logAnalysisState.getExecutionStatus();
 
-    assertThat(status.name()).isEqualTo(AnalysisStatus.SUCCESS.name());
+    assertThat(status.name()).isEqualTo(AnalysisStatus.TRANSITION.name());
   }
 
   @Test
@@ -181,7 +181,7 @@ public class ServiceGuardLogAnalysisStateTest {
   @Category(UnitTests.class)
   public void testHandleTransition() {
     AnalysisState state = logAnalysisState.handleTransition();
-    assertThat(state.getStatus().name()).isEqualTo(AnalysisStatus.SUCCESS.name());
+    assertThat(state.getStatus().name()).isEqualTo(AnalysisStatus.CREATED.name());
   }
 
   @Test
