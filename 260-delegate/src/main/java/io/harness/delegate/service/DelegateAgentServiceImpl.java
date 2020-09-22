@@ -415,7 +415,7 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
                                           .description(description)
                                           .version(getVersion())
                                           .delegateType(DELEGATE_TYPE)
-                                          .proxy(delegateConfiguration.isProxy())
+                                          //.proxy(set to true if there is a system proxy)
                                           .polllingModeEnabled(delegateConfiguration.isPollForTasks())
                                           .sampleDelegate(isSample)
                                           .ceEnabled(Boolean.parseBoolean(System.getenv("ENABlE_CE")));
@@ -607,9 +607,6 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
       // Stream the request body
       RequestBuilder requestBuilder =
           client.newRequestBuilder().method(METHOD.GET).uri(uri.toString()).header("Version", getVersion());
-      if (delegateConfiguration.isProxy()) {
-        requestBuilder.header("X-Atmosphere-WebSocket-Proxy", "true");
-      }
 
       requestBuilder
           .encoder(new Encoder<Delegate, Reader>() { // Do not change this, wasync doesn't like lambdas
@@ -866,7 +863,7 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
                                             .lastHeartBeat(clock.millis())
                                             .delegateType(DELEGATE_TYPE)
                                             .description(delegateConfiguration.getDescription())
-                                            .proxy(delegateConfiguration.isProxy())
+                                            //.proxy(set to true if there is a system proxy)
                                             .polllingModeEnabled(delegateConfiguration.isPollForTasks())
                                             .ceEnabled(Boolean.parseBoolean(System.getenv("ENABlE_CE")))
                                             .build();
