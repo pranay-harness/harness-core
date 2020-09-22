@@ -1,5 +1,6 @@
 package io.harness.delegate.task.shell;
 
+import static io.harness.expression.Expression.ALLOW_SECRETS;
 import static java.util.Collections.emptyList;
 
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
@@ -21,7 +22,7 @@ public class ShellScriptApprovalTaskParameters implements TaskParameters, Execut
 
   private ScriptType scriptType;
   private final String outputVars;
-  @Expression private final String script;
+  @Expression(ALLOW_SECRETS) private final String script;
   private String workingDirectory;
 
   @Override

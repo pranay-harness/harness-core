@@ -1,6 +1,7 @@
 package software.wings.infra;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.expression.Expression.DISALLOW_SECRETS;
 import static software.wings.beans.AzureKubernetesInfrastructureMapping.Builder.anAzureKubernetesInfrastructureMapping;
 import static software.wings.beans.InfrastructureType.AZURE_KUBERNETES;
 import static software.wings.common.InfrastructureConstants.INFRA_KUBERNETES_INFRAID_EXPRESSION;
@@ -24,7 +25,7 @@ public class AzureKubernetesService
     implements KubernetesInfrastructure, InfraMappingInfrastructureProvider, FieldKeyValMapProvider {
   private String cloudProviderId;
   @IncludeFieldMap private String clusterName;
-  @IncludeFieldMap @Expression private String namespace;
+  @IncludeFieldMap @Expression(DISALLOW_SECRETS) private String namespace;
   private String releaseName;
   private String subscriptionId;
   private String resourceGroup;

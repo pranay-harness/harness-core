@@ -1,5 +1,7 @@
 package software.wings.helpers.ext.pcf.request;
 
+import static io.harness.expression.Expression.ALLOW_SECRETS;
+
 import io.harness.beans.FileData;
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import io.harness.delegate.beans.executioncapability.ExecutionCapabilityDemander;
@@ -21,7 +23,7 @@ import java.util.List;
 @EqualsAndHashCode(callSuper = false)
 public class PcfRunPluginCommandRequest
     extends PcfCommandRequest implements TaskParameters, ExecutionCapabilityDemander, ActivityAccess {
-  @Expression private String renderedScriptString;
+  @Expression(ALLOW_SECRETS) private String renderedScriptString;
   private List<String> filePathsInScript;
   private List<FileData> fileDataList;
   private List<EncryptedDataDetail> encryptedDataDetails;

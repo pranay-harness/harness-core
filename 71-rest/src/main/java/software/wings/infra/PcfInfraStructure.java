@@ -1,5 +1,6 @@
 package software.wings.infra;
 
+import static io.harness.expression.Expression.DISALLOW_SECRETS;
 import static software.wings.beans.InfrastructureType.PCF_INFRASTRUCTURE;
 
 import com.fasterxml.jackson.annotation.JsonTypeName;
@@ -21,8 +22,8 @@ import java.util.List;
 @Builder
 public class PcfInfraStructure implements InfraMappingInfrastructureProvider, FieldKeyValMapProvider {
   private String cloudProviderId;
-  @Expression @IncludeFieldMap private String organization;
-  @Expression @IncludeFieldMap private String space;
+  @Expression(DISALLOW_SECRETS) @IncludeFieldMap private String organization;
+  @Expression(DISALLOW_SECRETS) @IncludeFieldMap private String space;
   private List<String> tempRouteMap;
   private List<String> routeMaps;
 

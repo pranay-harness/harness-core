@@ -1,6 +1,7 @@
 package software.wings.beans.shellscript.provisioner;
 
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.expression.Expression.ALLOW_SECRETS;
 
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import io.harness.delegate.beans.executioncapability.ExecutionCapabilityDemander;
@@ -20,7 +21,7 @@ import java.util.Map;
 @Value
 @Builder
 public class ShellScriptProvisionParameters implements TaskParameters, ActivityAccess, ExecutionCapabilityDemander {
-  @Expression private String scriptBody;
+  @Expression(ALLOW_SECRETS) private String scriptBody;
   private long timeoutInMillis;
   private Map<String, String> textVariables;
   private Map<String, EncryptedDataDetail> encryptedVariables;

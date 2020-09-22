@@ -1,5 +1,7 @@
 package io.harness.delegate.task.http;
 
+import static io.harness.expression.Expression.ALLOW_SECRETS;
+
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import io.harness.delegate.beans.executioncapability.ExecutionCapabilityDemander;
 import io.harness.delegate.task.TaskParameters;
@@ -15,9 +17,9 @@ import java.util.List;
 @Builder
 public class HttpTaskParameters implements TaskParameters, ExecutionCapabilityDemander {
   private String method;
-  @Expression private String url;
-  @Expression private String header;
-  @Expression private String body;
+  @Expression(ALLOW_SECRETS) private String url;
+  @Expression(ALLOW_SECRETS) private String header;
+  @Expression(ALLOW_SECRETS) private String body;
   private int socketTimeoutMillis;
   private boolean useProxy;
 

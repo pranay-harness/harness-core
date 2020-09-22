@@ -1,6 +1,7 @@
 package software.wings.infra;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.expression.Expression.DISALLOW_SECRETS;
 import static io.harness.validation.Validator.ensureType;
 import static java.lang.String.format;
 import static software.wings.beans.GcpKubernetesInfrastructureMapping.Builder.aGcpKubernetesInfrastructureMapping;
@@ -34,7 +35,7 @@ public class GoogleKubernetesEngine
     implements KubernetesInfrastructure, InfraMappingInfrastructureProvider, FieldKeyValMapProvider, ProvisionerAware {
   private String cloudProviderId;
   @IncludeFieldMap private String clusterName;
-  @IncludeFieldMap @Expression private String namespace;
+  @IncludeFieldMap @Expression(DISALLOW_SECRETS) private String namespace;
   private String releaseName;
   private Map<String, String> expressions;
 

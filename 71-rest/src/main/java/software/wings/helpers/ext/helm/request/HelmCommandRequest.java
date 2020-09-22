@@ -1,5 +1,6 @@
 package software.wings.helpers.ext.helm.request;
 
+import static io.harness.expression.Expression.ALLOW_SECRETS;
 import static io.harness.k8s.model.HelmVersion.V2;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
@@ -45,12 +46,12 @@ public class HelmCommandRequest implements TaskParameters, ActivityAccess, Execu
   private GitConfig gitConfig;
   private List<EncryptedDataDetail> encryptedDataDetails;
   @JsonIgnore private transient LogCallback executionLogCallback;
-  @Expression private String commandFlags;
+  @Expression(ALLOW_SECRETS) private String commandFlags;
   private K8sDelegateManifestConfig repoConfig;
   @Builder.Default private HelmVersion helmVersion = V2;
   private String ocPath;
   private String workingDir;
-  @Expression private List<String> variableOverridesYamlFiles;
+  @Expression(ALLOW_SECRETS) private List<String> variableOverridesYamlFiles;
   private GitFileConfig gitFileConfig;
   private boolean k8SteadyStateCheckEnabled;
   private boolean deprecateFabric8Enabled;

@@ -1,5 +1,7 @@
 package software.wings.helpers.ext.helm.request;
 
+import static io.harness.expression.Expression.ALLOW_SECRETS;
+
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import io.harness.delegate.beans.executioncapability.ExecutionCapabilityDemander;
 import io.harness.delegate.task.ActivityAccess;
@@ -25,7 +27,7 @@ public class HelmValuesFetchTaskParameters implements TaskParameters, ActivityAc
 
   // This is to support helm v1
   private ContainerServiceParams containerServiceParams;
-  @Expression private String helmCommandFlags;
+  @Expression(ALLOW_SECRETS) private String helmCommandFlags;
 
   private HelmChartConfigParams helmChartConfigTaskParams;
 

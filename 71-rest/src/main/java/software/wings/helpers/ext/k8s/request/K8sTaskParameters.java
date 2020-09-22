@@ -1,5 +1,7 @@
 package software.wings.helpers.ext.k8s.request;
 
+import static io.harness.expression.Expression.DISALLOW_SECRETS;
+
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import io.harness.delegate.beans.executioncapability.ExecutionCapabilityDemander;
 import io.harness.delegate.beans.executioncapability.KustomizeCapability;
@@ -25,7 +27,7 @@ public class K8sTaskParameters implements TaskParameters, ActivityAccess, Execut
   private String activityId;
   private K8sClusterConfig k8sClusterConfig;
   private String workflowExecutionId;
-  @Expression private String releaseName;
+  @Expression(DISALLOW_SECRETS) private String releaseName;
   private Integer timeoutIntervalInMin;
   @NotEmpty private K8sTaskType commandType;
   private HelmVersion helmVersion;
