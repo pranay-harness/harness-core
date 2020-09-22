@@ -78,4 +78,5 @@ message UpdateProfileSelectorsRequest {
 }
 
 message UpdateProfileSelectorsResponse {
+  DelegateProfileGrpc profile = 1;
 }

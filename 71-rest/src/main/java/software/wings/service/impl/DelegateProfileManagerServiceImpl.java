@@ -62,6 +62,12 @@ public class DelegateProfileManagerServiceImpl implements DelegateProfileManager
   }
 
   @Override
+  public void delete(String accountId, String delegateProfileId) {
+    logger.info("Delete delegate profile");
+    throw new UnsupportedOperationException("not implemented");
+  }
+
+  @Override
   public DelegateProfileDetails updateScopingRules(
       String accountId, String delegateProfileId, List<ScopingRuleDetails> scopingRules) {
     List<ProfileScopingRule> grpcScopingRules = convert(scopingRules);
@@ -79,8 +85,17 @@ public class DelegateProfileManagerServiceImpl implements DelegateProfileManager
 
   @Override
   public DelegateProfileDetails updateSelectors(String accountId, String delegateProfileId, List<String> selectors) {
-    logger.info("Update delegate profile selectors");
-    throw new UnsupportedOperationException("not implemented");
+    List<ProfileSelector> grpcSelectors = convertToProfileSelector(selectors);
+
+    DelegateProfileGrpc delegateProfileGrpc =
+        delegateProfileServiceGrpcClient.updateProfileSelectors(AccountId.newBuilder().setId(accountId).build(),
+            ProfileId.newBuilder().setId(delegateProfileId).build(), grpcSelectors);
+
+    if (delegateProfileGrpc == null) {
+      return null;
+    }
+
+    return convert(delegateProfileGrpc);
   }
 
   @Override
@@ -94,10 +109,55 @@ public class DelegateProfileManagerServiceImpl implements DelegateProfileManager
     return convert(delegateProfileGrpc);
   }
 
-  @Override
-  public void delete(String accountId, String delegateProfileId) {
-    logger.info("Delete delegate profile");
-    throw new UnsupportedOperationException("not implemented");
+  private List<ProfileSelector> convertToProfileSelector(List<String> selectors) {
+    if (isEmpty(selectors)) {
+      return Collections.emptyList();
+    }
+
+    return selectors.stream()
+        .map(selector -> ProfileSelector.newBuilder().setSelector(selector).build())
+        .collect(Collectors.toList());
+  }
+  private DelegateProfileGrpc convert(DelegateProfileDetails delegateProfile) {
+    DelegateProfileGrpc.Builder delegateProfileGrpcBuilder =
+        DelegateProfileGrpc.newBuilder()
+            .setAccountId(AccountId.newBuilder().setId(delegateProfile.getAccountId()).build())
+            .setName(delegateProfile.getName())
+            .setPrimary(delegateProfile.isPrimary())
+            .setApprovalRequired(delegateProfile.isApprovalRequired());
+
+    if (isNotBlank(delegateProfile.getUuid())) {
+      delegateProfileGrpcBuilder.setProfileId(ProfileId.newBuilder().setId(delegateProfile.getUuid()).build());
+    }
+
+    if (isNotBlank(delegateProfile.getDescription())) {
+      delegateProfileGrpcBuilder.setDescription(delegateProfile.getDescription());
+    }
+
+    if (isNotBlank(delegateProfile.getStartupScript())) {
+      delegateProfileGrpcBuilder.setStartupScript(delegateProfile.getStartupScript());
+    }
+
+    if (isNotEmpty(delegateProfile.getSelectors())) {
+      delegateProfileGrpcBuilder.addAllSelectors(
+          delegateProfile.getSelectors()
+              .stream()
+              .map(selector -> ProfileSelector.newBuilder().setSelector(selector).build())
+              .collect(Collectors.toList()));
+    }
+
+    if (isNotEmpty(delegateProfile.getScopingRules())) {
+      delegateProfileGrpcBuilder.addAllScopingRules(delegateProfile.getScopingRules()
+                                                        .stream()
+                                                        .map(scopingRule
+                                                            -> ProfileScopingRule.newBuilder()
+                                                                   .setDescription(scopingRule.getDescription())
+                                                                   .putAllScopingEntities(convert(scopingRule))
+                                                                   .build())
+                                                        .collect(Collectors.toList()));
+    }
+
+    return delegateProfileGrpcBuilder.build();
   }
 
   private List<ProfileScopingRule> convert(List<ScopingRuleDetails> scopingRules) {
@@ -171,48 +231,6 @@ public class DelegateProfileManagerServiceImpl implements DelegateProfileManager
     }
 
     return delegateProfileDetailsBuilder.build();
-  }
-
-  private DelegateProfileGrpc convert(DelegateProfileDetails delegateProfile) {
-    DelegateProfileGrpc.Builder delegateProfileGrpcBuilder =
-        DelegateProfileGrpc.newBuilder()
-            .setAccountId(AccountId.newBuilder().setId(delegateProfile.getAccountId()).build())
-            .setName(delegateProfile.getName())
-            .setPrimary(delegateProfile.isPrimary())
-            .setApprovalRequired(delegateProfile.isApprovalRequired());
-
-    if (isNotBlank(delegateProfile.getUuid())) {
-      delegateProfileGrpcBuilder.setProfileId(ProfileId.newBuilder().setId(delegateProfile.getUuid()).build());
-    }
-
-    if (isNotBlank(delegateProfile.getDescription())) {
-      delegateProfileGrpcBuilder.setDescription(delegateProfile.getDescription());
-    }
-
-    if (isNotBlank(delegateProfile.getStartupScript())) {
-      delegateProfileGrpcBuilder.setStartupScript(delegateProfile.getStartupScript());
-    }
-
-    if (isNotEmpty(delegateProfile.getSelectors())) {
-      delegateProfileGrpcBuilder.addAllSelectors(
-          delegateProfile.getSelectors()
-              .stream()
-              .map(selector -> ProfileSelector.newBuilder().setSelector(selector).build())
-              .collect(Collectors.toList()));
-    }
-
-    if (isNotEmpty(delegateProfile.getScopingRules())) {
-      delegateProfileGrpcBuilder.addAllScopingRules(delegateProfile.getScopingRules()
-                                                        .stream()
-                                                        .map(scopingRule
-                                                            -> ProfileScopingRule.newBuilder()
-                                                                   .setDescription(scopingRule.getDescription())
-                                                                   .putAllScopingEntities(convert(scopingRule))
-                                                                   .build())
-                                                        .collect(Collectors.toList()));
-    }
-
-    return delegateProfileGrpcBuilder.build();
   }
 
   private String extractScopingEntityId(Map<String, ScopingValues> scopingEntitiesMap, String entityId) {
