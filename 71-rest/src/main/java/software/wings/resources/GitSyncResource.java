@@ -17,6 +17,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.hibernate.validator.constraints.NotEmpty;
 import software.wings.beans.GitDetail;
 import software.wings.beans.GitFileActivitySummary;
+import software.wings.security.PermissionAttribute.PermissionType;
 import software.wings.security.annotations.AuthRule;
 import software.wings.security.annotations.Scope;
 import software.wings.service.impl.yaml.GitToHarnessErrorCommitStats;
@@ -214,6 +215,7 @@ public class GitSyncResource {
    */
   @POST
   @Path("errors/_discard")
+  @AuthRule(permissionType = PermissionType.MANAGE_CONFIG_AS_CODE)
   public RestResponse discardGitSyncErrorV2(@QueryParam("accountId") String accountId, List<String> errors) {
     gitSyncErrorService.deleteGitSyncErrorAndLogFileActivity(errors, Status.DISCARDED, accountId);
     return RestResponse.Builder.aRestResponse().build();

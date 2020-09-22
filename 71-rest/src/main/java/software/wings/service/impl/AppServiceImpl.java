@@ -61,18 +61,23 @@ import software.wings.beans.Event.Type;
 import software.wings.beans.InformationNotification;
 import software.wings.beans.Role;
 import software.wings.beans.Service;
+import software.wings.beans.User;
 import software.wings.common.NotificationMessageResolver.NotificationMessageType;
 import software.wings.dl.GenericDbCache;
 import software.wings.dl.WingsPersistence;
 import software.wings.prune.PruneEntityListener;
 import software.wings.prune.PruneEvent;
+import software.wings.security.AccountPermissionSummary;
 import software.wings.security.PermissionAttribute;
 import software.wings.security.PermissionAttribute.Action;
 import software.wings.security.PermissionAttribute.PermissionType;
+import software.wings.security.UserPermissionInfo;
+import software.wings.security.UserThreadLocal;
 import software.wings.service.impl.security.auth.AuthHandler;
 import software.wings.service.intfc.AlertService;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ArtifactService;
+import software.wings.service.intfc.AuthService;
 import software.wings.service.intfc.EnvironmentService;
 import software.wings.service.intfc.InfrastructureProvisionerService;
 import software.wings.service.intfc.NotificationService;
@@ -96,6 +101,7 @@ import software.wings.yaml.gitSync.YamlGitConfig;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 import javax.validation.executable.ValidateOnExecution;
@@ -139,6 +145,7 @@ public class AppServiceImpl implements AppService {
   @Inject private EventPublishHelper eventPublishHelper;
   @Inject private ResourceLookupService resourceLookupService;
   @Inject private UserGroupService userGroupService;
+  @Inject private AuthService authService;
 
   @Inject private QueuePublisher<PruneEvent> pruneQueue;
   @Inject @Named("ServiceJobScheduler") private PersistentScheduler serviceJobScheduler;
@@ -178,7 +185,7 @@ public class AppServiceImpl implements AppService {
 
       // Save the Git Configuration for application if not null
       YamlGitConfig yamlGitConfig = app.getYamlGitConfig();
-      if (yamlGitConfig != null) {
+      if (yamlGitConfig != null && hasGitSyncPermission(accountId)) {
         setAppYamlGitConfigDefaults(application.getAccountId(), application.getUuid(), yamlGitConfig);
 
         // We are disabling git fullsync when the app is created on git side. The reason we have to to do this is that
@@ -510,6 +517,10 @@ public class AppServiceImpl implements AppService {
   }
 
   private void updateAppYamlGitConfig(Application savedApp, Application app, boolean performFullSync) {
+    if (!hasGitSyncPermission(savedApp.getAccountId())) {
+      return;
+    }
+
     YamlGitConfig savedYamlGitConfig = savedApp.getYamlGitConfig();
 
     YamlGitConfig yamlGitConfig = app.getYamlGitConfig();
@@ -531,6 +542,20 @@ public class AppServiceImpl implements AppService {
         yamlGitService.save(yamlGitConfig, performFullSync);
       }
     }
+  }
+
+  private boolean hasGitSyncPermission(String accountId) {
+    User user = UserThreadLocal.get();
+    if (null == user) {
+      return false;
+    }
+
+    final UserPermissionInfo userPermissionInfo = authService.getUserPermissionInfo(accountId, user, false);
+    return Optional.ofNullable(userPermissionInfo)
+        .map(UserPermissionInfo::getAccountPermissionSummary)
+        .map(AccountPermissionSummary::getPermissions)
+        .map(permission -> permission.contains(PermissionType.MANAGE_CONFIG_AS_CODE))
+        .orElse(false);
   }
 
   private void setAppYamlGitConfigDefaults(String accountId, String appId, YamlGitConfig yamlGitConfig) {
