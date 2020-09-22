@@ -20,9 +20,9 @@ import software.wings.helpers.ext.k8s.response.K8sTaskExecutionResponse;
 public interface ManagerCIResource {
   @POST("ci" + CICommonEndpointConstants.CI_SETUP_ENDPOINT)
   @KryoRequest
-  Call<RestResponse<K8sTaskExecutionResponse>> createK8PodTask(@Query("k8ConnectorName") String k8ConnectorName,
-      @Query("gitConnectorName") String gitConnectorName, @Query("branchName") String branchName,
-      @Body CIK8PodParams<CIK8ContainerParams> podParams);
+  Call<RestResponse<K8sTaskExecutionResponse>> createK8PodTask(@Query("accountId") String accountId,
+      @Query("k8ConnectorName") String k8ConnectorName, @Query("gitConnectorName") String gitConnectorName,
+      @Query("branchName") String branchName, @Body CIK8PodParams<CIK8ContainerParams> podParams);
 
   @POST("ci" + CICommonEndpointConstants.CI_COMMAND_EXECUTION_ENDPOINT)
   @KryoRequest

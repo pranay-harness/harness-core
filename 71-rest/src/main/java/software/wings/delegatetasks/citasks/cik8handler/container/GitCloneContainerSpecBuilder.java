@@ -7,6 +7,7 @@ package software.wings.delegatetasks.citasks.cik8handler.container;
 
 import static io.harness.k8s.KubernetesConvention.getKubernetesGitSecretName;
 import static io.harness.validation.Validator.notNullCheck;
+
 import static software.wings.delegatetasks.citasks.cik8handler.params.CIGitConstants.GIT_CLONE_CONTAINER_NAME;
 import static software.wings.delegatetasks.citasks.cik8handler.params.CIGitConstants.GIT_CLONE_IMAGE_NAME;
 import static software.wings.delegatetasks.citasks.cik8handler.params.CIGitConstants.GIT_CLONE_IMAGE_TAG;
@@ -15,6 +16,8 @@ import static software.wings.delegatetasks.citasks.cik8handler.params.CIGitConst
 import static software.wings.delegatetasks.citasks.cik8handler.params.CIGitConstants.GIT_SSH_VOL_MOUNT_PATH;
 import static software.wings.delegatetasks.citasks.cik8handler.params.CIGitConstants.GIT_SSH_VOL_NAME;
 import static software.wings.delegatetasks.citasks.cik8handler.params.CIGitConstants.GIT_USERNAME_ENV_VAR;
+import static software.wings.delegatetasks.citasks.cik8handler.params.CIGitConstants.LOG_SERVICE_ENDPOINT_VARIABLE;
+import static software.wings.delegatetasks.citasks.cik8handler.params.CIGitConstants.LOG_SERVICE_ENDPOINT_VARIABLE_VALUE;
 
 import com.google.inject.Singleton;
 
@@ -180,6 +183,12 @@ public class GitCloneContainerSpecBuilder extends BaseContainerSpecBuilder {
                                    .build();
       envVars.add(new EnvVarBuilder().withName(GIT_PASS_ENV_VAR).withValueFrom(pwdSource).build());
     }
+    // Add log service endpoint
+    envVars.add(new EnvVarBuilder()
+                    .withName(LOG_SERVICE_ENDPOINT_VARIABLE)
+                    .withValue(LOG_SERVICE_ENDPOINT_VARIABLE_VALUE)
+                    .build());
+    logger.info(envVars.toString());
     return envVars;
   }
 

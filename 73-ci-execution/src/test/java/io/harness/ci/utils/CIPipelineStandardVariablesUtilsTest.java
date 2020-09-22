@@ -5,6 +5,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.beans.executionargs.CIExecutionArgs;
 import io.harness.category.element.UnitTests;
+import io.harness.ci.beans.entities.BuildNumber;
 import io.harness.ci.stdvars.BuildStandardVariables;
 import io.harness.executionplan.CIExecutionTest;
 import io.harness.rule.Owner;
@@ -18,7 +19,8 @@ public class CIPipelineStandardVariablesUtilsTest extends CIExecutionTest {
   @Owner(developers = ALEKSANDAR)
   @Category(UnitTests.class)
   public void shouldFetchBuildStandardVariables() {
-    CIExecutionArgs ciExecutionArgs = CIExecutionArgs.builder().buildNumber(BUILD_NUMBER).build();
+    BuildNumber buildNumber = BuildNumber.builder().buildNumber(BUILD_NUMBER).build();
+    CIExecutionArgs ciExecutionArgs = CIExecutionArgs.builder().buildNumber(buildNumber).build();
     BuildStandardVariables buildStandardVariables =
         CIPipelineStandardVariablesUtils.fetchBuildStandardVariables(ciExecutionArgs);
     assertThat(buildStandardVariables).isEqualTo(BuildStandardVariables.builder().number(BUILD_NUMBER).build());

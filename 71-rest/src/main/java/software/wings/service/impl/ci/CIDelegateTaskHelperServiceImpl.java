@@ -64,10 +64,10 @@ public class CIDelegateTaskHelperServiceImpl implements CIDelegateTaskHelperServ
   private static final String ACCOUNT_ID = "kmpySmUISimoRrJL6NL73w";
 
   @Override
-  public K8sTaskExecutionResponse setBuildEnv(String k8ConnectorName, String gitConnectorName, String branchName,
-      CIK8PodParams<CIK8ContainerParams> podParams) {
+  public K8sTaskExecutionResponse setBuildEnv(String accountId, String k8ConnectorName, String gitConnectorName,
+      String branchName, CIK8PodParams<CIK8ContainerParams> podParams) {
     logger.info("Received pod creation call for pod {} on manager", podParams.getName());
-    SettingAttribute cloudProvider = settingsService.getSettingAttributeByName(ACCOUNT_ID, gitConnectorName);
+    SettingAttribute cloudProvider = settingsService.getSettingAttributeByName(accountId, gitConnectorName);
     GitFetchFilesConfig gitFetchFilesConfig = null;
     if (cloudProvider != null) {
       GitConfig gitConfig = (GitConfig) cloudProvider.getValue();
@@ -78,7 +78,7 @@ public class CIDelegateTaskHelperServiceImpl implements CIDelegateTaskHelperServ
                                 .gitConfig(gitConfig)
                                 .build();
     }
-    SettingAttribute googleCloud = settingsService.getSettingAttributeByName(ACCOUNT_ID, k8ConnectorName);
+    SettingAttribute googleCloud = settingsService.getSettingAttributeByName(accountId, k8ConnectorName);
     KubernetesClusterConfig kubernetesClusterConfig = null;
     List<EncryptedDataDetail> encryptedDataDetails = null;
     if (googleCloud != null) {
@@ -86,9 +86,9 @@ public class CIDelegateTaskHelperServiceImpl implements CIDelegateTaskHelperServ
       encryptedDataDetails = secretManager.getEncryptionDetails(kubernetesClusterConfig);
     }
 
-    addImageRegistryConnectorSecrets(podParams);
+    addImageRegistryConnectorSecrets(podParams, accountId);
 
-    addSecrets(podParams);
+    addSecrets(podParams, accountId);
 
     CIK8PodParams<CIK8ContainerParams> podParamsWithGitDetails =
         CIK8PodParams.<CIK8ContainerParams>builder()
@@ -106,7 +106,7 @@ public class CIDelegateTaskHelperServiceImpl implements CIDelegateTaskHelperServ
       logger.info("Sending delegate task for pod creation from manager podname: {}", podParams.getName());
       DelegateResponseData responseData = delegateService.executeTask(
           DelegateTask.builder()
-              .accountId(ACCOUNT_ID)
+              .accountId(accountId)
               .setupAbstraction(Cd1SetupFields.APP_ID_FIELD, GLOBAL_APP_ID)
               .data(TaskData.builder()
                         .taskType(TaskType.CI_BUILD.name())
@@ -132,7 +132,7 @@ public class CIDelegateTaskHelperServiceImpl implements CIDelegateTaskHelperServ
     return null;
   }
 
-  private void addImageRegistryConnectorSecrets(CIK8PodParams<CIK8ContainerParams> podParams) {
+  private void addImageRegistryConnectorSecrets(CIK8PodParams<CIK8ContainerParams> podParams, String accountId) {
     List<CIK8ContainerParams> containerParamsList = new ArrayList<>();
     Optional.ofNullable(podParams.getContainerParamsList()).ifPresent(containerParamsList::addAll);
     Optional.ofNullable(podParams.getInitContainerParamsList()).ifPresent(containerParamsList::addAll);
@@ -143,7 +143,7 @@ public class CIDelegateTaskHelperServiceImpl implements CIDelegateTaskHelperServ
       String registryUrl = imageDetailsWithConnector.getImageDetails().getRegistryUrl();
 
       if (connectorName != null) {
-        SettingAttribute customerImageRegistry = settingsService.getSettingAttributeByName(ACCOUNT_ID, connectorName);
+        SettingAttribute customerImageRegistry = settingsService.getSettingAttributeByName(accountId, connectorName);
         SettingValue value = customerImageRegistry.getValue();
         switch (value.getSettingType()) {
           case DOCKER:
@@ -240,7 +240,7 @@ public class CIDelegateTaskHelperServiceImpl implements CIDelegateTaskHelperServ
     return null;
   }
 
-  private void addSecrets(CIK8PodParams<CIK8ContainerParams> podParams) {
+  private void addSecrets(CIK8PodParams<CIK8ContainerParams> podParams, String accountId) {
     List<CIK8ContainerParams> cik8ContainerParamsList = podParams.getContainerParamsList();
 
     cik8ContainerParamsList.forEach(cik8ContainerParams -> {
@@ -248,26 +248,26 @@ public class CIDelegateTaskHelperServiceImpl implements CIDelegateTaskHelperServ
         Map<String, EncryptedVariableWithType> secrets = new HashMap<>();
         for (Map.Entry<String, EncryptedVariableWithType> entry :
             cik8ContainerParams.getContainerSecrets().getEncryptedSecrets().entrySet()) {
-          getEncryptedSecretWithType(ACCOUNT_ID, entry.getKey())
+          getEncryptedSecretWithType(accountId, entry.getKey())
               .ifPresent(encryptedSecretWithType -> secrets.put(entry.getKey(), encryptedSecretWithType));
         }
         cik8ContainerParams.getContainerSecrets().setEncryptedSecrets(secrets);
       }
 
       if (isNotEmpty(cik8ContainerParams.getContainerSecrets().getPublishArtifactEncryptedValues())) {
-        setPublishImageEncryptedInfo(cik8ContainerParams);
+        setPublishImageEncryptedInfo(cik8ContainerParams, accountId);
       }
     });
   }
 
-  private void setPublishImageEncryptedInfo(CIK8ContainerParams cik8ContainerParams) {
+  private void setPublishImageEncryptedInfo(CIK8ContainerParams cik8ContainerParams, String accountId) {
     Map<String, EncryptableSettingWithEncryptionDetails> publishArtifactEncryptedValues = new HashMap<>();
     for (Map.Entry<String, EncryptableSettingWithEncryptionDetails> entry :
         cik8ContainerParams.getContainerSecrets().getPublishArtifactEncryptedValues().entrySet()) {
       String connectorIdentifier = entry.getKey();
 
       SettingAttribute publishImageSettingsAttribute =
-          settingsService.getSettingAttributeByName(ACCOUNT_ID, connectorIdentifier);
+          settingsService.getSettingAttributeByName(accountId, connectorIdentifier);
 
       if (publishImageSettingsAttribute != null && publishImageSettingsAttribute.getValue() != null) {
         List<EncryptedDataDetail> encryptionDetails =

@@ -33,7 +33,7 @@ public class WebhookTriggerProcessor implements TriggerProcessor {
     return CIExecutionArgs.builder()
         .executionSource(webhookExecutionSource)
         .inputSet(WebhookTriggerExecutionInputSet.builder().payload(eventPayload).build())
-        .buildNumber(buildNumber.getBuildNumber())
+        .buildNumber(buildNumber)
         .build();
   }
 }

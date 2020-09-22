@@ -9,8 +9,12 @@ import static software.wings.common.CICommonPodConstants.POD_NAME;
 import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
 
+import io.harness.beans.executionargs.CIExecutionArgs;
+import io.harness.beans.executionargs.ExecutionArgs;
 import io.harness.beans.stages.IntegrationStage;
 import io.harness.beans.stages.IntegrationStageStepParameters;
+import io.harness.ci.beans.entities.BuildNumber;
+import io.harness.exception.InvalidRequestException;
 import io.harness.executionplan.core.ExecutionPlanCreationContext;
 import io.harness.executionplan.core.ExecutionPlanCreator;
 import io.harness.executionplan.core.ExecutionPlanCreatorResponse;
@@ -39,14 +43,23 @@ public class IntegrationStagePlanCreator implements SupportDefinedExecutorPlanCr
       IntegrationStage integrationStage, ExecutionPlanCreationContext context) {
     final String podName = generatePodName(integrationStage);
 
+    CIExecutionArgs ciExecutionArgs =
+        (CIExecutionArgs) context.getAttribute(ExecutionArgs.EXEC_ARGS)
+            .orElseThrow(()
+                             -> new InvalidRequestException(
+                                 "Execution arguments are empty for pipeline execution " + context.getAccountId()));
+
+    String stageID = integrationStage.getIdentifier();
+    BuildNumber buildNumber = ciExecutionArgs.getBuildNumber();
+
     ExecutionElement execution = integrationStage.getExecution();
     ExecutionElement modifiedExecutionPlan =
         ciLiteEngineIntegrationStageModifier.modifyExecutionPlan(execution, integrationStage, context);
 
     integrationStage.setExecution(modifiedExecutionPlan);
     final ExecutionPlanCreatorResponse planForExecution = createPlanForExecution(modifiedExecutionPlan, context);
-
-    final PlanNode deploymentStageNode = prepareDeploymentNode(integrationStage, context, planForExecution, podName);
+    final PlanNode deploymentStageNode =
+        prepareDeploymentNode(integrationStage, context, planForExecution, podName, buildNumber, stageID);
 
     return ExecutionPlanCreatorResponse.builder()
         .planNode(deploymentStageNode)
@@ -65,7 +78,7 @@ public class IntegrationStagePlanCreator implements SupportDefinedExecutorPlanCr
   }
 
   private PlanNode prepareDeploymentNode(IntegrationStage integrationStage, ExecutionPlanCreationContext context,
-      ExecutionPlanCreatorResponse planForExecution, String podName) {
+      ExecutionPlanCreatorResponse planForExecution, String podName, BuildNumber buildNumber, String stageID) {
     final String deploymentStageUid = generateUuid();
 
     return PlanNode.builder()
@@ -76,6 +89,7 @@ public class IntegrationStagePlanCreator implements SupportDefinedExecutorPlanCr
         .group(GROUP_NAME)
         .stepParameters(
             IntegrationStageStepParameters.builder()
+                .buildNumber(buildNumber)
                 .podName(podName)
                 .integrationStage(integrationStage)
                 .fieldToExecutionNodeIdMap(ImmutableMap.of(CHILD_PLAN_START_NODE, planForExecution.getStartingNodeId()))

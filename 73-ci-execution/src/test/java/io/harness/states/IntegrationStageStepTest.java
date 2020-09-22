@@ -14,6 +14,7 @@ import io.harness.ambiance.Ambiance;
 import io.harness.beans.stages.IntegrationStage;
 import io.harness.beans.stages.IntegrationStageStepParameters;
 import io.harness.category.element.UnitTests;
+import io.harness.ci.beans.entities.BuildNumber;
 import io.harness.engine.outputs.ExecutionSweepingOutputService;
 import io.harness.execution.status.Status;
 import io.harness.executionplan.CIExecutionPlanTestHelper;
@@ -54,11 +55,13 @@ public class IntegrationStageStepTest extends CIExecutionTest {
     Ambiance ambiance = Ambiance.builder().build();
     Map<String, String> fieldToExecutionNodeIdMap = new HashMap<>();
     fieldToExecutionNodeIdMap.put("io/harness/beans/execution", CHILD_ID);
-    IntegrationStageStepParameters stateParameters = IntegrationStageStepParameters.builder()
-                                                         .integrationStage(integrationStage)
-                                                         .podName("podname")
-                                                         .fieldToExecutionNodeIdMap(fieldToExecutionNodeIdMap)
-                                                         .build();
+    IntegrationStageStepParameters stateParameters =
+        IntegrationStageStepParameters.builder()
+            .integrationStage(integrationStage)
+            .podName("podname")
+            .buildNumber(BuildNumber.builder().accountIdentifier("accountId").build())
+            .fieldToExecutionNodeIdMap(fieldToExecutionNodeIdMap)
+            .build();
     ChildExecutableResponse childExecutableResponse =
         integrationStageStep.obtainChild(ambiance, stateParameters, StepInputPackage.builder().build());
     assertThat(childExecutableResponse).isNotNull();
