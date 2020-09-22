@@ -36,7 +36,7 @@ def _impl(ctx):
 
     # Report
 
-    report_file = ctx.actions.declare_file("{name}_pmd_report.{extension}".format(
+    report_file = ctx.actions.declare_file("pmd_report.{extension}".format(
         name = ctx.label.name,
         extension = _report_format_extensions.get(ctx.attr.report_format, default = ctx.attr.report_format),
     ))
@@ -86,6 +86,9 @@ _pmd = rule(
             executable = True,
             cfg = "host",
         ),
+#        "visibility" : attr.label_list(
+#            default = ["//visibility:public"],
+#        ),
         "srcs": attr.label_list(
             allow_files = True,
             doc = "Source code files.",
@@ -132,11 +135,18 @@ def pmd(
         name = "pmd",
         rulesets = None,
         srcs = None,
-        tags = ["manual","no-ide"]
+        tags = ["manual","no-ide"],
+        visibility = ["//visibility:public"],
         ):
     if srcs == None:
         srcs=native.glob(["src/main/**"])
     if rulesets == None:
         rulesets = ["//tools/config/src/main/resources:harness_pmd_ruleset.xml"]
 
-    _pmd(name=name,srcs=srcs, rulesets = rulesets)
+    _pmd(name=name,srcs=srcs, rulesets = rulesets, visibility = visibility)
+
+def get_pmd_targets(modules = []):
+    _targets = []
+    for f in modules:
+        _targets.append(f+":pmd")
+    return _targets
