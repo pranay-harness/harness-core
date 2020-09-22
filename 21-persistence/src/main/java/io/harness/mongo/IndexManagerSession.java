@@ -366,13 +366,9 @@ public class IndexManagerSession {
             "Should create index {} {}\n{}", indexCreator.getOptions().toString(), indexCreator.getKeys().toString());
         break;
       case INSPECT:
-        String stats = "Empty collection";
-        if (indexCreator.getCollection().count() > 0) {
-          stats = indexCreator.getCollection().getStats().toString();
-        }
-        logger.error("Should create index {}\nScript: db.{}.createIndex({}, {})\n{}",
-            indexCreator.getOptions().get(NAME), indexCreator.getCollection().getName(),
-            indexCreator.getKeys().toString(), indexCreator.getOptions().toString(), stats);
+        logger.error("Should create index {}\nScript: db.{}.createIndex({}, {})", indexCreator.getOptions().get(NAME),
+            indexCreator.getCollection().getName(), indexCreator.getKeys().toString(),
+            indexCreator.getOptions().toString());
         break;
       default:
         Switch.unhandled(mode);
