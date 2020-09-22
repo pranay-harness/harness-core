@@ -5,4 +5,7 @@ public class CustomActivity extends Activity {
   public ActivityType getType() {
     return ActivityType.CUSTOM;
   }
+
+  @Override
+  public void validateActivityParams() {}
 }

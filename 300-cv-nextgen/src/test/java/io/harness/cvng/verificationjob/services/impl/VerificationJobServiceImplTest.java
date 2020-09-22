@@ -2,6 +2,7 @@ package io.harness.cvng.verificationjob.services.impl;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.rule.OwnerRule.KAMAL;
+import static io.harness.rule.OwnerRule.PRAVEEN;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
@@ -99,6 +100,17 @@ public class VerificationJobServiceImplTest extends CvNextGenTest {
         .isEqualTo(null);
   }
 
+  @Test
+  @Owner(developers = PRAVEEN)
+  @Category(UnitTests.class)
+  public void testUpsert_newJobCreationWithRuntimeParams() {
+    VerificationJobDTO verificationJobDTO = createDTOWithRuntimeParams();
+    verificationJobService.upsert(accountId, verificationJobDTO);
+    VerificationJobDTO inserted =
+        verificationJobService.getVerificationJobDTO(accountId, verificationJobDTO.getIdentifier());
+    assertThat(inserted).isEqualTo(verificationJobDTO);
+  }
+
   private VerificationJobDTO createDTO() {
     TestVerificationJobDTO testVerificationJobDTO = new TestVerificationJobDTO();
     testVerificationJobDTO.setIdentifier(identifier);
@@ -112,6 +124,13 @@ public class VerificationJobServiceImplTest extends CvNextGenTest {
     testVerificationJobDTO.setDuration("15m");
     testVerificationJobDTO.setProjectIdentifier(generateUuid());
     testVerificationJobDTO.setOrgIdentifier(generateUuid());
+    return testVerificationJobDTO;
+  }
+
+  private VerificationJobDTO createDTOWithRuntimeParams() {
+    TestVerificationJobDTO testVerificationJobDTO = (TestVerificationJobDTO) createDTO();
+    testVerificationJobDTO.setEnvIdentifier("${envIdentifier}");
+    testVerificationJobDTO.setServiceIdentifier("${serviceIdentifier}");
     return testVerificationJobDTO;
   }
 }

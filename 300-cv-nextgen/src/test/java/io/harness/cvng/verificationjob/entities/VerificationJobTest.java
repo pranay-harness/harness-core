@@ -1,7 +1,12 @@
 package io.harness.cvng.verificationjob.entities;
 
+import static io.harness.cvng.verificationjob.CVVerificationJobConstants.DURATION_KEY;
+import static io.harness.cvng.verificationjob.CVVerificationJobConstants.ENV_IDENTIFIER_KEY;
+import static io.harness.cvng.verificationjob.CVVerificationJobConstants.SERVICE_IDENTIFIER_KEY;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.rule.OwnerRule.KAMAL;
+import static io.harness.rule.OwnerRule.PRAVEEN;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.times;
@@ -22,6 +27,8 @@ import org.junit.experimental.categories.Category;
 
 import java.time.Duration;
 import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
 
 public class VerificationJobTest extends CategoryTest {
   private String accountId;
@@ -38,7 +45,9 @@ public class VerificationJobTest extends CategoryTest {
     testFieldForNotNull(VerificationJobKeys.identifier);
     testFieldForNotNull(VerificationJobKeys.jobName);
     testFieldForNotNull(VerificationJobKeys.dataSources);
+
     testFieldForNotNull(VerificationJobKeys.duration);
+
     testFieldForNotNull(VerificationJobKeys.envIdentifier);
     testFieldForNotNull(VerificationJobKeys.serviceIdentifier);
     testFieldForNotNull(VerificationJobKeys.serviceIdentifier);
@@ -62,7 +71,7 @@ public class VerificationJobTest extends CategoryTest {
     VerificationJob verificationJob = createVerificationJob();
     verificationJob.setDuration(Duration.ofSeconds(0));
     assertThatThrownBy(() -> verificationJob.validate())
-        .hasMessage("Minimum allowed duration is 5 mins. Current value(ms): 0");
+        .hasMessage("Minimum allowed duration is 5 mins. Current value(mins): 0");
   }
 
   @Test
@@ -72,7 +81,7 @@ public class VerificationJobTest extends CategoryTest {
     VerificationJob verificationJob = createVerificationJob();
     verificationJob.setDuration(Duration.ofMinutes(4));
     assertThatThrownBy(() -> verificationJob.validate())
-        .hasMessage("Minimum allowed duration is 5 mins. Current value(ms): 240000");
+        .hasMessage("Minimum allowed duration is 5 mins. Current value(mins): 4");
   }
 
   @Test(expected = Test.None.class)
@@ -104,6 +113,62 @@ public class VerificationJobTest extends CategoryTest {
     verificationJob.validate();
   }
 
+  @Test
+  @Owner(developers = PRAVEEN)
+  @Category({UnitTests.class})
+  public void testResolveCommonJobRuntimeParams_validArgs() {
+    VerificationJob verificationJob = createVerificationJob();
+    assertThat(verificationJob.getServiceIdentifier()).isNotEqualTo("cvngService");
+    assertThat(verificationJob.getEnvIdentifier()).isNotEqualTo("production");
+    assertThat(verificationJob.getDuration().toMinutes()).isEqualTo(5);
+
+    Map<String, String> runtimeParams = new HashMap<>();
+    runtimeParams.put(SERVICE_IDENTIFIER_KEY, "cvngService");
+    runtimeParams.put(ENV_IDENTIFIER_KEY, "production");
+    runtimeParams.put(DURATION_KEY, "30m");
+    verificationJob = verificationJob.resolveVerificationJob(runtimeParams);
+    assertThat(verificationJob.getServiceIdentifier()).isEqualTo("cvngService");
+    assertThat(verificationJob.getEnvIdentifier()).isEqualTo("production");
+    assertThat(verificationJob.getDuration().toMinutes()).isEqualTo(30);
+  }
+
+  @Test
+  @Owner(developers = PRAVEEN)
+  @Category({UnitTests.class})
+  public void testResolveCommonJobRuntimeParams_onlyServiceAndEnvOverride() {
+    VerificationJob verificationJob = createVerificationJob();
+    assertThat(verificationJob.getServiceIdentifier()).isNotEqualTo("cvngService");
+    assertThat(verificationJob.getEnvIdentifier()).isNotEqualTo("production");
+    assertThat(verificationJob.getDuration().toMinutes()).isEqualTo(5);
+
+    Map<String, String> runtimeParams = new HashMap<>();
+    runtimeParams.put(SERVICE_IDENTIFIER_KEY, "cvngService");
+    runtimeParams.put(ENV_IDENTIFIER_KEY, "production");
+
+    verificationJob = verificationJob.resolveVerificationJob(runtimeParams);
+    assertThat(verificationJob.getServiceIdentifier()).isEqualTo("cvngService");
+    assertThat(verificationJob.getEnvIdentifier()).isEqualTo("production");
+    assertThat(verificationJob.getDuration().toMinutes()).isEqualTo(5);
+  }
+
+  @Test
+  @Owner(developers = PRAVEEN)
+  @Category({UnitTests.class})
+  public void testResolveCommonJobRuntimeParams_onlyDurationOverride() {
+    VerificationJob verificationJob = createVerificationJob();
+    assertThat(verificationJob.getServiceIdentifier()).isNotEqualTo("cvngService");
+    assertThat(verificationJob.getEnvIdentifier()).isNotEqualTo("production");
+    assertThat(verificationJob.getDuration().toMinutes()).isEqualTo(5);
+
+    Map<String, String> runtimeParams = new HashMap<>();
+    runtimeParams.put(DURATION_KEY, "30m");
+
+    VerificationJob resolvedVerificationJob = verificationJob.resolveVerificationJob(runtimeParams);
+    assertThat(resolvedVerificationJob.getServiceIdentifier()).isEqualTo(verificationJob.getServiceIdentifier());
+    assertThat(resolvedVerificationJob.getEnvIdentifier()).isEqualTo(verificationJob.getEnvIdentifier());
+    assertThat(resolvedVerificationJob.getDuration().toMinutes()).isEqualTo(30);
+  }
+
   private void testFieldForNotNull(String fieldName) throws IllegalAccessException {
     VerificationJob verificationJob = createVerificationJob();
     FieldUtils.writeField(verificationJob, fieldName, null, true);
@@ -119,10 +184,10 @@ public class VerificationJobTest extends CategoryTest {
     testVerificationJob.setJobName(generateUuid());
     testVerificationJob.setDataSources(Lists.newArrayList(DataSourceType.APP_DYNAMICS));
     testVerificationJob.setSensitivity(Sensitivity.MEDIUM);
-    testVerificationJob.setServiceIdentifier(generateUuid());
-    testVerificationJob.setEnvIdentifier(generateUuid());
+    testVerificationJob.setServiceIdentifier(generateUuid(), false);
+    testVerificationJob.setEnvIdentifier(generateUuid(), false);
     testVerificationJob.setBaseLineVerificationTaskIdentifier(generateUuid());
-    testVerificationJob.setDuration(Duration.ofMinutes(15));
+    testVerificationJob.setDuration(Duration.ofMinutes(5));
     testVerificationJob.setProjectIdentifier(generateUuid());
     testVerificationJob.setOrgIdentifier(generateUuid());
     return testVerificationJob;

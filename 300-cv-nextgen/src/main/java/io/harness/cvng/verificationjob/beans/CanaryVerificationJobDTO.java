@@ -12,12 +12,12 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @EqualsAndHashCode(callSuper = true)
 public class CanaryVerificationJobDTO extends VerificationJobDTO {
-  private Sensitivity sensitivity;
+  private String sensitivity;
   private Integer trafficSplitPercentage;
   @Override
   public VerificationJob getVerificationJob() {
     CanaryVerificationJob canaryVerificationJob = new CanaryVerificationJob();
-    canaryVerificationJob.setSensitivity(sensitivity);
+    canaryVerificationJob.setSensitivity(sensitivity, isRuntimeParam(sensitivity));
     canaryVerificationJob.setTrafficSplitPercentage(trafficSplitPercentage);
     populateCommonFields(canaryVerificationJob);
     return canaryVerificationJob;

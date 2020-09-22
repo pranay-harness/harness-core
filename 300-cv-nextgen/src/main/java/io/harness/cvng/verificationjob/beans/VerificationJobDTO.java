@@ -1,5 +1,7 @@
 package io.harness.cvng.verificationjob.beans;
 
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import io.harness.cvng.beans.DataSourceType;
@@ -7,7 +9,6 @@ import io.harness.cvng.verificationjob.entities.VerificationJob;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.time.Duration;
 import java.util.List;
 
 @Data
@@ -25,18 +26,19 @@ public abstract class VerificationJobDTO {
   private String duration;
   protected void populateCommonFields(VerificationJob verificationJob) {
     verificationJob.setIdentifier(this.identifier);
-    verificationJob.setServiceIdentifier(serviceIdentifier);
-    verificationJob.setEnvIdentifier(envIdentifier);
+    verificationJob.setServiceIdentifier(serviceIdentifier, isRuntimeParam(serviceIdentifier));
+    verificationJob.setEnvIdentifier(envIdentifier, isRuntimeParam(envIdentifier));
     verificationJob.setJobName(jobName);
-    verificationJob.setDuration(parseDuration());
+    verificationJob.setDuration(duration, isRuntimeParam(duration));
     verificationJob.setDataSources(dataSources);
     verificationJob.setProjectIdentifier(projectIdentifier);
     verificationJob.setOrgIdentifier(orgIdentifier);
   }
 
-  private Duration parseDuration() {
-    return Duration.ofMinutes(Integer.parseInt(duration.substring(0, duration.length() - 1)));
-  }
   @JsonIgnore public abstract VerificationJob getVerificationJob();
   public abstract VerificationJobType getType();
+
+  protected boolean isRuntimeParam(String value) {
+    return isNotEmpty(value) && value.startsWith("${") && value.endsWith("}");
+  }
 }

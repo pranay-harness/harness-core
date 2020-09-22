@@ -11,6 +11,7 @@ import lombok.experimental.FieldNameConstants;
 
 import java.time.Instant;
 import java.util.List;
+import java.util.Map;
 
 @Data
 @FieldNameConstants(innerTypeName = "HealthVerificationJobKeys")
@@ -41,4 +42,7 @@ public class HealthVerificationJob extends VerificationJob {
   public List<TimeRange> getDataCollectionTimeRanges(Instant startTime) {
     return null;
   }
+
+  @Override
+  public void resolveJobParams(Map<String, String> runtimeParameters) {}
 }

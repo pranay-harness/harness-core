@@ -2,6 +2,8 @@ package io.harness.cvng.verificationjob.services.impl;
 
 import static io.harness.cvng.beans.DataCollectionExecutionStatus.QUEUED;
 import static io.harness.cvng.core.utils.DateTimeUtils.roundDownTo1MinBoundary;
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.UUIDGenerator.generateUuid;
 
 import com.google.common.base.Charsets;
 import com.google.common.base.Preconditions;
@@ -52,13 +54,13 @@ public class VerificationJobInstanceServiceImpl implements VerificationJobInstan
   @Inject private VerificationTaskService verificationTaskService;
   @Override
   public String create(String accountId, VerificationJobInstanceDTO verificationJobInstanceDTO) {
+    // TODO: Is this API even needed anymore ?
     VerificationJob verificationJob =
         verificationJobService.getVerificationJob(accountId, verificationJobInstanceDTO.getVerificationJobIdentifier());
     Preconditions.checkNotNull(verificationJob, "No Job exists for verificationJobIdentifier: '%s'",
         verificationJobInstanceDTO.getVerificationJobIdentifier());
     VerificationJobInstance verificationJobInstance =
         VerificationJobInstance.builder()
-            .verificationJobId(verificationJob.getUuid())
             .verificationJobIdentifier(verificationJobInstanceDTO.getVerificationJobIdentifier())
             .accountId(accountId)
             .executionStatus(ExecutionStatus.QUEUED)
@@ -68,10 +70,26 @@ public class VerificationJobInstanceServiceImpl implements VerificationJobInstan
             .newVersionHosts(verificationJobInstanceDTO.getNewVersionHosts())
             .oldVersionHosts(verificationJobInstanceDTO.getOldVersionHosts())
             .newHostsTrafficSplitPercentage(verificationJobInstanceDTO.getNewHostsTrafficSplitPercentage())
+            // TODO: Change these to extract runtime params
             .duration(verificationJob.getDuration())
             .build();
     hPersistence.save(verificationJobInstance);
     return verificationJobInstance.getUuid();
+  }
+
+  @Override
+  public List<String> create(List<VerificationJobInstance> verificationJobInstances) {
+    if (isNotEmpty(verificationJobInstances)) {
+      List<String> jobInstanceIds = new ArrayList<>();
+      verificationJobInstances.forEach(verificationJobInstance -> {
+        String uuid = generateUuid();
+        verificationJobInstance.setUuid(uuid);
+        jobInstanceIds.add(uuid);
+      });
+      hPersistence.save(verificationJobInstances);
+      return jobInstanceIds;
+    }
+    return null;
   }
 
   @Override
@@ -86,7 +104,7 @@ public class VerificationJobInstanceServiceImpl implements VerificationJobInstan
 
   @Override
   public void createDataCollectionTasks(VerificationJobInstance verificationJobInstance) {
-    VerificationJob verificationJob = verificationJobService.get(verificationJobInstance.getVerificationJobId());
+    VerificationJob verificationJob = verificationJobInstance.getResolvedJob();
     Preconditions.checkNotNull(verificationJob);
     List<CVConfig> cvConfigs = cvConfigService.find(verificationJob.getAccountId(), verificationJob.getDataSources());
     Set<String> connectorIds = cvConfigs.stream().map(CVConfig::getConnectorIdentifier).collect(Collectors.toSet());
@@ -137,7 +155,7 @@ public class VerificationJobInstanceServiceImpl implements VerificationJobInstan
   @Override
   public TimeRange getPreDeploymentTimeRange(String verificationJobInstanceId) {
     VerificationJobInstance verificationJobInstance = getVerificationJobInstance(verificationJobInstanceId);
-    VerificationJob verificationJob = verificationJobService.get(verificationJobInstance.getVerificationJobId());
+    VerificationJob verificationJob = verificationJobInstance.getResolvedJob();
     return verificationJob.getPreDeploymentTimeRange(verificationJobInstance.getDeploymentStartTime());
   }
 

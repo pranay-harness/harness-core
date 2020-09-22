@@ -16,6 +16,7 @@ import lombok.experimental.FieldNameConstants;
 
 import java.time.Instant;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 @Data
@@ -57,4 +58,7 @@ public class BlueGreenVerificationJob extends VerificationJob {
   public List<TimeRange> getDataCollectionTimeRanges(Instant startTime) {
     return null;
   }
+
+  @Override
+  public void resolveJobParams(Map<String, String> runtimeParameters) {}
 }
