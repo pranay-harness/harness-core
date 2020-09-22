@@ -45,10 +45,11 @@ public class CILiteEngineIntegrationStageModifier implements StageExecutionModif
                                  "Execution arguments are empty for pipeline execution " + context.getAccountId()));
 
     String branch = getBranchNameFromExecutionSource(ciExecutionArgs);
-    return getCILiteEngineTaskExecution(integrationStage, branch);
+    return getCILiteEngineTaskExecution(integrationStage, branch, context.getAccountId());
   }
 
-  private ExecutionElement getCILiteEngineTaskExecution(IntegrationStage integrationStage, String inputBranch) {
+  private ExecutionElement getCILiteEngineTaskExecution(
+      IntegrationStage integrationStage, String inputBranch, String accountId) {
     // TODO Only git is supported currently
     String branchToBeCloned = getBranchNameFromPipeline(integrationStage);
 
@@ -60,7 +61,7 @@ public class CILiteEngineIntegrationStageModifier implements StageExecutionModif
       GitConnectorYaml gitConnectorYaml = (GitConnectorYaml) integrationStage.getGitConnector();
       return ExecutionElement.builder()
           .steps(ciLiteEngineStepGroupUtils.createExecutionWrapperWithLiteEngineSteps(
-              integrationStage, branchToBeCloned, gitConnectorYaml.getIdentifier()))
+              integrationStage, branchToBeCloned, gitConnectorYaml.getIdentifier(), accountId))
           .build();
     } else {
       throw new IllegalArgumentException("Input connector type is not of type git");

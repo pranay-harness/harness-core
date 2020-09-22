@@ -33,9 +33,11 @@ public class LiteEngineTaskStepGeneratorTest extends CIExecutionTest {
     Integer parallelism = 2;
     Integer liteEngineCounter = 1;
     boolean usePVC = true;
+    String accountId = "accountId";
 
-    LiteEngineTaskStepInfo actual = liteEngineTaskStepGenerator.createLiteEngineTaskStepInfo(executionElement,
-        branchName, gitConnectorIdentifier, integrationStage, buildNumber, parallelism, liteEngineCounter, usePVC);
+    LiteEngineTaskStepInfo actual =
+        liteEngineTaskStepGenerator.createLiteEngineTaskStepInfo(executionElement, branchName, gitConnectorIdentifier,
+            integrationStage, buildNumber, parallelism, liteEngineCounter, usePVC, accountId);
     ((K8BuildJobEnvInfo) actual.getBuildJobEnvInfo())
         .getPodsSetupInfo()
         .getPodSetupInfoList()
@@ -71,9 +73,11 @@ public class LiteEngineTaskStepGeneratorTest extends CIExecutionTest {
     Integer parallelism = 2;
     Integer liteEngineCounter = 2;
     boolean usePVC = true;
+    String accountId = "accountId";
 
-    LiteEngineTaskStepInfo actual = liteEngineTaskStepGenerator.createLiteEngineTaskStepInfo(executionElement,
-        branchName, gitConnectorIdentifier, integrationStage, buildNumber, parallelism, liteEngineCounter, usePVC);
+    LiteEngineTaskStepInfo actual =
+        liteEngineTaskStepGenerator.createLiteEngineTaskStepInfo(executionElement, branchName, gitConnectorIdentifier,
+            integrationStage, buildNumber, parallelism, liteEngineCounter, usePVC, accountId);
     ((K8BuildJobEnvInfo) actual.getBuildJobEnvInfo())
         .getPodsSetupInfo()
         .getPodSetupInfoList()

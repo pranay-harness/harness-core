@@ -15,7 +15,7 @@ public class LiteEngineTaskStepGenerator {
 
   LiteEngineTaskStepInfo createLiteEngineTaskStepInfo(ExecutionElement executionElement, String branchName,
       String gitConnectorIdentifier, IntegrationStage integrationStage, String buildNumber, Integer parallelism,
-      Integer liteEngineCounter, boolean usePVC) {
+      Integer liteEngineCounter, boolean usePVC, String accountId) {
     boolean isFirstPod = isFirstPod(liteEngineCounter);
     BuildJobEnvInfo buildJobEnvInfo =
         buildJobEnvInfoBuilder.getCIBuildJobEnvInfo(integrationStage, isFirstPod, buildNumber, parallelism);
@@ -27,6 +27,7 @@ public class LiteEngineTaskStepGenerator {
           .usePVC(usePVC)
           .buildJobEnvInfo(buildJobEnvInfo)
           .steps(executionElement)
+          .accountId(accountId)
           .build();
     } else {
       return LiteEngineTaskStepInfo.builder()
@@ -34,6 +35,7 @@ public class LiteEngineTaskStepGenerator {
           .buildJobEnvInfo(buildJobEnvInfo)
           .usePVC(usePVC)
           .steps(executionElement)
+          .accountId(accountId)
           .build();
     }
   }

@@ -27,6 +27,7 @@ import io.harness.ambiance.Ambiance;
 import io.harness.beans.environment.K8BuildJobEnvInfo;
 import io.harness.beans.environment.pod.PodSetupInfo;
 import io.harness.beans.environment.pod.container.ContainerDefinitionInfo;
+import io.harness.beans.serializer.ExecutionProtobufSerializer;
 import io.harness.beans.steps.stepinfo.BuildEnvSetupStepInfo;
 import io.harness.beans.steps.stepinfo.LiteEngineTaskStepInfo;
 import io.harness.beans.sweepingoutputs.ContextElement;
@@ -38,11 +39,13 @@ import io.harness.exception.InvalidArgumentsException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.managerclient.ManagerCIResource;
 import io.harness.network.SafeHttpCall;
+import io.harness.product.ci.engine.proto.Execution;
 import io.harness.references.SweepingOutputRefObject;
 import io.harness.rest.RestResponse;
 import io.harness.security.encryption.EncryptableSettingWithEncryptionDetails;
 import io.harness.stateutils.buildstate.providers.InternalContainerParamsProvider;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.codec.binary.Base64;
 import org.jetbrains.annotations.NotNull;
 import software.wings.beans.ci.pod.CIContainerType;
 import software.wings.beans.ci.pod.CIK8ContainerParams;
@@ -72,6 +75,7 @@ public class K8BuildSetupUtils {
   @Inject private EngineExpressionService engineExpressionService;
   @Inject ExecutionSweepingOutputService executionSweepingOutputResolver;
   @Inject ServiceTokenUtils serviceTokenUtils;
+  @Inject ExecutionProtobufSerializer protobufSerializer;
 
   public RestResponse<K8sTaskExecutionResponse> executeCISetupTask(
       BuildEnvSetupStepInfo buildEnvSetupStepInfo, Ambiance ambiance) {
@@ -176,7 +180,8 @@ public class K8BuildSetupUtils {
     List<String> args;
     if (containerDefinitionInfo.getContainerType() == CIContainerType.STEP_EXECUTOR
         && containerDefinitionInfo.isMainLiteEngine()) {
-      args = liteEngineTaskUtils.getMainLiteEngineArguments(liteEngineTaskStepInfo, ports);
+      String serializedLiteEngineStepInfo = getSerializedLiteEngineStepInfo(liteEngineTaskStepInfo);
+      args = liteEngineTaskUtils.getMainLiteEngineArguments(serializedLiteEngineStepInfo, ports);
     } else {
       args = liteEngineTaskUtils.getWorkerLiteEngineArguments(
           containerDefinitionInfo.getPorts()
@@ -203,6 +208,13 @@ public class K8BuildSetupUtils {
                 .build())
         .volumeToMountPath(volumeToMountPath)
         .build();
+  }
+
+  private String getSerializedLiteEngineStepInfo(LiteEngineTaskStepInfo liteEngineTaskStepInfo) {
+    Execution executionPrototype = protobufSerializer.convertExecutionElement(liteEngineTaskStepInfo.getSteps());
+    Execution execution =
+        Execution.newBuilder(executionPrototype).setAccountId(liteEngineTaskStepInfo.getAccountId()).build();
+    return Base64.encodeBase64String(execution.toByteArray());
   }
 
   private Map<String, EncryptableSettingWithEncryptionDetails> getPublishArtifactEncryptedValues(

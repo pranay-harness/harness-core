@@ -68,8 +68,8 @@ public class K8BuildSetupUtilsTest extends CIExecutionTest {
   private static final List<String> command =
       Collections.unmodifiableList(Arrays.asList("/step-exec/.harness/bin/ci-lite-engine"));
   private static final List<String> args = Collections.unmodifiableList(Arrays.asList("stage", "--input",
-      "CkISQAoFcnVuLTESC2J1aWxkU2NyaXB0GhgKES4vYnVpbGQtc2NyaXB0LnNoEgMQsAlCEHJ1bi0xLWNhbGxiYWNrSWQKnwEKnAEKCHBhcmFsbGVsEgRuYW1lGkQKB3Rlc3QtcDESC3Rlc3RTY3JpcHQxGhgKES4vdGVzdC1zY3JpcHQxLnNoEgMQsAlCEnRlc3QtcDEtY2FsbGJhY2tJZBpECgd0ZXN0LXAyEgt0ZXN0U2NyaXB0MhoYChEuL3Rlc3Qtc2NyaXB0Mi5zaBIDELAJQhJ0ZXN0LXAyLWNhbGxiYWNrSWQKnAIKmQIKCHBhcmFsbGVsEgRuYW1lGmwKCXB1Ymxpc2gtMTJJEkcKDH4vRG9ja2VyZmlsZRICfi8aMwocdXMuZ2NyLmlvL2NpLXBsYXkvcG9ydGFsOnYwMRIRCg1nY3ItY29ubmVjdG9yEAEYBEIUcHVibGlzaC0xLWNhbGxiYWNrSWQamAEKCXB1Ymxpc2gtMjJ1EnMKDH4vRG9ja2VyZmlsZRICfi8aXwpIIGh0dHBzOi8vOTg3OTIzMTMyODc5LmRrci5lY3IuZXUtd2VzdC0xLmFtYXpvbmF3cy5jb20vY2ktcGxheS9wb3J0YWw6djAxEhEKDWVjci1jb25uZWN0b3IQAhgFQhRwdWJsaXNoLTItY2FsbGJhY2tJZA==",
-      "--logpath", "/step-exec/.harness/logs/", "--tmppath", "/step-exec/.harness/tmp/", "--ports", "9001", "--debug"));
+      "CkISQAoFcnVuLTESC2J1aWxkU2NyaXB0GhgKES4vYnVpbGQtc2NyaXB0LnNoEgMQsAlCEHJ1bi0xLWNhbGxiYWNrSWQKnwEKnAEKCHBhcmFsbGVsEgRuYW1lGkQKB3Rlc3QtcDESC3Rlc3RTY3JpcHQxGhgKES4vdGVzdC1zY3JpcHQxLnNoEgMQsAlCEnRlc3QtcDEtY2FsbGJhY2tJZBpECgd0ZXN0LXAyEgt0ZXN0U2NyaXB0MhoYChEuL3Rlc3Qtc2NyaXB0Mi5zaBIDELAJQhJ0ZXN0LXAyLWNhbGxiYWNrSWQKnAIKmQIKCHBhcmFsbGVsEgRuYW1lGmwKCXB1Ymxpc2gtMTJJEkcKDH4vRG9ja2VyZmlsZRICfi8aMwocdXMuZ2NyLmlvL2NpLXBsYXkvcG9ydGFsOnYwMRIRCg1nY3ItY29ubmVjdG9yEAEYBEIUcHVibGlzaC0xLWNhbGxiYWNrSWQamAEKCXB1Ymxpc2gtMjJ1EnMKDH4vRG9ja2VyZmlsZRICfi8aXwpIIGh0dHBzOi8vOTg3OTIzMTMyODc5LmRrci5lY3IuZXUtd2VzdC0xLmFtYXpvbmF3cy5jb20vY2ktcGxheS9wb3J0YWw6djAxEhEKDWVjci1jb25uZWN0b3IQAhgFQhRwdWJsaXNoLTItY2FsbGJhY2tJZBIJYWNjb3VudElk",
+      "--logpath", "/step-exec/.harness/logs/", "--tmppath", "/step-exec/.harness/tmp/", "--ports", "9001"));
 
   private static final List<String> args2 = Collections.unmodifiableList(Arrays.asList(
       "server", "--port", "9001", "--logpath", "/step-exec/.harness/logs/", "--tmppath", "/step-exec/.harness/tmp/"));

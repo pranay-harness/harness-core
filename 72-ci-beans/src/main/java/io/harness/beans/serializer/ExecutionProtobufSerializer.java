@@ -10,6 +10,7 @@ import io.harness.beans.steps.stepinfo.PublishStepInfo;
 import io.harness.beans.steps.stepinfo.RestoreCacheStepInfo;
 import io.harness.beans.steps.stepinfo.RunStepInfo;
 import io.harness.beans.steps.stepinfo.SaveCacheStepInfo;
+import io.harness.product.ci.engine.proto.Execution;
 import io.harness.product.ci.engine.proto.ParallelStep;
 import io.harness.product.ci.engine.proto.Step;
 import io.harness.product.ci.engine.proto.UnitStep;
@@ -33,10 +34,14 @@ public class ExecutionProtobufSerializer implements ProtobufSerializer<Execution
   @Inject private RestoreCacheStepProtobufSerializer restoreCacheStepProtobufSerializer;
 
   @Override
-  public String serialize(ExecutionElement executionElement) {
+  public String serialize(ExecutionElement object) {
+    return Base64.encodeBase64String(convertExecutionElement(object).toByteArray());
+  }
+
+  public Execution convertExecutionElement(ExecutionElement executionElement) {
     List<Step> protoSteps = new LinkedList<>();
     if (isEmpty(executionElement.getSteps())) {
-      return "";
+      return Execution.newBuilder().build();
     }
 
     executionElement.getSteps().forEach(executionWrapper -> {
@@ -64,8 +69,7 @@ public class ExecutionProtobufSerializer implements ProtobufSerializer<Execution
       }
     });
 
-    return Base64.encodeBase64String(
-        io.harness.product.ci.engine.proto.Execution.newBuilder().addAllSteps(protoSteps).build().toByteArray());
+    return Execution.newBuilder().addAllSteps(protoSteps).buildPartial();
   }
 
   public UnitStep serialiseStep(StepElement step) {
