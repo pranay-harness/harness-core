@@ -177,12 +177,12 @@ public class PerpetualTaskRecordDaoTest extends WingsBaseTest {
                                                   .build();
 
     String taskId = perpetualTaskRecordDao.save(perpetualTaskRecord);
-    perpetualTaskRecordDao.detachTaskFromDelegate(ACCOUNT_ID, DELEGATE_ID);
+    perpetualTaskRecordDao.markAllTasksOnDelegateForReassignment(ACCOUNT_ID, DELEGATE_ID);
     PerpetualTaskRecord task = perpetualTaskRecordDao.getTask(taskId);
 
     assertThat(task).isNotNull();
-    assertThat(task.getState()).isEqualTo(PerpetualTaskState.TASK_UNASSIGNED);
-    assertThat(task.getDelegateId()).isEqualTo("");
+    assertThat(task.getState()).isEqualTo(PerpetualTaskState.TASK_TO_REBALANCE);
+    assertThat(task.getDelegateId()).isEqualTo("test-delegate-id1");
     assertThat(task.getClientContext()).isEqualTo(clientContext);
   }
 
