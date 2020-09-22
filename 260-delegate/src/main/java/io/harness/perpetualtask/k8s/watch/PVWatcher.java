@@ -144,8 +144,7 @@ public class PVWatcher implements ResourceEventHandler<V1PersistentVolume> {
             .putAllLabels(firstNonNull(persistentVolume.getMetadata().getAnnotations(), Collections.emptyMap()))
             .setClaimName(getClaimName(persistentVolume.getSpec()))
             .setClaimNamespace(getClaimNamespace(persistentVolume.getSpec()))
-            .setStorageClassType(getStorageType(
-                ofNullable(persistentVolume.getSpec().getStorageClassName()).orElse(""))) // empty class means default
+            .setStorageClassType(getStorageType(persistentVolume)) // empty class means default
             .setCapacity(K8sResourceUtils.getStorageCapacity(persistentVolume.getSpec()))
             .build();
     eventPublisher.publishMessage(pvInfo, timestamp, ImmutableMap.of(CLUSTER_ID_IDENTIFIER, clusterId));
@@ -187,12 +186,17 @@ public class PVWatcher implements ResourceEventHandler<V1PersistentVolume> {
     }
   }
 
-  public String getStorageType(String name) {
-    try {
-      return this.storageV1Api.readStorageClass(name, null, null, null).getParameters().get("type");
-    } catch (Exception ex) {
-      logger.warn("Failed to get storageClass type, returning default", ex);
+  public String getStorageType(V1PersistentVolume persistentVolume) {
+    String defaultValue = "default";
+    if (persistentVolume.getSpec() != null && persistentVolume.getSpec().getStorageClassName() != null) {
+      try {
+        return this.storageV1Api.readStorageClass(persistentVolume.getSpec().getStorageClassName(), null, null, null)
+            .getParameters()
+            .getOrDefault("type", defaultValue);
+      } catch (Exception ex) {
+        logger.warn("Failed to get storageClassName {}", persistentVolume.getSpec().getStorageClassName(), ex);
+      }
     }
-    return "";
+    return defaultValue;
   }
 }
