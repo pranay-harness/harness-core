@@ -6,7 +6,6 @@ import io.harness.ambiance.Ambiance;
 import io.harness.beans.steps.stepinfo.CleanupStepInfo;
 import io.harness.beans.sweepingoutputs.ContextElement;
 import io.harness.beans.sweepingoutputs.K8PodDetails;
-import io.harness.engine.expressions.EngineExpressionService;
 import io.harness.engine.outputs.ExecutionSweepingOutputService;
 import io.harness.execution.status.Status;
 import io.harness.facilitator.PassThroughData;
@@ -29,7 +28,6 @@ import lombok.extern.slf4j.Slf4j;
 // TODO Cleanup Support for other types (Non K8)
 public class CleanupStep implements Step, SyncExecutable {
   @Inject private ManagerCIResource managerCIResource;
-  @Inject EngineExpressionService engineExpressionService;
   public static final StepType STEP_TYPE = CleanupStepInfo.typeInfo.getStepType();
   @Inject ExecutionSweepingOutputService executionSweepingOutputResolver;
 

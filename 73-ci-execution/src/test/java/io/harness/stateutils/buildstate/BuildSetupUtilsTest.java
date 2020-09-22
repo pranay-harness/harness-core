@@ -51,7 +51,7 @@ public class BuildSetupUtilsTest extends CIExecutionTest {
   @Test
   @Owner(developers = HARSH)
   @Category(UnitTests.class)
-  public void shouldExecuteCISetupTask() throws IOException {
+  public void shouldExecuteCILiteEngineTask() throws IOException {
     Call<RestResponse<K8sTaskExecutionResponse>> requestCall = mock(Call.class);
 
     when(requestCall.execute())

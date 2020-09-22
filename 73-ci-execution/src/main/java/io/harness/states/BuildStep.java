@@ -13,7 +13,6 @@ import io.harness.beans.script.ScriptInfo;
 import io.harness.beans.steps.stepinfo.BuildStepInfo;
 import io.harness.beans.sweepingoutputs.ContextElement;
 import io.harness.beans.sweepingoutputs.K8PodDetails;
-import io.harness.engine.expressions.EngineExpressionService;
 import io.harness.engine.outputs.ExecutionSweepingOutputService;
 import io.harness.execution.status.Status;
 import io.harness.facilitator.PassThroughData;
@@ -39,7 +38,6 @@ import java.util.List;
 @Slf4j
 public class BuildStep implements Step, SyncExecutable<BuildStepInfo> {
   @Inject private ManagerCIResource managerCIResource;
-  @Inject EngineExpressionService engineExpressionService;
   public static final StepType STEP_TYPE = BuildStepInfo.typeInfo.getStepType();
   @Inject ExecutionSweepingOutputService executionSweepingOutputResolver;
 

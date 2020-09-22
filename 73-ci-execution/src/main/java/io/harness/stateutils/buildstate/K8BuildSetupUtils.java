@@ -33,7 +33,6 @@ import io.harness.beans.steps.stepinfo.LiteEngineTaskStepInfo;
 import io.harness.beans.sweepingoutputs.ContextElement;
 import io.harness.beans.sweepingoutputs.K8PodDetails;
 import io.harness.data.structure.EmptyPredicate;
-import io.harness.engine.expressions.EngineExpressionService;
 import io.harness.engine.outputs.ExecutionSweepingOutputService;
 import io.harness.exception.InvalidArgumentsException;
 import io.harness.exception.InvalidRequestException;
@@ -72,7 +71,6 @@ import java.util.stream.Collectors;
 public class K8BuildSetupUtils {
   @Inject private ManagerCIResource managerCIResource;
   @Inject private LiteEngineTaskUtils liteEngineTaskUtils;
-  @Inject private EngineExpressionService engineExpressionService;
   @Inject ExecutionSweepingOutputService executionSweepingOutputResolver;
   @Inject ServiceTokenUtils serviceTokenUtils;
   @Inject ExecutionProtobufSerializer protobufSerializer;

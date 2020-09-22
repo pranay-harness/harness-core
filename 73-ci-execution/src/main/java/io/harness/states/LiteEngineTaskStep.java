@@ -21,7 +21,6 @@ import io.harness.exception.InvalidRequestException;
 import io.harness.execution.status.Status;
 import io.harness.facilitator.PassThroughData;
 import io.harness.facilitator.modes.sync.SyncExecutable;
-import io.harness.managerclient.ManagerCIResource;
 import io.harness.plancreators.IntegrationStagePlanCreator;
 import io.harness.state.Step;
 import io.harness.state.StepType;
@@ -44,9 +43,8 @@ import java.util.Map;
 
 @Slf4j
 public class LiteEngineTaskStep implements Step, SyncExecutable<LiteEngineTaskStepInfo> {
-  @Inject private ManagerCIResource managerCIResource;
   @Inject private BuildSetupUtils buildSetupUtils;
-  @Inject private Map<String, TaskExecutor<HDelegateTask> > taskExecutorMap;
+  @Inject private Map<String, TaskExecutor<HDelegateTask>> taskExecutorMap;
   @Inject private ExecutionSweepingOutputService executionSweepingOutputResolver;
   public static final StepType STEP_TYPE = LiteEngineTaskStepInfo.typeInfo.getStepType();
 
@@ -70,7 +68,7 @@ public class LiteEngineTaskStep implements Step, SyncExecutable<LiteEngineTaskSt
   private void addCallBackIds(LiteEngineTaskStepInfo liteEngineTaskStepInfo, Ambiance ambiance) {
     Map<String, String> taskIds = new HashMap<>();
     liteEngineTaskStepInfo.getSteps().getSteps().forEach(
-        executionWrapper -> { addCallBackId(executionWrapper, ambiance, taskIds); });
+        executionWrapper -> addCallBackId(executionWrapper, ambiance, taskIds));
 
     executionSweepingOutputResolver.consume(ambiance, CALLBACK_IDS, StepTaskDetails.builder().taskIds(taskIds).build(),
         IntegrationStagePlanCreator.GROUP_NAME);
