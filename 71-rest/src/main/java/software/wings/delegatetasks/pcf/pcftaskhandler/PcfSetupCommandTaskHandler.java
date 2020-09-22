@@ -381,15 +381,17 @@ public class PcfSetupCommandTaskHandler extends PcfCommandTaskHandler {
       List<File> filesToBeRemoved = new ArrayList<>();
 
       // Delete all manifests created.
-      filesToBeRemoved.add(pcfManifestFileData.getManifestFile());
+      File manifestYamlFile = pcfManifestFileData.getManifestFile();
+      if (manifestYamlFile != null) {
+        filesToBeRemoved.add(pcfManifestFileData.getManifestFile());
+      }
       pcfManifestFileData.getVarFiles().forEach(filesToBeRemoved::add);
 
       if (artifactFile != null) {
         filesToBeRemoved.add(artifactFile);
       }
 
-      if (pcfCommandRequest.isUseCfCLI()) {
-        File manifestYamlFile = pcfManifestFileData.getManifestFile();
+      if (pcfCommandRequest.isUseCfCLI() && manifestYamlFile != null) {
         filesToBeRemoved.add(
             new File(pcfCommandTaskHelper.generateFinalManifestFilePath(manifestYamlFile.getAbsolutePath())));
       }
