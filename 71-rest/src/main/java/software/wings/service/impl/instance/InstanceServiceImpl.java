@@ -398,7 +398,7 @@ public class InstanceServiceImpl implements InstanceService {
     PageRequest<Instance> pageRequest = new PageRequest<>();
     pageRequest.addFilter("infraMappingId", Operator.EQ, infraMappingId);
     pageRequest.addFilter("appId", Operator.EQ, appId);
-    PageResponse<Instance> pageResponse = listInstancesNotRemovedFully(pageRequest);
+    PageResponse<Instance> pageResponse = list(pageRequest);
     return pageResponse.getResponse();
   }
 
