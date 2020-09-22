@@ -11,7 +11,6 @@ import io.harness.delegate.task.TaskParameters;
 import io.harness.exception.InvalidRequestException;
 import io.harness.grpc.DelegateServiceGrpcClient;
 import io.harness.tasks.TaskExecutor;
-import io.harness.waiter.WaitNotifyEngine;
 
 import java.time.Duration;
 import java.util.Map;
@@ -22,7 +21,7 @@ public class CIDelegateTaskExecutor implements TaskExecutor<HDelegateTask> {
   private final Supplier<DelegateCallbackToken> delegateCallbackTokenSupplier;
 
   @Inject
-  public CIDelegateTaskExecutor(DelegateServiceGrpcClient delegateServiceGrpcClient, WaitNotifyEngine waitNotifyEngine,
+  public CIDelegateTaskExecutor(DelegateServiceGrpcClient delegateServiceGrpcClient,
       Supplier<DelegateCallbackToken> delegateCallbackTokenSupplier) {
     this.delegateServiceGrpcClient = delegateServiceGrpcClient;
     this.delegateCallbackTokenSupplier = delegateCallbackTokenSupplier;

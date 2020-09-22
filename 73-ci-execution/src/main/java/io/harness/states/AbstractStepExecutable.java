@@ -16,7 +16,6 @@ import io.harness.exception.FailureType;
 import io.harness.execution.status.Status;
 import io.harness.facilitator.modes.async.AsyncExecutable;
 import io.harness.facilitator.modes.async.AsyncExecutableResponse;
-import io.harness.managerclient.ManagerCIResource;
 import io.harness.references.SweepingOutputRefObject;
 import io.harness.state.Step;
 import io.harness.state.io.FailureInfo;
@@ -26,13 +25,11 @@ import io.harness.tasks.ResponseData;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.EnumSet;
-import java.util.List;
 import java.util.Map;
 
 @Slf4j
 public abstract class AbstractStepExecutable implements Step, AsyncExecutable<CIStepInfo> {
   @Inject private ExecutionSweepingOutputService executionSweepingOutputResolver;
-  @Inject private ManagerCIResource managerCIResource;
   @Override
   public AsyncExecutableResponse executeAsync(
       Ambiance ambiance, CIStepInfo stepParameters, StepInputPackage inputPackage) {
@@ -72,6 +69,4 @@ public abstract class AbstractStepExecutable implements Step, AsyncExecutable<CI
 
   @Override
   public void handleAbort(Ambiance ambiance, CIStepInfo stateParameters, AsyncExecutableResponse executableResponse) {}
-
-  protected abstract List<String> getExecCommand(CIStepInfo ciStepInfo);
 }

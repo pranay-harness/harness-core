@@ -7,7 +7,6 @@ import io.harness.beans.steps.stepinfo.BuildEnvSetupStepInfo;
 import io.harness.execution.status.Status;
 import io.harness.facilitator.PassThroughData;
 import io.harness.facilitator.modes.sync.SyncExecutable;
-import io.harness.managerclient.ManagerCIResource;
 import io.harness.state.Step;
 import io.harness.state.StepType;
 import io.harness.state.io.StepInputPackage;
@@ -21,7 +20,6 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class BuildEnvSetupStep implements Step, SyncExecutable<BuildEnvSetupStepInfo> {
-  @Inject private ManagerCIResource managerCIResource;
   @Inject private BuildSetupUtils buildSetupUtils;
   public static final StepType STEP_TYPE = BuildEnvSetupStepInfo.typeInfo.getStepType();
 

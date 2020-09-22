@@ -15,9 +15,7 @@ import io.harness.beans.steps.stepinfo.BuildEnvSetupStepInfo;
 import io.harness.beans.sweepingoutputs.K8PodDetails;
 import io.harness.category.element.UnitTests;
 import io.harness.engine.outputs.ExecutionSweepingOutputService;
-import io.harness.executionplan.CIExecutionPlanTestHelper;
 import io.harness.executionplan.CIExecutionTest;
-import io.harness.managerclient.ManagerCIResource;
 import io.harness.rest.RestResponse;
 import io.harness.rule.Owner;
 import io.harness.stateutils.buildstate.BuildSetupUtils;
@@ -33,15 +31,12 @@ import java.io.IOException;
 
 public class BuildEnvSetupStepTest extends CIExecutionTest {
   @Inject private BuildEnvSetupStep buildEnvSetupStep;
-  @Inject private CIExecutionPlanTestHelper ciExecutionPlanTestHelper;
-  @Mock private ManagerCIResource managerCIResource;
   @Mock private BuildSetupUtils buildSetupUtils;
   @Mock private Ambiance ambiance;
   @Mock private ExecutionSweepingOutputService executionSweepingOutputResolver;
 
   @Before
   public void setUp() {
-    on(buildEnvSetupStep).set("managerCIResource", managerCIResource);
     on(buildEnvSetupStep).set("buildSetupUtils", buildSetupUtils);
   }
 
