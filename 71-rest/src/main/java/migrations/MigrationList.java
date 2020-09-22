@@ -9,6 +9,7 @@ import migrations.accountpermission.ManageApiKeyPermissionMigration;
 import migrations.accountpermission.ManageApplicationsPermissionMigration;
 import migrations.accountpermission.ManageAuthenticationSettingsPermissionMigration;
 import migrations.accountpermission.ManageCloudProvidersAndConnectorsPermissionMigration;
+import migrations.accountpermission.ManageConfigAsCodePermissionMigration;
 import migrations.accountpermission.ManageDelegatePermissionMigration;
 import migrations.accountpermission.ManageDelegateProfilesPermissionMigration;
 import migrations.accountpermission.ManageDeploymentFreezePermissionMigration;
@@ -397,6 +398,7 @@ public class MigrationList {
         .add(Pair.of(342, RemoveDeprecatedTagManagementPermission.class))
         .add(Pair.of(343, PerpetualTaskMigration.class))
         .add(Pair.of(344, RemoveDeprecatedApplicationsCreatePermission.class))
+        .add(Pair.of(345, ManageConfigAsCodePermissionMigration.class))
         .build();
   }
 }

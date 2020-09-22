@@ -1,6 +1,7 @@
 package software.wings.resources;
 
 import static io.harness.beans.PageResponse.PageResponseBuilder.aPageResponse;
+import static io.harness.rule.OwnerRule.ABHINAV;
 import static io.harness.rule.OwnerRule.VARDAN_BANSAL;
 import static java.lang.String.format;
 import static javax.ws.rs.client.Entity.entity;
@@ -9,6 +10,7 @@ import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static software.wings.security.PermissionAttribute.PermissionType.MANAGE_CONFIG_AS_CODE;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 import static software.wings.yaml.errorhandling.GitSyncError.GitSyncDirection.GIT_TO_HARNESS;
 
@@ -27,12 +29,14 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.Captor;
 import software.wings.WingsBaseTest;
 import software.wings.exception.WingsExceptionMapper;
+import software.wings.security.annotations.AuthRule;
 import software.wings.service.intfc.yaml.sync.GitSyncErrorService;
 import software.wings.service.intfc.yaml.sync.GitSyncService;
 import software.wings.utils.ResourceTestRule;
 import software.wings.yaml.errorhandling.GitSyncError;
 import software.wings.yaml.errorhandling.GitToHarnessErrorDetails;
 
+import java.lang.reflect.Method;
 import java.util.Arrays;
 import java.util.List;
 import javax.ws.rs.core.GenericType;
@@ -101,5 +105,14 @@ public class GitSyncResourceTest extends WingsBaseTest {
                                         new GenericType<RestResponse<List<GitSyncError>>>() {});
 
     assertThat(restResponse).isNotNull();
+  }
+
+  @Test
+  @Owner(developers = ABHINAV)
+  @Category(UnitTests.class)
+  public void checkIfPermissionCorrect() throws NoSuchMethodException {
+    Method method = GitSyncResource.class.getDeclaredMethod("discardGitSyncErrorV2", String.class, List.class);
+    AuthRule annotation = method.getAnnotation(AuthRule.class);
+    assertThat(annotation.permissionType()).isEqualTo(MANAGE_CONFIG_AS_CODE);
   }
 }

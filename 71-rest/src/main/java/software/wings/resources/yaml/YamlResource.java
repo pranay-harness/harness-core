@@ -665,6 +665,7 @@ public class YamlResource {
   @Path("full-sync/{entityId}")
   @Timed
   @ExceptionMetered
+  @AuthRule(permissionType = PermissionType.MANAGE_CONFIG_AS_CODE)
   public RestResponse pushDirectory(@PathParam("entityId") String entityId, @QueryParam("accountId") String accountId,
       @QueryParam("entityType") EntityType entityType) {
     yamlGitService.fullSync(accountId, entityId, entityType, true);
@@ -895,7 +896,7 @@ public class YamlResource {
   @Path("git-config")
   @Timed
   @ExceptionMetered
-  @AuthRule(permissionType = PermissionType.ACCOUNT_MANAGEMENT)
+  @AuthRule(permissionType = PermissionType.MANAGE_CONFIG_AS_CODE)
   public RestResponse<YamlGitConfig> saveGitConfig(
       @QueryParam("accountId") String accountId, YamlGitConfig yamlGitSync) {
     yamlGitSync.setAccountId(accountId);
@@ -922,6 +923,7 @@ public class YamlResource {
   @Path("git-config/{entityId}")
   @Timed
   @ExceptionMetered
+  @AuthRule(permissionType = PermissionType.MANAGE_CONFIG_AS_CODE)
   public RestResponse<YamlGitConfig> delete(@PathParam("entityId") String entityId,
       @QueryParam("accountId") String accountId, @QueryParam("entityType") EntityType entityType) {
     yamlGitService.delete(accountId, entityId, entityType);
@@ -939,7 +941,7 @@ public class YamlResource {
   @Path("git-config/{entityId}")
   @Timed
   @ExceptionMetered
-  @AuthRule(permissionType = PermissionType.ACCOUNT_MANAGEMENT)
+  @AuthRule(permissionType = PermissionType.MANAGE_CONFIG_AS_CODE)
   public RestResponse<YamlGitConfig> updateGitConfig(
       @QueryParam("accountId") String accountId, YamlGitConfig yamlGitSync) {
     yamlGitSync.setAccountId(accountId);
@@ -1046,6 +1048,7 @@ public class YamlResource {
   @Path("git-sync-errors-discard-all")
   @Timed
   @ExceptionMetered
+  @AuthRule(permissionType = PermissionType.MANAGE_CONFIG_AS_CODE)
   public RestResponse discardGitSyncError(@QueryParam("accountId") String accountId) {
     return yamlGitService.discardAllGitSyncError(accountId);
   }
@@ -1054,6 +1057,7 @@ public class YamlResource {
   @Path("git-sync-errors-discard-selected")
   @Timed
   @ExceptionMetered
+  @AuthRule(permissionType = PermissionType.MANAGE_CONFIG_AS_CODE)
   public RestResponse discardGitSyncError(@QueryParam("accountId") String accountId, List<String> errorIds) {
     return yamlGitService.discardGitSyncErrorsForGivenIds(accountId, errorIds);
   }
@@ -1063,6 +1067,7 @@ public class YamlResource {
   @Consumes(MULTIPART_FORM_DATA)
   @Timed
   @ExceptionMetered
+  @AuthRule(permissionType = PermissionType.MANAGE_CONFIG_AS_CODE)
   public RestResponse<String> processYamlFilesAsZip(@QueryParam("accountId") @NotEmpty String accountId,
       @QueryParam("yamlPath") @Optional String yamlPath, @FormDataParam("file") InputStream uploadedInputStream,
       @FormDataParam("file") FormDataContentDisposition fileDetail) throws IOException, YamlProcessingException {
@@ -1107,6 +1112,7 @@ public class YamlResource {
   @Path("full-sync-account")
   @Timed
   @ExceptionMetered
+  @AuthRule(permissionType = PermissionType.MANAGE_CONFIG_AS_CODE)
   public RestResponse fullSyncAccount(@QueryParam("accountId") String accountId) {
     yamlGitService.asyncFullSyncForEntireAccount(accountId);
     return new RestResponse<>("Triggered async full git sync");
@@ -1158,7 +1164,6 @@ public class YamlResource {
   @Path("/yaml-content")
   @Timed
   @ExceptionMetered
-  @AuthRule(permissionType = PermissionType.ACCOUNT_MANAGEMENT)
   public RestResponse<YamlPayload> getYamlForFilePath(@QueryParam("accountId") String accountId,
       @QueryParam("yamlFilePath") String yamlFilePath, @QueryParam("yamlSubType") String yamlSubType,
       @QueryParam("applicationId") String applicationId) {
@@ -1178,7 +1183,7 @@ public class YamlResource {
   @Consumes(MULTIPART_FORM_DATA)
   @Timed
   @ExceptionMetered
-  @AuthRule(permissionType = PermissionType.ACCOUNT_MANAGEMENT, action = Action.UPDATE)
+  @AuthRule(permissionType = PermissionType.MANAGE_CONFIG_AS_CODE)
   public RestResponse<YamlOperationResponse> upsertYAMLEntities(@QueryParam("accountId") @NotEmpty String accountId,
       @FormDataParam("file") InputStream uploadedInputStream) throws IOException {
     return new RestResponse<>(yamlService.upsertYAMLFilesAsZip(accountId,
@@ -1189,7 +1194,7 @@ public class YamlResource {
   @Path("delete-entities")
   @Timed
   @ExceptionMetered
-  @AuthRule(permissionType = PermissionType.ACCOUNT_MANAGEMENT, action = Action.UPDATE)
+  @AuthRule(permissionType = PermissionType.MANAGE_CONFIG_AS_CODE)
   public RestResponse<YamlOperationResponse> deleteYAMLEntities(
       @QueryParam("accountId") @NotEmpty String accountId, @QueryParam("filePaths") @NotEmpty List<String> filePaths) {
     return new RestResponse<>(yamlService.deleteYAMLByPaths(accountId, filePaths));
