@@ -3,9 +3,6 @@ package io.harness.delegate.configuration;
 import lombok.Builder;
 import lombok.Data;
 
-/**
- * Created by peeyushaggarwal on 11/29/16.
- */
 @Data
 @Builder
 public class DelegateConfiguration {
@@ -19,7 +16,6 @@ public class DelegateConfiguration {
   private String localDiskPath;
   private boolean doUpgrade;
   private Integer maxCachedArtifacts;
-  private boolean proxy;
   private boolean pollForTasks;
   private String description;
 

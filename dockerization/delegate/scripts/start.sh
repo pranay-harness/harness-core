@@ -212,9 +212,6 @@ fi
 if ! `grep maxCachedArtifacts config-delegate.yml > /dev/null`; then
   echo "maxCachedArtifacts: 2" >> config-delegate.yml
 fi
-if ! `grep proxy config-delegate.yml > /dev/null`; then
-  echo "proxy: false" >> config-delegate.yml
-fi
 if ! `grep pollForTasks config-delegate.yml > /dev/null`; then
   if [ "$DEPLOY_MODE" == "ONPREM" ]; then
       echo "pollForTasks: true" >> config-delegate.yml
