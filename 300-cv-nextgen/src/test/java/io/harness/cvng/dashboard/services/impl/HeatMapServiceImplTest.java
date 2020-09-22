@@ -416,8 +416,11 @@ public class HeatMapServiceImplTest extends CvNextGenTest {
         heatMapService.getCategoryRiskScores(accountId, orgId, projectIdentifier, serviceIdentifier, envIdentifier);
 
     assertThat(categoryRiskMap).isNotNull();
-    assertThat(categoryRiskMap.size()).isEqualTo(1);
+    assertThat(categoryRiskMap.size()).isEqualTo(3);
     assertThat(categoryRiskMap.containsKey(CVMonitoringCategory.PERFORMANCE)).isTrue();
+    assertThat(categoryRiskMap.get(CVMonitoringCategory.PERFORMANCE)).isNotEqualTo(-1);
+    assertThat(categoryRiskMap.get(CVMonitoringCategory.QUALITY)).isEqualTo(-1);
+    assertThat(categoryRiskMap.get(CVMonitoringCategory.RESOURCES)).isEqualTo(-1);
   }
 
   @Test
@@ -449,9 +452,12 @@ public class HeatMapServiceImplTest extends CvNextGenTest {
         heatMapService.getCategoryRiskScores(accountId, orgId, projectIdentifier, null, envIdentifier);
 
     assertThat(categoryRiskMap).isNotNull();
-    assertThat(categoryRiskMap.size()).isEqualTo(2);
+
+    assertThat(categoryRiskMap.size()).isEqualTo(3);
     assertThat(categoryRiskMap.containsKey(CVMonitoringCategory.PERFORMANCE)).isTrue();
-    assertThat(categoryRiskMap.containsKey(CVMonitoringCategory.QUALITY)).isTrue();
+    assertThat(categoryRiskMap.get(CVMonitoringCategory.PERFORMANCE)).isNotEqualTo(-1);
+    assertThat(categoryRiskMap.get(CVMonitoringCategory.QUALITY)).isNotEqualTo(-1);
+    assertThat(categoryRiskMap.get(CVMonitoringCategory.RESOURCES)).isEqualTo(-1);
   }
 
   @Test
@@ -483,8 +489,12 @@ public class HeatMapServiceImplTest extends CvNextGenTest {
         heatMapService.getCategoryRiskScores(accountId, orgId, projectIdentifier, null, null);
 
     assertThat(categoryRiskMap).isNotNull();
-    assertThat(categoryRiskMap.size()).isEqualTo(2);
+    assertThat(categoryRiskMap.size()).isEqualTo(3);
     assertThat(categoryRiskMap.containsKey(CVMonitoringCategory.PERFORMANCE)).isTrue();
     assertThat(categoryRiskMap.containsKey(CVMonitoringCategory.QUALITY)).isTrue();
+
+    assertThat(categoryRiskMap.get(CVMonitoringCategory.PERFORMANCE)).isNotEqualTo(-1);
+    assertThat(categoryRiskMap.get(CVMonitoringCategory.QUALITY)).isNotEqualTo(-1);
+    assertThat(categoryRiskMap.get(CVMonitoringCategory.RESOURCES)).isEqualTo(-1);
   }
 }

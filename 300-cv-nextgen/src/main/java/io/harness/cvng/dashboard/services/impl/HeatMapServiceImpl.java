@@ -30,6 +30,7 @@ import org.mongodb.morphia.query.Sort;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -205,6 +206,11 @@ public class HeatMapServiceImpl implements HeatMapService {
         SortedSet<HeatMapRisk> risks = new TreeSet<>(latestHeatMap.getHeatMapRisks());
         Double risk = risks.last().getRiskScore() * 100;
         categoryScoreMap.put(category, risk.intValue());
+      }
+    });
+    Arrays.asList(CVMonitoringCategory.values()).forEach(category -> {
+      if (!categoryScoreMap.containsKey(category)) {
+        categoryScoreMap.put(category, -1);
       }
     });
     return categoryScoreMap;
