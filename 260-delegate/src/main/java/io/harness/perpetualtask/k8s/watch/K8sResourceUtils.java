@@ -13,6 +13,7 @@ import lombok.experimental.UtilityClass;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.Map;
+import java.util.Objects;
 
 @UtilityClass
 @Slf4j
@@ -20,6 +21,7 @@ public class K8sResourceUtils {
   private static final String K8S_CPU_RESOURCE = "cpu";
   private static final String K8S_MEMORY_RESOURCE = "memory";
   private static final String K8S_STORAGE_RESOURCE = "storage";
+  private static final String K8S_POD_RESOURCE = "pods";
 
   public static Resource getResource(V1Container k8sContainer) {
     // get the resource for each container
@@ -123,10 +125,20 @@ public class K8sResourceUtils {
   static Map<String, Quantity> getResourceMap(Map<String, io.kubernetes.client.custom.Quantity> resourceMap) {
     long cpuNanos = getCpuNanos(resourceMap);
     long memBytes = getMemBytes(resourceMap);
+    long pods = getPods(resourceMap);
     return ImmutableMap.<String, Quantity>builder()
         .put(K8S_CPU_RESOURCE, Quantity.newBuilder().setUnit("n").setAmount(cpuNanos).build())
         .put(K8S_MEMORY_RESOURCE, Quantity.newBuilder().setUnit("").setAmount(memBytes).build())
+        .put(K8S_POD_RESOURCE, Quantity.newBuilder().setAmount(pods).setUnit("").build())
         .build();
+  }
+
+  private static long getPods(Map<String, io.kubernetes.client.custom.Quantity> resourceMap) {
+    return ofNullable(resourceMap)
+        .map(resReq -> resReq.get(K8S_POD_RESOURCE))
+        .filter(Objects::nonNull)
+        .map(q -> q.getNumber().longValue())
+        .orElse(0L);
   }
 
   private static long getMemBytes(Map<String, io.kubernetes.client.custom.Quantity> resourceMap) {

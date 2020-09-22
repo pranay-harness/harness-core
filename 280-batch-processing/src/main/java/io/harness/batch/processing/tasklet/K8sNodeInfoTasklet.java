@@ -1,6 +1,5 @@
 package io.harness.batch.processing.tasklet;
 
-import static io.harness.batch.processing.tasklet.util.InstanceMetaDataUtils.populateNodePoolNameFromLabel;
 import static io.harness.ccm.cluster.entities.K8sWorkload.encodeDotsInKey;
 
 import com.google.common.annotations.VisibleForTesting;
@@ -117,10 +116,12 @@ public class K8sNodeInfoTasklet implements Tasklet {
     metaData.put(InstanceMetaDataConstants.NODE_UID, nodeUid);
     metaData.put(InstanceMetaDataConstants.CLOUD_PROVIDER_INSTANCE_ID, cloudProviderInstanceId);
     metaData.put(InstanceMetaDataConstants.INSTANCE_CATEGORY, getInstanceCategory(k8SCloudProvider, labelsMap).name());
+    metaData.put(InstanceMetaDataConstants.POD_CAPACITY,
+        String.valueOf(K8sResourceUtils.getPodCapacity(nodeInfo.getAllocatableResourceMap())));
     if (null != labelsMap.get(K8sCCMConstants.COMPUTE_TYPE)) {
       metaData.put(InstanceMetaDataConstants.COMPUTE_TYPE, labelsMap.get(K8sCCMConstants.COMPUTE_TYPE));
     }
-    populateNodePoolNameFromLabel(labelsMap, metaData);
+    InstanceMetaDataUtils.populateNodePoolNameFromLabel(labelsMap, metaData);
 
     Resource allocatableResource = K8sResourceUtils.getResource(nodeInfo.getAllocatableResourceMap());
     Resource totalResource = allocatableResource;

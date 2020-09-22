@@ -30,6 +30,7 @@ import org.junit.experimental.categories.Category;
 import java.math.BigDecimal;
 
 public class K8sResourceUtilsTest extends CategoryTest {
+  private static final String K8S_POD_RESOURCE = "pods";
   private final V1ResourceRequirements resourceRequirements = new V1ResourceRequirements();
   private V1Container k8sContainer;
   private final DateTime TIMESTAMP = DateTime.now();
@@ -80,7 +81,8 @@ public class K8sResourceUtilsTest extends CategoryTest {
     assertThat(
         K8sResourceUtils.getResourceMap(ImmutableMap.of("memory", new io.kubernetes.client.custom.Quantity("0.5Mi"))))
         .isEqualTo(ImmutableMap.of("cpu", Quantity.newBuilder().setUnit("n").setAmount(0).build(), "memory",
-            Quantity.newBuilder().setAmount(512 * 1024).build()));
+            Quantity.newBuilder().setAmount(512 * 1024).build(), K8S_POD_RESOURCE,
+            Quantity.newBuilder().setAmount(0).build()));
   }
 
   @Test
@@ -90,16 +92,20 @@ public class K8sResourceUtilsTest extends CategoryTest {
     assertThat(
         K8sResourceUtils.getResourceMap(ImmutableMap.of("cpu", new io.kubernetes.client.custom.Quantity("100m"))))
         .isEqualTo(ImmutableMap.of("cpu", Quantity.newBuilder().setUnit("n").setAmount(100_000_000L).build(), "memory",
-            Quantity.newBuilder().setAmount(0).build()));
+            Quantity.newBuilder().setAmount(0).build(), K8S_POD_RESOURCE, Quantity.newBuilder().setAmount(0).build()));
 
     assertThat(K8sResourceUtils.getResourceMap(ImmutableMap.of("cpu",
                    new io.kubernetes.client.custom.Quantity(
                        new BigDecimal("1.9"), io.kubernetes.client.custom.Quantity.Format.DECIMAL_SI),
                    "memory",
                    new io.kubernetes.client.custom.Quantity(
-                       new BigDecimal(1_000L), io.kubernetes.client.custom.Quantity.Format.BINARY_SI))))
+                       new BigDecimal(1_000L), io.kubernetes.client.custom.Quantity.Format.BINARY_SI),
+                   K8S_POD_RESOURCE,
+                   new io.kubernetes.client.custom.Quantity(
+                       new BigDecimal("1"), io.kubernetes.client.custom.Quantity.Format.DECIMAL_SI))))
         .isEqualTo(ImmutableMap.of("cpu", Quantity.newBuilder().setUnit("n").setAmount(1_900_000_000L).build(),
-            "memory", Quantity.newBuilder().setAmount(1_000L).build()));
+            "memory", Quantity.newBuilder().setAmount(1_000L).build(), K8S_POD_RESOURCE,
+            Quantity.newBuilder().setAmount(1L).build()));
   }
 
   @Test
@@ -141,6 +147,17 @@ public class K8sResourceUtilsTest extends CategoryTest {
             .build();
     assertThat(K8sResourceUtils.getStorageCapacity(spec))
         .isEqualTo(Quantity.newBuilder().setAmount(1024L).setUnit("B").build());
+  }
+
+  @Test
+  @Owner(developers = UTSAV)
+  @Category(UnitTests.class)
+  public void testGetPodsFromResourceMap() {
+    assertThat(K8sResourceUtils.getResourceMap(ImmutableMap.of("pods", new io.kubernetes.client.custom.Quantity("101")))
+                   .get(K8S_POD_RESOURCE)
+                   .getAmount())
+        .isEqualTo(101L);
+    assertThat(K8sResourceUtils.getResourceMap(ImmutableMap.of()).get(K8S_POD_RESOURCE).getAmount()).isEqualTo(0L);
   }
 
   private V1Container makeContainer(String cpuReq, String memReq, String cpuLim, String memLim) {

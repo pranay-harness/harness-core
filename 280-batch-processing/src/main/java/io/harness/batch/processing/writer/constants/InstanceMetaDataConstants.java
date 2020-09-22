@@ -32,6 +32,7 @@ public class InstanceMetaDataConstants {
   public static final String CLAIM_NAMESPACE = "claim_namespace";
   public static final String PV_TYPE = "pv_type";
   public static final String STORAGE_CLASS = "storage_class";
+  public static final String POD_CAPACITY = "pod_capacity";
 
   private InstanceMetaDataConstants() {}
 }
