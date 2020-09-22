@@ -1,5 +1,7 @@
 package software.wings.helpers.ext.k8s.request;
 
+import static io.harness.expression.Expression.ALLOW_SECRETS;
+
 import io.harness.delegate.task.k8s.K8sTaskType;
 import io.harness.expression.Expression;
 import io.harness.k8s.model.HelmVersion;
@@ -13,7 +15,7 @@ import java.util.List;
 @EqualsAndHashCode(callSuper = true)
 public class K8sBlueGreenDeployTaskParameters extends K8sTaskParameters implements ManifestAwareTaskParams {
   private K8sDelegateManifestConfig k8sDelegateManifestConfig;
-  @Expression private List<String> valuesYamlList;
+  @Expression(ALLOW_SECRETS) private List<String> valuesYamlList;
   private boolean skipDryRun;
 
   @Builder

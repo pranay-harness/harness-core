@@ -1,5 +1,7 @@
 package software.wings.infra;
 
+import static io.harness.expression.Expression.ALLOW_SECRETS;
+
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import io.harness.expression.Expression;
 import lombok.Builder;
@@ -22,7 +24,7 @@ import java.util.List;
 public class CustomInfrastructure implements InfraMappingInfrastructureProvider, FieldKeyValMapProvider {
   public static final String DUMMY_CLOUD_PROVIDER = "DUMMY_CLOUD_PROVIDER";
 
-  @IncludeFieldMap @Expression private List<NameValuePair> infraVariables;
+  @IncludeFieldMap @Expression(ALLOW_SECRETS) private List<NameValuePair> infraVariables;
   private transient String customDeploymentName;
 
   @Override

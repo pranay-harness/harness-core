@@ -1,5 +1,7 @@
 package software.wings.beans.delegation;
 
+import static io.harness.expression.Expression.ALLOW_SECRETS;
+import static io.harness.expression.Expression.DISALLOW_SECRETS;
 import static software.wings.common.Constants.HARNESS_KUBE_CONFIG_PATH;
 import static software.wings.core.ssh.executors.SshSessionConfig.Builder.aSshSessionConfig;
 
@@ -48,7 +50,7 @@ public class ShellScriptParameters implements TaskParameters, ActivityAccess, Ex
   private String accountId;
   private final String appId;
   private final String activityId;
-  @Expression final String host;
+  @Expression(DISALLOW_SECRETS) final String host;
   private final String userName;
   private final ShellScriptState.ConnectionType connectionType;
   private final List<EncryptedDataDetail> keyEncryptedDataDetails;
@@ -60,7 +62,7 @@ public class ShellScriptParameters implements TaskParameters, ActivityAccess, Ex
   private final Map<String, String> environment;
   private final String workingDirectory;
   private final ScriptType scriptType;
-  @Expression @NonFinal @Setter String script;
+  @Expression(ALLOW_SECRETS) @NonFinal @Setter String script;
   private final boolean executeOnDelegate;
   private final String outputVars;
   private final HostConnectionAttributes hostConnectionAttributes;

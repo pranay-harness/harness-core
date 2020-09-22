@@ -1,5 +1,7 @@
 package software.wings.beans.delegation;
 
+import static io.harness.expression.Expression.ALLOW_SECRETS;
+
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import io.harness.delegate.beans.executioncapability.ExecutionCapabilityDemander;
 import io.harness.delegate.task.ActivityAccess;
@@ -43,7 +45,7 @@ public class TerraformProvisionParameters implements TaskParameters, ActivityAcc
   List<EncryptedDataDetail> sourceRepoEncryptionDetails;
   private final String scriptPath;
   private final List<NameValuePair> rawVariables;
-  @Expression private final Map<String, String> variables;
+  @Expression(ALLOW_SECRETS) private final Map<String, String> variables;
   private final Map<String, EncryptedDataDetail> encryptedVariables;
 
   private final Map<String, String> backendConfigs;
