@@ -15,6 +15,7 @@ import io.harness.beans.CIPipeline;
 import io.harness.beans.CIPipelineSetupParameters;
 import io.harness.beans.executionargs.CIExecutionArgs;
 import io.harness.category.element.UnitTests;
+import io.harness.ci.beans.entities.BuildNumber;
 import io.harness.engine.outputs.ExecutionSweepingOutputService;
 import io.harness.execution.status.Status;
 import io.harness.executionplan.CIExecutionPlanTestHelper;
@@ -54,11 +55,13 @@ public class CIPipelineSetupStepTest extends CIExecutionTest {
     when(executionSweepingOutputResolver.consume(any(), any(), any(), any())).thenReturn("namespace");
     Map<String, String> fieldToExecutionNodeIdMap = new HashMap<>();
     fieldToExecutionNodeIdMap.put("stages", CHILD_ID);
-    CIPipelineSetupParameters stateParameters = CIPipelineSetupParameters.builder()
-                                                    .ciPipeline(ciPipeline)
-                                                    .ciExecutionArgs(CIExecutionArgs.builder().buildNumber(1L).build())
-                                                    .fieldToExecutionNodeIdMap(fieldToExecutionNodeIdMap)
-                                                    .build();
+    BuildNumber buildNumber = BuildNumber.builder().buildNumber(1L).build();
+    CIPipelineSetupParameters stateParameters =
+        CIPipelineSetupParameters.builder()
+            .ciPipeline(ciPipeline)
+            .ciExecutionArgs(CIExecutionArgs.builder().buildNumber(buildNumber).build())
+            .fieldToExecutionNodeIdMap(fieldToExecutionNodeIdMap)
+            .build();
     ChildExecutableResponse childExecutableResponse =
         ciPipelineSetupStep.obtainChild(ambiance, stateParameters, StepInputPackage.builder().build());
     assertThat(childExecutableResponse).isNotNull();

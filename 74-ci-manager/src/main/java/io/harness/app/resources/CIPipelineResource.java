@@ -8,6 +8,7 @@ import io.harness.app.intfc.CIPipelineService;
 import io.harness.app.yaml.YAML;
 import io.harness.beans.CIPipeline;
 import io.harness.beans.executionargs.CIExecutionArgs;
+import io.harness.ci.beans.entities.BuildNumber;
 import io.harness.core.ci.services.BuildNumberService;
 import io.harness.impl.CIPipelineExecutionService;
 import io.harness.ng.core.dto.ResponseDTO;
@@ -74,10 +75,10 @@ public class CIPipelineResource {
       @PathParam("identifier") @NotEmpty String pipelineId) {
     try {
       CIPipeline ciPipeline = ciPipelineService.readPipeline(pipelineId, accountId, orgId, projectId);
-      buildNumberService.increaseBuildNumber(
+      BuildNumber buildNumber = buildNumberService.increaseBuildNumber(
           ciPipeline.getAccountId(), ciPipeline.getOrganizationId(), ciPipeline.getProjectId());
       // TODO create manual execution source
-      CIExecutionArgs ciExecutionArgs = CIExecutionArgs.builder().buildNumber(1L).build();
+      CIExecutionArgs ciExecutionArgs = CIExecutionArgs.builder().buildNumber(buildNumber).build();
       ciPipelineExecutionService.executePipeline(ciPipeline, ciExecutionArgs, 1L);
     } catch (Exception e) {
       logger.error("Failed to run input pipeline ", e);

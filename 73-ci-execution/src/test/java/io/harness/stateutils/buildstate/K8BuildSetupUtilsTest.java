@@ -12,6 +12,13 @@ import static io.harness.common.CIExecutionConstants.DELEGATE_SERVICE_ID_VARIABL
 import static io.harness.common.CIExecutionConstants.DELEGATE_SERVICE_TOKEN_VARIABLE;
 import static io.harness.common.CIExecutionConstants.ENDPOINT_MINIO_VARIABLE;
 import static io.harness.common.CIExecutionConstants.ENDPOINT_MINIO_VARIABLE_VALUE;
+import static io.harness.common.CIExecutionConstants.HARNESS_ACCOUNT_ID_VARIABLE;
+import static io.harness.common.CIExecutionConstants.HARNESS_BUILD_ID_VARIABLE;
+import static io.harness.common.CIExecutionConstants.HARNESS_ORG_ID_VARIABLE;
+import static io.harness.common.CIExecutionConstants.HARNESS_PROJECT_ID_VARIABLE;
+import static io.harness.common.CIExecutionConstants.HARNESS_STAGE_ID_VARIABLE;
+import static io.harness.common.CIExecutionConstants.LOG_SERVICE_ENDPOINT_VARIABLE;
+import static io.harness.common.CIExecutionConstants.LOG_SERVICE_ENDPOINT_VARIABLE_VALUE;
 import static io.harness.common.CIExecutionConstants.SECRET_KEY_MINIO_VARIABLE;
 import static io.harness.rule.OwnerRule.HARSH;
 import static io.harness.stateutils.buildstate.providers.InternalContainerParamsProvider.ContainerKind.ADDON_CONTAINER;
@@ -26,8 +33,10 @@ import static software.wings.common.CICommonPodConstants.STEP_EXEC;
 import com.google.inject.Inject;
 
 import io.harness.beans.environment.K8BuildJobEnvInfo;
+import io.harness.beans.sweepingoutputs.K8PodDetails;
 import io.harness.beans.sweepingoutputs.StepTaskDetails;
 import io.harness.category.element.UnitTests;
+import io.harness.ci.beans.entities.BuildNumber;
 import io.harness.engine.outputs.ExecutionSweepingOutputService;
 import io.harness.executionplan.CIExecutionPlanTestHelper;
 import io.harness.executionplan.CIExecutionTest;
@@ -87,8 +96,23 @@ public class K8BuildSetupUtilsTest extends CIExecutionTest {
 
     K8BuildJobEnvInfo.PodsSetupInfo podsSetupInfo = ciExecutionPlanTestHelper.getCIPodsSetupInfoOnFirstPod();
 
+    String accountID = "account";
+    String orgID = "org";
+    String projectID = "project";
+    Long buildID = 1L;
+    String stageID = "stage";
+    String namespace = "default";
+    BuildNumber buildNumber = BuildNumber.builder()
+                                  .accountIdentifier(accountID)
+                                  .orgIdentifier(orgID)
+                                  .projectIdentifier(projectID)
+                                  .buildNumber(buildID)
+                                  .build();
+    K8PodDetails k8PodDetails =
+        K8PodDetails.builder().namespace(namespace).buildNumber(buildNumber).stageID(stageID).build();
+
     CIK8PodParams<CIK8ContainerParams> podParams =
-        k8BuildSetupUtils.getPodParams(podsSetupInfo.getPodSetupInfoList().get(0), "default",
+        k8BuildSetupUtils.getPodParams(podsSetupInfo.getPodSetupInfoList().get(0), k8PodDetails,
             ciExecutionPlanTestHelper.getExpectedLiteEngineTaskInfoOnFirstPod(), null, true);
 
     Map<String, EncryptedVariableWithType> envSecretVars = new HashMap<>();
@@ -103,6 +127,12 @@ public class K8BuildSetupUtilsTest extends CIExecutionTest {
         podParams.getContainerParamsList().get(0).getEnvVars().get(DELEGATE_SERVICE_TOKEN_VARIABLE));
     envVars.put(DELEGATE_SERVICE_ENDPOINT_VARIABLE, DELEGATE_SERVICE_ENDPOINT_VARIABLE_VALUE);
     envVars.put(DELEGATE_SERVICE_ID_VARIABLE, DELEGATE_SERVICE_ID_VARIABLE_VALUE);
+    envVars.put(LOG_SERVICE_ENDPOINT_VARIABLE, LOG_SERVICE_ENDPOINT_VARIABLE_VALUE);
+    envVars.put(HARNESS_ACCOUNT_ID_VARIABLE, accountID);
+    envVars.put(HARNESS_ORG_ID_VARIABLE, orgID);
+    envVars.put(HARNESS_PROJECT_ID_VARIABLE, projectID);
+    envVars.put(HARNESS_BUILD_ID_VARIABLE, buildID.toString());
+    envVars.put(HARNESS_STAGE_ID_VARIABLE, stageID);
     envVars.putAll(ciExecutionPlanTestHelper.getEnvVars());
 
     Map<String, String> map = new HashMap<>();
@@ -164,7 +194,7 @@ public class K8BuildSetupUtilsTest extends CIExecutionTest {
     assertThat(podParams.getContainerParamsList().get(1).getEnvVars()).containsAllEntriesOf(envVars);
 
     assertThat(podParams.getContainerParamsList().get(2))
-        .isEqualTo(InternalContainerParamsProvider.getContainerParams(ADDON_CONTAINER)
+        .isEqualTo(InternalContainerParamsProvider.getContainerParams(ADDON_CONTAINER, k8PodDetails)
                        .containerSecrets(ContainerSecrets.builder().build())
                        .build());
   }

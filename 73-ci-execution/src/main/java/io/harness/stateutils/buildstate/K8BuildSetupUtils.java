@@ -10,6 +10,13 @@ import static io.harness.common.CIExecutionConstants.DELEGATE_SERVICE_ID_VARIABL
 import static io.harness.common.CIExecutionConstants.DELEGATE_SERVICE_TOKEN_VARIABLE;
 import static io.harness.common.CIExecutionConstants.ENDPOINT_MINIO_VARIABLE;
 import static io.harness.common.CIExecutionConstants.ENDPOINT_MINIO_VARIABLE_VALUE;
+import static io.harness.common.CIExecutionConstants.HARNESS_ACCOUNT_ID_VARIABLE;
+import static io.harness.common.CIExecutionConstants.HARNESS_BUILD_ID_VARIABLE;
+import static io.harness.common.CIExecutionConstants.HARNESS_ORG_ID_VARIABLE;
+import static io.harness.common.CIExecutionConstants.HARNESS_PROJECT_ID_VARIABLE;
+import static io.harness.common.CIExecutionConstants.HARNESS_STAGE_ID_VARIABLE;
+import static io.harness.common.CIExecutionConstants.LOG_SERVICE_ENDPOINT_VARIABLE;
+import static io.harness.common.CIExecutionConstants.LOG_SERVICE_ENDPOINT_VARIABLE_VALUE;
 import static io.harness.common.CIExecutionConstants.SECRET_KEY_MINIO_VARIABLE;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.stateutils.buildstate.providers.InternalContainerParamsProvider.ContainerKind.ADDON_CONTAINER;
@@ -81,7 +88,6 @@ public class K8BuildSetupUtils {
       K8PodDetails k8PodDetails = (K8PodDetails) executionSweepingOutputResolver.resolve(
           ambiance, SweepingOutputRefObject.builder().name(ContextElement.podDetails).build());
 
-      final String namespace = k8PodDetails.getNamespace();
       final String clusterName = k8PodDetails.getClusterName();
       PodSetupInfo podSetupInfo = getPodSetupInfo((K8BuildJobEnvInfo) buildEnvSetupStepInfo.getBuildJobEnvInfo());
 
@@ -90,9 +96,9 @@ public class K8BuildSetupUtils {
 
       // TODO Use k8 connector from element input
       logger.info("Sending pod creation task for {}", podSetupInfo.getName());
-      return SafeHttpCall.execute(managerCIResource.createK8PodTask(clusterName,
+      return SafeHttpCall.execute(managerCIResource.createK8PodTask(k8PodDetails.getAccountId(), clusterName,
           buildEnvSetupStepInfo.getGitConnectorIdentifier(), buildEnvSetupStepInfo.getBranchName(),
-          getPodParams(podSetupInfo, namespace, null, publishStepConnectorIdentifier, false)));
+          getPodParams(podSetupInfo, k8PodDetails, null, publishStepConnectorIdentifier, false)));
 
     } catch (Exception e) {
       logger.error("build state execution failed", e);
@@ -104,7 +110,7 @@ public class K8BuildSetupUtils {
       LiteEngineTaskStepInfo liteEngineTaskStepInfo, Ambiance ambiance) {
     K8PodDetails k8PodDetails = (K8PodDetails) executionSweepingOutputResolver.resolve(
         ambiance, SweepingOutputRefObject.builder().name(ContextElement.podDetails).build());
-    final String namespace = k8PodDetails.getNamespace();
+
     final String clusterName = k8PodDetails.getClusterName();
 
     try {
@@ -114,9 +120,9 @@ public class K8BuildSetupUtils {
           ((K8BuildJobEnvInfo) liteEngineTaskStepInfo.getBuildJobEnvInfo()).getPublishStepConnectorIdentifier();
 
       // TODO Use k8 connector from element input
-      return SafeHttpCall.execute(managerCIResource.createK8PodTask(clusterName,
+      return SafeHttpCall.execute(managerCIResource.createK8PodTask(k8PodDetails.getAccountId(), clusterName,
           liteEngineTaskStepInfo.getGitConnectorIdentifier(), liteEngineTaskStepInfo.getBranchName(),
-          getPodParams(podSetupInfo, namespace, liteEngineTaskStepInfo, publishStepConnectorIdentifier,
+          getPodParams(podSetupInfo, k8PodDetails, liteEngineTaskStepInfo, publishStepConnectorIdentifier,
               liteEngineTaskStepInfo.isUsePVC())));
     } catch (Exception e) {
       logger.error("lite engine task state execution failed", e);
@@ -124,8 +130,9 @@ public class K8BuildSetupUtils {
     return null;
   }
 
-  public CIK8PodParams<CIK8ContainerParams> getPodParams(PodSetupInfo podSetupInfo, String namespace,
+  public CIK8PodParams<CIK8ContainerParams> getPodParams(PodSetupInfo podSetupInfo, K8PodDetails k8PodDetails,
       LiteEngineTaskStepInfo liteEngineTaskStepInfo, Set<String> publishStepConnectorIdentifier, boolean usePVC) {
+    final String namespace = k8PodDetails.getNamespace();
     Map<String, String> map = new HashMap<>();
     map.put(STEP_EXEC, MOUNT_PATH);
     List<String> ports = podSetupInfo.getPodSetupParams()
@@ -143,11 +150,11 @@ public class K8BuildSetupUtils {
             .getContainerDefinitionInfos()
             .stream()
             .map(containerDefinitionInfo
-                -> createCIK8ContainerParams(containerDefinitionInfo, map, liteEngineTaskStepInfo, ports))
+                -> createCIK8ContainerParams(containerDefinitionInfo, map, liteEngineTaskStepInfo, ports, k8PodDetails))
             .collect(toList());
 
     CIK8ContainerParamsBuilder addOnCik8ContainerParamsBuilder =
-        InternalContainerParamsProvider.getContainerParams(ADDON_CONTAINER);
+        InternalContainerParamsProvider.getContainerParams(ADDON_CONTAINER, k8PodDetails);
 
     addOnCik8ContainerParamsBuilder.containerSecrets(
         ContainerSecrets.builder()
@@ -168,12 +175,13 @@ public class K8BuildSetupUtils {
         .containerParamsList(containerParams)
         .pvcParamList(pvcParams)
         .initContainerParamsList(Collections.singletonList(
-            InternalContainerParamsProvider.getContainerParams(LITE_ENGINE_CONTAINER).build()))
+            InternalContainerParamsProvider.getContainerParams(LITE_ENGINE_CONTAINER, k8PodDetails).build()))
         .build();
   }
 
   private CIK8ContainerParams createCIK8ContainerParams(ContainerDefinitionInfo containerDefinitionInfo,
-      Map<String, String> volumeToMountPath, LiteEngineTaskStepInfo liteEngineTaskStepInfo, List<String> ports) {
+      Map<String, String> volumeToMountPath, LiteEngineTaskStepInfo liteEngineTaskStepInfo, List<String> ports,
+      K8PodDetails k8PodDetails) {
     List<String> commands = liteEngineTaskUtils.getLiteEngineCommand();
     List<String> args;
     if (containerDefinitionInfo.getContainerType() == CIContainerType.STEP_EXECUTOR
@@ -193,7 +201,7 @@ public class K8BuildSetupUtils {
         .name(containerDefinitionInfo.getName())
         .containerResourceParams(containerDefinitionInfo.getContainerResourceParams())
         .containerType(CIContainerType.STEP_EXECUTOR)
-        .envVars(getCIExecutorEnvVariables(containerDefinitionInfo))
+        .envVars(getCIExecutorEnvVariables(containerDefinitionInfo, k8PodDetails))
         .containerSecrets(
             ContainerSecrets.builder().encryptedSecrets(getSecretEnvVars(containerDefinitionInfo)).build())
         .commands(commands)
@@ -254,17 +262,29 @@ public class K8BuildSetupUtils {
   }
 
   @NotNull
-  private Map<String, String> getCIExecutorEnvVariables(ContainerDefinitionInfo containerDefinitionInfo) {
+  private Map<String, String> getCIExecutorEnvVariables(
+      ContainerDefinitionInfo containerDefinitionInfo, K8PodDetails k8PodDetails) {
     Map<String, String> envVars = new HashMap<>();
+    final String accountID = k8PodDetails.getBuildNumber().getAccountIdentifier();
+    final String projectID = k8PodDetails.getBuildNumber().getProjectIdentifier();
+    final String orgID = k8PodDetails.getBuildNumber().getOrgIdentifier();
+    final Long buildNumber = k8PodDetails.getBuildNumber().getBuildNumber();
+    final String stageID = k8PodDetails.getStageID();
     if (isNotEmpty(containerDefinitionInfo.getEnvVars())) {
       envVars.putAll(containerDefinitionInfo.getEnvVars()); // Put customer input env variables
     }
-    // Put Harness internal env variable like that of minio
+    // Add environment variables that need to be used inside the lite engine container
     envVars.put(ENDPOINT_MINIO_VARIABLE, ENDPOINT_MINIO_VARIABLE_VALUE);
     envVars.put(BUCKET_MINIO_VARIABLE, BUCKET_MINIO_VARIABLE_VALUE);
     envVars.put(DELEGATE_SERVICE_TOKEN_VARIABLE, serviceTokenUtils.getServiceToken());
     envVars.put(DELEGATE_SERVICE_ENDPOINT_VARIABLE, DELEGATE_SERVICE_ENDPOINT_VARIABLE_VALUE);
     envVars.put(DELEGATE_SERVICE_ID_VARIABLE, DELEGATE_SERVICE_ID_VARIABLE_VALUE);
+    envVars.put(LOG_SERVICE_ENDPOINT_VARIABLE, LOG_SERVICE_ENDPOINT_VARIABLE_VALUE);
+    envVars.put(HARNESS_ACCOUNT_ID_VARIABLE, accountID);
+    envVars.put(HARNESS_PROJECT_ID_VARIABLE, projectID);
+    envVars.put(HARNESS_ORG_ID_VARIABLE, orgID);
+    envVars.put(HARNESS_BUILD_ID_VARIABLE, buildNumber.toString());
+    envVars.put(HARNESS_STAGE_ID_VARIABLE, stageID);
     return envVars;
   }
 }

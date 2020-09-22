@@ -9,6 +9,7 @@ import io.harness.beans.stages.IntegrationStageStepParameters;
 import io.harness.beans.sweepingoutputs.ContextElement;
 import io.harness.beans.sweepingoutputs.K8PodDetails;
 import io.harness.beans.yaml.extended.infrastrucutre.K8sDirectInfraYaml;
+import io.harness.ci.beans.entities.BuildNumber;
 import io.harness.engine.outputs.ExecutionSweepingOutputService;
 import io.harness.facilitator.modes.child.ChildExecutable;
 import io.harness.facilitator.modes.child.ChildExecutableResponse;
@@ -36,10 +37,18 @@ public class IntegrationStageStep implements Step, ChildExecutable<IntegrationSt
             "kubernetes-direct")) {
       K8sDirectInfraYaml k8sDirectInfraYaml =
           (K8sDirectInfraYaml) integrationStageStepParameters.getIntegrationStage().getInfrastructure();
+
+      BuildNumber buildNumber = integrationStageStepParameters.getBuildNumber();
+      String stageID = integrationStageStepParameters.getIntegrationStage().getIdentifier();
+
       K8PodDetails k8PodDetails = K8PodDetails.builder()
                                       .clusterName(k8sDirectInfraYaml.getSpec().getKubernetesCluster())
+                                      .buildNumber(buildNumber)
+                                      .stageID(stageID)
+                                      .accountId(buildNumber.getAccountIdentifier())
                                       .namespace(k8sDirectInfraYaml.getSpec().getNamespace())
                                       .build();
+
       executionSweepingOutputResolver.consume(ambiance, ContextElement.podDetails, k8PodDetails, null);
     }
     final Map<String, String> fieldToExecutionNodeIdMap = integrationStageStepParameters.getFieldToExecutionNodeIdMap();

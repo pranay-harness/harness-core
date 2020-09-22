@@ -12,8 +12,13 @@ public final class CIGitConstants {
   public static final String GIT_USERNAME_ENV_VAR = "GIT_USERNAME"; // Environment variable key to store GIT username
   public static final String GIT_PASS_ENV_VAR = "GIT_PASSWORD"; // Environment variable key to store GIT password
   public static final String GIT_CLONE_CONTAINER_NAME = "git-clone";
+  // TODO: (vistaar) Change this to harness/ci-logger when access is approved
   public static final String GIT_CLONE_IMAGE_NAME = "alpine/git"; // Container image used for cloning GIT repositories
   public static final String GIT_CLONE_IMAGE_TAG = "1.0.10"; // Image version used for cloning GIT repositories
+
+  public static final String LOG_SERVICE_ENDPOINT_VARIABLE = "LOG_SERVICE_ENDPOINT";
+  public static final String LOG_SERVICE_ENDPOINT_VARIABLE_VALUE = "http://34.122.43.109:80";
+
   public static final String GIT_SSH_VOL_NAME = "git-secret"; // Name of volume that stores GIT SSH secret keys
   public static final String PATH_DELIMITER = "/";
   public static final String GIT_SSH_VOL_MOUNT_PATH =

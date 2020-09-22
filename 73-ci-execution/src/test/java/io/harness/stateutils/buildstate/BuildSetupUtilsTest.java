@@ -13,6 +13,7 @@ import com.google.inject.Inject;
 import io.harness.ambiance.Ambiance;
 import io.harness.beans.sweepingoutputs.K8PodDetails;
 import io.harness.category.element.UnitTests;
+import io.harness.ci.beans.entities.BuildNumber;
 import io.harness.engine.expressions.EngineExpressionService;
 import io.harness.engine.outputs.ExecutionSweepingOutputService;
 import io.harness.executionplan.CIExecutionPlanTestHelper;
@@ -53,17 +54,19 @@ public class BuildSetupUtilsTest extends CIExecutionTest {
   @Category(UnitTests.class)
   public void shouldExecuteCILiteEngineTask() throws IOException {
     Call<RestResponse<K8sTaskExecutionResponse>> requestCall = mock(Call.class);
+    BuildNumber buildNumber = BuildNumber.builder().buildNumber(1L).build();
 
     when(requestCall.execute())
         .thenReturn(Response.success(new RestResponse<>(K8sTaskExecutionResponse.builder().build())));
-    when(managerCIResource.createK8PodTask(any(), any(), any(), any())).thenReturn(requestCall);
+    when(managerCIResource.createK8PodTask(any(), any(), any(), any(), any())).thenReturn(requestCall);
     when(engineExpressionService.renderExpression(any(), any())).thenReturn(CLUSTER_NAME);
     when(executionSweepingOutputResolver.resolve(any(), any()))
-        .thenReturn(K8PodDetails.builder().clusterName("cluster").namespace("namespace").build());
+        .thenReturn(
+            K8PodDetails.builder().clusterName("cluster").namespace("namespace").buildNumber(buildNumber).build());
 
     buildSetupUtils.executeCILiteEngineTask(
         ciExecutionPlanTestHelper.getExpectedLiteEngineTaskInfoOnFirstPod(), ambiance);
 
-    verify(managerCIResource, times(1)).createK8PodTask(any(), any(), any(), any());
+    verify(managerCIResource, times(1)).createK8PodTask(any(), any(), any(), any(), any());
   }
 }

@@ -35,11 +35,11 @@ public class CIServiceHelperResource {
   @Path(CICommonEndpointConstants.CI_SETUP_ENDPOINT)
   @Timed
   @LearningEngineAuth
-  public RestResponse<K8sTaskExecutionResponse> setBuildEnv(@QueryParam("k8ConnectorName") String k8ConnectorName,
-      @QueryParam("gitConnectorName") String gitConnectorName, @QueryParam("branchName") String branchName,
-      CIK8PodParams<CIK8ContainerParams> podParams) {
+  public RestResponse<K8sTaskExecutionResponse> setBuildEnv(@QueryParam("accountId") String accountId,
+      @QueryParam("k8ConnectorName") String k8ConnectorName, @QueryParam("gitConnectorName") String gitConnectorName,
+      @QueryParam("branchName") String branchName, CIK8PodParams<CIK8ContainerParams> podParams) {
     return new RestResponse<>(
-        ciDelegateTaskHelperService.setBuildEnv(k8ConnectorName, gitConnectorName, branchName, podParams));
+        ciDelegateTaskHelperService.setBuildEnv(accountId, k8ConnectorName, gitConnectorName, branchName, podParams));
   }
 
   @POST

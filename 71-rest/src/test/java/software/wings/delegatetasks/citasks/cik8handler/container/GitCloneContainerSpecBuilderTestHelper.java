@@ -9,6 +9,8 @@ import static software.wings.delegatetasks.citasks.cik8handler.params.CIGitConst
 import static software.wings.delegatetasks.citasks.cik8handler.params.CIGitConstants.GIT_SSH_VOL_MOUNT_PATH;
 import static software.wings.delegatetasks.citasks.cik8handler.params.CIGitConstants.GIT_SSH_VOL_NAME;
 import static software.wings.delegatetasks.citasks.cik8handler.params.CIGitConstants.GIT_USERNAME_ENV_VAR;
+import static software.wings.delegatetasks.citasks.cik8handler.params.CIGitConstants.LOG_SERVICE_ENDPOINT_VARIABLE;
+import static software.wings.delegatetasks.citasks.cik8handler.params.CIGitConstants.LOG_SERVICE_ENDPOINT_VARIABLE_VALUE;
 
 import io.fabric8.kubernetes.api.model.Container;
 import io.fabric8.kubernetes.api.model.ContainerBuilder;
@@ -166,6 +168,10 @@ public class GitCloneContainerSpecBuilderTestHelper {
     List<EnvVar> envVars = new ArrayList<>();
     envVars.add(new EnvVarBuilder().withName(GIT_USERNAME_ENV_VAR).withValueFrom(gitUserNameSource).build());
     envVars.add(new EnvVarBuilder().withName(GIT_PASS_ENV_VAR).withValueFrom(gitPwdSource).build());
+    envVars.add(new EnvVarBuilder()
+                    .withName(LOG_SERVICE_ENDPOINT_VARIABLE)
+                    .withValue(LOG_SERVICE_ENDPOINT_VARIABLE_VALUE)
+                    .build());
 
     return new ContainerBuilder()
         .withCommand(gitCtrCommands)
@@ -185,6 +191,11 @@ public class GitCloneContainerSpecBuilderTestHelper {
     List<VolumeMount> volumeMounts = new ArrayList<>();
     volumeMounts.add(new VolumeMountBuilder().withName(stepExecVolumeName).withMountPath(volumeMountPath).build());
     volumeMounts.add(new VolumeMountBuilder().withName(GIT_SSH_VOL_NAME).withMountPath(GIT_SSH_VOL_MOUNT_PATH).build());
+    List<EnvVar> envVars = new ArrayList<>();
+    envVars.add(new EnvVarBuilder()
+                    .withName(LOG_SERVICE_ENDPOINT_VARIABLE)
+                    .withValue(LOG_SERVICE_ENDPOINT_VARIABLE_VALUE)
+                    .build());
 
     return new ContainerBuilder()
         .withCommand(gitCtrCommands)
@@ -192,6 +203,7 @@ public class GitCloneContainerSpecBuilderTestHelper {
         .withImage(GIT_CLONE_IMAGE_NAME + ":" + GIT_CLONE_IMAGE_TAG)
         .withName(GIT_CLONE_CONTAINER_NAME)
         .withSecurityContext(new SecurityContextBuilder().withPrivileged(false).build())
+        .withEnv(envVars)
         .withVolumeMounts(volumeMounts)
         .build();
   }
@@ -204,6 +216,11 @@ public class GitCloneContainerSpecBuilderTestHelper {
     List<VolumeMount> volumeMounts = new ArrayList<>();
     volumeMounts.add(new VolumeMountBuilder().withName(stepExecVolumeName).withMountPath(volumeMountPath).build());
     volumeMounts.add(new VolumeMountBuilder().withName(GIT_SSH_VOL_NAME).withMountPath(GIT_SSH_VOL_MOUNT_PATH).build());
+    List<EnvVar> envVars = new ArrayList<>();
+    envVars.add(new EnvVarBuilder()
+                    .withName(LOG_SERVICE_ENDPOINT_VARIABLE)
+                    .withValue(LOG_SERVICE_ENDPOINT_VARIABLE_VALUE)
+                    .build());
 
     return new ContainerBuilder()
         .withCommand(gitCtrCommands)
@@ -211,6 +228,7 @@ public class GitCloneContainerSpecBuilderTestHelper {
         .withImage(GIT_CLONE_IMAGE_NAME + ":" + GIT_CLONE_IMAGE_TAG)
         .withName(GIT_CLONE_CONTAINER_NAME)
         .withSecurityContext(new SecurityContextBuilder().withPrivileged(false).build())
+        .withEnv(envVars)
         .withVolumeMounts(volumeMounts)
         .build();
   }

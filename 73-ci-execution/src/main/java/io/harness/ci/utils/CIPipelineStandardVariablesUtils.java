@@ -10,6 +10,6 @@ import lombok.Builder;
 @Builder
 public class CIPipelineStandardVariablesUtils {
   public static BuildStandardVariables fetchBuildStandardVariables(CIExecutionArgs ciExecutionArgs) {
-    return BuildStandardVariables.builder().number(ciExecutionArgs.getBuildNumber()).build();
+    return BuildStandardVariables.builder().number(ciExecutionArgs.getBuildNumber().getBuildNumber()).build();
   }
 }
