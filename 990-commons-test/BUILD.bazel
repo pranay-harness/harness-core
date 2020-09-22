@@ -3,6 +3,7 @@ load("//:GenTestRules.bzl", "run_tests")
 load("//tools/checkstyle:rules.bzl", "checkstyle")
 load("//:macros.bzl", "sources")
 load("//:macros.bzl", "sonarqube_test")
+load("//tools/pmd:defs.bzl","pmd")
 
 sources()
 
@@ -78,3 +79,5 @@ sonarqube_test(
         ":module",
     ],
 )
+
+pmd()
