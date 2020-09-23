@@ -112,4 +112,12 @@ public class DelegateTaskSelectorMapServiceImpl implements DelegateTaskSelectorM
     }
     return existingMap;
   }
+
+  @Override
+  public TaskSelectorMap get(String accountId, String taskGroup) {
+    return hPersistence.createQuery(TaskSelectorMap.class)
+        .filter(TaskSelectorMapKeys.accountId, accountId)
+        .filter(TaskSelectorMapKeys.taskGroup, taskGroup)
+        .get();
+  }
 }

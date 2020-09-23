@@ -47,4 +47,13 @@ public interface DelegateTaskSelectorMapService {
    * @return updated task selector map, or null if map is deleted as result.
    */
   TaskSelectorMap removeTaskSelector(String accountId, String taskSelectorMapUuid, String taskSelector);
+
+  /**
+   * Get task selector map given task group.
+   *
+   * @param accountId
+   * @param taskGroup
+   * @return
+   */
+  TaskSelectorMap get(String accountId, String taskGroup);
 }
