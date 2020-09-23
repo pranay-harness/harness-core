@@ -71,6 +71,7 @@ import io.harness.category.element.UnitTests;
 import io.harness.ccm.config.CCMSettingService;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.exception.GeneralException;
+import io.harness.exception.InvalidRequestException;
 import io.harness.exception.UserGroupAlreadyExistException;
 import io.harness.limits.LimitCheckerFactory;
 import io.harness.rule.Owner;
@@ -844,6 +845,22 @@ public class UserGroupServiceImplTest extends WingsBaseTest {
 
     UserGroup savedUserGroup = userGroupService.save(userGroup);
     assertThat(savedUserGroup).isNull();
+  }
+
+  @Test(expected = InvalidRequestException.class)
+  @Owner(developers = VOJIN)
+  @Category(UnitTests.class)
+  public void shouldNotSaveUserGroupWithInvalidName() {
+    UserGroup userGroup = builder()
+                              .accountId(accountId)
+                              .uuid(userGroupId)
+                              .description(description)
+                              .name("<a href='http://authorization.site'>Click ME</a>")
+                              .appPermissions(Sets.newHashSet(envPermission))
+                              .memberIds(asList(user1Id, user2Id))
+                              .build();
+
+    userGroupService.save(userGroup);
   }
 
   @Test(expected = UserGroupAlreadyExistException.class)

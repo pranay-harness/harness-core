@@ -113,6 +113,8 @@ public class SignupServiceTest extends WingsBaseTest {
     final String blankName = "  ";
     assertThatThrownBy(() -> signupService.validateName(blankName)).isInstanceOf(InvalidArgumentsException.class);
     assertThatThrownBy(() -> signupService.validateName(null)).isInstanceOf(InvalidArgumentsException.class);
+    assertThatThrownBy(() -> signupService.validateName("<a href='http://authorization.site'>Click ME</a>"))
+        .isInstanceOf(InvalidArgumentsException.class);
   }
 
   private void fail() {

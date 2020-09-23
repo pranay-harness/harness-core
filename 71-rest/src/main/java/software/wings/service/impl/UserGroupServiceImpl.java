@@ -111,6 +111,8 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ExecutorService;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import javax.annotation.Nullable;
 import javax.validation.constraints.NotNull;
@@ -127,6 +129,8 @@ public class UserGroupServiceImpl implements UserGroupService {
   private static final Logger log = LoggerFactory.getLogger(UserGroupServiceImpl.class);
 
   public static final String DEFAULT_USER_GROUP_DESCRIPTION = "Default account admin user group";
+
+  private static final Pattern userGroupNamePattern = Pattern.compile("^[a-zA-Z0-9 -._]*$");
 
   @Inject private ExecutorService executors;
   @Inject private WingsPersistence wingsPersistence;
@@ -149,6 +153,7 @@ public class UserGroupServiceImpl implements UserGroupService {
     checkUserGroupsCountWithinLimit(userGroup.getAccountId());
     checkForUserGroupWithEmptyName(userGroup);
     checkForUserGroupWithSameName(userGroup);
+    validateUserGroupName(userGroup.getName());
 
     if (null == userGroup.getNotificationSettings()) {
       NotificationSettings notificationSettings = new NotificationSettings(false, true, emptyList(), null, "", "");
@@ -171,6 +176,14 @@ public class UserGroupServiceImpl implements UserGroupService {
     logger.info("Auditing creation of new userGroup={} and account={}", userGroup.getName(), account.getAccountName());
     eventPublishHelper.publishSetupRbacEvent(userGroup.getAccountId(), savedUserGroup.getUuid(), EntityType.USER_GROUP);
     return savedUserGroup;
+  }
+
+  private void validateUserGroupName(String name) {
+    Matcher matcher = userGroupNamePattern.matcher(name);
+
+    if (!matcher.matches()) {
+      throw new InvalidRequestException("User group name is not valid.");
+    }
   }
 
   private AccountPermissions addDefaultCePermissions(AccountPermissions accountPermissions) {
@@ -377,6 +390,7 @@ public class UserGroupServiceImpl implements UserGroupService {
     UserGroup userGroupFromDB = get(userGroup.getAccountId(), userGroup.getUuid());
     checkForUserGroupWithSameName(userGroup);
     checkForUserGroupWithEmptyName(userGroup);
+    validateUserGroupName(userGroup.getName());
     if (UserGroupUtils.isAdminUserGroup(userGroupFromDB)) {
       throw new WingsException(
           ErrorCode.UPDATE_NOT_ALLOWED, "Can not update name/description of Account Administrator user group");
@@ -652,6 +666,7 @@ public class UserGroupServiceImpl implements UserGroupService {
   @Override
   public UserGroup cloneUserGroup(
       final String accountId, final String uuid, final String newName, final String newDescription) {
+    validateUserGroupName(newName);
     UserGroup existingGroup = get(accountId, uuid, true);
     notNullCheck("userGroup", existingGroup);
     unEqualCheck(existingGroup.getName(), newName);
