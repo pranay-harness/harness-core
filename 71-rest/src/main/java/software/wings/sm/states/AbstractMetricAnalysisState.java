@@ -193,11 +193,11 @@ public abstract class AbstractMetricAnalysisState extends AbstractAnalysisState 
           }
         }
 
-        if (isEmpty(canaryNewHostNames) && !isAwsLambdaState(context)) {
+        if (analysisContext.isSkipVerification()) {
           getLogger().warn(
               "id: {}, Could not find test nodes to compare the data", context.getStateExecutionInstanceId());
-          return generateAnalysisResponse(analysisContext, ExecutionStatus.FAILED,
-              "Could not find newly deployed instances. Please ensure that new workflow resulted in actual deployment.");
+          return generateAnalysisResponse(analysisContext, ExecutionStatus.SKIPPED,
+              "Could not find newly deployed instances. Skipping verification");
         }
 
         Map<String, String> lastExecutionNodes = analysisContext.getControlNodes();
@@ -434,12 +434,12 @@ public abstract class AbstractMetricAnalysisState extends AbstractAnalysisState 
   }
 
   private AnalysisContext getAnalysisContext(ExecutionContext context, String correlationId) {
-    NodePair nodePair = getControlAndTestNodes(context);
+    CVInstanceApiResponse cvInstanceAPIResponse = getCVInstanceAPIResponse(context);
     getLogger().info("Using new instance API");
     Map<String, String> testNodes =
-        nodePair.getTestNodes().stream().collect(Collectors.toMap(key -> key, key -> DEFAULT_GROUP_NAME));
-    Map<String, String> controlNodes =
-        nodePair.getControlNodes().stream().collect(Collectors.toMap(key -> key, key -> DEFAULT_GROUP_NAME));
+        cvInstanceAPIResponse.getTestNodes().stream().collect(Collectors.toMap(key -> key, key -> DEFAULT_GROUP_NAME));
+    Map<String, String> controlNodes = cvInstanceAPIResponse.getControlNodes().stream().collect(
+        Collectors.toMap(key -> key, key -> DEFAULT_GROUP_NAME));
 
     int timeDurationInt = Integer.parseInt(getTimeDuration());
     String accountId = appService.get(context.getAppId()).getAccountId();
@@ -473,9 +473,10 @@ public abstract class AbstractMetricAnalysisState extends AbstractAnalysisState 
             .isHistoricalDataCollection(isHistoricalDataCollection)
             .initialDelaySeconds(getDelaySeconds(initialAnalysisDelay))
             .dataCollectionIntervalMins(getDataCollectionRate())
-            .newNodesTrafficShiftPercent(nodePair.getNewNodesTrafficShiftPercent().isPresent()
-                    ? nodePair.getNewNodesTrafficShiftPercent().get()
+            .newNodesTrafficShiftPercent(cvInstanceAPIResponse.getNewNodesTrafficShiftPercent().isPresent()
+                    ? cvInstanceAPIResponse.getNewNodesTrafficShiftPercent().get()
                     : null)
+            .skipVerification(cvInstanceAPIResponse.isSkipVerification())
             .build();
     if (getCVTaskFeatureName().isPresent()) {
       analysisContext.setFeatureFlag(

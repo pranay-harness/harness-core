@@ -78,7 +78,7 @@ import software.wings.service.intfc.appdynamics.AppdynamicsService;
 import software.wings.service.intfc.verification.CVActivityLogService.Logger;
 import software.wings.sm.ExecutionResponse;
 import software.wings.sm.StateType;
-import software.wings.sm.states.AbstractAnalysisState.NodePair;
+import software.wings.sm.states.AbstractAnalysisState.CVInstanceApiResponse;
 import software.wings.sm.states.AppDynamicsState.AppDynamicsStateKeys;
 import software.wings.verification.VerificationStateAnalysisExecutionData;
 
@@ -168,13 +168,13 @@ public class AppDynamicsStateTest extends APMStateVerificationTestBase {
   @Category(UnitTests.class)
   public void shouldTestNonTemplatized() {
     AppDynamicsState spyAppDynamicsState = setupNonTemplatized(false);
-    doReturn(NodePair.builder()
+    doReturn(CVInstanceApiResponse.builder()
                  .controlNodes(Collections.emptySet())
                  .testNodes(Collections.singleton("node"))
                  .newNodesTrafficShiftPercent(Optional.empty())
                  .build())
         .when(spyAppDynamicsState)
-        .getControlAndTestNodes(any());
+        .getCVInstanceAPIResponse(any());
     ExecutionResponse executionResponse = spyAppDynamicsState.execute(executionContext);
     assertThat(executionResponse.getExecutionStatus()).isEqualTo(ExecutionStatus.RUNNING);
   }
@@ -188,13 +188,13 @@ public class AppDynamicsStateTest extends APMStateVerificationTestBase {
     String applicationIdExpression = "${workflow.variables.applicationId}";
     appDynamicsState.setApplicationId(applicationIdExpression);
     AppDynamicsState spyAppDynamicsState = setupNonTemplatized(false);
-    doReturn(NodePair.builder()
+    doReturn(CVInstanceApiResponse.builder()
                  .controlNodes(Collections.emptySet())
                  .testNodes(Collections.singleton("node"))
                  .newNodesTrafficShiftPercent(Optional.empty())
                  .build())
         .when(spyAppDynamicsState)
-        .getControlAndTestNodes(any());
+        .getCVInstanceAPIResponse(any());
     ExecutionResponse executionResponse = spyAppDynamicsState.execute(executionContext);
     assertThat(executionResponse.getExecutionStatus()).isEqualTo(ExecutionStatus.ERROR);
     assertThat(executionResponse.getErrorMessage())
@@ -214,13 +214,13 @@ public class AppDynamicsStateTest extends APMStateVerificationTestBase {
     when(appdynamicsService.getAppDynamicsApplicationByName(any(), eq(applicationName), anyString(), anyString()))
         .thenReturn(applicationId);
     AppDynamicsState spyAppDynamicsState = setupNonTemplatized(false);
-    doReturn(NodePair.builder()
+    doReturn(CVInstanceApiResponse.builder()
                  .controlNodes(Collections.emptySet())
                  .testNodes(Collections.singleton("node"))
                  .newNodesTrafficShiftPercent(Optional.empty())
                  .build())
         .when(spyAppDynamicsState)
-        .getControlAndTestNodes(any());
+        .getCVInstanceAPIResponse(any());
     ExecutionResponse executionResponse = spyAppDynamicsState.execute(executionContext);
     assertThat(executionResponse.getExecutionStatus()).isEqualTo(ExecutionStatus.ERROR);
     assertThat(executionResponse.getErrorMessage())
@@ -240,13 +240,13 @@ public class AppDynamicsStateTest extends APMStateVerificationTestBase {
         .thenReturn(applicationId);
     when(executionContext.renderExpression(eq(applicationIdExpression))).thenReturn("tierName");
     AppDynamicsState spyAppDynamicsState = setupNonTemplatized(false);
-    doReturn(NodePair.builder()
+    doReturn(CVInstanceApiResponse.builder()
                  .controlNodes(Collections.emptySet())
                  .testNodes(Collections.singleton("node"))
                  .newNodesTrafficShiftPercent(Optional.empty())
                  .build())
         .when(spyAppDynamicsState)
-        .getControlAndTestNodes(any());
+        .getCVInstanceAPIResponse(any());
     ExecutionResponse executionResponse = spyAppDynamicsState.execute(executionContext);
     assertThat(executionResponse.getExecutionStatus()).isEqualTo(ExecutionStatus.ERROR);
     assertThat(executionResponse.getErrorMessage())
@@ -270,13 +270,13 @@ public class AppDynamicsStateTest extends APMStateVerificationTestBase {
         .thenReturn(applicationId);
     when(appdynamicsService.getTierByName(any(), any(), eq(tierName), anyString(), anyString(), any()))
         .thenReturn(tierId);
-    doReturn(NodePair.builder()
+    doReturn(CVInstanceApiResponse.builder()
                  .controlNodes(Collections.emptySet())
                  .testNodes(Collections.singleton("node"))
                  .newNodesTrafficShiftPercent(Optional.empty())
                  .build())
         .when(spyAppDynamicsState)
-        .getControlAndTestNodes(any());
+        .getCVInstanceAPIResponse(any());
     ExecutionResponse executionResponse = spyAppDynamicsState.execute(executionContext);
     assertThat(executionResponse.getExecutionStatus()).isEqualTo(RUNNING);
   }
@@ -300,13 +300,13 @@ public class AppDynamicsStateTest extends APMStateVerificationTestBase {
       appDynamicsState.setTierId("123aa");
     }
     AppDynamicsState spyAppDynamicsState = spy(appDynamicsState);
-    doReturn(NodePair.builder()
+    doReturn(CVInstanceApiResponse.builder()
                  .controlNodes(Collections.singleton("control"))
                  .testNodes(Collections.singleton("test"))
                  .newNodesTrafficShiftPercent(Optional.empty())
                  .build())
         .when(spyAppDynamicsState)
-        .getControlAndTestNodes(any());
+        .getCVInstanceAPIResponse(any());
     doReturn(workflowId).when(spyAppDynamicsState).getWorkflowId(executionContext);
     doReturn(serviceId).when(spyAppDynamicsState).getPhaseServiceId(executionContext);
     when(workflowStandardParams.getEnv())
@@ -324,13 +324,13 @@ public class AppDynamicsStateTest extends APMStateVerificationTestBase {
   @Category(UnitTests.class)
   public void shouldTestNonTemplatizedBadTier() {
     AppDynamicsState spyAppDynamicsState = setupNonTemplatized(true);
-    doReturn(NodePair.builder()
+    doReturn(CVInstanceApiResponse.builder()
                  .controlNodes(Collections.emptySet())
                  .testNodes(Collections.singleton("node"))
                  .newNodesTrafficShiftPercent(Optional.empty())
                  .build())
         .when(spyAppDynamicsState)
-        .getControlAndTestNodes(any());
+        .getCVInstanceAPIResponse(any());
     ExecutionResponse executionResponse = spyAppDynamicsState.execute(executionContext);
     assertThat(executionResponse.getExecutionStatus()).isEqualTo(ERROR);
     assertThat(executionResponse.getErrorMessage())
@@ -373,13 +373,13 @@ public class AppDynamicsStateTest extends APMStateVerificationTestBase {
             .build()));
 
     AppDynamicsState spyAppDynamicsState = spy(appDynamicsState);
-    doReturn(NodePair.builder()
+    doReturn(AbstractAnalysisState.CVInstanceApiResponse.builder()
                  .controlNodes(Collections.singleton("control"))
                  .testNodes(Collections.singleton("test"))
                  .newNodesTrafficShiftPercent(Optional.empty())
                  .build())
         .when(spyAppDynamicsState)
-        .getControlAndTestNodes(any());
+        .getCVInstanceAPIResponse(any());
     doReturn(workflowId).when(spyAppDynamicsState).getWorkflowId(executionContext);
     doReturn(serviceId).when(spyAppDynamicsState).getPhaseServiceId(executionContext);
 
@@ -666,13 +666,13 @@ public class AppDynamicsStateTest extends APMStateVerificationTestBase {
         .when(spyAppDynamicsState)
         .getTemplateExpressions();
 
-    doReturn(NodePair.builder()
+    doReturn(CVInstanceApiResponse.builder()
                  .controlNodes(Collections.singleton("control"))
                  .testNodes(Collections.singleton("test"))
                  .newNodesTrafficShiftPercent(Optional.empty())
                  .build())
         .when(spyAppDynamicsState)
-        .getControlAndTestNodes(any());
+        .getCVInstanceAPIResponse(any());
     doReturn(workflowId).when(spyAppDynamicsState).getWorkflowId(executionContext);
     doReturn(serviceId).when(spyAppDynamicsState).getPhaseServiceId(executionContext);
 
@@ -688,13 +688,13 @@ public class AppDynamicsStateTest extends APMStateVerificationTestBase {
         .getEnv();
     when(executionContext.getContextElement(ContextElementType.STANDARD)).thenReturn(workflowStandardParams);
 
-    doReturn(NodePair.builder()
+    doReturn(CVInstanceApiResponse.builder()
                  .controlNodes(Collections.emptySet())
                  .testNodes(Collections.singleton("node"))
                  .newNodesTrafficShiftPercent(Optional.empty())
                  .build())
         .when(spyAppDynamicsState)
-        .getControlAndTestNodes(any());
+        .getCVInstanceAPIResponse(any());
 
     ExecutionResponse executionResponse = spyAppDynamicsState.execute(executionContext);
     assertThat(executionResponse.getExecutionStatus()).isEqualTo(ERROR);

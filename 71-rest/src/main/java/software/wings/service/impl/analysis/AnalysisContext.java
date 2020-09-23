@@ -111,6 +111,7 @@ public class AnalysisContext extends Base implements PersistentRegularIterable, 
   private boolean isHistoricalDataCollection;
   private boolean inspectHostsInLogs;
   @Nullable private Integer newNodesTrafficShiftPercent;
+  private boolean skipVerification;
 
   @JsonIgnore
   @SchemaIgnore
@@ -132,7 +133,7 @@ public class AnalysisContext extends Base implements PersistentRegularIterable, 
       String hostNameField, int collectionInterval, long startDataCollectionMinute,
       DataCollectionInfo dataCollectionInfo, int initialDelaySeconds, int dataCollectionIntervalMins,
       boolean isHistoricalDataCollection, String customThresholdRefId, boolean inspectHostsInLogs,
-      Integer newNodesTrafficShiftPercent) {
+      Integer newNodesTrafficShiftPercent, boolean skipVerification) {
     super(uuid, appId, createdBy, createdAt, lastUpdatedBy, lastUpdatedAt, entityYamlPath, syncFromGit);
     this.accountId = accountId;
     this.workflowId = workflowId;
@@ -177,6 +178,7 @@ public class AnalysisContext extends Base implements PersistentRegularIterable, 
     this.customThresholdRefId = customThresholdRefId;
     this.inspectHostsInLogs = inspectHostsInLogs;
     this.newNodesTrafficShiftPercent = newNodesTrafficShiftPercent;
+    this.skipVerification = skipVerification;
   }
 
   public LogClusterContext getClusterContext() {

@@ -157,8 +157,8 @@ public class DynatraceState extends AbstractMetricAnalysisState {
     return Collections.singletonMap(TEST_HOST_NAME, DEFAULT_GROUP_NAME);
   }
   @Override
-  protected NodePair getControlAndTestNodes(ExecutionContext context) {
-    return NodePair.builder()
+  protected CVInstanceApiResponse getCVInstanceAPIResponse(ExecutionContext context) {
+    return CVInstanceApiResponse.builder()
         .testNodes(getCanaryNewHostNames(context).keySet())
         .controlNodes(getComparisonStrategy() == COMPARE_WITH_PREVIOUS ? Collections.emptySet()
                                                                        : getLastExecutionNodes(context).keySet())

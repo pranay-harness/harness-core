@@ -1,6 +1,7 @@
 package software.wings.sm.states;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.govern.Switch.noop;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static software.wings.beans.AccountType.COMMUNITY;
@@ -670,17 +671,19 @@ public abstract class AbstractAnalysisState extends State {
     return settingAttribute;
   }
 
-  protected NodePair getControlAndTestNodes(ExecutionContext context) {
+  protected CVInstanceApiResponse getCVInstanceAPIResponse(ExecutionContext context) {
     String hostNameTemplate = isEmpty(getHostnameTemplate()) ? DEFAULT_HOSTNAME_TEMPLATE : getHostnameTemplate();
-    NodePair nodePair = getNodePair(context, hostNameTemplate);
+    CVInstanceApiResponse cvInstanceAPIResponse = getCVInstanceAPIResponse(context, hostNameTemplate);
     if (hostNameTemplate == DEFAULT_HOSTNAME_TEMPLATE) {
       try {
-        NodePair nodePairWithNewDefaultHostnameTemplate = getNodePair(context, "${instanceDetails.hostName}");
-        if (!nodePair.equals(nodePairWithNewDefaultHostnameTemplate)) {
-          getLogger().info("[NewInstanceAPI][Error] NodePair values returned from default template are different {} {}",
-              nodePair, nodePairWithNewDefaultHostnameTemplate);
+        CVInstanceApiResponse cvInstanceApiResponseWithNewDefaultHostnameTemplate =
+            getCVInstanceAPIResponse(context, "${instanceDetails.hostName}");
+        if (!cvInstanceAPIResponse.equals(cvInstanceApiResponseWithNewDefaultHostnameTemplate)) {
+          getLogger().info(
+              "[NewInstanceAPI][Error] CVInstanceApiResponse values returned from default template are different {} {}",
+              cvInstanceAPIResponse, cvInstanceApiResponseWithNewDefaultHostnameTemplate);
         } else {
-          getLogger().info("[NewInstanceAPI] NodePair values are same for default template");
+          getLogger().info("[NewInstanceAPI] CVInstanceApiResponse values are same for default template");
         }
       } catch (Exception e) {
         getLogger().info(
@@ -690,33 +693,41 @@ public abstract class AbstractAnalysisState extends State {
     } else {
       getLogger().info("[NewInstanceAPI] hostNameTemplate is not default {}", hostNameTemplate);
     }
-    return nodePair;
+    return cvInstanceAPIResponse;
   }
 
-  private NodePair getNodePair(ExecutionContext context, String hostNameTemplate) {
+  private CVInstanceApiResponse getCVInstanceAPIResponse(ExecutionContext context, String hostNameTemplate) {
     Set<String> controlNodes, testNodes;
-    InstanceApiResponse instanceApiResponse;
-    Optional<Integer> newNodesTrafficShift;
 
+    Optional<Integer> newNodesTrafficShift;
+    boolean skipVerification;
     if (getComparisonStrategy() == COMPARE_WITH_PREVIOUS) {
-      instanceApiResponse = context.renderExpressionsForInstanceDetails(hostNameTemplate, true);
+      InstanceApiResponse instanceApiResponse = context.renderExpressionsForInstanceDetails(hostNameTemplate, true);
       testNodes = new HashSet<>(instanceApiResponse.getInstances());
       newNodesTrafficShift = instanceApiResponse.getNewInstanceTrafficPercent();
       controlNodes = new HashSet<>();
+      skipVerification = instanceApiResponse.isSkipVerification();
     } else {
-      Set<String> allNodes =
-          new HashSet<>(context.renderExpressionsForInstanceDetailsForWorkflow(hostNameTemplate, false).getInstances());
-      instanceApiResponse = includePreviousPhaseNodes
+      InstanceApiResponse allNodesResponse =
+          context.renderExpressionsForInstanceDetailsForWorkflow(hostNameTemplate, false);
+      Set<String> allNodes = new HashSet<>(allNodesResponse.getInstances());
+      InstanceApiResponse instanceApiResponse = includePreviousPhaseNodes
           ? context.renderExpressionsForInstanceDetailsForWorkflow(hostNameTemplate, true)
           : context.renderExpressionsForInstanceDetails(hostNameTemplate, true);
+      skipVerification = instanceApiResponse.isSkipVerification() || allNodesResponse.isSkipVerification();
       testNodes = new HashSet<>(instanceApiResponse.getInstances());
       newNodesTrafficShift = instanceApiResponse.getNewInstanceTrafficPercent();
       Set<String> allPhaseNewNodes =
           new HashSet<>(context.renderExpressionsForInstanceDetailsForWorkflow(hostNameTemplate, true).getInstances());
       controlNodes = Sets.difference(allNodes, allPhaseNewNodes);
     }
-    return NodePair.builder()
+    if (!skipVerification) {
+      // this is part of the contract with CDP team to always have test node if skipVerification is false.
+      Preconditions.checkState(isNotEmpty(testNodes), "Could not find newly deployed instances.");
+    }
+    return CVInstanceApiResponse.builder()
         .controlNodes(controlNodes)
+        .skipVerification(skipVerification)
         .testNodes(testNodes)
         .newNodesTrafficShiftPercent(newNodesTrafficShift)
         .build();
@@ -724,9 +735,10 @@ public abstract class AbstractAnalysisState extends State {
 
   @Value
   @Builder
-  protected static class NodePair {
+  protected static class CVInstanceApiResponse {
     private Set<String> controlNodes;
     private Set<String> testNodes;
+    private boolean skipVerification;
     private Optional<Integer> newNodesTrafficShiftPercent;
   }
 }
