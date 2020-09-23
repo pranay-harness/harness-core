@@ -1,6 +1,7 @@
 package io.harness.cdng.pipeline.service;
 
 import com.google.common.collect.ImmutableMap;
+import com.google.gson.Gson;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
@@ -11,8 +12,10 @@ import io.harness.cdng.pipeline.CDPipeline;
 import io.harness.cdng.pipeline.executions.PipelineExecutionStatus;
 import io.harness.cdng.pipeline.executions.TriggerType;
 import io.harness.cdng.pipeline.executions.beans.CDStageExecution;
+import io.harness.cdng.pipeline.executions.beans.ExecutionGraph;
 import io.harness.cdng.pipeline.executions.beans.ParallelStageExecution;
 import io.harness.cdng.pipeline.executions.beans.PipelineExecution;
+import io.harness.cdng.pipeline.executions.beans.PipelineExecutionDetail;
 import io.harness.cdng.pipeline.executions.beans.StageExecution;
 import io.harness.cdng.pipeline.executions.beans.dto.PipelineExecutionDTO;
 import io.harness.cdng.pipeline.mappers.ExecutionToDtoMapper;
@@ -30,10 +33,15 @@ import software.wings.beans.User;
 import software.wings.security.UserThreadLocal;
 
 import java.io.IOException;
+import java.net.URL;
+import java.nio.charset.Charset;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import javax.annotation.Nonnull;
 
 @Singleton
 public class NgPipelineExecutionServiceImpl implements NgPipelineExecutionService {
@@ -73,10 +81,26 @@ public class NgPipelineExecutionServiceImpl implements NgPipelineExecutionServic
   @Override
   public List<PipelineExecutionDTO> getExecutions(
       String accountId, String orgId, String projectId, Criteria criteria, Pageable pageable) {
-    return Lists.newArrayList(ExecutionToDtoMapper.writeExecutionDto(CreateDummyPipelineExecution()));
+    return Lists.newArrayList(ExecutionToDtoMapper.writeExecutionDto(createDummyPipelineExecution()));
   }
 
-  private PipelineExecution CreateDummyPipelineExecution() {
+  @Override
+  public PipelineExecutionDetail getPipelineExecutionDetail(@Nonnull String planExecutionId, String stageIdentifier)
+      throws IOException {
+    ClassLoader classLoader = this.getClass().getClassLoader();
+    final URL testFile = classLoader.getResource("cdng/executionGraphResponse.yaml");
+    String content = new String(Files.readAllBytes(Paths.get(testFile.getPath())), Charset.defaultCharset());
+    Gson gson = new Gson();
+
+    ExecutionGraph executionGraph = gson.fromJson(content, ExecutionGraph.class);
+
+    return PipelineExecutionDetail.builder()
+        .pipelineExecution(ExecutionToDtoMapper.writeExecutionDto(createDummyPipelineExecution()))
+        .stageGraph(executionGraph)
+        .build();
+  }
+
+  private PipelineExecution createDummyPipelineExecution() {
     String artifactIdentifier = "artifactIdentifier";
     List<StageExecution> stageExecutions = new ArrayList<>();
     stageExecutions.add(

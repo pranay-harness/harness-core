@@ -7,6 +7,7 @@ import com.google.inject.Inject;
 import com.codahale.metrics.annotation.ExceptionMetered;
 import com.codahale.metrics.annotation.Timed;
 import io.harness.cdng.pipeline.executions.beans.PipelineExecution;
+import io.harness.cdng.pipeline.executions.beans.PipelineExecutionDetail;
 import io.harness.cdng.pipeline.executions.beans.dto.PipelineExecutionDTO;
 import io.harness.cdng.pipeline.service.NgPipelineExecutionServiceImpl;
 import io.harness.ng.core.RestQueryFilterParser;
@@ -22,12 +23,14 @@ import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.mongodb.core.query.Criteria;
 
+import java.io.IOException;
 import java.util.List;
 import javax.validation.constraints.NotNull;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DefaultValue;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
+import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 
@@ -60,5 +63,18 @@ public class CDNGExecutionResource {
     List<PipelineExecutionDTO> pipelines =
         executionService.getExecutions(accountId, orgId, projectId, criteria, getPageRequest(page, size, sort));
     return ResponseDTO.newResponse(pipelines);
+  }
+
+  @GET
+  @Timed
+  @ExceptionMetered
+  @ApiOperation(value = "Gets Executions list", nickname = "getPipelineExecutionDetail")
+  @Path("/{planExecutionId}")
+  public ResponseDTO<PipelineExecutionDetail> getPipelineExecutionDetail(
+      @NotNull @QueryParam("accountIdentifier") String accountId, @NotNull @QueryParam("orgIdentifier") String orgId,
+      @NotNull @QueryParam("projectIdentifier") String projectId,
+      @NotNull @PathParam("planExecutionId") String planExecutionId,
+      @NotNull @QueryParam("stageIdentifier") String stageIdentifier) throws IOException {
+    return ResponseDTO.newResponse(executionService.getPipelineExecutionDetail(planExecutionId, stageIdentifier));
   }
 }
