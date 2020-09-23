@@ -4,6 +4,7 @@ import static io.harness.cache.CacheBackend.NOOP;
 import static io.harness.mongo.MongoModule.defaultMongoClientOptions;
 import static org.mockito.Mockito.mock;
 
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.inject.AbstractModule;
 import com.google.inject.Injector;
@@ -29,6 +30,8 @@ import io.harness.cache.CacheModule;
 import io.harness.commandlibrary.client.CommandLibraryServiceHttpClient;
 import io.harness.configuration.ConfigurationType;
 import io.harness.connector.ConnectorPersistenceConfig;
+import io.harness.delegate.beans.DelegateAsyncTaskResponse;
+import io.harness.delegate.beans.DelegateSyncTaskResponse;
 import io.harness.event.EventsModule;
 import io.harness.event.handler.segment.SegmentConfig;
 import io.harness.factory.ClosingFactory;
@@ -41,9 +44,10 @@ import io.harness.grpc.client.GrpcClientConfig;
 import io.harness.grpc.client.ManagerGrpcClientModule;
 import io.harness.grpc.server.Connector;
 import io.harness.grpc.server.GrpcServerConfig;
-import io.harness.mongo.HObjectFactory;
 import io.harness.mongo.MongoConfig;
+import io.harness.mongo.ObjectFactoryModule;
 import io.harness.mongo.QueryFactory;
+import io.harness.morphia.MorphiaRegistrar;
 import io.harness.organizationmanagerclient.OrganizationManagerClientConfig;
 import io.harness.persistence.HPersistence;
 import io.harness.rest.RestResponse;
@@ -54,6 +58,9 @@ import io.harness.serializer.KryoRegistrar;
 import io.harness.serializer.ManagerRegistrars;
 import io.harness.serializer.kryo.CvNextGenCommonsBeansKryoRegistrar;
 import io.harness.serializer.kryo.TestPersistenceKryoRegistrar;
+import io.harness.serializer.morphia.BatchProcessingMorphiaRegistrar;
+import io.harness.serializer.morphia.EventServerMorphiaRegistrar;
+import io.harness.serializer.morphia.TestPersistenceMorphiaRegistrar;
 import io.harness.service.DelegateServiceModule;
 import io.harness.spring.AliasRegistrar;
 import io.harness.testframework.framework.ManagerExecutor;
@@ -97,6 +104,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import javax.validation.Validation;
@@ -110,7 +118,6 @@ public class FunctionalTestRule implements MethodRule, InjectorRuleMixin, MongoR
     this.closingFactory = closingFactory;
   }
 
-  protected AdvancedDatastore datastore;
   private ExecutorService executorService = new CurrentThreadExecutor();
   public static final String alpnJar =
       "org/mortbay/jetty/alpn/alpn-boot/8.1.13.v20181017/alpn-boot-8.1.13.v20181017.jar";
@@ -135,11 +142,6 @@ public class FunctionalTestRule implements MethodRule, InjectorRuleMixin, MongoR
 
     MongoClient mongoClient = new MongoClient(clientUri);
     closingFactory.addServer(mongoClient);
-
-    Morphia morphia = new Morphia();
-    morphia.getMapper().getOptions().setObjectFactory(new HObjectFactory());
-    datastore = (AdvancedDatastore) morphia.createDatastore(mongoClient, dbName);
-    datastore.setQueryFactory(new QueryFactory());
 
     RestResponse<ElasticsearchConfig> elasticsearchConfigRestResponse =
         Setup.portal()
@@ -174,6 +176,7 @@ public class FunctionalTestRule implements MethodRule, InjectorRuleMixin, MongoR
     modules.add(new ClosingFactoryModule(closingFactory));
 
     modules.add(new KryoModule());
+    modules.add(ObjectFactoryModule.getInstance());
     modules.add(new ProviderModule() {
       @Provides
       @Singleton
@@ -187,9 +190,30 @@ public class FunctionalTestRule implements MethodRule, InjectorRuleMixin, MongoR
 
       @Provides
       @Singleton
+      Set<Class<? extends MorphiaRegistrar>> morphiaRegistrars() {
+        return ImmutableSet.<Class<? extends MorphiaRegistrar>>builder()
+            .addAll(ManagerRegistrars.morphiaRegistrars)
+            .add(EventServerMorphiaRegistrar.class)
+            .add(BatchProcessingMorphiaRegistrar.class)
+            .add(TestPersistenceMorphiaRegistrar.class)
+            .build();
+      }
+
+      @Provides
+      @Singleton
       Set<Class<? extends AliasRegistrar>> aliasRegistrars() {
         return ImmutableSet.<Class<? extends AliasRegistrar>>builder()
             .addAll(ManagerRegistrars.aliasRegistrars)
+            .build();
+      }
+
+      @Provides
+      @Singleton
+      @Named("morphiaClasses")
+      Map<Class, String> morphiaCustomCollectionNames() {
+        return ImmutableMap.<Class, String>builder()
+            .put(DelegateSyncTaskResponse.class, "delegateSyncTaskResponses")
+            .put(DelegateAsyncTaskResponse.class, "delegateAsyncTaskResponses")
             .build();
       }
     });
@@ -219,7 +243,9 @@ public class FunctionalTestRule implements MethodRule, InjectorRuleMixin, MongoR
       @Provides
       @Named("primaryDatastore")
       @Singleton
-      AdvancedDatastore datastore() {
+      AdvancedDatastore datastore(Morphia morphia) {
+        AdvancedDatastore datastore = (AdvancedDatastore) morphia.createDatastore(mongoClient, dbName);
+        datastore.setQueryFactory(new QueryFactory());
         return datastore;
       }
     });

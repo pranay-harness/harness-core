@@ -11,7 +11,6 @@ import io.harness.batch.processing.config.BatchProcessingRegistrarsModule;
 import io.harness.factory.ClosingFactory;
 import io.harness.factory.ClosingFactoryModule;
 import io.harness.govern.ProviderModule;
-import io.harness.mongo.HObjectFactory;
 import io.harness.persistence.HPersistence;
 import io.harness.rule.InjectorRuleMixin;
 import io.harness.testlib.module.MongoRuleMixin;
@@ -20,7 +19,6 @@ import io.harness.timescaledb.TimeScaleDBService;
 import org.junit.rules.MethodRule;
 import org.junit.runners.model.FrameworkMethod;
 import org.junit.runners.model.Statement;
-import org.mongodb.morphia.ObjectFactory;
 import software.wings.dl.WingsMongoPersistence;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.impl.security.NoOpSecretManagerImpl;
@@ -32,7 +30,6 @@ import java.util.Collections;
 import java.util.List;
 
 public class BatchProcessingRule implements MethodRule, InjectorRuleMixin, MongoRuleMixin {
-  public static final HObjectFactory H_OBJECT_FACTORY = new HObjectFactory();
   private final ClosingFactory closingFactory;
 
   public BatchProcessingRule(ClosingFactory closingFactory) {
@@ -66,14 +63,6 @@ public class BatchProcessingRule implements MethodRule, InjectorRuleMixin, Mongo
         bind(HPersistence.class).to(WingsMongoPersistence.class);
         bind(WingsPersistence.class).to(WingsMongoPersistence.class);
         bind(SecretManager.class).to(NoOpSecretManagerImpl.class);
-      }
-
-      @Provides
-      @Singleton
-      public ObjectFactory objectFactory() {
-        // Constructing a new ObjectFactory takes a lot of time due to scanning packages using reflection. We make it
-        // once and reuse it for all tests.
-        return H_OBJECT_FACTORY;
       }
 
       @Provides
