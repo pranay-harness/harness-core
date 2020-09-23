@@ -25,8 +25,6 @@ public class SecretDTOV2 {
   private String orgIdentifier;
   private String projectIdentifier;
   @NotNull private Map<String, String> tags;
-  private Long createdAt;
-  private Long lastModifiedAt;
 
   @JsonProperty("spec")
   @JsonTypeInfo(
@@ -37,7 +35,7 @@ public class SecretDTOV2 {
 
   @Builder
   public SecretDTOV2(SecretType type, String name, String description, String identifier, String orgIdentifier,
-      String projectIdentifier, Map<String, String> tags, SecretSpecDTO spec, Long createdAt, Long lastModifiedAt) {
+      String projectIdentifier, Map<String, String> tags, SecretSpecDTO spec) {
     this.type = type;
     this.name = name;
     this.description = description;
@@ -46,8 +44,6 @@ public class SecretDTOV2 {
     this.projectIdentifier = projectIdentifier;
     this.tags = tags;
     this.spec = spec;
-    this.createdAt = createdAt;
-    this.lastModifiedAt = lastModifiedAt;
   }
 
   public Secret toEntity() {

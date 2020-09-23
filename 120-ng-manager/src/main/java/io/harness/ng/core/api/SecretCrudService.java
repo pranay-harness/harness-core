@@ -2,6 +2,7 @@ package io.harness.ng.core.api;
 
 import io.harness.beans.NGPageResponse;
 import io.harness.ng.core.dto.secrets.SecretDTOV2;
+import io.harness.ng.core.dto.secrets.SecretResponseWrapper;
 import io.harness.ng.core.remote.SecretValidationMetaData;
 import io.harness.ng.core.remote.SecretValidationResultDTO;
 import io.harness.secretmanagerclient.SecretType;
@@ -23,19 +24,19 @@ public interface SecretCrudService {
     return RequestBody.create(MediaType.parse("text/plain"), bytes);
   }
 
-  SecretDTOV2 create(String accountIdentifier, SecretDTOV2 dto);
+  SecretResponseWrapper create(String accountIdentifier, SecretDTOV2 dto);
 
-  SecretDTOV2 createViaYaml(String accountIdentifier, SecretDTOV2 dto);
+  SecretResponseWrapper createViaYaml(String accountIdentifier, SecretDTOV2 dto);
 
-  Optional<SecretDTOV2> get(
+  Optional<SecretResponseWrapper> get(
       String accountIdentifier, String orgIdentifier, String projectIdentifier, String identifier);
 
-  NGPageResponse<SecretDTOV2> list(String accountIdentifier, String orgIdentifier, String projectIdentifier,
+  NGPageResponse<SecretResponseWrapper> list(String accountIdentifier, String orgIdentifier, String projectIdentifier,
       SecretType secretType, String searchTerm, int page, int size);
 
   boolean delete(String accountIdentifier, String orgIdentifier, String projectIdentifier, String identifier);
 
-  SecretDTOV2 createFile(String accountIdentifier, SecretDTOV2 dto, InputStream inputStream);
+  SecretResponseWrapper createFile(String accountIdentifier, SecretDTOV2 dto, InputStream inputStream);
 
   boolean updateFile(String accountIdentifier, SecretDTOV2 dto, InputStream inputStream);
 
