@@ -260,9 +260,10 @@ public class NewRelicStateTest extends APMStateVerificationTestBase {
     NewRelicState spyNewRelicState = spy(newRelicState);
     doReturn(false).when(spyNewRelicState).isEligibleForPerMinuteTask(accountId);
     doReturn(false).when(spyNewRelicState).isDemoPath(any(AnalysisContext.class));
-    doReturn(AbstractAnalysisState.NodePair.builder().newNodesTrafficShiftPercent(Optional.empty()).build())
+    doReturn(
+        AbstractAnalysisState.CVInstanceApiResponse.builder().newNodesTrafficShiftPercent(Optional.empty()).build())
         .when(spyNewRelicState)
-        .getControlAndTestNodes(any());
+        .getCVInstanceAPIResponse(any());
 
     doReturn(asList(TemplateExpression.builder()
                         .fieldName("analysisServerConfigId")
@@ -277,13 +278,13 @@ public class NewRelicStateTest extends APMStateVerificationTestBase {
         .when(spyNewRelicState)
         .getTemplateExpressions();
 
-    doReturn(AbstractAnalysisState.NodePair.builder()
+    doReturn(AbstractAnalysisState.CVInstanceApiResponse.builder()
                  .controlNodes(Collections.singleton("control"))
                  .testNodes(Collections.singleton("test"))
                  .newNodesTrafficShiftPercent(Optional.empty())
                  .build())
         .when(spyNewRelicState)
-        .getControlAndTestNodes(any());
+        .getCVInstanceAPIResponse(any());
     doReturn(workflowId).when(spyNewRelicState).getWorkflowId(executionContext);
     doReturn(serviceId).when(spyNewRelicState).getPhaseServiceId(executionContext);
 

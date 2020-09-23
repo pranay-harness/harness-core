@@ -46,7 +46,7 @@ import software.wings.service.intfc.elk.ElkAnalysisService;
 import software.wings.service.intfc.verification.CVActivityLogService.Logger;
 import software.wings.sm.ExecutionResponse;
 import software.wings.sm.StateType;
-import software.wings.sm.states.AbstractAnalysisState.NodePair;
+import software.wings.sm.states.AbstractAnalysisState.CVInstanceApiResponse;
 
 import java.util.Arrays;
 import java.util.Collections;
@@ -118,23 +118,22 @@ public class ElkAnalysisStateTest extends APMStateVerificationTestBase {
   @Test
   @Owner(developers = RAGHU)
   @Category(UnitTests.class)
-  public void noTestNodes() {
+  public void testExecute_skipVerificationTrue() {
     ElkAnalysisState spyState = spy(elkAnalysisState);
     doReturn(workflowId).when(spyState).getWorkflowId(executionContext);
     doReturn(serviceId).when(spyState).getPhaseServiceId(executionContext);
-    doReturn(NodePair.builder()
+    doReturn(CVInstanceApiResponse.builder()
                  .testNodes(Collections.emptySet())
                  .controlNodes(Collections.emptySet())
+                 .skipVerification(true)
                  .newNodesTrafficShiftPercent(Optional.empty())
                  .build())
         .when(spyState)
-        .getControlAndTestNodes(any());
+        .getCVInstanceAPIResponse(any());
 
     ExecutionResponse response = spyState.execute(executionContext);
-    assertThat(response.getExecutionStatus()).isEqualTo(ExecutionStatus.FAILED);
-    assertThat(response.getErrorMessage())
-        .isEqualTo(
-            "Could not find newly deployed instances. Please ensure that new workflow resulted in actual deployment.");
+    assertThat(response.getExecutionStatus()).isEqualTo(ExecutionStatus.SKIPPED);
+    assertThat(response.getErrorMessage()).isEqualTo("Could not find newly deployed instances. Skipping verification");
 
     LogMLAnalysisSummary analysisSummary = analysisService.getAnalysisSummary(stateExecutionId, appId, StateType.ELK);
     assertThat(analysisSummary.getRiskLevel()).isEqualTo(RiskLevel.NA);
@@ -151,13 +150,13 @@ public class ElkAnalysisStateTest extends APMStateVerificationTestBase {
   public void noControlNodesCompareWithCurrent() {
     elkAnalysisState.setComparisonStrategy(AnalysisComparisonStrategy.COMPARE_WITH_CURRENT.name());
     ElkAnalysisState spyState = spy(elkAnalysisState);
-    doReturn(NodePair.builder()
+    doReturn(CVInstanceApiResponse.builder()
                  .testNodes(Collections.singleton("some-host"))
                  .controlNodes(Collections.emptySet())
                  .newNodesTrafficShiftPercent(Optional.empty())
                  .build())
         .when(spyState)
-        .getControlAndTestNodes(any());
+        .getCVInstanceAPIResponse(any());
 
     doReturn(workflowId).when(spyState).getWorkflowId(executionContext);
     doReturn(serviceId).when(spyState).getPhaseServiceId(executionContext);
@@ -184,13 +183,13 @@ public class ElkAnalysisStateTest extends APMStateVerificationTestBase {
     ElkAnalysisState spyState = spy(elkAnalysisState);
     doReturn(workflowId).when(spyState).getWorkflowId(executionContext);
     doReturn(serviceId).when(spyState).getPhaseServiceId(executionContext);
-    doReturn(NodePair.builder()
+    doReturn(CVInstanceApiResponse.builder()
                  .testNodes(Collections.singleton("some-host"))
                  .controlNodes(Collections.emptySet())
                  .newNodesTrafficShiftPercent(Optional.empty())
                  .build())
         .when(spyState)
-        .getControlAndTestNodes(any());
+        .getCVInstanceAPIResponse(any());
 
     ExecutionResponse response = spyState.execute(executionContext);
     assertThat(response.getExecutionStatus()).isEqualTo(ExecutionStatus.SUCCESS);

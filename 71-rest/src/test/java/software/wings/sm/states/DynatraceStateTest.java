@@ -144,13 +144,13 @@ public class DynatraceStateTest extends APMStateVerificationTestBase {
     wingsPersistence.save(settingAttribute);
     dynatraceState.setAnalysisServerConfigId(settingAttribute.getUuid());
     DynatraceState spyState = spy(dynatraceState);
-    doReturn(AbstractAnalysisState.NodePair.builder()
+    doReturn(AbstractAnalysisState.CVInstanceApiResponse.builder()
                  .controlNodes(Collections.singleton("control"))
                  .testNodes(Collections.singleton("test"))
                  .newNodesTrafficShiftPercent(Optional.empty())
                  .build())
         .when(spyState)
-        .getControlAndTestNodes(any());
+        .getCVInstanceAPIResponse(any());
     doReturn(workflowId).when(spyState).getWorkflowId(executionContext);
     doReturn(serviceId).when(spyState).getPhaseServiceId(executionContext);
     when(workflowStandardParams.getEnv())
@@ -274,16 +274,17 @@ public class DynatraceStateTest extends APMStateVerificationTestBase {
     wingsPersistence.save(settingAttribute);
     dynatraceState.setAnalysisServerConfigId(settingAttribute.getUuid());
     DynatraceState spyState = spy(dynatraceState);
-    doReturn(AbstractAnalysisState.NodePair.builder().newNodesTrafficShiftPercent(Optional.empty()).build())
+    doReturn(
+        AbstractAnalysisState.CVInstanceApiResponse.builder().newNodesTrafficShiftPercent(Optional.empty()).build())
         .when(spyState)
-        .getControlAndTestNodes(any());
-    doReturn(AbstractAnalysisState.NodePair.builder()
+        .getCVInstanceAPIResponse(any());
+    doReturn(AbstractAnalysisState.CVInstanceApiResponse.builder()
                  .controlNodes(Collections.singleton("control"))
                  .testNodes(Collections.singleton("test"))
                  .newNodesTrafficShiftPercent(Optional.empty())
                  .build())
         .when(spyState)
-        .getControlAndTestNodes(any());
+        .getCVInstanceAPIResponse(any());
     doReturn(workflowId).when(spyState).getWorkflowId(executionContext);
     doReturn(serviceId).when(spyState).getPhaseServiceId(executionContext);
     when(workflowStandardParams.getEnv())

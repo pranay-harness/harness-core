@@ -97,23 +97,22 @@ public class SplunkV2StateTest extends APMStateVerificationTestBase {
   @Test
   @Owner(developers = RAGHU)
   @Category(UnitTests.class)
-  public void noTestNodes() {
+  public void testExecute_skipVerificationTrue() {
     SplunkV2State spyState = spy(splunkState);
     doReturn(workflowId).when(spyState).getWorkflowId(executionContext);
     doReturn(serviceId).when(spyState).getPhaseServiceId(executionContext);
-    doReturn(AbstractAnalysisState.NodePair.builder()
+    doReturn(AbstractAnalysisState.CVInstanceApiResponse.builder()
                  .testNodes(Collections.emptySet())
                  .controlNodes(Collections.emptySet())
                  .newNodesTrafficShiftPercent(Optional.empty())
+                 .skipVerification(true)
                  .build())
         .when(spyState)
-        .getControlAndTestNodes(any());
+        .getCVInstanceAPIResponse(any());
 
     ExecutionResponse response = spyState.execute(executionContext);
-    assertThat(response.getExecutionStatus()).isEqualTo(ExecutionStatus.FAILED);
-    assertThat(response.getErrorMessage())
-        .isEqualTo(
-            "Could not find newly deployed instances. Please ensure that new workflow resulted in actual deployment.");
+    assertThat(response.getExecutionStatus()).isEqualTo(ExecutionStatus.SKIPPED);
+    assertThat(response.getErrorMessage()).isEqualTo("Could not find newly deployed instances. Skipping verification");
 
     LogMLAnalysisSummary analysisSummary =
         analysisService.getAnalysisSummary(stateExecutionId, appId, StateType.SPLUNKV2);
@@ -133,13 +132,13 @@ public class SplunkV2StateTest extends APMStateVerificationTestBase {
     SplunkV2State spyState = spy(splunkState);
     doReturn(workflowId).when(spyState).getWorkflowId(executionContext);
     doReturn(serviceId).when(spyState).getPhaseServiceId(executionContext);
-    doReturn(AbstractAnalysisState.NodePair.builder()
+    doReturn(AbstractAnalysisState.CVInstanceApiResponse.builder()
                  .controlNodes(Collections.emptySet())
                  .testNodes(Collections.singleton("some-host"))
                  .newNodesTrafficShiftPercent(Optional.empty())
                  .build())
         .when(spyState)
-        .getControlAndTestNodes(any());
+        .getCVInstanceAPIResponse(any());
 
     ExecutionResponse response = spyState.execute(executionContext);
     assertThat(response.getExecutionStatus()).isEqualTo(ExecutionStatus.SUCCESS);
@@ -167,13 +166,13 @@ public class SplunkV2StateTest extends APMStateVerificationTestBase {
     doReturn(serviceId).when(spyState).getPhaseServiceId(executionContext);
     Logger activityLogger = mock(Logger.class);
     when(cvActivityLogService.getLoggerByStateExecutionId(anyString(), anyString())).thenReturn(activityLogger);
-    doReturn(AbstractAnalysisState.NodePair.builder()
+    doReturn(AbstractAnalysisState.CVInstanceApiResponse.builder()
                  .testNodes(Collections.singleton("some-host"))
                  .controlNodes(Collections.emptySet())
                  .newNodesTrafficShiftPercent(Optional.empty())
                  .build())
         .when(spyState)
-        .getControlAndTestNodes(any());
+        .getCVInstanceAPIResponse(any());
 
     ExecutionResponse response = spyState.execute(executionContext);
     assertThat(response.getExecutionStatus()).isEqualTo(ExecutionStatus.SUCCESS);
@@ -203,13 +202,13 @@ public class SplunkV2StateTest extends APMStateVerificationTestBase {
     doReturn(serviceId).when(spyState).getPhaseServiceId(executionContext);
     Logger activityLogger = mock(Logger.class);
     when(cvActivityLogService.getLoggerByStateExecutionId(anyString(), anyString())).thenReturn(activityLogger);
-    doReturn(AbstractAnalysisState.NodePair.builder()
+    doReturn(AbstractAnalysisState.CVInstanceApiResponse.builder()
                  .controlNodes(Collections.singleton("${some-expression}"))
                  .testNodes(Collections.singleton("some-host"))
                  .newNodesTrafficShiftPercent(Optional.empty())
                  .build())
         .when(spyState)
-        .getControlAndTestNodes(any());
+        .getCVInstanceAPIResponse(any());
 
     ExecutionResponse response = spyState.execute(executionContext);
     assertThat(response.getExecutionStatus()).isEqualTo(ExecutionStatus.FAILED);
@@ -226,13 +225,13 @@ public class SplunkV2StateTest extends APMStateVerificationTestBase {
     SplunkV2State spyState = spy(splunkState);
     doReturn(workflowId).when(spyState).getWorkflowId(executionContext);
     doReturn(serviceId).when(spyState).getPhaseServiceId(executionContext);
-    doReturn(AbstractAnalysisState.NodePair.builder()
+    doReturn(AbstractAnalysisState.CVInstanceApiResponse.builder()
                  .controlNodes(Collections.singleton("${some-expression}"))
                  .testNodes(Collections.singleton("some-host"))
                  .newNodesTrafficShiftPercent(Optional.empty())
                  .build())
         .when(spyState)
-        .getControlAndTestNodes(any());
+        .getCVInstanceAPIResponse(any());
 
     Logger activityLogger = mock(Logger.class);
     when(cvActivityLogService.getLoggerByStateExecutionId(anyString(), anyString())).thenReturn(activityLogger);
@@ -298,13 +297,13 @@ public class SplunkV2StateTest extends APMStateVerificationTestBase {
     responseMap.put("somekey", response);
 
     SplunkV2State spyState = spy(splunkState);
-    doReturn(AbstractAnalysisState.NodePair.builder()
+    doReturn(AbstractAnalysisState.CVInstanceApiResponse.builder()
                  .controlNodes(Collections.singleton("control"))
                  .testNodes(Collections.singleton("test"))
                  .newNodesTrafficShiftPercent(Optional.empty())
                  .build())
         .when(spyState)
-        .getControlAndTestNodes(any());
+        .getCVInstanceAPIResponse(any());
     doReturn(workflowId).when(spyState).getWorkflowId(executionContext);
     doReturn(serviceId).when(spyState).getPhaseServiceId(executionContext);
 

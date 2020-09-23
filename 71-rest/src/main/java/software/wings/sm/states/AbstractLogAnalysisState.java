@@ -170,10 +170,10 @@ public abstract class AbstractLogAnalysisState extends AbstractAnalysisState {
           return getDemoExecutionResponse(analysisContext);
         }
 
-        if (isEmpty(canaryNewHostNames)) {
+        if (analysisContext.isSkipVerification()) {
           getLogger().warn("Could not find test nodes to compare the data");
-          return generateAnalysisResponse(analysisContext, ExecutionStatus.FAILED,
-              "Could not find newly deployed instances. Please ensure that new workflow resulted in actual deployment.");
+          return generateAnalysisResponse(analysisContext, ExecutionStatus.SKIPPED,
+              "Could not find newly deployed instances. Skipping verification");
         }
 
         Set<String> lastExecutionNodes = analysisContext.getControlNodes().keySet();
@@ -414,12 +414,12 @@ public abstract class AbstractLogAnalysisState extends AbstractAnalysisState {
   }
 
   private AnalysisContext getLogAnalysisContext(ExecutionContext context, String correlationId) {
-    NodePair nodePair = getControlAndTestNodes(context);
+    CVInstanceApiResponse cvInstanceAPIResponse = getCVInstanceAPIResponse(context);
     getLogger().info("Using new instance API");
     Map<String, String> testNodes =
-        nodePair.getTestNodes().stream().collect(Collectors.toMap(key -> key, key -> DEFAULT_GROUP_NAME));
-    Map<String, String> controlNodes =
-        nodePair.getControlNodes().stream().collect(Collectors.toMap(key -> key, key -> DEFAULT_GROUP_NAME));
+        cvInstanceAPIResponse.getTestNodes().stream().collect(Collectors.toMap(key -> key, key -> DEFAULT_GROUP_NAME));
+    Map<String, String> controlNodes = cvInstanceAPIResponse.getControlNodes().stream().collect(
+        Collectors.toMap(key -> key, key -> DEFAULT_GROUP_NAME));
 
     renderedQuery = context.renderExpression(query);
 
@@ -454,11 +454,11 @@ public abstract class AbstractLogAnalysisState extends AbstractAnalysisState {
             .initialDelaySeconds(getDelaySeconds(initialAnalysisDelay))
             .inspectHostsInLogs(shouldInspectHostsForLogAnalysis())
             .isHistoricalDataCollection(isHistoricalAnalysis(context.getAccountId()))
-            .newNodesTrafficShiftPercent(nodePair.getNewNodesTrafficShiftPercent().isPresent()
-                    ? nodePair.getNewNodesTrafficShiftPercent().get()
+            .newNodesTrafficShiftPercent(cvInstanceAPIResponse.getNewNodesTrafficShiftPercent().isPresent()
+                    ? cvInstanceAPIResponse.getNewNodesTrafficShiftPercent().get()
                     : null)
+            .skipVerification(cvInstanceAPIResponse.isSkipVerification())
             .build();
-
     // Saving data collection info as part of context.
     // This will be directly used as part of delegate task
     // todo: Pranjal: Condition will be removed once enabled for all verifiers.
