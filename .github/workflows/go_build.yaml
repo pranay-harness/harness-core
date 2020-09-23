@@ -13,11 +13,6 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v2
 
-      - name: Setup credentials for cloning private github repositories
-        uses: fusion-engineering/setup-git-credentials@v2
-        with:
-          credentials: https://vistaarjuneja:e0d5719c5ca4f969f3e00eb0c54c899e048be2d3@github.com/	
-
       - name: Building expression service code
         run: |
           echo "Building golang expression service protobuf using bazel..."

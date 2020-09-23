@@ -11,8 +11,8 @@ import (
 	"sync"
 	"time"
 
-	"github.com/wings-software/log-service/client"
-	"github.com/wings-software/log-service/stream"
+	"github.com/wings-software/portal/product/log-service/client"
+	"github.com/wings-software/portal/product/log-service/stream"
 )
 
 // RemoteWriter is an io.Writer that sends logs to the server.

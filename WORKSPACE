@@ -2,7 +2,8 @@ workspace(name = "harness_monorepo")
 
 load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
 load("@bazel_tools//tools/build_defs/repo:git.bzl", "git_repository")
-load("//tools/pmd:dependencies.bzl","rules_pmd_dependencies")
+load("//tools/pmd:dependencies.bzl", "rules_pmd_dependencies")
+
 rules_pmd_dependencies()
 
 # Download the Go rules
@@ -42,8 +43,8 @@ gazelle_dependencies()
 go_repository(
     name = "com_github_pkg_errors",
     importpath = "github.com/pkg/errors",
-    sum = "h1:FEBLx1zS214owpjy7qsBeixbURkuhQAwrK5UwLGTwt4=",
-    version = "v0.9.1",
+    sum = "h1:iURUrRGxPUNPdy5/HRSm+Yj6okJ6UtLINN0Q9M4+h3I=",
+    version = "v0.8.1",
 )
 
 http_archive(
@@ -209,15 +210,15 @@ go_repository(
 go_repository(
     name = "com_github_stretchr_objx",
     importpath = "github.com/stretchr/objx",
-    sum = "h1:2vfRuCMp5sSVIDSqO8oNnWJq7mPa6KVP3iPIwFBuy8A=",
-    version = "v0.1.1",
+    sum = "h1:4G4v2dO3VZwixGIRoQ5Lfboy6nUhCyYzaqnIAPPhYs4=",
+    version = "v0.1.0",
 )
 
 go_repository(
     name = "com_github_stretchr_testify",
     importpath = "github.com/stretchr/testify",
-    sum = "h1:nOGnQDM7FYENwehXlg/kFVnos3rEvtKTjRvOWSzb6H4=",
-    version = "v1.5.1",
+    sum = "h1:2E4SXV/wtOkTonXsotYi4li6zVWxYlZuYNCXe9XRJyk=",
+    version = "v1.4.0",
 )
 
 go_repository(
@@ -244,8 +245,8 @@ go_repository(
 go_repository(
     name = "org_golang_x_crypto",
     importpath = "golang.org/x/crypto",
-    sum = "h1:ObdrDkeb4kJdCP557AjRjq69pTHfNouLtWZG7j9rPN8=",
-    version = "v0.0.0-20191011191535-87dc89f01550",
+    sum = "h1:iMGN4xG0cnqj3t+zOM8wUB0BiPKHEwSxEZCvzcbZuvk=",
+    version = "v0.0.0-20190510104115-cbcb75029529",
 )
 
 go_repository(
@@ -258,36 +259,36 @@ go_repository(
 go_repository(
     name = "org_golang_x_mod",
     importpath = "golang.org/x/mod",
-    sum = "h1:GgiSbuUyC0BlbUmHQBgFqu32eiRR/CEYdjOjOd4zE6Y=",
-    version = "v0.1.1-0.20191107180719-034126e5016b",
+    sum = "h1:JgcxKXxCjrA2tyDP/aNU9K0Ck5Czfk6C7e2tMw7+bSI=",
+    version = "v0.0.0-20190513183733-4bf6d317e70e",
 )
 
 go_repository(
     name = "org_golang_x_sys",
     importpath = "golang.org/x/sys",
-    sum = "h1:gWF768j/LaZugp8dyS4UwsslYCYz9XgFxvlgsn0n9H8=",
-    version = "v0.0.0-20200420163511-1957bb5e6d1f",
+    sum = "h1:+R4KGOnez64A81RvjARKc4UT5/tI9ujCIVX+P5KiHuI=",
+    version = "v0.0.0-20190412213103-97732733099d",
 )
 
 go_repository(
     name = "org_golang_x_text",
     importpath = "golang.org/x/text",
-    sum = "h1:tW2bmiBqwgJj/UpqtC8EpXEZVYOwU0yG4iWbprSVAcs=",
-    version = "v0.3.2",
+    sum = "h1:g61tztE5qeGQ89tm6NTjjM9VPIm088od1l6aSorWRWg=",
+    version = "v0.3.0",
 )
 
 go_repository(
     name = "org_golang_x_tools",
     importpath = "golang.org/x/tools",
-    sum = "h1:5E4dL8+NgFOgjwbTKz+OOEGGhP+ectTmF842l6KjupQ=",
-    version = "v0.0.0-20200207183749-b753a1ba74fa",
+    sum = "h1:hKsoRgsbwY1NafxrwTs+k64bikrLBkAgPir1TNCj3Zs=",
+    version = "v0.0.0-20191029190741-b9c20aec41a5",
 )
 
 go_repository(
     name = "org_golang_x_xerrors",
     importpath = "golang.org/x/xerrors",
-    sum = "h1:E7g+9GITq07hpfrRu66IVDexMakfv52eLZ2CXBWiKr4=",
-    version = "v0.0.0-20191204190536-9bdfabe68543",
+    sum = "h1:9zdDQZ7Thm29KFXgAX/+yaf3eVbP7djjWp/dXAppNCc=",
+    version = "v0.0.0-20190717185122-a985d3407aa7",
 )
 
 go_repository(
@@ -314,8 +315,8 @@ go_repository(
 go_repository(
     name = "org_uber_go_zap",
     importpath = "go.uber.org/zap",
-    sum = "h1:ZZCA22JRF2gQE5FoNmhmrf7jeJJ2uhqDUNRYKm8dvmM=",
-    version = "v1.15.0",
+    sum = "h1:uFRZXykJGK9lLY4HtgSw44DnIcAM+kRBP7x5m+NpAOM=",
+    version = "v1.16.0",
 )
 
 go_repository(
@@ -370,8 +371,8 @@ go_repository(
 go_repository(
     name = "com_github_aws_aws_sdk_go",
     importpath = "github.com/aws/aws-sdk-go",
-    sum = "h1:NXNqBS9hjOCpDL8SyCyl38gZX3LLLunKOJc5E7vJ8P0=",
-    version = "v1.30.29",
+    sum = "h1:VU78gcf/3wA4HNEDCHidK738l7K0Bals4SJnfnvXOtY=",
+    version = "v1.34.10",
 )
 
 go_repository(
@@ -468,8 +469,8 @@ go_repository(
 go_repository(
     name = "com_github_golang_protobuf",
     importpath = "github.com/golang/protobuf",
-    sum = "h1:ZFgWrT+bLgsYPirOnRfKLYJLvssAegOj/hgyMFdJZe0=",
-    version = "v1.4.1",
+    sum = "h1:gyjaxf+svBWX08ZjK86iN9geUJF0H6gp2IRKX6Nf6/I=",
+    version = "v1.3.3",
 )
 
 go_repository(
@@ -482,8 +483,8 @@ go_repository(
 go_repository(
     name = "com_github_google_go_cmp",
     importpath = "github.com/google/go-cmp",
-    sum = "h1:xsAVV57WRhGj6kEIi8ReJzQlHHqcBYCElAvkovg3B/4=",
-    version = "v0.4.0",
+    sum = "h1:+dTQ8DZQJz0Mb/HjFlkptS1FeQ4cWSnN941F8aEG4SQ=",
+    version = "v0.2.0",
 )
 
 go_repository(
@@ -678,8 +679,8 @@ go_repository(
 go_repository(
     name = "org_golang_x_net",
     importpath = "golang.org/x/net",
-    sum = "h1:QBjCr1Fz5kw158VqdE9JfI9cJnl/ymnJWAdMuinqL7Y=",
-    version = "v0.0.0-20200506145744-7e3656a0809f",
+    sum = "h1:R/3boaszxrf1GEUWTVDzSKVwLmSJpwZ1yqXm8j0v2QI=",
+    version = "v0.0.0-20190620200207-3b0461eec859",
 )
 
 go_repository(
@@ -955,13 +956,6 @@ go_repository(
     version = "v1.0.9",
 )
 
-go_repository(
-    name = "com_github_wings-software_log-service",
-    commit = "b2562185bcb6d11b16aba713d1afaee60855e4a2",
-    importpath = "github.com/wings-software/log-service",
-)
-
-
 ###########################################################################################
 # ######################################   Java code ######################################
 
@@ -983,158 +977,158 @@ load("@rules_jvm_external//:defs.bzl", "maven_install")
 
 maven_install(
     name = "maven",
-    artifacts= [
-              "junit:junit:4.12",
-              "org.slf4j:slf4j-api:1.7.29",
-              "org.powermock:powermock-module-junit4:1.7.4",
-              "ch.qos.logback:logback-classic:1.2.3",
-              "com.bettercloud:vault-java-driver:4.0.0",
-              "com.google.code.findbugs:annotations:3.0.0",
-              "com.google.guava:guava:21.0",
-              "com.google.inject:guice:4.2.3",
-              "commons-codec:commons-codec:1.10",
-              "net.rcarz:jira-client:0.8-SNAPSHOT",
-              "org.apache.commons:commons-lang3:3.7",
-              "org.assertj:assertj-core:3.16.1",
-              "org.eclipse.jgit:org.eclipse.jgit:5.3.0.201903130848-r",
-              "org.jacoco:org.jacoco.agent:0.8.5",
-              "org.mockito:mockito-core:1.10.19",
-              "org.projectlombok:lombok:1.18.6",
-              "ch.qos.logback.contrib:logback-jackson:0.1.5",
-              "ch.qos.logback.contrib:logback-json-classic:0.1.5",
-              "com.auth0:java-jwt:3.1.0",
-              "com.fasterxml:classmate:1.3.0",
-              "com.fasterxml.jackson.core:jackson-databind:2.7.9",
-              "com.esotericsoftware:kryo:4.0.0",
-              "com.fasterxml.jackson.core:jackson-annotations:2.7.9",
-              "com.fasterxml.jackson.dataformat:jackson-dataformat-yaml:2.7.9",
-              "com.fasterxml.jackson.core:jackson-core:2.7.9",
-              "com.fasterxml.jackson.datatype:jackson-datatype-guava:2.7.9",
-              "com.fasterxml.jackson.datatype:jackson-datatype-jdk8:2.7.9",
-              "com.fasterxml.jackson.datatype:jackson-datatype-joda:2.7.9",
-              "com.fasterxml.jackson.datatype:jackson-datatype-jsr310:2.7.9",
-              "com.fasterxml.jackson.module:jackson-module-afterburner:2.7.9",
-              "com.fasterxml.uuid:java-uuid-generator:4.0.1",
-              "com.github.reinert:jjschema:1.0",
-              "com.google.auth:google-auth-library-credentials:0.18.0",
-              "com.google.cloud:google-cloud-logging:1.93.0",
-              "com.google.j2objc:j2objc-annotations:1.3",
-              "com.google.guava:guava:21.0",
-              "com.google.inject:guice:4.2.3",
-              "com.google.inject.extensions:guice-multibindings:4.2.3",
-              "com.hazelcast:hazelcast:3.8.1",
-              "com.jayway.jsonpath:json-path:2.2.0",
-              "com.nimbusds:nimbus-jose-jwt:8.19",
-              "com.github.stephenc.jcip:jcip-annotations:1.0-1",
-              "com.squareup.retrofit2:converter-jackson:2.2.0",
-              "com.squareup.retrofit2:retrofit:2.2.0",
-              "commons-codec:commons-codec:1.10",
-              "commons-validator:commons-validator:1.6",
-              "de.javakaffee:kryo-serializers:0.41",
-              "io.dropwizard:dropwizard-lifecycle:1.0.2",
-              "io.dropwizard:dropwizard-logging:1.0.2",
-              "io.dropwizard.metrics:metrics-healthchecks:3.1.2",
-              "io.grpc:grpc-api:1.30.2",
-              "io.prometheus:simpleclient:0.5.0",
-              "io.prometheus:simpleclient_dropwizard:0.5.0",
-              "javax.ws.rs:javax.ws.rs-api:2.0.1",
-              "org.apache.commons:commons-csv:1.5",
-              "org.apache.commons:commons-jexl3:3.0",
-              "org.apache.commons:commons-lang3:3.7",
-              "org.apache.commons:commons-text:1.2",
-              "org.apache.httpcomponents:fluent-hc:4.5.1",
-              "org.codehaus.janino:janino:3.0.6",
-              "org.codehaus.janino:commons-compiler:3.0.6",
-              "org.eclipse.jgit:org.eclipse.jgit:5.3.0.201903130848-r",
-              "org.javassist:javassist:3.20.0-GA",
-              "org.modelmapper:modelmapper:0.7.5",
-              "org.mongodb.morphia:morphia:1.3.2",
-              "org.projectlombok:lombok:1.18.6",
-              "org.reflections:reflections:0.9.12-SNAPSHOT",
-              "org.slf4j:slf4j-api:1.7.29",
-              "org.zeroturnaround:zt-exec:1.9",
-              "net.javacrumbs.json-unit:json-unit-fluent:1.12.1",
-              "org.jooq:joor:0.9.5",
-              "org.powermock:powermock-api-mockito:1.7.4",
-              "org.powermock:powermock-api-mockito-common:1.7.4",
-              "org.powermock:powermock-api-support:1.7.4",
-              "org.powermock:powermock-reflect:1.7.4",
-              "org.powermock:powermock-core:1.7.4",
-              "org.mockito:mockito-core:1.10.19",
-              "io.github.resilience4j:resilience4j-circuitbreaker:1.5.0",
-              "io.github.resilience4j:resilience4j-retrofit:1.5.0",
-              "io.github.resilience4j:resilience4j-retry:1.5.0",
-              "com.squareup.okhttp3:okhttp:3.9.0",
-              "commons-cli:commons-cli:1.2",
-              "commons-io:commons-io:2.6",
-              "commons-lang:commons-lang:2.3",
-              "commons-logging:commons-logging:1.1.1",
-              "com.google.api:gax:1.53.1",
-              "com.google.api:gax-grpc:1.46.1",
-              "com.google.api.grpc:proto-google-common-protos:1.17.0",
-              "com.google.api.grpc:proto-google-iam-v1:0.13.0",
-              "com.google.cloud:google-cloud-core:1.92.4",
-              "com.google.cloud:google-cloud-core:1.79.0",
-              "com.google.code.gson:gson:2.8.0",
-              "com.google.errorprone:error_prone_annotations:2.3.3",
-              "com.google.http-client:google-http-client:1.34.1",
-              "com.google.http-client:google-http-client-jackson:1.20.0",
-              "com.google.protobuf:protobuf-java:3.11.4",
-              "com.google.protobuf:protobuf-java-util:3.11.4",
-              "com.jcraft:jzlib:1.1.3",
-              "io.grpc:grpc-context:1.30.1",
-              "io.grpc:grpc-core:1.30.2",
-              "io.grpc:grpc-grpclb:1.30.2",
-              "io.grpc:grpc-protobuf:1.30.2",
-              "io.grpc:grpc-alts:1.30.2",
-              "io.grpc:grpc-auth:1.30.2",
-              "io.grpc:grpc-stub:1.30.2",
-              "net.minidev:json-smart:2.3",
-              "io.grpc:grpc-netty-shaded:1.30.2",
-              "org.codehaus.mojo:animal-sniffer-annotations:1.18",
-              "org.apache.httpcomponents:httpclient:4.5.2",
-              "org.apache.httpcomponents:httpcore:4.4.1",
-              "org.apache.httpcomponents:httpmime:4.3.6",
-              "org.mongodb:mongo-java-driver:3.12.2",
-              "org.objenesis:objenesis:2.3",
-              "org.ow2.asm:asm:5.0.3",
-              "org.slf4j:jul-to-slf4j:1.7.29",
-              "org.slf4j:log4j-over-slf4j:1.7.29",
-              "org.threeten:threetenbp:1.4.1",
-              "io.grpc:grpc-services:1.30.2",
-              "net.openhft:chronicle-queue:5.19.2",
-              "io.grpc:grpc-testing:1.21.0",
-              "org.awaitility:awaitility:2.0.0",
-              "com.amazonaws:aws-java-sdk-ec2:1.11.834",
-              "com.esotericsoftware.yamlbeans:yamlbeans:1.13",
-              "com.google.apis:google-api-services-monitoring:v3-rev477-1.25.0",
-              "com.sumologic.api.client:sumo-java-client:2.5",
-              "io.fabric8:kubernetes-api:3.0.11",
-              "io.fabric8:kubernetes-client:3.1.12",
-              "io.fabric8:kubernetes-model:2.0.8",
-              "io.fabric8:kubernetes-api:3.0.11",
-              "io.fabric8:kubernetes-client:3.1.12",
-              "io.kubernetes:client-java:8.0.2",
-              "io.kubernetes:client-java-api:8.0.2",
-              "ch.qos.logback:logback-core:1.1.7",
-              "dnsjava:dnsjava:2.1.7",
-              "cglib:cglib-nodep:2.2.2",
-              "com.google.http-client:google-http-client-jackson2:1.34.1",
-              "com.squareup.okhttp3:logging-interceptor:3.9.1",
-              "com.google.cloud:google-cloud-core:1.92.4",
-              "com.google.cloud:google-cloud-core-grpc:1.79.0",
-              "org.bouncycastle:bcprov-jdk15on:1.61",
-              "io.grpc:grpc-context:1.30.2",
-              "net.java.dev.jna:jna-platform:4.0.0",
-              "net.java.dev.jna:jna:4.0.0",
-              "com.google.code.findbugs:jsr305:3.0.1",
-              "org.apache.commons:commons-compress:1.10",
-              "org.jetbrains:annotations:13.0",
-              "org.yaml:snakeyaml:1.15",
-              "org.json:json:20160810",
-              "org.bouncycastle:bcpkix-jdk15on:1.60",
-              "javax.validation:validation-api:1.1.0.Final",
-              "org.slf4j:jcl-over-slf4j:1.7.29"
+    artifacts = [
+        "junit:junit:4.12",
+        "org.slf4j:slf4j-api:1.7.29",
+        "org.powermock:powermock-module-junit4:1.7.4",
+        "ch.qos.logback:logback-classic:1.2.3",
+        "com.bettercloud:vault-java-driver:4.0.0",
+        "com.google.code.findbugs:annotations:3.0.0",
+        "com.google.guava:guava:21.0",
+        "com.google.inject:guice:4.2.3",
+        "commons-codec:commons-codec:1.10",
+        "net.rcarz:jira-client:0.8-SNAPSHOT",
+        "org.apache.commons:commons-lang3:3.7",
+        "org.assertj:assertj-core:3.16.1",
+        "org.eclipse.jgit:org.eclipse.jgit:5.3.0.201903130848-r",
+        "org.jacoco:org.jacoco.agent:0.8.5",
+        "org.mockito:mockito-core:1.10.19",
+        "org.projectlombok:lombok:1.18.6",
+        "ch.qos.logback.contrib:logback-jackson:0.1.5",
+        "ch.qos.logback.contrib:logback-json-classic:0.1.5",
+        "com.auth0:java-jwt:3.1.0",
+        "com.fasterxml:classmate:1.3.0",
+        "com.fasterxml.jackson.core:jackson-databind:2.7.9",
+        "com.esotericsoftware:kryo:4.0.0",
+        "com.fasterxml.jackson.core:jackson-annotations:2.7.9",
+        "com.fasterxml.jackson.dataformat:jackson-dataformat-yaml:2.7.9",
+        "com.fasterxml.jackson.core:jackson-core:2.7.9",
+        "com.fasterxml.jackson.datatype:jackson-datatype-guava:2.7.9",
+        "com.fasterxml.jackson.datatype:jackson-datatype-jdk8:2.7.9",
+        "com.fasterxml.jackson.datatype:jackson-datatype-joda:2.7.9",
+        "com.fasterxml.jackson.datatype:jackson-datatype-jsr310:2.7.9",
+        "com.fasterxml.jackson.module:jackson-module-afterburner:2.7.9",
+        "com.fasterxml.uuid:java-uuid-generator:4.0.1",
+        "com.github.reinert:jjschema:1.0",
+        "com.google.auth:google-auth-library-credentials:0.18.0",
+        "com.google.cloud:google-cloud-logging:1.93.0",
+        "com.google.j2objc:j2objc-annotations:1.3",
+        "com.google.guava:guava:21.0",
+        "com.google.inject:guice:4.2.3",
+        "com.google.inject.extensions:guice-multibindings:4.2.3",
+        "com.hazelcast:hazelcast:3.8.1",
+        "com.jayway.jsonpath:json-path:2.2.0",
+        "com.nimbusds:nimbus-jose-jwt:8.19",
+        "com.github.stephenc.jcip:jcip-annotations:1.0-1",
+        "com.squareup.retrofit2:converter-jackson:2.2.0",
+        "com.squareup.retrofit2:retrofit:2.2.0",
+        "commons-codec:commons-codec:1.10",
+        "commons-validator:commons-validator:1.6",
+        "de.javakaffee:kryo-serializers:0.41",
+        "io.dropwizard:dropwizard-lifecycle:1.0.2",
+        "io.dropwizard:dropwizard-logging:1.0.2",
+        "io.dropwizard.metrics:metrics-healthchecks:3.1.2",
+        "io.grpc:grpc-api:1.30.2",
+        "io.prometheus:simpleclient:0.5.0",
+        "io.prometheus:simpleclient_dropwizard:0.5.0",
+        "javax.ws.rs:javax.ws.rs-api:2.0.1",
+        "org.apache.commons:commons-csv:1.5",
+        "org.apache.commons:commons-jexl3:3.0",
+        "org.apache.commons:commons-lang3:3.7",
+        "org.apache.commons:commons-text:1.2",
+        "org.apache.httpcomponents:fluent-hc:4.5.1",
+        "org.codehaus.janino:janino:3.0.6",
+        "org.codehaus.janino:commons-compiler:3.0.6",
+        "org.eclipse.jgit:org.eclipse.jgit:5.3.0.201903130848-r",
+        "org.javassist:javassist:3.20.0-GA",
+        "org.modelmapper:modelmapper:0.7.5",
+        "org.mongodb.morphia:morphia:1.3.2",
+        "org.projectlombok:lombok:1.18.6",
+        "org.reflections:reflections:0.9.12-SNAPSHOT",
+        "org.slf4j:slf4j-api:1.7.29",
+        "org.zeroturnaround:zt-exec:1.9",
+        "net.javacrumbs.json-unit:json-unit-fluent:1.12.1",
+        "org.jooq:joor:0.9.5",
+        "org.powermock:powermock-api-mockito:1.7.4",
+        "org.powermock:powermock-api-mockito-common:1.7.4",
+        "org.powermock:powermock-api-support:1.7.4",
+        "org.powermock:powermock-reflect:1.7.4",
+        "org.powermock:powermock-core:1.7.4",
+        "org.mockito:mockito-core:1.10.19",
+        "io.github.resilience4j:resilience4j-circuitbreaker:1.5.0",
+        "io.github.resilience4j:resilience4j-retrofit:1.5.0",
+        "io.github.resilience4j:resilience4j-retry:1.5.0",
+        "com.squareup.okhttp3:okhttp:3.9.0",
+        "commons-cli:commons-cli:1.2",
+        "commons-io:commons-io:2.6",
+        "commons-lang:commons-lang:2.3",
+        "commons-logging:commons-logging:1.1.1",
+        "com.google.api:gax:1.53.1",
+        "com.google.api:gax-grpc:1.46.1",
+        "com.google.api.grpc:proto-google-common-protos:1.17.0",
+        "com.google.api.grpc:proto-google-iam-v1:0.13.0",
+        "com.google.cloud:google-cloud-core:1.92.4",
+        "com.google.cloud:google-cloud-core:1.79.0",
+        "com.google.code.gson:gson:2.8.0",
+        "com.google.errorprone:error_prone_annotations:2.3.3",
+        "com.google.http-client:google-http-client:1.34.1",
+        "com.google.http-client:google-http-client-jackson:1.20.0",
+        "com.google.protobuf:protobuf-java:3.11.4",
+        "com.google.protobuf:protobuf-java-util:3.11.4",
+        "com.jcraft:jzlib:1.1.3",
+        "io.grpc:grpc-context:1.30.1",
+        "io.grpc:grpc-core:1.30.2",
+        "io.grpc:grpc-grpclb:1.30.2",
+        "io.grpc:grpc-protobuf:1.30.2",
+        "io.grpc:grpc-alts:1.30.2",
+        "io.grpc:grpc-auth:1.30.2",
+        "io.grpc:grpc-stub:1.30.2",
+        "net.minidev:json-smart:2.3",
+        "io.grpc:grpc-netty-shaded:1.30.2",
+        "org.codehaus.mojo:animal-sniffer-annotations:1.18",
+        "org.apache.httpcomponents:httpclient:4.5.2",
+        "org.apache.httpcomponents:httpcore:4.4.1",
+        "org.apache.httpcomponents:httpmime:4.3.6",
+        "org.mongodb:mongo-java-driver:3.12.2",
+        "org.objenesis:objenesis:2.3",
+        "org.ow2.asm:asm:5.0.3",
+        "org.slf4j:jul-to-slf4j:1.7.29",
+        "org.slf4j:log4j-over-slf4j:1.7.29",
+        "org.threeten:threetenbp:1.4.1",
+        "io.grpc:grpc-services:1.30.2",
+        "net.openhft:chronicle-queue:5.19.2",
+        "io.grpc:grpc-testing:1.21.0",
+        "org.awaitility:awaitility:2.0.0",
+        "com.amazonaws:aws-java-sdk-ec2:1.11.834",
+        "com.esotericsoftware.yamlbeans:yamlbeans:1.13",
+        "com.google.apis:google-api-services-monitoring:v3-rev477-1.25.0",
+        "com.sumologic.api.client:sumo-java-client:2.5",
+        "io.fabric8:kubernetes-api:3.0.11",
+        "io.fabric8:kubernetes-client:3.1.12",
+        "io.fabric8:kubernetes-model:2.0.8",
+        "io.fabric8:kubernetes-api:3.0.11",
+        "io.fabric8:kubernetes-client:3.1.12",
+        "io.kubernetes:client-java:8.0.2",
+        "io.kubernetes:client-java-api:8.0.2",
+        "ch.qos.logback:logback-core:1.1.7",
+        "dnsjava:dnsjava:2.1.7",
+        "cglib:cglib-nodep:2.2.2",
+        "com.google.http-client:google-http-client-jackson2:1.34.1",
+        "com.squareup.okhttp3:logging-interceptor:3.9.1",
+        "com.google.cloud:google-cloud-core:1.92.4",
+        "com.google.cloud:google-cloud-core-grpc:1.79.0",
+        "org.bouncycastle:bcprov-jdk15on:1.61",
+        "io.grpc:grpc-context:1.30.2",
+        "net.java.dev.jna:jna-platform:4.0.0",
+        "net.java.dev.jna:jna:4.0.0",
+        "com.google.code.findbugs:jsr305:3.0.1",
+        "org.apache.commons:commons-compress:1.10",
+        "org.jetbrains:annotations:13.0",
+        "org.yaml:snakeyaml:1.15",
+        "org.json:json:20160810",
+        "org.bouncycastle:bcpkix-jdk15on:1.60",
+        "javax.validation:validation-api:1.1.0.Final",
+        "org.slf4j:jcl-over-slf4j:1.7.29",
     ],
     version_conflict_policy = "pinned",
     repositories = [
@@ -1146,10 +1140,11 @@ maven_install(
 )
 
 load("@maven//:defs.bzl", "pinned_maven_install")
+
 pinned_maven_install()
 
 maven_install(
-    name="maven_checkstyle",
+    name = "maven_checkstyle",
     artifacts = [
         "antlr:antlr:2.7.2",
         "org.antlr:antlr4-runtime:4.7.2",
@@ -1203,4 +1198,61 @@ exports_files(["WORKSPACE"], visibility = ["//visibility:public"])
 )
 
 load("//tools/pmd:toolchains.bzl", "rules_pmd_toolchains")
+
 rules_pmd_toolchains()
+
+go_repository(
+    name = "com_github_alecthomas_template",
+    importpath = "github.com/alecthomas/template",
+    sum = "h1:JYp7IbQjafoB+tBA3gMyHYHrpOtNuDiK/uB5uXxq5wM=",
+    version = "v0.0.0-20190718012654-fb15b899a751",
+)
+
+go_repository(
+    name = "com_github_alecthomas_units",
+    importpath = "github.com/alecthomas/units",
+    sum = "h1:UQZhZ2O0vMHr2cI+DC1Mbh0TJxzA3RcLoMsFw+aXw7E=",
+    version = "v0.0.0-20190924025748-f65c72e2690d",
+)
+
+go_repository(
+    name = "com_github_go_chi_chi",
+    importpath = "github.com/go-chi/chi",
+    sum = "h1:fGFk2Gmi/YKXk0OmGfBh0WgmN3XB8lVnEyNz34tQRec=",
+    version = "v4.1.2+incompatible",
+)
+
+go_repository(
+    name = "com_github_joho_godotenv",
+    importpath = "github.com/joho/godotenv",
+    sum = "h1:Zjp+RcGpHhGlrMbJzXTrZZPrWj+1vfm90La1wgB6Bhc=",
+    version = "v1.3.0",
+)
+
+go_repository(
+    name = "com_github_kelseyhightower_envconfig",
+    importpath = "github.com/kelseyhightower/envconfig",
+    sum = "h1:Im6hONhd3pLkfDFsbRgu68RDNkGF1r3dvMUtDTo2cv8=",
+    version = "v1.4.0",
+)
+
+go_repository(
+    name = "in_gopkg_alecthomas_kingpin_v2",
+    importpath = "gopkg.in/alecthomas/kingpin.v2",
+    sum = "h1:jMFz6MfLP0/4fUyZle81rXUoxOBFi19VUFKVDOQfozc=",
+    version = "v2.2.6",
+)
+
+go_repository(
+    name = "io_etcd_go_bbolt",
+    importpath = "go.etcd.io/bbolt",
+    sum = "h1:XAzx9gjCb0Rxj7EoqcClPD1d5ZBxZJk0jbuoPHenBt0=",
+    version = "v1.3.5",
+)
+
+go_repository(
+    name = "com_github_cenkalti_backoff",
+    importpath = "github.com/cenkalti/backoff",
+    sum = "h1:tNowT99t7UNflLxfYYSlKYsBpXdEet03Pg2g16Swow4=",
+    version = "v2.2.1+incompatible",
+)
