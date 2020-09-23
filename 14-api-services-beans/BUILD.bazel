@@ -11,8 +11,8 @@ java_library(
     name = "maven_deps",
     exports = [
             "//990-commons-test:module",
-            "//12-commons:maven_deps",
             "//12-commons:module",
+            "//12-commons:maven_deps",
             "@maven//:com_amazonaws_aws_java_sdk_ec2",
             "@maven//:com_esotericsoftware_yamlbeans_yamlbeans",
             "@maven//:com_google_apis_google_api_services_monitoring",
@@ -35,7 +35,7 @@ java_library(
     name = "test_deps",
     exports = [
         "@maven//:org_assertj_assertj_core",
-        "@maven//:junit_junit"
+        "@maven//:junit_junit",
     ]
 )
 
@@ -58,8 +58,8 @@ java_library(
     deps = [
         "maven_deps",
         "module",
+        "test_deps",
         "//:lombok",
-        "test_deps"
     ],
    visibility = ["//visibility:public"],
 )
@@ -69,9 +69,9 @@ run_tests(
     deps = [
         "module",
         "maven_deps",
-        "//:lombok",
+        "test_deps",
         "tests",
-        "test_deps"
+        "//:lombok",
     ],
     runtime_deps = [
             "//14-api-services-beans/src/test/resources:resources",

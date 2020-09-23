@@ -65,11 +65,18 @@ build_proto_module() {
    -f scripts/bazel/proto_pom.xml
 }
 
-
 build_bazel_module 990-commons-test
 build_bazel_module 12-commons
+build_bazel_module 13-ng-commons
 build_bazel_module 13-grpc-api
 build_bazel_module 14-api-services-beans
+build_bazel_module 15-api-services
+build_bazel_module 16-expression-service
+build_bazel_module 19-delegate-tasks-beans
+build_bazel_module 20-delegate-beans
+build_bazel_module 20-delegate-tasks
+build_bazel_module 20-ng-core-beans
+build_bazel_module 21-delegate-agent-beans
 build_java_proto_module 13-grpc-api
 build_java_proto_module 19-delegate-tasks-beans
 build_java_proto_module 20-delegate-beans

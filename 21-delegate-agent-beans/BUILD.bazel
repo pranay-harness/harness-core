@@ -1,0 +1,95 @@
+load("@rules_java//java:defs.bzl", "java_binary")
+load("//:GenTestRules.bzl", "run_tests")
+load("//tools/checkstyle:rules.bzl", "checkstyle")
+load("//:macros.bzl", "sonarqube_test")
+load("//tools/pmd:defs.bzl","pmd")
+load("//:macros.bzl", "sources")
+
+sources()
+
+java_library(
+    name = "maven_deps",
+    exports = [
+                "//990-commons-test:module",
+                "//12-commons:module",
+                "@maven//:com_google_protobuf_protobuf_java",
+                "@maven//:org_projectlombok_lombok",
+                "@maven//:com_google_guava_guava",
+                "@maven//:com_google_code_findbugs_annotations",
+                "@maven//:com_fasterxml_jackson_core_jackson_annotations",
+                "@maven//:com_google_code_findbugs_jsr305",
+                "@maven//:org_slf4j_slf4j_api",
+                "@maven//:commons_io_commons_io",
+                "@maven//:org_apache_commons_commons_lang3",
+                "@maven//:com_squareup_okhttp3_okhttp",
+                "@maven//:com_esotericsoftware_kryo"
+        ],
+    visibility = ["//visibility:public"],
+)
+
+
+
+java_library(
+    name = "module",
+    srcs = glob(["src/main/**/*.java"]),
+    deps = [
+                "maven_deps",
+                "//:lombok",
+                "//21-delegate-agent-beans/src/main/proto:21_delegate_agent_beans_java_proto",
+                "//20-delegate-beans/src/main/proto:20_delegate_beans_java_proto",
+    ],
+   resources = [
+
+      ],
+   visibility = ["//visibility:public"],
+)
+
+java_library(
+    name = "test_deps",
+    exports = [
+        "@maven//:org_mockito_mockito_core",
+        "@maven//:org_assertj_assertj_core",
+        "@maven//:junit_junit"
+    ]
+)
+
+
+java_library(
+    name = "tests",
+    srcs = glob(["src/test/**/*.java"]),
+    deps = [
+                "module",
+                "maven_deps",
+                "//:lombok",
+                "test_deps",
+    ],
+   visibility = ["//visibility:public"],
+)
+
+run_tests(
+    test_files = glob(["src/test/**/*Test.java"],exclude = ["**/CommonsTest.java"],),
+    deps = [
+                "module",
+                "maven_deps",
+                "tests",
+                "test_deps",
+                "//:lombok",
+    ],
+    runtime_deps = [
+        "@maven//:javax_ws_rs_javax_ws_rs_api",
+    ],
+    testonly = 1,
+)
+
+checkstyle()
+
+sonarqube_test(
+    name="sq_mycomponent",
+    srcs = ["sources"],
+    targets = [
+        ":maven_deps",
+        ":module",
+    ],
+)
+
+pmd()

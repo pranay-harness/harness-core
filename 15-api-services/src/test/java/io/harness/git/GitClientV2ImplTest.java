@@ -395,6 +395,8 @@ public class GitClientV2ImplTest extends CategoryTest {
                            .append("cd " + repoPath + ";")
                            .append("touch " + tag + ";")
                            .append("git add " + tag + ";")
+                           .append("git config user.email 'someone@someplace.com';")
+                           .append("git config user.name 'someone';")
                            .append("git commit -m 'commit " + tag + "';")
                            .append("git push origin master;")
                            .append("git tag " + tag + ";")
@@ -414,6 +416,8 @@ public class GitClientV2ImplTest extends CategoryTest {
                          .append("mkdir -p " + repoPath + ";")
                          .append("cd " + repoPath + ";")
                          .append("git init " + (bare ? "--bare" : "") + ";")
+                         .append("git config user.email 'someone@someplace.com';")
+                         .append("git config user.name 'someone';")
                          .toString();
 
     executeCommand(command);
