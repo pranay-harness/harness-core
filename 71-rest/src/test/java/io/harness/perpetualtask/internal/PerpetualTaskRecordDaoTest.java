@@ -1,6 +1,7 @@
 package io.harness.perpetualtask.internal;
 
 import static io.harness.rule.OwnerRule.HITESH;
+import static io.harness.rule.OwnerRule.MATT;
 import static io.harness.rule.OwnerRule.VUK;
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -32,6 +33,7 @@ public class PerpetualTaskRecordDaoTest extends WingsBaseTest {
   private final String CLUSTER_NAME = "clusterName";
   private final String ACCOUNT_ID = "test-account-id";
   private final String DELEGATE_ID = "test-delegate-id1";
+  private final String CLIENT_TASK_ID = "client-task-id1";
   private final String CLOUD_PROVIDER_ID = "cloudProviderId";
   private final long HEARTBEAT_MILLIS = Instant.now().toEpochMilli();
 
@@ -132,10 +134,10 @@ public class PerpetualTaskRecordDaoTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = VUK)
+  @Owner(developers = MATT)
   @Category(UnitTests.class)
-  public void testGetExistingPerpetualTaskWithTaskParams() {
-    PerpetualTaskClientContext clientContext = getClientContextWithTaskParams();
+  public void testGetExistingPerpetualTaskWithClientTaskId() {
+    PerpetualTaskClientContext clientContext = getClientContextWithClientId();
     PerpetualTaskRecord perpetualTaskRecord = getPerpetualTaskRecord();
     perpetualTaskRecord.setClientContext(clientContext);
     perpetualTaskRecordDao.save(perpetualTaskRecord);
@@ -197,6 +199,10 @@ public class PerpetualTaskRecordDaoTest extends WingsBaseTest {
   public PerpetualTaskClientContext getClientContextWithTaskParams() {
     byte[] taskParameters = new byte[] {1, 2, 3, 4};
     return PerpetualTaskClientContext.builder().executionBundle(taskParameters).build();
+  }
+
+  public PerpetualTaskClientContext getClientContextWithClientId() {
+    return PerpetualTaskClientContext.builder().clientId(CLIENT_TASK_ID).build();
   }
 
   public PerpetualTaskRecord getPerpetualTaskRecord() {
