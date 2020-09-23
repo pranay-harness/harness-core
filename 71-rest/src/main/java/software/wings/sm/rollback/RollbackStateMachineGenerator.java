@@ -43,29 +43,29 @@ public class RollbackStateMachineGenerator {
   @Inject private WorkflowExecutionService workflowExecutionService;
   @Inject private WorkflowConcurrencyHelper workflowConcurrencyHelper;
 
-  public StateMachine generateForRollbackExecution(@NotNull String appId, @NotNull String successfulExecutionId,
-      boolean infraRefactor) throws InvalidRollbackException {
+  public StateMachine generateForRollbackExecution(@NotNull String appId, @NotNull String successfulExecutionId)
+      throws InvalidRollbackException {
     WorkflowExecution successfulExecution = workflowExecutionService.getWorkflowExecution(appId, successfulExecutionId);
     if (!validForRollback(successfulExecution)) {
       throw new InvalidRollbackException("Execution Not Valid For Rollback", ErrorCode.INVALID_ROLLBACK);
     }
-    return generateForRollback(appId, successfulExecution.getWorkflowId(), successfulExecutionId, infraRefactor);
+    return generateForRollback(appId, successfulExecution.getWorkflowId(), successfulExecutionId);
   }
 
   private StateMachine generateForRollback(
-      @NotNull String appId, @NotNull String workflowId, @NotNull String successfulExecutionId, boolean infraRefactor) {
+      @NotNull String appId, @NotNull String workflowId, @NotNull String successfulExecutionId) {
     Workflow workflow = workflowService.readWorkflow(appId, workflowId);
-    return getStateMachine(appId, workflow, successfulExecutionId, infraRefactor);
+    return getStateMachine(appId, workflow, successfulExecutionId);
   }
 
   private StateMachine getStateMachine(
-      @NotNull String appId, @NotNull Workflow workflow, @NotNull String successfulExecutionId, boolean infraRefactor) {
+      @NotNull String appId, @NotNull Workflow workflow, @NotNull String successfulExecutionId) {
     final OrchestrationWorkflow orchestrationWorkflow = workflow.getOrchestrationWorkflow();
     CanaryOrchestrationWorkflow modifiedOrchestrationWorkflow =
         modifyOrchestrationForRollback(appId, orchestrationWorkflow, successfulExecutionId);
     modifiedOrchestrationWorkflow.setGraph(modifiedOrchestrationWorkflow.generateGraph());
     return new StateMachine(workflow, workflow.getDefaultVersion(), modifiedOrchestrationWorkflow.getGraph(),
-        workflowService.stencilMap(appId), infraRefactor, false);
+        workflowService.stencilMap(appId), false);
   }
 
   private CanaryOrchestrationWorkflow modifyOrchestrationForRollback(

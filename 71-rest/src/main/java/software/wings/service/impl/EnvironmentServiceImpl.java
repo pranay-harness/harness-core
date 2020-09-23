@@ -70,7 +70,6 @@ import software.wings.beans.EnvSummary;
 import software.wings.beans.Environment;
 import software.wings.beans.Environment.EnvironmentKeys;
 import software.wings.beans.Event.Type;
-import software.wings.beans.FeatureName;
 import software.wings.beans.HarnessTagLink;
 import software.wings.beans.HarnessTagType;
 import software.wings.beans.InformationNotification;
@@ -200,9 +199,6 @@ public class EnvironmentServiceImpl implements EnvironmentService, DataProvider 
   }
 
   void addInfraDefDetailToEnv(String appId, @Nonnull List<Environment> environments) {
-    if (!featureFlagService.isEnabled(FeatureName.INFRA_MAPPING_REFACTOR, appService.getAccountIdByAppId(appId))) {
-      return;
-    }
     List<String> envIds = new ArrayList<>();
     for (Environment environment : environments) {
       envIds.add(environment.getUuid());
@@ -832,10 +828,8 @@ public class EnvironmentServiceImpl implements EnvironmentService, DataProvider 
 
   private void cloneInfrastructureDefinitions(
       final Environment sourceEnvironment, final Environment targetEnvironment) {
-    if (featureFlagService.isEnabled(FeatureName.INFRA_MAPPING_REFACTOR, sourceEnvironment.getAccountId())) {
-      infrastructureDefinitionService.cloneInfrastructureDefinitions(sourceEnvironment.getAppId(),
-          sourceEnvironment.getUuid(), targetEnvironment.getAppId(), targetEnvironment.getUuid());
-    }
+    infrastructureDefinitionService.cloneInfrastructureDefinitions(sourceEnvironment.getAppId(),
+        sourceEnvironment.getUuid(), targetEnvironment.getAppId(), targetEnvironment.getUuid());
   }
 
   private void cloneServiceVariables(Environment clonedEnvironment, List<ServiceVariable> serviceVariables,

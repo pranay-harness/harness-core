@@ -3,7 +3,6 @@ package software.wings.service.impl.workflow.creation;
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.validation.Validator.notNullCheck;
-import static software.wings.beans.FeatureName.INFRA_MAPPING_REFACTOR;
 import static software.wings.beans.Workflow.WorkflowBuilder.aWorkflow;
 
 import com.google.inject.Inject;
@@ -61,12 +60,11 @@ public class MultiPhaseWorkflowCreator extends WorkflowCreator {
       return;
     }
 
-    boolean infraRefactor = featureFlagService.isEnabled(INFRA_MAPPING_REFACTOR, workflow.getAccountId());
     OrchestrationWorkflow orchestrationWorkflow = workflow.getOrchestrationWorkflow();
     CanaryOrchestrationWorkflow canaryOrchestrationWorkflow = (CanaryOrchestrationWorkflow) orchestrationWorkflow;
-    boolean serviceRepeat = canaryOrchestrationWorkflow.serviceRepeat(workflowPhase, infraRefactor);
-    workflowServiceHelper.generateNewWorkflowPhaseSteps(workflow.getAppId(), workflow.getEnvId(), workflowPhase,
-        serviceRepeat, orchestrationWorkflow.getOrchestrationWorkflowType(), workflow.getCreationFlags());
+    boolean serviceRepeat = canaryOrchestrationWorkflow.serviceRepeat(workflowPhase);
+    workflowServiceHelper.generateNewWorkflowPhaseSteps(workflow.getAppId(), workflowPhase, serviceRepeat,
+        orchestrationWorkflow.getOrchestrationWorkflowType(), workflow.getCreationFlags());
     workflowServiceTemplateHelper.addLinkedWorkflowPhaseTemplate(workflowPhase);
     canaryOrchestrationWorkflow.getWorkflowPhases().add(workflowPhase);
 

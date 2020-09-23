@@ -12,6 +12,7 @@ import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyBoolean;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static software.wings.api.CommandStateExecutionData.Builder.aCommandStateExecutionData;
@@ -34,6 +35,7 @@ import static software.wings.utils.WingsTestConstants.ARTIFACT_ID;
 import static software.wings.utils.WingsTestConstants.ARTIFACT_STREAM_ID;
 import static software.wings.utils.WingsTestConstants.ENV_ID;
 import static software.wings.utils.WingsTestConstants.ENV_NAME;
+import static software.wings.utils.WingsTestConstants.INFRA_DEFINITION_ID;
 import static software.wings.utils.WingsTestConstants.INFRA_MAPPING_ID;
 import static software.wings.utils.WingsTestConstants.PCF_SERVICE_NAME;
 import static software.wings.utils.WingsTestConstants.SERVICE_ID;
@@ -73,6 +75,7 @@ import software.wings.app.PortalConfig;
 import software.wings.beans.Activity;
 import software.wings.beans.Application;
 import software.wings.beans.AwsConfig;
+import software.wings.beans.AwsInfrastructureMapping;
 import software.wings.beans.BlueprintProperty;
 import software.wings.beans.CloudFormationInfrastructureProvisioner;
 import software.wings.beans.EntityType;
@@ -100,6 +103,8 @@ import software.wings.helpers.ext.cloudformation.request.CloudFormationCommandRe
 import software.wings.helpers.ext.cloudformation.request.CloudFormationCreateStackRequest;
 import software.wings.helpers.ext.cloudformation.request.CloudFormationDeleteStackRequest;
 import software.wings.helpers.ext.url.SubdomainUrlHelperIntfc;
+import software.wings.infra.AwsAmiInfrastructure;
+import software.wings.infra.InfrastructureDefinition;
 import software.wings.service.ServiceHelper;
 import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.ActivityService;
@@ -110,6 +115,7 @@ import software.wings.service.intfc.ArtifactStreamServiceBindingService;
 import software.wings.service.intfc.DelegateService;
 import software.wings.service.intfc.EnvironmentService;
 import software.wings.service.intfc.FeatureFlagService;
+import software.wings.service.intfc.InfrastructureDefinitionService;
 import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.InfrastructureProvisionerService;
 import software.wings.service.intfc.ServiceResourceService;
@@ -142,6 +148,7 @@ public class CloudFormationStateTest extends WingsBaseTest {
   @Mock private DelegateService delegateService;
   @Mock private ServiceResourceService serviceResourceService;
   @Mock private ActivityService activityService;
+  @Mock private InfrastructureDefinitionService infrastructureDefinitionService;
   @Mock private InfrastructureMappingService infrastructureMappingService;
   @Mock private AppService appService;
   @Mock private EnvironmentService environmentService;
@@ -301,7 +308,12 @@ public class CloudFormationStateTest extends WingsBaseTest {
     when(artifactService.get(any())).thenReturn(artifact);
     when(artifactStreamService.get(any())).thenReturn(artifactStream);
 
-    when(infrastructureMappingService.get(APP_ID, INFRA_MAPPING_ID)).thenReturn(anAwsInfrastructureMapping().build());
+    final AwsInfrastructureMapping infraMapping = anAwsInfrastructureMapping().build();
+    infraMapping.setInfrastructureDefinitionId(INFRA_DEFINITION_ID);
+    when(infrastructureMappingService.get(APP_ID, INFRA_MAPPING_ID)).thenReturn(infraMapping);
+    doReturn(InfrastructureDefinition.builder().infrastructure(AwsAmiInfrastructure.builder().build()).build())
+        .when(infrastructureDefinitionService)
+        .get(APP_ID, INFRA_DEFINITION_ID);
 
     Activity activity =
         Activity.builder().triggeredBy(TriggeredBy.builder().name("test").email("test@harness.io").build()).build();
@@ -322,6 +334,7 @@ public class CloudFormationStateTest extends WingsBaseTest {
     on(context).set("variableProcessor", variableProcessor);
     on(context).set("evaluator", evaluator);
     on(context).set("infrastructureMappingService", infrastructureMappingService);
+    on(context).set("infrastructureDefinitionService", infrastructureDefinitionService);
     on(context).set("serviceResourceService", serviceResourceService);
     on(context).set("sweepingOutputService", sweepingOutputService);
     on(context).set("featureFlagService", featureFlagService);
@@ -333,7 +346,6 @@ public class CloudFormationStateTest extends WingsBaseTest {
     when(configuration.getPortal()).thenReturn(portalConfig);
     doNothing().when(serviceHelper).addPlaceholderTexts(any());
     when(featureFlagService.isEnabled(FeatureName.ARTIFACT_STREAM_REFACTOR, ACCOUNT_ID)).thenReturn(false);
-    when(featureFlagService.isEnabled(FeatureName.INFRA_MAPPING_REFACTOR, ACCOUNT_ID)).thenReturn(false);
     when(subdomainUrlHelper.getPortalBaseUrl(any())).thenReturn("baseUrl");
   }
 

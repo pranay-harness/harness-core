@@ -483,7 +483,6 @@ public class PipelineServiceImpl implements PipelineService {
   public List<EntityType> getRequiredEntities(String appId, String pipelineId) {
     Pipeline pipeline = wingsPersistence.getWithAppId(Pipeline.class, appId, pipelineId);
     notNullCheck("pipeline", pipeline, USER);
-    boolean infraRefactor = featureFlagService.isEnabled(FeatureName.INFRA_MAPPING_REFACTOR, pipeline.getAccountId());
     List<EntityType> entityTypes = new ArrayList<>();
     for (PipelineStage pipelineStage : pipeline.getPipelineStages()) {
       for (PipelineStageElement pipelineStageElement : pipelineStage.getPipelineStageElements()) {
@@ -492,7 +491,7 @@ public class PipelineServiceImpl implements PipelineService {
         }
         if (ENV_STATE.name().equals(pipelineStageElement.getType())) {
           Workflow workflow = workflowService.readWorkflowWithoutServices(
-              pipeline.getAppId(), (String) pipelineStageElement.getProperties().get("workflowId"), infraRefactor);
+              pipeline.getAppId(), (String) pipelineStageElement.getProperties().get("workflowId"));
           OrchestrationWorkflow orchestrationWorkflow = workflow.getOrchestrationWorkflow();
           if (orchestrationWorkflow != null) {
             if (BUILD == orchestrationWorkflow.getOrchestrationWorkflowType()) {
@@ -764,7 +763,6 @@ public class PipelineServiceImpl implements PipelineService {
     Pipeline pipeline = wingsPersistence.getWithAppId(Pipeline.class, appId, pipelineId);
     notNullCheck("Pipeline does not exist", pipeline, USER);
 
-    boolean infraRefactor = featureFlagService.isEnabled(FeatureName.INFRA_MAPPING_REFACTOR, pipeline.getAccountId());
     List<PipelineStage> pipelineStages = pipeline.getPipelineStages();
     List<Variable> pipelineVariables = new ArrayList<>();
     Map<String, Workflow> workflowCache = new HashMap<>();
@@ -774,7 +772,7 @@ public class PipelineServiceImpl implements PipelineService {
           continue;
         } else if (ENV_STATE.name().equals(pse.getType())) {
           String workflowId = (String) pse.getProperties().get("workflowId");
-          Workflow workflow = getWorkflow(pipeline, infraRefactor, workflowCache, workflowId);
+          Workflow workflow = getWorkflow(pipeline, workflowCache, workflowId);
           setPipelineVariables(workflow, pse, pipelineVariables, true);
         } else if (APPROVAL.name().equals(pse.getType())) {
           setPipelineVariablesApproval(pse, pipelineVariables, pipelineStage.getName());
@@ -794,7 +792,6 @@ public class PipelineServiceImpl implements PipelineService {
     boolean hasSshInfraMapping = false;
     boolean templatized = false;
     boolean pipelineParameterized = false;
-    boolean infraRefactor = featureFlagService.isEnabled(FeatureName.INFRA_MAPPING_REFACTOR, pipeline.getAccountId());
     Set<String> invalidStages = new HashSet<>();
     List<PipelineStage> pipelineStages = pipeline.getPipelineStages();
     List<Variable> pipelineVariables = new ArrayList<>();
@@ -807,7 +804,7 @@ public class PipelineServiceImpl implements PipelineService {
           try {
             String workflowId = (String) pse.getProperties().get("workflowId");
             Workflow workflow = withServices ? getWorkflowWithServices(pipeline, workflowCache, workflowId)
-                                             : getWorkflow(pipeline, infraRefactor, workflowCache, workflowId);
+                                             : getWorkflow(pipeline, workflowCache, workflowId);
 
             if (!hasSshInfraMapping) {
               hasSshInfraMapping = workflowServiceHelper.workflowHasSshDeploymentPhase(
@@ -853,13 +850,12 @@ public class PipelineServiceImpl implements PipelineService {
     pipeline.setDeploymentTypes(deploymentTypes.stream().distinct().collect(toList()));
   }
 
-  private Workflow getWorkflow(
-      Pipeline pipeline, boolean infraRefactor, Map<String, Workflow> workflowCache, String workflowId) {
+  private Workflow getWorkflow(Pipeline pipeline, Map<String, Workflow> workflowCache, String workflowId) {
     Workflow workflow;
     if (workflowCache.containsKey(workflowId)) {
       workflow = workflowCache.get(workflowId);
     } else {
-      workflow = workflowService.readWorkflowWithoutServices(pipeline.getAppId(), workflowId, infraRefactor);
+      workflow = workflowService.readWorkflowWithoutServices(pipeline.getAppId(), workflowId);
       requireOrchestrationWorkflow(workflow);
       workflowCache.put(workflowId, workflow);
     }
@@ -918,7 +914,6 @@ public class PipelineServiceImpl implements PipelineService {
     boolean templatized = false;
     boolean envParameterized = false;
     boolean hasBuildWorkflow = false;
-    boolean infraRefactor = featureFlagService.isEnabled(FeatureName.INFRA_MAPPING_REFACTOR, pipeline.getAccountId());
     List<DeploymentType> deploymentTypes = new ArrayList<>();
     Set<String> invalidStages = new HashSet<>();
     Map<String, Workflow> workflowCache = new HashMap<>();
@@ -930,7 +925,7 @@ public class PipelineServiceImpl implements PipelineService {
           }
 
           String workflowId = (String) pse.getProperties().get("workflowId");
-          Workflow workflow = getWorkflow(pipeline, infraRefactor, workflowCache, workflowId);
+          Workflow workflow = getWorkflow(pipeline, workflowCache, workflowId);
 
           if (!workflow.getOrchestrationWorkflow().isValid()) {
             invalidStages.add(pse.getName());
@@ -1764,7 +1759,6 @@ public class PipelineServiceImpl implements PipelineService {
                                                      .artifactVariables(new ArrayList<>())
                                                      .build();
 
-    boolean infraRefactor = featureFlagService.isEnabled(FeatureName.INFRA_MAPPING_REFACTOR, pipeline.getAccountId());
     boolean isBuildPipeline = false;
     if (workflowCache == null) {
       workflowCache = new HashMap<>();
@@ -1780,7 +1774,7 @@ public class PipelineServiceImpl implements PipelineService {
         if (workflowCache.containsKey(workflowId)) {
           workflow = workflowCache.get(workflowId);
         } else {
-          workflow = workflowService.readWorkflowWithoutServices(pipeline.getAppId(), workflowId, infraRefactor);
+          workflow = workflowService.readWorkflowWithoutServices(pipeline.getAppId(), workflowId);
           requireOrchestrationWorkflow(workflow);
           workflowCache.put(workflowId, workflow);
         }

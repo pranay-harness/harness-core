@@ -43,6 +43,7 @@ import static software.wings.utils.WingsTestConstants.COMMAND_NAME;
 import static software.wings.utils.WingsTestConstants.COMPUTE_PROVIDER_ID;
 import static software.wings.utils.WingsTestConstants.ENV_ID;
 import static software.wings.utils.WingsTestConstants.ENV_NAME;
+import static software.wings.utils.WingsTestConstants.INFRA_DEFINITION_ID;
 import static software.wings.utils.WingsTestConstants.INFRA_MAPPING_ID;
 import static software.wings.utils.WingsTestConstants.SERVICE_ID;
 import static software.wings.utils.WingsTestConstants.SERVICE_NAME;
@@ -101,6 +102,8 @@ import software.wings.expression.ManagerExpressionEvaluator;
 import software.wings.helpers.ext.container.ContainerDeploymentManagerHelper;
 import software.wings.helpers.ext.container.ContainerMasterUrlHelper;
 import software.wings.helpers.ext.url.SubdomainUrlHelperIntfc;
+import software.wings.infra.GoogleKubernetesEngine;
+import software.wings.infra.InfrastructureDefinition;
 import software.wings.service.impl.ContainerServiceParams;
 import software.wings.service.intfc.ActivityService;
 import software.wings.service.intfc.AppService;
@@ -110,6 +113,7 @@ import software.wings.service.intfc.ContainerService;
 import software.wings.service.intfc.DelegateService;
 import software.wings.service.intfc.EnvironmentService;
 import software.wings.service.intfc.FeatureFlagService;
+import software.wings.service.intfc.InfrastructureDefinitionService;
 import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.ServiceTemplateService;
@@ -141,6 +145,7 @@ public class KubernetesDeployTest extends WingsBaseTest {
   @Mock private ServiceResourceService serviceResourceService;
   @Mock private ActivityService activityService;
   @Mock private InfrastructureMappingService infrastructureMappingService;
+  @Mock private InfrastructureDefinitionService infrastructureDefinitionService;
   @Mock private AppService appService;
   @Mock private EnvironmentService environmentService;
   @Mock private ServiceTemplateService serviceTemplateService;
@@ -254,7 +259,18 @@ public class KubernetesDeployTest extends WingsBaseTest {
                                                       .withComputeProviderSettingId(COMPUTE_PROVIDER_ID)
                                                       .withDeploymentType(DeploymentType.KUBERNETES.name())
                                                       .build();
+    infrastructureMapping.setInfrastructureDefinitionId(INFRA_DEFINITION_ID);
+
+    InfrastructureDefinition infrastructureDefinition =
+        InfrastructureDefinition.builder()
+            .deploymentType(DeploymentType.HELM)
+            .uuid(INFRA_DEFINITION_ID)
+            .infrastructure(
+                GoogleKubernetesEngine.builder().cloudProviderId(COMPUTE_PROVIDER_ID).clusterName(CLUSTER_NAME).build())
+            .build();
+
     when(infrastructureMappingService.get(APP_ID, INFRA_MAPPING_ID)).thenReturn(infrastructureMapping);
+    when(infrastructureDefinitionService.get(APP_ID, INFRA_DEFINITION_ID)).thenReturn(infrastructureDefinition);
 
     Activity activity = Activity.builder().build();
     activity.setUuid(ACTIVITY_ID);
@@ -296,6 +312,7 @@ public class KubernetesDeployTest extends WingsBaseTest {
   public void shouldExecute() {
     on(context).set("sweepingOutputService", sweepingOutputService);
     on(context).set("infrastructureMappingService", infrastructureMappingService);
+    on(context).set("infrastructureDefinitionService", infrastructureDefinitionService);
     on(context).set("serviceResourceService", serviceResourceService);
     on(context).set("serviceTemplateService", serviceTemplateService);
     on(context).set("variableProcessor", variableProcessor);
@@ -373,6 +390,7 @@ public class KubernetesDeployTest extends WingsBaseTest {
     on(context).set("serviceResourceService", serviceResourceService);
     on(context).set("serviceTemplateService", serviceTemplateService);
     on(context).set("infrastructureMappingService", infrastructureMappingService);
+    on(context).set("infrastructureDefinitionService", infrastructureDefinitionService);
     on(context).set("variableProcessor", variableProcessor);
     on(context).set("featureFlagService", featureFlagService);
     on(context).set("evaluator", evaluator);

@@ -111,7 +111,6 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import software.wings.beans.Application;
 import software.wings.beans.Base;
-import software.wings.beans.FeatureName;
 import software.wings.beans.User;
 import software.wings.beans.yaml.Change;
 import software.wings.beans.yaml.ChangeContext;
@@ -520,11 +519,6 @@ public class YamlServiceImpl<Y extends BaseYaml, B extends Base> implements Yaml
     return null;
   }
 
-  private boolean ignoreIfFeatureFlagEnabled(
-      String accountId, FeatureName featureName, YamlType yamlTypeToIgnore, YamlType givenYamlType) {
-    return yamlTypeToIgnore == givenYamlType && featureFlagService.isEnabled(featureName, accountId);
-  }
-
   private <T extends BaseYamlHandler> ChangeContextErrorMap validate(List<Change> changeList) {
     logger.info(GIT_YAML_LOG_PREFIX + "Validating changeset");
     List<ChangeContext> changeContextList = Lists.newArrayList();
@@ -543,10 +537,7 @@ public class YamlServiceImpl<Y extends BaseYaml, B extends Base> implements Yaml
           YamlType yamlType = findYamlType(yamlFilePath, change.getAccountId());
           String yamlSubType = getYamlSubType(change.getFileContent());
 
-          if (ignoreIfFeatureFlagEnabled(
-                  change.getAccountId(), FeatureName.INFRA_MAPPING_REFACTOR, INFRA_MAPPING, yamlType)) {
-            logger.warn("Skipping {} because feature flag {} is enabled", change.getFilePath(),
-                FeatureName.INFRA_MAPPING_REFACTOR);
+          if (INFRA_MAPPING == yamlType) {
             continue;
           }
 

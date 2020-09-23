@@ -23,12 +23,12 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static software.wings.api.CloudProviderType.AWS;
 import static software.wings.api.DeploymentType.SSH;
 import static software.wings.beans.AwsInfrastructureMapping.Builder.anAwsInfrastructureMapping;
 import static software.wings.beans.BuildWorkflow.BuildOrchestrationWorkflowBuilder.aBuildOrchestrationWorkflow;
 import static software.wings.beans.EntityType.ENVIRONMENT;
 import static software.wings.beans.EntityType.INFRASTRUCTURE_DEFINITION;
-import static software.wings.beans.EntityType.INFRASTRUCTURE_MAPPING;
 import static software.wings.beans.EntityType.SERVICE;
 import static software.wings.beans.Environment.Builder.anEnvironment;
 import static software.wings.beans.Variable.ENTITY_TYPE;
@@ -138,6 +138,7 @@ import software.wings.beans.trigger.WebhookEventType;
 import software.wings.beans.trigger.WebhookParameters;
 import software.wings.beans.trigger.WebhookSource;
 import software.wings.common.MongoIdempotentRegistry;
+import software.wings.infra.AwsInstanceInfrastructure;
 import software.wings.infra.GoogleKubernetesEngine;
 import software.wings.infra.InfrastructureDefinition;
 import software.wings.scheduler.BackgroundJobScheduler;
@@ -2193,11 +2194,14 @@ public class TriggerServiceTest extends WingsBaseTest {
   @Owner(developers = SRINIVAS)
   @Category(UnitTests.class)
   public void shouldTriggerTemplatedWorkflowExecutionByManualTrigger() {
+    when(infrastructureDefinitionService.get(APP_ID, INFRA_DEFINITION_ID))
+        .thenReturn(
+            InfrastructureDefinition.builder().infrastructure(AwsInstanceInfrastructure.builder().build()).build());
     setTemplatedWorkflow();
     Map<String, String> workflowVariables = new HashMap<>();
     workflowVariables.put("Environment", ENV_NAME);
     workflowVariables.put("Service", SERVICE_ID);
-    workflowVariables.put("ServiceInfra_Ssh", INFRA_MAPPING_ID);
+    workflowVariables.put("InfraDef_Ssh", INFRA_DEFINITION_ID);
 
     Map<String, String> parameters = new HashMap<>();
     parameters.put("MyVar", "MyValue");
@@ -2226,7 +2230,7 @@ public class TriggerServiceTest extends WingsBaseTest {
     verify(workflowExecutionService)
         .triggerEnvExecution(anyString(), anyString(), any(ExecutionArgs.class), any(Trigger.class));
     verify(environmentService).getEnvironmentByName(APP_ID, ENV_NAME, false);
-    verify(infrastructureMappingService).get(APP_ID, INFRA_MAPPING_ID);
+    verify(infrastructureDefinitionService).get(APP_ID, INFRA_DEFINITION_ID);
     verify(serviceResourceService).get(APP_ID, SERVICE_ID, false);
   }
 
@@ -2234,12 +2238,15 @@ public class TriggerServiceTest extends WingsBaseTest {
   @Owner(developers = SRINIVAS)
   @Category(UnitTests.class)
   public void shouldTriggerTemplatedWorkflowExecutionByBitBucketWebhook() {
+    when(infrastructureDefinitionService.get(APP_ID, INFRA_DEFINITION_ID))
+        .thenReturn(
+            InfrastructureDefinition.builder().infrastructure(AwsInstanceInfrastructure.builder().build()).build());
     setTemplatedWorkflow();
 
     Map<String, String> workflowVariables = new HashMap<>();
     workflowVariables.put("Environment", ENV_NAME);
     workflowVariables.put("Service", SERVICE_ID);
-    workflowVariables.put("ServiceInfra_Ssh", INFRA_MAPPING_ID);
+    workflowVariables.put("InfraDef_Ssh", INFRA_DEFINITION_ID);
 
     workflowWebhookConditionTrigger.setWorkflowVariables(workflowVariables);
 
@@ -2259,7 +2266,7 @@ public class TriggerServiceTest extends WingsBaseTest {
     verify(workflowExecutionService)
         .triggerEnvExecution(anyString(), anyString(), any(ExecutionArgs.class), any(Trigger.class));
     verify(environmentService).getEnvironmentByName(APP_ID, ENV_NAME, false);
-    verify(infrastructureMappingService).get(APP_ID, INFRA_MAPPING_ID);
+    verify(infrastructureDefinitionService).get(APP_ID, INFRA_DEFINITION_ID);
     verify(serviceResourceService).get(APP_ID, SERVICE_ID, false);
   }
 
@@ -2269,10 +2276,13 @@ public class TriggerServiceTest extends WingsBaseTest {
   public void shouldTriggerTemplatedWorkflowExecutionWithoutArtifactSelection() {
     when(artifactStreamService.fetchArtifactStreamIdsForService(APP_ID, SERVICE_ID))
         .thenReturn(Arrays.asList(ARTIFACT_STREAM_ID));
+    when(infrastructureDefinitionService.get(APP_ID, INFRA_DEFINITION_ID))
+        .thenReturn(
+            InfrastructureDefinition.builder().infrastructure(AwsInstanceInfrastructure.builder().build()).build());
 
     Map<String, String> workflowVariables = new HashMap<>();
     workflowVariables.put("Environment", ENV_NAME);
-    workflowVariables.put("ServiceInfra_Ssh", INFRA_MAPPING_ID);
+    workflowVariables.put("InfraDef_Ssh", INFRA_DEFINITION_ID);
     workflowVariables.put("Service", SERVICE_ID);
     setTemplatedWorkflow();
 
@@ -2302,7 +2312,7 @@ public class TriggerServiceTest extends WingsBaseTest {
         .triggerEnvExecution(anyString(), anyString(), any(ExecutionArgs.class), any(Trigger.class));
 
     verify(serviceResourceService).get(APP_ID, SERVICE_ID, false);
-    verify(infrastructureMappingService).get(APP_ID, INFRA_MAPPING_ID);
+    verify(infrastructureDefinitionService).get(APP_ID, INFRA_DEFINITION_ID);
   }
 
   private void setTemplatedWorkflow() {
@@ -2312,9 +2322,10 @@ public class TriggerServiceTest extends WingsBaseTest {
                                                .metadata(ImmutableMap.of("entityType", "ENVIRONMENT"))
                                                .build(),
         TemplateExpression.builder()
-            .fieldName("infraMappingId")
-            .expression("${ServiceInfra_SSH}")
-            .metadata(ImmutableMap.of("entityType", "INFRASTRUCTURE_MAPPING"))
+            .fieldName("infraDefinitionId")
+            .expression("${InfraDef_SSH}")
+            .metadata(ImmutableMap.of("entityType", "INFRASTRUCTURE_DEFINITION"))
+
             .build(),
         TemplateExpression.builder()
             .fieldName("serviceId")
@@ -2326,18 +2337,11 @@ public class TriggerServiceTest extends WingsBaseTest {
         aVariable().entityType(ENVIRONMENT).name("Environment").build());
     workflow.getOrchestrationWorkflow().getUserVariables().add(aVariable().entityType(SERVICE).name("Service").build());
     workflow.getOrchestrationWorkflow().getUserVariables().add(
-        aVariable().entityType(INFRASTRUCTURE_MAPPING).name("ServiceInfra_Ssh").build());
+        aVariable().entityType(INFRASTRUCTURE_DEFINITION).name("InfraDef_Ssh").build());
     when(workflowService.readWorkflowWithoutOrchestration(APP_ID, WORKFLOW_ID)).thenReturn(workflow);
     when(workflowService.readWorkflow(APP_ID, WORKFLOW_ID)).thenReturn(workflow);
     when(environmentService.getEnvironmentByName(APP_ID, ENV_NAME, false))
         .thenReturn(anEnvironment().appId(APP_ID).uuid(ENV_ID).build());
-    when(infrastructureMappingService.get(APP_ID, INFRA_MAPPING_ID))
-        .thenReturn(anAwsInfrastructureMapping()
-                        .withUuid(INFRA_MAPPING_ID)
-                        .withServiceId(SERVICE_ID)
-                        .withDeploymentType(SSH.name())
-                        .withComputeProviderType("AWS")
-                        .build());
   }
 
   @Test
@@ -2363,7 +2367,7 @@ public class TriggerServiceTest extends WingsBaseTest {
 
     pipeline.getPipelineVariables().add(aVariable().entityType(ENVIRONMENT).name("ENV").build());
     pipeline.getPipelineVariables().add(aVariable().entityType(SERVICE).name("SERVICE").build());
-    pipeline.getPipelineVariables().add(aVariable().entityType(INFRASTRUCTURE_MAPPING).name("INFRA").build());
+    pipeline.getPipelineVariables().add(aVariable().entityType(INFRASTRUCTURE_DEFINITION).name("INFRA").build());
 
     when(pipelineService.readPipeline(APP_ID, PIPELINE_ID, true)).thenReturn(pipeline);
 
@@ -2371,12 +2375,12 @@ public class TriggerServiceTest extends WingsBaseTest {
         .thenReturn(anEnvironment().appId(APP_ID).uuid(ENV_ID).build());
     when(serviceResourceService.getServiceByName(APP_ID, SERVICE_NAME, false))
         .thenReturn(Service.builder().name(SERVICE_NAME).build());
-    when(infrastructureMappingService.getInfraMappingByName(APP_ID, ENV_ID, INFRA_NAME))
-        .thenReturn(anAwsInfrastructureMapping()
-                        .withUuid(INFRA_MAPPING_ID)
-                        .withServiceId(SERVICE_ID)
-                        .withDeploymentType(SSH.name())
-                        .withComputeProviderType("AWS")
+    when(infrastructureDefinitionService.getInfraDefByName(APP_ID, ENV_ID, INFRA_NAME))
+        .thenReturn(InfrastructureDefinition.builder()
+                        .uuid(INFRA_DEFINITION_ID)
+                        .deploymentType(SSH)
+                        .cloudProviderType(AWS)
+                        .infrastructure(AwsInstanceInfrastructure.builder().build())
                         .build());
 
     Map<String, String> parameters = new HashMap<>();
@@ -2388,7 +2392,7 @@ public class TriggerServiceTest extends WingsBaseTest {
     verify(workflowExecutionService)
         .triggerEnvExecution(anyString(), anyString(), any(ExecutionArgs.class), any(Trigger.class));
     verify(environmentService).getEnvironmentByName(APP_ID, ENV_NAME, false);
-    verify(infrastructureMappingService).getInfraMappingByName(APP_ID, ENV_ID, INFRA_NAME);
+    verify(infrastructureDefinitionService).getInfraDefByName(APP_ID, ENV_ID, INFRA_NAME);
     verify(serviceResourceService).getServiceByName(APP_ID, SERVICE_NAME, false);
   }
 

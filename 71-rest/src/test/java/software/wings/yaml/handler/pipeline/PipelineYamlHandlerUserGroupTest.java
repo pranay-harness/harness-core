@@ -9,7 +9,6 @@ import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.when;
 import static software.wings.api.DeploymentType.SSH;
-import static software.wings.beans.AwsInfrastructureMapping.Builder.anAwsInfrastructureMapping;
 import static software.wings.beans.CanaryOrchestrationWorkflow.CanaryOrchestrationWorkflowBuilder.aCanaryOrchestrationWorkflow;
 import static software.wings.beans.Environment.Builder.anEnvironment;
 import static software.wings.beans.PhaseStep.PhaseStepBuilder.aPhaseStep;
@@ -17,13 +16,12 @@ import static software.wings.beans.PhaseStepType.POST_DEPLOYMENT;
 import static software.wings.beans.PhaseStepType.PRE_DEPLOYMENT;
 import static software.wings.beans.Workflow.WorkflowBuilder.aWorkflow;
 import static software.wings.beans.WorkflowPhase.WorkflowPhaseBuilder.aWorkflowPhase;
-import static software.wings.settings.SettingVariableTypes.AWS;
 import static software.wings.utils.ArtifactType.WAR;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 import static software.wings.utils.WingsTestConstants.APP_ID;
 import static software.wings.utils.WingsTestConstants.ENV_ID;
 import static software.wings.utils.WingsTestConstants.ENV_NAME;
-import static software.wings.utils.WingsTestConstants.INFRA_MAPPING_ID;
+import static software.wings.utils.WingsTestConstants.INFRA_DEFINITION_ID;
 import static software.wings.utils.WingsTestConstants.SERVICE_ID;
 import static software.wings.utils.WingsTestConstants.SERVICE_NAME;
 import static software.wings.utils.WingsTestConstants.WORKFLOW_NAME;
@@ -42,9 +40,9 @@ import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
+import software.wings.api.CloudProviderType;
 import software.wings.beans.Account;
 import software.wings.beans.Application;
-import software.wings.beans.AwsInfrastructureMapping;
 import software.wings.beans.Environment;
 import software.wings.beans.Pipeline;
 import software.wings.beans.Pipeline.Yaml;
@@ -57,6 +55,8 @@ import software.wings.beans.security.UserGroup;
 import software.wings.beans.yaml.ChangeContext;
 import software.wings.beans.yaml.GitFileChange;
 import software.wings.beans.yaml.YamlType;
+import software.wings.infra.AwsInstanceInfrastructure;
+import software.wings.infra.InfrastructureDefinition;
 import software.wings.rules.SetupScheduler;
 import software.wings.service.impl.SSHKeyDataProvider;
 import software.wings.service.impl.WinRmConnectionAttributesDataProvider;
@@ -70,6 +70,7 @@ import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.EntityVersionService;
 import software.wings.service.intfc.EnvironmentService;
+import software.wings.service.intfc.InfrastructureDefinitionService;
 import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.PipelineService;
 import software.wings.service.intfc.ServiceResourceService;
@@ -96,6 +97,7 @@ public class PipelineYamlHandlerUserGroupTest extends BaseYamlHandlerTest {
   @Mock AppService appService;
   @Mock YamlGitService yamlGitService;
   @Mock InfrastructureMappingService infrastructureMappingService;
+  @Mock InfrastructureDefinitionService infrastructureDefinitionService;
   @Mock ServiceResourceService serviceResourceService;
   @Mock private Account account;
   @Mock private AccountService accountService;
@@ -170,13 +172,13 @@ public class PipelineYamlHandlerUserGroupTest extends BaseYamlHandlerTest {
 
   @Before
   public void setUp() throws IOException {
-    AwsInfrastructureMapping awsInfrastructureMapping = anAwsInfrastructureMapping()
-                                                            .withServiceId(SERVICE_ID)
-                                                            .withUuid(INFRA_MAPPING_ID)
-                                                            .withDeploymentType(SSH.name())
-                                                            .withComputeProviderType(AWS.name())
-                                                            .build();
-    when(infrastructureMappingService.get(APP_ID, INFRA_MAPPING_ID)).thenReturn(awsInfrastructureMapping);
+    InfrastructureDefinition awsInfraDefinition = InfrastructureDefinition.builder()
+                                                      .uuid(INFRA_DEFINITION_ID)
+                                                      .deploymentType(SSH)
+                                                      .cloudProviderType(CloudProviderType.AWS)
+                                                      .infrastructure(AwsInstanceInfrastructure.builder().build())
+                                                      .build();
+    when(infrastructureDefinitionService.get(APP_ID, INFRA_DEFINITION_ID)).thenReturn(awsInfraDefinition);
 
     UserGroup userGroup = new UserGroup();
     userGroup.setName("Account Administrator");
@@ -208,9 +210,6 @@ public class PipelineYamlHandlerUserGroupTest extends BaseYamlHandlerTest {
     when(environmentService.getEnvironmentByName(anyString(), anyString(), anyBoolean())).thenReturn(environment);
     when(serviceResourceService.getServiceByName(anyString(), anyString(), anyBoolean())).thenReturn(service);
 
-    when(infrastructureMappingService.getInfraMappingByName(anyString(), anyString(), anyString()))
-        .thenReturn(awsInfrastructureMapping);
-
     when(yamlGitService.get(anyString(), anyString(), any())).thenReturn(null);
 
     Workflow workflow1 = aWorkflow()
@@ -221,7 +220,7 @@ public class PipelineYamlHandlerUserGroupTest extends BaseYamlHandlerTest {
                              .orchestrationWorkflow(aCanaryOrchestrationWorkflow()
                                                         .withPreDeploymentSteps(aPhaseStep(PRE_DEPLOYMENT).build())
                                                         .addWorkflowPhase(aWorkflowPhase()
-                                                                              .infraMappingId(INFRA_MAPPING_ID)
+                                                                              .infraDefinitionId(INFRA_DEFINITION_ID)
                                                                               .serviceId(SERVICE_ID)
                                                                               .deploymentType(SSH)
                                                                               .build())

@@ -9,7 +9,6 @@ import static org.mockito.Mockito.when;
 import static org.mockito.MockitoAnnotations.initMocks;
 import static software.wings.beans.AccountPlugin.Builder.anAccountPlugin;
 import static software.wings.beans.FeatureName.ARTIFACT_STREAM_REFACTOR;
-import static software.wings.beans.FeatureName.INFRA_MAPPING_REFACTOR;
 import static software.wings.beans.PluginCategory.Artifact;
 import static software.wings.beans.PluginCategory.AzureArtifacts;
 import static software.wings.beans.PluginCategory.CloudProvider;
@@ -92,8 +91,6 @@ public class PluginServiceTest extends CategoryTest {
     FieldUtils.writeField(pluginService, "featureFlagService", mockFeatureFlagService, true);
     when(mockFeatureFlagService.isEnabled(ARTIFACT_STREAM_REFACTOR, accountId)).thenReturn(false);
     when(mockFeatureFlagService.isEnabled(ARTIFACT_STREAM_REFACTOR, multiArtifactEnabledAccountId)).thenReturn(true);
-    when(mockFeatureFlagService.isEnabled(INFRA_MAPPING_REFACTOR, accountId)).thenReturn(true);
-    when(mockFeatureFlagService.isEnabled(INFRA_MAPPING_REFACTOR, multiArtifactEnabledAccountId)).thenReturn(true);
   }
 
   @Test

@@ -55,11 +55,6 @@ public class BuildWorkflow extends CanaryOrchestrationWorkflow {
   }
 
   @Override
-  public boolean validate(boolean infraRefactor) {
-    return validate();
-  }
-
-  @Override
   public OrchestrationWorkflow cloneInternal() {
     return aBuildOrchestrationWorkflow()
         .withGraph(getGraph())

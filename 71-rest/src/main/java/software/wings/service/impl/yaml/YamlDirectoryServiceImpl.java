@@ -87,7 +87,6 @@ import software.wings.beans.Environment.EnvironmentKeys;
 import software.wings.beans.FeatureName;
 import software.wings.beans.HarnessTag;
 import software.wings.beans.InfrastructureMapping;
-import software.wings.beans.InfrastructureMapping.InfrastructureMappingKeys;
 import software.wings.beans.InfrastructureProvisioner;
 import software.wings.beans.LambdaSpecification;
 import software.wings.beans.NotificationGroup;
@@ -1368,51 +1367,27 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
         envFolder.addChild(new AppLevelYamlNode(accountId, environment.getUuid(), environment.getAppId(), yamlFileName,
             Environment.class, envPath.clone().add(yamlFileName), yamlGitSyncService, Type.ENVIRONMENT));
 
-        if (!featureFlagService.isEnabled(FeatureName.INFRA_MAPPING_REFACTOR, accountId)) {
-          // ------------------- INFRA MAPPING SECTION -----------------------
-          DirectoryPath infraMappingPath = envPath.clone().add(INFRA_MAPPING_FOLDER);
-          FolderNode infraMappingsFolder = new FolderNode(accountId, INFRA_MAPPING_FOLDER, InfrastructureMapping.class,
-              infraMappingPath, environment.getAppId(), yamlGitSyncService);
-          envFolder.addChild(infraMappingsFolder);
+        // ------------------- INFRA DEFINITION SECTION ------------------------
+        DirectoryPath infraDefinitionPath = envPath.clone().add(INFRA_DEFINITION_FOLDER);
+        FolderNode infraDefinitionFolder = new FolderNode(accountId, INFRA_DEFINITION_FOLDER,
+            InfrastructureDefinition.class, infraDefinitionPath, environment.getAppId(), yamlGitSyncService);
+        envFolder.addChild(infraDefinitionFolder);
+        PageRequest<InfrastructureDefinition> infrastructureDefinitionPageRequest =
+            aPageRequest()
+                .addFilter(InfrastructureDefinitionKeys.appId, Operator.EQ, environment.getAppId())
+                .addFilter(InfrastructureDefinitionKeys.envId, Operator.EQ, environment.getUuid())
+                .build();
+        PageResponse<InfrastructureDefinition> infrastructureDefinitionsList =
+            infrastructureDefinitionService.list(infrastructureDefinitionPageRequest);
 
-          PageRequest<InfrastructureMapping> pageRequest =
-              aPageRequest()
-                  .addFilter(InfrastructureMappingKeys.appId, Operator.EQ, environment.getAppId())
-                  .addFilter(InfrastructureMappingKeys.envId, Operator.EQ, environment.getUuid())
-                  .build();
-          PageResponse<InfrastructureMapping> infraMappingList = infraMappingService.list(pageRequest);
-
-          // iterate over service commands
-          infraMappingList.forEach(infraMapping -> {
-            String infraMappingYamlFileName = infraMapping.getName() + YAML_EXTENSION;
-            infraMappingsFolder.addChild(new EnvLevelYamlNode(accountId, infraMapping.getUuid(),
-                infraMapping.getAppId(), infraMapping.getEnvId(), infraMappingYamlFileName, InfrastructureMapping.class,
-                infraMappingPath.clone().add(infraMappingYamlFileName), yamlGitSyncService, Type.INFRA_MAPPING));
-          });
-          // ------------------- END INFRA MAPPING SECTION -----------------------
-        } else {
-          // ------------------- INFRA DEFINITION SECTION ------------------------
-          DirectoryPath infraDefinitionPath = envPath.clone().add(INFRA_DEFINITION_FOLDER);
-          FolderNode infraDefinitionFolder = new FolderNode(accountId, INFRA_DEFINITION_FOLDER,
-              InfrastructureDefinition.class, infraDefinitionPath, environment.getAppId(), yamlGitSyncService);
-          envFolder.addChild(infraDefinitionFolder);
-          PageRequest<InfrastructureDefinition> infrastructureDefinitionPageRequest =
-              aPageRequest()
-                  .addFilter(InfrastructureDefinitionKeys.appId, Operator.EQ, environment.getAppId())
-                  .addFilter(InfrastructureDefinitionKeys.envId, Operator.EQ, environment.getUuid())
-                  .build();
-          PageResponse<InfrastructureDefinition> infrastructureDefinitionsList =
-              infrastructureDefinitionService.list(infrastructureDefinitionPageRequest);
-
-          infrastructureDefinitionsList.forEach(infraDefinition -> {
-            String infraDefinitionYamlFileName = infraDefinition.getName() + YAML_EXTENSION;
-            infraDefinitionFolder.addChild(new EnvLevelYamlNode(accountId, infraDefinition.getUuid(),
-                infraDefinition.getAppId(), infraDefinition.getEnvId(), infraDefinitionYamlFileName,
-                InfrastructureDefinition.class, infraDefinitionPath.clone().add(infraDefinitionYamlFileName),
-                yamlGitSyncService, Type.INFRA_DEFINITION));
-          });
-          // ------------------- END DEFINITION SECTION ------------------------
-        }
+        infrastructureDefinitionsList.forEach(infraDefinition -> {
+          String infraDefinitionYamlFileName = infraDefinition.getName() + YAML_EXTENSION;
+          infraDefinitionFolder.addChild(new EnvLevelYamlNode(accountId, infraDefinition.getUuid(),
+              infraDefinition.getAppId(), infraDefinition.getEnvId(), infraDefinitionYamlFileName,
+              InfrastructureDefinition.class, infraDefinitionPath.clone().add(infraDefinitionYamlFileName),
+              yamlGitSyncService, Type.INFRA_DEFINITION));
+        });
+        // ------------------- END DEFINITION SECTION ------------------------
 
         // ------------------- CV CONFIG SECTION -----------------------
 

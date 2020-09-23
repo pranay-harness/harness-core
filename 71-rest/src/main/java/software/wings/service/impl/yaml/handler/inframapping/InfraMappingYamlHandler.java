@@ -10,7 +10,6 @@ import io.harness.exception.HarnessException;
 import org.mongodb.morphia.Key;
 import software.wings.beans.Application;
 import software.wings.beans.Environment;
-import software.wings.beans.FeatureName;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.InfrastructureProvisioner;
 import software.wings.beans.Service;
@@ -119,9 +118,7 @@ public abstract class InfraMappingYamlHandler<Y extends InfrastructureMapping.Ya
     yaml.setInfraMappingType(infraMapping.getInfraMappingType());
     yaml.setDeploymentType(infraMapping.getDeploymentType());
     yaml.setHarnessApiVersion(getHarnessApiVersion());
-    if (featureFlagService.isEnabled(FeatureName.INFRA_MAPPING_REFACTOR, infraMapping.getAccountId())) {
-      yaml.setBlueprints(infraMapping.getBlueprints());
-    }
+    yaml.setBlueprints(infraMapping.getBlueprints());
   }
 
   protected void toBean(ChangeContext<Y> context, B bean, String appId, String envId, String serviceId,
@@ -138,9 +135,7 @@ public abstract class InfraMappingYamlHandler<Y extends InfrastructureMapping.Ya
     bean.setAccountId(context.getChange().getAccountId());
     String name = yamlHelper.getNameFromYamlFilePath(context.getChange().getFilePath());
     bean.setName(name);
-    if (featureFlagService.isEnabled(FeatureName.INFRA_MAPPING_REFACTOR, context.getChange().getAccountId())) {
-      bean.setBlueprints(yaml.getBlueprints());
-    }
+    bean.setBlueprints(yaml.getBlueprints());
   }
 
   protected <T extends InfrastructureMapping> T upsertInfrastructureMapping(

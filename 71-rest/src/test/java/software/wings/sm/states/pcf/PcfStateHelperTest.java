@@ -14,7 +14,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.fail;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
-import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.spy;
@@ -78,7 +77,6 @@ import software.wings.api.pcf.SwapRouteRollbackSweepingOutputPcf;
 import software.wings.beans.Activity;
 import software.wings.beans.Activity.ActivityBuilder;
 import software.wings.beans.Activity.Type;
-import software.wings.beans.FeatureName;
 import software.wings.beans.PcfConfig;
 import software.wings.beans.PcfInfrastructureMapping;
 import software.wings.beans.Service;
@@ -228,10 +226,6 @@ public class PcfStateHelperTest extends WingsBaseTest {
   @Owner(developers = ADWAIT)
   @Category(UnitTests.class)
   public void testFetchManifestYmlString() throws Exception {
-    when(featureFlagService.isEnabled(FeatureName.INFRA_MAPPING_REFACTOR, ACCOUNT_ID))
-        .thenReturn(true)
-        .thenReturn(false);
-
     doReturn(PcfServiceSpecification.builder()
                  .serviceId(SERVICE_ID)
                  .manifestYaml(PcfSetupStateTest.MANIFEST_YAML_CONTENT)
@@ -708,7 +702,6 @@ public class PcfStateHelperTest extends WingsBaseTest {
   @Owner(developers = ADWAIT)
   @Category(UnitTests.class)
   public void testGenerateManifestMap() {
-    doReturn(true).when(featureFlagService).isEnabled(eq(FeatureName.INFRA_MAPPING_REFACTOR), anyString());
     Service service = Service.builder().uuid(SERVICE_ID).isPcfV2(true).build();
     doReturn(service).when(serviceResourceService).get(anyString());
 

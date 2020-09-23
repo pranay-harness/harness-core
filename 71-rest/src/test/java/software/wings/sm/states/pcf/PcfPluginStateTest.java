@@ -44,6 +44,7 @@ import static software.wings.utils.WingsTestConstants.ARTIFACT_STREAM_ID;
 import static software.wings.utils.WingsTestConstants.COMPUTE_PROVIDER_ID;
 import static software.wings.utils.WingsTestConstants.ENV_ID;
 import static software.wings.utils.WingsTestConstants.ENV_NAME;
+import static software.wings.utils.WingsTestConstants.INFRA_DEFINITION_ID;
 import static software.wings.utils.WingsTestConstants.INFRA_MAPPING_ID;
 import static software.wings.utils.WingsTestConstants.PASSWORD;
 import static software.wings.utils.WingsTestConstants.SERVICE_ID;
@@ -71,6 +72,7 @@ import org.mockito.Mock;
 import org.mockito.Spy;
 import org.mongodb.morphia.Key;
 import software.wings.WingsBaseTest;
+import software.wings.api.DeploymentType;
 import software.wings.api.PhaseElement;
 import software.wings.api.ServiceElement;
 import software.wings.api.pcf.PcfPluginStateExecutionData;
@@ -79,7 +81,6 @@ import software.wings.app.PortalConfig;
 import software.wings.beans.Activity;
 import software.wings.beans.Application;
 import software.wings.beans.Environment;
-import software.wings.beans.FeatureName;
 import software.wings.beans.GitFetchFilesTaskParams;
 import software.wings.beans.GitFileConfig;
 import software.wings.beans.InfraMappingSweepingOutput;
@@ -108,6 +109,8 @@ import software.wings.expression.ManagerExpressionEvaluator;
 import software.wings.helpers.ext.k8s.request.K8sValuesLocation;
 import software.wings.helpers.ext.pcf.response.PcfCommandExecutionResponse;
 import software.wings.helpers.ext.url.SubdomainUrlHelperIntfc;
+import software.wings.infra.InfrastructureDefinition;
+import software.wings.infra.PcfInfraStructure;
 import software.wings.service.ServiceHelper;
 import software.wings.service.impl.servicetemplates.ServiceTemplateHelper;
 import software.wings.service.intfc.ActivityService;
@@ -119,6 +122,7 @@ import software.wings.service.intfc.ArtifactStreamServiceBindingService;
 import software.wings.service.intfc.DelegateService;
 import software.wings.service.intfc.EnvironmentService;
 import software.wings.service.intfc.FeatureFlagService;
+import software.wings.service.intfc.InfrastructureDefinitionService;
 import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.ServiceTemplateService;
@@ -146,6 +150,7 @@ public class PcfPluginStateTest extends WingsBaseTest {
   @Mock private ServiceResourceService serviceResourceService;
   @Mock private ActivityService activityService;
   @Mock private InfrastructureMappingService infrastructureMappingService;
+  @Mock private InfrastructureDefinitionService infrastructureDefinitionService;
   @Mock private AppService appService;
   @Mock private EnvironmentService environmentService;
   @Mock private ServiceTemplateService serviceTemplateService;
@@ -269,7 +274,15 @@ public class PcfPluginStateTest extends WingsBaseTest {
                                                       .space(SPACE)
                                                       .computeProviderSettingId(COMPUTE_PROVIDER_ID)
                                                       .build();
+    infrastructureMapping.setInfrastructureDefinitionId(INFRA_DEFINITION_ID);
+    InfrastructureDefinition infrastructureDefinition =
+        InfrastructureDefinition.builder()
+            .deploymentType(DeploymentType.PCF)
+            .uuid(INFRA_DEFINITION_ID)
+            .infrastructure(PcfInfraStructure.builder().organization(ORG).space(SPACE).build())
+            .build();
     when(infrastructureMappingService.get(APP_ID, INFRA_MAPPING_ID)).thenReturn(infrastructureMapping);
+    when(infrastructureDefinitionService.get(APP_ID, INFRA_DEFINITION_ID)).thenReturn(infrastructureDefinition);
 
     when(settingsService.get(any())).thenReturn(pcfConfig);
 
@@ -289,6 +302,7 @@ public class PcfPluginStateTest extends WingsBaseTest {
     on(context).set("serviceResourceService", serviceResourceService);
     on(context).set("featureFlagService", featureFlagService);
     on(context).set("infrastructureMappingService", infrastructureMappingService);
+    on(context).set("infrastructureDefinitionService", infrastructureDefinitionService);
     on(context).set("settingsService", settingsService);
     on(context).set("evaluator", evaluator);
     on(context).set("sweepingOutputService", sweepingOutputService);
@@ -300,7 +314,6 @@ public class PcfPluginStateTest extends WingsBaseTest {
     portalConfig.setUrl(BASE_URL);
     when(configuration.getPortal()).thenReturn(portalConfig);
     doNothing().when(serviceHelper).addPlaceholderTexts(any());
-    when(featureFlagService.isEnabled(FeatureName.INFRA_MAPPING_REFACTOR, ACCOUNT_ID)).thenReturn(true);
     when(subdomainUrlHelper.getPortalBaseUrl(any())).thenReturn("baseUrl");
   }
 

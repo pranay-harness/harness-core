@@ -3,7 +3,6 @@ package software.wings.service.impl.workflow.creation.helpers;
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static software.wings.api.DeploymentType.KUBERNETES;
-import static software.wings.beans.FeatureName.INFRA_MAPPING_REFACTOR;
 import static software.wings.beans.PhaseStep.PhaseStepBuilder.aPhaseStep;
 import static software.wings.beans.PhaseStepType.K8S_PHASE_STEP;
 import static software.wings.beans.WorkflowPhase.WorkflowPhaseBuilder.aWorkflowPhase;
@@ -43,12 +42,8 @@ public class WorkflowPhaseHelper {
         .build();
   }
 
-  public void setCloudProvider(String accountId, String appId, WorkflowPhase workflowPhase) {
-    if (featureFlagService.isEnabled(INFRA_MAPPING_REFACTOR, accountId)) {
-      workflowServiceHelper.setCloudProviderInfraRefactor(appId, workflowPhase);
-    } else {
-      workflowServiceHelper.setCloudProvider(appId, workflowPhase);
-    }
+  public void setCloudProvider(String appId, WorkflowPhase workflowPhase) {
+    workflowServiceHelper.setCloudProviderInfraRefactor(appId, workflowPhase);
   }
 
   public void addK8sEmptyPhaseStep(WorkflowPhase workflowPhase) {
@@ -81,7 +76,7 @@ public class WorkflowPhaseHelper {
   public void setCloudProviderIfNeeded(Workflow workflow, WorkflowPhase workflowPhase) {
     OrchestrationWorkflow orchestrationWorkflow = workflow.getOrchestrationWorkflow();
     if (orchestrationWorkflow.needCloudProvider()) {
-      setCloudProvider(workflow.getAccountId(), workflow.getAppId(), workflowPhase);
+      setCloudProvider(workflow.getAppId(), workflowPhase);
     }
   }
 

@@ -2,7 +2,6 @@ package software.wings.service.impl;
 
 import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
 import static io.harness.beans.SearchFilter.Operator.EQ;
-import static io.harness.beans.SearchFilter.Operator.IN;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static java.util.Arrays.asList;
@@ -38,7 +37,6 @@ import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
 import software.wings.beans.ConfigFile;
 import software.wings.beans.Environment;
-import software.wings.beans.FeatureName;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.Service;
 import software.wings.beans.ServiceTemplate;
@@ -72,7 +70,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.TreeSet;
 import java.util.concurrent.ExecutorService;
-import java.util.stream.Collectors;
 import javax.validation.executable.ValidateOnExecution;
 
 /**
@@ -195,9 +192,6 @@ public class ServiceTemplateServiceImpl implements ServiceTemplateService {
       return;
     }
     String appId = serviceTemplates.get(0).getAppId();
-    String envId = serviceTemplates.get(0).getEnvId();
-
-    boolean infraRefactor = featureFlagService.isEnabled(FeatureName.INFRA_MAPPING_REFACTOR, appId);
 
     ImmutableMap<String, ServiceTemplate> serviceTemplateMap =
         Maps.uniqueIndex(serviceTemplates, ServiceTemplate::getUuid);
@@ -236,25 +230,9 @@ public class ServiceTemplateServiceImpl implements ServiceTemplateService {
       Service tempService = serviceMap.get(serviceTemplate.getServiceId());
       serviceTemplate.setServiceArtifactType(tempService != null ? tempService.getArtifactType() : ArtifactType.OTHER);
     });
-    if (infraRefactor) {
-      serviceTemplateMap.forEach((templateId, serviceTemplate)
-                                     -> serviceTemplate.setInfrastructureMappings(getInfraMappingsFromServiceTemplate(
-                                         serviceTemplate.getAppId(), serviceTemplate.getUuid())));
-    } else {
-      PageRequest<InfrastructureMapping> infraPageRequest =
-          aPageRequest()
-              .addFilter("appId", EQ, appId)
-              .addFilter("envId", EQ, envId)
-              .addFilter("serviceTemplateId", IN, serviceTemplateMap.keySet().toArray())
-              .build();
-      List<InfrastructureMapping> infrastructureMappings =
-          infrastructureMappingService.list(infraPageRequest).getResponse();
-      Map<String, List<InfrastructureMapping>> infraMappingListByTemplateId =
-          infrastructureMappings.stream().collect(Collectors.groupingBy(InfrastructureMapping::getServiceTemplateId));
-      infraMappingListByTemplateId.forEach(
-          (templateId, infrastructureMappingList)
-              -> serviceTemplateMap.get(templateId).setInfrastructureMappings(infrastructureMappingList));
-    }
+    serviceTemplateMap.forEach((templateId, serviceTemplate)
+                                   -> serviceTemplate.setInfrastructureMappings(getInfraMappingsFromServiceTemplate(
+                                       serviceTemplate.getAppId(), serviceTemplate.getUuid())));
   }
 
   /* (non-Javadoc)
@@ -625,8 +603,7 @@ public class ServiceTemplateServiceImpl implements ServiceTemplateService {
         serviceVariableService.getServiceVariablesForEntity(appId, serviceTemplate.getUuid(), encryptedFieldMode);
 
     final List<ServiceVariable> mergedVariables = overrideServiceSettings(
-        overrideServiceSettings(serviceVariables, allServiceVariables, appId, workflowExecutionId, encryptedFieldMode),
-        templateServiceVariables, appId, workflowExecutionId, encryptedFieldMode);
+        overrideServiceSettings(serviceVariables, allServiceVariables), templateServiceVariables);
 
     if (encryptedFieldComputeMode == EncryptedFieldComputeMode.OBTAIN_VALUE) {
       obtainEncryptedValues(appId, workflowExecutionId, mergedVariables);
@@ -679,9 +656,8 @@ public class ServiceTemplateServiceImpl implements ServiceTemplateService {
     return mergedConfigFiles;
   }
 
-  private List<ServiceVariable> overrideServiceSettings(List<ServiceVariable> existingServiceVariables,
-      List<ServiceVariable> newServiceVariables, String appId, String workflowExecutionId,
-      EncryptedFieldMode encryptedFieldMode) {
+  private List<ServiceVariable> overrideServiceSettings(
+      List<ServiceVariable> existingServiceVariables, List<ServiceVariable> newServiceVariables) {
     List<ServiceVariable> mergedServiceSettings = existingServiceVariables;
     if (!existingServiceVariables.isEmpty() || !newServiceVariables.isEmpty()) {
       if (logger.isDebugEnabled()) {

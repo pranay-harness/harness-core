@@ -139,13 +139,7 @@ public class PhaseSubWorkflow extends SubWorkflowState {
 
     Environment env = ((ExecutionContextImpl) context).getEnv();
 
-    boolean infraRefactor = featureFlagService.isEnabled(FeatureName.INFRA_MAPPING_REFACTOR, context.getAccountId());
-
     InfrastructureMapping infrastructureMapping = null;
-    if (!infraRefactor) {
-      infrastructureMapping = phaseSubWorkflowHelperService.getInfraMapping(
-          infraMappingId, infraMappingTemplateExpression, app.getAppId(), context);
-    }
 
     phaseSubWorkflowHelperService.validateEntitiesRelationship(service, infrastructureDefinition, infrastructureMapping,
         env, serviceTemplateExpression, infraMappingTemplateExpression, context.getAccountId());
@@ -255,10 +249,8 @@ public class PhaseSubWorkflow extends SubWorkflowState {
 
     String accountId = context.getAccountId();
 
-    boolean infraRefactor = featureFlagService.isEnabled(FeatureName.INFRA_MAPPING_REFACTOR, context.getAccountId());
-
     // Not null check is for build Workflow
-    if (infraRefactor && infrastructureDefinition != null) {
+    if (infrastructureDefinition != null) {
       phaseElementBuilder.deploymentType(infrastructureDefinition.getDeploymentType().name());
       phaseElementBuilder.infraDefinitionId(infrastructureDefinition.getUuid());
     } else if (infrastructureMapping != null) {

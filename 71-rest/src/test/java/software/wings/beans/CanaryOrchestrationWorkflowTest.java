@@ -92,7 +92,7 @@ public class CanaryOrchestrationWorkflowTest extends WingsBaseTest {
     List<Variable> workflowVariables = asList(envVar, infraVar);
     Workflow workflow = getBasicWorkflow(asList(infraTemplateExpression), envTemplateExpression, workflowVariables);
 
-    workflow.getOrchestrationWorkflow().onLoad(true, workflow);
+    workflow.getOrchestrationWorkflow().onLoad(workflow);
     assertThat(workflow.getOrchestrationWorkflow().getUserVariables()).isNotEmpty();
     assertThat(workflow.getOrchestrationWorkflow().getUserVariables().get(0).getName()).isEqualTo("Environment");
     assertThat(workflow.getOrchestrationWorkflow().getUserVariables().get(0).getMetadata().get(Variable.RELATED_FIELD))
@@ -137,7 +137,7 @@ public class CanaryOrchestrationWorkflowTest extends WingsBaseTest {
     Workflow workflow = getBasicWorkflow(
         asList(srvTemplateExpression, infraTemplateExpression), envTemplateExpression, workflowVariables);
 
-    workflow.getOrchestrationWorkflow().onLoad(true, workflow);
+    workflow.getOrchestrationWorkflow().onLoad(workflow);
 
     assertThat(workflow.getOrchestrationWorkflow().getUserVariables()).isNotEmpty();
     assertThat(workflow.getOrchestrationWorkflow().getUserVariables().get(0).getName()).isEqualTo("Environment");
@@ -183,7 +183,7 @@ public class CanaryOrchestrationWorkflowTest extends WingsBaseTest {
     List<Variable> workflowVariables = asList(infraVar);
     Workflow workflow = getBasicWorkflow(asList(infraTemplateExpression), null, workflowVariables);
 
-    workflow.getOrchestrationWorkflow().onLoad(true, workflow);
+    workflow.getOrchestrationWorkflow().onLoad(workflow);
 
     assertThat(workflow.getOrchestrationWorkflow().getUserVariables()).isNotEmpty();
 
@@ -213,7 +213,7 @@ public class CanaryOrchestrationWorkflowTest extends WingsBaseTest {
     List<Variable> workflowVariables = asList(serviceVar);
     Workflow workflow = getBasicWorkflow(asList(srvTemplateExpression), null, workflowVariables);
 
-    workflow.getOrchestrationWorkflow().onLoad(true, workflow);
+    workflow.getOrchestrationWorkflow().onLoad(workflow);
 
     assertThat(workflow.getOrchestrationWorkflow().getUserVariables()).isNotEmpty();
 
@@ -248,7 +248,7 @@ public class CanaryOrchestrationWorkflowTest extends WingsBaseTest {
     Workflow workflow =
         getBasicWorkflow(asList(srvTemplateExpression, infraTemplateExpression), null, workflowVariables);
 
-    workflow.getOrchestrationWorkflow().onLoad(true, workflow);
+    workflow.getOrchestrationWorkflow().onLoad(workflow);
 
     assertThat(workflow.getOrchestrationWorkflow().getUserVariables()).isNotEmpty();
     assertThat(workflow.getOrchestrationWorkflow().getUserVariables().get(0).getName()).isEqualTo("Service");
@@ -307,7 +307,7 @@ public class CanaryOrchestrationWorkflowTest extends WingsBaseTest {
 
     Workflow workflow = getWorkflow(asList(phase1, phase2), envTemplateExpression, workflowVariables);
 
-    workflow.getOrchestrationWorkflow().onLoad(true, workflow);
+    workflow.getOrchestrationWorkflow().onLoad(workflow);
     assertThat(workflow.getOrchestrationWorkflow().getUserVariables()).isNotEmpty();
     assertThat(workflow.getOrchestrationWorkflow().getUserVariables().get(0).getName()).isEqualTo("Environment");
     assertThat(workflow.getOrchestrationWorkflow().getUserVariables().get(0).getMetadata().get(Variable.RELATED_FIELD))
@@ -379,7 +379,7 @@ public class CanaryOrchestrationWorkflowTest extends WingsBaseTest {
 
     Workflow workflow = getWorkflow(asList(phase1, phase2), null, workflowVariables);
 
-    workflow.getOrchestrationWorkflow().onLoad(true, workflow);
+    workflow.getOrchestrationWorkflow().onLoad(workflow);
     assertThat(workflow.getOrchestrationWorkflow().getUserVariables()).isNotEmpty();
 
     assertThat(workflow.getOrchestrationWorkflow().getUserVariables().get(0).getName()).isEqualTo("Service");
@@ -431,7 +431,7 @@ public class CanaryOrchestrationWorkflowTest extends WingsBaseTest {
 
     Workflow workflow = getWorkflow(asList(phase1, phase2), null, workflowVariables);
 
-    workflow.getOrchestrationWorkflow().onLoad(true, workflow);
+    workflow.getOrchestrationWorkflow().onLoad(workflow);
     assertThat(workflow.getOrchestrationWorkflow().getUserVariables()).isNotEmpty();
 
     assertThat(workflow.getOrchestrationWorkflow().getUserVariables().get(0).getName()).isEqualTo("Service");
@@ -464,7 +464,7 @@ public class CanaryOrchestrationWorkflowTest extends WingsBaseTest {
 
     Workflow workflow = getWorkflow(asList(phase1, phase2), null, workflowVariables);
 
-    workflow.getOrchestrationWorkflow().onLoad(true, workflow);
+    workflow.getOrchestrationWorkflow().onLoad(workflow);
     assertThat(workflow.getOrchestrationWorkflow().getUserVariables()).isNotEmpty();
 
     assertThat(workflow.getOrchestrationWorkflow().getUserVariables().get(0).getName()).isEqualTo("Service");
@@ -503,7 +503,7 @@ public class CanaryOrchestrationWorkflowTest extends WingsBaseTest {
 
     Workflow workflow = getWorkflow(asList(phase1, phase2), null, workflowVariables);
 
-    workflow.getOrchestrationWorkflow().onLoad(true, workflow);
+    workflow.getOrchestrationWorkflow().onLoad(workflow);
     assertThat(workflow.getOrchestrationWorkflow().getUserVariables()).isNotEmpty();
 
     assertThat(workflow.getOrchestrationWorkflow().getUserVariables().get(0).getName()).isEqualTo("Service");
@@ -554,7 +554,7 @@ public class CanaryOrchestrationWorkflowTest extends WingsBaseTest {
 
     Workflow workflow = getWorkflow(asList(phase1, phase2), null, workflowVariables);
 
-    workflow.getOrchestrationWorkflow().onLoad(true, workflow);
+    workflow.getOrchestrationWorkflow().onLoad(workflow);
     assertThat(workflow.getOrchestrationWorkflow().getUserVariables()).isNotEmpty();
 
     assertThat(workflow.getOrchestrationWorkflow().getUserVariables().get(0).getName())
@@ -587,7 +587,7 @@ public class CanaryOrchestrationWorkflowTest extends WingsBaseTest {
 
     Workflow workflow = getWorkflow(asList(phase1, phase2), null, workflowVariables);
 
-    workflow.getOrchestrationWorkflow().onLoad(true, workflow);
+    workflow.getOrchestrationWorkflow().onLoad(workflow);
     assertThat(workflow.getOrchestrationWorkflow().isValid()).isFalse();
     assertThat(workflow.getOrchestrationWorkflow().getValidationMessage())
         .isEqualTo(
@@ -612,7 +612,7 @@ public class CanaryOrchestrationWorkflowTest extends WingsBaseTest {
 
     Workflow workflow = getWorkflow(asList(phase1), envTemplateExpression, null);
 
-    workflow.getOrchestrationWorkflow().setTransientFields(true, workflow);
+    workflow.getOrchestrationWorkflow().setTransientFields(workflow);
     assertThat(workflow.isEnvTemplatized()).isTrue();
     CanaryOrchestrationWorkflow canaryOrchestrationWorkflow =
         (CanaryOrchestrationWorkflow) workflow.getOrchestrationWorkflow();
@@ -636,7 +636,7 @@ public class CanaryOrchestrationWorkflowTest extends WingsBaseTest {
 
     Workflow workflow = getWorkflow(asList(phase1), null, null);
 
-    workflow.getOrchestrationWorkflow().setTransientFields(true, workflow);
+    workflow.getOrchestrationWorkflow().setTransientFields(workflow);
     assertThat(workflow.isEnvTemplatized()).isFalse();
     CanaryOrchestrationWorkflow canaryOrchestrationWorkflow =
         (CanaryOrchestrationWorkflow) workflow.getOrchestrationWorkflow();

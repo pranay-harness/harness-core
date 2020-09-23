@@ -22,7 +22,7 @@ public abstract class PhaseHelper {
                                       .infraDefinitionId(workflow.getInfraDefinitionId())
                                       .serviceId(workflow.getServiceId())
                                       .build();
-    workflowPhaseHelper.setCloudProvider(workflow.getAccountId(), workflow.getAppId(), workflowPhase);
+    workflowPhaseHelper.setCloudProvider(workflow.getAppId(), workflowPhase);
     List<PhaseStep> phaseSteps = workflowPhase.getPhaseSteps();
     phaseSteps.addAll(getWorkflowPhaseSteps());
     workflowServiceTemplateHelper.addLinkedWorkflowPhaseTemplate(workflowPhase);

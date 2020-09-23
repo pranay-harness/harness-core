@@ -3,7 +3,6 @@ package software.wings.service.impl.workflow.creation;
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.validation.Validator.notNullCheck;
 import static org.apache.commons.lang3.StringUtils.isBlank;
-import static software.wings.beans.FeatureName.INFRA_MAPPING_REFACTOR;
 import static software.wings.beans.Workflow.WorkflowBuilder.aWorkflow;
 import static software.wings.common.WorkflowConstants.K8S_CANARY_PHASE_NAME;
 import static software.wings.common.WorkflowConstants.K8S_PRIMARY_PHASE_NAME;
@@ -71,10 +70,9 @@ public class K8V2CanaryWorkflowCreator extends WorkflowCreator {
       return;
     }
 
-    boolean infraRefactor = featureFlagService.isEnabled(INFRA_MAPPING_REFACTOR, workflow.getAccountId());
     OrchestrationWorkflow orchestrationWorkflow = workflow.getOrchestrationWorkflow();
     CanaryOrchestrationWorkflow canaryOrchestrationWorkflow = (CanaryOrchestrationWorkflow) orchestrationWorkflow;
-    boolean serviceRepeat = canaryOrchestrationWorkflow.serviceRepeat(workflowPhase, infraRefactor);
+    boolean serviceRepeat = canaryOrchestrationWorkflow.serviceRepeat(workflowPhase);
     boolean createCanaryPhase = !serviceRepeat;
     boolean createPrimaryPhase =
         serviceRepeat && !canaryOrchestrationWorkflow.containsPhaseWithName(K8S_PRIMARY_PHASE_NAME);

@@ -103,11 +103,11 @@ public class RollbackStateMachineGeneratorTest extends WingsBaseTest {
     when(workflowService.readWorkflow(APP_ID, WORKFLOW_ID)).thenReturn(workflow);
     when(workflowService.stencilMap(any())).thenReturn(stencilMap);
     StateMachine originalStateMachine = new StateMachine(workflow, workflow.getDefaultVersion(),
-        ((CustomOrchestrationWorkflow) workflow.getOrchestrationWorkflow()).getGraph(), stencilMap, true, false);
+        ((CustomOrchestrationWorkflow) workflow.getOrchestrationWorkflow()).getGraph(), stencilMap, false);
     assertThat(originalStateMachine).isNotNull();
     assertThat(originalStateMachine.getStates()).hasSize(4);
     assertThat(originalStateMachine.getChildStateMachines()).hasSize(5);
-    StateMachine sm = stateMachineGenerator.generateForRollbackExecution(APP_ID, WORKFLOW_EXECUTION_ID, true);
+    StateMachine sm = stateMachineGenerator.generateForRollbackExecution(APP_ID, WORKFLOW_EXECUTION_ID);
     assertThat(sm).isNotNull();
     assertThat(sm.getStates()).hasSize(4);
     assertThat(sm.getChildStateMachines()).hasSize(4);
@@ -121,7 +121,7 @@ public class RollbackStateMachineGeneratorTest extends WingsBaseTest {
     when(workflowExecutionService.getWorkflowExecution(APP_ID, WORKFLOW_EXECUTION_ID)).thenReturn(runningExecution);
     when(workflowService.readWorkflow(APP_ID, WORKFLOW_ID)).thenReturn(workflow);
     when(workflowService.stencilMap(any())).thenReturn(stencilMap);
-    assertThatThrownBy(() -> stateMachineGenerator.generateForRollbackExecution(APP_ID, WORKFLOW_EXECUTION_ID, true))
+    assertThatThrownBy(() -> stateMachineGenerator.generateForRollbackExecution(APP_ID, WORKFLOW_EXECUTION_ID))
         .isInstanceOf(InvalidRollbackException.class);
   }
 }

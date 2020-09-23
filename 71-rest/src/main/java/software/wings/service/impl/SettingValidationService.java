@@ -26,7 +26,6 @@ import io.harness.eraro.ErrorCode;
 import io.harness.exception.ExceptionUtils;
 import io.harness.exception.InvalidArgumentsException;
 import io.harness.exception.InvalidRequestException;
-import io.harness.exception.UnavailableFeatureException;
 import io.harness.exception.UnknownEnumTypeException;
 import io.harness.exception.WingsException;
 import io.harness.logging.CommandExecutionStatus;
@@ -299,10 +298,6 @@ public class SettingValidationService {
     } else if (settingValue instanceof HelmRepoConfig) {
       validateHelmRepoConfig(settingAttribute, encryptedDataDetails);
     } else if (settingValue instanceof SpotInstConfig) {
-      if (!featureFlagService.isEnabled(FeatureName.INFRA_MAPPING_REFACTOR, settingAttribute.getAccountId())) {
-        throw new UnavailableFeatureException(
-            "Enable Feature Flag INFRA_MAPPING_REFACTOR to create Spotinst Cloud Provider", USER);
-      }
       validateSpotInstConfig(settingAttribute, encryptedDataDetails);
     } else if (settingValue instanceof CEAwsConfig) {
       validateCEAwsConfig(settingAttribute);

@@ -129,6 +129,7 @@ import software.wings.service.impl.security.auth.AuthHandler;
 import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ArtifactStreamService;
+import software.wings.service.intfc.InfrastructureDefinitionService;
 import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.UserGroupService;
@@ -156,6 +157,7 @@ public class SettingsServiceImplTest extends WingsBaseTest {
   @Mock private AuthHandler authHandler;
   @Mock private Application application;
   @Mock private InfrastructureMappingService infrastructureMappingService;
+  @Mock private InfrastructureDefinitionService infrastructureDefinitionService;
   @Mock private ArtifactStreamService artifactStreamService;
   @Mock private EntityUpdateService entityUpdateService;
   @Mock private YamlDirectoryService yamlDirectoryService;
@@ -395,7 +397,7 @@ public class SettingsServiceImplTest extends WingsBaseTest {
   @Test
   @Owner(developers = ANUBHAW)
   @Category(UnitTests.class)
-  public void shouldThroeExceptionIfReferencedCloudProviderDeleted() {
+  public void shouldThrowExceptionIfReferencedCloudProviderDeleted() {
     SettingAttribute settingAttribute = aSettingAttribute()
                                             .withAppId("APP_ID")
                                             .withAccountId("ACCOUNT_ID")
@@ -410,12 +412,14 @@ public class SettingsServiceImplTest extends WingsBaseTest {
                                .withComputeProviderType(AWS.name())
                                .withComputeProviderName("NAME")
                                .build()));
+    when(infrastructureDefinitionService.listNamesByComputeProviderId(anyString(), anyString()))
+        .thenReturn(asList("infra-definition"));
     when(settingServiceHelper.userHasPermissionsToChangeEntity(eq(settingAttribute), anyString(), any()))
         .thenReturn(true);
 
     assertThatThrownBy(() -> settingsService.delete(APP_ID, SETTING_ID))
         .isInstanceOf(WingsException.class)
-        .hasMessage("Cloud provider [SETTING_NAME] is referenced by 1 Service Infrastructure [NAME].");
+        .hasMessage("Cloud provider [SETTING_NAME] is referenced by 1 Infrastructure  Definition [infra-definition].");
   }
 
   /**

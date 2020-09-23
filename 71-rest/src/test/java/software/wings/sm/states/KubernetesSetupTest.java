@@ -41,6 +41,7 @@ import static software.wings.utils.WingsTestConstants.CLUSTER_NAME;
 import static software.wings.utils.WingsTestConstants.COMPUTE_PROVIDER_ID;
 import static software.wings.utils.WingsTestConstants.ENV_ID;
 import static software.wings.utils.WingsTestConstants.ENV_NAME;
+import static software.wings.utils.WingsTestConstants.INFRA_DEFINITION_ID;
 import static software.wings.utils.WingsTestConstants.INFRA_MAPPING_ID;
 import static software.wings.utils.WingsTestConstants.SERVICE_ID;
 import static software.wings.utils.WingsTestConstants.SERVICE_NAME;
@@ -108,6 +109,8 @@ import software.wings.expression.ManagerExpressionEvaluator;
 import software.wings.helpers.ext.container.ContainerDeploymentManagerHelper;
 import software.wings.helpers.ext.container.ContainerMasterUrlHelper;
 import software.wings.helpers.ext.url.SubdomainUrlHelperIntfc;
+import software.wings.infra.GoogleKubernetesEngine;
+import software.wings.infra.InfrastructureDefinition;
 import software.wings.service.impl.ContainerServiceParams;
 import software.wings.service.impl.artifact.ArtifactCollectionUtils;
 import software.wings.service.intfc.ActivityService;
@@ -115,16 +118,15 @@ import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ArtifactService;
 import software.wings.service.intfc.ArtifactStreamService;
 import software.wings.service.intfc.ArtifactStreamServiceBindingService;
-import software.wings.service.intfc.ConfigService;
 import software.wings.service.intfc.DelegateService;
 import software.wings.service.intfc.EnvironmentService;
 import software.wings.service.intfc.FeatureFlagService;
+import software.wings.service.intfc.InfrastructureDefinitionService;
 import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.ServiceTemplateService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.WorkflowExecutionService;
-import software.wings.service.intfc.security.EncryptionService;
 import software.wings.service.intfc.security.SecretManager;
 import software.wings.service.intfc.sweepingoutput.SweepingOutputService;
 import software.wings.sm.ExecutionContext;
@@ -148,6 +150,7 @@ public class KubernetesSetupTest extends WingsBaseTest {
   @Mock private ServiceResourceService serviceResourceService;
   @Mock private ActivityService activityService;
   @Mock private InfrastructureMappingService infrastructureMappingService;
+  @Mock private InfrastructureDefinitionService infrastructureDefinitionService;
   @Mock private AppService appService;
   @Mock private EnvironmentService environmentService;
   @Mock private ServiceTemplateService serviceTemplateService;
@@ -156,11 +159,8 @@ public class KubernetesSetupTest extends WingsBaseTest {
   @Mock private ArtifactService artifactService;
   @Mock private ArtifactStreamService artifactStreamService;
   @Mock private ArtifactStreamServiceBindingService artifactStreamServiceBindingService;
-  @Mock private EncryptionService encryptionService;
   @Mock private VariableProcessor variableProcessor;
   @Mock private ManagerExpressionEvaluator evaluator;
-  @Mock private ConfigService configService;
-  @Mock private ContainerDeploymentManagerHelper containerDeploymentHelper;
   @Mock private FeatureFlagService featureFlagService;
   @Mock private AwsCommandHelper mockAwsCommandHelper;
   @Mock private ArtifactCollectionUtils artifactCollectionUtils;
@@ -298,7 +298,19 @@ public class KubernetesSetupTest extends WingsBaseTest {
                                                       .withClusterName(CLUSTER_NAME)
                                                       .withComputeProviderSettingId(COMPUTE_PROVIDER_ID)
                                                       .build();
+
+    infrastructureMapping.setInfrastructureDefinitionId(INFRA_DEFINITION_ID);
+
+    InfrastructureDefinition infrastructureDefinition =
+        InfrastructureDefinition.builder()
+            .uuid(INFRA_DEFINITION_ID)
+            .deploymentType(DeploymentType.KUBERNETES)
+            .infrastructure(
+                GoogleKubernetesEngine.builder().cloudProviderId(COMPUTE_PROVIDER_ID).clusterName(CLUSTER_NAME).build())
+            .build();
+
     when(infrastructureMappingService.get(APP_ID, INFRA_MAPPING_ID)).thenReturn(infrastructureMapping);
+    when(infrastructureDefinitionService.get(APP_ID, INFRA_DEFINITION_ID)).thenReturn(infrastructureDefinition);
 
     Activity activity = Activity.builder().build();
     activity.setUuid(ACTIVITY_ID);
@@ -320,6 +332,7 @@ public class KubernetesSetupTest extends WingsBaseTest {
         .thenReturn(WorkflowExecution.builder().build());
     context = new ExecutionContextImpl(stateExecutionInstance);
     on(context).set("infrastructureMappingService", infrastructureMappingService);
+    on(context).set("infrastructureDefinitionService", infrastructureDefinitionService);
     on(context).set("serviceResourceService", serviceResourceService);
     on(context).set("variableProcessor", variableProcessor);
     on(context).set("sweepingOutputService", sweepingOutputService);
@@ -513,6 +526,7 @@ public class KubernetesSetupTest extends WingsBaseTest {
             .build();
     ExecutionContext context = new ExecutionContextImpl(stateExecutionInstance);
     on(context).set("infrastructureMappingService", infrastructureMappingService);
+    on(context).set("infrastructureDefinitionService", infrastructureDefinitionService);
     on(context).set("serviceResourceService", serviceResourceService);
     on(context).set("sweepingOutputService", sweepingOutputService);
     on(context).set("variableProcessor", variableProcessor);

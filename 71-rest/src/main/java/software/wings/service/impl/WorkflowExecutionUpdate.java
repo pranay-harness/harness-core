@@ -41,7 +41,6 @@ import software.wings.beans.Account;
 import software.wings.beans.Application;
 import software.wings.beans.EnvSummary;
 import software.wings.beans.Environment.EnvironmentType;
-import software.wings.beans.FeatureName;
 import software.wings.beans.HarnessTagLink;
 import software.wings.beans.NameValuePair;
 import software.wings.beans.WorkflowExecution;
@@ -479,15 +478,6 @@ public class WorkflowExecutionUpdate implements StateMachineExecutionCallback {
       WorkflowExecution workflowExecution =
           workflowExecutionService.getExecutionDetails(appId, workflowExecutionId, true);
       logger.info("Breakdown refresh happened for workflow execution {}", workflowExecution.getUuid());
-      if (context.getWorkflowType() == WorkflowType.ORCHESTRATION
-          && !featureFlagService.isEnabled(FeatureName.INFRA_MAPPING_REFACTOR, workflowExecution.getAccountId())) {
-        executionEventQueue.send(ExecutionEvent.builder()
-                                     .appId(appId)
-                                     .workflowId(workflowExecution.getWorkflowId())
-                                     .infraMappingIds(workflowExecution.getInfraMappingIds())
-                                     .infraDefinitionIds(workflowExecution.getInfraDefinitionIds())
-                                     .build());
-      }
     } catch (Exception e) {
       logger.error("Error in breakdown refresh", e);
     }

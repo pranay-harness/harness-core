@@ -39,7 +39,6 @@ import static software.wings.beans.Application.Builder.anApplication;
 import static software.wings.beans.CanaryOrchestrationWorkflow.CanaryOrchestrationWorkflowBuilder.aCanaryOrchestrationWorkflow;
 import static software.wings.beans.CustomOrchestrationWorkflow.CustomOrchestrationWorkflowBuilder.aCustomOrchestrationWorkflow;
 import static software.wings.beans.EntityType.SERVICE;
-import static software.wings.beans.FeatureName.INFRA_MAPPING_REFACTOR;
 import static software.wings.beans.Graph.Builder.aGraph;
 import static software.wings.beans.GraphLink.Builder.aLink;
 import static software.wings.beans.PhaseStep.PhaseStepBuilder.aPhaseStep;
@@ -112,6 +111,7 @@ import org.junit.rules.ExpectedException;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import software.wings.WingsBaseTest;
+import software.wings.api.CloudProviderType;
 import software.wings.api.DeploymentType;
 import software.wings.api.PhaseElement;
 import software.wings.api.ServiceElement;
@@ -169,6 +169,8 @@ import software.wings.beans.infrastructure.Host;
 import software.wings.beans.trigger.Trigger;
 import software.wings.dl.WingsPersistence;
 import software.wings.helpers.ext.jenkins.BuildDetails;
+import software.wings.infra.InfrastructureDefinition;
+import software.wings.infra.PhysicalInfra;
 import software.wings.licensing.LicenseService;
 import software.wings.rules.Listeners;
 import software.wings.scheduler.BackgroundJobScheduler;
@@ -182,6 +184,7 @@ import software.wings.service.intfc.ArtifactStreamServiceBindingService;
 import software.wings.service.intfc.AuthService;
 import software.wings.service.intfc.BuildSourceService;
 import software.wings.service.intfc.FeatureFlagService;
+import software.wings.service.intfc.InfrastructureDefinitionService;
 import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.PipelineService;
 import software.wings.service.intfc.ResourceConstraintService;
@@ -232,6 +235,7 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
   @Inject @InjectMocks private WorkflowExecutionService workflowExecutionService;
   @Inject private WingsPersistence wingsPersistence;
   @Inject private InfrastructureMappingService infrastructureMappingService;
+  @Inject private InfrastructureDefinitionService infrastructureDefinitionService;
 
   @Mock private ArtifactService artifactService;
   @Mock private ArtifactStreamServiceBindingService artifactStreamServiceBindingService;
@@ -1694,10 +1698,9 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
     SettingAttribute computeProvider = wingsPersistence.saveAndGet(SettingAttribute.class,
         aSettingAttribute().withAppId(app.getUuid()).withValue(aPhysicalDataCenterConfig().build()).build());
 
-    InfrastructureMapping infrastructureMapping =
-        createInfraMappingService(serviceTemplate, computeProvider, "Name4", "host1");
+    final InfrastructureDefinition infraDefinition = createInfraDefinition(computeProvider, "Name4", "host1");
 
-    triggerWorkflow(app.getAppId(), env, service, infrastructureMapping);
+    triggerWorkflow(app.getAppId(), env, service, infraDefinition);
   }
 
   @Test
@@ -1715,25 +1718,24 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
     SettingAttribute computeProvider = wingsPersistence.saveAndGet(SettingAttribute.class,
         aSettingAttribute().withAppId(app.getUuid()).withValue(aPhysicalDataCenterConfig().build()).build());
 
-    InfrastructureMapping infrastructureMapping =
-        infrastructureMappingService.save(PhysicalInfrastructureMapping.Builder.aPhysicalInfrastructureMapping()
-                                              .withName("Name2")
-                                              .withAppId(app.getUuid())
-                                              .withAccountId(app.getAccountId())
-                                              .withEnvId(env.getUuid())
-                                              .withHostNames(Lists.newArrayList("host1"))
-                                              .withServiceTemplateId(serviceTemplate1.getUuid())
-                                              .withComputeProviderSettingId(computeProvider.getUuid())
-                                              .withComputeProviderType(computeProvider.getValue().getType())
-                                              .withDeploymentType(SSH.name())
-                                              .withHostConnectionAttrs(AccessType.KEY.name())
-                                              .withInfraMappingType(PHYSICAL_DATA_CENTER.name())
-                                              .build(),
-            null);
+    final InfrastructureDefinition infrastructureDefinition =
+        infrastructureDefinitionService.save(InfrastructureDefinition.builder()
+                                                 .name("Name2")
+                                                 .appId(app.getUuid())
+                                                 .accountId(app.getAccountId())
+                                                 .envId(env.getUuid())
+                                                 .deploymentType(SSH)
+                                                 .cloudProviderType(CloudProviderType.PHYSICAL_DATA_CENTER)
+                                                 .infrastructure(PhysicalInfra.builder()
+                                                                     .hostNames(Lists.newArrayList("host1"))
+                                                                     .cloudProviderId(computeProvider.getUuid())
+                                                                     .hostConnectionAttrs(AccessType.KEY.name())
+                                                                     .build())
+                                                 .build(),
+            false);
 
-    InfrastructureMapping templateInfraMapping =
-        createInfraMappingService(serviceTemplate2, computeProvider, "Name3", "host12");
-    triggerTemplateWorkflow(app.getAppId(), env, service1, infrastructureMapping, service2, templateInfraMapping);
+    final InfrastructureDefinition templateInfraDefinition = createInfraDefinition(computeProvider, "Name3", "host12");
+    triggerTemplateWorkflow(app.getAppId(), env, service1, service2, infrastructureDefinition, templateInfraDefinition);
   }
 
   private ServiceTemplate getServiceTemplate(Service service) {
@@ -1753,13 +1755,13 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
    * @param appId                 the app id
    * @param env                   the env
    * @param service
-   * @param infrastructureMapping
+   * @param infrastructureDefinition
    * @return the string
    * @throws InterruptedException the interrupted exception
    */
   public String triggerWorkflow(String appId, Environment env, Service service,
-      InfrastructureMapping infrastructureMapping) throws InterruptedException {
-    Workflow workflow = createWorkflow(appId, env, service, infrastructureMapping);
+      InfrastructureDefinition infrastructureDefinition) throws InterruptedException {
+    Workflow workflow = createWorkflow(appId, env, service, infrastructureDefinition);
     ExecutionArgs executionArgs = new ExecutionArgs();
 
     WorkflowExecutionUpdateFake callback = new WorkflowExecutionUpdateFake();
@@ -1801,22 +1803,21 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
   }
   /**
    * Trigger template workflow.
-   *
-   * @param appId                 the app id
+   *  @param appId                 the app id
    * @param env                   the env
    * @param service
-   * @param infrastructureMapping
    * @param templateService
-   *@param templateInfraMapping @return the string
+   * @param infrastructureDefinition
+   * @param templateInfraDefinition
    * @throws InterruptedException the interrupted exception
    */
-  private String triggerTemplateWorkflow(String appId, Environment env, Service service,
-      InfrastructureMapping infrastructureMapping, Service templateService, InfrastructureMapping templateInfraMapping)
+  private String triggerTemplateWorkflow(String appId, Environment env, Service service, Service templateService,
+      InfrastructureDefinition infrastructureDefinition, InfrastructureDefinition templateInfraDefinition)
       throws InterruptedException {
-    Workflow workflow = createTemplateWorkflow(appId, env, service, infrastructureMapping);
+    Workflow workflow = createTemplateWorkflow(appId, env, service, infrastructureDefinition);
     ExecutionArgs executionArgs = new ExecutionArgs();
-    executionArgs.setWorkflowVariables(
-        ImmutableMap.of("Service", templateService.getUuid(), "ServiceInfra_SSH", templateInfraMapping.getUuid()));
+    executionArgs.setWorkflowVariables(ImmutableMap.of(
+        "Service", templateService.getUuid(), "InfraDefinition_SSH", templateInfraDefinition.getUuid()));
 
     WorkflowExecutionUpdateFake callback = new WorkflowExecutionUpdateFake();
     WorkflowExecution execution = workflowExecutionService.triggerOrchestrationWorkflowExecution(
@@ -1835,7 +1836,7 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
     return executionId;
   }
   private Workflow createWorkflow(
-      String appId, Environment env, Service service, InfrastructureMapping infrastructureMapping) {
+      String appId, Environment env, Service service, InfrastructureDefinition infraDefinition) {
     Workflow orchestrationWorkflow =
         aWorkflow()
             .name(WORKFLOW_NAME)
@@ -1848,7 +1849,7 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
                                                              .name("Phase1")
                                                              .serviceId(service.getUuid())
                                                              .deploymentType(SSH)
-                                                             .infraMappingId(infrastructureMapping.getUuid())
+                                                             .infraDefinitionId(infraDefinition.getUuid())
                                                              .build())
                                        .withPostDeploymentSteps(aPhaseStep(PhaseStepType.POST_DEPLOYMENT).build())
                                        .build())
@@ -1905,12 +1906,12 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
   }
 
   private Workflow createTemplateWorkflow(
-      String appId, Environment env, Service service, InfrastructureMapping infrastructureMapping) {
+      String appId, Environment env, Service service, InfrastructureDefinition infrastructureDefinition) {
     TemplateExpression infraExpression =
         TemplateExpression.builder()
-            .fieldName("infraMappingId")
-            .expression("${ServiceInfra_SSH}")
-            .metadata(new HashMap<>(ImmutableMap.of("entityType", "INFRASTRUCTURE_MAPPING")))
+            .fieldName("infraDefinitionId")
+            .expression("${InfraDefinition_SSH}")
+            .metadata(new HashMap<>(ImmutableMap.of("entityType", "INFRASTRUCTURE_DEFINITION")))
             .build();
 
     TemplateExpression serviceExpression = TemplateExpression.builder()
@@ -1931,7 +1932,7 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
                                           .name("Phase1")
                                           .serviceId(service.getUuid())
                                           .deploymentType(SSH)
-                                          .infraMappingId(infrastructureMapping.getUuid())
+                                          .infraDefinitionId(infrastructureDefinition.getUuid())
                                           .templateExpressions(asList(infraExpression, serviceExpression))
                                           .build())
                     .withPostDeploymentSteps(aPhaseStep(PhaseStepType.POST_DEPLOYMENT).build())
@@ -1947,9 +1948,9 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
         .hasFieldOrProperty("postDeploymentSteps")
         .hasFieldOrProperty("graph");
     assertThat(orchestrationWorkflow2.getTemplatizedServiceIds()).isNotNull().contains(service.getUuid());
-    assertThat(orchestrationWorkflow1.getTemplatizedInfraMappingIds())
+    assertThat(orchestrationWorkflow1.getTemplatizedInfraDefinitionIds())
         .isNotNull()
-        .contains(infrastructureMapping.getUuid());
+        .contains(infrastructureDefinition.getUuid());
     assertThat(orchestrationWorkflow1).extracting("userVariables").isNotNull();
     assertThat(
         orchestrationWorkflow1.getUserVariables().stream().anyMatch(variable -> variable.getName().equals("Service")))
@@ -2038,10 +2039,9 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
     SettingAttribute computeProvider = wingsPersistence.saveAndGet(SettingAttribute.class,
         aSettingAttribute().withAppId(app.getUuid()).withValue(aPhysicalDataCenterConfig().build()).build());
 
-    InfrastructureMapping infrastructureMapping =
-        createInfraMappingService(serviceTemplate, computeProvider, "Name4", "host1");
+    final InfrastructureDefinition infraDefinition = createInfraDefinition(computeProvider, "Name4", "host1");
 
-    Workflow workflow = createWorkflow(appId, env, service, infrastructureMapping);
+    Workflow workflow = createWorkflow(appId, env, service, infraDefinition);
 
     ExecutionArgs executionArgs = new ExecutionArgs();
     executionArgs.setOrchestrationId(workflow.getUuid());
@@ -2066,8 +2066,26 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
                                                  .withDeploymentType(SSH.name())
                                                  .withHostConnectionAttrs(AccessType.KEY.name())
                                                  .withInfraMappingType(PHYSICAL_DATA_CENTER.name())
+                                                 .withServiceId(serviceTemplate.getServiceId())
                                                  .build(),
         null);
+  }
+
+  private InfrastructureDefinition createInfraDefinition(SettingAttribute settingAttribute, String name, String host) {
+    return infrastructureDefinitionService.save(InfrastructureDefinition.builder()
+                                                    .name(name)
+                                                    .appId(app.getUuid())
+                                                    .accountId(app.getAccountId())
+                                                    .envId(env.getUuid())
+                                                    .deploymentType(SSH)
+                                                    .cloudProviderType(CloudProviderType.PHYSICAL_DATA_CENTER)
+                                                    .infrastructure(PhysicalInfra.builder()
+                                                                        .hostNames(Lists.newArrayList(host))
+                                                                        .cloudProviderId(settingAttribute.getUuid())
+                                                                        .hostConnectionAttrs(AccessType.KEY.name())
+                                                                        .build())
+                                                    .build(),
+        false);
   }
 
   private InfrastructureMapping createContainerInfraMappingService(
@@ -2112,7 +2130,6 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
   @Owner(developers = PRASHANT, intermittent = true)
   @Category(UnitTests.class)
   public void testShouldNotQueueDeployment() {
-    when(featureFlagService.isEnabled(eq(INFRA_MAPPING_REFACTOR), any())).thenReturn(true, true, true, true);
     List<WorkflowExecution> waitingOnDeployments = getWorkflowExecutions(true);
     assertThat(waitingOnDeployments).isNotEmpty().hasSize(2);
     List<ExecutionStatus> executionStatuses =

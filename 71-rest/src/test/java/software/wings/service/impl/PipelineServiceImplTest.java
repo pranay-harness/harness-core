@@ -983,7 +983,7 @@ public class PipelineServiceImplTest extends WingsBaseTest {
     Pipeline pipeline = Pipeline.builder().pipelineStages(Collections.singletonList(pipelineStage)).build();
     pipeline.setWorkflowIds(Collections.singletonList(WORKFLOW_ID));
 
-    doReturn(workflow).when(mockWorkflowService).readWorkflowWithoutServices(anyString(), eq(WORKFLOW_ID), eq(false));
+    doReturn(workflow).when(mockWorkflowService).readWorkflowWithoutServices(anyString(), eq(WORKFLOW_ID));
     pipelineServiceImpl.setServicesAndPipelineVariables(pipeline);
     assertThat(pipeline.isValid()).isFalse();
     assertThat(pipelineStage.isValid()).isFalse();

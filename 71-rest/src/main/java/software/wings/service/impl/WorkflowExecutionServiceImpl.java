@@ -16,7 +16,6 @@ import static io.harness.beans.ExecutionStatus.STARTING;
 import static io.harness.beans.ExecutionStatus.SUCCESS;
 import static io.harness.beans.ExecutionStatus.WAITING;
 import static io.harness.beans.ExecutionStatus.activeStatuses;
-import static io.harness.beans.OrchestrationWorkflowType.BUILD;
 import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
 import static io.harness.beans.PageRequest.UNLIMITED;
 import static io.harness.beans.SearchFilter.Operator.EQ;
@@ -61,7 +60,6 @@ import static software.wings.beans.ApprovalDetails.Action.APPROVE;
 import static software.wings.beans.ApprovalDetails.Action.REJECT;
 import static software.wings.beans.ElementExecutionSummary.ElementExecutionSummaryBuilder.anElementExecutionSummary;
 import static software.wings.beans.EntityType.DEPLOYMENT;
-import static software.wings.beans.FeatureName.INFRA_MAPPING_REFACTOR;
 import static software.wings.beans.PipelineExecution.Builder.aPipelineExecution;
 import static software.wings.beans.config.ArtifactSourceable.ARTIFACT_SOURCE_DOCKER_CONFIG_NAME_KEY;
 import static software.wings.beans.config.ArtifactSourceable.ARTIFACT_SOURCE_DOCKER_CONFIG_PLACEHOLDER;
@@ -69,7 +67,6 @@ import static software.wings.beans.deployment.DeploymentMetadata.Include;
 import static software.wings.beans.deployment.DeploymentMetadata.Include.ARTIFACT_SERVICE;
 import static software.wings.beans.deployment.DeploymentMetadata.Include.DEPLOYMENT_TYPE;
 import static software.wings.beans.deployment.DeploymentMetadata.Include.ENVIRONMENT;
-import static software.wings.sm.InfraMappingSummary.Builder.anInfraMappingSummary;
 import static software.wings.sm.InstanceStatusSummary.InstanceStatusSummaryBuilder.anInstanceStatusSummary;
 import static software.wings.sm.StateType.APPROVAL;
 import static software.wings.sm.StateType.APPROVAL_RESUME;
@@ -277,7 +274,6 @@ import software.wings.sm.ExecutionInterrupt.ExecutionInterruptKeys;
 import software.wings.sm.ExecutionInterruptEffect;
 import software.wings.sm.ExecutionInterruptManager;
 import software.wings.sm.InfraDefinitionSummary;
-import software.wings.sm.InfraMappingSummary;
 import software.wings.sm.InstanceStatusSummary;
 import software.wings.sm.PhaseExecutionSummary;
 import software.wings.sm.PhaseStepExecutionSummary;
@@ -1264,13 +1260,12 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
       String pipelineExecutionId, @NotNull ExecutionArgs executionArgs, WorkflowExecutionUpdate workflowExecutionUpdate,
       Trigger trigger) {
     String accountId = appService.getAccountIdByAppId(appId);
-    boolean infraRefactor = featureFlagService.isEnabled(INFRA_MAPPING_REFACTOR, accountId);
 
     logger.info("Execution Triggered. Type: {}", executionArgs.getWorkflowType());
 
     // TODO - validate list of artifact Ids if it's matching for all the services involved in this orchestration
 
-    Workflow workflow = workflowExecutionServiceHelper.obtainWorkflow(appId, workflowId, infraRefactor);
+    Workflow workflow = workflowExecutionServiceHelper.obtainWorkflow(appId, workflowId);
     String resolveEnvId = workflowService.resolveEnvironmentId(workflow, executionArgs.getWorkflowVariables());
     envId = resolveEnvId != null ? resolveEnvId : envId;
     User user = UserThreadLocal.get();
@@ -1287,17 +1282,15 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
     deploymentFreezeChecker.check(accountId);
     checkPreDeploymentConditions(accountId, appId);
 
-    if (infraRefactor) {
-      workflow.setOrchestrationWorkflow(
-          workflowConcurrencyHelper.enhanceWithConcurrencySteps(workflow, executionArgs.getWorkflowVariables()));
-    }
+    workflow.setOrchestrationWorkflow(
+        workflowConcurrencyHelper.enhanceWithConcurrencySteps(workflow, executionArgs.getWorkflowVariables()));
 
     if (isEmpty(workflow.getAccountId())) {
       workflow.setAccountId(accountId);
     }
     StateMachine stateMachine = new StateMachine(workflow, workflow.getDefaultVersion(),
         ((CustomOrchestrationWorkflow) workflow.getOrchestrationWorkflow()).getGraph(),
-        workflowService.stencilMap(appId), infraRefactor, false);
+        workflowService.stencilMap(appId), false);
 
     // TODO: this is workaround for a side effect in the state machine generation that mangles with the original
     //       workflow object.
@@ -1306,7 +1299,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
     stateMachine.setOrchestrationWorkflow(null);
 
     WorkflowExecution workflowExecution = workflowExecutionServiceHelper.obtainExecution(
-        workflow, stateMachine, resolveEnvId, pipelineExecutionId, executionArgs, infraRefactor);
+        workflow, stateMachine, resolveEnvId, pipelineExecutionId, executionArgs);
 
     validateExecutionArgsHosts(executionArgs.getHosts(), workflowExecution, workflow);
     validateWorkflowTypeAndService(workflow, executionArgs);
@@ -1534,32 +1527,20 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
     stateExecutionInstance = stateMachineExecutor.queue(stateMachine, stateExecutionInstance);
 
     WorkflowExecution savedWorkflowExecution;
-    if (shouldNotQueueWorkflow(workflowExecution, workflow)) {
-      // set startTs before starting the actual execution, because after the starting event
-      // we can have FAILED status in stateExecutionInstance (ex.: ApprovalState)
-      setWorkflowExecutionStartTs(workflowExecution);
-      // Multiple calls because of ISSUE - https://harness.atlassian.net/browse/CDC-9129
-      savedWorkflowExecution = wingsPersistence.getWithAppId(
-          WorkflowExecution.class, workflowExecution.getAppId(), workflowExecution.getUuid());
-      if (workflowExecution.getWorkflowType() == PIPELINE) {
-        savePipelineSweepingOutPut(workflowExecution, pipeline, savedWorkflowExecution);
-      }
-      stateMachineExecutor.startExecution(stateMachine, stateExecutionInstance);
-      updateStartStatus(workflowExecution.getAppId(), workflowExecution.getUuid(), RUNNING, false);
-      savedWorkflowExecution = wingsPersistence.getWithAppId(
-          WorkflowExecution.class, workflowExecution.getAppId(), workflowExecution.getUuid());
-      executionUpdate.publish(savedWorkflowExecution);
-    } else {
-      // create queue event
-      executionEventQueue.send(ExecutionEvent.builder()
-                                   .appId(workflowExecution.getAppId())
-                                   .workflowId(workflowExecution.getWorkflowId())
-                                   .infraMappingIds(workflowExecution.getInfraMappingIds())
-                                   .infraDefinitionIds(workflowExecution.getInfraDefinitionIds())
-                                   .build());
-      savedWorkflowExecution = wingsPersistence.getWithAppId(
-          WorkflowExecution.class, workflowExecution.getAppId(), workflowExecution.getUuid());
+    // set startTs before starting the actual execution, because after the starting event
+    // we can have FAILED status in stateExecutionInstance (ex.: ApprovalState)
+    setWorkflowExecutionStartTs(workflowExecution);
+    // Multiple calls because of ISSUE - https://harness.atlassian.net/browse/CDC-9129
+    savedWorkflowExecution = wingsPersistence.getWithAppId(
+        WorkflowExecution.class, workflowExecution.getAppId(), workflowExecution.getUuid());
+    if (workflowExecution.getWorkflowType() == PIPELINE) {
+      savePipelineSweepingOutPut(workflowExecution, pipeline, savedWorkflowExecution);
     }
+    stateMachineExecutor.startExecution(stateMachine, stateExecutionInstance);
+    updateStartStatus(workflowExecution.getAppId(), workflowExecution.getUuid(), RUNNING, false);
+    savedWorkflowExecution = wingsPersistence.getWithAppId(
+        WorkflowExecution.class, workflowExecution.getAppId(), workflowExecution.getUuid());
+    executionUpdate.publish(savedWorkflowExecution);
     return savedWorkflowExecution;
   }
 
@@ -1665,11 +1646,6 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
       }
     }
     return artifacts;
-  }
-
-  private boolean shouldNotQueueWorkflow(WorkflowExecution workflowExecution, Workflow workflow) {
-    return workflowExecution.getWorkflowType() != ORCHESTRATION || BUILD == workflowExecution.getOrchestrationType()
-        || featureFlagService.isEnabled(INFRA_MAPPING_REFACTOR, workflow.getAccountId());
   }
 
   private void savePipelineSweepingOutPut(
@@ -2449,12 +2425,11 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
       logger.error("workflowId is null for an orchestrated execution");
       throw new InvalidRequestException("workflowId is null for an orchestrated execution");
     }
-    boolean infraRefactor = featureFlagService.isEnabled(INFRA_MAPPING_REFACTOR, accountId);
 
     logger.info("Execution Triggered. Type: {}, accountId={}", executionArgs.getWorkflowType(), accountId);
 
     String workflowId = executionArgs.getOrchestrationId();
-    Workflow workflow = workflowExecutionServiceHelper.obtainWorkflow(appId, workflowId, infraRefactor);
+    Workflow workflow = workflowExecutionServiceHelper.obtainWorkflow(appId, workflowId);
 
     // Doing this check here so that workflow is already fetched from database.
     preDeploymentChecks.checkIfWorkflowUsingRestrictedFeatures(workflow);
@@ -2465,13 +2440,11 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
 
     // Not including instance limit and deployment limit check as it is a emergency rollback
     accountExpirationChecker.check(accountId);
-    if (infraRefactor) {
-      workflow.setOrchestrationWorkflow(
-          workflowConcurrencyHelper.enhanceWithConcurrencySteps(workflow, executionArgs.getWorkflowVariables()));
-    }
+    workflow.setOrchestrationWorkflow(
+        workflowConcurrencyHelper.enhanceWithConcurrencySteps(workflow, executionArgs.getWorkflowVariables()));
 
-    StateMachine stateMachine = rollbackStateMachineGenerator.generateForRollbackExecution(
-        appId, previousWorkflowExecution.getUuid(), infraRefactor);
+    StateMachine stateMachine =
+        rollbackStateMachineGenerator.generateForRollbackExecution(appId, previousWorkflowExecution.getUuid());
 
     // This is workaround for a side effect in the state machine generation that mangles with the original
     //       workflow object.
@@ -2479,8 +2452,8 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
 
     stateMachine.setOrchestrationWorkflow(null);
 
-    WorkflowExecution workflowExecution = workflowExecutionServiceHelper.obtainExecution(
-        workflow, stateMachine, envId, null, executionArgs, infraRefactor);
+    WorkflowExecution workflowExecution =
+        workflowExecutionServiceHelper.obtainExecution(workflow, stateMachine, envId, null, executionArgs);
     workflowExecution.setOnDemandRollback(true);
     workflowExecution.setOriginalExecution(WorkflowExecutionInfo.builder()
                                                .name(previousWorkflowExecution.getName())
@@ -3058,8 +3031,6 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
     if (workflowExecution.getServiceExecutionSummaries() != null) {
       return;
     }
-    boolean infraRefactor = featureFlagService.isEnabled(
-        INFRA_MAPPING_REFACTOR, appService.getAccountIdByAppId(workflowExecution.getAppId()));
     List<ElementExecutionSummary> serviceExecutionSummaries = new ArrayList<>();
     // TODO : version should also be captured as part of the WorkflowExecution
     Workflow workflow = workflowService.readWorkflow(workflowExecution.getAppId(), workflowExecution.getWorkflowId());
@@ -3067,14 +3038,9 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
       List<Service> services = getResolvedServices(workflow, workflowExecution);
       List<InfrastructureMapping> infrastructureMappings = null;
       List<InfrastructureDefinition> infrastructureDefinitions = null;
-      if (infraRefactor) {
-        infrastructureDefinitions = getResolvedInfraDefinitions(workflow, workflowExecution);
-      } else {
-        infrastructureMappings = getResolvedInfraMappings(workflow, workflowExecution);
-      }
+      infrastructureDefinitions = getResolvedInfraDefinitions(workflow, workflowExecution);
 
       if (services != null) {
-        List<InfrastructureMapping> finalInfrastructureMappings = infrastructureMappings;
         List<InfrastructureDefinition> finalInfrastructureDefinitions = infrastructureDefinitions;
         services.forEach(service -> {
           ServiceElement serviceElement =
@@ -3082,40 +3048,20 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
           ElementExecutionSummary elementSummary =
               anElementExecutionSummary().withContextElement(serviceElement).withStatus(ExecutionStatus.QUEUED).build();
 
-          if (infraRefactor) {
-            List<InfraDefinitionSummary> infraDefinitionSummaries = new ArrayList<>();
-            if (finalInfrastructureDefinitions != null) {
-              for (InfrastructureDefinition infrastructureDefinition : finalInfrastructureDefinitions) {
-                infraDefinitionSummaries.add(
-                    InfraDefinitionSummary.builder()
-                        .infraDefinitionId(infrastructureDefinition.getUuid())
-                        .deploymentType(infrastructureDefinition.getDeploymentType())
-                        .displayName(infrastructureDefinition.getName())
-                        .cloudProviderType(infrastructureDefinition.getInfrastructure().getCloudProviderType())
-                        .cloudProviderName(
-                            infrastructureDefinitionService.cloudProviderNameForDefinition(infrastructureDefinition))
-                        .build());
-              }
-              elementSummary.setInfraDefinitionSummaries(infraDefinitionSummaries);
+          List<InfraDefinitionSummary> infraDefinitionSummaries = new ArrayList<>();
+          if (finalInfrastructureDefinitions != null) {
+            for (InfrastructureDefinition infrastructureDefinition : finalInfrastructureDefinitions) {
+              infraDefinitionSummaries.add(
+                  InfraDefinitionSummary.builder()
+                      .infraDefinitionId(infrastructureDefinition.getUuid())
+                      .deploymentType(infrastructureDefinition.getDeploymentType())
+                      .displayName(infrastructureDefinition.getName())
+                      .cloudProviderType(infrastructureDefinition.getInfrastructure().getCloudProviderType())
+                      .cloudProviderName(
+                          infrastructureDefinitionService.cloudProviderNameForDefinition(infrastructureDefinition))
+                      .build());
             }
-          } else {
-            List<InfraMappingSummary> infraMappingSummaries = new ArrayList<>();
-            if (finalInfrastructureMappings != null) {
-              for (InfrastructureMapping infraMapping : finalInfrastructureMappings) {
-                if (infraMapping.getServiceId().equals(service.getUuid())) {
-                  DeploymentType deploymentType = serviceResourceService.getDeploymentType(infraMapping, service, null);
-                  infraMappingSummaries.add(anInfraMappingSummary()
-                                                .withInframappingId(infraMapping.getUuid())
-                                                .withInfraMappingType(infraMapping.getInfraMappingType())
-                                                .withComputerProviderName(infraMapping.getComputeProviderName())
-                                                .withDisplayName(infraMapping.getName())
-                                                .withDeploymentType(deploymentType.name())
-                                                .withComputerProviderType(infraMapping.getComputeProviderType())
-                                                .build());
-                }
-              }
-              elementSummary.setInfraMappingSummary(infraMappingSummaries);
-            }
+            elementSummary.setInfraDefinitionSummaries(infraDefinitionSummaries);
           }
           serviceExecutionSummaries.add(elementSummary);
         });
@@ -3374,7 +3320,6 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
   }
 
   private int refreshTotal(WorkflowExecution workflowExecution) {
-    boolean infraRefactor = featureFlagService.isEnabled(INFRA_MAPPING_REFACTOR, workflowExecution.getAccountId());
     Workflow workflow = workflowService.readWorkflow(workflowExecution.getAppId(), workflowExecution.getWorkflowId());
     if (workflow == null || workflow.getOrchestrationWorkflow() == null) {
       logger.info("Workflow was deleted. Skipping the refresh total");
@@ -3382,12 +3327,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
     }
 
     List<String> resolvedInfraMappingIds;
-    if (infraRefactor) {
-      resolvedInfraMappingIds = workflowExecution.getInfraMappingIds();
-    } else {
-      List<InfrastructureMapping> resolvedInfraMappings = getResolvedInfraMappings(workflow, workflowExecution);
-      resolvedInfraMappingIds = resolvedInfraMappings.stream().map(InfrastructureMapping::getUuid).collect(toList());
-    }
+    resolvedInfraMappingIds = workflowExecution.getInfraMappingIds();
     if (isEmpty(resolvedInfraMappingIds)) {
       return 0;
     }

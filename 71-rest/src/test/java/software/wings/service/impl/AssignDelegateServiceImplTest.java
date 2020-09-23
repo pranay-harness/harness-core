@@ -26,7 +26,6 @@ import static software.wings.beans.Environment.Builder.anEnvironment;
 import static software.wings.beans.Environment.EnvironmentType.NON_PROD;
 import static software.wings.beans.Environment.EnvironmentType.PROD;
 import static software.wings.beans.FeatureName.DISABLE_DELEGATE_CAPABILITY_FRAMEWORK;
-import static software.wings.beans.FeatureName.INFRA_MAPPING_REFACTOR;
 import static software.wings.beans.GcpKubernetesInfrastructureMapping.Builder.aGcpKubernetesInfrastructureMapping;
 import static software.wings.service.impl.AssignDelegateServiceImpl.ERROR_MESSAGE;
 import static software.wings.service.impl.AssignDelegateServiceImpl.MAX_DELEGATE_LAST_HEARTBEAT;
@@ -986,7 +985,6 @@ public class AssignDelegateServiceImplTest extends WingsBaseTest {
                             .excludeScopes(emptyList())
                             .build();
     BatchDelegateSelectionLog batch = BatchDelegateSelectionLog.builder().taskId(delegateTask.getUuid()).build();
-    when(featureFlagService.isEnabled(eq(INFRA_MAPPING_REFACTOR), any())).thenReturn(true);
     when(infrastructureMappingService.get(APP_ID, INFRA_MAPPING_ID)).thenReturn(infrastructureMapping);
     when(delegateService.get(ACCOUNT_ID, DELEGATE_ID, false)).thenReturn(delegate);
     assertThat(assignDelegateService.canAssign(batch, DELEGATE_ID, delegateTask)).isTrue();

@@ -301,7 +301,6 @@ public class InfrastructureMappingServiceTest extends WingsBaseTest {
         infrastructureMappingService.save(physicalInfrastructureMapping, null);
 
     assertThat(returnedInfrastructureMapping.getUuid()).isEqualTo(INFRA_MAPPING_ID);
-    verify(serviceTemplateService).get(APP_ID, TEMPLATE_ID);
     verify(clusterSubject).fireInform(any(), any());
   }
 
@@ -455,7 +454,7 @@ public class InfrastructureMappingServiceTest extends WingsBaseTest {
     keyValuePairs.put("infrastructureDefinitionId", INFRA_DEFINITION_ID);
     keyValuePairs.put(InfrastructureMappingKeys.displayName, "Name4");
 
-    Set<String> fieldsToRemove = Sets.newHashSet("provisionerId", "hosts", "loadBalancerId");
+    Set<String> fieldsToRemove = Sets.newHashSet("blueprints", "provisionerId", "hosts", "loadBalancerId");
     verify(wingsPersistence)
         .updateFields(PhysicalInfrastructureMapping.class, INFRA_MAPPING_ID, keyValuePairs, fieldsToRemove);
     verify(wingsPersistence, times(2)).getWithAppId(InfrastructureMapping.class, APP_ID, INFRA_MAPPING_ID);
@@ -550,6 +549,7 @@ public class InfrastructureMappingServiceTest extends WingsBaseTest {
 
     Set<String> fieldsToRemove = new HashSet<>();
     fieldsToRemove.add("provisionerId");
+    fieldsToRemove.add("blueprints");
     verify(wingsPersistence)
         .updateFields(PhysicalInfrastructureMappingWinRm.class, INFRA_MAPPING_ID, keyValuePairs, fieldsToRemove);
     verify(wingsPersistence, times(2)).getWithAppId(InfrastructureMapping.class, APP_ID, INFRA_MAPPING_ID);

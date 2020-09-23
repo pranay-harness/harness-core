@@ -172,12 +172,8 @@ public class CanaryWorkflowExecutionAdvisor implements ExecutionEventAdvisor {
           String infraMappingId;
           if (context.fetchInfraMappingId() == null) {
             List<InfrastructureMapping> resolvedInfraMappings;
-            if (featureFlagService.isEnabled(FeatureName.INFRA_MAPPING_REFACTOR, workflow.getAccountId())) {
-              resolvedInfraMappings = infrastructureMappingService.getInfraStructureMappingsByUuids(
-                  workflow.getAppId(), workflowExecution.getInfraMappingIds());
-            } else {
-              resolvedInfraMappings = workflowExecutionService.getResolvedInfraMappings(workflow, workflowExecution);
-            }
+            resolvedInfraMappings = infrastructureMappingService.getInfraStructureMappingsByUuids(
+                workflow.getAppId(), workflowExecution.getInfraMappingIds());
             if (isEmpty(resolvedInfraMappings)) {
               return anExecutionEventAdvice()
                   .withExecutionInterruptType(ExecutionInterruptType.NEXT_STEP)
