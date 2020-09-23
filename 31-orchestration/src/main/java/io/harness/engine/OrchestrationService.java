@@ -17,6 +17,7 @@ import javax.validation.Valid;
 public interface OrchestrationService {
   PlanExecution startExecution(@Valid Plan plan);
   PlanExecution startExecution(@Valid Plan plan, Map<String, String> setupAbstractions);
+  PlanExecution rerunExecution(String planExecutionId, Map<String, String> setupAbstractions);
 
   Interrupt registerInterrupt(@Valid InterruptPackage interruptPackage);
 }
