@@ -198,17 +198,6 @@ public class GitConfigHelperService {
     gitConfig.setUrlType(GitConfig.UrlType.REPO);
   }
 
-  private String getRepositoryUrl(GitConfig gitConfig, String repoName) {
-    notNullCheck("GitConfig provided cannot be null", gitConfig);
-    if (GitConfig.UrlType.ACCOUNT == gitConfig.getUrlType()) {
-      notEmptyCheck("Repo name cannot be null for Account level git connector", repoName);
-      String purgedRepoUrl = gitConfig.getRepoUrl().replaceAll("/*$", "");
-      String purgedRepoName = repoName.replaceAll("^/*", "");
-      return purgedRepoUrl + "/" + purgedRepoName;
-    }
-    return gitConfig.getRepoUrl();
-  }
-
   private String getDisplayRepositoryUrl(String repositoryUrl) {
     try {
       URIish uri = new URIish(repositoryUrl);
@@ -257,11 +246,15 @@ public class GitConfigHelperService {
     }
   }
 
-  public String constructRepositoryUrl(GitConfig gitConfig, String repoName) {
+  public String getRepositoryUrl(GitConfig gitConfig, String repoName) {
     notNullCheck("GitConfig provided cannot be null", gitConfig);
-    notEmptyCheck("Repo name cannot be empty", repoName);
-    String purgedRepoUrl = gitConfig.getRepoUrl().replaceAll("/*$", "");
-    String purgedRepoName = repoName.replaceAll("^/*", "");
-    return purgedRepoUrl + "/" + purgedRepoName;
+    if (GitConfig.UrlType.ACCOUNT == gitConfig.getUrlType()) {
+      notEmptyCheck("Repo name cannot be empty for Account level git connector", repoName);
+      repoName = repoName.trim();
+      String purgedRepoUrl = gitConfig.getRepoUrl().replaceAll("/*$", "");
+      String purgedRepoName = repoName.replaceAll("^/*", "");
+      return purgedRepoUrl + "/" + purgedRepoName;
+    }
+    return gitConfig.getRepoUrl();
   }
 }

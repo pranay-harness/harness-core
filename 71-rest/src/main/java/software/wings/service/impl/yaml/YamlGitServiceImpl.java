@@ -876,7 +876,7 @@ public class YamlGitServiceImpl implements YamlGitService {
   }
 
   private boolean matchesRepositoryFullName(GitConfig gitConfig, String repositoryName, String repositoryFullName) {
-    String processedUrl = gitConfigHelperService.constructRepositoryUrl(gitConfig, repositoryName);
+    String processedUrl = gitConfigHelperService.getRepositoryUrl(gitConfig, repositoryName);
     processedUrl = cleanupRepositoryName(processedUrl);
     String processedFullName = cleanupRepositoryName(repositoryFullName);
 
