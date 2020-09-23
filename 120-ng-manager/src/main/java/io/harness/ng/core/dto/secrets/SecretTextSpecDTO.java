@@ -26,7 +26,7 @@ public class SecretTextSpecDTO extends SecretSpecDTO {
   @Override
   @JsonIgnore
   public boolean isValidYaml() {
-    return valueType == ValueType.Inline && value == null;
+    return valueType == ValueType.Reference || (valueType == ValueType.Inline && value == null);
   }
 
   @Override

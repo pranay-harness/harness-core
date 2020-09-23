@@ -19,6 +19,7 @@ import io.harness.exception.InvalidRequestException;
 import io.harness.ng.core.api.impl.SecretEntityReferenceHelper;
 import io.harness.ng.core.dto.secrets.SecretDTOV2;
 import io.harness.ng.core.dto.secrets.SecretFileSpecDTO;
+import io.harness.ng.core.dto.secrets.SecretResponseWrapper;
 import io.harness.ng.core.models.Secret;
 import io.harness.ng.core.models.Secret.SecretKeys;
 import io.harness.ng.core.remote.SecretValidationMetaData;
@@ -85,18 +86,27 @@ public class SecretCrudServiceImpl implements SecretCrudService {
     return secretModifyService;
   }
 
+  private SecretResponseWrapper getResponseWrapper(@NotNull Secret secret) {
+    return SecretResponseWrapper.builder()
+        .secret(secret.toDTO())
+        .updatedAt(secret.getLastModifiedAt())
+        .createdAt(secret.getCreatedAt())
+        .build();
+  }
+
   @Override
-  public SecretDTOV2 create(String accountIdentifier, SecretDTOV2 dto) {
+  public SecretResponseWrapper create(String accountIdentifier, SecretDTOV2 dto) {
     EncryptedDataDTO encryptedData = getService(dto.getType()).create(accountIdentifier, dto);
     if (Optional.ofNullable(encryptedData).isPresent()) {
       secretEntityReferenceHelper.createEntityReferenceForSecret(encryptedData);
-      return ngSecretService.create(accountIdentifier, dto).toDTO();
+      Secret secret = ngSecretService.create(accountIdentifier, dto);
+      return getResponseWrapper(secret);
     }
     throw new SecretManagementException(SECRET_MANAGEMENT_ERROR, "Unable to create secret remotely.", USER);
   }
 
   @Override
-  public SecretDTOV2 createViaYaml(@NotNull String accountIdentifier, SecretDTOV2 dto) {
+  public SecretResponseWrapper createViaYaml(@NotNull String accountIdentifier, SecretDTOV2 dto) {
     if (!dto.getSpec().isValidYaml()) {
       throw new InvalidRequestException("Yaml not valid.", USER);
     }
@@ -104,19 +114,19 @@ public class SecretCrudServiceImpl implements SecretCrudService {
   }
 
   @Override
-  public Optional<SecretDTOV2> get(
+  public Optional<SecretResponseWrapper> get(
       String accountIdentifier, String orgIdentifier, String projectIdentifier, String identifier) {
     Optional<Secret> secretV2Optional =
         ngSecretService.get(accountIdentifier, orgIdentifier, projectIdentifier, identifier);
     if (secretV2Optional.isPresent()) {
-      return Optional.ofNullable(secretV2Optional.get().toDTO());
+      return Optional.ofNullable(getResponseWrapper(secretV2Optional.get()));
     }
     return Optional.empty();
   }
 
   @Override
-  public NGPageResponse<SecretDTOV2> list(String accountIdentifier, String orgIdentifier, String projectIdentifier,
-      SecretType secretType, String searchTerm, int page, int size) {
+  public NGPageResponse<SecretResponseWrapper> list(String accountIdentifier, String orgIdentifier,
+      String projectIdentifier, SecretType secretType, String searchTerm, int page, int size) {
     Criteria criteria = Criteria.where(SecretKeys.accountIdentifier)
                             .is(accountIdentifier)
                             .and(SecretKeys.orgIdentifier)
@@ -132,7 +142,7 @@ public class SecretCrudServiceImpl implements SecretCrudService {
     }
     Page<Secret> secrets = ngSecretService.list(criteria, page, size);
     return PageUtils.getNGPageResponse(
-        secrets, secrets.getContent().stream().map(Secret::toDTO).collect(Collectors.toList()));
+        secrets, secrets.getContent().stream().map(this ::getResponseWrapper).collect(Collectors.toList()));
   }
 
   @Override
@@ -185,7 +195,8 @@ public class SecretCrudServiceImpl implements SecretCrudService {
 
   @SneakyThrows
   @Override
-  public SecretDTOV2 createFile(String accountIdentifier, SecretDTOV2 dto, InputStream inputStream) {
+  public SecretResponseWrapper createFile(
+      @NotNull String accountIdentifier, @NotNull SecretDTOV2 dto, @NotNull InputStream inputStream) {
     SecretFileSpecDTO specDTO = (SecretFileSpecDTO) dto.getSpec();
     SecretFileDTO secretFileDTO = SecretFileDTO.builder()
                                       .account(accountIdentifier)
@@ -204,14 +215,15 @@ public class SecretCrudServiceImpl implements SecretCrudService {
                 new BoundedInputStream(inputStream, fileUploadLimit.getEncryptedFileLimit())))));
     if (Optional.ofNullable(encryptedData).isPresent()) {
       secretEntityReferenceHelper.createEntityReferenceForSecret(encryptedData);
-      return ngSecretService.create(accountIdentifier, dto).toDTO();
+      Secret secret = ngSecretService.create(accountIdentifier, dto);
+      return getResponseWrapper(secret);
     }
     throw new SecretManagementException(SECRET_MANAGEMENT_ERROR, "Unable to create secret file remotely", USER);
   }
 
   @SneakyThrows
   @Override
-  public boolean updateFile(String accountIdentifier, SecretDTOV2 dto, InputStream inputStream) {
+  public boolean updateFile(String accountIdentifier, SecretDTOV2 dto, @NotNull InputStream inputStream) {
     EncryptedDataDTO encryptedDataDTO = getResponse(secretManagerClient.getSecret(
         dto.getIdentifier(), accountIdentifier, dto.getOrgIdentifier(), dto.getProjectIdentifier()));
     SecretFileSpecDTO specDTO = (SecretFileSpecDTO) dto.getSpec();

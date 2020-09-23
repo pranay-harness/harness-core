@@ -57,8 +57,6 @@ public class Secret {
         .tags(getTags())
         .type(getType())
         .spec(Optional.ofNullable(getSecretSpec()).map(SecretSpec::toDTO).orElse(null))
-        .lastModifiedAt(getLastModifiedAt())
-        .createdAt(getCreatedAt())
         .build();
   }
 }

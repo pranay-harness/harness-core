@@ -37,7 +37,6 @@ import java.util.List;
 
 public interface SecretManagerClient {
   String SECRETS_API = "ng/secrets";
-  String SECRETS_API_V2 = "v2/ng/secrets";
   String SECRET_FILES_API = "ng/secret-files";
   String SECRET_MANAGERS_API = "ng/secret-managers";
 
