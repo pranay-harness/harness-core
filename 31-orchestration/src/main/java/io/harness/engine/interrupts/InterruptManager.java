@@ -18,7 +18,7 @@ public class InterruptManager {
                               .uuid(generateUuid())
                               .planExecutionId(interruptPackage.getPlanExecutionId())
                               .type(interruptPackage.getInterruptType())
-                              .createdBy(interruptPackage.getEmbeddedUser())
+                              .metadata(interruptPackage.getMetadata())
                               .nodeExecutionId(interruptPackage.getNodeExecutionId())
                               .parameters(interruptPackage.getParameters())
                               .build();

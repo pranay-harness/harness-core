@@ -43,12 +43,12 @@ public class CIPipelineExecutionServiceImplTest extends CIExecutionTest {
   public void executePipeline() {
     CIPipeline ciPipeline = executionPlanTestHelper.getCIPipeline();
 
-    when(orchestrationService.startExecution(any(), any(), any()))
+    when(orchestrationService.startExecution(any(), any()))
         .thenReturn(PlanExecution.builder().uuid("planId").status(RUNNING).build());
 
     PlanExecution planExecution =
         ciPipelineExecutionService.executePipeline(ciPipeline, CIExecutionArgs.builder().build(), null);
     assertThat(planExecution).isNotNull();
-    verify(orchestrationService, times(1)).startExecution(any(), any(), any());
+    verify(orchestrationService, times(1)).startExecution(any(), any());
   }
 }

@@ -6,7 +6,6 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import io.harness.beans.CIPipeline;
-import io.harness.beans.EmbeddedUser;
 import io.harness.beans.executionargs.CIExecutionArgs;
 import io.harness.ci.beans.entities.CIBuild;
 import io.harness.core.ci.services.CIBuildServiceImpl;
@@ -36,9 +35,11 @@ public class CIPipelineExecutionServiceImpl implements CIPipelineExecutionServic
     // User user = UserThreadLocal.get()
     Map<String, String> setupAbstractions = new HashMap<>();
     setupAbstractions.put("accountId", ciPipeline.getAccountId());
+    setupAbstractions.put("userId", "harsh");
+    setupAbstractions.put("userName", "harsh jain");
+    setupAbstractions.put("userEmail", "harsh.jain@harness.io");
 
-    PlanExecution planExecution = orchestrationService.startExecution(plan, setupAbstractions,
-        EmbeddedUser.builder().uuid("harsh").email("harsh.jain@harness.io").name("harsh jain").build());
+    PlanExecution planExecution = orchestrationService.startExecution(plan, setupAbstractions);
     createCIBuild(ciPipeline, ciExecutionArgs, planExecution, buildNumber);
     return planExecution;
   }

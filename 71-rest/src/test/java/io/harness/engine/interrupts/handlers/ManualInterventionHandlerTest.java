@@ -11,7 +11,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
 
-import io.harness.beans.EmbeddedUser;
 import io.harness.category.element.UnitTests;
 import io.harness.engine.OrchestrationService;
 import io.harness.engine.PlanRepo;
@@ -34,6 +33,7 @@ import software.wings.WingsBaseTest;
 import software.wings.rules.Listeners;
 
 import java.util.List;
+import java.util.Map;
 
 @Listeners(OrchestrationNotifyEventListener.class)
 public class ManualInterventionHandlerTest extends WingsBaseTest {
@@ -41,8 +41,6 @@ public class ManualInterventionHandlerTest extends WingsBaseTest {
   @Inject private NodeExecutionService nodeExecutionService;
   @Inject private InterruptTestHelper interruptTestHelper;
   @Inject private StepRegistry stepRegistry;
-
-  private static final EmbeddedUser EMBEDDED_USER = new EmbeddedUser(generateUuid(), PRASHANT, PRASHANT);
 
   @Before
   public void setUp() {
@@ -53,8 +51,7 @@ public class ManualInterventionHandlerTest extends WingsBaseTest {
   @Owner(developers = PRASHANT)
   @Category(UnitTests.class)
   public void shouldTestHandleInterrupt() {
-    PlanExecution execution = orchestrationService.startExecution(PlanRepo.planWithFailure(),
-        ImmutableMap.of("accountId", generateUuid(), "appId", generateUuid()), EMBEDDED_USER);
+    PlanExecution execution = orchestrationService.startExecution(PlanRepo.planWithFailure(), getAbstractions());
     interruptTestHelper.waitForPlanStatus(execution.getUuid(), INTERVENTION_WAITING);
     assertThat(execution).isNotNull();
   }
@@ -63,8 +60,7 @@ public class ManualInterventionHandlerTest extends WingsBaseTest {
   @Owner(developers = PRASHANT)
   @Category(UnitTests.class)
   public void shouldTestHandleInterruptWithRetry() {
-    PlanExecution execution = orchestrationService.startExecution(PlanRepo.planWithFailure(),
-        ImmutableMap.of("accountId", generateUuid(), "appId", generateUuid()), EMBEDDED_USER);
+    PlanExecution execution = orchestrationService.startExecution(PlanRepo.planWithFailure(), getAbstractions());
     interruptTestHelper.waitForPlanStatus(execution.getUuid(), INTERVENTION_WAITING);
     List<NodeExecution> nodeExecutionList =
         nodeExecutionService.fetchNodeExecutionsWithoutOldRetries(execution.getUuid());
@@ -78,7 +74,6 @@ public class ManualInterventionHandlerTest extends WingsBaseTest {
                                                    .interruptType(ExecutionInterruptType.RETRY)
                                                    .planExecutionId(execution.getUuid())
                                                    .nodeExecutionId(nodeExecution.getUuid())
-                                                   .embeddedUser(EMBEDDED_USER)
                                                    .parameters(SimpleStepAsyncParams.builder().build())
                                                    .build());
 
@@ -95,8 +90,7 @@ public class ManualInterventionHandlerTest extends WingsBaseTest {
   @Owner(developers = PRASHANT)
   @Category(UnitTests.class)
   public void shouldTestHandleInterruptWithMarkSuccess() {
-    PlanExecution execution = orchestrationService.startExecution(PlanRepo.planWithFailure(),
-        ImmutableMap.of("accountId", generateUuid(), "appId", generateUuid()), EMBEDDED_USER);
+    PlanExecution execution = orchestrationService.startExecution(PlanRepo.planWithFailure(), getAbstractions());
     interruptTestHelper.waitForPlanStatus(execution.getUuid(), INTERVENTION_WAITING);
     List<NodeExecution> nodeExecutionList =
         nodeExecutionService.fetchNodeExecutionsWithoutOldRetries(execution.getUuid());
@@ -109,7 +103,6 @@ public class ManualInterventionHandlerTest extends WingsBaseTest {
                                                                      .interruptType(ExecutionInterruptType.MARK_SUCCESS)
                                                                      .planExecutionId(execution.getUuid())
                                                                      .nodeExecutionId(nodeExecution.getUuid())
-                                                                     .embeddedUser(EMBEDDED_USER)
                                                                      .build());
 
     assertThat(interrupt).isNotNull();
@@ -125,8 +118,7 @@ public class ManualInterventionHandlerTest extends WingsBaseTest {
   @Owner(developers = PRASHANT)
   @Category(UnitTests.class)
   public void shouldTestHandleInterruptWithMarkFailed() {
-    PlanExecution execution = orchestrationService.startExecution(PlanRepo.planWithFailure(),
-        ImmutableMap.of("accountId", generateUuid(), "appId", generateUuid()), EMBEDDED_USER);
+    PlanExecution execution = orchestrationService.startExecution(PlanRepo.planWithFailure(), getAbstractions());
     interruptTestHelper.waitForPlanStatus(execution.getUuid(), INTERVENTION_WAITING);
     List<NodeExecution> nodeExecutionList =
         nodeExecutionService.fetchNodeExecutionsWithoutOldRetries(execution.getUuid());
@@ -139,7 +131,6 @@ public class ManualInterventionHandlerTest extends WingsBaseTest {
                                                                      .interruptType(ExecutionInterruptType.MARK_FAILED)
                                                                      .planExecutionId(execution.getUuid())
                                                                      .nodeExecutionId(nodeExecution.getUuid())
-                                                                     .embeddedUser(EMBEDDED_USER)
                                                                      .build());
 
     assertThat(interrupt).isNotNull();
@@ -149,5 +140,10 @@ public class ManualInterventionHandlerTest extends WingsBaseTest {
     interruptTestHelper.waitForPlanStatus(execution.getUuid(), FAILED);
     nodeExecutionList = nodeExecutionService.fetchNodeExecutionsWithoutOldRetries(execution.getUuid());
     assertThat(nodeExecutionList).hasSize(1);
+  }
+
+  private Map<String, String> getAbstractions() {
+    return ImmutableMap.of("accountId", generateUuid(), "appId", generateUuid(), "userId", generateUuid(), "userName",
+        PRASHANT, "userEmail", PRASHANT);
   }
 }

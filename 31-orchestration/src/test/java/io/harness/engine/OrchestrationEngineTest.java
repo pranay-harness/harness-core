@@ -19,7 +19,6 @@ import io.harness.adviser.AdvisingEvent;
 import io.harness.advisers.success.OnSuccessAdviser;
 import io.harness.advisers.success.OnSuccessAdviserParameters;
 import io.harness.ambiance.Ambiance;
-import io.harness.beans.EmbeddedUser;
 import io.harness.category.element.UnitTests;
 import io.harness.exception.InvalidRequestException;
 import io.harness.execution.PlanExecution;
@@ -58,7 +57,6 @@ public class OrchestrationEngineTest extends OrchestrationTest {
   private static final AdviserType TEST_ADVISER_TYPE =
       AdviserType.builder().type("TEST_HTTP_RESPONSE_CODE_SWITCH").build();
   private static final StepType TEST_STEP_TYPE = StepType.builder().type("TEST_STEP_PLAN").build();
-  private static final StepType DUMMY_STEP_TYPE = StepType.builder().type("DUMMY").build();
 
   @Before
   public void setUp() {
@@ -87,9 +85,7 @@ public class OrchestrationEngineTest extends OrchestrationTest {
             .startingNodeId(testNodeId)
             .build();
 
-    EmbeddedUser user = new EmbeddedUser(generateUuid(), ALEXEI, ALEXEI);
-
-    PlanExecution response = orchestrationService.startExecution(oneNodePlan, prepareInputArgs(), user);
+    PlanExecution response = orchestrationService.startExecution(oneNodePlan, prepareInputArgs());
 
     engineTestHelper.waitForPlanCompletion(response.getUuid());
     response = engineTestHelper.getPlanExecutionStatus(response.getUuid());
@@ -118,9 +114,7 @@ public class OrchestrationEngineTest extends OrchestrationTest {
             .startingNodeId(testStartNodeId)
             .build();
 
-    EmbeddedUser user = new EmbeddedUser(generateUuid(), ALEXEI, ALEXEI);
-
-    PlanExecution response = orchestrationService.startExecution(oneNodePlan, prepareInputArgs(), user);
+    PlanExecution response = orchestrationService.startExecution(oneNodePlan, prepareInputArgs());
 
     engineTestHelper.waitForPlanCompletion(response.getUuid());
     response = engineTestHelper.getPlanExecutionStatus(response.getUuid());
@@ -168,10 +162,8 @@ public class OrchestrationEngineTest extends OrchestrationTest {
             .startingNodeId(testStartNodeId)
             .build();
 
-    EmbeddedUser user = new EmbeddedUser(generateUuid(), ALEXEI, ALEXEI);
-
     try (MaintenanceGuard guard = new MaintenanceGuard(false)) {
-      PlanExecution response = orchestrationService.startExecution(oneNodePlan, prepareInputArgs(), user);
+      PlanExecution response = orchestrationService.startExecution(oneNodePlan, prepareInputArgs());
 
       engineTestHelper.waitForPlanCompletion(response.getUuid());
       response = engineTestHelper.getPlanExecutionStatus(response.getUuid());
@@ -189,15 +181,14 @@ public class OrchestrationEngineTest extends OrchestrationTest {
     final String exceptionStartMessage = "No node found with Id";
     Plan oneNodePlan = Plan.builder().startingNodeId(generateUuid()).build();
 
-    EmbeddedUser user = new EmbeddedUser(generateUuid(), ALEXEI, ALEXEI);
-
-    assertThatThrownBy(() -> orchestrationService.startExecution(oneNodePlan, prepareInputArgs(), user))
+    assertThatThrownBy(() -> orchestrationService.startExecution(oneNodePlan, prepareInputArgs()))
         .isInstanceOf(InvalidRequestException.class)
         .hasMessageStartingWith(exceptionStartMessage);
   }
 
   private static Map<String, String> prepareInputArgs() {
-    return ImmutableMap.of("accountId", "kmpySmUISimoRrJL6NL73w", "appId", "XEsfW6D_RJm1IaGpDidD3g");
+    return ImmutableMap.of("accountId", "kmpySmUISimoRrJL6NL73w", "appId", "XEsfW6D_RJm1IaGpDidD3g", "userId",
+        generateUuid(), "userName", ALEXEI, "userEmail", ALEXEI);
   }
 
   private static class TestHttpResponseCodeSwitchAdviser implements Adviser {

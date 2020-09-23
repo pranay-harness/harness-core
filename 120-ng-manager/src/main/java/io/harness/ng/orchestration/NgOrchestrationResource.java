@@ -44,7 +44,7 @@ public class NgOrchestrationResource {
   public RestResponse<PlanExecution> triggerHttpV2Plan(
       @QueryParam("accountId") @NotNull String accountId, @QueryParam("appId") @NotNull String appId) {
     PlanExecution execution = orchestrationService.startExecution(
-        customExecutionProvider.provideHttpSwitchPlanV2(), getAbstractions(accountId, appId), EMBEDDED_USER);
+        customExecutionProvider.provideHttpSwitchPlanV2(), getAbstractions(accountId, appId));
     return new RestResponse<>(execution);
   }
 
@@ -54,7 +54,7 @@ public class NgOrchestrationResource {
   public RestResponse<PlanExecution> triggerHttpV3Plan(
       @QueryParam("accountId") @NotNull String accountId, @QueryParam("appId") @NotNull String appId) {
     PlanExecution execution = orchestrationService.startExecution(
-        customExecutionProvider.provideHttpSwitchPlanV3(), getAbstractions(accountId, appId), EMBEDDED_USER);
+        customExecutionProvider.provideHttpSwitchPlanV3(), getAbstractions(accountId, appId));
     return new RestResponse<>(execution);
   }
 
@@ -63,9 +63,8 @@ public class NgOrchestrationResource {
   @ApiOperation(value = "Triggers a task chain v2 Plan", nickname = "http-chain-v2")
   public RestResponse<PlanExecution> triggerHttpChainV2Plan(
       @QueryParam("accountId") @NotNull String accountId, @QueryParam("appId") @NotNull String appId) {
-    PlanExecution execution =
-        orchestrationService.startExecution(customExecutionProvider.provideTaskChainPlan(FacilitatorType.TASK_CHAIN_V2),
-            getAbstractions(accountId, appId), EMBEDDED_USER);
+    PlanExecution execution = orchestrationService.startExecution(
+        customExecutionProvider.provideTaskChainPlan(FacilitatorType.TASK_CHAIN_V2), getAbstractions(accountId, appId));
     return new RestResponse<>(execution);
   }
 
@@ -74,9 +73,8 @@ public class NgOrchestrationResource {
   @ApiOperation(value = "Triggers a task chain v3 Plan", nickname = "http-chain-v3")
   public RestResponse<PlanExecution> triggerHttpChainV3Plan(
       @QueryParam("accountId") @NotNull String accountId, @QueryParam("appId") @NotNull String appId) {
-    PlanExecution execution =
-        orchestrationService.startExecution(customExecutionProvider.provideTaskChainPlan(FacilitatorType.TASK_CHAIN_V3),
-            getAbstractions(accountId, appId), EMBEDDED_USER);
+    PlanExecution execution = orchestrationService.startExecution(
+        customExecutionProvider.provideTaskChainPlan(FacilitatorType.TASK_CHAIN_V3), getAbstractions(accountId, appId));
     return new RestResponse<>(execution);
   }
 
@@ -106,6 +104,7 @@ public class NgOrchestrationResource {
   }
 
   private Map<String, String> getAbstractions(String accountId, String appId) {
-    return ImmutableMap.of("accountId", accountId, "appId", appId);
+    return ImmutableMap.of("accountId", accountId, "appId", appId, "userId", "lv0euRhKRCyiXWzS7pOg6g", "userName",
+        "Admin", "userEmail", "admin@harness.io");
   }
 }

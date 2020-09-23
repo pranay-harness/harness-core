@@ -10,7 +10,6 @@ import io.harness.OrchestrationTest;
 import io.harness.adviser.advise.RetryAdvise;
 import io.harness.ambiance.Ambiance;
 import io.harness.ambiance.Level;
-import io.harness.beans.EmbeddedUser;
 import io.harness.category.element.UnitTests;
 import io.harness.engine.executions.node.NodeExecutionService;
 import io.harness.engine.executions.plan.PlanExecutionService;
@@ -41,8 +40,6 @@ public class RetryAdviseHandlerTest extends OrchestrationTest {
   private static final String NODE_EXECUTION_ID = generateUuid();
   private static final String NODE_SETUP_ID = generateUuid();
 
-  private static final EmbeddedUser EMBEDDED_USER = new EmbeddedUser(generateUuid(), PRASHANT, PRASHANT);
-
   private Ambiance ambiance;
   private RetryAdvise advise;
 
@@ -54,7 +51,7 @@ public class RetryAdviseHandlerTest extends OrchestrationTest {
                        Level.builder().runtimeId(NODE_EXECUTION_ID).setupId(NODE_SETUP_ID).build()))
                    .build();
 
-    planExecutionService.save(PlanExecution.builder().uuid(PLAN_EXECUTION_ID).createdBy(EMBEDDED_USER).build());
+    planExecutionService.save(PlanExecution.builder().uuid(PLAN_EXECUTION_ID).build());
 
     NodeExecution nodeExecution = NodeExecution.builder()
                                       .uuid(NODE_EXECUTION_ID)

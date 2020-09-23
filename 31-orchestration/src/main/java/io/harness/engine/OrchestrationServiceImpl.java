@@ -8,7 +8,6 @@ import io.harness.ambiance.Ambiance;
 import io.harness.annotations.Redesign;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.beans.EmbeddedUser;
 import io.harness.engine.events.OrchestrationEventEmitter;
 import io.harness.engine.executions.plan.PlanExecutionService;
 import io.harness.engine.interrupts.InterruptManager;
@@ -35,18 +34,17 @@ public class OrchestrationServiceImpl implements OrchestrationService {
   @Inject private InterruptManager interruptManager;
 
   @Override
-  public PlanExecution startExecution(Plan plan, EmbeddedUser createdBy) {
-    return startExecution(plan, null, createdBy);
+  public PlanExecution startExecution(Plan plan) {
+    return startExecution(plan, null);
   }
 
   @Override
-  public PlanExecution startExecution(@Valid Plan plan, Map<String, String> setupAbstractions, EmbeddedUser createdBy) {
+  public PlanExecution startExecution(@Valid Plan plan, Map<String, String> setupAbstractions) {
     PlanExecution planExecution = PlanExecution.builder()
                                       .uuid(generateUuid())
                                       .plan(plan)
                                       .setupAbstractions(setupAbstractions)
                                       .status(Status.RUNNING)
-                                      .createdBy(createdBy)
                                       .startTs(System.currentTimeMillis())
                                       .build();
     PlanNode planNode = plan.fetchStartingNode();
