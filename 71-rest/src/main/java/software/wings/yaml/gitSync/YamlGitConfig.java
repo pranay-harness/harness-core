@@ -7,6 +7,7 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonView;
 import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.annotation.HarnessEntity;
+import io.harness.data.validator.Trimmed;
 import io.harness.mongo.index.CdUniqueIndex;
 import io.harness.mongo.index.Field;
 import lombok.Builder;
@@ -24,6 +25,7 @@ import software.wings.beans.SettingAttribute;
 import software.wings.jersey.JsonViews;
 import software.wings.settings.SettingVariableTypes;
 
+import javax.annotation.Nullable;
 import javax.validation.constraints.NotNull;
 
 @CdUniqueIndex(name = "locate", fields = { @Field("accountId")
@@ -46,6 +48,8 @@ public class YamlGitConfig extends Base implements EncryptableSetting {
 
   private String url;
   @NotEmpty private String branchName;
+  @Trimmed(message = "repositoryName should not contain leading and trailing spaces")
+  @Nullable
   private String repositoryName;
   private String username;
 

@@ -33,6 +33,7 @@ import software.wings.yaml.setting.SourceRepoProviderYaml;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import javax.annotation.Nullable;
 
 @JsonTypeName("GIT")
 @Data
@@ -56,7 +57,7 @@ public class GitConfig extends SettingValue implements EncryptableSetting {
   @JsonView(JsonViews.Internal.class) @SchemaIgnore private String encryptedPassword;
   private String sshSettingId;
   @SchemaIgnore @Transient private SettingAttribute sshSettingAttribute;
-  @SchemaIgnore @Transient private String repoName;
+  @SchemaIgnore @Transient @Trimmed @Nullable private String repoName;
   private boolean keyAuth;
   @Default private AuthenticationScheme authenticationScheme = HTTP_PASSWORD;
   @Attributes(title = "Description") private String description;

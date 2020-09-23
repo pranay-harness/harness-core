@@ -28,6 +28,8 @@ public class GitUtilsManager {
     return gitConfig;
   }
 
+  /* To use method GitConfigHelperService#getRepositoryUrl */
+  @Deprecated
   public static String fetchCompleteGitRepoUrl(GitConfig gitConfig, String repoName) {
     if (GitConfig.UrlType.ACCOUNT == gitConfig.getUrlType()) {
       if (StringUtils.isEmpty(repoName)) {
