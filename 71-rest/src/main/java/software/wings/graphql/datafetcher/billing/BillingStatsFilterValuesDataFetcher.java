@@ -5,18 +5,24 @@ import com.google.inject.Inject;
 import graphql.schema.DataFetchingEnvironment;
 import graphql.schema.SelectedField;
 import io.harness.ccm.cluster.InstanceDataServiceImpl;
+import io.harness.ccm.cluster.dao.K8sWorkloadDao;
 import io.harness.ccm.cluster.entities.InstanceData;
+import io.harness.ccm.cluster.entities.K8sLabelFilter;
+import io.harness.ccm.cluster.entities.TagFilter;
 import io.harness.exception.InvalidRequestException;
 import io.harness.timescaledb.DBUtils;
 import io.harness.timescaledb.TimeScaleDBService;
 import lombok.extern.slf4j.Slf4j;
+import software.wings.beans.HarnessTag;
 import software.wings.graphql.datafetcher.AbstractStatsDataFetcherWithAggregationListAndLimit;
 import software.wings.graphql.datafetcher.billing.BillingDataQueryMetadata.BillingDataMetaDataFields;
 import software.wings.graphql.datafetcher.k8sLabel.K8sLabelConnectionDataFetcher;
 import software.wings.graphql.schema.type.QLK8sLabel;
+import software.wings.graphql.schema.type.QLTags;
 import software.wings.graphql.schema.type.aggregation.QLData;
 import software.wings.graphql.schema.type.aggregation.QLIdFilter;
 import software.wings.graphql.schema.type.aggregation.QLIdOperator;
+import software.wings.graphql.schema.type.aggregation.QLTimeFilter;
 import software.wings.graphql.schema.type.aggregation.billing.QLBillingDataFilter;
 import software.wings.graphql.schema.type.aggregation.billing.QLBillingSortCriteria;
 import software.wings.graphql.schema.type.aggregation.billing.QLCCMEntityGroupBy;
@@ -28,6 +34,7 @@ import software.wings.graphql.schema.type.aggregation.k8sLabel.QLK8sLabelFilter;
 import software.wings.graphql.schema.type.aggregation.k8sLabel.QLK8sLabelFilter.QLK8sLabelFilterBuilder;
 import software.wings.security.PermissionAttribute.PermissionType;
 import software.wings.security.annotations.AuthRule;
+import software.wings.service.intfc.HarnessTagService;
 
 import java.sql.Connection;
 import java.sql.ResultSet;
@@ -35,10 +42,12 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
-import java.util.stream.Collectors;
 import javax.validation.constraints.NotNull;
 
 @Slf4j
@@ -51,7 +60,10 @@ public class BillingStatsFilterValuesDataFetcher
   @Inject BillingDataQueryBuilder billingDataQueryBuilder;
   @Inject K8sLabelConnectionDataFetcher k8sLabelConnectionDataFetcher;
   @Inject InstanceDataServiceImpl instanceDataService;
+  @Inject K8sWorkloadDao k8sWorkloadDao;
+  @Inject HarnessTagService harnessTagService;
   private static final String TOTAL = "total";
+  private static final String EMPTY = "";
 
   @Override
   @AuthRule(permissionType = PermissionType.LOGGED_IN)
@@ -77,7 +89,17 @@ public class BillingStatsFilterValuesDataFetcher
     ResultSet resultSet = null;
     boolean successful = false;
     int retryCount = 0;
-    boolean fetchLabels = isGroupByLabelPresent(groupByList);
+
+    K8sLabelFilter labelFilter = null;
+    if (isGroupByLabelPresent(groupByList)) {
+      labelFilter = prepareLabelFilters(filters, groupByList, accountId, limit, offset);
+    }
+
+    TagFilter tagFilter = null;
+    if (isGroupByTagPresent(groupByList)) {
+      tagFilter = prepareTagFilters(filters, groupByList, accountId, limit, offset);
+    }
+
     List<QLCCMEntityGroupBy> groupByEntityList = billingDataQueryBuilder.getGroupByEntity(groupByList);
     List<QLCCMEntityGroupBy> groupByNodeAndPodList = new ArrayList<>();
     List<QLCCMEntityGroupBy> groupByEntityListExcludingNodeAndPod = new ArrayList<>();
@@ -112,7 +134,8 @@ public class BillingStatsFilterValuesDataFetcher
            Statement statement = connection.createStatement()) {
         resultSet = statement.executeQuery(queryData.getQuery());
         successful = true;
-        return generateFilterValuesData(queryData, resultSet, instanceIds, accountId, fetchLabels, totalCount);
+        return generateFilterValuesData(
+            queryData, resultSet, instanceIds, accountId, labelFilter, tagFilter, totalCount);
       } catch (SQLException e) {
         retryCount++;
         if (retryCount >= MAX_RETRY) {
@@ -218,7 +241,8 @@ public class BillingStatsFilterValuesDataFetcher
   }
 
   private QLFilterValuesListData generateFilterValuesData(BillingDataQueryMetadata queryData, ResultSet resultSet,
-      Set<String> instanceIds, String accountId, boolean fetchLabels, Long totalCount) throws SQLException {
+      Set<String> instanceIds, String accountId, K8sLabelFilter labelFilter, TagFilter tagFilter, Long totalCount)
+      throws SQLException {
     QLFilterValuesDataBuilder filterValuesDataBuilder = QLFilterValuesData.builder();
     Set<String> cloudServiceNames = new HashSet<>();
     Set<String> workloadNames = new HashSet<>();
@@ -232,6 +256,8 @@ public class BillingStatsFilterValuesDataFetcher
     List<QLEntityData> clusters = new ArrayList<>();
     List<QLEntityData> instances = new ArrayList<>();
     List<QLK8sLabel> k8sLabels = new ArrayList<>();
+    List<QLTags> tags = new ArrayList<>();
+    boolean fetchLabels = labelFilter != null;
 
     while (resultSet != null && resultSet.next()) {
       for (BillingDataMetaDataFields field : queryData.getFieldNames()) {
@@ -278,30 +304,62 @@ public class BillingStatsFilterValuesDataFetcher
     }
 
     // Fetching K8s labels if workload names are fetched
-    if (fetchLabels || !workloadNames.isEmpty()) {
+    if (!workloadNames.isEmpty()) {
       k8sLabels = k8sLabelConnectionDataFetcher.fetchAllLabels(
           Arrays.asList(prepareLabelFilters(getClusterIdsFromFilters(queryData.getFilters()),
               workloadNames.toArray(new String[0]), namespaces.toArray(new String[0]), accountId)));
+    } else if (fetchLabels) {
+      List<String> labels;
+      if (labelFilter.getLabelName().equals(EMPTY)) {
+        labels = k8sWorkloadDao.listLabelKeys(labelFilter);
+        for (String labelName : labels) {
+          k8sLabels.add(QLK8sLabel.builder().name(labelName).build());
+        }
+      } else {
+        labels = k8sWorkloadDao.listLabelValues(labelFilter);
+        k8sLabels.add(
+            QLK8sLabel.builder().name(labelFilter.getLabelName()).values(labels.toArray(new String[0])).build());
+      }
+    }
+
+    // Fetching tags
+    if (tagFilter != null) {
+      if (tagFilter.getTagName().equals(EMPTY)) {
+        List<HarnessTag> harnessTags = harnessTagService.listTags(accountId);
+        for (HarnessTag tag : harnessTags) {
+          tags.add(QLTags.builder().name(tag.getKey()).build());
+        }
+      } else {
+        HarnessTag tag = harnessTagService.get(accountId, tagFilter.getTagName());
+        tags.add(QLTags.builder().name(tag.getKey()).values(tag.getAllowedValues().toArray(new String[0])).build());
+      }
     }
 
     if (!instanceIds.isEmpty()) {
       List<QLBillingDataFilter> filters = queryData.getFilters();
       String clusterId = BillingStatsDefaultKeys.CLUSTERID;
-      for (QLBillingDataFilter filter : filters) {
-        if (filter.getCluster() != null) {
-          clusterId = filter.getCluster().getValues()[0];
-        }
+      Optional<QLBillingDataFilter> clusterFilter =
+          filters.stream().filter(filter -> filter.getCluster() != null).findFirst();
+      if (clusterFilter.isPresent()) {
+        clusterId = clusterFilter.get().getCluster().getValues()[0];
       }
+
+      List<InstanceData> instanceData;
       if (!clusterId.equals(BillingStatsDefaultKeys.CLUSTERID)) {
-        List<InstanceData> instanceData = instanceDataService.fetchInstanceDataForGivenInstances(
-            accountId, clusterId, instanceIds.stream().collect(Collectors.toList()));
-        instanceData.forEach(entry
-            -> instances.add(QLEntityData.builder()
-                                 .name(entry.getInstanceName())
-                                 .id(entry.getInstanceId())
-                                 .type(BillingDataMetaDataFields.INSTANCEID.getFieldName())
-                                 .build()));
+        instanceData =
+            instanceDataService.fetchInstanceDataForGivenInstances(accountId, clusterId, new ArrayList<>(instanceIds));
+      } else {
+        instanceData = instanceDataService.fetchInstanceDataForGivenInstances(new ArrayList<>(instanceIds));
       }
+
+      Map<String, String> instanceNames = new HashMap<>();
+      instanceData.forEach(record -> instanceNames.put(record.getInstanceId(), record.getInstanceName()));
+      instanceNames.keySet().forEach(id
+          -> instances.add(QLEntityData.builder()
+                               .name(instanceNames.get(id))
+                               .id(id)
+                               .type(BillingDataMetaDataFields.INSTANCEID.getFieldName())
+                               .build()));
     }
 
     filterValuesDataBuilder.cloudServiceNames(getEntity(BillingDataMetaDataFields.CLOUDSERVICENAME, cloudServiceNames))
@@ -315,7 +373,8 @@ public class BillingStatsFilterValuesDataFetcher
         .services(getEntity(BillingDataMetaDataFields.SERVICEID, serviceIds))
         .cloudProviders(getEntity(BillingDataMetaDataFields.CLOUDPROVIDERID, cloudProviders))
         .k8sLabels(k8sLabels)
-        .instances(instances);
+        .instances(instances)
+        .tags(tags);
 
     List<QLFilterValuesData> filterValuesDataList = new ArrayList<>();
     filterValuesDataList.add(filterValuesDataBuilder.build());
@@ -409,6 +468,15 @@ public class BillingStatsFilterValuesDataFetcher
     return false;
   }
 
+  private boolean isGroupByTagPresent(List<QLCCMGroupBy> groupByList) {
+    for (QLCCMGroupBy groupBy : groupByList) {
+      if (groupBy.getTagAggregation() != null) {
+        return true;
+      }
+    }
+    return false;
+  }
+
   @Override
   protected QLData postFetch(String accountId, List<QLCCMGroupBy> groupByList,
       List<QLCCMAggregationFunction> aggregationFunctions, List<QLBillingSortCriteria> sortCriteria, QLData qlData,
@@ -433,5 +501,56 @@ public class BillingStatsFilterValuesDataFetcher
     List<SelectedField> selectionSet = dataFetchingEnvironment.getSelectionSet().getFields();
     selectionSet.forEach(field -> selectedFields.add(field.getName()));
     return new ArrayList<>(selectedFields);
+  }
+
+  private K8sLabelFilter prepareLabelFilters(
+      List<QLBillingDataFilter> filters, List<QLCCMGroupBy> groupBy, String accountId, int limit, int offset) {
+    Optional<QLBillingDataFilter> labelFilter =
+        filters.stream().filter(filter -> filter.getLabelSearch() != null).findFirst();
+    Optional<QLCCMGroupBy> labelGroupBy =
+        groupBy.stream().filter(entry -> entry.getLabelAggregation() != null).findFirst();
+    String searchString = EMPTY;
+    String labelName = EMPTY;
+    if (labelGroupBy.isPresent()) {
+      labelName = labelGroupBy.get().getLabelAggregation().getName();
+    }
+    if (labelFilter.isPresent()) {
+      searchString = labelFilter.get().getLabelSearch().getValues()[0];
+    }
+    QLTimeFilter startTimeFilter = billingDataQueryBuilder.getStartTimeFilter(filters);
+    long startTime = startTimeFilter.getValue().longValue();
+    QLTimeFilter endTimeFilter = billingDataQueryBuilder.getEndTimeFilter(filters);
+    long endTime = endTimeFilter.getValue().longValue();
+    return K8sLabelFilter.builder()
+        .accountId(accountId)
+        .startTime(startTime)
+        .endTime(endTime)
+        .limit(limit)
+        .offset(offset)
+        .labelName(labelName)
+        .searchString(searchString)
+        .build();
+  }
+
+  private TagFilter prepareTagFilters(
+      List<QLBillingDataFilter> filters, List<QLCCMGroupBy> groupBy, String accountId, int limit, int offset) {
+    Optional<QLBillingDataFilter> tagFilter =
+        filters.stream().filter(filter -> filter.getTagSearch() != null).findFirst();
+    Optional<QLCCMGroupBy> tagGroupBy = groupBy.stream().filter(entry -> entry.getTagAggregation() != null).findFirst();
+    String searchString = EMPTY;
+    String tagName = EMPTY;
+    if (tagGroupBy.isPresent()) {
+      tagName = tagGroupBy.get().getTagAggregation().getTagName();
+    }
+    if (tagFilter.isPresent()) {
+      searchString = tagFilter.get().getTagSearch().getValues()[0];
+    }
+    return TagFilter.builder()
+        .accountId(accountId)
+        .limit(limit)
+        .offset(offset)
+        .tagName(tagName)
+        .searchString(searchString)
+        .build();
   }
 }

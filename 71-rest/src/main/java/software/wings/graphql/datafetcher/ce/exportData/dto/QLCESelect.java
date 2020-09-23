@@ -8,5 +8,5 @@ import java.util.List;
 @Value
 @Builder
 public class QLCESelect {
-  List<String> labels;
+  private List<String> labels;
 }

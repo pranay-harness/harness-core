@@ -30,6 +30,8 @@ public class QLBillingDataFilter implements EntityFilter {
   private QLIdFilter nodeInstanceId;
   private QLIdFilter podInstanceId;
   private QLIdFilter parentInstanceId;
+  private QLIdFilter labelSearch;
+  private QLIdFilter tagSearch;
   private QLTimeFilter startTime;
   private QLTimeFilter endTime;
   private QLBillingDataTagFilter tag;
@@ -97,6 +99,12 @@ public class QLBillingDataFilter implements EntityFilter {
     if (filter.getEnvType() != null) {
       filterTypes.add(QLBillingDataFilterType.EnvironmentType);
     }
+    if (filter.getLabelSearch() != null) {
+      filterTypes.add(QLBillingDataFilterType.LabelSearch);
+    }
+    if (filter.getTagSearch() != null) {
+      filterTypes.add(QLBillingDataFilterType.TagSearch);
+    }
     if (filter.getAlertTime() != null) {
       filterTypes.add(QLBillingDataFilterType.AlertTime);
     }
@@ -143,6 +151,10 @@ public class QLBillingDataFilter implements EntityFilter {
         return filter.getParentInstanceId();
       case EnvironmentType:
         return filter.getEnvType();
+      case LabelSearch:
+        return filter.getLabelSearch();
+      case TagSearch:
+        return filter.getTagSearch();
       case AlertTime:
         return filter.getAlertTime();
       default:

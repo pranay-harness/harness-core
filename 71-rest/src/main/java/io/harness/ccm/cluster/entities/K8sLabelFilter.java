@@ -1,9 +1,9 @@
 package io.harness.ccm.cluster.entities;
 
 import lombok.Builder;
-import lombok.Value;
+import lombok.Data;
 
-@Value
+@Data
 @Builder
 public class K8sLabelFilter {
   private String accountId;

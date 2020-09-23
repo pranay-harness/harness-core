@@ -104,7 +104,7 @@ public class NodeAndPodDetailsDataFetcher
     }
 
     if (costData != null && !costData.getData().isEmpty()) {
-      return getFieldsFromInstanceData(accountId, costData, filters);
+      return getFieldsFromInstanceData(costData, filters);
     }
 
     return null;
@@ -121,6 +121,8 @@ public class NodeAndPodDetailsDataFetcher
       Double systemCost = BillingStatsDefaultKeys.SYSTEMCOST;
       Double networkCost = BillingStatsDefaultKeys.NETWORKCOST;
       Double unallocatedCost = BillingStatsDefaultKeys.UNALLOCATEDCOST;
+      String clusterName = BillingStatsDefaultKeys.CLUSTERNAME;
+      String clusterId = BillingStatsDefaultKeys.CLUSTERID;
 
       for (BillingDataQueryMetadata.BillingDataMetaDataFields field : queryData.getFieldNames()) {
         switch (field) {
@@ -142,6 +144,12 @@ public class NodeAndPodDetailsDataFetcher
           case NETWORKCOST:
             networkCost = billingDataHelper.roundingDoubleFieldValue(field, resultSet);
             break;
+          case CLUSTERNAME:
+            clusterName = resultSet.getString(field.getFieldName());
+            break;
+          case CLUSTERID:
+            clusterId = resultSet.getString(field.getFieldName());
+            break;
           default:
             break;
         }
@@ -155,13 +163,15 @@ public class NodeAndPodDetailsDataFetcher
                                   .systemCost(systemCost)
                                   .unallocatedCost(unallocatedCost)
                                   .networkCost(networkCost)
+                                  .clusterName(clusterName)
+                                  .clusterId(clusterId)
                                   .build());
     }
     return QLNodeAndPodDetailsTableData.builder().data(entityTableListData).build();
   }
 
   private QLNodeAndPodDetailsTableData getFieldsFromInstanceData(
-      String accountId, QLNodeAndPodDetailsTableData costData, List<QLBillingDataFilter> filters) {
+      QLNodeAndPodDetailsTableData costData, List<QLBillingDataFilter> filters) {
     List<String> instanceIds = new ArrayList<>();
     Map<String, QLNodeAndPodDetailsTableRow> instanceIdToCostData = new HashMap<>();
     costData.getData().forEach(entry -> {
@@ -169,8 +179,7 @@ public class NodeAndPodDetailsDataFetcher
       instanceIds.add(entry.getId());
     });
 
-    List<InstanceData> instanceData =
-        instanceDataService.fetchInstanceDataForGivenInstances(accountId, getClusterId(filters), instanceIds);
+    List<InstanceData> instanceData = instanceDataService.fetchInstanceDataForGivenInstances(instanceIds);
     Map<String, InstanceData> instanceIdToInstanceData = new HashMap<>();
     instanceData.forEach(entry -> instanceIdToInstanceData.put(entry.getInstanceId(), entry));
 
@@ -203,7 +212,8 @@ public class NodeAndPodDetailsDataFetcher
       QLNodeAndPodDetailsTableRowBuilder builder = QLNodeAndPodDetailsTableRow.builder();
       builder.name(entry.getInstanceName())
           .id(entry.getInstanceId())
-          .clusterName(entry.getClusterName())
+          .clusterName(costDataEntry.getClusterName())
+          .clusterId(costDataEntry.getClusterId())
           .nodePoolName(entry.getMetaData().getOrDefault(NODE_POOL_NAME, "-"))
           .totalCost(costDataEntry.getTotalCost())
           .idleCost(costDataEntry.getIdleCost())
@@ -239,7 +249,8 @@ public class NodeAndPodDetailsDataFetcher
           .id(entry.getInstanceId())
           .namespace(entry.getMetaData().get(NAMESPACE))
           .workload(entry.getMetaData().get(WORKLOAD))
-          .clusterName(entry.getClusterName())
+          .clusterName(costDataEntry.getClusterName())
+          .clusterId(costDataEntry.getClusterId())
           .node(entry.getMetaData().get(PARENT_RESOURCE_ID))
           .nodePoolName(entry.getMetaData().getOrDefault(NODE_POOL_NAME, "-"))
           .totalCost(costDataEntry.getTotalCost())
@@ -262,15 +273,6 @@ public class NodeAndPodDetailsDataFetcher
     for (QLBillingDataFilter filter : filters) {
       if (filter.getInstanceType() != null) {
         return filter.getInstanceType().getValues()[0];
-      }
-    }
-    return "";
-  }
-
-  private String getClusterId(List<QLBillingDataFilter> filters) {
-    for (QLBillingDataFilter filter : filters) {
-      if (filter.getCluster() != null) {
-        return filter.getCluster().getValues()[0];
       }
     }
     return "";

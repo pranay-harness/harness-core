@@ -19,6 +19,7 @@ import io.harness.category.element.UnitTests;
 import io.harness.ccm.cluster.InstanceDataServiceImpl;
 import io.harness.ccm.cluster.dao.K8sWorkloadDao;
 import io.harness.ccm.cluster.entities.InstanceData;
+import io.harness.ccm.cluster.entities.K8sLabelFilter;
 import io.harness.ccm.cluster.entities.K8sWorkload;
 import io.harness.exception.InvalidRequestException;
 import io.harness.rule.Owner;
@@ -29,20 +30,25 @@ import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.stubbing.Answer;
+import software.wings.beans.HarnessTag;
 import software.wings.beans.User;
 import software.wings.graphql.datafetcher.AbstractDataFetcherTest;
 import software.wings.graphql.datafetcher.DataFetcherUtils;
 import software.wings.graphql.schema.type.aggregation.QLIdFilter;
 import software.wings.graphql.schema.type.aggregation.QLIdOperator;
 import software.wings.graphql.schema.type.aggregation.QLSortOrder;
+import software.wings.graphql.schema.type.aggregation.QLTimeFilter;
+import software.wings.graphql.schema.type.aggregation.QLTimeOperator;
 import software.wings.graphql.schema.type.aggregation.billing.QLBillingDataFilter;
 import software.wings.graphql.schema.type.aggregation.billing.QLBillingDataLabelAggregation;
+import software.wings.graphql.schema.type.aggregation.billing.QLBillingDataTagAggregation;
 import software.wings.graphql.schema.type.aggregation.billing.QLBillingSortCriteria;
 import software.wings.graphql.schema.type.aggregation.billing.QLBillingSortType;
 import software.wings.graphql.schema.type.aggregation.billing.QLCCMEntityGroupBy;
 import software.wings.graphql.schema.type.aggregation.billing.QLCCMGroupBy;
 import software.wings.graphql.schema.type.aggregation.billing.QLFilterValuesListData;
 import software.wings.security.UserThreadLocal;
+import software.wings.service.intfc.HarnessTagService;
 
 import java.sql.Connection;
 import java.sql.ResultSet;
@@ -52,16 +58,20 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 public class BillingStatsFilterValuesDataFetcherTest extends AbstractDataFetcherTest {
   @Mock TimeScaleDBService timeScaleDBService;
   @Mock private DataFetcherUtils utils;
   @Mock private DataFetchingEnvironment environment;
   @Mock InstanceDataServiceImpl instanceDataService;
+  @Mock K8sWorkloadDao k8sWorkloadDao;
+  @Mock HarnessTagService harnessTagService;
+
   @Inject @InjectMocks BillingStatsFilterValuesDataFetcher billingStatsFilterValuesDataFetcher;
-  @Inject private K8sWorkloadDao k8sWorkloadDao;
 
   @Mock Statement statement;
   @Mock ResultSet resultSet;
@@ -117,6 +127,7 @@ public class BillingStatsFilterValuesDataFetcherTest extends AbstractDataFetcher
   final double[] doubleVal = {0};
   private static final int LIMIT = 100;
   private static final int OFFSET = 0;
+  private static final long currentTime = System.currentTimeMillis();
 
   @Before
   public void setup() throws SQLException {
@@ -129,6 +140,22 @@ public class BillingStatsFilterValuesDataFetcherTest extends AbstractDataFetcher
     Map<String, String> labels = new HashMap<>();
     labels.put(LABEL_NAME, LABEL_VALUE);
     k8sWorkloadDao.save(getTestWorkload(WORKLOAD_NAME_ACCOUNT1, labels));
+    K8sLabelFilter filter = K8sLabelFilter.builder()
+                                .accountId(ACCOUNT1_ID)
+                                .startTime(currentTime - 100)
+                                .endTime(currentTime + 100)
+                                .limit(1)
+                                .offset(0)
+                                .build();
+    when(k8sWorkloadDao.listLabelKeys(filter)).thenReturn(Arrays.asList(LABEL_NAME));
+    filter.setLabelName(LABEL_VALUE);
+    when(k8sWorkloadDao.listLabelValues(filter)).thenReturn(Arrays.asList(LABEL_VALUE));
+    Set<String> tagValues = new HashSet<>();
+    tagValues.add(TAG_VALUE_MODULE1);
+    when(harnessTagService.listTags(ACCOUNT1_ID))
+        .thenReturn(Collections.singletonList(HarnessTag.builder().key(TAG_MODULE).allowedValues(tagValues).build()));
+    when(harnessTagService.get(ACCOUNT1_ID, TAG_MODULE))
+        .thenReturn(HarnessTag.builder().key(TAG_MODULE).allowedValues(tagValues).build());
 
     Connection mockConnection = mock(Connection.class);
     Statement mockStatement = mock(Statement.class);
@@ -321,7 +348,6 @@ public class BillingStatsFilterValuesDataFetcherTest extends AbstractDataFetcher
     assertThat(sortCriteria.get(0).getSortType()).isEqualTo(QLBillingSortType.Workload);
     assertThat(sortCriteria.get(0).getSortOrder()).isEqualTo(QLSortOrder.DESCENDING);
     assertThat(data).isNotNull();
-    assertThat(data.getData().get(0).getK8sLabels().get(0).getName()).isEqualTo(LABEL_NAME);
     assertThat(data.getData().get(0).getWorkloadNames().get(0).getName()).isEqualTo(WORKLOAD_NAME_ACCOUNT1);
     assertThat(data.getData().get(0).getApplications().size()).isEqualTo(0);
     assertThat(data.getData().get(0).getEnvironments().size()).isEqualTo(0);
@@ -340,12 +366,12 @@ public class BillingStatsFilterValuesDataFetcherTest extends AbstractDataFetcher
   public void testFetchMethodInBillingStatsFilterValuesDataFetcherForNodes() {
     when(instanceDataService.fetchInstanceDataForGivenInstances(anyString(), anyString(), anyList()))
         .thenReturn(Collections.singletonList(mockInstanceData(INSTANCE1_SERVICE1_ENV1_APP1_ACCOUNT1)));
+    when(instanceDataService.fetchInstanceDataForGivenInstances(anyList()))
+        .thenReturn(Collections.singletonList(mockInstanceData(INSTANCE1_SERVICE1_ENV1_APP1_ACCOUNT1)));
 
-    String[] clusterValues = new String[] {CLUSTER1_ID};
     String[] workloadNameValues = new String[] {WORKLOAD_NAME_ACCOUNT1};
     String[] namespaceValues = new String[] {NAMESPACE1};
     List<QLBillingDataFilter> filters = new ArrayList<>();
-    filters.add(makeClusterFilter(clusterValues));
     filters.add(makeWorkloadNameFilter(workloadNameValues));
     filters.add(makeNamespaceFilter(namespaceValues));
     List<QLCCMGroupBy> groupBy =
@@ -373,14 +399,12 @@ public class BillingStatsFilterValuesDataFetcherTest extends AbstractDataFetcher
   @Owner(developers = SHUBHANSHU)
   @Category(UnitTests.class)
   public void testFetchMethodInBillingStatsFilterValuesDataFetcherForPods() {
-    when(instanceDataService.fetchInstanceDataForGivenInstances(anyString(), anyString(), anyList()))
+    when(instanceDataService.fetchInstanceDataForGivenInstances(anyList()))
         .thenReturn(Collections.singletonList(mockInstanceData(INSTANCE1_SERVICE1_ENV1_APP1_ACCOUNT1)));
 
-    String[] clusterValues = new String[] {CLUSTER1_ID};
     String[] workloadNameValues = new String[] {WORKLOAD_NAME_ACCOUNT1};
     String[] namespaceValues = new String[] {NAMESPACE1};
     List<QLBillingDataFilter> filters = new ArrayList<>();
-    filters.add(makeClusterFilter(clusterValues));
     filters.add(makeWorkloadNameFilter(workloadNameValues));
     filters.add(makeNamespaceFilter(namespaceValues));
     List<QLCCMGroupBy> groupBy =
@@ -430,6 +454,54 @@ public class BillingStatsFilterValuesDataFetcherTest extends AbstractDataFetcher
     assertThat(data.getData().get(0).getEnvironments().size()).isEqualTo(0);
     assertThat(data.getData().get(0).getServices().size()).isEqualTo(0);
     assertThat(data.getTotal()).isEqualTo(100L);
+  }
+
+  @Test
+  @Owner(developers = SHUBHANSHU)
+  @Category(UnitTests.class)
+  public void testFetchMethodInBillingStatsFilterValuesDataFetcherForLabelSearch() {
+    List<QLBillingDataFilter> filters = new ArrayList<>();
+    filters.add(makeStartTimeFilter(currentTime - 86400000));
+    filters.add(makeEndTimeFilter(currentTime - 86400000));
+    List<QLCCMGroupBy> groupBy = Arrays.asList(makeLabelGroupBy());
+
+    QLFilterValuesListData data = (QLFilterValuesListData) billingStatsFilterValuesDataFetcher.fetchSelectedFields(
+        ACCOUNT1_ID, Collections.EMPTY_LIST, filters, groupBy, Collections.emptyList(), LIMIT, OFFSET, environment);
+
+    assertThat(data).isNotNull();
+    assertThat(data.getData().get(0).getK8sLabels().get(0).getName()).isEqualTo(LABEL_NAME);
+    assertThat(data.getData().get(0).getCloudServiceNames().size()).isEqualTo(0);
+    assertThat(data.getData().get(0).getTaskIds().size()).isEqualTo(0);
+    assertThat(data.getData().get(0).getLaunchTypes().size()).isEqualTo(0);
+    assertThat(data.getData().get(0).getWorkloadNames().size()).isEqualTo(0);
+    assertThat(data.getData().get(0).getClusters().size()).isEqualTo(0);
+    assertThat(data.getData().get(0).getApplications().size()).isEqualTo(0);
+    assertThat(data.getData().get(0).getEnvironments().size()).isEqualTo(0);
+    assertThat(data.getData().get(0).getServices().size()).isEqualTo(0);
+  }
+
+  @Test
+  @Owner(developers = SHUBHANSHU)
+  @Category(UnitTests.class)
+  public void testFetchMethodInBillingStatsFilterValuesDataFetcherForTagSearch() {
+    List<QLBillingDataFilter> filters = new ArrayList<>();
+    filters.add(makeStartTimeFilter(currentTime - 86400000));
+    filters.add(makeEndTimeFilter(currentTime - 86400000));
+    List<QLCCMGroupBy> groupBy = Arrays.asList(makeTagGroupBy());
+
+    QLFilterValuesListData data = (QLFilterValuesListData) billingStatsFilterValuesDataFetcher.fetchSelectedFields(
+        ACCOUNT1_ID, Collections.EMPTY_LIST, filters, groupBy, Collections.emptyList(), LIMIT, OFFSET, environment);
+
+    assertThat(data).isNotNull();
+    assertThat(data.getData().get(0).getTags().get(0).getName()).isEqualTo(TAG_MODULE);
+    assertThat(data.getData().get(0).getCloudServiceNames().size()).isEqualTo(0);
+    assertThat(data.getData().get(0).getTaskIds().size()).isEqualTo(0);
+    assertThat(data.getData().get(0).getLaunchTypes().size()).isEqualTo(0);
+    assertThat(data.getData().get(0).getWorkloadNames().size()).isEqualTo(0);
+    assertThat(data.getData().get(0).getClusters().size()).isEqualTo(0);
+    assertThat(data.getData().get(0).getApplications().size()).isEqualTo(0);
+    assertThat(data.getData().get(0).getEnvironments().size()).isEqualTo(0);
+    assertThat(data.getData().get(0).getServices().size()).isEqualTo(0);
   }
 
   public QLBillingSortCriteria makeDescByTimeSortingCriteria() {
@@ -511,6 +583,11 @@ public class BillingStatsFilterValuesDataFetcherTest extends AbstractDataFetcher
     return QLCCMGroupBy.builder().labelAggregation(labelAggregation).build();
   }
 
+  public QLCCMGroupBy makeTagGroupBy() {
+    QLBillingDataTagAggregation tagAggregation = QLBillingDataTagAggregation.builder().tagName(TAG_MODULE).build();
+    return QLCCMGroupBy.builder().tagAggregation(tagAggregation).build();
+  }
+
   public QLBillingDataFilter makeClusterFilter(String[] values) {
     QLIdFilter clusterFilter = QLIdFilter.builder().operator(QLIdOperator.EQUALS).values(values).build();
     return QLBillingDataFilter.builder().cluster(clusterFilter).build();
@@ -533,6 +610,16 @@ public class BillingStatsFilterValuesDataFetcherTest extends AbstractDataFetcher
 
   public QLBillingSortCriteria makeSortingCriteria(QLBillingSortType type) {
     return QLBillingSortCriteria.builder().sortOrder(QLSortOrder.DESCENDING).sortType(type).build();
+  }
+
+  public QLBillingDataFilter makeStartTimeFilter(Long filterTime) {
+    QLTimeFilter timeFilter = QLTimeFilter.builder().operator(QLTimeOperator.AFTER).value(filterTime).build();
+    return QLBillingDataFilter.builder().startTime(timeFilter).build();
+  }
+
+  public QLBillingDataFilter makeEndTimeFilter(Long filterTime) {
+    QLTimeFilter timeFilter = QLTimeFilter.builder().operator(QLTimeOperator.BEFORE).value(filterTime).build();
+    return QLBillingDataFilter.builder().endTime(timeFilter).build();
   }
 
   private K8sWorkload getTestWorkload(String workloadName, Map<String, String> labels) {

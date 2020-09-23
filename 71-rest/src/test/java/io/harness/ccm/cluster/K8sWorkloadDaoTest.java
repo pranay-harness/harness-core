@@ -7,6 +7,7 @@ import com.google.inject.Inject;
 
 import io.harness.category.element.UnitTests;
 import io.harness.ccm.cluster.dao.K8sWorkloadDao;
+import io.harness.ccm.cluster.entities.K8sLabelFilter;
 import io.harness.ccm.cluster.entities.K8sWorkload;
 import io.harness.rule.Owner;
 import org.junit.Before;
@@ -30,6 +31,7 @@ public class K8sWorkloadDaoTest extends WingsBaseTest {
   private static final String NAMESPACE = "namespace";
   private static final String UID = "uid";
   private static final String UUID = "uuid";
+  private static final long currentTime = System.currentTimeMillis();
 
   @Before
   public void setUp() {
@@ -98,6 +100,38 @@ public class K8sWorkloadDaoTest extends WingsBaseTest {
     assertThat(workloads).hasSize(0);
   }
 
+  @Test
+  @Owner(developers = SHUBHANSHU)
+  @Category(UnitTests.class)
+  public void shouldListLabelKeys() {
+    K8sLabelFilter filter = K8sLabelFilter.builder()
+                                .accountId(ACCOUNT_ID)
+                                .startTime(currentTime - 100)
+                                .endTime(currentTime + 100)
+                                .limit(1)
+                                .offset(0)
+                                .build();
+    List<String> labelKeys = k8sWorkloadDao.listLabelKeys(filter);
+    assertThat(labelKeys).hasSize(0);
+  }
+
+  @Test
+  @Owner(developers = SHUBHANSHU)
+  @Category(UnitTests.class)
+  public void shouldListLabelValues() {
+    K8sLabelFilter filter = K8sLabelFilter.builder()
+                                .accountId(ACCOUNT_ID)
+                                .startTime(currentTime - 100)
+                                .endTime(currentTime + 100)
+                                .limit(1)
+                                .offset(0)
+                                .labelName("key")
+                                .searchString("val")
+                                .build();
+    List<String> labelKeys = k8sWorkloadDao.listLabelValues(filter);
+    assertThat(labelKeys).hasSize(0);
+  }
+
   private K8sWorkload getTestWorkload(String workloadName, Map<String, String> labels) {
     return K8sWorkload.builder()
         .accountId(ACCOUNT_ID)
@@ -109,6 +143,7 @@ public class K8sWorkloadDaoTest extends WingsBaseTest {
         .namespace(NAMESPACE)
         .uid(UID)
         .uuid(UUID)
+        .lastUpdatedAt(currentTime)
         .build();
   }
 }

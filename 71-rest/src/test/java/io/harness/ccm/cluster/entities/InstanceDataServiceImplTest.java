@@ -40,6 +40,8 @@ public class InstanceDataServiceImplTest extends WingsBaseTest {
 
   @Before
   public void setUp() {
+    when(instanceDataDao.fetchInstanceDataForGivenInstances(Collections.singletonList(INSTANCE_ID)))
+        .thenReturn(Collections.singletonList(getTestInstanceData()));
     when(instanceDataDao.fetchInstanceDataForGivenInstances(
              ACCOUNT_ID, CLUSTER_ID, Collections.singletonList(INSTANCE_ID)))
         .thenReturn(Collections.singletonList(getTestInstanceData()));
@@ -49,6 +51,25 @@ public class InstanceDataServiceImplTest extends WingsBaseTest {
   @Owner(developers = SHUBHANSHU)
   @Category(UnitTests.class)
   public void shouldFetchInstanceDataForGivenInstances() {
+    List<InstanceData> instanceData =
+        instanceDataService.fetchInstanceDataForGivenInstances(Collections.singletonList(INSTANCE_ID));
+    assertThat(instanceData.get(0).getUuid()).isEqualTo(UUID);
+    assertThat(instanceData.get(0).getAccountId()).isEqualTo(ACCOUNT_ID);
+    assertThat(instanceData.get(0).getClusterId()).isEqualTo(CLUSTER_ID);
+    assertThat(instanceData.get(0).getInstanceId()).isEqualTo(INSTANCE_ID);
+    assertThat(instanceData.get(0).getInstanceName()).isEqualTo(INSTANCE_NAME);
+    assertThat(instanceData.get(0).getTotalResource().getCpuUnits()).isEqualTo(CPU_UNITS);
+    assertThat(instanceData.get(0).getTotalResource().getMemoryMb()).isEqualTo(MEMORY_MB);
+    assertThat(instanceData.get(0).getUsageStartTime()).isEqualTo(USAGE_START_TIME);
+    assertThat(instanceData.get(0).getUsageStopTime()).isEqualTo(USAGE_STOP_TIME);
+    assertThat(instanceData.get(0).getMetaData().get(INSTANCE_CATEGORY)).isEqualTo("SPOT");
+    assertThat(instanceData.get(0).getMetaData().get(OPERATING_SYSTEM)).isEqualTo("linux");
+  }
+
+  @Test
+  @Owner(developers = SHUBHANSHU)
+  @Category(UnitTests.class)
+  public void shouldFetchInstanceDataForGivenInstancesInCluster() {
     List<InstanceData> instanceData = instanceDataService.fetchInstanceDataForGivenInstances(
         ACCOUNT_ID, CLUSTER_ID, Collections.singletonList(INSTANCE_ID));
     assertThat(instanceData.get(0).getUuid()).isEqualTo(UUID);

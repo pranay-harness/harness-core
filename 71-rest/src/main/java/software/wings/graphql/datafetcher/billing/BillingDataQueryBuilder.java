@@ -76,6 +76,7 @@ public class BillingDataQueryBuilder {
   private static final String DEFAULT_ENVIRONMENT_TYPE = "ALL";
   public static final String BILLING_DATA_HOURLY_TABLE = "billing_data_hourly t0";
   private static final long ONE_DAY_MILLIS = 86400000;
+  private static final String EMPTY = "";
   @Inject TagHelper tagHelper;
   @Inject K8sLabelHelper k8sLabelHelper;
   @Inject EnvironmentServiceImpl environmentService;
@@ -109,9 +110,9 @@ public class BillingDataQueryBuilder {
     List<BillingDataMetaDataFields> fieldNames = new ArrayList<>();
     List<BillingDataMetaDataFields> groupByFields = new ArrayList<>();
 
-    if (addInstanceTypeFilter
-        && (isGroupByClusterPresent(groupBy) || isNoneGroupBySelectedWithoutFilterInClusterView(groupBy, filters)
-               || isEfficiencyStatsQuery)) {
+    if (addInstanceTypeFilter && !checkForAdditionalFilterInClusterDrillDown(filters)
+        && ((isGroupByClusterPresent(groupBy) && !isClusterDrilldown(groupBy))
+               || isNoneGroupBySelectedWithoutFilterInClusterView(groupBy, filters) || isEfficiencyStatsQuery)) {
       addInstanceTypeFilter(filters);
     }
 
@@ -231,6 +232,9 @@ public class BillingDataQueryBuilder {
 
     if (!Lists.isNullOrEmpty(filters)) {
       filters = processFilterForTagsAndLabels(accountId, filters);
+      filters = filters.stream()
+                    .filter(filter -> filter.getLabelSearch() == null && filter.getTagSearch() == null)
+                    .collect(Collectors.toList());
       decorateQueryWithFilters(selectQuery, filters);
     }
 
@@ -297,6 +301,11 @@ public class BillingDataQueryBuilder {
     List<BillingDataMetaDataFields> fieldNames = new ArrayList<>();
     List<BillingDataMetaDataFields> groupByFields = new ArrayList<>();
 
+    // To fetch clusterName from timescaleDb
+    if (isGroupByEntityPresent(groupBy, QLCCMEntityGroupBy.Cluster)) {
+      groupBy.add(QLCCMEntityGroupBy.ClusterName);
+    }
+
     if (!shouldUseHourlyData(filters, accountId)) {
       selectQuery.addCustomFromTable(schema.getBillingDataTable());
     } else {
@@ -347,9 +356,10 @@ public class BillingDataQueryBuilder {
       fieldNames.add(BillingDataMetaDataFields.COUNT);
     }
 
-    if (!Lists.isNullOrEmpty(filters)) {
-      filters = processFilterForTagsAndLabels(accountId, filters);
-      decorateQueryWithFilters(selectQuery, filters);
+    List<QLBillingDataFilter> timeFilters = getTimeFilters(filters);
+
+    if (!Lists.isNullOrEmpty(timeFilters)) {
+      decorateQueryWithFilters(selectQuery, timeFilters);
     }
 
     addAccountFilter(selectQuery, accountId);
@@ -670,6 +680,9 @@ public class BillingDataQueryBuilder {
         return schema.getInstanceId();
       case ParentInstanceId:
         return schema.getParentInstanceId();
+      case LabelSearch:
+      case TagSearch:
+        return null;
       default:
         throw new InvalidRequestException("Filter type not supported " + type);
     }
@@ -1023,6 +1036,16 @@ public class BillingDataQueryBuilder {
     }
   }
 
+  protected QLTimeFilter getEndTimeFilter(List<QLBillingDataFilter> filters) {
+    Optional<QLBillingDataFilter> endTimeDataFilter =
+        filters.stream().filter(qlBillingDataFilter -> qlBillingDataFilter.getEndTime() != null).findFirst();
+    if (endTimeDataFilter.isPresent()) {
+      return endTimeDataFilter.get().getEndTime();
+    } else {
+      throw new InvalidRequestException("Start time cannot be null");
+    }
+  }
+
   protected QLBillingDataFilter getInstanceTypeFilter() {
     String[] instanceTypeIdFilterValues = new String[] {"CLUSTER_UNALLOCATED"};
     QLIdFilter instanceTypeFilter =
@@ -1047,72 +1070,55 @@ public class BillingDataQueryBuilder {
       for (QLBillingDataFilterType type : filterTypes) {
         if (type == QLBillingDataFilterType.Tag) {
           QLBillingDataTagFilter tagFilter = filter.getTag();
-
           if (tagFilter != null) {
-            Set<String> entityIds = tagHelper.getEntityIdsFromTags(
-                accountId, tagFilter.getTags(), getEntityType(tagFilter.getEntityType()));
-            if (isNotEmpty(entityIds)) {
-              switch (tagFilter.getEntityType()) {
-                case APPLICATION:
-                  newList.add(QLBillingDataFilter.builder()
-                                  .application(QLIdFilter.builder()
-                                                   .operator(QLIdOperator.IN)
-                                                   .values(entityIds.toArray(new String[0]))
-                                                   .build())
-                                  .build());
-                  break;
-                case SERVICE:
-                  newList.add(QLBillingDataFilter.builder()
-                                  .service(QLIdFilter.builder()
-                                               .operator(QLIdOperator.IN)
-                                               .values(entityIds.toArray(new String[0]))
-                                               .build())
-                                  .build());
-                  break;
-                case ENVIRONMENT:
-                  newList.add(QLBillingDataFilter.builder()
-                                  .environment(QLIdFilter.builder()
-                                                   .operator(QLIdOperator.IN)
-                                                   .values(entityIds.toArray(new String[0]))
-                                                   .build())
-                                  .build());
-                  break;
-                default:
-                  logger.error("EntityType {} not supported in query", tagFilter.getEntityType());
-                  throw new InvalidRequestException("Error while compiling query", WingsException.USER);
+            QLIdOperator operator = tagFilter.getOperator();
+            List<QLBillingDataTagType> tagEntityTypes = new ArrayList<>();
+            if (tagFilter.getEntityType() == null) {
+              tagEntityTypes.add(QLBillingDataTagType.APPLICATION);
+              tagEntityTypes.add(QLBillingDataTagType.SERVICE);
+              tagEntityTypes.add(QLBillingDataTagType.ENVIRONMENT);
+            } else {
+              tagEntityTypes.add(tagFilter.getEntityType());
+            }
+            for (QLBillingDataTagType tagEntityType : tagEntityTypes) {
+              Set<String> entityIds =
+                  tagHelper.getEntityIdsFromTags(accountId, tagFilter.getTags(), getEntityType(tagEntityType));
+              if (isNotEmpty(entityIds)) {
+                switch (tagEntityType) {
+                  case APPLICATION:
+                    newList.add(QLBillingDataFilter.builder()
+                                    .application(QLIdFilter.builder()
+                                                     .operator(operator)
+                                                     .values(entityIds.toArray(new String[0]))
+                                                     .build())
+                                    .build());
+                    break;
+                  case SERVICE:
+                    newList.add(QLBillingDataFilter.builder()
+                                    .service(QLIdFilter.builder()
+                                                 .operator(operator)
+                                                 .values(entityIds.toArray(new String[0]))
+                                                 .build())
+                                    .build());
+                    break;
+                  case ENVIRONMENT:
+                    newList.add(QLBillingDataFilter.builder()
+                                    .environment(QLIdFilter.builder()
+                                                     .operator(operator)
+                                                     .values(entityIds.toArray(new String[0]))
+                                                     .build())
+                                    .build());
+                    break;
+                  default:
+                    logger.error("EntityType {} not supported in query", tagFilter.getEntityType());
+                    throw new InvalidRequestException("Error while compiling query", WingsException.USER);
+                }
               }
             }
           }
         } else if (type == QLBillingDataFilterType.Label) {
           QLBillingDataLabelFilter labelFilter = filter.getLabel();
-          String clusterId = getClusterIdFromFilters(filters);
-          if (labelFilter != null) {
-            Set<String> workloadNamesWithNamespaces =
-                k8sLabelHelper.getWorkloadNamesWithNamespacesFromLabels(accountId, clusterId, labelFilter);
-            Set<String> workloadNames = new HashSet<>();
-            Set<String> namespaces = new HashSet<>();
-            workloadNamesWithNamespaces.forEach(workloadNameWithNamespace -> {
-              StringTokenizer tokenizer = new StringTokenizer(workloadNameWithNamespace, BillingStatsDefaultKeys.TOKEN);
-              workloadNames.add(tokenizer.nextToken());
-              namespaces.add(tokenizer.nextToken());
-            });
-            if (isNotEmpty(workloadNames)) {
-              newList.add(QLBillingDataFilter.builder()
-                              .workloadName(QLIdFilter.builder()
-                                                .operator(QLIdOperator.IN)
-                                                .values(workloadNames.toArray(new String[0]))
-                                                .build())
-                              .build());
-            }
-            if (isNotEmpty(namespaces)) {
-              newList.add(QLBillingDataFilter.builder()
-                              .namespace(QLIdFilter.builder()
-                                             .operator(QLIdOperator.IN)
-                                             .values(namespaces.toArray(new String[0]))
-                                             .build())
-                              .build());
-            }
-          }
+          newList.addAll(getEntityFiltersFromLabelFilter(accountId, filters, labelFilter));
         } else if (type == QLBillingDataFilterType.EnvironmentType) {
           newList.add(getEnvironmentIdFilter(filters, filter.getEnvType()));
         } else {
@@ -1122,6 +1128,57 @@ public class BillingDataQueryBuilder {
     }
 
     return newList;
+  }
+
+  private List<QLBillingDataFilter> getEntityFiltersFromLabelFilter(
+      String accountId, List<QLBillingDataFilter> filters, QLBillingDataLabelFilter labelFilter) {
+    List<QLBillingDataFilter> timeFilters = getTimeFilters(filters);
+    long startTime = 0L;
+    long endTime = Long.MAX_VALUE;
+    for (QLBillingDataFilter filter : timeFilters) {
+      if (filter.getStartTime() != null) {
+        startTime = Math.max(startTime, filter.getStartTime().getValue().longValue());
+      }
+      if (filter.getEndTime() != null) {
+        endTime = Math.min(endTime, filter.getEndTime().getValue().longValue());
+      }
+    }
+
+    String clusterId = getClusterIdFromFilters(filters);
+    List<QLBillingDataFilter> entityFilters = new ArrayList<>();
+
+    if (labelFilter != null) {
+      QLIdOperator operator = labelFilter.getOperator();
+      Set<String> workloadNamesWithNamespaces;
+      if (!clusterId.equals(EMPTY)) {
+        workloadNamesWithNamespaces =
+            k8sLabelHelper.getWorkloadNamesWithNamespacesFromLabels(accountId, clusterId, labelFilter);
+      } else {
+        workloadNamesWithNamespaces =
+            k8sLabelHelper.getWorkloadNamesWithNamespacesFromLabels(accountId, startTime, endTime, labelFilter);
+      }
+      Set<String> workloadNames = new HashSet<>();
+      Set<String> namespaces = new HashSet<>();
+      workloadNamesWithNamespaces.forEach(workloadNameWithNamespace -> {
+        StringTokenizer tokenizer = new StringTokenizer(workloadNameWithNamespace, BillingStatsDefaultKeys.TOKEN);
+        workloadNames.add(tokenizer.nextToken());
+        namespaces.add(tokenizer.nextToken());
+      });
+      if (isNotEmpty(workloadNames)) {
+        entityFilters.add(
+            QLBillingDataFilter.builder()
+                .workloadName(
+                    QLIdFilter.builder().operator(operator).values(workloadNames.toArray(new String[0])).build())
+                .build());
+      }
+      if (isNotEmpty(namespaces)) {
+        entityFilters.add(
+            QLBillingDataFilter.builder()
+                .namespace(QLIdFilter.builder().operator(operator).values(namespaces.toArray(new String[0])).build())
+                .build());
+      }
+    }
+    return entityFilters;
   }
 
   private QLBillingDataFilter getEnvironmentIdFilter(
@@ -1146,6 +1203,9 @@ public class BillingDataQueryBuilder {
   }
 
   public EntityType getEntityType(QLBillingDataTagType entityType) {
+    if (entityType == null) {
+      return EntityType.APPLICATION;
+    }
     switch (entityType) {
       case APPLICATION:
         return EntityType.APPLICATION;
@@ -1160,6 +1220,9 @@ public class BillingDataQueryBuilder {
   }
 
   protected QLCCMEntityGroupBy getGroupByEntityFromTag(QLBillingDataTagAggregation groupByTag) {
+    if (groupByTag.getEntityType() == null) {
+      return QLCCMEntityGroupBy.Application;
+    }
     switch (groupByTag.getEntityType()) {
       case APPLICATION:
         return QLCCMEntityGroupBy.Application;
@@ -1187,7 +1250,7 @@ public class BillingDataQueryBuilder {
         return filter.getCluster().getValues()[0];
       }
     }
-    return "";
+    return EMPTY;
   }
 
   private boolean isGroupByHour(QLCCMTimeSeriesAggregation groupByTime) {
@@ -1255,6 +1318,13 @@ public class BillingDataQueryBuilder {
     return false;
   }
 
+  private List<QLBillingDataFilter> getTimeFilters(List<QLBillingDataFilter> filters) {
+    return filters.stream()
+        .filter(qlBillingDataFilter
+            -> qlBillingDataFilter.getStartTime() != null || qlBillingDataFilter.getEndTime() != null)
+        .collect(Collectors.toList());
+  }
+
   private void addFieldsForPodCountDataFetcher(
       SelectQuery selectQuery, List<CeActivePodCountMetaDataFields> fieldNames) {
     selectQuery.addColumns(podTableSchema.getStartTime());
@@ -1265,5 +1335,37 @@ public class BillingDataQueryBuilder {
     fieldNames.add(CeActivePodCountMetaDataFields.INSTANCEID);
     selectQuery.addColumns(podTableSchema.getPodCount());
     fieldNames.add(CeActivePodCountMetaDataFields.PODCOUNT);
+  }
+
+  private boolean isClusterDrilldown(List<QLCCMEntityGroupBy> groupByList) {
+    return groupByList.stream().anyMatch(groupBy
+        -> groupBy == QLCCMEntityGroupBy.WorkloadName || groupBy == QLCCMEntityGroupBy.Namespace
+            || groupBy == QLCCMEntityGroupBy.CloudServiceName || groupBy == QLCCMEntityGroupBy.TaskId
+            || groupBy == QLCCMEntityGroupBy.LaunchType);
+  }
+
+  protected boolean showUnallocatedCost(List<QLCCMEntityGroupBy> groupBy, List<QLBillingDataFilter> filters) {
+    boolean isClusterDrillDown = isClusterDrilldown(groupBy);
+    boolean showUnallocated = false;
+    List<String> values = new ArrayList<>();
+    for (QLBillingDataFilter filter : filters) {
+      if (filter.getWorkloadName() != null) {
+        values.addAll(Arrays.asList(filter.getWorkloadName().getValues()));
+      }
+      if (filter.getNamespace() != null) {
+        values.addAll(Arrays.asList(filter.getNamespace().getValues()));
+      }
+      if (filter.getCloudServiceName() != null) {
+        values.addAll(Arrays.asList(filter.getCloudServiceName().getValues()));
+      }
+      if (filter.getLaunchType() != null) {
+        values.addAll(Arrays.asList(filter.getLaunchType().getValues()));
+      }
+      if (filter.getTaskId() != null) {
+        values.addAll(Arrays.asList(filter.getTaskId().getValues()));
+      }
+    }
+    showUnallocated = !values.contains("Unallocated");
+    return isClusterDrillDown && showUnallocated;
   }
 }

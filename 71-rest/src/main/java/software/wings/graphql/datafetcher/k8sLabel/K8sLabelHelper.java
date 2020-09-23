@@ -35,6 +35,25 @@ public class K8sLabelHelper {
     return workloadNamesWithNamespaces;
   }
 
+  public Set<String> getWorkloadNamesWithNamespacesFromLabels(
+      String accountId, long startTime, long endTime, QLBillingDataLabelFilter labelFilter) {
+    Map<String, List<String>> labels = new HashMap<>();
+    labelFilter.getLabels().forEach(label -> {
+      String labelName = label.getName();
+      if (labels.containsKey(labelName)) {
+        label.getValues().forEach(value -> labels.get(labelName).add(value));
+      } else {
+        labels.put(labelName, label.getValues());
+      }
+    });
+    List<K8sWorkload> workloads = k8sWorkloadDao.list(accountId, startTime, endTime, labels);
+    Set<String> workloadNamesWithNamespaces = new HashSet<>();
+    workloads.forEach(workload
+        -> workloadNamesWithNamespaces.add(
+            workload.getName() + BillingStatsDefaultKeys.TOKEN + workload.getNamespace()));
+    return workloadNamesWithNamespaces;
+  }
+
   public Set<K8sWorkload> getLabelLinks(String accountId, Set<String> workloadNames, String labelName) {
     List<K8sWorkload> workloads = k8sWorkloadDao.list(accountId, workloadNames, labelName);
     Set<K8sWorkload> uniqueWorkloads = new HashSet<>();
