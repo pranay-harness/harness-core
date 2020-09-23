@@ -3,6 +3,7 @@ package io.harness.engine;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.execution.status.Status.SUCCEEDED;
 import static io.harness.rule.OwnerRule.ALEXEI;
+import static io.harness.rule.OwnerRule.GARVIT;
 import static io.harness.utils.steps.TestAsyncStep.ASYNC_STEP_TYPE;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -184,6 +185,41 @@ public class OrchestrationEngineTest extends OrchestrationTest {
     assertThatThrownBy(() -> orchestrationService.startExecution(oneNodePlan, prepareInputArgs()))
         .isInstanceOf(InvalidRequestException.class)
         .hasMessageStartingWith(exceptionStartMessage);
+  }
+
+  @Test
+  @RealMongo
+  @Owner(developers = GARVIT)
+  @Category(UnitTests.class)
+  public void shouldRerunExecution() {
+    String testNodeId = generateUuid();
+    Plan oneNodePlan =
+        Plan.builder()
+            .node(PlanNode.builder()
+                      .name("Test Rerun Node")
+                      .uuid(testNodeId)
+                      .identifier("test1")
+                      .stepType(TEST_STEP_TYPE)
+                      .facilitatorObtainment(FacilitatorObtainment.builder()
+                                                 .type(FacilitatorType.builder().type(FacilitatorType.SYNC).build())
+                                                 .build())
+                      .build())
+            .startingNodeId(testNodeId)
+            .build();
+
+    PlanExecution planExecution = orchestrationService.startExecution(oneNodePlan, prepareInputArgs());
+    engineTestHelper.waitForPlanCompletion(planExecution.getUuid());
+    planExecution = engineTestHelper.getPlanExecutionStatus(planExecution.getUuid());
+
+    assertThat(planExecution).isNotNull();
+    assertThat(planExecution.getStatus()).isEqualTo(SUCCEEDED);
+
+    PlanExecution newPlanExecution = orchestrationService.rerunExecution(planExecution.getUuid(), prepareInputArgs());
+    engineTestHelper.waitForPlanCompletion(newPlanExecution.getUuid());
+    newPlanExecution = engineTestHelper.getPlanExecutionStatus(newPlanExecution.getUuid());
+
+    assertThat(newPlanExecution).isNotNull();
+    assertThat(newPlanExecution.getStatus()).isEqualTo(SUCCEEDED);
   }
 
   private static Map<String, String> prepareInputArgs() {

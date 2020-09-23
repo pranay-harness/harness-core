@@ -67,6 +67,12 @@ public class OrchestrationServiceImpl implements OrchestrationService {
   }
 
   @Override
+  public PlanExecution rerunExecution(String planExecutionId, Map<String, String> setupAbstractions) {
+    PlanExecution planExecution = planExecutionService.get(planExecutionId);
+    return startExecution(planExecution.getPlan(), setupAbstractions);
+  }
+
+  @Override
   public Interrupt registerInterrupt(InterruptPackage interruptPackage) {
     return interruptManager.register(interruptPackage);
   }
