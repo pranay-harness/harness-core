@@ -121,7 +121,7 @@ public class ConnectorResource {
     return ResponseDTO.newResponse(connectorService.validate(connectorDTO.getConnector(), accountIdentifier));
   }
 
-  @GET
+  @POST
   @Path("testConnection/{connectorIdentifier}")
   @ApiOperation(value = "Test the connection", nickname = "getTestConnectionResult")
   public ResponseDTO<ConnectorValidationResult> testConnection(
