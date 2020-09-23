@@ -9,6 +9,7 @@ import io.harness.cdng.connector.tasks.KubernetesConnectionDelegateValidation;
 import io.harness.cdng.connector.tasks.KubernetesTestConnectionDelegateTask;
 import io.harness.cdng.git.tasks.NGGitConnectionValidation;
 import io.harness.cdng.k8s.K8sCommandValidationNG;
+import io.harness.cdng.secrets.tasks.SSHConfigValidationDelegateTask;
 import io.harness.cvng.connectiontask.AppDynamicsTestConnectionDelegateTask;
 import io.harness.cvng.connectiontask.SplunkTestConnectionDelegateTask;
 import io.harness.delegate.beans.DelegateTaskPackage;
@@ -453,6 +454,8 @@ public enum TaskType {
   VALIDATE_KUBERNETES_CONFIG(
       TaskGroup.CONTAINER, KubernetesTestConnectionDelegateTask.class, KubernetesConnectionDelegateValidation.class),
   NG_GIT_COMMAND(TaskGroup.GIT, NGGitCommandTask.class, NGGitConnectionValidation.class),
+  NG_SSH_VALIDATION(
+      TaskGroup.CONNECTIVITY_VALIDATION, SSHConfigValidationDelegateTask.class, AlwaysTrueValidation.class),
   DOCKER_CONNECTIVITY_TEST_TASK(TaskGroup.GIT, DockerTestConnectionDelegateTask.class, NGDockerValidation.class),
   GCP_TASK(TaskGroup.GCP, GcpTask.class, GcpValidationTask.class);
 

@@ -18,7 +18,6 @@ import io.harness.rule.Owner;
 import io.harness.secretmanagerclient.SecretType;
 import io.harness.secretmanagerclient.dto.SecretFileDTO;
 import io.harness.secretmanagerclient.dto.SecretFileUpdateDTO;
-import io.harness.stream.BoundedInputStream;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -85,7 +84,7 @@ public class NGSecretFileServiceImplTest extends WingsBaseTest {
         .thenReturn(Optional.ofNullable(secretManagerConfig));
     doNothing().when(secretManagerConfigService).decryptEncryptionConfigSecrets(any(), any(), anyBoolean());
     when(vaultService.encryptFile(any(), any(), any(), any(byte[].class), any())).thenReturn(encryptedData);
-    EncryptedData savedData = ngSecretFileService.create(secretFileDTO, new BoundedInputStream(null));
+    EncryptedData savedData = ngSecretFileService.create(secretFileDTO, null);
 
     assertThat(savedData.getName()).isEqualTo(encryptedData.getName());
     verify(secretManagerConfigService).decryptEncryptionConfigSecrets(any(), any(), anyBoolean());
@@ -101,7 +100,7 @@ public class NGSecretFileServiceImplTest extends WingsBaseTest {
 
     when(ngSecretService.get(any(), any(), any(), any())).thenReturn(Optional.of(encryptedData));
     try {
-      ngSecretFileService.create(random(SecretFileDTO.class), new BoundedInputStream(null));
+      ngSecretFileService.create(random(SecretFileDTO.class), null);
       fail("Creation of secret file should fail.");
     } catch (SecretManagementException secretManagementException) {
       // nothing required
@@ -115,7 +114,7 @@ public class NGSecretFileServiceImplTest extends WingsBaseTest {
     when(ngSecretService.get(any(), any(), any(), any())).thenReturn(Optional.empty());
     when(ngSecretManagerService.getSecretManager(any(), any(), any(), any())).thenReturn(Optional.empty());
     try {
-      ngSecretFileService.create(random(SecretFileDTO.class), new BoundedInputStream(null));
+      ngSecretFileService.create(random(SecretFileDTO.class), null);
       fail("Creation of secret file should fail.");
     } catch (SecretManagementException secretManagementException) {
       // nothing required
@@ -139,8 +138,7 @@ public class NGSecretFileServiceImplTest extends WingsBaseTest {
         .thenReturn(Optional.of(secretManagerConfig));
     doNothing().when(secretManagerConfigService).decryptEncryptionConfigSecrets(any(), any(), anyBoolean());
     when(vaultService.encryptFile(any(), any(), any(), any(byte[].class), any())).thenReturn(encryptedData);
-    boolean success =
-        ngSecretFileService.update(ACCOUNT, null, null, IDENTIFIER, secretFileUpdateDTO, new BoundedInputStream(null));
+    boolean success = ngSecretFileService.update(ACCOUNT, null, null, IDENTIFIER, secretFileUpdateDTO, null);
     assertThat(success).isEqualTo(true);
     verify(ngSecretService, times(0)).deleteSecretInSecretManager(any(), any(), any());
     verify(secretManagerConfigService).decryptEncryptionConfigSecrets(any(), any(), anyBoolean());
@@ -162,8 +160,7 @@ public class NGSecretFileServiceImplTest extends WingsBaseTest {
         .thenReturn(Optional.of(secretManagerConfig));
     doNothing().when(secretManagerConfigService).decryptEncryptionConfigSecrets(any(), any(), anyBoolean());
     when(vaultService.encryptFile(any(), any(), any(), any(byte[].class), any())).thenReturn(encryptedData);
-    boolean success =
-        ngSecretFileService.update(ACCOUNT, null, null, IDENTIFIER, secretFileUpdateDTO, new BoundedInputStream(null));
+    boolean success = ngSecretFileService.update(ACCOUNT, null, null, IDENTIFIER, secretFileUpdateDTO, null);
     assertThat(success).isEqualTo(true);
     verify(ngSecretService, times(1)).deleteSecretInSecretManager(any(), any(), any());
     verify(secretManagerConfigService).decryptEncryptionConfigSecrets(any(), any(), anyBoolean());
@@ -177,8 +174,7 @@ public class NGSecretFileServiceImplTest extends WingsBaseTest {
   public void testUpdateSecretShouldFail_SecretDoesNotExist() {
     when(ngSecretService.get(any(), any(), any(), any())).thenReturn(Optional.empty());
     try {
-      ngSecretFileService.update(
-          ACCOUNT, null, null, IDENTIFIER, random(SecretFileUpdateDTO.class), new BoundedInputStream(null));
+      ngSecretFileService.update(ACCOUNT, null, null, IDENTIFIER, random(SecretFileUpdateDTO.class), null);
       fail("Updating of secret file should fail.");
     } catch (SecretManagementException exception) {
       // do nothing
@@ -192,8 +188,7 @@ public class NGSecretFileServiceImplTest extends WingsBaseTest {
     when(ngSecretService.get(any(), any(), any(), any())).thenReturn(Optional.of(random(EncryptedData.class)));
     when(ngSecretManagerService.getSecretManager(any(), any(), any(), any())).thenReturn(Optional.empty());
     try {
-      ngSecretFileService.update(
-          ACCOUNT, null, null, IDENTIFIER, random(SecretFileUpdateDTO.class), new BoundedInputStream(null));
+      ngSecretFileService.update(ACCOUNT, null, null, IDENTIFIER, random(SecretFileUpdateDTO.class), null);
       fail("Updating of secret file should fail.");
     } catch (SecretManagementException exception) {
       // do nothing

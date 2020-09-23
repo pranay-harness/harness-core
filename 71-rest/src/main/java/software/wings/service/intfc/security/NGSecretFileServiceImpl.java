@@ -15,7 +15,6 @@ import com.google.inject.Singleton;
 import io.harness.secretmanagerclient.NGEncryptedDataMetadata;
 import io.harness.secretmanagerclient.dto.SecretFileDTO;
 import io.harness.secretmanagerclient.dto.SecretFileUpdateDTO;
-import io.harness.stream.BoundedInputStream;
 import lombok.AllArgsConstructor;
 import software.wings.beans.GcpKmsConfig;
 import software.wings.beans.LocalEncryptionConfig;
@@ -28,6 +27,7 @@ import software.wings.service.intfc.FileService;
 import software.wings.settings.SettingVariableTypes;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.Optional;
 import javax.validation.constraints.NotNull;
 
@@ -62,7 +62,7 @@ public class NGSecretFileServiceImpl implements NGSecretFileService {
   }
 
   @Override
-  public EncryptedData create(SecretFileDTO dto, @NotNull BoundedInputStream inputStream) {
+  public EncryptedData create(SecretFileDTO dto, @NotNull InputStream inputStream) {
     // create NG meta data out of DTO
     NGEncryptedDataMetadata metadata = NGEncryptedDataMetadata.builder()
                                            .accountIdentifier(dto.getAccount())
@@ -97,7 +97,7 @@ public class NGSecretFileServiceImpl implements NGSecretFileService {
     // in case of file creation of YAML, we receive an empty stream, so we create an empty byte array to handle it
     byte[] inputBytes = new byte[0];
     if (secretManagerConfigOptional.isPresent()) {
-      if (inputStream.getTotalBytesRead() > 0) {
+      if (inputStream != null) {
         try {
           inputBytes = ByteStreams.toByteArray(inputStream);
         } catch (IOException exception) {
@@ -131,7 +131,7 @@ public class NGSecretFileServiceImpl implements NGSecretFileService {
 
   @Override
   public boolean update(@NotNull String account, String org, String project, String identifier, SecretFileUpdateDTO dto,
-      @NotNull BoundedInputStream inputStream) {
+      @NotNull InputStream inputStream) {
     // get secret file saved in DB
     Optional<EncryptedData> encryptedDataOptional = ngSecretService.get(account, org, project, identifier);
 
@@ -142,7 +142,7 @@ public class NGSecretFileServiceImpl implements NGSecretFileService {
       // In case of creating with YAML, file upload is not allowed, so we initialize inputBytes as an empty array
       byte[] inputBytes = new byte[0];
       try {
-        if (inputStream.getTotalBytesRead() > 0) {
+        if (inputStream != null) {
           inputBytes = ByteStreams.toByteArray(inputStream);
         }
       } catch (IOException exception) {

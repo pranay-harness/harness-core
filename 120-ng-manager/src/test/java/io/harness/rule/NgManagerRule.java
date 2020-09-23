@@ -1,11 +1,14 @@
 package io.harness.rule;
 
+import static org.mockito.Mockito.mock;
+
 import com.google.inject.AbstractModule;
 import com.google.inject.Injector;
 import com.google.inject.Module;
 import com.google.inject.Provides;
 import com.google.inject.Singleton;
 
+import io.harness.ManagerDelegateServiceDriver;
 import io.harness.entityreferenceclient.EntityReferenceClientModule;
 import io.harness.entityreferenceclient.NGManagerClientConfig;
 import io.harness.factory.ClosingFactory;
@@ -59,6 +62,7 @@ public class NgManagerRule implements MethodRule, InjectorRuleMixin, MongoRuleMi
       @Override
       protected void configure() {
         bind(HPersistence.class).to(MongoPersistence.class);
+        bind(ManagerDelegateServiceDriver.class).toInstance(mock(ManagerDelegateServiceDriver.class));
       }
     });
     modules.add(mongoTypeModule(annotations));

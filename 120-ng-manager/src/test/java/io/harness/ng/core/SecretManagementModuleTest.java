@@ -12,6 +12,7 @@ import com.google.inject.Provides;
 import com.google.inject.Singleton;
 
 import io.harness.CategoryTest;
+import io.harness.ManagerDelegateServiceDriver;
 import io.harness.category.element.UnitTests;
 import io.harness.entityreferenceclient.EntityReferenceClientModule;
 import io.harness.entityreferenceclient.NGManagerClientConfig;
@@ -74,6 +75,13 @@ public class SecretManagementModuleTest extends CategoryTest {
       @Singleton
       SecretRepository repository() {
         return mock(SecretRepository.class);
+      }
+    });
+    modules.add(new ProviderModule() {
+      @Provides
+      @Singleton
+      ManagerDelegateServiceDriver registerDriver() {
+        return mock(ManagerDelegateServiceDriver.class);
       }
     });
     modules.add(secretManagementModule);
