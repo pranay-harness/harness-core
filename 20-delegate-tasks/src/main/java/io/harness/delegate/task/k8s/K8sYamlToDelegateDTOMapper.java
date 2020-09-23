@@ -41,7 +41,7 @@ public class K8sYamlToDelegateDTOMapper {
 
       case MANUAL_CREDENTIALS:
         return getKubernetesConfigFromManualCredentials(
-            (KubernetesClusterDetailsDTO) (clusterConfigDTO.getConfig()), namespace);
+            (KubernetesClusterDetailsDTO) (clusterConfigDTO.getConfig()), namespaceNotBlank);
 
       default:
         throw new UnsupportedOperationException(

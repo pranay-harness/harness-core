@@ -34,6 +34,4 @@ public class ConnectorSummaryDTO {
   Long version;
 
   ConnectorConnectivityDetails status;
-
-  // todo @deepak: Add the createdBy lastUpdatedBy
 }
