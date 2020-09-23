@@ -4,6 +4,7 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.validation.Validator.notEmptyCheck;
 import static io.harness.validation.Validator.notNullCheck;
+import static org.apache.commons.lang3.StringUtils.trimToEmpty;
 import static software.wings.beans.Application.GLOBAL_APP_ID;
 import static software.wings.beans.yaml.YamlConstants.GIT_YAML_LOG_PREFIX;
 
@@ -249,8 +250,8 @@ public class GitConfigHelperService {
   public String getRepositoryUrl(GitConfig gitConfig, String repoName) {
     notNullCheck("GitConfig provided cannot be null", gitConfig);
     if (GitConfig.UrlType.ACCOUNT == gitConfig.getUrlType()) {
+      repoName = trimToEmpty(repoName);
       notEmptyCheck("Repo name cannot be empty for Account level git connector", repoName);
-      repoName = repoName.trim();
       String purgedRepoUrl = gitConfig.getRepoUrl().replaceAll("/*$", "");
       String purgedRepoName = repoName.replaceAll("^/*", "");
       return purgedRepoUrl + "/" + purgedRepoName;

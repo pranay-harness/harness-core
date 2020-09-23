@@ -18,6 +18,10 @@ import static java.lang.String.format;
 import static java.util.Arrays.asList;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static java.util.stream.Collectors.toList;
+import static org.apache.commons.lang3.StringUtils.endsWith;
+import static org.apache.commons.lang3.StringUtils.isBlank;
+import static org.apache.commons.lang3.StringUtils.isNotBlank;
+import static org.apache.commons.lang3.StringUtils.startsWith;
 import static software.wings.beans.Application.GLOBAL_APP_ID;
 import static software.wings.beans.EntityType.ACCOUNT;
 import static software.wings.beans.EntityType.APPLICATION;
@@ -76,7 +80,6 @@ import io.harness.serializer.JsonUtils;
 import io.harness.tasks.Cd1SetupFields;
 import io.harness.waiter.WaitNotifyEngine;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.StringUtils;
 import org.mongodb.morphia.query.Query;
 import software.wings.beans.Account;
 import software.wings.beans.Application;
@@ -218,10 +221,10 @@ public class YamlGitServiceImpl implements YamlGitService {
     GitConfig gitConfig = getGitConfig(ygs);
     notNullCheck("Git config does not exist", gitConfig);
 
-    if (UrlType.ACCOUNT == gitConfig.getUrlType() && StringUtils.isBlank(ygs.getRepositoryName())) {
+    if (UrlType.ACCOUNT == gitConfig.getUrlType() && isBlank(ygs.getRepositoryName())) {
       throw new GeneralException("Account level git connector must have repository name set");
     }
-    if (UrlType.ACCOUNT != gitConfig.getUrlType() && StringUtils.isNotBlank(ygs.getRepositoryName())) {
+    if (UrlType.ACCOUNT != gitConfig.getUrlType() && isNotBlank(ygs.getRepositoryName())) {
       throw new GeneralException("Repository level git connector must not have repository name set");
     }
 
@@ -880,7 +883,7 @@ public class YamlGitServiceImpl implements YamlGitService {
     processedUrl = cleanupRepositoryName(processedUrl);
     String processedFullName = cleanupRepositoryName(repositoryFullName);
 
-    return StringUtils.endsWith(processedUrl, processedFullName);
+    return endsWith(processedUrl, processedFullName);
   }
 
   @Override
@@ -1155,7 +1158,7 @@ public class YamlGitServiceImpl implements YamlGitService {
 
   @Override
   public boolean checkApplicationChange(GitFileChange gitFileChange) {
-    return StringUtils.startsWith(gitFileChange.getFilePath(), APPLICATION_FOLDER_PATH);
+    return startsWith(gitFileChange.getFilePath(), APPLICATION_FOLDER_PATH);
   }
 
   @Override

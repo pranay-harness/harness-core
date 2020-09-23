@@ -6,6 +6,7 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import io.harness.beans.EmbeddedUser;
+import io.harness.data.validator.Trimmed;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -14,6 +15,7 @@ import org.apache.commons.io.FilenameUtils;
 import org.hibernate.validator.constraints.NotEmpty;
 
 import java.util.List;
+import javax.annotation.Nullable;
 import javax.validation.constraints.NotNull;
 
 @Data
@@ -29,7 +31,7 @@ public class TerraformInfrastructureProvisioner extends InfrastructureProvisione
    * can be checked out.
    */
   @NotEmpty private String sourceRepoBranch;
-  private String repoName;
+  @Trimmed(message = "repoName should not contain leading and trailing spaces") @Nullable private String repoName;
   @NotNull private String path;
   private String normalizedPath;
   private List<NameValuePair> backendConfigs;
