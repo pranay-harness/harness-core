@@ -540,6 +540,47 @@ public class InfrastructureProvisionerServiceImplTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(developers = ARVIND)
+  @Category(UnitTests.class)
+  public void detailsTest() {
+    InfrastructureProvisionerServiceImpl ipService = spy(new InfrastructureProvisionerServiceImpl());
+    FeatureFlagService mockFeatureFlagService = mock(FeatureFlagService.class);
+    GitConfigHelperService spyGitConfigHelperService = spy(new GitConfigHelperService());
+    Reflect.on(ipService).set("featureFlagService", mockFeatureFlagService);
+    Reflect.on(ipService).set("gitConfigHelperService", spyGitConfigHelperService);
+
+    doReturn(false).when(mockFeatureFlagService).isEnabled(eq(FeatureName.INFRA_MAPPING_REFACTOR), any());
+    Map<String, SettingAttribute> idToSettingAttributeMapping = new HashMap<>();
+    Map<String, Service> idToServiceMapping = new HashMap<>();
+
+    idToSettingAttributeMapping.put("settingId",
+        aSettingAttribute()
+            .withValue(GitConfig.builder().urlType(GitConfig.UrlType.ACCOUNT).repoUrl("http://a.com/b").build())
+            .build());
+
+    idToSettingAttributeMapping.put("settingId3",
+        aSettingAttribute()
+            .withValue(GitConfig.builder().urlType(GitConfig.UrlType.REPO).repoUrl("http://a.com/b/z").build())
+            .build());
+
+    InfrastructureProvisionerDetails details1 = ipService.details(
+        TerraformInfrastructureProvisioner.builder().sourceRepoSettingId("settingId").repoName("c").build(),
+        idToSettingAttributeMapping, idToServiceMapping);
+
+    InfrastructureProvisionerDetails details2 = ipService.details(
+        TerraformInfrastructureProvisioner.builder().sourceRepoSettingId("settingId").repoName("d").build(),
+        idToSettingAttributeMapping, idToServiceMapping);
+
+    InfrastructureProvisionerDetails details3 =
+        ipService.details(TerraformInfrastructureProvisioner.builder().sourceRepoSettingId("settingId3").build(),
+            idToSettingAttributeMapping, idToServiceMapping);
+
+    assertThat(details1.getRepository()).isEqualTo("http://a.com/b/c");
+    assertThat(details2.getRepository()).isEqualTo("http://a.com/b/d");
+    assertThat(details3.getRepository()).isEqualTo("http://a.com/b/z");
+  }
+
+  @Test
   @Owner(developers = VAIBHAV_SI)
   @Category(UnitTests.class)
   public void shouldListDetailsForEmptyInfraMappingBlueprints() {

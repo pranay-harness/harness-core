@@ -336,8 +336,9 @@ public class InfrastructureProvisionerServiceImpl implements InfrastructureProvi
 
       if (settingAttribute != null && settingAttribute.getValue() instanceof GitConfig) {
         GitConfig gitConfig = (GitConfig) settingAttribute.getValue();
-        gitConfigHelperService.convertToRepoGitConfig(gitConfig, terraformInfrastructureProvisioner.getRepoName());
-        detailsBuilder.repository(gitConfig.getRepoUrl());
+        String repositoryUrl =
+            gitConfigHelperService.getRepositoryUrl(gitConfig, terraformInfrastructureProvisioner.getRepoName());
+        detailsBuilder.repository(repositoryUrl);
       }
     } else if (provisioner instanceof CloudFormationInfrastructureProvisioner) {
       CloudFormationInfrastructureProvisioner cloudFormationInfrastructureProvisioner =
