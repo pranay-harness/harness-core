@@ -25,5 +25,5 @@ public interface CVAnalysisConstants {
   String TREND_ANALYSIS_TEST_DATA = "service-guard-trend-test-data";
   String TREND_METRIC_TEMPLATE = "trend-metric-template";
   String TREND_METRIC_NAME = "trend-error-metric";
-  String LOG_METRIC_TEMPLATE_FILE = "/log_metric_template.yml";
+  String LOG_METRIC_TEMPLATE_FILE = "/io/harness/cvng/analysis/service/impl/log_metric_template.yml";
 }

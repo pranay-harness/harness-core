@@ -26,6 +26,7 @@ import io.harness.cvng.analysis.services.api.LearningEngineTaskService;
 import io.harness.cvng.analysis.services.api.TrendAnalysisService;
 import io.harness.cvng.beans.CVMonitoringCategory;
 import io.harness.cvng.beans.TimeSeriesMetricType;
+import io.harness.cvng.core.beans.TimeSeriesMetricDefinition;
 import io.harness.cvng.core.entities.CVConfig;
 import io.harness.cvng.core.entities.SplunkCVConfig;
 import io.harness.cvng.core.services.api.CVConfigService;
@@ -135,6 +136,21 @@ public class TrendAnalysisServiceImplTest extends CvNextGenTest {
       for (Frequency frequency : cluster.getFrequencyTrend()) {
         assertThat(frequency.getRiskScore()).isEqualTo(1.0);
       }
+    }
+  }
+
+  @Test
+  @Owner(developers = SOWMYA)
+  @Category(UnitTests.class)
+  public void testGetTimeSeriesMetricDefinitions() {
+    List<TimeSeriesMetricDefinition> timeSeriesMetricDefinitions =
+        trendAnalysisService.getTimeSeriesMetricDefinitions();
+    assertThat(timeSeriesMetricDefinitions).isNotEmpty();
+    assertThat(timeSeriesMetricDefinitions.size()).isEqualTo(2);
+    for (TimeSeriesMetricDefinition timeSeriesMetricDefinition : timeSeriesMetricDefinitions) {
+      assertThat(timeSeriesMetricDefinition.getMetricName()).isEqualTo(TREND_METRIC_NAME);
+      assertThat(timeSeriesMetricDefinition.getMetricType()).isEqualTo(TimeSeriesMetricType.ERROR);
+      assertThat(timeSeriesMetricDefinition.getMetricGroupName()).isEqualTo("*");
     }
   }
 
