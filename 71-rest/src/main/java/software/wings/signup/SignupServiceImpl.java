@@ -70,6 +70,7 @@ public class SignupServiceImpl implements SignupService {
   private final RegexValidator domainRegex = new RegexValidator(
       "^(?:\\p{Alnum}(?>[\\p{Alnum}-]{0,61}\\p{Alnum})?\\.)+(\\p{Alpha}(?>[\\p{Alnum}-]{0,61}\\p{Alnum})?)\\.?$");
   private static final Pattern EMAIL_PATTERN = Pattern.compile("^\\s*?(.+)@(.+?)\\s*$");
+  private static final Pattern NAME_PATTERN = Pattern.compile("^[a-zA-Z0-9 -._]*$");
   private static final String TRIAL_SIGNUP_COMPLETED_TEMPLATE_NAME = "trial_signup_completed";
   private static final String SETUP_PASSWORD_FOR_SIGNUP = "setup_password_for_signup";
   private static final List<String> whitelistedTopLevelDomains = ImmutableList.of("inc");
@@ -279,6 +280,11 @@ public class SignupServiceImpl implements SignupService {
   public void validateName(String name) {
     if (isBlank(name)) {
       throw new InvalidArgumentsException("Name cannot be empty", USER);
+    }
+
+    Matcher matcher = NAME_PATTERN.matcher(name);
+    if (!matcher.matches()) {
+      throw new InvalidArgumentsException("User name is not valid.", USER);
     }
   }
 
