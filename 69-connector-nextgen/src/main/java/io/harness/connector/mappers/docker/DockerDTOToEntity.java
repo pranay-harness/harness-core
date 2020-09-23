@@ -6,6 +6,7 @@ import io.harness.connector.entities.embedded.docker.DockerConnector;
 import io.harness.connector.entities.embedded.docker.DockerConnector.DockerConnectorBuilder;
 import io.harness.connector.entities.embedded.docker.DockerUserNamePasswordAuthentication;
 import io.harness.connector.mappers.ConnectorDTOToEntityMapper;
+import io.harness.connector.mappers.SecretRefHelper;
 import io.harness.delegate.beans.connector.ConnectorCategory;
 import io.harness.delegate.beans.connector.ConnectorType;
 import io.harness.delegate.beans.connector.docker.DockerAuthType;
@@ -38,7 +39,7 @@ public class DockerDTOToEntity implements ConnectorDTOToEntityMapper<DockerConne
       DockerUserNamePasswordDTO dockerUserNamePasswordDTO) {
     return DockerUserNamePasswordAuthentication.builder()
         .username(dockerUserNamePasswordDTO.getUsername())
-        .passwordRef(dockerUserNamePasswordDTO.getPasswordRef().toSecretRefStringValue())
+        .passwordRef(SecretRefHelper.getSecretConfigString(dockerUserNamePasswordDTO.getPasswordRef()))
         .build();
   }
 }
