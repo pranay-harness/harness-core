@@ -44,122 +44,113 @@ public class CustomExecutionServiceImpl implements CustomExecutionService {
 
   @Override
   public PlanExecution executeHttpSwitch() {
-    return orchestrationService.startExecution(
-        customExecutionProvider.provideHttpSwitchPlan(), getAbstractions(), getEmbeddedUser());
+    return orchestrationService.startExecution(customExecutionProvider.provideHttpSwitchPlan(), getAbstractions());
   }
 
   @Override
   public PlanExecution executeHttpFork() {
-    return orchestrationService.startExecution(
-        customExecutionProvider.provideHttpForkPlan(), getAbstractions(), getEmbeddedUser());
+    return orchestrationService.startExecution(customExecutionProvider.provideHttpForkPlan(), getAbstractions());
   }
 
   @Override
   public PlanExecution executeSectionPlan() {
-    return orchestrationService.startExecution(
-        customExecutionProvider.provideHttpSectionPlan(), getAbstractions(), getEmbeddedUser());
+    return orchestrationService.startExecution(customExecutionProvider.provideHttpSectionPlan(), getAbstractions());
   }
 
   @Override
   public PlanExecution executeRetryIgnorePlan() {
-    return orchestrationService.startExecution(
-        customExecutionProvider.provideHttpRetryIgnorePlan(), getAbstractions(), getEmbeddedUser());
+    return orchestrationService.startExecution(customExecutionProvider.provideHttpRetryIgnorePlan(), getAbstractions());
   }
 
   @Override
   public PlanExecution executeRetryAbortPlan() {
-    return orchestrationService.startExecution(
-        customExecutionProvider.provideHttpRetryAbortPlan(), getAbstractions(), getEmbeddedUser());
+    return orchestrationService.startExecution(customExecutionProvider.provideHttpRetryAbortPlan(), getAbstractions());
   }
 
   @Override
   public PlanExecution executeInterventionPlan() {
     return orchestrationService.startExecution(
-        customExecutionProvider.provideHttpInterventionPlan(), getAbstractions(), getEmbeddedUser());
+        customExecutionProvider.provideHttpInterventionPlan(), getAbstractions());
   }
 
   @Override
   public PlanExecution executeRollbackPlan() {
-    User user = UserThreadLocal.get();
-    return orchestrationService.startExecution(customExecutionProvider.provideHttpRollbackPlan(), getAbstractions(),
-        EmbeddedUser.builder().uuid(user.getUuid()).email(user.getEmail()).name(user.getName()).build());
+    return orchestrationService.startExecution(customExecutionProvider.provideHttpRollbackPlan(), getAbstractions());
   }
 
   @Override
   public PlanExecution executeSimpleShellScriptPlan(String accountId, String appId) {
     return orchestrationService.startExecution(
-        customExecutionProvider.provideSimpleShellScriptPlan(), getAbstractions(accountId, appId), getEmbeddedUser());
+        customExecutionProvider.provideSimpleShellScriptPlan(), getAbstractions(accountId, appId));
   }
 
   @Override
   public PlanExecution executeSimpleTimeoutPlan(String accountId, String appId) {
     return orchestrationService.startExecution(
-        customExecutionProvider.provideSimpleTimeoutPlan(), getAbstractions(accountId, appId), getEmbeddedUser());
+        customExecutionProvider.provideSimpleTimeoutPlan(), getAbstractions(accountId, appId));
   }
 
   @Override
   public PlanExecution executeTaskChainPlanV1() {
     return orchestrationService.startExecution(
-        customExecutionProvider.provideTaskChainPlan(FacilitatorType.TASK_CHAIN), getAbstractions(), getEmbeddedUser());
+        customExecutionProvider.provideTaskChainPlan(FacilitatorType.TASK_CHAIN), getAbstractions());
   }
 
   @Override
   public PlanExecution executeSectionChainPlan() {
-    return orchestrationService.startExecution(
-        customExecutionProvider.provideSectionChainPlan(), getAbstractions(), getEmbeddedUser());
+    return orchestrationService.startExecution(customExecutionProvider.provideSectionChainPlan(), getAbstractions());
   }
 
   @Override
   public PlanExecution executeSectionChainPlanWithFailure() {
     return orchestrationService.startExecution(
-        customExecutionProvider.provideSectionChainPlanWithFailure(), getAbstractions(), getEmbeddedUser());
+        customExecutionProvider.provideSectionChainPlanWithFailure(), getAbstractions());
   }
 
   @Override
   public PlanExecution executeSectionChainPlanWithNoChildren() {
     return orchestrationService.startExecution(
-        customExecutionProvider.provideSectionChainPlanWithNoChildren(), getAbstractions(), getEmbeddedUser());
+        customExecutionProvider.provideSectionChainPlanWithNoChildren(), getAbstractions());
   }
 
   @Override
   public PlanExecution executeSectionChainRollbackPlan() {
     return orchestrationService.startExecution(
-        customExecutionProvider.provideSectionChainRollbackPlan(), getAbstractions(), getEmbeddedUser());
+        customExecutionProvider.provideSectionChainRollbackPlan(), getAbstractions());
   }
 
   @Override
   public PlanExecution testGraphPlan() {
-    return orchestrationService.startExecution(
-        customExecutionProvider.provideGraphTestPlan(), getAbstractions(), getEmbeddedUser());
+    return orchestrationService.startExecution(customExecutionProvider.provideGraphTestPlan(), getAbstractions());
   }
 
   @Override
   public PlanExecution executeSingleBarrierPlan() {
     return orchestrationService.startExecution(
-        customExecutionProvider.providePlanWithSingleBarrier(), getAbstractions(), getEmbeddedUser());
+        customExecutionProvider.providePlanWithSingleBarrier(), getAbstractions());
   }
 
   @Override
   public PlanExecution executeMultipleBarriersPlan() {
     return orchestrationService.startExecution(
-        customExecutionProvider.providePlanWithMultipleBarriers(), getAbstractions(), getEmbeddedUser());
+        customExecutionProvider.providePlanWithMultipleBarriers(), getAbstractions());
   }
 
   @Override
   public PlanExecution executeResourceRestraintPlan() {
     return orchestrationService.startExecution(
-        customExecutionProvider.provideResourceRestraintPlan(), getAbstractions(), getEmbeddedUser());
+        customExecutionProvider.provideResourceRestraintPlan(), getAbstractions());
   }
 
   @Override
   public PlanExecution executeResourceRestraintPlanForFunctionalTest(Plan plan, EmbeddedUser embeddedUser) {
-    return orchestrationService.startExecution(plan, getAbstractions(), embeddedUser);
+    return orchestrationService.startExecution(plan, getAbstractions(embeddedUser));
   }
 
   @Override
   public PlanExecution executeResourceRestraintWithWaitPlan() {
     return orchestrationService.startExecution(
-        customExecutionProvider.provideResourceRestraintWithWaitPlan(), getAbstractions(), getEmbeddedUser());
+        customExecutionProvider.provideResourceRestraintWithWaitPlan(), getAbstractions());
   }
 
   @Override
@@ -169,8 +160,7 @@ public class CustomExecutionServiceImpl implements CustomExecutionService {
 
   @Override
   public PlanExecution executeSkipChildren() {
-    return orchestrationService.startExecution(
-        customExecutionProvider.getSkipChildrenPlan(), getAbstractions(), getEmbeddedUser());
+    return orchestrationService.startExecution(customExecutionProvider.getSkipChildrenPlan(), getAbstractions());
   }
 
   @Override
@@ -194,16 +184,22 @@ public class CustomExecutionServiceImpl implements CustomExecutionService {
     graphVisualizer.generateImage(graph, output);
   }
 
-  private EmbeddedUser getEmbeddedUser() {
-    User user = UserThreadLocal.get();
-    return EmbeddedUser.builder().uuid(user.getUuid()).email(user.getEmail()).name(user.getName()).build();
-  }
-
   private Map<String, String> getAbstractions() {
     return getAbstractions(ACCOUNT_ID, APP_ID);
   }
 
+  private Map<String, String> getAbstractions(EmbeddedUser user) {
+    return getAbstractions(ACCOUNT_ID, APP_ID, user);
+  }
+
   private Map<String, String> getAbstractions(String accountId, String appId) {
-    return ImmutableMap.of("accountId", accountId, "appId", appId);
+    User user = UserThreadLocal.get();
+    return getAbstractions(accountId, appId,
+        EmbeddedUser.builder().uuid(user.getUuid()).email(user.getEmail()).name(user.getName()).build());
+  }
+
+  private Map<String, String> getAbstractions(String accountId, String appId, EmbeddedUser user) {
+    return ImmutableMap.of("accountId", accountId, "appId", appId, "userId", user.getUuid(), "userName", user.getName(),
+        "userEmail", user.getEmail());
   }
 }

@@ -7,4 +7,7 @@ public class SetupAbstractionKeys {
   public final String accountId = "accountId";
   public final String orgIdentifier = "orgIdentifier";
   public final String projectIdentifier = "projectIdentifier";
+  public final String userId = "userId";
+  public final String userName = "userName";
+  public final String userEmail = "userEmail";
 }

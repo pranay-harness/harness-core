@@ -6,9 +6,7 @@ import static java.time.Duration.ofDays;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import io.harness.annotations.Redesign;
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.beans.EmbeddedUser;
 import io.harness.execution.status.Status;
-import io.harness.persistence.CreatedByAccess;
 import io.harness.persistence.PersistentEntity;
 import io.harness.persistence.UuidAccess;
 import io.harness.plan.Plan;
@@ -37,11 +35,10 @@ import java.util.Map;
 @Entity(value = "planExecutions")
 @Document("planExecutions")
 @JsonIgnoreProperties(ignoreUnknown = true, value = {"plan"})
-public class PlanExecution implements PersistentEntity, CreatedByAccess, UuidAccess {
+public class PlanExecution implements PersistentEntity, UuidAccess {
   public static final Duration TTL = ofDays(21);
 
   @Wither @Id @org.mongodb.morphia.annotations.Id String uuid;
-  EmbeddedUser createdBy;
   @Wither @CreatedDate Long createdAt;
   Plan plan;
   Map<String, String> setupAbstractions;

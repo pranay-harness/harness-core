@@ -13,7 +13,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 import com.google.inject.Inject;
 
 import io.harness.OrchestrationTest;
-import io.harness.beans.EmbeddedUser;
 import io.harness.category.element.UnitTests;
 import io.harness.interrupts.Interrupt;
 import io.harness.rule.Owner;
@@ -26,16 +25,13 @@ import java.util.List;
 public class InterruptServiceImplTest extends OrchestrationTest {
   @Inject private InterruptService interruptService;
 
-  private static final EmbeddedUser EMBEDDED_USER = new EmbeddedUser(generateUuid(), PRASHANT, PRASHANT);
-
   @Test
   @RealMongo
   @Owner(developers = PRASHANT)
   @Category(UnitTests.class)
   public void shouldTestSave() {
     String planExecutionId = generateUuid();
-    Interrupt interrupt =
-        Interrupt.builder().planExecutionId(planExecutionId).type(ABORT_ALL).createdBy(EMBEDDED_USER).build();
+    Interrupt interrupt = Interrupt.builder().planExecutionId(planExecutionId).type(ABORT_ALL).build();
 
     Interrupt savedInterrupt = interruptService.save(interrupt);
     assertThat(savedInterrupt).isNotNull();
@@ -67,8 +63,7 @@ public class InterruptServiceImplTest extends OrchestrationTest {
   @Category(UnitTests.class)
   public void shouldTestMarkProcessed() {
     String planExecutionId = generateUuid();
-    Interrupt abortAllInterrupt =
-        Interrupt.builder().planExecutionId(planExecutionId).type(ABORT_ALL).createdBy(EMBEDDED_USER).build();
+    Interrupt abortAllInterrupt = Interrupt.builder().planExecutionId(planExecutionId).type(ABORT_ALL).build();
     Interrupt savedInterrupt = interruptService.save(abortAllInterrupt);
     Interrupt processed = interruptService.markProcessed(savedInterrupt.getUuid(), DISCARDED);
     assertThat(processed).isNotNull();
@@ -80,8 +75,7 @@ public class InterruptServiceImplTest extends OrchestrationTest {
   @Category(UnitTests.class)
   public void markProcessing() {
     String planExecutionId = generateUuid();
-    Interrupt abortAllInterrupt =
-        Interrupt.builder().planExecutionId(planExecutionId).type(ABORT_ALL).createdBy(EMBEDDED_USER).build();
+    Interrupt abortAllInterrupt = Interrupt.builder().planExecutionId(planExecutionId).type(ABORT_ALL).build();
     Interrupt savedInterrupt = interruptService.save(abortAllInterrupt);
     Interrupt processing = interruptService.markProcessing(savedInterrupt.getUuid());
     assertThat(processing).isNotNull();
@@ -112,14 +106,11 @@ public class InterruptServiceImplTest extends OrchestrationTest {
   }
 
   private void saveInterruptList(String planExecutionId, boolean retryDiscarded) {
-    Interrupt abortAllInterrupt =
-        Interrupt.builder().planExecutionId(planExecutionId).type(ABORT_ALL).createdBy(EMBEDDED_USER).build();
-    Interrupt pauseAllInterrupt =
-        Interrupt.builder().planExecutionId(planExecutionId).type(PAUSE_ALL).createdBy(EMBEDDED_USER).build();
+    Interrupt abortAllInterrupt = Interrupt.builder().planExecutionId(planExecutionId).type(ABORT_ALL).build();
+    Interrupt pauseAllInterrupt = Interrupt.builder().planExecutionId(planExecutionId).type(PAUSE_ALL).build();
     Interrupt retryInterrupt = Interrupt.builder()
                                    .planExecutionId(planExecutionId)
                                    .type(RETRY)
-                                   .createdBy(EMBEDDED_USER)
                                    .nodeExecutionId(generateUuid())
                                    .state(retryDiscarded ? DISCARDED : REGISTERED)
                                    .build();

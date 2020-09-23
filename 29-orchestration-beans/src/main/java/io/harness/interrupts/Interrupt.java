@@ -5,9 +5,7 @@ import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_NESTS;
 
 import io.harness.annotations.Redesign;
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.beans.EmbeddedUser;
 import io.harness.logging.AutoLogContext;
-import io.harness.persistence.CreatedByAccess;
 import io.harness.persistence.PersistentEntity;
 import io.harness.persistence.UuidAccess;
 import io.harness.state.io.StepParameters;
@@ -36,7 +34,7 @@ import javax.validation.constraints.NotNull;
 @Entity(value = "interrupts")
 @Document(value = "interrupts")
 @FieldNameConstants(innerTypeName = "InterruptKeys")
-public class Interrupt implements PersistentEntity, UuidAccess, CreatedByAccess {
+public class Interrupt implements PersistentEntity, UuidAccess {
   public enum State { REGISTERED, PROCESSING, PROCESSED_SUCCESSFULLY, PROCESSED_UNSUCCESSFULLY, DISCARDED }
 
   @Wither @Id @org.mongodb.morphia.annotations.Id @NotNull String uuid;
@@ -44,7 +42,7 @@ public class Interrupt implements PersistentEntity, UuidAccess, CreatedByAccess 
   @NonNull String planExecutionId;
   String nodeExecutionId;
   StepParameters parameters;
-  EmbeddedUser createdBy;
+  Map<String, String> metadata;
   @Wither @LastModifiedDate Long lastUpdatedAt;
   @Wither @CreatedDate Long createdAt;
   @NonFinal @Setter @Builder.Default State state = State.REGISTERED;

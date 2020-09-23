@@ -50,10 +50,21 @@ public class NgPipelineExecutionServiceImpl implements NgPipelineExecutionServic
 
       final Plan planForPipeline =
           executionPlanCreatorService.createPlanForPipeline(cdPipeline, accountId, contextAttributes);
-      return orchestrationService.startExecution(planForPipeline,
-          ImmutableMap.of(SetupAbstractionKeys.accountId, accountId, SetupAbstractionKeys.orgIdentifier, orgId,
-              SetupAbstractionKeys.projectIdentifier, projectId),
-          user != null ? user : getEmbeddedUser());
+
+      if (user == null) {
+        user = getEmbeddedUser();
+      }
+      ImmutableMap.Builder<String, String> abstractionsBuilder =
+          ImmutableMap.<String, String>builder()
+              .put(SetupAbstractionKeys.accountId, accountId)
+              .put(SetupAbstractionKeys.orgIdentifier, orgId)
+              .put(SetupAbstractionKeys.projectIdentifier, projectId);
+      if (user != null) {
+        abstractionsBuilder.put(SetupAbstractionKeys.userId, user.getUuid())
+            .put(SetupAbstractionKeys.userName, user.getName())
+            .put(SetupAbstractionKeys.userEmail, user.getEmail());
+      }
+      return orchestrationService.startExecution(planForPipeline, abstractionsBuilder.build());
     } catch (IOException e) {
       throw new GeneralException("error while de-serializing Yaml", e);
     }

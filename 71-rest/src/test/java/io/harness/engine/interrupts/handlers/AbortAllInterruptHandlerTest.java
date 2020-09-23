@@ -11,7 +11,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
 
-import io.harness.beans.EmbeddedUser;
 import io.harness.category.element.UnitTests;
 import io.harness.engine.OrchestrationService;
 import io.harness.engine.PlanRepo;
@@ -29,13 +28,13 @@ import org.junit.experimental.categories.Category;
 import software.wings.WingsBaseTest;
 import software.wings.rules.Listeners;
 
+import java.util.Map;
+
 @Listeners(OrchestrationNotifyEventListener.class)
 public class AbortAllInterruptHandlerTest extends WingsBaseTest {
   @Inject private OrchestrationService orchestrationService;
   @Inject private StepRegistry stepRegistry;
   @Inject private InterruptTestHelper interruptTestHelper;
-
-  private static final EmbeddedUser EMBEDDED_USER = new EmbeddedUser(generateUuid(), PRASHANT, PRASHANT);
 
   @Before
   public void setUp() {
@@ -46,15 +45,11 @@ public class AbortAllInterruptHandlerTest extends WingsBaseTest {
   @Owner(developers = PRASHANT)
   @Category(UnitTests.class)
   public void shouldTestHandleInterrupt() {
-    PlanExecution execution = orchestrationService.startExecution(PlanRepo.planWithBigWait(),
-        ImmutableMap.of("accountId", generateUuid(), "appId", generateUuid()), EMBEDDED_USER);
+    PlanExecution execution = orchestrationService.startExecution(PlanRepo.planWithBigWait(), getAbstractions());
     interruptTestHelper.waitForPlanStatus(execution.getUuid(), RUNNING);
 
-    Interrupt handledInterrupt = orchestrationService.registerInterrupt(InterruptPackage.builder()
-                                                                            .planExecutionId(execution.getUuid())
-                                                                            .interruptType(ABORT_ALL)
-                                                                            .embeddedUser(EMBEDDED_USER)
-                                                                            .build());
+    Interrupt handledInterrupt = orchestrationService.registerInterrupt(
+        InterruptPackage.builder().planExecutionId(execution.getUuid()).interruptType(ABORT_ALL).build());
     assertThat(handledInterrupt).isNotNull();
     assertThat(handledInterrupt.getState()).isEqualTo(PROCESSED_SUCCESSFULLY);
 
@@ -62,5 +57,10 @@ public class AbortAllInterruptHandlerTest extends WingsBaseTest {
     PlanExecution abortedExecution = interruptTestHelper.fetchPlanExecutionStatus(execution.getUuid());
     assertThat(abortedExecution).isNotNull();
     assertThat(abortedExecution.getStatus()).isEqualTo(ABORTED);
+  }
+
+  private Map<String, String> getAbstractions() {
+    return ImmutableMap.of("accountId", generateUuid(), "appId", generateUuid(), "userId", generateUuid(), "userName",
+        PRASHANT, "userEmail", PRASHANT);
   }
 }

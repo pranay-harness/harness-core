@@ -14,7 +14,6 @@ import io.harness.OrchestrationVisualizationTest;
 import io.harness.ambiance.Ambiance;
 import io.harness.ambiance.Level;
 import io.harness.beans.EdgeList;
-import io.harness.beans.EmbeddedUser;
 import io.harness.beans.Graph;
 import io.harness.beans.GraphVertex;
 import io.harness.beans.OrchestrationAdjacencyList;
@@ -85,7 +84,7 @@ public class GraphGenerationServiceImplTest extends OrchestrationVisualizationTe
   @RealMongo
   @Category(UnitTests.class)
   public void shouldThrowInvalidRequestExceptionWhenNoNodesAreFound() {
-    PlanExecution planExecution = PlanExecution.builder().uuid("plan_test_id").createdBy(createdBy()).build();
+    PlanExecution planExecution = PlanExecution.builder().uuid("plan_test_id").build();
     planExecutionService.save(planExecution);
 
     assertThatThrownBy(() -> graphGenerationService.generateGraph(planExecution.getUuid()))
@@ -98,7 +97,7 @@ public class GraphGenerationServiceImplTest extends OrchestrationVisualizationTe
   @Owner(developers = ALEXEI)
   @Category(UnitTests.class)
   public void shouldTestWithoutCache() {
-    PlanExecution planExecution = planExecutionService.save(PlanExecution.builder().createdBy(createdBy()).build());
+    PlanExecution planExecution = planExecutionService.save(PlanExecution.builder().build());
     StepParameters forkStepParams =
         DummyForkStepParameters.builder().parallelNodeId("parallel_node_1").parallelNodeId("parallel_node_2").build();
     NodeExecution fork = NodeExecution.builder()
@@ -167,7 +166,7 @@ public class GraphGenerationServiceImplTest extends OrchestrationVisualizationTe
   @Owner(developers = ALEXEI)
   @Category(UnitTests.class)
   public void shouldTestWithCache() {
-    PlanExecution planExecution = planExecutionService.save(PlanExecution.builder().createdBy(createdBy()).build());
+    PlanExecution planExecution = planExecutionService.save(PlanExecution.builder().build());
     NodeExecution dummyStart = NodeExecution.builder()
                                    .ambiance(Ambiance.builder().planExecutionId(planExecution.getUuid()).build())
                                    .mode(ExecutionMode.SYNC)
@@ -201,7 +200,7 @@ public class GraphGenerationServiceImplTest extends OrchestrationVisualizationTe
   @Owner(developers = ALEXEI)
   @Category(UnitTests.class)
   public void shouldReturnOrchestrationGraph() {
-    PlanExecution planExecution = planExecutionService.save(PlanExecution.builder().createdBy(createdBy()).build());
+    PlanExecution planExecution = planExecutionService.save(PlanExecution.builder().build());
     NodeExecution dummyStart =
         NodeExecution.builder()
             .ambiance(Ambiance.builder()
@@ -235,7 +234,7 @@ public class GraphGenerationServiceImplTest extends OrchestrationVisualizationTe
   @Owner(developers = ALEXEI)
   @Category(UnitTests.class)
   public void shouldReturnOrchestrationGraphWithCachedAdjList() {
-    PlanExecution planExecution = planExecutionService.save(PlanExecution.builder().createdBy(createdBy()).build());
+    PlanExecution planExecution = planExecutionService.save(PlanExecution.builder().build());
     NodeExecution dummyStart =
         NodeExecution.builder()
             .ambiance(Ambiance.builder()
@@ -278,7 +277,7 @@ public class GraphGenerationServiceImplTest extends OrchestrationVisualizationTe
   @Owner(developers = ALEXEI)
   @Category(UnitTests.class)
   public void shouldReturnOrchestrationGraphWithCachedAdjListWithNewAddedNodes() {
-    PlanExecution planExecution = planExecutionService.save(PlanExecution.builder().createdBy(createdBy()).build());
+    PlanExecution planExecution = planExecutionService.save(PlanExecution.builder().build());
     NodeExecution dummyStart =
         NodeExecution.builder()
             .ambiance(Ambiance.builder()
@@ -349,7 +348,7 @@ public class GraphGenerationServiceImplTest extends OrchestrationVisualizationTe
   @Owner(developers = ALEXEI)
   @Category(UnitTests.class)
   public void shouldReturnPartialOrchestrationGraph() {
-    PlanExecution planExecution = planExecutionService.save(PlanExecution.builder().createdBy(createdBy()).build());
+    PlanExecution planExecution = planExecutionService.save(PlanExecution.builder().build());
     NodeExecution dummyStart =
         NodeExecution.builder()
             .ambiance(Ambiance.builder()
@@ -400,9 +399,5 @@ public class GraphGenerationServiceImplTest extends OrchestrationVisualizationTe
       runnableCaptor.getValue().run();
       return null;
     };
-  }
-
-  private EmbeddedUser createdBy() {
-    return EmbeddedUser.builder().uuid(ALEXEI + "whj983regf").name(ALEXEI).email(ALEXEI + "@harness.io").build();
   }
 }
