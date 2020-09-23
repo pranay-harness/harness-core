@@ -284,6 +284,7 @@ public class InstanceServiceImpl implements InstanceService {
   public PageResponse<Instance> listInstancesNotRemovedFully(PageRequest<Instance> pageRequest) {
     Query<Instance> query = wingsPersistence.convertToQuery(Instance.class, pageRequest);
     long sevenDaysOldTimeInMills = System.currentTimeMillis() - TimeUnit.DAYS.toMillis(7);
+
     query.and(query.or(query.criteria(InstanceKeys.deletedAt).greaterThanOrEq(sevenDaysOldTimeInMills),
         query.criteria(InstanceKeys.isDeleted).equal(false), query.criteria(InstanceKeys.needRetry).equal(true)));
     return aPageResponse().withResponse(query.asList()).build();
