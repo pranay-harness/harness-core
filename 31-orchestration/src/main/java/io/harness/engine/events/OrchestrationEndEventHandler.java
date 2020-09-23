@@ -9,7 +9,7 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @OwnedBy(CDC)
-public class OrchestrationStartEventHandler implements AsyncOrchestrationEventHandler {
+public class OrchestrationEndEventHandler implements AsyncOrchestrationEventHandler {
   @Override
   public void handleEvent(OrchestrationEvent event) {
     logger.info("Event Received: {}", event.getEventType());

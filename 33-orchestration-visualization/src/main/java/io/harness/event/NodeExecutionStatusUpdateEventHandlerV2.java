@@ -13,8 +13,9 @@ import io.harness.beans.converter.GraphVertexConverter;
 import io.harness.engine.executions.node.NodeExecutionService;
 import io.harness.engine.outcomes.OutcomeService;
 import io.harness.execution.NodeExecution;
+import io.harness.execution.events.AsyncOrchestrationEventHandler;
 import io.harness.execution.events.OrchestrationEvent;
-import io.harness.execution.events.OrchestrationEventHandler;
+import io.harness.generator.GraphGenerator;
 import io.harness.service.GraphGenerationService;
 import lombok.extern.slf4j.Slf4j;
 
@@ -22,10 +23,11 @@ import java.util.Map;
 
 @OwnedBy(CDC)
 @Slf4j
-public class NodeExecutionStatusUpdateEventHandler implements OrchestrationEventHandler {
+public class NodeExecutionStatusUpdateEventHandlerV2 implements AsyncOrchestrationEventHandler {
   @Inject private NodeExecutionService nodeExecutionService;
   @Inject private GraphGenerationService graphGenerationService;
   @Inject private OutcomeService outcomeService;
+  @Inject private GraphGenerator graphGenerator;
 
   @Override
   public void handleEvent(OrchestrationEvent event) {
@@ -37,18 +39,18 @@ public class NodeExecutionStatusUpdateEventHandler implements OrchestrationEvent
 
     NodeExecution nodeExecution = nodeExecutionService.get(nodeExecutionId);
 
-    OrchestrationGraphInternal graph =
+    OrchestrationGraphInternal graphInternal =
         graphGenerationService.getCachedOrchestrationGraphInternal(ambiance.getPlanExecutionId());
 
-    // return if there is no cache
-    if (graph == null) {
-      logger.info("Orchestration graph cache is null");
-      return;
+    if (graphInternal.getRootNodeId() == null) {
+      logger.info("Setting rootNodeId: [{}] for plan [{}]", nodeExecutionId, ambiance.getPlanExecutionId());
+      graphInternal = graphInternal.withRootNodeId(nodeExecutionId);
     }
 
-    Map<String, GraphVertex> graphVertexMap = graph.getAdjacencyList().getGraphVertexMap();
+    Map<String, GraphVertex> graphVertexMap = graphInternal.getAdjacencyList().getGraphVertexMap();
     if (graphVertexMap.containsKey(nodeExecutionId)) {
-      logger.info("Updating graph vertex for [{}] with status [{}]", nodeExecutionId, nodeExecution.getStatus());
+      logger.info("Updating graph vertex for [{}] with status [{}]. PlanExecutionId: [{}]", nodeExecutionId,
+          nodeExecution.getStatus(), ambiance.getPlanExecutionId());
       graphVertexMap.computeIfPresent(nodeExecutionId, (key, prevValue) -> {
         GraphVertex newValue = GraphVertexConverter.convertFrom(nodeExecution);
         if (isFinalStatus(newValue.getStatus())) {
@@ -56,7 +58,11 @@ public class NodeExecutionStatusUpdateEventHandler implements OrchestrationEvent
         }
         return newValue;
       });
-      graphGenerationService.cacheOrchestrationGraphInternal(graph);
+    } else {
+      logger.info("Adding graph vertex with id [{}] and status [{}]. PlanExecutionId: [{}]", nodeExecutionId,
+          nodeExecution.getStatus(), ambiance.getPlanExecutionId());
+      graphGenerator.populateAdjacencyList(graphInternal.getAdjacencyList(), nodeExecution);
     }
+    graphGenerationService.cacheOrchestrationGraphInternal(graphInternal);
   }
 }

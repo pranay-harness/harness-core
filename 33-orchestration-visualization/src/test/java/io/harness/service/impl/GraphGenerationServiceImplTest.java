@@ -17,7 +17,7 @@ import io.harness.beans.EdgeList;
 import io.harness.beans.Graph;
 import io.harness.beans.GraphVertex;
 import io.harness.beans.OrchestrationAdjacencyList;
-import io.harness.beans.OrchestrationAdjacencyListInternal;
+import io.harness.beans.OrchestrationGraphInternal;
 import io.harness.beans.converter.GraphVertexConverter;
 import io.harness.cache.SpringMongoStore;
 import io.harness.category.element.UnitTests;
@@ -251,14 +251,18 @@ public class GraphGenerationServiceImplTest extends OrchestrationVisualizationTe
             .build();
     nodeExecutionRepository.save(dummyStart);
 
-    OrchestrationAdjacencyListInternal adjacencyListInternal =
-        OrchestrationAdjacencyListInternal.builder()
-            .cacheKey(planExecution.getUuid())
+    OrchestrationAdjacencyList adjacencyListInternal =
+        OrchestrationAdjacencyList.builder()
             .graphVertexMap(ImmutableMap.of(dummyStart.getUuid(), GraphVertexConverter.convertFrom(dummyStart)))
             .adjacencyList(
                 ImmutableMap.of(dummyStart.getUuid(), EdgeList.builder().edges(new ArrayList<>()).next(null).build()))
             .build();
-    mongoStore.upsert(adjacencyListInternal, Duration.ofDays(10));
+    OrchestrationGraphInternal graphInternal = OrchestrationGraphInternal.builder()
+                                                   .rootNodeId(dummyStart.getUuid())
+                                                   .cacheKey(planExecution.getUuid())
+                                                   .adjacencyList(adjacencyListInternal)
+                                                   .build();
+    mongoStore.upsert(graphInternal, Duration.ofDays(10));
 
     OrchestrationGraph graphResponse = graphGenerationService.generateOrchestrationGraph(planExecution.getUuid());
     assertThat(graphResponse).isNotNull();
@@ -316,12 +320,14 @@ public class GraphGenerationServiceImplTest extends OrchestrationVisualizationTe
     Map<String, EdgeList> adjacencyListMap = new HashMap<>();
     adjacencyListMap.put(dummyStart.getUuid(), EdgeList.builder().edges(new ArrayList<>()).next(null).build());
 
-    OrchestrationAdjacencyListInternal adjacencyListInternal = OrchestrationAdjacencyListInternal.builder()
-                                                                   .cacheKey(planExecution.getUuid())
-                                                                   .graphVertexMap(graphVertexMap)
-                                                                   .adjacencyList(adjacencyListMap)
-                                                                   .build();
-    mongoStore.upsert(adjacencyListInternal, Duration.ofDays(10));
+    OrchestrationAdjacencyList adjacencyListInternal =
+        OrchestrationAdjacencyList.builder().graphVertexMap(graphVertexMap).adjacencyList(adjacencyListMap).build();
+    OrchestrationGraphInternal graphInternal = OrchestrationGraphInternal.builder()
+                                                   .rootNodeId(dummyStart.getUuid())
+                                                   .cacheKey(planExecution.getUuid())
+                                                   .adjacencyList(adjacencyListInternal)
+                                                   .build();
+    mongoStore.upsert(graphInternal, Duration.ofDays(10));
 
     OrchestrationGraph graphResponse = graphGenerationService.generateOrchestrationGraph(planExecution.getUuid());
     assertThat(graphResponse).isNotNull();

@@ -10,12 +10,13 @@ import io.harness.annotations.Redesign;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.Graph;
-import io.harness.beans.OrchestrationAdjacencyListInternal;
+import io.harness.beans.OrchestrationAdjacencyList;
+import io.harness.beans.OrchestrationGraphInternal;
 import io.harness.cache.SpringMongoStore;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.dto.OrchestrationGraph;
 import io.harness.dto.OrchestrationGraph.OrchestrationGraphBuilder;
-import io.harness.dto.converter.OrchestrationAdjacencyListConverter;
+import io.harness.dto.converter.OrchestrationGraphConverter;
 import io.harness.engine.executions.node.NodeExecutionService;
 import io.harness.engine.executions.plan.PlanExecutionService;
 import io.harness.exception.InvalidRequestException;
@@ -71,13 +72,13 @@ public class GraphGenerationServiceImpl implements GraphGenerationService {
   }
 
   @Override
-  public OrchestrationAdjacencyListInternal getCachedOrchestrationAdjacencyListInternal(String planExecutionId) {
-    return mongoStore.get(OrchestrationAdjacencyListInternal.ALGORITHM_ID,
-        OrchestrationAdjacencyListInternal.STRUCTURE_HASH, planExecutionId, null);
+  public OrchestrationGraphInternal getCachedOrchestrationGraphInternal(String planExecutionId) {
+    return mongoStore.get(
+        OrchestrationGraphInternal.ALGORITHM_ID, OrchestrationGraphInternal.STRUCTURE_HASH, planExecutionId, null);
   }
 
   @Override
-  public void cacheOrchestrationAdjacencyListInternal(OrchestrationAdjacencyListInternal adjacencyListInternal) {
+  public void cacheOrchestrationGraphInternal(OrchestrationGraphInternal adjacencyListInternal) {
     executorService.submit(() -> mongoStore.upsert(adjacencyListInternal, Duration.ofDays(10)));
   }
 
@@ -91,36 +92,42 @@ public class GraphGenerationServiceImpl implements GraphGenerationService {
 
     String rootNodeId = obtainStartingNodeExId(nodeExecutions);
 
-    OrchestrationGraphBuilder graphBuilder = OrchestrationGraph.builder()
-                                                 .planExecutionId(planExecution.getUuid())
-                                                 .startTs(planExecution.getStartTs())
-                                                 .endTs(planExecution.getEndTs())
-                                                 .status(planExecution.getStatus())
-                                                 .rootNodeId(rootNodeId);
-
-    OrchestrationAdjacencyListInternal cachedAdjacencyList =
-        getCachedOrchestrationAdjacencyListInternal(planExecutionId);
-    if (cachedAdjacencyList != null) {
+    OrchestrationGraphInternal graphInternal = getCachedOrchestrationGraphInternal(planExecutionId);
+    if (graphInternal != null) {
+      OrchestrationAdjacencyList adjacencyList = graphInternal.getAdjacencyList();
       List<NodeExecution> newNodeExecutions =
           nodeExecutions.stream()
-              .filter(node -> !cachedAdjacencyList.getGraphVertexMap().containsKey(node.getUuid()))
+              .filter(node -> !adjacencyList.getGraphVertexMap().containsKey(node.getUuid()))
               .collect(Collectors.toList());
       if (!newNodeExecutions.isEmpty()) {
-        graphGenerator.populateAdjacencyList(cachedAdjacencyList, newNodeExecutions);
+        graphGenerator.populateAdjacencyList(adjacencyList, newNodeExecutions);
+        cacheOrchestrationGraphInternal(graphInternal);
       }
-      cacheOrchestrationAdjacencyListInternal(cachedAdjacencyList);
 
-      graphBuilder.adjacencyList(OrchestrationAdjacencyListConverter.convertFrom(cachedAdjacencyList));
-      return graphBuilder.build();
+      return OrchestrationGraphConverter.convertFrom(graphInternal);
     }
 
-    OrchestrationAdjacencyListInternal orchestrationAdjacencyList =
-        graphGenerator.generateAdjacencyList(rootNodeId, nodeExecutions, false);
+    OrchestrationGraphInternal graph =
+        OrchestrationGraphInternal.builder()
+            .cacheKey(planExecutionId)
+            .cacheContextOrder(System.currentTimeMillis())
+            .cacheParams(null)
+            .planExecutionId(planExecution.getUuid())
+            .startTs(planExecution.getStartTs())
+            .endTs(planExecution.getEndTs())
+            .status(planExecution.getStatus())
+            .rootNodeId(rootNodeId)
+            .adjacencyList(graphGenerator.generateAdjacencyList(rootNodeId, nodeExecutions, false))
+            .build();
 
-    cacheOrchestrationAdjacencyListInternal(orchestrationAdjacencyList.withCacheKey(planExecutionId));
+    cacheOrchestrationGraphInternal(graph);
 
-    graphBuilder.adjacencyList(OrchestrationAdjacencyListConverter.convertFrom(orchestrationAdjacencyList));
-    return graphBuilder.build();
+    return OrchestrationGraphConverter.convertFrom(graph);
+  }
+
+  @Override
+  public OrchestrationGraph generateOrchestrationGraphV2(String planExecutionId) {
+    return OrchestrationGraphConverter.convertFrom(getCachedOrchestrationGraphInternal(planExecutionId));
   }
 
   @Override
@@ -140,8 +147,7 @@ public class GraphGenerationServiceImpl implements GraphGenerationService {
             .endTs(planExecution.getEndTs())
             .status(planExecution.getStatus())
             .rootNodeId(startingNodeId)
-            .adjacencyList(OrchestrationAdjacencyListConverter.convertFrom(
-                graphGenerator.generateAdjacencyList(startingNodeId, nodeExecutions, true)));
+            .adjacencyList(graphGenerator.generateAdjacencyList(startingNodeId, nodeExecutions, true));
 
     return graphBuilder.build();
   }

@@ -169,8 +169,13 @@ public class CustomExecutionServiceImpl implements CustomExecutionService {
   }
 
   @Override
-  public OrchestrationGraph getOrchestrationGraph(String executionPlanId) {
-    return graphGenerationService.generateOrchestrationGraph(executionPlanId);
+  public OrchestrationGraph getOrchestrationGraph(String planExecutionId) {
+    return graphGenerationService.generateOrchestrationGraph(planExecutionId);
+  }
+
+  @Override
+  public OrchestrationGraph getOrchestrationGraphV2(String planExecutionId) {
+    return graphGenerationService.generateOrchestrationGraphV2(planExecutionId);
   }
 
   @Override

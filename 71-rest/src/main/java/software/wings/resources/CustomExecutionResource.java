@@ -135,6 +135,13 @@ public class CustomExecutionResource {
   }
 
   @GET
+  @Path("/get-orchestration-graph-v2")
+  public RestResponse<OrchestrationGraph> getOrchestrationGraphV2(
+      @QueryParam("planExecutionId") String planExecutionId) {
+    return new RestResponse<>(customExecutionService.getOrchestrationGraphV2(planExecutionId));
+  }
+
+  @GET
   @Path("/get-partial-orchestration-graph")
   public RestResponse<OrchestrationGraph> getPartialOrchestrationGraph(
       @QueryParam("startingSetupNodeId") String startingSetupNodeId,
