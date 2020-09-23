@@ -11,8 +11,8 @@ import com.mongodb.ErrorCategory;
 import com.mongodb.MongoCommandException;
 import io.harness.cache.SpringCacheEntity.SpringCacheEntityKeys;
 import io.harness.data.structure.EmptyPredicate;
-import io.harness.govern.IgnoreThrowable;
 import io.harness.serializer.KryoSerializer;
+import io.harness.springdata.HMongoTemplate;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.data.mongodb.core.MongoTemplate;
@@ -97,12 +97,12 @@ public class SpringMongoStore implements DistributedStore {
       }
 
       Update update = new Update()
+                          .setOnInsert(SpringCacheEntityKeys.canonicalKey, canonicalKey)
                           .set(SpringCacheEntityKeys.contextValue, contextValue)
-                          .set(SpringCacheEntityKeys.canonicalKey, canonicalKey)
                           .set(SpringCacheEntityKeys.entity, kryoSerializer.asDeflatedBytes(entity))
                           .set(SpringCacheEntityKeys.validUntil, Date.from(OffsetDateTime.now().plus(ttl).toInstant()));
 
-      mongoTemplate.upsert(query, update, SpringCacheEntity.class);
+      mongoTemplate.findAndModify(query, update, HMongoTemplate.upsertReturnNewOptions, SpringCacheEntity.class);
     } catch (MongoCommandException e) {
       if (ErrorCategory.fromErrorCode(e.getErrorCode()) != DUPLICATE_KEY) {
         logger.error("Failed to update cache for key {}, hash {}", canonicalKey, contextValue, e);
@@ -110,7 +110,7 @@ public class SpringMongoStore implements DistributedStore {
         new Exception().addSuppressed(e);
       }
     } catch (DuplicateKeyException e) {
-      IgnoreThrowable.ignoredOnPurpose(e);
+      logger.error("Failed to update cache for key {}, hash {} ", canonicalKey, contextValue, e);
     } catch (RuntimeException e) {
       logger.error("Failed to update cache for key {}, hash {}", canonicalKey, contextValue, e);
     }

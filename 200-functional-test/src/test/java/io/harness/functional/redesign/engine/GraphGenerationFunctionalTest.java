@@ -3,6 +3,7 @@ package io.harness.functional.redesign.engine;
 import static io.harness.rule.OwnerRule.ALEXEI;
 import static org.assertj.core.api.Assertions.assertThat;
 
+import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 
 import com.fasterxml.jackson.core.JsonParser;
@@ -12,6 +13,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.deser.std.StdDeserializer;
+import io.harness.beans.EdgeList;
 import io.harness.beans.ExecutionStatus;
 import io.harness.beans.Graph;
 import io.harness.beans.GraphVertex;
@@ -47,6 +49,7 @@ import software.wings.beans.Application;
 
 import java.io.IOException;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 import javax.ws.rs.core.GenericType;
@@ -261,6 +264,68 @@ public class GraphGenerationFunctionalTest extends AbstractFunctionalTest {
                                                  .filter(vertex -> vertex.getName().startsWith("http"))
                                                  .map(GraphVertex::getUuid)
                                                  .collect(Collectors.toList()));
+  }
+
+  @Test
+  @Owner(developers = ALEXEI)
+  @Category(FunctionalTests.class)
+  public void shouldGenerateOrchestrationGraphWithBarriers() {
+    List<String> nodeNames = Lists.newArrayList("Dummy Node 2", "barrier3", "Dummy Node 1", "barrier1", "Dummy Node 3",
+        "Dummy Node 4", "Wait Node", "barrier2", "Fork Node");
+    PlanExecution planExecutionResponse =
+        executePlan(bearerToken, application.getAccountId(), application.getAppId(), "multiple-barriers");
+    assertThat(planExecutionResponse.getStatus()).isEqualTo(Status.SUCCEEDED);
+
+    OrchestrationGraph response =
+        requestOrchestrationGraph(null, planExecutionResponse.getUuid(), "get-orchestration-graph");
+    assertThat(response).isNotNull();
+
+    assertThat(response.getPlanExecutionId()).isEqualTo(planExecutionResponse.getUuid());
+    assertThat(response.getRootNodeId()).isNotNull();
+    assertThat(response.getStartTs()).isNotNull();
+    assertThat(response.getEndTs()).isNotNull();
+    assertThat(response.getStatus()).isEqualTo(Status.SUCCEEDED);
+
+    Map<String, GraphVertex> graphVertexMap = response.getAdjacencyList().getGraphVertexMap();
+    Map<String, EdgeList> adjacencyList = response.getAdjacencyList().getAdjacencyList();
+    assertThat(graphVertexMap.size()).isEqualTo(9);
+    assertThat(adjacencyList.size()).isEqualTo(9);
+
+    assertThat(
+        graphVertexMap.values().stream().map(GraphVertex::getStatus).allMatch(status -> Status.SUCCEEDED == status))
+        .isTrue();
+    assertThat(graphVertexMap.values().stream().map(GraphVertex::getName).collect(Collectors.toList()))
+        .containsExactlyInAnyOrderElementsOf(nodeNames);
+
+    Map<String, String> nameVertexMap = graphVertexMap.entrySet().stream().collect(
+        Collectors.toMap(entry -> entry.getValue().getName(), entry -> entry.getValue().getUuid()));
+
+    assertThat(adjacencyList.get(nameVertexMap.get("Fork Node")).getEdges().size()).isEqualTo(2);
+    assertThat(adjacencyList.get(nameVertexMap.get("Fork Node")).getNext()).isNull();
+
+    assertThat(adjacencyList.get(nameVertexMap.get("Dummy Node 2")).getEdges()).isEmpty();
+    assertThat(adjacencyList.get(nameVertexMap.get("Dummy Node 2")).getNext()).isNotNull();
+
+    assertThat(adjacencyList.get(nameVertexMap.get("Dummy Node 1")).getEdges()).isEmpty();
+    assertThat(adjacencyList.get(nameVertexMap.get("Dummy Node 1")).getNext()).isNotNull();
+
+    assertThat(adjacencyList.get(nameVertexMap.get("Wait Node")).getEdges()).isEmpty();
+    assertThat(adjacencyList.get(nameVertexMap.get("Wait Node")).getNext()).isNotNull();
+
+    assertThat(adjacencyList.get(nameVertexMap.get("barrier1")).getEdges()).isEmpty();
+    assertThat(adjacencyList.get(nameVertexMap.get("barrier1")).getNext()).isNotNull();
+
+    assertThat(adjacencyList.get(nameVertexMap.get("barrier2")).getEdges()).isEmpty();
+    assertThat(adjacencyList.get(nameVertexMap.get("barrier2")).getNext()).isNotNull();
+
+    assertThat(adjacencyList.get(nameVertexMap.get("barrier3")).getEdges()).isEmpty();
+    assertThat(adjacencyList.get(nameVertexMap.get("barrier3")).getNext()).isNotNull();
+
+    assertThat(adjacencyList.get(nameVertexMap.get("Dummy Node 3")).getEdges()).isEmpty();
+    assertThat(adjacencyList.get(nameVertexMap.get("Dummy Node 3")).getNext()).isNull();
+
+    assertThat(adjacencyList.get(nameVertexMap.get("Dummy Node 4")).getEdges()).isEmpty();
+    assertThat(adjacencyList.get(nameVertexMap.get("Dummy Node 4")).getNext()).isNull();
   }
 
   private Graph requestGraph(String planExecutionId, String requestUri) {

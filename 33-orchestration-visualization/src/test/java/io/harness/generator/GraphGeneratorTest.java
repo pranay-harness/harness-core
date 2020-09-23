@@ -14,7 +14,7 @@ import io.harness.ambiance.Ambiance;
 import io.harness.ambiance.Level;
 import io.harness.beans.EdgeList;
 import io.harness.beans.GraphVertex;
-import io.harness.beans.OrchestrationAdjacencyListInternal;
+import io.harness.beans.OrchestrationAdjacencyList;
 import io.harness.beans.converter.GraphVertexConverter;
 import io.harness.category.element.UnitTests;
 import io.harness.engine.outcomes.OutcomeService;
@@ -341,7 +341,7 @@ public class GraphGeneratorTest extends OrchestrationVisualizationTest {
   @Test
   @Owner(developers = ALEXEI)
   @Category(UnitTests.class)
-  public void shouldGenerateOrchestrationAdjacencyListInternalWithSection() {
+  public void shouldGenerateOrchestrationAdjacencyListWithSection() {
     NodeExecution dummyStart =
         NodeExecution.builder()
             .uuid("node1")
@@ -396,7 +396,7 @@ public class GraphGeneratorTest extends OrchestrationVisualizationTest {
             .build();
     List<NodeExecution> nodeExecutions = Lists.newArrayList(dummyStart, section, sectionChild);
 
-    OrchestrationAdjacencyListInternal adjacencyList =
+    OrchestrationAdjacencyList adjacencyList =
         graphGenerator.generateAdjacencyList(dummyStart.getUuid(), nodeExecutions, false);
 
     assertThat(adjacencyList).isNotNull();
@@ -416,7 +416,7 @@ public class GraphGeneratorTest extends OrchestrationVisualizationTest {
   @Test
   @Owner(developers = ALEXEI)
   @Category(UnitTests.class)
-  public void shouldGenerateOrchestrationAdjacencyListInternalWithChildChain() {
+  public void shouldGenerateOrchestrationAdjacencyListWithChildChain() {
     String dummyNode1Uuid = "dummyNode1";
     String dummyNode2Uuid = "dummyNode2";
 
@@ -523,7 +523,7 @@ public class GraphGeneratorTest extends OrchestrationVisualizationTest {
     List<NodeExecution> nodeExecutions =
         Lists.newArrayList(sectionChainParentNode, sectionChain1, sectionChain2, dummyNode1, dummyNode2);
 
-    OrchestrationAdjacencyListInternal adjacencyList =
+    OrchestrationAdjacencyList adjacencyList =
         graphGenerator.generateAdjacencyList(sectionChainParentNode.getUuid(), nodeExecutions, true);
     assertThat(adjacencyList).isNotNull();
 
@@ -604,7 +604,7 @@ public class GraphGeneratorTest extends OrchestrationVisualizationTest {
             .build();
     List<NodeExecution> nodeExecutions = Lists.newArrayList(fork, parallelNode1, parallelNode2);
 
-    OrchestrationAdjacencyListInternal adjacencyList =
+    OrchestrationAdjacencyList adjacencyList =
         graphGenerator.generateAdjacencyList(fork.getUuid(), nodeExecutions, false);
     assertThat(adjacencyList).isNotNull();
 
@@ -700,7 +700,7 @@ public class GraphGeneratorTest extends OrchestrationVisualizationTest {
             .build();
     List<NodeExecution> nodeExecutions = Lists.newArrayList(fork, parallelNode1, parallelNode2, dummyNode1);
 
-    OrchestrationAdjacencyListInternal adjacencyList =
+    OrchestrationAdjacencyList adjacencyList =
         graphGenerator.generateAdjacencyList(parallelNode2.getUuid(), nodeExecutions, true);
     assertThat(adjacencyList).isNotNull();
 
@@ -761,17 +761,15 @@ public class GraphGeneratorTest extends OrchestrationVisualizationTest {
     Map<String, EdgeList> adjacencyListMap = new HashMap<>();
     adjacencyListMap.put(dummyNode1.getUuid(), EdgeList.builder().edges(new ArrayList<>()).next(null).build());
 
-    OrchestrationAdjacencyListInternal adjacencyListInternal = OrchestrationAdjacencyListInternal.builder()
-                                                                   .graphVertexMap(graphVertexMap)
-                                                                   .adjacencyList(adjacencyListMap)
-                                                                   .build();
+    OrchestrationAdjacencyList orchestrationAdjacencyList =
+        OrchestrationAdjacencyList.builder().graphVertexMap(graphVertexMap).adjacencyList(adjacencyListMap).build();
 
-    graphGenerator.populateAdjacencyList(adjacencyListInternal, Lists.newArrayList(dummyNode2));
+    graphGenerator.populateAdjacencyList(orchestrationAdjacencyList, Lists.newArrayList(dummyNode2));
 
-    assertThat(adjacencyListInternal).isNotNull();
-    assertThat(adjacencyListInternal.getGraphVertexMap().size()).isEqualTo(2);
-    assertThat(adjacencyListInternal.getAdjacencyList().get(dummyNode1.getUuid()).getNext()).isNull();
-    assertThat(adjacencyListInternal.getAdjacencyList().get(dummyNode2.getUuid()).getNext())
+    assertThat(orchestrationAdjacencyList).isNotNull();
+    assertThat(orchestrationAdjacencyList.getGraphVertexMap().size()).isEqualTo(2);
+    assertThat(orchestrationAdjacencyList.getAdjacencyList().get(dummyNode1.getUuid()).getNext()).isNull();
+    assertThat(orchestrationAdjacencyList.getAdjacencyList().get(dummyNode2.getUuid()).getNext())
         .isEqualTo(dummyNode2.getNextId());
   }
 
@@ -821,22 +819,20 @@ public class GraphGeneratorTest extends OrchestrationVisualizationTest {
     Map<String, EdgeList> adjacencyListMap = new HashMap<>();
     adjacencyListMap.put(dummyNode1.getUuid(), EdgeList.builder().edges(new ArrayList<>()).next(null).build());
 
-    OrchestrationAdjacencyListInternal adjacencyListInternal = OrchestrationAdjacencyListInternal.builder()
-                                                                   .graphVertexMap(graphVertexMap)
-                                                                   .adjacencyList(adjacencyListMap)
-                                                                   .build();
+    OrchestrationAdjacencyList orchestrationAdjacencyList =
+        OrchestrationAdjacencyList.builder().graphVertexMap(graphVertexMap).adjacencyList(adjacencyListMap).build();
 
-    graphGenerator.populateAdjacencyList(adjacencyListInternal, Lists.newArrayList(dummyNode2));
+    graphGenerator.populateAdjacencyList(orchestrationAdjacencyList, Lists.newArrayList(dummyNode2));
 
-    assertThat(adjacencyListInternal).isNotNull();
-    assertThat(adjacencyListInternal.getGraphVertexMap().size()).isEqualTo(2);
+    assertThat(orchestrationAdjacencyList).isNotNull();
+    assertThat(orchestrationAdjacencyList.getGraphVertexMap().size()).isEqualTo(2);
 
-    assertThat(adjacencyListInternal.getAdjacencyList().get(dummyNode1.getUuid()).getNext())
+    assertThat(orchestrationAdjacencyList.getAdjacencyList().get(dummyNode1.getUuid()).getNext())
         .isEqualTo(dummyNode2.getUuid());
-    assertThat(adjacencyListInternal.getAdjacencyList().get(dummyNode1.getUuid()).getEdges()).isEmpty();
+    assertThat(orchestrationAdjacencyList.getAdjacencyList().get(dummyNode1.getUuid()).getEdges()).isEmpty();
 
-    assertThat(adjacencyListInternal.getAdjacencyList().get(dummyNode2.getUuid()).getNext()).isNull();
-    assertThat(adjacencyListInternal.getAdjacencyList().get(dummyNode2.getUuid()).getEdges()).isEmpty();
+    assertThat(orchestrationAdjacencyList.getAdjacencyList().get(dummyNode2.getUuid()).getNext()).isNull();
+    assertThat(orchestrationAdjacencyList.getAdjacencyList().get(dummyNode2.getUuid()).getEdges()).isEmpty();
   }
 
   @Test
@@ -917,28 +913,26 @@ public class GraphGeneratorTest extends OrchestrationVisualizationTest {
         sectionChain1.getUuid(), EdgeList.builder().edges(new ArrayList<>()).next(dummyNode1.getUuid()).build());
     adjacencyListMap.put(dummyNode1.getUuid(), EdgeList.builder().edges(new ArrayList<>()).next(null).build());
 
-    OrchestrationAdjacencyListInternal adjacencyListInternal = OrchestrationAdjacencyListInternal.builder()
-                                                                   .graphVertexMap(graphVertexMap)
-                                                                   .adjacencyList(adjacencyListMap)
-                                                                   .build();
+    OrchestrationAdjacencyList orchestrationAdjacencyList =
+        OrchestrationAdjacencyList.builder().graphVertexMap(graphVertexMap).adjacencyList(adjacencyListMap).build();
 
-    graphGenerator.populateAdjacencyList(adjacencyListInternal, Lists.newArrayList(sectionChain2));
+    graphGenerator.populateAdjacencyList(orchestrationAdjacencyList, Lists.newArrayList(sectionChain2));
 
-    assertThat(adjacencyListInternal).isNotNull();
+    assertThat(orchestrationAdjacencyList).isNotNull();
 
-    assertThat(adjacencyListInternal.getGraphVertexMap().size()).isEqualTo(4);
-    assertThat(adjacencyListInternal.getGraphVertexMap().keySet())
+    assertThat(orchestrationAdjacencyList.getGraphVertexMap().size()).isEqualTo(4);
+    assertThat(orchestrationAdjacencyList.getGraphVertexMap().keySet())
         .containsExactlyInAnyOrder(
             sectionChainParentNode.getUuid(), sectionChain1.getUuid(), sectionChain2.getUuid(), dummyNode1.getUuid());
 
-    assertThat(adjacencyListInternal.getAdjacencyList().size()).isEqualTo(4);
-    assertThat(adjacencyListInternal.getAdjacencyList().get(sectionChainParentNode.getUuid()).getEdges())
+    assertThat(orchestrationAdjacencyList.getAdjacencyList().size()).isEqualTo(4);
+    assertThat(orchestrationAdjacencyList.getAdjacencyList().get(sectionChainParentNode.getUuid()).getEdges())
         .containsExactlyInAnyOrder(sectionChain1.getUuid());
-    assertThat(adjacencyListInternal.getAdjacencyList().get(sectionChain1.getUuid()).getNext())
+    assertThat(orchestrationAdjacencyList.getAdjacencyList().get(sectionChain1.getUuid()).getNext())
         .isEqualTo(dummyNode1.getUuid());
-    assertThat(adjacencyListInternal.getAdjacencyList().get(dummyNode1.getUuid()).getNext())
+    assertThat(orchestrationAdjacencyList.getAdjacencyList().get(dummyNode1.getUuid()).getNext())
         .isEqualTo(sectionChain2.getUuid());
-    assertThat(adjacencyListInternal.getAdjacencyList().get(sectionChain2.getUuid()).getNext()).isNull();
+    assertThat(orchestrationAdjacencyList.getAdjacencyList().get(sectionChain2.getUuid()).getNext()).isNull();
   }
 
   @Test
@@ -1013,20 +1007,18 @@ public class GraphGeneratorTest extends OrchestrationVisualizationTest {
         fork.getUuid(), EdgeList.builder().edges(Lists.newArrayList(parallelNode1.getUuid())).next(null).build());
     adjacencyListMap.put(parallelNode1.getUuid(), EdgeList.builder().edges(new ArrayList<>()).next(null).build());
 
-    OrchestrationAdjacencyListInternal adjacencyListInternal = OrchestrationAdjacencyListInternal.builder()
-                                                                   .graphVertexMap(graphVertexMap)
-                                                                   .adjacencyList(adjacencyListMap)
-                                                                   .build();
+    OrchestrationAdjacencyList orchestrationAdjacencyList =
+        OrchestrationAdjacencyList.builder().graphVertexMap(graphVertexMap).adjacencyList(adjacencyListMap).build();
 
-    graphGenerator.populateAdjacencyList(adjacencyListInternal, Lists.newArrayList(parallelNode2));
+    graphGenerator.populateAdjacencyList(orchestrationAdjacencyList, Lists.newArrayList(parallelNode2));
 
-    assertThat(adjacencyListInternal).isNotNull();
+    assertThat(orchestrationAdjacencyList).isNotNull();
 
-    assertThat(adjacencyListInternal.getGraphVertexMap().size()).isEqualTo(3);
-    assertThat(adjacencyListInternal.getGraphVertexMap().keySet())
+    assertThat(orchestrationAdjacencyList.getGraphVertexMap().size()).isEqualTo(3);
+    assertThat(orchestrationAdjacencyList.getGraphVertexMap().keySet())
         .containsExactlyInAnyOrder(fork.getUuid(), parallelNode1.getUuid(), parallelNode2.getUuid());
 
-    Map<String, EdgeList> adjacencyList = adjacencyListInternal.getAdjacencyList();
+    Map<String, EdgeList> adjacencyList = orchestrationAdjacencyList.getAdjacencyList();
     assertThat(adjacencyList).isNotNull();
     assertThat(adjacencyList.get(fork.getUuid()).getEdges())
         .containsExactlyInAnyOrder(parallelNode1.getUuid(), parallelNode2.getUuid());

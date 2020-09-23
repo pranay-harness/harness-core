@@ -9,15 +9,15 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.engine.executions.node.NodeExecutionService;
 import io.harness.execution.NodeExecution;
+import io.harness.execution.events.AsyncOrchestrationEventHandler;
 import io.harness.execution.events.OrchestrationEvent;
-import io.harness.execution.events.OrchestrationEventHandler;
 import io.harness.timeout.TimeoutEngine;
 import io.harness.timeout.trackers.events.StatusUpdateTimeoutEvent;
 
 import java.util.List;
 
 @OwnedBy(CDC)
-public class NodeExecutionStatusUpdateEventHandler implements OrchestrationEventHandler {
+public class NodeExecutionStatusUpdateEventHandler implements AsyncOrchestrationEventHandler {
   @Inject private NodeExecutionService nodeExecutionService;
   @Inject private TimeoutEngine timeoutEngine;
 

@@ -35,6 +35,7 @@ import io.harness.data.Outcome;
 import io.harness.delay.DelayEventHelper;
 import io.harness.engine.advise.AdviseHandler;
 import io.harness.engine.advise.AdviseHandlerFactory;
+import io.harness.engine.events.OrchestrationEventEmitter;
 import io.harness.engine.executables.ExecutableProcessor;
 import io.harness.engine.executables.ExecutableProcessorFactory;
 import io.harness.engine.executables.InvocationHelper;
@@ -50,7 +51,10 @@ import io.harness.engine.resume.EngineWaitResumeCallback;
 import io.harness.exception.ExceptionUtils;
 import io.harness.execution.NodeExecution;
 import io.harness.execution.NodeExecution.NodeExecutionKeys;
+import io.harness.execution.PlanExecution;
 import io.harness.execution.PlanExecution.PlanExecutionKeys;
+import io.harness.execution.events.OrchestrationEvent;
+import io.harness.execution.events.OrchestrationEventType;
 import io.harness.execution.status.Status;
 import io.harness.facilitator.Facilitator;
 import io.harness.facilitator.FacilitatorObtainment;
@@ -117,6 +121,7 @@ public class OrchestrationEngine {
   @Inject private InvocationHelper invocationHelper;
   @Inject private TimeoutEngine timeoutEngine;
   @Inject @Named(OrchestrationPublisherName.PUBLISHER_NAME) String publisherName;
+  @Inject private OrchestrationEventEmitter eventEmitter;
 
   public void startNodeExecution(String nodeExecutionId) {
     NodeExecution nodeExecution = nodeExecutionService.get(nodeExecutionId);
@@ -351,8 +356,15 @@ public class OrchestrationEngine {
 
   private void concludePlanExecution(Ambiance ambiance) {
     Status status = calculateEndStatus(ambiance.getPlanExecutionId());
-    planExecutionService.updateStatus(
+    PlanExecution planExecution = planExecutionService.updateStatus(
         ambiance.getPlanExecutionId(), status, ops -> ops.set(PlanExecutionKeys.endTs, System.currentTimeMillis()));
+    eventEmitter.emitEvent(OrchestrationEvent.builder()
+                               .ambiance(Ambiance.builder()
+                                             .planExecutionId(planExecution.getUuid())
+                                             .setupAbstractions(planExecution.getSetupAbstractions())
+                                             .build())
+                               .eventType(OrchestrationEventType.ORCHESTRATION_END)
+                               .build());
   }
 
   // TODO (prashant) => Improve this with more clarity.

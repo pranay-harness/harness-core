@@ -16,7 +16,7 @@ import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.EdgeList;
 import io.harness.beans.GraphVertex;
-import io.harness.beans.OrchestrationAdjacencyListInternal;
+import io.harness.beans.OrchestrationAdjacencyList;
 import io.harness.beans.Subgraph;
 import io.harness.beans.converter.GraphVertexConverter;
 import io.harness.data.Outcome;
@@ -50,7 +50,7 @@ public class GraphGenerator {
     return generate(startingNodeExId, nodeExecutions);
   }
 
-  public OrchestrationAdjacencyListInternal generateAdjacencyList(
+  public OrchestrationAdjacencyList generateAdjacencyList(
       String startingNodeExId, List<NodeExecution> nodeExecutions, boolean isOutcomePresent) {
     if (isEmpty(startingNodeExId)) {
       logger.warn("Starting node cannot be null");
@@ -60,31 +60,34 @@ public class GraphGenerator {
   }
 
   public void populateAdjacencyList(
-      OrchestrationAdjacencyListInternal adjacencyListInternal, List<NodeExecution> nodeExecutions) {
+      OrchestrationAdjacencyList adjacencyListInternal, List<NodeExecution> nodeExecutions) {
     nodeExecutions.sort(Comparator.comparing(NodeExecution::getCreatedAt));
 
+    for (NodeExecution nodeExecution : nodeExecutions) {
+      populateAdjacencyList(adjacencyListInternal, nodeExecution);
+    }
+  }
+
+  public void populateAdjacencyList(OrchestrationAdjacencyList adjacencyListInternal, NodeExecution nodeExecution) {
     Map<String, GraphVertex> graphVertexMap = adjacencyListInternal.getGraphVertexMap();
     Map<String, EdgeList> adjacencyList = adjacencyListInternal.getAdjacencyList();
 
-    for (NodeExecution nodeExecution : nodeExecutions) {
-      String currentUuid = nodeExecution.getUuid();
-      graphVertexMap.put(currentUuid, GraphVertexConverter.convertFrom(nodeExecution));
+    String currentUuid = nodeExecution.getUuid();
+    graphVertexMap.put(currentUuid, GraphVertexConverter.convertFrom(nodeExecution));
 
-      // compute adjList
-      if (isPreviousIdPresent(nodeExecution.getPreviousId())) {
-        adjacencyList.get(nodeExecution.getPreviousId()).setNext(currentUuid);
-      } else if (isParentIdPresent(nodeExecution.getParentId())) {
-        String parentId = nodeExecution.getParentId();
-        EdgeList parentEdgeList = adjacencyList.get(parentId);
-        if (isChainNonInitialVertex(graphVertexMap.get(parentId).getMode(), parentEdgeList)) {
-          appendToChainEnd(adjacencyList, parentEdgeList.getEdges().get(0), currentUuid);
-        } else {
-          parentEdgeList.getEdges().add(currentUuid);
-        }
+    // compute adjList
+    if (isPreviousIdPresent(nodeExecution.getPreviousId())) {
+      adjacencyList.get(nodeExecution.getPreviousId()).setNext(currentUuid);
+    } else if (isParentIdPresent(nodeExecution.getParentId())) {
+      String parentId = nodeExecution.getParentId();
+      EdgeList parentEdgeList = adjacencyList.get(parentId);
+      if (isChainNonInitialVertex(graphVertexMap.get(parentId).getMode(), parentEdgeList)) {
+        appendToChainEnd(adjacencyList, parentEdgeList.getEdges().get(0), currentUuid);
+      } else {
+        parentEdgeList.getEdges().add(currentUuid);
       }
-      adjacencyList.put(
-          currentUuid, EdgeList.builder().edges(new ArrayList<>()).next(nodeExecution.getNextId()).build());
     }
+    adjacencyList.put(currentUuid, EdgeList.builder().edges(new ArrayList<>()).next(nodeExecution.getNextId()).build());
   }
 
   boolean isPreviousIdPresent(String previousId) {
@@ -99,7 +102,7 @@ public class GraphGenerator {
     return isChainMode(mode) && !parentEdgeList.getEdges().isEmpty();
   }
 
-  OrchestrationAdjacencyListInternal generateList(
+  OrchestrationAdjacencyList generateList(
       String startingNodeExId, List<NodeExecution> nodeExecutions, boolean isOutcomePresent) {
     final GraphGeneratorSession session = createSession(nodeExecutions);
     return session.generateListStartingFrom(startingNodeExId, isOutcomePresent);
@@ -202,8 +205,7 @@ public class GraphGenerator {
       currentVertex.setNext(generateGraph(nextChainNodeId));
     }
 
-    private OrchestrationAdjacencyListInternal generateListStartingFrom(
-        String startingNodeId, boolean isOutcomePresent) {
+    private OrchestrationAdjacencyList generateListStartingFrom(String startingNodeId, boolean isOutcomePresent) {
       if (startingNodeId == null) {
         throw new InvalidRequestException("The starting node id cannot be null");
       }
@@ -262,10 +264,7 @@ public class GraphGenerator {
         adjacencyList.put(currentNodeId, EdgeList.builder().edges(edges).next(nextNodeId).build());
       }
 
-      return OrchestrationAdjacencyListInternal.builder()
-          .graphVertexMap(graphVertexMap)
-          .adjacencyList(adjacencyList)
-          .build();
+      return OrchestrationAdjacencyList.builder().graphVertexMap(graphVertexMap).adjacencyList(adjacencyList).build();
     }
 
     /**

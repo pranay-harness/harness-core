@@ -18,6 +18,11 @@ import org.springframework.lang.Nullable;
 public class HMongoTemplate extends MongoTemplate {
   private static final int RETRIES = 3;
 
+  public static final FindAndModifyOptions upsertReturnNewOptions =
+      new FindAndModifyOptions().upsert(true).returnNew(true);
+  public static final FindAndModifyOptions upsertReturnOldOptions =
+      new FindAndModifyOptions().upsert(true).returnNew(false);
+
   public HMongoTemplate(MongoDbFactory mongoDbFactory, MongoConverter mongoConverter) {
     super(mongoDbFactory, mongoConverter);
   }
