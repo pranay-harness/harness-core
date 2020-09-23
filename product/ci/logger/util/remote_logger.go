@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"os"
 
-	ciclient "github.com/wings-software/log-service/client/ci"
+	ciclient "github.com/wings-software/portal/product/log-service/client/ci"
 	"github.com/wings-software/portal/commons/go/lib/logs"
 )
 

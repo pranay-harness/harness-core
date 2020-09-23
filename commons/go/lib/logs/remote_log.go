@@ -1,7 +1,7 @@
 package logs
 
 import (
-	"github.com/wings-software/log-service/client"
+	"github.com/wings-software/portal/product/log-service/client"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
 )

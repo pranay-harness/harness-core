@@ -7,6 +7,6 @@ go_library(
     visibility = ["//visibility:public"],
     deps = [
         "//commons/go/lib/logs:go_default_library",
-        "@com_github_wings-software_log-service//client/ci:go_default_library",
+        "//product/log-service/client/ci:go_default_library",
     ],
 )

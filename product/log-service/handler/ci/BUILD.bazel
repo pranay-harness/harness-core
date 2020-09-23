@@ -1,0 +1,19 @@
+load("@io_bazel_rules_go//go:def.bzl", "go_library")
+
+go_library(
+    name = "go_default_library",
+    srcs = [
+        "handler.go",
+        "store.go",
+        "stream.go",
+    ],
+    importpath = "github.com/wings-software/portal/product/log-service/handler/ci",
+    visibility = ["//visibility:public"],
+    deps = [
+        "//product/log-service/handler/util:go_default_library",
+        "//product/log-service/logger:go_default_library",
+        "//product/log-service/store:go_default_library",
+        "//product/log-service/stream:go_default_library",
+        "@com_github_go_chi_chi//:go_default_library",
+    ],
+)
