@@ -10,7 +10,6 @@ sources()
 java_library(
     name = "maven_deps",
     exports = [
-            "//990-commons-test:module",
             "//12-commons:module",
             "//12-commons:maven_deps",
             "@maven//:com_amazonaws_aws_java_sdk_ec2",
@@ -34,6 +33,7 @@ java_library(
 java_library(
     name = "test_deps",
     exports = [
+        "//990-commons-test:module",
         "@maven//:org_assertj_assertj_core",
         "@maven//:junit_junit",
     ]

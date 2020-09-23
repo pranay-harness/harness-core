@@ -10,7 +10,6 @@ sources()
 java_library(
     name = "maven_deps",
     exports = [
-                "//990-commons-test:module",
                 "//12-commons:module",
                 "@maven//:com_google_protobuf_protobuf_java",
                 "@maven//:org_projectlombok_lombok",
@@ -47,6 +46,7 @@ java_library(
 java_library(
     name = "test_deps",
     exports = [
+        "//990-commons-test:module",
         "@maven//:org_mockito_mockito_core",
         "@maven//:org_assertj_assertj_core",
         "@maven//:junit_junit"

@@ -10,7 +10,6 @@ sources()
 java_library(
     name = "maven_deps",
     exports = [
-               "//990-commons-test:module",
                "//12-commons:module",
                "//12-commons:maven_deps",
                "@maven//:com_google_code_findbugs_annotations",
@@ -61,6 +60,7 @@ java_library(
         "module",
         "maven_deps",
         "test_deps",
+        "//990-commons-test:module",
         "//13-grpc-api/src/main/proto:13_grpc_api_proto",
         "//13-grpc-api/src/main/proto:13_grpc_api_java_proto",
         "//:lombok",
