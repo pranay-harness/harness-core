@@ -10,6 +10,7 @@ import com.google.inject.Singleton;
 
 import com.mongodb.DBCollection;
 import io.harness.mongo.index.migrator.Migrator;
+import io.harness.persistence.Store;
 import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.AdvancedDatastore;
 import org.mongodb.morphia.Morphia;
@@ -26,10 +27,10 @@ public class IndexManager {
   @Inject Injector injector;
   @Nullable @Inject Map<String, Migrator> migrators;
 
-  public void ensureIndexes(Mode mode, AdvancedDatastore datastore, Morphia morphia) {
+  public void ensureIndexes(Mode mode, AdvancedDatastore datastore, Morphia morphia, Store store) {
     try {
       IndexManagerSession session = new IndexManagerSession(datastore, migrators, mode == null ? MANUAL : mode);
-      if (session.ensureIndexes(morphia) && mode == INSPECT) {
+      if (session.ensureIndexes(morphia, store) && mode == INSPECT) {
         logger.info("the inspection finished");
         throw new IndexManagerInspectException();
       }

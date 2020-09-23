@@ -22,6 +22,7 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
+import org.mongodb.morphia.Morphia;
 import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
 import org.springframework.mock.env.MockEnvironment;
@@ -35,12 +36,13 @@ public class ApplicationReadyListenerTest extends CategoryTest {
 
   @Mock private HPersistence hPersistence;
   @Mock private TimeScaleDBService timeScaleDBService;
+  @Mock private Morphia morphia;
   @Mock private IndexManager indexManager;
 
   @Before
   public void setUp() throws Exception {
     MockEnvironment env = new MockEnvironment();
-    listener = new ApplicationReadyListener(timeScaleDBService, hPersistence, indexManager, env);
+    listener = new ApplicationReadyListener(timeScaleDBService, hPersistence, morphia, indexManager, env);
   }
 
   @Test
@@ -67,7 +69,7 @@ public class ApplicationReadyListenerTest extends CategoryTest {
   public void shouldPassIfTsDbNotConnectableButEnsureTimescaleFalse() throws Exception {
     MockEnvironment env = new MockEnvironment();
     env.setProperty("ensure-timescale", "false");
-    val listener = new ApplicationReadyListener(timeScaleDBService, hPersistence, indexManager, env);
+    val listener = new ApplicationReadyListener(timeScaleDBService, hPersistence, morphia, indexManager, env);
     assertThatCode(listener::ensureTimescaleConnectivity).doesNotThrowAnyException();
   }
 
