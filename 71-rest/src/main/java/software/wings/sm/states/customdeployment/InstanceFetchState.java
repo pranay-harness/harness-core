@@ -1,11 +1,14 @@
 package software.wings.sm.states.customdeployment;
 
+import static com.google.common.base.Preconditions.checkArgument;
 import static io.harness.beans.ExecutionStatus.FAILED;
 import static io.harness.beans.ExecutionStatus.SUCCESS;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.logging.CommandExecutionStatus.RUNNING;
 import static java.lang.String.format;
 import static java.util.Arrays.asList;
+import static org.apache.commons.lang3.StringUtils.isBlank;
+import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static software.wings.api.InstanceElement.Builder.anInstanceElement;
 import static software.wings.beans.Log.Builder.aLog;
 import static software.wings.beans.LogColor.Red;
@@ -82,6 +85,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -150,7 +154,13 @@ public class InstanceFetchState extends State {
         accountId, infrastructureMapping.getCustomDeploymentTemplateId(),
         infrastructureMapping.getDeploymentTypeTemplateVersion());
 
-    String scriptString = replaceInfraVariables(
+    try {
+      validatePrerequisites(deploymentTypeTemplate);
+    } catch (IllegalArgumentException e) {
+      return handleException(e, "Prerequisites not met.");
+    }
+
+    final String scriptString = replaceInfraVariables(
         deploymentTypeTemplate.getFetchInstanceScript(), infraMappingElement.getCustom().getVars());
 
     final ManagerExecutionLogCallback logCallback =
@@ -210,6 +220,23 @@ public class InstanceFetchState extends State {
                                 .instanceFetchScript(getRenderedScriptExceptSecrets(taskParameters.getScriptBody()))
                                 .build())
         .build();
+  }
+
+  private void validatePrerequisites(CustomDeploymentTypeTemplate deploymentTypeTemplate) {
+    checkArgument(
+        isNotBlank(deploymentTypeTemplate.getFetchInstanceScript()), "Fetch Instance Command Script Cannot Be Empty");
+    checkArgument(
+        isNotBlank(deploymentTypeTemplate.getHostObjectArrayPath()), "Host Object Array Path Cannot Be Empty");
+    checkArgument(
+        deploymentTypeTemplate.getHostAttributes() != null && deploymentTypeTemplate.getHostAttributes().size() > 0,
+        "Host Attribute Mapping Cannot be Empty. It is required to map Json to Instances");
+    final Set<String> emptyAttributes = deploymentTypeTemplate.getHostAttributes()
+                                            .entrySet()
+                                            .stream()
+                                            .filter(e -> isBlank(e.getValue()) && isNotBlank(e.getKey()))
+                                            .map(Entry::getKey)
+                                            .collect(Collectors.toSet());
+    checkArgument(emptyAttributes.isEmpty(), format("Following host attribute fields are empty %s", emptyAttributes));
   }
 
   private ManagerExecutionLogCallback buildLogcallBack(String appId, String activityId, String commandUnitName) {
@@ -312,7 +339,7 @@ public class InstanceFetchState extends State {
 
   private ExecutionResponse handleException(Throwable t, String defaultErrorMessage) {
     final ExecutionResponseBuilder responseBuilder = ExecutionResponse.builder().executionStatus(FAILED);
-    StringBuilder errorMessage = new StringBuilder("Reason: ");
+    StringBuilder errorMessage = new StringBuilder();
     if (t instanceof InvalidJsonException) {
       errorMessage.append(org.apache.commons.lang3.exception.ExceptionUtils.getRootCauseMessage(t));
     } else if (t instanceof WingsException) {
