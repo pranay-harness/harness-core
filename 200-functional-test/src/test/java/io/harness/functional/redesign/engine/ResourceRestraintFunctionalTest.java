@@ -10,6 +10,7 @@ import com.google.inject.Inject;
 import io.harness.adviser.AdviserObtainment;
 import io.harness.adviser.AdviserType;
 import io.harness.advisers.success.OnSuccessAdviserParameters;
+import io.harness.beans.EmbeddedUser;
 import io.harness.category.element.FunctionalTests;
 import io.harness.execution.PlanExecution;
 import io.harness.execution.status.Status;
@@ -55,6 +56,7 @@ public class ResourceRestraintFunctionalTest extends AbstractFunctionalTest {
   @Before
   public void setUp() {
     owners = ownerManager.create();
+    owners.add(EmbeddedUser.builder().uuid(generateUuid()).name(ALEXEI).email(ALEXEI).build());
     application = applicationGenerator.ensurePredefined(seed, owners, ApplicationGenerator.Applications.GENERIC_TEST);
     assertThat(application).isNotNull();
 
