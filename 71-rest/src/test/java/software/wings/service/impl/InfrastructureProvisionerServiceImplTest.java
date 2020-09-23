@@ -121,7 +121,6 @@ public class InfrastructureProvisionerServiceImplTest extends WingsBaseTest {
   @Mock MorphiaIterator infrastructureMappings;
   @Mock InfrastructureMappingService infrastructureMappingService;
   @Mock InfrastructureDefinitionService infrastructureDefinitionService;
-  @Mock FeatureFlagService featureFlagService;
   @Mock AwsCFHelperServiceManager awsCFHelperServiceManager;
   @Mock ServiceResourceService serviceResourceService;
   @Mock SettingsService settingService;
@@ -553,9 +552,7 @@ public class InfrastructureProvisionerServiceImplTest extends WingsBaseTest {
     Reflect.on(ipService).set("featureFlagService", mockFeatureFlagService);
     Reflect.on(ipService).set("gitConfigHelperService", spyGitConfigHelperService);
 
-    doReturn(false).when(mockFeatureFlagService).isEnabled(eq(FeatureName.INFRA_MAPPING_REFACTOR), any());
     Map<String, SettingAttribute> idToSettingAttributeMapping = new HashMap<>();
-    Map<String, Service> idToServiceMapping = new HashMap<>();
 
     idToSettingAttributeMapping.put("settingId",
         aSettingAttribute()
@@ -569,15 +566,15 @@ public class InfrastructureProvisionerServiceImplTest extends WingsBaseTest {
 
     InfrastructureProvisionerDetails details1 = ipService.details(
         TerraformInfrastructureProvisioner.builder().sourceRepoSettingId("settingId").repoName("c").build(),
-        idToSettingAttributeMapping, idToServiceMapping);
+        idToSettingAttributeMapping);
 
     InfrastructureProvisionerDetails details2 = ipService.details(
         TerraformInfrastructureProvisioner.builder().sourceRepoSettingId("settingId").repoName("d").build(),
-        idToSettingAttributeMapping, idToServiceMapping);
+        idToSettingAttributeMapping);
 
     InfrastructureProvisionerDetails details3 =
         ipService.details(TerraformInfrastructureProvisioner.builder().sourceRepoSettingId("settingId3").build(),
-            idToSettingAttributeMapping, idToServiceMapping);
+            idToSettingAttributeMapping);
 
     assertThat(details1.getRepository()).isEqualTo("http://a.com/b/c");
     assertThat(details2.getRepository()).isEqualTo("http://a.com/b/d");
