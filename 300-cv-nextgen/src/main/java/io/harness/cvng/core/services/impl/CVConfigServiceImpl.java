@@ -20,6 +20,7 @@ import io.harness.cvng.core.services.api.DeletedCVConfigService;
 import io.harness.cvng.core.services.api.VerificationTaskService;
 import io.harness.cvng.dashboard.beans.EnvToServicesDTO;
 import io.harness.cvng.dashboard.services.api.AnomalyService;
+import io.harness.ng.core.environment.beans.EnvironmentType;
 import io.harness.ng.core.environment.dto.EnvironmentResponseDTO;
 import io.harness.ng.core.service.dto.ServiceResponseDTO;
 import io.harness.persistence.HPersistence;
@@ -231,5 +232,22 @@ public class CVConfigServiceImpl implements CVConfigService {
       query = query.filter(CVConfigKeys.category, monitoringCategory);
     }
     return query.asList();
+  }
+
+  @Override
+  public List<CVConfig> getConfigsOfProductionEnvironments(String accountId, String orgIdentifier,
+      String projectIdentifier, String environmentIdentifier, String serviceIdentifier,
+      CVMonitoringCategory monitoringCategory) {
+    List<CVConfig> configsForFilter =
+        list(accountId, orgIdentifier, projectIdentifier, environmentIdentifier, serviceIdentifier, monitoringCategory);
+    List<CVConfig> configsToReturn = new ArrayList<>();
+    configsForFilter.forEach(config -> {
+      EnvironmentResponseDTO environment = nextGenService.getEnvironment(
+          config.getEnvIdentifier(), config.getAccountId(), config.getOrgIdentifier(), config.getProjectIdentifier());
+      if (environment.getType().equals(EnvironmentType.Production)) {
+        configsToReturn.add(config);
+      }
+    });
+    return configsToReturn;
   }
 }

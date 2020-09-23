@@ -31,4 +31,6 @@ public interface CVConfigService {
   List<EnvToServicesDTO> getEnvToServicesList(String accountId, String orgIdentifier, String projectIdentifier);
   Map<String, Set<String>> getEnvToServicesMap(String accountId, String orgIdentifier, String projectIdentifier);
   Set<CVMonitoringCategory> getAvailableCategories(String accountId, String projectIdentifier);
+  List<CVConfig> getConfigsOfProductionEnvironments(String accountId, String orgIdentifier, String projectIdentifier,
+      String environmentIdentifier, String serviceIdentifier, CVMonitoringCategory monitoringCategory);
 }
