@@ -10,7 +10,6 @@ sources()
 java_library(
     name = "maven_deps",
     exports = [
-            "//990-commons-test:module",
              "//12-commons:module",
              "//14-api-services-beans:module",
              "@maven//:com_google_protobuf_protobuf_java",
@@ -50,6 +49,7 @@ java_library(
 java_library(
     name = "test_deps",
     exports = [
+        "//990-commons-test:module",
         "//15-api-services:module",
         "//19-delegate-tasks-beans:module",
         "@maven//:org_mockito_mockito_core",
@@ -67,7 +67,6 @@ java_library(
         "module",
         "maven_deps",
         "//:lombok",
-        "//990-commons-test:module",
         "test_deps",
     ],
    visibility = ["//visibility:public"],

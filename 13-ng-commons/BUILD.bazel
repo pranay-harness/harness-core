@@ -10,7 +10,6 @@ sources()
 java_library(
     name = "maven_deps",
     exports = [
-            "//990-commons-test:module",
             "//12-commons:module",
             "@maven//:ch_qos_logback_contrib_logback_jackson",
             "@maven//:ch_qos_logback_contrib_logback_json_classic",

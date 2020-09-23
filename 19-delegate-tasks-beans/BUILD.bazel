@@ -10,29 +10,37 @@ sources()
 java_library(
     name = "maven_deps",
     exports = [
+               "//12-commons:module",
+               "//12-commons:maven_deps",
                 "//14-api-services-beans:maven_deps",
                 "@maven//:com_fasterxml_jackson_core_jackson_annotations",
                 "@maven//:com_google_code_findbugs_annotations",
                 "@maven//:com_google_guava_guava",
                 "@maven//:com_google_protobuf_protobuf_java",
-                "@maven//:junit_junit",
                 "@maven//:org_apache_commons_commons_lang3",
                 "@maven//:org_eclipse_jgit_org_eclipse_jgit",
-                "@maven//:org_mockito_mockito_core",
                 "@maven//:org_projectlombok_lombok",
                 "@maven//:org_slf4j_slf4j_api",
                 "@maven//:io_swagger_swagger_annotations",
                 "@maven//:org_apache_httpcomponents_httpclient",
-                "@maven//:org_assertj_assertj_core"
         ],
     visibility = ["//visibility:public"],
 )
 
-
+java_library(
+    name = "test_deps",
+    exports = [
+        "//990-commons-test:module",
+        "@maven//:org_powermock_powermock_module_junit4",
+        "@maven//:org_mockito_mockito_core",
+        "@maven//:org_assertj_assertj_core",
+        "@maven//:junit_junit"
+    ]
+)
 
 java_library(
     name = "module",
-    srcs = glob(["src/**/*.java"]),
+    srcs = glob(["src/main/**/*.java"]),
     deps = [
                 "maven_deps",
                 "//14-api-services-beans:module",
@@ -49,8 +57,8 @@ java_library(
     deps = [
                 "maven_deps",
                 "module",
+                "test_deps",
                 "//:lombok",
-                "//990-commons-test:module",
     ],
    visibility = ["//visibility:public"],
 )
