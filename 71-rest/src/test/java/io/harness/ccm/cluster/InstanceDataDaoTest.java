@@ -44,8 +44,8 @@ public class InstanceDataDaoTest extends WingsBaseTest {
   @Owner(developers = SHUBHANSHU)
   @Category(UnitTests.class)
   public void shouldFetchInstanceDataForGivenInstances() {
-    List<InstanceData> instanceData = instanceDataDao.fetchInstanceDataForGivenInstances(
-        ACCOUNT_ID, CLUSTER_ID, Collections.singletonList(INSTANCE_ID));
+    List<InstanceData> instanceData =
+        instanceDataDao.fetchInstanceDataForGivenInstances(Collections.singletonList(INSTANCE_ID));
     assertThat(instanceData.get(0).getUuid()).isEqualTo(UUID);
     assertThat(instanceData.get(0).getAccountId()).isEqualTo(ACCOUNT_ID);
     assertThat(instanceData.get(0).getClusterId()).isEqualTo(CLUSTER_ID);

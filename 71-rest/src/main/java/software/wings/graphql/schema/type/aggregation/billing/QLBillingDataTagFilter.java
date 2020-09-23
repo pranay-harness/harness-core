@@ -13,10 +13,14 @@ import java.util.List;
 public class QLBillingDataTagFilter implements Filter {
   private QLBillingDataTagType entityType;
   private List<QLTagInput> tags;
+  private QLIdOperator operator;
 
   @Override
   public QLIdOperator getOperator() {
-    return QLIdOperator.IN;
+    if (operator == null) {
+      return QLIdOperator.IN;
+    }
+    return operator;
   }
 
   @Override

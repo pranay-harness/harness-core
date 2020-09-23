@@ -6,5 +6,6 @@ import java.util.List;
 
 public interface InstanceDataService {
   InstanceData get(String instanceId);
+  List<InstanceData> fetchInstanceDataForGivenInstances(List<String> instanceIds);
   List<InstanceData> fetchInstanceDataForGivenInstances(String accountId, String clusterId, List<String> instanceIds);
 }

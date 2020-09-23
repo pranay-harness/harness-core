@@ -22,6 +22,7 @@ public class BillingStatsDefaultKeys {
   public static final String NAMESPACE = "Total";
   public static final String CLUSTERTYPE = "Default_ClusterType";
   public static final String CLUSTERID = "Default_ClusterId";
+  public static final String CLUSTERNAME = "Default_ClusterName";
   public static final String TASKID = "Total";
   public static final int TOTALWORKLOADS = 0;
   public static final int TOTALNAMESPACES = 0;

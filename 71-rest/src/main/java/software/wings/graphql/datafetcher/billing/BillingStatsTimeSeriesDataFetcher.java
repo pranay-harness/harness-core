@@ -37,6 +37,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.EnumMap;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
@@ -58,6 +59,7 @@ public class BillingStatsTimeSeriesDataFetcher
   private static final long ONE_DAY_MILLIS = 86400000;
   private static final long ONE_HOUR_SEC = 3600;
   private static final long ONE_DAY_SEC = 86400;
+  private static final String UNALLOCATED_COST_ENTRY = "Unallocated";
 
   @Override
   @AuthRule(permissionType = PermissionType.LOGGED_IN)
@@ -90,15 +92,20 @@ public class BillingStatsTimeSeriesDataFetcher
     QLCCMTimeSeriesAggregation groupByTime = billingDataQueryBuilder.getGroupByTime(groupByList);
     timePeriod = getTimePeriod(groupByTime);
 
+    if (filters == null) {
+      filters = new ArrayList<>();
+    }
+
+    // For calculating unallocated cost
+    Map<Long, Double> unallocatedCostMapping = null;
+    if (billingDataQueryBuilder.showUnallocatedCost(groupByEntityList, filters)) {
+      unallocatedCostMapping = getUnallocatedCostData(accountId, filters, groupByList);
+    }
+
     if (!groupByTagList.isEmpty()) {
       groupByEntityList = getGroupByEntityListFromTags(groupByList, groupByEntityList, groupByTagList);
     } else if (!groupByLabelList.isEmpty()) {
       groupByEntityList = getGroupByEntityListFromLabels(groupByList, groupByEntityList, groupByLabelList);
-    }
-    groupByEntityList = getGroupByEntityListFromTags(groupByList, groupByEntityList, groupByTagList);
-
-    if (filters == null) {
-      filters = new ArrayList<>();
     }
 
     queryData = billingDataQueryBuilder.formQuery(accountId, filters, aggregateFunction, groupByEntityList, groupByTime,
@@ -111,7 +118,8 @@ public class BillingStatsTimeSeriesDataFetcher
            Statement statement = connection.createStatement()) {
         resultSet = statement.executeQuery(queryData.getQuery());
         successful = true;
-        return generateStackedTimeSeriesData(queryData, resultSet, getMinStartTimeFromFilters(filters), timePeriod);
+        return generateStackedTimeSeriesData(
+            queryData, resultSet, getMinStartTimeFromFilters(filters), timePeriod, unallocatedCostMapping);
       } catch (SQLException e) {
         retryCount++;
         if (retryCount >= MAX_RETRY) {
@@ -131,7 +139,8 @@ public class BillingStatsTimeSeriesDataFetcher
   }
 
   protected QLBillingStackedTimeSeriesData generateStackedTimeSeriesData(BillingDataQueryMetadata queryData,
-      ResultSet resultSet, long startTimeFromFilters, long timePeriod) throws SQLException {
+      ResultSet resultSet, long startTimeFromFilters, long timePeriod, Map<Long, Double> unallocatedCostMapping)
+      throws SQLException {
     Map<Long, List<QLBillingTimeDataPoint>> qlTimeDataPointMap = new LinkedHashMap<>();
     Map<Long, List<QLBillingTimeDataPoint>> qlTimeCpuPointMap = new LinkedHashMap<>();
     Map<Long, List<QLBillingTimeDataPoint>> qlTimeMemoryPointMap = new LinkedHashMap<>();
@@ -313,7 +322,22 @@ public class BillingStatsTimeSeriesDataFetcher
 
     QLBillingStackedTimeSeriesDataBuilder timeSeriesDataBuilder = QLBillingStackedTimeSeriesData.builder();
 
-    return timeSeriesDataBuilder.data(prepareStackedTimeSeriesData(queryData, qlTimeDataPointMap))
+    List<QLBillingStackedTimeSeriesDataPoint> dataPoints = prepareStackedTimeSeriesData(queryData, qlTimeDataPointMap);
+    if (unallocatedCostMapping != null) {
+      dataPoints.forEach(dataPoint -> {
+        long time = dataPoint.getTime();
+        if (unallocatedCostMapping.containsKey(time)) {
+          dataPoint.getValues().add(QLBillingDataPoint.builder()
+                                        .key(QLReference.builder()
+                                                 .name(UNALLOCATED_COST_ENTRY)
+                                                 .id(UNALLOCATED_COST_ENTRY + ":" + UNALLOCATED_COST_ENTRY)
+                                                 .build())
+                                        .value(unallocatedCostMapping.get(time))
+                                        .build());
+        }
+      });
+    }
+    return timeSeriesDataBuilder.data(dataPoints)
         .cpuIdleCost(prepareStackedTimeSeriesData(queryData, qlTimeCpuPointMap))
         .memoryIdleCost(prepareStackedTimeSeriesData(queryData, qlTimeMemoryPointMap))
         .cpuUtilMetrics(prepareStackedTimeSeriesData(queryData, qlTimeCpuUtilsPointMap))
@@ -353,7 +377,7 @@ public class BillingStatsTimeSeriesDataFetcher
     return Math.round(resultSet.getDouble(field.getFieldName()) * 100D) / 100D;
   }
 
-  private double roundingDoubleValue(double value) throws SQLException {
+  private double roundingDoubleValue(double value) {
     return Math.round(value * 100D) / 100D;
   }
 
@@ -584,6 +608,67 @@ public class BillingStatsTimeSeriesDataFetcher
       default:
         return ONE_DAY_SEC;
     }
+  }
+
+  protected Map<Long, Double> getUnallocatedCostData(
+      @NotNull String accountId, List<QLBillingDataFilter> filters, List<QLCCMGroupBy> groupByList) {
+    BillingDataQueryMetadata queryData;
+    ResultSet resultSet = null;
+    boolean successful = false;
+    int retryCount = 0;
+
+    List<QLCCMAggregationFunction> aggregateFunction =
+        Collections.singletonList(QLCCMAggregationFunction.builder()
+                                      .operationType(QLCCMAggregateOperation.SUM)
+                                      .columnName("unallocatedcost")
+                                      .build());
+    QLCCMTimeSeriesAggregation groupByTime = billingDataQueryBuilder.getGroupByTime(groupByList);
+
+    queryData = billingDataQueryBuilder.formQuery(
+        accountId, filters, aggregateFunction, Collections.emptyList(), groupByTime, Collections.emptyList(), false);
+    logger.info("BillingStatsTimeSeriesDataFetcher query for unallocated cost: {}", queryData.getQuery());
+    logger.info(queryData.getQuery());
+
+    while (!successful && retryCount < MAX_RETRY) {
+      try (Connection connection = timeScaleDBService.getDBConnection();
+           Statement statement = connection.createStatement()) {
+        resultSet = statement.executeQuery(queryData.getQuery());
+        successful = true;
+        Map<Long, Double> unallocatedCostMapping = new HashMap<>();
+        while (resultSet != null && resultSet.next()) {
+          double unallocatedCost = 0;
+          long time = 0L;
+          for (BillingDataMetaDataFields field : queryData.getFieldNames()) {
+            switch (field.getDataType()) {
+              case DOUBLE:
+                unallocatedCost = roundingDoubleFieldValue(field, resultSet);
+                break;
+              case TIMESTAMP:
+                time = resultSet.getTimestamp(field.getFieldName(), utils.getDefaultCalendar()).getTime();
+                break;
+              default:
+                break;
+            }
+          }
+          unallocatedCostMapping.put(time, unallocatedCost);
+        }
+        return unallocatedCostMapping;
+      } catch (SQLException e) {
+        retryCount++;
+        if (retryCount >= MAX_RETRY) {
+          logger.error(
+              "Failed to execute query in BillingStatsTimeSeriesDataFetcher for unallocated cost, max retry count reached, query=[{}],accountId=[{}]",
+              queryData.getQuery(), accountId, e);
+        } else {
+          logger.warn(
+              "Failed to execute query in BillingStatsTimeSeriesDataFetcher for unallocated cost, query=[{}],accountId=[{}], retryCount=[{}]",
+              queryData.getQuery(), accountId, retryCount);
+        }
+      } finally {
+        DBUtils.close(resultSet);
+      }
+    }
+    return null;
   }
 
   @Override

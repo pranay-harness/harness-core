@@ -6,6 +6,7 @@ import lombok.Value;
 import lombok.experimental.FieldDefaults;
 import software.wings.graphql.datafetcher.billing.QLEntityData;
 import software.wings.graphql.schema.type.QLK8sLabel;
+import software.wings.graphql.schema.type.QLTags;
 import software.wings.graphql.schema.type.aggregation.QLData;
 import software.wings.security.PermissionAttribute.ResourceType;
 import software.wings.security.annotations.Scope;
@@ -29,4 +30,5 @@ public class QLFilterValuesData implements QLData {
   List<QLEntityData> clusters;
   List<QLEntityData> instances;
   List<QLK8sLabel> k8sLabels;
+  List<QLTags> tags;
 }

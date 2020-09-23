@@ -48,6 +48,13 @@ import java.util.stream.Collectors;
 @CdIndex(name = "accountId_name_labels",
     fields = { @Field(K8sWorkloadKeys.accountId)
                , @Field(K8sWorkloadKeys.name), @Field(K8sWorkloadKeys.labels) })
+@CdIndex(name = "accountId_lastUpdatedAt",
+    fields = { @Field(K8sWorkloadKeys.accountId)
+               , @Field(K8sWorkloadKeys.lastUpdatedAt) })
+@CdIndex(name = "accountId_lastUpdatedAt_labels",
+    fields =
+    { @Field(K8sWorkloadKeys.accountId)
+      , @Field(K8sWorkloadKeys.lastUpdatedAt), @Field(K8sWorkloadKeys.labels) })
 @FieldNameConstants(innerTypeName = "K8sWorkloadKeys")
 public final class K8sWorkload implements PersistentEntity, UuidAware, CreatedAtAware, UpdatedAtAware, AccountAccess {
   @Id String uuid;

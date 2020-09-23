@@ -97,8 +97,7 @@ public class NodeAndPodDetailsDataFetcherTest extends AbstractDataFetcherTest {
     createAccount(ACCOUNT1_ID, getLicenseInfo());
     createApp(ACCOUNT1_ID, APP1_ID_ACCOUNT1, APP1_ID_ACCOUNT1, TAG_TEAM, TAG_VALUE_TEAM1);
     when(statsHelper.getEntityName(any(), anyString())).thenAnswer(i -> i.getArgumentAt(1, String.class));
-    when(instanceDataService.fetchInstanceDataForGivenInstances(
-             ACCOUNT_ID, CLUSTER_ID, Collections.singletonList(INSTANCE_ID)))
+    when(instanceDataService.fetchInstanceDataForGivenInstances(Collections.singletonList(INSTANCE_ID)))
         .thenReturn(Collections.singletonList(getTestInstanceData(INSTANCE_ID, INSTANCE_ID)));
     Connection mockConnection = mock(Connection.class);
     Statement mockStatement = mock(Statement.class);

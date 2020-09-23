@@ -160,16 +160,25 @@ public class BillingStatsEntityDataFetcher
       Double unallocatedCost = BillingStatsDefaultKeys.UNALLOCATEDCOST;
       // Used to recalculate cost trend in case of group by labels or tags
       Double prevBillingAmount = BillingStatsDefaultKeys.TOTALCOST;
+      String applicationName = name;
+      String clusterName = name;
+      String appId = entityId;
       int efficiencyScore = BillingStatsDefaultKeys.EFFICIENCY_SCORE;
       int efficiencyScoreTrendPercentage = BillingStatsDefaultKeys.EFFICIENCY_SCORE_TREND;
 
       for (BillingDataMetaDataFields field : queryData.getFieldNames()) {
         switch (field) {
           case APPID:
+            type = field.getFieldName();
+            entityId = resultSet.getString(field.getFieldName());
+            name = statsHelper.getEntityName(field, entityId);
+            applicationName = name;
+            appId = entityId;
+            break;
           case SERVICEID:
-          case CLUSTERNAME:
           case TASKID:
           case CLOUDPROVIDERID:
+          case CLUSTERNAME:
           case ENVID:
             type = field.getFieldName();
             entityId = resultSet.getString(field.getFieldName());
@@ -223,6 +232,7 @@ public class BillingStatsEntityDataFetcher
             type = field.getFieldName();
             entityId = resultSet.getString(field.getFieldName());
             name = statsHelper.getEntityName(field, entityId);
+            clusterName = name;
             clusterId = entityId;
             break;
           case MAXCPUUTILIZATION:
@@ -311,6 +321,10 @@ public class BillingStatsEntityDataFetcher
           .avgCpuUtilization(avgCpuUtilization)
           .avgMemoryUtilization(avgMemoryUtilization)
           .unallocatedCost(unallocatedCost)
+          .prevBillingAmount(prevBillingAmount)
+          .appName(applicationName)
+          .appId(appId)
+          .clusterName(clusterName)
           .efficiencyScore(efficiencyScore)
           .efficiencyScoreTrendPercentage(efficiencyScoreTrendPercentage)
           .prevBillingAmount(prevBillingAmount);

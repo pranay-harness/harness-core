@@ -71,6 +71,8 @@ extend type Query {
   ): SunburstChartData @dataFetcher(name: sunburstChartStats)
 
   nodeAndPodDetails(
+    limit: Int
+    offset: Int
     filters: [CCMFilter]
     aggregateFunction: [CCMAggregationFunction]
     groupBy: [CCMGroupBy]
@@ -194,6 +196,9 @@ type BillingEntityDataPoint {
   avgMemoryUtilization: Number
   unallocatedCost: Number
   networkCost: Number
+  appId: String
+  appName: String
+  clusterName: String
   efficiencyScore: Number
   efficiencyScoreTrend: Number
 }
@@ -257,6 +262,12 @@ type BillingFilterDataPoint {
   clusters: [EntityData]
   instances: [EntityData]
   k8sLabels: [K8sLabel]
+  tags: [Tags]
+}
+
+type Tags {
+  name: String
+  values: [String]
 }
 
 type EntityData {
@@ -382,13 +393,17 @@ input CCMFilter {
   podInstanceId: IdFilter
   parentInstanceId: IdFilter
   envType: CEEnvironmentTypeFilter
+  labelSearch: IdFilter
+  tagSearch: IdFilter
 }
 
 input BillingDataLabelFilter {
+  operator: IdOperator
   labels: [K8sLabelInput]
 }
 
 input BillingDataTagFilter {
+  operator: IdOperator
   entityType: BillingDataTagType
   tags: [TagInput]
 }
@@ -419,6 +434,7 @@ type NodeAndPodDataPoint {
   namespace: String
   workload: String
   clusterName: String
+  clusterId: String
   node: String
   nodePoolName: String
   totalCost: Number

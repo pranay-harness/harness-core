@@ -11,10 +11,14 @@ import java.util.List;
 @Builder
 public class QLBillingDataLabelFilter implements Filter {
   private List<QLK8sLabelInput> labels;
+  private QLIdOperator operator;
 
   @Override
   public QLIdOperator getOperator() {
-    return QLIdOperator.IN;
+    if (operator == null) {
+      return QLIdOperator.IN;
+    }
+    return operator;
   }
 
   @Override
