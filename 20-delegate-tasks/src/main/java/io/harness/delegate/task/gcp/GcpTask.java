@@ -12,7 +12,6 @@ import io.harness.delegate.task.gcp.request.GcpRequest.RequestType;
 import io.harness.delegate.task.gcp.taskHandlers.TaskHandler;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
-import io.harness.gcp.impl.GcpClientImpl;
 
 import java.util.Map;
 import java.util.function.BooleanSupplier;
@@ -20,7 +19,6 @@ import java.util.function.Consumer;
 
 public class GcpTask extends AbstractDelegateRunnableTask {
   @Inject private Map<RequestType, TaskHandler> gcpTaskTypeToTaskHandlerMap;
-  @Inject private GcpClientImpl gcpClient;
 
   public GcpTask(
       DelegateTaskPackage delegateTaskPackage, Consumer<DelegateTaskResponse> consumer, BooleanSupplier preExecute) {

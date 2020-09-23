@@ -72,6 +72,7 @@ import java.io.File;
 import java.io.IOException;
 import java.net.URISyntaxException;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -108,6 +109,7 @@ public class InstanceFetchStateTest extends WingsBaseTest {
     doReturn(infraMapping).when(infrastructureMappingService).get(APP_ID, INFRA_MAPPING_ID);
     doReturn(CustomDeploymentTypeTemplate.builder()
                  .fetchInstanceScript("echo Hello")
+                 .hostObjectArrayPath("items")
                  .hostAttributes(ImmutableMap.of("key", "value"))
                  .build())
         .when(customDeploymentTypeService)
@@ -231,7 +233,7 @@ public class InstanceFetchStateTest extends WingsBaseTest {
     assertThat(executionResponse.getExecutionStatus()).isEqualTo(FAILED);
     assertThat(executionResponse.getErrorMessage())
         .isEqualTo(
-            "Reason: JsonParseException: Unexpected character (':' (code 58)): was expecting comma to separate ARRAY entries\n"
+            "JsonParseException: Unexpected character (':' (code 58)): was expecting comma to separate ARRAY entries\n"
             + " at [Source: {\"Instances\": [\"ip\":\"1.1\"},{\"ip\":\"2.2\"}]}; line: 1, column: 21]");
   }
 
@@ -374,6 +376,157 @@ public class InstanceFetchStateTest extends WingsBaseTest {
                    .map(v -> v.get("ipv6"))
                    .collect(Collectors.toList()))
         .containsExactlyInAnyOrder(StringUtils.EMPTY, StringUtils.EMPTY, "10.20.30.40");
+  }
+
+  @Test
+  @Owner(developers = YOGESH)
+  @Category(UnitTests.class)
+  public void validateEmptyHostObjectArrayPath() {
+    // valid case
+    doReturn(CustomDeploymentTypeTemplate.builder()
+                 .fetchInstanceScript("hello")
+                 .hostObjectArrayPath("items")
+                 .hostAttributes(ImmutableMap.of("key", "value"))
+                 .build())
+        .when(customDeploymentTypeService)
+        .fetchDeploymentTemplate(anyString(), anyString(), anyString());
+
+    state.execute(context);
+
+    verify(delegateService).queueTask(any(DelegateTask.class));
+
+    // empty host object array path
+    doReturn(CustomDeploymentTypeTemplate.builder()
+                 .fetchInstanceScript("hello")
+                 .hostObjectArrayPath("")
+                 .hostAttributes(ImmutableMap.of("key", "value"))
+                 .build())
+        .when(customDeploymentTypeService)
+        .fetchDeploymentTemplate(anyString(), anyString(), anyString());
+
+    ExecutionResponse response = state.execute(context);
+
+    assertThat(response.getExecutionStatus()).isEqualTo(FAILED);
+    assertThat(response.getErrorMessage())
+        .isEqualTo("Prerequisites not met.\n"
+            + "Host Object Array Path Cannot Be Empty");
+    // null case
+    doReturn(CustomDeploymentTypeTemplate.builder()
+                 .fetchInstanceScript("hello")
+                 .hostObjectArrayPath(null)
+                 .hostAttributes(ImmutableMap.of("key", "value"))
+                 .build())
+        .when(customDeploymentTypeService)
+        .fetchDeploymentTemplate(anyString(), anyString(), anyString());
+
+    response = state.execute(context);
+
+    assertThat(response.getExecutionStatus()).isEqualTo(FAILED);
+    assertThat(response.getErrorMessage())
+        .isEqualTo("Prerequisites not met.\n"
+            + "Host Object Array Path Cannot Be Empty");
+  }
+
+  @Test
+  @Owner(developers = YOGESH)
+  @Category(UnitTests.class)
+  public void validateEmptyScript() {
+    // valid case
+    doReturn(CustomDeploymentTypeTemplate.builder()
+                 .fetchInstanceScript("echo hello")
+                 .hostObjectArrayPath("items")
+                 .hostAttributes(ImmutableMap.of("key", "value"))
+                 .build())
+        .when(customDeploymentTypeService)
+        .fetchDeploymentTemplate(anyString(), anyString(), anyString());
+
+    state.execute(context);
+
+    verify(delegateService).queueTask(any(DelegateTask.class));
+
+    doReturn(CustomDeploymentTypeTemplate.builder()
+                 .fetchInstanceScript("")
+                 .hostObjectArrayPath("items")
+                 .hostAttributes(ImmutableMap.of("key", "value"))
+                 .build())
+        .when(customDeploymentTypeService)
+        .fetchDeploymentTemplate(anyString(), anyString(), anyString());
+
+    ExecutionResponse response = state.execute(context);
+
+    assertThat(response.getExecutionStatus()).isEqualTo(FAILED);
+    assertThat(response.getErrorMessage())
+        .isEqualTo("Prerequisites not met.\n"
+            + "Fetch Instance Command Script Cannot Be Empty");
+
+    // null case
+    doReturn(CustomDeploymentTypeTemplate.builder()
+                 .fetchInstanceScript(null)
+                 .hostObjectArrayPath("items")
+                 .hostAttributes(ImmutableMap.of("key", "value"))
+                 .build())
+        .when(customDeploymentTypeService)
+        .fetchDeploymentTemplate(anyString(), anyString(), anyString());
+
+    response = state.execute(context);
+
+    assertThat(response.getExecutionStatus()).isEqualTo(FAILED);
+    assertThat(response.getErrorMessage())
+        .isEqualTo("Prerequisites not met.\n"
+            + "Fetch Instance Command Script Cannot Be Empty");
+  }
+
+  @Test
+  @Owner(developers = YOGESH)
+  @Category(UnitTests.class)
+  public void validateEmptyFieldValuesForHostAttributes() {
+    doReturn(CustomDeploymentTypeTemplate.builder()
+                 .fetchInstanceScript("echo hello")
+                 .hostObjectArrayPath("items")
+                 .hostAttributes(ImmutableMap.of("k", "v"))
+                 .build())
+        .when(customDeploymentTypeService)
+        .fetchDeploymentTemplate(anyString(), anyString(), anyString());
+
+    state.execute(context);
+
+    verify(delegateService, times(1)).queueTask(any(DelegateTask.class));
+
+    Map<String, String> attributes = new HashMap<>();
+    attributes.put("key", "value");
+    attributes.put("key-1", "");
+    attributes.put("key-2", "value");
+    attributes.put("key-3", null);
+    doReturn(CustomDeploymentTypeTemplate.builder()
+                 .fetchInstanceScript("")
+                 .hostObjectArrayPath("items")
+                 .hostAttributes(attributes)
+                 .build())
+        .when(customDeploymentTypeService)
+        .fetchDeploymentTemplate(anyString(), anyString(), anyString());
+
+    ExecutionResponse response = state.execute(context);
+
+    assertThat(response.getExecutionStatus()).isEqualTo(FAILED);
+    assertThat(response.getErrorMessage())
+        .isEqualTo("Prerequisites not met.\n"
+            + "Fetch Instance Command Script Cannot Be Empty");
+
+    // null case
+    doReturn(CustomDeploymentTypeTemplate.builder()
+                 .fetchInstanceScript(null)
+                 .hostObjectArrayPath("items")
+                 .hostAttributes(null)
+                 .build())
+        .when(customDeploymentTypeService)
+        .fetchDeploymentTemplate(anyString(), anyString(), anyString());
+
+    response = state.execute(context);
+
+    assertThat(response.getExecutionStatus()).isEqualTo(FAILED);
+    assertThat(response.getErrorMessage())
+        .isEqualTo("Prerequisites not met.\n"
+            + "Fetch Instance Command Script Cannot Be Empty");
   }
 
   @Test
