@@ -1,11 +1,14 @@
 directories:
   990-commons-test
   12-commons
+  13-ng-commons
   13-grpc-api
   14-api-services-beans
-
+  15-api-services
+  16-expression-service
+  19-delegate-tasks-beans
+  20-delegate-tasks
+  20-ng-core-beans
+  21-delegate-agent-beans
 # Automatically includes all relevant targets under the 'directories' above
 derive_targets_from_directories: true
-
-workspace_type: java
-java_language_level: 8

@@ -1,0 +1,55 @@
+load("@rules_java//java:defs.bzl", "java_binary")
+load("//:GenTestRules.bzl", "run_tests")
+load("//tools/checkstyle:rules.bzl", "checkstyle")
+load("//:macros.bzl", "sonarqube_test")
+load("//:macros.bzl", "sources")
+load("//tools/pmd:defs.bzl","pmd")
+
+sources()
+
+java_library(
+    name = "maven_deps",
+    exports = [
+                "//12-commons:module",
+                "//13-ng-commons:module",
+                "//14-api-services-beans:module",
+                "@maven//:com_smoketurner_dropwizard_swagger",
+                "@maven//:org_projectlombok_lombok",
+                "@maven//:com_google_code_findbugs_annotations",
+                "@maven//:javax_validation_validation_api",
+                "@maven//:com_google_guava_guava",
+                "@maven//:com_fasterxml_jackson_core_jackson_annotations",
+                "@maven//:io_swagger_swagger_annotations",
+                "@maven//:org_hibernate_hibernate_validator",
+                "@maven//:com_esotericsoftware_kryo",
+                "@maven//:org_slf4j_slf4j_api",
+        ],
+    visibility = ["//visibility:public"],
+)
+
+java_library(
+    name = "module",
+    srcs = glob(["src/main/**/*.java"]),
+    deps = [
+                "maven_deps",
+                "//:lombok",
+
+    ],
+   resources = [
+
+      ],
+   visibility = ["//visibility:public"],
+)
+
+checkstyle()
+
+sonarqube_test(
+    name="sq_mycomponent",
+    srcs = ["sources"],
+    targets = [
+        ":maven_deps",
+        ":module",
+    ],
+)
+
+pmd()

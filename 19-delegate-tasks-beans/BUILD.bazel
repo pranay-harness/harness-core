@@ -1,0 +1,83 @@
+load("@rules_java//java:defs.bzl", "java_binary")
+load("//:GenTestRules.bzl", "run_tests")
+load("//tools/checkstyle:rules.bzl", "checkstyle")
+load("//:macros.bzl", "sources")
+load("//:macros.bzl", "sonarqube_test")
+load("//tools/pmd:defs.bzl","pmd")
+
+sources()
+
+java_library(
+    name = "maven_deps",
+    exports = [
+                "//14-api-services-beans:maven_deps",
+                "@maven//:com_fasterxml_jackson_core_jackson_annotations",
+                "@maven//:com_google_code_findbugs_annotations",
+                "@maven//:com_google_guava_guava",
+                "@maven//:com_google_protobuf_protobuf_java",
+                "@maven//:junit_junit",
+                "@maven//:org_apache_commons_commons_lang3",
+                "@maven//:org_eclipse_jgit_org_eclipse_jgit",
+                "@maven//:org_mockito_mockito_core",
+                "@maven//:org_projectlombok_lombok",
+                "@maven//:org_slf4j_slf4j_api",
+                "@maven//:io_swagger_swagger_annotations",
+                "@maven//:org_apache_httpcomponents_httpclient",
+                "@maven//:org_assertj_assertj_core"
+        ],
+    visibility = ["//visibility:public"],
+)
+
+
+
+java_library(
+    name = "module",
+    srcs = glob(["src/**/*.java"]),
+    deps = [
+                "maven_deps",
+                "//14-api-services-beans:module",
+                "//19-delegate-tasks-beans/src/main/proto:19_delegate_tasks_beans_proto",
+                "//19-delegate-tasks-beans/src/main/proto:19_delegate_tasks_beans_java_proto",
+                "//:lombok"
+    ],
+   visibility = ["//visibility:public"],
+)
+
+java_library(
+    name = "tests",
+    srcs = glob(["src/test/**/*.java"]),
+    deps = [
+                "maven_deps",
+                "module",
+                "//:lombok",
+                "//990-commons-test:module",
+    ],
+   visibility = ["//visibility:public"],
+)
+
+run_tests(
+    test_files = glob(["src/test/**/*Test.java"],exclude = ["**/DelegateTasksTest.java"],),
+    deps = [
+                "module",
+                "maven_deps",
+                "//:lombok",
+                "tests"
+    ],
+    runtime_deps = [
+                "@maven//:javax_ws_rs_javax_ws_rs_api",
+    ],
+    testonly = 1,
+)
+
+checkstyle()
+
+sonarqube_test(
+    name="sq_mycomponent",
+    srcs = ["sources"],
+    targets = [
+        ":maven_deps",
+        ":module",
+    ],
+)
+
+pmd()

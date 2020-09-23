@@ -10,9 +10,9 @@ sources()
 java_library(
     name = "maven_deps",
     exports = [
-                "//990-commons-test:module",
-               "//12-commons:maven_deps",
+               "//990-commons-test:module",
                "//12-commons:module",
+               "//12-commons:maven_deps",
                "@maven//:com_google_code_findbugs_annotations",
                "@maven//:com_google_protobuf_protobuf_java",
                "@maven//:com_google_protobuf_protobuf_java_util",
@@ -32,6 +32,7 @@ java_library(
                "@maven//:joda_time_joda_time"
 
     ],
+     visibility = ["//visibility:public"],
 )
 
 java_library(
@@ -59,10 +60,10 @@ java_library(
     deps = [
         "module",
         "maven_deps",
-        "//:lombok",
         "test_deps",
         "//13-grpc-api/src/main/proto:13_grpc_api_proto",
         "//13-grpc-api/src/main/proto:13_grpc_api_java_proto",
+        "//:lombok",
     ]
 )
 run_tests(
@@ -71,10 +72,10 @@ run_tests(
         "module",
         "tests",
         "maven_deps",
-        "//:lombok",
         "test_deps",
         "//13-grpc-api/src/main/proto:13_grpc_api_proto",
         "//13-grpc-api/src/main/proto:13_grpc_api_java_proto",
+        "//:lombok",
     ],
     runtime_deps = [
         "@maven//:javax_ws_rs_javax_ws_rs_api",

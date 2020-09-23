@@ -1198,6 +1198,7 @@ exports_files(["WORKSPACE"], visibility = ["//visibility:public"])
 )
 
 load("//tools/pmd:toolchains.bzl", "rules_pmd_toolchains")
+rules_pmd_toolchains()
 
 rules_pmd_toolchains()
 
@@ -1256,3 +1257,4 @@ go_repository(
     sum = "h1:tNowT99t7UNflLxfYYSlKYsBpXdEet03Pg2g16Swow4=",
     version = "v2.2.1+incompatible",
 )
+

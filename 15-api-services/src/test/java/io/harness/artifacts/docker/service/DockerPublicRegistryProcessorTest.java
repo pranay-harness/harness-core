@@ -14,6 +14,7 @@ import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.when;
 
+import com.github.tomakehurst.wiremock.core.WireMockConfiguration;
 import com.github.tomakehurst.wiremock.junit.WireMockRule;
 import io.harness.CategoryTest;
 import io.harness.artifacts.beans.BuildDetailsInternal;
@@ -43,7 +44,9 @@ import java.util.Map;
 
 public class DockerPublicRegistryProcessorTest extends CategoryTest {
   @Rule public MockitoRule mockitoRule = MockitoJUnit.rule();
-  @Rule public WireMockRule wireMockRule = new WireMockRule(9882);
+  @Rule
+  public WireMockRule wireMockRule = new WireMockRule(
+      WireMockConfiguration.wireMockConfig().usingFilesUnderDirectory("15-api-services/src/test/resources").port(9882));
 
   @Mock private DockerRestClientFactory dockerRestClientFactory;
   @Mock private DockerRegistryUtils dockerRegistryUtils;
