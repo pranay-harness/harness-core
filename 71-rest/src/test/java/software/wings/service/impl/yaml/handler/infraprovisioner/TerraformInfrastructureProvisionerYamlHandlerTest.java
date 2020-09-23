@@ -7,7 +7,6 @@ import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.verify;
-import static software.wings.api.DeploymentType.SSH;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 import static software.wings.utils.WingsTestConstants.APP_ID;
 import static software.wings.utils.WingsTestConstants.SERVICE_ID;
@@ -23,9 +22,6 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import software.wings.beans.Application;
-import software.wings.beans.BlueprintProperty;
-import software.wings.beans.InfrastructureMappingBlueprint;
-import software.wings.beans.InfrastructureMappingBlueprint.CloudProviderType;
 import software.wings.beans.NameValuePair;
 import software.wings.beans.Service;
 import software.wings.beans.ServiceVariable.Type;
@@ -46,7 +42,6 @@ import software.wings.yaml.handler.BaseYamlHandlerTest;
 
 import java.io.IOException;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
 
 public class TerraformInfrastructureProvisionerYamlHandlerTest extends BaseYamlHandlerTest {
@@ -66,17 +61,6 @@ public class TerraformInfrastructureProvisionerYamlHandlerTest extends BaseYamlH
       + "  valueType: TEXT\n"
       + "- name: secret_key\n"
       + "  valueType: ENCRYPTED_TEXT\n"
-      + "mappingBlueprints:\n"
-      + "- cloudProviderType: AWS\n"
-      + "  deploymentType: SSH\n"
-      + "  properties:\n"
-      + "  - name: region\n"
-      + "    value: ${terraform.region}\n"
-      + "  - name: securityGroups\n"
-      + "    value: ${terraform.security_group}\n"
-      + "  - name: tags\n"
-      + "    value: ${terraform.archive_tags}\n"
-      + "  serviceName: ServiceName\n"
       + "repoName: REPO_NAME\n"
       + "sourceRepoBranch: master\n"
       + "sourceRepoSettingName: TERRAFORM_TEST_GIT_REPO\n"
@@ -112,7 +96,6 @@ public class TerraformInfrastructureProvisionerYamlHandlerTest extends BaseYamlH
     assertThat("TERRAFORM").isEqualTo(provisionerSaved.getInfrastructureProvisionerType());
     assertThat(APP_ID).isEqualTo(provisionerSaved.getAppId());
     assertThat(SETTING_ID).isEqualTo(provisionerSaved.getSourceRepoSettingId());
-    assertThat(1).isEqualTo(provisionerSaved.getMappingBlueprints().size());
     assertThat(provisionerSaved.getRepoName()).isEqualTo("REPO_NAME");
 
     Yaml yamlFromObject = handler.toYaml(provisionerSaved, WingsTestConstants.APP_ID);
@@ -122,38 +105,23 @@ public class TerraformInfrastructureProvisionerYamlHandlerTest extends BaseYamlH
     List<NameValuePair> variables =
         Arrays.asList(NameValuePair.builder().name("access_key").valueType(Type.TEXT.toString()).build(),
             NameValuePair.builder().name("secret_key").valueType(Type.ENCRYPTED_TEXT.toString()).build());
-    TerraformInfrastructureProvisioner provisioner =
-        TerraformInfrastructureProvisioner.builder()
-            .appId(APP_ID)
-            .uuid("UUID1")
-            .name("Name1")
-            .description("Desc1")
-            .sourceRepoSettingId(SETTING_ID)
-            .sourceRepoBranch("master")
-            .repoName("REPO_NAME")
-            .variables(variables)
-            .backendConfigs(variables)
-            .mappingBlueprints(Collections.singletonList(
-                InfrastructureMappingBlueprint.builder()
-                    .cloudProviderType(CloudProviderType.AWS)
-                    .deploymentType(SSH)
-                    .serviceId(SERVICE_ID)
-                    .properties(asList(BlueprintProperty.builder().name("k2").value("v2").build()))
-                    .build()))
-            .build();
+    TerraformInfrastructureProvisioner provisioner = TerraformInfrastructureProvisioner.builder()
+                                                         .appId(APP_ID)
+                                                         .uuid("UUID1")
+                                                         .name("Name1")
+                                                         .description("Desc1")
+                                                         .sourceRepoSettingId(SETTING_ID)
+                                                         .sourceRepoBranch("master")
+                                                         .repoName("REPO_NAME")
+                                                         .variables(variables)
+                                                         .backendConfigs(variables)
+                                                         .build();
     TerraformInfrastructureProvisioner.Yaml yaml1 = handler.toYaml(provisioner, APP_ID);
     assertThat(yaml1).isNotNull();
     assertThat("TERRAFORM").isEqualTo(yaml1.getType());
     assertThat("1.0").isEqualTo(yaml1.getHarnessApiVersion());
     assertThat("Desc1").isEqualTo(yaml1.getDescription());
     assertThat("master").isEqualTo(yaml1.getSourceRepoBranch());
-    assertThat(1).isEqualTo(yaml1.getMappingBlueprints().size());
-    assertThat("ServiceName").isEqualTo(yaml1.getMappingBlueprints().get(0).getServiceName());
-    assertThat(SSH).isEqualTo(yaml1.getMappingBlueprints().get(0).getDeploymentType());
-    assertThat(CloudProviderType.AWS).isEqualTo(yaml1.getMappingBlueprints().get(0).getCloudProviderType());
-    assertThat(1).isEqualTo(yaml1.getMappingBlueprints().get(0).getProperties().size());
-    assertThat("k2").isEqualTo(yaml1.getMappingBlueprints().get(0).getProperties().get(0).getName());
-    assertThat("v2").isEqualTo(yaml1.getMappingBlueprints().get(0).getProperties().get(0).getValue());
     assertThat("access_key").isEqualTo(yaml1.getVariables().get(0).getName());
     assertThat("secret_key").isEqualTo(yaml1.getVariables().get(1).getName());
     assertThat("access_key").isEqualTo(yaml1.getBackendConfigs().get(0).getName());
@@ -163,8 +131,7 @@ public class TerraformInfrastructureProvisionerYamlHandlerTest extends BaseYamlH
 
     handler.upsertFromYaml(changeContext, null);
     TerraformInfrastructureProvisioner provisioner1 = captor.getValue();
-    assertThat(provisioner)
-        .isEqualToIgnoringGivenFields(provisioner1, "uuid", "mappingBlueprints", "name", "description");
+    assertThat(provisioner).isEqualToIgnoringGivenFields(provisioner1, "uuid", "name", "description");
   }
 
   private ChangeContext<Yaml> getChangeContext() {

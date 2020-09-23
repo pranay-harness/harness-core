@@ -34,8 +34,8 @@ import static software.wings.api.DeploymentType.CUSTOM;
 import static software.wings.api.DeploymentType.ECS;
 import static software.wings.api.DeploymentType.HELM;
 import static software.wings.api.DeploymentType.KUBERNETES;
+import static software.wings.api.DeploymentType.PCF;
 import static software.wings.api.DeploymentType.SSH;
-import static software.wings.beans.AwsInfrastructureMapping.Builder.anAwsInfrastructureMapping;
 import static software.wings.beans.CanaryOrchestrationWorkflow.CanaryOrchestrationWorkflowBuilder.aCanaryOrchestrationWorkflow;
 import static software.wings.beans.PhaseStep.PhaseStepBuilder.aPhaseStep;
 import static software.wings.beans.PhaseStepType.AZURE_VMSS_DEPLOY;
@@ -96,8 +96,8 @@ import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import software.wings.WingsBaseTest;
+import software.wings.api.CloudProviderType;
 import software.wings.api.DeploymentType;
-import software.wings.beans.AwsInfrastructureMapping;
 import software.wings.beans.AzureVMSSInfrastructureMapping;
 import software.wings.beans.BuildWorkflow;
 import software.wings.beans.BuildWorkflow.BuildOrchestrationWorkflowBuilder;
@@ -105,15 +105,11 @@ import software.wings.beans.CanaryOrchestrationWorkflow;
 import software.wings.beans.EntityType;
 import software.wings.beans.Environment;
 import software.wings.beans.FeatureName;
-import software.wings.beans.GcpKubernetesInfrastructureMapping;
 import software.wings.beans.GraphNode;
 import software.wings.beans.InfrastructureMapping;
-import software.wings.beans.InfrastructureMappingType;
 import software.wings.beans.OrchestrationWorkflow;
-import software.wings.beans.PcfInfrastructureMapping;
 import software.wings.beans.PhaseStep;
 import software.wings.beans.PhaseStepType;
-import software.wings.beans.PhysicalInfrastructureMapping;
 import software.wings.beans.PipelineStage.PipelineStageElement;
 import software.wings.beans.Service;
 import software.wings.beans.TemplateExpression;
@@ -126,6 +122,7 @@ import software.wings.beans.artifact.AmazonS3ArtifactStream;
 import software.wings.beans.container.EcsServiceSpecification;
 import software.wings.beans.workflow.StepSkipStrategy;
 import software.wings.infra.AwsAmiInfrastructure;
+import software.wings.infra.AwsInstanceInfrastructure;
 import software.wings.infra.AzureVMSSInfra;
 import software.wings.infra.GoogleKubernetesEngine;
 import software.wings.infra.InfrastructureDefinition;
@@ -456,8 +453,7 @@ public class WorkflowServiceHelperTest extends WingsBaseTest {
 
     WorkflowPhase workflowPhase = aWorkflowPhase().serviceId(SERVICE_ID).build();
 
-    WorkflowPhase rollbackPhase =
-        workflowServiceHelper.generateRollbackWorkflowPhaseForEcsBlueGreen(APP_ID, workflowPhase, BASIC);
+    WorkflowPhase rollbackPhase = workflowServiceHelper.generateRollbackWorkflowPhaseForEcsBlueGreen(workflowPhase);
     verifyPhase(rollbackPhase,
         asList(new String[] {StateType.ECS_LISTENER_UPDATE_ROLLBACK.name(), ECS_SERVICE_ROLLBACK.name()}), 4);
   }
@@ -733,73 +729,74 @@ public class WorkflowServiceHelperTest extends WingsBaseTest {
   public void testNeedArtifactCheckStep() {
     CanaryOrchestrationWorkflow canaryOrchestrationWorkflow = null;
     List<WorkflowPhase> workflowPhases = null;
-    AwsInfrastructureMapping awsInfrastructureMapping =
-        anAwsInfrastructureMapping()
-            .withAppId(APP_ID)
-            .withUuid(INFRA_MAPPING_ID)
-            .withInfraMappingType(InfrastructureMappingType.AWS_SSH.name())
-            .build();
 
-    workflowPhases = ImmutableList.<WorkflowPhase>of(aWorkflowPhase().infraMappingId(INFRA_MAPPING_ID).build());
+    InfrastructureDefinition awsInfraDef = InfrastructureDefinition.builder()
+                                               .appId(APP_ID)
+                                               .uuid(INFRA_DEFINITION_ID)
+                                               .deploymentType(SSH)
+                                               .cloudProviderType(AWS)
+                                               .infrastructure(AwsInstanceInfrastructure.builder().build())
+                                               .build();
 
-    when(infrastructureMappingService.getInfraStructureMappingsByUuids(APP_ID, Arrays.asList(INFRA_MAPPING_ID)))
-        .thenReturn(Arrays.asList(awsInfrastructureMapping));
+    workflowPhases = ImmutableList.<WorkflowPhase>of(aWorkflowPhase().infraDefinitionId(INFRA_DEFINITION_ID).build());
+
+    when(infrastructureDefinitionService.getInfraStructureDefinitionByUuids(APP_ID, singletonList(INFRA_DEFINITION_ID)))
+        .thenReturn(singletonList(awsInfraDef));
     canaryOrchestrationWorkflow = aCanaryOrchestrationWorkflow().withWorkflowPhases(workflowPhases).build();
-    assertThat(workflowServiceHelper.needArtifactCheckStep(
-                   awsInfrastructureMapping.getAppId(), canaryOrchestrationWorkflow, false))
+    assertThat(workflowServiceHelper.needArtifactCheckStep(awsInfraDef.getAppId(), canaryOrchestrationWorkflow))
         .isTrue();
 
-    PhysicalInfrastructureMapping physicalInfrastructureMapping =
-        PhysicalInfrastructureMapping.Builder.aPhysicalInfrastructureMapping()
-            .withAppId(APP_ID)
-            .withUuid(INFRA_MAPPING_ID)
-            .withInfraMappingType(InfrastructureMappingType.PHYSICAL_DATA_CENTER_SSH.name())
-            .build();
+    InfrastructureDefinition physicalInfraDef = InfrastructureDefinition.builder()
+                                                    .appId(APP_ID)
+                                                    .deploymentType(SSH)
+                                                    .cloudProviderType(PHYSICAL_DATA_CENTER)
+                                                    .infrastructure(PhysicalInfra.builder().build())
+                                                    .build();
 
-    workflowPhases = ImmutableList.<WorkflowPhase>of(aWorkflowPhase().infraMappingId(INFRA_MAPPING_ID).build());
+    workflowPhases = ImmutableList.<WorkflowPhase>of(aWorkflowPhase().infraDefinitionId(INFRA_DEFINITION_ID).build());
 
-    when(infrastructureMappingService.getInfraStructureMappingsByUuids(APP_ID, Arrays.asList(INFRA_MAPPING_ID)))
-        .thenReturn(Arrays.asList(physicalInfrastructureMapping));
+    when(infrastructureDefinitionService.getInfraStructureDefinitionByUuids(APP_ID, singletonList(INFRA_DEFINITION_ID)))
+        .thenReturn(singletonList(physicalInfraDef));
     canaryOrchestrationWorkflow = aCanaryOrchestrationWorkflow().withWorkflowPhases(workflowPhases).build();
-    assertThat(workflowServiceHelper.needArtifactCheckStep(
-                   physicalInfrastructureMapping.getAppId(), canaryOrchestrationWorkflow, false))
+    assertThat(workflowServiceHelper.needArtifactCheckStep(physicalInfraDef.getAppId(), canaryOrchestrationWorkflow))
         .isTrue();
 
-    PcfInfrastructureMapping pcfInfrastructureMapping = PcfInfrastructureMapping.builder()
-                                                            .appId(APP_ID)
-                                                            .uuid(INFRA_MAPPING_ID)
-                                                            .infraMappingType(InfrastructureMappingType.PCF_PCF.name())
-                                                            .build();
+    InfrastructureDefinition pcfInfraDef = InfrastructureDefinition.builder()
+                                               .appId(APP_ID)
+                                               .uuid(INFRA_DEFINITION_ID)
+                                               .deploymentType(PCF)
+                                               .cloudProviderType(CloudProviderType.PCF)
+                                               .infrastructure(PcfInfraStructure.builder().build())
+                                               .build();
 
-    workflowPhases = ImmutableList.<WorkflowPhase>of(aWorkflowPhase().infraMappingId(INFRA_MAPPING_ID).build());
+    workflowPhases = ImmutableList.<WorkflowPhase>of(aWorkflowPhase().infraDefinitionId(INFRA_DEFINITION_ID).build());
 
-    when(infrastructureMappingService.getInfraStructureMappingsByUuids(APP_ID, Arrays.asList(INFRA_MAPPING_ID)))
-        .thenReturn(Arrays.asList(pcfInfrastructureMapping));
+    when(infrastructureDefinitionService.getInfraStructureDefinitionByUuids(APP_ID, singletonList(INFRA_DEFINITION_ID)))
+        .thenReturn(singletonList(pcfInfraDef));
     canaryOrchestrationWorkflow = aCanaryOrchestrationWorkflow().withWorkflowPhases(workflowPhases).build();
-    assertThat(workflowServiceHelper.needArtifactCheckStep(
-                   pcfInfrastructureMapping.getAppId(), canaryOrchestrationWorkflow, false))
+    assertThat(workflowServiceHelper.needArtifactCheckStep(pcfInfraDef.getAppId(), canaryOrchestrationWorkflow))
         .isTrue();
 
-    GcpKubernetesInfrastructureMapping gcpK8sInfraMapping =
-        GcpKubernetesInfrastructureMapping.builder()
-            .appId(APP_ID)
-            .uuid(INFRA_MAPPING_ID)
-            .infraMappingType(InfrastructureMappingType.GCP_KUBERNETES.name())
-            .build();
+    InfrastructureDefinition gcpK8sInfraDef = InfrastructureDefinition.builder()
+                                                  .appId(APP_ID)
+                                                  .uuid(INFRA_DEFINITION_ID)
+                                                  .deploymentType(KUBERNETES)
+                                                  .cloudProviderType(GCP)
+                                                  .infrastructure(GoogleKubernetesEngine.builder().build())
+                                                  .build();
 
     workflowPhases =
-        ImmutableList.<WorkflowPhase>of(aWorkflowPhase().infraMappingId(awsInfrastructureMapping.getUuid()).build());
+        ImmutableList.<WorkflowPhase>of(aWorkflowPhase().infraDefinitionId(gcpK8sInfraDef.getUuid()).build());
 
-    when(infrastructureMappingService.getInfraStructureMappingsByUuids(APP_ID, Arrays.asList(INFRA_MAPPING_ID)))
-        .thenReturn(Arrays.asList(gcpK8sInfraMapping));
+    when(infrastructureDefinitionService.getInfraStructureDefinitionByUuids(APP_ID, singletonList(INFRA_DEFINITION_ID)))
+        .thenReturn(singletonList(gcpK8sInfraDef));
     canaryOrchestrationWorkflow = aCanaryOrchestrationWorkflow().withWorkflowPhases(workflowPhases).build();
-    assertThat(
-        workflowServiceHelper.needArtifactCheckStep(gcpK8sInfraMapping.getAppId(), canaryOrchestrationWorkflow, false))
+    assertThat(workflowServiceHelper.needArtifactCheckStep(gcpK8sInfraDef.getAppId(), canaryOrchestrationWorkflow))
         .isFalse();
 
     workflowPhases = Collections.emptyList();
     canaryOrchestrationWorkflow = aCanaryOrchestrationWorkflow().withWorkflowPhases(workflowPhases).build();
-    assertThat(workflowServiceHelper.needArtifactCheckStep(APP_ID, canaryOrchestrationWorkflow, false)).isFalse();
+    assertThat(workflowServiceHelper.needArtifactCheckStep(APP_ID, canaryOrchestrationWorkflow)).isFalse();
 
     InfrastructureDefinition infrastructureDefinition = InfrastructureDefinition.builder()
                                                             .uuid("id1")
@@ -810,8 +807,7 @@ public class WorkflowServiceHelperTest extends WingsBaseTest {
         .thenReturn(Arrays.asList(infrastructureDefinition));
     workflowPhases = ImmutableList.<WorkflowPhase>of(aWorkflowPhase().infraDefinitionId(INFRA_DEFINITION_ID).build());
     canaryOrchestrationWorkflow = aCanaryOrchestrationWorkflow().withWorkflowPhases(workflowPhases).build();
-    assertThat(workflowServiceHelper.needArtifactCheckStep(APP_ID, canaryOrchestrationWorkflow, true)).isTrue();
-    assertThat(workflowServiceHelper.needArtifactCheckStep(APP_ID, canaryOrchestrationWorkflow, false)).isFalse();
+    assertThat(workflowServiceHelper.needArtifactCheckStep(APP_ID, canaryOrchestrationWorkflow)).isTrue();
   }
 
   @Test
@@ -977,7 +973,6 @@ public class WorkflowServiceHelperTest extends WingsBaseTest {
     when(infrastructureMappingService.get(APP_ID, INFRA_MAPPING_ID)).thenReturn(awsAmiInfraDef.getInfraMapping());
     when(serviceResourceService.getWithDetails(APP_ID, SERVICE_ID)).thenReturn(amiService);
     when(appService.getAccountIdByAppId(APP_ID)).thenReturn(ACCOUNT_ID);
-    when(featureFlagService.isEnabled(FeatureName.INFRA_MAPPING_REFACTOR, ACCOUNT_ID)).thenReturn(false, true);
 
     // feature flag off
     workflowServiceHelper.generateNewWorkflowPhaseStepsForSpotinst(APP_ID, workflowPhase, true);
@@ -1001,7 +996,6 @@ public class WorkflowServiceHelperTest extends WingsBaseTest {
     assertThat(phaseStepTypes).containsExactly(PhaseStepType.SPOTINST_DEPLOY, VERIFY_SERVICE, WRAP_UP);
 
     // SPOT INST BLUE GREEN
-    when(featureFlagService.isEnabled(FeatureName.INFRA_MAPPING_REFACTOR, ACCOUNT_ID)).thenReturn(false, true);
 
     // feature flag off
     workflowPhase.getPhaseSteps().clear();
@@ -1022,7 +1016,6 @@ public class WorkflowServiceHelperTest extends WingsBaseTest {
             PhaseStepType.SPOTINST_LISTENER_UPDATE, WRAP_UP);
 
     // AWS AMI BLUE GREEN
-    when(featureFlagService.isEnabled(FeatureName.INFRA_MAPPING_REFACTOR, ACCOUNT_ID)).thenReturn(false, true);
 
     // feature flag off
     workflowPhase.getPhaseSteps().clear();
@@ -1053,7 +1046,6 @@ public class WorkflowServiceHelperTest extends WingsBaseTest {
             PhaseStepType.AMI_SWITCH_AUTOSCALING_GROUP_ROUTES, WRAP_UP);
 
     // AWS AMI BASIC
-    when(featureFlagService.isEnabled(FeatureName.INFRA_MAPPING_REFACTOR, ACCOUNT_ID)).thenReturn(false, true);
 
     // feature flag off
     workflowPhase.getPhaseSteps().clear();
@@ -1321,7 +1313,6 @@ public class WorkflowServiceHelperTest extends WingsBaseTest {
     when(infrastructureDefinitionService.get(APP_ID, INFRA_DEFINITION_ID)).thenReturn(gcpK8sInfra);
     when(infrastructureMappingService.get(APP_ID, INFRA_MAPPING_ID)).thenReturn(gcpK8sInfra.getInfraMapping());
     when(appService.getAccountIdByAppId(APP_ID)).thenReturn(ACCOUNT_ID);
-    when(featureFlagService.isEnabled(FeatureName.INFRA_MAPPING_REFACTOR, ACCOUNT_ID)).thenReturn(false, true);
 
     // feature flag off
     workflowServiceHelper.generateNewWorkflowPhaseStepsForKubernetes(
@@ -1378,7 +1369,6 @@ public class WorkflowServiceHelperTest extends WingsBaseTest {
     when(infrastructureDefinitionService.get(APP_ID, INFRA_DEFINITION_ID)).thenReturn(sshDefinition);
     when(infrastructureMappingService.get(APP_ID, INFRA_MAPPING_ID)).thenReturn(sshDefinition.getInfraMapping());
     when(appService.getAccountIdByAppId(APP_ID)).thenReturn(ACCOUNT_ID);
-    when(featureFlagService.isEnabled(FeatureName.INFRA_MAPPING_REFACTOR, ACCOUNT_ID)).thenReturn(false, true);
 
     // feature flag off
     workflowServiceHelper.generateNewWorkflowPhaseStepsForSSH(APP_ID, workflowPhase, OrchestrationWorkflowType.CANARY);
@@ -1554,7 +1544,7 @@ public class WorkflowServiceHelperTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void testGenerateNewPhaseStepsForCustomDeployment() {
     WorkflowPhase workflowPhase = aWorkflowPhase().deploymentType(CUSTOM).build();
-    workflowServiceHelper.generateNewWorkflowPhaseSteps(APP_ID, ENV_ID, workflowPhase, false, BASIC, null);
+    workflowServiceHelper.generateNewWorkflowPhaseSteps(APP_ID, workflowPhase, false, BASIC, null);
 
     assertThat(workflowPhase.getPhaseSteps()).hasSize(3);
     assertThat(workflowPhase.getPhaseSteps().stream().map(PhaseStep::getPhaseStepType).collect(Collectors.toSet()))
@@ -1596,7 +1586,7 @@ public class WorkflowServiceHelperTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void testCustomDeploymentWrapUpPhaseHasFetchInstanceScriptStep() {
     WorkflowPhase workflowPhase = aWorkflowPhase().deploymentType(CUSTOM).build();
-    workflowServiceHelper.generateNewWorkflowPhaseSteps(APP_ID, ENV_ID, workflowPhase, false, BASIC, null);
+    workflowServiceHelper.generateNewWorkflowPhaseSteps(APP_ID, workflowPhase, false, BASIC, null);
 
     assertThat(workflowPhase.getPhaseSteps().get(2).getSteps().size()).isNotEqualTo(0);
     assertThat(workflowPhase.getPhaseSteps().get(2).getSteps().get(0).getType())

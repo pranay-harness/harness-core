@@ -60,7 +60,6 @@ import software.wings.api.k8s.K8sExecutionSummary;
 import software.wings.api.terraform.TerraformProvisionInheritPlanElement;
 import software.wings.beans.Activity;
 import software.wings.beans.FailureStrategy;
-import software.wings.beans.FeatureName;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.InfrastructureProvisioner;
 import software.wings.beans.PhaseStepType;
@@ -128,9 +127,7 @@ public class PhaseStepSubWorkflow extends SubWorkflowState {
       throw new InvalidRequestException("null phaseStepType");
     }
 
-    if (featureFlagService.isEnabled(FeatureName.INFRA_MAPPING_REFACTOR, contextIntf.getAccountId())) {
-      populateInfraMapping(contextIntf);
-    }
+    populateInfraMapping(contextIntf);
 
     ExecutionResponse response;
     PhaseElement phaseElement = contextIntf.getContextElement(ContextElementType.PARAM, PhaseElement.PHASE_PARAM);

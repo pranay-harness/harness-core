@@ -1271,12 +1271,9 @@ public class ExecutionContextImpl implements DeploymentExecutionContext {
       return null;
     }
 
-    String name = infrastructureMapping.getName();
-    if (featureFlagService.isEnabled(FeatureName.INFRA_MAPPING_REFACTOR, infrastructureMapping.getAccountId())) {
-      InfrastructureDefinition infrastructureDefinition =
-          infrastructureDefinitionService.get(appId, infrastructureMapping.getInfrastructureDefinitionId());
-      name = infrastructureDefinition.getName();
-    }
+    InfrastructureDefinition infrastructureDefinition =
+        infrastructureDefinitionService.get(appId, infrastructureMapping.getInfrastructureDefinitionId());
+    String name = infrastructureDefinition.getName();
     InfraMappingElementBuilder builder =
         InfraMappingElement.builder().name(name).infraId(infrastructureMapping.getUuid());
 

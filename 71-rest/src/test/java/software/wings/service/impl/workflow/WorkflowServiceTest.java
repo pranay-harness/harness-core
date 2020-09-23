@@ -32,6 +32,7 @@ import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyBoolean;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
+import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.inOrder;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -40,18 +41,17 @@ import static software.wings.api.DeploymentType.ECS;
 import static software.wings.api.DeploymentType.KUBERNETES;
 import static software.wings.api.DeploymentType.SSH;
 import static software.wings.beans.AwsInfrastructureMapping.Builder.anAwsInfrastructureMapping;
-import static software.wings.beans.EcsInfrastructureMapping.Builder.anEcsInfrastructureMapping;
 import static software.wings.beans.EntityType.APPDYNAMICS_CONFIGID;
 import static software.wings.beans.EntityType.ELK_CONFIGID;
 import static software.wings.beans.EntityType.ELK_INDICES;
 import static software.wings.beans.EntityType.ENVIRONMENT;
+import static software.wings.beans.EntityType.INFRASTRUCTURE_DEFINITION;
 import static software.wings.beans.EntityType.INFRASTRUCTURE_MAPPING;
 import static software.wings.beans.EntityType.PROVISIONER;
 import static software.wings.beans.EntityType.SERVICE;
 import static software.wings.beans.EntityType.WORKFLOW;
 import static software.wings.beans.Environment.Builder.anEnvironment;
 import static software.wings.beans.FeatureName.INFRA_MAPPING_REFACTOR;
-import static software.wings.beans.GcpKubernetesInfrastructureMapping.Builder.aGcpKubernetesInfrastructureMapping;
 import static software.wings.beans.GraphLink.Builder.aLink;
 import static software.wings.beans.NotificationGroup.NotificationGroupBuilder.aNotificationGroup;
 import static software.wings.beans.NotificationRule.NotificationRuleBuilder.aNotificationRule;
@@ -86,7 +86,6 @@ import static software.wings.common.TemplateConstants.LATEST_TAG;
 import static software.wings.common.WorkflowConstants.PHASE_NAME_PREFIX;
 import static software.wings.common.WorkflowConstants.PHASE_STEP_VALIDATION_MESSAGE;
 import static software.wings.common.WorkflowConstants.STEP_VALIDATION_MESSAGE;
-import static software.wings.common.WorkflowConstants.WORKFLOW_INFRAMAPPING_VALIDATION_MESSAGE;
 import static software.wings.common.WorkflowConstants.WORKFLOW_VALIDATION_MESSAGE;
 import static software.wings.service.impl.workflow.WorkflowServiceHelper.DEPLOY_CONTAINERS;
 import static software.wings.service.impl.workflow.WorkflowServiceHelper.KUBERNETES_SWAP_SERVICES_PRIMARY_STAGE;
@@ -104,11 +103,11 @@ import static software.wings.service.impl.workflow.WorkflowServiceTestHelper.ass
 import static software.wings.service.impl.workflow.WorkflowServiceTestHelper.assertWorkflowPhaseTemplateExpressions;
 import static software.wings.service.impl.workflow.WorkflowServiceTestHelper.assertWorkflowPhaseTemplateStep;
 import static software.wings.service.impl.workflow.WorkflowServiceTestHelper.constructAmiBGWorkflow;
-import static software.wings.service.impl.workflow.WorkflowServiceTestHelper.constructAmiInfraMapping;
+import static software.wings.service.impl.workflow.WorkflowServiceTestHelper.constructAmiInfraDef;
 import static software.wings.service.impl.workflow.WorkflowServiceTestHelper.constructAmiWorkflow;
 import static software.wings.service.impl.workflow.WorkflowServiceTestHelper.constructAppDVerifyStep;
 import static software.wings.service.impl.workflow.WorkflowServiceTestHelper.constructAppdTemplateExpressions;
-import static software.wings.service.impl.workflow.WorkflowServiceTestHelper.constructAwsLambdaInfraMapping;
+import static software.wings.service.impl.workflow.WorkflowServiceTestHelper.constructAwsLambdaInfraDef;
 import static software.wings.service.impl.workflow.WorkflowServiceTestHelper.constructBasicDeploymentTemplateWorkflow;
 import static software.wings.service.impl.workflow.WorkflowServiceTestHelper.constructBasicWorkflow;
 import static software.wings.service.impl.workflow.WorkflowServiceTestHelper.constructBasicWorkflowWithInfraNodeDeployServicePhaseStep;
@@ -129,12 +128,13 @@ import static software.wings.service.impl.workflow.WorkflowServiceTestHelper.con
 import static software.wings.service.impl.workflow.WorkflowServiceTestHelper.constructCloneMetadata;
 import static software.wings.service.impl.workflow.WorkflowServiceTestHelper.constructCommandTemplateStep;
 import static software.wings.service.impl.workflow.WorkflowServiceTestHelper.constructCustomWorkflow;
-import static software.wings.service.impl.workflow.WorkflowServiceTestHelper.constructDirectKubernetesInfra;
+import static software.wings.service.impl.workflow.WorkflowServiceTestHelper.constructDirectKubernetesInfraDef;
+import static software.wings.service.impl.workflow.WorkflowServiceTestHelper.constructEcsInfraDef;
 import static software.wings.service.impl.workflow.WorkflowServiceTestHelper.constructEcsWorkflow;
-import static software.wings.service.impl.workflow.WorkflowServiceTestHelper.constructEcsnfraMapping;
 import static software.wings.service.impl.workflow.WorkflowServiceTestHelper.constructElkTemplateExpressions;
-import static software.wings.service.impl.workflow.WorkflowServiceTestHelper.constructGKInfraMapping;
+import static software.wings.service.impl.workflow.WorkflowServiceTestHelper.constructGKInfraDef;
 import static software.wings.service.impl.workflow.WorkflowServiceTestHelper.constructHELMInfra;
+import static software.wings.service.impl.workflow.WorkflowServiceTestHelper.constructHELMInfraDef;
 import static software.wings.service.impl.workflow.WorkflowServiceTestHelper.constructHelmWorkflowWithProperties;
 import static software.wings.service.impl.workflow.WorkflowServiceTestHelper.constructHttpTemplateStep;
 import static software.wings.service.impl.workflow.WorkflowServiceTestHelper.constructK8SBlueGreenWorkflow;
@@ -142,7 +142,6 @@ import static software.wings.service.impl.workflow.WorkflowServiceTestHelper.con
 import static software.wings.service.impl.workflow.WorkflowServiceTestHelper.constructLinkedTemplate;
 import static software.wings.service.impl.workflow.WorkflowServiceTestHelper.constructMulitServiceTemplateWorkflow;
 import static software.wings.service.impl.workflow.WorkflowServiceTestHelper.constructMultiServiceWorkflow;
-import static software.wings.service.impl.workflow.WorkflowServiceTestHelper.constructMultiServiceWorkflowWithPhase;
 import static software.wings.service.impl.workflow.WorkflowServiceTestHelper.constructPhysicalInfraMapping;
 import static software.wings.service.impl.workflow.WorkflowServiceTestHelper.constructPipeline;
 import static software.wings.service.impl.workflow.WorkflowServiceTestHelper.constructServiceCommand;
@@ -151,8 +150,8 @@ import static software.wings.service.impl.workflow.WorkflowServiceTestHelper.con
 import static software.wings.service.impl.workflow.WorkflowServiceTestHelper.constructWfWithTrafficShiftSteps;
 import static software.wings.service.impl.workflow.WorkflowServiceTestHelper.constructWorkflowWithParam;
 import static software.wings.service.impl.workflow.WorkflowServiceTestHelper.getEnvTemplateExpression;
-import static software.wings.service.impl.workflow.WorkflowServiceTestHelper.getInfraTemplateExpression;
 import static software.wings.service.impl.workflow.WorkflowServiceTestHelper.getServiceTemplateExpression;
+import static software.wings.service.impl.workflow.WorkflowServiceTestHelper.prepareInfraDefTemplateExpression;
 import static software.wings.sm.StateType.APPROVAL_RESUME;
 import static software.wings.sm.StateType.AWS_CODEDEPLOY_STATE;
 import static software.wings.sm.StateType.AWS_LAMBDA_VERIFICATION;
@@ -230,8 +229,9 @@ import static software.wings.utils.WingsTestConstants.ENV_ID;
 import static software.wings.utils.WingsTestConstants.ENV_ID_CHANGED;
 import static software.wings.utils.WingsTestConstants.ENV_NAME;
 import static software.wings.utils.WingsTestConstants.INFRA_DEFINITION_ID;
+import static software.wings.utils.WingsTestConstants.INFRA_DEFINITION_ID_CHANGED;
 import static software.wings.utils.WingsTestConstants.INFRA_MAPPING_ID;
-import static software.wings.utils.WingsTestConstants.INFRA_MAPPING_ID_CHANGED;
+import static software.wings.utils.WingsTestConstants.INFRA_NAME;
 import static software.wings.utils.WingsTestConstants.JENKINS_URL;
 import static software.wings.utils.WingsTestConstants.NOTIFICATION_GROUP_ID;
 import static software.wings.utils.WingsTestConstants.PASSWORD;
@@ -291,7 +291,6 @@ import software.wings.beans.Application;
 import software.wings.beans.ArtifactStreamMetadata;
 import software.wings.beans.ArtifactVariable;
 import software.wings.beans.AwsAmiInfrastructureMapping;
-import software.wings.beans.AwsInfrastructureMapping;
 import software.wings.beans.BasicOrchestrationWorkflow;
 import software.wings.beans.BlueGreenOrchestrationWorkflow;
 import software.wings.beans.BuildWorkflow;
@@ -304,7 +303,6 @@ import software.wings.beans.FailureStrategy;
 import software.wings.beans.FeatureName;
 import software.wings.beans.Graph;
 import software.wings.beans.GraphNode;
-import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.InfrastructureMappingType;
 import software.wings.beans.JenkinsConfig;
 import software.wings.beans.MultiServiceOrchestrationWorkflow;
@@ -317,6 +315,7 @@ import software.wings.beans.Pipeline;
 import software.wings.beans.Role;
 import software.wings.beans.RoleType;
 import software.wings.beans.Service;
+import software.wings.beans.ServiceTemplate;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.SettingAttribute.SettingCategory;
 import software.wings.beans.TemplateExpression;
@@ -346,9 +345,13 @@ import software.wings.beans.template.Template;
 import software.wings.beans.template.TemplateType;
 import software.wings.beans.template.command.HttpTemplate;
 import software.wings.dl.WingsPersistence;
+import software.wings.infra.AwsAmiInfrastructure;
+import software.wings.infra.AwsEcsInfrastructure;
 import software.wings.infra.AwsInstanceInfrastructure;
 import software.wings.infra.DirectKubernetesInfrastructure;
+import software.wings.infra.GoogleKubernetesEngine;
 import software.wings.infra.InfrastructureDefinition;
+import software.wings.infra.PhysicalInfra;
 import software.wings.rules.Listeners;
 import software.wings.service.StaticMap;
 import software.wings.service.intfc.AccountService;
@@ -363,6 +366,7 @@ import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.NotificationSetupService;
 import software.wings.service.intfc.PipelineService;
 import software.wings.service.intfc.ServiceResourceService;
+import software.wings.service.intfc.ServiceTemplateService;
 import software.wings.service.intfc.TriggerService;
 import software.wings.service.intfc.UserGroupService;
 import software.wings.service.intfc.WorkflowExecutionService;
@@ -431,6 +435,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
   @Mock private TemplateService templateService;
   @Mock private UserGroupService userGroupService;
   @Mock FeatureFlagService featureFlagService;
+  @Mock private ServiceTemplateService serviceTemplateService;
   @Mock private PersonalizationService personalizationService;
 
   @InjectMocks @Inject private WorkflowServiceHelper workflowServiceHelper;
@@ -486,6 +491,14 @@ public class WorkflowServiceTest extends WingsBaseTest {
                         .withDeploymentType(SSH.name())
                         .withInfraMappingType(InfrastructureMappingType.AWS_SSH.name())
                         .withComputeProviderType(SettingVariableTypes.AWS.name())
+                        .build());
+    when(infrastructureDefinitionService.get(APP_ID, INFRA_DEFINITION_ID))
+        .thenReturn(InfrastructureDefinition.builder()
+                        .appId(APP_ID)
+                        .uuid(INFRA_DEFINITION_ID)
+                        .deploymentType(SSH)
+                        .infrastructure(PhysicalInfra.builder().build())
+                        .cloudProviderType(CloudProviderType.PHYSICAL_DATA_CENTER)
                         .build());
     when(userGroupService.getDefaultUserGroup(Mockito.anyString()))
         .thenReturn(UserGroup.builder().uuid("some-user-group-id").build());
@@ -891,6 +904,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
   @Owner(developers = SRINIVAS)
   @Category(UnitTests.class)
   public void stencilsForOrchestrationFilterWorkflowPhase() throws IllegalArgumentException {
+    mockAwsInfraDef(INFRA_DEFINITION_ID);
     Map<StateTypeScope, List<Stencil>> stencils = getStateTypeScopeListMap();
 
     assertThat(stencils).isNotNull().hasSize(1).containsKeys(StateTypeScope.ORCHESTRATION_STENCILS);
@@ -923,13 +937,12 @@ public class WorkflowServiceTest extends WingsBaseTest {
   @Owner(developers = SRINIVAS)
   @Category(UnitTests.class)
   public void stencilsForOrchestrationFilterGKInfra() throws IllegalArgumentException {
-    when(infrastructureMappingService.get(APP_ID, INFRA_MAPPING_ID))
-        .thenReturn(aGcpKubernetesInfrastructureMapping()
-                        .withUuid(INFRA_MAPPING_ID)
-                        .withServiceId(SERVICE_ID)
-                        .withDeploymentType(DeploymentType.KUBERNETES.name())
-                        .withInfraMappingType(InfrastructureMappingType.GCP_KUBERNETES.name())
-                        .withComputeProviderType(SettingVariableTypes.GCP.name())
+    when(infrastructureDefinitionService.get(APP_ID, INFRA_DEFINITION_ID))
+        .thenReturn(InfrastructureDefinition.builder()
+                        .uuid(INFRA_DEFINITION_ID)
+                        .deploymentType(KUBERNETES)
+                        .cloudProviderType(CloudProviderType.GCP)
+                        .infrastructure(GoogleKubernetesEngine.builder().build())
                         .build());
 
     Map<StateTypeScope, List<Stencil>> stencils = getStateTypeScopeListMap();
@@ -948,13 +961,12 @@ public class WorkflowServiceTest extends WingsBaseTest {
   @Owner(developers = SRINIVAS)
   @Category(UnitTests.class)
   public void stencilsForOrchestrationFilterECSInfra() throws IllegalArgumentException {
-    when(infrastructureMappingService.get(APP_ID, INFRA_MAPPING_ID))
-        .thenReturn(anEcsInfrastructureMapping()
-                        .withUuid(INFRA_MAPPING_ID)
-                        .withServiceId(SERVICE_ID)
-                        .withDeploymentType(ECS.name())
-                        .withInfraMappingType(InfrastructureMappingType.AWS_ECS.name())
-                        .withComputeProviderType(SettingVariableTypes.AWS.name())
+    when(infrastructureDefinitionService.get(APP_ID, INFRA_DEFINITION_ID))
+        .thenReturn(InfrastructureDefinition.builder()
+                        .uuid(INFRA_DEFINITION_ID)
+                        .cloudProviderType(CloudProviderType.AWS)
+                        .deploymentType(ECS)
+                        .infrastructure(AwsEcsInfrastructure.builder().build())
                         .build());
 
     Map<StateTypeScope, List<Stencil>> stencils = getStateTypeScopeListMap();
@@ -1065,7 +1077,8 @@ public class WorkflowServiceTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void shouldCreateBasicDirectKubernetesDeploymentWorkflow() {
     Workflow workflow = constructBasicWorkflow();
-    when(infrastructureMappingService.get(APP_ID, INFRA_MAPPING_ID)).thenReturn(constructDirectKubernetesInfra());
+    when(infrastructureDefinitionService.get(APP_ID, INFRA_DEFINITION_ID))
+        .thenReturn(constructDirectKubernetesInfraDef());
     when(serviceResourceService.getDeploymentType(any(), any(), any())).thenReturn(DeploymentType.KUBERNETES);
 
     Workflow savedWorkflow = workflowService.createWorkflow(workflow);
@@ -1100,7 +1113,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void shouldCreateBasicGCPKubernetesDeploymentWorkflow() {
     Workflow workflow = constructBasicWorkflow();
-    when(infrastructureMappingService.get(APP_ID, INFRA_MAPPING_ID)).thenReturn(constructGKInfraMapping());
+    when(infrastructureDefinitionService.get(APP_ID, INFRA_DEFINITION_ID)).thenReturn(constructGKInfraDef());
     when(serviceResourceService.getDeploymentType(any(), any(), any())).thenReturn(DeploymentType.KUBERNETES);
 
     Workflow savedWorkflow = workflowService.createWorkflow(workflow);
@@ -1159,7 +1172,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void shouldCreateBlueGreenCPKubernetesDeploymentWorkflow() {
     Workflow workflow = constructBlueGreenWorkflow();
-    when(infrastructureMappingService.get(APP_ID, INFRA_MAPPING_ID)).thenReturn(constructGKInfraMapping());
+    when(infrastructureDefinitionService.get(APP_ID, INFRA_DEFINITION_ID)).thenReturn(constructGKInfraDef());
     when(serviceResourceService.getDeploymentType(any(), any(), any())).thenReturn(DeploymentType.KUBERNETES);
 
     Workflow savedWorkflow = workflowService.createWorkflow(workflow);
@@ -1198,7 +1211,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void shouldCreateBasicEcsDeploymentWorkflow() {
     Workflow workflow = constructBasicWorkflow();
-    when(infrastructureMappingService.get(APP_ID, INFRA_MAPPING_ID)).thenReturn(constructEcsnfraMapping());
+    when(infrastructureDefinitionService.get(APP_ID, INFRA_DEFINITION_ID)).thenReturn(constructEcsInfraDef());
     when(serviceResourceService.getDeploymentType(any(), any(), any())).thenReturn(DeploymentType.ECS);
 
     Workflow savedWorkflow = workflowService.createWorkflow(workflow);
@@ -1229,7 +1242,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void shouldCreateBasicAwsAmiDeploymentWorkflow() {
     Workflow workflow = constructBasicWorkflow();
-    when(infrastructureMappingService.get(APP_ID, INFRA_MAPPING_ID)).thenReturn(constructAmiInfraMapping());
+    when(infrastructureDefinitionService.get(APP_ID, INFRA_DEFINITION_ID)).thenReturn(constructAmiInfraDef());
     when(serviceResourceService.getDeploymentType(any(), any(), any())).thenReturn(AMI);
 
     Workflow savedWorkflow = workflowService.createWorkflow(workflow);
@@ -1257,7 +1270,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void shouldCreateBasicAwsLambdaDeploymentWorkflow() {
     Workflow workflow = constructBasicWorkflow();
-    when(infrastructureMappingService.get(APP_ID, INFRA_MAPPING_ID)).thenReturn(constructAwsLambdaInfraMapping());
+    when(infrastructureDefinitionService.get(APP_ID, INFRA_DEFINITION_ID)).thenReturn(constructAwsLambdaInfraDef());
     when(serviceResourceService.getDeploymentType(any(), any(), any())).thenReturn(DeploymentType.AWS_LAMBDA);
 
     Workflow savedWorkflow = workflowService.createWorkflow(workflow);
@@ -1287,8 +1300,10 @@ public class WorkflowServiceTest extends WingsBaseTest {
     Map<String, Object> properties = new HashMap<>();
     properties.put("helmReleaseNamePrefix", "defaultValue");
     Workflow workflow = constructHelmWorkflowWithProperties(properties);
-    when(infrastructureMappingService.get(APP_ID, INFRA_MAPPING_ID)).thenReturn(constructHELMInfra());
+    when(infrastructureDefinitionService.get(APP_ID, INFRA_DEFINITION_ID)).thenReturn(constructHELMInfraDef());
     when(serviceResourceService.getDeploymentType(any(), any(), any())).thenReturn(DeploymentType.HELM);
+    when(serviceTemplateService.get(APP_ID, SERVICE_ID, ENV_ID))
+        .thenReturn(ServiceTemplate.Builder.aServiceTemplate().withUuid(SERVICE_TEMPLATE_ID).build());
     when(serviceResourceService.checkArtifactNeededForHelm(APP_ID, SERVICE_TEMPLATE_ID)).thenReturn(true);
 
     Workflow savedWorkflow = workflowService.createWorkflow(workflow);
@@ -1499,7 +1514,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
     assertThat(orchestrationWorkflow.isValid()).isFalse();
     assertThat(orchestrationWorkflow)
         .hasFieldOrPropertyWithValue(
-            "validationMessage", format(WORKFLOW_INFRAMAPPING_VALIDATION_MESSAGE, "[Phase 1]"));
+            "validationMessage", "Some phases [Phase 1] Infrastructure Definition are found to be invalid/incomplete.");
 
     List<WorkflowPhase> workflowPhases =
         ((BasicOrchestrationWorkflow) workflow3.getOrchestrationWorkflow()).getWorkflowPhases();
@@ -1507,7 +1522,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
 
     WorkflowPhase workflowPhase = workflowPhases.get(0);
     assertThat(workflowPhase).isNotNull().hasFieldOrPropertyWithValue("name", PHASE_NAME_PREFIX + 1);
-    assertThat(workflowPhase.getInfraMappingId()).isNull();
+    assertThat(workflowPhase.getInfraDefinitionId()).isNull();
     assertThat(workflowPhase.getComputeProviderId()).isNull();
     assertThat(workflowPhase.getInfraMappingName()).isNull();
   }
@@ -1524,20 +1539,21 @@ public class WorkflowServiceTest extends WingsBaseTest {
     when(serviceResourceService.get(APP_ID, SERVICE_ID_CHANGED, false))
         .thenReturn(Service.builder().artifactType(DOCKER).uuid(SERVICE_ID_CHANGED).build());
 
-    when(infrastructureMappingService.get(APP_ID, INFRA_MAPPING_ID_CHANGED))
-        .thenReturn(anAwsInfrastructureMapping()
-                        .withName("NAME")
-                        .withServiceId(SERVICE_ID_CHANGED)
-                        .withUuid(INFRA_MAPPING_ID_CHANGED)
-                        .withDeploymentType(SSH.name())
-                        .withComputeProviderSettingId(COMPUTE_PROVIDER_ID)
-                        .withComputeProviderType(SettingVariableTypes.AWS.name())
-                        .build());
+    //    when(infrastructureMappingService.get(APP_ID, INFRA_DEFINITION_ID_CHANGED))
+    //        .thenReturn(anAwsInfrastructureMapping()
+    //                        .withName("NAME")
+    //                        .withServiceId(SERVICE_ID_CHANGED)
+    //                        .withUuid(INFRA_DEFINITION_ID_CHANGED)
+    //                        .withDeploymentType(SSH.name())
+    //                        .withComputeProviderSettingId(COMPUTE_PROVIDER_ID)
+    //                        .withComputeProviderType(SettingVariableTypes.AWS.name())
+    //                        .build());
+    mockAwsInfraDef(INFRA_DEFINITION_ID_CHANGED);
 
     Workflow workflow2 = aWorkflow()
                              .appId(APP_ID)
                              .envId(ENV_ID_CHANGED)
-                             .infraMappingId(INFRA_MAPPING_ID_CHANGED)
+                             .infraDefinitionId(INFRA_DEFINITION_ID_CHANGED)
                              .serviceId(SERVICE_ID_CHANGED)
                              .uuid(workflow1.getUuid())
                              .name(name2)
@@ -1556,10 +1572,9 @@ public class WorkflowServiceTest extends WingsBaseTest {
 
     WorkflowPhase workflowPhase = workflowPhases.get(0);
     assertThat(workflowPhase).isNotNull().hasFieldOrPropertyWithValue("name", PHASE_NAME_PREFIX + 1);
-    assertThat(workflowPhase).hasFieldOrPropertyWithValue("infraMappingId", INFRA_MAPPING_ID_CHANGED);
+    assertThat(workflowPhase).hasFieldOrPropertyWithValue("infraDefinitionId", INFRA_DEFINITION_ID_CHANGED);
     assertThat(workflowPhase).hasFieldOrPropertyWithValue("serviceId", SERVICE_ID_CHANGED);
     assertThat(workflowPhase.getComputeProviderId()).isNotNull();
-    assertThat(workflowPhase.getInfraMappingName()).isNotNull();
   }
 
   @Test(expected = WingsException.class)
@@ -1574,18 +1589,12 @@ public class WorkflowServiceTest extends WingsBaseTest {
     when(serviceResourceService.get(APP_ID, SERVICE_ID_CHANGED, false))
         .thenReturn(Service.builder().artifactType(DOCKER).uuid(SERVICE_ID_CHANGED).build());
 
-    when(infrastructureMappingService.get(APP_ID, INFRA_MAPPING_ID_CHANGED))
-        .thenReturn(anAwsInfrastructureMapping()
-                        .withServiceId(SERVICE_ID)
-                        .withUuid(INFRA_MAPPING_ID_CHANGED)
-                        .withDeploymentType(SSH.name())
-                        .withComputeProviderSettingId(COMPUTE_PROVIDER_ID)
-                        .withComputeProviderType(SettingVariableTypes.AWS.name())
-                        .build());
+    when(infrastructureDefinitionService.get(APP_ID, INFRA_DEFINITION_ID))
+        .thenReturn(buildAwsSshInfraDef(INFRA_DEFINITION_ID_CHANGED));
     Workflow workflow2 = aWorkflow()
                              .appId(APP_ID)
                              .envId(ENV_ID_CHANGED)
-                             .infraMappingId(INFRA_MAPPING_ID_CHANGED)
+                             .infraDefinitionId(INFRA_DEFINITION_ID_CHANGED)
                              .serviceId(SERVICE_ID_CHANGED)
                              .uuid(workflow1.getUuid())
                              .name(name2)
@@ -1606,11 +1615,11 @@ public class WorkflowServiceTest extends WingsBaseTest {
     when(serviceResourceService.get(APP_ID, SERVICE_ID_CHANGED, false))
         .thenReturn(Service.builder().name(SERVICE_NAME).artifactType(WAR).uuid(SERVICE_ID_CHANGED).build());
 
-    mockAwsInfraMappingChanged();
+    mockAwsInfraDef(INFRA_DEFINITION_ID_CHANGED);
     Workflow workflow2 = aWorkflow()
                              .appId(APP_ID)
                              .envId(ENV_ID_CHANGED)
-                             .infraMappingId(INFRA_MAPPING_ID_CHANGED)
+                             .infraDefinitionId(INFRA_DEFINITION_ID_CHANGED)
                              .serviceId(SERVICE_ID_CHANGED)
                              .uuid(workflow1.getUuid())
                              .name(name2)
@@ -1625,46 +1634,18 @@ public class WorkflowServiceTest extends WingsBaseTest {
     }
   }
 
-  private void mockAwsInfraMappingChanged() {
-    when(infrastructureMappingService.get(APP_ID, INFRA_MAPPING_ID_CHANGED))
-        .thenReturn(anAwsInfrastructureMapping()
-                        .withServiceId(SERVICE_ID_CHANGED)
-                        .withUuid(INFRA_MAPPING_ID_CHANGED)
-                        .withDeploymentType(SSH.name())
-                        .withComputeProviderSettingId(COMPUTE_PROVIDER_ID)
-                        .withComputeProviderType(SettingVariableTypes.AWS.name())
-                        .build());
+  private void mockAwsInfraDef(String infraDefId) {
+    when(infrastructureDefinitionService.get(APP_ID, infraDefId)).thenReturn(buildAwsSshInfraDef(infraDefId));
   }
 
-  @Test
-  @Owner(developers = SRINIVAS)
-  @Category(UnitTests.class)
-  public void shouldUpdateMulitServiceDeploymentEnvironment() {
-    Workflow workflow1 = workflowService.createWorkflow(constructMultiServiceWorkflowWithPhase());
-
-    String name2 = "Name2";
-
-    Workflow workflow2 = aWorkflow().appId(APP_ID).envId(ENV_ID_CHANGED).uuid(workflow1.getUuid()).name(name2).build();
-
-    workflowService.updateWorkflow(workflow2, null, false);
-
-    Workflow workflow3 = workflowService.readWorkflow(workflow1.getAppId(), workflow1.getUuid());
-    assertThat(workflow3).isNotNull().hasFieldOrPropertyWithValue("envId", ENV_ID_CHANGED);
-    OrchestrationWorkflow orchestrationWorkflow = workflow3.getOrchestrationWorkflow();
-    assertThat(orchestrationWorkflow.isValid()).isFalse();
-    assertThat(orchestrationWorkflow)
-        .hasFieldOrPropertyWithValue(
-            "validationMessage", format(WORKFLOW_INFRAMAPPING_VALIDATION_MESSAGE, "[Phase 1]"));
-
-    List<WorkflowPhase> workflowPhases =
-        ((CanaryOrchestrationWorkflow) workflow3.getOrchestrationWorkflow()).getWorkflowPhases();
-    assertThat(workflowPhases).isNotNull().hasSize(1);
-
-    WorkflowPhase workflowPhase = workflowPhases.get(0);
-    assertThat(workflowPhase).isNotNull().hasFieldOrPropertyWithValue("name", PHASE_NAME_PREFIX + 1);
-    assertThat(workflowPhase.getInfraMappingId()).isNull();
-    assertThat(workflowPhase.getComputeProviderId()).isNull();
-    assertThat(workflowPhase.getInfraMappingName()).isNull();
+  private InfrastructureDefinition buildAwsSshInfraDef(String infraDefId) {
+    return InfrastructureDefinition.builder()
+        .uuid(infraDefId)
+        .name(INFRA_NAME)
+        .deploymentType(SSH)
+        .cloudProviderType(CloudProviderType.AWS)
+        .infrastructure(AwsInstanceInfrastructure.builder().cloudProviderId(COMPUTE_PROVIDER_ID).build())
+        .build();
   }
 
   @Test
@@ -1674,21 +1655,14 @@ public class WorkflowServiceTest extends WingsBaseTest {
     when(serviceResourceService.get(APP_ID, SERVICE_ID_CHANGED, false))
         .thenReturn(Service.builder().name(SERVICE_NAME).artifactType(WAR).uuid(SERVICE_ID_CHANGED).build());
 
-    when(infrastructureMappingService.get(APP_ID, INFRA_MAPPING_ID_CHANGED))
-        .thenReturn(anAwsInfrastructureMapping()
-                        .withName("NAME")
-                        .withServiceId(SERVICE_ID_CHANGED)
-                        .withUuid(INFRA_MAPPING_ID_CHANGED)
-                        .withDeploymentType(SSH.name())
-                        .withComputeProviderSettingId(COMPUTE_PROVIDER_ID)
-                        .withComputeProviderType(SettingVariableTypes.AWS.name())
-                        .build());
+    mockAwsInfraDef(INFRA_DEFINITION_ID_CHANGED);
     Workflow workflow1 = createMultiServiceWorkflow();
 
-    WorkflowPhase workflowPhase = aWorkflowPhase().infraMappingId(INFRA_MAPPING_ID).serviceId(SERVICE_ID).build();
+    WorkflowPhase workflowPhase = aWorkflowPhase().infraDefinitionId(INFRA_DEFINITION_ID).serviceId(SERVICE_ID).build();
     workflowService.createWorkflowPhase(workflow1.getAppId(), workflow1.getUuid(), workflowPhase);
 
-    WorkflowPhase workflowPhase2 = aWorkflowPhase().infraMappingId(INFRA_MAPPING_ID).serviceId(SERVICE_ID).build();
+    WorkflowPhase workflowPhase2 =
+        aWorkflowPhase().infraDefinitionId(INFRA_DEFINITION_ID).serviceId(SERVICE_ID).build();
     workflowService.createWorkflowPhase(workflow1.getAppId(), workflow1.getUuid(), workflowPhase2);
 
     Workflow workflow2 = workflowService.readWorkflow(workflow1.getAppId(), workflow1.getUuid());
@@ -1699,7 +1673,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
     workflowPhase2 = workflowPhases2.get(workflowPhases2.size() - 1);
     workflowPhase2.setName("phase2-changed");
     workflowPhase2.setServiceId(SERVICE_ID_CHANGED);
-    workflowPhase2.setInfraMappingId(INFRA_MAPPING_ID_CHANGED);
+    workflowPhase2.setInfraDefinitionId(INFRA_DEFINITION_ID_CHANGED);
 
     workflowService.updateWorkflowPhase(workflow2.getAppId(), workflow2.getUuid(), workflowPhase2);
 
@@ -1709,10 +1683,9 @@ public class WorkflowServiceTest extends WingsBaseTest {
     WorkflowPhase workflowPhase3 = workflowPhases3.get(workflowPhases3.size() - 1);
     assertThat(workflowPhase3).isEqualToComparingOnlyGivenFields(workflowPhase2, "uuid", "name");
 
-    assertThat(workflowPhase3).hasFieldOrPropertyWithValue("infraMappingId", INFRA_MAPPING_ID_CHANGED);
+    assertThat(workflowPhase3).hasFieldOrPropertyWithValue("infraDefinitionId", INFRA_DEFINITION_ID_CHANGED);
     assertThat(workflowPhase3).hasFieldOrPropertyWithValue("serviceId", SERVICE_ID_CHANGED);
     assertThat(workflowPhase3.getComputeProviderId()).isNotNull();
-    assertThat(workflowPhase3.getInfraMappingName()).isNotNull();
   }
 
   @Test
@@ -1722,13 +1695,14 @@ public class WorkflowServiceTest extends WingsBaseTest {
     when(serviceResourceService.get(APP_ID, SERVICE_ID_CHANGED, false))
         .thenReturn(Service.builder().name(SERVICE_NAME).artifactType(WAR).uuid(SERVICE_ID_CHANGED).build());
 
-    mockAwsInfraMappingChanged();
+    mockAwsInfraDef(INFRA_DEFINITION_ID_CHANGED);
     Workflow workflow1 = createMultiServiceWorkflow();
 
-    WorkflowPhase workflowPhase = aWorkflowPhase().infraMappingId(INFRA_MAPPING_ID).serviceId(SERVICE_ID).build();
+    WorkflowPhase workflowPhase = aWorkflowPhase().infraDefinitionId(INFRA_DEFINITION_ID).serviceId(SERVICE_ID).build();
     workflowService.createWorkflowPhase(workflow1.getAppId(), workflow1.getUuid(), workflowPhase);
 
-    WorkflowPhase workflowPhase2 = aWorkflowPhase().infraMappingId(INFRA_MAPPING_ID).serviceId(SERVICE_ID).build();
+    WorkflowPhase workflowPhase2 =
+        aWorkflowPhase().infraDefinitionId(INFRA_DEFINITION_ID).serviceId(SERVICE_ID).build();
     workflowService.createWorkflowPhase(workflow1.getAppId(), workflow1.getUuid(), workflowPhase2);
 
     Workflow workflow2 = workflowService.readWorkflow(workflow1.getAppId(), workflow1.getUuid());
@@ -1739,7 +1713,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
     workflowPhase2 = workflowPhases2.get(workflowPhases2.size() - 1);
     workflowPhase2.setName("phase2-changed");
     workflowPhase2.setServiceId(SERVICE_ID_CHANGED);
-    workflowPhase2.setInfraMappingId(INFRA_MAPPING_ID_CHANGED);
+    workflowPhase2.setInfraDefinitionId(INFRA_DEFINITION_ID_CHANGED);
 
     try {
       workflowService.updateWorkflowPhase(workflow2.getAppId(), workflow2.getUuid(), workflowPhase2);
@@ -1782,10 +1756,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
     Workflow workflow3 = workflowService.readWorkflow(workflow1.getAppId(), workflow1.getUuid());
     assertThat(workflow3).isNotNull().hasFieldOrPropertyWithValue("envId", ENV_ID_CHANGED);
     OrchestrationWorkflow orchestrationWorkflow = workflow3.getOrchestrationWorkflow();
-    assertThat(orchestrationWorkflow.isValid()).isFalse();
-    assertThat(orchestrationWorkflow)
-        .hasFieldOrPropertyWithValue(
-            "validationMessage", format(WORKFLOW_INFRAMAPPING_VALIDATION_MESSAGE, "[Phase 1]"));
+    assertThat(orchestrationWorkflow.isValid()).isTrue();
 
     List<WorkflowPhase> workflowPhases =
         ((CanaryOrchestrationWorkflow) workflow3.getOrchestrationWorkflow()).getWorkflowPhases();
@@ -1793,9 +1764,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
 
     WorkflowPhase workflowPhase = workflowPhases.get(0);
     assertThat(workflowPhase).isNotNull().hasFieldOrPropertyWithValue("name", PHASE_NAME_PREFIX + 1);
-    assertThat(workflowPhase.getInfraMappingId()).isNull();
-    assertThat(workflowPhase.getComputeProviderId()).isNull();
-    assertThat(workflowPhase.getInfraMappingName()).isNull();
+    assertThat(workflowPhase.getInfraDefinitionId()).isEqualTo(INFRA_DEFINITION_ID);
   }
 
   @Test
@@ -1805,21 +1774,14 @@ public class WorkflowServiceTest extends WingsBaseTest {
     when(serviceResourceService.get(APP_ID, SERVICE_ID_CHANGED, false))
         .thenReturn(Service.builder().name(SERVICE_NAME).artifactType(WAR).uuid(SERVICE_ID_CHANGED).build());
 
-    when(infrastructureMappingService.get(APP_ID, INFRA_MAPPING_ID_CHANGED))
-        .thenReturn(anAwsInfrastructureMapping()
-                        .withName("NAME")
-                        .withServiceId(SERVICE_ID_CHANGED)
-                        .withUuid(INFRA_MAPPING_ID_CHANGED)
-                        .withDeploymentType(SSH.name())
-                        .withComputeProviderSettingId(COMPUTE_PROVIDER_ID)
-                        .withComputeProviderType(SettingVariableTypes.AWS.name())
-                        .build());
+    mockAwsInfraDef(INFRA_DEFINITION_ID_CHANGED);
     Workflow workflow1 = createCanaryWorkflow();
 
-    WorkflowPhase workflowPhase = aWorkflowPhase().infraMappingId(INFRA_MAPPING_ID).serviceId(SERVICE_ID).build();
+    WorkflowPhase workflowPhase = aWorkflowPhase().infraDefinitionId(INFRA_DEFINITION_ID).serviceId(SERVICE_ID).build();
     workflowService.createWorkflowPhase(workflow1.getAppId(), workflow1.getUuid(), workflowPhase);
 
-    WorkflowPhase workflowPhase2 = aWorkflowPhase().infraMappingId(INFRA_MAPPING_ID).serviceId(SERVICE_ID).build();
+    WorkflowPhase workflowPhase2 =
+        aWorkflowPhase().infraDefinitionId(INFRA_DEFINITION_ID).serviceId(SERVICE_ID).build();
     workflowService.createWorkflowPhase(workflow1.getAppId(), workflow1.getUuid(), workflowPhase2);
 
     Workflow workflow2 = workflowService.readWorkflow(workflow1.getAppId(), workflow1.getUuid());
@@ -1830,7 +1792,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
     workflowPhase2 = workflowPhases2.get(workflowPhases2.size() - 1);
     workflowPhase2.setName("phase2-changed");
     workflowPhase2.setServiceId(SERVICE_ID_CHANGED);
-    workflowPhase2.setInfraMappingId(INFRA_MAPPING_ID_CHANGED);
+    workflowPhase2.setInfraDefinitionId(INFRA_DEFINITION_ID_CHANGED);
 
     workflowService.updateWorkflowPhase(workflow2.getAppId(), workflow2.getUuid(), workflowPhase2);
 
@@ -1840,10 +1802,9 @@ public class WorkflowServiceTest extends WingsBaseTest {
     WorkflowPhase workflowPhase3 = workflowPhases3.get(workflowPhases3.size() - 1);
     assertThat(workflowPhase3).isEqualToComparingOnlyGivenFields(workflowPhase2, "uuid", "name");
 
-    assertThat(workflowPhase3).hasFieldOrPropertyWithValue("infraMappingId", INFRA_MAPPING_ID_CHANGED);
+    assertThat(workflowPhase3).hasFieldOrPropertyWithValue("infraDefinitionId", INFRA_DEFINITION_ID_CHANGED);
     assertThat(workflowPhase3).hasFieldOrPropertyWithValue("serviceId", SERVICE_ID_CHANGED);
     assertThat(workflowPhase3.getComputeProviderId()).isNotNull();
-    assertThat(workflowPhase3.getInfraMappingName()).isNotNull();
   }
 
   @Test
@@ -1853,13 +1814,14 @@ public class WorkflowServiceTest extends WingsBaseTest {
     when(serviceResourceService.get(APP_ID, SERVICE_ID_CHANGED, false))
         .thenReturn(Service.builder().name(SERVICE_NAME).artifactType(WAR).uuid(SERVICE_ID_CHANGED).build());
 
-    mockAwsInfraMappingChanged();
+    mockAwsInfraDef(INFRA_DEFINITION_ID_CHANGED);
     Workflow workflow1 = createCanaryWorkflow();
 
-    WorkflowPhase workflowPhase = aWorkflowPhase().infraMappingId(INFRA_MAPPING_ID).serviceId(SERVICE_ID).build();
+    WorkflowPhase workflowPhase = aWorkflowPhase().infraDefinitionId(INFRA_DEFINITION_ID).serviceId(SERVICE_ID).build();
     workflowService.createWorkflowPhase(workflow1.getAppId(), workflow1.getUuid(), workflowPhase);
 
-    WorkflowPhase workflowPhase2 = aWorkflowPhase().infraMappingId(INFRA_MAPPING_ID).serviceId(SERVICE_ID).build();
+    WorkflowPhase workflowPhase2 =
+        aWorkflowPhase().infraDefinitionId(INFRA_DEFINITION_ID).serviceId(SERVICE_ID).build();
     workflowService.createWorkflowPhase(workflow1.getAppId(), workflow1.getUuid(), workflowPhase2);
 
     Workflow workflow2 = workflowService.readWorkflow(workflow1.getAppId(), workflow1.getUuid());
@@ -1870,7 +1832,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
     workflowPhase2 = workflowPhases2.get(workflowPhases2.size() - 1);
     workflowPhase2.setName("phase2-changed");
     workflowPhase2.setServiceId(SERVICE_ID_CHANGED);
-    workflowPhase2.setInfraMappingId(INFRA_MAPPING_ID_CHANGED);
+    workflowPhase2.setInfraDefinitionId(INFRA_DEFINITION_ID_CHANGED);
 
     try {
       workflowService.updateWorkflowPhase(workflow2.getAppId(), workflow2.getUuid(), workflowPhase2);
@@ -1960,7 +1922,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void shouldCreateWorkflowPhase() {
     Workflow workflow1 = createCanaryWorkflow();
-    WorkflowPhase workflowPhase = aWorkflowPhase().serviceId(SERVICE_ID).infraMappingId(INFRA_MAPPING_ID).build();
+    WorkflowPhase workflowPhase = aWorkflowPhase().serviceId(SERVICE_ID).infraDefinitionId(INFRA_DEFINITION_ID).build();
 
     workflowService.createWorkflowPhase(workflow1.getAppId(), workflow1.getUuid(), workflowPhase);
     Workflow workflow2 = workflowService.readWorkflow(workflow1.getAppId(), workflow1.getUuid());
@@ -1994,10 +1956,11 @@ public class WorkflowServiceTest extends WingsBaseTest {
   public void shouldUpdateWorkflowPhase() {
     Workflow workflow1 = createCanaryWorkflow();
 
-    WorkflowPhase workflowPhase = aWorkflowPhase().infraMappingId(INFRA_MAPPING_ID).serviceId(SERVICE_ID).build();
+    WorkflowPhase workflowPhase = aWorkflowPhase().infraDefinitionId(INFRA_DEFINITION_ID).serviceId(SERVICE_ID).build();
     workflowService.createWorkflowPhase(workflow1.getAppId(), workflow1.getUuid(), workflowPhase);
 
-    WorkflowPhase workflowPhase2 = aWorkflowPhase().infraMappingId(INFRA_MAPPING_ID).serviceId(SERVICE_ID).build();
+    WorkflowPhase workflowPhase2 =
+        aWorkflowPhase().infraDefinitionId(INFRA_DEFINITION_ID).serviceId(SERVICE_ID).build();
     workflowService.createWorkflowPhase(workflow1.getAppId(), workflow1.getUuid(), workflowPhase2);
 
     Workflow workflow1Refresh = workflowService.readWorkflow(workflow1.getAppId(), workflow1.getUuid());
@@ -2016,7 +1979,8 @@ public class WorkflowServiceTest extends WingsBaseTest {
     WorkflowPhase workflowPhases2Changed = workflowPhases.get(workflowPhases.size() - 1);
     assertThat(workflowPhases2Changed).isEqualToComparingOnlyGivenFields(workflowPhase2, "uuid", "name");
 
-    WorkflowPhase workflowPhase3 = aWorkflowPhase().infraMappingId(INFRA_MAPPING_ID).serviceId(SERVICE_ID).build();
+    WorkflowPhase workflowPhase3 =
+        aWorkflowPhase().infraDefinitionId(INFRA_DEFINITION_ID).serviceId(SERVICE_ID).build();
     workflowService.createWorkflowPhase(workflow1.getAppId(), workflow1.getUuid(), workflowPhase3);
 
     Workflow workflow3 = workflowService.readWorkflow(workflow1.getAppId(), workflow1.getUuid());
@@ -2029,16 +1993,11 @@ public class WorkflowServiceTest extends WingsBaseTest {
   @Owner(developers = SRINIVAS)
   @Category(UnitTests.class)
   public void shouldCreateWorkflowPhaseInvalidServiceandInframapping() {
-    when(infrastructureMappingService.get(APP_ID, INFRA_MAPPING_ID))
-        .thenReturn(anAwsInfrastructureMapping()
-                        .withUuid(INFRA_MAPPING_ID)
-                        .withServiceId(SERVICE_ID_CHANGED)
-                        .withDeploymentType(SSH.name())
-                        .withComputeProviderType(SettingVariableTypes.AWS.name())
-                        .build());
+    mockAwsInfraDef(INFRA_DEFINITION_ID);
     Workflow workflow1 = createCanaryWorkflow();
 
-    WorkflowPhase workflowPhase = aWorkflowPhase().infraMappingId(INFRA_MAPPING_ID).serviceId(SERVICE_ID).build();
+    WorkflowPhase workflowPhase =
+        aWorkflowPhase().infraDefinitionId(INFRA_DEFINITION_ID).serviceId(SERVICE_ID_CHANGED).build();
     workflowService.createWorkflowPhase(workflow1.getAppId(), workflow1.getUuid(), workflowPhase);
   }
 
@@ -2048,19 +2007,14 @@ public class WorkflowServiceTest extends WingsBaseTest {
   public void shouldUpdateWorkflowPhaseInvalidServiceandInfra() {
     when(serviceResourceService.get(APP_ID, SERVICE_ID_CHANGED, false))
         .thenReturn(Service.builder().uuid(SERVICE_ID_CHANGED).build());
-    when(infrastructureMappingService.get(APP_ID, INFRA_MAPPING_ID_CHANGED))
-        .thenReturn(anAwsInfrastructureMapping()
-                        .withUuid(INFRA_MAPPING_ID_CHANGED)
-                        .withServiceId(SERVICE_ID)
-                        .withDeploymentType(SSH.name())
-                        .withComputeProviderType(SettingVariableTypes.AWS.name())
-                        .build());
+    mockAwsInfraDef(INFRA_DEFINITION_ID_CHANGED);
     Workflow workflow1 = createCanaryWorkflow();
 
-    WorkflowPhase workflowPhase = aWorkflowPhase().infraMappingId(INFRA_MAPPING_ID).serviceId(SERVICE_ID).build();
+    WorkflowPhase workflowPhase = aWorkflowPhase().infraDefinitionId(INFRA_DEFINITION_ID).serviceId(SERVICE_ID).build();
     workflowService.createWorkflowPhase(workflow1.getAppId(), workflow1.getUuid(), workflowPhase);
 
-    WorkflowPhase workflowPhase2 = aWorkflowPhase().infraMappingId(INFRA_MAPPING_ID).serviceId(SERVICE_ID).build();
+    WorkflowPhase workflowPhase2 =
+        aWorkflowPhase().infraDefinitionId(INFRA_DEFINITION_ID).serviceId(SERVICE_ID).build();
     workflowService.createWorkflowPhase(workflow1.getAppId(), workflow1.getUuid(), workflowPhase2);
 
     Workflow workflow2 = workflowService.readWorkflow(workflow1.getAppId(), workflow1.getUuid());
@@ -2071,7 +2025,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
     workflowPhase2 = workflowPhases2.get(workflowPhases2.size() - 1);
     workflowPhase2.setName("phase2-changed");
     workflowPhase2.setServiceId(SERVICE_ID_CHANGED);
-    workflowPhase2.setInfraMappingId(INFRA_MAPPING_ID_CHANGED);
+    workflowPhase2.setInfraDefinitionId(INFRA_DEFINITION_ID_CHANGED);
 
     workflowService.updateWorkflowPhase(workflow2.getAppId(), workflow2.getUuid(), workflowPhase2);
   }
@@ -2082,10 +2036,11 @@ public class WorkflowServiceTest extends WingsBaseTest {
   public void shouldCloneWorkflowPhase() {
     Workflow workflow1 = createCanaryWorkflow();
 
-    WorkflowPhase workflowPhase = aWorkflowPhase().infraMappingId(INFRA_MAPPING_ID).serviceId(SERVICE_ID).build();
+    WorkflowPhase workflowPhase = aWorkflowPhase().infraDefinitionId(INFRA_DEFINITION_ID).serviceId(SERVICE_ID).build();
     workflowService.createWorkflowPhase(workflow1.getAppId(), workflow1.getUuid(), workflowPhase);
 
-    WorkflowPhase workflowPhase2 = aWorkflowPhase().infraMappingId(INFRA_MAPPING_ID).serviceId(SERVICE_ID).build();
+    WorkflowPhase workflowPhase2 =
+        aWorkflowPhase().infraDefinitionId(INFRA_DEFINITION_ID).serviceId(SERVICE_ID).build();
     workflowService.createWorkflowPhase(workflow1.getAppId(), workflow1.getUuid(), workflowPhase2);
 
     Workflow workflow2 = workflowService.readWorkflow(workflow1.getAppId(), workflow1.getUuid());
@@ -2106,7 +2061,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
     assertThat(clonedWorkflowPhase.getUuid()).isNotEqualTo(workflowPhase2.getUuid());
     assertThat(clonedWorkflowPhase.getName()).isEqualTo("phase 2-clone");
     assertThat(clonedWorkflowPhase)
-        .isEqualToComparingOnlyGivenFields(workflowPhase2, "infraMappingId", "serviceId", "computeProviderId");
+        .isEqualToComparingOnlyGivenFields(workflowPhase2, "infraDefinitionId", "serviceId", "computeProviderId");
     assertThat(clonedWorkflowPhase.getPhaseSteps()).isNotNull().size().isEqualTo(workflowPhase2.getPhaseSteps().size());
   }
 
@@ -2115,7 +2070,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void shouldCreateMultiServiceWorkflowPhase() {
     Workflow workflow1 = createMultiServiceWorkflow();
-    WorkflowPhase workflowPhase = aWorkflowPhase().serviceId(SERVICE_ID).infraMappingId(INFRA_MAPPING_ID).build();
+    WorkflowPhase workflowPhase = aWorkflowPhase().serviceId(SERVICE_ID).infraDefinitionId(INFRA_DEFINITION_ID).build();
 
     workflowService.createWorkflowPhase(workflow1.getAppId(), workflow1.getUuid(), workflowPhase);
     Workflow workflow2 = workflowService.readWorkflow(workflow1.getAppId(), workflow1.getUuid());
@@ -2149,10 +2104,11 @@ public class WorkflowServiceTest extends WingsBaseTest {
   public void shouldUpdateMultiServiceWorkflowPhase() {
     Workflow workflow1 = createMultiServiceWorkflow();
 
-    WorkflowPhase workflowPhase = aWorkflowPhase().infraMappingId(INFRA_MAPPING_ID).serviceId(SERVICE_ID).build();
+    WorkflowPhase workflowPhase = aWorkflowPhase().infraDefinitionId(INFRA_DEFINITION_ID).serviceId(SERVICE_ID).build();
     workflowService.createWorkflowPhase(workflow1.getAppId(), workflow1.getUuid(), workflowPhase);
 
-    WorkflowPhase workflowPhase2 = aWorkflowPhase().infraMappingId(INFRA_MAPPING_ID).serviceId(SERVICE_ID).build();
+    WorkflowPhase workflowPhase2 =
+        aWorkflowPhase().infraDefinitionId(INFRA_DEFINITION_ID).serviceId(SERVICE_ID).build();
     workflowService.createWorkflowPhase(workflow1.getAppId(), workflow1.getUuid(), workflowPhase2);
 
     Workflow workflow2 = workflowService.readWorkflow(workflow1.getAppId(), workflow1.getUuid());
@@ -2213,10 +2169,11 @@ public class WorkflowServiceTest extends WingsBaseTest {
   public void shouldUpdateWorkflowPhaseRollback() {
     Workflow workflow1 = createCanaryWorkflow();
 
-    WorkflowPhase workflowPhase = aWorkflowPhase().infraMappingId(INFRA_MAPPING_ID).serviceId(SERVICE_ID).build();
+    WorkflowPhase workflowPhase = aWorkflowPhase().infraDefinitionId(INFRA_DEFINITION_ID).serviceId(SERVICE_ID).build();
     workflowService.createWorkflowPhase(workflow1.getAppId(), workflow1.getUuid(), workflowPhase);
 
-    WorkflowPhase workflowPhase2 = aWorkflowPhase().infraMappingId(INFRA_MAPPING_ID).serviceId(SERVICE_ID).build();
+    WorkflowPhase workflowPhase2 =
+        aWorkflowPhase().infraDefinitionId(INFRA_DEFINITION_ID).serviceId(SERVICE_ID).build();
     workflowService.createWorkflowPhase(workflow1.getAppId(), workflow1.getUuid(), workflowPhase2);
 
     Workflow workflow2 = workflowService.readWorkflow(workflow1.getAppId(), workflow1.getUuid());
@@ -2304,10 +2261,11 @@ public class WorkflowServiceTest extends WingsBaseTest {
   public void shouldHaveGraph() {
     Workflow workflow1 = createCanaryWorkflow();
 
-    WorkflowPhase workflowPhase = aWorkflowPhase().infraMappingId(INFRA_MAPPING_ID).serviceId(SERVICE_ID).build();
+    WorkflowPhase workflowPhase = aWorkflowPhase().infraDefinitionId(INFRA_DEFINITION_ID).serviceId(SERVICE_ID).build();
     workflowService.createWorkflowPhase(workflow1.getAppId(), workflow1.getUuid(), workflowPhase);
 
-    WorkflowPhase workflowPhase2 = aWorkflowPhase().infraMappingId(INFRA_MAPPING_ID).serviceId(SERVICE_ID).build();
+    WorkflowPhase workflowPhase2 =
+        aWorkflowPhase().infraDefinitionId(INFRA_DEFINITION_ID).serviceId(SERVICE_ID).build();
     workflowService.createWorkflowPhase(workflow1.getAppId(), workflow1.getUuid(), workflowPhase2);
 
     Workflow workflow2 = workflowService.readWorkflow(workflow1.getAppId(), workflow1.getUuid());
@@ -2505,7 +2463,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void shouldFetchInfraDefVariables() {
     List<Variable> variables =
-        newArrayList(aVariable().entityType(EntityType.INFRASTRUCTURE_DEFINITION).name("name1").value("value1").build(),
+        newArrayList(aVariable().entityType(INFRASTRUCTURE_DEFINITION).name("name1").value("value1").build(),
             aVariable().entityType(SERVICE).name("name2").value("value2").build());
 
     List<Variable> infraDefVariables = workflowServiceTemplateHelper.getInfraDefCompleteWorkflowVariables(variables);
@@ -2600,7 +2558,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
     Workflow workflow2 = aWorkflow().appId(APP_ID).envId(ENV_ID).uuid(workflow1.getUuid()).name(name2).build();
 
     workflow2.setTemplateExpressions(
-        asList(getEnvTemplateExpression(), getInfraTemplateExpression(), getServiceTemplateExpression()));
+        asList(getEnvTemplateExpression(), prepareInfraDefTemplateExpression(), getServiceTemplateExpression()));
 
     workflowService.updateWorkflow(workflow2, null, false);
 
@@ -2621,7 +2579,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
         aWorkflow().appId(APP_ID).envId(ENV_ID).serviceId(serviceId).uuid(workflow1.getUuid()).name(name2).build();
 
     workflow2.setTemplateExpressions(
-        asList(getEnvTemplateExpression(), getInfraTemplateExpression(), getServiceTemplateExpression()));
+        asList(getEnvTemplateExpression(), prepareInfraDefTemplateExpression(), getServiceTemplateExpression()));
 
     try {
       when(serviceResourceService.get(serviceId)).thenReturn(service);
@@ -2665,21 +2623,21 @@ public class WorkflowServiceTest extends WingsBaseTest {
     assertThat(workflowPhases).isNotNull().hasSize(2);
 
     WorkflowPhase workflowPhase = workflowPhases.get(0);
-    assertThat(workflowPhase.getInfraMappingId()).isNotNull();
+    assertThat(workflowPhase.getInfraDefinitionId()).isNotNull();
     assertThat(workflowPhase.getTemplateExpressions())
         .isNotEmpty()
         .extracting(TemplateExpression::getFieldName)
-        .contains("infraMappingId");
+        .contains("infraDefinitionId");
     assertThat(orchestrationWorkflow.getUserVariables())
         .extracting(Variable::obtainEntityType)
-        .containsSequence(ENVIRONMENT, INFRASTRUCTURE_MAPPING);
+        .containsSequence(ENVIRONMENT, INFRASTRUCTURE_DEFINITION);
 
     workflowPhase = workflowPhases.get(1);
-    assertThat(workflowPhase.getInfraMappingId()).isNotNull();
+    assertThat(workflowPhase.getInfraDefinitionId()).isNotNull();
     assertThat(workflowPhase.getTemplateExpressions())
         .isNotEmpty()
         .extracting(TemplateExpression::getFieldName)
-        .contains("infraMappingId");
+        .contains("infraDefinitionId");
   }
 
   @Test
@@ -2712,31 +2670,30 @@ public class WorkflowServiceTest extends WingsBaseTest {
 
     WorkflowPhase workflowPhase = workflowPhases.get(0);
     assertThat(workflowPhase).isNotNull().hasFieldOrPropertyWithValue("name", PHASE_NAME_PREFIX + 1);
-    assertThat(workflowPhase.getInfraMappingId()).isNotNull();
+    assertThat(workflowPhase.getInfraDefinitionId()).isNotNull();
     assertThat(workflowPhase.getTemplateExpressions())
         .isNotEmpty()
         .extracting(TemplateExpression::getFieldName)
-        .contains("infraMappingId");
+        .contains("infraDefinitionId");
     assertThat(orchestrationWorkflow.getUserVariables())
         .extracting(Variable::obtainEntityType)
-        .containsSequence(ENVIRONMENT, INFRASTRUCTURE_MAPPING);
+        .containsSequence(ENVIRONMENT, INFRASTRUCTURE_DEFINITION);
 
     // Assert Service Infra variable has metadata with the associated service infrastructure
-    final Variable infraVariable1 =
-        orchestrationWorkflow.getUserVariables()
-            .stream()
-            .filter(variable -> variable.obtainEntityType() == EntityType.INFRASTRUCTURE_MAPPING)
-            .findFirst()
-            .orElse(null);
+    final Variable infraVariable1 = orchestrationWorkflow.getUserVariables()
+                                        .stream()
+                                        .filter(variable -> variable.obtainEntityType() == INFRASTRUCTURE_DEFINITION)
+                                        .findFirst()
+                                        .orElse(null);
 
     assertThat(infraVariable1.getMetadata().get("serviceId")).isEqualTo(SERVICE_ID);
 
     workflowPhase = workflowPhases.get(1);
-    assertThat(workflowPhase.getInfraMappingId()).isNotNull();
+    assertThat(workflowPhase.getInfraDefinitionId()).isNotNull();
     assertThat(workflowPhase.getTemplateExpressions())
         .isNotEmpty()
         .extracting(TemplateExpression::getFieldName)
-        .contains("infraMappingId");
+        .contains("infraDefinitionId");
   }
 
   @Test
@@ -2745,10 +2702,11 @@ public class WorkflowServiceTest extends WingsBaseTest {
   public void shouldTemplatizeCanaryPhase() {
     Workflow workflow1 = createCanaryWorkflow();
 
-    WorkflowPhase workflowPhase = aWorkflowPhase().infraMappingId(INFRA_MAPPING_ID).serviceId(SERVICE_ID).build();
+    WorkflowPhase workflowPhase = aWorkflowPhase().infraDefinitionId(INFRA_DEFINITION_ID).serviceId(SERVICE_ID).build();
     workflowService.createWorkflowPhase(workflow1.getAppId(), workflow1.getUuid(), workflowPhase);
 
-    WorkflowPhase workflowPhase2 = aWorkflowPhase().infraMappingId(INFRA_MAPPING_ID).serviceId(SERVICE_ID).build();
+    WorkflowPhase workflowPhase2 =
+        aWorkflowPhase().infraDefinitionId(INFRA_DEFINITION_ID).serviceId(SERVICE_ID).build();
     workflowService.createWorkflowPhase(workflow1.getAppId(), workflow1.getUuid(), workflowPhase2);
 
     Workflow workflow2 = workflowService.readWorkflow(workflow1.getAppId(), workflow1.getUuid());
@@ -2759,7 +2717,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
     workflowPhase2 = workflowPhases2.get(workflowPhases2.size() - 1);
     workflowPhase2.setName("phase2-changed");
 
-    workflowPhase2.setTemplateExpressions(asList(getServiceTemplateExpression(), getInfraTemplateExpression()));
+    workflowPhase2.setTemplateExpressions(asList(getServiceTemplateExpression(), prepareInfraDefTemplateExpression()));
 
     workflowService.updateWorkflowPhase(workflow2.getAppId(), workflow2.getUuid(), workflowPhase2);
     Workflow workflow3 = workflowService.readWorkflow(workflow1.getAppId(), workflow1.getUuid());
@@ -2776,7 +2734,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
     Workflow workflow2 = aWorkflow().appId(APP_ID).envId(ENV_ID).uuid(workflow1.getUuid()).name(name2).build();
 
     workflow2.setTemplateExpressions(
-        asList(getEnvTemplateExpression(), getInfraTemplateExpression(), getServiceTemplateExpression()));
+        asList(getEnvTemplateExpression(), prepareInfraDefTemplateExpression(), getServiceTemplateExpression()));
 
     workflowService.updateWorkflow(workflow2, null, false);
 
@@ -2796,8 +2754,8 @@ public class WorkflowServiceTest extends WingsBaseTest {
                                                 .metadata(ImmutableMap.of("entityType", "ENVIRONMENT"))
                                                 .build(),
         TemplateExpression.builder()
-            .fieldName("infraMappingId")
-            .expression("${ServiceInfra_SSH_Changed}")
+            .fieldName("infraDefinitionId")
+            .expression("${InfraDef_SSH_Changed}")
             .metadata(ImmutableMap.of("entityType", "INFRASTRUCTURE_MAPPING"))
             .build(),
         TemplateExpression.builder()
@@ -2817,7 +2775,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
     orchestrationWorkflow = templatizedWorkflow.getOrchestrationWorkflow();
     workflowPhases = ((BasicOrchestrationWorkflow) orchestrationWorkflow).getWorkflowPhases();
     assertThat(orchestrationWorkflow.getTemplatizedServiceIds()).isNotNull().contains(SERVICE_ID);
-    assertThat(orchestrationWorkflow.getTemplatizedInfraMappingIds()).isNotNull().contains(INFRA_MAPPING_ID);
+    assertThat(orchestrationWorkflow.getTemplatizedInfraDefinitionIds()).isNotNull().contains(INFRA_DEFINITION_ID);
     assertThat(orchestrationWorkflow).extracting("userVariables").isNotNull();
     assertThat(
         orchestrationWorkflow.getUserVariables().stream().anyMatch(variable -> variable.getName().equals("Service")))
@@ -2826,10 +2784,10 @@ public class WorkflowServiceTest extends WingsBaseTest {
                    variable -> variable.getName().equals("Service_Changed")))
         .isTrue();
     assertThat(orchestrationWorkflow.getUserVariables().stream().anyMatch(
-                   variable -> variable.getName().equals("ServiceInfra_SSH")))
+                   variable -> variable.getName().equals("InfraDef_SSH")))
         .isFalse();
     assertThat(orchestrationWorkflow.getUserVariables().stream().anyMatch(
-                   variable -> variable.getName().equals("ServiceInfra_SSH_Changed")))
+                   variable -> variable.getName().equals("InfraDef_SSH_Changed")))
         .isTrue();
     assertThat(orchestrationWorkflow.getUserVariables().stream().anyMatch(
                    variable -> variable.getName().equals("Environment")))
@@ -2842,11 +2800,11 @@ public class WorkflowServiceTest extends WingsBaseTest {
 
     workflowPhase = workflowPhases.get(0);
     assertThat(workflowPhase).isNotNull().hasFieldOrPropertyWithValue("name", PHASE_NAME_PREFIX + 1);
-    assertThat(workflowPhase.getInfraMappingId()).isNotNull();
+    assertThat(workflowPhase.getInfraDefinitionId()).isNotNull();
     assertThat(workflowPhase.getTemplateExpressions())
         .isNotEmpty()
         .extracting(TemplateExpression::getFieldName)
-        .contains("infraMappingId");
+        .contains("infraDefinitionId");
     assertThat(workflowPhase.getTemplateExpressions())
         .isNotEmpty()
         .extracting(TemplateExpression::getFieldName)
@@ -2879,24 +2837,24 @@ public class WorkflowServiceTest extends WingsBaseTest {
     OrchestrationWorkflow orchestrationWorkflow = workflow3.getOrchestrationWorkflow();
     List<WorkflowPhase> workflowPhases = ((CanaryOrchestrationWorkflow) orchestrationWorkflow).getWorkflowPhases();
     assertThat(orchestrationWorkflow.getTemplatizedServiceIds()).isNotNull().doesNotContain(SERVICE_ID);
-    assertThat(orchestrationWorkflow.getTemplatizedInfraMappingIds()).isNotNull().contains(INFRA_MAPPING_ID);
+    assertThat(orchestrationWorkflow.getTemplatizedInfraDefinitionIds()).isNotNull().contains(INFRA_DEFINITION_ID);
     assertThat(orchestrationWorkflow).extracting("userVariables").isNotNull();
     assertThat(orchestrationWorkflow.getUserVariables().stream().anyMatch(
-                   variable -> variable.getName().equals("ServiceInfra_SSH")))
+                   variable -> variable.getName().equals("InfraDefinition_SSH")))
         .isTrue();
 
     assertThat(workflowPhases).isNotNull().hasSize(1);
 
     WorkflowPhase workflowPhase = workflowPhases.get(0);
     assertThat(workflowPhase).isNotNull().hasFieldOrPropertyWithValue("name", PHASE_NAME_PREFIX + 1);
-    assertThat(workflowPhase.getInfraMappingId()).isNotNull();
+    assertThat(workflowPhase.getInfraDefinitionId()).isNotNull();
     assertThat(workflowPhase.getTemplateExpressions())
         .isNotEmpty()
         .extracting(TemplateExpression::getFieldName)
-        .contains("infraMappingId");
+        .contains("infraDefinitionId");
     assertThat(orchestrationWorkflow.getUserVariables())
         .extracting(Variable::obtainEntityType)
-        .containsSequence(ENVIRONMENT, INFRASTRUCTURE_MAPPING);
+        .containsSequence(ENVIRONMENT, INFRASTRUCTURE_DEFINITION);
 
     TemplateExpression envExpression = TemplateExpression.builder()
                                            .fieldName("envId")
@@ -2914,10 +2872,10 @@ public class WorkflowServiceTest extends WingsBaseTest {
     orchestrationWorkflow = workflow3.getOrchestrationWorkflow();
     workflowPhases = ((CanaryOrchestrationWorkflow) orchestrationWorkflow).getWorkflowPhases();
     assertThat(orchestrationWorkflow.getTemplatizedServiceIds()).isNotNull().doesNotContain(SERVICE_ID);
-    assertThat(orchestrationWorkflow.getTemplatizedInfraMappingIds()).isNotNull().contains(INFRA_MAPPING_ID);
+    assertThat(orchestrationWorkflow.getTemplatizedInfraDefinitionIds()).isNotNull().contains(INFRA_DEFINITION_ID);
     assertThat(orchestrationWorkflow).extracting("userVariables").isNotNull();
     assertThat(orchestrationWorkflow.getUserVariables().stream().anyMatch(
-                   variable -> variable.getName().equals("ServiceInfra_SSH")))
+                   variable -> variable.getName().equals("InfraDefinition_SSH")))
         .isTrue();
     assertThat(orchestrationWorkflow.getUserVariables().stream().anyMatch(
                    variable -> variable.getName().equals("Environment")))
@@ -2930,14 +2888,14 @@ public class WorkflowServiceTest extends WingsBaseTest {
 
     workflowPhase = workflowPhases.get(0);
     assertThat(workflowPhase).isNotNull().hasFieldOrPropertyWithValue("name", PHASE_NAME_PREFIX + 1);
-    assertThat(workflowPhase.getInfraMappingId()).isNotNull();
+    assertThat(workflowPhase.getInfraDefinitionId()).isNotNull();
     assertThat(workflowPhase.getTemplateExpressions())
         .isNotEmpty()
         .extracting(TemplateExpression::getFieldName)
-        .contains("infraMappingId");
+        .contains("infraDefinitionId");
     assertThat(orchestrationWorkflow.getUserVariables())
         .extracting(Variable::obtainEntityType)
-        .containsSequence(ENVIRONMENT, INFRASTRUCTURE_MAPPING);
+        .containsSequence(ENVIRONMENT, INFRASTRUCTURE_DEFINITION);
   }
 
   @Test
@@ -2952,7 +2910,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
 
     workflowPhase.setName("phase2-changed");
 
-    workflowPhase.setTemplateExpressions(asList(getInfraTemplateExpression(), getServiceTemplateExpression()));
+    workflowPhase.setTemplateExpressions(asList(prepareInfraDefTemplateExpression(), getServiceTemplateExpression()));
 
     workflowService.updateWorkflowPhase(workflow.getAppId(), workflow.getUuid(), workflowPhase);
 
@@ -2963,14 +2921,14 @@ public class WorkflowServiceTest extends WingsBaseTest {
     WorkflowPhase workflowPhase3 = workflowPhases2.get(workflowPhases2.size() - 1);
     assertThat(workflowPhase3).isEqualToComparingOnlyGivenFields(workflowPhase, "uuid", "name");
 
-    assertThat(workflowPhase3.getInfraMappingId()).isNotNull();
+    assertThat(workflowPhase3.getInfraDefinitionId()).isNotNull();
     assertThat(workflowPhase3.getTemplateExpressions())
         .isNotEmpty()
         .extracting(TemplateExpression::getFieldName)
-        .contains("infraMappingId");
+        .contains("infraDefinitionId");
     assertThat(workflow3.getOrchestrationWorkflow().getUserVariables())
         .extracting(Variable::obtainEntityType)
-        .containsSequence(SERVICE, INFRASTRUCTURE_MAPPING);
+        .containsSequence(SERVICE, INFRASTRUCTURE_DEFINITION);
   }
 
   @Test
@@ -2983,7 +2941,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
     Workflow workflow2 = aWorkflow().appId(APP_ID).envId(ENV_ID).uuid(workflow1.getUuid()).name(name2).build();
 
     workflow2.setTemplateExpressions(
-        asList(getEnvTemplateExpression(), getInfraTemplateExpression(), getServiceTemplateExpression()));
+        asList(getEnvTemplateExpression(), prepareInfraDefTemplateExpression(), getServiceTemplateExpression()));
 
     workflowService.updateWorkflow(workflow2, null, false);
 
@@ -2992,7 +2950,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
     assertTemplatizedWorkflow(workflow3);
 
     // Detemplatize service Infra
-    workflow2.setTemplateExpressions(asList(getEnvTemplateExpression(), getInfraTemplateExpression()));
+    workflow2.setTemplateExpressions(asList(getEnvTemplateExpression(), prepareInfraDefTemplateExpression()));
 
     workflowService.updateWorkflow(workflow2, null, false);
 
@@ -3009,51 +2967,18 @@ public class WorkflowServiceTest extends WingsBaseTest {
 
     WorkflowPhase workflowPhase = workflowPhases.get(0);
     assertThat(workflowPhase).isNotNull().hasFieldOrPropertyWithValue("name", PHASE_NAME_PREFIX + 1);
-    assertThat(workflowPhase.getInfraMappingId()).isNotNull();
+    assertThat(workflowPhase.getInfraDefinitionId()).isNotNull();
     assertThat(workflowPhase.getTemplateExpressions())
         .isNotEmpty()
         .extracting(TemplateExpression::getFieldName)
-        .contains("infraMappingId");
+        .contains("infraDefinitionId");
     assertThat(workflowPhase.getTemplateExpressions())
         .isNotEmpty()
         .extracting(TemplateExpression::getFieldName)
         .doesNotContain("serviceId");
     assertThat(orchestrationWorkflow.getUserVariables())
         .extracting(Variable::obtainEntityType)
-        .containsSequence(ENVIRONMENT, INFRASTRUCTURE_MAPPING);
-  }
-
-  @Test(expected = WingsException.class)
-  @Owner(developers = SRINIVAS)
-  @Category(UnitTests.class)
-  public void shouldDeTemplatizeOnlyInfraCanaryPhase() {
-    Workflow workflow1 = createCanaryWorkflow();
-
-    WorkflowPhase workflowPhase = aWorkflowPhase().infraMappingId(INFRA_MAPPING_ID).serviceId(SERVICE_ID).build();
-    workflowService.createWorkflowPhase(workflow1.getAppId(), workflow1.getUuid(), workflowPhase);
-
-    WorkflowPhase workflowPhase2 = aWorkflowPhase().infraMappingId(INFRA_MAPPING_ID).serviceId(SERVICE_ID).build();
-    workflowService.createWorkflowPhase(workflow1.getAppId(), workflow1.getUuid(), workflowPhase2);
-
-    Workflow workflow2 = workflowService.readWorkflow(workflow1.getAppId(), workflow1.getUuid());
-    assertThat(workflow2).isNotNull();
-
-    List<WorkflowPhase> workflowPhases2 =
-        ((CanaryOrchestrationWorkflow) workflow2.getOrchestrationWorkflow()).getWorkflowPhases();
-    workflowPhase2 = workflowPhases2.get(workflowPhases2.size() - 1);
-    workflowPhase2.setName("phase2-changed");
-
-    workflowPhase2.setTemplateExpressions(asList(getServiceTemplateExpression(), getInfraTemplateExpression()));
-
-    workflowService.updateWorkflowPhase(workflow2.getAppId(), workflow2.getUuid(), workflowPhase2);
-
-    Workflow workflow3 = workflowService.readWorkflow(workflow1.getAppId(), workflow1.getUuid());
-
-    WorkflowPhase workflowPhase3 = assertWorkflowPhaseTemplateExpressions(workflow3, workflowPhase2);
-
-    workflowPhase3.setTemplateExpressions(asList(getServiceTemplateExpression()));
-
-    workflowService.updateWorkflowPhase(workflow2.getAppId(), workflow2.getUuid(), workflowPhase3);
+        .containsSequence(ENVIRONMENT, INFRASTRUCTURE_DEFINITION);
   }
 
   @Test
@@ -3062,10 +2987,11 @@ public class WorkflowServiceTest extends WingsBaseTest {
   public void shouldDeTemplatizeOnlyServiceandInfraCanaryPhase() {
     Workflow workflow1 = createCanaryWorkflow();
 
-    WorkflowPhase workflowPhase = aWorkflowPhase().infraMappingId(INFRA_MAPPING_ID).serviceId(SERVICE_ID).build();
+    WorkflowPhase workflowPhase = aWorkflowPhase().infraDefinitionId(INFRA_DEFINITION_ID).serviceId(SERVICE_ID).build();
     workflowService.createWorkflowPhase(workflow1.getAppId(), workflow1.getUuid(), workflowPhase);
 
-    WorkflowPhase workflowPhase2 = aWorkflowPhase().infraMappingId(INFRA_MAPPING_ID).serviceId(SERVICE_ID).build();
+    WorkflowPhase workflowPhase2 =
+        aWorkflowPhase().infraDefinitionId(INFRA_DEFINITION_ID).serviceId(SERVICE_ID).build();
     workflowService.createWorkflowPhase(workflow1.getAppId(), workflow1.getUuid(), workflowPhase2);
 
     Workflow workflow2 = workflowService.readWorkflow(workflow1.getAppId(), workflow1.getUuid());
@@ -3076,7 +3002,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
     workflowPhase2 = workflowPhases2.get(workflowPhases2.size() - 1);
     workflowPhase2.setName("phase2-changed");
 
-    workflowPhase2.setTemplateExpressions(asList(getServiceTemplateExpression(), getInfraTemplateExpression()));
+    workflowPhase2.setTemplateExpressions(asList(getServiceTemplateExpression(), prepareInfraDefTemplateExpression()));
 
     workflowService.updateWorkflowPhase(workflow2.getAppId(), workflow2.getUuid(), workflowPhase2);
 
@@ -3086,14 +3012,14 @@ public class WorkflowServiceTest extends WingsBaseTest {
     WorkflowPhase workflowPhase3 = workflowPhases3.get(workflowPhases3.size() - 1);
     assertThat(workflowPhase3).isEqualToComparingOnlyGivenFields(workflowPhase2, "uuid", "name");
 
-    assertThat(workflowPhase3.getInfraMappingId()).isNotNull();
+    assertThat(workflowPhase3.getInfraDefinitionId()).isNotNull();
     assertThat(workflowPhase3.getTemplateExpressions())
         .isNotEmpty()
         .extracting(TemplateExpression::getFieldName)
-        .contains("infraMappingId");
+        .contains("infraDefinitionId");
     assertThat(workflow3.getOrchestrationWorkflow().getUserVariables())
         .extracting(Variable::obtainEntityType)
-        .containsSequence(SERVICE, INFRASTRUCTURE_MAPPING);
+        .containsSequence(SERVICE, INFRASTRUCTURE_DEFINITION);
 
     workflowPhase3.setTemplateExpressions(null);
     workflowService.updateWorkflowPhase(workflow2.getAppId(), workflow2.getUuid(), workflowPhase3);
@@ -3104,7 +3030,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
     WorkflowPhase workflowPhase4 = workflowPhases3.get(workflowPhases4.size() - 1);
     assertThat(workflowPhase4).isEqualToComparingOnlyGivenFields(workflowPhase2, "uuid", "name");
 
-    assertThat(workflowPhase4.getInfraMappingId()).isNotNull();
+    assertThat(workflowPhase4.getInfraDefinitionId()).isNotNull();
     assertThat(workflowPhase4.getTemplateExpressions()).isEmpty();
     assertThat(workflow4.getOrchestrationWorkflow().getUserVariables()).isNullOrEmpty();
   }
@@ -3154,10 +3080,11 @@ public class WorkflowServiceTest extends WingsBaseTest {
     when(serviceResourceService.getDeploymentType(any(), any(), any())).thenReturn(DeploymentType.SSH);
     Workflow workflow1 = createCanaryWorkflow();
 
-    WorkflowPhase workflowPhase = aWorkflowPhase().infraMappingId(INFRA_MAPPING_ID).serviceId(SERVICE_ID).build();
+    WorkflowPhase workflowPhase = aWorkflowPhase().infraDefinitionId(INFRA_DEFINITION_ID).serviceId(SERVICE_ID).build();
     workflowService.createWorkflowPhase(workflow1.getAppId(), workflow1.getUuid(), workflowPhase);
 
-    WorkflowPhase workflowPhase2 = aWorkflowPhase().infraMappingId(INFRA_MAPPING_ID).serviceId(SERVICE_ID).build();
+    WorkflowPhase workflowPhase2 =
+        aWorkflowPhase().infraDefinitionId(INFRA_DEFINITION_ID).serviceId(SERVICE_ID).build();
     workflowService.createWorkflowPhase(workflow1.getAppId(), workflow1.getUuid(), workflowPhase2);
 
     Workflow workflow2 = workflowService.readWorkflow(workflow1.getAppId(), workflow1.getUuid());
@@ -3269,10 +3196,11 @@ public class WorkflowServiceTest extends WingsBaseTest {
   public void shouldGetResolvedTemplatizedServices() {
     Workflow workflow1 = createCanaryWorkflow();
 
-    WorkflowPhase workflowPhase = aWorkflowPhase().infraMappingId(INFRA_MAPPING_ID).serviceId(SERVICE_ID).build();
+    WorkflowPhase workflowPhase = aWorkflowPhase().infraDefinitionId(INFRA_DEFINITION_ID).serviceId(SERVICE_ID).build();
     workflowService.createWorkflowPhase(workflow1.getAppId(), workflow1.getUuid(), workflowPhase);
 
-    WorkflowPhase workflowPhase2 = aWorkflowPhase().infraMappingId(INFRA_MAPPING_ID).serviceId(SERVICE_ID).build();
+    WorkflowPhase workflowPhase2 =
+        aWorkflowPhase().infraDefinitionId(INFRA_DEFINITION_ID).serviceId(SERVICE_ID).build();
     workflowService.createWorkflowPhase(workflow1.getAppId(), workflow1.getUuid(), workflowPhase2);
 
     Workflow workflow2 = workflowService.readWorkflow(workflow1.getAppId(), workflow1.getUuid());
@@ -3283,7 +3211,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
     workflowPhase2 = workflowPhases2.get(workflowPhases2.size() - 1);
     workflowPhase2.setName("phase2-changed");
 
-    workflowPhase2.setTemplateExpressions(asList(getServiceTemplateExpression(), getInfraTemplateExpression()));
+    workflowPhase2.setTemplateExpressions(asList(getServiceTemplateExpression(), prepareInfraDefTemplateExpression()));
 
     workflowService.updateWorkflowPhase(workflow2.getAppId(), workflow2.getUuid(), workflowPhase2);
 
@@ -3293,64 +3221,55 @@ public class WorkflowServiceTest extends WingsBaseTest {
     WorkflowPhase workflowPhase3 = workflowPhases3.get(workflowPhases3.size() - 1);
     assertThat(workflowPhase3).isEqualToComparingOnlyGivenFields(workflowPhase2, "uuid", "name");
 
-    assertThat(workflowPhase3.getInfraMappingId()).isNotNull();
+    assertThat(workflowPhase3.getInfraDefinitionId()).isNotNull();
     assertThat(workflowPhase3.getTemplateExpressions())
         .isNotEmpty()
         .extracting(TemplateExpression::getFieldName)
-        .contains("infraMappingId");
+        .contains("infraDefinitionId");
     assertThat(workflow3.getOrchestrationWorkflow().getUserVariables())
         .extracting(Variable::obtainEntityType)
-        .containsSequence(SERVICE, INFRASTRUCTURE_MAPPING);
+        .containsSequence(SERVICE, INFRASTRUCTURE_DEFINITION);
 
     when(serviceResourceService.fetchServicesByUuids(APP_ID, asList(SERVICE_ID))).thenReturn(asList(service));
-    List<Service> resolvedServices = workflowService.getResolvedServices(
-        workflow3, ImmutableMap.of("Service", SERVICE_ID, "ServiceInfra_SSH", INFRA_MAPPING_ID));
+    List<Service> resolvedServices =
+        workflowService.getResolvedServices(workflow3, ImmutableMap.of("Service", SERVICE_ID));
     assertThat(resolvedServices).isNotEmpty().extracting(Service::getName).contains(SERVICE_NAME);
   }
 
   @Test
   @Owner(developers = SRINIVAS)
   @Category(UnitTests.class)
-  public void shouldGetResolvedInfraMappings() {
-    AwsInfrastructureMapping awsInfrastructureMapping = anAwsInfrastructureMapping()
-                                                            .withServiceId(SERVICE_ID)
-                                                            .withUuid(INFRA_MAPPING_ID)
-                                                            .withDeploymentType(SSH.name())
-                                                            .withComputeProviderType(SettingVariableTypes.AWS.name())
-                                                            .build();
-    when(infrastructureMappingService.get(APP_ID, INFRA_MAPPING_ID)).thenReturn(awsInfrastructureMapping);
-    when(infrastructureMappingService.getInfraStructureMappingsByUuids(APP_ID, asList(INFRA_MAPPING_ID)))
-        .thenReturn(asList(awsInfrastructureMapping));
+  public void shouldGetResolvedInfraDef() {
+    InfrastructureDefinition infrastructureDefinition = buildAwsSshInfraDef(INFRA_DEFINITION_ID);
+    when(infrastructureDefinitionService.get(APP_ID, INFRA_DEFINITION_ID)).thenReturn(infrastructureDefinition);
+    when(infrastructureDefinitionService.getInfraStructureDefinitionByUuids(APP_ID, asList(INFRA_DEFINITION_ID)))
+        .thenReturn(asList(infrastructureDefinition));
     Workflow workflow1 = constructCanaryWorkflowWithPhase();
 
     Workflow savedWorkflow = workflowService.createWorkflow(workflow1);
     assertThat(savedWorkflow).isNotNull().hasFieldOrProperty("uuid");
-    List<InfrastructureMapping> resolvedInfraMappings = workflowService.getResolvedInfraMappings(savedWorkflow, null);
-    assertThat(resolvedInfraMappings)
+    List<InfrastructureDefinition> resolvedInfraDefinitions =
+        workflowService.getResolvedInfraDefinitions(savedWorkflow, null);
+    assertThat(resolvedInfraDefinitions)
         .isNotEmpty()
-        .extracting(InfrastructureMapping::getUuid)
-        .contains(INFRA_MAPPING_ID);
+        .extracting(InfrastructureDefinition::getUuid)
+        .contains(INFRA_DEFINITION_ID);
   }
 
   @Test
   @Owner(developers = SRINIVAS)
   @Category(UnitTests.class)
   public void shouldGetResolvedTemplatizedInfraMappings() {
-    AwsInfrastructureMapping awsInfrastructureMapping = anAwsInfrastructureMapping()
-                                                            .withServiceId(SERVICE_ID)
-                                                            .withUuid(INFRA_MAPPING_ID)
-                                                            .withDeploymentType(SSH.name())
-                                                            .withComputeProviderType(SettingVariableTypes.AWS.name())
-                                                            .build();
-    when(infrastructureMappingService.get(APP_ID, INFRA_MAPPING_ID)).thenReturn(awsInfrastructureMapping);
-    when(infrastructureMappingService.getInfraStructureMappingsByUuids(APP_ID, asList(INFRA_MAPPING_ID)))
-        .thenReturn(asList(awsInfrastructureMapping));
+    mockAwsInfraDef(INFRA_DEFINITION_ID);
+    when(infrastructureDefinitionService.getInfraStructureDefinitionByUuids(APP_ID, asList(INFRA_DEFINITION_ID)))
+        .thenReturn(asList(buildAwsSshInfraDef(INFRA_DEFINITION_ID)));
 
     Workflow workflow1 = createCanaryWorkflow();
-    WorkflowPhase workflowPhase = aWorkflowPhase().infraMappingId(INFRA_MAPPING_ID).serviceId(SERVICE_ID).build();
+    WorkflowPhase workflowPhase = aWorkflowPhase().infraDefinitionId(INFRA_DEFINITION_ID).serviceId(SERVICE_ID).build();
     workflowService.createWorkflowPhase(workflow1.getAppId(), workflow1.getUuid(), workflowPhase);
 
-    WorkflowPhase workflowPhase2 = aWorkflowPhase().infraMappingId(INFRA_MAPPING_ID).serviceId(SERVICE_ID).build();
+    WorkflowPhase workflowPhase2 =
+        aWorkflowPhase().infraDefinitionId(INFRA_DEFINITION_ID).serviceId(SERVICE_ID).build();
     workflowService.createWorkflowPhase(workflow1.getAppId(), workflow1.getUuid(), workflowPhase2);
 
     Workflow workflow2 = workflowService.readWorkflow(workflow1.getAppId(), workflow1.getUuid());
@@ -3361,7 +3280,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
     workflowPhase2 = workflowPhases2.get(workflowPhases2.size() - 1);
     workflowPhase2.setName("phase2-changed");
 
-    workflowPhase2.setTemplateExpressions(asList(getServiceTemplateExpression(), getInfraTemplateExpression()));
+    workflowPhase2.setTemplateExpressions(asList(getServiceTemplateExpression(), prepareInfraDefTemplateExpression()));
 
     workflowService.updateWorkflowPhase(workflow2.getAppId(), workflow2.getUuid(), workflowPhase2);
 
@@ -3371,24 +3290,24 @@ public class WorkflowServiceTest extends WingsBaseTest {
     WorkflowPhase workflowPhase3 = workflowPhases3.get(workflowPhases3.size() - 1);
     assertThat(workflowPhase3).isEqualToComparingOnlyGivenFields(workflowPhase2, "uuid", "name");
 
-    assertThat(workflowPhase3.getInfraMappingId()).isNotNull();
+    assertThat(workflowPhase3.getInfraDefinitionId()).isNotNull();
     assertThat(workflowPhase3.getTemplateExpressions())
         .isNotEmpty()
         .extracting(TemplateExpression::getFieldName)
-        .contains("infraMappingId");
+        .contains("infraDefinitionId");
     assertThat(workflow3.getOrchestrationWorkflow().getUserVariables())
         .extracting(Variable::obtainEntityType)
-        .containsSequence(SERVICE, INFRASTRUCTURE_MAPPING);
+        .containsSequence(SERVICE, INFRASTRUCTURE_DEFINITION);
 
     when(serviceResourceService.fetchServicesByUuids(APP_ID, asList(SERVICE_ID))).thenReturn(asList(service));
 
-    List<InfrastructureMapping> resolvedInfraMappings = workflowService.getResolvedInfraMappings(
-        workflow3, ImmutableMap.of("Service", SERVICE_ID, "ServiceInfra_SSH", INFRA_MAPPING_ID));
+    List<InfrastructureDefinition> resolvedInfraDefinitions = workflowService.getResolvedInfraDefinitions(
+        workflow3, ImmutableMap.of("Service", SERVICE_ID, "InfraDef_SSH", INFRA_DEFINITION_ID));
 
-    assertThat(resolvedInfraMappings)
+    assertThat(resolvedInfraDefinitions)
         .isNotEmpty()
-        .extracting(InfrastructureMapping::getUuid)
-        .contains(INFRA_MAPPING_ID);
+        .extracting(InfrastructureDefinition::getUuid)
+        .contains(INFRA_DEFINITION_ID);
   }
 
   @Test
@@ -3826,8 +3745,8 @@ public class WorkflowServiceTest extends WingsBaseTest {
         .isNotEmpty()
         .contains(workflow.getName());
 
-    assertThat(
-        workflowService.obtainWorkflowNamesReferencedByServiceInfrastructure(workflow.getAppId(), INFRA_MAPPING_ID))
+    assertThat(workflowService.obtainWorkflowNamesReferencedByInfrastructureDefinition(
+                   workflow.getAppId(), INFRA_DEFINITION_ID))
         .isNotEmpty()
         .contains(workflow.getName());
   }
@@ -4478,6 +4397,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
   @Owner(developers = AADITI)
   @Category(UnitTests.class)
   public void categoriesForEcsWorkflow() throws IllegalArgumentException {
+    doReturn(constructEcsInfraDef()).when(infrastructureDefinitionService).get(APP_ID, INFRA_DEFINITION_ID);
     Workflow workflow = workflowService.createWorkflow(constructEcsWorkflow());
     String phaseId =
         ((CanaryOrchestrationWorkflow) workflow.getOrchestrationWorkflow()).getWorkflowPhases().get(0).getUuid();
@@ -4604,13 +4524,12 @@ public class WorkflowServiceTest extends WingsBaseTest {
   @Owner(developers = YOGESH)
   @Category(UnitTests.class)
   public void categoriesForK8sBlueGreenWorkflow() throws IllegalArgumentException {
-    when(infrastructureMappingService.get(APP_ID, INFRA_MAPPING_ID))
-        .thenReturn(aGcpKubernetesInfrastructureMapping()
-                        .withUuid(INFRA_MAPPING_ID)
-                        .withServiceId(SERVICE_ID)
-                        .withDeploymentType(DeploymentType.KUBERNETES.name())
-                        .withInfraMappingType(InfrastructureMappingType.GCP_KUBERNETES.name())
-                        .withComputeProviderType(SettingVariableTypes.GCP.name())
+    when(infrastructureDefinitionService.get(APP_ID, INFRA_DEFINITION_ID))
+        .thenReturn(InfrastructureDefinition.builder()
+                        .uuid(INFRA_DEFINITION_ID)
+                        .deploymentType(KUBERNETES)
+                        .cloudProviderType(CloudProviderType.GCP)
+                        .infrastructure(GoogleKubernetesEngine.builder().build())
                         .build());
 
     Workflow workflow = workflowService.createWorkflow(constructK8SBlueGreenWorkflow());
@@ -4671,6 +4590,13 @@ public class WorkflowServiceTest extends WingsBaseTest {
                         .withDeploymentType(AMI.name())
                         .withInfraMappingType(InfrastructureMappingType.AWS_AMI.name())
                         .withComputeProviderType(SettingVariableTypes.AWS.name())
+                        .build());
+    when(infrastructureDefinitionService.get(APP_ID, INFRA_DEFINITION_ID))
+        .thenReturn(InfrastructureDefinition.builder()
+                        .uuid(INFRA_DEFINITION_ID)
+                        .cloudProviderType(CloudProviderType.AWS)
+                        .deploymentType(AMI)
+                        .infrastructure(AwsAmiInfrastructure.builder().build())
                         .build());
     Workflow workflow = workflowService.createWorkflow(constructAmiBGWorkflow());
     String phaseId =
@@ -4736,6 +4662,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
   @Owner(developers = AADITI)
   @Category(UnitTests.class)
   public void testSelectNodesForAwsSshWorkflow() {
+    mockAwsInfraDef(INFRA_DEFINITION_ID);
     Workflow workflow = workflowService.createWorkflow(constructBasicWorkflowWithInfraNodeDeployServicePhaseStep());
     String phaseId =
         ((CanaryOrchestrationWorkflow) workflow.getOrchestrationWorkflow()).getWorkflowPhases().get(0).getUuid();
@@ -4756,6 +4683,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
   @Owner(developers = ACASIAN)
   @Category(UnitTests.class)
   public void testSelectNodesForAwsWinRmWorkflow() {
+    mockAwsInfraDef(INFRA_DEFINITION_ID);
     Workflow workflow =
         workflowService.createWorkflow(constructBasicWorkflowWithInfraNodeDeployServicePhaseStepAndWinRmDeployment());
     String phaseId =
@@ -4853,9 +4781,8 @@ public class WorkflowServiceTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void testK8sV2BGWorkflowHasRouteUpdateStepInRollbackPhase() {
     Workflow workflow = constructBlueGreenWorkflow();
-    when(infrastructureMappingService.get(APP_ID, INFRA_MAPPING_ID)).thenReturn(constructGKInfraMapping());
+    when(infrastructureDefinitionService.get(APP_ID, INFRA_DEFINITION_ID)).thenReturn(constructGKInfraDef());
 
-    // when(serviceResourceService.getDeploymentType(any(), any(), any())).thenReturn(DeploymentType.KUBERNETES);
     when(serviceResourceService.get(APP_ID, SERVICE_ID, false))
         .thenReturn(Service.builder()
                         .name(SERVICE_NAME)

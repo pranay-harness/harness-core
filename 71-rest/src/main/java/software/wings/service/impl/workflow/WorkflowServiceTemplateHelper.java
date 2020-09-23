@@ -298,8 +298,7 @@ public class WorkflowServiceTemplateHelper {
    * @param workflow
    * @param workflowPhase
    */
-  public static void setTemplateExpresssionsFromPhase(
-      Workflow workflow, WorkflowPhase workflowPhase, boolean infraRefactor) {
+  public static void setTemplateExpresssionsFromPhase(Workflow workflow, WorkflowPhase workflowPhase) {
     List<TemplateExpression> templateExpressions = workflow.getTemplateExpressions();
     TemplateExpression envExpression = getTemplateExpression(templateExpressions, "envId");
     // Reset template expressions
@@ -314,11 +313,7 @@ public class WorkflowServiceTemplateHelper {
       }
       // It means, user templatizing it from phase level
       addTemplateExpressions(phaseTemplateExpressions, templateExpressions);
-      if (infraRefactor) {
-        validateTemplateExpressionsInfraRefactor(templateExpressions);
-      } else {
-        validateTemplateExpressions(templateExpressions);
-      }
+      validateTemplateExpressionsInfraRefactor(templateExpressions);
 
       workflow.setTemplateExpressions(templateExpressions);
     }

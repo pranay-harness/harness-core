@@ -1248,20 +1248,17 @@ public class SettingsServiceImpl implements SettingsService {
   }
 
   private void ensureSettingSafeToDelete(SettingAttribute settingAttribute) {
-    String accountId = settingAttribute.getAccountId();
-    if (featureFlagService.isEnabled(FeatureName.INFRA_MAPPING_REFACTOR, accountId)) {
-      List<String> infraDefinitionNames = infrastructureDefinitionService.listNamesByConnectionAttr(
-          settingAttribute.getAccountId(), settingAttribute.getUuid());
-      if (isNotEmpty(infraDefinitionNames)) {
-        throw new InvalidRequestException(format("Attribute [%s] is referenced by %d "
-                + " %s "
-                + "[%s].",
-            settingAttribute.getName(), infraDefinitionNames.size(),
-            plural("Infrastructure "
-                    + "Definition",
-                infraDefinitionNames.size()),
-            join(", ", infraDefinitionNames)));
-      }
+    List<String> infraDefinitionNames = infrastructureDefinitionService.listNamesByConnectionAttr(
+        settingAttribute.getAccountId(), settingAttribute.getUuid());
+    if (isNotEmpty(infraDefinitionNames)) {
+      throw new InvalidRequestException(format("Attribute [%s] is referenced by %d "
+              + " %s "
+              + "[%s].",
+          settingAttribute.getName(), infraDefinitionNames.size(),
+          plural("Infrastructure "
+                  + "Definition",
+              infraDefinitionNames.size()),
+          join(", ", infraDefinitionNames)));
     }
     // TODO:: workflow scan for finding out usage in Steps/expression ???
   }
@@ -1313,29 +1310,14 @@ public class SettingsServiceImpl implements SettingsService {
 
   private void ensureCloudProviderSafeToDelete(SettingAttribute cloudProviderSetting) {
     String accountId = cloudProviderSetting.getAccountId();
-    if (featureFlagService.isEnabled(FeatureName.INFRA_MAPPING_REFACTOR, accountId)) {
-      List<String> infraDefinitionNames =
-          infrastructureDefinitionService.listNamesByComputeProviderId(accountId, cloudProviderSetting.getUuid());
-      if (isNotEmpty(infraDefinitionNames)) {
-        throw new InvalidRequestException(
-            format("Cloud provider [%s] is referenced by %d Infrastructure  %s [%s].", cloudProviderSetting.getName(),
-                infraDefinitionNames.size(), plural("Definition", infraDefinitionNames.size()),
-                join(", ", infraDefinitionNames)),
-            USER);
-      }
-    } else {
-      List<InfrastructureMapping> infrastructureMappings = infrastructureMappingService.listByComputeProviderId(
-          cloudProviderSetting.getAccountId(), cloudProviderSetting.getUuid());
-
-      if (!infrastructureMappings.isEmpty()) {
-        List<String> infraMappingNames =
-            infrastructureMappings.stream().map(InfrastructureMapping::getName).collect(toList());
-        throw new InvalidRequestException(
-            format("Cloud provider [%s] is referenced by %d Service %s [%s].", cloudProviderSetting.getName(),
-                infraMappingNames.size(), plural("Infrastructure", infraMappingNames.size()),
-                join(", ", infraMappingNames)),
-            USER);
-      }
+    List<String> infraDefinitionNames =
+        infrastructureDefinitionService.listNamesByComputeProviderId(accountId, cloudProviderSetting.getUuid());
+    if (isNotEmpty(infraDefinitionNames)) {
+      throw new InvalidRequestException(
+          format("Cloud provider [%s] is referenced by %d Infrastructure  %s [%s].", cloudProviderSetting.getName(),
+              infraDefinitionNames.size(), plural("Definition", infraDefinitionNames.size()),
+              join(", ", infraDefinitionNames)),
+          USER);
     }
 
     if (!featureFlagService.isEnabled(FeatureName.ARTIFACT_STREAM_REFACTOR, accountId)) {

@@ -17,12 +17,14 @@ import static software.wings.sm.StateExecutionInstance.Builder.aStateExecutionIn
 import static software.wings.sm.WorkflowStandardParams.Builder.aWorkflowStandardParams;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 import static software.wings.utils.WingsTestConstants.APP_ID;
+import static software.wings.utils.WingsTestConstants.INFRA_MAPPING_ID;
 import static software.wings.utils.WingsTestConstants.PHASE_STEP;
 
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 
 import io.harness.beans.ExecutionStatus;
+import io.harness.beans.SweepingOutputInstance;
 import io.harness.category.element.UnitTests;
 import io.harness.exception.WingsException;
 import io.harness.rule.Owner;
@@ -42,9 +44,12 @@ import software.wings.api.ServiceInstanceIdsParam;
 import software.wings.api.ServiceInstanceIdsParam.ServiceInstanceIdsParamBuilder;
 import software.wings.beans.ElementExecutionSummary;
 import software.wings.beans.FailureStrategy;
+import software.wings.beans.InfraMappingSweepingOutput;
 import software.wings.beans.PhaseStepType;
 import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.WorkflowExecutionService;
+import software.wings.service.intfc.sweepingoutput.SweepingOutputInquiry;
+import software.wings.service.intfc.sweepingoutput.SweepingOutputService;
 import software.wings.sm.ElementNotifyResponseData;
 import software.wings.sm.ExecutionContextImpl;
 import software.wings.sm.ExecutionResponse;
@@ -64,6 +69,7 @@ public class StepSubWorkflowTest extends WingsBaseTest {
   private static final String STATE_NAME = "state";
   @Mock private WorkflowExecutionService workflowExecutionService;
   @Mock private FeatureFlagService featureFlagService;
+  @Mock private SweepingOutputService sweepingOutputService;
   @Inject private KryoSerializer kryoSerializer;
 
   private List<ElementExecutionSummary> elementExecutionSummaries = new ArrayList<>();
@@ -86,6 +92,12 @@ public class StepSubWorkflowTest extends WingsBaseTest {
                                                         .addStateExecutionData(new PhaseStepExecutionData())
                                                         .build();
     ExecutionContextImpl context = spy(new ExecutionContextImpl(stateExecutionInstance));
+    Reflect.on(context).set("sweepingOutputService", sweepingOutputService);
+    doReturn(SweepingOutputInstance.builder()
+                 .value(InfraMappingSweepingOutput.builder().infraMappingId(INFRA_MAPPING_ID).build())
+                 .build())
+        .when(sweepingOutputService)
+        .find(any(SweepingOutputInquiry.class));
     PhaseStepSubWorkflow phaseStepSubWorkflow = new PhaseStepSubWorkflow(PHASE_STEP);
     phaseStepSubWorkflow.setPhaseStepType(PhaseStepType.PRE_DEPLOYMENT);
     List<FailureStrategy> failureStrategies = new ArrayList<>();
@@ -124,6 +136,12 @@ public class StepSubWorkflowTest extends WingsBaseTest {
                                                         .addStateExecutionData(new PhaseStepExecutionData())
                                                         .build();
     ExecutionContextImpl context = spy(new ExecutionContextImpl(stateExecutionInstance));
+    Reflect.on(context).set("sweepingOutputService", sweepingOutputService);
+    doReturn(SweepingOutputInstance.builder()
+                 .value(InfraMappingSweepingOutput.builder().infraMappingId(INFRA_MAPPING_ID).build())
+                 .build())
+        .when(sweepingOutputService)
+        .find(any(SweepingOutputInquiry.class));
     PhaseStepSubWorkflow phaseStepSubWorkflow = new PhaseStepSubWorkflow(PHASE_STEP);
     phaseStepSubWorkflow.setPhaseStepType(PhaseStepType.CONTAINER_DEPLOY);
     Reflect.on(phaseStepSubWorkflow).set("featureFlagService", featureFlagService);

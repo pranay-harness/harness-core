@@ -413,16 +413,14 @@ public class PluginServiceImpl implements PluginService {
                        .withUiSchema(readUiSchema("SERVICENOW"))
                        .build());
 
-    if (featureFlagService.isEnabled(FeatureName.INFRA_MAPPING_REFACTOR, accountId)) {
-      pluginList.add(anAccountPlugin()
-                         .withSettingClass(SpotInstConfig.class)
-                         .withAccountId(accountId)
-                         .withIsEnabled(true)
-                         .withDisplayName(SettingVariableTypes.SPOT_INST.getDisplayName())
-                         .withType(SettingVariableTypes.SPOT_INST.toString())
-                         .withPluginCategories(singletonList(CloudProvider))
-                         .build());
-    }
+    pluginList.add(anAccountPlugin()
+                       .withSettingClass(SpotInstConfig.class)
+                       .withAccountId(accountId)
+                       .withIsEnabled(true)
+                       .withDisplayName(SettingVariableTypes.SPOT_INST.getDisplayName())
+                       .withType(SettingVariableTypes.SPOT_INST.toString())
+                       .withPluginCategories(singletonList(CloudProvider))
+                       .build());
 
     if (featureFlagService.isEnabled(FeatureName.ARTIFACT_STREAM_REFACTOR, accountId)) {
       pluginList.add(anAccountPlugin()

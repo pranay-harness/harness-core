@@ -5,8 +5,6 @@ import static io.harness.rule.OwnerRule.HARSH;
 import static io.harness.rule.OwnerRule.RAMA;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.Matchers.any;
-import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.when;
 import static software.wings.service.impl.yaml.handler.workflow.WorkflowYamlConstant.BUILD_INVALID_YAML_CONTENT;
 import static software.wings.service.impl.yaml.handler.workflow.WorkflowYamlConstant.BUILD_INVALID_YAML_FILE_PATH;
@@ -31,7 +29,6 @@ import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
-import software.wings.beans.FeatureName;
 import software.wings.beans.Workflow;
 import software.wings.beans.yaml.ChangeContext;
 import software.wings.service.intfc.FeatureFlagService;
@@ -94,7 +91,6 @@ public class BuildWorkflowYamlHandlerTest extends BaseWorkflowYamlHandlerTest {
   @Owner(developers = HARSH)
   @Category(UnitTests.class)
   public void testCRUDAndGetInfrDef() throws Exception {
-    Mockito.when(featureFlagService.isEnabled(eq(FeatureName.INFRA_MAPPING_REFACTOR), any())).thenReturn(true);
     when(limitCheckerFactory.getInstance(new Action(Mockito.anyString(), ActionType.CREATE_WORKFLOW)))
         .thenReturn(new MockChecker(true, ActionType.CREATE_WORKFLOW));
 

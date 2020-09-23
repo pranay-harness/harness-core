@@ -385,7 +385,7 @@ public class TriggerServiceHelper {
   }
 
   public static Map<String, String> overrideTriggerVariables(
-      boolean infraDefEnabled, Trigger trigger, ExecutionArgs executionArgs, List<Variable> updatedVariables) {
+      Trigger trigger, ExecutionArgs executionArgs, List<Variable> updatedVariables) {
     // Workflow variables come from Webhook
     Map<String, String> webhookVariableValues =
         executionArgs.getWorkflowVariables() == null ? new HashMap<>() : executionArgs.getWorkflowVariables();
@@ -395,8 +395,7 @@ public class TriggerServiceHelper {
         trigger.getWorkflowVariables() == null ? new HashMap<>() : trigger.getWorkflowVariables();
     for (Entry<String, String> entry : webhookVariableValues.entrySet()) {
       if (isNotEmpty(entry.getValue())) {
-        if (infraDefEnabled && entry.getKey().startsWith("ServiceInfra")
-            && ORCHESTRATION == trigger.getWorkflowType()) {
+        if (entry.getKey().startsWith("ServiceInfra") && ORCHESTRATION == trigger.getWorkflowType()) {
           String infraMappingVarName = entry.getKey();
           String infraDefVarName = infraMappingVarName.replace("ServiceInfra", "InfraDefinition");
           triggerWorkflowVariableValues.put(infraDefVarName, entry.getValue());

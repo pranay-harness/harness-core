@@ -118,7 +118,6 @@ import software.wings.beans.HarnessTagLink;
 import software.wings.beans.HarnessTagType;
 import software.wings.beans.InformationNotification;
 import software.wings.beans.InfrastructureMapping;
-import software.wings.beans.InfrastructureProvisioner;
 import software.wings.beans.LambdaSpecification;
 import software.wings.beans.LambdaSpecification.FunctionSpecification;
 import software.wings.beans.LambdaSpecification.LambdaSpecificationKeys;
@@ -662,10 +661,6 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
   private void cloneServiceSpecifications(String appId, Service originalService, String clonedServiceId) {
     String originalServiceId = originalService.getUuid();
 
-    if (!featureFlagService.isEnabled(FeatureName.INFRA_MAPPING_REFACTOR, originalService.getAccountId())) {
-      clonePcfSpecification(appId, clonedServiceId, originalServiceId);
-    }
-
     if (ArtifactType.DOCKER == originalService.getArtifactType()) {
       cloneHelmChartSpecification(appId, clonedServiceId, originalServiceId);
       cloneContainerTasks(appId, clonedServiceId, originalServiceId);
@@ -702,15 +697,6 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
       HelmChartSpecification helmChartSpecificationNew = helmChartSpecification.cloneInternal();
       helmChartSpecificationNew.setServiceId(clonedServiceId);
       createHelmChartSpecification(helmChartSpecificationNew);
-    }
-  }
-
-  private void clonePcfSpecification(String appId, String clonedServiceId, String originalServiceId) {
-    PcfServiceSpecification pcfServiceSpecification = getPcfServiceSpecification(appId, originalServiceId);
-    if (pcfServiceSpecification != null) {
-      PcfServiceSpecification pcfServiceSpecificationNew = pcfServiceSpecification.cloneInternal();
-      pcfServiceSpecificationNew.setServiceId(clonedServiceId);
-      createPcfServiceSpecification(pcfServiceSpecificationNew);
     }
   }
 
@@ -1184,17 +1170,14 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
   private void ensureServiceSafeToDelete(Service service) {
     // Ensure service and and sevice commands referenced by workflow
 
-    String accountId = service.getAccountId();
-    if (featureFlagService.isEnabled(FeatureName.INFRA_MAPPING_REFACTOR, accountId)) {
-      List<String> referencingInfraDefinitionNames =
-          infrastructureDefinitionService.listNamesByScopedService(service.getAppId(), service.getUuid());
-      if (isNotEmpty(referencingInfraDefinitionNames)) {
-        throw new InvalidRequestException(
-            format("Service %s is referenced by %s %s [%s].", service.getName(), referencingInfraDefinitionNames.size(),
-                plural("Infrastructure Definition", referencingInfraDefinitionNames.size()),
-                join(", ", referencingInfraDefinitionNames)),
-            USER);
-      }
+    List<String> referencingInfraDefinitionNames =
+        infrastructureDefinitionService.listNamesByScopedService(service.getAppId(), service.getUuid());
+    if (isNotEmpty(referencingInfraDefinitionNames)) {
+      throw new InvalidRequestException(
+          format("Service %s is referenced by %s %s [%s].", service.getName(), referencingInfraDefinitionNames.size(),
+              plural("Infrastructure Definition", referencingInfraDefinitionNames.size()),
+              join(", ", referencingInfraDefinitionNames)),
+          USER);
     }
 
     List<String> referencingWorkflowNames =
@@ -1205,22 +1188,6 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
           format("Service %s is referenced by %s %s [%s].", service.getName(), referencingWorkflowNames.size(),
               plural("workflow", referencingWorkflowNames.size()), join(", ", referencingWorkflowNames)),
           USER);
-    }
-
-    if (!featureFlagService.isEnabled(FeatureName.INFRA_MAPPING_REFACTOR, accountId)) {
-      List<InfrastructureProvisioner> provisioners = infrastructureProvisionerService.listByBlueprintDetails(
-          service.getAppId(), null, service.getUuid(), null, null);
-
-      if (isNotEmpty(provisioners)) {
-        String infrastructureProvisionerNames =
-            provisioners.stream().map(InfrastructureProvisioner::getName).collect(joining(","));
-        throw new InvalidRequestException(
-            format("Service [%s] couldn't be deleted. Remove Service reference from the following "
-                    + plural("infrastructure provisioner", provisioners.size()) + " [" + infrastructureProvisionerNames
-                    + "] ",
-                service.getName()),
-            USER);
-      }
     }
 
     List<String> refPipelines =
@@ -2670,20 +2637,7 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
       return;
     }
 
-    if (featureFlagService.isEnabled(FeatureName.INFRA_MAPPING_REFACTOR, service.getAccountId())) {
-      createDefaultPcfV2Manifests(service);
-    } else {
-      createDefaultPcfSpec(service);
-    }
-  }
-
-  private void createDefaultPcfSpec(Service service) {
-    PcfServiceSpecification pcfServiceSpecification =
-        PcfServiceSpecification.builder().serviceId(service.getUuid()).build();
-    pcfServiceSpecification.setAppId(service.getAppId());
-    pcfServiceSpecification.resetToDefaultManifestSpecification();
-
-    createPcfServiceSpecification(pcfServiceSpecification);
+    createDefaultPcfV2Manifests(service);
   }
 
   @Override

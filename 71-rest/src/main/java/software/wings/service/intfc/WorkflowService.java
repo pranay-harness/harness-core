@@ -73,8 +73,6 @@ public interface WorkflowService extends OwnedByApplication, SettingsServiceMani
 
   Workflow readWorkflowWithoutServices(@NotNull String appId, @NotNull String workflowId);
 
-  Workflow readWorkflowWithoutServices(@NotNull String appId, @NotNull String workflowId, boolean infraRefactor);
-
   Workflow readWorkflowWithoutOrchestration(@NotNull String appId, @NotNull String workflowId);
 
   List<Workflow> listWorkflowsWithoutOrchestration(Collection<String> workflowIds);
@@ -83,7 +81,7 @@ public interface WorkflowService extends OwnedByApplication, SettingsServiceMani
 
   @ValidationGroups(Create.class) Workflow createWorkflow(@Valid Workflow workflow);
 
-  boolean ensureArtifactCheck(String appId, OrchestrationWorkflow orchestrationWorkflow, boolean infraRefactor);
+  boolean ensureArtifactCheck(String appId, OrchestrationWorkflow orchestrationWorkflow);
 
   @ValidationGroups(Update.class) Workflow updateWorkflow(@Valid Workflow workflow, boolean migration);
 

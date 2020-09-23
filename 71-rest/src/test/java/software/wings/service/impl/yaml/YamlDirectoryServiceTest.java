@@ -71,6 +71,7 @@ import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import software.wings.WingsBaseTest;
+import software.wings.api.CloudProviderType;
 import software.wings.beans.AppDynamicsConfig;
 import software.wings.beans.Application;
 import software.wings.beans.AwsConfig;
@@ -83,11 +84,9 @@ import software.wings.beans.FeatureName;
 import software.wings.beans.GcpConfig;
 import software.wings.beans.GitConfig;
 import software.wings.beans.InfrastructureMapping;
-import software.wings.beans.InfrastructureMappingType;
 import software.wings.beans.InfrastructureProvisioner;
 import software.wings.beans.JenkinsConfig;
 import software.wings.beans.JiraConfig;
-import software.wings.beans.PcfInfrastructureMapping;
 import software.wings.beans.Pipeline;
 import software.wings.beans.Service;
 import software.wings.beans.ServiceNowConfig;
@@ -111,6 +110,7 @@ import software.wings.beans.container.PcfServiceSpecification;
 import software.wings.beans.settings.helm.AmazonS3HelmRepoConfig;
 import software.wings.beans.trigger.Trigger;
 import software.wings.infra.InfrastructureDefinition;
+import software.wings.infra.PcfInfraStructure;
 import software.wings.security.AppPermissionSummary;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ApplicationManifestService;
@@ -297,7 +297,7 @@ public class YamlDirectoryServiceTest extends WingsBaseTest {
     // These are nested yaml strcutures for service like index.yaml, config files, commands etc.
     Set<String> expectedDirPaths =
         new HashSet<>(Arrays.asList("Setup/Applications/APP_NAME/Environments/ENV_NAME/Index.yaml",
-            "Setup/Applications/APP_NAME/Environments/ENV_NAME/Service Infrastructure",
+            "Setup/Applications/APP_NAME/Environments/ENV_NAME/Infrastructure Definitions",
             "Setup/Applications/APP_NAME/Environments/ENV_NAME/Service Verification",
             "Setup/Applications/APP_NAME/Environments/ENV_NAME/Config Files"));
 
@@ -381,7 +381,6 @@ public class YamlDirectoryServiceTest extends WingsBaseTest {
                                     .applicationManifestId(applicationManifest.getUuid())
                                     .build();
     // Mocking stuff
-    when(featureFlagService.isEnabled(FeatureName.INFRA_MAPPING_REFACTOR, ACCOUNT_ID)).thenReturn(true);
     doReturn(Arrays.asList()).when(environmentService).getEnvByApp(anyString());
     when(infrastructureDefinitionService.list(any(PageRequest.class)))
         .thenReturn(aPageResponse().withResponse(Arrays.asList(infraDefinition_1)).build(),
@@ -817,20 +816,22 @@ public class YamlDirectoryServiceTest extends WingsBaseTest {
         .when(environmentService)
         .list(any(), anyBoolean(), anyString());
 
-    PageResponse<InfrastructureMapping> mappingResponse =
+    PageResponse<InfrastructureDefinition> mappingResponse =
         aPageResponse()
-            .withResponse(Arrays.asList(PcfInfrastructureMapping.builder()
-                                            .organization("ORG")
-                                            .space("SPACE")
-                                            .routeMaps(Arrays.asList("url1.com"))
+            .withResponse(Arrays.asList(InfrastructureDefinition.builder()
                                             .accountId(ACCOUNT_ID)
                                             .appId(APP_ID)
-                                            .infraMappingType(InfrastructureMappingType.PCF_PCF.name())
                                             .envId(ENV_ID)
+                                            .cloudProviderType(CloudProviderType.PCF)
+                                            .infrastructure(PcfInfraStructure.builder()
+                                                                .organization("ORG")
+                                                                .space("SPACE")
+                                                                .routeMaps(Arrays.asList("url1.com"))
+                                                                .build())
                                             .build()))
             .build();
 
-    doReturn(mappingResponse).when(infraMappingService).list(any());
+    doReturn(mappingResponse).when(infrastructureDefinitionService).list(any());
 
     doReturn(Collections.EMPTY_LIST).when(configService).getConfigFileOverridesForEnv(anyString(), anyString());
 

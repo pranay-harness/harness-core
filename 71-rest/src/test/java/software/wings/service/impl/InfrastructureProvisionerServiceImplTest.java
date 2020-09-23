@@ -26,14 +26,16 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 import static software.wings.beans.AwsInfrastructureMapping.Builder.anAwsInfrastructureMapping;
-import static software.wings.beans.InfrastructureMappingBlueprint.NodeFilteringType.AWS_INSTANCE_FILTER;
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 import static software.wings.utils.WingsTestConstants.APP_ID;
+import static software.wings.utils.WingsTestConstants.INFRA_DEFINITION_ID;
+import static software.wings.utils.WingsTestConstants.INFRA_MAPPING_ID;
 import static software.wings.utils.WingsTestConstants.PROVISIONER_ID;
 import static software.wings.utils.WingsTestConstants.PROVISIONER_NAME;
 import static software.wings.utils.WingsTestConstants.SERVICE_ID;
 import static software.wings.utils.WingsTestConstants.SETTING_ID;
+import static software.wings.utils.WingsTestConstants.WORKFLOW_EXECUTION_ID;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Sets;
@@ -46,11 +48,10 @@ import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.beans.SearchFilter.Operator;
 import io.harness.category.element.UnitTests;
+import io.harness.context.ContextElementType;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
-import io.harness.logging.CommandExecutionStatus;
 import io.harness.rule.Owner;
-import org.apache.commons.lang3.StringUtils;
 import org.joor.Reflect;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -60,19 +61,16 @@ import org.mockito.Mock;
 import org.mongodb.morphia.query.MorphiaIterator;
 import org.mongodb.morphia.query.Query;
 import software.wings.WingsBaseTest;
-import software.wings.api.DeploymentType;
+import software.wings.api.PhaseElement;
+import software.wings.api.ServiceElement;
 import software.wings.api.TerraformExecutionData;
-import software.wings.beans.AwsInfrastructureMapping;
 import software.wings.beans.AwsInstanceFilter;
-import software.wings.beans.BlueprintProperty;
 import software.wings.beans.CloudFormationInfrastructureProvisioner;
 import software.wings.beans.EntityType;
-import software.wings.beans.FeatureName;
 import software.wings.beans.GitConfig;
 import software.wings.beans.GitFileConfig;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.InfrastructureMappingBlueprint;
-import software.wings.beans.InfrastructureMappingBlueprint.CloudProviderType;
 import software.wings.beans.InfrastructureMappingType;
 import software.wings.beans.InfrastructureProvisioner;
 import software.wings.beans.InfrastructureProvisionerDetails;
@@ -87,21 +85,23 @@ import software.wings.beans.TerraformInputVariablesTaskResponse;
 import software.wings.beans.shellscript.provisioner.ShellScriptInfrastructureProvisioner;
 import software.wings.dl.WingsPersistence;
 import software.wings.expression.ManagerExpressionEvaluator;
-import software.wings.helpers.ext.cloudformation.response.CloudFormationCommandResponse;
-import software.wings.helpers.ext.cloudformation.response.CloudFormationCreateStackResponse;
 import software.wings.infra.AwsEcsInfrastructure;
+import software.wings.infra.AwsInstanceInfrastructure;
 import software.wings.infra.InfrastructureDefinition;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.DelegateService;
 import software.wings.service.intfc.FeatureFlagService;
+import software.wings.service.intfc.InfrastructureDefinitionService;
 import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.InfrastructureProvisionerService;
 import software.wings.service.intfc.ResourceLookupService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.SettingsService;
+import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.service.intfc.aws.manager.AwsCFHelperServiceManager;
 import software.wings.settings.SettingVariableTypes;
 import software.wings.sm.ExecutionContext;
+import software.wings.sm.ExecutionContextImpl;
 import software.wings.utils.GitUtilsManager;
 
 import java.util.ArrayList;
@@ -120,6 +120,7 @@ public class InfrastructureProvisionerServiceImplTest extends WingsBaseTest {
   @Mock DBCursor dbCursor;
   @Mock MorphiaIterator infrastructureMappings;
   @Mock InfrastructureMappingService infrastructureMappingService;
+  @Mock InfrastructureDefinitionService infrastructureDefinitionService;
   @Mock FeatureFlagService featureFlagService;
   @Mock AwsCFHelperServiceManager awsCFHelperServiceManager;
   @Mock ServiceResourceService serviceResourceService;
@@ -130,6 +131,7 @@ public class InfrastructureProvisionerServiceImplTest extends WingsBaseTest {
   @Mock GitUtilsManager gitUtilsManager;
   @Mock GitConfigHelperService gitConfigHelperService;
   @Mock DelegateService delegateService;
+  @Mock WorkflowExecutionService workflowExecutionService;
   @Inject @InjectMocks InfrastructureProvisionerService infrastructureProvisionerService;
   @Inject @InjectMocks InfrastructureProvisionerServiceImpl infrastructureProvisionerServiceImpl;
   @Inject private WingsPersistence wingsPersistence;
@@ -138,26 +140,8 @@ public class InfrastructureProvisionerServiceImplTest extends WingsBaseTest {
   @Owner(developers = SATYAM)
   @Category(UnitTests.class)
   public void testRegenerateInfrastructureMappings() throws Exception {
-    doReturn(false).when(featureFlagService).isEnabled(eq(FeatureName.INFRA_MAPPING_REFACTOR), any());
     InfrastructureProvisioner infrastructureProvisioner =
-        CloudFormationInfrastructureProvisioner.builder()
-            .appId(APP_ID)
-            .uuid(ID_KEY)
-            .mappingBlueprints(
-                asList(InfrastructureMappingBlueprint.builder()
-                           .cloudProviderType(CloudProviderType.AWS)
-                           .serviceId(SERVICE_ID)
-                           .deploymentType(DeploymentType.SSH)
-                           .properties(asList(BlueprintProperty.builder()
-                                                  .name("region")
-                                                  .value("${cloudformation"
-                                                      + ".myregion}")
-                                                  .build(),
-                               BlueprintProperty.builder().name("vpcs").value("${cloudformation.myvpcs}").build(),
-                               BlueprintProperty.builder().name("tags").value("${cloudformation.mytags}").build()))
-                           .nodeFilteringType(AWS_INSTANCE_FILTER)
-                           .build()))
-            .build();
+        CloudFormationInfrastructureProvisioner.builder().appId(APP_ID).uuid(ID_KEY).build();
     doReturn(infrastructureProvisioner)
         .when(mockWingsPersistence)
         .getWithAppId(eq(InfrastructureProvisioner.class), anyString(), anyString());
@@ -167,13 +151,35 @@ public class InfrastructureProvisionerServiceImplTest extends WingsBaseTest {
     doReturn(new HashMap<>()).when(executionContext).asMap();
 
     doReturn(true).doReturn(true).doReturn(false).when(infrastructureMappings).hasNext();
+    doReturn(APP_ID).when(executionContext).getAppId();
+    doReturn(WORKFLOW_EXECUTION_ID).when(executionContext).getWorkflowExecutionId();
+    doReturn(PhaseElement.builder()
+                 .infraDefinitionId(INFRA_DEFINITION_ID)
+                 .serviceElement(ServiceElement.builder().uuid(SERVICE_ID).build())
+                 .build())
+        .when(executionContext)
+        .getContextElement(ContextElementType.PARAM, ExecutionContextImpl.PHASE_PARAM);
+
     InfrastructureMapping infrastructureMapping = anAwsInfrastructureMapping()
+                                                      .withUuid(INFRA_MAPPING_ID)
                                                       .withAppId(APP_ID)
                                                       .withProvisionerId(ID_KEY)
                                                       .withServiceId(SERVICE_ID)
                                                       .withInfraMappingType(InfrastructureMappingType.AWS_SSH.name())
                                                       .build();
-
+    InfrastructureDefinition infrastructureDefinition =
+        InfrastructureDefinition.builder()
+            .appId(APP_ID)
+            .provisionerId(PROVISIONER_ID)
+            .infrastructure(AwsInstanceInfrastructure.builder()
+                                .expressions(ImmutableMap.of("region", "${cloudformation.myregion}", "vpcIds",
+                                    "${cloudformation.myvpcs}", "tags", "${cloudformation.mytags}"))
+                                .build())
+            .build();
+    doReturn(infrastructureDefinition).when(infrastructureDefinitionService).get(APP_ID, INFRA_DEFINITION_ID);
+    doReturn(infrastructureMapping)
+        .when(infrastructureDefinitionService)
+        .saveInfrastructureMapping(SERVICE_ID, infrastructureDefinition, WORKFLOW_EXECUTION_ID);
     doReturn(infrastructureMapping).when(infrastructureMappings).next();
     doReturn(dbCursor).when(infrastructureMappings).getCursor();
 
@@ -183,12 +189,6 @@ public class InfrastructureProvisionerServiceImplTest extends WingsBaseTest {
     objectMap.put("myregion", "us-east-1");
     objectMap.put("myvpcs", "vpc1,vpc2,vpc3");
     objectMap.put("mytags", "name:mockName");
-    CloudFormationCommandResponse commandResponse = CloudFormationCreateStackResponse.builder()
-                                                        .commandExecutionStatus(CommandExecutionStatus.SUCCESS)
-                                                        .output(StringUtils.EMPTY)
-                                                        .stackId("11")
-                                                        .cloudFormationOutputMap(objectMap)
-                                                        .build();
 
     doReturn(infrastructureMapping).when(infrastructureMappingService).update(any(), anyString());
 
@@ -200,11 +200,17 @@ public class InfrastructureProvisionerServiceImplTest extends WingsBaseTest {
     infrastructureProvisionerService.regenerateInfrastructureMappings(ID_KEY, executionContext, objectMap);
 
     ArgumentCaptor<InfrastructureMapping> captor = ArgumentCaptor.forClass(InfrastructureMapping.class);
-    verify(infrastructureMappingService).update(captor.capture(), anyString());
-    InfrastructureMapping mapping = captor.getValue();
-    AwsInstanceFilter awsInstanceFilter = ((AwsInfrastructureMapping) mapping).getAwsInstanceFilter();
+    verify(infrastructureMappingService)
+        .saveInfrastructureMappingToSweepingOutput(
+            eq(APP_ID), eq(WORKFLOW_EXECUTION_ID), any(PhaseElement.class), eq(INFRA_MAPPING_ID));
+
+    verify(infrastructureDefinitionService, times(1))
+        .saveInfrastructureMapping(SERVICE_ID, infrastructureDefinition, WORKFLOW_EXECUTION_ID);
+    AwsInstanceFilter awsInstanceFilter =
+        ((AwsInstanceInfrastructure) infrastructureDefinition.getInfrastructure()).getAwsInstanceFilter();
     assertThat(awsInstanceFilter).isNotNull();
-    assertThat(((AwsInfrastructureMapping) mapping).getRegion()).isEqualTo("us-east-1");
+    assertThat(((AwsInstanceInfrastructure) infrastructureDefinition.getInfrastructure()).getRegion())
+        .isEqualTo("us-east-1");
 
     assertThat(awsInstanceFilter.getVpcIds()).isNotNull();
     assertThat(awsInstanceFilter.getVpcIds()).hasSize(3);
@@ -528,9 +534,7 @@ public class InfrastructureProvisionerServiceImplTest extends WingsBaseTest {
     doReturn(idToServiceMapping).when(ipService).getIdToServiceMapping(APP_ID, servicesIds);
     InfrastructureProvisionerDetails infrastructureProvisionerDetails =
         InfrastructureProvisionerDetails.builder().build();
-    doReturn(infrastructureProvisionerDetails)
-        .when(ipService)
-        .details(provisioner, idToSettingAttributeMapping, idToServiceMapping);
+    doReturn(infrastructureProvisionerDetails).when(ipService).details(provisioner, idToSettingAttributeMapping);
 
     PageResponse<InfrastructureProvisionerDetails> infraProvisionerDetailsPageResponse =
         ipService.listDetails(infraProvisionerPageRequest, true, null, APP_ID);
@@ -606,9 +610,7 @@ public class InfrastructureProvisionerServiceImplTest extends WingsBaseTest {
     doReturn(idToServiceMapping).when(ipService).getIdToServiceMapping(APP_ID, servicesIds);
     InfrastructureProvisionerDetails infrastructureProvisionerDetails =
         InfrastructureProvisionerDetails.builder().build();
-    doReturn(infrastructureProvisionerDetails)
-        .when(ipService)
-        .details(provisioner, idToSettingAttributeMapping, idToServiceMapping);
+    doReturn(infrastructureProvisionerDetails).when(ipService).details(provisioner, idToSettingAttributeMapping);
 
     PageResponse<InfrastructureProvisionerDetails> infraProvisionerDetailsPageResponse =
         ipService.listDetails(infraProvisionerPageRequest, true, null, APP_ID);
@@ -625,23 +627,15 @@ public class InfrastructureProvisionerServiceImplTest extends WingsBaseTest {
     WingsPersistence mockWingsPersistence = mock(WingsPersistence.class);
     Reflect.on(ipService).set("wingsPersistence", mockWingsPersistence);
     FeatureFlagService mockFeatureFlagService = mock(FeatureFlagService.class);
-    Reflect.on(ipService).set("featureFlagService", mockFeatureFlagService);
     String SVC_ID_00 = "svc-00";
     String SVC_ID_01 = "svc-01";
-    doReturn(false).when(mockFeatureFlagService).isEnabled(eq(FeatureName.INFRA_MAPPING_REFACTOR), any());
-    InfrastructureProvisioner provisioner =
-        TerraformInfrastructureProvisioner.builder()
-            .mappingBlueprints(asList(InfrastructureMappingBlueprint.builder().serviceId(SVC_ID_00).build(),
-                InfrastructureMappingBlueprint.builder().serviceId(SVC_ID_01).build()))
-            .build();
+    InfrastructureProvisioner provisioner = TerraformInfrastructureProvisioner.builder().build();
     doReturn(provisioner).when(mockWingsPersistence).getWithAppId(any(), anyString(), anyString());
     Map<String, Service> map = new HashMap<>();
     map.put("svc-00", Service.builder().uuid(SVC_ID_00).name("name-00").build());
     doReturn(map).when(ipService).getIdToServiceMapping(anyString(), anySet());
     InfrastructureProvisioner returned = ipService.get(APP_ID, PROVISIONER_ID);
     assertThat(returned).isNotNull();
-    assertThat(returned.getMappingBlueprints().size()).isEqualTo(1);
-    assertThat(returned.getMappingBlueprints().get(0).getServiceId()).isEqualTo(SVC_ID_00);
   }
 
   @Test

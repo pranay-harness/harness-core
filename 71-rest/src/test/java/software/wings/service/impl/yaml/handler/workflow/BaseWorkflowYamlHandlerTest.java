@@ -25,6 +25,7 @@ import com.google.inject.Inject;
 import io.harness.exception.WingsException;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import software.wings.api.CloudProviderType;
 import software.wings.api.DeploymentType;
 import software.wings.beans.Environment;
 import software.wings.beans.GcpKubernetesInfrastructureMapping;
@@ -36,8 +37,8 @@ import software.wings.beans.artifact.GcrArtifactStream;
 import software.wings.beans.yaml.ChangeContext;
 import software.wings.beans.yaml.GitFileChange;
 import software.wings.beans.yaml.YamlType;
+import software.wings.infra.GoogleKubernetesEngine;
 import software.wings.infra.InfrastructureDefinition;
-import software.wings.infra.PcfInfraStructure;
 import software.wings.service.impl.SSHKeyDataProvider;
 import software.wings.service.impl.WinRmConnectionAttributesDataProvider;
 import software.wings.service.impl.workflow.WorkflowServiceHelper;
@@ -170,7 +171,9 @@ public abstract class BaseWorkflowYamlHandlerTest extends BaseYamlHandlerTest {
         .uuid(INFRA_DEFINITION_ID)
         .name(INFRA_NAME)
         .appId(APP_ID)
-        .infrastructure(PcfInfraStructure.builder().build())
+        .deploymentType(DeploymentType.KUBERNETES)
+        .cloudProviderType(CloudProviderType.GCP)
+        .infrastructure(GoogleKubernetesEngine.builder().cloudProviderId(COMPUTE_PROVIDER_ID).build())
         .build();
   }
 

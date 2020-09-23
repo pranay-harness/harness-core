@@ -107,8 +107,6 @@ import software.wings.beans.ContainerInfrastructureMapping;
 import software.wings.beans.DirectKubernetesInfrastructureMapping;
 import software.wings.beans.EcsInfrastructureMapping;
 import software.wings.beans.Environment;
-import software.wings.beans.Event.Type;
-import software.wings.beans.FeatureName;
 import software.wings.beans.GcpKubernetesInfrastructureMapping;
 import software.wings.beans.HostConnectionType;
 import software.wings.beans.HostValidationRequest;
@@ -459,20 +457,11 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
   public InfrastructureMapping save(
       InfrastructureMapping infraMapping, boolean skipValidation, String workflowExecutionId) {
     // The default name uses a bunch of user inputs, which is why we generate it at the time of save.
-    boolean infraRefactor =
-        featureFlagService.isEnabled(FeatureName.INFRA_MAPPING_REFACTOR, infraMapping.getAccountId());
     if (infraMapping.isAutoPopulate()) {
       setAutoPopulatedName(infraMapping);
     }
 
     SettingAttribute computeProviderSetting = settingsService.get(infraMapping.getComputeProviderSettingId());
-
-    if (!infraRefactor) {
-      ServiceTemplate serviceTemplate =
-          serviceTemplateService.get(infraMapping.getAppId(), infraMapping.getServiceTemplateId());
-      notNullCheck("Service Template", serviceTemplate, USER);
-      infraMapping.setServiceId(serviceTemplate.getServiceId());
-    }
 
     if (computeProviderSetting != null) {
       infraMapping.setComputeProviderName(computeProviderSetting.getName());
@@ -498,10 +487,6 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
     }
 
     String accountId = appService.getAccountIdByAppId(infraMapping.getAppId());
-    if (!infraRefactor) {
-      yamlPushService.pushYamlChangeSet(
-          accountId, null, savedInfraMapping, Type.CREATE, infraMapping.isSyncFromGit(), false);
-    }
     if (!savedInfraMapping.isSample()) {
       eventPublishHelper.publishAccountEvent(
           accountId, AccountEvent.builder().accountEventType(AccountEventType.INFRA_MAPPING_ADDED).build(), true, true);
@@ -558,12 +543,10 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
       fieldsToRemove.add(InfrastructureMapping.PROVISIONER_ID_KEY);
     }
 
-    if (featureFlagService.isEnabled(FeatureName.INFRA_MAPPING_REFACTOR, infrastructureMapping.getAccountId())) {
-      if (isNotEmpty(infrastructureMapping.getBlueprints())) {
-        keyValuePairs.put(InfrastructureMappingKeys.blueprints, infrastructureMapping.getBlueprints());
-      } else {
-        fieldsToRemove.add(InfrastructureMappingKeys.blueprints);
-      }
+    if (isNotEmpty(infrastructureMapping.getBlueprints())) {
+      keyValuePairs.put(InfrastructureMappingKeys.blueprints, infrastructureMapping.getBlueprints());
+    } else {
+      fieldsToRemove.add(InfrastructureMappingKeys.blueprints);
     }
 
     setDefaults(infrastructureMapping);
@@ -708,13 +691,11 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
       }
 
       // BLUEPRINT
-      if (featureFlagService.isEnabled(FeatureName.INFRA_MAPPING_REFACTOR, infrastructureMapping.getAccountId())) {
-        Map<String, Object> blueprints = infrastructureMapping.getBlueprints();
-        if (blueprints == null) {
-          fieldsToRemove.add(InfrastructureMappingKeys.blueprints);
-        } else {
-          keyValuePairs.put(InfrastructureMappingKeys.blueprints, blueprints);
-        }
+      Map<String, Object> blueprints = infrastructureMapping.getBlueprints();
+      if (blueprints == null) {
+        fieldsToRemove.add(InfrastructureMappingKeys.blueprints);
+      } else {
+        keyValuePairs.put(InfrastructureMappingKeys.blueprints, blueprints);
       }
 
     } else if (infrastructureMapping instanceof PhysicalInfrastructureMapping) {
@@ -859,15 +840,6 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
     wingsPersistence.updateFields(
         infrastructureMapping.getClass(), infrastructureMapping.getUuid(), finalKeyValuePairs, fieldsToRemove);
     InfrastructureMapping updatedInfraMapping = get(infrastructureMapping.getAppId(), infrastructureMapping.getUuid());
-
-    boolean isRename = !updatedInfraMapping.getName().equals(savedInfraMapping.getName());
-
-    boolean infraRefactor =
-        featureFlagService.isEnabled(FeatureName.INFRA_MAPPING_REFACTOR, savedInfraMapping.getAccountId());
-    if (!infraRefactor) {
-      yamlPushService.pushYamlChangeSet(savedInfraMapping.getAccountId(), savedInfraMapping, updatedInfraMapping,
-          Type.UPDATE, infrastructureMapping.isSyncFromGit(), isRename);
-    }
 
     try {
       subject.fireInform(InfrastructureMappingServiceObxxxxxxxx:onUpdated, updatedInfraMapping);
@@ -1280,13 +1252,6 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
 
     if (!forceDelete) {
       ensureSafeToDelete(appId, infraMappingId);
-    }
-
-    String accountId = appService.getAccountIdByAppId(infrastructureMapping.getAppId());
-    boolean infraRefactor = featureFlagService.isEnabled(FeatureName.INFRA_MAPPING_REFACTOR, accountId);
-
-    if (!infraRefactor) {
-      yamlPushService.pushYamlChangeSet(accountId, infrastructureMapping, null, Type.DELETE, syncFromGit, false);
     }
 
     prune(appId, infraMappingId);
@@ -2075,13 +2040,9 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
   @Override
   public List<String> listHostDisplayNames(String appId, String infraMappingId, String workflowExecutionId) {
     InfrastructureMapping infrastructureMapping = get(appId, infraMappingId);
-    if (featureFlagService.isEnabled(FeatureName.INFRA_MAPPING_REFACTOR, appService.getAccountIdByAppId(appId))) {
-      notNullCheck(
-          "Infra Mapping not found. Make sure to run provisioner step if Infra Definition is dynamic provisioned.",
-          infrastructureMapping, USER);
-    } else {
-      notNullCheck("Infra Mapping was deleted", infrastructureMapping, USER);
-    }
+    notNullCheck(
+        "Infra Mapping not found. Make sure to run provisioner step if Infra Definition is dynamic provisioned.",
+        infrastructureMapping, USER);
     return getInfrastructureMappingHostDisplayNames(infrastructureMapping, appId, workflowExecutionId);
   }
 

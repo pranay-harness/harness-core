@@ -6,10 +6,8 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.validation.Validator.notNullCheck;
 import static java.lang.String.format;
-import static java.util.Collections.emptyList;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toMap;
-import static java.util.stream.Collectors.toSet;
 import static org.atteo.evo.inflector.English.plural;
 
 import com.google.common.annotations.VisibleForTesting;
@@ -31,7 +29,6 @@ import io.harness.delegate.beans.RemoteMethodReturnValueData;
 import io.harness.delegate.beans.TaskData;
 import io.harness.delegate.service.DelegateAgentFileService.FileBucket;
 import io.harness.eraro.ErrorCode;
-import io.harness.exception.ExceptionUtils;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.UnexpectedException;
 import io.harness.exception.WingsException;
@@ -41,7 +38,6 @@ import io.harness.limits.ActionType;
 import io.harness.limits.LimitCheckerFactory;
 import io.harness.limits.LimitEnforcementUtils;
 import io.harness.limits.checker.StaticLimitCheckerWithDecrement;
-import io.harness.persistence.HIterator;
 import io.harness.queue.QueuePublisher;
 import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.security.encryption.EncryptionConfig;
@@ -63,12 +59,10 @@ import software.wings.beans.CloudFormationInfrastructureProvisioner;
 import software.wings.beans.CloudFormationSourceType;
 import software.wings.beans.EntityType;
 import software.wings.beans.Event.Type;
-import software.wings.beans.FeatureName;
 import software.wings.beans.GitConfig;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.InfrastructureMappingBlueprint;
 import software.wings.beans.InfrastructureMappingBlueprint.CloudProviderType;
-import software.wings.beans.InfrastructureMappingBlueprint.NodeFilteringType;
 import software.wings.beans.InfrastructureProvisioner;
 import software.wings.beans.InfrastructureProvisionerDetails;
 import software.wings.beans.InfrastructureProvisionerDetails.InfrastructureProvisionerDetailsBuilder;
@@ -120,7 +114,6 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.function.Predicate;
@@ -283,42 +276,19 @@ public class InfrastructureProvisionerServiceImpl implements InfrastructureProvi
   public PageResponse<InfrastructureProvisioner> listByBlueprintDetails(@NotEmpty String appId,
       String infrastructureProvisionerType, String serviceId, DeploymentType deploymentType,
       CloudProviderType cloudProviderType) {
-    PageRequestBuilder requestBuilder = aPageRequest();
-
-    String accountIdByAppId = appService.getAccountIdByAppId(appId);
-    if (!featureFlagService.isEnabled(FeatureName.INFRA_MAPPING_REFACTOR, accountIdByAppId)) {
-      if (serviceId != null) {
-        requestBuilder.addFilter(InfrastructureMappingBlueprint.SERVICE_ID_KEY, Operator.EQ, serviceId);
-      }
-      if (deploymentType != null) {
-        requestBuilder.addFilter(InfrastructureMappingBlueprint.DEPLOYMENT_TYPE_KEY, Operator.EQ, deploymentType);
-      }
-      if (cloudProviderType != null) {
-        requestBuilder.addFilter(
-            InfrastructureMappingBlueprint.CLOUD_PROVIDER_TYPE_KEY, Operator.EQ, cloudProviderType);
-      }
-    }
-
-    final PageRequest blueprintRequest = requestBuilder.build();
-    requestBuilder = aPageRequest().addFilter(InfrastructureProvisioner.APP_ID_KEY, Operator.EQ, appId);
+    PageRequestBuilder requestBuilder =
+        aPageRequest().addFilter(InfrastructureProvisioner.APP_ID_KEY, Operator.EQ, appId);
 
     if (infrastructureProvisionerType != null) {
       requestBuilder.addFilter(
           InfrastructureProvisioner.INFRASTRUCTURE_PROVISIONER_TYPE_KEY, Operator.EQ, infrastructureProvisionerType);
     }
 
-    if (!featureFlagService.isEnabled(FeatureName.INFRA_MAPPING_REFACTOR, accountIdByAppId)) {
-      if (isNotEmpty(blueprintRequest.getFilters())) {
-        requestBuilder.addFilter(
-            InfrastructureProvisioner.MAPPING_BLUEPRINTS_KEY, Operator.ELEMENT_MATCH, blueprintRequest);
-      }
-    }
-
     return wingsPersistence.query(InfrastructureProvisioner.class, requestBuilder.build());
   }
 
-  InfrastructureProvisionerDetails details(InfrastructureProvisioner provisioner,
-      Map<String, SettingAttribute> idToSettingAttributeMapping, Map<String, Service> idToServiceMapping) {
+  InfrastructureProvisionerDetails details(
+      InfrastructureProvisioner provisioner, Map<String, SettingAttribute> idToSettingAttributeMapping) {
     final InfrastructureProvisionerDetailsBuilder detailsBuilder =
         InfrastructureProvisionerDetails.builder()
             .uuid(provisioner.getUuid())
@@ -348,16 +318,6 @@ public class InfrastructureProvisionerServiceImpl implements InfrastructureProvi
       detailsBuilder.cloudFormationSourceType(sourceType);
     }
 
-    if (!featureFlagService.isEnabled(FeatureName.INFRA_MAPPING_REFACTOR, provisioner.getAccountId())) {
-      if (isNotEmpty(provisioner.getMappingBlueprints())) {
-        detailsBuilder.services(provisioner.getMappingBlueprints()
-                                    .stream()
-                                    .map(InfrastructureMappingBlueprint::getServiceId)
-                                    .map(idToServiceMapping::get)
-                                    .filter(Objects::nonNull)
-                                    .collect(toMap(Service::getName, Service::getUuid)));
-      }
-    }
     return detailsBuilder.build();
   }
 
@@ -430,16 +390,12 @@ public class InfrastructureProvisionerServiceImpl implements InfrastructureProvi
         format("Time taken in getIdToSettingAttributeMapping : [%s] ms", System.currentTimeMillis() - startTime));
     startTime = System.currentTimeMillis();
 
-    Map<String, Service> idToServiceMapping = getIdToServiceMapping(appId, servicesIds);
     logger.info("Time taken in idToServiceMapping : [{}] ms", System.currentTimeMillis() - startTime);
     startTime = System.currentTimeMillis();
 
     PageResponse<InfrastructureProvisionerDetails> infrastructureProvisionerDetails = new PageResponse<>();
     infrastructureProvisionerDetails.setResponse(
-        pageResponse.getResponse()
-            .stream()
-            .map(item -> details(item, idToSettingAttributeMapping, idToServiceMapping))
-            .collect(toList()));
+        pageResponse.getResponse().stream().map(item -> details(item, idToSettingAttributeMapping)).collect(toList()));
     logger.info("Time taken in setting details : [{}] ms", System.currentTimeMillis() - startTime);
     logger.info("Time taken by details api : [{}] ms", System.currentTimeMillis() - apiStartTime);
     return infrastructureProvisionerDetails;
@@ -451,23 +407,6 @@ public class InfrastructureProvisionerServiceImpl implements InfrastructureProvi
         wingsPersistence.getWithAppId(InfrastructureProvisioner.class, appId, infrastructureProvisionerId);
     if (infrastructureProvisioner == null) {
       throw new InvalidRequestException("Provisioner Not Found");
-    }
-    if (!featureFlagService.isEnabled(FeatureName.INFRA_MAPPING_REFACTOR, infrastructureProvisioner.getAccountId())) {
-      List<InfrastructureMappingBlueprint> mappingBlueprints = infrastructureProvisioner.getMappingBlueprints();
-      if (isNotEmpty(mappingBlueprints)) {
-        Set<String> serviceIds =
-            mappingBlueprints.stream().map(InfrastructureMappingBlueprint::getServiceId).collect(toSet());
-        Map<String, Service> idToServiceMapping = getIdToServiceMapping(appId, serviceIds);
-        Set<String> existingServiceIds = idToServiceMapping.keySet();
-        if (isEmpty(existingServiceIds)) {
-          infrastructureProvisioner.setMappingBlueprints(emptyList());
-        } else {
-          infrastructureProvisioner.setMappingBlueprints(
-              mappingBlueprints.stream()
-                  .filter(mappingBlueprint -> existingServiceIds.contains(mappingBlueprint.getServiceId()))
-                  .collect(toList()));
-        }
-      }
     }
     return infrastructureProvisioner;
   }
@@ -481,39 +420,21 @@ public class InfrastructureProvisionerServiceImpl implements InfrastructureProvi
   }
 
   private void ensureSafeToDelete(String appId, InfrastructureProvisioner infrastructureProvisioner) {
-    final String accountId = appService.getAccountIdByAppId(appId);
     final String infrastructureProvisionerId = infrastructureProvisioner.getUuid();
 
-    if (featureFlagService.isEnabled(FeatureName.INFRA_MAPPING_REFACTOR, accountId)) {
-      List<String> infraDefinitionNames =
-          infrastructureDefinitionService.listNamesByProvisionerId(appId, infrastructureProvisionerId);
-      if (isNotEmpty(infraDefinitionNames)) {
-        throw new InvalidRequestException(format("Infrastructure provisioner [%s] is not safe to "
-                + "delete."
-                + "Referenced "
-                + "by "
-                + "%d %s [%s].",
-            infrastructureProvisioner.getName(), infraDefinitionNames.size(),
-            plural("Infrastructure "
-                    + "Definition",
-                infraDefinitionNames.size()),
-            HarnessStringUtils.join(", ", infraDefinitionNames)));
-      }
-    } else {
-      List<Key<InfrastructureMapping>> keys =
-          wingsPersistence.createQuery(InfrastructureMapping.class)
-              .filter(InfrastructureMapping.APP_ID_KEY, appId)
-              .filter(InfrastructureMapping.PROVISIONER_ID_KEY, infrastructureProvisionerId)
-              .asKeyList();
-      try {
-        for (Key<InfrastructureMapping> key : keys) {
-          infrastructureMappingService.ensureSafeToDelete(appId, (String) key.getId());
-        }
-      } catch (Exception exception) {
-        throw new InvalidRequestException(
-            format("Infrastructure provisioner %s is not safe to delete", infrastructureProvisionerId), exception,
-            USER);
-      }
+    List<String> infraDefinitionNames =
+        infrastructureDefinitionService.listNamesByProvisionerId(appId, infrastructureProvisionerId);
+    if (isNotEmpty(infraDefinitionNames)) {
+      throw new InvalidRequestException(format("Infrastructure provisioner [%s] is not safe to "
+              + "delete."
+              + "Referenced "
+              + "by "
+              + "%d %s [%s].",
+          infrastructureProvisioner.getName(), infraDefinitionNames.size(),
+          plural("Infrastructure "
+                  + "Definition",
+              infraDefinitionNames.size()),
+          HarnessStringUtils.join(", ", infraDefinitionNames)));
     }
   }
 
@@ -559,24 +480,6 @@ public class InfrastructureProvisionerServiceImpl implements InfrastructureProvi
     for (Key<InfrastructureProvisioner> key : keys) {
       prune(appId, (String) key.getId());
       harnessTagService.pruneTagLinks(appService.getAccountIdByAppId(appId), (String) key.getId());
-    }
-  }
-
-  // Region is optional and is not present in the blue print properties for cloud formation provisioners and
-  // present for terraform
-  private void applyProperties(Map<String, Object> contextMap, InfrastructureMapping infrastructureMapping,
-      List<BlueprintProperty> properties, Optional<ManagerExecutionLogCallback> executionLogCallbackOptional,
-      Optional<String> region, NodeFilteringType nodeFilteringType, String infraProvisionerTypeKey,
-      String workflowExecutionId) {
-    Map<String, Object> propertyNameEvaluatedMap =
-        resolveProperties(contextMap, properties, executionLogCallbackOptional, region, false, infraProvisionerTypeKey);
-
-    try {
-      infrastructureMapping.applyProvisionerVariables(propertyNameEvaluatedMap, nodeFilteringType, false);
-      infrastructureMappingService.update(infrastructureMapping, workflowExecutionId);
-    } catch (Exception e) {
-      addToExecutionLog(executionLogCallbackOptional, ExceptionUtils.getMessage(e));
-      throw e;
     }
   }
 
@@ -671,72 +574,33 @@ public class InfrastructureProvisionerServiceImpl implements InfrastructureProvi
     contextMap.put(infrastructureProvisioner.variableKey(), outputs);
     contextMap.putAll(outputs);
 
-    boolean featureFlagEnabled =
-        featureFlagService.isEnabled(FeatureName.INFRA_MAPPING_REFACTOR, infrastructureProvisioner.getAccountId());
-
-    if (featureFlagEnabled) {
-      try {
-        String infraMappingId = getInfraMappingId(context);
-        String infraDefinitionId = getInfraDefinitionId(context);
-        if (isEmpty(infraMappingId) && isNotEmpty(infraDefinitionId)) {
-          // Inside deployment phase, but mapping not yet generated
-          InfrastructureDefinition infrastructureDefinition =
-              infrastructureDefinitionService.get(appId, infraDefinitionId);
-          addToExecutionLog(executionLogCallbackOptional,
-              format("Mapping provisioner outputs to Infra Definition: [%s]", infrastructureDefinition.getName()));
-          Map<String, Object> resolvedExpressions =
-              resolveExpressions(infrastructureDefinition, contextMap, infrastructureProvisioner);
-          ((ProvisionerAware) infrastructureDefinition.getInfrastructure())
-              .applyExpressions(resolvedExpressions, appId, infrastructureDefinition.getEnvId(), infraDefinitionId);
-          InfrastructureMapping infrastructureMapping = infrastructureDefinitionService.saveInfrastructureMapping(
-              getServiceId(context), infrastructureDefinition, context.getWorkflowExecutionId());
-          PhaseElement phaseElement =
-              context.getContextElement(ContextElementType.PARAM, ExecutionContextImpl.PHASE_PARAM);
-          infrastructureMappingService.saveInfrastructureMappingToSweepingOutput(
-              appId, context.getWorkflowExecutionId(), phaseElement, infrastructureMapping.getUuid());
-          workflowExecutionService.appendInfraMappingId(
-              appId, context.getWorkflowExecutionId(), infrastructureMapping.getUuid());
-          addToExecutionLog(executionLogCallbackOptional, "Mapping completed successfully");
-        }
-      } catch (WingsException ex) {
-        throw ex;
-      } catch (Exception ex) {
-        throw new UnexpectedException("Failed while mapping provisioner outputs to Infra Definition", ex);
+    try {
+      String infraMappingId = getInfraMappingId(context);
+      String infraDefinitionId = getInfraDefinitionId(context);
+      if (isEmpty(infraMappingId) && isNotEmpty(infraDefinitionId)) {
+        // Inside deployment phase, but mapping not yet generated
+        InfrastructureDefinition infrastructureDefinition =
+            infrastructureDefinitionService.get(appId, infraDefinitionId);
+        addToExecutionLog(executionLogCallbackOptional,
+            format("Mapping provisioner outputs to Infra Definition: [%s]", infrastructureDefinition.getName()));
+        Map<String, Object> resolvedExpressions =
+            resolveExpressions(infrastructureDefinition, contextMap, infrastructureProvisioner);
+        ((ProvisionerAware) infrastructureDefinition.getInfrastructure())
+            .applyExpressions(resolvedExpressions, appId, infrastructureDefinition.getEnvId(), infraDefinitionId);
+        InfrastructureMapping infrastructureMapping = infrastructureDefinitionService.saveInfrastructureMapping(
+            getServiceId(context), infrastructureDefinition, context.getWorkflowExecutionId());
+        PhaseElement phaseElement =
+            context.getContextElement(ContextElementType.PARAM, ExecutionContextImpl.PHASE_PARAM);
+        infrastructureMappingService.saveInfrastructureMappingToSweepingOutput(
+            appId, context.getWorkflowExecutionId(), phaseElement, infrastructureMapping.getUuid());
+        workflowExecutionService.appendInfraMappingId(
+            appId, context.getWorkflowExecutionId(), infrastructureMapping.getUuid());
+        addToExecutionLog(executionLogCallbackOptional, "Mapping completed successfully");
       }
-    } else {
-      try (HIterator<InfrastructureMapping> infrastructureMappings = new HIterator<>(
-               wingsPersistence.createQuery(InfrastructureMapping.class)
-                   .filter(InfrastructureMapping.APP_ID_KEY, infrastructureProvisioner.getAppId())
-                   .filter(InfrastructureMapping.PROVISIONER_ID_KEY, infrastructureProvisioner.getUuid())
-                   .fetch())) {
-        if (infrastructureMappings.hasNext()) {
-          while (infrastructureMappings.hasNext()) {
-            InfrastructureMapping infrastructureMapping = infrastructureMappings.next();
-
-            if (isEmpty(infrastructureProvisioner.getMappingBlueprints())) {
-              throw new InvalidRequestException(
-                  "Service Mapping not found for Service Infra : " + infrastructureMapping.getName()
-                      + ". Add Service Mapping or de-link provisioner from Service Infra to resolve.",
-                  USER);
-            }
-
-            infrastructureProvisioner.getMappingBlueprints()
-                .stream()
-                .filter(blueprint -> blueprint.getServiceId().equals(infrastructureMapping.getServiceId()))
-                .filter(blueprint
-                    -> blueprint.infrastructureMappingType().name().equals(infrastructureMapping.getInfraMappingType()))
-                .forEach(blueprint -> {
-                  logger.info("Provisioner {} updates infrastructureMapping {}", infrastructureProvisioner.getUuid(),
-                      infrastructureMapping.getUuid());
-                  addToExecutionLog(executionLogCallbackOptional,
-                      "Updating service infra \"" + infrastructureMapping.getName() + "\"");
-                  applyProperties(contextMap, infrastructureMapping, blueprint.getProperties(),
-                      executionLogCallbackOptional, region, blueprint.getNodeFilteringType(),
-                      infrastructureProvisioner.variableKey(), context.getWorkflowExecutionId());
-                });
-          }
-        }
-      }
+    } catch (WingsException ex) {
+      throw ex;
+    } catch (Exception ex) {
+      throw new UnexpectedException("Failed while mapping provisioner outputs to Infra Definition", ex);
     }
   }
 

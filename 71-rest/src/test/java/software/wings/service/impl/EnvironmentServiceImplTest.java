@@ -55,7 +55,6 @@ public class EnvironmentServiceImplTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void shouldAddInfraDefWithCount() {
     doReturn(ACCOUNT_ID).when(appService).getAccountIdByAppId(APP_ID);
-    doReturn(true).when(featureFlagService).isEnabled(FeatureName.INFRA_MAPPING_REFACTOR, ACCOUNT_ID);
     PageResponse<Environment> environmentPageResponse = new PageResponse<>();
     Environment env1 = Environment.Builder.anEnvironment().uuid("ENV_1").build();
     Environment env2 = Environment.Builder.anEnvironment().uuid("ENV_2").build();
@@ -83,22 +82,6 @@ public class EnvironmentServiceImplTest extends WingsBaseTest {
     assertThat(env2.getInfrastructureDefinitions()).hasSize(0);
     assertThat(env1.getInfraDefinitionsCount()).isEqualTo(2);
     assertThat(env2.getInfraDefinitionsCount()).isEqualTo(0);
-  }
-
-  @Test
-  @Owner(developers = VAIBHAV_SI)
-  @Category(UnitTests.class)
-  public void shouldNotAddWhenFeatureFlagDisabled() {
-    doReturn(ACCOUNT_ID).when(appService).getAccountIdByAppId(APP_ID);
-    doReturn(false).when(featureFlagService).isEnabled(FeatureName.INFRA_MAPPING_REFACTOR, ACCOUNT_ID);
-    PageResponse<Environment> environmentPageResponse = new PageResponse<>();
-    environmentPageResponse.setResponse(Collections.singletonList(Environment.Builder.anEnvironment().build()));
-
-    environmentService.addInfraDefDetailToEnv(APP_ID, environmentPageResponse);
-
-    Environment environment = environmentPageResponse.getResponse().get(0);
-    assertThat(environment.getInfrastructureDefinitions()).isNull();
-    assertThat(environment.getInfraDefinitionsCount()).isEqualTo(0);
   }
 
   @Test

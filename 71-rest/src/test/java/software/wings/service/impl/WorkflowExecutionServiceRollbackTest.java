@@ -327,18 +327,17 @@ public class WorkflowExecutionServiceRollbackTest extends WingsBaseTest {
 
     when(appService.getAccountIdByAppId(APP_ID)).thenReturn(ACCOUNT_ID);
     when(featureFlagService.isEnabled(INFRA_MAPPING_REFACTOR, ACCOUNT_ID)).thenReturn(true);
-    when(workflowExecutionServiceHelper.obtainWorkflow(APP_ID, WORKFLOW_ID, true)).thenReturn(workflow);
+    when(workflowExecutionServiceHelper.obtainWorkflow(APP_ID, WORKFLOW_ID)).thenReturn(workflow);
     doNothing().when(accountExpirationChecker).check(ACCOUNT_ID);
 
     StateMachine rollbackSM = aStateMachine().build();
-    when(rollbackStateMachineGenerator.generateForRollbackExecution(APP_ID, newWE.getUuid(), true))
-        .thenReturn(rollbackSM);
+    when(rollbackStateMachineGenerator.generateForRollbackExecution(APP_ID, newWE.getUuid())).thenReturn(rollbackSM);
     when(workflowService.readWorkflow(APP_ID, WORKFLOW_ID)).thenReturn(workflow);
 
     WorkflowExecution rollbackWE = createNewWorkflowExecution(false);
     rollbackWE.setExecutionArgs(executionArgs);
     rollbackWE.setUuid(WORKFLOW_EXECUTION_ID);
-    when(workflowExecutionServiceHelper.obtainExecution(workflow, rollbackSM, ENV_ID, null, executionArgs, true))
+    when(workflowExecutionServiceHelper.obtainExecution(workflow, rollbackSM, ENV_ID, null, executionArgs))
         .thenReturn(rollbackWE);
     when(workflowExecutionServiceHelper.obtainWorkflowStandardParams(APP_ID, ENV_ID, executionArgs, workflow))
         .thenReturn(aWorkflowStandardParams().build());

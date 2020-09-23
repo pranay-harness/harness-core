@@ -21,7 +21,6 @@ import org.mongodb.morphia.query.Sort;
 import software.wings.api.PhaseElement;
 import software.wings.api.PhaseExecutionData;
 import software.wings.api.SelectNodeStepExecutionSummary;
-import software.wings.beans.FeatureName;
 import software.wings.beans.ServiceInstance;
 import software.wings.beans.WorkflowExecution;
 import software.wings.beans.execution.WorkflowExecutionInfo;
@@ -248,7 +247,7 @@ public class StateExecutionServiceImpl implements StateExecutionService {
     for (StateExecutionInstance previousStateExecutionInstance : previousStateExecutionInstances) {
       PhaseExecutionData phaseExecutionData = getPhaseExecutionDataSweepingOutput(previousStateExecutionInstance);
 
-      if (doesNotNeedProcessing(stateExecutionInstance, phaseElement, infraMappingId, phaseExecutionData)) {
+      if (doesNotNeedProcessing(stateExecutionInstance, phaseElement, phaseExecutionData)) {
         continue;
       }
 
@@ -325,18 +324,13 @@ public class StateExecutionServiceImpl implements StateExecutionService {
     return phaseElement;
   }
 
-  private boolean doesNotNeedProcessing(StateExecutionInstance stateExecutionInstance, PhaseElement phaseElement,
-      String infraMappingId, PhaseExecutionData phaseExecutionData) {
+  private boolean doesNotNeedProcessing(
+      StateExecutionInstance stateExecutionInstance, PhaseElement phaseElement, PhaseExecutionData phaseExecutionData) {
     if (stateExecutionInstance.getDisplayName().equals(phaseElement == null ? null : phaseElement.getPhaseName())) {
       return true;
     }
-    if (featureFlagService.isEnabled(
-            FeatureName.INFRA_MAPPING_REFACTOR, appService.getAccountIdByAppId(stateExecutionInstance.getAppId()))) {
-      return phaseElement != null && phaseElement.getInfraDefinitionId() != null
-          && !phaseElement.getInfraDefinitionId().equals(phaseExecutionData.getInfraDefinitionId());
-    } else {
-      return infraMappingId != null && !phaseExecutionData.getInfraMappingId().equals(infraMappingId);
-    }
+    return phaseElement != null && phaseElement.getInfraDefinitionId() != null
+        && !phaseElement.getInfraDefinitionId().equals(phaseExecutionData.getInfraDefinitionId());
   }
 
   @Override

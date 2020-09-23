@@ -51,7 +51,6 @@ import static software.wings.beans.CommandCategory.Type.SCRIPTS;
 import static software.wings.beans.CommandCategory.Type.VERIFICATIONS;
 import static software.wings.beans.ConfigFile.DEFAULT_TEMPLATE_ID;
 import static software.wings.beans.EntityVersion.Builder.anEntityVersion;
-import static software.wings.beans.FeatureName.INFRA_MAPPING_REFACTOR;
 import static software.wings.beans.Graph.Builder.aGraph;
 import static software.wings.beans.PhaseStep.PhaseStepBuilder.aPhaseStep;
 import static software.wings.beans.Service.ServiceBuilder;
@@ -157,7 +156,6 @@ import software.wings.beans.PhaseStepType;
 import software.wings.beans.Service;
 import software.wings.beans.Service.ServiceKeys;
 import software.wings.beans.ServiceVariable;
-import software.wings.beans.TerraformInfrastructureProvisioner;
 import software.wings.beans.Variable;
 import software.wings.beans.Workflow.WorkflowBuilder;
 import software.wings.beans.appmanifest.AppManifestKind;
@@ -517,29 +515,6 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
   @Test
   @Owner(developers = SRINIVAS)
   @Category(UnitTests.class)
-  public void shouldThrowExceptionOnDeleteReferencedByInfraProvisioner() {
-    when(limitCheckerFactory.getInstance(new Action(Mockito.anyString(), ActionType.CREATE_SERVICE)))
-        .thenReturn(new MockChecker(true, ActionType.CREATE_SERVICE));
-    when(mockWingsPersistence.delete(any(), any())).thenReturn(true);
-    when(workflowService.obtainWorkflowNamesReferencedByService(APP_ID, SERVICE_ID)).thenReturn(asList());
-    when(infrastructureProvisionerService.listByBlueprintDetails(APP_ID, null, SERVICE_ID, null, null))
-        .thenReturn(aPageResponse()
-                        .withResponse(
-                            asList(TerraformInfrastructureProvisioner.builder().name("Referenced Provisioner").build()))
-                        .build());
-
-    assertThatThrownBy(() -> srs.delete(APP_ID, SERVICE_ID))
-        .isInstanceOf(WingsException.class)
-        .hasMessage("Service [SERVICE_NAME] couldn't be deleted. "
-            + "Remove Service reference from the following infrastructure provisioner [Referenced Provisioner] ");
-
-    verify(workflowService).obtainWorkflowNamesReferencedByService(APP_ID, SERVICE_ID);
-    verify(infrastructureProvisionerService).listByBlueprintDetails(APP_ID, null, SERVICE_ID, null, null);
-  }
-
-  @Test
-  @Owner(developers = SRINIVAS)
-  @Category(UnitTests.class)
   public void shouldThrowExceptionOnDeleteReferencedByPipeline() {
     when(limitCheckerFactory.getInstance(new Action(Mockito.anyString(), ActionType.CREATE_SERVICE)))
         .thenReturn(new MockChecker(true, ActionType.CREATE_SERVICE));
@@ -555,7 +530,6 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
         .hasMessage("Service is referenced by 1 pipeline [Referenced Pipeline] as a workflow variable.");
 
     verify(workflowService).obtainWorkflowNamesReferencedByService(APP_ID, SERVICE_ID);
-    verify(infrastructureProvisionerService).listByBlueprintDetails(APP_ID, null, SERVICE_ID, null, null);
     verify(pipelineService).obtainPipelineNamesReferencedByTemplatedEntity(APP_ID, SERVICE_ID);
   }
 
@@ -578,7 +552,6 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
         .hasMessage("Service is referenced by 1 trigger [Referenced Trigger] as a workflow variable.");
 
     verify(workflowService).obtainWorkflowNamesReferencedByService(APP_ID, SERVICE_ID);
-    verify(infrastructureProvisionerService).listByBlueprintDetails(APP_ID, null, SERVICE_ID, null, null);
     verify(pipelineService).obtainPipelineNamesReferencedByTemplatedEntity(APP_ID, SERVICE_ID);
     verify(triggerService).obtainTriggerNamesReferencedByTemplatedEntityId(APP_ID, SERVICE_ID);
   }
@@ -2497,7 +2470,6 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
     doReturn(service).when(spyServiceResourceService).addCommand(any(), any(), any(ServiceCommand.class), eq(true));
     doNothing().when(auditServiceHelper).addEntityOperationIdentifierDataToAuditContext(any());
     when(appService.getAccountIdByAppId(APP_ID)).thenReturn(ACCOUNT_ID);
-    when(featureFlagService.isEnabled(INFRA_MAPPING_REFACTOR, ACCOUNT_ID)).thenReturn(true);
     Service savedService = spyServiceResourceService.save(service);
 
     assertThat(savedService.getUuid()).isEqualTo(SERVICE_ID);
@@ -2565,7 +2537,6 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
     doReturn(service).when(spyServiceResourceService).addCommand(any(), any(), any(ServiceCommand.class), eq(true));
     doNothing().when(auditServiceHelper).addEntityOperationIdentifierDataToAuditContext(any());
     when(appService.getAccountIdByAppId(APP_ID)).thenReturn(ACCOUNT_ID);
-    when(featureFlagService.isEnabled(INFRA_MAPPING_REFACTOR, ACCOUNT_ID)).thenReturn(true);
     when(applicationManifestService.getManifestByServiceId(service.getAppId(), service.getUuid()))
         .thenReturn(ApplicationManifest.builder().storeType(StoreType.Local).build());
     Service savedService = spyServiceResourceService.save(service);

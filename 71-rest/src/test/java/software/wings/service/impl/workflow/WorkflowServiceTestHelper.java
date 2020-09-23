@@ -6,8 +6,10 @@ import static java.util.Arrays.asList;
 import static java.util.stream.Collectors.toList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static software.wings.api.DeploymentType.AMI;
+import static software.wings.api.DeploymentType.AWS_LAMBDA;
 import static software.wings.api.DeploymentType.ECS;
 import static software.wings.api.DeploymentType.HELM;
+import static software.wings.api.DeploymentType.KUBERNETES;
 import static software.wings.api.DeploymentType.SSH;
 import static software.wings.api.DeploymentType.WINRM;
 import static software.wings.beans.BasicOrchestrationWorkflow.BasicOrchestrationWorkflowBuilder.aBasicOrchestrationWorkflow;
@@ -18,7 +20,6 @@ import static software.wings.beans.CustomOrchestrationWorkflow.CustomOrchestrati
 import static software.wings.beans.DirectKubernetesInfrastructureMapping.Builder.aDirectKubernetesInfrastructureMapping;
 import static software.wings.beans.EcsInfrastructureMapping.Builder.anEcsInfrastructureMapping;
 import static software.wings.beans.EntityType.ENVIRONMENT;
-import static software.wings.beans.EntityType.INFRASTRUCTURE_MAPPING;
 import static software.wings.beans.EntityType.SERVICE;
 import static software.wings.beans.GcpKubernetesInfrastructureMapping.Builder.aGcpKubernetesInfrastructureMapping;
 import static software.wings.beans.Graph.Builder.aGraph;
@@ -84,6 +85,7 @@ import com.google.common.collect.ImmutableMap;
 
 import io.harness.beans.WorkflowType;
 import io.harness.interrupts.RepairActionCode;
+import software.wings.api.CloudProviderType;
 import software.wings.api.DeploymentType;
 import software.wings.beans.AwsLambdaInfraStructureMapping;
 import software.wings.beans.BasicOrchestrationWorkflow;
@@ -92,6 +94,7 @@ import software.wings.beans.CanaryOrchestrationWorkflow;
 import software.wings.beans.CustomOrchestrationWorkflow;
 import software.wings.beans.DirectKubernetesInfrastructureMapping;
 import software.wings.beans.EcsInfrastructureMapping;
+import software.wings.beans.EntityType;
 import software.wings.beans.ExecutionScope;
 import software.wings.beans.GcpKubernetesInfrastructureMapping;
 import software.wings.beans.Graph;
@@ -110,6 +113,12 @@ import software.wings.beans.WorkflowPhase;
 import software.wings.beans.command.ServiceCommand;
 import software.wings.beans.concurrency.ConcurrencyStrategy;
 import software.wings.beans.stats.CloneMetadata;
+import software.wings.infra.AwsAmiInfrastructure;
+import software.wings.infra.AwsEcsInfrastructure;
+import software.wings.infra.AwsLambdaInfrastructure;
+import software.wings.infra.DirectKubernetesInfrastructure;
+import software.wings.infra.GoogleKubernetesEngine;
+import software.wings.infra.InfrastructureDefinition;
 import software.wings.sm.StateType;
 
 import java.util.ArrayList;
@@ -162,13 +171,15 @@ public class WorkflowServiceTestHelper {
         .appId(APP_ID)
         .envId(ENV_ID)
         .workflowType(WorkflowType.ORCHESTRATION)
-        .orchestrationWorkflow(
-            aCanaryOrchestrationWorkflow()
-                .withPreDeploymentSteps(aPhaseStep(PRE_DEPLOYMENT).build())
-                .addWorkflowPhase(
-                    aWorkflowPhase().infraMappingId(INFRA_MAPPING_ID).serviceId(SERVICE_ID).deploymentType(SSH).build())
-                .withPostDeploymentSteps(aPhaseStep(POST_DEPLOYMENT).build())
-                .build())
+        .orchestrationWorkflow(aCanaryOrchestrationWorkflow()
+                                   .withPreDeploymentSteps(aPhaseStep(PRE_DEPLOYMENT).build())
+                                   .addWorkflowPhase(aWorkflowPhase()
+                                                         .infraDefinitionId(INFRA_DEFINITION_ID)
+                                                         .serviceId(SERVICE_ID)
+                                                         .deploymentType(SSH)
+                                                         .build())
+                                   .withPostDeploymentSteps(aPhaseStep(POST_DEPLOYMENT).build())
+                                   .build())
         .build();
   }
 
@@ -177,13 +188,20 @@ public class WorkflowServiceTestHelper {
         .name(WORKFLOW_NAME)
         .appId(APP_ID)
         .workflowType(WorkflowType.ORCHESTRATION)
-        .orchestrationWorkflow(
-            aCanaryOrchestrationWorkflow()
-                .withPreDeploymentSteps(aPhaseStep(PRE_DEPLOYMENT).build())
-                .withPostDeploymentSteps(aPhaseStep(POST_DEPLOYMENT).build())
-                .addWorkflowPhase(aWorkflowPhase().infraMappingId(INFRA_MAPPING_ID).serviceId(SERVICE_ID).build())
-                .addWorkflowPhase(aWorkflowPhase().infraMappingId(INFRA_MAPPING_ID).serviceId(SERVICE_ID).build())
-                .build())
+        .orchestrationWorkflow(aCanaryOrchestrationWorkflow()
+                                   .withPreDeploymentSteps(aPhaseStep(PRE_DEPLOYMENT).build())
+                                   .withPostDeploymentSteps(aPhaseStep(POST_DEPLOYMENT).build())
+                                   .addWorkflowPhase(aWorkflowPhase()
+                                                         .infraMappingId(INFRA_MAPPING_ID)
+                                                         .infraDefinitionId(INFRA_DEFINITION_ID)
+                                                         .serviceId(SERVICE_ID)
+                                                         .build())
+                                   .addWorkflowPhase(aWorkflowPhase()
+                                                         .infraMappingId(INFRA_MAPPING_ID)
+                                                         .infraDefinitionId(INFRA_DEFINITION_ID)
+                                                         .serviceId(SERVICE_ID)
+                                                         .build())
+                                   .build())
         .build();
   }
 
@@ -211,6 +229,7 @@ public class WorkflowServiceTestHelper {
                 .addWorkflowPhase(
                     aWorkflowPhase()
                         .infraMappingId(INFRA_MAPPING_ID)
+                        .infraDefinitionId(INFRA_DEFINITION_ID)
                         .serviceId(SERVICE_ID)
                         .deploymentType(SSH)
                         .phaseSteps(asList(aPhaseStep(VERIFY_SERVICE, WorkflowServiceHelper.ENABLE_SERVICE)
@@ -247,7 +266,7 @@ public class WorkflowServiceTestHelper {
         .name(WORKFLOW_NAME)
         .appId(APP_ID)
         .serviceId(SERVICE_ID)
-        .infraMappingId(INFRA_MAPPING_ID)
+        .infraDefinitionId(INFRA_DEFINITION_ID)
         .workflowType(WorkflowType.ORCHESTRATION)
         .envId(ENV_ID)
         .orchestrationWorkflow(aBasicOrchestrationWorkflow()
@@ -262,7 +281,7 @@ public class WorkflowServiceTestHelper {
         .name(WORKFLOW_NAME)
         .appId(APP_ID)
         .serviceId(SERVICE_ID)
-        .infraMappingId(INFRA_MAPPING_ID)
+        .infraDefinitionId(INFRA_DEFINITION_ID)
         .workflowType(WorkflowType.ORCHESTRATION)
         .envId(ENV_ID)
         .orchestrationWorkflow(aBlueGreenOrchestrationWorkflow()
@@ -277,16 +296,18 @@ public class WorkflowServiceTestHelper {
         .name(WORKFLOW_NAME)
         .appId(APP_ID)
         .serviceId(SERVICE_ID)
-        .infraMappingId(INFRA_MAPPING_ID)
+        .infraDefinitionId(INFRA_DEFINITION_ID)
         .workflowType(WorkflowType.ORCHESTRATION)
         .envId(ENV_ID)
-        .orchestrationWorkflow(
-            aBasicOrchestrationWorkflow()
-                .withPreDeploymentSteps(aPhaseStep(PRE_DEPLOYMENT).build())
-                .withPostDeploymentSteps(aPhaseStep(POST_DEPLOYMENT).build())
-                .addWorkflowPhase(
-                    aWorkflowPhase().infraMappingId(INFRA_MAPPING_ID).serviceId(SERVICE_ID).deploymentType(SSH).build())
-                .build())
+        .orchestrationWorkflow(aBasicOrchestrationWorkflow()
+                                   .withPreDeploymentSteps(aPhaseStep(PRE_DEPLOYMENT).build())
+                                   .withPostDeploymentSteps(aPhaseStep(POST_DEPLOYMENT).build())
+                                   .addWorkflowPhase(aWorkflowPhase()
+                                                         .infraDefinitionId(INFRA_DEFINITION_ID)
+                                                         .serviceId(SERVICE_ID)
+                                                         .deploymentType(SSH)
+                                                         .build())
+                                   .build())
         .build();
   }
 
@@ -328,7 +349,7 @@ public class WorkflowServiceTestHelper {
                     aWorkflowPhase()
                         .serviceId(SERVICE_ID)
                         .deploymentType(SSH)
-                        .infraMappingId(INFRA_MAPPING_ID)
+                        .infraDefinitionId(INFRA_DEFINITION_ID)
                         .phaseSteps(
                             asList(aPhaseStep(PhaseStepType.INFRASTRUCTURE_NODE, INFRASTRUCTURE_NODE.name()).build(),
                                 aPhaseStep(PhaseStepType.DEPLOY_SERVICE, "Deploy Service").build()))
@@ -350,7 +371,7 @@ public class WorkflowServiceTestHelper {
                     aWorkflowPhase()
                         .serviceId(SERVICE_ID)
                         .deploymentType(WINRM)
-                        .infraMappingId(INFRA_MAPPING_ID)
+                        .infraDefinitionId(INFRA_DEFINITION_ID)
                         .phaseSteps(
                             asList(aPhaseStep(PhaseStepType.INFRASTRUCTURE_NODE, INFRASTRUCTURE_NODE.name()).build(),
                                 aPhaseStep(PhaseStepType.DEPLOY_SERVICE, "Deploy Service").build()))
@@ -400,13 +421,15 @@ public class WorkflowServiceTestHelper {
         .envId(ENV_ID)
         .appId(APP_ID)
         .workflowType(WorkflowType.ORCHESTRATION)
-        .orchestrationWorkflow(
-            aMultiServiceOrchestrationWorkflow()
-                .withPreDeploymentSteps(aPhaseStep(PRE_DEPLOYMENT).build())
-                .addWorkflowPhase(
-                    aWorkflowPhase().infraMappingId(INFRA_MAPPING_ID).serviceId(SERVICE_ID).deploymentType(SSH).build())
-                .withPostDeploymentSteps(aPhaseStep(POST_DEPLOYMENT).build())
-                .build())
+        .orchestrationWorkflow(aMultiServiceOrchestrationWorkflow()
+                                   .withPreDeploymentSteps(aPhaseStep(PRE_DEPLOYMENT).build())
+                                   .addWorkflowPhase(aWorkflowPhase()
+                                                         .infraDefinitionId(INFRA_DEFINITION_ID)
+                                                         .serviceId(SERVICE_ID)
+                                                         .deploymentType(SSH)
+                                                         .build())
+                                   .withPostDeploymentSteps(aPhaseStep(POST_DEPLOYMENT).build())
+                                   .build())
         .build();
   }
 
@@ -415,15 +438,20 @@ public class WorkflowServiceTestHelper {
         .name(WORKFLOW_NAME)
         .appId(APP_ID)
         .workflowType(WorkflowType.ORCHESTRATION)
-        .orchestrationWorkflow(
-            aMultiServiceOrchestrationWorkflow()
-                .withPreDeploymentSteps(aPhaseStep(PRE_DEPLOYMENT).build())
-                .addWorkflowPhase(
-                    aWorkflowPhase().infraMappingId(INFRA_MAPPING_ID).serviceId(SERVICE_ID).deploymentType(SSH).build())
-                .addWorkflowPhase(
-                    aWorkflowPhase().infraMappingId(INFRA_MAPPING_ID).serviceId(SERVICE_ID).deploymentType(SSH).build())
-                .withPostDeploymentSteps(aPhaseStep(POST_DEPLOYMENT).build())
-                .build())
+        .orchestrationWorkflow(aMultiServiceOrchestrationWorkflow()
+                                   .withPreDeploymentSteps(aPhaseStep(PRE_DEPLOYMENT).build())
+                                   .addWorkflowPhase(aWorkflowPhase()
+                                                         .infraDefinitionId(INFRA_DEFINITION_ID)
+                                                         .serviceId(SERVICE_ID)
+                                                         .deploymentType(SSH)
+                                                         .build())
+                                   .addWorkflowPhase(aWorkflowPhase()
+                                                         .infraDefinitionId(INFRA_DEFINITION_ID)
+                                                         .serviceId(SERVICE_ID)
+                                                         .deploymentType(SSH)
+                                                         .build())
+                                   .withPostDeploymentSteps(aPhaseStep(POST_DEPLOYMENT).build())
+                                   .build())
         .build();
   }
 
@@ -432,15 +460,20 @@ public class WorkflowServiceTestHelper {
         .name(WORKFLOW_NAME)
         .appId(APP_ID)
         .workflowType(WorkflowType.ORCHESTRATION)
-        .orchestrationWorkflow(
-            aCanaryOrchestrationWorkflow()
-                .withPreDeploymentSteps(aPhaseStep(PRE_DEPLOYMENT).build())
-                .addWorkflowPhase(
-                    aWorkflowPhase().infraMappingId(INFRA_MAPPING_ID).serviceId(SERVICE_ID).deploymentType(SSH).build())
-                .addWorkflowPhase(
-                    aWorkflowPhase().infraMappingId(INFRA_MAPPING_ID).serviceId(SERVICE_ID).deploymentType(SSH).build())
-                .withPostDeploymentSteps(aPhaseStep(POST_DEPLOYMENT).build())
-                .build())
+        .orchestrationWorkflow(aCanaryOrchestrationWorkflow()
+                                   .withPreDeploymentSteps(aPhaseStep(PRE_DEPLOYMENT).build())
+                                   .addWorkflowPhase(aWorkflowPhase()
+                                                         .infraDefinitionId(INFRA_DEFINITION_ID)
+                                                         .serviceId(SERVICE_ID)
+                                                         .deploymentType(SSH)
+                                                         .build())
+                                   .addWorkflowPhase(aWorkflowPhase()
+                                                         .infraDefinitionId(INFRA_DEFINITION_ID)
+                                                         .serviceId(SERVICE_ID)
+                                                         .deploymentType(SSH)
+                                                         .build())
+                                   .withPostDeploymentSteps(aPhaseStep(POST_DEPLOYMENT).build())
+                                   .build())
         .build();
   }
 
@@ -539,7 +572,7 @@ public class WorkflowServiceTestHelper {
                 .withPreDeploymentSteps(aPhaseStep(PRE_DEPLOYMENT).build())
                 .addWorkflowPhase(aWorkflowPhase()
                                       .serviceId(SERVICE_ID)
-                                      .infraMappingId(INFRA_MAPPING_ID)
+                                      .infraDefinitionId(INFRA_DEFINITION_ID)
                                       .deploymentType(ECS)
                                       .phaseSteps(asList(aPhaseStep(PhaseStepType.CONTAINER_DEPLOY, DEPLOY_CONTAINERS)
                                                              .addStep(GraphNode.builder()
@@ -631,7 +664,7 @@ public class WorkflowServiceTestHelper {
     return aWorkflowPhase()
         .uuid(generateUuid())
         .serviceId(SERVICE_ID)
-        .infraMappingId(INFRA_MAPPING_ID)
+        .infraDefinitionId(INFRA_DEFINITION_ID)
         .deploymentType(DeploymentType.HELM)
         .phaseSteps(asList(aPhaseStep(HELM_DEPLOY, DEPLOY_CONTAINERS)
                                .addStep(GraphNode.builder()
@@ -674,7 +707,7 @@ public class WorkflowServiceTestHelper {
         .appId(APP_ID)
         .envId(ENV_ID)
         .serviceId(SERVICE_ID)
-        .infraMappingId(INFRA_MAPPING_ID)
+        .infraDefinitionId(INFRA_DEFINITION_ID)
         .orchestrationWorkflow(aBlueGreenOrchestrationWorkflow()
                                    .addWorkflowPhase(aWorkflowPhase()
                                                          .deploymentType(DeploymentType.KUBERNETES)
@@ -696,13 +729,13 @@ public class WorkflowServiceTestHelper {
         .appId(APP_ID)
         .envId(ENV_ID)
         .serviceId(SERVICE_ID)
-        .infraMappingId(INFRA_MAPPING_ID)
+        .infraDefinitionId(INFRA_DEFINITION_ID)
         .orchestrationWorkflow(
             aBasicOrchestrationWorkflow()
                 .withWorkflowPhases(asList(
                     aWorkflowPhase()
                         .serviceId(SERVICE_ID)
-                        .infraMappingId(INFRA_MAPPING_ID)
+                        .infraDefinitionId(INFRA_DEFINITION_ID)
                         .deploymentType(AMI)
                         .phaseSteps(asList(
                             aPhaseStep(AMI_DEPLOY_AUTOSCALING_GROUP, AMI_DEPLOY_AUTOSCALING_GROUP.name()).build()))
@@ -719,13 +752,13 @@ public class WorkflowServiceTestHelper {
         .appId(APP_ID)
         .envId(ENV_ID)
         .serviceId(SERVICE_ID)
-        .infraMappingId(INFRA_MAPPING_ID)
+        .infraDefinitionId(INFRA_DEFINITION_ID)
         .orchestrationWorkflow(
             aBlueGreenOrchestrationWorkflow()
                 .withWorkflowPhases(asList(
                     aWorkflowPhase()
                         .serviceId(SERVICE_ID)
-                        .infraMappingId(INFRA_MAPPING_ID)
+                        .infraDefinitionId(INFRA_DEFINITION_ID)
                         .deploymentType(AMI)
                         .phaseSteps(asList(
                             aPhaseStep(AMI_DEPLOY_AUTOSCALING_GROUP, AMI_DEPLOY_AUTOSCALING_GROUP.name()).build()))
@@ -744,6 +777,15 @@ public class WorkflowServiceTestHelper {
         .withInfraMappingType(GCP_KUBERNETES.name())
         .withComputeProviderType(GCP.name())
         .withClusterName(RUNTIME)
+        .build();
+  }
+
+  public static InfrastructureDefinition constructGKInfraDef() {
+    return InfrastructureDefinition.builder()
+        .deploymentType(KUBERNETES)
+        .uuid(INFRA_DEFINITION_ID)
+        .cloudProviderType(CloudProviderType.GCP)
+        .infrastructure(GoogleKubernetesEngine.builder().clusterName(RUNTIME).build())
         .build();
   }
 
@@ -766,6 +808,15 @@ public class WorkflowServiceTestHelper {
         .build();
   }
 
+  public static InfrastructureDefinition constructDirectKubernetesInfraDef() {
+    return InfrastructureDefinition.builder()
+        .uuid(INFRA_DEFINITION_ID)
+        .deploymentType(KUBERNETES)
+        .cloudProviderType(CloudProviderType.GCP)
+        .infrastructure(DirectKubernetesInfrastructure.builder().build())
+        .build();
+  }
+
   public static DirectKubernetesInfrastructureMapping constructHELMInfra() {
     return aDirectKubernetesInfrastructureMapping()
         .withAppId(APP_ID)
@@ -774,6 +825,17 @@ public class WorkflowServiceTestHelper {
         .withServiceTemplateId(SERVICE_TEMPLATE_ID)
         .withDeploymentType(DeploymentType.HELM.name())
         .withComputeProviderType(GCP.name())
+        .build();
+  }
+
+  public static InfrastructureDefinition constructHELMInfraDef() {
+    return InfrastructureDefinition.builder()
+        .appId(APP_ID)
+        .uuid(INFRA_DEFINITION_ID)
+        .envId(ENV_ID)
+        .deploymentType(HELM)
+        .cloudProviderType(CloudProviderType.KUBERNETES_CLUSTER)
+        .infrastructure(GoogleKubernetesEngine.builder().build())
         .build();
   }
 
@@ -788,6 +850,16 @@ public class WorkflowServiceTestHelper {
         .build();
   }
 
+  public static InfrastructureDefinition constructEcsInfraDef() {
+    return InfrastructureDefinition.builder()
+        .uuid(INFRA_DEFINITION_ID)
+        .deploymentType(ECS)
+        .cloudProviderType(CloudProviderType.AWS)
+        .appId(APP_ID)
+        .infrastructure(AwsEcsInfrastructure.builder().clusterName(RUNTIME).build())
+        .build();
+  }
+
   public static EcsInfrastructureMapping constructAmiInfraMapping() {
     return anEcsInfrastructureMapping()
         .withUuid(INFRA_MAPPING_ID)
@@ -795,6 +867,15 @@ public class WorkflowServiceTestHelper {
         .withDeploymentType(DeploymentType.AMI.name())
         .withInfraMappingType(AWS_AMI.name())
         .withComputeProviderType(AWS.name())
+        .build();
+  }
+
+  public static InfrastructureDefinition constructAmiInfraDef() {
+    return InfrastructureDefinition.builder()
+        .uuid(INFRA_DEFINITION_ID)
+        .cloudProviderType(CloudProviderType.AWS)
+        .deploymentType(AMI)
+        .infrastructure(AwsAmiInfrastructure.builder().build())
         .build();
   }
 
@@ -806,6 +887,15 @@ public class WorkflowServiceTestHelper {
     awsLambdaInfraStructureMapping.setComputeProviderType(AWS.name());
 
     return awsLambdaInfraStructureMapping;
+  }
+
+  public static InfrastructureDefinition constructAwsLambdaInfraDef() {
+    return InfrastructureDefinition.builder()
+        .deploymentType(AWS_LAMBDA)
+        .cloudProviderType(CloudProviderType.AWS)
+        .uuid(INFRA_DEFINITION_ID)
+        .infrastructure(AwsLambdaInfrastructure.builder().build())
+        .build();
   }
 
   public static CloneMetadata constructCloneMetadata(Workflow workflow2) {
@@ -836,20 +926,20 @@ public class WorkflowServiceTestHelper {
         .name(WORKFLOW_NAME)
         .appId(APP_ID)
         .serviceId(SERVICE_ID)
-        .infraMappingId(INFRA_MAPPING_ID)
+        .infraDefinitionId(INFRA_DEFINITION_ID)
         .orchestrationWorkflow(
             aBasicOrchestrationWorkflow()
                 .withWorkflowPhases(asList(aWorkflowPhase()
                                                .serviceId(SERVICE_ID)
-                                               .infraMappingId(INFRA_MAPPING_ID)
+                                               .infraDefinitionId(INFRA_DEFINITION_ID)
                                                .templateExpressions(asList(getEnvTemplateExpression(),
-                                                   getServiceTemplateExpression(), getInfraTemplateExpression()))
+                                                   getServiceTemplateExpression(), prepareInfraDefTemplateExpression()))
                                                .build()))
                 .withPreDeploymentSteps(aPhaseStep(PRE_DEPLOYMENT).build())
                 .withPostDeploymentSteps(aPhaseStep(POST_DEPLOYMENT).build())
                 .build())
         .templateExpressions(
-            asList(getEnvTemplateExpression(), getServiceTemplateExpression(), getInfraTemplateExpression()))
+            asList(getEnvTemplateExpression(), getServiceTemplateExpression(), prepareInfraDefTemplateExpression()))
         .build();
   }
 
@@ -865,6 +955,7 @@ public class WorkflowServiceTestHelper {
                 .addWorkflowPhase(
                     aWorkflowPhase()
                         .infraMappingId(INFRA_MAPPING_ID)
+                        .infraDefinitionId(INFRA_DEFINITION_ID)
                         .serviceId(SERVICE_ID)
                         .deploymentType(SSH)
                         .phaseSteps(asList(
@@ -891,14 +982,14 @@ public class WorkflowServiceTestHelper {
 
     WorkflowPhase workflowPhase = workflowPhases.get(0);
     assertThat(workflowPhase).isNotNull().hasFieldOrPropertyWithValue("name", PHASE_NAME_PREFIX + 1);
-    assertThat(workflowPhase.getInfraMappingId()).isNotNull();
+    assertThat(workflowPhase.getInfraDefinitionId()).isNotNull();
     assertThat(workflowPhase.getTemplateExpressions())
         .isNotEmpty()
         .extracting(TemplateExpression::getFieldName)
-        .contains("infraMappingId");
+        .contains("infraDefinitionId");
     assertThat(orchestrationWorkflow.getUserVariables())
         .extracting(Variable::obtainEntityType)
-        .containsSequence(ENVIRONMENT, SERVICE, INFRASTRUCTURE_MAPPING);
+        .containsSequence(ENVIRONMENT, SERVICE, EntityType.INFRASTRUCTURE_DEFINITION);
     assertThat(workflowPhase.fetchServiceTemplateExpression().getMetadata()).containsKey(Variable.ARTIFACT_TYPE);
   }
 
@@ -1076,26 +1167,26 @@ public class WorkflowServiceTestHelper {
 
   public static void assertTemplatizedOrchestrationWorkflow(OrchestrationWorkflow orchestrationWorkflow) {
     assertThat(orchestrationWorkflow.getTemplatizedServiceIds()).isNotNull().doesNotContain(SERVICE_ID);
-    assertThat(orchestrationWorkflow.getTemplatizedInfraMappingIds()).isNotNull().contains(INFRA_MAPPING_ID);
+    assertThat(orchestrationWorkflow.getTemplatizedInfraDefinitionIds()).isNotNull().contains(INFRA_DEFINITION_ID);
     assertThat(orchestrationWorkflow).extracting("userVariables").isNotNull();
     assertThat(orchestrationWorkflow.getUserVariables().stream().anyMatch(
-                   variable -> variable.getName().equals("ServiceInfra_SSH")))
+                   variable -> variable.getName().equals("InfraDefinition_SSH")))
         .isTrue();
     assertThat(orchestrationWorkflow.getUserVariables().stream().anyMatch(
-                   variable -> variable.getName().equals("ServiceInfra_SSH2")))
+                   variable -> variable.getName().equals("InfraDefinition_SSH2")))
         .isTrue();
   }
 
   public static void assertTemplateWorkflowPhase(
       OrchestrationWorkflow orchestrationWorkflow, List<WorkflowPhase> workflowPhases) {
     assertThat(orchestrationWorkflow.getTemplatizedServiceIds()).isNullOrEmpty();
-    assertThat(orchestrationWorkflow.getTemplatizedInfraMappingIds()).isNotNull().contains(INFRA_MAPPING_ID);
+    assertThat(orchestrationWorkflow.getTemplatizedInfraDefinitionIds()).isNotNull().contains(INFRA_DEFINITION_ID);
     assertThat(orchestrationWorkflow).extracting("userVariables").isNotNull();
     assertThat(
         orchestrationWorkflow.getUserVariables().stream().anyMatch(variable -> variable.getName().equals("Service")))
         .isFalse();
     assertThat(orchestrationWorkflow.getUserVariables().stream().anyMatch(
-                   variable -> variable.getName().equals("ServiceInfra_SSH")))
+                   variable -> variable.getName().equals("InfraDef_SSH")))
         .isTrue();
     assertThat(orchestrationWorkflow.getUserVariables().stream().anyMatch(
                    variable -> variable.getName().equals("Environment")))
@@ -1110,14 +1201,14 @@ public class WorkflowServiceTestHelper {
     WorkflowPhase workflowPhase3 = workflowPhases3.get(workflowPhases3.size() - 1);
     assertThat(workflowPhase3).isEqualToComparingOnlyGivenFields(workflowPhase, "uuid", "name");
 
-    assertThat(workflowPhase3.getInfraMappingId()).isNotNull();
+    assertThat(workflowPhase3.getInfraDefinitionId()).isNotNull();
     assertThat(workflowPhase3.getTemplateExpressions())
         .isNotEmpty()
         .extracting(TemplateExpression::getFieldName)
-        .contains("infraMappingId");
+        .contains("infraDefinitionId");
     assertThat(workflow.getOrchestrationWorkflow().getUserVariables())
         .extracting(Variable::obtainEntityType)
-        .containsSequence(SERVICE, INFRASTRUCTURE_MAPPING);
+        .containsSequence(SERVICE, EntityType.INFRASTRUCTURE_DEFINITION);
     return workflowPhase3;
   }
 

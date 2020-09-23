@@ -19,12 +19,14 @@ import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
 import static software.wings.beans.infrastructure.Host.Builder.aHost;
 import static software.wings.utils.WingsTestConstants.ACCESS_KEY;
 import static software.wings.utils.WingsTestConstants.APP_ID;
+import static software.wings.utils.WingsTestConstants.ENV_ID;
 import static software.wings.utils.WingsTestConstants.HOST_CONN_ATTR_ID;
 import static software.wings.utils.WingsTestConstants.HOST_ID;
 import static software.wings.utils.WingsTestConstants.HOST_NAME;
 import static software.wings.utils.WingsTestConstants.INFRA_MAPPING_ID;
 import static software.wings.utils.WingsTestConstants.SECRET_KEY;
 import static software.wings.utils.WingsTestConstants.SERVICE_ID;
+import static software.wings.utils.WingsTestConstants.SERVICE_TEMPLATE_ID;
 import static software.wings.utils.WingsTestConstants.SETTING_ID;
 import static software.wings.utils.WingsTestConstants.WORKFLOW_EXECUTION_ID;
 
@@ -51,6 +53,7 @@ import software.wings.api.DeploymentType;
 import software.wings.beans.AwsConfig;
 import software.wings.beans.AwsInfrastructureMapping;
 import software.wings.beans.HostConnectionType;
+import software.wings.beans.ServiceTemplate;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.infrastructure.Host;
 import software.wings.service.impl.AwsHelperService;
@@ -58,6 +61,7 @@ import software.wings.service.impl.AwsInfrastructureProvider;
 import software.wings.service.impl.AwsUtils;
 import software.wings.service.intfc.HostService;
 import software.wings.service.intfc.ServiceResourceService;
+import software.wings.service.intfc.ServiceTemplateService;
 import software.wings.service.intfc.aws.manager.AwsAsgHelperServiceManager;
 import software.wings.service.intfc.aws.manager.AwsEc2HelperServiceManager;
 import software.wings.service.intfc.security.SecretManager;
@@ -76,6 +80,7 @@ public class AwsInfrastructureProviderTest extends WingsBaseTest {
   @Mock private AwsEc2HelperServiceManager mockAwsEc2HelperServiceManager;
   @Mock private AwsAsgHelperServiceManager mockAwsAsgHelperServiceManager;
   @Mock private ServiceResourceService serviceResourceService;
+  @Mock private ServiceTemplateService serviceTemplateService;
   @Spy private AwsHelperService awsHelperService;
 
   @Inject @InjectMocks private AwsInfrastructureProvider infrastructureProvider = new AwsInfrastructureProvider();
@@ -238,6 +243,8 @@ public class AwsInfrastructureProviderTest extends WingsBaseTest {
                                                          .withAppId(APP_ID)
                                                          .withSetDesiredCapacity(true)
                                                          .withDesiredCapacity(1)
+                                                         .withEnvId(ENV_ID)
+                                                         .withServiceId(SERVICE_ID)
                                                          .build();
     doReturn(asList(new Instance()
                         .withPrivateDnsName(HOST_NAME)
@@ -247,6 +254,9 @@ public class AwsInfrastructureProviderTest extends WingsBaseTest {
         .when(mockAwsAsgHelperServiceManager)
         .listAutoScalingGroupInstances(awsConfig, Collections.emptyList(), infrastructureMapping.getRegion(),
             infrastructureMapping.getAutoScalingGroupName(), APP_ID);
+    when(serviceTemplateService.getOrCreate(
+             infrastructureMapping.getAppId(), infrastructureMapping.getServiceId(), infrastructureMapping.getEnvId()))
+        .thenReturn(ServiceTemplate.Builder.aServiceTemplate().withUuid(SERVICE_TEMPLATE_ID).build());
     doReturn(HOST_NAME).when(mockAwsUtils).getHostnameFromPrivateDnsName(HOST_NAME);
     doNothing()
         .when(awsHelperService)
@@ -286,6 +296,7 @@ public class AwsInfrastructureProviderTest extends WingsBaseTest {
                                                          .withDesiredCapacity(1)
                                                          .withHostConnectionAttrs("hostConnectionAttr")
                                                          .withServiceId(SERVICE_ID)
+                                                         .withEnvId(ENV_ID)
                                                          .build();
     when(mockAwsAsgHelperServiceManager.listAutoScalingGroupInstances(awsConfig, Collections.emptyList(),
              infrastructureMapping.getRegion(), infrastructureMapping.getAutoScalingGroupName(), APP_ID))
@@ -294,6 +305,10 @@ public class AwsInfrastructureProviderTest extends WingsBaseTest {
                                .withPublicDnsName(HOST_NAME)
                                .withInstanceId("INSTANCE_ID")
                                .withState(new InstanceState().withName("running"))));
+    when(serviceTemplateService.getOrCreate(
+             infrastructureMapping.getAppId(), infrastructureMapping.getServiceId(), infrastructureMapping.getEnvId()))
+        .thenReturn(ServiceTemplate.Builder.aServiceTemplate().withUuid(SERVICE_TEMPLATE_ID).build());
+
     SettingAttribute computeProvider = aSettingAttribute().withValue(awsConfig).build();
     List<Host> hosts = infrastructureProvider.maybeSetAutoScaleCapacityAndGetHosts(
         APP_ID, WORKFLOW_EXECUTION_ID, infrastructureMapping, computeProvider);

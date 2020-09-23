@@ -86,17 +86,15 @@ public abstract class OrchestrationWorkflow {
 
   public abstract void onSave();
 
-  public abstract void onLoad(boolean infraRefactor, Workflow workflow);
+  public abstract void onLoad(Workflow workflow);
 
-  public abstract void setTransientFields(boolean infraRefactor, Workflow workflow);
+  public abstract void setTransientFields(Workflow workflow);
 
   public abstract Set<EntityType> getRequiredEntityTypes();
 
   public abstract void setRequiredEntityTypes(Set<EntityType> requiredEntityTypes);
 
   public abstract boolean validate();
-
-  public abstract boolean validate(boolean infraRefactor);
 
   public abstract OrchestrationWorkflow cloneInternal();
 

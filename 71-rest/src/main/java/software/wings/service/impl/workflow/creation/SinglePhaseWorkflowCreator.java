@@ -60,7 +60,7 @@ public class SinglePhaseWorkflowCreator extends WorkflowCreator {
     OrchestrationWorkflow orchestrationWorkflow = workflow.getOrchestrationWorkflow();
 
     if (orchestrationWorkflow.needCloudProvider()) {
-      workflowPhaseHelper.setCloudProvider(workflow.getAccountId(), workflow.getAppId(), workflowPhase);
+      workflowPhaseHelper.setCloudProvider(workflow.getAppId(), workflowPhase);
     }
 
     // No need to generate phase steps if it's already created
@@ -70,7 +70,7 @@ public class SinglePhaseWorkflowCreator extends WorkflowCreator {
     }
 
     CanaryOrchestrationWorkflow canaryOrchestrationWorkflow = (CanaryOrchestrationWorkflow) orchestrationWorkflow;
-    workflowServiceHelper.generateNewWorkflowPhaseSteps(workflow.getAppId(), workflow.getEnvId(), workflowPhase, false,
+    workflowServiceHelper.generateNewWorkflowPhaseSteps(workflow.getAppId(), workflowPhase, false,
         orchestrationWorkflow.getOrchestrationWorkflowType(), workflow.getCreationFlags());
 
     workflowServiceTemplateHelper.addLinkedWorkflowPhaseTemplate(workflowPhase);

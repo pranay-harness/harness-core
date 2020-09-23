@@ -86,7 +86,7 @@ public class WorkflowExecutionServiceHelper {
   }
 
   @NotNull
-  public Workflow obtainWorkflow(@NotNull String appId, @NotNull String workflowId, boolean infraRefactor) {
+  public Workflow obtainWorkflow(@NotNull String appId, @NotNull String workflowId) {
     Workflow workflow = workflowService.readWorkflow(appId, workflowId);
     notNullCheck("Error reading workflow. Might be deleted", workflow);
     notNullCheck("Error reading workflow. Might be deleted", workflow.getOrchestrationWorkflow());
@@ -99,7 +99,7 @@ public class WorkflowExecutionServiceHelper {
 
   @NotNull
   public WorkflowExecution obtainExecution(Workflow workflow, StateMachine stateMachine, String resolveEnvId,
-      String pipelineExecutionId, @NotNull ExecutionArgs executionArgs, boolean infraRefactor) {
+      String pipelineExecutionId, @NotNull ExecutionArgs executionArgs) {
     WorkflowExecution workflowExecution = WorkflowExecution.builder().build();
     workflowExecution.setAppId(workflow.getAppId());
     workflowExecution.setAccountId(workflow.getAccountId());
@@ -132,16 +132,9 @@ public class WorkflowExecutionServiceHelper {
       }
     }
 
-    if (infraRefactor) {
-      workflowExecution.setInfraDefinitionIds(
-          workflowService.getResolvedInfraDefinitionIds(workflow, workflowVariables));
-      workflowExecution.setCloudProviderIds(infrastructureDefinitionService.fetchCloudProviderIds(
-          workflow.getAppId(), workflowExecution.getInfraDefinitionIds()));
-    } else {
-      workflowExecution.setInfraMappingIds(workflowService.getResolvedInfraMappingIds(workflow, workflowVariables));
-      workflowExecution.setCloudProviderIds(infrastructureMappingService.fetchCloudProviderIds(
-          workflow.getAppId(), workflowExecution.getInfraMappingIds()));
-    }
+    workflowExecution.setInfraDefinitionIds(workflowService.getResolvedInfraDefinitionIds(workflow, workflowVariables));
+    workflowExecution.setCloudProviderIds(infrastructureDefinitionService.fetchCloudProviderIds(
+        workflow.getAppId(), workflowExecution.getInfraDefinitionIds()));
     return workflowExecution;
   }
 

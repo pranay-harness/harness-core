@@ -43,7 +43,6 @@ import software.wings.beans.EntityType;
 import software.wings.beans.Environment;
 import software.wings.beans.Environment.Builder;
 import software.wings.beans.FeatureName;
-import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.Pipeline;
 import software.wings.beans.SampleAppEntityStatus;
 import software.wings.beans.SampleAppEntityStatus.Health;
@@ -59,7 +58,6 @@ import software.wings.service.intfc.EnvironmentService;
 import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.HarnessSampleAppService;
 import software.wings.service.intfc.InfrastructureDefinitionService;
-import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.PipelineService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.SettingsService;
@@ -73,15 +71,14 @@ public class HarnessSampeAppServiceTest extends WingsBaseTest {
   @Inject private SettingsService settingsService;
   @Inject private ServiceResourceService serviceResourceService;
   @Inject private EnvironmentService environmentService;
-  @Inject private InfrastructureMappingService infrastructureMappingService;
   @Inject private WorkflowService workflowService;
   @Inject private PipelineService pipelineService;
   @Inject private AppService appService;
   @Inject private HarnessSampleAppService harnessSampleAppService;
+  @Inject private InfrastructureDefinitionService infrastructureDefinitionService;
   @Mock private FeatureFlagService featureFlagService;
   @Mock private SettingsService mockSettingsService;
-  @Mock private InfrastructureMappingService mockInfrastructureMappingService;
-  @Mock private InfrastructureDefinitionService infrastructureDefinitionService;
+  @Mock private InfrastructureDefinitionService mockInfrastructureDefinitionService;
   @InjectMocks private HarnessSampleAppServiceImpl harnessSampleAppServiceImpl;
 
   private void assertSampleAppHealthIsBad(Application sampleApp) {
@@ -107,17 +104,15 @@ public class HarnessSampeAppServiceTest extends WingsBaseTest {
     prodEnv.setName("Test Prod Env");
     environmentService.update(prodEnv);
 
-    InfrastructureMapping k8sInfraMappingQA = infrastructureMappingService.getInfraMappingByName(
-        sampleApp.getAppId(), qaEnv.getUuid(), K8S_SERVICE_INFRA_NAME);
-    assertThat(k8sInfraMappingQA).isNotNull();
-    k8sInfraMappingQA.setName("Test K8s Service Infra QA");
-    when(mockInfrastructureMappingService.update(k8sInfraMappingQA, null)).thenReturn(k8sInfraMappingQA);
+    InfrastructureDefinition k8sInfraDefQA =
+        infrastructureDefinitionService.getInfraDefByName(sampleApp.getAppId(), qaEnv.getUuid(), K8S_INFRA_NAME);
+    assertThat(k8sInfraDefQA).isNotNull();
+    k8sInfraDefQA.setName("Test K8s Service Infra QA");
 
-    InfrastructureMapping k8sInfraMappingProd = infrastructureMappingService.getInfraMappingByName(
-        sampleApp.getAppId(), prodEnv.getUuid(), K8S_SERVICE_INFRA_NAME);
-    assertThat(k8sInfraMappingProd).isNotNull();
-    k8sInfraMappingProd.setName("Test K8s Service Infra Prod");
-    when(mockInfrastructureMappingService.update(k8sInfraMappingProd, null)).thenReturn(k8sInfraMappingProd);
+    InfrastructureDefinition k8sInfraDefProd =
+        infrastructureDefinitionService.getInfraDefByName(sampleApp.getAppId(), prodEnv.getUuid(), K8S_INFRA_NAME);
+    assertThat(k8sInfraDefProd).isNotNull();
+    k8sInfraDefProd.setName("Test K8s Service Infra Prod");
 
     if (isV2) {
       Workflow rollingWf = workflowService.readWorkflowByName(sampleApp.getAppId(), K8S_ROLLING_WORKFLOW_NAME);
@@ -311,7 +306,7 @@ public class HarnessSampeAppServiceTest extends WingsBaseTest {
         Account.class, anAccount().withAccountName(ACCOUNT_NAME).withUuid(ACCOUNT_ID).build());
     assertThat(savedAccount).isNotNull();
 
-    sampleDataProviderService.createHarnessSampleApp(savedAccount);
+    sampleDataProviderService.createK8sV2SampleApp(savedAccount);
     Application app = appService.getAppByName(savedAccount.getUuid(), HARNESS_SAMPLE_APP);
     assertThat(app).isNotNull();
     return app;
@@ -347,7 +342,7 @@ public class HarnessSampeAppServiceTest extends WingsBaseTest {
   public void shouldReturnGoodHealthWhenInfraDefFound() {
     Environment env = Builder.anEnvironment().uuid("id").build();
     InfrastructureDefinition infrastructureDefinition = InfrastructureDefinition.builder().build();
-    when(infrastructureDefinitionService.getInfraDefByName(APP_ID, "id", K8S_INFRA_NAME))
+    when(mockInfrastructureDefinitionService.getInfraDefByName(APP_ID, "id", K8S_INFRA_NAME))
         .thenReturn(infrastructureDefinition);
 
     Health health = harnessSampleAppServiceImpl.getHealthForInfraDef(APP_ID, env);
@@ -360,7 +355,7 @@ public class HarnessSampeAppServiceTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void shouldReturnBadHealthWhenInfraDefNotFound() {
     Environment env = Builder.anEnvironment().uuid("id").build();
-    when(infrastructureDefinitionService.getInfraDefByName(APP_ID, "id", K8S_INFRA_NAME)).thenReturn(null);
+    when(mockInfrastructureDefinitionService.getInfraDefByName(APP_ID, "id", K8S_INFRA_NAME)).thenReturn(null);
 
     Health health = harnessSampleAppServiceImpl.getHealthForInfraDef(APP_ID, env);
 

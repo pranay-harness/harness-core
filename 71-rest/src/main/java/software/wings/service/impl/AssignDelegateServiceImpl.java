@@ -40,7 +40,6 @@ import software.wings.beans.Delegate.DelegateKeys;
 import software.wings.beans.Delegate.Status;
 import software.wings.beans.DelegateScope;
 import software.wings.beans.Environment;
-import software.wings.beans.FeatureName;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.TaskType;
 import software.wings.delegatetasks.validation.DelegateConnectionResult;
@@ -288,7 +287,6 @@ public class AssignDelegateServiceImpl implements AssignDelegateService {
 
   private boolean scopeMatch(
       DelegateScope scope, String appId, String envId, String infraMappingId, TaskGroup taskGroup, String accountId) {
-    boolean infraRefactor = featureFlagService.isEnabled(FeatureName.INFRA_MAPPING_REFACTOR, accountId);
     if (!scope.isValid()) {
       logger.error("Delegate scope cannot be empty.");
       throw new WingsException(ErrorCode.INVALID_ARGUMENT).addParam("args", "Delegate scope cannot be empty.");
@@ -316,7 +314,7 @@ public class AssignDelegateServiceImpl implements AssignDelegateService {
       match = isNotBlank(envId) && scope.getEnvironments().contains(envId);
     }
 
-    if (infraRefactor && (isNotEmpty(scope.getInfrastructureDefinitions()) || isNotEmpty(scope.getServices()))) {
+    if (isNotEmpty(scope.getInfrastructureDefinitions()) || isNotEmpty(scope.getServices())) {
       InfrastructureMapping infrastructureMapping =
           isNotBlank(infraMappingId) ? infrastructureMappingService.get(appId, infraMappingId) : null;
       if (infrastructureMapping != null) {

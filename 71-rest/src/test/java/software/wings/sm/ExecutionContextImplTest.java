@@ -99,12 +99,15 @@ import software.wings.beans.ServiceVariable.Type;
 import software.wings.beans.Variable;
 import software.wings.beans.artifact.Artifact;
 import software.wings.beans.customdeployment.CustomDeploymentTypeDTO;
+import software.wings.infra.GoogleKubernetesEngine;
+import software.wings.infra.InfrastructureDefinition;
 import software.wings.scheduler.BackgroundJobScheduler;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ArtifactService;
 import software.wings.service.intfc.ArtifactStreamServiceBindingService;
 import software.wings.service.intfc.EnvironmentService;
 import software.wings.service.intfc.FeatureFlagService;
+import software.wings.service.intfc.InfrastructureDefinitionService;
 import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.ServiceTemplateService;
@@ -142,6 +145,7 @@ public class ExecutionContextImplTest extends WingsBaseTest {
   @Mock private SweepingOutputService sweepingOutputService;
   @Mock private CustomDeploymentTypeService customDeploymentTypeService;
   @Mock private InfrastructureMappingService infrastructureMappingService;
+  @Mock private InfrastructureDefinitionService infrastructureDefinitionService;
 
   @Before
   public void setup() {
@@ -1025,6 +1029,7 @@ public class ExecutionContextImplTest extends WingsBaseTest {
     ExecutionContextImpl context = Mockito.spy(new ExecutionContextImpl(new StateExecutionInstance()));
     Reflect.on(context).set("featureFlagService", featureFlagService);
     Reflect.on(context).set("serviceResourceService", serviceResourceService);
+    Reflect.on(context).set("infrastructureDefinitionService", infrastructureDefinitionService);
     Reflect.on(context).set("infrastructureMappingService", infrastructureMappingService);
 
     doReturn(PhaseElement.builder().build())
@@ -1038,6 +1043,9 @@ public class ExecutionContextImplTest extends WingsBaseTest {
                  .computeProviderName("gcp-name")
                  .build())
         .when(infrastructureMappingService)
+        .get(anyString(), anyString());
+    doReturn(InfrastructureDefinition.builder().infrastructure(GoogleKubernetesEngine.builder().build()).build())
+        .when(infrastructureDefinitionService)
         .get(anyString(), anyString());
 
     InfraMappingElement infraMappingElement = context.fetchInfraMappingElement();

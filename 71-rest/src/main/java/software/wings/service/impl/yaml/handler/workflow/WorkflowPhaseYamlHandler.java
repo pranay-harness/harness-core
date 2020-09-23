@@ -17,7 +17,6 @@ import io.harness.exception.HarnessException;
 import io.harness.exception.WingsException;
 import software.wings.api.DeploymentType;
 import software.wings.beans.EntityType;
-import software.wings.beans.FeatureName;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.PhaseStep;
 import software.wings.beans.Service;
@@ -76,8 +75,7 @@ public class WorkflowPhaseYamlHandler extends BaseYamlHandler<WorkflowPhase.Yaml
     String infraDefName = null;
     String deploymentTypeString = yaml.getType();
 
-    if (featureFlagService.isEnabled(FeatureName.INFRA_MAPPING_REFACTOR, accountId)
-        && isNotEmpty(yaml.getInfraDefinitionName())) {
+    if (isNotEmpty(yaml.getInfraDefinitionName())) {
       InfrastructureDefinition infrastructureDefinition =
           infrastructureDefinitionService.getInfraDefByName(appId, envId, yaml.getInfraDefinitionName());
       infraDefId = infrastructureDefinition != null ? infrastructureDefinition.getUuid() : null;
@@ -203,39 +201,21 @@ public class WorkflowPhaseYamlHandler extends BaseYamlHandler<WorkflowPhase.Yaml
     }
 
     String infraMappingName = null;
-    String infraMappingId = bean.getInfraMappingId();
     String infraDefId = bean.getInfraDefinitionId();
     String infraDefName = null;
-    String accountId = appService.getAccountIdByAppId(appId);
-    if (featureFlagService.isEnabled(FeatureName.INFRA_MAPPING_REFACTOR, accountId)) {
-      InfrastructureDefinition infrastructureDefinition = null;
-      if (isNotEmpty(infraDefId)) {
-        infrastructureDefinition = infrastructureDefinitionService.get(appId, infraDefId);
-        if (infrastructureDefinition != null) {
-          infraDefName = infrastructureDefinition.getName();
-        }
+    InfrastructureDefinition infrastructureDefinition = null;
+    if (isNotEmpty(infraDefId)) {
+      infrastructureDefinition = infrastructureDefinitionService.get(appId, infraDefId);
+      if (infrastructureDefinition != null) {
+        infraDefName = infrastructureDefinition.getName();
       }
+    }
 
-      // when templatized infraMappings used, we do expect infraMapping can be null, so don't perform this check
-      if (isNotEmpty(infraDefId) && infrastructureDefinition == null && !bean.checkInfraDefinitionTemplatized()) {
-        String message = format("Infra-definition:%s could not be found for workflowPhase:%s, for app:%s", infraDefId,
-            bean.getName(), appId);
-        throw new WingsException(ErrorCode.GENERAL_ERROR, USER).addParam("message", message);
-      }
-    } else if (isNotEmpty(infraMappingId)) {
-      InfrastructureMapping infrastructureMapping = infraMappingService.get(appId, infraMappingId);
-
-      // dont set infraName is its templatized
-      if (infrastructureMapping != null) {
-        infraMappingName = infrastructureMapping.getName();
-      }
-
-      // when templatized infraMappings used, we do expect infraMapping can be null, so don't perform this check
-      if (infrastructureMapping == null && !bean.checkInfraTemplatized()) {
-        String message = format("Infra-mapping:%s could not be found for workflowPhase:%s, for app:%s", infraMappingId,
-            bean.getName(), appId);
-        throw new WingsException(ErrorCode.GENERAL_ERROR, USER).addParam("message", message);
-      }
+    // when templatized infraMappings used, we do expect infraMapping can be null, so don't perform this check
+    if (isNotEmpty(infraDefId) && infrastructureDefinition == null && !bean.checkInfraDefinitionTemplatized()) {
+      String message = format(
+          "Infra-definition:%s could not be found for workflowPhase:%s, for app:%s", infraDefId, bean.getName(), appId);
+      throw new WingsException(ErrorCode.GENERAL_ERROR, USER).addParam("message", message);
     }
 
     return Yaml.builder()

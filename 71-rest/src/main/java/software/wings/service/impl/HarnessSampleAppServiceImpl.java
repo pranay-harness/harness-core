@@ -12,7 +12,6 @@ import static io.harness.seeddata.SampleDataProviderConstants.K8S_PIPELINE_NAME;
 import static io.harness.seeddata.SampleDataProviderConstants.K8S_PROD_ENVIRONMENT;
 import static io.harness.seeddata.SampleDataProviderConstants.K8S_QA_ENVIRONMENT;
 import static io.harness.seeddata.SampleDataProviderConstants.K8S_ROLLING_WORKFLOW_NAME;
-import static io.harness.seeddata.SampleDataProviderConstants.K8S_SERVICE_INFRA_NAME;
 import static io.harness.seeddata.SampleDataProviderConstants.K8S_SERVICE_NAME;
 
 import com.google.inject.Inject;
@@ -28,13 +27,11 @@ import software.wings.beans.Application;
 import software.wings.beans.EntityType;
 import software.wings.beans.Environment;
 import software.wings.beans.FeatureName;
-import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.Pipeline;
 import software.wings.beans.SampleAppEntityStatus;
 import software.wings.beans.SampleAppEntityStatus.Health;
 import software.wings.beans.SampleAppStatus;
 import software.wings.beans.Service;
-import software.wings.beans.ServiceTemplate;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.SettingAttribute.SettingCategory;
 import software.wings.beans.Workflow;
@@ -292,51 +289,12 @@ public class HarnessSampleAppServiceImpl implements HarnessSampleAppService {
       health = Health.BAD;
     }
 
-    if (featureFlagService.isEnabled(FeatureName.INFRA_MAPPING_REFACTOR, accountId)) {
-      health = getHealthForInfraDef(appId, existingQAEnvironment);
-      entityStatusList.add(SampleAppEntityStatus.builder()
-                               .entityName(K8S_INFRA_NAME)
-                               .entityType(EntityType.INFRASTRUCTURE_DEFINITION.name())
-                               .health(health)
-                               .build());
-    } else {
-      // Verify QA infra mapping
-      if (existingService != null && existingQAEnvironment != null) {
-        ServiceTemplate existingQAServiceTemplate =
-            serviceTemplateService.get(appId, existingService.getUuid(), existingQAEnvironment.getUuid());
-        if (existingQAServiceTemplate != null) {
-          entityStatusList.add(SampleAppEntityStatus.builder()
-                                   .entityName(K8S_SERVICE_INFRA_NAME)
-                                   .entityType(EntityType.SERVICE_TEMPLATE.name())
-                                   .health(Health.GOOD)
-                                   .build());
-        } else {
-          entityStatusList.add(SampleAppEntityStatus.builder()
-                                   .entityName(K8S_SERVICE_INFRA_NAME)
-                                   .entityType(EntityType.SERVICE_TEMPLATE.name())
-                                   .health(Health.BAD)
-                                   .build());
-          health = Health.BAD;
-        }
-
-        InfrastructureMapping existingQAInfraMapping = infrastructureMappingService.getInfraMappingByName(
-            appId, existingQAEnvironment.getUuid(), K8S_SERVICE_INFRA_NAME);
-        if (existingQAInfraMapping != null) {
-          entityStatusList.add(SampleAppEntityStatus.builder()
-                                   .entityName(K8S_SERVICE_INFRA_NAME)
-                                   .entityType(EntityType.INFRASTRUCTURE_MAPPING.name())
-                                   .health(Health.GOOD)
-                                   .build());
-        } else {
-          entityStatusList.add(SampleAppEntityStatus.builder()
-                                   .entityName(K8S_SERVICE_INFRA_NAME)
-                                   .entityType(EntityType.INFRASTRUCTURE_MAPPING.name())
-                                   .health(Health.BAD)
-                                   .build());
-          health = Health.BAD;
-        }
-      }
-    }
+    health = getHealthForInfraDef(appId, existingQAEnvironment);
+    entityStatusList.add(SampleAppEntityStatus.builder()
+                             .entityName(K8S_INFRA_NAME)
+                             .entityType(EntityType.INFRASTRUCTURE_DEFINITION.name())
+                             .health(health)
+                             .build());
 
     // Verify Prod environment
     Environment existingProdEnvironment = environmentService.getEnvironmentByName(appId, K8S_PROD_ENVIRONMENT);
@@ -355,51 +313,12 @@ public class HarnessSampleAppServiceImpl implements HarnessSampleAppService {
       health = Health.BAD;
     }
 
-    if (featureFlagService.isEnabled(FeatureName.INFRA_MAPPING_REFACTOR, accountId)) {
-      health = getHealthForInfraDef(appId, existingProdEnvironment);
-      entityStatusList.add(SampleAppEntityStatus.builder()
-                               .entityName(K8S_INFRA_NAME)
-                               .entityType(EntityType.INFRASTRUCTURE_DEFINITION.name())
-                               .health(health)
-                               .build());
-    } else {
-      // Verify prod infra mapping
-      if (existingService != null && existingProdEnvironment != null) {
-        ServiceTemplate existingProdServiceTemplate =
-            serviceTemplateService.get(appId, existingService.getUuid(), existingProdEnvironment.getUuid());
-        if (existingProdServiceTemplate != null) {
-          entityStatusList.add(SampleAppEntityStatus.builder()
-                                   .entityName(K8S_SERVICE_INFRA_NAME)
-                                   .entityType(EntityType.SERVICE_TEMPLATE.name())
-                                   .health(Health.GOOD)
-                                   .build());
-        } else {
-          entityStatusList.add(SampleAppEntityStatus.builder()
-                                   .entityName(K8S_SERVICE_INFRA_NAME)
-                                   .entityType(EntityType.SERVICE_TEMPLATE.name())
-                                   .health(Health.BAD)
-                                   .build());
-          health = Health.BAD;
-        }
-
-        InfrastructureMapping existingProdInfraMapping = infrastructureMappingService.getInfraMappingByName(
-            appId, existingProdEnvironment.getUuid(), K8S_SERVICE_INFRA_NAME);
-        if (existingProdInfraMapping != null) {
-          entityStatusList.add(SampleAppEntityStatus.builder()
-                                   .entityName(K8S_SERVICE_INFRA_NAME)
-                                   .entityType(EntityType.INFRASTRUCTURE_MAPPING.name())
-                                   .health(Health.GOOD)
-                                   .build());
-        } else {
-          entityStatusList.add(SampleAppEntityStatus.builder()
-                                   .entityName(K8S_SERVICE_INFRA_NAME)
-                                   .entityType(EntityType.INFRASTRUCTURE_MAPPING.name())
-                                   .health(Health.BAD)
-                                   .build());
-          health = Health.BAD;
-        }
-      }
-    }
+    health = getHealthForInfraDef(appId, existingProdEnvironment);
+    entityStatusList.add(SampleAppEntityStatus.builder()
+                             .entityName(K8S_INFRA_NAME)
+                             .entityType(EntityType.INFRASTRUCTURE_DEFINITION.name())
+                             .health(health)
+                             .build());
 
     // Verify canary workflow
     Workflow existingCanaryWorkflow = workflowService.readWorkflowByName(appId, K8S_CANARY_WORKFLOW_NAME);

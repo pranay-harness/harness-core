@@ -38,7 +38,6 @@ import static software.wings.beans.EntityType.USER_GROUP;
 import static software.wings.beans.Graph.Builder.aGraph;
 import static software.wings.beans.GraphLink.Builder.aLink;
 import static software.wings.common.WorkflowConstants.PHASE_NAME_PREFIX;
-import static software.wings.common.WorkflowConstants.WORKFLOW_INFRAMAPPING_VALIDATION_MESSAGE;
 import static software.wings.common.WorkflowConstants.WORKFLOW_VALIDATION_MESSAGE;
 import static software.wings.common.WorkflowConstants.phaseNamePattern;
 import static software.wings.service.impl.workflow.WorkflowServiceHelper.ROLLBACK_PREFIX;
@@ -339,7 +338,7 @@ public class CanaryOrchestrationWorkflow extends CustomOrchestrationWorkflow {
    * Invoked after loading document from mongo by morphia.
    */
   @Override
-  public void onLoad(boolean infraRefactor, Workflow workflow) {
+  public void onLoad(Workflow workflow) {
     populatePhaseSteps(preDeploymentSteps, getGraph());
     if (rollbackProvisioners != null) {
       populatePhaseSteps(rollbackProvisioners, getGraph());
@@ -349,7 +348,7 @@ public class CanaryOrchestrationWorkflow extends CustomOrchestrationWorkflow {
     cleanupMetadata(userVariables);
     // update related field for envId var.
     if (workflow.checkEnvironmentTemplatized()) {
-      updateRelatedFieldEnv(infraRefactor, workflow);
+      updateRelatedFieldEnv(workflow);
     }
 
     workflowPhases = new ArrayList<>();
@@ -364,14 +363,8 @@ public class CanaryOrchestrationWorkflow extends CustomOrchestrationWorkflow {
           updateMetadataService(workflow, workflowPhase);
         }
 
-        if (infraRefactor) {
-          if (workflowPhase.checkInfraDefinitionTemplatized()) {
-            updateMetadataInfraDefinition(workflow, workflowPhase);
-          }
-        } else {
-          if (workflowPhase.checkInfraTemplatized()) {
-            updateMetadataInfraMapping(workflow, workflowPhase);
-          }
+        if (workflowPhase.checkInfraDefinitionTemplatized()) {
+          updateMetadataInfraDefinition(workflow, workflowPhase);
         }
       } catch (InvalidRequestException e) {
         setValid(false);
@@ -384,25 +377,21 @@ public class CanaryOrchestrationWorkflow extends CustomOrchestrationWorkflow {
       });
     }
     populatePhaseSteps(postDeploymentSteps, getGraph());
-    if (concurrencyStrategy == null && infraRefactor && BUILD != getOrchestrationWorkflowType()) {
+    if (concurrencyStrategy == null && BUILD != getOrchestrationWorkflowType()) {
       setConcurrencyStrategy(ConcurrencyStrategy.builder().build());
     }
     reorderUserVariables();
   }
 
   @Override
-  public void setTransientFields(boolean infraRefactor, Workflow workflow) {
+  public void setTransientFields(Workflow workflow) {
     workflow.setEnvTemplatized(workflow.fetchEnvTemplatizedName() != null);
 
     for (String workflowPhaseId : workflowPhaseIds) {
       WorkflowPhase workflowPhase = workflowPhaseIdMap.get(workflowPhaseId);
       boolean srvTemplatised = workflowPhase.checkServiceTemplatized();
       boolean infraTemplatised;
-      if (infraRefactor) {
-        infraTemplatised = workflowPhase.checkInfraDefinitionTemplatized();
-      } else {
-        infraTemplatised = workflowPhase.checkInfraTemplatized();
-      }
+      infraTemplatised = workflowPhase.checkInfraDefinitionTemplatized();
       workflowPhase.setSrvTemplatised(srvTemplatised);
       workflowPhase.setInfraTemplatised(infraTemplatised);
       WorkflowPhase rollbackPhase = rollbackWorkflowPhaseIdMap.get(workflowPhaseId);
@@ -463,24 +452,6 @@ public class CanaryOrchestrationWorkflow extends CustomOrchestrationWorkflow {
 
       if (isEmpty((String) variable.getMetadata().get(Variable.INFRA_ID))) {
         variable.getMetadata().remove(Variable.INFRA_ID);
-      }
-    }
-  }
-
-  private void updateMetadataInfraMapping(Workflow workflow, WorkflowPhase workflowPhase) {
-    String infraVarName = workflowPhase.fetchInfraMappingTemplatizedName();
-    // if env is not templatised add envId in metadata
-    Variable variable = contains(userVariables, infraVarName);
-    if (variable != null && variable.getMetadata() != null) {
-      if (!workflow.checkEnvironmentTemplatized()) {
-        variable.getMetadata().put(Variable.ENV_ID, workflow.getEnvId());
-      } else {
-        variable.getMetadata().remove(Variable.ENV_ID);
-      }
-      if (!workflowPhase.checkServiceTemplatized()) {
-        variable.getMetadata().put(Variable.SERVICE_ID, workflowPhase.getServiceId());
-      } else {
-        variable.getMetadata().remove(Variable.SERVICE_ID);
       }
     }
   }
@@ -557,23 +528,12 @@ public class CanaryOrchestrationWorkflow extends CustomOrchestrationWorkflow {
     }
   }
 
-  private void updateRelatedFieldEnv(boolean infraRefactor, Workflow workflow) {
+  private void updateRelatedFieldEnv(Workflow workflow) {
     String envVarName = workflow.fetchEnvTemplatizedName();
     Variable variable = contains(userVariables, envVarName);
     if (variable != null && variable.getMetadata() != null) {
-      if (infraRefactor) {
-        variable.getMetadata().put(Variable.RELATED_FIELD, Joiner.on(",").join(fetchInfraDefVariableNames()));
-      } else {
-        variable.getMetadata().put(Variable.RELATED_FIELD, Joiner.on(",").join(fetchInfraMappingVariableNames()));
-      }
+      variable.getMetadata().put(Variable.RELATED_FIELD, Joiner.on(",").join(fetchInfraDefVariableNames()));
     }
-  }
-
-  private List<String> fetchInfraMappingVariableNames() {
-    return userVariables.stream()
-        .filter(t -> t.obtainEntityType() != null && t.obtainEntityType() == INFRASTRUCTURE_MAPPING)
-        .map(Variable::getName)
-        .collect(toList());
   }
 
   private List<String> fetchInfraDefVariableNames() {
@@ -934,22 +894,7 @@ public class CanaryOrchestrationWorkflow extends CustomOrchestrationWorkflow {
     setValidationMessage(null);
     if (workflowPhases != null) {
       validateInternal();
-      validateInframapping();
-    }
-    return isValid();
-  }
-
-  @Override
-  public boolean validate(boolean infraRefactor) {
-    setValid(true);
-    setValidationMessage(null);
-    if (workflowPhases != null) {
-      validateInternal();
-      if (infraRefactor) {
-        validateDefinitions();
-      } else {
-        validateInframapping();
-      }
+      validateDefinitions();
     }
     return isValid();
   }
@@ -1010,24 +955,6 @@ public class CanaryOrchestrationWorkflow extends CustomOrchestrationWorkflow {
     }
   }
 
-  private void validateInframapping() {
-    if (workflowPhases != null) {
-      List<String> invalidInfraPhaseIds = new ArrayList<>();
-      for (WorkflowPhase phase : workflowPhases) {
-        if (phase == null || phase.checkInfraTemplatized()) {
-          continue;
-        }
-        if (isEmpty(phase.getInfraMappingId())) {
-          invalidInfraPhaseIds.add(phase.getName());
-        }
-      }
-      if (isNotEmpty(invalidInfraPhaseIds)) {
-        setValid(false);
-        setValidationMessage(format(WORKFLOW_INFRAMAPPING_VALIDATION_MESSAGE, invalidInfraPhaseIds.toString()));
-      }
-    }
-  }
-
   private void validateDefinitions() {
     if (workflowPhases != null) {
       List<String> invalidInfraPhaseIds = new ArrayList<>();
@@ -1046,26 +973,17 @@ public class CanaryOrchestrationWorkflow extends CustomOrchestrationWorkflow {
     }
   }
 
-  public boolean serviceRepeat(WorkflowPhase workflowPhase, boolean infraRefactor) {
+  public boolean serviceRepeat(WorkflowPhase workflowPhase) {
     if (workflowPhaseIds == null) {
       return false;
     }
     for (String phaseId : workflowPhaseIds) {
       WorkflowPhase existingPhase = workflowPhaseIdMap.get(phaseId);
-      if (infraRefactor) {
-        if (existingPhase.getServiceId().equals(workflowPhase.getServiceId())
-            && existingPhase.getDeploymentType() == workflowPhase.getDeploymentType()
-            && existingPhase.getInfraDefinitionId() != null
-            && existingPhase.getInfraDefinitionId().equals(workflowPhase.getInfraDefinitionId())) {
-          return true;
-        }
-      } else {
-        if (existingPhase.getServiceId().equals(workflowPhase.getServiceId())
-            && existingPhase.getDeploymentType() == workflowPhase.getDeploymentType()
-            && existingPhase.getInfraMappingId() != null
-            && existingPhase.getInfraMappingId().equals(workflowPhase.getInfraMappingId())) {
-          return true;
-        }
+      if (existingPhase.getServiceId().equals(workflowPhase.getServiceId())
+          && existingPhase.getDeploymentType() == workflowPhase.getDeploymentType()
+          && existingPhase.getInfraDefinitionId() != null
+          && existingPhase.getInfraDefinitionId().equals(workflowPhase.getInfraDefinitionId())) {
+        return true;
       }
     }
     return false;

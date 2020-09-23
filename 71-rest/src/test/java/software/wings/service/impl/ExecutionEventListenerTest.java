@@ -6,6 +6,7 @@ import static io.harness.beans.ExecutionStatus.SUCCESS;
 import static io.harness.rule.OwnerRule.SRINIVAS;
 import static java.util.Arrays.asList;
 import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -28,7 +29,6 @@ import software.wings.WingsBaseTest;
 import software.wings.beans.WorkflowExecution;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.intfc.AppService;
-import software.wings.service.intfc.FeatureFlagService;
 import software.wings.sm.StateMachineExecutor;
 
 /**
@@ -38,7 +38,6 @@ public class ExecutionEventListenerTest extends WingsBaseTest {
   @Inject @InjectMocks private ExecutionEventListener executionEventListener;
   @Inject private WingsPersistence wingsPersistence;
   @Mock private StateMachineExecutor stateMachineExecutor;
-  @Mock private FeatureFlagService featureFlagService;
   @Mock private AppService appService;
 
   @Test
@@ -66,7 +65,7 @@ public class ExecutionEventListenerTest extends WingsBaseTest {
   @Test
   @Owner(developers = SRINIVAS)
   @Category(UnitTests.class)
-  public void shouldQueueBuildWorkflow() throws Exception {
+  public void shouldNotQueueBuildWorkflow() throws Exception {
     WorkflowExecution queuedExecution =
         WorkflowExecution.builder().appId(APP_ID).workflowId(WORKFLOW_ID).status(QUEUED).build();
 
@@ -75,13 +74,13 @@ public class ExecutionEventListenerTest extends WingsBaseTest {
     when(stateMachineExecutor.startQueuedExecution(APP_ID, queuedExecution.getUuid())).thenReturn(true);
     executionEventListener.onMessage(ExecutionEvent.builder().appId(APP_ID).workflowId(WORKFLOW_ID).build());
 
-    verify(stateMachineExecutor).startQueuedExecution(APP_ID, queuedExecution.getUuid());
+    verify(stateMachineExecutor, never()).startQueuedExecution(anyString(), anyString());
   }
 
   @Test
   @Owner(developers = SRINIVAS)
   @Category(UnitTests.class)
-  public void shouldQueueWorkflow() throws Exception {
+  public void shouldNotQueueWorkflow() throws Exception {
     WorkflowExecution queuedExecution = WorkflowExecution.builder()
                                             .infraMappingIds(asList(INFRA_MAPPING_ID))
                                             .appId(APP_ID)
@@ -97,7 +96,7 @@ public class ExecutionEventListenerTest extends WingsBaseTest {
                                          .workflowId(WORKFLOW_ID)
                                          .build());
 
-    verify(stateMachineExecutor).startQueuedExecution(APP_ID, queuedExecution.getUuid());
+    verify(stateMachineExecutor, never()).startQueuedExecution(anyString(), anyString());
   }
 
   @Test
@@ -105,7 +104,7 @@ public class ExecutionEventListenerTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void shouldQueueWorkflowInfraRefactor() throws Exception {
     when(appService.getAccountIdByAppId(any())).thenReturn(ACCOUNT_ID);
-    when(featureFlagService.isEnabled(any(), any())).thenReturn(true);
+    //    when(featureFlagService.isEnabled(any(), any())).thenReturn(true);
     WorkflowExecution queuedExecution = WorkflowExecution.builder()
                                             .infraDefinitionIds(asList(INFRA_DEFINITION_ID))
                                             .appId(APP_ID)

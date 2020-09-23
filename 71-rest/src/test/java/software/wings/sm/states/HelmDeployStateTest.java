@@ -59,6 +59,7 @@ import static software.wings.utils.WingsTestConstants.COMPUTE_PROVIDER_ID;
 import static software.wings.utils.WingsTestConstants.ENV_ID;
 import static software.wings.utils.WingsTestConstants.ENV_NAME;
 import static software.wings.utils.WingsTestConstants.HOST_NAME;
+import static software.wings.utils.WingsTestConstants.INFRA_DEFINITION_ID;
 import static software.wings.utils.WingsTestConstants.INFRA_MAPPING_ID;
 import static software.wings.utils.WingsTestConstants.RELEASE_NAME;
 import static software.wings.utils.WingsTestConstants.SERVICE_ID;
@@ -157,6 +158,8 @@ import software.wings.helpers.ext.helm.response.HelmValuesFetchTaskResponse;
 import software.wings.helpers.ext.k8s.request.K8sDelegateManifestConfig;
 import software.wings.helpers.ext.k8s.request.K8sValuesLocation;
 import software.wings.helpers.ext.url.SubdomainUrlHelperIntfc;
+import software.wings.infra.GoogleKubernetesEngine;
+import software.wings.infra.InfrastructureDefinition;
 import software.wings.service.impl.ContainerServiceParams;
 import software.wings.service.impl.GitConfigHelperService;
 import software.wings.service.impl.GitFileConfigHelperService;
@@ -172,6 +175,7 @@ import software.wings.service.intfc.ArtifactStreamServiceBindingService;
 import software.wings.service.intfc.DelegateService;
 import software.wings.service.intfc.EnvironmentService;
 import software.wings.service.intfc.FeatureFlagService;
+import software.wings.service.intfc.InfrastructureDefinitionService;
 import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.LogService;
 import software.wings.service.intfc.ServiceResourceService;
@@ -231,6 +235,7 @@ public class HelmDeployStateTest extends WingsBaseTest {
   @Mock private EnvironmentService environmentService;
   @Mock private ManagerExpressionEvaluator evaluator;
   @Mock private InfrastructureMappingService infrastructureMappingService;
+  @Mock private InfrastructureDefinitionService infrastructureDefinitionService;
   @Mock private MainConfiguration configuration;
   @Mock private PortalConfig portalConfig;
   @Mock private ServiceResourceService serviceResourceService;
@@ -305,6 +310,14 @@ public class HelmDeployStateTest extends WingsBaseTest {
                                                             .withDeploymentType(DeploymentType.KUBERNETES.name())
                                                             .build();
 
+  private InfrastructureDefinition infrastructureDefinition =
+      InfrastructureDefinition.builder()
+          .deploymentType(DeploymentType.HELM)
+          .uuid(INFRA_DEFINITION_ID)
+          .infrastructure(
+              GoogleKubernetesEngine.builder().cloudProviderId(COMPUTE_PROVIDER_ID).clusterName(CLUSTER_NAME).build())
+          .build();
+
   private String outputName = InfrastructureConstants.PHASE_INFRA_MAPPING_KEY_NAME + phaseElement.getUuid();
   private SweepingOutputInstance sweepingOutputInstance =
       SweepingOutputInstance.builder()
@@ -326,6 +339,7 @@ public class HelmDeployStateTest extends WingsBaseTest {
   public void setup() throws InterruptedException {
     context = new ExecutionContextImpl(stateExecutionInstance);
     helmDeployState.setHelmReleaseNamePrefix(HELM_RELEASE_NAME_PREFIX);
+    infrastructureMapping.setInfrastructureDefinitionId(INFRA_DEFINITION_ID);
 
     EmbeddedUser currentUser = EmbeddedUser.builder().name("test").email("test@harness.io").build();
     workflowStandardParams.setCurrentUser(currentUser);
@@ -337,6 +351,7 @@ public class HelmDeployStateTest extends WingsBaseTest {
     when(serviceResourceService.get(APP_ID, SERVICE_ID)).thenReturn(service);
     when(environmentService.get(APP_ID, ENV_ID, false)).thenReturn(env);
     when(infrastructureMappingService.get(APP_ID, INFRA_MAPPING_ID)).thenReturn(infrastructureMapping);
+    when(infrastructureDefinitionService.get(APP_ID, INFRA_DEFINITION_ID)).thenReturn(infrastructureDefinition);
 
     when(activityService.save(any(Activity.class))).thenReturn(Activity.builder().uuid(ACTIVITY_ID).build());
     when(secretManager.getEncryptionDetails(anyObject(), anyString(), anyString())).thenReturn(Collections.emptyList());
@@ -369,6 +384,7 @@ public class HelmDeployStateTest extends WingsBaseTest {
     on(workflowStandardParams).set("featureFlagService", featureFlagService);
 
     on(context).set("infrastructureMappingService", infrastructureMappingService);
+    on(context).set("infrastructureDefinitionService", infrastructureDefinitionService);
     on(context).set("serviceResourceService", serviceResourceService);
     on(context).set("artifactService", artifactService);
     on(context).set("variableProcessor", variableProcessor);

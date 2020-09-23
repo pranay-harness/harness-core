@@ -54,12 +54,12 @@ public class CustomOrchestrationWorkflow extends OrchestrationWorkflow {
   }
 
   @Override
-  public void onLoad(boolean infraRefactor, Workflow workflow) {
+  public void onLoad(Workflow workflow) {
     // do nothing
   }
 
   @Override
-  public void setTransientFields(boolean infraRefactor, Workflow workflow) {
+  public void setTransientFields(Workflow workflow) {
     // do nothing
   }
 
@@ -75,11 +75,6 @@ public class CustomOrchestrationWorkflow extends OrchestrationWorkflow {
 
   @Override
   public boolean validate() {
-    return true;
-  }
-
-  @Override
-  public boolean validate(boolean infraRefactor) {
     return true;
   }
 

@@ -1,6 +1,5 @@
 package software.wings.service;
 
-import static io.harness.exception.WingsException.USER;
 import static io.harness.validation.Validator.notNullCheck;
 import static java.lang.String.format;
 
@@ -10,7 +9,6 @@ import com.google.inject.Singleton;
 import io.harness.exception.InvalidRequestException;
 import org.apache.commons.collections.CollectionUtils;
 import software.wings.beans.Environment;
-import software.wings.beans.FeatureName;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.Service;
 import software.wings.beans.TemplateExpression;
@@ -87,12 +85,7 @@ public class PhaseSubWorkflowHelperService {
     }
   }
 
-  public void validateServiceInfraMappingRelationShip(Service service, InfrastructureMapping infrastructureMapping,
-      TemplateExpression serviceTemplateExpression, TemplateExpression infraMappingTemplateExpression,
-      String accountId) {
-    validateServiceInfraMappingTemplatizationRelationShip(
-        serviceTemplateExpression, infraMappingTemplateExpression, accountId);
-
+  public void validateServiceInfraMappingRelationShip(Service service, InfrastructureMapping infrastructureMapping) {
     if (service != null && infrastructureMapping != null
         && !service.getUuid().equals(infrastructureMapping.getServiceId())) {
       throw new InvalidRequestException(format("Service [%s] is not associated with Service Infra [%s]",
@@ -114,16 +107,7 @@ public class PhaseSubWorkflowHelperService {
       InfrastructureMapping infrastructureMapping, Environment env, TemplateExpression serviceTemplateExpression,
       TemplateExpression infraMappingTemplateExpression, String accountId) {
     validateScopedServices(service, infrastructureDefinition);
-    validateServiceInfraMappingRelationShip(
-        service, infrastructureMapping, serviceTemplateExpression, infraMappingTemplateExpression, accountId);
+    validateServiceInfraMappingRelationShip(service, infrastructureMapping);
     validateEnvInfraRelationShip(env, infrastructureDefinition, infrastructureMapping);
-  }
-
-  public void validateServiceInfraMappingTemplatizationRelationShip(TemplateExpression serviceTemplateExpresion,
-      TemplateExpression infraMappingTemplateExpression, String accountId) {
-    if (!featureFlagService.isEnabled(FeatureName.INFRA_MAPPING_REFACTOR, accountId) && serviceTemplateExpresion != null
-        && infraMappingTemplateExpression == null) {
-      throw new InvalidRequestException("Service templatized so service infrastructure should be templatized", USER);
-    }
   }
 }

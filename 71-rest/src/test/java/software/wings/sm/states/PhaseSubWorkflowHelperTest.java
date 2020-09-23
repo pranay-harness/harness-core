@@ -17,7 +17,6 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import software.wings.WingsBaseTest;
 import software.wings.beans.Environment;
-import software.wings.beans.FeatureName;
 import software.wings.beans.GcpKubernetesInfrastructureMapping;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.Service;
@@ -171,32 +170,20 @@ public class PhaseSubWorkflowHelperTest extends WingsBaseTest {
   @Owner(developers = VAIBHAV_SI)
   @Category(UnitTests.class)
   public void shouldValidateServiceInfraMappingRelationship() {
-    TemplateExpression serviceTemplateExpresion = TemplateExpression.builder().build(),
-                       infraMappingTemplateExpression = TemplateExpression.builder().build();
     Service service = Service.builder().uuid(SERVICE_ID).build();
     InfrastructureMapping infrastructureMapping =
         GcpKubernetesInfrastructureMapping.builder().serviceId(SERVICE_ID).build();
-    phaseSubWorkflowHelperService.validateServiceInfraMappingRelationShip(
-        service, infrastructureMapping, serviceTemplateExpresion, infraMappingTemplateExpression, ACCOUNT_ID);
-
-    assertThatThrownBy(()
-                           -> phaseSubWorkflowHelperService.validateServiceInfraMappingRelationShip(
-                               service, infrastructureMapping, serviceTemplateExpresion, null, ACCOUNT_ID));
-
-    phaseSubWorkflowHelperService.validateServiceInfraMappingRelationShip(
-        service, infrastructureMapping, null, null, ACCOUNT_ID);
+    phaseSubWorkflowHelperService.validateServiceInfraMappingRelationShip(service, infrastructureMapping);
 
     infrastructureMapping.setServiceId(WRONG_ID);
-    assertThatThrownBy(()
-                           -> phaseSubWorkflowHelperService.validateServiceInfraMappingRelationShip(
-                               service, infrastructureMapping, null, null, ACCOUNT_ID));
+    assertThatThrownBy(
+        () -> phaseSubWorkflowHelperService.validateServiceInfraMappingRelationShip(service, infrastructureMapping));
     infrastructureMapping.setServiceId(SERVICE_ID);
-    phaseSubWorkflowHelperService.validateServiceInfraMappingRelationShip(
-        service, infrastructureMapping, null, null, ACCOUNT_ID);
+    phaseSubWorkflowHelperService.validateServiceInfraMappingRelationShip(service, infrastructureMapping);
 
     // Validate should not fail for null values
-    phaseSubWorkflowHelperService.validateServiceInfraMappingRelationShip(null, null, null, null, ACCOUNT_ID);
-    phaseSubWorkflowHelperService.validateServiceInfraMappingRelationShip(service, null, null, null, ACCOUNT_ID);
+    phaseSubWorkflowHelperService.validateServiceInfraMappingRelationShip(null, null);
+    phaseSubWorkflowHelperService.validateServiceInfraMappingRelationShip(service, null);
   }
 
   @Test
@@ -220,27 +207,5 @@ public class PhaseSubWorkflowHelperTest extends WingsBaseTest {
     // Should not fail for null  values
     phaseSubWorkflowHelperService.validateScopedServices(null, infrastructureDefinition);
     phaseSubWorkflowHelperService.validateScopedServices(service, null);
-  }
-
-  @Test
-  @Owner(developers = VAIBHAV_SI)
-  @Category(UnitTests.class)
-  public void serviceInfraTemplatizationValidationShouldNotFailForFeatureFlagOn() {
-    TemplateExpression serviceTemplateExpression = TemplateExpression.builder().build();
-    when(featureFlagService.isEnabled(FeatureName.INFRA_MAPPING_REFACTOR, ACCOUNT_ID)).thenReturn(true);
-
-    phaseSubWorkflowHelperService.validateServiceInfraMappingTemplatizationRelationShip(
-        serviceTemplateExpression, null, ACCOUNT_ID);
-  }
-
-  @Test(expected = InvalidRequestException.class)
-  @Owner(developers = VAIBHAV_SI)
-  @Category(UnitTests.class)
-  public void serviceInfraTemplatizationValidationShouldFailForFeatureFlagOff() {
-    TemplateExpression serviceTemplateExpression = TemplateExpression.builder().build();
-    when(featureFlagService.isEnabled(FeatureName.INFRA_MAPPING_REFACTOR, ACCOUNT_ID)).thenReturn(false);
-
-    phaseSubWorkflowHelperService.validateServiceInfraMappingTemplatizationRelationShip(
-        serviceTemplateExpression, null, ACCOUNT_ID);
   }
 }
