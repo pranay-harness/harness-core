@@ -16,7 +16,6 @@ import io.harness.secretmanagerclient.dto.EncryptedDataDTO;
 import io.harness.secretmanagerclient.dto.SecretFileDTO;
 import io.harness.secretmanagerclient.dto.SecretFileUpdateDTO;
 import io.harness.serializer.JsonUtils;
-import io.harness.stream.BoundedInputStream;
 import io.swagger.annotations.Api;
 import lombok.AllArgsConstructor;
 import org.apache.commons.lang3.StringUtils;
@@ -55,7 +54,7 @@ public class SecretFilesResourceNG {
       throw new InvalidRequestException("Meta data cannot be null/empty.");
     }
     SecretFileDTO dto = JsonUtils.asObject(fileMetadata, SecretFileDTO.class);
-    EncryptedData savedData = ngSecretFileService.create(dto, new BoundedInputStream(inputStream));
+    EncryptedData savedData = ngSecretFileService.create(dto, inputStream);
     return new RestResponse<>(toDTO(savedData));
   }
 
@@ -70,7 +69,7 @@ public class SecretFilesResourceNG {
       throw new InvalidRequestException("Meta data cannot be null/empty.");
     }
     SecretFileUpdateDTO dto = JsonUtils.asObject(fileMetadata, SecretFileUpdateDTO.class);
-    return new RestResponse<>(ngSecretFileService.update(accountIdentifier, orgIdentifier, projectIdentifier,
-        identifier, dto, new BoundedInputStream(uploadedInputStream, fileUploadLimits.getEncryptedFileLimit())));
+    return new RestResponse<>(ngSecretFileService.update(
+        accountIdentifier, orgIdentifier, projectIdentifier, identifier, dto, uploadedInputStream));
   }
 }

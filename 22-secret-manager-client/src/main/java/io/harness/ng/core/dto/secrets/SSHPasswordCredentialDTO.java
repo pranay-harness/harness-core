@@ -2,10 +2,11 @@ package io.harness.ng.core.dto.secrets;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonTypeName;
+import io.harness.beans.DecryptableEntity;
 import io.harness.encryption.SecretRefData;
 import io.harness.encryption.SecretReference;
 import io.harness.ng.core.models.SSHCredentialSpec;
-import io.harness.ng.core.models.SSHKeyCredential;
+import io.harness.ng.core.models.SSHPasswordCredential;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Builder;
 import lombok.Data;
@@ -16,20 +17,14 @@ import javax.validation.constraints.NotNull;
 @Data
 @Builder
 @EqualsAndHashCode(callSuper = true)
-@JsonTypeName("KeyReference")
+@JsonTypeName("Password")
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class SSHKeyReferenceCredentialDTO extends SSHCredentialSpecDTO {
+public class SSHPasswordCredentialDTO extends SSHCredentialSpecDTO implements DecryptableEntity {
   @NotNull private String userName;
-  @NotNull private String key;
-  @ApiModelProperty(dataType = "string") @SecretReference private SecretRefData encryptedPassphrase;
+  @ApiModelProperty(dataType = "string") @NotNull @SecretReference private SecretRefData password;
 
   @Override
   public SSHCredentialSpec toEntity() {
-    return SSHKeyCredential.builder()
-        .userName(getUserName())
-        .keyPath(getKey())
-        .userName(getUserName())
-        .encryptedPassphrase(getEncryptedPassphrase())
-        .build();
+    return SSHPasswordCredential.builder().userName(getUserName()).password(getPassword()).build();
   }
 }

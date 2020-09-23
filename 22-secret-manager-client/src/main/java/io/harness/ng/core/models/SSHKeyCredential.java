@@ -14,15 +14,15 @@ import lombok.EqualsAndHashCode;
 @JsonTypeName("KeyReference")
 public class SSHKeyCredential extends SSHCredentialSpec {
   private String userName;
-  private String keyPath;
   private SecretRefData encryptedPassphrase;
+  private SecretRefData key;
 
   @Override
   public SSHCredentialSpecDTO toDTO() {
     return SSHKeyReferenceCredentialDTO.builder()
         .userName(getUserName())
-        .key(getKeyPath())
         .encryptedPassphrase(getEncryptedPassphrase())
+        .key(getKey())
         .build();
   }
 }

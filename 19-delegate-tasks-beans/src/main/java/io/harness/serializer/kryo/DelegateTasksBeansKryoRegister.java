@@ -63,6 +63,7 @@ import io.harness.delegate.beans.git.GitCommandExecutionResponse.GitCommandStatu
 import io.harness.delegate.beans.git.GitCommandParams;
 import io.harness.delegate.beans.git.GitCommandType;
 import io.harness.delegate.beans.git.YamlGitConfigDTO;
+import io.harness.delegate.beans.secrets.SSHConfigValidationTaskResponse;
 import io.harness.delegate.beans.storeconfig.FetchType;
 import io.harness.delegate.beans.storeconfig.GitStoreDelegateConfig;
 import io.harness.delegate.command.CommandExecutionData;
@@ -314,5 +315,6 @@ public class DelegateTasksBeansKryoRegister implements KryoRegistrar {
     kryo.register(GcpRequest.RequestType.class, 19335);
     kryo.register(GcpValidationRequest.class, 19336);
     kryo.register(GcpValidationTaskResponse.class, 19337);
+    kryo.register(SSHConfigValidationTaskResponse.class, 19338);
   }
 }
