@@ -100,7 +100,7 @@ public class MongoModule extends AbstractModule {
     AdvancedDatastore primaryDatastore = (AdvancedDatastore) morphia.createDatastore(mongoClient, uri.getDatabase());
     primaryDatastore.setQueryFactory(new QueryFactory());
 
-    indexManager.ensureIndexes(mongoConfig.getIndexManagerMode(), primaryDatastore, morphia);
+    indexManager.ensureIndexes(mongoConfig.getIndexManagerMode(), primaryDatastore, morphia, null);
 
     HObjectFactory hObjectFactory = (HObjectFactory) objectFactory;
 

@@ -34,12 +34,13 @@ public class IndexManagerTest extends PersistenceTest {
     morphia.mapPackage("io.harness");
 
     assertThatThrownBy(
-        () -> indexManager.ensureIndexes(INSPECT, persistence.getDatastore(TestIndexEntity.class), morphia))
+        () -> indexManager.ensureIndexes(INSPECT, persistence.getDatastore(TestIndexEntity.class), morphia, null))
         .isInstanceOf(IndexManagerInspectException.class);
 
-    indexManager.ensureIndexes(AUTO, persistence.getDatastore(TestIndexEntity.class), morphia);
+    indexManager.ensureIndexes(AUTO, persistence.getDatastore(TestIndexEntity.class), morphia, null);
 
-    assertThatCode(() -> indexManager.ensureIndexes(INSPECT, persistence.getDatastore(TestIndexEntity.class), morphia))
+    assertThatCode(
+        () -> indexManager.ensureIndexes(INSPECT, persistence.getDatastore(TestIndexEntity.class), morphia, null))
         .doesNotThrowAnyException();
   }
 

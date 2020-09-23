@@ -27,6 +27,7 @@ import com.mongodb.DuplicateKeyException;
 import com.mongodb.MongoCommandException;
 import com.mongodb.ReadPreference;
 import io.harness.annotation.IgnoreUnusedIndex;
+import io.harness.annotation.StoreIn;
 import io.harness.data.structure.ListUtils.OneAndOnlyOne;
 import io.harness.govern.Switch;
 import io.harness.logging.AutoLogContext;
@@ -41,6 +42,7 @@ import io.harness.mongo.index.FdTtlIndex;
 import io.harness.mongo.index.FdUniqueIndex;
 import io.harness.mongo.index.Field;
 import io.harness.mongo.index.migrator.Migrator;
+import io.harness.persistence.Store;
 import io.harness.threading.Morpheus;
 import lombok.AllArgsConstructor;
 import lombok.Value;
@@ -144,13 +146,21 @@ public class IndexManagerSession {
     void process(MappedClass mc, DBCollection collection);
   }
 
-  public static Set<String> processIndexes(AdvancedDatastore datastore, Morphia morphia, IndexesProcessor processor) {
+  public static Set<String> processIndexes(
+      AdvancedDatastore datastore, Morphia morphia, Store store, IndexesProcessor processor) {
     Set<String> processedCollections = new HashSet<>();
     Collection<MappedClass> mappedClasses = morphia.getMapper().getMappedClasses();
     mappedClasses.forEach(mc -> {
       Entity entity = mc.getEntityAnnotation();
       if (entity == null) {
         return;
+      }
+
+      if (store != null) {
+        StoreIn storeIn = mc.getClazz().getAnnotation(StoreIn.class);
+        if (storeIn == null || !store.getName().equals(storeIn.value())) {
+          return;
+        }
       }
 
       DBCollection collection = datastore.getCollection(mc.getClazz());
@@ -174,9 +184,10 @@ public class IndexManagerSession {
     return processedCollections;
   }
 
-  public static List<IndexCreator> allIndexes(AdvancedDatastore datastore, Morphia morphia) {
+  public static List<IndexCreator> allIndexes(AdvancedDatastore datastore, Morphia morphia, Store store) {
     List<IndexCreator> result = new ArrayList<>();
-    processIndexes(datastore, morphia, (mc, collection) -> result.addAll(indexCreators(mc, collection).values()));
+    processIndexes(
+        datastore, morphia, store, (mc, collection) -> result.addAll(indexCreators(mc, collection).values()));
     return result;
   }
 
@@ -541,14 +552,14 @@ public class IndexManagerSession {
     return actionPerformed.get();
   }
 
-  public boolean ensureIndexes(Morphia morphia) {
+  public boolean ensureIndexes(Morphia morphia, Store store) {
     // Morphia auto creates embedded/nested Entity indexes with the parent Entity indexes.
     // There is no way to override this behavior.
     // https://github.com/mongodb/morphia/issues/706
 
     AtomicBoolean actionPerformed = new AtomicBoolean(false);
 
-    Set<String> processedCollections = processIndexes(datastore, morphia, (mc, collection) -> {
+    Set<String> processedCollections = processIndexes(datastore, morphia, store, (mc, collection) -> {
       if (processCollection(mc, collection)) {
         actionPerformed.set(true);
       }

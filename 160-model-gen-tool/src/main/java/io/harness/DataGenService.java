@@ -198,7 +198,7 @@ public class DataGenService {
 
   protected void dropDBAndEnsureIndexes() {
     wingsPersistence.getDatastore(DEFAULT_STORE).getDB().dropDatabase();
-    indexManager.ensureIndexes(AUTO, primaryDatastore, morphia);
+    indexManager.ensureIndexes(AUTO, primaryDatastore, morphia, null);
   }
 
   private void createGlobalSettings(Account account) {
