@@ -1,0 +1,106 @@
+pipeline:
+  name: "Manager Service Deployment"
+  identifier: parallelStages
+  stages:
+    - parallel:
+        - stage:
+            identifier: managerDeploymentStage
+            name: manager deployment stage
+            type: Deployment
+            spec:
+              service:
+                name: ManagerService
+                identifier: ManagerServiceLatest
+                serviceDefinition:
+                  type: Kubernetes
+                  spec:
+                    manifests:
+                      - manifest:
+                          identifier: baseValues
+                          type: K8sManifest
+                          spec:
+                            store:
+                              type: Git
+                              spec:
+                                connectorIdentifier: my_git_connector
+                                gitFetchType: Branch
+                                branch: master
+                                paths:
+                                  - test/spec
+              infrastructure:
+                environment:
+                  name:
+                  identifier: stagingInfra
+                  type: PreProduction
+                  tags:
+                    - key: cloud
+                      value: GCP
+                    - key: team
+                      value: cdp
+                infrastructureDefinition:
+                  type: KubernetesDirect
+                  spec:
+                    connectorIdentifier: myK8sConnector
+                    namespace: harness
+                    releaseName: testingqa
+              execution:
+                steps:
+                  - step:
+                      name: http step 1
+                      identifier: httpStep1
+                      type: Http
+                      spec:
+                        socketTimeoutMillis: 1000
+                        method: GET
+                        url: http://httpstat.us/500
+
+        - stage:
+            identifier: managerDeploymentStage2
+            name: manager deployment stage2
+            type: Deployment
+            spec:
+              service:
+                name: ManagerService
+                identifier: ManagerServiceLatest
+                serviceDefinition:
+                  type: Kubernetes
+                  spec:
+                    manifests:
+                      - manifest:
+                          identifier: baseValues
+                          type: K8sManifest
+                          spec:
+                            store:
+                              type: Git
+                              spec:
+                                connectorIdentifier: my_git_connector
+                                gitFetchType: Branch
+                                branch: master
+                                paths:
+                                  - test/spec
+              infrastructure:
+                environment:
+                  name:
+                  identifier: stagingInfra
+                  type: PreProduction
+                  tags:
+                    - key: cloud
+                      value: GCP
+                    - key: team
+                      value: cdp
+                infrastructureDefinition:
+                  type: KubernetesDirect
+                  spec:
+                    connectorIdentifier: myK8sConnector
+                    namespace: harness
+                    releaseName: testingqa
+              execution:
+                steps:
+                  - step:
+                      name: http step 1
+                      identifier: httpStep1
+                      type: Http
+                      spec:
+                        socketTimeoutMillis: 1000
+                        method: GET
+                        url: http://httpstat.us/500
