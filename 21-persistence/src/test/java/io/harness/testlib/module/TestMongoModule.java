@@ -13,6 +13,7 @@ import com.google.inject.name.Named;
 import com.mongodb.MongoClient;
 import io.harness.factory.ClosingFactory;
 import io.harness.mongo.HObjectFactory;
+import io.harness.mongo.ObjectFactoryModule;
 import io.harness.mongo.QueryFactory;
 import io.harness.mongo.index.migrator.Migrator;
 import io.harness.morphia.MorphiaModule;
@@ -48,12 +49,6 @@ public class TestMongoModule extends AbstractModule implements MongoRuleMixin {
   @Singleton
   String databaseNameProvider(@Named("databaseName") String databaseName) {
     return databaseName;
-  }
-
-  @Provides
-  @Singleton
-  public ObjectFactory objectFactory() {
-    return new HObjectFactory();
   }
 
   @Provides
@@ -111,6 +106,7 @@ public class TestMongoModule extends AbstractModule implements MongoRuleMixin {
 
   @Override
   protected void configure() {
+    install(ObjectFactoryModule.getInstance());
     install(MorphiaModule.getInstance());
 
     MapBinder.newMapBinder(binder(), String.class, Migrator.class);

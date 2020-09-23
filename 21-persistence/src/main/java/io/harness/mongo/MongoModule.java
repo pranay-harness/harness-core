@@ -66,16 +66,11 @@ public class MongoModule extends AbstractModule {
 
   @Override
   protected void configure() {
+    install(ObjectFactoryModule.getInstance());
     install(MorphiaModule.getInstance());
     install(KryoModule.getInstance());
 
     MapBinder.newMapBinder(binder(), String.class, Migrator.class);
-  }
-
-  @Provides
-  @Singleton
-  public ObjectFactory objectFactory() {
-    return new HObjectFactory();
   }
 
   @Provides
