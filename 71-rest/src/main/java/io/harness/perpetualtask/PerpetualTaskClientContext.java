@@ -10,6 +10,9 @@ import java.util.Map;
 @Builder
 @FieldNameConstants(innerTypeName = "PerpetualTaskClientContextKeys")
 public class PerpetualTaskClientContext {
+  // Unique key (provided by caller) that references the perpetual task in question
+  private String clientId;
+
   // This is a set of arbitrary client parameters that will allow for the task to be identified from the
   // client that requested it and will provide the necessary task parameters.
   private Map<String, String> clientParams;

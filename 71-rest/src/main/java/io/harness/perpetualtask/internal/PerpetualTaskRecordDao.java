@@ -148,11 +148,10 @@ public class PerpetualTaskRecordDao {
                                                               .field(PerpetualTaskRecordKeys.perpetualTaskType)
                                                               .equal(perpetualTaskType);
 
-    if (clientContext.getClientParams() != null) {
+    if (clientContext.getClientId() != null) {
+      perpetualTaskRecordQuery.field(PerpetualTaskRecordKeys.client_id).equal(clientContext.getClientId());
+    } else if (clientContext.getClientParams() != null) {
       perpetualTaskRecordQuery.field(PerpetualTaskRecordKeys.client_params).equal(clientContext.getClientParams());
-    }
-    if (clientContext.getExecutionBundle() != null) {
-      perpetualTaskRecordQuery.field(PerpetualTaskRecordKeys.task_parameters).equal(clientContext.getExecutionBundle());
     }
 
     return Optional.ofNullable(perpetualTaskRecordQuery.get());
