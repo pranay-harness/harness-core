@@ -98,6 +98,9 @@ import io.harness.delegate.beans.NoAvailableDelegatesException;
 import io.harness.delegate.beans.NoInstalledDelegatesException;
 import io.harness.delegate.beans.RemoteMethodReturnValueData;
 import io.harness.delegate.beans.TaskData;
+import io.harness.delegate.beans.TaskGroup;
+import io.harness.delegate.beans.TaskSelectorMap;
+import io.harness.delegate.beans.executioncapability.SelectorCapability;
 import io.harness.delegate.service.DelegateAgentFileService.FileBucket;
 import io.harness.delegate.task.http.HttpTaskParameters;
 import io.harness.delegate.task.mixin.HttpConnectionExecutionCapabilityGenerator;
@@ -188,8 +191,10 @@ import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import java.util.zip.GZIPInputStream;
 
@@ -2480,6 +2485,56 @@ public class DelegateServiceTest extends WingsBaseTest {
     when(assignDelegateService.noInstalledDelegates(ACCOUNT_ID)).thenReturn(false);
 
     delegateService.scheduleSyncTask(task);
+  }
+
+  @Test
+  @Owner(developers = VUK)
+  @Category(UnitTests.class)
+  public void testConvertSelectorsToExecutionCapabilityTaskSelectors_TaskSelectors() {
+    List<String> selectors = Arrays.asList("a", "b");
+
+    DelegateTask delegateTask =
+        DelegateTask.builder().accountId(ACCOUNT_ID).delegateId(DELEGATE_ID).tags(selectors).build();
+
+    delegateService.convertToExecutionCapability(delegateTask);
+
+    List<SelectorCapability> selectorsCapabilityList = delegateTask.getExecutionCapabilities()
+                                                           .stream()
+                                                           .filter(c -> c instanceof SelectorCapability)
+                                                           .map(c -> (SelectorCapability) c)
+                                                           .collect(Collectors.toList());
+
+    assertThat(selectorsCapabilityList.get(0).getSelectors()).isEqualTo(new HashSet<>(selectors));
+  }
+
+  @Test
+  @Owner(developers = VUK)
+  @Category(UnitTests.class)
+  public void testConvertSelectorsToExecutionCapabilityTaskSelectors_TaskCategory() {
+    Set<String> commandMapSelectors = new HashSet<>();
+    commandMapSelectors.add("eee");
+    TaskSelectorMap sampleMap = TaskSelectorMap.builder()
+                                    .accountId(ACCOUNT_ID)
+                                    .taskGroup(TaskGroup.HTTP)
+                                    .selectors(commandMapSelectors)
+                                    .build();
+    wingsPersistence.save(sampleMap);
+
+    DelegateTask delegateTask = DelegateTask.builder()
+                                    .accountId(ACCOUNT_ID)
+                                    .delegateId(DELEGATE_ID)
+                                    .data(TaskData.builder().taskType(TaskType.HTTP.name()).build())
+                                    .build();
+
+    delegateService.convertToExecutionCapability(delegateTask);
+
+    List<SelectorCapability> selectorsCapabilityList = delegateTask.getExecutionCapabilities()
+                                                           .stream()
+                                                           .filter(c -> c instanceof SelectorCapability)
+                                                           .map(c -> (SelectorCapability) c)
+                                                           .collect(Collectors.toList());
+
+    assertThat(selectorsCapabilityList.get(0).getSelectors()).isEqualTo(sampleMap.getSelectors());
   }
 
   private DelegateTask saveDelegateTask(boolean async, Set<String> validatingTaskIds, DelegateTask.Status status) {

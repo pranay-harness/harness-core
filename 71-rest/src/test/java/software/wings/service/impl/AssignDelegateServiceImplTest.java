@@ -382,7 +382,7 @@ public class AssignDelegateServiceImplTest extends WingsBaseTest {
   @Value
   @Builder
   public static class TagTestData {
-    List<String> taskTags;
+    List<ExecutionCapability> executionCapabilities;
     List<String> delegateTags;
     boolean assignable;
     int numOfMissingAllSelectorsInvocations;
@@ -393,120 +393,142 @@ public class AssignDelegateServiceImplTest extends WingsBaseTest {
   @Owner(developers = BRETT)
   @Category(UnitTests.class)
   public void assignByTags() {
-    List<TagTestData> tests = ImmutableList.<TagTestData>builder()
-                                  .add(TagTestData.builder()
-                                           .taskTags(null)
-                                           .delegateTags(null)
-                                           .assignable(true)
-                                           .numOfMissingAllSelectorsInvocations(0)
-                                           .numOfMissingSelectorInvocations(0)
-                                           .build())
-                                  .add(TagTestData.builder()
-                                           .taskTags(null)
-                                           .delegateTags(emptyList())
-                                           .assignable(true)
-                                           .numOfMissingAllSelectorsInvocations(0)
-                                           .numOfMissingSelectorInvocations(0)
-                                           .build())
-                                  .add(TagTestData.builder()
-                                           .taskTags(emptyList())
-                                           .delegateTags(null)
-                                           .assignable(true)
-                                           .numOfMissingAllSelectorsInvocations(0)
-                                           .numOfMissingSelectorInvocations(0)
-                                           .build())
-                                  .add(TagTestData.builder()
-                                           .taskTags(emptyList())
-                                           .delegateTags(emptyList())
-                                           .assignable(true)
-                                           .numOfMissingAllSelectorsInvocations(0)
-                                           .numOfMissingSelectorInvocations(0)
-                                           .build())
-                                  .add(TagTestData.builder()
-                                           .taskTags(ImmutableList.of("a"))
-                                           .delegateTags(null)
-                                           .assignable(false)
-                                           .numOfMissingAllSelectorsInvocations(1)
-                                           .numOfMissingSelectorInvocations(0)
-                                           .build())
-                                  .add(TagTestData.builder()
-                                           .taskTags(ImmutableList.of("a"))
-                                           .delegateTags(emptyList())
-                                           .assignable(false)
-                                           .numOfMissingAllSelectorsInvocations(2)
-                                           .numOfMissingSelectorInvocations(0)
-                                           .build())
-                                  .add(TagTestData.builder()
-                                           .taskTags(null)
-                                           .delegateTags(ImmutableList.of("a"))
-                                           .assignable(true)
-                                           .numOfMissingAllSelectorsInvocations(2)
-                                           .numOfMissingSelectorInvocations(0)
-                                           .build())
-                                  .add(TagTestData.builder()
-                                           .taskTags(emptyList())
-                                           .delegateTags(ImmutableList.of("a"))
-                                           .assignable(true)
-                                           .numOfMissingAllSelectorsInvocations(2)
-                                           .numOfMissingSelectorInvocations(0)
-                                           .build())
-                                  .add(TagTestData.builder()
-                                           .taskTags(ImmutableList.of("a", "b"))
-                                           .delegateTags(ImmutableList.of("a", "c", "b"))
-                                           .assignable(true)
-                                           .numOfMissingAllSelectorsInvocations(2)
-                                           .numOfMissingSelectorInvocations(0)
-                                           .build())
-                                  .add(TagTestData.builder()
-                                           .taskTags(ImmutableList.of("a", "b", "c"))
-                                           .delegateTags(ImmutableList.of("a", "b"))
-                                           .assignable(false)
-                                           .numOfMissingAllSelectorsInvocations(2)
-                                           .numOfMissingSelectorInvocations(1)
-                                           .build())
-                                  .add(TagTestData.builder()
-                                           .taskTags(ImmutableList.of("a", "b"))
-                                           .delegateTags(ImmutableList.of("c", "a"))
-                                           .assignable(false)
-                                           .numOfMissingAllSelectorsInvocations(2)
-                                           .numOfMissingSelectorInvocations(2)
-                                           .build())
-                                  .add(TagTestData.builder()
-                                           .taskTags(ImmutableList.of("a", "b"))
-                                           .delegateTags(ImmutableList.of("c", "d"))
-                                           .assignable(false)
-                                           .numOfMissingAllSelectorsInvocations(2)
-                                           .numOfMissingSelectorInvocations(4)
-                                           .build())
-                                  .add(TagTestData.builder()
-                                           .taskTags(ImmutableList.of("a ", " B "))
-                                           .delegateTags(ImmutableList.of("A", " b"))
-                                           .assignable(true)
-                                           .numOfMissingAllSelectorsInvocations(2)
-                                           .numOfMissingSelectorInvocations(4)
-                                           .build())
-                                  .add(TagTestData.builder()
-                                           .taskTags(ImmutableList.of("a-b"))
-                                           .delegateTags(ImmutableList.of("a", " b"))
-                                           .assignable(false)
-                                           .numOfMissingAllSelectorsInvocations(2)
-                                           .numOfMissingSelectorInvocations(5)
-                                           .build())
-                                  .add(TagTestData.builder()
-                                           .taskTags(ImmutableList.of("a"))
-                                           .delegateTags(ImmutableList.of("a-b"))
-                                           .assignable(false)
-                                           .numOfMissingAllSelectorsInvocations(2)
-                                           .numOfMissingSelectorInvocations(6)
-                                           .build())
-                                  .add(TagTestData.builder()
-                                           .taskTags(ImmutableList.of("", " "))
-                                           .delegateTags(ImmutableList.of("a"))
-                                           .assignable(true)
-                                           .numOfMissingAllSelectorsInvocations(2)
-                                           .numOfMissingSelectorInvocations(6)
-                                           .build())
-                                  .build();
+    List<TagTestData> tests =
+        ImmutableList.<TagTestData>builder()
+            .add(TagTestData.builder()
+                     .executionCapabilities(null)
+                     .delegateTags(null)
+                     .assignable(true)
+                     .numOfMissingAllSelectorsInvocations(0)
+                     .numOfMissingSelectorInvocations(0)
+                     .build())
+            .add(TagTestData.builder()
+                     .executionCapabilities(null)
+                     .delegateTags(emptyList())
+                     .assignable(true)
+                     .numOfMissingAllSelectorsInvocations(0)
+                     .numOfMissingSelectorInvocations(0)
+                     .build())
+            .add(TagTestData.builder()
+                     .executionCapabilities(emptyList())
+                     .delegateTags(null)
+                     .assignable(true)
+                     .numOfMissingAllSelectorsInvocations(0)
+                     .numOfMissingSelectorInvocations(0)
+                     .build())
+            .add(TagTestData.builder()
+                     .executionCapabilities(emptyList())
+                     .delegateTags(emptyList())
+                     .assignable(true)
+                     .numOfMissingAllSelectorsInvocations(0)
+                     .numOfMissingSelectorInvocations(0)
+                     .build())
+            .add(TagTestData.builder()
+                     .executionCapabilities(ImmutableList.of(
+                         SelectorCapability.builder().selectors(Stream.of("a").collect(Collectors.toSet())).build()))
+                     .delegateTags(null)
+                     .assignable(false)
+                     .numOfMissingAllSelectorsInvocations(1)
+                     .numOfMissingSelectorInvocations(0)
+                     .build())
+            .add(TagTestData.builder()
+                     .executionCapabilities(ImmutableList.of(
+                         SelectorCapability.builder().selectors(Stream.of("a").collect(Collectors.toSet())).build()))
+                     .delegateTags(emptyList())
+                     .assignable(false)
+                     .numOfMissingAllSelectorsInvocations(2)
+                     .numOfMissingSelectorInvocations(0)
+                     .build())
+            .add(TagTestData.builder()
+                     .executionCapabilities(null)
+                     .delegateTags(ImmutableList.of("a"))
+                     .assignable(true)
+                     .numOfMissingAllSelectorsInvocations(2)
+                     .numOfMissingSelectorInvocations(0)
+                     .build())
+            .add(TagTestData.builder()
+                     .executionCapabilities(emptyList())
+                     .delegateTags(ImmutableList.of("a"))
+                     .assignable(true)
+                     .numOfMissingAllSelectorsInvocations(2)
+                     .numOfMissingSelectorInvocations(0)
+                     .build())
+            .add(TagTestData.builder()
+                     .executionCapabilities(
+                         ImmutableList.of(SelectorCapability.builder()
+                                              .selectors(Stream.of("a", "b").collect(Collectors.toSet()))
+                                              .build()))
+                     .delegateTags(ImmutableList.of("a", "c", "b"))
+                     .assignable(true)
+                     .numOfMissingAllSelectorsInvocations(2)
+                     .numOfMissingSelectorInvocations(0)
+                     .build())
+            .add(TagTestData.builder()
+                     .executionCapabilities(
+                         ImmutableList.of(SelectorCapability.builder()
+                                              .selectors(Stream.of("a", "b", "c").collect(Collectors.toSet()))
+                                              .build()))
+                     .delegateTags(ImmutableList.of("a", "b"))
+                     .assignable(false)
+                     .numOfMissingAllSelectorsInvocations(2)
+                     .numOfMissingSelectorInvocations(1)
+                     .build())
+            .add(TagTestData.builder()
+                     .executionCapabilities(
+                         ImmutableList.of(SelectorCapability.builder()
+                                              .selectors(Stream.of("a", "b").collect(Collectors.toSet()))
+                                              .build()))
+                     .delegateTags(ImmutableList.of("c", "a"))
+                     .assignable(false)
+                     .numOfMissingAllSelectorsInvocations(2)
+                     .numOfMissingSelectorInvocations(2)
+                     .build())
+            .add(TagTestData.builder()
+                     .executionCapabilities(
+                         ImmutableList.of(SelectorCapability.builder()
+                                              .selectors(Stream.of("a", "b").collect(Collectors.toSet()))
+                                              .build()))
+                     .delegateTags(ImmutableList.of("c", "d"))
+                     .assignable(false)
+                     .numOfMissingAllSelectorsInvocations(2)
+                     .numOfMissingSelectorInvocations(4)
+                     .build())
+            .add(TagTestData.builder()
+                     .executionCapabilities(
+                         ImmutableList.of(SelectorCapability.builder()
+                                              .selectors(Stream.of("a ", " B ").collect(Collectors.toSet()))
+                                              .build()))
+                     .delegateTags(ImmutableList.of("A", " b"))
+                     .assignable(true)
+                     .numOfMissingAllSelectorsInvocations(2)
+                     .numOfMissingSelectorInvocations(4)
+                     .build())
+            .add(TagTestData.builder()
+                     .executionCapabilities(ImmutableList.of(
+                         SelectorCapability.builder().selectors(Stream.of("a-b").collect(Collectors.toSet())).build()))
+                     .delegateTags(ImmutableList.of("a", " b"))
+                     .assignable(false)
+                     .numOfMissingAllSelectorsInvocations(2)
+                     .numOfMissingSelectorInvocations(5)
+                     .build())
+            .add(TagTestData.builder()
+                     .executionCapabilities(ImmutableList.of(
+                         SelectorCapability.builder().selectors(Stream.of("a").collect(Collectors.toSet())).build()))
+                     .delegateTags(ImmutableList.of("a-b"))
+                     .assignable(false)
+                     .numOfMissingAllSelectorsInvocations(2)
+                     .numOfMissingSelectorInvocations(6)
+                     .build())
+            .add(
+                TagTestData.builder()
+                    .executionCapabilities(ImmutableList.of(
+                        SelectorCapability.builder().selectors(Stream.of("", " ").collect(Collectors.toSet())).build()))
+                    .delegateTags(ImmutableList.of("a"))
+                    .assignable(true)
+                    .numOfMissingAllSelectorsInvocations(2)
+                    .numOfMissingSelectorInvocations(6)
+                    .build())
+            .build();
 
     DelegateTaskBuilder delegateTaskBuilder = DelegateTask.builder()
                                                   .accountId(ACCOUNT_ID)
@@ -535,7 +557,7 @@ public class AssignDelegateServiceImplTest extends WingsBaseTest {
       when(delegateService.retrieveDelegateSelectors(delegate))
           .thenReturn(delegate.getTags() == null ? new HashSet<>() : new HashSet<>(test.getDelegateTags()));
 
-      DelegateTask delegateTask = delegateTaskBuilder.tags(test.getTaskTags()).build();
+      DelegateTask delegateTask = delegateTaskBuilder.executionCapabilities(test.getExecutionCapabilities()).build();
       BatchDelegateSelectionLog batch = BatchDelegateSelectionLog.builder().taskId(delegateTask.getUuid()).build();
       assertThat(assignDelegateService.canAssign(batch, DELEGATE_ID, delegateTask)).isEqualTo(test.isAssignable());
 
@@ -555,7 +577,7 @@ public class AssignDelegateServiceImplTest extends WingsBaseTest {
       when(delegateService.retrieveDelegateSelectors(delegate))
           .thenReturn(delegate.getTags() == null ? new HashSet<>() : new HashSet<>(test.getDelegateTags()));
 
-      DelegateTask delegateTask = delegateTaskBuilder.tags(test.getTaskTags()).build();
+      DelegateTask delegateTask = delegateTaskBuilder.executionCapabilities(test.getExecutionCapabilities()).build();
       BatchDelegateSelectionLog batch = BatchDelegateSelectionLog.builder().taskId(delegateTask.getUuid()).build();
       assertThat(assignDelegateService.canAssign(batch, DELEGATE_ID, delegateTask)).isFalse();
     }
@@ -564,7 +586,7 @@ public class AssignDelegateServiceImplTest extends WingsBaseTest {
   @Value
   @Builder
   public static class NameTestData {
-    List<String> taskTags;
+    List<ExecutionCapability> executionCapabilities;
     String delegateName;
     String hostName;
     boolean assignable;
@@ -579,19 +601,34 @@ public class AssignDelegateServiceImplTest extends WingsBaseTest {
         .thenReturn(new HashSet<>(asList("A")))
         .thenReturn(new HashSet<>(asList("a", "b")));
 
-    List<NameTestData> tests =
-        ImmutableList.<NameTestData>builder()
-            .add(NameTestData.builder().taskTags(ImmutableList.of("a")).assignable(false).build())
-            .add(NameTestData.builder().taskTags(ImmutableList.of("a")).delegateName("A").assignable(true).build())
-            .add(NameTestData.builder().taskTags(ImmutableList.of("a")).hostName("A").assignable(true).build())
-            .add(NameTestData.builder().taskTags(ImmutableList.of("a")).hostName("A").assignable(true).build())
-            .add(NameTestData.builder()
-                     .taskTags(ImmutableList.of("a", "b"))
-                     .delegateName("A")
-                     .hostName("b")
-                     .assignable(true)
-                     .build())
-            .build();
+    SelectorCapability selectorCapability =
+        SelectorCapability.builder().selectors(Stream.of("a").collect(Collectors.toSet())).build();
+
+    List<NameTestData> tests = ImmutableList.<NameTestData>builder()
+                                   .add(NameTestData.builder()
+                                            .executionCapabilities(ImmutableList.of(selectorCapability))
+                                            .assignable(false)
+                                            .build())
+                                   .add(NameTestData.builder()
+                                            .executionCapabilities(ImmutableList.of(selectorCapability))
+                                            .delegateName("A")
+                                            .assignable(true)
+                                            .build())
+                                   .add(NameTestData.builder()
+                                            .executionCapabilities(ImmutableList.of(selectorCapability))
+                                            .hostName("A")
+                                            .assignable(true)
+                                            .build())
+                                   .add(NameTestData.builder()
+                                            .executionCapabilities(ImmutableList.of(
+                                                SelectorCapability.builder()
+                                                    .selectors(Stream.of("a", "b").collect(Collectors.toSet()))
+                                                    .build()))
+                                            .delegateName("A")
+                                            .hostName("b")
+                                            .assignable(true)
+                                            .build())
+                                   .build();
 
     DelegateTaskBuilder delegateTaskBuilder = DelegateTask.builder()
                                                   .accountId(ACCOUNT_ID)
@@ -612,7 +649,7 @@ public class AssignDelegateServiceImplTest extends WingsBaseTest {
       Delegate delegate = delegateBuilder.delegateName(test.getDelegateName()).hostName(test.getHostName()).build();
       when(delegateService.get(ACCOUNT_ID, DELEGATE_ID, false)).thenReturn(delegate);
 
-      DelegateTask delegateTask = delegateTaskBuilder.tags(test.getTaskTags()).build();
+      DelegateTask delegateTask = delegateTaskBuilder.executionCapabilities(test.getExecutionCapabilities()).build();
       BatchDelegateSelectionLog batch = BatchDelegateSelectionLog.builder().taskId(delegateTask.getUuid()).build();
       assertThat(assignDelegateService.canAssign(batch, DELEGATE_ID, delegateTask)).isEqualTo(test.isAssignable());
     }

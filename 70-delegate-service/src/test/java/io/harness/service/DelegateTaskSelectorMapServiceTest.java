@@ -2,6 +2,7 @@ package io.harness.service;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.rule.OwnerRule.SANJA;
+import static io.harness.rule.OwnerRule.VUK;
 import static java.util.Arrays.asList;
 import static java.util.Collections.singleton;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -23,6 +24,7 @@ import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 
 import java.util.HashSet;
+import java.util.Set;
 
 public class DelegateTaskSelectorMapServiceTest extends DelegateServiceTest {
   private static final String ACCOUNT_ID = generateUuid();
@@ -199,5 +201,38 @@ public class DelegateTaskSelectorMapServiceTest extends DelegateServiceTest {
     taskSelectorMapService.removeTaskSelector(ACCOUNT_ID, taskSelectorMap.getUuid(), "a");
     TaskSelectorMap updated = hPersistence.get(TaskSelectorMap.class, taskSelectorMap.getUuid());
     assertThat(updated).isNull();
+  }
+
+  @Test
+  @Owner(developers = VUK)
+  @Category(UnitTests.class)
+  public void shouldGetTaskSelectorMap() {
+    String accountId = generateUuid();
+    String taskGroup = TaskGroup.HTTP.name();
+
+    Set<String> commandMapSelectors = new HashSet<>();
+    commandMapSelectors.add("e");
+    TaskSelectorMap taskSelectorMap = TaskSelectorMap.builder()
+                                          .accountId(ACCOUNT_ID)
+                                          .taskGroup(TaskGroup.HTTP)
+                                          .selectors(commandMapSelectors)
+                                          .build();
+    hPersistence.save(taskSelectorMap);
+
+    taskSelectorMapService.get(accountId, taskGroup);
+
+    TaskSelectorMap fetchTaskSelectorMap = hPersistence.get(TaskSelectorMap.class, taskSelectorMap.getUuid());
+    assertThat(fetchTaskSelectorMap).isNotNull();
+    assertThat(fetchTaskSelectorMap.getAccountId()).isEqualTo(ACCOUNT_ID);
+    assertThat(fetchTaskSelectorMap.getTaskGroup()).isEqualTo(TaskGroup.HTTP);
+    assertThat(fetchTaskSelectorMap.getSelectors()).containsExactly("e");
+  }
+
+  @Test
+  @Owner(developers = VUK)
+  @Category(UnitTests.class)
+  public void shouldNotGetTaskSelectorMap() {
+    TaskSelectorMap getTaskSelectorMap = taskSelectorMapService.get(ACCOUNT_ID, TaskGroup.HTTP.name());
+    assertThat(getTaskSelectorMap).isNull();
   }
 }

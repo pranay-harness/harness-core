@@ -48,6 +48,7 @@ import static java.util.Objects.nonNull;
 import static java.util.stream.Collectors.groupingBy;
 import static java.util.stream.Collectors.joining;
 import static java.util.stream.Collectors.toList;
+import static java.util.stream.Collectors.toSet;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.apache.commons.lang3.StringUtils.substringAfter;
@@ -113,7 +114,9 @@ import io.harness.delegate.beans.ErrorNotifyResponseData;
 import io.harness.delegate.beans.NoAvailableDelegatesException;
 import io.harness.delegate.beans.NoInstalledDelegatesException;
 import io.harness.delegate.beans.RemoteMethodReturnValueData;
+import io.harness.delegate.beans.TaskSelectorMap;
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
+import io.harness.delegate.beans.executioncapability.SelectorCapability;
 import io.harness.delegate.service.DelegateAgentFileService.FileBucket;
 import io.harness.delegate.task.DelegateLogContext;
 import io.harness.delegate.task.TaskLogContext;
@@ -151,6 +154,7 @@ import io.harness.service.intfc.DelegateCallbackRegistry;
 import io.harness.service.intfc.DelegateCallbackService;
 import io.harness.service.intfc.DelegateSyncService;
 import io.harness.service.intfc.DelegateTaskResultsProvider;
+import io.harness.service.intfc.DelegateTaskSelectorMapService;
 import io.harness.service.intfc.DelegateTaskService;
 import io.harness.stream.BoundedInputStream;
 import io.harness.version.VersionInfoManager;
@@ -346,6 +350,7 @@ public class DelegateServiceImpl implements DelegateService {
   @Inject private DelegateCallbackRegistry delegateCallbackRegistry;
   @Inject private EmailNotificationService emailNotificationService;
   @Inject private DelegateGrpcConfig delegateGrpcConfig;
+  @Inject private DelegateTaskSelectorMapService taskSelectorMapService;
 
   @Inject @Named(DelegatesFeature.FEATURE_NAME) private UsageLimitedFeature delegatesFeature;
   @Inject @Getter private Subject<DelegateObserver> subject = new Subject<>();
@@ -2051,6 +2056,41 @@ public class DelegateServiceImpl implements DelegateService {
 
   @VisibleForTesting
   @Override
+  public void convertToExecutionCapability(DelegateTask task) {
+    Set<ExecutionCapability> selectorCapabilities = new HashSet<>();
+
+    if (isNotEmpty(task.getTags())) {
+      Set<SelectorCapability> selectors =
+          task.getTags()
+              .stream()
+              .map(capability -> SelectorCapability.builder().selectors(new HashSet<>(task.getTags())).build())
+              .collect(toSet());
+
+      selectorCapabilities.addAll(selectors);
+    }
+
+    if (task.getData() != null && task.getData().getTaskType() != null) {
+      String taskGroup = TaskType.valueOf(task.getData().getTaskType()).getTaskGroup().toString();
+      TaskSelectorMap mapFromTaskType = taskSelectorMapService.get(task.getAccountId(), taskGroup);
+      if (mapFromTaskType != null && isNotEmpty(mapFromTaskType.getSelectors())) {
+        selectorCapabilities.addAll(
+            mapFromTaskType.getSelectors()
+                .stream()
+                .map(capability
+                    -> SelectorCapability.builder().selectors(new HashSet<>(mapFromTaskType.getSelectors())).build())
+                .collect(toSet()));
+      }
+    }
+
+    if (task.getExecutionCapabilities() == null) {
+      task.setExecutionCapabilities(new ArrayList<>(selectorCapabilities));
+    } else {
+      task.getExecutionCapabilities().addAll(selectorCapabilities);
+    }
+  }
+
+  @VisibleForTesting
+  @Override
   public void saveDelegateTask(DelegateTask task, DelegateTask.Status taskStatus) {
     task.setStatus(taskStatus);
     task.setVersion(getVersion());
@@ -2079,6 +2119,8 @@ public class DelegateServiceImpl implements DelegateService {
     }
 
     checkTaskRankRateLimit(task.getRank());
+
+    convertToExecutionCapability(task);
     wingsPersistence.save(task);
   }
 
@@ -2225,6 +2267,7 @@ public class DelegateServiceImpl implements DelegateService {
       }
     } else if (eligibleDelegates.isEmpty()) {
       logger.warn("{} delegates active but no delegates are eligible to execute task", activeDelegates.size());
+
       alertService.openAlert(task.getAccountId(), task.getAppId(), NoEligibleDelegates,
           NoEligibleDelegatesAlert.builder()
               .accountId(task.getAccountId())
@@ -2533,7 +2576,7 @@ public class DelegateServiceImpl implements DelegateService {
 
       if (isNotEmpty(secretManagerFunctor.getEvaluatedSecrets())) {
         delegateTaskPackageBuilder.secrets(
-            secretManagerFunctor.getEvaluatedSecrets().values().stream().collect(Collectors.toSet()));
+            secretManagerFunctor.getEvaluatedSecrets().values().stream().collect(toSet()));
       }
 
       return delegateTaskPackageBuilder.build();
