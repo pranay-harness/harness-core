@@ -53,7 +53,7 @@ public class TimeSeriesDashboardServiceImpl implements TimeSeriesDashboardServic
     Instant endTime = Instant.ofEpochMilli(endTimeMillis);
 
     // get all the cvConfigs that belong to
-    List<CVConfig> cvConfigList = cvConfigService.list(
+    List<CVConfig> cvConfigList = cvConfigService.getConfigsOfProductionEnvironments(
         accountId, orgIdentifier, projectIdentifier, environmentIdentifier, serviceIdentifier, monitoringCategory);
     List<String> cvConfigIds = cvConfigList.stream().map(CVConfig::getUuid).collect(Collectors.toList());
 
@@ -125,7 +125,9 @@ public class TimeSeriesDashboardServiceImpl implements TimeSeriesDashboardServic
     return NGPageResponse.<TimeSeriesMetricDataDTO>builder()
         .pageSize(size)
         .pageCount(sortedMetricdata.size() / size)
-        .itemCount(returnList.size())
+        .itemCount(sortedMetricdata.size())
+        .pageIndex(returnList.size() == 0 ? -1 : page)
+        .empty(returnList.size() == 0)
         .content(returnList)
         .build();
   }

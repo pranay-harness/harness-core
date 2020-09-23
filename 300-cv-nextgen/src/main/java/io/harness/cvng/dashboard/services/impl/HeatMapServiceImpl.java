@@ -14,6 +14,7 @@ import io.harness.cvng.beans.CVMonitoringCategory;
 import io.harness.cvng.core.services.api.CVConfigService;
 import io.harness.cvng.dashboard.beans.EnvServiceRiskDTO;
 import io.harness.cvng.dashboard.beans.EnvServiceRiskDTO.ServiceRisk;
+import io.harness.cvng.dashboard.beans.EnvToServicesDTO;
 import io.harness.cvng.dashboard.beans.HeatMapDTO;
 import io.harness.cvng.dashboard.entities.HeatMap;
 import io.harness.cvng.dashboard.entities.HeatMap.HeatMapKeys;
@@ -21,6 +22,8 @@ import io.harness.cvng.dashboard.entities.HeatMap.HeatMapResolution;
 import io.harness.cvng.dashboard.entities.HeatMap.HeatMapRisk;
 import io.harness.cvng.dashboard.entities.HeatMap.HeatMapRisk.HeatMapRiskKeys;
 import io.harness.cvng.dashboard.services.api.HeatMapService;
+import io.harness.ng.core.environment.beans.EnvironmentType;
+import io.harness.ng.core.service.dto.ServiceResponseDTO;
 import io.harness.persistence.HIterator;
 import io.harness.persistence.HPersistence;
 import org.mongodb.morphia.UpdateOptions;
@@ -39,6 +42,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.SortedSet;
 import java.util.TreeSet;
+import java.util.stream.Collectors;
 import javax.validation.constraints.NotNull;
 
 public class HeatMapServiceImpl implements HeatMapService {
@@ -141,8 +145,16 @@ public class HeatMapServiceImpl implements HeatMapService {
   @Override
   public List<EnvServiceRiskDTO> getEnvServiceRiskScores(
       String accountId, String orgIdentifier, String projectIdentifier) {
-    Map<String, Set<String>> envToServicesMap =
-        cvConfigService.getEnvToServicesMap(accountId, orgIdentifier, projectIdentifier);
+    List<EnvToServicesDTO> envToServicesDTOS =
+        cvConfigService.getEnvToServicesList(accountId, orgIdentifier, projectIdentifier);
+    Map<String, Set<String>> envToServicesMap = new HashMap<>();
+    envToServicesDTOS.forEach(envToServicesDTO -> {
+      if (envToServicesDTO.getEnvironment().getType().equals(EnvironmentType.Production)) {
+        Set<String> services =
+            envToServicesDTO.getServices().stream().map(ServiceResponseDTO::getIdentifier).collect(Collectors.toSet());
+        envToServicesMap.put(envToServicesDTO.getEnvironment().getIdentifier(), services);
+      }
+    });
     List<EnvServiceRiskDTO> envServiceRiskDTOList = new ArrayList<>();
     envToServicesMap.forEach((envIdentifier, serviceSet) -> {
       Set<ServiceRisk> serviceRisks = new HashSet<>();

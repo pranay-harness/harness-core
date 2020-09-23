@@ -70,7 +70,7 @@ public class LogDashboardServiceImpl implements LogDashboardService {
 
     Instant startTime = Instant.ofEpochMilli(startTimeMillis);
     Instant endTime = Instant.ofEpochMilli(endTimeMillis);
-    List<CVConfig> configs = cvConfigService.list(
+    List<CVConfig> configs = cvConfigService.getConfigsOfProductionEnvironments(
         accountId, orgIdentifier, projectIdentifier, environmentIdentifer, serviceIdentifier, category);
     List<String> cvConfigIds = configs.stream().map(CVConfig::getUuid).collect(Collectors.toList());
     for (String cvConfigId : cvConfigIds) {
@@ -107,7 +107,7 @@ public class LogDashboardServiceImpl implements LogDashboardService {
     List<LogData> logDataToBeReturned = Collections.synchronizedList(new ArrayList<>());
     Instant startTime = Instant.ofEpochMilli(startTimeMillis);
     Instant endTime = Instant.ofEpochMilli(endTimeMillis);
-    List<CVConfig> configs = cvConfigService.list(
+    List<CVConfig> configs = cvConfigService.getConfigsOfProductionEnvironments(
         accountId, orgIdentifier, projectIdentifier, environmentIdentifer, serviceIdentifier, category);
     List<String> cvConfigIds = configs.stream().map(CVConfig::getUuid).collect(Collectors.toList());
 
@@ -232,7 +232,9 @@ public class LogDashboardServiceImpl implements LogDashboardService {
     return NGPageResponse.<AnalyzedLogDataDTO>builder()
         .pageSize(size)
         .pageCount(totalNumPages)
-        .itemCount(returnList.size())
+        .itemCount(analyzedLogData.size())
+        .pageIndex(returnList.size() == 0 ? -1 : page)
+        .empty(returnList.size() == 0)
         .content(returnList)
         .build();
   }
