@@ -12,6 +12,7 @@ import static io.harness.rule.OwnerRule.BRETT;
 import static io.harness.rule.OwnerRule.GARVIT;
 import static io.harness.rule.OwnerRule.GEORGE;
 import static io.harness.rule.OwnerRule.HARSH;
+import static io.harness.rule.OwnerRule.INDER;
 import static io.harness.rule.OwnerRule.KAMAL;
 import static io.harness.rule.OwnerRule.PRASHANT;
 import static io.harness.rule.OwnerRule.RUSHABH;
@@ -21,6 +22,7 @@ import static io.harness.rule.OwnerRule.UJJAWAL;
 import static io.harness.rule.OwnerRule.YOGESH;
 import static java.lang.String.format;
 import static java.util.Arrays.asList;
+import static java.util.Collections.singletonList;
 import static java.util.stream.Collectors.toList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -82,6 +84,7 @@ import static software.wings.beans.Variable.VariableBuilder.aVariable;
 import static software.wings.beans.Workflow.WorkflowBuilder.aWorkflow;
 import static software.wings.beans.WorkflowPhase.WorkflowPhaseBuilder.aWorkflowPhase;
 import static software.wings.beans.artifact.Artifact.Builder.anArtifact;
+import static software.wings.beans.workflow.StepSkipStrategy.Scope.SPECIFIC_STEPS;
 import static software.wings.common.TemplateConstants.LATEST_TAG;
 import static software.wings.common.WorkflowConstants.PHASE_NAME_PREFIX;
 import static software.wings.common.WorkflowConstants.PHASE_STEP_VALIDATION_MESSAGE;
@@ -344,6 +347,7 @@ import software.wings.beans.stats.CloneMetadata;
 import software.wings.beans.template.Template;
 import software.wings.beans.template.TemplateType;
 import software.wings.beans.template.command.HttpTemplate;
+import software.wings.beans.workflow.StepSkipStrategy;
 import software.wings.dl.WingsPersistence;
 import software.wings.infra.AwsAmiInfrastructure;
 import software.wings.infra.AwsEcsInfrastructure;
@@ -4955,5 +4959,54 @@ public class WorkflowServiceTest extends WingsBaseTest {
     when(artifactStreamService.get(ARTIFACT_STREAM_ID)).thenReturn(nexusArtifactStream);
     workflowService.resolveArtifactStreamMetadata(APP_ID, artifactVariables, workflowExecution);
     assertThat(artifactVariables.get(0).getArtifactStreamMetadata()).isNull();
+  }
+
+  private GraphNode prepareGraphNode(int idx) {
+    return GraphNode.builder().id("id" + idx).build();
+  }
+
+  @Test
+  @Owner(developers = INDER)
+  @Category(UnitTests.class)
+  public void shouldCloneWorkflowPhaseWithSkipSTepStrategies() {
+    Workflow workflow1 = createCanaryWorkflow();
+    PhaseStep phaseStep =
+        aPhaseStep(PRE_DEPLOYMENT)
+            .addStep(prepareGraphNode(1))
+            .addStep(prepareGraphNode(2))
+            .withStepSkipStrategies(singletonList(new StepSkipStrategy(SPECIFIC_STEPS, asList("id1", "id2"), "true")))
+            .build();
+    WorkflowPhase workflowPhase = aWorkflowPhase()
+                                      .infraMappingId(INFRA_MAPPING_ID)
+                                      .serviceId(SERVICE_ID)
+                                      .phaseSteps(singletonList(phaseStep))
+                                      .build();
+    workflowService.createWorkflowPhase(workflow1.getAppId(), workflow1.getUuid(), workflowPhase);
+
+    Workflow workflow2 = workflowService.readWorkflow(workflow1.getAppId(), workflow1.getUuid());
+    assertThat(workflow2).isNotNull();
+
+    List<WorkflowPhase> workflowPhases2 =
+        ((CanaryOrchestrationWorkflow) workflow2.getOrchestrationWorkflow()).getWorkflowPhases();
+    WorkflowPhase workflowPhase2 = workflowPhases2.get(workflowPhases2.size() - 1);
+    workflowPhase2.setName("phase 2-clone");
+
+    workflowService.cloneWorkflowPhase(workflow2.getAppId(), workflow2.getUuid(), workflowPhase2);
+
+    Workflow workflow3 = workflowService.readWorkflow(workflow1.getAppId(), workflow1.getUuid());
+    List<WorkflowPhase> workflowPhases3 =
+        ((CanaryOrchestrationWorkflow) workflow3.getOrchestrationWorkflow()).getWorkflowPhases();
+    WorkflowPhase clonedWorkflowPhase = workflowPhases3.get(workflowPhases3.size() - 1);
+    assertThat(clonedWorkflowPhase).isNotNull();
+    assertThat(clonedWorkflowPhase.getUuid()).isNotEqualTo(workflowPhase2.getUuid());
+    assertThat(clonedWorkflowPhase.getName()).isEqualTo("phase 2-clone");
+    assertThat(clonedWorkflowPhase)
+        .isEqualToComparingOnlyGivenFields(workflowPhase2, "infraMappingId", "serviceId", "computeProviderId");
+    assertThat(clonedWorkflowPhase.getPhaseSteps()).isNotNull().size().isEqualTo(workflowPhase2.getPhaseSteps().size());
+
+    assertThat(clonedWorkflowPhase.getPhaseSteps().get(0).getStepSkipStrategies())
+        .isNotNull()
+        .size()
+        .isEqualTo(workflowPhase2.getPhaseSteps().get(0).getStepSkipStrategies().size());
   }
 }

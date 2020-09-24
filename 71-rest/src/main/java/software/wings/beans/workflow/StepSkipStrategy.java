@@ -16,6 +16,7 @@ import org.mongodb.morphia.annotations.Transient;
 import software.wings.beans.PhaseStep;
 import software.wings.yaml.BaseYaml;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
@@ -73,6 +74,10 @@ public class StepSkipStrategy {
         }
       }
     }
+  }
+
+  public StepSkipStrategy cloneInternal() {
+    return new StepSkipStrategy(getScope(), new ArrayList<>(getStepIds()), getAssertionExpression());
   }
 
   @Data
