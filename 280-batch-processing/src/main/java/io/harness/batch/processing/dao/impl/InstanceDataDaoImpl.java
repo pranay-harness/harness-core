@@ -163,15 +163,14 @@ public class InstanceDataDaoImpl implements InstanceDataDao {
 
     } else {
       logger.trace("Instance data found {} ", instanceData);
-      Map<String, String> instanceDataMetaData = instanceData.getMetaData();
-      Map<String, String> metaData = instanceInfo.getMetaData();
-      String cloudProviderInstanceId = InstanceMetaDataUtils.getValueForKeyFromInstanceMetaData(
-          InstanceMetaDataConstants.CLOUD_PROVIDER_INSTANCE_ID, metaData);
-      if (null != cloudProviderInstanceId) {
-        instanceDataMetaData.put(InstanceMetaDataConstants.CLOUD_PROVIDER_INSTANCE_ID, cloudProviderInstanceId);
+      Map<String, String> oldInstanceMetaData = instanceData.getMetaData();
+      Map<String, String> newInstanceMetaData = instanceInfo.getMetaData();
+
+      if (InstanceMetaDataUtils.carryUpdatedMapKeyFromTo(newInstanceMetaData,
+              oldInstanceMetaData)) { // carry updated (key,value) from newInstanceMetaData to oldInstanceMetaData
         UpdateOperations<InstanceData> updateOperations = hPersistence.createUpdateOperations(InstanceData.class);
-        updateOperations.set(InstanceDataKeys.metaData, instanceDataMetaData);
-        hPersistence.upsert(query, updateOperations, upsertReturnNewOptions);
+        updateOperations.set(InstanceDataKeys.metaData, oldInstanceMetaData);
+        return hPersistence.upsert(query, updateOperations, upsertReturnNewOptions);
       }
     }
     return instanceData;
