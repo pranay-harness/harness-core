@@ -1,14 +1,10 @@
 package io.harness.mongo;
 
-import static io.harness.morphia.MorphiaRegistrar.putClass;
-
 import com.mongodb.DBObject;
 import io.harness.exception.UnexpectedException;
 import io.harness.logging.AutoLogRemoveContext;
 import io.harness.mongo.MorphiaMove.MorphiaMoveKeys;
-import io.harness.morphia.MorphiaRegistrar;
 import io.harness.morphia.MorphiaRegistrar.NotFoundClass;
-import io.harness.morphia.MorphiaRegistrarHelperPut;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import org.eclipse.jetty.util.ConcurrentHashSet;
@@ -34,32 +30,15 @@ import java.util.stream.Collectors;
 
 @Slf4j
 public class HObjectFactory extends DefaultCreator {
+  private static final Objenesis objenesis = new ObjenesisStd(true);
+
   @Setter private AdvancedDatastore datastore;
 
-  private static synchronized Map<String, Class> collectMorphiaInterfaceImplementers() {
-    Map<String, Class> map = new ConcurrentHashMap<>();
-    MorphiaRegistrarHelperPut h = (name, clazz) -> putClass(map, "io.harness." + name, clazz);
-    MorphiaRegistrarHelperPut w = (name, clazz) -> putClass(map, "software.wings." + name, clazz);
+  private Map<String, Class> morphiaInterfaceImplementers;
 
-    try {
-      Reflections reflections = new Reflections("io.harness.serializer.morphia");
-      for (Class clazz : reflections.getSubTypesOf(MorphiaRegistrar.class)) {
-        Constructor<?> constructor = clazz.getConstructor();
-        final MorphiaRegistrar morphiaRegistrar = (MorphiaRegistrar) constructor.newInstance();
-
-        morphiaRegistrar.registerImplementationClasses(h, w);
-      }
-    } catch (Exception e) {
-      logger.error("Failed to initialize morphia object factory", e);
-      System.exit(1);
-    }
-
-    return map;
+  HObjectFactory(Map<String, Class> morphiaInterfaceImplementers) {
+    this.morphiaInterfaceImplementers = morphiaInterfaceImplementers;
   }
-
-  private Map<String, Class> morphiaInterfaceImplementers = collectMorphiaInterfaceImplementers();
-
-  private static final Objenesis objenesis = new ObjenesisStd(true);
 
   private boolean isHarnessClass(String className) {
     return className.startsWith("software.wings") || className.startsWith("io.harness");

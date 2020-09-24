@@ -14,6 +14,7 @@ import org.apache.commons.io.IOUtils;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mongodb.morphia.Morphia;
+import org.mongodb.morphia.ObjectFactory;
 import software.wings.WingsBaseTest;
 import software.wings.beans.Account;
 
@@ -27,7 +28,7 @@ import java.util.stream.Collectors;
 public class MongoIndexesTest extends WingsBaseTest {
   @Inject HPersistence persistence;
   @Inject @Named("morphiaClasses") Set<Class> classes;
-  @Inject HObjectFactory objectFactory;
+  @Inject ObjectFactory objectFactory;
 
   @Test
   @Owner(developers = GEORGE)

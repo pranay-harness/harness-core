@@ -7,7 +7,6 @@ import com.google.inject.Inject;
 
 import io.harness.VerificationBaseTest;
 import io.harness.category.element.UnitTests;
-import io.harness.mongo.HObjectFactory;
 import io.harness.mongo.IndexCreator;
 import io.harness.mongo.IndexManagerSession;
 import io.harness.persistence.HPersistence;
@@ -17,6 +16,7 @@ import org.apache.commons.io.IOUtils;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mongodb.morphia.Morphia;
+import org.mongodb.morphia.ObjectFactory;
 import software.wings.beans.Account;
 
 import java.io.IOException;
@@ -28,7 +28,7 @@ import java.util.stream.Collectors;
 @Slf4j
 public class MongoIndexesTest extends VerificationBaseTest {
   @Inject HPersistence persistence;
-  @Inject HObjectFactory objectFactory;
+  @Inject ObjectFactory objectFactory;
 
   Set<Class> classes = VerificationMorphiaClasses.classes;
 
