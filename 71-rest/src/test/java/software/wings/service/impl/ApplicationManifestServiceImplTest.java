@@ -664,16 +664,20 @@ public class ApplicationManifestServiceImplTest extends WingsBaseTest {
   @Test
   @Owner(developers = INDER)
   @Category(UnitTests.class)
-  public void shouldNotUpdateWithPollForChangesEnabledAndChartVersionGiven() {
+  public void shouldNotCreateOrUpdateWithPollForChangesEnabledAndChartVersionGiven() {
+    enableFeatureFlag();
     ApplicationManifest applicationManifest = getHelmChartApplicationManifest();
-    ApplicationManifest savedAppManifest = getHelmChartApplicationManifest();
 
-    when(applicationManifestServiceImpl.getById(anyString(), anyString())).thenReturn(savedAppManifest);
-    savedAppManifest.setPollForChanges(true);
     applicationManifest.setPollForChanges(true);
     applicationManifest.setHelmChartConfig(HelmChartConfig.builder().chartVersion("v1").build());
 
-    assertThatThrownBy(() -> applicationManifestServiceImpl.checkForUpdates(applicationManifest))
+    assertThatThrownBy(
+        () -> applicationManifestServiceImpl.handlePollForChangesToggle(applicationManifest, true, ACCOUNT_ID))
+        .isInstanceOf(InvalidRequestException.class)
+        .hasMessageContaining("No Helm Chart version is required when Poll for Manifest option is enabled.");
+
+    assertThatThrownBy(
+        () -> applicationManifestServiceImpl.handlePollForChangesToggle(applicationManifest, false, ACCOUNT_ID))
         .isInstanceOf(InvalidRequestException.class)
         .hasMessageContaining("No Helm Chart version is required when Poll for Manifest option is enabled.");
   }

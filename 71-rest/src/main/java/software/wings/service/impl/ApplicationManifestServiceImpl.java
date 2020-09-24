@@ -406,10 +406,6 @@ public class ApplicationManifestServiceImpl implements ApplicationManifestServic
         deletePerpetualTask(savedAppManifest);
       }
     } else if (Boolean.TRUE.equals(curPollForChanges)) {
-      if (isNotEmpty(applicationManifest.getHelmChartConfig().getChartVersion())) {
-        throw new InvalidRequestException(
-            "No Helm Chart version is required when Poll for Manifest option is enabled.");
-      }
       if (oldPollForChanges == null || Boolean.FALSE.equals(oldPollForChanges)) {
         createPerpetualTask(applicationManifest);
       } else {
@@ -433,6 +429,11 @@ public class ApplicationManifestServiceImpl implements ApplicationManifestServic
           && applicationManifest.getStoreType() != HelmChartRepo) {
         throw new InvalidRequestException(
             applicationManifest.getStoreType() + " Manifest format doesn't support poll for changes option.");
+      }
+      if (Boolean.TRUE.equals(applicationManifest.getPollForChanges())
+          && isNotEmpty(applicationManifest.getHelmChartConfig().getChartVersion())) {
+        throw new InvalidRequestException(
+            "No Helm Chart version is required when Poll for Manifest option is enabled.");
       }
       if (isCreate && Boolean.TRUE.equals(applicationManifest.getPollForChanges())) {
         createPerpetualTask(applicationManifest);
