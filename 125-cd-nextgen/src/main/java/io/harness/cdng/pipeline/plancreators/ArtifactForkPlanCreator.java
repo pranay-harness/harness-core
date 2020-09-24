@@ -7,6 +7,7 @@ import static java.util.Collections.singletonList;
 
 import com.google.inject.Inject;
 
+import io.harness.beans.ParameterField;
 import io.harness.cdng.artifact.bean.ArtifactConfig;
 import io.harness.cdng.artifact.bean.yaml.ArtifactListConfig;
 import io.harness.cdng.artifact.bean.yaml.ArtifactOverrideSets;
@@ -163,8 +164,8 @@ public class ArtifactForkPlanCreator
   private List<ArtifactConfig> getArtifactOverrideSetsApplicable(ServiceConfig serviceConfig) {
     List<ArtifactConfig> artifacts = new LinkedList<>();
     if (serviceConfig.getStageOverrides() != null
-        && serviceConfig.getStageOverrides().getUseArtifactOverrideSets() != null) {
-      for (String useArtifactOverrideSet : serviceConfig.getStageOverrides().getUseArtifactOverrideSets()) {
+        && !ParameterField.isEmpty(serviceConfig.getStageOverrides().getUseArtifactOverrideSets())) {
+      for (String useArtifactOverrideSet : serviceConfig.getStageOverrides().getUseArtifactOverrideSets().getValue()) {
         List<ArtifactOverrideSets> artifactOverrideSetsList =
             serviceConfig.getServiceDefinition()
                 .getServiceSpec()

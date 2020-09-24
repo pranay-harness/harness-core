@@ -9,15 +9,16 @@ import static org.mockito.Mockito.when;
 import com.google.inject.Injector;
 
 import io.harness.CategoryTest;
-import io.harness.beans.ParameterField;
 import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
+import io.harness.walktree.beans.DummyVisitorField;
+import io.harness.walktree.beans.DummyVisitorFieldProcessor;
 import io.harness.walktree.registries.visitorfield.VisitableFieldProcessor;
 import io.harness.walktree.registries.visitorfield.VisitorFieldRegistry;
-import io.harness.walktree.registries.visitorfield.VisitorFieldType;
-import io.harness.walktree.visitor.utilities.VisitorDummyElementUtilities;
-import io.harness.walktree.visitor.utilities.VisitorParentPathUtilities;
+import io.harness.walktree.visitor.utilities.VisitorDummyElementUtils;
+import io.harness.walktree.visitor.utilities.VisitorParentPathUtils;
 import io.harness.walktree.visitor.validation.modes.ModeType;
+import org.assertj.core.api.Assertions;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -32,16 +33,16 @@ public class ValidationVisitorTest extends CategoryTest {
 
   @InjectMocks
   private ValidationVisitor validationVisitor = spy(new ValidationVisitor(injector, ModeType.PRE_INPUT_SET, true));
-  ;
 
   @Before
   public void setup() {
     MockitoAnnotations.initMocks(this);
-    VisitableFieldProcessor visitableFieldProcessor = Mockito.mock(VisitableFieldProcessor.class);
-    when(visitorFieldRegistry.obtain(VisitorFieldType.builder().type("PARAMETER_FIELD").build()))
-        .thenReturn(visitableFieldProcessor);
+    VisitableFieldProcessor visitableFieldProcessor = Mockito.mock(DummyVisitorFieldProcessor.class);
+    when(visitorFieldRegistry.obtainFieldType(DummyVisitorField.class))
+        .thenReturn(DummyVisitorField.VISITOR_FIELD_TYPE);
+    when(visitorFieldRegistry.obtain(DummyVisitorField.VISITOR_FIELD_TYPE)).thenReturn(visitableFieldProcessor);
     when(visitableFieldProcessor.createNewFieldWithStringValue(any()))
-        .thenReturn(ParameterField.createJsonResponseField(".parameterField"));
+        .thenReturn(DummyVisitorField.builder().value(".dummyTestField").build());
   }
 
   @Test
@@ -51,7 +52,7 @@ public class ValidationVisitorTest extends CategoryTest {
     VisitorTestChild visitorTestChild = VisitorTestChild.builder().name("dummyTestPojo").build();
     VisitorTestParent visitorTestParent =
         VisitorTestParent.builder().name("parent").visitorTestChild(visitorTestChild).build();
-    VisitorDummyElementUtilities.addToDummyElementMap(
+    VisitorDummyElementUtils.addToDummyElementMap(
         validationVisitor.getElementToDummyElementMap(), visitorTestChild, VisitorTestChild.builder().build());
     when(validationVisitor.getHelperClass(visitorTestParent)).thenReturn(new VisitorTestParentVisitorHelper());
     validationVisitor.addErrorChildrenToCurrentElement(visitorTestParent);
@@ -75,8 +76,8 @@ public class ValidationVisitorTest extends CategoryTest {
 
     assertThat(validationVisitor.getElementToDummyElementMap().size()).isEqualTo(1);
     assertThat(validationVisitor.uuidToVisitorResponse.size()).isEqualTo(2);
-    ParameterField<String> parameterField = dummy.getParameterField();
-    assertThat(parameterField.getResponseField()).isEqualTo(".parameterField");
+    DummyVisitorField dummyTestField = dummy.getVisitorField();
+    Assertions.assertThat(dummyTestField.getValue()).isEqualTo(".dummyTestField");
   }
 
   @Test
@@ -91,10 +92,9 @@ public class ValidationVisitorTest extends CategoryTest {
 
     assertThat(validationVisitor.getElementToDummyElementMap().size()).isEqualTo(2);
     assertThat(validationVisitor.uuidToVisitorResponse.size()).isEqualTo(2);
-    ParameterField<String> parameterField =
-        ((VisitorTestParent) validationVisitor.getElementToDummyElementMap().get(visitorTestParent))
-            .getParameterField();
-    assertThat(parameterField.getResponseField()).isEqualTo(".parameterField");
+    DummyVisitorField dummyTestField =
+        ((VisitorTestParent) validationVisitor.getElementToDummyElementMap().get(visitorTestParent)).getVisitorField();
+    Assertions.assertThat(dummyTestField.getValue()).isEqualTo(".dummyTestField");
   }
 
   @Test
@@ -105,7 +105,7 @@ public class ValidationVisitorTest extends CategoryTest {
     VisitorTestParent visitorTestParent = VisitorTestParent.builder().visitorTestChild(visitorTestChild).build();
     validationVisitor.preVisitElement(visitorTestParent);
 
-    assertThat(VisitorParentPathUtilities.getFullQualifiedDomainName(validationVisitor.getContextMap()))
+    assertThat(VisitorParentPathUtils.getFullQualifiedDomainName(validationVisitor.getContextMap()))
         .isEqualTo("dummyTestPOJO");
   }
 }

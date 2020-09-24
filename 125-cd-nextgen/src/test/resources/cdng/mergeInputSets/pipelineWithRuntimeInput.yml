@@ -27,7 +27,7 @@ pipeline:
                         type: Dockerhub
                         spec:
                           dockerhubConnector: myDocker2
-                          imagePath: "library/redis"
+                          imagePath: ${input}
                           tag: ${input}
                 manifests:
                   - manifest:
@@ -39,7 +39,7 @@ pipeline:
                           spec:
                             connectorIdentifier: myGitConnector
                             gitFetchType: Branch
-                            branch: master
+                            branch: ${input}
                             paths: ${input}.allowedValues(['paths1', 'master/paths2', 'paths3'])
                 manifestOverrideSets:
                   - overrideSet:
@@ -55,7 +55,7 @@ pipeline:
                                 spec:
                                   connectorIdentifier: ${input}
                                   gitFetchType: Branch
-                                  branch: master
+                                  branch: ${input}
                                   paths:
                                     - test/spec
           infrastructure:

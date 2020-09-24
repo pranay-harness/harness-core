@@ -18,9 +18,9 @@ public interface VisitableFieldProcessor<T extends VisitorFieldWrapper> extends 
   T updateCurrentField(T actualField, T overrideField);
 
   /**
-   * This function is used to create new field of custom java classes.
+   * This function is used to create clone of field of custom java classes.
    */
-  T createNewField(T actualField);
+  T cloneField(T actualField);
 
   /**
    * This function returns the error uuid corresponding to the field.
@@ -31,4 +31,11 @@ public interface VisitableFieldProcessor<T extends VisitorFieldWrapper> extends 
    * This functions creates new field with Error field as input.
    */
   T createNewFieldWithStringValue(String stringValue);
+
+  /**
+   * This function checks whether field is equivalent to null or not.
+   * @param actualField
+   * @return
+   */
+  boolean isNull(T actualField);
 }

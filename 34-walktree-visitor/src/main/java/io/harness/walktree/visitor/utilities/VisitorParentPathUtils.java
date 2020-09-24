@@ -10,7 +10,7 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 
 @UtilityClass
-public class VisitorParentPathUtilities {
+public class VisitorParentPathUtils {
   private String PARENT_PATH_KEY = "PARENT_PATH_KEY";
 
   private <T> void setConfig(String key, T config, Map<String, Object> contextMap) {

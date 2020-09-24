@@ -1,12 +1,12 @@
 package io.harness.walktree.visitor.utilities;
 
 import io.harness.data.structure.UUIDGenerator;
+import io.harness.exception.InvalidRequestException;
 import io.harness.reflection.ReflectionUtils;
 import io.harness.walktree.registries.visitorfield.VisitableFieldProcessor;
 import io.harness.walktree.registries.visitorfield.VisitorFieldRegistry;
 import io.harness.walktree.registries.visitorfield.VisitorFieldType;
 import io.harness.walktree.registries.visitorfield.VisitorFieldWrapper;
-import io.harness.walktree.visitor.SimpleVisitor;
 import io.harness.walktree.visitor.WithMetadata;
 import io.harness.walktree.visitor.response.VisitorResponse;
 import lombok.experimental.UtilityClass;
@@ -15,46 +15,46 @@ import java.lang.reflect.Field;
 import java.util.Map;
 
 @UtilityClass
-public class VisitorResponseUtility {
+public class VisitorResponseUtils {
   /**
    * Adds the given uuid -> validationErrors to the uuidToErrorMap
    * Appends to the given uuid if the uuid already exists.
    * @param uuid
-   * @param validationResponseList
+   * @param visitorResponse
    */
-  public void addToVisitorResponse(String uuid, VisitorResponse validationResponseList,
-      Map<String, VisitorResponse> uuidToErrorResponseList, VisitorResponse newObject) {
-    VisitorResponse existingValidationResponseList = uuidToErrorResponseList.getOrDefault(uuid, newObject);
-    existingValidationResponseList.add(validationResponseList);
-    uuidToErrorResponseList.put(uuid, validationResponseList);
+  public void addToVisitorResponse(String uuid, VisitorResponse visitorResponse,
+      Map<String, VisitorResponse> uuidToErrorResponseMap, VisitorResponse newObject) {
+    VisitorResponse existingValidationResponseList = uuidToErrorResponseMap.getOrDefault(uuid, newObject);
+    existingValidationResponseList.add(visitorResponse);
+    uuidToErrorResponseMap.put(uuid, visitorResponse);
   }
 
-  public <T> String addUUIDValueToGivenField(SimpleVisitor<T> simpleVisitor, Object element,
+  public String addUUIDValueToGivenField(Map<String, Object> contextMap, Object element,
       VisitorFieldRegistry visitorFieldRegistry, String fieldName, boolean useFQN) throws IllegalAccessException {
     Field field = ReflectionUtils.getFieldByName(element.getClass(), fieldName);
     field.setAccessible(true);
     if (VisitorFieldWrapper.class.isAssignableFrom(field.getType())) {
-      return addWrappedUUID(simpleVisitor, visitorFieldRegistry, element, field, useFQN);
+      return addWrappedUUID(contextMap, visitorFieldRegistry, element, field, useFQN);
     } else if (field.getType() == String.class) {
-      return addUUID(simpleVisitor, element, field, useFQN);
+      return addUUID(contextMap, element, field, useFQN);
     }
-    return addUUIDToMetaDataField(simpleVisitor, element, useFQN);
+    return addUUIDToMetaDataField(contextMap, element, useFQN);
   }
 
-  public <T> String getUUid(SimpleVisitor<T> simpleVisitor, String fieldName, boolean useFQN) {
-    return useFQN
-        ? VisitorParentPathUtilities.getFullQualifiedDomainName(simpleVisitor.getContextMap()) + "." + fieldName
-        : UUIDGenerator.generateUuid();
+  public String getUUid(Map<String, Object> contextMap, String fieldName, boolean useFQN) {
+    return useFQN ? VisitorParentPathUtils.getFullQualifiedDomainName(contextMap) + "." + fieldName
+                  : UUIDGenerator.generateUuid();
   }
 
-  private <T> String addWrappedUUID(SimpleVisitor<T> simpleVisitor, VisitorFieldRegistry visitorFieldRegistry,
-      Object element, Field field, boolean usFQN) throws IllegalAccessException {
+  private String addWrappedUUID(Map<String, Object> contextMap, VisitorFieldRegistry visitorFieldRegistry,
+      Object element, Field field, boolean useFQN) throws IllegalAccessException {
     if (field.get(element) == null) {
-      String uuid = getUUid(simpleVisitor, field.getName(), usFQN);
-      VisitableFieldProcessor<?> visitorFieldWrapper =
-          visitorFieldRegistry.obtain(VisitorFieldType.builder().type("PARAMETER_FIELD").build());
+      String uuid = getUUid(contextMap, field.getName(), useFQN);
+      Class<? extends VisitorFieldWrapper> fieldType = (Class<? extends VisitorFieldWrapper>) field.getType();
+      VisitableFieldProcessor<?> visitableFieldProcessor =
+          visitorFieldRegistry.obtain(visitorFieldRegistry.obtainFieldType(fieldType));
 
-      field.set(element, visitorFieldWrapper.createNewFieldWithStringValue(uuid));
+      field.set(element, visitableFieldProcessor.createNewFieldWithStringValue(uuid));
       return uuid;
     }
     VisitorFieldWrapper parameterField = (VisitorFieldWrapper) field.get(element);
@@ -63,17 +63,17 @@ public class VisitorResponseUtility {
     return visitorFieldWrapper.getFieldWithStringValue(parameterField);
   }
 
-  private <T> String addUUID(SimpleVisitor<T> simpleVisitor, Object element, Field field, boolean usFQN)
+  private String addUUID(Map<String, Object> contextMap, Object element, Field field, boolean useFQN)
       throws IllegalAccessException {
     if (field.get(element) == null) {
-      String uuid = getUUid(simpleVisitor, field.getName(), usFQN);
+      String uuid = getUUid(contextMap, field.getName(), useFQN);
       field.set(element, uuid);
       return uuid;
     }
     return (String) field.get(element);
   }
 
-  private <T> String addUUIDToMetaDataField(SimpleVisitor<T> simpleVisitor, Object element, boolean usFQN)
+  private String addUUIDToMetaDataField(Map<String, Object> contextMap, Object element, boolean useFQN)
       throws IllegalAccessException {
     if (element instanceof WithMetadata) {
       Field field = ReflectionUtils.getFieldByName(element.getClass(), "metadata");
@@ -82,12 +82,12 @@ public class VisitorResponseUtility {
       }
       field.setAccessible(true);
       if (field.get(element) == null) {
-        String uuid = getUUid(simpleVisitor, field.getName(), usFQN);
+        String uuid = getUUid(contextMap, field.getName(), useFQN);
         field.set(element, uuid);
         return uuid;
       }
       return (String) field.get(element);
     }
-    throw new IllegalAccessException();
+    throw new InvalidRequestException("There is no field with Metadata.");
   }
 }

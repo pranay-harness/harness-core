@@ -6,6 +6,7 @@ import static io.harness.data.structure.UUIDGenerator.generateUuid;
 
 import com.google.inject.Singleton;
 
+import io.harness.beans.ParameterField;
 import io.harness.cdng.manifest.state.ManifestStep;
 import io.harness.cdng.manifest.state.ManifestStepParameters;
 import io.harness.cdng.manifest.yaml.ManifestConfigWrapper;
@@ -61,9 +62,10 @@ public class ManifestStepPlanCreator implements SupportDefinedExecutorPlanCreato
   private List<ManifestConfigWrapper> getManifestOverrideSetsApplicable(ServiceConfig serviceConfig) {
     List<ManifestConfigWrapper> manifestOverrideSets = new LinkedList<>();
     if (serviceConfig.getStageOverrides() != null
-        && serviceConfig.getStageOverrides().getUseManifestOverrideSets() != null) {
+        && !ParameterField.isEmpty(serviceConfig.getStageOverrides().getUseManifestOverrideSets())) {
       serviceConfig.getStageOverrides()
           .getUseManifestOverrideSets()
+          .getValue()
           .stream()
           .map(useManifestOverrideSet
               -> serviceConfig.getServiceDefinition()

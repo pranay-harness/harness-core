@@ -28,6 +28,13 @@ public class InfraUseFromStage implements Serializable, Visitable {
   String metadata;
 
   @Override
+  public VisitableChildren getChildrenToWalk() {
+    VisitableChildren children = VisitableChildren.builder().build();
+    children.add("overrides", overrides);
+    return children;
+  }
+
+  @Override
   public LevelNode getLevelNode() {
     return LevelNode.builder().qualifierName(LevelNodeQualifierName.INFRA_USE_FROM_STAGE).build();
   }

@@ -1,4 +1,4 @@
-package io.harness.walktree.visitor;
+package io.harness.walktree.visitor.response;
 
 import lombok.Builder;
 import lombok.Data;

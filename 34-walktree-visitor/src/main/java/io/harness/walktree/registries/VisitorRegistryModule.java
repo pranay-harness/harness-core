@@ -44,7 +44,7 @@ public class VisitorRegistryModule extends AbstractModule {
     Set fieldTypeClasses = new HashSet<>();
     visitableFieldRegistrarMap.values().forEach(
         visitableFieldRegistrar -> { visitableFieldRegistrar.registerFieldTypes(fieldTypeClasses); });
-    classes.forEach(pair -> {
+    fieldTypeClasses.forEach(pair -> {
       Pair<Class<? extends VisitorFieldWrapper>, VisitorFieldType> fieldTypePair =
           (Pair<Class<? extends VisitorFieldWrapper>, VisitorFieldType>) pair;
       visitorFieldRegistry.registerFieldTypes(fieldTypePair.getLeft(), fieldTypePair.getRight());

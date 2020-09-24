@@ -12,6 +12,7 @@ public class ValuesManifestVisitorHelper implements ConfigValidator {
 
   @Override
   public Object createDummyVisitableElement(Object originalElement) {
-    return ValuesManifest.builder().build();
+    ValuesManifest valuesManifest = (ValuesManifest) originalElement;
+    return ValuesManifest.builder().identifier(valuesManifest.getIdentifier()).build();
   }
 }

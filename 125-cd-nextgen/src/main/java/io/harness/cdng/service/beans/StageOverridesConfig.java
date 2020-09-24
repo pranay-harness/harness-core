@@ -1,13 +1,16 @@
 package io.harness.cdng.service.beans;
 
+import io.harness.beans.ParameterField;
 import io.harness.cdng.artifact.bean.yaml.ArtifactListConfig;
 import io.harness.cdng.manifest.yaml.ManifestConfigWrapper;
 import io.harness.cdng.visitor.LevelNodeQualifierName;
 import io.harness.cdng.visitor.helpers.serviceconfig.StageOverridesVisitorHelper;
+import io.harness.common.SwaggerConstants;
 import io.harness.walktree.beans.LevelNode;
 import io.harness.walktree.beans.VisitableChildren;
 import io.harness.walktree.visitor.SimpleVisitorHelper;
 import io.harness.walktree.visitor.Visitable;
+import io.swagger.annotations.ApiModelProperty;
 import lombok.Builder;
 import lombok.Value;
 
@@ -17,9 +20,12 @@ import java.util.List;
 @Builder
 @SimpleVisitorHelper(helperClass = StageOverridesVisitorHelper.class)
 public class StageOverridesConfig implements Visitable {
-  List<String> useArtifactOverrideSets;
+  @ApiModelProperty(dataType = SwaggerConstants.STRING_LIST_CLASSPATH)
+  ParameterField<List<String>> useArtifactOverrideSets;
   ArtifactListConfig artifacts;
-  List<String> useManifestOverrideSets;
+
+  @ApiModelProperty(dataType = SwaggerConstants.STRING_LIST_CLASSPATH)
+  ParameterField<List<String>> useManifestOverrideSets;
   List<ManifestConfigWrapper> manifests;
 
   // For Visitor Framework Impl

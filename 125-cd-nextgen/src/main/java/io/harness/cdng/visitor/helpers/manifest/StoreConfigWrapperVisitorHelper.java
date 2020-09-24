@@ -12,6 +12,7 @@ public class StoreConfigWrapperVisitorHelper implements ConfigValidator {
 
   @Override
   public Object createDummyVisitableElement(Object originalElement) {
-    return StoreConfigWrapper.builder().build();
+    StoreConfigWrapper storeConfigWrapper = (StoreConfigWrapper) originalElement;
+    return StoreConfigWrapper.builder().type(storeConfigWrapper.getType()).build();
   }
 }

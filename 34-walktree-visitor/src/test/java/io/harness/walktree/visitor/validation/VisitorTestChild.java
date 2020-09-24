@@ -1,7 +1,7 @@
 package io.harness.walktree.visitor.validation;
 
 import io.harness.walktree.beans.LevelNode;
-import io.harness.walktree.visitor.ParentQualifier;
+import io.harness.walktree.beans.ParentQualifier;
 import io.harness.walktree.visitor.validation.annotations.Required;
 import io.harness.walktree.visitor.validation.modes.PreInputSet;
 import lombok.Builder;

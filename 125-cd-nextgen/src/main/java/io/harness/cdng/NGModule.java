@@ -3,6 +3,7 @@ package io.harness.cdng;
 import com.google.inject.AbstractModule;
 
 import io.harness.NGPipelineCommonsModule;
+import io.harness.WalkTreeModule;
 import io.harness.cdng.artifact.resources.docker.service.DockerResourceService;
 import io.harness.cdng.artifact.resources.docker.service.DockerResourceServiceImpl;
 import io.harness.cdng.artifact.service.ArtifactSourceService;
@@ -30,6 +31,7 @@ public class NGModule extends AbstractModule {
   @Override
   protected void configure() {
     install(NGCoreModule.getInstance());
+    install(WalkTreeModule.getInstance());
     install(NGPipelineCommonsModule.getInstance());
 
     bind(ArtifactSourceService.class).to(ArtifactSourceServiceImpl.class);

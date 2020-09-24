@@ -1,6 +1,7 @@
 package io.harness.yaml.core;
 
 import com.fasterxml.jackson.annotation.JsonTypeName;
+import io.harness.data.structure.EmptyPredicate;
 import io.harness.data.validator.EntityIdentifier;
 import io.harness.data.validator.EntityName;
 import io.harness.visitor.helpers.executionelement.StepGroupElementVisitorHelper;
@@ -34,8 +35,12 @@ public class StepGroupElement implements ExecutionWrapper, WithIdentifier, Visit
   @Override
   public VisitableChildren getChildrenToWalk() {
     VisitableChildren children = VisitableChildren.builder().build();
-    steps.forEach(step -> children.add("steps", step));
-    rollbackSteps.forEach(rollbackStep -> children.add("rollbackSteps", rollbackStep));
+    if (EmptyPredicate.isNotEmpty(steps)) {
+      steps.forEach(step -> children.add("steps", step));
+    }
+    if (EmptyPredicate.isNotEmpty(rollbackSteps)) {
+      rollbackSteps.forEach(rollbackStep -> children.add("rollbackSteps", rollbackStep));
+    }
     return children;
   }
 

@@ -4,10 +4,11 @@ import io.harness.ambiance.Ambiance;
 import io.harness.common.NGExpressionUtils;
 import io.harness.engine.expressions.EngineExpressionService;
 
-import java.util.HashSet;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 /**
  * This validator handles currentValue to be String, Number, List - of String or Number.
@@ -98,18 +99,12 @@ public class AllowedValuesValidator implements RuntimeValidator {
   }
 
   private RuntimeValidatorResponse isStringValueAllowed(String currentValue, String[] parametersList) {
-    Set<String> parametersSet = new HashSet<>();
-    for (String s : parametersList) {
-      parametersSet.add(s.trim());
-    }
+    Set<String> parametersSet = Arrays.stream(parametersList).map(String::trim).collect(Collectors.toSet());
     return isAllowedValuesFromSet(currentValue.trim(), parametersSet);
   }
 
   private RuntimeValidatorResponse isNumberValueAllowed(String currentValue, String[] parametersList) {
-    Set<Double> parametersSet = new HashSet<>();
-    for (String s : parametersList) {
-      parametersSet.add(Double.valueOf(s));
-    }
+    Set<Double> parametersSet = Arrays.stream(parametersList).map(Double::valueOf).collect(Collectors.toSet());
     return isAllowedValuesFromSet(Double.valueOf(currentValue), parametersSet);
   }
 

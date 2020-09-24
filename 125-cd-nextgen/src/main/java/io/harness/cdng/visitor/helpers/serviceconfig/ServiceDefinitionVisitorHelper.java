@@ -12,6 +12,7 @@ public class ServiceDefinitionVisitorHelper implements ConfigValidator {
 
   @Override
   public Object createDummyVisitableElement(Object originalElement) {
-    return ServiceDefinition.builder().build();
+    ServiceDefinition serviceDefinition = (ServiceDefinition) originalElement;
+    return ServiceDefinition.builder().type(serviceDefinition.getType()).build();
   }
 }

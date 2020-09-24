@@ -8,6 +8,7 @@ import io.harness.cdng.manifest.yaml.ManifestOverrideSets;
 import io.harness.cdng.service.ServiceSpec;
 import io.harness.cdng.visitor.LevelNodeQualifierName;
 import io.harness.cdng.visitor.helpers.serviceconfig.KubernetesServiceSpecVisitorHelper;
+import io.harness.data.structure.EmptyPredicate;
 import io.harness.walktree.beans.LevelNode;
 import io.harness.walktree.beans.VisitableChildren;
 import io.harness.walktree.visitor.SimpleVisitorHelper;
@@ -39,10 +40,15 @@ public class KubernetesServiceSpec implements ServiceSpec, Visitable {
   public VisitableChildren getChildrenToWalk() {
     VisitableChildren children = VisitableChildren.builder().build();
     children.add("artifacts", artifacts);
-    if (manifests != null) {
+    if (EmptyPredicate.isNotEmpty(artifactOverrideSets)) {
+      artifactOverrideSets.forEach(artifactOverrideSet -> children.add("artifactOverrideSets", artifactOverrideSet));
+    }
+    if (EmptyPredicate.isNotEmpty(manifests)) {
       manifests.forEach(manifest -> children.add("manifests", manifest));
     }
-    // add override sets if necessary
+    if (EmptyPredicate.isNotEmpty(manifestOverrideSets)) {
+      manifestOverrideSets.forEach(manifestOverrideSet -> children.add("manifestOverrideSets", manifestOverrideSet));
+    }
     return children;
   }
 

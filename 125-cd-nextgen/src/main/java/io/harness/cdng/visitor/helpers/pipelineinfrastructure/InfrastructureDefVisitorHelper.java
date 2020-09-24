@@ -12,6 +12,7 @@ public class InfrastructureDefVisitorHelper implements ConfigValidator {
 
   @Override
   public Object createDummyVisitableElement(Object originalElement) {
-    return InfrastructureDef.builder().build();
+    InfrastructureDef infrastructureDef = (InfrastructureDef) originalElement;
+    return InfrastructureDef.builder().type(infrastructureDef.getType()).build();
   }
 }

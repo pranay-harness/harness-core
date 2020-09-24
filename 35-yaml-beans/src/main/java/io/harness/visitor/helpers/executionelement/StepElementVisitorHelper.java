@@ -13,10 +13,6 @@ public class StepElementVisitorHelper implements ConfigValidator {
   @Override
   public Object createDummyVisitableElement(Object originalElement) {
     StepElement stepElement = (StepElement) originalElement;
-    return StepElement.builder()
-        .identifier(stepElement.getIdentifier())
-        .stepSpecType(stepElement.getStepSpecType())
-        .type(stepElement.getType())
-        .build();
+    return StepElement.builder().identifier(stepElement.getIdentifier()).type(stepElement.getType()).build();
   }
 }
