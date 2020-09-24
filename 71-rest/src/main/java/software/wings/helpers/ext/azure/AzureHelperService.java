@@ -22,8 +22,6 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import com.microsoft.aad.adal4j.AuthenticationException;
 import com.microsoft.azure.AzureEnvironment;
 import com.microsoft.azure.credentials.ApplicationTokenCredentials;
@@ -37,10 +35,6 @@ import com.microsoft.azure.management.keyvault.Vault;
 import com.microsoft.azure.management.resources.ResourceGroup;
 import com.microsoft.azure.management.resources.fluentcore.arm.models.HasName;
 import com.microsoft.rest.LogLevel;
-import io.fabric8.kubernetes.api.model.AuthInfo;
-import io.fabric8.kubernetes.api.model.Cluster;
-import io.fabric8.kubernetes.api.model.Context;
-import io.fabric8.kubernetes.client.internal.KubeConfigUtils;
 import io.harness.beans.PageResponse;
 import io.harness.exception.AzureServiceException;
 import io.harness.exception.ClusterNotFoundException;
@@ -48,9 +42,11 @@ import io.harness.exception.ExceptionUtils;
 import io.harness.exception.InvalidArgumentsException;
 import io.harness.exception.InvalidCredentialsException;
 import io.harness.exception.InvalidRequestException;
+import io.harness.k8s.KubeConfigHelper;
 import io.harness.k8s.model.KubernetesConfig;
 import io.harness.network.Http;
 import io.harness.security.encryption.EncryptedDataDetail;
+import io.kubernetes.client.util.KubeConfig;
 import lombok.extern.slf4j.Slf4j;
 import okhttp3.OkHttpClient;
 import org.apache.commons.lang3.tuple.ImmutablePair;
@@ -76,6 +72,7 @@ import software.wings.infra.InfrastructureDefinition;
 import software.wings.service.intfc.security.EncryptionService;
 
 import java.io.IOException;
+import java.io.StringReader;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -613,21 +610,20 @@ public class AzureHelperService {
 
   private KubernetesConfig parseConfig(String configContent, String namespace) {
     try {
-      ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
-      io.fabric8.kubernetes.api.model.Config kubeConfig =
-          mapper.readValue(decodeBase64ToString(configContent), io.fabric8.kubernetes.api.model.Config.class);
-
-      Context currentContext = KubeConfigUtils.getCurrentContext(kubeConfig);
-      Cluster currentCluster = KubeConfigUtils.getCluster(kubeConfig, currentContext);
-      AuthInfo currentAuthInfo = KubeConfigUtils.getUserAuthInfo(kubeConfig, currentContext);
+      KubeConfig kubeConfig = KubeConfig.loadKubeConfig(new StringReader(decodeBase64ToString(configContent)));
+      String masterUrl = kubeConfig.getServer();
+      String certificateAuthorityData = kubeConfig.getCertificateAuthorityData();
+      String username = KubeConfigHelper.getCurrentUser(kubeConfig);
+      String clientCertificateData = kubeConfig.getClientCertificateData();
+      String clientKeyData = kubeConfig.getClientKeyData();
 
       return KubernetesConfig.builder()
           .namespace(namespace)
-          .masterUrl(currentCluster.getServer())
-          .caCert(currentCluster.getCertificateAuthorityData().toCharArray())
-          .username(currentContext.getUser() != null ? currentContext.getUser().toCharArray() : null)
-          .clientCert(currentAuthInfo.getClientCertificateData().toCharArray())
-          .clientKey(currentAuthInfo.getClientKeyData().toCharArray())
+          .masterUrl(masterUrl)
+          .caCert(certificateAuthorityData.toCharArray())
+          .username(username != null ? username.toCharArray() : null)
+          .clientCert(clientCertificateData.toCharArray())
+          .clientKey(clientKeyData.toCharArray())
           .build();
     } catch (Exception e) {
       throw new AzureServiceException(
