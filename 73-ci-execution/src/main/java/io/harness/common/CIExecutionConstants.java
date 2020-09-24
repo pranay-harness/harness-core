@@ -26,7 +26,7 @@ public class CIExecutionConstants {
 
   // Image details
   public static final String ADDON_IMAGE_NAME = "harness/ci-addon";
-  public static final String ADDON_IMAGE_TAG = "valpha-0.91";
+  public static final String ADDON_IMAGE_TAG = "valpha-0.92";
   public static final String ADDON_CONTAINER_NAME = "addon";
   public static final String ADDON_ARGS =
       "mkdir -p /addon/bin; cp /usr/local/bin/jfrog /addon/bin/jfrog; cp /usr/local/bin/ci-addon /addon/bin/ci-addon; chmod +x /addon/bin/ci-addon; /addon/bin/ci-addon";
@@ -58,11 +58,11 @@ public class CIExecutionConstants {
   public static final String BUCKET_MINIO_VARIABLE_VALUE = "test";
 
   public static final String LOG_SERVICE_ENDPOINT_VARIABLE = "LOG_SERVICE_ENDPOINT";
-  public static final String LOG_SERVICE_ENDPOINT_VARIABLE_VALUE = "http://34.122.43.109:80";
+  public static final String LOG_SERVICE_ENDPOINT_VARIABLE_VALUE = "https://qb.harness.io/log-service";
 
   public static final String LITE_ENGINE_IMAGE_NAME = "harness/ci-lite-engine";
 
-  public static final String LITE_ENGINE_IMAGE_TAG = "valpha-0.91";
+  public static final String LITE_ENGINE_IMAGE_TAG = "valpha-0.92";
   public static final String LITE_ENGINE_CONTAINER_NAME = "setup-lite-engine";
   public static final String LITE_ENGINE_ARGS =
       "mkdir -p /step-exec/workspace; mkdir -p /step-exec/.harness/bin; mkdir -p /step-exec/.harness/logs; mkdir -p /step-exec/.harness/tmp; cp /usr/local/bin/ci-lite-engine-linux-amd64 /step-exec/.harness/bin/ci-lite-engine; chmod +x /step-exec/.harness/bin/ci-lite-engine;";
