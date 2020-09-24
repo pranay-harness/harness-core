@@ -1,0 +1,96 @@
+extend type Query {
+  viewFields: viewFieldData @dataFetcher(name: viewFields)
+}
+
+type ViewEntityStatsData {
+  data: [ViewEntityStatsDataPoint]
+}
+
+type ViewEntityStatsDataPoint {
+  name: String
+  cost: Number
+  costTrend: Number
+}
+
+input CEViewRule {
+  conditions: [CEViewFilter]!
+}
+
+input CEViewTimeFilter {
+  field: viewFieldInput!
+  operator: ViewTimeFilterOperator!
+  value: DateTime!
+}
+
+input CEViewFilter {
+  field: viewFieldInput!
+  operator: ViewFilterOperator!
+  values: [String]!
+}
+
+input viewFieldInput {
+  fieldId: String
+  fieldName: String
+  identifier: ViewFieldIdentifier
+}
+
+enum ViewTimeFilterOperator {
+  AFTER
+  BEFORE
+}
+
+enum ViewFilterOperator {
+  EQUALS
+  IN
+}
+
+input CEViewAggregation {
+  operationType: ViewAggregateOperation
+  columnName: String
+}
+
+enum ViewAggregateOperation {
+  SUM
+}
+
+input CEViewGroupBy {
+  entityGroupBy: viewFieldInput
+  timeTruncGroupBy: CEViewTimeTruncGroupBy
+}
+
+input CEViewTimeTruncGroupBy {
+  resolution: ViewTimeGroupType
+}
+
+enum ViewTimeGroupType {
+  DAY
+  MONTH
+}
+
+input CEViewSortCriteria {
+  sortType: viewFieldInput
+  sortOrder: SortOrder
+}
+
+enum ViewFieldIdentifier {
+  CLUSTER
+  AWS
+  GCP
+  CUSTOM
+  COMMON
+}
+
+type viewFieldData {
+  fieldIdentifierData: [viewFieldIdentifierData]
+}
+
+type viewFieldIdentifierData {
+  identifier: ViewFieldIdentifier
+  values: [viewField]
+}
+
+type viewField {
+  fieldId: String
+  fieldName: String
+  identifier: ViewFieldIdentifier
+}

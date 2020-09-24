@@ -71,6 +71,7 @@
         <module>270-verification</module>
         <module>280-batch-processing</module>
         <module>300-cv-nextgen</module>
+        <module>450-ce-views</module>
 
         <!--<module>990-commons-test</module>-->
     </modules>

@@ -112,6 +112,7 @@ enum DataFetcherEnum {
   deleteSecret
   secretManager
   secretManagers
+  viewFields
   getSecret
   startExecution
   executionInputs

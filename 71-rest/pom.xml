@@ -805,6 +805,11 @@
         </dependency>
         <dependency>
             <groupId>software.wings</groupId>
+            <artifactId>450-ce-views</artifactId>
+            <version>${project.parent.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>software.wings</groupId>
             <artifactId>57-command-library-common</artifactId>
             <version>${project.parent.version}</version>
         </dependency>
