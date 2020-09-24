@@ -54,19 +54,20 @@ public class AddAccountIdToStateExecutionInstance implements Migration {
       }
     }
     for (Map.Entry<String, Set<String>> entry : accountIdToAppIdMap.entrySet()) {
-      bulkSetAccountId(entry.getKey(), "stateExecutionInstances", entry.getValue());
+      for (String appId : entry.getValue()) {
+        bulkSetAccountId(entry.getKey(), "stateExecutionInstances", appId);
+      }
     }
     logger.info(debugLine + "Migration of stateExecutionInstances finished");
   }
 
-  private void bulkSetAccountId(String accountId, String collectionName, Set<String> appIdSet) {
+  private void bulkSetAccountId(String accountId, String collectionName, String appId) {
     logger.info(debugLine + "Migrating all stateExecutionInstances for account " + accountId);
     final DBCollection collection = wingsPersistence.getCollection(DEFAULT_STORE, collectionName);
 
     BulkWriteOperation bulkWriteOperation = collection.initializeUnorderedBulkOperation();
 
-    BasicDBObject objectsToBeUpdated =
-        new BasicDBObject("accountId", null).append("appId", new BasicDBObject("$in", appIdSet));
+    BasicDBObject objectsToBeUpdated = new BasicDBObject("accountId", null).append("appId", appId);
     BasicDBObject projection = new BasicDBObject("_id", Boolean.TRUE);
     DBCursor dataRecords = collection.find(objectsToBeUpdated, projection).limit(1000);
 
