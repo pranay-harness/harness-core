@@ -1,5 +1,6 @@
 package io.harness.walktree.beans;
 
+import io.harness.data.structure.EmptyPredicate;
 import lombok.Builder;
 import lombok.Data;
 
@@ -16,6 +17,6 @@ public class VisitableChildren {
   }
 
   public boolean isEmpty() {
-    return visitableChildList.isEmpty();
+    return EmptyPredicate.isEmpty(visitableChildList);
   }
 }

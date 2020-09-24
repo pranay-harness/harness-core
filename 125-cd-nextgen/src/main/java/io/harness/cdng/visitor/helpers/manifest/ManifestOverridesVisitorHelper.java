@@ -12,6 +12,7 @@ public class ManifestOverridesVisitorHelper implements ConfigValidator {
 
   @Override
   public Object createDummyVisitableElement(Object originalElement) {
-    return ManifestOverrideSets.builder().build();
+    ManifestOverrideSets original = (ManifestOverrideSets) originalElement;
+    return ManifestOverrideSets.builder().identifier(original.getIdentifier()).build();
   }
 }
