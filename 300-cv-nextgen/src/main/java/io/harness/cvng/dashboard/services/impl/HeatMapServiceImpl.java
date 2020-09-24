@@ -1,5 +1,6 @@
 package io.harness.cvng.dashboard.services.impl;
 
+import static io.harness.cvng.core.utils.DateTimeUtils.roundDownTo5MinBoundary;
 import static io.harness.cvng.dashboard.entities.HeatMap.HeatMapResolution.getHeatMapResolution;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
@@ -30,8 +31,10 @@ import org.mongodb.morphia.UpdateOptions;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.Sort;
 
+import java.time.Clock;
 import java.time.Duration;
 import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -46,8 +49,10 @@ import java.util.stream.Collectors;
 import javax.validation.constraints.NotNull;
 
 public class HeatMapServiceImpl implements HeatMapService {
+  private static final int RISK_TIME_BUFFER_MINS = 15;
   @Inject private HPersistence hPersistence;
   @Inject private CVConfigService cvConfigService;
+  @Inject private Clock clock;
 
   @Override
   public void updateRiskScore(String accountId, String projectIdentifier, String serviceIdentifier,
@@ -214,10 +219,13 @@ public class HeatMapServiceImpl implements HeatMapService {
                                         .order(Sort.descending(HeatMapKeys.heatMapBucketEndTime));
 
       HeatMap latestHeatMap = heatMapQuery.get();
+      Instant roundedDownTime = roundDownTo5MinBoundary(clock.instant());
       if (latestHeatMap != null) {
         SortedSet<HeatMapRisk> risks = new TreeSet<>(latestHeatMap.getHeatMapRisks());
-        Double risk = risks.last().getRiskScore() * 100;
-        categoryScoreMap.put(category, risk.intValue());
+        if (risks.last().getEndTime().isAfter(roundedDownTime.minus(RISK_TIME_BUFFER_MINS, ChronoUnit.MINUTES))) {
+          Double risk = risks.last().getRiskScore() * 100;
+          categoryScoreMap.put(category, risk.intValue());
+        }
       }
     });
     Arrays.asList(CVMonitoringCategory.values()).forEach(category -> {
