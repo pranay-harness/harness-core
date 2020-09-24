@@ -24,7 +24,7 @@ import java.util.Set;
 
 @Slf4j
 public class UserGroupUtils {
-  public static UserGroup getUserGroup(Account account, String bearerToken, String groupName) {
+  static UserGroup getUserGroup(Account account, String bearerToken, String groupName) {
     List<UserGroup> userGroupList = UserGroupRestUtils.getUserGroups(account, bearerToken);
     assertThat(userGroupList != null && userGroupList.size() > 0).isTrue();
     if (userGroupList != null) {
@@ -123,7 +123,7 @@ public class UserGroupUtils {
     return accountPermissions;
   }
 
-  public static AccountPermissions buildAccountManagement() {
+  private static AccountPermissions buildAccountManagement() {
     Set<PermissionType> permissionTypes = new HashSet<>();
     permissionTypes.add(PermissionType.ACCOUNT_MANAGEMENT);
     AccountPermissions accountPermissions = AccountPermissions.builder().build();

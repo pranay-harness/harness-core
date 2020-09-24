@@ -96,7 +96,7 @@ public class NotificationSetupResource {
   @Path("notification-groups")
   @Timed
   @ExceptionMetered
-  @AuthRule(permissionType = PermissionType.ACCOUNT_MANAGEMENT)
+  @AuthRule(permissionType = PermissionType.MANAGE_ALERT_NOTIFICATION_RULES)
   public RestResponse<NotificationGroup> createNotificationGroups(
       @QueryParam("accountId") String accountId, NotificationGroup notificationGroup) {
     notificationGroup.setAccountId(accountId);
@@ -115,7 +115,7 @@ public class NotificationSetupResource {
   @Path("notification-groups/{notificationGroupId}")
   @Timed
   @ExceptionMetered
-  @AuthRule(permissionType = PermissionType.ACCOUNT_MANAGEMENT)
+  @AuthRule(permissionType = PermissionType.MANAGE_ALERT_NOTIFICATION_RULES)
   public RestResponse<NotificationGroup> updateNotificationGroups(@QueryParam("accountId") String accountId,
       @PathParam("notificationGroupId") String notificationGroupId, NotificationGroup notificationGroup) {
     notificationGroup.setAccountId(accountId);
@@ -135,7 +135,7 @@ public class NotificationSetupResource {
   @Path("notification-groups/{notificationGroupId}")
   @Timed
   @ExceptionMetered
-  @AuthRule(permissionType = PermissionType.ACCOUNT_MANAGEMENT)
+  @AuthRule(permissionType = PermissionType.MANAGE_ALERT_NOTIFICATION_RULES)
   public RestResponse deleteNotificationGroups(
       @QueryParam("accountId") String accountId, @PathParam("notificationGroupId") String notificationGroupId) {
     notificationSetupService.deleteNotificationGroups(accountId, notificationGroupId);

@@ -25,16 +25,10 @@ import static software.wings.scheduler.LdapGroupSyncJob.add;
 import static software.wings.security.PermissionAttribute.Action.EXECUTE;
 import static software.wings.security.PermissionAttribute.Action.EXECUTE_PIPELINE;
 import static software.wings.security.PermissionAttribute.Action.EXECUTE_WORKFLOW;
-import static software.wings.security.PermissionAttribute.PermissionType.ACCOUNT_MANAGEMENT;
 import static software.wings.security.PermissionAttribute.PermissionType.ALL_APP_ENTITIES;
 import static software.wings.security.PermissionAttribute.PermissionType.CE_ADMIN;
 import static software.wings.security.PermissionAttribute.PermissionType.CE_VIEWER;
 import static software.wings.security.PermissionAttribute.PermissionType.DEPLOYMENT;
-import static software.wings.security.PermissionAttribute.PermissionType.MANAGE_ALERT_NOTIFICATION_RULES;
-import static software.wings.security.PermissionAttribute.PermissionType.MANAGE_API_KEYS;
-import static software.wings.security.PermissionAttribute.PermissionType.MANAGE_APPLICATION_STACKS;
-import static software.wings.security.PermissionAttribute.PermissionType.MANAGE_AUTHENTICATION_SETTINGS;
-import static software.wings.security.PermissionAttribute.PermissionType.MANAGE_IP_WHITELIST;
 import static software.wings.security.PermissionAttribute.PermissionType.USER_PERMISSION_MANAGEMENT;
 import static software.wings.security.PermissionAttribute.PermissionType.USER_PERMISSION_READ;
 
@@ -102,7 +96,6 @@ import software.wings.service.intfc.pagerduty.PagerDutyService;
 
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
@@ -516,7 +509,6 @@ public class UserGroupServiceImpl implements UserGroupService {
     UserGroup userGroup = get(accountId, userGroupId);
     checkImplicitPermissions(accountPermissions, accountId, userGroup.getName());
     checkDeploymentPermissions(userGroup);
-    addAccountManagementPermissions(userGroup);
     UpdateOperations<UserGroup> operations = wingsPersistence.createUpdateOperations(UserGroup.class);
     setUnset(operations, UserGroupKeys.appPermissions, appPermissions);
     setUnset(operations, UserGroupKeys.accountPermissions,
@@ -555,32 +547,10 @@ public class UserGroupServiceImpl implements UserGroupService {
     }
   }
 
-  private void addAccountManagementPermissions(UserGroup userGroup) {
-    if (userGroup.getAccountPermissions() == null || isEmpty(userGroup.getAccountPermissions().getPermissions())) {
-      return;
-    }
-    EnumSet<PermissionType> newAccountPermissions = EnumSet.noneOf(PermissionType.class);
-    for (PermissionType permission : userGroup.getAccountPermissions().getPermissions()) {
-      if (ACCOUNT_MANAGEMENT == permission) {
-        newAccountPermissions.add(MANAGE_IP_WHITELIST);
-        newAccountPermissions.add(MANAGE_AUTHENTICATION_SETTINGS);
-        newAccountPermissions.add(MANAGE_APPLICATION_STACKS);
-        newAccountPermissions.add(MANAGE_ALERT_NOTIFICATION_RULES);
-        newAccountPermissions.add(MANAGE_API_KEYS);
-      }
-      newAccountPermissions.add(permission);
-    }
-
-    if (!newAccountPermissions.equals(userGroup.getAccountPermissions().getPermissions())) {
-      userGroup.setAccountPermissions(AccountPermissions.builder().permissions(newAccountPermissions).build());
-    }
-  }
-
   @Override
   public UserGroup updatePermissions(UserGroup userGroup) {
     checkImplicitPermissions(userGroup.getAccountPermissions(), userGroup.getAccountId(), userGroup.getName());
     checkDeploymentPermissions(userGroup);
-    addAccountManagementPermissions(userGroup);
     AccountPermissions accountPermissions =
         Optional.ofNullable(userGroup.getAccountPermissions()).orElse(AccountPermissions.builder().build());
     userGroup.setAccountPermissions(addDefaultCePermissions(accountPermissions));

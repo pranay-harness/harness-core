@@ -2559,13 +2559,10 @@ public class UserServiceImpl implements UserService {
     if (accountPermissionSummary == null) {
       return false;
     }
-
     Set<PermissionType> permissions = accountPermissionSummary.getPermissions();
-
     if (isEmpty(permissions)) {
       return false;
     }
-
     return permissions.contains(PermissionType.ACCOUNT_MANAGEMENT);
   }
 
