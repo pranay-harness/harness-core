@@ -9,6 +9,7 @@ import static io.harness.rule.OwnerRule.VAIBHAV_SI;
 import static io.harness.rule.OwnerRule.VUK;
 import static io.harness.rule.OwnerRule.YOGESH;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assumptions.assumeThat;
 
 import io.harness.CategoryTest;
 import io.harness.MockableTestMixin;
@@ -182,8 +183,9 @@ public class InstallUtilsTest extends CategoryTest implements MockableTestMixin 
   @Owner(developers = VAIBHAV_SI)
   @Category(FunctionalTests.class)
   public void shouldInstallKustomize() throws IOException, IllegalAccessException {
-    setStaticFieldValue(SystemUtils.class, "IS_OS_WINDOWS", false);
-    setStaticFieldValue(SystemUtils.class, "IS_OS_MAC", false);
+    assumeThat(SystemUtils.IS_OS_WINDOWS).isFalse();
+    assumeThat(SystemUtils.IS_OS_MAC).isFalse();
+
     FileUtils.deleteDirectory(new File("./client-tools/kustomize/"));
     assertThat(InstallUtils.installKustomize(delegateConfiguration)).isTrue();
 

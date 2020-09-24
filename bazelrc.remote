@@ -10,3 +10,5 @@ build --host_java_toolchain=@bazel_tools//tools/jdk:toolchain_hostjdk8
 
 # TODO: remove from here when remote cache is enabled for developers
 build --remote_cache=https://storage.googleapis.com/harness-bazel-cache
+
+build --test_output=all
