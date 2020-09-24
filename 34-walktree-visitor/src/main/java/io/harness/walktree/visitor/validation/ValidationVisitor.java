@@ -7,17 +7,16 @@ import com.google.inject.Inject;
 import com.google.inject.Injector;
 
 import io.harness.walktree.beans.LevelNode;
+import io.harness.walktree.beans.ParentQualifier;
 import io.harness.walktree.beans.VisitElementResult;
-import io.harness.walktree.beans.VisitableChildren;
 import io.harness.walktree.registries.visitorfield.VisitorFieldRegistry;
-import io.harness.walktree.visitor.ParentQualifier;
 import io.harness.walktree.visitor.SimpleVisitor;
-import io.harness.walktree.visitor.VisitorErrorResponse;
-import io.harness.walktree.visitor.VisitorErrorResponseList;
+import io.harness.walktree.visitor.response.VisitorErrorResponse;
+import io.harness.walktree.visitor.response.VisitorErrorResponseWrapper;
 import io.harness.walktree.visitor.response.VisitorResponse;
-import io.harness.walktree.visitor.utilities.VisitorDummyElementUtilities;
-import io.harness.walktree.visitor.utilities.VisitorParentPathUtilities;
-import io.harness.walktree.visitor.utilities.VisitorResponseUtility;
+import io.harness.walktree.visitor.utilities.VisitorDummyElementUtils;
+import io.harness.walktree.visitor.utilities.VisitorParentPathUtils;
+import io.harness.walktree.visitor.utilities.VisitorResponseUtils;
 import io.harness.walktree.visitor.validation.modes.ModeType;
 import io.harness.walktree.visitor.validation.modes.PostInputSet;
 import io.harness.walktree.visitor.validation.modes.PreInputSet;
@@ -58,9 +57,9 @@ public class ValidationVisitor extends SimpleVisitor<ConfigValidator> {
     // add to the list of parent.
     if (element instanceof ParentQualifier) {
       LevelNode levelNode = ((ParentQualifier) element).getLevelNode();
-      VisitorParentPathUtilities.addToParentList(this.getContextMap(), levelNode);
+      VisitorParentPathUtils.addToParentList(this.getContextMap(), levelNode);
     }
-    return VisitElementResult.CONTINUE;
+    return super.preVisitElement(element);
   }
 
   @Override
@@ -68,9 +67,9 @@ public class ValidationVisitor extends SimpleVisitor<ConfigValidator> {
     addErrorChildrenToCurrentElement(element);
     // Remove from parent list once traversed
     if (element instanceof ParentQualifier) {
-      VisitorParentPathUtilities.removeFromParentList(this.getContextMap());
+      VisitorParentPathUtils.removeFromParentList(this.getContextMap());
     }
-    currentObject = VisitorDummyElementUtilities.getDummyElement(getElementToDummyElementMap(), element);
+    currentObject = VisitorDummyElementUtils.getDummyElementFromMap(getElementToDummyElementMap(), element);
     return super.postVisitElement(element);
   }
 
@@ -85,7 +84,7 @@ public class ValidationVisitor extends SimpleVisitor<ConfigValidator> {
       throw new NotImplementedException("Helper Class not implemented for object of type" + currentElement.getClass());
     }
     boolean hasError = validateAnnotations(currentElement, dummyElement);
-    VisitorDummyElementUtilities.addToDummyElementMapUsingPredicate(
+    VisitorDummyElementUtils.addToDummyElementMapUsingPredicate(
         getElementToDummyElementMap(), currentElement, dummyElement, object -> hasError);
 
     helperClass.validate(currentElement, this);
@@ -123,16 +122,16 @@ public class ValidationVisitor extends SimpleVisitor<ConfigValidator> {
     for (String key : errorsMap.keys()) {
       try {
         List<String> errorMessages = new ArrayList<>(errorsMap.get(key));
-        VisitorErrorResponseList visitorErrorResponseList =
-            VisitorErrorResponseList.builder()
+        VisitorErrorResponseWrapper visitorErrorResponseWrapper =
+            VisitorErrorResponseWrapper.builder()
                 .errors(errorMessages.stream()
                             .map(message -> VisitorErrorResponse.builder().fieldName(key).message(message).build())
                             .collect(Collectors.toList()))
                 .build();
-        String uuid =
-            VisitorResponseUtility.addUUIDValueToGivenField(this, dummyElement, visitorFieldRegistry, key, useFQN);
-        VisitorResponseUtility.addToVisitorResponse(
-            uuid, visitorErrorResponseList, uuidToVisitorResponse, VisitorErrorResponseList.builder().build());
+        String uuid = VisitorResponseUtils.addUUIDValueToGivenField(
+            this.getContextMap(), dummyElement, visitorFieldRegistry, key, useFQN);
+        VisitorResponseUtils.addToVisitorResponse(
+            uuid, visitorErrorResponseWrapper, uuidToVisitorResponse, VisitorErrorResponseWrapper.builder().build());
 
       } catch (IllegalAccessException e) {
         logger.error(String.format("Error using reflection : %s", e.getMessage()));
@@ -146,23 +145,6 @@ public class ValidationVisitor extends SimpleVisitor<ConfigValidator> {
    */
   @VisibleForTesting
   void addErrorChildrenToCurrentElement(Object element) {
-    // If element has children and they have errors then we want to merge them to dummy object for this element.
-    VisitableChildren dummyVisitableChildrenFromElementToDummyMap =
-        VisitorDummyElementUtilities.getDummyVisitableChildrenFromElementToDummyMap(
-            element, getElementToDummyElementMap());
-    if (dummyVisitableChildrenFromElementToDummyMap.isEmpty()) {
-      return;
-    }
-    ConfigValidator helperClass = getHelperClass(element);
-    if (helperClass != null) {
-      VisitorDummyElementUtilities.addToDummyElementMap(
-          getElementToDummyElementMap(), element, helperClass.createDummyVisitableElement(element));
-      VisitableChildren visitableChildren = VisitorDummyElementUtilities.addDummyChildrenToGivenElement(element,
-          VisitorDummyElementUtilities.getDummyElement(getElementToDummyElementMap(), element),
-          getElementToDummyElementMap());
-      helperClass.handleComplexVisitableChildren(
-          VisitorDummyElementUtilities.getDummyElement(getElementToDummyElementMap(), element), this,
-          visitableChildren);
-    }
+    VisitorDummyElementUtils.addChildrenToCurrentDummyElement(element, getElementToDummyElementMap(), this);
   }
 }

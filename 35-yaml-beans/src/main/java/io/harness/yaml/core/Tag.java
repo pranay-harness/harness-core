@@ -1,7 +1,7 @@
 package io.harness.yaml.core;
 
 import io.harness.walktree.beans.LevelNode;
-import io.harness.walktree.visitor.ParentQualifier;
+import io.harness.walktree.beans.ParentQualifier;
 import lombok.Builder;
 import lombok.Value;
 

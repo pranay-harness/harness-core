@@ -11,7 +11,6 @@ import io.harness.beans.ExecutionStrategyType;
 import io.harness.cdng.pipeline.CDPipeline;
 import io.harness.cdng.pipeline.StepCategory;
 import io.harness.cdng.pipeline.beans.CDPipelineValidationInfo;
-import io.harness.cdng.pipeline.beans.dto.CDPipelineRequestDTO;
 import io.harness.cdng.pipeline.beans.dto.CDPipelineResponseDTO;
 import io.harness.cdng.pipeline.beans.dto.CDPipelineSummaryResponseDTO;
 import io.harness.cdng.pipeline.beans.dto.CDPipelineValidationInfoDTO;
@@ -39,7 +38,6 @@ import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
@@ -138,19 +136,6 @@ public class CDNGPipelineResource {
       return ResponseDTO.newResponse(null);
     }
     return ResponseDTO.newResponse(PipelineValidationMapper.writePipelineValidationDto(cdPipelineValidationInfo));
-  }
-
-  @POST
-  @Produces({"text/dummy"})
-  @Consumes({"text/dummy"})
-  @Timed
-  @ExceptionMetered
-  @ApiOperation(value = "Create a Pipeline", nickname = "postPipelineDummy")
-  public ResponseDTO<CDPipelineRequestDTO> dummyCreatePipelineForSwagger(
-      @NotNull @QueryParam("accountIdentifier") String accountId, @QueryParam("orgIdentifier") String orgId,
-      @NotNull @QueryParam("projectIdentifier") String projectId, @NotNull @Valid CDPipelineRequestDTO yaml) {
-    logger.info("Creating pipeline");
-    return ResponseDTO.newResponse(yaml);
   }
 
   @POST

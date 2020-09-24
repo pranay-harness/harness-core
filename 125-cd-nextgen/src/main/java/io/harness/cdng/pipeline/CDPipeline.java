@@ -58,6 +58,6 @@ public class CDPipeline implements Pipeline, Visitable {
 
   @Override
   public LevelNode getLevelNode() {
-    return LevelNode.builder().qualifierName(LevelNodeQualifierName.CDPIPELINE).build();
+    return LevelNode.builder().qualifierName(LevelNodeQualifierName.CD_PIPELINE).build();
   }
 }

@@ -45,7 +45,7 @@ public class ParameterField<T> implements OrchestrationField, VisitorFieldWrappe
     return new ParameterField<>(true, responseField);
   }
 
-  private ParameterField(T value, boolean isExpression, String expressionValue, InputSetValidator inputSetValidator,
+  public ParameterField(T value, boolean isExpression, String expressionValue, InputSetValidator inputSetValidator,
       boolean isTypeString) {
     this.value = value;
     this.isExpression = isExpression;
@@ -117,5 +117,9 @@ public class ParameterField<T> implements OrchestrationField, VisitorFieldWrappe
   @Override
   public VisitorFieldType getVisitorFieldType() {
     return VISITOR_FIELD_TYPE;
+  }
+
+  public static boolean isEmpty(ParameterField<?> actualField) {
+    return actualField == null || actualField.equals(ParameterField.ofNull()) || actualField.getValue() == null;
   }
 }

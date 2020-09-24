@@ -15,15 +15,13 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.experimental.Wither;
 
-import javax.validation.constraints.NotNull;
-
 @Data
 @Builder
 @SimpleVisitorHelper(helperClass = ServiceConfigVisitorHelper.class)
 public class ServiceConfig implements OverridesApplier<ServiceConfig>, Visitable {
   @Wither private ServiceUseFromStage useFromStage;
 
-  @ApiModelProperty(dataType = SwaggerConstants.STRING_CLASSPATH) @NotNull private ParameterField<String> identifier;
+  @ApiModelProperty(dataType = SwaggerConstants.STRING_CLASSPATH) private ParameterField<String> identifier;
   @ApiModelProperty(dataType = SwaggerConstants.STRING_CLASSPATH) @Wither private ParameterField<String> name;
   @ApiModelProperty(dataType = SwaggerConstants.STRING_CLASSPATH) @Wither private ParameterField<String> description;
   private ServiceDefinition serviceDefinition;
@@ -53,6 +51,8 @@ public class ServiceConfig implements OverridesApplier<ServiceConfig>, Visitable
   public VisitableChildren getChildrenToWalk() {
     VisitableChildren children = VisitableChildren.builder().build();
     children.add("serviceDefinition", serviceDefinition);
+    children.add("useFromStage", useFromStage);
+    children.add("stageOverrides", stageOverrides);
     return children;
   }
 

@@ -33,7 +33,6 @@ public class JsonPipelineUtils {
   static {
     mapper = new ObjectMapper();
     mapper.disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES);
-    mapper.setSerializationInclusion(JsonInclude.Include.NON_NULL);
     mapper.setSerializationInclusion(JsonInclude.Include.NON_EMPTY);
     mapper.setSubtypeResolver(AnnotationAwareJsonSubtypeResolver.newInstance(mapper.getSubtypeResolver()));
     mapper.registerModule(new Jdk8Module());

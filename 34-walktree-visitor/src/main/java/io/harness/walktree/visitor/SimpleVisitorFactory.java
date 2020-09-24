@@ -4,7 +4,10 @@ import com.google.inject.Inject;
 import com.google.inject.Injector;
 import com.google.inject.Singleton;
 
+import io.harness.walktree.visitor.mergeinputset.MergeInputSetVisitor;
 import io.harness.walktree.visitor.validation.ValidationVisitor;
+
+import java.util.List;
 
 @Singleton
 public class SimpleVisitorFactory {
@@ -14,5 +17,11 @@ public class SimpleVisitorFactory {
     ValidationVisitor validationVisitor = new ValidationVisitor(injector, modeType, useFQN);
     injector.injectMembers(validationVisitor);
     return validationVisitor;
+  }
+
+  public MergeInputSetVisitor obtainMergeInputSetVisitor(boolean useFQN, List<Object> inputSetsPipeline) {
+    MergeInputSetVisitor mergeInputSetVisitor = new MergeInputSetVisitor(injector, useFQN, inputSetsPipeline);
+    injector.injectMembers(mergeInputSetVisitor);
+    return mergeInputSetVisitor;
   }
 }

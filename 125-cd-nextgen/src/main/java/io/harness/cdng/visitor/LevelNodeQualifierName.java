@@ -1,7 +1,5 @@
 package io.harness.cdng.visitor;
 
-import static io.harness.cdng.pipeline.DeploymentStage.DEPLOYMENT_NAME;
-
 import io.harness.cdng.infra.yaml.InfrastructureKind;
 import io.harness.cdng.manifest.ManifestType;
 import io.harness.cdng.pipeline.stepinfo.StepSpecType;
@@ -26,8 +24,8 @@ public interface LevelNodeQualifierName {
   String STORE_CONFIG_WRAPPER = "store";
   String K8S_MANIFEST = ManifestType.K8Manifest;
   String VALUE_MANIFEST = ManifestType.VALUES;
-  String CDPIPELINE = "pipeline";
-  String DEPLOYMENT_STAGE = DEPLOYMENT_NAME;
+  String CD_PIPELINE = "pipeline";
+  String SPEC = "spec";
   String PIPELINE_INFRASTRUCTURE = "infrastructure";
   String HTTP_STEP = StepSpecType.HTTP;
   String SHELL_SCRIPT_STEP = StepSpecType.SHELL_SCRIPT;

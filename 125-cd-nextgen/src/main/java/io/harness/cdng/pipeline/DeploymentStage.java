@@ -20,10 +20,9 @@ import lombok.Getter;
 
 @Data
 @Builder
-@JsonTypeName(DeploymentStage.DEPLOYMENT_NAME)
+@JsonTypeName(NGStageType.DEPLOYMENT_STAGE)
 @SimpleVisitorHelper(helperClass = DeploymentStageVisitorHelper.class)
 public class DeploymentStage implements CDStage, Visitable {
-  @JsonIgnore public static final String DEPLOYMENT_NAME = "Deployment";
   @Getter(onMethod = @__(@JsonIgnore)) @JsonIgnore String identifier;
   @Getter(onMethod = @__(@JsonIgnore)) @JsonIgnore String name;
   ServiceConfig service;
@@ -48,6 +47,6 @@ public class DeploymentStage implements CDStage, Visitable {
 
   @Override
   public LevelNode getLevelNode() {
-    return LevelNode.builder().qualifierName(LevelNodeQualifierName.DEPLOYMENT_STAGE).build();
+    return LevelNode.builder().qualifierName(LevelNodeQualifierName.SPEC).build();
   }
 }

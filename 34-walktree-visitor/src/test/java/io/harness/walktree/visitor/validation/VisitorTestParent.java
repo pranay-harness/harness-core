@@ -1,6 +1,6 @@
 package io.harness.walktree.visitor.validation;
 
-import io.harness.beans.ParameterField;
+import io.harness.walktree.beans.DummyVisitorField;
 import io.harness.walktree.beans.LevelNode;
 import io.harness.walktree.beans.VisitableChildren;
 import io.harness.walktree.visitor.SimpleVisitorHelper;
@@ -18,7 +18,7 @@ public class VisitorTestParent implements Visitable {
   @Required(groups = PreInputSet.class) String name;
 
   // used to check for parameterField
-  @Required(groups = PreInputSet.class) ParameterField<String> parameterField;
+  @Required(groups = PreInputSet.class) DummyVisitorField visitorField;
 
   VisitorTestChild visitorTestChild;
 

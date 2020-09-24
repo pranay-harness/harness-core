@@ -3,8 +3,10 @@ package io.harness.walktree.visitor;
 import com.google.inject.Injector;
 import com.google.inject.Key;
 
+import io.harness.exception.InvalidArgumentsException;
 import io.harness.walktree.beans.VisitElementResult;
 import lombok.Getter;
+import lombok.extern.slf4j.Slf4j;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -12,7 +14,8 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 
-public abstract class SimpleVisitor<T> extends Visitor {
+@Slf4j
+public abstract class SimpleVisitor<T extends DummyVisitableElement> extends Visitor {
   private Injector injector;
   @Getter Map<String, Object> contextMap = new ConcurrentHashMap<>();
   @Getter Map<Object, Object> elementToDummyElementMap = new HashMap<>();
@@ -51,5 +54,23 @@ public abstract class SimpleVisitor<T> extends Visitor {
 
   public void removeAttribute(String key) {
     contextMap.remove(key);
+  }
+
+  /**
+   * This function returns new dummy object for the currentElement.
+   * @param currentElement
+   * @return Dummy Object
+   */
+  protected Object getNewDummyObject(Object currentElement) {
+    DummyVisitableElement helperClass = getHelperClass(currentElement);
+    Object dummyElement;
+    if (helperClass != null) {
+      dummyElement = helperClass.createDummyVisitableElement(currentElement);
+    } else {
+      logger.error("Helper Class not implemented for object of type" + currentElement.getClass());
+      throw new InvalidArgumentsException(
+          "Helper Class not implemented for object of type" + currentElement.getClass());
+    }
+    return dummyElement;
   }
 }

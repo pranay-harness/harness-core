@@ -11,14 +11,21 @@ public class ParameterVisitorFieldProcessor implements VisitableFieldProcessor<P
 
   @Override
   public ParameterField<?> updateCurrentField(ParameterField<?> actualField, ParameterField<?> overrideField) {
-    actualField.updateWithValue(overrideField.getValue());
+    if (overrideField == null || actualField == null) {
+      return actualField;
+    }
+    if (overrideField.isExpression()) {
+      actualField.updateWithExpression(overrideField.getExpressionValue());
+    } else {
+      actualField.updateWithValue(overrideField.getValue());
+    }
     return actualField;
   }
 
   @Override
-  public ParameterField<?> createNewField(ParameterField<?> actualField) {
-    return ParameterField.createExpressionField(
-        true, actualField.getExpressionValue(), actualField.getInputSetValidator(), actualField.isTypeString());
+  public ParameterField<?> cloneField(ParameterField<?> actualField) {
+    return new ParameterField<>(actualField.getValue(), actualField.isExpression(), actualField.getExpressionValue(),
+        actualField.getInputSetValidator(), actualField.isTypeString());
   }
 
   @Override
@@ -29,5 +36,10 @@ public class ParameterVisitorFieldProcessor implements VisitableFieldProcessor<P
   @Override
   public ParameterField<?> createNewFieldWithStringValue(String stringValue) {
     return ParameterField.createJsonResponseField(stringValue);
+  }
+
+  @Override
+  public boolean isNull(ParameterField<?> actualField) {
+    return actualField.equals(ParameterField.ofNull());
   }
 }

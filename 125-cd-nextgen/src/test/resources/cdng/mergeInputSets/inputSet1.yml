@@ -1,0 +1,15 @@
+pipeline:
+  identifier: myPipeline1
+  stages:
+    - stage:
+        identifier: prod
+        type: Deployment
+        spec:
+          service:
+            useFromStage:
+              stage: qa
+          infrastructure:
+            useFromStage:
+              overrides:
+                environment:
+                  identifier: new-env

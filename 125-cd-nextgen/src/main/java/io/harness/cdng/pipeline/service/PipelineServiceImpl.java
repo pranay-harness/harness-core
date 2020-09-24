@@ -26,8 +26,8 @@ import io.harness.exception.DuplicateFieldException;
 import io.harness.exception.GeneralException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.PipelineDoesNotExistException;
-import io.harness.walktree.visitor.ErrorResponse;
-import io.harness.walktree.visitor.ErrorResponseWrapper;
+import io.harness.walktree.visitor.response.VisitorErrorResponse;
+import io.harness.walktree.visitor.response.VisitorErrorResponseWrapper;
 import io.harness.yaml.core.StageElement;
 import io.harness.yaml.utils.YamlPipelineUtils;
 import org.springframework.dao.DuplicateKeyException;
@@ -202,12 +202,13 @@ public class PipelineServiceImpl implements PipelineService {
   @Override
   public Optional<CDPipelineValidationInfo> validatePipeline(
       String pipelineId, String accountId, String orgId, String projectId) {
-    Map<String, ErrorResponseWrapper> uuidToErrorResponse = new HashMap<>();
-    ErrorResponse errorResponse = ErrorResponse.builder().fieldName("identifier").message("cannot be null").build();
+    Map<String, VisitorErrorResponseWrapper> uuidToErrorResponse = new HashMap<>();
+    VisitorErrorResponse errorResponse =
+        VisitorErrorResponse.builder().fieldName("identifier").message("cannot be null").build();
     uuidToErrorResponse.put(
-        "pipeline.identifier", ErrorResponseWrapper.builder().errors(Lists.newArrayList(errorResponse)).build());
-    uuidToErrorResponse.put(
-        "pipeline.stage.identifier", ErrorResponseWrapper.builder().errors(Lists.newArrayList(errorResponse)).build());
+        "pipeline.identifier", VisitorErrorResponseWrapper.builder().errors(Lists.newArrayList(errorResponse)).build());
+    uuidToErrorResponse.put("pipeline.stage.identifier",
+        VisitorErrorResponseWrapper.builder().errors(Lists.newArrayList(errorResponse)).build());
     CDPipeline cdPipeline =
         CDPipeline.builder()
             .identifier("pipeline.identifier")

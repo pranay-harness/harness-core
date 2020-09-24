@@ -5,7 +5,6 @@ import io.harness.cdng.infra.InfrastructureDef;
 import io.harness.cdng.infra.beans.InfraUseFromStage;
 import io.harness.cdng.visitor.LevelNodeQualifierName;
 import io.harness.cdng.visitor.helpers.pipelineinfrastructure.PipelineInfrastructureVisitorHelper;
-import io.harness.state.Step;
 import io.harness.walktree.beans.LevelNode;
 import io.harness.walktree.beans.VisitableChildren;
 import io.harness.walktree.visitor.SimpleVisitorHelper;
@@ -14,8 +13,6 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.experimental.Wither;
 
-import java.util.List;
-
 @Data
 @Builder
 @SimpleVisitorHelper(helperClass = PipelineInfrastructureVisitorHelper.class)
@@ -23,8 +20,6 @@ public class PipelineInfrastructure implements Visitable {
   private InfrastructureDef infrastructureDefinition;
   @Wither private InfraUseFromStage useFromStage;
   private EnvironmentYaml environment;
-  private List<Step> steps;
-  private List<Step> rollbackSteps;
 
   // For Visitor Framework Impl
   String metadata;
@@ -38,6 +33,7 @@ public class PipelineInfrastructure implements Visitable {
     VisitableChildren children = VisitableChildren.builder().build();
     children.add("infrastructureDefinition", infrastructureDefinition);
     children.add("environment", environment);
+    children.add("useFromStage", useFromStage);
     return children;
   }
 
