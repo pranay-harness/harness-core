@@ -947,7 +947,7 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
   }
 
   @Override
-  public Service getService(KubernetesConfig kubernetesConfig, String name, String namespace) {
+  public Service getServiceFabric8(KubernetesConfig kubernetesConfig, String name, String namespace) {
     return isNotBlank(name) ? kubernetesHelperService.getKubernetesClient(kubernetesConfig)
                                   .services()
                                   .inNamespace(isNotBlank(namespace) ? namespace : kubernetesConfig.getNamespace())
@@ -967,7 +967,7 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
   }
 
   @Override
-  public V1Service getService(KubernetesConfig kubernetesConfig, String name) {
+  public V1Service getService(KubernetesConfig kubernetesConfig, String name, String namespace) {
     try {
       if (kubernetesConfig == null || isBlank(name)) {
         return null;
@@ -976,7 +976,7 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
       ApiClient apiClient = kubernetesHelperService.getApiClient(kubernetesConfig);
       String fieldSelector = format("%s=%s", RESOURCE_NAME_FIELD, name);
       V1ServiceList result = new CoreV1Api(apiClient).listNamespacedService(
-          kubernetesConfig.getNamespace(), null, null, null, fieldSelector, null, null, null, null, null);
+          namespace, null, null, null, fieldSelector, null, null, null, null, null);
       return isEmpty(result.getItems()) ? null : result.getItems().get(0);
     } catch (ApiException exception) {
       String message =
@@ -984,6 +984,11 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
       logger.error(message);
       throw new InvalidRequestException(message, exception, USER);
     }
+  }
+
+  @Override
+  public V1Service getService(KubernetesConfig kubernetesConfig, String name) {
+    return kubernetesConfig == null ? null : getService(kubernetesConfig, name, kubernetesConfig.getNamespace());
   }
 
   @Override

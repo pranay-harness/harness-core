@@ -71,9 +71,11 @@ public interface KubernetesContainerService {
 
   Service createOrReplaceService(KubernetesConfig kubernetesConfig, Service definition);
 
-  Service getService(KubernetesConfig kubernetesConfig, String name, String namespace);
+  Service getServiceFabric8(KubernetesConfig kubernetesConfig, String name, String namespace);
 
   Service getServiceFabric8(KubernetesConfig kubernetesConfig, String name);
+
+  V1Service getService(KubernetesConfig kubernetesConfig, String name, String namespace);
 
   V1Service getService(KubernetesConfig kubernetesConfig, String name);
 

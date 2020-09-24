@@ -21,6 +21,7 @@ import static org.mockito.Matchers.anyBoolean;
 import static org.mockito.Matchers.anyLong;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -28,6 +29,7 @@ import static org.mockito.Mockito.verify;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.util.concurrent.TimeLimiter;
+import com.google.common.util.concurrent.UncheckedTimeoutException;
 import com.google.inject.Inject;
 
 import io.fabric8.kubernetes.api.model.ContainerStatusBuilder;
@@ -42,12 +44,19 @@ import io.harness.k8s.model.HarnessLabelValues;
 import io.harness.k8s.model.K8sContainer;
 import io.harness.k8s.model.K8sPod;
 import io.harness.k8s.model.KubernetesConfig;
+import io.harness.k8s.model.KubernetesResource;
 import io.harness.k8s.model.KubernetesResourceId;
 import io.harness.logging.CommandExecutionStatus;
 import io.harness.logging.LogCallback;
 import io.harness.logging.LogLevel;
 import io.harness.rule.Owner;
+import io.kubernetes.client.openapi.models.V1LoadBalancerIngress;
+import io.kubernetes.client.openapi.models.V1Service;
+import io.kubernetes.client.openapi.models.V1ServiceBuilder;
+import io.kubernetes.client.openapi.models.V1ServicePortBuilder;
+import io.kubernetes.client.util.Yaml;
 import me.snowdrop.istio.api.networking.v1alpha3.Subset;
+import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -67,6 +76,8 @@ import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 public class K8sTaskHelperBaseTest extends CategoryTest {
+  private static final KubernetesConfig KUBERNETES_CONFIG = KubernetesConfig.builder().build();
+  private static final String DEFAULT = "default";
   @Rule public MockitoRule mockitoRule = MockitoJUnit.rule();
 
   @Mock private KubernetesContainerService mockKubernetesContainerService;
@@ -74,6 +85,13 @@ public class K8sTaskHelperBaseTest extends CategoryTest {
   @Inject @InjectMocks private K8sTaskHelperBase k8sTaskHelperBase;
 
   long LONG_TIMEOUT_INTERVAL = 60 * 1000L;
+
+  @Before
+  public void setup() throws Exception {
+    doAnswer(invocation -> invocation.getArgumentAt(0, Callable.class).call())
+        .when(mockTimeLimiter)
+        .callWithTimeout(any(Callable.class), anyLong(), any(TimeUnit.class), anyBoolean());
+  }
 
   @Test
   @Owner(developers = ABOSII)
@@ -89,9 +107,7 @@ public class K8sTaskHelperBaseTest extends CategoryTest {
     doReturn(existingPods)
         .when(mockKubernetesContainerService)
         .getRunningPodsWithLabels(config, "default", labelsQuery);
-    doAnswer(invocation -> invocation.getArgumentAt(0, Callable.class).call())
-        .when(mockTimeLimiter)
-        .callWithTimeout(any(Callable.class), anyLong(), any(TimeUnit.class), anyBoolean());
+
     List<K8sPod> pods =
         k8sTaskHelperBase.getPodDetailsWithLabels(config, "default", "releaseName", labelsQuery, LONG_TIMEOUT_INTERVAL);
 
@@ -284,5 +300,120 @@ public class K8sTaskHelperBaseTest extends CategoryTest {
       @Override
       public void saveExecutionLog(String line, LogLevel logLevel, CommandExecutionStatus commandExecutionStatus) {}
     };
+  }
+
+  @Test
+  @Owner(developers = ABOSII)
+  @Category(UnitTests.class)
+  public void testGetLoadBalancerEndpoint() {
+    List<Integer> servicePorts = asList(38493, 80, 443);
+    List<KubernetesResource> resources = asList(getServiceResource("ClusterIP"), getServiceResource("LoadBalancer"));
+
+    doReturn(getK8sService("LoadBalancer", servicePorts, "hostname", null))
+        .when(mockKubernetesContainerService)
+        .getService(KUBERNETES_CONFIG, "LoadBalancer", DEFAULT);
+
+    String endpoint = k8sTaskHelperBase.getLoadBalancerEndpoint(KUBERNETES_CONFIG, resources);
+    assertThat(endpoint).isEqualTo("https://hostname/");
+  }
+
+  @Test
+  @Owner(developers = ABOSII)
+  @Category(UnitTests.class)
+  public void testGetLoadBalancerEndpointHttpPort() {
+    List<Integer> servicePorts = asList(38493, 80);
+    List<KubernetesResource> resources = singletonList(getServiceResource("LoadBalancer"));
+
+    doReturn(getK8sService("LoadBalancer", servicePorts, "hostname", null))
+        .when(mockKubernetesContainerService)
+        .getService(KUBERNETES_CONFIG, "LoadBalancer", DEFAULT);
+
+    String endpoint = k8sTaskHelperBase.getLoadBalancerEndpoint(KUBERNETES_CONFIG, resources);
+    assertThat(endpoint).isEqualTo("http://hostname/");
+  }
+
+  @Test
+  @Owner(developers = ABOSII)
+  @Category(UnitTests.class)
+  public void testGetLoadBalancerEndpointHttpPortWithIP() {
+    List<Integer> servicePorts = asList(38493, 80);
+    List<KubernetesResource> resources = singletonList(getServiceResource("LoadBalancer"));
+
+    doReturn(getK8sService("LoadBalancer", servicePorts, null, "10.33.33.33"))
+        .when(mockKubernetesContainerService)
+        .getService(KUBERNETES_CONFIG, "LoadBalancer", DEFAULT);
+
+    String endpoint = k8sTaskHelperBase.getLoadBalancerEndpoint(KUBERNETES_CONFIG, resources);
+    assertThat(endpoint).isEqualTo("http://10.33.33.33/");
+  }
+
+  @Test
+  @Owner(developers = ABOSII)
+  @Category(UnitTests.class)
+  public void testGetLoadBalancerEndpointRandomPort() {
+    List<Integer> servicePorts = singletonList(38493);
+    List<KubernetesResource> resources = singletonList(getServiceResource("LoadBalancer"));
+
+    doReturn(getK8sService("LoadBalancer", servicePorts, "hostname", null))
+        .when(mockKubernetesContainerService)
+        .getService(KUBERNETES_CONFIG, "LoadBalancer", DEFAULT);
+
+    String endpoint = k8sTaskHelperBase.getLoadBalancerEndpoint(KUBERNETES_CONFIG, resources);
+    assertThat(endpoint).isEqualTo("hostname:38493");
+  }
+
+  @Test
+  @Owner(developers = ABOSII)
+  @Category(UnitTests.class)
+  public void testGetLoadBalancerEndpointNoPortsExposed() {
+    List<KubernetesResource> resources = singletonList(getServiceResource("LoadBalancer"));
+
+    doReturn(getK8sService("LoadBalancer", emptyList(), null, "33.33.33.33"))
+        .when(mockKubernetesContainerService)
+        .getService(KUBERNETES_CONFIG, "LoadBalancer", DEFAULT);
+
+    String endpoint = k8sTaskHelperBase.getLoadBalancerEndpoint(KUBERNETES_CONFIG, resources);
+    assertThat(endpoint).isEqualTo("33.33.33.33");
+  }
+
+  @Test
+  @Owner(developers = ABOSII)
+  @Category(UnitTests.class)
+  public void testGetLoadBalancerEndpointServiceNotReady() throws Exception {
+    List<KubernetesResource> resources = singletonList(getServiceResource("LoadBalancer"));
+
+    doThrow(new UncheckedTimeoutException())
+        .when(mockTimeLimiter)
+        .callWithTimeout(any(Callable.class), anyLong(), any(TimeUnit.class), anyBoolean());
+
+    String endpoint = k8sTaskHelperBase.getLoadBalancerEndpoint(KUBERNETES_CONFIG, resources);
+    assertThat(endpoint).isNull();
+  }
+
+  private V1Service getK8sService(String type, List<Integer> ports, String hostname, String ip) {
+    V1ServiceBuilder serviceBuilder = new V1ServiceBuilder()
+                                          .withNewSpec()
+                                          .withPorts(ports.stream()
+                                                         .map(port -> new V1ServicePortBuilder().withPort(port).build())
+                                                         .collect(Collectors.toList()))
+                                          .withType(type)
+                                          .endSpec();
+
+    if (hostname != null || ip != null) {
+      serviceBuilder.withNewStatus()
+          .withNewLoadBalancer()
+          .withIngress(new V1LoadBalancerIngress().hostname(hostname).ip(ip))
+          .endLoadBalancer()
+          .endStatus();
+    }
+
+    return serviceBuilder.build();
+  }
+
+  private KubernetesResource getServiceResource(String type) {
+    return KubernetesResource.builder()
+        .resourceId(KubernetesResourceId.builder().name(type).kind(Service.name()).namespace(DEFAULT).build())
+        .spec(Yaml.dump(getK8sService(type, emptyList(), null, null)))
+        .build();
   }
 }
