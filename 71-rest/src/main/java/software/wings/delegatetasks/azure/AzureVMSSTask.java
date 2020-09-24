@@ -11,7 +11,6 @@ import io.harness.azure.model.AzureConfig;
 import io.harness.delegate.beans.DelegateTaskPackage;
 import io.harness.delegate.beans.DelegateTaskResponse;
 import io.harness.delegate.beans.azure.AzureConfigDTO;
-import io.harness.delegate.beans.azure.AzureConfigDelegate;
 import io.harness.delegate.beans.azure.AzureVMAuthDTO;
 import io.harness.delegate.task.AbstractDelegateRunnableTask;
 import io.harness.delegate.task.TaskParameters;
@@ -65,7 +64,7 @@ public class AzureVMSSTask extends AbstractDelegateRunnableTask {
 
     AzureVMSSCommandRequest azureVMSSCommandRequest = (AzureVMSSCommandRequest) parameters;
     AzureVMSSTaskParameters azureVMSSTaskParameters = azureVMSSCommandRequest.getAzureVMSSTaskParameters();
-    decryptTaskParameters(azureVMSSCommandRequest, azureVMSSTaskParameters);
+    decryptTaskParameters(azureVMSSTaskParameters);
     AzureConfig azureConfigForDelegateTask = createAzureConfigForDelegateTask(azureVMSSCommandRequest);
     AzureVMSSTaskHandler handler;
     if (azureVMSSTaskParameters.isSyncTask()) {
@@ -108,38 +107,21 @@ public class AzureVMSSTask extends AbstractDelegateRunnableTask {
   }
 
   private AzureConfig createAzureConfigForDelegateTask(AzureVMSSCommandRequest azureVMSSCommandRequest) {
-    AzureConfigDelegate azureConfigDelegate = azureVMSSCommandRequest.getAzureConfigDelegate();
-    AzureConfigDTO azureConfigDTO = azureConfigDelegate.getAzureConfigDTO();
-    secretDecryptionService.decrypt(azureConfigDTO, azureConfigDelegate.getAzureEncryptionDetails());
+    AzureConfigDTO azureConfigDTO = azureVMSSCommandRequest.getAzureConfigDTO();
+    secretDecryptionService.decrypt(azureConfigDTO, azureVMSSCommandRequest.getAzureConfigEncryptionDetails());
 
     String clientId = azureConfigDTO.getClientId();
     String tenantId = azureConfigDTO.getTenantId();
-    char[] key = azureConfigDTO.getKey();
+    char[] key = azureConfigDTO.getKey().getDecryptedValue();
     return AzureConfig.builder().clientId(clientId).tenantId(tenantId).key(key).build();
   }
 
-  private void decryptTaskParameters(
-      AzureVMSSCommandRequest azureVMSSCommandRequest, AzureVMSSTaskParameters azureVMSSTaskParameters) {
+  private void decryptTaskParameters(AzureVMSSTaskParameters azureVMSSTaskParameters) {
     if (AzureVMSSTaskParameters.AzureVMSSTaskType.AZURE_VMSS_SETUP == azureVMSSTaskParameters.getCommandType()) {
       AzureVMSSSetupTaskParameters setupTaskParameters = (AzureVMSSSetupTaskParameters) azureVMSSTaskParameters;
-
-      if (azureVMSSCommandRequest.getAzureHostConnectionDelegate() != null
-          && azureVMSSCommandRequest.getAzureHostConnectionDelegate().getAzureVMAuthDTO() != null) {
-        AzureVMAuthDTO azureVMAuthDTO = azureVMSSCommandRequest.getAzureHostConnectionDelegate().getAzureVMAuthDTO();
-        List<EncryptedDataDetail> azureEncryptionDetails =
-            azureVMSSCommandRequest.getAzureHostConnectionDelegate().getAzureEncryptionDetails();
-        secretDecryptionService.decrypt(azureVMAuthDTO, azureEncryptionDetails);
-        setupTaskParameters.setSshPublicKey(String.valueOf(azureVMAuthDTO.getKey()));
-      }
-
-      if (azureVMSSCommandRequest.getAzureVMCredentialsDelegate() != null
-          && azureVMSSCommandRequest.getAzureVMCredentialsDelegate().getAzureVMAuthDTO() != null) {
-        AzureVMAuthDTO azureVMAuthDTO = azureVMSSCommandRequest.getAzureVMCredentialsDelegate().getAzureVMAuthDTO();
-        List<EncryptedDataDetail> azureEncryptionDetails =
-            azureVMSSCommandRequest.getAzureVMCredentialsDelegate().getAzureEncryptionDetails();
-        secretDecryptionService.decrypt(azureVMAuthDTO, azureEncryptionDetails);
-        setupTaskParameters.setPassword(String.valueOf(azureVMAuthDTO.getKey()));
-      }
+      AzureVMAuthDTO azureVmAuthDTO = setupTaskParameters.getAzureVmAuthDTO();
+      List<EncryptedDataDetail> vmAuthDTOEncryptionDetails = setupTaskParameters.getVmAuthDTOEncryptionDetails();
+      secretDecryptionService.decrypt(azureVmAuthDTO, vmAuthDTOEncryptionDetails);
     }
   }
 

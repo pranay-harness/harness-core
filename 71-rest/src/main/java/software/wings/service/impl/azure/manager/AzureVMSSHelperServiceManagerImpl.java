@@ -139,11 +139,11 @@ public class AzureVMSSHelperServiceManagerImpl implements AzureVMSSHelperService
 
   private AzureVMSSTaskResponse executeTask(String accountId, AzureVMSSTaskParameters parameters,
       AzureConfig azureConfig, List<EncryptedDataDetail> azureEncryptionDetails, String appId) {
-    AzureVMSSCommandRequest request =
-        AzureVMSSCommandRequest.builder()
-            .azureConfigDelegate(azureVMSSStateHelper.createDelegateConfig(azureConfig, azureEncryptionDetails))
-            .azureVMSSTaskParameters(parameters)
-            .build();
+    AzureVMSSCommandRequest request = AzureVMSSCommandRequest.builder()
+                                          .azureConfigDTO(azureVMSSStateHelper.createAzureConfigDTO(azureConfig))
+                                          .azureConfigEncryptionDetails(azureEncryptionDetails)
+                                          .azureVMSSTaskParameters(parameters)
+                                          .build();
 
     DelegateTask delegateTask =
         DelegateTask.builder()

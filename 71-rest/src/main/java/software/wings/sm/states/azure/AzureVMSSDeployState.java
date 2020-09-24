@@ -258,7 +258,8 @@ public class AzureVMSSDeployState extends State {
   private AzureVMSSCommandRequest buildAzureVMSSCommandRequest(AzureConfig azureConfig,
       List<EncryptedDataDetail> azureEncryptionDetails, AzureVMSSTaskParameters azureVmssTaskParameters) {
     return AzureVMSSCommandRequest.builder()
-        .azureConfigDelegate(azureVMSSStateHelper.createDelegateConfig(azureConfig, azureEncryptionDetails))
+        .azureConfigDTO(azureVMSSStateHelper.createAzureConfigDTO(azureConfig))
+        .azureConfigEncryptionDetails(azureEncryptionDetails)
         .azureVMSSTaskParameters(azureVmssTaskParameters)
         .build();
   }
