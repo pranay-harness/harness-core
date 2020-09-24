@@ -7,6 +7,7 @@ import lombok.experimental.UtilityClass;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.Map;
+import java.util.Objects;
 
 @UtilityClass
 @Slf4j
@@ -20,6 +21,19 @@ public class InstanceMetaDataUtils {
       return metaData.get(metaDataKey);
     }
     return null;
+  }
+
+  public static boolean carryUpdatedMapKeyFromTo(Map<String, String> fromMap, Map<String, String> toMap) {
+    boolean updateRequired = false;
+    if (fromMap != null && toMap != null) {
+      for (Map.Entry<String, String> e : fromMap.entrySet()) {
+        if (!Objects.equals(e.getValue(), toMap.get(e.getKey()))) {
+          toMap.put(e.getKey(), e.getValue());
+          updateRequired = true;
+        }
+      }
+    }
+    return updateRequired;
   }
 
   public static void populateNodePoolNameFromLabel(Map<String, String> labelsMap, Map<String, String> metaData) {

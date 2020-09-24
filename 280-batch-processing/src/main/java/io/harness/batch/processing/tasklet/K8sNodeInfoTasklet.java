@@ -54,6 +54,7 @@ public class K8sNodeInfoTasklet implements Tasklet {
 
   private static final String AWS_SPOT_INSTANCE = "spot";
   private static final String AZURE_SPOT_INSTANCE = "spot";
+  private static final boolean UPDATE_OLD_NODE_DATA = true;
 
   @Override
   public RepeatStatus execute(StepContribution stepContribution, ChunkContext chunkContext) {
@@ -92,10 +93,12 @@ public class K8sNodeInfoTasklet implements Tasklet {
     String clusterId = nodeInfo.getClusterId();
     String nodeUid = nodeInfo.getNodeUid();
 
-    InstanceData existingInstanceData = instanceDataService.fetchInstanceData(accountId, clusterId, nodeUid);
-    if (null != existingInstanceData
-        && !ImmutableSet.of("kmpySmUISimoRrJL6NL73w", "ng2HGKFpStaPsVqGr3B3gA").contains(accountId)) {
-      return InstanceInfo.builder().metaData(Collections.emptyMap()).build();
+    if (!UPDATE_OLD_NODE_DATA) {
+      InstanceData existingInstanceData = instanceDataService.fetchInstanceData(accountId, clusterId, nodeUid);
+      if (null != existingInstanceData
+          && !ImmutableSet.of("kmpySmUISimoRrJL6NL73w", "ng2HGKFpStaPsVqGr3B3gA").contains(accountId)) {
+        return InstanceInfo.builder().metaData(Collections.emptyMap()).build();
+      }
     }
 
     Map<String, String> labelsMap = nodeInfo.getLabelsMap();
