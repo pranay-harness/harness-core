@@ -18,7 +18,10 @@ import io.harness.cdng.inputset.beans.resource.MergeInputSetResponseDTO;
 import io.harness.cdng.inputset.mappers.CDInputSetElementMapper;
 import io.harness.cdng.inputset.mappers.CDInputSetFilterHelper;
 import io.harness.cdng.inputset.services.CDInputSetEntityService;
+import io.harness.cdng.pipeline.beans.dto.CDPipelineResponseDTO;
+import io.harness.cdng.pipeline.service.PipelineService;
 import io.harness.data.structure.EmptyPredicate;
+import io.harness.exception.InvalidRequestException;
 import io.harness.ng.core.dto.ErrorDTO;
 import io.harness.ng.core.dto.FailureDTO;
 import io.harness.ng.core.dto.ResponseDTO;
@@ -65,6 +68,7 @@ import javax.ws.rs.QueryParam;
     })
 public class InputSetResource {
   private final CDInputSetEntityService cdInputSetEntityService;
+  private PipelineService ngPipelineService;
 
   @GET
   @Path("{inputSetIdentifier}")
@@ -175,17 +179,16 @@ public class InputSetResource {
       @NotNull @QueryParam("orgIdentifier") String orgIdentifier,
       @NotNull @QueryParam("projectIdentifier") String projectIdentifier,
       @NotNull @QueryParam("pipelineIdentifier") String pipelineIdentifier) {
-    // currently returning a dummy response
-    String dummyFilename = "dummyInputSetTemplate.yaml";
-    ClassLoader classLoader = this.getClass().getClassLoader();
-    String content = null;
-    try {
-      content =
-          Resources.toString(Objects.requireNonNull(classLoader.getResource(dummyFilename)), StandardCharsets.UTF_8);
-    } catch (IOException e) {
-      // do nothing
+    Optional<CDPipelineResponseDTO> pipeline =
+        ngPipelineService.getPipeline(pipelineIdentifier, accountId, orgIdentifier, projectIdentifier);
+    if (pipeline.isPresent()) {
+      String pipelineYaml = pipeline.get().getYamlPipeline();
+      String inputSetTemplate = cdInputSetEntityService.getTemplateFromPipeline(pipelineYaml);
+      return ResponseDTO.newResponse(
+          InputSetTemplateResponseDTO.builder().inputSetTemplateYaml(inputSetTemplate).build());
+    } else {
+      throw new InvalidRequestException("Pipeline not found");
     }
-    return ResponseDTO.newResponse(InputSetTemplateResponseDTO.builder().inputSetTemplateYaml(content).build());
   }
 
   @POST

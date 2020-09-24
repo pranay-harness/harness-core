@@ -6,6 +6,7 @@ import io.harness.cdng.manifest.yaml.ManifestConfigWrapper;
 import io.harness.cdng.visitor.LevelNodeQualifierName;
 import io.harness.cdng.visitor.helpers.serviceconfig.StageOverridesVisitorHelper;
 import io.harness.common.SwaggerConstants;
+import io.harness.data.structure.EmptyPredicate;
 import io.harness.walktree.beans.LevelNode;
 import io.harness.walktree.beans.VisitableChildren;
 import io.harness.walktree.visitor.SimpleVisitorHelper;
@@ -35,8 +36,9 @@ public class StageOverridesConfig implements Visitable {
   public VisitableChildren getChildrenToWalk() {
     VisitableChildren children = VisitableChildren.builder().build();
     children.add("artifacts", artifacts);
-    manifests.forEach(manifest -> children.add("manifests", manifest));
-    // add override sets if necessary
+    if (EmptyPredicate.isNotEmpty(manifests)) {
+      manifests.forEach(manifest -> children.add("manifests", manifest));
+    }
     return children;
   }
 

@@ -4,6 +4,7 @@ import static io.harness.rule.OwnerRule.NAMAN;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
+import com.google.common.io.Resources;
 import com.google.inject.Inject;
 
 import io.harness.category.element.UnitTests;
@@ -20,6 +21,9 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.mongodb.core.query.Criteria;
 
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.util.Objects;
 import java.util.Optional;
 
 public class CDInputSetEntityServiceImplTest extends CDNGBaseTest {
@@ -131,5 +135,23 @@ public class CDInputSetEntityServiceImplTest extends CDNGBaseTest {
     Optional<CDInputSetEntity> deletedInputSet = cdInputSetEntityService.get(
         ACCOUNT_ID, ORG_IDENTIFIER, PROJ_IDENTIFIER, PIPELINE_IDENTIFIER, IDENTIFIER, false);
     assertThat(deletedInputSet.isPresent()).isFalse();
+  }
+
+  @Test
+  @Owner(developers = NAMAN)
+  @Category(UnitTests.class)
+  public void testGetTemplateFromPipeline() throws IOException {
+    ClassLoader classLoader = getClass().getClassLoader();
+    String pipelineFilename = "pipeline-extensive.yaml";
+    String pipelineYaml =
+        Resources.toString(Objects.requireNonNull(classLoader.getResource(pipelineFilename)), StandardCharsets.UTF_8);
+
+    String tempYaml = cdInputSetEntityService.getTemplateFromPipeline(pipelineYaml).replaceAll("\"", "");
+    assertThat(tempYaml).isNotNull();
+
+    String templateFilename = "pipeline-extensive-template.yaml";
+    String templateYaml =
+        Resources.toString(Objects.requireNonNull(classLoader.getResource(templateFilename)), StandardCharsets.UTF_8);
+    assertThat(tempYaml).isEqualTo(templateYaml);
   }
 }

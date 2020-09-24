@@ -33,7 +33,8 @@ import javax.validation.constraints.Size;
     {
       @Field(CDInputSetEntityKeys.accountId)
       , @Field(CDInputSetEntityKeys.orgIdentifier), @Field(CDInputSetEntityKeys.projectIdentifier),
-          @Field(CDInputSetEntityKeys.pipelineIdentifier), @Field(CDInputSetEntityKeys.identifier)
+          @Field(CDInputSetEntityKeys.pipelineIdentifier), @Field(CDInputSetEntityKeys.identifier),
+          @Field(CDInputSetEntityKeys.name)
     })
 @CdIndex(name = "accountIdIndex", fields = { @Field(CDInputSetEntityKeys.accountId) })
 @Entity(value = "inputSetsNG", noClassnameStored = true)

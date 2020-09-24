@@ -21,4 +21,6 @@ public interface CDInputSetEntityService {
 
   boolean delete(String accountId, String orgIdentifier, String projectIdentifier, String pipelineIdentifier,
       String inputSetIdentifier);
+
+  String getTemplateFromPipeline(String pipelineYaml);
 }

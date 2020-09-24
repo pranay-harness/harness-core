@@ -11,9 +11,14 @@ import io.harness.cdng.inputset.beans.entities.CDInputSetEntity;
 import io.harness.cdng.inputset.beans.entities.CDInputSetEntity.CDInputSetEntityKeys;
 import io.harness.cdng.inputset.repository.spring.CDInputSetRepository;
 import io.harness.cdng.inputset.services.CDInputSetEntityService;
+import io.harness.cdng.pipeline.CDPipeline;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.exception.DuplicateFieldException;
 import io.harness.exception.InvalidRequestException;
+import io.harness.walktree.visitor.SimpleVisitorFactory;
+import io.harness.walktree.visitor.inputset.InputSetTemplateVisitor;
+import io.harness.yaml.utils.JsonPipelineUtils;
+import io.harness.yaml.utils.YamlPipelineUtils;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.DuplicateKeyException;
@@ -21,6 +26,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.mongodb.core.query.Criteria;
 
+import java.io.IOException;
 import java.util.Objects;
 import java.util.Optional;
 import javax.validation.Valid;
@@ -31,6 +37,7 @@ import javax.validation.constraints.NotNull;
 @Slf4j
 public class CDInputSetEntityServiceImpl implements CDInputSetEntityService {
   private final CDInputSetRepository cdInputSetRepository;
+  private final SimpleVisitorFactory simpleVisitorFactory;
   private static final String DUP_KEY_EXP_FORMAT_STRING =
       "InputSet [%s] under Project[%s], Organization [%s] for Pipeline [%s] already exists";
 
@@ -134,6 +141,19 @@ public class CDInputSetEntityServiceImpl implements CDInputSetEntityService {
               inputSetIdentifier, projectIdentifier, orgIdentifier, pipelineIdentifier));
     }
     return true;
+  }
+
+  @Override
+  public String getTemplateFromPipeline(String pipelineYaml) {
+    InputSetTemplateVisitor visitor = simpleVisitorFactory.obtainInputSetTemplateVisitor();
+    try {
+      CDPipeline pipeline = YamlPipelineUtils.read(pipelineYaml, CDPipeline.class);
+      visitor.walkElementTree(pipeline);
+      CDPipeline result = (CDPipeline) visitor.getCurrentObject();
+      return JsonPipelineUtils.writeYamlString(result).replaceAll("---\n", "");
+    } catch (IOException e) {
+      throw new InvalidRequestException("Pipeline could not be converted to template");
+    }
   }
 
   private void setName(CDInputSetEntity cdInputSetEntity) {
