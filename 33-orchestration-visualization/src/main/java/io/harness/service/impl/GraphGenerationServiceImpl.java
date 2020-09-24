@@ -78,8 +78,8 @@ public class GraphGenerationServiceImpl implements GraphGenerationService {
   }
 
   @Override
-  public void cacheOrchestrationGraphInternal(OrchestrationGraphInternal adjacencyListInternal) {
-    executorService.submit(() -> mongoStore.upsert(adjacencyListInternal, Duration.ofDays(10)));
+  public void cacheOrchestrationGraphInternal(OrchestrationGraphInternal orchestrationGraphInternal) {
+    mongoStore.upsert(orchestrationGraphInternal, Duration.ofDays(10));
   }
 
   @Override
