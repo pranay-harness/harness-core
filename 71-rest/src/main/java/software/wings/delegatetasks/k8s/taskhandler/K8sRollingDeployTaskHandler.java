@@ -177,7 +177,9 @@ public class K8sRollingDeployTaskHandler extends K8sTaskHandler {
             .k8sPodList(k8sRollingBaseHandler.tagNewPods(
                 k8sRollingBaseHandler.getPods(steadyStateTimeoutInMillis, allWorkloads, kubernetesConfig, releaseName),
                 existingPodList))
-            .loadBalancer(k8sTaskHelperBase.getLoadBalancerEndpoint(kubernetesConfig, resources))
+            .loadBalancer(k8sRollingDeployTaskParameters.isDeprecateFabric8Enabled()
+                    ? k8sTaskHelperBase.getLoadBalancerEndpoint(kubernetesConfig, resources)
+                    : k8sTaskHelperBase.getLoadBalancerEndpointFabric8(kubernetesConfig, resources))
             .helmChartInfo(helmChartInfo)
             .build();
 

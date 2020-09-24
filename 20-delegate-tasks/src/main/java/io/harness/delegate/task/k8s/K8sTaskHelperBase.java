@@ -102,6 +102,10 @@ import io.harness.logging.DummyLogCallbackImpl;
 import io.harness.logging.LogCallback;
 import io.harness.logging.LogLevel;
 import io.harness.serializer.YamlUtils;
+import io.kubernetes.client.openapi.models.V1LoadBalancerIngress;
+import io.kubernetes.client.openapi.models.V1LoadBalancerStatus;
+import io.kubernetes.client.openapi.models.V1Service;
+import io.kubernetes.client.openapi.models.V1ServicePort;
 import lombok.extern.slf4j.Slf4j;
 import me.snowdrop.istio.api.networking.v1alpha3.Destination;
 import me.snowdrop.istio.api.networking.v1alpha3.DestinationRule;
@@ -133,10 +137,12 @@ import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.concurrent.Callable;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -275,20 +281,47 @@ public class K8sTaskHelperBase {
     return getPodDetailsWithLabels(kubernetesConfig, namespace, releaseName, labels, timeoutInMillis);
   }
 
-  private Service waitForLoadBalancerService(
+  private Service waitForLoadBalancerServiceFabric8(
       KubernetesConfig kubernetesConfig, String serviceName, String namespace, int timeoutInSeconds) {
+    return waitForLoadBalancerService(serviceName, () -> {
+      Service service = kubernetesContainerService.getServiceFabric8(kubernetesConfig, serviceName, namespace);
+
+      LoadBalancerStatus loadBalancerStatus = service.getStatus().getLoadBalancer();
+      if (!loadBalancerStatus.getIngress().isEmpty()) {
+        return service;
+      }
+
+      return null;
+    }, timeoutInSeconds);
+  }
+
+  private V1Service waitForLoadBalancerService(
+      KubernetesConfig kubernetesConfig, String serviceName, String namespace, int timeoutInSeconds) {
+    return waitForLoadBalancerService(serviceName, () -> {
+      V1Service service = kubernetesContainerService.getService(kubernetesConfig, serviceName, namespace);
+      if (service.getStatus() != null && service.getStatus().getLoadBalancer() != null) {
+        V1LoadBalancerStatus loadBalancerStatus = service.getStatus().getLoadBalancer();
+        if (isNotEmpty(loadBalancerStatus.getIngress())) {
+          return service;
+        }
+      }
+
+      return null;
+    }, timeoutInSeconds);
+  }
+
+  private <T> T waitForLoadBalancerService(String name, Callable<T> getLoadBalancerService, int timeoutInSeconds) {
     try {
       return timeLimiter.callWithTimeout(() -> {
         while (true) {
-          Service service = kubernetesContainerService.getService(kubernetesConfig, serviceName, namespace);
-
-          LoadBalancerStatus loadBalancerStatus = service.getStatus().getLoadBalancer();
-          if (!loadBalancerStatus.getIngress().isEmpty()) {
-            return service;
+          T result = getLoadBalancerService.call();
+          if (result != null) {
+            return result;
           }
+
           int sleepTimeInSeconds = 5;
-          logger.info("waitForLoadBalancerService: LoadBalancer Service {} not ready. Sleeping for {} seconds",
-              serviceName, sleepTimeInSeconds);
+          logger.info("waitForLoadBalancerService: LoadBalancer Service {} not ready. Sleeping for {} seconds", name,
+              sleepTimeInSeconds);
           sleep(ofSeconds(sleepTimeInSeconds));
         }
       }, timeoutInSeconds, TimeUnit.SECONDS, true);
@@ -297,39 +330,22 @@ public class K8sTaskHelperBase {
     } catch (Exception e) {
       logger.error("Exception while trying to get LoadBalancer service", e);
     }
+
     return null;
   }
 
-  public String getLoadBalancerEndpoint(KubernetesConfig kubernetesConfig, List<KubernetesResource> resources) {
-    KubernetesResource loadBalancerResource = getFirstLoadBalancerService(resources);
-    if (loadBalancerResource == null) {
-      return null;
-    }
-
-    // NOTE(hindwani): We are not using timeOutInMillis for waiting because of the bug: CDP-13872
-    Service service = waitForLoadBalancerService(kubernetesConfig, loadBalancerResource.getResourceId().getName(),
-        loadBalancerResource.getResourceId().getNamespace(), 60);
-
-    if (service == null) {
-      logger.warn("Could not get the Service Status {} from cluster.", loadBalancerResource.getResourceId().getName());
-      return null;
-    }
-
-    LoadBalancerIngress loadBalancerIngress = service.getStatus().getLoadBalancer().getIngress().get(0);
-    String loadBalancerHost =
-        isNotBlank(loadBalancerIngress.getHostname()) ? loadBalancerIngress.getHostname() : loadBalancerIngress.getIp();
-
+  private String getLoadBalancerEndpoint(String loadBalancerHost, Iterator<Integer> ports) {
     boolean port80Found = false;
     boolean port443Found = false;
     Integer firstPort = null;
 
-    for (ServicePort servicePort : service.getSpec().getPorts()) {
-      firstPort = servicePort.getPort();
+    while (ports.hasNext()) {
+      firstPort = ports.next();
 
-      if (servicePort.getPort() == 80) {
+      if (firstPort == 80) {
         port80Found = true;
       }
-      if (servicePort.getPort() == 443) {
+      if (firstPort == 443) {
         port443Found = true;
       }
     }
@@ -343,6 +359,60 @@ public class K8sTaskHelperBase {
     } else {
       return loadBalancerHost;
     }
+  }
+
+  public String getLoadBalancerEndpoint(KubernetesConfig kubernetesConfig, List<KubernetesResource> resources) {
+    KubernetesResource loadBalancerResource = getFirstLoadBalancerService(resources);
+    if (loadBalancerResource == null) {
+      return null;
+    }
+
+    // NOTE(hindwani): We are not using timeOutInMillis for waiting because of the bug: CDP-13872
+    V1Service service = waitForLoadBalancerService(kubernetesConfig, loadBalancerResource.getResourceId().getName(),
+        loadBalancerResource.getResourceId().getNamespace(), 60);
+
+    if (service == null) {
+      logger.warn("Could not get the Service Status {} from cluster.", loadBalancerResource.getResourceId().getName());
+      return null;
+    }
+
+    if (service.getStatus() == null || service.getStatus().getLoadBalancer() == null
+        || service.getStatus().getLoadBalancer().getIngress() == null) {
+      return null;
+    }
+
+    V1LoadBalancerIngress loadBalancerIngress = service.getStatus().getLoadBalancer().getIngress().get(0);
+    String loadBalancerHost =
+        isNotBlank(loadBalancerIngress.getHostname()) ? loadBalancerIngress.getHostname() : loadBalancerIngress.getIp();
+    if (service.getSpec() == null || service.getSpec().getPorts() == null) {
+      return loadBalancerHost;
+    }
+
+    return getLoadBalancerEndpoint(
+        loadBalancerHost, service.getSpec().getPorts().stream().map(V1ServicePort::getPort).iterator());
+  }
+
+  public String getLoadBalancerEndpointFabric8(KubernetesConfig kubernetesConfig, List<KubernetesResource> resources) {
+    KubernetesResource loadBalancerResource = getFirstLoadBalancerService(resources);
+    if (loadBalancerResource == null) {
+      return null;
+    }
+
+    // NOTE(hindwani): We are not using timeOutInMillis for waiting because of the bug: CDP-13872
+    Service service = waitForLoadBalancerServiceFabric8(kubernetesConfig,
+        loadBalancerResource.getResourceId().getName(), loadBalancerResource.getResourceId().getNamespace(), 60);
+
+    if (service == null) {
+      logger.warn("Could not get the Service Status {} from cluster.", loadBalancerResource.getResourceId().getName());
+      return null;
+    }
+
+    LoadBalancerIngress loadBalancerIngress = service.getStatus().getLoadBalancer().getIngress().get(0);
+    String loadBalancerHost =
+        isNotBlank(loadBalancerIngress.getHostname()) ? loadBalancerIngress.getHostname() : loadBalancerIngress.getIp();
+
+    return getLoadBalancerEndpoint(
+        loadBalancerHost, service.getSpec().getPorts().stream().map(ServicePort::getPort).iterator());
   }
 
   public void setNamespaceToKubernetesResourcesIfRequired(

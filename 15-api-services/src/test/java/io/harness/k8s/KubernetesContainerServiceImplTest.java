@@ -629,7 +629,7 @@ public class KubernetesContainerServiceImplTest extends CategoryTest {
     assertThat(args.getValue()).isEqualTo("service");
     verify(serviceResource).get();
 
-    kubernetesContainerService.getService(KUBERNETES_CONFIG, "service", "testNamespace");
+    kubernetesContainerService.getServiceFabric8(KUBERNETES_CONFIG, "service", "testNamespace");
     verify(services, times(2)).inNamespace(args.capture());
     assertThat(args.getValue()).isEqualTo("testNamespace");
     verify(serviceResource, times(2)).get();
