@@ -1,5 +1,7 @@
 package software.wings.helpers.ext.azure;
 
+import static io.harness.data.encoding.EncodingUtils.encodeBase64;
+import static io.harness.rule.OwnerRule.ABOSII;
 import static io.harness.rule.OwnerRule.ANSHUL;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
@@ -31,6 +33,7 @@ import com.microsoft.azure.management.resources.ResourceGroups;
 import com.microsoft.rest.LogLevel;
 import com.microsoft.rest.RestException;
 import io.harness.category.element.UnitTests;
+import io.harness.k8s.model.KubernetesConfig;
 import io.harness.network.Http;
 import io.harness.rule.Owner;
 import okhttp3.OkHttpClient;
@@ -51,6 +54,7 @@ import software.wings.beans.AzureConfig;
 import software.wings.beans.AzureTagDetails;
 import software.wings.beans.AzureVaultConfig;
 import software.wings.beans.cloudprovider.azure.AzureEnvironmentType;
+import software.wings.helpers.ext.azure.AksGetCredentialsResponse.AksGetCredentialProperties;
 import software.wings.service.intfc.security.EncryptionService;
 
 import java.util.List;
@@ -65,6 +69,9 @@ public class AzureHelperServiceTest extends WingsBaseTest {
   @Mock private Azure azure;
   @Mock private EncryptionService encryptionService;
   @Mock private ResourceGroups resourceGroups;
+
+  @Mock AzureManagementRestClient azureManagementRestClient;
+  @Mock Call<AksGetCredentialsResponse> aksGetCredentialsCall;
 
   @InjectMocks private AzureHelperService azureHelperService;
 
@@ -312,5 +319,54 @@ public class AzureHelperServiceTest extends WingsBaseTest {
     verify(configurable, times(3)).authenticate(captor.capture());
     tokenCredentials = captor.getValue();
     assertThat(tokenCredentials.environment().managementEndpoint()).isEqualTo("https://management.core.windows.net/");
+  }
+
+  @Test
+  @Owner(developers = ABOSII)
+  @Category(UnitTests.class)
+  public void testGetKubernetesClusterConfig() throws Exception {
+    String kubeConfig = "apiVersion: v1\n"
+        + "clusters:\n"
+        + "- cluster:\n"
+        + "    xxxxxxxx https://master-url\n"
+        + "    certificate-authority-data: certificate-authority-data\n"
+        + "    insecure-skip-tls-verify: true\n"
+        + "  name: cluster\n"
+        + "contexts:\n"
+        + "- context:\n"
+        + "    cluster: cluster\n"
+        + "    user: admin\n"
+        + "    namespace: namespace\n"
+        + "  name: current\n"
+        + "current-context: current\n"
+        + "kind: Config\n"
+        + "preferences: {}\n"
+        + "users:\n"
+        + "- name: admin\n"
+        + "  user:\n"
+        + "    client-certificate-data: client-certificate-data\n"
+        + "    client-key-data: client-key-data\n";
+
+    AzureConfig azureConfig = AzureConfig.builder().azureEnvironmentType(AZURE).build();
+    AzureHelperService spyOnAzureHelperService = spy(azureHelperService);
+    AksGetCredentialsResponse credentials = new AksGetCredentialsResponse();
+    AksGetCredentialProperties properties = credentials.new AksGetCredentialProperties();
+    properties.setKubeConfig(encodeBase64(kubeConfig));
+    credentials.setProperties(properties);
+
+    doReturn("token").when(spyOnAzureHelperService).getAzureBearerAuthToken(any(AzureConfig.class));
+    doReturn(azureManagementRestClient).when(spyOnAzureHelperService).getAzureManagementRestClient(AZURE);
+    doReturn(aksGetCredentialsCall)
+        .when(azureManagementRestClient)
+        .getAdminCredentials(anyString(), anyString(), anyString(), anyString());
+    doReturn(Response.success(credentials)).when(aksGetCredentialsCall).execute();
+
+    KubernetesConfig clusterConfig = spyOnAzureHelperService.getKubernetesClusterConfig(
+        azureConfig, emptyList(), "subscriptionId", "resourceGroup", "clusterName", "namespace");
+    assertThat(clusterConfig.getMasterUrl()).isEqualTo("https://master-url");
+    assertThat(clusterConfig.getCaCert()).isEqualTo("certificate-authority-data".toCharArray());
+    assertThat(clusterConfig.getUsername()).isEqualTo("admin".toCharArray());
+    assertThat(clusterConfig.getClientCert()).isEqualTo("client-certificate-data".toCharArray());
+    assertThat(clusterConfig.getClientKey()).isEqualTo("client-key-data".toCharArray());
   }
 }
