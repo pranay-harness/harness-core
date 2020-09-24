@@ -7,3 +7,5 @@ build --host_java_toolchain=@bazel_tools//tools/jdk:toolchain_vanilla
 build --java_toolchain=@bazel_tools//tools/jdk:toolchain_vanilla
 
 build --remote_upload_local_results=false
+
+build --test_output=errors
