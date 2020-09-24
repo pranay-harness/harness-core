@@ -1,15 +1,14 @@
-package io.harness.delegate.beans.connector.docker;
+package io.harness.delegate.beans.connector.gcpconnector;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonValue;
 
-public enum DockerAuthType {
-  @JsonProperty(DockerConstants.usernamePassword) USER_PASSWORD(DockerConstants.usernamePassword),
-  NO_AUTH(DockerConstants.noAuth);
+public enum GcpAuthType {
+  @JsonProperty(GcpConstants.secretKey) SECRET_KEY(GcpConstants.secretKey);
 
   private final String displayName;
 
-  DockerAuthType(String displayName) {
+  GcpAuthType(String displayName) {
     this.displayName = displayName;
   }
 

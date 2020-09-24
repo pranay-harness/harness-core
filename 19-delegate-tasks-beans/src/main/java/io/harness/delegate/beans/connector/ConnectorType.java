@@ -17,7 +17,8 @@ public enum ConnectorType {
   @JsonProperty("Awssecretsmanager") AWS_SECRETS_MANAGER("Awssecretsmanager"),
   @JsonProperty("Azurevault") AZURE_VAULT("Azurevault"),
   @JsonProperty("Cyberark") CYBERARK("Cyberark"),
-  @JsonProperty("CustomSecretManager") CUSTOM("CustomSecretManager");
+  @JsonProperty("CustomSecretManager") CUSTOM("CustomSecretManager"),
+  @JsonProperty("Gcp") GCP("Gcp");
 
   private final String displayName;
 

@@ -1,9 +1,8 @@
-package io.harness.delegate.beans.connector.docker;
+package io.harness.delegate.beans.connector.gcpconnector;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
-import io.swagger.annotations.ApiModelProperty;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -14,14 +13,11 @@ import javax.validation.constraints.NotNull;
 @Data
 @NoArgsConstructor
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class DockerAuthenticationDTO {
-  @ApiModelProperty(allowableValues = DockerConstants.usernamePassword)
-  @NotNull
-  @JsonProperty("type")
-  DockerAuthType authType;
+public class GcpAuthDTO {
+  @NotNull @JsonProperty("type") GcpAuthType authType;
 
   @Builder
-  public DockerAuthenticationDTO(DockerAuthType authType, DockerAuthCredentialsDTO credentials) {
+  public GcpAuthDTO(GcpAuthType authType, GcpAuthCredentialsDTO credentials) {
     this.authType = authType;
     this.credentials = credentials;
   }
@@ -31,5 +27,5 @@ public class DockerAuthenticationDTO {
       use = JsonTypeInfo.Id.NAME, property = "type", include = JsonTypeInfo.As.EXTERNAL_PROPERTY, visible = true)
   @NotNull
   @Valid
-  DockerAuthCredentialsDTO credentials;
+  GcpAuthCredentialsDTO credentials;
 }
