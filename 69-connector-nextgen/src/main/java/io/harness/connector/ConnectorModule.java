@@ -14,6 +14,9 @@ import io.harness.connector.mappers.appdynamicsmapper.AppDynamicsEntityToDTO;
 import io.harness.connector.mappers.docker.DockerConnectorSummaryMapper;
 import io.harness.connector.mappers.docker.DockerDTOToEntity;
 import io.harness.connector.mappers.docker.DockerEntityToDTO;
+import io.harness.connector.mappers.gcpmappers.GcpConnectorSummaryMapper;
+import io.harness.connector.mappers.gcpmappers.GcpDTOToEntity;
+import io.harness.connector.mappers.gcpmappers.GcpEntityToDTO;
 import io.harness.connector.mappers.gitconnectormapper.GitConfigSummaryMapper;
 import io.harness.connector.mappers.gitconnectormapper.GitDTOToEntity;
 import io.harness.connector.mappers.gitconnectormapper.GitEntityToDTO;
@@ -71,6 +74,7 @@ public class ConnectorModule extends AbstractModule {
     connectorDTOToEntityMapBinder.addBinding(ConnectorType.GCP_KMS.getDisplayName()).to(GcpKmsDTOToEntity.class);
     connectorDTOToEntityMapBinder.addBinding(ConnectorType.LOCAL.getDisplayName()).to(LocalDTOToEntity.class);
     connectorDTOToEntityMapBinder.addBinding(ConnectorType.DOCKER.getDisplayName()).to(DockerDTOToEntity.class);
+    connectorDTOToEntityMapBinder.addBinding(ConnectorType.GCP.getDisplayName()).to(GcpDTOToEntity.class);
 
     MapBinder<String, ConnectorEntityToDTOMapper> connectorEntityToDTOMapper =
         MapBinder.newMapBinder(binder(), String.class, ConnectorEntityToDTOMapper.class);
@@ -83,6 +87,7 @@ public class ConnectorModule extends AbstractModule {
     connectorEntityToDTOMapper.addBinding(ConnectorType.GCP_KMS.getDisplayName()).to(GcpKmsEntityToDTO.class);
     connectorEntityToDTOMapper.addBinding(ConnectorType.LOCAL.getDisplayName()).to(LocalEntityToDTO.class);
     connectorEntityToDTOMapper.addBinding(ConnectorType.DOCKER.getDisplayName()).to(DockerEntityToDTO.class);
+    connectorEntityToDTOMapper.addBinding(ConnectorType.GCP.getDisplayName()).to(GcpEntityToDTO.class);
 
     MapBinder<String, ConnectorConfigSummaryDTOMapper> connectorConfigSummaryDTOMapper =
         MapBinder.newMapBinder(binder(), String.class, ConnectorConfigSummaryDTOMapper.class);
@@ -101,6 +106,7 @@ public class ConnectorModule extends AbstractModule {
         .to(SplunkConnectorSummaryMapper.class);
     connectorConfigSummaryDTOMapper.addBinding(ConnectorType.DOCKER.getDisplayName())
         .to(DockerConnectorSummaryMapper.class);
+    connectorConfigSummaryDTOMapper.addBinding(ConnectorType.GCP.getDisplayName()).to(GcpConnectorSummaryMapper.class);
 
     bind(ConnectorService.class)
         .annotatedWith(Names.named(DEFAULT_CONNECTOR_SERVICE))

@@ -3,6 +3,10 @@ package io.harness.serializer.morphia;
 import io.harness.connector.entities.Connector;
 import io.harness.connector.entities.embedded.appdynamicsconnector.AppDynamicsConnector;
 import io.harness.connector.entities.embedded.docker.DockerConnector;
+import io.harness.connector.entities.embedded.gcpconnector.GcpConfig;
+import io.harness.connector.entities.embedded.gcpconnector.GcpDelegateDetails;
+import io.harness.connector.entities.embedded.gcpconnector.GcpDetails;
+import io.harness.connector.entities.embedded.gcpconnector.GcpSecretKeyAuth;
 import io.harness.connector.entities.embedded.gcpkmsconnector.GcpKmsConnector;
 import io.harness.connector.entities.embedded.gitconnector.GitConfig;
 import io.harness.connector.entities.embedded.gitconnector.GitSSHAuthentication;
@@ -34,6 +38,7 @@ public class ConnectorMorphiaClassesRegistrar implements MorphiaRegistrar {
     set.add(AppDynamicsConnector.class);
     set.add(SplunkConnector.class);
     set.add(DockerConnector.class);
+    set.add(GcpConfig.class);
   }
 
   @Override
@@ -47,5 +52,8 @@ public class ConnectorMorphiaClassesRegistrar implements MorphiaRegistrar {
     h.put("connector.entities.embedded.gitconnector.GitSSHAuthentication", GitSSHAuthentication.class);
     h.put("connector.entities.embedded.gitconnector.GitUserNamePasswordAuthentication",
         GitUserNamePasswordAuthentication.class);
+    h.put("connector.entities.embedded.gcpconnector.GcpDelegateDetails", GcpDelegateDetails.class);
+    h.put("connector.entities.embedded.gcpconnector.GcpDetails", GcpDetails.class);
+    h.put("connector.entities.embedded.gcpconnector.GcpSecretKeyAuth", GcpSecretKeyAuth.class);
   }
 }
