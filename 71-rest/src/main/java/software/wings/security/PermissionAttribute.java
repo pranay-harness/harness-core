@@ -463,19 +463,19 @@ public class PermissionAttribute {
     /**
      * Manage User, User Groups and API keys
      */
-    MANAGE_USER_AND_USER_GROUPS_AND_API_KEYS,
+    @Deprecated MANAGE_USER_AND_USER_GROUPS_AND_API_KEYS,
 
     /**
      *  View User, User Groups and API keys
      */
-    VIEW_USER_AND_USER_GROUPS_AND_API_KEYS,
+    @Deprecated VIEW_USER_AND_USER_GROUPS_AND_API_KEYS,
 
     /**
      * Manage IP Whitelist
      */
     MANAGE_IP_WHITELIST,
 
-    MANAGE_IP_WHITELISTING,
+    @Deprecated MANAGE_IP_WHITELISTING,
 
     /**
      * Manage Deployment Freezes

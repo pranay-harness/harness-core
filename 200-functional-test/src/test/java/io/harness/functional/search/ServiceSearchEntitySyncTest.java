@@ -16,6 +16,7 @@ import io.harness.testframework.restutils.ServiceRestUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.http.HttpStatus;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import software.wings.app.MainConfiguration;
@@ -64,6 +65,7 @@ public class ServiceSearchEntitySyncTest extends AbstractFunctionalTest {
   @Test
   @Owner(developers = UTKARSH)
   @Category(FunctionalTests.class)
+  @Ignore("TODO: please provide clear motivation why this test is ignored")
   public void testServiceCRUDSync() {
     if (isSearchDisabled()) {
       return;
