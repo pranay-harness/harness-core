@@ -2,7 +2,6 @@ package software.wings.service.intfc;
 
 import io.harness.beans.DelegateTask;
 import io.harness.delegate.beans.TaskGroup;
-import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import io.harness.selection.log.BatchDelegateSelectionLog;
 import software.wings.delegatetasks.validation.DelegateConnectionResult;
 
@@ -16,8 +15,7 @@ public interface AssignDelegateService {
   boolean canAssign(BatchDelegateSelectionLog batch, String delegateId, DelegateTask task);
 
   boolean canAssign(BatchDelegateSelectionLog batch, String delegateId, String accountId, String appId, String envId,
-      String infraMappingId, TaskGroup taskGroup, List<ExecutionCapability> executionCapabilities,
-      Map<String, String> taskSetupAbstractions);
+      String infraMappingId, TaskGroup taskGroup, List<String> tags, Map<String, String> taskSetupAbstractions);
 
   boolean isWhitelisted(DelegateTask task, String delegateId);
 
