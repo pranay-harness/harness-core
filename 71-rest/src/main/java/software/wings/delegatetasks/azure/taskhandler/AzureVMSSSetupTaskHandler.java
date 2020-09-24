@@ -33,6 +33,7 @@ import io.harness.azure.model.AzureConfig;
 import io.harness.azure.model.AzureUserAuthVMInstanceData;
 import io.harness.azure.model.AzureVMSSAutoScalingData;
 import io.harness.azure.utility.AzureResourceUtility;
+import io.harness.delegate.beans.azure.AzureVMAuthDTO;
 import io.harness.delegate.task.azure.AzureVMSSPreDeploymentData;
 import io.harness.delegate.task.azure.request.AzureVMSSSetupTaskParameters;
 import io.harness.delegate.task.azure.request.AzureVMSSTaskParameters;
@@ -273,12 +274,13 @@ public class AzureVMSSSetupTaskHandler extends AzureVMSSTaskHandler {
   }
 
   private AzureUserAuthVMInstanceData buildUserAuthVMInstanceData(AzureVMSSSetupTaskParameters setupTaskParameters) {
-    String vmssAuthType = setupTaskParameters.getVmssAuthType();
-    String username = setupTaskParameters.getUserName();
-    String password =
-        vmssAuthType.equals(VMSS_AUTH_TYPE_DEFAULT) ? setupTaskParameters.getPassword() : StringUtils.EMPTY;
-    String sshPublicKey =
-        vmssAuthType.equals(VMSS_AUTH_TYPE_SSH_PUBLIC_KEY) ? setupTaskParameters.getSshPublicKey() : StringUtils.EMPTY;
+    AzureVMAuthDTO azureVmAuthDTO = setupTaskParameters.getAzureVmAuthDTO();
+    String vmssAuthType = azureVmAuthDTO.getAzureVmAuthType().name();
+    String username = azureVmAuthDTO.getUserName();
+    String decryptedValue = new String(azureVmAuthDTO.getSecretRef().getDecryptedValue());
+    String password = vmssAuthType.equals(VMSS_AUTH_TYPE_DEFAULT) ? decryptedValue : StringUtils.EMPTY;
+    String sshPublicKey = vmssAuthType.equals(VMSS_AUTH_TYPE_SSH_PUBLIC_KEY) ? decryptedValue : StringUtils.EMPTY;
+
     return AzureUserAuthVMInstanceData.builder()
         .vmssAuthType(vmssAuthType)
         .userName(username)

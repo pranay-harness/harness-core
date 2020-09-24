@@ -70,8 +70,8 @@ public class AzureVMSSInstanceSyncPerpetualTaskClient implements PerpetualTaskSe
             .build();
     AzureVMSSCommandRequest request =
         AzureVMSSCommandRequest.builder()
-            .azureConfigDelegate(azureVMSSStateHelper.createDelegateConfig(
-                perpetualTaskData.azureConfig, perpetualTaskData.getEncryptedDataDetails()))
+            .azureConfigDTO(azureVMSSStateHelper.createAzureConfigDTO(perpetualTaskData.azureConfig))
+            .azureConfigEncryptionDetails(perpetualTaskData.getEncryptedDataDetails())
             .azureVMSSTaskParameters(azureVMSSListVMDataParameters)
             .build();
 

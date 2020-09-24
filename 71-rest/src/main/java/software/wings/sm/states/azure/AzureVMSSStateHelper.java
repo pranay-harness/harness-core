@@ -12,6 +12,7 @@ import static io.harness.azure.model.AzureConstants.UP_SCALE_STEADY_STATE_WAIT_C
 import static io.harness.beans.OrchestrationWorkflowType.BLUE_GREEN;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.delegate.beans.azure.AzureVMAuthType.SSH_PUBLIC_KEY;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.validation.Validator.notNullCheck;
 import static java.lang.String.format;
@@ -34,12 +35,13 @@ import io.harness.beans.TriggeredBy;
 import io.harness.context.ContextElementType;
 import io.harness.data.encoding.EncodingUtils;
 import io.harness.delegate.beans.azure.AzureConfigDTO;
-import io.harness.delegate.beans.azure.AzureConfigDelegate;
 import io.harness.delegate.beans.azure.AzureVMAuthDTO;
-import io.harness.delegate.beans.azure.AzureVMAuthDelegate;
+import io.harness.delegate.beans.azure.AzureVMAuthType;
 import io.harness.delegate.task.azure.response.AzureVMInstanceData;
 import io.harness.delegate.task.azure.response.AzureVMSSTaskExecutionResponse;
 import io.harness.deployment.InstanceDetails;
+import io.harness.encryption.Scope;
+import io.harness.encryption.SecretRefData;
 import io.harness.exception.InvalidRequestException;
 import io.harness.logging.CommandExecutionStatus;
 import io.harness.logging.Misc;
@@ -57,13 +59,13 @@ import software.wings.beans.AzureConfig;
 import software.wings.beans.AzureVMSSInfrastructureMapping;
 import software.wings.beans.DeploymentExecutionContext;
 import software.wings.beans.Environment;
-import software.wings.beans.HostConnectionAttributes;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.Log;
 import software.wings.beans.ResizeStrategy;
 import software.wings.beans.Service;
 import software.wings.beans.ServiceVariable;
 import software.wings.beans.SettingAttribute;
+import software.wings.beans.VMSSAuthType;
 import software.wings.beans.artifact.Artifact;
 import software.wings.beans.command.AzureVMSSDummyCommandUnit;
 import software.wings.beans.command.Command;
@@ -128,7 +130,7 @@ public class AzureVMSSStateHelper {
   }
 
   public Application getApplication(ExecutionContext context) {
-    return Optional.ofNullable(getWorkflowStandardParams(context))
+    return Optional.of(getWorkflowStandardParams(context))
         .map(WorkflowStandardParams::getApp)
         .orElseThrow(
             ()
@@ -137,7 +139,7 @@ public class AzureVMSSStateHelper {
   }
 
   public Environment getEnvironment(ExecutionContext context) {
-    return Optional.ofNullable(getWorkflowStandardParams(context))
+    return Optional.of(getWorkflowStandardParams(context))
         .map(WorkflowStandardParams::getEnv)
         .orElseThrow(()
                          -> new InvalidRequestException(
@@ -251,39 +253,9 @@ public class AzureVMSSStateHelper {
     return (AzureVMSSInfrastructureMapping) infrastructureMappingService.get(appId, infraMappingId);
   }
 
-  public List<EncryptedDataDetail> getEncryptedDataDetails(ExecutionContext context, final String settingId) {
-    SettingAttribute settingAttribute = settingsService.get(settingId);
-    return secretManager.getEncryptionDetails(
-        (EncryptableSetting) settingAttribute.getValue(), context.getAppId(), context.getWorkflowExecutionId());
-  }
-
-  public List<EncryptedDataDetail> getServiceVariableEncryptedDataDetails(
-      ExecutionContext context, ServiceVariable serviceVariable) {
-    return secretManager.getEncryptionDetails(serviceVariable, context.getAppId(), context.getWorkflowExecutionId());
-  }
-
   public AzureConfig getAzureConfig(final String computeProviderSettingId) {
     SettingAttribute settingAttribute = settingsService.get(computeProviderSettingId);
     return (AzureConfig) settingAttribute.getValue();
-  }
-
-  public HostConnectionAttributes getHostConnectionAttributes(final String hostConnectionAttrsKeyRefId) {
-    SettingAttribute settingAttribute = settingsService.get(hostConnectionAttrsKeyRefId);
-    return (HostConnectionAttributes) settingAttribute.getValue();
-  }
-
-  public ServiceVariable buildEncryptedServiceVariable(
-      final String accountId, final String appId, final String envId, final String secretTextName) {
-    EncryptedData encryptedData = secretManager.getSecretMappedToAppByName(accountId, appId, envId, secretTextName);
-    if (encryptedData == null) {
-      throw new InvalidRequestException("No secret found with name + [" + secretTextName + "]", USER);
-    }
-    return ServiceVariable.builder()
-        .accountId(accountId)
-        .type(ENCRYPTED_TEXT)
-        .encryptedValue(encryptedData.getUuid())
-        .secretTextName(secretTextName)
-        .build();
   }
 
   public Integer getAzureVMSSStateTimeoutFromContext(ExecutionContext context) {
@@ -291,7 +263,7 @@ public class AzureVMSSStateHelper {
         context.getContextElement(ContextElementType.AZURE_VMSS_SETUP);
     return Optional.ofNullable(azureVMSSSetupContextElement)
         .map(AzureVMSSSetupContextElement::getAutoScalingSteadyStateVMSSTimeout)
-        .filter(autoScalingSteadyStateVMSSTimeout -> autoScalingSteadyStateVMSSTimeout.intValue() > 0)
+        .filter(autoScalingSteadyStateVMSSTimeout -> autoScalingSteadyStateVMSSTimeout > 0)
         .map(autoScalingSteadyStateVMSSTimeout
             -> Ints.checkedCast(TimeUnit.MINUTES.toMillis(autoScalingSteadyStateVMSSTimeout.longValue())))
         .orElse(null);
@@ -390,41 +362,75 @@ public class AzureVMSSStateHelper {
         .build();
   }
 
-  public AzureConfigDelegate createDelegateConfig(
-      AzureConfig azureConfig, List<EncryptedDataDetail> encryptedDataDetails) {
-    AzureConfigDTO azureConfigDTO = AzureConfigDTO.builder()
-                                        .clientId(azureConfig.getClientId())
-                                        .encryptedKey(azureConfig.getEncryptedKey())
-                                        .tenantId(azureConfig.getTenantId())
-                                        .build();
-
-    return AzureConfigDelegate.builder()
-        .azureConfigDTO(azureConfigDTO)
-        .azureEncryptionDetails(encryptedDataDetails)
+  public AzureConfigDTO createAzureConfigDTO(AzureConfig azureConfig) {
+    return AzureConfigDTO.builder()
+        .clientId(azureConfig.getClientId())
+        .key(new SecretRefData(azureConfig.getEncryptedKey(), Scope.ACCOUNT, null))
+        .tenantId(azureConfig.getTenantId())
         .build();
   }
 
-  public AzureVMAuthDelegate createHostConnectionDelegate(
-      HostConnectionAttributes connectionAttributes, List<EncryptedDataDetail> encryptedDataDetails) {
-    AzureVMAuthDTO azureVMAuthDTO = AzureVMAuthDTO.builder()
-                                        .authType(AzureVMAuthDTO.AuthType.SSH)
-                                        .encryptedKey(connectionAttributes.getEncryptedKey())
-                                        .build();
-    return AzureVMAuthDelegate.builder()
-        .azureVMAuthDTO(azureVMAuthDTO)
-        .azureEncryptionDetails(encryptedDataDetails)
+  public AzureVMAuthDTO createVMAuthDTO(AzureVMSSInfrastructureMapping azureVMSSInfrastructureMapping) {
+    VMSSAuthType vmssAuthType = azureVMSSInfrastructureMapping.getVmssAuthType();
+    if (VMSSAuthType.PASSWORD != vmssAuthType && VMSSAuthType.SSH_PUBLIC_KEY != vmssAuthType) {
+      throw new InvalidRequestException(
+          format("Unsupported Azure VMSS Auth type, %s", azureVMSSInfrastructureMapping.getVmssAuthType()));
+    }
+
+    String passwordSecretTextName = azureVMSSInfrastructureMapping.getPasswordSecretTextName();
+    String hostConnectionAttrs = azureVMSSInfrastructureMapping.getHostConnectionAttrs();
+    String userName = azureVMSSInfrastructureMapping.getUserName();
+    String secretRefIdentifier = vmssAuthType == VMSSAuthType.PASSWORD ? passwordSecretTextName : hostConnectionAttrs;
+
+    return AzureVMAuthDTO.builder()
+        .userName(userName)
+        .azureVmAuthType(AzureVMAuthType.valueOf(vmssAuthType.name()))
+        .secretRef(new SecretRefData(secretRefIdentifier, Scope.ACCOUNT, null))
         .build();
   }
 
-  public AzureVMAuthDelegate createVMAuthDelegate(
-      ServiceVariable serviceVariable, List<EncryptedDataDetail> encryptedDataDetails) {
-    AzureVMAuthDTO azureVMAuthDTO = AzureVMAuthDTO.builder()
-                                        .authType(AzureVMAuthDTO.AuthType.PASSWORD)
-                                        .encryptedKey(serviceVariable.getSecretTextName())
-                                        .build();
-    return AzureVMAuthDelegate.builder()
-        .azureVMAuthDTO(azureVMAuthDTO)
-        .azureEncryptionDetails(encryptedDataDetails)
+  public List<EncryptedDataDetail> getVMAuthDTOEncryptionDetails(
+      ExecutionContext context, AzureVMAuthDTO azureVmAuthDTO, String envId) {
+    AzureVMAuthType azureVmAuthType = azureVmAuthDTO.getAzureVmAuthType();
+    String secretIdentifier = azureVmAuthDTO.getSecretRef().getIdentifier();
+
+    return SSH_PUBLIC_KEY == azureVmAuthType ? getEncryptedDataDetails(context, secretIdentifier)
+                                             : getServiceVariableEncryptedDataDetails(context, secretIdentifier, envId);
+  }
+
+  public List<EncryptedDataDetail> getEncryptedDataDetails(ExecutionContext context, final String settingId) {
+    SettingAttribute settingAttribute = settingsService.get(settingId);
+    return secretManager.getEncryptionDetails(
+        (EncryptableSetting) settingAttribute.getValue(), context.getAppId(), context.getWorkflowExecutionId());
+  }
+
+  private List<EncryptedDataDetail> getServiceVariableEncryptedDataDetails(
+      ExecutionContext context, final String passwordSecretTextName, final String envId) {
+    String appId = context.getAppId();
+    ServiceVariable serviceVariable =
+        buildEncryptedServiceVariable(context.getAccountId(), appId, envId, passwordSecretTextName);
+    return secretManager.getEncryptionDetails(serviceVariable, appId, context.getWorkflowExecutionId());
+  }
+
+  private ServiceVariable buildEncryptedServiceVariable(
+      final String accountId, final String appId, final String envId, final String secretTextName) {
+    EncryptedData encryptedData = secretManager.getSecretMappedToAppByName(accountId, appId, envId, secretTextName);
+    if (encryptedData == null) {
+      throw new InvalidRequestException(format("No secret found with name: %s", secretTextName), USER);
+    }
+    return ServiceVariable.builder()
+        .accountId(accountId)
+        .type(ENCRYPTED_TEXT)
+        .encryptedValue(encryptedData.getUuid())
+        .secretTextName(secretTextName)
         .build();
+  }
+
+  public void updateEncryptedDataDetailSecretFieldName(
+      AzureVMAuthDTO azureVmAuthDTO, List<EncryptedDataDetail> vmAuthDTOEncryptionDetails) {
+    String secretRefFieldName = azureVmAuthDTO.getSecretRefFieldName();
+    for (EncryptedDataDetail encryptedDataDetail : vmAuthDTOEncryptionDetails) {
+      encryptedDataDetail.setFieldName(secretRefFieldName);
+    }
   }
 }

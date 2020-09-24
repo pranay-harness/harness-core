@@ -5,7 +5,6 @@ import static io.harness.azure.model.AzureConstants.DEFAULT_AZURE_VMSS_MAX_INSTA
 import static io.harness.azure.model.AzureConstants.DEFAULT_AZURE_VMSS_MIN_INSTANCES;
 import static io.harness.azure.model.AzureConstants.DEFAULT_AZURE_VMSS_TIMEOUT_MIN;
 import static io.harness.exception.ExceptionUtils.getMessage;
-import static java.lang.String.format;
 import static java.util.Collections.singletonList;
 import static java.util.concurrent.TimeUnit.MINUTES;
 import static software.wings.beans.ResizeStrategy.RESIZE_NEW_FIRST;
@@ -18,6 +17,7 @@ import io.harness.azure.model.AzureConstants;
 import io.harness.beans.DelegateTask;
 import io.harness.beans.ExecutionStatus;
 import io.harness.delegate.beans.TaskData;
+import io.harness.delegate.beans.azure.AzureVMAuthDTO;
 import io.harness.delegate.task.azure.request.AzureLoadBalancerDetailForBGDeployment;
 import io.harness.delegate.task.azure.request.AzureVMSSSetupTaskParameters;
 import io.harness.delegate.task.azure.request.AzureVMSSTaskParameters;
@@ -38,12 +38,9 @@ import software.wings.beans.AzureConfig;
 import software.wings.beans.AzureVMSSInfrastructureMapping;
 import software.wings.beans.DeploymentExecutionContext;
 import software.wings.beans.Environment;
-import software.wings.beans.HostConnectionAttributes;
 import software.wings.beans.ResizeStrategy;
 import software.wings.beans.Service;
-import software.wings.beans.ServiceVariable;
 import software.wings.beans.TaskType;
-import software.wings.beans.VMSSAuthType;
 import software.wings.beans.artifact.Artifact;
 import software.wings.beans.command.CommandUnitDetails;
 import software.wings.service.impl.azure.manager.AzureVMSSCommandRequest;
@@ -127,7 +124,7 @@ public class AzureVMSSSetupState extends State {
         buildAzureVMSSTaskParameters(context, app, service, env, activityId, azureVMSSInfrastructureMapping);
 
     AzureVMSSCommandRequest commandRequest =
-        buildAzureVMSSCommandRequest(context, azureVMSSInfrastructureMapping, azureVmssTaskParameters, envId);
+        buildAzureVMSSCommandRequest(context, azureVMSSInfrastructureMapping, azureVmssTaskParameters);
 
     AzureVMSSSetupStateExecutionData azureVMSSSetupStateExecutionData =
         buildAzureVMSSSetupStateExecutionData(context, activityId);
@@ -165,8 +162,6 @@ public class AzureVMSSSetupState extends State {
     String baseVMSSName = azureVMSSInfrastructureMapping.getBaseVMSSName();
     String subscriptionId = azureVMSSInfrastructureMapping.getSubscriptionId();
     String resourceGroupName = azureVMSSInfrastructureMapping.getResourceGroupName();
-    String userName = azureVMSSInfrastructureMapping.getUserName();
-    String vmssAuthType = azureVMSSInfrastructureMapping.getVmssAuthType().name();
     String vmssDeploymentType = azureVMSSInfrastructureMapping.getVmssDeploymentType().name();
     String infraMappingId = azureVMSSInfrastructureMapping.getUuid();
 
@@ -174,6 +169,7 @@ public class AzureVMSSSetupState extends State {
     String appId = app.getAppId();
     boolean isBlueGreen = azureVMSSStateHelper.isBlueGreenWorkflow(context);
     String artifactRevision = artifact.getRevision();
+    String envId = env.getUuid();
     String userData = azureVMSSStateHelper.getBase64EncodedUserData(context, app.getUuid(), service.getUuid());
 
     String vmssNamePrefixFixed = azureVMSSStateHelper.fixNamePrefix(
@@ -189,6 +185,11 @@ public class AzureVMSSSetupState extends State {
     int desiredInstancesFixed = azureVMSSStateHelper.renderExpressionOrGetDefault(
         desiredInstances, context, DEFAULT_AZURE_VMSS_DESIRED_INSTANCES);
 
+    AzureVMAuthDTO azureVmAuthDTO = azureVMSSStateHelper.createVMAuthDTO(azureVMSSInfrastructureMapping);
+    List<EncryptedDataDetail> vmAuthDTOEncryptionDetails =
+        azureVMSSStateHelper.getVMAuthDTOEncryptionDetails(context, azureVmAuthDTO, envId);
+    azureVMSSStateHelper.updateEncryptedDataDetailSecretFieldName(azureVmAuthDTO, vmAuthDTOEncryptionDetails);
+
     return AzureVMSSSetupTaskParameters.builder()
         .accountId(accountId)
         .appId(appId)
@@ -201,9 +202,9 @@ public class AzureVMSSSetupState extends State {
         .baseVMSSName(baseVMSSName)
         .subscriptionId(subscriptionId)
         .resourceGroupName(resourceGroupName)
-        .userName(userName)
         .userData(userData)
-        .vmssAuthType(vmssAuthType)
+        .azureVmAuthDTO(azureVmAuthDTO)
+        .vmAuthDTOEncryptionDetails(vmAuthDTOEncryptionDetails)
         .vmssDeploymentType(vmssDeploymentType)
         .infraMappingId(infraMappingId)
         .minInstances(minInstancesFixed)
@@ -215,8 +216,7 @@ public class AzureVMSSSetupState extends State {
   }
 
   private AzureVMSSCommandRequest buildAzureVMSSCommandRequest(ExecutionContext context,
-      AzureVMSSInfrastructureMapping azureVMSSInfrastructureMapping, AzureVMSSTaskParameters azureVmssTaskParameters,
-      String envId) {
+      AzureVMSSInfrastructureMapping azureVMSSInfrastructureMapping, AzureVMSSTaskParameters azureVmssTaskParameters) {
     // AzureConfig
     String computeProviderSettingId = azureVMSSInfrastructureMapping.getComputeProviderSettingId();
     AzureConfig azureConfig = azureVMSSStateHelper.getAzureConfig(computeProviderSettingId);
@@ -225,32 +225,9 @@ public class AzureVMSSSetupState extends State {
 
     AzureVMSSCommandRequestBuilder azureVMSSCommandRequestBuilder =
         AzureVMSSCommandRequest.builder()
-            .azureConfigDelegate(azureVMSSStateHelper.createDelegateConfig(azureConfig, azureEncryptionDetails))
+            .azureConfigDTO(azureVMSSStateHelper.createAzureConfigDTO(azureConfig))
+            .azureConfigEncryptionDetails(azureEncryptionDetails)
             .azureVMSSTaskParameters(azureVmssTaskParameters);
-
-    if (VMSSAuthType.SSH_PUBLIC_KEY == azureVMSSInfrastructureMapping.getVmssAuthType()) {
-      String hostConnectionAttrsKeyRefId = azureVMSSInfrastructureMapping.getHostConnectionAttrs();
-      HostConnectionAttributes hostConnectionAttributes =
-          azureVMSSStateHelper.getHostConnectionAttributes(hostConnectionAttrsKeyRefId);
-      List<EncryptedDataDetail> hostConnectionAttributesEncryptionDetails =
-          azureVMSSStateHelper.getEncryptedDataDetails(context, hostConnectionAttrsKeyRefId);
-
-      azureVMSSCommandRequestBuilder.azureHostConnectionDelegate(azureVMSSStateHelper.createHostConnectionDelegate(
-          hostConnectionAttributes, hostConnectionAttributesEncryptionDetails));
-
-    } else if (VMSSAuthType.PASSWORD == azureVMSSInfrastructureMapping.getVmssAuthType()) {
-      String passwordSecretTextName = azureVMSSInfrastructureMapping.getPasswordSecretTextName();
-      ServiceVariable encryptedServiceVariable = azureVMSSStateHelper.buildEncryptedServiceVariable(
-          context.getAccountId(), context.getAppId(), envId, passwordSecretTextName);
-      List<EncryptedDataDetail> serviceVariableEncryptionDetails =
-          azureVMSSStateHelper.getServiceVariableEncryptedDataDetails(context, encryptedServiceVariable);
-
-      azureVMSSCommandRequestBuilder.azureVMCredentialsDelegate(
-          azureVMSSStateHelper.createVMAuthDelegate(encryptedServiceVariable, serviceVariableEncryptionDetails));
-    } else {
-      throw new InvalidRequestException(
-          format("Unsupported Azure VMSS Auth type, %s", azureVMSSInfrastructureMapping.getVmssAuthType()));
-    }
 
     return azureVMSSCommandRequestBuilder.build();
   }

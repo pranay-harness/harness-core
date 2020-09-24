@@ -1,7 +1,6 @@
 package software.wings.delegatetasks.azure.taskhandler;
 
 import static io.harness.azure.model.AzureConstants.HARNESS_AUTOSCALING_GROUP_TAG_NAME;
-import static io.harness.azure.model.AzureConstants.VMSS_AUTH_TYPE_SSH_PUBLIC_KEY;
 import static io.harness.azure.model.AzureConstants.VMSS_CREATED_TIME_STAMP_TAG_NAME;
 import static io.harness.delegate.task.azure.request.AzureVMSSTaskParameters.AzureVMSSTaskType.AZURE_VMSS_SETUP;
 import static io.harness.rule.OwnerRule.IVAN;
@@ -31,10 +30,13 @@ import io.harness.azure.model.AzureConfig;
 import io.harness.azure.model.AzureUserAuthVMInstanceData;
 import io.harness.azure.utility.AzureResourceUtility;
 import io.harness.category.element.UnitTests;
+import io.harness.delegate.beans.azure.AzureVMAuthDTO;
+import io.harness.delegate.beans.azure.AzureVMAuthType;
 import io.harness.delegate.task.azure.request.AzureVMSSSetupTaskParameters;
 import io.harness.delegate.task.azure.response.AzureVMSSSetupTaskResponse;
 import io.harness.delegate.task.azure.response.AzureVMSSTaskExecutionResponse;
 import io.harness.delegate.task.azure.response.AzureVMSSTaskResponse;
+import io.harness.encryption.SecretRefData;
 import io.harness.rule.Owner;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -77,6 +79,12 @@ public class AzureVMSSSetupTaskHandlerTest extends WingsBaseTest {
     VirtualMachineScaleSet virtualMachineScaleSetVersion5 = mock(VirtualMachineScaleSet.class);
     VirtualMachineScaleSet baseVirtualMachineScaleSet = mock(VirtualMachineScaleSet.class);
     AzureConfig azureConfig = AzureConfig.builder().build();
+    AzureVMAuthDTO azureVMAuthDTO =
+        AzureVMAuthDTO.builder()
+            .userName("username")
+            .azureVmAuthType(AzureVMAuthType.SSH_PUBLIC_KEY)
+            .secretRef(SecretRefData.builder().decryptedValue("sshPublicKey".toCharArray()).build())
+            .build();
     AzureVMSSSetupTaskParameters azureVMSSSetupTaskParameters = AzureVMSSSetupTaskParameters.builder()
                                                                     .infraMappingId("infraMappingId")
                                                                     .appId("appId")
@@ -87,16 +95,14 @@ public class AzureVMSSSetupTaskHandlerTest extends WingsBaseTest {
                                                                     .baseVMSSName("baseVMSSName")
                                                                     .blueGreen(false)
                                                                     .commandName("commandName")
+                                                                    .azureVmAuthDTO(azureVMAuthDTO)
                                                                     .commandType(AZURE_VMSS_SETUP)
                                                                     .desiredInstances(1)
                                                                     .maxInstances(1)
                                                                     .minInstances(0)
                                                                     .resourceGroupName("resourceGroupName")
-                                                                    .sshPublicKey("sshPublicKey")
                                                                     .subscriptionId("subscriptionId")
                                                                     .useCurrentRunningCount(false)
-                                                                    .userName("userName")
-                                                                    .vmssAuthType(VMSS_AUTH_TYPE_SSH_PUBLIC_KEY)
                                                                     .vmssNamePrefix("newVirtualScaleSetName")
                                                                     .useCurrentRunningCount(false)
                                                                     .build();

@@ -12,6 +12,9 @@ import io.harness.delegate.beans.RemoteMethodReturnValueData;
 import io.harness.delegate.beans.SecretDetail;
 import io.harness.delegate.beans.TaskData;
 import io.harness.delegate.beans.artifact.ArtifactFileMetadata;
+import io.harness.delegate.beans.azure.AzureConfigDTO;
+import io.harness.delegate.beans.azure.AzureVMAuthDTO;
+import io.harness.delegate.beans.azure.AzureVMAuthType;
 import io.harness.delegate.beans.connector.ConnectorValidationResult;
 import io.harness.delegate.beans.connector.appdynamicsconnector.AppDynamicsConnectionTaskParams;
 import io.harness.delegate.beans.connector.appdynamicsconnector.AppDynamicsConnectionTaskResponse;
@@ -316,5 +319,8 @@ public class DelegateTasksBeansKryoRegister implements KryoRegistrar {
     kryo.register(GcpValidationRequest.class, 19336);
     kryo.register(GcpValidationTaskResponse.class, 19337);
     kryo.register(SSHConfigValidationTaskResponse.class, 19338);
+    kryo.register(AzureConfigDTO.class, 19339);
+    kryo.register(AzureVMAuthDTO.class, 19340);
+    kryo.register(AzureVMAuthType.class, 19341);
   }
 }
