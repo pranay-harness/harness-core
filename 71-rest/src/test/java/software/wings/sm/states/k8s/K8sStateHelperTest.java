@@ -89,6 +89,7 @@ import io.harness.k8s.model.K8sPod;
 import io.harness.logging.CommandExecutionStatus;
 import io.harness.rule.Owner;
 import io.harness.serializer.KryoSerializer;
+import io.harness.tasks.Cd1SetupFields;
 import io.harness.tasks.ResponseData;
 import org.jetbrains.annotations.NotNull;
 import org.junit.Before;
@@ -1164,10 +1165,11 @@ public class K8sStateHelperTest extends WingsBaseTest {
     ArgumentCaptor<DelegateTask> captor = ArgumentCaptor.forClass(DelegateTask.class);
     verify(delegateService).queueTask(captor.capture());
     DelegateTask delegateTask = captor.getValue();
-    assertThat(delegateTask.getAppId()).isEqualTo(APP_ID);
-    assertThat(delegateTask.getEnvId()).isEqualTo(ENV_ID);
+    assertThat(delegateTask.getSetupAbstractions().get(Cd1SetupFields.APP_ID_FIELD)).isEqualTo(APP_ID);
+    assertThat(delegateTask.getSetupAbstractions().get(Cd1SetupFields.ENV_ID_FIELD)).isEqualTo(ENV_ID);
     assertThat(delegateTask.getAccountId()).isEqualTo(ACCOUNT_ID);
-    assertThat(delegateTask.getInfrastructureMappingId()).isEqualTo(INFRA_MAPPING_ID);
+    assertThat(delegateTask.getSetupAbstractions().get(Cd1SetupFields.INFRASTRUCTURE_MAPPING_ID_FIELD))
+        .isEqualTo(INFRA_MAPPING_ID);
     assertThat(delegateTask.getData().getTaskType()).isEqualTo(TaskType.GIT_FETCH_FILES_TASK.name());
     assertThat(delegateTask.getData().isAsync()).isTrue();
     assertThat(delegateTask.getData().getTimeout())
@@ -1204,10 +1206,11 @@ public class K8sStateHelperTest extends WingsBaseTest {
     ArgumentCaptor<DelegateTask> captor = ArgumentCaptor.forClass(DelegateTask.class);
     verify(delegateService).queueTask(captor.capture());
     DelegateTask delegateTask = captor.getValue();
-    assertThat(delegateTask.getAppId()).isEqualTo(APP_ID);
-    assertThat(delegateTask.getEnvId()).isEqualTo(ENV_ID);
+    assertThat(delegateTask.getSetupAbstractions().get(Cd1SetupFields.APP_ID_FIELD)).isEqualTo(APP_ID);
+    assertThat(delegateTask.getSetupAbstractions().get(Cd1SetupFields.ENV_ID_FIELD)).isEqualTo(ENV_ID);
     assertThat(delegateTask.getAccountId()).isEqualTo(ACCOUNT_ID);
-    assertThat(delegateTask.getInfrastructureMappingId()).isEqualTo(INFRA_MAPPING_ID);
+    assertThat(delegateTask.getSetupAbstractions().get(Cd1SetupFields.INFRASTRUCTURE_MAPPING_ID_FIELD))
+        .isEqualTo(INFRA_MAPPING_ID);
     assertThat(delegateTask.getData().getTaskType()).isEqualTo(TaskType.HELM_VALUES_FETCH.name());
     assertThat(delegateTask.getData().isAsync()).isTrue();
     assertThat(delegateTask.getData().getTimeout()).isEqualTo(TimeUnit.MINUTES.toMillis(10));
