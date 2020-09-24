@@ -7,18 +7,21 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.validation.Validator.notNullCheck;
+import static java.util.stream.Collectors.toMap;
 import static software.wings.beans.Environment.EnvironmentType.ALL;
 import static software.wings.beans.Environment.GLOBAL_ENV_ID;
 import static software.wings.beans.TaskType.JIRA;
 
 import com.google.inject.Inject;
 
+import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.DelegateTask;
 import io.harness.beans.ExecutionStatus;
 import io.harness.beans.SweepingOutputInstance;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.delegate.beans.TaskData;
+import io.harness.exception.HarnessJiraException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.expression.ExpressionEvaluator;
 import io.harness.tasks.Cd1SetupFields;
@@ -27,8 +30,12 @@ import lombok.Getter;
 import lombok.Setter;
 import lombok.experimental.FieldNameConstants;
 import lombok.extern.slf4j.Slf4j;
+import net.sf.json.JSONObject;
 import org.mongodb.morphia.annotations.Transient;
+import software.wings.api.jira.JiraCreateMetaResponse;
 import software.wings.api.jira.JiraExecutionData;
+import software.wings.api.jira.JiraField;
+import software.wings.api.jira.JiraProjectData;
 import software.wings.beans.Activity;
 import software.wings.beans.Activity.ActivityBuilder;
 import software.wings.beans.Activity.Type;
@@ -41,6 +48,7 @@ import software.wings.beans.jira.JiraTaskParameters;
 import software.wings.delegatetasks.jira.JiraAction;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.impl.DelegateServiceImpl;
+import software.wings.service.impl.JiraHelperService;
 import software.wings.service.intfc.ActivityService;
 import software.wings.service.intfc.LogService;
 import software.wings.service.intfc.security.SecretManager;
@@ -55,12 +63,16 @@ import software.wings.sm.states.mixin.SweepingOutputStateMixin;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Set;
+import java.util.StringJoiner;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -76,9 +88,18 @@ public class JiraCreateUpdate extends State implements SweepingOutputStateMixin 
   private static final String JIRA_ISSUE_KEY = "issueKey";
   private static final String JIRA_ISSUE = "issue";
   public static final String DATETIME_ISO_FORMAT = "yyyy-MM-dd'T'HH:mm:ssXX";
+  public static final String MULTISELECT = "multiselect";
+  public static final String ARRAY = "array";
+  public static final String OPTION = "option";
+  public static final String INVALID_VALUES_ERROR_MESSAGE =
+      "Invalid values %s provided for custom field: %s. Please, check out allowed values: %s.";
+  public static final String INVALID_VALUE_ERROR_MESSAGE =
+      "Invalid value [%s] provided for custom field: %s. Please, check out allowed values: %s.";
+  public static final String RESOLUTION = "resolution";
 
   @Inject private transient ActivityService activityService;
   @Inject @Transient private LogService logService;
+  @Inject @Transient private JiraHelperService jiraHelperService;
 
   @Inject @Transient private transient WingsPersistence wingsPersistence;
   @Inject @Transient private DelegateServiceImpl delegateService;
@@ -112,6 +133,11 @@ public class JiraCreateUpdate extends State implements SweepingOutputStateMixin 
     this.customFields = customFields;
   }
 
+  @SchemaIgnore
+  public Map<String, JiraCustomFieldValue> getCustomFieldsMap() {
+    return this.customFields;
+  }
+
   @Getter @Setter private SweepingOutputInstance.Scope sweepingOutputScope;
   @Getter @Setter private String sweepingOutputName;
 
@@ -129,21 +155,22 @@ public class JiraCreateUpdate extends State implements SweepingOutputStateMixin 
     ExecutionContextImpl executionContext = (ExecutionContextImpl) context;
 
     JiraConfig jiraConfig = getJiraConfig(jiraConnectorId);
-    if (isNotEmpty(customFields)) {
-      for (Entry<String, JiraCustomFieldValue> customField : customFields.entrySet()) {
-        JiraCustomFieldValue value = customField.getValue();
-        if (value.getFieldType().equals("date")) {
-          String parsedDateValue = parseDateValue(value.getFieldValue(), context);
-          value.setFieldValue(parsedDateValue);
-        }
-        if (value.getFieldType().equals("datetime")) {
-          String parsedDateTimeValue = parseDateTimeValue(value.getFieldValue(), context);
-          value.setFieldValue(parsedDateTimeValue);
-        }
+    parseCustomFieldsDateTime(context);
+    renderExpressions(context);
+    if (EmptyPredicate.isNotEmpty(customFields)) {
+      JiraCreateMetaResponse createMetadata = jiraHelperService.getCreateMetadata(
+          jiraConnectorId, null, project, context.getAccountId(), context.getAppId());
+
+      Map<String, Map<Object, Object>> customFieldsValueToIdMap = mapCustomFieldsValuesToId(createMetadata);
+      Map<String, String> customFieldsIdToNameMap = mapCustomFieldsIdsToNames(createMetadata);
+
+      try {
+        resolveCustomFieldsVars(customFieldsIdToNameMap, customFieldsValueToIdMap);
+      } catch (HarnessJiraException e) {
+        logger.error("Failing Jira step due to: ", e);
+        return ExecutionResponse.builder().errorMessage(e.getMessage()).executionStatus(FAILED).build();
       }
     }
-    renderExpressions(context);
-
     if (ExpressionEvaluator.containsVariablePattern(issueId)) {
       return ExecutionResponse.builder()
           .executionStatus(FAILED)
@@ -205,6 +232,106 @@ public class JiraCreateUpdate extends State implements SweepingOutputStateMixin 
         .delegateTaskId(delegateTaskId)
         .stateExecutionData(JiraExecutionData.builder().activityId(activityId).build())
         .build();
+  }
+
+  void resolveCustomFieldsVars(
+      Map<String, String> customFieldsIdToNameMap, Map<String, Map<Object, Object>> customFieldsValueToIdMap) {
+    for (Entry<String, JiraCustomFieldValue> customFieldValueEntry : customFields.entrySet()) {
+      if (customFieldsIdToNameMap.get(customFieldValueEntry.getKey()) != null) {
+        Set<Object> allowedValues = customFieldsValueToIdMap.get(customFieldValueEntry.getKey()).keySet();
+        Collection<Object> allowedIds = customFieldsValueToIdMap.get(customFieldValueEntry.getKey()).values();
+        String customFieldName = customFieldsIdToNameMap.get(customFieldValueEntry.getKey());
+        Map<Object, Object> customField = customFieldsValueToIdMap.get(customFieldValueEntry.getKey());
+        List<String> fieldValues;
+        StringJoiner fieldIds = new StringJoiner(",");
+        if (customFieldValueEntry.getValue().getFieldType().equals(MULTISELECT)) {
+          Set<String> invalidValues = new HashSet<>();
+          fieldValues = Arrays.asList(customFieldValueEntry.getValue().getFieldValue().replace(" ,", ",").split(","));
+          for (String value : fieldValues) {
+            String fieldId = (String) customField.get(value.trim().toLowerCase());
+            if (fieldId == null) {
+              if (allowedIds.contains(value)) {
+                fieldId = value;
+              } else {
+                invalidValues.add(value);
+              }
+            }
+            fieldIds.add(fieldId);
+          }
+          if (!invalidValues.isEmpty()) {
+            throw new HarnessJiraException(
+                String.format(INVALID_VALUES_ERROR_MESSAGE, invalidValues, customFieldName, allowedValues), null);
+          }
+        } else if (customFieldValueEntry.getValue().getFieldType().equals(OPTION)
+            || customFieldValueEntry.getValue().getFieldType().equals(RESOLUTION)) {
+          String value = customFieldValueEntry.getValue().getFieldValue().trim();
+          String fieldId = (String) customField.get(value.toLowerCase());
+          if (fieldId == null) {
+            if (allowedIds.contains(value)) {
+              fieldId = value;
+            } else {
+              throw new HarnessJiraException(
+                  String.format(INVALID_VALUE_ERROR_MESSAGE, value, customFieldName, allowedValues), null);
+            }
+          }
+          fieldIds.add(fieldId);
+        }
+        customFieldValueEntry.getValue().setFieldValue(fieldIds.toString());
+      }
+    }
+  }
+
+  private void parseCustomFieldsDateTime(ExecutionContext context) {
+    if (isNotEmpty(customFields)) {
+      for (Entry<String, JiraCustomFieldValue> customField : customFields.entrySet()) {
+        JiraCustomFieldValue value = customField.getValue();
+        if (value.getFieldType().equals("date")) {
+          String parsedDateValue = parseDateValue(value.getFieldValue(), context);
+          value.setFieldValue(parsedDateValue);
+        }
+        if (value.getFieldType().equals("datetime")) {
+          String parsedDateTimeValue = parseDateTimeValue(value.getFieldValue(), context);
+          value.setFieldValue(parsedDateTimeValue);
+        }
+      }
+    }
+  }
+
+  Map<String, String> mapCustomFieldsIdsToNames(JiraCreateMetaResponse createMetadata) {
+    return createMetadata.getProjects()
+        .stream()
+        .filter(jiraProjectData -> jiraProjectData.getKey().equals(project))
+        .map(JiraProjectData::getIssueTypes)
+        .flatMap(Collection::stream)
+        .filter(jiraIssue -> jiraIssue.getName().equals(issueType))
+        .flatMap(jiraIssue -> jiraIssue.getJiraFields().entrySet().stream())
+        .map(Entry::getValue)
+        .filter(jiraField
+            -> jiraField.getSchema().get("type").equals(OPTION) || jiraField.getSchema().get("type").equals(RESOLUTION)
+                || (jiraField.getSchema().get("type").equals(ARRAY) && jiraField.getAllowedValues() != null))
+        .collect(toMap(JiraField::getKey, JiraField::getName));
+  }
+
+  Map<String, Map<Object, Object>> mapCustomFieldsValuesToId(JiraCreateMetaResponse createMetadata) {
+    return createMetadata.getProjects()
+        .stream()
+        .filter(jiraProjectData -> jiraProjectData.getKey().equals(project))
+        .map(JiraProjectData::getIssueTypes)
+        .flatMap(Collection::stream)
+        .filter(jiraIssue -> jiraIssue.getName().equals(issueType))
+        .flatMap(jiraIssue -> jiraIssue.getJiraFields().entrySet().stream())
+        .map(Entry::getValue)
+        .filter(jiraField
+            -> jiraField.getSchema().get("type").equals(OPTION) || jiraField.getSchema().get("type").equals(RESOLUTION)
+                || (jiraField.getSchema().get("type").equals(ARRAY) && jiraField.getAllowedValues() != null))
+        .collect(toMap(JiraField::getKey,
+            jiraField
+            -> Arrays.stream(jiraField.getAllowedValues().toArray())
+                   .map(json -> (JSONObject) json)
+                   .collect(toMap(ob
+                       -> ob.get("value") != null ? ((String) ob.get("value")).toLowerCase()
+                                                  : ((String) ob.get("name")).toLowerCase(),
+                       ob -> ob.get("id")))));
   }
 
   String parseDateTimeValue(String fieldValue, ExecutionContext context) {

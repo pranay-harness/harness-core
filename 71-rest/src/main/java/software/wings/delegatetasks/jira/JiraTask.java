@@ -478,7 +478,8 @@ public class JiraTask extends AbstractDelegateRunnableTask {
     String fieldValue = customFieldValueEntry.getValue().getFieldValue();
 
     switch (type) {
-      case "option": {
+      case "option":
+      case "resolution": {
         return new ValueTuple("id", fieldValue);
       }
       case "number":
