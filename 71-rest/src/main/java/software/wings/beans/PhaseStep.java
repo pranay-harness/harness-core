@@ -41,7 +41,9 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 /**
  * Created by rishi on 12/21/16.
@@ -333,13 +335,20 @@ public class PhaseStep {
                                     .withPhaseStepType(stepType)
                                     .withRollback(isRollback())
                                     .withFailureStrategies(getFailureStrategies())
-                                    .withStepSkipStrategies(getStepSkipStrategies())
                                     .withStatusForRollback(getStatusForRollback())
                                     .withStepsInParallel(isStepsInParallel())
                                     .withArtifactNeeded(isArtifactNeeded())
                                     .withWaitInterval(getWaitInterval())
                                     .build();
     List<GraphNode> steps = getSteps();
+    List<StepSkipStrategy> stepSkipStrategyList = getStepSkipStrategies();
+    List<StepSkipStrategy> clonedStepSkipStrategies = new ArrayList<>();
+    if (stepSkipStrategyList != null) {
+      clonedStepSkipStrategies = stepSkipStrategyList.stream()
+                                     .map(StepSkipStrategy::cloneInternal)
+                                     .filter(Objects::nonNull)
+                                     .collect(Collectors.toList());
+    }
     List<String> clonedStepIds = new ArrayList<>();
     List<GraphNode> clonedSteps = new ArrayList<>();
     if (steps != null) {
@@ -356,10 +365,22 @@ public class PhaseStep {
         }
         clonedSteps.add(clonedStep);
         clonedStepIds.add(clonedStep.getId());
+        for (StepSkipStrategy stepSkipStrategy : clonedStepSkipStrategies) {
+          List<String> stepIds = stepSkipStrategy.getStepIds();
+          if (stepIds != null && stepIds.contains(step.getId())) {
+            for (int i = 0; i < stepIds.size(); i++) {
+              if (stepIds.get(i).equals(step.getId())) {
+                stepIds.set(i, clonedStep.getId());
+                break;
+              }
+            }
+          }
+        }
       }
     }
     clonedPhaseStep.setStepsIds(clonedStepIds);
     clonedPhaseStep.setSteps(clonedSteps);
+    clonedPhaseStep.setStepSkipStrategies(clonedStepSkipStrategies);
     return clonedPhaseStep;
   }
 
