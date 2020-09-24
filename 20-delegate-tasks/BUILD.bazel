@@ -26,7 +26,8 @@ java_library(
              "@maven//:io_fabric8_kubernetes_client",
              "@maven//:commons_io_commons_io",
              "@maven//:io_fabric8_kubernetes_api",
-             "@maven//:com_amazonaws_aws_java_sdk_core"
+             "@maven//:com_amazonaws_aws_java_sdk_core",
+             "@maven//:io_kubernetes_client_java_api"
         ],
     visibility = ["//visibility:public"],
 )
