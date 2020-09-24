@@ -1,14 +1,10 @@
 package software.wings.beans.alert;
 
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.mongo.iterator.MongoPersistenceIterator.SchedulingType.REGULAR;
 import static java.time.Duration.ofMinutes;
-import static java.util.stream.Collectors.toSet;
 
 import com.google.inject.Inject;
 
-import io.harness.delegate.beans.executioncapability.ExecutionCapability;
-import io.harness.delegate.beans.executioncapability.SelectorCapability;
 import io.harness.iterator.PersistenceIteratorFactory;
 import io.harness.iterator.PersistenceIteratorFactory.PumpExecutorOptions;
 import io.harness.mongo.iterator.MongoPersistenceIterator;
@@ -26,10 +22,6 @@ import software.wings.service.intfc.AlertService;
 import software.wings.service.intfc.AssignDelegateService;
 
 import java.time.Duration;
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
 
 @Slf4j
 public class AlertReconciliationHandler implements Handler<Alert> {
@@ -75,21 +67,6 @@ public class AlertReconciliationHandler implements Handler<Alert> {
     }
   }
 
-  private List<ExecutionCapability> convertSelectorsToCapabilities(List<String> selectors) {
-    Set<ExecutionCapability> executionCapabilities = new HashSet<>();
-
-    if (isNotEmpty(selectors)) {
-      Set<SelectorCapability> selectorCapabilities =
-          selectors.stream()
-              .map(capability -> SelectorCapability.builder().selectors(new HashSet<>(selectors)).build())
-              .collect(toSet());
-
-      executionCapabilities.addAll(selectorCapabilities);
-    }
-
-    return new ArrayList<>(executionCapabilities);
-  }
-
   public void handleNoEligibleDelegates(Alert alert) {
     NoEligibleDelegatesAlert data = (NoEligibleDelegatesAlert) alert.getAlertData();
     NoEligibleDelegatesAlertReconciliation alertReconciliation =
@@ -97,7 +74,7 @@ public class AlertReconciliationHandler implements Handler<Alert> {
 
     boolean canAssign = alertReconciliation.getDelegates().stream().anyMatch(delegateId
         -> assignDelegateService.canAssign(null, delegateId, alert.getAccountId(), data.getAppId(), data.getEnvId(),
-            data.getInfraMappingId(), data.getTaskGroup(), convertSelectorsToCapabilities(data.getSelectors()), null));
+            data.getInfraMappingId(), data.getTaskGroup(), data.getSelectors(), null));
 
     if (canAssign) {
       alertService.close(alert);
