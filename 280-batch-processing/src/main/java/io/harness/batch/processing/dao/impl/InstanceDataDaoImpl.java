@@ -3,6 +3,7 @@ package io.harness.batch.processing.dao.impl;
 import static io.harness.persistence.HPersistence.upsertReturnNewOptions;
 import static io.harness.persistence.HPersistence.upsertReturnOldOptions;
 import static io.harness.persistence.HQuery.excludeAuthority;
+import static io.harness.persistence.HQuery.excludeAuthorityCount;
 import static io.harness.persistence.HQuery.excludeCount;
 import static java.util.Objects.isNull;
 
@@ -188,7 +189,7 @@ public class InstanceDataDaoImpl implements InstanceDataDao {
     if (instanceIds.isEmpty()) {
       return Collections.emptyList();
     } else {
-      return hPersistence.createQuery(InstanceData.class, excludeAuthority)
+      return hPersistence.createQuery(InstanceData.class, excludeAuthorityCount)
           .field(InstanceDataKeys.instanceId)
           .in(instanceIds)
           .asList();

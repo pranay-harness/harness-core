@@ -4,8 +4,6 @@ import static io.harness.batch.processing.tasklet.util.InstanceMetaDataUtils.pop
 import static io.harness.ccm.cluster.entities.K8sWorkload.encodeDotsInKey;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 
-import com.google.common.collect.ImmutableSet;
-
 import io.harness.batch.processing.ccm.CCMJobConstants;
 import io.harness.batch.processing.ccm.ClusterType;
 import io.harness.batch.processing.ccm.InstanceInfo;
@@ -39,6 +37,8 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 @Slf4j
 public class K8sPodInfoTasklet implements Tasklet {
@@ -68,32 +68,45 @@ public class K8sPodInfoTasklet implements Tasklet {
         new PublishedMessageReader(publishedMessageDao, accountId, messageType, startTime, endTime, batchSize);
     do {
       publishedMessageList = publishedMessageReader.getNext();
+      Map<String, Set<String>> existingInstanceIds = getExistingInstanceIds(publishedMessageList);
       publishedMessageList.stream()
-          .map(this ::processPodInfoMessage)
+          .map(publishedMessage -> processPodInfoMessage(publishedMessage, existingInstanceIds))
           .filter(instanceInfo -> instanceInfo.getMetaData().containsKey(InstanceMetaDataConstants.INSTANCE_CATEGORY))
           .forEach(instanceInfo -> instanceDataDao.upsert(instanceInfo));
     } while (publishedMessageList.size() == batchSize);
     return null;
   }
 
-  public InstanceInfo processPodInfoMessage(PublishedMessage publishedMessage) {
+  private Map<String, Set<String>> getExistingInstanceIds(List<PublishedMessage> publishedMessageList) {
+    Set<String> podIds = getPodIds(publishedMessageList);
+    List<InstanceData> instanceData = instanceDataDao.fetchInstanceData(podIds);
+    return instanceData.stream().collect(Collectors.groupingBy(
+        InstanceData::getInstanceId, Collectors.mapping(InstanceData::getClusterId, Collectors.toSet())));
+  }
+
+  private Set<String> getPodIds(List<PublishedMessage> publishedMessageList) {
+    return publishedMessageList.stream()
+        .map(publishedMessage -> ((PodInfo) publishedMessage.getMessage()).getPodUid())
+        .collect(Collectors.toSet());
+  }
+
+  public InstanceInfo processPodInfoMessage(
+      PublishedMessage publishedMessage, Map<String, Set<String>> existingInstanceIds) {
     try {
-      return process(publishedMessage);
+      return process(publishedMessage, existingInstanceIds);
     } catch (Exception ex) {
       logger.error("K8sPodInfoTasklet Exception ", ex);
     }
     return InstanceInfo.builder().metaData(Collections.emptyMap()).build();
   }
 
-  public InstanceInfo process(PublishedMessage publishedMessage) {
+  public InstanceInfo process(PublishedMessage publishedMessage, Map<String, Set<String>> existingInstanceIds) {
     String accountId = publishedMessage.getAccountId();
     PodInfo podInfo = (PodInfo) publishedMessage.getMessage();
     String podUid = podInfo.getPodUid();
     String clusterId = podInfo.getClusterId();
 
-    InstanceData existingInstanceData = instanceDataService.fetchInstanceData(accountId, clusterId, podUid);
-    if (null != existingInstanceData
-        && !ImmutableSet.of("kmpySmUISimoRrJL6NL73w", "ng2HGKFpStaPsVqGr3B3gA").contains(accountId)) {
+    if (null != existingInstanceIds.get(podUid) && existingInstanceIds.get(podUid).contains(clusterId)) {
       return InstanceInfo.builder().metaData(Collections.emptyMap()).build();
     }
 
