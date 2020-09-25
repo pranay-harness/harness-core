@@ -25,6 +25,7 @@ import io.harness.common.NGPipelineObjectMapperHelper;
 import io.harness.gitsync.core.runnable.GitChangeSetRunnable;
 import io.harness.maintenance.MaintenanceController;
 import io.harness.ng.core.CorrelationFilter;
+import io.harness.ng.core.EtagFilter;
 import io.harness.ng.core.exceptionmappers.GenericExceptionMapperV2;
 import io.harness.ng.core.exceptionmappers.JerseyViolationExceptionMapperV2;
 import io.harness.ng.core.exceptionmappers.WingsExceptionMapperV2;
@@ -114,6 +115,7 @@ public class NextGenApplication extends Application<NextGenConfiguration> {
     registerJerseyFeatures(environment);
     registerCharsetResponseFilter(environment, injector);
     registerCorrelationFilter(environment, injector);
+    registerEtagFilter(environment, injector);
     registerScheduleJobs(injector);
     registerWaitEnginePublishers(injector);
     registerManagedBeans(environment, injector);
@@ -167,6 +169,10 @@ public class NextGenApplication extends Application<NextGenConfiguration> {
 
   private void registerCorrelationFilter(Environment environment, Injector injector) {
     environment.jersey().register(injector.getInstance(CorrelationFilter.class));
+  }
+
+  private void registerEtagFilter(Environment environment, Injector injector) {
+    environment.jersey().register(injector.getInstance(EtagFilter.class));
   }
 
   private void registerQueueListeners(Injector injector) {

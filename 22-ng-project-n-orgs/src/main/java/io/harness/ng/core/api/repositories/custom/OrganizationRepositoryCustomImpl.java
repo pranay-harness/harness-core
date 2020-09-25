@@ -3,13 +3,16 @@ package io.harness.ng.core.api.repositories.custom;
 import com.google.inject.Inject;
 
 import io.harness.ng.core.entities.Organization;
+import io.harness.ng.core.entities.Organization.OrganizationKeys;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.mongodb.core.FindAndModifyOptions;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
+import org.springframework.data.mongodb.core.query.Update;
 import org.springframework.data.repository.support.PageableExecutionUtils;
 
 import java.util.List;
@@ -24,5 +27,26 @@ public class OrganizationRepositoryCustomImpl implements OrganizationRepositoryC
     List<Organization> organizations = mongoTemplate.find(query, Organization.class);
     return PageableExecutionUtils.getPage(
         organizations, pageable, () -> mongoTemplate.count(Query.of(query).limit(-1).skip(-1), Organization.class));
+  }
+
+  @Override
+  public Organization update(Query query, Update update) {
+    return mongoTemplate.findAndModify(query, update, new FindAndModifyOptions().returnNew(true), Organization.class);
+  }
+
+  @Override
+  public Boolean delete(String accountIdentifier, String identifier, Long version) {
+    Criteria criteria = Criteria.where(OrganizationKeys.accountIdentifier)
+                            .is(accountIdentifier)
+                            .and(OrganizationKeys.identifier)
+                            .is(identifier)
+                            .and(OrganizationKeys.deleted)
+                            .ne(Boolean.TRUE);
+    if (version != null) {
+      criteria.and(OrganizationKeys.version).is(version);
+    }
+    Query query = new Query(criteria);
+    Update update = new Update().set(OrganizationKeys.deleted, Boolean.TRUE);
+    return mongoTemplate.findAndModify(query, update, Organization.class) != null;
   }
 }

@@ -6,7 +6,7 @@ import static io.harness.security.encryption.EncryptionType.GCP_KMS;
 import static io.harness.utils.PageTestUtils.getPage;
 import static java.util.Collections.emptyList;
 import static junit.framework.TestCase.assertEquals;
-import static junit.framework.TestCase.assertFalse;
+import static junit.framework.TestCase.assertNull;
 import static junit.framework.TestCase.assertTrue;
 import static org.apache.commons.lang3.RandomStringUtils.randomAlphabetic;
 import static org.mockito.Matchers.any;
@@ -40,8 +40,6 @@ import org.mockito.ArgumentCaptor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.mongodb.core.query.Criteria;
-
-import java.util.Optional;
 
 public class OrganizationServiceImplTest extends CategoryTest {
   private OrganizationRepository organizationRepository;
@@ -110,8 +108,7 @@ public class OrganizationServiceImplTest extends CategoryTest {
     organization.setAccountIdentifier(accountIdentifier);
     organization.setIdentifier(identifier);
 
-    when(organizationService.get(accountIdentifier, identifier)).thenReturn(Optional.of(organization));
-    when(organizationRepository.save(organization)).thenReturn(organization);
+    when(organizationRepository.update(any(), any())).thenReturn(organization);
 
     Organization updatedOrganization = organizationService.update(accountIdentifier, identifier, organizationDTO);
 
@@ -130,9 +127,6 @@ public class OrganizationServiceImplTest extends CategoryTest {
     organization.setAccountIdentifier(accountIdentifier);
     organization.setIdentifier(identifier);
     organization.setName(randomAlphabetic(10));
-
-    when(organizationService.get(accountIdentifier, identifier)).thenReturn(Optional.of(organization));
-
     organizationService.update(accountIdentifier, identifier, organizationDTO);
   }
 
@@ -147,33 +141,11 @@ public class OrganizationServiceImplTest extends CategoryTest {
     organization.setAccountIdentifier(accountIdentifier);
     organization.setIdentifier(identifier);
 
-    when(organizationService.get(accountIdentifier, identifier)).thenReturn(Optional.empty());
+    when(organizationRepository.update(any(), any())).thenReturn(null);
 
-    organizationService.update(accountIdentifier, identifier, organizationDTO);
-  }
+    Organization updatedOrganization = organizationService.update(accountIdentifier, identifier, organizationDTO);
 
-  @Test
-  @Owner(developers = KARAN)
-  @Category(UnitTests.class)
-  public void testDeleteOrganization() {
-    String accountIdentifier = randomAlphabetic(10);
-    String identifier = randomAlphabetic(10);
-    OrganizationDTO organizationDTO = createOrganizationDTO(accountIdentifier, identifier);
-    Organization organization = toOrganization(organizationDTO);
-
-    when(organizationService.get(accountIdentifier, identifier)).thenReturn(Optional.empty());
-
-    assertFalse(organizationService.delete(accountIdentifier, identifier));
-
-    when(organizationService.get(accountIdentifier, identifier)).thenReturn(Optional.of(organization));
-
-    Organization deletedOrganization = toOrganization(organizationDTO);
-    deletedOrganization.setDeleted(Boolean.TRUE);
-
-    when(organizationRepository.save(deletedOrganization)).thenReturn(deletedOrganization);
-
-    assertTrue(organizationService.delete(accountIdentifier, identifier));
-    verify(organizationRepository).save(deletedOrganization);
+    assertNull(updatedOrganization);
   }
 
   @Test

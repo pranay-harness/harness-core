@@ -1,11 +1,11 @@
 package io.harness.ng.core.impl;
 
 import static io.harness.NGConstants.HARNESS_SECRET_MANAGER_IDENTIFIER;
+import static io.harness.NGConstants.NAME_KEY;
 import static io.harness.eraro.ErrorCode.SECRET_MANAGEMENT_ERROR;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.exception.WingsException.USER_SRE;
 import static io.harness.ng.NextGenModule.SECRET_MANAGER_CONNECTOR_SERVICE;
-import static io.harness.ng.core.remote.OrganizationMapper.applyUpdateToOrganization;
 import static io.harness.ng.core.remote.OrganizationMapper.toOrganization;
 import static io.harness.ng.core.utils.NGUtils.getConnectorRequestDTO;
 import static io.harness.ng.core.utils.NGUtils.getDefaultHarnessSecretManagerName;
@@ -19,6 +19,7 @@ import com.google.inject.Singleton;
 import com.google.inject.name.Named;
 
 import io.harness.connector.services.ConnectorService;
+import io.harness.data.validator.EntityNameValidator;
 import io.harness.exception.DuplicateFieldException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.ng.core.api.NGSecretManagerService;
@@ -35,6 +36,8 @@ import org.springframework.dao.DuplicateKeyException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.mongodb.core.query.Criteria;
+import org.springframework.data.mongodb.core.query.Query;
+import org.springframework.data.mongodb.core.query.Update;
 import software.wings.service.impl.security.SecretManagementException;
 
 import java.util.Optional;
@@ -104,14 +107,43 @@ public class OrganizationServiceImpl implements OrganizationService {
   @Override
   public Organization update(String accountIdentifier, String identifier, OrganizationDTO organizationDTO) {
     validateUpdateOrganizationRequest(accountIdentifier, identifier, organizationDTO);
-    Optional<Organization> organizationOptional = get(accountIdentifier, identifier);
-    if (organizationOptional.isPresent()) {
-      Organization organization = organizationOptional.get();
-      Organization updatedOrganization = applyUpdateToOrganization(organization, organizationDTO);
-      validate(updatedOrganization);
-      return organizationRepository.save(updatedOrganization);
+    Criteria criteria = Criteria.where(OrganizationKeys.accountIdentifier)
+                            .is(accountIdentifier)
+                            .and(OrganizationKeys.identifier)
+                            .is(identifier)
+                            .and(OrganizationKeys.deleted)
+                            .ne(Boolean.TRUE);
+    if (organizationDTO.getVersion() != null) {
+      criteria.and(OrganizationKeys.version).is(organizationDTO.getVersion());
     }
-    throw new InvalidRequestException("Organisation to be updated does not exist");
+    Query query = new Query(criteria);
+    Update update = getUpdate(organizationDTO);
+    organizationDTO.setAccountIdentifier(accountIdentifier);
+    organizationDTO.setIdentifier(identifier);
+    organizationDTO.setName(Optional.ofNullable(organizationDTO.getName()).orElse(NAME_KEY));
+    validate(toOrganization(organizationDTO));
+    Organization organization = organizationRepository.update(query, update);
+    if (organization == null) {
+      throw new InvalidRequestException("Resource not found or your resource version might be older", USER);
+    }
+    return organization;
+  }
+
+  private Update getUpdate(OrganizationDTO organizationDTO) {
+    Update update = new Update();
+    if (isNotBlank(organizationDTO.getName()) && EntityNameValidator.isValid(organizationDTO.getName())) {
+      update.set(OrganizationKeys.name, organizationDTO.getName());
+    }
+    if (isNotBlank(organizationDTO.getColor())) {
+      update.set(OrganizationKeys.color, organizationDTO.getColor());
+    }
+    if (organizationDTO.getDescription() != null) {
+      update.set(OrganizationKeys.description, organizationDTO.getDescription());
+    }
+    if (organizationDTO.getTags() != null) {
+      update.set(OrganizationKeys.tags, organizationDTO.getTags());
+    }
+    return update;
   }
 
   @Override
@@ -142,15 +174,8 @@ public class OrganizationServiceImpl implements OrganizationService {
   }
 
   @Override
-  public boolean delete(String accountIdentifier, String organizationIdentifier) {
-    Optional<Organization> organizationOptional = get(accountIdentifier, organizationIdentifier);
-    if (organizationOptional.isPresent()) {
-      Organization organization = organizationOptional.get();
-      organization.setDeleted(Boolean.TRUE);
-      organizationRepository.save(organization);
-      return true;
-    }
-    return false;
+  public boolean delete(String accountIdentifier, String organizationIdentifier, Long version) {
+    return organizationRepository.delete(accountIdentifier, organizationIdentifier, version);
   }
 
   private void validateCreateOrganizationRequest(String accountIdentifier, OrganizationDTO organization) {
