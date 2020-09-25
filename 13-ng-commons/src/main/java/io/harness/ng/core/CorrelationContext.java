@@ -1,7 +1,10 @@
 package io.harness.ng.core;
 
 import lombok.experimental.UtilityClass;
+import okhttp3.Interceptor;
 import org.slf4j.MDC;
+
+import javax.validation.constraints.NotNull;
 
 @UtilityClass
 public class CorrelationContext {
@@ -21,5 +24,12 @@ public class CorrelationContext {
 
   public static void clearCorrelationId() {
     MDC.remove(correlationIdKey);
+  }
+
+  @NotNull
+  public static Interceptor getCorrelationIdInterceptor() {
+    return chain -> {
+      return chain.proceed(chain.request().newBuilder().header(getCorrelationIdKey(), getCorrelationId()).build());
+    };
   }
 }

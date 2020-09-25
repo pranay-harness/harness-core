@@ -2,6 +2,7 @@ package io.harness.ng.core.dto;
 
 import static com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import io.harness.ModuleType;
@@ -31,4 +32,5 @@ public class ProjectDTO {
   List<String> owners;
   @Size(max = 128) List<String> tags;
   Long lastModifiedAt;
+  @JsonIgnore Long version;
 }
