@@ -9,12 +9,12 @@ import io.harness.mongo.index.FdTtlIndex;
 import io.harness.persistence.AccountAccess;
 import io.harness.persistence.CreatedAtAware;
 import io.harness.persistence.PersistentEntity;
-import io.harness.persistence.UuidAware;
 import lombok.Builder;
 import lombok.Builder.Default;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.experimental.FieldNameConstants;
+import org.bson.types.ObjectId;
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Id;
 import org.mongodb.morphia.annotations.PrePersist;
@@ -32,8 +32,9 @@ import java.util.Set;
 @FieldNameConstants(innerTypeName = "TimeSeriesRecordKeys")
 @Entity(value = "timeSeriesRecords", noClassnameStored = true)
 @HarnessEntity(exportable = false)
-public class TimeSeriesRecord implements UuidAware, CreatedAtAware, AccountAccess, PersistentEntity {
-  @Id private String uuid;
+public class TimeSeriesRecord implements CreatedAtAware, AccountAccess, PersistentEntity {
+  // TODO: Is this the correct approach for uuid?
+  @Id private ObjectId uuid;
 
   @FdIndex private String accountId;
   @FdIndex private String cvConfigId;

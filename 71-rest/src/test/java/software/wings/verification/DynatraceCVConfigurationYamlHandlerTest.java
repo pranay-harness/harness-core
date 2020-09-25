@@ -116,6 +116,7 @@ public class DynatraceCVConfigurationYamlHandlerTest extends WingsBaseTest {
     yaml.setServiceName(serviceName);
     yaml.setConnectorName(connectorName);
     yaml.setDynatraceServiceName("serviceName3");
+    yaml.setDynatraceServiceEntityId("entityID3");
     return yaml;
   }
 
@@ -130,6 +131,7 @@ public class DynatraceCVConfigurationYamlHandlerTest extends WingsBaseTest {
     DynaTraceCVConfigurationYaml yaml = yamlHandler.toYaml(cvServiceConfiguration, appId);
     assertThat(yaml.getDynatraceServiceName()).isEqualTo("serviceName2");
     assertThat(yaml.getServiceName()).isEqualTo(serviceName);
+    assertThat(yaml.getDynatraceServiceEntityId()).isEqualTo("entityID2");
   }
 
   @Test
@@ -141,6 +143,7 @@ public class DynatraceCVConfigurationYamlHandlerTest extends WingsBaseTest {
     cvServiceConfiguration.setServiceEntityId("entityID4");
     DynaTraceCVConfigurationYaml yaml = yamlHandler.toYaml(cvServiceConfiguration, appId);
     assertThat(yaml.getDynatraceServiceName()).isEmpty();
+    assertThat(yaml.getDynatraceServiceEntityId()).isEmpty();
   }
 
   @Test
@@ -180,6 +183,29 @@ public class DynatraceCVConfigurationYamlHandlerTest extends WingsBaseTest {
     // setting a bad service name here and expecting an exception
     changeContext.getYaml().setDynatraceServiceName("serviceName5");
     DynaTraceCVServiceConfiguration bean = yamlHandler.upsertFromYaml(changeContext, null);
+  }
+
+  @Test
+  @Owner(developers = PRAVEEN)
+  @Category(UnitTests.class)
+  public void testUpsert_sameDynatraceServiceNameDiffID() {
+    when(yamlHelper.getAppId(anyString(), anyString())).thenReturn(appId);
+    when(yamlHelper.getEnvironmentId(anyString(), anyString())).thenReturn(envId);
+    when(yamlHelper.getNameFromYamlFilePath("TestDynaTraceConfig.yaml")).thenReturn("TestDynaTraceConfig");
+
+    List<DynaTraceApplication> services = getDynatraceServiceList();
+    services.add(DynaTraceApplication.builder().displayName("serviceName2").entityId("entityID5").build());
+    when(dynaTraceService.getServices(connectorId)).thenReturn(services);
+    ChangeContext<DynaTraceCVConfigurationYaml> changeContext = new ChangeContext<>();
+    Change c = Change.Builder.aFileChange().withAccountId(accountId).withFilePath("TestDynaTraceConfig.yaml").build();
+    changeContext.setChange(c);
+    changeContext.setYaml(buildYaml());
+    // setting a bad service name here and expecting an exception
+    changeContext.getYaml().setDynatraceServiceName("serviceName2");
+    changeContext.getYaml().setDynatraceServiceEntityId("entityID5");
+    DynaTraceCVServiceConfiguration bean = yamlHandler.upsertFromYaml(changeContext, null);
+
+    assertThat(bean.getServiceEntityId()).isEqualTo("entityID5");
   }
 
   @Test(expected = DataCollectionException.class)

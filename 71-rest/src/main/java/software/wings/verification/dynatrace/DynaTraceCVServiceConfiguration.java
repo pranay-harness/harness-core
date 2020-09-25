@@ -37,5 +37,6 @@ public class DynaTraceCVServiceConfiguration extends CVConfiguration {
   @EqualsAndHashCode(callSuper = true)
   public static final class DynaTraceCVConfigurationYaml extends CVConfigurationYaml {
     private String dynatraceServiceName;
+    private String dynatraceServiceEntityId;
   }
 }
