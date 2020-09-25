@@ -1,9 +1,11 @@
 package software.wings.delegatetasks.pcf.pcftaskhandler;
 
 import static io.harness.rule.OwnerRule.ADWAIT;
+import static io.harness.rule.OwnerRule.BOJANA;
 import static java.util.Collections.emptyList;
 import static java.util.stream.Collectors.toList;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyBoolean;
@@ -19,8 +21,10 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.reset;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 import static software.wings.delegatetasks.pcf.PcfCommandTaskHelper.DELIMITER;
 import static software.wings.helpers.ext.pcf.request.PcfInfraMappingDataRequest.ActionType.RUNNING_COUNT;
+import static software.wings.utils.WingsTestConstants.ACTIVITY_ID;
 import static software.wings.utils.WingsTestConstants.APP_ID;
 import static software.wings.utils.WingsTestConstants.APP_NAME;
 import static software.wings.utils.WingsTestConstants.USER_NAME_DECRYPTED;
@@ -1095,5 +1099,23 @@ public class PcfCommandTaskHandlerTest extends WingsBaseTest {
     doThrow(new PivotalClientApiException("e")).when(pcfDeploymentManager).getApplicationByName(any());
     pcfDeployCommandTaskHandler.generatePcfInstancesElementsForExistingApp(
         pcfInstanceElements, PcfRequestConfig.builder().build(), request, executionLogCallback);
+  }
+
+  @Test
+  @Owner(developers = BOJANA)
+  @Category(UnitTests.class)
+  public void testpcfApplicationDetailsCommandTaskHandlerInvalidArgumentsException() throws IOException {
+    PcfCommandRequest pcfCommandRequest = mock(PcfCommandDeployRequest.class);
+    when(pcfCommandRequest.getActivityId()).thenReturn(ACTIVITY_ID);
+    List<EncryptedDataDetail> encryptedDataDetails = Arrays.asList(EncryptedDataDetail.builder().build());
+    when(encryptionService.getDecryptedValue(any())).thenReturn("decryptedValue".toCharArray());
+    try {
+      pcfApplicationDetailsCommandTaskHandler.executeTask(pcfCommandRequest, encryptedDataDetails);
+    } catch (Exception e) {
+      assertThatExceptionOfType(InvalidArgumentsException.class);
+      InvalidArgumentsException invalidArgumentsException = (InvalidArgumentsException) e;
+      assertThat(invalidArgumentsException.getParams())
+          .containsValue("pcfCommandRequest: Must be instance of PcfInstanceSyncRequest");
+    }
   }
 }

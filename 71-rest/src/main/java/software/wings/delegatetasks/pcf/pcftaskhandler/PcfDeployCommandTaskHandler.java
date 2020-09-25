@@ -254,7 +254,8 @@ public class PcfDeployCommandTaskHandler extends PcfCommandTaskHandler {
     }
   }
 
-  private void unmapRoutesIfAppDownsizedToZero(PcfCommandDeployRequest pcfCommandDeployRequest,
+  @VisibleForTesting
+  void unmapRoutesIfAppDownsizedToZero(PcfCommandDeployRequest pcfCommandDeployRequest,
       PcfRequestConfig pcfRequestConfig, ExecutionLogCallback executionLogCallback) throws PivotalClientApiException {
     if (pcfCommandDeployRequest.isStandardBlueGreen() || pcfCommandDeployRequest.getDownsizeAppDetail() == null
         || isBlank(pcfCommandDeployRequest.getDownsizeAppDetail().getApplicationName())) {
