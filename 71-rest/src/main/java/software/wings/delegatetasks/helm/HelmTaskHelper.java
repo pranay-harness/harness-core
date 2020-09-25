@@ -299,12 +299,13 @@ public class HelmTaskHelper {
     try {
       return processExecutor.execute();
     } catch (IOException e) {
-      throw new HelmClientException(format("[IO exception] %s", errorMessage), USER, e);
+      // Not setting the cause here because it carries forward the commands which can contain passwords
+      throw new HelmClientException(format("[IO exception] %s", errorMessage), USER);
     } catch (InterruptedException e) {
       Thread.currentThread().interrupt();
-      throw new HelmClientException(format("[Interrupted] %s", errorMessage), USER, e);
+      throw new HelmClientException(format("[Interrupted] %s", errorMessage), USER);
     } catch (TimeoutException | UncheckedTimeoutException e) {
-      throw new HelmClientException(format("[Timed out] %s", errorMessage), USER, e);
+      throw new HelmClientException(format("[Timed out] %s", errorMessage), USER);
     }
   }
 

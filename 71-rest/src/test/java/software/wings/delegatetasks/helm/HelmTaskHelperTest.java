@@ -100,21 +100,25 @@ public class HelmTaskHelperTest extends WingsBaseTest {
     doThrow(new IOException()).when(processExecutor).execute();
     assertThatExceptionOfType(HelmClientException.class)
         .isThrownBy(() -> helmTaskHelper.executeCommand("", ".", "", LONG_TIMEOUT_INTERVAL))
+        .withNoCause()
         .withMessageContaining("[IO exception]");
 
     doThrow(new InterruptedException()).when(processExecutor).execute();
     assertThatExceptionOfType(HelmClientException.class)
         .isThrownBy(() -> helmTaskHelper.executeCommand("", ".", "foo", LONG_TIMEOUT_INTERVAL))
+        .withNoCause()
         .withMessageContaining("[Interrupted] foo");
 
     doThrow(new TimeoutException()).when(processExecutor).execute();
     assertThatExceptionOfType(HelmClientException.class)
         .isThrownBy(() -> helmTaskHelper.executeCommand("", ".", null, LONG_TIMEOUT_INTERVAL))
+        .withNoCause()
         .withMessageContaining("[Timed out]");
 
     doThrow(new RuntimeException("test")).when(processExecutor).execute();
     assertThatExceptionOfType(RuntimeException.class)
         .isThrownBy(() -> helmTaskHelper.executeCommand("", ".", "", LONG_TIMEOUT_INTERVAL))
+        .withNoCause()
         .withMessageContaining("test");
   }
 
