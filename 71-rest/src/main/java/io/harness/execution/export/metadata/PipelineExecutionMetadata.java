@@ -38,8 +38,7 @@ public class PipelineExecutionMetadata implements ExecutionMetadata {
     MetadataUtils.acceptMultiple(visitor, stages);
   }
 
-  public static PipelineExecutionMetadata fromWorkflowExecution(
-      WorkflowExecution workflowExecution, boolean infraRefactor) {
+  public static PipelineExecutionMetadata fromWorkflowExecution(WorkflowExecution workflowExecution) {
     if (workflowExecution == null || workflowExecution.getWorkflowType() != WorkflowType.PIPELINE) {
       return null;
     }
@@ -55,8 +54,7 @@ public class PipelineExecutionMetadata implements ExecutionMetadata {
         .inputArtifacts(ArtifactMetadata.fromArtifacts(
             workflowExecution.getExecutionArgs() == null ? null : workflowExecution.getExecutionArgs().getArtifacts()))
         .status(workflowExecution.getStatus())
-        .stages(PipelineStageExecutionMetadata.fromPipelineExecution(
-            workflowExecution.getPipelineExecution(), infraRefactor))
+        .stages(PipelineStageExecutionMetadata.fromPipelineExecution(workflowExecution.getPipelineExecution()))
         .tags(workflowExecution.getTags())
         .timing(TimingMetadata.fromStartAndEndTimeObjects(workflowExecution.getStartTs(), workflowExecution.getEndTs()))
         .triggeredBy(TriggeredByMetadata.fromWorkflowExecution(workflowExecution))

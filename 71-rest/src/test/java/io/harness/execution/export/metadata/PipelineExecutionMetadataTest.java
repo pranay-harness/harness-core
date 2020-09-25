@@ -43,14 +43,14 @@ public class PipelineExecutionMetadataTest extends CategoryTest {
   @Owner(developers = GARVIT)
   @Category(UnitTests.class)
   public void testFromWorkflowExecution() {
-    assertThat(PipelineExecutionMetadata.fromWorkflowExecution(null, true)).isNull();
+    assertThat(PipelineExecutionMetadata.fromWorkflowExecution(null)).isNull();
     assertThat(PipelineExecutionMetadata.fromWorkflowExecution(
-                   WorkflowExecution.builder().workflowType(WorkflowType.ORCHESTRATION).build(), true))
+                   WorkflowExecution.builder().workflowType(WorkflowType.ORCHESTRATION).build()))
         .isNull();
 
     Instant now = Instant.now();
     PipelineExecutionMetadata pipelineExecutionMetadata =
-        PipelineExecutionMetadata.fromWorkflowExecution(MetadataTestUtils.preparePipelineWorkflowExecution(now), true);
+        PipelineExecutionMetadata.fromWorkflowExecution(MetadataTestUtils.preparePipelineWorkflowExecution(now));
     MetadataTestUtils.validatePipelineWorkflowExecutionMetadata(pipelineExecutionMetadata, now);
   }
 }

@@ -27,14 +27,12 @@ import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import software.wings.beans.ExecutionArgs;
-import software.wings.beans.FeatureName;
 import software.wings.beans.InfrastructureType;
 import software.wings.beans.Service;
 import software.wings.beans.Workflow;
 import software.wings.beans.WorkflowExecution;
 import software.wings.beans.artifact.Artifact;
 import software.wings.infra.InfrastructureDefinition;
-import software.wings.service.intfc.FeatureFlagService;
 
 import java.util.Arrays;
 import java.util.List;
@@ -48,7 +46,6 @@ public class PcfFunctionalTest extends AbstractFunctionalTest {
 
   @Inject private WorkflowGenerator workflowGenerator;
   @Inject private WorkflowUtils workflowUtils;
-  @Inject private FeatureFlagService featureFlagService;
 
   private final Seed seed = new Seed(0);
   private Owners owners;
@@ -59,7 +56,6 @@ public class PcfFunctionalTest extends AbstractFunctionalTest {
   public void setUp() {
     owners = ownerManager.create();
     owners.obtainApplication(() -> applicationGenerator.ensurePredefined(seed, owners, Applications.GENERIC_TEST));
-    featureFlagService.enableAccount(FeatureName.INFRA_MAPPING_REFACTOR, owners.obtainAccount().getUuid());
     resetCache(owners.obtainAccount().getUuid());
   }
 

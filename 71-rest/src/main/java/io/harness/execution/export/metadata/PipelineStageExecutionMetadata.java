@@ -48,8 +48,7 @@ public class PipelineStageExecutionMetadata implements GraphNodeVisitable {
     }
   }
 
-  static List<PipelineStageExecutionMetadata> fromPipelineExecution(
-      PipelineExecution pipelineExecution, boolean infraRefactor) {
+  static List<PipelineStageExecutionMetadata> fromPipelineExecution(PipelineExecution pipelineExecution) {
     if (pipelineExecution == null || pipelineExecution.getPipeline() == null) {
       return null;
     }
@@ -73,7 +72,7 @@ public class PipelineStageExecutionMetadata implements GraphNodeVisitable {
     boolean firstStage = true;
     for (int i = 0; i < pipelineStageExecutions.size(); i++) {
       PipelineStageExecutionMetadata pipelineStageExecutionMetadata =
-          fromPipelineStageExecution(pipelineStageExecutions.get(i), pipelineStages.get(i), infraRefactor, firstStage);
+          fromPipelineStageExecution(pipelineStageExecutions.get(i), pipelineStages.get(i), firstStage);
       if (pipelineStageExecutionMetadata != null) {
         pipelineStageExecutionMetadataList.add(pipelineStageExecutionMetadata);
       }
@@ -85,8 +84,8 @@ public class PipelineStageExecutionMetadata implements GraphNodeVisitable {
   }
 
   @VisibleForTesting
-  static PipelineStageExecutionMetadata fromPipelineStageExecution(PipelineStageExecution pipelineStageExecution,
-      PipelineStage pipelineStage, boolean infraRefactor, boolean firstStage) {
+  static PipelineStageExecutionMetadata fromPipelineStageExecution(
+      PipelineStageExecution pipelineStageExecution, PipelineStage pipelineStage, boolean firstStage) {
     if (pipelineStageExecution == null || pipelineStage == null) {
       return null;
     }
@@ -95,8 +94,7 @@ public class PipelineStageExecutionMetadata implements GraphNodeVisitable {
         || APPROVAL_RESUME.name().equals(pipelineStageExecution.getStateType());
     List<WorkflowExecutionMetadata> workflowExecutionMetadataList = isApproval
         ? null
-        : WorkflowExecutionMetadata.fromWorkflowExecutions(
-              pipelineStageExecution.getWorkflowExecutions(), infraRefactor);
+        : WorkflowExecutionMetadata.fromWorkflowExecutions(pipelineStageExecution.getWorkflowExecutions());
     return PipelineStageExecutionMetadata.builder()
         .stageName(pipelineStage.getName())
         .name(pipelineStageExecution.getStateName())

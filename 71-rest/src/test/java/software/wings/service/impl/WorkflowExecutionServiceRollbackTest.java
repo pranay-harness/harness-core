@@ -17,7 +17,6 @@ import static software.wings.beans.Application.Builder.anApplication;
 import static software.wings.beans.CanaryOrchestrationWorkflow.CanaryOrchestrationWorkflowBuilder.aCanaryOrchestrationWorkflow;
 import static software.wings.beans.Environment.EnvironmentType.NON_PROD;
 import static software.wings.beans.Environment.EnvironmentType.PROD;
-import static software.wings.beans.FeatureName.INFRA_MAPPING_REFACTOR;
 import static software.wings.beans.Workflow.WorkflowBuilder.aWorkflow;
 import static software.wings.beans.artifact.Artifact.Builder.anArtifact;
 import static software.wings.beans.execution.RollbackType.AUTO;
@@ -326,7 +325,6 @@ public class WorkflowExecutionServiceRollbackTest extends WingsBaseTest {
     wingsPersistence.save(newWE);
 
     when(appService.getAccountIdByAppId(APP_ID)).thenReturn(ACCOUNT_ID);
-    when(featureFlagService.isEnabled(INFRA_MAPPING_REFACTOR, ACCOUNT_ID)).thenReturn(true);
     when(workflowExecutionServiceHelper.obtainWorkflow(APP_ID, WORKFLOW_ID)).thenReturn(workflow);
     doNothing().when(accountExpirationChecker).check(ACCOUNT_ID);
 

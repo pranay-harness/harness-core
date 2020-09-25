@@ -50,8 +50,8 @@ public class PipelineStageExecutionMetadataTest extends CategoryTest {
   @Owner(developers = GARVIT)
   @Category(UnitTests.class)
   public void testFromPipelineExecution() {
-    assertThat(PipelineStageExecutionMetadata.fromPipelineExecution(null, true)).isNull();
-    assertThat(PipelineStageExecutionMetadata.fromPipelineExecution(aPipelineExecution().build(), true)).isNull();
+    assertThat(PipelineStageExecutionMetadata.fromPipelineExecution(null)).isNull();
+    assertThat(PipelineStageExecutionMetadata.fromPipelineExecution(aPipelineExecution().build())).isNull();
 
     assertThatThrownBy(
         ()
@@ -59,8 +59,7 @@ public class PipelineStageExecutionMetadataTest extends CategoryTest {
                 aPipelineExecution()
                     .withPipeline(Pipeline.builder().build())
                     .withPipelineStageExecutions(Collections.singletonList(PipelineStageExecution.builder().build()))
-                    .build(),
-                true))
+                    .build()))
         .isInstanceOf(InvalidRequestException.class);
 
     List<PipelineStageExecutionMetadata> pipelineStageExecutionMetadataList =
@@ -72,8 +71,7 @@ public class PipelineStageExecutionMetadataTest extends CategoryTest {
                                   .build())
                 .withPipelineStageExecutions(asList(PipelineStageExecution.builder().build(),
                     PipelineStageExecution.builder().build(), PipelineStageExecution.builder().build()))
-                .build(),
-            true);
+                .build());
 
     assertThat(pipelineStageExecutionMetadataList).isNotNull();
     assertThat(pipelineStageExecutionMetadataList.size()).isEqualTo(2);
@@ -84,11 +82,10 @@ public class PipelineStageExecutionMetadataTest extends CategoryTest {
   @Owner(developers = GARVIT)
   @Category(UnitTests.class)
   public void testFromPipelineStageExecution() {
-    assertThat(
-        PipelineStageExecutionMetadata.fromPipelineStageExecution(null, PipelineStage.builder().build(), true, false))
+    assertThat(PipelineStageExecutionMetadata.fromPipelineStageExecution(null, PipelineStage.builder().build(), false))
         .isNull();
     assertThat(PipelineStageExecutionMetadata.fromPipelineStageExecution(
-                   PipelineStageExecution.builder().build(), null, true, false))
+                   PipelineStageExecution.builder().build(), null, false))
         .isNull();
 
     Instant now = Instant.now();
@@ -103,7 +100,7 @@ public class PipelineStageExecutionMetadataTest extends CategoryTest {
                 .startTs(minuteAgo.toEpochMilli())
                 .endTs(now.toEpochMilli())
                 .build(),
-            PipelineStage.builder().name("stg").parallel(false).build(), true, false);
+            PipelineStage.builder().name("stg").parallel(false).build(), false);
     assertThat(pipelineStageExecutionMetadata).isNotNull();
     assertThat(pipelineStageExecutionMetadata.getStageName()).isEqualTo("stg");
     assertThat(pipelineStageExecutionMetadata.getName()).isEqualTo("n");
@@ -127,7 +124,7 @@ public class PipelineStageExecutionMetadataTest extends CategoryTest {
                 WorkflowExecution.builder().uuid("id").workflowType(WorkflowType.ORCHESTRATION).build()))
             .stateExecutionData(ApprovalStateExecutionData.builder().comments("c").build())
             .build(),
-        PipelineStage.builder().parallel(true).build(), true, true);
+        PipelineStage.builder().parallel(true).build(), true);
     assertThat(pipelineStageExecutionMetadata).isNotNull();
     assertThat(pipelineStageExecutionMetadata.getName()).isEqualTo("n");
     assertThat(pipelineStageExecutionMetadata.getType()).isEqualTo("WORKFLOW_EXECUTION");

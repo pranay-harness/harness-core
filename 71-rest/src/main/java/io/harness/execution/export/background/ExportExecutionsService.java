@@ -38,7 +38,6 @@ import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.query.FindOptions;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.Sort;
-import software.wings.beans.FeatureName;
 import software.wings.beans.PipelineStageExecution;
 import software.wings.beans.WorkflowExecution;
 import software.wings.beans.WorkflowExecution.WorkflowExecutionKeys;
@@ -169,12 +168,10 @@ public class ExportExecutionsService {
   }
 
   private ExecutionMetadata prepareExecutionMetadata(WorkflowExecution workflowExecution) {
-    boolean infraRefactor =
-        featureFlagService.isEnabled(FeatureName.INFRA_MAPPING_REFACTOR, workflowExecution.getAccountId());
     if (workflowExecution.getWorkflowType() == WorkflowType.PIPELINE) {
-      return PipelineExecutionMetadata.fromWorkflowExecution(workflowExecution, infraRefactor);
+      return PipelineExecutionMetadata.fromWorkflowExecution(workflowExecution);
     } else {
-      return WorkflowExecutionMetadata.fromWorkflowExecution(workflowExecution, infraRefactor);
+      return WorkflowExecutionMetadata.fromWorkflowExecution(workflowExecution);
     }
   }
 

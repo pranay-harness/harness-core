@@ -45,11 +45,11 @@ public class WorkflowExecutionMetadataTest extends CategoryTest {
   @Owner(developers = GARVIT)
   @Category(UnitTests.class)
   public void testFromWorkflowExecutions() {
-    assertThat(WorkflowExecutionMetadata.fromWorkflowExecutions(null, true)).isNull();
+    assertThat(WorkflowExecutionMetadata.fromWorkflowExecutions(null)).isNull();
 
     Instant now = Instant.now();
-    List<WorkflowExecutionMetadata> workflowExecutionMetadataList = WorkflowExecutionMetadata.fromWorkflowExecutions(
-        asList(null, MetadataTestUtils.prepareWorkflowExecution(now)), true);
+    List<WorkflowExecutionMetadata> workflowExecutionMetadataList =
+        WorkflowExecutionMetadata.fromWorkflowExecutions(asList(null, MetadataTestUtils.prepareWorkflowExecution(now)));
     assertThat(workflowExecutionMetadataList).isNotNull();
     assertThat(workflowExecutionMetadataList.size()).isEqualTo(1);
     validateWorkflowExecutionMetadata(workflowExecutionMetadataList.get(0), now, false);
@@ -59,14 +59,14 @@ public class WorkflowExecutionMetadataTest extends CategoryTest {
   @Owner(developers = GARVIT)
   @Category(UnitTests.class)
   public void testFromWorkflowExecution() {
-    assertThat(WorkflowExecutionMetadata.fromWorkflowExecution(null, true)).isNull();
+    assertThat(WorkflowExecutionMetadata.fromWorkflowExecution(null)).isNull();
     assertThat(WorkflowExecutionMetadata.fromWorkflowExecution(
-                   WorkflowExecution.builder().workflowType(WorkflowType.PIPELINE).build(), true))
+                   WorkflowExecution.builder().workflowType(WorkflowType.PIPELINE).build()))
         .isNull();
 
     Instant now = Instant.now();
     WorkflowExecutionMetadata workflowExecutionMetadata =
-        WorkflowExecutionMetadata.fromWorkflowExecution(MetadataTestUtils.prepareWorkflowExecution(now), true);
+        WorkflowExecutionMetadata.fromWorkflowExecution(MetadataTestUtils.prepareWorkflowExecution(now));
     validateWorkflowExecutionMetadata(workflowExecutionMetadata, now, true);
   }
 

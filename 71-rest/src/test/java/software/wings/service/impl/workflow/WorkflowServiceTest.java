@@ -53,7 +53,6 @@ import static software.wings.beans.EntityType.PROVISIONER;
 import static software.wings.beans.EntityType.SERVICE;
 import static software.wings.beans.EntityType.WORKFLOW;
 import static software.wings.beans.Environment.Builder.anEnvironment;
-import static software.wings.beans.FeatureName.INFRA_MAPPING_REFACTOR;
 import static software.wings.beans.GraphLink.Builder.aLink;
 import static software.wings.beans.NotificationGroup.NotificationGroupBuilder.aNotificationGroup;
 import static software.wings.beans.NotificationRule.NotificationRuleBuilder.aNotificationRule;
@@ -1335,7 +1334,6 @@ public class WorkflowServiceTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void testCreateBGHelmDeploymentWorkflow() {
     Workflow workflow = constructBlueGreenHelmWorkflow();
-    when(featureFlagService.isEnabled(INFRA_MAPPING_REFACTOR, ACCOUNT_ID)).thenReturn(true);
     when(infrastructureMappingService.get(APP_ID, INFRA_MAPPING_ID)).thenReturn(constructHELMInfra());
     when(infrastructureDefinitionService.get(APP_ID, INFRA_DEFINITION_ID))
         .thenReturn(InfrastructureDefinition.builder()
@@ -1367,7 +1365,6 @@ public class WorkflowServiceTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void testAddHelmDeploymentWorkflowPhase() {
     Workflow workflow = constructCanaryWorkflow();
-    when(featureFlagService.isEnabled(INFRA_MAPPING_REFACTOR, ACCOUNT_ID)).thenReturn(true);
     when(infrastructureMappingService.get(APP_ID, INFRA_MAPPING_ID)).thenReturn(constructHELMInfra());
     when(infrastructureDefinitionService.get(APP_ID, INFRA_DEFINITION_ID))
         .thenReturn(InfrastructureDefinition.builder()
@@ -4717,7 +4714,6 @@ public class WorkflowServiceTest extends WingsBaseTest {
         .thenReturn(Personalization.builder()
                         .steps(PersonalizationSteps.builder().favorites(favorites).recent(recents).build())
                         .build());
-    when(featureFlagService.isEnabled(FeatureName.INFRA_MAPPING_REFACTOR, ACCOUNT_ID)).thenReturn(true);
     when(infrastructureDefinitionService.get(APP_ID, INFRA_DEFINITION_ID))
         .thenReturn(InfrastructureDefinition.builder()
                         .name("def1")

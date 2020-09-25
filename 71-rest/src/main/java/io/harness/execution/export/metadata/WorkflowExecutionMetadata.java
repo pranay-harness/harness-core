@@ -44,19 +44,16 @@ public class WorkflowExecutionMetadata implements ExecutionMetadata {
     MetadataUtils.acceptMultiple(visitor, executionGraph);
   }
 
-  static List<WorkflowExecutionMetadata> fromWorkflowExecutions(
-      List<WorkflowExecution> workflowExecutions, boolean infraRefactor) {
-    return MetadataUtils.map(
-        workflowExecutions, workflowExecution -> fromWorkflowExecution(workflowExecution, infraRefactor, false));
+  static List<WorkflowExecutionMetadata> fromWorkflowExecutions(List<WorkflowExecution> workflowExecutions) {
+    return MetadataUtils.map(workflowExecutions, workflowExecution -> fromWorkflowExecution(workflowExecution, false));
   }
 
-  public static WorkflowExecutionMetadata fromWorkflowExecution(
-      WorkflowExecution workflowExecution, boolean infraRefactor) {
-    return fromWorkflowExecution(workflowExecution, infraRefactor, true);
+  public static WorkflowExecutionMetadata fromWorkflowExecution(WorkflowExecution workflowExecution) {
+    return fromWorkflowExecution(workflowExecution, true);
   }
 
   private static WorkflowExecutionMetadata fromWorkflowExecution(
-      WorkflowExecution workflowExecution, boolean infraRefactor, boolean withTriggeredBy) {
+      WorkflowExecution workflowExecution, boolean withTriggeredBy) {
     if (workflowExecution == null || workflowExecution.getWorkflowType() != WorkflowType.ORCHESTRATION) {
       return null;
     }
@@ -68,8 +65,8 @@ public class WorkflowExecutionMetadata implements ExecutionMetadata {
         .application(workflowExecution.getAppName())
         .entityName(workflowExecution.getName())
         .environment(EnvMetadata.fromFirstEnvSummary(workflowExecution.getEnvironments()))
-        .serviceInfrastructures(ServiceInfraSummaryMetadata.fromElementExecutionSummaries(
-            workflowExecution.getServiceExecutionSummaries(), infraRefactor))
+        .serviceInfrastructures(
+            ServiceInfraSummaryMetadata.fromElementExecutionSummaries(workflowExecution.getServiceExecutionSummaries()))
         .inputArtifacts(ArtifactMetadata.fromArtifacts(
             EmptyPredicate.isEmpty(workflowExecution.getArtifacts()) && workflowExecution.getExecutionArgs() != null
                 ? workflowExecution.getExecutionArgs().getArtifacts()
