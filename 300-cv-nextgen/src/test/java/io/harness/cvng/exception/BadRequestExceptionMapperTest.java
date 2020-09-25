@@ -5,31 +5,30 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
+import io.harness.eraro.ResponseMessage;
 import io.harness.rule.Owner;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
-import java.util.HashSet;
-import java.util.List;
-import javax.validation.ConstraintViolationException;
+import javax.ws.rs.BadRequestException;
 import javax.ws.rs.core.Response;
 
-public class ConstraintViolationExceptionMapperTest extends CategoryTest {
-  private ConstraintViolationExceptionMapper constraintViolationExceptionMapper;
+public class BadRequestExceptionMapperTest extends CategoryTest {
+  private BadRequestExceptionMapper badRequestExceptionMapper;
 
   @Before
   public void setup() {
-    constraintViolationExceptionMapper = new ConstraintViolationExceptionMapper();
+    badRequestExceptionMapper = new BadRequestExceptionMapper();
   }
 
   @Test
   @Owner(developers = NEMANJA)
   @Category(UnitTests.class)
   public void testToResponse() {
-    ConstraintViolationException constraintViolationException = new ConstraintViolationException(new HashSet<>());
-    Response response = constraintViolationExceptionMapper.toResponse(constraintViolationException);
+    BadRequestException exception = new BadRequestException();
+    Response response = badRequestExceptionMapper.toResponse(exception);
+    assertThat(response.getEntity()).isInstanceOf(ResponseMessage.class);
     assertThat(response.getStatus()).isEqualTo(Response.Status.BAD_REQUEST.getStatusCode());
-    assertThat(response.getEntity()).isInstanceOf(List.class);
   }
 }

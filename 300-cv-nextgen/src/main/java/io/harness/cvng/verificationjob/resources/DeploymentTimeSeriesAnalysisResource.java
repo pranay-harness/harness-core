@@ -5,7 +5,7 @@ import com.google.inject.Inject;
 import com.codahale.metrics.annotation.ExceptionMetered;
 import com.codahale.metrics.annotation.Timed;
 import io.harness.annotations.ExposeInternalException;
-import io.harness.cvng.analysis.beans.TransactionSummaryPageDTO;
+import io.harness.cvng.analysis.beans.TransactionMetricInfoSummaryPageDTO;
 import io.harness.cvng.analysis.services.api.DeploymentTimeSeriesAnalysisService;
 import io.harness.rest.RestResponse;
 import io.harness.security.annotations.LearningEngineAuth;
@@ -30,7 +30,7 @@ public class DeploymentTimeSeriesAnalysisResource {
   @Timed
   @LearningEngineAuth
   @ExceptionMetered
-  public RestResponse<TransactionSummaryPageDTO> getMetrics(
+  public RestResponse<TransactionMetricInfoSummaryPageDTO> getMetrics(
       @PathParam("verificationJobInstanceId") String verificationJobInstanceId,
       @QueryParam("accountId") String accountId, @QueryParam("anomalousMetricsOnly") boolean anomalousMetricsOnly,
       @QueryParam("hostName") String hostName, @QueryParam("pageNumber") int pageNumber) {

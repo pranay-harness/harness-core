@@ -4,39 +4,49 @@ import lombok.Builder;
 import lombok.Value;
 
 import java.util.List;
+import javax.validation.constraints.NotNull;
 
 @Value
 @Builder
 public class DeploymentTimeSeriesAnalysisDTO {
-  ResultSummary resultSummary;
-  List<HostSummary> hostSummaries;
+  int risk;
+  Double score;
+  List<HostInfo> hostSummaries;
+  List<TransactionMetricHostData> transactionMetricSummaries;
+
   @Value
   @Builder
-  public static class ResultSummary {
+  public static class HostInfo {
+    String hostName;
+    boolean presentBeforeDeployment;
+    boolean presentAfterDeployment;
     int risk;
     Double score;
-    List<TransactionSummary> transactionSummaries;
   }
+
   @Value
   @Builder
-  public static class HostSummary {
+  public static class HostData implements Comparable<HostData> {
     String hostName;
-    String isNewHost;
-    ResultSummary resultSummary;
-  }
-  @Value
-  @Builder
-  public static class TransactionSummary {
-    String transactionName;
-    List<MetricSummary> metricSummaries;
-  }
-  @Value
-  @Builder
-  public static class MetricSummary {
-    String metricName;
-    int risk; // -1 means n/a no analysis done.
-    Double score; // greater then 0. No higher boundary.. Mean of 1. Won't be present if risk is -1.
+    int risk;
+    Double score;
     List<Double> controlData;
     List<Double> testData;
+
+    @Override
+    public int compareTo(@NotNull HostData o) {
+      int result = Double.compare(o.getScore(), this.getScore());
+      return result == 0 ? o.getHostName().compareTo(this.getHostName()) : result;
+    }
+  }
+
+  @Value
+  @Builder
+  public static class TransactionMetricHostData {
+    String transactionName;
+    String metricName;
+    int risk;
+    Double score;
+    List<HostData> hostData;
   }
 }

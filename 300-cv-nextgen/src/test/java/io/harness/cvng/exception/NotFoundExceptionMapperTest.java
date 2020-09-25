@@ -3,6 +3,7 @@ package io.harness.cvng.exception;
 import static io.harness.rule.OwnerRule.NEMANJA;
 import static org.assertj.core.api.Assertions.assertThat;
 
+import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import io.harness.eraro.ResponseMessage;
 import io.harness.rule.Owner;
@@ -13,7 +14,7 @@ import org.junit.experimental.categories.Category;
 import javax.ws.rs.NotFoundException;
 import javax.ws.rs.core.Response;
 
-public class NotFoundExceptionMapperTest {
+public class NotFoundExceptionMapperTest extends CategoryTest {
   private NotFoundExceptionMapper notFoundExceptionMapper;
 
   @Before

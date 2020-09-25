@@ -2,8 +2,7 @@ package io.harness.cvng.analysis.entities;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import io.harness.annotation.HarnessEntity;
-import io.harness.cvng.analysis.beans.DeploymentTimeSeriesAnalysisDTO.HostSummary;
-import io.harness.cvng.analysis.beans.DeploymentTimeSeriesAnalysisDTO.ResultSummary;
+import io.harness.cvng.analysis.beans.DeploymentTimeSeriesAnalysisDTO;
 import io.harness.persistence.AccountAccess;
 import io.harness.persistence.CreatedAtAware;
 import io.harness.persistence.PersistentEntity;
@@ -37,6 +36,8 @@ public class DeploymentTimeSeriesAnalysis
   private String verificationTaskId;
   private Instant startTime;
   private Instant endTime;
-  private ResultSummary resultSummary;
-  private List<HostSummary> hostSummaries;
+  private int risk;
+  private Double score;
+  private List<DeploymentTimeSeriesAnalysisDTO.HostInfo> hostSummaries;
+  private List<DeploymentTimeSeriesAnalysisDTO.TransactionMetricHostData> transactionMetricSummaries;
 }

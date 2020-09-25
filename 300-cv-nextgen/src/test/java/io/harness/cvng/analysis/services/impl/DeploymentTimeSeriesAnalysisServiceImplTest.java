@@ -3,17 +3,23 @@ package io.harness.cvng.analysis.services.impl;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.rule.OwnerRule.NEMANJA;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import com.google.inject.Inject;
 
 import io.harness.CvNextGenTest;
 import io.harness.category.element.UnitTests;
 import io.harness.cvng.analysis.beans.DeploymentTimeSeriesAnalysisDTO;
-import io.harness.cvng.analysis.beans.TransactionSummaryPageDTO;
+import io.harness.cvng.analysis.beans.TransactionMetricInfoSummaryPageDTO;
 import io.harness.cvng.analysis.entities.DeploymentTimeSeriesAnalysis;
 import io.harness.cvng.analysis.services.api.DeploymentTimeSeriesAnalysisService;
-import io.harness.cvng.core.entities.VerificationTask;
-import io.harness.persistence.HPersistence;
+import io.harness.cvng.beans.DataSourceType;
+import io.harness.cvng.core.services.api.VerificationTaskService;
+import io.harness.cvng.verificationjob.beans.CanaryVerificationJobDTO;
+import io.harness.cvng.verificationjob.beans.Sensitivity;
+import io.harness.cvng.verificationjob.beans.VerificationJobInstanceDTO;
+import io.harness.cvng.verificationjob.services.api.VerificationJobInstanceService;
+import io.harness.cvng.verificationjob.services.api.VerificationJobService;
 import io.harness.rule.Owner;
 import org.junit.Before;
 import org.junit.Test;
@@ -23,347 +29,328 @@ import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
+import javax.ws.rs.BadRequestException;
 
 public class DeploymentTimeSeriesAnalysisServiceImplTest extends CvNextGenTest {
-  @Inject private HPersistence hPersistence;
+  @Inject private VerificationJobInstanceService verificationJobInstanceService;
+  @Inject private VerificationJobService verificationJobService;
+  @Inject private VerificationTaskService verificationTaskService;
   @Inject private DeploymentTimeSeriesAnalysisService deploymentTimeSeriesAnalysisService;
 
   private String accountId;
   private String cvConfigId;
-  private String verificationJobInstanceId;
+  private String identifier;
+  private String serviceIdentifier;
+  private String projectIdentifier;
+  private String orgIdentifier;
+  private String envIdentifier;
 
   @Before
   public void setUp() {
     accountId = generateUuid();
     cvConfigId = generateUuid();
-    verificationJobInstanceId = generateUuid();
+    serviceIdentifier = generateUuid();
+    identifier = generateUuid();
+    projectIdentifier = generateUuid();
+    orgIdentifier = generateUuid();
+    envIdentifier = generateUuid();
   }
 
   @Test
   @Owner(developers = NEMANJA)
   @Category(UnitTests.class)
-  public void testGetMetrics_withoutFiltering() {
-    VerificationTask verificationTask = createVerificationTask();
+  public void testGetMetrics() {
+    verificationJobService.upsert(accountId, createCanaryVerificationJobDTO());
+    String verificationJobInstanceId =
+        verificationJobInstanceService.create(accountId, createVerificationJobInstanceDTO());
+    String verificationTaskId = verificationTaskService.create(accountId, cvConfigId, verificationJobInstanceId);
+    deploymentTimeSeriesAnalysisService.save(createDeploymentTimSeriesAnalysis(verificationTaskId));
 
-    String verificationTaskId = hPersistence.save(verificationTask);
-    DeploymentTimeSeriesAnalysis deploymentTimeSeriesAnalysis = createDeploymentTimSeriesAnalysis(verificationTaskId);
-    hPersistence.save(deploymentTimeSeriesAnalysis);
+    TransactionMetricInfoSummaryPageDTO transactionMetricInfoSummaryPageDTO =
+        deploymentTimeSeriesAnalysisService.getMetrics(accountId, verificationJobInstanceId, false, null, 0);
 
-    TransactionSummaryPageDTO transactionSummaryPageDTO =
-        deploymentTimeSeriesAnalysisService.getMetrics(accountId, verificationJobInstanceId, false, null, 1);
-
-    assertThat(transactionSummaryPageDTO.getPageNumber()).isEqualTo(1);
-    assertThat(transactionSummaryPageDTO.getNumberOfPages()).isEqualTo(1);
-    assertThat(transactionSummaryPageDTO.getElementRange().getFromIndex()).isEqualTo(1);
-    assertThat(transactionSummaryPageDTO.getElementRange().getToIndex()).isEqualTo(1);
-    assertThat(transactionSummaryPageDTO.getTransactionSummaries()).isNotNull();
-    assertThat(transactionSummaryPageDTO.getTransactionSummaries().size()).isEqualTo(1);
-    assertThat(transactionSummaryPageDTO.getTransactionSummaries().get(0).getTransactionName())
-        .isEqualTo("/todolist/requestLogin");
+    assertThat(transactionMetricInfoSummaryPageDTO.getPageResponse().getPageIndex()).isEqualTo(0);
+    assertThat(transactionMetricInfoSummaryPageDTO.getPageResponse().getPageCount()).isEqualTo(0);
+    assertThat(transactionMetricInfoSummaryPageDTO.getPageResponse().getContent()).isNotNull();
+    assertThat(transactionMetricInfoSummaryPageDTO.getPageResponse()
+                   .getContent()
+                   .get(0)
+                   .getTransactionMetric()
+                   .getTransactionName())
+        .isEqualTo("/todolist/exception");
+    assertThat(
+        transactionMetricInfoSummaryPageDTO.getPageResponse().getContent().get(0).getTransactionMetric().getScore())
+        .isEqualTo(2.5); // ensures that sorting based on score from transaction works
+    assertThat(transactionMetricInfoSummaryPageDTO.getPageResponse().getContent().get(0).getNodes().size())
+        .isEqualTo(2);
+    assertThat(
+        transactionMetricInfoSummaryPageDTO.getPageResponse().getContent().get(0).getNodes().first().getHostName())
+        .isEqualTo("node2");
+    assertThat(transactionMetricInfoSummaryPageDTO.getPageResponse().getContent().get(0).getNodes().first().getScore())
+        .isEqualTo(2); // checks that sorting per node works correctly
   }
 
   @Test
   @Owner(developers = NEMANJA)
   @Category(UnitTests.class)
   public void testGetMetrics_withHostNameFilter() {
-    VerificationTask verificationTask = createVerificationTask();
+    verificationJobService.upsert(accountId, createCanaryVerificationJobDTO());
+    String verificationJobInstanceId =
+        verificationJobInstanceService.create(accountId, createVerificationJobInstanceDTO());
+    String verificationTaskId = verificationTaskService.create(accountId, cvConfigId, verificationJobInstanceId);
+    deploymentTimeSeriesAnalysisService.save(createDeploymentTimSeriesAnalysis(verificationTaskId));
 
-    String verificationTaskId = hPersistence.save(verificationTask);
-    DeploymentTimeSeriesAnalysis deploymentTimeSeriesAnalysis = createDeploymentTimSeriesAnalysis(verificationTaskId);
-    hPersistence.save(deploymentTimeSeriesAnalysis);
+    TransactionMetricInfoSummaryPageDTO transactionMetricInfoSummaryPageDTO =
+        deploymentTimeSeriesAnalysisService.getMetrics(accountId, verificationJobInstanceId, false, "node1", 0);
 
-    TransactionSummaryPageDTO transactionSummaryPageDTO =
-        deploymentTimeSeriesAnalysisService.getMetrics(accountId, verificationJobInstanceId, false, "node1", 1);
-
-    assertThat(transactionSummaryPageDTO.getPageNumber()).isEqualTo(1);
-    assertThat(transactionSummaryPageDTO.getNumberOfPages()).isEqualTo(1);
-    assertThat(transactionSummaryPageDTO.getElementRange().getFromIndex()).isEqualTo(1);
-    assertThat(transactionSummaryPageDTO.getElementRange().getToIndex()).isEqualTo(1);
-    assertThat(transactionSummaryPageDTO.getTransactionSummaries()).isNotNull();
-    assertThat(transactionSummaryPageDTO.getTransactionSummaries().size()).isEqualTo(1);
-    assertThat(transactionSummaryPageDTO.getTransactionSummaries().get(0).getTransactionName())
-        .isEqualTo("hostSummary/todolist/requestLogin");
+    assertThat(transactionMetricInfoSummaryPageDTO.getPageResponse().getPageIndex()).isEqualTo(0);
+    assertThat(transactionMetricInfoSummaryPageDTO.getPageResponse().getPageCount()).isEqualTo(0);
+    assertThat(transactionMetricInfoSummaryPageDTO.getPageResponse().getContent()).isNotNull();
+    assertThat(transactionMetricInfoSummaryPageDTO.getPageResponse().getContent().get(0).getNodes().size())
+        .isEqualTo(1);
+    assertThat(
+        transactionMetricInfoSummaryPageDTO.getPageResponse().getContent().get(0).getNodes().first().getHostName())
+        .isEqualTo("node1");
   }
 
   @Test
   @Owner(developers = NEMANJA)
   @Category(UnitTests.class)
-  public void testGetMetrics_withWrongHostNameFilter() {
-    VerificationTask verificationTask = createVerificationTask();
-
-    String verificationTaskId = hPersistence.save(verificationTask);
-    DeploymentTimeSeriesAnalysis deploymentTimeSeriesAnalysis = createDeploymentTimSeriesAnalysis(verificationTaskId);
-    hPersistence.save(deploymentTimeSeriesAnalysis);
-
-    TransactionSummaryPageDTO transactionSummaryPageDTO =
-        deploymentTimeSeriesAnalysisService.getMetrics(accountId, verificationJobInstanceId, false, "randomNode", 1);
-
-    assertThat(transactionSummaryPageDTO.getPageNumber()).isEqualTo(1);
-    assertThat(transactionSummaryPageDTO.getNumberOfPages()).isEqualTo(1);
-    assertThat(transactionSummaryPageDTO.getElementRange().getFromIndex()).isEqualTo(0);
-    assertThat(transactionSummaryPageDTO.getElementRange().getToIndex()).isEqualTo(0);
-    assertThat(transactionSummaryPageDTO.getTransactionSummaries().size()).isEqualTo(0);
+  public void testGetMetrics_withWrongHostName() {
+    verificationJobService.upsert(accountId, createCanaryVerificationJobDTO());
+    String verificationJobInstanceId =
+        verificationJobInstanceService.create(accountId, createVerificationJobInstanceDTO());
+    String verificationTaskId = verificationTaskService.create(accountId, cvConfigId, verificationJobInstanceId);
+    deploymentTimeSeriesAnalysisService.save(createDeploymentTimSeriesAnalysis(verificationTaskId));
+    assertThatThrownBy(()
+                           -> deploymentTimeSeriesAnalysisService.getMetrics(
+                               accountId, verificationJobInstanceId, false, "randomNode", 0))
+        .isInstanceOf(BadRequestException.class)
+        .hasMessageContaining("Host Name randomNode doesn't exist");
   }
 
   @Test
   @Owner(developers = NEMANJA)
   @Category(UnitTests.class)
   public void testGetMetrics_withAnomalousMetricsFilter() {
-    VerificationTask verificationTask = createVerificationTask();
+    verificationJobService.upsert(accountId, createCanaryVerificationJobDTO());
+    String verificationJobInstanceId =
+        verificationJobInstanceService.create(accountId, createVerificationJobInstanceDTO());
+    String verificationTaskId = verificationTaskService.create(accountId, cvConfigId, verificationJobInstanceId);
+    deploymentTimeSeriesAnalysisService.save(createDeploymentTimSeriesAnalysis(verificationTaskId));
 
-    String verificationTaskId = hPersistence.save(verificationTask);
-    DeploymentTimeSeriesAnalysis deploymentTimeSeriesAnalysis = createDeploymentTimSeriesAnalysis(verificationTaskId);
-    hPersistence.save(deploymentTimeSeriesAnalysis);
+    TransactionMetricInfoSummaryPageDTO transactionMetricInfoSummaryPageDTO =
+        deploymentTimeSeriesAnalysisService.getMetrics(accountId, verificationJobInstanceId, true, null, 0);
 
-    TransactionSummaryPageDTO transactionSummaryPageDTO =
-        deploymentTimeSeriesAnalysisService.getMetrics(accountId, verificationJobInstanceId, true, null, 1);
-
-    assertThat(transactionSummaryPageDTO.getPageNumber()).isEqualTo(1);
-    assertThat(transactionSummaryPageDTO.getNumberOfPages()).isEqualTo(1);
-    assertThat(transactionSummaryPageDTO.getElementRange().getFromIndex()).isEqualTo(1);
-    assertThat(transactionSummaryPageDTO.getElementRange().getToIndex()).isEqualTo(1);
-    assertThat(transactionSummaryPageDTO.getTransactionSummaries()).isNotNull();
-    assertThat(transactionSummaryPageDTO.getTransactionSummaries().size()).isEqualTo(1);
-    assertThat(transactionSummaryPageDTO.getTransactionSummaries().get(0).getTransactionName())
-        .isEqualTo("/todolist/requestLogin");
+    assertThat(transactionMetricInfoSummaryPageDTO.getPageResponse().getPageIndex()).isEqualTo(0);
+    assertThat(transactionMetricInfoSummaryPageDTO.getPageResponse().getPageCount()).isEqualTo(0);
+    assertThat(transactionMetricInfoSummaryPageDTO.getPageResponse().getContent()).isNotNull();
+    assertThat(transactionMetricInfoSummaryPageDTO.getPageResponse().getContent().size()).isEqualTo(1);
+    assertThat(
+        transactionMetricInfoSummaryPageDTO.getPageResponse().getContent().get(0).getTransactionMetric().getScore())
+        .isEqualTo(2.5);
   }
 
   @Test
   @Owner(developers = NEMANJA)
   @Category(UnitTests.class)
-  public void testGetMetrics_withAnomalousMetricsFilter_whenRiskIsLow() {
-    VerificationTask verificationTask = createVerificationTask();
+  public void testGetMetrics_withHostNameAndAnomalousMetricsFilter() {
+    verificationJobService.upsert(accountId, createCanaryVerificationJobDTO());
+    String verificationJobInstanceId =
+        verificationJobInstanceService.create(accountId, createVerificationJobInstanceDTO());
+    String verificationTaskId = verificationTaskService.create(accountId, cvConfigId, verificationJobInstanceId);
+    deploymentTimeSeriesAnalysisService.save(createDeploymentTimSeriesAnalysis(verificationTaskId));
 
-    String verificationTaskId = hPersistence.save(verificationTask);
+    TransactionMetricInfoSummaryPageDTO transactionMetricInfoSummaryPageDTO =
+        deploymentTimeSeriesAnalysisService.getMetrics(accountId, verificationJobInstanceId, true, "node2", 0);
 
-    DeploymentTimeSeriesAnalysis deploymentTimeSeriesAnalysis = createDeploymentTimSeriesAnalysis(verificationTaskId);
-
-    DeploymentTimeSeriesAnalysisDTO.ResultSummary resultSummaryWithLowRisk =
-        createResultSummary(0, 0D, deploymentTimeSeriesAnalysis.getResultSummary().getTransactionSummaries());
-    deploymentTimeSeriesAnalysis.setResultSummary(resultSummaryWithLowRisk);
-    hPersistence.save(deploymentTimeSeriesAnalysis);
-
-    TransactionSummaryPageDTO transactionSummaryPageDTO =
-        deploymentTimeSeriesAnalysisService.getMetrics(accountId, verificationJobInstanceId, true, null, 1);
-
-    assertThat(transactionSummaryPageDTO.getPageNumber()).isEqualTo(1);
-    assertThat(transactionSummaryPageDTO.getNumberOfPages()).isEqualTo(1);
-    assertThat(transactionSummaryPageDTO.getElementRange().getFromIndex()).isEqualTo(0);
-    assertThat(transactionSummaryPageDTO.getElementRange().getToIndex()).isEqualTo(0);
-    assertThat(transactionSummaryPageDTO.getTransactionSummaries().size()).isEqualTo(0);
+    assertThat(transactionMetricInfoSummaryPageDTO.getPageResponse().getPageIndex()).isEqualTo(0);
+    assertThat(transactionMetricInfoSummaryPageDTO.getPageResponse().getPageCount()).isEqualTo(0);
+    assertThat(transactionMetricInfoSummaryPageDTO.getPageResponse().getContent()).isNotNull();
+    assertThat(transactionMetricInfoSummaryPageDTO.getPageResponse().getContent().size()).isEqualTo(1);
+    assertThat(
+        transactionMetricInfoSummaryPageDTO.getPageResponse().getContent().get(0).getTransactionMetric().getScore())
+        .isEqualTo(2.5);
+    assertThat(transactionMetricInfoSummaryPageDTO.getPageResponse().getContent().get(0).getNodes().size())
+        .isEqualTo(1);
+    assertThat(
+        transactionMetricInfoSummaryPageDTO.getPageResponse().getContent().get(0).getNodes().first().getHostName())
+        .isEqualTo("node2");
   }
-
   @Test
   @Owner(developers = NEMANJA)
   @Category(UnitTests.class)
-  public void testGetMetrics_withHostNameAndAnomalousFilter_andRiskIsHigh() {
-    VerificationTask verificationTask = createVerificationTask();
+  public void testGetMetrics_withMultipleDeploymentTimeSeriesAnalyses() {
+    verificationJobService.upsert(accountId, createCanaryVerificationJobDTO());
+    String verificationJobInstanceId =
+        verificationJobInstanceService.create(accountId, createVerificationJobInstanceDTO());
+    String verificationTaskId = verificationTaskService.create(accountId, cvConfigId, verificationJobInstanceId);
+    deploymentTimeSeriesAnalysisService.save(createDeploymentTimSeriesAnalysis(verificationTaskId));
 
-    String verificationTaskId = hPersistence.save(verificationTask);
     DeploymentTimeSeriesAnalysis deploymentTimeSeriesAnalysis = createDeploymentTimSeriesAnalysis(verificationTaskId);
-    hPersistence.save(deploymentTimeSeriesAnalysis);
+    deploymentTimeSeriesAnalysis.setStartTime(Instant.now().plus(1, ChronoUnit.HOURS));
+    DeploymentTimeSeriesAnalysisDTO.TransactionMetricHostData transactionMetricHostData =
+        createTransactionMetricHostData("newTransaction", "newMetric", 5, 5.0,
+            deploymentTimeSeriesAnalysis.getTransactionMetricSummaries().get(0).getHostData());
+    deploymentTimeSeriesAnalysis.setTransactionMetricSummaries(Arrays.asList(transactionMetricHostData));
+    deploymentTimeSeriesAnalysisService.save(deploymentTimeSeriesAnalysis);
 
-    TransactionSummaryPageDTO transactionSummaryPageDTO =
-        deploymentTimeSeriesAnalysisService.getMetrics(accountId, verificationJobInstanceId, true, "node1", 1);
+    TransactionMetricInfoSummaryPageDTO transactionMetricInfoSummaryPageDTO =
+        deploymentTimeSeriesAnalysisService.getMetrics(accountId, verificationJobInstanceId, false, null, 0);
 
-    assertThat(transactionSummaryPageDTO.getPageNumber()).isEqualTo(1);
-    assertThat(transactionSummaryPageDTO.getNumberOfPages()).isEqualTo(1);
-    assertThat(transactionSummaryPageDTO.getElementRange().getFromIndex()).isEqualTo(1);
-    assertThat(transactionSummaryPageDTO.getElementRange().getToIndex()).isEqualTo(1);
-    assertThat(transactionSummaryPageDTO.getTransactionSummaries()).isNotNull();
-    assertThat(transactionSummaryPageDTO.getTransactionSummaries().size()).isEqualTo(1);
-    assertThat(transactionSummaryPageDTO.getTransactionSummaries().get(0).getTransactionName())
-        .isEqualTo("hostSummary/todolist/requestLogin");
-  }
-
-  @Test
-  @Owner(developers = NEMANJA)
-  @Category(UnitTests.class)
-  public void testGetMetrics_withHostNameAndAnomalousFilter_andRiskIsLow() {
-    VerificationTask verificationTask = createVerificationTask();
-
-    String verificationTaskId = hPersistence.save(verificationTask);
-    DeploymentTimeSeriesAnalysis deploymentTimeSeriesAnalysis = createDeploymentTimSeriesAnalysis(verificationTaskId);
-
-    DeploymentTimeSeriesAnalysisDTO.ResultSummary resultSummary = createResultSummary(0, 0D, Collections.emptyList());
-    DeploymentTimeSeriesAnalysisDTO.HostSummary hostSummary = createHostSummary("node1", "false", resultSummary);
-    deploymentTimeSeriesAnalysis.setHostSummaries(Arrays.asList(hostSummary));
-    hPersistence.save(deploymentTimeSeriesAnalysis);
-
-    TransactionSummaryPageDTO transactionSummaryPageDTO =
-        deploymentTimeSeriesAnalysisService.getMetrics(accountId, verificationJobInstanceId, true, "node1", 1);
-
-    assertThat(transactionSummaryPageDTO.getPageNumber()).isEqualTo(1);
-    assertThat(transactionSummaryPageDTO.getNumberOfPages()).isEqualTo(1);
-    assertThat(transactionSummaryPageDTO.getElementRange().getFromIndex()).isEqualTo(0);
-    assertThat(transactionSummaryPageDTO.getElementRange().getToIndex()).isEqualTo(0);
-    assertThat(transactionSummaryPageDTO.getTransactionSummaries()).isNotNull();
-    assertThat(transactionSummaryPageDTO.getTransactionSummaries().size()).isEqualTo(0);
-  }
-
-  @Test
-  @Owner(developers = NEMANJA)
-  @Category(UnitTests.class)
-  public void testGetMetrics_withMultipleDeploymentTimeSeriesAnalises() {
-    VerificationTask verificationTask = createVerificationTask();
-
-    String verificationTaskId = hPersistence.save(verificationTask);
-    DeploymentTimeSeriesAnalysis deploymentTimeSeriesAnalysis = createDeploymentTimSeriesAnalysis(verificationTaskId);
-    DeploymentTimeSeriesAnalysis deploymentTimeSeriesAnalysis2 = createDeploymentTimSeriesAnalysis(verificationTaskId);
-    Instant analysisStartTime = Instant.now().plus(1, ChronoUnit.HOURS);
-    deploymentTimeSeriesAnalysis2.setStartTime(analysisStartTime);
-
-    DeploymentTimeSeriesAnalysisDTO.TransactionSummary transactionSummary =
-        createTransactionSummary("expectedTransactionName",
-            deploymentTimeSeriesAnalysis2.getResultSummary().getTransactionSummaries().get(0).getMetricSummaries());
-    DeploymentTimeSeriesAnalysisDTO.ResultSummary resultSummary =
-        createResultSummary(2, 0D, Arrays.asList(transactionSummary));
-
-    deploymentTimeSeriesAnalysis2.setResultSummary(resultSummary);
-    hPersistence.save(deploymentTimeSeriesAnalysis);
-    hPersistence.save(deploymentTimeSeriesAnalysis2);
-
-    TransactionSummaryPageDTO transactionSummaryPageDTO =
-        deploymentTimeSeriesAnalysisService.getMetrics(accountId, verificationJobInstanceId, false, null, 1);
-
-    assertThat(transactionSummaryPageDTO.getPageNumber()).isEqualTo(1);
-    assertThat(transactionSummaryPageDTO.getNumberOfPages()).isEqualTo(1);
-    assertThat(transactionSummaryPageDTO.getElementRange().getFromIndex()).isEqualTo(1);
-    assertThat(transactionSummaryPageDTO.getElementRange().getToIndex()).isEqualTo(1);
-    assertThat(transactionSummaryPageDTO.getTransactionSummaries()).isNotNull();
-    assertThat(transactionSummaryPageDTO.getTransactionSummaries().size()).isEqualTo(1);
-    assertThat(transactionSummaryPageDTO.getTransactionSummaries().get(0).getTransactionName())
-        .isEqualTo("expectedTransactionName");
+    assertThat(transactionMetricInfoSummaryPageDTO.getPageResponse().getPageIndex()).isEqualTo(0);
+    assertThat(transactionMetricInfoSummaryPageDTO.getPageResponse().getPageCount()).isEqualTo(0);
+    assertThat(transactionMetricInfoSummaryPageDTO.getPageResponse().getContent()).isNotNull();
+    assertThat(transactionMetricInfoSummaryPageDTO.getPageResponse().getContent().size()).isEqualTo(1);
+    assertThat(transactionMetricInfoSummaryPageDTO.getPageResponse()
+                   .getContent()
+                   .get(0)
+                   .getTransactionMetric()
+                   .getTransactionName())
+        .isEqualTo("newTransaction");
   }
 
   @Test
   @Owner(developers = NEMANJA)
   @Category(UnitTests.class)
   public void testGetMetrics_withMultiplePages() {
-    VerificationTask verificationTask = createVerificationTask();
-
-    String verificationTaskId = hPersistence.save(verificationTask);
+    verificationJobService.upsert(accountId, createCanaryVerificationJobDTO());
+    String verificationJobInstanceId =
+        verificationJobInstanceService.create(accountId, createVerificationJobInstanceDTO());
+    String verificationTaskId = verificationTaskService.create(accountId, cvConfigId, verificationJobInstanceId);
     DeploymentTimeSeriesAnalysis deploymentTimeSeriesAnalysis = createDeploymentTimSeriesAnalysis(verificationTaskId);
-    List<DeploymentTimeSeriesAnalysisDTO.MetricSummary> metricSummaries =
-        Arrays.asList(createMetricSummary("metric", 0, 0D, Arrays.asList(0D), Arrays.asList(0D)));
-    List<DeploymentTimeSeriesAnalysisDTO.TransactionSummary> transactionSummaries = new ArrayList();
-
+    List<DeploymentTimeSeriesAnalysisDTO.TransactionMetricHostData> transactionSummaries = new ArrayList();
     for (int i = 0; i < 25; i++) {
-      transactionSummaries.add(createTransactionSummary("transaction" + i, metricSummaries));
+      transactionSummaries.add(createTransactionMetricHostData("transaction " + i, "metric", 0, 0.0,
+          deploymentTimeSeriesAnalysis.getTransactionMetricSummaries().get(0).getHostData()));
     }
-    DeploymentTimeSeriesAnalysisDTO.ResultSummary resultSummary = createResultSummary(0, 0D, transactionSummaries);
-    deploymentTimeSeriesAnalysis.setResultSummary(resultSummary);
-    hPersistence.save(deploymentTimeSeriesAnalysis);
+    deploymentTimeSeriesAnalysis.setTransactionMetricSummaries(transactionSummaries);
+    deploymentTimeSeriesAnalysisService.save(deploymentTimeSeriesAnalysis);
 
-    TransactionSummaryPageDTO page1 =
+    TransactionMetricInfoSummaryPageDTO page1 =
+        deploymentTimeSeriesAnalysisService.getMetrics(accountId, verificationJobInstanceId, false, null, 0);
+
+    assertThat(page1.getPageResponse().getPageIndex()).isEqualTo(0);
+    assertThat(page1.getPageResponse().getPageCount()).isEqualTo(2);
+    assertThat(page1.getPageResponse().getContent()).isNotNull();
+    assertThat(page1.getPageResponse().getContent().size()).isEqualTo(10);
+
+    TransactionMetricInfoSummaryPageDTO page2 =
         deploymentTimeSeriesAnalysisService.getMetrics(accountId, verificationJobInstanceId, false, null, 1);
 
-    assertThat(page1.getPageNumber()).isEqualTo(1);
-    assertThat(page1.getNumberOfPages()).isEqualTo(3);
-    assertThat(page1.getElementRange().getFromIndex()).isEqualTo(1);
-    assertThat(page1.getElementRange().getToIndex()).isEqualTo(10);
-    assertThat(page1.getTransactionSummaries()).isNotNull();
-    assertThat(page1.getTransactionSummaries().size()).isEqualTo(10);
+    assertThat(page2.getPageResponse().getPageIndex()).isEqualTo(1);
+    assertThat(page2.getPageResponse().getPageCount()).isEqualTo(2);
+    assertThat(page2.getPageResponse().getContent()).isNotNull();
+    assertThat(page2.getPageResponse().getContent().size()).isEqualTo(10);
 
-    TransactionSummaryPageDTO page2 =
+    TransactionMetricInfoSummaryPageDTO page3 =
         deploymentTimeSeriesAnalysisService.getMetrics(accountId, verificationJobInstanceId, false, null, 2);
 
-    assertThat(page2.getPageNumber()).isEqualTo(2);
-    assertThat(page2.getNumberOfPages()).isEqualTo(3);
-    assertThat(page2.getElementRange().getFromIndex()).isEqualTo(11);
-    assertThat(page2.getElementRange().getToIndex()).isEqualTo(20);
-    assertThat(page2.getTransactionSummaries()).isNotNull();
-    assertThat(page2.getTransactionSummaries().size()).isEqualTo(10);
-
-    TransactionSummaryPageDTO page3 =
-        deploymentTimeSeriesAnalysisService.getMetrics(accountId, verificationJobInstanceId, false, null, 3);
-
-    assertThat(page3.getPageNumber()).isEqualTo(3);
-    assertThat(page3.getNumberOfPages()).isEqualTo(3);
-    assertThat(page3.getElementRange().getFromIndex()).isEqualTo(21);
-    assertThat(page3.getElementRange().getToIndex()).isEqualTo(25);
-    assertThat(page3.getTransactionSummaries()).isNotNull();
-    assertThat(page3.getTransactionSummaries().size()).isEqualTo(5);
+    assertThat(page3.getPageResponse().getPageIndex()).isEqualTo(2);
+    assertThat(page3.getPageResponse().getPageCount()).isEqualTo(2);
+    assertThat(page3.getPageResponse().getContent()).isNotNull();
+    assertThat(page3.getPageResponse().getContent().size()).isEqualTo(5);
   }
 
-  private VerificationTask createVerificationTask() {
-    return VerificationTask.builder()
-        .cvConfigId(cvConfigId)
-        .accountId(accountId)
-        .verificationJobInstanceId(verificationJobInstanceId)
+  @Test
+  @Owner(developers = NEMANJA)
+  @Category(UnitTests.class)
+  public void testGetMetrics_withoutDeploymentTimeSeriesAnalysis() {
+    verificationJobService.upsert(accountId, createCanaryVerificationJobDTO());
+    String verificationJobInstanceId =
+        verificationJobInstanceService.create(accountId, createVerificationJobInstanceDTO());
+    verificationTaskService.create(accountId, cvConfigId, verificationJobInstanceId);
+
+    TransactionMetricInfoSummaryPageDTO transactionMetricInfoSummaryPageDTO =
+        deploymentTimeSeriesAnalysisService.getMetrics(accountId, verificationJobInstanceId, false, null, 0);
+
+    assertThat(transactionMetricInfoSummaryPageDTO.getPageResponse().getPageIndex()).isEqualTo(0);
+    assertThat(transactionMetricInfoSummaryPageDTO.getPageResponse().getPageCount()).isEqualTo(0);
+    assertThat(transactionMetricInfoSummaryPageDTO.getPageResponse().getContent()).isEmpty();
+  }
+
+  private VerificationJobInstanceDTO createVerificationJobInstanceDTO() {
+    return VerificationJobInstanceDTO.builder()
+        .verificationJobIdentifier(identifier)
+        .verificationTaskStartTimeMs(Instant.now().toEpochMilli())
         .build();
   }
-  private DeploymentTimeSeriesAnalysisDTO.ResultSummary createResultSummary(
-      int risk, Double score, List<DeploymentTimeSeriesAnalysisDTO.TransactionSummary> transactionSummaries) {
-    return DeploymentTimeSeriesAnalysisDTO.ResultSummary.builder()
+
+  private CanaryVerificationJobDTO createCanaryVerificationJobDTO() {
+    CanaryVerificationJobDTO canaryVerificationJobDTO = new CanaryVerificationJobDTO();
+    canaryVerificationJobDTO.setIdentifier(identifier);
+    canaryVerificationJobDTO.setJobName("jobName");
+    canaryVerificationJobDTO.setDuration("100");
+    canaryVerificationJobDTO.setServiceIdentifier(serviceIdentifier);
+    canaryVerificationJobDTO.setProjectIdentifier(projectIdentifier);
+    canaryVerificationJobDTO.setOrgIdentifier(orgIdentifier);
+    canaryVerificationJobDTO.setEnvIdentifier(envIdentifier);
+    canaryVerificationJobDTO.setDataSources(Arrays.asList(DataSourceType.APP_DYNAMICS));
+    canaryVerificationJobDTO.setSensitivity(Sensitivity.LOW.name());
+    return canaryVerificationJobDTO;
+  }
+
+  private DeploymentTimeSeriesAnalysisDTO.HostInfo createHostInfo(
+      String hostName, int risk, Double score, boolean presentBeforeDeployment, boolean presentAfterDeploymeent) {
+    return DeploymentTimeSeriesAnalysisDTO.HostInfo.builder()
+        .hostName(hostName)
         .risk(risk)
         .score(score)
-        .transactionSummaries(transactionSummaries)
+        .presentAfterDeployment(presentBeforeDeployment)
+        .presentAfterDeployment(presentAfterDeploymeent)
         .build();
   }
 
-  private DeploymentTimeSeriesAnalysisDTO.TransactionSummary createTransactionSummary(
-      String transactionName, List<DeploymentTimeSeriesAnalysisDTO.MetricSummary> metricSummaries) {
-    return DeploymentTimeSeriesAnalysisDTO.TransactionSummary.builder()
+  private DeploymentTimeSeriesAnalysisDTO.HostData createHostData(
+      String hostName, int risk, Double score, List<Double> controlData, List<Double> testData) {
+    return DeploymentTimeSeriesAnalysisDTO.HostData.builder()
+        .hostName(hostName)
+        .risk(risk)
+        .score(score)
+        .controlData(controlData)
+        .testData(testData)
+        .build();
+  }
+
+  private DeploymentTimeSeriesAnalysisDTO.TransactionMetricHostData createTransactionMetricHostData(
+      String transactionName, String metricName, int risk, Double score,
+      List<DeploymentTimeSeriesAnalysisDTO.HostData> hostDataList) {
+    return DeploymentTimeSeriesAnalysisDTO.TransactionMetricHostData.builder()
         .transactionName(transactionName)
-        .metricSummaries(metricSummaries)
-        .build();
-  }
-
-  private DeploymentTimeSeriesAnalysisDTO.MetricSummary createMetricSummary(
-      String metricName, int risk, Double score, List<Double> testData, List<Double> controlData) {
-    return DeploymentTimeSeriesAnalysisDTO.MetricSummary.builder()
         .metricName(metricName)
         .risk(risk)
         .score(score)
-        .testData(testData)
-        .controlData(controlData)
-        .build();
-  }
-
-  private DeploymentTimeSeriesAnalysisDTO.HostSummary createHostSummary(
-      String hostName, String isNewHost, DeploymentTimeSeriesAnalysisDTO.ResultSummary resultSummary) {
-    return DeploymentTimeSeriesAnalysisDTO.HostSummary.builder()
-        .hostName(hostName)
-        .isNewHost(isNewHost)
-        .resultSummary(resultSummary)
+        .hostData(hostDataList)
         .build();
   }
 
   private DeploymentTimeSeriesAnalysis createDeploymentTimSeriesAnalysis(String verificationTaskId) {
-    DeploymentTimeSeriesAnalysisDTO.MetricSummary callsPerMinute =
-        createMetricSummary("Calls per Minute", -1, 0D, Arrays.asList(2D), Arrays.asList(2D));
+    DeploymentTimeSeriesAnalysisDTO.HostInfo hostInfo1 = createHostInfo("node1", 1, 1.1, false, true);
+    DeploymentTimeSeriesAnalysisDTO.HostInfo hostInfo2 = createHostInfo("node2", 2, 2.2, false, true);
+    DeploymentTimeSeriesAnalysisDTO.HostData hostData1 =
+        createHostData("node1", 0, 0.0, Arrays.asList(1D), Arrays.asList(1D));
+    DeploymentTimeSeriesAnalysisDTO.HostData hostData2 =
+        createHostData("node2", 2, 2.0, Arrays.asList(1D), Arrays.asList(1D));
 
-    DeploymentTimeSeriesAnalysisDTO.MetricSummary averageResponseTime =
-        createMetricSummary("Average Response Time (ms)", 1, 0D, Arrays.asList(1D), Arrays.asList(1D));
+    DeploymentTimeSeriesAnalysisDTO.TransactionMetricHostData transactionMetricHostData1 =
+        createTransactionMetricHostData(
+            "/todolist/inside", "Errors per Minute", 0, 0.5, Arrays.asList(hostData1, hostData2));
 
-    DeploymentTimeSeriesAnalysisDTO.TransactionSummary transactionSummary =
-        createTransactionSummary("/todolist/requestLogin", Arrays.asList(callsPerMinute, averageResponseTime));
+    DeploymentTimeSeriesAnalysisDTO.HostData hostData3 =
+        createHostData("node1", 0, 0.0, Arrays.asList(1D), Arrays.asList(1D));
+    DeploymentTimeSeriesAnalysisDTO.HostData hostData4 =
+        createHostData("node2", 2, 2.0, Arrays.asList(1D), Arrays.asList(1D));
 
-    DeploymentTimeSeriesAnalysisDTO.ResultSummary resultSummary =
-        createResultSummary(2, 1.64D, Arrays.asList(transactionSummary));
-
-    DeploymentTimeSeriesAnalysisDTO.MetricSummary callsPerMinute2 =
-        createMetricSummary("Calls per Minute", 0, 0D, Arrays.asList(3D), Arrays.asList(1D));
-
-    DeploymentTimeSeriesAnalysisDTO.MetricSummary averageResponseTime2 =
-        createMetricSummary("Average Response Time (ms)", 2, 1D, Arrays.asList(0D), Arrays.asList(0D));
-
-    DeploymentTimeSeriesAnalysisDTO.TransactionSummary transactionSummary2 = createTransactionSummary(
-        "hostSummary/todolist/requestLogin", Arrays.asList(callsPerMinute2, averageResponseTime2));
-
-    DeploymentTimeSeriesAnalysisDTO.ResultSummary resultSummaryForHost =
-        createResultSummary(1, 1D, Arrays.asList(transactionSummary2));
-
-    DeploymentTimeSeriesAnalysisDTO.HostSummary hostSummary = createHostSummary("node1", "false", resultSummaryForHost);
+    DeploymentTimeSeriesAnalysisDTO.TransactionMetricHostData transactionMetricHostData2 =
+        createTransactionMetricHostData(
+            "/todolist/exception", "Calls per Minute", 2, 2.5, Arrays.asList(hostData3, hostData4));
 
     return DeploymentTimeSeriesAnalysis.builder()
         .accountId(accountId)
         .verificationTaskId(verificationTaskId)
-        .resultSummary(resultSummary)
-        .hostSummaries(Arrays.asList(hostSummary))
+        .transactionMetricSummaries(Arrays.asList(transactionMetricHostData1, transactionMetricHostData2))
+        .hostSummaries(Arrays.asList(hostInfo1, hostInfo2))
         .startTime(Instant.now())
         .endTime(Instant.now().plus(1, ChronoUnit.MINUTES))
         .build();
