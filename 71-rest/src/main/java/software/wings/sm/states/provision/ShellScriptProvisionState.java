@@ -20,11 +20,13 @@ import io.harness.context.ContextElementType;
 import io.harness.delegate.beans.TaskData;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
+import io.harness.serializer.KryoSerializer;
 import io.harness.tasks.Cd1SetupFields;
 import io.harness.tasks.ResponseData;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
+import org.mongodb.morphia.annotations.Transient;
 import software.wings.api.ScriptStateExecutionData;
 import software.wings.api.ShellScriptProvisionerOutputElement;
 import software.wings.api.shellscript.provision.ShellScriptProvisionExecutionData;
@@ -75,6 +77,8 @@ public class ShellScriptProvisionState extends State implements SweepingOutputSt
   @Getter @Setter private List<NameValuePair> variables;
   @Getter @Setter private String sweepingOutputName;
   @Getter @Setter private SweepingOutputInstance.Scope sweepingOutputScope;
+
+  @Transient @Inject KryoSerializer kryoSerializer;
 
   public ShellScriptProvisionState(String name) {
     super(name, StateType.SHELL_SCRIPT_PROVISION.name());
@@ -222,5 +226,10 @@ public class ShellScriptProvisionState extends State implements SweepingOutputSt
     }
     logger.info("Shell Script Provision State Validated");
     return results;
+  }
+
+  @Override
+  public KryoSerializer getKryoSerializer() {
+    return kryoSerializer;
   }
 }

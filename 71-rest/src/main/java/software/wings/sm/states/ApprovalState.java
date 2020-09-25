@@ -55,6 +55,7 @@ import io.harness.exception.WingsException;
 import io.harness.expression.ExpressionEvaluator;
 import io.harness.logging.Misc;
 import io.harness.scheduler.PersistentScheduler;
+import io.harness.serializer.KryoSerializer;
 import io.harness.tasks.ResponseData;
 import lombok.Getter;
 import lombok.Setter;
@@ -153,6 +154,11 @@ public class ApprovalState extends State implements SweepingOutputStateMixin {
   @Getter @Setter private String disableAssertion;
   @Setter @SchemaIgnore private String stageName;
 
+  @Override
+  public KryoSerializer getKryoSerializer() {
+    return kryoSerializer;
+  }
+
   public enum ApprovalStateType { JIRA, USER_GROUP, SHELL_SCRIPT, SERVICENOW }
   public static final MediaType JSON = MediaType.parse("application/json; charset=utf-8");
 
@@ -169,6 +175,7 @@ public class ApprovalState extends State implements SweepingOutputStateMixin {
   @Inject private transient SweepingOutputService sweepingOutputService;
   @Inject private UserGroupService userGroupService;
   @Inject @Transient private TemplateExpressionProcessor templateExpressionProcessor;
+  @Transient @Inject KryoSerializer kryoSerializer;
 
   @Inject @Named("ServiceJobScheduler") private PersistentScheduler serviceJobScheduler;
   private Integer DEFAULT_APPROVAL_STATE_TIMEOUT_MILLIS = 7 * 24 * 60 * 60 * 1000; // 7 days

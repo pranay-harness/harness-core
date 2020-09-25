@@ -68,6 +68,7 @@ import io.harness.rule.Owner;
 import io.harness.serializer.KryoSerializer;
 import io.harness.waiter.WaitNotifyEngine;
 import org.apache.commons.jexl3.JexlException;
+import org.joor.Reflect;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -606,6 +607,7 @@ public class ApprovalStateTest extends WingsBaseTest {
     when(context.renderExpression(anyString(), any(StateExecutionContext.class)))
         .thenAnswer(invocationOnMock -> invocationOnMock.getArgumentAt(0, String.class));
     when(context.prepareSweepingOutputBuilder(any())).thenReturn(SweepingOutputInstance.builder());
+    Reflect.on(approvalState).set("kryoSerializer", kryoSerializer);
     approvalState.setSweepingOutputName("test");
     approvalState.setVariables(asList(NameValuePair.builder().name("test").value("test").valueType("TEXT").build()));
     verifyUserGroupSweepingOutput();

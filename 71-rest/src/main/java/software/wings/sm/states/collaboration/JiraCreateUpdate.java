@@ -24,6 +24,7 @@ import io.harness.delegate.beans.TaskData;
 import io.harness.exception.HarnessJiraException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.expression.ExpressionEvaluator;
+import io.harness.serializer.KryoSerializer;
 import io.harness.tasks.Cd1SetupFields;
 import io.harness.tasks.ResponseData;
 import lombok.Getter;
@@ -105,6 +106,7 @@ public class JiraCreateUpdate extends State implements SweepingOutputStateMixin 
   @Inject @Transient private DelegateServiceImpl delegateService;
   @Inject @Transient private transient SecretManager secretManager;
   @Inject @Transient private SweepingOutputService sweepingOutputService;
+  @Transient @Inject KryoSerializer kryoSerializer;
 
   @Getter @Setter @NotNull private JiraAction jiraAction;
   @Getter @Setter @NotNull String jiraConnectorId;
@@ -574,5 +576,10 @@ public class JiraCreateUpdate extends State implements SweepingOutputStateMixin 
     }
     matcher = varPattern.matcher(fieldValue);
     return matcher.matches();
+  }
+
+  @Override
+  public KryoSerializer getKryoSerializer() {
+    return kryoSerializer;
   }
 }

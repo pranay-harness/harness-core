@@ -7,6 +7,7 @@ import com.google.inject.Inject;
 
 import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
+import io.harness.serializer.KryoSerializer;
 import io.harness.tasks.ResponseData;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.codec.binary.Base64;
@@ -193,5 +194,10 @@ public class SplunkState extends HttpState {
       postData.append(URLEncoder.encode(String.valueOf(param.getValue()), "UTF-8"));
     }
     return postData.toString();
+  }
+
+  @Override
+  public KryoSerializer getKryoSerializer() {
+    return kryoSerializer;
   }
 }

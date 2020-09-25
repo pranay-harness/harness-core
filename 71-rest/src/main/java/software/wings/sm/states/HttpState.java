@@ -34,6 +34,7 @@ import io.harness.exception.ExceptionUtils;
 import io.harness.exception.InvalidArgumentsException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.expression.ExpressionReflectionUtils;
+import io.harness.serializer.KryoSerializer;
 import io.harness.tasks.Cd1SetupFields;
 import io.harness.tasks.ResponseData;
 import lombok.AllArgsConstructor;
@@ -47,6 +48,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.jexl3.JexlException;
 import org.apache.commons.jexl3.JexlException.Parsing;
 import org.apache.commons.jexl3.JexlException.Property;
+import org.mongodb.morphia.annotations.Transient;
 import software.wings.api.HttpStateExecutionData;
 import software.wings.api.HttpStateExecutionData.HttpStateExecutionDataBuilder;
 import software.wings.beans.Activity.Type;
@@ -116,6 +118,7 @@ public class HttpState extends State implements SweepingOutputStateMixin {
   @Inject protected transient ManagerDecryptionService managerDecryptionService;
   @Inject protected transient SecretManager secretManager;
   @Inject protected transient DelegateService delegateService;
+  @Transient @Inject KryoSerializer kryoSerializer;
 
   public HttpState() {}
 
@@ -570,6 +573,11 @@ public class HttpState extends State implements SweepingOutputStateMixin {
 
   private String scheduleDelegateTask(DelegateTask task) {
     return delegateService.queueTask(task);
+  }
+
+  @Override
+  public KryoSerializer getKryoSerializer() {
+    return kryoSerializer;
   }
 
   /**
