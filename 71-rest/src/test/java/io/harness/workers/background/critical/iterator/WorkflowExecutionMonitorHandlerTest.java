@@ -38,7 +38,6 @@ import org.powermock.core.classloader.annotations.PowerMockIgnore;
 import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
 import software.wings.WingsBaseTest;
-import software.wings.beans.FeatureName;
 import software.wings.beans.WorkflowExecution;
 import software.wings.dl.WingsPersistence;
 import software.wings.sm.ExecutionInterrupt;
@@ -145,7 +144,6 @@ public class WorkflowExecutionMonitorHandlerTest extends WingsBaseTest {
                                       .message("Starting artifact collection")
                                       .build();
     wingsPersistence.save(execution);
-    featureFlagService.enableAccount(FeatureName.NAS_SUPPORT, ACCOUNT_ID);
     workflowExecutionMonitorHandler.handle(execution);
     WorkflowExecution updatedWorkflowExecution = wingsPersistence.get(WorkflowExecution.class, WORKFLOW_EXECUTION_ID);
     assertThat(updatedWorkflowExecution.getStatus()).isEqualTo(EXPIRED);

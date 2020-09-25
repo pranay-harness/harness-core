@@ -264,7 +264,6 @@ public class ArtifactCollectionStateTest extends CategoryTest {
     artifactCollectionState.setRuntimeValues(runtimeValues);
     artifactCollectionState.setBuildNo("1.0");
     when(artifactStreamService.get(ARTIFACT_STREAM_ID)).thenReturn(nexusArtifactStream);
-    when(featureFlagService.isEnabled(FeatureName.NAS_SUPPORT, ACCOUNT_ID)).thenReturn(true);
     when(artifactService.getArtifactByBuildNumberAndSourceName(
              nexusArtifactStream, "1.0", false, "${repo}/${groupId}/${path}"))
         .thenReturn(anArtifact().withAppId(APP_ID).withStatus(Status.APPROVED).build());
@@ -284,7 +283,6 @@ public class ArtifactCollectionStateTest extends CategoryTest {
     artifactCollectionState.setRuntimeValues(runtimeValues);
     artifactCollectionState.setBuildNo("${workflow.variables.buildNo}");
     when(artifactStreamService.get(ARTIFACT_STREAM_ID)).thenReturn(nexusArtifactStream);
-    when(featureFlagService.isEnabled(FeatureName.NAS_SUPPORT, ACCOUNT_ID)).thenReturn(true);
     when(artifactService.getArtifactByBuildNumberAndSourceName(
              nexusArtifactStream, "1.1", false, "${repo}/${groupId}/${path}"))
         .thenReturn(null);
@@ -309,7 +307,6 @@ public class ArtifactCollectionStateTest extends CategoryTest {
     artifactCollectionState.setRuntimeValues(runtimeValues);
     artifactCollectionState.setBuildNo("1.1");
     when(artifactStreamService.get(ARTIFACT_STREAM_ID)).thenReturn(nexusArtifactStream);
-    when(featureFlagService.isEnabled(FeatureName.NAS_SUPPORT, ACCOUNT_ID)).thenReturn(true);
     ExecutionResponse executionResponse = artifactCollectionState.execute(executionContext);
     assertThat(executionResponse).isNotNull();
     assertThat(executionResponse.getExecutionStatus()).isEqualTo(ExecutionStatus.FAILED);
@@ -325,7 +322,6 @@ public class ArtifactCollectionStateTest extends CategoryTest {
     runtimeValues.put("artifactId", "todolist");
     artifactCollectionState.setRuntimeValues(runtimeValues);
     when(artifactStreamService.get(ARTIFACT_STREAM_ID)).thenReturn(nexusArtifactStream);
-    when(featureFlagService.isEnabled(FeatureName.NAS_SUPPORT, ACCOUNT_ID)).thenReturn(true);
     ExecutionResponse executionResponse = artifactCollectionState.execute(executionContext);
     assertThat(executionResponse).isNotNull();
     assertThat(executionResponse.getExecutionStatus()).isEqualTo(ExecutionStatus.FAILED);
@@ -342,7 +338,6 @@ public class ArtifactCollectionStateTest extends CategoryTest {
     artifactCollectionState.setRuntimeValues(runtimeValues);
     artifactCollectionState.setBuildNo("1.1");
     when(artifactStreamService.get(ARTIFACT_STREAM_ID)).thenReturn(nexusArtifactStream);
-    when(featureFlagService.isEnabled(FeatureName.NAS_SUPPORT, ACCOUNT_ID)).thenReturn(true);
     when(artifactService.getArtifactByBuildNumberAndSourceName(
              nexusArtifactStream, "1.1", false, "${repo}/${groupId}/${path}"))
         .thenReturn(null);

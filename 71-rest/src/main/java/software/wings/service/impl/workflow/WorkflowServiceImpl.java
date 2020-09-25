@@ -2174,25 +2174,22 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
   @Override
   public void resolveArtifactStreamMetadata(
       String appId, List<ArtifactVariable> artifactVariables, WorkflowExecution workflowExecution) {
-    String accountId = appService.getAccountIdByAppId(appId);
-    if (featureFlagService.isEnabled(FeatureName.NAS_SUPPORT, accountId)) {
-      if (workflowExecution != null && workflowExecution.getExecutionArgs() != null) {
-        List<ArtifactVariable> previousArtifactVariables = workflowExecution.getExecutionArgs().getArtifactVariables();
-        if (isNotEmpty(previousArtifactVariables)) {
-          for (ArtifactVariable artifactVariable : artifactVariables) {
-            for (ArtifactVariable previousArtifactVariable : previousArtifactVariables) {
-              if (artifactVariable.getName().equals(previousArtifactVariable.getName())
-                  && artifactVariable.getEntityType() == previousArtifactVariable.getEntityType()
-                  && artifactVariable.getEntityId().equals(previousArtifactVariable.getEntityId())
-                  && previousArtifactVariable.getArtifactStreamMetadata() != null
-                  && isNotEmpty(artifactVariable.getAllowedList())
-                  && artifactVariable.getAllowedList().contains(
-                         previousArtifactVariable.getArtifactStreamMetadata().getArtifactStreamId())) {
-                artifactVariable.setArtifactStreamMetadata(
-                    fetchArtifactStreamMetadataInArtifactVariable(previousArtifactVariable));
-                artifactVariable.setUiDisplayName(previousArtifactVariable.getUiDisplayName());
-                break;
-              }
+    if (workflowExecution != null && workflowExecution.getExecutionArgs() != null) {
+      List<ArtifactVariable> previousArtifactVariables = workflowExecution.getExecutionArgs().getArtifactVariables();
+      if (isNotEmpty(previousArtifactVariables)) {
+        for (ArtifactVariable artifactVariable : artifactVariables) {
+          for (ArtifactVariable previousArtifactVariable : previousArtifactVariables) {
+            if (artifactVariable.getName().equals(previousArtifactVariable.getName())
+                && artifactVariable.getEntityType() == previousArtifactVariable.getEntityType()
+                && artifactVariable.getEntityId().equals(previousArtifactVariable.getEntityId())
+                && previousArtifactVariable.getArtifactStreamMetadata() != null
+                && isNotEmpty(artifactVariable.getAllowedList())
+                && artifactVariable.getAllowedList().contains(
+                       previousArtifactVariable.getArtifactStreamMetadata().getArtifactStreamId())) {
+              artifactVariable.setArtifactStreamMetadata(
+                  fetchArtifactStreamMetadataInArtifactVariable(previousArtifactVariable));
+              artifactVariable.setUiDisplayName(previousArtifactVariable.getUiDisplayName());
+              break;
             }
           }
         }

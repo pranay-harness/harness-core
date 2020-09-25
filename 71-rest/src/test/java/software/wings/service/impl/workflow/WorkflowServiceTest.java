@@ -4815,7 +4815,6 @@ public class WorkflowServiceTest extends WingsBaseTest {
   @Owner(developers = AADITI)
   @Category(UnitTests.class)
   public void shouldUpdateArtifactVariablesWithArtifactStreamMetadata() {
-    when(featureFlagService.isEnabled(FeatureName.NAS_SUPPORT, ACCOUNT_ID)).thenReturn(true);
     List<ArtifactVariable> artifactVariables = new ArrayList<>();
     artifactVariables.add(ArtifactVariable.builder().entityType(SERVICE).entityId(SERVICE_ID).name("art_srv").build());
     artifactVariables.add(ArtifactVariable.builder()
@@ -4869,7 +4868,6 @@ public class WorkflowServiceTest extends WingsBaseTest {
   @Owner(developers = AADITI)
   @Category(UnitTests.class)
   public void fetchDeploymentMetadataWhenArtifactStreamParametersUpdated() {
-    when(featureFlagService.isEnabled(FeatureName.NAS_SUPPORT, ACCOUNT_ID)).thenReturn(true);
     List<ArtifactVariable> artifactVariables = new ArrayList<>();
     artifactVariables.add(ArtifactVariable.builder()
                               .entityType(SERVICE)
@@ -4918,7 +4916,6 @@ public class WorkflowServiceTest extends WingsBaseTest {
   @Owner(developers = AADITI)
   @Category(UnitTests.class)
   public void fetchDeploymentMetadataWhenArtifactStreamUpdatedToNonParameterized() {
-    when(featureFlagService.isEnabled(FeatureName.NAS_SUPPORT, ACCOUNT_ID)).thenReturn(true);
     List<ArtifactVariable> artifactVariables = new ArrayList<>();
     artifactVariables.add(ArtifactVariable.builder()
                               .entityType(SERVICE)

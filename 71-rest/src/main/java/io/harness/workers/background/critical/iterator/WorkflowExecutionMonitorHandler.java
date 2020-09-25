@@ -29,7 +29,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.Sort;
 import org.mongodb.morphia.query.UpdateOperations;
-import software.wings.beans.FeatureName;
 import software.wings.beans.WorkflowExecution;
 import software.wings.beans.WorkflowExecution.WorkflowExecutionKeys;
 import software.wings.dl.WingsPersistence;
@@ -84,13 +83,12 @@ public class WorkflowExecutionMonitorHandler implements Handler<WorkflowExecutio
   public void handle(WorkflowExecution entity) {
     try {
       // logic to expire workflowExecution if its stuck in preparing state for more than 10 mins
-      if (featureFlagService.isEnabled(FeatureName.NAS_SUPPORT, entity.getAccountId())) {
-        if (entity.getStatus() == PREPARING
-            && System.currentTimeMillis() - entity.getStartTs() > EXPIRE_THRESHOLD.toMillis()) {
-          updateStartStatusAndUnsetMessage(entity.getAppId(), entity.getUuid(), EXPIRED);
-          return;
-        }
+      if (entity.getStatus() == PREPARING
+          && System.currentTimeMillis() - entity.getStartTs() > EXPIRE_THRESHOLD.toMillis()) {
+        updateStartStatusAndUnsetMessage(entity.getAppId(), entity.getUuid(), EXPIRED);
+        return;
       }
+
       boolean hasActiveStates = false;
       try (HIterator<StateExecutionInstance> stateExecutionInstances =
                new HIterator<>(wingsPersistence.createQuery(StateExecutionInstance.class)

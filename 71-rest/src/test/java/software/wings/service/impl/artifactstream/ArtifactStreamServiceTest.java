@@ -1,7 +1,5 @@
 package software.wings.service.impl.artifactstream;
 
-import static io.harness.annotations.dev.HarnessTeam.CDC;
-import static io.harness.annotations.test.FeatureName.NAS_SUPPORT;
 import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
 import static io.harness.beans.SearchFilter.Operator.EQ;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
@@ -53,7 +51,6 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
 
-import io.harness.annotations.test.TestInfo;
 import io.harness.beans.EmbeddedUser;
 import io.harness.category.element.UnitTests;
 import io.harness.exception.InvalidRequestException;
@@ -692,7 +689,6 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
   @Test
   @Owner(developers = SRINIVAS)
   @Category(UnitTests.class)
-  @TestInfo(testCaseIds = {"CDC-7376"}, featureName = NAS_SUPPORT, category = {UnitTests.class}, ownedBy = CDC)
   public void shouldAddNexusArtifactStream() {
     ArtifactStream savedArtifactSteam = createNexusArtifactStream("nexus1");
     validateNexusArtifactStream(savedArtifactSteam, APP_ID);
@@ -3772,7 +3768,6 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
   @Test
   @Owner(developers = AADITI)
   @Category(UnitTests.class)
-  @TestInfo(testCaseIds = {"CDC-7378"}, featureName = NAS_SUPPORT, category = {UnitTests.class}, ownedBy = CDC)
   public void shouldAddNexusArtifactStreamWithParameters() {
     when(settingsService.getSettingValueById(ACCOUNT_ID, SETTING_ID))
         .thenReturn(NexusConfig.builder()
@@ -3805,7 +3800,6 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
   }
 
   private ArtifactStream createNexusArtifactStream(NexusArtifactStream nexusArtifactStream) {
-    when(featureFlagService.isEnabled(FeatureName.NAS_SUPPORT, ACCOUNT_ID)).thenReturn(true);
     ArtifactStream savedArtifactSteam = createArtifactStream(nexusArtifactStream);
     assertThat(savedArtifactSteam.getAccountId()).isEqualTo(ACCOUNT_ID);
     assertThat(savedArtifactSteam.getUuid()).isNotEmpty();
@@ -3823,25 +3817,6 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
     assertThat(savedArtifactSteam.fetchArtifactStreamAttributes().getArtifactName()).isEqualTo("${path}");
     assertThat(savedArtifactSteam.getCollectionStatus()).isEqualTo(UNSTABLE.name());
     return savedArtifactSteam;
-  }
-
-  @Test(expected = InvalidRequestException.class)
-  @Owner(developers = AADITI)
-  @Category(UnitTests.class)
-  public void shouldNotAddNexusArtifactStreamWithParametersWithFFOff() {
-    NexusArtifactStream nexusArtifactStream = NexusArtifactStream.builder()
-                                                  .accountId(ACCOUNT_ID)
-                                                  .appId(APP_ID)
-                                                  .settingId(SETTING_ID)
-                                                  .jobname("releases")
-                                                  .groupId("io.harness.test")
-                                                  .artifactPaths(asList("${path}"))
-                                                  .autoPopulate(false)
-                                                  .serviceId(SERVICE_ID)
-                                                  .name("testNexus")
-                                                  .build();
-    when(featureFlagService.isEnabled(FeatureName.NAS_SUPPORT, ACCOUNT_ID)).thenReturn(false);
-    createArtifactStream(nexusArtifactStream);
   }
 
   @Test
@@ -3869,7 +3844,6 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
                                                   .build();
     ArtifactStream savedArtifactSteam = createNexusArtifactStream(nexusArtifactStream);
     assertThat(savedArtifactSteam.isArtifactStreamParameterized()).isEqualTo(true);
-    when(featureFlagService.isEnabled(FeatureName.NAS_SUPPORT, ACCOUNT_ID)).thenReturn(true);
 
     updateAndValidateNexusArtifactStream((NexusArtifactStream) savedArtifactSteam, APP_ID);
 
@@ -3906,29 +3880,6 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
   @Test(expected = InvalidRequestException.class)
   @Owner(developers = AADITI)
   @Category(UnitTests.class)
-  public void shouldNotUpdateNexusArtifactStreamParameterizedWithFFOff() {
-    NexusArtifactStream nexusArtifactStream = NexusArtifactStream.builder()
-                                                  .accountId(ACCOUNT_ID)
-                                                  .appId(APP_ID)
-                                                  .settingId(SETTING_ID)
-                                                  .jobname("releases")
-                                                  .groupId("io.harness.test")
-                                                  .artifactPaths(asList("${path}"))
-                                                  .autoPopulate(false)
-                                                  .serviceId(SERVICE_ID)
-                                                  .name("testNexus")
-                                                  .build();
-    ArtifactStream savedArtifactSteam = createNexusArtifactStream(nexusArtifactStream);
-    when(featureFlagService.isEnabled(FeatureName.NAS_SUPPORT, ACCOUNT_ID)).thenReturn(false);
-
-    NexusArtifactStream savedNexusArtifactStream = (NexusArtifactStream) savedArtifactSteam;
-    savedNexusArtifactStream.setArtifactPaths(asList("${folder}/${path}"));
-    artifactStreamService.update(savedNexusArtifactStream);
-  }
-
-  @Test(expected = InvalidRequestException.class)
-  @Owner(developers = AADITI)
-  @Category(UnitTests.class)
   public void shouldNotAddNexusArtifactStreamWithInvalidParameters() {
     NexusArtifactStream nexusArtifactStream = NexusArtifactStream.builder()
                                                   .accountId(ACCOUNT_ID)
@@ -3941,14 +3892,12 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
                                                   .serviceId(SERVICE_ID)
                                                   .name("testNexus")
                                                   .build();
-    when(featureFlagService.isEnabled(FeatureName.NAS_SUPPORT, ACCOUNT_ID)).thenReturn(true);
     createArtifactStream(nexusArtifactStream);
   }
 
   @Test(expected = InvalidRequestException.class)
   @Owner(developers = AADITI)
   @Category(UnitTests.class)
-  @TestInfo(testCaseIds = {"CDC-7396"}, featureName = NAS_SUPPORT, category = {UnitTests.class}, ownedBy = CDC)
   public void shouldNotAddNexus3xArtifactStreamWithParameters() {
     when(settingsService.getSettingValueById(ACCOUNT_ID, SETTING_ID))
         .thenReturn(NexusConfig.builder()
@@ -3968,7 +3917,6 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
                                                   .serviceId(SERVICE_ID)
                                                   .name("testNexus")
                                                   .build();
-    when(featureFlagService.isEnabled(FeatureName.NAS_SUPPORT, ACCOUNT_ID)).thenReturn(true);
     createArtifactStream(nexusArtifactStream);
   }
 
@@ -3995,39 +3943,10 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
                                                   .name("testNexus")
                                                   .metadataOnly(true)
                                                   .build();
-    when(featureFlagService.isEnabled(FeatureName.NAS_SUPPORT, ACCOUNT_ID)).thenReturn(true);
     ArtifactStream savedArtifactSteam = createArtifactStream(nexusArtifactStream);
     List<String> parameters = artifactStreamService.getArtifactStreamParameters(savedArtifactSteam.getUuid());
     assertThat(parameters.size()).isEqualTo(3);
     assertThat(parameters).containsAll(asList("repo", "groupId", "path"));
-  }
-
-  @Test(expected = InvalidRequestException.class)
-  @Owner(developers = AADITI)
-  @Category(UnitTests.class)
-  public void shouldNotGetParametersForArtifactStreamWithFFOff() {
-    when(settingsService.getSettingValueById(ACCOUNT_ID, SETTING_ID))
-        .thenReturn(NexusConfig.builder()
-                        .version("2.x")
-                        .nexusUrl("http://nexus.software")
-                        .username("username")
-                        .accountId(ACCOUNT_ID)
-                        .build());
-    NexusArtifactStream nexusArtifactStream = NexusArtifactStream.builder()
-                                                  .accountId(ACCOUNT_ID)
-                                                  .appId(APP_ID)
-                                                  .settingId(SETTING_ID)
-                                                  .jobname("${repo}")
-                                                  .groupId("${groupId}")
-                                                  .artifactPaths(asList("${path}"))
-                                                  .autoPopulate(false)
-                                                  .serviceId(SERVICE_ID)
-                                                  .name("testNexus")
-                                                  .build();
-    when(featureFlagService.isEnabled(FeatureName.NAS_SUPPORT, ACCOUNT_ID)).thenReturn(true);
-    ArtifactStream savedArtifactSteam = createArtifactStream(nexusArtifactStream);
-    when(featureFlagService.isEnabled(FeatureName.NAS_SUPPORT, ACCOUNT_ID)).thenReturn(false);
-    artifactStreamService.getArtifactStreamParameters(savedArtifactSteam.getUuid());
   }
 
   @Test(expected = InvalidRequestException.class)
@@ -4045,7 +3964,6 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
                                                   .serviceId(SERVICE_ID)
                                                   .name("testNexus")
                                                   .build();
-    when(featureFlagService.isEnabled(FeatureName.NAS_SUPPORT, ACCOUNT_ID)).thenReturn(true);
     ArtifactStream savedArtifactSteam = createArtifactStream(nexusArtifactStream);
     artifactStreamService.getArtifactStreamParameters(savedArtifactSteam.getUuid());
   }
@@ -4063,53 +3981,12 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
                                                     .serviceId(SERVICE_ID)
                                                     .build();
     ArtifactStream savedArtifactSteam = createArtifactStream(dockerArtifactStream);
-    when(featureFlagService.isEnabled(FeatureName.NAS_SUPPORT, ACCOUNT_ID)).thenReturn(true);
     artifactStreamService.getArtifactStreamParameters(savedArtifactSteam.getUuid());
   }
 
   @Test
   @Owner(developers = AADITI)
   @Category(UnitTests.class)
-  @TestInfo(testCaseIds = {"CDC-7380"}, featureName = NAS_SUPPORT, category = {UnitTests.class}, ownedBy = CDC)
-  public void testListArtifactStreamsWithParametersWithFFOnAndOff() {
-    NexusArtifactStream nexusArtifactStream = NexusArtifactStream.builder()
-                                                  .accountId(ACCOUNT_ID)
-                                                  .appId(APP_ID)
-                                                  .settingId(SETTING_ID)
-                                                  .jobname("${repo}")
-                                                  .groupId("${groupId}")
-                                                  .artifactPaths(asList("${path}"))
-                                                  .autoPopulate(false)
-                                                  .serviceId(SERVICE_ID)
-                                                  .name("testNexus")
-                                                  .metadataOnly(true)
-                                                  .build();
-    when(featureFlagService.isEnabled(FeatureName.NAS_SUPPORT, ACCOUNT_ID)).thenReturn(true);
-    NexusArtifactStream artifactStream = (NexusArtifactStream) createArtifactStream(nexusArtifactStream);
-    assertThat(artifactStream.getJobname()).isEqualTo("${repo}");
-    assertThat(artifactStream.getGroupId()).isEqualTo("${groupId}");
-    assertThat(artifactStream.getArtifactPaths().get(0)).isEqualTo("${path}");
-    assertThat(artifactStream.getName()).isEqualTo("testNexus");
-    assertThat(artifactStream.isArtifactStreamParameterized()).isEqualTo(true);
-    constructAmazonS3Artifacts(APP_ID, "test-2");
-    List<ArtifactStream> artifactStreams =
-        artifactStreamService.list(aPageRequest().addFilter(ArtifactStreamKeys.appId, EQ, APP_ID).build(), ACCOUNT_ID,
-            true, "test", ArtifactType.OTHER, 100);
-    assertThat(artifactStreams).hasSize(2).extracting(ArtifactStream::getName).contains("test-2", "testNexus");
-    when(featureFlagService.isEnabled(FeatureName.NAS_SUPPORT, ACCOUNT_ID)).thenReturn(false);
-    artifactStreams = artifactStreamService.list(aPageRequest().addFilter(ArtifactStreamKeys.appId, EQ, APP_ID).build(),
-        ACCOUNT_ID, true, "test", ArtifactType.OTHER, 100);
-    assertThat(artifactStreams)
-        .hasSize(1)
-        .extracting(ArtifactStream::getName)
-        .containsSequence("test-2")
-        .doesNotContain("testNexus");
-  }
-
-  @Test
-  @Owner(developers = AADITI)
-  @Category(UnitTests.class)
-  @TestInfo(testCaseIds = {"CDC-7381"}, featureName = NAS_SUPPORT, category = {UnitTests.class}, ownedBy = CDC)
   public void testCreateNexusArtifactStreamsWithExtensionClassifier() {
     NexusArtifactStream nexusArtifactStream = NexusArtifactStream.builder()
                                                   .accountId(ACCOUNT_ID)
@@ -4125,7 +4002,6 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
                                                   .name("testNexus")
                                                   .metadataOnly(true)
                                                   .build();
-    when(featureFlagService.isEnabled(FeatureName.NAS_SUPPORT, ACCOUNT_ID)).thenReturn(true);
     NexusArtifactStream artifactStream = (NexusArtifactStream) createArtifactStream(nexusArtifactStream);
     assertThat(artifactStream.getJobname()).isEqualTo("${repo}");
     assertThat(artifactStream.getGroupId()).isEqualTo("${groupId}");

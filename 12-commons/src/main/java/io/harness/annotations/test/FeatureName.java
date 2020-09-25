@@ -1,3 +1,3 @@
 package io.harness.annotations.test;
 
-public enum FeatureName { NAS_SUPPORT }
+public enum FeatureName {}

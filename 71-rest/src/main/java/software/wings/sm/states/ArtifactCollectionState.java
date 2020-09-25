@@ -95,8 +95,7 @@ public class ArtifactCollectionState extends State {
 
     String evaluatedBuildNo;
     Artifact lastCollectedArtifact;
-    if (artifactStream.isArtifactStreamParameterized()
-        && featureFlagService.isEnabled(FeatureName.NAS_SUPPORT, artifactStream.getAccountId())) {
+    if (artifactStream.isArtifactStreamParameterized()) {
       if (isEmpty(runtimeValues)) {
         logger.info("Artifact Source {} parameterized. However, runtime values not provided", artifactStream.getName());
         return ExecutionResponse.builder()

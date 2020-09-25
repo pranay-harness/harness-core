@@ -1,10 +1,8 @@
 package io.harness.functional.nas;
 
-import static io.harness.annotations.dev.HarnessTeam.CDC;
-import static io.harness.annotations.test.FeatureName.NAS_SUPPORT;
 import static io.harness.beans.WorkflowType.ORCHESTRATION;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
-import static io.harness.generator.EnvironmentGenerator.Environments.FUNCTIONAL_TEST;
+import static io.harness.generator.EnvironmentGenerator.Environments.GENERIC_TEST;
 import static io.harness.rule.OwnerRule.AADITI;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -13,7 +11,6 @@ import static software.wings.beans.trigger.ArtifactSelection.Type.WEBHOOK_VARIAB
 import com.google.gson.Gson;
 import com.google.inject.Inject;
 
-import io.harness.annotations.test.TestInfo;
 import io.harness.beans.ExecutionStatus;
 import io.harness.beans.WorkflowType;
 import io.harness.category.element.FunctionalTests;
@@ -40,7 +37,6 @@ import io.restassured.path.json.JsonPath;
 import org.awaitility.Awaitility;
 import org.junit.After;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import software.wings.beans.Account;
@@ -117,10 +113,10 @@ public class NASWorkflowExecutionTest extends AbstractFunctionalTest {
     settingAttribute =
         settingGenerator.ensurePredefined(seed, owners, SettingGenerator.Settings.HARNESS_NEXUS2_CONNECTOR);
 
-    environment = environmentGenerator.ensurePredefined(seed, owners, FUNCTIONAL_TEST);
+    environment = environmentGenerator.ensurePredefined(seed, owners, GENERIC_TEST);
     assertThat(environment).isNotNull();
     infrastructureDefinition = infrastructureDefinitionGenerator.ensurePredefined(
-        seed, owners, InfrastructureDefinitionGenerator.InfrastructureDefinitions.AWS_SSH_FUNCTIONAL_TEST_NAS);
+        seed, owners, InfrastructureDefinitionGenerator.InfrastructureDefinitions.PHYSICAL_SSH_TEST);
 
     // create parameterized nexus npm artifact stream
     final String accountId = service.getAccountId();
@@ -153,9 +149,6 @@ public class NASWorkflowExecutionTest extends AbstractFunctionalTest {
   @Test
   @Owner(developers = AADITI)
   @Category({FunctionalTests.class})
-  @TestInfo(testCaseIds = {"CDC-7412"}, featureName = NAS_SUPPORT, category = {FunctionalTests.class}, ownedBy = CDC)
-  @Ignore("enable this when NAS_SUPPORT FF is removed")
-  // CDC-7412
   public void executeBasicWorkflowWithParameterizedArtifactStream() {
     Map<String, Object> runtimeValues = new HashMap<>();
     runtimeValues.put("repo", "npm-internal");
@@ -167,9 +160,6 @@ public class NASWorkflowExecutionTest extends AbstractFunctionalTest {
   @Test
   @Owner(developers = AADITI)
   @Category({FunctionalTests.class})
-  @TestInfo(testCaseIds = {"CDC-7416"}, featureName = NAS_SUPPORT, category = {FunctionalTests.class}, ownedBy = CDC)
-  @Ignore("enable this when NAS_SUPPORT FF is removed")
-  // CDC-7416
   public void executeBasicWorkflowWithIncorrectParameters() {
     Map<String, Object> runtimeValues = new HashMap<>();
     runtimeValues.put("repo", "npm-internal1");
@@ -246,8 +236,6 @@ public class NASWorkflowExecutionTest extends AbstractFunctionalTest {
   @Test
   @Owner(developers = AADITI)
   @Category({FunctionalTests.class})
-  @Ignore("enable this when NAS_SUPPORT FF is removed")
-  // CDC-7455
   public void shouldExecuteTrigger() {
     GenericType<RestResponse<Trigger>> triggerType = new GenericType<RestResponse<Trigger>>() {
 

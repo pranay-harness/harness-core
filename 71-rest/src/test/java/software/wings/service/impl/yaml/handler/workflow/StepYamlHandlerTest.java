@@ -21,7 +21,6 @@ import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import software.wings.beans.Application;
-import software.wings.beans.FeatureName;
 import software.wings.beans.Service;
 import software.wings.beans.artifact.NexusArtifactStream;
 import software.wings.beans.yaml.ChangeContext;
@@ -56,7 +55,6 @@ public class StepYamlHandlerTest extends BaseYamlHandlerTest {
     when(appService.getAppByName(ACCOUNT_ID, "a1")).thenReturn(application);
     when(appService.get(APP_ID)).thenReturn(application);
     when(yamlHelper.getAppId(ACCOUNT_ID, "Setup/Applications/a1/Workflows/build.yaml")).thenReturn(APP_ID);
-    when(featureFlagService.isEnabled(FeatureName.NAS_SUPPORT, ACCOUNT_ID)).thenReturn(true);
     when(serviceResourceService.getServiceByName(APP_ID, "s1")).thenReturn(Service.builder().uuid(SERVICE_ID).build());
     when(artifactStreamService.getArtifactStreamByName(APP_ID, SERVICE_ID, "test")).thenReturn(nexusArtifactStream);
     when(artifactStreamService.get(ARTIFACT_STREAM_ID)).thenReturn(nexusArtifactStream);
