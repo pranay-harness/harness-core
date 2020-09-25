@@ -6,6 +6,7 @@ import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlMatching;
 import static io.harness.rule.OwnerRule.AADITI;
 import static io.harness.rule.OwnerRule.GEORGE;
+import static io.harness.rule.OwnerRule.ROHITKARELIA;
 import static io.harness.rule.OwnerRule.SRINIVAS;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -512,6 +513,24 @@ public class NexusServiceTest extends WingsBaseTest {
       + "</artifactUri>\n"
       + "                                <pomUri/>\n"
       + "                            </indexBrowserTreeNode>\n"
+      + "                            <indexBrowserTreeNode>\n"
+      + "                                <type>artifact</type>\n"
+      + "                                <leaf>true</leaf>\n"
+      + "                                <nodeName>todolist-4.0.zip</nodeName>\n"
+      + "                                <path>/mygroup/todolist/4.0/todolist-4.0.zip</path>\n"
+      + "                                <groupId>mygroup</groupId>\n"
+      + "                                <artifactId>todolist</artifactId>\n"
+      + "                                <version>4.0</version>\n"
+      + "                                <repositoryId>releases</repositoryId>\n"
+      + "                                <locallyAvailable>false</locallyAvailable>\n"
+      + "                                <artifactTimestamp>0</artifactTimestamp>\n"
+      + "                                <extension>zip</extension>\n"
+      + "                                <packaging>zip</packaging>\n"
+      + "                                <artifactUri>\n"
+      + "https://nexus2.dev.harness.io/service/local/artifact/maven/redirect?r=releases&amp;g=mygroup&amp;a=todolist&amp;v=4.0&amp;p=zip\n"
+      + "</artifactUri>\n"
+      + "                                <pomUri/>\n"
+      + "                            </indexBrowserTreeNode>\n"
       + "                        </children>\n"
       + "                        <groupId>mygroup</groupId>\n"
       + "                        <artifactId>todolist</artifactId>\n"
@@ -950,7 +969,7 @@ public class NexusServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = AADITI)
+  @Owner(developers = ROHITKARELIA)
   @Category(UnitTests.class)
   public void shouldGetVersionsWithExtensionAndClassifier() {
     wireMockRule.stubFor(
@@ -959,7 +978,7 @@ public class NexusServiceTest extends WingsBaseTest {
                 aResponse().withStatus(200).withBody(XML_RESPONSE).withHeader("Content-Type", "application/xml")));
 
     List<BuildDetails> buildDetails = nexusService.getVersions(
-        nexusConfig, null, "releases", "software.wings.nexus", "rest-client", "jar", "sources");
+        nexusConfig, null, "releases", "software.wings.nexus", "rest-client", "jar", "capsule");
     assertThat(buildDetails)
         .hasSize(2)
         .extracting(BuildDetails::getNumber, BuildDetails::getRevision)
@@ -968,23 +987,45 @@ public class NexusServiceTest extends WingsBaseTest {
     assertThat(buildDetails)
         .hasSize(2)
         .extracting(BuildDetails::getBuildUrl)
-        .containsExactly(
-            "http://localhost:8881/nexus/service/local/artifact/maven/content?r=releases&g=software.wings.nexus&a=rest-client&v=3.0&p=jar&e=jar&c=sources",
-            "http://localhost:8881/nexus/service/local/artifact/maven/content?r=releases&g=software.wings.nexus&a=rest-client&v=3.1.2&p=jar&e=jar&c=sources");
-    assertThat(buildDetails.get(0).getArtifactFileMetadataList().get(0))
-        .extracting(ArtifactFileMetadata::getFileName)
-        .isEqualTo("rest-client-3.0.jar");
-    assertThat(buildDetails.get(0).getArtifactFileMetadataList().get(0))
-        .extracting(ArtifactFileMetadata::getUrl)
-        .isEqualTo(
-            "http://localhost:8881/nexus/service/local/artifact/maven/content?r=releases&g=software.wings.nexus&a=rest-client&v=3.0&p=jar&e=jar&c=sources");
+        .contains(
+            "http://localhost:8881/nexus/service/local/artifact/maven/content?r=releases&g=software.wings.nexus&a=rest-client&v=3.1.2&p=jar&e=jar&c=capsule");
     assertThat(buildDetails.get(1).getArtifactFileMetadataList().get(0))
         .extracting(ArtifactFileMetadata::getFileName)
         .isEqualTo("rest-client-3.1.2-capsule.jar");
     assertThat(buildDetails.get(1).getArtifactFileMetadataList().get(0))
         .extracting(ArtifactFileMetadata::getUrl)
         .isEqualTo(
-            "http://localhost:8881/nexus/service/local/artifact/maven/content?r=releases&g=software.wings.nexus&a=rest-client&v=3.1.2&p=jar&e=jar&c=sources");
+            "http://localhost:8881/nexus/service/local/artifact/maven/content?r=releases&g=software.wings.nexus&a=rest-client&v=3.1.2&p=jar&e=jar&c=capsule");
+  }
+
+  @Test
+  @Owner(developers = ROHITKARELIA)
+  @Category(UnitTests.class)
+  public void shouldGetVersionsWithExtensionNotProvidedAndClassifierProvided() {
+    wireMockRule.stubFor(
+        get(urlEqualTo("/nexus/service/local/repositories/releases/index_content/software/wings/nexus/rest-client/"))
+            .willReturn(
+                aResponse().withStatus(200).withBody(XML_RESPONSE).withHeader("Content-Type", "application/xml")));
+
+    List<BuildDetails> buildDetails =
+        nexusService.getVersions(nexusConfig, null, "releases", "software.wings.nexus", "rest-client", "", "capsule");
+    assertThat(buildDetails)
+        .hasSize(2)
+        .extracting(BuildDetails::getNumber, BuildDetails::getRevision)
+        .containsExactly(tuple("3.0", "3.0"), tuple("3.1.2", "3.1.2"));
+
+    assertThat(buildDetails)
+        .hasSize(2)
+        .extracting(BuildDetails::getBuildUrl)
+        .contains(
+            "http://localhost:8881/nexus/service/local/artifact/maven/content?r=releases&g=software.wings.nexus&a=rest-client&v=3.1.2&p=jar&c=capsule");
+    assertThat(buildDetails.get(1).getArtifactFileMetadataList().get(0))
+        .extracting(ArtifactFileMetadata::getFileName)
+        .isEqualTo("rest-client-3.1.2-capsule.jar");
+    assertThat(buildDetails.get(1).getArtifactFileMetadataList().get(0))
+        .extracting(ArtifactFileMetadata::getUrl)
+        .isEqualTo(
+            "http://localhost:8881/nexus/service/local/artifact/maven/content?r=releases&g=software.wings.nexus&a=rest-client&v=3.1.2&p=jar&c=capsule");
   }
 
   @Test
@@ -1610,7 +1651,7 @@ public class NexusServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = AADITI)
+  @Owner(developers = ROHITKARELIA)
   @Category(UnitTests.class)
   public void shouldGetVersionWithExtensionAndClassifier() {
     wireMockRule.stubFor(
@@ -1628,21 +1669,72 @@ public class NexusServiceTest extends WingsBaseTest {
         .hasSize(1)
         .extracting(BuildDetails::getBuildUrl)
         .containsExactly(
-            "http://localhost:8881/nexus/service/local/artifact/maven/content?r=releases&g=mygroup&a=todolist&v=4.0&p=war&e=zip&c=sources");
+            "http://localhost:8881/nexus/service/local/artifact/maven/content?r=releases&g=mygroup&a=todolist&v=4.0&p=zip&e=zip&c=sources");
     assertThat(buildDetails.get(0).getArtifactFileMetadataList().get(0))
-        .extracting(ArtifactFileMetadata::getFileName)
-        .isEqualTo("todolist-4.0.zip");
-    assertThat(buildDetails.get(0).getArtifactFileMetadataList().get(0))
-        .extracting(ArtifactFileMetadata::getUrl)
-        .isEqualTo(
-            "http://localhost:8881/nexus/service/local/artifact/maven/content?r=releases&g=mygroup&a=todolist&v=4.0&p=war&e=zip&c=sources");
-    assertThat(buildDetails.get(0).getArtifactFileMetadataList().get(1))
         .extracting(ArtifactFileMetadata::getFileName)
         .isEqualTo("todolist-4.0-sources.zip");
-    assertThat(buildDetails.get(0).getArtifactFileMetadataList().get(1))
+    assertThat(buildDetails.get(0).getArtifactFileMetadataList().get(0))
         .extracting(ArtifactFileMetadata::getUrl)
         .isEqualTo(
             "http://localhost:8881/nexus/service/local/artifact/maven/content?r=releases&g=mygroup&a=todolist&v=4.0&p=zip&e=zip&c=sources");
+  }
+
+  @Test
+  @Owner(developers = ROHITKARELIA)
+  @Category(UnitTests.class)
+  public void shouldGetVersionWithExtensionNotProvidedAndClassifierProvided() {
+    wireMockRule.stubFor(
+        get(urlEqualTo("/nexus/service/local/repositories/releases/index_content/mygroup/todolist/4.0/"))
+            .willReturn(aResponse()
+                            .withStatus(200)
+                            .withBody(XML_RESPONSE_INDEX_TREE_BROWSER_2)
+                            .withHeader("Content-Type", "application/xml")));
+
+    List<BuildDetails> buildDetails =
+        nexusService.getVersion(nexusConfig, null, "releases", "mygroup", "todolist", "", "sources", "4.0");
+    assertThat(buildDetails).hasSize(1).extracting(BuildDetails::getNumber).containsExactly("4.0");
+
+    assertThat(buildDetails)
+        .hasSize(1)
+        .extracting(BuildDetails::getBuildUrl)
+        .contains(
+            "http://localhost:8881/nexus/service/local/artifact/maven/content?r=releases&g=mygroup&a=todolist&v=4.0&p=zip&c=sources");
+    assertThat(buildDetails.get(0).getArtifactFileMetadataList().get(0))
+        .extracting(ArtifactFileMetadata::getFileName)
+        .isEqualTo("todolist-4.0-sources.zip");
+    assertThat(buildDetails.get(0).getArtifactFileMetadataList().get(0))
+        .extracting(ArtifactFileMetadata::getUrl)
+        .isEqualTo(
+            "http://localhost:8881/nexus/service/local/artifact/maven/content?r=releases&g=mygroup&a=todolist&v=4.0&p=zip&c=sources");
+  }
+
+  @Test
+  @Owner(developers = ROHITKARELIA)
+  @Category(UnitTests.class)
+  public void shouldGetVersionWithExtensionProvidedAndClassifierNotProvided() {
+    wireMockRule.stubFor(
+        get(urlEqualTo("/nexus/service/local/repositories/releases/index_content/mygroup/todolist/4.0/"))
+            .willReturn(aResponse()
+                            .withStatus(200)
+                            .withBody(XML_RESPONSE_INDEX_TREE_BROWSER_2)
+                            .withHeader("Content-Type", "application/xml")));
+
+    List<BuildDetails> buildDetails =
+        nexusService.getVersion(nexusConfig, null, "releases", "mygroup", "todolist", "zip", "", "4.0");
+    assertThat(buildDetails).hasSize(1).extracting(BuildDetails::getNumber).contains("4.0");
+
+    assertThat(buildDetails)
+        .hasSize(1)
+        .extracting(BuildDetails::getBuildUrl)
+        .contains(
+            "http://localhost:8881/nexus/service/local/artifact/maven/content?r=releases&g=mygroup&a=todolist&v=4.0&p=zip&e=zip");
+    assertThat(buildDetails.get(0).getArtifactFileMetadataList().get(0))
+        .extracting(ArtifactFileMetadata::getFileName)
+        .isEqualTo("todolist-4.0-sources.zip");
+    assertThat(buildDetails.get(0).getArtifactFileMetadataList().get(0))
+        .extracting(ArtifactFileMetadata::getUrl)
+        .isEqualTo(
+            "http://localhost:8881/nexus/service/local/artifact/maven/content?r=releases&g=mygroup&a=todolist&v=4.0&p=zip&e=zip");
   }
 
   @Test

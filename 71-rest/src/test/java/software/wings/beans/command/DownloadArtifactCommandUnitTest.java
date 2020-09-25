@@ -200,15 +200,17 @@ public class DownloadArtifactCommandUnitTest extends WingsBaseTest {
           .metadataOnly(true)
           .artifactFileMetadata(asList(
               builder()
-                  .fileName("todolist-7.0.war")
+                  .fileName("todolist-7.0-sources.war")
                   .url(
-                      "https://nexus2-cdteam.harness.io/service/local/artifact/maven/content?r=releases&g=io.harness.test&a=todolist&v=7.0&p=war&e=war")
+                      "https://nexus2-cdteam.harness.io/service/local/artifact/maven/content?r=releases&g=io.harness.test&a=todolist&v=7.0&p=war&e=war&c=sources")
                   .build()))
           .serverSetting(nexusSetting)
           .artifactStreamId(ARTIFACT_STREAM_ID)
           .jobName("releases")
           .groupId("io.harness.test")
           .artifactName("todolist")
+          .extension("war")
+          .classifier("sources")
           .artifactServerEncryptedDataDetails(Collections.emptyList())
           .build();
 
@@ -592,13 +594,13 @@ public class DownloadArtifactCommandUnitTest extends WingsBaseTest {
   private Object[][] getNexus2MavenData() {
     return new Object[][] {
         {ScriptType.BASH,
-            "curl --fail --progress-bar -H \"Authorization: Basic YWRtaW46ZHVtbXkxMjMh\" -X GET \"https://nexus2-cdteam.harness.io/service/local/artifact/maven/content?r=releases&g=io.harness.test&a=todolist&v=7.0&p=war&e=war\" -o \"DESTINATION_DIR_PATH/todolist-7.0.war\"\n"},
+            "curl --fail --progress-bar -H \"Authorization: Basic YWRtaW46ZHVtbXkxMjMh\" -X GET \"https://nexus2-cdteam.harness.io/service/local/artifact/maven/content?r=releases&g=io.harness.test&a=todolist&v=7.0&p=war&e=war&c=sources\" -o \"DESTINATION_DIR_PATH/todolist-7.0-sources.war\"\n"},
         {ScriptType.POWERSHELL,
             "$Headers = @{\n"
                 + "    Authorization = \"Basic YWRtaW46ZHVtbXkxMjMh\"\n"
                 + "}\n"
                 + " [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12\n"
-                + " Invoke-WebRequest -Uri \"https://nexus2-cdteam.harness.io/service/local/artifact/maven/content?r=releases&g=io.harness.test&a=todolist&v=7.0&p=war&e=war\" -Headers $Headers -OutFile \"DESTINATION_DIR_PATH\\todolist-7.0.war\""}};
+                + " Invoke-WebRequest -Uri \"https://nexus2-cdteam.harness.io/service/local/artifact/maven/content?r=releases&g=io.harness.test&a=todolist&v=7.0&p=war&e=war&c=sources\" -Headers $Headers -OutFile \"DESTINATION_DIR_PATH\\todolist-7.0-sources.war\""}};
   }
 
   private Object[][] getNexus2MavenDataAnon() {
