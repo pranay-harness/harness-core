@@ -27,8 +27,8 @@ go_library(
 
 java_grpc_library(
     name = "ciscm_java_proto",
+    visibility = ["//visibility:public"],
     deps = [
         ":ciscmpb_proto",
     ],
-    visibility = ["//visibility:public"],
 )

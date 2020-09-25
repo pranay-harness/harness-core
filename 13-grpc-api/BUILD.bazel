@@ -2,90 +2,90 @@ load("@rules_java//java:defs.bzl", "java_binary")
 load("//:GenTestRules.bzl", "run_tests")
 load("//tools/checkstyle:rules.bzl", "checkstyle")
 load("//:macros.bzl", "sources")
-load("//:macros.bzl","sonarqube_test")
-load("//tools/pmd:defs.bzl","pmd")
+load("//:macros.bzl", "sonarqube_test")
+load("//tools/pmd:defs.bzl", "pmd")
 
 sources()
 
 java_library(
     name = "maven_deps",
+    visibility = ["//visibility:public"],
     exports = [
-               "//12-commons:module",
-               "//12-commons:maven_deps",
-               "@maven//:com_google_code_findbugs_annotations",
-               "@maven//:com_google_protobuf_protobuf_java",
-               "@maven//:com_google_protobuf_protobuf_java_util",
-               "@maven//:io_grpc_grpc_core",
-               "@maven//:io_grpc_grpc_netty_shaded",
-               "@maven//:io_grpc_grpc_protobuf",
-               "@maven//:io_grpc_grpc_services",
-               "@maven//:io_grpc_grpc_stub",
-               "@maven//:net_openhft_chronicle_queue",
-               "@maven//:org_slf4j_slf4j_api",
-               "@maven//:io_grpc_grpc_testing",
-               "@maven//:junit_junit",
-               "@maven//:org_awaitility_awaitility",
-               "@maven//:org_mockito_mockito_core",
-               "@maven//:net_openhft_chronicle_wire",
-               "@maven//:io_grpc_grpc_context",
-               "@maven//:joda_time_joda_time"
-
+        "//12-commons:maven_deps",
+        "//12-commons:module",
+        "@maven//:com_google_code_findbugs_annotations",
+        "@maven//:com_google_protobuf_protobuf_java",
+        "@maven//:com_google_protobuf_protobuf_java_util",
+        "@maven//:io_grpc_grpc_context",
+        "@maven//:io_grpc_grpc_core",
+        "@maven//:io_grpc_grpc_netty_shaded",
+        "@maven//:io_grpc_grpc_protobuf",
+        "@maven//:io_grpc_grpc_services",
+        "@maven//:io_grpc_grpc_stub",
+        "@maven//:io_grpc_grpc_testing",
+        "@maven//:joda_time_joda_time",
+        "@maven//:junit_junit",
+        "@maven//:net_openhft_chronicle_queue",
+        "@maven//:net_openhft_chronicle_wire",
+        "@maven//:org_awaitility_awaitility",
+        "@maven//:org_mockito_mockito_core",
+        "@maven//:org_slf4j_slf4j_api",
     ],
-     visibility = ["//visibility:public"],
 )
 
 java_library(
     name = "test_deps",
     exports = [
-        "@maven//:org_assertj_assertj_core"
-    ]
+        "@maven//:org_assertj_assertj_core",
+    ],
 )
 
 java_library(
     name = "module",
     srcs = glob(["src/main/**/*.java"]),
+    visibility = ["//visibility:public"],
     deps = [
         "maven_deps",
         "//:lombok",
-        "//13-grpc-api/src/main/proto:13_grpc_api_proto",
         "//13-grpc-api/src/main/proto:13_grpc_api_java_proto",
+        "//13-grpc-api/src/main/proto:13_grpc_api_proto",
     ],
-   visibility = ["//visibility:public"],
 )
 
 java_library(
     name = "tests",
     srcs = glob(["src/test/**/*.java"]),
     deps = [
-        "module",
         "maven_deps",
+        "module",
         "test_deps",
-        "//990-commons-test:module",
-        "//13-grpc-api/src/main/proto:13_grpc_api_proto",
-        "//13-grpc-api/src/main/proto:13_grpc_api_java_proto",
         "//:lombok",
-    ]
+        "//13-grpc-api/src/main/proto:13_grpc_api_java_proto",
+        "//13-grpc-api/src/main/proto:13_grpc_api_proto",
+        "//990-commons-test:module",
+    ],
 )
+
 run_tests(
     test_files = glob(["src/test/**/*Test.java"]),
-    deps = [
-        "module",
-        "tests",
-        "maven_deps",
-        "test_deps",
-        "//13-grpc-api/src/main/proto:13_grpc_api_proto",
-        "//13-grpc-api/src/main/proto:13_grpc_api_java_proto",
-        "//:lombok",
-    ],
     runtime_deps = [
         "@maven//:javax_ws_rs_javax_ws_rs_api",
+    ],
+    deps = [
+        "maven_deps",
+        "module",
+        "test_deps",
+        "tests",
+        "//:lombok",
+        "//13-grpc-api/src/main/proto:13_grpc_api_java_proto",
+        "//13-grpc-api/src/main/proto:13_grpc_api_proto",
     ],
 )
 
 checkstyle()
 
 sonarqube_test(
-    name="sq_mycomponent",
+    name = "sq_mycomponent",
     srcs = ["sources"],
     targets = [
         ":maven_deps",

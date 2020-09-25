@@ -2,88 +2,88 @@ load("@rules_java//java:defs.bzl", "java_binary")
 load("//:GenTestRules.bzl", "run_tests")
 load("//tools/checkstyle:rules.bzl", "checkstyle")
 load("//:macros.bzl", "sources")
-load("//:macros.bzl","sonarqube_test")
-load("//tools/pmd:defs.bzl","pmd")
+load("//:macros.bzl", "sonarqube_test")
+load("//tools/pmd:defs.bzl", "pmd")
 
 sources()
 
 java_library(
     name = "maven_deps",
-    exports = [
-            "//12-commons:module",
-            "//12-commons:maven_deps",
-            "@maven//:com_amazonaws_aws_java_sdk_ec2",
-            "@maven//:com_esotericsoftware_yamlbeans_yamlbeans",
-            "@maven//:com_google_apis_google_api_services_monitoring",
-            "@maven//:com_google_code_gson_gson",
-            "@maven//:com_sumologic_api_client_sumo_java_client",
-            "@maven//:io_fabric8_kubernetes_api",
-            "@maven//:io_fabric8_kubernetes_client",
-            "@maven//:io_fabric8_kubernetes_model",
-            "@maven//:io_kubernetes_client_java",
-            "@maven//:io_kubernetes_client_java_api",
-            "@maven//:org_json_json",
-            "@maven//:org_mongodb_mongo_java_driver",
-            "@maven//:org_slf4j_log4j_over_slf4j",
-            "@maven//:com_amazonaws_aws_java_sdk_core"
-        ],
     visibility = ["//visibility:public"],
+    exports = [
+        "//12-commons:maven_deps",
+        "//12-commons:module",
+        "@maven//:com_amazonaws_aws_java_sdk_core",
+        "@maven//:com_amazonaws_aws_java_sdk_ec2",
+        "@maven//:com_esotericsoftware_yamlbeans_yamlbeans",
+        "@maven//:com_google_apis_google_api_services_monitoring",
+        "@maven//:com_google_code_gson_gson",
+        "@maven//:com_sumologic_api_client_sumo_java_client",
+        "@maven//:io_fabric8_kubernetes_api",
+        "@maven//:io_fabric8_kubernetes_client",
+        "@maven//:io_fabric8_kubernetes_model",
+        "@maven//:io_kubernetes_client_java",
+        "@maven//:io_kubernetes_client_java_api",
+        "@maven//:org_json_json",
+        "@maven//:org_mongodb_mongo_java_driver",
+        "@maven//:org_slf4j_log4j_over_slf4j",
+    ],
 )
 
 java_library(
     name = "test_deps",
     exports = [
         "//990-commons-test:module",
-        "@maven//:org_assertj_assertj_core",
         "@maven//:junit_junit",
-    ]
+        "@maven//:org_assertj_assertj_core",
+    ],
 )
 
 java_library(
     name = "module",
     srcs = glob(["src/main/**/*.java"]),
+    resources = [
+        "//14-api-services-beans/src/test/resources:resource",
+    ],
+    visibility = ["//visibility:public"],
     deps = [
         "maven_deps",
         "//:lombok",
     ],
-   resources = [
-           "//14-api-services-beans/src/test/resources:resource",
-      ],
-   visibility = ["//visibility:public"],
 )
 
 java_library(
     name = "tests",
     srcs = glob(["src/test/**/*.java"]),
+    visibility = ["//visibility:public"],
     deps = [
         "maven_deps",
         "module",
         "test_deps",
         "//:lombok",
     ],
-   visibility = ["//visibility:public"],
 )
 
 run_tests(
+    testonly = 1,
     test_files = glob(["src/test/**/*Test.java"]),
+    runtime_deps = [
+        "//14-api-services-beans/src/test/resources",
+        "@maven//:javax_ws_rs_javax_ws_rs_api",
+    ],
     deps = [
-        "module",
         "maven_deps",
+        "module",
         "test_deps",
         "tests",
         "//:lombok",
     ],
-    runtime_deps = [
-            "//14-api-services-beans/src/test/resources:resources",
-            "@maven//:javax_ws_rs_javax_ws_rs_api",
-    ],
-    testonly = 1,
 )
 
 checkstyle()
 
 sonarqube_test(
-    name="sq_mycomponent",
+    name = "sq_mycomponent",
     srcs = ["sources"],
     targets = [
         ":maven_deps",

@@ -2,8 +2,8 @@ load("@rules_proto_grpc//java:defs.bzl", "java_grpc_library")
 
 java_grpc_library(
     name = "50_delegate_task_grpc_service_java_proto",
+    visibility = ["//visibility:public"],
     deps = [
         "//50-delegate-task-grpc-service/src/main/proto/io/harness/task/service:50_delegate_task_grpc_service_proto",
     ],
-    visibility = ["//visibility:public"],
 )

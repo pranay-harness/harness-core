@@ -1,8 +1,10 @@
-def impl_checkstyle(name, tags, srcs=[],
-               checkstyle_suppressions="//tools/checkstyle:checkstyle-suppressions.xml",
-               checkstyle_xpath_suppressions="//tools/checkstyle:checkstyle-xpath-suppressions.xml",
-               checkstyle_xml="//tools/config/src/main/resources:harness_checks.xml"):
-
+def impl_checkstyle(
+        name,
+        tags,
+        srcs = [],
+        checkstyle_suppressions = "//tools/checkstyle:checkstyle-suppressions.xml",
+        checkstyle_xpath_suppressions = "//tools/checkstyle:checkstyle-xpath-suppressions.xml",
+        checkstyle_xml = "//tools/config/src/main/resources:harness_checks.xml"):
     native.genrule(
         name = name,
         srcs = srcs,
@@ -21,7 +23,7 @@ def impl_checkstyle(name, tags, srcs=[],
             "> \"$@\"",
             "&& sed -Ei.bak 's|sandbox/darwin-sandbox/[0-9]+/execroot|execroot/harness_monorepo/bazel-out/darwin-fastbuild/bin/sq.runfiles|g'  \"$@\"",
             "&& sed -Ei.bak 's|sandbox/[a-zA-Z]+-sandbox/[0-9]+/execroot|execroot/harness_monorepo/bazel-out/k8-fastbuild/bin/sq.runfiles|g' \"$@\"",
-            "&& cat \"$@\""
+            "&& cat \"$@\"",
         ]),
         tools = [
             checkstyle_xml,
@@ -31,13 +33,13 @@ def impl_checkstyle(name, tags, srcs=[],
         ],
     )
 
-def checkstyle(name="checkstyle", srcs = None,tags = ["manual","no-ide"]):
+def checkstyle(name = "checkstyle", srcs = None, tags = ["manual", "no-ide"]):
     if srcs == None:
-        srcs = ["//"+native.package_name()+":sources"]
-    impl_checkstyle(name=name, srcs=srcs, tags=tags)
+        srcs = ["//" + native.package_name() + ":sources"]
+    impl_checkstyle(name = name, srcs = srcs, tags = tags)
 
 def get_checkstyle_targets(modules = []):
-        _targets = []
-        for f in modules:
-            _targets.append(f+":checkstyle")
-        return _targets
+    _targets = []
+    for f in modules:
+        _targets.append(f + ":checkstyle")
+    return _targets

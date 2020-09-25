@@ -9,3 +9,7 @@ build --java_toolchain=@bazel_tools//tools/jdk:toolchain_vanilla
 build --remote_upload_local_results=false
 
 build --test_output=errors
+
+build --symlink_prefix=/
+build --experimental_convenience_symlinks=ignore
+build --experimental_no_product_name_out_symlink=true

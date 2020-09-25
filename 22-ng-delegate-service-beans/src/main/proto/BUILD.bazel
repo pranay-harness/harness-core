@@ -5,18 +5,18 @@ proto_library(
     name = "22_ng_delegate_service_beans_proto",
     srcs = glob(["**/*.proto"]),
     strip_import_prefix = "",
+    visibility = ["//visibility:public"],
     deps = [
         "@com_google_protobuf//:any_proto",
         "@com_google_protobuf//:duration_proto",
         "@com_google_protobuf//:timestamp_proto",
     ],
-    visibility = ["//visibility:public"],
 )
 
 java_grpc_compile(
     name = "22_ng_delegate_service_beans_java_proto",
+    visibility = ["//visibility:public"],
     deps = [
         ":22_ng_delegate_service_beans_proto",
     ],
-    visibility = ["//visibility:public"],
 )

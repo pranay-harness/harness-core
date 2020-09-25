@@ -3,95 +3,94 @@ load("//:GenTestRules.bzl", "run_tests")
 load("//tools/checkstyle:rules.bzl", "checkstyle")
 load("//:macros.bzl", "sonarqube_test")
 load("//:macros.bzl", "sources")
-load("//tools/pmd:defs.bzl","pmd")
+load("//tools/pmd:defs.bzl", "pmd")
 
 sources()
 
 java_library(
     name = "maven_deps",
-    exports = [
-             "//12-commons:module",
-             "//14-api-services-beans:module",
-             "@maven//:com_google_protobuf_protobuf_java",
-             "@maven//:io_fabric8_fabric8_utils",
-             "@maven//:com_google_code_findbugs_annotations",
-             "@maven//:com_google_inject_guice",
-             "@maven//:javax_validation_validation_api",
-             "@maven//:org_slf4j_slf4j_api",
-             "@maven//:com_google_guava_guava",
-             "@maven//:org_apache_commons_commons_lang3",
-             "@maven//:org_zeroturnaround_zt_exec",
-             "@maven//:io_fabric8_kubernetes_model",
-             "@maven//:me_snowdrop_istio_model",
-             "@maven//:io_fabric8_kubernetes_client",
-             "@maven//:commons_io_commons_io",
-             "@maven//:io_fabric8_kubernetes_api",
-             "@maven//:com_amazonaws_aws_java_sdk_core",
-             "@maven//:io_kubernetes_client_java_api"
-        ],
     visibility = ["//visibility:public"],
+    exports = [
+        "//12-commons:module",
+        "//14-api-services-beans:module",
+        "@maven//:com_amazonaws_aws_java_sdk_core",
+        "@maven//:com_google_code_findbugs_annotations",
+        "@maven//:com_google_guava_guava",
+        "@maven//:com_google_inject_guice",
+        "@maven//:com_google_protobuf_protobuf_java",
+        "@maven//:commons_io_commons_io",
+        "@maven//:io_fabric8_fabric8_utils",
+        "@maven//:io_fabric8_kubernetes_api",
+        "@maven//:io_fabric8_kubernetes_client",
+        "@maven//:io_fabric8_kubernetes_model",
+        "@maven//:io_kubernetes_client_java_api",
+        "@maven//:javax_validation_validation_api",
+        "@maven//:me_snowdrop_istio_model",
+        "@maven//:org_apache_commons_commons_lang3",
+        "@maven//:org_slf4j_slf4j_api",
+        "@maven//:org_zeroturnaround_zt_exec",
+    ],
 )
 
 java_library(
     name = "module",
     srcs = glob(["src/main/**/*.java"]),
+    resources = [
+    ],
+    visibility = ["//visibility:public"],
     deps = [
         "maven_deps",
         "//:lombok",
         "//15-api-services:module",
         "//19-delegate-tasks-beans:module",
     ],
-   resources = [
-
-      ],
-   visibility = ["//visibility:public"],
 )
 
 java_library(
     name = "test_deps",
     exports = [
-        "//990-commons-test:module",
         "//15-api-services:module",
         "//19-delegate-tasks-beans:module",
-        "@maven//:org_mockito_mockito_core",
-        "@maven//:org_assertj_assertj_core",
+        "//990-commons-test:module",
         "@maven//:com_google_guava_guava",
         "@maven//:com_google_inject_guice",
-        "@maven//:junit_junit"
-    ]
+        "@maven//:junit_junit",
+        "@maven//:org_assertj_assertj_core",
+        "@maven//:org_mockito_mockito_core",
+    ],
 )
 
 java_library(
     name = "tests",
     srcs = glob(["src/test/**/*.java"]),
+    visibility = ["//visibility:public"],
     deps = [
-        "module",
         "maven_deps",
-        "//:lombok",
+        "module",
         "test_deps",
+        "//:lombok",
     ],
-   visibility = ["//visibility:public"],
 )
 
 run_tests(
+    testonly = 1,
     test_files = glob(["src/test/**/*Test.java"]),
+    runtime_deps = [
+        "@maven//:javax_ws_rs_javax_ws_rs_api",
+    ],
     deps = [
-        "module",
         "maven_deps",
+        "module",
         "test_deps",
         "tests",
         "//:lombok",
     ],
-    runtime_deps = [
-        "@maven//:javax_ws_rs_javax_ws_rs_api",
-    ],
-    testonly = 1,
 )
 
 checkstyle()
 
 sonarqube_test(
-    name="sq_mycomponent",
+    name = "sq_mycomponent",
     srcs = ["sources"],
     targets = [
         ":maven_deps",

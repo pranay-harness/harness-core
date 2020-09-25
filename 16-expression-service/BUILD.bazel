@@ -3,83 +3,86 @@ load("//:GenTestRules.bzl", "run_tests")
 load("//tools/checkstyle:rules.bzl", "checkstyle")
 load("//:macros.bzl", "sources")
 load("//:macros.bzl", "sonarqube_test")
-load("//tools/pmd:defs.bzl","pmd")
+load("//tools/pmd:defs.bzl", "pmd")
 
 sources()
 
 java_library(
     name = "maven_deps",
-    exports = [
-                "//12-commons:module",
-                "//13-grpc-api:module",
-                "//13-grpc-api:maven_deps",
-                "@maven//:com_google_inject_guice",
-                "@maven//:com_google_protobuf_protobuf_java",
-                "@maven//:io_grpc_grpc_netty",
-                "@maven//:io_grpc_grpc_protobuf",
-                "@maven//:io_grpc_grpc_stub",
-                "@maven//:org_projectlombok_lombok",
-        ],
     visibility = ["//visibility:public"],
+    exports = [
+        "//12-commons:module",
+        "//13-grpc-api:maven_deps",
+        "//13-grpc-api:module",
+        "@maven//:com_google_inject_guice",
+        "@maven//:com_google_protobuf_protobuf_java",
+        "@maven//:io_grpc_grpc_netty",
+        "@maven//:io_grpc_grpc_protobuf",
+        "@maven//:io_grpc_grpc_stub",
+        "@maven//:org_projectlombok_lombok",
+    ],
 )
 
 java_library(
     name = "test_deps",
     exports = [
-        "//990-commons-test:module",
         "//16-expression-service/src/main/proto/io/harness/expression/service:16_expression_service_java_proto",
+        "//990-commons-test:module",
         "@maven//:org_assertj_assertj_core",
-    ]
+    ],
 )
 
 java_library(
     name = "module",
     srcs = glob(["src/main/**/*.java"]),
-    deps = [
-                "//13-grpc-api:module",
-                "//16-expression-service/src/main/proto/io/harness/expression/service:16_expression_service_java_proto",
-                "//16-expression-service/src/main/proto/io/harness/expression/service:16_expression_service_proto",
-                "maven_deps",
-                "//:lombok",
+    resources = [
+        "//16-expression-service/src/test/resources:resource",
     ],
-   resources = [
-                "//16-expression-service/src/test/resources:resource",
-      ],
-   visibility = ["//visibility:public"],
+    visibility = ["//visibility:public"],
+    deps = [
+        "maven_deps",
+        "//:lombok",
+        "//13-grpc-api:module",
+        "//16-expression-service/src/main/proto/io/harness/expression/service:16_expression_service_java_proto",
+        "//16-expression-service/src/main/proto/io/harness/expression/service:16_expression_service_proto",
+    ],
 )
 
 java_library(
     name = "tests",
     srcs = glob(["src/test/**/*.java"]),
+    visibility = ["//visibility:public"],
     deps = [
-                "module",
-                "maven_deps",
-                "test_deps",
-                "//:lombok",
-    ],
-   visibility = ["//visibility:public"],
-)
-
-run_tests(
-    test_files = glob(["src/test/**/*Test.java"],exclude = ["**/ExpressionServiceTest.java"],),
-    deps = [
-        "module",
-        "tests",
         "maven_deps",
+        "module",
         "test_deps",
         "//:lombok",
     ],
-    runtime_deps = [
-      "//16-expression-service/src/test/resources:resources",
-     "@maven//:javax_ws_rs_javax_ws_rs_api",
-    ],
+)
+
+run_tests(
     testonly = 1,
+    test_files = glob(
+        ["src/test/**/*Test.java"],
+        exclude = ["**/ExpressionServiceTest.java"],
+    ),
+    runtime_deps = [
+        "//16-expression-service/src/test/resources",
+        "@maven//:javax_ws_rs_javax_ws_rs_api",
+    ],
+    deps = [
+        "maven_deps",
+        "module",
+        "test_deps",
+        "tests",
+        "//:lombok",
+    ],
 )
 
 checkstyle()
 
 sonarqube_test(
-    name="sq_mycomponent",
+    name = "sq_mycomponent",
     srcs = ["sources"],
     targets = [
         ":maven_deps",
