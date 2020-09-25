@@ -1,4 +1,4 @@
-package io.harness.ng.core.entityReference.resouce;
+package io.harness.ng.core.entityReference.resource;
 
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.times;

@@ -1,4 +1,4 @@
-package io.harness.ng.core.entityReference.resouce;
+package io.harness.ng.core.entityReference.resource;
 
 import com.google.inject.Inject;
 
