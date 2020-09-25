@@ -15,6 +15,8 @@ import java.util.Optional;
 public class ProjectMapper {
   public static Project toProject(ProjectDTO createProjectDTO) {
     return Project.builder()
+        .accountIdentifier(createProjectDTO.getAccountIdentifier())
+        .orgIdentifier(createProjectDTO.getOrgIdentifier())
         .identifier(createProjectDTO.getIdentifier())
         .name(createProjectDTO.getName())
         .description(Optional.ofNullable(createProjectDTO.getDescription()).orElse(""))

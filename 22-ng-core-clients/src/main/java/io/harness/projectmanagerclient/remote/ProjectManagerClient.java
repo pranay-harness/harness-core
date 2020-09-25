@@ -8,6 +8,7 @@ import static io.harness.NGConstants.PAGE_KEY;
 import static io.harness.NGConstants.SEARCH_TERM_KEY;
 import static io.harness.NGConstants.SIZE_KEY;
 import static io.harness.NGConstants.SORT_KEY;
+import static javax.ws.rs.core.HttpHeaders.IF_MATCH;
 
 import io.harness.ModuleType;
 import io.harness.beans.NGPageResponse;
@@ -17,6 +18,7 @@ import retrofit2.Call;
 import retrofit2.http.Body;
 import retrofit2.http.DELETE;
 import retrofit2.http.GET;
+import retrofit2.http.Header;
 import retrofit2.http.POST;
 import retrofit2.http.PUT;
 import retrofit2.http.Path;
@@ -48,6 +50,7 @@ public interface ProjectManagerClient {
       @Body ProjectDTO projectDTO);
 
   @DELETE(PROJECTS_API + "/{identifier}")
-  Call<ResponseDTO<Boolean>> deleteProject(@Path(value = IDENTIFIER_KEY) String identifier,
-      @Path(value = ACCOUNT_KEY) String accountIdentifier, @Path(value = ORG_KEY) String orgIdentifier);
+  Call<ResponseDTO<Boolean>> deleteProject(@Header(IF_MATCH) Long ifMatch,
+      @Path(value = IDENTIFIER_KEY) String identifier, @Path(value = ACCOUNT_KEY) String accountIdentifier,
+      @Path(value = ORG_KEY) String orgIdentifier);
 }

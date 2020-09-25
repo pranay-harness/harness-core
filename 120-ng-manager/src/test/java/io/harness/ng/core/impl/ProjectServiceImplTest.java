@@ -9,7 +9,7 @@ import static io.harness.utils.PageTestUtils.getPage;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
 import static junit.framework.TestCase.assertEquals;
-import static junit.framework.TestCase.assertFalse;
+import static junit.framework.TestCase.assertNull;
 import static junit.framework.TestCase.assertTrue;
 import static org.apache.commons.lang3.RandomStringUtils.randomAlphabetic;
 import static org.mockito.Matchers.any;
@@ -124,9 +124,9 @@ public class ProjectServiceImplTest extends CategoryTest {
     Project project = toProject(projectDTO);
     project.setAccountIdentifier(accountIdentifier);
     project.setOrgIdentifier(orgIdentifier);
+    project.setIdentifier(identifier);
 
-    when(projectService.get(accountIdentifier, orgIdentifier, identifier)).thenReturn(Optional.of(project));
-    when(projectRepository.save(project)).thenReturn(project);
+    when(projectRepository.update(any(), any())).thenReturn(project);
 
     Project updatedProject = projectService.update(accountIdentifier, orgIdentifier, identifier, projectDTO);
 
@@ -145,9 +145,7 @@ public class ProjectServiceImplTest extends CategoryTest {
     Project project = toProject(projectDTO);
     project.setAccountIdentifier(accountIdentifier);
     project.setOrgIdentifier(orgIdentifier);
-
-    when(projectService.get(accountIdentifier, orgIdentifier, identifier)).thenReturn(Optional.of(project));
-
+    project.setName(randomAlphabetic(10));
     projectService.update(accountIdentifier, orgIdentifier, identifier, projectDTO);
   }
 
@@ -162,35 +160,13 @@ public class ProjectServiceImplTest extends CategoryTest {
     Project project = toProject(projectDTO);
     project.setAccountIdentifier(accountIdentifier);
     project.setOrgIdentifier(orgIdentifier);
+    project.setIdentifier(identifier);
 
-    when(projectService.get(accountIdentifier, orgIdentifier, identifier)).thenReturn(Optional.empty());
+    when(projectRepository.update(any(), any())).thenReturn(null);
 
-    projectService.update(accountIdentifier, orgIdentifier, identifier, projectDTO);
-  }
+    Project updatedProject = projectService.update(accountIdentifier, orgIdentifier, identifier, projectDTO);
 
-  @Test
-  @Owner(developers = KARAN)
-  @Category(UnitTests.class)
-  public void testDeleteProject() {
-    String accountIdentifier = randomAlphabetic(10);
-    String orgIdentifier = randomAlphabetic(10);
-    String identifier = randomAlphabetic(10);
-    ProjectDTO projectDTO = createProjectDTO(accountIdentifier, orgIdentifier, identifier);
-    Project project = toProject(projectDTO);
-
-    when(projectService.get(accountIdentifier, orgIdentifier, identifier)).thenReturn(Optional.empty());
-
-    assertFalse(projectService.delete(accountIdentifier, orgIdentifier, identifier));
-
-    when(projectService.get(accountIdentifier, orgIdentifier, identifier)).thenReturn(Optional.of(project));
-
-    Project deletedProject = toProject(projectDTO);
-    deletedProject.setDeleted(Boolean.TRUE);
-
-    when(projectRepository.save(deletedProject)).thenReturn(deletedProject);
-
-    assertTrue(projectService.delete(accountIdentifier, orgIdentifier, identifier));
-    verify(projectRepository).save(deletedProject);
+    assertNull(updatedProject);
   }
 
   @Test

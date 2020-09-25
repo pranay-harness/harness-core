@@ -1,11 +1,11 @@
 package io.harness.ng.core.impl;
 
 import static io.harness.NGConstants.HARNESS_SECRET_MANAGER_IDENTIFIER;
+import static io.harness.NGConstants.NAME_KEY;
 import static io.harness.eraro.ErrorCode.SECRET_MANAGEMENT_ERROR;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.exception.WingsException.USER_SRE;
 import static io.harness.ng.NextGenModule.SECRET_MANAGER_CONNECTOR_SERVICE;
-import static io.harness.ng.core.remote.ProjectMapper.applyUpdateToProject;
 import static io.harness.ng.core.remote.ProjectMapper.toProject;
 import static io.harness.ng.core.utils.NGUtils.getConnectorRequestDTO;
 import static io.harness.ng.core.utils.NGUtils.getDefaultHarnessSecretManagerName;
@@ -19,6 +19,7 @@ import com.google.inject.Singleton;
 import com.google.inject.name.Named;
 
 import io.harness.connector.services.ConnectorService;
+import io.harness.data.validator.EntityNameValidator;
 import io.harness.exception.DuplicateFieldException;
 import io.harness.exception.InvalidArgumentsException;
 import io.harness.exception.InvalidRequestException;
@@ -37,6 +38,8 @@ import org.springframework.dao.DuplicateKeyException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.mongodb.core.query.Criteria;
+import org.springframework.data.mongodb.core.query.Query;
+import org.springframework.data.mongodb.core.query.Update;
 import software.wings.service.impl.security.SecretManagementException;
 
 import java.util.Optional;
@@ -107,14 +110,52 @@ public class ProjectServiceImpl implements ProjectService {
   @Override
   public Project update(String accountIdentifier, String orgIdentifier, String identifier, ProjectDTO projectDTO) {
     validateUpdateProjectRequest(accountIdentifier, orgIdentifier, identifier, projectDTO);
-    Optional<Project> projectOptional = get(accountIdentifier, orgIdentifier, identifier);
-    if (projectOptional.isPresent()) {
-      Project project = projectOptional.get();
-      Project updatedProject = applyUpdateToProject(project, projectDTO);
-      validate(updatedProject);
-      return projectRepository.save(updatedProject);
+    Criteria criteria = Criteria.where(ProjectKeys.accountIdentifier)
+                            .is(accountIdentifier)
+                            .and(ProjectKeys.orgIdentifier)
+                            .is(orgIdentifier)
+                            .and(ProjectKeys.identifier)
+                            .is(identifier)
+                            .and(ProjectKeys.deleted)
+                            .ne(Boolean.TRUE);
+    if (projectDTO.getVersion() != null) {
+      criteria.and(ProjectKeys.version).is(projectDTO.getVersion());
     }
-    throw new InvalidRequestException("Project to be updated does not exist");
+    Query query = new Query(criteria);
+    Update update = getUpdate(projectDTO);
+    projectDTO.setAccountIdentifier(accountIdentifier);
+    projectDTO.setOrgIdentifier(orgIdentifier);
+    projectDTO.setIdentifier(identifier);
+    projectDTO.setName(Optional.ofNullable(projectDTO.getName()).orElse(NAME_KEY));
+    validate(toProject(projectDTO));
+    Project project = projectRepository.update(query, update);
+    if (project == null) {
+      throw new InvalidRequestException("Resource not found or your resource version might be older", USER);
+    }
+    return project;
+  }
+
+  private Update getUpdate(ProjectDTO projectDTO) {
+    Update update = new Update();
+    if (isNotBlank(projectDTO.getName()) && EntityNameValidator.isValid(projectDTO.getName())) {
+      update.set(ProjectKeys.name, projectDTO.getName());
+    }
+    if (isNotBlank(projectDTO.getColor())) {
+      update.set(ProjectKeys.color, projectDTO.getColor());
+    }
+    if (projectDTO.getDescription() != null) {
+      update.set(ProjectKeys.description, projectDTO.getDescription());
+    }
+    if (projectDTO.getTags() != null) {
+      update.set(ProjectKeys.tags, projectDTO.getTags());
+    }
+    if (projectDTO.getOwners() != null) {
+      update.set(ProjectKeys.owners, projectDTO.getOwners());
+    }
+    if (projectDTO.getModules() != null) {
+      update.set(ProjectKeys.modules, projectDTO.getModules());
+    }
+    return update;
   }
 
   @Override
@@ -152,15 +193,8 @@ public class ProjectServiceImpl implements ProjectService {
   }
 
   @Override
-  public boolean delete(String accountIdentifier, String orgIdentifier, String projectIdentifier) {
-    Optional<Project> projectOptional = get(accountIdentifier, orgIdentifier, projectIdentifier);
-    if (projectOptional.isPresent()) {
-      Project project = projectOptional.get();
-      project.setDeleted(Boolean.TRUE);
-      projectRepository.save(project);
-      return true;
-    }
-    return false;
+  public boolean delete(String accountIdentifier, String orgIdentifier, String projectIdentifier, Long version) {
+    return projectRepository.delete(accountIdentifier, orgIdentifier, projectIdentifier, version);
   }
 
   private void validateCreateProjectRequest(String accountIdentifier, String orgIdentifier, ProjectDTO project) {

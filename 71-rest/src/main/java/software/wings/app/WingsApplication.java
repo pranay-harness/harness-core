@@ -92,6 +92,7 @@ import io.harness.metrics.MetricRegistryModule;
 import io.harness.mongo.MongoModule;
 import io.harness.mongo.QuartzCleaner;
 import io.harness.morphia.MorphiaRegistrar;
+import io.harness.ng.core.CorrelationFilter;
 import io.harness.perpetualtask.AwsAmiInstanceSyncPerpetualTaskClient;
 import io.harness.perpetualtask.AwsCodeDeployInstanceSyncPerpetualTaskClient;
 import io.harness.perpetualtask.CustomDeploymentInstanceSyncClient;
@@ -486,6 +487,8 @@ public class WingsApplication extends Application<MainConfiguration> {
     // Authentication/Authorization filters
     registerAuthFilters(configuration, environment, injector);
 
+    registerCorrelationFilter(environment, injector);
+
     // Register collection iterators
     if (configuration.isEnableIterators()) {
       registerIterators(injector);
@@ -718,6 +721,10 @@ public class WingsApplication extends Application<MainConfiguration> {
         injector.getInstance(NotifyQueuePublisherRegister.class);
     notifyQueuePublisherRegister.register(GENERAL, payload -> publisher.send(asList(GENERAL), payload));
     notifyQueuePublisherRegister.register(ORCHESTRATION, payload -> publisher.send(asList(ORCHESTRATION), payload));
+  }
+
+  private void registerCorrelationFilter(Environment environment, Injector injector) {
+    environment.jersey().register(injector.getInstance(CorrelationFilter.class));
   }
 
   private void registerQueueListeners(Injector injector) {
