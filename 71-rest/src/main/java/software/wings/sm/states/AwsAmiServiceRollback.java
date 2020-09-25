@@ -191,4 +191,10 @@ public class AwsAmiServiceRollback extends AwsAmiServiceDeployState {
   public InstanceUnitType getInstanceUnitType() {
     return super.getInstanceUnitType();
   }
+
+  @Override
+  @SchemaIgnore
+  public Integer getTimeoutMillis() {
+    return super.getTimeoutMillis();
+  }
 }

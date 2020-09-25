@@ -275,7 +275,6 @@ public abstract class State {
     return timeoutMillis;
   }
 
-  @Attributes(title = "Timeout (Milli-seconds)")
   @SchemaIgnore
   public Integer getTimeoutMillis(ExecutionContext context) {
     return getTimeoutMillis();

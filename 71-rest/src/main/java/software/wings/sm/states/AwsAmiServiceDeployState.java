@@ -28,6 +28,7 @@ import com.google.inject.Inject;
 
 import com.amazonaws.services.ec2.model.Instance;
 import com.github.reinert.jjschema.Attributes;
+import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.beans.DelegateTask;
 import io.harness.beans.ExecutionStatus;
 import io.harness.beans.SweepingOutputInstance;
@@ -162,6 +163,7 @@ public class AwsAmiServiceDeployState extends State {
   }
 
   @Override
+  @SchemaIgnore
   public Integer getTimeoutMillis(ExecutionContext context) {
     AmiServiceSetupElement serviceSetupElement =
         (AmiServiceSetupElement) awsAmiServiceStateHelper.getSetupElementFromSweepingOutput(
