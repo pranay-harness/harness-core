@@ -335,7 +335,9 @@ public class TimeSeriesAnalysisServiceImpl implements TimeSeriesAnalysisService 
             .endTime(learningEngineTask.getAnalysisEndTime())
             .verificationTaskId(learningEngineTask.getVerificationTaskId())
             .hostSummaries(analysis.getHostSummaries())
-            .resultSummary(analysis.getResultSummary())
+            .transactionMetricSummaries(analysis.getTransactionMetricSummaries())
+            .risk(analysis.getRisk())
+            .score(analysis.getScore())
             .build();
     deploymentTimeSeriesAnalysisService.save(deploymentTimeSeriesAnalysis);
   }

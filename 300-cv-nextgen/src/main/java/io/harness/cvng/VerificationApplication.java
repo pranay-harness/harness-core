@@ -40,6 +40,7 @@ import io.harness.cvng.core.entities.DeletedCVConfig.DeletedCVConfigKeys;
 import io.harness.cvng.core.jobs.CVConfigCleanupHandler;
 import io.harness.cvng.core.jobs.CVConfigDataCollectionHandler;
 import io.harness.cvng.core.services.CVNextGenConstants;
+import io.harness.cvng.exception.BadRequestExceptionMapper;
 import io.harness.cvng.exception.ConstraintViolationExceptionMapper;
 import io.harness.cvng.exception.GenericExceptionMapper;
 import io.harness.cvng.exception.NotFoundExceptionMapper;
@@ -402,5 +403,6 @@ public class VerificationApplication extends Application<VerificationConfigurati
     jersey.register(GenericExceptionMapper.class);
     jersey.register(ConstraintViolationExceptionMapper.class);
     jersey.register(NotFoundExceptionMapper.class);
+    jersey.register(BadRequestExceptionMapper.class);
   }
 }

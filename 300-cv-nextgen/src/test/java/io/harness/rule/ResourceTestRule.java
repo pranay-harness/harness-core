@@ -9,6 +9,7 @@ import io.dropwizard.jackson.Jackson;
 import io.dropwizard.jersey.DropwizardResourceConfig;
 import io.dropwizard.jersey.jackson.JacksonMessageBodyProvider;
 import io.dropwizard.jersey.validation.Validators;
+import io.harness.cvng.exception.BadRequestExceptionMapper;
 import io.harness.cvng.exception.ConstraintViolationExceptionMapper;
 import io.harness.cvng.exception.GenericExceptionMapper;
 import io.harness.cvng.exception.NotFoundExceptionMapper;
@@ -162,6 +163,7 @@ public class ResourceTestRule implements TestRule {
 
     private void configure(ResourceTestRule resourceTestRule) {
       register(ConstraintViolationExceptionMapper.class);
+      register(BadRequestExceptionMapper.class);
       register(NotFoundExceptionMapper.class);
       register(GenericExceptionMapper.class);
       for (Class<?> provider : resourceTestRule.providers) {
