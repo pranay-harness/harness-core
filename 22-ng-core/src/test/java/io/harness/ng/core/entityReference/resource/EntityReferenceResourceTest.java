@@ -44,6 +44,19 @@ public class EntityReferenceResourceTest {
   @Test
   @Owner(developers = OwnerRule.DEEPAK)
   @Category(UnitTests.class)
+  public void isEntityReferenced() {
+    String accountIdentifier = "accountIdentifier";
+    String orgIdentifier = "orgIdentifier";
+    String projectIdentifier = "projectIdentifier";
+    String identifier = "identifier";
+    entityReferenceResource.isEntityReferenced(accountIdentifier, orgIdentifier, projectIdentifier, identifier);
+    Mockito.verify(entityReferenceService, times(1))
+        .isEntityReferenced(eq(accountIdentifier), eq(orgIdentifier), eq(projectIdentifier), eq(identifier));
+  }
+
+  @Test
+  @Owner(developers = OwnerRule.DEEPAK)
+  @Category(UnitTests.class)
   public void saveTest() {
     String accountIdentifier = "accountIdentifier";
     String orgIdentifier = "orgIdentifier";

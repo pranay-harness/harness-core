@@ -54,6 +54,12 @@
         </dependency>
         <dependency>
             <groupId>software.wings</groupId>
+            <artifactId>22-ng-core-clients</artifactId>
+            <version>${project.parent.version}</version>
+            <scope>compile</scope>
+        </dependency>
+        <dependency>
+            <groupId>software.wings</groupId>
             <artifactId>22-ng-project-n-orgs</artifactId>
             <version>${project.parent.version}</version>
         </dependency>

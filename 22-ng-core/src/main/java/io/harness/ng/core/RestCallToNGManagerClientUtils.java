@@ -13,7 +13,7 @@ import java.io.IOException;
 
 @Singleton
 @Slf4j
-public final class RestCallToNGManagerClientUtils {
+public class RestCallToNGManagerClientUtils {
   public static <T> T execute(Call<ResponseDTO<T>> request) {
     try {
       Response<ResponseDTO<T>> response = request.execute();
