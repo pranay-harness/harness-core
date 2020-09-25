@@ -62,7 +62,7 @@ public class LogDashboardServiceImpl implements LogDashboardService {
   }
 
   @Override
-  public List<LogDataByTag> getLogCountByTag(String accountId, String projectIdentifier, String orgIdentifier,
+  public SortedSet<LogDataByTag> getLogCountByTag(String accountId, String projectIdentifier, String orgIdentifier,
       String serviceIdentifier, String environmentIdentifer, CVMonitoringCategory category, long startTimeMillis,
       long endTimeMillis) {
     Map<Long, Map<LogAnalysisTag, Integer>> logTagCountMap = new HashMap<>();
@@ -98,7 +98,9 @@ public class LogDashboardServiceImpl implements LogDashboardService {
           (tag, count) -> { logDataByTag.addCountByTag(CountByTag.builder().tag(tag).count(count).build()); });
       logDataByTagList.add(logDataByTag);
     });
-    return logDataByTagList;
+    SortedSet<LogDataByTag> sortedReturnSet = new TreeSet<>(logDataByTagList);
+    logger.info("In getLogCountByTag, returning a set of size {}", sortedReturnSet.size());
+    return sortedReturnSet;
   }
 
   private NGPageResponse<AnalyzedLogDataDTO> getLogs(String accountId, String projectIdentifier, String orgIdentifier,

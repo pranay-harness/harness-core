@@ -14,7 +14,7 @@ import io.harness.rest.RestResponse;
 import io.harness.security.annotations.LearningEngineAuth;
 import io.swagger.annotations.Api;
 
-import java.util.List;
+import java.util.SortedSet;
 import javax.validation.constraints.NotNull;
 import javax.ws.rs.DefaultValue;
 import javax.ws.rs.GET;
@@ -72,7 +72,7 @@ public class LogDashboardResource {
   @Timed
   @ExceptionMetered
   @LearningEngineAuth
-  public RestResponse<List<LogDataByTag>> getTagCount(@QueryParam("accountId") String accountId,
+  public RestResponse<SortedSet<LogDataByTag>> getTagCount(@QueryParam("accountId") String accountId,
       @NotNull @QueryParam("projectIdentifier") String projectIdentifier,
       @NotNull @QueryParam("orgIdentifier") String orgIdentifier,
       @QueryParam("environmentIdentifier") String environmentIdentifier,
