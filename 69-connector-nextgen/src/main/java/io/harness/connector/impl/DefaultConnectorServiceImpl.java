@@ -2,6 +2,7 @@ package io.harness.connector.impl;
 
 import static io.harness.connector.entities.ConnectivityStatus.FAILURE;
 import static io.harness.connector.entities.ConnectivityStatus.SUCCESS;
+import static io.harness.ng.core.RestCallToNGManagerClientUtils.execute;
 import static java.lang.String.format;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
@@ -24,8 +25,11 @@ import io.harness.connector.validator.ConnectionValidator;
 import io.harness.delegate.beans.connector.ConnectorCategory;
 import io.harness.delegate.beans.connector.ConnectorType;
 import io.harness.delegate.beans.connector.ConnectorValidationResult;
+import io.harness.entityreferenceclient.remote.EntityReferenceClient;
 import io.harness.exception.DuplicateFieldException;
 import io.harness.exception.InvalidRequestException;
+import io.harness.exception.UnexpectedException;
+import io.harness.ng.core.entityReference.EntityReferenceHelper;
 import io.harness.utils.FullyQualifiedIdentifierHelper;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -49,6 +53,8 @@ public class DefaultConnectorServiceImpl implements ConnectorService {
   private final ConnectorFilterHelper connectorFilterHelper;
   private ConnectorScopeHelper connectorScopeHelper;
   private Map<String, ConnectionValidator> connectionValidatorMap;
+  EntityReferenceClient entityReferenceClient;
+  EntityReferenceHelper entityReferenceHelper;
 
   @Override
   public Optional<ConnectorDTO> get(
@@ -133,9 +139,26 @@ public class DefaultConnectorServiceImpl implements ConnectorService {
           createConnectorNotFoundMessage(accountIdentifier, orgIdentifier, projectIdentifier, connectorIdentifier));
     }
     Connector existingConnector = existingConnectorOptional.get();
+    checkThatTheConnectorIsNotUsedByOthers(existingConnector);
     existingConnector.setDeleted(true);
     connectorRepository.save(existingConnector);
     return true;
+  }
+
+  private void checkThatTheConnectorIsNotUsedByOthers(Connector connector) {
+    boolean isEntityReferenced = false;
+    try {
+      isEntityReferenced = execute(entityReferenceClient.isEntityReferenced(connector.getAccountIdentifier(),
+          connector.getOrgIdentifier(), connector.getProjectIdentifier(), connector.getIdentifier()));
+    } catch (Exception ex) {
+      logger.info("Encountered exception while requesting the Entity Reference records of [{}], with exception",
+          connector.getIdentifier(), ex);
+      throw new UnexpectedException("Error while deleting the connector");
+    }
+    if (isEntityReferenced) {
+      throw new InvalidRequestException(String.format(
+          "Could not delete the connector %s as it is referenced by other entities", connector.getIdentifier()));
+    }
   }
 
   public ConnectorValidationResult validate(ConnectorRequestDTO connectorDTO, String accountIdentifier) {

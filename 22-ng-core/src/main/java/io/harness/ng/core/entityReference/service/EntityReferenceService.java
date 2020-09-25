@@ -10,4 +10,7 @@ public interface EntityReferenceService {
   EntityReferenceDTO save(EntityReferenceDTO entityReferenceDTO);
 
   Boolean delete(String referredEntityFQN, String referredByEntityFQN);
+
+  Boolean isEntityReferenced(
+      String accountIdentifier, String orgIdentifier, String projectIdentifier, String identifier);
 }

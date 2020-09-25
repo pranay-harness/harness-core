@@ -1,5 +1,10 @@
 package io.harness.ng.core.entityReference.resource;
 
+import static io.harness.NGConstants.ACCOUNT_KEY;
+import static io.harness.NGConstants.IDENTIFIER_KEY;
+import static io.harness.NGConstants.ORG_KEY;
+import static io.harness.NGConstants.PROJECT_KEY;
+
 import com.google.inject.Inject;
 
 import io.harness.ng.core.dto.ResponseDTO;
@@ -37,6 +42,16 @@ public class EntityReferenceResource {
       @QueryParam("identifier") String referredEntityIdentifier, @QueryParam("searchTerm") String searchTerm) {
     return ResponseDTO.newResponse(entityReferenceService.list(
         page, size, accountIdentifier, orgIdentifier, projectIdentifier, referredEntityIdentifier, searchTerm));
+  }
+
+  @GET
+  @Path("/isEntityReferenced")
+  @ApiOperation(value = "Returns true if the entity is referenced by other resource", nickname = "isEntityReferenced")
+  public ResponseDTO<Boolean> isEntityReferenced(@NotEmpty @QueryParam(ACCOUNT_KEY) String accountIdentifier,
+      @QueryParam(ORG_KEY) String orgIdentifier, @QueryParam(PROJECT_KEY) String projectIdentifier,
+      @QueryParam(IDENTIFIER_KEY) String identifier) {
+    return ResponseDTO.newResponse(
+        entityReferenceService.isEntityReferenced(accountIdentifier, orgIdentifier, projectIdentifier, identifier));
   }
 
   @POST

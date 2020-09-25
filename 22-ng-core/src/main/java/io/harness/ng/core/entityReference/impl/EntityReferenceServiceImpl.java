@@ -14,6 +14,7 @@ import io.harness.ng.core.entityReference.mappers.EntityReferenceDTOtoEntity;
 import io.harness.ng.core.entityReference.mappers.EntityReferenceToDTO;
 import io.harness.ng.core.entityReference.repositories.EntityReferenceRepository;
 import io.harness.ng.core.entityReference.service.EntityReferenceService;
+import io.harness.utils.FullyQualifiedIdentifierHelper;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -41,6 +42,14 @@ public class EntityReferenceServiceImpl implements EntityReferenceService {
     Pageable pageable = getPageRequest(page, size, Sort.by(Sort.Direction.DESC, EntityReferenceKeys.createdAt));
     Page<EntityReference> entityReferences = entityReferenceRepository.findAll(criteria, pageable);
     return entityReferences.map(entityReference -> entityReferenceToDTO.createEntityReferenceDTO(entityReference));
+  }
+
+  @Override
+  public Boolean isEntityReferenced(
+      String accountIdentifier, String orgIdentifier, String projectIdentifier, String identifier) {
+    String referrerdEntityFQN = FullyQualifiedIdentifierHelper.getFullyQualifiedIdentifier(
+        accountIdentifier, orgIdentifier, projectIdentifier, identifier);
+    return entityReferenceRepository.existsByReferredEntityFQN(referrerdEntityFQN);
   }
 
   @Override

@@ -39,6 +39,35 @@ public class EntityReferenceServiceImplTest extends NGCoreBaseTest {
   @Test
   @Owner(developers = OwnerRule.DEEPAK)
   @Category(UnitTests.class)
+  public void isEntityReferenced() {
+    String accountIdentifier = "accountIdentifier";
+    String orgIdentifier = "orgIdentifier";
+    String projectIdentifier = "projectIdentifier";
+    String referredIdentifier1 = "referredIdentifier1";
+    String referredByIdentifier1 = "referredByIdentifier1";
+    String referredEntityName1 = "Connector 1";
+    String referredByEntityName1 = "Pipeline 1";
+
+    String referredEntityFQN1 = FullyQualifiedIdentifierHelper.getFullyQualifiedIdentifier(
+        accountIdentifier, orgIdentifier, projectIdentifier, referredIdentifier1);
+    String referredByEntityFQN1 = FullyQualifiedIdentifierHelper.getFullyQualifiedIdentifier(
+        accountIdentifier, orgIdentifier, projectIdentifier, referredByIdentifier1);
+
+    EntityReferenceDTO entityReferenceDTO1 = createEntityReference(accountIdentifier, referredEntityFQN1, CONNECTORS,
+        referredEntityName1, referredByEntityFQN1, SECRETS, referredByEntityName1);
+    EntityReferenceDTO savedEntityReferenceDTO = entityReferenceService.save(entityReferenceDTO1);
+    boolean entityReferenceExists = entityReferenceService.isEntityReferenced(
+        accountIdentifier, orgIdentifier, projectIdentifier, referredIdentifier1);
+    assertThat(entityReferenceExists).isTrue();
+
+    boolean doesEntityReferenceExists = entityReferenceService.isEntityReferenced(
+        accountIdentifier, orgIdentifier, projectIdentifier, "identifierWhichIsNotReferenced");
+    assertThat(doesEntityReferenceExists).isFalse();
+  }
+
+  @Test
+  @Owner(developers = OwnerRule.DEEPAK)
+  @Category(UnitTests.class)
   public void listTest() {
     String accountIdentifier = "accountIdentifier";
     String orgIdentifier = "orgIdentifier";

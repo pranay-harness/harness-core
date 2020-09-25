@@ -10,4 +10,5 @@ import org.springframework.transaction.annotation.Transactional;
 public interface EntityReferenceRepository
     extends PagingAndSortingRepository<EntityReference, String>, EntityReferenceCustomRepository {
   long deleteByReferredEntityFQNAndReferredByEntityFQN(String referredEntityFQN, String referredByEntityFQN);
+  boolean existsByReferredEntityFQN(String referredEntityFQN);
 }

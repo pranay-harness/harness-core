@@ -30,8 +30,8 @@ public class ConnectorFilterHelper {
     }
 
     if (isNotBlank(searchTerm)) {
-      Criteria seachCriteria = new Criteria().orOperator(where(ConnectorKeys.name).regex(searchTerm),
-          where(IDENTIFIER_KEY).regex(searchTerm), where(TAGS_KEY).regex(searchTerm));
+      Criteria seachCriteria = new Criteria().orOperator(where(ConnectorKeys.name).regex(searchTerm, "i"),
+          where(IDENTIFIER_KEY).regex(searchTerm, "i"), where(TAGS_KEY).regex(searchTerm, "i"));
       criteria.andOperator(seachCriteria);
     }
     return criteria;
