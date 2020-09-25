@@ -2,7 +2,6 @@ package io.harness.cdng.pipeline;
 
 import io.harness.beans.ParameterField;
 import io.harness.cdng.pipeline.CDPipeline.CDPipelineKeys;
-import io.harness.cdng.visitor.LevelNodeQualifierName;
 import io.harness.cdng.visitor.helpers.cdpipeline.CDPipelineVisitorHelper;
 import io.harness.common.SwaggerConstants;
 import io.harness.data.validator.EntityIdentifier;
@@ -58,6 +57,6 @@ public class CDPipeline implements Pipeline, Visitable {
 
   @Override
   public LevelNode getLevelNode() {
-    return LevelNode.builder().qualifierName(LevelNodeQualifierName.CD_PIPELINE).build();
+    return LevelNode.builder().qualifierName(identifier).build();
   }
 }

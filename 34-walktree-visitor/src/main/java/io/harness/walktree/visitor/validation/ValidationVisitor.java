@@ -6,6 +6,7 @@ import com.google.common.collect.Multimap;
 import com.google.inject.Inject;
 import com.google.inject.Injector;
 
+import io.harness.reflection.ReflectionUtils;
 import io.harness.walktree.beans.LevelNode;
 import io.harness.walktree.beans.ParentQualifier;
 import io.harness.walktree.beans.VisitElementResult;
@@ -24,6 +25,7 @@ import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.NotImplementedException;
 
+import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -119,17 +121,19 @@ public class ValidationVisitor extends SimpleVisitor<ConfigValidator> {
     violations.forEach(objectConstraintViolation
         -> errorsMap.put(
             objectConstraintViolation.getPropertyPath().toString(), objectConstraintViolation.getMessage()));
-    for (String key : errorsMap.keys()) {
+    for (String fieldName : errorsMap.keys()) {
       try {
-        List<String> errorMessages = new ArrayList<>(errorsMap.get(key));
+        List<String> errorMessages = new ArrayList<>(errorsMap.get(fieldName));
         VisitorErrorResponseWrapper visitorErrorResponseWrapper =
             VisitorErrorResponseWrapper.builder()
                 .errors(errorMessages.stream()
-                            .map(message -> VisitorErrorResponse.builder().fieldName(key).message(message).build())
+                            .map(message
+                                -> VisitorErrorResponse.errorBuilder().fieldName(fieldName).message(message).build())
                             .collect(Collectors.toList()))
                 .build();
+        Field field = ReflectionUtils.getFieldByName(dummyElement.getClass(), fieldName);
         String uuid = VisitorResponseUtils.addUUIDValueToGivenField(
-            this.getContextMap(), dummyElement, visitorFieldRegistry, key, useFQN);
+            this.getContextMap(), dummyElement, visitorFieldRegistry, field, useFQN);
         VisitorResponseUtils.addToVisitorResponse(
             uuid, visitorErrorResponseWrapper, uuidToVisitorResponse, VisitorErrorResponseWrapper.builder().build());
 

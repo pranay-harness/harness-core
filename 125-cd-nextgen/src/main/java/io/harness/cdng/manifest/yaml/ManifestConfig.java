@@ -19,7 +19,7 @@ import lombok.NoArgsConstructor;
 
 @Data
 @NoArgsConstructor
-@JsonTypeName("manifest")
+@JsonTypeName(LevelNodeQualifierName.MANIFEST_CONFIG)
 @SimpleVisitorHelper(helperClass = ManifestConfigVisitorHelper.class)
 public class ManifestConfig implements ManifestConfigWrapper, Visitable {
   @EntityIdentifier String identifier;
@@ -59,6 +59,8 @@ public class ManifestConfig implements ManifestConfigWrapper, Visitable {
 
   @Override
   public LevelNode getLevelNode() {
-    return LevelNode.builder().qualifierName(LevelNodeQualifierName.MANIFEST_CONFIG).build();
+    return LevelNode.builder()
+        .qualifierName(LevelNodeQualifierName.MANIFEST_LIST_CONFIG + LevelNodeQualifierName.PATH_CONNECTOR + identifier)
+        .build();
   }
 }

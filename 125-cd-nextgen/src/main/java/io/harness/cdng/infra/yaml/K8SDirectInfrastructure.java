@@ -58,6 +58,6 @@ public class K8SDirectInfrastructure implements Infrastructure, Visitable {
 
   @Override
   public LevelNode getLevelNode() {
-    return LevelNode.builder().qualifierName(LevelNodeQualifierName.KUBERNETES_DIRECT).build();
+    return LevelNode.builder().qualifierName(LevelNodeQualifierName.SPEC).build();
   }
 }

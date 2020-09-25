@@ -11,7 +11,8 @@ import java.util.stream.Collectors;
 
 @UtilityClass
 public class VisitorParentPathUtils {
-  private String PARENT_PATH_KEY = "PARENT_PATH_KEY";
+  private final String PARENT_PATH_KEY = "PARENT_PATH_KEY";
+  public final String PATH_CONNECTOR = ".";
 
   private <T> void setConfig(String key, T config, Map<String, Object> contextMap) {
     if (config == null) {
@@ -42,6 +43,6 @@ public class VisitorParentPathUtils {
   public String getFullQualifiedDomainName(Map<String, Object> contextMap) {
     Optional<LinkedList<LevelNode>> parentPath = getConfig(PARENT_PATH_KEY, contextMap);
     LinkedList<LevelNode> levelNodes = parentPath.orElse(new LinkedList<>());
-    return levelNodes.stream().map(LevelNode::getQualifierName).collect(Collectors.joining("."));
+    return levelNodes.stream().map(LevelNode::getQualifierName).collect(Collectors.joining(PATH_CONNECTOR));
   }
 }

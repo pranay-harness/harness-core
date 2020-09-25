@@ -79,6 +79,8 @@ public class StageElement implements StageElementWrapper, WithIdentifier, Visita
 
   @Override
   public LevelNode getLevelNode() {
-    return LevelNode.builder().qualifierName(LevelNodeQualifierName.STAGE_ELEMENT).build();
+    return LevelNode.builder()
+        .qualifierName(LevelNodeQualifierName.STAGES_ELEMENT + LevelNodeQualifierName.PATH_CONNECTOR + identifier)
+        .build();
   }
 }

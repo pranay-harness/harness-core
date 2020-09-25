@@ -6,6 +6,7 @@ import com.google.inject.Singleton;
 
 import io.harness.walktree.visitor.inputset.InputSetTemplateVisitor;
 import io.harness.walktree.visitor.mergeinputset.MergeInputSetVisitor;
+import io.harness.walktree.visitor.mergeinputset.beans.MergeVisitorInputSetElement;
 import io.harness.walktree.visitor.validation.ValidationVisitor;
 
 import java.util.List;
@@ -20,8 +21,9 @@ public class SimpleVisitorFactory {
     return validationVisitor;
   }
 
-  public MergeInputSetVisitor obtainMergeInputSetVisitor(boolean useFQN, List<Object> inputSetsPipeline) {
-    MergeInputSetVisitor mergeInputSetVisitor = new MergeInputSetVisitor(injector, useFQN, inputSetsPipeline);
+  public MergeInputSetVisitor obtainMergeInputSetVisitor(
+      boolean useFQN, List<MergeVisitorInputSetElement> inputSetPipelineList) {
+    MergeInputSetVisitor mergeInputSetVisitor = new MergeInputSetVisitor(injector, useFQN, inputSetPipelineList);
     injector.injectMembers(mergeInputSetVisitor);
     return mergeInputSetVisitor;
   }

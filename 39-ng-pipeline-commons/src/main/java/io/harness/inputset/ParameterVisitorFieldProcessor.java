@@ -24,6 +24,9 @@ public class ParameterVisitorFieldProcessor implements VisitableFieldProcessor<P
 
   @Override
   public ParameterField<?> cloneField(ParameterField<?> actualField) {
+    if (actualField == null) {
+      return null;
+    }
     return new ParameterField<>(actualField.getValue(), actualField.isExpression(), actualField.getExpressionValue(),
         actualField.getInputSetValidator(), actualField.isTypeString());
   }

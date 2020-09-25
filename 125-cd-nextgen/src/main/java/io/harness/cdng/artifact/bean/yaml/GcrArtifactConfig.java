@@ -86,6 +86,6 @@ public class GcrArtifactConfig implements ArtifactConfig, Visitable {
 
   @Override
   public LevelNode getLevelNode() {
-    return LevelNode.builder().qualifierName(LevelNodeQualifierName.GCR_ARTIFACT_CONFIG).build();
+    return LevelNode.builder().qualifierName(LevelNodeQualifierName.SPEC).build();
   }
 }
