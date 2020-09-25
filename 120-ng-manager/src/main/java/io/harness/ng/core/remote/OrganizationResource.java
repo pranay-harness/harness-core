@@ -6,6 +6,7 @@ import static io.harness.NGConstants.SEARCH_TERM_KEY;
 import static io.harness.ng.core.remote.OrganizationMapper.writeDto;
 import static io.harness.utils.PageUtils.getNGPageResponse;
 import static io.harness.utils.PageUtils.getPageRequest;
+import static javax.ws.rs.core.HttpHeaders.IF_MATCH;
 
 import com.google.inject.Inject;
 
@@ -33,6 +34,7 @@ import javax.ws.rs.BeanParam;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
+import javax.ws.rs.HeaderParam;
 import javax.ws.rs.POST;
 import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
@@ -42,8 +44,8 @@ import javax.ws.rs.QueryParam;
 
 @Api("organizations")
 @Path("organizations")
-@Produces({"application/json", "text/yaml"})
-@Consumes({"application/json", "text/yaml"})
+@Produces({"application/json", "application/yaml"})
+@Consumes({"application/json", "application/yaml"})
 @AllArgsConstructor(access = AccessLevel.PACKAGE, onConstructor = @__({ @Inject }))
 @ApiResponses(value =
     {
@@ -58,16 +60,18 @@ public class OrganizationResource {
   public ResponseDTO<OrganizationDTO> create(
       @NotNull @QueryParam(ACCOUNT_KEY) String accountIdentifier, @NotNull @Valid OrganizationDTO organizationDTO) {
     Organization updatedOrganization = organizationService.create(accountIdentifier, organizationDTO);
-    return ResponseDTO.newResponse(writeDto(updatedOrganization));
+    return ResponseDTO.newResponse(updatedOrganization.getVersion().toString(), writeDto(updatedOrganization));
   }
 
   @GET
   @Path("{identifier}")
   @ApiOperation(value = "Get an Organization by identifier", nickname = "getOrganization")
-  public ResponseDTO<Optional<OrganizationDTO>> get(@NotNull @PathParam(IDENTIFIER_KEY) String identifier,
+  public ResponseDTO<OrganizationDTO> get(@NotNull @PathParam(IDENTIFIER_KEY) String identifier,
       @NotNull @QueryParam(ACCOUNT_KEY) String accountIdentifier) {
     Optional<Organization> organizationOptional = organizationService.get(accountIdentifier, identifier);
-    return ResponseDTO.newResponse(organizationOptional.map(OrganizationMapper::writeDto));
+    return organizationOptional
+        .map(organization -> ResponseDTO.newResponse(organization.getVersion().toString(), writeDto(organization)))
+        .orElseGet(() -> ResponseDTO.newResponse(null));
   }
 
   @GET
@@ -84,17 +88,21 @@ public class OrganizationResource {
   @PUT
   @Path("{identifier}")
   @ApiOperation(value = "Update an Organization by identifier", nickname = "putOrganization")
-  public ResponseDTO<OrganizationDTO> update(@NotNull @PathParam(IDENTIFIER_KEY) String identifier,
-      @NotNull @QueryParam(ACCOUNT_KEY) String accountIdentifier, @NotNull @Valid OrganizationDTO organizationDTO) {
+  public ResponseDTO<OrganizationDTO> update(@HeaderParam(IF_MATCH) String ifMatch,
+      @NotNull @PathParam(IDENTIFIER_KEY) String identifier, @NotNull @QueryParam(ACCOUNT_KEY) String accountIdentifier,
+      @NotNull @Valid OrganizationDTO organizationDTO) {
+    organizationDTO.setVersion(Optional.ofNullable(ifMatch).map(Long::parseLong).orElse(null));
     Organization updatedOrganization = organizationService.update(accountIdentifier, identifier, organizationDTO);
-    return ResponseDTO.newResponse(writeDto(updatedOrganization));
+    return ResponseDTO.newResponse(updatedOrganization.getVersion().toString(), writeDto(updatedOrganization));
   }
 
   @DELETE
   @Path("{identifier}")
   @ApiOperation(value = "Delete an Organization by identifier", nickname = "deleteOrganization")
-  public ResponseDTO<Boolean> delete(@NotNull @PathParam(IDENTIFIER_KEY) String identifier,
+  public ResponseDTO<Boolean> delete(@HeaderParam(IF_MATCH) String ifMatch,
+      @NotNull @PathParam(IDENTIFIER_KEY) String identifier,
       @NotNull @QueryParam(ACCOUNT_KEY) String accountIdentifier) {
-    return ResponseDTO.newResponse(organizationService.delete(accountIdentifier, identifier));
+    return ResponseDTO.newResponse(organizationService.delete(
+        accountIdentifier, identifier, Optional.ofNullable(ifMatch).map(Long::parseLong).orElse(null)));
   }
 }

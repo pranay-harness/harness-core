@@ -6,6 +6,7 @@ import static io.harness.NGConstants.PAGE_KEY;
 import static io.harness.NGConstants.SEARCH_TERM_KEY;
 import static io.harness.NGConstants.SIZE_KEY;
 import static io.harness.NGConstants.SORT_KEY;
+import static javax.ws.rs.core.HttpHeaders.IF_MATCH;
 
 import io.harness.beans.NGPageResponse;
 import io.harness.ng.core.dto.OrganizationDTO;
@@ -14,6 +15,7 @@ import retrofit2.Call;
 import retrofit2.http.Body;
 import retrofit2.http.DELETE;
 import retrofit2.http.GET;
+import retrofit2.http.Header;
 import retrofit2.http.POST;
 import retrofit2.http.PUT;
 import retrofit2.http.Path;
@@ -43,6 +45,6 @@ public interface OrganizationManagerClient {
       @Query(value = ACCOUNT_KEY) String accountIdentifier, @Body OrganizationDTO organizationDTO);
 
   @DELETE(ORGANIZATIONS_API + "/{identifier}")
-  Call<ResponseDTO<Boolean>> deleteOrganization(
+  Call<ResponseDTO<Boolean>> deleteOrganization(@Header(IF_MATCH) Long ifMatch,
       @Path(value = IDENTIFIER_KEY) String identifier, @Query(value = ACCOUNT_KEY) String accountIdentifier);
 }

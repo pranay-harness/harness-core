@@ -20,5 +20,5 @@ public interface OrganizationService {
 
   Page<Organization> list(Criteria criteria, Pageable pageable);
 
-  boolean delete(String accountIdentifier, String identifier);
+  boolean delete(String accountIdentifier, String identifier, Long version);
 }

@@ -46,8 +46,8 @@ import javax.ws.rs.QueryParam;
 
 @Api("projects")
 @Path("projects")
-@Produces({"application/json", "text/yaml"})
-@Consumes({"application/json", "text/yaml"})
+@Produces({"application/json", "application/yaml"})
+@Consumes({"application/json", "application/yaml"})
 @AllArgsConstructor(access = AccessLevel.PACKAGE, onConstructor = @__({ @Inject }))
 @ApiResponses(value =
     {
