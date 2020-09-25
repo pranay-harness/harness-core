@@ -23,6 +23,7 @@ import software.wings.WingsBaseTest;
 import software.wings.sm.ExecutionContextImpl;
 import software.wings.sm.ExecutionResponse;
 import software.wings.sm.StateExecutionInstance;
+import software.wings.sm.StateExecutionInstanceHelper;
 import software.wings.sm.resume.ResumeStateUtils;
 
 import java.util.Map;
@@ -30,6 +31,7 @@ import java.util.concurrent.TimeUnit;
 
 public class EnvLoopResumeStateTest extends WingsBaseTest {
   @Mock private ResumeStateUtils resumeStateUtils;
+  @Mock private StateExecutionInstanceHelper stateExecutionInstanceHelper;
 
   @InjectMocks private EnvLoopResumeState envLoopResumeState = new EnvLoopResumeState("ENV_LOOP_RESUME_STATE");
 
@@ -56,6 +58,7 @@ public class EnvLoopResumeStateTest extends WingsBaseTest {
     when(context.getStateExecutionInstanceId()).thenReturn(currStateExecutionId);
     StateExecutionInstance stateExecutionInstance = aStateExecutionInstance().uuid(currStateExecutionId).build();
     when(context.getStateExecutionInstance()).thenReturn(stateExecutionInstance);
+    when(stateExecutionInstanceHelper.clone(stateExecutionInstance)).thenReturn(stateExecutionInstance);
     when(resumeStateUtils.fetchPipelineExecutionId(context)).thenReturn(currPipelineExecutionId);
     when(resumeStateUtils.prepareExecutionResponseBuilder(context, prevStateExecutionId))
         .thenReturn(ExecutionResponse.builder());
