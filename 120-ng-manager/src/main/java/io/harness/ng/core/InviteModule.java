@@ -56,7 +56,7 @@ public class InviteModule extends AbstractModule {
   @Named("baseURL")
   @Singleton
   protected String getBaseURL(NextGenConfiguration nextGenConfiguration) {
-    return nextGenConfiguration.getBaseURL();
+    return nextGenConfiguration.getNgManagerClientConfig().getBaseUrl();
   }
 
   @Provides

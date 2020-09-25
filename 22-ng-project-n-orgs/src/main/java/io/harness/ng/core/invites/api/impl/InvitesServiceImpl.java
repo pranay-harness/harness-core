@@ -60,7 +60,7 @@ import javax.validation.constraints.NotNull;
 public class InvitesServiceImpl implements InvitesService {
   private static final int INVITATION_VALIDITY_IN_DAYS = 30;
   private static final int LINK_VALIDITY_IN_DAYS = 7;
-  private static final String mailSubjectFormat = "Invitation for project %s on Harness";
+  private static final String MAIL_SUBJECT_FORMAT = "Invitation for project %s on Harness";
   @Inject @Named("baseURL") private final String baseURL;
   @Inject @Named("env") private final String env;
   @Inject @Named("userVerificatonSecret") private final String jwtPasswordSecret;
@@ -78,7 +78,7 @@ public class InvitesServiceImpl implements InvitesService {
 
   @Inject
   protected void setBaseURL() {
-    verificationBaseUrl = baseURL + "/invites/verify?token=%s&accountId=%s";
+    verificationBaseUrl = baseURL + "invites/verify?token=%s&accountId=%s";
   }
 
   @Inject
@@ -221,7 +221,7 @@ public class InvitesServiceImpl implements InvitesService {
   public boolean sendInvitationMail(Invite invite) {
     updateJWTTokenInInvite(invite);
     String url = String.format(verificationBaseUrl, invite.getInviteToken(), invite.getAccountIdentifier());
-    String subject = String.format(mailSubjectFormat, invite.getProjectIdentifier());
+    String subject = String.format(MAIL_SUBJECT_FORMAT, invite.getProjectIdentifier());
     EmailData emailData = EmailData.builder().to(ImmutableList.of(invite.getEmail())).subject(subject).build();
     emailData.setTemplateName("invite");
     emailData.setTemplateModel(ImmutableMap.of("projectname", invite.getProjectIdentifier(), "url", url));
