@@ -567,6 +567,8 @@ public class DelegateServiceImpl implements DelegateService {
                    .ip(delegate.getIp())
                    .status(delegate.getStatus())
                    .lastHeartBeat(delegate.getLastHeartBeat())
+                   .isConnected(delegate.getStatus() == Status.ENABLED
+                       && System.currentTimeMillis() - 60_000 < delegate.getLastHeartBeat())
                    .delegateProfileId(delegate.getDelegateProfileId())
                    .delegateType(delegate.getDelegateType())
                    .polllingModeEnabled(delegate.isPolllingModeEnabled())
