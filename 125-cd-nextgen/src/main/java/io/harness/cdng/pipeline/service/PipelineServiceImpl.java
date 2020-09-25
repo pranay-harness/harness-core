@@ -204,7 +204,7 @@ public class PipelineServiceImpl implements PipelineService {
       String pipelineId, String accountId, String orgId, String projectId) {
     Map<String, VisitorErrorResponseWrapper> uuidToErrorResponse = new HashMap<>();
     VisitorErrorResponse errorResponse =
-        VisitorErrorResponse.builder().fieldName("identifier").message("cannot be null").build();
+        VisitorErrorResponse.errorBuilder().fieldName("identifier").message("cannot be null").build();
     uuidToErrorResponse.put(
         "pipeline.identifier", VisitorErrorResponseWrapper.builder().errors(Lists.newArrayList(errorResponse)).build());
     uuidToErrorResponse.put("pipeline.stage.identifier",

@@ -1,16 +1,12 @@
 pipeline:
-  name: My Deployment Pipeline
   identifier: myPipeline1
-  description: This is my first pipeline. It is really concrete
   stages:
   - stage:
       identifier: qa
-      name: qa
       type: Deployment
       spec:
         service:
           identifier: service2
-          name: service1
           serviceDefinition:
             type: Kubernetes
             spec:
@@ -18,15 +14,12 @@ pipeline:
                 primary:
                   type: Dockerhub
                   spec:
-                    dockerhubConnector: npQuotecenter
                     imagePath: image2
-                    tag: latest
                 sidecars:
                 - sidecar:
                     identifier: sidecar1
                     type: Dockerhub
                     spec:
-                      dockerhubConnector: myDocker2
                       imagePath: sidecarimage
                       tag: tag2
               manifests:
@@ -37,8 +30,6 @@ pipeline:
                     store:
                       type: Git
                       spec:
-                        connectorIdentifier: myGitConnector
-                        gitFetchType: Branch
                         branch: master
                         paths:
                         - path3
@@ -55,10 +46,7 @@ pipeline:
                           type: Git
                           spec:
                             connectorIdentifier: my-git-connector
-                            gitFetchType: Branch
                             branch: masterOverride2
-                            paths:
-                            - test/spec
         infrastructure:
           infrastructureDefinition:
             type: KubernetesDirect
@@ -68,66 +56,29 @@ pipeline:
           environment:
             name: env
             identifier: env2
-            type: PreProduction
         execution:
           steps:
           - parallel:
             - step:
                 identifier: rolloutDeployment
-                name: Rollout Deployment
                 type: K8sRollingDeploy
                 spec:
                   timeout: 100
                   skipDryRun: true
-          - stepGroup:
-              identifier: HttpValidationSteps
-              steps:
-              - step:
-                  identifier: HttpValidation
-                  type: Http
-                  spec:
-                    url: http://httpstat.us/500
-                    socketTimeoutMillis: 30000
-          - step:
-              identifier: httpStep1
-              name: http step 1
-              type: Http
-              spec:
-                url: http://httpstat.us/500
-                method: GET
-                socketTimeoutMillis: 1000
           rollbackSteps:
           - step:
               identifier: rollbackRolloutDeployment1
-              name: Rollback Rollout Deployment
               type: K8sRollingRollback
               spec:
                 timeout: 5
-          - step:
-              identifier: httpStep4
-              name: http rollback step 2
-              type: Http
-              spec:
-                url: http://httpstat.us/200
-                method: GET
-                socketTimeoutMillis: 1000
   - stage:
       identifier: prod
-      name: Prod stage
       type: Deployment
       spec:
         service:
           useFromStage:
             stage: new-qa
           stageOverrides:
-            artifacts:
-              primary:
-                type: Dockerhub
-                spec:
-                  tag: 1.18
-            useManifestOverrideSets:
-            - overrideSet1
-            - overrideSet2
             manifests:
             - manifest:
                 identifier: prodOverride
@@ -137,26 +88,9 @@ pipeline:
                     type: Git
                     spec:
                       connectorIdentifier: my-connector
-                      gitFetchType: Branch
                       branch: ${input}
-                      paths:
-                      - test/prod/values.yaml
         infrastructure:
           useFromStage:
-            stage: qaStage
             overrides:
               environment:
                 identifier: new-env
-              infrastructureDefinition:
-                type: KubernetesDirect
-                spec:
-                  releaseName: testingprod
-        execution:
-          steps:
-          - step:
-              identifier: rolloutDeployment
-              name: Rollout Deployment
-              type: K8sRollingDeploy
-              spec:
-                timeout: 120000
-                skipDryRun: false

@@ -20,7 +20,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 @UtilityClass
 public class VisitorDummyElementUtils {
@@ -149,14 +148,6 @@ public class VisitorDummyElementUtils {
           unhandledVisitableChildren);
     } else {
       throw new InvalidArgumentsException("DummyVisitableElement helper class cannot be null");
-    }
-  }
-
-  public void addToMapWithValuesList(Map<Object, List<Object>> mapWithValuesList, Object key, Object value) {
-    if (mapWithValuesList.containsKey(key)) {
-      mapWithValuesList.get(key).add(value);
-    } else {
-      mapWithValuesList.put(key, Stream.of(value).collect(Collectors.toList()));
     }
   }
 

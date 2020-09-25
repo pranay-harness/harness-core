@@ -83,6 +83,6 @@ public class GitStore implements StoreConfig, Visitable {
 
   @Override
   public LevelNode getLevelNode() {
-    return LevelNode.builder().qualifierName(ManifestStoreType.GIT).build();
+    return LevelNode.builder().qualifierName("spec").build();
   }
 }

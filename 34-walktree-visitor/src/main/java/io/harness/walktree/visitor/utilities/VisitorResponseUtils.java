@@ -30,8 +30,7 @@ public class VisitorResponseUtils {
   }
 
   public String addUUIDValueToGivenField(Map<String, Object> contextMap, Object element,
-      VisitorFieldRegistry visitorFieldRegistry, String fieldName, boolean useFQN) throws IllegalAccessException {
-    Field field = ReflectionUtils.getFieldByName(element.getClass(), fieldName);
+      VisitorFieldRegistry visitorFieldRegistry, Field field, boolean useFQN) throws IllegalAccessException {
     field.setAccessible(true);
     if (VisitorFieldWrapper.class.isAssignableFrom(field.getType())) {
       return addWrappedUUID(contextMap, visitorFieldRegistry, element, field, useFQN);
@@ -42,7 +41,8 @@ public class VisitorResponseUtils {
   }
 
   public String getUUid(Map<String, Object> contextMap, String fieldName, boolean useFQN) {
-    return useFQN ? VisitorParentPathUtils.getFullQualifiedDomainName(contextMap) + "." + fieldName
+    return useFQN ? VisitorParentPathUtils.getFullQualifiedDomainName(contextMap)
+            + VisitorParentPathUtils.PATH_CONNECTOR + fieldName
                   : UUIDGenerator.generateUuid();
   }
 

@@ -59,6 +59,6 @@ public class ValuesManifest implements ManifestAttributes, Visitable {
 
   @Override
   public LevelNode getLevelNode() {
-    return LevelNode.builder().qualifierName(LevelNodeQualifierName.VALUE_MANIFEST).build();
+    return LevelNode.builder().qualifierName(LevelNodeQualifierName.SPEC).build();
   }
 }

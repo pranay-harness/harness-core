@@ -93,6 +93,6 @@ public class DockerHubArtifactConfig implements ArtifactConfig, Visitable {
 
   @Override
   public LevelNode getLevelNode() {
-    return LevelNode.builder().qualifierName(LevelNodeQualifierName.DOCKER_HUB_NAME).build();
+    return LevelNode.builder().qualifierName(LevelNodeQualifierName.SPEC).build();
   }
 }

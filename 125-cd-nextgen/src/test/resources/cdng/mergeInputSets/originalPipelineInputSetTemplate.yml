@@ -1,15 +1,11 @@
 pipeline:
-  name: My Deployment Pipeline
   identifier: myPipeline1
-  description: This is my first pipeline. It is really concrete
   stages:
     - stage:
-        name: qa
         identifier: qa
         type: Deployment
         spec:
           service:
-            name: service1
             identifier: ${input}
             serviceDefinition:
               type: Kubernetes # Can it be type to make it consistent with other types
@@ -18,15 +14,12 @@ pipeline:
                   primary:
                     type: Dockerhub
                     spec:
-                      dockerhubConnector: npQuotecenter
                       imagePath: ${input}
-                      tag: "latest"
                   sidecars:
                     - sidecar:
                         identifier: sidecar1
                         type: Dockerhub
                         spec:
-                          dockerhubConnector: myDocker2
                           imagePath: ${input}
                           tag: ${input}
                 manifests:
@@ -37,8 +30,6 @@ pipeline:
                         store:
                           type: Git
                           spec:
-                            connectorIdentifier: myGitConnector
-                            gitFetchType: Branch
                             branch: ${input}
                             paths: ${input}.allowedValues(['paths1', 'master/paths2', 'paths3'])
                 manifestOverrideSets:
@@ -54,15 +45,11 @@ pipeline:
                                 # Git|Local
                                 spec:
                                   connectorIdentifier: ${input}
-                                  gitFetchType: Branch
                                   branch: ${input}
-                                  paths:
-                                    - test/spec
           infrastructure:
             environment:
               name: ${input}
               identifier: ${input}
-              type: PreProduction
             infrastructureDefinition:
               type: KubernetesDirect
               spec:
@@ -72,47 +59,19 @@ pipeline:
             steps:
               - parallel:
                   - step:
-                      name: "Rollout Deployment"
                       identifier: rolloutDeployment
                       type: K8sRollingDeploy
                       spec:
                         timeout: ${input}.allowedValues(100, 1000, 100)
                         skipDryRun: ${input}.allowedValues(true, false)
-              - stepGroup:
-                  identifier: HttpValidationSteps
-                  steps:
-                    - step:
-                        identifier: HttpValidation
-                        type: Http
-                        spec:
-                          socketTimeoutMillis: 30000
-                          url: http://httpstat.us/500
-              - step:
-                  name: http step 1
-                  identifier: httpStep1
-                  type: Http
-                  spec:
-                    socketTimeoutMillis: 1000
-                    method: GET
-                    url: http://httpstat.us/500
             rollbackSteps:
               - step:
-                  name: "Rollback Rollout Deployment"
                   identifier: rollbackRolloutDeployment1
                   type: K8sRollingRollback
                   spec:
                     timeout: ${input}.allowedValues(100, 1000, 100)
-              - step:
-                  name: http rollback step 2
-                  identifier: httpStep4
-                  type: Http
-                  spec:
-                    socketTimeoutMillis: 1000
-                    method: GET
-                    url: http://httpstat.us/200
     - stage:
         identifier: prod
-        name: Prod stage
         type: Deployment
         spec:
           service:
@@ -128,34 +87,9 @@ pipeline:
                         type: Git
                         spec:
                           connectorIdentifier: ${input}
-                          gitFetchType: Branch
                           branch: ${input}
-                          paths:
-                            - test/prod/values.yaml
-              useManifestOverrideSets:
-                - overrideSet1
-                - overrideSet2
-              artifacts:
-                primary:
-                  type: Dockerhub
-                  spec:
-                    tag: "1.18"
           infrastructure:
             useFromStage:
-              stage: qaStage
               overrides:
                 environment:
                   identifier: ${input}
-                infrastructureDefinition:
-                  type: KubernetesDirect
-                  spec:
-                    releaseName: testingprod
-          execution:
-            steps:
-              - step:
-                  name: Rollout Deployment
-                  identifier: rolloutDeployment
-                  type: K8sRollingDeploy
-                  spec:
-                    timeout: 120000
-                    skipDryRun: false
