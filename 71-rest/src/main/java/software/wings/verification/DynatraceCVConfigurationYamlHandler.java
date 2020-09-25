@@ -29,6 +29,7 @@ public class DynatraceCVConfigurationYamlHandler
     super.toYaml(yaml, bean);
     List<DynaTraceApplication> serviceList = dynaTraceService.getServices(bean.getConnectorId());
     yaml.setDynatraceServiceName("");
+    yaml.setDynatraceServiceEntityId("");
     if (isEmpty(serviceList)) {
       logger.info("No dynatrace services found for the connector " + bean.getConnectorId());
     } else {
@@ -36,6 +37,7 @@ public class DynatraceCVConfigurationYamlHandler
         for (DynaTraceApplication service : serviceList) {
           if (service.getEntityId().equals(bean.getServiceEntityId())) {
             yaml.setDynatraceServiceName(service.getDisplayName());
+            yaml.setDynatraceServiceEntityId(service.getEntityId());
             break;
           }
         }
@@ -73,9 +75,12 @@ public class DynatraceCVConfigurationYamlHandler
     }
 
     for (DynaTraceApplication service : serviceList) {
-      if (service.getDisplayName().equals(yaml.getDynatraceServiceName())) {
-        bean.setServiceEntityId(service.getEntityId());
-        break;
+      if (service.getDisplayName().equals(yaml.getDynatraceServiceName().trim())) {
+        if (isEmpty(yaml.getDynatraceServiceEntityId())
+            || service.getEntityId().equals(yaml.getDynatraceServiceEntityId().trim())) {
+          bean.setServiceEntityId(service.getEntityId());
+          break;
+        }
       }
     }
 
