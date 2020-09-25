@@ -91,7 +91,6 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.InOrder;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.Mockito;
 import org.mongodb.morphia.Key;
 import org.mongodb.morphia.query.FieldEnd;
 import org.mongodb.morphia.query.UpdateOperations;
@@ -110,7 +109,6 @@ import software.wings.beans.ContainerInfrastructureMapping;
 import software.wings.beans.DirectKubernetesInfrastructureMapping;
 import software.wings.beans.EcsInfrastructureMapping;
 import software.wings.beans.Environment;
-import software.wings.beans.FeatureName;
 import software.wings.beans.GcpConfig;
 import software.wings.beans.GcpKubernetesInfrastructureMapping;
 import software.wings.beans.HostConnectionType;
@@ -1130,7 +1128,6 @@ public class InfrastructureMappingServiceTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void testValidateAwsLambdaInfrastructureMapping() {
     AwsLambdaInfraStructureMapping awsLambdaInfraStructureMapping = new AwsLambdaInfraStructureMapping();
-    Mockito.when(featureFlagService.isEnabled(eq(FeatureName.INFRA_MAPPING_REFACTOR), any())).thenReturn(true);
 
     awsLambdaInfraStructureMapping.setProvisionerId("test");
     awsLambdaInfraStructureMapping.setRegion("region");

@@ -25,14 +25,12 @@ public class ServiceInfraSummaryMetadata {
   Long instancesDeployed;
 
   static List<ServiceInfraSummaryMetadata> fromElementExecutionSummaries(
-      List<ElementExecutionSummary> executionSummaries, boolean infraRefactor) {
-    return MetadataUtils.map(
-        executionSummaries, executionSummary -> fromElementExecutionSummary(executionSummary, infraRefactor));
+      List<ElementExecutionSummary> executionSummaries) {
+    return MetadataUtils.map(executionSummaries, executionSummary -> fromElementExecutionSummary(executionSummary));
   }
 
   @VisibleForTesting
-  static ServiceInfraSummaryMetadata fromElementExecutionSummary(
-      ElementExecutionSummary executionSummary, boolean infraRefactor) {
+  static ServiceInfraSummaryMetadata fromElementExecutionSummary(ElementExecutionSummary executionSummary) {
     if (executionSummary == null) {
       return null;
     }
@@ -51,7 +49,7 @@ public class ServiceInfraSummaryMetadata {
                                  .count();
     return ServiceInfraSummaryMetadata.builder()
         .service(serviceElement.getName())
-        .infrastructure(InfraMetadata.fromElementExecutionSummary(executionSummary, infraRefactor))
+        .infrastructure(InfraMetadata.fromElementExecutionSummary(executionSummary))
         .instancesDeployed(instancesDeployed <= 0 ? 0 : instancesDeployed)
         .build();
   }

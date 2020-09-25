@@ -22,9 +22,8 @@ public class ServiceInfraSummaryMetadataTest extends CategoryTest {
   @Owner(developers = GARVIT)
   @Category(UnitTests.class)
   public void testFromElementExecutionSummary() {
-    assertThat(ServiceInfraSummaryMetadata.fromElementExecutionSummary(null, true)).isNull();
-    assertThat(ServiceInfraSummaryMetadata.fromElementExecutionSummary(anElementExecutionSummary().build(), true))
-        .isNull();
+    assertThat(ServiceInfraSummaryMetadata.fromElementExecutionSummary(null)).isNull();
+    assertThat(ServiceInfraSummaryMetadata.fromElementExecutionSummary(anElementExecutionSummary().build())).isNull();
 
     ServiceInfraSummaryMetadata serviceInfraSummaryMetadata = ServiceInfraSummaryMetadata.fromElementExecutionSummary(
         anElementExecutionSummary()
@@ -39,8 +38,7 @@ public class ServiceInfraSummaryMetadataTest extends CategoryTest {
             .withInstanceStatusSummaries(
                 asList(null, anInstanceStatusSummary().withInstanceElement(anInstanceElement().build()).build(),
                     anInstanceStatusSummary().build()))
-            .build(),
-        true);
+            .build());
     assertThat(serviceInfraSummaryMetadata).isNotNull();
     assertThat(serviceInfraSummaryMetadata.getService()).isEqualTo("n");
     assertThat(serviceInfraSummaryMetadata.getInfrastructure()).isNotNull();
