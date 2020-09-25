@@ -236,12 +236,14 @@ public class ScpCommandUnitTest extends WingsBaseTest {
           .artifactStreamType(ArtifactStreamType.NEXUS.name())
           .metadataOnly(true)
           .metadata(mockMetadata(ArtifactStreamType.NEXUS))
-          .artifactFileMetadata(asList(builder().fileName("todolist-7.0.war").url(NEXUS_URL).build()))
+          .artifactFileMetadata(asList(builder().fileName("todolist-7.0-sources.war").url(NEXUS_URL).build()))
           .serverSetting(nexusSetting)
           .artifactStreamId(ARTIFACT_STREAM_ID)
           .jobName("releases")
           .groupId("io.harness.test")
           .artifactName("todolist")
+          .extension("war")
+          .classifier("sources")
           .artifactServerEncryptedDataDetails(Collections.emptyList())
           .build();
 

@@ -614,19 +614,13 @@ public class NexusTwoServiceImpl {
           if (!artifact.getNodeName().endsWith("pom")) {
             String artifactName = artifact.getNodeName();
             if (!artifactName.endsWith("pom")) {
-              String artifactUrl = constructArtifactDownloadUrl(nexusConfig, artifact, extension, classifier);
-              logger.info("Artifact Url:" + artifactUrl);
-              if (isNotEmpty(extension)) {
-                int index = artifactName.lastIndexOf('.');
-                // to avoid running into ArrayIndexOutOfBoundsException
-                if (index >= 0 && index < artifactName.length() - 1) {
-                  artifactName = artifactName.replace(artifactName.substring(index + 1), extension);
+              if (classifier == null || artifactName.contains(classifier)) {
+                String artifactUrl = constructArtifactDownloadUrl(nexusConfig, artifact, extension, classifier);
+                if (isEmpty(extension) || artifactName.endsWith(extension)) {
+                  logger.info("Artifact Url:" + artifactUrl + " for artifact filename: " + artifactName);
+                  artifactUrls.add(ArtifactFileMetadata.builder().fileName(artifactName).url(artifactUrl).build());
                 }
               }
-              artifactUrls.add(ArtifactFileMetadata.builder()
-                                   .fileName(artifactName)
-                                   .url(constructArtifactDownloadUrl(nexusConfig, artifact, extension, classifier))
-                                   .build());
             }
           }
         }

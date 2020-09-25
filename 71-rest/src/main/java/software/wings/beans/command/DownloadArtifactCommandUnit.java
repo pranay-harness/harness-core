@@ -61,6 +61,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.SimpleTimeZone;
+import java.util.stream.Collectors;
 
 @JsonTypeName("DOWNLOAD_ARTIFACT")
 @EqualsAndHashCode(callSuper = true)
@@ -69,6 +70,7 @@ public class DownloadArtifactCommandUnit extends ExecCommandUnit {
   private static final String NO_ARTIFACTS_ERROR_STRING = "There are no artifacts to download";
   private static final String ISO_8601_BASIC_FORMAT = "yyyyMMdd'T'HHmmss'Z'";
   private static final String EMPTY_BODY_SHA256 = "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855";
+  private static final String PERIOD_DELIMITER = ".";
 
   @Inject private EncryptionService encryptionService;
   @Inject @Transient private transient DelegateLogService delegateLogService;
@@ -533,6 +535,24 @@ public class DownloadArtifactCommandUnit extends ExecCommandUnit {
     if (isEmpty(artifactFileMetadata)) {
       saveExecutionLog(context, ERROR, NO_ARTIFACTS_ERROR_STRING);
       throw new InvalidRequestException(NO_ARTIFACTS_ERROR_STRING, USER);
+    }
+
+    // filter artifacts based on extension and classifier for nexus parameterized artifact stream.
+    // No op for non-parameterized artifact stream because we have already filtered artifactFileMetadata before we reach
+    // here
+    if (isNotEmpty(artifactStreamAttributes.getExtension())) {
+      artifactFileMetadata =
+          artifactFileMetadata.stream()
+              .filter(aFileMetadata
+                  -> aFileMetadata.getFileName().endsWith(PERIOD_DELIMITER + artifactStreamAttributes.getExtension()))
+              .collect(Collectors.toList());
+    }
+
+    if (isNotEmpty(artifactStreamAttributes.getClassifier())) {
+      artifactFileMetadata =
+          artifactFileMetadata.stream()
+              .filter(aFileMetadata -> aFileMetadata.getFileName().contains(artifactStreamAttributes.getClassifier()))
+              .collect(Collectors.toList());
     }
 
     switch (this.getScriptType()) {

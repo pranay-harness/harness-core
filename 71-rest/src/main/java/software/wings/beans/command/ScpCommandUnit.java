@@ -68,6 +68,7 @@ import java.util.stream.Stream;
 @Slf4j
 public class ScpCommandUnit extends SshCommandUnit {
   private static final String ARTIFACT_STRING = "artifact/";
+  private static final String PERIOD_DELIMITER = ".";
   @Inject @Transient private transient DelegateLogService delegateLogService;
   @Inject @Transient private AzureArtifactsService azureArtifactsService;
   @Inject @Transient private EncryptionService encryptionService;
@@ -233,6 +234,17 @@ public class ScpCommandUnit extends SshCommandUnit {
             }
             NexusConfig nexusConfig = (NexusConfig) artifactStreamAttributes.getServerSetting().getValue();
             for (ArtifactFileMetadata artifactFileMetadata : artifactStreamAttributes.getArtifactFileMetadata()) {
+              // filter artifacts based on extension and classifier for nexus parameterized artifact stream.
+              // No op for non-parameterized artifact stream because we have already filtered artifactFileMetadata
+              // before we reach here
+              if ((isNotEmpty(artifactStreamAttributes.getExtension())
+                      && !artifactFileMetadata.getFileName().endsWith(
+                             PERIOD_DELIMITER + artifactStreamAttributes.getExtension()))
+                  || (isNotEmpty(artifactStreamAttributes.getClassifier())
+                         && !artifactFileMetadata.getFileName().contains(artifactStreamAttributes.getClassifier()))) {
+                continue;
+              }
+
               metadata.put(ArtifactMetadataKeys.artifactFileName, artifactFileMetadata.getFileName());
               metadata.put(ArtifactMetadataKeys.artifactPath, artifactFileMetadata.getUrl());
               metadata.put(ArtifactMetadataKeys.artifactFileSize,
