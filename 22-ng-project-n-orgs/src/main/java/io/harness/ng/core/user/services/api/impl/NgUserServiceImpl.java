@@ -35,8 +35,8 @@ public class NgUserServiceImpl implements NgUserService {
   @Override
   public Page<User> list(String accountIdentifier, String searchString, Pageable pageable) {
     //  @Ankush remove the offset and limit from the following statement because it is redundant pagination
-    PageResponse<User> userPageResponse =
-        RestClientUtils.getResponse(userClient.list(accountIdentifier, "0", "100", searchString));
+    PageResponse<User> userPageResponse = RestClientUtils.getResponse(userClient.list(
+        accountIdentifier, String.valueOf(pageable.getOffset()), String.valueOf(pageable.getPageSize()), searchString));
     List<User> users = userPageResponse.getResponse();
     return new PageImpl<>(users, pageable, users.size());
   }
