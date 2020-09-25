@@ -202,7 +202,8 @@ public class PcfRollbackCommandTaskHandler extends PcfCommandTaskHandler {
    * In deploy state, once older app is downsized to 0, we remove routeMaps,
    * this step will restore them.
    */
-  private void restoreRoutesForOldApplication(PcfCommandRollbackRequest commandRollbackRequest,
+  @VisibleForTesting
+  void restoreRoutesForOldApplication(PcfCommandRollbackRequest commandRollbackRequest,
       PcfRequestConfig pcfRequestConfig, ExecutionLogCallback executionLogCallback) throws PivotalClientApiException {
     if (commandRollbackRequest.isStandardBlueGreenWorkflow()
         || EmptyPredicate.isEmpty(commandRollbackRequest.getAppsToBeDownSized())) {
@@ -227,7 +228,8 @@ public class PcfRollbackCommandTaskHandler extends PcfCommandTaskHandler {
     }
   }
 
-  private void unmapRoutesFromNewAppAfterDownsize(ExecutionLogCallback executionLogCallback,
+  @VisibleForTesting
+  void unmapRoutesFromNewAppAfterDownsize(ExecutionLogCallback executionLogCallback,
       PcfCommandRollbackRequest commandRollbackRequest, PcfRequestConfig pcfRequestConfig)
       throws PivotalClientApiException {
     if (commandRollbackRequest.isStandardBlueGreenWorkflow()

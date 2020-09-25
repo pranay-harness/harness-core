@@ -1,7 +1,9 @@
 package software.wings.delegatetasks.pcf.pcftaskhandler;
 
+import static io.harness.rule.OwnerRule.BOJANA;
 import static io.harness.rule.OwnerRule.ROHIT_KUMAR;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyListOf;
 import static org.mockito.Matchers.anyString;
@@ -15,6 +17,7 @@ import com.google.common.collect.ImmutableList;
 
 import io.harness.beans.FileData;
 import io.harness.category.element.UnitTests;
+import io.harness.exception.InvalidArgumentsException;
 import io.harness.logging.CommandExecutionStatus;
 import io.harness.rule.Owner;
 import io.harness.security.encryption.EncryptedDataDetail;
@@ -36,6 +39,7 @@ import software.wings.helpers.ext.pcf.PcfClient;
 import software.wings.helpers.ext.pcf.PcfDeploymentManager;
 import software.wings.helpers.ext.pcf.PivotalClientApiException;
 import software.wings.helpers.ext.pcf.request.PcfCommandRequest.PcfCommandType;
+import software.wings.helpers.ext.pcf.request.PcfCommandRollbackRequest;
 import software.wings.helpers.ext.pcf.request.PcfRunPluginCommandRequest;
 import software.wings.helpers.ext.pcf.request.PcfRunPluginScriptRequestData;
 import software.wings.helpers.ext.pcf.response.PcfCommandExecutionResponse;
@@ -120,5 +124,20 @@ public class PcfRunPluginCommandTaskHandlerTest extends WingsBaseTest {
     final PcfCommandExecutionResponse commandExecutionResponse = pcfRunPluginCommandTaskHandler.handleError(
         executionLogCallback, getPcfRunPluginCommandRequest(), new PivotalClientApiException(""));
     assertThat(commandExecutionResponse.getCommandExecutionStatus()).isEqualTo(CommandExecutionStatus.FAILURE);
+  }
+
+  @Test
+  @Owner(developers = BOJANA)
+  @Category(UnitTests.class)
+  public void testExecuteTaskInternalInvalidArgumentsException() {
+    try {
+      pcfRunPluginCommandTaskHandler.executeTaskInternal(
+          PcfCommandRollbackRequest.builder().build(), null, executionLogCallback);
+    } catch (Exception e) {
+      assertThatExceptionOfType(InvalidArgumentsException.class);
+      InvalidArgumentsException invalidArgumentsException = (InvalidArgumentsException) e;
+      assertThat(invalidArgumentsException.getParams())
+          .containsValue("pcfCommandRequest: Must be instance of PcfPluginCommandRequest");
+    }
   }
 }
