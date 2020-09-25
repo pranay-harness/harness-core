@@ -8,8 +8,8 @@ import io.harness.cdng.artifact.resources.docker.service.DockerResourceService;
 import io.harness.cdng.artifact.resources.docker.service.DockerResourceServiceImpl;
 import io.harness.cdng.artifact.service.ArtifactSourceService;
 import io.harness.cdng.artifact.service.impl.ArtifactSourceServiceImpl;
-import io.harness.cdng.inputset.services.CDInputSetEntityService;
-import io.harness.cdng.inputset.services.impl.CDInputSetEntityServiceImpl;
+import io.harness.cdng.inputset.services.InputSetEntityService;
+import io.harness.cdng.inputset.services.impl.InputSetEntityServiceImpl;
 import io.harness.cdng.pipeline.service.NgPipelineExecutionService;
 import io.harness.cdng.pipeline.service.NgPipelineExecutionServiceImpl;
 import io.harness.cdng.pipeline.service.PipelineService;
@@ -38,6 +38,6 @@ public class NGModule extends AbstractModule {
     bind(PipelineService.class).to(PipelineServiceImpl.class);
     bind(NgPipelineExecutionService.class).to(NgPipelineExecutionServiceImpl.class);
     bind(DockerResourceService.class).to(DockerResourceServiceImpl.class);
-    bind(CDInputSetEntityService.class).to(CDInputSetEntityServiceImpl.class);
+    bind(InputSetEntityService.class).to(InputSetEntityServiceImpl.class);
   }
 }

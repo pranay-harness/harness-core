@@ -2,22 +2,21 @@ package io.harness.ng.core.inputset.resources;
 
 import static io.harness.utils.PageUtils.getNGPageResponse;
 
-import com.google.common.io.Resources;
 import com.google.inject.Inject;
 
 import com.codahale.metrics.annotation.ExceptionMetered;
 import com.codahale.metrics.annotation.Timed;
+import io.harness.NGConstants;
 import io.harness.beans.NGPageResponse;
 import io.harness.cdng.inputset.beans.entities.CDInputSetEntity;
-import io.harness.cdng.inputset.beans.entities.CDInputSetEntity.CDInputSetEntityKeys;
+import io.harness.cdng.inputset.beans.resource.InputSetListType;
 import io.harness.cdng.inputset.beans.resource.InputSetResponseDTO;
 import io.harness.cdng.inputset.beans.resource.InputSetSummaryResponseDTO;
 import io.harness.cdng.inputset.beans.resource.InputSetTemplateResponseDTO;
-import io.harness.cdng.inputset.beans.resource.MergeInputSetRequestDTO;
-import io.harness.cdng.inputset.beans.resource.MergeInputSetResponseDTO;
-import io.harness.cdng.inputset.mappers.CDInputSetElementMapper;
-import io.harness.cdng.inputset.mappers.CDInputSetFilterHelper;
-import io.harness.cdng.inputset.services.CDInputSetEntityService;
+import io.harness.cdng.inputset.beans.yaml.CDInputSet;
+import io.harness.cdng.inputset.mappers.InputSetElementMapper;
+import io.harness.cdng.inputset.mappers.InputSetFilterHelper;
+import io.harness.cdng.inputset.services.InputSetEntityService;
 import io.harness.cdng.pipeline.beans.dto.CDPipelineResponseDTO;
 import io.harness.cdng.pipeline.service.PipelineService;
 import io.harness.data.structure.EmptyPredicate;
@@ -25,9 +24,17 @@ import io.harness.exception.InvalidRequestException;
 import io.harness.ng.core.dto.ErrorDTO;
 import io.harness.ng.core.dto.FailureDTO;
 import io.harness.ng.core.dto.ResponseDTO;
+import io.harness.ngpipeline.BaseInputSetEntity;
+import io.harness.ngpipeline.BaseInputSetEntity.BaseInputSetEntityKeys;
+import io.harness.ngpipeline.overlayinputset.beans.entities.OverlayInputSetEntity;
+import io.harness.ngpipeline.overlayinputset.beans.resource.OverlayInputSetResponseDTO;
+import io.harness.overlayinputset.OverlayInputSet;
 import io.harness.utils.PageUtils;
 import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiImplicitParam;
+import io.swagger.annotations.ApiImplicitParams;
 import io.swagger.annotations.ApiOperation;
+import io.swagger.annotations.ApiParam;
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
 import lombok.AccessLevel;
@@ -38,12 +45,8 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.mongodb.core.query.Criteria;
 
-import java.io.IOException;
-import java.nio.charset.StandardCharsets;
 import java.util.List;
-import java.util.Objects;
 import java.util.Optional;
-import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
@@ -58,8 +61,8 @@ import javax.ws.rs.QueryParam;
 
 @Api("/inputSets")
 @Path("/inputSets")
-@Produces({"application/json", "text/yaml", "text/html"})
-@Consumes({"application/json", "text/yaml", "text/html"})
+@Produces({"application/json", "application/yaml"})
+@Consumes({"application/json", "application/yaml"})
 @AllArgsConstructor(access = AccessLevel.PACKAGE, onConstructor = @__({ @Inject }))
 @ApiResponses(value =
     {
@@ -67,53 +70,128 @@ import javax.ws.rs.QueryParam;
       , @ApiResponse(code = 500, response = ErrorDTO.class, message = "Internal server error")
     })
 public class InputSetResource {
-  private final CDInputSetEntityService cdInputSetEntityService;
-  private PipelineService ngPipelineService;
+  private final InputSetEntityService inputSetEntityService;
+  private final PipelineService ngPipelineService;
 
   @GET
   @Path("{inputSetIdentifier}")
   @Timed
   @ExceptionMetered
   @ApiOperation(value = "Gets an InputSet by identifier", nickname = "getInputSetForPipeline")
-  public ResponseDTO<InputSetResponseDTO> get(@PathParam("inputSetIdentifier") String inputSetIdentifier,
-      @NotNull @QueryParam("accountIdentifier") String accountId,
-      @NotNull @QueryParam("orgIdentifier") String orgIdentifier,
-      @NotNull @QueryParam("projectIdentifier") String projectIdentifier,
-      @NotNull @QueryParam("pipelineIdentifier") String pipelineIdentifier,
-      @QueryParam("deleted") @DefaultValue("false") boolean deleted) {
-    Optional<CDInputSetEntity> cdInputSetEntity = cdInputSetEntityService.get(
+  public ResponseDTO<InputSetResponseDTO> getCDInputSet(
+      @PathParam(NGConstants.INPUT_SET_IDENTIFIER_KEY) String inputSetIdentifier,
+      @NotNull @QueryParam(NGConstants.ACCOUNT_KEY) String accountId,
+      @NotNull @QueryParam(NGConstants.ORG_KEY) String orgIdentifier,
+      @NotNull @QueryParam(NGConstants.PROJECT_KEY) String projectIdentifier,
+      @NotNull @QueryParam(NGConstants.PIPELINE_KEY) String pipelineIdentifier,
+      @QueryParam(NGConstants.DELETED_KEY) @DefaultValue("false") boolean deleted) {
+    Optional<BaseInputSetEntity> baseInputSetEntity = inputSetEntityService.get(
         accountId, orgIdentifier, projectIdentifier, pipelineIdentifier, inputSetIdentifier, deleted);
-    return ResponseDTO.newResponse(cdInputSetEntity.map(CDInputSetElementMapper::writeResponseDTO).orElse(null));
+    return ResponseDTO.newResponse(
+        baseInputSetEntity.map(InputSetElementMapper::writeCDInputSetResponseDTO).orElse(null));
+  }
+
+  @GET
+  @Path("overlay/{inputSetIdentifier}")
+  @Timed
+  @ExceptionMetered
+  @ApiOperation(value = "Gets an Overlay InputSet by identifier", nickname = "getOverlayInputSetForPipeline")
+  public ResponseDTO<OverlayInputSetResponseDTO> getOverlayInputSet(
+      @PathParam(NGConstants.INPUT_SET_IDENTIFIER_KEY) String inputSetIdentifier,
+      @NotNull @QueryParam(NGConstants.ACCOUNT_KEY) String accountId,
+      @NotNull @QueryParam(NGConstants.ORG_KEY) String orgIdentifier,
+      @NotNull @QueryParam(NGConstants.PROJECT_KEY) String projectIdentifier,
+      @NotNull @QueryParam(NGConstants.PIPELINE_KEY) String pipelineIdentifier,
+      @QueryParam(NGConstants.DELETED_KEY) @DefaultValue("false") boolean deleted) {
+    Optional<BaseInputSetEntity> overlayInputSetEntity = inputSetEntityService.get(
+        accountId, orgIdentifier, projectIdentifier, pipelineIdentifier, inputSetIdentifier, deleted);
+    return ResponseDTO.newResponse(
+        overlayInputSetEntity.map(InputSetElementMapper::writeOverlayResponseDTO).orElse(null));
   }
 
   @POST
   @Timed
   @ExceptionMetered
+  @ApiImplicitParams({
+    @ApiImplicitParam(dataTypeClass = CDInputSet.class, dataType = "io.harness.cdng.inputset.beans.yaml.CDInputSet",
+        paramType = "body")
+  })
   @ApiOperation(value = "Create an InputSet For Pipeline", nickname = "createInputSetForPipeline")
-  public ResponseDTO<InputSetResponseDTO> create(@NotNull @QueryParam("accountIdentifier") String accountId,
-      @NotNull @QueryParam("orgIdentifier") String orgIdentifier,
-      @NotNull @QueryParam("projectIdentifier") String projectIdentifier,
-      @NotNull @QueryParam("pipelineIdentifier") String pipelineIdentifier, @NotNull String yaml) {
-    CDInputSetEntity cdInputSetEntity = CDInputSetElementMapper.toCDInputSetEntity(
+  public ResponseDTO<InputSetResponseDTO>
+  createCDInputSet(@NotNull @QueryParam(NGConstants.ACCOUNT_KEY) String accountId,
+      @NotNull @QueryParam(NGConstants.ORG_KEY) String orgIdentifier,
+      @NotNull @QueryParam(NGConstants.PROJECT_KEY) String projectIdentifier,
+      @NotNull @QueryParam(NGConstants.PIPELINE_KEY) String pipelineIdentifier,
+      @NotNull @ApiParam(hidden = true, type = "") String yaml) {
+    CDInputSetEntity cdInputSetEntity =
+        InputSetElementMapper.toCDInputSetEntity(accountId, orgIdentifier, projectIdentifier, pipelineIdentifier, yaml);
+    BaseInputSetEntity createdEntity = inputSetEntityService.create(cdInputSetEntity);
+    return ResponseDTO.newResponse(InputSetElementMapper.writeCDInputSetResponseDTO(createdEntity));
+  }
+
+  @POST
+  @Path("overlay")
+  @Timed
+  @ExceptionMetered
+  @ApiImplicitParams({
+    @ApiImplicitParam(dataTypeClass = OverlayInputSet.class, dataType = "io.harness.overlayinputset.OverlayInputSet",
+        paramType = "body")
+  })
+  @ApiOperation(value = "Create an Overlay InputSet For Pipeline", nickname = "createOverlayInputSetForPipeline")
+  public ResponseDTO<OverlayInputSetResponseDTO>
+  createOverlayInputSet(@NotNull @QueryParam(NGConstants.ACCOUNT_KEY) String accountId,
+      @NotNull @QueryParam(NGConstants.ORG_KEY) String orgIdentifier,
+      @NotNull @QueryParam(NGConstants.PROJECT_KEY) String projectIdentifier,
+      @NotNull @QueryParam(NGConstants.PIPELINE_KEY) String pipelineIdentifier,
+      @NotNull @ApiParam(hidden = true, type = "") String yaml) {
+    OverlayInputSetEntity overlayInputSetEntity = InputSetElementMapper.toOverlayInputSetEntity(
         accountId, orgIdentifier, projectIdentifier, pipelineIdentifier, yaml);
-    CDInputSetEntity createdEntity = cdInputSetEntityService.create(cdInputSetEntity);
-    return ResponseDTO.newResponse(CDInputSetElementMapper.writeResponseDTO(createdEntity));
+    BaseInputSetEntity createdEntity = inputSetEntityService.create(overlayInputSetEntity);
+    return ResponseDTO.newResponse(InputSetElementMapper.writeOverlayResponseDTO(createdEntity));
   }
 
   @PUT
   @Path("{inputSetIdentifier}")
   @Timed
   @ExceptionMetered
+  @ApiImplicitParams({
+    @ApiImplicitParam(dataTypeClass = CDInputSet.class, dataType = "io.harness.cdng.inputset.beans.yaml.CDInputSet",
+        paramType = "body")
+  })
   @ApiOperation(value = "Update an InputSet by identifier", nickname = "updateInputSetForPipeline")
-  public ResponseDTO<InputSetResponseDTO> update(@PathParam("inputSetIdentifier") String inputSetIdentifier,
-      @NotNull @QueryParam("accountIdentifier") String accountId,
-      @NotNull @QueryParam("orgIdentifier") String orgIdentifier,
-      @NotNull @QueryParam("projectIdentifier") String projectIdentifier,
-      @NotNull @QueryParam("pipelineIdentifier") String pipelineIdentifier, @NotNull String yaml) {
-    CDInputSetEntity requestInputSetEntity = CDInputSetElementMapper.toCDInputSetEntityWithIdentifier(
+  public ResponseDTO<InputSetResponseDTO>
+  updateCDInputSet(@PathParam(NGConstants.INPUT_SET_IDENTIFIER_KEY) String inputSetIdentifier,
+      @NotNull @QueryParam(NGConstants.ACCOUNT_KEY) String accountId,
+      @NotNull @QueryParam(NGConstants.ORG_KEY) String orgIdentifier,
+      @NotNull @QueryParam(NGConstants.PROJECT_KEY) String projectIdentifier,
+      @NotNull @QueryParam(NGConstants.PIPELINE_KEY) String pipelineIdentifier,
+      @NotNull @ApiParam(hidden = true, type = "") String yaml) {
+    CDInputSetEntity cdInputSetEntity = InputSetElementMapper.toCDInputSetEntityWithIdentifier(
         accountId, orgIdentifier, projectIdentifier, pipelineIdentifier, inputSetIdentifier, yaml);
-    CDInputSetEntity updatedInputSetEntity = cdInputSetEntityService.update(requestInputSetEntity);
-    return ResponseDTO.newResponse(CDInputSetElementMapper.writeResponseDTO(updatedInputSetEntity));
+    BaseInputSetEntity updatedInputSetEntity = inputSetEntityService.update(cdInputSetEntity);
+    return ResponseDTO.newResponse(InputSetElementMapper.writeCDInputSetResponseDTO(updatedInputSetEntity));
+  }
+
+  @PUT
+  @Path("overlay/{inputSetIdentifier}")
+  @Timed
+  @ExceptionMetered
+  @ApiImplicitParams({
+    @ApiImplicitParam(dataTypeClass = OverlayInputSet.class, dataType = "io.harness.overlayinputset.OverlayInputSet",
+        paramType = "body")
+  })
+  @ApiOperation(value = "Update an Overlay InputSet by identifier", nickname = "updateOverlayInputSetForPipeline")
+  public ResponseDTO<OverlayInputSetResponseDTO>
+  updateOverlayInputSet(@PathParam(NGConstants.INPUT_SET_IDENTIFIER_KEY) String inputSetIdentifier,
+      @NotNull @QueryParam(NGConstants.ACCOUNT_KEY) String accountId,
+      @NotNull @QueryParam(NGConstants.ORG_KEY) String orgIdentifier,
+      @NotNull @QueryParam(NGConstants.PROJECT_KEY) String projectIdentifier,
+      @NotNull @QueryParam(NGConstants.PIPELINE_KEY) String pipelineIdentifier,
+      @NotNull @ApiParam(hidden = true, type = "") String yaml) {
+    OverlayInputSetEntity overlayInputSetEntity = InputSetElementMapper.toOverlayInputSetEntityWithIdentifier(
+        accountId, orgIdentifier, projectIdentifier, pipelineIdentifier, inputSetIdentifier, yaml);
+    BaseInputSetEntity updatedInputSetEntity = inputSetEntityService.update(overlayInputSetEntity);
+    return ResponseDTO.newResponse(InputSetElementMapper.writeOverlayResponseDTO(updatedInputSetEntity));
   }
 
   @DELETE
@@ -121,29 +199,13 @@ public class InputSetResource {
   @Timed
   @ExceptionMetered
   @ApiOperation(value = "Delete an inputSet by identifier", nickname = "deleteInputSetForPipeline")
-  public ResponseDTO<Boolean> delete(@PathParam("inputSetIdentifier") String inputSetIdentifier,
-      @NotNull @QueryParam("accountIdentifier") String accountId,
-      @NotNull @QueryParam("orgIdentifier") String orgIdentifier,
-      @NotNull @QueryParam("projectIdentifier") String projectIdentifier,
-      @NotNull @QueryParam("pipelineIdentifier") String pipelineIdentifier) {
-    return ResponseDTO.newResponse(cdInputSetEntityService.delete(
+  public ResponseDTO<Boolean> delete(@PathParam(NGConstants.INPUT_SET_IDENTIFIER_KEY) String inputSetIdentifier,
+      @NotNull @QueryParam(NGConstants.ACCOUNT_KEY) String accountId,
+      @NotNull @QueryParam(NGConstants.ORG_KEY) String orgIdentifier,
+      @NotNull @QueryParam(NGConstants.PROJECT_KEY) String projectIdentifier,
+      @NotNull @QueryParam(NGConstants.PIPELINE_KEY) String pipelineIdentifier) {
+    return ResponseDTO.newResponse(inputSetEntityService.delete(
         accountId, orgIdentifier, projectIdentifier, pipelineIdentifier, inputSetIdentifier));
-  }
-
-  @PUT
-  @Path("{inputSetIdentifier}/upsert")
-  @Timed
-  @ExceptionMetered
-  @ApiOperation(value = "Upsert an inputSet by identifier", nickname = "upsertInputSetForPipeline")
-  public ResponseDTO<InputSetResponseDTO> upsert(@PathParam("inputSetIdentifier") String inputSetIdentifier,
-      @NotNull @QueryParam("accountIdentifier") String accountId,
-      @NotNull @QueryParam("orgIdentifier") String orgIdentifier,
-      @NotNull @QueryParam("projectIdentifier") String projectIdentifier,
-      @NotNull @QueryParam("pipelineIdentifier") String pipelineIdentifier, @NotNull String yaml) {
-    CDInputSetEntity cdInputSetEntity = CDInputSetElementMapper.toCDInputSetEntityWithIdentifier(
-        accountId, orgIdentifier, projectIdentifier, pipelineIdentifier, inputSetIdentifier, yaml);
-    CDInputSetEntity upsertedInputSetEntity = cdInputSetEntityService.upsert(cdInputSetEntity);
-    return ResponseDTO.newResponse(CDInputSetElementMapper.writeResponseDTO(upsertedInputSetEntity));
   }
 
   @GET
@@ -151,21 +213,24 @@ public class InputSetResource {
   @ExceptionMetered
   @ApiOperation(value = "Gets InputSets list for a pipeline", nickname = "getInputSetsListForPipeline")
   public ResponseDTO<NGPageResponse<InputSetSummaryResponseDTO>> listInputSetsForPipeline(
-      @QueryParam("page") @DefaultValue("0") int page, @QueryParam("size") @DefaultValue("100") int size,
-      @NotNull @QueryParam("accountIdentifier") String accountId,
-      @NotNull @QueryParam("orgIdentifier") String orgIdentifier,
-      @NotNull @QueryParam("projectIdentifier") String projectIdentifier,
-      @NotNull @QueryParam("pipelineIdentifier") String pipelineIdentifier, @QueryParam("sort") List<String> sort) {
-    Criteria criteria = CDInputSetFilterHelper.createCriteriaForGetList(
-        accountId, orgIdentifier, projectIdentifier, pipelineIdentifier, false);
+      @QueryParam(NGConstants.PAGE_KEY) @DefaultValue("0") int page,
+      @QueryParam(NGConstants.SIZE_KEY) @DefaultValue("100") int size,
+      @NotNull @QueryParam(NGConstants.ACCOUNT_KEY) String accountId,
+      @NotNull @QueryParam(NGConstants.ORG_KEY) String orgIdentifier,
+      @NotNull @QueryParam(NGConstants.PROJECT_KEY) String projectIdentifier,
+      @NotNull @QueryParam(NGConstants.PIPELINE_KEY) String pipelineIdentifier,
+      @QueryParam("inputSetType") @DefaultValue("ALL") InputSetListType inputSetListType,
+      @QueryParam(NGConstants.SEARCH_TERM_KEY) String searchTerm, @QueryParam(NGConstants.SORT_KEY) List<String> sort) {
+    Criteria criteria = InputSetFilterHelper.createCriteriaForGetList(
+        accountId, orgIdentifier, projectIdentifier, pipelineIdentifier, inputSetListType, searchTerm, false);
     Pageable pageRequest;
     if (EmptyPredicate.isEmpty(sort)) {
-      pageRequest = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, CDInputSetEntityKeys.createdAt));
+      pageRequest = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, BaseInputSetEntityKeys.createdAt));
     } else {
       pageRequest = PageUtils.getPageRequest(page, size, sort);
     }
     Page<InputSetSummaryResponseDTO> inputSetList =
-        cdInputSetEntityService.list(criteria, pageRequest).map(CDInputSetElementMapper::writeSummaryResponseDTO);
+        inputSetEntityService.list(criteria, pageRequest).map(InputSetElementMapper::writeSummaryResponseDTO);
     return ResponseDTO.newResponse(getNGPageResponse(inputSetList));
   }
 
@@ -175,45 +240,19 @@ public class InputSetResource {
   @ExceptionMetered
   @ApiOperation(value = "Get template from a pipeline yaml", nickname = "getTemplateFromPipeline")
   public ResponseDTO<InputSetTemplateResponseDTO> getTemplateFromPipeline(
-      @NotNull @QueryParam("accountIdentifier") String accountId,
-      @NotNull @QueryParam("orgIdentifier") String orgIdentifier,
-      @NotNull @QueryParam("projectIdentifier") String projectIdentifier,
-      @NotNull @QueryParam("pipelineIdentifier") String pipelineIdentifier) {
+      @NotNull @QueryParam(NGConstants.ACCOUNT_KEY) String accountId,
+      @NotNull @QueryParam(NGConstants.ORG_KEY) String orgIdentifier,
+      @NotNull @QueryParam(NGConstants.PROJECT_KEY) String projectIdentifier,
+      @NotNull @QueryParam(NGConstants.PIPELINE_KEY) String pipelineIdentifier) {
     Optional<CDPipelineResponseDTO> pipeline =
         ngPipelineService.getPipeline(pipelineIdentifier, accountId, orgIdentifier, projectIdentifier);
     if (pipeline.isPresent()) {
       String pipelineYaml = pipeline.get().getYamlPipeline();
-      String inputSetTemplate = cdInputSetEntityService.getTemplateFromPipeline(pipelineYaml);
+      String inputSetTemplate = inputSetEntityService.getTemplateFromPipeline(pipelineYaml);
       return ResponseDTO.newResponse(
           InputSetTemplateResponseDTO.builder().inputSetTemplateYaml(inputSetTemplate).build());
     } else {
       throw new InvalidRequestException("Pipeline not found");
     }
-  }
-
-  @POST
-  @Path("merge")
-  @Timed
-  @ExceptionMetered
-  @ApiOperation(
-      value = "Merges given input sets list on pipeline and return input set template format of applied pipeline",
-      nickname = "getMergeInputSetFromPipelineTemplate")
-  public ResponseDTO<MergeInputSetResponseDTO>
-  getMergeInputSetFromPipelineTemplate(@NotNull @QueryParam("accountIdentifier") String accountId,
-      @NotNull @QueryParam("orgIdentifier") String orgIdentifier,
-      @NotNull @QueryParam("projectIdentifier") String projectIdentifier,
-      @NotNull @QueryParam("pipelineIdentifier") String pipelineIdentifier,
-      @NotNull @Valid MergeInputSetRequestDTO mergeInputSetRequestDTO) {
-    // currently returning a dummy response
-    String dummyFilename = "dummyInputSetTemplate.yaml";
-    ClassLoader classLoader = this.getClass().getClassLoader();
-    String content = null;
-    try {
-      content =
-          Resources.toString(Objects.requireNonNull(classLoader.getResource(dummyFilename)), StandardCharsets.UTF_8);
-    } catch (IOException e) {
-      // do nothing
-    }
-    return ResponseDTO.newResponse(MergeInputSetResponseDTO.builder().pipelineYaml(content).build());
   }
 }

@@ -11,7 +11,7 @@ public class OverlayInputSet implements OverlayInputSetWrapper {
   String identifier;
   String name;
   String description;
-  List<String> inputSetsReferences;
+  List<String> inputSetReferences;
 
   // add tags
 }

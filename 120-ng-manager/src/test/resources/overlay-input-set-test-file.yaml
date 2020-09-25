@@ -2,6 +2,6 @@ overlayInputSet:
   name: input set name
   identifier: identifier
   description: input set description
-  inputSetsReferences:
+  inputSetReferences:
     - inputSet1
     - inputSet2
