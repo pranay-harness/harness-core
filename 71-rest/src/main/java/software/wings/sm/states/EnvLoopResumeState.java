@@ -20,6 +20,7 @@ import software.wings.sm.ExecutionResponse;
 import software.wings.sm.ExecutionResponse.ExecutionResponseBuilder;
 import software.wings.sm.State;
 import software.wings.sm.StateExecutionInstance;
+import software.wings.sm.StateExecutionInstanceHelper;
 import software.wings.sm.StateType;
 import software.wings.sm.resume.ResumeStateUtils;
 
@@ -39,6 +40,7 @@ public class EnvLoopResumeState extends State {
   @Setter @SchemaIgnore private Map<String, String> workflowExecutionIdWithStateExecutionIds;
 
   @Transient @Inject private ResumeStateUtils resumeStateUtils;
+  @Transient @Inject private StateExecutionInstanceHelper stateExecutionInstanceHelper;
 
   public EnvLoopResumeState(String name) {
     super(name, StateType.ENV_LOOP_RESUME_STATE.name());
@@ -63,7 +65,7 @@ public class EnvLoopResumeState extends State {
     for (Map.Entry<String, String> entry : workflowExecutionIdWithStateExecutionIds.entrySet()) {
       String state = getName() + "_" + i;
       ForkElement element = ForkElement.builder().stateName(state).parentId(stateExecutionInstance.getUuid()).build();
-      StateExecutionInstance childStateExecutionInstance = stateExecutionInstance.cloneInternal();
+      StateExecutionInstance childStateExecutionInstance = stateExecutionInstanceHelper.clone(stateExecutionInstance);
       childStateExecutionInstance.setStateParams(null);
 
       childStateExecutionInstance.setContextElement(element);

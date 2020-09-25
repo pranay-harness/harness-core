@@ -21,6 +21,7 @@ import software.wings.service.intfc.WorkflowService;
 import software.wings.sm.ExecutionContextImpl;
 import software.wings.sm.ExecutionResponse;
 import software.wings.sm.StateExecutionInstance;
+import software.wings.sm.StateExecutionInstanceHelper;
 import software.wings.sm.StateType;
 import software.wings.sm.StateTypeDescriptor;
 import software.wings.sm.states.ForkState.ForkStateExecutionData;
@@ -32,6 +33,7 @@ import java.util.concurrent.TimeUnit;
 public class EnvLoopStateTest extends WingsBaseTest {
   @Mock private ExecutionContextImpl context;
   @Mock private WorkflowService workflowService;
+  @Mock private StateExecutionInstanceHelper stateExecutionInstanceHelper;
   @InjectMocks private EnvLoopState envLoopState = new EnvLoopState("ENV_LOOP_STATE");
 
   @Before
@@ -56,7 +58,7 @@ public class EnvLoopStateTest extends WingsBaseTest {
   public void shouldExecute() {
     StateExecutionInstance stateExecutionInstance = aStateExecutionInstance().uuid("UUID").build();
     when(context.getStateExecutionInstance()).thenReturn(stateExecutionInstance);
-
+    when(stateExecutionInstanceHelper.clone(stateExecutionInstance)).thenReturn(stateExecutionInstance);
     Map<String, StateTypeDescriptor> stencilMap = new HashMap<>();
     stencilMap.put(StateType.ENV_STATE.getType(), StateType.ENV_LOOP_STATE);
     when(workflowService.stencilMap(anyString())).thenReturn(stencilMap);

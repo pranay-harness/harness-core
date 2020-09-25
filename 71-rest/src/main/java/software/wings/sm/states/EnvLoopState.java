@@ -19,13 +19,13 @@ import software.wings.api.ForkElement;
 import software.wings.beans.LoopEnvStateParams;
 import software.wings.beans.LoopEnvStateParams.LoopEnvStateParamsBuilder;
 import software.wings.service.impl.workflow.WorkflowServiceImpl;
-import software.wings.service.intfc.WorkflowService;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionContextImpl;
 import software.wings.sm.ExecutionResponse;
 import software.wings.sm.ExecutionResponse.ExecutionResponseBuilder;
 import software.wings.sm.State;
 import software.wings.sm.StateExecutionInstance;
+import software.wings.sm.StateExecutionInstanceHelper;
 import software.wings.sm.StateType;
 import software.wings.sm.states.ForkState.ForkStateExecutionData;
 import software.wings.stencils.EnumData;
@@ -53,7 +53,7 @@ public class EnvLoopState extends State {
   @Getter @Setter @JsonIgnore private boolean disable;
 
   @Getter @Setter private String disableAssertion;
-  @Transient @Inject private WorkflowService workflowService;
+  @Transient @Inject private StateExecutionInstanceHelper instanceHelper;
 
   public EnvLoopState(String name) {
     super(name, StateType.ENV_LOOP_STATE.name());
@@ -77,7 +77,7 @@ public class EnvLoopState extends State {
       String state = getName() + "_" + i;
       forkStateNames.add(state);
       ForkElement element = ForkElement.builder().stateName(state).parentId(stateExecutionInstance.getUuid()).build();
-      StateExecutionInstance childStateExecutionInstance = stateExecutionInstance.cloneInternal();
+      StateExecutionInstance childStateExecutionInstance = instanceHelper.clone(stateExecutionInstance);
       childStateExecutionInstance.setStateParams(null);
 
       childStateExecutionInstance.setContextElement(element);

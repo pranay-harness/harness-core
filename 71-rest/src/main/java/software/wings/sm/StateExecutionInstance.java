@@ -21,7 +21,6 @@ import io.harness.persistence.CreatedAtAware;
 import io.harness.persistence.PersistentEntity;
 import io.harness.persistence.UpdatedAtAware;
 import io.harness.persistence.UuidAware;
-import io.harness.serializer.KryoUtils;
 import lombok.Data;
 import lombok.experimental.FieldNameConstants;
 import org.mongodb.morphia.annotations.Entity;
@@ -176,20 +175,6 @@ public class StateExecutionInstance
       return null;
     }
     return phaseElement;
-  }
-
-  public StateExecutionInstance cloneInternal() {
-    StateExecutionInstance clone = KryoUtils.clone(this);
-    clone.setPrevInstanceId(null);
-    clone.setDelegateTaskId(null);
-    clone.setContextTransition(true);
-    clone.setStatus(ExecutionStatus.NEW);
-    clone.setStartTs(null);
-    clone.setEndTs(null);
-    clone.setCreatedAt(0);
-    clone.setLastUpdatedAt(0);
-    clone.setHasInspection(false);
-    return clone;
   }
 
   /**
