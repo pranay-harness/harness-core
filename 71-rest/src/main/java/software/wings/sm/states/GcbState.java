@@ -34,6 +34,7 @@ import io.harness.delegate.beans.DelegateTaskNotifyResponseData;
 import io.harness.delegate.beans.ErrorNotifyResponseData;
 import io.harness.delegate.beans.TaskData;
 import io.harness.exception.UnsupportedOperationException;
+import io.harness.serializer.KryoSerializer;
 import io.harness.tasks.Cd1SetupFields;
 import io.harness.tasks.ResponseData;
 import lombok.Data;
@@ -101,6 +102,7 @@ public class GcbState extends State implements SweepingOutputStateMixin {
   @Transient @Inject private TemplateExpressionProcessor templateExpressionProcessor;
   @Transient @Inject private TemplateUtils templateUtils;
   @Transient @Inject private SettingsService settingsService;
+  @Transient @Inject KryoSerializer kryoSerializer;
 
   public GcbState(String name) {
     super(name, StateType.GCB.name());
@@ -366,6 +368,11 @@ public class GcbState extends State implements SweepingOutputStateMixin {
       default:
         throw new UnsupportedOperationException("Gcb option " + gcbOptions.getSpecSource() + " not supported");
     }
+  }
+
+  @Override
+  public KryoSerializer getKryoSerializer() {
+    return kryoSerializer;
   }
 
   @Data

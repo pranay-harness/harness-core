@@ -24,6 +24,7 @@ import static software.wings.utils.WingsTestConstants.WORKFLOW_EXECUTION_ID;
 import static software.wings.utils.WingsTestConstants.WORKFLOW_NAME;
 
 import com.google.common.collect.ImmutableMap;
+import com.google.inject.Inject;
 
 import io.harness.beans.DelegateTask;
 import io.harness.beans.ExecutionStatus;
@@ -34,7 +35,9 @@ import io.harness.beans.WorkflowType;
 import io.harness.category.element.UnitTests;
 import io.harness.context.ContextElementType;
 import io.harness.rule.Owner;
+import io.harness.serializer.KryoSerializer;
 import io.harness.tasks.ResponseData;
+import org.joor.Reflect;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.ArgumentCaptor;
@@ -69,6 +72,7 @@ public class ShellScriptProvisionStateTest extends WingsBaseTest {
   @Mock private InfrastructureProvisionerService infrastructureProvisionerService;
   @Mock private SweepingOutputService sweepingOutputService;
   @Mock private ExecutionContextImpl executionContext;
+  @Inject private KryoSerializer kryoSerializer;
 
   @InjectMocks
   private ShellScriptProvisionState state =
@@ -151,6 +155,7 @@ public class ShellScriptProvisionStateTest extends WingsBaseTest {
   @Owner(developers = ABOSII)
   @Category(UnitTests.class)
   public void testHandleAsyncResponse() {
+    Reflect.on(state).set("kryoSerializer", kryoSerializer);
     state.setProvisionerId(PROVISIONER_ID);
     state.setSweepingOutputName("${expression}");
     state.setSweepingOutputScope(Scope.PHASE);

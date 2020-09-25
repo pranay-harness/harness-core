@@ -37,6 +37,7 @@ import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.expression.ExpressionReflectionUtils;
 import io.harness.security.encryption.EncryptedDataDetail;
+import io.harness.serializer.KryoSerializer;
 import io.harness.tasks.Cd1SetupFields;
 import io.harness.tasks.ResponseData;
 import lombok.Getter;
@@ -112,11 +113,17 @@ public class ShellScriptState extends State implements SweepingOutputStateMixin 
   @Inject @Transient private TemplateExpressionProcessor templateExpressionProcessor;
   @Inject @Transient private DelegateService delegateService;
   @Inject @Transient private FeatureFlagService featureFlagService;
+  @Transient @Inject KryoSerializer kryoSerializer;
 
   @Getter @Setter @Attributes(title = "Execute on Delegate") private boolean executeOnDelegate;
 
   @NotEmpty @Getter @Setter @Attributes(title = "Target Host") private String host;
   @NotEmpty @Getter @Setter @Attributes(title = "Tags") private List<String> tags;
+
+  @Override
+  public KryoSerializer getKryoSerializer() {
+    return kryoSerializer;
+  }
 
   public enum ConnectionType { SSH, WINRM }
 

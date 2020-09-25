@@ -40,8 +40,8 @@ import static software.wings.utils.WingsTestConstants.SETTING_ID;
 import static software.wings.utils.WingsTestConstants.TEMPLATE_ID;
 
 import com.google.common.collect.ImmutableMap;
+import com.google.inject.Inject;
 
-import io.harness.CategoryTest;
 import io.harness.beans.DelegateTask;
 import io.harness.beans.ExecutionStatus;
 import io.harness.beans.SweepingOutputInstance;
@@ -53,7 +53,9 @@ import io.harness.delegate.beans.ErrorNotifyResponseData;
 import io.harness.delegate.command.CommandExecutionResult;
 import io.harness.logging.CommandExecutionStatus;
 import io.harness.rule.Owner;
+import io.harness.serializer.KryoSerializer;
 import org.apache.commons.lang3.reflect.FieldUtils;
+import org.joor.Reflect;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -63,6 +65,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnit;
 import org.mockito.junit.MockitoRule;
+import software.wings.WingsBaseTest;
 import software.wings.api.ScriptStateExecutionData;
 import software.wings.beans.Activity;
 import software.wings.beans.Activity.Type;
@@ -96,7 +99,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public class ShellScriptStateTest extends CategoryTest {
+public class ShellScriptStateTest extends WingsBaseTest {
   private static final Activity ACTIVITY_WITH_ID = Activity.builder().build();
 
   static {
@@ -123,6 +126,8 @@ public class ShellScriptStateTest extends CategoryTest {
   @InjectMocks private ShellScriptState shellScriptState = new ShellScriptState("ShellScript");
 
   private ExecutionResponse asyncExecutionResponse;
+
+  @Inject KryoSerializer kryoSerializer;
 
   @Before
   public void setUp() throws Exception {
@@ -154,6 +159,7 @@ public class ShellScriptStateTest extends CategoryTest {
   @Owner(developers = AADITI)
   @Category(UnitTests.class)
   public void shouldHandleAsyncResponseOnShellScriptSuccessAndSaveSweepingOutput() {
+    Reflect.on(shellScriptState).set("kryoSerializer", kryoSerializer);
     when(executionContext.getStateExecutionData())
         .thenReturn(ScriptStateExecutionData.builder().activityId(ACTIVITY_ID).build());
     when(executionContext.prepareSweepingOutputBuilder(any(SweepingOutputInstance.Scope.class)))

@@ -17,11 +17,13 @@ import io.harness.eraro.ErrorCode;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.ServiceNowException;
 import io.harness.exception.WingsException;
+import io.harness.serializer.KryoSerializer;
 import io.harness.tasks.Cd1SetupFields;
 import io.harness.tasks.ResponseData;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
+import org.mongodb.morphia.annotations.Transient;
 import software.wings.api.ServiceNowExecutionData;
 import software.wings.beans.Activity.Type;
 import software.wings.beans.ServiceNowConfig;
@@ -62,6 +64,7 @@ public class ServiceNowCreateUpdateState extends State implements SweepingOutput
   @Inject private transient DelegateService delegateService;
   @Inject private transient SweepingOutputService sweepingOutputService;
   @Inject private transient ActivityHelperService activityHelperService;
+  @Transient @Inject KryoSerializer kryoSerializer;
 
   private static final long ASYNC_TASK_TIMEOUT_MILLIS = 60 * 1000;
   private static final String ISSUE_NUMBER = "issueNumber";
@@ -196,5 +199,10 @@ public class ServiceNowCreateUpdateState extends State implements SweepingOutput
     }
 
     return (ServiceNowConfig) snowSettingAttribute.getValue();
+  }
+
+  @Override
+  public KryoSerializer getKryoSerializer() {
+    return kryoSerializer;
   }
 }

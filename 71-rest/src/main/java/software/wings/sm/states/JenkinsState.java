@@ -32,6 +32,7 @@ import io.harness.delegate.beans.DelegateResponseData;
 import io.harness.delegate.beans.DelegateTaskNotifyResponseData;
 import io.harness.delegate.beans.ErrorNotifyResponseData;
 import io.harness.delegate.beans.TaskData;
+import io.harness.serializer.KryoSerializer;
 import io.harness.tasks.Cd1SetupFields;
 import io.harness.tasks.ResponseData;
 import lombok.AllArgsConstructor;
@@ -111,6 +112,7 @@ public class JenkinsState extends State implements SweepingOutputStateMixin {
   @Transient @Inject private TemplateExpressionProcessor templateExpressionProcessor;
   @Transient @Inject private TemplateUtils templateUtils;
   @Transient @Inject private SettingsService settingsService;
+  @Transient @Inject private KryoSerializer kryoSerializer;
 
   public JenkinsState(String name) {
     super(name, StateType.JENKINS.name());
@@ -580,6 +582,11 @@ public class JenkinsState extends State implements SweepingOutputStateMixin {
 
   protected void updateActivityStatus(String activityId, String appId, ExecutionStatus status) {
     activityService.updateStatus(activityId, appId, status);
+  }
+
+  @Override
+  public KryoSerializer getKryoSerializer() {
+    return kryoSerializer;
   }
 
   @Data
