@@ -3,84 +3,87 @@ load("//:GenTestRules.bzl", "run_tests")
 load("//tools/checkstyle:rules.bzl", "checkstyle")
 load("//:macros.bzl", "sources")
 load("//:macros.bzl", "sonarqube_test")
-load("//tools/pmd:defs.bzl","pmd")
+load("//tools/pmd:defs.bzl", "pmd")
 
 sources()
 
 java_library(
     name = "maven_deps",
-    exports = [
-               "//12-commons:module",
-               "//12-commons:maven_deps",
-                "//14-api-services-beans:maven_deps",
-                "@maven//:com_fasterxml_jackson_core_jackson_annotations",
-                "@maven//:com_google_code_findbugs_annotations",
-                "@maven//:com_google_guava_guava",
-                "@maven//:com_google_protobuf_protobuf_java",
-                "@maven//:org_apache_commons_commons_lang3",
-                "@maven//:org_eclipse_jgit_org_eclipse_jgit",
-                "@maven//:org_projectlombok_lombok",
-                "@maven//:org_slf4j_slf4j_api",
-                "@maven//:io_swagger_swagger_annotations",
-                "@maven//:org_apache_httpcomponents_httpclient",
-        ],
     visibility = ["//visibility:public"],
+    exports = [
+        "//12-commons:maven_deps",
+        "//12-commons:module",
+        "//14-api-services-beans:maven_deps",
+        "@maven//:com_fasterxml_jackson_core_jackson_annotations",
+        "@maven//:com_google_code_findbugs_annotations",
+        "@maven//:com_google_guava_guava",
+        "@maven//:com_google_protobuf_protobuf_java",
+        "@maven//:io_swagger_swagger_annotations",
+        "@maven//:org_apache_commons_commons_lang3",
+        "@maven//:org_apache_httpcomponents_httpclient",
+        "@maven//:org_eclipse_jgit_org_eclipse_jgit",
+        "@maven//:org_projectlombok_lombok",
+        "@maven//:org_slf4j_slf4j_api",
+    ],
 )
 
 java_library(
     name = "test_deps",
     exports = [
         "//990-commons-test:module",
-        "@maven//:org_powermock_powermock_module_junit4",
-        "@maven//:org_mockito_mockito_core",
+        "@maven//:junit_junit",
         "@maven//:org_assertj_assertj_core",
-        "@maven//:junit_junit"
-    ]
+        "@maven//:org_mockito_mockito_core",
+        "@maven//:org_powermock_powermock_module_junit4",
+    ],
 )
 
 java_library(
     name = "module",
     srcs = glob(["src/main/**/*.java"]),
+    visibility = ["//visibility:public"],
     deps = [
-                "maven_deps",
-                "//14-api-services-beans:module",
-                "//19-delegate-tasks-beans/src/main/proto:19_delegate_tasks_beans_proto",
-                "//19-delegate-tasks-beans/src/main/proto:19_delegate_tasks_beans_java_proto",
-                "//:lombok"
+        "maven_deps",
+        "//:lombok",
+        "//14-api-services-beans:module",
+        "//19-delegate-tasks-beans/src/main/proto:19_delegate_tasks_beans_java_proto",
+        "//19-delegate-tasks-beans/src/main/proto:19_delegate_tasks_beans_proto",
     ],
-   visibility = ["//visibility:public"],
 )
 
 java_library(
     name = "tests",
     srcs = glob(["src/test/**/*.java"]),
+    visibility = ["//visibility:public"],
     deps = [
-                "maven_deps",
-                "module",
-                "test_deps",
-                "//:lombok",
+        "maven_deps",
+        "module",
+        "test_deps",
+        "//:lombok",
     ],
-   visibility = ["//visibility:public"],
 )
 
 run_tests(
-    test_files = glob(["src/test/**/*Test.java"],exclude = ["**/DelegateTasksTest.java"],),
-    deps = [
-                "module",
-                "maven_deps",
-                "//:lombok",
-                "tests"
-    ],
-    runtime_deps = [
-                "@maven//:javax_ws_rs_javax_ws_rs_api",
-    ],
     testonly = 1,
+    test_files = glob(
+        ["src/test/**/*Test.java"],
+        exclude = ["**/DelegateTasksTest.java"],
+    ),
+    runtime_deps = [
+        "@maven//:javax_ws_rs_javax_ws_rs_api",
+    ],
+    deps = [
+        "maven_deps",
+        "module",
+        "tests",
+        "//:lombok",
+    ],
 )
 
 checkstyle()
 
 sonarqube_test(
-    name="sq_mycomponent",
+    name = "sq_mycomponent",
     srcs = ["sources"],
     targets = [
         ":maven_deps",

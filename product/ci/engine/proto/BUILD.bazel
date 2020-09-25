@@ -28,8 +28,8 @@ go_library(
 
 java_grpc_library(
     name = "ciengine_java_proto",
+    visibility = ["//visibility:public"],
     deps = [
         ":cienginepb_proto",
     ],
-    visibility = ["//visibility:public"],
 )

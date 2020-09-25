@@ -8,9 +8,9 @@ sources()
 
 java_library(
     name = "maven_deps",
-    exports = [
-        ],
     visibility = ["//visibility:public"],
+    exports = [
+    ],
 )
 
 java_library(
@@ -24,7 +24,7 @@ java_library(
 checkstyle()
 
 sonarqube_test(
-    name="sq_mycomponent",
+    name = "sq_mycomponent",
     srcs = ["sources"],
     targets = [
         ":maven_deps",

@@ -9,12 +9,17 @@
 # gazelle:exclude pkg/
 ## gazelle:proto_strip_import_prefix /proto/harness.io/
 
+load("@com_github_bazelbuild_buildtools//buildifier:def.bzl", "buildifier")
 load("@bazel_gazelle//:def.bzl", "gazelle")
 
 # gazelle:prefix github.com/wings-software/portal
 gazelle(name = "gazelle")
 
 load("@io_bazel_rules_go//go:def.bzl", "nogo")
+
+buildifier(
+    name = "buildifier",
+)
 
 nogo(
     name = "nogo_vet",
@@ -34,15 +39,15 @@ load("//tools/pmd:defs.bzl", "get_pmd_targets")
 java_plugin(
     name = "lombok_plugin",
     processor_class = "lombok.launch.AnnotationProcessorHider$AnnotationProcessor",
-    deps = ["@maven//:org_projectlombok_lombok"],
     visibility = ["//visibility:public"],
+    deps = ["@maven//:org_projectlombok_lombok"],
 )
 
 java_library(
     name = "lombok",
-    exports = ["@maven//:org_projectlombok_lombok"],
     exported_plugins = [":lombok_plugin"],
     visibility = ["//visibility:public"],
+    exports = ["@maven//:org_projectlombok_lombok"],
 )
 
 modules = [
@@ -56,7 +61,7 @@ modules = [
     "//19-delegate-tasks-beans",
     "//20-delegate-tasks",
     "//20-ng-core-beans",
-    "//21-delegate-agent-beans"
+    "//21-delegate-agent-beans",
 ]
 
 filegroup(
@@ -83,14 +88,14 @@ filegroup(
 
 sonarqube(
     name = "sq",
+    srcs = [],
+    coverage_report = ":coverage_report",
+    modules = get_sonar_targets(modules),
     project_key = "portal_bazel",
     project_name = "Bazel Portal",
-    srcs = [],
-    targets = [],
-    modules = get_sonar_targets(modules),
-    coverage_report = ":coverage_report",
     scm_info = [":git"],
     tags = ["manual"],
+    targets = [],
 )
 
 filegroup(

@@ -5,16 +5,16 @@ proto_library(
     name = "19_delegate_tasks_beans_proto",
     srcs = glob(["**/*.proto"]),
     strip_import_prefix = "",
+    visibility = ["//visibility:public"],
     deps = [
         "@com_google_protobuf//:timestamp_proto",
     ],
-    visibility = ["//visibility:public"],
 )
 
 java_proto_library(
     name = "19_delegate_tasks_beans_java_proto",
+    visibility = ["//visibility:public"],
     deps = [
         ":19_delegate_tasks_beans_proto",
     ],
-    visibility = ["//visibility:public"],
 )

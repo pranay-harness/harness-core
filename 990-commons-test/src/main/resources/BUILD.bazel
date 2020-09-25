@@ -5,8 +5,8 @@ load("//:macros.bzl", "resources")
 filegroup(
     name = "resource",
     srcs = [
-        "secrets.properties",
         "logback-test.xml",
+        "secrets.properties",
     ],
 )
 

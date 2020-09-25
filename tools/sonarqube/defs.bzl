@@ -33,7 +33,7 @@ def _build_sonar_project_properties(ctx, sq_properties_file):
         for t in ctx.attr.test_targets:
             test_target = ctx.label.relative(t)
             bazel_test_report_path = "bazel-testlogs/" + test_target.package + "/" + test_target.name + "/test.xml"
-            bazel_test_report = [t for t in ctx.files.test_reports if t.short_path == bazel_test_report_path]#[0] or fail("Expected Bazel test report for %s with path %s" % (test_target, bazel_test_report_path))
+            bazel_test_report = [t for t in ctx.files.test_reports if t.short_path == bazel_test_report_path]  #[0] or fail("Expected Bazel test report for %s with path %s" % (test_target, bazel_test_report_path))
             bazel_test_report.append(None)
             if bazel_test_report[0] == None:
                 continue
@@ -162,9 +162,9 @@ _COMMON_ATTRS = dict(dict(), **{
         doc = """Template file for sonar-project.properties.""",
     ),
     "sq_properties": attr.output(),
-    "checkstyle_report_path":attr.string(
-        default = ""
-    )
+    "checkstyle_report_path": attr.string(
+        default = "",
+    ),
 })
 
 _sonarqube = rule(
@@ -272,11 +272,11 @@ def sq_project(
         sq_properties = "sonar-project.properties",
         tags = tags,
         visibility = visibility,
-        checkstyle_report_path = checkstyle_report_path
+        checkstyle_report_path = checkstyle_report_path,
     )
 
 def get_sonar_targets(modules = []):
     _targets = dict()
     for f in modules:
-        _targets.update({f+":sq_mycomponent":f[2:]})
+        _targets.update({f + ":sq_mycomponent": f[2:]})
     return _targets

@@ -2,8 +2,8 @@ load("@rules_proto_grpc//java:defs.bzl", "java_grpc_library")
 
 java_grpc_library(
     name = "21_delegate_agent_beans_java_proto",
+    visibility = ["//visibility:public"],
     deps = [
         "//21-delegate-agent-beans/src/main/proto/io/harness/perpetualtask:21_delegate_agent_beans_proto",
     ],
-    visibility = ["//visibility:public"],
 )

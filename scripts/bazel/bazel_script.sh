@@ -11,6 +11,9 @@ then
   BAZEL_ARGUMENTS="${BAZEL_ARGUMENTS} --action_env=DISTRIBUTE_TESTING_WORKERS=${DISTRIBUTE_TESTING_WORKERS}"
 fi
 
+BAZEL_DIRS=${HOME}/.bazel-dirs/
+BAZEL_ARGUMENTS="--experimental_convenience_symlinks=normal --symlink_prefix=${BAZEL_DIRS}"
+
 if [[ ! -z "${OVERRIDE_LOCAL_M2}" ]]; then
   local_repo=${OVERRIDE_LOCAL_M2}
 fi
@@ -30,7 +33,7 @@ build_bazel_module() {
   fi
 
   mvn -B install:install-file \
-   -Dfile=bazel-bin/${module}/libmodule.jar \
+   -Dfile=${BAZEL_DIRS}/bin/${module}/libmodule.jar \
    -DgroupId=software.wings \
    -DartifactId=${module} \
    -Dversion=0.0.1-SNAPSHOT \
@@ -55,7 +58,7 @@ build_proto_module() {
   bazel_library=`echo ${module} | tr '-' '_'`
 
   mvn -B install:install-file \
-   -Dfile=../../bazel-bin/${modulePath}/lib${bazel_library}_java_proto.jar \
+   -Dfile=${BAZEL_DIRS}/bin/${modulePath}/lib${bazel_library}_java_proto.jar \
    -DgroupId=software.wings \
    -DartifactId=${module}-proto \
    -Dversion=0.0.1-SNAPSHOT \
@@ -87,5 +90,3 @@ build_java_proto_module 50-delegate-task-grpc-service proto
 build_proto_module 16-expression-service 16-expression-service/src/main/proto/io/harness/expression/service
 build_proto_module ciscm product/ci/scm/proto
 build_proto_module ciengine product/ci/engine/proto
-
-rm -f bazel-bin bazel-out bazel-portal bazel-testlogs

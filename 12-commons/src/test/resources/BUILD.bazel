@@ -1,6 +1,9 @@
 package(default_visibility = ["//visibility:public"])
-load("//:macros.bzl","resources")
+
+load("//:macros.bzl", "resources")
+
 resources()
+
 filegroup(
     name = "resource",
     srcs = glob(["*"]),
