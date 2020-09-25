@@ -84,5 +84,18 @@ if [[ "" != "$MANAGER_CLIENT_BASEURL" ]]; then
   yq write -i $CONFIG_FILE managerClientConfig.baseUrl "$MANAGER_CLIENT_BASEURL"
 fi
 
+if [[ "" != "$NG_MANAGER_CLIENT_BASEURL" ]]; then
+  yq write -i $CONFIG_FILE ngManagerClientConfig.baseUrl "$NG_MANAGER_CLIENT_BASEURL"
+fi
 
+if [[ "" != "$SMTP_HOST" ]]; then
+  yq write -i $CONFIG_FILE smtp.host "$SMTP_HOST"
+fi
 
+if [[ "" != "$SMTP_USERNAME" ]]; then
+  yq write -i $CONFIG_FILE smtp.username "$SMTP_USERNAME"
+fi
+
+if [[ "" != "$SMTP_PASSWORD" ]]; then
+  yq write -i $CONFIG_FILE smtp.password "$SMTP_PASSWORD"
+fi

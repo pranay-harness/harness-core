@@ -99,6 +99,4 @@ smtp:
   username: smtp_username_placeholder
   password: "smtp_password_placeholder"
 
-ngAPIBaseURL: "http://localhost:7457"
-
 environment: dev

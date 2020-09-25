@@ -41,7 +41,6 @@ public class NextGenConfiguration extends Configuration {
   @JsonProperty("ngManagerClientConfig") private NGManagerClientConfig ngManagerClientConfig;
   @JsonProperty(value = "enableAuth", defaultValue = "true") private boolean enableAuth;
   @JsonProperty("smtp") private SmtpConfig smtpConfig;
-  @JsonProperty("ngAPIBaseURL") private String baseURL;
   @JsonProperty("environment") private String environment;
   // [secondary-db]: Uncomment this and the corresponding config in yaml file if you want to connect to another database
   //  @JsonProperty("secondary-mongo") MongoConfig secondaryMongoConfig;
