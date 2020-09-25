@@ -329,12 +329,14 @@ public class DelegateServiceTest extends WingsBaseTest {
     deletedDelegate.setStatus(Status.DELETED);
 
     wingsPersistence.save(Arrays.asList(delegate, deletedDelegate));
+
     delegateService.registerHeartbeat(accountId, delegate.getUuid(),
         DelegateConnectionHeartbeat.builder().delegateConnectionId(generateUuid()).version(VERSION).build(),
         ConnectionMode.POLLING);
     DelegateStatus delegateStatus = delegateService.getDelegateStatus(accountId);
     assertThat(delegateStatus.getPublishedVersions()).hasSize(1).contains(VERSION);
     assertThat(delegateStatus.getDelegates()).hasSize(1);
+    assertThat(delegateStatus.getDelegates().get(0).isConnected()).isTrue();
 
     validateDelegateInnerProperties(delegate.getUuid(), delegateStatus.getDelegates().get(0));
   }
