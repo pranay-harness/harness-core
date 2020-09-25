@@ -62,6 +62,7 @@ import io.harness.redesign.services.CustomExecutionServiceImpl;
 import io.harness.registries.registrar.StepRegistrar;
 import io.harness.secretmanagerclient.SecretManagementClientModule;
 import io.harness.serializer.KryoRegistrar;
+import io.harness.serializer.ManagerRegistrars;
 import io.harness.serializer.NextGenRegistrars;
 import io.harness.service.DelegateServiceDriverModule;
 import io.harness.spring.AliasRegistrar;
@@ -71,6 +72,7 @@ import io.harness.version.VersionModule;
 import io.harness.waiter.NgOrchestrationNotifyEventListener;
 import lombok.extern.slf4j.Slf4j;
 import org.hibernate.validator.parameternameprovider.ReflectionParameterNameProvider;
+import org.mongodb.morphia.converters.TypeConverter;
 import ru.vyarus.guice.validator.ValidationModule;
 
 import java.util.Map;
@@ -192,6 +194,14 @@ public class NextGenModule extends AbstractModule {
       Set<Class<? extends AliasRegistrar>> aliasRegistrars() {
         return ImmutableSet.<Class<? extends AliasRegistrar>>builder()
             .addAll(NextGenRegistrars.aliasRegistrars)
+            .build();
+      }
+
+      @Provides
+      @Singleton
+      Set<Class<? extends TypeConverter>> morphiaConverters() {
+        return ImmutableSet.<Class<? extends TypeConverter>>builder()
+            .addAll(ManagerRegistrars.morphiaConverters)
             .build();
       }
     });

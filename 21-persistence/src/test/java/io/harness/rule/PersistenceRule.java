@@ -54,6 +54,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.junit.rules.MethodRule;
 import org.junit.runners.model.FrameworkMethod;
 import org.junit.runners.model.Statement;
+import org.mongodb.morphia.converters.TypeConverter;
 
 import java.io.Closeable;
 import java.io.IOException;
@@ -122,6 +123,14 @@ public class PersistenceRule implements MethodRule, InjectorRuleMixin, MongoRule
         return ImmutableSet.<Class<? extends MorphiaRegistrar>>builder()
             .addAll(PersistenceRegistrars.morphiaRegistrars)
             .add(TestPersistenceMorphiaRegistrar.class)
+            .build();
+      }
+
+      @Provides
+      @Singleton
+      Set<Class<? extends TypeConverter>> morphiaConverters() {
+        return ImmutableSet.<Class<? extends TypeConverter>>builder()
+            .addAll(PersistenceRegistrars.morphiaConverters)
             .build();
       }
     });

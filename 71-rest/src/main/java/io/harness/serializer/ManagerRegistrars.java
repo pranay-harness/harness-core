@@ -29,6 +29,7 @@ import io.harness.serializer.morphia.ViewsMorphiaRegistrar;
 import io.harness.serializer.spring.WingsAliasRegistrar;
 import io.harness.spring.AliasRegistrar;
 import lombok.experimental.UtilityClass;
+import org.mongodb.morphia.converters.TypeConverter;
 
 @UtilityClass
 public class ManagerRegistrars {
@@ -83,5 +84,11 @@ public class ManagerRegistrars {
           .addAll(YamlBeansModuleRegistrars.aliasRegistrars)
           .addAll(ExecutionPlanModuleRegistrars.aliasRegistrars)
           .add(WingsAliasRegistrar.class)
+          .build();
+
+  public static final ImmutableSet<Class<? extends TypeConverter>> morphiaConverters =
+      ImmutableSet.<Class<? extends TypeConverter>>builder()
+          .addAll(PersistenceRegistrars.morphiaConverters)
+          .addAll(OrchestrationBeansRegistrars.morphiaConverters)
           .build();
 }

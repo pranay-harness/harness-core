@@ -8,6 +8,7 @@ import io.harness.serializer.morphia.OrchestrationStepsMorphiaRegistrar;
 import io.harness.serializer.spring.OrchestrationStepsAliasRegistrar;
 import io.harness.spring.AliasRegistrar;
 import lombok.experimental.UtilityClass;
+import org.mongodb.morphia.converters.TypeConverter;
 
 @UtilityClass
 public class OrchestrationStepsModuleRegistrars {
@@ -28,5 +29,10 @@ public class OrchestrationStepsModuleRegistrars {
       ImmutableSet.<Class<? extends AliasRegistrar>>builder()
           .addAll(OrchestrationRegistrars.aliasRegistrars)
           .add(OrchestrationStepsAliasRegistrar.class)
+          .build();
+
+  public static final ImmutableSet<Class<? extends TypeConverter>> morphiaConverters =
+      ImmutableSet.<Class<? extends TypeConverter>>builder()
+          .addAll(OrchestrationBeansRegistrars.morphiaConverters)
           .build();
 }

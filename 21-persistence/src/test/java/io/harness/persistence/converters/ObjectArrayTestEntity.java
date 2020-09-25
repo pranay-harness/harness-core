@@ -9,14 +9,12 @@ import lombok.NoArgsConstructor;
 import lombok.experimental.FieldNameConstants;
 import org.mongodb.morphia.annotations.Id;
 
-import java.time.Duration;
-
 @Data
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-@FieldNameConstants(innerTypeName = "DurationTestEntityKeys")
-public class DurationTestEntity implements PersistentEntity, UuidAccess {
+@FieldNameConstants(innerTypeName = "ObjectArrayTestEntityKeys")
+public class ObjectArrayTestEntity implements PersistentEntity, UuidAccess {
   @Id String uuid;
-  Duration testDuration;
+  Object[] array;
 }

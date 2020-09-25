@@ -4,6 +4,7 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static java.nio.charset.StandardCharsets.UTF_8;
 
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.util.concurrent.ServiceManager;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
@@ -18,11 +19,13 @@ import io.harness.mongo.MongoModule;
 import io.harness.morphia.MorphiaModule;
 import io.harness.persistence.HPersistence;
 import io.harness.persistence.Store;
+import io.harness.serializer.PersistenceRegistrars;
 import io.harness.serializer.YamlUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.FileUtils;
 import org.apache.log4j.LogManager;
 import org.hibernate.validator.parameternameprovider.ReflectionParameterNameProvider;
+import org.mongodb.morphia.converters.TypeConverter;
 import org.slf4j.bridge.SLF4JBridgeHandler;
 import ru.vyarus.guice.validator.ValidationModule;
 
@@ -31,6 +34,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.logging.Level;
 import javax.validation.Validation;
 import javax.validation.ValidatorFactory;
@@ -90,6 +94,14 @@ public class EventServiceApplication {
       @Named("morphiaClasses")
       Map<Class, String> morphiaCustomCollectionNames() {
         return ImmutableMap.<Class, String>builder().build();
+      }
+
+      @Provides
+      @Singleton
+      Set<Class<? extends TypeConverter>> morphiaConverters() {
+        return ImmutableSet.<Class<? extends TypeConverter>>builder()
+            .addAll(PersistenceRegistrars.morphiaConverters)
+            .build();
       }
     });
 

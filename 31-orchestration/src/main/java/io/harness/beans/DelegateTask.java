@@ -4,14 +4,11 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 
 import io.harness.annotation.HarnessEntity;
 import io.harness.beans.DelegateTask.DelegateTaskKeys;
-import io.harness.beans.DelegateTask.ParametersConverter;
-import io.harness.delegate.beans.DelegateResponseData;
 import io.harness.delegate.beans.DelegateTaskRank;
 import io.harness.delegate.beans.TaskData;
 import io.harness.delegate.beans.TaskData.TaskDataKeys;
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import io.harness.delegate.task.HDelegateTask;
-import io.harness.mongo.KryoConverter;
 import io.harness.mongo.index.CdIndex;
 import io.harness.mongo.index.FdTtlIndex;
 import io.harness.mongo.index.Field;
@@ -29,10 +26,8 @@ import lombok.Singular;
 import lombok.experimental.FieldNameConstants;
 import lombok.experimental.UtilityClass;
 import org.hibernate.validator.constraints.NotEmpty;
-import org.mongodb.morphia.annotations.Converters;
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Id;
-import org.mongodb.morphia.converters.SimpleValueConverter;
 
 import java.time.OffsetDateTime;
 import java.util.Date;
@@ -47,7 +42,6 @@ import javax.validation.constraints.NotNull;
 @EqualsAndHashCode(exclude = {"uuid", "createdAt", "lastUpdatedAt", "validUntil"})
 @Entity(value = "delegateTasks", noClassnameStored = true)
 @HarnessEntity(exportable = false)
-@Converters({ParametersConverter.class})
 @FieldNameConstants(innerTypeName = "DelegateTaskKeys")
 @CdIndex(name = "index", fields = { @Field(DelegateTaskKeys.status)
                                     , @Field(DelegateTaskKeys.expiry) })
@@ -160,18 +154,6 @@ public class DelegateTask
    */
   public String getArtifactStreamId() {
     return setupAbstractions == null ? null : setupAbstractions.get(Cd1SetupFields.ARTIFACT_STREAM_ID_FIELD);
-  }
-
-  public static class ParametersConverter extends KryoConverter {
-    public ParametersConverter() {
-      super(Object[].class);
-    }
-  }
-
-  public static class ResponseDataConverter extends KryoConverter implements SimpleValueConverter {
-    public ResponseDataConverter() {
-      super(DelegateResponseData.class);
-    }
   }
 
   public enum Status {

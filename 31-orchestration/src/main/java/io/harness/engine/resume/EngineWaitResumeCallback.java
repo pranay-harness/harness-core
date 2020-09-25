@@ -8,17 +8,14 @@ import io.harness.ambiance.Ambiance;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.engine.OrchestrationEngine;
 import io.harness.facilitator.FacilitatorResponse;
-import io.harness.persistence.converters.DurationConverter;
 import io.harness.state.io.StepInputPackage;
 import io.harness.tasks.ResponseData;
 import io.harness.waiter.NotifyCallback;
 import lombok.Builder;
-import org.mongodb.morphia.annotations.Converters;
 
 import java.util.Map;
 
 @OwnedBy(CDC)
-@Converters({DurationConverter.class})
 public class EngineWaitResumeCallback implements NotifyCallback {
   @Inject private OrchestrationEngine orchestrationEngine;
 

@@ -7,6 +7,7 @@ import io.harness.serializer.kryo.CVNGKryoRegistrar;
 import io.harness.serializer.kryo.ConnectorNextGenRegistrars;
 import io.harness.serializer.morphia.CVNextGenMorphiaRegister;
 import lombok.experimental.UtilityClass;
+import org.mongodb.morphia.converters.TypeConverter;
 
 @UtilityClass
 public class CvNextGenRegistrars {
@@ -21,5 +22,11 @@ public class CvNextGenRegistrars {
       ImmutableSet.<Class<? extends MorphiaRegistrar>>builder()
           .addAll(CvNextGenCommonsRegistrars.morphiaRegistrars)
           .add(CVNextGenMorphiaRegister.class)
+          .build();
+
+  public static final ImmutableSet<Class<? extends TypeConverter>> morphiaConverters =
+      ImmutableSet.<Class<? extends TypeConverter>>builder()
+          .addAll(PersistenceRegistrars.morphiaConverters)
+          .addAll(OrchestrationBeansRegistrars.morphiaConverters)
           .build();
 }
