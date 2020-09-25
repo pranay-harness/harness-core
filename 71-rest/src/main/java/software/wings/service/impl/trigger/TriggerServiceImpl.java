@@ -1620,8 +1620,7 @@ public class TriggerServiceImpl implements TriggerService {
                 + "] does not exist for the Service +[" + services.get(serviceArtifactSummaryEntry.getKey()) + "]",
             USER);
       }
-      if (featureFlagService.isEnabled(FeatureName.NAS_SUPPORT, artifactStream.getAccountId())
-          && artifactStream.isArtifactStreamParameterized()) {
+      if (artifactStream.isArtifactStreamParameterized()) {
         throw new InvalidRequestException(
             "Parameterized artifact stream found in service however parameter values not provided", USER);
       }

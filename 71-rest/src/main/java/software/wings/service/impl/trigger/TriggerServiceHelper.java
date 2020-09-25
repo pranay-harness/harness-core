@@ -41,7 +41,6 @@ import lombok.extern.slf4j.Slf4j;
 import net.redhogs.cronparser.I18nMessages;
 import org.quartz.CronScheduleBuilder;
 import software.wings.beans.ExecutionArgs;
-import software.wings.beans.FeatureName;
 import software.wings.beans.Service;
 import software.wings.beans.Variable;
 import software.wings.beans.VariableType;
@@ -294,12 +293,11 @@ public class TriggerServiceHelper {
           artifacts.put("service", service.getName());
           artifacts.put("buildNumber", service.getName() + "_BUILD_NUMBER_PLACE_HOLDER");
           artifacts.put("artifactSourceName", service.getName() + "_ARTIFACT_SOURCE_NAME_PLACE_HOLDER");
-          if (featureFlagService.isEnabled(FeatureName.NAS_SUPPORT, service.getAccountId())) {
-            Map<String, Object> parameterMap = addParametersForArtifactStream(service, trigger.getArtifactSelections());
-            if (isNotEmpty(parameterMap)) {
-              artifacts.put("artifactVariables", parameterMap);
-            }
+          Map<String, Object> parameterMap = addParametersForArtifactStream(service, trigger.getArtifactSelections());
+          if (isNotEmpty(parameterMap)) {
+            artifacts.put("artifactVariables", parameterMap);
           }
+
           artifactList.add(artifacts);
         }
       }

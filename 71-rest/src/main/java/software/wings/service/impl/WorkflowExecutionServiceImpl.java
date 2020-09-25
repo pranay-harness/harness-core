@@ -1397,21 +1397,16 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
     workflowExecution.setAccountId(app.getAccountId());
     wingsPersistence.save(workflowExecution);
     logger.info("Created workflow execution {}", workflowExecution.getUuid());
-    if (featureFlagService.isEnabled(FeatureName.NAS_SUPPORT, app.getAccountId())) {
-      WorkflowExecution finalWorkflowExecution = workflowExecution;
-      if (parameterizedArtifactStreamsPresent(executionArgs.getArtifactVariables())) {
-        if (!executionArgs.isTriggeredFromPipeline() || executionArgs.getWorkflowType() != ORCHESTRATION) {
-          workflowExecution.setStatus(PREPARING);
-          updateStatus(
-              workflowExecution.getAppId(), workflowExecution.getUuid(), PREPARING, "Starting artifact collection");
-          executorService.submit(
-              ()
-                  -> collectArtifactsAndStartExecution(finalWorkflowExecution, stateMachine, workflowExecutionAdvisor,
-                      workflowExecutionUpdate, stdParams, app, workflow, pipeline, executionArgs, contextElements));
-        }
-      } else {
-        workflowExecution = continueWorkflowExecution(workflowExecution, stateMachine, workflowExecutionAdvisor,
-            workflowExecutionUpdate, stdParams, app, workflow, pipeline, executionArgs, contextElements);
+    WorkflowExecution finalWorkflowExecution = workflowExecution;
+    if (parameterizedArtifactStreamsPresent(executionArgs.getArtifactVariables())) {
+      if (!executionArgs.isTriggeredFromPipeline() || executionArgs.getWorkflowType() != ORCHESTRATION) {
+        workflowExecution.setStatus(PREPARING);
+        updateStatus(
+            workflowExecution.getAppId(), workflowExecution.getUuid(), PREPARING, "Starting artifact collection");
+        executorService.submit(
+            ()
+                -> collectArtifactsAndStartExecution(finalWorkflowExecution, stateMachine, workflowExecutionAdvisor,
+                    workflowExecutionUpdate, stdParams, app, workflow, pipeline, executionArgs, contextElements));
       }
     } else {
       workflowExecution = continueWorkflowExecution(workflowExecution, stateMachine, workflowExecutionAdvisor,

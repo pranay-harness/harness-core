@@ -1,7 +1,5 @@
 package software.wings.service.impl.yaml.handler.artifactstream;
 
-import static io.harness.annotations.dev.HarnessTeam.CDC;
-import static io.harness.annotations.test.FeatureName.NAS_SUPPORT;
 import static io.harness.git.model.ChangeType.MODIFY;
 import static io.harness.rule.OwnerRule.AADITI;
 import static java.lang.String.format;
@@ -19,7 +17,6 @@ import static software.wings.utils.WingsTestConstants.SETTING_ID;
 
 import com.google.inject.Inject;
 
-import io.harness.annotations.test.TestInfo;
 import io.harness.category.element.UnitTests;
 import io.harness.exception.InvalidRequestException;
 import io.harness.rule.Owner;
@@ -29,7 +26,6 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import software.wings.beans.Application;
-import software.wings.beans.FeatureName;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.artifact.NexusArtifactStream;
 import software.wings.beans.yaml.ChangeContext;
@@ -137,7 +133,6 @@ public class NexusArtifactStreamYamlHandlerTest extends BaseYamlHandlerTest {
   @Test
   @Owner(developers = AADITI)
   @Category(UnitTests.class)
-  @TestInfo(testCaseIds = {"CDC-7449"}, featureName = NAS_SUPPORT, category = {UnitTests.class}, ownedBy = CDC)
   public void testParameterizedArtifactStreamFromYaml() {
     String appName = "Nexus App";
     String serviceName = "Nexus Service";
@@ -189,7 +184,6 @@ public class NexusArtifactStreamYamlHandlerTest extends BaseYamlHandlerTest {
                  artifactStreamName)))
         .thenReturn(SERVICE_ID);
     final ArgumentCaptor<NexusArtifactStream> captor = ArgumentCaptor.forClass(NexusArtifactStream.class);
-    when(featureFlagService.isEnabled(FeatureName.NAS_SUPPORT, ACCOUNT_ID)).thenReturn(true);
     yamlHandler.upsertFromYaml(changeContext, asList(changeContext));
     verify(artifactStreamService).createWithBinding(anyString(), captor.capture(), anyBoolean());
     final NexusArtifactStream artifactStream = captor.getValue();

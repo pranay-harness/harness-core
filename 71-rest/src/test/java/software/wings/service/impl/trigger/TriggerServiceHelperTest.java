@@ -3,7 +3,6 @@ package software.wings.service.impl.trigger;
 import static io.harness.rule.OwnerRule.AADITI;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.powermock.api.mockito.PowerMockito.when;
 import static software.wings.beans.trigger.ArtifactSelection.Type.WEBHOOK_VARIABLE;
 import static software.wings.service.impl.trigger.TriggerServiceTestHelper.buildNexusArtifactStream;
 import static software.wings.service.impl.trigger.TriggerServiceTestHelper.buildWorkflowWebhookTrigger;
@@ -23,7 +22,6 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import software.wings.WingsBaseTest;
-import software.wings.beans.FeatureName;
 import software.wings.beans.Service;
 import software.wings.beans.WebHookToken;
 import software.wings.beans.trigger.ArtifactSelection;
@@ -47,7 +45,6 @@ public class TriggerServiceHelperTest extends WingsBaseTest {
   @Owner(developers = AADITI)
   @Category(UnitTests.class)
   public void constructWebhookTokenForParameterizedArtifactStream() {
-    when(featureFlagService.isEnabled(FeatureName.NAS_SUPPORT, ACCOUNT_ID)).thenReturn(true);
     Mockito.when(artifactStreamService.get(ARTIFACT_STREAM_ID_1)).thenReturn(buildNexusArtifactStream());
 
     workflowWebhookConditionTrigger.setArtifactSelections(asList(ArtifactSelection.builder()

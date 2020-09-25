@@ -180,8 +180,8 @@ public class TriggerServiceTest extends WingsBaseTest {
   @Mock private BackgroundJobScheduler jobScheduler;
   @Mock private PipelineService pipelineService;
   @Mock private WorkflowExecutionService workflowExecutionService;
-  @Mock private WebhookTriggerProcessor webhookTriggerProcessor;
   @Mock private ArtifactStreamService artifactStreamService;
+  @Mock private WebhookTriggerProcessor webhookTriggerProcessor;
   @Mock private ArtifactService artifactService;
   @Mock private ArtifactCollectionService artifactCollectionServiceAsync;
   @Mock private ServiceResourceService serviceResourceService;
@@ -200,6 +200,7 @@ public class TriggerServiceTest extends WingsBaseTest {
   @Mock private TriggerAuthHandler triggerAuthHandler;
   @Mock private TriggerExecutionService triggerExecutionService;
 
+  @Inject @InjectMocks TriggerServiceHelper triggerServiceHelper;
   @Inject @InjectMocks private TriggerService triggerService;
 
   Trigger webhookConditionTrigger = buildWebhookCondTrigger();
@@ -1886,7 +1887,7 @@ public class TriggerServiceTest extends WingsBaseTest {
 
     verify(workflowExecutionService)
         .triggerEnvExecution(anyString(), anyString(), any(ExecutionArgs.class), any(Trigger.class));
-    verify(artifactStreamService, times(8)).get(ARTIFACT_STREAM_ID);
+    verify(artifactStreamService, times(11)).get(ARTIFACT_STREAM_ID);
     verify(artifactService).getArtifactByBuildNumber(artifactStream, ARTIFACT_FILTER, false);
   }
 
@@ -1952,7 +1953,7 @@ public class TriggerServiceTest extends WingsBaseTest {
 
     verify(workflowExecutionService)
         .triggerEnvExecution(anyString(), anyString(), any(ExecutionArgs.class), any(Trigger.class));
-    verify(artifactStreamService, times(8)).get(ARTIFACT_STREAM_ID);
+    verify(artifactStreamService, times(11)).get(ARTIFACT_STREAM_ID);
     verify(artifactService).getArtifactByBuildNumber(artifactStream, ARTIFACT_FILTER, false);
 
     verify(workflowExecutionService).obtainLastGoodDeployedArtifacts(APP_ID, PIPELINE_ID);
@@ -2006,7 +2007,7 @@ public class TriggerServiceTest extends WingsBaseTest {
 
     verify(workflowExecutionService)
         .triggerEnvExecution(anyString(), anyString(), any(ExecutionArgs.class), any(Trigger.class));
-    verify(artifactStreamService, times(5)).get(ARTIFACT_STREAM_ID);
+    verify(artifactStreamService, times(7)).get(ARTIFACT_STREAM_ID);
     verify(artifactService).getArtifactByBuildNumber(artifactStream, ARTIFACT_FILTER, false);
 
     verify(workflowExecutionService).obtainLastGoodDeployedArtifacts(APP_ID, WORKFLOW_ID);
@@ -2592,7 +2593,6 @@ public class TriggerServiceTest extends WingsBaseTest {
     when(artifactStreamService.get(ARTIFACT_STREAM_ID_1)).thenReturn(buildNexusArtifactStream());
     when(artifactStreamServiceBindingService.getService(APP_ID, ARTIFACT_STREAM_ID_1, false))
         .thenReturn(Service.builder().uuid(SERVICE_ID).name(CATALOG_SERVICE_NAME).accountId(ACCOUNT_ID).build());
-    when(featureFlagService.isEnabled(FeatureName.NAS_SUPPORT, ACCOUNT_ID)).thenReturn(true);
 
     Trigger t2 = Trigger.builder()
                      .workflowId(WORKFLOW_ID)

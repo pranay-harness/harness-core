@@ -52,7 +52,6 @@ import org.mockito.Mock;
 import software.wings.WingsBaseTest;
 import software.wings.app.MainConfiguration;
 import software.wings.beans.Application;
-import software.wings.beans.FeatureName;
 import software.wings.beans.Service;
 import software.wings.beans.WebHookRequest;
 import software.wings.beans.WebHookResponse;
@@ -987,7 +986,6 @@ public class WebHookServiceImplTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void shouldExecuteWithServiceAndParameterizedArtifactStream() {
     wingsPersistence.save(Service.builder().name(SERVICE_NAME).appId(APP_ID).build());
-    when(featureFlagService.isEnabled(FeatureName.NAS_SUPPORT, ACCOUNT_ID)).thenReturn(true);
     Map<String, Object> parameterMap = new HashMap<>();
     parameterMap.put("repo", "npm-internal");
     parameterMap.put("package", "npm-app1");

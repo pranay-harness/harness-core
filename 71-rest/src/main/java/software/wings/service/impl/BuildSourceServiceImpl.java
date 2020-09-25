@@ -427,8 +427,7 @@ public class BuildSourceServiceImpl implements BuildSourceService {
     if (artifactStream == null) {
       throw new InvalidRequestException("Artifact stream was deleted", USER);
     }
-    if (featureFlagService.isEnabled(FeatureName.NAS_SUPPORT, artifactStream.getAccountId())
-        && artifactStream.isArtifactStreamParameterized()) {
+    if (artifactStream.isArtifactStreamParameterized()) {
       throw new InvalidRequestException("Manually pull artifact not supported for parameterized artifact stream");
     }
     logger.info(

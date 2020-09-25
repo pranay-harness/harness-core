@@ -23,7 +23,6 @@ import io.harness.exception.WingsException;
 import lombok.extern.slf4j.Slf4j;
 import lombok.var;
 import org.apache.commons.lang3.StringUtils;
-import software.wings.beans.FeatureName;
 import software.wings.beans.GraphNode;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.InfrastructureProvisioner;
@@ -133,7 +132,7 @@ public class StepYamlHandler extends BaseYamlHandler<StepYaml, GraphNode> {
 
     generateKnownProperties(outputProperties, changeContext);
 
-    validateArtifactCollectionStep(stepYaml, accountId, outputProperties);
+    validateArtifactCollectionStep(stepYaml, outputProperties);
 
     Boolean isRollback = false;
     if (changeContext.getProperties().get(YamlConstants.IS_ROLLBACK) != null) {
@@ -175,16 +174,13 @@ public class StepYamlHandler extends BaseYamlHandler<StepYaml, GraphNode> {
         .build();
   }
 
-  private void validateArtifactCollectionStep(
-      StepYaml stepYaml, String accountId, Map<String, Object> outputProperties) {
-    if (featureFlagService.isEnabled(FeatureName.NAS_SUPPORT, accountId)) {
-      if (StateType.ARTIFACT_COLLECTION.name().equals(stepYaml.getType()) && isNotEmpty(outputProperties)) {
-        String artifactStreamId = (String) outputProperties.get("artifactStreamId");
-        if (artifactStreamId != null) {
-          ArtifactStream artifactStream = artifactStreamService.get(artifactStreamId);
-          notNullCheck("Artifact stream is null for the given id:" + artifactStreamId, artifactStream, USER);
-          validateMandatoryFieldsWithParameterizedArtifactStream(outputProperties, artifactStreamId, artifactStream);
-        }
+  private void validateArtifactCollectionStep(StepYaml stepYaml, Map<String, Object> outputProperties) {
+    if (StateType.ARTIFACT_COLLECTION.name().equals(stepYaml.getType()) && isNotEmpty(outputProperties)) {
+      String artifactStreamId = (String) outputProperties.get("artifactStreamId");
+      if (artifactStreamId != null) {
+        ArtifactStream artifactStream = artifactStreamService.get(artifactStreamId);
+        notNullCheck("Artifact stream is null for the given id:" + artifactStreamId, artifactStream, USER);
+        validateMandatoryFieldsWithParameterizedArtifactStream(outputProperties, artifactStreamId, artifactStream);
       }
     }
   }
