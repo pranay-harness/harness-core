@@ -20,6 +20,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.http.HttpStatus;
 import org.junit.After;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import software.wings.beans.Application;
@@ -81,6 +82,7 @@ public class RBACOtherAccountsTest extends AbstractFunctionalTest {
   @Test
   @Owner(developers = NATARAJA)
   @Category(FunctionalTests.class)
+  @Ignore("TODO: please provide clear motivation why this test is ignored")
   public void amNoPermissionToPostForIPWhitelisting() {
     AccessManagementUtils.amNoPermissionToPostForIPWhitelisting(
         getAccount(), bearerToken, RBAC_USER, "default", HttpStatus.SC_OK);
@@ -89,6 +91,7 @@ public class RBACOtherAccountsTest extends AbstractFunctionalTest {
   @Test
   @Owner(developers = NATARAJA)
   @Category(FunctionalTests.class)
+  @Ignore("TODO: please provide clear motivation why this test is ignored")
   public void amNoPermissionToPostForAPIKeys() {
     AccessManagementUtils.runAPIKeyPostTest(
         getAccount(), bearerToken, RBAC_USER, "default", HttpStatus.SC_OK, userGroup);
