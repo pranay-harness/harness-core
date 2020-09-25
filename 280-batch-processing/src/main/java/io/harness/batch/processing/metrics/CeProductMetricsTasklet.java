@@ -54,10 +54,15 @@ public class CeProductMetricsTasklet implements Tasklet {
     SegmentConfig segmentConfig = mainConfiguration.getSegmentConfig();
     String writeKey = segmentConfig.getApiKey();
     Analytics analytics = Analytics.builder(writeKey).build();
+    String companyName = account.getCompanyName();
+    if (null == companyName) {
+      logger.info("Comapny name is null account {} {} {}", account.getUuid(), companyName, account.getAccountName());
+      companyName = account.getAccountName();
+    }
     ImmutableMap.Builder<String, Object> groupTraitsMapBuilder =
         ImmutableMap.<String, Object>builder()
             .put("is_ce_enabled", account.isCloudCostEnabled())
-            .put("company_name", account.getCompanyName())
+            .put("company_name", companyName)
             .put("total_aws_cloud_cost", ceCloudMetricsService.getTotalCloudCost(accountId, "AWS", start, end))
             .put("total_gcp_cloud_cost", ceCloudMetricsService.getTotalCloudCost(accountId, "GCP", start, end))
             .put("total_cluster_cost", productMetricsService.getTotalClusterCost(accountId, start, end))
