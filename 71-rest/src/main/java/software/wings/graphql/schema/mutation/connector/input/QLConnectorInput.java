@@ -18,4 +18,5 @@ public class QLConnectorInput implements QLMutationInput {
   private QLConnectorType connectorType;
   private QLGitConnectorInput gitConnector;
   private QLDockerConnectorInput dockerConnector;
+  private QLNexusConnectorInput nexusConnector;
 }

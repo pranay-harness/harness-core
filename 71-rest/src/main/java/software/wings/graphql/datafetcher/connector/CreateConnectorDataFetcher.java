@@ -60,8 +60,8 @@ public class CreateConnectorDataFetcher extends BaseMutatorDataFetcher<QLConnect
 
     settingServiceHelper.updateSettingAttributeBeforeResponse(settingAttribute, false);
 
-    QLConnectorBuilder qlGitConnectorBuilder = connectorsController.getConnectorBuilder(settingAttribute);
-    return builder.connector(connectorsController.populateConnector(settingAttribute, qlGitConnectorBuilder).build())
+    QLConnectorBuilder qlConnectorBuilder = connectorsController.getConnectorBuilder(settingAttribute);
+    return builder.connector(connectorsController.populateConnector(settingAttribute, qlConnectorBuilder).build())
         .build();
   }
 }

@@ -27,7 +27,7 @@ public class DockerConnector extends Connector {
     handleSecrets(dockerConnectorInput.getPasswordSecretId(), dockerConfig);
 
     if (dockerConnectorInput.getUserName().isPresent()) {
-      dockerConnectorInput.getUserName().getValue().ifPresent(dockerConfig::setUsername);
+      dockerConnectorInput.getUserName().getValue().ifPresent(userName -> dockerConfig.setUsername(userName.trim()));
     }
 
     checkUrlExists(dockerConnectorInput, dockerConfig);

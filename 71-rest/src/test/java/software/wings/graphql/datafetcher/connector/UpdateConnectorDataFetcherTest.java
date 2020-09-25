@@ -23,6 +23,7 @@ import static software.wings.graphql.datafetcher.connector.utils.ConnectorConsta
 import static software.wings.graphql.datafetcher.connector.utils.ConnectorConstants.USERNAME;
 import static software.wings.graphql.datafetcher.connector.utils.Utility.getQlDockerConnectorInputBuilder;
 import static software.wings.graphql.datafetcher.connector.utils.Utility.getQlGitConnectorInputBuilder;
+import static software.wings.graphql.datafetcher.connector.utils.Utility.getQlNexusConnectorInputBuilder;
 import static software.wings.security.PermissionAttribute.PermissionType.MANAGE_CONNECTORS;
 
 import com.google.inject.Inject;
@@ -40,16 +41,20 @@ import org.mockito.MockitoAnnotations;
 import software.wings.beans.DockerConfig;
 import software.wings.beans.GitConfig;
 import software.wings.beans.SettingAttribute;
+import software.wings.beans.config.NexusConfig;
 import software.wings.graphql.datafetcher.AbstractDataFetcherTest;
 import software.wings.graphql.datafetcher.MutationContext;
 import software.wings.graphql.schema.mutation.connector.input.QLConnectorInput;
 import software.wings.graphql.schema.mutation.connector.input.QLCustomCommitDetailsInput;
 import software.wings.graphql.schema.mutation.connector.input.QLDockerConnectorInput.QLDockerConnectorInputBuilder;
 import software.wings.graphql.schema.mutation.connector.input.QLGitConnectorInput.QLGitConnectorInputBuilder;
+import software.wings.graphql.schema.mutation.connector.input.QLNexusConnectorInput.QLNexusConnectorInputBuilder;
+import software.wings.graphql.schema.mutation.connector.input.QLNexusVersion;
 import software.wings.graphql.schema.mutation.connector.payload.QLUpdateConnectorPayload;
 import software.wings.graphql.schema.type.QLConnectorType;
 import software.wings.graphql.schema.type.connector.QLDockerConnector;
 import software.wings.graphql.schema.type.connector.QLGitConnector;
+import software.wings.graphql.schema.type.connector.QLNexusConnector;
 import software.wings.security.annotations.AuthRule;
 import software.wings.security.encryption.EncryptedData;
 import software.wings.service.impl.SettingServiceHelper;
@@ -372,6 +377,124 @@ public class UpdateConnectorDataFetcherTest extends AbstractDataFetcherTest {
                                  .connectorId(null)
                                  .connectorType(QLConnectorType.DOCKER)
                                  .dockerConnector(updateDockerConnectorInputBuilder.build())
+                                 .build();
+    MutationContext context = MutationContext.builder().accountId(ACCOUNT_ID).build();
+
+    assertThatThrownBy(() -> dataFetcher.mutateAndFetch(input, context))
+        .isInstanceOf(InvalidRequestException.class)
+        .hasMessage("Connector ID is not provided");
+  }
+
+  // UPDATE NEXUS CONNECTOR TESTS
+  @Test
+  @Owner(developers = MILOS)
+  @Category(UnitTests.class)
+  public void updateNexusConnector() {
+    SettingAttribute setting = SettingAttribute.Builder.aSettingAttribute()
+                                   .withAccountId(ACCOUNT_ID)
+                                   .withCategory(SettingAttribute.SettingCategory.CONNECTOR)
+                                   .withValue(NexusConfig.builder().accountId(ACCOUNT_ID).nexusUrl(URL).build())
+                                   .build();
+
+    doReturn(setting).when(settingsService).getByAccount(ACCOUNT_ID, CONNECTOR_ID);
+
+    doReturn(SettingAttribute.Builder.aSettingAttribute()
+                 .withCategory(SettingAttribute.SettingCategory.CONNECTOR)
+                 .withValue(NexusConfig.builder().accountId(ACCOUNT_ID).nexusUrl(URL).build())
+                 .build())
+        .when(settingsService)
+        .updateWithSettingFields(setting, setting.getUuid(), GLOBAL_APP_ID);
+
+    doNothing()
+        .when(settingServiceHelper)
+        .updateSettingAttributeBeforeResponse(isA(SettingAttribute.class), isA(Boolean.class));
+
+    doReturn(QLNexusConnector.builder()).when(connectorsController).getConnectorBuilder(any());
+    doReturn(QLNexusConnector.builder()).when(connectorsController).populateConnector(any(), any());
+    doReturn(new EncryptedData()).when(secretManager).getSecretById(ACCOUNT_ID, PASSWORD);
+
+    QLUpdateConnectorPayload payload =
+        dataFetcher.mutateAndFetch(QLConnectorInput.builder()
+                                       .connectorId(CONNECTOR_ID)
+                                       .connectorType(QLConnectorType.NEXUS)
+                                       .nexusConnector(getQlNexusConnectorInputBuilder()
+                                                           .passwordSecretId(RequestField.ofNullable(PASSWORD))
+                                                           .version(RequestField.ofNullable(QLNexusVersion.V2))
+                                                           .build())
+                                       .build(),
+            MutationContext.builder().accountId(ACCOUNT_ID).build());
+
+    verify(settingsService, times(1)).getByAccount(ACCOUNT_ID, CONNECTOR_ID);
+    verify(settingsService, times(1)).updateWithSettingFields(setting, setting.getUuid(), GLOBAL_APP_ID);
+    verify(settingServiceHelper, times(1))
+        .updateSettingAttributeBeforeResponse(isA(SettingAttribute.class), isA(Boolean.class));
+
+    assertThat(payload.getConnector()).isNotNull();
+    assertThat(payload.getConnector()).isInstanceOf(QLNexusConnector.class);
+  }
+
+  @Test
+  @Owner(developers = MILOS)
+  @Category(UnitTests.class)
+  public void updateNexusConnectorWithoutUsername() {
+    SettingAttribute setting = SettingAttribute.Builder.aSettingAttribute()
+                                   .withCategory(SettingAttribute.SettingCategory.CONNECTOR)
+                                   .withValue(NexusConfig.builder().accountId(ACCOUNT_ID).nexusUrl(URL).build())
+                                   .build();
+
+    QLNexusConnectorInputBuilder updateNexusConnectorInputBuilder =
+        getQlNexusConnectorInputBuilder()
+            .userName(RequestField.absent())
+            .passwordSecretId(RequestField.ofNullable(PASSWORD));
+
+    doReturn(setting).when(settingsService).getByAccount(ACCOUNT_ID, CONNECTOR_ID);
+
+    QLConnectorInput input = QLConnectorInput.builder()
+                                 .connectorId(CONNECTOR_ID)
+                                 .connectorType(QLConnectorType.NEXUS)
+                                 .nexusConnector(updateNexusConnectorInputBuilder.build())
+                                 .build();
+    MutationContext context = MutationContext.builder().accountId(ACCOUNT_ID).build();
+
+    assertThatThrownBy(() -> dataFetcher.mutateAndFetch(input, context))
+        .isInstanceOf(InvalidRequestException.class)
+        .hasMessage("userName should be specified");
+  }
+
+  @Test
+  @Owner(developers = MILOS)
+  @Category(UnitTests.class)
+  public void updateNexusConnectorWithoutConnectorType() {
+    QLNexusConnectorInputBuilder updateNexusConnectorInputBuilder =
+        getQlNexusConnectorInputBuilder()
+            .userName(RequestField.ofNullable(USERNAME))
+            .passwordSecretId(RequestField.ofNullable(PASSWORD));
+
+    QLConnectorInput input = QLConnectorInput.builder()
+                                 .connectorId(CONNECTOR_ID)
+                                 .connectorType(null)
+                                 .nexusConnector(updateNexusConnectorInputBuilder.build())
+                                 .build();
+    MutationContext context = MutationContext.builder().accountId(ACCOUNT_ID).build();
+
+    assertThatThrownBy(() -> dataFetcher.mutateAndFetch(input, context))
+        .isInstanceOf(InvalidRequestException.class)
+        .hasMessage("Invalid connector type provided");
+  }
+
+  @Test
+  @Owner(developers = MILOS)
+  @Category(UnitTests.class)
+  public void updateNexusConnectorWithoutConnectorID() {
+    QLNexusConnectorInputBuilder updateNexusConnectorInputBuilder =
+        getQlNexusConnectorInputBuilder()
+            .userName(RequestField.ofNullable(USERNAME))
+            .passwordSecretId(RequestField.ofNullable(PASSWORD));
+
+    QLConnectorInput input = QLConnectorInput.builder()
+                                 .connectorId(null)
+                                 .connectorType(QLConnectorType.DOCKER)
+                                 .nexusConnector(updateNexusConnectorInputBuilder.build())
                                  .build();
     MutationContext context = MutationContext.builder().accountId(ACCOUNT_ID).build();
 

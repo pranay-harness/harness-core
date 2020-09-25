@@ -11,10 +11,11 @@ import software.wings.security.annotations.Scope;
 @Builder
 @Scope(PermissionAttribute.ResourceType.SETTING)
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class QLDockerConnectorInput {
+public class QLNexusConnectorInput {
   private RequestField<String> name;
 
   private RequestField<String> userName;
   private RequestField<String> URL;
   private RequestField<String> passwordSecretId;
+  private RequestField<QLNexusVersion> version;
 }

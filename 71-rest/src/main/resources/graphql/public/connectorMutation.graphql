@@ -12,6 +12,7 @@ input CreateConnectorInput {
   connectorType: ConnectorType!
   gitConnector: GitConnectorInput
   dockerConnector: DockerConnectorInput
+  nexusConnector: NexusConnectorInput
 }
 
 input UpdateConnectorInput {
@@ -20,6 +21,7 @@ input UpdateConnectorInput {
   connectorType: ConnectorType!
   gitConnector: GitConnectorInput
   dockerConnector: DockerConnectorInput
+  nexusConnector: NexusConnectorInput
 }
 
 input DeleteConnectorInput {
@@ -64,4 +66,17 @@ input DockerConnectorInput {
   URL: String!
   userName: String
   passwordSecretId: String
+}
+
+input NexusConnectorInput {
+  name: String!
+  URL: String!
+  userName: String
+  passwordSecretId: String
+  version: NexusVersion!
+}
+
+enum NexusVersion {
+  V2
+  V3
 }
