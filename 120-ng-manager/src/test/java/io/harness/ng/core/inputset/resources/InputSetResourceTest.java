@@ -10,14 +10,19 @@ import com.google.common.io.Resources;
 import io.harness.NgManagerTest;
 import io.harness.category.element.UnitTests;
 import io.harness.cdng.inputset.beans.entities.CDInputSetEntity;
-import io.harness.cdng.inputset.beans.entities.CDInputSetEntity.CDInputSetEntityKeys;
+import io.harness.cdng.inputset.beans.resource.InputSetListType;
 import io.harness.cdng.inputset.beans.resource.InputSetResponseDTO;
 import io.harness.cdng.inputset.beans.resource.InputSetSummaryResponseDTO;
-import io.harness.cdng.inputset.beans.yaml.CDInputSet;
-import io.harness.cdng.inputset.mappers.CDInputSetFilterHelper;
-import io.harness.cdng.inputset.services.impl.CDInputSetEntityServiceImpl;
+import io.harness.cdng.inputset.mappers.InputSetFilterHelper;
+import io.harness.cdng.inputset.services.impl.InputSetEntityServiceImpl;
+import io.harness.cdng.pipeline.beans.dto.CDPipelineResponseDTO;
+import io.harness.cdng.pipeline.service.PipelineService;
+import io.harness.ngpipeline.BaseInputSetEntity;
+import io.harness.ngpipeline.BaseInputSetEntity.BaseInputSetEntityKeys;
+import io.harness.ngpipeline.InputSetEntityType;
+import io.harness.ngpipeline.overlayinputset.beans.entities.OverlayInputSetEntity;
+import io.harness.ngpipeline.overlayinputset.beans.resource.OverlayInputSetResponseDTO;
 import io.harness.rule.Owner;
-import io.harness.yaml.utils.YamlPipelineUtils;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -38,83 +43,175 @@ import java.util.Objects;
 import java.util.Optional;
 
 public class InputSetResourceTest extends NgManagerTest {
-  @Mock CDInputSetEntityServiceImpl cdInputSetEntityService;
+  @Mock InputSetEntityServiceImpl inputSetEntityService;
+  @Mock PipelineService ngPipelineService;
   @InjectMocks InputSetResource inputSetResource;
 
-  InputSetResponseDTO inputSetResponseDTO;
+  InputSetResponseDTO cdInputSetResponseDTO;
+  OverlayInputSetResponseDTO overlayInputSetResponseDTO;
   InputSetSummaryResponseDTO inputSetSummaryResponseDTO;
+
   CDInputSetEntity cdInputSetEntity;
+  OverlayInputSetEntity overlayInputSetEntity;
+
+  CDPipelineResponseDTO cdPipelineResponseDTO;
 
   private final String IDENTIFIER = "identifier";
   private final String PIPELINE_IDENTIFIER = "pipeline_identifier";
   private final String ACCOUNT_ID = "account_id";
   private final String ORG_IDENTIFIER = "orgId";
   private final String PROJ_IDENTIFIER = "projId";
-  private String inputSetYaml;
+  private String cdInputSetYaml;
+  private String overlayInputSetYaml;
+  private String pipelineYaml;
 
   @Before
   public void setUp() throws IOException {
     ClassLoader classLoader = getClass().getClassLoader();
 
     String inputSetFileName = "input-set-test-file.yaml";
-    inputSetYaml =
+    cdInputSetYaml =
         Resources.toString(Objects.requireNonNull(classLoader.getResource(inputSetFileName)), StandardCharsets.UTF_8);
 
-    inputSetResponseDTO = InputSetResponseDTO.builder()
-                              .accountId(ACCOUNT_ID)
-                              .orgIdentifier(ORG_IDENTIFIER)
-                              .projectIdentifier(PROJ_IDENTIFIER)
-                              .identifier(IDENTIFIER)
-                              .name(IDENTIFIER)
-                              .pipelineIdentifier(PIPELINE_IDENTIFIER)
-                              .inputSetYaml(inputSetYaml)
-                              .build();
+    String overlayInputSetFileName = "overlay-input-set-test-file.yaml";
+    overlayInputSetYaml = Resources.toString(
+        Objects.requireNonNull(classLoader.getResource(overlayInputSetFileName)), StandardCharsets.UTF_8);
+
+    pipelineYaml = "pipeline:\n\tname: pName\n\tidentifier: pID\n\t";
+
+    cdInputSetResponseDTO = InputSetResponseDTO.builder()
+                                .accountId(ACCOUNT_ID)
+                                .orgIdentifier(ORG_IDENTIFIER)
+                                .projectIdentifier(PROJ_IDENTIFIER)
+                                .identifier(IDENTIFIER)
+                                .name(IDENTIFIER)
+                                .pipelineIdentifier(PIPELINE_IDENTIFIER)
+                                .inputSetYaml(cdInputSetYaml)
+                                .build();
+
+    overlayInputSetResponseDTO = OverlayInputSetResponseDTO.builder()
+                                     .accountId(ACCOUNT_ID)
+                                     .orgIdentifier(ORG_IDENTIFIER)
+                                     .projectIdentifier(PROJ_IDENTIFIER)
+                                     .identifier(IDENTIFIER)
+                                     .name(IDENTIFIER)
+                                     .pipelineIdentifier(PIPELINE_IDENTIFIER)
+                                     .overlayInputSetYaml(overlayInputSetYaml)
+                                     .build();
 
     inputSetSummaryResponseDTO = InputSetSummaryResponseDTO.builder()
                                      .identifier(IDENTIFIER)
                                      .name(IDENTIFIER)
                                      .pipelineIdentifier(PIPELINE_IDENTIFIER)
-                                     .isOverlaySet(false)
+                                     .inputSetType(InputSetEntityType.INPUT_SET)
                                      .build();
 
-    cdInputSetEntity = CDInputSetEntity.builder()
-                           .accountId(ACCOUNT_ID)
-                           .orgIdentifier(ORG_IDENTIFIER)
-                           .projectIdentifier(PROJ_IDENTIFIER)
-                           .identifier(IDENTIFIER)
-                           .name(IDENTIFIER)
-                           .pipelineIdentifier(PIPELINE_IDENTIFIER)
-                           .inputSetYaml(inputSetYaml)
-                           .cdInputSet(YamlPipelineUtils.read(inputSetYaml, CDInputSet.class))
-                           .build();
+    cdInputSetEntity = CDInputSetEntity.builder().build();
+    setBaseEntityFields(cdInputSetEntity, InputSetEntityType.INPUT_SET, cdInputSetYaml);
+
+    overlayInputSetEntity = OverlayInputSetEntity.builder().build();
+    setBaseEntityFields(overlayInputSetEntity, InputSetEntityType.OVERLAY_INPUT_SET, overlayInputSetYaml);
+
+    cdPipelineResponseDTO = CDPipelineResponseDTO.builder().yamlPipeline(pipelineYaml).build();
+  }
+
+  private void setBaseEntityFields(BaseInputSetEntity baseInputSetEntity, InputSetEntityType type, String yaml) {
+    baseInputSetEntity.setAccountId(ACCOUNT_ID);
+    baseInputSetEntity.setOrgIdentifier(ORG_IDENTIFIER);
+    baseInputSetEntity.setProjectIdentifier(PROJ_IDENTIFIER);
+    baseInputSetEntity.setPipelineIdentifier(PIPELINE_IDENTIFIER);
+    baseInputSetEntity.setIdentifier(IDENTIFIER);
+    baseInputSetEntity.setName(IDENTIFIER);
+    baseInputSetEntity.setInputSetType(type);
+    baseInputSetEntity.setInputSetYaml(yaml);
   }
 
   @Test
   @Owner(developers = NAMAN)
   @Category(UnitTests.class)
-  public void testGet() {
+  public void testGetCDInputSet() {
     doReturn(Optional.of(cdInputSetEntity))
-        .when(cdInputSetEntityService)
+        .when(inputSetEntityService)
         .get(ACCOUNT_ID, ORG_IDENTIFIER, PROJ_IDENTIFIER, PIPELINE_IDENTIFIER, IDENTIFIER, false);
 
     InputSetResponseDTO inputSetResponseDTO1 =
-        inputSetResource.get(IDENTIFIER, ACCOUNT_ID, ORG_IDENTIFIER, PROJ_IDENTIFIER, PIPELINE_IDENTIFIER, false)
+        inputSetResource
+            .getCDInputSet(IDENTIFIER, ACCOUNT_ID, ORG_IDENTIFIER, PROJ_IDENTIFIER, PIPELINE_IDENTIFIER, false)
             .getData();
 
-    assertThat(inputSetResponseDTO1).isEqualTo(inputSetResponseDTO);
+    assertThat(inputSetResponseDTO1).isEqualTo(cdInputSetResponseDTO);
   }
 
   @Test
   @Owner(developers = NAMAN)
   @Category(UnitTests.class)
-  public void testCreate() {
-    doReturn(cdInputSetEntity).when(cdInputSetEntityService).create(any());
+  public void testGetOverlayInputSet() {
+    doReturn(Optional.of(overlayInputSetEntity))
+        .when(inputSetEntityService)
+        .get(ACCOUNT_ID, ORG_IDENTIFIER, PROJ_IDENTIFIER, PIPELINE_IDENTIFIER, IDENTIFIER, false);
 
-    InputSetResponseDTO inputSetResponseDTO1 =
-        inputSetResource.create(ACCOUNT_ID, ORG_IDENTIFIER, PROJ_IDENTIFIER, PIPELINE_IDENTIFIER, inputSetYaml)
+    OverlayInputSetResponseDTO inputSetResponseDTO1 =
+        inputSetResource
+            .getOverlayInputSet(IDENTIFIER, ACCOUNT_ID, ORG_IDENTIFIER, PROJ_IDENTIFIER, PIPELINE_IDENTIFIER, false)
             .getData();
 
-    assertThat(inputSetResponseDTO1).isEqualTo(inputSetResponseDTO);
+    assertThat(inputSetResponseDTO1).isEqualTo(overlayInputSetResponseDTO);
+  }
+
+  @Test
+  @Owner(developers = NAMAN)
+  @Category(UnitTests.class)
+  public void testCreateCDInputSet() {
+    doReturn(cdInputSetEntity).when(inputSetEntityService).create(any());
+
+    InputSetResponseDTO inputSetResponseDTO1 =
+        inputSetResource
+            .createCDInputSet(ACCOUNT_ID, ORG_IDENTIFIER, PROJ_IDENTIFIER, PIPELINE_IDENTIFIER, cdInputSetYaml)
+            .getData();
+
+    assertThat(inputSetResponseDTO1).isEqualTo(cdInputSetResponseDTO);
+  }
+
+  @Test
+  @Owner(developers = NAMAN)
+  @Category(UnitTests.class)
+  public void testCreateOverlayInputSet() {
+    doReturn(overlayInputSetEntity).when(inputSetEntityService).create(any());
+
+    OverlayInputSetResponseDTO inputSetResponseDTO1 = inputSetResource
+                                                          .createOverlayInputSet(ACCOUNT_ID, ORG_IDENTIFIER,
+                                                              PROJ_IDENTIFIER, PIPELINE_IDENTIFIER, overlayInputSetYaml)
+                                                          .getData();
+
+    assertThat(inputSetResponseDTO1).isEqualTo(overlayInputSetResponseDTO);
+  }
+
+  @Test
+  @Owner(developers = NAMAN)
+  @Category(UnitTests.class)
+  public void testUpdateCDInputSet() {
+    doReturn(cdInputSetEntity).when(inputSetEntityService).update(any());
+
+    InputSetResponseDTO inputSetResponseDTO1 = inputSetResource
+                                                   .updateCDInputSet(IDENTIFIER, ACCOUNT_ID, ORG_IDENTIFIER,
+                                                       PROJ_IDENTIFIER, PIPELINE_IDENTIFIER, cdInputSetYaml)
+                                                   .getData();
+
+    assertThat(inputSetResponseDTO1).isEqualTo(cdInputSetResponseDTO);
+  }
+
+  @Test
+  @Owner(developers = NAMAN)
+  @Category(UnitTests.class)
+  public void testUpdateOverlayInputSet() {
+    doReturn(overlayInputSetEntity).when(inputSetEntityService).update(any());
+
+    OverlayInputSetResponseDTO inputSetResponseDTO1 = inputSetResource
+                                                          .updateOverlayInputSet(IDENTIFIER, ACCOUNT_ID, ORG_IDENTIFIER,
+                                                              PROJ_IDENTIFIER, PIPELINE_IDENTIFIER, overlayInputSetYaml)
+                                                          .getData();
+
+    assertThat(inputSetResponseDTO1).isEqualTo(overlayInputSetResponseDTO);
   }
 
   @Test
@@ -122,7 +219,7 @@ public class InputSetResourceTest extends NgManagerTest {
   @Category(UnitTests.class)
   public void testDelete() {
     doReturn(true)
-        .when(cdInputSetEntityService)
+        .when(inputSetEntityService)
         .delete(ACCOUNT_ID, ORG_IDENTIFIER, PROJ_IDENTIFIER, PIPELINE_IDENTIFIER, IDENTIFIER);
 
     Boolean response =
@@ -134,45 +231,33 @@ public class InputSetResourceTest extends NgManagerTest {
   @Test
   @Owner(developers = NAMAN)
   @Category(UnitTests.class)
-  public void testUpdate() {
-    doReturn(cdInputSetEntity).when(cdInputSetEntityService).update(any());
-
-    InputSetResponseDTO inputSetResponseDTO1 =
-        inputSetResource
-            .update(IDENTIFIER, ACCOUNT_ID, ORG_IDENTIFIER, PROJ_IDENTIFIER, PIPELINE_IDENTIFIER, inputSetYaml)
-            .getData();
-
-    assertThat(inputSetResponseDTO1).isEqualTo(inputSetResponseDTO);
-  }
-
-  @Test
-  @Owner(developers = NAMAN)
-  @Category(UnitTests.class)
-  public void testUpsert() {
-    doReturn(cdInputSetEntity).when(cdInputSetEntityService).upsert(any());
-
-    InputSetResponseDTO inputSetResponseDTO1 =
-        inputSetResource
-            .upsert(IDENTIFIER, ACCOUNT_ID, ORG_IDENTIFIER, PROJ_IDENTIFIER, PIPELINE_IDENTIFIER, inputSetYaml)
-            .getData();
-
-    assertThat(inputSetResponseDTO1).isEqualTo(inputSetResponseDTO);
-  }
-
-  @Test
-  @Owner(developers = NAMAN)
-  @Category(UnitTests.class)
   public void testListServicesWithDESCSort() {
-    Criteria criteria = CDInputSetFilterHelper.createCriteriaForGetList("", "", "", "", false);
-    Pageable pageable = PageRequest.of(0, 10, Sort.by(Sort.Direction.DESC, CDInputSetEntityKeys.createdAt));
+    Criteria criteria = InputSetFilterHelper.createCriteriaForGetList("", "", "", "", InputSetListType.ALL, "", false);
+    Pageable pageable = PageRequest.of(0, 10, Sort.by(Sort.Direction.DESC, BaseInputSetEntityKeys.createdAt));
     final Page<CDInputSetEntity> serviceList = new PageImpl<>(Collections.singletonList(cdInputSetEntity), pageable, 1);
-    doReturn(serviceList).when(cdInputSetEntityService).list(criteria, pageable);
+    doReturn(serviceList).when(inputSetEntityService).list(criteria, pageable);
 
     List<InputSetSummaryResponseDTO> content =
-        inputSetResource.listInputSetsForPipeline(0, 10, "", "", "", "", null).getData().getContent();
+        inputSetResource.listInputSetsForPipeline(0, 10, "", "", "", "", InputSetListType.ALL, "", null)
+            .getData()
+            .getContent();
 
     assertThat(content).isNotNull();
     assertThat(content.size()).isEqualTo(1);
     assertThat(content.get(0)).isEqualTo(inputSetSummaryResponseDTO);
+  }
+
+  @Test
+  @Owner(developers = NAMAN)
+  @Category(UnitTests.class)
+  public void testGetTemplateFromPipeline() {
+    doReturn(Optional.of(cdPipelineResponseDTO)).when(ngPipelineService).getPipeline(any(), any(), any(), any());
+    doReturn("").when(inputSetEntityService).getTemplateFromPipeline(pipelineYaml);
+
+    String responseTemplateYaml =
+        inputSetResource.getTemplateFromPipeline(ACCOUNT_ID, ORG_IDENTIFIER, PROJ_IDENTIFIER, PIPELINE_IDENTIFIER)
+            .getData()
+            .getInputSetTemplateYaml();
+    assertThat(responseTemplateYaml).isEqualTo("");
   }
 }
