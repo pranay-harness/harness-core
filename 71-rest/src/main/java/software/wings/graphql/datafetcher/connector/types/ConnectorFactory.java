@@ -18,6 +18,8 @@ public class ConnectorFactory {
         return new GitConnector(secretManager, settingsService, connectorsController);
       case DOCKER:
         return new DockerConnector(secretManager, connectorsController);
+      case NEXUS:
+        return new NexusConnector(secretManager, connectorsController);
       default:
         throw new InvalidRequestException("Invalid connector Type");
     }
