@@ -6,8 +6,8 @@ import lombok.Builder;
 import lombok.Data;
 import org.jetbrains.annotations.NotNull;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.SortedSet;
+import java.util.TreeSet;
 
 @Data
 @Builder
@@ -24,7 +24,7 @@ public class TimeSeriesMetricDataDTO implements Comparable<TimeSeriesMetricDataD
 
   @Builder.Default Integer totalRisk = 0;
 
-  List<MetricData> metricDataList;
+  SortedSet<MetricData> metricDataList;
 
   @JsonIgnore
   public Integer getTotalRisk() {
@@ -33,7 +33,7 @@ public class TimeSeriesMetricDataDTO implements Comparable<TimeSeriesMetricDataD
 
   public void addMetricData(double value, long timestamp, Double risk) {
     if (metricDataList == null) {
-      metricDataList = new ArrayList<>();
+      metricDataList = new TreeSet<>();
     }
     totalRisk += risk.intValue();
     metricDataList.add(MetricData.builder()
@@ -56,10 +56,15 @@ public class TimeSeriesMetricDataDTO implements Comparable<TimeSeriesMetricDataD
 
   @Data
   @Builder
-  public static class MetricData {
-    private long timestamp;
+  public static class MetricData implements Comparable<MetricData> {
+    private Long timestamp;
     private double value;
     TimeSeriesRisk risk;
+
+    @Override
+    public int compareTo(@NotNull MetricData o) {
+      return timestamp.compareTo(o.timestamp);
+    }
   }
 
   public enum TimeSeriesRisk {

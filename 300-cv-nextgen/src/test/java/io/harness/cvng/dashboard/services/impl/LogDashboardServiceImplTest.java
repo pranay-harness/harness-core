@@ -43,6 +43,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
+import java.util.SortedSet;
 
 public class LogDashboardServiceImplTest extends CvNextGenTest {
   private String projectIdentifier;
@@ -252,13 +253,13 @@ public class LogDashboardServiceImplTest extends CvNextGenTest {
              cvConfigId, Arrays.asList(LogAnalysisTag.values()), startTime, endTime))
         .thenReturn(resultList);
 
-    List<LogDataByTag> timeTagCountMap =
+    SortedSet<LogDataByTag> timeTagCountMap =
         logDashboardService.getLogCountByTag(accountId, projectIdentifier, orgIdentifier, serviceIdentifier,
             envIdentifier, CVMonitoringCategory.PERFORMANCE, startTime.toEpochMilli(), endTime.toEpochMilli());
 
     assertThat(timeTagCountMap).isNotEmpty();
     assertThat(timeTagCountMap.size()).isEqualTo(1);
-    List<LogDataByTag.CountByTag> countMap = timeTagCountMap.get(0).getCountByTags();
+    List<LogDataByTag.CountByTag> countMap = timeTagCountMap.first().getCountByTags();
     assertThat(countMap.size()).isEqualTo(2);
   }
 
@@ -279,7 +280,7 @@ public class LogDashboardServiceImplTest extends CvNextGenTest {
              cvConfigId, Arrays.asList(LogAnalysisTag.values()), startTime, endTime))
         .thenReturn(resultList);
 
-    List<LogDataByTag> timeTagCountMap = logDashboardService.getLogCountByTag(accountId, projectIdentifier,
+    SortedSet<LogDataByTag> timeTagCountMap = logDashboardService.getLogCountByTag(accountId, projectIdentifier,
         orgIdentifier, serviceIdentifier, envIdentifier, CVMonitoringCategory.PERFORMANCE,
         startTime.plus(10, ChronoUnit.MINUTES).toEpochMilli(), startTime.plus(15, ChronoUnit.MINUTES).toEpochMilli());
 
