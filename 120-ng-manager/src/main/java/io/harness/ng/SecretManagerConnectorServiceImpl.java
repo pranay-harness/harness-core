@@ -134,8 +134,19 @@ public class SecretManagerConnectorServiceImpl implements ConnectorService {
   @Override
   public ConnectorValidationResult testConnection(
       String accountIdentifier, String orgIdentifier, String projectIdentifier, String connectorIdentifier) {
-    boolean success =
-        ngSecretManagerService.validate(accountIdentifier, orgIdentifier, projectIdentifier, connectorIdentifier);
-    return ConnectorValidationResult.builder().valid(success).build();
+    long currentTime = System.currentTimeMillis();
+    try {
+      boolean success =
+          ngSecretManagerService.validate(accountIdentifier, orgIdentifier, projectIdentifier, connectorIdentifier);
+      return ConnectorValidationResult.builder().valid(success).testedAt(currentTime).build();
+    } catch (Exception exception) {
+      logger.info("Test connection for connector {}, {}, {}, {} failed.", accountIdentifier, orgIdentifier,
+          projectIdentifier, connectorIdentifier, exception);
+      return ConnectorValidationResult.builder()
+          .valid(false)
+          .errorMessage(exception.getMessage())
+          .testedAt(currentTime)
+          .build();
+    }
   }
 }
