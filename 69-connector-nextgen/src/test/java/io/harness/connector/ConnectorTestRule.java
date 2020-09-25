@@ -26,11 +26,13 @@ import io.harness.rule.InjectorRuleMixin;
 import io.harness.secretmanagerclient.services.api.SecretManagerClientService;
 import io.harness.serializer.KryoModule;
 import io.harness.serializer.KryoRegistrar;
+import io.harness.serializer.OrchestrationBeansRegistrars;
 import io.harness.testlib.module.MongoRuleMixin;
 import io.harness.testlib.module.TestMongoModule;
 import org.junit.rules.MethodRule;
 import org.junit.runners.model.FrameworkMethod;
 import org.junit.runners.model.Statement;
+import org.mongodb.morphia.converters.TypeConverter;
 
 import java.io.Closeable;
 import java.lang.annotation.Annotation;
@@ -78,6 +80,14 @@ public class ConnectorTestRule implements InjectorRuleMixin, MethodRule, MongoRu
       @Singleton
       Set<Class<? extends MorphiaRegistrar>> morphiaRegistrars() {
         return ImmutableSet.<Class<? extends MorphiaRegistrar>>builder().build();
+      }
+
+      @Provides
+      @Singleton
+      Set<Class<? extends TypeConverter>> morphiaConverters() {
+        return ImmutableSet.<Class<? extends TypeConverter>>builder()
+            .addAll(OrchestrationBeansRegistrars.morphiaConverters)
+            .build();
       }
     });
     return modules;

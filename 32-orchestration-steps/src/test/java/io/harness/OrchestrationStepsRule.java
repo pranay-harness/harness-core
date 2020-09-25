@@ -26,6 +26,7 @@ import io.harness.queue.QueuePublisher;
 import io.harness.rule.InjectorRuleMixin;
 import io.harness.serializer.KryoModule;
 import io.harness.serializer.KryoRegistrar;
+import io.harness.serializer.OrchestrationBeansRegistrars;
 import io.harness.serializer.OrchestrationStepsModuleRegistrars;
 import io.harness.serializer.kryo.TestPersistenceKryoRegistrar;
 import io.harness.serializer.morphia.TestPersistenceMorphiaRegistrar;
@@ -45,6 +46,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.junit.rules.MethodRule;
 import org.junit.runners.model.FrameworkMethod;
 import org.junit.runners.model.Statement;
+import org.mongodb.morphia.converters.TypeConverter;
 
 import java.io.Closeable;
 import java.lang.annotation.Annotation;
@@ -101,6 +103,14 @@ public class OrchestrationStepsRule implements MethodRule, InjectorRuleMixin, Mo
       public OrchestrationModuleConfig orchestrationModuleConfig() {
         return OrchestrationModuleConfig.builder()
             .expressionEvaluatorProvider(new AmbianceExpressionEvaluatorProvider())
+            .build();
+      }
+
+      @Provides
+      @Singleton
+      Set<Class<? extends TypeConverter>> morphiaConverters() {
+        return ImmutableSet.<Class<? extends TypeConverter>>builder()
+            .addAll(OrchestrationBeansRegistrars.morphiaConverters)
             .build();
       }
     });

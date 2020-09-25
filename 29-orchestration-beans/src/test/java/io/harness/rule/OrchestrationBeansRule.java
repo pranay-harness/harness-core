@@ -30,6 +30,7 @@ import io.harness.threading.ExecutorModule;
 import org.junit.rules.MethodRule;
 import org.junit.runners.model.FrameworkMethod;
 import org.junit.runners.model.Statement;
+import org.mongodb.morphia.converters.TypeConverter;
 
 import java.io.Closeable;
 import java.lang.annotation.Annotation;
@@ -76,6 +77,14 @@ public class OrchestrationBeansRule implements MethodRule, InjectorRuleMixin, Mo
       Set<Class<? extends AliasRegistrar>> aliasRegistrars() {
         return ImmutableSet.<Class<? extends AliasRegistrar>>builder()
             .addAll(OrchestrationBeansRegistrars.aliasRegistrars)
+            .build();
+      }
+
+      @Provides
+      @Singleton
+      Set<Class<? extends TypeConverter>> morphiaConverters() {
+        return ImmutableSet.<Class<? extends TypeConverter>>builder()
+            .addAll(OrchestrationBeansRegistrars.morphiaConverters)
             .build();
       }
     });

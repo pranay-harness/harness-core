@@ -4,6 +4,7 @@ import static io.harness.govern.IgnoreThrowable.ignoredOnPurpose;
 import static io.harness.morphia.MorphiaRegistrar.putClass;
 
 import com.google.inject.AbstractModule;
+import com.google.inject.Injector;
 import com.google.inject.Key;
 import com.google.inject.Provider;
 import com.google.inject.Provides;
@@ -20,6 +21,7 @@ import io.harness.testing.TestExecution;
 import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.Morphia;
 import org.mongodb.morphia.ObjectFactory;
+import org.mongodb.morphia.converters.TypeConverter;
 import org.mongodb.morphia.mapping.MappedClass;
 
 import java.lang.reflect.Constructor;
@@ -86,7 +88,8 @@ public class MorphiaModule extends AbstractModule {
   @Provides
   @Singleton
   public Morphia morphia(@Named("morphiaClasses") Set<Class> classes,
-      @Named("morphiaClasses") Map<Class, String> customCollectionName, ObjectFactory objectFactory) {
+      @Named("morphiaClasses") Map<Class, String> customCollectionName, ObjectFactory objectFactory, Injector injector,
+      Set<Class<? extends TypeConverter>> morphiaConverters) {
     Morphia morphia = new Morphia();
     morphia.getMapper().getOptions().setObjectFactory(objectFactory);
     morphia.getMapper().getOptions().setMapSubPackages(true);
@@ -109,6 +112,8 @@ public class MorphiaModule extends AbstractModule {
       throw new UnexpectedException("We cannot add morphia MappedClass", e);
     }
     morphia.map(classesCopy);
+    morphiaConverters.forEach(
+        converter -> morphia.getMapper().getConverters().addConverter(injector.getInstance(converter)));
     return morphia;
   }
 

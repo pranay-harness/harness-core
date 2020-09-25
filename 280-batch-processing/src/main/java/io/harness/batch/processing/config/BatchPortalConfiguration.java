@@ -1,6 +1,7 @@
 package io.harness.batch.processing.config;
 
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
 import com.google.inject.Module;
 import com.google.inject.Provides;
 import com.google.inject.Singleton;
@@ -9,13 +10,16 @@ import com.google.inject.name.Named;
 import io.harness.delegate.beans.DelegateAsyncTaskResponse;
 import io.harness.delegate.beans.DelegateSyncTaskResponse;
 import io.harness.govern.ProviderModule;
+import io.harness.serializer.PersistenceRegistrars;
 import lombok.extern.slf4j.Slf4j;
+import org.mongodb.morphia.converters.TypeConverter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Profile;
 import org.springframework.guice.annotation.EnableGuiceModules;
 
 import java.util.Map;
+import java.util.Set;
 
 @Slf4j
 @Configuration
@@ -42,6 +46,20 @@ public class BatchPortalConfiguration {
         return ImmutableMap.<Class, String>builder()
             .put(DelegateSyncTaskResponse.class, "delegateSyncTaskResponses")
             .put(DelegateAsyncTaskResponse.class, "delegateAsyncTaskResponses")
+            .build();
+      }
+    };
+  }
+
+  @Bean
+  @Profile("!test")
+  public Module morphiaConverterModule() {
+    return new ProviderModule() {
+      @Provides
+      @Singleton
+      Set<Class<? extends TypeConverter>> morphiaConverters() {
+        return ImmutableSet.<Class<? extends TypeConverter>>builder()
+            .addAll(PersistenceRegistrars.morphiaConverters)
             .build();
       }
     };

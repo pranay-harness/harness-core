@@ -2,7 +2,10 @@ package io.harness.rule;
 
 import static io.harness.network.LocalhostUtils.findFreePort;
 
+import com.google.common.collect.ImmutableSet;
 import com.google.inject.Module;
+import com.google.inject.Provides;
+import com.google.inject.Singleton;
 
 import io.harness.event.app.EventServiceConfig;
 import io.harness.event.app.EventServiceModule;
@@ -10,7 +13,9 @@ import io.harness.event.client.impl.appender.AppenderModule;
 import io.harness.event.client.impl.tailer.TailerModule;
 import io.harness.factory.ClosingFactory;
 import io.harness.factory.ClosingFactoryModule;
+import io.harness.govern.ProviderModule;
 import io.harness.grpc.server.Connector;
+import io.harness.serializer.PersistenceRegistrars;
 import io.harness.testlib.module.MongoRuleMixin;
 import io.harness.testlib.module.TestMongoModule;
 import lombok.Getter;
@@ -18,12 +23,14 @@ import org.apache.commons.io.FileUtils;
 import org.junit.rules.MethodRule;
 import org.junit.runners.model.FrameworkMethod;
 import org.junit.runners.model.Statement;
+import org.mongodb.morphia.converters.TypeConverter;
 
 import java.lang.annotation.Annotation;
 import java.nio.file.Paths;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 
 public class EventServiceRule implements MethodRule, InjectorRuleMixin, MongoRuleMixin {
@@ -59,6 +66,16 @@ public class EventServiceRule implements MethodRule, InjectorRuleMixin, MongoRul
                                      .publishAuthority("localhost")
                                      .minDelay(Duration.ofMillis(10))
                                      .build()));
+
+    modules.add(new ProviderModule() {
+      @Provides
+      @Singleton
+      Set<Class<? extends TypeConverter>> morphiaConverters() {
+        return ImmutableSet.<Class<? extends TypeConverter>>builder()
+            .addAll(PersistenceRegistrars.morphiaConverters)
+            .build();
+      }
+    });
 
     modules.add(new EventServiceModule(
         EventServiceConfig.builder().connector(new Connector(port, true, "cert.pem", "key.pem")).build()));

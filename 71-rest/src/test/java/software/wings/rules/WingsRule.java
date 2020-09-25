@@ -80,6 +80,7 @@ import org.hibernate.validator.parameternameprovider.ReflectionParameterNameProv
 import org.junit.rules.MethodRule;
 import org.junit.runners.model.FrameworkMethod;
 import org.junit.runners.model.Statement;
+import org.mongodb.morphia.converters.TypeConverter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import ru.vyarus.guice.validator.ValidationModule;
@@ -193,6 +194,14 @@ public class WingsRule implements MethodRule, InjectorRuleMixin, MongoRuleMixin 
         return ImmutableSet.<Class<? extends AliasRegistrar>>builder()
             .addAll(ManagerRegistrars.aliasRegistrars)
             .add(WingsTestSpringAliasRegistrar.class)
+            .build();
+      }
+
+      @Provides
+      @Singleton
+      Set<Class<? extends TypeConverter>> morphiaConverters() {
+        return ImmutableSet.<Class<? extends TypeConverter>>builder()
+            .addAll(ManagerRegistrars.morphiaConverters)
             .build();
       }
     });

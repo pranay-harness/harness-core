@@ -14,6 +14,7 @@ import io.harness.queue.QueueController;
 import io.harness.rule.InjectorRuleMixin;
 import io.harness.serializer.CvNextGenCommonsRegistrars;
 import io.harness.serializer.KryoRegistrar;
+import io.harness.serializer.PersistenceRegistrars;
 import io.harness.testlib.module.MongoRuleMixin;
 import io.harness.testlib.module.TestMongoModule;
 import io.harness.threading.CurrentThreadExecutor;
@@ -22,6 +23,7 @@ import io.harness.time.TimeModule;
 import org.junit.rules.MethodRule;
 import org.junit.runners.model.FrameworkMethod;
 import org.junit.runners.model.Statement;
+import org.mongodb.morphia.converters.TypeConverter;
 
 import java.lang.annotation.Annotation;
 import java.util.ArrayList;
@@ -70,6 +72,14 @@ public class CVNextGenCommonTestRule implements InjectorRuleMixin, MethodRule, M
       Set<Class<? extends MorphiaRegistrar>> morphiaRegistrars() {
         return ImmutableSet.<Class<? extends MorphiaRegistrar>>builder()
             .addAll(CvNextGenCommonsRegistrars.morphiaRegistrars)
+            .build();
+      }
+
+      @Provides
+      @Singleton
+      Set<Class<? extends TypeConverter>> morphiaConverters() {
+        return ImmutableSet.<Class<? extends TypeConverter>>builder()
+            .addAll(PersistenceRegistrars.morphiaConverters)
             .build();
       }
     });

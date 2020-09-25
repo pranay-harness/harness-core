@@ -20,13 +20,11 @@ import io.harness.persistence.CreatedAtAware;
 import io.harness.persistence.PersistentEntity;
 import io.harness.persistence.UpdatedAtAware;
 import io.harness.persistence.UuidAware;
-import io.harness.persistence.converters.DurationConverter;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import lombok.experimental.FieldNameConstants;
-import org.mongodb.morphia.annotations.Converters;
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Id;
 
@@ -45,9 +43,7 @@ import javax.validation.constraints.NotNull;
 @JsonIgnoreProperties(ignoreUnknown = true)
 @Entity(value = "verificationJobs")
 @HarnessEntity(exportable = true)
-// TODO: find a way to add it to using morphia.getMapper().getConverters().addConverter(new DurationConverter());
 // Also the serialization of duration is in millis.
-@Converters(DurationConverter.class)
 public abstract class VerificationJob
     implements PersistentEntity, UuidAware, CreatedAtAware, UpdatedAtAware, AccountAccess {
   @Id private String uuid;

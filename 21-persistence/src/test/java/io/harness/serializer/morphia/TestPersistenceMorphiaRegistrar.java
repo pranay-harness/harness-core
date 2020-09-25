@@ -10,6 +10,8 @@ import io.harness.morphia.MorphiaRegistrar;
 import io.harness.morphia.MorphiaRegistrarHelperPut;
 import io.harness.persistence.MorphiaClass;
 import io.harness.persistence.TestHolderEntity;
+import io.harness.persistence.converters.DurationTestEntity;
+import io.harness.persistence.converters.ObjectArrayTestEntity;
 import io.harness.queue.TestInternalEntity;
 import io.harness.queue.TestNoTopicQueuableObject;
 import io.harness.queue.TestTopicQueuableObject;
@@ -29,6 +31,8 @@ public class TestPersistenceMorphiaRegistrar implements MorphiaRegistrar {
     set.add(TestRegularIterableEntity.class);
     set.add(TestTopicQueuableObject.class);
     set.add(TestIndexEntity.class);
+    set.add(DurationTestEntity.class);
+    set.add(ObjectArrayTestEntity.class);
   }
 
   @Override

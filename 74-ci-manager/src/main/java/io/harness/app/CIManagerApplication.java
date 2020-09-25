@@ -54,6 +54,7 @@ import io.harness.waiter.OrchestrationNotifyEventListener;
 import org.apache.log4j.LogManager;
 import org.glassfish.jersey.server.model.Resource;
 import org.hibernate.validator.parameternameprovider.ReflectionParameterNameProvider;
+import org.mongodb.morphia.converters.TypeConverter;
 import org.reflections.Reflections;
 import org.slf4j.Logger;
 import ru.vyarus.guice.validator.ValidationModule;
@@ -141,6 +142,14 @@ public class CIManagerApplication extends Application<CIManagerConfiguration> {
       Set<Class<? extends AliasRegistrar>> aliasRegistrars() {
         return ImmutableSet.<Class<? extends AliasRegistrar>>builder()
             .addAll(CiExecutionRegistrars.aliasRegistrars)
+            .build();
+      }
+
+      @Provides
+      @Singleton
+      Set<Class<? extends TypeConverter>> morphiaConverters() {
+        return ImmutableSet.<Class<? extends TypeConverter>>builder()
+            .addAll(ManagerRegistrars.morphiaConverters)
             .build();
       }
     });

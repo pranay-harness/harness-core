@@ -2,6 +2,7 @@ package io.harness.rule;
 
 import static org.mockito.Mockito.mock;
 
+import com.google.common.collect.ImmutableSet;
 import com.google.inject.AbstractModule;
 import com.google.inject.Injector;
 import com.google.inject.Module;
@@ -24,6 +25,7 @@ import io.harness.remote.client.ServiceHttpClientConfig;
 import io.harness.secretmanagerclient.SecretManagementClientModule;
 import io.harness.serializer.KryoModule;
 import io.harness.serializer.KryoRegistrar;
+import io.harness.serializer.ManagerRegistrars;
 import io.harness.serializer.NextGenRegistrars;
 import io.harness.spring.AliasRegistrar;
 import io.harness.testlib.module.MongoRuleMixin;
@@ -34,6 +36,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.junit.rules.MethodRule;
 import org.junit.runners.model.FrameworkMethod;
 import org.junit.runners.model.Statement;
+import org.mongodb.morphia.converters.TypeConverter;
 
 import java.io.Closeable;
 import java.lang.annotation.Annotation;
@@ -92,6 +95,14 @@ public class NgManagerRule implements MethodRule, InjectorRuleMixin, MongoRuleMi
       @Singleton
       Set<Class<? extends AliasRegistrar>> aliasRegistrars() {
         return NextGenRegistrars.aliasRegistrars;
+      }
+
+      @Provides
+      @Singleton
+      Set<Class<? extends TypeConverter>> morphiaConverters() {
+        return ImmutableSet.<Class<? extends TypeConverter>>builder()
+            .addAll(ManagerRegistrars.morphiaConverters)
+            .build();
       }
     });
     return modules;

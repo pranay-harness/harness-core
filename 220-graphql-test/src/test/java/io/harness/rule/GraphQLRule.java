@@ -52,6 +52,7 @@ import org.hibernate.validator.parameternameprovider.ReflectionParameterNameProv
 import org.junit.rules.MethodRule;
 import org.junit.runners.model.FrameworkMethod;
 import org.junit.runners.model.Statement;
+import org.mongodb.morphia.converters.TypeConverter;
 import ru.vyarus.guice.validator.ValidationModule;
 import software.wings.app.AuthModule;
 import software.wings.app.GcpMarketplaceIntegrationModule;
@@ -169,6 +170,14 @@ public class GraphQLRule implements MethodRule, InjectorRuleMixin, MongoRuleMixi
       Set<Class<? extends AliasRegistrar>> aliasRegistrars() {
         return ImmutableSet.<Class<? extends AliasRegistrar>>builder()
             .addAll(ManagerRegistrars.aliasRegistrars)
+            .build();
+      }
+
+      @Provides
+      @Singleton
+      Set<Class<? extends TypeConverter>> morphiaConverters() {
+        return ImmutableSet.<Class<? extends TypeConverter>>builder()
+            .addAll(ManagerRegistrars.morphiaConverters)
             .build();
       }
     });

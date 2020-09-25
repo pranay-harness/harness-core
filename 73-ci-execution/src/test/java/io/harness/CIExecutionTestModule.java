@@ -12,9 +12,11 @@ import io.harness.morphia.MorphiaRegistrar;
 import io.harness.security.ServiceTokenGenerator;
 import io.harness.serializer.CiExecutionRegistrars;
 import io.harness.serializer.KryoRegistrar;
+import io.harness.serializer.ManagerRegistrars;
 import io.harness.serializer.kryo.KryoConverterFactory;
 import io.harness.serializer.kryo.TestPersistenceKryoRegistrar;
 import io.harness.serializer.morphia.TestPersistenceMorphiaRegistrar;
+import org.mongodb.morphia.converters.TypeConverter;
 
 import java.util.Set;
 
@@ -35,6 +37,12 @@ public class CIExecutionTestModule extends AbstractModule {
         .addAll(CiExecutionRegistrars.morphiaRegistrars)
         .add(TestPersistenceMorphiaRegistrar.class)
         .build();
+  }
+
+  @Provides
+  @Singleton
+  Set<Class<? extends TypeConverter>> morphiaConverters() {
+    return ImmutableSet.<Class<? extends TypeConverter>>builder().addAll(ManagerRegistrars.morphiaConverters).build();
   }
 
   @Provides

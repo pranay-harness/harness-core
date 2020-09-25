@@ -15,6 +15,7 @@ import io.harness.morphia.MorphiaRegistrar;
 import io.harness.serializer.CiBeansRegistrars;
 import io.harness.serializer.KryoModule;
 import io.harness.serializer.KryoRegistrar;
+import io.harness.serializer.ManagerRegistrars;
 import io.harness.serializer.kryo.TestPersistenceKryoRegistrar;
 import io.harness.serializer.morphia.TestPersistenceMorphiaRegistrar;
 import io.harness.testing.ComponentTestsModule;
@@ -25,6 +26,7 @@ import org.junit.rules.MethodRule;
 import org.junit.runners.model.FrameworkMethod;
 import org.junit.runners.model.Statement;
 import org.mongodb.morphia.ObjectFactory;
+import org.mongodb.morphia.converters.TypeConverter;
 import org.mongodb.morphia.mapping.DefaultCreator;
 
 import java.io.Closeable;
@@ -85,6 +87,14 @@ public class CiBeansRule implements MethodRule, InjectorRuleMixin {
       @Named("morphiaClasses")
       Map<Class, String> morphiaCustomCollectionNames() {
         return Collections.emptyMap();
+      }
+
+      @Provides
+      @Singleton
+      Set<Class<? extends TypeConverter>> morphiaConverters() {
+        return ImmutableSet.<Class<? extends TypeConverter>>builder()
+            .addAll(ManagerRegistrars.morphiaConverters)
+            .build();
       }
     });
 
