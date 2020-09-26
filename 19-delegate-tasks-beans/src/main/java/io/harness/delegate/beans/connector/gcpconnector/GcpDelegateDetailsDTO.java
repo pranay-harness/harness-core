@@ -9,6 +9,6 @@ import lombok.Data;
 @Builder
 @JsonIgnoreProperties(ignoreUnknown = true)
 @JsonTypeName(GcpConstants.inheritFromDelegate)
-public class GcpDelegateDetailsDTO implements GcpCredentialDTO {
+public class GcpDelegateDetailsDTO implements GcpCredentialSpecDTO {
   String delegateSelector;
 }

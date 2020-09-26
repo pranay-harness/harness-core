@@ -41,10 +41,11 @@ public class GcpValidationTaskHandler implements TaskHandler {
   }
 
   private GcpResponse validateGcpServiceAccountKeyCredential(GcpRequest gcpRequest) {
-    if (gcpRequest.getGcpAuthDTO() == null) {
+    if (gcpRequest.getGcpManualDetailsDTO() == null
+        || gcpRequest.getGcpManualDetailsDTO().getGcpSecretKeyAuthDTO() == null) {
       throw new InvalidRequestException("Authentication details not found");
     }
-    final GcpSecretKeyAuthDTO credentials = (GcpSecretKeyAuthDTO) gcpRequest.getGcpAuthDTO().getCredentials();
+    final GcpSecretKeyAuthDTO credentials = gcpRequest.getGcpManualDetailsDTO().getGcpSecretKeyAuthDTO();
     secretDecryptionService.decrypt(credentials, gcpRequest.getEncryptionDetails());
     gcpClient.getGkeContainerService(credentials.getSecretKeyRef().getDecryptedValue());
     return GcpValidationTaskResponse.builder().executionStatus(CommandExecutionStatus.SUCCESS).build();

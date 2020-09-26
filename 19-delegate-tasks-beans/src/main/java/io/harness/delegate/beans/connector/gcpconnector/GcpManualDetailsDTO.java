@@ -13,6 +13,6 @@ import javax.validation.constraints.NotNull;
 @Builder
 @JsonIgnoreProperties(ignoreUnknown = true)
 @JsonTypeName(GcpConstants.manualConfig)
-public class GcpDetailsDTO implements GcpCredentialDTO {
-  @JsonProperty("auth") @NotNull @Valid GcpAuthDTO auth;
+public class GcpManualDetailsDTO implements GcpCredentialSpecDTO {
+  @JsonProperty("spec") @NotNull @Valid GcpSecretKeyAuthDTO gcpSecretKeyAuthDTO;
 }

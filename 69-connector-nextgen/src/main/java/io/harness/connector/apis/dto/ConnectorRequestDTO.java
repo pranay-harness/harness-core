@@ -8,6 +8,7 @@ import io.harness.delegate.beans.connector.ConnectorConfigDTO;
 import io.harness.delegate.beans.connector.ConnectorType;
 import io.harness.delegate.beans.connector.appdynamicsconnector.AppDynamicsConnectorDTO;
 import io.harness.delegate.beans.connector.docker.DockerConnectorDTO;
+import io.harness.delegate.beans.connector.gcpconnector.GcpConnectorDTO;
 import io.harness.delegate.beans.connector.gitconnector.GitConfigDTO;
 import io.harness.delegate.beans.connector.k8Connector.KubernetesClusterConfigDTO;
 import io.harness.delegate.beans.connector.localconnector.LocalConnectorDTO;
@@ -62,7 +63,8 @@ public class ConnectorRequestDTO {
         @JsonSubTypes.Type(value = VaultConnectorDTO.class, name = "Vault"),
         @JsonSubTypes.Type(value = DockerConnectorDTO.class, name = "DockerRegistry"),
         @JsonSubTypes.Type(value = LocalConnectorDTO.class, name = "Local"),
-        @JsonSubTypes.Type(value = GcpKmsConfigDTO.class, name = "GcpKms")
+        @JsonSubTypes.Type(value = GcpKmsConfigDTO.class, name = "GcpKms"),
+        @JsonSubTypes.Type(value = GcpConnectorDTO.class, name = "Gcp")
   })
   @Valid
   @NotNull
