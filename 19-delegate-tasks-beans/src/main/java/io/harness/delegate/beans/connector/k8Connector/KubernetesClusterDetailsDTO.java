@@ -13,7 +13,7 @@ import javax.validation.constraints.NotNull;
 @Builder
 @JsonIgnoreProperties(ignoreUnknown = true)
 @JsonTypeName("ManualConfig")
-public class KubernetesClusterDetailsDTO implements KubernetesCredentialDTO {
+public class KubernetesClusterDetailsDTO implements KubernetesCredentialSpecDTO {
   @NotNull String masterUrl;
   @JsonProperty("auth") @NotNull @Valid KubernetesAuthDTO auth;
 }

@@ -61,8 +61,9 @@ public class KubernetesEntityToDTOTest extends CategoryTest {
     KubernetesClusterConfigDTO connectorDTO =
         kubernetesEntityToDTO.createConnectorDTO((KubernetesClusterConfig) connector);
     assertThat(connectorDTO).isNotNull();
-    assertThat(((KubernetesDelegateDetailsDTO) connectorDTO.getConfig()).getDelegateName()).isEqualTo(delegateName);
-    assertThat(connectorDTO.getKubernetesCredentialType()).isEqualTo(INHERIT_FROM_DELEGATE);
+    assertThat(((KubernetesDelegateDetailsDTO) connectorDTO.getCredential().getConfig()).getDelegateName())
+        .isEqualTo(delegateName);
+    assertThat(connectorDTO.getCredential().getKubernetesCredentialType()).isEqualTo(INHERIT_FROM_DELEGATE);
   }
 
   @Test(expected = UnexpectedException.class)
@@ -123,9 +124,9 @@ public class KubernetesEntityToDTOTest extends CategoryTest {
     KubernetesClusterConfigDTO connectorDTO =
         kubernetesEntityToDTO.createConnectorDTO((KubernetesClusterConfig) connector);
     assertThat(connectorDTO).isNotNull();
-    assertThat(connectorDTO.getConfig()).isNotNull();
-    assertThat(connectorDTO.getKubernetesCredentialType()).isEqualTo(MANUAL_CREDENTIALS);
-    KubernetesClusterDetailsDTO credentialDTO = (KubernetesClusterDetailsDTO) connectorDTO.getConfig();
+    assertThat(connectorDTO.getCredential().getConfig()).isNotNull();
+    assertThat(connectorDTO.getCredential().getKubernetesCredentialType()).isEqualTo(MANUAL_CREDENTIALS);
+    KubernetesClusterDetailsDTO credentialDTO = (KubernetesClusterDetailsDTO) connectorDTO.getCredential().getConfig();
     assertThat(credentialDTO).isNotNull();
     assertThat(credentialDTO.getMasterUrl()).isNotNull();
     KubernetesUserNamePasswordDTO kubernetesUserNamePasswordDTO =
@@ -176,9 +177,9 @@ public class KubernetesEntityToDTOTest extends CategoryTest {
     KubernetesClusterConfigDTO connectorDTO =
         kubernetesEntityToDTO.createConnectorDTO((KubernetesClusterConfig) connector);
     assertThat(connectorDTO).isNotNull();
-    assertThat(connectorDTO.getConfig()).isNotNull();
-    assertThat(connectorDTO.getKubernetesCredentialType()).isEqualTo(MANUAL_CREDENTIALS);
-    KubernetesClusterDetailsDTO credentialDTO = (KubernetesClusterDetailsDTO) connectorDTO.getConfig();
+    assertThat(connectorDTO.getCredential().getConfig()).isNotNull();
+    assertThat(connectorDTO.getCredential().getKubernetesCredentialType()).isEqualTo(MANUAL_CREDENTIALS);
+    KubernetesClusterDetailsDTO credentialDTO = (KubernetesClusterDetailsDTO) connectorDTO.getCredential().getConfig();
     assertThat(credentialDTO).isNotNull();
     assertThat(credentialDTO.getMasterUrl()).isNotNull();
     KubernetesClientKeyCertDTO kubernetesClientKeyCertDTO =
@@ -228,9 +229,9 @@ public class KubernetesEntityToDTOTest extends CategoryTest {
     KubernetesClusterConfigDTO connectorDTO =
         kubernetesEntityToDTO.createConnectorDTO((KubernetesClusterConfig) connector);
     assertThat(connectorDTO).isNotNull();
-    assertThat(connectorDTO.getConfig()).isNotNull();
-    assertThat(connectorDTO.getKubernetesCredentialType()).isEqualTo(MANUAL_CREDENTIALS);
-    KubernetesClusterDetailsDTO credentialDTO = (KubernetesClusterDetailsDTO) connectorDTO.getConfig();
+    assertThat(connectorDTO.getCredential().getConfig()).isNotNull();
+    assertThat(connectorDTO.getCredential().getKubernetesCredentialType()).isEqualTo(MANUAL_CREDENTIALS);
+    KubernetesClusterDetailsDTO credentialDTO = (KubernetesClusterDetailsDTO) connectorDTO.getCredential().getConfig();
     assertThat(credentialDTO).isNotNull();
     assertThat(credentialDTO.getMasterUrl()).isNotNull();
     KubernetesOpenIdConnectDTO kubernetesOpenIdConnectDTO =
@@ -266,9 +267,9 @@ public class KubernetesEntityToDTOTest extends CategoryTest {
     KubernetesClusterConfigDTO connectorDTO =
         kubernetesEntityToDTO.createConnectorDTO((KubernetesClusterConfig) connector);
     assertThat(connectorDTO).isNotNull();
-    assertThat(connectorDTO.getConfig()).isNotNull();
-    assertThat(connectorDTO.getKubernetesCredentialType()).isEqualTo(MANUAL_CREDENTIALS);
-    KubernetesClusterDetailsDTO credentialDTO = (KubernetesClusterDetailsDTO) connectorDTO.getConfig();
+    assertThat(connectorDTO.getCredential().getConfig()).isNotNull();
+    assertThat(connectorDTO.getCredential().getKubernetesCredentialType()).isEqualTo(MANUAL_CREDENTIALS);
+    KubernetesClusterDetailsDTO credentialDTO = (KubernetesClusterDetailsDTO) connectorDTO.getCredential().getConfig();
     assertThat(credentialDTO).isNotNull();
     assertThat(credentialDTO.getMasterUrl()).isNotNull();
     KubernetesServiceAccountDTO kubernetesUserNamePasswordDTO =

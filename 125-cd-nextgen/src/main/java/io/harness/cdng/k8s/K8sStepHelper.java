@@ -112,7 +112,7 @@ public class K8sStepHelper {
     switch (connectorDTO.getConnectorType()) {
       case KUBERNETES_CLUSTER:
         KubernetesClusterConfigDTO connectorConfig = (KubernetesClusterConfigDTO) connectorDTO.getConnectorConfig();
-        KubernetesClusterDetailsDTO config = (KubernetesClusterDetailsDTO) connectorConfig.getConfig();
+        KubernetesClusterDetailsDTO config = (KubernetesClusterDetailsDTO) connectorConfig.getCredential().getConfig();
         KubernetesUserNamePasswordDTO auth = (KubernetesUserNamePasswordDTO) config.getAuth().getCredentials();
         // todo @Vaibhav/@Deepak: Now the k8 uses the new secret and this secret requires identifier and previous
         // required uuid, this has to be changed according to the framework
@@ -187,8 +187,10 @@ public class K8sStepHelper {
     switch (connectorDTO.getConnectorType()) {
       case KUBERNETES_CLUSTER:
         KubernetesClusterConfigDTO connectorConfig = (KubernetesClusterConfigDTO) connectorDTO.getConnectorConfig();
-        if (connectorConfig.getKubernetesCredentialType() == KubernetesCredentialType.MANUAL_CREDENTIALS) {
-          KubernetesClusterDetailsDTO clusterDetailsDTO = (KubernetesClusterDetailsDTO) connectorConfig.getConfig();
+        if (connectorConfig.getCredential().getKubernetesCredentialType()
+            == KubernetesCredentialType.MANUAL_CREDENTIALS) {
+          KubernetesClusterDetailsDTO clusterDetailsDTO =
+              (KubernetesClusterDetailsDTO) connectorConfig.getCredential().getConfig();
 
           KubernetesAuthCredentialDTO authCredentialDTO = clusterDetailsDTO.getAuth().getCredentials();
           return secretManagerClientService.getEncryptionDetails(ngAccess, authCredentialDTO);

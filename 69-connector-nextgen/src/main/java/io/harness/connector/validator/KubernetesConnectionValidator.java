@@ -40,9 +40,10 @@ public class KubernetesConnectionValidator
       T connectorConfig, String accountIdentifier, String orgIdentifier, String projectIdentifier) {
     List<EncryptedDataDetail> encryptedDataDetailList = null;
     KubernetesClusterConfigDTO kubernetesClusterConfig = (KubernetesClusterConfigDTO) connectorConfig;
-    if (kubernetesClusterConfig.getKubernetesCredentialType() == KubernetesCredentialType.MANUAL_CREDENTIALS) {
-      KubernetesAuthCredentialDTO kubernetesAuthCredential =
-          getKubernetesAuthCredential((KubernetesClusterDetailsDTO) kubernetesClusterConfig.getConfig());
+    if (kubernetesClusterConfig.getCredential().getKubernetesCredentialType()
+        == KubernetesCredentialType.MANUAL_CREDENTIALS) {
+      KubernetesAuthCredentialDTO kubernetesAuthCredential = getKubernetesAuthCredential(
+          (KubernetesClusterDetailsDTO) kubernetesClusterConfig.getCredential().getConfig());
       encryptedDataDetailList =
           super.getEncryptionDetail(kubernetesAuthCredential, accountIdentifier, orgIdentifier, projectIdentifier);
     }

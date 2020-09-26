@@ -14,6 +14,7 @@ import io.harness.delegate.beans.connector.k8Connector.KubernetesAuthType;
 import io.harness.delegate.beans.connector.k8Connector.KubernetesClientKeyCertDTO;
 import io.harness.delegate.beans.connector.k8Connector.KubernetesClusterConfigDTO;
 import io.harness.delegate.beans.connector.k8Connector.KubernetesClusterDetailsDTO;
+import io.harness.delegate.beans.connector.k8Connector.KubernetesCredentialDTO;
 import io.harness.delegate.beans.connector.k8Connector.KubernetesDelegateDetailsDTO;
 import io.harness.delegate.beans.connector.k8Connector.KubernetesOpenIdConnectDTO;
 import io.harness.delegate.beans.connector.k8Connector.KubernetesServiceAccountDTO;
@@ -59,8 +60,11 @@ public class K8sYamlToDelegateDTOMapperTest extends CategoryTest {
             .build();
     KubernetesClusterConfigDTO connectorDTOWithUserNamePassword =
         KubernetesClusterConfigDTO.builder()
-            .kubernetesCredentialType(MANUAL_CREDENTIALS)
-            .config(KubernetesClusterDetailsDTO.builder().masterUrl(masterUrl).auth(kubernetesAuthDTO).build())
+            .credential(
+                KubernetesCredentialDTO.builder()
+                    .kubernetesCredentialType(MANUAL_CREDENTIALS)
+                    .config(KubernetesClusterDetailsDTO.builder().masterUrl(masterUrl).auth(kubernetesAuthDTO).build())
+                    .build())
             .build();
     KubernetesConfig config =
         k8sYamlToDelegateDTOMapper.createKubernetesConfigFromClusterConfig(connectorDTOWithUserNamePassword);
@@ -117,8 +121,11 @@ public class K8sYamlToDelegateDTOMapperTest extends CategoryTest {
                                               .build();
     KubernetesClusterConfigDTO connectorDTOWithClientKeyCreds =
         KubernetesClusterConfigDTO.builder()
-            .kubernetesCredentialType(MANUAL_CREDENTIALS)
-            .config(KubernetesClusterDetailsDTO.builder().masterUrl(masterUrl).auth(kubernetesAuthDTO).build())
+            .credential(
+                KubernetesCredentialDTO.builder()
+                    .kubernetesCredentialType(MANUAL_CREDENTIALS)
+                    .config(KubernetesClusterDetailsDTO.builder().masterUrl(masterUrl).auth(kubernetesAuthDTO).build())
+                    .build())
             .build();
     KubernetesConfig config =
         k8sYamlToDelegateDTOMapper.createKubernetesConfigFromClusterConfig(connectorDTOWithClientKeyCreds, namespace);
@@ -149,8 +156,11 @@ public class K8sYamlToDelegateDTOMapperTest extends CategoryTest {
             .build();
     KubernetesClusterConfigDTO connectorDTOWithServiceAccountCreds =
         KubernetesClusterConfigDTO.builder()
-            .kubernetesCredentialType(MANUAL_CREDENTIALS)
-            .config(KubernetesClusterDetailsDTO.builder().masterUrl(masterUrl).auth(kubernetesAuthDTO).build())
+            .credential(
+                KubernetesCredentialDTO.builder()
+                    .kubernetesCredentialType(MANUAL_CREDENTIALS)
+                    .config(KubernetesClusterDetailsDTO.builder().masterUrl(masterUrl).auth(kubernetesAuthDTO).build())
+                    .build())
             .build();
     KubernetesConfig config =
         k8sYamlToDelegateDTOMapper.createKubernetesConfigFromClusterConfig(connectorDTOWithServiceAccountCreds, null);
@@ -201,8 +211,11 @@ public class K8sYamlToDelegateDTOMapperTest extends CategoryTest {
                                               .build();
     KubernetesClusterConfigDTO connectorDTOWithOpenIdConnectCred =
         KubernetesClusterConfigDTO.builder()
-            .kubernetesCredentialType(MANUAL_CREDENTIALS)
-            .config(KubernetesClusterDetailsDTO.builder().masterUrl(masterUrl).auth(kubernetesAuthDTO).build())
+            .credential(
+                KubernetesCredentialDTO.builder()
+                    .kubernetesCredentialType(MANUAL_CREDENTIALS)
+                    .config(KubernetesClusterDetailsDTO.builder().masterUrl(masterUrl).auth(kubernetesAuthDTO).build())
+                    .build())
             .build();
     KubernetesConfig config =
         k8sYamlToDelegateDTOMapper.createKubernetesConfigFromClusterConfig(connectorDTOWithOpenIdConnectCred, null);
@@ -223,8 +236,10 @@ public class K8sYamlToDelegateDTOMapperTest extends CategoryTest {
     String delegateName = "testDeleagete";
     KubernetesClusterConfigDTO connectorDTOWithDelegateCreds =
         KubernetesClusterConfigDTO.builder()
-            .kubernetesCredentialType(INHERIT_FROM_DELEGATE)
-            .config(KubernetesDelegateDetailsDTO.builder().delegateName(delegateName).build())
+            .credential(KubernetesCredentialDTO.builder()
+                            .kubernetesCredentialType(INHERIT_FROM_DELEGATE)
+                            .config(KubernetesDelegateDetailsDTO.builder().delegateName(delegateName).build())
+                            .build())
             .build();
     KubernetesConfig config =
         k8sYamlToDelegateDTOMapper.createKubernetesConfigFromClusterConfig(connectorDTOWithDelegateCreds, null);

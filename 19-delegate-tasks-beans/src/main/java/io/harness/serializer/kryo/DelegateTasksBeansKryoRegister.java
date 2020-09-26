@@ -42,7 +42,7 @@ import io.harness.delegate.beans.connector.k8Connector.KubernetesClusterConfigDT
 import io.harness.delegate.beans.connector.k8Connector.KubernetesClusterDetailsDTO;
 import io.harness.delegate.beans.connector.k8Connector.KubernetesConnectionTaskParams;
 import io.harness.delegate.beans.connector.k8Connector.KubernetesConnectionTaskResponse;
-import io.harness.delegate.beans.connector.k8Connector.KubernetesCredentialDTO;
+import io.harness.delegate.beans.connector.k8Connector.KubernetesCredentialSpecDTO;
 import io.harness.delegate.beans.connector.k8Connector.KubernetesCredentialType;
 import io.harness.delegate.beans.connector.k8Connector.KubernetesDelegateDetailsDTO;
 import io.harness.delegate.beans.connector.k8Connector.KubernetesOpenIdConnectDTO;
@@ -228,7 +228,7 @@ public class DelegateTasksBeansKryoRegister implements KryoRegistrar {
     kryo.register(KubernetesClusterDetailsDTO.class, 19049);
     kryo.register(KubernetesConnectionTaskParams.class, 19057);
     kryo.register(KubernetesConnectionTaskResponse.class, 19056);
-    kryo.register(KubernetesCredentialDTO.class, 19047);
+    kryo.register(KubernetesCredentialSpecDTO.class, 19047);
     kryo.register(KubernetesCredentialType.class, 19046);
     kryo.register(KubernetesDelegateDetailsDTO.class, 19048);
     kryo.register(KubernetesOpenIdConnectDTO.class, 19055);

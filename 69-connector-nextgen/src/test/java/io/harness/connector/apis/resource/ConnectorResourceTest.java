@@ -21,6 +21,7 @@ import io.harness.connector.apis.dto.ConnectorWrapper;
 import io.harness.connector.services.ConnectorService;
 import io.harness.delegate.beans.connector.ConnectorValidationResult;
 import io.harness.delegate.beans.connector.k8Connector.KubernetesClusterConfigDTO;
+import io.harness.delegate.beans.connector.k8Connector.KubernetesCredentialDTO;
 import io.harness.delegate.beans.connector.k8Connector.KubernetesDelegateDetailsDTO;
 import io.harness.ng.core.dto.ResponseDTO;
 import io.harness.rule.Owner;
@@ -55,20 +56,26 @@ public class ConnectorResourceTest extends CategoryTest {
             .name("connector")
             .identifier("identifier")
             .connectorType(KUBERNETES_CLUSTER)
-            .connectorConfig(KubernetesClusterConfigDTO.builder()
-                                 .kubernetesCredentialType(INHERIT_FROM_DELEGATE)
-                                 .config(KubernetesDelegateDetailsDTO.builder().delegateName("delegateName").build())
-                                 .build())
+            .connectorConfig(
+                KubernetesClusterConfigDTO.builder()
+                    .credential(KubernetesCredentialDTO.builder()
+                                    .kubernetesCredentialType(INHERIT_FROM_DELEGATE)
+                                    .config(KubernetesDelegateDetailsDTO.builder().delegateName("delegateName").build())
+                                    .build())
+                    .build())
             .build();
     randomConnectorRequestDTO =
         ConnectorRequestDTO.builder()
             .name("connector")
             .identifier("identifier")
             .connectorType(KUBERNETES_CLUSTER)
-            .connectorConfig(KubernetesClusterConfigDTO.builder()
-                                 .kubernetesCredentialType(INHERIT_FROM_DELEGATE)
-                                 .config(KubernetesDelegateDetailsDTO.builder().delegateName("delegateName").build())
-                                 .build())
+            .connectorConfig(
+                KubernetesClusterConfigDTO.builder()
+                    .credential(KubernetesCredentialDTO.builder()
+                                    .kubernetesCredentialType(INHERIT_FROM_DELEGATE)
+                                    .config(KubernetesDelegateDetailsDTO.builder().delegateName("delegateName").build())
+                                    .build())
+                    .build())
             .build();
     connectorWrapper = ConnectorWrapper.builder().connector(connectorDTO).build();
     connectorRequestWrapper = ConnectorRequestWrapper.builder().connector(randomConnectorRequestDTO).build();

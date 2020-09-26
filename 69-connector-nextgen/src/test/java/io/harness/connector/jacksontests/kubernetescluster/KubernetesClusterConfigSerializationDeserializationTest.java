@@ -14,6 +14,7 @@ import io.harness.delegate.beans.connector.k8Connector.KubernetesAuthDTO;
 import io.harness.delegate.beans.connector.k8Connector.KubernetesAuthType;
 import io.harness.delegate.beans.connector.k8Connector.KubernetesClusterConfigDTO;
 import io.harness.delegate.beans.connector.k8Connector.KubernetesClusterDetailsDTO;
+import io.harness.delegate.beans.connector.k8Connector.KubernetesCredentialDTO;
 import io.harness.delegate.beans.connector.k8Connector.KubernetesUserNamePasswordDTO;
 import io.harness.encryption.Scope;
 import io.harness.encryption.SecretRefData;
@@ -58,10 +59,12 @@ public class KubernetesClusterConfigSerializationDeserializationTest extends Cat
             .credentials(
                 KubernetesUserNamePasswordDTO.builder().username(userName).passwordRef(passwordSecretRef).build())
             .build();
-    return KubernetesClusterConfigDTO.builder()
-        .kubernetesCredentialType(MANUAL_CREDENTIALS)
-        .config(KubernetesClusterDetailsDTO.builder().masterUrl(masterUrl).auth(kubernetesAuthDTO).build())
-        .build();
+    KubernetesCredentialDTO k8sCredentials =
+        KubernetesCredentialDTO.builder()
+            .kubernetesCredentialType(MANUAL_CREDENTIALS)
+            .config(KubernetesClusterDetailsDTO.builder().masterUrl(masterUrl).auth(kubernetesAuthDTO).build())
+            .build();
+    return KubernetesClusterConfigDTO.builder().credential(k8sCredentials).build();
   }
 
   private ConnectorRequestDTO createConnectorRequestDTOForK8sConnector() {

@@ -24,6 +24,7 @@ import io.harness.delegate.beans.connector.k8Connector.KubernetesAuthDTO;
 import io.harness.delegate.beans.connector.k8Connector.KubernetesClientKeyCertDTO;
 import io.harness.delegate.beans.connector.k8Connector.KubernetesClusterConfigDTO;
 import io.harness.delegate.beans.connector.k8Connector.KubernetesClusterDetailsDTO;
+import io.harness.delegate.beans.connector.k8Connector.KubernetesCredentialDTO;
 import io.harness.delegate.beans.connector.k8Connector.KubernetesCredentialType;
 import io.harness.delegate.beans.connector.k8Connector.KubernetesDelegateDetailsDTO;
 import io.harness.delegate.beans.connector.k8Connector.KubernetesOpenIdConnectDTO;
@@ -58,10 +59,12 @@ public class KubernetesEntityToDTO implements ConnectorEntityToDTOMapper<Kuberne
 
   private KubernetesClusterConfigDTO createInheritFromDelegateCredentialsDTO(
       KubernetesDelegateDetails delegateCredential) {
-    return KubernetesClusterConfigDTO.builder()
-        .config(KubernetesDelegateDetailsDTO.builder().delegateName(delegateCredential.getDelegateName()).build())
-        .kubernetesCredentialType(INHERIT_FROM_DELEGATE)
-        .build();
+    KubernetesCredentialDTO k8sCredentials =
+        KubernetesCredentialDTO.builder()
+            .config(KubernetesDelegateDetailsDTO.builder().delegateName(delegateCredential.getDelegateName()).build())
+            .kubernetesCredentialType(INHERIT_FROM_DELEGATE)
+            .build();
+    return KubernetesClusterConfigDTO.builder().credential(k8sCredentials).build();
   }
 
   private KubernetesClusterConfigDTO createManualKubernetessCredentialsDTO(
@@ -89,13 +92,14 @@ public class KubernetesEntityToDTO implements ConnectorEntityToDTOMapper<Kuberne
             kubernetesClusterDetails.getAuthType() == null ? null
                                                            : kubernetesClusterDetails.getAuthType().getDisplayName());
     }
-    return KubernetesClusterConfigDTO.builder()
-        .kubernetesCredentialType(MANUAL_CREDENTIALS)
-        .config(KubernetesClusterDetailsDTO.builder()
-                    .masterUrl(kubernetesClusterDetails.getMasterUrl())
-                    .auth(manualCredentials)
-                    .build())
-        .build();
+    KubernetesCredentialDTO k8sCredentials = KubernetesCredentialDTO.builder()
+                                                 .kubernetesCredentialType(MANUAL_CREDENTIALS)
+                                                 .config(KubernetesClusterDetailsDTO.builder()
+                                                             .masterUrl(kubernetesClusterDetails.getMasterUrl())
+                                                             .auth(manualCredentials)
+                                                             .build())
+                                                 .build();
+    return KubernetesClusterConfigDTO.builder().credential(k8sCredentials).build();
   }
 
   private KubernetesAuthDTO createUserPasswordDTO(K8sUserNamePassword userNamePasswordCredential) {

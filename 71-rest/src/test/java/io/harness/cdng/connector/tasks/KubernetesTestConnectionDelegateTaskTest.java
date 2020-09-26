@@ -16,6 +16,7 @@ import io.harness.delegate.beans.connector.k8Connector.KubernetesAuthType;
 import io.harness.delegate.beans.connector.k8Connector.KubernetesClusterConfigDTO;
 import io.harness.delegate.beans.connector.k8Connector.KubernetesClusterDetailsDTO;
 import io.harness.delegate.beans.connector.k8Connector.KubernetesConnectionTaskParams;
+import io.harness.delegate.beans.connector.k8Connector.KubernetesCredentialDTO;
 import io.harness.delegate.beans.connector.k8Connector.KubernetesUserNamePasswordDTO;
 import io.harness.delegate.task.k8s.K8sYamlToDelegateDTOMapper;
 import io.harness.encryption.Scope;
@@ -51,16 +52,21 @@ public class KubernetesTestConnectionDelegateTaskTest extends WingsBaseTest {
       (KubernetesTestConnectionDelegateTask) TaskType.VALIDATE_KUBERNETES_CONFIG.getDelegateRunnableTask(
           DelegateTaskPackage.builder()
               .delegateId("delegateid")
-              .data((TaskData.builder().async(true).timeout(DEFAULT_ASYNC_CALL_TIMEOUT))
-                        .parameters(new Object[] {
-                            KubernetesConnectionTaskParams.builder()
-                                .kubernetesClusterConfig(
-                                    KubernetesClusterConfigDTO.builder()
-                                        .config(KubernetesClusterDetailsDTO.builder().auth(kubernetesAuthDTO).build())
-                                        .build())
-                                .encryptionDetails(Collections.emptyList())
-                                .build()})
-                        .build())
+              .data(
+                  (TaskData.builder().async(true).timeout(DEFAULT_ASYNC_CALL_TIMEOUT))
+                      .parameters(new Object[] {
+                          KubernetesConnectionTaskParams.builder()
+                              .kubernetesClusterConfig(
+                                  KubernetesClusterConfigDTO.builder()
+                                      .credential(
+                                          KubernetesCredentialDTO.builder()
+                                              .config(
+                                                  KubernetesClusterDetailsDTO.builder().auth(kubernetesAuthDTO).build())
+                                              .build())
+                                      .build())
+                              .encryptionDetails(Collections.emptyList())
+                              .build()})
+                      .build())
               .build(),
           notifyResponseData -> {}, () -> true);
 
