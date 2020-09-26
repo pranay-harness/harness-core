@@ -78,7 +78,7 @@ input ServiceInput {
 }
 
 input ArtfifactValueInput {
-  #type of the artifactValue: Build number or artifactId
+  #type of the artifactValue: Build number, artifactId or parameterized artifact source
   valueType: ArtifactInputType!
 
   #artifact Id input if value type is ARTIFACT_ID
@@ -86,11 +86,15 @@ input ArtfifactValueInput {
 
   #Build number input if value type is BUILD_NUMBER
   buildNumber: BuildNumberInput
+
+  #Parameterized artifact source input if value type is PARAMETERIZED_ARTIFACT_SOURCE
+  parameterizedArtifactSource: ParameterizedArtifactSourceInput
 }
 
 enum ArtifactInputType {
   ARTIFACT_ID
   BUILD_NUMBER
+  PARAMETERIZED_ARTIFACT_SOURCE
 }
 
 input ArtifactIdInput {
@@ -103,6 +107,22 @@ input BuildNumberInput {
   artifactSourceName: String!
   #build number to deploy
   buildNumber: String!
+}
+
+input ParameterizedArtifactSourceInput {
+  #name of the artifact source to which the specified build number comes from
+  artifactSourceName: String!
+  #build number to deploy
+  buildNumber: String!
+  #parameters and their runtime values
+  parameterValueInputs: [ParameterValueInput]
+}
+
+input ParameterValueInput {
+  #parameter name
+  name: String!
+  #runtime value for parameter
+  value: String!
 }
 
 type StartExecutionPayload {

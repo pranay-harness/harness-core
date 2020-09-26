@@ -1,6 +1,8 @@
 package software.wings.graphql.datafetcher.artifactSource;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static software.wings.graphql.datafetcher.artifactSource.ArtifactSourceController.populateArtifactSource;
 
 import com.google.inject.Inject;
 
@@ -15,8 +17,8 @@ import software.wings.security.PermissionAttribute;
 import software.wings.security.annotations.AuthRule;
 import software.wings.service.intfc.ArtifactStreamService;
 
+import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors;
 
 @OwnedBy(CDC)
 public class ServiceArtifactSourceConnectionDataFetcher
@@ -30,9 +32,18 @@ public class ServiceArtifactSourceConnectionDataFetcher
       String serviceId = parameters.getServiceId();
       String appId = parameters.getApplicationId();
       List<ArtifactStream> artifactStreams = artifactStreamService.getArtifactStreamsForService(appId, serviceId);
-      return artifactStreams.stream()
-          .map(ArtifactSourceController::populateArtifactSource)
-          .collect(Collectors.toList());
+      List<QLArtifactSource> result = new ArrayList<>();
+      if (isNotEmpty(artifactStreams)) {
+        for (ArtifactStream artifactStream : artifactStreams) {
+          if (!artifactStream.isArtifactStreamParameterized()) {
+            result.add(populateArtifactSource(artifactStream));
+          } else {
+            List<String> params = artifactStreamService.getArtifactStreamParameters(artifactStream.getUuid());
+            result.add(populateArtifactSource(artifactStream, params));
+          }
+        }
+      }
+      return result;
     }
   }
 

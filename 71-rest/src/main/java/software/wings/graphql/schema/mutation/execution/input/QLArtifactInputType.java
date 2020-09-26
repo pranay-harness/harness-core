@@ -8,7 +8,8 @@ import software.wings.graphql.schema.type.QLEnum;
 @OwnedBy(CDC)
 public enum QLArtifactInputType implements QLEnum {
   ARTIFACT_ID,
-  BUILD_NUMBER;
+  BUILD_NUMBER,
+  PARAMETERIZED_ARTIFACT_SOURCE;
 
   @Override
   public String getStringValue() {

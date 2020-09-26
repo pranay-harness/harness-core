@@ -12,11 +12,9 @@ import software.wings.security.annotations.Scope;
 @OwnedBy(CDC)
 @Value
 @Builder
-@FieldNameConstants(innerTypeName = "QLArtifactValueInputKeys")
+@FieldNameConstants(innerTypeName = "QLParameterValueInputKeys")
 @Scope(PermissionAttribute.ResourceType.DEPLOYMENT)
-public class QLArtifactValueInput {
-  QLArtifactInputType valueType;
-  QLArtifactIdInput artifactId;
-  QLBuildNumberInput buildNumber;
-  QLParameterizedArtifactSourceInput parameterizedArtifactSource;
+public class QLParameterValueInput {
+  String name;
+  String value;
 }

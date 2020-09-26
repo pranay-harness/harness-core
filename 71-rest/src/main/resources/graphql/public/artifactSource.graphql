@@ -159,6 +159,7 @@ type NexusArtifactSource implements ArtifactSource {
   name: String
   createdAt: DateTime
   properties: NexusProps
+  parameters: [String]
   artifacts(limit: Int!, offset: Int): ArtifactConnection
     @dataFetcher(name: artifactConnection, contextFieldArgsMap: "{ \"ArtifactSource\": \"id\"}")
 }
