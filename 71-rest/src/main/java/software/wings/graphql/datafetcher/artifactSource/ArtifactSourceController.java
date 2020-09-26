@@ -1,6 +1,7 @@
 package software.wings.graphql.datafetcher.artifactSource;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
+import static java.lang.String.format;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.data.structure.EmptyPredicate;
@@ -49,6 +50,7 @@ import software.wings.graphql.schema.type.artifactSource.QLSMBArtifactSource;
 import software.wings.utils.RepositoryFormat;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -153,6 +155,7 @@ public class ArtifactSourceController {
             .name(artifactStream.getName())
             .createdAt(artifactStream.getCreatedAt())
             .properties(generateNexusProps(nexusArtifactStream))
+            .parameters(Collections.emptyList())
             .build();
 
       case BAMBOO:
@@ -286,6 +289,22 @@ public class ArtifactSourceController {
       default:
         throw new UnsupportedOperationException(
             "Nexus RepositoryType type not supported: " + artifactStream.getRepositoryType());
+    }
+  }
+
+  public static QLArtifactSource populateArtifactSource(ArtifactStream artifactStream, List<String> parameters) {
+    ArtifactStreamType artifactStreamType = ArtifactStreamType.valueOf(artifactStream.getArtifactStreamType());
+    switch (artifactStreamType) {
+      case NEXUS:
+        return QLNexusArtifactSource.builder()
+            .id(artifactStream.getUuid())
+            .name(artifactStream.getName())
+            .createdAt(artifactStream.getCreatedAt())
+            .parameters(parameters)
+            .build();
+      default:
+        throw new UnsupportedOperationException(
+            format("Artifact stream type [%s]does not support parameters: ", artifactStreamType));
     }
   }
 }

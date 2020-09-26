@@ -572,6 +572,8 @@
 71-rest/src/main/java/software/wings/graphql/schema/mutation/execution/input/QLArtifactValueInput.java
 71-rest/src/main/java/software/wings/graphql/schema/mutation/execution/input/QLBuildNumberInput.java
 71-rest/src/main/java/software/wings/graphql/schema/mutation/execution/input/QLExecutionType.java
+71-rest/src/main/java/software/wings/graphql/schema/mutation/execution/input/QLParameterValueInput.java
+71-rest/src/main/java/software/wings/graphql/schema/mutation/execution/input/QLParameterizedArtifactSourceInput.java
 71-rest/src/main/java/software/wings/graphql/schema/mutation/execution/input/QLServiceInput.java
 71-rest/src/main/java/software/wings/graphql/schema/mutation/execution/input/QLStartExecutionInput.java
 71-rest/src/main/java/software/wings/graphql/schema/mutation/execution/input/QLVariableInput.java

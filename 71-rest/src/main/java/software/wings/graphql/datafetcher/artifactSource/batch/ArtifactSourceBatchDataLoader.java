@@ -1,6 +1,8 @@
 package software.wings.graphql.datafetcher.artifactSource.batch;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static software.wings.graphql.datafetcher.artifactSource.ArtifactSourceController.populateArtifactSource;
 
 import com.google.inject.Inject;
 
@@ -8,18 +10,16 @@ import io.harness.annotations.dev.OwnedBy;
 import org.apache.commons.collections4.CollectionUtils;
 import org.dataloader.MappedBatchLoader;
 import software.wings.beans.artifact.ArtifactStream;
-import software.wings.graphql.datafetcher.artifactSource.ArtifactSourceController;
 import software.wings.graphql.schema.type.artifactSource.QLArtifactSource;
 import software.wings.service.intfc.ArtifactStreamService;
 
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
-import java.util.function.Function;
-import java.util.stream.Collectors;
 import javax.validation.constraints.NotNull;
 
 @OwnedBy(CDC)
@@ -46,9 +46,17 @@ public class ArtifactSourceBatchDataLoader implements MappedBatchLoader<String, 
 
   public Map<String, QLArtifactSource> getArtifactSourceMap(@NotNull Set<String> artifactSourceIds) {
     List<ArtifactStream> artifactStreamList = artifactStreamService.listByIds(artifactSourceIds);
-
-    return artifactStreamList.stream()
-        .map(ArtifactSourceController::populateArtifactSource)
-        .collect(Collectors.toMap(QLArtifactSource::getId, Function.identity()));
+    Map<String, QLArtifactSource> result = new HashMap<>();
+    if (isNotEmpty(artifactStreamList)) {
+      for (ArtifactStream artifactStream : artifactStreamList) {
+        if (!artifactStream.isArtifactStreamParameterized()) {
+          result.put(artifactStream.getUuid(), populateArtifactSource(artifactStream));
+        } else {
+          List<String> parameters = artifactStreamService.getArtifactStreamParameters(artifactStream.getUuid());
+          result.put(artifactStream.getUuid(), populateArtifactSource(artifactStream, parameters));
+        }
+      }
+    }
+    return result;
   }
 }

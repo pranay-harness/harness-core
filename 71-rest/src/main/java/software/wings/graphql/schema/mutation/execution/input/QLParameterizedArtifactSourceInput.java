@@ -1,4 +1,4 @@
-package software.wings.graphql.schema.type.artifactSource;
+package software.wings.graphql.schema.mutation.execution.input;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 
@@ -14,12 +14,10 @@ import java.util.List;
 @OwnedBy(CDC)
 @Value
 @Builder
-@FieldNameConstants(innerTypeName = "QLNexusArtifactSourceKeys")
-@Scope(PermissionAttribute.ResourceType.SERVICE)
-public class QLNexusArtifactSource implements QLArtifactSource {
-  String name;
-  String id;
-  Long createdAt;
-  List<String> parameters;
-  QLNexusProps properties;
+@FieldNameConstants(innerTypeName = "QLParameterizedArtifactSourceInputKeys")
+@Scope(PermissionAttribute.ResourceType.DEPLOYMENT)
+public class QLParameterizedArtifactSourceInput {
+  String artifactSourceName;
+  String buildNumber;
+  List<QLParameterValueInput> parameterValueInputs;
 }

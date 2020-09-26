@@ -29,16 +29,20 @@ import software.wings.graphql.schema.mutation.execution.input.QLArtifactIdInput;
 import software.wings.graphql.schema.mutation.execution.input.QLArtifactInputType;
 import software.wings.graphql.schema.mutation.execution.input.QLArtifactValueInput;
 import software.wings.graphql.schema.mutation.execution.input.QLBuildNumberInput;
+import software.wings.graphql.schema.mutation.execution.input.QLParameterValueInput;
+import software.wings.graphql.schema.mutation.execution.input.QLParameterizedArtifactSourceInput;
 import software.wings.graphql.schema.mutation.execution.input.QLServiceInput;
 import software.wings.graphql.schema.mutation.execution.input.QLStartExecutionInput;
 import software.wings.graphql.schema.type.QLExecutionStatus;
 import software.wings.resources.graphql.TriggeredByType;
+import software.wings.service.ArtifactStreamHelper;
 import software.wings.service.intfc.ArtifactCollectionService;
 import software.wings.service.intfc.ArtifactService;
 import software.wings.service.intfc.ArtifactStreamService;
 import software.wings.service.intfc.ServiceResourceService;
 
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -55,6 +59,7 @@ public class ExecutionController {
   @Inject ArtifactStreamService artifactStreamService;
   @Inject @Named("AsyncArtifactCollectionService") private ArtifactCollectionService artifactCollectionServiceAsync;
   @Inject ServiceResourceService serviceResourceService;
+  @Inject ArtifactStreamHelper artifactStreamHelper;
 
   public static QLExecutionStatus convertStatus(ExecutionStatus status) {
     switch (status) {
@@ -184,7 +189,6 @@ public class ExecutionController {
         artifactStreamService.getArtifactStreamByName(service.getAppId(), service.getUuid(), artifactSourceName);
     notNullCheck("Cannot find artifact Source: " + artifactSourceName + " in specified service: " + service.getName(),
         artifactStream, USER);
-
     Artifact artifact = getArtifactForBuildNumber(service.getAppId(), artifactStream, buildNumber.getBuildNumber());
     notNullCheck(
         "Cannot find or collect artifact for specified Build Number: " + buildNumber.getBuildNumber(), artifact, USER);
@@ -202,6 +206,66 @@ public class ExecutionController {
 
   private Artifact collectNewArtifactForBuildNumber(String appId, ArtifactStream artifactStream, String buildNumber) {
     Artifact artifact = artifactCollectionServiceAsync.collectNewArtifacts(appId, artifactStream, buildNumber);
+    if (artifact != null) {
+      logger.info("Artifact {} collected for the build number {} of stream id {}", artifact, buildNumber,
+          artifactStream.getUuid());
+    } else {
+      logger.warn(
+          "Artifact collection invoked. However, Artifact not yet collected for the build number {} of stream id {}",
+          buildNumber, artifactStream.getUuid());
+    }
+    return artifact;
+  }
+  private Artifact getArtifactFromBuildNumberAndParameters(
+      QLParameterizedArtifactSourceInput parameterizedArtifactSourceInput, Service service) {
+    String artifactSourceName = parameterizedArtifactSourceInput.getArtifactSourceName();
+
+    if (isEmpty(artifactSourceName)) {
+      throw new InvalidRequestException(
+          "Artifact Source name cannot be empty for serviceInput: " + service.getName(), USER);
+    }
+
+    if (isEmpty(parameterizedArtifactSourceInput.getBuildNumber())) {
+      throw new InvalidRequestException("Build Number cannot be empty for serviceInput: " + service.getName(), USER);
+    }
+
+    ArtifactStream artifactStream =
+        artifactStreamService.getArtifactStreamByName(service.getAppId(), service.getUuid(), artifactSourceName);
+    notNullCheck("Cannot find artifact Source: " + artifactSourceName + " in specified service: " + service.getName(),
+        artifactStream, USER);
+    if (!artifactStream.isArtifactStreamParameterized()) {
+      throw new InvalidRequestException(
+          "Parameterized Artifact Source valueType cannot be used for non-parameterized artifact source");
+    } else {
+      List<QLParameterValueInput> parameterValueInputs = parameterizedArtifactSourceInput.getParameterValueInputs();
+      if (isEmpty(parameterValueInputs)) {
+        throw new InvalidRequestException(
+            "Artifact Source is parameterized. However, runtime values for parameters not provided", USER);
+      }
+      Map<String, Object> runtimeValues = new HashMap<>();
+      for (QLParameterValueInput parameterValueInput : parameterValueInputs) {
+        runtimeValues.put(parameterValueInput.getName(), parameterValueInput.getValue());
+      }
+      runtimeValues.put("buildNo", parameterizedArtifactSourceInput.getBuildNumber());
+      artifactStreamHelper.resolveArtifactStreamRuntimeValues(artifactStream, runtimeValues);
+      artifactStream.setSourceName(artifactStream.generateSourceName());
+      Artifact collectedArtifactForBuildNumber = artifactService.getArtifactByBuildNumberAndSourceName(
+          artifactStream, parameterizedArtifactSourceInput.getBuildNumber(), false, artifactStream.getSourceName());
+      if (collectedArtifactForBuildNumber == null) {
+        collectedArtifactForBuildNumber = collectNewArtifactForBuildNumber(artifactStream.getAppId(), artifactStream,
+            parameterizedArtifactSourceInput.getBuildNumber(), runtimeValues);
+      }
+      notNullCheck("Cannot find or collect artifact for specified Build Number: "
+              + parameterizedArtifactSourceInput.getBuildNumber(),
+          collectedArtifactForBuildNumber, USER);
+      return collectedArtifactForBuildNumber;
+    }
+  }
+
+  private Artifact collectNewArtifactForBuildNumber(
+      String appId, ArtifactStream artifactStream, String buildNumber, Map<String, Object> artifactVariables) {
+    Artifact artifact =
+        artifactCollectionServiceAsync.collectNewArtifacts(appId, artifactStream, buildNumber, artifactVariables);
     if (artifact != null) {
       logger.info("Artifact {} collected for the build number {} of stream id {}", artifact, buildNumber,
           artifactStream.getUuid());
@@ -240,6 +304,13 @@ public class ExecutionController {
               "BuildNumberInput is required for the service Input: " + serviceName + "for value type as BUILD_NUMBER",
               artifactValueInput.getBuildNumber(), USER);
           artifacts.add(getArtifactFromBuildNumber(artifactValueInput.getBuildNumber(), service));
+          continue;
+        case PARAMETERIZED_ARTIFACT_SOURCE:
+          notNullCheck("ParameterizedArtifactSourceInput is required for the service Input: " + serviceName
+                  + "for value type as PARAMETERIZED_ARTIFACT_SOURCE",
+              artifactValueInput.getParameterizedArtifactSource(), USER);
+          artifacts.add(
+              getArtifactFromBuildNumberAndParameters(artifactValueInput.getParameterizedArtifactSource(), service));
           continue;
         default:
           throw new UnsupportedOperationException("Unexpected artifact value type: " + type);

@@ -1,6 +1,8 @@
 package software.wings.graphql.datafetcher.artifactSource;
 
+import static io.harness.rule.OwnerRule.AADITI;
 import static io.harness.rule.OwnerRule.PRABU;
+import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static software.wings.beans.artifact.ArtifactStreamType.ACR;
 import static software.wings.beans.artifact.ArtifactStreamType.AMAZON_S3;
@@ -16,6 +18,7 @@ import static software.wings.beans.artifact.ArtifactStreamType.JENKINS;
 import static software.wings.beans.artifact.ArtifactStreamType.NEXUS;
 import static software.wings.beans.artifact.ArtifactStreamType.SFTP;
 import static software.wings.beans.artifact.ArtifactStreamType.SMB;
+import static software.wings.graphql.datafetcher.artifactSource.ArtifactSourceTestHelper.getNexusArtifactStream;
 import static software.wings.utils.WingsTestConstants.ARTIFACT_PATH;
 import static software.wings.utils.WingsTestConstants.ARTIFACT_STREAM_ID;
 import static software.wings.utils.WingsTestConstants.ARTIFACT_STREAM_NAME;
@@ -70,13 +73,29 @@ import software.wings.graphql.schema.type.artifactSource.QLSFTPArtifactSource;
 import software.wings.graphql.schema.type.artifactSource.QLSMBArtifactSource;
 import software.wings.utils.RepositoryFormat;
 
-import java.util.Arrays;
 import java.util.List;
 
 public class ArtifactSourceControllerTest extends WingsBaseTest {
   private static final String REGION = "REGION";
   private static final String REGISRTY_NAME = "REGISRTY_NAME";
-  private static final List<String> artifactPaths = Arrays.asList(ARTIFACT_PATH, ARTIFACT_PATH + "2");
+  private static final List<String> artifactPaths = asList(ARTIFACT_PATH, ARTIFACT_PATH + "2");
+
+  @Test
+  @Owner(developers = AADITI)
+  @Category(UnitTests.class)
+  public void shouldReturnParameterizedNexus2ArtifactSource() {
+    NexusArtifactStream nexusArtifactStream = getNexusArtifactStream(SETTING_ID, ARTIFACT_STREAM_ID);
+    List<String> parameters = asList("repo", "groupId", "path");
+    QLArtifactSource qlArtifactSource =
+        ArtifactSourceController.populateArtifactSource(nexusArtifactStream, parameters);
+    assertThat(qlArtifactSource).isNotNull();
+    assertThat(qlArtifactSource).isInstanceOf(QLNexusArtifactSource.class);
+    QLNexusArtifactSource qlNexusArtifactSource = (QLNexusArtifactSource) qlArtifactSource;
+    assertThat(qlNexusArtifactSource.getName()).isEqualTo("testNexus");
+    assertThat(qlNexusArtifactSource.getId()).isEqualTo(ARTIFACT_STREAM_ID);
+    assertThat(qlNexusArtifactSource.getParameters().size()).isEqualTo(3);
+    assertThat(qlNexusArtifactSource.getParameters()).containsAll(asList("repo", "groupId", "path"));
+  }
 
   @Test
   @Owner(developers = PRABU)
@@ -123,7 +142,7 @@ public class ArtifactSourceControllerTest extends WingsBaseTest {
     tag2.setKey(key2);
     final String value2 = "value2";
     tag2.setValue(value2);
-    List<AmiArtifactStream.Tag> tags = Arrays.asList(tag1, tag2);
+    List<AmiArtifactStream.Tag> tags = asList(tag1, tag2);
     AmiArtifactStream amiArtifactStream = AmiArtifactStream.builder()
                                               .uuid(ARTIFACT_STREAM_ID)
                                               .createdAt(LONG_DEFAULT_VALUE)
