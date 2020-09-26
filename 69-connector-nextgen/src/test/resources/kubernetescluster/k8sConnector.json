@@ -11,14 +11,16 @@
     ],
     "type": "K8sCluster",
     "spec": {
-      "type": "ManualConfig",
-      "spec": {
-        "masterUrl": "https://abc.com",
-        "auth": {
-          "type": "UsernamePassword",
-          "spec": {
-            "username": "userName",
-            "passwordRef": "acc.passwordRef"
+      "credential": {
+        "type": "ManualConfig",
+        "spec": {
+          "masterUrl": "https://abc.com",
+          "auth": {
+            "type": "UsernamePassword",
+            "spec": {
+              "username": "userName",
+              "passwordRef": "acc.passwordRef"
+            }
           }
         }
       }

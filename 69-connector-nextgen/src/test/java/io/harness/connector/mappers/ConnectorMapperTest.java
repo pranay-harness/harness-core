@@ -25,6 +25,7 @@ import io.harness.delegate.beans.connector.k8Connector.KubernetesAuthDTO;
 import io.harness.delegate.beans.connector.k8Connector.KubernetesAuthType;
 import io.harness.delegate.beans.connector.k8Connector.KubernetesClusterConfigDTO;
 import io.harness.delegate.beans.connector.k8Connector.KubernetesClusterDetailsDTO;
+import io.harness.delegate.beans.connector.k8Connector.KubernetesCredentialDTO;
 import io.harness.delegate.beans.connector.k8Connector.KubernetesUserNamePasswordDTO;
 import io.harness.encryption.Scope;
 import io.harness.encryption.SecretRefData;
@@ -73,8 +74,11 @@ public class ConnectorMapperTest extends CategoryTest {
             .build();
     KubernetesClusterConfigDTO connectorDTOWithUserNamePassword =
         KubernetesClusterConfigDTO.builder()
-            .kubernetesCredentialType(MANUAL_CREDENTIALS)
-            .config(KubernetesClusterDetailsDTO.builder().masterUrl(masterURL).auth(kubernetesAuthDTO).build())
+            .credential(
+                KubernetesCredentialDTO.builder()
+                    .kubernetesCredentialType(MANUAL_CREDENTIALS)
+                    .config(KubernetesClusterDetailsDTO.builder().masterUrl(masterURL).auth(kubernetesAuthDTO).build())
+                    .build())
             .build();
     when(kubernetesEntityToDTO.createConnectorDTO(any())).thenReturn(connectorDTOWithUserNamePassword);
   }
@@ -90,8 +94,11 @@ public class ConnectorMapperTest extends CategoryTest {
             .build();
     KubernetesClusterConfigDTO connectorDTOWithDelegateCreds =
         KubernetesClusterConfigDTO.builder()
-            .kubernetesCredentialType(MANUAL_CREDENTIALS)
-            .config(KubernetesClusterDetailsDTO.builder().masterUrl(masterURL).auth(kubernetesAuthDTO).build())
+            .credential(
+                KubernetesCredentialDTO.builder()
+                    .kubernetesCredentialType(MANUAL_CREDENTIALS)
+                    .config(KubernetesClusterDetailsDTO.builder().masterUrl(masterURL).auth(kubernetesAuthDTO).build())
+                    .build())
             .build();
     ConnectorRequestDTO connectorRequestDTO = ConnectorRequestDTO.builder()
                                                   .name(name)

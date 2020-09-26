@@ -38,9 +38,10 @@ public class KubernetesTestConnectionDelegateTask extends AbstractDelegateRunnab
   public KubernetesConnectionTaskResponse run(TaskParameters parameters) {
     KubernetesConnectionTaskParams kubernetesConnectionTaskParams = (KubernetesConnectionTaskParams) parameters;
     KubernetesClusterConfigDTO kubernetesClusterConfig = kubernetesConnectionTaskParams.getKubernetesClusterConfig();
-    if (kubernetesClusterConfig.getKubernetesCredentialType() == KubernetesCredentialType.MANUAL_CREDENTIALS) {
-      KubernetesAuthCredentialDTO kubernetesCredentialAuth =
-          getKubernetesCredentialsAuth((KubernetesClusterDetailsDTO) kubernetesClusterConfig.getConfig());
+    if (kubernetesClusterConfig.getCredential().getKubernetesCredentialType()
+        == KubernetesCredentialType.MANUAL_CREDENTIALS) {
+      KubernetesAuthCredentialDTO kubernetesCredentialAuth = getKubernetesCredentialsAuth(
+          (KubernetesClusterDetailsDTO) kubernetesClusterConfig.getCredential().getConfig());
       secretDecryptionService.decrypt(kubernetesCredentialAuth, kubernetesConnectionTaskParams.getEncryptionDetails());
     }
     Exception execptionInProcessing = null;

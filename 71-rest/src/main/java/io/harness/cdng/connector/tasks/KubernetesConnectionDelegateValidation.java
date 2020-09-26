@@ -34,15 +34,17 @@ public class KubernetesConnectionDelegateValidation extends AbstractDelegateVali
       throw new UnexpectedException("INVALID PARAMETER: Expecting the input of type KubernetesConnectionTaskParams");
     }
     boolean validated = false;
-    if (kubernetesClusterConfig.getKubernetesCredentialType() == KubernetesCredentialType.INHERIT_FROM_DELEGATE) {
-      validated = ((KubernetesDelegateDetailsDTO) kubernetesClusterConfig.getConfig())
+    if (kubernetesClusterConfig.getCredential().getKubernetesCredentialType()
+        == KubernetesCredentialType.INHERIT_FROM_DELEGATE) {
+      validated = ((KubernetesDelegateDetailsDTO) kubernetesClusterConfig.getCredential().getConfig())
                       .getDelegateName()
                       .equals(System.getenv().get("DELEGATE_NAME"));
     } else {
       String url;
-      url = "None".equals(((KubernetesClusterDetailsDTO) kubernetesClusterConfig.getConfig()).getMasterUrl())
+      url = "None".equals(
+                ((KubernetesClusterDetailsDTO) kubernetesClusterConfig.getCredential().getConfig()).getMasterUrl())
           ? "https://container.googleapis.com/"
-          : ((KubernetesClusterDetailsDTO) kubernetesClusterConfig.getConfig()).getMasterUrl();
+          : ((KubernetesClusterDetailsDTO) kubernetesClusterConfig.getCredential().getConfig()).getMasterUrl();
       validated = connectableHttpUrl(url);
     }
     return singletonList(DelegateConnectionResult.builder().criteria("").validated(validated).build());
@@ -58,15 +60,19 @@ public class KubernetesConnectionDelegateValidation extends AbstractDelegateVali
     } else {
       throw new UnexpectedException("INVALID PARAMETER: Expecting the input of type KubernetesConnectionTaskParams");
     }
-    if (kubernetesClusterConfig.getKubernetesCredentialType() == KubernetesCredentialType.INHERIT_FROM_DELEGATE) {
-      String delegateName = ((KubernetesDelegateDetailsDTO) kubernetesClusterConfig.getConfig()).getDelegateName();
-      return Collections.singletonList(delegateName);
-    } else if (kubernetesClusterConfig.getKubernetesCredentialType() == KubernetesCredentialType.MANUAL_CREDENTIALS) {
-      String masterUrl = ((KubernetesClusterDetailsDTO) kubernetesClusterConfig.getConfig()).getMasterUrl();
+    if (kubernetesClusterConfig.getCredential().getKubernetesCredentialType()
+        == KubernetesCredentialType.INHERIT_FROM_DELEGATE) {
+      KubernetesDelegateDetailsDTO k8sDelegateDetails =
+          (KubernetesDelegateDetailsDTO) kubernetesClusterConfig.getCredential().getConfig();
+      return Collections.singletonList(k8sDelegateDetails.getDelegateName());
+    } else if (kubernetesClusterConfig.getCredential().getKubernetesCredentialType()
+        == KubernetesCredentialType.MANUAL_CREDENTIALS) {
+      String masterUrl =
+          ((KubernetesClusterDetailsDTO) kubernetesClusterConfig.getCredential().getConfig()).getMasterUrl();
       return Collections.singletonList(masterUrl);
     } else {
-      throw new UnsupportedOperationException(
-          String.format("Invalid kubernetes cofing type [%s]", kubernetesClusterConfig.getKubernetesCredentialType()));
+      throw new UnsupportedOperationException(String.format("Invalid kubernetes cofing type [%s]",
+          kubernetesClusterConfig.getCredential().getKubernetesCredentialType()));
     }
   }
 }

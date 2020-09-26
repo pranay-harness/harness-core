@@ -142,8 +142,10 @@ public class K8sTaskNG extends AbstractDelegateRunnableTask {
       DirectK8sInfraDelegateConfig directK8sInfraDelegateConfig = (DirectK8sInfraDelegateConfig) k8sInfraDelegateConfig;
 
       KubernetesClusterConfigDTO clusterConfigDTO = directK8sInfraDelegateConfig.getKubernetesClusterConfigDTO();
-      if (clusterConfigDTO.getKubernetesCredentialType() == KubernetesCredentialType.MANUAL_CREDENTIALS) {
-        KubernetesClusterDetailsDTO clusterDetailsDTO = (KubernetesClusterDetailsDTO) clusterConfigDTO.getConfig();
+      if (clusterConfigDTO.getCredential().getKubernetesCredentialType()
+          == KubernetesCredentialType.MANUAL_CREDENTIALS) {
+        KubernetesClusterDetailsDTO clusterDetailsDTO =
+            (KubernetesClusterDetailsDTO) clusterConfigDTO.getCredential().getConfig();
         KubernetesAuthCredentialDTO authCredentialDTO = clusterDetailsDTO.getAuth().getCredentials();
         secretDecryptionService.decrypt(authCredentialDTO, directK8sInfraDelegateConfig.getEncryptionDataDetails());
       }

@@ -11,6 +11,6 @@ import javax.validation.constraints.NotNull;
 @Builder
 @JsonIgnoreProperties(ignoreUnknown = true)
 @JsonTypeName("InheritFromDelegate")
-public class KubernetesDelegateDetailsDTO implements KubernetesCredentialDTO {
+public class KubernetesDelegateDetailsDTO implements KubernetesCredentialSpecDTO {
   @NotNull String delegateName;
 }

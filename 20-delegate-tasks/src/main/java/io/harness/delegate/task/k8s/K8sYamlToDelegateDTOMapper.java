@@ -29,7 +29,7 @@ public class K8sYamlToDelegateDTOMapper {
   public KubernetesConfig createKubernetesConfigFromClusterConfig(
       KubernetesClusterConfigDTO clusterConfigDTO, String namespace) {
     String namespaceNotBlank = isNotBlank(namespace) ? namespace : "default";
-    KubernetesCredentialType kubernetesCredentialType = clusterConfigDTO.getKubernetesCredentialType();
+    KubernetesCredentialType kubernetesCredentialType = clusterConfigDTO.getCredential().getKubernetesCredentialType();
 
     switch (kubernetesCredentialType) {
       case INHERIT_FROM_DELEGATE:
@@ -41,7 +41,7 @@ public class K8sYamlToDelegateDTOMapper {
 
       case MANUAL_CREDENTIALS:
         return getKubernetesConfigFromManualCredentials(
-            (KubernetesClusterDetailsDTO) (clusterConfigDTO.getConfig()), namespaceNotBlank);
+            (KubernetesClusterDetailsDTO) (clusterConfigDTO.getCredential().getConfig()), namespaceNotBlank);
 
       default:
         throw new UnsupportedOperationException(

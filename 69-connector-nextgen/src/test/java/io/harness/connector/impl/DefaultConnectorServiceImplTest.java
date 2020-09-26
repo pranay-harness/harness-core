@@ -31,6 +31,7 @@ import io.harness.delegate.beans.connector.k8Connector.KubernetesAuthDTO;
 import io.harness.delegate.beans.connector.k8Connector.KubernetesAuthType;
 import io.harness.delegate.beans.connector.k8Connector.KubernetesClusterConfigDTO;
 import io.harness.delegate.beans.connector.k8Connector.KubernetesClusterDetailsDTO;
+import io.harness.delegate.beans.connector.k8Connector.KubernetesCredentialDTO;
 import io.harness.delegate.beans.connector.k8Connector.KubernetesUserNamePasswordDTO;
 import io.harness.encryption.Scope;
 import io.harness.encryption.SecretRefData;
@@ -96,16 +97,18 @@ public class DefaultConnectorServiceImplTest extends ConnectorsBaseTest {
             .credentials(
                 KubernetesUserNamePasswordDTO.builder().username(userName).passwordRef(passwordSecretRef).build())
             .build();
-    KubernetesClusterConfigDTO connectorDTOWithDelegateCreds =
-        KubernetesClusterConfigDTO.builder()
+    KubernetesCredentialDTO connectorDTOWithDelegateCreds =
+        KubernetesCredentialDTO.builder()
             .kubernetesCredentialType(MANUAL_CREDENTIALS)
             .config(KubernetesClusterDetailsDTO.builder().masterUrl(masterUrl).auth(kubernetesAuthDTO).build())
             .build();
+    KubernetesClusterConfigDTO k8sClusterConfig =
+        KubernetesClusterConfigDTO.builder().credential(connectorDTOWithDelegateCreds).build();
     return ConnectorRequestDTO.builder()
         .name(name)
         .identifier(connectorIdentifier)
         .connectorType(KUBERNETES_CLUSTER)
-        .connectorConfig(connectorDTOWithDelegateCreds)
+        .connectorConfig(k8sClusterConfig)
         .build();
   }
 
@@ -141,16 +144,18 @@ public class DefaultConnectorServiceImplTest extends ConnectorsBaseTest {
             .credentials(
                 KubernetesUserNamePasswordDTO.builder().username(updatedUserName).passwordRef(passwordRefData).build())
             .build();
-    KubernetesClusterConfigDTO connectorDTOWithUserNamePwdCreds =
-        KubernetesClusterConfigDTO.builder()
+    KubernetesCredentialDTO connectorDTOWithUserNamePwdCreds =
+        KubernetesCredentialDTO.builder()
             .kubernetesCredentialType(MANUAL_CREDENTIALS)
             .config(KubernetesClusterDetailsDTO.builder().masterUrl(updatedMasterUrl).auth(kubernetesAuthDTO).build())
             .build();
+    KubernetesClusterConfigDTO k8sClusterConfig =
+        KubernetesClusterConfigDTO.builder().credential(connectorDTOWithUserNamePwdCreds).build();
     ConnectorRequestDTO newConnectorRequestDTO = ConnectorRequestDTO.builder()
                                                      .name(updatedName)
                                                      .identifier(identifier)
                                                      .connectorType(KUBERNETES_CLUSTER)
-                                                     .connectorConfig(connectorDTOWithUserNamePwdCreds)
+                                                     .connectorConfig(k8sClusterConfig)
                                                      .build();
 
     ConnectorDTO connectorDTOOutput = connectorService.update(newConnectorRequestDTO, accountIdentifier);
@@ -160,9 +165,10 @@ public class DefaultConnectorServiceImplTest extends ConnectorsBaseTest {
     assertThat(connectorDTOOutput.getConnectorType()).isEqualTo(KUBERNETES_CLUSTER);
     KubernetesClusterConfigDTO kubernetesCluster = (KubernetesClusterConfigDTO) connectorDTOOutput.getConnectorConfig();
     assertThat(kubernetesCluster).isNotNull();
-    assertThat(kubernetesCluster.getConfig()).isNotNull();
-    assertThat(kubernetesCluster.getKubernetesCredentialType()).isEqualTo(MANUAL_CREDENTIALS);
-    KubernetesClusterDetailsDTO credentialDTO = (KubernetesClusterDetailsDTO) kubernetesCluster.getConfig();
+    assertThat(kubernetesCluster.getCredential().getConfig()).isNotNull();
+    assertThat(kubernetesCluster.getCredential().getKubernetesCredentialType()).isEqualTo(MANUAL_CREDENTIALS);
+    KubernetesClusterDetailsDTO credentialDTO =
+        (KubernetesClusterDetailsDTO) kubernetesCluster.getCredential().getConfig();
     assertThat(credentialDTO).isNotNull();
     assertThat(credentialDTO.getMasterUrl()).isNotNull();
     assertThat(credentialDTO.getMasterUrl()).isEqualTo(updatedMasterUrl);
@@ -224,9 +230,10 @@ public class DefaultConnectorServiceImplTest extends ConnectorsBaseTest {
     assertThat(connectorDTOOutput.getConnectorType()).isEqualTo(KUBERNETES_CLUSTER);
     KubernetesClusterConfigDTO kubernetesCluster = (KubernetesClusterConfigDTO) connectorDTOOutput.getConnectorConfig();
     assertThat(kubernetesCluster).isNotNull();
-    assertThat(kubernetesCluster.getConfig()).isNotNull();
-    assertThat(kubernetesCluster.getKubernetesCredentialType()).isEqualTo(MANUAL_CREDENTIALS);
-    KubernetesClusterDetailsDTO credentialDTO = (KubernetesClusterDetailsDTO) kubernetesCluster.getConfig();
+    assertThat(kubernetesCluster.getCredential().getConfig()).isNotNull();
+    assertThat(kubernetesCluster.getCredential().getKubernetesCredentialType()).isEqualTo(MANUAL_CREDENTIALS);
+    KubernetesClusterDetailsDTO credentialDTO =
+        (KubernetesClusterDetailsDTO) kubernetesCluster.getCredential().getConfig();
     assertThat(credentialDTO).isNotNull();
     assertThat(credentialDTO.getMasterUrl()).isNotNull();
     KubernetesUserNamePasswordDTO kubernetesUserNamePasswordDTO =
@@ -279,16 +286,18 @@ public class DefaultConnectorServiceImplTest extends ConnectorsBaseTest {
                     .passwordRef(SecretRefData.builder().identifier(passwordIdentifier).scope(Scope.ACCOUNT).build())
                     .build())
             .build();
-    KubernetesClusterConfigDTO connectorDTOWithDelegateCreds =
-        KubernetesClusterConfigDTO.builder()
+    KubernetesCredentialDTO connectorDTOWithDelegateCreds =
+        KubernetesCredentialDTO.builder()
             .kubernetesCredentialType(MANUAL_CREDENTIALS)
             .config(KubernetesClusterDetailsDTO.builder().masterUrl(masterUrl).auth(kubernetesAuthDTO).build())
             .build();
+    KubernetesClusterConfigDTO k8sClusterConfig =
+        KubernetesClusterConfigDTO.builder().credential(connectorDTOWithDelegateCreds).build();
     ConnectorRequestDTO connectorRequestDTO = ConnectorRequestDTO.builder()
                                                   .name(name)
                                                   .identifier(identifier)
                                                   .connectorType(KUBERNETES_CLUSTER)
-                                                  .connectorConfig(connectorDTOWithDelegateCreds)
+                                                  .connectorConfig(k8sClusterConfig)
                                                   .build();
 
     when(connectionValidatorMap.get(any())).thenReturn(kubernetesConnectionValidator);
