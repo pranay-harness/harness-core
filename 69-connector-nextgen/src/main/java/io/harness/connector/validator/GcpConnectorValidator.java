@@ -31,7 +31,7 @@ public class GcpConnectorValidator extends AbstractConnectorValidator implements
         final GcpDelegateDetailsDTO config = (GcpDelegateDetailsDTO) gcpConnector.getConfig();
         return gcpValidationRequestBuilder.delegateSelector(config.getDelegateSelector()).build();
       default:
-        throw new InvalidRequestException("Invalid credential type");
+        throw new InvalidRequestException("Invalid credential type: " + gcpConnector.getGcpCredentialType());
     }
   }
 

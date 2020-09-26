@@ -11,6 +11,8 @@ import io.harness.connector.mappers.ConnectorEntityToDTOMapper;
 import io.harness.connector.mappers.appdynamicsmapper.AppDynamicsConnectorSummaryMapper;
 import io.harness.connector.mappers.appdynamicsmapper.AppDynamicsDTOToEntity;
 import io.harness.connector.mappers.appdynamicsmapper.AppDynamicsEntityToDTO;
+import io.harness.connector.mappers.awsmapper.AwsDTOToEntity;
+import io.harness.connector.mappers.awsmapper.AwsEntityToDTO;
 import io.harness.connector.mappers.docker.DockerConnectorSummaryMapper;
 import io.harness.connector.mappers.docker.DockerDTOToEntity;
 import io.harness.connector.mappers.docker.DockerEntityToDTO;
@@ -75,6 +77,7 @@ public class ConnectorModule extends AbstractModule {
     connectorDTOToEntityMapBinder.addBinding(ConnectorType.LOCAL.getDisplayName()).to(LocalDTOToEntity.class);
     connectorDTOToEntityMapBinder.addBinding(ConnectorType.DOCKER.getDisplayName()).to(DockerDTOToEntity.class);
     connectorDTOToEntityMapBinder.addBinding(ConnectorType.GCP.getDisplayName()).to(GcpDTOToEntity.class);
+    connectorDTOToEntityMapBinder.addBinding(ConnectorType.AWS.getDisplayName()).to(AwsDTOToEntity.class);
 
     MapBinder<String, ConnectorEntityToDTOMapper> connectorEntityToDTOMapper =
         MapBinder.newMapBinder(binder(), String.class, ConnectorEntityToDTOMapper.class);
@@ -88,6 +91,7 @@ public class ConnectorModule extends AbstractModule {
     connectorEntityToDTOMapper.addBinding(ConnectorType.LOCAL.getDisplayName()).to(LocalEntityToDTO.class);
     connectorEntityToDTOMapper.addBinding(ConnectorType.DOCKER.getDisplayName()).to(DockerEntityToDTO.class);
     connectorEntityToDTOMapper.addBinding(ConnectorType.GCP.getDisplayName()).to(GcpEntityToDTO.class);
+    connectorEntityToDTOMapper.addBinding(ConnectorType.AWS.getDisplayName()).to(AwsEntityToDTO.class);
 
     MapBinder<String, ConnectorConfigSummaryDTOMapper> connectorConfigSummaryDTOMapper =
         MapBinder.newMapBinder(binder(), String.class, ConnectorConfigSummaryDTOMapper.class);

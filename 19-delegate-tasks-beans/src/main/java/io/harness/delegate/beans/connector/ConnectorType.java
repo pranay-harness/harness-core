@@ -18,7 +18,8 @@ public enum ConnectorType {
   @JsonProperty("Azurevault") AZURE_VAULT("Azurevault"),
   @JsonProperty("Cyberark") CYBERARK("Cyberark"),
   @JsonProperty("CustomSecretManager") CUSTOM("CustomSecretManager"),
-  @JsonProperty("Gcp") GCP("Gcp");
+  @JsonProperty("Gcp") GCP("Gcp"),
+  @JsonProperty("Aws") AWS("Aws");
 
   private final String displayName;
 

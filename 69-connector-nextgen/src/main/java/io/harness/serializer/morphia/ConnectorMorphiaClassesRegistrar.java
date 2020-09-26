@@ -2,6 +2,9 @@ package io.harness.serializer.morphia;
 
 import io.harness.connector.entities.Connector;
 import io.harness.connector.entities.embedded.appdynamicsconnector.AppDynamicsConnector;
+import io.harness.connector.entities.embedded.awsconnector.AwsAccessKeyCredential;
+import io.harness.connector.entities.embedded.awsconnector.AwsConfig;
+import io.harness.connector.entities.embedded.awsconnector.AwsIamCredential;
 import io.harness.connector.entities.embedded.docker.DockerConnector;
 import io.harness.connector.entities.embedded.gcpconnector.GcpConfig;
 import io.harness.connector.entities.embedded.gcpconnector.GcpDelegateDetails;
@@ -38,6 +41,7 @@ public class ConnectorMorphiaClassesRegistrar implements MorphiaRegistrar {
     set.add(SplunkConnector.class);
     set.add(DockerConnector.class);
     set.add(GcpConfig.class);
+    set.add(AwsConfig.class);
   }
 
   @Override
@@ -53,5 +57,7 @@ public class ConnectorMorphiaClassesRegistrar implements MorphiaRegistrar {
         GitUserNamePasswordAuthentication.class);
     h.put("connector.entities.embedded.gcpconnector.GcpDelegateDetails", GcpDelegateDetails.class);
     h.put("connector.entities.embedded.gcpconnector.GcpServiceAccountKey", GcpServiceAccountKey.class);
+    h.put("connector.entities.embedded.awsconnector.AwsIamCredential", AwsIamCredential.class);
+    h.put("connector.entities.embedded.awsconnector.AwsAccessKeyCredential", AwsAccessKeyCredential.class);
   }
 }
