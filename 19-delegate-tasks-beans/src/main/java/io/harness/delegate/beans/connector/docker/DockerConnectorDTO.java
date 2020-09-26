@@ -10,6 +10,8 @@ import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import lombok.experimental.FieldDefaults;
 
+import javax.validation.constraints.NotNull;
+
 @Data
 @Builder
 @NoArgsConstructor
@@ -18,6 +20,6 @@ import lombok.experimental.FieldDefaults;
 @JsonIgnoreProperties(ignoreUnknown = true)
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class DockerConnectorDTO extends ConnectorConfigDTO {
-  String dockerRegistryUrl;
+  @NotNull String dockerRegistryUrl;
   DockerAuthenticationDTO auth;
 }

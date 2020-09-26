@@ -10,8 +10,8 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import lombok.experimental.FieldDefaults;
-import org.hibernate.validator.constraints.NotBlank;
 
+import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 
 @Data
@@ -20,14 +20,15 @@ import javax.validation.constraints.NotNull;
 @JsonIgnoreProperties(ignoreUnknown = true)
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class GitConfigDTO extends ConnectorConfigDTO {
-  @JsonProperty("type") GitAuthType gitAuthType;
-  @JsonProperty("connectionType") GitConnectionType gitConnectionType;
-  @NotBlank String url;
+  @NotNull @JsonProperty("type") GitAuthType gitAuthType;
+  @NotNull @JsonProperty("connectionType") GitConnectionType gitConnectionType;
+  @NotNull String url;
   String branchName;
 
   @JsonProperty("spec")
   @JsonTypeInfo(
       use = JsonTypeInfo.Id.NAME, property = "type", include = JsonTypeInfo.As.EXTERNAL_PROPERTY, visible = true)
+  @Valid
   @NotNull
   GitAuthenticationDTO gitAuth;
 

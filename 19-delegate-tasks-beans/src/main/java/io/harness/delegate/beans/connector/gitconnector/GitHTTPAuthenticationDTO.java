@@ -7,7 +7,6 @@ import io.swagger.annotations.ApiModelProperty;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
-import org.hibernate.validator.constraints.NotBlank;
 
 import javax.validation.constraints.NotNull;
 
@@ -16,6 +15,6 @@ import javax.validation.constraints.NotNull;
 @EqualsAndHashCode(callSuper = true)
 @JsonTypeName("Http")
 public class GitHTTPAuthenticationDTO extends GitAuthenticationDTO {
-  @NotBlank String username;
+  @NotNull String username;
   @ApiModelProperty(dataType = "string") @NotNull @SecretReference SecretRefData passwordRef;
 }

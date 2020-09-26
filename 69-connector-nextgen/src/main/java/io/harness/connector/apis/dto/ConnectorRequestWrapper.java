@@ -6,10 +6,13 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.experimental.FieldDefaults;
 
+import javax.validation.Valid;
+import javax.validation.constraints.NotNull;
+
 @Data
 @JsonIgnoreProperties(ignoreUnknown = true)
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @Builder
 public class ConnectorRequestWrapper {
-  ConnectorRequestDTO connector;
+  @Valid @NotNull ConnectorRequestDTO connector;
 }
