@@ -450,8 +450,8 @@ public enum TaskType {
   EXECUTE_COMMAND(TaskGroup.CI, ExecuteCommandTask.class, AlwaysTrueValidation.class),
   CI_CLEANUP(TaskGroup.CI, CICleanupTask.class, AlwaysTrueValidation.class),
   AWS_S3_TASK(TaskGroup.AWS, AwsS3Task.class, AwsConnectionValidation.class),
-  GCP_TASK(TaskGroup.GCP, GcpTask.class, GcpValidationTask.class),
   // Add all NG tasks below this.
+  GCP_TASK(TaskGroup.GCP, GcpTask.class, GcpValidationTask.class),
   VALIDATE_KUBERNETES_CONFIG(
       TaskGroup.CONTAINER, KubernetesTestConnectionDelegateTask.class, KubernetesConnectionDelegateValidation.class),
   NG_GIT_COMMAND(TaskGroup.GIT, NGGitCommandTask.class, NGGitConnectionValidation.class),

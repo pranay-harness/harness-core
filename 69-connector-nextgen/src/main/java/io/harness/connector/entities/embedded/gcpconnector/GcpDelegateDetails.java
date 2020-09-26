@@ -6,7 +6,7 @@ import org.springframework.data.annotation.TypeAlias;
 
 @Data
 @Builder
-@TypeAlias("connector.entities.embedded.gcpconnector.GcpDelegateDetails")
+@TypeAlias("io.harness.connector.entities.embedded.gcpconnector.GcpDelegateDetails")
 public class GcpDelegateDetails implements GcpCredential {
   String delegateSelector;
 }
