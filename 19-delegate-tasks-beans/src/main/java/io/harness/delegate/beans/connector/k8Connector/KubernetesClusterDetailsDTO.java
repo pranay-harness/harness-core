@@ -5,7 +5,6 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import lombok.Builder;
 import lombok.Data;
-import org.hibernate.validator.constraints.NotBlank;
 
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
@@ -15,6 +14,6 @@ import javax.validation.constraints.NotNull;
 @JsonIgnoreProperties(ignoreUnknown = true)
 @JsonTypeName("ManualConfig")
 public class KubernetesClusterDetailsDTO implements KubernetesCredentialDTO {
-  @NotBlank String masterUrl;
+  @NotNull String masterUrl;
   @JsonProperty("auth") @NotNull @Valid KubernetesAuthDTO auth;
 }

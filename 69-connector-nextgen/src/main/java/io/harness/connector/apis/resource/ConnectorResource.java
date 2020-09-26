@@ -14,9 +14,13 @@ import io.harness.connector.services.ConnectorService;
 import io.harness.delegate.beans.connector.ConnectorCategory;
 import io.harness.delegate.beans.connector.ConnectorType;
 import io.harness.delegate.beans.connector.ConnectorValidationResult;
+import io.harness.ng.core.dto.ErrorDTO;
+import io.harness.ng.core.dto.FailureDTO;
 import io.harness.ng.core.dto.ResponseDTO;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
+import io.swagger.annotations.ApiResponse;
+import io.swagger.annotations.ApiResponses;
 import org.hibernate.validator.constraints.NotEmpty;
 
 import java.util.Optional;
@@ -37,6 +41,11 @@ import javax.ws.rs.QueryParam;
 @Path("accounts/{accountIdentifier}/connectors")
 @Produces({"application/json", "text/yaml", "text/html"})
 @Consumes({"application/json", "text/yaml", "text/html"})
+@ApiResponses(value =
+    {
+      @ApiResponse(code = 400, response = FailureDTO.class, message = "Bad Request")
+      , @ApiResponse(code = 500, response = ErrorDTO.class, message = "Internal server error")
+    })
 public class ConnectorResource {
   private final ConnectorService connectorService;
 

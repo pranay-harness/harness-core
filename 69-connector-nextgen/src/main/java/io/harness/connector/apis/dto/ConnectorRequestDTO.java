@@ -19,24 +19,24 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.experimental.FieldDefaults;
-import org.hibernate.validator.constraints.NotBlank;
 
 import java.util.List;
 import javax.validation.Valid;
+import javax.validation.constraints.NotNull;
 
 @Data
 @NoArgsConstructor
 @JsonIgnoreProperties(ignoreUnknown = true)
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class ConnectorRequestDTO {
-  @NotBlank String name;
-  @NotBlank String identifier;
+  @NotNull String name;
+  @NotNull String identifier;
   String description;
   String orgIdentifier;
   String projectIdentifier;
   List<String> tags;
 
-  @JsonProperty("type") ConnectorType connectorType;
+  @NotNull @JsonProperty("type") ConnectorType connectorType;
 
   @Builder
   public ConnectorRequestDTO(String name, String identifier, String description, String orgIdentifier,
@@ -65,5 +65,6 @@ public class ConnectorRequestDTO {
         @JsonSubTypes.Type(value = GcpKmsConfigDTO.class, name = "GcpKms")
   })
   @Valid
+  @NotNull
   ConnectorConfigDTO connectorConfig;
 }
