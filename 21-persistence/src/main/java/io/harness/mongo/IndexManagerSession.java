@@ -67,6 +67,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
 
 @Slf4j
 public class IndexManagerSession {
@@ -343,6 +344,8 @@ public class IndexManagerSession {
     this.mode = mode;
   }
 
+  private static final AtomicInteger step = new AtomicInteger(0);
+
   public void create(IndexCreator indexCreator) {
     if (migrators != null) {
       String migratorKey = indexCreator.getCollection().getName() + "."
@@ -373,13 +376,13 @@ public class IndexManagerSession {
         }
         break;
       case MANUAL:
-        logger.info(
-            "Should create index {} {}\n{}", indexCreator.getOptions().toString(), indexCreator.getKeys().toString());
+        logger.info("{}. Should create index {} {}\n{}", step.incrementAndGet(), indexCreator.getOptions().toString(),
+            indexCreator.getKeys().toString());
         break;
       case INSPECT:
-        logger.error("Should create index {}\nScript: db.{}.createIndex({}, {})", indexCreator.getOptions().get(NAME),
-            indexCreator.getCollection().getName(), indexCreator.getKeys().toString(),
-            indexCreator.getOptions().toString());
+        logger.error("{}. Should create index {}\nScript: db.{}.createIndex({}, {})", step.incrementAndGet(),
+            indexCreator.getOptions().get(NAME), indexCreator.getCollection().getName(),
+            indexCreator.getKeys().toString(), indexCreator.getOptions().toString());
         break;
       default:
         Switch.unhandled(mode);
@@ -393,10 +396,11 @@ public class IndexManagerSession {
         collection.dropIndex(indexName);
         break;
       case MANUAL:
-        logger.info("Should drop index {}", indexName);
+        logger.info("{}. Should drop index {}", step.incrementAndGet(), indexName);
         break;
       case INSPECT:
-        logger.error("Should drop index {}\nScript: db.{}.dropIndex('{}')", indexName, collection.getName(), indexName);
+        logger.error("{}. Should drop index {}\nScript: db.{}.dropIndex('{}')", step.incrementAndGet(), indexName,
+            collection.getName(), indexName);
         break;
       default:
         Switch.unhandled(mode);
