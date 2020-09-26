@@ -1,5 +1,8 @@
 package io.harness.gcp.impl;
 
+import static io.harness.eraro.ErrorCode.INVALID_CLOUD_PROVIDER;
+import static io.harness.exception.WingsException.USER;
+
 import com.google.api.client.googleapis.auth.oauth2.GoogleCredential;
 import com.google.api.client.googleapis.javanet.GoogleNetHttpTransport;
 import com.google.api.client.http.javanet.NetHttpTransport;
@@ -11,11 +14,15 @@ import com.google.inject.Singleton;
 
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.GoogleClientException;
+import io.harness.exception.WingsException;
 import io.harness.gcp.client.GcpClient;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.io.IOUtils;
 
 import java.io.IOException;
+import java.nio.charset.Charset;
 import java.security.GeneralSecurityException;
+import java.util.Arrays;
 import java.util.Collections;
 
 @Slf4j
@@ -45,6 +52,33 @@ public class GcpClientImpl implements GcpClient {
   @VisibleForTesting
   GoogleCredential getDefaultGoogleCredentials() throws IOException {
     GoogleCredential credential = GoogleCredential.getApplicationDefault();
+    if (credential.createScopedRequired()) {
+      credential = credential.createScoped(Collections.singletonList(ContainerScopes.CLOUD_PLATFORM));
+    }
+    return credential;
+  }
+
+  @Override
+  public Container getGkeContainerService(char[] serviceAccountKey) {
+    try {
+      JacksonFactory jsonFactory = JacksonFactory.getDefaultInstance();
+      NetHttpTransport transport = GoogleNetHttpTransport.newTrustedTransport();
+      GoogleCredential credential = getGoogleCredential(serviceAccountKey);
+      return new Container.Builder(transport, jsonFactory, credential).setApplicationName("Harness").build();
+    } catch (GeneralSecurityException e) {
+      logger.error("Security exception getting Google container service", e);
+      throw new WingsException(INVALID_CLOUD_PROVIDER, USER)
+          .addParam("message", "Invalid Google Cloud Platform credentials.");
+    } catch (IOException e) {
+      logger.error("Error getting Google container service", e);
+      throw new WingsException(INVALID_CLOUD_PROVIDER, USER)
+          .addParam("message", "Invalid Google Cloud Platform credentials.");
+    }
+  }
+
+  GoogleCredential getGoogleCredential(char[] serviceAccountKey) throws IOException {
+    GoogleCredential credential = GoogleCredential.fromStream(
+        IOUtils.toInputStream(Arrays.toString(serviceAccountKey), Charset.defaultCharset()));
     if (credential.createScopedRequired()) {
       credential = credential.createScoped(Collections.singletonList(ContainerScopes.CLOUD_PLATFORM));
     }

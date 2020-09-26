@@ -16,7 +16,7 @@ import org.springframework.data.annotation.TypeAlias;
 @EqualsAndHashCode(callSuper = false)
 @Entity(value = "connectors", noClassnameStored = true)
 @Persistent
-@TypeAlias("connector.entities.embedded.gcpconnector.GcpConfig")
+@TypeAlias("io.harness.connector.entities.embedded.gcpconnector.GcpConfig")
 public class GcpConfig extends Connector {
   GcpCredentialType credentialType;
   GcpCredential credential;

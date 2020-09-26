@@ -9,7 +9,7 @@ import org.springframework.data.annotation.TypeAlias;
 @Value
 @Builder
 @FieldNameConstants(innerTypeName = "GcpDetailsKeys")
-@TypeAlias("connector.entities.embedded.gcpconnector.GcpDetails")
+@TypeAlias("io.harness.connector.entities.embedded.gcpconnector.GcpDetails")
 public class GcpDetails implements GcpCredential {
   GcpAuthType authType;
   GcpAuth auth;

@@ -1,14 +1,18 @@
 package io.harness.delegate.task.gcp.taskHandlers;
 
+import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.apache.commons.lang3.exception.ExceptionUtils.getRootCause;
 
 import com.google.inject.Inject;
 
+import io.harness.delegate.beans.connector.gcpconnector.GcpSecretKeyAuthDTO;
 import io.harness.delegate.task.gcp.request.GcpRequest;
 import io.harness.delegate.task.gcp.response.GcpResponse;
 import io.harness.delegate.task.gcp.response.GcpValidationTaskResponse;
+import io.harness.exception.InvalidRequestException;
 import io.harness.gcp.client.GcpClient;
 import io.harness.logging.CommandExecutionStatus;
+import io.harness.security.encryption.SecretDecryptionService;
 import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
@@ -19,19 +23,38 @@ import java.util.Optional;
 @Slf4j
 public class GcpValidationTaskHandler implements TaskHandler {
   @Inject private GcpClient gcpClient;
+  @Inject private SecretDecryptionService secretDecryptionService;
 
   @Override
   public GcpResponse executeRequest(GcpRequest gcpRequest) {
     try {
-      gcpClient.validateDefaultCredentials();
-      return GcpValidationTaskResponse.builder().executionStatus(CommandExecutionStatus.SUCCESS).build();
+      if (isNotBlank(gcpRequest.getDelegateSelector())) {
+        gcpClient.validateDefaultCredentials();
+        return GcpValidationTaskResponse.builder().executionStatus(CommandExecutionStatus.SUCCESS).build();
+      } else {
+        return validateGcpServiceAccountKeyCredential(gcpRequest);
+      }
     } catch (Exception ex) {
-      logger.error("Failed while validating default credentials for GCP", ex);
-      return GcpValidationTaskResponse.builder()
-          .executionStatus(CommandExecutionStatus.FAILURE)
-          .errorMessage(ex.getMessage() + "." + getRootCauseMessage(ex))
-          .build();
+      logger.error("Failed while validating credentials for GCP", ex);
+      return getFailedGcpResponse(ex);
     }
+  }
+
+  private GcpResponse validateGcpServiceAccountKeyCredential(GcpRequest gcpRequest) {
+    if (gcpRequest.getGcpAuthDTO() == null) {
+      throw new InvalidRequestException("Authentication details not found");
+    }
+    final GcpSecretKeyAuthDTO credentials = (GcpSecretKeyAuthDTO) gcpRequest.getGcpAuthDTO().getCredentials();
+    secretDecryptionService.decrypt(credentials, gcpRequest.getEncryptionDetails());
+    gcpClient.getGkeContainerService(credentials.getSecretKeyRef().getDecryptedValue());
+    return GcpValidationTaskResponse.builder().executionStatus(CommandExecutionStatus.SUCCESS).build();
+  }
+
+  private GcpValidationTaskResponse getFailedGcpResponse(Exception ex) {
+    return GcpValidationTaskResponse.builder()
+        .executionStatus(CommandExecutionStatus.FAILURE)
+        .errorMessage(ex.getMessage() + "." + getRootCauseMessage(ex))
+        .build();
   }
 
   private String getRootCauseMessage(Throwable t) {

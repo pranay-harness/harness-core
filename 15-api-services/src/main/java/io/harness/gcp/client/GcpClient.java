@@ -14,4 +14,6 @@ public interface GcpClient {
    * @return the gke container service
    */
   Container getGkeContainerService();
+
+  Container getGkeContainerService(char[] serviceAccountKey);
 }
