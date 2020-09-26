@@ -2,10 +2,10 @@ package io.harness.connector.validator;
 
 import io.harness.delegate.beans.connector.ConnectorConfigDTO;
 import io.harness.delegate.beans.connector.ConnectorValidationResult;
-import io.harness.delegate.beans.connector.gcpconnector.GcpAuthDTO;
+import io.harness.delegate.beans.connector.gcpconnector.GcpConnectorCredentialDTO;
 import io.harness.delegate.beans.connector.gcpconnector.GcpConnectorDTO;
 import io.harness.delegate.beans.connector.gcpconnector.GcpDelegateDetailsDTO;
-import io.harness.delegate.beans.connector.gcpconnector.GcpDetailsDTO;
+import io.harness.delegate.beans.connector.gcpconnector.GcpManualDetailsDTO;
 import io.harness.delegate.task.TaskParameters;
 import io.harness.delegate.task.gcp.request.GcpValidationRequest;
 import io.harness.delegate.task.gcp.request.GcpValidationRequest.GcpValidationRequestBuilder;
@@ -17,15 +17,15 @@ public class GcpConnectorValidator extends AbstractConnectorValidator implements
   @Override
   public <T extends ConnectorConfigDTO> TaskParameters getTaskParameters(
       T connectorConfig, String accountIdentifier, String orgIdentifier, String projectIdentifier) {
-    GcpConnectorDTO gcpConnector = (GcpConnectorDTO) connectorConfig;
+    GcpConnectorDTO gcpConnectorDTO = (GcpConnectorDTO) connectorConfig;
+    GcpConnectorCredentialDTO gcpConnector = gcpConnectorDTO.getCredential();
     final GcpValidationRequestBuilder gcpValidationRequestBuilder = GcpValidationRequest.builder();
     switch (gcpConnector.getGcpCredentialType()) {
       case MANUAL_CREDENTIALS:
-        final GcpDetailsDTO gcpDetailsDTO = (GcpDetailsDTO) gcpConnector.getConfig();
-        final GcpAuthDTO auth = gcpDetailsDTO.getAuth();
-        return gcpValidationRequestBuilder.gcpAuthDTO(auth)
-            .encryptedDataDetailList(
-                super.getEncryptionDetail(auth.getCredentials(), accountIdentifier, orgIdentifier, projectIdentifier))
+        final GcpManualDetailsDTO gcpDetailsDTO = (GcpManualDetailsDTO) gcpConnector.getConfig();
+        return gcpValidationRequestBuilder.gcpManualDetailsDTO(gcpDetailsDTO)
+            .encryptedDataDetailList(super.getEncryptionDetail(
+                gcpDetailsDTO.getGcpSecretKeyAuthDTO(), accountIdentifier, orgIdentifier, projectIdentifier))
             .build();
       case INHERIT_FROM_DELEGATE:
         final GcpDelegateDetailsDTO config = (GcpDelegateDetailsDTO) gcpConnector.getConfig();

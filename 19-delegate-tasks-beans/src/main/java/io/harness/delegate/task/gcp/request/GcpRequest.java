@@ -4,7 +4,7 @@ import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
 import com.google.common.collect.ImmutableSet;
 
-import io.harness.delegate.beans.connector.gcpconnector.GcpAuthDTO;
+import io.harness.delegate.beans.connector.gcpconnector.GcpManualDetailsDTO;
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import io.harness.delegate.beans.executioncapability.ExecutionCapabilityDemander;
 import io.harness.delegate.beans.executioncapability.SelectorCapability;
@@ -28,7 +28,7 @@ public abstract class GcpRequest implements ExecutionCapabilityDemander {
   @NotNull private RequestType requestType;
   // Below 2 are NG specific.
   private List<EncryptedDataDetail> encryptionDetails;
-  private GcpAuthDTO gcpAuthDTO;
+  private GcpManualDetailsDTO gcpManualDetailsDTO;
 
   @Override
   public List<ExecutionCapability> fetchRequiredExecutionCapabilities() {

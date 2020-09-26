@@ -5,8 +5,7 @@ import io.harness.connector.entities.embedded.appdynamicsconnector.AppDynamicsCo
 import io.harness.connector.entities.embedded.docker.DockerConnector;
 import io.harness.connector.entities.embedded.gcpconnector.GcpConfig;
 import io.harness.connector.entities.embedded.gcpconnector.GcpDelegateDetails;
-import io.harness.connector.entities.embedded.gcpconnector.GcpDetails;
-import io.harness.connector.entities.embedded.gcpconnector.GcpSecretKeyAuth;
+import io.harness.connector.entities.embedded.gcpconnector.GcpServiceAccountKey;
 import io.harness.connector.entities.embedded.gcpkmsconnector.GcpKmsConnector;
 import io.harness.connector.entities.embedded.gitconnector.GitConfig;
 import io.harness.connector.entities.embedded.gitconnector.GitSSHAuthentication;
@@ -53,7 +52,6 @@ public class ConnectorMorphiaClassesRegistrar implements MorphiaRegistrar {
     h.put("connector.entities.embedded.gitconnector.GitUserNamePasswordAuthentication",
         GitUserNamePasswordAuthentication.class);
     h.put("connector.entities.embedded.gcpconnector.GcpDelegateDetails", GcpDelegateDetails.class);
-    h.put("connector.entities.embedded.gcpconnector.GcpDetails", GcpDetails.class);
-    h.put("connector.entities.embedded.gcpconnector.GcpSecretKeyAuth", GcpSecretKeyAuth.class);
+    h.put("connector.entities.embedded.gcpconnector.GcpServiceAccountKey", GcpServiceAccountKey.class);
   }
 }

@@ -2,16 +2,14 @@ package io.harness.connector.mappers.gcpmappers;
 
 import io.harness.connector.entities.embedded.gcpconnector.GcpConfig;
 import io.harness.connector.entities.embedded.gcpconnector.GcpDelegateDetails;
-import io.harness.connector.entities.embedded.gcpconnector.GcpDetails;
-import io.harness.connector.entities.embedded.gcpconnector.GcpSecretKeyAuth;
+import io.harness.connector.entities.embedded.gcpconnector.GcpServiceAccountKey;
 import io.harness.connector.mappers.ConnectorEntityToDTOMapper;
 import io.harness.connector.mappers.SecretRefHelper;
-import io.harness.delegate.beans.connector.gcpconnector.GcpAuthDTO;
-import io.harness.delegate.beans.connector.gcpconnector.GcpAuthType;
+import io.harness.delegate.beans.connector.gcpconnector.GcpConnectorCredentialDTO;
 import io.harness.delegate.beans.connector.gcpconnector.GcpConnectorDTO;
 import io.harness.delegate.beans.connector.gcpconnector.GcpCredentialType;
 import io.harness.delegate.beans.connector.gcpconnector.GcpDelegateDetailsDTO;
-import io.harness.delegate.beans.connector.gcpconnector.GcpDetailsDTO;
+import io.harness.delegate.beans.connector.gcpconnector.GcpManualDetailsDTO;
 import io.harness.delegate.beans.connector.gcpconnector.GcpSecretKeyAuthDTO;
 import io.harness.encryption.SecretRefData;
 import io.harness.exception.InvalidRequestException;
@@ -31,28 +29,17 @@ public class GcpEntityToDTO implements ConnectorEntityToDTOMapper<GcpConfig> {
   }
 
   private GcpConnectorDTO buildManualCredential(GcpConfig connector) {
-    final GcpDetails gcpDetails = (GcpDetails) connector.getCredential();
-    final GcpAuthType authType = gcpDetails.getAuthType();
-    GcpDetailsDTO gcpDetailsDTO = null;
-    switch (authType) {
-      case SECRET_KEY:
-        gcpDetailsDTO = buildSecretKeyAuth(gcpDetails);
-        break;
-      default:
-        throw new InvalidRequestException("Invalid Auth type");
-    }
-    return GcpConnectorDTO.builder()
-        .gcpCredentialType(GcpCredentialType.MANUAL_CREDENTIALS)
-        .config(gcpDetailsDTO)
-        .build();
-  }
-
-  private GcpDetailsDTO buildSecretKeyAuth(GcpDetails gcpDetails) {
-    final GcpSecretKeyAuth auth = (GcpSecretKeyAuth) gcpDetails.getAuth();
+    final GcpServiceAccountKey auth = (GcpServiceAccountKey) connector.getCredential();
     final SecretRefData secretRef = SecretRefHelper.createSecretRef(auth.getSecretKeyRef());
     final GcpSecretKeyAuthDTO secretKeyAuth = GcpSecretKeyAuthDTO.builder().secretKeyRef(secretRef).build();
-    final GcpAuthDTO authDTO = GcpAuthDTO.builder().authType(GcpAuthType.SECRET_KEY).credentials(secretKeyAuth).build();
-    return GcpDetailsDTO.builder().auth(authDTO).build();
+    final GcpManualDetailsDTO gcpManualDetailsDTO =
+        GcpManualDetailsDTO.builder().gcpSecretKeyAuthDTO(secretKeyAuth).build();
+    return GcpConnectorDTO.builder()
+        .credential(GcpConnectorCredentialDTO.builder()
+                        .gcpCredentialType(GcpCredentialType.MANUAL_CREDENTIALS)
+                        .config(gcpManualDetailsDTO)
+                        .build())
+        .build();
   }
 
   private GcpConnectorDTO buildInheritFromDelegate(GcpConfig connector) {
@@ -60,8 +47,10 @@ public class GcpEntityToDTO implements ConnectorEntityToDTOMapper<GcpConfig> {
     GcpDelegateDetailsDTO gcpDelegateDetailsDTO =
         GcpDelegateDetailsDTO.builder().delegateSelector(gcpCredential.getDelegateSelector()).build();
     return GcpConnectorDTO.builder()
-        .gcpCredentialType(GcpCredentialType.INHERIT_FROM_DELEGATE)
-        .config(gcpDelegateDetailsDTO)
+        .credential(GcpConnectorCredentialDTO.builder()
+                        .gcpCredentialType(GcpCredentialType.INHERIT_FROM_DELEGATE)
+                        .config(gcpDelegateDetailsDTO)
+                        .build())
         .build();
   }
 }

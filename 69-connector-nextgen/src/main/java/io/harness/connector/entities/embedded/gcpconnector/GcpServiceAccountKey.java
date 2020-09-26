@@ -6,7 +6,7 @@ import org.springframework.data.annotation.TypeAlias;
 
 @Value
 @Builder
-@TypeAlias("io.harness.connector.entities.embedded.gcpconnector.GcpSecretKeyAuth")
-public class GcpSecretKeyAuth implements GcpAuth {
+@TypeAlias("io.harness.connector.entities.embedded.gcpconnector.GcpServiceAccountKey")
+public class GcpServiceAccountKey implements GcpCredential {
   String secretKeyRef;
 }
