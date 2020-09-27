@@ -116,3 +116,30 @@ else
         fi
     done
 fi
+
+set -x
+BAZEL_FORMAT_PROPERTY=hook.pre-commit.format.bazel
+if [ "`git config $BAZEL_FORMAT_PROPERTY`" == "false" ]
+then
+    echo -e '\033[0;31m' formatting bazel is disabled - to enable: '\033[0;37m'git config --unset $BAZEL_FORMAT_PROPERTY '\033[0m'
+else
+    echo -e '\033[0;34m' formatting bazel ... to disable: '\033[0;37m'git config --add $BAZEL_FORMAT_PROPERTY false '\033[0m'
+
+    #do the formatting
+    if buildifier --version &> /dev/null
+    then
+        for file in `git diff-index --cached --name-only $against |\
+            grep -e "BUILD.bazel$" -e "WORKSPACE$" -e ".bzl$" -e "BUILD$"`
+        do
+            if [ -e "${file}" ]
+            then
+                buildifier "${file}"
+                git diff --exit-code -- "${file}"
+                if [ "$?" -ne "0" ]
+                then
+                    git add "${file}"
+                fi
+            fi
+      done
+    fi
+fi
