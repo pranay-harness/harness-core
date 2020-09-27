@@ -195,7 +195,8 @@ public class DefaultConnectorServiceImpl implements ConnectorService {
       }
       long connectivityTestedAt = System.currentTimeMillis();
       validationResult.setTestedAt(connectivityTestedAt);
-      updateConnectivityStatusOfConnector(connectorOptional.get(), validationResult, connectivityTestedAt);
+      updateConnectivityStatusOfConnector(
+          connectorOptional.get(), validationResult, connectivityTestedAt, connectorDTO.getStatus());
       return validationResult;
     } else {
       throw new InvalidRequestException(
@@ -203,8 +204,9 @@ public class DefaultConnectorServiceImpl implements ConnectorService {
     }
   }
 
-  private void updateConnectivityStatusOfConnector(
-      Connector connector, ConnectorValidationResult connectorValidationResult, long connectivityTestedAt) {
+  private void updateConnectivityStatusOfConnector(Connector connector,
+      ConnectorValidationResult connectorValidationResult, long connectivityTestedAt,
+      ConnectorConnectivityDetails lastStatus) {
     if (connectorValidationResult != null) {
       ConnectorConnectivityDetailsBuilder connectorConnectivityDetailsBuilder =
           ConnectorConnectivityDetails.builder()
@@ -213,6 +215,8 @@ public class DefaultConnectorServiceImpl implements ConnectorService {
               .lastTestedAt(connectivityTestedAt);
       if (connectorValidationResult.isValid()) {
         connectorConnectivityDetailsBuilder.lastConnectedAt(connectivityTestedAt);
+      } else {
+        connectorConnectivityDetailsBuilder.lastConnectedAt(lastStatus == null ? 0 : lastStatus.getLastConnectedAt());
       }
       connector.setStatus(connectorConnectivityDetailsBuilder.build());
       connectorRepository.save(connector);
