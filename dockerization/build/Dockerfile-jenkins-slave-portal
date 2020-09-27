@@ -72,6 +72,17 @@ RUN wget https://archive.apache.org/dist/maven/maven-3/3.6.1/binaries/apache-mav
     && echo "export M2_HOME=/usr/local/src/apache-maven && export PATH=\${M2_HOME}/bin:\${PATH}" > /etc/profile.d/maven.sh \
     && chmod +x /etc/profile.d/maven.sh \
     && source /etc/profile.d/maven.sh \
-    && rm apache-maven-3.6.1-bin.tar.gz
+    && rm apache-maven-3.6.1-bin.tar.gz \
+    && cd / \
+    && rm -rf /tmp/*
+
+RUN cd /tmp \
+    && git clone https://github.com/bazelbuild/buildtools.git \
+    && cd buildtools \
+    && bazel build //... \
+    && cp /tmp/buildtools/bazel-bin/unused_deps/unused_deps-linux_amd64 /usr/bin/unused_deps \
+    && unused_deps --version \
+    && cd / \
+    && rm -rf /tmp/*
 
 ENTRYPOINT ["jenkins-slave"]

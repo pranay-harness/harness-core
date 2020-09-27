@@ -15,6 +15,10 @@ RUN cd /root \
     && source /etc/profile.d/maven.sh \
     && mvn -B -T 2C -Dmaven.repo.local=/root/.m2/repository -s /root/.m2/settings.xml \
        compile test-compile dependency:go-offline \
+    && cd tools \
+    && mvn -B -T 2C -Dmaven.repo.local=/root/.m2/repository -s /root/.m2/settings.xml \
+       compile test-compile dependency:go-offline \
+    && cd .. \
     && rm -rf `find . -type d -name target` \
     && rm -rf /root/.m2/repository/software/wings
 
