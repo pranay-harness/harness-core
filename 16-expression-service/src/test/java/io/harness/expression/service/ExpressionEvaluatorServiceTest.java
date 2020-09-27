@@ -12,7 +12,7 @@ import io.grpc.inprocess.InProcessChannelBuilder;
 import io.grpc.inprocess.InProcessServerBuilder;
 import io.grpc.testing.GrpcCleanupRule;
 import io.harness.category.element.UnitTests;
-import io.harness.expression.ExpressionServiceTest;
+import io.harness.expression.ExpressionServiceTestBase;
 import io.harness.rule.Owner;
 import org.junit.After;
 import org.junit.Before;
@@ -22,7 +22,7 @@ import org.junit.experimental.categories.Category;
 
 import java.io.IOException;
 
-public class ExpressionEvaluatorServiceTest extends ExpressionServiceTest {
+public class ExpressionEvaluatorServiceTest extends ExpressionServiceTestBase {
   @Rule public GrpcCleanupRule grpcCleanupRule = new GrpcCleanupRule();
   @Inject ExpressionServiceImpl expressionEvaluatorService;
   private ExpressionEvaulatorServiceGrpc.ExpressionEvaulatorServiceBlockingStub expressionEvaulatorServiceBlockingStub;

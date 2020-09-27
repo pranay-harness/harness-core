@@ -6,7 +6,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.junit.Rule;
 
 @Slf4j
-public abstract class CommonsTest extends CategoryTest {
+public abstract class CommonsTestBase extends CategoryTest {
   @Rule public LifecycleRule lifecycleRule = new LifecycleRule();
   @Rule public CommonsRule commonsRule = new CommonsRule(lifecycleRule.getClosingFactory());
 }

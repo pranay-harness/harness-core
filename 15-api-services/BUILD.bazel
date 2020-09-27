@@ -120,7 +120,6 @@ run_tests(
     testonly = 1,
     test_files = glob(
         ["src/test/**/*Test.java"],
-        exclude = ["**/ApiServiceTest.java"],
     ),
     runtime_deps = [
         "//15-api-services/src/test/resources",
