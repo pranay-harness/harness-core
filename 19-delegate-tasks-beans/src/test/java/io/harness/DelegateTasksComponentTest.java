@@ -16,7 +16,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 
 @Slf4j
-public class DelegateTasksComponentTest extends DelegateTasksTest {
+public class DelegateTasksComponentTest extends DelegateTasksTestBase {
   @Inject private Map<String, TestExecution> tests;
 
   @Test

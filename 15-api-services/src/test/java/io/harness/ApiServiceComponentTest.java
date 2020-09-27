@@ -16,7 +16,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 
 @Slf4j
-public class ApiServiceComponentTest extends ApiServiceTest {
+public class ApiServiceComponentTest extends ApiServiceTestBase {
   @Inject private Map<String, TestExecution> tests;
 
   @Test

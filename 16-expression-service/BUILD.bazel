@@ -64,7 +64,6 @@ run_tests(
     testonly = 1,
     test_files = glob(
         ["src/test/**/*Test.java"],
-        exclude = ["**/ExpressionServiceTest.java"],
     ),
     runtime_deps = [
         "//16-expression-service/src/test/resources",

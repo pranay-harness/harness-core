@@ -16,7 +16,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 
 @Slf4j
-public class CommonsComponentTest extends CommonsTest {
+public class CommonsComponentTest extends CommonsTestBase {
   @Inject private Map<String, TestExecution> tests;
 
   @Test
