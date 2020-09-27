@@ -64,9 +64,11 @@ find . -iname "*.graphql" | xargs -L 1 prettier --write --print-width=120
 
 find . \( -iname "*.java" -o -iname "*.proto" \) | xargs clang-format -i
 
+bazel run //:buildifier
+
 git diff --exit-code
 
- find . \( -iname "*.proto" -a -not -regex ".*/target/.*" \) |\
+find . \( -iname "*.proto" -a -not -regex ".*/target/.*" \) |\
     grep -v src/main/proto/log_analysis_record.proto |\
     grep -v src/main/proto/time_series_record.proto |\
     while read file; do validate_proto "$file"; done
