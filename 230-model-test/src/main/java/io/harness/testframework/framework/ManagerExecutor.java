@@ -26,6 +26,7 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -33,6 +34,7 @@ import java.util.List;
 @Slf4j
 public class ManagerExecutor {
   private static boolean failedAlready;
+  private static Duration waiting = ofMinutes(5);
 
   public static void ensureManager(Class clazz, String alpnPath, String alpnJarPath) throws IOException {
     if (!isHealthy()) {
@@ -51,7 +53,7 @@ public class ManagerExecutor {
     String directoryPath = Project.rootDirectory(clazz);
     final File lockfile = new File(directoryPath, "manager");
 
-    if (FileIo.acquireLock(lockfile, ofMinutes(2))) {
+    if (FileIo.acquireLock(lockfile, waiting)) {
       try {
         if (isHealthy()) {
           return;
@@ -59,7 +61,7 @@ public class ManagerExecutor {
         ProcessExecutor processExecutor = managerProcessExecutor(clazz, verb, alpnPath, alpnJarPath);
         processExecutor.start();
 
-        Poller.pollFor(ofMinutes(2), ofSeconds(2), ManagerExecutor::isHealthy);
+        Poller.pollFor(waiting, ofSeconds(2), ManagerExecutor::isHealthy);
       } catch (RuntimeException | IOException exception) {
         failedAlready = true;
         throw exception;

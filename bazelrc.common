@@ -5,6 +5,9 @@ build --action_env=HARNESS_GENERATION_PASSPHRASE
 # TODO: enable remote cache for developers
 # build --remote_cache=https://storage.googleapis.com/harness-bazel-cache
 
+build --test_output=errors
+
+build --strict_java_deps=strict
 build --java_header_compilation=false
 build --test_env=LC_ALL="en_US.UTF-8"
 build --javacopt=-XepDisableAllChecks
