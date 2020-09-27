@@ -28,6 +28,7 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
 import javax.ws.rs.core.GenericType;
@@ -36,6 +37,7 @@ import javax.ws.rs.core.GenericType;
 @Slf4j
 public class DelegateExecutor {
   private static boolean failedAlready;
+  private static Duration waiting = ofMinutes(5);
 
   @Inject private DelegateService delegateService;
 
@@ -54,7 +56,7 @@ public class DelegateExecutor {
     final File directory = new File(directoryPath);
     final File lockfile = new File(directoryPath, "delegate");
 
-    if (FileIo.acquireLock(lockfile, ofMinutes(2))) {
+    if (FileIo.acquireLock(lockfile, waiting)) {
       try {
         if (isHealthy(account.getUuid(), bearerToken)) {
           return;
@@ -85,7 +87,7 @@ public class DelegateExecutor {
 
         processExecutor.start();
 
-        Poller.pollFor(ofMinutes(2), ofSeconds(2), () -> isHealthy(account.getUuid(), bearerToken));
+        Poller.pollFor(waiting, ofSeconds(2), () -> isHealthy(account.getUuid(), bearerToken));
 
       } catch (RuntimeException exception) {
         failedAlready = true;

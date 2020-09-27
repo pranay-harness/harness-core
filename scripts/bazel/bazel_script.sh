@@ -7,8 +7,8 @@ then
   GCP="--google_credentials=${GCP_KEY}"
   bazelrc=--bazelrc=bazelrc.remote
   local_repo=/root/.m2/repository
-  BAZEL_ARGUMENTS="${BAZEL_ARGUMENTS} --action_env=DISTRIBUTE_TESTING_WORKER=${DISTRIBUTE_TESTING_WORKER}"
-  BAZEL_ARGUMENTS="${BAZEL_ARGUMENTS} --action_env=DISTRIBUTE_TESTING_WORKERS=${DISTRIBUTE_TESTING_WORKERS}"
+  BAZEL_ARGUMENTS="${BAZEL_ARGUMENTS} --test_env=DISTRIBUTE_TESTING_WORKER=${DISTRIBUTE_TESTING_WORKER}"
+  BAZEL_ARGUMENTS="${BAZEL_ARGUMENTS} --test_env=DISTRIBUTE_TESTING_WORKERS=${DISTRIBUTE_TESTING_WORKERS}"
 fi
 
 BAZEL_DIRS=${HOME}/.bazel-dirs/
@@ -23,14 +23,14 @@ then
   GCP=""
 fi
 
+if [ "${RUN_BAZEL_TESTS}" == "true" ]
+then
+  bazel ${bazelrc} test --keep_going ${GCP} ${BAZEL_ARGUMENTS} -- //... -//product/... -//commons/...
+fi
+
 build_bazel_module() {
   module=$1
   bazel ${bazelrc} build //${module}:module ${GCP} ${BAZEL_ARGUMENTS}
-
-  if [ "${RUN_BAZEL_TESTS}" == "true" ]
-  then
-    bazel ${bazelrc} test //${module}/... ${GCP} ${BAZEL_ARGUMENTS} || true
-  fi
 
   mvn -B install:install-file \
    -Dfile=${BAZEL_DIRS}/bin/${module}/libmodule.jar \

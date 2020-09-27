@@ -23,6 +23,7 @@ import org.junit.rules.MethodRule;
 import org.junit.runners.model.FrameworkMethod;
 import org.junit.runners.model.Statement;
 import org.mongodb.morphia.ObjectFactory;
+import org.mongodb.morphia.converters.TypeConverter;
 import org.mongodb.morphia.mapping.DefaultCreator;
 
 import java.io.Closeable;
@@ -74,6 +75,12 @@ public class DelegateTasksRule implements MethodRule, InjectorRuleMixin {
         return ImmutableSet.<Class<? extends MorphiaRegistrar>>builder()
             .addAll(DelegateTasksBeansRegistrars.morphiaRegistrars)
             .build();
+      }
+
+      @Provides
+      @Singleton
+      Set<Class<? extends TypeConverter>> morphiaConverters() {
+        return ImmutableSet.<Class<? extends TypeConverter>>builder().build();
       }
 
       @Provides
