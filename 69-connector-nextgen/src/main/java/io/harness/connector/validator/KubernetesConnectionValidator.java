@@ -2,6 +2,8 @@ package io.harness.connector.validator;
 
 import com.google.inject.Singleton;
 
+import io.harness.delegate.beans.DelegateResponseData;
+import io.harness.delegate.beans.ErrorNotifyResponseData;
 import io.harness.delegate.beans.connector.ConnectorConfigDTO;
 import io.harness.delegate.beans.connector.ConnectorValidationResult;
 import io.harness.delegate.beans.connector.k8Connector.KubernetesAuthCredentialDTO;
@@ -22,11 +24,17 @@ public class KubernetesConnectionValidator
     extends AbstractConnectorValidator implements ConnectionValidator<KubernetesClusterConfigDTO> {
   public ConnectorValidationResult validate(KubernetesClusterConfigDTO kubernetesClusterConfig,
       String accountIdentifier, String orgIdentifier, String projectIdentifier) {
-    KubernetesConnectionTaskResponse responseData = (KubernetesConnectionTaskResponse) super.validateConnector(
-        kubernetesClusterConfig, accountIdentifier, orgIdentifier, projectIdentifier);
+    DelegateResponseData responseData =
+        super.validateConnector(kubernetesClusterConfig, accountIdentifier, orgIdentifier, projectIdentifier);
+    if (responseData instanceof ErrorNotifyResponseData) {
+      ErrorNotifyResponseData errorNotifyResponseData = (ErrorNotifyResponseData) responseData;
+      logger.info("Error in validation task for connector : [{}] with failure types [{}]",
+          errorNotifyResponseData.getErrorMessage(), errorNotifyResponseData.getFailureTypes());
+    }
+    KubernetesConnectionTaskResponse taskResponse = (KubernetesConnectionTaskResponse) responseData;
     return ConnectorValidationResult.builder()
-        .valid(responseData.getConnectionSuccessFul())
-        .errorMessage(responseData.getErrorMessage())
+        .valid(taskResponse.getConnectionSuccessFul())
+        .errorMessage(taskResponse.getErrorMessage())
         .build();
   }
 
