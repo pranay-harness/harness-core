@@ -24,20 +24,8 @@ java_library(
 )
 
 java_library(
-    name = "test_deps",
-    exports = [
-        "//16-expression-service/src/main/proto/io/harness/expression/service:16_expression_service_java_proto",
-        "//990-commons-test:module",
-        "@maven//:org_assertj_assertj_core",
-    ],
-)
-
-java_library(
     name = "module",
     srcs = glob(["src/main/**/*.java"]),
-    resources = [
-        "//16-expression-service/src/test/resources:resource",
-    ],
     visibility = ["//visibility:public"],
     deps = [
         "maven_deps",
@@ -51,12 +39,17 @@ java_library(
 java_library(
     name = "tests",
     srcs = glob(["src/test/**/*.java"]),
+    resources = [
+        "//16-expression-service/src/test/resources:resource",
+    ],
     visibility = ["//visibility:private"],
     deps = [
         "maven_deps",
         "module",
-        "test_deps",
         "//:lombok",
+        "//16-expression-service/src/main/proto/io/harness/expression/service:16_expression_service_java_proto",
+        "//990-commons-test:module",
+        "@maven//:org_assertj_assertj_core",
     ],
 )
 

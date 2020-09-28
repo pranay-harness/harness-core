@@ -31,20 +31,8 @@ java_library(
 )
 
 java_library(
-    name = "test_deps",
-    exports = [
-        "//990-commons-test:module",
-        "@maven//:junit_junit",
-        "@maven//:org_assertj_assertj_core",
-    ],
-)
-
-java_library(
     name = "module",
     srcs = glob(["src/main/**/*.java"]),
-    resources = [
-        "//14-api-services-beans/src/test/resources:resource",
-    ],
     visibility = ["//visibility:public"],
     deps = [
         "maven_deps",
@@ -55,12 +43,17 @@ java_library(
 java_library(
     name = "tests",
     srcs = glob(["src/test/**/*.java"]),
+    resources = [
+        "//14-api-services-beans/src/test/resources:resource",
+    ],
     visibility = ["//visibility:private"],
     deps = [
         "maven_deps",
         "module",
-        "test_deps",
         "//:lombok",
+        "//990-commons-test:module",
+        "@maven//:junit_junit",
+        "@maven//:org_assertj_assertj_core",
     ],
 )
 

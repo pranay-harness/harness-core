@@ -85,18 +85,8 @@ java_library(
 )
 
 java_library(
-    name = "test_deps",
-    exports = [
-        "//990-commons-test:module",
-    ],
-)
-
-java_library(
     name = "module",
     srcs = glob(["src/main/**/*.java"]),
-    data = [
-        "//15-api-services/src/test/resources:resource",
-    ],
     visibility = ["//visibility:public"],
     deps = [
         "maven_deps",
@@ -114,8 +104,8 @@ java_library(
     deps = [
         "maven_deps",
         "module",
-        "test_deps",
         "//:lombok",
+        "//990-commons-test:module",
     ],
 )
 
