@@ -20,7 +20,7 @@ public interface PipelineService {
   String updatePipeline(String yaml, String accountId, String orgId, String projectId, String pipelineId);
   Optional<CDPipelineResponseDTO> getPipeline(String pipelineId, String accountId, String orgId, String projectId);
   Page<CDPipelineSummaryResponseDTO> getPipelines(
-      String accountId, String orgId, String projectId, Criteria criteria, Pageable pageable);
+      String accountId, String orgId, String projectId, Criteria criteria, Pageable pageable, String searchTerm);
   Map<ServiceDefinitionType, List<ExecutionStrategyType>> getExecutionStrategyList();
   String getExecutionStrategyYaml(
       ServiceDefinitionType serviceDefinitionType, ExecutionStrategyType executionStrategyType) throws IOException;
