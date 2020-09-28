@@ -62,7 +62,6 @@ modules = [
     "//20-delegate-tasks",
     "//20-ng-core-beans",
     "//21-delegate-agent-beans",
-    "//21-persistence",
 ]
 
 filegroup(

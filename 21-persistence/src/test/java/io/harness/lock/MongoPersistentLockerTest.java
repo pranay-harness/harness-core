@@ -17,7 +17,7 @@ import com.google.inject.Inject;
 import com.deftlabs.lock.mongo.DistributedLock;
 import com.deftlabs.lock.mongo.DistributedLockOptions;
 import com.deftlabs.lock.mongo.DistributedLockSvc;
-import io.harness.PersistenceTestBase;
+import io.harness.PersistenceTest;
 import io.harness.category.element.UnitTests;
 import io.harness.eraro.MessageManager;
 import io.harness.exception.WingsException;
@@ -37,7 +37,7 @@ import java.time.Duration;
 /**
  * The Class PersistentLockerTest.
  */
-public class MongoPersistentLockerTest extends PersistenceTestBase {
+public class MongoPersistentLockerTest extends PersistenceTest {
   @Mock private DistributedLockSvc distributedLockSvc;
 
   @Inject @InjectMocks private MongoPersistentLocker mongoPersistentLocker;

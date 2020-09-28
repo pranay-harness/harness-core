@@ -11,7 +11,7 @@ import static org.assertj.core.api.AssertionsForClassTypes.assertThatThrownBy;
 import com.google.inject.Inject;
 
 import com.mongodb.DuplicateKeyException;
-import io.harness.PersistenceTestBase;
+import io.harness.PersistenceTest;
 import io.harness.beans.EmbeddedUser;
 import io.harness.category.element.UnitTests;
 import io.harness.persistence.TestEntity.TestEntityKeys;
@@ -26,7 +26,7 @@ import org.mongodb.morphia.query.UpdateOperations;
 import java.util.List;
 import java.util.stream.IntStream;
 
-public class HPersistenceTest extends PersistenceTestBase {
+public class HPersistenceTest extends PersistenceTest {
   @Inject private HPersistence persistence;
 
   @Test

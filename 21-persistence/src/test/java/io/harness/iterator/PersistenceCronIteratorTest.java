@@ -12,7 +12,7 @@ import static org.joor.Reflect.on;
 
 import com.google.inject.Inject;
 
-import io.harness.PersistenceTestBase;
+import io.harness.PersistenceTest;
 import io.harness.category.element.StressTests;
 import io.harness.category.element.UnitTests;
 import io.harness.iterator.TestCronIterableEntity.CronIterableEntityKeys;
@@ -39,7 +39,7 @@ import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
 
 @Slf4j
-public class PersistenceCronIteratorTest extends PersistenceTestBase {
+public class PersistenceCronIteratorTest extends PersistenceTest {
   @Inject private HPersistence persistence;
   @Inject private QueueController queueController;
   @Inject private MorphiaPersistenceProvider<TestCronIterableEntity> persistenceProvider;

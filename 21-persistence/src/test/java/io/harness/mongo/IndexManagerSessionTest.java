@@ -14,7 +14,7 @@ import com.google.inject.Inject;
 import com.mongodb.BasicDBObject;
 import com.mongodb.DBCollection;
 import com.mongodb.DBObject;
-import io.harness.PersistenceTestBase;
+import io.harness.PersistenceTest;
 import io.harness.category.element.UnitTests;
 import io.harness.mongo.IndexCreator.IndexCreatorBuilder;
 import io.harness.mongo.IndexManagerSession.Accesses;
@@ -31,7 +31,7 @@ import java.util.Collection;
 import java.util.Date;
 import java.util.Map;
 
-public class IndexManagerSessionTest extends PersistenceTestBase {
+public class IndexManagerSessionTest extends PersistenceTest {
   @Inject HPersistence persistence;
 
   @Test

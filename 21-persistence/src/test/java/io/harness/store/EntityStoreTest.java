@@ -5,7 +5,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import com.google.inject.Inject;
 
-import io.harness.PersistenceTestBase;
+import io.harness.PersistenceTest;
 import io.harness.annotation.StoreIn;
 import io.harness.category.element.UnitTests;
 import io.harness.persistence.HPersistence;
@@ -19,7 +19,7 @@ import org.mongodb.morphia.AdvancedDatastore;
 @StoreIn("foo")
 class Dummy implements PersistentEntity {}
 
-public class EntityStoreTest extends PersistenceTestBase {
+public class EntityStoreTest extends PersistenceTest {
   @Inject private HPersistence persistence;
 
   @Test

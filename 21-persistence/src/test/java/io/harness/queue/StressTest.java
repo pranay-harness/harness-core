@@ -7,7 +7,7 @@ import static org.assertj.core.api.Assertions.assertThatCode;
 
 import com.google.inject.Inject;
 
-import io.harness.PersistenceTestBase;
+import io.harness.PersistenceTest;
 import io.harness.category.element.StressTests;
 import io.harness.maintenance.MaintenanceGuard;
 import io.harness.persistence.HPersistence;
@@ -23,7 +23,7 @@ import java.io.IOException;
 import java.time.Duration;
 
 @Slf4j
-public class StressTest extends PersistenceTestBase {
+public class StressTest extends PersistenceTest {
   private static final int COUNT = 1000000;
   @Inject private HPersistence persistence;
   @Inject private QueueConsumer<TestTopicQueuableObject> topicConsumer;
