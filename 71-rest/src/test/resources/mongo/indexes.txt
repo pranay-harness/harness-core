@@ -348,6 +348,7 @@ instance {"name": "appId_1", "background": true} {"appId": 1}
 instance {"name": "createdAt_1", "background": true} {"createdAt": 1}
 instance {"name": "instance_index1", "background": true} {"appId": 1, "isDeleted": 1, "deletedAt": 1}
 instance {"name": "instance_index10", "background": true} {"accountId": 1, "infraMappingId": 1}
+instance {"name": "instance_index11", "background": true} {"infraMappingId": 1, "appId": 1, "createdAt": 1, "isDeleted": 1}
 instance {"name": "instance_index2", "background": true} {"appId": 1, "infraMappingId": 1, "isDeleted": 1, "deletedAt": 1}
 instance {"name": "instance_index3", "background": true} {"accountId": 1, "createdAt": 1, "isDeleted": 1, "deletedAt": 1}
 instance {"name": "instance_index5", "background": true} {"appId": 1, "serviceId": 1, "createdAt": 1, "isDeleted": 1, "deletedAt": 1}

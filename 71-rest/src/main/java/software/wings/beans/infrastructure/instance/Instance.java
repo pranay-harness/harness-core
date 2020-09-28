@@ -51,6 +51,10 @@ import software.wings.beans.infrastructure.instance.key.PodInstanceKey;
                                               , @Field("isDeleted"), @Field("deletedAt") })
 @CdIndex(name = "instance_index10", fields = { @Field("accountId")
                                                , @Field("infraMappingId") })
+@CdIndex(name = "instance_index11",
+    fields = { @Field("infraMappingId")
+               , @Field("appId"), @Field("createdAt"), @Field("isDeleted") })
+
 @FieldNameConstants(innerTypeName = "InstanceKeys")
 @Entity(value = "instance", noClassnameStored = true)
 @HarnessEntity(exportable = false)
