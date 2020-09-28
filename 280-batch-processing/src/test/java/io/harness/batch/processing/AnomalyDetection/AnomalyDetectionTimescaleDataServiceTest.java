@@ -15,7 +15,6 @@ import io.harness.batch.processing.anomalydetection.types.AnomalyDetectionModel;
 import io.harness.batch.processing.anomalydetection.types.AnomalyType;
 import io.harness.batch.processing.anomalydetection.types.EntityType;
 import io.harness.batch.processing.anomalydetection.types.TimeGranularity;
-import io.harness.batch.processing.pricing.data.CloudProvider;
 import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
 import io.harness.timescaledb.TimeScaleDBService;
@@ -128,7 +127,6 @@ public class AnomalyDetectionTimescaleDataServiceTest extends CategoryTest {
                             .clusterName(CLUSTER_NAME)
                             .workloadName(null)
                             .workloadType(null)
-                            .cloudProvider(CloudProvider.GCP)
                             .isAnomaly(true)
                             .absoluteThreshold(true)
                             .relativeThreshold(true)

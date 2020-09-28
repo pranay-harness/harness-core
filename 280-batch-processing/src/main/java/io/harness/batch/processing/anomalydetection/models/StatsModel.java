@@ -42,7 +42,6 @@ public class StatsModel {
                                    .entityType(data.getEntityType())
                                    .clusterId(data.getClusterId())
                                    .clusterName(data.getClusterName())
-                                   .cloudProvider(data.getCloudProvider())
                                    .workloadType(data.getWorkloadType())
                                    .workloadName(data.getWorkloadName())
                                    .namespace(data.getNamespace())

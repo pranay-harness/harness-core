@@ -10,7 +10,6 @@ import org.springframework.batch.item.ItemWriter;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import java.util.List;
-import java.util.stream.Collectors;
 
 @Slf4j
 public class AnomalyDetectionTimeScaleWriter implements ItemWriter<Anomaly>, StepExecutionListener {
@@ -23,8 +22,7 @@ public class AnomalyDetectionTimeScaleWriter implements ItemWriter<Anomaly>, Ste
 
   @Override
   public void write(List<? extends Anomaly> anomaliesList) throws Exception {
-    dataService.writeAnomaliesToTimescale(
-        anomaliesList.stream().filter(t -> t.isAnomaly()).collect(Collectors.toList()));
+    dataService.writeAnomaliesToTimescale((List<Anomaly>) anomaliesList);
   }
 
   @Override

@@ -2,7 +2,6 @@ package io.harness.batch.processing.anomalydetection;
 
 import io.harness.batch.processing.anomalydetection.types.EntityType;
 import io.harness.batch.processing.anomalydetection.types.TimeGranularity;
-import io.harness.batch.processing.pricing.data.CloudProvider;
 import lombok.Data;
 import lombok.experimental.SuperBuilder;
 
@@ -18,5 +17,4 @@ public abstract class AnomalyDetectionInfo {
   private String workloadName;
   private String workloadType;
   private String namespace;
-  private CloudProvider cloudProvider;
 }
