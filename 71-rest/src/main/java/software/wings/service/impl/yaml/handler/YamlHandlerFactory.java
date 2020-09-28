@@ -598,7 +598,7 @@ public class YamlHandlerFactory {
         "InstanaCVConfiguration", "PrometheusCVServiceConfiguration", "StackDriverMetricCVConfiguration",
         "BugsnagCVConfiguration", "ElkCVConfiguration", "LogsCVConfiguration", "SplunkCVConfiguration",
         "StackdriverCVConfiguration", "AzureInfrastructureMapping", "InfrastructureDefinition",
-        "ShellScriptInfrastructureProvisioner", "Template");
+        "ShellScriptInfrastructureProvisioner", "Template", "CustomLogCVServiceConfiguration");
   }
 
   private static List<String> obtainLeafEntitiesWithFeatureFlag() {
@@ -618,6 +618,7 @@ public class YamlHandlerFactory {
         "DynaTraceCVServiceConfiguration", "DatadogLogCVConfiguration", "InstanaCVConfiguration",
         "PrometheusCVServiceConfiguration", "StackDriverMetricCVConfiguration", "BugsnagCVConfiguration",
         "ElkCVConfiguration", "LogsCVConfiguration", "SplunkCVConfiguration", "StackdriverCVConfiguration",
-        "AzureInfrastructureMapping", "InfrastructureDefinition", "ShellScriptInfrastructureProvisioner", "Template");
+        "AzureInfrastructureMapping", "InfrastructureDefinition", "ShellScriptInfrastructureProvisioner", "Template",
+        "CustomLogCVServiceConfiguration");
   }
 }

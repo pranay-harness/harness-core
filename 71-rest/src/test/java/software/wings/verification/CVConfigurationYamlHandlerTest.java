@@ -11,6 +11,7 @@ import com.google.inject.Inject;
 
 import io.harness.category.element.UnitTests;
 import io.harness.git.model.ChangeType;
+import io.harness.reflection.ReflectionUtils;
 import io.harness.rule.Owner;
 import org.apache.commons.lang3.reflect.FieldUtils;
 import org.junit.Before;
@@ -23,6 +24,7 @@ import software.wings.WingsBaseTest;
 import software.wings.beans.yaml.Change;
 import software.wings.beans.yaml.ChangeContext;
 import software.wings.dl.WingsPersistence;
+import software.wings.service.impl.yaml.handler.YamlHandlerFactory;
 import software.wings.service.impl.yaml.service.YamlHelper;
 import software.wings.service.intfc.verification.CVConfigurationService;
 import software.wings.sm.StateType;
@@ -90,6 +92,42 @@ public class CVConfigurationYamlHandlerTest extends WingsBaseTest {
         throw new RuntimeException(e);
       }
     });
+  }
+
+  @Test
+  @Owner(developers = SOWMYA)
+  @Category(UnitTests.class)
+  public void testYamlFactory_leafEntitiesForCVClasses() {
+    Reflections reflections = new Reflections("software.wings");
+    Set<Class<? extends CVConfiguration>> cvConfigurationClasses = reflections.getSubTypesOf(CVConfiguration.class);
+    assertThat(cvConfigurationClasses.size()).isGreaterThan(0);
+
+    Set<String> leafEntities = (Set<String>) ReflectionUtils.getFieldValue(new YamlHandlerFactory(), "leafEntities");
+    assertThat(leafEntities).isNotNull();
+
+    cvConfigurationClasses.forEach(configuration
+        -> assertThat(leafEntities.contains(configuration.getSimpleName()))
+               .withFailMessage("Leaf entities does not contain class: " + configuration.getSimpleName())
+               .isTrue());
+  }
+
+  @Test
+  @Owner(developers = SOWMYA)
+  @Category(UnitTests.class)
+  public void testYamlFactory_leafEntitiesWithFeatureFlagForCVClasses() {
+    Reflections reflections = new Reflections("software.wings");
+    Set<Class<? extends CVConfiguration>> cvConfigurationClasses = reflections.getSubTypesOf(CVConfiguration.class);
+    assertThat(cvConfigurationClasses.size()).isGreaterThan(0);
+
+    Set<String> leafEntitiesWithFeatureFlag =
+        (Set<String>) ReflectionUtils.getFieldValue(new YamlHandlerFactory(), "leafEntities");
+    assertThat(leafEntitiesWithFeatureFlag).isNotNull();
+
+    cvConfigurationClasses.forEach(configuration
+        -> assertThat(leafEntitiesWithFeatureFlag.contains(configuration.getSimpleName()))
+               .withFailMessage(
+                   "Leaf entities with feature flag does not contain class: " + configuration.getSimpleName())
+               .isTrue());
   }
 
   @Test
