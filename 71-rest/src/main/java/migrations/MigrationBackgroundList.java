@@ -285,10 +285,11 @@ public class MigrationBackgroundList {
         .add(Pair.of(170, BaseMigration.class))
         .add(Pair.of(171, BaseMigration.class))
         .add(Pair.of(172, AddAccountIdToCommandCollection.class))
-        .add(Pair.of(173, AddAccountIdToStateMachine.class))
+        .add(Pair.of(173, BaseMigration.class))
         .add(Pair.of(174, InfraMappingToDefinitionMigration.class))
         .add(Pair.of(175, BaseMigration.class))
         .add(Pair.of(176, AddAccountIdToStateExecutionInstance.class))
+        .add(Pair.of(177, AddAccountIdToStateMachine.class))
         .build();
   }
 }
