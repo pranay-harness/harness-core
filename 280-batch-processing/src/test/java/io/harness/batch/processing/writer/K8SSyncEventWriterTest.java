@@ -73,7 +73,8 @@ public class K8SSyncEventWriterTest extends CategoryTest {
   @Before
   public void setUpData() {
     MockitoAnnotations.initMocks(this);
-    when(config.getBatchQueryConfig()).thenReturn(BatchQueryConfig.builder().queryBatchSize(50).build());
+    when(config.getBatchQueryConfig())
+        .thenReturn(BatchQueryConfig.builder().queryBatchSize(50).syncJobDisabled(false).build());
   }
 
   @Test
