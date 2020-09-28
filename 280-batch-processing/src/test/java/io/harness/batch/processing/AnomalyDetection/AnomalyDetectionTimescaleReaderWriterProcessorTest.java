@@ -20,7 +20,6 @@ import io.harness.batch.processing.anomalydetection.types.EntityType;
 import io.harness.batch.processing.anomalydetection.types.TimeGranularity;
 import io.harness.batch.processing.anomalydetection.writer.AnomalyDetectionTimeScaleWriter;
 import io.harness.batch.processing.ccm.CCMJobConstants;
-import io.harness.batch.processing.pricing.data.CloudProvider;
 import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
 import org.junit.Before;
@@ -165,7 +164,6 @@ public class AnomalyDetectionTimescaleReaderWriterProcessorTest extends BatchPro
                                 .clusterName(CLUSTER_NAME)
                                 .workloadName(null)
                                 .workloadType(null)
-                                .cloudProvider(CloudProvider.GCP)
                                 .isAnomaly(true)
                                 .absoluteThreshold(true)
                                 .relativeThreshold(true)
@@ -199,7 +197,6 @@ public class AnomalyDetectionTimescaleReaderWriterProcessorTest extends BatchPro
                                                                 .entityType(EntityType.CLUSTER)
                                                                 .clusterId(CLUSTER_ID)
                                                                 .clusterName(CLUSTER_NAME)
-                                                                .cloudProvider(CloudProvider.GCP)
                                                                 .build();
 
     anomalyDetectionTimeSeries.initialiseTrainData(

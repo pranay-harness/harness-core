@@ -42,7 +42,10 @@ public class AnomalyDetectionTimescaleReader implements ItemReader<AnomalyDetect
             .timeGranularity(TimeGranularity.DAILY)
             .entityType(EntityType.CLUSTER)
             .build();
+    logger.info("Anomaly Detection batch job of {} type , {} time granularity {}, for accountId:{} , endtime:{}",
+        EntityType.CLUSTER.toString(), TimeGranularity.DAILY.toString(), accountId, endTime.toString());
     listClusterAnomalyDetectionTimeSeries = dataService.readClusterLevelData(timeSeriesSpec);
+    logger.info("successfully read {} no of clusters", listClusterAnomalyDetectionTimeSeries.size());
     timeSeriesIndex = 0;
   }
 

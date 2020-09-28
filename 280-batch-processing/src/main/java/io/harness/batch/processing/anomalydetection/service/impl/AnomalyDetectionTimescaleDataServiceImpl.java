@@ -7,7 +7,6 @@ import io.harness.batch.processing.anomalydetection.AnomalyDetectionConstants;
 import io.harness.batch.processing.anomalydetection.AnomalyDetectionTimeSeries;
 import io.harness.batch.processing.anomalydetection.TimeSeriesSpec;
 import io.harness.batch.processing.anomalydetection.TimeSeriesUtils;
-import io.harness.batch.processing.pricing.data.CloudProvider;
 import io.harness.timescaledb.DBUtils;
 import io.harness.timescaledb.TimeScaleDBService;
 import lombok.extern.slf4j.Slf4j;
@@ -32,10 +31,10 @@ import java.util.stream.IntStream;
 public class AnomalyDetectionTimescaleDataServiceImpl {
   @Autowired private TimeScaleDBService timeScaleDBService;
   static final String CLUSTER_STATEMENT =
-      "SELECT STARTTIME AS STARTTIME ,  sum(BILLINGAMOUNT) AS COST ,CLUSTERID ,CLUSTERNAME , CLOUDPROVIDERID from billing_data where ACCOUNTID = '%s' and STARTTIME >= '%s' and STARTTIME <= '%s' and instancetype IN ('ECS_TASK_FARGATE','ECS_CONTAINER_INSTANCE','K8S_NODE') group by CLUSTERID , STARTTIME , CLUSTERNAME , CLOUDPROVIDERID order by  CLUSTERID ,STARTTIME , CLUSTERNAME , CLOUDPROVIDERID";
+      "SELECT STARTTIME AS STARTTIME ,  sum(BILLINGAMOUNT) AS COST ,CLUSTERID ,CLUSTERNAME from billing_data where ACCOUNTID = '%s' and STARTTIME >= '%s' and STARTTIME <= '%s' and instancetype IN ('ECS_TASK_FARGATE','ECS_CONTAINER_INSTANCE','K8S_NODE') group by CLUSTERID , STARTTIME , CLUSTERNAME  order by  CLUSTERID ,STARTTIME , CLUSTERNAME";
 
   static final String ANOMALY_INSERT_STATEMENT =
-      "INSERT INTO ANOMALIES (ANOMALYTIME,ACCOUNTID,TIMEGRANULARITY,ENTITYID,ENTITYTYPE,CLUSTERID,CLUSTERNAME,WORKLOADNAME,WORKLOADTYPE,NAMESPACE,CLOUDPROVIDERID,ANOMALYSCORE,ANOMALYTYPE,REPORTEDBY,ABSOLUTETHRESHOLD,RELATIVETHRESHOLD,PROBABILISTICTHRESHOLD) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?) ON CONFLICT DO NOTHING";
+      "INSERT INTO ANOMALIES (ANOMALYTIME,ACCOUNTID,TIMEGRANULARITY,ENTITYID,ENTITYTYPE,CLUSTERID,CLUSTERNAME,WORKLOADNAME,WORKLOADTYPE,NAMESPACE,ANOMALYSCORE,ANOMALYTYPE,REPORTEDBY,ABSOLUTETHRESHOLD,RELATIVETHRESHOLD,PROBABILISTICTHRESHOLD) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?) ON CONFLICT DO NOTHING";
 
   private static final int MAX_RETRY_COUNT = 2;
 
@@ -79,6 +78,9 @@ public class AnomalyDetectionTimescaleDataServiceImpl {
       currentAnomalyDetectionTimeSeries = readNextTimeSeries(resultSet, timeSeriesSpec);
       if (TimeSeriesUtils.validate(currentAnomalyDetectionTimeSeries, timeSeriesSpec)) {
         listClusterAnomalyDetectionTimeSeries.add(currentAnomalyDetectionTimeSeries);
+      } else {
+        logger.info("Invalid time series data of {}:{} ", currentAnomalyDetectionTimeSeries.getEntityType(),
+            currentAnomalyDetectionTimeSeries.getEntityId());
       }
     } while (!resultSet.isClosed());
     return listClusterAnomalyDetectionTimeSeries;
@@ -88,11 +90,6 @@ public class AnomalyDetectionTimescaleDataServiceImpl {
       throws SQLException {
     String clusterId = resultSet.getString("CLUSTERID");
     String clusterName = resultSet.getString("CLUSTERNAME");
-    CloudProvider cloudProvider = null;
-
-    if (resultSet.getString("CLOUDPROVIDERID") != null) {
-      cloudProvider = CloudProvider.valueOf(resultSet.getString("CLOUDPROVIDERID"));
-    }
 
     AnomalyDetectionTimeSeries anomalyDetectionTimeSeries = AnomalyDetectionTimeSeries.builder()
                                                                 .accountId(timeSeriesSpec.getAccountId())
@@ -101,7 +98,6 @@ public class AnomalyDetectionTimescaleDataServiceImpl {
                                                                 .entityType(timeSeriesSpec.getEntityType())
                                                                 .clusterId(clusterId)
                                                                 .clusterName(clusterName)
-                                                                .cloudProvider(cloudProvider)
                                                                 .build();
 
     anomalyDetectionTimeSeries.initialiseTrainData(
@@ -170,16 +166,11 @@ public class AnomalyDetectionTimescaleDataServiceImpl {
     statement.setString(8, anomaly.getWorkloadName());
     statement.setString(9, anomaly.getWorkloadType());
     statement.setString(10, anomaly.getNamespace());
-    if (anomaly.getCloudProvider() != null) {
-      statement.setString(11, anomaly.getCloudProvider().toString());
-    } else {
-      statement.setString(11, null);
-    }
-    statement.setDouble(12, anomaly.getAnomalyScore());
-    statement.setString(13, anomaly.getAnomalyType().toString());
-    statement.setString(14, anomaly.getReportedBy().toString());
-    statement.setBoolean(15, anomaly.isAbsoluteThreshold());
-    statement.setBoolean(16, anomaly.isRelativeThreshold());
-    statement.setBoolean(17, anomaly.isProbabilisticThreshold());
+    statement.setDouble(11, anomaly.getAnomalyScore());
+    statement.setString(12, anomaly.getAnomalyType().toString());
+    statement.setString(13, anomaly.getReportedBy().toString());
+    statement.setBoolean(14, anomaly.isAbsoluteThreshold());
+    statement.setBoolean(15, anomaly.isRelativeThreshold());
+    statement.setBoolean(16, anomaly.isProbabilisticThreshold());
   }
 }
