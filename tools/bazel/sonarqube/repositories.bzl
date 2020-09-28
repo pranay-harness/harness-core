@@ -8,7 +8,7 @@ def bazel_sonarqube_repositories(
         bazel_skylib_sha256 = "97e70364e9249702246c0e9444bccdc4b847bed1eb03c5a3ece4f83dfe6abc44"):
     http_archive(
         name = "org_sonarsource_scanner_cli_sonar_scanner_cli",
-        build_file = "//tools/sonarqube:BUILD.sonar_scanner",
+        build_file = "//tools/bazel/sonarqube:BUILD.sonar_scanner",
         sha256 = sonar_scanner_cli_sha256,
         strip_prefix = "sonar-scanner-" + sonar_scanner_cli_version,
         urls = [

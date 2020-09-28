@@ -117,7 +117,6 @@ else
     done
 fi
 
-set -x
 BAZEL_FORMAT_PROPERTY=hook.pre-commit.format.bazel
 if [ "`git config $BAZEL_FORMAT_PROPERTY`" == "false" ]
 then
