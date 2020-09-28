@@ -7,6 +7,7 @@ import static io.harness.persistence.HQuery.excludeAuthority;
 import static io.harness.rest.RestResponse.Builder.aRestResponse;
 import static io.harness.rule.OwnerRule.PRAVEEN;
 import static io.harness.rule.OwnerRule.RAGHU;
+import static io.harness.rule.OwnerRule.SOWMYA;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.data.Offset.offset;
 import static org.mockito.Matchers.any;
@@ -297,6 +298,30 @@ public class MetricDataAnalysisServiceTest extends VerificationBaseTest {
     final TimeSeriesMLAnalysisRecord savedAnalysisRecord =
         wingsPersistence.createQuery(TimeSeriesMLAnalysisRecord.class, excludeAuthority).get();
     assertThat(savedAnalysisRecord.getRiskScore()).isEqualTo(riskScore, offset(0.0001));
+  }
+
+  @Test
+  @Owner(developers = SOWMYA)
+  @Category(UnitTests.class)
+  public void testSaveAnalysisRecordsML_savesRiskScoreWhenNoTestMetrics() throws IOException {
+    File file = new File(getClass().getClassLoader().getResource("./247_analysis_record_with_risk.json.zip").getFile());
+    TimeSeriesMLAnalysisRecord timeSeriesMLAnalysisRecord =
+        JsonUtils.asObject(readZippedContents(file), TimeSeriesMLAnalysisRecord.class);
+    assertThat(timeSeriesMLAnalysisRecord.getRiskScore()).isNull();
+    timeSeriesMLAnalysisRecord.setOverallMetricScores(new HashMap<>());
+    final NewRelicCVServiceConfiguration newRelicCVServiceConfiguration =
+        NewRelicCVServiceConfiguration.builder().build();
+    final String cvConfigId = wingsPersistence.save(newRelicCVServiceConfiguration);
+    final LearningEngineAnalysisTask learningEngineAnalysisTask =
+        LearningEngineAnalysisTask.builder().state_execution_id(generateUuid()).cluster_level(0).build();
+    final String taskId = wingsPersistence.save(learningEngineAnalysisTask);
+    timeSeriesMLAnalysisRecord.setCvConfigId(cvConfigId);
+    metricDataAnalysisService.saveAnalysisRecordsML(accountId, StateType.NEW_RELIC, appId,
+        learningEngineAnalysisTask.getState_execution_id(), null, DEFAULT_GROUP_NAME, 10, taskId, null, cvConfigId,
+        timeSeriesMLAnalysisRecord, null);
+    final TimeSeriesMLAnalysisRecord savedAnalysisRecord =
+        wingsPersistence.createQuery(TimeSeriesMLAnalysisRecord.class, excludeAuthority).get();
+    assertThat(savedAnalysisRecord.getRiskScore()).isEqualTo(-1.0);
   }
 
   @Test

@@ -432,7 +432,7 @@ public class TimeSeriesAnalysisServiceImpl implements TimeSeriesAnalysisService 
   }
 
   private double computeRiskScore(MetricAnalysisRecord mlAnalysisResponse) {
-    return mlAnalysisResponse.getOverallMetricScores().values().stream().mapToDouble(score -> score).max().orElse(0.0);
+    return mlAnalysisResponse.getOverallMetricScores().values().stream().mapToDouble(score -> score).max().orElse(-1.0);
   }
 
   @Override
