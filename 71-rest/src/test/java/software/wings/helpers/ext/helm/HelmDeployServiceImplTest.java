@@ -16,6 +16,7 @@ import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
 import static org.apache.commons.lang3.StringUtils.replace;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.joor.Reflect.on;
@@ -1065,6 +1066,22 @@ public class HelmDeployServiceImplTest extends WingsBaseTest {
     assertThat(helmCommandResponse.getOutput()).contains("Some I/O issue");
   }
 
+  @Test
+  @Owner(developers = ABOSII)
+  @Category(UnitTests.class)
+  public void testRollbackFailedCommand() throws Exception {
+    HelmRollbackCommandRequest request = HelmRollbackCommandRequest.builder().build();
+    HelmInstallCommandResponse failureResponse =
+        HelmInstallCommandResponse.builder().output("Unable to rollback").commandExecutionStatus(FAILURE).build();
+
+    doReturn(failureResponse).when(helmClient).rollback(request);
+
+    HelmInstallCommandResponse response = (HelmInstallCommandResponse) helmDeployService.rollback(request);
+
+    assertThat(response.getCommandExecutionStatus()).isEqualTo(FAILURE);
+    assertThat(response.getOutput()).isEqualTo("Unable to rollback");
+  }
+
   private void successWhenHelm3PresentInClientTools() throws InterruptedException, IOException, TimeoutException {
     doReturn("/client-tools/helm").when(k8sGlobalConfigService).getHelmPath(V3);
 
@@ -1176,6 +1193,17 @@ public class HelmDeployServiceImplTest extends WingsBaseTest {
     helmDeployService.deleteAndPurgeHelmRelease(helmInstallCommandRequest, new ExecutionLogCallback());
 
     verify(helmClient, times(1)).deleteHelmRelease(helmInstallCommandRequest);
+  }
+
+  @Test
+  @Owner(developers = ABOSII)
+  @Category(UnitTests.class)
+  public void testDeleteAndPurgeHelmReleaseNameNotFailOnException() throws Exception {
+    doThrow(new IOException("Unable to execute process")).when(helmClient).deleteHelmRelease(helmInstallCommandRequest);
+
+    assertThatCode(
+        () -> helmDeployService.deleteAndPurgeHelmRelease(helmInstallCommandRequest, new ExecutionLogCallback()))
+        .doesNotThrowAnyException();
   }
 
   @Test
@@ -1467,6 +1495,42 @@ public class HelmDeployServiceImplTest extends WingsBaseTest {
   @Test
   @Owner(developers = ABOSII)
   @Category(UnitTests.class)
+  public void testGetHelmChartInfoVersionFromChartSpec() throws Exception {
+    helmInstallCommandRequest.setRepoConfig(null);
+    helmInstallCommandRequest.getChartSpecification().setChartName("chartName");
+    helmInstallCommandRequest.getChartSpecification().setChartVersion("chartVersionFromSpec");
+
+    doReturn(helmCliReleaseHistoryResponse).when(helmClient).releaseHistory(helmInstallCommandRequest);
+    doReturn(helmInstallCommandResponse).when(helmClient).upgrade(helmInstallCommandRequest);
+    doReturn(helmCliListReleasesResponse).when(helmClient).listReleases(helmInstallCommandRequest);
+
+    HelmInstallCommandResponse response =
+        (HelmInstallCommandResponse) helmDeployService.deploy(helmInstallCommandRequest);
+
+    assertThat(response.getHelmChartInfo().getVersion()).isEqualTo("chartVersionFromSpec");
+  }
+
+  @Test
+  @Owner(developers = ABOSII)
+  @Category(UnitTests.class)
+  public void testGetHelmChartInfoRepourlFromChartSpecChartName() throws Exception {
+    helmInstallCommandRequest.setRepoConfig(null);
+    helmInstallCommandRequest.getChartSpecification().setChartVersion("chartVersion");
+    helmInstallCommandRequest.getChartSpecification().setChartName("chartRepoUrlFromSpec/chartName");
+
+    doReturn(helmCliReleaseHistoryResponse).when(helmClient).releaseHistory(helmInstallCommandRequest);
+    doReturn(helmInstallCommandResponse).when(helmClient).upgrade(helmInstallCommandRequest);
+    doReturn(helmCliListReleasesResponse).when(helmClient).listReleases(helmInstallCommandRequest);
+
+    HelmInstallCommandResponse response =
+        (HelmInstallCommandResponse) helmDeployService.deploy(helmInstallCommandRequest);
+
+    assertThat(response.getHelmChartInfo().getRepoUrl()).isEqualTo("chartRepoUrlFromSpec");
+  }
+
+  @Test
+  @Owner(developers = ABOSII)
+  @Category(UnitTests.class)
   public void testGetHelmChartInfoFromRemoteRepo() throws Exception {
     testGetHelmChartInfoFromRemoteRepo(StoreType.HelmChartRepo);
     testGetHelmChartInfoFromRemoteRepo(StoreType.HelmSourceRepo);
@@ -1492,5 +1556,65 @@ public class HelmDeployServiceImplTest extends WingsBaseTest {
         (HelmInstallCommandResponse) helmDeployService.deploy(helmInstallCommandRequest);
 
     assertThat(response.getHelmChartInfo()).isEqualTo(helmChartInfo);
+  }
+
+  @Test
+  @Owner(developers = ABOSII)
+  @Category(UnitTests.class)
+  public void testDeleteHelmReleaseAtEnd() throws Exception {
+    String releaseListOutput = "NAME\tREVISION\tSTATUS\tCHART\tNAMESPACE\n";
+    releaseListOutput += "releaseX\t3\tSUCCESS\tchart\tdefault\n";
+    releaseListOutput += "releaseY\t1\tSUCCESS\tchart\tdefault\n";
+    releaseListOutput += "releaseZ\t1\tFAILED\tchart\tdefault\n";
+    releaseListOutput += "release\t1\tFAILED\tchart\tdefault\n";
+    helmInstallCommandRequest.setReleaseName("release");
+
+    doReturn(HelmCliResponse.builder().output(releaseListOutput).commandExecutionStatus(SUCCESS).build())
+        .when(helmClient)
+        .listReleases(helmInstallCommandRequest);
+
+    helmDeployService.deploy(helmInstallCommandRequest);
+
+    verify(helmClient, times(1)).deleteHelmRelease(helmInstallCommandRequest);
+  }
+
+  @Test
+  @Owner(developers = ABOSII)
+  @Category(UnitTests.class)
+  public void testRepoUpdateOnDeploy() throws Exception {
+    helmInstallCommandRequest.setRepoConfig(null);
+
+    doReturn(helmCliReleaseHistoryResponse).when(helmClient).releaseHistory(helmInstallCommandRequest);
+    helmDeployService.deploy(helmInstallCommandRequest);
+
+    verify(helmClient, times(1)).repoUpdate(helmInstallCommandRequest);
+  }
+
+  @Test
+  @Owner(developers = ABOSII)
+  @Category(UnitTests.class)
+  public void testRepoUpdateOnDeployNonInstallRequest() throws Exception {
+    helmInstallCommandRequest.setRepoConfig(null);
+    helmInstallCommandRequest.setHelmCommandType(HelmCommandRequest.HelmCommandType.LIST_RELEASE);
+    doReturn(helmCliReleaseHistoryResponse).when(helmClient).releaseHistory(helmInstallCommandRequest);
+    helmDeployService.deploy(helmInstallCommandRequest);
+
+    verify(helmClient, never()).repoUpdate(helmInstallCommandRequest);
+  }
+
+  @Test
+  @Owner(developers = ABOSII)
+  @Category(UnitTests.class)
+  public void testRepoUpdateOnDeployException() throws Exception {
+    IOException thrownException = new IOException("Unable to do something");
+    helmInstallCommandRequest.setRepoConfig(null);
+
+    doReturn(helmCliReleaseHistoryResponse).when(helmClient).releaseHistory(helmInstallCommandRequest);
+    doThrow(thrownException).when(helmClient).repoUpdate(helmInstallCommandRequest);
+
+    HelmInstallCommandResponse response =
+        (HelmInstallCommandResponse) helmDeployService.deploy(helmInstallCommandRequest);
+    assertThat(response.getCommandExecutionStatus()).isEqualTo(FAILURE);
+    assertThat(response.getOutput()).contains("Unable to do something");
   }
 }
