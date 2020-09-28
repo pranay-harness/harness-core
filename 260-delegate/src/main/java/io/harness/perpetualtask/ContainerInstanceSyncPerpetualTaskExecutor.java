@@ -136,9 +136,9 @@ public class ContainerInstanceSyncPerpetualTaskExecutor implements PerpetualTask
       KubernetesConfig kubernetesConfig) {
     try {
       long timeoutMillis = K8sTaskHelperBase.getTimeoutMillisFromMinutes(DEFAULT_STEADY_STATE_TIMEOUT);
-      List<K8sPod> k8sPodList =
-          k8sTaskHelperBase.getPodDetails(kubernetesConfig, k8sContainerInstanceSyncPerpetualTaskParams.getNamespace(),
-              k8sContainerInstanceSyncPerpetualTaskParams.getReleaseName(), timeoutMillis);
+      List<K8sPod> k8sPodList = k8sTaskHelperBase.getPodDetailsFabric8(kubernetesConfig,
+          k8sContainerInstanceSyncPerpetualTaskParams.getNamespace(),
+          k8sContainerInstanceSyncPerpetualTaskParams.getReleaseName(), timeoutMillis);
 
       return K8sTaskExecutionResponse.builder()
           .k8sTaskResponse(K8sInstanceSyncResponse.builder().k8sPodInfoList(k8sPodList).build())

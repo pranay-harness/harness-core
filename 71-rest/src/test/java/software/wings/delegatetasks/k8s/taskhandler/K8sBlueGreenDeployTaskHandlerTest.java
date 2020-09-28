@@ -588,6 +588,7 @@ public class K8sBlueGreenDeployTaskHandlerTest extends WingsBaseTest {
     on(k8sBlueGreenDeployTaskHandler).set("releaseName", "releaseName");
     on(k8sBlueGreenDeployTaskHandler).set("stageColor", "stageColor");
     on(k8sBlueGreenDeployTaskHandler).set("primaryColor", "primaryColor");
+    on(k8sBlueGreenDeployTaskHandler).set("isDeprecateFabric8Enabled", true);
 
     testGetAllPodsWithStageAndPrimary();
     testGetAllPodsWitNoPrimary();

@@ -21,6 +21,7 @@ import static org.mockito.Matchers.anyListOf;
 import static org.mockito.Matchers.anyLong;
 import static org.mockito.Matchers.anyMapOf;
 import static org.mockito.Matchers.anyString;
+import static org.mockito.Matchers.eq;
 import static org.mockito.Matchers.isA;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
@@ -103,6 +104,11 @@ import io.kubernetes.client.openapi.ApiClient;
 import io.kubernetes.client.openapi.ApiException;
 import io.kubernetes.client.openapi.ApiResponse;
 import io.kubernetes.client.openapi.Pair;
+import io.kubernetes.client.openapi.models.V1Pod;
+import io.kubernetes.client.openapi.models.V1PodList;
+import io.kubernetes.client.openapi.models.V1PodListBuilder;
+import io.kubernetes.client.openapi.models.V1PodStatus;
+import io.kubernetes.client.openapi.models.V1PodStatusBuilder;
 import io.kubernetes.client.openapi.models.V1Service;
 import io.kubernetes.client.openapi.models.V1ServiceBuilder;
 import io.kubernetes.client.openapi.models.V1ServiceList;
@@ -110,6 +116,8 @@ import io.kubernetes.client.openapi.models.V1ServiceListBuilder;
 import io.kubernetes.client.openapi.models.VersionInfo;
 import io.kubernetes.client.openapi.models.VersionInfoBuilder;
 import okhttp3.Call;
+
+import org.joda.time.DateTime;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Rule;
@@ -345,6 +353,8 @@ public class KubernetesContainerServiceImplTest extends CategoryTest {
              anyMapOf(String.class, Object.class), any(String[].class), any(ApiCallback.class)))
         .thenReturn(k8sApiCall);
     when(k8sApiClient.escapeString(anyString())).thenAnswer(invocation -> invocation.getArgumentAt(0, String.class));
+    when(k8sApiClient.parameterToPair(anyString(), any())).thenCallRealMethod();
+    when(k8sApiClient.parameterToString(any())).thenCallRealMethod();
 
     replicationController = new ReplicationController();
     spec = new ReplicationControllerSpec();
@@ -983,5 +993,68 @@ public class KubernetesContainerServiceImplTest extends CategoryTest {
         .thenThrow(new ApiException(409, "Unable to get cluster version"));
     assertThatThrownBy(() -> kubernetesContainerService.getVersion(KUBERNETES_CONFIG))
         .hasMessage("Unable to retrieve k8s version. Code: 409, message: Unable to get cluster version");
+  }
+
+  @Test
+  @Owner(developers = ABOSII)
+  @Category(UnitTests.class)
+  public void testGetRunningPodsWithLabels() throws Exception {
+    V1PodStatus runningStatus = new V1PodStatusBuilder().withPhase("Running").build();
+    V1PodStatus terminatedStatus = new V1PodStatusBuilder().withPhase("Terminated").build();
+    Map<String, String> labels = ImmutableMap.of("label1", "value1", "label2", "value2");
+    V1PodList v1PodList = new V1PodListBuilder()
+                              .addNewItem() // With running status
+                              .withNewMetadata()
+                              .withName("pod-1")
+                              .endMetadata()
+                              .withStatus(runningStatus)
+                              .endItem()
+                              .addNewItem() // With deletion timestamp
+                              .withNewMetadata()
+                              .withName("pod-2")
+                              .withDeletionTimestamp(DateTime.now())
+                              .endMetadata()
+                              .withStatus(terminatedStatus)
+                              .endItem()
+                              .addNewItem() // Without status
+                              .withNewMetadata()
+                              .withName("pod-3")
+                              .endMetadata()
+                              .endItem()
+                              .addNewItem() // With terminated status
+                              .withNewMetadata()
+                              .withName("pod-4")
+                              .endMetadata()
+                              .withStatus(terminatedStatus)
+                              .endItem()
+                              .build();
+
+    when(k8sApiClient.execute(k8sApiCall, TypeToken.get(V1PodList.class).getType()))
+        .thenReturn(new ApiResponse<>(200, emptyMap(), v1PodList));
+
+    List<V1Pod> result = kubernetesContainerService.getRunningPodsWithLabels(KUBERNETES_CONFIG, "default", labels);
+    ArgumentCaptor<List<Pair>> queryParamsCaptor = ArgumentCaptor.forClass((Class) List.class);
+    verify(k8sApiClient, times(1))
+        .buildCall(anyString(), eq("GET"), queryParamsCaptor.capture(), anyListOf(Pair.class), any(),
+            anyMapOf(String.class, String.class), anyMapOf(String.class, String.class),
+            anyMapOf(String.class, Object.class), any(String[].class), any(ApiCallback.class));
+    assertThat(result).hasSize(1);
+    assertThat(result.get(0).getMetadata().getName()).isEqualTo("pod-1");
+    Optional<Pair> labelSelector =
+        queryParamsCaptor.getValue().stream().filter(pair -> "labelSelector".equals(pair.getName())).findAny();
+    assertThat(labelSelector).isPresent();
+    assertThat(labelSelector.get().getValue()).isEqualTo("label1=value1,label2=value2");
+  }
+
+  @Test
+  @Owner(developers = ABOSII)
+  @Category(UnitTests.class)
+  public void testGetRunningPodsWithLabelsException() throws Exception {
+    Map<String, String> labels = ImmutableMap.of("label1", "value1");
+    when(k8sApiClient.execute(k8sApiCall, TypeToken.get(V1PodList.class).getType()))
+        .thenThrow(new ApiException(401, emptyMap(), "{\"error\": \"unauthorized\"}"));
+
+    assertThatThrownBy(() -> kubernetesContainerService.getRunningPodsWithLabels(KUBERNETES_CONFIG, "default", labels))
+        .hasMessageContaining("Unable to get running pods. Code: 401, message: {\"error\": \"unauthorized\"}");
   }
 }

@@ -73,6 +73,7 @@ public class K8sScaleTaskHandler extends K8sTaskHandler {
 
     k8sScaleResponse = K8sScaleResponse.builder().build();
 
+    boolean isDeprecateFabric8Enabled = k8sScaleTaskParameters.isDeprecateFabric8Enabled();
     KubernetesConfig kubernetesConfig =
         containerDeploymentDelegateHelper.getKubernetesConfig(k8sScaleTaskParameters.getK8sClusterConfig());
 
@@ -89,8 +90,11 @@ public class K8sScaleTaskHandler extends K8sTaskHandler {
     }
 
     long steadyStateTimeoutInMillis = getTimeoutMillisFromMinutes(k8sScaleTaskParameters.getTimeoutIntervalInMin());
-    List<K8sPod> beforePodList = k8sTaskHelperBase.getPodDetails(kubernetesConfig, resourceIdToScale.getNamespace(),
-        k8sScaleTaskParameters.getReleaseName(), steadyStateTimeoutInMillis);
+    List<K8sPod> beforePodList = isDeprecateFabric8Enabled
+        ? k8sTaskHelperBase.getPodDetails(kubernetesConfig, resourceIdToScale.getNamespace(),
+              k8sScaleTaskParameters.getReleaseName(), steadyStateTimeoutInMillis)
+        : k8sTaskHelperBase.getPodDetailsFabric8(kubernetesConfig, resourceIdToScale.getNamespace(),
+              k8sScaleTaskParameters.getReleaseName(), steadyStateTimeoutInMillis);
 
     success = k8sTaskHelperBase.scale(client, k8sDelegateTaskParams, resourceIdToScale, targetReplicaCount,
         new ExecutionLogCallback(delegateLogService, k8sScaleTaskParameters.getAccountId(),
@@ -110,8 +114,11 @@ public class K8sScaleTaskHandler extends K8sTaskHandler {
       }
     }
 
-    List<K8sPod> afterPodList = k8sTaskHelperBase.getPodDetails(kubernetesConfig, resourceIdToScale.getNamespace(),
-        k8sScaleTaskParameters.getReleaseName(), steadyStateTimeoutInMillis);
+    List<K8sPod> afterPodList = isDeprecateFabric8Enabled
+        ? k8sTaskHelperBase.getPodDetails(kubernetesConfig, resourceIdToScale.getNamespace(),
+              k8sScaleTaskParameters.getReleaseName(), steadyStateTimeoutInMillis)
+        : k8sTaskHelperBase.getPodDetailsFabric8(kubernetesConfig, resourceIdToScale.getNamespace(),
+              k8sScaleTaskParameters.getReleaseName(), steadyStateTimeoutInMillis);
 
     k8sScaleResponse.setK8sPodList(tagNewPods(beforePodList, afterPodList));
     return k8sTaskHelper.getK8sTaskExecutionResponse(k8sScaleResponse, CommandExecutionStatus.SUCCESS);

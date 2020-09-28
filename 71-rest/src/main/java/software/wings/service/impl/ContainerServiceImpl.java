@@ -162,10 +162,9 @@ public class ContainerServiceImpl implements ContainerService {
         if (isEmpty(containerServiceParams.getReleaseName())) {
           return Collections.emptyList();
         }
-        Map<String, String> labels =
-            ImmutableMap.of(HelmConstants.HELM_RELEASE_LABEL, containerServiceParams.getReleaseName());
-        final List<Pod> pods = kubernetesContainerService.getRunningPodsWithLabels(
-            kubernetesConfig, containerServiceParams.getNamespace(), labels);
+        final List<Pod> pods = kubernetesContainerService.getRunningPodsWithLabelsFabric8(kubernetesConfig,
+            containerServiceParams.getNamespace(),
+            ImmutableMap.of(HelmConstants.HELM_RELEASE_LABEL, containerServiceParams.getReleaseName()));
         return pods.stream()
             .map(pod
                 -> KubernetesContainerInfo.builder()

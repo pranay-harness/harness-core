@@ -57,7 +57,7 @@ public class ContainerServiceImplTest extends WingsBaseTest {
         buildContainerSvcParams(null, KubernetesClusterConfig.builder().build());
     doReturn(asList(buildPod("p-1", "i-1"), buildPod("p-2", "i-2")))
         .when(kubernetesContainerService)
-        .getRunningPodsWithLabels(
+        .getRunningPodsWithLabelsFabric8(
             any(KubernetesConfig.class), eq("default"), eq(ImmutableMap.of("release", "release-name")));
 
     final List<ContainerInfo> containerInfos = containerService.getContainerInfos(containerServiceParams);

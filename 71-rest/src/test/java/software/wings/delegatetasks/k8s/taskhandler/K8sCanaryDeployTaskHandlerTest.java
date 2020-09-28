@@ -117,6 +117,8 @@ public class K8sCanaryDeployTaskHandlerTest extends WingsBaseTest {
     doReturn(KubernetesConfig.builder().namespace("default").build())
         .when(containerDeploymentDelegateHelper)
         .getKubernetesConfig(any(K8sClusterConfig.class));
+
+    on(k8sCanaryDeployTaskHandler).set("isDeprecateFabric8Enabled", true);
   }
 
   @Test
