@@ -123,6 +123,8 @@ public class DefaultConnectorServiceImpl implements ConnectorService {
     Connector newConnector = connectorMapper.toConnector(connectorRequestDTO, accountIdentifier);
     newConnector.setId(existingConnector.get().getId());
     newConnector.setVersion(existingConnector.get().getVersion());
+    newConnector.setStatus(existingConnector.get().getStatus());
+    newConnector.setCreatedAt(existingConnector.get().getCreatedAt());
     Connector updatedConnector = connectorRepository.save(newConnector);
     return connectorMapper.writeDTO(updatedConnector);
   }
