@@ -184,6 +184,6 @@ public class K8sRollingBaseHandlerTest extends CategoryTest {
 
     k8sRollingBaseHandler.getPods(3000L, managedWorkload, kubernetesConfig, "releaseName");
 
-    verify(k8sTaskHelperBase, times(2)).getPodDetails(kubernetesConfig, "default", "releaseName", 3000L);
+    verify(k8sTaskHelperBase, times(1)).getPodDetails(kubernetesConfig, "default", "releaseName", 3000L);
   }
 }

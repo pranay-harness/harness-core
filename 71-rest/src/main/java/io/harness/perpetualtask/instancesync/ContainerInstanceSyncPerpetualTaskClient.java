@@ -32,6 +32,7 @@ import software.wings.annotation.EncryptableSetting;
 import software.wings.beans.AzureKubernetesInfrastructureMapping;
 import software.wings.beans.ContainerInfrastructureMapping;
 import software.wings.beans.EcsInfrastructureMapping;
+import software.wings.beans.FeatureName;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.TaskType;
 import software.wings.delegatetasks.aws.AwsCommandHelper;
@@ -40,6 +41,7 @@ import software.wings.helpers.ext.k8s.request.K8sClusterConfig;
 import software.wings.helpers.ext.k8s.request.K8sInstanceSyncTaskParameters;
 import software.wings.service.impl.ContainerMetadataType;
 import software.wings.service.impl.ContainerServiceParams;
+import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.security.SecretManager;
@@ -59,6 +61,7 @@ public class ContainerInstanceSyncPerpetualTaskClient implements PerpetualTaskSe
   @Inject SecretManager secretManager;
   @Inject SettingsService settingsService;
   @Inject KryoSerializer kryoSerializer;
+  @Inject FeatureFlagService featureFlagService;
 
   @Override
   public Message getTaskParams(PerpetualTaskClientContext clientContext) {
@@ -99,6 +102,8 @@ public class ContainerInstanceSyncPerpetualTaskClient implements PerpetualTaskSe
                                                 .setK8SClusterConfig(clusterConfig)
                                                 .setNamespace(taskData.getNamespace())
                                                 .setReleaseName(taskData.getReleaseName())
+                                                .setDeprecateFabric8Enabled(featureFlagService.isEnabled(
+                                                    FeatureName.DEPRECATE_FABRIC8_FOR_K8S, taskData.getAccountId()))
                                                 .build())
         .build();
   }

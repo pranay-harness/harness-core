@@ -91,7 +91,7 @@ public class ContainerInstanceSyncPerpetualTaskExecutorTest extends DelegateTest
     final K8sPod pod = K8sPod.builder().namespace("namespace").releaseName("release").build();
     doReturn(Arrays.asList(pod))
         .when(k8sTaskHelperBase)
-        .getPodDetailsFabric8(any(KubernetesConfig.class), eq("namespace"), eq("release"), anyLong());
+        .getPodDetails(any(KubernetesConfig.class), eq("namespace"), eq("release"), anyLong());
     doReturn(call)
         .when(delegateAgentManagerClient)
         .publishInstanceSyncResult(anyString(), anyString(), any(DelegateResponseData.class));
@@ -137,7 +137,7 @@ public class ContainerInstanceSyncPerpetualTaskExecutorTest extends DelegateTest
 
     doThrow(new RuntimeException("Failed to retrieve pod list"))
         .when(k8sTaskHelperBase)
-        .getPodDetailsFabric8(any(KubernetesConfig.class), eq("namespace"), eq("release"), anyLong());
+        .getPodDetails(any(KubernetesConfig.class), eq("namespace"), eq("release"), anyLong());
     doReturn(call)
         .when(delegateAgentManagerClient)
         .publishInstanceSyncResult(anyString(), anyString(), any(DelegateResponseData.class));
@@ -297,6 +297,7 @@ public class ContainerInstanceSyncPerpetualTaskExecutorTest extends DelegateTest
                                                     .setAccountId("accountId")
                                                     .setNamespace("namespace")
                                                     .setReleaseName("release")
+                                                    .setDeprecateFabric8Enabled(true)
                                                     .build())
             .build();
     return PerpetualTaskExecutionParams.newBuilder().setCustomizedParams(Any.pack(params)).build();
