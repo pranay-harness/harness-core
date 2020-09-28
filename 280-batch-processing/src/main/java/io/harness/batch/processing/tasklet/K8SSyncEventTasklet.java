@@ -37,6 +37,9 @@ public class K8SSyncEventTasklet extends EventWriter implements Tasklet {
 
   @Override
   public RepeatStatus execute(StepContribution stepContribution, ChunkContext chunkContext) {
+    if (config.getBatchQueryConfig().isSyncJobDisabled()) {
+      return null;
+    }
     parameters = chunkContext.getStepContext().getStepExecution().getJobParameters();
     int batchSize = config.getBatchQueryConfig().getQueryBatchSize();
     Long startTime = CCMJobConstants.getFieldLongValueFromJobParams(parameters, CCMJobConstants.JOB_START_DATE);

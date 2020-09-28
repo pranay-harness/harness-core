@@ -24,6 +24,7 @@ timescaledb:
 batchQueryConfig:
   queryBatchSize: 4000
   instanceDataBatchSize: 5000
+  syncJobDisabled: true
 
 podInfo:
   name: batch-processing-0

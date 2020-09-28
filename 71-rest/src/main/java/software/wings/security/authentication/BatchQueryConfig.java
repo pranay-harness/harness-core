@@ -11,4 +11,5 @@ import lombok.Data;
 public class BatchQueryConfig {
   private int queryBatchSize;
   private int instanceDataBatchSize;
+  private boolean syncJobDisabled;
 }

@@ -10,7 +10,6 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableSet;
 import com.google.protobuf.Any;
 import com.google.protobuf.Message;
 import com.google.protobuf.Timestamp;
@@ -213,11 +212,12 @@ public class K8sPodInfoEventTaskletTest extends CategoryTest {
   @Owner(developers = HITESH)
   @Category(UnitTests.class)
   public void shouldCreateEmptyInstancePodInfo() throws Exception {
+    InstanceData instanceData = getNodeInstantData();
+    when(instanceDataService.fetchInstanceData(ACCOUNT_ID, CLUSTER_ID, POD_UID)).thenReturn(instanceData);
     PublishedMessage k8sPodInfoMessage = getK8sPodInfoMessage(POD_UID, POD_NAME, NODE_NAME, CLOUD_PROVIDER_ID,
         ACCOUNT_ID, CLUSTER_ID, CLUSTER_NAME, NAMESPACE, Collections.emptyMap(), Collections.emptyMap(),
         Resource.newBuilder().build(), START_TIMESTAMP, WORKLOAD_NAME, WORKLOAD_TYPE, WORKLOAD_ID);
-    InstanceInfo instanceInfo =
-        k8sPodInfoTasklet.process(k8sPodInfoMessage, ImmutableMap.of(POD_UID, ImmutableSet.of(CLUSTER_ID)));
+    InstanceInfo instanceInfo = k8sPodInfoTasklet.process(k8sPodInfoMessage);
     assertThat(instanceInfo.getInstanceId()).isNull();
   }
 
@@ -243,7 +243,7 @@ public class K8sPodInfoEventTaskletTest extends CategoryTest {
     PublishedMessage k8sPodInfoMessage =
         getK8sPodInfoMessage(POD_UID, POD_NAME, NODE_NAME, CLOUD_PROVIDER_ID, ACCOUNT_ID, CLUSTER_ID, CLUSTER_NAME,
             NAMESPACE, label, NAMESPACE_LABELS, resource, START_TIMESTAMP, WORKLOAD_NAME, WORKLOAD_TYPE, WORKLOAD_ID);
-    InstanceInfo instanceInfo = k8sPodInfoTasklet.process(k8sPodInfoMessage, ImmutableMap.of());
+    InstanceInfo instanceInfo = k8sPodInfoTasklet.process(k8sPodInfoMessage);
     io.harness.batch.processing.ccm.Resource infoResource = instanceInfo.getResource();
     io.harness.batch.processing.ccm.Resource limitResource = instanceInfo.getResourceLimit();
     Map<String, String> metaData = instanceInfo.getMetaData();
@@ -289,7 +289,7 @@ public class K8sPodInfoEventTaskletTest extends CategoryTest {
     PublishedMessage k8sPodInfoMessage =
         getK8sPodInfoMessage(POD_UID, KUBE_PROXY_POD_NAME, NODE_NAME, CLOUD_PROVIDER_ID, ACCOUNT_ID, CLUSTER_ID,
             CLUSTER_NAME, KUBE_SYSTEM_NAMESPACE, label, NAMESPACE_LABELS, resource, START_TIMESTAMP, "", "", "");
-    InstanceInfo instanceInfo = k8sPodInfoTasklet.process(k8sPodInfoMessage, ImmutableMap.of());
+    InstanceInfo instanceInfo = k8sPodInfoTasklet.process(k8sPodInfoMessage);
     io.harness.batch.processing.ccm.Resource infoResource = instanceInfo.getResource();
     io.harness.batch.processing.ccm.Resource limitResource = instanceInfo.getResourceLimit();
 
