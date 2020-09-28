@@ -8,6 +8,7 @@ import io.harness.connector.entities.ConnectorConnectivityDetails;
 import io.harness.delegate.beans.connector.ConnectorConfigDTO;
 import io.harness.delegate.beans.connector.ConnectorType;
 import io.harness.delegate.beans.connector.appdynamicsconnector.AppDynamicsConnectorDTO;
+import io.harness.delegate.beans.connector.artifactoryconnector.ArtifactoryConnectorDTO;
 import io.harness.delegate.beans.connector.awsconnector.AwsConnectorDTO;
 import io.harness.delegate.beans.connector.docker.DockerConnectorDTO;
 import io.harness.delegate.beans.connector.gcpconnector.GcpConnectorDTO;
@@ -72,7 +73,8 @@ public class ConnectorDTO {
         @JsonSubTypes.Type(value = LocalConnectorDTO.class, name = "Local"),
         @JsonSubTypes.Type(value = GcpKmsConfigDTO.class, name = "GcpKms"),
         @JsonSubTypes.Type(value = GcpConnectorDTO.class, name = "Gcp"),
-        @JsonSubTypes.Type(value = AwsConnectorDTO.class, name = "Aws")
+        @JsonSubTypes.Type(value = AwsConnectorDTO.class, name = "Aws"),
+        @JsonSubTypes.Type(value = ArtifactoryConnectorDTO.class, name = "Artifactory"),
   })
   ConnectorConfigDTO connectorConfig;
 

@@ -11,6 +11,8 @@ import io.harness.connector.mappers.ConnectorEntityToDTOMapper;
 import io.harness.connector.mappers.appdynamicsmapper.AppDynamicsConnectorSummaryMapper;
 import io.harness.connector.mappers.appdynamicsmapper.AppDynamicsDTOToEntity;
 import io.harness.connector.mappers.appdynamicsmapper.AppDynamicsEntityToDTO;
+import io.harness.connector.mappers.artifactorymapper.ArtifactoryDTOToEntity;
+import io.harness.connector.mappers.artifactorymapper.ArtifactoryEntityToDTO;
 import io.harness.connector.mappers.awsmapper.AwsDTOToEntity;
 import io.harness.connector.mappers.awsmapper.AwsEntityToDTO;
 import io.harness.connector.mappers.docker.DockerConnectorSummaryMapper;
@@ -39,8 +41,11 @@ import io.harness.connector.mappers.splunkconnectormapper.SplunkDTOToEntity;
 import io.harness.connector.mappers.splunkconnectormapper.SplunkEntityToDTO;
 import io.harness.connector.services.ConnectorService;
 import io.harness.connector.validator.AppDynamicsConnectionValidator;
+import io.harness.connector.validator.ArtifactoryConnectionValidator;
+import io.harness.connector.validator.AwsConnectorValidator;
 import io.harness.connector.validator.ConnectionValidator;
 import io.harness.connector.validator.DockerConnectionValidator;
+import io.harness.connector.validator.GcpConnectorValidator;
 import io.harness.connector.validator.GitConnectorValidator;
 import io.harness.connector.validator.KubernetesConnectionValidator;
 import io.harness.connector.validator.SplunkConnectionValidator;
@@ -63,6 +68,10 @@ public class ConnectorModule extends AbstractModule {
     connectorValidatorMapBinder.addBinding(ConnectorType.APP_DYNAMICS.getDisplayName())
         .to(AppDynamicsConnectionValidator.class);
     connectorValidatorMapBinder.addBinding(ConnectorType.DOCKER.getDisplayName()).to(DockerConnectionValidator.class);
+    connectorValidatorMapBinder.addBinding(ConnectorType.GCP.getDisplayName()).to(GcpConnectorValidator.class);
+    connectorValidatorMapBinder.addBinding(ConnectorType.AWS.getDisplayName()).to(AwsConnectorValidator.class);
+    connectorValidatorMapBinder.addBinding(ConnectorType.ARTIFACTORY.getDisplayName())
+        .to(ArtifactoryConnectionValidator.class);
 
     MapBinder<String, ConnectorDTOToEntityMapper> connectorDTOToEntityMapBinder =
         MapBinder.newMapBinder(binder(), String.class, ConnectorDTOToEntityMapper.class);
@@ -78,6 +87,8 @@ public class ConnectorModule extends AbstractModule {
     connectorDTOToEntityMapBinder.addBinding(ConnectorType.DOCKER.getDisplayName()).to(DockerDTOToEntity.class);
     connectorDTOToEntityMapBinder.addBinding(ConnectorType.GCP.getDisplayName()).to(GcpDTOToEntity.class);
     connectorDTOToEntityMapBinder.addBinding(ConnectorType.AWS.getDisplayName()).to(AwsDTOToEntity.class);
+    connectorDTOToEntityMapBinder.addBinding(ConnectorType.ARTIFACTORY.getDisplayName())
+        .to(ArtifactoryDTOToEntity.class);
 
     MapBinder<String, ConnectorEntityToDTOMapper> connectorEntityToDTOMapper =
         MapBinder.newMapBinder(binder(), String.class, ConnectorEntityToDTOMapper.class);
@@ -92,6 +103,7 @@ public class ConnectorModule extends AbstractModule {
     connectorEntityToDTOMapper.addBinding(ConnectorType.DOCKER.getDisplayName()).to(DockerEntityToDTO.class);
     connectorEntityToDTOMapper.addBinding(ConnectorType.GCP.getDisplayName()).to(GcpEntityToDTO.class);
     connectorEntityToDTOMapper.addBinding(ConnectorType.AWS.getDisplayName()).to(AwsEntityToDTO.class);
+    connectorEntityToDTOMapper.addBinding(ConnectorType.ARTIFACTORY.getDisplayName()).to(ArtifactoryEntityToDTO.class);
 
     MapBinder<String, ConnectorConfigSummaryDTOMapper> connectorConfigSummaryDTOMapper =
         MapBinder.newMapBinder(binder(), String.class, ConnectorConfigSummaryDTOMapper.class);

@@ -37,6 +37,7 @@ import io.harness.exception.UnexpectedException;
 import io.harness.exception.UnknownEnumTypeException;
 
 import java.util.Collections;
+import java.util.List;
 
 @Singleton
 public class KubernetesDTOToEntity implements ConnectorDTOToEntityMapper<KubernetesClusterConfigDTO> {
@@ -46,9 +47,13 @@ public class KubernetesDTOToEntity implements ConnectorDTOToEntityMapper<Kuberne
     KubernetesCredential kubernetesCredential = getKubernetesCredential(k8ClusterDTO);
     KubernetesClusterConfig kubernetesClusterConfig =
         KubernetesClusterConfig.builder().credentialType(credentialType).credential(kubernetesCredential).build();
-    kubernetesClusterConfig.setCategories(Collections.singletonList(ConnectorCategory.CLOUD_PROVIDER));
     kubernetesClusterConfig.setType(KUBERNETES_CLUSTER);
     return kubernetesClusterConfig;
+  }
+
+  @Override
+  public List<ConnectorCategory> getConnectorCategory() {
+    return Collections.singletonList(ConnectorCategory.CLOUD_PROVIDER);
   }
 
   private KubernetesCredentialType getKubernetesCredentialType(KubernetesClusterConfigDTO k8ClusterDTO) {

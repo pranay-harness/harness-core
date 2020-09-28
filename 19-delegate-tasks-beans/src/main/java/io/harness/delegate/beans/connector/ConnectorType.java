@@ -19,7 +19,8 @@ public enum ConnectorType {
   @JsonProperty("Cyberark") CYBERARK("Cyberark"),
   @JsonProperty("CustomSecretManager") CUSTOM("CustomSecretManager"),
   @JsonProperty("Gcp") GCP("Gcp"),
-  @JsonProperty("Aws") AWS("Aws");
+  @JsonProperty("Aws") AWS("Aws"),
+  @JsonProperty("Artifactory") ARTIFACTORY("Artifactory");
 
   private final String displayName;
 

@@ -3,6 +3,7 @@ package io.harness.delegate.beans.connector.awsconnector;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
+import io.swagger.annotations.ApiModel;
 import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Data;
@@ -16,6 +17,7 @@ import javax.validation.constraints.NotNull;
 @NoArgsConstructor
 @JsonIgnoreProperties(ignoreUnknown = true)
 @FieldDefaults(level = AccessLevel.PRIVATE)
+@ApiModel("AwsCredential")
 public class AwsCredentialDTO {
   @Valid CrossAccountAccess crossAccountAccess;
   @NotNull @JsonProperty("type") AwsCredentialType awsCredentialType;

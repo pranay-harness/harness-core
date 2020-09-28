@@ -8,6 +8,7 @@ import io.harness.connector.entities.embedded.gitconnector.GitSSHAuthentication;
 import io.harness.connector.entities.embedded.gitconnector.GitUserNamePasswordAuthentication;
 import io.harness.connector.mappers.ConnectorDTOToEntityMapper;
 import io.harness.connector.mappers.SecretRefHelper;
+import io.harness.delegate.beans.connector.ConnectorCategory;
 import io.harness.delegate.beans.connector.gitconnector.CustomCommitAttributes;
 import io.harness.delegate.beans.connector.gitconnector.GitAuthType;
 import io.harness.delegate.beans.connector.gitconnector.GitAuthenticationDTO;
@@ -16,6 +17,9 @@ import io.harness.delegate.beans.connector.gitconnector.GitConnectionType;
 import io.harness.delegate.beans.connector.gitconnector.GitHTTPAuthenticationDTO;
 import io.harness.delegate.beans.connector.gitconnector.GitSSHAuthenticationDTO;
 import io.harness.exception.UnknownEnumTypeException;
+
+import java.util.Collections;
+import java.util.List;
 
 @Singleton
 public class GitDTOToEntity implements ConnectorDTOToEntityMapper<GitConfigDTO> {
@@ -34,6 +38,11 @@ public class GitDTOToEntity implements ConnectorDTOToEntityMapper<GitConfigDTO> 
         .customCommitAttributes(customCommitAttributes)
         .authenticationDetails(gitAuthentication)
         .build();
+  }
+
+  @Override
+  public List<ConnectorCategory> getConnectorCategory() {
+    return Collections.singletonList(ConnectorCategory.CLOUD_PROVIDER);
   }
 
   private String getBranchName(GitConfigDTO gitConfigDTO) {

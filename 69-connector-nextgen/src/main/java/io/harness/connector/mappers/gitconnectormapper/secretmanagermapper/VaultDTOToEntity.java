@@ -7,19 +7,23 @@ import io.harness.delegate.beans.connector.ConnectorCategory;
 import io.harness.delegate.beans.connector.vaultconnector.VaultConnectorDTO;
 
 import java.util.Collections;
+import java.util.List;
 
 public class VaultDTOToEntity implements ConnectorDTOToEntityMapper<VaultConnectorDTO> {
   @Override
   public Connector toConnectorEntity(VaultConnectorDTO connectorDTO) {
-    VaultConnector vaultConnector = VaultConnector.builder()
-                                        .accessType(connectorDTO.getAccessType())
-                                        .isDefault(connectorDTO.isDefault())
-                                        .isReadOnly(connectorDTO.isReadOnly())
-                                        .secretEngineName(connectorDTO.getSecretEngineName())
-                                        .vaultUrl(connectorDTO.getVaultUrl())
-                                        .secretEngineVersion(connectorDTO.getSecretEngineVersion())
-                                        .build();
-    vaultConnector.setCategories(Collections.singletonList(ConnectorCategory.SECRET_MANAGER));
-    return vaultConnector;
+    return VaultConnector.builder()
+        .accessType(connectorDTO.getAccessType())
+        .isDefault(connectorDTO.isDefault())
+        .isReadOnly(connectorDTO.isReadOnly())
+        .secretEngineName(connectorDTO.getSecretEngineName())
+        .vaultUrl(connectorDTO.getVaultUrl())
+        .secretEngineVersion(connectorDTO.getSecretEngineVersion())
+        .build();
+  }
+
+  @Override
+  public List<ConnectorCategory> getConnectorCategory() {
+    return Collections.singletonList(ConnectorCategory.SECRET_MANAGER);
   }
 }
