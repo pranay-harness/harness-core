@@ -1,19 +1,17 @@
 package io.harness.eraro;
 
 import static java.util.stream.Collectors.joining;
-import static javax.ws.rs.core.Response.Status.BAD_REQUEST;
-import static javax.ws.rs.core.Response.Status.CONFLICT;
-import static javax.ws.rs.core.Response.Status.EXPECTATION_FAILED;
-import static javax.ws.rs.core.Response.Status.FORBIDDEN;
-import static javax.ws.rs.core.Response.Status.GATEWAY_TIMEOUT;
-import static javax.ws.rs.core.Response.Status.MOVED_PERMANENTLY;
-import static javax.ws.rs.core.Response.Status.NOT_FOUND;
-import static javax.ws.rs.core.Response.Status.SERVICE_UNAVAILABLE;
-import static javax.ws.rs.core.Response.Status.UNAUTHORIZED;
+import static io.harness.eraro.Status.BAD_REQUEST;
+import static io.harness.eraro.Status.CONFLICT;
+import static io.harness.eraro.Status.EXPECTATION_FAILED;
+import static io.harness.eraro.Status.FORBIDDEN;
+import static io.harness.eraro.Status.GATEWAY_TIMEOUT;
+import static io.harness.eraro.Status.MOVED_PERMANENTLY;
+import static io.harness.eraro.Status.NOT_FOUND;
+import static io.harness.eraro.Status.SERVICE_UNAVAILABLE;
+import static io.harness.eraro.Status.UNAUTHORIZED;
 
 import com.google.common.base.Splitter;
-
-import javax.ws.rs.core.Response.Status;
 
 /**
  * The enum Error codes.
@@ -175,7 +173,7 @@ public enum ErrorCode {
 
   NOT_LICENSED,
 
-  REQUEST_TIMEOUT(GATEWAY_TIMEOUT, GATEWAY_TIMEOUT.getReasonPhrase()),
+  REQUEST_TIMEOUT(GATEWAY_TIMEOUT),
 
   WORKFLOW_ALREADY_TRIGGERED,
 
@@ -471,6 +469,7 @@ public enum ErrorCode {
 
   ErrorCode(Status status) {
     this.status = status;
+    this.description = status.getReason();
   }
 
   ErrorCode(String description) {

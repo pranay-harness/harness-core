@@ -841,7 +841,7 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
         if (errorResponse.contains(INVALID_TOKEN.name())
             || errorResponse.contains(DUPLICATE_DELEGATE_EXCEPTION.name())) {
           initiateSelfDestruct();
-        } else if (response.code() == EXPIRED_TOKEN.getStatus().getStatusCode()) {
+        } else if (response.code() == EXPIRED_TOKEN.getStatus().getCode()) {
           logger.warn("Delegate was not authorized to invoke manager. New token should be generated.");
         }
         response.errorBody().close();
