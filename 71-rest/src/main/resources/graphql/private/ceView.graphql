@@ -1,5 +1,29 @@
 extend type Query {
   viewFields: viewFieldData @dataFetcher(name: viewFields)
+  views: ViewsData @dataFetcher(name: views)
+}
+
+type ViewsData {
+  sampleViews: [View]
+  customerViews: [View]
+}
+
+type View {
+  id: String
+  name: String
+  createdAt: Number
+  lastUpdatedAt: Number
+  chartType: ViewChartType
+  viewType: ViewType
+}
+
+enum ViewChartType {
+  STACKED_TIME_SERIES
+}
+
+enum ViewType {
+  SAMPLE
+  CUSTOMER
 }
 
 type ViewEntityStatsData {
