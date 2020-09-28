@@ -18,6 +18,7 @@ import io.dropwizard.jersey.PATCH;
 import io.harness.account.ProvisionStep;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
+import io.harness.cvng.beans.ServiceGuardLimitDTO;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.logging.AccountLogContext;
@@ -31,6 +32,7 @@ import io.harness.seeddata.SampleDataProviderService;
 import io.swagger.annotations.Api;
 import lombok.extern.slf4j.Slf4j;
 import org.hibernate.validator.constraints.NotEmpty;
+import org.springframework.web.bind.annotation.RequestBody;
 import retrofit2.http.Body;
 import software.wings.beans.Account;
 import software.wings.beans.AccountEvent;
@@ -484,5 +486,23 @@ public class AccountResource {
       @PathParam("accountId") @NotEmpty String accountId, @NotNull SubdomainUrl subdomainUrl) {
     String userId = UserThreadLocal.get().getUuid();
     return new RestResponse<>(accountService.addSubdomainUrl(userId, accountId, subdomainUrl));
+  }
+
+  @PUT
+  @Path("set-service-guard-count/{accountId}")
+  @Timed
+  @ExceptionMetered
+  public RestResponse<String> setServiceGuardAccountLimit(@PathParam("accountId") @NotEmpty String accountId,
+      @NotNull @RequestBody ServiceGuardLimitDTO serviceGuardLimitDTO) {
+    try (AutoLogContext ignore = new AccountLogContext(accountId, OVERRIDE_ERROR)) {
+      logger.info("Updating account service guard counts");
+      RestResponse<String> response =
+          accountPermissionUtils.checkIfHarnessUser("User not allowed to generate a new license");
+      if (response == null) {
+        accountService.setServiceGuardAccount(accountId, serviceGuardLimitDTO);
+        response = new RestResponse<>("success");
+      }
+      return response;
+    }
   }
 }

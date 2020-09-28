@@ -23,6 +23,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 import static org.assertj.core.api.Assertions.fail;
 import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -30,6 +31,7 @@ import static org.mockito.Mockito.when;
 import static software.wings.beans.Account.Builder.anAccount;
 import static software.wings.beans.Account.GLOBAL_ACCOUNT_ID;
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
+import static software.wings.common.VerificationConstants.SERVICE_GUAARD_LIMIT;
 import static software.wings.utils.WingsTestConstants.COMPANY_NAME;
 import static software.wings.utils.WingsTestConstants.ILLEGAL_ACCOUNT_NAME;
 import static software.wings.utils.WingsTestConstants.PORTAL_URL;
@@ -42,11 +44,13 @@ import io.harness.beans.PageRequest;
 import io.harness.beans.PageRequest.PageRequestBuilder;
 import io.harness.beans.PageResponse;
 import io.harness.category.element.UnitTests;
+import io.harness.cvng.beans.ServiceGuardLimitDTO;
 import io.harness.delegate.beans.DelegateConfiguration;
 import io.harness.exception.InvalidArgumentsException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.UnauthorizedException;
 import io.harness.exception.WingsException;
+import io.harness.rest.RestResponse;
 import io.harness.rule.Owner;
 import org.apache.commons.lang3.reflect.FieldUtils;
 import org.junit.Before;
@@ -83,6 +87,7 @@ import software.wings.features.GovernanceFeature;
 import software.wings.features.api.PremiumFeature;
 import software.wings.helpers.ext.mail.EmailData;
 import software.wings.licensing.LicenseService;
+import software.wings.resources.AccountResource;
 import software.wings.resources.UserResource;
 import software.wings.security.AccountPermissionSummary;
 import software.wings.security.AppPermissionSummary;
@@ -108,6 +113,7 @@ import software.wings.service.intfc.account.AccountCrudObserver;
 import software.wings.service.intfc.compliance.GovernanceConfigService;
 import software.wings.service.intfc.template.TemplateGalleryService;
 import software.wings.sm.StateType;
+import software.wings.utils.AccountPermissionUtils;
 import software.wings.verification.CVConfiguration;
 import software.wings.verification.newrelic.NewRelicCVServiceConfiguration;
 
@@ -138,11 +144,13 @@ public class AccountServiceTest extends WingsBaseTest {
   @Mock private AuthService authService;
   @Mock private EmailNotificationService emailNotificationService;
   @Mock private HarnessUserGroupService harnessUserGroupService;
+  @Mock private AccountPermissionUtils accountPermissionUtils;
   @Mock(answer = Answers.RETURNS_DEEP_STUBS) private MainConfiguration configuration;
 
   @InjectMocks @Inject private LicenseService licenseService;
   @InjectMocks @Inject private AccountService accountService;
   @InjectMocks @Inject private UserResource userResource;
+  @InjectMocks @Inject private AccountResource accountResource;
   @Mock private AuthHandler authHandler;
 
   @Mock private GovernanceConfigService governanceConfigService;
@@ -164,6 +172,7 @@ public class AccountServiceTest extends WingsBaseTest {
   public void setup() throws IllegalAccessException {
     FieldUtils.writeField(licenseService, "accountService", accountService, true);
     FieldUtils.writeField(accountService, "licenseService", licenseService, true);
+    FieldUtils.writeField(accountResource, "accountPermissionUtils", accountPermissionUtils, true);
   }
 
   private Account saveAccount(String companyName) {
@@ -1194,5 +1203,32 @@ public class AccountServiceTest extends WingsBaseTest {
     assertThat(restrictedAccounts.contains("222")).isTrue();
     assertThat(restrictedAccounts.contains("333")).isFalse();
     assertThat(restrictedAccounts.contains("111")).isFalse();
+  }
+
+  @Test
+  @Owner(developers = RAGHU)
+  @Category(UnitTests.class)
+  public void testUpdateServiceGuardAccountLimit_WhenNotHarnessUser() {
+    when(accountPermissionUtils.checkIfHarnessUser(anyString()))
+        .thenReturn(new RestResponse<>("user is not authorized"));
+    RestResponse<String> restResponse = accountResource.setServiceGuardAccountLimit(
+        accountId, ServiceGuardLimitDTO.builder().serviceGuardLimit(10).build());
+    assertThat(restResponse.getResponseMessages()).isEmpty();
+    assertThat(restResponse.getResource()).isEqualTo("user is not authorized");
+  }
+
+  @Test
+  @Owner(developers = RAGHU)
+  @Category(UnitTests.class)
+  public void testUpdateServiceGuardAccountLimit() {
+    when(accountPermissionUtils.checkIfHarnessUser(anyString())).thenReturn(null);
+    Account account = saveAccount(generateUuid());
+    Account savedAccount = wingsPersistence.get(Account.class, account.getUuid());
+    assertThat(savedAccount.getServiceGuardLimit()).isEqualTo(SERVICE_GUAARD_LIMIT);
+    RestResponse<String> restResponse = accountResource.setServiceGuardAccountLimit(
+        account.getUuid(), ServiceGuardLimitDTO.builder().serviceGuardLimit(25).build());
+    assertThat(restResponse.getResource()).isEqualTo("success");
+    savedAccount = wingsPersistence.get(Account.class, account.getUuid());
+    assertThat(savedAccount.getServiceGuardLimit()).isEqualTo(25L);
   }
 }

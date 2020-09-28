@@ -3,6 +3,7 @@ package software.wings.service.intfc;
 import io.harness.account.ProvisionStep;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
+import io.harness.cvng.beans.ServiceGuardLimitDTO;
 import io.harness.delegate.beans.DelegateConfiguration;
 import io.harness.validation.Create;
 import io.harness.validation.Update;
@@ -184,4 +185,6 @@ public interface AccountService {
   Optional<String> getCeAccountType(String accountId);
 
   Set<String> getAccountsWithDisabledHarnessUserGroupAccess();
+
+  void setServiceGuardAccount(String accountId, ServiceGuardLimitDTO serviceGuardLimitDTO);
 }
