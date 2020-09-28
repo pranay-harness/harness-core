@@ -1122,7 +1122,7 @@ public class YamlResource {
   @Path("/tags/{uuid}")
   @Timed
   @ExceptionMetered
-  @AuthRule(permissionType = PermissionType.ACCOUNT_MANAGEMENT)
+  @AuthRule(permissionType = PermissionType.MANAGE_TAGS)
   public RestResponse<YamlPayload> getTags(@QueryParam("accountId") String accountId) {
     return yamlResourceService.getHarnessTags(accountId);
   }
@@ -1131,7 +1131,7 @@ public class YamlResource {
   @Path("/tags/{uuid}")
   @Timed
   @ExceptionMetered
-  @AuthRule(permissionType = PermissionType.ACCOUNT_MANAGEMENT)
+  @AuthRule(permissionType = PermissionType.MANAGE_TAGS)
   public RestResponse<ServiceCommand> updateTags(@QueryParam("accountId") String accountId, YamlPayload yamlPayload) {
     return yamlService.update(yamlPayload, accountId);
   }
