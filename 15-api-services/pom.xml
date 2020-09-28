@@ -9,6 +9,10 @@
     <artifactId>15-api-services</artifactId>
     <dependencies>
         <dependency>
+            <groupId>com.amazonaws</groupId>
+            <artifactId>aws-java-sdk-sts</artifactId>
+        </dependency>
+        <dependency>
             <groupId>com.github.scribejava</groupId>
             <artifactId>scribejava-apis</artifactId>
         </dependency>
