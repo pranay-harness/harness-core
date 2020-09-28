@@ -1,7 +1,6 @@
 package io.harness.engine.events;
 
 import static io.harness.rule.OwnerRule.PRASHANT;
-import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.times;
@@ -31,23 +30,24 @@ import org.mockito.Mock;
 
 public class OrchestrationEventEmitterTest extends OrchestrationTest {
   @InjectMocks @Inject private OrchestrationEventEmitter eventEmitter;
+  @InjectMocks @Inject private OrchestrationEventListener eventListener;
   @Mock OrchestrationEventHandlerRegistry registry;
 
   @Inject private Injector injector;
 
   @Test
-  @Owner(developers = PRASHANT, intermittent = true)
+  @Owner(developers = PRASHANT)
   @Category(UnitTests.class)
   public void shouldTestEmitEvent() {
-    OrchestrationSubject subject = spy(new OrchestrationSubject());
+    OrchestrationSubject subject = spy(new OrchestrationSubject(injector));
     SyncOrchestrationEventHandlerProxy syncProxy = spy(
         SyncOrchestrationEventHandlerProxy.builder().injector(injector).eventHandlerClass(StartHandler1.class).build());
     AsyncOrchestrationEventHandlerProxy asyncProxy = spy(AsyncOrchestrationEventHandlerProxy.builder()
                                                              .injector(injector)
                                                              .eventHandlerClass(StartHandler2.class)
                                                              .build());
-    subject.register(syncProxy);
-    subject.register(asyncProxy);
+    subject.registerSyncHandler(syncProxy);
+    subject.registerAsyncHandler(asyncProxy);
 
     when(registry.obtain(OrchestrationEventType.ORCHESTRATION_START)).thenReturn(subject);
     OrchestrationEvent event = OrchestrationEvent.builder()
@@ -55,7 +55,9 @@ public class OrchestrationEventEmitterTest extends OrchestrationTest {
                                    .eventType(OrchestrationEventType.ORCHESTRATION_START)
                                    .build();
     eventEmitter.emitEvent(event);
-    verify(subject, times(1)).fireInform(any(), eq(event));
+    eventListener.onMessage(event);
+    verify(subject, times(1)).handleEventSync(eq(event));
+    verify(subject, times(1)).handleEventAsync(eq(event));
     verify(syncProxy, times(1)).handleEvent(eq(event));
     verify(asyncProxy, times(1)).handleEvent(eq(event));
     verify(asyncProxy, times(1)).getInformExecutorService();

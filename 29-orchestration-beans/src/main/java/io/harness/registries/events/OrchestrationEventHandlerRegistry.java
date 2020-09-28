@@ -5,12 +5,9 @@ import com.google.inject.Injector;
 
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.execution.events.AsyncOrchestrationEventHandlerProxy;
 import io.harness.execution.events.OrchestrationEventHandler;
 import io.harness.execution.events.OrchestrationEventType;
 import io.harness.execution.events.OrchestrationSubject;
-import io.harness.execution.events.SyncOrchestrationEventHandler;
-import io.harness.execution.events.SyncOrchestrationEventHandlerProxy;
 import io.harness.registries.Registry;
 import io.harness.registries.RegistryType;
 
@@ -26,16 +23,8 @@ public class OrchestrationEventHandlerRegistry
   @Override
   public void register(
       OrchestrationEventType registryKey, Class<? extends OrchestrationEventHandler> registrableEntity) {
-    OrchestrationSubject subject = registry.computeIfAbsent(registryKey, val -> new OrchestrationSubject());
-    if (SyncOrchestrationEventHandler.class.isAssignableFrom(registrableEntity)) {
-      subject.register(
-          SyncOrchestrationEventHandlerProxy.builder().injector(injector).eventHandlerClass(registrableEntity).build());
-    } else {
-      subject.register(AsyncOrchestrationEventHandlerProxy.builder()
-                           .injector(injector)
-                           .eventHandlerClass(registrableEntity)
-                           .build());
-    }
+    OrchestrationSubject subject = registry.computeIfAbsent(registryKey, val -> new OrchestrationSubject(injector));
+    subject.register(registrableEntity);
   }
 
   @Override

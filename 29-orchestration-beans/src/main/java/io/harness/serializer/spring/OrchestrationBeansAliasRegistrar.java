@@ -7,6 +7,7 @@ import io.harness.data.ExecutionSweepingOutputInstance;
 import io.harness.data.OutcomeInstance;
 import io.harness.execution.NodeExecution;
 import io.harness.execution.PlanExecution;
+import io.harness.execution.events.OrchestrationEvent;
 import io.harness.facilitator.DefaultFacilitatorParams;
 import io.harness.facilitator.FacilitatorType;
 import io.harness.facilitator.modes.async.AsyncExecutableResponse;
@@ -59,5 +60,6 @@ public class OrchestrationBeansAliasRegistrar implements AliasRegistrar {
     orchestrationElements.put("activeTimeoutTracker", ActiveTimeoutTracker.class);
     orchestrationElements.put("stepOutcomeRef", StepOutcomeRef.class);
     orchestrationElements.put("timeoutDetails", TimeoutDetails.class);
+    orchestrationElements.put("orchestrationEvent", OrchestrationEvent.class);
   }
 }
