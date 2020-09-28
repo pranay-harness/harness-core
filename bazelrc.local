@@ -3,10 +3,11 @@ import bazelrc.common
 # Add properties that are shared between developers but are specific to local bazel build
 build --javabase=@bazel_tools//tools/jdk:absolute_javabase
 build --host_javabase=@bazel_tools//tools/jdk:absolute_javabase
-build --host_java_toolchain=@bazel_tools//tools/jdk:toolchain_vanilla
-build --java_toolchain=@bazel_tools//tools/jdk:toolchain_vanilla
+build --host_java_toolchain=@bazel_tools//tools/jdk:toolchain_hostjdk8
+build --java_toolchain=@bazel_tools//tools/jdk:toolchain_hostjdk8
 
 build --remote_upload_local_results=false
+build --strict_java_deps=error
 
 build --symlink_prefix=/
 build --experimental_convenience_symlinks=ignore

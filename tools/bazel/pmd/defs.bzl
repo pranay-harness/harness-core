@@ -142,7 +142,7 @@ def pmd(
     if rulesets == None:
         rulesets = ["//tools/config/src/main/resources:harness_pmd_ruleset.xml"]
 
-    _pmd(name = name, srcs = srcs, rulesets = rulesets, visibility = visibility)
+    _pmd(name = name, srcs = srcs, rulesets = rulesets, visibility = visibility, tags = tags)
 
 def get_pmd_targets(modules = []):
     _targets = []
