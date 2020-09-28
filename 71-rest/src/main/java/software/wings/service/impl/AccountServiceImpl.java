@@ -46,6 +46,7 @@ import io.harness.beans.PageResponse;
 import io.harness.beans.PageResponse.PageResponseBuilder;
 import io.harness.cache.HarnessCacheManager;
 import io.harness.ccm.license.CeLicenseInfo;
+import io.harness.cvng.beans.ServiceGuardLimitDTO;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.data.structure.UUIDGenerator;
 import io.harness.delegate.beans.DelegateConfiguration;
@@ -1591,5 +1592,11 @@ public class AccountServiceImpl implements AccountService {
     }
 
     return Optional.of(accountType);
+  }
+
+  @Override
+  public void setServiceGuardAccount(String accountId, ServiceGuardLimitDTO serviceGuardLimitDTO) {
+    wingsPersistence.updateField(
+        Account.class, accountId, AccountKeys.serviceGuardLimit, serviceGuardLimitDTO.getServiceGuardLimit());
   }
 }
