@@ -1,5 +1,6 @@
 package software.wings.delegatetasks.k8s.taskhandler;
 
+import static io.harness.rule.OwnerRule.ABOSII;
 import static io.harness.rule.OwnerRule.BOJANA;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 import static org.mockito.Matchers.any;
@@ -57,16 +58,12 @@ public class K8sInstanceSyncTaskHandlerTest extends WingsBaseTest {
     List<K8sPod> podsList = Arrays.asList(K8sPod.builder().build());
     doReturn(podsList)
         .when(k8sTaskHelperBase)
-        .getPodDetailsFabric8(any(KubernetesConfig.class), anyString(), anyString(), anyLong());
+        .getPodDetails(any(KubernetesConfig.class), anyString(), anyString(), anyLong());
 
-    k8sInstanceSyncTaskHandler.executeTaskInternal(
-        K8sInstanceSyncTaskParameters.builder().build(), K8sDelegateTaskParams.builder().build());
-    verify(k8sTaskHelperBase, times(1))
-        .getPodDetailsFabric8(any(KubernetesConfig.class), anyString(), anyString(), anyLong());
+    k8sInstanceSyncTaskHandler.executeTaskInternal(getTaskParameters(), K8sDelegateTaskParams.builder().build());
+    verify(k8sTaskHelperBase, times(1)).getPodDetails(any(KubernetesConfig.class), anyString(), anyString(), anyLong());
     verify(k8sTaskHelper, times(1))
         .getK8sTaskExecutionResponse(any(K8sTaskResponse.class), any(CommandExecutionStatus.class));
-    verify(k8sTaskHelperBase, times(1))
-        .getPodDetailsFabric8(any(KubernetesConfig.class), anyString(), anyString(), anyLong());
   }
 
   @Test
@@ -77,13 +74,35 @@ public class K8sInstanceSyncTaskHandlerTest extends WingsBaseTest {
         .when(containerDeploymentDelegateHelper)
         .getKubernetesConfig(any(K8sClusterConfig.class));
 
-    k8sInstanceSyncTaskHandler.executeTaskInternal(
-        K8sInstanceSyncTaskParameters.builder().build(), K8sDelegateTaskParams.builder().build());
+    k8sInstanceSyncTaskHandler.executeTaskInternal(getTaskParameters(), K8sDelegateTaskParams.builder().build());
+    verify(k8sTaskHelperBase, times(1)).getPodDetails(any(KubernetesConfig.class), anyString(), anyString(), anyLong());
+    verify(k8sTaskHelper, times(1))
+        .getK8sTaskExecutionResponse(any(K8sTaskResponse.class), any(CommandExecutionStatus.class));
+  }
+
+  @Test
+  @Owner(developers = ABOSII)
+  @Category(UnitTests.class)
+  public void executeTaskInternalWithDeprecateFabric8Disabled() throws Exception {
+    K8sInstanceSyncTaskParameters taskParameters = getTaskParameters();
+    taskParameters.setDeprecateFabric8Enabled(false);
+    doReturn(KubernetesConfig.builder().build())
+        .when(containerDeploymentDelegateHelper)
+        .getKubernetesConfig(any(K8sClusterConfig.class));
+
+    List<K8sPod> podsList = Arrays.asList(K8sPod.builder().build());
+    doReturn(podsList)
+        .when(k8sTaskHelperBase)
+        .getPodDetailsFabric8(any(KubernetesConfig.class), anyString(), anyString(), anyLong());
+
+    k8sInstanceSyncTaskHandler.executeTaskInternal(taskParameters, K8sDelegateTaskParams.builder().build());
     verify(k8sTaskHelperBase, times(1))
         .getPodDetailsFabric8(any(KubernetesConfig.class), anyString(), anyString(), anyLong());
     verify(k8sTaskHelper, times(1))
         .getK8sTaskExecutionResponse(any(K8sTaskResponse.class), any(CommandExecutionStatus.class));
-    verify(k8sTaskHelperBase, times(1))
-        .getPodDetailsFabric8(any(KubernetesConfig.class), anyString(), anyString(), anyLong());
+  }
+
+  private K8sInstanceSyncTaskParameters getTaskParameters() {
+    return K8sInstanceSyncTaskParameters.builder().deprecateFabric8Enabled(true).build();
   }
 }

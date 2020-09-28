@@ -104,6 +104,7 @@ import io.harness.logging.LogLevel;
 import io.harness.serializer.YamlUtils;
 import io.kubernetes.client.openapi.models.V1LoadBalancerIngress;
 import io.kubernetes.client.openapi.models.V1LoadBalancerStatus;
+import io.kubernetes.client.openapi.models.V1ObjectMeta;
 import io.kubernetes.client.openapi.models.V1Service;
 import io.kubernetes.client.openapi.models.V1ServicePort;
 import lombok.extern.slf4j.Slf4j;
@@ -279,11 +280,12 @@ public class K8sTaskHelperBase {
                        -> pod.getMetadata() != null && pod.getStatus() != null
                            && pod.getStatus().getContainerStatuses() != null)
                    .map(pod -> {
+                     V1ObjectMeta metadata = pod.getMetadata();
                      return K8sPod.builder()
-                         .uid(pod.getMetadata().getUid())
-                         .name(pod.getMetadata().getName())
+                         .uid(metadata.getUid())
+                         .name(metadata.getName())
                          .podIP(pod.getStatus().getPodIP())
-                         .namespace(pod.getMetadata().getNamespace())
+                         .namespace(metadata.getNamespace())
                          .releaseName(releaseName)
                          .containerList(pod.getStatus()
                                             .getContainerStatuses()
@@ -295,7 +297,8 @@ public class K8sTaskHelperBase {
                                                        .image(container.getImage())
                                                        .build())
                                             .collect(toList()))
-                         .labels(pod.getMetadata().getLabels())
+                         // Need to ensure that we're storing labels as registered by kryo map implementation
+                         .labels(metadata.getLabels() != null ? new HashMap<>(metadata.getLabels()) : null)
                          .build();
                    })
                    .collect(toList()),

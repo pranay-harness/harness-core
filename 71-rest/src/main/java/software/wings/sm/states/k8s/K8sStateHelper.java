@@ -761,6 +761,8 @@ public class K8sStateHelper {
             .k8sClusterConfig(
                 containerDeploymentManagerHelper.getK8sClusterConfig(containerInfrastructureMapping, null))
             .namespace(namespace)
+            .deprecateFabric8Enabled(featureFlagService.isEnabled(
+                FeatureName.DEPRECATE_FABRIC8_FOR_K8S, containerInfrastructureMapping.getAccountId()))
             .releaseName(releaseName)
             .build();
 
