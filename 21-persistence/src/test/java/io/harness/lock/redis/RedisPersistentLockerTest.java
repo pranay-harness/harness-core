@@ -12,7 +12,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.mockito.MockitoAnnotations.initMocks;
 
-import io.harness.PersistenceTest;
+import io.harness.PersistenceTestBase;
 import io.harness.category.element.UnitTests;
 import io.harness.lock.AcquiredLock;
 import io.harness.redis.RedisConfig;
@@ -36,7 +36,7 @@ import java.util.concurrent.TimeUnit;
  */
 @RunWith(PowerMockRunner.class)
 @PrepareForTest(Redisson.class)
-public class RedisPersistentLockerTest extends PersistenceTest {
+public class RedisPersistentLockerTest extends PersistenceTestBase {
   private RedisPersistentLocker redisPersistentLocker;
   private RedissonClient client;
 

@@ -11,7 +11,7 @@ import ch.qos.logback.classic.LoggerContext;
 import ch.qos.logback.classic.turbo.TurboFilter;
 import ch.qos.logback.core.spi.FilterReply;
 import de.bwaldvogel.mongo.wire.MongoWireProtocolHandler;
-import io.harness.PersistenceTest;
+import io.harness.PersistenceTestBase;
 import io.harness.category.element.UnitTests;
 import io.harness.persistence.HPersistence;
 import io.harness.rule.Owner;
@@ -27,7 +27,7 @@ import java.io.ObjectStreamClass;
 import java.util.Collections;
 import java.util.List;
 
-public class MongoStoreTest extends PersistenceTest {
+public class MongoStoreTest extends PersistenceTestBase {
   @Inject HPersistence hPersistence;
   @Inject MongoStore mongoStore;
 
