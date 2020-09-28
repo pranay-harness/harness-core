@@ -2,7 +2,7 @@ package io.harness.cvng.client;
 
 import com.google.inject.Inject;
 
-import io.harness.connector.apis.dto.ConnectorDTO;
+import io.harness.connector.apis.dto.ConnectorInfoDTO;
 import io.harness.cvng.beans.DataCollectionConnectorBundle;
 import io.harness.cvng.core.entities.CVConfig.CVConfigKeys;
 import io.harness.cvng.core.entities.DataCollectionTask.DataCollectionTaskKeys;
@@ -22,7 +22,7 @@ public class VerificationManagerServiceImpl implements VerificationManagerServic
       String orgIdentifier, String projectIdentifier, String dataCollectionWorkerId) {
     // Need to write this to handle retries, exception etc in a proper way.
 
-    Optional<ConnectorDTO> connectorDTO =
+    Optional<ConnectorInfoDTO> connectorDTO =
         nextGenService.get(accountId, connectorIdentifier, orgIdentifier, projectIdentifier);
     if (!connectorDTO.isPresent()) {
       throw new InternalServerErrorException("Failed to retrieve connector with id: " + connectorIdentifier);
@@ -46,7 +46,7 @@ public class VerificationManagerServiceImpl implements VerificationManagerServic
   public String createDeploymentVerificationPerpetualTask(String accountId, String connectorIdentifier,
       String orgIdentifier, String projectIdentifier, String dataCollectionWorkerId) {
     // TODO(telemetry): counter
-    Optional<ConnectorDTO> connectorDTO =
+    Optional<ConnectorInfoDTO> connectorDTO =
         nextGenService.get(accountId, connectorIdentifier, orgIdentifier, projectIdentifier);
     if (!connectorDTO.isPresent()) {
       throw new InternalServerErrorException("Failed to retrieve connector with id: " + connectorIdentifier);

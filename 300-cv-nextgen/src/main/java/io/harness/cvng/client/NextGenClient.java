@@ -1,8 +1,7 @@
 package io.harness.cvng.client;
 
 import io.harness.connector.apis.dto.ConnectorDTO;
-import io.harness.connector.apis.dto.ConnectorRequestDTO;
-import io.harness.connector.apis.dto.ConnectorWrapper;
+import io.harness.connector.apis.dto.ConnectorResponseDTO;
 import io.harness.ng.core.dto.ResponseDTO;
 import io.harness.ng.core.environment.dto.EnvironmentResponseDTO;
 import io.harness.ng.core.service.dto.ServiceResponseDTO;
@@ -19,11 +18,11 @@ public interface NextGenClient {
   String CONNECTOR_BASE_PATH = "accounts/{accountIdentifier}/connectors";
 
   @POST(CONNECTOR_BASE_PATH)
-  Call<ResponseDTO<ConnectorDTO>> create(
-      @Body ConnectorRequestDTO connectorRequestDTO, @Path("accountIdentifier") String accountIdentifier);
+  Call<ResponseDTO<ConnectorResponseDTO>> create(
+      @Body ConnectorDTO connector, @Path("accountIdentifier") String accountIdentifier);
 
   @GET(CONNECTOR_BASE_PATH + "/{connectorIdentifier}")
-  Call<ResponseDTO<ConnectorWrapper>> get(@Path("accountIdentifier") String accountIdentifier,
+  Call<ResponseDTO<ConnectorResponseDTO>> get(@Path("accountIdentifier") String accountIdentifier,
       @Path("connectorIdentifier") String connectorIdentifier, @Query("orgIdentifier") @NotNull String orgIdentifier,
       @Query("projectIdentifier") @NotNull String projectIdentifier);
 

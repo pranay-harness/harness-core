@@ -16,7 +16,8 @@ import io.harness.cdng.manifest.ManifestStoreType;
 import io.harness.cdng.manifest.yaml.GitStore;
 import io.harness.cdng.manifest.yaml.StoreConfig;
 import io.harness.common.AmbianceHelper;
-import io.harness.connector.apis.dto.ConnectorDTO;
+import io.harness.connector.apis.dto.ConnectorInfoDTO;
+import io.harness.connector.apis.dto.ConnectorResponseDTO;
 import io.harness.connector.services.ConnectorService;
 import io.harness.delegate.beans.connector.gitconnector.GitConfigDTO;
 import io.harness.delegate.beans.connector.gitconnector.GitHTTPAuthenticationDTO;
@@ -62,22 +63,21 @@ public class K8sStepHelper {
         K8sDirectInfrastructureOutcome k8SDirectInfrastructure = (K8sDirectInfrastructureOutcome) infrastructure;
         return k8SDirectInfrastructure.getReleaseName();
       default:
-        throw new UnsupportedOperationException(
-            String.format("Unknown infrastructure type: [%s]", infrastructure.getKind()));
+        throw new UnsupportedOperationException(format("Unknown infrastructure type: [%s]", infrastructure.getKind()));
     }
   }
 
-  public ConnectorDTO getConnector(String connectorId, Ambiance ambiance) {
+  public ConnectorInfoDTO getConnector(String connectorId, Ambiance ambiance) {
     NGAccess ngAccess = AmbianceHelper.getNgAccess(ambiance);
     IdentifierRef identifierRef = IdentifierRefHelper.getIdentifierRef(
         connectorId, ngAccess.getAccountIdentifier(), ngAccess.getOrgIdentifier(), ngAccess.getProjectIdentifier());
-    Optional<ConnectorDTO> connectorDTO = connectorService.get(identifierRef.getAccountId(),
+    Optional<ConnectorResponseDTO> connectorDTO = connectorService.get(identifierRef.getAccountId(),
         identifierRef.getOrgIdentifier(), identifierRef.getProjectIdentifier(), identifierRef.getIdentifier());
     if (!connectorDTO.isPresent()) {
       throw new InvalidRequestException(
-          String.format("Connector not found for identifier : [%s]", connectorId), WingsException.USER);
+          format("Connector not found for identifier : [%s]", connectorId), WingsException.USER);
     }
-    return connectorDTO.get();
+    return connectorDTO.get().getConnector();
   }
 
   List<EncryptedDataDetail> getEncryptedDataDetails(EncryptableSetting encryptableSetting) {
@@ -100,15 +100,12 @@ public class K8sStepHelper {
             .cloudProviderName(cloudProvider.getName());
         return k8sClusterConfigBuilder.build();
       default:
-        throw new UnsupportedOperationException(
-            String.format("Unknown infrastructure type: [%s]", infrastructure.getKind()));
+        throw new UnsupportedOperationException(format("Unknown infrastructure type: [%s]", infrastructure.getKind()));
     }
   }
 
-  private SettingAttribute getSettingAttribute(@NotNull ConnectorDTO connectorDTO) {
-    SettingAttribute.Builder builder = SettingAttribute.Builder.aSettingAttribute()
-                                           .withAccountId(connectorDTO.getAccountIdentifier())
-                                           .withName(connectorDTO.getName());
+  private SettingAttribute getSettingAttribute(@NotNull ConnectorInfoDTO connectorDTO) {
+    SettingAttribute.Builder builder = SettingAttribute.Builder.aSettingAttribute().withName(connectorDTO.getName());
     switch (connectorDTO.getConnectorType()) {
       case KUBERNETES_CLUSTER:
         KubernetesClusterConfigDTO connectorConfig = (KubernetesClusterConfigDTO) connectorDTO.getConnectorConfig();
@@ -136,7 +133,6 @@ public class K8sStepHelper {
                 /* .encryptedPassword(SecretRefHelper.getSecretConfigString())*/
                 .branch(gitConfigDTO.getBranchName())
                 .authenticationScheme(HostConnectionAttributes.AuthenticationScheme.HTTP_PASSWORD)
-                .accountId(connectorDTO.getAccountIdentifier())
                 .build();
         builder.withValue(gitConfig);
         break;
@@ -146,14 +142,14 @@ public class K8sStepHelper {
   }
 
   SettingAttribute getSettingAttribute(String connectorId, Ambiance ambiance) {
-    ConnectorDTO connectorDTO = getConnector(connectorId, ambiance);
+    ConnectorInfoDTO connectorDTO = getConnector(connectorId, ambiance);
     return getSettingAttribute(connectorDTO);
   }
 
   public ManifestDelegateConfig getManifestDelegateConfig(StoreConfig storeConfig, Ambiance ambiance) {
     if (storeConfig.getKind().equals(ManifestStoreType.GIT)) {
       GitStore gitStore = (GitStore) storeConfig;
-      ConnectorDTO connectorDTO = getConnector(gitStore.getConnectorIdentifier().getValue(), ambiance);
+      ConnectorInfoDTO connectorDTO = getConnector(gitStore.getConnectorIdentifier().getValue(), ambiance);
       GitConfigDTO gitConfigDTO = (GitConfigDTO) connectorDTO.getConnectorConfig();
 
       NGAccess basicNGAccessObject = AmbianceHelper.getNgAccess(ambiance);
@@ -164,13 +160,12 @@ public class K8sStepHelper {
           .storeDelegateConfig(getGitStoreDelegateConfig(gitStore, connectorDTO, encryptedDataDetailList))
           .build();
     } else {
-      throw new UnsupportedOperationException(
-          String.format("Unsupported Store Config type: [%s]", storeConfig.getKind()));
+      throw new UnsupportedOperationException(format("Unsupported Store Config type: [%s]", storeConfig.getKind()));
     }
   }
 
   public GitStoreDelegateConfig getGitStoreDelegateConfig(@Nonnull GitStore gitStore,
-      @Nonnull ConnectorDTO connectorDTO, @Nonnull List<EncryptedDataDetail> encryptedDataDetailList) {
+      @Nonnull ConnectorInfoDTO connectorDTO, @Nonnull List<EncryptedDataDetail> encryptedDataDetailList) {
     return GitStoreDelegateConfig.builder()
         .gitConfigDTO((GitConfigDTO) connectorDTO.getConnectorConfig())
         .encryptedDataDetails(encryptedDataDetailList)
@@ -183,7 +178,7 @@ public class K8sStepHelper {
   }
 
   private List<EncryptedDataDetail> getEncryptionDataDetails(
-      @Nonnull ConnectorDTO connectorDTO, @Nonnull NGAccess ngAccess) {
+      @Nonnull ConnectorInfoDTO connectorDTO, @Nonnull NGAccess ngAccess) {
     switch (connectorDTO.getConnectorType()) {
       case KUBERNETES_CLUSTER:
         KubernetesClusterConfigDTO connectorConfig = (KubernetesClusterConfigDTO) connectorDTO.getConnectorConfig();
@@ -210,7 +205,7 @@ public class K8sStepHelper {
     switch (infrastructure.getKind()) {
       case KUBERNETES_DIRECT:
         K8sDirectInfrastructureOutcome k8SDirectInfrastructure = (K8sDirectInfrastructureOutcome) infrastructure;
-        ConnectorDTO connectorDTO = getConnector(k8SDirectInfrastructure.getConnectorIdentifier(), ambiance);
+        ConnectorInfoDTO connectorDTO = getConnector(k8SDirectInfrastructure.getConnectorIdentifier(), ambiance);
 
         return DirectK8sInfraDelegateConfig.builder()
             .namespace(k8SDirectInfrastructure.getNamespace())
@@ -220,7 +215,7 @@ public class K8sStepHelper {
 
       default:
         throw new UnsupportedOperationException(
-            String.format("Unsupported Infrastructure type: [%s]", infrastructure.getKind()));
+            format("Unsupported Infrastructure type: [%s]", infrastructure.getKind()));
     }
   }
 

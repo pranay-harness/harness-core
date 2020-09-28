@@ -1,6 +1,7 @@
 package io.harness.ng;
 
-import io.harness.connector.apis.dto.ConnectorRequestDTO;
+import io.harness.connector.apis.dto.ConnectorDTO;
+import io.harness.connector.apis.dto.ConnectorInfoDTO;
 import io.harness.delegate.beans.connector.localconnector.LocalConnectorDTO;
 import io.harness.secretmanagerclient.dto.LocalConfigDTO;
 import io.harness.security.encryption.EncryptionType;
@@ -9,18 +10,19 @@ import lombok.experimental.UtilityClass;
 @UtilityClass
 public class LocalConfigDTOMapper {
   public static LocalConfigDTO getLocalConfigDTO(
-      String accountIdentifier, ConnectorRequestDTO connectorRequestDTO, LocalConnectorDTO localConnectorDTO) {
+      String accountIdentifier, ConnectorDTO connectorRequestDTO, LocalConnectorDTO localConnectorDTO) {
+    ConnectorInfoDTO connector = connectorRequestDTO.getConnectorInfo();
     return LocalConfigDTO.builder()
         .isDefault(localConnectorDTO.isDefault())
         .encryptionType(EncryptionType.LOCAL)
 
-        .name(connectorRequestDTO.getName())
+        .name(connector.getName())
         .accountIdentifier(accountIdentifier)
-        .orgIdentifier(connectorRequestDTO.getOrgIdentifier())
-        .projectIdentifier(connectorRequestDTO.getProjectIdentifier())
-        .tags(connectorRequestDTO.getTags())
-        .identifier(connectorRequestDTO.getIdentifier())
-        .description(connectorRequestDTO.getDescription())
+        .orgIdentifier(connector.getOrgIdentifier())
+        .projectIdentifier(connector.getProjectIdentifier())
+        .tags(connector.getTags())
+        .identifier(connector.getIdentifier())
+        .description(connector.getDescription())
         .build();
   }
 }

@@ -9,7 +9,8 @@ import io.harness.CategoryTest;
 import io.harness.ambiance.Ambiance;
 import io.harness.category.element.UnitTests;
 import io.harness.cdng.common.beans.SetupAbstractionKeys;
-import io.harness.connector.apis.dto.ConnectorDTO;
+import io.harness.connector.apis.dto.ConnectorInfoDTO;
+import io.harness.connector.apis.dto.ConnectorResponseDTO;
 import io.harness.connector.services.ConnectorService;
 import io.harness.rule.Owner;
 import org.junit.Rule;
@@ -34,11 +35,12 @@ public class K8sStepHelperTest extends CategoryTest {
   @Category(UnitTests.class)
   public void testGetProjectConnector() {
     Ambiance ambiance = getAmbiance();
-    ConnectorDTO connectorDTO = ConnectorDTO.builder().build();
-    Optional<ConnectorDTO> connectorDTOOptional = Optional.of(connectorDTO);
+    ConnectorInfoDTO connectorDTO = ConnectorInfoDTO.builder().build();
+    Optional<ConnectorResponseDTO> connectorDTOOptional =
+        Optional.of(ConnectorResponseDTO.builder().connector(connectorDTO).build());
     doReturn(connectorDTOOptional).when(connectorService).get("account1", "org1", "project1", "abcConnector");
 
-    ConnectorDTO actualConnector = k8sStepHelper.getConnector("abcConnector", ambiance);
+    ConnectorInfoDTO actualConnector = k8sStepHelper.getConnector("abcConnector", ambiance);
     assertThat(actualConnector).isEqualTo(connectorDTO);
   }
 
@@ -47,11 +49,12 @@ public class K8sStepHelperTest extends CategoryTest {
   @Category(UnitTests.class)
   public void testGetOrgConnector() {
     Ambiance ambiance = getAmbiance();
-    ConnectorDTO connectorDTO = ConnectorDTO.builder().build();
-    Optional<ConnectorDTO> connectorDTOOptional = Optional.of(connectorDTO);
+    ConnectorInfoDTO connectorDTO = ConnectorInfoDTO.builder().build();
+    Optional<ConnectorResponseDTO> connectorDTOOptional =
+        Optional.of(ConnectorResponseDTO.builder().connector(connectorDTO).build());
     doReturn(connectorDTOOptional).when(connectorService).get("account1", "org1", null, "abcConnector");
 
-    ConnectorDTO actualConnector = k8sStepHelper.getConnector("org.abcConnector", ambiance);
+    ConnectorInfoDTO actualConnector = k8sStepHelper.getConnector("org.abcConnector", ambiance);
     assertThat(actualConnector).isEqualTo(connectorDTO);
   }
 
@@ -60,14 +63,15 @@ public class K8sStepHelperTest extends CategoryTest {
   @Category(UnitTests.class)
   public void testGetAccountConnector() {
     Ambiance ambiance = getAmbiance();
-    ConnectorDTO connectorDTO = ConnectorDTO.builder().build();
-    Optional<ConnectorDTO> connectorDTOOptional = Optional.of(connectorDTO);
+    ConnectorInfoDTO connectorDTO = ConnectorInfoDTO.builder().build();
+    Optional<ConnectorResponseDTO> connectorDTOOptional =
+        Optional.of(ConnectorResponseDTO.builder().connector(connectorDTO).build());
 
     doReturn(connectorDTOOptional).when(connectorService).get("account1", null, null, "abcConnector");
     doReturn(Optional.empty()).when(connectorService).get("account1", "org1", null, "abcConnector");
     doReturn(Optional.empty()).when(connectorService).get("account1", "org1", "project1", "abcConnector");
 
-    ConnectorDTO actualConnector = k8sStepHelper.getConnector("acc.abcConnector", ambiance);
+    ConnectorInfoDTO actualConnector = k8sStepHelper.getConnector("acc.abcConnector", ambiance);
     assertThat(actualConnector).isEqualTo(connectorDTO);
 
     assertThatThrownBy(() -> k8sStepHelper.getConnector("org.abcConnector", ambiance))

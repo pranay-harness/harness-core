@@ -16,12 +16,10 @@ import static org.mockito.Mockito.when;
 import com.google.inject.Inject;
 
 import io.harness.category.element.UnitTests;
-import io.harness.connector.ConnectorScopeHelper;
 import io.harness.connector.ConnectorsBaseTest;
 import io.harness.connector.apis.dto.ConnectorDTO;
-import io.harness.connector.apis.dto.ConnectorRequestDTO;
-import io.harness.connector.apis.dto.ConnectorSummaryDTO;
-import io.harness.connector.entities.Connector;
+import io.harness.connector.apis.dto.ConnectorInfoDTO;
+import io.harness.connector.apis.dto.ConnectorResponseDTO;
 import io.harness.connector.entities.embedded.kubernetescluster.KubernetesClusterConfig;
 import io.harness.connector.repositories.base.ConnectorRepository;
 import io.harness.connector.validator.ConnectionValidator;
@@ -49,7 +47,6 @@ import org.junit.rules.ExpectedException;
 import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
 import org.springframework.data.domain.Page;
 import retrofit2.Call;
@@ -65,7 +62,6 @@ import java.util.stream.Collectors;
 public class DefaultConnectorServiceImplTest extends ConnectorsBaseTest {
   @Mock KubernetesConnectionValidator kubernetesConnectionValidator;
   @Mock ConnectorRepository connectorRepository;
-  @Mock ConnectorScopeHelper connectorScopeHelper = Mockito.mock(ConnectorScopeHelper.class);
   @Mock private Map<String, ConnectionValidator> connectionValidatorMap;
   @Mock EntityReferenceClient entityReferenceClient;
   @Inject @InjectMocks DefaultConnectorServiceImpl connectorService;
@@ -90,7 +86,7 @@ public class DefaultConnectorServiceImplTest extends ConnectorsBaseTest {
     passwordSecretRef = SecretRefData.builder().identifier(passwordIdentifier).scope(Scope.ACCOUNT).build();
   }
 
-  private ConnectorRequestDTO createKubernetesConnectorRequestDTO(String connectorIdentifier) {
+  private ConnectorDTO createKubernetesConnectorRequestDTO(String connectorIdentifier) {
     KubernetesAuthDTO kubernetesAuthDTO =
         KubernetesAuthDTO.builder()
             .authType(KubernetesAuthType.USER_PASSWORD)
@@ -104,16 +100,17 @@ public class DefaultConnectorServiceImplTest extends ConnectorsBaseTest {
             .build();
     KubernetesClusterConfigDTO k8sClusterConfig =
         KubernetesClusterConfigDTO.builder().credential(connectorDTOWithDelegateCreds).build();
-    return ConnectorRequestDTO.builder()
-        .name(name)
-        .identifier(connectorIdentifier)
-        .connectorType(KUBERNETES_CLUSTER)
-        .connectorConfig(k8sClusterConfig)
-        .build();
+    ConnectorInfoDTO connectorInfo = ConnectorInfoDTO.builder()
+                                         .name(name)
+                                         .identifier(connectorIdentifier)
+                                         .connectorType(KUBERNETES_CLUSTER)
+                                         .connectorConfig(k8sClusterConfig)
+                                         .build();
+    return ConnectorDTO.builder().connectorInfo(connectorInfo).build();
   }
 
-  private ConnectorDTO createConnector(String connectorIdentifier) {
-    ConnectorRequestDTO connectorRequestDTO = createKubernetesConnectorRequestDTO(connectorIdentifier);
+  private ConnectorResponseDTO createConnector(String connectorIdentifier) {
+    ConnectorDTO connectorRequestDTO = createKubernetesConnectorRequestDTO(connectorIdentifier);
     return connectorService.create(connectorRequestDTO, accountIdentifier);
   }
 
@@ -121,7 +118,7 @@ public class DefaultConnectorServiceImplTest extends ConnectorsBaseTest {
   @Owner(developers = OwnerRule.DEEPAK)
   @Category(UnitTests.class)
   public void testCreate() {
-    ConnectorDTO connectorDTOOutput = createConnector(identifier);
+    ConnectorResponseDTO connectorDTOOutput = createConnector(identifier);
     ensureKubernetesConnectorFieldsAreCorrect(connectorDTOOutput);
   }
 
@@ -151,19 +148,22 @@ public class DefaultConnectorServiceImplTest extends ConnectorsBaseTest {
             .build();
     KubernetesClusterConfigDTO k8sClusterConfig =
         KubernetesClusterConfigDTO.builder().credential(connectorDTOWithUserNamePwdCreds).build();
-    ConnectorRequestDTO newConnectorRequestDTO = ConnectorRequestDTO.builder()
-                                                     .name(updatedName)
-                                                     .identifier(identifier)
-                                                     .connectorType(KUBERNETES_CLUSTER)
-                                                     .connectorConfig(k8sClusterConfig)
-                                                     .build();
+    ConnectorDTO connector = ConnectorDTO.builder()
+                                 .connectorInfo(ConnectorInfoDTO.builder()
+                                                    .name(updatedName)
+                                                    .identifier(identifier)
+                                                    .connectorType(KUBERNETES_CLUSTER)
+                                                    .connectorConfig(k8sClusterConfig)
+                                                    .build())
+                                 .build();
 
-    ConnectorDTO connectorDTOOutput = connectorService.update(newConnectorRequestDTO, accountIdentifier);
-    assertThat(connectorDTOOutput).isNotNull();
-    assertThat(connectorDTOOutput.getName()).isEqualTo(updatedName);
-    assertThat(connectorDTOOutput.getIdentifier()).isEqualTo(identifier);
-    assertThat(connectorDTOOutput.getConnectorType()).isEqualTo(KUBERNETES_CLUSTER);
-    KubernetesClusterConfigDTO kubernetesCluster = (KubernetesClusterConfigDTO) connectorDTOOutput.getConnectorConfig();
+    ConnectorResponseDTO connectorResponse = connectorService.update(connector, accountIdentifier);
+    ConnectorInfoDTO connectorInfo = connectorResponse.getConnector();
+    assertThat(connectorInfo).isNotNull();
+    assertThat(connectorInfo.getName()).isEqualTo(updatedName);
+    assertThat(connectorInfo.getIdentifier()).isEqualTo(identifier);
+    assertThat(connectorInfo.getConnectorType()).isEqualTo(KUBERNETES_CLUSTER);
+    KubernetesClusterConfigDTO kubernetesCluster = (KubernetesClusterConfigDTO) connectorInfo.getConnectorConfig();
     assertThat(kubernetesCluster).isNotNull();
     assertThat(kubernetesCluster.getCredential().getConfig()).isNotNull();
     assertThat(kubernetesCluster.getCredential().getKubernetesCredentialType()).isEqualTo(MANUAL_CREDENTIALS);
@@ -190,15 +190,13 @@ public class DefaultConnectorServiceImplTest extends ConnectorsBaseTest {
     createConnector(connectorIdentifier2);
     createConnector(connectorIdentifier3);
     ArgumentCaptor<Page> connectorsListArgumentCaptor = ArgumentCaptor.forClass(Page.class);
-    Page<ConnectorSummaryDTO> connectorSummaryDTOSList =
-        connectorService.list(0, 100, accountIdentifier, null, null, "connector", KUBERNETES_CLUSTER, CLOUD_PROVIDER);
-    verify(connectorScopeHelper, times(1))
-        .createConnectorSummaryListForConnectors(connectorsListArgumentCaptor.capture());
-    List<Connector> connectorsList = connectorsListArgumentCaptor.getValue().toList();
-    assertThat(connectorsList.size()).isEqualTo(3);
-    List<String> connectorIdentifierList = connectorsList.stream()
-                                               .map(connectorSummaryDTO -> connectorSummaryDTO.getIdentifier())
-                                               .collect(Collectors.toList());
+    Page<ConnectorResponseDTO> connectorSummaryDTOSList =
+        connectorService.list(0, 100, accountIdentifier, null, null, null, KUBERNETES_CLUSTER, CLOUD_PROVIDER);
+    assertThat(connectorSummaryDTOSList.getTotalElements()).isEqualTo(3);
+    List<String> connectorIdentifierList =
+        connectorSummaryDTOSList.stream()
+            .map(connectorSummaryDTO -> connectorSummaryDTO.getConnector().getIdentifier())
+            .collect(Collectors.toList());
     assertThat(connectorIdentifierList).contains(connectorIdentifier1);
     assertThat(connectorIdentifierList).contains(connectorIdentifier2);
     assertThat(connectorIdentifierList).contains(connectorIdentifier3);
@@ -209,7 +207,7 @@ public class DefaultConnectorServiceImplTest extends ConnectorsBaseTest {
   @Category(UnitTests.class)
   public void testGet() {
     createConnector(identifier);
-    ConnectorDTO connectorDTO = connectorService.get(accountIdentifier, null, null, identifier).get();
+    ConnectorResponseDTO connectorDTO = connectorService.get(accountIdentifier, null, null, identifier).get();
     ensureKubernetesConnectorFieldsAreCorrect(connectorDTO);
   }
 
@@ -218,17 +216,18 @@ public class DefaultConnectorServiceImplTest extends ConnectorsBaseTest {
   @Category(UnitTests.class)
   public void testGetWhenConnectorDoesntExists() {
     createConnector(identifier);
-    Optional<ConnectorDTO> connectorDTO =
+    Optional<ConnectorResponseDTO> connectorDTO =
         connectorService.get(accountIdentifier, "orgIdentifier", "projectIdentifier", identifier);
     assertThat(connectorDTO.isPresent()).isFalse();
   }
 
-  private void ensureKubernetesConnectorFieldsAreCorrect(ConnectorDTO connectorDTOOutput) {
-    assertThat(connectorDTOOutput).isNotNull();
-    assertThat(connectorDTOOutput.getName()).isEqualTo(name);
-    assertThat(connectorDTOOutput.getIdentifier()).isEqualTo(identifier);
-    assertThat(connectorDTOOutput.getConnectorType()).isEqualTo(KUBERNETES_CLUSTER);
-    KubernetesClusterConfigDTO kubernetesCluster = (KubernetesClusterConfigDTO) connectorDTOOutput.getConnectorConfig();
+  private void ensureKubernetesConnectorFieldsAreCorrect(ConnectorResponseDTO connectorResponse) {
+    ConnectorInfoDTO connectorInfo = connectorResponse.getConnector();
+    assertThat(connectorInfo).isNotNull();
+    assertThat(connectorInfo.getName()).isEqualTo(name);
+    assertThat(connectorInfo.getIdentifier()).isEqualTo(identifier);
+    assertThat(connectorInfo.getConnectorType()).isEqualTo(KUBERNETES_CLUSTER);
+    KubernetesClusterConfigDTO kubernetesCluster = (KubernetesClusterConfigDTO) connectorInfo.getConnectorConfig();
     assertThat(kubernetesCluster).isNotNull();
     assertThat(kubernetesCluster.getCredential().getConfig()).isNotNull();
     assertThat(kubernetesCluster.getCredential().getKubernetesCredentialType()).isEqualTo(MANUAL_CREDENTIALS);
@@ -293,12 +292,14 @@ public class DefaultConnectorServiceImplTest extends ConnectorsBaseTest {
             .build();
     KubernetesClusterConfigDTO k8sClusterConfig =
         KubernetesClusterConfigDTO.builder().credential(connectorDTOWithDelegateCreds).build();
-    ConnectorRequestDTO connectorRequestDTO = ConnectorRequestDTO.builder()
-                                                  .name(name)
-                                                  .identifier(identifier)
-                                                  .connectorType(KUBERNETES_CLUSTER)
-                                                  .connectorConfig(k8sClusterConfig)
-                                                  .build();
+    ConnectorDTO connectorRequestDTO = ConnectorDTO.builder()
+                                           .connectorInfo(ConnectorInfoDTO.builder()
+                                                              .name(name)
+                                                              .identifier(identifier)
+                                                              .connectorType(KUBERNETES_CLUSTER)
+                                                              .connectorConfig(k8sClusterConfig)
+                                                              .build())
+                                           .build();
 
     when(connectionValidatorMap.get(any())).thenReturn(kubernetesConnectionValidator);
     when(kubernetesConnectionValidator.validate(any(), anyString(), any(), anyString())).thenReturn(null);

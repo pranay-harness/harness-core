@@ -3,7 +3,7 @@ package io.harness.cvng.core.services.impl;
 import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
 
-import io.harness.connector.apis.dto.ConnectorDTO;
+import io.harness.connector.apis.dto.ConnectorInfoDTO;
 import io.harness.cvng.beans.SplunkSavedSearch;
 import io.harness.cvng.beans.SplunkValidationResponse;
 import io.harness.cvng.client.NextGenService;
@@ -44,7 +44,7 @@ public class SplunkServiceImpl implements SplunkService {
 
   private SplunkConnectorDTO retrieveSplunkConnectorDTO(
       String accountId, String connectorIdentifier, String orgIdentifier, String projectIdentifier) {
-    Optional<ConnectorDTO> connectorDTO =
+    Optional<ConnectorInfoDTO> connectorDTO =
         nextGenService.get(accountId, connectorIdentifier, orgIdentifier, projectIdentifier);
     Preconditions.checkState(connectorDTO.isPresent(), "ConnectorDTO should not be null");
     Preconditions.checkState(connectorDTO.get().getConnectorConfig() instanceof SplunkConnectorDTO,

@@ -12,7 +12,8 @@ import io.harness.cdng.artifact.bean.ArtifactConfig;
 import io.harness.cdng.artifact.bean.yaml.DockerHubArtifactConfig;
 import io.harness.cdng.artifact.mappers.ArtifactConfigToDelegateReqMapper;
 import io.harness.common.AmbianceHelper;
-import io.harness.connector.apis.dto.ConnectorDTO;
+import io.harness.connector.apis.dto.ConnectorInfoDTO;
+import io.harness.connector.apis.dto.ConnectorResponseDTO;
 import io.harness.connector.services.ConnectorService;
 import io.harness.delegate.beans.connector.docker.DockerConnectorDTO;
 import io.harness.delegate.task.artifacts.ArtifactSourceDelegateRequest;
@@ -34,7 +35,7 @@ public class ArtifactStepHelper {
 
   public ArtifactSourceDelegateRequest toSourceDelegateRequest(ArtifactConfig artifactConfig, Ambiance ambiance) {
     List<EncryptedDataDetail> encryptedDataDetails;
-    ConnectorDTO connectorDTO;
+    ConnectorInfoDTO connectorDTO;
     NGAccess ngAccess = AmbianceHelper.getNgAccess(ambiance);
     switch (artifactConfig.getSourceType()) {
       case DOCKER_HUB:
@@ -51,17 +52,17 @@ public class ArtifactStepHelper {
     }
   }
 
-  private ConnectorDTO getConnector(String connectorIdentifierRef, Ambiance ambiance) {
+  private ConnectorInfoDTO getConnector(String connectorIdentifierRef, Ambiance ambiance) {
     NGAccess ngAccess = AmbianceHelper.getNgAccess(ambiance);
     IdentifierRef connectorRef = IdentifierRefHelper.getIdentifierRef(connectorIdentifierRef,
         ngAccess.getAccountIdentifier(), ngAccess.getOrgIdentifier(), ngAccess.getProjectIdentifier());
-    Optional<ConnectorDTO> connectorDTO = connectorService.get(connectorRef.getAccountId(),
+    Optional<ConnectorResponseDTO> connectorDTO = connectorService.get(connectorRef.getAccountId(),
         connectorRef.getOrgIdentifier(), connectorRef.getProjectIdentifier(), connectorRef.getIdentifier());
     if (!connectorDTO.isPresent()) {
       throw new InvalidRequestException(
           String.format("Connector not found for identifier : [%s]", connectorIdentifierRef), WingsException.USER);
     }
-    return connectorDTO.get();
+    return connectorDTO.get().getConnector();
   }
 
   public String getArtifactStepTaskType(ArtifactConfig artifactConfig) {

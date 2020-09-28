@@ -14,10 +14,9 @@ import io.harness.CategoryTest;
 import io.harness.beans.NGPageResponse;
 import io.harness.category.element.UnitTests;
 import io.harness.connector.apis.dto.ConnectorDTO;
-import io.harness.connector.apis.dto.ConnectorRequestDTO;
-import io.harness.connector.apis.dto.ConnectorRequestWrapper;
+import io.harness.connector.apis.dto.ConnectorInfoDTO;
+import io.harness.connector.apis.dto.ConnectorResponseDTO;
 import io.harness.connector.apis.dto.ConnectorSummaryDTO;
-import io.harness.connector.apis.dto.ConnectorWrapper;
 import io.harness.connector.services.ConnectorService;
 import io.harness.delegate.beans.connector.ConnectorValidationResult;
 import io.harness.delegate.beans.connector.k8Connector.KubernetesClusterConfigDTO;
@@ -42,17 +41,16 @@ import java.util.Optional;
 public class ConnectorResourceTest extends CategoryTest {
   @Mock private ConnectorService connectorService;
   @InjectMocks private ConnectorResource connectorResource;
-  ConnectorDTO connectorDTO;
-  ConnectorRequestDTO randomConnectorRequestDTO;
-  ConnectorWrapper connectorWrapper;
-  ConnectorRequestWrapper connectorRequestWrapper;
+  ConnectorResponseDTO connectorResponse;
+  ConnectorInfoDTO connectorInfo;
+  ConnectorDTO connectorRequest;
   String accountIdentifier = "accountIdentifier";
 
   @Before
   public void setUp() throws Exception {
     MockitoAnnotations.initMocks(this);
-    connectorDTO =
-        ConnectorDTO.builder()
+    connectorInfo =
+        ConnectorInfoDTO.builder()
             .name("connector")
             .identifier("identifier")
             .connectorType(KUBERNETES_CLUSTER)
@@ -64,30 +62,17 @@ public class ConnectorResourceTest extends CategoryTest {
                                     .build())
                     .build())
             .build();
-    randomConnectorRequestDTO =
-        ConnectorRequestDTO.builder()
-            .name("connector")
-            .identifier("identifier")
-            .connectorType(KUBERNETES_CLUSTER)
-            .connectorConfig(
-                KubernetesClusterConfigDTO.builder()
-                    .credential(KubernetesCredentialDTO.builder()
-                                    .kubernetesCredentialType(INHERIT_FROM_DELEGATE)
-                                    .config(KubernetesDelegateDetailsDTO.builder().delegateName("delegateName").build())
-                                    .build())
-                    .build())
-            .build();
-    connectorWrapper = ConnectorWrapper.builder().connector(connectorDTO).build();
-    connectorRequestWrapper = ConnectorRequestWrapper.builder().connector(randomConnectorRequestDTO).build();
+    connectorRequest = ConnectorDTO.builder().connectorInfo(connectorInfo).build();
+    connectorResponse = ConnectorResponseDTO.builder().connector(connectorInfo).build();
   }
 
   @Test
   @Owner(developers = OwnerRule.DEEPAK)
   @Category(UnitTests.class)
   public void create() {
-    doReturn(connectorDTO).when(connectorService).create(any(), any());
-    ResponseDTO<ConnectorWrapper> connectorResponseDTO =
-        connectorResource.create(connectorRequestWrapper, accountIdentifier);
+    doReturn(connectorResponse).when(connectorService).create(any(), any());
+    ResponseDTO<ConnectorResponseDTO> connectorResponseDTO =
+        connectorResource.create(connectorRequest, accountIdentifier);
     Mockito.verify(connectorService, times(1)).create(any(), any());
     assertThat(connectorResponseDTO.getData()).isNotNull();
   }
@@ -96,9 +81,9 @@ public class ConnectorResourceTest extends CategoryTest {
   @Owner(developers = OwnerRule.DEEPAK)
   @Category(UnitTests.class)
   public void update() {
-    when(connectorService.update(any(), any())).thenReturn(connectorDTO);
-    ResponseDTO<ConnectorWrapper> connectorResponseDTO =
-        connectorResource.update(connectorRequestWrapper, accountIdentifier);
+    when(connectorService.update(any(), any())).thenReturn(connectorResponse);
+    ResponseDTO<ConnectorResponseDTO> connectorResponseDTO =
+        connectorResource.update(connectorRequest, accountIdentifier);
     Mockito.verify(connectorService, times(1)).update(any(), any());
     assertThat(connectorResponseDTO.getData()).isNotNull();
   }
@@ -107,8 +92,8 @@ public class ConnectorResourceTest extends CategoryTest {
   @Owner(developers = OwnerRule.DEEPAK)
   @Category(UnitTests.class)
   public void get() {
-    when(connectorService.get(any(), any(), any(), any())).thenReturn(Optional.of(connectorDTO));
-    ConnectorWrapper connectorRequestDTO =
+    when(connectorService.get(any(), any(), any(), any())).thenReturn(Optional.of(connectorResponse));
+    ConnectorResponseDTO connectorRequestDTO =
         connectorResource.get("accountIdentifier", "orgIdentifier", "projectIdentifier", "connectorIdentifier")
             .getData();
     Mockito.verify(connectorService, times(1)).get(any(), any(), any(), any());
@@ -122,12 +107,12 @@ public class ConnectorResourceTest extends CategoryTest {
     String orgIdentifier = "orgIdentifier";
     String projectIdentifier = "projectIdentifier";
     String searchTerm = "searchTerm";
-    final Page<ConnectorSummaryDTO> page =
+    final Page<ConnectorResponseDTO> page =
         PageTestUtils.getPage(Arrays.asList(ConnectorSummaryDTO.builder().build()), 1);
     when(connectorService.list(100, 0, accountIdentifier, orgIdentifier, projectIdentifier, searchTerm,
              KUBERNETES_CLUSTER, CLOUD_PROVIDER))
         .thenReturn(page);
-    ResponseDTO<NGPageResponse<ConnectorSummaryDTO>> connectorSummaryListResponse = connectorResource.list(
+    ResponseDTO<NGPageResponse<ConnectorResponseDTO>> connectorSummaryListResponse = connectorResource.list(
         100, 0, accountIdentifier, orgIdentifier, projectIdentifier, searchTerm, KUBERNETES_CLUSTER, CLOUD_PROVIDER);
     Mockito.verify(connectorService, times(1))
         .list(eq(100), eq(0), eq(accountIdentifier), eq(orgIdentifier), eq(projectIdentifier), eq(searchTerm),
@@ -161,9 +146,8 @@ public class ConnectorResourceTest extends CategoryTest {
   @Owner(developers = OwnerRule.DEEPAK)
   @Category(UnitTests.class)
   public void validateTest() {
-    ResponseDTO<ConnectorValidationResult> result =
-        connectorResource.validate(connectorRequestWrapper, accountIdentifier);
-    Mockito.verify(connectorService, times(1)).validate(eq(randomConnectorRequestDTO), eq(accountIdentifier));
+    ResponseDTO<ConnectorValidationResult> result = connectorResource.validate(connectorRequest, accountIdentifier);
+    Mockito.verify(connectorService, times(1)).validate(eq(connectorRequest), eq(accountIdentifier));
   }
 
   @Test

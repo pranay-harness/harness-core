@@ -14,7 +14,8 @@ import io.harness.cdng.artifact.resources.docker.dtos.DockerBuildDetailsDTO;
 import io.harness.cdng.artifact.resources.docker.dtos.DockerRequestDTO;
 import io.harness.cdng.artifact.resources.docker.dtos.DockerResponseDTO;
 import io.harness.cdng.artifact.resources.docker.mappers.DockerResourceMapper;
-import io.harness.connector.apis.dto.ConnectorDTO;
+import io.harness.connector.apis.dto.ConnectorInfoDTO;
+import io.harness.connector.apis.dto.ConnectorResponseDTO;
 import io.harness.connector.services.ConnectorService;
 import io.harness.delegate.beans.DelegateResponseData;
 import io.harness.delegate.beans.ErrorNotifyResponseData;
@@ -41,6 +42,8 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 import javax.annotation.Nonnull;
+import javax.validation.Valid;
+import javax.validation.constraints.NotNull;
 
 @Singleton
 public class DockerResourceServiceImpl implements DockerResourceService {
@@ -151,16 +154,21 @@ public class DockerResourceServiceImpl implements DockerResourceService {
   }
 
   private DockerConnectorDTO getConnector(IdentifierRef dockerConnectorRef) {
-    Optional<ConnectorDTO> connectorDTO =
+    Optional<ConnectorResponseDTO> connectorDTO =
         connectorService.get(dockerConnectorRef.getAccountId(), dockerConnectorRef.getOrgIdentifier(),
             dockerConnectorRef.getProjectIdentifier(), dockerConnectorRef.getIdentifier());
 
-    if (!connectorDTO.isPresent() || !connectorDTO.get().getConnectorType().equals(ConnectorType.DOCKER)) {
+    if (!connectorDTO.isPresent() || !isADockerConnector(connectorDTO.get())) {
       throw new InvalidRequestException(String.format("Connector not found for identifier : [%s] with scope: [%s]",
                                             dockerConnectorRef.getIdentifier(), dockerConnectorRef.getScope()),
           WingsException.USER);
     }
-    return (DockerConnectorDTO) connectorDTO.get().getConnectorConfig();
+    ConnectorInfoDTO connectors = connectorDTO.get().getConnector();
+    return (DockerConnectorDTO) connectors.getConnectorConfig();
+  }
+
+  private boolean isADockerConnector(@Valid @NotNull ConnectorResponseDTO connectorResponseDTO) {
+    return ConnectorType.DOCKER == (connectorResponseDTO.getConnector().getConnectorType());
   }
 
   private BaseNGAccess getBaseNGAccess(String accountId, String orgIdentifier, String projectIdentifier) {

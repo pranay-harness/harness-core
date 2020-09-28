@@ -11,7 +11,8 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
 
-import io.harness.connector.apis.dto.ConnectorDTO;
+import io.harness.connector.apis.dto.ConnectorInfoDTO;
+import io.harness.connector.apis.dto.ConnectorResponseDTO;
 import io.harness.connector.services.ConnectorService;
 import io.harness.delegate.beans.connector.ConnectorType;
 import io.harness.delegate.beans.git.YamlGitConfigDTO;
@@ -216,12 +217,16 @@ public class YamlGitConfigServiceImpl implements YamlGitConfigService {
   }
 
   @Override
-  public Optional<ConnectorDTO> getGitConnector(
+  public Optional<ConnectorInfoDTO> getGitConnector(
       YamlGitConfigDTO ygs, String gitConnectorId, String repoName, String branchName) {
-    Optional<ConnectorDTO> connectorDTO =
+    Optional<ConnectorResponseDTO> connectorDTO =
         connectorService.get(ygs.getAccountId(), ygs.getOrganizationId(), ygs.getProjectId(), gitConnectorId);
-    if (connectorDTO.isPresent() && connectorDTO.get().getConnectorType() == ConnectorType.GIT) {
-      return connectorDTO;
+
+    if (connectorDTO.isPresent()) {
+      ConnectorInfoDTO connectorInfo = connectorDTO.get().getConnector();
+      if (connectorInfo.getConnectorType() == ConnectorType.GIT) {
+        return connectorDTO.map(connectorResponse -> connectorResponse.getConnector());
+      }
     }
     return Optional.empty();
   }

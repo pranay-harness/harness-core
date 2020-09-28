@@ -22,7 +22,7 @@ import io.harness.cdng.service.beans.ServiceOutcome;
 import io.harness.cdng.stepsdependency.constants.OutcomeExpressionConstants;
 import io.harness.cdng.stepsdependency.utils.CDStepDependencyUtils;
 import io.harness.common.AmbianceHelper;
-import io.harness.connector.apis.dto.ConnectorDTO;
+import io.harness.connector.apis.dto.ConnectorInfoDTO;
 import io.harness.delegate.beans.TaskData;
 import io.harness.delegate.beans.connector.gitconnector.GitConfigDTO;
 import io.harness.delegate.beans.storeconfig.GitStoreDelegateConfig;
@@ -116,7 +116,7 @@ public class K8sRollingStep implements Step, TaskChainExecutable<K8sRollingStepP
       if (ManifestStoreType.GIT.equals(valuesManifest.getStoreConfigWrapper().getStoreConfig().getKind())) {
         GitStore gitStore = (GitStore) valuesManifest.getStoreConfigWrapper().getStoreConfig();
         String connectorId = gitStore.getConnectorIdentifier().getValue();
-        ConnectorDTO connectorDTO = k8sStepHelper.getConnector(connectorId, ambiance);
+        ConnectorInfoDTO connectorDTO = k8sStepHelper.getConnector(connectorId, ambiance);
         List<EncryptedDataDetail> encryptedDataDetails =
             k8sStepHelper.getEncryptedDataDetails((GitConfigDTO) connectorDTO.getConnectorConfig(), ambiance);
         GitStoreDelegateConfig gitStoreDelegateConfig =

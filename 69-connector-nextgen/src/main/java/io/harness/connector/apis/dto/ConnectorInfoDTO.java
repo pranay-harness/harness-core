@@ -31,7 +31,7 @@ import javax.validation.constraints.NotNull;
 @NoArgsConstructor
 @JsonIgnoreProperties(ignoreUnknown = true)
 @FieldDefaults(level = AccessLevel.PRIVATE)
-public class ConnectorRequestDTO {
+public class ConnectorInfoDTO {
   @NotNull String name;
   @NotNull String identifier;
   String description;
@@ -40,19 +40,6 @@ public class ConnectorRequestDTO {
   List<String> tags;
 
   @NotNull @JsonProperty("type") ConnectorType connectorType;
-
-  @Builder
-  public ConnectorRequestDTO(String name, String identifier, String description, String orgIdentifier,
-      String projectIdentifier, List<String> tags, ConnectorType connectorType, ConnectorConfigDTO connectorConfig) {
-    this.name = name;
-    this.identifier = identifier;
-    this.description = description;
-    this.orgIdentifier = orgIdentifier;
-    this.projectIdentifier = projectIdentifier;
-    this.tags = tags;
-    this.connectorType = connectorType;
-    this.connectorConfig = connectorConfig;
-  }
 
   @JsonProperty("spec")
   @JsonTypeInfo(
@@ -73,4 +60,17 @@ public class ConnectorRequestDTO {
   @Valid
   @NotNull
   ConnectorConfigDTO connectorConfig;
+
+  @Builder
+  public ConnectorInfoDTO(String name, String identifier, String description, String orgIdentifier,
+      String projectIdentifier, List<String> tags, ConnectorType connectorType, ConnectorConfigDTO connectorConfig) {
+    this.name = name;
+    this.identifier = identifier;
+    this.description = description;
+    this.orgIdentifier = orgIdentifier;
+    this.projectIdentifier = projectIdentifier;
+    this.tags = tags;
+    this.connectorType = connectorType;
+    this.connectorConfig = connectorConfig;
+  }
 }
