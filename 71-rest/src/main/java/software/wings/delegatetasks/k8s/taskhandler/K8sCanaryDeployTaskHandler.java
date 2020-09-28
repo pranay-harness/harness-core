@@ -82,6 +82,7 @@ public class K8sCanaryDeployTaskHandler extends K8sTaskHandler {
   private KubernetesResourceId previousManagedWorkload;
   private String releaseName;
   private String manifestFilesDirectory;
+  private boolean isDeprecateFabric8Enabled;
 
   @Override
   public K8sTaskExecutionResponse executeTaskInternal(
@@ -93,6 +94,7 @@ public class K8sCanaryDeployTaskHandler extends K8sTaskHandler {
 
     K8sCanaryDeployTaskParameters k8sCanaryDeployTaskParameters = (K8sCanaryDeployTaskParameters) k8sTaskParameters;
 
+    isDeprecateFabric8Enabled = k8sCanaryDeployTaskParameters.isDeprecateFabric8Enabled();
     releaseName = k8sCanaryDeployTaskParameters.getReleaseName();
     manifestFilesDirectory = Paths.get(k8sDelegateTaskParams.getWorkingDirectory(), MANIFEST_FILES_DIR).toString();
     final long timeoutInMillis = getTimeoutMillisFromMinutes(k8sTaskParameters.getTimeoutIntervalInMin());
@@ -162,10 +164,14 @@ public class K8sCanaryDeployTaskHandler extends K8sTaskHandler {
 
   @VisibleForTesting
   List<K8sPod> getAllPods(long timeoutInMillis) throws Exception {
-    List<K8sPod> allPods = k8sTaskHelperBase.getPodDetails(
-        kubernetesConfig, canaryWorkload.getResourceId().getNamespace(), releaseName, timeoutInMillis);
-    List<K8sPod> canaryPods = k8sTaskHelperBase.getPodDetailsWithTrack(
-        kubernetesConfig, canaryWorkload.getResourceId().getNamespace(), releaseName, "canary", timeoutInMillis);
+    String namespace = canaryWorkload.getResourceId().getNamespace();
+    List<K8sPod> allPods = isDeprecateFabric8Enabled
+        ? k8sTaskHelperBase.getPodDetails(kubernetesConfig, namespace, releaseName, timeoutInMillis)
+        : k8sTaskHelperBase.getPodDetailsFabric8(kubernetesConfig, namespace, releaseName, timeoutInMillis);
+    List<K8sPod> canaryPods = isDeprecateFabric8Enabled
+        ? k8sTaskHelperBase.getPodDetailsWithTrack(kubernetesConfig, namespace, releaseName, "canary", timeoutInMillis)
+        : k8sTaskHelperBase.getPodDetailsWithTrackFabric8(
+              kubernetesConfig, namespace, releaseName, "canary", timeoutInMillis);
     Set<String> canaryPodNames = canaryPods.stream().map(K8sPod::getName).collect(Collectors.toSet());
     allPods.forEach(pod -> {
       if (canaryPodNames.contains(pod.getName())) {

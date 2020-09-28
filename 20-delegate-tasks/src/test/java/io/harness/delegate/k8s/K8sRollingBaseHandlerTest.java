@@ -1,5 +1,6 @@
 package io.harness.delegate.k8s;
 
+import static io.harness.rule.OwnerRule.ABOSII;
 import static io.harness.rule.OwnerRule.ANSHUL;
 import static io.harness.rule.OwnerRule.YOGESH;
 import static java.util.Arrays.asList;
@@ -170,5 +171,19 @@ public class K8sRollingBaseHandlerTest extends CategoryTest {
 
   private K8sPod buildPod(int name) {
     return K8sPod.builder().name(String.valueOf(name)).build();
+  }
+
+  @Test
+  @Owner(developers = ABOSII)
+  @Category(UnitTests.class)
+  public void testGetPods() throws Exception {
+    KubernetesResourceId sample = KubernetesResourceId.builder().namespace("default").build();
+    List<KubernetesResource> managedWorkload = Arrays.asList(KubernetesResource.builder().resourceId(sample).build(),
+        KubernetesResource.builder().resourceId(sample).build());
+    KubernetesConfig kubernetesConfig = KubernetesConfig.builder().build();
+
+    k8sRollingBaseHandler.getPods(3000L, managedWorkload, kubernetesConfig, "releaseName");
+
+    verify(k8sTaskHelperBase, times(2)).getPodDetails(kubernetesConfig, "default", "releaseName", 3000L);
   }
 }

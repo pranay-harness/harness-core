@@ -258,9 +258,13 @@ public class HelmDeployServiceImpl implements HelmDeployService {
                    (ExecutionLogCallback) executionLogCallback);
         executionLogCallback.saveExecutionLog(
             format("Status check done with success [%s] for resources in namespace: [%s]", success, namespace));
-        containerInfoList.addAll(k8sTaskHelperBase.getContainerInfos(
-            containerDeploymentDelegateHelper.getKubernetesConfig(commandRequest.getContainerServiceParams()),
-            commandRequest.getReleaseName(), namespace, timeoutInMillis));
+        KubernetesConfig kubernetesConfig =
+            containerDeploymentDelegateHelper.getKubernetesConfig(commandRequest.getContainerServiceParams());
+        String releaseName = commandRequest.getReleaseName();
+        List<ContainerInfo> containerInfos = commandRequest.isDeprecateFabric8Enabled()
+            ? k8sTaskHelperBase.getContainerInfos(kubernetesConfig, releaseName, namespace, timeoutInMillis)
+            : k8sTaskHelperBase.getContainerInfosFabric8(kubernetesConfig, releaseName, namespace, timeoutInMillis);
+        containerInfoList.addAll(containerInfos);
       }
     }
     executionLogCallback.saveExecutionLog(format("Currently running Containers: [%s]", containerInfoList.size()));

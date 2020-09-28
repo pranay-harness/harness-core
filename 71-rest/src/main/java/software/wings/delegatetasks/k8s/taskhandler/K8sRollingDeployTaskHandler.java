@@ -119,7 +119,8 @@ public class K8sRollingDeployTaskHandler extends K8sTaskHandler {
 
     List<KubernetesResource> allWorkloads = ListUtils.union(managedWorkloads, customWorkloads);
     List<K8sPod> existingPodList =
-        k8sRollingBaseHandler.getPods(steadyStateTimeoutInMillis, allWorkloads, kubernetesConfig, releaseName);
+        k8sRollingBaseHandler.getPods(k8sRollingDeployTaskParameters.isDeprecateFabric8Enabled(),
+            steadyStateTimeoutInMillis, allWorkloads, kubernetesConfig, releaseName);
 
     success = k8sTaskHelperBase.applyManifests(client, resources, k8sDelegateTaskParams,
         k8sTaskHelper.getExecutionLogCallback(k8sRollingDeployTaskParameters, Apply), true);
@@ -175,7 +176,8 @@ public class K8sRollingDeployTaskHandler extends K8sTaskHandler {
         K8sRollingDeployResponse.builder()
             .releaseNumber(release.getNumber())
             .k8sPodList(k8sRollingBaseHandler.tagNewPods(
-                k8sRollingBaseHandler.getPods(steadyStateTimeoutInMillis, allWorkloads, kubernetesConfig, releaseName),
+                k8sRollingBaseHandler.getPods(k8sRollingDeployTaskParameters.isDeprecateFabric8Enabled(),
+                    steadyStateTimeoutInMillis, allWorkloads, kubernetesConfig, releaseName),
                 existingPodList))
             .loadBalancer(k8sRollingDeployTaskParameters.isDeprecateFabric8Enabled()
                     ? k8sTaskHelperBase.getLoadBalancerEndpoint(kubernetesConfig, resources)

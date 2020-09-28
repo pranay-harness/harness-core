@@ -47,7 +47,7 @@ public class K8sInstanceSyncTaskHandler extends K8sTaskHandler {
         getTimeoutMillisFromMinutes(k8sInstanceSyncTaskParameters.getTimeoutIntervalInMin());
 
     List<K8sPod> k8sPodList =
-        k8sTaskHelperBase.getPodDetails(kubernetesConfig, k8sInstanceSyncTaskParameters.getNamespace(),
+        k8sTaskHelperBase.getPodDetailsFabric8(kubernetesConfig, k8sInstanceSyncTaskParameters.getNamespace(),
             k8sInstanceSyncTaskParameters.getReleaseName(), steadyStateTimeoutInMillis);
 
     K8sInstanceSyncResponse k8sInstanceSyncResponse =

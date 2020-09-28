@@ -57,14 +57,16 @@ public class K8sInstanceSyncTaskHandlerTest extends WingsBaseTest {
     List<K8sPod> podsList = Arrays.asList(K8sPod.builder().build());
     doReturn(podsList)
         .when(k8sTaskHelperBase)
-        .getPodDetails(any(KubernetesConfig.class), anyString(), anyString(), anyLong());
+        .getPodDetailsFabric8(any(KubernetesConfig.class), anyString(), anyString(), anyLong());
 
     k8sInstanceSyncTaskHandler.executeTaskInternal(
         K8sInstanceSyncTaskParameters.builder().build(), K8sDelegateTaskParams.builder().build());
-    verify(k8sTaskHelperBase, times(1)).getPodDetails(any(KubernetesConfig.class), anyString(), anyString(), anyLong());
+    verify(k8sTaskHelperBase, times(1))
+        .getPodDetailsFabric8(any(KubernetesConfig.class), anyString(), anyString(), anyLong());
     verify(k8sTaskHelper, times(1))
         .getK8sTaskExecutionResponse(any(K8sTaskResponse.class), any(CommandExecutionStatus.class));
-    verify(k8sTaskHelperBase, times(1)).getPodDetails(any(KubernetesConfig.class), anyString(), anyString(), anyLong());
+    verify(k8sTaskHelperBase, times(1))
+        .getPodDetailsFabric8(any(KubernetesConfig.class), anyString(), anyString(), anyLong());
   }
 
   @Test
@@ -77,9 +79,11 @@ public class K8sInstanceSyncTaskHandlerTest extends WingsBaseTest {
 
     k8sInstanceSyncTaskHandler.executeTaskInternal(
         K8sInstanceSyncTaskParameters.builder().build(), K8sDelegateTaskParams.builder().build());
-    verify(k8sTaskHelperBase, times(1)).getPodDetails(any(KubernetesConfig.class), anyString(), anyString(), anyLong());
+    verify(k8sTaskHelperBase, times(1))
+        .getPodDetailsFabric8(any(KubernetesConfig.class), anyString(), anyString(), anyLong());
     verify(k8sTaskHelper, times(1))
         .getK8sTaskExecutionResponse(any(K8sTaskResponse.class), any(CommandExecutionStatus.class));
-    verify(k8sTaskHelperBase, times(1)).getPodDetails(any(KubernetesConfig.class), anyString(), anyString(), anyLong());
+    verify(k8sTaskHelperBase, times(1))
+        .getPodDetailsFabric8(any(KubernetesConfig.class), anyString(), anyString(), anyLong());
   }
 }

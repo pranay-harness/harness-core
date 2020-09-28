@@ -96,6 +96,7 @@ public class K8sBlueGreenDeployTaskHandler extends K8sTaskHandler {
   private String stageColor;
   private String releaseName;
   private String manifestFilesDirectory;
+  private boolean isDeprecateFabric8Enabled;
 
   @Override
   public K8sTaskExecutionResponse executeTaskInternal(
@@ -108,6 +109,7 @@ public class K8sBlueGreenDeployTaskHandler extends K8sTaskHandler {
     K8sBlueGreenDeployTaskParameters k8sBlueGreenDeployTaskParameters =
         (K8sBlueGreenDeployTaskParameters) k8sTaskParameters;
 
+    isDeprecateFabric8Enabled = k8sBlueGreenDeployTaskParameters.isDeprecateFabric8Enabled();
     releaseName = k8sBlueGreenDeployTaskParameters.getReleaseName();
     manifestFilesDirectory = Paths.get(k8sDelegateTaskParams.getWorkingDirectory(), MANIFEST_FILES_DIR).toString();
     final long timeoutInMillis = getTimeoutMillisFromMinutes(k8sTaskParameters.getTimeoutIntervalInMin());
@@ -188,12 +190,20 @@ public class K8sBlueGreenDeployTaskHandler extends K8sTaskHandler {
   @VisibleForTesting
   List<K8sPod> getAllPods(long timeoutInMillis) throws Exception {
     List<K8sPod> allPods = new ArrayList<>();
-    final List<K8sPod> stagePods = k8sTaskHelperBase.getPodDetailsWithColor(
-        kubernetesConfig, managedWorkload.getResourceId().getNamespace(), releaseName, stageColor, timeoutInMillis);
+    String namespace = managedWorkload.getResourceId().getNamespace();
+    final List<K8sPod> stagePods = isDeprecateFabric8Enabled
+        ? k8sTaskHelperBase.getPodDetailsWithColor(
+              kubernetesConfig, namespace, releaseName, stageColor, timeoutInMillis)
+        : k8sTaskHelperBase.getPodDetailsWithColorFabric8(
+              kubernetesConfig, namespace, releaseName, stageColor, timeoutInMillis);
+    final List<K8sPod> primaryPods = isDeprecateFabric8Enabled
+        ? k8sTaskHelperBase.getPodDetailsWithColor(
+              kubernetesConfig, namespace, releaseName, primaryColor, timeoutInMillis)
+        : k8sTaskHelperBase.getPodDetailsWithColorFabric8(
+              kubernetesConfig, namespace, releaseName, primaryColor, timeoutInMillis);
     stagePods.forEach(pod -> pod.setNewPod(true));
     allPods.addAll(stagePods);
-    allPods.addAll(k8sTaskHelperBase.getPodDetailsWithColor(
-        kubernetesConfig, managedWorkload.getResourceId().getNamespace(), releaseName, primaryColor, timeoutInMillis));
+    allPods.addAll(primaryPods);
     return allPods;
   }
 

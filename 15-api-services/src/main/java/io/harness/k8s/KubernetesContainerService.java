@@ -13,6 +13,7 @@ import io.fabric8.kubernetes.client.KubernetesClient;
 import io.harness.container.ContainerInfo;
 import io.harness.k8s.model.KubernetesConfig;
 import io.harness.logging.LogCallback;
+import io.kubernetes.client.openapi.models.V1Pod;
 import io.kubernetes.client.openapi.models.V1Service;
 import io.kubernetes.client.openapi.models.VersionInfo;
 import me.snowdrop.istio.api.IstioResource;
@@ -129,7 +130,10 @@ public interface KubernetesContainerService {
   void saveReleaseHistory(
       KubernetesConfig kubernetesConfig, String infraMappingId, String releaseHistory, boolean storeInSecrets);
 
-  List<Pod> getRunningPodsWithLabels(KubernetesConfig kubernetesConfig, String namespace, Map<String, String> labels);
+  List<Pod> getRunningPodsWithLabelsFabric8(
+      KubernetesConfig kubernetesConfig, String namespace, Map<String, String> labels);
+
+  List<V1Pod> getRunningPodsWithLabels(KubernetesConfig kubernetesConfig, String namespace, Map<String, String> labels);
 
   void deleteIstioVirtualService(KubernetesConfig kubernetesConfig, String name);
 

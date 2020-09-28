@@ -1,5 +1,6 @@
 package io.harness.delegate.task.k8s;
 
+import static io.harness.helm.HelmConstants.HELM_RELEASE_LABEL;
 import static io.harness.k8s.model.Kind.ConfigMap;
 import static io.harness.k8s.model.Kind.Deployment;
 import static io.harness.k8s.model.Kind.Namespace;
@@ -19,6 +20,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyBoolean;
 import static org.mockito.Matchers.anyLong;
+import static org.mockito.Matchers.anyMapOf;
+import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.doThrow;
@@ -39,8 +42,10 @@ import io.fabric8.kubernetes.api.model.PodBuilder;
 import io.fabric8.kubernetes.api.model.PodStatusBuilder;
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
+import io.harness.container.ContainerInfo;
 import io.harness.k8s.KubernetesContainerService;
 import io.harness.k8s.model.HarnessLabelValues;
+import io.harness.k8s.model.HarnessLabels;
 import io.harness.k8s.model.K8sContainer;
 import io.harness.k8s.model.K8sPod;
 import io.harness.k8s.model.KubernetesConfig;
@@ -50,7 +55,15 @@ import io.harness.logging.CommandExecutionStatus;
 import io.harness.logging.LogCallback;
 import io.harness.logging.LogLevel;
 import io.harness.rule.Owner;
+import io.kubernetes.client.openapi.models.V1ContainerStatus;
+import io.kubernetes.client.openapi.models.V1ContainerStatusBuilder;
 import io.kubernetes.client.openapi.models.V1LoadBalancerIngress;
+import io.kubernetes.client.openapi.models.V1ObjectMeta;
+import io.kubernetes.client.openapi.models.V1ObjectMetaBuilder;
+import io.kubernetes.client.openapi.models.V1Pod;
+import io.kubernetes.client.openapi.models.V1PodBuilder;
+import io.kubernetes.client.openapi.models.V1PodStatus;
+import io.kubernetes.client.openapi.models.V1PodStatusBuilder;
 import io.kubernetes.client.openapi.models.V1Service;
 import io.kubernetes.client.openapi.models.V1ServiceBuilder;
 import io.kubernetes.client.openapi.models.V1ServicePortBuilder;
@@ -96,7 +109,7 @@ public class K8sTaskHelperBaseTest extends CategoryTest {
   @Test
   @Owner(developers = ABOSII)
   @Category(UnitTests.class)
-  public void testGetPodDetailsWithLabels() throws Exception {
+  public void testGetPodDetailsWithLabelsFabric8() throws Exception {
     KubernetesConfig config = KubernetesConfig.builder().build();
     Map<String, String> labelsQuery = ImmutableMap.of("release-name", "releaseName");
     List<Pod> existingPods =
@@ -106,10 +119,9 @@ public class K8sTaskHelperBaseTest extends CategoryTest {
 
     doReturn(existingPods)
         .when(mockKubernetesContainerService)
-        .getRunningPodsWithLabels(config, "default", labelsQuery);
-
-    List<K8sPod> pods =
-        k8sTaskHelperBase.getPodDetailsWithLabels(config, "default", "releaseName", labelsQuery, LONG_TIMEOUT_INTERVAL);
+        .getRunningPodsWithLabelsFabric8(config, "default", labelsQuery);
+    List<K8sPod> pods = k8sTaskHelperBase.getPodDetailsWithLabelsFabric8(
+        config, "default", "releaseName", labelsQuery, LONG_TIMEOUT_INTERVAL);
 
     assertThat(pods).isNotEmpty();
     assertThat(pods).hasSize(3);
@@ -415,5 +427,123 @@ public class K8sTaskHelperBaseTest extends CategoryTest {
         .resourceId(KubernetesResourceId.builder().name(type).kind(Service.name()).namespace(DEFAULT).build())
         .spec(Yaml.dump(getK8sService(type, emptyList(), null, null)))
         .build();
+  }
+
+  @Test
+  @Owner(developers = ABOSII)
+  @Category(UnitTests.class)
+  public void testGetPodDetailsWithLabels() throws Exception {
+    KubernetesConfig config = KubernetesConfig.builder().build();
+    Map<String, String> labels = ImmutableMap.of("release-name", "releaseName");
+    List<V1Pod> existingPods =
+        asList(v1Pod(v1Metadata("pod-1", labels), v1PodStatus("pod-1-ip", v1ContainerStatus("web", "nginx"))),
+            v1Pod(v1Metadata("pod-2", labels),
+                v1PodStatus("pod-2-ip", v1ContainerStatus("app", "todo"), v1ContainerStatus("web", "nginx"))),
+            v1Pod(v1Metadata("pod-3", labels), v1PodStatus("pod-3-ip")), v1Pod(v1Metadata("pod-4", labels), null),
+            v1Pod(null, null));
+
+    doReturn(existingPods).when(mockKubernetesContainerService).getRunningPodsWithLabels(config, "default", labels);
+
+    List<K8sPod> pods =
+        k8sTaskHelperBase.getPodDetailsWithLabels(config, "default", "releaseName", labels, LONG_TIMEOUT_INTERVAL);
+
+    assertThat(pods).hasSize(2);
+    K8sPod pod = pods.get(0);
+    K8sContainer container = pods.get(0).getContainerList().get(0);
+    assertThat(pod.getName()).isEqualTo("pod-1");
+    assertThat(pod.getUid()).isEqualTo("pod-1");
+    assertThat(pod.getLabels()).isEqualTo(labels);
+    assertThat(pod.getContainerList()).hasSize(1);
+    assertThat(container.getName()).isEqualTo("web");
+    assertThat(container.getImage()).isEqualTo("nginx");
+
+    pod = pods.get(1);
+    assertThat(pod.getName()).isEqualTo("pod-2");
+    assertThat(pod.getUid()).isEqualTo("pod-2");
+    assertThat(pod.getLabels()).isEqualTo(labels);
+    assertThat(pod.getContainerList()).hasSize(2);
+    container = pods.get(1).getContainerList().get(0);
+    assertThat(container.getName()).isEqualTo("app");
+    assertThat(container.getImage()).isEqualTo("todo");
+    container = pods.get(1).getContainerList().get(1);
+    assertThat(container.getName()).isEqualTo("web");
+    assertThat(container.getImage()).isEqualTo("nginx");
+  }
+
+  private V1ObjectMeta v1Metadata(String name, Map<String, String> labels) {
+    return new V1ObjectMetaBuilder().withUid(name).withName(name).withLabels(labels).build();
+  }
+
+  private V1ContainerStatus v1ContainerStatus(String name, String image) {
+    return new V1ContainerStatusBuilder().withContainerID(name).withName(name).withImage(image).build();
+  }
+
+  private V1PodStatus v1PodStatus(String podIP, V1ContainerStatus... containerStatuses) {
+    return new V1PodStatusBuilder().withPodIP(podIP).withContainerStatuses(containerStatuses).build();
+  }
+
+  private V1Pod v1Pod(V1ObjectMeta metadata, V1PodStatus status) {
+    return new V1PodBuilder().withMetadata(metadata).withStatus(status).build();
+  }
+
+  @Test
+  @Owner(developers = ABOSII)
+  @Category(UnitTests.class)
+  public void testGetPodDetailsWithTrack() throws Exception {
+    KubernetesConfig config = KubernetesConfig.builder().build();
+    K8sTaskHelperBase spyK8sTaskHelperBase = spy(K8sTaskHelperBase.class);
+    Map<String, String> expectedLabels =
+        ImmutableMap.of(HarnessLabels.releaseName, "release", HarnessLabels.track, "canary");
+    doReturn(emptyList())
+        .when(spyK8sTaskHelperBase)
+        .getPodDetailsWithLabels(
+            any(KubernetesConfig.class), anyString(), anyString(), anyMapOf(String.class, String.class), anyLong());
+    spyK8sTaskHelperBase.getPodDetailsWithTrack(config, "default", "release", "canary", DEFAULT_STEADY_STATE_TIMEOUT);
+
+    verify(spyK8sTaskHelperBase, times(1))
+        .getPodDetailsWithLabels(config, "default", "release", expectedLabels, DEFAULT_STEADY_STATE_TIMEOUT);
+  }
+
+  @Test
+  @Owner(developers = ABOSII)
+  @Category(UnitTests.class)
+  public void testGetPodDetailsWithColor() throws Exception {
+    KubernetesConfig config = KubernetesConfig.builder().build();
+    K8sTaskHelperBase spyK8sTaskHelperBase = spy(K8sTaskHelperBase.class);
+    Map<String, String> expectedLabels =
+        ImmutableMap.of(HarnessLabels.releaseName, "release", HarnessLabels.color, "blue");
+    doReturn(emptyList())
+        .when(spyK8sTaskHelperBase)
+        .getPodDetailsWithLabels(
+            any(KubernetesConfig.class), anyString(), anyString(), anyMapOf(String.class, String.class), anyLong());
+    spyK8sTaskHelperBase.getPodDetailsWithColor(config, "default", "release", "blue", DEFAULT_STEADY_STATE_TIMEOUT);
+
+    verify(spyK8sTaskHelperBase, times(1))
+        .getPodDetailsWithLabels(config, "default", "release", expectedLabels, DEFAULT_STEADY_STATE_TIMEOUT);
+  }
+
+  @Test
+  @Owner(developers = ABOSII)
+  @Category(UnitTests.class)
+  public void testGetContainerInfos() throws Exception {
+    List<K8sPod> existingPods = singletonList(K8sPod.builder().name("name").podIP("pod-ip").build());
+    KubernetesConfig config = KubernetesConfig.builder().build();
+    K8sTaskHelperBase spyK8sTaskHelperBase = spy(K8sTaskHelperBase.class);
+    Map<String, String> expectedLabels = ImmutableMap.of(HELM_RELEASE_LABEL, "release");
+    doReturn(existingPods)
+        .when(spyK8sTaskHelperBase)
+        .getPodDetailsWithLabels(
+            any(KubernetesConfig.class), anyString(), anyString(), anyMapOf(String.class, String.class), anyLong());
+    List<ContainerInfo> result =
+        spyK8sTaskHelperBase.getContainerInfos(config, "release", "default", DEFAULT_STEADY_STATE_TIMEOUT);
+
+    verify(spyK8sTaskHelperBase, times(1))
+        .getPodDetailsWithLabels(config, "default", "release", expectedLabels, DEFAULT_STEADY_STATE_TIMEOUT);
+    assertThat(result).hasSize(1);
+    ContainerInfo containerInfo = result.get(0);
+    assertThat(containerInfo.getPodName()).isEqualTo("name");
+    assertThat(containerInfo.getIp()).isEqualTo("pod-ip");
+    assertThat(containerInfo.getReleaseName()).isEqualTo("release");
+    assertThat(containerInfo.isNewContainer()).isTrue();
   }
 }

@@ -445,6 +445,7 @@ public class HelmDeployServiceImplTest extends WingsBaseTest {
             .chartSpecification(HelmChartSpecification.builder().chartName(HelmTestConstants.CHART_NAME_KEY).build())
             .containerServiceParams(ContainerServiceParams.builder().namespace("default").build())
             .executionLogCallback(logCallback)
+            .deprecateFabric8Enabled(true)
             .sourceRepoConfig(K8sDelegateManifestConfig.builder()
                                   .manifestStoreTypes(StoreType.HelmSourceRepo)
                                   .gitConfig(GitConfig.builder().build())
@@ -465,6 +466,7 @@ public class HelmDeployServiceImplTest extends WingsBaseTest {
                                 .chartUrl("http://127.0.0.1")
                                 .build())
         .executionLogCallback(logCallback)
+        .deprecateFabric8Enabled(true)
         .build();
   }
 
@@ -992,6 +994,7 @@ public class HelmDeployServiceImplTest extends WingsBaseTest {
                                                                      .chartName(HelmTestConstants.CHART_NAME_KEY)
                                                                      .chartUrl("http://127.0.0.1")
                                                                      .build())
+                                             .deprecateFabric8Enabled(true)
                                              .timeoutInMillis(LONG_TIMEOUT_INTERVAL)
                                              .build();
     List<ContainerInfo> containerInfosDefault1 =

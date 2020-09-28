@@ -240,11 +240,11 @@ public class K8sTaskHelperBase {
         && !StringUtils.equals(filename, values_filename);
   }
 
-  public List<K8sPod> getPodDetailsWithLabels(KubernetesConfig kubernetesConfig, String namespace, String releaseName,
-      Map<String, String> labels, long timeoutInMillis) throws Exception {
+  public List<K8sPod> getPodDetailsWithLabelsFabric8(KubernetesConfig kubernetesConfig, String namespace,
+      String releaseName, Map<String, String> labels, long timeoutInMillis) throws Exception {
     return timeLimiter.callWithTimeout(
         ()
-            -> kubernetesContainerService.getRunningPodsWithLabels(kubernetesConfig, namespace, labels)
+            -> kubernetesContainerService.getRunningPodsWithLabelsFabric8(kubernetesConfig, namespace, labels)
                    .stream()
                    .map(pod
                        -> K8sPod.builder()
@@ -269,10 +269,55 @@ public class K8sTaskHelperBase {
         timeoutInMillis, TimeUnit.MILLISECONDS, true);
   }
 
+  public List<K8sPod> getPodDetailsWithLabels(KubernetesConfig kubernetesConfig, String namespace, String releaseName,
+      Map<String, String> labels, long timeoutinMillis) throws Exception {
+    return timeLimiter.callWithTimeout(
+        ()
+            -> kubernetesContainerService.getRunningPodsWithLabels(kubernetesConfig, namespace, labels)
+                   .stream()
+                   .filter(pod
+                       -> pod.getMetadata() != null && pod.getStatus() != null
+                           && pod.getStatus().getContainerStatuses() != null)
+                   .map(pod -> {
+                     return K8sPod.builder()
+                         .uid(pod.getMetadata().getUid())
+                         .name(pod.getMetadata().getName())
+                         .podIP(pod.getStatus().getPodIP())
+                         .namespace(pod.getMetadata().getNamespace())
+                         .releaseName(releaseName)
+                         .containerList(pod.getStatus()
+                                            .getContainerStatuses()
+                                            .stream()
+                                            .map(container
+                                                -> K8sContainer.builder()
+                                                       .containerId(container.getContainerID())
+                                                       .name(container.getName())
+                                                       .image(container.getImage())
+                                                       .build())
+                                            .collect(toList()))
+                         .labels(pod.getMetadata().getLabels())
+                         .build();
+                   })
+                   .collect(toList()),
+        timeoutinMillis, TimeUnit.MILLISECONDS, true);
+  }
+
+  public List<K8sPod> getPodDetailsWithTrackFabric8(KubernetesConfig kubernetesConfig, String namespace,
+      String releaseName, String track, long timeoutInMillis) throws Exception {
+    Map<String, String> labels = ImmutableMap.of(HarnessLabels.releaseName, releaseName, HarnessLabels.track, track);
+    return getPodDetailsWithLabelsFabric8(kubernetesConfig, namespace, releaseName, labels, timeoutInMillis);
+  }
+
   public List<K8sPod> getPodDetailsWithTrack(KubernetesConfig kubernetesConfig, String namespace, String releaseName,
       String track, long timeoutInMillis) throws Exception {
     Map<String, String> labels = ImmutableMap.of(HarnessLabels.releaseName, releaseName, HarnessLabels.track, track);
     return getPodDetailsWithLabels(kubernetesConfig, namespace, releaseName, labels, timeoutInMillis);
+  }
+
+  public List<K8sPod> getPodDetailsWithColorFabric8(KubernetesConfig kubernetesConfig, String namespace,
+      String releaseName, String color, long timeoutInMillis) throws Exception {
+    Map<String, String> labels = ImmutableMap.of(HarnessLabels.releaseName, releaseName, HarnessLabels.color, color);
+    return getPodDetailsWithLabelsFabric8(kubernetesConfig, namespace, releaseName, labels, timeoutInMillis);
   }
 
   public List<K8sPod> getPodDetailsWithColor(KubernetesConfig kubernetesConfig, String namespace, String releaseName,
@@ -426,6 +471,12 @@ public class K8sTaskHelperBase {
         kubernetesResource.getResourceId().setNamespace(namespace);
       }
     }
+  }
+
+  public List<K8sPod> getPodDetailsFabric8(
+      KubernetesConfig kubernetesConfig, String namespace, String releaseName, long timeoutInMillis) throws Exception {
+    Map<String, String> labels = ImmutableMap.of(HarnessLabels.releaseName, releaseName);
+    return getPodDetailsWithLabelsFabric8(kubernetesConfig, namespace, releaseName, labels, timeoutInMillis);
   }
 
   public List<K8sPod> getPodDetails(
@@ -669,15 +720,35 @@ public class K8sTaskHelperBase {
     return isEmpty(pod.getContainerList()) ? EMPTY : pod.getContainerList().get(0).getContainerId();
   }
 
-  private List<K8sPod> getHelmPodDetails(
-      KubernetesConfig kubernetesConfig, String namespace, String releaseName, long timeoutInMillis) throws Exception {
+  private List<K8sPod> getHelmPodDetails(boolean useFabric8, KubernetesConfig kubernetesConfig, String namespace,
+      String releaseName, long timeoutInMillis) throws Exception {
     Map<String, String> labels = ImmutableMap.of(HELM_RELEASE_LABEL, releaseName);
-    return getPodDetailsWithLabels(kubernetesConfig, namespace, releaseName, labels, timeoutInMillis);
+    return useFabric8
+        ? getPodDetailsWithLabelsFabric8(kubernetesConfig, namespace, releaseName, labels, timeoutInMillis)
+        : getPodDetailsWithLabels(kubernetesConfig, namespace, releaseName, labels, timeoutInMillis);
+  }
+
+  public List<ContainerInfo> getContainerInfosFabric8(
+      KubernetesConfig kubernetesConfig, String releaseName, String namespace, long timeoutInMillis) throws Exception {
+    List<K8sPod> helmPods = getHelmPodDetails(true, kubernetesConfig, namespace, releaseName, timeoutInMillis);
+
+    return helmPods.stream()
+        .map(pod
+            -> ContainerInfo.builder()
+                   .hostName(pod.getName())
+                   .ip(pod.getPodIP())
+                   .containerId(getPodContainerId(pod))
+                   .podName(pod.getName())
+                   .newContainer(true)
+                   .status(ContainerInfo.Status.SUCCESS)
+                   .releaseName(releaseName)
+                   .build())
+        .collect(Collectors.toList());
   }
 
   public List<ContainerInfo> getContainerInfos(
       KubernetesConfig kubernetesConfig, String releaseName, String namespace, long timeoutInMillis) throws Exception {
-    List<K8sPod> helmPods = getHelmPodDetails(kubernetesConfig, namespace, releaseName, timeoutInMillis);
+    List<K8sPod> helmPods = getHelmPodDetails(false, kubernetesConfig, namespace, releaseName, timeoutInMillis);
 
     return helmPods.stream()
         .map(pod

@@ -129,6 +129,8 @@ import io.kubernetes.client.openapi.ApiClient;
 import io.kubernetes.client.openapi.ApiException;
 import io.kubernetes.client.openapi.apis.CoreV1Api;
 import io.kubernetes.client.openapi.apis.VersionApi;
+import io.kubernetes.client.openapi.models.V1Pod;
+import io.kubernetes.client.openapi.models.V1PodList;
 import io.kubernetes.client.openapi.models.V1Service;
 import io.kubernetes.client.openapi.models.V1ServiceList;
 import io.kubernetes.client.openapi.models.VersionInfo;
@@ -177,6 +179,8 @@ import java.util.stream.Collectors;
 public class KubernetesContainerServiceImpl implements KubernetesContainerService {
   private static final String RUNNING = "Running";
   private static final String RESOURCE_NAME_FIELD = "metadata.name";
+  private static final String K8S_SELECTOR_FORMAT = "%s=%s";
+  private static final String K8S_SELECTOR_DELIMITER = ",";
   public static final String METRICS_SERVER_ABSENT = "CE.MetricsServerCheck: Please install metrics server.";
   public static final String RESOURCE_PERMISSION_REQUIRED =
       "CE: The provided serviceaccount is missing the following permissions: %n %s. Please grant these to the service account.";
@@ -974,7 +978,7 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
       }
 
       ApiClient apiClient = kubernetesHelperService.getApiClient(kubernetesConfig);
-      String fieldSelector = format("%s=%s", RESOURCE_NAME_FIELD, name);
+      String fieldSelector = format(K8S_SELECTOR_FORMAT, RESOURCE_NAME_FIELD, name);
       V1ServiceList result = new CoreV1Api(apiClient).listNamespacedService(
           namespace, null, null, null, fieldSelector, null, null, null, null, null);
       return isEmpty(result.getItems()) ? null : result.getItems().get(0);
@@ -1629,7 +1633,7 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
   }
 
   @Override
-  public List<Pod> getRunningPodsWithLabels(
+  public List<Pod> getRunningPodsWithLabelsFabric8(
       KubernetesConfig kubernetesConfig, String namespace, Map<String, String> labels) {
     return kubernetesHelperService.getKubernetesClient(kubernetesConfig)
         .pods()
@@ -1640,8 +1644,32 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
         .stream()
         .filter(pod
             -> StringUtils.isBlank(pod.getMetadata().getDeletionTimestamp())
-                && StringUtils.equals(pod.getStatus().getPhase(), "Running"))
+                && StringUtils.equals(pod.getStatus().getPhase(), RUNNING))
         .collect(Collectors.toList());
+  }
+
+  @Override
+  public List<V1Pod> getRunningPodsWithLabels(
+      KubernetesConfig kubernetesConfig, String namespace, Map<String, String> labels) {
+    try {
+      ApiClient apiClient = kubernetesHelperService.getApiClient(kubernetesConfig);
+      String labelSelector = labels.entrySet()
+                                 .stream()
+                                 .map(entry -> format(K8S_SELECTOR_FORMAT, entry.getKey(), entry.getValue()))
+                                 .collect(Collectors.joining(K8S_SELECTOR_DELIMITER));
+      V1PodList podList = new CoreV1Api(apiClient).listNamespacedPod(
+          namespace, null, null, null, null, labelSelector, null, null, null, null);
+      return podList.getItems()
+          .stream()
+          .filter(pod
+              -> pod.getMetadata() != null && pod.getMetadata().getDeletionTimestamp() == null
+                  && pod.getStatus() != null && StringUtils.equals(pod.getStatus().getPhase(), RUNNING))
+          .collect(Collectors.toList());
+    } catch (ApiException exception) {
+      String message =
+          format("Unable to get running pods. Code: %s, message: %s", exception.getCode(), exception.getResponseBody());
+      throw new InvalidRequestException(message, exception, USER);
+    }
   }
 
   @Override
