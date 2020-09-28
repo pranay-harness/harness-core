@@ -49,7 +49,7 @@ import java.util.concurrent.ExecutorService;
 
 public class K8sResourceValidatorImplTest extends CategoryTest {
   @Rule public MockitoRule mockitoRule = MockitoJUnit.rule();
-  @Rule public WireMockRule wireMockRule = new WireMockRule(65220);
+  @Rule public WireMockRule wireMockRule = new WireMockRule(0);
 
   @Mock AuthorizationV1Api authorizationV1Api;
   @InjectMocks K8sResourceValidatorImpl k8sResourceValidator;

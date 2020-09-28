@@ -27,7 +27,7 @@ import io.harness.category.element.UnitTests;
 import io.harness.exception.InvalidArtifactServerException;
 import io.harness.rule.Owner;
 import io.harness.serializer.JsonUtils;
-import org.junit.BeforeClass;
+import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -46,7 +46,7 @@ public class DockerPublicRegistryProcessorTest extends CategoryTest {
   @Rule public MockitoRule mockitoRule = MockitoJUnit.rule();
   @Rule
   public WireMockRule wireMockRule = new WireMockRule(
-      WireMockConfiguration.wireMockConfig().usingFilesUnderDirectory("15-api-services/src/test/resources").port(9882));
+      WireMockConfiguration.wireMockConfig().usingFilesUnderDirectory("15-api-services/src/test/resources").port(0));
 
   @Mock private DockerRestClientFactory dockerRestClientFactory;
   @Mock private DockerRegistryUtils dockerRegistryUtils;
@@ -57,9 +57,9 @@ public class DockerPublicRegistryProcessorTest extends CategoryTest {
   private static DockerInternalConfig dockerConfig;
   private static DockerRegistryRestClient dockerRegistryRestClient;
 
-  @BeforeClass
-  public static void beforeClass() {
-    String url = "http://localhost:9882/";
+  @Before
+  public void beforeClass() {
+    String url = "http://localhost:" + wireMockRule.port() + "/";
     dockerConfig =
         DockerInternalConfig.builder().dockerRegistryUrl(url).username("username").password("password").build();
     dockerRegistryRestClient = new DockerRestClientFactoryImpl().getDockerRegistryRestClient(dockerConfig);
@@ -75,11 +75,11 @@ public class DockerPublicRegistryProcessorTest extends CategoryTest {
 
     when(result.getName()).thenReturn("1");
     when(dockerPublicImageTagResponse.getResults()).thenReturn(asList(result));
-    when(dockerPublicImageTagResponse.getNext()).thenReturn("http://localhost:9882/v2/");
+    when(dockerPublicImageTagResponse.getNext()).thenReturn("http://localhost:" + wireMockRule.port() + "/v2/");
     images = dockerPublicRegistryProcessor.paginate(dockerPublicImageTagResponse, dockerConfig, "image", null, 10);
     assertThat(images).isNotEmpty();
     assertThat(images.get(0).getUiDisplayName()).isEqualTo("Tag# 1");
-    assertThat(images.get(0).getBuildUrl()).isEqualTo("http://localhost:9882/image/tags/1");
+    assertThat(images.get(0).getBuildUrl()).isEqualTo("http://localhost:" + wireMockRule.port() + "/image/tags/1");
   }
 
   @Test

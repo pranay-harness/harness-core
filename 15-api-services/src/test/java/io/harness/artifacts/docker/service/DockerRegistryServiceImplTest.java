@@ -33,7 +33,7 @@ import io.harness.exception.InvalidArtifactServerException;
 import io.harness.network.Http;
 import io.harness.rule.Owner;
 import io.harness.serializer.JsonUtils;
-import org.junit.BeforeClass;
+import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -51,7 +51,7 @@ public class DockerRegistryServiceImplTest extends CategoryTest {
   @Rule public MockitoRule mockitoRule = MockitoJUnit.rule();
   @Rule
   public WireMockRule wireMockRule = new WireMockRule(
-      WireMockConfiguration.wireMockConfig().usingFilesUnderDirectory("15-api-services/src/test/resources").port(9883));
+      WireMockConfiguration.wireMockConfig().usingFilesUnderDirectory("15-api-services/src/test/resources").port(0));
   @Mock private DockerRestClientFactory dockerRestClientFactory;
   @Mock private DockerRegistryUtils dockerRegistryUtils;
   @InjectMocks DockerRegistryServiceImpl dockerRegistryService;
@@ -63,12 +63,12 @@ public class DockerRegistryServiceImplTest extends CategoryTest {
   private static DockerImageTagResponse dockerImageTagResponse;
   private static DockerImageTagResponse dockerImageTagResponsePaginated;
 
-  @BeforeClass
-  public static void beforeClass() {
+  @Before
+  public void before() {
     dockerRegistryToken = new DockerRegistryToken();
     dockerRegistryToken.setToken("dockerRegistryToken");
 
-    url = "http://localhost:9883/";
+    url = "http://localhost:" + wireMockRule.port() + "/";
     dockerConfig =
         DockerInternalConfig.builder().dockerRegistryUrl(url).username("username").password("password").build();
     dockerRegistryRestClient = new DockerRestClientFactoryImpl().getDockerRegistryRestClient(dockerConfig);
@@ -92,7 +92,8 @@ public class DockerRegistryServiceImplTest extends CategoryTest {
   public void testValidateCredentialForIOException() {
     wireMockRule.stubFor(get(urlEqualTo("/v2/"))
                              .willReturn(aResponse().withStatus(401).withHeader("Www-Authenticate",
-                                 "Bearer realm=\"https://localhost:9883/service/token\",service=\"harbor-registry\"")));
+                                 "Bearer realm=\"https://localhost:" + wireMockRule.port()
+                                     + "/service/token\",service=\"harbor-registry\"")));
     doReturn(dockerRegistryRestClient).when(dockerRestClientFactory).getDockerRegistryRestClient(dockerConfig);
     assertThatThrownBy(() -> dockerRegistryService.validateCredentials(dockerConfig))
         .isInstanceOf(InvalidArtifactServerException.class);
@@ -103,11 +104,10 @@ public class DockerRegistryServiceImplTest extends CategoryTest {
   @Category(UnitTests.class)
   public void testValidateCredentialForIOException2() {
     doReturn(dockerRegistryRestClient).when(dockerRestClientFactory).getDockerRegistryRestClient(dockerConfig);
-    wireMockRule.stubFor(
-        get(urlEqualTo("/v2"))
-            .willReturn(aResponse().withStatus(401).withHeader("Www-Authenticate",
-                "Bearer realm=\"http://localhost:9883/service/token\",service=\"harbor-registry\",scope=\"somevalue\"")));
-    // http://localhost:9883/service/token?service=harbor-registry&scope=somevalue
+    wireMockRule.stubFor(get(urlEqualTo("/v2"))
+                             .willReturn(aResponse().withStatus(401).withHeader("Www-Authenticate",
+                                 "Bearer realm=\"http://localhost:" + wireMockRule.port()
+                                     + "/service/token\",service=\"harbor-registry\",scope=\"somevalue\"")));
     wireMockRule.stubFor(get(urlEqualTo("/service/token?service=harbor-registry&scope=somevalue"))
                              .willReturn(aResponse().withBody(JsonUtils.asJson(dockerRegistryToken))));
     assertThatThrownBy(() -> dockerRegistryService.validateCredentials(dockerConfig))
@@ -130,10 +130,10 @@ public class DockerRegistryServiceImplTest extends CategoryTest {
   public void testValidateCredentialIOExceptionForAllgetapiVersionCalls() {
     doReturn(dockerRegistryRestClient).when(dockerRestClientFactory).getDockerRegistryRestClient(dockerConfig);
     wireMockRule.stubFor(get(urlEqualTo("/v2")).willReturn(aResponse().withFault(Fault.MALFORMED_RESPONSE_CHUNK)));
-    wireMockRule.stubFor(
-        get(urlEqualTo("/v2/"))
-            .willReturn(aResponse().withStatus(401).withHeader("Www-Authenticate",
-                "Bearer realm=\"http://localhost:9883/service/token\",service=\"harbor-registry\",scope=\"somevalue\"")));
+    wireMockRule.stubFor(get(urlEqualTo("/v2/"))
+                             .willReturn(aResponse().withStatus(401).withHeader("Www-Authenticate",
+                                 "Bearer realm=\"http://localhost:" + wireMockRule.port()
+                                     + "/service/token\",service=\"harbor-registry\",scope=\"somevalue\"")));
 
     // http://localhost:9883/service/token?service=harbor-registry&scope=somevalue
     wireMockRule.stubFor(get(urlEqualTo("/service/token?service=harbor-registry&scope=somevalue"))
@@ -179,10 +179,10 @@ public class DockerRegistryServiceImplTest extends CategoryTest {
     try {
       doReturn(dockerRegistryRestClient).when(dockerRestClientFactory).getDockerRegistryRestClient(dockerConfig);
 
-      wireMockRule.stubFor(
-          get(urlEqualTo("/v2/image/tags/list"))
-              .willReturn(aResponse().withStatus(401).withHeader("Www-Authenticate",
-                  "Bearer realm=\"http://localhost:9883/service/token\",service=\"harbor-registry\",scope=\"somevalue\"")));
+      wireMockRule.stubFor(get(urlEqualTo("/v2/image/tags/list"))
+                               .willReturn(aResponse().withStatus(401).withHeader("Www-Authenticate",
+                                   "Bearer realm=\"http://localhost:" + wireMockRule.port()
+                                       + "/service/token\",service=\"harbor-registry\",scope=\"somevalue\"")));
 
       // http://localhost:9883/service/token?service=harbor-registry&scope=somevalue
       wireMockRule.stubFor(get(urlEqualTo("/service/token?service=harbor-registry&scope=somevalue"))
