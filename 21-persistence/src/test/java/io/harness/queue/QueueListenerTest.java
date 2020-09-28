@@ -16,7 +16,7 @@ import static org.mockito.Mockito.verify;
 
 import com.google.inject.Inject;
 
-import io.harness.PersistenceTest;
+import io.harness.PersistenceTestBase;
 import io.harness.category.element.UnitTests;
 import io.harness.maintenance.MaintenanceGuard;
 import io.harness.mongo.queue.MongoQueueConsumer;
@@ -35,7 +35,7 @@ import java.io.IOException;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
-public class QueueListenerTest extends PersistenceTest {
+public class QueueListenerTest extends PersistenceTestBase {
   private MongoQueuePublisher<TestTopicQueuableObject> producer;
   private MongoQueueConsumer<TestTopicQueuableObject> consumer;
   private TestTopicQueuableObjectListener listener;

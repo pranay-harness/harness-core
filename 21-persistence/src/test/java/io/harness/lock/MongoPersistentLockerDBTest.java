@@ -13,7 +13,7 @@ import com.google.inject.Inject;
 import com.mongodb.BasicDBObject;
 import com.mongodb.DBCollection;
 import com.mongodb.DBObject;
-import io.harness.PersistenceTest;
+import io.harness.PersistenceTestBase;
 import io.harness.category.element.UnitTests;
 import io.harness.exception.WingsException;
 import io.harness.lock.mongo.MongoPersistentLocker;
@@ -30,7 +30,7 @@ import java.time.Duration;
  * The Class PersistentLockerTest.
  */
 @Slf4j
-public class MongoPersistentLockerDBTest extends PersistenceTest {
+public class MongoPersistentLockerDBTest extends PersistenceTestBase {
   @Inject private MongoPersistentLocker mongoPersistentLocker;
 
   private DBObject getDbLock(String uuid) {

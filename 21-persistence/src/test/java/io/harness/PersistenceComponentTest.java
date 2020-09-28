@@ -16,7 +16,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 
 @Slf4j
-public class PersistenceComponentTest extends PersistenceTest {
+public class PersistenceComponentTest extends PersistenceTestBase {
   @Inject private Map<String, TestExecution> tests;
 
   @Test

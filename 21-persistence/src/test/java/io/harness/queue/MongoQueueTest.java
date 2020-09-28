@@ -15,7 +15,7 @@ import static org.joor.Reflect.on;
 
 import com.google.inject.Inject;
 
-import io.harness.PersistenceTest;
+import io.harness.PersistenceTestBase;
 import io.harness.category.element.UnitTests;
 import io.harness.mongo.queue.MongoQueueConsumer;
 import io.harness.mongo.queue.MongoQueuePublisher;
@@ -31,7 +31,7 @@ import java.net.UnknownHostException;
 import java.time.Duration;
 import java.util.Date;
 
-public class MongoQueueTest extends PersistenceTest {
+public class MongoQueueTest extends PersistenceTestBase {
   private final Duration DEFAULT_WAIT = ofSeconds(3);
   private final Duration DEFAULT_POLL = ofSeconds(1);
 
