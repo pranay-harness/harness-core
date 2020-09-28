@@ -336,7 +336,7 @@ public class DelegateServiceTest extends WingsBaseTest {
     DelegateStatus delegateStatus = delegateService.getDelegateStatus(accountId);
     assertThat(delegateStatus.getPublishedVersions()).hasSize(1).contains(VERSION);
     assertThat(delegateStatus.getDelegates()).hasSize(1);
-    assertThat(delegateStatus.getDelegates().get(0).isConnected()).isTrue();
+    assertThat(delegateStatus.getDelegates().get(0).isActivelyConnected()).isTrue();
 
     validateDelegateInnerProperties(delegate.getUuid(), delegateStatus.getDelegates().get(0));
   }

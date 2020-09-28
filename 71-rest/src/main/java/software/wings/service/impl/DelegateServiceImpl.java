@@ -557,32 +557,35 @@ public class DelegateServiceImpl implements DelegateService {
       boolean filterInactiveDelegates) {
     return delegates.stream()
         .filter(delegate -> !filterInactiveDelegates || perDelegateConnections.containsKey(delegate.getUuid()))
-        .map(delegate
-            -> DelegateStatus.DelegateInner.builder()
-                   .uuid(delegate.getUuid())
-                   .delegateName(delegate.getDelegateName())
-                   .description(delegate.getDescription())
-                   .hostName(delegate.getHostName())
-                   .delegateGroupName(delegate.getDelegateGroupName())
-                   .ip(delegate.getIp())
-                   .status(delegate.getStatus())
-                   .lastHeartBeat(delegate.getLastHeartBeat())
-                   .isConnected(delegate.getStatus() == Status.ENABLED
-                       && System.currentTimeMillis() - 60_000 < delegate.getLastHeartBeat())
-                   .delegateProfileId(delegate.getDelegateProfileId())
-                   .delegateType(delegate.getDelegateType())
-                   .polllingModeEnabled(delegate.isPolllingModeEnabled())
-                   .proxy(delegate.isProxy())
-                   .ceEnabled(delegate.isCeEnabled())
-                   .excludeScopes(delegate.getExcludeScopes())
-                   .includeScopes(delegate.getIncludeScopes())
-                   .tags(delegate.getTags())
-                   .profileExecutedAt(delegate.getProfileExecutedAt())
-                   .profileError(delegate.isProfileError())
-                   .implicitSelectors(retrieveDelegateImplicitSelectors(delegate))
-                   .sampleDelegate(delegate.isSampleDelegate())
-                   .connections(perDelegateConnections.computeIfAbsent(delegate.getUuid(), uuid -> emptyList()))
-                   .build())
+        .map(delegate -> {
+          List<DelegateStatus.DelegateInner.DelegateConnectionInner> connections =
+              perDelegateConnections.computeIfAbsent(delegate.getUuid(), uuid -> emptyList());
+          return DelegateStatus.DelegateInner.builder()
+              .uuid(delegate.getUuid())
+              .delegateName(delegate.getDelegateName())
+              .description(delegate.getDescription())
+              .hostName(delegate.getHostName())
+              .delegateGroupName(delegate.getDelegateGroupName())
+              .ip(delegate.getIp())
+              .status(delegate.getStatus())
+              .lastHeartBeat(delegate.getLastHeartBeat())
+              // currently, we do not return stale connections, but if we do this must filter them out
+              .activelyConnected(!connections.isEmpty())
+              .delegateProfileId(delegate.getDelegateProfileId())
+              .delegateType(delegate.getDelegateType())
+              .polllingModeEnabled(delegate.isPolllingModeEnabled())
+              .proxy(delegate.isProxy())
+              .ceEnabled(delegate.isCeEnabled())
+              .excludeScopes(delegate.getExcludeScopes())
+              .includeScopes(delegate.getIncludeScopes())
+              .tags(delegate.getTags())
+              .profileExecutedAt(delegate.getProfileExecutedAt())
+              .profileError(delegate.isProfileError())
+              .implicitSelectors(retrieveDelegateImplicitSelectors(delegate))
+              .sampleDelegate(delegate.isSampleDelegate())
+              .connections(connections)
+              .build();
+        })
         .collect(Collectors.toList());
   }
 

@@ -32,7 +32,7 @@ public class DelegateStatus {
     private String description;
     private Status status;
     private long lastHeartBeat;
-    private boolean isConnected;
+    private boolean activelyConnected;
     private String delegateProfileId;
     private String delegateType;
     private boolean polllingModeEnabled;
