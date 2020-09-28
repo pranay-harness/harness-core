@@ -5,7 +5,7 @@ import lombok.Data;
 
 @Data
 @Builder
-public class AzureVMSSAutoScalingData {
+public class AzureVMSSAutoScaleSettingsData {
   private int minInstances;
   private int maxInstances;
   private int desiredInstances;

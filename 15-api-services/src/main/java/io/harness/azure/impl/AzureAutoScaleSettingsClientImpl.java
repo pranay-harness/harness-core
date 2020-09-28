@@ -63,6 +63,10 @@ public class AzureAutoScaleSettingsClientImpl extends AzureClient implements Azu
   public void attachAutoScaleSettingToTargetResourceId(AzureConfig azureConfig, String resourceGroupName,
       String targetResourceId, List<String> autoScaleSettingResourceInnerJson,
       ScaleCapacity defaultProfileScaleCapacity) {
+    if (isNull(autoScaleSettingResourceInnerJson) || autoScaleSettingResourceInnerJson.isEmpty()) {
+      return;
+    }
+
     for (String autoScaleSetting : autoScaleSettingResourceInnerJson) {
       attachAutoScaleSettingToTargetResourceId(
           azureConfig, resourceGroupName, targetResourceId, autoScaleSetting, defaultProfileScaleCapacity);
@@ -182,10 +186,9 @@ public class AzureAutoScaleSettingsClientImpl extends AzureClient implements Azu
           targetResourceId);
       azure.autoscaleSettings().deleteById(autoscaleSetting.id());
     } else {
-      throw new InvalidRequestException(format("Unable to find AutoScaleSetting, resourceGroupName: %s, "
-                                                + "targetResourceId: %s",
-                                            resourceGroupName, targetResourceId),
-          USER);
+      logger.info("There is no AutoScaleSettings attached on, targetResourceId : {}, "
+              + "resourceGroupName: {}",
+          targetResourceId, resourceGroupName);
     }
   }
 

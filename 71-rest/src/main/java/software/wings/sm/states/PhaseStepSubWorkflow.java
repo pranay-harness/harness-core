@@ -84,6 +84,7 @@ import software.wings.sm.StateExecutionInstance;
 import software.wings.sm.StateType;
 import software.wings.sm.StepExecutionSummary;
 import software.wings.sm.WorkflowStandardParams;
+import software.wings.sm.states.azure.AzureVMSSSetupContextElement;
 import software.wings.sm.states.spotinst.SpotInstSetupContextElement;
 import software.wings.sm.states.spotinst.SpotinstTrafficShiftAlbSetupElement;
 
@@ -363,6 +364,8 @@ public class PhaseStepSubWorkflow extends SubWorkflowState {
       case ECS_UPDATE_LISTENER_BG:
       case ECS_UPDATE_ROUTE_53_DNS_WEIGHT:
       case AMI_SWITCH_AUTOSCALING_GROUP_ROUTES:
+      case AZURE_VMSS_DEPLOY:
+      case AZURE_VMSS_SWITCH_ROUTES:
       case SPOTINST_DEPLOY:
       case SPOTINST_LISTENER_UPDATE: {
         // All the data required is already there on the service setup element.
@@ -488,6 +491,11 @@ public class PhaseStepSubWorkflow extends SubWorkflowState {
       case ROLLBACK_PROVISION_INFRASTRUCTURE:
       case CUSTOM_DEPLOYMENT_PHASE_STEP:
       case STAGE_EXECUTION:
+      case AZURE_VMSS_SETUP:
+      case AZURE_VMSS_DEPLOY:
+      case AZURE_VMSS_ROLLBACK:
+      case AZURE_VMSS_SWITCH_ROUTES:
+      case AZURE_VMSS_SWITCH_ROLLBACK:
         noop();
         break;
 
@@ -593,11 +601,19 @@ public class PhaseStepSubWorkflow extends SubWorkflowState {
         contextElements.add(contextElement);
         addNotifyElement = true;
       }
+    } else if (phaseStepType == PhaseStepType.AZURE_VMSS_SETUP) {
+      ContextElement contextElement =
+          fetchNotifiedContextElement(elementNotifyResponseData, AzureVMSSSetupContextElement.class);
+      if (contextElement != null) {
+        contextElements.add(contextElement);
+        addNotifyElement = true;
+      }
     } else if (phaseStepType == PhaseStepType.HELM_DEPLOY || phaseStepType == PhaseStepType.PCF_RESIZE
         || phaseStepType == PhaseStepType.AMI_DEPLOY_AUTOSCALING_GROUP
         || phaseStepType == PhaseStepType.DEPLOY_AWSCODEDEPLOY || phaseStepType == PhaseStepType.CONTAINER_DEPLOY
         || phaseStepType == PhaseStepType.K8S_PHASE_STEP || phaseStepType == PhaseStepType.SPOTINST_DEPLOY
-        || phaseStepType == PhaseStepType.CUSTOM_DEPLOYMENT_PHASE_STEP) {
+        || phaseStepType == PhaseStepType.CUSTOM_DEPLOYMENT_PHASE_STEP
+        || phaseStepType == PhaseStepType.AZURE_VMSS_DEPLOY) {
       ContextElement contextElement =
           fetchNotifiedContextElement(elementNotifyResponseData, InstanceElementListParam.class);
       if (contextElement != null) {

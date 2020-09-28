@@ -1,8 +1,5 @@
 package software.wings.delegatetasks.azure.taskhandler;
 
-import static io.harness.azure.model.AzureConstants.DEFAULT_AZURE_VMSS_DESIRED_INSTANCES;
-import static io.harness.azure.model.AzureConstants.DEFAULT_AZURE_VMSS_MAX_INSTANCES;
-import static io.harness.azure.model.AzureConstants.DEFAULT_AZURE_VMSS_MIN_INSTANCES;
 import static io.harness.azure.model.AzureConstants.DOWN_SCALE_COMMAND_UNIT;
 import static io.harness.azure.model.AzureConstants.DOWN_SCALE_STEADY_STATE_WAIT_COMMAND_UNIT;
 import static io.harness.azure.model.AzureConstants.HARNESS_AUTOSCALING_GROUP_TAG_NAME;
@@ -25,13 +22,13 @@ import static software.wings.beans.LogHelper.color;
 import static software.wings.beans.LogWeight.Bold;
 
 import com.google.common.annotations.VisibleForTesting;
+import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import com.microsoft.azure.management.compute.VirtualMachineScaleSet;
-import com.microsoft.azure.management.monitor.AutoscaleProfile;
 import io.harness.azure.model.AzureConfig;
 import io.harness.azure.model.AzureUserAuthVMInstanceData;
-import io.harness.azure.model.AzureVMSSAutoScalingData;
+import io.harness.azure.model.AzureVMSSAutoScaleSettingsData;
 import io.harness.azure.utility.AzureResourceUtility;
 import io.harness.delegate.beans.azure.AzureVMAuthDTO;
 import io.harness.delegate.task.azure.AzureVMSSPreDeploymentData;
@@ -47,7 +44,6 @@ import org.apache.commons.lang3.StringUtils;
 import org.jetbrains.annotations.NotNull;
 import software.wings.beans.command.ExecutionLogCallback;
 
-import java.util.Collections;
 import java.util.Comparator;
 import java.util.Date;
 import java.util.List;
@@ -62,6 +58,8 @@ import java.util.stream.Collectors;
 @NoArgsConstructor
 @Slf4j
 public class AzureVMSSSetupTaskHandler extends AzureVMSSTaskHandler {
+  @Inject private AzureAutoScaleHelper azureAutoScaleHelper;
+
   @Override
   protected AzureVMSSTaskExecutionResponse executeTaskInternal(
       AzureVMSSTaskParameters azureVMSSTaskParameters, AzureConfig azureConfig) {
@@ -89,8 +87,8 @@ public class AzureVMSSSetupTaskHandler extends AzureVMSSTaskHandler {
     createVirtualMachineScaleSet(
         azureConfig, setupTaskParameters, newHarnessRevision, newVirtualMachineScaleSetName, logCallback);
 
-    AzureVMSSSetupTaskResponse azureVMSSSetupTaskResponse = buildAzureVMSSSetupTaskResponse(azureConfig,
-        newHarnessRevision, newVirtualMachineScaleSetName, mostRecentActiveVMSS, setupTaskParameters, logCallback);
+    AzureVMSSSetupTaskResponse azureVMSSSetupTaskResponse = buildAzureVMSSSetupTaskResponse(
+        azureConfig, newHarnessRevision, newVirtualMachineScaleSetName, mostRecentActiveVMSS, setupTaskParameters);
 
     logCallback.saveExecutionLog(
         format("Completed Azure VMSS Setup with new scale set name [%s]", newVirtualMachineScaleSetName), INFO,
@@ -307,29 +305,29 @@ public class AzureVMSSSetupTaskHandler extends AzureVMSSTaskHandler {
 
   private AzureVMSSSetupTaskResponse buildAzureVMSSSetupTaskResponse(AzureConfig azureConfig, Integer harnessRevision,
       String newVirtualMachineScaleSetName, VirtualMachineScaleSet mostRecentActiveVMSS,
-      AzureVMSSSetupTaskParameters setupTaskParameters, ExecutionLogCallback logCallback) {
+      AzureVMSSSetupTaskParameters setupTaskParameters) {
     boolean isBlueGreen = setupTaskParameters.isBlueGreen();
     boolean isUseCurrentRunningCount = setupTaskParameters.isUseCurrentRunningCount();
     String baseVirtualMachineScaleSetName = setupTaskParameters.getBaseVMSSName();
     String subscriptionId = setupTaskParameters.getSubscriptionId();
     String resourceGroupName = setupTaskParameters.getResourceGroupName();
 
-    AzureVMSSAutoScalingData azureVMSSAutoScalingData = getAzureVMSSAutoScalingData(
-        azureConfig, mostRecentActiveVMSS, setupTaskParameters, logCallback, isUseCurrentRunningCount);
+    AzureVMSSAutoScaleSettingsData azureVMSSInstanceLimits = azureAutoScaleHelper.getVMSSAutoScaleInstanceLimits(
+        azureConfig, setupTaskParameters, mostRecentActiveVMSS, isUseCurrentRunningCount, SETUP_COMMAND_UNIT);
 
     String mostRecentActiveVMSSName = mostRecentActiveVMSS == null ? StringUtils.EMPTY : mostRecentActiveVMSS.name();
 
-    List<String> baseVMSSScalingPolicyJSONs =
-        getScalingPolicyJSONs(azureConfig, subscriptionId, resourceGroupName, baseVirtualMachineScaleSetName);
+    List<String> baseVMSSScalingPolicyJSONs = azureAutoScaleHelper.getVMSSAutoScaleSettingsJSONs(
+        azureConfig, subscriptionId, resourceGroupName, baseVirtualMachineScaleSetName);
     AzureVMSSPreDeploymentData azureVMSSPreDeploymentData =
-        populatePreDeploymentData(azureConfig, subscriptionId, mostRecentActiveVMSS);
+        populatePreDeploymentData(azureConfig, mostRecentActiveVMSS);
 
     return AzureVMSSSetupTaskResponse.builder()
         .lastDeployedVMSSName(mostRecentActiveVMSSName)
         .harnessRevision(harnessRevision)
-        .minInstances(azureVMSSAutoScalingData.getMinInstances())
-        .maxInstances(azureVMSSAutoScalingData.getMaxInstances())
-        .desiredInstances(azureVMSSAutoScalingData.getDesiredInstances())
+        .minInstances(azureVMSSInstanceLimits.getMinInstances())
+        .maxInstances(azureVMSSInstanceLimits.getMaxInstances())
+        .desiredInstances(azureVMSSInstanceLimits.getDesiredInstances())
         .blueGreen(isBlueGreen)
         .newVirtualMachineScaleSetName(newVirtualMachineScaleSetName)
         .baseVMSSScalingPolicyJSONs(baseVMSSScalingPolicyJSONs)
@@ -337,82 +335,12 @@ public class AzureVMSSSetupTaskHandler extends AzureVMSSTaskHandler {
         .build();
   }
 
-  private AzureVMSSAutoScalingData getAzureVMSSAutoScalingData(AzureConfig azureConfig,
-      VirtualMachineScaleSet mostRecentActiveVMSS, AzureVMSSSetupTaskParameters setupTaskParameters,
-      ExecutionLogCallback logCallback, boolean isUseCurrentRunningCount) {
-    if (isUseCurrentRunningCount) {
-      if (mostRecentActiveVMSS != null) {
-        Optional<AutoscaleProfile> defaultAutoScaleProfileOp = azureAutoScaleSettingsClient.getDefaultAutoScaleProfile(
-            azureConfig, mostRecentActiveVMSS.resourceGroupName(), mostRecentActiveVMSS.id());
-        if (defaultAutoScaleProfileOp.isPresent()) {
-          return getMostRecentActiveVMSSAutoScalingData(
-              defaultAutoScaleProfileOp.get(), mostRecentActiveVMSS, logCallback);
-        }
-      }
-      return getDefaultAutoScalingData(logCallback);
-    }
-
-    return getWorkflowInputAutoScalingData(setupTaskParameters, logCallback);
-  }
-
-  private AzureVMSSAutoScalingData getMostRecentActiveVMSSAutoScalingData(AutoscaleProfile defaultAutoScaleProfile,
-      VirtualMachineScaleSet mostRecentActiveVMSS, ExecutionLogCallback logCallback) {
-    int minInstances = defaultAutoScaleProfile.minInstanceCount();
-    int maxInstances = defaultAutoScaleProfile.maxInstanceCount();
-    int desiredInstances = mostRecentActiveVMSS.capacity();
-    String mostRecentActiveVMSSName = mostRecentActiveVMSS.name();
-
-    logCallback.saveExecutionLog(format("Using currently running min: [%d], max: [%d], desired: [%d] from VMSS: [%s]",
-                                     minInstances, maxInstances, desiredInstances, mostRecentActiveVMSSName),
-        INFO);
-
-    return AzureVMSSAutoScalingData.builder()
-        .minInstances(minInstances)
-        .maxInstances(maxInstances)
-        .desiredInstances(desiredInstances)
-        .build();
-  }
-
-  private AzureVMSSAutoScalingData getDefaultAutoScalingData(ExecutionLogCallback logCallback) {
-    int minInstances = DEFAULT_AZURE_VMSS_MIN_INSTANCES;
-    int maxInstances = DEFAULT_AZURE_VMSS_MAX_INSTANCES;
-    int desiredInstances = DEFAULT_AZURE_VMSS_DESIRED_INSTANCES;
-
-    logCallback.saveExecutionLog(
-        format("Using default min: [%d], max: [%d], desired: [%d]", minInstances, maxInstances, desiredInstances),
-        INFO);
-    return AzureVMSSAutoScalingData.builder()
-        .minInstances(minInstances)
-        .maxInstances(maxInstances)
-        .desiredInstances(desiredInstances)
-        .build();
-  }
-
-  private AzureVMSSAutoScalingData getWorkflowInputAutoScalingData(
-      AzureVMSSSetupTaskParameters setupTaskParameters, ExecutionLogCallback logCallback) {
-    int minInstances = setupTaskParameters.getMinInstances();
-    int maxInstances = setupTaskParameters.getMaxInstances();
-    int desiredInstances = setupTaskParameters.getDesiredInstances();
-
-    logCallback.saveExecutionLog(format("Using workflow input min: [%d], max: [%d] and desired: [%d]", minInstances,
-                                     maxInstances, desiredInstances),
-        INFO);
-
-    return AzureVMSSAutoScalingData.builder()
-        .minInstances(minInstances)
-        .maxInstances(maxInstances)
-        .desiredInstances(desiredInstances)
-        .build();
-  }
-
   private AzureVMSSPreDeploymentData populatePreDeploymentData(
-      AzureConfig azureConfig, String subscriptionId, VirtualMachineScaleSet mostRecentActiveVMSS) {
+      AzureConfig azureConfig, VirtualMachineScaleSet mostRecentActiveVMSS) {
     boolean isMostRecentVMSSAvailable = mostRecentActiveVMSS != null;
 
-    List<String> autoScalingPoliciesJson = isMostRecentVMSSAvailable
-        ? getScalingPolicyJSONs(
-              azureConfig, subscriptionId, mostRecentActiveVMSS.resourceGroupName(), mostRecentActiveVMSS.name())
-        : emptyList();
+    List<String> autoScalingPoliciesJson =
+        azureAutoScaleHelper.getVMSSAutoScaleSettingsJSONs(azureConfig, mostRecentActiveVMSS);
 
     return AzureVMSSPreDeploymentData.builder()
         .minCapacity(0)
@@ -420,18 +348,5 @@ public class AzureVMSSSetupTaskHandler extends AzureVMSSTaskHandler {
         .scalingPolicyJSON(isMostRecentVMSSAvailable ? autoScalingPoliciesJson : emptyList())
         .oldVmssName(isMostRecentVMSSAvailable ? mostRecentActiveVMSS.name() : StringUtils.EMPTY)
         .build();
-  }
-
-  private List<String> getScalingPolicyJSONs(
-      AzureConfig azureConfig, String subscriptionId, String resourceGroupName, String virtualMachineScaleSetName) {
-    Optional<VirtualMachineScaleSet> virtualMachineScaleSetOp = azureComputeClient.getVirtualMachineScaleSetByName(
-        azureConfig, subscriptionId, resourceGroupName, virtualMachineScaleSetName);
-
-    return virtualMachineScaleSetOp
-        .flatMap(virtualMachineScaleSet
-            -> azureAutoScaleSettingsClient.getAutoScaleSettingJSONByTargetResourceId(
-                azureConfig, resourceGroupName, virtualMachineScaleSet.id()))
-        .map(Collections::singletonList)
-        .orElse(Collections.emptyList());
   }
 }

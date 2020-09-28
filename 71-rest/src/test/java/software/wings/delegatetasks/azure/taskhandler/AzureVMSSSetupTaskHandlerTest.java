@@ -28,6 +28,7 @@ import io.harness.azure.client.AzureAutoScaleSettingsClient;
 import io.harness.azure.client.AzureComputeClient;
 import io.harness.azure.model.AzureConfig;
 import io.harness.azure.model.AzureUserAuthVMInstanceData;
+import io.harness.azure.model.AzureVMSSAutoScaleSettingsData;
 import io.harness.azure.utility.AzureResourceUtility;
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.beans.azure.AzureVMAuthDTO;
@@ -40,7 +41,6 @@ import io.harness.encryption.SecretRefData;
 import io.harness.rule.Owner;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
-import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Spy;
@@ -59,11 +59,15 @@ import java.util.Optional;
 public class AzureVMSSSetupTaskHandlerTest extends WingsBaseTest {
   @Mock private DelegateLogService mockDelegateLogService;
   @Mock private AzureComputeClient mockAzureComputeClient;
-  @Mock private AzureAutoScaleSettingsClient azureAutoScaleSettingsClient;
+  @Mock private AzureAutoScaleSettingsClient mockAzureAutoScaleSettingsClient;
+  @Mock private AzureAutoScaleHelper mockAzureAutoScaleHelper;
   @Mock private TimeLimiter timeLimiter;
   @Mock VirtualMachineScaleSetVMs virtualMachineScaleSetVMs;
   @Mock VirtualMachineScaleSetVM virtualMachineScaleSetVM;
   @Mock Subscription subscription;
+  private final int minInstances = 0;
+  private final int maxInstances = 2;
+  private final int desiredInstances = 1;
 
   @Spy @InjectMocks AzureVMSSSetupTaskHandler azureVMSSSetupTaskHandler;
 
@@ -71,7 +75,8 @@ public class AzureVMSSSetupTaskHandlerTest extends WingsBaseTest {
   @Owner(developers = IVAN)
   @Category(UnitTests.class)
   public void testExecuteTaskInternal() throws Exception {
-    ExecutionLogCallback mockCallback = mock(ExecutionLogCallback.class);
+    mockAzureAutoScaleHelperMethods();
+    mockExecutionLogCallbackMethods();
     VirtualMachineScaleSet virtualMachineScaleSetVersion1 = mock(VirtualMachineScaleSet.class);
     VirtualMachineScaleSet virtualMachineScaleSetVersion2 = mock(VirtualMachineScaleSet.class);
     VirtualMachineScaleSet virtualMachineScaleSetVersion3 = mock(VirtualMachineScaleSet.class);
@@ -79,38 +84,7 @@ public class AzureVMSSSetupTaskHandlerTest extends WingsBaseTest {
     VirtualMachineScaleSet virtualMachineScaleSetVersion5 = mock(VirtualMachineScaleSet.class);
     VirtualMachineScaleSet baseVirtualMachineScaleSet = mock(VirtualMachineScaleSet.class);
     AzureConfig azureConfig = AzureConfig.builder().build();
-    AzureVMAuthDTO azureVMAuthDTO =
-        AzureVMAuthDTO.builder()
-            .userName("username")
-            .azureVmAuthType(AzureVMAuthType.SSH_PUBLIC_KEY)
-            .secretRef(SecretRefData.builder().decryptedValue("sshPublicKey".toCharArray()).build())
-            .build();
-    AzureVMSSSetupTaskParameters azureVMSSSetupTaskParameters = AzureVMSSSetupTaskParameters.builder()
-                                                                    .infraMappingId("infraMappingId")
-                                                                    .appId("appId")
-                                                                    .accountId("accountId")
-                                                                    .activityId("activityId")
-                                                                    .artifactRevision("artifactRevision")
-                                                                    .autoScalingSteadyStateVMSSTimeout(0)
-                                                                    .baseVMSSName("baseVMSSName")
-                                                                    .blueGreen(false)
-                                                                    .commandName("commandName")
-                                                                    .azureVmAuthDTO(azureVMAuthDTO)
-                                                                    .commandType(AZURE_VMSS_SETUP)
-                                                                    .desiredInstances(1)
-                                                                    .maxInstances(1)
-                                                                    .minInstances(0)
-                                                                    .resourceGroupName("resourceGroupName")
-                                                                    .subscriptionId("subscriptionId")
-                                                                    .useCurrentRunningCount(false)
-                                                                    .vmssNamePrefix("newVirtualScaleSetName")
-                                                                    .useCurrentRunningCount(false)
-                                                                    .build();
-
-    doNothing().when(mockCallback).saveExecutionLog(anyString());
-    doNothing().when(mockCallback).saveExecutionLog(anyString(), any(), any());
-    doReturn(Boolean.TRUE).when(timeLimiter).callWithTimeout(any(), anyLong(), any(), anyBoolean());
-    doReturn(mockCallback).when(azureVMSSSetupTaskHandler).getLogCallBack(any(), anyString());
+    AzureVMSSSetupTaskParameters azureVMSSSetupTaskParameters = buildAzureVMSSSetupTaskParameters();
 
     Instant instant = Instant.now();
     Date dateVersion1 = Date.from(instant.minus(5, ChronoUnit.DAYS));
@@ -202,25 +176,21 @@ public class AzureVMSSSetupTaskHandlerTest extends WingsBaseTest {
 
     // buildAzureVMSSSetupTaskResponse
     doReturn(Optional.of("{baseScalingPolicies: {...}}"))
-        .when(azureAutoScaleSettingsClient)
+        .when(mockAzureAutoScaleSettingsClient)
         .getAutoScaleSettingJSONByTargetResourceId(
             any(AzureConfig.class), eq("resourceGroupName"), eq("baseVirtualMachineScaleSetId"));
 
     // populatePreDeploymentData
     doReturn(Optional.of("{mostRecentScalingPolicies: {...}}"))
-        .when(azureAutoScaleSettingsClient)
+        .when(mockAzureAutoScaleSettingsClient)
         .getAutoScaleSettingJSONByTargetResourceId(
             any(AzureConfig.class), eq("resourceGroupName"), eq("mostRecentActiveVMSSId"));
-
-    ArgumentCaptor<String> baseVirtualScaleSetNameArgumentCaptor = ArgumentCaptor.forClass(String.class);
-    ArgumentCaptor<String> newVirtualScaleSetNameArgumentCaptor = ArgumentCaptor.forClass(String.class);
-    ArgumentCaptor<Integer> harnessRevisionArgumentCaptor = ArgumentCaptor.forClass(Integer.class);
 
     AzureVMSSTaskExecutionResponse response =
         azureVMSSSetupTaskHandler.executeTaskInternal(azureVMSSSetupTaskParameters, azureConfig);
 
     // createVirtualMachineScaleSet
-    verify(mockAzureComputeClient, times(3))
+    verify(mockAzureComputeClient, times(1))
         .getVirtualMachineScaleSetByName(
             any(AzureConfig.class), eq("subscriptionId"), eq("resourceGroupName"), anyString());
 
@@ -236,12 +206,13 @@ public class AzureVMSSSetupTaskHandlerTest extends WingsBaseTest {
     assertThat(setupResponse.getErrorMessage()).isNull();
     assertThat(setupResponse.getBaseVMSSScalingPolicyJSONs())
         .isEqualTo(Collections.singletonList("{baseScalingPolicies: {...}}"));
-    assertThat(setupResponse.getDesiredInstances()).isEqualTo(1);
     assertThat(setupResponse.getHarnessRevision()).isEqualTo(6);
     assertThat(setupResponse.getLastDeployedVMSSName()).isEqualTo("mostRecentActiveVMSSName");
-    assertThat(setupResponse.getMaxInstances()).isEqualTo(1);
-    assertThat(setupResponse.getMinInstances()).isEqualTo(0);
     assertThat(setupResponse.getNewVirtualMachineScaleSetName()).isEqualTo("newVirtualScaleSetName__6");
+    // instance limits
+    assertThat(setupResponse.getDesiredInstances()).isEqualTo(desiredInstances);
+    assertThat(setupResponse.getMaxInstances()).isEqualTo(maxInstances);
+    assertThat(setupResponse.getMinInstances()).isEqualTo(minInstances);
 
     // for rollback
     assertThat(setupResponse.getPreDeploymentData().getDesiredCapacity()).isEqualTo(2);
@@ -249,5 +220,58 @@ public class AzureVMSSSetupTaskHandlerTest extends WingsBaseTest {
     assertThat(setupResponse.getPreDeploymentData().getOldVmssName()).isEqualTo("mostRecentActiveVMSSName");
     assertThat(setupResponse.getPreDeploymentData().getScalingPolicyJSON())
         .isEqualTo(Collections.singletonList("{mostRecentScalingPolicies: {...}}"));
+  }
+
+  private AzureVMSSSetupTaskParameters buildAzureVMSSSetupTaskParameters() {
+    AzureVMAuthDTO azureVMAuthDTO = buildAzureVMAuthDTO();
+    return AzureVMSSSetupTaskParameters.builder()
+        .infraMappingId("infraMappingId")
+        .appId("appId")
+        .accountId("accountId")
+        .activityId("activityId")
+        .artifactRevision("artifactRevision")
+        .autoScalingSteadyStateVMSSTimeout(10)
+        .baseVMSSName("baseVMSSName")
+        .blueGreen(false)
+        .commandName("commandName")
+        .azureVmAuthDTO(azureVMAuthDTO)
+        .commandType(AZURE_VMSS_SETUP)
+        .resourceGroupName("resourceGroupName")
+        .subscriptionId("subscriptionId")
+        .vmssNamePrefix("newVirtualScaleSetName")
+        .useCurrentRunningCount(false)
+        .build();
+  }
+
+  private AzureVMAuthDTO buildAzureVMAuthDTO() {
+    return AzureVMAuthDTO.builder()
+        .userName("username")
+        .azureVmAuthType(AzureVMAuthType.SSH_PUBLIC_KEY)
+        .secretRef(SecretRefData.builder().decryptedValue("sshPublicKey".toCharArray()).build())
+        .build();
+  }
+
+  private void mockAzureAutoScaleHelperMethods() {
+    AzureVMSSAutoScaleSettingsData azureVMSSAutoScaleSettingsData = mock(AzureVMSSAutoScaleSettingsData.class);
+    doReturn(minInstances).when(azureVMSSAutoScaleSettingsData).getMinInstances();
+    doReturn(maxInstances).when(azureVMSSAutoScaleSettingsData).getMaxInstances();
+    doReturn(desiredInstances).when(azureVMSSAutoScaleSettingsData).getDesiredInstances();
+    doReturn(azureVMSSAutoScaleSettingsData)
+        .when(mockAzureAutoScaleHelper)
+        .getVMSSAutoScaleInstanceLimits(any(), any(), any(), anyBoolean(), anyString());
+    doReturn(Collections.singletonList("{baseScalingPolicies: {...}}"))
+        .when(mockAzureAutoScaleHelper)
+        .getVMSSAutoScaleSettingsJSONs(any(), anyString(), anyString(), anyString());
+    doReturn(Collections.singletonList("{mostRecentScalingPolicies: {...}}"))
+        .when(mockAzureAutoScaleHelper)
+        .getVMSSAutoScaleSettingsJSONs(any(), any());
+  }
+
+  private void mockExecutionLogCallbackMethods() throws Exception {
+    ExecutionLogCallback mockCallback = mock(ExecutionLogCallback.class);
+    doNothing().when(mockCallback).saveExecutionLog(anyString());
+    doNothing().when(mockCallback).saveExecutionLog(anyString(), any(), any());
+    doReturn(Boolean.TRUE).when(timeLimiter).callWithTimeout(any(), anyLong(), any(), anyBoolean());
+    doReturn(mockCallback).when(azureVMSSSetupTaskHandler).getLogCallBack(any(), anyString());
   }
 }
