@@ -46,11 +46,12 @@ public class Ambiance {
   public Map<String, String> logContextMap() {
     Map<String, String> logContext = setupAbstractions == null ? new HashMap<>() : new HashMap<>(setupAbstractions);
     logContext.put(AmbianceKeys.planExecutionId, planExecutionId);
-    levels.forEach(level -> {
+    Level level = obtainCurrentLevel();
+    if (level != null) {
       logContext.put("identifier", level.getIdentifier());
       logContext.put("runtimeId", level.getRuntimeId());
       logContext.put("setupId", level.getSetupId());
-    });
+    }
     return logContext;
   }
 

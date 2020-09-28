@@ -10,6 +10,7 @@ import io.harness.data.OutcomeInstance;
 import io.harness.data.SweepingOutput;
 import io.harness.execution.NodeExecution;
 import io.harness.execution.PlanExecution;
+import io.harness.execution.events.OrchestrationEvent;
 import io.harness.facilitator.DefaultFacilitatorParams;
 import io.harness.facilitator.FacilitatorParameters;
 import io.harness.facilitator.PassThroughData;
@@ -47,6 +48,7 @@ public class OrchestrationBeansMorphiaRegistrar implements MorphiaRegistrar {
     set.add(PassThroughData.class);
     set.add(SweepingOutput.class);
     set.add(ExecutionSweepingOutputInstance.class);
+    set.add(OrchestrationEvent.class);
   }
 
   @Override
