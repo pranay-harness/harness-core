@@ -129,7 +129,7 @@ public class SettingAttribute extends Base implements NameAccess, PersistentRegu
 
   @NotEmpty private String envId = GLOBAL_ENV_ID;
   @NotEmpty String accountId;
-  @NotEmpty @EntityName @Trimmed private String name;
+  @NotEmpty @EntityName @Trimmed(message = "cannot have trailing whitespace") private String name;
   @Valid private SettingValue value;
   @Valid @Transient private ConnectivityValidationAttributes validationAttributes;
   private SettingCategory category = SettingCategory.SETTING;

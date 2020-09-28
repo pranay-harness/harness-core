@@ -80,6 +80,7 @@ import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.validation.Create;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import org.mongodb.morphia.annotations.Transient;
 import org.mongodb.morphia.query.FindOptions;
 import org.mongodb.morphia.query.Query;
@@ -535,6 +536,7 @@ public class SettingsServiceImpl implements SettingsService {
   }
 
   private void prePruneSettingAttribute(final String appId, final String accountId, final SettingAttribute variable) {
+    variable.setName(StringUtils.trim(variable.getName()));
     variable.setAppId(appId);
     if (accountId != null) {
       variable.setAccountId(accountId);
