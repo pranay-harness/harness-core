@@ -14,8 +14,8 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
 
-import io.harness.beans.NGPageResponse;
 import io.harness.exception.InvalidRequestException;
+import io.harness.ng.beans.PageResponse;
 import io.harness.ng.core.api.impl.SecretEntityReferenceHelper;
 import io.harness.ng.core.dto.secrets.SecretDTOV2;
 import io.harness.ng.core.dto.secrets.SecretFileSpecDTO;
@@ -125,7 +125,7 @@ public class SecretCrudServiceImpl implements SecretCrudService {
   }
 
   @Override
-  public NGPageResponse<SecretResponseWrapper> list(String accountIdentifier, String orgIdentifier,
+  public PageResponse<SecretResponseWrapper> list(String accountIdentifier, String orgIdentifier,
       String projectIdentifier, SecretType secretType, String searchTerm, int page, int size) {
     Criteria criteria = Criteria.where(SecretKeys.accountIdentifier)
                             .is(accountIdentifier)

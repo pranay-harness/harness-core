@@ -9,10 +9,11 @@ import com.google.inject.Inject;
 
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.beans.NGPageRequest;
-import io.harness.beans.NGPageResponse;
+import io.harness.beans.SortOrder;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.DuplicateFieldException;
+import io.harness.ng.beans.PageRequest;
+import io.harness.ng.beans.PageResponse;
 import io.harness.ng.core.BaseNGAccess;
 import io.harness.ng.core.NGAccess;
 import io.harness.ng.core.Status;
@@ -77,11 +78,12 @@ public class InviteResource {
 
   @GET
   @ApiOperation(value = "Get all invites for the queried project", nickname = "getInvites")
-  public ResponseDTO<NGPageResponse<InviteDTO>> get(@QueryParam("accountIdentifier") @NotEmpty String accountIdentifier,
+  public ResponseDTO<PageResponse<InviteDTO>> get(@QueryParam("accountIdentifier") @NotEmpty String accountIdentifier,
       @QueryParam("orgIdentifier") @NotEmpty String orgIdentifier,
-      @QueryParam("projectIdentifier") @NotEmpty String projectIdentifier, @BeanParam NGPageRequest ngPageRequest) {
-    if (isEmpty(ngPageRequest.getSort())) {
-      ngPageRequest.setSort(ImmutableList.of("createdAt,DESC"));
+      @QueryParam("projectIdentifier") @NotEmpty String projectIdentifier, @BeanParam PageRequest pageRequest) {
+    if (isEmpty(pageRequest.getSortOrders())) {
+      SortOrder order = SortOrder.Builder.aSortOrder().withField("createdAt", SortOrder.OrderType.DESC).build();
+      pageRequest.setSortOrders(ImmutableList.of(order));
     }
 
     Criteria criteria = Criteria.where(InviteKeys.accountIdentifier)
@@ -95,7 +97,7 @@ public class InviteResource {
                             .and(InviteKeys.deleted)
                             .is(Boolean.FALSE);
     Page<InviteDTO> invites =
-        invitesService.list(criteria, PageUtils.getPageRequest(ngPageRequest)).map(InviteMapper::writeDTO);
+        invitesService.list(criteria, PageUtils.getPageRequest(pageRequest)).map(InviteMapper::writeDTO);
     return ResponseDTO.newResponse(getNGPageResponse(invites));
   }
 

@@ -4,8 +4,8 @@ import static io.harness.utils.PageUtils.getNGPageResponse;
 
 import com.google.inject.Inject;
 
-import io.harness.beans.NGPageResponse;
 import io.harness.data.structure.EmptyPredicate;
+import io.harness.ng.beans.PageResponse;
 import io.harness.ng.core.dto.ErrorDTO;
 import io.harness.ng.core.dto.FailureDTO;
 import io.harness.ng.core.dto.ResponseDTO;
@@ -109,7 +109,7 @@ public class EnvironmentResource {
 
   @GET
   @ApiOperation(value = "Gets environment list for a project", nickname = "getEnvironmentListForProject")
-  public ResponseDTO<NGPageResponse<EnvironmentResponseDTO>> listEnvironmentsForProject(
+  public ResponseDTO<PageResponse<EnvironmentResponseDTO>> listEnvironmentsForProject(
       @QueryParam("page") @DefaultValue("0") int page, @QueryParam("size") @DefaultValue("100") int size,
       @QueryParam("accountId") String accountId, @QueryParam("orgIdentifier") String orgIdentifier,
       @QueryParam("projectIdentifier") String projectIdentifier, @QueryParam("sort") List<String> sort) {

@@ -11,7 +11,7 @@ import io.harness.app.RestQueryFilterParser;
 import io.harness.app.beans.dto.CIBuildFilterDTO;
 import io.harness.app.beans.dto.CIBuildResponseDTO;
 import io.harness.app.intfc.CIBuildInfoService;
-import io.harness.beans.NGPageResponse;
+import io.harness.ng.beans.PageResponse;
 import io.harness.ng.core.dto.ResponseDTO;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
@@ -54,7 +54,7 @@ public class CIBuildResource {
   @Timed
   @ExceptionMetered
   @ApiOperation(value = "Get builds list", nickname = "getBuilds")
-  public ResponseDTO<NGPageResponse<CIBuildResponseDTO>> getBuilds(
+  public ResponseDTO<PageResponse<CIBuildResponseDTO>> getBuilds(
       @NotNull @QueryParam("accountIdentifier") String accountId, @QueryParam("orgIdentifier") String orgId,
       @NotNull @QueryParam("projectIdentifier") String projectId, @QueryParam("userIdentifier") String userId,
       @QueryParam("branch") String branch, @QueryParam("tags") List<String> tags,

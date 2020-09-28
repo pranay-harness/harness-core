@@ -10,9 +10,8 @@ import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
-import io.harness.beans.NGPageResponse;
-import io.harness.beans.PageResponse;
 import io.harness.exception.InvalidRequestException;
+import io.harness.ng.beans.PageResponse;
 import io.harness.ng.core.api.NGSecretService;
 import io.harness.secretmanagerclient.SecretType;
 import io.harness.secretmanagerclient.ValueType;
@@ -43,27 +42,31 @@ public class NGSecretServiceImpl implements NGSecretService {
         getResponse(secretManagerClient.getSecret(identifier, accountIdentifier, orgIdentifier, projectIdentifier)));
   }
 
-  private NGPageResponse<EncryptedData> getNGPageResponseFromPageResponse(PageResponse<EncryptedDataDTO> pageResponse) {
-    NGPageResponse<EncryptedData> encryptedDataPageResponse =
-        NGPageResponse.<EncryptedData>builder()
+  private PageResponse<EncryptedData> getNGPageResponseFromPageResponse(
+      io.harness.beans.PageResponse<EncryptedDataDTO> pageResponse) {
+    PageResponse<EncryptedData> encryptedDataPageResponse =
+        PageResponse.<EncryptedData>builder()
             .pageIndex(pageResponse.getStart())
             .empty(pageResponse.isEmpty())
             .pageSize(pageResponse.size())
-            .itemCount(pageResponse.getTotal())
+            .totalItems(pageResponse.getTotal())
             .content(pageResponse.getResponse().stream().map(EncryptedDataMapper::fromDTO).collect(Collectors.toList()))
             .build();
-    if (encryptedDataPageResponse.getItemCount() > 0 && encryptedDataPageResponse.getPageSize() > 0) {
-      encryptedDataPageResponse.setPageCount(
-          (int) Math.ceil((double) encryptedDataPageResponse.getItemCount() / encryptedDataPageResponse.getPageSize()));
+    if (encryptedDataPageResponse.getTotalItems() > 0 && encryptedDataPageResponse.getPageSize() > 0) {
+      encryptedDataPageResponse.setTotalPages((int) Math.ceil(
+          (double) encryptedDataPageResponse.getTotalItems() / encryptedDataPageResponse.getPageSize()));
     }
+    encryptedDataPageResponse.setPageItemCount(
+        (encryptedDataPageResponse.getContent() != null) ? encryptedDataPageResponse.getContent().size() : 0);
     return encryptedDataPageResponse;
   }
 
   @Override
-  public NGPageResponse<EncryptedData> list(String accountIdentifier, String orgIdentifier, String projectIdentifier,
+  public PageResponse<EncryptedData> list(String accountIdentifier, String orgIdentifier, String projectIdentifier,
       SecretType secretType, String searchTerm, int page, int size) {
-    PageResponse<EncryptedDataDTO> pageResponse = getResponse(secretManagerClient.listSecrets(accountIdentifier,
-        orgIdentifier, projectIdentifier, toSettingVariableType(secretType), searchTerm, page, size));
+    io.harness.beans.PageResponse<EncryptedDataDTO> pageResponse =
+        getResponse(secretManagerClient.listSecrets(accountIdentifier, orgIdentifier, projectIdentifier,
+            toSettingVariableType(secretType), searchTerm, page, size));
     return getNGPageResponseFromPageResponse(pageResponse);
   }
 

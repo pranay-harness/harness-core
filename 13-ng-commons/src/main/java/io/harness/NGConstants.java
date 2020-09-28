@@ -3,9 +3,9 @@ package io.harness;
 public class NGConstants {
   private NGConstants() {}
 
-  public static final String PAGE_KEY = "page";
-  public static final String SIZE_KEY = "size";
-  public static final String SORT_KEY = "sort";
+  public static final String PAGE_KEY = "pageIndex";
+  public static final String SIZE_KEY = "pageSize";
+  public static final String SORT_KEY = "sortOrders";
   public static final String ACCOUNT_KEY = "accountIdentifier";
   public static final String ORG_KEY = "orgIdentifier";
   public static final String PROJECT_KEY = "projectIdentifier";
@@ -22,7 +22,7 @@ public class NGConstants {
   public static final String MODULE_TYPE_KEY = "moduleType";
   public static final String HARNESS_SECRET_MANAGER_IDENTIFIER = "harnessSecretManager";
   public static final String ENTITY_REFERENCE_LOG_PREFIX = "ENTITY_REFERENCE :";
-  public static final String HARNESS_BLUE = "68ABDA";
+  public static final String HARNESS_BLUE = "#0063F7";
   public static final String PIPELINE_KEY = "pipelineIdentifier";
   public static final String INPUT_SET_IDENTIFIER_KEY = "inputSetIdentifier";
   public static final String DELETED_KEY = "deleted";

@@ -5,11 +5,10 @@ import com.google.inject.Inject;
 import com.codahale.metrics.annotation.ExceptionMetered;
 import com.codahale.metrics.annotation.Timed;
 import io.harness.annotations.ExposeInternalException;
-
-import io.harness.beans.NGPageResponse;
 import io.harness.cvng.analysis.beans.LogAnalysisClusterChartDTO;
 import io.harness.cvng.analysis.beans.LogAnalysisClusterDTO;
 import io.harness.cvng.analysis.services.api.DeploymentLogAnalysisService;
+import io.harness.ng.beans.PageResponse;
 import io.harness.rest.RestResponse;
 import io.swagger.annotations.Api;
 
@@ -42,7 +41,7 @@ public class DeploymentLogAnalysisResource {
   @GET
   @Timed
   @ExceptionMetered
-  public RestResponse<NGPageResponse<LogAnalysisClusterDTO>> getMetrics(
+  public RestResponse<PageResponse<LogAnalysisClusterDTO>> getMetrics(
       @PathParam("verificationJobInstanceId") String verificationJobInstanceId,
       @QueryParam("accountId") String accountId, @QueryParam("label") Integer label,
       @QueryParam("pageNumber") int pageNumber) {

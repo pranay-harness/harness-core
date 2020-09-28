@@ -11,7 +11,7 @@ import static io.harness.NGConstants.SORT_KEY;
 import static javax.ws.rs.core.HttpHeaders.IF_MATCH;
 
 import io.harness.ModuleType;
-import io.harness.beans.NGPageResponse;
+import io.harness.ng.beans.PageResponse;
 import io.harness.ng.core.dto.ProjectDTO;
 import io.harness.ng.core.dto.ResponseDTO;
 import retrofit2.Call;
@@ -39,7 +39,7 @@ public interface ProjectManagerClient {
       @Query(value = ACCOUNT_KEY) String accountIdentifier, @Query(value = ORG_KEY) String orgIdentifier);
 
   @GET(PROJECTS_API)
-  Call<ResponseDTO<NGPageResponse<ProjectDTO>>> listProject(@Query(value = ACCOUNT_KEY) String accountIdentifier,
+  Call<ResponseDTO<PageResponse<ProjectDTO>>> listProject(@Query(value = ACCOUNT_KEY) String accountIdentifier,
       @Query(value = ORG_KEY) String orgIdentifier, @Query(value = "hasModule") boolean hasModule,
       @Query(value = MODULE_TYPE_KEY) ModuleType moduleType, @Query(value = SEARCH_TERM_KEY) String searchTerm,
       @Query(value = PAGE_KEY) int page, @Query(value = SIZE_KEY) int size, @Query(value = SORT_KEY) List<String> sort);

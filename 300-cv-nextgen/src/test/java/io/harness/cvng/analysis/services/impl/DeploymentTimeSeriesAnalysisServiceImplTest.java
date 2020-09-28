@@ -71,7 +71,7 @@ public class DeploymentTimeSeriesAnalysisServiceImplTest extends CvNextGenTest {
         deploymentTimeSeriesAnalysisService.getMetrics(accountId, verificationJobInstanceId, false, null, 0);
 
     assertThat(transactionMetricInfoSummaryPageDTO.getPageResponse().getPageIndex()).isEqualTo(0);
-    assertThat(transactionMetricInfoSummaryPageDTO.getPageResponse().getPageCount()).isEqualTo(0);
+    assertThat(transactionMetricInfoSummaryPageDTO.getPageResponse().getTotalPages()).isEqualTo(0);
     assertThat(transactionMetricInfoSummaryPageDTO.getPageResponse().getContent()).isNotNull();
     assertThat(transactionMetricInfoSummaryPageDTO.getPageResponse()
                    .getContent()
@@ -105,7 +105,7 @@ public class DeploymentTimeSeriesAnalysisServiceImplTest extends CvNextGenTest {
         deploymentTimeSeriesAnalysisService.getMetrics(accountId, verificationJobInstanceId, false, "node1", 0);
 
     assertThat(transactionMetricInfoSummaryPageDTO.getPageResponse().getPageIndex()).isEqualTo(0);
-    assertThat(transactionMetricInfoSummaryPageDTO.getPageResponse().getPageCount()).isEqualTo(0);
+    assertThat(transactionMetricInfoSummaryPageDTO.getPageResponse().getTotalPages()).isEqualTo(0);
     assertThat(transactionMetricInfoSummaryPageDTO.getPageResponse().getContent()).isNotNull();
     assertThat(transactionMetricInfoSummaryPageDTO.getPageResponse().getContent().get(0).getNodes().size())
         .isEqualTo(1);
@@ -144,7 +144,7 @@ public class DeploymentTimeSeriesAnalysisServiceImplTest extends CvNextGenTest {
         deploymentTimeSeriesAnalysisService.getMetrics(accountId, verificationJobInstanceId, true, null, 0);
 
     assertThat(transactionMetricInfoSummaryPageDTO.getPageResponse().getPageIndex()).isEqualTo(0);
-    assertThat(transactionMetricInfoSummaryPageDTO.getPageResponse().getPageCount()).isEqualTo(0);
+    assertThat(transactionMetricInfoSummaryPageDTO.getPageResponse().getTotalPages()).isEqualTo(0);
     assertThat(transactionMetricInfoSummaryPageDTO.getPageResponse().getContent()).isNotNull();
     assertThat(transactionMetricInfoSummaryPageDTO.getPageResponse().getContent().size()).isEqualTo(1);
     assertThat(
@@ -166,7 +166,7 @@ public class DeploymentTimeSeriesAnalysisServiceImplTest extends CvNextGenTest {
         deploymentTimeSeriesAnalysisService.getMetrics(accountId, verificationJobInstanceId, true, "node2", 0);
 
     assertThat(transactionMetricInfoSummaryPageDTO.getPageResponse().getPageIndex()).isEqualTo(0);
-    assertThat(transactionMetricInfoSummaryPageDTO.getPageResponse().getPageCount()).isEqualTo(0);
+    assertThat(transactionMetricInfoSummaryPageDTO.getPageResponse().getTotalPages()).isEqualTo(0);
     assertThat(transactionMetricInfoSummaryPageDTO.getPageResponse().getContent()).isNotNull();
     assertThat(transactionMetricInfoSummaryPageDTO.getPageResponse().getContent().size()).isEqualTo(1);
     assertThat(
@@ -200,7 +200,7 @@ public class DeploymentTimeSeriesAnalysisServiceImplTest extends CvNextGenTest {
         deploymentTimeSeriesAnalysisService.getMetrics(accountId, verificationJobInstanceId, false, null, 0);
 
     assertThat(transactionMetricInfoSummaryPageDTO.getPageResponse().getPageIndex()).isEqualTo(0);
-    assertThat(transactionMetricInfoSummaryPageDTO.getPageResponse().getPageCount()).isEqualTo(0);
+    assertThat(transactionMetricInfoSummaryPageDTO.getPageResponse().getTotalPages()).isEqualTo(0);
     assertThat(transactionMetricInfoSummaryPageDTO.getPageResponse().getContent()).isNotNull();
     assertThat(transactionMetricInfoSummaryPageDTO.getPageResponse().getContent().size()).isEqualTo(1);
     assertThat(transactionMetricInfoSummaryPageDTO.getPageResponse()
@@ -232,7 +232,7 @@ public class DeploymentTimeSeriesAnalysisServiceImplTest extends CvNextGenTest {
         deploymentTimeSeriesAnalysisService.getMetrics(accountId, verificationJobInstanceId, false, null, 0);
 
     assertThat(page1.getPageResponse().getPageIndex()).isEqualTo(0);
-    assertThat(page1.getPageResponse().getPageCount()).isEqualTo(2);
+    assertThat(page1.getPageResponse().getTotalPages()).isEqualTo(2);
     assertThat(page1.getPageResponse().getContent()).isNotNull();
     assertThat(page1.getPageResponse().getContent().size()).isEqualTo(10);
 
@@ -240,7 +240,7 @@ public class DeploymentTimeSeriesAnalysisServiceImplTest extends CvNextGenTest {
         deploymentTimeSeriesAnalysisService.getMetrics(accountId, verificationJobInstanceId, false, null, 1);
 
     assertThat(page2.getPageResponse().getPageIndex()).isEqualTo(1);
-    assertThat(page2.getPageResponse().getPageCount()).isEqualTo(2);
+    assertThat(page2.getPageResponse().getTotalPages()).isEqualTo(2);
     assertThat(page2.getPageResponse().getContent()).isNotNull();
     assertThat(page2.getPageResponse().getContent().size()).isEqualTo(10);
 
@@ -248,7 +248,7 @@ public class DeploymentTimeSeriesAnalysisServiceImplTest extends CvNextGenTest {
         deploymentTimeSeriesAnalysisService.getMetrics(accountId, verificationJobInstanceId, false, null, 2);
 
     assertThat(page3.getPageResponse().getPageIndex()).isEqualTo(2);
-    assertThat(page3.getPageResponse().getPageCount()).isEqualTo(2);
+    assertThat(page3.getPageResponse().getTotalPages()).isEqualTo(2);
     assertThat(page3.getPageResponse().getContent()).isNotNull();
     assertThat(page3.getPageResponse().getContent().size()).isEqualTo(5);
   }
@@ -266,7 +266,7 @@ public class DeploymentTimeSeriesAnalysisServiceImplTest extends CvNextGenTest {
         deploymentTimeSeriesAnalysisService.getMetrics(accountId, verificationJobInstanceId, false, null, 0);
 
     assertThat(transactionMetricInfoSummaryPageDTO.getPageResponse().getPageIndex()).isEqualTo(0);
-    assertThat(transactionMetricInfoSummaryPageDTO.getPageResponse().getPageCount()).isEqualTo(0);
+    assertThat(transactionMetricInfoSummaryPageDTO.getPageResponse().getTotalPages()).isEqualTo(0);
     assertThat(transactionMetricInfoSummaryPageDTO.getPageResponse().getContent()).isEmpty();
   }
 

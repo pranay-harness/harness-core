@@ -5,8 +5,8 @@ import static software.wings.beans.Service.ServiceKeys;
 
 import com.google.inject.Inject;
 
-import io.harness.beans.NGPageResponse;
 import io.harness.data.structure.EmptyPredicate;
+import io.harness.ng.beans.PageResponse;
 import io.harness.ng.core.dto.ErrorDTO;
 import io.harness.ng.core.dto.FailureDTO;
 import io.harness.ng.core.dto.ResponseDTO;
@@ -109,7 +109,7 @@ public class ServiceResource {
 
   @GET
   @ApiOperation(value = "Gets Service list for a project", nickname = "getServiceListForProject")
-  public ResponseDTO<NGPageResponse<ServiceResponseDTO>> listServicesForProject(
+  public ResponseDTO<PageResponse<ServiceResponseDTO>> listServicesForProject(
       @QueryParam("page") @DefaultValue("0") int page, @QueryParam("size") @DefaultValue("100") int size,
       @QueryParam("accountId") String accountId, @QueryParam("orgIdentifier") String orgIdentifier,
       @QueryParam("projectIdentifier") String projectIdentifier, @QueryParam("sort") List<String> sort) {

@@ -30,7 +30,27 @@ public class EntityIdentifierValidator implements ConstraintValidator<EntityIden
 
   @Override
   public boolean isValid(String identifier, ConstraintValidatorContext context) {
-    return isNotBlank(identifier) && matchesIdentifierPattern(identifier) && hasAllowedWords(identifier);
+    if (!isNotBlank(identifier)) {
+      context.disableDefaultConstraintViolation();
+      context.buildConstraintViolationWithTemplate("cannot be empty").addConstraintViolation();
+      return false;
+    }
+    if (!matchesIdentifierPattern(identifier)) {
+      context.disableDefaultConstraintViolation();
+      context
+          .buildConstraintViolationWithTemplate(identifier
+              + "can be 64 characters long and only contain alphanumeric, underscore, hyphen and $ characters,"
+              + " and not start with a number")
+          .addConstraintViolation();
+      return false;
+    }
+    if (!hasAllowedWords(identifier)) {
+      context.disableDefaultConstraintViolation();
+      context.buildConstraintViolationWithTemplate(identifier + "is a keyword, so cannot be used")
+          .addConstraintViolation();
+      return false;
+    }
+    return true;
   }
 
   @VisibleForTesting

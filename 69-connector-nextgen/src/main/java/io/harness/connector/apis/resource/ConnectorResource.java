@@ -13,13 +13,13 @@ import static io.harness.utils.PageUtils.getNGPageResponse;
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
 
-import io.harness.beans.NGPageResponse;
 import io.harness.connector.apis.dto.ConnectorDTO;
 import io.harness.connector.apis.dto.ConnectorResponseDTO;
 import io.harness.connector.services.ConnectorService;
 import io.harness.delegate.beans.connector.ConnectorCategory;
 import io.harness.delegate.beans.connector.ConnectorType;
 import io.harness.delegate.beans.connector.ConnectorValidationResult;
+import io.harness.ng.beans.PageResponse;
 import io.harness.ng.core.dto.ErrorDTO;
 import io.harness.ng.core.dto.FailureDTO;
 import io.harness.ng.core.dto.ResponseDTO;
@@ -82,7 +82,7 @@ public class ConnectorResource {
 
   @GET
   @ApiOperation(value = "Gets Connector list", nickname = "getConnectorList")
-  public ResponseDTO<NGPageResponse<ConnectorResponseDTO>> list(@QueryParam(PAGE_KEY) @DefaultValue("0") int page,
+  public ResponseDTO<PageResponse<ConnectorResponseDTO>> list(@QueryParam(PAGE_KEY) @DefaultValue("0") int page,
       @QueryParam(SIZE_KEY) @DefaultValue("100") int size, @NotEmpty @QueryParam(ACCOUNT_KEY) String accountIdentifier,
       @QueryParam(ORG_KEY) String orgIdentifier, @QueryParam(PROJECT_KEY) String projectIdentifier,
       @QueryParam(SEARCH_TERM_KEY) String searchTerm, @QueryParam(TYPE_KEY) ConnectorType type,

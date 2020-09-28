@@ -1,9 +1,9 @@
 package io.harness.cvng.analysis.services.api;
 
-import io.harness.beans.NGPageResponse;
 import io.harness.cvng.analysis.beans.LogAnalysisClusterChartDTO;
 import io.harness.cvng.analysis.beans.LogAnalysisClusterDTO;
 import io.harness.cvng.analysis.entities.DeploymentLogAnalysis;
+import io.harness.ng.beans.PageResponse;
 
 import java.util.List;
 
@@ -14,6 +14,6 @@ public interface DeploymentLogAnalysisService {
 
   List<LogAnalysisClusterChartDTO> getLogAnalysisClusters(String accountId, String verificationJobInstanceId);
 
-  NGPageResponse<LogAnalysisClusterDTO> getLogAnalysisResult(
+  PageResponse<LogAnalysisClusterDTO> getLogAnalysisResult(
       String accountId, String verificationJobInstanceId, Integer label, int pageNumber);
 }

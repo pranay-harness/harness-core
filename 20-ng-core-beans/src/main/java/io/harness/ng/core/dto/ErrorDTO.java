@@ -3,6 +3,7 @@ package io.harness.ng.core.dto;
 import io.harness.eraro.ErrorCode;
 import io.harness.ng.core.CorrelationContext;
 import io.harness.ng.core.Status;
+import io.swagger.annotations.ApiModel;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.Setter;
@@ -11,6 +12,7 @@ import lombok.experimental.FieldDefaults;
 @Getter
 @Setter
 @FieldDefaults(level = AccessLevel.PRIVATE)
+@ApiModel(value = "Error")
 public class ErrorDTO {
   Status status = Status.ERROR; // we won't rely on http codes, clients will figure out error/success with this field
   ErrorCode code; // enum representing what kind of an error this is (e.g.- secret management error)

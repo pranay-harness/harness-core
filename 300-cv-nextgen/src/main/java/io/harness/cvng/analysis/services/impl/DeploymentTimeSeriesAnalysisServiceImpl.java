@@ -2,7 +2,6 @@ package io.harness.cvng.analysis.services.impl;
 
 import com.google.inject.Inject;
 
-import io.harness.beans.NGPageResponse;
 import io.harness.cvng.analysis.beans.DeploymentTimeSeriesAnalysisDTO;
 import io.harness.cvng.analysis.beans.TransactionMetricInfo;
 import io.harness.cvng.analysis.beans.TransactionMetricInfoSummaryPageDTO;
@@ -13,6 +12,7 @@ import io.harness.cvng.core.beans.TimeRange;
 import io.harness.cvng.core.services.api.VerificationTaskService;
 import io.harness.cvng.verificationjob.entities.VerificationJobInstance;
 import io.harness.cvng.verificationjob.services.api.VerificationJobInstanceService;
+import io.harness.ng.beans.PageResponse;
 import io.harness.persistence.HPersistence;
 import org.apache.commons.lang3.StringUtils;
 import org.mongodb.morphia.query.Sort;
@@ -95,7 +95,7 @@ public class DeploymentTimeSeriesAnalysisServiceImpl implements DeploymentTimeSe
         .build();
   }
 
-  private NGPageResponse<TransactionMetricInfo> formPageResponse(
+  private PageResponse<TransactionMetricInfo> formPageResponse(
       List<TransactionMetricInfo> transactionMetricInfoList, int pageNumber, int size) {
     List<TransactionMetricInfo> returnList = new ArrayList<>();
 
@@ -109,11 +109,11 @@ public class DeploymentTimeSeriesAnalysisServiceImpl implements DeploymentTimeSe
       }
       i++;
     }
-    return NGPageResponse.<TransactionMetricInfo>builder()
+    return PageResponse.<TransactionMetricInfo>builder()
         .pageSize(size)
         .pageIndex(pageNumber)
-        .pageCount(transactionMetricInfoList.size() / size)
-        .itemCount(transactionMetricInfoList.size())
+        .totalPages(transactionMetricInfoList.size() / size)
+        .totalItems(transactionMetricInfoList.size())
         .content(returnList)
         .build();
   }

@@ -2,7 +2,6 @@ package io.harness.cvng.dashboard.services.impl;
 
 import com.google.inject.Inject;
 
-import io.harness.beans.NGPageResponse;
 import io.harness.cvng.beans.CVMonitoringCategory;
 import io.harness.cvng.core.entities.CVConfig;
 import io.harness.cvng.core.entities.TimeSeriesRecord;
@@ -10,6 +9,7 @@ import io.harness.cvng.core.services.api.CVConfigService;
 import io.harness.cvng.core.services.api.TimeSeriesService;
 import io.harness.cvng.dashboard.beans.TimeSeriesMetricDataDTO;
 import io.harness.cvng.dashboard.services.api.TimeSeriesDashboardService;
+import io.harness.ng.beans.PageResponse;
 import io.harness.persistence.HPersistence;
 
 import java.time.Instant;
@@ -30,7 +30,7 @@ public class TimeSeriesDashboardServiceImpl implements TimeSeriesDashboardServic
   @Inject private TimeSeriesService timeSeriesService;
 
   @Override
-  public NGPageResponse<TimeSeriesMetricDataDTO> getSortedMetricData(String accountId, String projectIdentifier,
+  public PageResponse<TimeSeriesMetricDataDTO> getSortedMetricData(String accountId, String projectIdentifier,
       String orgIdentifier, String environmentIdentifier, String serviceIdentifier,
       CVMonitoringCategory monitoringCategory, Long startTimeMillis, Long endTimeMillis, int page, int size) {
     return getMetricData(accountId, projectIdentifier, orgIdentifier, environmentIdentifier, serviceIdentifier,
@@ -38,14 +38,14 @@ public class TimeSeriesDashboardServiceImpl implements TimeSeriesDashboardServic
   }
 
   @Override
-  public NGPageResponse<TimeSeriesMetricDataDTO> getSortedAnomalousMetricData(String accountId,
-      String projectIdentifier, String orgIdentifier, String environmentIdentifier, String serviceIdentifier,
+  public PageResponse<TimeSeriesMetricDataDTO> getSortedAnomalousMetricData(String accountId, String projectIdentifier,
+      String orgIdentifier, String environmentIdentifier, String serviceIdentifier,
       CVMonitoringCategory monitoringCategory, Long startTimeMillis, Long endTimeMillis, int page, int size) {
     return getMetricData(accountId, projectIdentifier, orgIdentifier, environmentIdentifier, serviceIdentifier,
         monitoringCategory, startTimeMillis, endTimeMillis, true, page, size);
   }
 
-  private NGPageResponse<TimeSeriesMetricDataDTO> getMetricData(String accountId, String projectIdentifier,
+  private PageResponse<TimeSeriesMetricDataDTO> getMetricData(String accountId, String projectIdentifier,
       String orgIdentifier, String environmentIdentifier, String serviceIdentifier,
       CVMonitoringCategory monitoringCategory, Long startTimeMillis, Long endTimeMillis, boolean anomalousOnly,
       int page, int size) {
@@ -107,7 +107,7 @@ public class TimeSeriesDashboardServiceImpl implements TimeSeriesDashboardServic
     return formPageResponse(sortedMetricData, page, size);
   }
 
-  private NGPageResponse<TimeSeriesMetricDataDTO> formPageResponse(
+  private PageResponse<TimeSeriesMetricDataDTO> formPageResponse(
       SortedSet<TimeSeriesMetricDataDTO> sortedMetricdata, int page, int size) {
     List<TimeSeriesMetricDataDTO> returnList = new ArrayList<>();
 
@@ -122,10 +122,10 @@ public class TimeSeriesDashboardServiceImpl implements TimeSeriesDashboardServic
       i++;
     }
 
-    return NGPageResponse.<TimeSeriesMetricDataDTO>builder()
+    return PageResponse.<TimeSeriesMetricDataDTO>builder()
         .pageSize(size)
-        .pageCount(sortedMetricdata.size() / size)
-        .itemCount(sortedMetricdata.size())
+        .totalPages(sortedMetricdata.size() / size)
+        .totalItems(sortedMetricdata.size())
         .pageIndex(returnList.size() == 0 ? -1 : page)
         .empty(returnList.size() == 0)
         .content(returnList)

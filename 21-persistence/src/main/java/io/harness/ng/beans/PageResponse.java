@@ -1,6 +1,7 @@
-package io.harness.beans;
+package io.harness.ng.beans;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import io.swagger.annotations.ApiModel;
 import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Data;
@@ -12,9 +13,11 @@ import java.util.List;
 @Builder
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class NGPageResponse<T> {
-  long pageCount;
-  long itemCount;
+@ApiModel(value = "Page")
+public class PageResponse<T> {
+  long totalPages;
+  long totalItems;
+  long pageItemCount;
   long pageSize;
   List<T> content;
   long pageIndex;

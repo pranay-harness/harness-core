@@ -4,6 +4,7 @@ import io.harness.eraro.ErrorCode;
 import io.harness.ng.core.CorrelationContext;
 import io.harness.ng.core.Status;
 import io.harness.ng.core.ValidationError;
+import io.swagger.annotations.ApiModel;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.Setter;
@@ -14,6 +15,7 @@ import java.util.List;
 @Getter
 @Setter
 @FieldDefaults(level = AccessLevel.PRIVATE)
+@ApiModel(value = "Failure")
 public class FailureDTO {
   Status status = Status.FAILURE; // we won't rely on http codes, clients will figure out error/success with this field
   ErrorCode code; // enum representing what kind of an error this is (e.g.- secret management error)

@@ -11,7 +11,7 @@ import static software.wings.resources.secretsmanagement.EncryptedDataMapper.toD
 
 import com.google.inject.Inject;
 
-import io.harness.beans.NGPageResponse;
+import io.harness.ng.beans.PageResponse;
 import io.harness.ng.core.api.NGSecretService;
 import io.harness.ng.core.dto.ErrorDTO;
 import io.harness.ng.core.dto.FailureDTO;
@@ -72,19 +72,20 @@ public class NGSecretResource {
 
   @GET
   @ApiOperation(value = "Get secrets for an account", nickname = "listSecrets")
-  public ResponseDTO<NGPageResponse<EncryptedDataDTO>> list(@QueryParam(ACCOUNT_KEY) @NotNull String accountIdentifier,
+  public ResponseDTO<PageResponse<EncryptedDataDTO>> list(@QueryParam(ACCOUNT_KEY) @NotNull String accountIdentifier,
       @QueryParam(ORG_KEY) String orgIdentifier, @QueryParam(PROJECT_KEY) String projectIdentifier,
       @QueryParam("type") SecretType secretType, @QueryParam(SEARCH_TERM_KEY) String searchTerm,
       @QueryParam(PAGE_KEY) @DefaultValue("0") int page, @QueryParam(SIZE_KEY) @DefaultValue("100") int size) {
-    NGPageResponse<EncryptedData> secrets =
+    PageResponse<EncryptedData> secrets =
         ngSecretService.list(accountIdentifier, orgIdentifier, projectIdentifier, secretType, searchTerm, page, size);
-    NGPageResponse<EncryptedDataDTO> encryptedDataDTOPageResponse = NGPageResponse.<EncryptedDataDTO>builder()
-                                                                        .empty(secrets.isEmpty())
-                                                                        .pageIndex(secrets.getPageIndex())
-                                                                        .pageSize(secrets.getPageSize())
-                                                                        .itemCount(secrets.getItemCount())
-                                                                        .pageCount(secrets.getPageCount())
-                                                                        .build();
+    PageResponse<EncryptedDataDTO> encryptedDataDTOPageResponse = PageResponse.<EncryptedDataDTO>builder()
+                                                                      .empty(secrets.isEmpty())
+                                                                      .pageIndex(secrets.getPageIndex())
+                                                                      .pageSize(secrets.getPageSize())
+                                                                      .totalItems(secrets.getTotalItems())
+                                                                      .totalPages(secrets.getTotalPages())
+                                                                      .pageItemCount(secrets.getPageItemCount())
+                                                                      .build();
     encryptedDataDTOPageResponse.setContent(
         secrets.getContent().stream().map(EncryptedDataMapper::toDTO).collect(Collectors.toList()));
 

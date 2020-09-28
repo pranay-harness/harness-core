@@ -5,11 +5,11 @@ import com.google.inject.Inject;
 import com.codahale.metrics.annotation.ExceptionMetered;
 import com.codahale.metrics.annotation.Timed;
 import io.harness.annotations.ExposeInternalException;
-import io.harness.beans.NGPageResponse;
 import io.harness.cvng.beans.CVMonitoringCategory;
 import io.harness.cvng.dashboard.beans.AnalyzedLogDataDTO;
 import io.harness.cvng.dashboard.beans.LogDataByTag;
 import io.harness.cvng.dashboard.services.api.LogDashboardService;
+import io.harness.ng.beans.PageResponse;
 import io.harness.rest.RestResponse;
 import io.harness.security.annotations.LearningEngineAuth;
 import io.swagger.annotations.Api;
@@ -34,7 +34,7 @@ public class LogDashboardResource {
   @Timed
   @ExceptionMetered
   @LearningEngineAuth
-  public RestResponse<NGPageResponse<AnalyzedLogDataDTO>> getAnomalousLogs(@QueryParam("accountId") String accountId,
+  public RestResponse<PageResponse<AnalyzedLogDataDTO>> getAnomalousLogs(@QueryParam("accountId") String accountId,
       @NotNull @QueryParam("projectIdentifier") String projectIdentifier,
       @NotNull @QueryParam("orgIdentifier") String orgIdentifier,
       @QueryParam("environmentIdentifier") String environmentIdentifier,
@@ -53,7 +53,7 @@ public class LogDashboardResource {
   @Timed
   @ExceptionMetered
   @LearningEngineAuth
-  public RestResponse<NGPageResponse<AnalyzedLogDataDTO>> getAllLogs(@QueryParam("accountId") String accountId,
+  public RestResponse<PageResponse<AnalyzedLogDataDTO>> getAllLogs(@QueryParam("accountId") String accountId,
       @NotNull @QueryParam("projectIdentifier") String projectIdentifier,
       @NotNull @QueryParam("orgIdentifier") String orgIdentifier,
       @QueryParam("environmentIdentifier") String environmentIdentifier,

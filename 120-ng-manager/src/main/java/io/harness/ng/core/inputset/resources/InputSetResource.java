@@ -7,7 +7,6 @@ import com.google.inject.Inject;
 import com.codahale.metrics.annotation.ExceptionMetered;
 import com.codahale.metrics.annotation.Timed;
 import io.harness.NGConstants;
-import io.harness.beans.NGPageResponse;
 import io.harness.cdng.inputset.beans.entities.CDInputSetEntity;
 import io.harness.cdng.inputset.beans.resource.InputSetListType;
 import io.harness.cdng.inputset.beans.resource.InputSetResponseDTO;
@@ -21,6 +20,7 @@ import io.harness.cdng.pipeline.beans.dto.CDPipelineResponseDTO;
 import io.harness.cdng.pipeline.service.PipelineService;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.exception.InvalidRequestException;
+import io.harness.ng.beans.PageResponse;
 import io.harness.ng.core.dto.ErrorDTO;
 import io.harness.ng.core.dto.FailureDTO;
 import io.harness.ng.core.dto.ResponseDTO;
@@ -212,7 +212,7 @@ public class InputSetResource {
   @Timed
   @ExceptionMetered
   @ApiOperation(value = "Gets InputSets list for a pipeline", nickname = "getInputSetsListForPipeline")
-  public ResponseDTO<NGPageResponse<InputSetSummaryResponseDTO>> listInputSetsForPipeline(
+  public ResponseDTO<PageResponse<InputSetSummaryResponseDTO>> listInputSetsForPipeline(
       @QueryParam(NGConstants.PAGE_KEY) @DefaultValue("0") int page,
       @QueryParam(NGConstants.SIZE_KEY) @DefaultValue("100") int size,
       @NotNull @QueryParam(NGConstants.ACCOUNT_KEY) String accountId,

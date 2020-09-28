@@ -5,16 +5,19 @@ import static io.harness.NGConstants.IDENTIFIER_KEY;
 import static io.harness.NGConstants.MODULE_TYPE_KEY;
 import static io.harness.NGConstants.ORG_KEY;
 import static io.harness.NGConstants.SEARCH_TERM_KEY;
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.ng.core.remote.ProjectMapper.writeDTO;
 import static io.harness.utils.PageUtils.getNGPageResponse;
 import static io.harness.utils.PageUtils.getPageRequest;
 import static javax.ws.rs.core.HttpHeaders.IF_MATCH;
 
+import com.google.common.collect.ImmutableList;
 import com.google.inject.Inject;
 
 import io.harness.ModuleType;
-import io.harness.beans.NGPageRequest;
-import io.harness.beans.NGPageResponse;
+import io.harness.beans.SortOrder;
+import io.harness.ng.beans.PageRequest;
+import io.harness.ng.beans.PageResponse;
 import io.harness.ng.core.dto.ErrorDTO;
 import io.harness.ng.core.dto.FailureDTO;
 import io.harness.ng.core.dto.ProjectDTO;
@@ -39,6 +42,7 @@ import javax.ws.rs.DELETE;
 import javax.ws.rs.DefaultValue;
 import javax.ws.rs.GET;
 import javax.ws.rs.HeaderParam;
+import javax.ws.rs.NotFoundException;
 import javax.ws.rs.POST;
 import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
@@ -73,23 +77,29 @@ public class ProjectResource {
   public ResponseDTO<ProjectDTO> get(@NotNull @PathParam(IDENTIFIER_KEY) String identifier,
       @NotNull @QueryParam(ACCOUNT_KEY) String accountIdentifier, @NotNull @QueryParam(ORG_KEY) String orgIdentifier) {
     Optional<Project> projectOptional = projectService.get(accountIdentifier, orgIdentifier, identifier);
-    return projectOptional.map(project -> ResponseDTO.newResponse(project.getVersion().toString(), writeDTO(project)))
-        .orElseGet(() -> ResponseDTO.newResponse(null));
+    if (!projectOptional.isPresent()) {
+      throw new NotFoundException("Resource not found");
+    }
+    return ResponseDTO.newResponse(projectOptional.get().getVersion().toString(), writeDTO(projectOptional.get()));
   }
 
   @GET
   @ApiOperation(value = "Get Project list", nickname = "getProjectList")
-  public ResponseDTO<NGPageResponse<ProjectDTO>> list(@NotNull @QueryParam(ACCOUNT_KEY) String accountIdentifier,
+  public ResponseDTO<PageResponse<ProjectDTO>> list(@NotNull @QueryParam(ACCOUNT_KEY) String accountIdentifier,
       @QueryParam(ORG_KEY) String orgIdentifier, @QueryParam("hasModule") @DefaultValue("true") boolean hasModule,
       @QueryParam(MODULE_TYPE_KEY) ModuleType moduleType, @QueryParam(SEARCH_TERM_KEY) String searchTerm,
-      @BeanParam NGPageRequest ngPageRequest) {
+      @BeanParam PageRequest pageRequest) {
+    if (isEmpty(pageRequest.getSortOrders())) {
+      SortOrder order = SortOrder.Builder.aSortOrder().withField("lastModifiedAt", SortOrder.OrderType.DESC).build();
+      pageRequest.setSortOrders(ImmutableList.of(order));
+    }
     ProjectFilterDTO projectFilterDTO = ProjectFilterDTO.builder()
                                             .searchTerm(searchTerm)
                                             .orgIdentifier(orgIdentifier)
                                             .hasModule(hasModule)
                                             .moduleType(moduleType)
                                             .build();
-    Page<ProjectDTO> projects = projectService.list(accountIdentifier, getPageRequest(ngPageRequest), projectFilterDTO)
+    Page<ProjectDTO> projects = projectService.list(accountIdentifier, getPageRequest(pageRequest), projectFilterDTO)
                                     .map(ProjectMapper::writeDTO);
     return ResponseDTO.newResponse(getNGPageResponse(projects));
   }
