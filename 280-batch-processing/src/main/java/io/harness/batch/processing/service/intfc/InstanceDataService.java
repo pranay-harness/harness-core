@@ -31,6 +31,8 @@ public interface InstanceDataService {
 
   List<InstanceData> fetchClusterActiveInstanceData(String accountId, String clusterId, Instant startTime);
 
+  Set<String> fetchClusterActiveInstanceIds(String accountId, String clusterId, Instant startTime);
+
   InstanceData getActiveInstance(String accountId, Instant startTime, Instant endTime, CloudProvider cloudProvider);
 
   List<InstanceLifecycleInfo> fetchInstanceDataForGivenInstances(Set<String> instanceIds);

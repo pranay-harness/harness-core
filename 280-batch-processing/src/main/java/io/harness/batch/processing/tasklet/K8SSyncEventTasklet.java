@@ -75,7 +75,7 @@ public class K8SSyncEventTasklet extends EventWriter implements Tasklet {
       Timestamp lastProcessedTimestamp = k8SClusterSyncEvent.getLastProcessedTimestamp();
       Set<String> activeInstanceIds =
           fetchActiveInstanceAtTime(accountId, clusterId, HTimestamps.toInstant(lastProcessedTimestamp));
-      logger.debug("Active K8S instances before {} time {}", lastProcessedTimestamp, activeInstanceIds);
+      logger.info("Active K8S instances before {} time {}", lastProcessedTimestamp, activeInstanceIds.size());
 
       Set<String> activeInstanceArns = new HashSet<>();
       activeInstanceArns.addAll(k8SClusterSyncEvent.getActiveNodeUidsList());
