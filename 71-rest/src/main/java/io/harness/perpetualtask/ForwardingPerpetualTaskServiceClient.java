@@ -21,7 +21,7 @@ import java.util.Map;
 
 @Slf4j
 public class ForwardingPerpetualTaskServiceClient implements PerpetualTaskServiceClient {
-  @Inject private NgManagerServiceDriver ngManagerServiceDriver;
+  @Inject(optional = true) private NgManagerServiceDriver ngManagerServiceDriver;
   @Inject private KryoSerializer kryoSerializer;
   private final String perpetualTaskType;
   private final String remoteServiceId;
