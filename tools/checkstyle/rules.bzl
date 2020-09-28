@@ -21,8 +21,8 @@ def impl_checkstyle(
             "--",
             "$(SRCS)",
             "> \"$@\"",
-            "&& sed -Ei.bak 's|sandbox/darwin-sandbox/[0-9]+/execroot|execroot/harness_monorepo/bazel-out/darwin-fastbuild/bin/sq.runfiles|g'  \"$@\"",
-            "&& sed -Ei.bak 's|sandbox/[a-zA-Z]+-sandbox/[0-9]+/execroot|execroot/harness_monorepo/bazel-out/k8-fastbuild/bin/sq.runfiles|g' \"$@\"",
+            "&& sed -Ei.bak 's|/private/(.*)/harness_monorepo/||g'  \"$@\"",
+            "&& sed -Ei.bak 's|/tmp/(.*)/harness_monorepo/||g'  \"$@\"",
             "&& cat \"$@\"",
         ]),
         tools = [
