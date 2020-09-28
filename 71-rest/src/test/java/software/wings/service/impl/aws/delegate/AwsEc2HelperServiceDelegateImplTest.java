@@ -102,8 +102,8 @@ public class AwsEc2HelperServiceDelegateImplTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void testValidateAwsAccountCredentialFalseIncorrectCredentials() {
     AmazonEC2Client mockClient = mock(AmazonEC2Client.class);
-    AwsConfig awsConfig =
-        new AwsConfig("ACCESS_KEY", new char[] {'s', 'e', 'c', 'r', 'e', 't'}, "", "", false, "", null, false, null);
+    AwsConfig awsConfig = new AwsConfig("ACCESS_KEY".toCharArray(), new char[] {'s', 'e', 'c', 'r', 'e', 't'}, "", "",
+        false, "", null, false, null, false, null);
     AmazonEC2Exception exception = new AmazonEC2Exception("Invalid Aws Credentials");
     exception.setStatusCode(401);
     doReturn(mockClient).when(awsEc2HelperServiceDelegate).getAmazonEc2Client(anyString(), any());
@@ -121,8 +121,8 @@ public class AwsEc2HelperServiceDelegateImplTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void testValidateAwsAccountCredentialFalseAccessKeyEmpty() {
     AmazonEC2Client mockClient = mock(AmazonEC2Client.class);
-    AwsConfig awsConfig =
-        new AwsConfig("", new char[] {'s', 'e', 'c', 'r', 'e', 't'}, "", "", false, "", null, false, null);
+    AwsConfig awsConfig = new AwsConfig(
+        "".toCharArray(), new char[] {'s', 'e', 'c', 'r', 'e', 't'}, "", "", false, "", null, false, null, false, null);
     AmazonEC2Exception exception = new AmazonEC2Exception("Invalid Aws Credentials");
     exception.setStatusCode(401);
     doReturn(mockClient).when(awsEc2HelperServiceDelegate).getAmazonEc2Client(anyString(), any());
@@ -140,7 +140,8 @@ public class AwsEc2HelperServiceDelegateImplTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void testValidateAwsAccountCredentialFalseSecretKeyEmpty() {
     AmazonEC2Client mockClient = mock(AmazonEC2Client.class);
-    AwsConfig awsConfig = new AwsConfig("ACCESS_KEY", null, "", "", false, "", null, false, null);
+    AwsConfig awsConfig =
+        new AwsConfig("ACCESS_KEY".toCharArray(), null, "", "", false, "", null, false, null, false, null);
     AmazonEC2Exception exception = new AmazonEC2Exception("Invalid Aws Credentials");
     exception.setStatusCode(401);
     doReturn(mockClient).when(awsEc2HelperServiceDelegate).getAmazonEc2Client(anyString(), any());

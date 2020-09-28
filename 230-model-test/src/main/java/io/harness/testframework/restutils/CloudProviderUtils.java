@@ -19,7 +19,7 @@ public class CloudProviderUtils {
             .withAccountId(accountId)
             .withValue(
                 AwsConfig.builder()
-                    .accessKey(new ScmSecret().decryptToString(new SecretName("qe_aws_playground_access_key")))
+                    .accessKey(new ScmSecret().decryptToCharArray(new SecretName("qe_aws_playground_access_key")))
                     .secretKey(new ScmSecret().decryptToCharArray(new SecretName("qe_aws_playground_secret_key")))
                     .accountId(accountId)
                     .build())

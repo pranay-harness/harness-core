@@ -49,8 +49,11 @@ public class AmazonS3ServiceTest extends WingsBaseTest {
   @Inject private AmazonS3Service amazonS3Service;
   @Inject @InjectMocks private DelegateFileManager delegateFileManager;
 
-  private static final AwsConfig awsConfig =
-      AwsConfig.builder().accessKey("access").secretKey("secret".toCharArray()).accountId("accountId").build();
+  private static final AwsConfig awsConfig = AwsConfig.builder()
+                                                 .accessKey("access".toCharArray())
+                                                 .secretKey("secret".toCharArray())
+                                                 .accountId("accountId")
+                                                 .build();
 
   @Before
   public void setUp() throws IllegalAccessException {

@@ -186,7 +186,8 @@ public class EcsInfraMappingYamlHandlerTest extends BaseYamlHandlerTest {
     return aSettingAttribute()
         .withName(computeProviderName)
         .withUuid(SETTING_ID)
-        .withValue(AwsConfig.builder().accessKey(ACCESS_KEY).secretKey(SECRET_KEY).accountId(ACCOUNT_ID).build())
+        .withValue(
+            AwsConfig.builder().accessKey(ACCESS_KEY.toCharArray()).secretKey(SECRET_KEY).accountId(ACCOUNT_ID).build())
         .build();
   }
 

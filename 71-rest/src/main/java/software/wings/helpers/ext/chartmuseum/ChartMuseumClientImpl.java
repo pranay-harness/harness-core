@@ -115,7 +115,7 @@ public class ChartMuseumClientImpl implements ChartMuseumClient {
   Map<String, String> getEnvForAwsConfig(AwsConfig awsConfig) {
     Map<String, String> environment = new HashMap<>();
     if (!awsConfig.isUseEc2IamCredentials()) {
-      environment.put(AWS_ACCESS_KEY_ID, awsConfig.getAccessKey());
+      environment.put(AWS_ACCESS_KEY_ID, new String(awsConfig.getAccessKey()));
       environment.put(AWS_SECRET_ACCESS_KEY, new String(awsConfig.getSecretKey()));
     }
     return environment;

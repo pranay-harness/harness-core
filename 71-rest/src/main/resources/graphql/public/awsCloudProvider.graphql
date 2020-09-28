@@ -19,7 +19,8 @@ input Ec2IamCredentials {
 }
 
 input AwsManualCredentials {
-  accessKey: String!
+  accessKey: String
+  accessKeySecretId: String
   secretKeySecretId: String!
 }
 
@@ -46,6 +47,7 @@ input UpdateEc2IamCredentials {
 
 input UpdateAwsManualCredentials {
   accessKey: String
+  accessKeySecretId: String
   secretKeySecretId: String
 }
 

@@ -441,7 +441,8 @@ public class YamlDirectoryServiceTest extends WingsBaseTest {
             .withUuid("aws-cp-id")
             .withAccountId(ACCOUNT_ID)
             .withCategory(SettingCategory.CLOUD_PROVIDER)
-            .withValue(AwsConfig.builder().accessKey("access-key").secretKey("secret-key".toCharArray()).build())
+            .withValue(
+                AwsConfig.builder().accessKey("access-key".toCharArray()).secretKey("secret-key".toCharArray()).build())
             .build();
     SettingAttribute gcpCp =
         aSettingAttribute()
@@ -651,7 +652,8 @@ public class YamlDirectoryServiceTest extends WingsBaseTest {
         aSettingAttribute()
             .withName("aws-cp")
             .withCategory(SettingCategory.CLOUD_PROVIDER)
-            .withValue(AwsConfig.builder().accessKey("access-key").secretKey("secret-key".toCharArray()).build())
+            .withValue(
+                AwsConfig.builder().accessKey("access-key".toCharArray()).secretKey("secret-key".toCharArray()).build())
             .build();
     ApplicationManifest appManifest =
         ApplicationManifest.builder().storeType(StoreType.Local).envId(env.getUuid()).serviceId(SERVICE_ID).build();

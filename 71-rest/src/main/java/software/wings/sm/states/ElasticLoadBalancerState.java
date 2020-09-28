@@ -78,7 +78,7 @@ public class ElasticLoadBalancerState extends State {
       loadBalancerName = loadBalancerConfig.getLoadBalancerName();
       region = loadBalancerConfig.getRegion().name();
       AwsConfig awsConfigDerived = AwsConfig.builder()
-                                       .accessKey(loadBalancerConfig.getAccessKey())
+                                       .accessKey(loadBalancerConfig.getAccessKey().toCharArray())
                                        .secretKey(loadBalancerConfig.getSecretKey())
                                        .useEc2IamCredentials(loadBalancerConfig.isUseEc2IamCredentials())
                                        .crossAccountAttributes(null)

@@ -58,7 +58,7 @@ public class AwsCodeDeployServiceTest extends WingsBaseTest {
     cloudProvider =
         SettingAttribute.Builder.aSettingAttribute()
             .withValue(AwsConfig.builder()
-                           .accessKey(scmSecret.decrypt(new SecretName("aws_playground_access_key")).toString())
+                           .accessKey(scmSecret.decryptToCharArray(new SecretName("aws_playground_access_key")))
                            .secretKey(scmSecret.decryptToCharArray(new SecretName("aws_playground_secret_key")))
                            .build())
             .build();

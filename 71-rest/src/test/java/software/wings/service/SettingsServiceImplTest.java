@@ -542,15 +542,18 @@ public class SettingsServiceImplTest extends WingsBaseTest {
 
   private SettingAttribute prepareSettingAttributeForUpdate() {
     String uuid = UUID.randomUUID().toString();
-    SettingAttribute settingAttribute =
-        aSettingAttribute()
-            .withUuid(uuid)
-            .withAppId(APP_ID)
-            .withAccountId(ACCOUNT_ID)
-            .withName("MY_CLOUD_PROVIDER")
-            .withCategory(SettingCategory.CLOUD_PROVIDER)
-            .withValue(AwsConfig.builder().accountId(ACCOUNT_ID).accessKey(ACCESS_KEY).secretKey(SECRET_KEY).build())
-            .build();
+    SettingAttribute settingAttribute = aSettingAttribute()
+                                            .withUuid(uuid)
+                                            .withAppId(APP_ID)
+                                            .withAccountId(ACCOUNT_ID)
+                                            .withName("MY_CLOUD_PROVIDER")
+                                            .withCategory(SettingCategory.CLOUD_PROVIDER)
+                                            .withValue(AwsConfig.builder()
+                                                           .accountId(ACCOUNT_ID)
+                                                           .accessKey(ACCESS_KEY.toCharArray())
+                                                           .secretKey(SECRET_KEY)
+                                                           .build())
+                                            .build();
 
     when(secretManager.getEncryptionDetails(anyObject(), anyString(), anyString())).thenReturn(Collections.emptyList());
     when(settingValidationService.validate(any(SettingAttribute.class))).thenReturn(true);
@@ -622,15 +625,18 @@ public class SettingsServiceImplTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void testValidateWhenValid() {
     String uuid = UUID.randomUUID().toString();
-    SettingAttribute settingAttribute =
-        aSettingAttribute()
-            .withUuid(uuid)
-            .withAppId(APP_ID)
-            .withAccountId(ACCOUNT_ID)
-            .withName("MY_CLOUD_PROVIDER_00")
-            .withCategory(SettingCategory.CLOUD_PROVIDER)
-            .withValue(AwsConfig.builder().accountId(ACCOUNT_ID).accessKey(ACCESS_KEY).secretKey(SECRET_KEY).build())
-            .build();
+    SettingAttribute settingAttribute = aSettingAttribute()
+                                            .withUuid(uuid)
+                                            .withAppId(APP_ID)
+                                            .withAccountId(ACCOUNT_ID)
+                                            .withName("MY_CLOUD_PROVIDER_00")
+                                            .withCategory(SettingCategory.CLOUD_PROVIDER)
+                                            .withValue(AwsConfig.builder()
+                                                           .accountId(ACCOUNT_ID)
+                                                           .accessKey(ACCESS_KEY.toCharArray())
+                                                           .secretKey(SECRET_KEY)
+                                                           .build())
+                                            .build();
     doReturn(true).when(settingValidationService).validate(settingAttribute);
     ValidationResult result = settingsService.validate(settingAttribute);
     assertThat(result).isNotNull();
@@ -642,15 +648,18 @@ public class SettingsServiceImplTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void testValidateWhenNotValid() {
     String uuid = UUID.randomUUID().toString();
-    SettingAttribute settingAttribute =
-        aSettingAttribute()
-            .withUuid(uuid)
-            .withAppId(APP_ID)
-            .withAccountId(ACCOUNT_ID)
-            .withName("MY_CLOUD_PROVIDER_01")
-            .withCategory(SettingCategory.CLOUD_PROVIDER)
-            .withValue(AwsConfig.builder().accountId(ACCOUNT_ID).accessKey(ACCESS_KEY).secretKey(SECRET_KEY).build())
-            .build();
+    SettingAttribute settingAttribute = aSettingAttribute()
+                                            .withUuid(uuid)
+                                            .withAppId(APP_ID)
+                                            .withAccountId(ACCOUNT_ID)
+                                            .withName("MY_CLOUD_PROVIDER_01")
+                                            .withCategory(SettingCategory.CLOUD_PROVIDER)
+                                            .withValue(AwsConfig.builder()
+                                                           .accountId(ACCOUNT_ID)
+                                                           .accessKey(ACCESS_KEY.toCharArray())
+                                                           .secretKey(SECRET_KEY)
+                                                           .build())
+                                            .build();
     doReturn(false).when(settingValidationService).validate(settingAttribute);
     ValidationResult result = settingsService.validate(settingAttribute);
     assertThat(result).isNotNull();
@@ -662,15 +671,18 @@ public class SettingsServiceImplTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void testValidateIdValid() {
     String uuid = UUID.randomUUID().toString();
-    SettingAttribute settingAttribute =
-        aSettingAttribute()
-            .withUuid(uuid)
-            .withAppId(APP_ID)
-            .withAccountId(ACCOUNT_ID)
-            .withName("MY_CLOUD_PROVIDER_02")
-            .withCategory(SettingCategory.CLOUD_PROVIDER)
-            .withValue(AwsConfig.builder().accountId(ACCOUNT_ID).accessKey(ACCESS_KEY).secretKey(SECRET_KEY).build())
-            .build();
+    SettingAttribute settingAttribute = aSettingAttribute()
+                                            .withUuid(uuid)
+                                            .withAppId(APP_ID)
+                                            .withAccountId(ACCOUNT_ID)
+                                            .withName("MY_CLOUD_PROVIDER_02")
+                                            .withCategory(SettingCategory.CLOUD_PROVIDER)
+                                            .withValue(AwsConfig.builder()
+                                                           .accountId(ACCOUNT_ID)
+                                                           .accessKey(ACCESS_KEY.toCharArray())
+                                                           .secretKey(SECRET_KEY)
+                                                           .build())
+                                            .build();
     doReturn(settingAttribute).when(mockWingsPersistence).get(SettingAttribute.class, uuid);
     doReturn(true).when(settingValidationService).validate(settingAttribute);
     ValidationResult result = settingsService.validate(uuid);

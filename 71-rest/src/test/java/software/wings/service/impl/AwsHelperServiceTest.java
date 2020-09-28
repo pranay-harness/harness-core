@@ -89,7 +89,7 @@ public class AwsHelperServiceTest extends WingsBaseTest {
   @Owner(developers = SATYAM)
   @Category(UnitTests.class)
   public void shouldUpdateStack() {
-    String accessKey = "abcd";
+    char[] accessKey = "abcd".toCharArray();
     char[] secretKey = "pqrs".toCharArray();
     String stackName = "Stack Name";
     String region = "us-west-1";
@@ -108,7 +108,7 @@ public class AwsHelperServiceTest extends WingsBaseTest {
   @Owner(developers = SATYAM)
   @Category(UnitTests.class)
   public void shouldDeleteStack() {
-    String accessKey = "abcd";
+    char[] accessKey = "abcd".toCharArray();
     char[] secretKey = "pqrs".toCharArray();
     String stackName = "Stack Name";
     String region = "us-west-1";
@@ -127,7 +127,7 @@ public class AwsHelperServiceTest extends WingsBaseTest {
   @Owner(developers = SATYAM)
   @Category(UnitTests.class)
   public void shouldDescribeStack() {
-    String accessKey = "qwer";
+    char[] accessKey = "qwer".toCharArray();
     char[] secretKey = "pqrs".toCharArray();
     String stackName = "Stack Name";
     String region = "us-west-1";
@@ -151,7 +151,7 @@ public class AwsHelperServiceTest extends WingsBaseTest {
   @Owner(developers = SATYAM)
   @Category(UnitTests.class)
   public void shouldGetAllEvents() {
-    String accessKey = "qwer";
+    char[] accessKey = "qwer".toCharArray();
     char[] secretKey = "pqrs".toCharArray();
     String stackName = "Stack Name";
     String region = "us-west-1";
@@ -177,7 +177,7 @@ public class AwsHelperServiceTest extends WingsBaseTest {
   @Owner(developers = SATYAM)
   @Category(UnitTests.class)
   public void shouldCreateStack() {
-    String accessKey = "abcd";
+    char[] accessKey = "abcd".toCharArray();
     char[] secretKey = "pqrs".toCharArray();
     String stackName = "Stack Name";
     String region = "us-west-1";
@@ -196,7 +196,7 @@ public class AwsHelperServiceTest extends WingsBaseTest {
   @Owner(developers = SATYAM)
   @Category(UnitTests.class)
   public void shouldListStacks() {
-    String accessKey = "qwer";
+    char[] accessKey = "qwer".toCharArray();
     char[] secretKey = "pqrs".toCharArray();
     String stackName = "Stack Name";
     String region = "us-west-1";
@@ -306,7 +306,7 @@ public class AwsHelperServiceTest extends WingsBaseTest {
   @Owner(developers = ACASIAN)
   @Category(UnitTests.class)
   public void shouldHandleAutoScaleException() throws IllegalAccessException {
-    String accessKey = "qwer";
+    char[] accessKey = "qwer".toCharArray();
     char[] secretKey = "pqrs".toCharArray();
     String autoScalingGroupName = "ASG Name";
     String region = "us-west-1";

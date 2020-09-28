@@ -1,9 +1,11 @@
 package software.wings.service.impl.yaml.handler.setting.cloudprovider;
 
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.exception.WingsException.USER;
 
 import com.google.inject.Singleton;
 
+import io.harness.exception.InvalidRequestException;
 import software.wings.beans.AwsConfig;
 import software.wings.beans.AwsConfig.Yaml;
 import software.wings.beans.SettingAttribute;
@@ -17,10 +19,12 @@ public class AwsConfigYamlHandler extends CloudProviderYamlHandler<Yaml, AwsConf
   public Yaml toYaml(SettingAttribute settingAttribute, String appId) {
     AwsConfig awsConfig = (AwsConfig) settingAttribute.getValue();
     String secretValueYamlRef =
-        isNotEmpty(awsConfig.getEncryptedSecretKey()) ? getEncryptedValue(awsConfig, "secretKey", false) : null;
+        isNotEmpty(awsConfig.getEncryptedSecretKey()) ? getEncryptedValue(awsConfig, "secretKey", true) : null;
+    boolean useEncryptedAccessKey = awsConfig.isUseEncryptedAccessKey();
     Yaml yaml = Yaml.builder()
                     .harnessApiVersion(getHarnessApiVersion())
-                    .accessKey(awsConfig.getAccessKey())
+                    .accessKey(useEncryptedAccessKey ? null : String.valueOf(awsConfig.getAccessKey()))
+                    .accessKeySecretId(useEncryptedAccessKey ? getEncryptedValue(awsConfig, "accessKey", true) : null)
                     .secretKey(secretValueYamlRef)
                     .type(awsConfig.getType())
                     .useEc2IamCredentials(awsConfig.isUseEc2IamCredentials())
@@ -33,15 +37,21 @@ public class AwsConfigYamlHandler extends CloudProviderYamlHandler<Yaml, AwsConf
   }
 
   @Override
-  protected SettingAttribute toBean(
+  public SettingAttribute toBean(
       SettingAttribute previous, ChangeContext<Yaml> changeContext, List<ChangeContext> changeSetContext) {
     String uuid = previous != null ? previous.getUuid() : null;
     Yaml yaml = changeContext.getYaml();
     String accountId = changeContext.getChange().getAccountId();
 
+    if (isNotEmpty(yaml.getAccessKey()) && isNotEmpty(yaml.getAccessKeySecretId())) {
+      throw new InvalidRequestException("Cannot set both value and secret reference for accessKey field", USER);
+    }
+
     AwsConfig config = AwsConfig.builder()
                            .accountId(accountId)
-                           .accessKey(yaml.getAccessKey())
+                           .accessKey(yaml.getAccessKey() != null ? yaml.getAccessKey().toCharArray() : null)
+                           .encryptedAccessKey(yaml.getAccessKeySecretId())
+                           .useEncryptedAccessKey(yaml.getAccessKeySecretId() != null)
                            .encryptedSecretKey(yaml.getSecretKey())
                            .useEc2IamCredentials(yaml.isUseEc2IamCredentials())
                            .tag(yaml.getTag())

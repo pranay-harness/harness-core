@@ -80,7 +80,7 @@ public class AmiServiceImplTest extends WingsBaseTest {
     when(awsHelperService.desribeEc2Images(any(), any(), any(), any()))
         .thenReturn(new DescribeImagesResult().withImages(images));
     AwsConfig awsConfig = AwsConfig.builder()
-                              .accessKey("AKIAJLEKM45P4PO5QUFQ")
+                              .accessKey("AKIAJLEKM45P4PO5QUFQ".toCharArray())
                               .secretKey("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".toCharArray())
                               .build();
 

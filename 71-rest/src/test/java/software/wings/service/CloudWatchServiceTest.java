@@ -71,9 +71,10 @@ public class CloudWatchServiceTest extends WingsBaseTest {
   @Before
   public void setUp() throws Exception {
     when(settingsService.get(SETTING_ID))
-        .thenReturn(aSettingAttribute()
-                        .withValue(AwsConfig.builder().accessKey(ACCESS_KEY).secretKey(SECRET_KEY).build())
-                        .build());
+        .thenReturn(
+            aSettingAttribute()
+                .withValue(AwsConfig.builder().accessKey(ACCESS_KEY.toCharArray()).secretKey(SECRET_KEY).build())
+                .build());
     ListMetricsResult listMetricsResult = new ListMetricsResult().withMetrics(
         asList(new Metric()
                    .withNamespace(NAMESPACE)
@@ -216,8 +217,8 @@ public class CloudWatchServiceTest extends WingsBaseTest {
     cloudWatchSetupTestNodeData.setRegion(AWSRegion.UsEast1.name());
     final CloudWatchSetupTestNodeData spy = spy(cloudWatchSetupTestNodeData);
     cloudWatchDelegateService.getMetricsWithDataForNode(
-        AwsConfig.builder().accessKey(ACCESS_KEY).secretKey(SECRET_KEY).build(), Lists.newArrayList(), spy,
-        ThirdPartyApiCallLog.createApiCallLog(generateUuid(), generateUuid()), generateUuid());
+        AwsConfig.builder().accessKey(ACCESS_KEY.toCharArray()).secretKey(SECRET_KEY).build(), Lists.newArrayList(),
+        spy, ThirdPartyApiCallLog.createApiCallLog(generateUuid(), generateUuid()), generateUuid());
     verify(spy).setFromTime(TimeUnit.SECONDS.toMillis(cloudWatchSetupTestNodeData.getFromTime()));
     verify(spy).setToTime(TimeUnit.SECONDS.toMillis(cloudWatchSetupTestNodeData.getToTime()));
   }

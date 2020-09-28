@@ -47,7 +47,7 @@ public class AwsClusterServiceIntegrationTest extends WingsBaseTest {
     awsConnectorSetting =
         aSettingAttribute()
             .withValue(AwsConfig.builder()
-                           .accessKey(scmSecret.decrypt(new SecretName("aws_config_access_key")).toString())
+                           .accessKey(scmSecret.decryptToCharArray(new SecretName("aws_config_access_key")))
                            .secretKey(scmSecret.decryptToCharArray(new SecretName("aws_setting_attribute_secret_key")))
 
                            .build())

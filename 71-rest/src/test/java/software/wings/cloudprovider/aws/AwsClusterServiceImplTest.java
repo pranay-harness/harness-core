@@ -40,7 +40,9 @@ public class AwsClusterServiceImplTest extends WingsBaseTest {
   @Inject @InjectMocks private AwsClusterService awsClusterService;
 
   private SettingAttribute cloudProviderSetting =
-      aSettingAttribute().withValue(AwsConfig.builder().accessKey(ACCESS_KEY).secretKey(SECRET_KEY).build()).build();
+      aSettingAttribute()
+          .withValue(AwsConfig.builder().accessKey(ACCESS_KEY.toCharArray()).secretKey(SECRET_KEY).build())
+          .build();
   private AwsClusterConfiguration clusterConfiguration = AwsClusterConfiguration.builder()
                                                              .name(CLUSTER_NAME)
                                                              .size(5)

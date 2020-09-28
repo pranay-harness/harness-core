@@ -1404,8 +1404,10 @@ public class PivotalClientTest extends WingsBaseTest {
     assertThat(environmentMapForPcfPush.containsKey(CF_DOCKER_CREDENTIALS)).isEqualTo(true);
 
     // ECR
-    AwsConfig awsConfig =
-        AwsConfig.builder().accessKey("AKIAWQ5IKSASRV2RUSNP").secretKey("secretKey".toCharArray()).build();
+    AwsConfig awsConfig = AwsConfig.builder()
+                              .accessKey("AKIAWQ5IKSASRV2RUSNP".toCharArray())
+                              .secretKey("secretKey".toCharArray())
+                              .build();
     serverSetting.setValue(awsConfig);
     environmentMapForPcfPush = mockedClient.getEnvironmentMapForPcfPush(requestData);
     assertThat(environmentMapForPcfPush.containsKey(CF_DOCKER_CREDENTIALS)).isEqualTo(true);

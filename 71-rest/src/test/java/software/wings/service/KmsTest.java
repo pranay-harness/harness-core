@@ -2271,7 +2271,7 @@ public class KmsTest extends WingsBaseTest {
     for (int i = 0; i < numOfSettingAttributes; i++) {
       final AwsConfig awsConfig = AwsConfig.builder()
                                       .accountId(accountId)
-                                      .accessKey(UUID.randomUUID().toString())
+                                      .accessKey(UUID.randomUUID().toString().toCharArray())
                                       .secretKey(UUID.randomUUID().toString().toCharArray())
                                       .build();
 

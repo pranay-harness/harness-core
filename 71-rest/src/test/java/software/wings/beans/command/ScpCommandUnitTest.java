@@ -93,7 +93,7 @@ public class ScpCommandUnitTest extends WingsBaseTest {
   private SettingAttribute awsSetting =
       aSettingAttribute()
           .withUuid(SETTING_ID)
-          .withValue(AwsConfig.builder().secretKey(SECRET_KEY).accessKey(ACCESS_KEY).build())
+          .withValue(AwsConfig.builder().secretKey(SECRET_KEY).accessKey(ACCESS_KEY.toCharArray()).build())
           .build();
   private SettingAttribute artifactorySetting = aSettingAttribute()
                                                     .withUuid(SETTING_ID)

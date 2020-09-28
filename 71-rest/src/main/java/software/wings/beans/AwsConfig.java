@@ -36,7 +36,7 @@ import java.util.List;
 @EqualsAndHashCode(callSuper = false)
 public class AwsConfig extends SettingValue implements EncryptableSetting, CloudCostAware {
   private static final String AWS_URL = "https://aws.amazon.com/";
-  @Attributes(title = "Access Key") private String accessKey;
+  @Attributes(title = "Access Key") @Encrypted(fieldName = "access_key", isReference = true) private char[] accessKey;
   @Attributes(title = "Secret Key") @Encrypted(fieldName = "secret_key") private char[] secretKey;
   @SchemaIgnore @NotEmpty private String accountId; // internal
   @JsonView(JsonViews.Internal.class) @SchemaIgnore private String encryptedSecretKey;
@@ -47,15 +47,18 @@ public class AwsConfig extends SettingValue implements EncryptableSetting, Cloud
   private boolean assumeCrossAccountRole;
   private AwsCrossAccountAttributes crossAccountAttributes;
 
+  @Attributes(title = "Use Encrypted Access Key") private boolean useEncryptedAccessKey;
+  @JsonView(JsonViews.Internal.class) @SchemaIgnore private String encryptedAccessKey;
+
   public AwsConfig() {
     super(SettingVariableTypes.AWS.name());
   }
 
-  public AwsConfig(String accessKey, char[] secretKey, String accountId, String encryptedSecretKey,
+  public AwsConfig(char[] accessKey, char[] secretKey, String accountId, String encryptedSecretKey,
       boolean useEc2IamCredentials, String tag, CCMConfig ccmConfig, boolean assumeCrossAccountRole,
-      AwsCrossAccountAttributes crossAccountAttributes) {
+      AwsCrossAccountAttributes crossAccountAttributes, boolean useEncryptedAccessKey, String encryptedAccessKey) {
     this();
-    this.accessKey = accessKey;
+    this.accessKey = accessKey == null ? null : accessKey.clone();
     this.secretKey = secretKey == null ? null : secretKey.clone();
     this.accountId = accountId;
     this.encryptedSecretKey = encryptedSecretKey;
@@ -64,6 +67,8 @@ public class AwsConfig extends SettingValue implements EncryptableSetting, Cloud
     this.ccmConfig = ccmConfig;
     this.assumeCrossAccountRole = assumeCrossAccountRole;
     this.crossAccountAttributes = crossAccountAttributes;
+    this.useEncryptedAccessKey = useEncryptedAccessKey;
+    this.encryptedAccessKey = encryptedAccessKey;
   }
 
   @Override
@@ -82,7 +87,8 @@ public class AwsConfig extends SettingValue implements EncryptableSetting, Cloud
       return Collections.emptyList();
     }
 
-    return Collections.singletonList(encryptedSecretKey);
+    return useEncryptedAccessKey ? Arrays.asList(encryptedAccessKey, encryptedSecretKey)
+                                 : Collections.singletonList(encryptedSecretKey);
   }
 
   @Data
@@ -90,6 +96,7 @@ public class AwsConfig extends SettingValue implements EncryptableSetting, Cloud
   @EqualsAndHashCode(callSuper = true)
   public static final class Yaml extends CloudProviderYaml {
     private String accessKey;
+    private String accessKeySecretId;
     private String secretKey;
     private boolean useEc2IamCredentials;
     private String tag;
@@ -97,11 +104,12 @@ public class AwsConfig extends SettingValue implements EncryptableSetting, Cloud
     private AwsCrossAccountAttributes crossAccountAttributes;
 
     @Builder
-    public Yaml(String type, String harnessApiVersion, String accessKey, String secretKey,
+    public Yaml(String type, String harnessApiVersion, String accessKey, String accessKeySecretId, String secretKey,
         UsageRestrictions.Yaml usageRestrictions, boolean useEc2IamCredentials, String tag,
         boolean assumeCrossAccountRole, AwsCrossAccountAttributes crossAccountAttributes) {
       super(type, harnessApiVersion, usageRestrictions);
       this.accessKey = accessKey;
+      this.accessKeySecretId = accessKeySecretId;
       this.secretKey = secretKey;
       this.useEc2IamCredentials = useEc2IamCredentials;
       this.tag = tag;

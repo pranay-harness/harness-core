@@ -261,7 +261,7 @@ public class BuildSourceServiceIntegrationTest extends BaseIntegrationTest {
                 .withAccountId(accountId)
                 .withValue(AwsConfig.builder()
                                .accountId(accountId)
-                               .accessKey(scmSecret.decryptToString(new SecretName("ecr_connector_access_key")))
+                               .accessKey(scmSecret.decryptToCharArray(new SecretName("ecr_connector_access_key")))
                                .secretKey(scmSecret.decryptToCharArray(new SecretName("ecr_connector_secret_key")))
                                .build())
                 .build();
@@ -280,7 +280,7 @@ public class BuildSourceServiceIntegrationTest extends BaseIntegrationTest {
                 .withAccountId(accountId)
                 .withValue(AwsConfig.builder()
                                .accountId(accountId)
-                               .accessKey(scmSecret.decryptToString(new SecretName("ecr_connector_access_key")))
+                               .accessKey(scmSecret.decryptToCharArray(new SecretName("ecr_connector_access_key")))
                                .secretKey(scmSecret.decryptToCharArray(new SecretName("ecr_connector_secret_key")))
                                .build())
                 .build();

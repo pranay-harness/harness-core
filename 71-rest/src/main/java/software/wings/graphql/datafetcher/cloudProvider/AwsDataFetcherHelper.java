@@ -1,5 +1,7 @@
 package software.wings.graphql.datafetcher.cloudProvider;
 
+import static io.harness.exception.WingsException.USER;
+
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
@@ -51,8 +53,15 @@ public class AwsDataFetcherHelper {
                 () -> new InvalidRequestException("No manualCredentials provided with the request."));
 
             configBuilder.useEc2IamCredentials(false);
-            configBuilder.accessKey(credentials.getAccessKey().getValue().orElseThrow(
-                () -> new InvalidRequestException("No accessKey provided with the request.")));
+            validateAccessKeyFields(credentials.getAccessKey(), credentials.getAccessKeySecretId(), false);
+            credentials.getAccessKey().getValue().map(String::toCharArray).ifPresent(accessKey -> {
+              configBuilder.accessKey(accessKey);
+              configBuilder.useEncryptedAccessKey(false);
+            });
+            credentials.getAccessKeySecretId().getValue().ifPresent(accessKeySecretId -> {
+              configBuilder.encryptedAccessKey(accessKeySecretId);
+              configBuilder.useEncryptedAccessKey(true);
+            });
             configBuilder.encryptedSecretKey(credentials.getSecretKeySecretId().getValue().orElseThrow(
                 () -> new InvalidRequestException("No secretKeySecretId provided with the request.")));
           } break;
@@ -118,7 +127,17 @@ public class AwsDataFetcherHelper {
             config.setUseEc2IamCredentials(false);
             config.setTag(null);
             input.getManualCredentials().getValue().ifPresent(credentials -> {
-              credentials.getAccessKey().getValue().ifPresent(config::setAccessKey);
+              validateAccessKeyFields(credentials.getAccessKey(), credentials.getAccessKeySecretId(), true);
+              credentials.getAccessKey().getValue().map(String::toCharArray).ifPresent(accessKey -> {
+                config.setAccessKey(accessKey);
+                config.setEncryptedAccessKey(null);
+                config.setUseEncryptedAccessKey(false);
+              });
+              credentials.getAccessKeySecretId().getValue().ifPresent(accessKeySecretId -> {
+                config.setEncryptedAccessKey(accessKeySecretId);
+                config.setAccessKey(null);
+                config.setUseEncryptedAccessKey(true);
+              });
               credentials.getSecretKeySecretId().getValue().ifPresent(config::setEncryptedSecretKey);
             });
           } break;
@@ -148,5 +167,20 @@ public class AwsDataFetcherHelper {
     if (input.getName().isPresent()) {
       input.getName().getValue().ifPresent(settingAttribute::setName);
     }
+  }
+
+  private void validateAccessKeyFields(
+      RequestField<String> accessKey, RequestField<String> accessKeySecretId, boolean isUpdate) {
+    if (isFieldValuePresent(accessKey) && isFieldValuePresent(accessKeySecretId)) {
+      throw new InvalidRequestException("Cannot set both value and secret reference for accessKey field", USER);
+    }
+
+    if (!isUpdate && !isFieldValuePresent(accessKey) && !isFieldValuePresent(accessKeySecretId)) {
+      throw new InvalidRequestException("One of fields 'accessKey' or 'accessKeySecretId' is required", USER);
+    }
+  }
+
+  private <T> boolean isFieldValuePresent(RequestField<T> field) {
+    return field.isPresent() && field.getValue().isPresent();
   }
 }

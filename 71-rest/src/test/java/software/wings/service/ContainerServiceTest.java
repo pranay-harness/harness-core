@@ -101,7 +101,7 @@ public class ContainerServiceTest extends WingsBaseTest {
       ContainerServiceParams.builder()
           .settingAttribute(aSettingAttribute()
                                 .withValue(AwsConfig.builder()
-                                               .accessKey("accessKey")
+                                               .accessKey("accessKey".toCharArray())
                                                .secretKey("secretKey".toCharArray())
                                                .accountId(ACCOUNT_ID)
                                                .build())
@@ -172,8 +172,11 @@ public class ContainerServiceTest extends WingsBaseTest {
     ecsService.setServiceName(ECS_SERVICE_NAME);
     ecsService.setCreatedAt(new Date());
     ecsService.setDesiredCount(2);
-    AwsConfig awsConfig =
-        AwsConfig.builder().accessKey("accessKey").secretKey("secretKey".toCharArray()).accountId(ACCOUNT_ID).build();
+    AwsConfig awsConfig = AwsConfig.builder()
+                              .accessKey("accessKey".toCharArray())
+                              .secretKey("secretKey".toCharArray())
+                              .accountId(ACCOUNT_ID)
+                              .build();
     SettingAttribute awsSettingAttribute = aSettingAttribute().withValue(awsConfig).build();
     when(awsClusterService.getServices(
              Regions.US_EAST_1.getName(), awsSettingAttribute, Collections.emptyList(), CLUSTER_NAME))

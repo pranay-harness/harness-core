@@ -317,7 +317,7 @@ public class DownloadArtifactCommandUnit extends ExecCommandUnit {
       awsSecretKey = credentials.getSecretKey();
       awsToken = credentials.getToken();
     } else {
-      awsAccessKey = awsConfig.getAccessKey();
+      awsAccessKey = String.valueOf(awsConfig.getAccessKey());
       awsSecretKey = String.valueOf(awsConfig.getSecretKey());
     }
     String bucketName = metadata.get(ArtifactMetadataKeys.bucketName);

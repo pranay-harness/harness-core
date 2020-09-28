@@ -664,7 +664,7 @@ public class PcfCommandTaskHelper {
       username = isEmpty(dockerConfig.getPassword()) ? EMPTY : dockerConfig.getUsername();
     } else if (serverSetting.getValue() instanceof AwsConfig) {
       AwsConfig awsConfig = (AwsConfig) serverSetting.getValue();
-      username = isEmpty(awsConfig.getSecretKey()) ? EMPTY : awsConfig.getAccessKey();
+      username = isEmpty(awsConfig.getSecretKey()) ? EMPTY : String.valueOf(awsConfig.getAccessKey());
     } else if (serverSetting.getValue() instanceof ArtifactoryConfig) {
       ArtifactoryConfig artifactoryConfig = (ArtifactoryConfig) serverSetting.getValue();
       username = isEmpty(artifactoryConfig.getPassword()) ? EMPTY : artifactoryConfig.getUsername();

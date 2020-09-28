@@ -88,7 +88,7 @@ public class AwsInfrastructureProviderTest extends WingsBaseTest {
   private SettingAttribute awsSetting =
       aSettingAttribute()
           .withUuid(SETTING_ID)
-          .withValue(AwsConfig.builder().secretKey(SECRET_KEY).accessKey(ACCESS_KEY).build())
+          .withValue(AwsConfig.builder().secretKey(SECRET_KEY).accessKey(ACCESS_KEY.toCharArray()).build())
           .build();
   private AwsConfig awsConfig = (AwsConfig) awsSetting.getValue();
 
