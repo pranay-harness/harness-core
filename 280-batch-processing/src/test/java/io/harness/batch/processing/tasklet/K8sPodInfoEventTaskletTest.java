@@ -15,6 +15,7 @@ import com.google.protobuf.Message;
 import com.google.protobuf.Timestamp;
 
 import io.harness.CategoryTest;
+import io.harness.batch.processing.billing.timeseries.data.PrunedInstanceData;
 import io.harness.batch.processing.ccm.CCMJobConstants;
 import io.harness.batch.processing.ccm.InstanceEvent;
 import io.harness.batch.processing.ccm.InstanceInfo;
@@ -22,7 +23,6 @@ import io.harness.batch.processing.ccm.InstanceType;
 import io.harness.batch.processing.config.BatchMainConfig;
 import io.harness.batch.processing.dao.intfc.InstanceDataDao;
 import io.harness.batch.processing.dao.intfc.PublishedMessageDao;
-import io.harness.batch.processing.entities.InstanceData;
 import io.harness.batch.processing.service.intfc.InstanceDataService;
 import io.harness.batch.processing.service.intfc.WorkloadRepository;
 import io.harness.batch.processing.tasklet.support.HarnessServiceInfoFetcher;
@@ -125,8 +125,8 @@ public class K8sPodInfoEventTaskletTest extends CategoryTest {
     when(parameters.getString(CCMJobConstants.ACCOUNT_ID)).thenReturn(ACCOUNT_ID);
     when(parameters.getString(CCMJobConstants.JOB_END_DATE)).thenReturn(String.valueOf(END_TIME_MILLIS));
 
-    InstanceData instanceData = getNodeInstantData();
-    when(instanceDataService.fetchInstanceDataWithName(
+    PrunedInstanceData instanceData = getNodeInstantData();
+    when(instanceDataService.fetchPrunedInstanceDataWithName(
              ACCOUNT_ID, CLUSTER_ID, NODE_NAME, HTimestamps.toMillis(START_TIMESTAMP)))
         .thenReturn(instanceData);
     Map<String, String> label = new HashMap<>();
@@ -225,8 +225,8 @@ public class K8sPodInfoEventTaskletTest extends CategoryTest {
   @Owner(developers = HITESH)
   @Category(UnitTests.class)
   public void shouldCreateInstancePodInfo() throws Exception {
-    InstanceData instanceData = getNodeInstantData();
-    when(instanceDataService.fetchInstanceDataWithName(
+    PrunedInstanceData instanceData = getNodeInstantData();
+    when(instanceDataService.fetchPrunedInstanceDataWithName(
              ACCOUNT_ID, CLUSTER_ID, NODE_NAME, HTimestamps.toMillis(START_TIMESTAMP)))
         .thenReturn(instanceData);
     Map<String, String> label = new HashMap<>();
@@ -273,8 +273,8 @@ public class K8sPodInfoEventTaskletTest extends CategoryTest {
   @Owner(developers = HITESH)
   @Category(UnitTests.class)
   public void shouldCreateInstancePodInfoWithKubeProxyWorkload() throws Exception {
-    InstanceData instanceData = getNodeInstantData();
-    when(instanceDataService.fetchInstanceDataWithName(
+    PrunedInstanceData instanceData = getNodeInstantData();
+    when(instanceDataService.fetchPrunedInstanceDataWithName(
              ACCOUNT_ID, CLUSTER_ID, NODE_NAME, HTimestamps.toMillis(START_TIMESTAMP)))
         .thenReturn(instanceData);
     Map<String, String> label = new HashMap<>();
@@ -311,7 +311,7 @@ public class K8sPodInfoEventTaskletTest extends CategoryTest {
     verify(workloadRepository).savePodWorkload(ACCOUNT_ID, (PodInfo) k8sPodInfoMessage.getMessage());
   }
 
-  private InstanceData getNodeInstantData() {
+  private PrunedInstanceData getNodeInstantData() {
     Map<String, String> nodeMetaData = new HashMap<>();
     nodeMetaData.put(InstanceMetaDataConstants.REGION, InstanceMetaDataConstants.REGION);
     nodeMetaData.put(InstanceMetaDataConstants.INSTANCE_FAMILY, InstanceMetaDataConstants.INSTANCE_FAMILY);
@@ -321,9 +321,8 @@ public class K8sPodInfoEventTaskletTest extends CategoryTest {
                                                                     .cpuUnits((double) CPU_AMOUNT)
                                                                     .memoryMb((double) MEMORY_AMOUNT)
                                                                     .build();
-    return InstanceData.builder()
+    return PrunedInstanceData.builder()
         .instanceId(NODE_NAME)
-        .instanceType(InstanceType.K8S_NODE)
         .cloudProviderInstanceId(CLOUD_PROVIDER_INSTANCE_ID)
         .totalResource(instanceResource)
         .metaData(nodeMetaData)

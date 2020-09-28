@@ -41,7 +41,8 @@ public class HarnessServiceInfoFetcherTest extends CategoryTest {
   @Category(UnitTests.class)
   public void shouldReturnHarnessSvcInfoWhenK8sV1LabelPresentAndMappingFound() throws Exception {
     ImmutableMap<String, String> labels = ImmutableMap.of(K8SV1_RELEASE_NAME, "value1");
-    when(k8sLabelServiceInfoFetcher.fetchHarnessServiceInfo(ACCOUNT_ID, labels)).thenReturn(Optional.ofNullable(null));
+    when(k8sLabelServiceInfoFetcher.fetchHarnessServiceInfoFromCache(ACCOUNT_ID, labels))
+        .thenReturn(Optional.ofNullable(null));
     HarnessServiceInfo harnessServiceInfo = new HarnessServiceInfo(
         "svc-id", "app-id", "cloud-provider-id", "env-id", "infra-mapping-id", "deployment-summary-id");
     when(cloudToHarnessMappingService.getHarnessServiceInfo(ACCOUNT_ID, SETTING_ID, NAMESPACE, POD_NAME))
@@ -60,7 +61,7 @@ public class HarnessServiceInfoFetcherTest extends CategoryTest {
         "svc-id", "app-id", "cloud-provider-id", "env-id", "infra-mapping-id", "deployment-summary-id");
     when(cloudToHarnessMappingService.getHarnessServiceInfo(ACCOUNT_ID, SETTING_ID, NAMESPACE, POD_NAME))
         .thenReturn(Optional.empty());
-    when(k8sLabelServiceInfoFetcher.fetchHarnessServiceInfo(ACCOUNT_ID, labels))
+    when(k8sLabelServiceInfoFetcher.fetchHarnessServiceInfoFromCache(ACCOUNT_ID, labels))
         .thenReturn(Optional.of(harnessServiceInfo));
     assertThat(harnessServiceInfoFetcher.fetchHarnessServiceInfo(ACCOUNT_ID, SETTING_ID, NAMESPACE, POD_NAME, labels))
         .isPresent()
@@ -73,7 +74,7 @@ public class HarnessServiceInfoFetcherTest extends CategoryTest {
   public void shouldReturnEmptyOptionalWhenNoReleaseNameLabel() throws Exception {
     ImmutableMap<String, String> labels = ImmutableMap.of("key1", "value1");
 
-    when(k8sLabelServiceInfoFetcher.fetchHarnessServiceInfo(ACCOUNT_ID, labels)).thenThrow(Exception.class);
+    when(k8sLabelServiceInfoFetcher.fetchHarnessServiceInfoFromCache(ACCOUNT_ID, labels)).thenThrow(Exception.class);
     assertThat(harnessServiceInfoFetcher.fetchHarnessServiceInfo(ACCOUNT_ID, SETTING_ID, NAMESPACE, POD_NAME, labels))
         .isNotPresent();
   }

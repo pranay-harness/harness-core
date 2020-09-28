@@ -65,7 +65,7 @@ class ComputedRecommendationWriter implements ItemWriter<K8sWorkloadRecommendati
                                      .map(K8sWorkload::getLabels)
                                      .map(K8sWorkload::decodeDotsInKey)
                                      .orElse(emptyMap());
-    k8sLabelServiceInfoFetcher.fetchHarnessServiceInfo(workloadId.getAccountId(), labels)
+    k8sLabelServiceInfoFetcher.fetchHarnessServiceInfoFromCache(workloadId.getAccountId(), labels)
         .ifPresent(k8sWorkloadRecommendation::setHarnessServiceInfo);
   }
 

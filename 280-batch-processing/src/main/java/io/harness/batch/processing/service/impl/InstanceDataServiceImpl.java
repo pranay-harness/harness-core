@@ -29,9 +29,10 @@ import java.util.stream.Collectors;
 public class InstanceDataServiceImpl implements InstanceDataService {
   @Autowired private InstanceDataDao instanceDataDao;
 
-  LoadingCache<CacheKey, PrunedInstanceData> instanceDataCache =
+  private final LoadingCache<CacheKey, PrunedInstanceData> instanceDataCache =
       Caffeine.newBuilder()
           .expireAfterWrite(24, TimeUnit.HOURS)
+          .maximumSize(10_000)
           .build(key -> pruneInstanceData(key.accountId, key.clusterId, key.instanceId, key.occurredAt));
 
   @Value
@@ -85,8 +86,8 @@ public class InstanceDataServiceImpl implements InstanceDataService {
 
   @Override
   public InstanceData fetchInstanceDataWithName(
-      String accountId, String clusterId, String instanceId, Long occurredAt) {
-    return instanceDataDao.fetchInstanceDataWithName(accountId, clusterId, instanceId, occurredAt);
+      String accountId, String clusterId, String instanceName, Long occurredAt) {
+    return instanceDataDao.fetchInstanceDataWithName(accountId, clusterId, instanceName, occurredAt);
   }
 
   @Override
@@ -133,7 +134,9 @@ public class InstanceDataServiceImpl implements InstanceDataService {
     if (null != instanceData) {
       return PrunedInstanceData.builder()
           .instanceId(instanceData.getInstanceId())
+          .cloudProviderInstanceId(instanceData.getCloudProviderInstanceId())
           .totalResource(instanceData.getTotalResource())
+          .metaData(instanceData.getMetaData())
           .build();
     } else {
       logger.warn("Instance detail not found clusterId {} instanceId {}", clusterId, instanceId);

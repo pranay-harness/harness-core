@@ -4,6 +4,7 @@ import static io.harness.batch.processing.tasklet.util.InstanceMetaDataUtils.pop
 import static io.harness.ccm.cluster.entities.K8sWorkload.encodeDotsInKey;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 
+import io.harness.batch.processing.billing.timeseries.data.PrunedInstanceData;
 import io.harness.batch.processing.ccm.CCMJobConstants;
 import io.harness.batch.processing.ccm.ClusterType;
 import io.harness.batch.processing.ccm.InstanceInfo;
@@ -112,10 +113,10 @@ public class K8sPodInfoTasklet implements Tasklet {
         InstanceMetaDataConstants.WORKLOAD_NAME, workloadName.equals("") ? podInfo.getPodName() : workloadName);
     metaData.put(InstanceMetaDataConstants.WORKLOAD_TYPE, workloadType.equals("") ? POD : workloadType);
 
-    InstanceData instanceData = instanceDataService.fetchInstanceDataWithName(
+    PrunedInstanceData prunedInstanceData = instanceDataService.fetchPrunedInstanceDataWithName(
         accountId, clusterId, podInfo.getNodeName(), publishedMessage.getOccurredAt());
-    if (null != instanceData) {
-      Map<String, String> nodeMetaData = instanceData.getMetaData();
+    if (null != prunedInstanceData) {
+      Map<String, String> nodeMetaData = prunedInstanceData.getMetaData();
       metaData.put(InstanceMetaDataConstants.REGION, nodeMetaData.get(InstanceMetaDataConstants.REGION));
       metaData.put(InstanceMetaDataConstants.ZONE, nodeMetaData.get(InstanceMetaDataConstants.ZONE));
       metaData.put(
@@ -127,16 +128,17 @@ public class K8sPodInfoTasklet implements Tasklet {
       metaData.put(
           InstanceMetaDataConstants.OPERATING_SYSTEM, nodeMetaData.get(InstanceMetaDataConstants.OPERATING_SYSTEM));
       metaData.put(InstanceMetaDataConstants.POD_NAME, podInfo.getPodName());
-      metaData.put(InstanceMetaDataConstants.ACTUAL_PARENT_RESOURCE_ID, instanceData.getInstanceId());
-      metaData.put(
-          InstanceMetaDataConstants.PARENT_RESOURCE_CPU, String.valueOf(instanceData.getTotalResource().getCpuUnits()));
+      metaData.put(InstanceMetaDataConstants.ACTUAL_PARENT_RESOURCE_ID, prunedInstanceData.getInstanceId());
+      metaData.put(InstanceMetaDataConstants.PARENT_RESOURCE_CPU,
+          String.valueOf(prunedInstanceData.getTotalResource().getCpuUnits()));
       metaData.put(InstanceMetaDataConstants.PARENT_RESOURCE_MEMORY,
-          String.valueOf(instanceData.getTotalResource().getMemoryMb()));
+          String.valueOf(prunedInstanceData.getTotalResource().getMemoryMb()));
       if (null != nodeMetaData.get(InstanceMetaDataConstants.COMPUTE_TYPE)) {
         metaData.put(InstanceMetaDataConstants.COMPUTE_TYPE, nodeMetaData.get(InstanceMetaDataConstants.COMPUTE_TYPE));
       }
-      if (null != instanceData.getCloudProviderInstanceId()) {
-        metaData.put(InstanceMetaDataConstants.CLOUD_PROVIDER_INSTANCE_ID, instanceData.getCloudProviderInstanceId());
+      if (null != prunedInstanceData.getCloudProviderInstanceId()) {
+        metaData.put(
+            InstanceMetaDataConstants.CLOUD_PROVIDER_INSTANCE_ID, prunedInstanceData.getCloudProviderInstanceId());
       }
       populateNodePoolNameFromLabel(nodeMetaData, metaData);
     } else {

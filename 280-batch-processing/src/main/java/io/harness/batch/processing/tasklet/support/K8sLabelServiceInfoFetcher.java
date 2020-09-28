@@ -5,6 +5,9 @@ import static io.harness.batch.processing.writer.constants.K8sCCMConstants.RELEA
 
 import com.google.inject.Inject;
 
+import com.github.benmanes.caffeine.cache.Caffeine;
+import com.github.benmanes.caffeine.cache.LoadingCache;
+import lombok.Value;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import software.wings.api.DeploymentSummary;
@@ -19,6 +22,7 @@ import software.wings.service.intfc.instance.CloudToHarnessMappingService;
 import java.util.Arrays;
 import java.util.Map;
 import java.util.Optional;
+import java.util.concurrent.TimeUnit;
 
 /**
  * Maps k8s objects to harness services using labels.
@@ -28,29 +32,57 @@ import java.util.Optional;
 public class K8sLabelServiceInfoFetcher {
   private final CloudToHarnessMappingService cloudToHarnessMappingService;
 
+  @Value
+  private static class CacheKey {
+    private String accountId;
+    private String releaseKey;
+    private String releaseValue;
+  }
+
+  private final LoadingCache<CacheKey, HarnessServiceInfo> harnessServiceInfoCache =
+      Caffeine.newBuilder()
+          .expireAfterAccess(1, TimeUnit.DAYS)
+          .maximumSize(1_000)
+          .build(key -> this.fetchHarnessServiceInfo(key.accountId, key.releaseKey, key.releaseValue));
+
   @Inject
   public K8sLabelServiceInfoFetcher(CloudToHarnessMappingService cloudToHarnessMappingService) {
     this.cloudToHarnessMappingService = cloudToHarnessMappingService;
   }
 
-  public Optional<HarnessServiceInfo> fetchHarnessServiceInfo(String accountId, Map<String, String> labelsMap) {
-    DeploymentSummaryBuilder deploymentSummaryBuilder = DeploymentSummary.builder().accountId(accountId);
+  public Optional<HarnessServiceInfo> fetchHarnessServiceInfoFromCache(
+      String accountId, Map<String, String> labelsMap) {
+    String releaseKey = "";
+    String releaseValue = "";
     if (labelsMap.containsKey(RELEASE_NAME)) {
-      String relName = labelsMap.get(RELEASE_NAME);
-      K8sDeploymentKey k8sDeploymentKey = K8sDeploymentKey.builder().releaseName(relName).build();
-      K8sDeploymentInfo k8sDeploymentInfo = K8sDeploymentInfo.builder().releaseName(relName).build();
-      deploymentSummaryBuilder.k8sDeploymentKey(k8sDeploymentKey).deploymentInfo(k8sDeploymentInfo);
-      return cloudToHarnessMappingService.getHarnessServiceInfo(deploymentSummaryBuilder.build());
+      releaseKey = RELEASE_NAME;
+      releaseValue = labelsMap.get(RELEASE_NAME);
     } else if (labelsMap.containsKey(HELM_RELEASE_NAME)) {
-      String relName = labelsMap.get(HELM_RELEASE_NAME);
-      Label label = Label.Builder.aLabel().withName(HELM_RELEASE_NAME).withValue(relName).build();
+      releaseKey = HELM_RELEASE_NAME;
+      releaseValue = labelsMap.get(HELM_RELEASE_NAME);
+    }
+
+    return Optional.ofNullable(harnessServiceInfoCache.get(new CacheKey(accountId, releaseKey, releaseValue)));
+  }
+
+  public HarnessServiceInfo fetchHarnessServiceInfo(String accountId, String releaseKey, String releaseValue) {
+    DeploymentSummaryBuilder deploymentSummaryBuilder = DeploymentSummary.builder().accountId(accountId);
+
+    if (RELEASE_NAME.equals(releaseKey)) {
+      K8sDeploymentKey k8sDeploymentKey = K8sDeploymentKey.builder().releaseName(releaseValue).build();
+      K8sDeploymentInfo k8sDeploymentInfo = K8sDeploymentInfo.builder().releaseName(releaseValue).build();
+
+      deploymentSummaryBuilder.k8sDeploymentKey(k8sDeploymentKey).deploymentInfo(k8sDeploymentInfo);
+      return cloudToHarnessMappingService.getHarnessServiceInfo(deploymentSummaryBuilder.build()).orElse(null);
+    } else if (HELM_RELEASE_NAME.equals(releaseKey)) {
+      Label label = Label.Builder.aLabel().withName(HELM_RELEASE_NAME).withValue(releaseValue).build();
       ContainerDeploymentKey containerDeploymentKey =
           ContainerDeploymentKey.builder().labels(Arrays.asList(label)).build();
+
       deploymentSummaryBuilder.containerDeploymentKey(containerDeploymentKey);
-      DeploymentSummary deploymentSummary = deploymentSummaryBuilder.build();
-      return cloudToHarnessMappingService.getHarnessServiceInfo(deploymentSummary);
-    } else {
-      return Optional.empty();
+      return cloudToHarnessMappingService.getHarnessServiceInfo(deploymentSummaryBuilder.build()).orElse(null);
     }
+
+    return null;
   }
 }
