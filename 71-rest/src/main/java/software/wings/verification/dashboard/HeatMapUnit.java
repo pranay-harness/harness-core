@@ -95,8 +95,10 @@ public class HeatMapUnit implements Comparable<HeatMapUnit> {
     if (scoreList == null) {
       scoreList = new ArrayList<>();
     }
-    scoreList.add(overallMetricScore);
-    overallScore = scoreList.stream().mapToDouble(val -> val).average().orElse(0.0);
+    if (overallMetricScore >= 0.0) {
+      scoreList.add(overallMetricScore);
+    }
+    overallScore = scoreList.stream().mapToDouble(val -> val).average().orElse(-1.0);
     updateRisksInUnit();
   }
 
