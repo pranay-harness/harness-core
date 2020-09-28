@@ -151,7 +151,7 @@ import javax.validation.constraints.NotNull;
 @Slf4j
 public class StateMachineExecutor implements StateInspectionListener {
   private static final int DEFAULT_STATE_TIMEOUT_MILLIS = 4 * 60 * 60 * 1000; // 4 hours
-  private static final int ABORT_EXPIRY_BUFFER_MILLIS = 1 * 60 * 60 * 1000; // 1 hours
+  private static final int ABORT_EXPIRY_BUFFER_MILLIS = 10 * 60 * 1000; // 5 min
 
   @Getter private Subject<StateStatusUpdate> statusUpdateSubject = new Subject<>();
 
@@ -1081,11 +1081,21 @@ public class StateMachineExecutor implements StateInspectionListener {
       for (String delegateTaskId : delegateTaskIds) {
         notNullCheck("context.getApp()", context.getApp());
         if (finalStatus == ABORTED) {
-          delegateService.abortTask(context.getApp().getAccountId(), delegateTaskId);
+          try {
+            delegateService.abortTask(context.getApp().getAccountId(), delegateTaskId);
+          } catch (Exception e) {
+            logger.error("Error in ABORTING WorkflowExecution {}. Error in aborting delegate task : {}. Reason : {}",
+                stateExecutionInstance.getExecutionUuid(), delegateTaskId, e.getMessage());
+          }
         } else {
-          String errorMsg = delegateService.expireTask(context.getApp().getAccountId(), delegateTaskId);
-          if (isNotBlank(errorMsg)) {
-            errorMsgBuilder.append(errorMsg);
+          try {
+            String errorMsg = delegateService.expireTask(context.getApp().getAccountId(), delegateTaskId);
+            if (isNotBlank(errorMsg)) {
+              errorMsgBuilder.append(errorMsg);
+            }
+          } catch (Exception e) {
+            logger.error("Error in ABORTING WorkflowExecution {}. Error in expiring delegate task : {}. Reason : {}",
+                stateExecutionInstance.getExecutionUuid(), delegateTaskId, e.getMessage());
           }
         }
       }
@@ -1468,64 +1478,69 @@ public class StateMachineExecutor implements StateInspectionListener {
         WorkflowExecution.class, workflowExecutionInterrupt.getAppId(), workflowExecutionInterrupt.getExecutionUuid());
 
     ExecutionInterruptType type = workflowExecutionInterrupt.getExecutionInterruptType();
-    switch (type) {
-      case IGNORE: {
-        StateExecutionInstance stateExecutionInstance = getStateExecutionInstance(workflowExecutionInterrupt.getAppId(),
-            workflowExecutionInterrupt.getExecutionUuid(), workflowExecutionInterrupt.getStateExecutionInstanceId());
+    try (AutoLogContext ignore = workflowExecutionInterrupt.autoLogContext()) {
+      logger.info("State To handle interrupt of Type : {}", type);
+      switch (type) {
+        case IGNORE: {
+          StateExecutionInstance stateExecutionInstance = getStateExecutionInstance(
+              workflowExecutionInterrupt.getAppId(), workflowExecutionInterrupt.getExecutionUuid(),
+              workflowExecutionInterrupt.getStateExecutionInstanceId());
 
-        updateStatus(stateExecutionInstance, FAILED, Lists.newArrayList(WAITING), null);
+          updateStatus(stateExecutionInstance, FAILED, Lists.newArrayList(WAITING), null);
 
-        StateMachine sm = stateExecutionService.obtainStateMachine(stateExecutionInstance);
+          StateMachine sm = stateExecutionService.obtainStateMachine(stateExecutionInstance);
 
-        State currentState =
-            sm.getState(stateExecutionInstance.getChildStateMachineId(), stateExecutionInstance.getStateName());
-        injector.injectMembers(currentState);
+          State currentState =
+              sm.getState(stateExecutionInstance.getChildStateMachineId(), stateExecutionInstance.getStateName());
+          injector.injectMembers(currentState);
 
-        ExecutionContextImpl context = new ExecutionContextImpl(stateExecutionInstance, sm, injector);
-        injector.injectMembers(context);
-        successTransition(context);
-        break;
-      }
+          ExecutionContextImpl context = new ExecutionContextImpl(stateExecutionInstance, sm, injector);
+          injector.injectMembers(context);
+          successTransition(context);
+          break;
+        }
 
-      case RESUME:
-      case MARK_SUCCESS: {
-        ExecutionContextImpl context = getExecutionContext(workflowExecutionInterrupt);
-        executorService.execute(new SmExecutionResumer(context, this, SUCCESS));
-        break;
-      }
+        case RESUME:
+        case MARK_SUCCESS: {
+          ExecutionContextImpl context = getExecutionContext(workflowExecutionInterrupt);
+          executorService.execute(new SmExecutionResumer(context, this, SUCCESS));
+          break;
+        }
 
-      case RETRY: {
-        StateExecutionInstance stateExecutionInstance = getStateExecutionInstance(workflowExecutionInterrupt.getAppId(),
-            workflowExecutionInterrupt.getExecutionUuid(), workflowExecutionInterrupt.getStateExecutionInstanceId());
+        case RETRY: {
+          StateExecutionInstance stateExecutionInstance = getStateExecutionInstance(
+              workflowExecutionInterrupt.getAppId(), workflowExecutionInterrupt.getExecutionUuid(),
+              workflowExecutionInterrupt.getStateExecutionInstanceId());
 
-        retryStateExecutionInstance(stateExecutionInstance, workflowExecutionInterrupt.getProperties());
-        break;
-      }
+          retryStateExecutionInstance(stateExecutionInstance, workflowExecutionInterrupt.getProperties());
+          break;
+        }
 
-      case MARK_EXPIRED:
-      case ABORT: {
-        ExecutionContextImpl context = getExecutionContext(workflowExecutionInterrupt);
-        discontinueExecution(context, type);
-        break;
+        case MARK_EXPIRED:
+        case ABORT: {
+          ExecutionContextImpl context = getExecutionContext(workflowExecutionInterrupt);
+          discontinueExecution(context, type);
+          break;
+        }
+        case ABORT_ALL: {
+          abortInstancesByStatus(workflowExecutionInterrupt, workflowExecution,
+              EnumSet.<ExecutionStatus>of(NEW, QUEUED, RUNNING, STARTING, PAUSED, PAUSING, WAITING));
+          break;
+        }
+        case END_EXECUTION:
+        case ROLLBACK: {
+          endExecution(workflowExecutionInterrupt, workflowExecution);
+          break;
+        }
+        case PAUSE_ALL: {
+          break;
+        }
+        case RESUME_ALL: {
+          break;
+        }
+        default:
+          unhandled(type);
       }
-      case ABORT_ALL: {
-        abortInstancesByStatus(workflowExecutionInterrupt, workflowExecution,
-            EnumSet.<ExecutionStatus>of(NEW, QUEUED, RUNNING, STARTING, PAUSED, PAUSING, WAITING));
-        break;
-      }
-      case END_EXECUTION:
-      case ROLLBACK: {
-        endExecution(workflowExecutionInterrupt, workflowExecution);
-        break;
-      }
-      case PAUSE_ALL: {
-        break;
-      }
-      case RESUME_ALL: {
-        break;
-      }
-      default:
-        unhandled(type);
     }
   }
 
@@ -1570,6 +1585,9 @@ public class StateMachineExecutor implements StateInspectionListener {
   private void abortInstancesByStatus(ExecutionInterrupt workflowExecutionInterrupt,
       WorkflowExecution workflowExecution, Collection<ExecutionStatus> statuses) {
     if (!markAbortingState(workflowExecutionInterrupt, workflowExecution, statuses)) {
+      logger.warn(
+          "ABORT_ALL workflowExecutionInterrupt: {} being ignored as could not mark aborting states for all instances: {}",
+          workflowExecutionInterrupt.getUuid(), workflowExecutionInterrupt.getExecutionUuid());
       return;
     }
 

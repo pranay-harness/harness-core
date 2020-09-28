@@ -1,12 +1,17 @@
 package software.wings.sm;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
+import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_NESTS;
+
+import com.google.common.collect.ImmutableMap;
 
 import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.annotation.HarnessEntity;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.EmbeddedUser;
 import io.harness.interrupts.ExecutionInterruptType;
+import io.harness.logging.AccountLogContext;
+import io.harness.logging.AutoLogContext;
 import io.harness.mongo.index.FdIndex;
 import io.harness.persistence.CreatedAtAware;
 import io.harness.persistence.CreatedByAware;
@@ -20,6 +25,9 @@ import lombok.experimental.FieldNameConstants;
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Id;
 import software.wings.beans.entityinterface.ApplicationAccess;
+import software.wings.service.impl.AppLogContext;
+import software.wings.service.impl.StateExecutionInstanceLogContext;
+import software.wings.service.impl.WorkflowExecutionLogContext;
 
 import java.util.Map;
 import java.util.Objects;
@@ -124,6 +132,33 @@ public class ExecutionInterrupt implements PersistentEntity, UuidAware, CreatedA
   public int hashCode() {
     return Objects.hash(
         super.hashCode(), executionInterruptType, seized, envId, executionUuid, stateExecutionInstanceId, properties);
+  }
+
+  public AutoLogContext autoLogContext() {
+    ImmutableMap.Builder<String, String> context = ImmutableMap.builder();
+    if (getUuid() != null) {
+      context.put("executionInterruptId", getUuid());
+    }
+    if (getAccountId() != null) {
+      context.put(AccountLogContext.ID, getAccountId());
+    }
+    if (getAppId() != null) {
+      context.put(AppLogContext.ID, getAppId());
+    }
+
+    if (getExecutionUuid() != null) {
+      context.put(WorkflowExecutionLogContext.ID, getExecutionUuid());
+    }
+
+    if (getExecutionInterruptType() != null) {
+      context.put(ExecutionInterruptKeys.executionInterruptType, getExecutionInterruptType().name());
+    }
+
+    if (getStateExecutionInstanceId() != null) {
+      context.put(StateExecutionInstanceLogContext.ID, getStateExecutionInstanceId());
+    }
+
+    return new AutoLogContext(context.build(), OVERRIDE_NESTS);
   }
 
   public static final class ExecutionInterruptBuilder {
