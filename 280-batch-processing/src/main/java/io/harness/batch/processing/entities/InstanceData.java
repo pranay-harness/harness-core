@@ -48,6 +48,13 @@ import java.util.Map;
       , @Field(InstanceDataKeys.clusterId), @Field(InstanceDataKeys.instanceName),
           @Field(value = InstanceDataKeys.usageStartTime, type = IndexType.DESC)
     })
+@CdIndex(name = "accountId_clusterId_instanceState_usageStartTime",
+    fields =
+    {
+      @Field(InstanceDataKeys.accountId)
+      , @Field(InstanceDataKeys.clusterId), @Field(InstanceDataKeys.instanceState),
+          @Field(value = InstanceDataKeys.usageStartTime)
+    })
 @CdIndex(name = "accountId_usageStartTime_usageStopTime",
     fields =
     {

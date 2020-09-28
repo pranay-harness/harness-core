@@ -21,6 +21,7 @@ import io.harness.batch.processing.events.timeseries.service.intfc.CostEventServ
 import io.harness.batch.processing.pricing.data.CloudProvider;
 import io.harness.batch.processing.tasklet.util.InstanceMetaDataUtils;
 import io.harness.batch.processing.writer.constants.InstanceMetaDataConstants;
+import io.harness.persistence.HIterator;
 import io.harness.persistence.HPersistence;
 import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.query.FindOptions;
@@ -32,6 +33,7 @@ import org.springframework.stereotype.Repository;
 
 import java.time.Instant;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -285,6 +287,25 @@ public class InstanceDataDaoImpl implements InstanceDataDao {
         .field(InstanceDataKeys.usageStartTime)
         .lessThanOrEq(startTime)
         .asList();
+  }
+
+  @Override
+  public Set<String> fetchClusterActiveInstanceIds(
+      String accountId, String clusterName, List<InstanceState> instanceState, Instant startTime) {
+    Set<String> instanceIds = new HashSet<>();
+    Query<InstanceData> query = hPersistence.createQuery(InstanceData.class)
+                                    .filter(InstanceDataKeys.accountId, accountId)
+                                    .filter(InstanceDataKeys.clusterId, clusterName)
+                                    .field(InstanceDataKeys.instanceState)
+                                    .in(instanceState)
+                                    .field(InstanceDataKeys.usageStartTime)
+                                    .lessThanOrEq(startTime);
+    try (HIterator<InstanceData> instanceItr = new HIterator<>(query.fetch())) {
+      for (InstanceData instanceData : instanceItr) {
+        instanceIds.add(instanceData.getInstanceId());
+      }
+    }
+    return instanceIds;
   }
 
   @Override

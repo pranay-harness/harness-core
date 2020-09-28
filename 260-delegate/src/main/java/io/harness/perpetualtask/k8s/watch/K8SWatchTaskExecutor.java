@@ -89,7 +89,7 @@ public class K8SWatchTaskExecutor implements PerpetualTaskExecutor {
 
         taskWatchIdMap.putIfAbsent(taskId.getId(), watchId);
         clusterSyncLastPublished.putIfAbsent(taskId.getId(), heartbeatTime);
-        if (clusterSyncLastPublished.get(taskId.getId()).plus(Duration.ofHours(1)).isBefore(now)) {
+        if (clusterSyncLastPublished.get(taskId.getId()).plus(Duration.ofHours(6)).isBefore(now)) {
           publishClusterSyncEvent(k8sMetricsClient, eventPublisher, watchTaskParams, now);
           clusterSyncLastPublished.put(taskId.getId(), now);
         }

@@ -19,7 +19,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 @Slf4j
 public abstract class EventWriter {
@@ -76,9 +75,7 @@ public abstract class EventWriter {
   }
 
   protected Set<String> fetchActiveInstanceAtTime(String accountId, String clusterId, Instant startTime) {
-    List<InstanceData> activeInstances =
-        instanceDataService.fetchClusterActiveInstanceData(accountId, clusterId, startTime);
-    return activeInstances.stream().map(InstanceData::getInstanceId).collect(Collectors.toSet());
+    return instanceDataService.fetchClusterActiveInstanceIds(accountId, clusterId, startTime);
   }
 
   protected String getIdFromArn(String arn) {

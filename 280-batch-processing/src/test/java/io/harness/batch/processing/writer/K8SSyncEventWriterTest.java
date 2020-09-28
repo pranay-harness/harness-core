@@ -8,6 +8,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import com.google.common.collect.ImmutableSet;
 import com.google.protobuf.Any;
 
 import io.harness.CategoryTest;
@@ -94,8 +95,8 @@ public class K8SSyncEventWriterTest extends CategoryTest {
     when(parameters.getString(CCMJobConstants.JOB_END_DATE)).thenReturn(String.valueOf(END_TIME_MILLIS));
     when(publishedMessageDao.fetchPublishedMessage(any(), any(), any(), any(), anyInt()))
         .thenReturn(Arrays.asList(k8sSyncEvent()));
-    when(instanceDataService.fetchClusterActiveInstanceData(any(), any(), any()))
-        .thenReturn(Arrays.asList(getInstanceData(TEST_INSTANCE_ID_NODE_RUNNING)));
+    when(instanceDataService.fetchClusterActiveInstanceIds(any(), any(), any()))
+        .thenReturn(ImmutableSet.of(TEST_INSTANCE_ID_NODE_RUNNING));
     when(instanceDataService.fetchActiveInstanceData(any(), any(), any(), any()))
         .thenReturn(getInstanceData(TEST_INSTANCE_ID_NODE_RUNNING));
 

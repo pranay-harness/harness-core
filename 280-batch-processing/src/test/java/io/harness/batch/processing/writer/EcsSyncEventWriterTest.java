@@ -2,9 +2,11 @@ package io.harness.batch.processing.writer;
 
 import static io.harness.rule.OwnerRule.HITESH;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import com.google.common.collect.ImmutableSet;
 import com.google.protobuf.Timestamp;
 
 import io.harness.CategoryTest;
@@ -64,6 +66,8 @@ public class EcsSyncEventWriterTest extends CategoryTest implements EcsEventGene
              TEST_ACCOUNT_ID, TEST_CLUSTER_ID, HTimestamps.toInstant(INSTANCE_LAST_PROCESSED_TIMESTAMP)))
         .thenReturn(Arrays.asList(
             createContainerInstanceData(TEST_ACTIVE_CONTAINER_ARN, TEST_ACCOUNT_ID, InstanceState.RUNNING)));
+    when(instanceDataService.fetchClusterActiveInstanceIds(any(), any(), any()))
+        .thenReturn(ImmutableSet.of(TEST_ACTIVE_CONTAINER_ARN));
     when(instanceDataService.fetchActiveInstanceData(
              TEST_ACCOUNT_ID, TEST_CLUSTER_ID, TEST_ACTIVE_CONTAINER_ARN, Arrays.asList(InstanceState.RUNNING)))
         .thenReturn(createContainerInstanceData(TEST_ACTIVE_CONTAINER_ARN, TEST_ACCOUNT_ID, InstanceState.RUNNING));
