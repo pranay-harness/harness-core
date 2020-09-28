@@ -6,6 +6,7 @@ import static io.harness.exception.WingsException.USER;
 import static io.harness.expression.ExpressionEvaluator.matchesVariablePattern;
 import static io.harness.validation.Validator.notNullCheck;
 import static java.lang.String.format;
+import static org.apache.commons.lang3.StringUtils.isBlank;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -48,6 +49,12 @@ public class WorkflowYAMLHelper {
     if (entityType == null || (skipEmpty && isEmpty(variableValue)) || matchesVariablePattern(variableValue)) {
       return variableValue;
     }
+
+    if (isBlank(variableValue)) {
+      throw new InvalidRequestException(
+          format("Empty value from YAML for variable: %s & EntityType %s", variable.getName(), entityType));
+    }
+
     EntityType entityTypeEnum = EntityType.valueOf(entityType);
     if (entityTypeEnum != variable.obtainEntityType()) {
       throw new InvalidRequestException(
