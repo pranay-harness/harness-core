@@ -82,7 +82,7 @@ _pmd = rule(
     implementation = _impl,
     attrs = {
         "_executable": attr.label(
-            default = "//tools/pmd:pmd",
+            default = "//tools/bazel/pmd:pmd",
             executable = True,
             cfg = "host",
         ),

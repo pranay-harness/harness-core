@@ -1,4 +1,4 @@
-load("//tools/sonarqube:defs.bzl", "sq_project")
+load("//tools/bazel/sonarqube:defs.bzl", "sq_project")
 
 def resources(name = "resources", runtime_deps = [], testonly = 0, visibility = None):
     native.java_library(

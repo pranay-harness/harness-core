@@ -31,10 +31,10 @@ nogo(
 ####################################################  JAVA Starts Here    ####################################################
 ########################################################################################################
 
-load("//tools/sonarqube:defs.bzl", "sonarqube")
-load("//tools/sonarqube:defs.bzl", "get_sonar_targets")
+load("//tools/bazel/sonarqube:defs.bzl", "sonarqube")
+load("//tools/bazel/sonarqube:defs.bzl", "get_sonar_targets")
 load("//tools/checkstyle:rules.bzl", "get_checkstyle_targets")
-load("//tools/pmd:defs.bzl", "get_pmd_targets")
+load("//tools/bazel/pmd:defs.bzl", "get_pmd_targets")
 
 java_plugin(
     name = "lombok_plugin",

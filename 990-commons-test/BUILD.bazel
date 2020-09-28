@@ -1,9 +1,9 @@
 load("@rules_java//java:defs.bzl", "java_binary")
-load("//:GenTestRules.bzl", "run_tests")
+load("//:tools/bazel/GenTestRules.bzl", "run_tests")
 load("//tools/checkstyle:rules.bzl", "checkstyle")
 load("//:macros.bzl", "sources")
 load("//:macros.bzl", "sonarqube_test")
-load("//tools/pmd:defs.bzl", "pmd")
+load("//tools/bazel/pmd:defs.bzl", "pmd")
 
 sources()
 
@@ -63,10 +63,11 @@ run_tests(
         "//990-commons-test/src/main/resources",
     ],
     deps = [
-        "libmodule.jar",
         "maven_deps",
+        "module",
         "tests",
         "//:lombok",
+        "@maven//:com_google_guava_guava",
     ],
 )
 

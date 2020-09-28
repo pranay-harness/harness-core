@@ -158,7 +158,7 @@ _COMMON_ATTRS = dict(dict(), **{
     ),
     "sq_properties_template": attr.label(
         allow_single_file = True,
-        default = "//tools/sonarqube:sonar-project.properties.tpl",
+        default = "//tools/bazel/sonarqube:sonar-project.properties.tpl",
         doc = """Template file for sonar-project.properties.""",
     ),
     "sq_properties": attr.output(),
@@ -180,7 +180,7 @@ _sonarqube = rule(
         ),
         "sonar_scanner": attr.label(
             executable = True,
-            default = "//tools/sonarqube:sonar_scanner",
+            default = "//tools/bazel/sonarqube:sonar_scanner",
             cfg = "host",
             doc = """Bazel binary target to execute the SonarQube CLI Scanner""",
         ),

@@ -2,7 +2,7 @@ workspace(name = "harness_monorepo")
 
 load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
 load("@bazel_tools//tools/build_defs/repo:git.bzl", "git_repository")
-load("//tools/pmd:dependencies.bzl", "rules_pmd_dependencies")
+load("//tools/bazel/pmd:dependencies.bzl", "rules_pmd_dependencies")
 
 rules_pmd_dependencies()
 
@@ -1187,7 +1187,7 @@ go_repository(
     version = "v1.7.0",
 )
 
-load("//tools/sonarqube:repositories.bzl", "bazel_sonarqube_repositories")
+load("//tools/bazel/sonarqube:repositories.bzl", "bazel_sonarqube_repositories")
 
 bazel_sonarqube_repositories()
 
@@ -1213,7 +1213,7 @@ exports_files(["WORKSPACE"], visibility = ["//visibility:public"])
     urls = ["https://github.com/AdoptOpenJDK/openjdk8-binaries/releases/download/jdk8u242-b08/OpenJDK8U-jdk_x64_linux_hotspot_8u242b08.tar.gz"],
 )
 
-load("//tools/pmd:toolchains.bzl", "rules_pmd_toolchains")
+load("//tools/bazel/pmd:toolchains.bzl", "rules_pmd_toolchains")
 
 rules_pmd_toolchains()
 
