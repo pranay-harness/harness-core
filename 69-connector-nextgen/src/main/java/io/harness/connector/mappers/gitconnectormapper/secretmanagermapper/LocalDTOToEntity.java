@@ -7,12 +7,16 @@ import io.harness.delegate.beans.connector.ConnectorCategory;
 import io.harness.delegate.beans.connector.localconnector.LocalConnectorDTO;
 
 import java.util.Collections;
+import java.util.List;
 
 public class LocalDTOToEntity implements ConnectorDTOToEntityMapper<LocalConnectorDTO> {
   @Override
   public Connector toConnectorEntity(LocalConnectorDTO connectorDTO) {
-    LocalConnector localConnector = LocalConnector.builder().isDefault(connectorDTO.isDefault()).build();
-    localConnector.setCategories(Collections.singletonList(ConnectorCategory.SECRET_MANAGER));
-    return localConnector;
+    return LocalConnector.builder().isDefault(connectorDTO.isDefault()).build();
+  }
+
+  @Override
+  public List<ConnectorCategory> getConnectorCategory() {
+    return Collections.singletonList(ConnectorCategory.SECRET_MANAGER);
   }
 }

@@ -2,10 +2,13 @@ package io.harness.serializer.morphia;
 
 import io.harness.connector.entities.Connector;
 import io.harness.connector.entities.embedded.appdynamicsconnector.AppDynamicsConnector;
+import io.harness.connector.entities.embedded.artifactoryconnector.ArtifactoryConnector;
+import io.harness.connector.entities.embedded.artifactoryconnector.ArtifactoryUserNamePasswordAuthentication;
 import io.harness.connector.entities.embedded.awsconnector.AwsAccessKeyCredential;
 import io.harness.connector.entities.embedded.awsconnector.AwsConfig;
 import io.harness.connector.entities.embedded.awsconnector.AwsIamCredential;
 import io.harness.connector.entities.embedded.docker.DockerConnector;
+import io.harness.connector.entities.embedded.docker.DockerUserNamePasswordAuthentication;
 import io.harness.connector.entities.embedded.gcpconnector.GcpConfig;
 import io.harness.connector.entities.embedded.gcpconnector.GcpDelegateDetails;
 import io.harness.connector.entities.embedded.gcpconnector.GcpServiceAccountKey;
@@ -42,6 +45,7 @@ public class ConnectorMorphiaClassesRegistrar implements MorphiaRegistrar {
     set.add(DockerConnector.class);
     set.add(GcpConfig.class);
     set.add(AwsConfig.class);
+    set.add(ArtifactoryConnector.class);
   }
 
   @Override
@@ -59,5 +63,9 @@ public class ConnectorMorphiaClassesRegistrar implements MorphiaRegistrar {
     h.put("connector.entities.embedded.gcpconnector.GcpServiceAccountKey", GcpServiceAccountKey.class);
     h.put("connector.entities.embedded.awsconnector.AwsIamCredential", AwsIamCredential.class);
     h.put("connector.entities.embedded.awsconnector.AwsAccessKeyCredential", AwsAccessKeyCredential.class);
+    h.put("connector.entities.embedded.docker.DockerUserNamePasswordAuthentication",
+        DockerUserNamePasswordAuthentication.class);
+    h.put("connector.entities.embedded.artifactoryconnector.ArtifactoryUserNamePasswordAuthentication",
+        ArtifactoryUserNamePasswordAuthentication.class);
   }
 }

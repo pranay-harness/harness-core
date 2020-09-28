@@ -2,6 +2,7 @@ package io.harness.delegate.beans.connector;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import io.harness.delegate.beans.connector.appdynamicsconnector.AppDynamicsConnectorDTO;
+import io.harness.delegate.beans.connector.artifactoryconnector.ArtifactoryConnectorDTO;
 import io.harness.delegate.beans.connector.awsconnector.AwsConnectorDTO;
 import io.harness.delegate.beans.connector.docker.DockerConnectorDTO;
 import io.harness.delegate.beans.connector.gcpconnector.GcpConnectorDTO;
@@ -16,8 +17,19 @@ import io.swagger.annotations.ApiModel;
 @JsonIgnoreProperties(ignoreUnknown = true)
 
 @ApiModel(value = "ConnectorConfigDTO",
-    subTypes = {KubernetesClusterConfigDTO.class, GitConfigDTO.class, DockerConnectorDTO.class,
-        SplunkConnectorDTO.class, AppDynamicsConnectorDTO.class, VaultConnectorDTO.class, LocalConnectorDTO.class,
-        GcpKmsConnectorDTO.class, GcpConnectorDTO.class, AwsConnectorDTO.class},
+    subTypes =
+        {
+            KubernetesClusterConfigDTO.class,
+            GitConfigDTO.class,
+            DockerConnectorDTO.class,
+            SplunkConnectorDTO.class,
+            AppDynamicsConnectorDTO.class,
+            VaultConnectorDTO.class,
+            LocalConnectorDTO.class,
+            GcpKmsConnectorDTO.class,
+            GcpConnectorDTO.class,
+            AwsConnectorDTO.class,
+            ArtifactoryConnectorDTO.class,
+        },
     discriminator = "type")
 public abstract class ConnectorConfigDTO {}

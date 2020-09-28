@@ -54,6 +54,7 @@ public class ConnectorMapper {
     connector.setTags(connectorRequestDTO.getTags());
     connector.setDescription(connectorRequestDTO.getDescription());
     connector.setType(connectorRequestDTO.getConnectorType());
+    connector.setCategories(connectorDTOToEntityMapper.getConnectorCategory());
     return connector;
   }
 

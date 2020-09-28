@@ -14,6 +14,7 @@ import io.harness.delegate.beans.connector.docker.DockerConnectorDTO;
 import io.harness.delegate.beans.connector.docker.DockerUserNamePasswordDTO;
 
 import java.util.Collections;
+import java.util.List;
 
 @Singleton
 public class DockerDTOToEntity implements ConnectorDTOToEntityMapper<DockerConnectorDTO> {
@@ -30,9 +31,13 @@ public class DockerDTOToEntity implements ConnectorDTOToEntityMapper<DockerConne
     }
 
     DockerConnector dockerConnector = dockerConnectorBuilder.build();
-    dockerConnector.setCategories(Collections.singletonList(ConnectorCategory.CLOUD_PROVIDER));
     dockerConnector.setType(ConnectorType.DOCKER);
     return dockerConnector;
+  }
+
+  @Override
+  public List<ConnectorCategory> getConnectorCategory() {
+    return Collections.singletonList(ConnectorCategory.CLOUD_PROVIDER);
   }
 
   private DockerUserNamePasswordAuthentication createDockerAuthentication(
