@@ -3,7 +3,6 @@ package io.harness.ng.core.dto;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import io.harness.ng.core.CorrelationContext;
 import io.harness.ng.core.Status;
-import io.harness.ng.core.dto.SupportsEntityTag;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.Setter;
