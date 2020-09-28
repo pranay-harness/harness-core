@@ -10,7 +10,6 @@ import com.google.inject.Singleton;
 
 import io.harness.EntityType;
 import io.harness.ModuleType;
-import io.harness.beans.NGPageResponse;
 import io.harness.encryption.Scope;
 import io.harness.gitsync.common.beans.GitFileLocation;
 import io.harness.gitsync.common.beans.GitFileLocation.GitFileLocationKeys;
@@ -21,6 +20,7 @@ import io.harness.gitsync.common.dtos.RepoProviders;
 import io.harness.gitsync.common.helper.GitFileLocationHelper;
 import io.harness.gitsync.common.service.GitEntityService;
 import io.harness.gitsync.core.dao.api.repositories.GitFileLocation.GitFileLocationRepository;
+import io.harness.ng.beans.PageResponse;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
@@ -144,7 +144,7 @@ public class GitEntityServiceImpl implements GitEntityService {
   }
 
   @Override
-  public NGPageResponse<GitSyncEntityListDTO> getPageByType(
+  public PageResponse<GitSyncEntityListDTO> getPageByType(
       String projectId, String orgId, String accountId, EntityType entityType, int page, int size) {
     final Scope scope = getScope(accountId, orgId, projectId);
     final Page<GitFileLocation> gitFileLocationsPage =

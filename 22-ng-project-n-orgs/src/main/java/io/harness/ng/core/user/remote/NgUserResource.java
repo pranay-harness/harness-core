@@ -6,8 +6,8 @@ import static io.harness.utils.PageUtils.getPageRequest;
 import com.google.inject.Inject;
 
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.beans.NGPageRequest;
-import io.harness.beans.NGPageResponse;
+import io.harness.ng.beans.PageRequest;
+import io.harness.ng.beans.PageResponse;
 import io.harness.ng.core.dto.ErrorDTO;
 import io.harness.ng.core.dto.FailureDTO;
 import io.harness.ng.core.dto.ResponseDTO;
@@ -49,10 +49,10 @@ public class NgUserResource {
 
   @GET
   @ApiOperation(value = "Get users for an account", nickname = "getUsers")
-  public ResponseDTO<NGPageResponse<UserSearchDTO>> list(
+  public ResponseDTO<PageResponse<UserSearchDTO>> list(
       @QueryParam("accountIdentifier") @NotNull String accountIdentifier,
-      @QueryParam("searchString") @DefaultValue("") String searchString, @BeanParam NGPageRequest ngPageRequest) {
-    Pageable pageable = getPageRequest(ngPageRequest);
+      @QueryParam("searchString") @DefaultValue("") String searchString, @BeanParam PageRequest pageRequest) {
+    Pageable pageable = getPageRequest(pageRequest);
     Page<User> users = ngUserService.list(accountIdentifier, searchString, pageable);
     return ResponseDTO.newResponse(PageUtils.getNGPageResponse(users.map(UserSearchMapper::writeDTO)));
   }

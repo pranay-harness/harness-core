@@ -10,7 +10,7 @@ import static io.harness.NGConstants.SIZE_KEY;
 
 import com.google.inject.Inject;
 
-import io.harness.beans.NGPageResponse;
+import io.harness.ng.beans.PageResponse;
 import io.harness.ng.core.api.SecretCrudService;
 import io.harness.ng.core.dto.ErrorDTO;
 import io.harness.ng.core.dto.FailureDTO;
@@ -86,7 +86,7 @@ public class NGSecretResourceV2 {
 
   @GET
   @ApiOperation(value = "Get secrets", nickname = "listSecretsV2")
-  public ResponseDTO<NGPageResponse<SecretResponseWrapper>> list(
+  public ResponseDTO<PageResponse<SecretResponseWrapper>> list(
       @QueryParam(ACCOUNT_KEY) @NotNull String accountIdentifier, @QueryParam(ORG_KEY) String orgIdentifier,
       @QueryParam(PROJECT_KEY) String projectIdentifier, @QueryParam("type") SecretType secretType,
       @QueryParam(SEARCH_TERM_KEY) String searchTerm, @QueryParam(PAGE_KEY) @DefaultValue("0") int page,

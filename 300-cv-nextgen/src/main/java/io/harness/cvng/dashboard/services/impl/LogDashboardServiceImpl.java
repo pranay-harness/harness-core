@@ -2,7 +2,6 @@ package io.harness.cvng.dashboard.services.impl;
 
 import com.google.inject.Inject;
 
-import io.harness.beans.NGPageResponse;
 import io.harness.cvng.analysis.entities.LogAnalysisCluster;
 import io.harness.cvng.analysis.entities.LogAnalysisCluster.Frequency;
 import io.harness.cvng.analysis.entities.LogAnalysisResult;
@@ -19,6 +18,7 @@ import io.harness.cvng.dashboard.beans.AnalyzedLogDataDTO.LogData;
 import io.harness.cvng.dashboard.beans.LogDataByTag;
 import io.harness.cvng.dashboard.beans.LogDataByTag.CountByTag;
 import io.harness.cvng.dashboard.services.api.LogDashboardService;
+import io.harness.ng.beans.PageResponse;
 import lombok.extern.slf4j.Slf4j;
 
 import java.time.Instant;
@@ -46,7 +46,7 @@ public class LogDashboardServiceImpl implements LogDashboardService {
   @Inject private CVParallelExecutor cvParallelExecutor;
 
   @Override
-  public NGPageResponse<AnalyzedLogDataDTO> getAnomalousLogs(String accountId, String projectIdentifier,
+  public PageResponse<AnalyzedLogDataDTO> getAnomalousLogs(String accountId, String projectIdentifier,
       String orgIdentifier, String serviceIdentifier, String environmentIdentifer, CVMonitoringCategory category,
       long startTimeMillis, long endTimeMillis, int page, int size) {
     return getLogs(accountId, projectIdentifier, orgIdentifier, serviceIdentifier, environmentIdentifer, category,
@@ -54,7 +54,7 @@ public class LogDashboardServiceImpl implements LogDashboardService {
   }
 
   @Override
-  public NGPageResponse<AnalyzedLogDataDTO> getAllLogs(String accountId, String projectIdentifier, String orgIdentifier,
+  public PageResponse<AnalyzedLogDataDTO> getAllLogs(String accountId, String projectIdentifier, String orgIdentifier,
       String serviceIdentifier, String environmentIdentifer, CVMonitoringCategory category, long startTimeMillis,
       long endTimeMillis, int page, int size) {
     return getLogs(accountId, projectIdentifier, orgIdentifier, serviceIdentifier, environmentIdentifer, category,
@@ -103,7 +103,7 @@ public class LogDashboardServiceImpl implements LogDashboardService {
     return sortedReturnSet;
   }
 
-  private NGPageResponse<AnalyzedLogDataDTO> getLogs(String accountId, String projectIdentifier, String orgIdentifier,
+  private PageResponse<AnalyzedLogDataDTO> getLogs(String accountId, String projectIdentifier, String orgIdentifier,
       String serviceIdentifier, String environmentIdentifer, CVMonitoringCategory category, long startTimeMillis,
       long endTimeMillis, List<LogAnalysisTag> tags, int page, int size) {
     List<LogData> logDataToBeReturned = Collections.synchronizedList(new ArrayList<>());
@@ -215,7 +215,7 @@ public class LogDashboardServiceImpl implements LogDashboardService {
     return logDataList;
   }
 
-  private NGPageResponse<AnalyzedLogDataDTO> formPageResponse(
+  private PageResponse<AnalyzedLogDataDTO> formPageResponse(
       int page, int size, SortedSet<AnalyzedLogDataDTO> analyzedLogData) {
     List<AnalyzedLogDataDTO> returnList = new ArrayList<>();
 
@@ -231,10 +231,10 @@ public class LogDashboardServiceImpl implements LogDashboardService {
       i++;
     }
 
-    return NGPageResponse.<AnalyzedLogDataDTO>builder()
+    return PageResponse.<AnalyzedLogDataDTO>builder()
         .pageSize(size)
-        .pageCount(totalNumPages)
-        .itemCount(analyzedLogData.size())
+        .totalPages(totalNumPages)
+        .totalItems(analyzedLogData.size())
         .pageIndex(returnList.size() == 0 ? -1 : page)
         .empty(returnList.size() == 0)
         .content(returnList)

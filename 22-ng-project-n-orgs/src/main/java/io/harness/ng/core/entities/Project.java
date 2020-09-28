@@ -46,11 +46,11 @@ import javax.validation.constraints.Size;
 @TypeAlias("projects")
 public class Project implements PersistentEntity, NGAccountAccess {
   @Wither @Id @org.mongodb.morphia.annotations.Id String id;
-  @Trimmed @NotEmpty String accountIdentifier;
-  @NotEmpty @EntityIdentifier String identifier;
-  @Trimmed @NotEmpty String orgIdentifier;
+  @Trimmed @EntityIdentifier String accountIdentifier;
+  @Trimmed @EntityIdentifier String identifier;
+  @Trimmed @EntityIdentifier String orgIdentifier;
 
-  @NotEmpty @EntityName String name;
+  @NotEmpty @EntityName(message = "name can only have a-z, A-Z, 0-9, - and _") String name;
   @Trimmed @NotEmpty String color;
   @NotNull @Singular @Size(max = 1024) List<ModuleType> modules;
   @NotNull @Size(max = 1024) String description;

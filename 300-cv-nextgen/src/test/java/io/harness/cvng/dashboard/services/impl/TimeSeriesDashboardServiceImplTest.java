@@ -13,7 +13,6 @@ import com.google.gson.reflect.TypeToken;
 import com.google.inject.Inject;
 
 import io.harness.CvNextGenTest;
-import io.harness.beans.NGPageResponse;
 import io.harness.category.element.UnitTests;
 import io.harness.cvng.beans.CVMonitoringCategory;
 import io.harness.cvng.core.entities.AppDynamicsCVConfig;
@@ -22,6 +21,7 @@ import io.harness.cvng.core.services.api.CVConfigService;
 import io.harness.cvng.core.services.api.TimeSeriesService;
 import io.harness.cvng.dashboard.beans.TimeSeriesMetricDataDTO;
 import io.harness.cvng.dashboard.services.api.TimeSeriesDashboardService;
+import io.harness.ng.beans.PageResponse;
 import io.harness.persistence.HPersistence;
 import io.harness.rule.Owner;
 import org.apache.commons.lang3.reflect.FieldUtils;
@@ -83,7 +83,7 @@ public class TimeSeriesDashboardServiceImplTest extends CvNextGenTest {
              serviceIdentifier, CVMonitoringCategory.PERFORMANCE))
         .thenReturn(Arrays.asList(cvConfig));
 
-    NGPageResponse<TimeSeriesMetricDataDTO> response =
+    PageResponse<TimeSeriesMetricDataDTO> response =
         timeSeriesDashboardService.getSortedMetricData(accountId, projectIdentifier, orgIdentifier, envIdentifier,
             serviceIdentifier, CVMonitoringCategory.PERFORMANCE, start.toEpochMilli(), end.toEpochMilli(), 0, 10);
 
@@ -110,8 +110,8 @@ public class TimeSeriesDashboardServiceImplTest extends CvNextGenTest {
              serviceIdentifier, CVMonitoringCategory.PERFORMANCE))
         .thenReturn(Arrays.asList(cvConfig));
 
-    NGPageResponse<TimeSeriesMetricDataDTO> response = timeSeriesDashboardService.getSortedAnomalousMetricData(
-        accountId, projectIdentifier, orgIdentifier, envIdentifier, serviceIdentifier, CVMonitoringCategory.PERFORMANCE,
+    PageResponse<TimeSeriesMetricDataDTO> response = timeSeriesDashboardService.getSortedAnomalousMetricData(accountId,
+        projectIdentifier, orgIdentifier, envIdentifier, serviceIdentifier, CVMonitoringCategory.PERFORMANCE,
         start.toEpochMilli(), end.toEpochMilli(), 0, 10);
     verify(cvConfigService)
         .getConfigsOfProductionEnvironments(accountId, orgIdentifier, projectIdentifier, envIdentifier,
@@ -143,7 +143,7 @@ public class TimeSeriesDashboardServiceImplTest extends CvNextGenTest {
              accountId, orgIdentifier, projectIdentifier, envIdentifier, serviceIdentifier, null))
         .thenReturn(Arrays.asList(cvConfig));
 
-    NGPageResponse<TimeSeriesMetricDataDTO> response =
+    PageResponse<TimeSeriesMetricDataDTO> response =
         timeSeriesDashboardService.getSortedAnomalousMetricData(accountId, projectIdentifier, orgIdentifier,
             envIdentifier, serviceIdentifier, null, start.toEpochMilli(), end.toEpochMilli(), 0, 10);
 
@@ -177,13 +177,13 @@ public class TimeSeriesDashboardServiceImplTest extends CvNextGenTest {
              serviceIdentifier, CVMonitoringCategory.PERFORMANCE))
         .thenReturn(Arrays.asList(cvConfig));
 
-    NGPageResponse<TimeSeriesMetricDataDTO> response = timeSeriesDashboardService.getSortedAnomalousMetricData(
-        accountId, projectIdentifier, generateUuid(), envIdentifier, serviceIdentifier,
-        CVMonitoringCategory.PERFORMANCE, start.toEpochMilli(), end.toEpochMilli(), 2, 3);
+    PageResponse<TimeSeriesMetricDataDTO> response = timeSeriesDashboardService.getSortedAnomalousMetricData(accountId,
+        projectIdentifier, generateUuid(), envIdentifier, serviceIdentifier, CVMonitoringCategory.PERFORMANCE,
+        start.toEpochMilli(), end.toEpochMilli(), 2, 3);
 
     assertThat(response).isNotNull();
     assertThat(response.getContent()).isNotEmpty();
-    assertThat(response.getPageCount()).isEqualTo(40);
+    assertThat(response.getTotalPages()).isEqualTo(40);
     assertThat(response.getContent().size()).isEqualTo(3);
     response.getContent().forEach(timeSeriesMetricDataDTO -> {
       assertThat(timeSeriesMetricDataDTO.getMetricDataList()).isNotEmpty();

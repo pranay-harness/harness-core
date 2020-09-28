@@ -1,6 +1,5 @@
 package io.harness.eraro;
 
-import static java.util.stream.Collectors.joining;
 import static io.harness.eraro.Status.BAD_REQUEST;
 import static io.harness.eraro.Status.CONFLICT;
 import static io.harness.eraro.Status.EXPECTATION_FAILED;
@@ -10,6 +9,7 @@ import static io.harness.eraro.Status.MOVED_PERMANENTLY;
 import static io.harness.eraro.Status.NOT_FOUND;
 import static io.harness.eraro.Status.SERVICE_UNAVAILABLE;
 import static io.harness.eraro.Status.UNAUTHORIZED;
+import static java.util.stream.Collectors.joining;
 
 import com.google.common.base.Splitter;
 
@@ -460,7 +460,11 @@ public enum ErrorCode {
 
   MISSING_DEFAULT_GOOGLE_CREDENTIALS,
 
-  INCORRECT_DEFAULT_GOOGLE_CREDENTIALS;
+  INCORRECT_DEFAULT_GOOGLE_CREDENTIALS,
+
+  OPTIMISTIC_LOCKING_EXCEPTION,
+
+  RESOURCE_NOT_FOUND_EXCEPTION;
 
   private Status status = BAD_REQUEST;
   private String description;

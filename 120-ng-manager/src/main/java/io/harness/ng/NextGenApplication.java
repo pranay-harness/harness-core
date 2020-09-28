@@ -28,6 +28,8 @@ import io.harness.ng.core.CorrelationFilter;
 import io.harness.ng.core.EtagFilter;
 import io.harness.ng.core.exceptionmappers.GenericExceptionMapperV2;
 import io.harness.ng.core.exceptionmappers.JerseyViolationExceptionMapperV2;
+import io.harness.ng.core.exceptionmappers.NotFoundExceptionMapper;
+import io.harness.ng.core.exceptionmappers.OptimisticLockingFailureExceptionMapper;
 import io.harness.ng.core.exceptionmappers.WingsExceptionMapperV2;
 import io.harness.ng.core.invites.ext.mail.EmailNotificationListener;
 import io.harness.ng.core.perpetualtask.sample.SampleRemotePTaskServiceClient;
@@ -155,6 +157,8 @@ public class NextGenApplication extends Application<NextGenConfiguration> {
 
   private void registerJerseyProviders(Environment environment) {
     environment.jersey().register(JerseyViolationExceptionMapperV2.class);
+    environment.jersey().register(OptimisticLockingFailureExceptionMapper.class);
+    environment.jersey().register(NotFoundExceptionMapper.class);
     environment.jersey().register(WingsExceptionMapperV2.class);
     environment.jersey().register(GenericExceptionMapperV2.class);
   }

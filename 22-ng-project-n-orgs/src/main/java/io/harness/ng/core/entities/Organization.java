@@ -37,10 +37,10 @@ import javax.validation.constraints.Size;
                , @Field(OrganizationKeys.identifier) })
 public class Organization implements PersistentEntity, NGAccountAccess {
   @Wither @Id @org.mongodb.morphia.annotations.Id String id;
-  @Trimmed @NotEmpty String accountIdentifier;
-  @NotEmpty @EntityIdentifier String identifier;
+  @Trimmed @EntityIdentifier String accountIdentifier;
+  @Trimmed @EntityIdentifier String identifier;
 
-  @NotEmpty @EntityName String name;
+  @NotEmpty @EntityName(message = "name can only have a-z, A-Z, 0-9, - and _") String name;
   @Trimmed @NotEmpty String color;
   @NotNull @Size(max = 1024) String description;
   @NotNull @Singular @Size(max = 128) List<String> tags;

@@ -11,7 +11,6 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.when;
 
 import io.harness.CategoryTest;
-import io.harness.beans.NGPageResponse;
 import io.harness.category.element.UnitTests;
 import io.harness.connector.apis.dto.ConnectorDTO;
 import io.harness.connector.apis.dto.ConnectorInfoDTO;
@@ -22,6 +21,7 @@ import io.harness.delegate.beans.connector.ConnectorValidationResult;
 import io.harness.delegate.beans.connector.k8Connector.KubernetesClusterConfigDTO;
 import io.harness.delegate.beans.connector.k8Connector.KubernetesCredentialDTO;
 import io.harness.delegate.beans.connector.k8Connector.KubernetesDelegateDetailsDTO;
+import io.harness.ng.beans.PageResponse;
 import io.harness.ng.core.dto.ResponseDTO;
 import io.harness.rule.Owner;
 import io.harness.rule.OwnerRule;
@@ -112,7 +112,7 @@ public class ConnectorResourceTest extends CategoryTest {
     when(connectorService.list(100, 0, accountIdentifier, orgIdentifier, projectIdentifier, searchTerm,
              KUBERNETES_CLUSTER, CLOUD_PROVIDER))
         .thenReturn(page);
-    ResponseDTO<NGPageResponse<ConnectorResponseDTO>> connectorSummaryListResponse = connectorResource.list(
+    ResponseDTO<PageResponse<ConnectorResponseDTO>> connectorSummaryListResponse = connectorResource.list(
         100, 0, accountIdentifier, orgIdentifier, projectIdentifier, searchTerm, KUBERNETES_CLUSTER, CLOUD_PROVIDER);
     Mockito.verify(connectorService, times(1))
         .list(eq(100), eq(0), eq(accountIdentifier), eq(orgIdentifier), eq(projectIdentifier), eq(searchTerm),

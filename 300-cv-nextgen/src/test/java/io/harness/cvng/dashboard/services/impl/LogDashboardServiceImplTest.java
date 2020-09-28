@@ -13,7 +13,6 @@ import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 
 import io.harness.CvNextGenTest;
-import io.harness.beans.NGPageResponse;
 import io.harness.category.element.UnitTests;
 import io.harness.cvng.analysis.entities.LogAnalysisCluster;
 import io.harness.cvng.analysis.entities.LogAnalysisCluster.Frequency;
@@ -28,6 +27,7 @@ import io.harness.cvng.core.services.api.CVConfigService;
 import io.harness.cvng.dashboard.beans.AnalyzedLogDataDTO;
 import io.harness.cvng.dashboard.beans.LogDataByTag;
 import io.harness.cvng.dashboard.services.api.LogDashboardService;
+import io.harness.ng.beans.PageResponse;
 import io.harness.persistence.HPersistence;
 import io.harness.rule.Owner;
 import org.apache.commons.lang3.reflect.FieldUtils;
@@ -86,7 +86,7 @@ public class LogDashboardServiceImplTest extends CvNextGenTest {
     when(mockLogAnalysisService.getAnalysisClusters(cvConfigId, new HashSet<>(labelList)))
         .thenReturn(buildLogAnalysisClusters(labelList));
 
-    NGPageResponse<AnalyzedLogDataDTO> pageResponse =
+    PageResponse<AnalyzedLogDataDTO> pageResponse =
         logDashboardService.getAnomalousLogs(accountId, projectIdentifier, orgIdentifier, serviceIdentifier,
             envIdentifier, CVMonitoringCategory.PERFORMANCE, startTime.toEpochMilli(), endTime.toEpochMilli(), 0, 10);
     verify(mockCvConfigService)
@@ -125,7 +125,7 @@ public class LogDashboardServiceImplTest extends CvNextGenTest {
     when(mockLogAnalysisService.getAnalysisClusters(cvConfigId, new HashSet<>(labelList)))
         .thenReturn(buildLogAnalysisClusters(labelList));
 
-    NGPageResponse<AnalyzedLogDataDTO> pageResponse =
+    PageResponse<AnalyzedLogDataDTO> pageResponse =
         logDashboardService.getAnomalousLogs(accountId, projectIdentifier, orgIdentifier, serviceIdentifier,
             envIdentifier, CVMonitoringCategory.PERFORMANCE, startTime.toEpochMilli(), endTime.toEpochMilli(), 0, 1);
     verify(mockCvConfigService)
@@ -133,9 +133,9 @@ public class LogDashboardServiceImplTest extends CvNextGenTest {
             serviceIdentifier, CVMonitoringCategory.PERFORMANCE);
     assertThat(pageResponse).isNotNull();
     assertThat(pageResponse.getContent()).isNotEmpty();
-    assertThat(pageResponse.getItemCount()).isEqualTo(4);
+    assertThat(pageResponse.getTotalItems()).isEqualTo(4);
     assertThat(pageResponse.getPageSize()).isEqualTo(1);
-    assertThat(pageResponse.getPageCount()).isGreaterThan(1);
+    assertThat(pageResponse.getTotalPages()).isGreaterThan(1);
     pageResponse.getContent().forEach(analyzedLogDataDTO -> {
       assertThat(Arrays.asList(LogAnalysisTag.UNKNOWN, LogAnalysisTag.UNEXPECTED)
                      .contains(analyzedLogDataDTO.getLogData().getTag()));
@@ -158,7 +158,7 @@ public class LogDashboardServiceImplTest extends CvNextGenTest {
     when(mockLogAnalysisService.getAnalysisClusters(cvConfigId, new HashSet<>(labelList)))
         .thenReturn(buildLogAnalysisClusters(labelList));
 
-    NGPageResponse<AnalyzedLogDataDTO> pageResponse =
+    PageResponse<AnalyzedLogDataDTO> pageResponse =
         logDashboardService.getAnomalousLogs(accountId, projectIdentifier, orgIdentifier, serviceIdentifier,
             envIdentifier, CVMonitoringCategory.PERFORMANCE, startTime.toEpochMilli(), endTime.toEpochMilli(), 0, 1);
     verify(mockCvConfigService)
@@ -184,7 +184,7 @@ public class LogDashboardServiceImplTest extends CvNextGenTest {
     when(mockLogAnalysisService.getAnalysisClusters(cvConfigId, new HashSet<>(labelList)))
         .thenReturn(buildLogAnalysisClusters(labelList));
 
-    NGPageResponse<AnalyzedLogDataDTO> pageResponse =
+    PageResponse<AnalyzedLogDataDTO> pageResponse =
         logDashboardService.getAllLogs(accountId, projectIdentifier, orgIdentifier, serviceIdentifier, envIdentifier,
             CVMonitoringCategory.PERFORMANCE, startTime.toEpochMilli(), endTime.toEpochMilli(), 0, 10);
     verify(mockCvConfigService)
@@ -218,7 +218,7 @@ public class LogDashboardServiceImplTest extends CvNextGenTest {
     when(mockLogAnalysisService.getAnalysisClusters(cvConfigId, new HashSet<>(labelList)))
         .thenReturn(buildLogAnalysisClusters(labelList));
 
-    NGPageResponse<AnalyzedLogDataDTO> pageResponse = logDashboardService.getAllLogs(accountId, projectIdentifier,
+    PageResponse<AnalyzedLogDataDTO> pageResponse = logDashboardService.getAllLogs(accountId, projectIdentifier,
         orgIdentifier, serviceIdentifier, envIdentifier, null, startTime.toEpochMilli(), endTime.toEpochMilli(), 0, 10);
 
     verify(mockCvConfigService)

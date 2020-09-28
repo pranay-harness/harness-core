@@ -5,10 +5,10 @@ import com.google.inject.Inject;
 import com.codahale.metrics.annotation.ExceptionMetered;
 import com.codahale.metrics.annotation.Timed;
 import io.harness.annotations.ExposeInternalException;
-import io.harness.beans.NGPageResponse;
 import io.harness.cvng.beans.CVMonitoringCategory;
 import io.harness.cvng.dashboard.beans.TimeSeriesMetricDataDTO;
 import io.harness.cvng.dashboard.services.api.TimeSeriesDashboardService;
+import io.harness.ng.beans.PageResponse;
 import io.harness.rest.RestResponse;
 import io.swagger.annotations.Api;
 
@@ -30,7 +30,7 @@ public class TimeseriesDashboardResource {
   @Path("anomalous-metric-data")
   @Timed
   @ExceptionMetered
-  public RestResponse<NGPageResponse<TimeSeriesMetricDataDTO>> getAnomalousMetricData(
+  public RestResponse<PageResponse<TimeSeriesMetricDataDTO>> getAnomalousMetricData(
       @NotNull @QueryParam("accountId") String accountId,
       @NotNull @QueryParam("projectIdentifier") String projectIdentifier,
       @NotNull @QueryParam("orgIdentifier") String orgIdentifier,
@@ -49,7 +49,7 @@ public class TimeseriesDashboardResource {
   @Path("metric-data")
   @Timed
   @ExceptionMetered
-  public RestResponse<NGPageResponse<TimeSeriesMetricDataDTO>> getMetricData(
+  public RestResponse<PageResponse<TimeSeriesMetricDataDTO>> getMetricData(
       @NotNull @QueryParam("accountId") String accountId,
       @NotNull @QueryParam("projectIdentifier") String projectIdentifier,
       @NotNull @QueryParam("orgIdentifier") String orgIdentifier,

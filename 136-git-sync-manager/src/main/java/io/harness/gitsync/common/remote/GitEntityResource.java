@@ -4,10 +4,10 @@ import com.google.inject.Inject;
 
 import io.harness.EntityType;
 import io.harness.ModuleType;
-import io.harness.beans.NGPageResponse;
 import io.harness.gitsync.common.dtos.GitSyncEntityListDTO;
 import io.harness.gitsync.common.dtos.GitSyncProductDTO;
 import io.harness.gitsync.common.service.GitEntityService;
+import io.harness.ng.beans.PageResponse;
 import io.harness.ng.core.dto.ResponseDTO;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
@@ -41,7 +41,7 @@ public class GitEntityResource {
   @GET
   @Path("entities/{entityType}")
   @ApiOperation(value = "Get Git Sync Entity By Type", nickname = "listGitSyncEntitiesByType")
-  public ResponseDTO<NGPageResponse<GitSyncEntityListDTO>> listByType(@QueryParam("projectId") String projectId,
+  public ResponseDTO<PageResponse<GitSyncEntityListDTO>> listByType(@QueryParam("projectId") String projectId,
       @QueryParam("organizationId") String organizationId, @QueryParam("accountId") @NotEmpty String accountId,
       @PathParam("entityType") EntityType entityType, @QueryParam("page") @DefaultValue("0") int page,
       @QueryParam("size") int size, @QueryParam("moduleType") String moduleType) {

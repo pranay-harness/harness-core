@@ -2,13 +2,13 @@ package io.harness.cvng.analysis.services.impl;
 
 import com.google.inject.Inject;
 
-import io.harness.beans.NGPageResponse;
 import io.harness.cvng.analysis.beans.LogAnalysisClusterChartDTO;
 import io.harness.cvng.analysis.beans.LogAnalysisClusterDTO;
 import io.harness.cvng.analysis.entities.DeploymentLogAnalysis;
 import io.harness.cvng.analysis.entities.DeploymentLogAnalysis.DeploymentLogAnalysisKeys;
 import io.harness.cvng.analysis.services.api.DeploymentLogAnalysisService;
 import io.harness.cvng.core.services.api.VerificationTaskService;
+import io.harness.ng.beans.PageResponse;
 import io.harness.persistence.HPersistence;
 import org.mongodb.morphia.query.Sort;
 
@@ -63,7 +63,7 @@ public class DeploymentLogAnalysisServiceImpl implements DeploymentLogAnalysisSe
     return logAnalysisClusterChartDTOList;
   }
 
-  public NGPageResponse<LogAnalysisClusterDTO> getLogAnalysisResult(
+  public PageResponse<LogAnalysisClusterDTO> getLogAnalysisResult(
       String accountId, String verificationJobInstanceId, Integer label, int pageNumber) {
     Set<String> verificationTaskIds =
         verificationTaskService.getVerificationTaskIds(accountId, verificationJobInstanceId);
@@ -100,7 +100,7 @@ public class DeploymentLogAnalysisServiceImpl implements DeploymentLogAnalysisSe
     return formPageResponse(logAnalysisClusters, pageNumber, DEFAULT_PAGE_SIZE);
   }
 
-  private NGPageResponse<LogAnalysisClusterDTO> formPageResponse(
+  private PageResponse<LogAnalysisClusterDTO> formPageResponse(
       List<LogAnalysisClusterDTO> logAnalysisClusters, int pageNumber, int size) {
     List<LogAnalysisClusterDTO> returnList = new ArrayList<>();
 
@@ -115,11 +115,11 @@ public class DeploymentLogAnalysisServiceImpl implements DeploymentLogAnalysisSe
       i++;
     }
 
-    return NGPageResponse.<LogAnalysisClusterDTO>builder()
+    return PageResponse.<LogAnalysisClusterDTO>builder()
         .pageSize(size)
         .pageIndex(pageNumber)
-        .pageCount(logAnalysisClusters.size() / size)
-        .itemCount(logAnalysisClusters.size())
+        .totalPages(logAnalysisClusters.size() / size)
+        .totalItems(logAnalysisClusters.size())
         .content(returnList)
         .build();
   }

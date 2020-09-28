@@ -8,13 +8,13 @@ import com.google.inject.Inject;
 import com.google.inject.Injector;
 
 import io.harness.CvNextGenTest;
-import io.harness.beans.NGPageResponse;
 import io.harness.category.element.UnitTests;
 import io.harness.cvng.analysis.beans.DeploymentLogAnalysisDTO;
 import io.harness.cvng.analysis.beans.LogAnalysisClusterDTO;
 import io.harness.cvng.analysis.entities.DeploymentLogAnalysis;
 import io.harness.cvng.analysis.services.api.DeploymentLogAnalysisService;
 import io.harness.cvng.core.services.api.VerificationTaskService;
+import io.harness.ng.beans.PageResponse;
 import io.harness.rest.RestResponse;
 import io.harness.rule.Owner;
 import io.harness.rule.ResourceTestRule;
@@ -73,11 +73,11 @@ public class DeploymentLogAnalysisResourceTest extends CvNextGenTest {
                             .get();
 
     assertThat(response.getStatus()).isEqualTo(200);
-    NGPageResponse<LogAnalysisClusterDTO> pageResponse =
-        response.readEntity(new GenericType<RestResponse<NGPageResponse<LogAnalysisClusterDTO>>>() {}).getResource();
+    PageResponse<LogAnalysisClusterDTO> pageResponse =
+        response.readEntity(new GenericType<RestResponse<PageResponse<LogAnalysisClusterDTO>>>() {}).getResource();
 
     assertThat(pageResponse.getPageIndex()).isEqualTo(0);
-    assertThat(pageResponse.getPageCount()).isEqualTo(0);
+    assertThat(pageResponse.getTotalPages()).isEqualTo(0);
     assertThat(pageResponse.getContent()).isNotNull();
     assertThat(pageResponse.getContent().size()).isEqualTo(3);
     assertThat(pageResponse.getContent().get(0).getLabel()).isEqualTo(3);
@@ -101,11 +101,11 @@ public class DeploymentLogAnalysisResourceTest extends CvNextGenTest {
                             .get();
 
     assertThat(response.getStatus()).isEqualTo(200);
-    NGPageResponse<LogAnalysisClusterDTO> pageResponse =
-        response.readEntity(new GenericType<RestResponse<NGPageResponse<LogAnalysisClusterDTO>>>() {}).getResource();
+    PageResponse<LogAnalysisClusterDTO> pageResponse =
+        response.readEntity(new GenericType<RestResponse<PageResponse<LogAnalysisClusterDTO>>>() {}).getResource();
 
     assertThat(pageResponse.getPageIndex()).isEqualTo(0);
-    assertThat(pageResponse.getPageCount()).isEqualTo(0);
+    assertThat(pageResponse.getTotalPages()).isEqualTo(0);
     assertThat(pageResponse.getContent()).isNotNull();
     assertThat(pageResponse.getContent().size()).isEqualTo(1);
     assertThat(pageResponse.getContent().get(0).getLabel()).isEqualTo(1);
@@ -130,11 +130,11 @@ public class DeploymentLogAnalysisResourceTest extends CvNextGenTest {
                             .get();
 
     assertThat(response.getStatus()).isEqualTo(200);
-    NGPageResponse<LogAnalysisClusterDTO> pageResponse =
-        response.readEntity(new GenericType<RestResponse<NGPageResponse<LogAnalysisClusterDTO>>>() {}).getResource();
+    PageResponse<LogAnalysisClusterDTO> pageResponse =
+        response.readEntity(new GenericType<RestResponse<PageResponse<LogAnalysisClusterDTO>>>() {}).getResource();
 
     assertThat(pageResponse.getPageIndex()).isEqualTo(0);
-    assertThat(pageResponse.getPageCount()).isEqualTo(0);
+    assertThat(pageResponse.getTotalPages()).isEqualTo(0);
     assertThat(pageResponse.getContent()).isNotNull();
     assertThat(pageResponse.getContent()).isEmpty();
   }
@@ -162,11 +162,11 @@ public class DeploymentLogAnalysisResourceTest extends CvNextGenTest {
                             .get();
 
     assertThat(response.getStatus()).isEqualTo(200);
-    NGPageResponse<LogAnalysisClusterDTO> pageResponse =
-        response.readEntity(new GenericType<RestResponse<NGPageResponse<LogAnalysisClusterDTO>>>() {}).getResource();
+    PageResponse<LogAnalysisClusterDTO> pageResponse =
+        response.readEntity(new GenericType<RestResponse<PageResponse<LogAnalysisClusterDTO>>>() {}).getResource();
 
     assertThat(pageResponse.getPageIndex()).isEqualTo(0);
-    assertThat(pageResponse.getPageCount()).isEqualTo(0);
+    assertThat(pageResponse.getTotalPages()).isEqualTo(0);
     assertThat(pageResponse.getContent()).isNotNull();
     assertThat(pageResponse.getContent().size()).isEqualTo(1);
     assertThat(pageResponse.getContent().get(0).getLabel()).isEqualTo(4);
@@ -198,11 +198,11 @@ public class DeploymentLogAnalysisResourceTest extends CvNextGenTest {
                              .get();
 
     assertThat(response1.getStatus()).isEqualTo(200);
-    NGPageResponse<LogAnalysisClusterDTO> pageResponse1 =
-        response1.readEntity(new GenericType<RestResponse<NGPageResponse<LogAnalysisClusterDTO>>>() {}).getResource();
+    PageResponse<LogAnalysisClusterDTO> pageResponse1 =
+        response1.readEntity(new GenericType<RestResponse<PageResponse<LogAnalysisClusterDTO>>>() {}).getResource();
 
     assertThat(pageResponse1.getPageIndex()).isEqualTo(0);
-    assertThat(pageResponse1.getPageCount()).isEqualTo(2);
+    assertThat(pageResponse1.getTotalPages()).isEqualTo(2);
     assertThat(pageResponse1.getContent()).isNotNull();
     assertThat(pageResponse1.getContent().size()).isEqualTo(10);
 
@@ -215,11 +215,11 @@ public class DeploymentLogAnalysisResourceTest extends CvNextGenTest {
                              .get();
 
     assertThat(response2.getStatus()).isEqualTo(200);
-    NGPageResponse<LogAnalysisClusterDTO> pageResponse2 =
-        response2.readEntity(new GenericType<RestResponse<NGPageResponse<LogAnalysisClusterDTO>>>() {}).getResource();
+    PageResponse<LogAnalysisClusterDTO> pageResponse2 =
+        response2.readEntity(new GenericType<RestResponse<PageResponse<LogAnalysisClusterDTO>>>() {}).getResource();
 
     assertThat(pageResponse2.getPageIndex()).isEqualTo(1);
-    assertThat(pageResponse2.getPageCount()).isEqualTo(2);
+    assertThat(pageResponse2.getTotalPages()).isEqualTo(2);
     assertThat(pageResponse2.getContent()).isNotNull();
     assertThat(pageResponse2.getContent().size()).isEqualTo(10);
 
@@ -232,11 +232,11 @@ public class DeploymentLogAnalysisResourceTest extends CvNextGenTest {
                              .get();
 
     assertThat(response2.getStatus()).isEqualTo(200);
-    NGPageResponse<LogAnalysisClusterDTO> pageResponse3 =
-        response3.readEntity(new GenericType<RestResponse<NGPageResponse<LogAnalysisClusterDTO>>>() {}).getResource();
+    PageResponse<LogAnalysisClusterDTO> pageResponse3 =
+        response3.readEntity(new GenericType<RestResponse<PageResponse<LogAnalysisClusterDTO>>>() {}).getResource();
 
     assertThat(pageResponse3.getPageIndex()).isEqualTo(2);
-    assertThat(pageResponse3.getPageCount()).isEqualTo(2);
+    assertThat(pageResponse3.getTotalPages()).isEqualTo(2);
     assertThat(pageResponse3.getContent()).isNotNull();
     assertThat(pageResponse3.getContent().size()).isEqualTo(5);
   }
@@ -256,11 +256,11 @@ public class DeploymentLogAnalysisResourceTest extends CvNextGenTest {
                             .get();
 
     assertThat(response.getStatus()).isEqualTo(200);
-    NGPageResponse<LogAnalysisClusterDTO> pageResponse =
-        response.readEntity(new GenericType<RestResponse<NGPageResponse<LogAnalysisClusterDTO>>>() {}).getResource();
+    PageResponse<LogAnalysisClusterDTO> pageResponse =
+        response.readEntity(new GenericType<RestResponse<PageResponse<LogAnalysisClusterDTO>>>() {}).getResource();
 
     assertThat(pageResponse.getPageIndex()).isEqualTo(0);
-    assertThat(pageResponse.getPageCount()).isEqualTo(0);
+    assertThat(pageResponse.getTotalPages()).isEqualTo(0);
     assertThat(pageResponse.getContent()).isEmpty();
   }
 

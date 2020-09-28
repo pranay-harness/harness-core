@@ -1,6 +1,6 @@
 package io.harness.ng.core.api;
 
-import io.harness.beans.NGPageResponse;
+import io.harness.ng.beans.PageResponse;
 import io.harness.ng.core.dto.secrets.SecretDTOV2;
 import io.harness.ng.core.dto.secrets.SecretResponseWrapper;
 import io.harness.ng.core.remote.SecretValidationMetaData;
@@ -31,7 +31,7 @@ public interface SecretCrudService {
   Optional<SecretResponseWrapper> get(
       String accountIdentifier, String orgIdentifier, String projectIdentifier, String identifier);
 
-  NGPageResponse<SecretResponseWrapper> list(String accountIdentifier, String orgIdentifier, String projectIdentifier,
+  PageResponse<SecretResponseWrapper> list(String accountIdentifier, String orgIdentifier, String projectIdentifier,
       SecretType secretType, String searchTerm, int page, int size);
 
   boolean delete(String accountIdentifier, String orgIdentifier, String projectIdentifier, String identifier);

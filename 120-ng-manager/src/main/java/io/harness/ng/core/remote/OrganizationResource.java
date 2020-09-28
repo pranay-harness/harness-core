@@ -3,15 +3,18 @@ package io.harness.ng.core.remote;
 import static io.harness.NGConstants.ACCOUNT_KEY;
 import static io.harness.NGConstants.IDENTIFIER_KEY;
 import static io.harness.NGConstants.SEARCH_TERM_KEY;
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.ng.core.remote.OrganizationMapper.writeDto;
 import static io.harness.utils.PageUtils.getNGPageResponse;
 import static io.harness.utils.PageUtils.getPageRequest;
 import static javax.ws.rs.core.HttpHeaders.IF_MATCH;
 
+import com.google.common.collect.ImmutableList;
 import com.google.inject.Inject;
 
-import io.harness.beans.NGPageRequest;
-import io.harness.beans.NGPageResponse;
+import io.harness.beans.SortOrder;
+import io.harness.ng.beans.PageRequest;
+import io.harness.ng.beans.PageResponse;
 import io.harness.ng.core.dto.ErrorDTO;
 import io.harness.ng.core.dto.FailureDTO;
 import io.harness.ng.core.dto.OrganizationDTO;
@@ -35,6 +38,7 @@ import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
 import javax.ws.rs.HeaderParam;
+import javax.ws.rs.NotFoundException;
 import javax.ws.rs.POST;
 import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
@@ -69,18 +73,24 @@ public class OrganizationResource {
   public ResponseDTO<OrganizationDTO> get(@NotNull @PathParam(IDENTIFIER_KEY) String identifier,
       @NotNull @QueryParam(ACCOUNT_KEY) String accountIdentifier) {
     Optional<Organization> organizationOptional = organizationService.get(accountIdentifier, identifier);
-    return organizationOptional
-        .map(organization -> ResponseDTO.newResponse(organization.getVersion().toString(), writeDto(organization)))
-        .orElseGet(() -> ResponseDTO.newResponse(null));
+    if (!organizationOptional.isPresent()) {
+      throw new NotFoundException("Resource not found");
+    }
+    return ResponseDTO.newResponse(
+        organizationOptional.get().getVersion().toString(), writeDto(organizationOptional.get()));
   }
 
   @GET
   @ApiOperation(value = "Get Organization list", nickname = "getOrganizationList")
-  public ResponseDTO<NGPageResponse<OrganizationDTO>> list(@NotNull @QueryParam(ACCOUNT_KEY) String accountIdentifier,
-      @QueryParam(SEARCH_TERM_KEY) String searchTerm, @BeanParam NGPageRequest ngPageRequest) {
+  public ResponseDTO<PageResponse<OrganizationDTO>> list(@NotNull @QueryParam(ACCOUNT_KEY) String accountIdentifier,
+      @QueryParam(SEARCH_TERM_KEY) String searchTerm, @BeanParam PageRequest pageRequest) {
+    if (isEmpty(pageRequest.getSortOrders())) {
+      SortOrder order = SortOrder.Builder.aSortOrder().withField("lastModifiedAt", SortOrder.OrderType.DESC).build();
+      pageRequest.setSortOrders(ImmutableList.of(order));
+    }
     OrganizationFilterDTO organizationFilterDTO = OrganizationFilterDTO.builder().searchTerm(searchTerm).build();
     Page<OrganizationDTO> organizations =
-        organizationService.list(accountIdentifier, getPageRequest(ngPageRequest), organizationFilterDTO)
+        organizationService.list(accountIdentifier, getPageRequest(pageRequest), organizationFilterDTO)
             .map(OrganizationMapper::writeDto);
     return ResponseDTO.newResponse(getNGPageResponse(organizations));
   }
