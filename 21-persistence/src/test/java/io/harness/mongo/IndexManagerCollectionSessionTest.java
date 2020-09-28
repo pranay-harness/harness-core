@@ -14,7 +14,7 @@ import com.google.inject.Inject;
 import com.mongodb.BasicDBObject;
 import com.mongodb.DBCollection;
 import com.mongodb.DBObject;
-import io.harness.PersistenceTestBase;
+import io.harness.PersistenceTest;
 import io.harness.category.element.UnitTests;
 import io.harness.mongo.IndexCreator.IndexCreatorBuilder;
 import io.harness.persistence.HPersistence;
@@ -27,7 +27,7 @@ import org.mongodb.morphia.Morphia;
 import java.util.List;
 import java.util.Set;
 
-public class IndexManagerCollectionSessionTest extends PersistenceTestBase {
+public class IndexManagerCollectionSessionTest extends PersistenceTest {
   @Inject HPersistence persistence;
   @Inject Morphia morphia;
 

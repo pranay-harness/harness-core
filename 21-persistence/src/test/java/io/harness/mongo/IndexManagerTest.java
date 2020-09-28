@@ -10,7 +10,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import com.google.inject.Inject;
 
 import com.mongodb.BasicDBObject;
-import io.harness.PersistenceTestBase;
+import io.harness.PersistenceTest;
 import io.harness.category.element.UnitTests;
 import io.harness.mongo.index.IndexType;
 import io.harness.persistence.HPersistence;
@@ -20,7 +20,7 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mongodb.morphia.Morphia;
 
-public class IndexManagerTest extends PersistenceTestBase {
+public class IndexManagerTest extends PersistenceTest {
   @Inject HPersistence persistence;
   @Inject IndexManager indexManager;
 

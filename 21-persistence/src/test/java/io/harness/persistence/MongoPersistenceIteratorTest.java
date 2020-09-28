@@ -5,7 +5,7 @@ import static java.lang.System.currentTimeMillis;
 import static java.time.Duration.ofMinutes;
 import static org.assertj.core.api.Assertions.assertThat;
 
-import io.harness.PersistenceTestBase;
+import io.harness.PersistenceTest;
 import io.harness.category.element.UnitTests;
 import io.harness.iterator.PersistentIterable;
 import io.harness.mongo.iterator.MongoPersistenceIterator;
@@ -17,7 +17,7 @@ import org.junit.experimental.categories.Category;
 
 import java.time.Duration;
 
-public class MongoPersistenceIteratorTest extends PersistenceTestBase {
+public class MongoPersistenceIteratorTest extends PersistenceTest {
   private static Duration targetInterval = ofMinutes(1);
   private static Duration maximumDelayForCheck = ofMinutes(2);
 

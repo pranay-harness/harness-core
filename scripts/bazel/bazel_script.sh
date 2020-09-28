@@ -43,23 +43,6 @@ build_bazel_module() {
    -DlocalRepositoryPath=${local_repo}
 }
 
-build_bazel_tests() {
-  module=$1
-
-  bazel ${bazelrc} build //${module}:tests ${GCP} ${BAZEL_ARGUMENTS}
-
-  mvn -B install:install-file \
-   -Dfile=${BAZEL_DIRS}/bin/${module}/libtests.jar \
-   -DgroupId=software.wings \
-   -DartifactId=${module} \
-   -Dversion=0.0.1-SNAPSHOT \
-   -Dclassifier=tests \
-   -Dpackaging=jar \
-   -DgeneratePom=true \
-   -DpomFile=${module}/pom.xml \
-   -DlocalRepositoryPath=${local_repo}
-}
-
 build_java_proto_module() {
   module=$1
   modulePath=$module/src/main/proto
@@ -97,8 +80,6 @@ build_bazel_module 20-delegate-beans
 build_bazel_module 20-delegate-tasks
 build_bazel_module 20-ng-core-beans
 build_bazel_module 21-delegate-agent-beans
-build_bazel_module 21-persistence
-build_bazel_tests 21-persistence
 build_java_proto_module 13-grpc-api
 build_java_proto_module 19-delegate-tasks-beans
 build_java_proto_module 20-delegate-beans

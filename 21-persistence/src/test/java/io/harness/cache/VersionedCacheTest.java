@@ -14,7 +14,7 @@ import com.google.common.collect.Sets;
 import com.google.inject.Inject;
 
 import com.github.benmanes.caffeine.jcache.CacheProxy;
-import io.harness.PersistenceTestBase;
+import io.harness.PersistenceTest;
 import io.harness.cache.VersionedEntryProcessor.VersionedMutableEntryWrapper;
 import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
@@ -44,7 +44,7 @@ import javax.cache.processor.EntryProcessor;
 import javax.cache.processor.EntryProcessorException;
 import javax.cache.processor.MutableEntry;
 
-public class VersionedCacheTest extends PersistenceTestBase {
+public class VersionedCacheTest extends PersistenceTest {
   private static class CacheableEntity {
     private String id;
     private String name;

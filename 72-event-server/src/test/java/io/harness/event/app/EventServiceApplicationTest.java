@@ -60,7 +60,7 @@ public class EventServiceApplicationTest extends EventServerTest {
   }
 
   @Test
-  @Owner(developers = AVMOHAN)
+  @Owner(developers = AVMOHAN, intermittent = true)
   @Category(UnitTests.class)
   @RealMongo
   public void shouldEventuallyPersistPublishedEvent() throws Exception {

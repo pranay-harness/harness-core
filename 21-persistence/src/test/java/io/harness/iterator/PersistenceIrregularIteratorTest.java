@@ -17,7 +17,7 @@ import static org.joor.Reflect.on;
 import com.google.inject.Inject;
 
 import com.mongodb.BasicDBObject;
-import io.harness.PersistenceTestBase;
+import io.harness.PersistenceTest;
 import io.harness.category.element.UnitTests;
 import io.harness.iterator.PersistenceIterator.ProcessMode;
 import io.harness.iterator.TestIrregularIterableEntity.TestIrregularIterableEntityKeys;
@@ -43,7 +43,7 @@ import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
 
 @Slf4j
-public class PersistenceIrregularIteratorTest extends PersistenceTestBase {
+public class PersistenceIrregularIteratorTest extends PersistenceTest {
   @Inject private HPersistence persistence;
   @Inject private MorphiaPersistenceProvider<TestIrregularIterableEntity> persistenceProvider;
   @Inject private QueueController queueController;

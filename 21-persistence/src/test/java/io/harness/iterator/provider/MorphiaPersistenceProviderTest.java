@@ -5,7 +5,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import com.google.inject.Inject;
 
-import io.harness.PersistenceTestBase;
+import io.harness.PersistenceTest;
 import io.harness.category.element.UnitTests;
 import io.harness.iterator.TestIterableEntity;
 import io.harness.iterator.TestIterableEntity.TestIterableEntityKeys;
@@ -16,7 +16,7 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mongodb.morphia.query.Query;
 
-public class MorphiaPersistenceProviderTest extends PersistenceTestBase {
+public class MorphiaPersistenceProviderTest extends PersistenceTest {
   @Inject private MorphiaPersistenceProvider<TestIterableEntity> persistenceProvider;
 
   @SuppressWarnings("checkstyle:RepetitiveName")

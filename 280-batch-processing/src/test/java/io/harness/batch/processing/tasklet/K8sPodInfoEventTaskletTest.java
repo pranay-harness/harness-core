@@ -23,6 +23,7 @@ import io.harness.batch.processing.ccm.InstanceType;
 import io.harness.batch.processing.config.BatchMainConfig;
 import io.harness.batch.processing.dao.intfc.InstanceDataDao;
 import io.harness.batch.processing.dao.intfc.PublishedMessageDao;
+import io.harness.batch.processing.entities.InstanceData;
 import io.harness.batch.processing.service.intfc.InstanceDataService;
 import io.harness.batch.processing.service.intfc.WorkloadRepository;
 import io.harness.batch.processing.tasklet.support.HarnessServiceInfoFetcher;
@@ -209,10 +210,10 @@ public class K8sPodInfoEventTaskletTest extends CategoryTest {
   }
 
   @Test
-  @Owner(developers = HITESH)
+  @Owner(developers = HITESH, intermittent = true)
   @Category(UnitTests.class)
   public void shouldCreateEmptyInstancePodInfo() throws Exception {
-    InstanceData instanceData = getNodeInstantData();
+    InstanceData instanceData = InstanceData.builder().build();
     when(instanceDataService.fetchInstanceData(ACCOUNT_ID, CLUSTER_ID, POD_UID)).thenReturn(instanceData);
     PublishedMessage k8sPodInfoMessage = getK8sPodInfoMessage(POD_UID, POD_NAME, NODE_NAME, CLOUD_PROVIDER_ID,
         ACCOUNT_ID, CLUSTER_ID, CLUSTER_NAME, NAMESPACE, Collections.emptyMap(), Collections.emptyMap(),

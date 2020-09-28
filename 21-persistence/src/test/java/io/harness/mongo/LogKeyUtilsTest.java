@@ -3,14 +3,14 @@ package io.harness.mongo;
 import static io.harness.rule.OwnerRule.GEORGE;
 import static org.assertj.core.api.Assertions.assertThat;
 
-import io.harness.PersistenceTestBase;
+import io.harness.PersistenceTest;
 import io.harness.category.element.UnitTests;
 import io.harness.persistence.LogKeyUtils;
 import io.harness.rule.Owner;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
-public class LogKeyUtilsTest extends PersistenceTestBase {
+public class LogKeyUtilsTest extends PersistenceTest {
   static class DummySampleEntity extends SampleEntity {}
 
   @Test

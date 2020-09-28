@@ -5,7 +5,7 @@ import static java.time.Duration.ofMinutes;
 import static java.time.Duration.ofSeconds;
 import static org.assertj.core.api.Assertions.assertThat;
 
-import io.harness.PersistenceTestBase;
+import io.harness.PersistenceTest;
 import io.harness.category.element.UnitTests;
 import io.harness.mongo.iterator.MongoPersistenceIterator;
 import io.harness.rule.Owner;
@@ -18,7 +18,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Slf4j
-public class PersistentFibonacciIteratorTest extends PersistenceTestBase {
+public class PersistentFibonacciIteratorTest extends PersistenceTest {
   class TestHandler implements MongoPersistenceIterator.Handler<TestFibonacciIterableEntity> {
     @Override
     public void handle(TestFibonacciIterableEntity entity) {
