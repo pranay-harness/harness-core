@@ -1,5 +1,6 @@
 package software.wings.service.impl.yaml;
 
+import static io.harness.rule.OwnerRule.DEEPAK_PUTHRAYA;
 import static io.harness.rule.OwnerRule.GARVIT;
 import static io.harness.rule.OwnerRule.POOJA;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -21,6 +22,7 @@ import com.google.inject.Inject;
 
 import io.harness.category.element.UnitTests;
 import io.harness.exception.GeneralException;
+import io.harness.exception.InvalidRequestException;
 import io.harness.rule.Owner;
 import org.junit.Before;
 import org.junit.Test;
@@ -325,5 +327,15 @@ public class WorkflowYAMLHelperTest extends WingsBaseTest {
     assertThat(workflowYAMLHelper.getWorkflowVariableValueBean(
                    ACCOUNT_ID, ENV_ID, APP_ID, EntityType.SS_SSH_CONNECTION_ATTRIBUTE.name(), "SSH", variable))
         .isEqualTo("ssh-con-id");
+  }
+
+  @Test(expected = InvalidRequestException.class)
+  @Owner(developers = DEEPAK_PUTHRAYA)
+  @Category(UnitTests.class)
+  public void shouldThrowErrorWhenVariableValueBlank() {
+    Variable variable = aVariable().name("test").entityType(EntityType.SS_SSH_CONNECTION_ATTRIBUTE).build();
+
+    workflowYAMLHelper.getWorkflowVariableValueBean(
+        ACCOUNT_ID, ENV_ID, APP_ID, EntityType.SS_SSH_CONNECTION_ATTRIBUTE.name(), "    ", false, variable);
   }
 }
