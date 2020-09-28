@@ -1,6 +1,7 @@
 package io.harness.ng;
 
-import io.harness.connector.apis.dto.ConnectorRequestDTO;
+import io.harness.connector.apis.dto.ConnectorDTO;
+import io.harness.connector.apis.dto.ConnectorInfoDTO;
 import io.harness.delegate.beans.connector.gcpkmsconnector.GcpKmsConnectorDTO;
 import io.harness.secretmanagerclient.dto.GcpKmsConfigDTO;
 import io.harness.secretmanagerclient.dto.GcpKmsConfigUpdateDTO;
@@ -10,7 +11,8 @@ import lombok.experimental.UtilityClass;
 @UtilityClass
 public class GcpKmsConfigDTOMapper {
   public static GcpKmsConfigDTO getGcpKmsConfigDTO(
-      String accountIdentifier, ConnectorRequestDTO connectorRequestDTO, GcpKmsConnectorDTO gcpKmsConnectorDTO) {
+      String accountIdentifier, ConnectorDTO connectorRequestDTO, GcpKmsConnectorDTO gcpKmsConnectorDTO) {
+    ConnectorInfoDTO connector = connectorRequestDTO.getConnectorInfo();
     return GcpKmsConfigDTO.builder()
         .region(gcpKmsConnectorDTO.getRegion())
         .keyName(gcpKmsConnectorDTO.getKeyName())
@@ -20,18 +22,19 @@ public class GcpKmsConfigDTOMapper {
         .isDefault(gcpKmsConnectorDTO.isDefault())
         .encryptionType(EncryptionType.GCP_KMS)
 
-        .name(connectorRequestDTO.getName())
+        .name(connector.getName())
         .accountIdentifier(accountIdentifier)
-        .orgIdentifier(connectorRequestDTO.getOrgIdentifier())
-        .projectIdentifier(connectorRequestDTO.getProjectIdentifier())
-        .tags(connectorRequestDTO.getTags())
-        .identifier(connectorRequestDTO.getIdentifier())
-        .description(connectorRequestDTO.getDescription())
+        .orgIdentifier(connector.getOrgIdentifier())
+        .projectIdentifier(connector.getProjectIdentifier())
+        .tags(connector.getTags())
+        .identifier(connector.getIdentifier())
+        .description(connector.getDescription())
         .build();
   }
 
   public static GcpKmsConfigUpdateDTO getGcpKmsConfigUpdateDTO(
-      ConnectorRequestDTO connectorRequestDTO, GcpKmsConnectorDTO gcpKmsConnectorDTO) {
+      ConnectorDTO connectorRequestDTO, GcpKmsConnectorDTO gcpKmsConnectorDTO) {
+    ConnectorInfoDTO connector = connectorRequestDTO.getConnectorInfo();
     return GcpKmsConfigUpdateDTO.builder()
         .region(gcpKmsConnectorDTO.getRegion())
         .keyName(gcpKmsConnectorDTO.getKeyName())
@@ -41,8 +44,8 @@ public class GcpKmsConfigDTOMapper {
         .isDefault(gcpKmsConnectorDTO.isDefault())
         .encryptionType(EncryptionType.GCP_KMS)
 
-        .tags(connectorRequestDTO.getTags())
-        .description(connectorRequestDTO.getDescription())
+        .tags(connector.getTags())
+        .description(connector.getDescription())
         .build();
   }
 }

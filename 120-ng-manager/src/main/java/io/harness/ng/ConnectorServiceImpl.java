@@ -10,8 +10,8 @@ import com.google.inject.Singleton;
 import com.google.inject.name.Named;
 
 import io.harness.connector.apis.dto.ConnectorDTO;
-import io.harness.connector.apis.dto.ConnectorRequestDTO;
-import io.harness.connector.apis.dto.ConnectorSummaryDTO;
+import io.harness.connector.apis.dto.ConnectorInfoDTO;
+import io.harness.connector.apis.dto.ConnectorResponseDTO;
 import io.harness.connector.services.ConnectorService;
 import io.harness.delegate.beans.connector.ConnectorCategory;
 import io.harness.delegate.beans.connector.ConnectorType;
@@ -22,6 +22,7 @@ import org.springframework.data.domain.Page;
 import software.wings.service.impl.security.SecretManagementException;
 
 import java.util.Optional;
+import javax.validation.constraints.NotNull;
 
 @Singleton
 public class ConnectorServiceImpl implements ConnectorService {
@@ -46,33 +47,35 @@ public class ConnectorServiceImpl implements ConnectorService {
   }
 
   @Override
-  public Optional<ConnectorDTO> get(
+  public Optional<ConnectorResponseDTO> get(
       String accountIdentifier, String orgIdentifier, String projectIdentifier, String connectorIdentifier) {
     return defaultConnectorService.get(accountIdentifier, orgIdentifier, projectIdentifier, connectorIdentifier);
   }
 
   @Override
-  public Page<ConnectorSummaryDTO> list(int page, int size, String accountIdentifier, String orgIdentifier,
+  public Page<ConnectorResponseDTO> list(int page, int size, String accountIdentifier, String orgIdentifier,
       String projectIdentifier, String searchTerm, ConnectorType type, ConnectorCategory category) {
     return defaultConnectorService.list(
         page, size, accountIdentifier, orgIdentifier, projectIdentifier, searchTerm, type, category);
   }
 
   @Override
-  public ConnectorDTO create(ConnectorRequestDTO connector, String accountIdentifier) {
-    if (HARNESS_SECRET_MANAGER_IDENTIFIER.equals(connector.getIdentifier())) {
+  public ConnectorResponseDTO create(@NotNull ConnectorDTO connector, String accountIdentifier) {
+    ConnectorInfoDTO connectorInfo = connector.getConnectorInfo();
+    if (HARNESS_SECRET_MANAGER_IDENTIFIER.equals(connectorInfo.getIdentifier())) {
       throw new InvalidRequestException(
           String.format("%s cannot be used as connector identifier", HARNESS_SECRET_MANAGER_IDENTIFIER), USER);
     }
-    return getConnectorService(connector.getConnectorType()).create(connector, accountIdentifier);
+    return getConnectorService(connectorInfo.getConnectorType()).create(connector, accountIdentifier);
   }
 
   @Override
-  public ConnectorDTO update(ConnectorRequestDTO connectorRequestDTO, String accountIdentifier) {
-    if (HARNESS_SECRET_MANAGER_IDENTIFIER.equals(connectorRequestDTO.getIdentifier())) {
+  public ConnectorResponseDTO update(@NotNull ConnectorDTO connector, String accountIdentifier) {
+    ConnectorInfoDTO connectorInfo = connector.getConnectorInfo();
+    if (HARNESS_SECRET_MANAGER_IDENTIFIER.equals(connectorInfo.getIdentifier())) {
       throw new InvalidRequestException("Update operation not supported for Harness Secret Manager", USER);
     }
-    return getConnectorService(connectorRequestDTO.getConnectorType()).update(connectorRequestDTO, accountIdentifier);
+    return getConnectorService(connectorInfo.getConnectorType()).update(connector, accountIdentifier);
   }
 
   @Override
@@ -81,16 +84,19 @@ public class ConnectorServiceImpl implements ConnectorService {
     if (HARNESS_SECRET_MANAGER_IDENTIFIER.equals(connectorIdentifier)) {
       throw new InvalidRequestException("Delete operation not supported for Harness Secret Manager", USER);
     }
-    Optional<ConnectorDTO> connectorDTO = get(accountIdentifier, orgIdentifier, projectIdentifier, connectorIdentifier);
+    Optional<ConnectorResponseDTO> connectorDTO =
+        get(accountIdentifier, orgIdentifier, projectIdentifier, connectorIdentifier);
     if (connectorDTO.isPresent()) {
-      return getConnectorService(connectorDTO.get().getConnectorType())
+      ConnectorResponseDTO connectorResponse = connectorDTO.get();
+      ConnectorInfoDTO connectorInfoDTO = connectorResponse.getConnector();
+      return getConnectorService(connectorInfoDTO.getConnectorType())
           .delete(accountIdentifier, orgIdentifier, projectIdentifier, connectorIdentifier);
     }
     throw new InvalidRequestException("No such connector found", USER);
   }
 
   @Override
-  public ConnectorValidationResult validate(ConnectorRequestDTO connector, String accountIdentifier) {
+  public ConnectorValidationResult validate(@NotNull ConnectorDTO connector, String accountIdentifier) {
     return defaultConnectorService.validate(connector, accountIdentifier);
   }
 
@@ -104,9 +110,12 @@ public class ConnectorServiceImpl implements ConnectorService {
   @Override
   public ConnectorValidationResult testConnection(
       String accountIdentifier, String orgIdentifier, String projectIdentifier, String connectorIdentifier) {
-    Optional<ConnectorDTO> connectorDTO = get(accountIdentifier, orgIdentifier, projectIdentifier, connectorIdentifier);
+    Optional<ConnectorResponseDTO> connectorDTO =
+        get(accountIdentifier, orgIdentifier, projectIdentifier, connectorIdentifier);
     if (connectorDTO.isPresent()) {
-      return getConnectorService(connectorDTO.get().getConnectorType())
+      ConnectorResponseDTO connectorResponse = connectorDTO.get();
+      ConnectorInfoDTO connectorInfoDTO = connectorResponse.getConnector();
+      return getConnectorService(connectorInfoDTO.getConnectorType())
           .testConnection(accountIdentifier, orgIdentifier, projectIdentifier, connectorIdentifier);
     }
     throw new InvalidRequestException("No such connector found", USER);

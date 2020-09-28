@@ -24,7 +24,7 @@ import static org.springframework.data.domain.Pageable.unpaged;
 import io.dropwizard.jersey.validation.JerseyViolationException;
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
-import io.harness.connector.apis.dto.ConnectorDTO;
+import io.harness.connector.apis.dto.ConnectorResponseDTO;
 import io.harness.connector.services.ConnectorService;
 import io.harness.exception.InvalidRequestException;
 import io.harness.ng.core.api.NGSecretManagerService;
@@ -90,7 +90,7 @@ public class ProjectServiceImplTest extends CategoryTest {
     when(projectRepository.save(project)).thenReturn(project);
     when(ngSecretManagerService.getGlobalSecretManager(accountIdentifier))
         .thenReturn(GcpKmsConfigDTO.builder().encryptionType(GCP_KMS).build());
-    when(secretManagerConnectorService.create(any(), eq(accountIdentifier))).thenReturn(new ConnectorDTO());
+    when(secretManagerConnectorService.create(any(), eq(accountIdentifier))).thenReturn(new ConnectorResponseDTO());
     when(organizationService.get(accountIdentifier, orgIdentifier)).thenReturn(Optional.of(random(Organization.class)));
 
     Project createdProject = projectService.create(accountIdentifier, orgIdentifier, projectDTO);

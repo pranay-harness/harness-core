@@ -22,7 +22,7 @@ import com.google.inject.Inject;
 import io.harness.CategoryTest;
 import io.harness.ManagerDelegateServiceDriver;
 import io.harness.category.element.UnitTests;
-import io.harness.connector.apis.dto.ConnectorDTO;
+import io.harness.connector.apis.dto.ConnectorInfoDTO;
 import io.harness.delegate.beans.connector.ConnectorType;
 import io.harness.delegate.beans.connector.gitconnector.GitConfigDTO;
 import io.harness.delegate.beans.git.YamlGitConfigDTO;
@@ -105,7 +105,7 @@ public class YamlGitServiceImplTest extends CategoryTest {
     doReturn(YamlGitConfigDTO.builder().build())
         .when(yamlGitConfigService)
         .getByFolderIdentifierAndIsEnabled(null, null, ACCOUNTID, null);
-    doReturn(Optional.of(ConnectorDTO.builder()
+    doReturn(Optional.of(ConnectorInfoDTO.builder()
                              .connectorType(ConnectorType.GIT)
                              .connectorConfig(GitConfigDTO.builder().build())
                              .build()))
@@ -211,7 +211,7 @@ public class YamlGitServiceImplTest extends CategoryTest {
         .when(gitCommitService)
         .findLastProcessedGitCommit(any(), any(), any());
     doReturn(null).when(ngSecretService).getEncryptionDetails(any(), any());
-    doReturn(Optional.of(ConnectorDTO.builder()
+    doReturn(Optional.of(ConnectorInfoDTO.builder()
                              .connectorType(ConnectorType.GIT)
                              .connectorConfig(GitConfigDTO.builder().build())
                              .build()))

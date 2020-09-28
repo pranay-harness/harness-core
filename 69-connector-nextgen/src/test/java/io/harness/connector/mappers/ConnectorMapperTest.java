@@ -13,7 +13,8 @@ import static org.mockito.Mockito.when;
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import io.harness.connector.apis.dto.ConnectorDTO;
-import io.harness.connector.apis.dto.ConnectorRequestDTO;
+import io.harness.connector.apis.dto.ConnectorInfoDTO;
+import io.harness.connector.apis.dto.ConnectorResponseDTO;
 import io.harness.connector.entities.Connector;
 import io.harness.connector.entities.embedded.kubernetescluster.K8sUserNamePassword;
 import io.harness.connector.entities.embedded.kubernetescluster.KubernetesClusterConfig;
@@ -100,12 +101,14 @@ public class ConnectorMapperTest extends CategoryTest {
                     .config(KubernetesClusterDetailsDTO.builder().masterUrl(masterURL).auth(kubernetesAuthDTO).build())
                     .build())
             .build();
-    ConnectorRequestDTO connectorRequestDTO = ConnectorRequestDTO.builder()
-                                                  .name(name)
-                                                  .identifier(identifier)
-                                                  .connectorType(KUBERNETES_CLUSTER)
-                                                  .connectorConfig(connectorDTOWithDelegateCreds)
-                                                  .build();
+    ConnectorDTO connectorRequestDTO = ConnectorDTO.builder()
+                                           .connectorInfo(ConnectorInfoDTO.builder()
+                                                              .name(name)
+                                                              .identifier(identifier)
+                                                              .connectorType(KUBERNETES_CLUSTER)
+                                                              .connectorConfig(connectorDTOWithDelegateCreds)
+                                                              .build())
+                                           .build();
     when(connectorDTOToEntityMapperMap.get(any())).thenReturn(kubernetesDTOToEntity);
     Connector connector = connectorMapper.toConnector(connectorRequestDTO, accountIdentifier);
     assertThat(connector).isNotNull();
@@ -142,26 +145,28 @@ public class ConnectorMapperTest extends CategoryTest {
     connector.setIdentifier(identifier);
     connector.setType(KUBERNETES_CLUSTER);
     when(connectorEntityToDTOMapperMap.get(any())).thenReturn(kubernetesEntityToDTO);
-    ConnectorDTO connectorRequestDTO = connectorMapper.writeDTO(connector);
-    assertThat(connectorRequestDTO).isNotNull();
-    assertThat(connectorRequestDTO.getName()).isEqualTo(name);
-    assertThat(connectorRequestDTO.getIdentifier()).isEqualTo(identifier);
-    assertThat(connectorRequestDTO.getConnectorType()).isEqualTo(KUBERNETES_CLUSTER);
+    ConnectorResponseDTO connectorResponse = connectorMapper.writeDTO(connector);
+    ConnectorInfoDTO connectorInfo = connectorResponse.getConnector();
+    assertThat(connectorInfo).isNotNull();
+    assertThat(connectorInfo.getName()).isEqualTo(name);
+    assertThat(connectorInfo.getIdentifier()).isEqualTo(identifier);
+    assertThat(connectorInfo.getConnectorType()).isEqualTo(KUBERNETES_CLUSTER);
   }
 
   @Test
   @Owner(developers = OwnerRule.DEEPAK)
   @Category(UnitTests.class)
   public void getScopeFromConnectorDTOTest() {
-    ConnectorRequestDTO connectorDTO = ConnectorRequestDTO.builder().build();
+    ConnectorInfoDTO connectorInfo = ConnectorInfoDTO.builder().build();
+    ConnectorDTO connectorDTO = ConnectorDTO.builder().connectorInfo(connectorInfo).build();
     Connector.Scope accountScope = connectorMapper.getScopeFromConnectorDTO(connectorDTO);
     assertThat(accountScope).isEqualTo(ACCOUNT);
 
-    connectorDTO.setOrgIdentifier("orgIdentifier");
+    connectorInfo.setOrgIdentifier("orgIdentifier");
     Connector.Scope orgScope = connectorMapper.getScopeFromConnectorDTO(connectorDTO);
     assertThat(orgScope).isEqualTo(ORGANIZATION);
 
-    connectorDTO.setProjectIdentifier("projectIdentifier");
+    connectorInfo.setProjectIdentifier("projectIdentifier");
     Connector.Scope projectScope = connectorMapper.getScopeFromConnectorDTO(connectorDTO);
     assertThat(projectScope).isEqualTo(PROJECT);
   }

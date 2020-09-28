@@ -3,8 +3,8 @@ package io.harness.cvng.client;
 import com.google.inject.Inject;
 
 import io.harness.connector.apis.dto.ConnectorDTO;
-import io.harness.connector.apis.dto.ConnectorRequestDTO;
-import io.harness.connector.apis.dto.ConnectorWrapper;
+import io.harness.connector.apis.dto.ConnectorInfoDTO;
+import io.harness.connector.apis.dto.ConnectorResponseDTO;
 import io.harness.ng.core.environment.dto.EnvironmentResponseDTO;
 import io.harness.ng.core.service.dto.ServiceResponseDTO;
 
@@ -15,18 +15,18 @@ public class NextGenServiceImpl implements NextGenService {
   @Inject RequestExecutor requestExecutor;
 
   @Override
-  public ConnectorDTO create(ConnectorRequestDTO connectorRequestDTO, String accountIdentifier) {
+  public ConnectorResponseDTO create(ConnectorDTO connectorRequestDTO, String accountIdentifier) {
     return requestExecutor.execute(nextGenClient.create(connectorRequestDTO, accountIdentifier)).getData();
   }
 
   @Override
-  public Optional<ConnectorDTO> get(
+  public Optional<ConnectorInfoDTO> get(
       String accountIdentifier, String connectorIdentifier, String orgIdentifier, String projectIdentifier) {
-    ConnectorWrapper connectorWrapper =
+    ConnectorResponseDTO connectorResponse =
         requestExecutor
             .execute(nextGenClient.get(accountIdentifier, connectorIdentifier, orgIdentifier, projectIdentifier))
             .getData();
-    return connectorWrapper != null ? Optional.of(connectorWrapper.getConnector()) : Optional.empty();
+    return connectorResponse != null ? Optional.of(connectorResponse.getConnector()) : Optional.empty();
   }
 
   @Override

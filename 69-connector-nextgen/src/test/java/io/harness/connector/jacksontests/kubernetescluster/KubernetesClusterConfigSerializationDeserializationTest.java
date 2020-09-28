@@ -8,8 +8,8 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
-import io.harness.connector.apis.dto.ConnectorRequestDTO;
-import io.harness.connector.apis.dto.ConnectorRequestWrapper;
+import io.harness.connector.apis.dto.ConnectorDTO;
+import io.harness.connector.apis.dto.ConnectorInfoDTO;
 import io.harness.delegate.beans.connector.k8Connector.KubernetesAuthDTO;
 import io.harness.delegate.beans.connector.k8Connector.KubernetesAuthType;
 import io.harness.delegate.beans.connector.k8Connector.KubernetesClusterConfigDTO;
@@ -67,9 +67,9 @@ public class KubernetesClusterConfigSerializationDeserializationTest extends Cat
     return KubernetesClusterConfigDTO.builder().credential(k8sCredentials).build();
   }
 
-  private ConnectorRequestDTO createConnectorRequestDTOForK8sConnector() {
+  private ConnectorInfoDTO createConnectorRequestDTOForK8sConnector() {
     KubernetesClusterConfigDTO kubernetesConnectorDTO = createKubernetesConnectorRequestDTO();
-    return ConnectorRequestDTO.builder()
+    return ConnectorInfoDTO.builder()
         .name(name)
         .identifier(connectorIdentifier)
         .description(description)
@@ -94,12 +94,11 @@ public class KubernetesClusterConfigSerializationDeserializationTest extends Cat
   @Owner(developers = OwnerRule.DEEPAK)
   @Category(UnitTests.class)
   public void testSerializationOfK8sConnector() {
-    ConnectorRequestDTO connectorRequestDTO = createConnectorRequestDTOForK8sConnector();
-    ConnectorRequestWrapper connectorRequestWrapper =
-        ConnectorRequestWrapper.builder().connector(connectorRequestDTO).build();
+    ConnectorInfoDTO connectorRequestDTO = createConnectorRequestDTOForK8sConnector();
+    ConnectorDTO connectorDTO = ConnectorDTO.builder().connectorInfo(connectorRequestDTO).build();
     String connectorString = "";
     try {
-      connectorString = objectMapper.writeValueAsString(connectorRequestWrapper);
+      connectorString = objectMapper.writeValueAsString(connectorDTO);
     } catch (Exception ex) {
       Assert.fail("Encountered exception while serializing k8s connector " + ex.getMessage());
     }
@@ -120,16 +119,15 @@ public class KubernetesClusterConfigSerializationDeserializationTest extends Cat
   @Category(UnitTests.class)
   public void testDeserializationOfK8sConnector() {
     String connectorInput = readFileAsString("src/test/resources/kubernetescluster/k8sConnector.json");
-    ConnectorRequestWrapper inputConnector = null;
+    ConnectorDTO inputConnector = null;
     try {
-      inputConnector = objectMapper.readValue(connectorInput, ConnectorRequestWrapper.class);
+      inputConnector = objectMapper.readValue(connectorInput, ConnectorDTO.class);
     } catch (Exception ex) {
       Assert.fail("Encountered exception while deserializing k8s connector " + ex.getMessage());
     }
-    ConnectorRequestDTO connectorRequestDTO = createConnectorRequestDTOForK8sConnector();
-    ConnectorRequestWrapper connectorRequestWrapper =
-        ConnectorRequestWrapper.builder().connector(connectorRequestDTO).build();
-    assertThat(inputConnector).isEqualTo(connectorRequestWrapper);
+    ConnectorInfoDTO connectorRequestDTO = createConnectorRequestDTOForK8sConnector();
+    ConnectorDTO connectorDTO = ConnectorDTO.builder().connectorInfo(connectorRequestDTO).build();
+    assertThat(inputConnector).isEqualTo(connectorDTO);
   }
 
   @Test

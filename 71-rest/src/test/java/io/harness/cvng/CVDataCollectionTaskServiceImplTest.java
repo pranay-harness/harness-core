@@ -9,7 +9,7 @@ import static org.mockito.MockitoAnnotations.initMocks;
 import com.google.inject.Inject;
 
 import io.harness.category.element.UnitTests;
-import io.harness.connector.apis.dto.ConnectorDTO;
+import io.harness.connector.apis.dto.ConnectorInfoDTO;
 import io.harness.cvng.beans.DataCollectionConnectorBundle;
 import io.harness.cvng.perpetualtask.CVDataCollectionTaskService;
 import io.harness.delegate.beans.connector.appdynamicsconnector.AppDynamicsConnectorDTO;
@@ -65,7 +65,7 @@ public class CVDataCollectionTaskServiceImplTest extends WingsBaseTest {
     DataCollectionConnectorBundle bundle =
         DataCollectionConnectorBundle.builder()
             .params(params)
-            .connectorDTO(ConnectorDTO.builder().connectorConfig(appDynamicsConnectorDTO).build())
+            .connectorDTO(ConnectorInfoDTO.builder().connectorConfig(appDynamicsConnectorDTO).build())
             .build();
     String taskId = dataCollectionTaskService.create(accountId, orgIdentifier, projectIdentifier, bundle);
     assertThat(taskId).isNotNull();
@@ -99,7 +99,7 @@ public class CVDataCollectionTaskServiceImplTest extends WingsBaseTest {
     DataCollectionConnectorBundle bundle =
         DataCollectionConnectorBundle.builder()
             .params(params)
-            .connectorDTO(ConnectorDTO.builder().connectorConfig(appDynamicsConnectorDTO).build())
+            .connectorDTO(ConnectorInfoDTO.builder().connectorConfig(appDynamicsConnectorDTO).build())
             .build();
     String taskId = dataCollectionTaskService.create(accountId, orgIdentifier, projectIdentifier, bundle);
     assertThat(taskId).isNotNull();

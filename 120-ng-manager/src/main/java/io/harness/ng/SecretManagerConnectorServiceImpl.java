@@ -11,8 +11,8 @@ import com.google.inject.Singleton;
 import com.google.inject.name.Named;
 
 import io.harness.connector.apis.dto.ConnectorDTO;
-import io.harness.connector.apis.dto.ConnectorRequestDTO;
-import io.harness.connector.apis.dto.ConnectorSummaryDTO;
+import io.harness.connector.apis.dto.ConnectorInfoDTO;
+import io.harness.connector.apis.dto.ConnectorResponseDTO;
 import io.harness.connector.services.ConnectorService;
 import io.harness.delegate.beans.connector.ConnectorCategory;
 import io.harness.delegate.beans.connector.ConnectorType;
@@ -41,52 +41,54 @@ public class SecretManagerConnectorServiceImpl implements ConnectorService {
   }
 
   @Override
-  public Page<ConnectorSummaryDTO> list(int page, int size, String accountIdentifier, String orgIdentifier,
+  public Page<ConnectorResponseDTO> list(int page, int size, String accountIdentifier, String orgIdentifier,
       String projectIdentifier, String searchTerm, ConnectorType type, ConnectorCategory categories) {
     throw new UnsupportedOperationException("This operation is not supported for secret manager");
   }
 
   @Override
-  public Optional<ConnectorDTO> get(
+  public Optional<ConnectorResponseDTO> get(
       String accountIdentifier, String orgIdentifier, String projectIdentifier, String connectorIdentifier) {
     return defaultConnectorService.get(accountIdentifier, orgIdentifier, projectIdentifier, connectorIdentifier);
   }
 
   @Override
-  public ConnectorDTO create(@Valid ConnectorRequestDTO connector, String accountIdentifier) {
+  public ConnectorResponseDTO create(@Valid ConnectorDTO connector, String accountIdentifier) {
     // TODO{karan} Remove this section after event driven is used to create harness secret manager for account
-    if (connector.getIdentifier().equals(HARNESS_SECRET_MANAGER_IDENTIFIER)) {
+    ConnectorInfoDTO connectorInfo = connector.getConnectorInfo();
+    if (connectorInfo.getIdentifier().equals(HARNESS_SECRET_MANAGER_IDENTIFIER)) {
       if (!defaultConnectorService.get(accountIdentifier, null, null, HARNESS_SECRET_MANAGER_IDENTIFIER).isPresent()) {
         logger.info("Account level Harness Secret Manager not found");
-        String orgIdentifier = connector.getOrgIdentifier();
-        String projectIdentifier = connector.getProjectIdentifier();
-        String description = connector.getDescription();
-        String name = connector.getName();
-        connector.setOrgIdentifier(null);
-        connector.setProjectIdentifier(null);
-        connector.setDescription("Account Level Secret Manager");
-        connector.setName("Harness Secrets Manager");
+        String orgIdentifier = connectorInfo.getOrgIdentifier();
+        String projectIdentifier = connectorInfo.getProjectIdentifier();
+        String description = connectorInfo.getDescription();
+        String name = connectorInfo.getName();
+        connectorInfo.setOrgIdentifier(null);
+        connectorInfo.setProjectIdentifier(null);
+        connectorInfo.setDescription("Account Level Secret Manager");
+        connectorInfo.setName("Harness Secrets Manager");
         createSecretManagerConnector(connector, accountIdentifier);
-        connector.setProjectIdentifier(projectIdentifier);
-        connector.setOrgIdentifier(orgIdentifier);
-        connector.setDescription(description);
-        connector.setName(name);
+        connectorInfo.setProjectIdentifier(projectIdentifier);
+        connectorInfo.setOrgIdentifier(orgIdentifier);
+        connectorInfo.setDescription(description);
+        connectorInfo.setName(name);
       }
     }
     return createSecretManagerConnector(connector, accountIdentifier);
   }
 
-  private ConnectorDTO createSecretManagerConnector(ConnectorRequestDTO connector, String accountIdentifier) {
+  private ConnectorResponseDTO createSecretManagerConnector(ConnectorDTO connector, String accountIdentifier) {
+    ConnectorInfoDTO connectorInfo = connector.getConnectorInfo();
     SecretManagerConfigDTO secretManagerConfigDTO =
-        SecretManagerConfigDTOMapper.fromConnectorDTO(accountIdentifier, connector, connector.getConnectorConfig());
+        SecretManagerConfigDTOMapper.fromConnectorDTO(accountIdentifier, connector, connectorInfo.getConnectorConfig());
     SecretManagerConfigDTO createdSecretManager = ngSecretManagerService.createSecretManager(secretManagerConfigDTO);
     if (Optional.ofNullable(createdSecretManager).isPresent()) {
       try {
         return defaultConnectorService.create(connector, accountIdentifier);
       } catch (Exception ex) {
         logger.error("Error occurred while creating secret manager in 120 ng, trying to delete in 71 rest", ex);
-        ngSecretManagerService.deleteSecretManager(accountIdentifier, connector.getOrgIdentifier(),
-            connector.getProjectIdentifier(), connector.getIdentifier());
+        ngSecretManagerService.deleteSecretManager(accountIdentifier, connectorInfo.getOrgIdentifier(),
+            connectorInfo.getProjectIdentifier(), connectorInfo.getIdentifier());
         throw new SecretManagementException(
             SECRET_MANAGEMENT_ERROR, "Exception occurred while saving secret manager", USER);
       }
@@ -96,11 +98,12 @@ public class SecretManagerConnectorServiceImpl implements ConnectorService {
   }
 
   @Override
-  public ConnectorDTO update(ConnectorRequestDTO connector, String accountIdentifier) {
+  public ConnectorResponseDTO update(ConnectorDTO connector, String accountIdentifier) {
+    ConnectorInfoDTO connectorInfo = connector.getConnectorInfo();
     SecretManagerConfigUpdateDTO dto =
-        SecretManagerConfigUpdateDTOMapper.fromConnectorDTO(connector, connector.getConnectorConfig());
+        SecretManagerConfigUpdateDTOMapper.fromConnectorDTO(connector, connectorInfo.getConnectorConfig());
     SecretManagerConfigDTO updatedSecretManagerConfig = ngSecretManagerService.updateSecretManager(accountIdentifier,
-        connector.getOrgIdentifier(), connector.getProjectIdentifier(), connector.getIdentifier(), dto);
+        connectorInfo.getOrgIdentifier(), connectorInfo.getProjectIdentifier(), connectorInfo.getIdentifier(), dto);
     if (Optional.ofNullable(updatedSecretManagerConfig).isPresent()) {
       return defaultConnectorService.update(connector, accountIdentifier);
     }
@@ -127,7 +130,7 @@ public class SecretManagerConnectorServiceImpl implements ConnectorService {
   }
 
   @Override
-  public ConnectorValidationResult validate(ConnectorRequestDTO connector, String accountIdentifier) {
+  public ConnectorValidationResult validate(ConnectorDTO connector, String accountIdentifier) {
     throw new UnsupportedOperationException("Cannot validate secret manager, use test connection API instead");
   }
 

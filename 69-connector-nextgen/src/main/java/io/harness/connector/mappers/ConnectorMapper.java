@@ -10,7 +10,8 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import io.harness.connector.apis.dto.ConnectorDTO;
-import io.harness.connector.apis.dto.ConnectorRequestDTO;
+import io.harness.connector.apis.dto.ConnectorInfoDTO;
+import io.harness.connector.apis.dto.ConnectorResponseDTO;
 import io.harness.connector.entities.Connector;
 import io.harness.connector.mappers.appdynamicsmapper.AppDynamicsDTOToEntity;
 import io.harness.connector.mappers.appdynamicsmapper.AppDynamicsEntityToDTO;
@@ -38,53 +39,56 @@ public class ConnectorMapper {
   @Inject private Map<String, ConnectorDTOToEntityMapper> connectorDTOToEntityMapperMap;
   @Inject private Map<String, ConnectorEntityToDTOMapper> connectorEntityToDTOMapperMap;
 
-  public Connector toConnector(ConnectorRequestDTO connectorRequestDTO, String accountIdentifier) {
+  public Connector toConnector(ConnectorDTO connectorRequestDTO, String accountIdentifier) {
+    ConnectorInfoDTO connectorInfo = connectorRequestDTO.getConnectorInfo();
     ConnectorDTOToEntityMapper connectorDTOToEntityMapper =
-        connectorDTOToEntityMapperMap.get(connectorRequestDTO.getConnectorType().toString());
-    Connector connector = connectorDTOToEntityMapper.toConnectorEntity(connectorRequestDTO.getConnectorConfig());
-    connector.setIdentifier(connectorRequestDTO.getIdentifier());
-    connector.setName(connectorRequestDTO.getName());
+        connectorDTOToEntityMapperMap.get(connectorInfo.getConnectorType().toString());
+    Connector connector = connectorDTOToEntityMapper.toConnectorEntity(connectorInfo.getConnectorConfig());
+    connector.setIdentifier(connectorInfo.getIdentifier());
+    connector.setName(connectorInfo.getName());
     connector.setScope(getScopeFromConnectorDTO(connectorRequestDTO));
     connector.setAccountIdentifier(accountIdentifier);
-    connector.setOrgIdentifier(connectorRequestDTO.getOrgIdentifier());
-    connector.setProjectIdentifier(connectorRequestDTO.getProjectIdentifier());
+    connector.setOrgIdentifier(connectorInfo.getOrgIdentifier());
+    connector.setProjectIdentifier(connectorInfo.getProjectIdentifier());
     connector.setFullyQualifiedIdentifier(FullyQualifiedIdentifierHelper.getFullyQualifiedIdentifier(accountIdentifier,
-        connectorRequestDTO.getOrgIdentifier(), connectorRequestDTO.getProjectIdentifier(),
-        connectorRequestDTO.getIdentifier()));
-    connector.setTags(connectorRequestDTO.getTags());
-    connector.setDescription(connectorRequestDTO.getDescription());
-    connector.setType(connectorRequestDTO.getConnectorType());
+        connectorInfo.getOrgIdentifier(), connectorInfo.getProjectIdentifier(), connectorInfo.getIdentifier()));
+    connector.setTags(connectorInfo.getTags());
+    connector.setDescription(connectorInfo.getDescription());
+    connector.setType(connectorInfo.getConnectorType());
     connector.setCategories(connectorDTOToEntityMapper.getConnectorCategory());
     return connector;
   }
 
   @VisibleForTesting
-  Connector.Scope getScopeFromConnectorDTO(ConnectorRequestDTO connectorRequestDTO) {
-    if (isNotBlank(connectorRequestDTO.getProjectIdentifier())) {
+  Connector.Scope getScopeFromConnectorDTO(ConnectorDTO connectorRequestDTO) {
+    ConnectorInfoDTO connectorInfo = connectorRequestDTO.getConnectorInfo();
+    if (isNotBlank(connectorInfo.getProjectIdentifier())) {
       return PROJECT;
     }
-    if (isNotBlank(connectorRequestDTO.getOrgIdentifier())) {
+    if (isNotBlank(connectorInfo.getOrgIdentifier())) {
       return ORGANIZATION;
     }
     return ACCOUNT;
   }
 
-  public ConnectorDTO writeDTO(Connector connector) {
+  public ConnectorResponseDTO writeDTO(Connector connector) {
     ConnectorConfigDTO connectorConfigDTO = createConnectorConfigDTO(connector);
-    return ConnectorDTO.builder()
-        .name(connector.getName())
-        .identifier(connector.getIdentifier())
-        .description(connector.getDescription())
-        .accountIdentifier(connector.getAccountIdentifier())
-        .orgIdentifier(connector.getOrgIdentifier())
-        .projectIdentifier(connector.getProjectIdentifier())
-        .connectorConfig(connectorConfigDTO)
-        .connectorType(connector.getType())
-        .tags(connector.getTags())
+    ConnectorInfoDTO connectorInfo = ConnectorInfoDTO.builder()
+                                         .name(connector.getName())
+                                         .identifier(connector.getIdentifier())
+                                         .description(connector.getDescription())
+                                         .orgIdentifier(connector.getOrgIdentifier())
+                                         .projectIdentifier(connector.getProjectIdentifier())
+                                         .connectorConfig(connectorConfigDTO)
+                                         .connectorType(connector.getType())
+                                         .tags(connector.getTags())
+                                         .connectorType(connector.getType())
+                                         .build();
+    return ConnectorResponseDTO.builder()
+        .connector(connectorInfo)
+        .status(connector.getStatus())
         .createdAt(connector.getCreatedAt())
         .lastModifiedAt(connector.getLastModifiedAt())
-        .connectorType(connector.getType())
-        .status(connector.getStatus())
         .build();
   }
 

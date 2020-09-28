@@ -27,8 +27,8 @@ import com.google.inject.Singleton;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import io.harness.ManagerDelegateServiceDriver;
-import io.harness.connector.apis.dto.ConnectorDTO;
 import io.harness.connector.apis.dto.ConnectorFilter;
+import io.harness.connector.apis.dto.ConnectorInfoDTO;
 import io.harness.data.structure.NullSafeImmutableMap;
 import io.harness.delegate.beans.TaskData;
 import io.harness.delegate.beans.connector.ConnectorType;
@@ -131,7 +131,7 @@ public class YamlGitServiceImpl implements YamlGitService {
     if (yamlGitConfig == null) {
       throw new InvalidRequestException(String.format("No git sync configured for [%s]", gitFileChange.getFilePath()));
     }
-    Optional<ConnectorDTO> connector = getGitConnector(yamlGitConfig);
+    Optional<ConnectorInfoDTO> connector = getGitConnector(yamlGitConfig);
 
     if (!connector.isPresent()) {
       throw new GeneralException(
@@ -155,7 +155,7 @@ public class YamlGitServiceImpl implements YamlGitService {
   }
 
   private TaskData getTaskDataForCommitAndPush(YamlChangeSet yamlChangeSet, GitFileChange gitFileChange,
-      YamlGitConfigDTO yamlGitConfig, ConnectorDTO connector, String accountIdentifier, String orgIdentifier,
+      YamlGitConfigDTO yamlGitConfig, ConnectorInfoDTO connector, String accountIdentifier, String orgIdentifier,
       String projectIdentifier) {
     GitConfigDTO gitConfig = (GitConfigDTO) connector.getConnectorConfig();
     GitAuthenticationDTO gitAuthenticationDecryptableEntity = gitConfig.getGitAuth();
@@ -193,7 +193,7 @@ public class YamlGitServiceImpl implements YamlGitService {
         .build();
   }
 
-  private Optional<ConnectorDTO> getGitConnector(YamlGitConfigDTO yamlGitConfig) {
+  private Optional<ConnectorInfoDTO> getGitConnector(YamlGitConfigDTO yamlGitConfig) {
     if (yamlGitConfig != null) {
       String branchName = yamlGitConfig.getBranch();
       String gitConnectorIdentifier = yamlGitConfig.getGitConnectorId();
@@ -211,16 +211,16 @@ public class YamlGitServiceImpl implements YamlGitService {
   }
 
   @VisibleForTesting
-  List<ConnectorDTO> getGitConnectors(String accountId) {
+  List<ConnectorInfoDTO> getGitConnectors(String accountId) {
     ConnectorFilter connectorFilter = ConnectorFilter.builder().type(ConnectorType.GIT).build();
     // TODO(abhinav): Refactor after connector impl
     return null;
   }
 
   @VisibleForTesting
-  String getGitConnectorIdByWebhookToken(List<ConnectorDTO> connectors, String webhookToken) {
+  String getGitConnectorIdByWebhookToken(List<ConnectorInfoDTO> connectors, String webhookToken) {
     String gitConnectorId = null;
-    for (ConnectorDTO connector : connectors) {
+    for (ConnectorInfoDTO connector : connectors) {
       final ConnectorType type = connector.getConnectorType();
       // TODO(abhinav): Change name to webhook token
       if (type.equals(ConnectorType.GIT) && webhookToken.equals(connector.getName())) {
@@ -240,7 +240,7 @@ public class YamlGitServiceImpl implements YamlGitService {
              YamlProcessingLogContext.builder().webhookToken(webhookToken).build(OVERRIDE_ERROR)) {
       logger.info(GIT_YAML_LOG_PREFIX + "Started processing webhook request");
 
-      List<ConnectorDTO> connectors = getGitConnectors(accountId);
+      List<ConnectorInfoDTO> connectors = getGitConnectors(accountId);
 
       if (isEmpty(connectors)) {
         logger.info(GIT_YAML_LOG_PREFIX + "Git connector not found for account");
@@ -408,7 +408,7 @@ public class YamlGitServiceImpl implements YamlGitService {
   private String createDelegateTaskForDiff(YamlChangeSet yamlChangeSet, String accountId,
       List<YamlGitConfigDTO> yamlGitConfigs, String lastProcessedCommitId, String endCommitId) {
     YamlGitConfigDTO yamlGitConfig = yamlGitConfigs.get(0);
-    final Optional<ConnectorDTO> connector = getGitConnector(yamlGitConfig);
+    final Optional<ConnectorInfoDTO> connector = getGitConnector(yamlGitConfig);
 
     if (!connector.isPresent()) {
       throw new GeneralException(
@@ -434,7 +434,7 @@ public class YamlGitServiceImpl implements YamlGitService {
   }
 
   private TaskData getTaskDataForDiff(YamlChangeSet yamlChangeSet, YamlGitConfigDTO yamlGitConfig,
-      ConnectorDTO connector, String accountIdentifier, String orgIdentifier, String projectIdentifier,
+      ConnectorInfoDTO connector, String accountIdentifier, String orgIdentifier, String projectIdentifier,
       String lastCommitId, String currentCommit) {
     GitConfigDTO gitConfig = (GitConfigDTO) connector.getConnectorConfig();
     GitAuthenticationDTO gitAuthenticationDecryptableEntity = gitConfig.getGitAuth();

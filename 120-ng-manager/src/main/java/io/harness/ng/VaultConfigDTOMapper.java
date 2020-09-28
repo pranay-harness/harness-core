@@ -1,6 +1,7 @@
 package io.harness.ng;
 
-import io.harness.connector.apis.dto.ConnectorRequestDTO;
+import io.harness.connector.apis.dto.ConnectorDTO;
+import io.harness.connector.apis.dto.ConnectorInfoDTO;
 import io.harness.delegate.beans.connector.vaultconnector.VaultConnectorDTO;
 import io.harness.secretmanagerclient.dto.VaultConfigDTO;
 import io.harness.secretmanagerclient.dto.VaultConfigUpdateDTO;
@@ -10,7 +11,8 @@ import lombok.experimental.UtilityClass;
 @UtilityClass
 public class VaultConfigDTOMapper {
   public static VaultConfigUpdateDTO getVaultConfigUpdateDTO(
-      ConnectorRequestDTO connectorRequestDTO, VaultConnectorDTO vaultConnectorDTO) {
+      ConnectorDTO connectorRequestDTO, VaultConnectorDTO vaultConnectorDTO) {
+    ConnectorInfoDTO connector = connectorRequestDTO.getConnectorInfo();
     return VaultConfigUpdateDTO.builder()
         .authToken(vaultConnectorDTO.getAuthToken())
         .basePath(vaultConnectorDTO.getBasePath())
@@ -23,13 +25,14 @@ public class VaultConfigDTOMapper {
         .isDefault(vaultConnectorDTO.isDefault())
         .encryptionType(EncryptionType.VAULT)
 
-        .tags(connectorRequestDTO.getTags())
-        .description(connectorRequestDTO.getDescription())
+        .tags(connector.getTags())
+        .description(connector.getDescription())
         .build();
   }
 
   public static VaultConfigDTO getVaultConfigDTO(
-      String accountIdentifier, ConnectorRequestDTO connectorRequestDTO, VaultConnectorDTO vaultConnectorDTO) {
+      String accountIdentifier, ConnectorDTO connectorRequestDTO, VaultConnectorDTO vaultConnectorDTO) {
+    ConnectorInfoDTO connector = connectorRequestDTO.getConnectorInfo();
     return VaultConfigDTO.builder()
         .authToken(vaultConnectorDTO.getAuthToken())
         .basePath(vaultConnectorDTO.getBasePath())
@@ -43,13 +46,13 @@ public class VaultConfigDTOMapper {
         .encryptionType(EncryptionType.VAULT)
         .secretEngineVersion(vaultConnectorDTO.getSecretEngineVersion())
 
-        .name(connectorRequestDTO.getName())
+        .name(connector.getName())
         .accountIdentifier(accountIdentifier)
-        .orgIdentifier(connectorRequestDTO.getOrgIdentifier())
-        .projectIdentifier(connectorRequestDTO.getProjectIdentifier())
-        .tags(connectorRequestDTO.getTags())
-        .identifier(connectorRequestDTO.getIdentifier())
-        .description(connectorRequestDTO.getDescription())
+        .orgIdentifier(connector.getOrgIdentifier())
+        .projectIdentifier(connector.getProjectIdentifier())
+        .tags(connector.getTags())
+        .identifier(connector.getIdentifier())
+        .description(connector.getDescription())
         .build();
   }
 }

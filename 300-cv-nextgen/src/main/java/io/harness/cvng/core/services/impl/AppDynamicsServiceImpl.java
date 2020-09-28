@@ -3,7 +3,7 @@ package io.harness.cvng.core.services.impl;
 import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
 
-import io.harness.connector.apis.dto.ConnectorDTO;
+import io.harness.connector.apis.dto.ConnectorInfoDTO;
 import io.harness.cvng.beans.AppdynamicsValidationResponse;
 import io.harness.cvng.beans.DataSourceType;
 import io.harness.cvng.beans.MetricPackDTO;
@@ -33,7 +33,7 @@ public class AppDynamicsServiceImpl implements AppDynamicsService {
   public Set<AppdynamicsValidationResponse> getMetricPackData(String accountId, String connectorIdentifier,
       String orgIdentifier, String projectIdentifier, long appdAppId, long appdTierId, String requestGuid,
       List<MetricPack> metricPacks) {
-    Optional<ConnectorDTO> connectorDTO =
+    Optional<ConnectorInfoDTO> connectorDTO =
         nextGenService.get(accountId, connectorIdentifier, orgIdentifier, projectIdentifier);
     Preconditions.checkState(connectorDTO.isPresent(), "ConnectorDTO should not be null");
     Preconditions.checkState(connectorDTO.get().getConnectorConfig() instanceof AppDynamicsConnectorDTO,
@@ -55,7 +55,7 @@ public class AppDynamicsServiceImpl implements AppDynamicsService {
   @Override
   public List<AppDynamicsApplication> getApplications(
       String accountId, String connectorIdentifier, String orgIdentifier, String projectIdentifier) {
-    Optional<ConnectorDTO> connectorDTO =
+    Optional<ConnectorInfoDTO> connectorDTO =
         nextGenService.get(accountId, connectorIdentifier, orgIdentifier, projectIdentifier);
     Preconditions.checkState(connectorDTO.isPresent(), "ConnectorDTO should not be null");
     Preconditions.checkState(connectorDTO.get().getConnectorConfig() instanceof AppDynamicsConnectorDTO,
@@ -70,7 +70,7 @@ public class AppDynamicsServiceImpl implements AppDynamicsService {
   @Override
   public Set<AppDynamicsTier> getTiers(String accountId, String connectorIdentifier, String orgIdentifier,
       String projectIdentifier, long appDynamicsAppId) {
-    Optional<ConnectorDTO> connectorDTO =
+    Optional<ConnectorInfoDTO> connectorDTO =
         nextGenService.get(accountId, connectorIdentifier, orgIdentifier, projectIdentifier);
     Preconditions.checkState(connectorDTO.isPresent(), "ConnectorDTO should not be null");
     Preconditions.checkState(connectorDTO.get().getConnectorConfig() instanceof AppDynamicsConnectorDTO,

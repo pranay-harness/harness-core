@@ -7,7 +7,8 @@ import static io.harness.delegate.beans.connector.ConnectorType.LOCAL;
 
 import io.dropwizard.jersey.validation.JerseyViolationException;
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.connector.apis.dto.ConnectorRequestDTO;
+import io.harness.connector.apis.dto.ConnectorDTO;
+import io.harness.connector.apis.dto.ConnectorInfoDTO;
 import io.harness.delegate.beans.connector.gcpkmsconnector.GcpKmsConnectorDTO;
 import io.harness.delegate.beans.connector.localconnector.LocalConnectorDTO;
 import io.harness.eraro.ErrorCode;
@@ -56,7 +57,8 @@ public class NGUtils {
     }
   }
 
-  public static ConnectorRequestDTO getConnectorRequestDTO(SecretManagerConfigDTO secretManagerConfigDTO) {
+  public static ConnectorDTO getConnectorRequestDTO(SecretManagerConfigDTO secretManagerConfigDTO) {
+    ConnectorInfoDTO connectorInfo = null;
     switch (secretManagerConfigDTO.getEncryptionType()) {
       case GCP_KMS:
         GcpKmsConfigDTO gcpKmsConfig = (GcpKmsConfigDTO) secretManagerConfigDTO;
@@ -68,31 +70,34 @@ public class NGUtils {
                                                     .credentials(gcpKmsConfig.getCredentials())
                                                     .isDefault(secretManagerConfigDTO.isDefault())
                                                     .build();
-        return ConnectorRequestDTO.builder()
-            .connectorType(GCP_KMS)
-            .identifier(secretManagerConfigDTO.getIdentifier())
-            .name(secretManagerConfigDTO.getName())
-            .orgIdentifier(secretManagerConfigDTO.getOrgIdentifier())
-            .projectIdentifier(secretManagerConfigDTO.getProjectIdentifier())
-            .description(secretManagerConfigDTO.getDescription())
-            .connectorConfig(gcpKmsConnectorDTO)
-            .build();
+        connectorInfo = ConnectorInfoDTO.builder()
+                            .connectorType(GCP_KMS)
+                            .identifier(secretManagerConfigDTO.getIdentifier())
+                            .name(secretManagerConfigDTO.getName())
+                            .orgIdentifier(secretManagerConfigDTO.getOrgIdentifier())
+                            .projectIdentifier(secretManagerConfigDTO.getProjectIdentifier())
+                            .description(secretManagerConfigDTO.getDescription())
+                            .connectorConfig(gcpKmsConnectorDTO)
+                            .build();
+        break;
       case LOCAL:
         LocalConnectorDTO localConnectorDTO =
             LocalConnectorDTO.builder().isDefault(secretManagerConfigDTO.isDefault()).build();
-        return ConnectorRequestDTO.builder()
-            .connectorType(LOCAL)
-            .identifier(secretManagerConfigDTO.getIdentifier())
-            .name(secretManagerConfigDTO.getName())
-            .orgIdentifier(secretManagerConfigDTO.getOrgIdentifier())
-            .projectIdentifier(secretManagerConfigDTO.getProjectIdentifier())
-            .description(secretManagerConfigDTO.getDescription())
-            .connectorConfig(localConnectorDTO)
-            .build();
+        connectorInfo = ConnectorInfoDTO.builder()
+                            .connectorType(LOCAL)
+                            .identifier(secretManagerConfigDTO.getIdentifier())
+                            .name(secretManagerConfigDTO.getName())
+                            .orgIdentifier(secretManagerConfigDTO.getOrgIdentifier())
+                            .projectIdentifier(secretManagerConfigDTO.getProjectIdentifier())
+                            .description(secretManagerConfigDTO.getDescription())
+                            .connectorConfig(localConnectorDTO)
+                            .build();
+        break;
       default:
         throw new SecretManagementException(
             ErrorCode.SECRET_MANAGEMENT_ERROR, "Unsupported Secret Manager", WingsException.USER);
     }
+    return ConnectorDTO.builder().connectorInfo(connectorInfo).build();
   }
 
   public static String getDefaultHarnessSecretManagerName(EncryptionType encryptionType) {

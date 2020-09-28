@@ -14,7 +14,8 @@ import io.harness.category.element.UnitTests;
 import io.harness.cdng.artifact.resources.docker.dtos.DockerBuildDetailsDTO;
 import io.harness.cdng.artifact.resources.docker.dtos.DockerRequestDTO;
 import io.harness.cdng.artifact.resources.docker.dtos.DockerResponseDTO;
-import io.harness.connector.apis.dto.ConnectorDTO;
+import io.harness.connector.apis.dto.ConnectorInfoDTO;
+import io.harness.connector.apis.dto.ConnectorResponseDTO;
 import io.harness.connector.services.ConnectorService;
 import io.harness.delegate.beans.connector.ConnectorType;
 import io.harness.delegate.beans.connector.docker.DockerAuthenticationDTO;
@@ -59,6 +60,15 @@ public class DockerResourceServiceImplTest extends CategoryTest {
     MockitoAnnotations.initMocks(this);
   }
 
+  private ConnectorResponseDTO getConnector() {
+    ConnectorInfoDTO connectorInfoDTO =
+        ConnectorInfoDTO.builder()
+            .connectorType(ConnectorType.DOCKER)
+            .connectorConfig(DockerConnectorDTO.builder().auth(DockerAuthenticationDTO.builder().build()).build())
+            .build();
+    return ConnectorResponseDTO.builder().connector(connectorInfoDTO).build();
+  }
+
   @Test
   @Owner(developers = SAHIL)
   @Category(UnitTests.class)
@@ -69,14 +79,9 @@ public class DockerResourceServiceImplTest extends CategoryTest {
                                       .projectIdentifier(PROJECT_IDENTIFIER)
                                       .orgIdentifier(ORG_IDENTIFIER)
                                       .build();
-
-    ConnectorDTO connectorDTO =
-        ConnectorDTO.builder()
-            .connectorType(ConnectorType.DOCKER)
-            .connectorConfig(DockerConnectorDTO.builder().auth(DockerAuthenticationDTO.builder().build()).build())
-            .build();
+    ConnectorResponseDTO connectorResponse = getConnector();
     when(connectorService.get(ACCOUNT_ID, ORG_IDENTIFIER, PROJECT_IDENTIFIER, "identifier"))
-        .thenReturn(Optional.of(connectorDTO));
+        .thenReturn(Optional.of(connectorResponse));
     EncryptedDataDetail encryptedDataDetail = EncryptedDataDetail.builder().build();
     when(secretManagerClientService.getEncryptionDetails(any(), any()))
         .thenReturn(Lists.newArrayList(encryptedDataDetail));
@@ -112,11 +117,7 @@ public class DockerResourceServiceImplTest extends CategoryTest {
                                       .orgIdentifier(ORG_IDENTIFIER)
                                       .build();
     DockerRequestDTO dockerRequestDTO = DockerRequestDTO.builder().build();
-    ConnectorDTO connectorDTO =
-        ConnectorDTO.builder()
-            .connectorType(ConnectorType.DOCKER)
-            .connectorConfig(DockerConnectorDTO.builder().auth(DockerAuthenticationDTO.builder().build()).build())
-            .build();
+    ConnectorResponseDTO connectorDTO = getConnector();
     when(connectorService.get(ACCOUNT_ID, ORG_IDENTIFIER, PROJECT_IDENTIFIER, "identifier"))
         .thenReturn(Optional.of(connectorDTO));
     EncryptedDataDetail encryptedDataDetail = EncryptedDataDetail.builder().build();
@@ -154,11 +155,7 @@ public class DockerResourceServiceImplTest extends CategoryTest {
                                       .orgIdentifier(ORG_IDENTIFIER)
                                       .build();
     DockerRequestDTO dockerRequestDTO = DockerRequestDTO.builder().build();
-    ConnectorDTO connectorDTO =
-        ConnectorDTO.builder()
-            .connectorType(ConnectorType.DOCKER)
-            .connectorConfig(DockerConnectorDTO.builder().auth(DockerAuthenticationDTO.builder().build()).build())
-            .build();
+    ConnectorResponseDTO connectorDTO = getConnector();
     when(connectorService.get(ACCOUNT_ID, ORG_IDENTIFIER, PROJECT_IDENTIFIER, "identifier"))
         .thenReturn(Optional.of(connectorDTO));
     EncryptedDataDetail encryptedDataDetail = EncryptedDataDetail.builder().build();
@@ -199,11 +196,7 @@ public class DockerResourceServiceImplTest extends CategoryTest {
                                       .projectIdentifier(PROJECT_IDENTIFIER)
                                       .orgIdentifier(ORG_IDENTIFIER)
                                       .build();
-    ConnectorDTO connectorDTO =
-        ConnectorDTO.builder()
-            .connectorType(ConnectorType.DOCKER)
-            .connectorConfig(DockerConnectorDTO.builder().auth(DockerAuthenticationDTO.builder().build()).build())
-            .build();
+    ConnectorResponseDTO connectorDTO = getConnector();
     when(connectorService.get(ACCOUNT_ID, ORG_IDENTIFIER, PROJECT_IDENTIFIER, "identifier"))
         .thenReturn(Optional.of(connectorDTO));
     EncryptedDataDetail encryptedDataDetail = EncryptedDataDetail.builder().build();
@@ -243,11 +236,7 @@ public class DockerResourceServiceImplTest extends CategoryTest {
                                       .projectIdentifier(PROJECT_IDENTIFIER)
                                       .orgIdentifier(ORG_IDENTIFIER)
                                       .build();
-    ConnectorDTO connectorDTO =
-        ConnectorDTO.builder()
-            .connectorType(ConnectorType.DOCKER)
-            .connectorConfig(DockerConnectorDTO.builder().auth(DockerAuthenticationDTO.builder().build()).build())
-            .build();
+    ConnectorResponseDTO connectorDTO = getConnector();
     when(connectorService.get(ACCOUNT_ID, ORG_IDENTIFIER, PROJECT_IDENTIFIER, "identifier"))
         .thenReturn(Optional.of(connectorDTO));
     EncryptedDataDetail encryptedDataDetail = EncryptedDataDetail.builder().build();

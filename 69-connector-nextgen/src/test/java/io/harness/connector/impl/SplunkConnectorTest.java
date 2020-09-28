@@ -12,7 +12,8 @@ import static org.mockito.Mockito.when;
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import io.harness.connector.apis.dto.ConnectorDTO;
-import io.harness.connector.apis.dto.ConnectorRequestDTO;
+import io.harness.connector.apis.dto.ConnectorInfoDTO;
+import io.harness.connector.apis.dto.ConnectorResponseDTO;
 import io.harness.connector.entities.embedded.splunkconnector.SplunkConnector;
 import io.harness.connector.mappers.ConnectorMapper;
 import io.harness.connector.repositories.base.ConnectorRepository;
@@ -53,8 +54,8 @@ public class SplunkConnectorTest extends CategoryTest {
   String secretIdentifier = "secretIdentifier";
   String name = "name";
   String splunkUrl = "https://xwz.com";
-  ConnectorRequestDTO connectorRequestDTO;
-  ConnectorDTO connectorDTO;
+  ConnectorDTO connectorRequest;
+  ConnectorResponseDTO connectorResponse;
   SplunkConnector connector;
   String accountIdentifier = "accountIdentifier";
   @Rule public ExpectedException expectedEx = ExpectedException.none();
@@ -82,34 +83,28 @@ public class SplunkConnectorTest extends CategoryTest {
                                                 .passwordRef(secretRefData)
                                                 .build();
 
-    connectorRequestDTO = ConnectorRequestDTO.builder()
-                              .name(name)
-                              .identifier(identifier)
-                              .connectorType(SPLUNK)
-                              .connectorConfig(splunkConnectorDTO)
-                              .build();
-
-    connectorDTO = ConnectorDTO.builder()
-                       .name(name)
-                       .identifier(identifier)
-                       .connectorType(SPLUNK)
-                       .connectorConfig(splunkConnectorDTO)
-                       .build();
-
+    ConnectorInfoDTO connectorInfo = ConnectorInfoDTO.builder()
+                                         .name(name)
+                                         .identifier(identifier)
+                                         .connectorType(SPLUNK)
+                                         .connectorConfig(splunkConnectorDTO)
+                                         .build();
+    connectorRequest = ConnectorDTO.builder().connectorInfo(connectorInfo).build();
+    connectorResponse = ConnectorResponseDTO.builder().connector(connectorInfo).build();
     when(connectorRepository.save(connector)).thenReturn(connector);
-    when(connectorMapper.writeDTO(connector)).thenReturn(connectorDTO);
-    when(connectorMapper.toConnector(connectorRequestDTO, accountIdentifier)).thenReturn(connector);
+    when(connectorMapper.writeDTO(connector)).thenReturn(connectorResponse);
+    when(connectorMapper.toConnector(connectorRequest, accountIdentifier)).thenReturn(connector);
   }
 
-  private ConnectorDTO createConnector() {
-    return connectorService.create(connectorRequestDTO, accountIdentifier);
+  private ConnectorResponseDTO createConnector() {
+    return connectorService.create(connectorRequest, accountIdentifier);
   }
 
   @Test
   @Owner(developers = OwnerRule.NEMANJA)
   @Category(UnitTests.class)
   public void testCreateSplunkConnector() {
-    ConnectorDTO connectorDTOOutput = createConnector();
+    ConnectorResponseDTO connectorDTOOutput = createConnector();
     ensureSplunkConnectorFieldsAreCorrect(connectorDTOOutput);
   }
 
@@ -125,12 +120,13 @@ public class SplunkConnectorTest extends CategoryTest {
     connectorService.testConnection(accountIdentifier, null, null, identifier);
     verify(splunkConnectionValidator, times(1)).validate(any(), anyString(), anyString(), anyString());
   }
-  private void ensureSplunkConnectorFieldsAreCorrect(ConnectorDTO connectorDTOOutput) {
-    assertThat(connectorDTOOutput).isNotNull();
-    assertThat(connectorDTOOutput.getName()).isEqualTo(name);
-    assertThat(connectorDTOOutput.getIdentifier()).isEqualTo(identifier);
-    assertThat(connectorDTOOutput.getConnectorType()).isEqualTo(SPLUNK);
-    SplunkConnectorDTO splunkConnectorDTO = (SplunkConnectorDTO) connectorDTOOutput.getConnectorConfig();
+  private void ensureSplunkConnectorFieldsAreCorrect(ConnectorResponseDTO connectorResponse) {
+    ConnectorInfoDTO connector = connectorResponse.getConnector();
+    assertThat(connector).isNotNull();
+    assertThat(connector.getName()).isEqualTo(name);
+    assertThat(connector.getIdentifier()).isEqualTo(identifier);
+    assertThat(connector.getConnectorType()).isEqualTo(SPLUNK);
+    SplunkConnectorDTO splunkConnectorDTO = (SplunkConnectorDTO) connector.getConnectorConfig();
     assertThat(splunkConnectorDTO).isNotNull();
     assertThat(splunkConnectorDTO.getUsername()).isEqualTo(userName);
     assertThat(splunkConnectorDTO.getPasswordRef()).isNotNull();
@@ -146,7 +142,7 @@ public class SplunkConnectorTest extends CategoryTest {
     createConnector();
     when(connectorRepository.findByFullyQualifiedIdentifierAndDeletedNot(anyString(), anyBoolean()))
         .thenReturn(Optional.of(connector));
-    ConnectorDTO connectorDTO = connectorService.get(accountIdentifier, null, null, identifier).get();
+    ConnectorResponseDTO connectorDTO = connectorService.get(accountIdentifier, null, null, identifier).get();
     ensureSplunkConnectorFieldsAreCorrect(connectorDTO);
   }
 }

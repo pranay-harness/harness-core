@@ -10,10 +10,9 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import io.harness.connector.ConnectorFilterHelper;
-import io.harness.connector.ConnectorScopeHelper;
 import io.harness.connector.apis.dto.ConnectorDTO;
-import io.harness.connector.apis.dto.ConnectorRequestDTO;
-import io.harness.connector.apis.dto.ConnectorSummaryDTO;
+import io.harness.connector.apis.dto.ConnectorInfoDTO;
+import io.harness.connector.apis.dto.ConnectorResponseDTO;
 import io.harness.connector.entities.Connector;
 import io.harness.connector.entities.Connector.ConnectorKeys;
 import io.harness.connector.entities.ConnectorConnectivityDetails;
@@ -51,13 +50,12 @@ public class DefaultConnectorServiceImpl implements ConnectorService {
   private final ConnectorMapper connectorMapper;
   private final ConnectorRepository connectorRepository;
   private final ConnectorFilterHelper connectorFilterHelper;
-  private ConnectorScopeHelper connectorScopeHelper;
   private Map<String, ConnectionValidator> connectionValidatorMap;
   EntityReferenceClient entityReferenceClient;
   EntityReferenceHelper entityReferenceHelper;
 
   @Override
-  public Optional<ConnectorDTO> get(
+  public Optional<ConnectorResponseDTO> get(
       String accountIdentifier, String orgIdentifier, String projectIdentifier, String connectorIdentifier) {
     String fullyQualifiedIdentifier = FullyQualifiedIdentifierHelper.getFullyQualifiedIdentifier(
         accountIdentifier, orgIdentifier, projectIdentifier, connectorIdentifier);
@@ -83,13 +81,13 @@ public class DefaultConnectorServiceImpl implements ConnectorService {
   }
 
   @Override
-  public Page<ConnectorSummaryDTO> list(int page, int size, String accountIdentifier, String orgIdentifier,
+  public Page<ConnectorResponseDTO> list(int page, int size, String accountIdentifier, String orgIdentifier,
       String projectIdentifier, String searchTerm, ConnectorType type, ConnectorCategory category) {
     Criteria criteria = connectorFilterHelper.createCriteriaFromConnectorFilter(
         accountIdentifier, orgIdentifier, projectIdentifier, searchTerm, type, category);
     Pageable pageable = getPageRequest(page, size, Sort.by(Sort.Direction.DESC, ConnectorKeys.createdAt));
     Page<Connector> connectors = connectorRepository.findAll(criteria, pageable);
-    return connectorScopeHelper.createConnectorSummaryListForConnectors(connectors);
+    return connectors.map(connector -> connectorMapper.writeDTO(connector));
   }
 
   private Pageable getPageRequest(int page, int size, Sort sort) {
@@ -97,7 +95,7 @@ public class DefaultConnectorServiceImpl implements ConnectorService {
   }
 
   @Override
-  public ConnectorDTO create(ConnectorRequestDTO connectorRequestDTO, String accountIdentifier) {
+  public ConnectorResponseDTO create(ConnectorDTO connectorRequestDTO, String accountIdentifier) {
     Connector connectorEntity = connectorMapper.toConnector(connectorRequestDTO, accountIdentifier);
     Connector savedConnectorEntity = null;
     try {
@@ -109,18 +107,18 @@ public class DefaultConnectorServiceImpl implements ConnectorService {
   }
 
   @Override
-  public ConnectorDTO update(ConnectorRequestDTO connectorRequestDTO, String accountIdentifier) {
-    Objects.requireNonNull(connectorRequestDTO.getIdentifier());
-    String fullyQualifiedIdentifier = FullyQualifiedIdentifierHelper.getFullyQualifiedIdentifier(accountIdentifier,
-        connectorRequestDTO.getOrgIdentifier(), connectorRequestDTO.getProjectIdentifier(),
-        connectorRequestDTO.getIdentifier());
+  public ConnectorResponseDTO update(ConnectorDTO connectorRequest, String accountIdentifier) {
+    ConnectorInfoDTO connector = connectorRequest.getConnectorInfo();
+    Objects.requireNonNull(connector.getIdentifier());
+    String fullyQualifiedIdentifier = FullyQualifiedIdentifierHelper.getFullyQualifiedIdentifier(
+        accountIdentifier, connector.getOrgIdentifier(), connector.getProjectIdentifier(), connector.getIdentifier());
     Optional<Connector> existingConnector =
         connectorRepository.findByFullyQualifiedIdentifierAndDeletedNot(fullyQualifiedIdentifier, true);
     if (!existingConnector.isPresent()) {
       throw new InvalidRequestException(
-          format("No connector exists with the  Identifier %s", connectorRequestDTO.getIdentifier()));
+          format("No connector exists with the  Identifier %s", connector.getIdentifier()));
     }
-    Connector newConnector = connectorMapper.toConnector(connectorRequestDTO, accountIdentifier);
+    Connector newConnector = connectorMapper.toConnector(connectorRequest, accountIdentifier);
     newConnector.setId(existingConnector.get().getId());
     newConnector.setVersion(existingConnector.get().getVersion());
     newConnector.setStatus(existingConnector.get().getStatus());
@@ -163,10 +161,11 @@ public class DefaultConnectorServiceImpl implements ConnectorService {
     }
   }
 
-  public ConnectorValidationResult validate(ConnectorRequestDTO connectorDTO, String accountIdentifier) {
-    ConnectionValidator connectionValidator = connectionValidatorMap.get(connectorDTO.getConnectorType().toString());
-    return connectionValidator.validate(connectorDTO.getConnectorConfig(), accountIdentifier,
-        connectorDTO.getOrgIdentifier(), connectorDTO.getProjectIdentifier());
+  public ConnectorValidationResult validate(ConnectorDTO connectorRequest, String accountIdentifier) {
+    ConnectorInfoDTO connector = connectorRequest.getConnectorInfo();
+    ConnectionValidator connectionValidator = connectionValidatorMap.get(connector.getConnectorType().toString());
+    return connectionValidator.validate(connector.getConnectorConfig(), accountIdentifier, connector.getOrgIdentifier(),
+        connector.getProjectIdentifier());
   }
 
   public boolean validateTheIdentifierIsUnique(
@@ -184,12 +183,13 @@ public class DefaultConnectorServiceImpl implements ConnectorService {
     Optional<Connector> connectorOptional =
         connectorRepository.findByFullyQualifiedIdentifierAndDeletedNot(fullyQualifiedIdentifier, true);
     if (connectorOptional.isPresent()) {
-      ConnectorDTO connectorDTO = connectorMapper.writeDTO(connectorOptional.get());
-      ConnectionValidator connectionValidator = connectionValidatorMap.get(connectorDTO.getConnectorType().toString());
+      ConnectorResponseDTO connectorDTO = connectorMapper.writeDTO(connectorOptional.get());
+      ConnectorInfoDTO connectorInfo = connectorDTO.getConnector();
+      ConnectionValidator connectionValidator = connectionValidatorMap.get(connectorInfo.getConnectorType().toString());
       ConnectorValidationResult validationResult;
       try {
         validationResult = connectionValidator.validate(
-            connectorDTO.getConnectorConfig(), accountIdentifier, orgIdentifier, projectIdentifier);
+            connectorInfo.getConnectorConfig(), accountIdentifier, orgIdentifier, projectIdentifier);
       } catch (Exception ex) {
         logger.info(String.format(
             "Test Connection failed for connector [%s] with error [%s]", fullyQualifiedIdentifier, ex.getMessage()));
