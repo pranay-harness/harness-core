@@ -6,11 +6,9 @@ import static io.harness.NGConstants.PAGE_KEY;
 import static io.harness.NGConstants.PROJECT_KEY;
 import static io.harness.NGConstants.SIZE_KEY;
 import static io.harness.beans.PageResponse.PageResponseBuilder.aPageResponse;
-import static io.harness.data.structure.UUIDGenerator.generateUuid;
 
 import com.google.inject.Inject;
 
-import io.harness.NgManagerServiceDriver;
 import io.harness.beans.PageResponse;
 import io.harness.ng.core.NGAccessWithEncryptionConsumer;
 import io.harness.rest.RestResponse;
@@ -47,12 +45,10 @@ import javax.ws.rs.QueryParam;
 @NextGenManagerAuth
 @Slf4j
 public class SecretsResourceNG {
-  private final NgManagerServiceDriver ngManagerServiceDriver;
   private final NGSecretService ngSecretService;
 
   @Inject
-  public SecretsResourceNG(NgManagerServiceDriver ngManagerServiceDriver, NGSecretService ngSecretService) {
-    this.ngManagerServiceDriver = ngManagerServiceDriver;
+  public SecretsResourceNG(NGSecretService ngSecretService) {
     this.ngSecretService = ngSecretService;
   }
 
@@ -132,12 +128,5 @@ public class SecretsResourceNG {
       NGAccessWithEncryptionConsumer ngAccessWithEncryptionConsumer) {
     return new RestResponse<>(ngSecretService.getEncryptionDetails(
         ngAccessWithEncryptionConsumer.getNgAccess(), ngAccessWithEncryptionConsumer.getDecryptableEntity()));
-  }
-
-  @GET
-  @Path("task")
-  public RestResponse<Boolean> sendTaskResponse() {
-    boolean sendTaskResultResponse = ngManagerServiceDriver.sendTaskResult(generateUuid(), null);
-    return new RestResponse<>(sendTaskResultResponse);
   }
 }

@@ -2,13 +2,10 @@ package software.wings.resources.secretsmanagment;
 
 import static io.harness.rule.OwnerRule.VIKAS;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
-import io.harness.NgManagerServiceDriver;
 import io.harness.category.element.UnitTests;
-import io.harness.delegate.beans.DelegateResponseData;
 import io.harness.rest.RestResponse;
 import io.harness.rule.Owner;
 import io.harness.secretmanagerclient.dto.EncryptedDataDTO;
@@ -30,14 +27,12 @@ public class SecretsResourceNGTest extends WingsBaseTest {
   private final String ORG_IDENTIFIER = "ACCOUNT_ID";
   private final String PROJECT_IDENTIFIER = "ACCOUNT_ID";
   private SecretsResourceNG secretsResourceNG;
-  private NgManagerServiceDriver ngManagerServiceDriver;
   private NGSecretService ngSecretService;
 
   @Before
   public void setup() {
-    ngManagerServiceDriver = mock(NgManagerServiceDriver.class);
     ngSecretService = mock(NGSecretService.class);
-    secretsResourceNG = new SecretsResourceNG(ngManagerServiceDriver, ngSecretService);
+    secretsResourceNG = new SecretsResourceNG(ngSecretService);
   }
 
   @Test
@@ -53,16 +48,5 @@ public class SecretsResourceNGTest extends WingsBaseTest {
     assertThat(encryptedDataRestResponse).isNotNull();
     assertThat(encryptedDataRestResponse.getResource()).isNotNull();
     assertThat(encryptedDataRestResponse.getResource().getName()).isEqualTo(SECRET_NAME);
-  }
-
-  @Test
-  @Owner(developers = VIKAS)
-  @Category(UnitTests.class)
-  public void testSendTaskResponse() {
-    when(ngManagerServiceDriver.sendTaskResult(any(String.class), any(DelegateResponseData.class))).thenReturn(true);
-    RestResponse<Boolean> restResponse = secretsResourceNG.sendTaskResponse();
-    assertThat(restResponse).isNotNull();
-    assertThat(restResponse.getResource()).isNotNull();
-    assertThat(restResponse.getResource()).isEqualTo(true);
   }
 }
