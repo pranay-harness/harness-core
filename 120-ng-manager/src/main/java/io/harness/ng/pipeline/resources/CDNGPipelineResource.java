@@ -6,6 +6,7 @@ import com.google.inject.Inject;
 
 import com.codahale.metrics.annotation.ExceptionMetered;
 import com.codahale.metrics.annotation.Timed;
+import io.harness.NGConstants;
 import io.harness.beans.EmbeddedUser;
 import io.harness.beans.ExecutionStrategyType;
 import io.harness.cdng.pipeline.CDPipeline;
@@ -24,7 +25,10 @@ import io.harness.ng.core.dto.ErrorDTO;
 import io.harness.ng.core.dto.FailureDTO;
 import io.harness.ng.core.dto.ResponseDTO;
 import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiImplicitParam;
+import io.swagger.annotations.ApiImplicitParams;
 import io.swagger.annotations.ApiOperation;
+import io.swagger.annotations.ApiParam;
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
 import lombok.AccessLevel;
@@ -52,8 +56,8 @@ import javax.ws.rs.QueryParam;
 
 @Api("pipelines")
 @Path("pipelines")
-@Produces({"application/json", "text/yaml", "text/html"})
-@Consumes({"application/json", "text/yaml", "text/html"})
+@Produces({"application/json", "application/yaml"})
+@Consumes({"application/json", "application/yaml"})
 @AllArgsConstructor(access = AccessLevel.PACKAGE, onConstructor = @__({ @Inject }))
 @ApiResponses(value =
     {
@@ -62,7 +66,7 @@ import javax.ws.rs.QueryParam;
     })
 @Slf4j
 public class CDNGPipelineResource {
-  private PipelineService ngPipelineService;
+  private final PipelineService ngPipelineService;
   private final RestQueryFilterParser restQueryFilterParser;
   private final NgPipelineExecutionService ngPipelineExecutionService;
 
@@ -75,8 +79,10 @@ public class CDNGPipelineResource {
   @ExceptionMetered
   @ApiOperation(value = "Gets a pipeline by identifier", nickname = "getPipeline")
   public ResponseDTO<CDPipelineResponseDTO> getPipelineByIdentifier(
-      @NotNull @QueryParam("accountIdentifier") String accountId, @QueryParam("orgIdentifier") String orgId,
-      @QueryParam("projectIdentifier") String projectId, @PathParam("pipelineIdentifier") String pipelineId) {
+      @NotNull @QueryParam(NGConstants.ACCOUNT_KEY) String accountId,
+      @NotNull @QueryParam(NGConstants.ORG_KEY) String orgId,
+      @NotNull @QueryParam(NGConstants.PROJECT_KEY) String projectId,
+      @PathParam(NGConstants.PIPELINE_KEY) String pipelineId) {
     logger.info("Get pipeline");
     return ResponseDTO.newResponse(ngPipelineService.getPipeline(pipelineId, accountId, orgId, projectId).orElse(null));
   }
@@ -86,24 +92,31 @@ public class CDNGPipelineResource {
   @ExceptionMetered
   @ApiOperation(value = "Gets Pipeline list", nickname = "getPipelineList")
   public ResponseDTO<Page<CDPipelineSummaryResponseDTO>> getListOfPipelines(
-      @NotNull @QueryParam("accountIdentifier") String accountId, @QueryParam("orgIdentifier") String orgId,
-      @NotNull @QueryParam("projectIdentifier") String projectId, @QueryParam("filter") String filterQuery,
+      @NotNull @QueryParam(NGConstants.ACCOUNT_KEY) String accountId,
+      @NotNull @QueryParam(NGConstants.ORG_KEY) String orgId,
+      @NotNull @QueryParam(NGConstants.PROJECT_KEY) String projectId, @QueryParam("filter") String filterQuery,
       @QueryParam("page") @DefaultValue("0") int page, @QueryParam("size") @DefaultValue("25") int size,
-      @QueryParam("sort") List<String> sort) {
+      @QueryParam("sort") List<String> sort, @QueryParam(NGConstants.SEARCH_TERM_KEY) String searchTerm) {
     logger.info("Get List of pipelines");
     Criteria criteria = restQueryFilterParser.getCriteriaFromFilterQuery(filterQuery, CDPipeline.class);
-    Page<CDPipelineSummaryResponseDTO> pipelines =
-        ngPipelineService.getPipelines(accountId, orgId, projectId, criteria, getPageRequest(page, size, sort));
+    Page<CDPipelineSummaryResponseDTO> pipelines = ngPipelineService.getPipelines(
+        accountId, orgId, projectId, criteria, getPageRequest(page, size, sort), searchTerm);
     return ResponseDTO.newResponse(pipelines);
   }
 
   @POST
   @Timed
   @ExceptionMetered
+  @ApiImplicitParams({
+    @ApiImplicitParam(
+        dataTypeClass = CDPipeline.class, dataType = "io.harness.cdng.pipeline.CDPipeline", paramType = "body")
+  })
   @ApiOperation(value = "Create a Pipeline", nickname = "postPipeline")
-  public ResponseDTO<String> createPipeline(@NotNull @QueryParam("accountIdentifier") String accountId,
-      @QueryParam("orgIdentifier") String orgId, @NotNull @QueryParam("projectIdentifier") String projectId,
-      @NotNull String yaml) {
+  public ResponseDTO<String>
+  createPipeline(@NotNull @QueryParam(NGConstants.ACCOUNT_KEY) String accountId,
+      @NotNull @QueryParam(NGConstants.ORG_KEY) String orgId,
+      @NotNull @QueryParam(NGConstants.PROJECT_KEY) String projectId,
+      @NotNull @ApiParam(hidden = true, type = "") String yaml) {
     logger.info("Creating pipeline");
     return ResponseDTO.newResponse(ngPipelineService.createPipeline(yaml, accountId, orgId, projectId));
   }
@@ -112,10 +125,17 @@ public class CDNGPipelineResource {
   @Path("/{pipelineIdentifier}")
   @Timed
   @ExceptionMetered
+  @ApiImplicitParams({
+    @ApiImplicitParam(
+        dataTypeClass = CDPipeline.class, dataType = "io.harness.cdng.pipeline.CDPipeline", paramType = "body")
+  })
   @ApiOperation(value = "Update a Pipeline", nickname = "putPipeline")
-  public ResponseDTO<String> updatePipeline(@NotNull @QueryParam("accountIdentifier") String accountId,
-      @QueryParam("orgIdentifier") String orgId, @NotNull @QueryParam("projectIdentifier") String projectId,
-      @PathParam("pipelineIdentifier") String pipelineId, @NotNull String yaml) {
+  public ResponseDTO<String>
+  updatePipeline(@NotNull @QueryParam(NGConstants.ACCOUNT_KEY) String accountId,
+      @NotNull @QueryParam(NGConstants.ORG_KEY) String orgId,
+      @NotNull @QueryParam(NGConstants.PROJECT_KEY) String projectId,
+      @PathParam(NGConstants.PIPELINE_KEY) String pipelineId,
+      @NotNull @ApiParam(hidden = true, type = "") String yaml) {
     logger.info("Updating pipeline");
     return ResponseDTO.newResponse(ngPipelineService.updatePipeline(yaml, accountId, orgId, projectId, pipelineId));
   }
@@ -126,9 +146,10 @@ public class CDNGPipelineResource {
   @ExceptionMetered
   @ApiOperation(value = "Validate a Pipeline", nickname = "validatePipeline")
   public ResponseDTO<CDPipelineValidationInfoDTO> validatePipeline(
-      @NotNull @QueryParam("accountIdentifier") String accountId, @QueryParam("orgIdentifier") String orgId,
-      @NotNull @QueryParam("projectIdentifier") String projectId, @QueryParam("pipelineIdentifier") String pipelineId)
-      throws IOException {
+      @NotNull @QueryParam(NGConstants.ACCOUNT_KEY) String accountId,
+      @NotNull @QueryParam(NGConstants.ORG_KEY) String orgId,
+      @NotNull @QueryParam(NGConstants.PROJECT_KEY) String projectId,
+      @QueryParam(NGConstants.PIPELINE_KEY) String pipelineId) throws IOException {
     logger.info("Validating pipeline");
     CDPipelineValidationInfo cdPipelineValidationInfo =
         ngPipelineService.validatePipeline(pipelineId, accountId, orgId, projectId).orElse(null);
@@ -143,9 +164,10 @@ public class CDNGPipelineResource {
   @Timed
   @ExceptionMetered
   @ApiOperation(value = "Execute a pipeline", nickname = "postPipelineExecute")
-  public ResponseDTO<PlanExecution> runPipeline(@NotNull @QueryParam("accountIdentifier") String accountId,
-      @QueryParam("orgIdentifier") String orgId, @QueryParam("projectIdentifier") String projectId,
-      @QueryParam("appId") String appId, @PathParam("identifier") @NotEmpty String pipelineId) {
+  public ResponseDTO<PlanExecution> runPipeline(@NotNull @QueryParam(NGConstants.ACCOUNT_KEY) String accountId,
+      @NotNull @QueryParam(NGConstants.ORG_KEY) String orgId,
+      @NotNull @QueryParam(NGConstants.PROJECT_KEY) String projectId, @QueryParam("appId") String appId,
+      @PathParam("identifier") @NotEmpty String pipelineId) {
     Optional<CDPipelineResponseDTO> cdPipelineRequestDTO =
         ngPipelineService.getPipeline(pipelineId, accountId, orgId, projectId);
     // TODO: remove APPID once the dependency is moved.
@@ -202,9 +224,10 @@ public class CDNGPipelineResource {
   @DELETE
   @Path("/{pipelineIdentifier}")
   @ApiOperation(value = "Delete a pipeline", nickname = "softDeletePipeline")
-  public ResponseDTO<Boolean> deletePipeline(@NotNull @QueryParam("accountIdentifier") String accountId,
-      @QueryParam("orgIdentifier") String orgId, @NotNull @QueryParam("projectIdentifier") String projectId,
-      @PathParam("pipelineIdentifier") String pipelineId) {
+  public ResponseDTO<Boolean> deletePipeline(@NotNull @QueryParam(NGConstants.ACCOUNT_KEY) String accountId,
+      @NotNull @QueryParam(NGConstants.ORG_KEY) String orgId,
+      @NotNull @QueryParam(NGConstants.PROJECT_KEY) String projectId,
+      @PathParam(NGConstants.PIPELINE_KEY) String pipelineId) {
     return ResponseDTO.newResponse(ngPipelineService.deletePipeline(accountId, orgId, projectId, pipelineId));
   }
 }

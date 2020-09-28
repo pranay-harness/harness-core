@@ -1,6 +1,7 @@
 package io.harness.cdng.pipeline.service;
 
 import static io.harness.exception.WingsException.USER_SRE;
+import static org.springframework.data.mongodb.core.query.Criteria.where;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.cache.CacheBuilder;
@@ -10,6 +11,7 @@ import com.google.common.collect.Lists;
 import com.google.common.io.Resources;
 import com.google.inject.Inject;
 
+import io.harness.NGConstants;
 import io.harness.beans.ExecutionStrategyType;
 import io.harness.cdng.pipeline.CDPipeline;
 import io.harness.cdng.pipeline.NGStepType;
@@ -19,9 +21,11 @@ import io.harness.cdng.pipeline.beans.CDPipelineValidationInfo;
 import io.harness.cdng.pipeline.beans.dto.CDPipelineResponseDTO;
 import io.harness.cdng.pipeline.beans.dto.CDPipelineSummaryResponseDTO;
 import io.harness.cdng.pipeline.beans.entities.CDPipelineEntity;
+import io.harness.cdng.pipeline.beans.entities.CDPipelineEntity.PipelineNGKeys;
 import io.harness.cdng.pipeline.mappers.PipelineDtoMapper;
 import io.harness.cdng.pipeline.repository.PipelineRepository;
 import io.harness.cdng.service.beans.ServiceDefinitionType;
+import io.harness.data.structure.EmptyPredicate;
 import io.harness.exception.DuplicateFieldException;
 import io.harness.exception.GeneralException;
 import io.harness.exception.InvalidRequestException;
@@ -106,16 +110,23 @@ public class PipelineServiceImpl implements PipelineService {
 
   @Override
   public Page<CDPipelineSummaryResponseDTO> getPipelines(
-      String accountId, String orgId, String projectId, Criteria criteria, Pageable pageable) {
+      String accountId, String orgId, String projectId, Criteria criteria, Pageable pageable, String searchTerm) {
     // TODO: Remove usage of mongotemplate from here and move to repository
-    criteria = criteria.and(CDPipelineEntity.PipelineNGKeys.accountId)
+    criteria = criteria.and(PipelineNGKeys.accountId)
                    .is(accountId)
-                   .and(CDPipelineEntity.PipelineNGKeys.projectIdentifier)
+                   .and(PipelineNGKeys.projectIdentifier)
                    .is(projectId)
-                   .and(CDPipelineEntity.PipelineNGKeys.orgIdentifier)
+                   .and(PipelineNGKeys.orgIdentifier)
                    .is(orgId)
-                   .and(CDPipelineEntity.PipelineNGKeys.deleted)
+                   .and(PipelineNGKeys.deleted)
                    .is(false);
+    if (EmptyPredicate.isNotEmpty(searchTerm)) {
+      Criteria searchCriteria = new Criteria().orOperator(
+          where(PipelineNGKeys.identifier).regex(searchTerm, NGConstants.CASE_INSENSITIVE_MONGO_OPTIONS));
+      criteria.andOperator(searchCriteria);
+      // add name and tags in search when they are added to the entity
+    }
+
     Page<CDPipelineEntity> list = pipelineRepository.findAll(criteria, pageable);
     return list.map(PipelineDtoMapper::preparePipelineSummary);
   }

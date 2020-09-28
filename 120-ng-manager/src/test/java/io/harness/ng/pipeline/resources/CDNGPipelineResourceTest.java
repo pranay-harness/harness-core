@@ -1,8 +1,8 @@
 package io.harness.ng.pipeline.resources;
 
+import static io.harness.rule.OwnerRule.NAMAN;
 import static io.harness.rule.OwnerRule.SAHIL;
 import static io.harness.rule.OwnerRule.SANYASI_NAIDU;
-import static junit.framework.TestCase.assertTrue;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
@@ -56,6 +56,11 @@ public class CDNGPipelineResourceTest extends CategoryTest {
   CDPipelineResponseDTO cdPipelineResponseDTO;
   CDPipelineRequestDTO cdPipelineRequestDTO;
   CDPipelineEntity cdPipelineEntity;
+  CDPipelineSummaryResponseDTO cdPipelineSummaryResponseDTO;
+
+  private final String ACCOUNT_ID = "account_id";
+  private final String ORG_IDENTIFIER = "orgId";
+  private final String PROJ_IDENTIFIER = "projId";
 
   @Before
   public void setUp() throws IOException {
@@ -68,12 +73,19 @@ public class CDNGPipelineResourceTest extends CategoryTest {
     cdPipelineResponseDTO =
         CDPipelineResponseDTO.builder().cdPipeline(cdPipeline).executionsPlaceHolder(new ArrayList<>()).build();
     cdPipelineEntity = CDPipelineEntity.builder()
-                           .accountId("ACCOUNT_ID")
-                           .projectIdentifier("PROJECT_ID")
-                           .orgIdentifier("ORG_ID")
+                           .accountId(ACCOUNT_ID)
+                           .projectIdentifier(PROJ_IDENTIFIER)
+                           .orgIdentifier(ORG_IDENTIFIER)
                            .identifier("managerServiceDeployment")
                            .cdPipeline(cdPipeline)
                            .build();
+    cdPipelineSummaryResponseDTO = CDPipelineSummaryResponseDTO.builder()
+                                       .identifier("pipelineID")
+                                       .name("pipelineName")
+                                       .numOfStages(0)
+                                       .numOfErrors(0)
+                                       .deployments(new ArrayList<>())
+                                       .build();
   }
 
   @Test
@@ -82,9 +94,10 @@ public class CDNGPipelineResourceTest extends CategoryTest {
   public void testGetPipeline() throws IOException {
     doReturn(Optional.of(cdPipelineResponseDTO))
         .when(pipelineService)
-        .getPipeline(cdPipelineRequestDTO.getCdPipeline().getIdentifier(), "ACCOUNT_ID", "ORG_ID", "PROJECT_ID");
+        .getPipeline(cdPipelineRequestDTO.getCdPipeline().getIdentifier(), ACCOUNT_ID, ORG_IDENTIFIER, PROJ_IDENTIFIER);
     CDPipelineResponseDTO pipelineResponse =
-        cdngPipelineResource.getPipelineByIdentifier("ACCOUNT_ID", "ORG_ID", "PROJECT_ID", "managerServiceDeployment")
+        cdngPipelineResource
+            .getPipelineByIdentifier(ACCOUNT_ID, ORG_IDENTIFIER, PROJ_IDENTIFIER, "managerServiceDeployment")
             .getData();
     assertThat(pipelineResponse).isNotNull();
     assertThat(pipelineResponse).isEqualTo(cdPipelineResponseDTO);
@@ -98,39 +111,43 @@ public class CDNGPipelineResourceTest extends CategoryTest {
     File file = new File(classLoader.getResource("pipeline.yaml").getFile());
     doReturn(cdPipelineEntity.getIdentifier())
         .when(pipelineService)
-        .createPipeline(Files.contentOf(file, Charset.defaultCharset()), "ACCOUNT_ID", "ORG_ID", "PROJECT_ID");
-    String yamlIdentifierActual =
-        cdngPipelineResource
-            .createPipeline("ACCOUNT_ID", "ORG_ID", "PROJECT_ID", Files.contentOf(file, Charset.defaultCharset()))
-            .getData();
+        .createPipeline(Files.contentOf(file, Charset.defaultCharset()), ACCOUNT_ID, ORG_IDENTIFIER, PROJ_IDENTIFIER);
+    String yamlIdentifierActual = cdngPipelineResource
+                                      .createPipeline(ACCOUNT_ID, ORG_IDENTIFIER, PROJ_IDENTIFIER,
+                                          Files.contentOf(file, Charset.defaultCharset()))
+                                      .getData();
     assertThat(yamlIdentifierActual).isEqualTo(cdPipelineResponseDTO.getCdPipeline().getIdentifier());
   }
 
   @Test
-  @Owner(developers = SANYASI_NAIDU)
+  @Owner(developers = NAMAN)
   @Category(UnitTests.class)
-  public void testListPipelines() {
-    List<CDPipelineResponseDTO> pipelineEntityList = new ArrayList<>();
-    when(pipelineService.getPipelines(anyString(), anyString(), anyString(), any(Criteria.class), any(Pageable.class)))
-        .thenReturn(PageTestUtils.getPage(pipelineEntityList, 0));
-    assertTrue(cdngPipelineResource.getListOfPipelines("ACCOUNT_ID", "ORG_ID", "PROJECT_ID", "", 10, 10, null)
-                   .getData()
-                   .isEmpty());
+  public void testGetListOfPipelines() {
+    List<CDPipelineSummaryResponseDTO> emptySummaryResponseList = new ArrayList<>();
+    doReturn(PageTestUtils.getPage(emptySummaryResponseList, 0))
+        .when(pipelineService)
+        .getPipelines(anyString(), anyString(), anyString(), any(Criteria.class), any(Pageable.class), anyString());
+    assertThat(
+        cdngPipelineResource.getListOfPipelines(ACCOUNT_ID, ORG_IDENTIFIER, PROJ_IDENTIFIER, "", 10, 10, null, "")
+            .getData()
+            .isEmpty())
+        .isTrue();
 
     Pageable pageable = PageUtils.getPageRequest(0, 10, null);
-    final Page<CDPipelineResponseDTO> pipelineEntities =
-        new PageImpl<>(Collections.singletonList(cdPipelineResponseDTO), pageable, 1);
-    doReturn(pipelineEntities)
+    Page<CDPipelineSummaryResponseDTO> summaryResponseDTOs =
+        new PageImpl<>(Collections.singletonList(cdPipelineSummaryResponseDTO), pageable, 1);
+    doReturn(summaryResponseDTOs)
         .when(pipelineService)
-        .getPipelines(anyString(), anyString(), anyString(), any(Criteria.class), any(Pageable.class));
+        .getPipelines(anyString(), anyString(), anyString(), any(Criteria.class), any(Pageable.class), anyString());
 
     List<CDPipelineSummaryResponseDTO> content =
-        cdngPipelineResource.getListOfPipelines("ACCOUNT_ID", "ORG_ID", "PROJECT_ID", "", 10, 10, null)
+        cdngPipelineResource.getListOfPipelines(ACCOUNT_ID, ORG_IDENTIFIER, PROJ_IDENTIFIER, "", 10, 10, null, "")
             .getData()
             .getContent();
+
     assertThat(content).isNotNull();
     assertThat(content.size()).isEqualTo(1);
-    assertThat(content.get(0)).isEqualTo(cdPipelineResponseDTO);
+    assertThat(content.get(0)).isEqualTo(cdPipelineSummaryResponseDTO);
   }
 
   @Test
