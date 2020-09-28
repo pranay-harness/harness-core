@@ -121,7 +121,8 @@ public class K8sWatchEventConfig {
                                        .map(K8sWorkload::getLabels)
                                        .map(K8sWorkload::decodeDotsInKey)
                                        .orElse(Collections.emptyMap());
-      Optional<HarnessServiceInfo> serviceInfo = k8sLabelServiceInfoFetcher.fetchHarnessServiceInfo(accountId, labels);
+      Optional<HarnessServiceInfo> serviceInfo =
+          k8sLabelServiceInfoFetcher.fetchHarnessServiceInfoFromCache(accountId, labels);
       return new EnrichedEvent<>(accountId, k8sWatchEventMsg.getOccurredAt(), k8sWatchEvent, serviceInfo.orElse(null));
     };
   }

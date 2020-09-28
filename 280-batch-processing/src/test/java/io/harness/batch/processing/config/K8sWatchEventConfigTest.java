@@ -218,7 +218,7 @@ public class K8sWatchEventConfigTest extends CategoryTest {
         .thenReturn(Optional.of(K8sWorkload.builder().labels(labelMap).build()));
     HarnessServiceInfo harnessServiceInfo = new HarnessServiceInfo(
         SVC_ID, APP_ID, "cloud-provider-id", ENV_ID, "infra-mapping-id", "deployment-summary-id");
-    when(k8sLabelServiceInfoFetcher.fetchHarnessServiceInfo(ACCOUNT_ID, labelMap))
+    when(k8sLabelServiceInfoFetcher.fetchHarnessServiceInfoFromCache(ACCOUNT_ID, labelMap))
         .thenReturn(Optional.of(harnessServiceInfo));
     ItemProcessor<PublishedMessage, EnrichedEvent<K8sWatchEvent>> enricher =
         k8sWatchEventConfig.enricher(workloadRepository, k8sLabelServiceInfoFetcher);

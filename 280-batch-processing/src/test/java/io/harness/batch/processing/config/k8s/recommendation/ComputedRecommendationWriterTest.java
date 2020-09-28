@@ -64,7 +64,8 @@ public class ComputedRecommendationWriterTest extends CategoryTest {
     workloadRepository = mock(WorkloadRepository.class);
     k8sLabelServiceInfoFetcher = mock(K8sLabelServiceInfoFetcher.class);
     when(workloadRepository.getWorkload(any())).thenReturn(Optional.empty());
-    when(k8sLabelServiceInfoFetcher.fetchHarnessServiceInfo(anyString(), anyMap())).thenReturn(Optional.empty());
+    when(k8sLabelServiceInfoFetcher.fetchHarnessServiceInfoFromCache(anyString(), anyMap()))
+        .thenReturn(Optional.empty());
     computedRecommendationWriter = new ComputedRecommendationWriter(
         workloadRecommendationDao, workloadCostService, workloadRepository, k8sLabelServiceInfoFetcher, JOB_START_DATE);
     captor = ArgumentCaptor.forClass(K8sWorkloadRecommendation.class);
@@ -591,7 +592,7 @@ public class ComputedRecommendationWriterTest extends CategoryTest {
     ResourceId workloadId = ResourceId.builder().accountId("account_id").build();
     when(workloadRepository.getWorkload(workloadId))
         .thenReturn(Optional.of(K8sWorkload.builder().labels(ImmutableMap.of("k1", "v1", "k2", "v2")).build()));
-    when(k8sLabelServiceInfoFetcher.fetchHarnessServiceInfo(
+    when(k8sLabelServiceInfoFetcher.fetchHarnessServiceInfoFromCache(
              eq("account_id"), eq(ImmutableMap.of("k1", "v1", "k2", "v2"))))
         .thenReturn(Optional.of(HarnessServiceInfo.builder()
                                     .serviceId("app_id")

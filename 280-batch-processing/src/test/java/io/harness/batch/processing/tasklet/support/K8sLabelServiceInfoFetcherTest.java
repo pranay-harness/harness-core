@@ -41,7 +41,8 @@ public class K8sLabelServiceInfoFetcherTest extends CategoryTest {
   @Owner(developers = AVMOHAN)
   @Category(UnitTests.class)
   public void shouldReturnEmptyOptionalWhenNoReleaseNameLabel() throws Exception {
-    assertThat(k8sLabelServiceInfoFetcher.fetchHarnessServiceInfo(ACCOUNT_ID, ImmutableMap.of("key1", "value1")))
+    assertThat(
+        k8sLabelServiceInfoFetcher.fetchHarnessServiceInfoFromCache(ACCOUNT_ID, ImmutableMap.of("key1", "value1")))
         .isNotPresent();
   }
 
@@ -52,7 +53,7 @@ public class K8sLabelServiceInfoFetcherTest extends CategoryTest {
     String relName = "115856c0-8bd5-4d5c-901b-a9abe538f6c4";
     ArgumentCaptor<DeploymentSummary> captor = ArgumentCaptor.forClass(DeploymentSummary.class);
     when(cloudToHarnessMappingService.getHarnessServiceInfo(captor.capture())).thenReturn(Optional.empty());
-    assertThat(k8sLabelServiceInfoFetcher.fetchHarnessServiceInfo(
+    assertThat(k8sLabelServiceInfoFetcher.fetchHarnessServiceInfoFromCache(
                    ACCOUNT_ID, ImmutableMap.of("key1", "value1", K8sCCMConstants.RELEASE_NAME, relName)))
         .isNotPresent();
     assertThat(captor.getValue()).satisfies(deploymentSummary -> {
@@ -74,7 +75,7 @@ public class K8sLabelServiceInfoFetcherTest extends CategoryTest {
         "svc-id", "app-id", "cloud-provider-id", "env-id", "infra-mapping-id", "deployment-summary-id");
     when(cloudToHarnessMappingService.getHarnessServiceInfo(captor.capture()))
         .thenReturn(Optional.of(harnessServiceInfo));
-    assertThat(k8sLabelServiceInfoFetcher.fetchHarnessServiceInfo(
+    assertThat(k8sLabelServiceInfoFetcher.fetchHarnessServiceInfoFromCache(
                    ACCOUNT_ID, ImmutableMap.of("key1", "value1", K8sCCMConstants.RELEASE_NAME, relName)))
         .isPresent()
         .hasValue(harnessServiceInfo);
@@ -97,7 +98,7 @@ public class K8sLabelServiceInfoFetcherTest extends CategoryTest {
         "svc-id", "app-id", "cloud-provider-id", "env-id", "infra-mapping-id", "deployment-summary-id");
     when(cloudToHarnessMappingService.getHarnessServiceInfo(captor.capture()))
         .thenReturn(Optional.of(harnessServiceInfo));
-    assertThat(k8sLabelServiceInfoFetcher.fetchHarnessServiceInfo(
+    assertThat(k8sLabelServiceInfoFetcher.fetchHarnessServiceInfoFromCache(
                    ACCOUNT_ID, ImmutableMap.of("key1", "value1", K8sCCMConstants.HELM_RELEASE_NAME, relName)))
         .isPresent()
         .hasValue(harnessServiceInfo);
