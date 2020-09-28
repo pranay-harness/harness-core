@@ -48,8 +48,13 @@ java_library(
 )
 
 java_library(
-    name = "test_deps",
-    exports = [
+    name = "tests",
+    srcs = glob(["src/test/**/*.java"]),
+    visibility = ["//visibility:private"],
+    deps = [
+        "maven_deps",
+        "module",
+        "//:lombok",
         "//15-api-services:module",
         "//19-delegate-tasks-beans:module",
         "//990-commons-test:module",
@@ -58,18 +63,6 @@ java_library(
         "@maven//:junit_junit",
         "@maven//:org_assertj_assertj_core",
         "@maven//:org_mockito_mockito_core",
-    ],
-)
-
-java_library(
-    name = "tests",
-    srcs = glob(["src/test/**/*.java"]),
-    visibility = ["//visibility:private"],
-    deps = [
-        "maven_deps",
-        "module",
-        "test_deps",
-        "//:lombok",
     ],
 )
 
