@@ -31,7 +31,6 @@ public class SizePredicateTest extends CategoryTest {
 
   @Test
   @Owner(developers = GEORGE)
-  @Category({FastUnitTests.class})
   public void testNull() {
     Custom custom = null;
     assertThat(size(custom)).isEqualTo(0);
@@ -81,7 +80,6 @@ public class SizePredicateTest extends CategoryTest {
 
   @Test
   @Owner(developers = GEORGE)
-  @Category({FastUnitTests.class})
   public void testEmpty() {
     Custom custom = Custom.builder().size(0).build();
     assertThat(size(custom)).isEqualTo(0);
@@ -131,7 +129,6 @@ public class SizePredicateTest extends CategoryTest {
 
   @Test
   @Owner(developers = GEORGE)
-  @Category({FastUnitTests.class})
   public void testNotEmpty() {
     Custom custom = Custom.builder().size(1).build();
     assertThat(size(custom)).isEqualTo(1);

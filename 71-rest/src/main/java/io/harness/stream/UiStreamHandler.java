@@ -147,7 +147,7 @@ public class UiStreamHandler extends AtmosphereHandlerAdapter {
     switch (transport) {
       case JSONP:
       case LONG_POLLING:
-        resource.getResponse().sendError(errorCode.getStatus().getStatusCode());
+        resource.getResponse().sendError(errorCode.getStatus().getCode());
         break;
       case WEBSOCKET:
         break;

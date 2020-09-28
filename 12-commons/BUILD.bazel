@@ -105,8 +105,16 @@ java_library(
 )
 
 java_library(
-    name = "test_deps",
-    exports = [
+    name = "tests",
+    srcs = glob(["src/test/**/*.java"]),
+    resources = [
+        "//12-commons/src/test/resources:resource",
+    ],
+    visibility = ["//visibility:private"],
+    deps = [
+        "maven_deps",
+        "module",
+        "//:lombok",
         "//990-commons-test:module",
         "@maven//:junit_junit",
         "@maven//:org_assertj_assertj_core",
@@ -115,39 +123,7 @@ java_library(
     ],
 )
 
-java_library(
-    name = "tests",
-    srcs = glob(["src/test/**/*.java"]),
-    resources = [
-        "//12-commons/src/test/resources:resource",
-    ],
-    visibility = ["//visibility:public"],
-    deps = [
-        "maven_deps",
-        "module",
-        "test_deps",
-        "//:lombok",
-        "//990-commons-test:module",
-    ],
-)
-
-run_tests(
-    testonly = 1,
-    test_files = glob(
-        ["src/test/**/*Test.java"],
-    ),
-    runtime_deps = [
-        "@maven//:javax_ws_rs_javax_ws_rs_api",
-    ],
-    deps = [
-        "maven_deps",
-        "module",
-        "test_deps",
-        "tests",
-        "//:lombok",
-        "@maven//:org_jacoco_org_jacoco_agent",
-    ],
-)
+run_tests()
 
 checkstyle()
 

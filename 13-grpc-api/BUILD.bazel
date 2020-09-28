@@ -55,6 +55,7 @@ java_library(
 java_library(
     name = "tests",
     srcs = glob(["src/test/**/*.java"]),
+    visibility = ["//visibility:private"],
     deps = [
         "maven_deps",
         "module",
@@ -66,22 +67,7 @@ java_library(
     ],
 )
 
-run_tests(
-    test_files = glob(["src/test/**/*Test.java"]),
-    runtime_deps = [
-        "@maven//:javax_ws_rs_javax_ws_rs_api",
-    ],
-    deps = [
-        "maven_deps",
-        "module",
-        "test_deps",
-        "tests",
-        "//:lombok",
-        "//13-grpc-api/src/main/proto:13_grpc_api_java_proto",
-        "//13-grpc-api/src/main/proto:13_grpc_api_proto",
-        "//990-commons-test:module",
-    ],
-)
+run_tests()
 
 checkstyle()
 

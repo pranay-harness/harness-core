@@ -46,6 +46,7 @@ java_library(
 java_library(
     name = "tests",
     srcs = glob(["src/test/**/*.java"]),
+    visibility = ["//visibility:private"],
     runtime_deps = [
         "//990-commons-test/src/main/resources",
     ],
@@ -57,19 +58,7 @@ java_library(
     ],
 )
 
-run_tests(
-    test_files = glob(["src/test/**/*Test.java"]),
-    runtime_deps = [
-        "//990-commons-test/src/main/resources",
-    ],
-    deps = [
-        "maven_deps",
-        "module",
-        "tests",
-        "//:lombok",
-        "@maven//:com_google_guava_guava",
-    ],
-)
+run_tests()
 
 checkstyle()
 

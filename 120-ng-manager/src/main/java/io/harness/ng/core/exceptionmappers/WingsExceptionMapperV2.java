@@ -44,7 +44,7 @@ public class WingsExceptionMapperV2 implements ExceptionMapper<WingsException> {
       errorCode = responseMessageList.get(responseMessageList.size() - 1).getCode();
     }
     if (errorCode != null) {
-      return errorCode.getStatus();
+      return Response.Status.fromStatusCode(errorCode.getStatus().getCode());
     } else {
       return INTERNAL_SERVER_ERROR;
     }

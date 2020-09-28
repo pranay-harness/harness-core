@@ -252,7 +252,7 @@ public class TemplateFunctionalTest extends AbstractFunctionalTest {
 
     RestResponse<Template> savedTemplateResponse = saveTemplate(template, templateType, bearerToken);
     assertThat(savedTemplateResponse.getResponseMessages()).isNotEmpty();
-    assertThat(savedTemplateResponse.getResponseMessages().get(0).getCode().getStatus().getStatusCode()).isEqualTo(400);
+    assertThat(savedTemplateResponse.getResponseMessages().get(0).getCode().getStatus().getCode()).isEqualTo(400);
 
     bearerToken = Setup.getAuthToken(adminUserEmail, "admin");
     savedTemplateResponse = saveTemplate(template, templateType, bearerToken);
@@ -300,7 +300,7 @@ public class TemplateFunctionalTest extends AbstractFunctionalTest {
                                 .as(templateType.getType());
 
     assertThat(savedTemplateResponse.getResponseMessages()).isNotEmpty();
-    assertThat(savedTemplateResponse.getResponseMessages().get(0).getCode().getStatus().getStatusCode()).isEqualTo(400);
+    assertThat(savedTemplateResponse.getResponseMessages().get(0).getCode().getStatus().getCode()).isEqualTo(400);
 
     // Delete template shouldn't be allowed
     deleteTemplate(bearerToken, account.getUuid(), savedTemplate.getUuid(), 400);
