@@ -1,11 +1,13 @@
 package software.wings.delegatetasks.helm;
 
+import static io.harness.exception.WingsException.USER;
 import static io.harness.k8s.model.HelmVersion.V2;
 import static io.harness.k8s.model.HelmVersion.V3;
 import static io.harness.rule.OwnerRule.ABOSII;
 import static io.harness.rule.OwnerRule.ACASIAN;
 import static io.harness.rule.OwnerRule.ROHITKARELIA;
 import static io.harness.rule.OwnerRule.YOGESH;
+import static java.lang.String.format;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
@@ -198,6 +200,29 @@ public class HelmTaskHelperTest extends WingsBaseTest {
   @Test
   @Owner(developers = ABOSII)
   @Category(UnitTests.class)
+  public void testGetHelmChartInfoFromChartsYamlFileFromInstallCommandRequest() throws Exception {
+    HelmInstallCommandRequest request = HelmInstallCommandRequest.builder().workingDir("working/dir").build();
+    HelmChartInfo helmChartInfo = HelmChartInfo.builder().build();
+
+    doReturn(helmChartInfo).when(helmTaskHelper).getHelmChartInfoFromChartsYamlFile("working/dir/Chart.yaml");
+
+    assertThat(helmTaskHelper.getHelmChartInfoFromChartsYamlFile(request)).isSameAs(helmChartInfo);
+  }
+
+  @Test
+  @Owner(developers = ABOSII)
+  @Category(UnitTests.class)
+  public void testGetHelmChartInfoFromChartDirectory() throws Exception {
+    HelmChartInfo helmChartInfo = HelmChartInfo.builder().build();
+
+    doReturn(helmChartInfo).when(helmTaskHelper).getHelmChartInfoFromChartsYamlFile("chart/directory/Chart.yaml");
+
+    assertThat(helmTaskHelper.getHelmChartInfoFromChartDirectory("chart/directory")).isSameAs(helmChartInfo);
+  }
+
+  @Test
+  @Owner(developers = ABOSII)
+  @Category(UnitTests.class)
   public void testDownloadChartFilesForGCSHelmRepo() throws Exception {
     ChartMuseumServer chartMuseumServer = ChartMuseumServer.builder().port(1234).build();
     GCSHelmRepoConfig gcsHelmRepoConfig =
@@ -384,40 +409,39 @@ public class HelmTaskHelperTest extends WingsBaseTest {
     emptyHelmChartConfigParams.setHelmVersion(null);
 
     helmTaskHelper.printHelmChartInfoInExecutionLogs(withAmazonS3ConfigRepo, executionLogCallback);
-    verify(executionLogCallback).saveExecutionLog(String.format("Chart bucket: %s", "bucketName"));
+    verify(executionLogCallback).saveExecutionLog(format("Chart bucket: %s", "bucketName"));
     helmTaskHelper.printHelmChartInfoInExecutionLogs(withHttpConfigRepo, executionLogCallback);
-    verify(executionLogCallback).saveExecutionLog(String.format("Repo url: %s", "http://127.0.0.1:1234"));
+    verify(executionLogCallback).saveExecutionLog(format("Repo url: %s", "http://127.0.0.1:1234"));
 
     // with chart name
     emptyHelmChartConfigParams.setChartName("chartName");
     helmTaskHelper.printHelmChartInfoInExecutionLogs(emptyHelmChartConfigParams, executionLogCallback);
-    verify(executionLogCallback, atLeastOnce()).saveExecutionLog(String.format("Chart name: %s", "chartName"));
+    verify(executionLogCallback, atLeastOnce()).saveExecutionLog(format("Chart name: %s", "chartName"));
 
     // with repo display name
     emptyHelmChartConfigParams.setRepoDisplayName("repoDisplayName");
     helmTaskHelper.printHelmChartInfoInExecutionLogs(emptyHelmChartConfigParams, executionLogCallback);
-    verify(executionLogCallback, atLeastOnce())
-        .saveExecutionLog(String.format("Helm repository: %s", "repoDisplayName"));
+    verify(executionLogCallback, atLeastOnce()).saveExecutionLog(format("Helm repository: %s", "repoDisplayName"));
 
     // with base path
     emptyHelmChartConfigParams.setBasePath("basePath");
     helmTaskHelper.printHelmChartInfoInExecutionLogs(emptyHelmChartConfigParams, executionLogCallback);
-    verify(executionLogCallback, atLeastOnce()).saveExecutionLog(String.format("Base Path: %s", "basePath"));
+    verify(executionLogCallback, atLeastOnce()).saveExecutionLog(format("Base Path: %s", "basePath"));
 
     // with chart version
     emptyHelmChartConfigParams.setChartVersion("1.0.0");
     helmTaskHelper.printHelmChartInfoInExecutionLogs(emptyHelmChartConfigParams, executionLogCallback);
-    verify(executionLogCallback, atLeastOnce()).saveExecutionLog(String.format("Chart version: %s", "1.0.0"));
+    verify(executionLogCallback, atLeastOnce()).saveExecutionLog(format("Chart version: %s", "1.0.0"));
 
     // with chart url
     emptyHelmChartConfigParams.setChartUrl("http://127.0.0.1");
     helmTaskHelper.printHelmChartInfoInExecutionLogs(emptyHelmChartConfigParams, executionLogCallback);
-    verify(executionLogCallback, atLeastOnce()).saveExecutionLog(String.format("Chart url: %s", "http://127.0.0.1"));
+    verify(executionLogCallback, atLeastOnce()).saveExecutionLog(format("Chart url: %s", "http://127.0.0.1"));
 
     // with helm version
     emptyHelmChartConfigParams.setHelmVersion(V2);
     helmTaskHelper.printHelmChartInfoInExecutionLogs(emptyHelmChartConfigParams, executionLogCallback);
-    verify(executionLogCallback, atLeastOnce()).saveExecutionLog(String.format("Helm version: %s", V2));
+    verify(executionLogCallback, atLeastOnce()).saveExecutionLog(format("Helm version: %s", V2));
   }
 
   private HelmChartConfigParams getHelmChartConfigParams(HelmRepoConfig repoConfig) {
@@ -659,5 +683,82 @@ public class HelmTaskHelperTest extends WingsBaseTest {
         .containsExactlyInAnyOrder(file1, file2, file3);
     assertThat(helmTaskHelper.getFilteredFiles(multipleFiles, Arrays.asList("dir/file1", "dir/file2", "misssing")))
         .containsExactlyInAnyOrder(file1, file2);
+  }
+
+  @Test
+  @Owner(developers = ABOSII)
+  @Category(UnitTests.class)
+  public void testInitHelm() throws Exception {
+    String workingDirectory = "/working/directory";
+    String expectedInitCommand = format("v2/helm init -c --skip-refresh --home %s/helm", workingDirectory);
+    doReturn(workingDirectory).when(helmTaskHelper).createNewDirectoryAtPath(anyString());
+    doReturn(new ProcessResult(0, new ProcessOutput("success".getBytes())))
+        .when(helmTaskHelper)
+        .executeCommand(expectedInitCommand, workingDirectory, "Initing helm Command " + expectedInitCommand,
+            LONG_TIMEOUT_INTERVAL);
+    assertThatCode(() -> helmTaskHelper.initHelm("/working/directory", V2, LONG_TIMEOUT_INTERVAL))
+        .doesNotThrowAnyException();
+  }
+
+  @Test
+  @Owner(developers = ABOSII)
+  @Category(UnitTests.class)
+  public void testInitHelmFailed() throws Exception {
+    String workingDirectory = "/working/directory";
+    String expectedInitCommand = format("v2/helm init -c --skip-refresh --home %s/helm", workingDirectory);
+    doReturn(workingDirectory).when(helmTaskHelper).createNewDirectoryAtPath(anyString());
+    doReturn(new ProcessResult(1, new ProcessOutput("something went wrong executing command".getBytes())))
+        .when(helmTaskHelper)
+        .executeCommand(expectedInitCommand, workingDirectory, "Initing helm Command " + expectedInitCommand,
+            LONG_TIMEOUT_INTERVAL);
+    assertThatThrownBy(() -> helmTaskHelper.initHelm("/working/directory", V2, LONG_TIMEOUT_INTERVAL))
+        .isInstanceOf(HelmClientException.class)
+        .hasMessageContaining("Failed to init helm")
+        .hasMessageContaining("something went wrong executing command");
+  }
+
+  @Test
+  @Owner(developers = ABOSII)
+  @Category(UnitTests.class)
+  public void testRemoveRepo() {
+    String workingDirectory = "/working/directory";
+    String repoName = "repoName";
+    String expectedRemoveCommand = format("v2/helm repo remove %s --home %s/helm", repoName, workingDirectory);
+    doReturn(new ProcessResult(0, new ProcessOutput("success".getBytes())))
+        .when(helmTaskHelper)
+        .executeCommand(expectedRemoveCommand, null, format("remove helm repo %s", repoName), LONG_TIMEOUT_INTERVAL);
+
+    assertThatCode(() -> helmTaskHelper.removeRepo(repoName, workingDirectory, V2, LONG_TIMEOUT_INTERVAL))
+        .doesNotThrowAnyException();
+  }
+
+  @Test
+  @Owner(developers = ABOSII)
+  @Category(UnitTests.class)
+  public void testRemoveRepoFailedWithoutAnyExceptions() {
+    String workingDirectory = "/working/directory";
+    String repoName = "repoName";
+    String expectedRemoveCommand = format("v2/helm repo remove %s --home %s/helm", repoName, workingDirectory);
+    doReturn(new ProcessResult(1, new ProcessOutput("something went wrong executing command".getBytes())))
+        .when(helmTaskHelper)
+        .executeCommand(expectedRemoveCommand, null, format("remove helm repo %s", repoName), LONG_TIMEOUT_INTERVAL);
+
+    assertThatCode(() -> helmTaskHelper.removeRepo(repoName, workingDirectory, V2, LONG_TIMEOUT_INTERVAL))
+        .doesNotThrowAnyException();
+  }
+
+  @Test
+  @Owner(developers = ABOSII)
+  @Category(UnitTests.class)
+  public void testRemoveRepoFailedWithException() {
+    String workingDirectory = "/working/directory";
+    String repoName = "repoName";
+    String expectedRemoveCommand = format("v2/helm repo remove %s --home %s/helm", repoName, workingDirectory);
+    doThrow(new InvalidRequestException("Something went wrong", USER))
+        .when(helmTaskHelper)
+        .executeCommand(expectedRemoveCommand, null, format("remove helm repo %s", repoName), LONG_TIMEOUT_INTERVAL);
+
+    assertThatCode(() -> helmTaskHelper.removeRepo(repoName, workingDirectory, V2, LONG_TIMEOUT_INTERVAL))
+        .doesNotThrowAnyException();
   }
 }
