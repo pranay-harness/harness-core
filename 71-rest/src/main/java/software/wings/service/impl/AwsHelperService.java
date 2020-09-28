@@ -236,8 +236,8 @@ public class AwsHelperService {
 
   public void validateAwsAccountCredential(String accessKey, char[] secretKey) {
     try {
-      getAmazonEc2Client(
-          Regions.US_EAST_1.getName(), AwsConfig.builder().accessKey(accessKey).secretKey(secretKey).build())
+      getAmazonEc2Client(Regions.US_EAST_1.getName(),
+          AwsConfig.builder().accessKey(accessKey.toCharArray()).secretKey(secretKey).build())
           .describeRegions();
       tracker.trackEC2Call("Describe Regions");
     } catch (AmazonEC2Exception amazonEC2Exception) {
@@ -320,7 +320,7 @@ public class AwsHelperService {
       credentialsProvider = new EC2ContainerCredentialsProviderWrapper();
     } else {
       credentialsProvider = new AWSStaticCredentialsProvider(
-          new BasicAWSCredentials(awsConfig.getAccessKey(), new String(awsConfig.getSecretKey())));
+          new BasicAWSCredentials(new String(awsConfig.getAccessKey()), new String(awsConfig.getSecretKey())));
     }
     if (awsConfig.isAssumeCrossAccountRole()) {
       // For the security token service we default to us-east-1.

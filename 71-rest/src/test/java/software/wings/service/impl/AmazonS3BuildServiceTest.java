@@ -42,8 +42,11 @@ public class AmazonS3BuildServiceTest extends WingsBaseTest {
   @Inject @InjectMocks private DelegateFileManager delegateFileManager;
   @Inject @InjectMocks private AmazonS3BuildService amazonS3BuildService;
   private static final List<String> artifactPaths = Lists.newArrayList("path1", "path2");
-  private static final AwsConfig awsConfig =
-      AwsConfig.builder().accessKey("access").secretKey("secret".toCharArray()).accountId("accountId").build();
+  private static final AwsConfig awsConfig = AwsConfig.builder()
+                                                 .accessKey("access".toCharArray())
+                                                 .secretKey("secret".toCharArray())
+                                                 .accountId("accountId")
+                                                 .build();
   private static final AmazonS3ArtifactStream amazonS3ArtifactStream = createAmazonS3ArtifactStream(artifactPaths);
   private static final AmazonS3ArtifactStream amazonS3ArtifactStream2 =
       createAmazonS3ArtifactStream(Lists.newArrayList("testfolder/"));

@@ -49,7 +49,7 @@ public class AmazonS3HelmRepoConfigYamlHandlerTest extends BaseSettingValueConfi
                                             .withAppId(GLOBAL_APP_ID)
                                             .withValue(AwsConfig.builder()
                                                            .accountId(ACCOUNT_ID)
-                                                           .accessKey("accessKey")
+                                                           .accessKey("accessKey".toCharArray())
                                                            .secretKey("secret".toCharArray())
                                                            .build())
                                             .build();

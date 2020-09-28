@@ -92,7 +92,7 @@ public class CloudWatchIntegrationTest extends BaseIntegrationTest {
             .withEnvId(GLOBAL_ENV_ID)
             .withAccountId(accountId)
             .withValue(AwsConfig.builder()
-                           .accessKey(scmSecret.decryptToString(new SecretName("aws_playground_access_key")))
+                           .accessKey(scmSecret.decryptToCharArray(new SecretName("aws_playground_access_key")))
                            .secretKey(scmSecret.decryptToCharArray(new SecretName("aws_playground_secret_key")))
                            .accountId(accountId)
                            .build())
@@ -109,7 +109,7 @@ public class CloudWatchIntegrationTest extends BaseIntegrationTest {
             .withAccountId(accountId)
             .withValue(
                 AwsConfig.builder()
-                    .accessKey(scmSecret.decryptToString(new SecretName("aws_playground_no_lambda_access_key")))
+                    .accessKey(scmSecret.decryptToCharArray(new SecretName("aws_playground_no_lambda_access_key")))
                     .secretKey(scmSecret.decryptToCharArray(new SecretName("aws_playground_no_lambda_secret_key")))
                     .accountId(accountId)
                     .build())

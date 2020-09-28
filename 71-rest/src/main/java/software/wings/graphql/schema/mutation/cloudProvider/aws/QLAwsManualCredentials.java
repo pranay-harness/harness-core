@@ -13,5 +13,6 @@ import software.wings.security.annotations.Scope;
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class QLAwsManualCredentials {
   private RequestField<String> accessKey;
+  private RequestField<String> accessKeySecretId;
   private RequestField<String> secretKeySecretId;
 }

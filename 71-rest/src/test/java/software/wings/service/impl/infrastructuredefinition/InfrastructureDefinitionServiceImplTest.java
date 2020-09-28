@@ -902,7 +902,8 @@ public class InfrastructureDefinitionServiceImplTest extends WingsBaseTest {
             .withUuid("aws-cp-id")
             .withAccountId(ACCOUNT_ID)
             .withCategory(SettingCategory.CLOUD_PROVIDER)
-            .withValue(AwsConfig.builder().accessKey("access-key").secretKey("secret-key".toCharArray()).build())
+            .withValue(
+                AwsConfig.builder().accessKey("access-key".toCharArray()).secretKey("secret-key".toCharArray()).build())
             .build();
 
     InfrastructureDefinition def = getValidInfra(PHYSICAL_INFRA, false);

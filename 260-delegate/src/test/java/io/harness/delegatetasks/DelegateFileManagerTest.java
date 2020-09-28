@@ -92,7 +92,7 @@ public class DelegateFileManagerTest extends CategoryTest {
   private SettingAttribute awsSetting =
       aSettingAttribute()
           .withUuid(SETTING_ID)
-          .withValue(AwsConfig.builder().secretKey(SECRET_KEY).accessKey(ACCESS_KEY).build())
+          .withValue(AwsConfig.builder().secretKey(SECRET_KEY).accessKey(ACCESS_KEY.toCharArray()).build())
           .build();
   private ArtifactStreamAttributes artifactStreamAttributesForS3 =
       ArtifactStreamAttributes.builder()

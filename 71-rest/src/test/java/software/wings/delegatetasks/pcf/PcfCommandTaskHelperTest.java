@@ -681,8 +681,10 @@ public class PcfCommandTaskHelperTest extends WingsBaseTest {
   public void testGenerateManifestYamlForECRPush() throws Exception {
     PcfCommandSetupRequest pcfCommandSetupRequest =
         PcfCommandSetupRequest.builder().manifestYaml(MANIFEST_YAML_DOCKER).build();
-    AwsConfig awsConfig =
-        AwsConfig.builder().accessKey("AKIAWQ5IKSASRV2RUSNP").secretKey("secretKey".toCharArray()).build();
+    AwsConfig awsConfig = AwsConfig.builder()
+                              .accessKey("AKIAWQ5IKSASRV2RUSNP".toCharArray())
+                              .secretKey("secretKey".toCharArray())
+                              .build();
     populateDockerInfo(pcfCommandSetupRequest, ECR_URL, awsConfig);
     PcfCreateApplicationRequestData requestData = generatePcfCreateApplicationRequestDataDocker(pcfCommandSetupRequest);
     String finalManifest = pcfCommandTaskHelper.generateManifestYamlForPush(pcfCommandSetupRequest, requestData);

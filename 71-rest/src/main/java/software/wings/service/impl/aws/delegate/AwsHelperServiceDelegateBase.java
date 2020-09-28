@@ -51,8 +51,8 @@ class AwsHelperServiceDelegateBase {
       logger.info("Instantiating EC2ContainerCredentialsProviderWrapper");
       credentialsProvider = new EC2ContainerCredentialsProviderWrapper();
     } else {
-      credentialsProvider =
-          new AWSStaticCredentialsProvider(new BasicAWSCredentials(defaultString(awsConfig.getAccessKey(), ""),
+      credentialsProvider = new AWSStaticCredentialsProvider(
+          new BasicAWSCredentials(defaultString(String.valueOf(awsConfig.getAccessKey()), ""),
               awsConfig.getSecretKey() != null ? new String(awsConfig.getSecretKey()) : ""));
     }
     if (awsConfig.isAssumeCrossAccountRole() && awsConfig.getCrossAccountAttributes() != null) {

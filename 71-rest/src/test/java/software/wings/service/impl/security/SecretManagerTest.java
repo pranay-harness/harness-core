@@ -148,7 +148,8 @@ public class SecretManagerTest extends CategoryTest {
   @Owner(developers = PUNEET)
   @Category(UnitTests.class)
   public void testMaskEncryptedFields() {
-    AwsConfig awsConfig = AwsConfig.builder().accountId(ACCOUNT_ID).accessKey(ACCESS_KEY).secretKey(SECRET_KEY).build();
+    AwsConfig awsConfig =
+        AwsConfig.builder().accountId(ACCOUNT_ID).accessKey(ACCESS_KEY.toCharArray()).secretKey(SECRET_KEY).build();
     secretManager.maskEncryptedFields(awsConfig);
     assertThat(awsConfig.getSecretKey()).isEqualTo(ENCRYPTED_FIELD_MASK.toCharArray());
   }
@@ -157,10 +158,11 @@ public class SecretManagerTest extends CategoryTest {
   @Owner(developers = BRETT)
   @Category(UnitTests.class)
   public void testResetUnchangedEncryptedFields() {
-    AwsConfig awsConfig = AwsConfig.builder().accountId(ACCOUNT_ID).accessKey(ACCESS_KEY).secretKey(SECRET_KEY).build();
+    AwsConfig awsConfig =
+        AwsConfig.builder().accountId(ACCOUNT_ID).accessKey(ACCESS_KEY.toCharArray()).secretKey(SECRET_KEY).build();
     AwsConfig maskedAwsConfig = AwsConfig.builder()
                                     .accountId(ACCOUNT_ID)
-                                    .accessKey(ACCESS_KEY)
+                                    .accessKey(ACCESS_KEY.toCharArray())
                                     .secretKey(ENCRYPTED_FIELD_MASK.toCharArray())
                                     .build();
     secretManager.resetUnchangedEncryptedFields(awsConfig, maskedAwsConfig);

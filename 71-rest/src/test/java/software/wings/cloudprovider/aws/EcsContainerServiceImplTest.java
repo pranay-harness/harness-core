@@ -89,7 +89,9 @@ public class EcsContainerServiceImplTest extends WingsBaseTest {
   @Inject @InjectMocks private EcsContainerService ecsContainerService;
 
   private SettingAttribute connectorConfig =
-      aSettingAttribute().withValue(AwsConfig.builder().accessKey(ACCESS_KEY).secretKey(SECRET_KEY).build()).build();
+      aSettingAttribute()
+          .withValue(AwsConfig.builder().accessKey(ACCESS_KEY.toCharArray()).secretKey(SECRET_KEY).build())
+          .build();
 
   private AwsConfig awsConfig = (AwsConfig) connectorConfig.getValue();
 

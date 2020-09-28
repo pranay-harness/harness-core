@@ -95,7 +95,7 @@ public class CloudFormationCommandTaskHandlerTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void testCreateStack() {
     String templateBody = "Template Body";
-    String accessKey = "abcd";
+    char[] accessKey = "abcd".toCharArray();
     char[] secretKey = "pqrs".toCharArray();
     String stackNameSuffix = "Stack Name 00";
     String roleArn = "roleArn";
@@ -156,7 +156,7 @@ public class CloudFormationCommandTaskHandlerTest extends WingsBaseTest {
   @Owner(developers = SATYAM)
   @Category(UnitTests.class)
   public void testCreateStackGit() {
-    String accessKey = "abcd";
+    char[] accessKey = "abcd".toCharArray();
     char[] secretKey = "pqrs".toCharArray();
     String data = "data";
     String stackNameSuffix = "Stack Name 00";
@@ -227,7 +227,7 @@ public class CloudFormationCommandTaskHandlerTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void testUpdateStack() {
     String templateBody = "Template Body";
-    String accessKey = "abcd";
+    char[] accessKey = "abcd".toCharArray();
     char[] secretKey = "pqrs".toCharArray();
     String stackNameSuffix = "Stack Name 00";
     CloudFormationCreateStackRequest request =
@@ -273,7 +273,7 @@ public class CloudFormationCommandTaskHandlerTest extends WingsBaseTest {
   @Owner(developers = SATYAM)
   @Category(UnitTests.class)
   public void testDeleteStack() {
-    String accessKey = "abcd";
+    char[] accessKey = "abcd".toCharArray();
     char[] secretKey = "pqrs".toCharArray();
     String stackNameSuffix = "Stack Name 01";
     String roleArn = "RoleArn";
@@ -312,7 +312,7 @@ public class CloudFormationCommandTaskHandlerTest extends WingsBaseTest {
   @Owner(developers = SATYAM)
   @Category(UnitTests.class)
   public void testListStacks() {
-    String accessKey = "abcd";
+    char[] accessKey = "abcd".toCharArray();
     char[] secretKey = "pqrs".toCharArray();
     CloudFormationListStacksRequest request =
         CloudFormationListStacksRequest.builder()

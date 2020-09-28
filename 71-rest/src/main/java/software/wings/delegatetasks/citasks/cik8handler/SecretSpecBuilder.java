@@ -187,7 +187,7 @@ public class SecretSpecBuilder {
                 break;
               case AWS:
                 AwsConfig awsConfig = (AwsConfig) encryptableSetting;
-                String accessKey = awsConfig.getAccessKey();
+                String accessKey = String.valueOf(awsConfig.getAccessKey());
                 String secretKey = String.valueOf(awsConfig.getSecretKey());
 
                 secretData.put(ACCESS_KEY_PREFIX + encryptedVariable.getKey(),

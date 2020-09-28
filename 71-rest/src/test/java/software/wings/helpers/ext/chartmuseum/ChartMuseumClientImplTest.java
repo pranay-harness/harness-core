@@ -32,9 +32,10 @@ public class ChartMuseumClientImplTest extends WingsBaseTest {
   }
 
   private void testGetEnvForAwsConfig() {
-    AwsConfig awsConfig = AwsConfig.builder().accessKey("abc").secretKey("topSecret".toCharArray()).build();
+    AwsConfig awsConfig =
+        AwsConfig.builder().accessKey("abc".toCharArray()).secretKey("topSecret".toCharArray()).build();
     Map<String, String> env = chartMuseumClient.getEnvForAwsConfig(awsConfig);
-    assertThat(env.get(ChartMuseumConstants.AWS_ACCESS_KEY_ID)).isEqualTo(awsConfig.getAccessKey());
+    assertThat(env.get(ChartMuseumConstants.AWS_ACCESS_KEY_ID).toCharArray()).isEqualTo(awsConfig.getAccessKey());
     assertThat(env.get(ChartMuseumConstants.AWS_SECRET_ACCESS_KEY)).isEqualTo(new String(awsConfig.getSecretKey()));
     assertThat(env.keySet()).hasSize(2);
   }

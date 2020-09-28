@@ -202,7 +202,7 @@ public class InfrastructureMappingIntegrationTest extends BaseIntegrationTest {
         aSettingAttribute()
             .withAppId(app.getUuid())
             .withValue(AwsConfig.builder()
-                           .accessKey(scmSecret.decryptToString(new SecretName("aws_config_access_key")))
+                           .accessKey(scmSecret.decryptToCharArray(new SecretName("aws_config_access_key")))
                            .secretKey(scmSecret.decryptToCharArray(new SecretName("aws_setting_attribute_secret_key")))
                            .build())
             .build());
@@ -242,7 +242,7 @@ public class InfrastructureMappingIntegrationTest extends BaseIntegrationTest {
         aSettingAttribute()
             .withAppId(app.getUuid())
             .withValue(AwsConfig.builder()
-                           .accessKey(scmSecret.decryptToString(new SecretName("aws_config_access_key")))
+                           .accessKey(scmSecret.decryptToCharArray(new SecretName("aws_config_access_key")))
                            .secretKey(scmSecret.decryptToCharArray(new SecretName("aws_setting_attribute_secret_key")))
                            .build())
             .build());

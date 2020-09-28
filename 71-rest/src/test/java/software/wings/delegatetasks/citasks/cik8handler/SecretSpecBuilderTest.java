@@ -321,7 +321,7 @@ public class SecretSpecBuilderTest extends WingsBaseTest {
     EncryptableSettingWithEncryptionDetails setting =
         EncryptableSettingWithEncryptionDetails.builder()
             .encryptableSetting(
-                AwsConfig.builder().accessKey("access-key").secretKey("secret-key".toCharArray()).build())
+                AwsConfig.builder().accessKey("access-key".toCharArray()).secretKey("secret-key".toCharArray()).build())
             .build();
     map.put("aws", setting);
     when(encryptionService.decrypt(any())).thenReturn(Collections.singletonList(setting));

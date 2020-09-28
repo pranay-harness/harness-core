@@ -64,7 +64,7 @@ public class InstanceSyncTestConstants {
   public static final String CONTAINER_7_ID = "container7_Id";
   public static final String CONTAINER_8_ID = "container8_Id";
   public static final String DEPLOYMENT_ID = "deployment_Id";
-  public static final String AWS_ACCESS_KEY = "awsAccessKey";
+  public static final char[] AWS_ACCESS_KEY = "awsAccessKey".toCharArray();
   public static final String AWS_ENCRYPTED_SECRET_KEY = "awsEncryptedSecretKey";
   public static final String INSTANCE_1_ID = "instance1_Id";
   public static final String INSTANCE_2_ID = "instance2_Id";

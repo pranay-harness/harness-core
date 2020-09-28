@@ -44,10 +44,12 @@ public class EcsPerpetualTaskServiceClientTest extends WingsBaseTest {
   @Before
   public void setUp() {
     when(settingsService.get(SETTING_ID))
-        .thenReturn(
-            SettingAttribute.Builder.aSettingAttribute()
-                .withValue(AwsConfig.builder().accessKey("accessKey").secretKey("secretKey".toCharArray()).build())
-                .build());
+        .thenReturn(SettingAttribute.Builder.aSettingAttribute()
+                        .withValue(AwsConfig.builder()
+                                       .accessKey("accessKey".toCharArray())
+                                       .secretKey("secretKey".toCharArray())
+                                       .build())
+                        .build());
 
     when(secretManager.getEncryptionDetails(any(), any(), any())).thenReturn(null);
 

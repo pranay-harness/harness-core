@@ -624,7 +624,7 @@ public class ArtifactCollectionServiceTest extends WingsBaseTest {
     when(artifactStreamService.get(ARTIFACT_STREAM_ID)).thenReturn(ecrArtifactStream);
     SettingAttribute settingAttribute =
         SettingAttribute.Builder.aSettingAttribute()
-            .withValue(AwsConfig.builder().secretKey(SECRET_KEY).accessKey(ACCESS_KEY).build())
+            .withValue(AwsConfig.builder().secretKey(SECRET_KEY).accessKey(ACCESS_KEY.toCharArray()).build())
             .withAccountId(ACCOUNT_ID)
             .build();
     when(settingsService.get(SETTING_ID)).thenReturn(settingAttribute);
@@ -916,7 +916,7 @@ public class ArtifactCollectionServiceTest extends WingsBaseTest {
                                               .build();
     SettingAttribute settingAttribute =
         SettingAttribute.Builder.aSettingAttribute()
-            .withValue(AwsConfig.builder().secretKey(SECRET_KEY).accessKey(ACCESS_KEY).build())
+            .withValue(AwsConfig.builder().secretKey(SECRET_KEY).accessKey(ACCESS_KEY.toCharArray()).build())
             .withAccountId(ACCOUNT_ID)
             .build();
     when(secretManager.getEncryptionDetails(any(), anyString(), anyString())).thenReturn(null);
@@ -943,7 +943,7 @@ public class ArtifactCollectionServiceTest extends WingsBaseTest {
     AmazonS3ArtifactStream jenkinsArtifactStream = getS3ArtifactStream();
     SettingAttribute settingAttribute =
         SettingAttribute.Builder.aSettingAttribute()
-            .withValue(AwsConfig.builder().secretKey(SECRET_KEY).accessKey(ACCESS_KEY).build())
+            .withValue(AwsConfig.builder().secretKey(SECRET_KEY).accessKey(ACCESS_KEY.toCharArray()).build())
             .withAccountId(ACCOUNT_ID)
             .build();
     when(secretManager.getEncryptionDetails(any(), anyString(), anyString())).thenReturn(null);

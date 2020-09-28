@@ -434,7 +434,7 @@ public class AwsInfrastructureProvider implements InfrastructureProvider {
   }
 
   public List<String> listClassicLoadBalancers(String accessKey, char[] secretKey, String region) {
-    AwsConfig awsConfig = AwsConfig.builder().accessKey(accessKey).secretKey(secretKey).build();
+    AwsConfig awsConfig = AwsConfig.builder().accessKey(accessKey.toCharArray()).secretKey(secretKey).build();
     return awsElbHelperServiceManager.listApplicationLoadBalancers(
         awsConfig, secretManager.getEncryptionDetails(awsConfig, null, null), region, "");
   }

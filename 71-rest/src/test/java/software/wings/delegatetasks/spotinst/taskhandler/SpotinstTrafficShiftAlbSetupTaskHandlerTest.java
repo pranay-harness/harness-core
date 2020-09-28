@@ -182,7 +182,8 @@ public class SpotinstTrafficShiftAlbSetupTaskHandlerTest extends WingsBaseTest {
                                         .spotInstAccountId("spotActId")
                                         .spotInstToken(new char[] {'t', 'o', 'k', 'e', 'n'})
                                         .build();
-    AwsConfig awsConfig = AwsConfig.builder().accessKey("awsAccessKey").secretKey(new char[] {'s', 'e'}).build();
+    AwsConfig awsConfig =
+        AwsConfig.builder().accessKey("awsAccessKey".toCharArray()).secretKey(new char[] {'s', 'e'}).build();
     ExecutionLogCallback mockCallback = mock(ExecutionLogCallback.class);
     doNothing().when(mockCallback).saveExecutionLog(anyString());
     doNothing().when(mockCallback).saveExecutionLog(anyString(), any(), any());

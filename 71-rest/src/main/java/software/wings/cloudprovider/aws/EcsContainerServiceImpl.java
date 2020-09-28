@@ -435,7 +435,7 @@ public class EcsContainerServiceImpl implements EcsContainerService {
                 new Parameter().withParameterKey("VpcCidr").withParameterValue("10.0.0.0/16"),
                 new Parameter().withParameterKey("VpcId").withParameterValue("vpc-84a9bfe0")),
         AwsConfig.builder()
-            .accessKey("AKIAJLEKM45P4PO5QUFQ")
+            .accessKey("AKIAJLEKM45P4PO5QUFQ".toCharArray())
             .secretKey("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".toCharArray())
             .build());
 
@@ -444,7 +444,7 @@ public class EcsContainerServiceImpl implements EcsContainerService {
         stack = awsHelperService
                     .describeStacks("us-east-1", new DescribeStacksRequest().withStackName("EC2ContainerService-test2"),
                         AwsConfig.builder()
-                            .accessKey("AKIAJLEKM45P4PO5QUFQ")
+                            .accessKey("AKIAJLEKM45P4PO5QUFQ".toCharArray())
                             .secretKey("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".toCharArray())
                             .build())
                     .getStacks()
@@ -783,7 +783,7 @@ public class EcsContainerServiceImpl implements EcsContainerService {
                 new Parameter().withParameterKey("VpcCidr").withParameterValue("10.0.0.0/16"),
                 new Parameter().withParameterKey("VpcId").withParameterValue("vpc-84a9bfe0")),
         AwsConfig.builder()
-            .accessKey("AKIAJLEKM45P4PO5QUFQ")
+            .accessKey("AKIAJLEKM45P4PO5QUFQ".toCharArray())
             .secretKey("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".toCharArray())
             .build());
 
@@ -792,7 +792,7 @@ public class EcsContainerServiceImpl implements EcsContainerService {
         stack = awsHelperService
                     .describeStacks("us-east-1", new DescribeStacksRequest().withStackName("EC2ContainerService-test2"),
                         AwsConfig.builder()
-                            .accessKey("AKIAJLEKM45P4PO5QUFQ")
+                            .accessKey("AKIAJLEKM45P4PO5QUFQ".toCharArray())
                             .secretKey("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".toCharArray())
                             .build())
                     .getStacks()
