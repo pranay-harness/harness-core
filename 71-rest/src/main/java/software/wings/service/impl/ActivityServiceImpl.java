@@ -159,6 +159,9 @@ public class ActivityServiceImpl implements ActivityService {
         case PCF_PLUGIN:
         case COMMAND:
         case HELM:
+        case AZURE_VMSS_SETUP:
+        case AZURE_VMSS_DEPLOY:
+        case AZURE_VMSS_SWAP:
         case AWS_AMI_SWITCH_ROUTES:
         case SPOTINST_SETUP:
         case SPOTINST_DEPLOY:

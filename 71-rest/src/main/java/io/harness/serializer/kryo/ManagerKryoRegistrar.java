@@ -818,6 +818,7 @@ import software.wings.sm.states.KubernetesSwapServiceSelectorsResponse;
 import software.wings.sm.states.ParameterEntry;
 import software.wings.sm.states.RepeatState.RepeatStateExecutionData;
 import software.wings.sm.states.ShellScriptState;
+import software.wings.sm.states.azure.AzureVMSSDeployExecutionSummary;
 import software.wings.sm.states.azure.AzureVMSSSetupContextElement;
 import software.wings.sm.states.azure.AzureVMSSSetupExecutionSummary;
 import software.wings.sm.states.azure.AzureVMSSSetupStateExecutionData;
@@ -1764,5 +1765,6 @@ public class ManagerKryoRegistrar implements KryoRegistrar {
 
     kryo.register(HelmChartCollectionParams.class, 8058);
     kryo.register(AwsAmiInfoVariables.class, 8059);
+    kryo.register(AzureVMSSDeployExecutionSummary.class, 8060);
   }
 }

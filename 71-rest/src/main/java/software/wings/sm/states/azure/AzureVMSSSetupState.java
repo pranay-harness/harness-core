@@ -127,7 +127,7 @@ public class AzureVMSSSetupState extends State {
         buildAzureVMSSCommandRequest(context, azureVMSSInfrastructureMapping, azureVmssTaskParameters);
 
     AzureVMSSSetupStateExecutionData azureVMSSSetupStateExecutionData =
-        buildAzureVMSSSetupStateExecutionData(context, activityId);
+        buildAzureVMSSSetupStateExecutionData(context, activityId, azureVMSSInfrastructureMapping.getUuid());
 
     executionLogCallback.saveExecutionLog("Starting Azure VMSS Setup");
     DelegateTask delegateTask =
@@ -234,7 +234,7 @@ public class AzureVMSSSetupState extends State {
 
   @NotNull
   private AzureVMSSSetupStateExecutionData buildAzureVMSSSetupStateExecutionData(
-      ExecutionContext context, String activityId) {
+      ExecutionContext context, String activityId, String infrastructureMappingId) {
     int maxInstancesFixed =
         azureVMSSStateHelper.renderExpressionOrGetDefault(maxInstances, context, DEFAULT_AZURE_VMSS_MAX_INSTANCES);
     int desiredInstancesFixed = azureVMSSStateHelper.renderExpressionOrGetDefault(
@@ -242,6 +242,7 @@ public class AzureVMSSSetupState extends State {
 
     return AzureVMSSSetupStateExecutionData.builder()
         .activityId(activityId)
+        .infrastructureMappingId(infrastructureMappingId)
         .maxInstances(useCurrentRunningCount ? null : maxInstancesFixed)
         .desiredInstances(useCurrentRunningCount ? null : desiredInstancesFixed)
         .resizeStrategy(resizeStrategy)
@@ -297,14 +298,18 @@ public class AzureVMSSSetupState extends State {
       ExecutionContext context, AzureVMSSTaskExecutionResponse executionResponse) {
     AzureVMSSSetupTaskResponse azureVMSSSetupTaskResponse =
         (AzureVMSSSetupTaskResponse) executionResponse.getAzureVMSSTaskResponse();
+    AzureVMSSSetupStateExecutionData azureVMSSSetupStateExecutionData =
+        (AzureVMSSSetupStateExecutionData) context.getStateExecutionData();
 
     boolean isBlueGreen = azureVMSSStateHelper.isBlueGreenWorkflow(context);
     ResizeStrategy resizeStrategyFixed = getResizeStrategy() == null ? RESIZE_NEW_FIRST : getResizeStrategy();
     int autoScalingSteadyStateVMSSTimeoutFixed = azureVMSSStateHelper.renderTimeoutExpressionOrGetDefault(
         autoScalingSteadyStateVMSSTimeout, context, DEFAULT_AZURE_VMSS_TIMEOUT_MIN);
+    String infrastructureMappingId = azureVMSSSetupStateExecutionData.getInfrastructureMappingId();
 
     return AzureVMSSSetupContextElement.builder()
         .isBlueGreen(isBlueGreen)
+        .infraMappingId(infrastructureMappingId)
         .azureLoadBalancerDetail(azureLoadBalancerDetail)
         .resizeStrategy(resizeStrategyFixed)
         .autoScalingSteadyStateVMSSTimeout(autoScalingSteadyStateVMSSTimeoutFixed)

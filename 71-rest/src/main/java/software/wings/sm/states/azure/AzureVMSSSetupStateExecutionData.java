@@ -21,6 +21,7 @@ import java.util.Map;
 @EqualsAndHashCode(callSuper = false)
 public class AzureVMSSSetupStateExecutionData extends StateExecutionData implements DelegateTaskNotifyResponseData {
   private String activityId;
+  private String infrastructureMappingId;
   private String newVirtualMachineScaleSetName;
   private String oldVirtualMachineScaleSetName;
   private Integer newVersion;

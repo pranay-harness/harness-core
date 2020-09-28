@@ -288,6 +288,12 @@ public class AzureVMSSDeployState extends State {
     AzureVMSSDeployStateExecutionData stateExecutionData =
         (AzureVMSSDeployStateExecutionData) context.getStateExecutionData();
     ExecutionStatus executionStatus = azureVMSSStateHelper.getExecutionStatus(executionResponse);
+    if (executionStatus == ExecutionStatus.FAILED) {
+      return ExecutionResponse.builder()
+          .executionStatus(executionStatus)
+          .errorMessage(executionResponse.getErrorMessage())
+          .build();
+    }
 
     azureVMSSStateHelper.updateActivityStatus(appId, activityId, executionStatus);
 
