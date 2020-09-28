@@ -4,6 +4,7 @@ package migrations;
 import com.google.common.collect.ImmutableList;
 
 import lombok.experimental.UtilityClass;
+import migrations.accountpermission.AddManageTagsPermission;
 import migrations.accountpermission.AlertNotificationAccountPermissionMigration;
 import migrations.accountpermission.ManageApiKeyPermissionMigration;
 import migrations.accountpermission.ManageApplicationsPermissionMigration;
@@ -399,6 +400,7 @@ public class MigrationList {
         .add(Pair.of(343, PerpetualTaskMigration.class))
         .add(Pair.of(344, RemoveDeprecatedApplicationsCreatePermission.class))
         .add(Pair.of(345, ManageConfigAsCodePermissionMigration.class))
+        .add(Pair.of(346, AddManageTagsPermission.class))
         .build();
   }
 }
