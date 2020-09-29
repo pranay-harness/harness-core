@@ -12,7 +12,6 @@ import io.harness.delegate.beans.connector.gcpconnector.GcpConnectorDTO;
 import io.harness.delegate.beans.connector.gcpconnector.GcpCredentialType;
 import io.harness.delegate.beans.connector.gcpconnector.GcpDelegateDetailsDTO;
 import io.harness.delegate.beans.connector.gcpconnector.GcpManualDetailsDTO;
-import io.harness.delegate.beans.connector.gcpconnector.GcpSecretKeyAuthDTO;
 import io.harness.delegate.task.gcp.response.GcpValidationTaskResponse;
 import io.harness.encryption.Scope;
 import io.harness.encryption.SecretRefData;
@@ -66,10 +65,7 @@ public class GcpConnectorValidatorTest extends CategoryTest {
         GcpConnectorDTO.builder()
             .credential(GcpConnectorCredentialDTO.builder()
                             .gcpCredentialType(GcpCredentialType.MANUAL_CREDENTIALS)
-                            .config(GcpManualDetailsDTO.builder()
-                                        .gcpSecretKeyAuthDTO(
-                                            GcpSecretKeyAuthDTO.builder().secretKeyRef(passwordSecretRef).build())
-                                        .build())
+                            .config(GcpManualDetailsDTO.builder().secretKeyRef(passwordSecretRef).build())
                             .build())
             .build();
     when(ngSecretService.getEncryptionDetails(any(), any())).thenReturn(null);

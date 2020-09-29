@@ -12,7 +12,6 @@ import io.harness.delegate.beans.connector.gcpconnector.GcpConnectorDTO;
 import io.harness.delegate.beans.connector.gcpconnector.GcpCredentialType;
 import io.harness.delegate.beans.connector.gcpconnector.GcpDelegateDetailsDTO;
 import io.harness.delegate.beans.connector.gcpconnector.GcpManualDetailsDTO;
-import io.harness.delegate.beans.connector.gcpconnector.GcpSecretKeyAuthDTO;
 import io.harness.encryption.SecretRefData;
 import io.harness.exception.InvalidRequestException;
 
@@ -34,9 +33,7 @@ public class GcpEntityToDTO implements ConnectorEntityToDTOMapper<GcpConfig> {
   private GcpConnectorDTO buildManualCredential(GcpConfig connector) {
     final GcpServiceAccountKey auth = (GcpServiceAccountKey) connector.getCredential();
     final SecretRefData secretRef = SecretRefHelper.createSecretRef(auth.getSecretKeyRef());
-    final GcpSecretKeyAuthDTO secretKeyAuth = GcpSecretKeyAuthDTO.builder().secretKeyRef(secretRef).build();
-    final GcpManualDetailsDTO gcpManualDetailsDTO =
-        GcpManualDetailsDTO.builder().gcpSecretKeyAuthDTO(secretKeyAuth).build();
+    final GcpManualDetailsDTO gcpManualDetailsDTO = GcpManualDetailsDTO.builder().secretKeyRef(secretRef).build();
     return GcpConnectorDTO.builder()
         .credential(GcpConnectorCredentialDTO.builder()
                         .gcpCredentialType(GcpCredentialType.MANUAL_CREDENTIALS)

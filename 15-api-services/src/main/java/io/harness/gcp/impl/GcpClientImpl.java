@@ -77,8 +77,8 @@ public class GcpClientImpl implements GcpClient {
   }
 
   GoogleCredential getGoogleCredential(char[] serviceAccountKey) throws IOException {
-    GoogleCredential credential = GoogleCredential.fromStream(
-        IOUtils.toInputStream(Arrays.toString(serviceAccountKey), Charset.defaultCharset()));
+    GoogleCredential credential =
+        GoogleCredential.fromStream(IOUtils.toInputStream(String.valueOf(serviceAccountKey), Charset.defaultCharset()));
     if (credential.createScopedRequired()) {
       credential = credential.createScoped(Collections.singletonList(ContainerScopes.CLOUD_PLATFORM));
     }
