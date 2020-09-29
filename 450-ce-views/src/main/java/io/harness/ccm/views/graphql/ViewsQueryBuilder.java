@@ -11,6 +11,8 @@ import com.healthmarketscience.sqlbuilder.FunctionCall;
 import com.healthmarketscience.sqlbuilder.InCondition;
 import com.healthmarketscience.sqlbuilder.OrderObject;
 import com.healthmarketscience.sqlbuilder.SelectQuery;
+import com.healthmarketscience.sqlbuilder.custom.postgresql.PgLimitClause;
+import com.healthmarketscience.sqlbuilder.custom.postgresql.PgOffsetClause;
 import io.harness.ccm.views.dao.ViewCustomFieldDao;
 import io.harness.ccm.views.entities.ViewCustomField;
 import io.harness.ccm.views.entities.ViewField;
@@ -29,6 +31,7 @@ import java.util.stream.Collectors;
 public class ViewsQueryBuilder {
   @Inject ViewCustomFieldDao viewCustomFieldDao;
   private static final String leftJoinLabels = " LEFT JOIN UNNEST(labels) as labels";
+  private static final String distinct = " DISTINCT(%s)";
   private static final String labelsFilter = "CONCAT(labels.key, ':', labels.value)";
 
   public SelectQuery getQuery(List<QLCEViewRule> rules, List<QLCEViewFilter> filters,
@@ -40,45 +43,13 @@ public class ViewsQueryBuilder {
     QLCEViewTimeTruncGroupBy groupByTime = getGroupByTime(groupByList);
 
     if (!customFields.isEmpty()) {
-      List<String> labelsKeysListAcrossCustomFields = new ArrayList<>();
-      for (ViewField field : customFields) {
-        ViewCustomField customField = viewCustomFieldDao.getById(field.getFieldId());
-        final List<String> labelsKeysList = customField.getViewFields()
-                                                .stream()
-                                                .filter(f -> f.getIdentifier() == ViewFieldIdentifier.LABEL)
-                                                .map(ViewField::getFieldName)
-                                                .collect(Collectors.toList());
-        labelsKeysListAcrossCustomFields.addAll(labelsKeysList);
-        if (!labelsKeysList.isEmpty()) {
-          isLabelsPresent = true;
-        }
-        selectQuery.addAliasedColumn(customField.getSqlFormula(), customField.getName());
-      }
-      if (!labelsKeysListAcrossCustomFields.isEmpty()) {
-        String[] labelsKeysListAcrossCustomFieldsStringArray =
-            labelsKeysListAcrossCustomFields.toArray(new String[labelsKeysListAcrossCustomFields.size()]);
-
-        filters.add(QLCEViewFilter.builder()
-                        .field(QLCEViewFieldInput.builder()
-                                   .fieldId(ViewsMetaDataFields.LABEL_KEY.getFieldName())
-                                   .identifier(ViewFieldIdentifier.LABEL)
-                                   .build())
-                        .operator(QLCEViewFilterOperator.IN)
-                        .values(labelsKeysListAcrossCustomFieldsStringArray)
-                        .build());
-      }
+      isLabelsPresent = modifyQueryForCustomFields(filters, customFields, selectQuery);
     }
 
     isLabelsPresent = isLabelsPresent || evaluateLabelsPresent(rules, filters, groupByEntity);
 
     if (isLabelsPresent) {
-      selectQuery.addCustomJoin(leftJoinLabels);
-      selectQuery.addCustomGroupings(ViewsMetaDataFields.LABEL_KEY.getAlias());
-      selectQuery.addCustomGroupings(ViewsMetaDataFields.LABEL_VALUE.getAlias());
-      selectQuery.addCustomColumns(
-          ViewsMetaDataFields.LABEL_KEY.getFieldName(), ViewsMetaDataFields.LABEL_KEY.getAlias());
-      selectQuery.addCustomColumns(
-          ViewsMetaDataFields.LABEL_VALUE.getFieldName(), ViewsMetaDataFields.LABEL_VALUE.getAlias());
+      decorateQueryWithLabelsMetadata(selectQuery);
     }
 
     if (!rules.isEmpty()) {
@@ -116,6 +87,105 @@ public class ViewsQueryBuilder {
     }
 
     return null;
+  }
+
+  public ViewsQueryMetadata getFilterValuesQuery(
+      List<QLCEViewFilter> filters, String cloudProviderTableName, Integer limit, Integer offset) {
+    List<QLCEViewFieldInput> fields = new ArrayList<>();
+    SelectQuery query = new SelectQuery();
+    query.addCustomization(new PgLimitClause(limit));
+    query.addCustomization(new PgOffsetClause(offset));
+    query.addCustomFromTable(cloudProviderTableName);
+    for (QLCEViewFilter filter : filters) {
+      QLCEViewFieldInput viewFieldInput = filter.getField();
+      switch (viewFieldInput.getIdentifier()) {
+        case AWS:
+        case GCP:
+        case CLUSTER:
+        case COMMON:
+          query.addAliasedColumn(
+              new CustomSql(String.format(distinct, viewFieldInput.getFieldId())), viewFieldInput.getFieldId());
+          break;
+        case LABEL:
+          if (viewFieldInput.getFieldId().equals(ViewsMetaDataFields.LABEL_KEY.getFieldName())) {
+            query.addCustomGroupings(ViewsMetaDataFields.LABEL_KEY.getAlias());
+            query.addAliasedColumn(new CustomSql(String.format(distinct, viewFieldInput.getFieldId())),
+                ViewsMetaDataFields.LABEL_KEY.getAlias());
+          } else {
+            query.addCustomGroupings(ViewsMetaDataFields.LABEL_VALUE.getAlias());
+            query.addCondition(getCondition(getLabelKeyFilter(new String[] {viewFieldInput.getFieldName()})));
+            query.addAliasedColumn(new CustomSql(String.format(distinct, viewFieldInput.getFieldId())),
+                ViewsMetaDataFields.LABEL_VALUE.getAlias());
+          }
+          query.addCustomJoin(leftJoinLabels);
+          break;
+        case CUSTOM:
+          ViewCustomField customField = viewCustomFieldDao.getById(viewFieldInput.getFieldId());
+          List<String> labelsKeysList = getLabelsKeyList(customField);
+          if (!labelsKeysList.isEmpty()) {
+            decorateQueryWithLabelsMetadata(query);
+            String[] labelsKeysListStringArray = labelsKeysList.toArray(new String[labelsKeysList.size()]);
+            query.addCondition(getCondition(getLabelKeyFilter(labelsKeysListStringArray)));
+          }
+          query.addAliasedColumn(new CustomSql(String.format(distinct, customField.getSqlFormula())),
+              modifyStringToComplyRegex(customField.getName()));
+          break;
+        default:
+          throw new InvalidRequestException("Invalid View Field Identifier " + viewFieldInput.getIdentifier());
+      }
+      fields.add(filter.getField());
+    }
+    return ViewsQueryMetadata.builder().query(query).fields(fields).build();
+  }
+
+  private QLCEViewFilter getLabelKeyFilter(String[] values) {
+    return QLCEViewFilter.builder()
+        .field(QLCEViewFieldInput.builder()
+                   .fieldId(ViewsMetaDataFields.LABEL_KEY.getFieldName())
+                   .identifier(ViewFieldIdentifier.LABEL)
+                   .build())
+        .operator(QLCEViewFilterOperator.IN)
+        .values(values)
+        .build();
+  }
+
+  private void decorateQueryWithLabelsMetadata(SelectQuery selectQuery) {
+    selectQuery.addCustomJoin(leftJoinLabels);
+    selectQuery.addCustomGroupings(ViewsMetaDataFields.LABEL_KEY.getAlias());
+    selectQuery.addCustomGroupings(ViewsMetaDataFields.LABEL_VALUE.getAlias());
+    selectQuery.addCustomColumns(
+        ViewsMetaDataFields.LABEL_KEY.getFieldName(), ViewsMetaDataFields.LABEL_KEY.getAlias());
+    selectQuery.addCustomColumns(
+        ViewsMetaDataFields.LABEL_VALUE.getFieldName(), ViewsMetaDataFields.LABEL_VALUE.getAlias());
+  }
+
+  private boolean modifyQueryForCustomFields(
+      List<QLCEViewFilter> filters, List<ViewField> customFields, SelectQuery selectQuery) {
+    boolean isLabelsPresent = false;
+    List<String> labelsKeysListAcrossCustomFields = new ArrayList<>();
+    for (ViewField field : customFields) {
+      ViewCustomField customField = viewCustomFieldDao.getById(field.getFieldId());
+      final List<String> labelsKeysList = getLabelsKeyList(customField);
+      labelsKeysListAcrossCustomFields.addAll(labelsKeysList);
+      if (!labelsKeysList.isEmpty()) {
+        isLabelsPresent = true;
+      }
+      selectQuery.addAliasedColumn(customField.getSqlFormula(), customField.getName());
+    }
+    if (!labelsKeysListAcrossCustomFields.isEmpty()) {
+      String[] labelsKeysListAcrossCustomFieldsStringArray =
+          labelsKeysListAcrossCustomFields.toArray(new String[labelsKeysListAcrossCustomFields.size()]);
+      filters.add(getLabelKeyFilter(labelsKeysListAcrossCustomFieldsStringArray));
+    }
+    return isLabelsPresent;
+  }
+
+  private List<String> getLabelsKeyList(ViewCustomField customField) {
+    return customField.getViewFields()
+        .stream()
+        .filter(f -> f.getIdentifier() == ViewFieldIdentifier.LABEL)
+        .map(ViewField::getFieldName)
+        .collect(Collectors.toList());
   }
 
   private boolean evaluateLabelsPresent(
@@ -349,5 +419,29 @@ public class ViewsQueryBuilder {
       default:
         throw new InvalidRequestException("Invalid View Field Identifier " + field.getIdentifier());
     }
+  }
+
+  public String getAliasFromField(QLCEViewFieldInput field) {
+    switch (field.getIdentifier()) {
+      case AWS:
+      case GCP:
+      case CLUSTER:
+      case COMMON:
+        return field.getFieldId();
+      case LABEL:
+        if (field.getFieldId().equals(ViewsMetaDataFields.LABEL_KEY.getFieldName())) {
+          return ViewsMetaDataFields.LABEL_KEY.getAlias();
+        } else {
+          return ViewsMetaDataFields.LABEL_VALUE.getAlias();
+        }
+      case CUSTOM:
+        return modifyStringToComplyRegex(field.getFieldName());
+      default:
+        throw new InvalidRequestException("Invalid View Field Identifier " + field.getIdentifier());
+    }
+  }
+
+  public String modifyStringToComplyRegex(String accountInfo) {
+    return accountInfo.toLowerCase().replaceAll("[^a-z0-9]", "_");
   }
 }

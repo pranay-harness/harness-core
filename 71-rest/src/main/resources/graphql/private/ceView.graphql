@@ -1,6 +1,11 @@
 extend type Query {
   viewFields: viewFieldData @dataFetcher(name: viewFields)
+  viewFilterStats(limit: Int, offset: Int, filters: [CEViewFilter]): viewFiterData @dataFetcher(name: viewFilterStats)
   views: ViewsData @dataFetcher(name: views)
+}
+
+type viewFiterData {
+  values: [String]
 }
 
 type ViewsData {
@@ -102,6 +107,7 @@ enum ViewFieldIdentifier {
   GCP
   CUSTOM
   COMMON
+  LABEL
 }
 
 type viewFieldData {

@@ -32,6 +32,6 @@ public class ViewCustomFieldDao {
   }
 
   public ViewCustomField getById(String uuid) {
-    return hPersistence.createQuery(ViewCustomField.class).filter(ViewCustomFieldKeys.uuid, uuid).get();
+    return hPersistence.createQuery(ViewCustomField.class).field(ViewCustomFieldKeys.uuid).equal(uuid).get();
   }
 }
