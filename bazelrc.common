@@ -5,6 +5,7 @@ build --action_env=HARNESS_GENERATION_PASSPHRASE
 # TODO: enable remote cache for developers
 # build --remote_cache=https://storage.googleapis.com/harness-bazel-cache
 
+build --test_env=TEST_MONGO_URI
 build --test_output=errors
 
 build --strict_java_deps=strict

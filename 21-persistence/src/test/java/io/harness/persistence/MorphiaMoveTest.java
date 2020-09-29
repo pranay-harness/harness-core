@@ -7,7 +7,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import com.google.common.collect.ImmutableSet;
 import com.google.inject.Inject;
 
-import io.harness.PersistenceTest;
+import io.harness.PersistenceTestBase;
 import io.harness.category.element.UnitTests;
 import io.harness.mongo.HObjectFactory;
 import io.harness.mongo.MorphiaMove;
@@ -25,7 +25,7 @@ class HackMorphiaClass implements MorphiaInterface {
   private String className;
 }
 
-public class MorphiaMoveTest extends PersistenceTest {
+public class MorphiaMoveTest extends PersistenceTestBase {
   @Inject private ObjectFactory objectFactory;
   @Inject private HPersistence persistence;
 

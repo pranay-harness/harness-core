@@ -4,13 +4,13 @@ import static io.harness.rule.OwnerRule.PRASHANT;
 import static io.harness.validation.Validator.ensureType;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-import io.harness.PersistenceTest;
+import io.harness.PersistenceTestBase;
 import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
-public class PersistenceValidatorTest extends PersistenceTest {
+public class PersistenceValidatorTest extends PersistenceTestBase {
   @Test
   @Owner(developers = PRASHANT)
   @Category(UnitTests.class)

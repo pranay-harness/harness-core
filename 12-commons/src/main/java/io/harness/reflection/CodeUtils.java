@@ -7,6 +7,8 @@ import com.google.common.base.Preconditions;
 import lombok.experimental.UtilityClass;
 
 import java.net.URL;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.security.CodeSource;
 import java.security.ProtectionDomain;
 import java.util.Set;
@@ -28,7 +30,12 @@ public class CodeUtils {
     if (location == null) {
       return null;
     }
-    return location.toString();
+    Path path = Paths.get(location.toString());
+    if (path.getFileName().toString().endsWith(".jar")) {
+      path = path.getParent();
+    }
+
+    return path.toString();
   }
 
   public static boolean isHarnessClass(Class clazz) {

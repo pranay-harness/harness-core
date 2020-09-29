@@ -14,7 +14,7 @@ import static org.joor.Reflect.on;
 
 import com.google.inject.Inject;
 
-import io.harness.PersistenceTest;
+import io.harness.PersistenceTestBase;
 import io.harness.category.element.StressTests;
 import io.harness.category.element.UnitTests;
 import io.harness.iterator.TestRegularIterableEntity.RegularIterableEntityKeys;
@@ -39,7 +39,7 @@ import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
 
 @Slf4j
-public class PersistenceRegularIteratorTest extends PersistenceTest {
+public class PersistenceRegularIteratorTest extends PersistenceTestBase {
   @Inject private HPersistence persistence;
   @Inject private MorphiaPersistenceProvider<TestRegularIterableEntity> persistenceProvider;
   @Inject private QueueController queueController;
