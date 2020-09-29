@@ -51,7 +51,7 @@ serviceScheduler:
 
 enableIterators: true
 trialRegistrationAllowed: true
-ngManagerAvailable: false
+ngManagerAvailable: true
 trialRegistrationAllowedForBugathon: false
 blacklistedEmailDomainsAllowed: true
 pwnedPasswordsAllowed: true

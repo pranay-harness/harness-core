@@ -357,6 +357,8 @@ fi
 
 if [[ "" != "$NG_MANAGER_AVAILABLE" ]]; then
   yq write -i $CONFIG_FILE ngManagerAvailable "$NG_MANAGER_AVAILABLE"
+else
+  yq write -i $CONFIG_FILE ngManagerAvailable "false"
 fi
 
 if [[ "" != "$ALLOW_TRIAL_REGISTRATION_FOR_BUGATHON" ]]; then

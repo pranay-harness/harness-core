@@ -46,7 +46,7 @@ import javax.validation.constraints.Size;
 @TypeAlias("projects")
 public class Project implements PersistentEntity, NGAccountAccess {
   @Wither @Id @org.mongodb.morphia.annotations.Id String id;
-  @Trimmed @EntityIdentifier String accountIdentifier;
+  @Trimmed String accountIdentifier;
   @Trimmed @EntityIdentifier String identifier;
   @Trimmed @EntityIdentifier String orgIdentifier;
 

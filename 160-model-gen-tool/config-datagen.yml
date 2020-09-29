@@ -215,7 +215,7 @@ organizationManagerClient:
   connectTimeOutSeconds: 15
   readTimeOutSeconds: 15
 
-ngManagerAvailable: false
+ngManagerAvailable: true
 
 grpcDelegateServiceClientConfig:
   target: localhost:9880
