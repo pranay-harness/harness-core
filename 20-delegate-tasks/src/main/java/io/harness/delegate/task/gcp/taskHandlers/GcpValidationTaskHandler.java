@@ -5,7 +5,7 @@ import static org.apache.commons.lang3.exception.ExceptionUtils.getRootCause;
 
 import com.google.inject.Inject;
 
-import io.harness.delegate.beans.connector.gcpconnector.GcpSecretKeyAuthDTO;
+import io.harness.delegate.beans.connector.gcpconnector.GcpManualDetailsDTO;
 import io.harness.delegate.task.gcp.request.GcpRequest;
 import io.harness.delegate.task.gcp.response.GcpResponse;
 import io.harness.delegate.task.gcp.response.GcpValidationTaskResponse;
@@ -41,13 +41,12 @@ public class GcpValidationTaskHandler implements TaskHandler {
   }
 
   private GcpResponse validateGcpServiceAccountKeyCredential(GcpRequest gcpRequest) {
-    if (gcpRequest.getGcpManualDetailsDTO() == null
-        || gcpRequest.getGcpManualDetailsDTO().getGcpSecretKeyAuthDTO() == null) {
+    GcpManualDetailsDTO gcpManualDetailsDTO = gcpRequest.getGcpManualDetailsDTO();
+    if (gcpManualDetailsDTO == null || gcpManualDetailsDTO.getSecretKeyRef() == null) {
       throw new InvalidRequestException("Authentication details not found");
     }
-    final GcpSecretKeyAuthDTO credentials = gcpRequest.getGcpManualDetailsDTO().getGcpSecretKeyAuthDTO();
-    secretDecryptionService.decrypt(credentials, gcpRequest.getEncryptionDetails());
-    gcpClient.getGkeContainerService(credentials.getSecretKeyRef().getDecryptedValue());
+    secretDecryptionService.decrypt(gcpManualDetailsDTO, gcpRequest.getEncryptionDetails());
+    gcpClient.getGkeContainerService(gcpManualDetailsDTO.getSecretKeyRef().getDecryptedValue());
     return GcpValidationTaskResponse.builder().executionStatus(CommandExecutionStatus.SUCCESS).build();
   }
 

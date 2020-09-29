@@ -24,8 +24,8 @@ public class GcpConnectorValidator extends AbstractConnectorValidator implements
       case MANUAL_CREDENTIALS:
         final GcpManualDetailsDTO gcpDetailsDTO = (GcpManualDetailsDTO) gcpConnector.getConfig();
         return gcpValidationRequestBuilder.gcpManualDetailsDTO(gcpDetailsDTO)
-            .encryptedDataDetailList(super.getEncryptionDetail(
-                gcpDetailsDTO.getGcpSecretKeyAuthDTO(), accountIdentifier, orgIdentifier, projectIdentifier))
+            .encryptedDataDetailList(
+                super.getEncryptionDetail(gcpDetailsDTO, accountIdentifier, orgIdentifier, projectIdentifier))
             .build();
       case INHERIT_FROM_DELEGATE:
         final GcpDelegateDetailsDTO config = (GcpDelegateDetailsDTO) gcpConnector.getConfig();

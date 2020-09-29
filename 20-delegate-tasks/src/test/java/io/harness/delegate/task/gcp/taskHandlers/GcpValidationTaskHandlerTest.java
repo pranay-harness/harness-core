@@ -7,7 +7,6 @@ import static org.mockito.Mockito.doThrow;
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.beans.connector.gcpconnector.GcpManualDetailsDTO;
-import io.harness.delegate.beans.connector.gcpconnector.GcpSecretKeyAuthDTO;
 import io.harness.delegate.task.gcp.request.GcpValidationRequest;
 import io.harness.delegate.task.gcp.response.GcpResponse;
 import io.harness.encryption.SecretRefData;
@@ -78,11 +77,7 @@ public class GcpValidationTaskHandlerTest extends CategoryTest {
 
   private GcpValidationRequest buildGcpValidationRequestWithSecretKey() {
     return GcpValidationRequest.builder()
-        .gcpManualDetailsDTO(
-            GcpManualDetailsDTO.builder()
-                .gcpSecretKeyAuthDTO(
-                    GcpSecretKeyAuthDTO.builder().secretKeyRef(SecretRefData.builder().build()).build())
-                .build())
+        .gcpManualDetailsDTO(GcpManualDetailsDTO.builder().secretKeyRef(SecretRefData.builder().build()).build())
         .build();
   }
 }

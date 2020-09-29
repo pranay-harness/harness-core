@@ -44,6 +44,9 @@ import com.mongodb.BasicDBList;
 import com.mongodb.BasicDBObject;
 import com.sumologic.client.SumoServerException;
 import io.fabric8.kubernetes.client.KubernetesClientException;
+import io.harness.aws.AwsAccessKeyCredential;
+import io.harness.aws.AwsConfig;
+import io.harness.aws.CrossAccountAccess;
 import io.harness.azure.model.SubscriptionData;
 import io.harness.azure.model.VirtualMachineScaleSetData;
 import io.harness.container.ContainerInfo;
@@ -185,5 +188,9 @@ public class ApiServiceBeansKryoRegister implements KryoRegistrar {
 
     kryo.register(JiraAction.class, 5580);
     kryo.register(JiraCustomFieldValue.class, 7177);
+
+    kryo.register(AwsConfig.class, 1428);
+    kryo.register(CrossAccountAccess.class, 1429);
+    kryo.register(AwsAccessKeyCredential.class, 1430);
   }
 }
