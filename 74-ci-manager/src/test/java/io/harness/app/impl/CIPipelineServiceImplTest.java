@@ -10,11 +10,13 @@ import static org.mockito.Mockito.when;
 import com.google.inject.Inject;
 
 import io.harness.app.beans.dto.CIPipelineFilterDTO;
-import io.harness.app.dao.repositories.CIPipelineRepository;
 import io.harness.app.yaml.YAML;
-import io.harness.beans.CIPipeline;
+import io.harness.beans.ParameterField;
 import io.harness.beans.stages.IntegrationStage;
 import io.harness.category.element.UnitTests;
+import io.harness.cdng.pipeline.CDPipeline;
+import io.harness.cdng.pipeline.beans.entities.CDPipelineEntity;
+import io.harness.ngpipeline.repository.PipelineRepository;
 import io.harness.rule.Owner;
 import io.harness.yaml.core.ExecutionElement;
 import io.harness.yaml.core.StageElement;
@@ -32,14 +34,14 @@ import java.util.Optional;
 import java.util.Scanner;
 
 public class CIPipelineServiceImplTest extends CIManagerTest {
-  @Mock private CIPipelineRepository ciPipelineRepository;
+  @Mock private PipelineRepository ciPipelineRepository;
   @InjectMocks @Inject CIPipelineServiceImpl ciPipelineService;
   private final String ACCOUNT_ID = "ACCOUNT_ID";
   private final String ORG_ID = "ORG_ID";
   private final String PROJECT_ID = "PROJECT_ID";
   private final String TAG = "foo";
   private YAML yaml;
-  private CIPipeline pipeline;
+  private CDPipelineEntity pipeline;
 
   @Before
   public void setUp() {
@@ -50,7 +52,11 @@ public class CIPipelineServiceImplTest extends CIManagerTest {
 
     yaml = YAML.builder().pipelineYAML(yamlString).build();
     pipeline =
-        CIPipeline.builder().identifier("testIdentifier").description("testDescription").uuid("testUUID").build();
+        CDPipelineEntity.builder()
+            .identifier("testIdentifier")
+            .cdPipeline(CDPipeline.builder().description(ParameterField.createValueField("testDescription")).build())
+            .uuid("testUUID")
+            .build();
   }
 
   private CIPipelineFilterDTO getPipelineFilter() {
@@ -66,20 +72,20 @@ public class CIPipelineServiceImplTest extends CIManagerTest {
   @Owner(developers = ALEKSANDAR)
   @Category(UnitTests.class)
   public void createPipelineFromYAML() {
-    ArgumentCaptor<CIPipeline> pipelineCaptor = ArgumentCaptor.forClass(CIPipeline.class);
-    when(ciPipelineRepository.save(any(CIPipeline.class))).thenReturn(pipeline);
+    ArgumentCaptor<CDPipelineEntity> pipelineCaptor = ArgumentCaptor.forClass(CDPipelineEntity.class);
+    when(ciPipelineRepository.save(any(CDPipelineEntity.class))).thenReturn(pipeline);
     when(ciPipelineRepository.findById("testId")).thenReturn(Optional.ofNullable(pipeline));
 
     ciPipelineService.createPipelineFromYAML(yaml, ACCOUNT_ID, ORG_ID, PROJECT_ID);
 
     verify(ciPipelineRepository).save(pipelineCaptor.capture());
-    CIPipeline ciPipeline = pipelineCaptor.getValue();
-    assertThat(ciPipeline).isNotNull();
-    assertThat(ciPipeline.getIdentifier()).isEqualTo("cipipeline");
+    CDPipelineEntity ciPipelineEntity = pipelineCaptor.getValue();
+    assertThat(ciPipelineEntity).isNotNull();
+    assertThat(ciPipelineEntity.getIdentifier()).isEqualTo("cipipeline");
 
-    assertThat(ciPipeline.getStages()).hasSize(1);
-    assertThat(ciPipeline.getStages().get(0)).isInstanceOf(StageElement.class);
-    StageElement stageElement = (StageElement) ciPipeline.getStages().get(0);
+    assertThat(ciPipelineEntity.getCdPipeline().getStages()).hasSize(1);
+    assertThat(ciPipelineEntity.getCdPipeline().getStages().get(0)).isInstanceOf(StageElement.class);
+    StageElement stageElement = (StageElement) ciPipelineEntity.getCdPipeline().getStages().get(0);
 
     IntegrationStage integrationStage = (IntegrationStage) stageElement.getStageType();
     assertThat(integrationStage.getIdentifier()).isEqualTo("masterBuildUpload");
@@ -97,16 +103,16 @@ public class CIPipelineServiceImplTest extends CIManagerTest {
   @Owner(developers = ALEKSANDAR)
   @Category(UnitTests.class)
   public void createPipeline() {
-    ArgumentCaptor<CIPipeline> pipelineCaptor = ArgumentCaptor.forClass(CIPipeline.class);
-    when(ciPipelineRepository.save(any(CIPipeline.class))).thenReturn(pipeline);
+    ArgumentCaptor<CDPipelineEntity> pipelineCaptor = ArgumentCaptor.forClass(CDPipelineEntity.class);
+    when(ciPipelineRepository.save(any(CDPipelineEntity.class))).thenReturn(pipeline);
     when(ciPipelineRepository.findById("testId")).thenReturn(Optional.ofNullable(pipeline));
 
     ciPipelineService.createPipeline(pipeline);
 
     verify(ciPipelineRepository).save(pipelineCaptor.capture());
-    CIPipeline ciPipeline = pipelineCaptor.getValue();
+    CDPipelineEntity ciPipeline = pipelineCaptor.getValue();
     assertThat(ciPipeline.getIdentifier()).isEqualTo("testIdentifier");
-    assertThat(ciPipeline.getDescription()).isEqualTo("testDescription");
+    assertThat(ciPipeline.getCdPipeline().getDescription().getValue()).isEqualTo("testDescription");
     assertThat(ciPipeline.getUuid()).isEqualTo("testUUID");
   }
 
@@ -114,14 +120,14 @@ public class CIPipelineServiceImplTest extends CIManagerTest {
   @Owner(developers = ALEKSANDAR)
   @Category(UnitTests.class)
   public void readPipeline() {
-    when(ciPipelineRepository.findByAccountIdAndOrganizationIdAndProjectIdAndIdentifier(
-             ACCOUNT_ID, ORG_ID, PROJECT_ID, "testId"))
+    when(ciPipelineRepository.findByAccountIdAndOrgIdentifierAndProjectIdentifierAndIdentifierAndDeletedNot(
+             ACCOUNT_ID, ORG_ID, PROJECT_ID, "testId", true))
         .thenReturn(Optional.ofNullable(pipeline));
 
-    CIPipeline ciPipeline = ciPipelineService.readPipeline("testId", ACCOUNT_ID, ORG_ID, PROJECT_ID);
+    CDPipelineEntity ciPipeline = ciPipelineService.readPipeline("testId", ACCOUNT_ID, ORG_ID, PROJECT_ID);
 
     assertThat(ciPipeline.getIdentifier()).isEqualTo("testIdentifier");
-    assertThat(ciPipeline.getDescription()).isEqualTo("testDescription");
+    assertThat(ciPipeline.getCdPipeline().getDescription().getValue()).isEqualTo("testDescription");
     assertThat(ciPipeline.getUuid()).isEqualTo("testUUID");
   }
 
@@ -132,12 +138,12 @@ public class CIPipelineServiceImplTest extends CIManagerTest {
     CIPipelineFilterDTO ciPipelineFilterDTO = getPipelineFilter();
     when(ciPipelineRepository.findAllWithCriteria(any())).thenReturn(Arrays.asList(pipeline));
 
-    List<CIPipeline> ciPipelineList = ciPipelineService.getPipelines(ciPipelineFilterDTO);
+    List<CDPipelineEntity> ciPipelineList = ciPipelineService.getPipelines(ciPipelineFilterDTO);
     assertThat(ciPipelineList).isNotEmpty();
 
-    CIPipeline ciPipeline = ciPipelineList.get(0);
+    CDPipelineEntity ciPipeline = ciPipelineList.get(0);
     assertThat(ciPipeline.getIdentifier()).isEqualTo("testIdentifier");
-    assertThat(ciPipeline.getDescription()).isEqualTo("testDescription");
+    assertThat(ciPipeline.getCdPipeline().getDescription().getValue()).isEqualTo("testDescription");
     assertThat(ciPipeline.getUuid()).isEqualTo("testUUID");
   }
 }

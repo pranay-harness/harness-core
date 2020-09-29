@@ -5,8 +5,8 @@ import static io.harness.beans.executionargs.ExecutionArgs.EXEC_ARGS;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
-import io.harness.beans.CIPipeline;
 import io.harness.beans.executionargs.CIExecutionArgs;
+import io.harness.cdng.pipeline.beans.entities.CDPipelineEntity;
 import io.harness.ci.beans.entities.CIBuild;
 import io.harness.core.ci.services.CIBuildServiceImpl;
 import io.harness.engine.OrchestrationService;
@@ -25,12 +25,12 @@ public class CIPipelineExecutionServiceImpl implements CIPipelineExecutionServic
   @Inject private ExecutionPlanCreatorService executionPlanCreatorService;
   @Inject private CIBuildServiceImpl ciBuildService;
 
-  public PlanExecution executePipeline(CIPipeline ciPipeline, CIExecutionArgs ciExecutionArgs, Long buildNumber) {
+  public PlanExecution executePipeline(CDPipelineEntity ciPipeline, CIExecutionArgs ciExecutionArgs, Long buildNumber) {
     Map<String, Object> contextAttributes = new HashMap<>();
     contextAttributes.put(EXEC_ARGS, ciExecutionArgs);
 
-    Plan plan =
-        executionPlanCreatorService.createPlanForPipeline(ciPipeline, ciPipeline.getAccountId(), contextAttributes);
+    Plan plan = executionPlanCreatorService.createPlanForPipeline(
+        ciPipeline.getCdPipeline(), ciPipeline.getAccountId(), contextAttributes);
     // TODO set user before execution which will be available once we build authentication
     // User user = UserThreadLocal.get()
     Map<String, String> setupAbstractions = new HashMap<>();
@@ -45,12 +45,12 @@ public class CIPipelineExecutionServiceImpl implements CIPipelineExecutionServic
   }
 
   private CIBuild createCIBuild(
-      CIPipeline ciPipeline, CIExecutionArgs ciExecutionArgs, PlanExecution planExecution, Long buildNumber) {
+      CDPipelineEntity ciPipeline, CIExecutionArgs ciExecutionArgs, PlanExecution planExecution, Long buildNumber) {
     CIBuild ciBuild = CIBuild.builder()
                           .buildNumber(buildNumber)
-                          .orgIdentifier(ciPipeline.getOrganizationId())
+                          .orgIdentifier(ciPipeline.getOrgIdentifier())
                           .executionSource(ciExecutionArgs.getExecutionSource())
-                          .projectIdentifier(ciPipeline.getProjectId())
+                          .projectIdentifier(ciPipeline.getProjectIdentifier())
                           .pipelineIdentifier(ciPipeline.getIdentifier())
                           .inputSet(ciExecutionArgs.getInputSet())
                           .triggerTime(System.currentTimeMillis()) // TODO Generate time at entry point

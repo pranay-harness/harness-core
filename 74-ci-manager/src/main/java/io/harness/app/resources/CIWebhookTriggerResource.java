@@ -7,8 +7,8 @@ import com.google.inject.Inject;
 import com.codahale.metrics.annotation.ExceptionMetered;
 import com.codahale.metrics.annotation.Timed;
 import io.harness.app.intfc.CIPipelineService;
-import io.harness.beans.CIPipeline;
 import io.harness.beans.executionargs.CIExecutionArgs;
+import io.harness.cdng.pipeline.beans.entities.CDPipelineEntity;
 import io.harness.ci.beans.entities.BuildNumber;
 import io.harness.core.ci.services.BuildNumberService;
 import io.harness.core.trigger.WebhookTriggerProcessor;
@@ -59,9 +59,9 @@ public class CIWebhookTriggerResource {
   public RestResponse<String> runPipelineFromTrigger(
       @PathParam("id") String pipelineId, String eventPayload, @Context HttpHeaders httpHeaders) {
     try {
-      CIPipeline ciPipeline = ciPipelineService.readPipeline(pipelineId);
+      CDPipelineEntity ciPipeline = ciPipelineService.readPipeline(pipelineId);
       BuildNumber buildNumber = buildNumberService.increaseBuildNumber(
-          ciPipeline.getAccountId(), ciPipeline.getOrganizationId(), ciPipeline.getProjectId());
+          ciPipeline.getAccountId(), ciPipeline.getOrgIdentifier(), ciPipeline.getProjectIdentifier());
       CIExecutionArgs ciExecutionArgs =
           webhookTriggerProcessor.generateExecutionArgs(pipelineId, eventPayload, httpHeaders, buildNumber);
       ciPipelineExecutionService.executePipeline(ciPipeline, ciExecutionArgs, buildNumber.getBuildNumber());

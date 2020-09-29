@@ -6,7 +6,7 @@ import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.beans.CIBeansTest;
-import io.harness.beans.CIPipeline;
+import io.harness.beans.ParameterField;
 import io.harness.beans.stages.IntegrationStage;
 import io.harness.beans.steps.stepinfo.GitCloneStepInfo;
 import io.harness.beans.steps.stepinfo.PublishStepInfo;
@@ -18,6 +18,7 @@ import io.harness.beans.yaml.extended.connector.GitConnectorYaml;
 import io.harness.beans.yaml.extended.container.Container;
 import io.harness.beans.yaml.extended.infrastrucutre.K8sDirectInfraYaml;
 import io.harness.category.element.UnitTests;
+import io.harness.cdng.pipeline.CDPipeline;
 import io.harness.rule.Owner;
 import io.harness.yaml.core.ExecutionElement;
 import io.harness.yaml.core.ParallelStepElement;
@@ -37,13 +38,12 @@ public class CIPipelineYamlTest extends CIBeansTest {
   public void testCiPipelineConversion() throws IOException {
     ClassLoader classLoader = this.getClass().getClassLoader();
     final URL testFile = classLoader.getResource("ci.yml");
-
-    CIPipeline ciPipelineActual = YamlPipelineUtils.read(testFile, CIPipeline.class);
-    CIPipeline ciPipelineExpected =
-        CIPipeline.builder()
+    CDPipeline ciPipelineActual = YamlPipelineUtils.read(testFile, CDPipeline.class);
+    CDPipeline ciPipelineExpected =
+        CDPipeline.builder()
             .identifier("cipipeline")
             .name("Integration Pipeline")
-            .description("sample pipeline used for testing")
+            .description(ParameterField.createValueField("sample pipeline used for testing"))
             .stages(singletonList(
                 StageElement.builder()
                     .identifier("masterBuildUpload")
@@ -167,6 +167,6 @@ public class CIPipelineYamlTest extends CIBeansTest {
                             .build())
                     .build()))
             .build();
-    assertThat(ciPipelineActual).isEqualTo(ciPipelineExpected);
+    assertThat(ciPipelineActual).usingRecursiveComparison().isEqualTo(ciPipelineExpected);
   }
 }

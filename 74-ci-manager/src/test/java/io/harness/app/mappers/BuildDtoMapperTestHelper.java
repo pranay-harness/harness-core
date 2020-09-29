@@ -1,12 +1,13 @@
 package io.harness.app.mappers;
 
-import io.harness.beans.CIPipeline;
 import io.harness.beans.Graph;
 import io.harness.beans.execution.BranchWebhookEvent;
 import io.harness.beans.execution.CommitDetails;
 import io.harness.beans.execution.PRWebhookEvent;
 import io.harness.beans.execution.WebhookExecutionSource;
 import io.harness.beans.execution.WebhookGitUser;
+import io.harness.cdng.pipeline.CDPipeline;
+import io.harness.cdng.pipeline.beans.entities.CDPipelineEntity;
 import io.harness.ci.beans.entities.CIBuild;
 import io.harness.execution.status.Status;
 
@@ -60,8 +61,11 @@ public class BuildDtoMapperTestHelper {
     return getBuild(executionSource);
   }
 
-  public static CIPipeline getPipeline() {
-    return CIPipeline.builder().identifier(PIPELINE_ID).name(PIPELINE_NAME).build();
+  public static CDPipelineEntity getPipeline() {
+    return CDPipelineEntity.builder()
+        .identifier(PIPELINE_ID)
+        .cdPipeline(CDPipeline.builder().name(PIPELINE_NAME).build())
+        .build();
   }
 
   public static Graph getGraph() {

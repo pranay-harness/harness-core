@@ -6,8 +6,8 @@ import com.codahale.metrics.annotation.ExceptionMetered;
 import com.codahale.metrics.annotation.Timed;
 import io.harness.app.intfc.CIPipelineService;
 import io.harness.app.yaml.YAML;
-import io.harness.beans.CIPipeline;
 import io.harness.beans.executionargs.CIExecutionArgs;
+import io.harness.cdng.pipeline.beans.entities.CDPipelineEntity;
 import io.harness.ci.beans.entities.BuildNumber;
 import io.harness.core.ci.services.BuildNumberService;
 import io.harness.impl.CIPipelineExecutionService;
@@ -48,7 +48,7 @@ public class CIPipelineResource {
       @QueryParam("orgIdentifier") String orgId, @NotNull @QueryParam("projectIdentifier") String projectId,
       @NotNull String yaml) {
     logger.info("Creating pipeline");
-    CIPipeline ciPipeline = ciPipelineService.createPipelineFromYAML(
+    CDPipelineEntity ciPipeline = ciPipelineService.createPipelineFromYAML(
         YAML.builder().pipelineYAML(yaml).build(), accountId, orgId, projectId);
     return new RestResponse<>(ciPipeline.getUuid());
   }
@@ -58,9 +58,9 @@ public class CIPipelineResource {
   @ExceptionMetered
   @ApiOperation(value = "Gets a CI pipeline by identifier", nickname = "getPipeline")
   @Path("/pipelines/{pipelineIdentifier}")
-  public ResponseDTO<CIPipeline> getPipelineByIdentifier(@NotNull @QueryParam("accountIdentifier") String accountId,
-      @QueryParam("orgIdentifier") String orgId, @QueryParam("projectIdentifier") String projectId,
-      @PathParam("pipelineIdentifier") String pipelineId) {
+  public ResponseDTO<CDPipelineEntity> getPipelineByIdentifier(
+      @NotNull @QueryParam("accountIdentifier") String accountId, @QueryParam("orgIdentifier") String orgId,
+      @QueryParam("projectIdentifier") String projectId, @PathParam("pipelineIdentifier") String pipelineId) {
     logger.info("Fetching pipeline");
     return ResponseDTO.newResponse(ciPipelineService.readPipeline(pipelineId, accountId, orgId, projectId));
   }
@@ -74,9 +74,9 @@ public class CIPipelineResource {
       @QueryParam("orgIdentifier") String orgId, @QueryParam("projectIdentifier") String projectId,
       @PathParam("identifier") @NotEmpty String pipelineId) {
     try {
-      CIPipeline ciPipeline = ciPipelineService.readPipeline(pipelineId, accountId, orgId, projectId);
+      CDPipelineEntity ciPipeline = ciPipelineService.readPipeline(pipelineId, accountId, orgId, projectId);
       BuildNumber buildNumber = buildNumberService.increaseBuildNumber(
-          ciPipeline.getAccountId(), ciPipeline.getOrganizationId(), ciPipeline.getProjectId());
+          ciPipeline.getAccountId(), ciPipeline.getOrgIdentifier(), ciPipeline.getProjectIdentifier());
       // TODO create manual execution source
       CIExecutionArgs ciExecutionArgs = CIExecutionArgs.builder().buildNumber(buildNumber).build();
       ciPipelineExecutionService.executePipeline(ciPipeline, ciExecutionArgs, 1L);

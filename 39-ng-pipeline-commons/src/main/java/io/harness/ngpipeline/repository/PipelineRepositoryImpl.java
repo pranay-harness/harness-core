@@ -1,4 +1,4 @@
-package io.harness.cdng.pipeline.repository;
+package io.harness.ngpipeline.repository;
 
 import com.google.inject.Inject;
 
@@ -34,8 +34,14 @@ public class PipelineRepositoryImpl implements CustomPipelineRepository {
   @Override
   public Page<CDPipelineEntity> findAll(Criteria criteria, Pageable pageable) {
     Query query = new Query(criteria).with(pageable);
-    List<CDPipelineEntity> pipelinesList = mongoTemplate.find(query, CDPipelineEntity.class);
-    return PageableExecutionUtils.getPage(
-        pipelinesList, pageable, () -> mongoTemplate.count(Query.of(query).limit(-1).skip(-1), CDPipelineEntity.class));
+    List<CDPipelineEntity> pipelineEntities = mongoTemplate.find(query, CDPipelineEntity.class);
+    return PageableExecutionUtils.getPage(pipelineEntities, pageable,
+        () -> mongoTemplate.count(Query.of(query).limit(-1).skip(-1), CDPipelineEntity.class));
+  }
+
+  @Override
+  public List<CDPipelineEntity> findAllWithCriteria(Criteria criteria) {
+    Query query = new Query(criteria);
+    return mongoTemplate.find(query, CDPipelineEntity.class);
   }
 }

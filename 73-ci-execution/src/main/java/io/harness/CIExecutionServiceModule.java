@@ -32,6 +32,7 @@ public class CIExecutionServiceModule extends AbstractModule {
     install(OrchestrationStepsModule.getInstance());
     install(OrchestrationVisualizationModule.getInstance());
     install(ExecutionPlanModule.getInstance());
+    install(NGPipelineCommonsModule.getInstance());
     bind(CIBuildService.class).to(CIBuildServiceImpl.class);
     bind(CIPipelineExecutionService.class).to(CIPipelineExecutionServiceImpl.class);
     MapBinder<String, StepRegistrar> stepRegistrarMapBinder =

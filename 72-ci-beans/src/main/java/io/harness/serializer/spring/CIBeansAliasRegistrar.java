@@ -1,7 +1,5 @@
 package io.harness.serializer.spring;
 
-import io.harness.beans.CIPipeline;
-import io.harness.beans.CIPipelineEntityInfo;
 import io.harness.beans.CIPipelineSetupParameters;
 import io.harness.beans.environment.K8BuildJobEnvInfo;
 import io.harness.beans.stages.IntegrationStage;
@@ -58,9 +56,7 @@ public class CIBeansAliasRegistrar implements AliasRegistrar {
     orchestrationElements.put("testStepInfo", TestStepInfo.class);
     orchestrationElements.put("saveCacheStepInfo", SaveCacheStepInfo.class);
     orchestrationElements.put("restoreCacheStepInfo", RestoreCacheStepInfo.class);
-    orchestrationElements.put("ciPipeline", CIPipeline.class);
     orchestrationElements.put("buildNumber", BuildNumber.class);
-    orchestrationElements.put("ciPipelineEntityInfo", CIPipelineEntityInfo.class);
     orchestrationElements.put("typeInfo", TypeInfo.class);
     orchestrationElements.put("integrationStage", IntegrationStage.class);
     orchestrationElements.put("container", Container.class);

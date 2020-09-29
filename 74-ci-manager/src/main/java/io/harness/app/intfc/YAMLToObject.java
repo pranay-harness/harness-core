@@ -1,5 +1,5 @@
 package io.harness.app.intfc;
 
-import io.harness.beans.CIPipeline;
+import io.harness.cdng.pipeline.CDPipeline;
 
-public interface YAMLToObject { CIPipeline convertYAML(String yaml); }
+public interface YAMLToObject { CDPipeline convertYAML(String yaml); }

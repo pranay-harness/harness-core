@@ -16,6 +16,7 @@ public class CiBeansRegistrars {
   public static final ImmutableSet<Class<? extends KryoRegistrar>> kryoRegistrars =
       ImmutableSet.<Class<? extends KryoRegistrar>>builder()
           .addAll(ManagerRegistrars.kryoRegistrars)
+          .addAll(NGPipelineRegistrars.kryoRegistrars)
           .add(CIBeansKryoRegistrar.class)
           .add(CvNextGenCommonsBeansKryoRegistrar.class)
           .build();
@@ -25,6 +26,7 @@ public class CiBeansRegistrars {
           .addAll(ManagerRegistrars.morphiaRegistrars)
           .add(CIBeansMorphiaRegistrar.class)
           .add(YamlMorphiaRegistrar.class)
+          .addAll(NGPipelineRegistrars.morphiaRegistrars)
           .build();
 
   public static final ImmutableSet<Class<? extends AliasRegistrar>> aliasRegistrars =

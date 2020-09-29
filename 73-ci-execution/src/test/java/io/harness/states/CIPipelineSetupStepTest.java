@@ -11,10 +11,10 @@ import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
 
 import io.harness.ambiance.Ambiance;
-import io.harness.beans.CIPipeline;
 import io.harness.beans.CIPipelineSetupParameters;
 import io.harness.beans.executionargs.CIExecutionArgs;
 import io.harness.category.element.UnitTests;
+import io.harness.cdng.pipeline.beans.entities.CDPipelineEntity;
 import io.harness.ci.beans.entities.BuildNumber;
 import io.harness.engine.outputs.ExecutionSweepingOutputService;
 import io.harness.execution.status.Status;
@@ -38,7 +38,7 @@ public class CIPipelineSetupStepTest extends CIExecutionTest {
   @Inject private CIPipelineSetupStep ciPipelineSetupStep;
   @Inject private CIExecutionPlanTestHelper ciExecutionPlanTestHelper;
   @Mock ExecutionSweepingOutputService executionSweepingOutputResolver;
-  private CIPipeline ciPipeline;
+  private CDPipelineEntity ciPipeline;
 
   private static final String CHILD_ID = generateUuid();
 
@@ -58,7 +58,7 @@ public class CIPipelineSetupStepTest extends CIExecutionTest {
     BuildNumber buildNumber = BuildNumber.builder().buildNumber(1L).build();
     CIPipelineSetupParameters stateParameters =
         CIPipelineSetupParameters.builder()
-            .ciPipeline(ciPipeline)
+            .ciPipeline(ciPipeline.getCdPipeline())
             .ciExecutionArgs(CIExecutionArgs.builder().buildNumber(buildNumber).build())
             .fieldToExecutionNodeIdMap(fieldToExecutionNodeIdMap)
             .build();
@@ -76,7 +76,7 @@ public class CIPipelineSetupStepTest extends CIExecutionTest {
     Map<String, String> fieldToExecutionNodeIdMap = new HashMap<>();
     fieldToExecutionNodeIdMap.put("stages", CHILD_ID);
     CIPipelineSetupParameters stateParameters = CIPipelineSetupParameters.builder()
-                                                    .ciPipeline(ciPipeline)
+                                                    .ciPipeline(ciPipeline.getCdPipeline())
                                                     .fieldToExecutionNodeIdMap(fieldToExecutionNodeIdMap)
                                                     .build();
 
@@ -96,7 +96,7 @@ public class CIPipelineSetupStepTest extends CIExecutionTest {
     Map<String, String> fieldToExecutionNodeIdMap = new HashMap<>();
     fieldToExecutionNodeIdMap.put("stages", CHILD_ID);
     CIPipelineSetupParameters stateParameters = CIPipelineSetupParameters.builder()
-                                                    .ciPipeline(ciPipeline)
+                                                    .ciPipeline(ciPipeline.getCdPipeline())
                                                     .fieldToExecutionNodeIdMap(fieldToExecutionNodeIdMap)
                                                     .build();
     assertThat(ciPipelineSetupStep.executeSync(ambiance, stateParameters, StepInputPackage.builder().build(), null)

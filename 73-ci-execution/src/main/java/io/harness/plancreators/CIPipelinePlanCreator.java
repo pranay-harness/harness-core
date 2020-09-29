@@ -9,10 +9,10 @@ import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
-import io.harness.beans.CIPipeline;
 import io.harness.beans.CIPipelineSetupParameters;
 import io.harness.beans.executionargs.CIExecutionArgs;
 import io.harness.beans.executionargs.ExecutionArgs;
+import io.harness.cdng.pipeline.CDPipeline;
 import io.harness.exception.InvalidRequestException;
 import io.harness.executionplan.core.ExecutionPlanCreationContext;
 import io.harness.executionplan.core.ExecutionPlanCreator;
@@ -35,10 +35,10 @@ import java.util.List;
  */
 @Singleton
 @Slf4j
-public class CIPipelinePlanCreator implements SupportDefinedExecutorPlanCreator<CIPipeline> {
+public class CIPipelinePlanCreator implements SupportDefinedExecutorPlanCreator<CDPipeline> {
   @Inject private ExecutionPlanCreatorHelper executionPlanCreatorHelper;
   @Override
-  public ExecutionPlanCreatorResponse createPlan(CIPipeline ciPipeline, ExecutionPlanCreationContext context) {
+  public ExecutionPlanCreatorResponse createPlan(CDPipeline ciPipeline, ExecutionPlanCreationContext context) {
     addArgumentsToContext(ciPipeline, context);
 
     CIExecutionArgs ciExecutionArgs =
@@ -58,12 +58,12 @@ public class CIPipelinePlanCreator implements SupportDefinedExecutorPlanCreator<
         .build();
   }
 
-  private void addArgumentsToContext(CIPipeline pipeline, ExecutionPlanCreationContext context) {
+  private void addArgumentsToContext(CDPipeline pipeline, ExecutionPlanCreationContext context) {
     context.addAttribute("CI_PIPELINE_CONFIG", pipeline);
   }
 
   private PlanNode preparePipelineNode(
-      CIPipeline pipeline, ExecutionPlanCreatorResponse planForStages, CIExecutionArgs ciExecutionArgs) {
+      CDPipeline pipeline, ExecutionPlanCreatorResponse planForStages, CIExecutionArgs ciExecutionArgs) {
     final String pipelineSetupNodeId = generateUuid();
 
     return PlanNode.builder()
@@ -93,7 +93,7 @@ public class CIPipelinePlanCreator implements SupportDefinedExecutorPlanCreator<
   @Override
   public boolean supports(PlanCreatorSearchContext<?> searchContext) {
     return getSupportedTypes().contains(searchContext.getType())
-        && searchContext.getObjectToPlan() instanceof CIPipeline;
+        && searchContext.getObjectToPlan() instanceof CDPipeline;
   }
 
   @Override

@@ -11,9 +11,9 @@ import static org.mockito.Mockito.when;
 
 import com.google.inject.Inject;
 
-import io.harness.beans.CIPipeline;
 import io.harness.beans.executionargs.CIExecutionArgs;
 import io.harness.category.element.UnitTests;
+import io.harness.cdng.pipeline.beans.entities.CDPipelineEntity;
 import io.harness.engine.OrchestrationService;
 import io.harness.execution.PlanExecution;
 import io.harness.executionplan.CIExecutionPlanCreatorRegistrar;
@@ -41,7 +41,7 @@ public class CIPipelineExecutionServiceImplTest extends CIExecutionTest {
   @Owner(developers = ALEKSANDAR)
   @Category(UnitTests.class)
   public void executePipeline() {
-    CIPipeline ciPipeline = executionPlanTestHelper.getCIPipeline();
+    CDPipelineEntity ciPipeline = executionPlanTestHelper.getCIPipeline();
 
     when(orchestrationService.startExecution(any(), any()))
         .thenReturn(PlanExecution.builder().uuid("planId").status(RUNNING).build());
