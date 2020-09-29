@@ -11,6 +11,8 @@ import com.google.inject.Singleton;
 
 import io.harness.app.CIManagerConfiguration;
 import io.harness.app.CIManagerServiceModule;
+import io.harness.app.SCMGrpcClientModule;
+import io.harness.app.ScmConnectionConfig;
 import io.harness.factory.ClosingFactory;
 import io.harness.factory.ClosingFactoryModule;
 import io.harness.govern.ProviderModule;
@@ -95,6 +97,15 @@ public class CIManagerRule implements MethodRule, InjectorRuleMixin, MongoRuleMi
       }
     });
 
+    CIManagerConfiguration configuration =
+        CIManagerConfiguration.builder()
+            .managerAuthority("localhost")
+            .managerTarget("localhost:9880")
+            .scmConnectionConfig(ScmConnectionConfig.builder().url("localhost:8181").build())
+            .managerServiceSecret("IC04LYMBf1lDP5oeY4hupxd4HJhLmN6azUku3xEbeE3SUx5G3ZYzhbiwVtK4i7AmqyU9OZkwB4v8E9qM")
+            .build();
+
+    modules.add(new SCMGrpcClientModule(configuration.getScmConnectionConfig()));
     modules.add(new ClosingFactoryModule(closingFactory));
     modules.add(mongoTypeModule(annotations));
     modules.add(new AbstractModule() {
@@ -116,13 +127,7 @@ public class CIManagerRule implements MethodRule, InjectorRuleMixin, MongoRuleMi
     });
     modules.add(TestMongoModule.getInstance());
     modules.add(new CIManagerPersistenceTestModule());
-    modules.add(new CIManagerServiceModule(
-        CIManagerConfiguration.builder()
-            .managerAuthority("localhost")
-            .managerTarget("localhost:9880")
-            .managerServiceSecret("IC04LYMBf1lDP5oeY4hupxd4HJhLmN6azUku3xEbeE3SUx5G3ZYzhbiwVtK4i7AmqyU9OZkwB4v8E9qM")
-            .build(),
-        null));
+    modules.add(new CIManagerServiceModule(configuration, null));
     return modules;
   }
 
