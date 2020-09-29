@@ -15,6 +15,8 @@ import io.harness.rest.RestResponse;
 import io.harness.secretmanagerclient.dto.EncryptedDataDTO;
 import io.harness.secretmanagerclient.dto.SecretManagerConfigDTO;
 import io.harness.secretmanagerclient.dto.SecretManagerConfigUpdateDTO;
+import io.harness.secretmanagerclient.dto.SecretManagerMetadataDTO;
+import io.harness.secretmanagerclient.dto.SecretManagerMetadataRequestDTO;
 import io.harness.secretmanagerclient.dto.SecretTextDTO;
 import io.harness.secretmanagerclient.dto.SecretTextUpdateDTO;
 import io.harness.security.encryption.EncryptedDataDetail;
@@ -129,4 +131,8 @@ public interface SecretManagerClient {
   Call<RestResponse<Boolean>> deleteSecretManager(@Path("identifier") String identifier,
       @Query(ACCOUNT_KEY) String accountIdentifier, @Query(ORG_KEY) String orgIdentifier,
       @Query(PROJECT_KEY) String projectIdentifier);
+
+  @POST(SECRET_MANAGERS_API + "/meta-data")
+  Call<RestResponse<SecretManagerMetadataDTO>> getSecretManagerMetadata(
+      @Query(ACCOUNT_KEY) String accountIdentifier, @Body SecretManagerMetadataRequestDTO requestDTO);
 }

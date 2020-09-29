@@ -63,7 +63,9 @@ public class SecretTextServiceImpl implements SecretModifyService {
   private void validateUpdateRequest(String accountIdentifier, SecretDTOV2 dto, SecretTextSpecDTO specDTO) {
     EncryptedDataDTO encryptedDataDTO = getResponse(secretManagerClient.getSecret(
         dto.getIdentifier(), accountIdentifier, dto.getOrgIdentifier(), dto.getProjectIdentifier()));
-    if (encryptedDataDTO == null || !specDTO.getSecretManagerIdentifier().equals(encryptedDataDTO.getSecretManager())) {
+    if (encryptedDataDTO == null) {
+      throw new InvalidRequestException("No such secret found.");
+    } else if (!specDTO.getSecretManagerIdentifier().equals(encryptedDataDTO.getSecretManager())) {
       throw new InvalidRequestException("Cannot change secret manager after creation of secret.", USER);
     }
   }
