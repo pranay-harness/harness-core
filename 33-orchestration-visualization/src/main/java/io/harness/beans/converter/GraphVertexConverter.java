@@ -25,6 +25,7 @@ public class GraphVertexConverter {
         .mode(nodeExecution.getMode())
         .interruptHistories(nodeExecution.getInterruptHistories())
         .retryIds(nodeExecution.getRetryIds())
+        .skipType(nodeExecution.getNode().getSkipGraphType())
         .build();
   }
 
@@ -44,6 +45,7 @@ public class GraphVertexConverter {
         .mode(nodeExecution.getMode())
         .interruptHistories(nodeExecution.getInterruptHistories())
         .retryIds(nodeExecution.getRetryIds())
+        .skipType(nodeExecution.getNode().getSkipGraphType())
         .outcomes(outcomes)
         .build();
   }

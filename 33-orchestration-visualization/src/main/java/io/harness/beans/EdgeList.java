@@ -18,6 +18,9 @@ import java.util.List;
 @JsonIgnoreProperties(ignoreUnknown = true)
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class EdgeList {
+  @NonFinal @Setter String parentId;
+  List<String> prevIds;
+  List<String> nextIds;
+
   List<String> edges;
-  @Setter @NonFinal String next;
 }

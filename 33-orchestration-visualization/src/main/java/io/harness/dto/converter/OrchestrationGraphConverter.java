@@ -11,7 +11,7 @@ public class OrchestrationGraphConverter {
         .startTs(orchestrationGraphInternal.getStartTs())
         .endTs(orchestrationGraphInternal.getEndTs())
         .status(orchestrationGraphInternal.getStatus())
-        .rootNodeId(orchestrationGraphInternal.getRootNodeId())
+        .rootNodeIds(orchestrationGraphInternal.getRootNodeIds())
         .planExecutionId(orchestrationGraphInternal.getPlanExecutionId())
         .adjacencyList(orchestrationGraphInternal.getAdjacencyList())
         .build();

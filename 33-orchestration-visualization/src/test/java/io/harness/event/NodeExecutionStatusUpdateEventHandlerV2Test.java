@@ -8,6 +8,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 
+import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 
 import io.harness.OrchestrationVisualizationTest;
@@ -112,7 +113,7 @@ public class NodeExecutionStatusUpdateEventHandlerV2Test extends OrchestrationVi
                                                                     .adjacencyList(new HashMap<>())
                                                                     .build())
                                                  .planExecutionId(planExecution.getUuid())
-                                                 .rootNodeId(null)
+                                                 .rootNodeIds(new ArrayList<>())
                                                  .startTs(planExecution.getStartTs())
                                                  .endTs(planExecution.getEndTs())
                                                  .status(planExecution.getStatus())
@@ -133,7 +134,7 @@ public class NodeExecutionStatusUpdateEventHandlerV2Test extends OrchestrationVi
     Awaitility.await().atMost(2, TimeUnit.SECONDS).pollInterval(500, TimeUnit.MILLISECONDS).until(() -> {
       OrchestrationGraphInternal graphInternal =
           graphGenerationService.getCachedOrchestrationGraphInternal(planExecution.getUuid());
-      return graphInternal.getRootNodeId() != null;
+      return !graphInternal.getRootNodeIds().isEmpty();
     });
 
     OrchestrationGraphInternal updatedGraph =
@@ -143,7 +144,7 @@ public class NodeExecutionStatusUpdateEventHandlerV2Test extends OrchestrationVi
     assertThat(updatedGraph.getPlanExecutionId()).isEqualTo(planExecution.getUuid());
     assertThat(updatedGraph.getStartTs()).isEqualTo(planExecution.getStartTs());
     assertThat(updatedGraph.getEndTs()).isNull();
-    assertThat(updatedGraph.getRootNodeId()).isEqualTo(dummyStart.getUuid());
+    assertThat(updatedGraph.getRootNodeIds()).containsExactlyInAnyOrder(dummyStart.getUuid());
     assertThat(updatedGraph.getAdjacencyList().getGraphVertexMap().size()).isEqualTo(1);
     assertThat(updatedGraph.getAdjacencyList().getAdjacencyList().size()).isEqualTo(1);
     assertThat(updatedGraph.getStatus()).isEqualTo(planExecution.getStatus());
@@ -184,10 +185,10 @@ public class NodeExecutionStatusUpdateEventHandlerV2Test extends OrchestrationVi
                                .graphVertexMap(Maps.newHashMap(
                                    dummyStart.getUuid(), convertNodeExecutionWithStatusSucceeded(dummyStart)))
                                .adjacencyList(Maps.newHashMap(dummyStart.getUuid(),
-                                   EdgeList.builder().edges(new ArrayList<>()).next(null).build()))
+                                   EdgeList.builder().edges(new ArrayList<>()).nextIds(new ArrayList<>()).build()))
                                .build())
             .planExecutionId(planExecution.getUuid())
-            .rootNodeId(dummyStart.getUuid())
+            .rootNodeIds(Lists.newArrayList(dummyStart.getUuid()))
             .startTs(planExecution.getStartTs())
             .endTs(planExecution.getEndTs())
             .status(planExecution.getStatus())
@@ -228,7 +229,7 @@ public class NodeExecutionStatusUpdateEventHandlerV2Test extends OrchestrationVi
     assertThat(updatedGraph.getPlanExecutionId()).isEqualTo(planExecution.getUuid());
     assertThat(updatedGraph.getStartTs()).isEqualTo(planExecution.getStartTs());
     assertThat(updatedGraph.getEndTs()).isNull();
-    assertThat(updatedGraph.getRootNodeId()).isEqualTo(dummyStart.getUuid());
+    assertThat(updatedGraph.getRootNodeIds()).containsExactlyInAnyOrder(dummyStart.getUuid());
 
     Map<String, GraphVertex> graphVertexMap = updatedGraph.getAdjacencyList().getGraphVertexMap();
     assertThat(graphVertexMap.size()).isEqualTo(1);

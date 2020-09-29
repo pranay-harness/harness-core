@@ -10,6 +10,8 @@ import io.harness.registrars.OrchestrationVisualizationModuleEventHandlerRegistr
 import io.harness.registries.registrar.OrchestrationEventHandlerRegistrar;
 import io.harness.service.GraphGenerationService;
 import io.harness.service.impl.GraphGenerationServiceImpl;
+import io.harness.skip.service.VertexSkipperService;
+import io.harness.skip.service.impl.VertexSkipperServiceImpl;
 
 @OwnedBy(CDC)
 public class OrchestrationVisualizationModule extends AbstractModule {
@@ -25,6 +27,7 @@ public class OrchestrationVisualizationModule extends AbstractModule {
   @Override
   protected void configure() {
     bind(GraphGenerationService.class).to(GraphGenerationServiceImpl.class);
+    bind(VertexSkipperService.class).to(VertexSkipperServiceImpl.class);
 
     // event registrar binding
     MapBinder<String, OrchestrationEventHandlerRegistrar> orchestrationEventHandlerRegistrarMapBinder =

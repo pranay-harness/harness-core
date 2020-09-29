@@ -67,7 +67,7 @@ public class GraphVisualizer {
   }
 
   public void generateImage(OrchestrationGraph graph, String filename) throws IOException {
-    MutableGraph mutableGraph = generateGraph(graph, Collections.singletonList(graph.getRootNodeId()));
+    MutableGraph mutableGraph = generateGraph(graph, graph.getRootNodeIds());
     addLinksToGraph(mutableGraph, graph);
 
     try {
@@ -101,8 +101,8 @@ public class GraphVisualizer {
             cluster.add(generateGraph(graph, entry.getValue().getEdges()));
             mutableGraph.add(cluster);
           }
-          if (entry.getValue().getNext() != null) {
-            mutableGraph.add(generateGraph(graph, Collections.singletonList(entry.getValue().getNext())));
+          if (!entry.getValue().getNextIds().isEmpty()) {
+            mutableGraph.add(generateGraph(graph, Collections.singletonList(entry.getValue().getNextIds().get(0))));
           }
         });
 
@@ -114,19 +114,19 @@ public class GraphVisualizer {
     Set<MutableNode> nodes = (Set<MutableNode>) mutableGraph.nodes();
     nodes.forEach(node -> {
       EdgeList edgeList = orchestrationGraph.getAdjacencyList().getAdjacencyList().get(node.attrs().get("ID"));
-      if (!edgeList.getEdges().isEmpty() && edgeList.getNext() != null) {
+      if (!edgeList.getEdges().isEmpty() && !edgeList.getNextIds().isEmpty()) {
         node.addLink(edgeList.getEdges().stream().map(s -> graphVertexMap.get(s).getName()).toArray(String[] ::new));
-        node.addLink(graphVertexMap.get(edgeList.getNext()).getName());
+        node.addLink(graphVertexMap.get(edgeList.getNextIds().get(0)).getName());
       } else if (!edgeList.getEdges().isEmpty()) {
         node.addLink(edgeList.getEdges().stream().map(s -> graphVertexMap.get(s).getName()).toArray(String[] ::new));
-      } else if (edgeList.getNext() != null) {
-        node.addLink(graphVertexMap.get(edgeList.getNext()).getName());
+      } else if (!edgeList.getNextIds().isEmpty()) {
+        node.addLink(graphVertexMap.get(edgeList.getNextIds().get(0)).getName());
       }
     });
   }
 
   public void breadthFirstTraversal(OrchestrationGraph graph) {
-    breadthFirstTraversalInternal(graph.getRootNodeId(), graph.getAdjacencyList());
+    breadthFirstTraversalInternal(graph.getRootNodeIds().get(0), graph.getAdjacencyList());
   }
 
   private void breadthFirstTraversalInternal(String nodeId, OrchestrationAdjacencyList adjacencyList) {
@@ -150,7 +150,7 @@ public class GraphVisualizer {
       logger.info(graphVertex.getName() + " ");
 
       List<String> childIds = adjacencyList.getAdjacencyList().get(graphVertex.getUuid()).getEdges();
-      String nextId = adjacencyList.getAdjacencyList().get(graphVertex.getUuid()).getNext();
+      String nextId = adjacencyList.getAdjacencyList().get(graphVertex.getUuid()).getNextIds().get(0);
       if (childIds.isEmpty() && nextId == null) {
         continue;
       }
@@ -172,7 +172,7 @@ public class GraphVisualizer {
   }
 
   public void depthFirstTraversal(OrchestrationGraph graph) {
-    depthFirstTraversalInternal(graph.getRootNodeId(), graph.getAdjacencyList(), new HashSet<>());
+    depthFirstTraversalInternal(graph.getRootNodeIds().get(0), graph.getAdjacencyList(), new HashSet<>());
   }
 
   private void depthFirstTraversalInternal(
@@ -190,8 +190,8 @@ public class GraphVisualizer {
       depthFirstTraversalInternal(child, adjacencyList, visited);
     }
 
-    if (edgeList.getNext() != null) {
-      depthFirstTraversalInternal(edgeList.getNext(), adjacencyList, visited);
+    if (!edgeList.getNextIds().isEmpty()) {
+      depthFirstTraversalInternal(edgeList.getNextIds().get(0), adjacencyList, visited);
     }
   }
 

@@ -6,6 +6,7 @@ import static io.harness.rule.OwnerRule.ALEXEI;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
+import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 
 import io.harness.OrchestrationVisualizationTest;
@@ -72,7 +73,7 @@ public class OrchestrationEndEventHandlerTest extends OrchestrationVisualization
                                    .build();
 
     OrchestrationGraphInternal orchestrationGraphInternal = OrchestrationGraphInternal.builder()
-                                                                .rootNodeId(generateUuid())
+                                                                .rootNodeIds(Lists.newArrayList(generateUuid()))
                                                                 .status(Status.RUNNING)
                                                                 .startTs(planExecution.getStartTs())
                                                                 .planExecutionId(planExecution.getUuid())

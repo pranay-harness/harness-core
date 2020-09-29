@@ -76,26 +76,30 @@ public class GraphGenerator {
     graphVertexMap.put(currentUuid, GraphVertexConverter.convertFrom(nodeExecution));
 
     // compute adjList
-    if (isPreviousIdPresent(nodeExecution.getPreviousId())) {
-      adjacencyList.get(nodeExecution.getPreviousId()).setNext(currentUuid);
-    } else if (isParentIdPresent(nodeExecution.getParentId())) {
-      String parentId = nodeExecution.getParentId();
+    String parentId = null;
+    List<String> prevIds = new ArrayList<>();
+    List<String> nextIds = new ArrayList<>();
+    if (isIdPresent(nodeExecution.getPreviousId())) {
+      adjacencyList.get(nodeExecution.getPreviousId()).getNextIds().add(currentUuid);
+      prevIds.add(nodeExecution.getPreviousId());
+    } else if (isIdPresent(nodeExecution.getParentId())) {
+      parentId = nodeExecution.getParentId();
       EdgeList parentEdgeList = adjacencyList.get(parentId);
       if (isChainNonInitialVertex(graphVertexMap.get(parentId).getMode(), parentEdgeList)) {
-        appendToChainEnd(adjacencyList, parentEdgeList.getEdges().get(0), currentUuid);
+        appendToChainEnd(adjacencyList, parentEdgeList.getEdges().get(0), currentUuid, prevIds);
       } else {
         parentEdgeList.getEdges().add(currentUuid);
       }
     }
-    adjacencyList.put(currentUuid, EdgeList.builder().edges(new ArrayList<>()).next(nodeExecution.getNextId()).build());
+    if (isIdPresent(nodeExecution.getNextId())) {
+      nextIds.add(nodeExecution.getNextId());
+    }
+    adjacencyList.put(currentUuid,
+        EdgeList.builder().edges(new ArrayList<>()).nextIds(nextIds).prevIds(prevIds).parentId(parentId).build());
   }
 
-  boolean isPreviousIdPresent(String previousId) {
-    return EmptyPredicate.isNotEmpty(previousId);
-  }
-
-  boolean isParentIdPresent(String parentId) {
-    return EmptyPredicate.isNotEmpty(parentId);
+  boolean isIdPresent(String id) {
+    return EmptyPredicate.isNotEmpty(id);
   }
 
   boolean isChainNonInitialVertex(ExecutionMode mode, EdgeList parentEdgeList) {
@@ -131,13 +135,17 @@ public class GraphGenerator {
         .collect(groupingBy(NodeExecution::getParentId, mapping(NodeExecution::getUuid, toList())));
   }
 
-  private void appendToChainEnd(Map<String, EdgeList> adjacencyList, String firstChainId, String nextId) {
+  private void appendToChainEnd(
+      Map<String, EdgeList> adjacencyList, String firstChainId, String nextId, List<String> prevIds) {
     EdgeList edgeList = adjacencyList.get(firstChainId);
-    while (edgeList.getNext() != null) {
-      edgeList = adjacencyList.get(edgeList.getNext());
+    String nextEdgeId = firstChainId;
+    while (!edgeList.getNextIds().isEmpty()) {
+      nextEdgeId = edgeList.getNextIds().get(0);
+      edgeList = adjacencyList.get(nextEdgeId);
     }
 
-    edgeList.setNext(nextId);
+    prevIds.add(nextEdgeId);
+    edgeList.getNextIds().add(nextId);
   }
 
   private class GraphGeneratorSession {
@@ -235,6 +243,7 @@ public class GraphGenerator {
         graphVertexMap.put(graphVertex.getUuid(), graphVertex);
 
         List<String> edges = new ArrayList<>();
+        List<String> nextIds = new ArrayList<>();
 
         if (parentIdMap.containsKey(currentNodeId) && !parentIdMap.get(currentNodeId).isEmpty()) {
           List<String> childNodeIds = parentIdMap.get(currentNodeId);
@@ -256,12 +265,14 @@ public class GraphGenerator {
             chainMap.remove(currentNodeId);
           }
           queue.add(nextNodeId);
+          nextIds.add(nextNodeId);
         } else if (chainMap.containsKey(currentNodeId)) {
           nextNodeId = chainMap.get(currentNodeId);
           queue.add(nextNodeId);
+          nextIds.add(nextNodeId);
         }
 
-        adjacencyList.put(currentNodeId, EdgeList.builder().edges(edges).next(nextNodeId).build());
+        adjacencyList.put(currentNodeId, EdgeList.builder().edges(edges).nextIds(nextIds).build());
       }
 
       return OrchestrationAdjacencyList.builder().graphVertexMap(graphVertexMap).adjacencyList(adjacencyList).build();

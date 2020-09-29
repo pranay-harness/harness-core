@@ -15,6 +15,7 @@ import io.harness.execution.events.SyncOrchestrationEventHandler;
 import io.harness.service.GraphGenerationService;
 import lombok.extern.slf4j.Slf4j;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 
 @OwnedBy(CDC)
@@ -40,7 +41,7 @@ public class OrchestrationStartEventHandler implements SyncOrchestrationEventHan
                                                                       .adjacencyList(new HashMap<>())
                                                                       .build())
                                                    .planExecutionId(planExecution.getUuid())
-                                                   .rootNodeId(null)
+                                                   .rootNodeIds(new ArrayList<>())
                                                    .startTs(planExecution.getStartTs())
                                                    .endTs(planExecution.getEndTs())
                                                    .status(planExecution.getStatus())

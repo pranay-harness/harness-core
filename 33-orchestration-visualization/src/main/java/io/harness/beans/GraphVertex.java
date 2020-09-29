@@ -8,6 +8,7 @@ import io.harness.data.Outcome;
 import io.harness.execution.status.Status;
 import io.harness.facilitator.modes.ExecutionMode;
 import io.harness.interrupts.InterruptEffect;
+import io.harness.skip.SkipType;
 import io.harness.state.io.FailureInfo;
 import io.harness.state.io.StepParameters;
 import lombok.AllArgsConstructor;
@@ -42,6 +43,9 @@ public class GraphVertex implements Serializable {
   private List<InterruptEffect> interruptHistories;
   private List<Outcome> outcomes;
   private List<String> retryIds;
+
+  // skip
+  private SkipType skipType;
 
   private Subgraph subgraph;
   private GraphVertex next;
