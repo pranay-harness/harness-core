@@ -74,6 +74,7 @@ import io.harness.interrupts.ExecutionInterruptType;
 import io.harness.logging.AutoLogContext;
 import io.harness.logging.ExceptionLogger;
 import io.harness.observer.Subject;
+import io.harness.persistence.HPersistence;
 import io.harness.serializer.KryoSerializer;
 import io.harness.serializer.MapperUtils;
 import io.harness.state.inspection.ExpressionVariableUsage;
@@ -380,7 +381,8 @@ public class StateMachineExecutor implements StateInspectionListener {
     stateExecutionInstance = saveStateExecutionInstance(stateMachine, stateExecutionInstance);
     ExecutionContextImpl context = new ExecutionContextImpl(stateExecutionInstance, stateMachine, injector);
     injector.injectMembers(context);
-    updateStateExecutionInstanceTimeout(stateMachine, stateExecutionInstance, context);
+    stateExecutionInstance = updateStateExecutionInstanceTimeout(stateMachine, stateExecutionInstance, context);
+    context = new ExecutionContextImpl(stateExecutionInstance, stateMachine, injector);
     executorService.execute(new SmExecutionDispatcher(context, this));
     return stateExecutionInstance;
   }
@@ -430,7 +432,9 @@ public class StateMachineExecutor implements StateInspectionListener {
   public void startExecution(StateMachine stateMachine, StateExecutionInstance stateExecutionInstance) {
     ExecutionContextImpl context = new ExecutionContextImpl(stateExecutionInstance, stateMachine, injector);
     injector.injectMembers(context);
-    updateStateExecutionInstanceTimeout(stateMachine, stateExecutionInstance, context);
+    StateExecutionInstance instance =
+        updateStateExecutionInstanceTimeout(stateMachine, stateExecutionInstance, context);
+    context = new ExecutionContextImpl(instance, stateMachine, injector);
     startExecution(context);
   }
 
@@ -689,7 +693,7 @@ public class StateMachineExecutor implements StateInspectionListener {
     return stateExecutionInstance;
   }
 
-  private void updateStateExecutionInstanceTimeout(
+  private StateExecutionInstance updateStateExecutionInstanceTimeout(
       StateMachine stateMachine, StateExecutionInstance stateExecutionInstance, ExecutionContext context) {
     State state =
         stateMachine.getState(stateExecutionInstance.getChildStateMachineId(), stateExecutionInstance.getStateName());
@@ -703,10 +707,11 @@ public class StateMachineExecutor implements StateInspectionListener {
             .set(StateExecutionInstanceKeys.stateTimeout, executionInstanceTimeout);
 
     StateExecutionInstance updated = wingsPersistence.findAndModify(
-        stateExecutionInstanceQuery, updateOperations, new FindAndModifyOptions().returnNew(false));
+        stateExecutionInstanceQuery, updateOperations, new FindAndModifyOptions().returnNew(true));
     if (updated == null) {
       logger.error("[TimeOut Op] StateExecutionInstance stateTimeout update Failed");
     }
+    return updated;
   }
 
   private StateExecutionInstance reloadStateExecutionInstanceAndCheckStatus(
@@ -1060,6 +1065,17 @@ public class StateMachineExecutor implements StateInspectionListener {
     boolean updated = false;
     StateMachine sm = context.getStateMachine();
     try {
+      Query<StateExecutionInstance> timeoutQuery =
+          wingsPersistence.createQuery(StateExecutionInstance.class)
+              .filter(StateExecutionInstanceKeys.accountId, stateExecutionInstance.getAccountId())
+              .filter(StateExecutionInstanceKeys.appId, stateExecutionInstance.getAppId())
+              .filter(StateExecutionInstanceKeys.uuid, stateExecutionInstance.getUuid());
+      UpdateOperations<StateExecutionInstance> timeOutUpdate =
+          wingsPersistence.createUpdateOperations(StateExecutionInstance.class)
+              .set(StateExecutionInstanceKeys.expiryTs, System.currentTimeMillis() + ABORT_EXPIRY_BUFFER_MILLIS);
+      stateExecutionInstance =
+          wingsPersistence.findAndModify(timeoutQuery, timeOutUpdate, HPersistence.returnNewOptions);
+
       State currentState =
           sm.getState(stateExecutionInstance.getChildStateMachineId(), stateExecutionInstance.getStateName());
       notNullCheck("currentState", currentState);
@@ -1104,7 +1120,6 @@ public class StateMachineExecutor implements StateInspectionListener {
         MapperUtils.mapObject(stateExecutionInstance.getStateParams(), currentState);
       }
       currentState.handleAbortEvent(context);
-      stateExecutionInstance.setExpiryTs(System.currentTimeMillis() + ABORT_EXPIRY_BUFFER_MILLIS);
 
       String errorMessage =
           (context.getStateExecutionData() != null && context.getStateExecutionData().getErrorMsg() != null
@@ -1226,7 +1241,8 @@ public class StateMachineExecutor implements StateInspectionListener {
         : Long.MAX_VALUE;
     stateExecutionInstance.setExpiryTs(timeout);
     return updateStatus(stateExecutionInstance, status, existingExecutionStatus, reason, ops -> {
-      ops.set("startTs", stateExecutionInstance.getStartTs()).set("expiryTs", stateExecutionInstance.getExpiryTs());
+      ops.set(StateExecutionInstanceKeys.startTs, stateExecutionInstance.getStartTs())
+          .set(StateExecutionInstanceKeys.expiryTs, timeout);
     });
   }
 
