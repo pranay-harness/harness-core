@@ -7,6 +7,7 @@ import com.google.inject.Inject;
 
 import com.github.benmanes.caffeine.cache.Caffeine;
 import com.github.benmanes.caffeine.cache.LoadingCache;
+import io.harness.batch.processing.tasklet.util.CacheUtils;
 import lombok.Value;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
@@ -19,7 +20,7 @@ import java.util.concurrent.TimeUnit;
 
 @Slf4j
 @Component
-public class HarnessServiceInfoFetcher {
+public class HarnessServiceInfoFetcher extends CacheUtils {
   private final CloudToHarnessMappingService cloudToHarnessMappingService;
   private final K8sLabelServiceInfoFetcher k8sLabelServiceInfoFetcher;
 
@@ -40,6 +41,7 @@ public class HarnessServiceInfoFetcher {
     this.cloudToHarnessMappingService = cloudToHarnessMappingService;
     this.getHarnessServiceInfoCache =
         Caffeine.newBuilder()
+            .recordStats()
             .expireAfterAccess(24, TimeUnit.HOURS)
             .maximumSize(1_000)
             .build(key

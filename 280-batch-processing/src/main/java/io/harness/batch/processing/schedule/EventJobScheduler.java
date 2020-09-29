@@ -15,8 +15,11 @@ import io.harness.batch.processing.metrics.ProductMetricsService;
 import io.harness.batch.processing.service.AccountExpiryCleanupService;
 import io.harness.batch.processing.service.impl.BatchJobBucketLogContext;
 import io.harness.batch.processing.service.impl.BatchJobTypeLogContext;
+import io.harness.batch.processing.service.impl.InstanceDataServiceImpl;
 import io.harness.batch.processing.service.intfc.BillingDataPipelineHealthStatusService;
 import io.harness.batch.processing.shard.AccountShardService;
+import io.harness.batch.processing.tasklet.support.HarnessServiceInfoFetcher;
+import io.harness.batch.processing.tasklet.support.K8sLabelServiceInfoFetcher;
 import io.harness.logging.AccountLogContext;
 import io.harness.logging.AutoLogContext;
 import lombok.extern.slf4j.Slf4j;
@@ -48,6 +51,9 @@ public class EventJobScheduler {
   @Autowired private ProductMetricsService productMetricsService;
   @Autowired private BudgetAlertsServiceImpl budgetAlertsService;
   @Autowired private AccountExpiryCleanupService accountExpiryCleanupService;
+  @Autowired private HarnessServiceInfoFetcher harnessServiceInfoFetcher;
+  @Autowired private InstanceDataServiceImpl instanceDataService;
+  @Autowired private K8sLabelServiceInfoFetcher k8sLabelServiceInfoFetcher;
 
   @PostConstruct
   public void orderJobs() {
@@ -155,6 +161,14 @@ public class EventJobScheduler {
     } catch (Exception ex) {
       logger.error("Exception while running budgetAlertsJob", ex);
     }
+  }
+
+  // log hit/miss rate and size of the LoadingCache periodically for tuning
+  @Scheduled(cron = "0 0 */7 ? * *")
+  public void printCacheStats() throws IllegalAccessException {
+    harnessServiceInfoFetcher.logCacheStats();
+    instanceDataService.logCacheStats();
+    k8sLabelServiceInfoFetcher.logCacheStats();
   }
 
   @SuppressWarnings("squid:S1166") // not required to rethrow exceptions.
