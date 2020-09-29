@@ -102,9 +102,17 @@ sonarqube(
 filegroup(
     name = "checkstyle",
     srcs = get_checkstyle_targets(modules),
+    tags = [
+        "manual",
+        "no-ide",
+    ],
 )
 
 filegroup(
     name = "pmd",
     srcs = get_pmd_targets(modules),
+    tags = [
+        "manual",
+        "no-ide",
+    ],
 )
