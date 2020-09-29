@@ -12,6 +12,13 @@ directories:
   21-delegate-agent-beans
   21-persistence
   22-delegate-service-beans
+  22-ng-core
+  22-ng-core-clients
+  22-ng-delegate-service-beans
+  22-ng-project-n-orgs
+  22-secret-manager-client
+  22-timeout-engine
+  22-wait-engine
   tools/bazel
 
 # Automatically includes all relevant targets under the 'directories' above

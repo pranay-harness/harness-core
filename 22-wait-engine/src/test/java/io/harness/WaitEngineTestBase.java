@@ -6,7 +6,7 @@ import org.junit.Rule;
 import org.mockito.junit.MockitoJUnit;
 import org.mockito.junit.MockitoRule;
 
-public abstract class WaitEngineTest extends CategoryTest implements MockableTestMixin {
+public abstract class WaitEngineTestBase extends CategoryTest implements MockableTestMixin {
   @Rule public LifecycleRule lifecycleRule = new LifecycleRule();
   @Rule public MockitoRule mockitoRule = MockitoJUnit.rule();
   @Rule public WaitEngineRule waitEngineRule = new WaitEngineRule(lifecycleRule.getClosingFactory());

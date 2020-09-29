@@ -6,7 +6,7 @@ import static io.harness.waiter.TestNotifyEventListener.TEST_PUBLISHER;
 
 import com.google.inject.Inject;
 
-import io.harness.WaitEngineTest;
+import io.harness.WaitEngineTestBase;
 import io.harness.category.element.StressTests;
 import io.harness.maintenance.MaintenanceGuard;
 import io.harness.persistence.HPersistence;
@@ -26,7 +26,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Slf4j
-public class StressTest extends WaitEngineTest {
+public class StressTest extends WaitEngineTestBase {
   private static final SecureRandom random = new SecureRandom();
 
   @Inject private HPersistence persistence;
