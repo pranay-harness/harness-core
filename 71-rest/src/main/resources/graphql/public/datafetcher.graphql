@@ -121,5 +121,6 @@ enum DataFetcherEnum {
   serviceArtifactSourceConnection
   artifactSource
   exportExecutions
+  viewFilterStats
   views
 }

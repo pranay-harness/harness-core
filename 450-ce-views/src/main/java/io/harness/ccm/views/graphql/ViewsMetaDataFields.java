@@ -4,8 +4,8 @@ public enum ViewsMetaDataFields {
   TIME_GRANULARITY("time_granularity", "time_granularity"),
   START_TIME("startTime", "startTime"),
   COST("cost", "cost"),
-  LABEL_KEY("label.key", "label_key"),
-  LABEL_VALUE("label.value", "label_value");
+  LABEL_KEY("labels.key", "labels_key"),
+  LABEL_VALUE("labels.value", "labels_value");
 
   private String fieldName;
   private String alias;

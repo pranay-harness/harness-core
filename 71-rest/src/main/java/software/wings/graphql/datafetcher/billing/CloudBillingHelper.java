@@ -40,6 +40,7 @@ public class CloudBillingHelper {
   @Inject private MainConfiguration mainConfiguration;
   @Inject private BillingDataPipelineRecordDao billingDataPipelineRecordDao;
 
+  public static final String unified = "unifiedTable";
   private static final String preAggregated = "preAggregated";
   private static final String awsRawTable = "awscur*";
   private static final String gcpRawTable = "gcp_billing_export*";
