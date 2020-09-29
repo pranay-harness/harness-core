@@ -12,7 +12,7 @@ import io.harness.delegate.beans.connector.awsconnector.AwsConnectorDTO;
 import io.harness.delegate.beans.connector.awsconnector.AwsCredentialType;
 import io.harness.delegate.beans.connector.awsconnector.AwsInheritFromDelegateSpecDTO;
 import io.harness.delegate.beans.connector.awsconnector.AwsManualConfigSpecDTO;
-import io.harness.delegate.beans.connector.awsconnector.CrossAccountAccess;
+import io.harness.delegate.beans.connector.awsconnector.CrossAccountAccessDTO;
 import io.harness.rule.Owner;
 import org.junit.Before;
 import org.junit.Test;
@@ -35,8 +35,8 @@ public class AwsEntityToDTOTest extends CategoryTest {
     final String crossAccountRoleArn = "crossAccountRoleArn";
     final String externalRoleArn = "externalRoleArn";
     final String delegateSelector = "delegateSelector";
-    final CrossAccountAccess crossAccountAccess =
-        CrossAccountAccess.builder().crossAccountRoleArn(crossAccountRoleArn).externalId(externalRoleArn).build();
+    final CrossAccountAccessDTO crossAccountAccess =
+        CrossAccountAccessDTO.builder().crossAccountRoleArn(crossAccountRoleArn).externalId(externalRoleArn).build();
     final AwsConfig awsConfig = AwsConfig.builder()
                                     .credentialType(AwsCredentialType.INHERIT_FROM_DELEGATE)
                                     .crossAccountAccess(crossAccountAccess)

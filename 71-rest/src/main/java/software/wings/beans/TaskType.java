@@ -17,6 +17,7 @@ import io.harness.delegate.beans.DelegateTaskResponse;
 import io.harness.delegate.beans.TaskGroup;
 import io.harness.delegate.task.DelegateRunnableTask;
 import io.harness.delegate.task.artifacts.docker.DockerArtifactTaskNG;
+import io.harness.delegate.task.aws.AwsDelegateTask;
 import io.harness.delegate.task.docker.DockerTestConnectionDelegateTask;
 import io.harness.delegate.task.gcp.GcpTask;
 import io.harness.delegate.task.git.GitFetchTaskNG;
@@ -457,7 +458,8 @@ public enum TaskType {
   NG_GIT_COMMAND(TaskGroup.GIT, NGGitCommandTask.class, NGGitConnectionValidation.class),
   NG_SSH_VALIDATION(
       TaskGroup.CONNECTIVITY_VALIDATION, SSHConfigValidationDelegateTask.class, AlwaysTrueValidation.class),
-  DOCKER_CONNECTIVITY_TEST_TASK(TaskGroup.DOCKER, DockerTestConnectionDelegateTask.class, NGDockerValidation.class);
+  DOCKER_CONNECTIVITY_TEST_TASK(TaskGroup.DOCKER, DockerTestConnectionDelegateTask.class, NGDockerValidation.class),
+  NG_AWS_TASK(TaskGroup.AWS, AwsDelegateTask.class, AlwaysTrueValidation.class);
 
   private final TaskGroup taskGroup;
   private final Class<? extends DelegateRunnableTask> delegateRunnableTaskClass;
