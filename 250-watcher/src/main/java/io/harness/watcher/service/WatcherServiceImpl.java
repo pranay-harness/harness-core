@@ -489,6 +489,11 @@ public class WatcherServiceImpl implements WatcherService {
       }
 
       List<String> expectedVersions = findExpectedDelegateVersions();
+      if (expectedVersions == null) {
+        // Something went wrong with obtaining the list with expected delegates.
+        // Postpone this for better times.
+        return;
+      }
       Multimap<String, String> runningVersions = LinkedHashMultimap.create();
       List<String> shutdownPendingList = new ArrayList<>();
 
@@ -742,25 +747,33 @@ public class WatcherServiceImpl implements WatcherService {
   }
 
   private void downloadRunScriptsBeforeRestartingDelegateAndWatcher() {
-    if (!isDiskFull()) {
-      try {
-        List<String> expectedDelegateVersions = findExpectedDelegateVersions();
-        for (String expectedVersion : expectedDelegateVersions) {
-          if (multiVersion) {
-            downloadRunScripts(expectedVersion, expectedVersion, true);
-          } else {
-            downloadRunScripts(".", expectedVersion, true);
-          }
-        }
-      } catch (IOException ioe) {
-        if (ioe.getMessage().contains(NO_SPACE_LEFT_ON_DEVICE_ERROR)) {
-          lastAvailableDiskSpace.set(getDiskFreeSpace());
-          logger.error("Download run script, Disk space is full. Free space: {}", lastAvailableDiskSpace.get());
-        }
-        logger.error("Error download run script", ioe);
-      } catch (Exception e) {
-        logger.error("Error downloading or starting run script", e);
+    // TODO: it seems wrong that we are not handling the issues with this method and going forward in the consuming
+    //       methods. We should return false if we are unable to download the scripts.
+    if (isDiskFull()) {
+      return;
+    }
+
+    try {
+      List<String> expectedDelegateVersions = findExpectedDelegateVersions();
+      if (expectedDelegateVersions == null) {
+        return;
       }
+
+      for (String expectedVersion : expectedDelegateVersions) {
+        if (multiVersion) {
+          downloadRunScripts(expectedVersion, expectedVersion, true);
+        } else {
+          downloadRunScripts(".", expectedVersion, true);
+        }
+      }
+    } catch (IOException ioe) {
+      if (ioe.getMessage().contains(NO_SPACE_LEFT_ON_DEVICE_ERROR)) {
+        lastAvailableDiskSpace.set(getDiskFreeSpace());
+        logger.error("Download run script, Disk space is full. Free space: {}", lastAvailableDiskSpace.get());
+      }
+      logger.error("Error download run script", ioe);
+    } catch (Exception e) {
+      logger.error("Error downloading or starting run script", e);
     }
   }
 
@@ -836,7 +849,7 @@ public class WatcherServiceImpl implements WatcherService {
             15L, TimeUnit.SECONDS, true);
 
         if (restResponse == null) {
-          return emptyList();
+          return null;
         }
 
         DelegateConfiguration config = restResponse.getResource();
