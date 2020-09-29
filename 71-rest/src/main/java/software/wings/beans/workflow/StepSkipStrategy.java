@@ -77,7 +77,8 @@ public class StepSkipStrategy {
   }
 
   public StepSkipStrategy cloneInternal() {
-    return new StepSkipStrategy(getScope(), new ArrayList<>(getStepIds()), getAssertionExpression());
+    return new StepSkipStrategy(
+        getScope(), getStepIds() == null ? null : new ArrayList<>(getStepIds()), getAssertionExpression());
   }
 
   @Data
