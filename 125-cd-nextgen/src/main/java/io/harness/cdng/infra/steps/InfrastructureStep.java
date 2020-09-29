@@ -5,6 +5,7 @@ import io.harness.cdng.infra.InfrastructureMapper;
 import io.harness.cdng.infra.beans.InfraMapping;
 import io.harness.cdng.infra.beans.InfrastructureOutcome;
 import io.harness.cdng.infra.yaml.Infrastructure;
+import io.harness.cdng.pipeline.steps.NGStepTypes;
 import io.harness.cdng.stepsdependency.constants.OutcomeExpressionConstants;
 import io.harness.execution.status.Status;
 import io.harness.executionplan.plancreator.beans.StepOutcomeGroup;
@@ -17,7 +18,7 @@ import io.harness.state.io.StepResponse;
 import io.harness.state.io.StepResponse.StepOutcome;
 
 public class InfrastructureStep implements Step, SyncExecutable<InfraStepParameters> {
-  public static final StepType STEP_TYPE = StepType.builder().type("INFRASTRUCTURE").build();
+  public static final StepType STEP_TYPE = StepType.builder().type(NGStepTypes.INFRASTRUCTURE).build();
 
   InfraMapping createInfraMappingObject(String serviceIdentifier, Infrastructure infrastructureSpec) {
     InfraMapping infraMapping = infrastructureSpec.getInfraMapping();

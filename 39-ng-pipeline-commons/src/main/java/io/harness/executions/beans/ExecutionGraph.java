@@ -1,4 +1,4 @@
-package io.harness.cdng.pipeline.executions.beans;
+package io.harness.executions.beans;
 
 import lombok.Builder;
 import lombok.Value;

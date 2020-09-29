@@ -1,6 +1,5 @@
-package io.harness.cdng.pipeline.executions.beans;
+package io.harness.executions.beans;
 
-import io.harness.cdng.pipeline.executions.PipelineExecutionStatus;
 import io.harness.state.io.FailureInfo;
 import lombok.Builder;
 import lombok.Value;

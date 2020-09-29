@@ -1,4 +1,4 @@
-package io.harness.cdng.pipeline.executions;
+package io.harness.executions.beans;
 
 public enum PipelineExecutionStatus {
   RUNNING,

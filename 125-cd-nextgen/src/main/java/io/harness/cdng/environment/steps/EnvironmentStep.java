@@ -6,6 +6,7 @@ import io.harness.ambiance.Ambiance;
 import io.harness.cdng.environment.EnvironmentMapper;
 import io.harness.cdng.environment.EnvironmentOutcome;
 import io.harness.cdng.environment.yaml.EnvironmentYaml;
+import io.harness.cdng.pipeline.steps.NGStepTypes;
 import io.harness.cdng.stepsdependency.constants.OutcomeExpressionConstants;
 import io.harness.common.AmbianceHelper;
 import io.harness.execution.status.Status;
@@ -20,7 +21,7 @@ import io.harness.state.io.StepInputPackage;
 import io.harness.state.io.StepResponse;
 
 public class EnvironmentStep implements Step, SyncExecutable<EnvironmentStepParameters> {
-  public static final StepType STEP_TYPE = StepType.builder().type("ENVIRONMENT").build();
+  public static final StepType STEP_TYPE = StepType.builder().type(NGStepTypes.ENVIRONMENT).build();
   @Inject private EnvironmentService environmentService;
 
   @Override

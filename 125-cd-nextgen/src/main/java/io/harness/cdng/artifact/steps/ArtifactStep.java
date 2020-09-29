@@ -11,6 +11,7 @@ import io.harness.cdng.artifact.mappers.ArtifactResponseToOutcomeMapper;
 import io.harness.cdng.artifact.utils.ArtifactStepHelper;
 import io.harness.cdng.artifact.utils.ArtifactUtils;
 import io.harness.cdng.orchestration.StepUtils;
+import io.harness.cdng.pipeline.steps.NGStepTypes;
 import io.harness.common.AmbianceHelper;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.delegate.beans.DelegateResponseData;
@@ -46,7 +47,7 @@ import java.util.concurrent.TimeUnit;
 @AllArgsConstructor(access = AccessLevel.PACKAGE, onConstructor = @__({ @Inject }))
 @Slf4j
 public class ArtifactStep implements Step, TaskExecutable<ArtifactStepParameters> {
-  public static final StepType STEP_TYPE = StepType.builder().type("ARTIFACT_STEP").build();
+  public static final StepType STEP_TYPE = StepType.builder().type(NGStepTypes.ARTIFACT_STEP).build();
   private final ArtifactStepHelper artifactStepHelper;
   // Default timeout of 1 minute.
   private static final long DEFAULT_TIMEOUT = TimeUnit.MINUTES.toMillis(1);

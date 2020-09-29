@@ -21,7 +21,7 @@ import java.util.Map;
 
 @Slf4j
 public class PipelineSetupStep implements Step, SyncExecutable, ChildExecutable<CDPipelineSetupParameters> {
-  public static final StepType STEP_TYPE = StepType.builder().type("PIPELINE_SETUP").build();
+  public static final StepType STEP_TYPE = StepType.builder().type(NGStepTypes.PIPELINE_SETUP).build();
 
   @Override
   public StepResponse executeSync(Ambiance ambiance, StepParameters stepParameters, StepInputPackage inputPackage,

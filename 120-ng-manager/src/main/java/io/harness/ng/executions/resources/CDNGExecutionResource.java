@@ -23,7 +23,6 @@ import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.mongodb.core.query.Criteria;
 
-import java.io.IOException;
 import java.util.List;
 import javax.validation.constraints.NotNull;
 import javax.ws.rs.Consumes;
@@ -68,13 +67,13 @@ public class CDNGExecutionResource {
   @GET
   @Timed
   @ExceptionMetered
-  @ApiOperation(value = "Gets Executions list", nickname = "getPipelineExecutionDetail")
+  @ApiOperation(value = "Gets Execution Detail", nickname = "getPipelineExecutionDetail")
   @Path("/{planExecutionId}")
   public ResponseDTO<PipelineExecutionDetail> getPipelineExecutionDetail(
       @NotNull @QueryParam("accountIdentifier") String accountId, @NotNull @QueryParam("orgIdentifier") String orgId,
       @NotNull @QueryParam("projectIdentifier") String projectId,
       @NotNull @PathParam("planExecutionId") String planExecutionId,
-      @NotNull @QueryParam("stageIdentifier") String stageIdentifier) throws IOException {
+      @QueryParam("stageIdentifier") String stageIdentifier) {
     return ResponseDTO.newResponse(executionService.getPipelineExecutionDetail(planExecutionId, stageIdentifier));
   }
 }

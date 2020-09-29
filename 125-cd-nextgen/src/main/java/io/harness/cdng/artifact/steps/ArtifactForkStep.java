@@ -8,6 +8,7 @@ import com.google.inject.Inject;
 
 import io.harness.ambiance.Ambiance;
 import io.harness.cdng.artifact.bean.ArtifactOutcome;
+import io.harness.cdng.pipeline.steps.NGStepTypes;
 import io.harness.cdng.service.beans.ServiceOutcome.ArtifactsOutcome;
 import io.harness.cdng.service.beans.ServiceOutcome.ArtifactsOutcome.ArtifactsOutcomeBuilder;
 import io.harness.cdng.stepsdependency.constants.OutcomeExpressionConstants;
@@ -35,7 +36,7 @@ import java.util.List;
 import java.util.Map;
 
 public class ArtifactForkStep implements Step, ChildrenExecutable<ForkStepParameters> {
-  public static final StepType STEP_TYPE = StepType.builder().type("ARTIFACT_FORK_STEP").build();
+  public static final StepType STEP_TYPE = StepType.builder().type(NGStepTypes.ARTIFACT_FORK_STEP).build();
   @Inject private OutcomeService outcomeService;
 
   @Override

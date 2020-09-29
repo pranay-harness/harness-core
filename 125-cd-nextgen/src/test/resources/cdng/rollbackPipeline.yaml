@@ -51,7 +51,7 @@ pipeline:
                   spec:
                     socketTimeoutMillis: 1000
                     method: GET
-                    url: http://httpstat.us/500
+                    url: https://www.google.com/
               - stepGroup:
                   name: StepGroup1
                   identifier: StepGroup1
@@ -63,7 +63,7 @@ pipeline:
                         spec:
                           socketTimeoutMillis: 1000
                           method: GET
-                          url: http://httpstat.us/200
+                          url: c
                   rollbackSteps:
                     - step:
                         name: http sg1 rollback step 1
@@ -72,7 +72,7 @@ pipeline:
                         spec:
                           socketTimeoutMillis: 1000
                           method: GET
-                          url: http://httpstat.us/200
+                          url: https://www.google.com/
               - stepGroup:
                   name: StepGroup2
                   identifier: StepGroup2
@@ -84,7 +84,7 @@ pipeline:
                         spec:
                           socketTimeoutMillis: 1000
                           method: GET
-                          url: http://httpstat.us/200
+                          url: https://www.google.com/
                   rollbackSteps:
                     - step:
                         name: http sg2 rollback step 1
@@ -93,7 +93,7 @@ pipeline:
                         spec:
                           socketTimeoutMillis: 1000
                           method: GET
-                          url: http://httpstat.us/200
+                          url: https://www.google.com/
                     - step:
                         name: http sg2 rollback step 2
                         identifier: httpStep8
@@ -101,7 +101,7 @@ pipeline:
                         spec:
                           socketTimeoutMillis: 1000
                           method: GET
-                          url: http://httpstat.us/200
+                          url: https://www.google.com/
               - stepGroup:
                   name: StepGroup3
                   identifier: StepGroup3
@@ -113,7 +113,7 @@ pipeline:
                         spec:
                           socketTimeoutMillis: 1000
                           method: GET
-                          url: http://httpstat.us/200
+                          url: https://www.google.com/
               - parallel:
                   - step:
                       name: http step 10
@@ -122,7 +122,7 @@ pipeline:
                       spec:
                         socketTimeoutMillis: 1000
                         method: GET
-                        url: http://httpstat.us/500
+                        url: fadsfa
                   - stepGroup:
                       name: StepGroup4
                       identifier: StepGroup4
@@ -134,7 +134,7 @@ pipeline:
                             spec:
                               socketTimeoutMillis: 1000
                               method: GET
-                              url: http://httpstat.us/500
+                              url: fadsfa
                       rollbackSteps:
                         - step:
                             name: http sg4 rollback step 1
@@ -143,7 +143,7 @@ pipeline:
                             spec:
                               socketTimeoutMillis: 1000
                               method: GET
-                              url: http://httpstat.us/200
+                              url: https://www.google.com/
                   - stepGroup:
                       name: StepGroup5
                       identifier: StepGroup5
@@ -155,7 +155,7 @@ pipeline:
                             spec:
                               socketTimeoutMillis: 1000
                               method: GET
-                              url: http://httpstat.us/500
+                              url: fadsfa
               - step:
                   name: http step 2
                   identifier: httpStep2
@@ -163,7 +163,7 @@ pipeline:
                   spec:
                     socketTimeoutMillis: 1000
                     method: GET
-                    url: http://httpstat.us/200
+                    url: https://www.google.com/
             rollbackSteps:
               - step:
                   name: http rollback step 1
@@ -172,7 +172,7 @@ pipeline:
                   spec:
                     socketTimeoutMillis: 1000
                     method: GET
-                    url: http://httpstat.us/200
+                    url: https://www.google.com/
               - step:
                   name: http rollback step 2
                   identifier: httpStep4
@@ -180,4 +180,4 @@ pipeline:
                   spec:
                     socketTimeoutMillis: 1000
                     method: GET
-                    url: http://httpstat.us/200
+                    url: https://www.google.com/

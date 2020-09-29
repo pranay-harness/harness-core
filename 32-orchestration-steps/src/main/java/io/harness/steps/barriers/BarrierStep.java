@@ -19,6 +19,7 @@ import io.harness.state.io.FailureInfo;
 import io.harness.state.io.StepInputPackage;
 import io.harness.state.io.StepResponse;
 import io.harness.state.io.StepResponse.StepResponseBuilder;
+import io.harness.steps.OrchestrationStepTypes;
 import io.harness.steps.barriers.beans.BarrierExecutionInstance;
 import io.harness.steps.barriers.beans.BarrierOutcome;
 import io.harness.steps.barriers.beans.BarrierResponseData;
@@ -32,7 +33,7 @@ import java.util.Map;
 @Slf4j
 public class BarrierStep
     implements Step, SyncExecutable<BarrierStepParameters>, AsyncExecutable<BarrierStepParameters> {
-  public static final StepType STEP_TYPE = StepType.builder().type("BARRIER").build();
+  public static final StepType STEP_TYPE = StepType.builder().type(OrchestrationStepTypes.BARRIER).build();
 
   private static final String BARRIER = "barrier";
 

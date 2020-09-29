@@ -12,13 +12,14 @@ import io.harness.state.Step;
 import io.harness.state.StepType;
 import io.harness.state.io.StepInputPackage;
 import io.harness.state.io.StepResponse;
+import io.harness.steps.OrchestrationStepTypes;
 import lombok.extern.slf4j.Slf4j;
 
 @OwnedBy(CDC)
 @Slf4j
 @Redesign
 public class DummyStep implements Step, SyncExecutable<DummyStepParameters> {
-  public static final StepType STEP_TYPE = StepType.builder().type("DUMMY").build();
+  public static final StepType STEP_TYPE = StepType.builder().type(OrchestrationStepTypes.DUMMY).build();
 
   @Override
   public StepResponse executeSync(Ambiance ambiance, DummyStepParameters dummyStepParameters,

@@ -18,6 +18,7 @@ import io.harness.cdng.manifest.yaml.StoreConfig;
 import io.harness.cdng.manifest.yaml.StoreConfigWrapper;
 import io.harness.cdng.manifest.yaml.kinds.K8sManifest;
 import io.harness.cdng.manifest.yaml.kinds.ValuesManifest;
+import io.harness.cdng.pipeline.steps.NGStepTypes;
 import io.harness.cdng.service.beans.ServiceOutcome;
 import io.harness.cdng.stepsdependency.constants.OutcomeExpressionConstants;
 import io.harness.cdng.stepsdependency.utils.CDStepDependencyUtils;
@@ -67,7 +68,7 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 public class K8sRollingStep implements Step, TaskChainExecutable<K8sRollingStepParameters> {
-  public static final StepType STEP_TYPE = StepType.builder().type("K8S_ROLLING").build();
+  public static final StepType STEP_TYPE = StepType.builder().type(NGStepTypes.K8S_ROLLING).build();
 
   @Inject private EngineExpressionService engineExpressionService;
   @Inject private K8sStepHelper k8sStepHelper;
