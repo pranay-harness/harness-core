@@ -9,6 +9,7 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import io.harness.beans.EmbeddedUser;
+import io.harness.data.validator.Trimmed;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -23,7 +24,7 @@ import java.util.List;
 @JsonTypeName("CLOUD_FORMATION")
 public class CloudFormationInfrastructureProvisioner extends InfrastructureProvisioner {
   private static String VARIABLE_KEY = "cloudformation";
-  @NotEmpty private String sourceType;
+  @NotEmpty @Trimmed(message = "Source type should not contain leading and trailing spaces") private String sourceType;
   private String templateBody;
   private String templateFilePath;
   private GitFileConfig gitFileConfig;
