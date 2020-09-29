@@ -46,10 +46,10 @@ build_bazel_module() {
 build_bazel_tests() {
   module=$1
 
-  bazel ${bazelrc} build //${module}:tests ${GCP} ${BAZEL_ARGUMENTS}
+  bazel ${bazelrc} build //${module}:supporter-test ${GCP} ${BAZEL_ARGUMENTS}
 
   mvn -B install:install-file \
-   -Dfile=${BAZEL_DIRS}/bin/${module}/libtests.jar \
+   -Dfile=${BAZEL_DIRS}/bin/${module}/libsupporter-test.jar \
    -DgroupId=software.wings \
    -DartifactId=${module} \
    -Dversion=0.0.1-SNAPSHOT \

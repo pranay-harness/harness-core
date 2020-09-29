@@ -1,7 +1,7 @@
 package io.harness.serializer.kryo;
 
 import com.esotericsoftware.kryo.Kryo;
-import io.harness.cache.MongoStoreTest;
+import io.harness.cache.MongoStoreTestBase;
 import io.harness.serializer.KryoRegistrar;
 
 public class TestPersistenceKryoRegistrar implements KryoRegistrar {
@@ -9,7 +9,7 @@ public class TestPersistenceKryoRegistrar implements KryoRegistrar {
 
   @Override
   public void register(Kryo kryo) {
-    kryo.register(MongoStoreTest.TestNominalEntity.class, index++);
-    kryo.register(MongoStoreTest.TestOrdinalEntity.class, index++);
+    kryo.register(MongoStoreTestBase.TestNominalEntity.class, index++);
+    kryo.register(MongoStoreTestBase.TestOrdinalEntity.class, index++);
   }
 }

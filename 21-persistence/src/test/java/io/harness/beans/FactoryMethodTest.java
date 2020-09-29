@@ -10,7 +10,7 @@ import io.harness.rule.Owner;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
-public class FactoryMethodTests extends CategoryTest {
+public class FactoryMethodTest extends CategoryTest {
   @Test
   @Owner(developers = VGLIJIN)
   @Category(UnitTests.class)

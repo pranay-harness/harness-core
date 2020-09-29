@@ -39,7 +39,7 @@ java_library(
 java_library(
     name = "test_deps",
     exports = [
-        "//21-persistence:tests",
+        "//21-persistence:supporter-test",
         "//990-commons-test:module",
         "@maven//:junit_junit",
         "@maven//:org_assertj_assertj_core",
