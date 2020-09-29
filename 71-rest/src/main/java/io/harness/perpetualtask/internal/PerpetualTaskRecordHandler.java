@@ -215,7 +215,7 @@ public class PerpetualTaskRecordHandler implements Handler<PerpetualTaskRecord>,
         .data(TaskData.builder()
                   .async(false)
                   .taskType(TaskType.CAPABILITY_VALIDATION.name())
-                  .parameters(new Object[] {executionCapabilityList.toArray()})
+                  .parameters(executionCapabilityList.toArray())
                   .timeout(TimeUnit.MINUTES.toMillis(InstanceSyncConstants.VALIDATION_TIMEOUT_MINUTES))
                   .build())
         .build();
