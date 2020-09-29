@@ -9,16 +9,11 @@ import com.google.inject.Singleton;
 import com.mongodb.client.result.UpdateResult;
 import io.harness.cdng.inputset.repository.spring.InputSetRepository;
 import io.harness.cdng.inputset.services.InputSetEntityService;
-import io.harness.cdng.pipeline.CDPipeline;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.exception.DuplicateFieldException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.ngpipeline.BaseInputSetEntity;
 import io.harness.ngpipeline.BaseInputSetEntity.BaseInputSetEntityKeys;
-import io.harness.walktree.visitor.SimpleVisitorFactory;
-import io.harness.walktree.visitor.inputset.InputSetTemplateVisitor;
-import io.harness.yaml.utils.JsonPipelineUtils;
-import io.harness.yaml.utils.YamlPipelineUtils;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.DuplicateKeyException;
@@ -26,9 +21,10 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.mongodb.core.query.Criteria;
 
-import java.io.IOException;
+import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.Set;
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 
@@ -37,7 +33,7 @@ import javax.validation.constraints.NotNull;
 @Slf4j
 public class InputSetEntityServiceImpl implements InputSetEntityService {
   private final InputSetRepository inputSetRepository;
-  private final SimpleVisitorFactory simpleVisitorFactory;
+
   private static final String DUP_KEY_EXP_FORMAT_STRING =
       "InputSet [%s] under Project[%s], Organization [%s] for Pipeline [%s] already exists";
 
@@ -114,16 +110,11 @@ public class InputSetEntityServiceImpl implements InputSetEntityService {
   }
 
   @Override
-  public String getTemplateFromPipeline(String pipelineYaml) {
-    InputSetTemplateVisitor visitor = simpleVisitorFactory.obtainInputSetTemplateVisitor();
-    try {
-      CDPipeline pipeline = YamlPipelineUtils.read(pipelineYaml, CDPipeline.class);
-      visitor.walkElementTree(pipeline);
-      CDPipeline result = (CDPipeline) visitor.getCurrentObject();
-      return JsonPipelineUtils.writeYamlString(result).replaceAll("---\n", "");
-    } catch (IOException e) {
-      throw new InvalidRequestException("Pipeline could not be converted to template");
-    }
+  public List<BaseInputSetEntity> getGivenInputSetList(String accountId, String orgIdentifier, String projectIdentifier,
+      String pipelineIdentifier, Set<String> inputSetIdentifiersList) {
+    return inputSetRepository
+        .findByAccountIdAndOrgIdentifierAndProjectIdentifierAndPipelineIdentifierAndDeletedNotAndIdentifierIn(
+            accountId, orgIdentifier, projectIdentifier, pipelineIdentifier, true, inputSetIdentifiersList);
   }
 
   private void setName(BaseInputSetEntity baseInputSetEntity) {

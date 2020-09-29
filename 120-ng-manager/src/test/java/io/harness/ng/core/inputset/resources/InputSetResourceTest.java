@@ -1,5 +1,6 @@
 package io.harness.ng.core.inputset.resources;
 
+import static io.harness.rule.OwnerRule.ARCHIT;
 import static io.harness.rule.OwnerRule.NAMAN;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
@@ -7,12 +8,16 @@ import static org.mockito.Mockito.doReturn;
 
 import com.google.common.io.Resources;
 
-import io.harness.NgManagerTest;
+import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import io.harness.cdng.inputset.beans.entities.CDInputSetEntity;
+import io.harness.cdng.inputset.beans.entities.MergeInputSetResponse;
 import io.harness.cdng.inputset.beans.resource.InputSetListType;
 import io.harness.cdng.inputset.beans.resource.InputSetResponseDTO;
 import io.harness.cdng.inputset.beans.resource.InputSetSummaryResponseDTO;
+import io.harness.cdng.inputset.beans.resource.MergeInputSetRequestDTO;
+import io.harness.cdng.inputset.beans.resource.MergeInputSetResponseDTO;
+import io.harness.cdng.inputset.helpers.InputSetMergeHelper;
 import io.harness.cdng.inputset.mappers.InputSetFilterHelper;
 import io.harness.cdng.inputset.services.impl.InputSetEntityServiceImpl;
 import io.harness.cdng.pipeline.beans.dto.CDPipelineResponseDTO;
@@ -28,6 +33,7 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
@@ -37,14 +43,16 @@ import org.springframework.data.mongodb.core.query.Criteria;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 
-public class InputSetResourceTest extends NgManagerTest {
+public class InputSetResourceTest extends CategoryTest {
   @Mock InputSetEntityServiceImpl inputSetEntityService;
   @Mock PipelineService ngPipelineService;
+  @Mock InputSetMergeHelper inputSetMergeHelper;
   @InjectMocks InputSetResource inputSetResource;
 
   InputSetResponseDTO cdInputSetResponseDTO;
@@ -67,6 +75,7 @@ public class InputSetResourceTest extends NgManagerTest {
 
   @Before
   public void setUp() throws IOException {
+    MockitoAnnotations.initMocks(this);
     ClassLoader classLoader = getClass().getClassLoader();
 
     String inputSetFileName = "input-set-test-file.yaml";
@@ -252,12 +261,33 @@ public class InputSetResourceTest extends NgManagerTest {
   @Category(UnitTests.class)
   public void testGetTemplateFromPipeline() {
     doReturn(Optional.of(cdPipelineResponseDTO)).when(ngPipelineService).getPipeline(any(), any(), any(), any());
-    doReturn("").when(inputSetEntityService).getTemplateFromPipeline(pipelineYaml);
+    doReturn("").when(inputSetMergeHelper).getTemplateFromPipeline(pipelineYaml);
 
     String responseTemplateYaml =
         inputSetResource.getTemplateFromPipeline(ACCOUNT_ID, ORG_IDENTIFIER, PROJ_IDENTIFIER, PIPELINE_IDENTIFIER)
             .getData()
             .getInputSetTemplateYaml();
     assertThat(responseTemplateYaml).isEqualTo("");
+  }
+
+  @Test
+  @Owner(developers = ARCHIT)
+  @Category(UnitTests.class)
+  public void testGetMergeInputSetFromPipelineTemplate() {
+    MergeInputSetResponse mergeInputSetResponse = MergeInputSetResponse.builder().pipelineYaml(pipelineYaml).build();
+    List<String> inputSetReferences = Arrays.asList("input1", "input2");
+    MergeInputSetRequestDTO mergeInputSetRequestDTO =
+        MergeInputSetRequestDTO.builder().inputSetReferences(inputSetReferences).build();
+
+    doReturn(mergeInputSetResponse)
+        .when(inputSetMergeHelper)
+        .getMergePipelineYamlFromInputIdentifierList(
+            ACCOUNT_ID, ORG_IDENTIFIER, PROJ_IDENTIFIER, PIPELINE_IDENTIFIER, inputSetReferences, true, false);
+    MergeInputSetResponseDTO mergePipelineTemplate =
+        inputSetResource
+            .getMergeInputSetFromPipelineTemplate(
+                ACCOUNT_ID, ORG_IDENTIFIER, PROJ_IDENTIFIER, PIPELINE_IDENTIFIER, false, mergeInputSetRequestDTO)
+            .getData();
+    assertThat(mergePipelineTemplate.getPipelineYaml()).isEqualTo(pipelineYaml);
   }
 }

@@ -1,6 +1,5 @@
 package io.harness.cdng.inputset.beans.resource;
 
-import io.harness.walktree.visitor.response.VisitorErrorResponseWrapper;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.AccessLevel;
@@ -16,6 +15,8 @@ import java.util.Map;
 @ApiModel("MergeInputSetResponse")
 public class MergeInputSetResponseDTO {
   String pipelineYaml;
+
   @ApiModelProperty(name = "isErrorResponse") boolean isErrorResponse;
-  Map<String, VisitorErrorResponseWrapper> uuidToErrorResponseMap;
+  String errorPipelineYaml;
+  Map<String, MergeInputSetErrorWrapperDTO> uuidToErrorResponseMap;
 }

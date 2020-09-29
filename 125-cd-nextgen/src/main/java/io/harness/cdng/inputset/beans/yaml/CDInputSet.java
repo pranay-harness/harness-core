@@ -7,14 +7,16 @@ import io.harness.yaml.core.intfc.InputSet;
 import lombok.Builder;
 import lombok.Data;
 
+import javax.validation.constraints.NotNull;
+
 @Data
 @Builder
 @JsonDeserialize(using = CDInputSetDeserializer.class)
 public class CDInputSet implements InputSet {
-  String identifier;
+  @NotNull String identifier;
   String name;
   String description;
-  CDPipeline pipeline;
+  @NotNull CDPipeline pipeline;
 
   // Add tags
 }

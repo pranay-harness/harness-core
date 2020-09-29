@@ -3,83 +3,85 @@ package io.harness.cdng.pipeline;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonValue;
-import io.harness.cdng.pipeline.stepinfo.StepSpecType;
+import io.harness.cdng.pipeline.stepinfo.StepSpecTypeConstants;
 import io.harness.cdng.service.beans.ServiceDefinitionType;
 
 import java.util.Arrays;
 import java.util.List;
 
 /*
-   Todo: Change StepSpecType.PLACEHOLDER to their respective type once the StepInfo for those is implemented.
+   Todo: Change StepSpecTypeConstants.PLACEHOLDER to their respective type once the StepInfo for those is implemented.
  */
 public enum NGStepType {
   // k8s steps
-  @JsonProperty(StepSpecType.PLACEHOLDER)
-  APPLY("Apply", Arrays.asList(ServiceDefinitionType.KUBERNETES), "Kubernetes", StepSpecType.PLACEHOLDER),
-  @JsonProperty(StepSpecType.PLACEHOLDER)
-  SCALE("Scale", Arrays.asList(ServiceDefinitionType.KUBERNETES), "Kubernetes", StepSpecType.PLACEHOLDER),
-  @JsonProperty(StepSpecType.PLACEHOLDER)
-  STAGE_DEPLOYMENT(
-      "Stage Deployment", Arrays.asList(ServiceDefinitionType.KUBERNETES), "Kubernetes", StepSpecType.PLACEHOLDER),
-  @JsonProperty(StepSpecType.K8S_ROLLING_DEPLOY)
-  K8S_ROLLING(
-      "K8s Rolling", Arrays.asList(ServiceDefinitionType.KUBERNETES), "Kubernetes", StepSpecType.K8S_ROLLING_DEPLOY),
-  @JsonProperty(StepSpecType.K8S_ROLLING_ROLLBACK)
+  @JsonProperty(StepSpecTypeConstants.PLACEHOLDER)
+  APPLY("Apply", Arrays.asList(ServiceDefinitionType.KUBERNETES), "Kubernetes", StepSpecTypeConstants.PLACEHOLDER),
+  @JsonProperty(StepSpecTypeConstants.PLACEHOLDER)
+  SCALE("Scale", Arrays.asList(ServiceDefinitionType.KUBERNETES), "Kubernetes", StepSpecTypeConstants.PLACEHOLDER),
+  @JsonProperty(StepSpecTypeConstants.PLACEHOLDER)
+  STAGE_DEPLOYMENT("Stage Deployment", Arrays.asList(ServiceDefinitionType.KUBERNETES), "Kubernetes",
+      StepSpecTypeConstants.PLACEHOLDER),
+  @JsonProperty(StepSpecTypeConstants.K8S_ROLLING_DEPLOY)
+  K8S_ROLLING("K8s Rolling", Arrays.asList(ServiceDefinitionType.KUBERNETES), "Kubernetes",
+      StepSpecTypeConstants.K8S_ROLLING_DEPLOY),
+  @JsonProperty(StepSpecTypeConstants.K8S_ROLLING_ROLLBACK)
   K8S_ROLLING_ROLLBACK("K8s Rolling Rollback", Arrays.asList(ServiceDefinitionType.KUBERNETES), "Kubernetes",
-      StepSpecType.K8S_ROLLING_ROLLBACK),
+      StepSpecTypeConstants.K8S_ROLLING_ROLLBACK),
 
-  @JsonProperty(StepSpecType.PLACEHOLDER)
-  SWAP_SELECTORS(
-      "Swap Selectors", Arrays.asList(ServiceDefinitionType.KUBERNETES), "Kubernetes", StepSpecType.PLACEHOLDER),
-  @JsonProperty(StepSpecType.PLACEHOLDER)
-  DELETE("Delete", Arrays.asList(ServiceDefinitionType.KUBERNETES), "Kubernetes", StepSpecType.PLACEHOLDER),
-  @JsonProperty(StepSpecType.PLACEHOLDER)
+  @JsonProperty(StepSpecTypeConstants.PLACEHOLDER)
+  SWAP_SELECTORS("Swap Selectors", Arrays.asList(ServiceDefinitionType.KUBERNETES), "Kubernetes",
+      StepSpecTypeConstants.PLACEHOLDER),
+  @JsonProperty(StepSpecTypeConstants.PLACEHOLDER)
+  DELETE("Delete", Arrays.asList(ServiceDefinitionType.KUBERNETES), "Kubernetes", StepSpecTypeConstants.PLACEHOLDER),
+  @JsonProperty(StepSpecTypeConstants.PLACEHOLDER)
   CANARY_DEPLOYMENT(
-      "Deployment", Arrays.asList(ServiceDefinitionType.KUBERNETES), "Kubernetes", StepSpecType.PLACEHOLDER),
+      "Deployment", Arrays.asList(ServiceDefinitionType.KUBERNETES), "Kubernetes", StepSpecTypeConstants.PLACEHOLDER),
 
   // Infrastructure Provisioners
-  @JsonProperty(StepSpecType.PLACEHOLDER)
+  @JsonProperty(StepSpecTypeConstants.PLACEHOLDER)
   TERRAFORM_APPLY("Terraform Apply", Arrays.asList(ServiceDefinitionType.values()),
-      "Infrastructure Provisioners/Terraform", StepSpecType.PLACEHOLDER),
-  @JsonProperty(StepSpecType.PLACEHOLDER)
+      "Infrastructure Provisioners/Terraform", StepSpecTypeConstants.PLACEHOLDER),
+  @JsonProperty(StepSpecTypeConstants.PLACEHOLDER)
   TERRAFORM_PROVISION("Terraform Provision", Arrays.asList(ServiceDefinitionType.values()),
-      "Infrastructure Provisioners/Terraform", StepSpecType.PLACEHOLDER),
-  @JsonProperty(StepSpecType.PLACEHOLDER)
+      "Infrastructure Provisioners/Terraform", StepSpecTypeConstants.PLACEHOLDER),
+  @JsonProperty(StepSpecTypeConstants.PLACEHOLDER)
   TERRAFORM_DELETE("Terraform Delete", Arrays.asList(ServiceDefinitionType.KUBERNETES),
-      "Infrastructure Provisioners/Terraform", StepSpecType.PLACEHOLDER),
-  @JsonProperty(StepSpecType.PLACEHOLDER)
+      "Infrastructure Provisioners/Terraform", StepSpecTypeConstants.PLACEHOLDER),
+  @JsonProperty(StepSpecTypeConstants.PLACEHOLDER)
   CREATE_STACK("Create Stack", Arrays.asList(ServiceDefinitionType.values()),
-      "Infrastructure Provisioners/Cloudformation", StepSpecType.PLACEHOLDER),
-  @JsonProperty(StepSpecType.PLACEHOLDER)
+      "Infrastructure Provisioners/Cloudformation", StepSpecTypeConstants.PLACEHOLDER),
+  @JsonProperty(StepSpecTypeConstants.PLACEHOLDER)
   DELETE_STACK("Delete Stack", Arrays.asList(ServiceDefinitionType.values()),
-      "Infrastructure Provisioners/Cloudformation", StepSpecType.PLACEHOLDER),
-  @JsonProperty(StepSpecType.PLACEHOLDER)
+      "Infrastructure Provisioners/Cloudformation", StepSpecTypeConstants.PLACEHOLDER),
+  @JsonProperty(StepSpecTypeConstants.PLACEHOLDER)
   SHELL_SCRIPT_PROVISIONER("Shell Script Provisioner", Arrays.asList(ServiceDefinitionType.values()),
-      "Infrastructure Provisioners/Shell Script Provisioner", StepSpecType.PLACEHOLDER),
+      "Infrastructure Provisioners/Shell Script Provisioner", StepSpecTypeConstants.PLACEHOLDER),
 
   // Issue Tracking
-  @JsonProperty(StepSpecType.PLACEHOLDER)
-  JIRA("Jira", Arrays.asList(ServiceDefinitionType.values()), "Issue Tracking", StepSpecType.PLACEHOLDER),
-  @JsonProperty(StepSpecType.PLACEHOLDER)
-  SERVICENOW("ServiceNow", Arrays.asList(ServiceDefinitionType.values()), "Issue Tracking", StepSpecType.PLACEHOLDER),
+  @JsonProperty(StepSpecTypeConstants.PLACEHOLDER)
+  JIRA("Jira", Arrays.asList(ServiceDefinitionType.values()), "Issue Tracking", StepSpecTypeConstants.PLACEHOLDER),
+  @JsonProperty(StepSpecTypeConstants.PLACEHOLDER)
+  SERVICENOW(
+      "ServiceNow", Arrays.asList(ServiceDefinitionType.values()), "Issue Tracking", StepSpecTypeConstants.PLACEHOLDER),
   // Notifications
-  @JsonProperty(StepSpecType.PLACEHOLDER)
-  EMAIL("Email", Arrays.asList(ServiceDefinitionType.values()), "Notification", StepSpecType.PLACEHOLDER),
+  @JsonProperty(StepSpecTypeConstants.PLACEHOLDER)
+  EMAIL("Email", Arrays.asList(ServiceDefinitionType.values()), "Notification", StepSpecTypeConstants.PLACEHOLDER),
   // Flow Control
-  @JsonProperty(StepSpecType.PLACEHOLDER)
-  BARRIERS("Barriers", Arrays.asList(ServiceDefinitionType.values()), "Flow Control", StepSpecType.PLACEHOLDER),
+  @JsonProperty(StepSpecTypeConstants.PLACEHOLDER)
+  BARRIERS(
+      "Barriers", Arrays.asList(ServiceDefinitionType.values()), "Flow Control", StepSpecTypeConstants.PLACEHOLDER),
   // Utilities
-  @JsonProperty(StepSpecType.SHELL_SCRIPT)
-  SHELL_SCRIPT(
-      "Shell Script", Arrays.asList(ServiceDefinitionType.values()), "Utilites/Scripted", StepSpecType.SHELL_SCRIPT),
-  @JsonProperty(StepSpecType.HTTP)
-  HTTP("Http", Arrays.asList(ServiceDefinitionType.values()), "Utilites/Scripted/", StepSpecType.HTTP),
-  @JsonProperty(StepSpecType.PLACEHOLDER)
+  @JsonProperty(StepSpecTypeConstants.SHELL_SCRIPT)
+  SHELL_SCRIPT("Shell Script", Arrays.asList(ServiceDefinitionType.values()), "Utilites/Scripted",
+      StepSpecTypeConstants.SHELL_SCRIPT),
+  @JsonProperty(StepSpecTypeConstants.HTTP)
+  HTTP("Http", Arrays.asList(ServiceDefinitionType.values()), "Utilites/Scripted/", StepSpecTypeConstants.HTTP),
+  @JsonProperty(StepSpecTypeConstants.PLACEHOLDER)
   NEW_RELIC_DEPLOYMENT_MAKER("New Relic Deployment Maker", Arrays.asList(ServiceDefinitionType.values()),
-      "Utilites/Non-Scripted/", StepSpecType.PLACEHOLDER),
-  @JsonProperty(StepSpecType.PLACEHOLDER)
+      "Utilites/Non-Scripted/", StepSpecTypeConstants.PLACEHOLDER),
+  @JsonProperty(StepSpecTypeConstants.PLACEHOLDER)
   TEMPLATIZED_SECRET_MANAGER("Templatized Secret Manager", Arrays.asList(ServiceDefinitionType.values()),
-      "Utilites/Non-Scripted/", StepSpecType.PLACEHOLDER);
+      "Utilites/Non-Scripted/", StepSpecTypeConstants.PLACEHOLDER);
 
   private String displayName;
   private List<ServiceDefinitionType> serviceDefinitionTypes;

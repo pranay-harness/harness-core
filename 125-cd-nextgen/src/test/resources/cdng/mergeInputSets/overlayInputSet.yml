@@ -1,0 +1,7 @@
+overlayInputSet:
+  name: overlay1
+  identifier: overlay1
+  description: input set description
+  inputSetReferences:
+    - input3
+    - input4

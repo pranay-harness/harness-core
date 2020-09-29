@@ -43,6 +43,11 @@ public class ParameterVisitorFieldProcessor implements VisitableFieldProcessor<P
 
   @Override
   public boolean isNull(ParameterField<?> actualField) {
-    return actualField.equals(ParameterField.ofNull());
+    if (actualField.getExpressionValue() != null || actualField.getInputSetValidator() != null
+        || actualField.getResponseField() != null || actualField.getValue() != null) {
+      return false;
+    }
+    // Every flag should be false.
+    return !actualField.isExpression() && !actualField.isJsonResponseField() && !actualField.isTypeString();
   }
 }

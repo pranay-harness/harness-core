@@ -13,6 +13,9 @@ public class DockerHubArtifactConfigVisitorHelper implements ConfigValidator {
   @Override
   public Object createDummyVisitableElement(Object originalElement) {
     DockerHubArtifactConfig dockerHubArtifactConfig = (DockerHubArtifactConfig) originalElement;
-    return DockerHubArtifactConfig.builder().identifier(dockerHubArtifactConfig.getIdentifier()).build();
+    return DockerHubArtifactConfig.builder()
+        .identifier(dockerHubArtifactConfig.getIdentifier())
+        .primaryArtifact(dockerHubArtifactConfig.isPrimaryArtifact())
+        .build();
   }
 }

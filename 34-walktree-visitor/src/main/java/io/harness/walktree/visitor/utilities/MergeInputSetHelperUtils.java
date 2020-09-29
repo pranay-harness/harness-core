@@ -14,7 +14,6 @@ import lombok.experimental.UtilityClass;
 import lombok.extern.slf4j.Slf4j;
 
 import java.lang.reflect.Field;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
@@ -260,7 +259,7 @@ public class MergeInputSetHelperUtils {
         inputSetFieldValue, elementField.getName(), inputSetIdentifier, isInputSetExpression, errorMessage);
 
     if (errorResponse != null) {
-      return responseWrapperBuilder.errors(Arrays.asList(errorResponse)).build();
+      return responseWrapperBuilder.errors(Stream.of(errorResponse).collect(Collectors.toList())).build();
     }
 
     // If currentElementFieldValue is inputSet expression, then no error
@@ -275,7 +274,7 @@ public class MergeInputSetHelperUtils {
         inputSetFieldValue, elementField.getName(), inputSetIdentifier, isInputSetValueValid, errorMessage);
 
     if (errorResponse != null) {
-      return responseWrapperBuilder.errors(Arrays.asList(errorResponse)).build();
+      return responseWrapperBuilder.errors(Stream.of(errorResponse).collect(Collectors.toList())).build();
     }
     return responseWrapperBuilder.build();
   }

@@ -1,68 +1,71 @@
-pipeline:
-  identifier: myPipeline1
-  stages:
-    - stage:
-        identifier: qa
-        type: Deployment
-        spec:
-          service:
-            identifier: service2 #adding comments to check
-            serviceDefinition:
-              type: Kubernetes # Can it be type to make it consistent with other types
-              spec:
-                artifacts:
-                  primary:
-                    type: Dockerhub
-                    spec:
-                      imagePath: image2
-                  sidecars:
-                    - sidecar:
-                        identifier: sidecar1
-                        type: Dockerhub
-                        spec:
-                          tag: tag2
-                manifests:
-                  - manifest:
-                      identifier: specFiles
-                      type: K8sManifest
+inputSet:
+  identifier: input4
+  name: input4
+  pipeline:
+    identifier: myPipeline1
+    stages:
+      - stage:
+          identifier: qa
+          type: Deployment
+          spec:
+            service:
+              identifier: service2 #adding comments to check
+              serviceDefinition:
+                type: Kubernetes # Can it be type to make it consistent with other types
+                spec:
+                  artifacts:
+                    primary:
+                      type: Dockerhub
                       spec:
-                        store:
-                          type: Git
+                        imagePath: image2
+                    sidecars:
+                      - sidecar:
+                          identifier: sidecar1
+                          type: Dockerhub
                           spec:
-                            paths:
-                              - path3
-                              - path4
-                manifestOverrideSets:
-                  - overrideSet:
-                      identifier: overrideSet1
-                      manifests:
-                        - manifest:
-                            identifier: baseValues
-                            type: K8sManifest
+                            tag: tag2
+                  manifests:
+                    - manifest:
+                        identifier: specFiles
+                        type: K8sManifest
+                        spec:
+                          store:
+                            type: Git
                             spec:
-                              store:
-                                type: Git
-                                # Git|Local
-                                spec:
-                                  branch: masterOverride2
-          infrastructure:
-            environment:
-              identifier: env2
-            infrastructureDefinition:
-              type: KubernetesDirect
-              spec:
-                namespace: prod2
-          execution:
-            steps:
-              - parallel:
-                  - step:
-                      identifier: rolloutDeployment
-                      type: K8sRollingDeploy
-                      spec:
-                        skipDryRun: true
-            rollbackSteps:
-              - step:
-                  identifier: rollbackRolloutDeployment1
-                  type: K8sRollingRollback
-                  spec:
-                    timeout: 5
+                              paths:
+                                - path3
+                                - path4
+                  manifestOverrideSets:
+                    - overrideSet:
+                        identifier: overrideSet1
+                        manifests:
+                          - manifest:
+                              identifier: baseValues
+                              type: K8sManifest
+                              spec:
+                                store:
+                                  type: Git
+                                  # Git|Local
+                                  spec:
+                                    branch: masterOverride2
+            infrastructure:
+              environment:
+                identifier: env2
+              infrastructureDefinition:
+                type: KubernetesDirect
+                spec:
+                  namespace: prod2
+            execution:
+              steps:
+                - parallel:
+                    - step:
+                        identifier: rolloutDeployment
+                        type: K8sRollingDeploy
+                        spec:
+                          skipDryRun: true
+              rollbackSteps:
+                - step:
+                    identifier: rollbackRolloutDeployment1
+                    type: K8sRollingRollback
+                    spec:
+                      timeout: 5

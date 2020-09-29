@@ -6,7 +6,7 @@ import io.harness.beans.ParameterField;
 import io.harness.cdng.executionplan.CDStepDependencyKey;
 import io.harness.cdng.executionplan.utils.PlanCreatorFacilitatorUtils;
 import io.harness.cdng.pipeline.CDStepInfo;
-import io.harness.cdng.pipeline.stepinfo.StepSpecType;
+import io.harness.cdng.pipeline.stepinfo.StepSpecTypeConstants;
 import io.harness.cdng.stepsdependency.constants.OutcomeExpressionConstants;
 import io.harness.cdng.stepsdependency.utils.CDStepDependencyUtils;
 import io.harness.cdng.visitor.LevelNodeQualifierName;
@@ -32,7 +32,7 @@ import java.util.Map;
 @Data
 @NoArgsConstructor
 @EqualsAndHashCode(callSuper = true)
-@JsonTypeName(StepSpecType.K8S_ROLLING_DEPLOY)
+@JsonTypeName(StepSpecTypeConstants.K8S_ROLLING_DEPLOY)
 @SimpleVisitorHelper(helperClass = K8sRollingStepInfoVisitorHelper.class)
 public class K8sRollingStepInfo extends K8sRollingStepParameters implements CDStepInfo, Visitable {
   @JsonIgnore private String name;
