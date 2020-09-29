@@ -24,7 +24,7 @@ public class NextGenServiceImpl implements NextGenService {
       String accountIdentifier, String connectorIdentifier, String orgIdentifier, String projectIdentifier) {
     ConnectorResponseDTO connectorResponse =
         requestExecutor
-            .execute(nextGenClient.get(accountIdentifier, connectorIdentifier, orgIdentifier, projectIdentifier))
+            .execute(nextGenClient.get(connectorIdentifier, accountIdentifier, orgIdentifier, projectIdentifier))
             .getData();
     return connectorResponse != null ? Optional.of(connectorResponse.getConnector()) : Optional.empty();
   }

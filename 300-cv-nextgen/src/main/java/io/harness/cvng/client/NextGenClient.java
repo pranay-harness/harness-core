@@ -15,15 +15,15 @@ import retrofit2.http.Query;
 import javax.validation.constraints.NotNull;
 
 public interface NextGenClient {
-  String CONNECTOR_BASE_PATH = "accounts/{accountIdentifier}/connectors";
+  String CONNECTOR_BASE_PATH = "connectors";
 
   @POST(CONNECTOR_BASE_PATH)
   Call<ResponseDTO<ConnectorResponseDTO>> create(
       @Body ConnectorDTO connector, @Path("accountIdentifier") String accountIdentifier);
 
   @GET(CONNECTOR_BASE_PATH + "/{connectorIdentifier}")
-  Call<ResponseDTO<ConnectorResponseDTO>> get(@Path("accountIdentifier") String accountIdentifier,
-      @Path("connectorIdentifier") String connectorIdentifier, @Query("orgIdentifier") @NotNull String orgIdentifier,
+  Call<ResponseDTO<ConnectorResponseDTO>> get(@Path("connectorIdentifier") String connectorIdentifier,
+      @Query("accountIdentifier") String accountIdentifier, @Query("orgIdentifier") @NotNull String orgIdentifier,
       @Query("projectIdentifier") @NotNull String projectIdentifier);
 
   @GET("environments/{environmentIdentifier}")
