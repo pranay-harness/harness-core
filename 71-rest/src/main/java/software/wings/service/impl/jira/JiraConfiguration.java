@@ -4,11 +4,11 @@ import static io.harness.annotations.dev.HarnessTeam.CDC;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.jira.JiraAction;
+import io.harness.jira.JiraCustomFieldValue;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
-import software.wings.beans.jira.JiraCustomFieldValue;
-import software.wings.delegatetasks.jira.JiraAction;
 
 import java.util.List;
 import java.util.Map;

@@ -62,6 +62,8 @@ import io.harness.git.model.GitRepositoryType;
 import io.harness.git.model.PushResultGit;
 import io.harness.globalcontex.AuditGlobalContextData;
 import io.harness.globalcontex.PurgeGlobalContextData;
+import io.harness.jira.JiraAction;
+import io.harness.jira.JiraCustomFieldValue;
 import io.harness.k8s.model.HelmVersion;
 import io.harness.k8s.model.ImageDetails;
 import io.harness.k8s.model.IstioDestinationWeight;
@@ -180,5 +182,8 @@ public class ApiServiceBeansKryoRegister implements KryoRegistrar {
     kryo.register(PushResultGit.RefUpdate.class, 1426);
     kryo.register(FetchFilesResult.class, 1427);
     kryo.register(GitRepositoryType.class, 5270);
+
+    kryo.register(JiraAction.class, 5580);
+    kryo.register(JiraCustomFieldValue.class, 7177);
   }
 }

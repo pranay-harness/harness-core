@@ -4,6 +4,7 @@
 12-commons/src/main/java/io/harness/expression/ResolveObjectResponse.java
 12-commons/src/main/java/io/harness/registries/exceptions/DuplicateRegistryException.java
 12-commons/src/main/java/io/harness/registries/exceptions/UnregisteredKeyAccessException.java
+14-api-services-beans/src/main/java/io/harness/jira/JiraCustomFieldValue.java
 15-api-services/src/main/java/io/harness/artifacts/docker/beans/DockerImageManifestResponse.java
 15-api-services/src/main/java/io/harness/artifacts/docker/beans/DockerPublicImageTagResponse.java
 15-api-services/src/main/java/io/harness/artifacts/docker/client/DockerRestClientFactoryImpl.java
@@ -441,7 +442,6 @@
 71-rest/src/main/java/software/wings/beans/deployment/WorkflowVariablesMetadata.java
 71-rest/src/main/java/software/wings/beans/execution/RollbackWorkflowExecutionInfo.java
 71-rest/src/main/java/software/wings/beans/execution/WorkflowExecutionInfo.java
-71-rest/src/main/java/software/wings/beans/jira/JiraCustomFieldValue.java
 71-rest/src/main/java/software/wings/beans/jira/JiraTaskParameters.java
 71-rest/src/main/java/software/wings/beans/jira/JiraWebhookParameters.java
 71-rest/src/main/java/software/wings/beans/servicenow/ServiceNowCreateUpdateParams.java
