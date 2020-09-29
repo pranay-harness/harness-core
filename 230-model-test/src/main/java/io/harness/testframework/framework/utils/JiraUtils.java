@@ -5,8 +5,8 @@ import static software.wings.sm.StateType.JIRA_CREATE_UPDATE;
 
 import com.google.common.collect.ImmutableMap;
 
+import io.harness.jira.JiraCustomFieldValue;
 import software.wings.beans.GraphNode;
-import software.wings.beans.jira.JiraCustomFieldValue;
 
 import java.util.Collections;
 import java.util.HashMap;

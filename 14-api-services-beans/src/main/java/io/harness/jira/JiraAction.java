@@ -1,4 +1,4 @@
-package software.wings.delegatetasks.jira;
+package io.harness.jira;
 
 public enum JiraAction {
   CREATE_TICKET("Create Ticket"),

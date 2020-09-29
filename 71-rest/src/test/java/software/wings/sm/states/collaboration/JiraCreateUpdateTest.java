@@ -8,6 +8,7 @@ import static org.mockito.Mockito.when;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.harness.category.element.UnitTests;
 import io.harness.exception.HarnessJiraException;
+import io.harness.jira.JiraCustomFieldValue;
 import io.harness.rule.Owner;
 import net.sf.json.JSONObject;
 import org.junit.BeforeClass;
@@ -17,7 +18,6 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import software.wings.WingsBaseTest;
 import software.wings.api.jira.JiraCreateMetaResponse;
-import software.wings.beans.jira.JiraCustomFieldValue;
 import software.wings.sm.ExecutionContextImpl;
 
 import java.io.File;

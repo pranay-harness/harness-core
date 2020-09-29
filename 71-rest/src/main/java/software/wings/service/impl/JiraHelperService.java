@@ -1,9 +1,9 @@
 package software.wings.service.impl;
 
 import static io.harness.exception.WingsException.USER;
+import static io.harness.jira.JiraAction.CHECK_APPROVAL;
+import static io.harness.jira.JiraAction.FETCH_ISSUE;
 import static io.harness.validation.Validator.notNullCheck;
-import static software.wings.delegatetasks.jira.JiraAction.CHECK_APPROVAL;
-import static software.wings.delegatetasks.jira.JiraAction.FETCH_ISSUE;
 import static software.wings.service.ApprovalUtils.checkApproval;
 
 import com.google.inject.Inject;
@@ -17,6 +17,7 @@ import io.harness.delegate.beans.TaskData;
 import io.harness.exception.HarnessJiraException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
+import io.harness.jira.JiraAction;
 import io.harness.tasks.Cd1SetupFields;
 import io.harness.waiter.WaitNotifyEngine;
 import lombok.extern.slf4j.Slf4j;
@@ -32,7 +33,6 @@ import software.wings.beans.TaskType;
 import software.wings.beans.approval.ApprovalPollingJobEntity;
 import software.wings.beans.approval.JiraApprovalParams;
 import software.wings.beans.jira.JiraTaskParameters;
-import software.wings.delegatetasks.jira.JiraAction;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.StateExecutionService;
 import software.wings.service.intfc.WorkflowExecutionService;

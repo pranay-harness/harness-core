@@ -5,13 +5,13 @@ import static io.harness.annotations.dev.HarnessTeam.CDC;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.ExecutionStatus;
 import io.harness.delegate.beans.DelegateTaskNotifyResponseData;
+import io.harness.jira.JiraAction;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import net.sf.json.JSONArray;
 import net.sf.json.JSONObject;
 import software.wings.api.ExecutionDataValue;
-import software.wings.delegatetasks.jira.JiraAction;
 import software.wings.sm.StateExecutionData;
 
 import java.util.Map;
