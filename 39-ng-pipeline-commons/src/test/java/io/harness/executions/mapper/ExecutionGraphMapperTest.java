@@ -1,6 +1,9 @@
 package io.harness.executions.mapper;
 
-import static io.harness.executions.beans.PipelineExecutionStatus.SUCCESS;
+import static io.harness.cdng.pipeline.executions.ExecutionStatus.FAILED;
+import static io.harness.cdng.pipeline.executions.ExecutionStatus.RUNNING;
+import static io.harness.cdng.pipeline.executions.ExecutionStatus.SUCCESS;
+import static io.harness.cdng.pipeline.executions.ExecutionStatus.WAITING;
 import static io.harness.rule.OwnerRule.VAIBHAV_SI;
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -10,6 +13,7 @@ import io.harness.beans.GraphVertex;
 import io.harness.beans.OrchestrationAdjacencyList;
 import io.harness.category.element.UnitTests;
 import io.harness.dto.OrchestrationGraph;
+import io.harness.execution.status.Status;
 import io.harness.executions.beans.ExecutionGraph;
 import io.harness.executions.beans.ExecutionNode;
 import io.harness.executions.beans.ExecutionNodeAdjacencyList;
@@ -36,10 +40,10 @@ public class ExecutionGraphMapperTest extends CategoryTest {
   }
 
   private ExecutionGraph prepareExpectedExecutionGraph() {
-    ExecutionNode executionNode1 = ExecutionNode.builder().name("node1").uuid("id1").status(SUCCESS).build();
-    ExecutionNode executionNode2 = ExecutionNode.builder().name("node2").uuid("id2").status(SUCCESS).build();
+    ExecutionNode executionNode1 = ExecutionNode.builder().name("node1").uuid("id1").status(RUNNING).build();
+    ExecutionNode executionNode2 = ExecutionNode.builder().name("node2").uuid("id2").status(FAILED).build();
     ExecutionNode executionNode3 = ExecutionNode.builder().name("node3").uuid("id3").status(SUCCESS).build();
-    ExecutionNode executionNode4 = ExecutionNode.builder().name("node4").uuid("id4").status(SUCCESS).build();
+    ExecutionNode executionNode4 = ExecutionNode.builder().name("node4").uuid("id4").status(WAITING).build();
 
     Map<String, ExecutionNode> executionNodeMap = new HashMap<>();
     executionNodeMap.put("id1", executionNode1);
@@ -60,10 +64,10 @@ public class ExecutionGraphMapperTest extends CategoryTest {
   }
 
   private OrchestrationGraph prepareOrchestrationGraph() {
-    GraphVertex node1 = GraphVertex.builder().name("node1").uuid("id1").build();
-    GraphVertex node2 = GraphVertex.builder().name("node2").uuid("id2").build();
-    GraphVertex node3 = GraphVertex.builder().name("node3").uuid("id3").build();
-    GraphVertex node4 = GraphVertex.builder().name("node4").uuid("id4").build();
+    GraphVertex node1 = GraphVertex.builder().name("node1").status(Status.RUNNING).uuid("id1").build();
+    GraphVertex node2 = GraphVertex.builder().name("node2").status(Status.FAILED).uuid("id2").build();
+    GraphVertex node3 = GraphVertex.builder().name("node3").status(Status.SUCCEEDED).uuid("id3").build();
+    GraphVertex node4 = GraphVertex.builder().name("node4").status(Status.TIMED_WAITING).uuid("id4").build();
 
     Map<String, GraphVertex> graphVertexMap = new HashMap<>();
     graphVertexMap.put("id1", node1);

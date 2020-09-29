@@ -8,6 +8,7 @@ import io.harness.cdng.variables.StageVariables;
 import io.harness.cdng.visitor.LevelNodeQualifierName;
 import io.harness.cdng.visitor.helpers.deploymentstage.DeploymentStageVisitorHelper;
 import io.harness.common.SwaggerConstants;
+import io.harness.pipeline.executions.NGStageType;
 import io.harness.walktree.beans.LevelNode;
 import io.harness.walktree.beans.VisitableChildren;
 import io.harness.walktree.visitor.SimpleVisitorHelper;
@@ -20,9 +21,12 @@ import lombok.Getter;
 
 @Data
 @Builder
-@JsonTypeName(NGStageType.DEPLOYMENT_STAGE)
+@JsonTypeName("Deployment")
 @SimpleVisitorHelper(helperClass = DeploymentStageVisitorHelper.class)
 public class DeploymentStage implements CDStage, Visitable {
+  @JsonIgnore public static String DEPLOYMENT_NAME = "Deployment";
+  @JsonIgnore public static NGStageType DEPLOYMENT_STAGE_TYPE = NGStageType.builder().type(DEPLOYMENT_NAME).build();
+
   @Getter(onMethod = @__(@JsonIgnore)) @JsonIgnore String identifier;
   @Getter(onMethod = @__(@JsonIgnore)) @JsonIgnore String name;
   ServiceConfig service;
@@ -46,6 +50,10 @@ public class DeploymentStage implements CDStage, Visitable {
   }
 
   @Override
+  public NGStageType getStageType() {
+    return DEPLOYMENT_STAGE_TYPE;
+  }
+
   public LevelNode getLevelNode() {
     return LevelNode.builder().qualifierName(LevelNodeQualifierName.SPEC).build();
   }

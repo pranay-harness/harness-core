@@ -19,7 +19,7 @@ import io.harness.cdng.pipeline.beans.dto.CDPipelineRequestDTO;
 import io.harness.cdng.pipeline.beans.dto.CDPipelineResponseDTO;
 import io.harness.cdng.pipeline.beans.dto.CDPipelineSummaryResponseDTO;
 import io.harness.cdng.pipeline.beans.entities.CDPipelineEntity;
-import io.harness.cdng.pipeline.service.NgPipelineExecutionService;
+import io.harness.cdng.pipeline.executions.service.NgPipelineExecutionService;
 import io.harness.cdng.pipeline.service.PipelineServiceImpl;
 import io.harness.cdng.service.beans.ServiceDefinitionType;
 import io.harness.ng.core.RestQueryFilterParser;

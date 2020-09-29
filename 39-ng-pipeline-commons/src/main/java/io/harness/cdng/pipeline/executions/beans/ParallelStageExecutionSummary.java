@@ -9,6 +9,6 @@ import java.util.List;
 @Data
 @Builder
 @JsonTypeName("parallel")
-public class ParallelStageExecution implements StageExecution {
-  List<StageExecution> stageExecutions;
+public class ParallelStageExecutionSummary implements StageExecutionSummary {
+  List<StageExecutionSummary> stageExecutionSummaries;
 }

@@ -8,7 +8,7 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo;
 
 @JsonTypeInfo(use = NAME, include = WRAPPER_OBJECT)
 @JsonSubTypes({
-  @JsonSubTypes.Type(value = CDStageExecutionDTO.class, name = "CDStage")
-  , @JsonSubTypes.Type(value = ParallelStageExecutionDTO.class, name = "parallel")
+  @JsonSubTypes.Type(value = CDStageExecutionSummaryDTO.class, name = "stage")
+  , @JsonSubTypes.Type(value = ParallelStageExecutionSummaryDTO.class, name = "parallel")
 })
-public interface StageExecutionDTO {}
+public interface StageExecutionSummaryDTO {}

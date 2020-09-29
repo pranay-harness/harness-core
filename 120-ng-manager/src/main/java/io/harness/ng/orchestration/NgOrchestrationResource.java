@@ -5,7 +5,7 @@ import com.google.inject.Inject;
 
 import io.harness.beans.EmbeddedUser;
 import io.harness.beans.Graph;
-import io.harness.cdng.pipeline.service.NgPipelineExecutionService;
+import io.harness.cdng.pipeline.executions.service.NgPipelineExecutionService;
 import io.harness.dto.OrchestrationGraph;
 import io.harness.engine.OrchestrationService;
 import io.harness.execution.PlanExecution;

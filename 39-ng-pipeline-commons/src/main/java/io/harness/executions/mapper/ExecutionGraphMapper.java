@@ -3,12 +3,12 @@ package io.harness.executions.mapper;
 import io.harness.beans.EdgeList;
 import io.harness.beans.GraphVertex;
 import io.harness.beans.OrchestrationAdjacencyList;
+import io.harness.cdng.pipeline.executions.ExecutionStatus;
 import io.harness.dto.OrchestrationGraph;
 import io.harness.executions.beans.ExecutionGraph;
 import io.harness.executions.beans.ExecutionGraph.ExecutionGraphBuilder;
 import io.harness.executions.beans.ExecutionNode;
 import io.harness.executions.beans.ExecutionNodeAdjacencyList;
-import io.harness.executions.beans.PipelineExecutionStatus;
 import lombok.NonNull;
 
 import java.util.HashMap;
@@ -41,7 +41,7 @@ public class ExecutionGraphMapper {
         .failureInfo(graphVertex.getFailureInfo())
         .name(graphVertex.getName())
         .startTs(graphVertex.getStartTs())
-        .status(PipelineExecutionStatus.SUCCESS) // TODO: use status mapper
+        .status(ExecutionStatus.getExecutionStatus(graphVertex.getStatus()))
         .stepType(graphVertex.getStepType())
         .uuid(graphVertex.getUuid())
         .build();
