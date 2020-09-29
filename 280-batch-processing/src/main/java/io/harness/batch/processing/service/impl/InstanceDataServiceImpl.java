@@ -10,6 +10,7 @@ import io.harness.batch.processing.entities.InstanceData;
 import io.harness.batch.processing.entities.InstanceData.InstanceDataKeys;
 import io.harness.batch.processing.pricing.data.CloudProvider;
 import io.harness.batch.processing.service.intfc.InstanceDataService;
+import io.harness.batch.processing.tasklet.util.CacheUtils;
 import lombok.EqualsAndHashCode;
 import lombok.Value;
 import lombok.extern.slf4j.Slf4j;
@@ -26,11 +27,12 @@ import java.util.stream.Collectors;
 
 @Service
 @Slf4j
-public class InstanceDataServiceImpl implements InstanceDataService {
+public class InstanceDataServiceImpl extends CacheUtils implements InstanceDataService {
   @Autowired private InstanceDataDao instanceDataDao;
 
   private final LoadingCache<CacheKey, PrunedInstanceData> instanceDataCache =
       Caffeine.newBuilder()
+          .recordStats()
           .expireAfterWrite(24, TimeUnit.HOURS)
           .maximumSize(10_000)
           .build(key -> pruneInstanceData(key.accountId, key.clusterId, key.instanceId, key.occurredAt));

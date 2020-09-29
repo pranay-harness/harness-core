@@ -210,7 +210,7 @@ public class K8sPodInfoEventTaskletTest extends CategoryTest {
   }
 
   @Test
-  @Owner(developers = HITESH, intermittent = true)
+  @Owner(developers = HITESH)
   @Category(UnitTests.class)
   public void shouldCreateEmptyInstancePodInfo() throws Exception {
     InstanceData instanceData = InstanceData.builder().build();
