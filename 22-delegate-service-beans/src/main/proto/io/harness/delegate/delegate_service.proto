@@ -126,8 +126,11 @@ message RegisterCallbackResponse {
   callback.DelegateCallbackToken callback_token = 1;
 }
 
+// Next ID: 8
 message CreatePerpetualTaskRequest {
   AccountId account_id = 1;
+  // client provides a task ID to uniquely identify the task on their side
+  string client_task_id = 7;
   string type = 2;
   perpetualtask.PerpetualTaskSchedule schedule = 3;
   perpetualtask.PerpetualTaskClientContextDetails context = 4;

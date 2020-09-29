@@ -280,6 +280,10 @@ public class DelegateServiceGrpcImpl extends DelegateServiceImplBase {
 
       PerpetualTaskClientContextBuilder contextBuilder = PerpetualTaskClientContext.builder();
 
+      if (!request.getClientTaskId().isEmpty()) {
+        contextBuilder.clientId(request.getClientTaskId());
+      }
+
       if (request.getContext().hasTaskClientParams()) {
         contextBuilder.clientParams(request.getContext().getTaskClientParams().getParamsMap());
       } else if (request.getContext().hasExecutionBundle()) {
