@@ -12,6 +12,7 @@ import io.harness.delegate.beans.connector.awsconnector.AwsConnectorDTO;
 import io.harness.delegate.beans.connector.docker.DockerConnectorDTO;
 import io.harness.delegate.beans.connector.gcpconnector.GcpConnectorDTO;
 import io.harness.delegate.beans.connector.gitconnector.GitConfigDTO;
+import io.harness.delegate.beans.connector.jira.JiraConnectorDTO;
 import io.harness.delegate.beans.connector.k8Connector.KubernetesClusterConfigDTO;
 import io.harness.delegate.beans.connector.localconnector.LocalConnectorDTO;
 import io.harness.delegate.beans.connector.splunkconnector.SplunkConnectorDTO;
@@ -56,6 +57,7 @@ public class ConnectorInfoDTO {
         @JsonSubTypes.Type(value = GcpConnectorDTO.class, name = "Gcp"),
         @JsonSubTypes.Type(value = AwsConnectorDTO.class, name = "Aws"),
         @JsonSubTypes.Type(value = ArtifactoryConnectorDTO.class, name = "Artifactory"),
+        @JsonSubTypes.Type(value = JiraConnectorDTO.class, name = "Jira")
   })
   @Valid
   @NotNull

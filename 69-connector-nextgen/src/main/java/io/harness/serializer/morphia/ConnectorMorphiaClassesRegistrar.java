@@ -16,6 +16,7 @@ import io.harness.connector.entities.embedded.gcpkmsconnector.GcpKmsConnector;
 import io.harness.connector.entities.embedded.gitconnector.GitConfig;
 import io.harness.connector.entities.embedded.gitconnector.GitSSHAuthentication;
 import io.harness.connector.entities.embedded.gitconnector.GitUserNamePasswordAuthentication;
+import io.harness.connector.entities.embedded.jira.JiraConnector;
 import io.harness.connector.entities.embedded.kubernetescluster.K8sClientKeyCert;
 import io.harness.connector.entities.embedded.kubernetescluster.K8sOpenIdConnect;
 import io.harness.connector.entities.embedded.kubernetescluster.K8sServiceAccount;
@@ -46,6 +47,7 @@ public class ConnectorMorphiaClassesRegistrar implements MorphiaRegistrar {
     set.add(GcpConfig.class);
     set.add(AwsConfig.class);
     set.add(ArtifactoryConnector.class);
+    set.add(JiraConnector.class);
   }
 
   @Override

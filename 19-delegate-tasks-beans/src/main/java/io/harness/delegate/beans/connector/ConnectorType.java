@@ -20,7 +20,8 @@ public enum ConnectorType {
   @JsonProperty("CustomSecretManager") CUSTOM("CustomSecretManager"),
   @JsonProperty("Gcp") GCP("Gcp"),
   @JsonProperty("Aws") AWS("Aws"),
-  @JsonProperty("Artifactory") ARTIFACTORY("Artifactory");
+  @JsonProperty("Artifactory") ARTIFACTORY("Artifactory"),
+  @JsonProperty("Jira") JIRA("Jira");
 
   private final String displayName;
 

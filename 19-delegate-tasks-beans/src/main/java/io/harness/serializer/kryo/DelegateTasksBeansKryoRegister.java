@@ -34,6 +34,7 @@ import io.harness.delegate.beans.connector.gitconnector.GitConnectionType;
 import io.harness.delegate.beans.connector.gitconnector.GitHTTPAuthenticationDTO;
 import io.harness.delegate.beans.connector.gitconnector.GitSSHAuthenticationDTO;
 import io.harness.delegate.beans.connector.gitconnector.GitSyncConfig;
+import io.harness.delegate.beans.connector.jira.JiraConnectorDTO;
 import io.harness.delegate.beans.connector.k8Connector.KubernetesAuthCredentialDTO;
 import io.harness.delegate.beans.connector.k8Connector.KubernetesAuthDTO;
 import io.harness.delegate.beans.connector.k8Connector.KubernetesAuthType;
@@ -324,5 +325,6 @@ public class DelegateTasksBeansKryoRegister implements KryoRegistrar {
     kryo.register(AzureVMAuthDTO.class, 19340);
     kryo.register(AzureVMAuthType.class, 19341);
     kryo.register(KubernetesCredentialDTO.class, 19342);
+    kryo.register(JiraConnectorDTO.class, 19343);
   }
 }

@@ -33,6 +33,8 @@ import io.harness.connector.mappers.gitconnectormapper.secretmanagermapper.Local
 import io.harness.connector.mappers.gitconnectormapper.secretmanagermapper.VaultConnectorSummaryDTOMapper;
 import io.harness.connector.mappers.gitconnectormapper.secretmanagermapper.VaultDTOToEntity;
 import io.harness.connector.mappers.gitconnectormapper.secretmanagermapper.VaultEntityToDTO;
+import io.harness.connector.mappers.jira.JiraDTOToEntity;
+import io.harness.connector.mappers.jira.JiraEntityToDTO;
 import io.harness.connector.mappers.kubernetesMapper.KubernetesConfigSummaryMapper;
 import io.harness.connector.mappers.kubernetesMapper.KubernetesDTOToEntity;
 import io.harness.connector.mappers.kubernetesMapper.KubernetesEntityToDTO;
@@ -89,6 +91,7 @@ public class ConnectorModule extends AbstractModule {
     connectorDTOToEntityMapBinder.addBinding(ConnectorType.AWS.getDisplayName()).to(AwsDTOToEntity.class);
     connectorDTOToEntityMapBinder.addBinding(ConnectorType.ARTIFACTORY.getDisplayName())
         .to(ArtifactoryDTOToEntity.class);
+    connectorDTOToEntityMapBinder.addBinding(ConnectorType.JIRA.getDisplayName()).to(JiraDTOToEntity.class);
 
     MapBinder<String, ConnectorEntityToDTOMapper> connectorEntityToDTOMapper =
         MapBinder.newMapBinder(binder(), String.class, ConnectorEntityToDTOMapper.class);
@@ -104,6 +107,7 @@ public class ConnectorModule extends AbstractModule {
     connectorEntityToDTOMapper.addBinding(ConnectorType.GCP.getDisplayName()).to(GcpEntityToDTO.class);
     connectorEntityToDTOMapper.addBinding(ConnectorType.AWS.getDisplayName()).to(AwsEntityToDTO.class);
     connectorEntityToDTOMapper.addBinding(ConnectorType.ARTIFACTORY.getDisplayName()).to(ArtifactoryEntityToDTO.class);
+    connectorEntityToDTOMapper.addBinding(ConnectorType.JIRA.getDisplayName()).to(JiraEntityToDTO.class);
 
     MapBinder<String, ConnectorConfigSummaryDTOMapper> connectorConfigSummaryDTOMapper =
         MapBinder.newMapBinder(binder(), String.class, ConnectorConfigSummaryDTOMapper.class);
