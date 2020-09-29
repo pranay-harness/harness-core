@@ -48,8 +48,11 @@ public class SplunkCVConfiguration extends LogsCVConfiguration {
 
   @Override
   public DataCollectionInfoV2 toDataCollectionInfo() {
-    SplunkDataCollectionInfoV2 splunkDataCollectionInfoV2 =
-        SplunkDataCollectionInfoV2.builder().query(getQuery()).hostnameField(getHostnameField()).build();
+    SplunkDataCollectionInfoV2 splunkDataCollectionInfoV2 = SplunkDataCollectionInfoV2.builder()
+                                                                .query(getQuery())
+                                                                .isAdvancedQuery(isAdvancedQuery())
+                                                                .hostnameField(getHostnameField())
+                                                                .build();
     fillDataCollectionInfoWithCommonFields(splunkDataCollectionInfoV2);
     return splunkDataCollectionInfoV2;
   }
@@ -66,5 +69,16 @@ public class SplunkCVConfiguration extends LogsCVConfiguration {
   public static class SplunkCVConfigurationYaml extends LogsCVConfigurationYaml {
     private boolean isAdvancedQuery;
     private String hostnameField;
+
+    @Attributes(title = "Is advanced query", required = false)
+    @DefaultValue("false")
+    @JsonProperty(value = "isAdvancedQuery")
+    public boolean isAdvancedQuery() {
+      return isAdvancedQuery;
+    }
+
+    public void setAdvancedQuery(boolean advancedQuery) {
+      this.isAdvancedQuery = advancedQuery;
+    }
   }
 }
