@@ -42,9 +42,9 @@ public class NodeExecutionStatusUpdateEventHandlerV2 implements AsyncOrchestrati
     OrchestrationGraphInternal graphInternal =
         graphGenerationService.getCachedOrchestrationGraphInternal(ambiance.getPlanExecutionId());
 
-    if (graphInternal.getRootNodeId() == null) {
+    if (graphInternal.getRootNodeIds().isEmpty()) {
       logger.info("Setting rootNodeId: [{}] for plan [{}]", nodeExecutionId, ambiance.getPlanExecutionId());
-      graphInternal = graphInternal.withRootNodeId(nodeExecutionId);
+      graphInternal.getRootNodeIds().add(nodeExecutionId);
     }
 
     Map<String, GraphVertex> graphVertexMap = graphInternal.getAdjacencyList().getGraphVertexMap();

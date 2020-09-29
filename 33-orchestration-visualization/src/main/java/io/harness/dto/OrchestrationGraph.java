@@ -10,6 +10,8 @@ import io.harness.execution.status.Status;
 import lombok.Builder;
 import lombok.Value;
 
+import java.util.List;
+
 @OwnedBy(CDC)
 @Value
 @Builder
@@ -21,6 +23,6 @@ public class OrchestrationGraph {
   Long endTs;
   Status status;
 
-  String rootNodeId;
+  List<String> rootNodeIds;
   OrchestrationAdjacencyList adjacencyList;
 }

@@ -7,6 +7,7 @@ import io.harness.annotations.Redesign;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.facilitator.FacilitatorObtainment;
 import io.harness.references.RefObject;
+import io.harness.skip.SkipType;
 import io.harness.state.StepType;
 import io.harness.state.io.StepParameters;
 import lombok.Builder;
@@ -36,7 +37,10 @@ public class PlanNode {
   @Singular List<AdviserObtainment> adviserObtainments;
   @Singular List<FacilitatorObtainment> facilitatorObtainments;
 
+  // skip
   boolean skipExpressionChain;
+
+  @Builder.Default SkipType skipGraphType = SkipType.NOOP;
 
   public PlanNode cloneForRetry(StepParameters parameters) {
     return PlanNode.builder()

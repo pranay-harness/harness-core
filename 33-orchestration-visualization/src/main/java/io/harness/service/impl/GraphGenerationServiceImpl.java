@@ -2,6 +2,7 @@ package io.harness.service.impl;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 
+import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
@@ -116,7 +117,7 @@ public class GraphGenerationServiceImpl implements GraphGenerationService {
             .startTs(planExecution.getStartTs())
             .endTs(planExecution.getEndTs())
             .status(planExecution.getStatus())
-            .rootNodeId(rootNodeId)
+            .rootNodeIds(Lists.newArrayList(rootNodeId))
             .adjacencyList(graphGenerator.generateAdjacencyList(rootNodeId, nodeExecutions, false))
             .build();
 
@@ -146,7 +147,7 @@ public class GraphGenerationServiceImpl implements GraphGenerationService {
             .startTs(planExecution.getStartTs())
             .endTs(planExecution.getEndTs())
             .status(planExecution.getStatus())
-            .rootNodeId(startingNodeId)
+            .rootNodeIds(Lists.newArrayList(startingNodeId))
             .adjacencyList(graphGenerator.generateAdjacencyList(startingNodeId, nodeExecutions, true));
 
     return graphBuilder.build();

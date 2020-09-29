@@ -36,7 +36,7 @@ public class OrchestrationGraphInternal implements Distributable, Nominal {
   @Wither Long endTs;
   @Wither Status status;
 
-  @Wither String rootNodeId;
+  List<String> rootNodeIds;
   OrchestrationAdjacencyList adjacencyList;
 
   @Override
