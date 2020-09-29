@@ -39,8 +39,10 @@ public class PageUtils {
 
   public static Pageable getPageRequest(PageRequest pageRequestDTO) {
     List<String> sortOrders = new ArrayList<>();
-    for (SortOrder sortOrder : pageRequestDTO.getSortOrders()) {
-      sortOrders.add(sortOrder.getFieldName() + sortOrder.getOrderType());
+    if (pageRequestDTO.getSortOrders() != null) {
+      for (SortOrder sortOrder : pageRequestDTO.getSortOrders()) {
+        sortOrders.add(sortOrder.getFieldName() + COMMA_SEPARATOR + sortOrder.getOrderType());
+      }
     }
     return getPageRequest(pageRequestDTO.getPageIndex(), pageRequestDTO.getPageSize(), sortOrders);
   }
