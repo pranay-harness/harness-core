@@ -43,7 +43,7 @@ public class GkeConsoleAppenderFactory<E extends DeferredProcessingAware> extend
       final LayoutWrappingEncoder<E> layoutEncoder = new LayoutWrappingEncoder<>();
       layoutEncoder.setLayout((Layout<E>) new CustomJsonLayout(context));
       consoleAppender.setEncoder(layoutEncoder);
-      consoleAppender.addFilter(levelFilterFactory.build(getThreshold()));
+      consoleAppender.addFilter(levelFilterFactory.build(threshold));
       getFilterFactories().forEach(f -> consoleAppender.addFilter(f.build()));
     }
     appender.start();
