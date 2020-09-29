@@ -1,95 +1,95 @@
 pipeline:
   identifier: myPipeline1
   stages:
-    - stage:
-        identifier: qa
-        type: Deployment
-        spec:
-          service:
-            identifier: ${input}
-            serviceDefinition:
-              type: Kubernetes # Can it be type to make it consistent with other types
-              spec:
-                artifacts:
-                  primary:
+  - stage:
+      identifier: qa
+      type: Deployment
+      spec:
+        service:
+          identifier: ${input}
+          serviceDefinition:
+            type: Kubernetes # Can it be type to make it consistent with other types
+            spec:
+              artifacts:
+                primary:
+                  type: Dockerhub
+                  spec:
+                    imagePath: ${input}
+                sidecars:
+                - sidecar:
+                    identifier: sidecar1
                     type: Dockerhub
                     spec:
                       imagePath: ${input}
-                  sidecars:
-                    - sidecar:
-                        identifier: sidecar1
-                        type: Dockerhub
-                        spec:
-                          imagePath: ${input}
-                          tag: ${input}
-                manifests:
+                      tag: ${input}
+              manifests:
+              - manifest:
+                  identifier: specFiles
+                  type: K8sManifest
+                  spec:
+                    store:
+                      type: Git
+                      spec:
+                        branch: ${input}
+                        paths: ${input}.allowedValues(['paths1', 'master/paths2', 'paths3'])
+              manifestOverrideSets:
+              - overrideSet:
+                  identifier: overrideSet1
+                  manifests:
                   - manifest:
-                      identifier: specFiles
+                      identifier: baseValues
                       type: K8sManifest
                       spec:
                         store:
                           type: Git
+                          # Git|Local
                           spec:
+                            connectorIdentifier: ${input}
                             branch: ${input}
-                            paths: ${input}.allowedValues(['paths1', 'master/paths2', 'paths3'])
-                manifestOverrideSets:
-                  - overrideSet:
-                      identifier: overrideSet1
-                      manifests:
-                        - manifest:
-                            identifier: baseValues
-                            type: K8sManifest
-                            spec:
-                              store:
-                                type: Git
-                                # Git|Local
-                                spec:
-                                  connectorIdentifier: ${input}
-                                  branch: ${input}
-          infrastructure:
-            environment:
-              name: ${input}
-              identifier: ${input}
-            infrastructureDefinition:
-              type: KubernetesDirect
+        infrastructure:
+          environment:
+            name: ${input}
+            identifier: ${input}
+          infrastructureDefinition:
+            type: KubernetesDirect
+            spec:
+              connectorIdentifier: ${input}
+              namespace: ${input}.allowedValues(jexl(${stage.name} == 'qa' ? 'dev1, qa1':'prod1, stage1'))
+        execution:
+          steps:
+          - parallel:
+            - step:
+                identifier: rolloutDeployment
+                type: K8sRollingDeploy
+                spec:
+                  timeout: ${input}.allowedValues(100, 1000, 100)
+                  skipDryRun: ${input}.allowedValues(true, false)
+          rollbackSteps:
+          - step:
+              identifier: rollbackRolloutDeployment1
+              type: K8sRollingRollback
               spec:
-                connectorIdentifier: ${input}
-                namespace: ${input}.allowedValues(jexl(${stage.name} == 'qa' ? 'dev1, qa1':'prod1, stage1'))
-          execution:
-            steps:
-              - parallel:
-                  - step:
-                      identifier: rolloutDeployment
-                      type: K8sRollingDeploy
-                      spec:
-                        timeout: ${input}.allowedValues(100, 1000, 100)
-                        skipDryRun: ${input}.allowedValues(true, false)
-            rollbackSteps:
-              - step:
-                  identifier: rollbackRolloutDeployment1
-                  type: K8sRollingRollback
-                  spec:
-                    timeout: ${input}.allowedValues(100, 1000, 100)
-    - stage:
-        identifier: prod
-        type: Deployment
-        spec:
-          service:
-            useFromStage:
-              stage: ${input}.regex(^prod*)
-            stageOverrides:
-              manifests:
-                - manifest:
-                    identifier: prodOverride
-                    type: Values
+                timeout: ${input}.allowedValues(100, 1000, 100)
+  - stage:
+      identifier: prod
+      type: Deployment
+      spec:
+        service:
+          useFromStage:
+            stage: ${input}.regex(^prod*)
+          stageOverrides:
+            manifests:
+            - manifest:
+                identifier: prodOverride
+                type: Values
+                spec:
+                  store:
+                    type: Git
                     spec:
-                      store:
-                        type: Git
-                        spec:
-                          connectorIdentifier: ${input}
-                          branch: ${input}
-          infrastructure:
-            useFromStage:
-              overrides:
-                environment:
-                  identifier: ${input}
+                      connectorIdentifier: ${input}
+                      branch: ${input}
+        infrastructure:
+          useFromStage:
+            overrides:
+              environment:
+                identifier: ${input}

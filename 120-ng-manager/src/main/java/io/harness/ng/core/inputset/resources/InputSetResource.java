@@ -8,11 +8,15 @@ import com.codahale.metrics.annotation.ExceptionMetered;
 import com.codahale.metrics.annotation.Timed;
 import io.harness.NGConstants;
 import io.harness.cdng.inputset.beans.entities.CDInputSetEntity;
+import io.harness.cdng.inputset.beans.entities.MergeInputSetResponse;
 import io.harness.cdng.inputset.beans.resource.InputSetListType;
 import io.harness.cdng.inputset.beans.resource.InputSetResponseDTO;
 import io.harness.cdng.inputset.beans.resource.InputSetSummaryResponseDTO;
 import io.harness.cdng.inputset.beans.resource.InputSetTemplateResponseDTO;
+import io.harness.cdng.inputset.beans.resource.MergeInputSetRequestDTO;
+import io.harness.cdng.inputset.beans.resource.MergeInputSetResponseDTO;
 import io.harness.cdng.inputset.beans.yaml.CDInputSet;
+import io.harness.cdng.inputset.helpers.InputSetMergeHelper;
 import io.harness.cdng.inputset.mappers.InputSetElementMapper;
 import io.harness.cdng.inputset.mappers.InputSetFilterHelper;
 import io.harness.cdng.inputset.services.InputSetEntityService;
@@ -47,6 +51,7 @@ import org.springframework.data.mongodb.core.query.Criteria;
 
 import java.util.List;
 import java.util.Optional;
+import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
@@ -72,6 +77,7 @@ import javax.ws.rs.QueryParam;
 public class InputSetResource {
   private final InputSetEntityService inputSetEntityService;
   private final PipelineService ngPipelineService;
+  private final InputSetMergeHelper inputSetMergeHelper;
 
   @GET
   @Path("{inputSetIdentifier}")
@@ -248,11 +254,31 @@ public class InputSetResource {
         ngPipelineService.getPipeline(pipelineIdentifier, accountId, orgIdentifier, projectIdentifier);
     if (pipeline.isPresent()) {
       String pipelineYaml = pipeline.get().getYamlPipeline();
-      String inputSetTemplate = inputSetEntityService.getTemplateFromPipeline(pipelineYaml);
+      String inputSetTemplate = inputSetMergeHelper.getTemplateFromPipeline(pipelineYaml);
       return ResponseDTO.newResponse(
           InputSetTemplateResponseDTO.builder().inputSetTemplateYaml(inputSetTemplate).build());
     } else {
       throw new InvalidRequestException("Pipeline not found");
     }
+  }
+
+  @POST
+  @Path("merge")
+  @Timed
+  @ExceptionMetered
+  @ApiOperation(
+      value = "Merges given input sets list on pipeline and return input set template format of applied pipeline",
+      nickname = "getMergeInputSetFromPipelineTemplateWithListInput")
+  public ResponseDTO<MergeInputSetResponseDTO>
+  getMergeInputSetFromPipelineTemplate(@NotNull @QueryParam(NGConstants.ACCOUNT_KEY) String accountId,
+      @NotNull @QueryParam(NGConstants.ORG_KEY) String orgIdentifier,
+      @NotNull @QueryParam(NGConstants.PROJECT_KEY) String projectIdentifier,
+      @NotNull @QueryParam(NGConstants.PIPELINE_KEY) String pipelineIdentifier,
+      @QueryParam("useFQNIfError") @DefaultValue("false") boolean useFQNIfErrorResponse,
+      @NotNull @Valid MergeInputSetRequestDTO mergeInputSetRequestDTO) {
+    MergeInputSetResponse mergeInputSetResponse =
+        inputSetMergeHelper.getMergePipelineYamlFromInputIdentifierList(accountId, orgIdentifier, projectIdentifier,
+            pipelineIdentifier, mergeInputSetRequestDTO.getInputSetReferences(), true, useFQNIfErrorResponse);
+    return ResponseDTO.newResponse(InputSetElementMapper.toMergeInputSetResponseDTO(mergeInputSetResponse));
   }
 }

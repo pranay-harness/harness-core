@@ -4,7 +4,6 @@ import static io.harness.rule.OwnerRule.NAMAN;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-import com.google.common.io.Resources;
 import com.google.inject.Inject;
 
 import io.harness.category.element.UnitTests;
@@ -24,10 +23,10 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.mongodb.core.query.Criteria;
 
-import java.io.IOException;
-import java.nio.charset.StandardCharsets;
-import java.util.Objects;
+import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 public class InputSetEntityServiceImplTest extends CDNGBaseTest {
   @Inject InputSetEntityServiceImpl inputSetEntityService;
@@ -179,12 +178,13 @@ public class InputSetEntityServiceImplTest extends CDNGBaseTest {
   @Owner(developers = NAMAN)
   @Category(UnitTests.class)
   public void testList() {
-    String ORG_IDENTIFIER = "orgId";
-    String PROJ_IDENTIFIER = "projId";
-    String PIPELINE_IDENTIFIER = "pipeline_identifier";
-    String CD_IDENTIFIER = "cdIdentifier";
-    String OVERLAY_IDENTIFIER = "overlayIdentifier";
-    String ACCOUNT_ID = "account_id";
+    final String ORG_IDENTIFIER = "orgId";
+    final String PROJ_IDENTIFIER = "projId";
+    final String PIPELINE_IDENTIFIER = "pipeline_identifier";
+    final String CD_IDENTIFIER = "cdIdentifier";
+    final String CD_IDENTIFIER_2 = "cdIdentifier2";
+    final String OVERLAY_IDENTIFIER = "overlayIdentifier";
+    final String ACCOUNT_ID = "account_id";
 
     CDInputSetEntity cdInputSetEntity = CDInputSetEntity.builder().build();
     cdInputSetEntity.setAccountId(ACCOUNT_ID);
@@ -216,23 +216,20 @@ public class InputSetEntityServiceImplTest extends CDNGBaseTest {
         .isEqualTo(InputSetElementMapper.writeSummaryResponseDTO(createdCDInputSet));
     assertThat(InputSetElementMapper.writeSummaryResponseDTO(list.getContent().get(1)))
         .isEqualTo(InputSetElementMapper.writeSummaryResponseDTO(createdOverlayInputSet));
-  }
 
-  @Test
-  @Owner(developers = NAMAN)
-  @Category(UnitTests.class)
-  public void testGetTemplateFromPipeline() throws IOException {
-    ClassLoader classLoader = getClass().getClassLoader();
-    String pipelineFilename = "pipeline-extensive.yaml";
-    String pipelineYaml =
-        Resources.toString(Objects.requireNonNull(classLoader.getResource(pipelineFilename)), StandardCharsets.UTF_8);
+    // Add another entity.
+    CDInputSetEntity cdInputSetEntity2 = CDInputSetEntity.builder().build();
+    cdInputSetEntity2.setAccountId(ACCOUNT_ID);
+    cdInputSetEntity2.setOrgIdentifier(ORG_IDENTIFIER);
+    cdInputSetEntity2.setProjectIdentifier(PROJ_IDENTIFIER);
+    cdInputSetEntity2.setPipelineIdentifier(PIPELINE_IDENTIFIER);
+    cdInputSetEntity2.setIdentifier(CD_IDENTIFIER_2);
+    cdInputSetEntity2.setName("Input Set");
 
-    String tempYaml = inputSetEntityService.getTemplateFromPipeline(pipelineYaml).replaceAll("\"", "");
-    assertThat(tempYaml).isNotNull();
-
-    String templateFilename = "pipeline-extensive-template.yaml";
-    String templateYaml =
-        Resources.toString(Objects.requireNonNull(classLoader.getResource(templateFilename)), StandardCharsets.UTF_8);
-    assertThat(tempYaml).isEqualTo(templateYaml);
+    BaseInputSetEntity createdCDInputSet2 = inputSetEntityService.create(cdInputSetEntity2);
+    List<BaseInputSetEntity> givenInputSetList =
+        inputSetEntityService.getGivenInputSetList(ACCOUNT_ID, ORG_IDENTIFIER, PROJ_IDENTIFIER, PIPELINE_IDENTIFIER,
+            Stream.of(CD_IDENTIFIER_2, OVERLAY_IDENTIFIER).collect(Collectors.toSet()));
+    assertThat(givenInputSetList).containsExactlyInAnyOrder(createdCDInputSet2, overlayInputSetEntity);
   }
 }

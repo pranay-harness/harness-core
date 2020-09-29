@@ -21,7 +21,7 @@ import lombok.NoArgsConstructor;
 @Data
 @NoArgsConstructor
 @EqualsAndHashCode(callSuper = true)
-@JsonTypeName(StepSpecType.HTTP)
+@JsonTypeName(StepSpecTypeConstants.HTTP)
 @SimpleVisitorHelper(helperClass = HttpStepInfoVisitorHelper.class)
 public class HttpStepInfo extends BasicHttpStepParameters implements CDStepInfo, Visitable {
   @JsonIgnore String name;

@@ -6,7 +6,6 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import io.swagger.annotations.ApiModel;
 import lombok.AccessLevel;
 import lombok.Builder;
-import lombok.NonNull;
 import lombok.Value;
 import lombok.experimental.FieldDefaults;
 import org.hibernate.validator.constraints.NotEmpty;
@@ -19,5 +18,5 @@ import java.util.List;
 @JsonInclude(NON_NULL)
 @ApiModel("MergeInputSetRequest")
 public class MergeInputSetRequestDTO {
-  @NonNull @NotEmpty List<String> inputSetIdentifierList;
+  @NotEmpty List<String> inputSetReferences;
 }

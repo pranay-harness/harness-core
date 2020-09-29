@@ -24,7 +24,7 @@ import java.util.List;
 @Data
 @NoArgsConstructor
 @EqualsAndHashCode(callSuper = true)
-@JsonTypeName(StepSpecType.SHELL_SCRIPT)
+@JsonTypeName(StepSpecTypeConstants.SHELL_SCRIPT)
 @SimpleVisitorHelper(helperClass = ShellScriptStepInfoVisitorHelper.class)
 public class ShellScriptStepInfo extends ShellScriptStepParameters implements CDStepInfo, Visitable {
   @JsonIgnore String name;

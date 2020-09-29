@@ -5,7 +5,9 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.mongodb.core.query.Criteria;
 
+import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 public interface InputSetEntityService {
   BaseInputSetEntity create(BaseInputSetEntity baseInputSetEntity);
@@ -20,5 +22,6 @@ public interface InputSetEntityService {
   boolean delete(String accountId, String orgIdentifier, String projectIdentifier, String pipelineIdentifier,
       String inputSetIdentifier);
 
-  String getTemplateFromPipeline(String pipelineYaml);
+  List<BaseInputSetEntity> getGivenInputSetList(String accountId, String orgIdentifier, String projectIdentifier,
+      String pipelineIdentifier, Set<String> inputSetIdentifiersList);
 }
