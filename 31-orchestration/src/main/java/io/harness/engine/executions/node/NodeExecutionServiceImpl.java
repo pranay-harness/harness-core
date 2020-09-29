@@ -28,6 +28,7 @@ import org.springframework.data.mongodb.core.query.Update;
 
 import java.util.EnumSet;
 import java.util.List;
+import java.util.Optional;
 import java.util.function.Consumer;
 
 @OwnedBy(CDC)
@@ -195,5 +196,10 @@ public class NodeExecutionServiceImpl implements NodeExecutionService {
       return false;
     }
     return true;
+  }
+
+  @Override
+  public Optional<NodeExecution> getByNodeIdentifier(String nodeIdentifier, String planExecutionId) {
+    return nodeExecutionRepository.findByNodeIdentifierAndAmbiancePlanExecutionId(nodeIdentifier, planExecutionId);
   }
 }

@@ -17,7 +17,7 @@ import java.util.Map;
 
 @Slf4j
 public class DeploymentStageStep implements Step, ChildExecutable<DeploymentStageStepParameters> {
-  public static final StepType STEP_TYPE = StepType.builder().type("DEPLOYMENT_STAGE_STEP").build();
+  public static final StepType STEP_TYPE = StepType.builder().type(NGStepTypes.DEPLOYMENT_STAGE_STEP).build();
 
   @Override
   public ChildExecutableResponse obtainChild(

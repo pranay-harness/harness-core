@@ -13,13 +13,14 @@ import io.harness.state.io.StepInputPackage;
 import io.harness.state.io.StepResponse;
 import io.harness.state.io.StepResponse.StepResponseBuilder;
 import io.harness.state.io.StepResponseNotifyData;
+import io.harness.steps.OrchestrationStepTypes;
 import io.harness.tasks.ResponseData;
 
 import java.util.Map;
 
 @OwnedBy(CDC)
 public class SectionStep implements Step, ChildExecutable<SectionStepParameters> {
-  public static final StepType STEP_TYPE = StepType.builder().type("SECTION").build();
+  public static final StepType STEP_TYPE = StepType.builder().type(OrchestrationStepTypes.SECTION).build();
 
   @Override
   public ChildExecutableResponse obtainChild(

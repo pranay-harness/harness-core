@@ -15,6 +15,7 @@ import com.google.inject.name.Names;
 
 import io.harness.OrchestrationModule;
 import io.harness.OrchestrationModuleConfig;
+import io.harness.OrchestrationVisualizationModule;
 import io.harness.callback.DelegateCallbackToken;
 import io.harness.connector.services.ConnectorService;
 import io.harness.engine.expressions.AmbianceExpressionEvaluatorProvider;
@@ -128,6 +129,7 @@ public class CDNGTestRule implements InjectorRuleMixin, MethodRule, MongoRuleMix
     modules.add(OrchestrationModule.getInstance());
     modules.add(ExecutionPlanModule.getInstance());
     modules.add(mongoTypeModule(annotations));
+    modules.add(OrchestrationVisualizationModule.getInstance());
 
     modules.add(new AbstractModule() {
       @Override

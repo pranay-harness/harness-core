@@ -6,6 +6,7 @@ import com.google.inject.Inject;
 import io.harness.beans.EmbeddedUser;
 import io.harness.beans.Graph;
 import io.harness.cdng.pipeline.service.NgPipelineExecutionService;
+import io.harness.dto.OrchestrationGraph;
 import io.harness.engine.OrchestrationService;
 import io.harness.execution.PlanExecution;
 import io.harness.facilitator.FacilitatorType;
@@ -101,6 +102,13 @@ public class NgOrchestrationResource {
   @ApiOperation(value = "generate graph execution visualization", nickname = "get-graph-visualization")
   public StreamingOutput getGraphVisualization(@QueryParam("planExecutionId") String planExecutionId) {
     return output -> customExecutionService.getGraphVisualization(planExecutionId, output);
+  }
+
+  @GET
+  @Path("/get-graph-orchestration")
+  @ApiOperation(value = "generate orchestration graph for plan execution", nickname = "get-graph-orchestration")
+  public RestResponse<OrchestrationGraph> getOrchestrationGraph(@QueryParam("planExecutionId") String planExecutionId) {
+    return new RestResponse<>(customExecutionService.getOrchestrationGraph(planExecutionId));
   }
 
   private Map<String, String> getAbstractions(String accountId, String appId) {

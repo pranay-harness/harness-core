@@ -39,4 +39,6 @@ public interface NodeExecutionRepository extends CrudRepository<NodeExecution, S
       String planExecutionId, StepType stepType, String identifier);
 
   List<NodeExecution> findByParentIdAndStatusIn(String parentId, EnumSet<Status> statuses);
+
+  Optional<NodeExecution> findByNodeIdentifierAndAmbiancePlanExecutionId(String nodeIdentifier, String planExecutionId);
 }

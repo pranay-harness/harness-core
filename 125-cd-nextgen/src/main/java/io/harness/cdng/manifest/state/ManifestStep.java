@@ -1,7 +1,7 @@
 package io.harness.cdng.manifest.state;
 
 import static io.harness.cdng.manifest.ManifestConstants.MANIFESTS;
-import static io.harness.cdng.manifest.ManifestConstants.MANIFEST_STEP;
+import static io.harness.cdng.pipeline.steps.NGStepTypes.MANIFEST_STEP;
 
 import io.harness.ambiance.Ambiance;
 import io.harness.cdng.manifest.yaml.ManifestAttributes;

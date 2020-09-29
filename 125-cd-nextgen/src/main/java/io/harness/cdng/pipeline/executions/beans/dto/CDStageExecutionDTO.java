@@ -1,8 +1,8 @@
 package io.harness.cdng.pipeline.executions.beans.dto;
 
 import com.fasterxml.jackson.annotation.JsonTypeName;
-import io.harness.cdng.pipeline.executions.PipelineExecutionStatus;
 import io.harness.cdng.service.beans.ServiceDefinitionType;
+import io.harness.executions.beans.PipelineExecutionStatus;
 import io.harness.yaml.core.Artifact;
 import lombok.Builder;
 import lombok.Data;

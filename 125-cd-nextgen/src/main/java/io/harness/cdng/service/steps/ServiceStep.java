@@ -9,6 +9,7 @@ import com.google.inject.Inject;
 import io.harness.ambiance.Ambiance;
 import io.harness.cdng.manifest.yaml.ManifestAttributes;
 import io.harness.cdng.manifest.yaml.ManifestOutcome;
+import io.harness.cdng.pipeline.steps.NGStepTypes;
 import io.harness.cdng.service.beans.ServiceConfig;
 import io.harness.cdng.service.beans.ServiceOutcome;
 import io.harness.cdng.service.beans.ServiceOutcome.ArtifactsOutcome;
@@ -45,7 +46,7 @@ import java.util.Optional;
 
 @Slf4j
 public class ServiceStep implements Step, ChildrenExecutable<ServiceStepParameters> {
-  public static final StepType STEP_TYPE = StepType.builder().type("SERVICE_STEP").build();
+  public static final StepType STEP_TYPE = StepType.builder().type(NGStepTypes.SERVICE_STEP).build();
   @Inject private OutcomeService outcomeService;
   @Inject private ServiceEntityService serviceEntityService;
 

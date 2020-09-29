@@ -6,6 +6,7 @@ import io.harness.ambiance.Ambiance;
 import io.harness.cdng.executionplan.CDStepDependencyKey;
 import io.harness.cdng.infra.beans.InfrastructureOutcome;
 import io.harness.cdng.orchestration.StepUtils;
+import io.harness.cdng.pipeline.steps.NGStepTypes;
 import io.harness.cdng.stepsdependency.utils.CDStepDependencyUtils;
 import io.harness.common.AmbianceHelper;
 import io.harness.data.structure.UUIDGenerator;
@@ -30,7 +31,7 @@ import software.wings.sm.states.k8s.K8sRollingDeployRollback;
 import java.util.Map;
 
 public class K8sRollingRollbackStep implements Step, TaskExecutable<K8sRollingRollbackStepParameters> {
-  public static final StepType STEP_TYPE = StepType.builder().type("K8S_ROLLBACK_ROLLING").build();
+  public static final StepType STEP_TYPE = StepType.builder().type(NGStepTypes.K8S_ROLLBACK_ROLLING).build();
 
   @Inject K8sStepHelper k8sStepHelper;
   @Inject private StepDependencyService stepDependencyService;

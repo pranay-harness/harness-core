@@ -1,8 +1,8 @@
 package io.harness.cdng.pipeline.executions.beans.dto;
 
-import io.harness.cdng.pipeline.executions.PipelineExecutionStatus;
 import io.harness.cdng.pipeline.executions.TriggerType;
 import io.harness.cdng.service.beans.ServiceDefinitionType;
+import io.harness.executions.beans.PipelineExecutionStatus;
 import io.harness.governance.pipeline.service.model.Tag;
 import io.harness.ng.core.user.User;
 import io.harness.yaml.core.intfc.StageType;
