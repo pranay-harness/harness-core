@@ -20,7 +20,7 @@ public class ExecutionGraphMapper {
   @NonNull
   public static ExecutionGraph toExecutionGraph(@NonNull OrchestrationGraph orchestrationGraph) {
     ExecutionGraphBuilder executionGraphBuilder =
-        ExecutionGraph.builder().rootNodeId(orchestrationGraph.getRootNodeId());
+        ExecutionGraph.builder().rootNodeId(orchestrationGraph.getRootNodeIds().get(0));
 
     OrchestrationAdjacencyList adjacencyList = orchestrationGraph.getAdjacencyList();
 
@@ -49,6 +49,9 @@ public class ExecutionGraphMapper {
 
   @NonNull
   static ExecutionNodeAdjacencyList toExecutionNodeAdjacencyList(@NonNull EdgeList edgeList) {
-    return ExecutionNodeAdjacencyList.builder().children(edgeList.getEdges()).next(edgeList.getNext()).build();
+    return ExecutionNodeAdjacencyList.builder()
+        .children(edgeList.getEdges())
+        .next(edgeList.getNextIds().get(0))
+        .build();
   }
 }
