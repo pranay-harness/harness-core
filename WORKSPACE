@@ -1170,6 +1170,8 @@ maven_install(
         "org.redisson:redisson:3.13.3",
         "org.springframework.data:spring-data-mongodb:2.2.7.RELEASE",
         "org.springframework.guice:spring-guice:1.1.3.RELEASE",
+        "net.jodah:failsafe:2.2.0",
+        "org.apache.commons:commons-email:1.5",
     ],
     maven_install_json = "//:maven_install.json",
     repositories = [
