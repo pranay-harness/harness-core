@@ -11,5 +11,6 @@ public class DelegateRegistrars {
       ImmutableSet.<Class<? extends KryoRegistrar>>builder()
           .addAll(ManagerRegistrars.kryoRegistrars)
           .add(CvNextGenCommonsBeansKryoRegistrar.class)
+          .addAll(CvNextGenCommonsRegistrars.kryoRegistrars)
           .build();
 }

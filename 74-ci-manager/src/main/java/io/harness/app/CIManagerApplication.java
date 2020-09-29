@@ -42,6 +42,7 @@ import io.harness.serializer.CiExecutionRegistrars;
 import io.harness.serializer.KryoModule;
 import io.harness.serializer.KryoRegistrar;
 import io.harness.serializer.ManagerRegistrars;
+import io.harness.serializer.YamlBeansModuleRegistrars;
 import io.harness.serializer.kryo.CIBeansKryoRegistrar;
 import io.harness.service.impl.DelegateAsyncServiceImpl;
 import io.harness.service.impl.DelegateSyncServiceImpl;
@@ -115,7 +116,9 @@ public class CIManagerApplication extends Application<CIManagerConfiguration> {
       Set<Class<? extends KryoRegistrar>> registrars() {
         return ImmutableSet.<Class<? extends KryoRegistrar>>builder()
             .addAll(ManagerRegistrars.kryoRegistrars)
+            .addAll(YamlBeansModuleRegistrars.kryoRegistrars)
             .add(CIBeansKryoRegistrar.class)
+            .addAll(CiExecutionRegistrars.kryoRegistrars)
             .build();
       }
 
