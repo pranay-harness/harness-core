@@ -1,6 +1,7 @@
 package io.harness.serializer.morphia;
 
 import io.harness.cdng.pipeline.beans.entities.CDPipelineEntity;
+import io.harness.cdng.pipeline.executions.beans.PipelineExecutionSummary;
 import io.harness.morphia.MorphiaRegistrar;
 import io.harness.morphia.MorphiaRegistrarHelperPut;
 import io.harness.ngpipeline.BaseInputSetEntity;
@@ -13,6 +14,7 @@ public class NGPipelineMorphiaRegistrar implements MorphiaRegistrar {
   public void registerClasses(Set<Class> set) {
     set.add(OverlayInputSetEntity.class);
     set.add(CDPipelineEntity.class);
+    set.add(PipelineExecutionSummary.class);
     set.add(BaseInputSetEntity.class);
   }
 

@@ -10,11 +10,11 @@ import java.util.List;
 @Data
 @Builder
 @JsonTypeName("parallel")
-public class ParallelStageExecutionDTO implements StageExecutionDTO {
-  List<StageExecutionDTO> stageExecutions;
+public class ParallelStageExecutionSummaryDTO implements StageExecutionSummaryDTO {
+  List<StageExecutionSummaryDTO> stageExecutions;
 
   @JsonCreator(mode = JsonCreator.Mode.DELEGATING)
-  public ParallelStageExecutionDTO(List<StageExecutionDTO> sections) {
+  public ParallelStageExecutionSummaryDTO(List<StageExecutionSummaryDTO> sections) {
     this.stageExecutions = sections;
   }
 }

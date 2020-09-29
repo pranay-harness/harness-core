@@ -1,3 +1,3 @@
 package io.harness.cdng.pipeline.executions.beans;
 
-public interface StageExecution {}
+public interface StageExecutionSummary {}

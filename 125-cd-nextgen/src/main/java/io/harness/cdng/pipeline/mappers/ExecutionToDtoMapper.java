@@ -1,13 +1,14 @@
 package io.harness.cdng.pipeline.mappers;
 
-import io.harness.cdng.pipeline.executions.beans.CDStageExecution;
-import io.harness.cdng.pipeline.executions.beans.ParallelStageExecution;
-import io.harness.cdng.pipeline.executions.beans.PipelineExecution;
-import io.harness.cdng.pipeline.executions.beans.StageExecution;
-import io.harness.cdng.pipeline.executions.beans.dto.CDStageExecutionDTO;
-import io.harness.cdng.pipeline.executions.beans.dto.ParallelStageExecutionDTO;
-import io.harness.cdng.pipeline.executions.beans.dto.PipelineExecutionDTO;
-import io.harness.cdng.pipeline.executions.beans.dto.StageExecutionDTO;
+import io.harness.cdng.pipeline.executions.ExecutionStatus;
+import io.harness.cdng.pipeline.executions.beans.CDStageExecutionSummary;
+import io.harness.cdng.pipeline.executions.beans.ParallelStageExecutionSummary;
+import io.harness.cdng.pipeline.executions.beans.PipelineExecutionSummary;
+import io.harness.cdng.pipeline.executions.beans.StageExecutionSummary;
+import io.harness.cdng.pipeline.executions.beans.dto.CDStageExecutionSummaryDTO;
+import io.harness.cdng.pipeline.executions.beans.dto.ParallelStageExecutionSummaryDTO;
+import io.harness.cdng.pipeline.executions.beans.dto.PipelineExecutionSummaryDTO;
+import io.harness.cdng.pipeline.executions.beans.dto.StageExecutionSummaryDTO;
 import lombok.experimental.UtilityClass;
 
 import java.util.List;
@@ -15,59 +16,76 @@ import java.util.stream.Collectors;
 
 @UtilityClass
 public class ExecutionToDtoMapper {
-  public PipelineExecutionDTO writeExecutionDto(PipelineExecution pipelineExecution) {
-    List<StageExecutionDTO> stageExecutionDTOs = pipelineExecution.getStageExecutionSummaryElements()
-                                                     .stream()
-                                                     .map(ExecutionToDtoMapper::writeStageExecutionDto)
-                                                     .collect(Collectors.toList());
-    return PipelineExecutionDTO.builder()
-        .endedAt(pipelineExecution.getEndedAt())
-        .envIdentifiers(pipelineExecution.getEnvIdentifiers())
-        .pipelineIdentifier(pipelineExecution.getPipelineIdentifier())
-        .pipelineName(pipelineExecution.getPipelineName())
-        .planExecutionId(pipelineExecution.getPlanExecutionId())
-        .serviceDefinitionTypes(pipelineExecution.getServiceDefinitionTypes())
-        .serviceIdentifiers(pipelineExecution.getServiceIdentifiers())
-        .stageExecutionSummaryElements(stageExecutionDTOs)
-        .stageIdentifiers(pipelineExecution.getStageIdentifiers())
-        .stageTypes(pipelineExecution.getStageTypes())
-        .startedAt(pipelineExecution.getStartedAt())
-        .pipelineExecutionStatus(pipelineExecution.getPipelineExecutionStatus())
-        .tags(pipelineExecution.getTags())
-        .triggeredBy(pipelineExecution.getTriggeredBy())
-        .triggerType(pipelineExecution.getTriggerType())
+  public PipelineExecutionSummaryDTO writeExecutionDto(PipelineExecutionSummary pipelineExecutionSummary) {
+    List<StageExecutionSummaryDTO> stageExecutionSummaryDTOS =
+        pipelineExecutionSummary.getStageExecutionSummarySummaryElements()
+            .stream()
+            .map(ExecutionToDtoMapper::writeStageExecutionDto)
+            .collect(Collectors.toList());
+    return PipelineExecutionSummaryDTO.builder()
+        .endedAt(pipelineExecutionSummary.getEndedAt())
+        .envIdentifiers(pipelineExecutionSummary.getEnvIdentifiers())
+        .pipelineIdentifier(pipelineExecutionSummary.getPipelineIdentifier())
+        .pipelineName(pipelineExecutionSummary.getPipelineName())
+        .planExecutionId(pipelineExecutionSummary.getPlanExecutionId())
+        .serviceDefinitionTypes(pipelineExecutionSummary.getServiceDefinitionTypes())
+        .serviceIdentifiers(pipelineExecutionSummary.getServiceIdentifiers())
+        .stageExecutionSummaryElements(stageExecutionSummaryDTOS)
+        .stageIdentifiers(pipelineExecutionSummary.getStageIdentifiers())
+        .stageTypes(pipelineExecutionSummary.getStageTypes())
+        .startedAt(pipelineExecutionSummary.getStartedAt())
+        .executionStatus(pipelineExecutionSummary.getExecutionStatus())
+        .tags(pipelineExecutionSummary.getTags())
+        .triggeredBy(pipelineExecutionSummary.getTriggeredBy())
+        .triggerType(pipelineExecutionSummary.getTriggerType())
+        .failedStagesCount(getCountForGivenStatus(
+            pipelineExecutionSummary.getStageExecutionSummarySummaryElements(), ExecutionStatus.FAILED))
+        .successfulStagesCount(getCountForGivenStatus(
+            pipelineExecutionSummary.getStageExecutionSummarySummaryElements(), ExecutionStatus.SUCCESS))
+        .runningStagesCount(getCountForGivenStatus(
+            pipelineExecutionSummary.getStageExecutionSummarySummaryElements(), ExecutionStatus.RUNNING))
         .build();
   }
 
-  public StageExecutionDTO writeStageExecutionDto(StageExecution stageExecution) {
-    if (stageExecution instanceof ParallelStageExecution) {
-      return writeParallelStageExecutionDto((ParallelStageExecution) stageExecution);
+  public StageExecutionSummaryDTO writeStageExecutionDto(StageExecutionSummary stageExecutionSummary) {
+    if (stageExecutionSummary instanceof ParallelStageExecutionSummary) {
+      return writeParallelStageExecutionDto((ParallelStageExecutionSummary) stageExecutionSummary);
     }
-    return writeCDStageExecutionDto((CDStageExecution) stageExecution);
+    return writeCDStageExecutionDto((CDStageExecutionSummary) stageExecutionSummary);
   }
 
-  private StageExecutionDTO writeParallelStageExecutionDto(ParallelStageExecution parallelStageExecution) {
-    return ParallelStageExecutionDTO.builder()
-        .stageExecutions(parallelStageExecution.getStageExecutions()
+  private StageExecutionSummaryDTO writeParallelStageExecutionDto(
+      ParallelStageExecutionSummary parallelStageExecution) {
+    return ParallelStageExecutionSummaryDTO.builder()
+        .stageExecutions(parallelStageExecution.getStageExecutionSummaries()
                              .stream()
                              .map(ExecutionToDtoMapper::writeStageExecutionDto)
                              .collect(Collectors.toList()))
         .build();
   }
 
-  private StageExecutionDTO writeCDStageExecutionDto(CDStageExecution cdStageExecution) {
-    return CDStageExecutionDTO.builder()
-        .artifactsDeployed(cdStageExecution.getArtifactsDeployed())
-        .deploymentType(cdStageExecution.getDeploymentType())
-        .endedAt(cdStageExecution.getEndedAt())
-        .envIdentifier(cdStageExecution.getEnvIdentifier())
-        .errorMsg(cdStageExecution.getErrorMsg())
-        .planExecutionId(cdStageExecution.getPlanExecutionId())
-        .serviceIdentifier(cdStageExecution.getServiceIdentifier())
-        .stageIdentifier(cdStageExecution.getStageIdentifier())
-        .stageName(cdStageExecution.getStageName())
-        .startedAt(cdStageExecution.getStartedAt())
-        .pipelineExecutionStatus(cdStageExecution.getPipelineExecutionStatus())
+  private StageExecutionSummaryDTO writeCDStageExecutionDto(CDStageExecutionSummary cdStageExecutionSummary) {
+    return CDStageExecutionSummaryDTO.builder()
+        .serviceDefinitionType(cdStageExecutionSummary.getServiceDefinitionType())
+        .endedAt(cdStageExecutionSummary.getEndedAt())
+        .envIdentifier(cdStageExecutionSummary.getEnvIdentifier())
+        .errorMsg(cdStageExecutionSummary.getErrorMsg())
+        .planExecutionId(cdStageExecutionSummary.getPlanExecutionId())
+        .serviceIdentifier(cdStageExecutionSummary.getServiceIdentifier())
+        .stageIdentifier(cdStageExecutionSummary.getStageIdentifier())
+        .stageName(cdStageExecutionSummary.getStageName())
+        .startedAt(cdStageExecutionSummary.getStartedAt())
+        .executionStatus(cdStageExecutionSummary.getExecutionStatus())
         .build();
+  }
+
+  private long getCountForGivenStatus(
+      List<StageExecutionSummary> stageExecutionSummaries, ExecutionStatus requiredStatus) {
+    return stageExecutionSummaries.stream()
+        .filter(stageExecutionSummary -> !(stageExecutionSummary instanceof ParallelStageExecutionSummary))
+        .map(stageExecutionSummary -> (CDStageExecutionSummary) stageExecutionSummary)
+        .map(CDStageExecutionSummary::getExecutionStatus)
+        .filter(status -> status == requiredStatus)
+        .count();
   }
 }

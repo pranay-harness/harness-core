@@ -6,6 +6,7 @@ import com.fasterxml.jackson.annotation.JsonTypeName;
 import io.harness.beans.yaml.extended.CustomVariables;
 import io.harness.beans.yaml.extended.container.Container;
 import io.harness.data.validator.EntityIdentifier;
+import io.harness.pipeline.executions.NGStageType;
 import io.harness.yaml.core.ExecutionElement;
 import io.harness.yaml.core.intfc.Connector;
 import io.harness.yaml.core.intfc.Infrastructure;
@@ -27,7 +28,11 @@ import javax.validation.constraints.NotNull;
 @JsonTypeName("ci")
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class IntegrationStage implements CIStage {
-  @JsonIgnore private static final CIStageType type = CIStageType.INTEGRATION;
+  @JsonIgnore public static final CIStageType type = CIStageType.INTEGRATION;
+  @JsonIgnore
+  public static final NGStageType INTEGRATION_STAGE_TYPE =
+      NGStageType.builder().type(CIStageType.INTEGRATION.name()).build();
+
   @Getter(onMethod = @__(@JsonIgnore)) @JsonIgnore @NotNull @EntityIdentifier private String identifier;
   @Getter(onMethod = @__(@JsonIgnore)) @JsonIgnore private String name;
 
@@ -46,5 +51,10 @@ public class IntegrationStage implements CIStage {
   @Override
   public CIStageType getType() {
     return type;
+  }
+
+  @Override
+  public NGStageType getStageType() {
+    return INTEGRATION_STAGE_TYPE;
   }
 }
