@@ -128,7 +128,8 @@ public class WorkflowServiceTemplateHelper {
           if (templateProperties != null) {
             if (!"COMMAND".equals(step.getType())) {
               if ((StateType.SHELL_SCRIPT.name().equals(step.getType()) || StateType.HTTP.name().equals(step.getType()))
-                  && step.getProperties().containsKey(TIMEOUT_PROPERTY_KEY)) {
+                  && step.getProperties().containsKey(TIMEOUT_PROPERTY_KEY)
+                  && (!(step.getProperties().get(TIMEOUT_PROPERTY_KEY).equals(Integer.valueOf(0))))) {
                 templateProperties.remove(TIMEOUT_PROPERTY_KEY);
                 templateStep.getProperties().remove(TIMEOUT_PROPERTY_KEY);
               }
