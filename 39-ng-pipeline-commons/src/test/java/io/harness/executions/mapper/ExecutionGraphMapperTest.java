@@ -19,6 +19,7 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -70,13 +71,17 @@ public class ExecutionGraphMapperTest extends CategoryTest {
     graphVertexMap.put("id3", node3);
     graphVertexMap.put("id4", node4);
 
-    EdgeList edgeList = EdgeList.builder().edges(Arrays.asList("id2", "id3")).next("id4").build();
+    EdgeList edgeList =
+        EdgeList.builder().edges(Arrays.asList("id2", "id3")).nextIds(Collections.singletonList("id4")).build();
     Map<String, EdgeList> edgeListMap = new HashMap<>();
     edgeListMap.put("id1", edgeList);
 
     OrchestrationAdjacencyList orchestrationAdjacencyList =
         OrchestrationAdjacencyList.builder().graphVertexMap(graphVertexMap).adjacencyList(edgeListMap).build();
 
-    return OrchestrationGraph.builder().rootNodeId("id1").adjacencyList(orchestrationAdjacencyList).build();
+    return OrchestrationGraph.builder()
+        .rootNodeIds(Collections.singletonList("id1"))
+        .adjacencyList(orchestrationAdjacencyList)
+        .build();
   }
 }
