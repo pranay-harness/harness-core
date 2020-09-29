@@ -63,7 +63,6 @@ import io.harness.config.PublisherConfiguration;
 import io.harness.config.WorkersConfiguration;
 import io.harness.configuration.DeployMode;
 import io.harness.cvng.core.services.api.VerificationServiceSecretManager;
-import io.harness.cvng.perpetualtask.DataCollectionPerpetualTaskServiceClient;
 import io.harness.delay.DelayEventListener;
 import io.harness.delegate.beans.DelegateAsyncTaskResponse;
 import io.harness.delegate.beans.DelegateSyncTaskResponse;
@@ -603,8 +602,6 @@ public class WingsApplication extends Application<MainConfiguration> {
         injector.getInstance(ContainerInstanceSyncPerpetualTaskClient.class));
     clientRegistry.registerClient(PerpetualTaskType.AWS_LAMBDA_INSTANCE_SYNC,
         injector.getInstance(AwsLambdaInstanceSyncPerpetualTaskClient.class));
-    clientRegistry.registerClient(
-        PerpetualTaskType.DATA_COLLECTION_TASK, injector.getInstance(DataCollectionPerpetualTaskServiceClient.class));
     clientRegistry.registerClient(PerpetualTaskType.CUSTOM_DEPLOYMENT_INSTANCE_SYNC,
         injector.getInstance(CustomDeploymentInstanceSyncClient.class));
     clientRegistry.registerClient(

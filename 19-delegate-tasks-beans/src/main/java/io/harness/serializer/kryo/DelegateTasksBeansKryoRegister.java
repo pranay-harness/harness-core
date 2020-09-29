@@ -57,6 +57,7 @@ import io.harness.delegate.beans.executioncapability.AlwaysFalseValidationCapabi
 import io.harness.delegate.beans.executioncapability.AwsRegionCapability;
 import io.harness.delegate.beans.executioncapability.CapabilityType;
 import io.harness.delegate.beans.executioncapability.ChartMuseumCapability;
+import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import io.harness.delegate.beans.executioncapability.GitConnectionNGCapability;
 import io.harness.delegate.beans.executioncapability.HttpConnectionExecutionCapability;
 import io.harness.delegate.beans.executioncapability.ProcessExecutorCapability;
@@ -325,6 +326,7 @@ public class DelegateTasksBeansKryoRegister implements KryoRegistrar {
     kryo.register(AzureVMAuthDTO.class, 19340);
     kryo.register(AzureVMAuthType.class, 19341);
     kryo.register(KubernetesCredentialDTO.class, 19342);
-    kryo.register(JiraConnectorDTO.class, 19343);
+    kryo.register(ExecutionCapability.class, 19343);
+    kryo.register(JiraConnectorDTO.class, 19344);
   }
 }

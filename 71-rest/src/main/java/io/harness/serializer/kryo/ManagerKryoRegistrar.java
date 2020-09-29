@@ -567,6 +567,7 @@ import software.wings.security.encryption.secretsmanagerconfigs.CustomSecretsMan
 import software.wings.security.encryption.secretsmanagerconfigs.CustomSecretsManagerShellScript.ScriptType;
 import software.wings.service.impl.ContainerServiceParams;
 import software.wings.service.impl.MasterUrlFetchTaskParameter;
+import software.wings.service.impl.PerpetualTaskCapabilityCheckResponse;
 import software.wings.service.impl.SlackMessageSenderImpl;
 import software.wings.service.impl.ThirdPartyApiCallLog;
 import software.wings.service.impl.WorkflowExecutionUpdate;
@@ -1761,6 +1762,9 @@ public class ManagerKryoRegistrar implements KryoRegistrar {
 
     kryo.register(HelmChartCollectionParams.class, 8058);
     kryo.register(AwsAmiInfoVariables.class, 8059);
+
     kryo.register(AzureVMSSDeployExecutionSummary.class, 8060);
+
+    kryo.register(PerpetualTaskCapabilityCheckResponse.class, 8061);
   }
 }
