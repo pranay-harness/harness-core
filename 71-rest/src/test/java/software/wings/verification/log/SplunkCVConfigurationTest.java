@@ -1,6 +1,7 @@
 package software.wings.verification.log;
 
 import static io.harness.rule.OwnerRule.KAMAL;
+import static io.harness.rule.OwnerRule.PRAVEEN;
 import static io.harness.rule.OwnerRule.SOWMYA;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.when;
@@ -86,5 +87,28 @@ public class SplunkCVConfigurationTest extends WingsBaseTest {
     assertThat(dataCollectionInfo.getEndTime()).isNull();
     assertThat(dataCollectionInfo.getQuery()).isEqualTo(query);
     assertThat(dataCollectionInfo.getHostnameField()).isEqualTo(hostnameField);
+    assertThat(dataCollectionInfo.isAdvancedQuery()).isEqualTo(splunkCVConfiguration.isAdvancedQuery());
+  }
+
+  @Test
+  @Owner(developers = PRAVEEN)
+  @Category(UnitTests.class)
+  public void testSplunkDataCollectionInfoCreation_advancedQuery() {
+    SplunkCVConfiguration splunkCVConfiguration = createSplunkConfig();
+    splunkCVConfiguration.setAdvancedQuery(true);
+    SplunkConfig splunkConfig = SplunkConfig.builder().splunkUrl("test").username("test").build();
+    SettingAttribute settingAttribute = Mockito.mock(SettingAttribute.class);
+    when(settingAttribute.getValue()).thenReturn(splunkConfig);
+    SplunkDataCollectionInfoV2 dataCollectionInfo =
+        (SplunkDataCollectionInfoV2) splunkCVConfiguration.toDataCollectionInfo();
+    assertThat(dataCollectionInfo.getAccountId()).isEqualTo(splunkCVConfiguration.getAccountId());
+    assertThat(dataCollectionInfo.getCvConfigId()).isEqualTo(splunkCVConfiguration.getUuid());
+    assertThat(dataCollectionInfo.getStateExecutionId())
+        .isEqualTo(CV_24x7_STATE_EXECUTION + "-" + splunkCVConfiguration.getUuid());
+    assertThat(dataCollectionInfo.getStartTime()).isNull();
+    assertThat(dataCollectionInfo.getEndTime()).isNull();
+    assertThat(dataCollectionInfo.getQuery()).isEqualTo(query);
+    assertThat(dataCollectionInfo.getHostnameField()).isEqualTo(hostnameField);
+    assertThat(dataCollectionInfo.isAdvancedQuery()).isTrue();
   }
 }
