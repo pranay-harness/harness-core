@@ -9,7 +9,7 @@ import static org.mockito.Mockito.when;
 import com.google.inject.Inject;
 
 import com.codahale.metrics.MetricRegistry;
-import io.harness.PersistenceTest;
+import io.harness.PersistenceTestBase;
 import io.harness.category.element.UnitTests;
 import io.harness.config.WorkersConfiguration;
 import io.harness.iterator.PersistenceIteratorFactory.PumpExecutorOptions;
@@ -26,7 +26,7 @@ import org.mockito.Mock;
 import java.security.SecureRandom;
 import java.time.Duration;
 
-public class PersistenceIteratorFactoryTest extends PersistenceTest {
+public class PersistenceIteratorFactoryTest extends PersistenceTestBase {
   @Mock WorkersConfiguration workersConfiguration;
   @Mock HarnessMetricRegistry harnessMetricRegistry;
   @InjectMocks @Inject PersistenceIteratorFactory persistenceIteratorFactory;
