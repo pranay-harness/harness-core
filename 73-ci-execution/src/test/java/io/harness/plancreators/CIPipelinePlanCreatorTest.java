@@ -7,8 +7,9 @@ import static org.mockito.Mockito.when;
 
 import com.google.inject.Inject;
 
-import io.harness.beans.CIPipeline;
 import io.harness.category.element.UnitTests;
+import io.harness.cdng.pipeline.CDPipeline;
+import io.harness.cdng.pipeline.beans.entities.CDPipelineEntity;
 import io.harness.executionplan.CIExecutionPlanCreatorRegistrar;
 import io.harness.executionplan.CIExecutionPlanTestHelper;
 import io.harness.executionplan.CIExecutionTest;
@@ -29,8 +30,8 @@ public class CIPipelinePlanCreatorTest extends CIExecutionTest {
   @Inject private CIExecutionPlanTestHelper ciExecutionPlanTestHelper;
   @Inject private CIExecutionPlanCreatorRegistrar ciExecutionPlanCreatorRegistrar;
 
-  @Mock private PlanCreatorSearchContext<CIPipeline> planCreatorSearchContext;
-  private CIPipeline ciPipeline;
+  @Mock private PlanCreatorSearchContext<CDPipeline> planCreatorSearchContext;
+  private CDPipelineEntity ciPipeline;
   @Before
   public void setUp() {
     ciExecutionPlanCreatorRegistrar.register();
@@ -44,7 +45,7 @@ public class CIPipelinePlanCreatorTest extends CIExecutionTest {
     ExecutionPlanCreationContextImpl executionPlanCreationContextWithExecutionArgs =
         ciExecutionPlanTestHelper.getExecutionPlanCreationContextWithExecutionArgs();
     ExecutionPlanCreatorResponse plan =
-        ciPipelinePlanCreator.createPlan(ciPipeline, executionPlanCreationContextWithExecutionArgs);
+        ciPipelinePlanCreator.createPlan(ciPipeline.getCdPipeline(), executionPlanCreationContextWithExecutionArgs);
     assertThat(plan.getPlanNodes()).isNotNull();
     List<PlanNode> planNodes = plan.getPlanNodes();
     assertThat(
@@ -61,7 +62,7 @@ public class CIPipelinePlanCreatorTest extends CIExecutionTest {
   @Owner(developers = ALEKSANDAR)
   @Category(UnitTests.class)
   public void supports() {
-    when(planCreatorSearchContext.getObjectToPlan()).thenReturn(ciPipeline);
+    when(planCreatorSearchContext.getObjectToPlan()).thenReturn(ciPipeline.getCdPipeline());
     when(planCreatorSearchContext.getType()).thenReturn(PIPELINE_PLAN_CREATOR.getName());
     assertThat(ciPipelinePlanCreator.supports(planCreatorSearchContext)).isTrue();
   }

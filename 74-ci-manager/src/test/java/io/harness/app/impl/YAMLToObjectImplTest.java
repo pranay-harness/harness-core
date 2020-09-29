@@ -8,8 +8,9 @@ import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
-import io.harness.beans.CIPipeline;
 import io.harness.category.element.UnitTests;
+import io.harness.cdng.pipeline.CDPipeline;
+import io.harness.cdng.pipeline.beans.entities.CDPipelineEntity;
 import io.harness.rule.Owner;
 import lombok.SneakyThrows;
 import org.junit.Test;
@@ -31,10 +32,11 @@ public class YAMLToObjectImplTest extends CIManagerTest {
   @Owner(developers = ALEKSANDAR)
   @Category(UnitTests.class)
   public void shouldReturnCIPipeline() {
-    doReturn(CIPipeline.builder().build()).when(yamlToObject).readYaml(anyString());
+    doReturn(CDPipeline.builder().build()).when(yamlToObject).readYaml(anyString());
     String yaml = "dummy";
-    CIPipeline ciPipeline = yamlToObject.convertYAML(yaml);
-    assertThat(ciPipeline).isNotNull();
+    CDPipeline ciPipeline = yamlToObject.convertYAML(yaml);
+    CDPipelineEntity cdPipelineEntity = CDPipelineEntity.builder().cdPipeline(ciPipeline).build();
+    assertThat(cdPipelineEntity.getCdPipeline()).isNotNull();
 
     verify(yamlToObject, times(1)).readYaml(anyString());
   }
@@ -46,8 +48,9 @@ public class YAMLToObjectImplTest extends CIManagerTest {
   public void shouldReturnNull() {
     doThrow(new IOException()).when(yamlToObject).readYaml(anyString());
     String yaml = "dummy";
-    CIPipeline ciPipeline = yamlToObject.convertYAML(yaml);
-    assertThat(ciPipeline).isNull();
+    CDPipeline ciPipeline = yamlToObject.convertYAML(yaml);
+    CDPipelineEntity cdPipelineEntity = CDPipelineEntity.builder().cdPipeline(ciPipeline).build();
+    assertThat(cdPipelineEntity.getCdPipeline()).isNull();
     verify(yamlToObject, times(1)).readYaml(anyString());
   }
 }

@@ -2,7 +2,7 @@ package io.harness.app.intfc;
 
 import io.harness.app.beans.dto.CIPipelineFilterDTO;
 import io.harness.app.yaml.YAML;
-import io.harness.beans.CIPipeline;
+import io.harness.cdng.pipeline.beans.entities.CDPipelineEntity;
 import io.harness.validation.Create;
 import ru.vyarus.guice.validator.group.annotation.ValidationGroups;
 
@@ -10,13 +10,13 @@ import java.util.List;
 import javax.validation.Valid;
 
 public interface CIPipelineService {
-  @ValidationGroups(Create.class) CIPipeline createPipeline(@Valid CIPipeline ciPipeline);
+  @ValidationGroups(Create.class) CDPipelineEntity createPipeline(@Valid CDPipelineEntity ciPipeline);
 
-  CIPipeline readPipeline(String pipelineId, String accountId, String orgId, String projectId);
+  CDPipelineEntity readPipeline(String pipelineId, String accountId, String orgId, String projectId);
 
-  CIPipeline readPipeline(String pipelineId);
+  CDPipelineEntity readPipeline(String pipelineId);
 
-  CIPipeline createPipelineFromYAML(YAML yaml, String accountId, String orgId, String projectId);
+  CDPipelineEntity createPipelineFromYAML(YAML yaml, String accountId, String orgId, String projectId);
 
-  List<CIPipeline> getPipelines(CIPipelineFilterDTO ciPipelineFilterDTO);
+  List<CDPipelineEntity> getPipelines(CIPipelineFilterDTO ciPipelineFilterDTO);
 }

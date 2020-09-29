@@ -14,7 +14,7 @@ import io.harness.app.dao.repositories.CIBuildInfoRepository;
 import io.harness.app.intfc.CIBuildInfoService;
 import io.harness.app.intfc.CIPipelineService;
 import io.harness.app.mappers.BuildDtoMapper;
-import io.harness.beans.CIPipeline;
+import io.harness.cdng.pipeline.beans.entities.CDPipelineEntity;
 import io.harness.ci.beans.entities.CIBuild;
 import lombok.AllArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -44,7 +44,7 @@ public class CIBuildInfoServiceImpl implements CIBuildInfoService {
     }
 
     CIBuild ciBuild = ciBuildOptional.get();
-    CIPipeline ciPipeline =
+    CDPipelineEntity ciPipeline =
         ciPipelineService.readPipeline(ciBuild.getPipelineIdentifier(), accountId, orgId, projectId);
     return buildDtoMapper.writeBuildDto(ciBuild, ciPipeline);
   }
@@ -52,7 +52,7 @@ public class CIBuildInfoServiceImpl implements CIBuildInfoService {
   @Override
   public Page<CIBuildResponseDTO> getBuilds(CIBuildFilterDTO ciBuildFilterDTO, Pageable pageable) {
     Criteria criteria = createBuildFilterCriteria(ciBuildFilterDTO);
-    Map<String, CIPipeline> ciPipelineMap = getPipelines(ciBuildFilterDTO);
+    Map<String, CDPipelineEntity> ciPipelineMap = getPipelines(ciBuildFilterDTO);
     if (isNotEmpty(ciBuildFilterDTO.getTags())) {
       List<String> pipelineIds = new ArrayList<>();
       pipelineIds.addAll(ciPipelineMap.keySet());
@@ -81,14 +81,14 @@ public class CIBuildInfoServiceImpl implements CIBuildInfoService {
     return criteria;
   }
 
-  private Map<String, CIPipeline> getPipelines(CIBuildFilterDTO ciBuildFilterDTO) {
+  private Map<String, CDPipelineEntity> getPipelines(CIBuildFilterDTO ciBuildFilterDTO) {
     CIPipelineFilterDTO ciPipelineFilterDTO = CIPipelineFilterDTO.builder()
                                                   .accountIdentifier(ciBuildFilterDTO.getAccountIdentifier())
                                                   .orgIdentifier(ciBuildFilterDTO.getOrgIdentifier())
                                                   .projectIdentifier(ciBuildFilterDTO.getProjectIdentifier())
                                                   .tags(ciBuildFilterDTO.getTags())
                                                   .build();
-    Map<String, CIPipeline> ciPipelineMap = new HashMap<>();
+    Map<String, CDPipelineEntity> ciPipelineMap = new HashMap<>();
     ciPipelineService.getPipelines(ciPipelineFilterDTO)
         .forEach(ciPipeline -> ciPipelineMap.put(ciPipeline.getIdentifier(), ciPipeline));
     return ciPipelineMap;

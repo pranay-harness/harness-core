@@ -19,8 +19,8 @@ import io.harness.app.beans.dto.CIBuildResponseDTO;
 import io.harness.app.dao.repositories.CIBuildInfoRepository;
 import io.harness.app.intfc.CIPipelineService;
 import io.harness.app.mappers.BuildDtoMapper;
-import io.harness.beans.CIPipeline;
 import io.harness.category.element.UnitTests;
+import io.harness.cdng.pipeline.beans.entities.CDPipelineEntity;
 import io.harness.ci.beans.entities.CIBuild;
 import io.harness.rule.Owner;
 import org.junit.Test;
@@ -56,7 +56,7 @@ public class CIBuildInfoServiceImplTest extends CIManagerTest {
   @Category(UnitTests.class)
   public void getBuildByID() {
     CIBuild ciBuild = getBasicBuild();
-    CIPipeline ciPipeline = getPipeline();
+    CDPipelineEntity ciPipeline = getPipeline();
     CIBuildResponseDTO ciBuildResponseDTO = getBasicBuildDTO();
     when(ciBuildInfoRepository.getBuildById(ACCOUNT_ID, ORG_ID, PROJECT_ID, BUILD_ID))
         .thenReturn(Optional.ofNullable(ciBuild));

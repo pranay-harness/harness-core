@@ -7,7 +7,6 @@ import static software.wings.beans.ci.pod.CIContainerType.STEP_EXECUTOR;
 import com.google.inject.Singleton;
 
 import graph.StepInfoGraph;
-import io.harness.beans.CIPipeline;
 import io.harness.beans.environment.BuildJobEnvInfo;
 import io.harness.beans.environment.K8BuildJobEnvInfo;
 import io.harness.beans.environment.pod.PodSetupInfo;
@@ -31,6 +30,8 @@ import io.harness.beans.yaml.extended.CustomVariables;
 import io.harness.beans.yaml.extended.connector.GitConnectorYaml;
 import io.harness.beans.yaml.extended.container.Container;
 import io.harness.beans.yaml.extended.infrastrucutre.K8sDirectInfraYaml;
+import io.harness.cdng.pipeline.CDPipeline;
+import io.harness.cdng.pipeline.beans.entities.CDPipelineEntity;
 import io.harness.common.CIExecutionConstants;
 import io.harness.executionplan.core.impl.ExecutionPlanCreationContextImpl;
 import io.harness.k8s.model.ImageDetails;
@@ -331,8 +332,13 @@ public class CIExecutionPlanTestHelper {
     return ids;
   }
 
-  public CIPipeline getCIPipeline() {
-    return CIPipeline.builder().identifier("testPipelineIdentifier").accountId("accountId").stages(getStages()).build();
+  public CDPipelineEntity getCIPipeline() {
+    CDPipeline cdPipeline = CDPipeline.builder().stages(getStages()).build();
+    return CDPipelineEntity.builder()
+        .identifier("testPipelineIdentifier")
+        .accountId("accountId")
+        .cdPipeline(cdPipeline)
+        .build();
   }
 
   private List<StageElementWrapper> getStages() {

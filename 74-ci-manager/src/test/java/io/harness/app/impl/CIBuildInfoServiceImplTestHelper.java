@@ -3,7 +3,8 @@ package io.harness.app.impl;
 import io.harness.app.beans.dto.CIBuildFilterDTO;
 import io.harness.app.beans.dto.CIBuildResponseDTO;
 import io.harness.app.beans.entities.CIBuildPipeline;
-import io.harness.beans.CIPipeline;
+import io.harness.cdng.pipeline.CDPipeline;
+import io.harness.cdng.pipeline.beans.entities.CDPipelineEntity;
 import io.harness.ci.beans.entities.CIBuild;
 
 import java.util.Arrays;
@@ -36,8 +37,11 @@ public class CIBuildInfoServiceImplTestHelper {
         .build();
   }
 
-  public static CIPipeline getPipeline() {
-    return CIPipeline.builder().identifier(PIPELINE_ID).name(PIPELINE_NAME).build();
+  public static CDPipelineEntity getPipeline() {
+    return CDPipelineEntity.builder()
+        .identifier(PIPELINE_ID)
+        .cdPipeline(CDPipeline.builder().name(PIPELINE_NAME).build())
+        .build();
   }
 
   public static CIBuildFilterDTO getBuildFilter() {

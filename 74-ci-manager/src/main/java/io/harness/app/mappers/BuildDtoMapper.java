@@ -11,7 +11,6 @@ import io.harness.app.beans.entities.CIBuildBranchHook;
 import io.harness.app.beans.entities.CIBuildCommit;
 import io.harness.app.beans.entities.CIBuildPRHook;
 import io.harness.app.beans.entities.CIBuildPipeline;
-import io.harness.beans.CIPipeline;
 import io.harness.beans.Graph;
 import io.harness.beans.execution.BranchWebhookEvent;
 import io.harness.beans.execution.CommitDetails;
@@ -20,6 +19,7 @@ import io.harness.beans.execution.PRWebhookEvent;
 import io.harness.beans.execution.WebhookEvent;
 import io.harness.beans.execution.WebhookExecutionSource;
 import io.harness.beans.execution.WebhookGitUser;
+import io.harness.cdng.pipeline.beans.entities.CDPipelineEntity;
 import io.harness.ci.beans.entities.CIBuild;
 import io.harness.service.GraphGenerationService;
 
@@ -36,7 +36,7 @@ public class BuildDtoMapper {
 
   @Inject private GraphGenerationService graphGenerationService;
 
-  public CIBuildResponseDTO writeBuildDto(CIBuild ciBuild, CIPipeline ciPipeline) throws InternalError {
+  public CIBuildResponseDTO writeBuildDto(CIBuild ciBuild, CDPipelineEntity ciPipeline) throws InternalError {
     if (ciPipeline == null) {
       throw new InternalError(
           format("pipeline:% for build:%s", ciBuild.getPipelineIdentifier(), ciBuild.getBuildNumber()));
@@ -89,11 +89,11 @@ public class BuildDtoMapper {
         .build();
   }
 
-  private CIBuildPipeline convertPipeline(CIPipeline ciPipeline) {
+  private CIBuildPipeline convertPipeline(CDPipelineEntity ciPipeline) {
     return CIBuildPipeline.builder()
         .id(ciPipeline.getIdentifier())
-        .name(ciPipeline.getName())
-        .tags(ciPipeline.getTags())
+        .name(ciPipeline.getCdPipeline().getName())
+        .tags(ciPipeline.getCdPipeline().getTags())
         .build();
   }
 

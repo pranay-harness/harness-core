@@ -4,6 +4,7 @@ import static com.fasterxml.jackson.annotation.JsonInclude.Include.NON_EMPTY;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
+import io.harness.yaml.core.Tag;
 import lombok.Builder;
 import lombok.Value;
 
@@ -16,5 +17,6 @@ import java.util.List;
 public class CIBuildPipeline {
   private String id;
   private String name;
-  private List<String> tags;
+  // tags implementation might change. Refrain from using it.
+  private List<Tag> tags;
 }

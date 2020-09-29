@@ -1,6 +1,7 @@
 package io.harness.app;
 
 import io.harness.CIExecutionPersistenceConfig;
+import io.harness.NGPipelinePersistenceConfig;
 import io.harness.OrchestrationPersistenceConfig;
 import io.harness.OrchestrationStepsPersistenceConfig;
 import io.harness.TimeoutEnginePersistenceConfig;
@@ -13,6 +14,7 @@ public class CIPersistenceModule extends PersistenceModule {
   protected Class<? extends SpringPersistenceConfig>[] getConfigClasses() {
     return new Class[] {TimeoutEnginePersistenceConfig.class, OrchestrationPersistenceConfig.class,
         WingsPersistenceConfig.class, CIManagerPersistenceConfig.class, CIExecutionPersistenceConfig.class,
-        CIExecutionPersistenceConfig.class, OrchestrationStepsPersistenceConfig.class};
+        CIExecutionPersistenceConfig.class, OrchestrationStepsPersistenceConfig.class,
+        NGPipelinePersistenceConfig.class};
   }
 }

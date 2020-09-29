@@ -1,5 +1,7 @@
 package io.harness.app.impl;
 
+import static org.mockito.Mockito.mock;
+
 import com.google.common.collect.ImmutableSet;
 import com.google.inject.AbstractModule;
 import com.google.inject.Injector;
@@ -14,6 +16,7 @@ import io.harness.factory.ClosingFactoryModule;
 import io.harness.govern.ProviderModule;
 import io.harness.govern.ServersModule;
 import io.harness.morphia.MorphiaRegistrar;
+import io.harness.ngpipeline.repository.PipelineRepository;
 import io.harness.queue.QueueController;
 import io.harness.rule.InjectorRuleMixin;
 import io.harness.serializer.CiExecutionRegistrars;
@@ -97,6 +100,7 @@ public class CIManagerRule implements MethodRule, InjectorRuleMixin, MongoRuleMi
     modules.add(new AbstractModule() {
       @Override
       protected void configure() {
+        bind(PipelineRepository.class).toInstance(mock(PipelineRepository.class));
         bind(QueueController.class).toInstance(new QueueController() {
           @Override
           public boolean isPrimary() {
