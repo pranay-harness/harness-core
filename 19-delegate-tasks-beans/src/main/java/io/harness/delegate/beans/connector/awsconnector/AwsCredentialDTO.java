@@ -19,7 +19,7 @@ import javax.validation.constraints.NotNull;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @ApiModel("AwsCredential")
 public class AwsCredentialDTO {
-  @Valid CrossAccountAccess crossAccountAccess;
+  @Valid CrossAccountAccessDTO crossAccountAccess;
   @NotNull @JsonProperty("type") AwsCredentialType awsCredentialType;
   @JsonProperty("spec")
   @JsonTypeInfo(
@@ -30,7 +30,7 @@ public class AwsCredentialDTO {
 
   @Builder
   public AwsCredentialDTO(
-      AwsCredentialType awsCredentialType, AwsCredentialSpecDTO config, CrossAccountAccess crossAccountAccess) {
+      AwsCredentialType awsCredentialType, AwsCredentialSpecDTO config, CrossAccountAccessDTO crossAccountAccess) {
     this.awsCredentialType = awsCredentialType;
     this.config = config;
     this.crossAccountAccess = crossAccountAccess;

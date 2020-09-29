@@ -2,7 +2,7 @@ package io.harness.connector.entities.embedded.awsconnector;
 
 import io.harness.connector.entities.Connector;
 import io.harness.delegate.beans.connector.awsconnector.AwsCredentialType;
-import io.harness.delegate.beans.connector.awsconnector.CrossAccountAccess;
+import io.harness.delegate.beans.connector.awsconnector.CrossAccountAccessDTO;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -20,6 +20,6 @@ import org.springframework.data.annotation.TypeAlias;
 @TypeAlias("io.harness.connector.entities.embedded.awsconnector.AwsConfig")
 public class AwsConfig extends Connector {
   AwsCredentialType credentialType;
-  CrossAccountAccess crossAccountAccess;
+  CrossAccountAccessDTO crossAccountAccess;
   AwsCredential credential;
 }
