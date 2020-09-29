@@ -16,7 +16,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 
 @Slf4j
-public class WaitEngineComponentTest extends WaitEngineTest {
+public class WaitEngineComponentTest extends WaitEngineTestBase {
   @Inject private Map<String, TestExecution> tests;
 
   @Test

@@ -11,7 +11,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import com.google.inject.Inject;
 
-import io.harness.WaitEngineTest;
+import io.harness.WaitEngineTestBase;
 import io.harness.category.element.UnitTests;
 import io.harness.maintenance.MaintenanceGuard;
 import io.harness.persistence.HPersistence;
@@ -33,7 +33,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 
-public class WaitNotifyEngineTest extends WaitEngineTest {
+public class WaitNotifyEngineTest extends WaitEngineTestBase {
   private static AtomicInteger callCount;
   private static Map<String, ResponseData> responseMap;
 
