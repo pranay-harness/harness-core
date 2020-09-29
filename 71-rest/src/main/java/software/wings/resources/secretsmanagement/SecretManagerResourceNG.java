@@ -12,6 +12,8 @@ import io.harness.eraro.ErrorCode;
 import io.harness.rest.RestResponse;
 import io.harness.secretmanagerclient.dto.SecretManagerConfigDTO;
 import io.harness.secretmanagerclient.dto.SecretManagerConfigUpdateDTO;
+import io.harness.secretmanagerclient.dto.SecretManagerMetadataDTO;
+import io.harness.secretmanagerclient.dto.SecretManagerMetadataRequestDTO;
 import io.swagger.annotations.Api;
 import software.wings.beans.SecretManagerConfig;
 import software.wings.resources.secretsmanagement.mappers.SecretManagerConfigMapper;
@@ -47,6 +49,15 @@ public class SecretManagerResourceNG {
   public RestResponse<SecretManagerConfigDTO> createSecretManager(SecretManagerConfigDTO dto) {
     SecretManagerConfig secretManagerConfig = SecretManagerConfigMapper.fromDTO(dto);
     return new RestResponse<>(ngSecretManagerService.createSecretManager(secretManagerConfig).toDTO(true));
+  }
+
+  @POST
+  @Path("meta-data")
+  @Produces("application/json")
+  @Consumes("application/json")
+  public RestResponse<SecretManagerMetadataDTO> getMetadata(
+      @QueryParam(ACCOUNT_KEY) @NotNull String accountIdentifier, SecretManagerMetadataRequestDTO requestDTO) {
+    return new RestResponse<>(ngSecretManagerService.getMetadata(accountIdentifier, requestDTO));
   }
 
   @GET

@@ -2,13 +2,24 @@ package software.wings.service.impl.security;
 
 import static io.harness.security.encryption.EncryptionType.GCP_KMS;
 import static io.harness.security.encryption.EncryptionType.LOCAL;
+import static io.harness.security.encryption.EncryptionType.VAULT;
 
 import com.google.inject.Inject;
 
+import io.harness.data.structure.EmptyPredicate;
 import io.harness.exception.DuplicateFieldException;
 import io.harness.secretmanagerclient.NGMetadata.NGMetadataKeys;
 import io.harness.secretmanagerclient.NGSecretManagerMetadata;
 import io.harness.secretmanagerclient.NGSecretManagerMetadata.NGSecretManagerMetadataKeys;
+import io.harness.secretmanagerclient.dto.SecretManagerMetadataDTO;
+import io.harness.secretmanagerclient.dto.SecretManagerMetadataRequestDTO;
+import io.harness.secretmanagerclient.dto.VaultAppRoleCredentialDTO;
+import io.harness.secretmanagerclient.dto.VaultAuthTokenCredentialDTO;
+import io.harness.secretmanagerclient.dto.VaultMetadataRequestSpecDTO;
+import io.harness.secretmanagerclient.dto.VaultMetadataSpecDTO;
+import io.harness.secretmanagerclient.dto.VaultSecretEngineDTO;
+import io.harness.security.encryption.AccessType;
+import io.harness.security.encryption.EncryptionType;
 import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.query.Query;
 import software.wings.beans.GcpKmsConfig;
@@ -17,6 +28,8 @@ import software.wings.beans.SecretManagerConfig;
 import software.wings.beans.SecretManagerConfig.SecretManagerConfigKeys;
 import software.wings.beans.VaultConfig;
 import software.wings.dl.WingsPersistence;
+import software.wings.service.impl.security.vault.SecretEngineSummary;
+import software.wings.service.impl.security.vault.VaultAppRoleLoginResult;
 import software.wings.service.intfc.security.GcpSecretsManagerService;
 import software.wings.service.intfc.security.LocalEncryptionService;
 import software.wings.service.intfc.security.NGSecretManagerService;
@@ -26,6 +39,7 @@ import software.wings.service.intfc.security.VaultService;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 import javax.validation.constraints.NotNull;
 
 @Slf4j
@@ -60,6 +74,13 @@ public class NGSecretManagerServiceImpl implements NGSecretManagerService {
       }
       switch (secretManagerConfig.getEncryptionType()) {
         case VAULT:
+          VaultConfig vaultConfig = (VaultConfig) secretManagerConfig;
+          if (vaultConfig.getAccessType() == AccessType.APP_ROLE) {
+            VaultAppRoleLoginResult loginResult = vaultService.appRoleLogin(vaultConfig);
+            if (loginResult != null && EmptyPredicate.isNotEmpty(loginResult.getClientToken())) {
+              vaultConfig.setAuthToken(loginResult.getClientToken());
+            }
+          }
           vaultService.saveOrUpdateVaultConfig(
               secretManagerConfig.getAccountId(), (VaultConfig) secretManagerConfig, false);
           return secretManagerConfig;
@@ -188,5 +209,52 @@ public class NGSecretManagerServiceImpl implements NGSecretManagerService {
       }
     }
     return false;
+  }
+
+  private VaultSecretEngineDTO fromSecretEngineSummary(SecretEngineSummary secretEngineSummary) {
+    if (secretEngineSummary == null) {
+      return null;
+    }
+    return VaultSecretEngineDTO.builder()
+        .name(secretEngineSummary.getName())
+        .description(secretEngineSummary.getDescription())
+        .type(secretEngineSummary.getType())
+        .version(secretEngineSummary.getVersion())
+        .build();
+  }
+
+  @Override
+  public SecretManagerMetadataDTO getMetadata(String accountIdentifier, SecretManagerMetadataRequestDTO requestDTO) {
+    if (requestDTO.getEncryptionType() == EncryptionType.VAULT) {
+      VaultConfig vaultConfig;
+      Optional<SecretManagerConfig> secretManagerConfigOptional = getSecretManager(accountIdentifier,
+          requestDTO.getOrgIdentifier(), requestDTO.getProjectIdentifier(), requestDTO.getIdentifier());
+      if (secretManagerConfigOptional.isPresent()) {
+        vaultConfig = (VaultConfig) secretManagerConfigOptional.get();
+        secretManagerConfigService.decryptEncryptionConfigSecrets(vaultConfig.getAccountId(), vaultConfig, false);
+      } else {
+        VaultMetadataRequestSpecDTO vaultMetadataRequestSpecDTO = (VaultMetadataRequestSpecDTO) requestDTO.getSpec();
+        vaultConfig = VaultConfig.builder().vaultUrl(vaultMetadataRequestSpecDTO.getUrl()).build();
+        vaultConfig.setAccountId(accountIdentifier);
+        if (vaultMetadataRequestSpecDTO.getAccessType() == AccessType.APP_ROLE) {
+          vaultConfig.setAppRoleId(((VaultAppRoleCredentialDTO) vaultMetadataRequestSpecDTO.getSpec()).getAppRoleId());
+          vaultConfig.setSecretId(((VaultAppRoleCredentialDTO) vaultMetadataRequestSpecDTO.getSpec()).getSecretId());
+        } else {
+          vaultConfig.setAuthToken(
+              ((VaultAuthTokenCredentialDTO) vaultMetadataRequestSpecDTO.getSpec()).getAuthToken());
+        }
+      }
+      List<SecretEngineSummary> secretEngineSummaryList = vaultService.listSecretEngines(vaultConfig);
+      return SecretManagerMetadataDTO.builder()
+          .encryptionType(VAULT)
+          .spec(
+              VaultMetadataSpecDTO.builder()
+                  .secretEngines(
+                      secretEngineSummaryList.stream().map(this ::fromSecretEngineSummary).collect(Collectors.toList()))
+                  .build())
+          .build();
+    }
+    throw new UnsupportedOperationException(
+        "This API is not supported for secret manager of type: " + requestDTO.getEncryptionType());
   }
 }

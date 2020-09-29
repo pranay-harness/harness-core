@@ -1,5 +1,7 @@
 package software.wings.service.intfc.security;
 
+import io.harness.secretmanagerclient.dto.SecretManagerMetadataDTO;
+import io.harness.secretmanagerclient.dto.SecretManagerMetadataRequestDTO;
 import software.wings.beans.SecretManagerConfig;
 
 import java.util.List;
@@ -22,4 +24,6 @@ public interface NGSecretManagerService {
 
   boolean deleteSecretManager(
       String accountIdentifier, String orgIdentifier, String projectIdentifier, String identifier);
+
+  SecretManagerMetadataDTO getMetadata(String accountIdentifier, SecretManagerMetadataRequestDTO requestDTO);
 }

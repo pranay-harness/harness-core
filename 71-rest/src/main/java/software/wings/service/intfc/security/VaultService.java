@@ -8,6 +8,7 @@ import software.wings.beans.alert.KmsSetupAlert;
 import software.wings.security.encryption.EncryptedData;
 import software.wings.security.encryption.SecretChangeLog;
 import software.wings.service.impl.security.vault.SecretEngineSummary;
+import software.wings.service.impl.security.vault.VaultAppRoleLoginResult;
 import software.wings.settings.SettingVariableTypes;
 
 import java.io.File;
@@ -64,4 +65,6 @@ public interface VaultService {
   KmsSetupAlert getRenewalAlert(VaultConfig vaultConfig);
 
   void validateVaultConfig(String accountId, VaultConfig vaultConfig);
+
+  VaultAppRoleLoginResult appRoleLogin(VaultConfig vaultConfig);
 }

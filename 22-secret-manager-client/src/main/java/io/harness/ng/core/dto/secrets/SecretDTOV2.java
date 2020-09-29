@@ -24,7 +24,7 @@ public class SecretDTOV2 {
   @NotNull private String identifier;
   private String orgIdentifier;
   private String projectIdentifier;
-  @NotNull private Map<String, String> tags;
+  private Map<String, String> tags;
 
   @JsonProperty("spec")
   @JsonTypeInfo(

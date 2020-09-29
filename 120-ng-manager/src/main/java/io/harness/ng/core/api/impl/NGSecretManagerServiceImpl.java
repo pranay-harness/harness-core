@@ -8,6 +8,8 @@ import com.google.inject.Singleton;
 import io.harness.ng.core.api.NGSecretManagerService;
 import io.harness.secretmanagerclient.dto.SecretManagerConfigDTO;
 import io.harness.secretmanagerclient.dto.SecretManagerConfigUpdateDTO;
+import io.harness.secretmanagerclient.dto.SecretManagerMetadataDTO;
+import io.harness.secretmanagerclient.dto.SecretManagerMetadataRequestDTO;
 import io.harness.secretmanagerclient.remote.SecretManagerClient;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -48,6 +50,11 @@ public class NGSecretManagerServiceImpl implements NGSecretManagerService {
   @Override
   public SecretManagerConfigDTO getGlobalSecretManager(String accountIdentifier) {
     return getResponse(secretManagerClient.getGlobalSecretManager(accountIdentifier));
+  }
+
+  @Override
+  public SecretManagerMetadataDTO getMetadata(String accountIdentifier, SecretManagerMetadataRequestDTO requestDTO) {
+    return getResponse(secretManagerClient.getSecretManagerMetadata(accountIdentifier, requestDTO));
   }
 
   @Override
