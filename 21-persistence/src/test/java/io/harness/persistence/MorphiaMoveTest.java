@@ -17,8 +17,6 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mongodb.morphia.ObjectFactory;
 
-interface MorphiaInterface {}
-
 @Builder
 class HackMorphiaClass implements MorphiaInterface {
   private String test;

@@ -11,99 +11,23 @@ import ch.qos.logback.classic.LoggerContext;
 import ch.qos.logback.classic.turbo.TurboFilter;
 import ch.qos.logback.core.spi.FilterReply;
 import de.bwaldvogel.mongo.wire.MongoWireProtocolHandler;
+import io.harness.cache.MongoStoreTestBase.TestOrdinalEntity;
+import io.harness.cache.MongoStoreTestBase.TestNominalEntity;
 import io.harness.PersistenceTestBase;
 import io.harness.category.element.UnitTests;
 import io.harness.persistence.HPersistence;
 import io.harness.rule.Owner;
-import lombok.Builder;
-import lombok.Value;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.Marker;
 
-import java.io.ObjectStreamClass;
 import java.util.Collections;
-import java.util.List;
 
 public class MongoStoreTest extends PersistenceTestBase {
   @Inject HPersistence hPersistence;
   @Inject MongoStore mongoStore;
-
-  @Value
-  @Builder
-  public static class TestNominalEntity implements Distributable, Nominal {
-    public static final long STRUCTURE_HASH = ObjectStreamClass.lookup(TestNominalEntity.class).getSerialVersionUID();
-    public static final long algorithmId = 0;
-
-    private long contextHash;
-
-    private String key;
-    private String value;
-
-    @Override
-    public long structureHash() {
-      return STRUCTURE_HASH;
-    }
-
-    @Override
-    public long algorithmId() {
-      return algorithmId;
-    }
-
-    @Override
-    public long contextHash() {
-      return contextHash;
-    }
-
-    @Override
-    public String key() {
-      return key;
-    }
-
-    @Override
-    public List<String> parameters() {
-      return null;
-    }
-  }
-
-  @Value
-  @Builder
-  public static class TestOrdinalEntity implements Distributable, Ordinal {
-    public static final long STRUCTURE_HASH = ObjectStreamClass.lookup(TestOrdinalEntity.class).getSerialVersionUID();
-    public static final long algorithmId = 0;
-
-    private long contextOrder;
-
-    private String key;
-    private String value;
-
-    @Override
-    public long structureHash() {
-      return STRUCTURE_HASH;
-    }
-
-    @Override
-    public long algorithmId() {
-      return algorithmId;
-    }
-
-    @Override
-    public long contextOrder() {
-      return contextOrder;
-    }
-
-    @Override
-    public String key() {
-      return key;
-    }
-
-    @Override
-    public List<String> parameters() {
-      return null;
-    }
-  }
 
   @Test
   @Owner(developers = GEORGE)

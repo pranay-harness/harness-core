@@ -30,6 +30,7 @@ java_library(
         "@maven//:com_hazelcast_hazelcast",
         "@maven//:com_jayway_jsonpath_json_path",
         "@maven//:com_novemberain_quartz_mongodb",
+        "@maven//:com_smoketurner_dropwizard_swagger",
         "@maven//:commons_dbcp_commons_dbcp",
         "@maven//:de_bwaldvogel_mongo_java_server",
         "@maven//:de_bwaldvogel_mongo_java_server_core",
@@ -98,12 +99,25 @@ java_library(
 )
 
 java_library(
+    name = "supporter-test",
+    srcs = glob(["src/supporter-test/**/*.java"]),
+    visibility = ["//visibility:public"],
+    deps = [
+        "maven_deps",
+        "module",
+        "test_deps",
+        "//:lombok",
+    ],
+)
+
+java_library(
     name = "tests",
     srcs = glob(["src/test/**/*.java"]),
     visibility = ["//visibility:public"],
     deps = [
         "maven_deps",
         "module",
+        "supporter-test",
         "test_deps",
         "//:lombok",
     ],
