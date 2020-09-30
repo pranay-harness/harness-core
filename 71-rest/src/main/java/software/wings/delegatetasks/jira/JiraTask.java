@@ -29,6 +29,7 @@ import net.rcarz.jiraclient.JiraClient;
 import net.rcarz.jiraclient.JiraException;
 import net.rcarz.jiraclient.Resource;
 import net.rcarz.jiraclient.RestException;
+import net.rcarz.jiraclient.TimeTracking;
 import net.rcarz.jiraclient.Transition;
 import net.sf.json.JSON;
 import net.sf.json.JSONArray;
@@ -338,10 +339,8 @@ public class JiraTask extends AbstractDelegateRunnableTask {
         }
 
         if (EmptyPredicate.isNotEmpty(parameters.getCustomFields())) {
-          for (Entry<String, JiraCustomFieldValue> customField : parameters.getCustomFields().entrySet()) {
-            update.field(customField.getKey(), getCustomFieldValue(customField));
-            fieldsUpdated = true;
-          }
+          setCustomFieldsOnUpdate(parameters, update);
+          fieldsUpdated = true;
         }
 
         if (fieldsUpdated) {
@@ -387,6 +386,22 @@ public class JiraTask extends AbstractDelegateRunnableTask {
         .issueKey(issueKeys.get(0))
         .jiraIssueData(firstIssueInListData)
         .build();
+  }
+
+  void setCustomFieldsOnUpdate(JiraTaskParameters parameters, FluentUpdate update) {
+    TimeTracking timeTracking = new TimeTracking();
+    for (Entry<String, JiraCustomFieldValue> customField : parameters.getCustomFields().entrySet()) {
+      if (customField.getKey().equals("TimeTracking:OriginalEstimate")) {
+        timeTracking.setOriginalEstimate((String) getCustomFieldValue(customField));
+      } else if (customField.getKey().equals("TimeTracking:RemainingEstimate")) {
+        timeTracking.setRemainingEstimate((String) getCustomFieldValue(customField));
+      } else {
+        update.field(customField.getKey(), getCustomFieldValue(customField));
+      }
+    }
+    if (timeTracking.getOriginalEstimate() != null || timeTracking.getRemainingEstimate() != null) {
+      update.field(Field.TIME_TRACKING, timeTracking);
+    }
   }
 
   public void updateStatus(Issue issue, String status) throws JiraException {
@@ -467,9 +482,7 @@ public class JiraTask extends AbstractDelegateRunnableTask {
       }
 
       if (EmptyPredicate.isNotEmpty(parameters.getCustomFields())) {
-        for (Entry<String, JiraCustomFieldValue> customField : parameters.getCustomFields().entrySet()) {
-          fluentCreate.field(customField.getKey(), getCustomFieldValue(customField));
-        }
+        setCustomFieldsOnCreate(parameters, fluentCreate);
       }
 
       Issue issue = fluentCreate.execute();
@@ -500,6 +513,22 @@ public class JiraTask extends AbstractDelegateRunnableTask {
     }
   }
 
+  void setCustomFieldsOnCreate(JiraTaskParameters parameters, Issue.FluentCreate fluentCreate) {
+    TimeTracking timeTracking = new TimeTracking();
+    for (Entry<String, JiraCustomFieldValue> customField : parameters.getCustomFields().entrySet()) {
+      if (customField.getKey().equals("TimeTracking:OriginalEstimate")) {
+        timeTracking.setOriginalEstimate((String) getCustomFieldValue(customField));
+      } else if (customField.getKey().equals("TimeTracking:RemainingEstimate")) {
+        timeTracking.setRemainingEstimate((String) getCustomFieldValue(customField));
+      } else {
+        fluentCreate.field(customField.getKey(), getCustomFieldValue(customField));
+      }
+    }
+    if (timeTracking.getOriginalEstimate() != null || timeTracking.getRemainingEstimate() != null) {
+      fluentCreate.field(Field.TIME_TRACKING, timeTracking);
+    }
+  }
+
   private Object getCustomFieldValue(Entry<String, JiraCustomFieldValue> customFieldValueEntry) {
     String fieldName = customFieldValueEntry.getKey();
     String type = customFieldValueEntry.getValue().getFieldType();
@@ -514,6 +543,7 @@ public class JiraTask extends AbstractDelegateRunnableTask {
         return Double.parseDouble(fieldValue);
       case "date":
       case "string":
+      case "timetracking":
       case "any":
         return fieldValue;
       case "datetime":
