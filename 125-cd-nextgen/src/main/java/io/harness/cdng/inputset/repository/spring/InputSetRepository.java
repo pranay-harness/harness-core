@@ -2,7 +2,7 @@ package io.harness.cdng.inputset.repository.spring;
 
 import io.harness.annotation.HarnessRepo;
 import io.harness.cdng.inputset.repository.custom.InputSetRepositoryCustom;
-import io.harness.ngpipeline.BaseInputSetEntity;
+import io.harness.ngpipeline.overlayinputset.beans.BaseInputSetEntity;
 import org.springframework.data.repository.PagingAndSortingRepository;
 
 import java.util.List;

@@ -9,12 +9,14 @@ import com.codahale.metrics.annotation.Timed;
 import io.harness.NGConstants;
 import io.harness.beans.EmbeddedUser;
 import io.harness.beans.ExecutionStrategyType;
+import io.harness.cdng.inputset.beans.resource.MergeInputSetRequestDTO;
 import io.harness.cdng.pipeline.NgPipeline;
 import io.harness.cdng.pipeline.StepCategory;
 import io.harness.cdng.pipeline.beans.CDPipelineValidationInfo;
 import io.harness.cdng.pipeline.beans.dto.CDPipelineResponseDTO;
 import io.harness.cdng.pipeline.beans.dto.CDPipelineSummaryResponseDTO;
 import io.harness.cdng.pipeline.beans.dto.CDPipelineValidationInfoDTO;
+import io.harness.cdng.pipeline.beans.resources.NGPipelineExecutionResponseDTO;
 import io.harness.cdng.pipeline.executions.service.NgPipelineExecutionService;
 import io.harness.cdng.pipeline.mappers.PipelineValidationMapper;
 import io.harness.cdng.pipeline.service.PipelineService;
@@ -42,6 +44,7 @@ import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
@@ -165,18 +168,57 @@ public class CDNGPipelineResource {
   @ExceptionMetered
   @ApiOperation(value = "Execute a pipeline", nickname = "postPipelineExecute")
   public ResponseDTO<PlanExecution> runPipeline(@NotNull @QueryParam(NGConstants.ACCOUNT_KEY) String accountId,
-      @NotNull @QueryParam(NGConstants.ORG_KEY) String orgId,
-      @NotNull @QueryParam(NGConstants.PROJECT_KEY) String projectId, @QueryParam("appId") String appId,
-      @PathParam("identifier") @NotEmpty String pipelineId) {
+      @NotNull @QueryParam(NGConstants.ORG_KEY) String orgIdentifier,
+      @NotNull @QueryParam(NGConstants.PROJECT_KEY) String projectIdentifier,
+      @PathParam("identifier") @NotEmpty String pipelineIdentifier) {
     Optional<CDPipelineResponseDTO> cdPipelineRequestDTO =
-        ngPipelineService.getPipeline(pipelineId, accountId, orgId, projectId);
-    // TODO: remove APPID once the dependency is moved.
+        ngPipelineService.getPipeline(pipelineIdentifier, accountId, orgIdentifier, projectIdentifier);
     String yaml = "";
     if (cdPipelineRequestDTO.isPresent()) {
       yaml = cdPipelineRequestDTO.get().getYamlPipeline();
     }
     return ResponseDTO.newResponse(
-        ngPipelineExecutionService.triggerPipeline(yaml, accountId, orgId, projectId, EMBEDDED_USER));
+        ngPipelineExecutionService.runPipeline(yaml, accountId, orgIdentifier, projectIdentifier, EMBEDDED_USER));
+  }
+
+  @POST
+  @Path("/{identifier}/execute/inputSetYaml")
+  @Timed
+  @ExceptionMetered
+  @ApiImplicitParams({
+    @ApiImplicitParam(
+        dataTypeClass = NgPipeline.class, dataType = "io.harness.cdng.pipeline.CDPipeline", paramType = "body")
+  })
+  @ApiOperation(
+      value = "Execute a pipeline with inputSet pipeline yaml", nickname = "postPipelineExecuteWithInputSetYaml")
+  public ResponseDTO<NGPipelineExecutionResponseDTO>
+  runPipelineWithInputSetPipelineYaml(@NotNull @QueryParam(NGConstants.ACCOUNT_KEY) String accountId,
+      @NotNull @QueryParam(NGConstants.ORG_KEY) String orgIdentifier,
+      @NotNull @QueryParam(NGConstants.PROJECT_KEY) String projectIdentifier,
+      @PathParam("identifier") @NotEmpty String pipelineIdentifier,
+      @QueryParam("useFQNIfError") @DefaultValue("false") boolean useFQNIfErrorResponse,
+      @NotNull @ApiParam(hidden = true, type = "") String inputSetPipelineYaml) {
+    return ResponseDTO.newResponse(
+        ngPipelineExecutionService.runPipelineWithInputSetPipelineYaml(accountId, orgIdentifier, projectIdentifier,
+            pipelineIdentifier, inputSetPipelineYaml, useFQNIfErrorResponse, EMBEDDED_USER));
+  }
+
+  @POST
+  @Path("/{identifier}/execute/inputSetList")
+  @Timed
+  @ExceptionMetered
+  @ApiOperation(
+      value = "Execute a pipeline with input set references list", nickname = "postPipelineExecuteWithInputSetList")
+  public ResponseDTO<NGPipelineExecutionResponseDTO>
+  runPipelineWithInputSetIdentifierList(@NotNull @QueryParam(NGConstants.ACCOUNT_KEY) String accountId,
+      @NotNull @QueryParam(NGConstants.ORG_KEY) String orgIdentifier,
+      @NotNull @QueryParam(NGConstants.PROJECT_KEY) String projectIdentifier,
+      @PathParam("identifier") @NotEmpty String pipelineIdentifier,
+      @QueryParam("useFQNIfError") @DefaultValue("false") boolean useFQNIfErrorResponse,
+      @NotNull @Valid MergeInputSetRequestDTO mergeInputSetRequestDTO) {
+    return ResponseDTO.newResponse(
+        ngPipelineExecutionService.runPipelineWithInputSetReferencesList(accountId, orgIdentifier, projectIdentifier,
+            pipelineIdentifier, mergeInputSetRequestDTO.getInputSetReferences(), useFQNIfErrorResponse, EMBEDDED_USER));
   }
 
   @GET

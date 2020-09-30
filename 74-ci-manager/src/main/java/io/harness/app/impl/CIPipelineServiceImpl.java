@@ -14,7 +14,7 @@ import io.harness.app.yaml.YAML;
 import io.harness.cdng.pipeline.NgPipeline;
 import io.harness.cdng.pipeline.NgPipeline.NgPipelineKeys;
 import io.harness.cdng.pipeline.beans.entities.NgPipelineEntity;
-import io.harness.ngpipeline.repository.PipelineRepository;
+import io.harness.ngpipeline.pipeline.repository.PipelineRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.mongodb.core.query.Criteria;
 

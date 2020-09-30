@@ -2,7 +2,7 @@ package io.harness.cdng.inputset.beans.entities;
 
 import io.harness.annotation.HarnessEntity;
 import io.harness.cdng.inputset.beans.yaml.CDInputSet;
-import io.harness.ngpipeline.BaseInputSetEntity;
+import io.harness.ngpipeline.overlayinputset.beans.BaseInputSetEntity;
 import lombok.Builder;
 import lombok.Data;
 import lombok.experimental.FieldNameConstants;

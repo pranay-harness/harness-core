@@ -29,7 +29,7 @@ import io.harness.exception.DuplicateFieldException;
 import io.harness.exception.GeneralException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.PipelineDoesNotExistException;
-import io.harness.ngpipeline.repository.PipelineRepository;
+import io.harness.ngpipeline.pipeline.repository.PipelineRepository;
 import io.harness.walktree.visitor.response.VisitorErrorResponse;
 import io.harness.walktree.visitor.response.VisitorErrorResponseWrapper;
 import io.harness.yaml.core.StageElement;
@@ -72,7 +72,7 @@ public class PipelineServiceImpl implements PipelineService {
       NgPipelineEntity savedNgPipelineEntity = pipelineRepository.save(ngPipelineEntity);
       return savedNgPipelineEntity.getIdentifier();
     } catch (IOException e) {
-      throw new GeneralException("error while saving pipeline", e);
+      throw new GeneralException("Error while de-serializing pipeline. is this valid Yaml? - " + e.getMessage(), e);
     } catch (DuplicateKeyException ex) {
       throw new DuplicateFieldException(
           String.format("Pipeline already exists under project %s ", projectId), USER_SRE, ex);
@@ -95,7 +95,7 @@ public class PipelineServiceImpl implements PipelineService {
             "Pipeline Identifier in the query Param & Identifier in the pipeline yaml are not matching");
       }
     } catch (IOException e) {
-      throw new GeneralException("error while de-serializing pipeline. is this valid Yaml?", e);
+      throw new GeneralException("Error while de-serializing pipeline. is this valid Yaml? - " + e.getMessage(), e);
     } catch (NoSuchElementException ex) {
       throw new GeneralException("Pipeline does not exist", ex);
     }

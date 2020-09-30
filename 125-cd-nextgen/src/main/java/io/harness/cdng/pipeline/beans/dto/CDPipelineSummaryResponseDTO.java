@@ -1,7 +1,9 @@
 package io.harness.cdng.pipeline.beans.dto;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonInclude;
 import io.harness.yaml.core.Tag;
+import io.swagger.annotations.ApiModel;
 import lombok.Builder;
 import lombok.Value;
 
@@ -10,6 +12,8 @@ import java.util.List;
 @Value
 @Builder
 @JsonIgnoreProperties(ignoreUnknown = true)
+@JsonInclude(JsonInclude.Include.NON_NULL)
+@ApiModel("NGPipelineSummaryResponse")
 public class CDPipelineSummaryResponseDTO {
   String name;
   String identifier;

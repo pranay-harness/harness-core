@@ -7,8 +7,6 @@ import lombok.Builder;
 import lombok.Value;
 import lombok.experimental.FieldDefaults;
 
-import java.util.Map;
-
 @Value
 @Builder
 @FieldDefaults(level = AccessLevel.PRIVATE)
@@ -17,6 +15,5 @@ public class MergeInputSetResponseDTO {
   String pipelineYaml;
 
   @ApiModelProperty(name = "isErrorResponse") boolean isErrorResponse;
-  String errorPipelineYaml;
-  Map<String, MergeInputSetErrorWrapperDTO> uuidToErrorResponseMap;
+  InputSetErrorWrapperDTO inputSetErrorWrapper;
 }

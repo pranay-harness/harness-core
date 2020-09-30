@@ -13,7 +13,7 @@ import io.harness.cdng.inputset.beans.resource.InputSetListType;
 import io.harness.cdng.inputset.mappers.InputSetElementMapper;
 import io.harness.cdng.inputset.mappers.InputSetFilterHelper;
 import io.harness.exception.InvalidRequestException;
-import io.harness.ngpipeline.BaseInputSetEntity;
+import io.harness.ngpipeline.overlayinputset.beans.BaseInputSetEntity;
 import io.harness.ngpipeline.overlayinputset.beans.entities.OverlayInputSetEntity;
 import io.harness.rule.Owner;
 import io.harness.utils.PageUtils;

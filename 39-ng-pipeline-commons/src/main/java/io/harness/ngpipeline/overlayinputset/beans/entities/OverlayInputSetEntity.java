@@ -1,7 +1,7 @@
 package io.harness.ngpipeline.overlayinputset.beans.entities;
 
 import io.harness.annotation.HarnessEntity;
-import io.harness.ngpipeline.BaseInputSetEntity;
+import io.harness.ngpipeline.overlayinputset.beans.BaseInputSetEntity;
 import lombok.Builder;
 import lombok.Data;
 import lombok.experimental.FieldNameConstants;

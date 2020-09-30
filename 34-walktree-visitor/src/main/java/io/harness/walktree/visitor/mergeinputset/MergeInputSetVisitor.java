@@ -156,9 +156,9 @@ public class MergeInputSetVisitor extends SimpleVisitor<DummyVisitableElement> {
         }
 
         try {
-          VisitorErrorResponseWrapper errorResponseWrapper =
-              MergeInputSetHelperUtils.isLeafInputSetFieldValid(currentElementField, inputSetElement.getIdentifier(),
-                  inputSetFieldValue, currentElementFieldValue, visitorFieldRegistry);
+          VisitorErrorResponseWrapper errorResponseWrapper = MergeInputSetHelperUtils.isLeafInputSetFieldValid(
+              currentElementField, inputSetElement.getInputSetIdentifier(), inputSetFieldValue,
+              currentElementFieldValue, visitorFieldRegistry);
           if (EmptyPredicate.isNotEmpty(errorResponseWrapper.getErrors())) {
             String uuid = VisitorResponseUtils.addUUIDValueToGivenField(
                 this.getContextMap(), dummyElement, visitorFieldRegistry, currentElementField, useFQN);

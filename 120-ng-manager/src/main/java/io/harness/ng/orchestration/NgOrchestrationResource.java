@@ -86,7 +86,7 @@ public class NgOrchestrationResource {
   @ApiOperation(value = "create and run an execution plan", nickname = "test-execution-plan")
   public RestResponse<PlanExecution> testExecutionPlan(@QueryParam("accountId") String accountId, String pipelineYaml) {
     return new RestResponse<>(
-        ngPipelineExecutionService.triggerPipeline(pipelineYaml, accountId, "orgid1", "projectid1", EMBEDDED_USER));
+        ngPipelineExecutionService.runPipeline(pipelineYaml, accountId, "orgid1", "projectid1", EMBEDDED_USER));
   }
 
   @GET

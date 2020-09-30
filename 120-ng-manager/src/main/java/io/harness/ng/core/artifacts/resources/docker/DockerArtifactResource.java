@@ -20,6 +20,7 @@ import lombok.AllArgsConstructor;
 
 import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
+import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
@@ -50,7 +51,7 @@ public class DockerArtifactResource {
     return ResponseDTO.newResponse(buildDetails);
   }
 
-  @GET
+  @POST
   @Path("getLabels")
   @ApiOperation(value = "Gets docker labels", nickname = "getLabelsForDocker")
   public ResponseDTO<DockerResponseDTO> getLabels(@QueryParam("imagePath") String imagePath,
@@ -64,7 +65,7 @@ public class DockerArtifactResource {
     return ResponseDTO.newResponse(buildDetails);
   }
 
-  @GET
+  @POST
   @Path("getLastSuccessfulBuild")
   @ApiOperation(value = "Gets docker last successful build", nickname = "getLastSuccessfulBuildForDocker")
   public ResponseDTO<DockerBuildDetailsDTO> getLastSuccessfulBuild(@QueryParam("imagePath") String imagePath,

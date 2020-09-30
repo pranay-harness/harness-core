@@ -6,6 +6,6 @@ import lombok.Value;
 @Value
 @Builder
 public class MergeVisitorInputSetElement {
-  String identifier;
+  String inputSetIdentifier;
   Object inputSetElement;
 }

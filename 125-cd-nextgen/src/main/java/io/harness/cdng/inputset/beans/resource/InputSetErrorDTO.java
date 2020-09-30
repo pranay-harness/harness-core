@@ -6,9 +6,9 @@ import lombok.Value;
 
 @Value
 @Builder
-@ApiModel("MergeInputSetError")
-public class MergeInputSetErrorDTO {
+@ApiModel("InputSetError")
+public class InputSetErrorDTO {
   String fieldName;
   String message;
-  String causedByInputSetIdentifier;
+  String identifierOfErrorSource;
 }

@@ -1,4 +1,4 @@
-package io.harness.ngpipeline.repository;
+package io.harness.ngpipeline.pipeline.repository;
 
 import io.harness.annotation.HarnessRepo;
 import io.harness.cdng.pipeline.beans.entities.NgPipelineEntity;
