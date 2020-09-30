@@ -3,6 +3,7 @@ package software.wings.graphql.datafetcher.connector.types;
 import io.harness.exception.InvalidRequestException;
 import io.harness.utils.RequestField;
 import lombok.AllArgsConstructor;
+import lombok.NoArgsConstructor;
 import software.wings.beans.GitConfig;
 import software.wings.beans.SettingAttribute;
 import software.wings.graphql.datafetcher.connector.ConnectorsController;
@@ -12,6 +13,7 @@ import software.wings.graphql.schema.mutation.connector.input.QLGitConnectorInpu
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.security.SecretManager;
 
+@NoArgsConstructor
 @AllArgsConstructor
 public class GitConnector extends Connector {
   private SecretManager secretManager;
@@ -138,12 +140,12 @@ public class GitConnector extends Connector {
 
   private void handleSecrets(
       RequestField<String> passwordSecretId, RequestField<String> sshSettingId, GitConfig gitConfig) {
-    if (passwordSecretId.isPresent()) {
-      passwordSecretId.getValue().ifPresent(gitConfig::setEncryptedPassword);
+    if (passwordSecretId.isPresent() && passwordSecretId.getValue().isPresent()) {
+      gitConfig.setEncryptedPassword(passwordSecretId.getValue().get());
       gitConfig.setKeyAuth(false);
       gitConfig.setSshSettingId(null);
-    } else if (sshSettingId.isPresent()) {
-      sshSettingId.getValue().ifPresent(gitConfig::setSshSettingId);
+    } else if (sshSettingId.isPresent() && sshSettingId.getValue().isPresent()) {
+      gitConfig.setSshSettingId(sshSettingId.getValue().get());
       gitConfig.setKeyAuth(true);
       gitConfig.setEncryptedPassword(null);
     }
