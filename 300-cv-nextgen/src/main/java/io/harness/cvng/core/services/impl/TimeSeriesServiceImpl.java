@@ -418,7 +418,7 @@ public class TimeSeriesServiceImpl implements TimeSeriesService {
   @Override
   public List<TimeSeriesRecord> getTimeSeriesRecordsForConfigs(
       List<String> cvConfigIds, Instant startTime, Instant endTime, boolean anomalousOnly) {
-    Query<TimeSeriesRecord> timeSeriesRecordQuery = hPersistence.createQuery(TimeSeriesRecord.class)
+    Query<TimeSeriesRecord> timeSeriesRecordQuery = hPersistence.createQuery(TimeSeriesRecord.class, excludeAuthority)
                                                         .field(TimeSeriesRecordKeys.cvConfigId)
                                                         .in(cvConfigIds)
 
