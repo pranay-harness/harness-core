@@ -7,8 +7,8 @@ import io.harness.data.validator.EntityName;
 import io.harness.data.validator.Trimmed;
 import io.harness.delegate.beans.connector.ConnectorCategory;
 import io.harness.delegate.beans.connector.ConnectorType;
-import io.harness.mongo.index.CdUniqueIndex;
 import io.harness.mongo.index.Field;
+import io.harness.mongo.index.NgUniqueIndex;
 import io.harness.ng.core.NGAccountAccess;
 import io.harness.persistence.PersistentEntity;
 import lombok.Data;
@@ -31,7 +31,7 @@ import javax.validation.constraints.Size;
 @Data
 @FieldNameConstants(innerTypeName = "ConnectorKeys")
 @Entity(value = "connectors", noClassnameStored = true)
-@CdUniqueIndex(name = "unique_fullyQualifiedIdentifier", fields = { @Field("fullyQualifiedIdentifier") })
+@NgUniqueIndex(name = "unique_fullyQualifiedIdentifier", fields = { @Field("fullyQualifiedIdentifier") })
 @JsonIgnoreProperties(ignoreUnknown = true)
 @Document("connectors")
 public abstract class Connector implements PersistentEntity, NGAccountAccess {

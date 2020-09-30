@@ -6,8 +6,8 @@ import io.harness.beans.execution.CommitDetails;
 import io.harness.beans.execution.PRWebhookEvent;
 import io.harness.beans.execution.WebhookExecutionSource;
 import io.harness.beans.execution.WebhookGitUser;
-import io.harness.cdng.pipeline.CDPipeline;
-import io.harness.cdng.pipeline.beans.entities.CDPipelineEntity;
+import io.harness.cdng.pipeline.NgPipeline;
+import io.harness.cdng.pipeline.beans.entities.NgPipelineEntity;
 import io.harness.ci.beans.entities.CIBuild;
 import io.harness.execution.status.Status;
 
@@ -61,10 +61,10 @@ public class BuildDtoMapperTestHelper {
     return getBuild(executionSource);
   }
 
-  public static CDPipelineEntity getPipeline() {
-    return CDPipelineEntity.builder()
+  public static NgPipelineEntity getPipeline() {
+    return NgPipelineEntity.builder()
         .identifier(PIPELINE_ID)
-        .cdPipeline(CDPipeline.builder().name(PIPELINE_NAME).build())
+        .ngPipeline(NgPipeline.builder().name(PIPELINE_NAME).build())
         .build();
   }
 

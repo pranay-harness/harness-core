@@ -2,8 +2,8 @@ package software.wings.beans;
 
 import io.harness.annotation.HarnessEntity;
 import io.harness.beans.EmbeddedUser;
-import io.harness.mongo.index.CdUniqueIndex;
 import io.harness.mongo.index.Field;
+import io.harness.mongo.index.NgUniqueIndex;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
@@ -14,7 +14,7 @@ import software.wings.yaml.BaseYaml;
 /**
  * Created by peeyushaggarwal on 11/2/16.
  */
-@CdUniqueIndex(name = "locate", fields = { @Field("entityType")
+@NgUniqueIndex(name = "locate", fields = { @Field("entityType")
                                            , @Field("entityUuid"), @Field("version") })
 @Entity(value = "entityVersions", noClassnameStored = true)
 @HarnessEntity(exportable = true)

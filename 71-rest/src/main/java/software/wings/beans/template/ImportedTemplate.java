@@ -6,9 +6,9 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import io.harness.annotation.HarnessEntity;
 import io.harness.beans.EmbeddedUser;
 import io.harness.mongo.index.CdIndex;
-import io.harness.mongo.index.CdUniqueIndex;
 import io.harness.mongo.index.FdIndex;
 import io.harness.mongo.index.Field;
+import io.harness.mongo.index.NgUniqueIndex;
 import io.harness.persistence.CreatedAtAware;
 import io.harness.persistence.CreatedByAware;
 import io.harness.persistence.PersistentEntity;
@@ -38,7 +38,7 @@ import javax.validation.constraints.NotNull;
 @CdIndex(name = "account_app_command_idx",
     fields = { @Field("accountId")
                , @Field("appId"), @Field("commandStoreName"), @Field("commandName") })
-@CdUniqueIndex(name = "template_idx", fields = { @Field("templateId") })
+@NgUniqueIndex(name = "template_idx", fields = { @Field("templateId") })
 @Entity(value = "importedTemplates", noClassnameStored = true)
 @HarnessEntity(exportable = true)
 public class ImportedTemplate implements PersistentEntity, UuidAware, CreatedAtAware, CreatedByAware, UpdatedAtAware,

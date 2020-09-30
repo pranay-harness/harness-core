@@ -11,9 +11,9 @@ import io.harness.app.beans.dto.CIPipelineFilterDTO;
 import io.harness.app.intfc.CIPipelineService;
 import io.harness.app.intfc.YAMLToObject;
 import io.harness.app.yaml.YAML;
-import io.harness.cdng.pipeline.CDPipeline;
-import io.harness.cdng.pipeline.CDPipeline.CDPipelineKeys;
-import io.harness.cdng.pipeline.beans.entities.CDPipelineEntity;
+import io.harness.cdng.pipeline.NgPipeline;
+import io.harness.cdng.pipeline.NgPipeline.NgPipelineKeys;
+import io.harness.cdng.pipeline.beans.entities.NgPipelineEntity;
 import io.harness.ngpipeline.repository.PipelineRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.mongodb.core.query.Criteria;
@@ -28,55 +28,55 @@ public class CIPipelineServiceImpl implements CIPipelineService {
   @Inject private YAMLToObject yamlToObject;
 
   @Override
-  public CDPipelineEntity createPipelineFromYAML(
+  public NgPipelineEntity createPipelineFromYAML(
       YAML yaml, String accountIdentifier, String orgIdentifier, String projectIdentifier) {
-    CDPipeline ciPipeline = yamlToObject.convertYAML(yaml.getPipelineYAML());
+    NgPipeline ngPipeline = yamlToObject.convertYAML(yaml.getPipelineYAML());
     // TODO Move this to non yaml section or create new entity class
-    CDPipelineEntity cdPipelineEntity = CDPipelineEntity.builder().cdPipeline(ciPipeline).build();
-    cdPipelineEntity.setAccountId(accountIdentifier);
-    cdPipelineEntity.setProjectIdentifier(projectIdentifier);
-    cdPipelineEntity.setIdentifier(ciPipeline.getIdentifier());
-    cdPipelineEntity.setOrgIdentifier(orgIdentifier);
-    return ciPipelineRepository.save(cdPipelineEntity);
+    NgPipelineEntity ngPipelineEntity = NgPipelineEntity.builder().ngPipeline(ngPipeline).build();
+    ngPipelineEntity.setAccountId(accountIdentifier);
+    ngPipelineEntity.setProjectIdentifier(projectIdentifier);
+    ngPipelineEntity.setIdentifier(ngPipeline.getIdentifier());
+    ngPipelineEntity.setOrgIdentifier(orgIdentifier);
+    return ciPipelineRepository.save(ngPipelineEntity);
   }
 
   @Override
-  public CDPipelineEntity createPipeline(CDPipelineEntity ciPipeline) {
-    ciPipelineValidations.validateCIPipeline(ciPipeline);
-    return ciPipelineRepository.save(ciPipeline);
+  public NgPipelineEntity createPipeline(NgPipelineEntity ngPipelineEntity) {
+    ciPipelineValidations.validateCIPipeline(ngPipelineEntity);
+    return ciPipelineRepository.save(ngPipelineEntity);
   }
 
-  public CDPipelineEntity readPipeline(String pipelineId) {
+  public NgPipelineEntity readPipeline(String pipelineId) {
     // TODO Validate accountId and fix read pipeline code
     return ciPipelineRepository.findById(pipelineId)
         .orElseThrow(() -> new IllegalArgumentException(format("Pipeline id:%s not found", pipelineId)));
   }
 
-  public CDPipelineEntity readPipeline(String pipelineId, String accountId, String orgId, String projectId) {
+  public NgPipelineEntity readPipeline(String pipelineId, String accountId, String orgId, String projectId) {
     return ciPipelineRepository
         .findByAccountIdAndOrgIdentifierAndProjectIdentifierAndIdentifierAndDeletedNot(
             accountId, orgId, projectId, pipelineId, true)
         .orElseThrow(() -> new IllegalArgumentException(format("Pipeline id:%s not found", pipelineId)));
   }
 
-  public List<CDPipelineEntity> getPipelines(CIPipelineFilterDTO ciPipelineFilterDTO) {
+  public List<NgPipelineEntity> getPipelines(CIPipelineFilterDTO ciPipelineFilterDTO) {
     Criteria criteria = createBuildFilterCriteria(ciPipelineFilterDTO);
     return ciPipelineRepository.findAllWithCriteria(criteria);
   }
 
   private Criteria createBuildFilterCriteria(CIPipelineFilterDTO ciPipelineFilterDTO) {
-    Criteria criteria = Criteria.where(CDPipelineEntity.PipelineNGKeys.accountId)
+    Criteria criteria = Criteria.where(NgPipelineEntity.PipelineNGKeys.accountId)
                             .is(ciPipelineFilterDTO.getAccountIdentifier())
-                            .and(CDPipelineEntity.PipelineNGKeys.orgIdentifier)
+                            .and(NgPipelineEntity.PipelineNGKeys.orgIdentifier)
                             .is(ciPipelineFilterDTO.getOrgIdentifier())
-                            .and(CDPipelineEntity.PipelineNGKeys.projectIdentifier)
+                            .and(NgPipelineEntity.PipelineNGKeys.projectIdentifier)
                             .is(ciPipelineFilterDTO.getProjectIdentifier());
 
     if (isNotBlank(ciPipelineFilterDTO.getPipelineName())) {
-      criteria.and(CDPipelineKeys.name).is(ciPipelineFilterDTO.getPipelineName());
+      criteria.and(NgPipelineKeys.name).is(ciPipelineFilterDTO.getPipelineName());
     }
     if (isNotEmpty(ciPipelineFilterDTO.getTags())) {
-      criteria.and(CDPipelineKeys.tags).in(ciPipelineFilterDTO.getTags());
+      criteria.and(NgPipelineKeys.tags).in(ciPipelineFilterDTO.getTags());
     }
     return criteria;
   }

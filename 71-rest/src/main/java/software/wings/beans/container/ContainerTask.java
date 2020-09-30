@@ -7,8 +7,8 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.annotation.HarnessEntity;
 import io.harness.beans.EmbeddedUser;
-import io.harness.mongo.index.CdUniqueIndex;
 import io.harness.mongo.index.Field;
+import io.harness.mongo.index.NgUniqueIndex;
 import io.harness.persistence.AccountAccess;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -26,7 +26,7 @@ import java.util.regex.Pattern;
  */
 @JsonIgnoreProperties(ignoreUnknown = true)
 @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = "deploymentType")
-@CdUniqueIndex(name = "service", fields = { @Field("serviceId")
+@NgUniqueIndex(name = "service", fields = { @Field("serviceId")
                                             , @Field("deploymentType") })
 @Entity("containerTasks")
 @HarnessEntity(exportable = true)

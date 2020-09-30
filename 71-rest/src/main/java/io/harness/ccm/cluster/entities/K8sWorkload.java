@@ -3,8 +3,8 @@ package io.harness.ccm.cluster.entities;
 import io.harness.annotation.StoreIn;
 import io.harness.ccm.cluster.entities.K8sWorkload.K8sWorkloadKeys;
 import io.harness.mongo.index.CdIndex;
-import io.harness.mongo.index.CdUniqueIndex;
 import io.harness.mongo.index.Field;
+import io.harness.mongo.index.NgUniqueIndex;
 import io.harness.persistence.AccountAccess;
 import io.harness.persistence.CreatedAtAware;
 import io.harness.persistence.PersistentEntity;
@@ -31,7 +31,7 @@ import java.util.stream.Collectors;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @StoreIn("events")
 @Entity(value = "k8sWorkload", noClassnameStored = true)
-@CdUniqueIndex(name = "no_dup_cluster", fields = { @Field(K8sWorkloadKeys.clusterId)
+@NgUniqueIndex(name = "no_dup_cluster", fields = { @Field(K8sWorkloadKeys.clusterId)
                                                    , @Field(K8sWorkloadKeys.uid) })
 @CdIndex(name = "accountId_clusterId_labels",
     fields = { @Field(K8sWorkloadKeys.accountId)

@@ -3,8 +3,8 @@ package io.harness.ccm.views.entities;
 import io.harness.annotation.StoreIn;
 import io.harness.beans.EmbeddedUser;
 import io.harness.mongo.index.CdIndex;
-import io.harness.mongo.index.CdUniqueIndex;
 import io.harness.mongo.index.Field;
+import io.harness.mongo.index.NgUniqueIndex;
 import io.harness.persistence.AccountAccess;
 import io.harness.persistence.CreatedAtAware;
 import io.harness.persistence.CreatedByAware;
@@ -24,7 +24,7 @@ import org.mongodb.morphia.annotations.Id;
 import java.util.Date;
 import javax.validation.constraints.Size;
 
-@CdUniqueIndex(name = "view_report_name", fields = { @Field("name")
+@NgUniqueIndex(name = "view_report_name", fields = { @Field("name")
                                                      , @Field("viewsId") })
 @CdIndex(name = "account_enabled_type", fields = { @Field("accountId")
                                                    , @Field("enabled"), @Field("type") })

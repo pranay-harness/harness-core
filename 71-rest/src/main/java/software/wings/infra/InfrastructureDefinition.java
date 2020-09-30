@@ -6,9 +6,9 @@ import io.harness.annotation.HarnessEntity;
 import io.harness.beans.EmbeddedUser;
 import io.harness.data.validator.EntityName;
 import io.harness.mongo.index.CdIndex;
-import io.harness.mongo.index.CdUniqueIndex;
 import io.harness.mongo.index.FdIndex;
 import io.harness.mongo.index.Field;
+import io.harness.mongo.index.NgUniqueIndex;
 import io.harness.persistence.AccountAccess;
 import io.harness.persistence.CreatedAtAware;
 import io.harness.persistence.CreatedByAware;
@@ -37,7 +37,7 @@ import java.util.ArrayList;
 import java.util.List;
 import javax.validation.constraints.NotNull;
 
-@CdUniqueIndex(name = "infraDefinitionIdx", fields = { @Field("appId")
+@NgUniqueIndex(name = "infraDefinitionIdx", fields = { @Field("appId")
                                                        , @Field("envId"), @Field("name") })
 @CdIndex(name = "infrastructure_cloudProviderId", fields = { @Field("infrastructure.cloudProviderId") })
 @Data

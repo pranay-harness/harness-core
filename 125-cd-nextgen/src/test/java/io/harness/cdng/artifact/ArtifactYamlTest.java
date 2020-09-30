@@ -10,8 +10,8 @@ import io.harness.cdng.artifact.bean.SidecarArtifactWrapper;
 import io.harness.cdng.artifact.bean.yaml.DockerHubArtifactConfig;
 import io.harness.cdng.artifact.bean.yaml.SidecarArtifact;
 import io.harness.cdng.artifact.utils.ArtifactUtils;
-import io.harness.cdng.pipeline.CDPipeline;
 import io.harness.cdng.pipeline.DeploymentStage;
+import io.harness.cdng.pipeline.NgPipeline;
 import io.harness.cdng.service.beans.KubernetesServiceSpec;
 import io.harness.rule.Owner;
 import io.harness.yaml.core.StageElement;
@@ -31,13 +31,13 @@ public class ArtifactYamlTest extends CategoryTest {
   public void testParseArtifactYamlForDocker() throws IOException {
     ClassLoader classLoader = this.getClass().getClassLoader();
     final URL testFile = classLoader.getResource("cdng/artifact.yml");
-    CDPipeline cdPipeline = YamlPipelineUtils.read(testFile, CDPipeline.class);
+    NgPipeline ngPipeline = YamlPipelineUtils.read(testFile, NgPipeline.class);
 
-    assertThat(cdPipeline.getIdentifier()).isEqualTo("prod_primary_deployment");
-    assertThat(cdPipeline.getStages().size()).isEqualTo(2);
+    assertThat(ngPipeline.getIdentifier()).isEqualTo("prod_primary_deployment");
+    assertThat(ngPipeline.getStages().size()).isEqualTo(2);
 
     // First Stage
-    StageElementWrapper stageWrapper = cdPipeline.getStages().get(0);
+    StageElementWrapper stageWrapper = ngPipeline.getStages().get(0);
     assertThat(stageWrapper).isInstanceOf(StageElement.class);
     assertThat(((StageElement) stageWrapper).getStageType()).isInstanceOf(DeploymentStage.class);
     DeploymentStage deploymentStage = (DeploymentStage) ((StageElement) stageWrapper).getStageType();

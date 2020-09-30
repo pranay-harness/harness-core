@@ -12,10 +12,10 @@ import io.harness.data.validator.EntityName;
 import io.harness.data.validator.Trimmed;
 import io.harness.k8s.model.HelmVersion;
 import io.harness.mongo.index.CdIndex;
-import io.harness.mongo.index.CdUniqueIndex;
 import io.harness.mongo.index.FdIndex;
 import io.harness.mongo.index.Field;
 import io.harness.mongo.index.IndexType;
+import io.harness.mongo.index.NgUniqueIndex;
 import io.harness.persistence.AccountAccess;
 import io.harness.persistence.NameAccess;
 import lombok.Builder;
@@ -51,7 +51,7 @@ import java.util.Set;
  */
 @OwnedBy(CDC)
 @JsonIgnoreProperties(ignoreUnknown = true)
-@CdUniqueIndex(name = "yaml", fields = { @Field("appId")
+@NgUniqueIndex(name = "yaml", fields = { @Field("appId")
                                          , @Field("name") })
 @CdIndex(name = "accountCreatedAtIndex",
     fields = { @Field(ServiceKeys.accountId)

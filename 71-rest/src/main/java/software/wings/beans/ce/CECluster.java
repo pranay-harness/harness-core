@@ -5,9 +5,9 @@ import static java.nio.charset.StandardCharsets.UTF_8;
 import com.google.common.hash.Hashing;
 
 import io.harness.annotation.StoreIn;
-import io.harness.mongo.index.CdUniqueIndex;
 import io.harness.mongo.index.FdIndex;
 import io.harness.mongo.index.Field;
+import io.harness.mongo.index.NgUniqueIndex;
 import io.harness.persistence.AccountAccess;
 import io.harness.persistence.CreatedAtAware;
 import io.harness.persistence.PersistentEntity;
@@ -27,7 +27,7 @@ import java.util.Base64;
 @Data
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @Entity(value = "ceCluster", noClassnameStored = true)
-@CdUniqueIndex(name = "no_dup",
+@NgUniqueIndex(name = "no_dup",
     fields =
     {
       @Field(CEClusterKeys.accountId)

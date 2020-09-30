@@ -9,8 +9,8 @@ import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import io.harness.delegate.beans.executioncapability.ExecutionCapabilityDemander;
 import io.harness.delegate.task.mixin.HttpConnectionExecutionCapabilityGenerator;
 import io.harness.encryption.Encrypted;
-import io.harness.mongo.index.CdUniqueIndex;
 import io.harness.mongo.index.Field;
+import io.harness.mongo.index.NgUniqueIndex;
 import io.harness.persistence.AccountAccess;
 import io.harness.security.encryption.EncryptionConfig;
 import io.harness.security.encryption.EncryptionType;
@@ -38,7 +38,7 @@ import java.util.List;
 @AllArgsConstructor
 @ToString(exclude = {"secretKey", "kmsArn"})
 @EqualsAndHashCode(callSuper = false)
-@CdUniqueIndex(name = "uniqueIdx", fields = { @Field("name")
+@NgUniqueIndex(name = "uniqueIdx", fields = { @Field("name")
                                               , @Field("accountId") })
 @Entity(value = "kmsConfig", noClassnameStored = true)
 @HarnessEntity(exportable = false)

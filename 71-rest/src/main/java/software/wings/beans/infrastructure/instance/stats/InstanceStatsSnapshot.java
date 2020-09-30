@@ -3,9 +3,9 @@ package software.wings.beans.infrastructure.instance.stats;
 import com.google.common.collect.ImmutableList;
 
 import io.harness.annotation.HarnessEntity;
-import io.harness.mongo.index.CdUniqueIndex;
 import io.harness.mongo.index.FdIndex;
 import io.harness.mongo.index.Field;
+import io.harness.mongo.index.NgUniqueIndex;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.EqualsAndHashCode;
@@ -29,7 +29,7 @@ import java.util.List;
 @Entity(value = "instanceStats", noClassnameStored = true)
 @HarnessEntity(exportable = false)
 
-@CdUniqueIndex(name = "accountId_timestamp_unique_idx", fields = { @Field("accountId")
+@NgUniqueIndex(name = "accountId_timestamp_unique_idx", fields = { @Field("accountId")
                                                                    , @Field("timestamp") })
 @FieldNameConstants(innerTypeName = "InstanceStatsSnapshotKeys")
 public class InstanceStatsSnapshot extends Base {

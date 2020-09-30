@@ -18,7 +18,7 @@ import io.harness.beans.yaml.extended.connector.GitConnectorYaml;
 import io.harness.beans.yaml.extended.container.Container;
 import io.harness.beans.yaml.extended.infrastrucutre.K8sDirectInfraYaml;
 import io.harness.category.element.UnitTests;
-import io.harness.cdng.pipeline.CDPipeline;
+import io.harness.cdng.pipeline.NgPipeline;
 import io.harness.rule.Owner;
 import io.harness.yaml.core.ExecutionElement;
 import io.harness.yaml.core.ParallelStepElement;
@@ -38,9 +38,9 @@ public class CIPipelineYamlTest extends CIBeansTest {
   public void testCiPipelineConversion() throws IOException {
     ClassLoader classLoader = this.getClass().getClassLoader();
     final URL testFile = classLoader.getResource("ci.yml");
-    CDPipeline ciPipelineActual = YamlPipelineUtils.read(testFile, CDPipeline.class);
-    CDPipeline ciPipelineExpected =
-        CDPipeline.builder()
+    NgPipeline ngPipelineActual = YamlPipelineUtils.read(testFile, NgPipeline.class);
+    NgPipeline ngPipelineExpected =
+        NgPipeline.builder()
             .identifier("cipipeline")
             .name("Integration Pipeline")
             .description(ParameterField.createValueField("sample pipeline used for testing"))
@@ -167,6 +167,6 @@ public class CIPipelineYamlTest extends CIBeansTest {
                             .build())
                     .build()))
             .build();
-    assertThat(ciPipelineActual).usingRecursiveComparison().isEqualTo(ciPipelineExpected);
+    assertThat(ngPipelineActual).usingRecursiveComparison().isEqualTo(ngPipelineExpected);
   }
 }

@@ -12,9 +12,9 @@ import com.google.cloud.datastore.Key;
 import io.harness.annotation.HarnessEntity;
 import io.harness.annotation.IgnoreUnusedIndex;
 import io.harness.beans.EmbeddedUser;
-import io.harness.mongo.index.CdUniqueIndex;
 import io.harness.mongo.index.FdIndex;
 import io.harness.mongo.index.Field;
+import io.harness.mongo.index.NgUniqueIndex;
 import io.harness.persistence.GoogleDataStoreAware;
 import lombok.Builder;
 import lombok.Data;
@@ -28,7 +28,7 @@ import software.wings.service.impl.analysis.AnalysisServiceImpl.CLUSTER_TYPE;
 import software.wings.service.impl.analysis.AnalysisServiceImpl.LogMLFeedbackType;
 import software.wings.sm.StateType;
 
-@CdUniqueIndex(name = "logFeedbackUniqueIdx",
+@NgUniqueIndex(name = "logFeedbackUniqueIdx",
     fields = { @Field("applicationId")
                , @Field("stateExecutionId"), @Field("clusterType"), @Field("clusterLabel") })
 @Data

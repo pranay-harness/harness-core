@@ -7,7 +7,7 @@ import com.google.inject.Inject;
 import com.google.inject.Injector;
 
 import io.harness.category.element.UnitTests;
-import io.harness.cdng.pipeline.CDPipeline;
+import io.harness.cdng.pipeline.NgPipeline;
 import io.harness.rule.Owner;
 import io.harness.walktree.visitor.validation.ValidationVisitor;
 import io.harness.walktree.visitor.validation.modes.ModeType;
@@ -21,7 +21,7 @@ import org.junit.experimental.categories.Category;
 import java.io.IOException;
 import java.net.URL;
 
-public class CDPipelineValidationTest extends CDNGBaseTest {
+public class NgPipelineValidationTest extends CDNGBaseTest {
   @Inject Injector injector;
 
   @Before
@@ -34,13 +34,13 @@ public class CDPipelineValidationTest extends CDNGBaseTest {
   public void testCDPipeline() throws IOException {
     ClassLoader classLoader = this.getClass().getClassLoader();
     final URL testFile = classLoader.getResource("cdng/validationpipeline.yaml");
-    CDPipeline cdPipeline = YamlPipelineUtils.read(testFile, CDPipeline.class);
+    NgPipeline ngPipeline = YamlPipelineUtils.read(testFile, NgPipeline.class);
     ValidationVisitor validationVisitor = new ValidationVisitor(injector, ModeType.PRE_INPUT_SET, true);
 
-    validationVisitor.walkElementTree(cdPipeline);
+    validationVisitor.walkElementTree(ngPipeline);
 
-    assertThat(validationVisitor.getCurrentObject()).isInstanceOf(CDPipeline.class);
-    CDPipeline validationResponse = (CDPipeline) validationVisitor.getCurrentObject();
+    assertThat(validationVisitor.getCurrentObject()).isInstanceOf(NgPipeline.class);
+    NgPipeline validationResponse = (NgPipeline) validationVisitor.getCurrentObject();
     assertThat(validationResponse.getIdentifier()).isEqualTo("pipeline.identifier");
     assertThat(validationResponse.getStages().size()).isEqualTo(1);
     assertThat(((StageElement) validationResponse.getStages().get(0)).getIdentifier())

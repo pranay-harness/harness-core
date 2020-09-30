@@ -1,7 +1,7 @@
 package io.harness.cdng.pipeline;
 
 import io.harness.beans.ParameterField;
-import io.harness.cdng.pipeline.CDPipeline.CDPipelineKeys;
+import io.harness.cdng.pipeline.NgPipeline.NgPipelineKeys;
 import io.harness.cdng.visitor.helpers.cdpipeline.CDPipelineVisitorHelper;
 import io.harness.common.SwaggerConstants;
 import io.harness.data.validator.EntityIdentifier;
@@ -29,15 +29,15 @@ import javax.validation.constraints.NotNull;
 
 @Data
 @Builder
-@FieldNameConstants(innerTypeName = "CDPipelineKeys")
+@FieldNameConstants(innerTypeName = "NgPipelineKeys")
 @RsqlQueryable(fields =
     {
-      @Field(CDPipelineKeys.name)
-      , @Field(CDPipelineKeys.identifier), @Field(CDPipelineKeys.description), @Field(CDPipelineKeys.tags),
-          @Field(CDPipelineKeys.stages)
+      @Field(NgPipelineKeys.name)
+      , @Field(NgPipelineKeys.identifier), @Field(NgPipelineKeys.description), @Field(NgPipelineKeys.tags),
+          @Field(NgPipelineKeys.stages)
     })
 @SimpleVisitorHelper(helperClass = CDPipelineVisitorHelper.class)
-public class CDPipeline implements Pipeline, Visitable {
+public class NgPipeline implements Pipeline, Visitable {
   @NotNull(groups = PreInputSet.class) @Required(groups = PostInputSet.class) @EntityName String name;
   @NotNull(groups = PreInputSet.class) @Required(groups = PostInputSet.class) @EntityIdentifier String identifier;
 

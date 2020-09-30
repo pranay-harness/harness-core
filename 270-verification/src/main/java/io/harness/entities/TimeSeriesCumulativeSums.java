@@ -10,10 +10,10 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import io.harness.annotation.HarnessEntity;
 import io.harness.exception.WingsException;
 import io.harness.mongo.index.CdIndex;
-import io.harness.mongo.index.CdUniqueIndex;
 import io.harness.mongo.index.FdIndex;
 import io.harness.mongo.index.Field;
 import io.harness.mongo.index.IndexType;
+import io.harness.mongo.index.NgUniqueIndex;
 import io.harness.persistence.AccountAccess;
 import io.harness.serializer.JsonUtils;
 import lombok.AllArgsConstructor;
@@ -35,7 +35,7 @@ import java.util.Map;
  * Created by Praveen.
  */
 
-@CdUniqueIndex(
+@NgUniqueIndex(
     name = "uniqueIdx", fields = { @Field("appId")
                                    , @Field("cvConfigId"), @Field("analysisMinute"), @Field("tag") })
 @CdIndex(name = "service_gd_idx",

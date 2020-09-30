@@ -4,8 +4,8 @@ import io.harness.data.validator.EntityIdentifier;
 import io.harness.data.validator.EntityName;
 import io.harness.data.validator.Trimmed;
 import io.harness.mongo.index.CdIndex;
-import io.harness.mongo.index.CdUniqueIndex;
 import io.harness.mongo.index.Field;
+import io.harness.mongo.index.NgUniqueIndex;
 import io.harness.ng.core.common.beans.Tag;
 import io.harness.ng.core.environment.beans.Environment.EnvironmentKeys;
 import io.harness.persistence.PersistentEntity;
@@ -29,7 +29,7 @@ import javax.validation.constraints.Size;
 
 @Data
 @Builder
-@CdUniqueIndex(name = "unique_accountId_organizationIdentifier_projectIdentifier_envIdentifier",
+@NgUniqueIndex(name = "unique_accountId_organizationIdentifier_projectIdentifier_envIdentifier",
     fields =
     {
       @Field(EnvironmentKeys.accountId)

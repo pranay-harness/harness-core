@@ -4,10 +4,10 @@ import com.google.common.collect.ImmutableList;
 
 import io.harness.annotation.HarnessEntity;
 import io.harness.mongo.index.CdIndex;
-import io.harness.mongo.index.CdUniqueIndex;
 import io.harness.mongo.index.FdIndex;
 import io.harness.mongo.index.Field;
 import io.harness.mongo.index.IndexType;
+import io.harness.mongo.index.NgUniqueIndex;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -33,7 +33,7 @@ import java.util.List;
 @EqualsAndHashCode(callSuper = false)
 @Entity(value = "gitCommits", noClassnameStored = true)
 
-@CdUniqueIndex(name = "gitCommitIdx", fields = { @Field(GitCommitKeys.accountId)
+@NgUniqueIndex(name = "gitCommitIdx", fields = { @Field(GitCommitKeys.accountId)
                                                  , @Field(GitCommitKeys.commitId) })
 @CdIndex(name = "gitCommitStatusLastUpdatedIdx",
     fields =

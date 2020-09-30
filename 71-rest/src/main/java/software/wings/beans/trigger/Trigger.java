@@ -11,9 +11,9 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.EmbeddedUser;
 import io.harness.beans.WorkflowType;
 import io.harness.mongo.index.CdIndex;
-import io.harness.mongo.index.CdUniqueIndex;
 import io.harness.mongo.index.FdIndex;
 import io.harness.mongo.index.Field;
+import io.harness.mongo.index.NgUniqueIndex;
 import io.harness.persistence.NameAccess;
 import lombok.Builder;
 import lombok.Data;
@@ -53,7 +53,7 @@ import javax.validation.constraints.NotNull;
 @FieldNameConstants(innerTypeName = "TriggerKeys")
 @Entity(value = "triggers")
 @HarnessEntity(exportable = true)
-@CdUniqueIndex(name = "yaml", fields = { @Field("appId")
+@NgUniqueIndex(name = "yaml", fields = { @Field("appId")
                                          , @Field("name") })
 @CdIndex(name = "conditionArtifactStreamId",
     fields =

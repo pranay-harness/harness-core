@@ -4,10 +4,10 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 
 import io.harness.annotation.StoreIn;
 import io.harness.data.structure.MongoMapSanitizer;
-import io.harness.mongo.index.CdUniqueIndex;
 import io.harness.mongo.index.FdIndex;
 import io.harness.mongo.index.FdTtlIndex;
 import io.harness.mongo.index.Field;
+import io.harness.mongo.index.NgUniqueIndex;
 import io.harness.persistence.AccountAccess;
 import io.harness.persistence.CreatedAtAware;
 import io.harness.persistence.PersistentEntity;
@@ -38,7 +38,7 @@ import java.util.Objects;
 @FieldNameConstants(innerTypeName = "K8sWorkloadRecommendationKeys")
 @StoreIn("events")
 @Entity(value = "k8sWorkloadRecommendation", noClassnameStored = true)
-@CdUniqueIndex(name = "no_dup",
+@NgUniqueIndex(name = "no_dup",
     fields =
     { @Field("accountId")
       , @Field("clusterId"), @Field("namespace"), @Field("workloadName"), @Field("workloadType") })

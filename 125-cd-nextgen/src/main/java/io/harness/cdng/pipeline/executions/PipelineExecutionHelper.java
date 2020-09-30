@@ -5,7 +5,7 @@ import static io.harness.cdng.pipeline.executions.ExecutionStatus.getExecutionSt
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
-import io.harness.cdng.pipeline.CDPipeline;
+import io.harness.cdng.pipeline.NgPipeline;
 import io.harness.cdng.pipeline.StageTypeToStageExecutionSummaryMapper;
 import io.harness.cdng.pipeline.executions.beans.CDStageExecutionSummary;
 import io.harness.cdng.pipeline.executions.beans.ParallelStageExecutionSummary;
@@ -28,8 +28,8 @@ public class PipelineExecutionHelper {
   @Inject StageTypeToStageExecutionMapperHelperRegistry stageTypeToStageExecutionMapperHelperRegistry;
 
   public void addStageSpecificDetailsToPipelineExecution(PipelineExecutionSummary pipelineExecutionSummary,
-      CDPipeline cdPipeline, Map<String, String> stageIdentifierToPlanNodeId) {
-    for (StageElementWrapper stageElementWrapper : cdPipeline.getStages()) {
+      NgPipeline ngPipeline, Map<String, String> stageIdentifierToPlanNodeId) {
+    for (StageElementWrapper stageElementWrapper : ngPipeline.getStages()) {
       addStageElementDetailsBasedOnStageElementWrapperType(
           stageElementWrapper, stageIdentifierToPlanNodeId, pipelineExecutionSummary, false);
     }

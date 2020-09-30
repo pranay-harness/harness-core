@@ -11,8 +11,8 @@ import io.harness.beans.ParameterField;
 import io.harness.category.element.UnitTests;
 import io.harness.cdng.CDNGBaseTest;
 import io.harness.cdng.environment.yaml.EnvironmentYaml;
-import io.harness.cdng.pipeline.CDPipeline;
 import io.harness.cdng.pipeline.DeploymentStage;
+import io.harness.cdng.pipeline.NgPipeline;
 import io.harness.cdng.pipeline.PipelineInfrastructure;
 import io.harness.cdng.pipeline.executions.beans.CDStageExecutionSummary;
 import io.harness.cdng.pipeline.executions.beans.ParallelStageExecutionSummary;
@@ -55,9 +55,9 @@ public class PipelineExecutionHelperTest extends CDNGBaseTest {
             .build();
     stageElement.setStageType(deploymentStage);
     PipelineExecutionSummary pipelineExecutionSummary = PipelineExecutionSummary.builder().build();
-    CDPipeline cdPipeline = CDPipeline.builder().stage(stageElement).build();
+    NgPipeline ngPipeline = NgPipeline.builder().stage(stageElement).build();
     pipelineExecutionHelper.addStageSpecificDetailsToPipelineExecution(
-        pipelineExecutionSummary, cdPipeline, Maps.of("testIdentifier", "node1"));
+        pipelineExecutionSummary, ngPipeline, Maps.of("testIdentifier", "node1"));
 
     CDStageExecutionSummary executionSummary = CDStageExecutionSummary.builder()
                                                    .planNodeId("node1")
@@ -100,9 +100,9 @@ public class PipelineExecutionHelperTest extends CDNGBaseTest {
         ParallelStageElement.builder().sections(Lists.newArrayList(stageElement)).build();
 
     PipelineExecutionSummary pipelineExecutionSummary = PipelineExecutionSummary.builder().build();
-    CDPipeline cdPipeline = CDPipeline.builder().stage(parallelStageElement).build();
+    NgPipeline ngPipeline = NgPipeline.builder().stage(parallelStageElement).build();
     pipelineExecutionHelper.addStageSpecificDetailsToPipelineExecution(
-        pipelineExecutionSummary, cdPipeline, Maps.of("testIdentifier", "node1"));
+        pipelineExecutionSummary, ngPipeline, Maps.of("testIdentifier", "node1"));
 
     CDStageExecutionSummary executionSummary = CDStageExecutionSummary.builder()
                                                    .planNodeId("node1")

@@ -14,9 +14,9 @@ import io.harness.annotation.HarnessEntity;
 import io.harness.beans.EmbeddedUser;
 import io.harness.expression.ExpressionEvaluator;
 import io.harness.logging.CommandExecutionStatus;
-import io.harness.mongo.index.CdUniqueIndex;
 import io.harness.mongo.index.FdIndex;
 import io.harness.mongo.index.Field;
+import io.harness.mongo.index.NgUniqueIndex;
 import io.harness.serializer.MapperUtils;
 import lombok.Getter;
 import lombok.Setter;
@@ -51,7 +51,7 @@ import java.util.Set;
 @Attributes(title = "Command")
 @Entity(value = "commands")
 @HarnessEntity(exportable = true)
-@CdUniqueIndex(name = "yaml", fields = { @Field("appId")
+@NgUniqueIndex(name = "yaml", fields = { @Field("appId")
                                          , @Field("originEntityId"), @Field("version") })
 @FieldNameConstants(innerTypeName = "CommandKeys")
 public class Command extends Base implements CommandUnit {

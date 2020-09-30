@@ -14,7 +14,7 @@ import io.harness.app.dao.repositories.CIBuildInfoRepository;
 import io.harness.app.intfc.CIBuildInfoService;
 import io.harness.app.intfc.CIPipelineService;
 import io.harness.app.mappers.BuildDtoMapper;
-import io.harness.cdng.pipeline.beans.entities.CDPipelineEntity;
+import io.harness.cdng.pipeline.beans.entities.NgPipelineEntity;
 import io.harness.ci.beans.entities.CIBuild;
 import lombok.AllArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -44,24 +44,24 @@ public class CIBuildInfoServiceImpl implements CIBuildInfoService {
     }
 
     CIBuild ciBuild = ciBuildOptional.get();
-    CDPipelineEntity ciPipeline =
+    NgPipelineEntity ngPipelineEntity =
         ciPipelineService.readPipeline(ciBuild.getPipelineIdentifier(), accountId, orgId, projectId);
-    return buildDtoMapper.writeBuildDto(ciBuild, ciPipeline);
+    return buildDtoMapper.writeBuildDto(ciBuild, ngPipelineEntity);
   }
 
   @Override
   public Page<CIBuildResponseDTO> getBuilds(CIBuildFilterDTO ciBuildFilterDTO, Pageable pageable) {
     Criteria criteria = createBuildFilterCriteria(ciBuildFilterDTO);
-    Map<String, CDPipelineEntity> ciPipelineMap = getPipelines(ciBuildFilterDTO);
+    Map<String, NgPipelineEntity> ngPipelineEntityMap = getPipelines(ciBuildFilterDTO);
     if (isNotEmpty(ciBuildFilterDTO.getTags())) {
       List<String> pipelineIds = new ArrayList<>();
-      pipelineIds.addAll(ciPipelineMap.keySet());
+      pipelineIds.addAll(ngPipelineEntityMap.keySet());
       criteria.and(CIBuild.Build.pipelineIdentifier).in(pipelineIds);
     }
 
     Page<CIBuild> list = ciBuildInfoRepository.getBuilds(criteria, pageable);
     return list.map(
-        ciBuild -> buildDtoMapper.writeBuildDto(ciBuild, ciPipelineMap.get(ciBuild.getPipelineIdentifier())));
+        ciBuild -> buildDtoMapper.writeBuildDto(ciBuild, ngPipelineEntityMap.get(ciBuild.getPipelineIdentifier())));
   }
 
   private Criteria createBuildFilterCriteria(CIBuildFilterDTO ciBuildFilterDTO) {
@@ -81,16 +81,16 @@ public class CIBuildInfoServiceImpl implements CIBuildInfoService {
     return criteria;
   }
 
-  private Map<String, CDPipelineEntity> getPipelines(CIBuildFilterDTO ciBuildFilterDTO) {
+  private Map<String, NgPipelineEntity> getPipelines(CIBuildFilterDTO ciBuildFilterDTO) {
     CIPipelineFilterDTO ciPipelineFilterDTO = CIPipelineFilterDTO.builder()
                                                   .accountIdentifier(ciBuildFilterDTO.getAccountIdentifier())
                                                   .orgIdentifier(ciBuildFilterDTO.getOrgIdentifier())
                                                   .projectIdentifier(ciBuildFilterDTO.getProjectIdentifier())
                                                   .tags(ciBuildFilterDTO.getTags())
                                                   .build();
-    Map<String, CDPipelineEntity> ciPipelineMap = new HashMap<>();
+    Map<String, NgPipelineEntity> ngPipelineEntityMap = new HashMap<>();
     ciPipelineService.getPipelines(ciPipelineFilterDTO)
-        .forEach(ciPipeline -> ciPipelineMap.put(ciPipeline.getIdentifier(), ciPipeline));
-    return ciPipelineMap;
+        .forEach(ngPipelineEntity -> ngPipelineEntityMap.put(ngPipelineEntity.getIdentifier(), ngPipelineEntity));
+    return ngPipelineEntityMap;
   }
 }

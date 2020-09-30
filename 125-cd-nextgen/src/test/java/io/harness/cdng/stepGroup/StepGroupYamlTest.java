@@ -5,8 +5,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
-import io.harness.cdng.pipeline.CDPipeline;
 import io.harness.cdng.pipeline.DeploymentStage;
+import io.harness.cdng.pipeline.NgPipeline;
 import io.harness.rule.Owner;
 import io.harness.yaml.core.ParallelStepElement;
 import io.harness.yaml.core.StageElement;
@@ -28,11 +28,11 @@ public class StepGroupYamlTest extends CategoryTest {
   public void testYamlParseForStepGroupAndParallel() throws IOException {
     ClassLoader classLoader = this.getClass().getClassLoader();
     final URL testFile = classLoader.getResource("cdng/stepGroup.yml");
-    CDPipeline cdPipeline = YamlPipelineUtils.read(testFile, CDPipeline.class);
-    assertThat(cdPipeline.getStages().size()).isEqualTo(2);
+    NgPipeline ngPipeline = YamlPipelineUtils.read(testFile, NgPipeline.class);
+    assertThat(ngPipeline.getStages().size()).isEqualTo(2);
 
     // First Stage
-    StageElementWrapper stageWrapper = cdPipeline.getStages().get(0);
+    StageElementWrapper stageWrapper = ngPipeline.getStages().get(0);
     assertThat(stageWrapper).isInstanceOf(StageElement.class);
     assertThat(((StageElement) stageWrapper).getStageType()).isInstanceOf(DeploymentStage.class);
     DeploymentStage deploymentStage = (DeploymentStage) ((StageElement) stageWrapper).getStageType();

@@ -2,7 +2,7 @@ package io.harness.ngpipeline.repository;
 
 import com.google.inject.Inject;
 
-import io.harness.cdng.pipeline.beans.entities.CDPipelineEntity;
+import io.harness.cdng.pipeline.beans.entities.NgPipelineEntity;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -21,27 +21,27 @@ public class PipelineRepositoryImpl implements CustomPipelineRepository {
 
   // Created Dummy method for examples
   @Override
-  public Optional<CDPipelineEntity> getPipelineByIdExample(String accountId, String pipelineId) {
+  public Optional<NgPipelineEntity> getPipelineByIdExample(String accountId, String pipelineId) {
     Criteria criteria = new Criteria()
-                            .and(CDPipelineEntity.PipelineNGKeys.accountId)
+                            .and(NgPipelineEntity.PipelineNGKeys.accountId)
                             .is(accountId)
-                            .and(CDPipelineEntity.PipelineNGKeys.identifier)
+                            .and(NgPipelineEntity.PipelineNGKeys.identifier)
                             .is(pipelineId);
     Query query = new Query(criteria);
-    return Optional.ofNullable(mongoTemplate.findOne(query, CDPipelineEntity.class));
+    return Optional.ofNullable(mongoTemplate.findOne(query, NgPipelineEntity.class));
   }
 
   @Override
-  public Page<CDPipelineEntity> findAll(Criteria criteria, Pageable pageable) {
+  public Page<NgPipelineEntity> findAll(Criteria criteria, Pageable pageable) {
     Query query = new Query(criteria).with(pageable);
-    List<CDPipelineEntity> pipelineEntities = mongoTemplate.find(query, CDPipelineEntity.class);
+    List<NgPipelineEntity> pipelineEntities = mongoTemplate.find(query, NgPipelineEntity.class);
     return PageableExecutionUtils.getPage(pipelineEntities, pageable,
-        () -> mongoTemplate.count(Query.of(query).limit(-1).skip(-1), CDPipelineEntity.class));
+        () -> mongoTemplate.count(Query.of(query).limit(-1).skip(-1), NgPipelineEntity.class));
   }
 
   @Override
-  public List<CDPipelineEntity> findAllWithCriteria(Criteria criteria) {
+  public List<NgPipelineEntity> findAllWithCriteria(Criteria criteria) {
     Query query = new Query(criteria);
-    return mongoTemplate.find(query, CDPipelineEntity.class);
+    return mongoTemplate.find(query, NgPipelineEntity.class);
   }
 }

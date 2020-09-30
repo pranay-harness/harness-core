@@ -8,8 +8,8 @@ import com.google.common.base.MoreObjects;
 import io.harness.annotation.HarnessEntity;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.EmbeddedUser;
-import io.harness.mongo.index.CdUniqueIndex;
 import io.harness.mongo.index.Field;
+import io.harness.mongo.index.NgUniqueIndex;
 import io.harness.persistence.AccountAccess;
 import io.harness.persistence.LogKeyUtils;
 import io.harness.persistence.NameAccess;
@@ -45,7 +45,7 @@ import java.util.Set;
 @Entity(value = "applications", noClassnameStored = true)
 @HarnessEntity(exportable = true)
 @FieldNameConstants(innerTypeName = "ApplicationKeys")
-@CdUniqueIndex(name = "yaml", fields = { @Field(ApplicationKeys.accountId)
+@NgUniqueIndex(name = "yaml", fields = { @Field(ApplicationKeys.accountId)
                                          , @Field(ApplicationKeys.name) })
 public class Application extends Base implements KeywordsAware, NameAccess, TagAware, AccountAccess {
   public static final String GLOBAL_APP_ID = "__GLOBAL_APP_ID__";

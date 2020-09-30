@@ -3,12 +3,12 @@ package io.harness.cdng.pipeline.beans.entities;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.annotation.HarnessEntity;
-import io.harness.cdng.pipeline.CDPipeline;
+import io.harness.cdng.pipeline.NgPipeline;
 import io.harness.data.validator.Trimmed;
 import io.harness.mongo.index.CdIndex;
-import io.harness.mongo.index.CdUniqueIndex;
 import io.harness.mongo.index.FdIndex;
 import io.harness.mongo.index.Field;
+import io.harness.mongo.index.NgUniqueIndex;
 import io.harness.persistence.AccountAccess;
 import io.harness.persistence.CreatedAtAware;
 import io.harness.persistence.PersistentEntity;
@@ -31,21 +31,21 @@ import javax.validation.constraints.NotNull;
 @Builder
 @JsonIgnoreProperties(ignoreUnknown = true)
 @FieldNameConstants(innerTypeName = "PipelineNGKeys")
-@CdUniqueIndex(name = "unique_accountIdentifier_organizationIdentifier_projectIdentifier_pipelineIdentifier",
+@NgUniqueIndex(name = "unique_accountIdentifier_organizationIdentifier_projectIdentifier_pipelineIdentifier",
     fields =
     {
-      @Field(CDPipelineEntity.PipelineNGKeys.accountId)
-      , @Field(CDPipelineEntity.PipelineNGKeys.orgIdentifier),
-          @Field(CDPipelineEntity.PipelineNGKeys.projectIdentifier), @Field(CDPipelineEntity.PipelineNGKeys.identifier)
+      @Field(NgPipelineEntity.PipelineNGKeys.accountId)
+      , @Field(NgPipelineEntity.PipelineNGKeys.orgIdentifier),
+          @Field(NgPipelineEntity.PipelineNGKeys.projectIdentifier), @Field(NgPipelineEntity.PipelineNGKeys.identifier)
     })
-@CdIndex(name = "accountIdentifierIndex", fields = { @Field(CDPipelineEntity.PipelineNGKeys.accountId) })
+@CdIndex(name = "accountIdentifierIndex", fields = { @Field(NgPipelineEntity.PipelineNGKeys.accountId) })
 @Entity(value = "pipelinesNG", noClassnameStored = true)
 @Document("pipelinesNG")
 @TypeAlias("pipelinesNG")
 @HarnessEntity(exportable = true)
-public class CDPipelineEntity implements PersistentEntity, AccountAccess, UuidAware, CreatedAtAware, UpdatedAtAware {
+public class NgPipelineEntity implements PersistentEntity, AccountAccess, UuidAware, CreatedAtAware, UpdatedAtAware {
   @Id @org.mongodb.morphia.annotations.Id String uuid;
-  private CDPipeline cdPipeline;
+  private NgPipeline ngPipeline;
   @NotEmpty String yamlPipeline;
   @NotEmpty String accountId;
   @NotEmpty String orgIdentifier;

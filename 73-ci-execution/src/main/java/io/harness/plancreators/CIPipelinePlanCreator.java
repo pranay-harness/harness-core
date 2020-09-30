@@ -12,7 +12,7 @@ import com.google.inject.Singleton;
 import io.harness.beans.CIPipelineSetupParameters;
 import io.harness.beans.executionargs.CIExecutionArgs;
 import io.harness.beans.executionargs.ExecutionArgs;
-import io.harness.cdng.pipeline.CDPipeline;
+import io.harness.cdng.pipeline.NgPipeline;
 import io.harness.exception.InvalidRequestException;
 import io.harness.executionplan.core.ExecutionPlanCreationContext;
 import io.harness.executionplan.core.ExecutionPlanCreator;
@@ -35,11 +35,11 @@ import java.util.List;
  */
 @Singleton
 @Slf4j
-public class CIPipelinePlanCreator implements SupportDefinedExecutorPlanCreator<CDPipeline> {
+public class CIPipelinePlanCreator implements SupportDefinedExecutorPlanCreator<NgPipeline> {
   @Inject private ExecutionPlanCreatorHelper executionPlanCreatorHelper;
   @Override
-  public ExecutionPlanCreatorResponse createPlan(CDPipeline ciPipeline, ExecutionPlanCreationContext context) {
-    addArgumentsToContext(ciPipeline, context);
+  public ExecutionPlanCreatorResponse createPlan(NgPipeline ngPipeline, ExecutionPlanCreationContext context) {
+    addArgumentsToContext(ngPipeline, context);
 
     CIExecutionArgs ciExecutionArgs =
         (CIExecutionArgs) context.getAttribute(ExecutionArgs.EXEC_ARGS)
@@ -47,9 +47,9 @@ public class CIPipelinePlanCreator implements SupportDefinedExecutorPlanCreator<
                              -> new InvalidRequestException(
                                  "Execution arguments are empty for pipeline execution " + context.getAccountId()));
 
-    final ExecutionPlanCreatorResponse planForStages = createPlanForStages(ciPipeline.getStages(), context);
+    final ExecutionPlanCreatorResponse planForStages = createPlanForStages(ngPipeline.getStages(), context);
 
-    final PlanNode pipelineExecutionNode = preparePipelineNode(ciPipeline, planForStages, ciExecutionArgs);
+    final PlanNode pipelineExecutionNode = preparePipelineNode(ngPipeline, planForStages, ciExecutionArgs);
 
     return ExecutionPlanCreatorResponse.builder()
         .planNode(pipelineExecutionNode)
@@ -58,12 +58,12 @@ public class CIPipelinePlanCreator implements SupportDefinedExecutorPlanCreator<
         .build();
   }
 
-  private void addArgumentsToContext(CDPipeline pipeline, ExecutionPlanCreationContext context) {
+  private void addArgumentsToContext(NgPipeline pipeline, ExecutionPlanCreationContext context) {
     context.addAttribute("CI_PIPELINE_CONFIG", pipeline);
   }
 
   private PlanNode preparePipelineNode(
-      CDPipeline pipeline, ExecutionPlanCreatorResponse planForStages, CIExecutionArgs ciExecutionArgs) {
+      NgPipeline pipeline, ExecutionPlanCreatorResponse planForStages, CIExecutionArgs ciExecutionArgs) {
     final String pipelineSetupNodeId = generateUuid();
 
     return PlanNode.builder()
@@ -72,7 +72,7 @@ public class CIPipelinePlanCreator implements SupportDefinedExecutorPlanCreator<
         .identifier(pipeline.getIdentifier())
         .stepType(CIPipelineSetupStep.STEP_TYPE)
         .stepParameters(CIPipelineSetupParameters.builder()
-                            .ciPipeline(pipeline)
+                            .ngPipeline(pipeline)
                             .ciExecutionArgs(ciExecutionArgs)
                             .fieldToExecutionNodeIdMap(ImmutableMap.of("stages", planForStages.getStartingNodeId()))
                             .build())
@@ -93,7 +93,7 @@ public class CIPipelinePlanCreator implements SupportDefinedExecutorPlanCreator<
   @Override
   public boolean supports(PlanCreatorSearchContext<?> searchContext) {
     return getSupportedTypes().contains(searchContext.getType())
-        && searchContext.getObjectToPlan() instanceof CDPipeline;
+        && searchContext.getObjectToPlan() instanceof NgPipeline;
   }
 
   @Override

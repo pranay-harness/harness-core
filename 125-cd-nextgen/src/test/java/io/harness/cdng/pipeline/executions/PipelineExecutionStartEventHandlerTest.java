@@ -11,7 +11,7 @@ import io.harness.CategoryTest;
 import io.harness.ambiance.Ambiance;
 import io.harness.ambiance.Level;
 import io.harness.category.element.UnitTests;
-import io.harness.cdng.pipeline.CDPipeline;
+import io.harness.cdng.pipeline.NgPipeline;
 import io.harness.cdng.pipeline.beans.CDPipelineSetupParameters;
 import io.harness.cdng.pipeline.executions.service.NgPipelineExecutionService;
 import io.harness.engine.executions.node.NodeExecutionServiceImpl;
@@ -59,7 +59,7 @@ public class PipelineExecutionStartEventHandlerTest extends CategoryTest {
         PlanNode.builder()
             .group(StepOutcomeGroup.PIPELINE.name())
             .uuid("uuid")
-            .stepParameters(CDPipelineSetupParameters.builder().cdPipeline(CDPipeline.builder().build()).build())
+            .stepParameters(CDPipelineSetupParameters.builder().ngPipeline(NgPipeline.builder().build()).build())
             .build();
     PlanExecution planExecution =
         PlanExecution.builder().plan(Plan.builder().startingNodeId("uuid").node(planNode).internalBuild()).build();
@@ -69,7 +69,7 @@ public class PipelineExecutionStartEventHandlerTest extends CategoryTest {
     verify(planExecutionService).get("executionId");
     verify(ngPipelineExecutionService)
         .createPipelineExecutionSummary(
-            anyString(), anyString(), anyString(), any(PlanExecution.class), any(CDPipeline.class));
+            anyString(), anyString(), anyString(), any(PlanExecution.class), any(NgPipeline.class));
   }
 
   @Test
@@ -89,7 +89,7 @@ public class PipelineExecutionStartEventHandlerTest extends CategoryTest {
         PlanNode.builder()
             .group(StepOutcomeGroup.STAGES.name())
             .uuid("uuid")
-            .stepParameters(CDPipelineSetupParameters.builder().cdPipeline(CDPipeline.builder().build()).build())
+            .stepParameters(CDPipelineSetupParameters.builder().ngPipeline(NgPipeline.builder().build()).build())
             .build();
     PlanExecution planExecution =
         PlanExecution.builder().plan(Plan.builder().startingNodeId("uuid").node(planNode).internalBuild()).build();
@@ -115,7 +115,7 @@ public class PipelineExecutionStartEventHandlerTest extends CategoryTest {
     PlanNode planNode =
         PlanNode.builder()
             .uuid("uuid")
-            .stepParameters(CDPipelineSetupParameters.builder().cdPipeline(CDPipeline.builder().build()).build())
+            .stepParameters(CDPipelineSetupParameters.builder().ngPipeline(NgPipeline.builder().build()).build())
             .build();
     PlanExecution planExecution =
         PlanExecution.builder().plan(Plan.builder().startingNodeId("uuid").node(planNode).internalBuild()).build();

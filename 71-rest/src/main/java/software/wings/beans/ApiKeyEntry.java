@@ -2,9 +2,9 @@ package software.wings.beans;
 
 import com.fasterxml.jackson.annotation.JsonView;
 import io.harness.annotation.HarnessEntity;
-import io.harness.mongo.index.CdUniqueIndex;
 import io.harness.mongo.index.FdIndex;
 import io.harness.mongo.index.Field;
+import io.harness.mongo.index.NgUniqueIndex;
 import io.harness.persistence.AccountAccess;
 import io.harness.persistence.CreatedAtAccess;
 import io.harness.persistence.PersistentEntity;
@@ -27,7 +27,7 @@ import java.util.List;
 @Entity(value = "apiKeys", noClassnameStored = true)
 @HarnessEntity(exportable = true)
 @FieldNameConstants(innerTypeName = "ApiKeyEntryKeys")
-@CdUniqueIndex(
+@NgUniqueIndex(
     name = "uniqueName", fields = { @Field(value = ApiKeyEntryKeys.accountId)
                                     , @Field(value = ApiKeyEntryKeys.name) })
 public class ApiKeyEntry implements PersistentEntity, UuidAccess, CreatedAtAccess, AccountAccess {

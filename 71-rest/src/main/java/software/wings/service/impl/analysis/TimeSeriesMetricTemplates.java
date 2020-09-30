@@ -5,10 +5,10 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.annotation.HarnessEntity;
-import io.harness.mongo.index.CdUniqueIndex;
 import io.harness.mongo.index.FdIndex;
 import io.harness.mongo.index.FdTtlIndex;
 import io.harness.mongo.index.Field;
+import io.harness.mongo.index.NgUniqueIndex;
 import io.harness.persistence.AccountAccess;
 import lombok.Builder;
 import lombok.Data;
@@ -28,7 +28,7 @@ import java.util.Map;
  * Created by rsingh on 08/30/17.
  */
 
-@CdUniqueIndex(name = "unique_Idx", fields = { @Field("stateExecutionId")
+@NgUniqueIndex(name = "unique_Idx", fields = { @Field("stateExecutionId")
                                                , @Field("cvConfigId") })
 @Data
 @EqualsAndHashCode(callSuper = false)

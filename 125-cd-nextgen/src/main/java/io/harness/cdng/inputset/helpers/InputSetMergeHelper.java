@@ -6,7 +6,7 @@ import com.google.inject.Singleton;
 import io.harness.cdng.inputset.beans.entities.CDInputSetEntity;
 import io.harness.cdng.inputset.beans.entities.MergeInputSetResponse;
 import io.harness.cdng.inputset.services.InputSetEntityService;
-import io.harness.cdng.pipeline.CDPipeline;
+import io.harness.cdng.pipeline.NgPipeline;
 import io.harness.cdng.pipeline.beans.dto.CDPipelineResponseDTO;
 import io.harness.cdng.pipeline.service.PipelineService;
 import io.harness.exception.InvalidArgumentsException;
@@ -45,19 +45,19 @@ public class InputSetMergeHelper {
    */
   public String getTemplateFromPipeline(String pipelineYaml) {
     try {
-      CDPipeline result = getTemplateObjectFromPipelineYaml(pipelineYaml);
+      NgPipeline result = getTemplateObjectFromPipelineYaml(pipelineYaml);
       return JsonPipelineUtils.writeYamlString(result).replaceAll("---\n", "");
     } catch (IOException e) {
       throw new InvalidRequestException("Pipeline could not be converted to template");
     }
   }
 
-  private CDPipeline getTemplateObjectFromPipelineYaml(String pipelineYaml) {
+  private NgPipeline getTemplateObjectFromPipelineYaml(String pipelineYaml) {
     InputSetTemplateVisitor visitor = simpleVisitorFactory.obtainInputSetTemplateVisitor();
     try {
-      CDPipeline pipeline = YamlPipelineUtils.read(pipelineYaml, CDPipeline.class);
+      NgPipeline pipeline = YamlPipelineUtils.read(pipelineYaml, NgPipeline.class);
       visitor.walkElementTree(pipeline);
-      return (CDPipeline) visitor.getCurrentObject();
+      return (NgPipeline) visitor.getCurrentObject();
     } catch (IOException e) {
       throw new InvalidRequestException("Pipeline could not be converted to template");
     }
@@ -75,7 +75,7 @@ public class InputSetMergeHelper {
         ngPipelineService.getPipeline(pipelineIdentifier, accountId, orgIdentifier, projectIdentifier);
     if (optionalPipeline.isPresent()) {
       CDPipelineResponseDTO cdPipelineResponseDTO = optionalPipeline.get();
-      CDPipeline originalPipeline = cdPipelineResponseDTO.getCdPipeline();
+      NgPipeline originalPipeline = cdPipelineResponseDTO.getNgPipeline();
       String pipelineYaml = cdPipelineResponseDTO.getYamlPipeline();
 
       if (isTemplateResponse) {

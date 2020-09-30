@@ -14,10 +14,10 @@ import io.harness.beans.EmbeddedUser;
 import io.harness.beans.ExecutionStatus;
 import io.harness.iterator.PersistentRegularIterable;
 import io.harness.mongo.index.CdIndex;
-import io.harness.mongo.index.CdUniqueIndex;
 import io.harness.mongo.index.FdIndex;
 import io.harness.mongo.index.FdTtlIndex;
 import io.harness.mongo.index.Field;
+import io.harness.mongo.index.NgUniqueIndex;
 import io.harness.persistence.AccountAccess;
 import io.harness.version.ServiceApiVersion;
 import lombok.AllArgsConstructor;
@@ -41,7 +41,7 @@ import java.util.Map;
  * Created by sriram_parthasarathy on 8/23/17.
  */
 
-@CdUniqueIndex(name = "task_Unique_Idx", fields = { @Field("stateExecutionId")
+@NgUniqueIndex(name = "task_Unique_Idx", fields = { @Field("stateExecutionId")
                                                     , @Field("executionStatus") })
 @CdIndex(name = "timeSeriesAnalysisIterationIdx",
     fields = { @Field("analysisType")

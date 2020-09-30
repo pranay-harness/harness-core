@@ -16,10 +16,10 @@ import io.harness.beans.EmbeddedUser;
 import io.harness.data.validator.EntityName;
 import io.harness.iterator.PersistentRegularIterable;
 import io.harness.mongo.index.CdIndex;
-import io.harness.mongo.index.CdUniqueIndex;
 import io.harness.mongo.index.FdIndex;
 import io.harness.mongo.index.Field;
 import io.harness.mongo.index.IndexType;
+import io.harness.mongo.index.NgUniqueIndex;
 import io.harness.persistence.AccountAccess;
 import io.harness.persistence.NameAccess;
 import io.harness.validation.Update;
@@ -52,7 +52,7 @@ import javax.annotation.Nullable;
 @NoArgsConstructor
 @RequiredArgsConstructor
 @Entity(value = "infrastructureMapping")
-@CdUniqueIndex(name = "yaml", fields = { @Field("appId")
+@NgUniqueIndex(name = "yaml", fields = { @Field("appId")
                                          , @Field("envId"), @Field("name") })
 @CdIndex(name = "app_infratype", fields = { @Field("appId")
                                             , @Field("infraMappingType") })

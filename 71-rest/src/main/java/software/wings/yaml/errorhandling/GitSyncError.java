@@ -3,9 +3,9 @@ package software.wings.yaml.errorhandling;
 import io.harness.annotation.HarnessEntity;
 import io.harness.iterator.PersistentRegularIterable;
 import io.harness.mongo.index.CdIndex;
-import io.harness.mongo.index.CdUniqueIndex;
 import io.harness.mongo.index.FdIndex;
 import io.harness.mongo.index.Field;
+import io.harness.mongo.index.NgUniqueIndex;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -27,7 +27,7 @@ import javax.ws.rs.DefaultValue;
  * @author rktummala on 12/15/17
  */
 
-@CdUniqueIndex(name = "account_filepath_direction_idx",
+@NgUniqueIndex(name = "account_filepath_direction_idx",
     fields = { @Field("accountId")
                , @Field("yamlFilePath"), @Field("gitSyncDirection") })
 @CdIndex(name = "gitCommitId_idx",

@@ -2,10 +2,10 @@ package software.wings.delegatetasks.validation;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import io.harness.annotation.HarnessEntity;
-import io.harness.mongo.index.CdUniqueIndex;
 import io.harness.mongo.index.FdIndex;
 import io.harness.mongo.index.FdTtlIndex;
 import io.harness.mongo.index.Field;
+import io.harness.mongo.index.NgUniqueIndex;
 import io.harness.persistence.AccountAccess;
 import io.harness.persistence.PersistentEntity;
 import io.harness.persistence.UpdatedAtAware;
@@ -27,7 +27,7 @@ import javax.validation.constraints.NotNull;
 @Builder
 @Entity(value = "delegateConnectionResults", noClassnameStored = true)
 @HarnessEntity(exportable = false)
-@CdUniqueIndex(name = "delegateConnectionResultsIdx",
+@NgUniqueIndex(name = "delegateConnectionResultsIdx",
     fields =
     {
       @Field(DelegateConnectionResultKeys.accountId)

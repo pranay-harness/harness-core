@@ -4,9 +4,9 @@ import com.google.common.collect.ImmutableList;
 
 import io.harness.annotation.HarnessEntity;
 import io.harness.beans.EmbeddedUser;
-import io.harness.mongo.index.CdUniqueIndex;
 import io.harness.mongo.index.FdIndex;
 import io.harness.mongo.index.Field;
+import io.harness.mongo.index.NgUniqueIndex;
 import io.harness.persistence.AccountAccess;
 import io.harness.persistence.CreatedAtAware;
 import io.harness.persistence.CreatedByAware;
@@ -36,7 +36,7 @@ import javax.validation.constraints.NotNull;
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 @Entity(value = "serverless-instance-stats", noClassnameStored = true)
 @HarnessEntity(exportable = false)
-@CdUniqueIndex(name = "accountId_timestamp_unique_idx", fields = { @Field("accountId")
+@NgUniqueIndex(name = "accountId_timestamp_unique_idx", fields = { @Field("accountId")
                                                                    , @Field("timestamp") })
 @FieldNameConstants(innerTypeName = "ServerlessInstanceStatsKeys")
 public class ServerlessInstanceStats implements PersistentEntity, UuidAware, CreatedAtAware, CreatedByAware,

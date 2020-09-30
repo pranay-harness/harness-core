@@ -4,8 +4,8 @@ import io.harness.data.validator.EntityIdentifier;
 import io.harness.data.validator.EntityName;
 import io.harness.data.validator.Trimmed;
 import io.harness.mongo.index.CdIndex;
-import io.harness.mongo.index.CdUniqueIndex;
 import io.harness.mongo.index.Field;
+import io.harness.mongo.index.NgUniqueIndex;
 import io.harness.ng.core.service.entity.ServiceEntity.ServiceEntityKeys;
 import io.harness.persistence.PersistentEntity;
 import lombok.Builder;
@@ -26,7 +26,7 @@ import javax.validation.constraints.Size;
 @Data
 @Builder
 @FieldNameConstants(innerTypeName = "ServiceEntityKeys")
-@CdUniqueIndex(name = "unique_accountId_organizationIdentifier_projectIdentifier_serviceIdentifier",
+@NgUniqueIndex(name = "unique_accountId_organizationIdentifier_projectIdentifier_serviceIdentifier",
     fields =
     {
       @Field(ServiceEntityKeys.accountId)

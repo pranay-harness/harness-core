@@ -35,12 +35,12 @@ import io.harness.mongo.IndexCreator.IndexCreatorBuilder;
 import io.harness.mongo.IndexManager.Mode;
 import io.harness.mongo.index.CdIndex;
 import io.harness.mongo.index.CdSparseIndex;
-import io.harness.mongo.index.CdUniqueIndex;
 import io.harness.mongo.index.FdIndex;
 import io.harness.mongo.index.FdSparseIndex;
 import io.harness.mongo.index.FdTtlIndex;
 import io.harness.mongo.index.FdUniqueIndex;
 import io.harness.mongo.index.Field;
+import io.harness.mongo.index.NgUniqueIndex;
 import io.harness.mongo.index.migrator.Migrator;
 import io.harness.persistence.Store;
 import io.harness.threading.Morpheus;
@@ -261,8 +261,8 @@ public class IndexManagerSession {
       checkWithTheOthers(creators, newCreator);
       putCreator(creators, newCreator.name(), newCreator);
     }
-    Set<CdUniqueIndex> cdUniqueIndices = fetchAnnotations(mc.getClazz(), CdUniqueIndex.class);
-    for (CdUniqueIndex index : cdUniqueIndices) {
+    Set<NgUniqueIndex> cdUniqueIndices = fetchAnnotations(mc.getClazz(), NgUniqueIndex.class);
+    for (NgUniqueIndex index : cdUniqueIndices) {
       IndexCreator newCreator =
           buildtCompoundIndexCreator(index.name(), id, index.fields(), UNIQUE_INDEX).collection(collection).build();
       checkWithTheOthers(creators, newCreator);

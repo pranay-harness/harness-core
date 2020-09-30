@@ -1,7 +1,7 @@
 package io.harness.cdng.pipeline.executions.service;
 
 import io.harness.beans.EmbeddedUser;
-import io.harness.cdng.pipeline.CDPipeline;
+import io.harness.cdng.pipeline.NgPipeline;
 import io.harness.cdng.pipeline.executions.beans.PipelineExecutionDetail;
 import io.harness.cdng.pipeline.executions.beans.PipelineExecutionSummary;
 import io.harness.execution.NodeExecution;
@@ -18,7 +18,7 @@ public interface NgPipelineExecutionService {
   Page<PipelineExecutionSummary> getExecutions(String accountId, String orgId, String projectId, Pageable pageable);
 
   PipelineExecutionSummary createPipelineExecutionSummary(
-      String accountId, String orgId, String projectId, PlanExecution planExecution, CDPipeline cdPipeline);
+      String accountId, String orgId, String projectId, PlanExecution planExecution, NgPipeline ngPipeline);
 
   PipelineExecutionDetail getPipelineExecutionDetail(@Nonnull String planExecutionId, String stageId);
 

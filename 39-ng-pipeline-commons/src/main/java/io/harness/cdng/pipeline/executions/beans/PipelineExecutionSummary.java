@@ -5,8 +5,8 @@ import io.harness.beans.EmbeddedUser;
 import io.harness.cdng.pipeline.executions.ExecutionStatus;
 import io.harness.cdng.pipeline.executions.TriggerType;
 import io.harness.cdng.pipeline.executions.beans.PipelineExecutionSummary.PipelineExecutionSummaryKeys;
-import io.harness.mongo.index.CdUniqueIndex;
 import io.harness.mongo.index.Field;
+import io.harness.mongo.index.NgUniqueIndex;
 import io.harness.persistence.PersistentEntity;
 import io.harness.pipeline.executions.NGStageType;
 import io.harness.yaml.core.Tag;
@@ -26,7 +26,7 @@ import java.util.List;
 @Entity(value = "pipelineExecutionSummary", noClassnameStored = true)
 @JsonIgnoreProperties(ignoreUnknown = true)
 @Document("pipelineExecutionSummary")
-@CdUniqueIndex(name = "unique_accountIdentifier_organizationIdentifier_projectIdentifier_identifier_planExecutionId",
+@NgUniqueIndex(name = "unique_accountIdentifier_organizationIdentifier_projectIdentifier_identifier_planExecutionId",
     fields =
     {
       @Field(PipelineExecutionSummaryKeys.accountIdentifier)

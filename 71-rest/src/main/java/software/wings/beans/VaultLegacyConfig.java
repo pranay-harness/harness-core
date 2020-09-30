@@ -8,8 +8,8 @@ import io.harness.annotation.HarnessEntity;
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import io.harness.delegate.beans.executioncapability.ExecutionCapabilityDemander;
 import io.harness.delegate.task.mixin.HttpConnectionExecutionCapabilityGenerator;
-import io.harness.mongo.index.CdUniqueIndex;
 import io.harness.mongo.index.Field;
+import io.harness.mongo.index.NgUniqueIndex;
 import io.harness.persistence.AccountAccess;
 import io.harness.security.encryption.EncryptionConfig;
 import io.harness.security.encryption.EncryptionType;
@@ -37,9 +37,9 @@ import java.util.List;
 @AllArgsConstructor
 @ToString(exclude = {"authToken"})
 @EqualsAndHashCode(callSuper = false)
-@CdUniqueIndex(name = "uniqueIdx", fields = { @Field("name")
+@NgUniqueIndex(name = "uniqueIdx", fields = { @Field("name")
                                               , @Field("accountId") })
-@CdUniqueIndex(name = "uniqueUrlIdx", fields = { @Field("vaultUrl")
+@NgUniqueIndex(name = "uniqueUrlIdx", fields = { @Field("vaultUrl")
                                                  , @Field("accountId") })
 @JsonIgnoreProperties(ignoreUnknown = true)
 @Entity(value = "vaultConfig", noClassnameStored = true)

@@ -8,7 +8,7 @@ import com.google.inject.Singleton;
 
 import io.harness.beans.EmbeddedUser;
 import io.harness.cdng.common.beans.SetupAbstractionKeys;
-import io.harness.cdng.pipeline.CDPipeline;
+import io.harness.cdng.pipeline.NgPipeline;
 import io.harness.cdng.pipeline.executions.ExecutionStatus;
 import io.harness.cdng.pipeline.executions.PipelineExecutionHelper;
 import io.harness.cdng.pipeline.executions.TriggerType;
@@ -59,13 +59,13 @@ public class NgPipelineExecutionServiceImpl implements NgPipelineExecutionServic
   @Override
   public PlanExecution triggerPipeline(
       String pipelineYaml, String accountId, String orgId, String projectId, EmbeddedUser user) {
-    final CDPipeline cdPipeline;
+    final NgPipeline ngPipeline;
     try {
-      cdPipeline = YamlPipelineUtils.read(pipelineYaml, CDPipeline.class);
+      ngPipeline = YamlPipelineUtils.read(pipelineYaml, NgPipeline.class);
       Map<String, Object> contextAttributes = new HashMap<>();
 
       final Plan planForPipeline =
-          executionPlanCreatorService.createPlanForPipeline(cdPipeline, accountId, contextAttributes);
+          executionPlanCreatorService.createPlanForPipeline(ngPipeline, accountId, contextAttributes);
       return orchestrationService.startExecution(planForPipeline,
           ImmutableMap.of(SetupAbstractionKeys.accountId, accountId, SetupAbstractionKeys.orgIdentifier, orgId,
               SetupAbstractionKeys.projectIdentifier, projectId));
@@ -89,7 +89,7 @@ public class NgPipelineExecutionServiceImpl implements NgPipelineExecutionServic
 
   @Override
   public PipelineExecutionSummary createPipelineExecutionSummary(
-      String accountId, String orgId, String projectId, PlanExecution planExecution, CDPipeline cdPipeline) {
+      String accountId, String orgId, String projectId, PlanExecution planExecution, NgPipeline ngPipeline) {
     Map<String, String> stageIdentifierToPlanNodeId = new HashMap<>();
     planExecution.getPlan()
         .getNodes()
@@ -100,8 +100,8 @@ public class NgPipelineExecutionServiceImpl implements NgPipelineExecutionServic
                                                             .accountIdentifier(accountId)
                                                             .orgIdentifier(orgId)
                                                             .projectIdentifier(projectId)
-                                                            .pipelineName(cdPipeline.getName())
-                                                            .pipelineIdentifier(cdPipeline.getIdentifier())
+                                                            .pipelineName(ngPipeline.getName())
+                                                            .pipelineIdentifier(ngPipeline.getIdentifier())
                                                             .executionStatus(ExecutionStatus.RUNNING)
                                                             .triggeredBy(getEmbeddedUser())
                                                             .triggerType(TriggerType.MANUAL)
@@ -109,7 +109,7 @@ public class NgPipelineExecutionServiceImpl implements NgPipelineExecutionServic
                                                             .startedAt(planExecution.getStartTs())
                                                             .build();
     pipelineExecutionHelper.addStageSpecificDetailsToPipelineExecution(
-        pipelineExecutionSummary, cdPipeline, stageIdentifierToPlanNodeId);
+        pipelineExecutionSummary, ngPipeline, stageIdentifierToPlanNodeId);
     return pipelineExecutionRepository.save(pipelineExecutionSummary);
   }
 
