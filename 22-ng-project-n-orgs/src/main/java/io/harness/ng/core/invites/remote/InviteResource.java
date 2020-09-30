@@ -71,8 +71,8 @@ import javax.ws.rs.core.Response;
 @Slf4j
 @OwnedBy(HarnessTeam.PL)
 public class InviteResource {
-  private static final String projectURIFormat = "/organizations/%s/projects/%s";
-  private static final String signupURL = "/#/login";
+  private static final String PROJECT_URL_FORMAT = "/organizations/%s/projects/%s";
+  private static final String SIGN_UP_URL = "/#/login";
   private final InvitesService invitesService;
   private final NgUserService ngUserService;
 
@@ -82,7 +82,8 @@ public class InviteResource {
       @QueryParam("orgIdentifier") @NotEmpty String orgIdentifier,
       @QueryParam("projectIdentifier") @NotEmpty String projectIdentifier, @BeanParam PageRequest pageRequest) {
     if (isEmpty(pageRequest.getSortOrders())) {
-      SortOrder order = SortOrder.Builder.aSortOrder().withField("createdAt", SortOrder.OrderType.DESC).build();
+      SortOrder order =
+          SortOrder.Builder.aSortOrder().withField(InviteKeys.createdAt, SortOrder.OrderType.DESC).build();
       pageRequest.setSortOrders(ImmutableList.of(order));
     }
 
@@ -146,8 +147,8 @@ public class InviteResource {
       Invite invite = inviteOpt.get();
       //      TODO @Ankush when user signup, check if he has any pending approved invites
       URI redirectURI = invite.getDeleted()
-          ? URI.create(String.format(projectURIFormat, invite.getOrgIdentifier(), invite.getProjectIdentifier()))
-          : URI.create(signupURL);
+          ? URI.create(String.format(PROJECT_URL_FORMAT, invite.getOrgIdentifier(), invite.getProjectIdentifier()))
+          : URI.create(SIGN_UP_URL);
       return Response.seeOther(redirectURI).build();
     }
     FailureDTO failureDto = FailureDTO.toBody(Status.FAILURE, ErrorCode.INVALID_REQUEST, "Bad Request", null);
