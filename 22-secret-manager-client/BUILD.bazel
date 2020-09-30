@@ -12,58 +12,39 @@ java_library(
     visibility = ["//visibility:public"],
     exports = [
         "//12-commons:module",
+        "//13-ng-commons:module",
+        "//14-api-services-beans:module",
+        "//19-delegate-tasks-beans:module",
+        "//20-ng-core-beans:module",
         "//21-persistence:module",
+        "//22-ng-project-n-orgs:module",
+        "@maven//:com_esotericsoftware_kryo",
+        "@maven//:com_fasterxml_jackson_core_jackson_annotations",
         "@maven//:com_google_code_findbugs_annotations",
-        "@maven//:com_google_guava_guava",
         "@maven//:com_google_inject_guice",
+        "@maven//:com_squareup_okhttp3_okhttp",
+        "@maven//:com_squareup_retrofit2_retrofit",
+        "@maven//:io_github_resilience4j_resilience4j_circuitbreaker",
+        "@maven//:io_github_resilience4j_resilience4j_retrofit",
+        "@maven//:io_swagger_swagger_annotations",
         "@maven//:javax_validation_validation_api",
-        "@maven//:org_apache_commons_commons_lang3",
+        "@maven//:org_hibernate_hibernate_validator",
         "@maven//:org_mongodb_morphia_morphia",
-        "@maven//:org_reflections_reflections",
-        "@maven//:org_slf4j_slf4j_api",
+        "@maven//:org_projectlombok_lombok",
         "@maven//:org_springframework_data_spring_data_commons",
         "@maven//:org_springframework_data_spring_data_mongodb",
-        "@maven//:org_springframework_spring_context",
-        "@maven//:org_springframework_spring_core",
     ],
 )
 
 java_library(
     name = "module",
     srcs = glob(["src/main/**/*.java"]),
-    resources = [
-    ],
     visibility = ["//visibility:public"],
     deps = [
         "maven_deps",
         "//:lombok",
     ],
 )
-
-java_library(
-    name = "test_deps",
-    exports = [
-        "//21-persistence:supporter-test",
-        "//990-commons-test:module",
-        "@maven//:junit_junit",
-        "@maven//:org_assertj_assertj_core",
-        "@maven//:org_mockito_mockito_core",
-    ],
-)
-
-java_library(
-    name = "tests",
-    srcs = glob(["src/test/**/*.java"]),
-    visibility = ["//visibility:public"],
-    deps = [
-        "maven_deps",
-        "module",
-        "test_deps",
-        "//:lombok",
-    ],
-)
-
-run_tests()
 
 checkstyle()
 
