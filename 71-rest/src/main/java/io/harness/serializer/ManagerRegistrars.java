@@ -12,6 +12,7 @@ import io.harness.serializer.kryo.OrchestrationStepsKryoRegistrar;
 import io.harness.serializer.kryo.OrchestrationVisualizationKryoRegistrar;
 import io.harness.serializer.kryo.ProjectAndOrgKryoRegistrar;
 import io.harness.serializer.kryo.SecretManagerClientKryoRegistrar;
+import io.harness.serializer.kryo.YamlKryoRegistrar;
 import io.harness.serializer.morphia.CommonEntitiesMorphiaRegister;
 import io.harness.serializer.morphia.ConnectorMorphiaClassesRegistrar;
 import io.harness.serializer.morphia.DelegateServiceBeansMorphiaRegistrar;
@@ -44,6 +45,7 @@ public class ManagerRegistrars {
           .addAll(NGCoreRegistrars.kryoRegistrars)
           .add(SecretManagerClientKryoRegistrar.class)
           .add(CvNextGenCommonsBeansKryoRegistrar.class)
+          .add(YamlKryoRegistrar.class)
           // temporary:
           .add(DelegateAgentKryoRegister.class)
           .add(DelegateAgentBeansKryoRegister.class)

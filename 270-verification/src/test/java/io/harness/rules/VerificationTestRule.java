@@ -15,7 +15,7 @@ import io.harness.factory.ClosingFactoryModule;
 import io.harness.mongo.MongoConfig;
 import io.harness.morphia.MorphiaRegistrar;
 import io.harness.serializer.KryoRegistrar;
-import io.harness.serializer.kryo.VerificationKryoRegistrar;
+import io.harness.serializer.VerificationRegistrars;
 import io.harness.serializer.morphia.VerificationMorphiaRegistrar;
 import io.harness.testlib.RealMongo;
 import io.harness.testlib.module.TestMongoModule;
@@ -27,9 +27,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 
-/**
- * Created by rsingh on 9/25/18.
- */
 public class VerificationTestRule extends WingsRule {
   @Override
   protected Configuration getConfiguration(List<Annotation> annotations, String dbName) {
@@ -66,7 +63,7 @@ public class VerificationTestRule extends WingsRule {
   protected Set<Class<? extends KryoRegistrar>> getKryoRegistrars() {
     return ImmutableSet.<Class<? extends KryoRegistrar>>builder()
         .addAll(super.getKryoRegistrars())
-        .add(VerificationKryoRegistrar.class)
+        .addAll(VerificationRegistrars.kryoRegistrars)
         .build();
   }
 
