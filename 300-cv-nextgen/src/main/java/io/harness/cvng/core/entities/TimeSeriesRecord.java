@@ -14,7 +14,6 @@ import lombok.Builder.Default;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.experimental.FieldNameConstants;
-import org.bson.types.ObjectId;
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Id;
 import org.mongodb.morphia.annotations.PrePersist;
@@ -33,9 +32,7 @@ import java.util.Set;
 @Entity(value = "timeSeriesRecords", noClassnameStored = true)
 @HarnessEntity(exportable = false)
 public class TimeSeriesRecord implements CreatedAtAware, AccountAccess, PersistentEntity {
-  // TODO: Is this the correct approach for uuid?
-  @Id private ObjectId uuid;
-
+  @Id private String uuid;
   @FdIndex private String accountId;
   @FdIndex private String cvConfigId;
   @FdIndex private String verificationTaskId;

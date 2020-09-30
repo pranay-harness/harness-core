@@ -9,7 +9,9 @@ import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.spy;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
@@ -41,6 +43,7 @@ import software.wings.beans.AwsConfig;
 import software.wings.delegatetasks.DelegateProxyFactory;
 import software.wings.metrics.MetricType;
 import software.wings.service.impl.AwsHelperService;
+import software.wings.service.impl.AwsInfrastructureProvider;
 import software.wings.service.impl.CloudWatchServiceImpl;
 import software.wings.service.impl.ThirdPartyApiCallLog;
 import software.wings.service.impl.cloudwatch.AwsNameSpace;
@@ -55,6 +58,7 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -64,6 +68,8 @@ public class CloudWatchServiceTest extends WingsBaseTest {
   @Mock private SettingsService settingsService;
   @Mock private AwsHelperService awsHelperService;
   @Mock private DelegateProxyFactory delegateProxyFactory;
+  @Mock private AwsInfrastructureProvider awsInfrastructureProvider;
+
   @Inject private CloudWatchDelegateService cloudWatchDelegateService;
 
   @Inject @InjectMocks private CloudWatchService cloudWatchService;
@@ -84,6 +90,8 @@ public class CloudWatchServiceTest extends WingsBaseTest {
         .thenReturn(listMetricsResult.getMetrics());
     when(awsHelperService.getCloudWatchMetrics(any(AwsConfig.class), any(), anyString(), any(ListMetricsRequest.class)))
         .thenReturn(listMetricsResult.getMetrics());
+    when(awsInfrastructureProvider.listClassicLoadBalancers(any(), anyString(), any()))
+        .thenReturn(Arrays.asList("LB1", "LB2"));
   }
 
   @Test
@@ -120,6 +128,18 @@ public class CloudWatchServiceTest extends WingsBaseTest {
     assertThat(cloudwatchMetrics.get(AwsNameSpace.ECS)).hasSize(4);
     assertThat(cloudwatchMetrics.get(AwsNameSpace.EC2)).hasSize(9);
     assertThat(cloudwatchMetrics.get(AwsNameSpace.ELB)).hasSize(13);
+  }
+
+  @Test
+  @Owner(developers = PRAVEEN)
+  @Category(UnitTests.class)
+  public void testListLoadBalancers() {
+    Set<String> loadBalancerNames = cloudWatchService.getLoadBalancerNames(SETTING_ID, "us-east-1");
+    verify(awsInfrastructureProvider, times(1)).listClassicLoadBalancers(any(), anyString(), any());
+    verify(awsInfrastructureProvider, times(1)).listElasticBalancers(any(), anyString(), any());
+    verify(awsInfrastructureProvider, never()).listLoadBalancers(any(), any(), any());
+    assertThat(loadBalancerNames.size()).isEqualTo(2);
+    assertThat(loadBalancerNames).containsExactlyInAnyOrder("LB1", "LB2");
   }
 
   @Test
