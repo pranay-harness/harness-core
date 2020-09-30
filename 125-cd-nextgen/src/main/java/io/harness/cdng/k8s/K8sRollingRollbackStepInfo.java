@@ -40,8 +40,8 @@ public class K8sRollingRollbackStepInfo extends K8sRollingRollbackStepParameters
   String metadata;
 
   @Builder(builderMethodName = "infoBuilder")
-  public K8sRollingRollbackStepInfo(ParameterField<Integer> timeout,
-      Map<String, StepDependencySpec> stepDependencySpecs, String name, String identifier) {
+  public K8sRollingRollbackStepInfo(ParameterField<String> timeout, Map<String, StepDependencySpec> stepDependencySpecs,
+      String name, String identifier) {
     super(timeout, stepDependencySpecs);
     this.name = name;
     this.identifier = identifier;
