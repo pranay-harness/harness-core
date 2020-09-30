@@ -1,7 +1,6 @@
 package io.harness.remote.client;
 
 import static com.fasterxml.jackson.databind.DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES;
-import static io.harness.ng.core.CorrelationContext.getCorrelationIdInterceptor;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.guava.GuavaModule;
@@ -78,7 +77,6 @@ public abstract class AbstractHttpClientFactory {
           .connectionPool(new ConnectionPool())
           .retryOnConnectionFailure(true)
           .addInterceptor(getAuthorizationInterceptor())
-          .addInterceptor(getCorrelationIdInterceptor())
           .addInterceptor(chain -> {
             Request original = chain.request();
 
