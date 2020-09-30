@@ -39,6 +39,7 @@ import org.apache.commons.lang3.StringUtils;
 import software.wings.api.jira.JiraCreateMetaResponse;
 import software.wings.api.jira.JiraExecutionData;
 import software.wings.api.jira.JiraExecutionData.JiraIssueData;
+import software.wings.api.jira.JiraField;
 import software.wings.beans.JiraConfig;
 import software.wings.beans.jira.JiraTaskParameters;
 import software.wings.delegatetasks.DelegateLogService;
@@ -62,6 +63,7 @@ import java.util.function.Consumer;
 @OwnedBy(CDC)
 @Slf4j
 public class JiraTask extends AbstractDelegateRunnableTask {
+  public static final String RESOLUTION = "resolution";
   @Inject private EncryptionService encryptionService;
   @Inject private DelegateLogService logService;
 
@@ -180,6 +182,11 @@ public class JiraTask extends AbstractDelegateRunnableTask {
       logger.info(" Response received from jira for GET_CREATE_METADATA");
       JiraCreateMetaResponse jiraCreateMetaResponse = new JiraCreateMetaResponse((JSONObject) response);
 
+      logger.info(" Fetching resolutions from jira for GET_CREATE_METADATA");
+      URI resolutionUri = jiraClient.getRestClient().buildURI(Resource.getBaseUri() + RESOLUTION);
+      JSONArray resolutions = (JSONArray) jiraClient.getRestClient().get(resolutionUri);
+      insertResolutionsInCreateMeta(resolutions, jiraCreateMetaResponse);
+
       logger.info(" Returning response to manager for GET_CREATE_METADATA");
       return JiraExecutionData.builder()
           .executionStatus(ExecutionStatus.SUCCESS)
@@ -190,6 +197,26 @@ public class JiraTask extends AbstractDelegateRunnableTask {
       logger.error(errorMessage, e);
       return JiraExecutionData.builder().errorMessage(errorMessage).executionStatus(ExecutionStatus.FAILED).build();
     }
+  }
+
+  private void insertResolutionsInCreateMeta(JSONArray resolutions, JiraCreateMetaResponse jiraCreateMetaResponse) {
+    Map<String, Object> resolutionProperties = new HashMap<>();
+    Map<String, String> schema = new HashMap<>();
+    schema.put("type", RESOLUTION);
+    schema.put("system", RESOLUTION);
+    resolutionProperties.put("schema", schema);
+    resolutionProperties.put("required", "false");
+    resolutionProperties.put("key", RESOLUTION);
+    resolutionProperties.put("name", "Resolution");
+    resolutionProperties.put("allowedValues", resolutions);
+
+    JSONObject resolutionObject = JSONObject.fromObject(resolutionProperties);
+
+    JiraField resolution = JiraField.getNewField(resolutionObject, RESOLUTION);
+
+    jiraCreateMetaResponse.getProjects().forEach(jiraProjectData
+        -> jiraProjectData.getIssueTypes().forEach(
+            jiraIssueType -> jiraIssueType.getJiraFields().put(RESOLUTION, resolution)));
   }
 
   private DelegateResponseData getStatuses(JiraTaskParameters parameters) {
@@ -480,7 +507,7 @@ public class JiraTask extends AbstractDelegateRunnableTask {
 
     switch (type) {
       case "option":
-      case "resolution": {
+      case RESOLUTION: {
         return new ValueTuple("id", fieldValue);
       }
       case "number":
