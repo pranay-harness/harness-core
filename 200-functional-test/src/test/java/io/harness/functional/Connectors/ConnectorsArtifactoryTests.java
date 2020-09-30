@@ -6,16 +6,20 @@ import static io.harness.rule.OwnerRule.NATARAJA;
 import static org.assertj.core.api.Assertions.assertThat;
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
 
+import com.google.inject.Inject;
+
 import io.harness.category.element.FunctionalTests;
 import io.harness.functional.AbstractFunctionalTest;
+import io.harness.generator.OwnerManager;
+import io.harness.generator.SecretGenerator;
 import io.harness.rule.Owner;
-import io.harness.scm.ScmSecret;
 import io.harness.scm.SecretName;
 import io.harness.testframework.framework.Retry;
 import io.harness.testframework.framework.matchers.BooleanMatcher;
 import io.harness.testframework.restutils.SettingsUtils;
 import io.restassured.path.json.JsonPath;
 import lombok.extern.slf4j.Slf4j;
+import org.junit.Before;
 import org.junit.FixMethodOrder;
 import org.junit.Ignore;
 import org.junit.Test;
@@ -54,6 +58,17 @@ public class ConnectorsArtifactoryTests extends AbstractFunctionalTest {
   private static String ArtifactoryConnectorId;
   private static String AzureArtifactsConnectorId;
 
+  @Inject private OwnerManager ownerManager;
+  @Inject private SecretGenerator secretGenerator;
+
+  private OwnerManager.Owners owners;
+
+  @Before
+  public void setUp() {
+    owners = ownerManager.create();
+    owners.add(getAccount());
+  }
+
   @Test
   @Owner(developers = NATARAJA)
   @Category(FunctionalTests.class)
@@ -87,7 +102,7 @@ public class ConnectorsArtifactoryTests extends AbstractFunctionalTest {
   }
 
   @Test
-  @Owner(developers = MEENAKSHI, intermittent = true)
+  @Owner(developers = GARVIT)
   @Category(FunctionalTests.class)
   public void runDockerConnectorCRUDTests() {
     retry.executeWithRetry(this ::TC7_createDockerConnector, booleanMatcher, true);
@@ -111,14 +126,13 @@ public class ConnectorsArtifactoryTests extends AbstractFunctionalTest {
   }
 
   @Test
-  @Owner(developers = MEENAKSHI, intermittent = true)
+  @Owner(developers = GARVIT)
   @Category(FunctionalTests.class)
-  @Ignore("Enable it once jfrog admin credentials are available ")
   public void runArtifactoryConnectorCRUDTests() {
     retry.executeWithRetry(this ::TC13_createArtifactoryConnector, booleanMatcher, true);
     logger.info("Created Artifactory Connector with id {}", ArtifactoryConnectorId);
-    // TC14_updateArtifactoryConnector();
-    // logger.info("Updated  Artifactory Connector with id {}", ArtifactoryConnectorId);
+    TC14_updateArtifactoryConnector();
+    logger.info("Updated  Artifactory Connector with id {}", ArtifactoryConnectorId);
     TC15_deleteArtifactoryConnector();
     logger.info("Deleted Artifactory Connector with id {}", ArtifactoryConnectorId);
   }
@@ -137,23 +151,23 @@ public class ConnectorsArtifactoryTests extends AbstractFunctionalTest {
   }
 
   public boolean TC1_createNexusConnector() {
-    String NEXUS_URL = "https://nexus2.harness.io";
+    String NEXUS_URL = "https://nexus2.dev.harness.io";
     String VERSION = "2.x";
-    String USER_NAME = "admin";
+    String USER_NAME = "harnessadmin";
 
-    SettingAttribute settingAttribute =
-        aSettingAttribute()
-            .withCategory(SettingCategory.CONNECTOR)
-            .withName(CONNECTOR_NAME_NEXUS)
-            .withAccountId(getAccount().getUuid())
-            .withValue(NexusConfig.builder()
-                           .nexusUrl(NEXUS_URL)
-                           .version(VERSION)
-                           .username(USER_NAME)
-                           .password(new ScmSecret().decryptToCharArray(new SecretName("harness_nexus")))
-                           .accountId(getAccount().getUuid())
-                           .build())
-            .build();
+    String secretId = secretGenerator.ensureStored(owners, new SecretName("harness_admin_nexus"));
+    SettingAttribute settingAttribute = aSettingAttribute()
+                                            .withCategory(SettingCategory.CONNECTOR)
+                                            .withName(CONNECTOR_NAME_NEXUS)
+                                            .withAccountId(getAccount().getUuid())
+                                            .withValue(NexusConfig.builder()
+                                                           .nexusUrl(NEXUS_URL)
+                                                           .version(VERSION)
+                                                           .username(USER_NAME)
+                                                           .password(secretId.toCharArray())
+                                                           .accountId(getAccount().getUuid())
+                                                           .build())
+                                            .build();
 
     JsonPath setAttrResponse = SettingsUtils.create(bearerToken, getAccount().getUuid(), settingAttribute);
     assertThat(setAttrResponse).isNotNull();
@@ -166,24 +180,24 @@ public class ConnectorsArtifactoryTests extends AbstractFunctionalTest {
   }
 
   public void TC2_updateNexusConnector() {
-    String NEXUS_URL = "https://nexus2.harness.io";
+    String NEXUS_URL = "https://nexus2.dev.harness.io";
     String VERSION = "2.x";
-    String USER_NAME = "admin";
+    String USER_NAME = "harnessadmin";
     CONNECTOR_NAME_NEXUS = CONNECTOR_NAME_NEXUS + "update";
 
-    SettingAttribute settingAttribute =
-        aSettingAttribute()
-            .withCategory(SettingCategory.CONNECTOR)
-            .withName(CONNECTOR_NAME_NEXUS)
-            .withAccountId(getAccount().getUuid())
-            .withValue(NexusConfig.builder()
-                           .nexusUrl(NEXUS_URL)
-                           .version(VERSION)
-                           .username(USER_NAME)
-                           .password(new ScmSecret().decryptToCharArray(new SecretName("harness_nexus")))
-                           .accountId(getAccount().getUuid())
-                           .build())
-            .build();
+    String secretId = secretGenerator.ensureStored(owners, new SecretName("harness_admin_nexus"));
+    SettingAttribute settingAttribute = aSettingAttribute()
+                                            .withCategory(SettingCategory.CONNECTOR)
+                                            .withName(CONNECTOR_NAME_NEXUS)
+                                            .withAccountId(getAccount().getUuid())
+                                            .withValue(NexusConfig.builder()
+                                                           .nexusUrl(NEXUS_URL)
+                                                           .version(VERSION)
+                                                           .username(USER_NAME)
+                                                           .password(secretId.toCharArray())
+                                                           .accountId(getAccount().getUuid())
+                                                           .build())
+                                            .build();
 
     JsonPath setAttrResponse =
         SettingsUtils.updateConnector(bearerToken, getAccount().getUuid(), NexusConnectorId, settingAttribute);
@@ -205,24 +219,23 @@ public class ConnectorsArtifactoryTests extends AbstractFunctionalTest {
   }
 
   public boolean TC4_createJenkinsConnector() {
-    String JENKINS_URL = "https://jenkinsint.harness.io/";
+    String JENKINS_URL = "https://jenkins.dev.harness.io/";
+    String USER_NAME = "harnessadmin";
 
-    String USER_NAME = "wingsbuild";
-
-    SettingAttribute settingAttribute =
-        aSettingAttribute()
-            .withCategory(SettingCategory.CONNECTOR)
-            .withName(CONNECTOR_NAME_JENKINS)
-            .withAccountId(getAccount().getUuid())
-            .withValue(JenkinsConfig.builder()
-                           .jenkinsUrl(JENKINS_URL)
-                           // .version(VERSION)
-                           .username(USER_NAME)
-                           .password(new ScmSecret().decryptToCharArray(new SecretName("harness_jenkins")))
-                           .authMechanism("Username/Password")
-                           .accountId(getAccount().getUuid())
-                           .build())
-            .build();
+    String secretId = secretGenerator.ensureStored(owners, new SecretName("harness_jenkins_dev"));
+    SettingAttribute settingAttribute = aSettingAttribute()
+                                            .withCategory(SettingCategory.CONNECTOR)
+                                            .withName(CONNECTOR_NAME_JENKINS)
+                                            .withAccountId(getAccount().getUuid())
+                                            .withValue(JenkinsConfig.builder()
+                                                           .jenkinsUrl(JENKINS_URL)
+                                                           // .version(VERSION)
+                                                           .username(USER_NAME)
+                                                           .password(secretId.toCharArray())
+                                                           .authMechanism("Username/Password")
+                                                           .accountId(getAccount().getUuid())
+                                                           .build())
+                                            .build();
 
     JsonPath setAttrResponse = SettingsUtils.create(bearerToken, getAccount().getUuid(), settingAttribute);
     // asserting the response
@@ -237,24 +250,23 @@ public class ConnectorsArtifactoryTests extends AbstractFunctionalTest {
 
   public void TC5_updateJenkinsConnector() {
     CONNECTOR_NAME_JENKINS = CONNECTOR_NAME_JENKINS + "update";
-    String JENKINS_URL = "https://jenkinsint.harness.io/";
+    String JENKINS_URL = "https://jenkins.dev.harness.io/";
+    String USER_NAME = "harnessadmin";
 
-    String USER_NAME = "wingsbuild";
-
-    SettingAttribute settingAttribute =
-        aSettingAttribute()
-            .withCategory(SettingCategory.CONNECTOR)
-            .withName(CONNECTOR_NAME_JENKINS)
-            .withAccountId(getAccount().getUuid())
-            .withValue(JenkinsConfig.builder()
-                           .jenkinsUrl(JENKINS_URL)
-                           // .version(VERSION)
-                           .username(USER_NAME)
-                           .password(new ScmSecret().decryptToCharArray(new SecretName("harness_jenkins")))
-                           .authMechanism("Username/Password")
-                           .accountId(getAccount().getUuid())
-                           .build())
-            .build();
+    String secretId = secretGenerator.ensureStored(owners, new SecretName("harness_jenkins_dev"));
+    SettingAttribute settingAttribute = aSettingAttribute()
+                                            .withCategory(SettingCategory.CONNECTOR)
+                                            .withName(CONNECTOR_NAME_JENKINS)
+                                            .withAccountId(getAccount().getUuid())
+                                            .withValue(JenkinsConfig.builder()
+                                                           .jenkinsUrl(JENKINS_URL)
+                                                           // .version(VERSION)
+                                                           .username(USER_NAME)
+                                                           .password(secretId.toCharArray())
+                                                           .authMechanism("Username/Password")
+                                                           .accountId(getAccount().getUuid())
+                                                           .build())
+                                            .build();
 
     JsonPath setAttrResponse =
         SettingsUtils.updateConnector(bearerToken, getAccount().getUuid(), JenkinsConnectorId, settingAttribute);
@@ -279,19 +291,19 @@ public class ConnectorsArtifactoryTests extends AbstractFunctionalTest {
     String DOCKER_URL = "https://registry.hub.docker.com/v2/";
     String USER_NAME = "";
 
-    SettingAttribute settingAttribute =
-        aSettingAttribute()
-            .withCategory(SettingCategory.CONNECTOR)
-            .withName(CONNECTOR_NAME_DOCKER)
-            .withAccountId(getAccount().getUuid())
-            .withValue(DockerConfig.builder()
-                           .dockerRegistryUrl(DOCKER_URL)
-                           // .version(VERSION)
-                           .username(USER_NAME)
-                           .password(new ScmSecret().decryptToCharArray(new SecretName("harness_docker_v2")))
-                           .accountId(getAccount().getUuid())
-                           .build())
-            .build();
+    String secretId = secretGenerator.ensureStored(owners, new SecretName("harness_docker_v2"));
+    SettingAttribute settingAttribute = aSettingAttribute()
+                                            .withCategory(SettingCategory.CONNECTOR)
+                                            .withName(CONNECTOR_NAME_DOCKER)
+                                            .withAccountId(getAccount().getUuid())
+                                            .withValue(DockerConfig.builder()
+                                                           .dockerRegistryUrl(DOCKER_URL)
+                                                           // .version(VERSION)
+                                                           .username(USER_NAME)
+                                                           .password(secretId.toCharArray())
+                                                           .accountId(getAccount().getUuid())
+                                                           .build())
+                                            .build();
 
     JsonPath setAttrResponse = SettingsUtils.create(bearerToken, getAccount().getUuid(), settingAttribute);
     assertThat(setAttrResponse).isNotNull();
@@ -308,19 +320,19 @@ public class ConnectorsArtifactoryTests extends AbstractFunctionalTest {
     String DOCKER_URL = "https://registry.hub.docker.com/v2/";
     String USER_NAME = "";
 
-    SettingAttribute settingAttribute =
-        aSettingAttribute()
-            .withCategory(SettingCategory.CONNECTOR)
-            .withName(CONNECTOR_NAME_DOCKER)
-            .withAccountId(getAccount().getUuid())
-            .withValue(DockerConfig.builder()
-                           .dockerRegistryUrl(DOCKER_URL)
-                           // .version(VERSION)
-                           .username(USER_NAME)
-                           .password(new ScmSecret().decryptToCharArray(new SecretName("harness_docker_v2")))
-                           .accountId(getAccount().getUuid())
-                           .build())
-            .build();
+    String secretId = secretGenerator.ensureStored(owners, new SecretName("harness_docker_v2"));
+    SettingAttribute settingAttribute = aSettingAttribute()
+                                            .withCategory(SettingCategory.CONNECTOR)
+                                            .withName(CONNECTOR_NAME_DOCKER)
+                                            .withAccountId(getAccount().getUuid())
+                                            .withValue(DockerConfig.builder()
+                                                           .dockerRegistryUrl(DOCKER_URL)
+                                                           // .version(VERSION)
+                                                           .username(USER_NAME)
+                                                           .password(secretId.toCharArray())
+                                                           .accountId(getAccount().getUuid())
+                                                           .build())
+                                            .build();
 
     JsonPath setAttrResponse =
         SettingsUtils.updateConnector(bearerToken, getAccount().getUuid(), DockerConnectorId, settingAttribute);
@@ -342,22 +354,21 @@ public class ConnectorsArtifactoryTests extends AbstractFunctionalTest {
   }
 
   public boolean TC10_createBambooConnector() {
-    String BAMBOO_URL = "http://cdteam-bamboo.harness.io:8085/";
-    String USER_NAME = "wingsbuild";
+    String BAMBOO_URL = "https://bamboo.dev.harness.io/";
+    String USER_NAME = "harnessadmin";
 
-    SettingAttribute settingAttribute =
-        aSettingAttribute()
-            .withCategory(SettingCategory.CONNECTOR)
-            .withName(CONNECTOR_NAME_BAMBOO)
-            .withAccountId(getAccount().getUuid())
-            .withValue(BambooConfig.builder()
-                           .bambooUrl(BAMBOO_URL)
-                           // .version(VERSION)
-                           .username(USER_NAME)
-                           .password(new ScmSecret().decryptToCharArray(new SecretName("harness_bamboo")))
-                           .accountId(getAccount().getUuid())
-                           .build())
-            .build();
+    String secretId = secretGenerator.ensureStored(owners, new SecretName("harness_bamboo_dev"));
+    SettingAttribute settingAttribute = aSettingAttribute()
+                                            .withCategory(SettingCategory.CONNECTOR)
+                                            .withName(CONNECTOR_NAME_BAMBOO)
+                                            .withAccountId(getAccount().getUuid())
+                                            .withValue(BambooConfig.builder()
+                                                           .bambooUrl(BAMBOO_URL)
+                                                           .username(USER_NAME)
+                                                           .password(secretId.toCharArray())
+                                                           .accountId(getAccount().getUuid())
+                                                           .build())
+                                            .build();
 
     JsonPath setAttrResponse = SettingsUtils.create(bearerToken, getAccount().getUuid(), settingAttribute);
     assertThat(setAttrResponse).isNotNull();
@@ -371,22 +382,22 @@ public class ConnectorsArtifactoryTests extends AbstractFunctionalTest {
 
   public void TC11_updateBambooConnector() {
     CONNECTOR_NAME_BAMBOO = CONNECTOR_NAME_BAMBOO + "update";
-    String BAMBOO_URL = "http://cdteam-bamboo.harness.io:8085/";
-    String USER_NAME = "wingsbuild";
+    String BAMBOO_URL = "https://bamboo.dev.harness.io/";
+    String USER_NAME = "harnessadmin";
 
-    SettingAttribute settingAttribute =
-        aSettingAttribute()
-            .withCategory(SettingCategory.CONNECTOR)
-            .withName(CONNECTOR_NAME_BAMBOO)
-            .withAccountId(getAccount().getUuid())
-            .withValue(BambooConfig.builder()
-                           .bambooUrl(BAMBOO_URL)
-                           // .version(VERSION)
-                           .username(USER_NAME)
-                           .password(new ScmSecret().decryptToCharArray(new SecretName("harness_bamboo")))
-                           .accountId(getAccount().getUuid())
-                           .build())
-            .build();
+    String secretId = secretGenerator.ensureStored(owners, new SecretName("harness_bamboo_dev"));
+    SettingAttribute settingAttribute = aSettingAttribute()
+                                            .withCategory(SettingCategory.CONNECTOR)
+                                            .withName(CONNECTOR_NAME_BAMBOO)
+                                            .withAccountId(getAccount().getUuid())
+                                            .withValue(BambooConfig.builder()
+                                                           .bambooUrl(BAMBOO_URL)
+                                                           // .version(VERSION)
+                                                           .username(USER_NAME)
+                                                           .password(secretId.toCharArray())
+                                                           .accountId(getAccount().getUuid())
+                                                           .build())
+                                            .build();
 
     JsonPath setAttrResponse =
         SettingsUtils.updateConnector(bearerToken, getAccount().getUuid(), BambooConnectorId, settingAttribute);
@@ -411,18 +422,18 @@ public class ConnectorsArtifactoryTests extends AbstractFunctionalTest {
     String ARTIFACTORY_URL = "https://jfrog.dev.harness.io/artifactory/";
     String USER_NAME = "harnessadmin";
 
-    SettingAttribute settingAttribute =
-        aSettingAttribute()
-            .withCategory(SettingCategory.CONNECTOR)
-            .withName(CONNECTOR_NAME_ARTIFACTORY)
-            .withAccountId(getAccount().getUuid())
-            .withValue(ArtifactoryConfig.builder()
-                           .artifactoryUrl(ARTIFACTORY_URL)
-                           .username(USER_NAME)
-                           .password(new ScmSecret().decryptToCharArray(new SecretName("harness_artifactory")))
-                           .accountId(getAccount().getUuid())
-                           .build())
-            .build();
+    String secretId = secretGenerator.ensureStored(owners, new SecretName("harness_artifactory_dev"));
+    SettingAttribute settingAttribute = aSettingAttribute()
+                                            .withCategory(SettingCategory.CONNECTOR)
+                                            .withName(CONNECTOR_NAME_ARTIFACTORY)
+                                            .withAccountId(getAccount().getUuid())
+                                            .withValue(ArtifactoryConfig.builder()
+                                                           .artifactoryUrl(ARTIFACTORY_URL)
+                                                           .username(USER_NAME)
+                                                           .password(secretId.toCharArray())
+                                                           .accountId(getAccount().getUuid())
+                                                           .build())
+                                            .build();
 
     JsonPath setAttrResponse = SettingsUtils.create(bearerToken, getAccount().getUuid(), settingAttribute);
     assertThat(setAttrResponse).isNotNull();
@@ -436,22 +447,22 @@ public class ConnectorsArtifactoryTests extends AbstractFunctionalTest {
 
   public void TC14_updateArtifactoryConnector() {
     CONNECTOR_NAME_ARTIFACTORY = CONNECTOR_NAME_ARTIFACTORY + "update";
-    String ARTIFACTORY_URL = "https://harness.jfrog.io/harness";
-    String USER_NAME = "admin";
+    String ARTIFACTORY_URL = "https://jfrog.dev.harness.io/artifactory/";
+    String USER_NAME = "harnessadmin";
 
-    SettingAttribute settingAttribute =
-        aSettingAttribute()
-            .withCategory(SettingCategory.CONNECTOR)
-            .withName(CONNECTOR_NAME_ARTIFACTORY)
-            .withAccountId(getAccount().getUuid())
-            .withValue(ArtifactoryConfig.builder()
-                           .artifactoryUrl(ARTIFACTORY_URL)
-                           // .version(VERSION)
-                           .username(USER_NAME)
-                           .password(new ScmSecret().decryptToCharArray(new SecretName("harness_artifactory")))
-                           .accountId(getAccount().getUuid())
-                           .build())
-            .build();
+    String secretId = secretGenerator.ensureStored(owners, new SecretName("harness_artifactory_dev"));
+    SettingAttribute settingAttribute = aSettingAttribute()
+                                            .withCategory(SettingCategory.CONNECTOR)
+                                            .withName(CONNECTOR_NAME_ARTIFACTORY)
+                                            .withAccountId(getAccount().getUuid())
+                                            .withValue(ArtifactoryConfig.builder()
+                                                           .artifactoryUrl(ARTIFACTORY_URL)
+                                                           // .version(VERSION)
+                                                           .username(USER_NAME)
+                                                           .password(secretId.toCharArray())
+                                                           .accountId(getAccount().getUuid())
+                                                           .build())
+                                            .build();
 
     JsonPath setAttrResponse =
         SettingsUtils.updateConnector(bearerToken, getAccount().getUuid(), ArtifactoryConnectorId, settingAttribute);
@@ -474,17 +485,17 @@ public class ConnectorsArtifactoryTests extends AbstractFunctionalTest {
 
   private boolean TC16_createAzureArtifactsConnector() {
     String azureDevopsUrl = "https://dev.azure.com/garvit-test";
-    SettingAttribute settingAttribute =
-        aSettingAttribute()
-            .withCategory(SettingCategory.AZURE_ARTIFACTS)
-            .withName(CONNECTOR_NAME_AZURE_ARTIFACTS)
-            .withAccountId(getAccount().getUuid())
-            .withValue(AzureArtifactsPATConfig.builder()
-                           .azureDevopsUrl(azureDevopsUrl)
-                           .pat(new ScmSecret().decryptToCharArray(new SecretName("harness_azure_devops_pat")))
-                           .accountId(getAccount().getUuid())
-                           .build())
-            .build();
+    String secretId = secretGenerator.ensureStored(owners, new SecretName("harness_azure_devops_pat"));
+    SettingAttribute settingAttribute = aSettingAttribute()
+                                            .withCategory(SettingCategory.AZURE_ARTIFACTS)
+                                            .withName(CONNECTOR_NAME_AZURE_ARTIFACTS)
+                                            .withAccountId(getAccount().getUuid())
+                                            .withValue(AzureArtifactsPATConfig.builder()
+                                                           .azureDevopsUrl(azureDevopsUrl)
+                                                           .pat(secretId.toCharArray())
+                                                           .accountId(getAccount().getUuid())
+                                                           .build())
+                                            .build();
 
     JsonPath setAttrResponse = SettingsUtils.create(bearerToken, getAccount().getUuid(), settingAttribute);
     assertThat(setAttrResponse).isNotNull();
@@ -499,17 +510,17 @@ public class ConnectorsArtifactoryTests extends AbstractFunctionalTest {
   private void TC17_updateAzureArtifactsConnector() {
     CONNECTOR_NAME_AZURE_ARTIFACTS = CONNECTOR_NAME_AZURE_ARTIFACTS + "update";
     String azureDevopsUrl = "https://dev.azure.com/garvit-test";
-    SettingAttribute settingAttribute =
-        aSettingAttribute()
-            .withCategory(SettingCategory.AZURE_ARTIFACTS)
-            .withName(CONNECTOR_NAME_AZURE_ARTIFACTS)
-            .withAccountId(getAccount().getUuid())
-            .withValue(AzureArtifactsPATConfig.builder()
-                           .azureDevopsUrl(azureDevopsUrl)
-                           .pat(new ScmSecret().decryptToCharArray(new SecretName("harness_azure_devops_pat")))
-                           .accountId(getAccount().getUuid())
-                           .build())
-            .build();
+    String secretId = secretGenerator.ensureStored(owners, new SecretName("harness_azure_devops_pat"));
+    SettingAttribute settingAttribute = aSettingAttribute()
+                                            .withCategory(SettingCategory.AZURE_ARTIFACTS)
+                                            .withName(CONNECTOR_NAME_AZURE_ARTIFACTS)
+                                            .withAccountId(getAccount().getUuid())
+                                            .withValue(AzureArtifactsPATConfig.builder()
+                                                           .azureDevopsUrl(azureDevopsUrl)
+                                                           .pat(secretId.toCharArray())
+                                                           .accountId(getAccount().getUuid())
+                                                           .build())
+                                            .build();
 
     JsonPath setAttrResponse =
         SettingsUtils.updateConnector(bearerToken, getAccount().getUuid(), AzureArtifactsConnectorId, settingAttribute);
