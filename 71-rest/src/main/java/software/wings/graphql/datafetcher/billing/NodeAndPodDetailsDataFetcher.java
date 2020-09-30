@@ -49,6 +49,7 @@ public class NodeAndPodDetailsDataFetcher
   private static final String WORKLOAD = "workload_name";
   private static final String PARENT_RESOURCE_ID = "parent_resource_id";
   private static final String NODE_POOL_NAME = "node_pool_name";
+  private static final String K8S_POD_CAPACITY = "pod_capacity";
 
   @Override
   @AuthRule(permissionType = PermissionAttribute.PermissionType.LOGGED_IN)
@@ -215,6 +216,7 @@ public class NodeAndPodDetailsDataFetcher
           .clusterName(costDataEntry.getClusterName())
           .clusterId(costDataEntry.getClusterId())
           .nodePoolName(entry.getMetaData().getOrDefault(NODE_POOL_NAME, "-"))
+          .podCapacity(entry.getMetaData().getOrDefault(K8S_POD_CAPACITY, "-"))
           .totalCost(costDataEntry.getTotalCost())
           .idleCost(costDataEntry.getIdleCost())
           .systemCost(costDataEntry.getSystemCost())

@@ -437,6 +437,7 @@ type NodeAndPodDataPoint {
   clusterId: String
   node: String
   nodePoolName: String
+  podCapacity: String
   totalCost: Number
   idleCost: Number
   systemCost: Number
