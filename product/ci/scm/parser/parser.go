@@ -35,7 +35,7 @@ func ParseWebhook(ctx context.Context, in *pb.ParseWebhookRequest,
 	start := time.Now()
 	webhook, err := parseRequest(in)
 	if err != nil {
-		log.Warnw(
+		log.Errorw(
 			"Failed to parse input webhook payload",
 			"input", in.String(),
 			"elapsed_time_ms", utils.TimeSince(start),
@@ -68,7 +68,7 @@ func ParseWebhook(ctx context.Context, in *pb.ParseWebhookRequest,
 			},
 		}, nil
 	default:
-		log.Warnw(
+		log.Errorw(
 			"Unsupported webhook event",
 			"event", event,
 			"elapsed_time_ms", utils.TimeSince(start),

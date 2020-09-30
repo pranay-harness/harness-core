@@ -2,33 +2,39 @@ package executor
 
 import (
 	"context"
-	"encoding/base64"
+	"fmt"
 	"testing"
 	"time"
 
 	"github.com/golang/mock/gomock"
-	"github.com/golang/protobuf/proto"
 	"github.com/pkg/errors"
 	"github.com/stretchr/testify/assert"
 	"github.com/wings-software/portal/commons/go/lib/filesystem"
 	"github.com/wings-software/portal/commons/go/lib/logs"
-	pb2 "github.com/wings-software/portal/product/ci/addon/proto"
+	caddon "github.com/wings-software/portal/product/ci/addon/grpc/client"
+	amgrpc "github.com/wings-software/portal/product/ci/addon/grpc/client/mocks"
+	addonpb "github.com/wings-software/portal/product/ci/addon/proto"
 	"github.com/wings-software/portal/product/ci/engine/output"
 	pb "github.com/wings-software/portal/product/ci/engine/proto"
 	"github.com/wings-software/portal/product/ci/engine/steps"
 	msteps "github.com/wings-software/portal/product/ci/engine/steps/mocks"
 	"go.uber.org/zap"
+	"google.golang.org/grpc"
 )
 
-func getEncodedExecuteStepProto(t *testing.T, r *pb.ExecuteStepRequest) string {
-	data, err := proto.Marshal(r)
-	if err != nil {
-		t.Fatalf("marshaling error: %v", err)
-	}
-	return base64.StdEncoding.EncodeToString(data)
+type mockClient struct {
+	err error
 }
 
-func TestStepRun(t *testing.T) {
+func (c *mockClient) ExecuteStep(ctx context.Context, in *addonpb.ExecuteStepRequest, opts ...grpc.CallOption) (*addonpb.ExecuteStepResponse, error) {
+	return nil, nil
+}
+
+func (c *mockClient) SignalStop(ctx context.Context, in *addonpb.SignalStopRequest, opts ...grpc.CallOption) (*addonpb.SignalStopResponse, error) {
+	return nil, c.err
+}
+
+func TestStepValidations(t *testing.T) {
 	ctrl, ctx := gomock.WithContext(context.Background(), t)
 	defer ctrl.Finish()
 
@@ -69,49 +75,36 @@ func TestStepRun(t *testing.T) {
 		TaskId:        taskID,
 	}
 
-	logPath := "/a/b"
 	log, _ := logs.GetObservedLogger(zap.InfoLevel)
 
 	tests := []struct {
 		name        string
 		step        *pb.UnitStep
-		logPath     string
 		expectedErr bool
 	}{
 		{
 			name:        "step ID is not set",
 			step:        stepProto1,
-			logPath:     logPath,
-			expectedErr: true,
-		},
-		{
-			name:        "empty log path",
-			step:        stepProto2,
-			logPath:     "",
 			expectedErr: true,
 		},
 		{
 			name:        "stage with error in run step",
 			step:        stepProto2,
-			logPath:     logPath,
 			expectedErr: true,
 		},
 		{
 			name:        "callback token is not set",
 			step:        stepProto3,
-			logPath:     logPath,
 			expectedErr: true,
 		},
 		{
 			name:        "task ID is not set",
 			step:        stepProto4,
-			logPath:     logPath,
 			expectedErr: true,
 		},
 		{
 			name:        "empty step success",
 			step:        stepProto5,
-			logPath:     logPath,
 			expectedErr: false,
 		},
 	}
@@ -123,12 +116,151 @@ func TestStepRun(t *testing.T) {
 		return nil
 	}
 	for _, tc := range tests {
-		e := NewUnitExecutor(tc.logPath, tmpFilePath, log.Sugar())
+		e := NewUnitExecutor(tmpFilePath, log.Sugar())
 		_, got := e.Run(ctx, tc.step, nil, accountID)
 		if tc.expectedErr == (got == nil) {
 			t.Fatalf("%s: expected error: %v, got: %v", tc.name, tc.expectedErr, got)
 		}
 	}
+}
+
+func TestStepRunError(t *testing.T) {
+	ctrl, ctx := gomock.WithContext(context.Background(), t)
+	defer ctrl.Finish()
+
+	accountID := "test"
+	taskID := "taskID"
+	callbackToken := "token"
+
+	tmpFilePath := "/tmp"
+	stepProto := &pb.UnitStep{
+		Id: "test2",
+		Step: &pb.UnitStep_Run{
+			Run: &pb.RunStep{
+				Commands:      []string{"ls"},
+				ContainerPort: uint32(8000),
+			},
+		},
+		CallbackToken: callbackToken,
+		TaskId:        taskID,
+	}
+
+	retries := int32(3)
+	log, _ := logs.GetObservedLogger(zap.InfoLevel)
+	mockStep := msteps.NewMockRunStep(ctrl)
+	mockStep.EXPECT().Run(ctx).Return(nil, retries, fmt.Errorf("run step failed"))
+
+	oldSendStepStatus := sendStepStatus
+	defer func() { sendStepStatus = oldSendStepStatus }()
+	sendStepStatus = func(ctx context.Context, accountID, callbackToken, taskID string, numRetries int32, timeTaken time.Duration,
+		stepOutput *output.StepOutput, stepErr error, log *zap.SugaredLogger) error {
+		return nil
+	}
+
+	oldStep := runStep
+	defer func() { runStep = oldStep }()
+	runStep = func(step *pb.UnitStep, tmpFilePath string, so output.StageOutput,
+		log *zap.SugaredLogger) steps.RunStep {
+		return mockStep
+	}
+
+	e := NewUnitExecutor(tmpFilePath, log.Sugar())
+	_, err := e.Run(ctx, stepProto, nil, accountID)
+	assert.NotEqual(t, err, nil)
+}
+
+func TestStepRunSuccess(t *testing.T) {
+	ctrl, ctx := gomock.WithContext(context.Background(), t)
+	defer ctrl.Finish()
+
+	accountID := "test"
+	taskID := "taskID"
+	callbackToken := "token"
+
+	tmpFilePath := "/tmp"
+	stepProto := &pb.UnitStep{
+		Id: "test2",
+		Step: &pb.UnitStep_Run{
+			Run: &pb.RunStep{
+				Commands:      []string{"ls"},
+				ContainerPort: uint32(8000),
+			},
+		},
+		CallbackToken: callbackToken,
+		TaskId:        taskID,
+	}
+
+	outputKey := "foo"
+	outputVal := "bar"
+	o := &output.StepOutput{Output: map[string]string{outputKey: outputVal}}
+	retries := int32(3)
+
+	log, _ := logs.GetObservedLogger(zap.InfoLevel)
+	mockStep := msteps.NewMockRunStep(ctrl)
+	mockStep.EXPECT().Run(ctx).Return(o, retries, nil)
+
+	oldSendStepStatus := sendStepStatus
+	defer func() { sendStepStatus = oldSendStepStatus }()
+	sendStepStatus = func(ctx context.Context, accountID, callbackToken, taskID string, numRetries int32, timeTaken time.Duration,
+		stepOutput *output.StepOutput, stepErr error, log *zap.SugaredLogger) error {
+		return nil
+	}
+
+	oldStep := runStep
+	defer func() { runStep = oldStep }()
+	runStep = func(step *pb.UnitStep, tmpFilePath string, so output.StageOutput,
+		log *zap.SugaredLogger) steps.RunStep {
+		return mockStep
+	}
+
+	e := NewUnitExecutor(tmpFilePath, log.Sugar())
+	ret, err := e.Run(ctx, stepProto, nil, accountID)
+	assert.Equal(t, err, nil)
+	assert.Equal(t, ret.Output[outputKey], outputVal)
+}
+
+func TestStepPluginSuccess(t *testing.T) {
+	ctrl, ctx := gomock.WithContext(context.Background(), t)
+	defer ctrl.Finish()
+
+	accountID := "test"
+	taskID := "taskID"
+	callbackToken := "token"
+
+	tmpFilePath := "/tmp"
+	stepProto := &pb.UnitStep{
+		Id: "test2",
+		Step: &pb.UnitStep_Plugin{
+			Plugin: &pb.PluginStep{
+				Image:         "plugin/drone-git",
+				ContainerPort: uint32(8000),
+			},
+		},
+		CallbackToken: callbackToken,
+		TaskId:        taskID,
+	}
+
+	retries := int32(3)
+	log, _ := logs.GetObservedLogger(zap.InfoLevel)
+	mockStep := msteps.NewMockPluginStep(ctrl)
+	mockStep.EXPECT().Run(ctx).Return(retries, nil)
+
+	oldSendStepStatus := sendStepStatus
+	defer func() { sendStepStatus = oldSendStepStatus }()
+	sendStepStatus = func(ctx context.Context, accountID, callbackToken, taskID string, numRetries int32, timeTaken time.Duration,
+		stepOutput *output.StepOutput, stepErr error, log *zap.SugaredLogger) error {
+		return nil
+	}
+
+	oldStep := pluginStep
+	defer func() { pluginStep = oldStep }()
+	pluginStep = func(step *pb.UnitStep, log *zap.SugaredLogger) steps.PluginStep {
+		return mockStep
+	}
+
+	e := NewUnitExecutor(tmpFilePath, log.Sugar())
+	_, err := e.Run(ctx, stepProto, nil, accountID)
+	assert.Equal(t, err, nil)
 }
 
 func TestStepSaveCacheError(t *testing.T) {
@@ -157,7 +289,6 @@ func TestStepSaveCacheError(t *testing.T) {
 		CallbackToken: callbackToken,
 		TaskId:        taskID,
 	}
-	logPath := "/a/b"
 	log, _ := logs.GetObservedLogger(zap.InfoLevel)
 
 	oldSendStepStatus := sendStepStatus
@@ -177,7 +308,7 @@ func TestStepSaveCacheError(t *testing.T) {
 		return mockStep
 	}
 
-	e := NewUnitExecutor(logPath, tmpFilePath, log.Sugar())
+	e := NewUnitExecutor(tmpFilePath, log.Sugar())
 	_, err := e.Run(ctx, stepProto, nil, accountID)
 	assert.NotEqual(t, err, nil)
 }
@@ -209,7 +340,6 @@ func TestStepSaveCacheSuccess(t *testing.T) {
 		CallbackToken: callbackToken,
 		TaskId:        taskID,
 	}
-	logPath := "/a/b"
 	o := &output.StepOutput{
 		Output: map[string]string{"key": key},
 	}
@@ -233,7 +363,7 @@ func TestStepSaveCacheSuccess(t *testing.T) {
 
 	mockStep.EXPECT().Run(ctx).Return(o, nil)
 
-	e := NewUnitExecutor(logPath, tmpFilePath, log.Sugar())
+	e := NewUnitExecutor(tmpFilePath, log.Sugar())
 	_, err := e.Run(ctx, stepProto, nil, accountID)
 	assert.Equal(t, err, nil)
 }
@@ -263,7 +393,6 @@ func TestStepRestoreCacheErr(t *testing.T) {
 		CallbackToken: callbackToken,
 		TaskId:        taskID,
 	}
-	logPath := "/a/b"
 	log, _ := logs.GetObservedLogger(zap.InfoLevel)
 	mockStep := msteps.NewMockRestoreCacheStep(ctrl)
 
@@ -283,7 +412,7 @@ func TestStepRestoreCacheErr(t *testing.T) {
 
 	mockStep.EXPECT().Run(ctx).Return(errors.New("restore failed"))
 
-	e := NewUnitExecutor(logPath, tmpFilePath, log.Sugar())
+	e := NewUnitExecutor(tmpFilePath, log.Sugar())
 	_, err := e.Run(ctx, stepProto, nil, accountID)
 	assert.NotEqual(t, err, nil)
 }
@@ -313,7 +442,6 @@ func TestStepRestoreCacheSuccess(t *testing.T) {
 		CallbackToken: callbackToken,
 		TaskId:        taskID,
 	}
-	logPath := "/a/b"
 	log, _ := logs.GetObservedLogger(zap.InfoLevel)
 	mockStep := msteps.NewMockRestoreCacheStep(ctrl)
 
@@ -333,7 +461,7 @@ func TestStepRestoreCacheSuccess(t *testing.T) {
 
 	mockStep.EXPECT().Run(ctx).Return(nil)
 
-	e := NewUnitExecutor(logPath, tmpFilePath, log.Sugar())
+	e := NewUnitExecutor(tmpFilePath, log.Sugar())
 	_, err := e.Run(ctx, stepProto, nil, accountID)
 	assert.Equal(t, err, nil)
 }
@@ -357,14 +485,13 @@ func TestPublishArtifactsSuccess(t *testing.T) {
 		Id: "test3",
 		Step: &pb.UnitStep_PublishArtifacts{
 			PublishArtifacts: &pb.PublishArtifactsStep{
-				Images: []*pb2.BuildPublishImage{},
-				Files:  []*pb2.UploadFile{},
+				Images: []*pb.BuildPublishImage{},
+				Files:  []*pb.UploadFile{},
 			},
 		},
 		CallbackToken: callbackToken,
 		TaskId:        taskID,
 	}
-	logPath := "/a/b"
 	log, _ := logs.GetObservedLogger(zap.InfoLevel)
 	mockStep := msteps.NewMockPublishArtifactsStep(ctrl)
 
@@ -384,7 +511,7 @@ func TestPublishArtifactsSuccess(t *testing.T) {
 
 	mockStep.EXPECT().Run(ctx).Return(errors.New("Could not publish artifacts"))
 
-	e := NewUnitExecutor(logPath, tmpFilePath, log.Sugar())
+	e := NewUnitExecutor(tmpFilePath, log.Sugar())
 	_, err := e.Run(ctx, stepProto, nil, accountID)
 	assert.NotEqual(t, err, nil)
 }
@@ -408,14 +535,13 @@ func TestPublishArtifactsErr(t *testing.T) {
 		Id: "test3",
 		Step: &pb.UnitStep_PublishArtifacts{
 			PublishArtifacts: &pb.PublishArtifactsStep{
-				Images: []*pb2.BuildPublishImage{},
-				Files:  []*pb2.UploadFile{},
+				Images: []*pb.BuildPublishImage{},
+				Files:  []*pb.UploadFile{},
 			},
 		},
 		CallbackToken: callbackToken,
 		TaskId:        taskID,
 	}
-	logPath := "/a/b"
 	log, _ := logs.GetObservedLogger(zap.InfoLevel)
 	mockStep := msteps.NewMockPublishArtifactsStep(ctrl)
 
@@ -435,56 +561,157 @@ func TestPublishArtifactsErr(t *testing.T) {
 
 	mockStep.EXPECT().Run(ctx).Return(nil)
 
-	e := NewUnitExecutor(logPath, tmpFilePath, log.Sugar())
+	e := NewUnitExecutor(tmpFilePath, log.Sugar())
 	_, err := e.Run(ctx, stepProto, nil, accountID)
 	assert.Equal(t, err, nil)
 }
 
-func TestExecuteStep(t *testing.T) {
-	logPath := "/a/b"
-	tmpFilePath := "/tmp"
-	accountID := "test"
-	taskID := "taskID"
-	callbackToken := "token"
-
-	r := &pb.ExecuteStepRequest{
-		Step: &pb.UnitStep{
-			Id:            "test4",
-			CallbackToken: callbackToken,
-			TaskId:        taskID,
-		},
-		AccountId: accountID,
-	}
-
-	oldLogger := newRemoteLogger
-	defer func() { newRemoteLogger = oldLogger }()
-	newRemoteLogger = func(key string) (rl *logs.RemoteLogger, err error) {
-		log, _ := logs.GetObservedLogger(zap.InfoLevel)
-		return &logs.RemoteLogger{BaseLogger: log.Sugar(), Writer: logs.NopWriter()}, nil
-	}
-
-	emptyStep := getEncodedExecuteStepProto(t, r)
+// Client creation failing
+func TestCleanupClientErr(t *testing.T) {
+	ctrl, ctx := gomock.WithContext(context.Background(), t)
+	defer ctrl.Finish()
+	tmpPath := "/tmp/"
+	port := uint32(8000)
 	log, _ := logs.GetObservedLogger(zap.InfoLevel)
-
-	oldSendStepStatus := sendStepStatus
-	defer func() { sendStepStatus = oldSendStepStatus }()
-	sendStepStatus = func(ctx context.Context, accountID, callbackToken, taskID string, numRetries int32, timeTaken time.Duration,
-		stepOutput *output.StepOutput, stepErr error, log *zap.SugaredLogger) error {
-		return nil
+	step := &pb.UnitStep{
+		Id: "test",
+		Step: &pb.UnitStep_Run{
+			Run: &pb.RunStep{
+				Commands:      []string{"cd .", "ls"},
+				ContainerPort: port,
+			},
+		},
 	}
 
-	ExecuteStep(emptyStep, logPath, tmpFilePath, log.Sugar())
+	oldClient := newAddonClient
+	defer func() { newAddonClient = oldClient }()
+	newAddonClient = func(port uint, log *zap.SugaredLogger) (caddon.AddonClient, error) {
+		return nil, errors.New("client create error")
+	}
+
+	e := NewUnitExecutor(tmpPath, log.Sugar())
+	err := e.Cleanup(ctx, step)
+	assert.NotNil(t, err)
 }
 
-func TestDecodeExecuteStep(t *testing.T) {
-	incorrectBase64Enc := "x"
-	invalidStepEnc := "YWJjZA=="
-
+// Failed to send GRPC request
+func TestCleanupServerErr(t *testing.T) {
+	ctrl, ctx := gomock.WithContext(context.Background(), t)
+	defer ctrl.Finish()
+	tmpPath := "/tmp/"
+	port := uint32(8000)
 	log, _ := logs.GetObservedLogger(zap.InfoLevel)
+	step := &pb.UnitStep{
+		Id: "test",
+		Step: &pb.UnitStep_Run{
+			Run: &pb.RunStep{
+				Commands:      []string{"cd .", "ls"},
+				ContainerPort: port,
+			},
+		},
+	}
 
-	_, err := decodeExecuteStepRequest(incorrectBase64Enc, log.Sugar())
-	assert.NotEqual(t, err, nil)
+	c := &mockClient{
+		err: errors.New("server not running"),
+	}
+	mClient := amgrpc.NewMockAddonClient(ctrl)
+	mClient.EXPECT().CloseConn().Return(nil)
+	mClient.EXPECT().Client().Return(c)
 
-	_, err = decodeExecuteStepRequest(invalidStepEnc, log.Sugar())
-	assert.NotEqual(t, err, nil)
+	oldClient := newAddonClient
+	defer func() { newAddonClient = oldClient }()
+	newAddonClient = func(port uint, log *zap.SugaredLogger) (caddon.AddonClient, error) {
+		return mClient, nil
+	}
+
+	e := NewUnitExecutor(tmpPath, log.Sugar())
+	err := e.Cleanup(ctx, step)
+	assert.NotNil(t, err)
+}
+
+// Success
+func TestCleanupRunStepSuccess(t *testing.T) {
+	ctrl, ctx := gomock.WithContext(context.Background(), t)
+	defer ctrl.Finish()
+
+	tmpPath := "/tmp/"
+	port := uint32(8000)
+	log, _ := logs.GetObservedLogger(zap.InfoLevel)
+	step := &pb.UnitStep{
+		Id: "test",
+		Step: &pb.UnitStep_Run{
+			Run: &pb.RunStep{
+				Commands:      []string{"cd .", "ls"},
+				ContainerPort: port,
+			},
+		},
+	}
+
+	c := &mockClient{
+		err: nil,
+	}
+	mClient := amgrpc.NewMockAddonClient(ctrl)
+	mClient.EXPECT().CloseConn().Return(nil)
+	mClient.EXPECT().Client().Return(c)
+
+	oldClient := newAddonClient
+	defer func() { newAddonClient = oldClient }()
+	newAddonClient = func(port uint, log *zap.SugaredLogger) (caddon.AddonClient, error) {
+		return mClient, nil
+	}
+
+	e := NewUnitExecutor(tmpPath, log.Sugar())
+	err := e.Cleanup(ctx, step)
+	assert.Nil(t, err)
+}
+
+// Success
+func TestCleanupPluginStepSuccess(t *testing.T) {
+	ctrl, ctx := gomock.WithContext(context.Background(), t)
+	defer ctrl.Finish()
+
+	tmpPath := "/tmp/"
+	port := uint32(8000)
+	log, _ := logs.GetObservedLogger(zap.InfoLevel)
+	step := &pb.UnitStep{
+		Id: "test",
+		Step: &pb.UnitStep_Plugin{
+			Plugin: &pb.PluginStep{
+				Image:         "plugin/drone-git",
+				ContainerPort: port,
+			},
+		},
+	}
+
+	c := &mockClient{
+		err: nil,
+	}
+	mClient := amgrpc.NewMockAddonClient(ctrl)
+	mClient.EXPECT().CloseConn().Return(nil)
+	mClient.EXPECT().Client().Return(c)
+
+	oldClient := newAddonClient
+	defer func() { newAddonClient = oldClient }()
+	newAddonClient = func(port uint, log *zap.SugaredLogger) (caddon.AddonClient, error) {
+		return mClient, nil
+	}
+
+	e := NewUnitExecutor(tmpPath, log.Sugar())
+	err := e.Cleanup(ctx, step)
+	assert.Nil(t, err)
+}
+
+// Success
+func TestCleanupNotRunStepSuccess(t *testing.T) {
+	ctrl, ctx := gomock.WithContext(context.Background(), t)
+	defer ctrl.Finish()
+	tmpPath := "/tmp/"
+	log, _ := logs.GetObservedLogger(zap.InfoLevel)
+	step := &pb.UnitStep{
+		Id: "test",
+	}
+
+	e := NewUnitExecutor(tmpPath, log.Sugar())
+	err := e.Cleanup(ctx, step)
+	assert.Nil(t, err)
 }

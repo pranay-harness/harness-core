@@ -2,8 +2,6 @@ package steps
 
 import (
 	"context"
-	"fmt"
-	"net"
 	"testing"
 
 	"github.com/golang/mock/gomock"
@@ -11,104 +9,76 @@ import (
 	"github.com/pkg/errors"
 	"github.com/stretchr/testify/assert"
 	"github.com/wings-software/portal/commons/go/lib/logs"
-	addon "github.com/wings-software/portal/product/ci/addon/grpc"
-	caddon "github.com/wings-software/portal/product/ci/addon/grpc/client"
-	mgrpc "github.com/wings-software/portal/product/ci/addon/grpc/client/mocks"
-	addonpb "github.com/wings-software/portal/product/ci/addon/proto"
 	"github.com/wings-software/portal/product/ci/engine/output"
-	enginepb "github.com/wings-software/portal/product/ci/engine/proto"
+	pb "github.com/wings-software/portal/product/ci/engine/proto"
 	"go.uber.org/zap"
-	"google.golang.org/grpc"
-	"google.golang.org/grpc/test/bufconn"
 )
 
-var lis *bufconn.Listener
-
-const bufSize = 1024 * 1024
-
-func init() {
-	log, _ := logs.GetObservedLogger(zap.InfoLevel)
-	stopCh := make(chan bool)
-	server := addon.NewAddonHandler(stopCh, log.Sugar())
-	lis = bufconn.Listen(bufSize)
-	s := grpc.NewServer()
-	addonpb.RegisterAddonServer(s, server)
-	go func() {
-		if err := s.Serve(lis); err != nil {
-			log.Sugar().Fatalw(fmt.Sprintf("Server exited with error: %d", err))
-		}
-	}()
-}
-
-func bufDialer(context.Context, string) (net.Conn, error) {
-	return lis.Dial()
-}
-
-func createPublishArtifactsStep() *enginepb.UnitStep {
+func createPublishArtifactsStep() *pb.UnitStep {
 	// Registry type not specified
-	info1 := &addonpb.BuildPublishImage{
+	info1 := &pb.BuildPublishImage{
 		DockerFile: "/step/harness/Dockerifle_1",
 		Context:    "/step/harness",
-		Destination: &addonpb.Destination{
+		Destination: &pb.Destination{
 			DestinationUrl: "us.gcr.io/ci-play/kaniko-build:v1.2",
-			Connector: &addonpb.Connector{
+			Connector: &pb.Connector{
 				Id:   "G",
-				Auth: addonpb.AuthType_SECRET_FILE,
+				Auth: pb.AuthType_SECRET_FILE,
 			},
 		},
 	}
-	info2 := &addonpb.BuildPublishImage{
+	info2 := &pb.BuildPublishImage{
 		DockerFile: "/step/harness/Dockerifle_2",
 		Context:    "/step/harness",
-		Destination: &addonpb.Destination{
+		Destination: &pb.Destination{
 			DestinationUrl: "vistaarjuneja/xyz:0.1",
-			LocationType:   addonpb.LocationType_DOCKERHUB,
-			Connector: &addonpb.Connector{
+			LocationType:   pb.LocationType_DOCKERHUB,
+			Connector: &pb.Connector{
 				Id:   "D",
-				Auth: addonpb.AuthType_BASIC_AUTH,
+				Auth: pb.AuthType_BASIC_AUTH,
 			},
 		},
 	}
-	info3 := &addonpb.BuildPublishImage{
+	info3 := &pb.BuildPublishImage{
 		DockerFile: "/step/harness/Dockerifle_1",
 		Context:    "/step/harness",
-		Destination: &addonpb.Destination{
+		Destination: &pb.Destination{
 			DestinationUrl: "448640225317.dkr.ecr.us-east-1.amazonaws.com/vistaarjuneja:v0.5",
-			LocationType:   addonpb.LocationType_ECR,
-			Connector: &addonpb.Connector{
+			LocationType:   pb.LocationType_ECR,
+			Connector: &pb.Connector{
 				Id:   "E",
-				Auth: addonpb.AuthType_ACCESS_KEY,
+				Auth: pb.AuthType_ACCESS_KEY,
 			},
 		},
 	}
 
-	info4 := &addonpb.UploadFile{
+	info4 := &pb.UploadFile{
 		FilePattern: "/step/harness/test.txt",
-		Destination: &addonpb.Destination{
+		Destination: &pb.Destination{
 			DestinationUrl: "https://harness.jfrog.io/artifactory/pcf",
-			Connector: &addonpb.Connector{
+			Connector: &pb.Connector{
 				Id:   "J",
-				Auth: addonpb.AuthType_BASIC_AUTH,
+				Auth: pb.AuthType_BASIC_AUTH,
 			},
-			LocationType: addonpb.LocationType_JFROG,
+			LocationType: pb.LocationType_JFROG,
 		},
 	}
-	x := []*addonpb.BuildPublishImage{}
+	x := []*pb.BuildPublishImage{}
 	x = append(x, info1)
 	x = append(x, info2)
 	x = append(x, info3)
 
-	y := []*addonpb.UploadFile{}
+	y := []*pb.UploadFile{}
 	y = append(y, info4)
 
-	publishArtifactsStep := &enginepb.UnitStep_PublishArtifacts{
-		PublishArtifacts: &enginepb.PublishArtifactsStep{
+	publishArtifactsStep := &pb.UnitStep_PublishArtifacts{
+		PublishArtifacts: &pb.PublishArtifactsStep{
 			Images: x,
 			Files:  y,
 		},
 	}
 
-	return &enginepb.UnitStep{
+	return &pb.UnitStep{
 		Id:          "10",
 		DisplayName: "publishing",
 		Step:        publishArtifactsStep,
@@ -122,48 +92,8 @@ func TestCreatePublishArtifacts_Invalid(t *testing.T) {
 
 	log, _ := logs.GetObservedLogger(zap.InfoLevel)
 
-	conn, err := grpc.DialContext(ctx, "bufnet", grpc.WithContextDialer(bufDialer), grpc.WithInsecure())
-	if err != nil {
-		t.Fatalf("Failed to dial bufnet: %v", err)
-	}
-	defer conn.Close()
-
 	// Create an invalid publish artifacts image step
 	step := createPublishArtifactsStep()
-	client := addonpb.NewAddonClient(conn)
-
-	oldClient := newAddonClient
-	defer func() { newAddonClient = oldClient }()
-	// Initialize a mock CI addon
-	mockClient := mgrpc.NewMockAddonClient(ctrl)
-	mockClient.EXPECT().Client().Return(client)
-	mockClient.EXPECT().CloseConn().Return(nil)
-	newAddonClient = func(port uint, log *zap.SugaredLogger) (caddon.AddonClient, error) {
-		return mockClient, nil
-	}
-
-	testPublishStep := NewPublishArtifactsStep(step, nil, log.Sugar())
-	err = testPublishStep.Run(ctx)
-
-	assert.NotNil(t, err)
-}
-
-func TestCreatePublishArtifacts_ClientCreationErr(t *testing.T) {
-	ctx := context.Background()
-	ctrl, _ := gomock.WithContext(context.Background(), t)
-	defer ctrl.Finish()
-
-	log, _ := logs.GetObservedLogger(zap.InfoLevel)
-
-	// Create an invalid publish artifacts image step
-	step := createPublishArtifactsStep()
-
-	oldClient := newAddonClient
-	defer func() { newAddonClient = oldClient }()
-	// Initialize a mock CI addon
-	newAddonClient = func(port uint, log *zap.SugaredLogger) (caddon.AddonClient, error) {
-		return nil, errors.New("Could not create client")
-	}
 
 	testPublishStep := NewPublishArtifactsStep(step, nil, log.Sugar())
 	err := testPublishStep.Run(ctx)
@@ -185,17 +115,17 @@ func Test_GetRequestArgError(t *testing.T) {
 
 	tests := []struct {
 		name        string
-		input       *enginepb.UnitStep
+		input       *pb.UnitStep
 		expectedErr bool
 	}{
 		{
 			name: "invalid file pattern",
-			input: &enginepb.UnitStep{
+			input: &pb.UnitStep{
 				Id:          stepID,
 				DisplayName: stepName,
-				Step: &enginepb.UnitStep_PublishArtifacts{
-					PublishArtifacts: &enginepb.PublishArtifactsStep{
-						Files: []*addonpb.UploadFile{
+				Step: &pb.UnitStep_PublishArtifacts{
+					PublishArtifacts: &pb.PublishArtifactsStep{
+						Files: []*pb.UploadFile{
 							{
 								FilePattern: invalidFilePattern,
 							},
@@ -207,12 +137,12 @@ func Test_GetRequestArgError(t *testing.T) {
 		},
 		{
 			name: "invalid docker file",
-			input: &enginepb.UnitStep{
+			input: &pb.UnitStep{
 				Id:          stepID,
 				DisplayName: stepName,
-				Step: &enginepb.UnitStep_PublishArtifacts{
-					PublishArtifacts: &enginepb.PublishArtifactsStep{
-						Images: []*addonpb.BuildPublishImage{
+				Step: &pb.UnitStep_PublishArtifacts{
+					PublishArtifacts: &pb.PublishArtifactsStep{
+						Images: []*pb.BuildPublishImage{
 							{
 								DockerFile: invalidDockerFile,
 							},
@@ -224,12 +154,12 @@ func Test_GetRequestArgError(t *testing.T) {
 		},
 		{
 			name: "invalid context",
-			input: &enginepb.UnitStep{
+			input: &pb.UnitStep{
 				Id:          stepID,
 				DisplayName: stepName,
-				Step: &enginepb.UnitStep_PublishArtifacts{
-					PublishArtifacts: &enginepb.PublishArtifactsStep{
-						Images: []*addonpb.BuildPublishImage{
+				Step: &pb.UnitStep_PublishArtifacts{
+					PublishArtifacts: &pb.PublishArtifactsStep{
+						Images: []*pb.BuildPublishImage{
 							{
 								DockerFile: dockerFile,
 								Context:    invalidContext,
@@ -271,21 +201,21 @@ func Test_GetRequestArgResolveJEXL(t *testing.T) {
 
 	tests := []struct {
 		name           string
-		input          *enginepb.UnitStep
-		resolvedFiles  []*addonpb.UploadFile
-		resolvedImages []*addonpb.BuildPublishImage
+		input          *pb.UnitStep
+		resolvedFiles  []*pb.UploadFile
+		resolvedImages []*pb.BuildPublishImage
 		jexlEvalRet    map[string]string
 		jexlEvalErr    error
 		expectedErr    bool
 	}{
 		{
 			name: "jexl evaluate error",
-			input: &enginepb.UnitStep{
+			input: &pb.UnitStep{
 				Id:          stepID,
 				DisplayName: stepName,
-				Step: &enginepb.UnitStep_PublishArtifacts{
-					PublishArtifacts: &enginepb.PublishArtifactsStep{
-						Files: []*addonpb.UploadFile{
+				Step: &pb.UnitStep_PublishArtifacts{
+					PublishArtifacts: &pb.PublishArtifactsStep{
+						Files: []*pb.UploadFile{
 							{
 								FilePattern: jFilePattern,
 							},
@@ -299,21 +229,21 @@ func Test_GetRequestArgResolveJEXL(t *testing.T) {
 		},
 		{
 			name: "jexl evaluate success with files",
-			input: &enginepb.UnitStep{
+			input: &pb.UnitStep{
 				Id:          stepID,
 				DisplayName: stepName,
-				Step: &enginepb.UnitStep_PublishArtifacts{
-					PublishArtifacts: &enginepb.PublishArtifactsStep{
-						Files: []*addonpb.UploadFile{
+				Step: &pb.UnitStep_PublishArtifacts{
+					PublishArtifacts: &pb.PublishArtifactsStep{
+						Files: []*pb.UploadFile{
 							{
 								FilePattern: jFilePattern,
-								Destination: &addonpb.Destination{
+								Destination: &pb.Destination{
 									DestinationUrl: jDstURL,
-									Connector: &addonpb.Connector{
+									Connector: &pb.Connector{
 										Id:   "J",
-										Auth: addonpb.AuthType_ACCESS_KEY,
+										Auth: pb.AuthType_ACCESS_KEY,
 									},
-									LocationType: addonpb.LocationType_S3,
+									LocationType: pb.LocationType_S3,
 									Region:       jRegion,
 								},
 							},
@@ -321,16 +251,16 @@ func Test_GetRequestArgResolveJEXL(t *testing.T) {
 					},
 				},
 			},
-			resolvedFiles: []*addonpb.UploadFile{
+			resolvedFiles: []*pb.UploadFile{
 				{
 					FilePattern: filePatternVal,
-					Destination: &addonpb.Destination{
+					Destination: &pb.Destination{
 						DestinationUrl: dstURLVal,
-						Connector: &addonpb.Connector{
+						Connector: &pb.Connector{
 							Id:   "J",
-							Auth: addonpb.AuthType_ACCESS_KEY,
+							Auth: pb.AuthType_ACCESS_KEY,
 						},
-						LocationType: addonpb.LocationType_S3,
+						LocationType: pb.LocationType_S3,
 						Region:       regionVal,
 					},
 				},
@@ -341,39 +271,39 @@ func Test_GetRequestArgResolveJEXL(t *testing.T) {
 		},
 		{
 			name: "jexl evaluate success with images",
-			input: &enginepb.UnitStep{
+			input: &pb.UnitStep{
 				Id:          stepID,
 				DisplayName: stepName,
-				Step: &enginepb.UnitStep_PublishArtifacts{
-					PublishArtifacts: &enginepb.PublishArtifactsStep{
-						Images: []*addonpb.BuildPublishImage{
+				Step: &pb.UnitStep_PublishArtifacts{
+					PublishArtifacts: &pb.PublishArtifactsStep{
+						Images: []*pb.BuildPublishImage{
 							{
 								DockerFile: jDockerFile,
 								Context:    jContextFile,
-								Destination: &addonpb.Destination{
+								Destination: &pb.Destination{
 									DestinationUrl: jDstURL,
-									Connector: &addonpb.Connector{
+									Connector: &pb.Connector{
 										Id:   "J",
-										Auth: addonpb.AuthType_ACCESS_KEY,
+										Auth: pb.AuthType_ACCESS_KEY,
 									},
-									LocationType: addonpb.LocationType_ECR,
+									LocationType: pb.LocationType_ECR,
 								},
 							},
 						},
 					},
 				},
 			},
-			resolvedImages: []*addonpb.BuildPublishImage{
+			resolvedImages: []*pb.BuildPublishImage{
 				{
 					DockerFile: dockerFileVal,
 					Context:    contextFileVal,
-					Destination: &addonpb.Destination{
+					Destination: &pb.Destination{
 						DestinationUrl: dstURLVal,
-						Connector: &addonpb.Connector{
+						Connector: &pb.Connector{
 							Id:   "J",
-							Auth: addonpb.AuthType_ACCESS_KEY,
+							Auth: pb.AuthType_ACCESS_KEY,
 						},
-						LocationType: addonpb.LocationType_ECR,
+						LocationType: pb.LocationType_ECR,
 					},
 				},
 			},
@@ -396,18 +326,18 @@ func Test_GetRequestArgResolveJEXL(t *testing.T) {
 			log *zap.SugaredLogger) (map[string]string, error) {
 			return tc.jexlEvalRet, tc.jexlEvalErr
 		}
-		ret, got := testPublishStep.createPublishArtifactArg(ctx)
+		files, images, got := testPublishStep.resolveExpressions(ctx)
 		if tc.expectedErr == (got == nil) {
 			t.Fatalf("%s: expected error: %v, got: %v", tc.name, tc.expectedErr, got)
 		}
 
 		if got == nil {
-			assert.Equal(t, len(ret.GetFiles()), len(tc.resolvedFiles))
-			for i := 0; i < len(ret.GetFiles()); i++ {
-				assert.Equal(t, proto.Equal(ret.GetFiles()[i], tc.resolvedFiles[i]), true)
+			assert.Equal(t, len(files), len(tc.resolvedFiles))
+			for i := 0; i < len(files); i++ {
+				assert.Equal(t, proto.Equal(files[i], tc.resolvedFiles[i]), true)
 			}
-			for i := 0; i < len(ret.GetImages()); i++ {
-				assert.Equal(t, proto.Equal(ret.GetImages()[i], tc.resolvedImages[i]), true)
+			for i := 0; i < len(images); i++ {
+				assert.Equal(t, proto.Equal(images[i], tc.resolvedImages[i]), true)
 			}
 		}
 

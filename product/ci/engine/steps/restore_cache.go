@@ -114,7 +114,7 @@ func (s *restoreCacheStep) Run(ctx context.Context) error {
 	tmpArchivePath := filepath.Join(s.tmpFilePath, s.id)
 	err := s.downloadWithRetries(ctx, tmpArchivePath)
 	if err != nil {
-		s.log.Warnw(
+		s.log.Errorw(
 			"failed to download from cache",
 			"key", s.key,
 			"elapsed_time_ms", utils.TimeSince(start),
@@ -134,7 +134,7 @@ func (s *restoreCacheStep) Run(ctx context.Context) error {
 
 	err = s.unarchiveFiles(tmpArchivePath)
 	if err != nil {
-		s.log.Warnw(
+		s.log.Errorw(
 			"failed to unarchive file",
 			"file_path", tmpArchivePath,
 			"key", s.key,
@@ -157,7 +157,7 @@ func (s *restoreCacheStep) downloadWithRetries(ctx context.Context, tmpArchivePa
 		start := time.Now()
 		err := s.download(ctx, tmpArchivePath)
 		if err != nil {
-			s.log.Warnw(
+			s.log.Errorw(
 				"failed to download from cache",
 				"key", s.key,
 				"elapsed_time_ms", utils.TimeSince(start),
@@ -187,7 +187,7 @@ func (s *restoreCacheStep) download(ctx context.Context, tmpArchivePath string) 
 		if resp.Code == "NoSuchKey" {
 			if !s.failIfNotExist {
 				s.ignoreUnarchive = true
-				s.log.Warnw(
+				s.log.Errorw(
 					"Continuing on Key not exist error from cache",
 					"key", s.key,
 					"failIfNotExist", s.failIfNotExist,

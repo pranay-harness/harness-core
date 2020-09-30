@@ -1,23 +1,23 @@
-package tasks
+package artifacts
 
 import (
 	"context"
+	"os"
+	"testing"
+
 	"github.com/golang/mock/gomock"
 	"github.com/pkg/errors"
 	"github.com/stretchr/testify/assert"
 	"go.uber.org/zap"
-	"os"
-	"testing"
 
 	"github.com/wings-software/portal/commons/go/lib/filesystem"
 	"github.com/wings-software/portal/commons/go/lib/kaniko"
-	"github.com/wings-software/portal/commons/go/lib/kaniko/mocks"
+	kaniko_mock "github.com/wings-software/portal/commons/go/lib/kaniko/mocks"
 	"github.com/wings-software/portal/commons/go/lib/logs"
-	pb "github.com/wings-software/portal/product/ci/addon/proto"
+	pb "github.com/wings-software/portal/product/ci/engine/proto"
 )
 
 func Test_validatePublishArtifactRequest(t *testing.T) {
-	taskID := "test-id"
 	filePattern := "/a/b/c"
 	destinationURL := "file://a/b/c"
 	connectorID := "testConnector"
@@ -26,47 +26,29 @@ func Test_validatePublishArtifactRequest(t *testing.T) {
 
 	tests := []struct {
 		name        string
-		input       *pb.PublishArtifactsRequest
+		files       []*pb.UploadFile
+		images      []*pb.BuildPublishImage
 		expectedErr bool
 	}{
 		{
-			name:        "nil request",
-			input:       nil,
-			expectedErr: true,
-		},
-		{
-			name:        "no task ID",
-			input:       &pb.PublishArtifactsRequest{},
-			expectedErr: true,
-		},
-		{
-			name: "file pattern not set",
-			input: &pb.PublishArtifactsRequest{
-				TaskId: &pb.TaskId{Id: taskID},
-				Files:  []*pb.UploadFile{{}},
-			},
+			name:        "file pattern not set",
+			files:       []*pb.UploadFile{{}},
 			expectedErr: true,
 		},
 		{
 			name: "destination is not set",
-			input: &pb.PublishArtifactsRequest{
-				TaskId: &pb.TaskId{Id: taskID},
-				Files: []*pb.UploadFile{
-					{FilePattern: filePattern},
-				},
+			files: []*pb.UploadFile{
+				{FilePattern: filePattern},
 			},
 			expectedErr: true,
 		},
 		{
 			name: "Connector is not set",
-			input: &pb.PublishArtifactsRequest{
-				TaskId: &pb.TaskId{Id: taskID},
-				Files: []*pb.UploadFile{
-					{
-						FilePattern: filePattern,
-						Destination: &pb.Destination{
-							DestinationUrl: destinationURL,
-						},
+			files: []*pb.UploadFile{
+				{
+					FilePattern: filePattern,
+					Destination: &pb.Destination{
+						DestinationUrl: destinationURL,
 					},
 				},
 			},
@@ -74,16 +56,13 @@ func Test_validatePublishArtifactRequest(t *testing.T) {
 		},
 		{
 			name: "valid request without location type",
-			input: &pb.PublishArtifactsRequest{
-				TaskId: &pb.TaskId{Id: taskID},
-				Files: []*pb.UploadFile{
-					{
-						FilePattern: filePattern,
-						Destination: &pb.Destination{
-							DestinationUrl: destinationURL,
-							Connector: &pb.Connector{
-								Id: connectorID,
-							},
+			files: []*pb.UploadFile{
+				{
+					FilePattern: filePattern,
+					Destination: &pb.Destination{
+						DestinationUrl: destinationURL,
+						Connector: &pb.Connector{
+							Id: connectorID,
 						},
 					},
 				},
@@ -92,184 +71,154 @@ func Test_validatePublishArtifactRequest(t *testing.T) {
 		},
 		{
 			name: "valid request with files & images",
-			input: &pb.PublishArtifactsRequest{
-				TaskId: &pb.TaskId{Id: taskID},
-				Files: []*pb.UploadFile{
-					{
-						FilePattern: filePattern,
-						Destination: &pb.Destination{
-							DestinationUrl: destinationURL,
-							Connector: &pb.Connector{
-								Id: connectorID,
-							},
-							LocationType: pb.LocationType_JFROG,
+			files: []*pb.UploadFile{
+				{
+					FilePattern: filePattern,
+					Destination: &pb.Destination{
+						DestinationUrl: destinationURL,
+						Connector: &pb.Connector{
+							Id: connectorID,
 						},
+						LocationType: pb.LocationType_JFROG,
 					},
 				},
-				Images: []*pb.BuildPublishImage{
-					{DockerFile: dockerFilePath,
-						Context: context,
-						Destination: &pb.Destination{
-							DestinationUrl: destinationURL,
-							Connector: &pb.Connector{
-								Id:   connectorID,
-								Auth: pb.AuthType_BASIC_AUTH,
-							},
-							LocationType: pb.LocationType_DOCKERHUB},
-					},
+			},
+			images: []*pb.BuildPublishImage{
+				{DockerFile: dockerFilePath,
+					Context: context,
+					Destination: &pb.Destination{
+						DestinationUrl: destinationURL,
+						Connector: &pb.Connector{
+							Id:   connectorID,
+							Auth: pb.AuthType_BASIC_AUTH,
+						},
+						LocationType: pb.LocationType_DOCKERHUB},
 				},
 			},
 			expectedErr: false,
 		},
 		{
-			name: "empty image list",
-			input: &pb.PublishArtifactsRequest{
-				TaskId: &pb.TaskId{Id: taskID},
-				Images: []*pb.BuildPublishImage{{}},
-			},
+			name:        "empty image list",
+			images:      []*pb.BuildPublishImage{{}},
 			expectedErr: true,
 		},
 		{
 			name: "context is not set",
-			input: &pb.PublishArtifactsRequest{
-				TaskId: &pb.TaskId{Id: taskID},
-				Images: []*pb.BuildPublishImage{
-					{
-						DockerFile: dockerFilePath,
-					},
+			images: []*pb.BuildPublishImage{
+				{
+					DockerFile: dockerFilePath,
 				},
 			},
 			expectedErr: true,
 		},
 		{
 			name: "dockerfile is not set",
-			input: &pb.PublishArtifactsRequest{
-				TaskId: &pb.TaskId{Id: taskID},
-				Images: []*pb.BuildPublishImage{
-					{
-						Context: dockerFilePath,
-					},
+			images: []*pb.BuildPublishImage{
+				{
+					Context: dockerFilePath,
 				},
 			},
 			expectedErr: true,
 		},
 		{
 			name: "jfrog with invalid auth type",
-			input: &pb.PublishArtifactsRequest{
-				TaskId: &pb.TaskId{Id: taskID},
-				Files: []*pb.UploadFile{
-					{
-						FilePattern: filePattern,
-						Destination: &pb.Destination{
-							DestinationUrl: destinationURL,
-							Connector: &pb.Connector{
-								Id:   connectorID,
-								Auth: pb.AuthType_SECRET_FILE,
-							},
-							LocationType: pb.LocationType_JFROG},
-					},
+			files: []*pb.UploadFile{
+				{
+					FilePattern: filePattern,
+					Destination: &pb.Destination{
+						DestinationUrl: destinationURL,
+						Connector: &pb.Connector{
+							Id:   connectorID,
+							Auth: pb.AuthType_SECRET_FILE,
+						},
+						LocationType: pb.LocationType_JFROG},
 				},
 			},
 			expectedErr: true,
 		},
 		{
 			name: "s3 with invalid auth type",
-			input: &pb.PublishArtifactsRequest{
-				TaskId: &pb.TaskId{Id: taskID},
-				Files: []*pb.UploadFile{
-					{
-						FilePattern: filePattern,
-						Destination: &pb.Destination{
-							DestinationUrl: destinationURL,
-							Connector: &pb.Connector{
-								Id:   connectorID,
-								Auth: pb.AuthType_SECRET_FILE,
-							},
-							LocationType: pb.LocationType_S3},
-					},
+			files: []*pb.UploadFile{
+				{
+					FilePattern: filePattern,
+					Destination: &pb.Destination{
+						DestinationUrl: destinationURL,
+						Connector: &pb.Connector{
+							Id:   connectorID,
+							Auth: pb.AuthType_SECRET_FILE,
+						},
+						LocationType: pb.LocationType_S3},
 				},
 			},
 			expectedErr: true,
 		},
 		{
 			name: "s3 with unset region",
-			input: &pb.PublishArtifactsRequest{
-				TaskId: &pb.TaskId{Id: taskID},
-				Files: []*pb.UploadFile{
-					{
-						FilePattern: filePattern,
-						Destination: &pb.Destination{
-							DestinationUrl: destinationURL,
-							Connector: &pb.Connector{
-								Id:   connectorID,
-								Auth: pb.AuthType_ACCESS_KEY,
-							},
-							LocationType: pb.LocationType_S3},
-					},
+			files: []*pb.UploadFile{
+				{
+					FilePattern: filePattern,
+					Destination: &pb.Destination{
+						DestinationUrl: destinationURL,
+						Connector: &pb.Connector{
+							Id:   connectorID,
+							Auth: pb.AuthType_ACCESS_KEY,
+						},
+						LocationType: pb.LocationType_S3},
 				},
 			},
 			expectedErr: true,
 		},
 		{
 			name: "gcr with invalid auth type",
-			input: &pb.PublishArtifactsRequest{
-				TaskId: &pb.TaskId{Id: taskID},
-				Images: []*pb.BuildPublishImage{
-					{DockerFile: dockerFilePath,
-						Context: context,
-						Destination: &pb.Destination{
-							DestinationUrl: destinationURL,
-							Connector: &pb.Connector{
-								Id:   connectorID,
-								Auth: pb.AuthType_BASIC_AUTH,
-							},
-							LocationType: pb.LocationType_GCR},
-					},
+			images: []*pb.BuildPublishImage{
+				{DockerFile: dockerFilePath,
+					Context: context,
+					Destination: &pb.Destination{
+						DestinationUrl: destinationURL,
+						Connector: &pb.Connector{
+							Id:   connectorID,
+							Auth: pb.AuthType_BASIC_AUTH,
+						},
+						LocationType: pb.LocationType_GCR},
 				},
 			},
 			expectedErr: true,
 		},
 		{
 			name: "ecr with invalid auth type",
-			input: &pb.PublishArtifactsRequest{
-				TaskId: &pb.TaskId{Id: taskID},
-				Images: []*pb.BuildPublishImage{
-					{DockerFile: dockerFilePath,
-						Context: context,
-						Destination: &pb.Destination{
-							DestinationUrl: destinationURL,
-							Connector: &pb.Connector{
-								Id:   connectorID,
-								Auth: pb.AuthType_SECRET_FILE,
-							},
-							LocationType: pb.LocationType_ECR},
-					},
+			images: []*pb.BuildPublishImage{
+				{DockerFile: dockerFilePath,
+					Context: context,
+					Destination: &pb.Destination{
+						DestinationUrl: destinationURL,
+						Connector: &pb.Connector{
+							Id:   connectorID,
+							Auth: pb.AuthType_SECRET_FILE,
+						},
+						LocationType: pb.LocationType_ECR},
 				},
 			},
 			expectedErr: true,
 		},
 		{
 			name: "dockerhub with invalid auth type",
-			input: &pb.PublishArtifactsRequest{
-				TaskId: &pb.TaskId{Id: taskID},
-				Images: []*pb.BuildPublishImage{
-					{DockerFile: dockerFilePath,
-						Context: context,
-						Destination: &pb.Destination{
-							DestinationUrl: destinationURL,
-							Connector: &pb.Connector{
-								Id:   connectorID,
-								Auth: pb.AuthType_SECRET_FILE,
-							},
-							LocationType: pb.LocationType_DOCKERHUB},
-					},
+			images: []*pb.BuildPublishImage{
+				{DockerFile: dockerFilePath,
+					Context: context,
+					Destination: &pb.Destination{
+						DestinationUrl: destinationURL,
+						Connector: &pb.Connector{
+							Id:   connectorID,
+							Auth: pb.AuthType_SECRET_FILE,
+						},
+						LocationType: pb.LocationType_DOCKERHUB},
 				},
 			},
 			expectedErr: true,
 		},
 	}
 	for _, tc := range tests {
-		got := validatePublishRequest(tc.input)
+		got := validatePublishRequest(tc.files, tc.images)
 		if tc.expectedErr == (got == nil) {
 			t.Fatalf("%s: expected error: %v, got: %v", tc.name, tc.expectedErr, got)
 		}
@@ -1096,7 +1045,6 @@ func Test_Publish(t *testing.T) {
 	p := NewPublishArtifactsTask(log.Sugar())
 	dockerFilePath := "~/dockerfile"
 	context := "~/"
-	taskID := "test-task"
 	filePattern := "/a/b/c"
 	destinationURL := "https://harness.jfrog.io/artifactory/pcf"
 	connectorID := "jfrogConnector"
@@ -1104,23 +1052,21 @@ func Test_Publish(t *testing.T) {
 
 	tests := []struct {
 		name        string
-		input       *pb.PublishArtifactsRequest
+		files       []*pb.UploadFile
+		images      []*pb.BuildPublishImage
 		expectedErr bool
 	}{
 		{
 			name: "unsupported file upload",
-			input: &pb.PublishArtifactsRequest{
-				TaskId: &pb.TaskId{Id: taskID},
-				Files: []*pb.UploadFile{
-					{
-						FilePattern: filePattern,
-						Destination: &pb.Destination{
-							DestinationUrl: destinationURL,
-							Connector: &pb.Connector{
-								Id: connectorID,
-							},
-							LocationType: pb.LocationType_GCR,
+			files: []*pb.UploadFile{
+				{
+					FilePattern: filePattern,
+					Destination: &pb.Destination{
+						DestinationUrl: destinationURL,
+						Connector: &pb.Connector{
+							Id: connectorID,
 						},
+						LocationType: pb.LocationType_GCR,
 					},
 				},
 			},
@@ -1128,19 +1074,16 @@ func Test_Publish(t *testing.T) {
 		},
 		{
 			name: "unsupported image upload",
-			input: &pb.PublishArtifactsRequest{
-				TaskId: &pb.TaskId{Id: taskID},
-				Images: []*pb.BuildPublishImage{
-					{
-						DockerFile: dockerFilePath,
-						Context:    context,
-						Destination: &pb.Destination{
-							DestinationUrl: destinationURL,
-							Connector: &pb.Connector{
-								Id: connectorID,
-							},
-							LocationType: pb.LocationType_JFROG,
+			images: []*pb.BuildPublishImage{
+				{
+					DockerFile: dockerFilePath,
+					Context:    context,
+					Destination: &pb.Destination{
+						DestinationUrl: destinationURL,
+						Connector: &pb.Connector{
+							Id: connectorID,
 						},
+						LocationType: pb.LocationType_JFROG,
 					},
 				},
 			},
@@ -1148,18 +1091,15 @@ func Test_Publish(t *testing.T) {
 		},
 		{
 			name: "failed to publish to JFROG",
-			input: &pb.PublishArtifactsRequest{
-				TaskId: &pb.TaskId{Id: taskID},
-				Files: []*pb.UploadFile{
-					{
-						FilePattern: filePattern,
-						Destination: &pb.Destination{
-							DestinationUrl: destinationURL,
-							Connector: &pb.Connector{
-								Id: connectorID,
-							},
-							LocationType: pb.LocationType_JFROG,
+			files: []*pb.UploadFile{
+				{
+					FilePattern: filePattern,
+					Destination: &pb.Destination{
+						DestinationUrl: destinationURL,
+						Connector: &pb.Connector{
+							Id: connectorID,
 						},
+						LocationType: pb.LocationType_JFROG,
 					},
 				},
 			},
@@ -1167,35 +1107,29 @@ func Test_Publish(t *testing.T) {
 		},
 		{
 			name: "failed to publish to S3",
-			input: &pb.PublishArtifactsRequest{
-				TaskId: &pb.TaskId{Id: taskID},
-				Files: []*pb.UploadFile{
-					{
-						FilePattern: filePattern,
-						Destination: &pb.Destination{
-							DestinationUrl: destinationURL,
-							Connector: &pb.Connector{
-								Id:   connectorID,
-								Auth: pb.AuthType_ACCESS_KEY,
-							},
-							LocationType: pb.LocationType_S3,
-							Region:       s3Region,
+			files: []*pb.UploadFile{
+				{
+					FilePattern: filePattern,
+					Destination: &pb.Destination{
+						DestinationUrl: destinationURL,
+						Connector: &pb.Connector{
+							Id:   connectorID,
+							Auth: pb.AuthType_ACCESS_KEY,
 						},
+						LocationType: pb.LocationType_S3,
+						Region:       s3Region,
 					},
 				},
 			},
 			expectedErr: true,
 		},
 		{
-			name: "success",
-			input: &pb.PublishArtifactsRequest{
-				TaskId: &pb.TaskId{Id: taskID},
-			},
+			name:        "success",
 			expectedErr: false,
 		},
 	}
 	for _, tc := range tests {
-		got := p.Publish(ctx, tc.input)
+		got := p.Publish(ctx, tc.files, tc.images)
 		if tc.expectedErr == (got == nil) {
 			t.Fatalf("%s: expected error: %v, got: %v", tc.name, tc.expectedErr, got)
 		}

@@ -2,24 +2,28 @@ load("@io_bazel_rules_go//go:def.bzl", "go_library", "go_test")
 
 go_library(
     name = "go_default_library",
-    srcs = ["engine_client.go"],
-    importpath = "github.com/wings-software/portal/product/ci/engine/grpc/client",
+    srcs = [
+        "file_map.go",
+        "tail.go",
+    ],
+    importpath = "github.com/wings-software/portal/commons/go/lib/tail",
     visibility = ["//visibility:public"],
     deps = [
-        "//product/ci/engine/proto:go_default_library",
-        "@com_github_grpc_ecosystem_go_grpc_middleware//retry:go_default_library",
-        "@org_golang_google_grpc//:go_default_library",
-        "@org_golang_google_grpc//codes:go_default_library",
+        "@com_github_hpcloud_tail//:go_default_library",
         "@org_uber_go_zap//:go_default_library",
     ],
 )
 
 go_test(
     name = "go_default_test",
-    srcs = ["engine_client_test.go"],
+    srcs = [
+        "file_map_test.go",
+        "tail_test.go",
+    ],
     embed = [":go_default_library"],
     deps = [
         "//commons/go/lib/logs:go_default_library",
+        "@com_github_golang_mock//gomock:go_default_library",
         "@com_github_stretchr_testify//assert:go_default_library",
         "@org_uber_go_zap//:go_default_library",
     ],

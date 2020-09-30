@@ -49,3 +49,17 @@ func (mr *MockUnitExecutorMockRecorder) Run(ctx, step, so, accountID interface{}
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Run", reflect.TypeOf((*MockUnitExecutor)(nil).Run), ctx, step, so, accountID)
 }
+
+// Cleanup mocks base method.
+func (m *MockUnitExecutor) Cleanup(ctx context.Context, step *proto.UnitStep) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "Cleanup", ctx, step)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// Cleanup indicates an expected call of Cleanup.
+func (mr *MockUnitExecutorMockRecorder) Cleanup(ctx, step interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Cleanup", reflect.TypeOf((*MockUnitExecutor)(nil).Cleanup), ctx, step)
+}

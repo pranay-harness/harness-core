@@ -4,11 +4,9 @@ load("@io_bazel_rules_go//proto:def.bzl", "go_proto_library")
 
 proto_library(
     name = "ciaddonpb_proto",
-    srcs = [
-        "addon.proto",
-        "progress.proto",
-    ],
+    srcs = ["addon.proto"],
     visibility = ["//visibility:public"],
+    deps = ["//product/ci/engine/proto:cienginepb_proto"],
 )
 
 go_proto_library(
@@ -17,6 +15,7 @@ go_proto_library(
     importpath = "github.com/wings-software/portal/product/ci/addon/proto",
     proto = ":ciaddonpb_proto",
     visibility = ["//visibility:public"],
+    deps = ["//product/ci/engine/proto:go_default_library"],
 )
 
 go_library(

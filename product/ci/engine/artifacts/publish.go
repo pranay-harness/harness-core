@@ -1,4 +1,4 @@
-package tasks
+package artifacts
 
 import (
 	"context"
@@ -13,7 +13,7 @@ import (
 	"github.com/wings-software/portal/commons/go/lib/jfrogutils"
 	"github.com/wings-software/portal/commons/go/lib/kaniko"
 	"github.com/wings-software/portal/commons/go/lib/utils"
-	pb "github.com/wings-software/portal/product/ci/addon/proto"
+	pb "github.com/wings-software/portal/product/ci/engine/proto"
 	"go.uber.org/zap"
 )
 
@@ -40,7 +40,7 @@ var (
 
 // PublishArtifacts represents an interface to upload files or build docker images and upload them to artifactory.
 type PublishArtifacts interface {
-	Publish(ctx context.Context, in *pb.PublishArtifactsRequest) error
+	Publish(ctx context.Context, files []*pb.UploadFile, images []*pb.BuildPublishImage) error
 }
 
 type publishArtifacts struct {
@@ -53,41 +53,41 @@ func NewPublishArtifactsTask(log *zap.SugaredLogger) PublishArtifacts {
 }
 
 //Publishes the artifacts to destination artifactories
-func (p *publishArtifacts) Publish(ctx context.Context, in *pb.PublishArtifactsRequest) error {
+func (p *publishArtifacts) Publish(ctx context.Context, files []*pb.UploadFile, images []*pb.BuildPublishImage) error {
 	start := time.Now()
 
 	// Basic preliminary validation to ensure that all fields are present. We can either process each request
 	// and error out if any argument is invalid or we can do preliminary validation to ensure that
 	// the request is mostly correct and then error out if an individual publish fails. We are going with
 	// the second approach here.
-	p.log.Infow("Publishing artifacts", "owner", "user")
-	err := validatePublishRequest(in)
+	p.log.Infow("Publishing artifacts")
+	err := validatePublishRequest(files, images)
 	if err != nil {
-		logWarning(p.log, "invalid artifact upload arguments", in.String(), start, err)
+		p.log.Errorw("Invalid artifact upload arguments", "elapsed_time_ms", utils.TimeSince(start), zap.Error(err))
 		return err
 	}
 
 	// Upload files
-	for _, file := range in.GetFiles() {
+	for _, file := range files {
 		switch file.GetDestination().GetLocationType() {
 		case pb.LocationType_JFROG:
 			if err := p.publishToJfrog(ctx, file.GetFilePattern(), file.GetDestination()); err != nil {
-				logWarning(p.log, "failed to publish to jfrog", file.String(), start, err)
+				logError(p.log, "failed to publish to jfrog", file.String(), start, err)
 				return err
 			}
 		case pb.LocationType_S3:
 			if err := p.publishToS3(ctx, file.GetFilePattern(), file.GetDestination()); err != nil {
-				logWarning(p.log, "failed to publish to s3", file.String(), start, err)
+				logError(p.log, "failed to publish to s3", file.String(), start, err)
 				return err
 			}
 		default:
-			logWarning(p.log, "unsupported artifact upload", file.String(), start, err)
+			logError(p.log, "unsupported artifact upload", file.String(), start, err)
 			return fmt.Errorf("unsupported artifact upload")
 		}
 	}
 
 	// Build and publish images
-	for _, img := range in.GetImages() {
+	for _, img := range images {
 		fs := filesystem.NewOSFileSystem(p.log)
 		destination := img.GetDestination()
 		locationType := destination.GetLocationType()
@@ -106,14 +106,13 @@ func (p *publishArtifacts) Publish(ctx context.Context, in *pb.PublishArtifactsR
 			err = errors.New(fmt.Sprintf("Unsupported location type for image %s", locationType))
 		}
 		if err != nil {
-			logWarning(p.log, "Unable to publish image", img.String(), start, err)
+			logError(p.log, "Unable to publish image", img.String(), start, err)
 			return err
 		}
 	}
 	p.log.Infow(
 		"Successfully published all artifacts",
 		"elapsed_time_ms", utils.TimeSince(start),
-		"owner", "user",
 	)
 	return nil
 }
@@ -147,7 +146,7 @@ func (p *publishArtifacts) buildPublishToDockerHub(dockerFilePath string, contex
 	}
 
 	if err = c.Publish(dockerFilePath, context, destinationURL); err != nil {
-		p.log.Warnw("Failed to publish image", "docker_file_path", dockerFilePath,
+		p.log.Errorw("Failed to publish image", "docker_file_path", dockerFilePath,
 			"context", context, "destination", destination.String(),
 			"time_elapsed_ms", utils.TimeSince(st), zap.Error(err))
 		return err
@@ -176,7 +175,7 @@ func (p *publishArtifacts) buildPublishToGCR(dockerFilePath, context string,
 	}
 
 	if err = c.Publish(dockerFilePath, context, destinationURL); err != nil {
-		p.log.Warnw("Failed to publish image", "docker_file_path", dockerFilePath,
+		p.log.Errorw("Failed to publish image", "docker_file_path", dockerFilePath,
 			"context", context, "destination", destination.String(),
 			"time_elapsed_ms", utils.TimeSince(st), zap.Error(err))
 		return err
@@ -211,7 +210,7 @@ func (p *publishArtifacts) buildPublishToECR(dockerFilePath, context string,
 	}
 
 	if err = c.Publish(dockerFilePath, context, destinationURL); err != nil {
-		p.log.Warnw("Failed to publish image", "docker_file_path", dockerFilePath,
+		p.log.Errorw("Failed to publish image", "docker_file_path", dockerFilePath,
 			"context", context, "destination", destination.String(),
 			"time_elapsed_ms", utils.TimeSince(st), zap.Error(err))
 		return err
@@ -306,9 +305,9 @@ func (p *publishArtifacts) publishToS3(ctx context.Context, filePattern string, 
 	return err
 }
 
-func logWarning(log *zap.SugaredLogger, warnMsg, args string, startTime time.Time, err error) {
-	log.Warnw(
-		warnMsg,
+func logError(log *zap.SugaredLogger, errMsg, args string, startTime time.Time, err error) {
+	log.Errorw(
+		errMsg,
 		"arguments", args,
 		"elapsed_time_ms", utils.TimeSince(startTime),
 		zap.Error(err),

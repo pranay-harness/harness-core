@@ -15,6 +15,8 @@ import (
 
 const defSleep = 5
 
+//go:generate mockgen -source command_context.go -package=exec -destination command_context_mock.go CmdContextFactory
+
 //CmdContextFactory describes an object capable of making a Command with a context
 type CmdContextFactory interface {
 	CmdContext(ctx context.Context, name string, args ...string) Command

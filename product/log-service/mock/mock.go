@@ -1,5 +1,5 @@
 package mock
 
-//go:generate mockgen -package=mock -destination=mock_store.go github.com/wings-software/log-service/store Store
-//go:generate mockgen -package=mock -destination=mock_stream.go github.com/wings-software/log-service/stream Stream
-//go:generate mockgen -package=mock -destination=mock_client.go github.com/wings-software/log-service/client Client
+//go:generate mockgen -source=../store/store.go -package=mock -destination=mock_store.go Store
+//go:generate mockgen -source=../stream/stream.go -package=mock -destination=mock_stream.go Stream
+//go:generate mockgen -source=../client/client.go -package=mock -destination=mock_client.go Client

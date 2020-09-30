@@ -9,7 +9,6 @@ import (
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/assert"
 	"github.com/wings-software/portal/commons/go/lib/logs"
-	addonpb "github.com/wings-software/portal/product/ci/addon/proto"
 	"go.uber.org/zap"
 )
 
@@ -40,22 +39,12 @@ func TestStartAfterFileCreation(t *testing.T) {
 		t.Fatalf("Unable to close temporary file")
 	}
 
-	in := &addonpb.StartTailRequest{
-		FileName:         tmpfile.Name(),
-		AdditionalFields: m1,
-	}
-
-	_, err = Start(ctx, in, log.Sugar())
+	err = Start(ctx, tmpfile.Name(), m1, false, log.Sugar())
 	if err != nil {
 		t.Fatalf("Could not start tailing")
 	}
 
-	in2 := &addonpb.StopTailRequest{
-		FileName: tmpfile.Name(),
-		Wait:     true,
-	}
-
-	_, err = Stop(ctx, in2, log.Sugar())
+	err = Stop(ctx, tmpfile.Name(), true, log.Sugar())
 	if err != nil {
 		t.Fatalf("Could not stop tailing")
 	}
@@ -91,12 +80,7 @@ func TestStartBeforeFileCreation(t *testing.T) {
 
 	fileName := "test_start_before_file_creation.txt"
 
-	in := &addonpb.StartTailRequest{
-		FileName:         fileName,
-		AdditionalFields: m1,
-	}
-
-	_, err := Start(ctx, in, log.Sugar())
+	err := Start(ctx, fileName, m1, false, log.Sugar())
 	if err != nil {
 		t.Fatalf("Could not start tailing")
 	}
@@ -107,12 +91,7 @@ func TestStartBeforeFileCreation(t *testing.T) {
 	}
 	defer os.Remove(fileName)
 
-	in2 := &addonpb.StopTailRequest{
-		FileName: fileName,
-		Wait:     true,
-	}
-
-	_, err = Stop(ctx, in2, log.Sugar())
+	err = Stop(ctx, fileName, true, log.Sugar())
 	if err != nil {
 		t.Fatalf("Could not stop tailing")
 	}
@@ -154,31 +133,21 @@ func TestMultipleStartSameFile(t *testing.T) {
 		t.Fatalf("Unable to close temporary file")
 	}
 
-	in := &addonpb.StartTailRequest{
-		FileName:         tmpfile.Name(),
-		AdditionalFields: m1,
-	}
-
 	// Invoke multiple Start RPCs
-	_, err = Start(ctx, in, log.Sugar())
+	err = Start(ctx, tmpfile.Name(), m1, false, log.Sugar())
 	if err != nil {
 		t.Fatalf("Could not start tailing")
 	}
-	_, err = Start(ctx, in, log.Sugar())
+	err = Start(ctx, tmpfile.Name(), m1, false, log.Sugar())
 	if err != nil {
 		t.Fatalf("Could not start tailing")
 	}
-	_, err = Start(ctx, in, log.Sugar())
+	err = Start(ctx, tmpfile.Name(), m1, false, log.Sugar())
 	if err != nil {
 		t.Fatalf("Could not start tailing")
 	}
 
-	in2 := &addonpb.StopTailRequest{
-		FileName: tmpfile.Name(),
-		Wait:     true,
-	}
-
-	_, err = Stop(ctx, in2, log.Sugar())
+	err = Stop(ctx, tmpfile.Name(), true, log.Sugar())
 	if err != nil {
 		t.Fatalf("Could not stop tailing")
 	}
@@ -201,12 +170,10 @@ func TestStopFilenameDoesntExist(t *testing.T) {
 
 	log, _ := logs.GetObservedLogger(zap.InfoLevel)
 
-	in2 := &addonpb.StopTailRequest{
-		FileName: "random_file_to_test.txt",
-		Wait:     true,
-	}
+	fileName := "random_file_to_test.txt"
+	wait := true
 
-	_, err := Stop(ctx, in2, log.Sugar())
+	err := Stop(ctx, fileName, wait, log.Sugar())
 	assert.Nil(t, err)
 }
 
@@ -235,25 +202,15 @@ func TestMultipleStopSameFilename(t *testing.T) {
 		t.Fatalf("Unable to close temporary file")
 	}
 
-	in := &addonpb.StartTailRequest{
-		FileName:         tmpfile.Name(),
-		AdditionalFields: m1,
-	}
-
 	// Invoke multiple Start RPCs
-	_, err = Start(ctx, in, log.Sugar())
+	err = Start(ctx, tmpfile.Name(), m1, false, log.Sugar())
 	if err != nil {
 		t.Fatalf("Could not start tailing")
 	}
 
-	in2 := &addonpb.StopTailRequest{
-		FileName: tmpfile.Name(),
-		Wait:     true,
-	}
-
-	_, err = Stop(ctx, in2, log.Sugar())
+	err = Stop(ctx, tmpfile.Name(), true, log.Sugar())
 	assert.Nil(t, err)
-	_, err = Stop(ctx, in2, log.Sugar())
+	err = Stop(ctx, tmpfile.Name(), true, log.Sugar())
 	assert.Nil(t, err)
 
 	obsLogs := observedLogs.All()

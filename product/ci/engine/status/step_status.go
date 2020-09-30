@@ -40,26 +40,14 @@ var (
 func SendStepStatus(ctx context.Context, accountID, callbackToken, taskID string, numRetries int32, timeTaken time.Duration,
 	stepOutput *output.StepOutput, stepErr error, log *zap.SugaredLogger) error {
 	start := time.Now()
-	arg, err := getRequestArg(accountID, callbackToken, taskID, numRetries, timeTaken, stepOutput, stepErr)
+	arg := getRequestArg(accountID, callbackToken, taskID, numRetries, timeTaken, stepOutput, stepErr)
+	err := sendStatusWithRetries(ctx, arg, log)
 	if err != nil {
-		log.Warnw(
-			"Failed to create arguments for sending step status",
-			"callback_token", callbackToken,
-			"step_output", stepOutput,
-			"step_error", stepErr,
-			"error_msg", zap.Error(err),
-			"elapsed_time_ms", utils.TimeSince(start))
-		return err
-	}
-
-	err = sendStatusWithRetries(ctx, arg, log)
-	if err != nil {
-		log.Warnw(
+		log.Errorw(
 			"Failed to send/execute delegate task status",
 			"callback_token", callbackToken,
 			"step_output", stepOutput,
 			"step_error", stepErr,
-			"error_msg", zap.Error(err),
 			"elapsed_time_ms", utils.TimeSince(start),
 			zap.Error(err),
 		)
@@ -70,7 +58,7 @@ func SendStepStatus(ctx context.Context, accountID, callbackToken, taskID string
 
 // getRequestArg returns arguments for send status rpc
 func getRequestArg(accountID, callbackToken, taskID string, numRetries int32, timeTaken time.Duration,
-	stepOutput *output.StepOutput, stepErr error) (*pb.SendTaskStatusRequest, error) {
+	stepOutput *output.StepOutput, stepErr error) *pb.SendTaskStatusRequest {
 	var stepErrMsg string
 	stepStatus := pb.StepExecutionStatus_SUCCESS
 	if stepErr != nil {
@@ -108,7 +96,7 @@ func getRequestArg(accountID, callbackToken, taskID string, numRetries int32, ti
 			},
 		},
 	}
-	return req, nil
+	return req
 }
 
 func sendStatusWithRetries(ctx context.Context, request *pb.SendTaskStatusRequest, log *zap.SugaredLogger) error {
@@ -116,7 +104,7 @@ func sendStatusWithRetries(ctx context.Context, request *pb.SendTaskStatusReques
 		start := time.Now()
 		err := sendRequest(ctx, request, log)
 		if err != nil {
-			log.Warnw(
+			log.Errorw(
 				"failed to send step status to delegate",
 				"elapsed_time_ms", utils.TimeSince(start),
 				zap.Error(err),

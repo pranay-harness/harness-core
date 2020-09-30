@@ -5,24 +5,29 @@ package io.harness.product.ci.engine.proto;
 option java_multiple_files = true;
 option go_package = "cienginepb";
 
-// Import CI Addon protos since step definitions
-// will closely resemble the protobufs there.
-import "product/ci/addon/proto/addon.proto";
-
-message PublishArtifactsStep {
-  repeated io.harness.product.ci.addon.proto.UploadFile files = 1;
-  repeated io.harness.product.ci.addon.proto.BuildPublishImage images = 2;
-}
+import "product/ci/engine/proto/artifact.proto";
 
 message StepContext {
   int32 num_retries = 1;
   int64 execution_timeout_secs = 2;
 }
 
+message PublishArtifactsStep {
+  repeated UploadFile files = 1;
+  repeated BuildPublishImage images = 2;
+}
+
 message RunStep {
   repeated string commands = 1;
   StepContext context = 2;
   repeated string envVarOutputs = 3;  // produced output variables
+  uint32 container_port = 4;          // Port of the container on which run step needs to be executed
+}
+
+message PluginStep {
+  string image = 1;
+  StepContext context = 2;
+  uint32 container_port = 3;  // Port of the container on which plugin step needs to be executed
 }
 
 message SaveCacheStep {
@@ -43,6 +48,7 @@ message UnitStep {
     SaveCacheStep save_cache = 4;
     RestoreCacheStep restore_cache = 5;
     PublishArtifactsStep publish_artifacts = 6;
+    PluginStep plugin = 9;
   }
   string callback_token = 7;
   string task_id = 8;
@@ -64,39 +70,4 @@ message Step {
 message Execution {
   repeated Step steps = 1;
   string account_id = 2;
-}
-
-// StageOutput is combination of outputs produced by steps in a stage. It can be referenced
-// by a step using expression values e.g. JEXL. At start of a stage, stage output is empty.
-message StageOutput {
-  // StepOutput is output produced by a step. Currently, only run step can produce outputs.
-  message StepOutput {
-    string step_id = 1;
-    map<string, string> output = 2;
-  }
-  repeated StepOutput step_outputs = 1;
-}
-
-message ExecuteStepRequest {
-  UnitStep step = 1;
-  StageOutput stage_output = 2;
-  string account_id = 3;
-}
-
-message ExecuteStepResponse {
-  map<string, string> output = 1;  // Step output
-}
-
-message SignalStopRequest {
-}
-
-message SignalStopResponse {
-}
-
-service LiteEngine {
-  // Synchronous RPC to execute a step
-  rpc ExecuteStep(ExecuteStepRequest) returns (ExecuteStepResponse);
-
-  // Synchronous RPC to send a signal to stop GRPC server
-  rpc SignalStop(SignalStopRequest) returns (SignalStopResponse);
 }

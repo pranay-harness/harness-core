@@ -1,81 +1,135 @@
 package grpc
 
 import (
+	"context"
+	"fmt"
+	"io"
 	"testing"
 
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/assert"
 	"github.com/wings-software/portal/commons/go/lib/logs"
-	pb "github.com/wings-software/portal/product/ci/addon/proto"
+	addonpb "github.com/wings-software/portal/product/ci/addon/proto"
+	"github.com/wings-software/portal/product/ci/addon/tasks"
+	mtasks "github.com/wings-software/portal/product/ci/addon/tasks/mocks"
+	pb "github.com/wings-software/portal/product/ci/engine/proto"
 	"go.uber.org/zap"
-	"golang.org/x/net/context"
 )
 
-func Test_handler_PublishArtifacts(t *testing.T) {
-	ctrl, ctx := gomock.WithContext(context.Background(), t)
-	defer ctrl.Finish()
-
-	oldLogger := newRemoteLogger
-	defer func() { newRemoteLogger = oldLogger }()
-	newRemoteLogger = func(key string) (rl *logs.RemoteLogger, err error) {
-		log, _ := logs.GetObservedLogger(zap.InfoLevel)
-		return &logs.RemoteLogger{BaseLogger: log.Sugar(), Writer: logs.NopWriter()}, nil
-	}
-
-	stopCh := make(chan bool)
-	log, _ := logs.GetObservedLogger(zap.InfoLevel)
-	h := NewAddonHandler(stopCh, log.Sugar())
-	taskID := "test-task"
-
-	tests := []struct {
-		name        string
-		input       *pb.PublishArtifactsRequest
-		expectedErr bool
-	}{
-		{
-			name:        "validation failed",
-			input:       nil,
-			expectedErr: true,
-		},
-		{
-			name: "success",
-			input: &pb.PublishArtifactsRequest{
-				TaskId: &pb.TaskId{Id: taskID},
-			},
-			expectedErr: false,
-		},
-	}
-	for _, tc := range tests {
-		_, got := h.PublishArtifacts(ctx, tc.input)
-		if tc.expectedErr == (got == nil) {
-			t.Fatalf("%s: expected error: %v, got: %v", tc.name, tc.expectedErr, got)
-		}
-	}
-}
-
-func Test_TaskProgress(t *testing.T) {
-	ctrl, ctx := gomock.WithContext(context.Background(), t)
-	defer ctrl.Finish()
-
-	stopCh := make(chan bool)
-	log, _ := logs.GetObservedLogger(zap.InfoLevel)
-	h := NewAddonHandler(stopCh, log.Sugar())
-	_, err := h.TaskProgress(ctx, nil)
-	assert.Nil(t, err)
-}
-
-func Test_TaskProgressUpdates(t *testing.T) {
-	stopCh := make(chan bool)
-	log, _ := logs.GetObservedLogger(zap.InfoLevel)
-	h := NewAddonHandler(stopCh, log.Sugar())
-	err := h.TaskProgressUpdates(nil, nil)
-	assert.Nil(t, err)
-}
-
-func Test_SignalStop(t *testing.T) {
+func TestSignalStop(t *testing.T) {
 	stopCh := make(chan bool)
 	log, _ := logs.GetObservedLogger(zap.InfoLevel)
 	h := NewAddonHandler(stopCh, log.Sugar())
 	_, err := h.SignalStop(nil, nil)
+	assert.Nil(t, err)
+}
+
+func TestExecuteNilStep(t *testing.T) {
+	ctrl, ctx := gomock.WithContext(context.Background(), t)
+	defer ctrl.Finish()
+
+	stopCh := make(chan bool)
+	log, _ := logs.GetObservedLogger(zap.InfoLevel)
+
+	oldLogger := newRemoteLogger
+	defer func() { newRemoteLogger = oldLogger }()
+	newRemoteLogger = func(key string) (rl *logs.RemoteLogger, err error) {
+		return &logs.RemoteLogger{BaseLogger: log.Sugar(), Writer: logs.NopWriter()}, nil
+	}
+
+	h := NewAddonHandler(stopCh, log.Sugar())
+	_, err := h.ExecuteStep(ctx, nil)
+	assert.NotNil(t, err)
+}
+
+func TestExecuteLoggerErr(t *testing.T) {
+	ctrl, ctx := gomock.WithContext(context.Background(), t)
+	defer ctrl.Finish()
+
+	stopCh := make(chan bool)
+	log, _ := logs.GetObservedLogger(zap.InfoLevel)
+
+	oldLogger := newRemoteLogger
+	defer func() { newRemoteLogger = oldLogger }()
+	newRemoteLogger = func(key string) (rl *logs.RemoteLogger, err error) {
+		return nil, fmt.Errorf("remote logger not found")
+	}
+
+	h := NewAddonHandler(stopCh, log.Sugar())
+	_, err := h.ExecuteStep(ctx, nil)
+	assert.NotNil(t, err)
+}
+
+func TestExecuteRunStep(t *testing.T) {
+	ctrl, ctx := gomock.WithContext(context.Background(), t)
+	defer ctrl.Finish()
+
+	stopCh := make(chan bool)
+	log, _ := logs.GetObservedLogger(zap.InfoLevel)
+	mockStep := mtasks.NewMockRunTask(ctrl)
+
+	in := &addonpb.ExecuteStepRequest{
+		Step: &pb.UnitStep{
+			Id: "step1",
+			Step: &pb.UnitStep_Run{
+				Run: &pb.RunStep{
+					Commands: []string{"ls"},
+				},
+			},
+		},
+	}
+
+	oldLogger := newRemoteLogger
+	defer func() { newRemoteLogger = oldLogger }()
+	newRemoteLogger = func(key string) (rl *logs.RemoteLogger, err error) {
+		return &logs.RemoteLogger{BaseLogger: log.Sugar(), Writer: logs.NopWriter()}, nil
+	}
+
+	oldRunTask := newRunTask
+	defer func() { newRunTask = oldRunTask }()
+	newRunTask = func(step *pb.UnitStep, tmpFilePath string, log *zap.SugaredLogger, w io.Writer) tasks.RunTask {
+		return mockStep
+	}
+
+	mockStep.EXPECT().Run(ctx).Return(nil, int32(1), nil)
+	h := NewAddonHandler(stopCh, log.Sugar())
+	_, err := h.ExecuteStep(ctx, in)
+	assert.Nil(t, err)
+}
+
+func TestExecutePluginStep(t *testing.T) {
+	ctrl, ctx := gomock.WithContext(context.Background(), t)
+	defer ctrl.Finish()
+
+	stopCh := make(chan bool)
+	log, _ := logs.GetObservedLogger(zap.InfoLevel)
+	mockStep := mtasks.NewMockPluginTask(ctrl)
+
+	in := &addonpb.ExecuteStepRequest{
+		Step: &pb.UnitStep{
+			Id: "step1",
+			Step: &pb.UnitStep_Plugin{
+				Plugin: &pb.PluginStep{
+					Image: "plugin/drone-git",
+				},
+			},
+		},
+	}
+
+	oldLogger := newRemoteLogger
+	defer func() { newRemoteLogger = oldLogger }()
+	newRemoteLogger = func(key string) (rl *logs.RemoteLogger, err error) {
+		return &logs.RemoteLogger{BaseLogger: log.Sugar(), Writer: logs.NopWriter()}, nil
+	}
+
+	oldPluginTask := newPluginTask
+	defer func() { newPluginTask = oldPluginTask }()
+	newPluginTask = func(step *pb.UnitStep, log *zap.SugaredLogger, w io.Writer) tasks.PluginTask {
+		return mockStep
+	}
+
+	mockStep.EXPECT().Run(ctx).Return(int32(1), nil)
+	h := NewAddonHandler(stopCh, log.Sugar())
+	_, err := h.ExecuteStep(ctx, in)
 	assert.Nil(t, err)
 }

@@ -10,12 +10,10 @@ go_library(
     visibility = ["//visibility:public"],
     deps = [
         "//product/ci/addon/proto:go_default_library",
-        "//product/ci/addon/tail:go_default_library",
         "//product/ci/addon/tasks:go_default_library",
+        "//product/ci/engine/proto:go_default_library",
         "//product/ci/logger/util:go_default_library",
         "@org_golang_google_grpc//:go_default_library",
-        "@org_golang_google_grpc//codes:go_default_library",
-        "@org_golang_google_grpc//status:go_default_library",
         "@org_golang_x_net//context:go_default_library",
         "@org_uber_go_zap//:go_default_library",
     ],
@@ -31,10 +29,12 @@ go_test(
     deps = [
         "//commons/go/lib/logs:go_default_library",
         "//product/ci/addon/proto:go_default_library",
+        "//product/ci/addon/tasks:go_default_library",
+        "//product/ci/addon/tasks/mocks:go_default_library",
+        "//product/ci/engine/proto:go_default_library",
         "@com_github_golang_mock//gomock:go_default_library",
         "@com_github_stretchr_testify//assert:go_default_library",
         "@org_golang_google_grpc//:go_default_library",
-        "@org_golang_x_net//context:go_default_library",
         "@org_uber_go_zap//:go_default_library",
     ],
 )

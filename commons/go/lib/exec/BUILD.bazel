@@ -5,6 +5,7 @@ go_library(
     srcs = [
         "command.go",
         "command_context.go",
+        "command_context_mock.go",
         "command_mock.go",
         "process_state.go",
         "process_state_mock.go",

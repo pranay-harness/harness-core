@@ -6,13 +6,14 @@ replace github.com/wings-software/portal/product/log-service => ../../../product
 
 require (
 	cloud.google.com/go/storage v1.8.0
-	github.com/aws/aws-sdk-go v1.34.10
+	github.com/aws/aws-sdk-go v1.34.29
 	github.com/cenkalti/backoff v2.2.1+incompatible // indirect
 	github.com/cenkalti/backoff/v4 v4.0.2
 	github.com/go-sql-driver/mysql v1.5.0
 	github.com/golang/mock v1.4.4
 	github.com/grpc-ecosystem/go-grpc-middleware v1.2.1
 	github.com/hashicorp/go-multierror v1.1.0
+	github.com/hpcloud/tail v1.0.0
 	github.com/minio/minio-go/v6 v6.0.57
 	github.com/opentracing/opentracing-go v1.1.0
 	github.com/pkg/errors v0.9.1
@@ -23,4 +24,6 @@ require (
 	google.golang.org/api v0.24.0
 	google.golang.org/grpc v1.29.1
 	gopkg.in/DATA-DOG/go-sqlmock.v1 v1.3.0
+	gopkg.in/fsnotify.v1 v1.4.7 // indirect
+	gopkg.in/tomb.v1 v1.0.0-20141024135613-dd632973f1e7 // indirect
 )

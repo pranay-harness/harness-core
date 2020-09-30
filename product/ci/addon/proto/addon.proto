@@ -5,79 +5,16 @@ package io.harness.product.ci.addon.proto;
 option java_multiple_files = true;
 option go_package = "ciaddonpb";
 
-import "product/ci/addon/proto/progress.proto";
+import "product/ci/engine/proto/execution.proto";
 
-enum ErrorType {
-  NO_ERROR = 0;
-  NETWORK_ERROR = 1;
-  AUTHENTICATION_ERROR = 2;
+message ExecuteStepRequest {
+  io.harness.product.ci.engine.proto.UnitStep step = 1;
+  string tmpFilePath = 2;  // Path to store temporary files
 }
 
-enum LocationType {
-  UNKNOWN = 0;  // Default value of enum is 0
-  // Artifactories
-  S3 = 1;
-  GCS = 2;
-  JFROG = 3;
-  // Registries
-  GCR = 4;
-  ECR = 5;
-  DOCKERHUB = 6;
-}
-
-enum AuthType {
-  BASIC_AUTH = 0;   // Assumes USERNAME_id and PASSWORD_id to be present
-  SECRET_FILE = 1;  // Assumes SECRET_PATH_id to be present
-  ACCESS_KEY = 2;   // Assumes ACCESS_KEY_id and/or SECRET_KEY_id to be present
-}
-
-message Error {
-  ErrorType error = 1;
-  string description = 2;
-}
-
-// Task global unique identifier
-message TaskId {
-  string id = 1;
-}
-
-// Details of connector
-message Connector {
-  string id = 1;
-  AuthType auth = 2;
-}
-
-message BuildPublishImage {
-  string docker_file = 1;
-  string context = 2;
-  Destination destination = 3;
-}
-
-message UploadFile {
-  string file_pattern = 1;
-  Destination destination = 2;  // location to copy the file
-}
-
-// Destination to upload to
-message Destination {
-  string destination_url = 1;
-  Connector connector = 2;
-  LocationType location_type = 3;
-  string region = 4;  // Valid only for S3 connector
-}
-
-message PublishArtifactsRequest {
-  TaskId task_id = 1;
-  repeated UploadFile files = 2;
-  repeated BuildPublishImage images = 3;
-  string step_id = 4;  // Necessary for all addon RPCs to propagate Step ID
-}
-
-message PublishArtifactsResponse {
-}
-
-message TaskProgressRequest {
-  TaskId task_id = 1;
+message ExecuteStepResponse {
+  map<string, string> output = 1;  // Step output
+  int32 num_retries = 2;
 }
 
 message SignalStopRequest {
@@ -86,64 +23,10 @@ message SignalStopRequest {
 message SignalStopResponse {
 }
 
-message TaskProgressResponse {
-  TaskStatus current_stage = 1;
-  Error error = 2;
-}
-
-message TaskProgressUpdatesRequest {
-  TaskId task_id = 1;
-}
-
-message TaskProgressUpdatesResponse {
-  TaskStatus current_stage = 1;
-  Error error = 2;
-}
-
-message StartTailRequest {
-  string file_name = 1;
-
-  // Logs are emitted in JSON by default. If this value is set as true, logs are emitted to stdout/stderr
-  // as they are.
-  bool disallow_json = 2;
-
-  // Additional fields to append log messages with. For example, if the log message is
-  // "20/12/7 INFO: Test" and additional_fields are {"foo": "x", "bar": "y"} then the
-  // emitted log message is {"foo": "x", "bar": "y", "log": "20/12/7 INFO: Test"}
-  // Not valid if disallow_json is specified as true
-  map<string, string> additional_fields = 3;
-}
-
-message StartTailResponse {
-}
-
-message StopTailRequest {
-  string file_name = 1;
-  bool wait = 2;  // Wait for file tailing to be completed before returning
-}
-
-message StopTailResponse {
-}
-
 service Addon {
-  // Asynchronous RPC to upload files as well as build docker images and publish them
-  // It takes a list of files/file_patterns and uploads them to a destination location
-  // It also takes a list of local Dockerfiles, builds them and upload to specified destination location
-  // call RPC TaskProgress() or TaskProgressUpdates() with this task_id to get the status
-  rpc PublishArtifacts(PublishArtifactsRequest) returns (PublishArtifactsResponse);
+  // Synchronous RPC to execute a step
+  rpc ExecuteStep(ExecuteStepRequest) returns (ExecuteStepResponse);
 
   // Synchronous RPC to send a signal to stop GRPC server
   rpc SignalStop(SignalStopRequest) returns (SignalStopResponse);
-
-  // RPC to start tailing on a file. Used for logging purposes.
-  rpc StartTail(StartTailRequest) returns (StartTailResponse);
-
-  // RPC to stop tailing on a file.
-  rpc StopTail(StopTailRequest) returns (StopTailResponse);
-
-  // Synchronous RPC to get progress of a given task_id
-  rpc TaskProgress(TaskProgressRequest) returns (TaskProgressResponse);
-
-  // Streaming RPC to get periodic progress updates of a given task_id.
-  rpc TaskProgressUpdates(TaskProgressUpdatesRequest) returns (stream TaskProgressUpdatesResponse);
 }

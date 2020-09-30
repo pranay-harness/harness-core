@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/base64"
 	"fmt"
-	"net"
 	"testing"
 	"time"
 
@@ -13,41 +12,12 @@ import (
 	"github.com/pkg/errors"
 	"github.com/stretchr/testify/assert"
 	"github.com/wings-software/portal/commons/go/lib/logs"
-	addon "github.com/wings-software/portal/product/ci/addon/grpc"
 	caddon "github.com/wings-software/portal/product/ci/addon/grpc/client"
-	mgrpc "github.com/wings-software/portal/product/ci/addon/grpc/client/mocks"
-	addonpb "github.com/wings-software/portal/product/ci/addon/proto"
-	cengine "github.com/wings-software/portal/product/ci/engine/grpc/client"
-	emgrpc "github.com/wings-software/portal/product/ci/engine/grpc/client/mocks"
+	mexecutor "github.com/wings-software/portal/product/ci/engine/executor/mocks"
 	"github.com/wings-software/portal/product/ci/engine/output"
 	pb "github.com/wings-software/portal/product/ci/engine/proto"
 	"go.uber.org/zap"
-	"google.golang.org/grpc"
-	"google.golang.org/grpc/test/bufconn"
 )
-
-const bufSize = 1024 * 1024
-
-var lis *bufconn.Listener
-
-func init() {
-	log, _ := logs.GetObservedLogger(zap.InfoLevel)
-	stopCh := make(chan bool)
-	lis = bufconn.Listen(bufSize)
-
-	addonServer := addon.NewAddonHandler(stopCh, log.Sugar())
-	s1 := grpc.NewServer()
-	addonpb.RegisterAddonServer(s1, addonServer)
-	go func() {
-		if err := s1.Serve(lis); err != nil {
-			panic(fmt.Sprintf("Server exited with error: %d", err))
-		}
-	}()
-}
-
-func bufDialer(context.Context, string) (net.Conn, error) {
-	return lis.Dial()
-}
 
 func getEncodedStageProto(t *testing.T, execution *pb.Execution) string {
 	data, err := proto.Marshal(execution)
@@ -55,6 +25,25 @@ func getEncodedStageProto(t *testing.T, execution *pb.Execution) string {
 		t.Fatalf("marshaling error: %v", err)
 	}
 	return base64.StdEncoding.EncodeToString(data)
+}
+
+func getTestRunStep(id string, cmd []string, envs []string, port uint32) *pb.UnitStep {
+	ctx := &pb.StepContext{
+		NumRetries: 2,
+	}
+
+	return &pb.UnitStep{
+		Id:          id,
+		DisplayName: fmt.Sprintf("step %s", id),
+		Step: &pb.UnitStep_Run{
+			Run: &pb.RunStep{
+				Context:       ctx,
+				Commands:      cmd,
+				EnvVarOutputs: envs,
+				ContainerPort: port,
+			},
+		},
+	}
 }
 
 func TestStageRun(t *testing.T) {
@@ -101,49 +90,41 @@ func TestStageRun(t *testing.T) {
 	encodedExecutionProto3 := getEncodedStageProto(t, executionProto3)
 	incorrectBase64Enc := "x"
 	invalidStageEnc := "YWJjZA=="
-	logPath := "/a/b"
 	log, _ := logs.GetObservedLogger(zap.InfoLevel)
 
 	tests := []struct {
 		name         string
 		encodedStage string
-		logPath      string
 		expectedErr  bool
 	}{
 		{
 			name:         "incorrect encoded stage",
 			encodedStage: incorrectBase64Enc,
-			logPath:      logPath,
 			expectedErr:  true,
 		},
 		{
 			name:         "stage encoding not in execution proto format",
 			encodedStage: invalidStageEnc,
-			logPath:      logPath,
 			expectedErr:  true,
 		},
 		{
 			name:         "empty stage success",
 			encodedStage: "",
-			logPath:      logPath,
 			expectedErr:  false,
 		},
 		{
 			name:         "stage with error in run step",
 			encodedStage: encodedExecutionProto1,
-			logPath:      logPath,
 			expectedErr:  true,
 		},
 		{
 			name:         "step ID is not set in stage",
 			encodedStage: encodedExecutionProto2,
-			logPath:      logPath,
 			expectedErr:  true,
 		},
 		{
 			name:         "parallel step ID is not set in stage",
 			encodedStage: encodedExecutionProto3,
-			logPath:      logPath,
 			expectedErr:  true,
 		},
 	}
@@ -163,7 +144,7 @@ func TestStageRun(t *testing.T) {
 	}
 
 	for _, tc := range tests {
-		e := NewStageExecutor(tc.encodedStage, tc.logPath, tmpFilePath, nil, false, log.Sugar())
+		e := NewStageExecutor(tc.encodedStage, tmpFilePath, false, log.Sugar())
 		got := e.Run()
 		if tc.expectedErr == (got == nil) {
 			t.Fatalf("%s: expected error: %v, got: %v", tc.name, tc.expectedErr, got)
@@ -171,95 +152,75 @@ func TestStageRun(t *testing.T) {
 	}
 }
 
-func TestExecuteStage(t *testing.T) {
-	logPath := "/a/b"
-	tmpFilePath := "/tmp"
-	emptyStage := ""
-	ports := []uint{9006}
-	log, _ := logs.GetObservedLogger(zap.InfoLevel)
-
-	oldAClient := newAddonClient
-	defer func() { newAddonClient = oldAClient }()
-	// Initialize a mock CI addon
-	newAddonClient = func(port uint, log *zap.SugaredLogger) (caddon.AddonClient, error) {
-		return nil, errors.New("Could not create client")
-	}
-
-	oldEClient := newLiteEngineClient
-	defer func() { newLiteEngineClient = oldEClient }()
-	newLiteEngineClient = func(port uint, log *zap.SugaredLogger) (cengine.LiteEngineClient, error) {
-		return nil, errors.New("Could not create client")
-	}
-
-	ExecuteStage(emptyStage, logPath, tmpFilePath, ports, false, log.Sugar())
-}
-
-func TestStopAddonServer(t *testing.T) {
-	// ctx := context.Background()
-	ctrl, ctx := gomock.WithContext(context.Background(), t)
+func TestStageSuccess(t *testing.T) {
+	ctrl, _ := gomock.WithContext(context.Background(), t)
 	defer ctrl.Finish()
 
-	conn, err := grpc.DialContext(ctx, "bufnet", grpc.WithContextDialer(bufDialer), grpc.WithInsecure())
-	if err != nil {
-		t.Fatalf("Failed to dial bufnet: %v", err)
+	tmpFilePath := "/tmp"
+	log, _ := logs.GetObservedLogger(zap.InfoLevel)
+	outputKey := "foo"
+	outputVal1 := "step1"
+	outputVal2 := "step2"
+	outputVal3 := "step3"
+	stepOutput1 := &output.StepOutput{Output: map[string]string{outputKey: outputVal1}}
+	stepOutput2 := &output.StepOutput{Output: map[string]string{outputKey: outputVal2}}
+	stepOutput3 := &output.StepOutput{Output: map[string]string{outputKey: outputVal3}}
+	psOutput := map[string]*output.StepOutput{"step1": stepOutput1, "step2": stepOutput2}
+
+	step1 := getTestRunStep("step1", []string{`echo step1`}, []string{}, uint32(8000))
+	step2 := getTestRunStep("step2", []string{`echo step2`}, []string{}, uint32(8001))
+	step3 := getTestRunStep("step3", []string{`echo step3`}, []string{}, uint32(8001))
+	pstep := &pb.ParallelStep{
+		Id:    "parallel",
+		Steps: []*pb.UnitStep{step1, step2},
 	}
-	defer conn.Close()
-	client := addonpb.NewAddonClient(conn)
-	fmt.Println(client)
+
+	execution := &pb.Execution{
+		Steps: []*pb.Step{
+			{
+				Step: &pb.Step_Parallel{Parallel: pstep},
+			},
+			{
+				Step: &pb.Step_Unit{Unit: step3},
+			},
+		},
+	}
+	encodedStage := getEncodedStageProto(t, execution)
+
 	oldClient := newAddonClient
 	defer func() { newAddonClient = oldClient }()
 	// Initialize a mock CI addon
-	mockClient := mgrpc.NewMockAddonClient(ctrl)
-	mockClient.EXPECT().CloseConn().Return(nil)
-	mockClient.EXPECT().Client().Return(client)
 	newAddonClient = func(port uint, log *zap.SugaredLogger) (caddon.AddonClient, error) {
-		return mockClient, nil
+		return nil, errors.New("Could not create client")
 	}
 
-	logPath := "/a/b"
-	tmpFilePath := "/tmp"
-	emptyStage := ""
-	log, _ := logs.GetObservedLogger(zap.InfoLevel)
-	executor := &stageExecutor{
-		log:          log.Sugar(),
-		stepLogPath:  logPath,
-		tmpFilePath:  tmpFilePath,
-		encodedStage: emptyStage,
+	// Mock out unit Executor run step
+	mockUnitExecutor := mexecutor.NewMockUnitExecutor(ctrl)
+	mockParalleExecutor := mexecutor.NewMockParallelExecutor(ctrl)
+	e := &stageExecutor{
+		unitExecutor:     mockUnitExecutor,
+		parallelExecutor: mockParalleExecutor,
+		tmpFilePath:      tmpFilePath,
+		log:              log.Sugar(),
+		encodedStage:     encodedStage,
+		stageOutput:      make(output.StageOutput),
 	}
-	err = executor.stopAddonServer(ctx)
+	mockParalleExecutor.EXPECT().Run(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(psOutput, nil)
+	mockParalleExecutor.EXPECT().Cleanup(gomock.Any(), gomock.Any()).Return(nil)
+	mockUnitExecutor.EXPECT().Run(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(stepOutput3, nil)
+	mockUnitExecutor.EXPECT().Cleanup(gomock.Any(), gomock.Any()).Return(nil)
+
+	err := e.Run()
 	assert.Equal(t, err, nil)
+	assert.Equal(t, e.stageOutput["step1"], stepOutput1)
+	assert.Equal(t, e.stageOutput["step2"], stepOutput2)
+	assert.Equal(t, e.stageOutput["step3"], stepOutput3)
 }
 
-func TestStopEngineServerError(t *testing.T) {
-	ctrl, ctx := gomock.WithContext(context.Background(), t)
-	defer ctrl.Finish()
-
-	conn, err := grpc.DialContext(ctx, "bufnet", grpc.WithContextDialer(bufDialer), grpc.WithInsecure())
-	if err != nil {
-		t.Fatalf("Failed to dial bufnet: %v", err)
-	}
-	defer conn.Close()
-	client := pb.NewLiteEngineClient(conn)
-	oldClient := newLiteEngineClient
-	defer func() { newLiteEngineClient = oldClient }()
-	// Initialize a mock Lite engine
-	mockClient := emgrpc.NewMockLiteEngineClient(ctrl)
-	mockClient.EXPECT().CloseConn().Return(nil)
-	mockClient.EXPECT().Client().Return(client)
-	newLiteEngineClient = func(port uint, log *zap.SugaredLogger) (cengine.LiteEngineClient, error) {
-		return mockClient, nil
-	}
-
-	logPath := "/a/b"
+func TestExecuteStage(t *testing.T) {
 	tmpFilePath := "/tmp"
 	emptyStage := ""
 	log, _ := logs.GetObservedLogger(zap.InfoLevel)
-	executor := &stageExecutor{
-		log:          log.Sugar(),
-		stepLogPath:  logPath,
-		tmpFilePath:  tmpFilePath,
-		encodedStage: emptyStage,
-	}
-	err = executor.stopWorkerLiteEngine(ctx, uint(3))
-	assert.NotEqual(t, err, nil)
+
+	ExecuteStage(emptyStage, tmpFilePath, false, log.Sugar())
 }

@@ -1,8 +1,8 @@
 package io.harness.beans.serializer;
 
-import static io.harness.product.ci.addon.proto.AuthType.ACCESS_KEY;
-import static io.harness.product.ci.addon.proto.AuthType.BASIC_AUTH;
-import static io.harness.product.ci.addon.proto.AuthType.SECRET_FILE;
+import static io.harness.product.ci.engine.proto.AuthType.ACCESS_KEY;
+import static io.harness.product.ci.engine.proto.AuthType.BASIC_AUTH;
+import static io.harness.product.ci.engine.proto.AuthType.SECRET_FILE;
 import static io.harness.rule.OwnerRule.ALEKSANDAR;
 import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -19,10 +19,10 @@ import io.harness.beans.steps.stepinfo.publish.artifact.connectors.DockerhubConn
 import io.harness.beans.steps.stepinfo.publish.artifact.connectors.EcrConnector;
 import io.harness.beans.steps.stepinfo.publish.artifact.connectors.GcrConnector;
 import io.harness.category.element.UnitTests;
-import io.harness.product.ci.addon.proto.BuildPublishImage;
-import io.harness.product.ci.addon.proto.LocationType;
-import io.harness.product.ci.addon.proto.UploadFile;
+import io.harness.product.ci.engine.proto.BuildPublishImage;
+import io.harness.product.ci.engine.proto.LocationType;
 import io.harness.product.ci.engine.proto.UnitStep;
+import io.harness.product.ci.engine.proto.UploadFile;
 import io.harness.rule.Owner;
 import org.apache.commons.codec.binary.Base64;
 import org.junit.Test;

@@ -4,11 +4,11 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"github.com/pkg/errors"
 	"os"
 	"regexp"
 	"time"
 
+	"github.com/pkg/errors"
 	pb "github.com/wings-software/portal/16-expression-service/src/main/proto/io/harness/expression/service"
 	"github.com/wings-software/portal/commons/go/lib/16-expression-service/grpc"
 	"github.com/wings-software/portal/commons/go/lib/utils"
@@ -43,12 +43,13 @@ func EvaluateJEXL(ctx context.Context, expressions []string, o output.StageOutpu
 	start := time.Now()
 	arg, err := getRequestArg(expressions, o)
 	if err != nil {
-		log.Warnw(
+		log.Errorw(
 			"Failed to create arguments for JEXL evaluation",
 			"expressions", expressions,
 			"stage_output", o,
-			"error_msg", zap.Error(err),
-			"elapsed_time_ms", utils.TimeSince(start))
+			"elapsed_time_ms", utils.TimeSince(start),
+			zap.Error(err),
+		)
 		return nil, err
 	}
 	if len(arg.Queries) == 0 {
@@ -57,7 +58,7 @@ func EvaluateJEXL(ctx context.Context, expressions []string, o output.StageOutpu
 
 	response, err := sendRequest(ctx, arg, log)
 	if err != nil {
-		log.Warnw(
+		log.Errorw(
 			"Failed to execute expression evaluation",
 			"expressions", expressions,
 			"stage_output", o,
@@ -69,7 +70,7 @@ func EvaluateJEXL(ctx context.Context, expressions []string, o output.StageOutpu
 	result := make(map[string]string)
 	for _, val := range response.GetValues() {
 		if val.GetStatusCode() != pb.ExpressionValue_SUCCESS {
-			log.Warnw(
+			log.Errorw(
 				"Failed to evaluate expression",
 				"expression", val.GetJexl(),
 				"stage_output", o,

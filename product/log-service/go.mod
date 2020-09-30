@@ -8,6 +8,7 @@ require (
 	github.com/aws/aws-sdk-go v1.34.29
 	github.com/go-chi/chi v4.1.2+incompatible
 	github.com/gofrs/uuid v3.3.0+incompatible
+	github.com/golang/mock v1.4.4
 	github.com/joho/godotenv v1.3.0
 	github.com/kelseyhightower/envconfig v1.4.0
 	github.com/sirupsen/logrus v1.6.0
