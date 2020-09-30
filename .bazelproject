@@ -20,6 +20,7 @@ directories:
   22-timeout-engine
   22-wait-engine
   23-delegate-service-driver
+  23-sm-core
   24-common-entities
   24-ng-manager-service-beans
   tools/bazel
