@@ -106,6 +106,7 @@ build_bazel_module 22-secret-manager-client
 build_bazel_module 22-timeout-engine
 build_bazel_module 22-wait-engine
 build_bazel_module 23-delegate-service-driver
+build_bazel_module 23-sm-core
 build_bazel_module 24-common-entities
 build_bazel_module 24-ng-manager-service-beans
 build_java_proto_module 13-grpc-api
