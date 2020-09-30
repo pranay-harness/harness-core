@@ -111,7 +111,7 @@ public class InvitesServiceImpl implements InvitesService {
           return wrapperForTransactions(this ::newInviteHandler, invite);
         }
         resendInvitationMail(existingInviteOptional.get());
-        return InviteOperationResponse.USER_INVITED_SUCCESSFULLY;
+        return InviteOperationResponse.USER_INVITE_RESENT;
       }
 
       // Case: user is not registered in the account
@@ -122,7 +122,8 @@ public class InvitesServiceImpl implements InvitesService {
       if (existingInvite.getApproved()) {
         return InviteOperationResponse.ACCOUNT_INVITE_ACCEPTED;
       }
-      return wrapperForTransactions(this ::newInviteHandler, invite);
+      resendInvitationMail(existingInvite);
+      return InviteOperationResponse.USER_INVITE_RESENT;
 
     } catch (DuplicateKeyException ex) {
       throw new DuplicateFieldException(
@@ -141,7 +142,7 @@ public class InvitesServiceImpl implements InvitesService {
 
   private Optional<Invite> getExistingInvite(Invite invite) {
     return invitesRepository
-        .findByAccountIdentifierAndOrgIdentifierAndProjectIdentifierAndEmailAndRoleAndInviteTypeAndDeletedNot(
+        .findFirstByAccountIdentifierAndOrgIdentifierAndProjectIdentifierAndEmailAndRoleAndInviteTypeAndDeletedNot(
             invite.getAccountIdentifier(), invite.getOrgIdentifier(), invite.getProjectIdentifier(), invite.getEmail(),
             invite.getRole(), invite.getInviteType(), Boolean.TRUE);
   }
@@ -189,7 +190,7 @@ public class InvitesServiceImpl implements InvitesService {
 
   @Override
   public Optional<Invite> get(String inviteId) {
-    return invitesRepository.findByIdAndDeletedNot(inviteId, Boolean.TRUE);
+    return invitesRepository.findFirstByIdAndDeletedNot(inviteId, Boolean.TRUE);
   }
 
   @Override

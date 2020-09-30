@@ -16,9 +16,10 @@ import java.util.Optional;
 @HarnessRepo
 @OwnedBy(PL)
 public interface InvitesRepository extends PagingAndSortingRepository<Invite, String>, InviteRepositoryCustom {
-  Optional<Invite> findByIdAndDeletedNot(String id, Boolean notDeleted);
+  Optional<Invite> findFirstByIdAndDeletedNot(String id, Boolean notDeleted);
 
-  Optional<Invite> findByAccountIdentifierAndOrgIdentifierAndProjectIdentifierAndEmailAndRoleAndInviteTypeAndDeletedNot(
+  Optional<Invite>
+  findFirstByAccountIdentifierAndOrgIdentifierAndProjectIdentifierAndEmailAndRoleAndInviteTypeAndDeletedNot(
       String accountIdentifier, String orgIdentifier, String projectIdentifier, String email, Role role,
       InviteType inviteType, Boolean notDeleted);
 
