@@ -414,6 +414,8 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
     setServiceId(artifactStream);
     artifactStream.validateRequiredFields();
 
+    validateIfNexus2AndDockerRepositoryType(artifactStream, accountId);
+
     // check if artifact stream is parameterized
     boolean streamParameterized = artifactStream.checkIfStreamParameterized();
     if (streamParameterized) {
@@ -502,6 +504,24 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
       } else {
         throw new InvalidRequestException(
             format("%s artifact stream does not support parameterized fields", artifactStream.getArtifactStreamType()));
+      }
+    }
+  }
+
+  private void validateIfNexus2AndDockerRepositoryType(ArtifactStream artifactStream, String accountId) {
+    if (artifactStream != null) {
+      if (artifactStream.getArtifactStreamType().equals(NEXUS.name())) {
+        SettingValue settingValue = settingsService.getSettingValueById(accountId, artifactStream.getSettingId());
+        if (settingValue instanceof NexusConfig) {
+          String nexusVersion = ((NexusConfig) settingValue).getVersion();
+          boolean isNexusTwo = nexusVersion != null && nexusVersion.equalsIgnoreCase("2.x");
+          if (isNexusTwo && artifactStream instanceof NexusArtifactStream) {
+            String repositoryType = ((NexusArtifactStream) artifactStream).getRepositoryType();
+            if (repositoryType != null && repositoryType.equals(RepositoryType.docker.name())) {
+              throw new InvalidRequestException("Nexus 2.x does not support docker artifact type");
+            }
+          }
+        }
       }
     }
   }
