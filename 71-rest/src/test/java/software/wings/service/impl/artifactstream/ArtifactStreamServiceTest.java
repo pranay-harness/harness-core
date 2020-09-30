@@ -5,11 +5,13 @@ import static io.harness.beans.SearchFilter.Operator.EQ;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.rule.OwnerRule.AADITI;
+import static io.harness.rule.OwnerRule.ALEXEI;
 import static io.harness.rule.OwnerRule.GARVIT;
 import static io.harness.rule.OwnerRule.ROHITKARELIA;
 import static io.harness.rule.OwnerRule.SRINIVAS;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.assertj.core.api.Assertions.tuple;
 import static org.mockito.Matchers.anyBoolean;
 import static org.mockito.Matchers.anyString;
@@ -2964,6 +2966,7 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
                         .nexusUrl("http://bamboo.software")
                         .username("username")
                         .accountId(ACCOUNT_ID)
+                        .version("3.x")
                         .build());
 
     NexusArtifactStream nexusArtifactStream = NexusArtifactStream.builder()
@@ -4012,5 +4015,34 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
     assertThat(artifactStream.getClassifier()).isEqualTo("${classifier}");
     assertThat(artifactStream.getName()).isEqualTo("testNexus");
     assertThat(artifactStream.isArtifactStreamParameterized()).isEqualTo(true);
+  }
+
+  @Test
+  @Owner(developers = ALEXEI)
+  @Category(UnitTests.class)
+  public void shouldThrowExceptionWhenAddingNexusArtifactStreamForDockerType() {
+    when(settingsService.getSettingValueById(ACCOUNT_ID, SETTING_ID))
+        .thenReturn(NexusConfig.builder()
+                        .username("username")
+                        .password("password".toCharArray())
+                        .accountId(ACCOUNT_ID)
+                        .version("2.x")
+                        .nexusUrl("http://bamboo.software")
+                        .build());
+    NexusArtifactStream nexusDockerArtifactStream = NexusArtifactStream.builder()
+                                                        .accountId(ACCOUNT_ID)
+                                                        .appId(APP_ID)
+                                                        .settingId(SETTING_ID)
+                                                        .jobname("docker-private")
+                                                        .groupId("wingsplugings/todolist")
+                                                        .imageName("wingsplugings/todolist")
+                                                        .autoPopulate(true)
+                                                        .serviceId(SERVICE_ID)
+                                                        .repositoryFormat(RepositoryFormat.docker.name())
+                                                        .build();
+    assertThatThrownBy(() -> createArtifactStream(nexusDockerArtifactStream))
+        .isInstanceOf(InvalidRequestException.class)
+        .hasMessageContaining("Nexus 2.x does not support docker artifact type");
+    verify(appService).getAccountIdByAppId(APP_ID);
   }
 }
