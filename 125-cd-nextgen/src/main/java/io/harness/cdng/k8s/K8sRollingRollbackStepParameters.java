@@ -18,6 +18,6 @@ import java.util.Map;
 @NoArgsConstructor
 @AllArgsConstructor
 public class K8sRollingRollbackStepParameters implements StepParameters {
-  @ApiModelProperty(dataType = SwaggerConstants.INTEGER_CLASSPATH) private ParameterField<Integer> timeout;
+  @ApiModelProperty(dataType = SwaggerConstants.STRING_CLASSPATH) private ParameterField<String> timeout;
   @JsonIgnore Map<String, StepDependencySpec> stepDependencySpecs;
 }

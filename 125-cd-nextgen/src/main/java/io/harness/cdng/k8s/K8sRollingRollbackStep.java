@@ -56,7 +56,7 @@ public class K8sRollingRollbackStep implements Step, TaskExecutable<K8sRollingRo
             .releaseNumber(k8sRollingOutcome.getReleaseNumber())
             .commandName(K8sRollingDeployRollback.K8S_DEPLOYMENT_ROLLING_ROLLBACK_COMMAND_NAME)
             .k8sTaskType(K8sTaskType.DEPLOYMENT_ROLLING_ROLLBACK)
-            .timeoutIntervalInMin(stepParameters.getTimeout().getValue())
+            .timeoutIntervalInMin(10 /*stepParameters.getTimeout().getValue()*/)
             .k8sClusterConfig(k8sStepHelper.getK8sClusterConfig(infrastructure, ambiance))
             .accountId(AmbianceHelper.getAccountId(ambiance))
             .build();
@@ -64,7 +64,7 @@ public class K8sRollingRollbackStep implements Step, TaskExecutable<K8sRollingRo
     return StepUtils.prepareDelegateTaskInput(AmbianceHelper.getAccountId(ambiance),
         TaskData.builder()
             .async(true)
-            .timeout(stepParameters.getTimeout().getValue())
+            .timeout(600000 /*stepParameters.getTimeout().getValue()*/)
             .taskType(TaskType.K8S_COMMAND_TASK.name())
             .parameters(new Object[] {taskParameters})
             .build(),

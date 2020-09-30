@@ -42,7 +42,7 @@ public class K8sRollingStepInfo extends K8sRollingStepParameters implements CDSt
   String metadata;
 
   @Builder(builderMethodName = "infoBuilder")
-  public K8sRollingStepInfo(ParameterField<Integer> timeout, ParameterField<Boolean> skipDryRun,
+  public K8sRollingStepInfo(ParameterField<String> timeout, ParameterField<Boolean> skipDryRun,
       Map<String, StepDependencySpec> stepDependencySpecs, String name, String identifier) {
     super(timeout, skipDryRun, stepDependencySpecs);
     this.name = name;

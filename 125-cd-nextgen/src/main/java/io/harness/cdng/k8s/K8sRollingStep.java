@@ -137,7 +137,7 @@ public class K8sRollingStep implements Step, TaskChainExecutable<K8sRollingStepP
 
     final TaskData taskData = TaskData.builder()
                                   .async(true)
-                                  .timeout(k8sRollingStepParameters.getTimeout().getValue())
+                                  .timeout(600000 /*k8sRollingStepParameters.getTimeout().getValue()*/)
                                   .taskType(TaskType.GIT_FETCH_NEXT_GEN_TASK.name())
                                   .parameters(new Object[] {gitFetchRequest})
                                   .build();
@@ -177,7 +177,7 @@ public class K8sRollingStep implements Step, TaskChainExecutable<K8sRollingStepP
             .commandName(K8sRollingDeploy.K8S_ROLLING_DEPLOY_COMMAND_NAME)
             .taskType(K8sTaskType.DEPLOYMENT_ROLLING)
             .localOverrideFeatureFlag(false)
-            .timeoutIntervalInMin(stepParameters.getTimeout().getValue())
+            .timeoutIntervalInMin(10 /*stepParameters.getTimeout().getValue()*/)
             .valuesYamlList(renderedValuesList)
             .k8sInfraDelegateConfig(k8sStepHelper.getK8sInfraDelegateConfig(infrastructure, ambiance))
             .manifestDelegateConfig(k8sStepHelper.getManifestDelegateConfig(storeConfig, ambiance))
@@ -187,7 +187,7 @@ public class K8sRollingStep implements Step, TaskChainExecutable<K8sRollingStepP
     TaskData taskData = TaskData.builder()
                             .parameters(new Object[] {k8sRollingDeployRequest})
                             .taskType(TaskType.K8S_COMMAND_TASK_NG.name())
-                            .timeout(stepParameters.getTimeout().getValue())
+                            .timeout(600000 /*stepParameters.getTimeout().getValue()*/)
                             .async(true)
                             .build();
 
