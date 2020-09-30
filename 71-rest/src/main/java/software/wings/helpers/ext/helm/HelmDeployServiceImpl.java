@@ -468,8 +468,8 @@ public class HelmDeployServiceImpl implements HelmDeployService {
 
   private ReleaseHistory fetchK8sReleaseHistory(HelmCommandRequest request, KubernetesConfig kubernetesConfig)
       throws IOException {
-    String releaseHistoryData =
-        kubernetesContainerService.fetchReleaseHistoryFromSecrets(kubernetesConfig, request.getReleaseName());
+    String releaseHistoryData = k8sTaskHelperBase.getReleaseHistoryFromSecret(
+        kubernetesConfig, request.getReleaseName(), request.isDeprecateFabric8Enabled());
 
     return (StringUtils.isEmpty(releaseHistoryData)) ? ReleaseHistory.createNew()
                                                      : ReleaseHistory.createFromData(releaseHistoryData);
@@ -496,8 +496,8 @@ public class HelmDeployServiceImpl implements HelmDeployService {
         containerDeploymentDelegateHelper.getKubernetesConfig(request.getContainerServiceParams());
     releaseHistory.setReleaseStatus(
         CommandExecutionStatus.SUCCESS == response.getCommandExecutionStatus() ? Status.Succeeded : Status.Failed);
-    kubernetesContainerService.saveReleaseHistory(
-        kubernetesConfig, request.getReleaseName(), releaseHistory.getAsYaml(), true);
+    k8sTaskHelperBase.saveReleaseHistory(kubernetesConfig, request.getReleaseName(), releaseHistory.getAsYaml(), true,
+        request.isDeprecateFabric8Enabled());
   }
 
   @Override

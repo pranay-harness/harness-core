@@ -134,8 +134,8 @@ public class K8sTrafficSplitTaskHandler extends K8sTaskHandler {
     executionLogCallback.saveExecutionLog(
         color("\nRelease name: " + k8sTrafficSplitTaskParameters.getReleaseName(), White, Bold));
 
-    String releaseHistoryData = kubernetesContainerService.fetchReleaseHistory(
-        kubernetesConfig, k8sTrafficSplitTaskParameters.getReleaseName());
+    String releaseHistoryData = k8sTaskHelperBase.getReleaseHistoryDataFromConfigMap(kubernetesConfig,
+        k8sTrafficSplitTaskParameters.getReleaseName(), k8sTrafficSplitTaskParameters.isDeprecateFabric8Enabled());
 
     if (StringUtils.isEmpty(releaseHistoryData)) {
       executionLogCallback.saveExecutionLog("\nNo release history found for release ");

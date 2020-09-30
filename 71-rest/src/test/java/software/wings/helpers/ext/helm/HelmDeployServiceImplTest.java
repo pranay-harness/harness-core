@@ -978,8 +978,9 @@ public class HelmDeployServiceImplTest extends WingsBaseTest {
 
   private void validateCreateNewRelease(int releaseNumber) throws Exception {
     ArgumentCaptor<String> releaseHistoryCaptor = ArgumentCaptor.forClass(String.class);
-    verify(kubernetesContainerService, atLeastOnce())
-        .saveReleaseHistory(any(KubernetesConfig.class), eq("release"), releaseHistoryCaptor.capture(), eq(true));
+    verify(k8sTaskHelperBase, atLeastOnce())
+        .saveReleaseHistory(
+            any(KubernetesConfig.class), eq("release"), releaseHistoryCaptor.capture(), eq(true), eq(true));
     ReleaseHistory storedHistory = ReleaseHistory.createFromData(releaseHistoryCaptor.getValue());
     assertThat(storedHistory.getRelease(releaseNumber)).isNotNull();
   }
@@ -1009,7 +1010,7 @@ public class HelmDeployServiceImplTest extends WingsBaseTest {
                         .output("Rollback was a success.")
                         .commandExecutionStatus(SUCCESS)
                         .build());
-    when(kubernetesContainerService.fetchReleaseHistoryFromSecrets(any(KubernetesConfig.class), eq("release")))
+    when(k8sTaskHelperBase.getReleaseHistoryFromSecret(any(KubernetesConfig.class), eq("release"), anyBoolean()))
         .thenReturn(releaseHistory.getAsYaml());
     when(k8sTaskHelperBase.getContainerInfos(any(), eq("release"), eq("default-1"), eq(LONG_TIMEOUT_INTERVAL)))
         .thenReturn(containerInfosDefault1);

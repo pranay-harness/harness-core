@@ -50,6 +50,7 @@ import static org.apache.http.HttpStatus.SC_FORBIDDEN;
 import static org.apache.http.HttpStatus.SC_UNAUTHORIZED;
 
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Charsets;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.io.Files;
@@ -131,6 +132,13 @@ import io.kubernetes.client.openapi.apis.CoreV1Api;
 import io.kubernetes.client.openapi.apis.VersionApi;
 import io.kubernetes.client.openapi.models.V1Pod;
 import io.kubernetes.client.openapi.models.V1PodList;
+import io.kubernetes.client.openapi.models.V1ConfigMap;
+import io.kubernetes.client.openapi.models.V1ConfigMapBuilder;
+import io.kubernetes.client.openapi.models.V1ConfigMapList;
+import io.kubernetes.client.openapi.models.V1ObjectMetaBuilder;
+import io.kubernetes.client.openapi.models.V1Secret;
+import io.kubernetes.client.openapi.models.V1SecretBuilder;
+import io.kubernetes.client.openapi.models.V1SecretList;
 import io.kubernetes.client.openapi.models.V1Service;
 import io.kubernetes.client.openapi.models.V1ServiceList;
 import io.kubernetes.client.openapi.models.VersionInfo;
@@ -1055,7 +1063,7 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
   }
 
   @Override
-  public ConfigMap createOrReplaceConfigMap(KubernetesConfig kubernetesConfig, ConfigMap definition) {
+  public ConfigMap createOrReplaceConfigMapFabric8(KubernetesConfig kubernetesConfig, ConfigMap definition) {
     String name = definition.getMetadata().getName();
     ConfigMap configMap = kubernetesHelperService.getKubernetesClient(kubernetesConfig)
                               .configMaps()
@@ -1070,7 +1078,45 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
   }
 
   @Override
-  public ConfigMap getConfigMap(KubernetesConfig kubernetesConfig, String name) {
+  public V1ConfigMap createOrReplaceConfigMap(KubernetesConfig kubernetesConfig, V1ConfigMap definition) {
+    String name = definition.getMetadata().getName();
+    V1ConfigMap configMap = getConfigMap(kubernetesConfig, name);
+    return configMap == null ? createConfigMap(kubernetesConfig, definition)
+                             : replaceConfigMap(kubernetesConfig, definition);
+  }
+
+  private V1ConfigMap replaceConfigMap(KubernetesConfig kubernetesConfig, V1ConfigMap definition) {
+    String name = definition.getMetadata().getName();
+    logger.info("Replacing config map [{}]", name);
+    ApiClient apiClient = kubernetesHelperService.getApiClient(kubernetesConfig);
+    try {
+      return new CoreV1Api(apiClient).replaceNamespacedConfigMap(
+          name, kubernetesConfig.getNamespace(), definition, null, null, null);
+    } catch (ApiException exception) {
+      String message = format(
+          "Failed to replace ConfigMap. Code: %s, message: %s", exception.getCode(), exception.getResponseBody());
+      logger.error(message);
+      throw new InvalidRequestException(message, exception, USER);
+    }
+  }
+
+  private V1ConfigMap createConfigMap(KubernetesConfig kubernetesConfig, V1ConfigMap definition) {
+    String name = definition.getMetadata().getName();
+    logger.info("Creating config map [{}]", name);
+    ApiClient apiClient = kubernetesHelperService.getApiClient(kubernetesConfig);
+    try {
+      return new CoreV1Api(apiClient).createNamespacedConfigMap(
+          kubernetesConfig.getNamespace(), definition, null, null, null);
+    } catch (ApiException exception) {
+      String message =
+          format("Failed to create ConfigMap. Code: %s, message: %s", exception.getCode(), exception.getResponseBody());
+      logger.error(message);
+      throw new InvalidRequestException(message, exception, USER);
+    }
+  }
+
+  @Override
+  public ConfigMap getConfigMapFabric8(KubernetesConfig kubernetesConfig, String name) {
     try {
       return kubernetesHelperService.getKubernetesClient(kubernetesConfig)
           .configMaps()
@@ -1083,12 +1129,42 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
   }
 
   @Override
-  public void deleteConfigMap(KubernetesConfig kubernetesConfig, String name) {
+  public V1ConfigMap getConfigMap(KubernetesConfig kubernetesConfig, String name) {
+    try {
+      ApiClient apiClient = kubernetesHelperService.getApiClient(kubernetesConfig);
+      String fieldSelector = format("%s=%s", RESOURCE_NAME_FIELD, name);
+      V1ConfigMapList configMapList = new CoreV1Api(apiClient).listNamespacedConfigMap(
+          kubernetesConfig.getNamespace(), null, null, null, fieldSelector, null, null, null, null, null);
+      return isEmpty(configMapList.getItems()) ? null : configMapList.getItems().get(0);
+    } catch (ApiException exception) {
+      String message =
+          format("Failed to get ConfigMap. Code: %s, message: %s", exception.getCode(), exception.getResponseBody());
+      logger.error(message);
+      throw new InvalidRequestException(message, exception, USER);
+    }
+  }
+
+  @Override
+  public void deleteConfigMapFabric8(KubernetesConfig kubernetesConfig, String name) {
     kubernetesHelperService.getKubernetesClient(kubernetesConfig)
         .configMaps()
         .inNamespace(kubernetesConfig.getNamespace())
         .withName(name)
         .delete();
+  }
+
+  @Override
+  public void deleteConfigMap(KubernetesConfig kubernetesConfig, String name) {
+    ApiClient apiClient = kubernetesHelperService.getApiClient(kubernetesConfig);
+    try {
+      new CoreV1Api(apiClient).deleteNamespacedConfigMap(
+          name, kubernetesConfig.getNamespace(), null, null, null, null, null, null);
+    } catch (ApiException exception) {
+      String message =
+          format("Failed to delete ConfigMap. Code: %s, message: %s", exception.getCode(), exception.getResponseBody());
+      logger.error(message);
+      throw new InvalidRequestException(message, exception, USER);
+    }
   }
 
   @Override
@@ -1240,7 +1316,7 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
   }
 
   @Override
-  public Secret getSecret(KubernetesConfig kubernetesConfig, String secretName) {
+  public Secret getSecretFabric8(KubernetesConfig kubernetesConfig, String secretName) {
     return isNotBlank(secretName) ? kubernetesHelperService.getKubernetesClient(kubernetesConfig)
                                         .secrets()
                                         .inNamespace(kubernetesConfig.getNamespace())
@@ -1250,7 +1326,27 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
   }
 
   @Override
-  public void deleteSecret(KubernetesConfig kubernetesConfig, String secretName) {
+  public V1Secret getSecret(KubernetesConfig kubernetesConfig, String secretName) {
+    if (isBlank(secretName)) {
+      return null;
+    }
+
+    ApiClient apiClient = kubernetesHelperService.getApiClient(kubernetesConfig);
+    String fieldSelector = format("%s=%s", RESOURCE_NAME_FIELD, secretName);
+    try {
+      V1SecretList secretList = new CoreV1Api(apiClient).listNamespacedSecret(
+          kubernetesConfig.getNamespace(), null, null, null, fieldSelector, null, null, null, null, null);
+      return isEmpty(secretList.getItems()) ? null : secretList.getItems().get(0);
+    } catch (ApiException exception) {
+      String message =
+          format("Failed to get Secret. Code: %s, message: %s", exception.getCode(), exception.getResponseBody());
+      logger.error(message);
+      throw new InvalidRequestException(message, exception, USER);
+    }
+  }
+
+  @Override
+  public void deleteSecretFabric8(KubernetesConfig kubernetesConfig, String secretName) {
     kubernetesHelperService.getKubernetesClient(kubernetesConfig)
         .secrets()
         .inNamespace(kubernetesConfig.getNamespace())
@@ -1259,11 +1355,62 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
   }
 
   @Override
-  public Secret createOrReplaceSecret(KubernetesConfig kubernetesConfig, Secret secret) {
+  public void deleteSecret(KubernetesConfig kubernetesConfig, String secretName) {
+    ApiClient apiClient = kubernetesHelperService.getApiClient(kubernetesConfig);
+    try {
+      new CoreV1Api(apiClient).deleteNamespacedSecret(
+          secretName, kubernetesConfig.getNamespace(), null, null, null, null, null, null);
+    } catch (ApiException exception) {
+      String message =
+          format("Failed to delete Secret. Code: %s, message: %s", exception.getCode(), exception.getResponseBody());
+      logger.error(message);
+      throw new InvalidRequestException(message, exception, USER);
+    }
+  }
+
+  @Override
+  public Secret createOrReplaceSecretFabric8(KubernetesConfig kubernetesConfig, Secret secret) {
     return kubernetesHelperService.getKubernetesClient(kubernetesConfig)
         .secrets()
         .inNamespace(kubernetesConfig.getNamespace())
         .createOrReplace(secret);
+  }
+
+  @Override
+  public V1Secret createOrReplaceSecret(KubernetesConfig kubernetesConfig, V1Secret definition) {
+    String name = definition.getMetadata().getName();
+    V1Secret secret = getSecret(kubernetesConfig, name);
+    return secret == null ? createSecret(kubernetesConfig, definition) : replaceSecret(kubernetesConfig, definition);
+  }
+
+  @VisibleForTesting
+  V1Secret createSecret(KubernetesConfig kubernetesConfig, V1Secret secret) {
+    logger.info("Creating secret [{}]", secret.getMetadata().getName());
+    ApiClient apiClient = kubernetesHelperService.getApiClient(kubernetesConfig);
+    try {
+      return new CoreV1Api(apiClient).createNamespacedSecret(kubernetesConfig.getNamespace(), secret, null, null, null);
+    } catch (ApiException exception) {
+      String message =
+          format("Failed to create Secret. Code: %s, message: %s", exception.getCode(), exception.getResponseBody());
+      logger.error(message);
+      throw new InvalidRequestException(message, exception, USER);
+    }
+  }
+
+  @VisibleForTesting
+  V1Secret replaceSecret(KubernetesConfig kubernetesConfig, V1Secret secret) {
+    String name = secret.getMetadata().getName();
+    logger.info("Replacing secret [{}]", name);
+    ApiClient apiClient = kubernetesHelperService.getApiClient(kubernetesConfig);
+    try {
+      return new CoreV1Api(apiClient).replaceNamespacedSecret(
+          name, kubernetesConfig.getNamespace(), secret, null, null, null);
+    } catch (ApiException exception) {
+      String message =
+          format("Failed to replace Secret. Code: %s, message: %s", exception.getCode(), exception.getResponseBody());
+      logger.error(message);
+      throw new InvalidRequestException(message, exception, USER);
+    }
   }
 
   @Override
@@ -1555,30 +1702,50 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
   }
 
   @Override
-  public String fetchReleaseHistory(KubernetesConfig kubernetesConfig, String releaseName) {
-    String releaseHistory = "";
-    ConfigMap configMap = getConfigMap(kubernetesConfig, releaseName);
+  public String fetchReleaseHistoryFromConfigMapFabric8(KubernetesConfig kubernetesConfig, String releaseName) {
+    ConfigMap configMap = getConfigMapFabric8(kubernetesConfig, releaseName);
     if (configMap != null && configMap.getData() != null && configMap.getData().containsKey(ReleaseHistoryKeyName)) {
-      releaseHistory = configMap.getData().get(ReleaseHistoryKeyName);
+      return configMap.getData().get(ReleaseHistoryKeyName);
     }
 
-    return releaseHistory;
+    return EMPTY;
   }
 
   @Override
-  public String fetchReleaseHistoryFromSecrets(KubernetesConfig kubernetesConfig, String releaseName) {
-    Secret secret = getSecret(kubernetesConfig, releaseName);
+  public String fetchReleaseHistoryFromSecretsFabric8(KubernetesConfig kubernetesConfig, String releaseName) {
+    Secret secret = getSecretFabric8(kubernetesConfig, releaseName);
     if (secret != null && secret.getData() != null && secret.getData().containsKey(ReleaseHistoryKeyName)) {
       return decodeBase64ToString(secret.getData().get(ReleaseHistoryKeyName));
     }
 
-    return StringUtils.EMPTY;
+    return EMPTY;
   }
 
   @Override
-  public void saveReleaseHistory(KubernetesConfig kubernetesConfig, String releaseName, String releaseHistory) {
+  public String fetchReleaseHistoryFromConfigMap(KubernetesConfig kubernetesConfig, String releaseName) {
+    V1ConfigMap configMap = getConfigMap(kubernetesConfig, releaseName);
+    if (configMap != null && configMap.getData() != null && configMap.getData().containsKey(ReleaseHistoryKeyName)) {
+      return configMap.getData().get(ReleaseHistoryKeyName);
+    }
+
+    return EMPTY;
+  }
+
+  @Override
+  public String fetchReleaseHistoryFromSecrets(KubernetesConfig kubernetesConfig, String releaseName) {
+    V1Secret secret = getSecret(kubernetesConfig, releaseName);
+    if (secret != null && secret.getData() != null && secret.getData().containsKey(ReleaseHistoryKeyName)) {
+      return new String(secret.getData().get(ReleaseHistoryKeyName), Charsets.UTF_8);
+    }
+
+    return EMPTY;
+  }
+
+  @Override
+  public void saveReleaseHistoryInConfigMapFabric8(
+      KubernetesConfig kubernetesConfig, String releaseName, String releaseHistory) {
     try {
-      ConfigMap configMap = getConfigMap(kubernetesConfig, releaseName);
+      ConfigMap configMap = getConfigMapFabric8(kubernetesConfig, releaseName);
       if (configMap == null) {
         configMap = new ConfigMapBuilder()
                         .withNewMetadata()
@@ -1592,10 +1759,42 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
         data.put(ReleaseHistoryKeyName, releaseHistory);
         configMap.setData(data);
       }
-      createOrReplaceConfigMap(kubernetesConfig, configMap);
+      createOrReplaceConfigMapFabric8(kubernetesConfig, configMap);
     } catch (Exception e) {
-      throw new WingsException(ErrorCode.GENERAL_ERROR, e)
-          .addParam("message", "Failed to save release History. " + ExceptionUtils.getMessage(e));
+      String message = "Failed to save release History. " + ExceptionUtils.getMessage(e);
+      logger.error(message);
+      throw new InvalidRequestException(message, e, USER);
+    }
+  }
+
+  @Override
+  public V1ConfigMap saveReleaseHistoryInConfigMap(
+      KubernetesConfig kubernetesConfig, String releaseName, String releaseHistory) {
+    V1ConfigMap configMap = getConfigMap(kubernetesConfig, releaseName);
+    if (configMap == null) {
+      configMap = new V1ConfigMapBuilder()
+                      .withMetadata(new V1ObjectMetaBuilder()
+                                        .withName(releaseName)
+                                        .withNamespace(kubernetesConfig.getNamespace())
+                                        .build())
+                      .withData(ImmutableMap.of(ReleaseHistoryKeyName, releaseHistory))
+                      .build();
+    } else {
+      Map data = configMap.getData();
+      data.put(ReleaseHistoryKeyName, releaseHistory);
+      configMap.setData(data);
+    }
+
+    return createOrReplaceConfigMap(kubernetesConfig, configMap);
+  }
+
+  @Override
+  public void saveReleaseHistoryFabric8(
+      KubernetesConfig kubernetesConfig, String releaseName, String releaseHistory, boolean storeInSecrets) {
+    if (storeInSecrets) {
+      saveReleaseHistoryInSecretsFabric8(kubernetesConfig, releaseName, releaseHistory);
+    } else {
+      saveReleaseHistoryInConfigMapFabric8(kubernetesConfig, releaseName, releaseHistory);
     }
   }
 
@@ -1605,14 +1804,15 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
     if (storeInSecrets) {
       saveReleaseHistoryInSecrets(kubernetesConfig, releaseName, releaseHistory);
     } else {
-      saveReleaseHistory(kubernetesConfig, releaseName, releaseHistory);
+      saveReleaseHistoryInConfigMap(kubernetesConfig, releaseName, releaseHistory);
     }
   }
 
-  @VisibleForTesting
-  void saveReleaseHistoryInSecrets(KubernetesConfig kubernetesConfig, String releaseName, String releaseHistory) {
+  @Override
+  public void saveReleaseHistoryInSecretsFabric8(
+      KubernetesConfig kubernetesConfig, String releaseName, String releaseHistory) {
     try {
-      Secret secret = getSecret(kubernetesConfig, releaseName);
+      Secret secret = getSecretFabric8(kubernetesConfig, releaseName);
       if (secret == null) {
         secret = new SecretBuilder()
                      .withNewMetadata()
@@ -1626,10 +1826,31 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
         data.put(ReleaseHistoryKeyName, encodeBase64(releaseHistory));
         secret.setData(data);
       }
-      createOrReplaceSecret(kubernetesConfig, secret);
+      createOrReplaceSecretFabric8(kubernetesConfig, secret);
     } catch (Exception e) {
       throw new GeneralException("Failed to save release History in secrets. " + ExceptionUtils.getMessage(e), e);
     }
+  }
+
+  @Override
+  public V1Secret saveReleaseHistoryInSecrets(
+      KubernetesConfig kubernetesConfig, String releaseName, String releaseHistory) {
+    V1Secret secret = getSecret(kubernetesConfig, releaseName);
+    if (secret == null) {
+      secret = new V1SecretBuilder()
+                   .withMetadata(new V1ObjectMetaBuilder()
+                                     .withNamespace(kubernetesConfig.getNamespace())
+                                     .withName(releaseName)
+                                     .build())
+                   .withData(ImmutableMap.of(ReleaseHistoryKeyName, releaseHistory.getBytes(Charsets.UTF_8)))
+                   .build();
+    } else {
+      Map data = secret.getData();
+      data.put(ReleaseHistoryKeyName, releaseHistory.getBytes(Charsets.UTF_8));
+      secret.setData(data);
+    }
+
+    return createOrReplaceSecret(kubernetesConfig, secret);
   }
 
   @Override

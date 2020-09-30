@@ -139,13 +139,14 @@ public class K8sBlueGreenDeployTaskHandler extends K8sTaskHandler {
         k8sTaskHelper.getExecutionLogCallback(k8sBlueGreenDeployTaskParameters, Apply), true);
     if (!success) {
       releaseHistory.setReleaseStatus(Status.Failed);
-      kubernetesContainerService.saveReleaseHistory(
-          kubernetesConfig, k8sBlueGreenDeployTaskParameters.getReleaseName(), releaseHistory.getAsYaml());
+      k8sTaskHelperBase.saveReleaseHistoryInConfigMap(kubernetesConfig,
+          k8sBlueGreenDeployTaskParameters.getReleaseName(), releaseHistory.getAsYaml(),
+          k8sBlueGreenDeployTaskParameters.isDeprecateFabric8Enabled());
       return getFailureResponse();
     }
 
-    kubernetesContainerService.saveReleaseHistory(
-        kubernetesConfig, k8sBlueGreenDeployTaskParameters.getReleaseName(), releaseHistory.getAsYaml());
+    k8sTaskHelperBase.saveReleaseHistoryInConfigMap(kubernetesConfig, k8sBlueGreenDeployTaskParameters.getReleaseName(),
+        releaseHistory.getAsYaml(), k8sBlueGreenDeployTaskParameters.isDeprecateFabric8Enabled());
 
     currentRelease.setManagedWorkloadRevision(
         k8sTaskHelperBase.getLatestRevision(client, managedWorkload.getResourceId(), k8sDelegateTaskParams));
@@ -158,8 +159,9 @@ public class K8sBlueGreenDeployTaskHandler extends K8sTaskHandler {
 
     if (!success) {
       releaseHistory.setReleaseStatus(Status.Failed);
-      kubernetesContainerService.saveReleaseHistory(
-          kubernetesConfig, k8sBlueGreenDeployTaskParameters.getReleaseName(), releaseHistory.getAsYaml());
+      k8sTaskHelperBase.saveReleaseHistoryInConfigMap(kubernetesConfig,
+          k8sBlueGreenDeployTaskParameters.getReleaseName(), releaseHistory.getAsYaml(),
+          k8sBlueGreenDeployTaskParameters.isDeprecateFabric8Enabled());
       return getFailureResponse();
     }
 
@@ -173,8 +175,8 @@ public class K8sBlueGreenDeployTaskHandler extends K8sTaskHandler {
     currentRelease.setManagedWorkloadRevision(
         k8sTaskHelperBase.getLatestRevision(client, managedWorkload.getResourceId(), k8sDelegateTaskParams));
     releaseHistory.setReleaseStatus(Status.Succeeded);
-    kubernetesContainerService.saveReleaseHistory(
-        kubernetesConfig, k8sBlueGreenDeployTaskParameters.getReleaseName(), releaseHistory.getAsYaml());
+    k8sTaskHelperBase.saveReleaseHistoryInConfigMap(kubernetesConfig, k8sBlueGreenDeployTaskParameters.getReleaseName(),
+        releaseHistory.getAsYaml(), k8sBlueGreenDeployTaskParameters.isDeprecateFabric8Enabled());
 
     return k8sTaskHelper.getK8sTaskExecutionResponse(K8sBlueGreenDeployResponse.builder()
                                                          .releaseNumber(currentRelease.getNumber())
@@ -216,10 +218,9 @@ public class K8sBlueGreenDeployTaskHandler extends K8sTaskHandler {
         containerDeploymentDelegateHelper.getKubernetesConfig(k8sBlueGreenDeployTaskParameters.getK8sClusterConfig());
 
     client = Kubectl.client(k8sDelegateTaskParams.getKubectlPath(), k8sDelegateTaskParams.getKubeconfigPath());
-
-    String releaseHistoryData = kubernetesContainerService.fetchReleaseHistory(
-        kubernetesConfig, k8sBlueGreenDeployTaskParameters.getReleaseName());
-
+    String releaseHistoryData = k8sTaskHelperBase.getReleaseHistoryDataFromConfigMap(kubernetesConfig,
+        k8sBlueGreenDeployTaskParameters.getReleaseName(),
+        k8sBlueGreenDeployTaskParameters.isDeprecateFabric8Enabled());
     releaseHistory = (StringUtils.isEmpty(releaseHistoryData)) ? ReleaseHistory.createNew()
                                                                : ReleaseHistory.createFromData(releaseHistoryData);
 

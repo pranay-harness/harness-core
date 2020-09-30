@@ -123,7 +123,7 @@ public class K8sRollingRequestHandler extends K8sRequestHandler {
     } else {
       k8sRollingBaseHandler.setManagedWorkloadsInRelease(k8sDelegateTaskParams, managedWorkloads, release, client);
 
-      kubernetesContainerService.saveReleaseHistory(
+      kubernetesContainerService.saveReleaseHistoryInConfigMap(
           kubernetesConfig, k8sRollingDeployRequest.getReleaseName(), releaseHistory.getAsYaml());
 
       List<KubernetesResourceId> managedWorkloadKubernetesResourceIds =
@@ -139,7 +139,7 @@ public class K8sRollingRequestHandler extends K8sRequestHandler {
 
       if (!success) {
         releaseHistory.setReleaseStatus(Status.Failed);
-        kubernetesContainerService.saveReleaseHistory(
+        kubernetesContainerService.saveReleaseHistoryInConfigMap(
             kubernetesConfig, k8sRollingDeployRequest.getReleaseName(), releaseHistory.getAsYaml());
         return getFailureResponse();
       }
@@ -149,7 +149,7 @@ public class K8sRollingRequestHandler extends K8sRequestHandler {
         k8sDelegateTaskParams, k8sTaskHelperBase.getExecutionLogCallback(k8sRollingDeployRequest, WrapUp), client);
 
     releaseHistory.setReleaseStatus(Status.Succeeded);
-    kubernetesContainerService.saveReleaseHistory(
+    kubernetesContainerService.saveReleaseHistoryInConfigMap(
         kubernetesConfig, k8sRollingDeployRequest.getReleaseName(), releaseHistory.getAsYaml());
 
     K8sRollingDeployResponse rollingSetupResponse =
@@ -185,7 +185,7 @@ public class K8sRollingRequestHandler extends K8sRequestHandler {
 
     try {
       String releaseHistoryData =
-          kubernetesContainerService.fetchReleaseHistory(kubernetesConfig, request.getReleaseName());
+          kubernetesContainerService.fetchReleaseHistoryFromConfigMap(kubernetesConfig, request.getReleaseName());
 
       releaseHistory = (StringUtils.isEmpty(releaseHistoryData)) ? ReleaseHistory.createNew()
                                                                  : ReleaseHistory.createFromData(releaseHistoryData);
