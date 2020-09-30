@@ -23,7 +23,7 @@ import java.util.Set;
 
 @OwnedBy(CDC)
 @Data
-@Builder
+@Builder(toBuilder = true)
 @ToString(exclude = {"serverSetting", "artifactServerEncryptedDataDetails"})
 public class ArtifactStreamAttributes implements ExecutionCapabilityDemander {
   private String jobName;
@@ -69,6 +69,11 @@ public class ArtifactStreamAttributes implements ExecutionCapabilityDemander {
   private String packageId;
   private String packageName;
   private List<String> artifactPaths;
+  private String osType;
+  private String imageType;
+  private String azureImageGalleryName;
+  private String azureResourceGroup;
+  private String azureImageDefinition;
   private boolean dockerBasedDeployment;
 
   // These fields are used only during artifact collection and cleanup.

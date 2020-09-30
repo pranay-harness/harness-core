@@ -71,6 +71,25 @@ type AzureArtifactsArtifactSource implements ArtifactSource {
   artifacts(limit: Int!, offset: Int): ArtifactConnection
     @dataFetcher(name: artifactConnection, contextFieldArgsMap: "{ \"ArtifactSource\": \"id\"}")
 }
+
+type AzureMachineImageArtifactSource implements ArtifactSource {
+  #Artifact Source Id
+  id: String
+  # Artifact source display name
+  name: String
+  createdAt: DateTime
+  # Azure Cloud Provider ID
+  azureCloudProviderId: String
+  # Valid azure image type
+  imageType: AzureImageType
+  # Azure subscription ID
+  subscriptionId: String
+  # Requires resource group, image gallery & image definition names
+  imageDefinition: AzureImageDefinitionProps
+  artifacts(limit: Int!, offset: Int): ArtifactConnection
+    @dataFetcher(name: artifactConnection, contextFieldArgsMap: "{ \"ArtifactSource\": \"id\"}")
+}
+
 type BambooArtifactSource implements ArtifactSource {
   #Artifact Source Id
   id: String
@@ -255,4 +274,17 @@ type NexusNpmProps implements NexusProps {
   repository: String
   repositoryFormat: NexusRepositoryFormat
   packageName: String
+}
+
+type AzureImageDefinitionProps {
+  # Resource group name
+  resourceGroup: String
+  # image gallery name
+  imageGalleryName: String
+  # image definition name
+  imageDefinitionName: String
+}
+
+enum AzureImageType {
+  IMAGE_GALLERY
 }

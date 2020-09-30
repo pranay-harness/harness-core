@@ -234,6 +234,9 @@ public enum TaskType {
       TaskGroup.AZURE_ARTIFACTS, ServiceImplDelegateTask.class, AzureArtifactsValidation.class),
   AZURE_ARTIFACTS_COLLECTION(
       TaskGroup.AZURE_ARTIFACTS, AzureArtifactsCollectionTask.class, AzureArtifactsValidation.class),
+  AZURE_MACHINE_IMAGE_VALIDATE_ARTIFACT_SERVER(
+      TaskGroup.AZURE_ARTIFACTS, ServiceImplDelegateTask.class, AlwaysTrueValidation.class),
+  AZURE_MACHINE_IMAGE_GET_BUILDS(TaskGroup.AZURE_ARTIFACTS, ServiceImplDelegateTask.class, AlwaysTrueValidation.class),
   AZURE_VMSS_COMMAND_TASK(TaskGroup.AZURE_VMSS, AzureVMSSTask.class, AlwaysTrueValidation.class),
   LDAP_TEST_CONN_SETTINGS(TaskGroup.LDAP, ServiceImplDelegateTask.class, LDAPValidation.class),
   LDAP_TEST_USER_SETTINGS(TaskGroup.LDAP, ServiceImplDelegateTask.class, LDAPValidation.class),

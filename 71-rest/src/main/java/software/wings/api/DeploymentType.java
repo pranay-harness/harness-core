@@ -47,6 +47,7 @@ public enum DeploymentType {
           .put(AWS_LAMBDA, Collections.singletonList(ArtifactType.AWS_LAMBDA))
           .put(AMI, Collections.singletonList(ArtifactType.AMI))
           .put(WINRM, Arrays.asList(ArtifactType.IIS, ArtifactType.IIS_APP, ArtifactType.IIS_VirtualDirectory))
+          .put(AZURE_VMSS, Collections.singletonList(ArtifactType.AZURE_MACHINE_IMAGE))
           .put(PCF, Collections.singletonList(ArtifactType.PCF))
           .put(CUSTOM,
               Arrays.asList(ArtifactType.DOCKER, ArtifactType.JAR, ArtifactType.WAR, ArtifactType.RPM,

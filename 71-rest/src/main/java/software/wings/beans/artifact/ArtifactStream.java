@@ -140,6 +140,8 @@ public abstract class ArtifactStream
 
   public abstract ArtifactStreamAttributes fetchArtifactStreamAttributes();
 
+  public void inferProperties(ArtifactStreamAttributes attributes) {}
+
   public abstract String fetchArtifactDisplayName(String buildNo);
 
   public void validateRequiredFields() {}

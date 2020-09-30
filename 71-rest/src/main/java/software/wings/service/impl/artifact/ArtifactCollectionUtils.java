@@ -16,6 +16,7 @@ import static software.wings.beans.artifact.ArtifactStreamType.ACR;
 import static software.wings.beans.artifact.ArtifactStreamType.AMAZON_S3;
 import static software.wings.beans.artifact.ArtifactStreamType.AMI;
 import static software.wings.beans.artifact.ArtifactStreamType.ARTIFACTORY;
+import static software.wings.beans.artifact.ArtifactStreamType.AZURE_MACHINE_IMAGE;
 import static software.wings.beans.artifact.ArtifactStreamType.BAMBOO;
 import static software.wings.beans.artifact.ArtifactStreamType.CUSTOM;
 import static software.wings.beans.artifact.ArtifactStreamType.DOCKER;
@@ -30,6 +31,7 @@ import static software.wings.expression.SecretFunctor.Mode.CASCADING;
 import static software.wings.helpers.ext.jenkins.BuildDetails.Builder.aBuildDetails;
 import static software.wings.service.impl.artifact.ArtifactServiceImpl.ARTIFACT_RETENTION_SIZE;
 
+import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
@@ -969,9 +971,9 @@ public class ArtifactCollectionUtils {
   }
 
   public static boolean supportsCleanup(String artifactStreamType) {
-    return DOCKER.name().equals(artifactStreamType) || AMI.name().equals(artifactStreamType)
-        || ARTIFACTORY.name().equals(artifactStreamType) || GCR.name().equals(artifactStreamType)
-        || ECR.name().equals(artifactStreamType) || ACR.name().equals(artifactStreamType)
-        || NEXUS.name().equals(artifactStreamType);
+    return Lists.newArrayList(DOCKER, AMI, ARTIFACTORY, GCR, ECR, ACR, NEXUS, AZURE_MACHINE_IMAGE)
+        .stream()
+        .map(Enum::name)
+        .anyMatch(x -> x.equals(artifactStreamType));
   }
 }

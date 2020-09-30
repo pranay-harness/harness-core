@@ -7,6 +7,7 @@ import static io.harness.logging.CommandExecutionStatus.SUCCESS;
 import static software.wings.beans.artifact.ArtifactStreamType.ACR;
 import static software.wings.beans.artifact.ArtifactStreamType.AMI;
 import static software.wings.beans.artifact.ArtifactStreamType.ARTIFACTORY;
+import static software.wings.beans.artifact.ArtifactStreamType.AZURE_MACHINE_IMAGE;
 import static software.wings.beans.artifact.ArtifactStreamType.DOCKER;
 import static software.wings.beans.artifact.ArtifactStreamType.ECR;
 import static software.wings.beans.artifact.ArtifactStreamType.GCR;
@@ -46,6 +47,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.RejectedExecutionException;
 import java.util.function.Function;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 @Data
 @Slf4j
@@ -154,9 +156,8 @@ public class BuildSourceCleanupCallback implements NotifyCallback {
       cleanupDockerArtifacts(artifactStream, deletedArtifacts);
     } else if (AMI.name().equals(artifactStreamType)) {
       cleanupAMIArtifacts(artifactStream, deletedArtifacts);
-    } else if (ARTIFACTORY.name().equals(artifactStreamType) || GCR.name().equals(artifactStreamType)
-        || ECR.name().equals(artifactStreamType) || ACR.name().equals(artifactStreamType)
-        || NEXUS.name().equals(artifactStreamType)) {
+    } else if (Stream.of(ARTIFACTORY, GCR, ECR, ACR, NEXUS, AZURE_MACHINE_IMAGE)
+                   .anyMatch(at -> at.name().equals(artifactStreamType))) {
       // This might not work for Nexus as we are also calling update nexus status
       List<Artifact> deletedArtifactsNew = cleanupStaleArtifacts(artifactStream, builds);
       deletedArtifacts.addAll(deletedArtifactsNew);

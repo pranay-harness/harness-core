@@ -20,6 +20,7 @@ import static software.wings.beans.artifact.ArtifactStreamType.AMAZON_S3;
 import static software.wings.beans.artifact.ArtifactStreamType.AMI;
 import static software.wings.beans.artifact.ArtifactStreamType.ARTIFACTORY;
 import static software.wings.beans.artifact.ArtifactStreamType.AZURE_ARTIFACTS;
+import static software.wings.beans.artifact.ArtifactStreamType.AZURE_MACHINE_IMAGE;
 import static software.wings.beans.artifact.ArtifactStreamType.BAMBOO;
 import static software.wings.beans.artifact.ArtifactStreamType.CUSTOM;
 import static software.wings.beans.artifact.ArtifactStreamType.DOCKER;
@@ -34,6 +35,7 @@ import static software.wings.common.TemplateConstants.LATEST_TAG;
 
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
@@ -289,6 +291,9 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
       case AMI:
         artifactStreamQuery.criteria(ArtifactStreamKeys.artifactStreamType).equal(AMI.name());
         break;
+      case AZURE_MACHINE_IMAGE:
+        artifactStreamQuery.criteria(ArtifactStreamKeys.artifactStreamType).equal(AZURE_MACHINE_IMAGE.name());
+        break;
       case AWS_CODEDEPLOY: // Deployment Type: AWS_CODEDEPLOY,
       case PCF: // Deployment Type: PCF,
       case WAR: // Deployment type: ssh
@@ -337,6 +342,10 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
         break;
       case AMI:
         artifactStreamPageRequest.addFilter(ArtifactStreamKeys.artifactStreamType, Operator.EQ, AMI.name());
+        break;
+      case AZURE_MACHINE_IMAGE:
+        artifactStreamPageRequest.addFilter(
+            ArtifactStreamKeys.artifactStreamType, Operator.EQ, AZURE_MACHINE_IMAGE.name());
         break;
       case AWS_CODEDEPLOY: // Deployment Type: AWS_CODEDEPLOY,
       case PCF: // Deployment Type: PCF,
@@ -629,12 +638,6 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
     String accountId = getAccountIdForArtifactStream(artifactStream);
     artifactStream.setAccountId(accountId);
 
-    if (GLOBAL_APP_ID.equals(artifactStream.fetchAppId())) {
-      usageRestrictionsService.validateUsageRestrictionsOnEntityUpdate(accountId,
-          settingsService.getUsageRestrictionsForSettingId(existingArtifactStream.getSettingId()),
-          settingsService.getUsageRestrictionsForSettingId(artifactStream.getSettingId()), false);
-    }
-
     artifactStream.validateRequiredFields();
 
     if (artifactStream.getArtifactStreamType() != null && existingArtifactStream.getArtifactStreamType() != null
@@ -706,7 +709,7 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
         Type.UPDATE, artifactStream.isSyncFromGit(), isRename);
 
     if (shouldDeleteArtifactsOnSourceChanged(existingArtifactStream, finalArtifactStream)
-        || shouldDeleteArtifactsOnServerChanged(existingArtifactStream, finalArtifactStream)) {
+        || shouldDeleteArtifactsOnServerChanged(existingArtifactStream)) {
       // Mark the collection status as unstable (for non-custom) because the artifact source has changed. We will again
       // do a fresh artifact collection.
       if (!CUSTOM.name().equals(artifactStream.getArtifactStreamType())) {
@@ -891,6 +894,7 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
       case JENKINS:
       case BAMBOO:
       case AZURE_ARTIFACTS:
+      case AZURE_MACHINE_IMAGE:
         return oldArtifactStream.artifactSourceChanged(updatedArtifactStream);
 
       default:
@@ -899,8 +903,7 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
     }
   }
 
-  private boolean shouldDeleteArtifactsOnServerChanged(
-      ArtifactStream oldArtifactStream, ArtifactStream updatedArtifactStream) {
+  private boolean shouldDeleteArtifactsOnServerChanged(ArtifactStream oldArtifactStream) {
     ArtifactStreamType artifactStreamType = ArtifactStreamType.valueOf(oldArtifactStream.getArtifactStreamType());
     if (artifactStreamType != CUSTOM) {
       return oldArtifactStream.artifactServerChanged(oldArtifactStream);
@@ -910,10 +913,12 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
 
   private void validateArtifactSourceData(ArtifactStream artifactStream) {
     String artifactStreamType = artifactStream.getArtifactStreamType();
-    if (DOCKER.name().equals(artifactStreamType) || ECR.name().equals(artifactStreamType)
-        || GCR.name().equals(artifactStreamType) || ACR.name().equals(artifactStreamType)
-        || ARTIFACTORY.name().equals(artifactStreamType) || NEXUS.name().equals(artifactStreamType)
-        || AZURE_ARTIFACTS.name().equals(artifactStreamType)) {
+    if (AZURE_MACHINE_IMAGE.name().equals(artifactStreamType) && artifactStream.shouldValidate()) {
+      buildSourceService.validateAndInferArtifactSource(artifactStream);
+    }
+    if (Lists.newArrayList(DOCKER, ECR, GCR, ACR, ARTIFACTORY, NEXUS, AZURE_ARTIFACTS)
+            .stream()
+            .anyMatch(type -> type.name().equals(artifactStreamType))) {
       if (artifactStream.shouldValidate()) {
         buildSourceService.validateArtifactSource(
             artifactStream.fetchAppId(), artifactStream.getSettingId(), artifactStream.fetchArtifactStreamAttributes());
@@ -1128,76 +1133,83 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
     if (service == null) {
       throw new InvalidRequestException("Service does not exist", USER);
     }
-    if (service.getArtifactType() == ArtifactType.DOCKER) {
-      ImmutableMap.Builder<String, String> builder = new ImmutableMap.Builder<String, String>()
-                                                         .put(DOCKER.name(), DOCKER.name())
-                                                         .put(ECR.name(), ECR.name())
-                                                         .put(ACR.name(), ACR.name())
-                                                         .put(GCR.name(), GCR.name())
-                                                         .put(ARTIFACTORY.name(), ARTIFACTORY.name())
-                                                         .put(NEXUS.name(), NEXUS.name())
-                                                         .put(CUSTOM.name(), CUSTOM.name());
-      return builder.build();
-    } else if (service.getArtifactType() == ArtifactType.AWS_LAMBDA) {
-      ImmutableMap.Builder<String, String> builder = new ImmutableMap.Builder<String, String>()
-                                                         .put(AMAZON_S3.name(), AMAZON_S3.name())
-                                                         .put(ARTIFACTORY.name(), ARTIFACTORY.name())
-                                                         .put(NEXUS.name(), NEXUS.name())
-                                                         .put(JENKINS.name(), JENKINS.name())
-                                                         .put(CUSTOM.name(), CUSTOM.name());
-      return builder.build();
-    } else if (service.getArtifactType() == ArtifactType.AMI) {
-      ImmutableMap.Builder<String, String> builder =
-          new ImmutableMap.Builder<String, String>().put(AMI.name(), AMI.name()).put(CUSTOM.name(), CUSTOM.name());
-      return builder.build();
-    } else if (service.getArtifactType() == ArtifactType.OTHER) {
-      ImmutableMap.Builder<String, String> builder = new ImmutableMap.Builder<String, String>()
-                                                         .put(DOCKER.name(), DOCKER.name())
-                                                         .put(ECR.name(), ECR.name())
-                                                         .put(ACR.name(), ACR.name())
-                                                         .put(GCR.name(), GCR.name())
-                                                         .put(ARTIFACTORY.name(), ARTIFACTORY.name())
-                                                         .put(NEXUS.name(), NEXUS.name())
-                                                         .put(JENKINS.name(), JENKINS.name())
-                                                         .put(BAMBOO.name(), BAMBOO.name())
-                                                         .put(GCS.name(), GCS.name())
-                                                         .put(AMAZON_S3.name(), AMAZON_S3.name())
-                                                         .put(AMI.name(), AMI.name())
-                                                         .put(AZURE_ARTIFACTS.name(), AZURE_ARTIFACTS.name())
-                                                         .put(SMB.name(), SMB.name())
-                                                         .put(SFTP.name(), SFTP.name())
-                                                         .put(CUSTOM.name(), CUSTOM.name());
-      return builder.build();
-    } else if (service.getArtifactType() == ArtifactType.PCF) {
-      ImmutableMap.Builder<String, String> builder = new ImmutableMap.Builder<String, String>()
-                                                         .put(ARTIFACTORY.name(), ARTIFACTORY.name())
-                                                         .put(NEXUS.name(), NEXUS.name())
-                                                         .put(JENKINS.name(), JENKINS.name())
-                                                         .put(BAMBOO.name(), BAMBOO.name())
-                                                         .put(GCS.name(), GCS.name())
-                                                         .put(AMAZON_S3.name(), AMAZON_S3.name())
-                                                         .put(AZURE_ARTIFACTS.name(), AZURE_ARTIFACTS.name())
-                                                         .put(SMB.name(), SMB.name())
-                                                         .put(SFTP.name(), SFTP.name())
-                                                         .put(DOCKER.name(), DOCKER.name())
-                                                         .put(ECR.name(), ECR.name())
-                                                         .put(GCR.name(), GCR.name())
-                                                         .put(CUSTOM.name(), CUSTOM.name());
-      return builder.build();
-    }
 
-    ImmutableMap.Builder<String, String> builder = new ImmutableMap.Builder<String, String>()
-                                                       .put(ARTIFACTORY.name(), ARTIFACTORY.name())
-                                                       .put(NEXUS.name(), NEXUS.name())
-                                                       .put(JENKINS.name(), JENKINS.name())
-                                                       .put(BAMBOO.name(), BAMBOO.name())
-                                                       .put(GCS.name(), GCS.name())
-                                                       .put(AMAZON_S3.name(), AMAZON_S3.name())
-                                                       .put(AMI.name(), AMI.name())
-                                                       .put(AZURE_ARTIFACTS.name(), AZURE_ARTIFACTS.name())
-                                                       .put(SMB.name(), SMB.name())
-                                                       .put(SFTP.name(), SFTP.name())
-                                                       .put(CUSTOM.name(), CUSTOM.name());
+    ImmutableMap.Builder<String, String> builder;
+    switch (service.getArtifactType()) {
+      case DOCKER:
+        builder = new ImmutableMap.Builder<String, String>()
+                      .put(DOCKER.name(), DOCKER.name())
+                      .put(ECR.name(), ECR.name())
+                      .put(ACR.name(), ACR.name())
+                      .put(GCR.name(), GCR.name())
+                      .put(ARTIFACTORY.name(), ARTIFACTORY.name())
+                      .put(NEXUS.name(), NEXUS.name())
+                      .put(CUSTOM.name(), CUSTOM.name());
+        break;
+      case AWS_LAMBDA:
+        builder = new ImmutableMap.Builder<String, String>()
+                      .put(AMAZON_S3.name(), AMAZON_S3.name())
+                      .put(ARTIFACTORY.name(), ARTIFACTORY.name())
+                      .put(NEXUS.name(), NEXUS.name())
+                      .put(JENKINS.name(), JENKINS.name())
+                      .put(CUSTOM.name(), CUSTOM.name());
+        break;
+      case AMI:
+        builder =
+            new ImmutableMap.Builder<String, String>().put(AMI.name(), AMI.name()).put(CUSTOM.name(), CUSTOM.name());
+        break;
+      case AZURE_MACHINE_IMAGE:
+        builder =
+            new ImmutableMap.Builder<String, String>().put(AZURE_MACHINE_IMAGE.name(), AZURE_MACHINE_IMAGE.name());
+        break;
+      case OTHER:
+        builder = new ImmutableMap.Builder<String, String>()
+                      .put(DOCKER.name(), DOCKER.name())
+                      .put(ECR.name(), ECR.name())
+                      .put(ACR.name(), ACR.name())
+                      .put(GCR.name(), GCR.name())
+                      .put(ARTIFACTORY.name(), ARTIFACTORY.name())
+                      .put(NEXUS.name(), NEXUS.name())
+                      .put(JENKINS.name(), JENKINS.name())
+                      .put(BAMBOO.name(), BAMBOO.name())
+                      .put(GCS.name(), GCS.name())
+                      .put(AMAZON_S3.name(), AMAZON_S3.name())
+                      .put(AMI.name(), AMI.name())
+                      .put(AZURE_ARTIFACTS.name(), AZURE_ARTIFACTS.name())
+                      .put(SMB.name(), SMB.name())
+                      .put(SFTP.name(), SFTP.name())
+                      .put(CUSTOM.name(), CUSTOM.name());
+        break;
+      case PCF:
+        builder = new ImmutableMap.Builder<String, String>()
+                      .put(ARTIFACTORY.name(), ARTIFACTORY.name())
+                      .put(NEXUS.name(), NEXUS.name())
+                      .put(JENKINS.name(), JENKINS.name())
+                      .put(BAMBOO.name(), BAMBOO.name())
+                      .put(GCS.name(), GCS.name())
+                      .put(AMAZON_S3.name(), AMAZON_S3.name())
+                      .put(AZURE_ARTIFACTS.name(), AZURE_ARTIFACTS.name())
+                      .put(SMB.name(), SMB.name())
+                      .put(SFTP.name(), SFTP.name())
+                      .put(DOCKER.name(), DOCKER.name())
+                      .put(ECR.name(), ECR.name())
+                      .put(GCR.name(), GCR.name())
+                      .put(CUSTOM.name(), CUSTOM.name());
+        break;
+      default:
+        builder = new ImmutableMap.Builder<String, String>()
+                      .put(ARTIFACTORY.name(), ARTIFACTORY.name())
+                      .put(NEXUS.name(), NEXUS.name())
+                      .put(JENKINS.name(), JENKINS.name())
+                      .put(BAMBOO.name(), BAMBOO.name())
+                      .put(GCS.name(), GCS.name())
+                      .put(AMAZON_S3.name(), AMAZON_S3.name())
+                      .put(AMI.name(), AMI.name())
+                      .put(AZURE_ARTIFACTS.name(), AZURE_ARTIFACTS.name())
+                      .put(SMB.name(), SMB.name())
+                      .put(SFTP.name(), SFTP.name())
+                      .put(CUSTOM.name(), CUSTOM.name());
+    }
     return builder.build();
   }
 

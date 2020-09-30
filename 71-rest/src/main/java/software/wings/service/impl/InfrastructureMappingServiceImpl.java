@@ -23,6 +23,7 @@ import static org.atteo.evo.inflector.English.plural;
 import static software.wings.api.DeploymentType.AMI;
 import static software.wings.api.DeploymentType.AWS_CODEDEPLOY;
 import static software.wings.api.DeploymentType.AWS_LAMBDA;
+import static software.wings.api.DeploymentType.AZURE_VMSS;
 import static software.wings.api.DeploymentType.ECS;
 import static software.wings.api.DeploymentType.HELM;
 import static software.wings.api.DeploymentType.KUBERNETES;
@@ -2358,6 +2359,9 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
         case AWS_LAMBDA:
           infraTypes.put(AWS_LAMBDA, asList(SettingVariableTypes.AWS));
           break;
+        case AZURE_VMSS:
+          infraTypes.put(AZURE_VMSS, asList(AZURE));
+          break;
         case AMI:
           infraTypes.put(AMI, asList(SettingVariableTypes.AWS));
           break;
@@ -2398,6 +2402,8 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
       infraTypes.put(AWS_LAMBDA, asList(SettingVariableTypes.AWS));
     } else if (artifactType == ArtifactType.AMI) {
       infraTypes.put(AMI, asList(SettingVariableTypes.AWS));
+    } else if (artifactType == ArtifactType.AZURE_MACHINE_IMAGE) {
+      infraTypes.put(AZURE_VMSS, asList(AZURE));
     } else if (artifactType == ArtifactType.IIS || artifactType == ArtifactType.IIS_APP
         || artifactType == ArtifactType.IIS_VirtualDirectory) {
       infraTypes.put(WINRM,

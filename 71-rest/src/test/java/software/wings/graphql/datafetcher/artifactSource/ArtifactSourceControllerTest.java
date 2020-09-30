@@ -1,8 +1,10 @@
 package software.wings.graphql.datafetcher.artifactSource;
 
 import static io.harness.rule.OwnerRule.AADITI;
+import static io.harness.rule.OwnerRule.DEEPAK_PUTHRAYA;
 import static io.harness.rule.OwnerRule.PRABU;
 import static java.util.Arrays.asList;
+import static junit.framework.TestCase.assertEquals;
 import static org.assertj.core.api.Assertions.assertThat;
 import static software.wings.beans.artifact.ArtifactStreamType.ACR;
 import static software.wings.beans.artifact.ArtifactStreamType.AMAZON_S3;
@@ -19,6 +21,7 @@ import static software.wings.beans.artifact.ArtifactStreamType.NEXUS;
 import static software.wings.beans.artifact.ArtifactStreamType.SFTP;
 import static software.wings.beans.artifact.ArtifactStreamType.SMB;
 import static software.wings.graphql.datafetcher.artifactSource.ArtifactSourceTestHelper.getNexusArtifactStream;
+import static software.wings.utils.WingsTestConstants.ARTIFACT_ID;
 import static software.wings.utils.WingsTestConstants.ARTIFACT_PATH;
 import static software.wings.utils.WingsTestConstants.ARTIFACT_STREAM_ID;
 import static software.wings.utils.WingsTestConstants.ARTIFACT_STREAM_NAME;
@@ -39,6 +42,7 @@ import software.wings.beans.artifact.AmazonS3ArtifactStream;
 import software.wings.beans.artifact.AmiArtifactStream;
 import software.wings.beans.artifact.ArtifactoryArtifactStream;
 import software.wings.beans.artifact.AzureArtifactsArtifactStream;
+import software.wings.beans.artifact.AzureMachineImageArtifactStream;
 import software.wings.beans.artifact.BambooArtifactStream;
 import software.wings.beans.artifact.DockerArtifactStream;
 import software.wings.beans.artifact.EcrArtifactStream;
@@ -48,6 +52,7 @@ import software.wings.beans.artifact.JenkinsArtifactStream;
 import software.wings.beans.artifact.NexusArtifactStream;
 import software.wings.beans.artifact.SftpArtifactStream;
 import software.wings.beans.artifact.SmbArtifactStream;
+import software.wings.graphql.schema.type.QLAzureImageDefinition;
 import software.wings.graphql.schema.type.QLKeyValuePair;
 import software.wings.graphql.schema.type.artifactSource.QLACRArtifactSource;
 import software.wings.graphql.schema.type.artifactSource.QLAMIArtifactSource;
@@ -57,6 +62,7 @@ import software.wings.graphql.schema.type.artifactSource.QLArtifactoryArtifactSo
 import software.wings.graphql.schema.type.artifactSource.QLArtifactoryDockerProps;
 import software.wings.graphql.schema.type.artifactSource.QLArtifactoryFileProps;
 import software.wings.graphql.schema.type.artifactSource.QLAzureArtifactsArtifactSource;
+import software.wings.graphql.schema.type.artifactSource.QLAzureMachineImageArtifactSource;
 import software.wings.graphql.schema.type.artifactSource.QLBambooArtifactSource;
 import software.wings.graphql.schema.type.artifactSource.QLDockerArtifactSource;
 import software.wings.graphql.schema.type.artifactSource.QLECRArtifactSource;
@@ -582,5 +588,43 @@ public class ArtifactSourceControllerTest extends WingsBaseTest {
     assertThat(qlAzureArtifactSource.getProject()).isEqualTo(PROJECT_ID);
     assertThat(qlAzureArtifactSource.getPackageType()).isEqualTo(PACKAGE_TYPE);
     assertThat(qlAzureArtifactSource.getScope()).isEqualTo("PROJECT");
+  }
+
+  @Test
+  @Owner(developers = DEEPAK_PUTHRAYA)
+  @Category(UnitTests.class)
+  public void shouldPopulateAzureMachineImageArtifactSource() {
+    AzureMachineImageArtifactStream stream =
+        AzureMachineImageArtifactStream.builder()
+            .uuid(ARTIFACT_ID)
+            .name(ARTIFACT_STREAM_NAME)
+            .settingId(SETTING_ID)
+            .createdAt(LONG_DEFAULT_VALUE)
+            .subscriptionId("subID")
+            .imageType(AzureMachineImageArtifactStream.ImageType.IMAGE_GALLERY)
+            .imageDefinition(AzureMachineImageArtifactStream.ImageDefinition.builder()
+                                 .resourceGroup("resourceGroup")
+                                 .imageDefinitionName("imageDefinition")
+                                 .imageGalleryName("imageGallery")
+                                 .build())
+            .build();
+    QLArtifactSource qlArtifactSource = ArtifactSourceController.populateArtifactSource(stream);
+    assertThat(qlArtifactSource).isInstanceOf(QLAzureMachineImageArtifactSource.class);
+
+    QLAzureMachineImageArtifactSource qaArtifactSource = (QLAzureMachineImageArtifactSource) qlArtifactSource;
+    QLAzureMachineImageArtifactSource expected = QLAzureMachineImageArtifactSource.builder()
+                                                     .id(ARTIFACT_ID)
+                                                     .name(ARTIFACT_STREAM_NAME)
+                                                     .createdAt(LONG_DEFAULT_VALUE)
+                                                     .azureCloudProviderId(SETTING_ID)
+                                                     .imageType("IMAGE_GALLERY")
+                                                     .subscriptionId("subID")
+                                                     .imageDefinition(QLAzureImageDefinition.builder()
+                                                                          .resourceGroup("resourceGroup")
+                                                                          .imageGalleryName("imageGallery")
+                                                                          .imageDefinitionName("imageDefinition")
+                                                                          .build())
+                                                     .build();
+    assertEquals("GraphQL artifact source should be mapped correctly", expected, qaArtifactSource);
   }
 }
