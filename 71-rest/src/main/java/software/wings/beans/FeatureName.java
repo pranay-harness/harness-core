@@ -106,7 +106,8 @@ public enum FeatureName {
   USE_CDN_FOR_STORAGE_FILES,
   USE_NEXUS3_PRIVATE_APIS,
   WEEKLY_WINDOW,
-  YAML_RBAC;
+  YAML_RBAC,
+  DYNATRACE_MULTI_SERVICE;
 
   FeatureName() {
     scope = Scope.PER_ACCOUNT;

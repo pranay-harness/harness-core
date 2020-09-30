@@ -42,6 +42,7 @@ import software.wings.service.impl.dynatrace.DynaTraceDataCollectionInfo;
 import software.wings.service.impl.dynatrace.DynaTraceTimeSeries;
 import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.AppService;
+import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.MetricDataAnalysisService;
 import software.wings.service.intfc.dynatrace.DynaTraceService;
 import software.wings.service.intfc.verification.CVActivityLogService.Logger;
@@ -52,6 +53,7 @@ import software.wings.verification.VerificationStateAnalysisExecutionData;
 import java.text.ParseException;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -64,6 +66,7 @@ import java.util.UUID;
 public class DynatraceStateTest extends APMStateVerificationTestBase {
   @Inject private MetricDataAnalysisService metricDataAnalysisService;
   @Mock private DynaTraceService dynaTraceService;
+  @Mock private FeatureFlagService mockFeatureFlagService;
   private DynatraceState dynatraceState;
   private List<String> serviceMethods = Lists.newArrayList(UUID.randomUUID().toString(), UUID.randomUUID().toString());
 
@@ -95,13 +98,14 @@ public class DynatraceStateTest extends APMStateVerificationTestBase {
     FieldUtils.writeField(dynatraceState, "workflowExecutionService", workflowExecutionService, true);
     FieldUtils.writeField(dynatraceState, "continuousVerificationService", continuousVerificationService, true);
     FieldUtils.writeField(dynatraceState, "workflowExecutionBaselineService", workflowExecutionBaselineService, true);
-    FieldUtils.writeField(dynatraceState, "featureFlagService", featureFlagService, true);
+    FieldUtils.writeField(dynatraceState, "featureFlagService", mockFeatureFlagService, true);
     FieldUtils.writeField(dynatraceState, "versionInfoManager", versionInfoManager, true);
     FieldUtils.writeField(dynatraceState, "appService", appService, true);
     FieldUtils.writeField(dynatraceState, "accountService", accountService, true);
     FieldUtils.writeField(dynatraceState, "cvActivityLogService", cvActivityLogService, true);
     FieldUtils.writeField(dynatraceState, "dynaTraceService", dynaTraceService, true);
     when(cvActivityLogService.getLoggerByStateExecutionId(anyString(), anyString())).thenReturn(mock(Logger.class));
+    when(mockFeatureFlagService.isEnabled(any(), any())).thenReturn(true);
   }
 
   @Test
@@ -178,6 +182,7 @@ public class DynatraceStateTest extends APMStateVerificationTestBase {
             .serviceId(serviceId)
             .startTime(0)
             .collectionTime(Integer.parseInt(dynatraceState.getTimeDuration()))
+            .dynatraceServiceIds(new HashSet<>())
             .timeSeriesDefinitions(Lists.newArrayList(DynaTraceTimeSeries.values()))
             .dataCollectionMinute(0)
             .encryptedDataDetails(
@@ -244,7 +249,44 @@ public class DynatraceStateTest extends APMStateVerificationTestBase {
     final DynaTraceDataCollectionInfo actualCollectionInfo =
         (DynaTraceDataCollectionInfo) task.getData().getParameters()[0];
 
-    assertThat(actualCollectionInfo.getDynatraceServiceId()).isEqualTo("entityID1");
+    assertThat(actualCollectionInfo.getDynatraceServiceIds()).containsExactly("entityID1");
+  }
+
+  @Test
+  @Owner(developers = PRAVEEN)
+  @Category(UnitTests.class)
+  public void testTriggerCollection_withServiceEntityIdMultiServiceFFTurnedOff() {
+    when(mockFeatureFlagService.isEnabled(any(), any())).thenReturn(false);
+    when(dynaTraceService.validateDynatraceServiceId(anyString(), anyString())).thenReturn(true);
+    dynatraceState.setServiceEntityId("entityID1,entityID2");
+    ExecutionResponse response = executeTrigger();
+    assertThat(response.getExecutionStatus()).isEqualTo(ExecutionStatus.ERROR);
+  }
+
+  @Test
+  @Owner(developers = PRAVEEN)
+  @Category(UnitTests.class)
+  public void testTriggerCollection_withServiceEntityIdMultiService() {
+    when(dynaTraceService.validateDynatraceServiceId(anyString(), anyString())).thenReturn(true);
+    dynatraceState.setServiceEntityId("entityID1,entityID2");
+    DelegateTask task = setupAndGetDelegateTaskFromTrigger();
+    final DynaTraceDataCollectionInfo actualCollectionInfo =
+        (DynaTraceDataCollectionInfo) task.getData().getParameters()[0];
+
+    assertThat(actualCollectionInfo.getDynatraceServiceIds()).contains("entityID1", "entityID2");
+  }
+
+  @Test
+  @Owner(developers = PRAVEEN)
+  @Category(UnitTests.class)
+  public void testTriggerCollection_withServiceEntityIdMultiServiceWithSpace() {
+    when(dynaTraceService.validateDynatraceServiceId(anyString(), anyString())).thenReturn(true);
+    dynatraceState.setServiceEntityId("entityID1 , entityID2");
+    DelegateTask task = setupAndGetDelegateTaskFromTrigger();
+    final DynaTraceDataCollectionInfo actualCollectionInfo =
+        (DynaTraceDataCollectionInfo) task.getData().getParameters()[0];
+
+    assertThat(actualCollectionInfo.getDynatraceServiceIds()).contains("entityID1", "entityID2");
   }
 
   @Test
@@ -257,10 +299,19 @@ public class DynatraceStateTest extends APMStateVerificationTestBase {
     final DynaTraceDataCollectionInfo actualCollectionInfo =
         (DynaTraceDataCollectionInfo) task.getData().getParameters()[0];
 
-    assertThat(actualCollectionInfo.getDynatraceServiceId()).isEqualTo("entityID3");
+    assertThat(actualCollectionInfo.getDynatraceServiceIds()).containsExactly("entityID3");
   }
 
   private DelegateTask setupAndGetDelegateTaskFromTrigger() {
+    ExecutionResponse response = executeTrigger();
+    assertThat(response.getExecutionStatus()).isEqualTo(ExecutionStatus.RUNNING);
+
+    List<DelegateTask> tasks = wingsPersistence.createQuery(DelegateTask.class, excludeAuthority).asList();
+    assertThat(tasks).hasSize(1);
+    return tasks.get(0);
+  }
+
+  private ExecutionResponse executeTrigger() {
     DynaTraceConfig dynaTraceConfig = DynaTraceConfig.builder()
                                           .accountId(accountId)
                                           .dynaTraceUrl("dynatrace-url")
@@ -291,11 +342,6 @@ public class DynatraceStateTest extends APMStateVerificationTestBase {
         .thenReturn(Environment.Builder.anEnvironment().uuid(UUID.randomUUID().toString()).build());
     when(executionContext.getContextElement(ContextElementType.STANDARD)).thenReturn(workflowStandardParams);
 
-    ExecutionResponse response = spyState.execute(executionContext);
-    assertThat(response.getExecutionStatus()).isEqualTo(ExecutionStatus.RUNNING);
-
-    List<DelegateTask> tasks = wingsPersistence.createQuery(DelegateTask.class, excludeAuthority).asList();
-    assertThat(tasks).hasSize(1);
-    return tasks.get(0);
+    return spyState.execute(executionContext);
   }
 }

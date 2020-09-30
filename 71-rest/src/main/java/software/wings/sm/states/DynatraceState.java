@@ -22,6 +22,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.annotations.Transient;
 import org.slf4j.Logger;
 import software.wings.beans.DynaTraceConfig;
+import software.wings.beans.FeatureName;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.TaskType;
 import software.wings.delegatetasks.cv.DataCollectionException;
@@ -34,11 +35,14 @@ import software.wings.sm.ExecutionContext;
 import software.wings.sm.StateType;
 import software.wings.verification.VerificationStateAnalysisExecutionData;
 
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -76,26 +80,44 @@ public class DynatraceState extends AbstractMetricAnalysisState {
     Preconditions.checkNotNull(settingAttribute, "No dynatrace setting with id: " + analysisServerConfigId + " found");
     final long dataCollectionStartTimeStamp = dataCollectionStartTimestampMillis();
     final DynaTraceConfig dynaTraceConfig = (DynaTraceConfig) settingAttribute.getValue();
-
     String resolvedServiceField = getResolvedFieldValue(context, DynatraceStateKeys.serviceEntityId, serviceEntityId);
-    String resolvedServiceId = null;
 
-    // we will do the resolution for serviceID only if it is not empty
-    // this is because already existing setups will not have this field.
+    Set<String> entityIdsToQuery = new HashSet<>();
     if (isNotEmpty(resolvedServiceField)) {
-      // if this is a name, get the corresponding ID.
-      try {
-        resolvedServiceId = dynaTraceService.resolveDynatraceServiceNameToId(resolvedConnectorId, resolvedServiceField);
-      } catch (Exception ex) {
-        logger.info("Exception while trying to resolve dynatrace service name to id");
+      List<String> resolvedServiceIds = Arrays.asList(resolvedServiceField.split(","));
+      resolvedServiceIds.replaceAll(String::trim);
+
+      if (resolvedServiceIds.size() > 1
+          && !featureFlagService.isEnabled(FeatureName.DYNATRACE_MULTI_SERVICE, context.getAccountId())) {
+        throw new DataCollectionException("Dynatrace Multiservice CV is not supported for this account. "
+            + "Please contact Harness support");
       }
-      if (resolvedServiceId == null) {
-        boolean isValidId = dynaTraceService.validateDynatraceServiceId(resolvedConnectorId, resolvedServiceField);
-        if (!isValidId) {
-          throw new DataCollectionException("Invalid serviceId provided in setup: " + resolvedServiceField);
+
+      resolvedServiceIds.forEach(resolvedServiceEntityId -> {
+        // we will do the resolution for serviceID only if it is not empty
+        // this is because already existing setups will not have this field.
+        String validatedServiceId = null;
+        if (isNotEmpty(resolvedServiceEntityId)) {
+          // if this is a name, get the corresponding ID.
+          try {
+            validatedServiceId =
+                dynaTraceService.resolveDynatraceServiceNameToId(resolvedConnectorId, resolvedServiceEntityId);
+            if (isNotEmpty(validatedServiceId)) {
+              resolvedServiceEntityId = validatedServiceId;
+            }
+          } catch (Exception ex) {
+            logger.info("Exception while trying to resolve dynatrace service name to id");
+          }
+          if (validatedServiceId == null) {
+            boolean isValidId =
+                dynaTraceService.validateDynatraceServiceId(resolvedConnectorId, resolvedServiceEntityId);
+            if (!isValidId) {
+              throw new DataCollectionException("Invalid serviceId provided in setup: " + resolvedServiceField);
+            }
+          }
+          entityIdsToQuery.add(resolvedServiceEntityId);
         }
-        resolvedServiceId = resolvedServiceField;
-      }
+      });
     }
 
     final DynaTraceDataCollectionInfo dataCollectionInfo =
@@ -110,7 +132,7 @@ public class DynatraceState extends AbstractMetricAnalysisState {
             .collectionTime(Integer.parseInt(getTimeDuration()))
             .timeSeriesDefinitions(Lists.newArrayList(DynaTraceTimeSeries.values()))
             .dataCollectionMinute(0)
-            .dynatraceServiceId(resolvedServiceId)
+            .dynatraceServiceIds(entityIdsToQuery)
             .encryptedDataDetails(secretManager.getEncryptionDetails(
                 dynaTraceConfig, context.getAppId(), context.getWorkflowExecutionId()))
             .analysisComparisonStrategy(getComparisonStrategy())
