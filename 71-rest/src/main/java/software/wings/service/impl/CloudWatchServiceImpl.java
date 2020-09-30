@@ -134,7 +134,7 @@ public class CloudWatchServiceImpl implements CloudWatchService {
       throw new WingsException("AWS account setting not found " + settingId);
     }
     loadBalancers.addAll(awsInfrastructureProvider.listClassicLoadBalancers(settingAttribute, region, ""));
-    loadBalancers.addAll(awsInfrastructureProvider.listLoadBalancers(settingAttribute, region, ""));
+    loadBalancers.addAll(awsInfrastructureProvider.listElasticBalancers(settingAttribute, region, ""));
     return loadBalancers;
   }
 

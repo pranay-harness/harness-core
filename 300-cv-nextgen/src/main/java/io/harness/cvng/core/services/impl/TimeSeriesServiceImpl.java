@@ -3,6 +3,7 @@ package io.harness.cvng.core.services.impl;
 import static io.harness.cvng.core.services.CVNextGenConstants.CV_ANALYSIS_WINDOW_MINUTES;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.persistence.HQuery.excludeAuthority;
 import static java.util.Comparator.comparingLong;
 
@@ -76,6 +77,8 @@ public class TimeSeriesServiceImpl implements TimeSeriesService {
       hPersistence.getDatastore(TimeSeriesRecord.class)
           .update(query,
               hPersistence.createUpdateOperations(TimeSeriesRecord.class)
+                  .setOnInsert(TimeSeriesRecordKeys.uuid, generateUuid())
+                  .setOnInsert(TimeSeriesRecordKeys.createdAt, Instant.now().toEpochMilli())
                   .set(TimeSeriesRecordKeys.accountId, timeSeriesRecord.getAccountId())
                   .addToSet(TimeSeriesRecordKeys.timeSeriesGroupValues,
                       Lists.newArrayList(timeSeriesRecord.getTimeSeriesGroupValues())),
@@ -170,7 +173,7 @@ public class TimeSeriesServiceImpl implements TimeSeriesService {
                                   .map(TimeSeriesRiskSummary.TransactionMetricRisk::getMetricName)
                                   .collect(Collectors.toSet());
     List<TimeSeriesRecord> records =
-        hPersistence.createQuery(TimeSeriesRecord.class)
+        hPersistence.createQuery(TimeSeriesRecord.class, excludeAuthority)
             .filter(TimeSeriesRecordKeys.cvConfigId, riskSummary.getCvConfigId())
             .filter(TimeSeriesRecordKeys.bucketStartTime, riskSummary.getAnalysisStartTime())
             .field(TimeSeriesRecordKeys.metricName)

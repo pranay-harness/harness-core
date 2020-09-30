@@ -21,6 +21,8 @@ import io.harness.CvNextGenTest;
 import io.harness.beans.EmbeddedUser;
 import io.harness.category.element.UnitTests;
 import io.harness.cvng.analysis.beans.TimeSeriesTestDataDTO.MetricData;
+import io.harness.cvng.analysis.entities.TimeSeriesRiskSummary;
+import io.harness.cvng.analysis.entities.TimeSeriesRiskSummary.TransactionMetricRisk;
 import io.harness.cvng.beans.DataSourceType;
 import io.harness.cvng.beans.TimeSeriesCustomThresholdActions;
 import io.harness.cvng.beans.TimeSeriesDataCollectionRecord;
@@ -138,6 +140,60 @@ public class TimeSeriesServiceImplTest extends CvNextGenTest {
                             .asList();
     assertThat(timeSeriesRecords.size()).isEqualTo(numOfMetrics);
     validateSavedRecords(numOfMetrics, numOfTxnx, numOfMins, timeSeriesRecords);
+  }
+
+  @Test
+  @Owner(developers = PRAVEEN)
+  @Category(UnitTests.class)
+  public void testUpdateRiskScore() {
+    int numOfMetrics = 4;
+    int numOfTxnx = 5;
+    long numOfMins = CV_ANALYSIS_WINDOW_MINUTES;
+
+    List<TimeSeriesDataCollectionRecord> collectionRecords = new ArrayList<>();
+    for (int i = 0; i < numOfMins; i++) {
+      TimeSeriesDataCollectionRecord collectionRecord = TimeSeriesDataCollectionRecord.builder()
+                                                            .accountId(accountId)
+                                                            .cvConfigId(cvConfigId)
+                                                            .timeStamp(TimeUnit.MINUTES.toMillis(i))
+                                                            .metricValues(new HashSet<>())
+                                                            .build();
+      for (int j = 0; j < numOfMetrics; j++) {
+        TimeSeriesDataRecordMetricValue metricValue = TimeSeriesDataRecordMetricValue.builder()
+                                                          .metricName("metric-" + j)
+                                                          .timeSeriesValues(new HashSet<>())
+                                                          .build();
+        for (int k = 0; k < numOfTxnx; k++) {
+          metricValue.getTimeSeriesValues().add(
+              TimeSeriesDataRecordGroupValue.builder().value(random.nextDouble()).groupName("group-" + k).build());
+        }
+        collectionRecord.getMetricValues().add(metricValue);
+      }
+      collectionRecords.add(collectionRecord);
+    }
+    timeSeriesService.save(collectionRecords);
+    List<TimeSeriesRecord> timeSeriesRecords = hPersistence.createQuery(TimeSeriesRecord.class, excludeAuthority)
+                                                   .order(Sort.ascending(TimeSeriesRecordKeys.metricName))
+                                                   .asList();
+    assertThat(timeSeriesRecords.size()).isEqualTo(numOfMetrics);
+
+    // update the risk now.
+    TimeSeriesRiskSummary riskSummary = createRiskSummary(numOfMetrics, numOfTxnx);
+    riskSummary.setAnalysisStartTime(Instant.ofEpochMilli(0));
+    timeSeriesService.updateRiskScores(cvConfigId, riskSummary);
+    timeSeriesRecords = hPersistence.createQuery(TimeSeriesRecord.class, excludeAuthority)
+                            .order(Sort.ascending(TimeSeriesRecordKeys.metricName))
+                            .asList();
+    // validate that the number of records is the same after updating risk
+    assertThat(timeSeriesRecords.size()).isEqualTo(numOfMetrics);
+
+    // validate the risks
+    timeSeriesRecords.forEach(record -> {
+      int lastIndex = record.getMetricName().charAt(record.getMetricName().length() - 1) - '0';
+      Integer risk = lastIndex % 2 == 0 ? 1 : 0;
+      record.getTimeSeriesGroupValues().forEach(
+          timeSeriesGroupValue -> assertThat(timeSeriesGroupValue.getRiskScore()).isEqualTo(risk.doubleValue()));
+    });
   }
 
   @Test
@@ -522,5 +578,22 @@ public class TimeSeriesServiceImplTest extends CvNextGenTest {
       });
       return timeSeriesMLAnalysisRecords;
     }
+  }
+
+  private TimeSeriesRiskSummary createRiskSummary(int numMetrics, int numTxns) {
+    TimeSeriesRiskSummary riskSummary = TimeSeriesRiskSummary.builder().cvConfigId(cvConfigId).build();
+    List<TransactionMetricRisk> transactionMetricRisks = new ArrayList<>();
+    for (int j = 0; j < numMetrics; j++) {
+      for (int k = 0; k < numTxns; k++) {
+        TransactionMetricRisk transactionMetricRisk = TransactionMetricRisk.builder()
+                                                          .metricName("metric-" + j)
+                                                          .transactionName("group-" + k)
+                                                          .metricRisk(j % 2 == 0 ? 1 : 0)
+                                                          .build();
+        transactionMetricRisks.add(transactionMetricRisk);
+      }
+    }
+    riskSummary.setTransactionMetricRiskList(transactionMetricRisks);
+    return riskSummary;
   }
 }
