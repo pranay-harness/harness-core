@@ -1,6 +1,6 @@
 package io.harness;
 
-import static io.harness.rule.OwnerRule.GEORGE;
+import static io.harness.rule.OwnerRule.AMAN;
 import static org.assertj.core.api.Assertions.assertThatCode;
 
 import com.google.inject.Inject;
@@ -21,7 +21,7 @@ public class CIExecutionComponentTest extends CIExecutionTest {
   @Inject private Map<String, TestExecution> tests;
 
   @Test
-  @Owner(developers = GEORGE)
+  @Owner(developers = AMAN)
   @Category(UnitTests.class)
   public void componentCIExecutionTests() {
     for (Entry<String, TestExecution> test : tests.entrySet()) {
