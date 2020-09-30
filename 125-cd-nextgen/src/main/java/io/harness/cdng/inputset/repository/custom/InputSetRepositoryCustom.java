@@ -1,7 +1,7 @@
 package io.harness.cdng.inputset.repository.custom;
 
 import com.mongodb.client.result.UpdateResult;
-import io.harness.ngpipeline.BaseInputSetEntity;
+import io.harness.ngpipeline.overlayinputset.beans.BaseInputSetEntity;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.mongodb.core.query.Criteria;

@@ -4,7 +4,7 @@ import com.google.inject.Inject;
 
 import com.mongodb.client.result.UpdateResult;
 import io.harness.cdng.inputset.mappers.InputSetFilterHelper;
-import io.harness.ngpipeline.BaseInputSetEntity;
+import io.harness.ngpipeline.overlayinputset.beans.BaseInputSetEntity;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

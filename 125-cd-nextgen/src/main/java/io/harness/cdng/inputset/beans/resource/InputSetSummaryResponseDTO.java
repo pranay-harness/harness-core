@@ -1,7 +1,7 @@
 package io.harness.cdng.inputset.beans.resource;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import io.harness.ngpipeline.InputSetEntityType;
+import io.harness.ngpipeline.overlayinputset.beans.InputSetEntityType;
 import io.swagger.annotations.ApiModel;
 import lombok.Builder;
 import lombok.Value;

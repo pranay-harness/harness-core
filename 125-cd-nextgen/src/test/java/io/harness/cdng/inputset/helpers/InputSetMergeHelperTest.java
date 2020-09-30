@@ -61,6 +61,8 @@ public class InputSetMergeHelperTest extends CDNGBaseTest {
   @Category(UnitTests.class)
   public void testMergingInputSets() throws IOException {
     setupPipelineAndInputSets();
+    testMergingInputSetsWithYamlParam(
+        "cdng/mergeInputSets/finalInputSet.yml", "cdng/mergeInputSets/expectedMergedPipeline.yml");
     testMergingInputSetsWithTemplateParam(false, "cdng/mergeInputSets/expectedMergedPipeline.yml");
     testMergingInputSetsWithTemplateParam(true, "cdng/mergeInputSets/expectedMergedPipelineInputTemplate.yml");
   }
@@ -110,6 +112,20 @@ public class InputSetMergeHelperTest extends CDNGBaseTest {
     expectedFieldName = "gitFetchType";
     expectedMessage = "Input Set field cannot have value if not marked as runtime in original pipeline.";
     validateAssertOnErrorResponse(uuidToErrorResponseMap, key, expectedIdentifier, expectedFieldName, expectedMessage);
+  }
+
+  private void testMergingInputSetsWithYamlParam(
+      String finalInputSetPipelineTemplateFileName, String expectedResponseYamlFileName) throws IOException {
+    ClassLoader classLoader = getClass().getClassLoader();
+    String finalInputSetPipelineYaml = Resources.toString(
+        Objects.requireNonNull(classLoader.getResource(finalInputSetPipelineTemplateFileName)), StandardCharsets.UTF_8);
+    MergeInputSetResponse mergeInputSetResponse = inputSetMergeHelper.getMergePipelineYamlFromInputSetPipelineYaml(
+        ACCOUNT_ID, ORG_ID, PROJECT_ID, PIPELINE_ID, finalInputSetPipelineYaml, false, false);
+    assertThat(mergeInputSetResponse.isErrorResponse()).isFalse();
+    String expectedMergedPipelineYaml = Resources.toString(
+        Objects.requireNonNull(classLoader.getResource(expectedResponseYamlFileName)), StandardCharsets.UTF_8);
+    String mergedPipelineYaml = mergeInputSetResponse.getPipelineYaml().replaceAll("\"", "");
+    assertThat(mergedPipelineYaml).isEqualTo(expectedMergedPipelineYaml);
   }
 
   private void testMergingInputSetsWithTemplateParam(boolean isTemplate, String expectedResponseYamlFileName)
@@ -176,7 +192,7 @@ public class InputSetMergeHelperTest extends CDNGBaseTest {
     VisitorErrorResponseWrapper errorResponseWrapper = uuidToErrorResponseMap.get(key);
     assertThat(errorResponseWrapper.getErrors().size()).isEqualTo(1);
     MergeInputSetErrorResponse errorResponse = (MergeInputSetErrorResponse) errorResponseWrapper.getErrors().get(0);
-    assertThat(errorResponse.getCausedByInputSetIdentifier()).isEqualTo(expectedIdentifier);
+    assertThat(errorResponse.getIdentifierOfErrorSource()).isEqualTo(expectedIdentifier);
     assertThat(errorResponse.getFieldName()).isEqualTo(expectedFieldName);
     assertThat(errorResponse.getMessage()).isEqualTo(expectedMessage);
   }

@@ -8,11 +8,11 @@ import lombok.Value;
 @Value
 @EqualsAndHashCode(callSuper = true)
 public class MergeInputSetErrorResponse extends VisitorErrorResponse {
-  String causedByInputSetIdentifier;
+  String identifierOfErrorSource;
 
   @Builder(builderMethodName = "mergeErrorBuilder")
-  public MergeInputSetErrorResponse(String fieldName, String message, String causedByInputSetIdentifier) {
+  public MergeInputSetErrorResponse(String fieldName, String message, String identifierOfErrorSource) {
     super(fieldName, message);
-    this.causedByInputSetIdentifier = causedByInputSetIdentifier;
+    this.identifierOfErrorSource = identifierOfErrorSource;
   }
 }

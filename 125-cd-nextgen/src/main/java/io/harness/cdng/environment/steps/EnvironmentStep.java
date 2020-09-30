@@ -55,7 +55,6 @@ public class EnvironmentStep implements Step, SyncExecutable<EnvironmentStepPara
         .identifier(environmentYaml.getIdentifier().getValue())
         .orgIdentifier(orgIdentifier)
         .projectIdentifier(projectIdentifier)
-        .tags(environmentYaml.getTags())
         .build();
   }
 }

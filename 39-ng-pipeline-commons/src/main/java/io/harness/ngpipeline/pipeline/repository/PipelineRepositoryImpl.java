@@ -1,4 +1,4 @@
-package io.harness.ngpipeline.repository;
+package io.harness.ngpipeline.pipeline.repository;
 
 import com.google.inject.Inject;
 

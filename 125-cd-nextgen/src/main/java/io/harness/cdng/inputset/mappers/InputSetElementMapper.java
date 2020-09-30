@@ -2,16 +2,17 @@ package io.harness.cdng.inputset.mappers;
 
 import io.harness.cdng.inputset.beans.entities.CDInputSetEntity;
 import io.harness.cdng.inputset.beans.entities.MergeInputSetResponse;
+import io.harness.cdng.inputset.beans.resource.InputSetErrorDTO;
+import io.harness.cdng.inputset.beans.resource.InputSetErrorResponseDTO;
+import io.harness.cdng.inputset.beans.resource.InputSetErrorWrapperDTO;
 import io.harness.cdng.inputset.beans.resource.InputSetResponseDTO;
 import io.harness.cdng.inputset.beans.resource.InputSetSummaryResponseDTO;
-import io.harness.cdng.inputset.beans.resource.MergeInputSetErrorDTO;
-import io.harness.cdng.inputset.beans.resource.MergeInputSetErrorWrapperDTO;
 import io.harness.cdng.inputset.beans.resource.MergeInputSetResponseDTO;
 import io.harness.cdng.inputset.beans.yaml.CDInputSet;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.exception.InvalidRequestException;
-import io.harness.ngpipeline.BaseInputSetEntity;
-import io.harness.ngpipeline.InputSetEntityType;
+import io.harness.ngpipeline.overlayinputset.beans.BaseInputSetEntity;
+import io.harness.ngpipeline.overlayinputset.beans.InputSetEntityType;
 import io.harness.ngpipeline.overlayinputset.beans.entities.OverlayInputSetEntity;
 import io.harness.ngpipeline.overlayinputset.beans.resource.OverlayInputSetResponseDTO;
 import io.harness.overlayinputset.OverlayInputSet;
@@ -133,27 +134,37 @@ public class InputSetElementMapper {
   }
 
   public MergeInputSetResponseDTO toMergeInputSetResponseDTO(MergeInputSetResponse mergeInputSetResponse) {
-    Map<String, MergeInputSetErrorWrapperDTO> uuidToErrorResponseMap = new HashMap<>();
+    return MergeInputSetResponseDTO.builder()
+        .pipelineYaml(mergeInputSetResponse.getPipelineYaml())
+        .isErrorResponse(mergeInputSetResponse.isErrorResponse())
+        .inputSetErrorWrapper(toInputSetErrorWrapperDTO(mergeInputSetResponse))
+        .build();
+  }
+
+  private InputSetErrorWrapperDTO toInputSetErrorWrapperDTO(MergeInputSetResponse mergeInputSetResponse) {
+    if (!mergeInputSetResponse.isErrorResponse()) {
+      return InputSetErrorWrapperDTO.builder().build();
+    }
+    Map<String, InputSetErrorResponseDTO> uuidToErrorResponseMap = new HashMap<>();
 
     if (EmptyPredicate.isNotEmpty(mergeInputSetResponse.getUuidToErrorResponseMap())) {
       for (Map.Entry<String, VisitorErrorResponseWrapper> entry :
           mergeInputSetResponse.getUuidToErrorResponseMap().entrySet()) {
-        List<MergeInputSetErrorDTO> errorDTOS = new LinkedList<>();
+        List<InputSetErrorDTO> errorDTOS = new LinkedList<>();
         entry.getValue().getErrors().forEach(error -> {
           MergeInputSetErrorResponse errorResponse = (MergeInputSetErrorResponse) error;
-          errorDTOS.add(MergeInputSetErrorDTO.builder()
+          errorDTOS.add(InputSetErrorDTO.builder()
                             .fieldName(error.getFieldName())
                             .message(error.getMessage())
-                            .causedByInputSetIdentifier(errorResponse.getCausedByInputSetIdentifier())
+                            .identifierOfErrorSource(errorResponse.getIdentifierOfErrorSource())
                             .build());
         });
 
-        uuidToErrorResponseMap.put(entry.getKey(), MergeInputSetErrorWrapperDTO.builder().errors(errorDTOS).build());
+        uuidToErrorResponseMap.put(entry.getKey(), InputSetErrorResponseDTO.builder().errors(errorDTOS).build());
       }
     }
-    return MergeInputSetResponseDTO.builder()
-        .pipelineYaml(mergeInputSetResponse.getPipelineYaml())
-        .isErrorResponse(mergeInputSetResponse.isErrorResponse())
+
+    return InputSetErrorWrapperDTO.builder()
         .errorPipelineYaml(mergeInputSetResponse.getErrorPipelineYaml())
         .uuidToErrorResponseMap(uuidToErrorResponseMap)
         .build();

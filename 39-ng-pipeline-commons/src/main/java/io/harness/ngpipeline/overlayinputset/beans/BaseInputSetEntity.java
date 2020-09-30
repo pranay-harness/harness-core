@@ -1,4 +1,4 @@
-package io.harness.ngpipeline;
+package io.harness.ngpipeline.overlayinputset.beans;
 
 import io.harness.annotation.HarnessEntity;
 import io.harness.data.validator.EntityIdentifier;
@@ -7,7 +7,7 @@ import io.harness.data.validator.Trimmed;
 import io.harness.mongo.index.CdIndex;
 import io.harness.mongo.index.Field;
 import io.harness.mongo.index.NgUniqueIndex;
-import io.harness.ngpipeline.BaseInputSetEntity.BaseInputSetEntityKeys;
+import io.harness.ngpipeline.overlayinputset.beans.BaseInputSetEntity.BaseInputSetEntityKeys;
 import io.harness.persistence.PersistentEntity;
 import lombok.Data;
 import lombok.experimental.FieldNameConstants;

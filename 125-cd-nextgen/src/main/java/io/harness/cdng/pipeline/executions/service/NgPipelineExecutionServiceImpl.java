@@ -8,7 +8,10 @@ import com.google.inject.Singleton;
 
 import io.harness.beans.EmbeddedUser;
 import io.harness.cdng.common.beans.SetupAbstractionKeys;
+import io.harness.cdng.inputset.beans.entities.MergeInputSetResponse;
+import io.harness.cdng.inputset.helpers.InputSetMergeHelper;
 import io.harness.cdng.pipeline.NgPipeline;
+import io.harness.cdng.pipeline.beans.resources.NGPipelineExecutionResponseDTO;
 import io.harness.cdng.pipeline.executions.ExecutionStatus;
 import io.harness.cdng.pipeline.executions.PipelineExecutionHelper;
 import io.harness.cdng.pipeline.executions.TriggerType;
@@ -18,6 +21,7 @@ import io.harness.cdng.pipeline.executions.beans.PipelineExecutionSummary;
 import io.harness.cdng.pipeline.executions.beans.PipelineExecutionSummary.PipelineExecutionSummaryKeys;
 import io.harness.cdng.pipeline.executions.repositories.PipelineExecutionRepository;
 import io.harness.cdng.pipeline.mappers.ExecutionToDtoMapper;
+import io.harness.cdng.pipeline.mappers.NGPipelineExecutionDTOMapper;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.dto.OrchestrationGraph;
 import io.harness.engine.OrchestrationService;
@@ -42,10 +46,12 @@ import software.wings.security.UserThreadLocal;
 
 import java.io.IOException;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import javax.annotation.Nonnull;
+import javax.validation.constraints.NotNull;
 
 @Singleton
 public class NgPipelineExecutionServiceImpl implements NgPipelineExecutionService {
@@ -55,23 +61,33 @@ public class NgPipelineExecutionServiceImpl implements NgPipelineExecutionServic
   @Inject private NodeExecutionService nodeExecutionService;
   @Inject private GraphGenerationService graphGenerationService;
   @Inject private PipelineExecutionHelper pipelineExecutionHelper;
+  @Inject private InputSetMergeHelper inputSetMergeHelper;
 
   @Override
-  public PlanExecution triggerPipeline(
+  public PlanExecution runPipeline(
       String pipelineYaml, String accountId, String orgId, String projectId, EmbeddedUser user) {
-    final NgPipeline ngPipeline;
-    try {
-      ngPipeline = YamlPipelineUtils.read(pipelineYaml, NgPipeline.class);
-      Map<String, Object> contextAttributes = new HashMap<>();
+    return startPipelinePlanExecution(accountId, orgId, projectId, pipelineYaml, user);
+  }
 
-      final Plan planForPipeline =
-          executionPlanCreatorService.createPlanForPipeline(ngPipeline, accountId, contextAttributes);
-      return orchestrationService.startExecution(planForPipeline,
-          ImmutableMap.of(SetupAbstractionKeys.accountId, accountId, SetupAbstractionKeys.orgIdentifier, orgId,
-              SetupAbstractionKeys.projectIdentifier, projectId));
-    } catch (IOException e) {
-      throw new GeneralException("error while de-serializing Yaml", e);
-    }
+  @Override
+  public NGPipelineExecutionResponseDTO runPipelineWithInputSetPipelineYaml(@NotNull String accountId,
+      @NotNull String orgIdentifier, @NotNull String projectIdentifier, @NotNull String pipelineIdentifier,
+      @NotNull String inputSetPipelineYaml, boolean useFQNIfErrorResponse, EmbeddedUser user) {
+    MergeInputSetResponse mergeInputSetResponse =
+        inputSetMergeHelper.getMergePipelineYamlFromInputSetPipelineYaml(accountId, orgIdentifier, projectIdentifier,
+            pipelineIdentifier, inputSetPipelineYaml, false, useFQNIfErrorResponse);
+    return getPipelineResponseDTO(accountId, orgIdentifier, projectIdentifier, mergeInputSetResponse, user);
+  }
+
+  @Override
+  public NGPipelineExecutionResponseDTO runPipelineWithInputSetReferencesList(String accountId, String orgIdentifier,
+      String projectIdentifier, String pipelineIdentifier, List<String> inputSetReferences,
+      boolean useFQNIfErrorResponse, EmbeddedUser user) {
+    MergeInputSetResponse mergeInputSetResponse =
+        inputSetMergeHelper.getMergePipelineYamlFromInputIdentifierList(accountId, orgIdentifier, projectIdentifier,
+            pipelineIdentifier, inputSetReferences, false, useFQNIfErrorResponse);
+
+    return getPipelineResponseDTO(accountId, orgIdentifier, projectIdentifier, mergeInputSetResponse, user);
   }
 
   @Override
@@ -157,6 +173,44 @@ public class NgPipelineExecutionServiceImpl implements NgPipelineExecutionServic
       pipelineExecutionHelper.updatePipelineExecutionStatus(pipelineExecutionSummary, nodeExecution);
     }
     return pipelineExecutionRepository.save(pipelineExecutionSummary);
+  }
+
+  private PlanExecution startPipelinePlanExecution(
+      String accountId, String orgIdentifier, String projectIdentifier, String finalPipelineYaml, EmbeddedUser user) {
+    try {
+      final NgPipeline cdPipeline;
+      cdPipeline = YamlPipelineUtils.read(finalPipelineYaml, NgPipeline.class);
+      Map<String, Object> contextAttributes = new HashMap<>();
+      final Plan planForPipeline =
+          executionPlanCreatorService.createPlanForPipeline(cdPipeline, accountId, contextAttributes);
+
+      if (user == null) {
+        user = getEmbeddedUser();
+      }
+      ImmutableMap.Builder<String, String> abstractionsBuilder =
+          ImmutableMap.<String, String>builder()
+              .put(SetupAbstractionKeys.accountId, accountId)
+              .put(SetupAbstractionKeys.orgIdentifier, orgIdentifier)
+              .put(SetupAbstractionKeys.projectIdentifier, projectIdentifier);
+      if (user != null) {
+        abstractionsBuilder.put(SetupAbstractionKeys.userId, user.getUuid())
+            .put(SetupAbstractionKeys.userName, user.getName())
+            .put(SetupAbstractionKeys.userEmail, user.getEmail());
+      }
+      return orchestrationService.startExecution(planForPipeline, abstractionsBuilder.build());
+    } catch (IOException e) {
+      throw new GeneralException("Error while de-serializing merged pipeline yaml", e);
+    }
+  }
+
+  private NGPipelineExecutionResponseDTO getPipelineResponseDTO(String accountId, String orgIdentifier,
+      String projectIdentifier, MergeInputSetResponse mergeInputSetResponse, EmbeddedUser user) {
+    if (mergeInputSetResponse.isErrorResponse()) {
+      return NGPipelineExecutionDTOMapper.toNGPipelineResponseDTO(null, mergeInputSetResponse);
+    }
+    PlanExecution planExecution = startPipelinePlanExecution(
+        accountId, orgIdentifier, projectIdentifier, mergeInputSetResponse.getPipelineYaml(), user);
+    return NGPipelineExecutionDTOMapper.toNGPipelineResponseDTO(planExecution, mergeInputSetResponse);
   }
 
   private EmbeddedUser getEmbeddedUser() {

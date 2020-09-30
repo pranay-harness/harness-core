@@ -174,7 +174,7 @@ public class MergeInputSetHelperUtils {
               Object key = dummyFieldToOriginalFieldMap.get(inputSetFieldDummy);
               addToMapWithValuesList(originalFieldToInputSetFieldMap, key,
                   MergeVisitorInputSetElement.builder()
-                      .identifier(inputSetElement.getIdentifier())
+                      .inputSetIdentifier(inputSetElement.getInputSetIdentifier())
                       .inputSetElement(inputSetField)
                       .build());
             }
@@ -209,7 +209,7 @@ public class MergeInputSetHelperUtils {
         if (checkIfInputSetFieldAtSameLevelOfOriginalField(
                 originalFieldValue, inputSetFieldValue, newDummyObjectFunction)) {
           inputSetFieldElementsResult.add(MergeVisitorInputSetElement.builder()
-                                              .identifier(inputSetElement.getIdentifier())
+                                              .inputSetIdentifier(inputSetElement.getInputSetIdentifier())
                                               .inputSetElement(inputSetFieldValue)
                                               .build());
         }
@@ -288,7 +288,7 @@ public class MergeInputSetHelperUtils {
       return MergeInputSetErrorResponse.mergeErrorBuilder()
           .fieldName(fieldName)
           .message(errorMessage)
-          .causedByInputSetIdentifier(inputSetIdentifier)
+          .identifierOfErrorSource(inputSetIdentifier)
           .build();
     }
     return null;

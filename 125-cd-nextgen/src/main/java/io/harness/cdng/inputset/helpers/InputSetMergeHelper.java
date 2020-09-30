@@ -11,8 +11,8 @@ import io.harness.cdng.pipeline.beans.dto.CDPipelineResponseDTO;
 import io.harness.cdng.pipeline.service.PipelineService;
 import io.harness.exception.InvalidArgumentsException;
 import io.harness.exception.InvalidRequestException;
-import io.harness.ngpipeline.BaseInputSetEntity;
-import io.harness.ngpipeline.InputSetEntityType;
+import io.harness.ngpipeline.overlayinputset.beans.BaseInputSetEntity;
+import io.harness.ngpipeline.overlayinputset.beans.InputSetEntityType;
 import io.harness.ngpipeline.overlayinputset.beans.entities.OverlayInputSetEntity;
 import io.harness.walktree.visitor.SimpleVisitorFactory;
 import io.harness.walktree.visitor.inputset.InputSetTemplateVisitor;
@@ -24,6 +24,7 @@ import io.harness.yaml.utils.YamlPipelineUtils;
 import lombok.AllArgsConstructor;
 
 import java.io.IOException;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
@@ -64,32 +65,76 @@ public class InputSetMergeHelper {
   }
 
   /**
-   * This function gives Pipeline object as response based on isTemplateResponse, which if true will set only template
-   * values marked as runtime in original pipeline.
-   * inputSetIdentifierList is ordered, the entry added to the end of list will be given highest priority.
+   * This is merge input Set helper function, which takes single inputset yaml which is yaml format.
+   * Note :- inputSetPipelineYaml should be of format  {@link io.harness.cdng.pipeline.NgPipeline }
+   */
+  public MergeInputSetResponse getMergePipelineYamlFromInputSetPipelineYaml(String accountId, String orgIdentifier,
+      String projectIdentifier, String pipelineIdentifier, String inputSetPipelineYaml, boolean isTemplateResponse,
+      boolean useFQNIfErrorResponse) {
+    try {
+      NgPipeline inputSetPipeline = YamlPipelineUtils.read(inputSetPipelineYaml, NgPipeline.class);
+      return getMergePipelineYamlFromInputSetPipelineYaml(accountId, orgIdentifier, projectIdentifier,
+          pipelineIdentifier, "inputSet", inputSetPipeline, isTemplateResponse, useFQNIfErrorResponse);
+    } catch (IOException e) {
+      throw new InvalidRequestException("InputSet Pipeline is not correct.");
+    }
+  }
+
+  /**
+   * This function gives Pipeline object as response based on isTemplateResponse, which if true will set only
+   * template values marked as runtime in original pipeline. There is only one inputSetPipeline as input.
+   */
+  public MergeInputSetResponse getMergePipelineYamlFromInputSetPipelineYaml(String accountId, String orgIdentifier,
+      String projectIdentifier, String pipelineIdentifier, String inputSetIdentifier, NgPipeline inputSetPipeline,
+      boolean isTemplateResponse, boolean useFQNIfErrorResponse) {
+    NgPipeline originalPipeline = getOriginalOrTemplatePipeline(
+        accountId, orgIdentifier, projectIdentifier, pipelineIdentifier, isTemplateResponse);
+    List<MergeVisitorInputSetElement> inputSetPipelineElementList =
+        Collections.singletonList(MergeVisitorInputSetElement.builder()
+                                      .inputSetIdentifier(inputSetIdentifier)
+                                      .inputSetElement(inputSetPipeline)
+                                      .build());
+    return runMergeInputSetVisitor(originalPipeline, inputSetPipelineElementList, useFQNIfErrorResponse);
+  }
+
+  /**
+   * This function gives Pipeline object as response based on isTemplateResponse, which if true will set only
+   * template values marked as runtime in original pipeline. inputSetIdentifierList is ordered, the entry added to
+   * the end of list will be given highest priority.
    */
   public MergeInputSetResponse getMergePipelineYamlFromInputIdentifierList(String accountId, String orgIdentifier,
       String projectIdentifier, String pipelineIdentifier, List<String> inputSetIdentifierList,
       boolean isTemplateResponse, boolean useFQNIfErrorResponse) {
+    NgPipeline originalPipeline = getOriginalOrTemplatePipeline(
+        accountId, orgIdentifier, projectIdentifier, pipelineIdentifier, isTemplateResponse);
+    List<MergeVisitorInputSetElement> inputSetPipelineElementList = getInputSetOrderedListPipelineElement(
+        accountId, orgIdentifier, projectIdentifier, pipelineIdentifier, inputSetIdentifierList);
+    return runMergeInputSetVisitor(originalPipeline, inputSetPipelineElementList, useFQNIfErrorResponse);
+  }
+
+  private NgPipeline getOriginalOrTemplatePipeline(String accountId, String orgIdentifier, String projectIdentifier,
+      String pipelineIdentifier, boolean isTemplateResponse) {
     Optional<CDPipelineResponseDTO> optionalPipeline =
         ngPipelineService.getPipeline(pipelineIdentifier, accountId, orgIdentifier, projectIdentifier);
-    if (optionalPipeline.isPresent()) {
-      CDPipelineResponseDTO cdPipelineResponseDTO = optionalPipeline.get();
-      NgPipeline originalPipeline = cdPipelineResponseDTO.getNgPipeline();
-      String pipelineYaml = cdPipelineResponseDTO.getYamlPipeline();
-
-      if (isTemplateResponse) {
-        originalPipeline = getTemplateObjectFromPipelineYaml(pipelineYaml);
-      }
-      List<MergeVisitorInputSetElement> inputSetPipelineElementList = getInputSetOrderedListPipelineElement(
-          accountId, orgIdentifier, projectIdentifier, pipelineIdentifier, inputSetIdentifierList);
-      MergeInputSetVisitor mergeInputSetVisitor =
-          simpleVisitorFactory.obtainMergeInputSetVisitor(useFQNIfErrorResponse, inputSetPipelineElementList);
-      mergeInputSetVisitor.walkElementTree(originalPipeline);
-      return toMergeInputSetResponse(mergeInputSetVisitor);
-    } else {
+    if (!optionalPipeline.isPresent()) {
       throw new InvalidRequestException("Pipeline doesn't exist for given identifier: " + pipelineIdentifier);
     }
+    CDPipelineResponseDTO cdPipelineResponseDTO = optionalPipeline.get();
+    NgPipeline originalPipeline = cdPipelineResponseDTO.getNgPipeline();
+    String pipelineYaml = cdPipelineResponseDTO.getYamlPipeline();
+
+    if (isTemplateResponse) {
+      originalPipeline = getTemplateObjectFromPipelineYaml(pipelineYaml);
+    }
+    return originalPipeline;
+  }
+
+  private MergeInputSetResponse runMergeInputSetVisitor(NgPipeline originalPipeline,
+      List<MergeVisitorInputSetElement> inputSetPipelineElementList, boolean useFQNIfErrorResponse) {
+    MergeInputSetVisitor mergeInputSetVisitor =
+        simpleVisitorFactory.obtainMergeInputSetVisitor(useFQNIfErrorResponse, inputSetPipelineElementList);
+    mergeInputSetVisitor.walkElementTree(originalPipeline);
+    return toMergeInputSetResponse(mergeInputSetVisitor);
   }
 
   /**
@@ -135,18 +180,20 @@ public class InputSetMergeHelper {
               // Overlay InputSet cannot contain another overlay InputSetIdentifier.
               else {
                 throw new InvalidArgumentsException(
-                    "Input set identifier doesn't exist, please send valid input set identifier.");
+                    "Input set identifier doesn't exist, please send valid input set identifier - " + inputSetReference
+                    + " which is defined in overlay identifier - " + inputSetIdentifier);
               }
             } else {
               throw new InvalidArgumentsException(
-                  "Input set identifier doesn't exist, please send valid input set identifier.");
+                  "Input set identifier doesn't exist, please send valid input set identifier - " + inputSetReference
+                  + " which is defined in overlay identifier - " + inputSetIdentifier);
             }
           }
         }
 
       } else {
         throw new InvalidArgumentsException(
-            "Input set identifier doesn't exist, please send valid input set identifier.");
+            "Input set identifier doesn't exist, please send valid input set identifier - " + inputSetIdentifier);
       }
     }
 
@@ -161,7 +208,7 @@ public class InputSetMergeHelper {
     if (baseInputSetEntity.getInputSetType() == InputSetEntityType.INPUT_SET) {
       CDInputSetEntity inputSetEntity = (CDInputSetEntity) baseInputSetEntity;
       return MergeVisitorInputSetElement.builder()
-          .identifier(inputSetIdentifier)
+          .inputSetIdentifier(inputSetIdentifier)
           .inputSetElement(inputSetEntity.getCdInputSet().getPipeline())
           .build();
     }

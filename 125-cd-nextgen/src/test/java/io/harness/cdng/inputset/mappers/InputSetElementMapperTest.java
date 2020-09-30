@@ -10,13 +10,14 @@ import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import io.harness.cdng.inputset.beans.entities.CDInputSetEntity;
 import io.harness.cdng.inputset.beans.entities.MergeInputSetResponse;
+import io.harness.cdng.inputset.beans.resource.InputSetErrorResponseDTO;
+import io.harness.cdng.inputset.beans.resource.InputSetErrorWrapperDTO;
 import io.harness.cdng.inputset.beans.resource.InputSetResponseDTO;
 import io.harness.cdng.inputset.beans.resource.InputSetSummaryResponseDTO;
-import io.harness.cdng.inputset.beans.resource.MergeInputSetErrorWrapperDTO;
 import io.harness.cdng.inputset.beans.resource.MergeInputSetResponseDTO;
 import io.harness.cdng.inputset.beans.yaml.CDInputSet;
-import io.harness.ngpipeline.BaseInputSetEntity;
-import io.harness.ngpipeline.InputSetEntityType;
+import io.harness.ngpipeline.overlayinputset.beans.BaseInputSetEntity;
+import io.harness.ngpipeline.overlayinputset.beans.InputSetEntityType;
 import io.harness.ngpipeline.overlayinputset.beans.entities.OverlayInputSetEntity;
 import io.harness.ngpipeline.overlayinputset.beans.resource.OverlayInputSetResponseDTO;
 import io.harness.rule.Owner;
@@ -110,6 +111,7 @@ public class InputSetElementMapperTest extends CategoryTest {
 
     requestMergeInputResponse = MergeInputSetResponse.builder()
                                     .pipelineYaml("PIPELINE_YAML")
+                                    .isErrorResponse(true)
                                     .uuidToErrorResponseMap(new HashMap<String, VisitorErrorResponseWrapper>() {
                                       {
                                         put("input1", VisitorErrorResponseWrapper.builder().build());
@@ -117,15 +119,19 @@ public class InputSetElementMapperTest extends CategoryTest {
                                       }
                                     })
                                     .build();
-    expectedMergeInputResponseDTO = MergeInputSetResponseDTO.builder()
-                                        .pipelineYaml("PIPELINE_YAML")
-                                        .uuidToErrorResponseMap(new HashMap<String, MergeInputSetErrorWrapperDTO>() {
-                                          {
-                                            put("input1", MergeInputSetErrorWrapperDTO.builder().build());
-                                            put("input2", MergeInputSetErrorWrapperDTO.builder().build());
-                                          }
-                                        })
-                                        .build();
+    expectedMergeInputResponseDTO =
+        MergeInputSetResponseDTO.builder()
+            .pipelineYaml("PIPELINE_YAML")
+            .isErrorResponse(true)
+            .inputSetErrorWrapper(InputSetErrorWrapperDTO.builder()
+                                      .uuidToErrorResponseMap(new HashMap<String, InputSetErrorResponseDTO>() {
+                                        {
+                                          put("input1", InputSetErrorResponseDTO.builder().build());
+                                          put("input2", InputSetErrorResponseDTO.builder().build());
+                                        }
+                                      })
+                                      .build())
+            .build();
 
     requestCdInputSetEntity = CDInputSetEntity.builder().cdInputSet(inputSetObject).build();
     responseCdInputSetEntity = CDInputSetEntity.builder().cdInputSet(inputSetObject).build();
@@ -257,15 +263,16 @@ public class InputSetElementMapperTest extends CategoryTest {
         InputSetElementMapper.toMergeInputSetResponseDTO(requestMergeInputResponse);
 
     assertThat(mergeInputSetResponseDTO.getPipelineYaml()).isEqualTo(expectedMergeInputResponseDTO.getPipelineYaml());
-    assertThat(mergeInputSetResponseDTO.getErrorPipelineYaml())
-        .isEqualTo(expectedMergeInputResponseDTO.getErrorPipelineYaml());
+    assertThat(mergeInputSetResponseDTO.getPipelineYaml()).isEqualTo(expectedMergeInputResponseDTO.getPipelineYaml());
+    assertThat(mergeInputSetResponseDTO.getInputSetErrorWrapper().getErrorPipelineYaml())
+        .isEqualTo(expectedMergeInputResponseDTO.getInputSetErrorWrapper().getErrorPipelineYaml());
     assertThat(mergeInputSetResponseDTO.isErrorResponse()).isEqualTo(expectedMergeInputResponseDTO.isErrorResponse());
-    assertThat(mergeInputSetResponseDTO.getUuidToErrorResponseMap().keySet().size())
-        .isEqualTo(expectedMergeInputResponseDTO.getUuidToErrorResponseMap().keySet().size());
+    assertThat(mergeInputSetResponseDTO.getInputSetErrorWrapper().getUuidToErrorResponseMap().keySet().size())
+        .isEqualTo(expectedMergeInputResponseDTO.getInputSetErrorWrapper().getUuidToErrorResponseMap().keySet().size());
 
-    assertThat(mergeInputSetResponseDTO.getUuidToErrorResponseMap().get("input1"))
-        .isEqualTo(expectedMergeInputResponseDTO.getUuidToErrorResponseMap().get("input1"));
-    assertThat(mergeInputSetResponseDTO.getUuidToErrorResponseMap().get("input2"))
-        .isEqualTo(expectedMergeInputResponseDTO.getUuidToErrorResponseMap().get("input2"));
+    assertThat(mergeInputSetResponseDTO.getInputSetErrorWrapper().getUuidToErrorResponseMap().get("input1"))
+        .isEqualTo(expectedMergeInputResponseDTO.getInputSetErrorWrapper().getUuidToErrorResponseMap().get("input1"));
+    assertThat(mergeInputSetResponseDTO.getInputSetErrorWrapper().getUuidToErrorResponseMap().get("input2"))
+        .isEqualTo(expectedMergeInputResponseDTO.getInputSetErrorWrapper().getUuidToErrorResponseMap().get("input2"));
   }
 }

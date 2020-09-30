@@ -16,7 +16,7 @@ import io.harness.beans.stages.IntegrationStage;
 import io.harness.category.element.UnitTests;
 import io.harness.cdng.pipeline.NgPipeline;
 import io.harness.cdng.pipeline.beans.entities.NgPipelineEntity;
-import io.harness.ngpipeline.repository.PipelineRepository;
+import io.harness.ngpipeline.pipeline.repository.PipelineRepository;
 import io.harness.rule.Owner;
 import io.harness.yaml.core.ExecutionElement;
 import io.harness.yaml.core.StageElement;

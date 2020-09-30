@@ -9,7 +9,7 @@ import java.util.List;
 
 @Value
 @Builder
-@ApiModel("MergeInputSetErrorWrapper")
-public class MergeInputSetErrorWrapperDTO {
-  @Builder.Default List<MergeInputSetErrorDTO> errors = new ArrayList<>();
+@ApiModel("InputSetErrorResponse")
+public class InputSetErrorResponseDTO {
+  @Builder.Default List<InputSetErrorDTO> errors = new ArrayList<>();
 }

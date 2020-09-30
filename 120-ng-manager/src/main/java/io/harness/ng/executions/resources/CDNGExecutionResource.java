@@ -12,7 +12,6 @@ import io.harness.cdng.pipeline.executions.beans.dto.PipelineExecutionSummaryDTO
 import io.harness.cdng.pipeline.executions.service.NgPipelineExecutionServiceImpl;
 import io.harness.cdng.pipeline.mappers.ExecutionToDtoMapper;
 import io.harness.ng.beans.PageResponse;
-import io.harness.ng.core.RestQueryFilterParser;
 import io.harness.ng.core.dto.ErrorDTO;
 import io.harness.ng.core.dto.FailureDTO;
 import io.harness.ng.core.dto.ResponseDTO;
@@ -47,7 +46,6 @@ import javax.ws.rs.QueryParam;
     })
 @Slf4j
 public class CDNGExecutionResource {
-  private final RestQueryFilterParser restQueryFilterParser;
   private final NgPipelineExecutionServiceImpl executionService;
 
   @GET

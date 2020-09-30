@@ -18,7 +18,7 @@ import io.harness.factory.ClosingFactoryModule;
 import io.harness.govern.ProviderModule;
 import io.harness.govern.ServersModule;
 import io.harness.morphia.MorphiaRegistrar;
-import io.harness.ngpipeline.repository.PipelineRepository;
+import io.harness.ngpipeline.pipeline.repository.PipelineRepository;
 import io.harness.queue.QueueController;
 import io.harness.rule.InjectorRuleMixin;
 import io.harness.serializer.CiExecutionRegistrars;
