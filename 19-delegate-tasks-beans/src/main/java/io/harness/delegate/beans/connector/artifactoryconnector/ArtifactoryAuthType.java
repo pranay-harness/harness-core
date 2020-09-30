@@ -4,8 +4,8 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonValue;
 
 public enum ArtifactoryAuthType {
-  @JsonProperty(ArtifactoryConstants.usernamePassword) USER_PASSWORD(ArtifactoryConstants.usernamePassword),
-  NO_AUTH(ArtifactoryConstants.noAuth);
+  @JsonProperty(ArtifactoryConstants.USERNAME_PASSWORD) USER_PASSWORD(ArtifactoryConstants.USERNAME_PASSWORD),
+  NO_AUTH(ArtifactoryConstants.NO_AUTH);
 
   private final String displayName;
 

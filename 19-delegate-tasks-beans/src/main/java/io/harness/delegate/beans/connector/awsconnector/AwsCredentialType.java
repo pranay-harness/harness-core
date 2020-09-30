@@ -4,8 +4,8 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonValue;
 
 public enum AwsCredentialType {
-  @JsonProperty(AwsConstants.inheritFromDelegate) INHERIT_FROM_DELEGATE(AwsConstants.inheritFromDelegate),
-  @JsonProperty(AwsConstants.manualConfig) MANUAL_CREDENTIALS(AwsConstants.manualConfig);
+  @JsonProperty(AwsConstants.INHERIT_FROM_DELEGATE) INHERIT_FROM_DELEGATE(AwsConstants.INHERIT_FROM_DELEGATE),
+  @JsonProperty(AwsConstants.MANUAL_CONFIG) MANUAL_CREDENTIALS(AwsConstants.MANUAL_CONFIG);
 
   private final String displayName;
 

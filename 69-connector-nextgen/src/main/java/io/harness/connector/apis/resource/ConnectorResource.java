@@ -45,7 +45,7 @@ import javax.ws.rs.QueryParam;
 @Api("/connectors")
 @Path("/connectors")
 @Produces({"application/json", "text/yaml", "text/html"})
-@Consumes({"application/json", "text/yaml", "text/html"})
+@Consumes({"application/json", "text/yaml", "text/html", "text/plain"})
 @ApiResponses(value =
     {
       @ApiResponse(code = 400, response = FailureDTO.class, message = "Bad Request")
@@ -94,7 +94,7 @@ public class ConnectorResource {
   @POST
   @ApiOperation(value = "Creates a Connector", nickname = "createConnector")
   public ResponseDTO<ConnectorResponseDTO> create(
-      @NotNull @Valid ConnectorDTO connector, @NotEmpty @QueryParam(ACCOUNT_KEY) String accountIdentifier) {
+      @Valid @NotNull ConnectorDTO connector, @NotEmpty @QueryParam(ACCOUNT_KEY) String accountIdentifier) {
     return ResponseDTO.newResponse(connectorService.create(connector, accountIdentifier));
   }
 

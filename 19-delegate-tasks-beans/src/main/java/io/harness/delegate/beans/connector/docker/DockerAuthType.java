@@ -4,8 +4,8 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonValue;
 
 public enum DockerAuthType {
-  @JsonProperty(DockerConstants.usernamePassword) USER_PASSWORD(DockerConstants.usernamePassword),
-  NO_AUTH(DockerConstants.noAuth);
+  @JsonProperty(DockerConstants.USERNAME_PASSWORD) USER_PASSWORD(DockerConstants.USERNAME_PASSWORD),
+  NO_AUTH(DockerConstants.NO_AUTH);
 
   private final String displayName;
 

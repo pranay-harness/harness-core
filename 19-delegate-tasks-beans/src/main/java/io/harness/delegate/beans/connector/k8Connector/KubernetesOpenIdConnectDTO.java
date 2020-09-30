@@ -14,14 +14,9 @@ import javax.validation.constraints.NotNull;
 @JsonTypeName("OpenIdConnect")
 public class KubernetesOpenIdConnectDTO extends KubernetesAuthCredentialDTO {
   @NotNull String oidcIssuerUrl;
-
-  @ApiModelProperty(dataType = "string") @NotNull @SecretReference SecretRefData oidcClientIdRef;
-
   @NotNull String oidcUsername;
-
+  @ApiModelProperty(dataType = "string") @NotNull @SecretReference SecretRefData oidcClientIdRef;
   @ApiModelProperty(dataType = "string") @NotNull @SecretReference SecretRefData oidcPasswordRef;
-
   @ApiModelProperty(dataType = "string") @SecretReference SecretRefData oidcSecretRef;
-
   String oidcScopes;
 }

@@ -1,7 +1,6 @@
 package io.harness.delegate.beans.connector.gcpconnector;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import com.fasterxml.jackson.annotation.JsonTypeName;
 import io.harness.beans.DecryptableEntity;
 import io.harness.encryption.SecretRefData;
 import io.harness.encryption.SecretReference;
@@ -15,7 +14,6 @@ import javax.validation.constraints.NotNull;
 @Data
 @Builder
 @JsonIgnoreProperties(ignoreUnknown = true)
-@JsonTypeName(GcpConstants.manualConfig)
 @ApiModel("GcpManualDetails")
 public class GcpManualDetailsDTO implements GcpCredentialSpecDTO, DecryptableEntity {
   @ApiModelProperty(dataType = "string") @NotNull @SecretReference SecretRefData secretKeyRef;
