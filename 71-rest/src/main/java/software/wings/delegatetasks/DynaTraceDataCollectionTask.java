@@ -39,7 +39,6 @@ import software.wings.sm.states.DynatraceState;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -102,6 +101,7 @@ public class DynaTraceDataCollectionTask extends AbstractDelegateDataCollectionT
     private Map<String, Long> hostStartTimeMap;
     private DynaTraceConfig dynaTraceConfig;
     boolean is247Task;
+    boolean isMultiService;
 
     private DynaTraceMetricCollector(
         DynaTraceDataCollectionInfo dataCollectionInfo, DataCollectionTaskResult taskResult, boolean is247Task) {
@@ -112,6 +112,9 @@ public class DynaTraceDataCollectionTask extends AbstractDelegateDataCollectionT
       hostStartTimeMap = new HashMap<>();
       dynaTraceConfig = dataCollectionInfo.getDynaTraceConfig();
       this.is247Task = is247Task;
+      if (dataCollectionInfo.getDynatraceServiceIds().size() > 1) {
+        isMultiService = true;
+      }
     }
 
     @Override
@@ -122,6 +125,10 @@ public class DynaTraceDataCollectionTask extends AbstractDelegateDataCollectionT
         try {
           List<DynaTraceMetricDataResponse> metricsData = getMetricsData();
           TreeBasedTable<String, Long, NewRelicMetricDataRecord> records = TreeBasedTable.create();
+          if (isMultiService) {
+            logger.info("Collecting multiservice data from dynatrace for stateExecutionId: {}",
+                dataCollectionInfo.getStateExecutionId());
+          }
           // Heartbeat
           records.put(HARNESS_HEARTBEAT_METRIC_NAME, 0L,
               NewRelicMetricDataRecord.builder()
@@ -243,9 +250,9 @@ public class DynaTraceDataCollectionTask extends AbstractDelegateDataCollectionT
               DynaTraceMetricDataRequest dataRequest =
                   DynaTraceMetricDataRequest.builder()
                       .timeseriesId(timeSeries.getTimeseriesId())
-                      .entities(dataCollectionInfo.getDynatraceServiceId() == null
+                      .entities(dataCollectionInfo.getDynatraceServiceIds() == null
                               ? null
-                              : Collections.singleton(dataCollectionInfo.getDynatraceServiceId()))
+                              : dataCollectionInfo.getDynatraceServiceIds())
                       .aggregationType(timeSeries.getAggregationType())
                       .percentile(timeSeries.getPercentile())
                       .startTimestamp(collectionStartTime)
@@ -274,9 +281,9 @@ public class DynaTraceDataCollectionTask extends AbstractDelegateDataCollectionT
                 DynaTraceMetricDataRequest dataRequest =
                     DynaTraceMetricDataRequest.builder()
                         .timeseriesId(timeSeries.getTimeseriesId())
-                        .entities(dataCollectionInfo.getDynatraceServiceId() == null
+                        .entities(dataCollectionInfo.getDynatraceServiceIds() == null
                                 ? null
-                                : Collections.singleton(dataCollectionInfo.getDynatraceServiceId()))
+                                : dataCollectionInfo.getDynatraceServiceIds())
                         .aggregationType(timeSeries.getAggregationType())
                         .percentile(timeSeries.getPercentile())
                         .startTimestamp(startTimeStamp)
@@ -310,17 +317,16 @@ public class DynaTraceDataCollectionTask extends AbstractDelegateDataCollectionT
           }
           for (DynaTraceTimeSeries timeSeries : dataCollectionInfo.getTimeSeriesDefinitions()) {
             callables.add(() -> {
-              DynaTraceMetricDataRequest dataRequest =
-                  DynaTraceMetricDataRequest.builder()
-                      .timeseriesId(timeSeries.getTimeseriesId())
-                      .entities(dataCollectionInfo.getDynatraceServiceId() == null
-                              ? null
-                              : Collections.singleton(dataCollectionInfo.getDynatraceServiceId()))
-                      .aggregationType(timeSeries.getAggregationType())
-                      .percentile(timeSeries.getPercentile())
-                      .startTimestamp(startTimeStamp)
-                      .endTimestamp(endTimeStamp)
-                      .build();
+              DynaTraceMetricDataRequest dataRequest = DynaTraceMetricDataRequest.builder()
+                                                           .timeseriesId(timeSeries.getTimeseriesId())
+                                                           .entities(dataCollectionInfo.getDynatraceServiceIds() == null
+                                                                   ? null
+                                                                   : dataCollectionInfo.getDynatraceServiceIds())
+                                                           .aggregationType(timeSeries.getAggregationType())
+                                                           .percentile(timeSeries.getPercentile())
+                                                           .startTimestamp(startTimeStamp)
+                                                           .endTimestamp(endTimeStamp)
+                                                           .build();
               return dynaTraceDelegateService.fetchMetricData(dynaTraceConfig, dataRequest, encryptionDetails,
                   ThirdPartyApiCallLog.fromDetails(createApiCallLog(dataCollectionInfo.getStateExecutionId())));
             });

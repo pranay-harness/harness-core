@@ -23,6 +23,7 @@ import software.wings.service.intfc.security.EncryptionService;
 import software.wings.sm.states.DynatraceState;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
@@ -44,6 +45,7 @@ public class DynaTraceDelegateServiceImpl implements DynaTraceDelegateService {
     final Call<Object> request = getDynaTraceRestClient(dynaTraceConfig)
                                      .listTimeSeries(getHeaderWithCredentials(dynaTraceConfig, encryptedDataDetails));
     requestExecutor.executeRequest(request);
+
     return true;
   }
 
@@ -67,25 +69,15 @@ public class DynaTraceDelegateServiceImpl implements DynaTraceDelegateService {
     final List<DynaTraceMetricDataResponse> metricDataResponses = new ArrayList<>();
 
     List<Callable<DynaTraceMetricDataResponse>> callables = new ArrayList<>();
-    for (DynaTraceTimeSeries timeSeries : Lists.newArrayList(DynaTraceTimeSeries.REQUEST_PER_MINUTE)) {
-      callables.add(() -> {
-        DynaTraceMetricDataRequest dataRequest =
-            DynaTraceMetricDataRequest.builder()
-                .timeseriesId(timeSeries.getTimeseriesId())
-                .aggregationType(timeSeries.getAggregationType())
-                .percentile(timeSeries.getPercentile())
-                .startTimestamp(setupTestNodeData.getFromTime())
-                .endTimestamp(setupTestNodeData.getToTime())
-                .entities(setupTestNodeData.getServiceEntityId() == null
-                        ? null
-                        : Collections.singleton(setupTestNodeData.getServiceEntityId()))
-                .build();
-
-        DynaTraceMetricDataResponse metricDataResponse =
-            fetchMetricData(config, dataRequest, encryptionDetails, thirdPartyApiCallLog);
-        metricDataResponse.getResult().setHost(DynatraceState.TEST_HOST_NAME);
-        return metricDataResponse;
-      });
+    if (setupTestNodeData.getServiceEntityId() == null) {
+      callables.addAll(
+          getCallablesForTestButton(null, config, encryptionDetails, setupTestNodeData, thirdPartyApiCallLog));
+    } else {
+      List<String> entityIds = Arrays.asList(setupTestNodeData.getServiceEntityId().split(","));
+      entityIds.replaceAll(String::trim);
+      entityIds.forEach(entity
+          -> callables.addAll(
+              getCallablesForTestButton(entity, config, encryptionDetails, setupTestNodeData, thirdPartyApiCallLog)));
     }
     List<Optional<DynaTraceMetricDataResponse>> results = dataCollectionService.executeParrallel(callables);
     results.forEach(result -> {
@@ -95,6 +87,30 @@ public class DynaTraceDelegateServiceImpl implements DynaTraceDelegateService {
     });
 
     return metricDataResponses;
+  }
+
+  private List<Callable<DynaTraceMetricDataResponse>> getCallablesForTestButton(String entityId, DynaTraceConfig config,
+      List<EncryptedDataDetail> encryptionDetails, DynaTraceSetupTestNodeData setupTestNodeData,
+      ThirdPartyApiCallLog thirdPartyApiCallLog) {
+    List<Callable<DynaTraceMetricDataResponse>> callables = new ArrayList<>();
+    for (DynaTraceTimeSeries timeSeries : Lists.newArrayList(DynaTraceTimeSeries.REQUEST_PER_MINUTE)) {
+      callables.add(() -> {
+        DynaTraceMetricDataRequest dataRequest = DynaTraceMetricDataRequest.builder()
+                                                     .timeseriesId(timeSeries.getTimeseriesId())
+                                                     .aggregationType(timeSeries.getAggregationType())
+                                                     .percentile(timeSeries.getPercentile())
+                                                     .startTimestamp(setupTestNodeData.getFromTime())
+                                                     .endTimestamp(setupTestNodeData.getToTime())
+                                                     .entities(Collections.singleton(entityId))
+                                                     .build();
+
+        DynaTraceMetricDataResponse metricDataResponse =
+            fetchMetricData(config, dataRequest, encryptionDetails, thirdPartyApiCallLog);
+        metricDataResponse.getResult().setHost(DynatraceState.TEST_HOST_NAME);
+        return metricDataResponse;
+      });
+    }
+    return callables;
   }
 
   private DynaTraceRestClient getDynaTraceRestClient(final DynaTraceConfig dynaTraceConfig) {
