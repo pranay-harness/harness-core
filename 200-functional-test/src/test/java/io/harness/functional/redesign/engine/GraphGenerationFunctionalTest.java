@@ -277,7 +277,7 @@ public class GraphGenerationFunctionalTest extends AbstractFunctionalTest {
     assertThat(planExecutionResponse.getStatus()).isEqualTo(Status.SUCCEEDED);
 
     OrchestrationGraph response =
-        requestOrchestrationGraph(null, planExecutionResponse.getUuid(), "get-orchestration-graph");
+        requestOrchestrationGraph(null, planExecutionResponse.getUuid(), "get-orchestration-graph-v2");
     assertThat(response).isNotNull();
 
     assertThat(response.getPlanExecutionId()).isEqualTo(planExecutionResponse.getUuid());
@@ -304,22 +304,22 @@ public class GraphGenerationFunctionalTest extends AbstractFunctionalTest {
     assertThat(adjacencyList.get(nameVertexMap.get("Fork Node")).getNextIds()).isEmpty();
 
     assertThat(adjacencyList.get(nameVertexMap.get("Dummy Node 2")).getEdges()).isEmpty();
-    assertThat(adjacencyList.get(nameVertexMap.get("Dummy Node 2")).getNextIds()).isEmpty();
+    assertThat(adjacencyList.get(nameVertexMap.get("Dummy Node 2")).getNextIds()).isNotEmpty();
 
     assertThat(adjacencyList.get(nameVertexMap.get("Dummy Node 1")).getEdges()).isEmpty();
-    assertThat(adjacencyList.get(nameVertexMap.get("Dummy Node 1")).getNextIds()).isEmpty();
+    assertThat(adjacencyList.get(nameVertexMap.get("Dummy Node 1")).getNextIds()).isNotEmpty();
 
     assertThat(adjacencyList.get(nameVertexMap.get("Wait Node")).getEdges()).isEmpty();
-    assertThat(adjacencyList.get(nameVertexMap.get("Wait Node")).getNextIds()).isEmpty();
+    assertThat(adjacencyList.get(nameVertexMap.get("Wait Node")).getNextIds()).isNotEmpty();
 
     assertThat(adjacencyList.get(nameVertexMap.get("barrier1")).getEdges()).isEmpty();
-    assertThat(adjacencyList.get(nameVertexMap.get("barrier1")).getNextIds()).isEmpty();
+    assertThat(adjacencyList.get(nameVertexMap.get("barrier1")).getNextIds()).isNotEmpty();
 
     assertThat(adjacencyList.get(nameVertexMap.get("barrier2")).getEdges()).isEmpty();
-    assertThat(adjacencyList.get(nameVertexMap.get("barrier2")).getNextIds()).isEmpty();
+    assertThat(adjacencyList.get(nameVertexMap.get("barrier2")).getNextIds()).isNotEmpty();
 
     assertThat(adjacencyList.get(nameVertexMap.get("barrier3")).getEdges()).isEmpty();
-    assertThat(adjacencyList.get(nameVertexMap.get("barrier3")).getNextIds()).isEmpty();
+    assertThat(adjacencyList.get(nameVertexMap.get("barrier3")).getNextIds()).isNotEmpty();
 
     assertThat(adjacencyList.get(nameVertexMap.get("Dummy Node 3")).getEdges()).isEmpty();
     assertThat(adjacencyList.get(nameVertexMap.get("Dummy Node 3")).getNextIds()).isEmpty();
