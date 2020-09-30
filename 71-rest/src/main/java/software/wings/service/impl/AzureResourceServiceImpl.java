@@ -12,7 +12,10 @@ import org.jetbrains.annotations.NotNull;
 import software.wings.app.MainConfiguration;
 import software.wings.beans.AzureConfig;
 import software.wings.beans.AzureContainerRegistry;
+import software.wings.beans.AzureImageDefinition;
+import software.wings.beans.AzureImageGallery;
 import software.wings.beans.AzureKubernetesCluster;
+import software.wings.beans.AzureResourceGroup;
 import software.wings.beans.NameValuePair;
 import software.wings.beans.SettingAttribute;
 import software.wings.helpers.ext.azure.AzureHelperService;
@@ -84,6 +87,35 @@ public class AzureResourceServiceImpl implements AzureResourceService {
     AzureConfig azureConfig = validateAndGetAzureConfig(cloudProviderSetting);
     return azureHelperService.listKubernetesClusters(
         azureConfig, secretManager.getEncryptionDetails(azureConfig, null, null), subscriptionId);
+  }
+
+  @Override
+  public List<AzureResourceGroup> listResourceGroups(String cloudProviderId, String subscriptionId) {
+    SettingAttribute cloudProviderSetting = settingService.get(cloudProviderId);
+    AzureConfig azureConfig = validateAndGetAzureConfig(cloudProviderSetting);
+    return azureHelperService
+        .listResourceGroups(azureConfig, secretManager.getEncryptionDetails(azureConfig, null, null), subscriptionId)
+        .stream()
+        .map(name -> AzureResourceGroup.builder().name(name).subscriptionId(subscriptionId).build())
+        .collect(Collectors.toList());
+  }
+
+  @Override
+  public List<AzureImageGallery> listImageGalleries(
+      String cloudProviderId, String subscriptionId, String resourceGroupName) {
+    SettingAttribute cloudProviderSetting = settingService.get(cloudProviderId);
+    AzureConfig azureConfig = validateAndGetAzureConfig(cloudProviderSetting);
+    return azureHelperService.listImageGalleries(
+        azureConfig, secretManager.getEncryptionDetails(azureConfig, null, null), subscriptionId, resourceGroupName);
+  }
+
+  @Override
+  public List<AzureImageDefinition> listImageDefinitions(
+      String cloudProviderId, String subscriptionId, String resourceGroupName, String galleryName) {
+    SettingAttribute cloudProviderSetting = settingService.get(cloudProviderId);
+    AzureConfig azureConfig = validateAndGetAzureConfig(cloudProviderSetting);
+    return azureHelperService.listImageDefinitions(azureConfig,
+        secretManager.getEncryptionDetails(azureConfig, null, null), subscriptionId, resourceGroupName, galleryName);
   }
 
   private AzureConfig validateAndGetAzureConfig(SettingAttribute cloudProviderSetting) {

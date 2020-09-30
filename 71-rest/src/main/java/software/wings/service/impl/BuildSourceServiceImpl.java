@@ -291,7 +291,7 @@ public class BuildSourceServiceImpl implements BuildSourceService {
             .getBuilds(appId, artifactStreamAttributes, settingValue, encryptedDataDetails);
       }
     } else {
-      return getBuildService(settingAttribute, appId)
+      return getBuildService(settingAttribute, appId, artifactStreamType)
           .getBuilds(appId, artifactStreamAttributes, settingValue, encryptedDataDetails);
     }
   }
@@ -381,13 +381,25 @@ public class BuildSourceServiceImpl implements BuildSourceService {
     SettingAttribute settingAttribute = settingsService.get(settingId);
     SettingValue settingValue = getSettingValue(settingAttribute);
     List<EncryptedDataDetail> encryptedDataDetails = getEncryptedDataDetails((EncryptableSetting) settingValue);
-    return getBuildService(settingAttribute, appId)
+    return getBuildService(settingAttribute, appId, artifactStreamAttributes.getArtifactStreamType())
         .validateArtifactSource(settingValue, encryptedDataDetails, artifactStreamAttributes);
   }
 
   @Override
   public boolean validateArtifactSource(ArtifactStream artifactStream) {
     return customBuildSourceService.validateArtifactSource(artifactStream);
+  }
+
+  @Override
+  public void validateAndInferArtifactSource(ArtifactStream artifactStream) {
+    SettingAttribute settingAttribute = settingsService.get(artifactStream.getSettingId());
+    SettingValue settingValue = getSettingValue(settingAttribute);
+    ArtifactStreamAttributes attributes = artifactStream.fetchArtifactStreamAttributes();
+    List<EncryptedDataDetail> encryptedDataDetails = getEncryptedDataDetails((EncryptableSetting) settingValue);
+    ArtifactStreamAttributes newAttributes =
+        getBuildService(settingAttribute, artifactStream.fetchAppId(), attributes.getArtifactStreamType())
+            .validateThenInferAttributes(settingValue, encryptedDataDetails, attributes);
+    artifactStream.inferProperties(newAttributes);
   }
 
   @Override

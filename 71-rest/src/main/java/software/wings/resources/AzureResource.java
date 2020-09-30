@@ -10,7 +10,10 @@ import com.codahale.metrics.annotation.Timed;
 import io.harness.rest.RestResponse;
 import io.swagger.annotations.Api;
 import software.wings.beans.AzureContainerRegistry;
+import software.wings.beans.AzureImageDefinition;
+import software.wings.beans.AzureImageGallery;
 import software.wings.beans.AzureKubernetesCluster;
+import software.wings.beans.AzureResourceGroup;
 import software.wings.beans.NameValuePair;
 import software.wings.security.annotations.Scope;
 import software.wings.service.intfc.AzureResourceService;
@@ -93,6 +96,40 @@ public class AzureResource {
     return new RestResponse(azureResourceService.listKubernetesClusters(cloudProviderId, subscriptionId));
   }
 
+  @GET
+  @Path("/subscriptions/{subscriptionId}/resourceGroups")
+  @Timed
+  @ExceptionMetered
+  public RestResponse<List<AzureResourceGroup>> listResourceGroups(@QueryParam("accountId") String accountId,
+      @QueryParam("cloudProviderId") String cloudProviderId,
+      @PathParam(value = "subscriptionId") String subscriptionId) {
+    return new RestResponse(azureResourceService.listResourceGroups(cloudProviderId, subscriptionId));
+  }
+
+  @GET
+  @Path("/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/imageGalleries")
+  @Timed
+  @ExceptionMetered
+  public RestResponse<List<AzureImageGallery>> listImageGalleries(@QueryParam("accountId") String accountId,
+      @QueryParam("cloudProviderId") String cloudProviderId, @PathParam(value = "subscriptionId") String subscriptionId,
+      @PathParam(value = "resourceGroupName") String resourceGroupName) {
+    return new RestResponse(
+        azureResourceService.listImageGalleries(cloudProviderId, subscriptionId, resourceGroupName));
+  }
+
+  @GET
+  @Path(
+      "/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/imageGalleries/{galleryName}/imageDefinitions")
+  @Timed
+  @ExceptionMetered
+  public RestResponse<List<AzureImageDefinition>>
+  listImageDefinitions(@QueryParam("accountId") String accountId, @QueryParam("cloudProviderId") String cloudProviderId,
+      @PathParam(value = "subscriptionId") String subscriptionId,
+      @PathParam(value = "resourceGroupName") String resourceGroupName,
+      @PathParam(value = "galleryName") String galleryName) {
+    return new RestResponse(
+        azureResourceService.listImageDefinitions(cloudProviderId, subscriptionId, resourceGroupName, galleryName));
+  }
   /**
    * List Azure regions.
    *

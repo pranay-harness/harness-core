@@ -33,6 +33,7 @@ import com.microsoft.azure.management.containerservice.KubernetesCluster;
 import com.microsoft.azure.management.containerservice.OSType;
 import com.microsoft.azure.management.keyvault.Vault;
 import com.microsoft.azure.management.resources.ResourceGroup;
+import com.microsoft.azure.management.resources.Subscription;
 import com.microsoft.azure.management.resources.fluentcore.arm.models.HasName;
 import com.microsoft.rest.LogLevel;
 import io.harness.beans.PageResponse;
@@ -58,6 +59,9 @@ import software.wings.api.DeploymentType;
 import software.wings.beans.AzureAvailabilitySet;
 import software.wings.beans.AzureConfig;
 import software.wings.beans.AzureContainerRegistry;
+import software.wings.beans.AzureImageDefinition;
+import software.wings.beans.AzureImageGallery;
+import software.wings.beans.AzureImageVersion;
 import software.wings.beans.AzureInfrastructureMapping;
 import software.wings.beans.AzureKubernetesCluster;
 import software.wings.beans.AzureTag;
@@ -132,9 +136,8 @@ public class AzureHelperService {
   public Map<String, String> listSubscriptions(AzureConfig azureConfig, List<EncryptedDataDetail> encryptionDetails) {
     encryptionService.decrypt(azureConfig, encryptionDetails);
     Azure azure = getAzureClient(azureConfig);
-    Map<String, String> subscriptionMap = new HashMap<>();
-    azure.subscriptions().list().forEach(sub -> subscriptionMap.put(sub.subscriptionId(), sub.displayName()));
-    return subscriptionMap;
+    return azure.subscriptions().list().stream().collect(
+        Collectors.toMap(Subscription::subscriptionId, Subscription::displayName));
   }
 
   public boolean isValidSubscription(
@@ -736,6 +739,65 @@ public class AzureHelperService {
       logger.error("Listing vaults failed for account Id {}", accountId, ex);
       throw new AzureServiceException("Failed to list vaults.", INVALID_AZURE_VAULT_CONFIGURATION, USER);
     }
+  }
+
+  public List<AzureImageGallery> listImageGalleries(AzureConfig azureConfig,
+      List<EncryptedDataDetail> encryptionDetails, String subscriptionId, String resourceGroupName) {
+    encryptionService.decrypt(azureConfig, encryptionDetails);
+    Azure azure = getAzureClient(azureConfig, subscriptionId);
+    return azure.galleries()
+        .listByResourceGroup(resourceGroupName)
+        .stream()
+        .map(ig
+            -> AzureImageGallery.builder()
+                   .name(ig.name())
+                   .subscriptionId(subscriptionId)
+                   .resourceGroupName(resourceGroupName)
+                   .regionName(ig.regionName())
+                   .build())
+        .collect(Collectors.toList());
+  }
+
+  public List<AzureImageDefinition> listImageDefinitions(AzureConfig azureConfig,
+      List<EncryptedDataDetail> encryptionDetails, String subscriptionId, String resourceGroupName,
+      String galleryName) {
+    encryptionService.decrypt(azureConfig, encryptionDetails);
+    Azure azure = getAzureClient(azureConfig, subscriptionId);
+    return azure.galleryImages()
+        .listByGallery(resourceGroupName, galleryName)
+        .stream()
+        .map(id
+            -> AzureImageDefinition.builder()
+                   .name(id.name())
+                   .location(id.location())
+                   .osType(id.osType().name())
+                   .subscriptionId(subscriptionId)
+                   .resourceGroupName(resourceGroupName)
+                   .galleryName(galleryName)
+                   .build())
+        .collect(Collectors.toList());
+  }
+
+  public List<AzureImageVersion> listImageDefinitionVersions(AzureConfig azureConfig,
+      List<EncryptedDataDetail> encryptionDetails, String subscriptionId, String resourceGroupName, String galleryName,
+      String imageDefinition) {
+    encryptionService.decrypt(azureConfig, encryptionDetails);
+    Azure azure = getAzureClient(azureConfig, subscriptionId);
+    // Only fetch successful Azure Image versions
+    return azure.galleryImageVersions()
+        .listByGalleryImage(resourceGroupName, galleryName, imageDefinition)
+        .stream()
+        .filter(id -> "Succeeded".equals(id.provisioningState()))
+        .map(id
+            -> AzureImageVersion.builder()
+                   .name(id.name())
+                   .imageDefinitionName(imageDefinition)
+                   .location(id.location())
+                   .subscriptionId(subscriptionId)
+                   .resourceGroupName(resourceGroupName)
+                   .galleryName(galleryName)
+                   .build())
+        .collect(Collectors.toList());
   }
 
   private List<Vault> listVaultsInternal(String accountId, AzureVaultConfig azureVaultConfig) throws IOException {

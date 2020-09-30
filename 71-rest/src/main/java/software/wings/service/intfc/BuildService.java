@@ -327,4 +327,13 @@ public interface BuildService<T> {
         wrapNewBuildsWithLabels(Collections.singletonList(buildDetails), artifactStreamAttributes, config);
     return isEmpty(buildDetailsList) ? null : buildDetailsList.get(0);
   }
+
+  /*
+   * Method validates the artifact stream attributes. Throws error in case of validation failure.
+   * Successfully validated artifacts should set any inferred fields and return stream data
+   * */
+  default ArtifactStreamAttributes validateThenInferAttributes(
+      T config, List<EncryptedDataDetail> encryptionDetails, ArtifactStreamAttributes artifactStreamAttributes) {
+    throw new UnsupportedOperationException();
+  }
 }

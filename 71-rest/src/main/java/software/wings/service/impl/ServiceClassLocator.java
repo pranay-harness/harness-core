@@ -13,6 +13,7 @@ import software.wings.service.intfc.AmazonS3BuildService;
 import software.wings.service.intfc.AmiBuildService;
 import software.wings.service.intfc.ArtifactoryBuildService;
 import software.wings.service.intfc.AzureArtifactsBuildService;
+import software.wings.service.intfc.AzureMachineImageBuildService;
 import software.wings.service.intfc.BambooBuildService;
 import software.wings.service.intfc.BuildService;
 import software.wings.service.intfc.CustomBuildService;
@@ -77,6 +78,8 @@ public class ServiceClassLocator {
         return AcrBuildService.class;
       case AZURE_ARTIFACTS:
         return AzureArtifactsBuildService.class;
+      case AZURE_MACHINE_IMAGE:
+        return AzureMachineImageBuildService.class;
       case CUSTOM:
         return CustomBuildService.class;
       default:

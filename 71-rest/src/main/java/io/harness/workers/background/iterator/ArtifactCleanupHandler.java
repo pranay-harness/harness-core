@@ -59,7 +59,7 @@ public class ArtifactCleanupHandler implements Handler<ArtifactStream> {
                        .in(asList(ArtifactStreamType.DOCKER.name(), ArtifactStreamType.AMI.name(),
                            ArtifactStreamType.ARTIFACTORY.name(), ArtifactStreamType.ECR.name(),
                            ArtifactStreamType.GCR.name(), ArtifactStreamType.ACR.name(),
-                           ArtifactStreamType.NEXUS.name())))
+                           ArtifactStreamType.NEXUS.name(), ArtifactStreamType.AZURE_MACHINE_IMAGE.name())))
             .schedulingType(REGULAR)
             .persistenceProvider(persistenceProvider)
             .redistribute(true));

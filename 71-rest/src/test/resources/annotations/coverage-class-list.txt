@@ -425,6 +425,7 @@
 71-rest/src/main/java/software/wings/beans/artifact/ArtifactSummary.java
 71-rest/src/main/java/software/wings/beans/artifact/ArtifactoryArtifactStream.java
 71-rest/src/main/java/software/wings/beans/artifact/AzureArtifactsArtifactStream.java
+71-rest/src/main/java/software/wings/beans/artifact/AzureMachineImageArtifactStream.java
 71-rest/src/main/java/software/wings/beans/artifact/BambooArtifactStream.java
 71-rest/src/main/java/software/wings/beans/artifact/CustomArtifactStream.java
 71-rest/src/main/java/software/wings/beans/artifact/DockerArtifactStream.java
@@ -581,6 +582,7 @@
 71-rest/src/main/java/software/wings/graphql/schema/mutation/execution/input/QLVariableValue.java
 71-rest/src/main/java/software/wings/graphql/schema/mutation/execution/input/QLVariableValueType.java
 71-rest/src/main/java/software/wings/graphql/schema/mutation/execution/payload/QLStartExecutionPayload.java
+71-rest/src/main/java/software/wings/graphql/schema/type/QLAzureImageDefinition.java
 71-rest/src/main/java/software/wings/graphql/schema/type/QLKeyValuePair.java
 71-rest/src/main/java/software/wings/graphql/schema/type/QLPipeline.java
 71-rest/src/main/java/software/wings/graphql/schema/type/QLPipelineExecution.java
@@ -595,6 +597,7 @@
 71-rest/src/main/java/software/wings/graphql/schema/type/artifactSource/QLArtifactoryDockerProps.java
 71-rest/src/main/java/software/wings/graphql/schema/type/artifactSource/QLArtifactoryFileProps.java
 71-rest/src/main/java/software/wings/graphql/schema/type/artifactSource/QLAzureArtifactsArtifactSource.java
+71-rest/src/main/java/software/wings/graphql/schema/type/artifactSource/QLAzureMachineImageArtifactSource.java
 71-rest/src/main/java/software/wings/graphql/schema/type/artifactSource/QLBambooArtifactSource.java
 71-rest/src/main/java/software/wings/graphql/schema/type/artifactSource/QLCustomArtifactSource.java
 71-rest/src/main/java/software/wings/graphql/schema/type/artifactSource/QLDockerArtifactSource.java
@@ -718,6 +721,7 @@
 71-rest/src/main/java/software/wings/service/impl/AppServiceImpl.java
 71-rest/src/main/java/software/wings/service/impl/ArtifactoryBuildServiceImpl.java
 71-rest/src/main/java/software/wings/service/impl/AzureArtifactsBuildServiceImpl.java
+71-rest/src/main/java/software/wings/service/impl/AzureMachineImageBuildServiceImpl.java
 71-rest/src/main/java/software/wings/service/impl/BambooBuildServiceImpl.java
 71-rest/src/main/java/software/wings/service/impl/BarrierServiceImpl.java
 71-rest/src/main/java/software/wings/service/impl/CustomBuildServiceImpl.java
@@ -824,6 +828,7 @@
 71-rest/src/main/java/software/wings/service/impl/yaml/handler/artifactstream/AmiArtifactStreamYamlHandler.java
 71-rest/src/main/java/software/wings/service/impl/yaml/handler/artifactstream/ArtifactoryArtifactStreamYamlHandler.java
 71-rest/src/main/java/software/wings/service/impl/yaml/handler/artifactstream/AzureArtifactsArtifactStreamYamlHandler.java
+71-rest/src/main/java/software/wings/service/impl/yaml/handler/artifactstream/AzureMachineImageArtifactStreamYamlHandler.java
 71-rest/src/main/java/software/wings/service/impl/yaml/handler/artifactstream/BambooArtifactStreamYamlHandler.java
 71-rest/src/main/java/software/wings/service/impl/yaml/handler/artifactstream/DockerArtifactStreamYamlHandler.java
 71-rest/src/main/java/software/wings/service/impl/yaml/handler/artifactstream/EcrArtifactStreamYamlHandler.java

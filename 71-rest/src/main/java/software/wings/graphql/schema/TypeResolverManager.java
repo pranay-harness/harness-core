@@ -24,6 +24,7 @@ import software.wings.graphql.schema.type.artifactSource.QLArtifactoryArtifactSo
 import software.wings.graphql.schema.type.artifactSource.QLArtifactoryDockerProps;
 import software.wings.graphql.schema.type.artifactSource.QLArtifactoryFileProps;
 import software.wings.graphql.schema.type.artifactSource.QLAzureArtifactsArtifactSource;
+import software.wings.graphql.schema.type.artifactSource.QLAzureMachineImageArtifactSource;
 import software.wings.graphql.schema.type.artifactSource.QLBambooArtifactSource;
 import software.wings.graphql.schema.type.artifactSource.QLCustomArtifactSource;
 import software.wings.graphql.schema.type.artifactSource.QLDockerArtifactSource;
@@ -172,6 +173,7 @@ public class TypeResolverManager {
     public static final String AMIArtifactSource = "AMIArtifactSource";
     public static final String ArtifactoryArtifactSource = "ArtifactoryArtifactSource";
     public static final String AzureArtifactsArtifactSource = "AzureArtifactsArtifactSource";
+    public static final String AzureMachineImageArtifactSource = "AzureMachineImageArtifactSource";
     public static final String BambooArtifactSource = "BambooArtifactSource";
     public static final String CustomArtifactSource = "CustomArtifactSource";
     public static final String DockerArtifactSource = "DockerArtifactSource";
@@ -324,6 +326,8 @@ public class TypeResolverManager {
                     .put(QLAMIArtifactSource.class, TypeResolverManagerTypes.AMIArtifactSource)
                     .put(QLArtifactoryArtifactSource.class, TypeResolverManagerTypes.ArtifactoryArtifactSource)
                     .put(QLAzureArtifactsArtifactSource.class, TypeResolverManagerTypes.AzureArtifactsArtifactSource)
+                    .put(QLAzureMachineImageArtifactSource.class,
+                        TypeResolverManagerTypes.AzureMachineImageArtifactSource)
                     .put(QLBambooArtifactSource.class, TypeResolverManagerTypes.BambooArtifactSource)
                     .put(QLCustomArtifactSource.class, TypeResolverManagerTypes.CustomArtifactSource)
                     .put(QLDockerArtifactSource.class, TypeResolverManagerTypes.DockerArtifactSource)

@@ -31,6 +31,7 @@ import static software.wings.beans.artifact.ArtifactStreamType.AMAZON_S3;
 import static software.wings.beans.artifact.ArtifactStreamType.AMI;
 import static software.wings.beans.artifact.ArtifactStreamType.ARTIFACTORY;
 import static software.wings.beans.artifact.ArtifactStreamType.AZURE_ARTIFACTS;
+import static software.wings.beans.artifact.ArtifactStreamType.AZURE_MACHINE_IMAGE;
 import static software.wings.beans.artifact.ArtifactStreamType.BAMBOO;
 import static software.wings.beans.artifact.ArtifactStreamType.CUSTOM;
 import static software.wings.beans.artifact.ArtifactStreamType.DOCKER;
@@ -82,6 +83,7 @@ import software.wings.service.impl.yaml.handler.artifactstream.AmiArtifactStream
 import software.wings.service.impl.yaml.handler.artifactstream.ArtifactStreamYamlHandler;
 import software.wings.service.impl.yaml.handler.artifactstream.ArtifactoryArtifactStreamYamlHandler;
 import software.wings.service.impl.yaml.handler.artifactstream.AzureArtifactsArtifactStreamYamlHandler;
+import software.wings.service.impl.yaml.handler.artifactstream.AzureMachineImageArtifactStreamYamlHandler;
 import software.wings.service.impl.yaml.handler.artifactstream.BambooArtifactStreamYamlHandler;
 import software.wings.service.impl.yaml.handler.artifactstream.CustomArtifactStreamYamlHandler;
 import software.wings.service.impl.yaml.handler.artifactstream.DockerArtifactStreamYamlHandler;
@@ -240,6 +242,8 @@ public class YamlModule extends CommandLibrarySharedModule {
         MapBinder.newMapBinder(binder(), String.class, ArtifactStreamYamlHandler.class);
     artifactStreamYamlHelperMapBinder.addBinding(AMAZON_S3.name()).to(AmazonS3ArtifactStreamYamlHandler.class);
     artifactStreamYamlHelperMapBinder.addBinding(AMI.name()).to(AmiArtifactStreamYamlHandler.class);
+    artifactStreamYamlHelperMapBinder.addBinding(AZURE_MACHINE_IMAGE.name())
+        .to(AzureMachineImageArtifactStreamYamlHandler.class);
     artifactStreamYamlHelperMapBinder.addBinding(ARTIFACTORY.name()).to(ArtifactoryArtifactStreamYamlHandler.class);
     artifactStreamYamlHelperMapBinder.addBinding(BAMBOO.name()).to(BambooArtifactStreamYamlHandler.class);
     artifactStreamYamlHelperMapBinder.addBinding(DOCKER.name()).to(DockerArtifactStreamYamlHandler.class);

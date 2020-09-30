@@ -11,6 +11,7 @@ import static software.wings.beans.artifact.ArtifactStreamType.ACR;
 import static software.wings.beans.artifact.ArtifactStreamType.AMAZON_S3;
 import static software.wings.beans.artifact.ArtifactStreamType.AMI;
 import static software.wings.beans.artifact.ArtifactStreamType.AZURE_ARTIFACTS;
+import static software.wings.beans.artifact.ArtifactStreamType.AZURE_MACHINE_IMAGE;
 import static software.wings.beans.artifact.ArtifactStreamType.CUSTOM;
 import static software.wings.beans.artifact.ArtifactStreamType.DOCKER;
 import static software.wings.beans.artifact.ArtifactStreamType.ECR;
@@ -83,9 +84,9 @@ public class ArtifactCollectionServiceAsyncImpl implements ArtifactCollectionSer
   // Default timeout of 1 minutes.
   private static final long DEFAULT_TIMEOUT = TimeUnit.MINUTES.toMillis(1);
 
-  static final List<String> metadataOnlyStreams =
-      Collections.unmodifiableList(asList(DOCKER.name(), ECR.name(), GCR.name(), NEXUS.name(), AMI.name(), ACR.name(),
-          AMAZON_S3.name(), GCS.name(), SMB.name(), SFTP.name(), AZURE_ARTIFACTS.name(), CUSTOM.name()));
+  static final List<String> metadataOnlyStreams = Collections.unmodifiableList(
+      asList(DOCKER.name(), ECR.name(), GCR.name(), NEXUS.name(), AMI.name(), ACR.name(), AMAZON_S3.name(), GCS.name(),
+          SMB.name(), SFTP.name(), AZURE_ARTIFACTS.name(), AZURE_MACHINE_IMAGE.name(), CUSTOM.name()));
 
   @Override
   public Artifact collectArtifact(String artifactStreamId, BuildDetails buildDetails) {

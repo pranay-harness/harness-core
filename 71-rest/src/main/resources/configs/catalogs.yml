@@ -11,6 +11,8 @@ ARTIFACT_TYPE:
       value: DOCKER
     - name: AMI
       value: AMI
+    - name: Azure Machine Image
+      value: AZURE_MACHINE_IMAGE
     - name: AWS Code Deploy
       value: AWS_CODEDEPLOY
     - name: AWS Lambda
@@ -71,6 +73,8 @@ ARTIFACT_STREAM_TYPE:
       value: Amazon S3
     - name: AMI
       value: AMI Repository
+    - name: AZURE_MACHINE_IMAGE
+      value: Azure Machine Image
     - name: AZURE_ARTIFACTS
       value: Azure Artifacts
     - name: SMB
@@ -240,6 +244,8 @@ DEPLOYMENT_TYPE:
       value: PCF
     - name: Windows Remote Management (WinRM)
       value: WINRM
+    - name: Azure Virtual Machine Scale Set
+      value: AZURE_VMSS
 
 ENVIRONMENT_TYPE:
     - name: Production

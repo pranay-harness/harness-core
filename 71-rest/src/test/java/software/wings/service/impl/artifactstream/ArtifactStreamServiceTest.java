@@ -6,6 +6,7 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.rule.OwnerRule.AADITI;
 import static io.harness.rule.OwnerRule.ALEXEI;
+import static io.harness.rule.OwnerRule.DEEPAK_PUTHRAYA;
 import static io.harness.rule.OwnerRule.GARVIT;
 import static io.harness.rule.OwnerRule.ROHITKARELIA;
 import static io.harness.rule.OwnerRule.SRINIVAS;
@@ -28,6 +29,7 @@ import static software.wings.beans.artifact.ArtifactStreamType.AMAZON_S3;
 import static software.wings.beans.artifact.ArtifactStreamType.AMI;
 import static software.wings.beans.artifact.ArtifactStreamType.ARTIFACTORY;
 import static software.wings.beans.artifact.ArtifactStreamType.AZURE_ARTIFACTS;
+import static software.wings.beans.artifact.ArtifactStreamType.AZURE_MACHINE_IMAGE;
 import static software.wings.beans.artifact.ArtifactStreamType.BAMBOO;
 import static software.wings.beans.artifact.ArtifactStreamType.CUSTOM;
 import static software.wings.beans.artifact.ArtifactStreamType.DOCKER;
@@ -246,6 +248,23 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
         artifactStreamService.getSupportedBuildSourceTypes(APP_ID, SERVICE_ID);
     assertThat(supportedBuildSourceTypes.containsKey(JENKINS.name())).isTrue();
     assertThat(supportedBuildSourceTypes.containsValue(JENKINS.name())).isTrue();
+  }
+
+  @Test
+  @Owner(developers = DEEPAK_PUTHRAYA)
+  @Category(UnitTests.class)
+  public void shouldGetSupportedBuildSourceTypesForAzureMachineImage() {
+    // For Azure Machine Image Artifact Type
+    when(serviceResourceService.get(APP_ID, SERVICE_ID, false))
+        .thenReturn(
+            Service.builder().appId(APP_ID).artifactType(ArtifactType.AZURE_MACHINE_IMAGE).uuid(SERVICE_ID).build());
+
+    Map<String, String> supportedBuildSourceTypes =
+        artifactStreamService.getSupportedBuildSourceTypes(APP_ID, SERVICE_ID);
+    assertThat(supportedBuildSourceTypes.containsKey(AZURE_MACHINE_IMAGE.name())).isTrue();
+    assertThat(supportedBuildSourceTypes.containsValue(AZURE_MACHINE_IMAGE.name())).isTrue();
+    assertThat(supportedBuildSourceTypes.containsKey(CUSTOM.name())).isFalse();
+    assertThat(supportedBuildSourceTypes.containsValue(CUSTOM.name())).isFalse();
   }
 
   @Test

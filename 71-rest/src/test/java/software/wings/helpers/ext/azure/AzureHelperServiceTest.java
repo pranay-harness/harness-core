@@ -3,6 +3,7 @@ package software.wings.helpers.ext.azure;
 import static io.harness.data.encoding.EncodingUtils.encodeBase64;
 import static io.harness.rule.OwnerRule.ABOSII;
 import static io.harness.rule.OwnerRule.ANSHUL;
+import static io.harness.rule.OwnerRule.DEEPAK_PUTHRAYA;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.emptyMap;
@@ -25,11 +26,39 @@ import com.microsoft.azure.Page;
 import com.microsoft.azure.PagedList;
 import com.microsoft.azure.credentials.ApplicationTokenCredentials;
 import com.microsoft.azure.management.Azure;
+import com.microsoft.azure.management.compute.Disallowed;
+import com.microsoft.azure.management.compute.DiskSkuTypes;
+import com.microsoft.azure.management.compute.Galleries;
+import com.microsoft.azure.management.compute.Gallery;
+import com.microsoft.azure.management.compute.GalleryImage;
+import com.microsoft.azure.management.compute.GalleryImageIdentifier;
+import com.microsoft.azure.management.compute.GalleryImageVersion;
+import com.microsoft.azure.management.compute.GalleryImageVersionPublishingProfile;
+import com.microsoft.azure.management.compute.GalleryImageVersionStorageProfile;
+import com.microsoft.azure.management.compute.GalleryImageVersions;
+import com.microsoft.azure.management.compute.GalleryImages;
+import com.microsoft.azure.management.compute.ImagePurchasePlan;
+import com.microsoft.azure.management.compute.OperatingSystemStateTypes;
+import com.microsoft.azure.management.compute.OperatingSystemTypes;
+import com.microsoft.azure.management.compute.RecommendedMachineConfiguration;
+import com.microsoft.azure.management.compute.ReplicationStatus;
+import com.microsoft.azure.management.compute.TargetRegion;
 import com.microsoft.azure.management.compute.VirtualMachine;
 import com.microsoft.azure.management.compute.VirtualMachines;
+import com.microsoft.azure.management.compute.implementation.ComputeManager;
+import com.microsoft.azure.management.compute.implementation.GalleryImageInner;
+import com.microsoft.azure.management.compute.implementation.GalleryImageVersionInner;
+import com.microsoft.azure.management.compute.implementation.GalleryInner;
 import com.microsoft.azure.management.containerservice.OSType;
+import com.microsoft.azure.management.resources.Location;
 import com.microsoft.azure.management.resources.ResourceGroup;
 import com.microsoft.azure.management.resources.ResourceGroups;
+import com.microsoft.azure.management.resources.Subscription;
+import com.microsoft.azure.management.resources.SubscriptionPolicies;
+import com.microsoft.azure.management.resources.SubscriptionState;
+import com.microsoft.azure.management.resources.Subscriptions;
+import com.microsoft.azure.management.resources.fluentcore.arm.Region;
+import com.microsoft.azure.management.resources.implementation.SubscriptionInner;
 import com.microsoft.rest.LogLevel;
 import com.microsoft.rest.RestException;
 import io.harness.category.element.UnitTests;
@@ -37,6 +66,7 @@ import io.harness.k8s.model.KubernetesConfig;
 import io.harness.network.Http;
 import io.harness.rule.Owner;
 import okhttp3.OkHttpClient;
+import org.joda.time.DateTime;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.junit.runner.RunWith;
@@ -49,6 +79,7 @@ import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
 import retrofit2.Call;
 import retrofit2.Response;
+import rx.Observable;
 import software.wings.WingsBaseTest;
 import software.wings.beans.AzureConfig;
 import software.wings.beans.AzureTagDetails;
@@ -57,8 +88,11 @@ import software.wings.beans.cloudprovider.azure.AzureEnvironmentType;
 import software.wings.helpers.ext.azure.AksGetCredentialsResponse.AksGetCredentialProperties;
 import software.wings.service.intfc.security.EncryptionService;
 
+import java.io.IOException;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
+import java.util.stream.Stream;
 
 @RunWith(PowerMockRunner.class)
 @PrepareForTest({Azure.class, AzureHelperService.class, Http.class})
@@ -368,5 +402,501 @@ public class AzureHelperServiceTest extends WingsBaseTest {
     assertThat(clusterConfig.getUsername()).isEqualTo("admin".toCharArray());
     assertThat(clusterConfig.getClientCert()).isEqualTo("client-certificate-data".toCharArray());
     assertThat(clusterConfig.getClientKey()).isEqualTo("client-key-data".toCharArray());
+  }
+
+  @Test()
+  @Owner(developers = DEEPAK_PUTHRAYA)
+  @Category(UnitTests.class)
+  public void testListSubscriptions() throws IOException {
+    PowerMockito.mockStatic(Azure.class);
+    when(Azure.configure()).thenReturn(configurable);
+    when(configurable.withLogLevel(any(LogLevel.class))).thenReturn(configurable);
+    when(configurable.authenticate(any(ApplicationTokenCredentials.class))).thenReturn(authenticated);
+    when(authenticated.withDefaultSubscription()).thenReturn(azure);
+
+    AzureConfig azureConfig =
+        AzureConfig.builder().clientId("clientId").tenantId("tenantId").key("key".toCharArray()).build();
+
+    Subscriptions subscriptions = mock(Subscriptions.class);
+    when(subscriptions.list()).thenReturn(new PagedList<Subscription>() {
+      @Override
+      public Stream<Subscription> stream() {
+        return Stream.of(new Subscription() {
+          @Override
+          public String subscriptionId() {
+            return "subscriptionId";
+          }
+
+          @Override
+          public String displayName() {
+            return "subscriptionName";
+          }
+
+          @Override
+          public SubscriptionState state() {
+            return null;
+          }
+
+          @Override
+          public SubscriptionPolicies subscriptionPolicies() {
+            return null;
+          }
+
+          @Override
+          public PagedList<Location> listLocations() {
+            return null;
+          }
+
+          @Override
+          public Location getLocationByRegion(Region region) {
+            return null;
+          }
+
+          @Override
+          public SubscriptionInner inner() {
+            return null;
+          }
+
+          @Override
+          public String key() {
+            return null;
+          }
+        });
+      }
+
+      @Override
+      public Page<Subscription> nextPage(String s) throws RestException, IOException {
+        return null;
+      }
+    });
+    when(azure.subscriptions()).thenReturn(subscriptions);
+    assertThat(azureHelperService.listSubscriptions(azureConfig, emptyList())).hasSize(1);
+  }
+
+  @Test()
+  @Owner(developers = DEEPAK_PUTHRAYA)
+  @Category(UnitTests.class)
+  public void testListImageGalleries() {
+    PowerMockito.mockStatic(Azure.class);
+    when(Azure.configure()).thenReturn(configurable);
+    when(configurable.withLogLevel(any(LogLevel.class))).thenReturn(configurable);
+    when(configurable.authenticate(any(ApplicationTokenCredentials.class))).thenReturn(authenticated);
+    when(authenticated.withSubscription(anyString())).thenReturn(azure);
+
+    AzureConfig azureConfig =
+        AzureConfig.builder().clientId("clientId").tenantId("tenantId").key("key".toCharArray()).build();
+
+    Galleries mockGalleries = mock(Galleries.class);
+    when(azure.galleries()).thenReturn(mockGalleries);
+    when(mockGalleries.listByResourceGroup(anyString())).thenReturn(new PagedList<Gallery>() {
+      @Override
+      public Stream<Gallery> stream() {
+        return Stream.of(new Gallery() {
+          @Override
+          public String description() {
+            return null;
+          }
+
+          @Override
+          public String uniqueName() {
+            return null;
+          }
+
+          @Override
+          public String provisioningState() {
+            return null;
+          }
+
+          @Override
+          public Observable<GalleryImage> getImageAsync(String s) {
+            return null;
+          }
+
+          @Override
+          public GalleryImage getImage(String s) {
+            return null;
+          }
+
+          @Override
+          public Observable<GalleryImage> listImagesAsync() {
+            return null;
+          }
+
+          @Override
+          public PagedList<GalleryImage> listImages() {
+            return null;
+          }
+
+          @Override
+          public ComputeManager manager() {
+            return null;
+          }
+
+          @Override
+          public String resourceGroupName() {
+            return null;
+          }
+
+          @Override
+          public String type() {
+            return null;
+          }
+
+          @Override
+          public String regionName() {
+            return null;
+          }
+
+          @Override
+          public Region region() {
+            return null;
+          }
+
+          @Override
+          public Map<String, String> tags() {
+            return null;
+          }
+
+          @Override
+          public String id() {
+            return null;
+          }
+
+          @Override
+          public String name() {
+            return null;
+          }
+
+          @Override
+          public GalleryInner inner() {
+            return null;
+          }
+
+          @Override
+          public String key() {
+            return null;
+          }
+
+          @Override
+          public Gallery refresh() {
+            return null;
+          }
+
+          @Override
+          public Observable<Gallery> refreshAsync() {
+            return null;
+          }
+
+          @Override
+          public Update update() {
+            return null;
+          }
+        });
+      }
+
+      @Override
+      public Page<Gallery> nextPage(String s) throws RestException, IOException {
+        return null;
+      }
+    });
+    assertThat(
+        azureHelperService.listImageGalleries(azureConfig, emptyList(), "someSubscriptionId", "someResourceGroup"))
+        .hasSize(1);
+  }
+
+  @Test()
+  @Owner(developers = DEEPAK_PUTHRAYA)
+  @Category(UnitTests.class)
+  public void testListImageDefinitions() {
+    PowerMockito.mockStatic(Azure.class);
+    when(Azure.configure()).thenReturn(configurable);
+    when(configurable.withLogLevel(any(LogLevel.class))).thenReturn(configurable);
+    when(configurable.authenticate(any(ApplicationTokenCredentials.class))).thenReturn(authenticated);
+    when(authenticated.withSubscription(anyString())).thenReturn(azure);
+
+    AzureConfig azureConfig =
+        AzureConfig.builder().clientId("clientId").tenantId("tenantId").key("key".toCharArray()).build();
+
+    Galleries mockGalleries = mock(Galleries.class);
+    GalleryImages mockImages = mock(GalleryImages.class);
+    when(azure.galleries()).thenReturn(mockGalleries);
+    when(azure.galleryImages()).thenReturn(mockImages);
+    when(mockImages.listByGallery(anyString(), anyString())).thenReturn(new PagedList<GalleryImage>() {
+      @Override
+      public Stream<GalleryImage> stream() {
+        return Stream.of(new GalleryImage() {
+          @Override
+          public String description() {
+            return null;
+          }
+
+          @Override
+          public List<DiskSkuTypes> unsupportedDiskTypes() {
+            return null;
+          }
+
+          @Override
+          public Disallowed disallowed() {
+            return null;
+          }
+
+          @Override
+          public DateTime endOfLifeDate() {
+            return null;
+          }
+
+          @Override
+          public String eula() {
+            return null;
+          }
+
+          @Override
+          public String id() {
+            return null;
+          }
+
+          @Override
+          public GalleryImageIdentifier identifier() {
+            return null;
+          }
+
+          @Override
+          public String location() {
+            return null;
+          }
+
+          @Override
+          public String name() {
+            return null;
+          }
+
+          @Override
+          public OperatingSystemStateTypes osState() {
+            return null;
+          }
+
+          @Override
+          public OperatingSystemTypes osType() {
+            return OperatingSystemTypes.LINUX;
+          }
+
+          @Override
+          public String privacyStatementUri() {
+            return null;
+          }
+
+          @Override
+          public String provisioningState() {
+            return null;
+          }
+
+          @Override
+          public ImagePurchasePlan purchasePlan() {
+            return null;
+          }
+
+          @Override
+          public RecommendedMachineConfiguration recommendedVirtualMachineConfiguration() {
+            return null;
+          }
+
+          @Override
+          public String releaseNoteUri() {
+            return null;
+          }
+
+          @Override
+          public Map<String, String> tags() {
+            return null;
+          }
+
+          @Override
+          public String type() {
+            return null;
+          }
+
+          @Override
+          public Observable<GalleryImageVersion> getVersionAsync(String s) {
+            return null;
+          }
+
+          @Override
+          public GalleryImageVersion getVersion(String s) {
+            return null;
+          }
+
+          @Override
+          public Observable<GalleryImageVersion> listVersionsAsync() {
+            return null;
+          }
+
+          @Override
+          public PagedList<GalleryImageVersion> listVersions() {
+            return null;
+          }
+
+          @Override
+          public ComputeManager manager() {
+            return null;
+          }
+
+          @Override
+          public GalleryImageInner inner() {
+            return null;
+          }
+
+          @Override
+          public String key() {
+            return null;
+          }
+
+          @Override
+          public GalleryImage refresh() {
+            return null;
+          }
+
+          @Override
+          public Observable<GalleryImage> refreshAsync() {
+            return null;
+          }
+
+          @Override
+          public Update update() {
+            return null;
+          }
+        });
+      }
+
+      @Override
+      public Page<GalleryImage> nextPage(String s) throws RestException, IOException {
+        return null;
+      }
+    });
+    assertThat(azureHelperService.listImageDefinitions(
+                   azureConfig, emptyList(), "someSubscriptionId", "someResourceGroup", "someGallery"))
+        .hasSize(1);
+  }
+
+  @Test()
+  @Owner(developers = DEEPAK_PUTHRAYA)
+  @Category(UnitTests.class)
+  public void testListImageDefinitionVersions() {
+    PowerMockito.mockStatic(Azure.class);
+    when(Azure.configure()).thenReturn(configurable);
+    when(configurable.withLogLevel(any(LogLevel.class))).thenReturn(configurable);
+    when(configurable.authenticate(any(ApplicationTokenCredentials.class))).thenReturn(authenticated);
+    when(authenticated.withSubscription(anyString())).thenReturn(azure);
+
+    AzureConfig azureConfig =
+        AzureConfig.builder().clientId("clientId").tenantId("tenantId").key("key".toCharArray()).build();
+
+    GalleryImageVersions galleryImageVersion = mock(GalleryImageVersions.class);
+    when(azure.galleryImageVersions()).thenReturn(galleryImageVersion);
+    when(galleryImageVersion.listByGalleryImage(anyString(), anyString(), anyString()))
+        .thenReturn(new PagedList<GalleryImageVersion>() {
+          @Override
+          public Stream<GalleryImageVersion> stream() {
+            return Stream.of(new GalleryImageVersion() {
+              @Override
+              public String id() {
+                return null;
+              }
+
+              @Override
+              public String location() {
+                return null;
+              }
+
+              @Override
+              public String name() {
+                return null;
+              }
+
+              @Override
+              public String provisioningState() {
+                return "Succeeded";
+              }
+
+              @Override
+              public GalleryImageVersionPublishingProfile publishingProfile() {
+                return null;
+              }
+
+              @Override
+              public List<TargetRegion> availableRegions() {
+                return null;
+              }
+
+              @Override
+              public DateTime endOfLifeDate() {
+                return null;
+              }
+
+              @Override
+              public Boolean isExcludedFromLatest() {
+                return true;
+              }
+
+              @Override
+              public ReplicationStatus replicationStatus() {
+                return null;
+              }
+
+              @Override
+              public GalleryImageVersionStorageProfile storageProfile() {
+                return null;
+              }
+
+              @Override
+              public Map<String, String> tags() {
+                return null;
+              }
+
+              @Override
+              public String type() {
+                return null;
+              }
+
+              @Override
+              public ComputeManager manager() {
+                return null;
+              }
+
+              @Override
+              public GalleryImageVersionInner inner() {
+                return null;
+              }
+
+              @Override
+              public String key() {
+                return null;
+              }
+
+              @Override
+              public GalleryImageVersion refresh() {
+                return null;
+              }
+
+              @Override
+              public Observable<GalleryImageVersion> refreshAsync() {
+                return null;
+              }
+
+              @Override
+              public Update update() {
+                return null;
+              }
+            });
+          }
+
+          @Override
+          public Page<GalleryImageVersion> nextPage(String s) throws RestException, IOException {
+            return null;
+          }
+        });
+
+    assertThat(azureHelperService.listImageDefinitionVersions(azureConfig, emptyList(), "someSubscriptionId",
+                   "someResourceGroupName", "someGalleryName", "someImageDefinitionName"))
+        .hasSize(1);
   }
 }

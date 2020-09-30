@@ -18,5 +18,6 @@ public enum ArtifactStreamType {
   SMB,
   SFTP,
   AZURE_ARTIFACTS,
+  AZURE_MACHINE_IMAGE,
   CUSTOM
 }

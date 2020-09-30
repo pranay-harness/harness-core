@@ -273,6 +273,16 @@ public interface BuildSourceService {
   }
 
   /**
+   * Validate Artifact Stream
+   *
+   * @param artifactStream
+   * @return
+   */
+  default void validateAndInferArtifactSource(ArtifactStream artifactStream) {
+    throw new UnsupportedOperationException();
+  }
+
+  /**
    * Get Job details
    *
    * @param appId

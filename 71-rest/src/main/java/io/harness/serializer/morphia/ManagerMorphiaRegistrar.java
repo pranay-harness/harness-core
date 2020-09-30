@@ -329,6 +329,7 @@ import software.wings.beans.artifact.ArtifactFile;
 import software.wings.beans.artifact.ArtifactStream;
 import software.wings.beans.artifact.ArtifactoryArtifactStream;
 import software.wings.beans.artifact.AzureArtifactsArtifactStream;
+import software.wings.beans.artifact.AzureMachineImageArtifactStream;
 import software.wings.beans.artifact.BambooArtifactStream;
 import software.wings.beans.artifact.CustomArtifactStream;
 import software.wings.beans.artifact.DockerArtifactStream;
@@ -849,6 +850,7 @@ public class ManagerMorphiaRegistrar implements MorphiaRegistrar {
     set.add(AwsSecretsManagerConfig.class);
     set.add(AwsSecretsManagerLegacyConfig.class);
     set.add(AzureArtifactsArtifactStream.class);
+    set.add(AzureMachineImageArtifactStream.class);
     set.add(AzureInfrastructureMapping.class);
     set.add(AzureKubernetesInfrastructureMapping.class);
     set.add(AzureVaultConfig.class);

@@ -658,6 +658,23 @@ public enum ArtifactType {
     }
   },
 
+  /**
+   * The constant AZURE_MACHINE_IMAGE.
+   */
+  AZURE_MACHINE_IMAGE {
+    private static final long serialVersionUID = 2932493038229748527L;
+
+    @Override
+    public boolean isInternal() {
+      return true;
+    }
+
+    @Override
+    public List<Command> getDefaultCommands() {
+      return emptyList();
+    }
+  },
+
   IIS {
     private static final long serialVersionUID = 2932493038229748527L;
 

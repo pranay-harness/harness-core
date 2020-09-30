@@ -12,6 +12,7 @@ import software.wings.beans.artifact.ArtifactStream;
 import software.wings.beans.artifact.ArtifactStreamType;
 import software.wings.beans.artifact.ArtifactoryArtifactStream;
 import software.wings.beans.artifact.AzureArtifactsArtifactStream;
+import software.wings.beans.artifact.AzureMachineImageArtifactStream;
 import software.wings.beans.artifact.BambooArtifactStream;
 import software.wings.beans.artifact.DockerArtifactStream;
 import software.wings.beans.artifact.EcrArtifactStream;
@@ -21,6 +22,7 @@ import software.wings.beans.artifact.JenkinsArtifactStream;
 import software.wings.beans.artifact.NexusArtifactStream;
 import software.wings.beans.artifact.SftpArtifactStream;
 import software.wings.beans.artifact.SmbArtifactStream;
+import software.wings.graphql.schema.type.QLAzureImageDefinition;
 import software.wings.graphql.schema.type.QLKeyValuePair;
 import software.wings.graphql.schema.type.artifactSource.QLACRArtifactSource;
 import software.wings.graphql.schema.type.artifactSource.QLAMIArtifactSource;
@@ -31,6 +33,7 @@ import software.wings.graphql.schema.type.artifactSource.QLArtifactoryDockerProp
 import software.wings.graphql.schema.type.artifactSource.QLArtifactoryFileProps;
 import software.wings.graphql.schema.type.artifactSource.QLArtifactoryProps;
 import software.wings.graphql.schema.type.artifactSource.QLAzureArtifactsArtifactSource;
+import software.wings.graphql.schema.type.artifactSource.QLAzureMachineImageArtifactSource;
 import software.wings.graphql.schema.type.artifactSource.QLBambooArtifactSource;
 import software.wings.graphql.schema.type.artifactSource.QLCustomArtifactSource;
 import software.wings.graphql.schema.type.artifactSource.QLDockerArtifactSource;
@@ -229,6 +232,24 @@ public class ArtifactSourceController {
             .project(azureArtifactsArtifactStream.getProject())
             .feedName(azureArtifactsArtifactStream.getFeed())
             .scope(EmptyPredicate.isNotEmpty(azureArtifactsArtifactStream.getProject()) ? "PROJECT" : "ORGANIZATION")
+            .build();
+
+      case AZURE_MACHINE_IMAGE:
+        AzureMachineImageArtifactStream azureMachineImageArtifactStream =
+            (AzureMachineImageArtifactStream) artifactStream;
+        return QLAzureMachineImageArtifactSource.builder()
+            .id(artifactStream.getUuid())
+            .name(artifactStream.getName())
+            .createdAt(artifactStream.getCreatedAt())
+            .azureCloudProviderId(azureMachineImageArtifactStream.getSettingId())
+            .imageType(azureMachineImageArtifactStream.getImageType().name())
+            .subscriptionId(azureMachineImageArtifactStream.getSubscriptionId())
+            .imageDefinition(
+                QLAzureImageDefinition.builder()
+                    .resourceGroup(azureMachineImageArtifactStream.getImageDefinition().getResourceGroup())
+                    .imageGalleryName(azureMachineImageArtifactStream.getImageDefinition().getImageGalleryName())
+                    .imageDefinitionName(azureMachineImageArtifactStream.getImageDefinition().getImageDefinitionName())
+                    .build())
             .build();
 
       default:
