@@ -1,0 +1,46 @@
+load("@rules_java//java:defs.bzl", "java_binary")
+load("//tools/checkstyle:rules.bzl", "checkstyle")
+load("//:macros.bzl", "sonarqube_test")
+load("//tools/bazel/pmd:defs.bzl", "pmd")
+load("//:macros.bzl", "sources")
+
+sources()
+
+java_library(
+    name = "maven_deps",
+    visibility = ["//visibility:public"],
+    exports = [
+        "//12-commons:module",
+        "//20-delegate-beans:module",
+        "//22-ng-delegate-service-beans:module",
+        "//990-commons-test:module",
+        "@maven//:com_google_guava_guava",
+        "@maven//:com_google_protobuf_protobuf_java",
+        "@maven//:io_grpc_grpc_api",
+        "@maven//:io_grpc_grpc_protobuf",
+        "@maven//:io_grpc_grpc_stub",
+    ],
+)
+
+java_library(
+    name = "module",
+    srcs = glob(["src/generated/**/*.java"]),
+    visibility = ["//visibility:public"],
+    deps = [
+        "maven_deps",
+        "//:lombok",
+    ],
+)
+
+checkstyle()
+
+sonarqube_test(
+    name = "sq_mycomponent",
+    srcs = ["sources"],
+    targets = [
+        ":maven_deps",
+        ":module",
+    ],
+)
+
+pmd()

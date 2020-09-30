@@ -28,7 +28,7 @@ import java.io.IOException;
 import java.util.stream.IntStream;
 
 @Slf4j
-public class NgManagerServiceDriverRetryTest extends NgManagerServiceDriverBaseTest {
+public class NgManagerServiceDriverRetryTest extends NgManagerServiceDriverTestBase {
   @Rule public GrpcCleanupRule grpcCleanupRule = new GrpcCleanupRule();
 
   private String taskId = "taskId";

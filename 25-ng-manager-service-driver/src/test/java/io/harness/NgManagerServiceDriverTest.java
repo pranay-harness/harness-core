@@ -24,7 +24,7 @@ import org.junit.experimental.categories.Category;
 
 import java.io.IOException;
 
-public class NgManagerServiceDriverTest extends NgManagerServiceDriverBaseTest {
+public class NgManagerServiceDriverTest extends NgManagerServiceDriverTestBase {
   @Rule public GrpcCleanupRule grpcCleanupRule = new GrpcCleanupRule();
 
   private String taskId = "taskId";
