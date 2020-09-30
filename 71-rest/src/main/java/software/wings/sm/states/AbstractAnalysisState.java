@@ -673,32 +673,7 @@ public abstract class AbstractAnalysisState extends State {
 
   protected CVInstanceApiResponse getCVInstanceAPIResponse(ExecutionContext context) {
     String hostNameTemplate = isEmpty(getHostnameTemplate()) ? DEFAULT_HOSTNAME_TEMPLATE : getHostnameTemplate();
-    CVInstanceApiResponse cvInstanceAPIResponse = getCVInstanceAPIResponse(context, hostNameTemplate);
-    if (hostNameTemplate == DEFAULT_HOSTNAME_TEMPLATE) {
-      try {
-        CVInstanceApiResponse cvInstanceApiResponseWithNewDefaultHostnameTemplate =
-            getCVInstanceAPIResponse(context, "${instanceDetails.hostName}");
-        if (!cvInstanceAPIResponse.equals(cvInstanceApiResponseWithNewDefaultHostnameTemplate)) {
-          getLogger().info(
-              "[NewInstanceAPI][Error] CVInstanceApiResponse values returned from default template are different {} {}",
-              cvInstanceAPIResponse, cvInstanceApiResponseWithNewDefaultHostnameTemplate);
-        } else {
-          getLogger().info("[NewInstanceAPI] CVInstanceApiResponse values are same for default template");
-        }
-      } catch (Exception e) {
-        getLogger().info(
-            "[NewInstanceAPI][Error] Exception when calling getNodePair with default hostname template (instanceDetails.hostName) {}",
-            e);
-      }
-    } else {
-      getLogger().info("[NewInstanceAPI] hostNameTemplate is not default {}", hostNameTemplate);
-    }
-    return cvInstanceAPIResponse;
-  }
-
-  private CVInstanceApiResponse getCVInstanceAPIResponse(ExecutionContext context, String hostNameTemplate) {
     Set<String> controlNodes, testNodes;
-
     Optional<Integer> newNodesTrafficShift;
     boolean skipVerification;
     if (getComparisonStrategy() == COMPARE_WITH_PREVIOUS) {
@@ -732,7 +707,6 @@ public abstract class AbstractAnalysisState extends State {
         .newNodesTrafficShiftPercent(newNodesTrafficShift)
         .build();
   }
-
   @Value
   @Builder
   protected static class CVInstanceApiResponse {

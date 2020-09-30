@@ -9,7 +9,6 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.Value;
-import software.wings.api.InstanceElement;
 import software.wings.sm.StateType;
 
 import java.util.concurrent.TimeUnit;
@@ -53,6 +52,5 @@ public class SetupTestNodeData {
   @Builder
   public static class Instance {
     InstanceDetails instanceDetails;
-    InstanceElement instance;
   }
 }

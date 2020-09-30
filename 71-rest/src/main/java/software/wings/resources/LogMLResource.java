@@ -7,6 +7,7 @@ import com.google.inject.Inject;
 
 import com.codahale.metrics.annotation.ExceptionMetered;
 import com.codahale.metrics.annotation.Timed;
+import io.harness.deployment.InstanceDetails;
 import io.harness.exception.WingsException;
 import io.harness.rest.RestResponse;
 import io.harness.security.annotations.LearningEngineAuth;
@@ -108,8 +109,9 @@ public class LogMLResource {
   @Path(LogAnalysisResource.LAST_EXECUTION_NODES)
   @Timed
   @ExceptionMetered
-  public RestResponse<Map<String, Map<String, ?>>> getLastExecutionNodes(@QueryParam("accountId") String accountId,
-      @QueryParam("appId") String appId, @QueryParam("workflowId") String workflowId) {
+  public RestResponse<Map<String, Map<String, InstanceDetails>>> getLastExecutionNodes(
+      @QueryParam("accountId") String accountId, @QueryParam("appId") String appId,
+      @QueryParam("workflowId") String workflowId) {
     return new RestResponse<>(analysisService.getLastExecutionNodes(appId, workflowId));
   }
 

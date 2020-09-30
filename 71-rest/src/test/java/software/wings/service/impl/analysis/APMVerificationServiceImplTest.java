@@ -27,6 +27,7 @@ import com.google.inject.Inject;
 
 import io.harness.beans.DelegateTask;
 import io.harness.category.element.UnitTests;
+import io.harness.deployment.InstanceDetails;
 import io.harness.exception.VerificationOperationException;
 import io.harness.exception.WingsException;
 import io.harness.rule.Owner;
@@ -42,7 +43,6 @@ import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import software.wings.APMFetchConfig;
 import software.wings.WingsBaseTest;
-import software.wings.api.InstanceElement;
 import software.wings.beans.APMValidateCollectorConfig;
 import software.wings.beans.APMVerificationConfig;
 import software.wings.beans.AppDynamicsConfig;
@@ -181,10 +181,9 @@ public class APMVerificationServiceImplTest extends WingsBaseTest {
             .metrics("docker.mem.rss")
             .fromTime(Timestamp.currentMinuteBoundary())
             .toTime(Timestamp.currentMinuteBoundary())
-            .instanceElement(
-                SetupTestNodeData.Instance.builder()
-                    .instance(InstanceElement.Builder.anInstanceElement().hostName("sampleHostname").build())
-                    .build())
+            .instanceElement(SetupTestNodeData.Instance.builder()
+                                 .instanceDetails(InstanceDetails.builder().hostName("sampleHostname").build())
+                                 .build())
             .stateType(StateType.DATA_DOG)
             .guid(generateUuid())
             .build();
@@ -223,10 +222,9 @@ public class APMVerificationServiceImplTest extends WingsBaseTest {
             .metrics("docker.mem.rss")
             .fromTime(Timestamp.currentMinuteBoundary())
             .toTime(Timestamp.currentMinuteBoundary())
-            .instanceElement(
-                SetupTestNodeData.Instance.builder()
-                    .instance(InstanceElement.Builder.anInstanceElement().hostName("sampleHostname").build())
-                    .build())
+            .instanceElement(SetupTestNodeData.Instance.builder()
+                                 .instanceDetails(InstanceDetails.builder().hostName("sampleHostname").build())
+                                 .build())
             .stateType(StateType.DATA_DOG)
             .guid(generateUuid())
             .build();
@@ -265,10 +263,9 @@ public class APMVerificationServiceImplTest extends WingsBaseTest {
             .metrics("docker.mem.rss")
             .fromTime(Timestamp.currentMinuteBoundary())
             .toTime(Timestamp.currentMinuteBoundary())
-            .instanceElement(
-                SetupTestNodeData.Instance.builder()
-                    .instance(InstanceElement.Builder.anInstanceElement().hostName("sampleHostname").build())
-                    .build())
+            .instanceElement(SetupTestNodeData.Instance.builder()
+                                 .instanceDetails(InstanceDetails.builder().hostName("sampleHostname").build())
+                                 .build())
             .stateType(StateType.DATA_DOG)
             .guid(generateUuid())
             .build();

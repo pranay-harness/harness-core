@@ -10,7 +10,6 @@ import static io.harness.govern.Switch.noop;
 import static io.harness.govern.Switch.unhandled;
 import static io.harness.persistence.HPersistence.upToOne;
 import static io.harness.persistence.HQuery.excludeAuthority;
-import static software.wings.api.InstanceElement.Builder.anInstanceElement;
 import static software.wings.beans.Application.GLOBAL_APP_ID;
 import static software.wings.common.VerificationConstants.DEMO_FAILURE_LOG_STATE_EXECUTION_ID;
 import static software.wings.common.VerificationConstants.DEMO_SUCCESS_LOG_STATE_EXECUTION_ID;
@@ -44,18 +43,11 @@ import org.apache.commons.codec.digest.DigestUtils;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.Sort;
 import software.wings.annotation.EncryptableSetting;
-import software.wings.api.DeploymentType;
-import software.wings.api.HostElement;
-import software.wings.api.InstanceElement;
-import software.wings.api.InstanceElementListParam;
-import software.wings.api.PcfInstanceElement;
 import software.wings.api.PhaseElement;
 import software.wings.api.jira.JiraExecutionData;
-import software.wings.beans.ElementExecutionSummary;
 import software.wings.beans.ElkConfig;
 import software.wings.beans.FeatureName;
 import software.wings.beans.InstanaConfig;
-import software.wings.beans.Service;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.SplunkConfig;
 import software.wings.beans.SumoConfig;
@@ -63,7 +55,6 @@ import software.wings.beans.SyncTaskContext;
 import software.wings.beans.WorkflowExecution;
 import software.wings.beans.WorkflowExecution.WorkflowExecutionKeys;
 import software.wings.beans.config.LogzConfig;
-import software.wings.beans.infrastructure.Host;
 import software.wings.delegatetasks.DelegateProxyFactory;
 import software.wings.dl.WingsPersistence;
 import software.wings.metrics.RiskLevel;
@@ -91,7 +82,6 @@ import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.DataStoreService;
 import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.HostService;
-import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.StateExecutionService;
 import software.wings.service.intfc.WorkflowExecutionService;
@@ -107,7 +97,6 @@ import software.wings.service.intfc.sweepingoutput.SweepingOutputService;
 import software.wings.service.intfc.verification.CV24x7DashboardService;
 import software.wings.service.intfc.verification.CVConfigurationService;
 import software.wings.sm.ContextElement;
-import software.wings.sm.InstanceStatusSummary;
 import software.wings.sm.StateExecutionInstance;
 import software.wings.sm.StateExecutionInstance.StateExecutionInstanceKeys;
 import software.wings.sm.StateType;
@@ -122,7 +111,6 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -163,7 +151,6 @@ public class AnalysisServiceImpl implements AnalysisService {
   @Inject private JiraHelperService jiraHelperService;
   @Inject private FeatureFlagService featureFlagService;
   @Inject private AppService appService;
-  @Inject private ServiceResourceService serviceResourceService;
   @Inject private SweepingOutputService sweepingOutputService;
 
   @Override
@@ -1279,7 +1266,7 @@ public class AnalysisServiceImpl implements AnalysisService {
   }
 
   @Override
-  public Map<String, Map<String, ?>> getLastExecutionNodes(String appId, String workflowId) {
+  public Map<String, Map<String, InstanceDetails>> getLastExecutionNodes(String appId, String workflowId) {
     WorkflowExecution workflowExecution = wingsPersistence.createQuery(WorkflowExecution.class)
                                               .filter(WorkflowExecutionKeys.appId, appId)
                                               .filter(WorkflowExecutionKeys.workflowId, workflowId)
@@ -1291,92 +1278,12 @@ public class AnalysisServiceImpl implements AnalysisService {
       throw new WingsException(ErrorCode.APM_CONFIGURATION_ERROR, USER)
           .addParam("reason", "No successful execution exists for the workflow.");
     }
-    if (featureFlagService.isEnabled(FeatureName.CV_EXPOSE_INSTANCE_DETAILS, workflowExecution.getAccountId())) {
-      List<InstanceDetails> instanceDetails =
-          sweepingOutputService.findInstanceDetailsForWorkflowExecution(appId, workflowExecution.getUuid());
-      if (!instanceDetails.isEmpty()) {
-        // CDP started populating instance details around may 2020 so for the execution before that. This can be empty.
-        // We are fallbacking on instanceElement if this is not present. We can remove the instanceElement code after
-        // aug end.
-        return instanceDetails.stream().collect(Collectors.toMap(InstanceDetails::getHostName,
-            instanceDetail -> Collections.singletonMap("instanceDetails", instanceDetail)));
-      }
-    }
 
-    Map<String, InstanceElement> hosts = new HashMap<>();
-    for (ElementExecutionSummary executionSummary : workflowExecution.getServiceExecutionSummaries()) {
-      if (isEmpty(executionSummary.getInstanceStatusSummaries())) {
-        continue;
-      }
-      for (InstanceStatusSummary instanceStatusSummary : executionSummary.getInstanceStatusSummaries()) {
-        InstanceElement instanceElement = instanceStatusSummary.getInstanceElement();
-        HostElement hostElement = instanceElement.getHost();
-        if (hostElement != null && hostElement.getUuid() != null && hostElement.getEc2Instance() == null) {
-          Host host = hostService.get(appId, workflowExecution.getEnvId(), hostElement.getUuid());
-          if (host != null && host.getEc2Instance() != null) {
-            hostElement.setEc2Instance(host.getEc2Instance());
-          }
-        }
-        hosts.put(instanceElement.getHostName(), instanceElement);
-      }
-    }
-    hosts.putAll(getPcfHostsIfneccessary(workflowExecution));
-    if (isEmpty(hosts)) {
-      logger.info("No nodes found for successful execution for workflow {} with executionId {}", workflowId,
-          workflowExecution.getUuid());
-      throw new WingsException(ErrorCode.APM_CONFIGURATION_ERROR, USER)
-          .addParam("reason", "No node information was captured in the last successful workflow execution");
-    }
-    return wrapInstanceElementWithInstanceKey(hosts);
-  }
+    List<InstanceDetails> instanceDetails =
+        sweepingOutputService.findInstanceDetailsForWorkflowExecution(appId, workflowExecution.getUuid());
 
-  private Map<String, Map<String, ?>> wrapInstanceElementWithInstanceKey(Map<String, InstanceElement> hosts) {
-    // renderExpression works with instance.
-    // example: ${instance.ecsContainerDetails.completeDockerId}
-    Map<String, Map<String, ?>> result = new HashMap<>();
-    for (Entry<String, InstanceElement> entry : hosts.entrySet()) {
-      result.put(entry.getKey(), Collections.singletonMap("instance", entry.getValue()));
-    }
-    return result;
-  }
-
-  private Map<String, InstanceElement> getPcfHostsIfneccessary(WorkflowExecution workflowExecution) {
-    Map<String, InstanceElement> rv = new HashMap<>();
-    List<String> serviceIds = workflowExecution.getServiceIds();
-    if (isNotEmpty(serviceIds)) {
-      serviceIds.forEach(serviceId -> {
-        Service service = serviceResourceService.get(serviceId);
-        if (service != null && DeploymentType.PCF == service.getDeploymentType()) {
-          try (HIterator<StateExecutionInstance> iterator =
-                   new HIterator<>(wingsPersistence.createQuery(StateExecutionInstance.class, excludeAuthority)
-                                       .filter(StateExecutionInstanceKeys.executionUuid, workflowExecution.getUuid())
-                                       .fetch())) {
-            while (iterator.hasNext()) {
-              StateExecutionInstance stateExecutionInstance = iterator.next();
-              LinkedList<ContextElement> contextElements = stateExecutionInstance.getContextElements();
-              if (isNotEmpty(contextElements)) {
-                contextElements.forEach(contextElement -> {
-                  if (contextElement instanceof InstanceElementListParam) {
-                    InstanceElementListParam instanceElementListParam = (InstanceElementListParam) contextElement;
-                    List<PcfInstanceElement> pcfInstanceElements = instanceElementListParam.getPcfInstanceElements();
-                    if (isNotEmpty(pcfInstanceElements)) {
-                      pcfInstanceElements.forEach(pcfInstanceElement
-                          -> rv.put(pcfInstanceElement.getDisplayName() + ":" + pcfInstanceElement.getInstanceIndex(),
-                              anInstanceElement()
-                                  .hostName(
-                                      pcfInstanceElement.getDisplayName() + ":" + pcfInstanceElement.getInstanceIndex())
-                                  .host(HostElement.builder().pcfElement(pcfInstanceElement).build())
-                                  .build()));
-                    }
-                  }
-                });
-              }
-            }
-          }
-        }
-      });
-    }
-    return rv;
+    return instanceDetails.stream().collect(Collectors.toMap(
+        InstanceDetails::getHostName, instanceDetail -> Collections.singletonMap("instanceDetails", instanceDetail)));
   }
 
   public enum CLUSTER_TYPE { CONTROL, TEST, UNKNOWN, IGNORE }
