@@ -48,7 +48,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
-public class ManagerDelegateServiceDriverTest extends ManagerDelegateServiceDriverBaseTest {
+public class ManagerDelegateServiceDriverTest extends ManagerDelegateServiceDriverTestBase {
   @Rule public GrpcCleanupRule grpcCleanupRule = new GrpcCleanupRule();
 
   private static final String ACCOUNT_ID = generateUuid();

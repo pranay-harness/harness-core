@@ -71,7 +71,12 @@ modules = [
     "//23-delegate-service-driver",
     "//23-sm-core",
     "//24-common-entities",
+    #    "//24-manager-delegate-service-beans",             ### No source files  ##
     "//24-ng-manager-service-beans",
+    "//25-manager-delegate-service-driver",
+    "//25-ng-async-task-grpc-server",
+    "//25-ng-manager-service-driver",
+    "//27-orchestration-persistence",
 ]
 
 filegroup(
