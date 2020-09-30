@@ -104,6 +104,7 @@ build_bazel_module 22-ng-project-n-orgs
 build_bazel_module 22-secret-manager-client
 build_bazel_module 22-timeout-engine
 build_bazel_module 22-wait-engine
+build_bazel_module 23-delegate-service-driver
 build_java_proto_module 13-grpc-api
 build_java_proto_module 19-delegate-tasks-beans
 build_java_proto_module 20-delegate-beans

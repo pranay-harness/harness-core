@@ -26,7 +26,7 @@
         <!--<module>22-secret-manager-client</module>-->
         <!--<module>22-timeout-engine</module>-->
         <!--<module>22-wait-engine</module>-->
-        <module>23-delegate-service-driver</module>
+        <!--<module>23-delegate-service-driver</module>-->
         <module>23-sm-core</module>
         <module>24-common-entities</module>
         <module>24-manager-delegate-service-beans</module>
