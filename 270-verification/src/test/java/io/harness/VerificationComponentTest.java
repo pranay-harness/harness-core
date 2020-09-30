@@ -1,6 +1,6 @@
 package io.harness;
 
-import static io.harness.rule.OwnerRule.GEORGE;
+import static io.harness.rule.OwnerRule.RAGHU;
 import static org.assertj.core.api.Assertions.assertThatCode;
 
 import com.google.inject.Inject;
@@ -20,7 +20,7 @@ public class VerificationComponentTest extends VerificationBaseTest {
   @Inject private Map<String, TestExecution> tests;
 
   @Test
-  @Owner(developers = GEORGE)
+  @Owner(developers = RAGHU)
   @Category(UnitTests.class)
   public void componentVerificationTests() {
     for (Entry<String, TestExecution> test : tests.entrySet()) {
