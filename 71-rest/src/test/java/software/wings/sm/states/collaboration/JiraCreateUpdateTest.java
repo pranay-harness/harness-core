@@ -3,6 +3,7 @@ package software.wings.sm.states.collaboration;
 import static io.harness.rule.OwnerRule.AGORODETKI;
 import static io.harness.rule.OwnerRule.POOJA;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.when;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -10,7 +11,9 @@ import io.harness.category.element.UnitTests;
 import io.harness.exception.HarnessJiraException;
 import io.harness.jira.JiraCustomFieldValue;
 import io.harness.rule.Owner;
+import net.sf.json.JSONArray;
 import net.sf.json.JSONObject;
+import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -18,7 +21,9 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import software.wings.WingsBaseTest;
 import software.wings.api.jira.JiraCreateMetaResponse;
+import software.wings.service.impl.JiraHelperService;
 import software.wings.sm.ExecutionContextImpl;
+import software.wings.utils.WingsTestConstants;
 
 import java.io.File;
 import java.io.IOException;
@@ -29,14 +34,27 @@ import java.util.Map;
 
 public class JiraCreateUpdateTest extends WingsBaseTest {
   @Mock private ExecutionContextImpl context;
+  @Mock private JiraHelperService jiraHelperService;
   @InjectMocks JiraCreateUpdate jiraCreateUpdateState = new JiraCreateUpdate("Jira");
   private static JiraCreateMetaResponse createMetaResponse;
+  private static JSONArray projects;
+  private static Object statuses;
 
   @BeforeClass
   public static void setup() throws IOException {
     JSONObject jsonObject =
         new ObjectMapper().readValue(new File("src/test/resources/mock_create_meta"), JSONObject.class);
     createMetaResponse = new JiraCreateMetaResponse(jsonObject);
+    projects = new ObjectMapper().readValue(new File("src/test/resources/mock_projects"), JSONArray.class);
+    statuses = new ObjectMapper().readValue(new File("src/test/resources/mock_statuses"), JSONArray.class);
+  }
+
+  @Before
+  public void setUpMocks() {
+    when(context.getAccountId()).thenReturn(WingsTestConstants.ACCOUNT_ID);
+    when(context.getAppId()).thenReturn(WingsTestConstants.APP_ID);
+    when(jiraHelperService.getProjects(anyString(), anyString(), anyString())).thenReturn(projects);
+    when(jiraHelperService.getStatuses(anyString(), anyString(), anyString(), anyString())).thenReturn(statuses);
   }
 
   @Test
@@ -200,6 +218,7 @@ public class JiraCreateUpdateTest extends WingsBaseTest {
     Map<String, String> map = new HashMap<>();
     map.put("multi", "Multiselect");
     map.put("customfield_option", "Option Name");
+    map.put("customfield_option_2", "Option Name");
 
     assertThat(jiraCreateUpdateState.mapCustomFieldsIdsToNames(createMetaResponse)).isEqualTo(map);
   }
@@ -217,8 +236,12 @@ public class JiraCreateUpdateTest extends WingsBaseTest {
     Map<String, String> option = new HashMap<>();
     option.put("optionvalue1", "option_id_1");
     option.put("optionvalue2", "option_id_2");
+    Map<String, String> option2 = new HashMap<>();
+    option2.put("optionvalue1", "option_id_1");
+    option2.put("optionvalue2", "option_id_2");
     map.put("multi", multi);
     map.put("customfield_option", option);
+    map.put("customfield_option_2", option2);
 
     assertThat(jiraCreateUpdateState.mapCustomFieldsValuesToId(createMetaResponse)).isEqualTo(map);
   }
@@ -298,5 +321,131 @@ public class JiraCreateUpdateTest extends WingsBaseTest {
 
     jiraCreateUpdateState.resolveCustomFieldsVars(jiraCreateUpdateState.mapCustomFieldsIdsToNames(createMetaResponse),
         jiraCreateUpdateState.mapCustomFieldsValuesToId(createMetaResponse));
+  }
+
+  @Test(expected = HarnessJiraException.class)
+  @Owner(developers = AGORODETKI)
+  @Category(UnitTests.class)
+  public void shouldFailProjectValidation() {
+    jiraCreateUpdateState.setProject("UNKNOWN");
+    jiraCreateUpdateState.setStatus("To Do");
+    jiraCreateUpdateState.setIssueType("Issue Type");
+    jiraCreateUpdateState.setPriority("High");
+
+    jiraCreateUpdateState.validateRequiredFields(createMetaResponse, context);
+  }
+
+  @Test(expected = HarnessJiraException.class)
+  @Owner(developers = AGORODETKI)
+  @Category(UnitTests.class)
+  public void shouldFailStatusValidation() {
+    jiraCreateUpdateState.setProject("PN");
+    jiraCreateUpdateState.setStatus("UNKNOWN");
+    jiraCreateUpdateState.setIssueType("Issue Type");
+    jiraCreateUpdateState.setPriority("High");
+
+    jiraCreateUpdateState.validateRequiredFields(createMetaResponse, context);
+  }
+
+  @Test(expected = HarnessJiraException.class)
+  @Owner(developers = AGORODETKI)
+  @Category(UnitTests.class)
+  public void shouldFailIssueTypeValidation() {
+    jiraCreateUpdateState.setProject("PN");
+    jiraCreateUpdateState.setStatus("To Do");
+    jiraCreateUpdateState.setIssueType("UNKNOWN");
+    jiraCreateUpdateState.setPriority("High");
+
+    jiraCreateUpdateState.validateRequiredFields(createMetaResponse, context);
+  }
+
+  @Test(expected = HarnessJiraException.class)
+  @Owner(developers = AGORODETKI)
+  @Category(UnitTests.class)
+  public void shouldFailPriorityValidation() {
+    jiraCreateUpdateState.setProject("PN");
+    jiraCreateUpdateState.setStatus("To Do");
+    jiraCreateUpdateState.setIssueType("Issue Type");
+    jiraCreateUpdateState.setPriority("UNKNOWN");
+
+    jiraCreateUpdateState.validateRequiredFields(createMetaResponse, context);
+  }
+
+  @Test
+  @Owner(developers = AGORODETKI)
+  @Category(UnitTests.class)
+  public void shouldPassRequiredFieldsValidation() {
+    jiraCreateUpdateState.setProject("PN");
+    jiraCreateUpdateState.setStatus("To Do");
+    jiraCreateUpdateState.setIssueType("Issue Type");
+    jiraCreateUpdateState.setPriority("High");
+
+    jiraCreateUpdateState.validateRequiredFields(createMetaResponse, context);
+  }
+
+  @Test(expected = HarnessJiraException.class)
+  @Owner(developers = AGORODETKI)
+  @Category(UnitTests.class)
+  public void shouldFailCustomFieldsNameValidation() {
+    jiraCreateUpdateState.setProject("PN");
+    jiraCreateUpdateState.setIssueType("Issue Type");
+
+    Map<String, JiraCustomFieldValue> customFields = new HashMap<>();
+    JiraCustomFieldValue customFieldValue = new JiraCustomFieldValue();
+    customFieldValue.setFieldValue("Some Value");
+    customFields.put("UNKNOWN", customFieldValue);
+    jiraCreateUpdateState.setCustomFields(customFields);
+
+    jiraCreateUpdateState.inferCustomFieldsTypes(createMetaResponse);
+  }
+
+  @Test
+  @Owner(developers = AGORODETKI)
+  @Category(UnitTests.class)
+  public void shouldInferCustomFieldType() {
+    jiraCreateUpdateState.setProject("PN");
+    jiraCreateUpdateState.setIssueType("Issue Type");
+
+    Map<String, JiraCustomFieldValue> customFields = new HashMap<>();
+    JiraCustomFieldValue customFieldValue = new JiraCustomFieldValue();
+    customFieldValue.setFieldValue("MultiselectName1");
+    customFields.put("Multiselect", customFieldValue);
+    jiraCreateUpdateState.setCustomFields(customFields);
+
+    jiraCreateUpdateState.inferCustomFieldsTypes(createMetaResponse);
+    assertThat(jiraCreateUpdateState.getCustomFieldsMap().get("multi").getFieldType()).isEqualTo("multiselect");
+  }
+
+  @Test
+  @Owner(developers = AGORODETKI)
+  @Category(UnitTests.class)
+  public void shouldInferTypeForTimetrackingField() {
+    jiraCreateUpdateState.setProject("PN");
+    jiraCreateUpdateState.setIssueType("Issue Type");
+
+    Map<String, JiraCustomFieldValue> customFields = new HashMap<>();
+    JiraCustomFieldValue customFieldValue = new JiraCustomFieldValue();
+    customFieldValue.setFieldValue("1d 4h");
+    customFields.put("TimeTracking:OriginalEstimate", customFieldValue);
+    jiraCreateUpdateState.setCustomFields(customFields);
+
+    jiraCreateUpdateState.inferCustomFieldsTypes(createMetaResponse);
+    assertThat(jiraCreateUpdateState.getCustomFieldsMap().get("TimeTracking:OriginalEstimate").getFieldType())
+        .isEqualTo("timetracking");
+  }
+
+  @Test(expected = HarnessJiraException.class)
+  @Owner(developers = AGORODETKI)
+  @Category(UnitTests.class)
+  public void shouldFailProcessingIfProvidedCustomFieldHasDuplicatesByName() {
+    jiraCreateUpdateState.setProject("PN");
+    jiraCreateUpdateState.setIssueType("Issue Type");
+
+    Map<String, JiraCustomFieldValue> customFields = new HashMap<>();
+    JiraCustomFieldValue customFieldValue = new JiraCustomFieldValue();
+    customFields.put("Option Name", customFieldValue);
+    jiraCreateUpdateState.setCustomFields(customFields);
+
+    jiraCreateUpdateState.inferCustomFieldsTypes(createMetaResponse);
   }
 }

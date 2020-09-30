@@ -33,11 +33,14 @@ import lombok.Getter;
 import lombok.Setter;
 import lombok.experimental.FieldNameConstants;
 import lombok.extern.slf4j.Slf4j;
+import net.sf.json.JSONArray;
 import net.sf.json.JSONObject;
+import org.apache.commons.lang3.StringUtils;
 import org.mongodb.morphia.annotations.Transient;
 import software.wings.api.jira.JiraCreateMetaResponse;
 import software.wings.api.jira.JiraExecutionData;
 import software.wings.api.jira.JiraField;
+import software.wings.api.jira.JiraIssueType;
 import software.wings.api.jira.JiraProjectData;
 import software.wings.beans.Activity;
 import software.wings.beans.Activity.ActivityBuilder;
@@ -97,6 +100,10 @@ public class JiraCreateUpdate extends State implements SweepingOutputStateMixin 
   public static final String INVALID_VALUE_ERROR_MESSAGE =
       "Invalid value [%s] provided for custom field: %s. Please, check out allowed values: %s.";
   public static final String RESOLUTION = "resolution";
+  public static final String INVALID_FIELD_NAME_ERROR_MESSAGE =
+      "The following custom field names %s are invalid. Please, check out allowed names: %s.";
+  public static final String VALUE = "value";
+  public static final String FAILING_JIRA_STEP_DUE_TO = "Failing Jira step due to: ";
 
   @Inject private transient ActivityService activityService;
   @Inject @Transient private LogService logService;
@@ -155,24 +162,50 @@ public class JiraCreateUpdate extends State implements SweepingOutputStateMixin 
 
   private ExecutionResponse executeInternal(ExecutionContext context, String activityId) {
     ExecutionContextImpl executionContext = (ExecutionContextImpl) context;
-
+    boolean areRequiredFieldsTemplatized = checkIfRequiredFieldsAreTemplatized();
     JiraConfig jiraConfig = getJiraConfig(jiraConnectorId);
-    parseCustomFieldsDateTime(context);
+    JiraCreateMetaResponse createMeta = null;
     renderExpressions(context);
-    if (EmptyPredicate.isNotEmpty(customFields)) {
-      JiraCreateMetaResponse createMetadata = jiraHelperService.getCreateMetadata(
+
+    if (areRequiredFieldsTemplatized) {
+      createMeta = jiraHelperService.getCreateMetadata(
           jiraConnectorId, null, project, context.getAccountId(), context.getAppId());
+      try {
+        validateRequiredFields(createMeta, context);
+      } catch (HarnessJiraException e) {
+        logger.error(FAILING_JIRA_STEP_DUE_TO, e);
+        return ExecutionResponse.builder().errorMessage(e.getMessage()).executionStatus(FAILED).build();
+      }
+    }
+
+    if (EmptyPredicate.isNotEmpty(customFields)) {
+      JiraCreateMetaResponse createMetadata = createMeta == null
+          ? jiraHelperService.getCreateMetadata(
+                jiraConnectorId, null, project, context.getAccountId(), context.getAppId())
+          : createMeta;
 
       Map<String, Map<Object, Object>> customFieldsValueToIdMap = mapCustomFieldsValuesToId(createMetadata);
       Map<String, String> customFieldsIdToNameMap = mapCustomFieldsIdsToNames(createMetadata);
 
+      if (areRequiredFieldsTemplatized) {
+        try {
+          inferCustomFieldsTypes(createMetadata);
+        } catch (HarnessJiraException e) {
+          logger.error(FAILING_JIRA_STEP_DUE_TO, e);
+          return ExecutionResponse.builder().errorMessage(e.getMessage()).executionStatus(FAILED).build();
+        }
+      }
+
+      parseCustomFieldsDateTime(context);
+
       try {
         resolveCustomFieldsVars(customFieldsIdToNameMap, customFieldsValueToIdMap);
       } catch (HarnessJiraException e) {
-        logger.error("Failing Jira step due to: ", e);
+        logger.error(FAILING_JIRA_STEP_DUE_TO, e);
         return ExecutionResponse.builder().errorMessage(e.getMessage()).executionStatus(FAILED).build();
       }
     }
+
     if (ExpressionEvaluator.containsVariablePattern(issueId)) {
       return ExecutionResponse.builder()
           .executionStatus(FAILED)
@@ -234,6 +267,167 @@ public class JiraCreateUpdate extends State implements SweepingOutputStateMixin 
         .delegateTaskId(delegateTaskId)
         .stateExecutionData(JiraExecutionData.builder().activityId(activityId).build())
         .build();
+  }
+
+  void validateRequiredFields(JiraCreateMetaResponse createMeta, ExecutionContext context) {
+    validateProject(context);
+    validateIssueType(createMeta);
+    validateStatus(context);
+    validatePriority(createMeta);
+  }
+
+  private void validateProject(ExecutionContext context) {
+    List<String> projects =
+        Arrays
+            .stream(
+                jiraHelperService.getProjects(jiraConnectorId, context.getAccountId(), context.getAppId()).toArray())
+            .map(ob -> (JSONObject) ob)
+            .map(existingProjects -> (String) existingProjects.get("key"))
+            .collect(Collectors.toList());
+    if (!projects.contains(project)) {
+      throw new HarnessJiraException(
+          String.format("Invalid project key [%s]. Please, check out allowed values: %s", project, projects), null);
+    }
+  }
+
+  private void validateStatus(ExecutionContext context) {
+    if (StringUtils.isNotBlank(status)) {
+      List<String> allowedStatuses = Arrays
+                                         .stream(((JSONArray) jiraHelperService.getStatuses(jiraConnectorId, project,
+                                                      context.getAccountId(), context.getAppId()))
+                                                     .toArray())
+                                         .map(ob -> (JSONObject) ob)
+                                         .filter(issue -> issue.get("name").equals(issueType))
+                                         .flatMap(issue -> Arrays.stream(((JSONArray) issue.get("statuses")).toArray()))
+                                         .map(ob -> (JSONObject) ob)
+                                         .map(statuses -> (String) statuses.get("name"))
+                                         .collect(Collectors.toList());
+      if (!allowedStatuses.contains(status)) {
+        throw new HarnessJiraException(
+            String.format("Invalid status [%s]. Please, check out allowed values %s", status, allowedStatuses), null);
+      }
+    }
+  }
+
+  private void validatePriority(JiraCreateMetaResponse createMetadata) {
+    if (StringUtils.isNotBlank(priority)) {
+      List<String> priorities =
+          createMetadata.getProjects()
+              .stream()
+              .filter(jiraProjectData -> jiraProjectData.getKey().equals(project))
+              .map(JiraProjectData::getIssueTypes)
+              .flatMap(Collection::stream)
+              .filter(jiraIssue -> jiraIssue.getName().equals(issueType))
+              .flatMap(jiraIssue -> jiraIssue.getJiraFields().entrySet().stream())
+              .map(Entry::getValue)
+              .filter(jiraField -> jiraField.getKey().equals("priority"))
+              .flatMap(jiraField -> Arrays.stream(jiraField.getAllowedValues().toArray()))
+              .map(json -> (JSONObject) json)
+              .map(ob -> ob.get(VALUE) != null ? ((String) ob.get(VALUE)) : ((String) ob.get("name")))
+              .collect(Collectors.toList());
+      if (!priorities.contains(priority)) {
+        throw new HarnessJiraException(
+            String.format("Invalid priority: [%s]. Please check out allowed values: %s", priority, priorities), null);
+      }
+    }
+  }
+
+  private void validateIssueType(JiraCreateMetaResponse createMetadata) {
+    List<String> issueTypes = createMetadata.getProjects()
+                                  .stream()
+                                  .filter(jiraProjectData -> jiraProjectData.getKey().equals(project))
+                                  .flatMap(jiraProjectData -> jiraProjectData.getIssueTypes().stream())
+                                  .map(JiraIssueType::getName)
+                                  .collect(Collectors.toList());
+    if (!issueTypes.contains(issueType)) {
+      throw new HarnessJiraException(
+          String.format("Invalid issue type: [%s]. Please, check out existing issue types: %s", issueType, issueType),
+          null);
+    }
+  }
+
+  private boolean checkIfRequiredFieldsAreTemplatized() {
+    return ExpressionEvaluator.containsVariablePattern(project)
+        || ExpressionEvaluator.containsVariablePattern(issueType);
+  }
+
+  void inferCustomFieldsTypes(JiraCreateMetaResponse createMetaResponse) {
+    Map<String, String> allCustomFieldsIdToNameMap =
+        createMetaResponse.getProjects()
+            .stream()
+            .filter(jiraProjectData -> jiraProjectData.getKey().equals(project))
+            .map(JiraProjectData::getIssueTypes)
+            .flatMap(Collection::stream)
+            .filter(jiraIssue -> jiraIssue.getName().equals(issueType))
+            .flatMap(jiraIssue -> jiraIssue.getJiraFields().entrySet().stream())
+            .map(Entry::getValue)
+            .filter(jiraField -> !jiraField.getSchema().get("type").equals("priority"))
+            .collect(toMap(JiraField::getKey, JiraField::getName));
+
+    validateCustomFieldsNames(allCustomFieldsIdToNameMap);
+    replaceCustomFieldNameWithId(allCustomFieldsIdToNameMap);
+    Map<String, String> fieldIdToTypeMap = mapCustomFieldIdsToTypes(createMetaResponse);
+    fieldIdToTypeMap.put("TimeTracking:OriginalEstimate", "timetracking");
+    fieldIdToTypeMap.put("TimeTracking:RemainingEstimate", "timetracking");
+    setCustomFieldTypes(fieldIdToTypeMap);
+  }
+
+  private void setCustomFieldTypes(Map<String, String> fieldIdToTypeMap) {
+    customFields.forEach((key, value) -> value.setFieldType(fieldIdToTypeMap.get(key)));
+  }
+
+  private Map<String, String> mapCustomFieldIdsToTypes(JiraCreateMetaResponse createMetaResponse) {
+    return createMetaResponse.getProjects()
+        .stream()
+        .filter(jiraProjectData -> jiraProjectData.getKey().equals(project))
+        .map(JiraProjectData::getIssueTypes)
+        .flatMap(Collection::stream)
+        .filter(jiraIssue -> jiraIssue.getName().equals(issueType))
+        .flatMap(jiraIssue -> jiraIssue.getJiraFields().entrySet().stream())
+        .map(Entry::getValue)
+        .collect(Collectors.toMap(JiraField::getKey, field -> {
+          if (field.getSchema().get("type").equals(ARRAY) && field.getAllowedValues() != null) {
+            return MULTISELECT;
+          } else {
+            return (String) field.getSchema().get("type");
+          }
+        }));
+  }
+
+  private void replaceCustomFieldNameWithId(Map<String, String> customFieldsIdToNamesMap) {
+    Map<String, String> filteredIdToNameMap = customFieldsIdToNamesMap.entrySet()
+                                                  .stream()
+                                                  .filter(entry -> customFields.containsKey(entry.getValue()))
+                                                  .collect(toMap(Entry::getKey, Entry::getValue));
+    Map<String, String> nameToIdsMap =
+        filteredIdToNameMap.entrySet().stream().collect(toMap(Entry::getValue, Entry::getKey, (key, duplicateKey) -> {
+          throw new HarnessJiraException(
+              String.format("Can not not process field [%s] since there are another fields with the same name.",
+                  customFieldsIdToNamesMap.get(duplicateKey)),
+              null);
+        }));
+
+    setCustomFields(customFields.entrySet().stream().collect(Collectors.toMap(entry -> {
+      if (entry.getKey().contains("TimeTracking:")) {
+        return entry.getKey();
+      } else {
+        return nameToIdsMap.get(entry.getKey());
+      }
+    }, Entry::getValue)));
+  }
+
+  private void validateCustomFieldsNames(Map<String, String> customFieldsIdToNamesMap) {
+    Set<String> invalidCustomFieldNames = new HashSet<>();
+    Collection<String> allowedCustomFieldNames = customFieldsIdToNamesMap.values();
+    for (String fieldName : customFields.keySet()) {
+      if (!allowedCustomFieldNames.contains(fieldName) && !fieldName.startsWith("TimeTracking:")) {
+        invalidCustomFieldNames.add(fieldName);
+      }
+    }
+    if (!invalidCustomFieldNames.isEmpty()) {
+      throw new HarnessJiraException(
+          String.format(INVALID_FIELD_NAME_ERROR_MESSAGE, invalidCustomFieldNames, allowedCustomFieldNames), null);
+    }
   }
 
   void resolveCustomFieldsVars(
@@ -331,8 +525,8 @@ public class JiraCreateUpdate extends State implements SweepingOutputStateMixin 
             -> Arrays.stream(jiraField.getAllowedValues().toArray())
                    .map(json -> (JSONObject) json)
                    .collect(toMap(ob
-                       -> ob.get("value") != null ? ((String) ob.get("value")).toLowerCase()
-                                                  : ((String) ob.get("name")).toLowerCase(),
+                       -> ob.get(VALUE) != null ? ((String) ob.get(VALUE)).toLowerCase()
+                                                : ((String) ob.get("name")).toLowerCase(),
                        ob -> ob.get("id")))));
   }
 
@@ -436,6 +630,10 @@ public class JiraCreateUpdate extends State implements SweepingOutputStateMixin 
   }
 
   private void renderExpressions(ExecutionContext context) {
+    project = context.renderExpression(project);
+    issueType = context.renderExpression(issueType);
+    priority = context.renderExpression(priority);
+    status = context.renderExpression(status);
     issueId = context.renderExpression(issueId);
     labels = context.renderExpressionList(labels);
     summary = context.renderExpression(summary);
@@ -447,7 +645,7 @@ public class JiraCreateUpdate extends State implements SweepingOutputStateMixin 
         JiraCustomFieldValue rendered = new JiraCustomFieldValue();
         rendered.setFieldType(value.getFieldType());
         rendered.setFieldValue(context.renderExpression(value.getFieldValue()));
-        renderedCustomFields.put(key, rendered);
+        renderedCustomFields.put(context.renderExpression(key), rendered);
       });
       customFields = renderedCustomFields;
     }
@@ -538,18 +736,20 @@ public class JiraCreateUpdate extends State implements SweepingOutputStateMixin 
           results.put("Field value missing", "Value must be provided for " + customField.getKey());
           continue;
         }
-        JiraCustomFieldValue value = customField.getValue();
-        if (value.getFieldType() == null) {
-          logger.info("Field Type null for a custom field selected: " + customField.getKey());
-          results.put("Field Type missing", "Type must be provided for " + customField.getKey());
-          continue;
-        }
-        if (value.getFieldType().equals("datetime") || value.getFieldType().equals("date")) {
-          String fieldValue = value.getFieldValue();
-          if (!validateDateFieldValue(fieldValue, value.getFieldType())) {
-            logger.info("Field value not valid for a custom field selected: {} {} ", customField.getKey(),
-                customField.getValue().getFieldValue());
-            results.put("Invalid field value", "Value provided for " + customField.getKey() + " is not valid");
+        if (!checkIfRequiredFieldsAreTemplatized()) {
+          JiraCustomFieldValue value = customField.getValue();
+          if (value.getFieldType() == null) {
+            logger.info("Field Type null for a custom field selected: " + customField.getKey());
+            results.put("Field Type missing", "Type must be provided for " + customField.getKey());
+            continue;
+          }
+          if (value.getFieldType().equals("datetime") || value.getFieldType().equals("date")) {
+            String fieldValue = value.getFieldValue();
+            if (!validateDateFieldValue(fieldValue, value.getFieldType())) {
+              logger.info("Field value not valid for a custom field selected: {} {} ", customField.getKey(),
+                  customField.getValue().getFieldValue());
+              results.put("Invalid field value", "Value provided for " + customField.getKey() + " is not valid");
+            }
           }
         }
       }

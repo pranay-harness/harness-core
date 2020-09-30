@@ -1,0 +1,23 @@
+[
+  {
+    "expand": "description,lead,issueTypes,url,projectKeys,permissions,insight",
+    "self": "selfUri",
+    "id": "01",
+    "key": "PN",
+    "name": "Project Name"
+  },
+  {
+    "expand": "description,lead,issueTypes,url,projectKeys,permissions,insight",
+    "self": "selfUri",
+    "id": "02",
+    "key": "SPN",
+    "name": "Second Project Name"
+  },
+  {
+    "expand": "description,lead,issueTypes,url,projectKeys,permissions,insight",
+    "self": "selfUri",
+    "id": "03",
+    "key": "TPN",
+    "name": "Third Project Name"
+  }
+]
