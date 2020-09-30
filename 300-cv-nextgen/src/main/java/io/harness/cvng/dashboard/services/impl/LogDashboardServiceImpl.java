@@ -30,7 +30,6 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.Set;
 import java.util.SortedSet;
 import java.util.TreeSet;
@@ -47,17 +46,17 @@ public class LogDashboardServiceImpl implements LogDashboardService {
 
   @Override
   public PageResponse<AnalyzedLogDataDTO> getAnomalousLogs(String accountId, String projectIdentifier,
-      String orgIdentifier, String serviceIdentifier, String environmentIdentifer, CVMonitoringCategory category,
+      String orgIdentifier, String serviceIdentifier, String environmentIdentifier, CVMonitoringCategory category,
       long startTimeMillis, long endTimeMillis, int page, int size) {
-    return getLogs(accountId, projectIdentifier, orgIdentifier, serviceIdentifier, environmentIdentifer, category,
+    return getLogs(accountId, projectIdentifier, orgIdentifier, serviceIdentifier, environmentIdentifier, category,
         startTimeMillis, endTimeMillis, Arrays.asList(LogAnalysisTag.UNEXPECTED, LogAnalysisTag.UNKNOWN), page, size);
   }
 
   @Override
   public PageResponse<AnalyzedLogDataDTO> getAllLogs(String accountId, String projectIdentifier, String orgIdentifier,
-      String serviceIdentifier, String environmentIdentifer, CVMonitoringCategory category, long startTimeMillis,
+      String serviceIdentifier, String environmentIdentifier, CVMonitoringCategory category, long startTimeMillis,
       long endTimeMillis, int page, int size) {
-    return getLogs(accountId, projectIdentifier, orgIdentifier, serviceIdentifier, environmentIdentifer, category,
+    return getLogs(accountId, projectIdentifier, orgIdentifier, serviceIdentifier, environmentIdentifier, category,
         startTimeMillis, endTimeMillis, Arrays.asList(LogAnalysisTag.values()), page, size);
   }
 
@@ -127,10 +126,8 @@ public class LogDashboardServiceImpl implements LogDashboardService {
       });
     });
 
-    List<Optional<Map<String, List<AnalysisResult>>>> allResults = cvParallelExecutor.executeParrallel(callables);
-    allResults.stream()
-        .filter(result -> result.isPresent())
-        .forEach(result -> cvConfigAnalysisResultMap.putAll(result.get()));
+    List<Map<String, List<AnalysisResult>>> allResults = cvParallelExecutor.executeParallel(callables);
+    allResults.forEach(result -> cvConfigAnalysisResultMap.putAll(result));
 
     // for each cvConfigId, make a call to get the labels/texts
     List<Callable<List<LogData>>> logDataCallables = new ArrayList<>();
@@ -144,10 +141,8 @@ public class LogDashboardServiceImpl implements LogDashboardService {
       });
     });
 
-    List<Optional<List<LogData>>> logDataResults = cvParallelExecutor.executeParrallel(logDataCallables);
-    logDataResults.stream()
-        .filter(result -> result.isPresent())
-        .forEach(result -> logDataToBeReturned.addAll(result.get()));
+    List<List<LogData>> logDataResults = cvParallelExecutor.executeParallel(logDataCallables);
+    logDataResults.forEach(result -> logDataToBeReturned.addAll(result));
 
     SortedSet<AnalyzedLogDataDTO> sortedList = new TreeSet<>();
     // create the sorted set first. Then form the page response.
