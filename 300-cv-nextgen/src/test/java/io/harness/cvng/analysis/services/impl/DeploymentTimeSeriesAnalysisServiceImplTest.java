@@ -1,9 +1,11 @@
 package io.harness.cvng.analysis.services.impl;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
+import static io.harness.rule.OwnerRule.KAMAL;
 import static io.harness.rule.OwnerRule.NEMANJA;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.assertj.core.data.Offset.offset;
 
 import com.google.inject.Inject;
 
@@ -30,6 +32,7 @@ import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Optional;
 import javax.ws.rs.BadRequestException;
 
 public class DeploymentTimeSeriesAnalysisServiceImplTest extends CvNextGenTest {
@@ -270,6 +273,38 @@ public class DeploymentTimeSeriesAnalysisServiceImplTest extends CvNextGenTest {
     assertThat(transactionMetricInfoSummaryPageDTO.getPageResponse().getContent()).isEmpty();
   }
 
+  @Test
+  @Owner(developers = KAMAL)
+  @Category(UnitTests.class)
+  public void testGetLatestRiskScore_noData() {
+    verificationJobService.upsert(accountId, createCanaryVerificationJobDTO());
+    String verificationJobInstanceId =
+        verificationJobInstanceService.create(accountId, createVerificationJobInstanceDTO());
+    verificationTaskService.create(accountId, cvConfigId, verificationJobInstanceId);
+    assertThat(deploymentTimeSeriesAnalysisService.getLatestRiskScore(accountId, verificationJobInstanceId))
+        .isEqualTo(Optional.empty());
+  }
+
+  @Test
+  @Owner(developers = KAMAL)
+  @Category(UnitTests.class)
+  public void testGetLatestRiskScore_getLatest() {
+    verificationJobService.upsert(accountId, createCanaryVerificationJobDTO());
+    String verificationJobInstanceId =
+        verificationJobInstanceService.create(accountId, createVerificationJobInstanceDTO());
+    String verificationTaskId = verificationTaskService.create(accountId, cvConfigId, verificationJobInstanceId);
+    DeploymentTimeSeriesAnalysis deploymentTimeSeriesAnalysis = createDeploymentTimSeriesAnalysis(verificationTaskId);
+    List<DeploymentTimeSeriesAnalysisDTO.TransactionMetricHostData> transactionSummaries = new ArrayList();
+    for (int i = 0; i < 25; i++) {
+      transactionSummaries.add(createTransactionMetricHostData("transaction " + i, "metric", 0, 0.0,
+          deploymentTimeSeriesAnalysis.getTransactionMetricSummaries().get(0).getHostData()));
+    }
+    deploymentTimeSeriesAnalysis.setTransactionMetricSummaries(transactionSummaries);
+    deploymentTimeSeriesAnalysisService.save(deploymentTimeSeriesAnalysis);
+    assertThat(deploymentTimeSeriesAnalysisService.getLatestRiskScore(accountId, verificationJobInstanceId).get())
+        .isCloseTo(.7, offset(.01));
+  }
+
   private VerificationJobInstanceDTO createVerificationJobInstanceDTO() {
     return VerificationJobInstanceDTO.builder()
         .verificationJobIdentifier(identifier)
@@ -345,9 +380,10 @@ public class DeploymentTimeSeriesAnalysisServiceImplTest extends CvNextGenTest {
     DeploymentTimeSeriesAnalysisDTO.TransactionMetricHostData transactionMetricHostData2 =
         createTransactionMetricHostData(
             "/todolist/exception", "Calls per Minute", 2, 2.5, Arrays.asList(hostData3, hostData4));
-
     return DeploymentTimeSeriesAnalysis.builder()
         .accountId(accountId)
+        .score(.7)
+        .risk(1)
         .verificationTaskId(verificationTaskId)
         .transactionMetricSummaries(Arrays.asList(transactionMetricHostData1, transactionMetricHostData2))
         .hostSummaries(Arrays.asList(hostInfo1, hostInfo2))

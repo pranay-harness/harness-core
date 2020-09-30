@@ -22,6 +22,7 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 import java.util.SortedSet;
 import java.util.TreeSet;
@@ -42,14 +43,11 @@ public class DeploymentTimeSeriesAnalysisServiceImpl implements DeploymentTimeSe
   @Override
   public TransactionMetricInfoSummaryPageDTO getMetrics(String accountId, String verificationJobInstanceId,
       boolean anomalousMetricsOnly, String hostName, int pageNumber) {
-    Set<String> verificationTaskIds =
-        verificationTaskService.getVerificationTaskIds(accountId, verificationJobInstanceId);
-
     VerificationJobInstance verificationJobInstance =
         verificationJobInstanceService.getVerificationJobInstance(verificationJobInstanceId);
 
     DeploymentTimeSeriesAnalysis latestDeploymentTimeSeriesAnalysis =
-        getLatestDeploymentTimeSeriesAnalysis(verificationTaskIds);
+        getLatestDeploymentTimeSeriesAnalysis(accountId, verificationJobInstanceId);
 
     if (latestDeploymentTimeSeriesAnalysis == null) {
       return TransactionMetricInfoSummaryPageDTO.builder()
@@ -158,7 +156,21 @@ public class DeploymentTimeSeriesAnalysisServiceImpl implements DeploymentTimeSe
         .asList();
   }
 
-  private DeploymentTimeSeriesAnalysis getLatestDeploymentTimeSeriesAnalysis(Set<String> verificationTaskIds) {
+  @Override
+  public Optional<Double> getLatestRiskScore(String accountId, String verificationJobInstanceId) {
+    DeploymentTimeSeriesAnalysis deploymentTimeSeriesAnalysis =
+        getLatestDeploymentTimeSeriesAnalysis(accountId, verificationJobInstanceId);
+    if (deploymentTimeSeriesAnalysis == null) {
+      return Optional.empty();
+    } else {
+      return Optional.of(deploymentTimeSeriesAnalysis.getScore());
+    }
+  }
+
+  private DeploymentTimeSeriesAnalysis getLatestDeploymentTimeSeriesAnalysis(
+      String accountId, String verificationJobInstanceId) {
+    Set<String> verificationTaskIds =
+        verificationTaskService.getVerificationTaskIds(accountId, verificationJobInstanceId);
     return hPersistence.createQuery(DeploymentTimeSeriesAnalysis.class)
         .field(DeploymentTimeSeriesAnalysisKeys.verificationTaskId)
         .in(verificationTaskIds)

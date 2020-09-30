@@ -20,6 +20,8 @@ public class DeploymentActivityDTO extends ActivityDTO {
   Set<String> oldVersionHosts;
   Set<String> newVersionHosts;
   Integer newHostsTrafficSplitPercentage;
+  String deploymentTag;
+  Long verificationStartTime;
 
   @Override
   public ActivityType getType() {
@@ -34,7 +36,10 @@ public class DeploymentActivityDTO extends ActivityDTO {
             .oldVersionHosts(oldVersionHosts == null ? null : new HashSet<>(oldVersionHosts))
             .newVersionHosts(newVersionHosts == null ? null : new HashSet<>(newVersionHosts))
             .newHostsTrafficSplitPercentage(newHostsTrafficSplitPercentage)
+            .deploymentTag(deploymentTag)
+            .verificationStartTime(verificationStartTime)
             .build();
+    deploymentActivity.setType(ActivityType.DEPLOYMENT);
     super.addCommonDataFields(deploymentActivity);
     return deploymentActivity;
   }

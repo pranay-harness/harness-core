@@ -1,9 +1,12 @@
 package io.harness.cvng.verificationjob.services.impl;
 
+import static io.harness.cvng.CVConstants.DEPLOYMENT_RISK_SCORE_FAILURE_THRESHOLD;
 import static io.harness.cvng.beans.DataCollectionExecutionStatus.QUEUED;
 import static io.harness.cvng.core.utils.DateTimeUtils.roundDownTo1MinBoundary;
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
+import static java.util.stream.Collectors.groupingBy;
 
 import com.google.common.base.Charsets;
 import com.google.common.base.Preconditions;
@@ -12,8 +15,12 @@ import com.google.inject.Injector;
 import com.google.inject.Key;
 import com.google.inject.name.Names;
 
+import io.harness.cvng.analysis.services.api.DeploymentAnalysisService;
 import io.harness.cvng.beans.DataCollectionInfo;
+import io.harness.cvng.client.NextGenService;
 import io.harness.cvng.client.VerificationManagerService;
+import io.harness.cvng.core.beans.DeploymentActivityVerificationResultDTO;
+import io.harness.cvng.core.beans.DeploymentActivityVerificationResultDTO.DeploymentSummary;
 import io.harness.cvng.core.beans.TimeRange;
 import io.harness.cvng.core.entities.CVConfig;
 import io.harness.cvng.core.entities.DataCollectionTask;
@@ -25,6 +32,7 @@ import io.harness.cvng.core.services.api.MetricPackService;
 import io.harness.cvng.core.services.api.VerificationTaskService;
 import io.harness.cvng.statemachine.beans.AnalysisStatus;
 import io.harness.cvng.verificationjob.beans.VerificationJobInstanceDTO;
+import io.harness.cvng.verificationjob.beans.VerificationJobType;
 import io.harness.cvng.verificationjob.entities.VerificationJob;
 import io.harness.cvng.verificationjob.entities.VerificationJobInstance;
 import io.harness.cvng.verificationjob.entities.VerificationJobInstance.ExecutionStatus;
@@ -32,16 +40,25 @@ import io.harness.cvng.verificationjob.entities.VerificationJobInstance.Progress
 import io.harness.cvng.verificationjob.entities.VerificationJobInstance.VerificationJobInstanceKeys;
 import io.harness.cvng.verificationjob.services.api.VerificationJobInstanceService;
 import io.harness.cvng.verificationjob.services.api.VerificationJobService;
+import io.harness.ng.core.environment.beans.EnvironmentType;
+import io.harness.ng.core.environment.dto.EnvironmentResponseDTO;
 import io.harness.persistence.HPersistence;
 import org.mongodb.morphia.UpdateOptions;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
 
+import java.time.Clock;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.OptionalDouble;
 import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
+import javax.annotation.Nullable;
 
 public class VerificationJobInstanceServiceImpl implements VerificationJobInstanceService {
   @Inject private HPersistence hPersistence;
@@ -52,6 +69,9 @@ public class VerificationJobInstanceServiceImpl implements VerificationJobInstan
   @Inject private Injector injector;
   @Inject private MetricPackService metricPackService;
   @Inject private VerificationTaskService verificationTaskService;
+  @Inject private NextGenService nextGenService;
+  @Inject private DeploymentAnalysisService deploymentAnalysisService;
+  @Inject private Clock clock;
   @Override
   public String create(String accountId, VerificationJobInstanceDTO verificationJobInstanceDTO) {
     // TODO: Is this API even needed anymore ?
@@ -70,9 +90,13 @@ public class VerificationJobInstanceServiceImpl implements VerificationJobInstan
             .newVersionHosts(verificationJobInstanceDTO.getNewVersionHosts())
             .oldVersionHosts(verificationJobInstanceDTO.getOldVersionHosts())
             .newHostsTrafficSplitPercentage(verificationJobInstanceDTO.getNewHostsTrafficSplitPercentage())
-            // TODO: Change these to extract runtime params
-            .duration(verificationJob.getDuration())
             .build();
+    hPersistence.save(verificationJobInstance);
+    return verificationJobInstance.getUuid();
+  }
+
+  @Override
+  public String create(VerificationJobInstance verificationJobInstance) {
     hPersistence.save(verificationJobInstance);
     return verificationJobInstance.getUuid();
   }
@@ -89,12 +113,18 @@ public class VerificationJobInstanceServiceImpl implements VerificationJobInstan
       hPersistence.save(verificationJobInstances);
       return jobInstanceIds;
     }
-    return null;
+    return Collections.emptyList();
   }
 
   @Override
   public VerificationJobInstanceDTO get(String verificationJobInstanceId) {
     return getVerificationJobInstance(verificationJobInstanceId).toDTO();
+  }
+  private List<VerificationJobInstance> get(List<String> verificationJobInstanceIds) {
+    return hPersistence.createQuery(VerificationJobInstance.class)
+        .field(VerificationJobInstanceKeys.uuid)
+        .in(verificationJobInstanceIds)
+        .asList();
   }
 
   @Override
@@ -157,6 +187,116 @@ public class VerificationJobInstanceServiceImpl implements VerificationJobInstan
     VerificationJobInstance verificationJobInstance = getVerificationJobInstance(verificationJobInstanceId);
     VerificationJob verificationJob = verificationJobInstance.getResolvedJob();
     return verificationJob.getPreDeploymentTimeRange(verificationJobInstance.getDeploymentStartTime());
+  }
+
+  @Override
+  public DeploymentActivityVerificationResultDTO getAggregatedVerificationResult(
+      List<String> verificationJobInstanceIds) {
+    List<VerificationJobInstance> verificationJobInstances = get(verificationJobInstanceIds);
+    List<VerificationJobInstance> postDeploymentVerificationJobInstances =
+        verificationJobInstances.stream()
+            .filter(verificationJobInstance
+                -> verificationJobInstance.getResolvedJob().getType() == VerificationJobType.HEALTH)
+            .collect(Collectors.toList());
+    // TODO: use cache to avoid duplicate calls and refactor the getEnv API
+    Map<EnvironmentType, List<VerificationJobInstance>> preAndProductionDeploymentGroup =
+        verificationJobInstances.stream()
+            .filter(verificationJobInstance
+                -> verificationJobInstance.getResolvedJob().getType() != VerificationJobType.HEALTH)
+            .collect(groupingBy(verificationJobInstance -> {
+              VerificationJob resolvedJob = verificationJobInstance.getResolvedJob();
+              EnvironmentResponseDTO environmentResponseDTO =
+                  nextGenService.getEnvironment(resolvedJob.getEnvIdentifier(), resolvedJob.getAccountId(),
+                      resolvedJob.getOrgIdentifier(), resolvedJob.getProjectIdentifier());
+              return environmentResponseDTO.getType();
+            }));
+    return DeploymentActivityVerificationResultDTO.builder()
+        .preProductionDeploymentSummary(
+            getDeploymentSummary(preAndProductionDeploymentGroup.get(EnvironmentType.PreProduction)))
+        .productionDeploymentSummary(
+            getDeploymentSummary(preAndProductionDeploymentGroup.get(EnvironmentType.Production)))
+        .postDeploymentSummary(getDeploymentSummary(postDeploymentVerificationJobInstances))
+        .build();
+  }
+
+  @Nullable
+  private DeploymentSummary getDeploymentSummary(List<VerificationJobInstance> verificationJobInstances) {
+    if (isEmpty(verificationJobInstances)) {
+      return null;
+    }
+    VerificationJobInstance minVerificationInstanceJob =
+        Collections.min(verificationJobInstances, Comparator.comparing(VerificationJobInstance::getStartTime));
+    VerificationJobInstance maxDuration =
+        Collections.max(verificationJobInstances, Comparator.comparing(vji -> vji.getResolvedJob().getDuration()));
+    int progressPercentage =
+        verificationJobInstances.stream().mapToInt(VerificationJobInstance::getProgressPercentage).sum()
+        / verificationJobInstances.size();
+    long timeRemainingMs =
+        verificationJobInstances.stream()
+            .mapToLong(
+                verificationJobInstance -> verificationJobInstance.getTimeRemainingMs(clock.instant()).toMillis())
+            .max()
+            .getAsLong();
+    List<Optional<Double>> latestRiskScores =
+        verificationJobInstances.stream()
+            .map(verificationJobInstance
+                -> deploymentAnalysisService.getLatestRiskScore(
+                    verificationJobInstance.getAccountId(), verificationJobInstance.getUuid()))
+            .collect(Collectors.toList());
+    int total = verificationJobInstances.size();
+    int progress = 0;
+    int passed = 0;
+    int failed = 0;
+    int notStarted = 0;
+    int errors = 0;
+    for (int i = 0; i < verificationJobInstances.size(); i++) {
+      VerificationJobInstance verificationJobInstance = verificationJobInstances.get(0);
+      switch (verificationJobInstance.getExecutionStatus()) {
+        case QUEUED:
+          notStarted++;
+          break;
+        case FAILED:
+        case TIMEOUT:
+          errors++;
+          break;
+        case SUCCESS:
+          Optional<Double> riskScore = latestRiskScores.get(i);
+          if (riskScore.isPresent()) {
+            if (riskScore.get() < DEPLOYMENT_RISK_SCORE_FAILURE_THRESHOLD) {
+              passed++;
+            } else {
+              failed++;
+            }
+          }
+          break;
+        case RUNNING:
+          progress++;
+          break;
+        default:
+          throw new IllegalStateException(verificationJobInstance.getExecutionStatus() + " not supported");
+      }
+    }
+    OptionalDouble optionalMaxRiskScore = latestRiskScores.stream()
+                                              .filter(optionalRiskScore -> optionalRiskScore.isPresent())
+                                              .mapToDouble(riskScore -> riskScore.get())
+                                              .max();
+    Double maxRiskScore = null;
+    if (optionalMaxRiskScore.isPresent()) {
+      maxRiskScore = optionalMaxRiskScore.getAsDouble();
+    }
+    return DeploymentSummary.builder()
+        .startTime(minVerificationInstanceJob.getStartTime().toEpochMilli())
+        .durationMs(maxDuration.getResolvedJob().getDuration().toMillis())
+        .timeRemainingMs(timeRemainingMs)
+        .progressPercentage(progressPercentage)
+        .riskScore(maxRiskScore)
+        .total(total)
+        .failed(failed)
+        .errors(errors)
+        .passed(passed)
+        .progress(progress)
+        .notStarted(notStarted)
+        .build();
   }
 
   private String getDataCollectionWorkerId(VerificationJobInstance verificationJobInstance, String connectorId) {

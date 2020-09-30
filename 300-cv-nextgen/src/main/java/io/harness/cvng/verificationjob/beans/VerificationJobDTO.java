@@ -37,7 +37,7 @@ public abstract class VerificationJobDTO {
 
   @JsonIgnore public abstract VerificationJob getVerificationJob();
   public abstract VerificationJobType getType();
-
+  @JsonIgnore
   protected boolean isRuntimeParam(String value) {
     return isNotEmpty(value) && value.startsWith("${") && value.endsWith("}");
   }

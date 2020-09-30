@@ -16,6 +16,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 
 public class DeploymentLogAnalysisServiceImpl implements DeploymentLogAnalysisService {
@@ -36,10 +37,8 @@ public class DeploymentLogAnalysisServiceImpl implements DeploymentLogAnalysisSe
 
   @Override
   public List<LogAnalysisClusterChartDTO> getLogAnalysisClusters(String accountId, String verificationJobInstanceId) {
-    Set<String> verificationTaskIds =
-        verificationTaskService.getVerificationTaskIds(accountId, verificationJobInstanceId);
-
-    DeploymentLogAnalysis latestDeploymentLogAnalysis = getLatestDeploymentLogAnalysis(verificationTaskIds);
+    DeploymentLogAnalysis latestDeploymentLogAnalysis =
+        getLatestDeploymentLogAnalysis(accountId, verificationJobInstanceId);
     if (latestDeploymentLogAnalysis == null) {
       return Collections.emptyList();
     }
@@ -65,10 +64,8 @@ public class DeploymentLogAnalysisServiceImpl implements DeploymentLogAnalysisSe
 
   public PageResponse<LogAnalysisClusterDTO> getLogAnalysisResult(
       String accountId, String verificationJobInstanceId, Integer label, int pageNumber) {
-    Set<String> verificationTaskIds =
-        verificationTaskService.getVerificationTaskIds(accountId, verificationJobInstanceId);
-
-    DeploymentLogAnalysis latestDeploymentLogAnalysis = getLatestDeploymentLogAnalysis(verificationTaskIds);
+    DeploymentLogAnalysis latestDeploymentLogAnalysis =
+        getLatestDeploymentLogAnalysis(accountId, verificationJobInstanceId);
     if (latestDeploymentLogAnalysis == null) {
       return formPageResponse(Collections.emptyList(), pageNumber, DEFAULT_PAGE_SIZE);
     }
@@ -100,7 +97,19 @@ public class DeploymentLogAnalysisServiceImpl implements DeploymentLogAnalysisSe
     return formPageResponse(logAnalysisClusters, pageNumber, DEFAULT_PAGE_SIZE);
   }
 
+  @Override
+  public Optional<Double> getLatestRiskScore(String accountId, String verificationJobInstanceId) {
+    DeploymentLogAnalysis latestDeploymentLogAnalysis =
+        getLatestDeploymentLogAnalysis(accountId, verificationJobInstanceId);
+    if (latestDeploymentLogAnalysis == null) {
+      return Optional.empty();
+    } else {
+      return Optional.of(latestDeploymentLogAnalysis.getResultSummary().getScore());
+    }
+  }
+
   private PageResponse<LogAnalysisClusterDTO> formPageResponse(
+
       List<LogAnalysisClusterDTO> logAnalysisClusters, int pageNumber, int size) {
     List<LogAnalysisClusterDTO> returnList = new ArrayList<>();
 
@@ -124,7 +133,9 @@ public class DeploymentLogAnalysisServiceImpl implements DeploymentLogAnalysisSe
         .build();
   }
 
-  private DeploymentLogAnalysis getLatestDeploymentLogAnalysis(Set<String> verificationTaskIds) {
+  private DeploymentLogAnalysis getLatestDeploymentLogAnalysis(String accountId, String verificationJobInstanceId) {
+    Set<String> verificationTaskIds =
+        verificationTaskService.getVerificationTaskIds(accountId, verificationJobInstanceId);
     return hPersistence.createQuery(DeploymentLogAnalysis.class)
         .field(DeploymentLogAnalysisKeys.verificationTaskId)
         .in(verificationTaskIds)

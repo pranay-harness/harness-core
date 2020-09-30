@@ -1,9 +1,11 @@
 package io.harness.cvng.analysis.services.impl;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
+import static io.harness.rule.OwnerRule.KAMAL;
 import static io.harness.rule.OwnerRule.NEMANJA;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.assertj.core.data.Offset.offset;
 
 import com.google.inject.Inject;
 
@@ -26,6 +28,7 @@ import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Optional;
 
 public class DeploymentLogAnalysisServiceImplTest extends CvNextGenTest {
   @Inject private VerificationTaskService verificationTaskService;
@@ -206,6 +209,34 @@ public class DeploymentLogAnalysisServiceImplTest extends CvNextGenTest {
     assertThatThrownBy(() -> deploymentLogAnalysisService.getLogAnalysisResult(accountId, generateUuid(), null, 0))
         .isInstanceOf(IllegalStateException.class)
         .hasMessageContaining("No verification task mapping exist for verificationJobInstanceId");
+  }
+
+  @Test
+  @Owner(developers = KAMAL)
+  @Category(UnitTests.class)
+  public void testGetLatestRiskScore_noData() {
+    verificationTaskService.create(accountId, cvConfigId, verificationJobInstanceId);
+    assertThat(deploymentLogAnalysisService.getLatestRiskScore(accountId, verificationJobInstanceId))
+        .isEqualTo(Optional.empty());
+  }
+
+  @Test
+  @Owner(developers = KAMAL)
+  @Category(UnitTests.class)
+  public void testGetLatestRiskScore_getLatestData() {
+    String verificationTaskId = verificationTaskService.create(accountId, cvConfigId, verificationJobInstanceId);
+    DeploymentLogAnalysis deploymentLogAnalysis = createDeploymentLogAnalysis(verificationTaskId);
+    List<DeploymentLogAnalysisDTO.ClusterSummary> clusterSummaries = new ArrayList();
+    List<DeploymentLogAnalysisDTO.Cluster> clusters = new ArrayList();
+    for (int i = 0; i < 25; i++) {
+      clusters.add(createCluster("Cluster " + i, i, 0, 0));
+      clusterSummaries.add(createClusterSummary(0, 0, 0, i, null, null));
+    }
+    deploymentLogAnalysis.setClusters(clusters);
+    deploymentLogAnalysis.setResultSummary(createResultSummary(0, .7654, null, clusterSummaries));
+    deploymentLogAnalysisService.save(deploymentLogAnalysis);
+    assertThat(deploymentLogAnalysisService.getLatestRiskScore(accountId, verificationJobInstanceId).get())
+        .isCloseTo(.7654, offset(.0001));
   }
 
   private DeploymentLogAnalysis createDeploymentLogAnalysis(String verificationTaskId) {

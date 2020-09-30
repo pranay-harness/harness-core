@@ -1,5 +1,13 @@
 package io.harness.cvng.core.services.api;
 
 import io.harness.cvng.core.beans.ActivityDTO;
+import io.harness.cvng.core.beans.DeploymentActivityVerificationResultDTO;
 
-public interface ActivityService { void register(String accountId, String webhookToken, ActivityDTO activityDTO); }
+import java.util.List;
+
+public interface ActivityService {
+  void register(String accountId, String webhookToken, ActivityDTO activityDTO);
+
+  List<DeploymentActivityVerificationResultDTO> getRecentDeploymentActivityVerifications(
+      String accountId, String projectIdentifier);
+}

@@ -7,6 +7,7 @@ import com.google.inject.Singleton;
 import com.google.inject.name.Named;
 import com.google.inject.name.Names;
 
+import io.harness.cvng.analysis.services.api.DeploymentAnalysisService;
 import io.harness.cvng.analysis.services.api.DeploymentLogAnalysisService;
 import io.harness.cvng.analysis.services.api.DeploymentTimeSeriesAnalysisService;
 import io.harness.cvng.analysis.services.api.LearningEngineTaskService;
@@ -14,6 +15,7 @@ import io.harness.cvng.analysis.services.api.LogAnalysisService;
 import io.harness.cvng.analysis.services.api.LogClusterService;
 import io.harness.cvng.analysis.services.api.TimeSeriesAnalysisService;
 import io.harness.cvng.analysis.services.api.TrendAnalysisService;
+import io.harness.cvng.analysis.services.impl.DeploymentAnalysisServiceImpl;
 import io.harness.cvng.analysis.services.impl.DeploymentLogAnalysisServiceImpl;
 import io.harness.cvng.analysis.services.impl.DeploymentTimeSeriesAnalysisServiceImpl;
 import io.harness.cvng.analysis.services.impl.LearningEngineTaskServiceImpl;
@@ -170,6 +172,7 @@ public class CVServiceModule extends AbstractModule {
       bind(NextGenService.class).to(NextGenServiceImpl.class);
       bind(HostRecordService.class).to(HostRecordServiceImpl.class);
       bind(DeploymentLogAnalysisService.class).to(DeploymentLogAnalysisServiceImpl.class);
+      bind(DeploymentAnalysisService.class).to(DeploymentAnalysisServiceImpl.class);
     } catch (IOException e) {
       throw new IllegalStateException("Could not load versionInfo.yaml", e);
     }

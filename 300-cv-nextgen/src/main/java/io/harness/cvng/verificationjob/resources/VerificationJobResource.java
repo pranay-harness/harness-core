@@ -11,6 +11,7 @@ import io.harness.rest.RestResponse;
 import io.swagger.annotations.Api;
 import retrofit2.http.Body;
 
+import java.util.List;
 import javax.validation.Valid;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
@@ -47,5 +48,14 @@ public class VerificationJobResource {
   public void deleteByGroup(
       @QueryParam("accountId") @Valid final String accountId, @QueryParam("identifier") String identifier) {
     verificationJobService.delete(accountId, identifier);
+  }
+
+  @GET
+  @Timed
+  @ExceptionMetered
+  @Path("/list")
+  public RestResponse<List<VerificationJobDTO>> list(@QueryParam("accountId") @Valid final String accountId,
+      @QueryParam("projectIdentifier") String projectIdentifier, @QueryParam("orgIdentifier") String orgIdentifier) {
+    return new RestResponse<>(verificationJobService.list(accountId, projectIdentifier, orgIdentifier));
   }
 }
