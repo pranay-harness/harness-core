@@ -9,9 +9,9 @@ import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-import static software.wings.api.InstanceElement.Builder.anInstanceElement;
 
 import io.harness.category.element.UnitTests;
+import io.harness.deployment.InstanceDetails;
 import io.harness.exception.VerificationOperationException;
 import io.harness.rule.Owner;
 import io.harness.serializer.JsonUtils;
@@ -152,7 +152,7 @@ public class PrometheusAnalysisServiceTest extends WingsBaseTest {
                     "/api/v1/query_range?start=$startTime&end=$endTime&step=60s&query=container_cpu_usage_seconds_total{container_name=\"harness-example\",pod_name=\"$hostName\"}")
                 .build()))
         .instanceElement(SetupTestNodeData.Instance.builder()
-                             .instance(anInstanceElement().hostName("dummyHostName").build())
+                             .instanceDetails(InstanceDetails.builder().hostName("dummyHostName").build())
                              .build())
         .settingId(settingId)
         .build();

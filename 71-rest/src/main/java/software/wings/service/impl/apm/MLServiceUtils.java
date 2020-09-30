@@ -5,7 +5,6 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 
 import lombok.extern.slf4j.Slf4j;
@@ -74,9 +73,6 @@ public class MLServiceUtils {
               .put("instanceDetails", nodeData.getInstanceElement().getInstanceDetails())
               .build());
       contextBuilder = contextBuilder.stateExecutionData(stateExecutionData);
-    }
-    if (nodeData.getInstanceElement().getInstance() != null) {
-      contextBuilder = contextBuilder.contextElements(Lists.newArrayList(nodeData.getInstanceElement().getInstance()));
     }
 
     String hostName = isEmpty(nodeData.getHostExpression())
