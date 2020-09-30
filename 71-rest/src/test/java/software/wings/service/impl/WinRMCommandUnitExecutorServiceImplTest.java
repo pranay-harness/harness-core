@@ -4,8 +4,10 @@ import static io.harness.logging.CommandExecutionStatus.FAILURE;
 import static io.harness.logging.CommandExecutionStatus.RUNNING;
 import static io.harness.logging.LogLevel.ERROR;
 import static io.harness.logging.LogLevel.INFO;
+import static io.harness.rule.OwnerRule.INDER;
 import static io.harness.rule.OwnerRule.SAHIL;
 import static java.lang.String.format;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 import static org.joor.Reflect.on;
 import static org.mockito.Matchers.any;
@@ -28,6 +30,7 @@ import static software.wings.utils.WingsTestConstants.FILE_ID;
 import static software.wings.utils.WingsTestConstants.HOST_CONN_ATTR_ID;
 import static software.wings.utils.WingsTestConstants.HOST_NAME;
 import static software.wings.utils.WingsTestConstants.PUBLIC_DNS;
+import static software.wings.utils.WingsTestConstants.RUNTIME_PATH;
 import static software.wings.utils.WingsTestConstants.SSH_USER_NAME;
 import static software.wings.utils.WingsTestConstants.SSH_USER_PASSWORD;
 
@@ -58,7 +61,6 @@ import software.wings.core.winrm.executors.WinRmExecutor;
 import software.wings.core.winrm.executors.WinRmExecutorFactory;
 import software.wings.core.winrm.executors.WinRmSessionConfig;
 import software.wings.delegatetasks.DelegateLogService;
-import software.wings.service.intfc.CommandUnitExecutorService;
 
 import java.util.HashMap;
 
@@ -84,7 +86,8 @@ public class WinRMCommandUnitExecutorServiceImplTest extends WingsBaseTest {
   @Mock private WinRmExecutor winRmExecutor;
 
   @InjectMocks
-  private CommandUnitExecutorService winRMCommandUnitExecutorService = new WinRMCommandUnitExecutorServiceImpl();
+  private WinRMCommandUnitExecutorServiceImpl winRMCommandUnitExecutorService =
+      new WinRMCommandUnitExecutorServiceImpl();
 
   private Host.Builder builder = aHost().withAppId(APP_ID).withHostName(HOST_NAME).withPublicDns(PUBLIC_DNS);
   private CommandExecutionContext.Builder commandExecutionContextBuider =
@@ -405,5 +408,19 @@ public class WinRMCommandUnitExecutorServiceImplTest extends WingsBaseTest {
         .withMessage("SOCKET_CONNECTION_TIMEOUT");
 
     verify(winRmExecutorFactory).getExecutor(winRmSessionConfig, false);
+  }
+
+  @Test
+  @Owner(developers = INDER)
+  @Category(UnitTests.class)
+  public void testGetCommandPath() {
+    String commandPath = winRMCommandUnitExecutorService.getCommandPath(
+        EXEC_COMMAND_UNIT, commandExecutionContextBuider.windowsRuntimePath(RUNTIME_PATH).build());
+    assertThat(commandPath).isEqualTo(RUNTIME_PATH);
+
+    ExecCommandUnit execCommandUnit = anExecCommandUnit().withCommandString(EXEC_CMD).withCommandPath("test").build();
+    commandPath =
+        winRMCommandUnitExecutorService.getCommandPath(execCommandUnit, commandExecutionContextBuider.build());
+    assertThat(commandPath).isEqualTo("test");
   }
 }
