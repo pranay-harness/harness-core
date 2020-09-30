@@ -19,6 +19,7 @@ directories:
   22-secret-manager-client
   22-timeout-engine
   22-wait-engine
+  23-delegate-service-driver
   tools/bazel
 
 # Automatically includes all relevant targets under the 'directories' above
