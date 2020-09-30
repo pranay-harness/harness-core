@@ -6,6 +6,7 @@ import io.harness.cvng.analysis.entities.DeploymentLogAnalysis;
 import io.harness.ng.beans.PageResponse;
 
 import java.util.List;
+import java.util.Optional;
 
 public interface DeploymentLogAnalysisService {
   void save(DeploymentLogAnalysis deploymentLogAnalysisDTO);
@@ -16,4 +17,6 @@ public interface DeploymentLogAnalysisService {
 
   PageResponse<LogAnalysisClusterDTO> getLogAnalysisResult(
       String accountId, String verificationJobInstanceId, Integer label, int pageNumber);
+
+  Optional<Double> getLatestRiskScore(String accountId, String verificationJobInstanceId);
 }

@@ -21,6 +21,8 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
+import java.util.List;
+
 public class VerificationJobServiceImplTest extends CvNextGenTest {
   @Inject private VerificationJobService verificationJobService;
   private String identifier;
@@ -109,6 +111,25 @@ public class VerificationJobServiceImplTest extends CvNextGenTest {
     VerificationJobDTO inserted =
         verificationJobService.getVerificationJobDTO(accountId, verificationJobDTO.getIdentifier());
     assertThat(inserted).isEqualTo(verificationJobDTO);
+  }
+
+  @Test
+  @Owner(developers = KAMAL)
+  @Category(UnitTests.class)
+  public void testList_empty() {
+    assertThat(verificationJobService.list(accountId, generateUuid(), generateUuid())).isEmpty();
+  }
+
+  @Test
+  @Owner(developers = KAMAL)
+  @Category(UnitTests.class)
+  public void testList_notEmpty() {
+    VerificationJobDTO verificationJobDTO = createDTOWithRuntimeParams();
+    verificationJobService.upsert(accountId, verificationJobDTO);
+    List<VerificationJobDTO> verificationJobDTOList = verificationJobService.list(
+        accountId, verificationJobDTO.getProjectIdentifier(), verificationJobDTO.getOrgIdentifier());
+    assertThat(verificationJobDTOList).hasSize(1);
+    assertThat(verificationJobDTOList.get(0)).isEqualTo(verificationJobDTO);
   }
 
   private VerificationJobDTO createDTO() {

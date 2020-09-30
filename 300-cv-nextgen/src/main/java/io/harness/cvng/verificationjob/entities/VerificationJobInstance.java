@@ -26,6 +26,7 @@ import org.mongodb.morphia.annotations.Id;
 import java.time.Duration;
 import java.time.Instant;
 import java.time.OffsetDateTime;
+import java.time.temporal.ChronoUnit;
 import java.util.Collections;
 import java.util.Date;
 import java.util.List;
@@ -59,7 +60,6 @@ public class VerificationJobInstance
   private Set<String> oldVersionHosts;
   private Set<String> newVersionHosts;
   private Integer newHostsTrafficSplitPercentage;
-  private Duration duration;
   private List<ProgressLog> progressLogs;
 
   private VerificationJob resolvedJob;
@@ -113,7 +113,7 @@ public class VerificationJobInstance
   }
 
   public Instant getEndTime() {
-    return getStartTime().plus(getDuration());
+    return getStartTime().plus(resolvedJob.getDuration());
   }
 
   public List<ProgressLog> getProgressLogs() {
@@ -141,6 +141,34 @@ public class VerificationJobInstance
 
     public static List<ExecutionStatus> finalStatuses() {
       return Lists.newArrayList(SUCCESS, FAILED, TIMEOUT);
+    }
+  }
+
+  public int getProgressPercentage() {
+    if (getProgressLogs().isEmpty()) {
+      return 0;
+    }
+    ProgressLog lastProgressLog = getProgressLogs().get(getProgressLogs().size() - 1);
+    Instant endTime = lastProgressLog.getEndTime();
+    Duration total = getResolvedJob().getDuration();
+    Duration completedTillNow = Duration.between(getStartTime(), endTime);
+
+    return (int) (completedTillNow.get(ChronoUnit.MILLIS) * 100.0 / total.get(ChronoUnit.MILLIS));
+  }
+
+  public Duration getTimeRemainingMs(Instant currentTime) {
+    if (ExecutionStatus.finalStatuses().contains(executionStatus)) {
+      return Duration.ZERO;
+    } else if (executionStatus == ExecutionStatus.QUEUED) {
+      return getResolvedJob().getDuration().plus(Duration.ofMinutes(5));
+    } else {
+      int percentage = getProgressPercentage();
+      if (percentage == 0) {
+        return getResolvedJob().getDuration().plus(Duration.ofMinutes(5));
+      }
+      Duration durationTillNow = Duration.between(getStartTime(), currentTime);
+      Duration durationFor1Percent = Duration.ofMillis(durationTillNow.toMillis() / percentage);
+      return Duration.ofMillis((100 - percentage) * durationFor1Percent.toMillis());
     }
   }
 }

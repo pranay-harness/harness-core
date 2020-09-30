@@ -54,7 +54,7 @@ public abstract class Activity implements PersistentEntity, UuidAware, CreatedAt
   private List<VerificationJobRuntimeDetails> verificationJobRuntimeDetails;
   @NotNull private Instant activityStartTime;
   private Instant activityEndTime;
-  private List<String> verificationJobInstances;
+  private List<String> verificationJobInstanceIds;
   private List<String> tags;
   @FdTtlIndex private Date validUntil = Date.from(OffsetDateTime.now().plusMonths(6).toInstant());
 

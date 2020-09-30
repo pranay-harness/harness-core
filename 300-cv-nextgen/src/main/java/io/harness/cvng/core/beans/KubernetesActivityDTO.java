@@ -25,6 +25,7 @@ public class KubernetesActivityDTO extends ActivityDTO {
     KubernetesActivity kubernetesActivity =
         KubernetesActivity.builder().clusterName(clusterName).activityDescription(activityDescription).build();
     super.addCommonDataFields(kubernetesActivity);
+    kubernetesActivity.setType(ActivityType.INFRASTRUCTURE);
     return kubernetesActivity;
   }
 }

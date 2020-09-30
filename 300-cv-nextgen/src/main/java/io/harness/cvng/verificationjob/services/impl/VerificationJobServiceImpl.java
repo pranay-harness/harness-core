@@ -9,6 +9,8 @@ import io.harness.cvng.verificationjob.entities.VerificationJob.VerificationJobK
 import io.harness.cvng.verificationjob.services.api.VerificationJobService;
 import io.harness.persistence.HPersistence;
 
+import java.util.List;
+import java.util.stream.Collectors;
 import javax.annotation.Nullable;
 
 public class VerificationJobServiceImpl implements VerificationJobService {
@@ -39,6 +41,11 @@ public class VerificationJobServiceImpl implements VerificationJobService {
   }
 
   @Override
+  public void save(VerificationJob verificationJob) {
+    hPersistence.save(verificationJob);
+  }
+
+  @Override
   public VerificationJob getVerificationJob(String accountId, String identifier) {
     Preconditions.checkNotNull(accountId);
     Preconditions.checkNotNull(identifier);
@@ -59,5 +66,17 @@ public class VerificationJobServiceImpl implements VerificationJobService {
     hPersistence.delete(hPersistence.createQuery(VerificationJob.class)
                             .filter(VerificationJobKeys.accountId, accountId)
                             .filter(VerificationJobKeys.identifier, identifier));
+  }
+
+  @Override
+  public List<VerificationJobDTO> list(String accountId, String projectIdentifier, String orgIdentifier) {
+    return hPersistence.createQuery(VerificationJob.class)
+        .filter(VerificationJobKeys.accountId, accountId)
+        .filter(VerificationJobKeys.orgIdentifier, orgIdentifier)
+        .filter(VerificationJobKeys.projectIdentifier, projectIdentifier)
+        .asList()
+        .stream()
+        .map(verificationJob -> verificationJob.getVerificationJobDTO())
+        .collect(Collectors.toList());
   }
 }
