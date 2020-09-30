@@ -26,6 +26,7 @@ import io.harness.serializer.KryoRegistrar;
 import io.harness.serializer.ManagerRegistrars;
 import net.sourceforge.argparse4j.inf.Namespace;
 import org.mongodb.morphia.AdvancedDatastore;
+import org.mongodb.morphia.converters.TypeConverter;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -82,6 +83,14 @@ public class InspectCommand<T extends io.dropwizard.Configuration> extends Confi
       Set<Class<? extends MorphiaRegistrar>> morphiaRegistrars() {
         return ImmutableSet.<Class<? extends MorphiaRegistrar>>builder()
             .addAll(ManagerRegistrars.morphiaRegistrars)
+            .build();
+      }
+
+      @Provides
+      @Singleton
+      Set<Class<? extends TypeConverter>> morphiaConverters() {
+        return ImmutableSet.<Class<? extends TypeConverter>>builder()
+            .addAll(ManagerRegistrars.morphiaConverters)
             .build();
       }
     });
