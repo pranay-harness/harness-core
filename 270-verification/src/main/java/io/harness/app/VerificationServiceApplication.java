@@ -80,7 +80,7 @@ import io.harness.security.VerificationServiceAuthenticationFilter;
 import io.harness.serializer.JsonSubtypeResolver;
 import io.harness.serializer.KryoRegistrar;
 import io.harness.serializer.ManagerRegistrars;
-import io.harness.serializer.kryo.VerificationKryoRegistrar;
+import io.harness.serializer.VerificationRegistrars;
 import io.harness.serializer.morphia.VerificationMorphiaRegistrar;
 import lombok.extern.slf4j.Slf4j;
 import org.glassfish.jersey.media.multipart.MultiPartFeature;
@@ -125,8 +125,6 @@ import javax.ws.rs.Path;
 
 /**
  * The main application - entry point for the entire verification service.
- *
- * @author Raghu
  */
 @Slf4j
 public class VerificationServiceApplication extends Application<VerificationServiceConfiguration> {
@@ -196,7 +194,9 @@ public class VerificationServiceApplication extends Application<VerificationServ
       @Provides
       @Singleton
       Set<Class<? extends KryoRegistrar>> kryoRegistrars() {
-        return ImmutableSet.<Class<? extends KryoRegistrar>>builder().add(VerificationKryoRegistrar.class).build();
+        return ImmutableSet.<Class<? extends KryoRegistrar>>builder()
+            .addAll(VerificationRegistrars.kryoRegistrars)
+            .build();
       }
 
       @Provides

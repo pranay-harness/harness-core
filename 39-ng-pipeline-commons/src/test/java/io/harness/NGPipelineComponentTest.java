@@ -1,6 +1,6 @@
 package io.harness;
 
-import static io.harness.rule.OwnerRule.GEORGE;
+import static io.harness.rule.OwnerRule.ARCHIT;
 import static org.assertj.core.api.Assertions.assertThatCode;
 
 import com.google.inject.Inject;
@@ -19,7 +19,7 @@ public class NGPipelineComponentTest extends NGPipelineBaseTest {
   @Inject private Map<String, TestExecution> tests;
 
   @Test
-  @Owner(developers = GEORGE)
+  @Owner(developers = ARCHIT)
   @Category(UnitTests.class)
   public void componentNGPipelineTests() {
     for (Map.Entry<String, TestExecution> test : tests.entrySet()) {
