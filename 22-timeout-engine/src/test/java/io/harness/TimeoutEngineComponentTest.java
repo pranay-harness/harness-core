@@ -16,7 +16,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 
 @Slf4j
-public class TimeoutEngineComponentTest extends TimeoutEngineTest {
+public class TimeoutEngineComponentTest extends TimeoutEngineTestBase {
   @Inject private Map<String, TestExecution> tests;
 
   @Test

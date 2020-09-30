@@ -3,13 +3,13 @@ package io.harness.timeout.trackers;
 import static io.harness.rule.OwnerRule.GARVIT;
 import static org.assertj.core.api.Assertions.assertThat;
 
-import io.harness.TimeoutEngineTest;
+import io.harness.TimeoutEngineTestBase;
 import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
-public class StopWatchTest extends TimeoutEngineTest {
+public class StopWatchTest extends TimeoutEngineTestBase {
   @Test
   @Owner(developers = GARVIT)
   @Category(UnitTests.class)

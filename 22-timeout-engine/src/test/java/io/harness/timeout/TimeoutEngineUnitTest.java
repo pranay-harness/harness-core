@@ -5,7 +5,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import com.google.inject.Inject;
 
-import io.harness.TimeoutEngineTest;
+import io.harness.TimeoutEngineTestBase;
 import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
 import io.harness.testlib.RealMongo;
@@ -13,7 +13,7 @@ import io.harness.timeout.trackers.absolute.AbsoluteTimeoutTracker;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
-public class TimeoutEngineUnitTest extends TimeoutEngineTest {
+public class TimeoutEngineUnitTest extends TimeoutEngineTestBase {
   @Inject private TimeoutEngine timeoutEngine;
 
   @Test

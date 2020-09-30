@@ -10127,9 +10127,6 @@
                 "coord": "org.springframework:spring-jcl:5.2.6.RELEASE",
                 "dependencies": [],
                 "directDependencies": [],
-                "exclusions": [
-                    "commons-logging:commons-logging"
-                ],
                 "file": "v1/https/repo1.maven.org/maven2/org/springframework/spring-jcl/5.2.6.RELEASE/spring-jcl-5.2.6.RELEASE.jar",
                 "mirror_urls": [
                     "https://repo1.maven.org/maven2/org/springframework/spring-jcl/5.2.6.RELEASE/spring-jcl-5.2.6.RELEASE.jar",

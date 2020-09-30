@@ -1172,6 +1172,7 @@ maven_install(
         "org.springframework.guice:spring-guice:1.1.3.RELEASE",
         "net.jodah:failsafe:2.2.0",
         "org.apache.commons:commons-email:1.5",
+        "org.springframework:spring-core:5.2.6.RELEASE",
     ],
     maven_install_json = "//:maven_install.json",
     repositories = [
