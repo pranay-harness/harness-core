@@ -12,7 +12,7 @@ public class PipelineValidationMapper {
   public CDPipelineValidationInfoDTO writePipelineValidationDto(CDPipelineValidationInfo cdPipelineValidationInfo)
       throws IOException {
     return CDPipelineValidationInfoDTO.builder()
-        .pipelineYaml(JsonPipelineUtils.writeYamlString(cdPipelineValidationInfo.getCdPipeline()))
+        .pipelineYaml(JsonPipelineUtils.writeYamlString(cdPipelineValidationInfo.getNgPipeline()))
         .uuidToErrorResponseMap(cdPipelineValidationInfo.getUuidToValidationErrors())
         .isErrorResponse(cdPipelineValidationInfo.isError())
         .build();

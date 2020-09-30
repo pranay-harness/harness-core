@@ -1,9 +1,9 @@
 package software.wings.beans.baseline;
 
 import io.harness.annotation.HarnessEntity;
-import io.harness.mongo.index.CdUniqueIndex;
 import io.harness.mongo.index.FdIndex;
 import io.harness.mongo.index.Field;
+import io.harness.mongo.index.NgUniqueIndex;
 import io.harness.persistence.AccountAccess;
 import lombok.Builder;
 import lombok.Data;
@@ -18,7 +18,7 @@ import software.wings.beans.Base;
  * Created by rsingh on 2/16/18.
  */
 
-@CdUniqueIndex(name = "baselineUniqueIndex", fields = { @Field("workflowId")
+@NgUniqueIndex(name = "baselineUniqueIndex", fields = { @Field("workflowId")
                                                         , @Field("envId"), @Field("serviceId") })
 @Data
 @Builder

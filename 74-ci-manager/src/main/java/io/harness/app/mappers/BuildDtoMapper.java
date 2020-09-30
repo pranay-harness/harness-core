@@ -19,7 +19,7 @@ import io.harness.beans.execution.PRWebhookEvent;
 import io.harness.beans.execution.WebhookEvent;
 import io.harness.beans.execution.WebhookExecutionSource;
 import io.harness.beans.execution.WebhookGitUser;
-import io.harness.cdng.pipeline.beans.entities.CDPipelineEntity;
+import io.harness.cdng.pipeline.beans.entities.NgPipelineEntity;
 import io.harness.ci.beans.entities.CIBuild;
 import io.harness.service.GraphGenerationService;
 
@@ -36,15 +36,15 @@ public class BuildDtoMapper {
 
   @Inject private GraphGenerationService graphGenerationService;
 
-  public CIBuildResponseDTO writeBuildDto(CIBuild ciBuild, CDPipelineEntity ciPipeline) throws InternalError {
-    if (ciPipeline == null) {
+  public CIBuildResponseDTO writeBuildDto(CIBuild ciBuild, NgPipelineEntity ngPipelineEntity) throws InternalError {
+    if (ngPipelineEntity == null) {
       throw new InternalError(
           format("pipeline:% for build:%s", ciBuild.getPipelineIdentifier(), ciBuild.getBuildNumber()));
     }
     CIBuildResponseDTO ciBuildResponseDTO = CIBuildResponseDTO.builder()
                                                 .id(ciBuild.getBuildNumber())
                                                 .startTime(ciBuild.getCreatedAt())
-                                                .pipeline(convertPipeline(ciPipeline))
+                                                .pipeline(convertPipeline(ngPipelineEntity))
                                                 .build();
 
     ExecutionSource executionSource = ciBuild.getExecutionSource();
@@ -89,11 +89,11 @@ public class BuildDtoMapper {
         .build();
   }
 
-  private CIBuildPipeline convertPipeline(CDPipelineEntity ciPipeline) {
+  private CIBuildPipeline convertPipeline(NgPipelineEntity ngPipelineEntity) {
     return CIBuildPipeline.builder()
-        .id(ciPipeline.getIdentifier())
-        .name(ciPipeline.getCdPipeline().getName())
-        .tags(ciPipeline.getCdPipeline().getTags())
+        .id(ngPipelineEntity.getIdentifier())
+        .name(ngPipelineEntity.getNgPipeline().getName())
+        .tags(ngPipelineEntity.getNgPipeline().getTags())
         .build();
   }
 

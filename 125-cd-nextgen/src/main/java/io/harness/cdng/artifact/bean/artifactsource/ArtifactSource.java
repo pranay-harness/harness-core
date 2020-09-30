@@ -3,9 +3,9 @@ package io.harness.cdng.artifact.bean.artifactsource;
 import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.annotation.HarnessEntity;
 import io.harness.delegate.task.artifacts.ArtifactSourceType;
-import io.harness.mongo.index.CdUniqueIndex;
 import io.harness.mongo.index.FdIndex;
 import io.harness.mongo.index.Field;
+import io.harness.mongo.index.NgUniqueIndex;
 import io.harness.persistence.AccountAccess;
 import io.harness.persistence.CreatedAtAware;
 import io.harness.persistence.PersistentEntity;
@@ -32,7 +32,7 @@ import javax.validation.constraints.NotNull;
 @Data
 @AllArgsConstructor
 @EqualsAndHashCode(callSuper = false)
-@CdUniqueIndex(name = "uniqueHash", fields = { @Field("uniqueHash") })
+@NgUniqueIndex(name = "uniqueHash", fields = { @Field("uniqueHash") })
 @FieldNameConstants(innerTypeName = "ArtifactSourceKeys")
 @Entity(value = "artifactSourceNG")
 @Document("artifactSourceNG")

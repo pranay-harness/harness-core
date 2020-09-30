@@ -3,9 +3,9 @@ package io.harness.selection.log;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.annotation.HarnessEntity;
-import io.harness.mongo.index.CdUniqueIndex;
 import io.harness.mongo.index.FdTtlIndex;
 import io.harness.mongo.index.Field;
+import io.harness.mongo.index.NgUniqueIndex;
 import io.harness.persistence.AccountAccess;
 import io.harness.persistence.PersistentEntity;
 import io.harness.persistence.UuidAware;
@@ -29,7 +29,7 @@ import javax.validation.constraints.NotNull;
 @Entity(value = "delegateSelectionLogRecords", noClassnameStored = true)
 @HarnessEntity(exportable = false)
 @FieldNameConstants(innerTypeName = "DelegateSelectionLogKeys")
-@CdUniqueIndex(name = "selectionLogsGroup",
+@NgUniqueIndex(name = "selectionLogsGroup",
     fields =
     {
       @Field(value = DelegateSelectionLogKeys.accountId)

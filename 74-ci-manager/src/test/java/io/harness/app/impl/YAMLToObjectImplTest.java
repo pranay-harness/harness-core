@@ -9,8 +9,8 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
 import io.harness.category.element.UnitTests;
-import io.harness.cdng.pipeline.CDPipeline;
-import io.harness.cdng.pipeline.beans.entities.CDPipelineEntity;
+import io.harness.cdng.pipeline.NgPipeline;
+import io.harness.cdng.pipeline.beans.entities.NgPipelineEntity;
 import io.harness.rule.Owner;
 import lombok.SneakyThrows;
 import org.junit.Test;
@@ -31,12 +31,12 @@ public class YAMLToObjectImplTest extends CIManagerTest {
   @Test
   @Owner(developers = ALEKSANDAR)
   @Category(UnitTests.class)
-  public void shouldReturnCIPipeline() {
-    doReturn(CDPipeline.builder().build()).when(yamlToObject).readYaml(anyString());
+  public void shouldReturnNgPipeline() {
+    doReturn(NgPipeline.builder().build()).when(yamlToObject).readYaml(anyString());
     String yaml = "dummy";
-    CDPipeline ciPipeline = yamlToObject.convertYAML(yaml);
-    CDPipelineEntity cdPipelineEntity = CDPipelineEntity.builder().cdPipeline(ciPipeline).build();
-    assertThat(cdPipelineEntity.getCdPipeline()).isNotNull();
+    NgPipeline ngPipeline = yamlToObject.convertYAML(yaml);
+    NgPipelineEntity ngPipelineEntity = NgPipelineEntity.builder().ngPipeline(ngPipeline).build();
+    assertThat(ngPipelineEntity.getNgPipeline()).isNotNull();
 
     verify(yamlToObject, times(1)).readYaml(anyString());
   }
@@ -48,9 +48,9 @@ public class YAMLToObjectImplTest extends CIManagerTest {
   public void shouldReturnNull() {
     doThrow(new IOException()).when(yamlToObject).readYaml(anyString());
     String yaml = "dummy";
-    CDPipeline ciPipeline = yamlToObject.convertYAML(yaml);
-    CDPipelineEntity cdPipelineEntity = CDPipelineEntity.builder().cdPipeline(ciPipeline).build();
-    assertThat(cdPipelineEntity.getCdPipeline()).isNull();
+    NgPipeline ngPipeline = yamlToObject.convertYAML(yaml);
+    NgPipelineEntity ngPipelineEntity = NgPipelineEntity.builder().ngPipeline(ngPipeline).build();
+    assertThat(ngPipelineEntity.getNgPipeline()).isNull();
     verify(yamlToObject, times(1)).readYaml(anyString());
   }
 }

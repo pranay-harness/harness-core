@@ -1,8 +1,8 @@
 package io.harness.cdng.executionplan.utils;
 
-import io.harness.cdng.pipeline.CDPipeline;
 import io.harness.cdng.pipeline.CDStage;
 import io.harness.cdng.pipeline.DeploymentStage;
+import io.harness.cdng.pipeline.NgPipeline;
 import io.harness.executionplan.core.ExecutionPlanCreationContext;
 import io.harness.yaml.core.ParallelStageElement;
 import io.harness.yaml.core.StageElement;
@@ -16,11 +16,11 @@ public class PlanCreatorConfigUtils {
   public static final String CD_PIPELINE_CONFIG = "CD_PIPELINE_CONFIG";
   public static final String CD_CURRENT_STAGE_CONFIG = "CD_CURRENT_STAGE_CONFIG";
 
-  public static void setPipelineConfig(CDPipeline pipeline, ExecutionPlanCreationContext context) {
+  public static void setPipelineConfig(NgPipeline pipeline, ExecutionPlanCreationContext context) {
     setConfig(CD_PIPELINE_CONFIG, pipeline, context);
   }
 
-  public static Optional<CDPipeline> getPipelineConfig(ExecutionPlanCreationContext context) {
+  public static Optional<NgPipeline> getPipelineConfig(ExecutionPlanCreationContext context) {
     return getConfig(CD_PIPELINE_CONFIG, context);
   }
 
@@ -45,9 +45,9 @@ public class PlanCreatorConfigUtils {
   }
 
   public CDStage getGivenDeploymentStageFromPipeline(ExecutionPlanCreationContext context, String stageIdentifier) {
-    Optional<CDPipeline> pipelineConfig = getPipelineConfig(context);
+    Optional<NgPipeline> pipelineConfig = getPipelineConfig(context);
     if (pipelineConfig.isPresent()) {
-      CDPipeline pipeline = pipelineConfig.get();
+      NgPipeline pipeline = pipelineConfig.get();
       for (StageElementWrapper stage : pipeline.getStages()) {
         if (stage instanceof StageElement) {
           DeploymentStage deploymentStage = (DeploymentStage) ((StageElement) stage).getStageType();

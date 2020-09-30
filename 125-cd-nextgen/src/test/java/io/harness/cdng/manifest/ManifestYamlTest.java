@@ -5,7 +5,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
-import io.harness.cdng.pipeline.CDPipeline;
+import io.harness.cdng.pipeline.NgPipeline;
 import io.harness.redesign.services.CustomExecutionProvider;
 import io.harness.rule.Owner;
 import io.harness.yaml.utils.YamlPipelineUtils;
@@ -23,7 +23,7 @@ public class ManifestYamlTest extends CategoryTest {
     String file = CustomExecutionProvider.class.getClassLoader().getResource("cdng/pipeline.yaml").getFile();
     String fileContent = FileUtils.readFileToString(new File(file), "UTF-8");
 
-    CDPipeline pipeline = YamlPipelineUtils.read(fileContent, CDPipeline.class);
+    NgPipeline pipeline = YamlPipelineUtils.read(fileContent, NgPipeline.class);
     assertThat(pipeline).isNotNull();
   }
 }

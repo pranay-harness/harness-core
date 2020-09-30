@@ -15,7 +15,7 @@ import com.google.inject.Inject;
 import io.harness.app.intfc.CIPipelineService;
 import io.harness.app.resources.CIWebhookTriggerResource;
 import io.harness.category.element.UnitTests;
-import io.harness.cdng.pipeline.beans.entities.CDPipelineEntity;
+import io.harness.cdng.pipeline.beans.entities.NgPipelineEntity;
 import io.harness.core.trigger.WebhookTriggerProcessor;
 import io.harness.core.trigger.WebhookTriggerProcessorUtils;
 import io.harness.impl.CIPipelineExecutionService;
@@ -60,9 +60,9 @@ public class WebhookExecutionTest extends CIManagerTest {
     MultivaluedMap<String, String> headersMultiMap = new MultivaluedHashMap<>();
     headersMultiMap.add(X_GIT_HUB_EVENT, "push");
     ClassLoader classLoader = getClass().getClassLoader();
-    CDPipelineEntity cdPipelineEntity = getPipeline();
+    NgPipelineEntity ngPipelineEntity = getPipeline();
     File file = new File(classLoader.getResource("github_pull_request.json").getFile());
-    when(ciPipelineService.readPipeline(PIPELINE_ID)).thenReturn(cdPipelineEntity);
+    when(ciPipelineService.readPipeline(PIPELINE_ID)).thenReturn(ngPipelineEntity);
     when(httpHeaders.getRequestHeaders()).thenReturn(headersMultiMap);
     when(httpHeaders.getHeaderString(X_GIT_HUB_EVENT)).thenReturn("push");
 

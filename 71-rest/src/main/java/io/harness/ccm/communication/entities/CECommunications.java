@@ -1,8 +1,8 @@
 package io.harness.ccm.communication.entities;
 
 import io.harness.mongo.index.CdIndex;
-import io.harness.mongo.index.CdUniqueIndex;
 import io.harness.mongo.index.Field;
+import io.harness.mongo.index.NgUniqueIndex;
 import io.harness.persistence.AccountAccess;
 import io.harness.persistence.CreatedAtAware;
 import io.harness.persistence.PersistentEntity;
@@ -17,7 +17,7 @@ import org.hibernate.validator.constraints.NotBlank;
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Id;
 
-@CdUniqueIndex(name = "account_email_type", fields = { @Field("accountId")
+@NgUniqueIndex(name = "account_email_type", fields = { @Field("accountId")
                                                        , @Field("emailId"), @Field("type") })
 @CdIndex(name = "account_enabled_type", fields = { @Field("accountId")
                                                    , @Field("enabled"), @Field("type") })

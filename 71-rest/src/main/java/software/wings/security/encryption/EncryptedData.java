@@ -13,9 +13,9 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.iterator.PersistentRegularIterable;
 import io.harness.mongo.index.CdIndex;
 import io.harness.mongo.index.CdSparseIndex;
-import io.harness.mongo.index.CdUniqueIndex;
 import io.harness.mongo.index.FdIndex;
 import io.harness.mongo.index.Field;
+import io.harness.mongo.index.NgUniqueIndex;
 import io.harness.ng.core.NGAccess;
 import io.harness.persistence.AccountAccess;
 import io.harness.persistence.NameAccess;
@@ -65,7 +65,7 @@ import javax.validation.constraints.NotNull;
 @HarnessEntity(exportable = true)
 @JsonIgnoreProperties(ignoreUnknown = true)
 
-@CdUniqueIndex(name = "acctNameIdx", fields = { @Field("accountId")
+@NgUniqueIndex(name = "acctNameIdx", fields = { @Field("accountId")
                                                 , @Field("name") })
 @CdIndex(name = "acctKmsIdx", fields = { @Field("accountId")
                                          , @Field("kmsId") })

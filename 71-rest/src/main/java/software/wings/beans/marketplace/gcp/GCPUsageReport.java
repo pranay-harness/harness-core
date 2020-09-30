@@ -6,8 +6,8 @@ import com.fasterxml.jackson.annotation.JsonView;
 import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.annotation.HarnessEntity;
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.mongo.index.CdUniqueIndex;
 import io.harness.mongo.index.Field;
+import io.harness.mongo.index.NgUniqueIndex;
 import io.harness.persistence.AccountAccess;
 import io.harness.persistence.CreatedAtAccess;
 import io.harness.persistence.PersistentEntity;
@@ -24,7 +24,7 @@ import java.time.Instant;
 import javax.validation.constraints.NotNull;
 
 @OwnedBy(PL)
-@CdUniqueIndex(name = "accountId_startTimestamp_unique_idx", fields = { @Field("accountId")
+@NgUniqueIndex(name = "accountId_startTimestamp_unique_idx", fields = { @Field("accountId")
                                                                         , @Field("startTimestamp") })
 @Value
 @FieldNameConstants(innerTypeName = "GCPUsageReportKeys")

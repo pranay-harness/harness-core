@@ -8,7 +8,7 @@ import com.codahale.metrics.annotation.ExceptionMetered;
 import com.codahale.metrics.annotation.Timed;
 import io.harness.app.intfc.CIPipelineService;
 import io.harness.beans.executionargs.CIExecutionArgs;
-import io.harness.cdng.pipeline.beans.entities.CDPipelineEntity;
+import io.harness.cdng.pipeline.beans.entities.NgPipelineEntity;
 import io.harness.ci.beans.entities.BuildNumber;
 import io.harness.core.ci.services.BuildNumberService;
 import io.harness.core.trigger.WebhookTriggerProcessor;
@@ -59,12 +59,12 @@ public class CIWebhookTriggerResource {
   public RestResponse<String> runPipelineFromTrigger(
       @PathParam("id") String pipelineId, String eventPayload, @Context HttpHeaders httpHeaders) {
     try {
-      CDPipelineEntity ciPipeline = ciPipelineService.readPipeline(pipelineId);
-      BuildNumber buildNumber = buildNumberService.increaseBuildNumber(
-          ciPipeline.getAccountId(), ciPipeline.getOrgIdentifier(), ciPipeline.getProjectIdentifier());
+      NgPipelineEntity ngPipelineEntity = ciPipelineService.readPipeline(pipelineId);
+      BuildNumber buildNumber = buildNumberService.increaseBuildNumber(ngPipelineEntity.getAccountId(),
+          ngPipelineEntity.getOrgIdentifier(), ngPipelineEntity.getProjectIdentifier());
       CIExecutionArgs ciExecutionArgs =
           webhookTriggerProcessor.generateExecutionArgs(pipelineId, eventPayload, httpHeaders, buildNumber);
-      ciPipelineExecutionService.executePipeline(ciPipeline, ciExecutionArgs, buildNumber.getBuildNumber());
+      ciPipelineExecutionService.executePipeline(ngPipelineEntity, ciExecutionArgs, buildNumber.getBuildNumber());
     } catch (Exception e) {
       logger.error("Failed to run input pipeline ", e);
     }

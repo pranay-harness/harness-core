@@ -8,10 +8,10 @@ import io.harness.beans.SweepingOutputInstance.SweepingOutputKeys;
 import io.harness.data.SweepingOutput;
 import io.harness.data.validator.Trimmed;
 import io.harness.mongo.index.CdIndex;
-import io.harness.mongo.index.CdUniqueIndex;
 import io.harness.mongo.index.FdTtlIndex;
 import io.harness.mongo.index.Field;
 import io.harness.mongo.index.IndexType;
+import io.harness.mongo.index.NgUniqueIndex;
 import io.harness.persistence.CreatedAtAware;
 import io.harness.persistence.PersistentEntity;
 import io.harness.persistence.UuidAccess;
@@ -35,22 +35,22 @@ import javax.validation.constraints.NotNull;
 @Value
 @Builder
 @Wither
-@CdUniqueIndex(name = "uniquePipelineExecution",
+@NgUniqueIndex(name = "uniquePipelineExecution",
     fields =
     {
       @Field(SweepingOutputKeys.appId), @Field(SweepingOutputKeys.name), @Field(SweepingOutputKeys.pipelineExecutionId)
     })
 
-@CdUniqueIndex(name = "uniqueWorkflowExecution",
+@NgUniqueIndex(name = "uniqueWorkflowExecution",
     fields =
     {
       @Field(SweepingOutputKeys.appId), @Field(SweepingOutputKeys.name), @Field(SweepingOutputKeys.workflowExecutionIds)
     })
-@CdUniqueIndex(name = "uniquePhaseExecution",
+@NgUniqueIndex(name = "uniquePhaseExecution",
     fields =
     { @Field(SweepingOutputKeys.appId)
       , @Field(SweepingOutputKeys.name), @Field(SweepingOutputKeys.phaseExecutionId) })
-@CdUniqueIndex(name = "uniqueStateExecution",
+@NgUniqueIndex(name = "uniqueStateExecution",
     fields =
     { @Field(SweepingOutputKeys.appId)
       , @Field(SweepingOutputKeys.name), @Field(SweepingOutputKeys.stateExecutionId) })

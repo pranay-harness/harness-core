@@ -1,9 +1,9 @@
 package software.wings.beans.appmanifest;
 
 import io.harness.annotation.HarnessEntity;
-import io.harness.mongo.index.CdUniqueIndex;
 import io.harness.mongo.index.FdIndex;
 import io.harness.mongo.index.Field;
+import io.harness.mongo.index.NgUniqueIndex;
 import io.harness.persistence.AccountAccess;
 import lombok.Builder;
 import lombok.Data;
@@ -15,7 +15,7 @@ import org.mongodb.morphia.annotations.Entity;
 import software.wings.beans.Base;
 import software.wings.yaml.BaseEntityYaml;
 
-@CdUniqueIndex(name = "manifestFileIdx", fields = { @Field("applicationManifestId")
+@NgUniqueIndex(name = "manifestFileIdx", fields = { @Field("applicationManifestId")
                                                     , @Field("fileName") })
 @Data
 @Builder

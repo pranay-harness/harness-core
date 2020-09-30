@@ -13,15 +13,15 @@ import com.google.inject.Inject;
 
 import io.harness.NGConstants;
 import io.harness.beans.ExecutionStrategyType;
-import io.harness.cdng.pipeline.CDPipeline;
 import io.harness.cdng.pipeline.NGStepType;
+import io.harness.cdng.pipeline.NgPipeline;
 import io.harness.cdng.pipeline.StepCategory;
 import io.harness.cdng.pipeline.StepData;
 import io.harness.cdng.pipeline.beans.CDPipelineValidationInfo;
 import io.harness.cdng.pipeline.beans.dto.CDPipelineResponseDTO;
 import io.harness.cdng.pipeline.beans.dto.CDPipelineSummaryResponseDTO;
-import io.harness.cdng.pipeline.beans.entities.CDPipelineEntity;
-import io.harness.cdng.pipeline.beans.entities.CDPipelineEntity.PipelineNGKeys;
+import io.harness.cdng.pipeline.beans.entities.NgPipelineEntity;
+import io.harness.cdng.pipeline.beans.entities.NgPipelineEntity.PipelineNGKeys;
 import io.harness.cdng.pipeline.mappers.PipelineDtoMapper;
 import io.harness.cdng.service.beans.ServiceDefinitionType;
 import io.harness.data.structure.EmptyPredicate;
@@ -66,11 +66,11 @@ public class PipelineServiceImpl implements PipelineService {
   @Override
   public String createPipeline(String yaml, String accountId, String orgId, String projectId) {
     try {
-      CDPipeline cdPipeline = YamlPipelineUtils.read(yaml, CDPipeline.class);
-      CDPipelineEntity cdPipelineEntity =
-          PipelineDtoMapper.toPipelineEntity(accountId, orgId, projectId, yaml, cdPipeline);
-      CDPipelineEntity savedCdPipeline = pipelineRepository.save(cdPipelineEntity);
-      return savedCdPipeline.getIdentifier();
+      NgPipeline ngPipeline = YamlPipelineUtils.read(yaml, NgPipeline.class);
+      NgPipelineEntity ngPipelineEntity =
+          PipelineDtoMapper.toPipelineEntity(accountId, orgId, projectId, yaml, ngPipeline);
+      NgPipelineEntity savedNgPipelineEntity = pipelineRepository.save(ngPipelineEntity);
+      return savedNgPipelineEntity.getIdentifier();
     } catch (IOException e) {
       throw new GeneralException("error while saving pipeline", e);
     } catch (DuplicateKeyException ex) {
@@ -82,14 +82,14 @@ public class PipelineServiceImpl implements PipelineService {
   @Override
   public String updatePipeline(String yaml, String accountId, String orgId, String projectId, String pipelineId) {
     try {
-      CDPipelineEntity cdPipelineEntityExisting = get(pipelineId, accountId, orgId, projectId);
-      CDPipeline cdPipeline = YamlPipelineUtils.read(yaml, CDPipeline.class);
-      if (pipelineId.equalsIgnoreCase(cdPipeline.getIdentifier())) {
-        CDPipelineEntity cdPipelineEntity =
-            PipelineDtoMapper.toPipelineEntity(accountId, orgId, projectId, yaml, cdPipeline);
-        cdPipelineEntity.setUuid(cdPipelineEntityExisting.getUuid());
-        CDPipelineEntity savedCdPipeline = pipelineRepository.save(cdPipelineEntity);
-        return savedCdPipeline.getIdentifier();
+      NgPipelineEntity ngPipelineEntityExisting = get(pipelineId, accountId, orgId, projectId);
+      NgPipeline ngPipeline = YamlPipelineUtils.read(yaml, NgPipeline.class);
+      if (pipelineId.equalsIgnoreCase(ngPipeline.getIdentifier())) {
+        NgPipelineEntity ngPipelineEntity =
+            PipelineDtoMapper.toPipelineEntity(accountId, orgId, projectId, yaml, ngPipeline);
+        ngPipelineEntity.setUuid(ngPipelineEntityExisting.getUuid());
+        NgPipelineEntity savedNgPipelineEntity = pipelineRepository.save(ngPipelineEntity);
+        return savedNgPipelineEntity.getIdentifier();
       } else {
         throw new InvalidRequestException(
             "Pipeline Identifier in the query Param & Identifier in the pipeline yaml are not matching");
@@ -104,8 +104,8 @@ public class PipelineServiceImpl implements PipelineService {
   @Override
   public Optional<CDPipelineResponseDTO> getPipeline(
       String pipelineId, String accountId, String orgId, String projectId) {
-    CDPipelineEntity cdPipeline = get(pipelineId, accountId, orgId, projectId);
-    return Optional.of(cdPipeline).map(PipelineDtoMapper::writePipelineDto);
+    NgPipelineEntity pipelineEntity = get(pipelineId, accountId, orgId, projectId);
+    return Optional.of(pipelineEntity).map(PipelineDtoMapper::writePipelineDto);
   }
 
   @Override
@@ -127,7 +127,7 @@ public class PipelineServiceImpl implements PipelineService {
       // add name and tags in search when they are added to the entity
     }
 
-    Page<CDPipelineEntity> list = pipelineRepository.findAll(criteria, pageable);
+    Page<NgPipelineEntity> list = pipelineRepository.findAll(criteria, pageable);
     return list.map(PipelineDtoMapper::preparePipelineSummary);
   }
 
@@ -193,9 +193,9 @@ public class PipelineServiceImpl implements PipelineService {
   @Override
   public boolean deletePipeline(String accountId, String orgId, String projectId, String pipelineId) {
     try {
-      CDPipelineEntity cdPipelineEntity = get(pipelineId, accountId, orgId, projectId);
-      cdPipelineEntity.setDeleted(true);
-      pipelineRepository.save(cdPipelineEntity);
+      NgPipelineEntity ngPipelineEntity = get(pipelineId, accountId, orgId, projectId);
+      ngPipelineEntity.setDeleted(true);
+      pipelineRepository.save(ngPipelineEntity);
     } catch (PipelineDoesNotExistException e) {
       // ignore exception
     }
@@ -220,26 +220,26 @@ public class PipelineServiceImpl implements PipelineService {
         "pipeline.identifier", VisitorErrorResponseWrapper.builder().errors(Lists.newArrayList(errorResponse)).build());
     uuidToErrorResponse.put("pipeline.stage.identifier",
         VisitorErrorResponseWrapper.builder().errors(Lists.newArrayList(errorResponse)).build());
-    CDPipeline cdPipeline =
-        CDPipeline.builder()
+    NgPipeline ngPipeline =
+        NgPipeline.builder()
             .identifier("pipeline.identifier")
             .name("dummyPipeline")
             .stage(StageElement.builder().name("dummyStage").identifier("pipeline.stage.identifier").build())
             .build();
     CDPipelineValidationInfo cdPipelineValidationInfo = CDPipelineValidationInfo.builder()
                                                             .uuidToValidationErrors(uuidToErrorResponse)
-                                                            .cdPipeline(cdPipeline)
+                                                            .ngPipeline(ngPipeline)
                                                             .isError(true)
                                                             .build();
     return Optional.of(cdPipelineValidationInfo);
   }
 
-  private CDPipelineEntity get(String pipelineId, String accountId, String orgId, String projectId) {
-    Optional<CDPipelineEntity> cdPipelineEntity =
+  private NgPipelineEntity get(String pipelineId, String accountId, String orgId, String projectId) {
+    Optional<NgPipelineEntity> pipelineEntity =
         pipelineRepository.findByAccountIdAndOrgIdentifierAndProjectIdentifierAndIdentifierAndDeletedNot(
             accountId, orgId, projectId, pipelineId, true);
-    if (cdPipelineEntity.isPresent()) {
-      return cdPipelineEntity.get();
+    if (pipelineEntity.isPresent()) {
+      return pipelineEntity.get();
     } else {
       throw new PipelineDoesNotExistException(pipelineId);
     }

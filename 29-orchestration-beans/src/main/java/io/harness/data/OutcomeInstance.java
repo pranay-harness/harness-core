@@ -8,8 +8,8 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.data.OutcomeInstance.OutcomeInstanceKeys;
 import io.harness.data.validator.Trimmed;
 import io.harness.mongo.index.CdIndex;
-import io.harness.mongo.index.CdUniqueIndex;
 import io.harness.mongo.index.Field;
+import io.harness.mongo.index.NgUniqueIndex;
 import io.harness.persistence.PersistentEntity;
 import io.harness.persistence.UuidAccess;
 import lombok.Builder;
@@ -31,7 +31,7 @@ import java.util.List;
 @Builder
 @FieldNameConstants(innerTypeName = "OutcomeInstanceKeys")
 
-@CdUniqueIndex(name = "levelRuntimeIdUniqueIdx",
+@NgUniqueIndex(name = "levelRuntimeIdUniqueIdx",
     fields =
     {
       @Field(OutcomeInstanceKeys.planExecutionId)

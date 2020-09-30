@@ -9,10 +9,10 @@ import io.harness.annotation.HarnessEntity;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.EmbeddedUser;
 import io.harness.mongo.index.CdIndex;
-import io.harness.mongo.index.CdUniqueIndex;
 import io.harness.mongo.index.FdIndex;
 import io.harness.mongo.index.Field;
 import io.harness.mongo.index.IndexType;
+import io.harness.mongo.index.NgUniqueIndex;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.experimental.FieldNameConstants;
@@ -31,7 +31,7 @@ import java.util.Objects;
 
 @OwnedBy(CDC)
 @Entity(value = "serviceTemplates", noClassnameStored = true)
-@CdUniqueIndex(name = "yaml", fields = { @Field("appId")
+@NgUniqueIndex(name = "yaml", fields = { @Field("appId")
                                          , @Field("envId"), @Field("name") })
 @CdIndex(name = "app_env_createdAt",
     fields =

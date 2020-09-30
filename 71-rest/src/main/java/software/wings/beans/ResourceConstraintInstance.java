@@ -9,10 +9,10 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.distribution.constraint.Consumer.State;
 import io.harness.iterator.PersistentRegularIterable;
 import io.harness.mongo.index.CdIndex;
-import io.harness.mongo.index.CdUniqueIndex;
 import io.harness.mongo.index.FdIndex;
 import io.harness.mongo.index.FdTtlIndex;
 import io.harness.mongo.index.Field;
+import io.harness.mongo.index.NgUniqueIndex;
 import io.harness.persistence.AccountAccess;
 import io.harness.persistence.UuidAware;
 import io.harness.validation.Update;
@@ -34,7 +34,7 @@ import javax.validation.constraints.NotNull;
 @Data
 @Builder
 @EqualsAndHashCode(callSuper = false)
-@CdUniqueIndex(name = "uniqueUnitOrder",
+@NgUniqueIndex(name = "uniqueUnitOrder",
     fields =
     {
       @Field(ResourceConstraintInstanceKeys.resourceConstraintId)

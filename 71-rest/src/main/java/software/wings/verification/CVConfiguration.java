@@ -8,10 +8,10 @@ import com.google.common.base.Preconditions;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.annotation.HarnessEntity;
-import io.harness.mongo.index.CdUniqueIndex;
 import io.harness.mongo.index.FdIndex;
 import io.harness.mongo.index.FdTtlIndex;
 import io.harness.mongo.index.Field;
+import io.harness.mongo.index.NgUniqueIndex;
 import io.harness.persistence.NameAccess;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -38,7 +38,7 @@ import javax.validation.constraints.NotNull;
  * 05/Oct/2018
  */
 
-@CdUniqueIndex(name = "nameUniqueIndex", fields = { @Field("appId")
+@NgUniqueIndex(name = "nameUniqueIndex", fields = { @Field("appId")
                                                     , @Field("envId"), @Field("name") })
 @Data
 @FieldNameConstants(innerTypeName = "CVConfigurationKeys")

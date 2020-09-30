@@ -5,8 +5,8 @@ import io.harness.data.validator.EntityIdentifier;
 import io.harness.data.validator.EntityName;
 import io.harness.data.validator.Trimmed;
 import io.harness.mongo.index.CdIndex;
-import io.harness.mongo.index.CdUniqueIndex;
 import io.harness.mongo.index.Field;
+import io.harness.mongo.index.NgUniqueIndex;
 import io.harness.ng.RsqlQueryable;
 import io.harness.ng.core.NGAccountAccess;
 import io.harness.ng.core.entities.Project.ProjectKeys;
@@ -32,7 +32,7 @@ import javax.validation.constraints.Size;
 @Data
 @Builder
 @FieldNameConstants(innerTypeName = "ProjectKeys")
-@CdUniqueIndex(name = "unique_accountIdentifier_organizationIdentifier_projectIdentifier",
+@NgUniqueIndex(name = "unique_accountIdentifier_organizationIdentifier_projectIdentifier",
     fields =
     { @Field(ProjectKeys.accountIdentifier)
       , @Field(ProjectKeys.orgIdentifier), @Field(ProjectKeys.identifier) })

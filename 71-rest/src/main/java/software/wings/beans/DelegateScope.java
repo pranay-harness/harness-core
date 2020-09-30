@@ -7,9 +7,9 @@ import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.annotation.HarnessEntity;
 import io.harness.beans.EmbeddedUser;
 import io.harness.delegate.beans.TaskGroup;
-import io.harness.mongo.index.CdUniqueIndex;
 import io.harness.mongo.index.FdIndex;
 import io.harness.mongo.index.Field;
+import io.harness.mongo.index.NgUniqueIndex;
 import io.harness.persistence.AccountAccess;
 import io.harness.persistence.CreatedAtAware;
 import io.harness.persistence.CreatedByAware;
@@ -36,7 +36,7 @@ import javax.validation.constraints.NotNull;
 @FieldNameConstants(innerTypeName = "DelegateScopeKeys")
 @Entity(value = "delegateScopes", noClassnameStored = true)
 @HarnessEntity(exportable = true)
-@CdUniqueIndex(name = "uniqueName",
+@NgUniqueIndex(name = "uniqueName",
     fields = { @Field(value = DelegateScopeKeys.accountId)
                , @Field(value = DelegateScopeKeys.name) })
 public class DelegateScope implements PersistentEntity, UuidAware, CreatedAtAware, CreatedByAware, UpdatedAtAware,

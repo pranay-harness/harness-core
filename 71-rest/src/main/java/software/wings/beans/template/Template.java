@@ -9,9 +9,9 @@ import io.harness.annotation.HarnessEntity;
 import io.harness.beans.EmbeddedUser;
 import io.harness.data.validator.EntityName;
 import io.harness.mongo.index.CdIndex;
-import io.harness.mongo.index.CdUniqueIndex;
 import io.harness.mongo.index.FdIndex;
 import io.harness.mongo.index.Field;
+import io.harness.mongo.index.NgUniqueIndex;
 import io.harness.persistence.NameAccess;
 import io.harness.validation.Create;
 import io.harness.validation.Update;
@@ -34,7 +34,7 @@ import javax.validation.constraints.NotNull;
 
 @JsonInclude(NON_NULL)
 
-@CdUniqueIndex(name = "yaml", fields = { @Field("accountId")
+@NgUniqueIndex(name = "yaml", fields = { @Field("accountId")
                                          , @Field("name"), @Field("folderId"), @Field("appId") })
 @CdIndex(name = "account_gallery_app_idx", fields = { @Field("accountId")
                                                       , @Field("galleryId"), @Field("appId") })

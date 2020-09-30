@@ -5,8 +5,8 @@ import io.harness.data.validator.EntityIdentifier;
 import io.harness.data.validator.EntityName;
 import io.harness.data.validator.Trimmed;
 import io.harness.mongo.index.CdIndex;
-import io.harness.mongo.index.CdUniqueIndex;
 import io.harness.mongo.index.Field;
+import io.harness.mongo.index.NgUniqueIndex;
 import io.harness.ngpipeline.BaseInputSetEntity.BaseInputSetEntityKeys;
 import io.harness.persistence.PersistentEntity;
 import lombok.Data;
@@ -23,7 +23,7 @@ import javax.validation.constraints.Size;
 
 @Data
 @FieldNameConstants(innerTypeName = "BaseInputSetEntityKeys")
-@CdUniqueIndex(name = "unique_accountId_organizationIdentifier_projectIdentifier_pipelineIdentifier_inputSetIdentifier",
+@NgUniqueIndex(name = "unique_accountId_organizationIdentifier_projectIdentifier_pipelineIdentifier_inputSetIdentifier",
     fields =
     {
       @Field(BaseInputSetEntityKeys.accountId)

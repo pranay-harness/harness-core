@@ -3,8 +3,8 @@ package io.harness.limits;
 import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.annotation.HarnessEntity;
 import io.harness.limits.lib.Limit;
-import io.harness.mongo.index.CdUniqueIndex;
 import io.harness.mongo.index.Field;
+import io.harness.mongo.index.NgUniqueIndex;
 import io.harness.persistence.AccountAccess;
 import io.harness.persistence.PersistentEntity;
 import io.harness.validation.Update;
@@ -20,7 +20,7 @@ import javax.validation.constraints.NotNull;
 @Getter
 @EqualsAndHashCode(exclude = "id", callSuper = false)
 @Entity(value = "allowedLimits", noClassnameStored = true)
-@CdUniqueIndex(name = "key_idx", fields = { @Field("key")
+@NgUniqueIndex(name = "key_idx", fields = { @Field("key")
                                             , @Field("accountId") })
 @FieldNameConstants(innerTypeName = "ConfiguredLimitKeys")
 @HarnessEntity(exportable = true)

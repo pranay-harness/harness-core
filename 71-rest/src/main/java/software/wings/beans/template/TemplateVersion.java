@@ -2,9 +2,9 @@ package software.wings.beans.template;
 
 import io.harness.annotation.HarnessEntity;
 import io.harness.mongo.index.CdIndex;
-import io.harness.mongo.index.CdUniqueIndex;
 import io.harness.mongo.index.Field;
 import io.harness.mongo.index.IndexType;
+import io.harness.mongo.index.NgUniqueIndex;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -17,7 +17,7 @@ import software.wings.beans.Base;
 import software.wings.beans.template.TemplateVersion.TemplateVersionKeys;
 
 @FieldNameConstants(innerTypeName = "TemplateVersionKeys")
-@CdUniqueIndex(name = "yaml", fields = { @Field("templateUuid")
+@NgUniqueIndex(name = "yaml", fields = { @Field("templateUuid")
                                          , @Field("version") })
 @CdIndex(name = "account_template_version",
     fields =

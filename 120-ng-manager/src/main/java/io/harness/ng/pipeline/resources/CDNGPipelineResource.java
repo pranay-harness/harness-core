@@ -9,7 +9,7 @@ import com.codahale.metrics.annotation.Timed;
 import io.harness.NGConstants;
 import io.harness.beans.EmbeddedUser;
 import io.harness.beans.ExecutionStrategyType;
-import io.harness.cdng.pipeline.CDPipeline;
+import io.harness.cdng.pipeline.NgPipeline;
 import io.harness.cdng.pipeline.StepCategory;
 import io.harness.cdng.pipeline.beans.CDPipelineValidationInfo;
 import io.harness.cdng.pipeline.beans.dto.CDPipelineResponseDTO;
@@ -98,7 +98,7 @@ public class CDNGPipelineResource {
       @QueryParam("page") @DefaultValue("0") int page, @QueryParam("size") @DefaultValue("25") int size,
       @QueryParam("sort") List<String> sort, @QueryParam(NGConstants.SEARCH_TERM_KEY) String searchTerm) {
     logger.info("Get List of pipelines");
-    Criteria criteria = restQueryFilterParser.getCriteriaFromFilterQuery(filterQuery, CDPipeline.class);
+    Criteria criteria = restQueryFilterParser.getCriteriaFromFilterQuery(filterQuery, NgPipeline.class);
     Page<CDPipelineSummaryResponseDTO> pipelines = ngPipelineService.getPipelines(
         accountId, orgId, projectId, criteria, getPageRequest(page, size, sort), searchTerm);
     return ResponseDTO.newResponse(pipelines);
@@ -109,7 +109,7 @@ public class CDNGPipelineResource {
   @ExceptionMetered
   @ApiImplicitParams({
     @ApiImplicitParam(
-        dataTypeClass = CDPipeline.class, dataType = "io.harness.cdng.pipeline.CDPipeline", paramType = "body")
+        dataTypeClass = NgPipeline.class, dataType = "io.harness.cdng.pipeline.NgPipeline", paramType = "body")
   })
   @ApiOperation(value = "Create a Pipeline", nickname = "postPipeline")
   public ResponseDTO<String>
@@ -127,7 +127,7 @@ public class CDNGPipelineResource {
   @ExceptionMetered
   @ApiImplicitParams({
     @ApiImplicitParam(
-        dataTypeClass = CDPipeline.class, dataType = "io.harness.cdng.pipeline.CDPipeline", paramType = "body")
+        dataTypeClass = NgPipeline.class, dataType = "io.harness.cdng.pipeline.NgPipeline", paramType = "body")
   })
   @ApiOperation(value = "Update a Pipeline", nickname = "putPipeline")
   public ResponseDTO<String>

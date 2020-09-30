@@ -5,9 +5,9 @@ import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.annotation.HarnessEntity;
 import io.harness.beans.EmbeddedUser;
 import io.harness.delegate.beans.DelegateProfile.DelegateProfileKeys;
-import io.harness.mongo.index.CdUniqueIndex;
 import io.harness.mongo.index.FdIndex;
 import io.harness.mongo.index.Field;
+import io.harness.mongo.index.NgUniqueIndex;
 import io.harness.persistence.AccountAccess;
 import io.harness.persistence.CreatedAtAware;
 import io.harness.persistence.CreatedByAware;
@@ -32,7 +32,7 @@ import javax.validation.constraints.NotNull;
 @Entity(value = "delegateProfiles", noClassnameStored = true)
 @HarnessEntity(exportable = true)
 @FieldNameConstants(innerTypeName = "DelegateProfileKeys")
-@CdUniqueIndex(name = "uniqueName",
+@NgUniqueIndex(name = "uniqueName",
     fields = { @Field(value = DelegateProfileKeys.accountId)
                , @Field(value = DelegateProfileKeys.name) })
 public final class DelegateProfile implements PersistentEntity, UuidAware, CreatedAtAware, CreatedByAware,

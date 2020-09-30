@@ -62,10 +62,10 @@ import io.harness.data.validator.EntityName;
 import io.harness.data.validator.Trimmed;
 import io.harness.iterator.PersistentRegularIterable;
 import io.harness.mongo.index.CdIndex;
-import io.harness.mongo.index.CdUniqueIndex;
 import io.harness.mongo.index.FdIndex;
 import io.harness.mongo.index.Field;
 import io.harness.mongo.index.IndexType;
+import io.harness.mongo.index.NgUniqueIndex;
 import io.harness.persistence.AccountAccess;
 import io.harness.persistence.NameAccess;
 import io.harness.security.encryption.EncryptionType;
@@ -102,7 +102,7 @@ import javax.validation.Valid;
       , @Field(SettingAttributeKeys.appId), @Field(SettingAttributeKeys.category),
           @Field(value = SettingAttributeKeys.createdAt, type = IndexType.DESC)
     })
-@CdUniqueIndex(name = "locate",
+@NgUniqueIndex(name = "locate",
     fields = { @Field("accountId")
                , @Field("appId"), @Field("envId"), @Field("name"), @Field("value.type") })
 @CdIndex(name = "acctCatTypeIdx", fields = { @Field("accountId")

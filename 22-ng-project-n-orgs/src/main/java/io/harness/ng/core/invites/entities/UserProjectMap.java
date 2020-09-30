@@ -4,8 +4,8 @@ import static io.harness.annotations.dev.HarnessTeam.PL;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.data.validator.Trimmed;
-import io.harness.mongo.index.CdUniqueIndex;
 import io.harness.mongo.index.Field;
+import io.harness.mongo.index.NgUniqueIndex;
 import io.harness.ng.core.invites.entities.UserProjectMap.UserProjectMapKeys;
 import io.harness.persistence.PersistentEntity;
 import lombok.Builder;
@@ -24,7 +24,7 @@ import java.util.List;
 @Data
 @Builder
 @FieldNameConstants(innerTypeName = "UserProjectMapKeys")
-@CdUniqueIndex(name = "uniqueUserProjectMap",
+@NgUniqueIndex(name = "uniqueUserProjectMap",
     fields =
     {
       @Field(UserProjectMapKeys.userId)

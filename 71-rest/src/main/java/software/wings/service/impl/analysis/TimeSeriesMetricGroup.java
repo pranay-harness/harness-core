@@ -4,10 +4,10 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.annotation.HarnessEntity;
 import io.harness.beans.EmbeddedUser;
-import io.harness.mongo.index.CdUniqueIndex;
 import io.harness.mongo.index.FdIndex;
 import io.harness.mongo.index.FdTtlIndex;
 import io.harness.mongo.index.Field;
+import io.harness.mongo.index.NgUniqueIndex;
 import io.harness.persistence.AccountAccess;
 import lombok.Builder;
 import lombok.Data;
@@ -26,7 +26,7 @@ import java.util.Map;
  * Created by rsingh on 08/30/17.
  */
 
-@CdUniqueIndex(name = "uniqueIdx", fields = { @Field("stateType")
+@NgUniqueIndex(name = "uniqueIdx", fields = { @Field("stateType")
                                               , @Field("stateExecutionId") })
 @Data
 @EqualsAndHashCode(callSuper = false)

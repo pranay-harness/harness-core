@@ -42,12 +42,12 @@ public class PipelineYamlTest extends CategoryTest {
   public void testPipelineWithRuntimeInputYaml() throws IOException {
     ClassLoader classLoader = this.getClass().getClassLoader();
     final URL testFile = classLoader.getResource("cdng/pipelineWithRuntimeInput.yml");
-    CDPipeline cdPipeline = YamlPipelineUtils.read(testFile, CDPipeline.class);
-    assertThat(cdPipeline.getIdentifier()).isEqualTo("myPipeline1");
-    assertThat(cdPipeline.getStages().size()).isEqualTo(2);
+    NgPipeline ngPipeline = YamlPipelineUtils.read(testFile, NgPipeline.class);
+    assertThat(ngPipeline.getIdentifier()).isEqualTo("myPipeline1");
+    assertThat(ngPipeline.getStages().size()).isEqualTo(2);
 
     // First Stage
-    StageElementWrapper stageWrapper = cdPipeline.getStages().get(0);
+    StageElementWrapper stageWrapper = ngPipeline.getStages().get(0);
     DeploymentStage deploymentStage = (DeploymentStage) ((StageElement) stageWrapper).getStageType();
 
     // Service
@@ -148,7 +148,7 @@ public class PipelineYamlTest extends CategoryTest {
         .isEqualTo(InputSetValidatorType.ALLOWED_VALUES);
 
     // Second stage
-    stageWrapper = cdPipeline.getStages().get(1);
+    stageWrapper = ngPipeline.getStages().get(1);
     deploymentStage = (DeploymentStage) ((StageElement) stageWrapper).getStageType();
 
     // Service

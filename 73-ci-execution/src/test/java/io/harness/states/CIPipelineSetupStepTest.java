@@ -14,7 +14,7 @@ import io.harness.ambiance.Ambiance;
 import io.harness.beans.CIPipelineSetupParameters;
 import io.harness.beans.executionargs.CIExecutionArgs;
 import io.harness.category.element.UnitTests;
-import io.harness.cdng.pipeline.beans.entities.CDPipelineEntity;
+import io.harness.cdng.pipeline.beans.entities.NgPipelineEntity;
 import io.harness.ci.beans.entities.BuildNumber;
 import io.harness.engine.outputs.ExecutionSweepingOutputService;
 import io.harness.execution.status.Status;
@@ -38,13 +38,13 @@ public class CIPipelineSetupStepTest extends CIExecutionTest {
   @Inject private CIPipelineSetupStep ciPipelineSetupStep;
   @Inject private CIExecutionPlanTestHelper ciExecutionPlanTestHelper;
   @Mock ExecutionSweepingOutputService executionSweepingOutputResolver;
-  private CDPipelineEntity ciPipeline;
+  private NgPipelineEntity ngPipelineEntity;
 
   private static final String CHILD_ID = generateUuid();
 
   @Before
   public void setUp() {
-    ciPipeline = ciExecutionPlanTestHelper.getCIPipeline();
+    ngPipelineEntity = ciExecutionPlanTestHelper.getCIPipeline();
     on(ciPipelineSetupStep).set("executionSweepingOutputResolver", executionSweepingOutputResolver);
   }
   @Test
@@ -58,7 +58,7 @@ public class CIPipelineSetupStepTest extends CIExecutionTest {
     BuildNumber buildNumber = BuildNumber.builder().buildNumber(1L).build();
     CIPipelineSetupParameters stateParameters =
         CIPipelineSetupParameters.builder()
-            .ciPipeline(ciPipeline.getCdPipeline())
+            .ngPipeline(ngPipelineEntity.getNgPipeline())
             .ciExecutionArgs(CIExecutionArgs.builder().buildNumber(buildNumber).build())
             .fieldToExecutionNodeIdMap(fieldToExecutionNodeIdMap)
             .build();
@@ -76,7 +76,7 @@ public class CIPipelineSetupStepTest extends CIExecutionTest {
     Map<String, String> fieldToExecutionNodeIdMap = new HashMap<>();
     fieldToExecutionNodeIdMap.put("stages", CHILD_ID);
     CIPipelineSetupParameters stateParameters = CIPipelineSetupParameters.builder()
-                                                    .ciPipeline(ciPipeline.getCdPipeline())
+                                                    .ngPipeline(ngPipelineEntity.getNgPipeline())
                                                     .fieldToExecutionNodeIdMap(fieldToExecutionNodeIdMap)
                                                     .build();
 
@@ -96,7 +96,7 @@ public class CIPipelineSetupStepTest extends CIExecutionTest {
     Map<String, String> fieldToExecutionNodeIdMap = new HashMap<>();
     fieldToExecutionNodeIdMap.put("stages", CHILD_ID);
     CIPipelineSetupParameters stateParameters = CIPipelineSetupParameters.builder()
-                                                    .ciPipeline(ciPipeline.getCdPipeline())
+                                                    .ngPipeline(ngPipelineEntity.getNgPipeline())
                                                     .fieldToExecutionNodeIdMap(fieldToExecutionNodeIdMap)
                                                     .build();
     assertThat(ciPipelineSetupStep.executeSync(ambiance, stateParameters, StepInputPackage.builder().build(), null)

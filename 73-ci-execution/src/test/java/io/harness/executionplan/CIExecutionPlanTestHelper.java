@@ -30,8 +30,8 @@ import io.harness.beans.yaml.extended.CustomVariables;
 import io.harness.beans.yaml.extended.connector.GitConnectorYaml;
 import io.harness.beans.yaml.extended.container.Container;
 import io.harness.beans.yaml.extended.infrastrucutre.K8sDirectInfraYaml;
-import io.harness.cdng.pipeline.CDPipeline;
-import io.harness.cdng.pipeline.beans.entities.CDPipelineEntity;
+import io.harness.cdng.pipeline.NgPipeline;
+import io.harness.cdng.pipeline.beans.entities.NgPipelineEntity;
 import io.harness.common.CIExecutionConstants;
 import io.harness.executionplan.core.impl.ExecutionPlanCreationContextImpl;
 import io.harness.k8s.model.ImageDetails;
@@ -332,12 +332,12 @@ public class CIExecutionPlanTestHelper {
     return ids;
   }
 
-  public CDPipelineEntity getCIPipeline() {
-    CDPipeline cdPipeline = CDPipeline.builder().stages(getStages()).build();
-    return CDPipelineEntity.builder()
+  public NgPipelineEntity getCIPipeline() {
+    NgPipeline ngPipeline = NgPipeline.builder().stages(getStages()).build();
+    return NgPipelineEntity.builder()
         .identifier("testPipelineIdentifier")
         .accountId("accountId")
-        .cdPipeline(cdPipeline)
+        .ngPipeline(ngPipeline)
         .build();
   }
 

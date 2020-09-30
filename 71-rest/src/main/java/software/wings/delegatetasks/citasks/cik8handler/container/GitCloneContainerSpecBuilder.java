@@ -7,7 +7,6 @@ package software.wings.delegatetasks.citasks.cik8handler.container;
 
 import static io.harness.k8s.KubernetesConvention.getKubernetesGitSecretName;
 import static io.harness.validation.Validator.notNullCheck;
-
 import static software.wings.delegatetasks.citasks.cik8handler.params.CIGitConstants.GIT_CLONE_CONTAINER_NAME;
 import static software.wings.delegatetasks.citasks.cik8handler.params.CIGitConstants.GIT_CLONE_IMAGE_NAME;
 import static software.wings.delegatetasks.citasks.cik8handler.params.CIGitConstants.GIT_CLONE_IMAGE_TAG;

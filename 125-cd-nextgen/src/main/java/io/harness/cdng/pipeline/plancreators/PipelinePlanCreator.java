@@ -10,7 +10,7 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import io.harness.cdng.executionplan.utils.PlanCreatorConfigUtils;
-import io.harness.cdng.pipeline.CDPipeline;
+import io.harness.cdng.pipeline.NgPipeline;
 import io.harness.cdng.pipeline.beans.CDPipelineSetupParameters;
 import io.harness.cdng.pipeline.steps.PipelineSetupStep;
 import io.harness.executionplan.core.AbstractPlanCreatorWithChildren;
@@ -35,23 +35,23 @@ import java.util.Map;
 @Singleton
 @Slf4j
 public class PipelinePlanCreator
-    extends AbstractPlanCreatorWithChildren<CDPipeline> implements SupportDefinedExecutorPlanCreator<CDPipeline> {
+    extends AbstractPlanCreatorWithChildren<NgPipeline> implements SupportDefinedExecutorPlanCreator<NgPipeline> {
   @Inject private ExecutionPlanCreatorHelper executionPlanCreatorHelper;
 
   @Override
   public Map<String, List<ExecutionPlanCreatorResponse>> createPlanForChildren(
-      CDPipeline cdPipeline, ExecutionPlanCreationContext context) {
+      NgPipeline ngPipeline, ExecutionPlanCreationContext context) {
     Map<String, List<ExecutionPlanCreatorResponse>> childrenPlanMap = new HashMap<>();
-    ExecutionPlanCreatorResponse planForStages = createPlanForStages(cdPipeline.getStages(), context);
+    ExecutionPlanCreatorResponse planForStages = createPlanForStages(ngPipeline.getStages(), context);
     childrenPlanMap.put("STAGES", singletonList(planForStages));
     return childrenPlanMap;
   }
 
   @Override
-  public ExecutionPlanCreatorResponse createPlanForSelf(CDPipeline cdPipeline,
+  public ExecutionPlanCreatorResponse createPlanForSelf(NgPipeline ngPipeline,
       Map<String, List<ExecutionPlanCreatorResponse>> planForChildrenMap, ExecutionPlanCreationContext context) {
     ExecutionPlanCreatorResponse planForStages = planForChildrenMap.get("STAGES").get(0);
-    final PlanNode pipelineExecutionNode = preparePipelineNode(cdPipeline, planForStages);
+    final PlanNode pipelineExecutionNode = preparePipelineNode(ngPipeline, planForStages);
     return ExecutionPlanCreatorResponse.builder()
         .planNode(pipelineExecutionNode)
         .planNodes(planForStages.getPlanNodes())
@@ -68,7 +68,7 @@ public class PipelinePlanCreator
     return stagesPlanCreator.createPlan(stages, context);
   }
 
-  private PlanNode preparePipelineNode(CDPipeline pipeline, ExecutionPlanCreatorResponse planForStages) {
+  private PlanNode preparePipelineNode(NgPipeline pipeline, ExecutionPlanCreatorResponse planForStages) {
     final String pipelineSetupNodeId = generateUuid();
 
     return PlanNode.builder()
@@ -79,7 +79,7 @@ public class PipelinePlanCreator
         .group(StepOutcomeGroup.PIPELINE.name())
         .skipExpressionChain(true)
         .stepParameters(CDPipelineSetupParameters.builder()
-                            .cdPipeline(pipeline)
+                            .ngPipeline(pipeline)
                             .fieldToExecutionNodeIdMap(ImmutableMap.of("stages", planForStages.getStartingNodeId()))
                             .build())
 
@@ -91,7 +91,7 @@ public class PipelinePlanCreator
   @Override
   public boolean supports(PlanCreatorSearchContext<?> searchContext) {
     return getSupportedTypes().contains(searchContext.getType())
-        && searchContext.getObjectToPlan() instanceof CDPipeline;
+        && searchContext.getObjectToPlan() instanceof NgPipeline;
   }
 
   @Override
@@ -100,13 +100,13 @@ public class PipelinePlanCreator
   }
 
   @Override
-  public String getPlanNodeType(CDPipeline cdPipeline) {
+  public String getPlanNodeType(NgPipeline ngPipeline) {
     return PlanNodeType.PIPELINE.name();
   }
 
   @Override
-  public void prePlanCreation(CDPipeline cdPipeline, ExecutionPlanCreationContext context) {
-    super.prePlanCreation(cdPipeline, context);
-    PlanCreatorConfigUtils.setPipelineConfig(cdPipeline, context);
+  public void prePlanCreation(NgPipeline ngPipeline, ExecutionPlanCreationContext context) {
+    super.prePlanCreation(ngPipeline, context);
+    PlanCreatorConfigUtils.setPipelineConfig(ngPipeline, context);
   }
 }

@@ -5,10 +5,10 @@ import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.annotation.HarnessEntity;
 import io.harness.iterator.PersistentRegularIterable;
 import io.harness.mongo.index.CdIndex;
-import io.harness.mongo.index.CdUniqueIndex;
 import io.harness.mongo.index.FdIndex;
 import io.harness.mongo.index.FdTtlIndex;
 import io.harness.mongo.index.Field;
+import io.harness.mongo.index.NgUniqueIndex;
 import io.harness.persistence.PersistentEntity;
 import io.harness.persistence.UuidAware;
 import lombok.Builder;
@@ -26,7 +26,7 @@ import java.time.OffsetDateTime;
 import java.util.Date;
 import javax.validation.constraints.NotNull;
 
-@CdUniqueIndex(
+@NgUniqueIndex(
     name = "search2", fields = { @Field("name")
                                  , @Field("pipeline.executionId"), @Field("pipeline.parallelIndex") })
 @CdIndex(name = "next", fields = { @Field("state")

@@ -14,11 +14,11 @@ import io.fabric8.utils.Lists;
 import io.harness.CategoryTest;
 import io.harness.beans.ExecutionStrategyType;
 import io.harness.category.element.UnitTests;
-import io.harness.cdng.pipeline.CDPipeline;
+import io.harness.cdng.pipeline.NgPipeline;
 import io.harness.cdng.pipeline.beans.dto.CDPipelineRequestDTO;
 import io.harness.cdng.pipeline.beans.dto.CDPipelineResponseDTO;
 import io.harness.cdng.pipeline.beans.dto.CDPipelineSummaryResponseDTO;
-import io.harness.cdng.pipeline.beans.entities.CDPipelineEntity;
+import io.harness.cdng.pipeline.beans.entities.NgPipelineEntity;
 import io.harness.cdng.pipeline.executions.service.NgPipelineExecutionService;
 import io.harness.cdng.pipeline.service.PipelineServiceImpl;
 import io.harness.cdng.service.beans.ServiceDefinitionType;
@@ -55,7 +55,7 @@ public class CDNGPipelineResourceTest extends CategoryTest {
   @Mock RestQueryFilterParser restQueryFilterParser;
   CDPipelineResponseDTO cdPipelineResponseDTO;
   CDPipelineRequestDTO cdPipelineRequestDTO;
-  CDPipelineEntity cdPipelineEntity;
+  NgPipelineEntity ngPipelineEntity;
   CDPipelineSummaryResponseDTO cdPipelineSummaryResponseDTO;
 
   private final String ACCOUNT_ID = "account_id";
@@ -67,17 +67,17 @@ public class CDNGPipelineResourceTest extends CategoryTest {
     MockitoAnnotations.initMocks(this);
     ClassLoader classLoader = this.getClass().getClassLoader();
     File file = new File(classLoader.getResource("pipeline.yaml").getFile());
-    CDPipeline cdPipeline = YamlPipelineUtils.read(file.toURL(), CDPipeline.class);
+    NgPipeline ngPipeline = YamlPipelineUtils.read(file.toURL(), NgPipeline.class);
     cdngPipelineResource = new CDNGPipelineResource(pipelineService, restQueryFilterParser, ngPipelineExecutionService);
-    cdPipelineRequestDTO = CDPipelineRequestDTO.builder().cdPipeline(cdPipeline).build();
+    cdPipelineRequestDTO = CDPipelineRequestDTO.builder().ngPipeline(ngPipeline).build();
     cdPipelineResponseDTO =
-        CDPipelineResponseDTO.builder().cdPipeline(cdPipeline).executionsPlaceHolder(new ArrayList<>()).build();
-    cdPipelineEntity = CDPipelineEntity.builder()
+        CDPipelineResponseDTO.builder().ngPipeline(ngPipeline).executionsPlaceHolder(new ArrayList<>()).build();
+    ngPipelineEntity = NgPipelineEntity.builder()
                            .accountId(ACCOUNT_ID)
                            .projectIdentifier(PROJ_IDENTIFIER)
                            .orgIdentifier(ORG_IDENTIFIER)
                            .identifier("managerServiceDeployment")
-                           .cdPipeline(cdPipeline)
+                           .ngPipeline(ngPipeline)
                            .build();
     cdPipelineSummaryResponseDTO = CDPipelineSummaryResponseDTO.builder()
                                        .identifier("pipelineID")
@@ -94,7 +94,7 @@ public class CDNGPipelineResourceTest extends CategoryTest {
   public void testGetPipeline() throws IOException {
     doReturn(Optional.of(cdPipelineResponseDTO))
         .when(pipelineService)
-        .getPipeline(cdPipelineRequestDTO.getCdPipeline().getIdentifier(), ACCOUNT_ID, ORG_IDENTIFIER, PROJ_IDENTIFIER);
+        .getPipeline(cdPipelineRequestDTO.getNgPipeline().getIdentifier(), ACCOUNT_ID, ORG_IDENTIFIER, PROJ_IDENTIFIER);
     CDPipelineResponseDTO pipelineResponse =
         cdngPipelineResource
             .getPipelineByIdentifier(ACCOUNT_ID, ORG_IDENTIFIER, PROJ_IDENTIFIER, "managerServiceDeployment")
@@ -109,14 +109,14 @@ public class CDNGPipelineResourceTest extends CategoryTest {
   public void testCreatePipeline() {
     ClassLoader classLoader = this.getClass().getClassLoader();
     File file = new File(classLoader.getResource("pipeline.yaml").getFile());
-    doReturn(cdPipelineEntity.getIdentifier())
+    doReturn(ngPipelineEntity.getIdentifier())
         .when(pipelineService)
         .createPipeline(Files.contentOf(file, Charset.defaultCharset()), ACCOUNT_ID, ORG_IDENTIFIER, PROJ_IDENTIFIER);
     String yamlIdentifierActual = cdngPipelineResource
                                       .createPipeline(ACCOUNT_ID, ORG_IDENTIFIER, PROJ_IDENTIFIER,
                                           Files.contentOf(file, Charset.defaultCharset()))
                                       .getData();
-    assertThat(yamlIdentifierActual).isEqualTo(cdPipelineResponseDTO.getCdPipeline().getIdentifier());
+    assertThat(yamlIdentifierActual).isEqualTo(cdPipelineResponseDTO.getNgPipeline().getIdentifier());
   }
 
   @Test

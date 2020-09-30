@@ -1,9 +1,9 @@
 package io.harness.cdng.pipeline.mappers;
 
-import io.harness.cdng.pipeline.CDPipeline;
+import io.harness.cdng.pipeline.NgPipeline;
 import io.harness.cdng.pipeline.beans.dto.CDPipelineResponseDTO;
 import io.harness.cdng.pipeline.beans.dto.CDPipelineSummaryResponseDTO;
-import io.harness.cdng.pipeline.beans.entities.CDPipelineEntity;
+import io.harness.cdng.pipeline.beans.entities.NgPipelineEntity;
 import io.harness.yaml.core.ParallelStageElement;
 import io.harness.yaml.core.StageElement;
 import io.harness.yaml.core.auxiliary.intfc.StageElementWrapper;
@@ -15,38 +15,38 @@ import java.util.List;
 
 @UtilityClass
 public class PipelineDtoMapper {
-  public CDPipelineEntity toPipelineEntity(
-      String accountId, String orgId, String projectId, String yaml, CDPipeline cdPipeline) {
-    return CDPipelineEntity.builder()
-        .cdPipeline(cdPipeline)
+  public NgPipelineEntity toPipelineEntity(
+      String accountId, String orgId, String projectId, String yaml, NgPipeline ngPipeline) {
+    return NgPipelineEntity.builder()
+        .ngPipeline(ngPipeline)
         .yamlPipeline(yaml)
         .accountId(accountId)
         .orgIdentifier(orgId)
         .projectIdentifier(projectId)
-        .identifier(cdPipeline.getIdentifier())
+        .identifier(ngPipeline.getIdentifier())
         .build();
   }
 
-  public CDPipelineResponseDTO writePipelineDto(CDPipelineEntity cdPipelineEntity) {
+  public CDPipelineResponseDTO writePipelineDto(NgPipelineEntity ngPipelineEntity) {
     return CDPipelineResponseDTO.builder()
-        .cdPipeline(cdPipelineEntity.getCdPipeline())
-        .yamlPipeline(cdPipelineEntity.getYamlPipeline())
+        .ngPipeline(ngPipelineEntity.getNgPipeline())
+        .yamlPipeline(ngPipelineEntity.getYamlPipeline())
         .executionsPlaceHolder(new ArrayList<>())
         .build();
   }
-  public CDPipelineSummaryResponseDTO preparePipelineSummary(CDPipelineEntity cdPipelineEntity) {
+  public CDPipelineSummaryResponseDTO preparePipelineSummary(NgPipelineEntity ngPipelineEntity) {
     return CDPipelineSummaryResponseDTO.builder()
-        .identifier(cdPipelineEntity.getIdentifier())
-        .description((String) cdPipelineEntity.getCdPipeline().getDescription().getJsonFieldValue())
-        .name(cdPipelineEntity.getCdPipeline().getName())
-        .tags(cdPipelineEntity.getCdPipeline().getTags())
-        .numOfStages(getNumberOfStages(cdPipelineEntity.getCdPipeline()))
-        .numOfErrors(getNumberOfErrorsLast10Days(cdPipelineEntity.getCdPipeline()))
-        .deployments(getNumberOfDeployments(cdPipelineEntity.getCdPipeline()))
+        .identifier(ngPipelineEntity.getIdentifier())
+        .description((String) ngPipelineEntity.getNgPipeline().getDescription().getJsonFieldValue())
+        .name(ngPipelineEntity.getNgPipeline().getName())
+        .tags(ngPipelineEntity.getNgPipeline().getTags())
+        .numOfStages(getNumberOfStages(ngPipelineEntity.getNgPipeline()))
+        .numOfErrors(getNumberOfErrorsLast10Days(ngPipelineEntity.getNgPipeline()))
+        .deployments(getNumberOfDeployments(ngPipelineEntity.getNgPipeline()))
         .build();
   }
 
-  private int getNumberOfStages(CDPipeline pipeline) {
+  private int getNumberOfStages(NgPipeline pipeline) {
     List<StageElementWrapper> stages = pipeline.getStages();
     int count = 0;
     for (StageElementWrapper wrapper : stages) {
@@ -61,7 +61,7 @@ public class PipelineDtoMapper {
   }
 
   // TODO: @Sahil for proper implementation
-  private int getNumberOfErrorsLast10Days(CDPipeline pipeline) {
+  private int getNumberOfErrorsLast10Days(NgPipeline pipeline) {
     int min = 0;
     int maxPlusOne = 3;
     SecureRandom r = new SecureRandom();
@@ -69,7 +69,7 @@ public class PipelineDtoMapper {
   }
 
   // TODO: @Sahil for proper implementation
-  private List<Integer> getNumberOfDeployments(CDPipeline pipeline) {
+  private List<Integer> getNumberOfDeployments(NgPipeline pipeline) {
     int min = 0;
     int maxPlusOne = 6;
     SecureRandom r = new SecureRandom();

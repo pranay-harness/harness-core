@@ -13,7 +13,7 @@ import com.google.inject.Inject;
 
 import io.harness.beans.executionargs.CIExecutionArgs;
 import io.harness.category.element.UnitTests;
-import io.harness.cdng.pipeline.beans.entities.CDPipelineEntity;
+import io.harness.cdng.pipeline.beans.entities.NgPipelineEntity;
 import io.harness.engine.OrchestrationService;
 import io.harness.execution.PlanExecution;
 import io.harness.executionplan.CIExecutionPlanCreatorRegistrar;
@@ -41,13 +41,13 @@ public class CIPipelineExecutionServiceImplTest extends CIExecutionTest {
   @Owner(developers = ALEKSANDAR)
   @Category(UnitTests.class)
   public void executePipeline() {
-    CDPipelineEntity ciPipeline = executionPlanTestHelper.getCIPipeline();
+    NgPipelineEntity ngPipelineEntity = executionPlanTestHelper.getCIPipeline();
 
     when(orchestrationService.startExecution(any(), any()))
         .thenReturn(PlanExecution.builder().uuid("planId").status(RUNNING).build());
 
     PlanExecution planExecution =
-        ciPipelineExecutionService.executePipeline(ciPipeline, CIExecutionArgs.builder().build(), null);
+        ciPipelineExecutionService.executePipeline(ngPipelineEntity, CIExecutionArgs.builder().build(), null);
     assertThat(planExecution).isNotNull();
     verify(orchestrationService, times(1)).startExecution(any(), any());
   }

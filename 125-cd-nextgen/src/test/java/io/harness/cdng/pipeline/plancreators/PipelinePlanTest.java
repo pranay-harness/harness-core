@@ -10,7 +10,7 @@ import io.harness.advisers.fail.OnFailAdviserParameters;
 import io.harness.category.element.UnitTests;
 import io.harness.cdng.CDNGBaseTest;
 import io.harness.cdng.executionplan.ExecutionPlanCreatorRegistrar;
-import io.harness.cdng.pipeline.CDPipeline;
+import io.harness.cdng.pipeline.NgPipeline;
 import io.harness.cdng.pipeline.beans.RollbackNode;
 import io.harness.cdng.pipeline.beans.RollbackOptionalChildChainStepParameters;
 import io.harness.cdng.pipeline.beans.RollbackOptionalChildrenParameters;
@@ -50,9 +50,9 @@ public class PipelinePlanTest extends CDNGBaseTest {
   public void testPipelinePlanForGivenYaml() throws IOException {
     ClassLoader classLoader = this.getClass().getClassLoader();
     final URL testFile = classLoader.getResource("cdng/multiStagePipeline.yml");
-    CDPipeline cdPipeline = YamlPipelineUtils.read(testFile, CDPipeline.class);
+    NgPipeline ngPipeline = YamlPipelineUtils.read(testFile, NgPipeline.class);
     final Plan planForPipeline =
-        executionPlanCreatorService.createPlanForPipeline(cdPipeline, WingsTestConstants.ACCOUNT_ID, contextAttributes);
+        executionPlanCreatorService.createPlanForPipeline(ngPipeline, WingsTestConstants.ACCOUNT_ID, contextAttributes);
     List<PlanNode> planNodes = planForPipeline.getNodes();
     List<PlanNode> pipelinePlanNodeList = getNodesByIdentifier(planNodes, "managerServiceDeployment");
     assertThat(pipelinePlanNodeList.size()).isEqualTo(1);
@@ -98,9 +98,9 @@ public class PipelinePlanTest extends CDNGBaseTest {
   public void testRollbackPlan() throws IOException {
     ClassLoader classLoader = this.getClass().getClassLoader();
     final URL testFile = classLoader.getResource("cdng/rollbackPipeline.yaml");
-    CDPipeline cdPipeline = YamlPipelineUtils.read(testFile, CDPipeline.class);
+    NgPipeline ngPipeline = YamlPipelineUtils.read(testFile, NgPipeline.class);
     final Plan planForPipeline =
-        executionPlanCreatorService.createPlanForPipeline(cdPipeline, WingsTestConstants.ACCOUNT_ID, contextAttributes);
+        executionPlanCreatorService.createPlanForPipeline(ngPipeline, WingsTestConstants.ACCOUNT_ID, contextAttributes);
     List<PlanNode> planNodes = planForPipeline.getNodes();
 
     // Stage1Node

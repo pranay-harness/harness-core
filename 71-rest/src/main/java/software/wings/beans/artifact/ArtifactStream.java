@@ -14,9 +14,9 @@ import io.harness.data.validator.EntityName;
 import io.harness.exception.InvalidRequestException;
 import io.harness.iterator.PersistentRegularIterable;
 import io.harness.mongo.index.CdIndex;
-import io.harness.mongo.index.CdUniqueIndex;
 import io.harness.mongo.index.FdIndex;
 import io.harness.mongo.index.Field;
+import io.harness.mongo.index.NgUniqueIndex;
 import io.harness.persistence.AccountAccess;
 import io.harness.persistence.NameAccess;
 import lombok.AllArgsConstructor;
@@ -49,7 +49,7 @@ import java.util.regex.Pattern;
 @OwnedBy(CDC)
 @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = "artifactStreamType")
 
-@CdUniqueIndex(name = "yaml", fields = { @Field("appId")
+@NgUniqueIndex(name = "yaml", fields = { @Field("appId")
                                          , @Field("serviceId"), @Field("name") })
 @CdIndex(name = "artifactStream_cleanup", fields = { @Field("artifactStreamType")
                                                      , @Field("nextCleanupIteration") })

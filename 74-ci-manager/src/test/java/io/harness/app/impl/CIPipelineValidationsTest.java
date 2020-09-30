@@ -7,8 +7,8 @@ import com.google.inject.Inject;
 
 import io.harness.beans.ParameterField;
 import io.harness.category.element.UnitTests;
-import io.harness.cdng.pipeline.CDPipeline;
-import io.harness.cdng.pipeline.beans.entities.CDPipelineEntity;
+import io.harness.cdng.pipeline.NgPipeline;
+import io.harness.cdng.pipeline.beans.entities.NgPipelineEntity;
 import io.harness.rule.Owner;
 import org.junit.Ignore;
 import org.junit.Test;
@@ -17,9 +17,9 @@ import org.junit.experimental.categories.Category;
 public class CIPipelineValidationsTest extends CIManagerTest {
   @Inject CIPipelineValidations ciPipelineValidations;
 
-  CDPipeline cdPipeline = CDPipeline.builder().description(ParameterField.createValueField("testDescription")).build();
-  CDPipelineEntity pipeline =
-      CDPipelineEntity.builder().identifier("testIdentifier").uuid("testUUID").cdPipeline(cdPipeline).build();
+  NgPipeline ngPipeline = NgPipeline.builder().description(ParameterField.createValueField("testDescription")).build();
+  NgPipelineEntity pipeline =
+      NgPipelineEntity.builder().identifier("testIdentifier").uuid("testUUID").ngPipeline(ngPipeline).build();
 
   @Test
   @Owner(developers = ALEKSANDAR)

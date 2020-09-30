@@ -11,9 +11,9 @@ import io.harness.cvng.beans.MetricPackDTO;
 import io.harness.cvng.beans.MetricPackDTO.MetricDefinitionDTO;
 import io.harness.cvng.beans.TimeSeriesMetricType;
 import io.harness.data.validator.Trimmed;
-import io.harness.mongo.index.CdUniqueIndex;
 import io.harness.mongo.index.FdIndex;
 import io.harness.mongo.index.Field;
+import io.harness.mongo.index.NgUniqueIndex;
 import io.harness.persistence.AccountAccess;
 import io.harness.persistence.CreatedAtAware;
 import io.harness.persistence.PersistentEntity;
@@ -36,7 +36,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 import javax.validation.constraints.NotNull;
 
-@CdUniqueIndex(
+@NgUniqueIndex(
     name = "unique_Idx", fields = { @Field("projectIdentifier")
                                     , @Field("dataSourceType"), @Field("identifier") })
 @Data

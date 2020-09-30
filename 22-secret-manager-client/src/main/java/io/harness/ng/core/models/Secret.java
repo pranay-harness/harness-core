@@ -2,8 +2,8 @@ package io.harness.ng.core.models;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
-import io.harness.mongo.index.CdUniqueIndex;
 import io.harness.mongo.index.Field;
+import io.harness.mongo.index.NgUniqueIndex;
 import io.harness.ng.core.dto.secrets.SecretDTOV2;
 import io.harness.ng.core.models.Secret.SecretKeys;
 import io.harness.secretmanagerclient.SecretType;
@@ -25,7 +25,7 @@ import java.util.Optional;
 @Entity(value = "secrets", noClassnameStored = true)
 @JsonIgnoreProperties(ignoreUnknown = true)
 @Document("secrets")
-@CdUniqueIndex(name = "unique_accountIdentifier_organizationIdentifier_projectIdentifier_identifier",
+@NgUniqueIndex(name = "unique_accountIdentifier_organizationIdentifier_projectIdentifier_identifier",
     fields =
     {
       @Field(SecretKeys.accountIdentifier)

@@ -3,8 +3,8 @@ package software.wings.beans;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import io.harness.annotation.HarnessEntity;
 import io.harness.beans.EmbeddedUser;
-import io.harness.mongo.index.CdUniqueIndex;
 import io.harness.mongo.index.Field;
+import io.harness.mongo.index.NgUniqueIndex;
 import io.harness.persistence.AccountAccess;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -15,7 +15,7 @@ import org.mongodb.morphia.annotations.Entity;
 @JsonIgnoreProperties(ignoreUnknown = true)
 @Data
 @EqualsAndHashCode(callSuper = true)
-@CdUniqueIndex(
+@NgUniqueIndex(
     name = "uniqueDelegateSequenceIdx", fields = { @Field("accountId")
                                                    , @Field("hostName"), @Field("sequenceNum") })
 @FieldNameConstants(innerTypeName = "DelegateSequenceConfigKeys")

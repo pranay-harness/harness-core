@@ -13,10 +13,10 @@ import io.harness.data.validator.EntityName;
 import io.harness.encryption.Encrypted;
 import io.harness.encryption.EncryptionReflectUtils;
 import io.harness.mongo.index.CdIndex;
-import io.harness.mongo.index.CdUniqueIndex;
 import io.harness.mongo.index.FdIndex;
 import io.harness.mongo.index.Field;
 import io.harness.mongo.index.IndexType;
+import io.harness.mongo.index.NgUniqueIndex;
 import io.harness.security.encryption.EncryptionType;
 import io.harness.validation.Create;
 import lombok.AllArgsConstructor;
@@ -44,7 +44,7 @@ import javax.validation.constraints.NotNull;
  */
 @OwnedBy(CDC)
 
-@CdUniqueIndex(name = "serviceVariableUniqueIdx",
+@NgUniqueIndex(name = "serviceVariableUniqueIdx",
     fields =
     {
       @Field("entityId")

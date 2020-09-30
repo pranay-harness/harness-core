@@ -1,8 +1,8 @@
 package io.harness.ccm.views.entities;
 
 import io.harness.annotation.StoreIn;
-import io.harness.mongo.index.CdUniqueIndex;
 import io.harness.mongo.index.Field;
+import io.harness.mongo.index.NgUniqueIndex;
 import io.harness.persistence.AccountAccess;
 import io.harness.persistence.CreatedAtAware;
 import io.harness.persistence.PersistentEntity;
@@ -18,7 +18,7 @@ import org.mongodb.morphia.annotations.Id;
 
 import java.util.List;
 
-@CdUniqueIndex(name = "accountId_viewId_name", fields = { @Field("accountId")
+@NgUniqueIndex(name = "accountId_viewId_name", fields = { @Field("accountId")
                                                           , @Field("viewId"), @Field("name") })
 
 @Data

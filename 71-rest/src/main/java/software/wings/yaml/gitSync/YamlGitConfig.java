@@ -8,8 +8,8 @@ import com.fasterxml.jackson.annotation.JsonView;
 import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.annotation.HarnessEntity;
 import io.harness.data.validator.Trimmed;
-import io.harness.mongo.index.CdUniqueIndex;
 import io.harness.mongo.index.Field;
+import io.harness.mongo.index.NgUniqueIndex;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -28,7 +28,7 @@ import software.wings.settings.SettingVariableTypes;
 import javax.annotation.Nullable;
 import javax.validation.constraints.NotNull;
 
-@CdUniqueIndex(name = "locate", fields = { @Field("accountId")
+@NgUniqueIndex(name = "locate", fields = { @Field("accountId")
                                            , @Field("entityId"), @Field("entityType") })
 @Data
 @Builder

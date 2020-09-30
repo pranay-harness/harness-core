@@ -8,10 +8,8 @@ import com.google.inject.Inject;
 import io.harness.beans.SweepingOutputInstance;
 import io.harness.expression.ExpressionEvaluator;
 import io.harness.serializer.JsonUtils;
-
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
-
 import software.wings.beans.GitConfig;
 import software.wings.beans.NameValuePair;
 import software.wings.beans.SettingAttribute;

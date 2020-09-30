@@ -20,7 +20,7 @@ import io.harness.app.dao.repositories.CIBuildInfoRepository;
 import io.harness.app.intfc.CIPipelineService;
 import io.harness.app.mappers.BuildDtoMapper;
 import io.harness.category.element.UnitTests;
-import io.harness.cdng.pipeline.beans.entities.CDPipelineEntity;
+import io.harness.cdng.pipeline.beans.entities.NgPipelineEntity;
 import io.harness.ci.beans.entities.CIBuild;
 import io.harness.rule.Owner;
 import org.junit.Test;
@@ -56,12 +56,12 @@ public class CIBuildInfoServiceImplTest extends CIManagerTest {
   @Category(UnitTests.class)
   public void getBuildByID() {
     CIBuild ciBuild = getBasicBuild();
-    CDPipelineEntity ciPipeline = getPipeline();
+    NgPipelineEntity ngPipelineEntity = getPipeline();
     CIBuildResponseDTO ciBuildResponseDTO = getBasicBuildDTO();
     when(ciBuildInfoRepository.getBuildById(ACCOUNT_ID, ORG_ID, PROJECT_ID, BUILD_ID))
         .thenReturn(Optional.ofNullable(ciBuild));
-    when(ciPipelineService.readPipeline(PIPELINE_ID, ACCOUNT_ID, ORG_ID, PROJECT_ID)).thenReturn(ciPipeline);
-    when(buildDtoMapper.writeBuildDto(ciBuild, ciPipeline)).thenReturn(ciBuildResponseDTO);
+    when(ciPipelineService.readPipeline(PIPELINE_ID, ACCOUNT_ID, ORG_ID, PROJECT_ID)).thenReturn(ngPipelineEntity);
+    when(buildDtoMapper.writeBuildDto(ciBuild, ngPipelineEntity)).thenReturn(ciBuildResponseDTO);
     CIBuildResponseDTO responseDTO = ciBuildInfoService.getBuild(BUILD_ID, ACCOUNT_ID, ORG_ID, PROJECT_ID);
     assertEquals(responseDTO.getId(), BUILD_ID);
     assertEquals(responseDTO.getPipeline().getId(), PIPELINE_ID);

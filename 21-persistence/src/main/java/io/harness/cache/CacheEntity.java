@@ -4,10 +4,10 @@ import static io.harness.annotations.dev.HarnessTeam.PL;
 
 import io.harness.annotation.HarnessEntity;
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.mongo.index.CdUniqueIndex;
 import io.harness.mongo.index.FdIndex;
 import io.harness.mongo.index.FdTtlIndex;
 import io.harness.mongo.index.Field;
+import io.harness.mongo.index.NgUniqueIndex;
 import io.harness.persistence.PersistentEntity;
 import lombok.Builder;
 import lombok.Value;
@@ -18,7 +18,7 @@ import org.mongodb.morphia.annotations.Id;
 import java.util.Date;
 
 @OwnedBy(PL)
-@CdUniqueIndex(name = "commutativeIdx", fields = { @Field("_id")
+@NgUniqueIndex(name = "commutativeIdx", fields = { @Field("_id")
                                                    , @Field("contextValue") })
 @Value
 @Builder

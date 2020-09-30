@@ -8,8 +8,8 @@ import static org.mockito.Mockito.when;
 import com.google.inject.Inject;
 
 import io.harness.category.element.UnitTests;
-import io.harness.cdng.pipeline.CDPipeline;
-import io.harness.cdng.pipeline.beans.entities.CDPipelineEntity;
+import io.harness.cdng.pipeline.NgPipeline;
+import io.harness.cdng.pipeline.beans.entities.NgPipelineEntity;
 import io.harness.executionplan.CIExecutionPlanCreatorRegistrar;
 import io.harness.executionplan.CIExecutionPlanTestHelper;
 import io.harness.executionplan.CIExecutionTest;
@@ -30,12 +30,12 @@ public class CIPipelinePlanCreatorTest extends CIExecutionTest {
   @Inject private CIExecutionPlanTestHelper ciExecutionPlanTestHelper;
   @Inject private CIExecutionPlanCreatorRegistrar ciExecutionPlanCreatorRegistrar;
 
-  @Mock private PlanCreatorSearchContext<CDPipeline> planCreatorSearchContext;
-  private CDPipelineEntity ciPipeline;
+  @Mock private PlanCreatorSearchContext<NgPipeline> planCreatorSearchContext;
+  private NgPipelineEntity ngPipelineEntity;
   @Before
   public void setUp() {
     ciExecutionPlanCreatorRegistrar.register();
-    ciPipeline = ciExecutionPlanTestHelper.getCIPipeline();
+    ngPipelineEntity = ciExecutionPlanTestHelper.getCIPipeline();
   }
 
   @Test
@@ -44,8 +44,8 @@ public class CIPipelinePlanCreatorTest extends CIExecutionTest {
   public void createPlan() {
     ExecutionPlanCreationContextImpl executionPlanCreationContextWithExecutionArgs =
         ciExecutionPlanTestHelper.getExecutionPlanCreationContextWithExecutionArgs();
-    ExecutionPlanCreatorResponse plan =
-        ciPipelinePlanCreator.createPlan(ciPipeline.getCdPipeline(), executionPlanCreationContextWithExecutionArgs);
+    ExecutionPlanCreatorResponse plan = ciPipelinePlanCreator.createPlan(
+        ngPipelineEntity.getNgPipeline(), executionPlanCreationContextWithExecutionArgs);
     assertThat(plan.getPlanNodes()).isNotNull();
     List<PlanNode> planNodes = plan.getPlanNodes();
     assertThat(
@@ -62,7 +62,7 @@ public class CIPipelinePlanCreatorTest extends CIExecutionTest {
   @Owner(developers = ALEKSANDAR)
   @Category(UnitTests.class)
   public void supports() {
-    when(planCreatorSearchContext.getObjectToPlan()).thenReturn(ciPipeline.getCdPipeline());
+    when(planCreatorSearchContext.getObjectToPlan()).thenReturn(ngPipelineEntity.getNgPipeline());
     when(planCreatorSearchContext.getType()).thenReturn(PIPELINE_PLAN_CREATOR.getName());
     assertThat(ciPipelinePlanCreator.supports(planCreatorSearchContext)).isTrue();
   }

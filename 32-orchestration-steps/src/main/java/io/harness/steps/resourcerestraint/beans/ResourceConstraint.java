@@ -9,9 +9,9 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.EmbeddedUser;
 import io.harness.data.validator.Trimmed;
 import io.harness.distribution.constraint.Constraint;
-import io.harness.mongo.index.CdUniqueIndex;
 import io.harness.mongo.index.FdIndex;
 import io.harness.mongo.index.Field;
+import io.harness.mongo.index.NgUniqueIndex;
 import io.harness.persistence.AccountAccess;
 import io.harness.persistence.CreatedAtAware;
 import io.harness.persistence.CreatedByAware;
@@ -33,7 +33,7 @@ import javax.validation.constraints.Min;
 import javax.validation.constraints.NotNull;
 
 @OwnedBy(CDC)
-@CdUniqueIndex(name = "uniqueName", fields = { @Field("accountId")
+@NgUniqueIndex(name = "uniqueName", fields = { @Field("accountId")
                                                , @Field("name") })
 @Data
 @Builder

@@ -7,9 +7,9 @@ import io.harness.annotations.Redesign;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.data.ExecutionSweepingOutputInstance.ExecutionSweepingOutputKeys;
 import io.harness.data.validator.Trimmed;
-import io.harness.mongo.index.CdUniqueIndex;
 import io.harness.mongo.index.FdIndex;
 import io.harness.mongo.index.Field;
+import io.harness.mongo.index.NgUniqueIndex;
 import io.harness.persistence.PersistentEntity;
 import io.harness.persistence.UuidAccess;
 import lombok.Builder;
@@ -33,7 +33,7 @@ import javax.validation.constraints.NotNull;
 @Redesign
 @Value
 @Builder
-@CdUniqueIndex(name = "levelRuntimeIdUniqueIdx2",
+@NgUniqueIndex(name = "levelRuntimeIdUniqueIdx2",
     fields =
     {
       @Field(ExecutionSweepingOutputKeys.planExecutionId)

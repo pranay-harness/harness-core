@@ -1,9 +1,9 @@
 package software.wings.beans.appmanifest;
 
 import io.harness.annotation.HarnessEntity;
-import io.harness.mongo.index.CdUniqueIndex;
 import io.harness.mongo.index.FdIndex;
 import io.harness.mongo.index.Field;
+import io.harness.mongo.index.NgUniqueIndex;
 import io.harness.persistence.AccountAccess;
 import lombok.Builder;
 import lombok.Data;
@@ -19,7 +19,7 @@ import software.wings.beans.HelmChartConfig;
 import software.wings.helpers.ext.kustomize.KustomizeConfig;
 import software.wings.yaml.BaseEntityYaml;
 
-@CdUniqueIndex(
+@NgUniqueIndex(
     name = "appManifestIdx", fields = { @Field("appId")
                                         , @Field("envId"), @Field("serviceId"), @Field("kind") })
 @Data
