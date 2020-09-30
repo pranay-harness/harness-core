@@ -6,18 +6,9 @@ import (
 	"fmt"
 
 	"github.com/golang/protobuf/proto"
-	"github.com/pkg/errors"
-	caddon "github.com/wings-software/portal/product/ci/addon/grpc/client"
-	addonpb "github.com/wings-software/portal/product/ci/addon/proto"
-	cengine "github.com/wings-software/portal/product/ci/engine/grpc/client"
 	"github.com/wings-software/portal/product/ci/engine/output"
 	pb "github.com/wings-software/portal/product/ci/engine/proto"
 	"go.uber.org/zap"
-)
-
-var (
-	newAddonClient      = caddon.NewAddonClient
-	newLiteEngineClient = cengine.NewLiteEngineClient
 )
 
 // StageExecutor represents an interface to execute a stage
@@ -26,17 +17,14 @@ type StageExecutor interface {
 }
 
 // NewStageExecutor creates a stage executor
-func NewStageExecutor(encodedStage, stepLogPath, tmpFilePath string, workerPorts []uint, debug bool,
+func NewStageExecutor(encodedStage, tmpFilePath string, debug bool,
 	log *zap.SugaredLogger) StageExecutor {
-	// TODO: (vistaar) remove step log path.
 	o := make(output.StageOutput)
-	unitExecutor := NewUnitExecutor(stepLogPath, tmpFilePath, log)
-	parallelExecutor := NewParallelExecutor(stepLogPath, tmpFilePath, workerPorts, log)
+	unitExecutor := NewUnitExecutor(tmpFilePath, log)
+	parallelExecutor := NewParallelExecutor(tmpFilePath, log)
 	return &stageExecutor{
 		encodedStage:     encodedStage,
-		stepLogPath:      stepLogPath,
 		tmpFilePath:      tmpFilePath,
-		workerPorts:      workerPorts,
 		debug:            debug,
 		stageOutput:      o,
 		unitExecutor:     unitExecutor,
@@ -47,11 +35,9 @@ func NewStageExecutor(encodedStage, stepLogPath, tmpFilePath string, workerPorts
 
 type stageExecutor struct {
 	log              *zap.SugaredLogger
-	stepLogPath      string             // File path to store logs of steps
 	tmpFilePath      string             // File path to store generated temporary files
 	encodedStage     string             // Stage in base64 encoded format
-	workerPorts      []uint             // GRPC server ports for worker lite-engines that are used for parallel steps
-	debug            bool               //If true, enables debug mode for checking run step logs by not exiting CI-addon
+	debug            bool               // If true, enables debug mode for checking run step logs by not exiting lite-engine
 	stageOutput      output.StageOutput // Stage output will store the output of steps in a stage
 	unitExecutor     UnitExecutor
 	parallelExecutor ParallelExecutor
@@ -60,12 +46,8 @@ type stageExecutor struct {
 // Executes steps in a stage
 func (e *stageExecutor) Run() error {
 	ctx := context.Background()
-	if e.debug == false {
-		defer e.stopAddonServer(ctx)
-	}
-
-	for _, port := range e.workerPorts {
-		defer e.stopWorkerLiteEngine(ctx, port)
+	if e.debug == true {
+		defer func() { select {} }()
 	}
 
 	execution, err := e.decodeStage(e.encodedStage)
@@ -73,60 +55,56 @@ func (e *stageExecutor) Run() error {
 		return err
 	}
 
-	accountID := execution.GetAccountId()
+	// Execute steps in a stage & cleans up the resources allocated for a step after its completion.
+	cleanupOnly := false
+	var stepExecErr error
 	for _, step := range execution.GetSteps() {
-		switch x := step.GetStep().(type) {
-		case *pb.Step_Unit:
-			stepOutput, err := e.unitExecutor.Run(ctx, step.GetUnit(), e.stageOutput, accountID)
-			if err != nil {
-				return err
+		if !cleanupOnly {
+			stepExecErr = e.executeStep(ctx, step, execution.GetAccountId())
+			if stepExecErr != nil {
+				cleanupOnly = true
 			}
-			e.stageOutput[step.GetUnit().GetId()] = stepOutput
-		case *pb.Step_Parallel:
-			stepOutputByID, err := e.parallelExecutor.Run(ctx, step.GetParallel(), e.stageOutput, accountID)
-			if err != nil {
-				return err
-			}
-			for stepID, stepOutput := range stepOutputByID {
-				e.stageOutput[stepID] = stepOutput
-			}
-		default:
-			return fmt.Errorf("Step has unexpected type %T", x)
 		}
+		e.cleanupStep(ctx, step)
+	}
+	return stepExecErr
+}
+
+// executeStep method executes a unit step or a parallel step
+func (e *stageExecutor) executeStep(ctx context.Context, step *pb.Step, accountID string) error {
+	switch x := step.GetStep().(type) {
+	case *pb.Step_Unit:
+		stepOutput, err := e.unitExecutor.Run(ctx, step.GetUnit(), e.stageOutput, accountID)
+		if err != nil {
+			return err
+		}
+		e.stageOutput[step.GetUnit().GetId()] = stepOutput
+	case *pb.Step_Parallel:
+		stepOutputByID, err := e.parallelExecutor.Run(ctx, step.GetParallel(), e.stageOutput, accountID)
+		if err != nil {
+			return err
+		}
+		for stepID, stepOutput := range stepOutputByID {
+			e.stageOutput[stepID] = stepOutput
+		}
+	default:
+		return fmt.Errorf("Step has unexpected type %T", x)
 	}
 	return nil
 }
 
-// Stop CI-Addon GRPC server
-func (e *stageExecutor) stopAddonServer(ctx context.Context) error {
-	addonClient, err := newAddonClient(caddon.AddonPort, e.log)
-	if err != nil {
-		return errors.Wrap(err, "Could not create CI Addon client")
+// cleanupStep method terminates any resource present for the step e.g. addon container
+func (e *stageExecutor) cleanupStep(ctx context.Context, step *pb.Step) error {
+	var err error
+	switch x := step.GetStep().(type) {
+	case *pb.Step_Unit:
+		err = e.unitExecutor.Cleanup(ctx, step.GetUnit())
+	case *pb.Step_Parallel:
+		err = e.parallelExecutor.Cleanup(ctx, step.GetParallel())
+	default:
+		err = fmt.Errorf("Step has unexpected type %T", x)
 	}
-	defer addonClient.CloseConn()
-
-	_, err = addonClient.Client().SignalStop(ctx, &addonpb.SignalStopRequest{})
-	if err != nil {
-		e.log.Warnw("Unable to send Stop server request", "error_msg", zap.Error(err))
-		return errors.Wrap(err, "Could not send stop server request")
-	}
-	return nil
-}
-
-// Stop worker Lite-engine running on a port
-func (e *stageExecutor) stopWorkerLiteEngine(ctx context.Context, port uint) error {
-	c, err := newLiteEngineClient(port, e.log)
-	if err != nil {
-		return errors.Wrap(err, "Could not create CI Lite engine client")
-	}
-	defer c.CloseConn()
-
-	_, err = c.Client().SignalStop(ctx, &pb.SignalStopRequest{})
-	if err != nil {
-		e.log.Warnw("Unable to send Stop server request", "error_msg", zap.Error(err))
-		return errors.Wrap(err, "Could not send stop server request")
-	}
-	return nil
+	return err
 }
 
 func (e *stageExecutor) decodeStage(encodedStage string) (*pb.Execution, error) {
@@ -148,8 +126,8 @@ func (e *stageExecutor) decodeStage(encodedStage string) (*pb.Execution, error) 
 }
 
 // ExecuteStage executes a stage of the pipeline
-func ExecuteStage(input, logpath, tmpFilePath string, workerPorts []uint, debug bool, log *zap.SugaredLogger) error {
-	executor := NewStageExecutor(input, logpath, tmpFilePath, workerPorts, debug, log)
+func ExecuteStage(input, tmpFilePath string, debug bool, log *zap.SugaredLogger) error {
+	executor := NewStageExecutor(input, tmpFilePath, debug, log)
 	if err := executor.Run(); err != nil {
 		log.Errorw(
 			"error while executing steps in a stage",

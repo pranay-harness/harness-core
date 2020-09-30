@@ -2,13 +2,14 @@ package executor
 
 import (
 	"context"
-	"encoding/base64"
 	"fmt"
 	"time"
 
-	"github.com/golang/protobuf/proto"
+	"github.com/pkg/errors"
 	"github.com/wings-software/portal/commons/go/lib/filesystem"
 	"github.com/wings-software/portal/commons/go/lib/logs"
+	caddon "github.com/wings-software/portal/product/ci/addon/grpc/client"
+	addonpb "github.com/wings-software/portal/product/ci/addon/proto"
 	"github.com/wings-software/portal/product/ci/engine/output"
 	pb "github.com/wings-software/portal/product/ci/engine/proto"
 	"github.com/wings-software/portal/product/ci/engine/status"
@@ -22,8 +23,10 @@ var (
 	restoreCacheStep     = steps.NewRestoreCacheStep
 	publishArtifactsStep = steps.NewPublishArtifactsStep
 	runStep              = steps.NewRunStep
+	pluginStep           = steps.NewPluginStep
 	sendStepStatus       = status.SendStepStatus
 	newRemoteLogger      = logger.GetRemoteLogger
+	newAddonClient       = caddon.NewAddonClient
 )
 
 //go:generate mockgen -source unit_executor.go -package=executor -destination mocks/unit_executor_mock.go UnitExecutor
@@ -31,18 +34,17 @@ var (
 // UnitExecutor represents an interface to execute a unit step
 type UnitExecutor interface {
 	Run(ctx context.Context, step *pb.UnitStep, so output.StageOutput, accountID string) (*output.StepOutput, error)
+	Cleanup(ctx context.Context, step *pb.UnitStep) error
 }
 
 type unitExecutor struct {
-	stepLogPath string // File path to store logs of step
 	tmpFilePath string // File path to store generated temporary files
 	log         *zap.SugaredLogger
 }
 
 // NewUnitExecutor creates a unit step executor
-func NewUnitExecutor(stepLogPath, tmpFilePath string, log *zap.SugaredLogger) UnitExecutor {
+func NewUnitExecutor(tmpFilePath string, log *zap.SugaredLogger) UnitExecutor {
 	return &unitExecutor{
-		stepLogPath: stepLogPath,
 		tmpFilePath: tmpFilePath,
 		log:         log,
 	}
@@ -62,11 +64,6 @@ func (e *unitExecutor) validate(step *pb.UnitStep) error {
 	if step.GetTaskId() == "" {
 		err := fmt.Errorf("Task ID should be non-empty")
 		e.log.Errorw("Task ID is not set", zap.Error(err))
-		return err
-	}
-	if e.stepLogPath == "" {
-		err := fmt.Errorf("Step log path should be non-empty")
-		e.log.Errorw("Empty step log path", zap.Error(err))
 		return err
 	}
 	return nil
@@ -107,13 +104,14 @@ func (e *unitExecutor) execute(ctx context.Context, step *pb.UnitStep,
 
 	switch x := step.GetStep().(type) {
 	case *pb.UnitStep_Run:
-		rl, err = newRemoteLogger(step.GetId())
+		e.log.Infow("Run step info", "step", x.Run.String())
+		stepOutput, numRetries, err = runStep(step, e.tmpFilePath, so, e.log).Run(ctx)
 		if err != nil {
 			return nil, numRetries, err
 		}
-		defer rl.Writer.Close()
-		e.log.Infow("Run step info", "step", x.Run.String())
-		stepOutput, numRetries, err = runStep(step, e.stepLogPath, e.tmpFilePath, so, fs, rl.BaseLogger, rl.Writer).Run(ctx)
+	case *pb.UnitStep_Plugin:
+		e.log.Infow("Plugin step info", "step", x.Plugin.String())
+		numRetries, err = pluginStep(step, e.log).Run(ctx)
 		if err != nil {
 			return nil, numRetries, err
 		}
@@ -139,9 +137,13 @@ func (e *unitExecutor) execute(ctx context.Context, step *pb.UnitStep,
 			return nil, numRetries, err
 		}
 	case *pb.UnitStep_PublishArtifacts:
-		// Publish artifact logs will be generated on addon
+		rl, err = newRemoteLogger(step.GetId())
+		if err != nil {
+			return nil, numRetries, err
+		}
+		defer rl.Writer.Close()
 		e.log.Infow("Publishing artifact info", "step", x.PublishArtifacts.String())
-		if err = publishArtifactsStep(step, so, e.log).Run(ctx); err != nil {
+		if err = publishArtifactsStep(step, so, rl.BaseLogger).Run(ctx); err != nil {
 			return nil, numRetries, err
 		}
 	case nil:
@@ -153,55 +155,31 @@ func (e *unitExecutor) execute(ctx context.Context, step *pb.UnitStep,
 	return stepOutput, numRetries, nil
 }
 
-// decodeExecuteStepRequest decodes base64 encoded unit step
-func decodeExecuteStepRequest(encodedStep string, log *zap.SugaredLogger) (*pb.ExecuteStepRequest, error) {
-	decodedStep, err := base64.StdEncoding.DecodeString(encodedStep)
-	if err != nil {
-		log.Errorw("Failed to decode step", "encoded_step", encodedStep, zap.Error(err))
-		return nil, err
+func (e *unitExecutor) Cleanup(ctx context.Context, step *pb.UnitStep) error {
+	switch x := step.GetStep().(type) {
+	case *pb.UnitStep_Run:
+		port := x.Run.GetContainerPort()
+		return e.stopAddonServer(ctx, uint(port))
+	case *pb.UnitStep_Plugin:
+		port := x.Plugin.GetContainerPort()
+		return e.stopAddonServer(ctx, uint(port))
 	}
-
-	r := &pb.ExecuteStepRequest{}
-	err = proto.Unmarshal(decodedStep, r)
-	if err != nil {
-		log.Errorw("Failed to deserialize step", "decoded_step", decodedStep, zap.Error(err))
-		return nil, err
-	}
-
-	log.Infow("Deserialized step", "step", r.GetStep().String())
-	return r, nil
+	return nil
 }
 
-// ExecuteStep executes a unit step of a stage
-func ExecuteStep(input, logpath, tmpFilePath string, log *zap.SugaredLogger) error {
-	r, err := decodeExecuteStepRequest(input, log)
+// Stops CI-Addon GRPC server
+func (e *unitExecutor) stopAddonServer(ctx context.Context, port uint) error {
+	addonClient, err := newAddonClient(port, e.log)
 	if err != nil {
-		log.Errorw(
-			"error while executing step",
-			"embedded_stage", input,
-			"log_path", logpath,
-			"step_id", r.GetStep().GetId(),
-			"error_msg", zap.Error(err),
-		)
-		return err
+		e.log.Errorw("Could not create CI Addon client", zap.Error(err))
+		return errors.Wrap(err, "Could not create CI Addon client")
 	}
+	defer addonClient.CloseConn()
 
-	ctx := context.Background()
-	executor := NewUnitExecutor(logpath, tmpFilePath, log)
-
-	stageOutput := make(output.StageOutput)
-	for _, stepOutput := range r.GetStageOutput().GetStepOutputs() {
-		stageOutput[stepOutput.GetStepId()] = &output.StepOutput{Output: stepOutput.GetOutput()}
-	}
-	if _, err := executor.Run(ctx, r.GetStep(), stageOutput, r.GetAccountId()); err != nil {
-		log.Errorw(
-			"error while executing step",
-			"step", r.GetStep().String(),
-			"log_path", logpath,
-			"step_id", r.GetStep().GetId(),
-			"error_msg", zap.Error(err),
-		)
-		return err
+	_, err = addonClient.Client().SignalStop(ctx, &addonpb.SignalStopRequest{})
+	if err != nil {
+		e.log.Errorw("Unable to send Stop server request", zap.Error(err))
+		return errors.Wrap(err, "Could not send stop server request")
 	}
 	return nil
 }

@@ -120,7 +120,7 @@ func (s *saveCacheStep) Run(ctx context.Context) (*output.StepOutput, error) {
 	tmpArchivePath := filepath.Join(s.tmpFilePath, s.id)
 	err := s.archiveFiles(tmpArchivePath)
 	if err != nil {
-		s.log.Warnw(
+		s.log.Errorw(
 			"failed to archive files",
 			"key", s.key,
 			"files", s.paths,
@@ -132,7 +132,7 @@ func (s *saveCacheStep) Run(ctx context.Context) (*output.StepOutput, error) {
 
 	xxhashSum, err := getFileXXHash(tmpArchivePath, s.fs, s.log)
 	if err != nil {
-		s.log.Warnw(
+		s.log.Errorw(
 			"failed to compute xxhash",
 			"key", s.key,
 			"elapsed_time_ms", utils.TimeSince(start),
@@ -143,7 +143,7 @@ func (s *saveCacheStep) Run(ctx context.Context) (*output.StepOutput, error) {
 
 	err = s.uploadWithRetries(ctx, xxhashSum, tmpArchivePath)
 	if err != nil {
-		s.log.Warnw(
+		s.log.Errorw(
 			"error while uploading file to cache",
 			"key", s.key,
 			"elapsed_time_ms", utils.TimeSince(start),
@@ -178,7 +178,7 @@ func (s *saveCacheStep) uploadWithRetries(ctx context.Context, xxhashSum, tmpArc
 		start := time.Now()
 		err := s.upload(ctx, xxhashSum, tmpArchivePath)
 		if err != nil {
-			s.log.Warnw(
+			s.log.Errorw(
 				"failed to upload to cache",
 				"key", s.key,
 				"elapsed_time_ms", utils.TimeSince(start),

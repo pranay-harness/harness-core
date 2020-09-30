@@ -1,6 +1,6 @@
 package io.harness.beans.serializer;
 
-import static io.harness.product.ci.addon.proto.AuthType.BASIC_AUTH;
+import static io.harness.product.ci.engine.proto.AuthType.BASIC_AUTH;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -14,14 +14,14 @@ import io.harness.beans.steps.stepinfo.publish.artifact.connectors.ArtifactoryCo
 import io.harness.beans.steps.stepinfo.publish.artifact.connectors.EcrConnector;
 import io.harness.beans.steps.stepinfo.publish.artifact.connectors.GcrConnector;
 import io.harness.callback.DelegateCallbackToken;
-import io.harness.product.ci.addon.proto.AuthType;
-import io.harness.product.ci.addon.proto.BuildPublishImage;
-import io.harness.product.ci.addon.proto.Connector;
-import io.harness.product.ci.addon.proto.Destination;
-import io.harness.product.ci.addon.proto.LocationType;
-import io.harness.product.ci.addon.proto.UploadFile;
+import io.harness.product.ci.engine.proto.AuthType;
+import io.harness.product.ci.engine.proto.BuildPublishImage;
+import io.harness.product.ci.engine.proto.Connector;
+import io.harness.product.ci.engine.proto.Destination;
+import io.harness.product.ci.engine.proto.LocationType;
 import io.harness.product.ci.engine.proto.PublishArtifactsStep;
 import io.harness.product.ci.engine.proto.UnitStep;
+import io.harness.product.ci.engine.proto.UploadFile;
 import org.apache.commons.codec.binary.Base64;
 
 import java.util.Optional;

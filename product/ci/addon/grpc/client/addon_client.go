@@ -16,8 +16,6 @@ import (
 const (
 	backoffTime = 100 * time.Millisecond
 	maxRetries  = 9
-	// AddonPort is the port on which CI addon service runs.
-	AddonPort = 8001
 )
 
 //AddonClient implements a GRPC client to communicate with CI addon

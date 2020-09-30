@@ -1,10 +1,7 @@
 package main
 
 /*
-	CI-addon performs the following actions
-		1) uploads the artifacts to customer desired location
-		2) updates the configuration files to reflect the new version of the artifact the CI pipeline built.
-		3) streams data, metrics through a stream-processing service(to be decided)
+	CI-addon is an entrypoint for run step & plugin step container images. It executes a step on receiving GRPC.
 */
 import (
 	"os"
@@ -18,7 +15,6 @@ import (
 const (
 	applicationName = "CI-addon"
 	deployable      = "ci-addon"
-	port            = 8001
 )
 
 var (
@@ -28,7 +24,7 @@ var (
 
 var args struct {
 	Verbose bool `arg:"--verbose" help:"enable verbose logging mode"`
-	Port    uint `arg:"--port" help:"port for running GRPC server"`
+	Port    uint `arg:"--port, required" help:"port for running GRPC server"`
 
 	Deployment            string `arg:"env:DEPLOYMENT" help:"name of the deployment"`
 	DeploymentEnvironment string `arg:"env:DEPLOYMENT_ENVIRONMENT" help:"environment of the deployment"`
@@ -37,7 +33,6 @@ var args struct {
 func parseArgs() {
 	// set defaults here
 	args.DeploymentEnvironment = "prod"
-	args.Port = port
 	args.Verbose = false
 
 	arg.MustParse(&args)

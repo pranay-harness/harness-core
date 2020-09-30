@@ -5,21 +5,20 @@ package steps
 import (
 	"context"
 	"fmt"
-	"github.com/gofrs/uuid"
-	"github.com/pkg/errors"
 	"time"
+
+	"github.com/pkg/errors"
 
 	"github.com/wings-software/portal/commons/go/lib/filesystem"
 	"github.com/wings-software/portal/commons/go/lib/utils"
-	caddon "github.com/wings-software/portal/product/ci/addon/grpc/client"
-	addonpb "github.com/wings-software/portal/product/ci/addon/proto"
+	"github.com/wings-software/portal/product/ci/engine/artifacts"
 	"github.com/wings-software/portal/product/ci/engine/output"
-	enginepb "github.com/wings-software/portal/product/ci/engine/proto"
+	pb "github.com/wings-software/portal/product/ci/engine/proto"
 	"go.uber.org/zap"
 )
 
 var (
-	newAddonClient = caddon.NewAddonClient
+	artifactPublishTask = artifacts.NewPublishArtifactsTask
 )
 
 //go:generate mockgen -source publish_artifacts.go -package steps -destination mocks/publish_artifacts_mock.go PublishArtifactsStep
@@ -33,12 +32,13 @@ type publishArtifactsStep struct {
 	id          string
 	displayName string
 	stageOutput output.StageOutput
-	files       []*addonpb.UploadFile
-	images      []*addonpb.BuildPublishImage
+	files       []*pb.UploadFile
+	images      []*pb.BuildPublishImage
 	log         *zap.SugaredLogger
 }
 
-func NewPublishArtifactsStep(step *enginepb.UnitStep, so output.StageOutput, log *zap.SugaredLogger) PublishArtifactsStep {
+// NewPublishArtifactsStep implements execution of publish artifacts step
+func NewPublishArtifactsStep(step *pb.UnitStep, so output.StageOutput, log *zap.SugaredLogger) PublishArtifactsStep {
 	s := step.GetPublishArtifacts()
 	return &publishArtifactsStep{
 		id:          step.GetId(),
@@ -52,54 +52,24 @@ func NewPublishArtifactsStep(step *enginepb.UnitStep, so output.StageOutput, log
 
 func (s *publishArtifactsStep) Run(ctx context.Context) error {
 	st := time.Now()
-	arg, err := s.createPublishArtifactArg(ctx)
+	resolvedFiles, resolvedImages, err := s.resolveExpressions(ctx)
 	if err != nil {
-		s.log.Warnw("Failed to generate request argument", "error_msg", zap.Error(err))
 		return err
 	}
 
-	addonClient, err := newAddonClient(caddon.AddonPort, s.log)
+	err = artifactPublishTask(s.log).Publish(ctx, resolvedFiles, resolvedImages)
 	if err != nil {
-		s.log.Warnw("Unable to create CI addon client", "error_msg", zap.Error(err))
-		return errors.Wrap(err, "Could not create CI Addon client")
-	}
-	defer addonClient.CloseConn()
-
-	c := addonClient.Client()
-	_, err = c.PublishArtifacts(ctx, arg)
-	if err != nil {
-		s.log.Warnw("Publish artifact RPC failed", "error_msg", zap.Error(err), "elapsed_time_ms", utils.TimeSince(st))
+		s.log.Errorw("Failed to publish artifacts", "elapsed_time_ms", utils.TimeSince(st), zap.Error(err))
 		return err
 	}
 	s.log.Infow("Successfully published artifacts", "elapsed_time_ms", utils.TimeSince(st))
 	return nil
 }
 
-// createPublishArtifactArg method creates arguments for addon PublishArtifacts GRPC
-func (s *publishArtifactsStep) createPublishArtifactArg(ctx context.Context) (
-	*addonpb.PublishArtifactsRequest, error) {
-	newUUID, err := uuid.NewV4()
-	if err != nil {
-		return nil, errors.Wrap(err, "Failed to generate UUID")
-	}
-	taskID := &addonpb.TaskId{Id: newUUID.String()}
-
-	resolvedFiles, resolvedImages, err := s.resolveExpressions(ctx)
-	if err != nil {
-		return nil, err
-	}
-	return &addonpb.PublishArtifactsRequest{
-		TaskId: taskID,
-		Files:  resolvedFiles,
-		Images: resolvedImages,
-		StepId: s.id,
-	}, nil
-}
-
 // resolveExpressions resolves JEXL expressions & expand home directory present in
 // publish artifact step input
 func (s *publishArtifactsStep) resolveExpressions(ctx context.Context) (
-	[]*addonpb.UploadFile, []*addonpb.BuildPublishImage, error) {
+	[]*pb.UploadFile, []*pb.BuildPublishImage, error) {
 	// JEXL expressions are only present in:
 	// 1. filePattern, destination URl & region for upload files
 	// 2. dockerfile, context, destination URL
@@ -121,7 +91,7 @@ func (s *publishArtifactsStep) resolveExpressions(ctx context.Context) (
 	}
 
 	// Resolving home directory & JEXL expression for files and images
-	var resolvedFiles []*addonpb.UploadFile
+	var resolvedFiles []*pb.UploadFile
 	for _, file := range s.files {
 		f, err := s.resolveFile(file, resolvedExprs)
 		if err != nil {
@@ -130,7 +100,7 @@ func (s *publishArtifactsStep) resolveExpressions(ctx context.Context) (
 		resolvedFiles = append(resolvedFiles, f)
 	}
 
-	var resolvedImages []*addonpb.BuildPublishImage
+	var resolvedImages []*pb.BuildPublishImage
 	for _, image := range s.images {
 		i, err := s.resolveImage(image, resolvedExprs)
 		if err != nil {
@@ -141,8 +111,8 @@ func (s *publishArtifactsStep) resolveExpressions(ctx context.Context) (
 	return resolvedFiles, resolvedImages, nil
 }
 
-func (s *publishArtifactsStep) resolveFile(file *addonpb.UploadFile,
-	resolvedExprs map[string]string) (*addonpb.UploadFile, error) {
+func (s *publishArtifactsStep) resolveFile(file *pb.UploadFile,
+	resolvedExprs map[string]string) (*pb.UploadFile, error) {
 	// Resolve JEXL & home directory for file pattern
 	var err error
 	filePattern := file.GetFilePattern()
@@ -164,8 +134,8 @@ func (s *publishArtifactsStep) resolveFile(file *addonpb.UploadFile,
 	return file, nil
 }
 
-func (s *publishArtifactsStep) resolveImage(image *addonpb.BuildPublishImage,
-	resolvedExprs map[string]string) (*addonpb.BuildPublishImage, error) {
+func (s *publishArtifactsStep) resolveImage(image *pb.BuildPublishImage,
+	resolvedExprs map[string]string) (*pb.BuildPublishImage, error) {
 	// Resolve JEXL & home directory for image docker file
 	var err error
 	dockerfile := image.GetDockerFile()

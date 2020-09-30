@@ -6,14 +6,13 @@ import (
 	"time"
 
 	"github.com/hpcloud/tail"
-	pb "github.com/wings-software/portal/product/ci/addon/proto"
 	"go.uber.org/zap"
 )
 
-func Start(ctx context.Context, in *pb.StartTailRequest, log *zap.SugaredLogger) (*pb.StartTailResponse, error) {
+// Start method starts tail on a file.
+func Start(ctx context.Context, fileName string, additionalFields map[string]string, disallowJSON bool, log *zap.SugaredLogger) error {
 	var err error
 	var t *tail.Tail
-	fileName := in.GetFileName()
 
 	fileMapping := FileTailMapping()
 
@@ -36,24 +35,23 @@ func Start(ctx context.Context, in *pb.StartTailRequest, log *zap.SugaredLogger)
 		// File has already been tailed. Use this as a fail-safe in case we get bombarded by requests
 		// for the same file. There is no reason the same file should be tailed multiple times without
 		// tailing being gracefully stopped through `StopTail`
-		return &pb.StartTailResponse{}, nil
+		return nil
 	}
 
 	if err != nil {
-		return nil, err
+		return err
 	}
 
 	go func() {
 		// This loop exits if either the file gets deleted or a stop signal is received
 		// In either case, we remove the file mappings and do a cleanup
-		additionalFields := in.GetAdditionalFields()
 		for key, val := range additionalFields {
 			log = log.With(key, val)
 		}
 
 		for line := range t.Lines {
-			// If disallow_json is set as true, emit the logs as they are
-			if in.GetDisallowJson() {
+			// If disallowJSON is set as true, emit the logs as they are
+			if disallowJSON {
 				fmt.Println(line.Text)
 				continue
 			}
@@ -67,12 +65,11 @@ func Start(ctx context.Context, in *pb.StartTailRequest, log *zap.SugaredLogger)
 		fileMapping.mu.Unlock()
 	}()
 
-	return &pb.StartTailResponse{}, nil
+	return nil
 }
 
-func Stop(ctx context.Context, in *pb.StopTailRequest, log *zap.SugaredLogger) (*pb.StopTailResponse, error) {
-	fileName := in.GetFileName()
-
+// Stop method stops tail on a file.
+func Stop(ctx context.Context, fileName string, wait bool, log *zap.SugaredLogger) error {
 	fileMapping := FileTailMapping()
 
 	fileMapping.mu.RLock()
@@ -81,7 +78,7 @@ func Stop(ctx context.Context, in *pb.StopTailRequest, log *zap.SugaredLogger) (
 	if !ok {
 		// No mapping exists. This is possible if the file was deleted before sending a stop signal
 		// or multiple goroutines with the same filename were invoked
-		return &pb.StopTailResponse{}, nil
+		return nil
 	}
 
 	// Send stop signal to goroutine tailing on the file
@@ -92,11 +89,11 @@ func Stop(ctx context.Context, in *pb.StopTailRequest, log *zap.SugaredLogger) (
 		time.Sleep(1 * time.Second)
 	}
 
-	if !in.GetWait() {
+	if !wait {
 		go val.tail.StopAtEOF()
 	} else {
 		val.tail.StopAtEOF()
 	}
 
-	return &pb.StopTailResponse{}, nil
+	return nil
 }

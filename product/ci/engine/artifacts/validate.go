@@ -1,26 +1,22 @@
-package tasks
+package artifacts
 
 import (
 	"fmt"
 
 	"github.com/pkg/errors"
-	pb "github.com/wings-software/portal/product/ci/addon/proto"
+	pb "github.com/wings-software/portal/product/ci/engine/proto"
 )
 
 //Validates the publish artifact request
-func validatePublishRequest(in *pb.PublishArtifactsRequest) error {
-	if in.GetTaskId().GetId() == "" {
-		return errors.New("task id is not set")
-	}
-
-	for _, file := range in.GetFiles() {
+func validatePublishRequest(files []*pb.UploadFile, images []*pb.BuildPublishImage) error {
+	for _, file := range files {
 		err := validateFile(file)
 		if err != nil {
 			return err
 		}
 	}
 
-	for _, image := range in.GetImages() {
+	for _, image := range images {
 		err := validateImage(image)
 		if err != nil {
 			return err

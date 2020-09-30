@@ -5,18 +5,18 @@ load("@rules_proto_grpc//java:defs.bzl", "java_grpc_library")
 
 proto_library(
     name = "cienginepb_proto",
-    srcs = ["execution.proto"],
+    srcs = [
+        "artifact.proto",
+        "execution.proto",
+    ],
     visibility = ["//visibility:public"],
-    deps = ["//product/ci/addon/proto:ciaddonpb_proto"],
 )
 
 go_proto_library(
     name = "cienginepb_go_proto",
-    compilers = ["@io_bazel_rules_go//proto:go_grpc"],
     importpath = "github.com/wings-software/portal/product/ci/engine/proto",
     proto = ":cienginepb_proto",
     visibility = ["//visibility:public"],
-    deps = ["//product/ci/addon/proto:go_default_library"],
 )
 
 go_library(
