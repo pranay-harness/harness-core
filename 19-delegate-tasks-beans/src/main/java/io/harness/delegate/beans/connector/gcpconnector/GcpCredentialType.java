@@ -4,8 +4,8 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonValue;
 
 public enum GcpCredentialType {
-  @JsonProperty(GcpConstants.inheritFromDelegate) INHERIT_FROM_DELEGATE(GcpConstants.inheritFromDelegate),
-  @JsonProperty(GcpConstants.manualConfig) MANUAL_CREDENTIALS(GcpConstants.manualConfig);
+  @JsonProperty(GcpConstants.INHERIT_FROM_DELEGATE) INHERIT_FROM_DELEGATE(GcpConstants.INHERIT_FROM_DELEGATE),
+  @JsonProperty(GcpConstants.MANUAL_CONFIG) MANUAL_CREDENTIALS(GcpConstants.MANUAL_CONFIG);
 
   private final String displayName;
 
