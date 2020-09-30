@@ -5,6 +5,7 @@ import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.rule.OwnerRule.TATHAGAT;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.assertj.core.api.Assertions.fail;
 import static software.wings.beans.Application.GLOBAL_APP_ID;
 import static software.wings.beans.BasicOrchestrationWorkflow.BasicOrchestrationWorkflowBuilder.aBasicOrchestrationWorkflow;
@@ -66,8 +67,10 @@ import software.wings.beans.template.Template;
 import software.wings.beans.template.TemplateType;
 import software.wings.beans.template.command.ShellScriptTemplate;
 import software.wings.beans.template.deploymenttype.CustomDeploymentTypeTemplate;
+import software.wings.exception.TemplateException;
 import software.wings.infra.InfrastructureDefinition;
 import software.wings.service.impl.workflow.WorkflowServiceHelper;
+import software.wings.service.intfc.template.TemplateService;
 import software.wings.sm.StateType;
 import software.wings.sm.states.customdeployment.InstanceFetchState.InstanceFetchStateKeys;
 
@@ -90,6 +93,7 @@ public class CustomDeploymentFunctionalTest extends AbstractFunctionalTest {
   @Inject private InfrastructureDefinitionGenerator infrastructureDefinitionGenerator;
   @Inject private TemplateGenerator templateGenerator;
   @Inject private SecretGenerator secretGenerator;
+  @Inject private TemplateService templateService;
 
   private static final long TIMEOUT = 1200000; // 20 minutes
 
@@ -110,15 +114,37 @@ public class CustomDeploymentFunctionalTest extends AbstractFunctionalTest {
   private Service service;
   private Environment environment;
   private InfrastructureDefinition infrastructureDefinition;
+  private Template template;
 
   List<Variable> secretInfraVariables = new ArrayList<>();
 
   @Before
-  public void setUp() {
+  public void setUp() throws IOException {
     owners = ownerManager.create();
     application = applicationGenerator.ensurePredefined(seed, owners, Applications.GENERIC_TEST);
     assertThat(application).isNotNull();
     resetCache(owners.obtainAccount().getUuid());
+
+    CustomDeploymentTypeTemplate customDeploymentTypeTemplate =
+        CustomDeploymentTypeTemplate.builder()
+            .hostAttributes(new HashMap<String, String>() {
+              { put("hostname", "ip"); }
+            })
+            .fetchInstanceScript(readFileContent(fetchInstanceScript, resourcePath))
+            .hostObjectArrayPath("instances")
+            .build();
+
+    template = templateGenerator.ensureCustomDeploymentTemplate(
+        seed, owners, customDeploymentTypeTemplate, "Test Custom Deployment Workflow ", secretInfraVariables);
+
+    service = serviceGenerator.ensurePredefinedCustomDeployment(
+        seed, owners, template.getUuid(), "Custom Deployment Service");
+    assertThat(service).isNotNull();
+    environment = environmentGenerator.ensurePredefined(seed, owners, EnvironmentGenerator.Environments.GENERIC_TEST);
+    assertThat(environment).isNotNull();
+    infrastructureDefinition = infrastructureDefinitionGenerator.ensurePredefinedCustomDeployment(
+        seed, owners, template.getUuid(), "CustomDeployment InfraStructureDefinition");
+    assertThat(infrastructureDefinition).isNotNull();
 
     secretGenerator.ensureStored(owners, SecretName.builder().value("pcf_password").build());
     assertThat(application).isNotNull();
@@ -137,27 +163,6 @@ public class CustomDeploymentFunctionalTest extends AbstractFunctionalTest {
   public void testCustomDeploymentWorkflowSuccess() throws IOException {
     final String accountId = owners.obtainAccount().getUuid();
     resetCache(accountId);
-
-    CustomDeploymentTypeTemplate customDeploymentTypeTemplate =
-        CustomDeploymentTypeTemplate.builder()
-            .hostAttributes(new HashMap<String, String>() {
-              { put("hostname", "ip"); }
-            })
-            .fetchInstanceScript(readFileContent(fetchInstanceScript, resourcePath))
-            .hostObjectArrayPath("instances")
-            .build();
-
-    Template template = templateGenerator.ensureCustomDeploymentTemplate(
-        seed, owners, customDeploymentTypeTemplate, "Test Custom Deployment Workflow ", secretInfraVariables);
-
-    service = serviceGenerator.ensurePredefinedCustomDeployment(
-        seed, owners, template.getUuid(), "Custom Deployment Service");
-    assertThat(service).isNotNull();
-    environment = environmentGenerator.ensurePredefined(seed, owners, EnvironmentGenerator.Environments.GENERIC_TEST);
-    assertThat(environment).isNotNull();
-    infrastructureDefinition = infrastructureDefinitionGenerator.ensurePredefinedCustomDeployment(
-        seed, owners, template.getUuid(), "CustomDeployment InfraStructureDefinition");
-    assertThat(infrastructureDefinition).isNotNull();
 
     Workflow workflow = getBasicCustomDeploymentTypeWorkflow(template.getUuid(), "Basic Workflow");
     Workflow savedWorkflow = createAndAssertWorkflow(workflow);
@@ -233,6 +238,16 @@ public class CustomDeploymentFunctionalTest extends AbstractFunctionalTest {
     assertThat(workflowExecution.getStatus()).isEqualTo(ExecutionStatus.FAILED);
     assertThat(workflowExecution.getRollbackDuration()).isNotNull();
     assertThat(workflowExecution.getServiceExecutionSummaries().get(0).getInstancesCount()).isEqualTo(0);
+  }
+
+  @Test(timeout = TIMEOUT)
+  @Owner(developers = TATHAGAT)
+  @Category(FunctionalTests.class)
+  public void testTemplateLinkedWithInfraNotGetDeleted() throws IOException {
+    assertThatThrownBy(() -> templateService.delete(owners.obtainAccount().getUuid(), template.getUuid()))
+        .isInstanceOf(TemplateException.class);
+    assertThatThrownBy(() -> templateService.delete(owners.obtainAccount().getUuid(), template.getUuid()))
+        .hasMessage("Template : [Test Custom Deployment Workflow ] couldn't be deleted");
   }
 
   private Workflow createAndAssertWorkflow(Workflow workflow) {
