@@ -243,7 +243,7 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
       String internalConfigName = getInternalHarnessConfigName(setupParams.getInfraMappingId());
 
       if (!setupParams.isRollback()) {
-        kubernetesContainerService.deleteSecret(kubernetesConfig, internalConfigName);
+        kubernetesContainerService.deleteSecretFabric8(kubernetesConfig, internalConfigName);
       }
 
       KubernetesContainerTask kubernetesContainerTask = (KubernetesContainerTask) setupParams.getContainerTask();
@@ -286,7 +286,7 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
 
       if (setupParams.isRollback()) {
         executionLogCallback.saveExecutionLog("Rolling back setup");
-        Secret previousConfig = kubernetesContainerService.getSecret(kubernetesConfig, internalConfigName);
+        Secret previousConfig = kubernetesContainerService.getSecretFabric8(kubernetesConfig, internalConfigName);
         if (isNotVersioned) {
           performYamlRollback(executionLogCallback, previousConfig, kubernetesConfig, containerServiceName,
               setupParams.getServiceSteadyStateTimeout());
@@ -323,7 +323,7 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
         registrySecretName = getKubernetesRegistrySecretName(setupParams.getImageDetails());
         Secret registrySecret = createRegistrySecret(registrySecretName, setupParams.getNamespace(),
             setupParams.getImageDetails(), controllerLabels, executionLogCallback);
-        kubernetesContainerService.createOrReplaceSecret(kubernetesConfig, registrySecret);
+        kubernetesContainerService.createOrReplaceSecretFabric8(kubernetesConfig, registrySecret);
       }
 
       Map<String, String> previousYamlConfig = new HashMap<>();
@@ -382,7 +382,7 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
                                 .endMetadata()
                                 .withStringData(previousYamlConfig)
                                 .build();
-        kubernetesContainerService.createOrReplaceSecret(kubernetesConfig, yamlConfig);
+        kubernetesContainerService.createOrReplaceSecretFabric8(kubernetesConfig, yamlConfig);
       }
 
       List<Label> labelArray = new ArrayList<>();
@@ -927,7 +927,7 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
                         .build()),
           LogLevel.INFO);
       secretMap.setData(secretData);
-      secretMap = kubernetesContainerService.createOrReplaceSecret(kubernetesConfig, secretMap);
+      secretMap = kubernetesContainerService.createOrReplaceSecretFabric8(kubernetesConfig, secretMap);
     }
     return secretMap;
   }
@@ -984,7 +984,7 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
     }
     if (configMap != null) {
       executionLogCallback.saveExecutionLog("Creating config map:\n\n" + toDisplayYaml(configMap));
-      configMap = kubernetesContainerService.createOrReplaceConfigMap(kubernetesConfig, configMap);
+      configMap = kubernetesContainerService.createOrReplaceConfigMapFabric8(kubernetesConfig, configMap);
     }
     return configMap;
   }
@@ -1002,7 +1002,7 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
   }
 
   private String getConfigMapYaml(KubernetesConfig kubernetesConfig, String containerServiceName) {
-    ConfigMap configMap = kubernetesContainerService.getConfigMap(kubernetesConfig, containerServiceName);
+    ConfigMap configMap = kubernetesContainerService.getConfigMapFabric8(kubernetesConfig, containerServiceName);
     if (configMap != null) {
       try {
         return toYaml(configMap);
@@ -1014,7 +1014,7 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
   }
 
   private String getSecretMapYaml(KubernetesConfig kubernetesConfig, String containerServiceName) {
-    Secret secretMap = kubernetesContainerService.getSecret(kubernetesConfig, containerServiceName);
+    Secret secretMap = kubernetesContainerService.getSecretFabric8(kubernetesConfig, containerServiceName);
     if (secretMap != null) {
       try {
         return toYaml(secretMap);
@@ -1295,14 +1295,14 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
         throw new InvalidArgumentsException("Couldn't parse configMap YAML: " + configMapYaml, e, USER);
       }
       executionLogCallback.saveExecutionLog("Setting configMap:\n\n" + toDisplayYaml(configMap));
-      kubernetesContainerService.createOrReplaceConfigMap(kubernetesConfig, configMap);
+      kubernetesContainerService.createOrReplaceConfigMapFabric8(kubernetesConfig, configMap);
     } else {
-      ConfigMap configMap = kubernetesContainerService.getConfigMap(kubernetesConfig, controllerName);
+      ConfigMap configMap = kubernetesContainerService.getConfigMapFabric8(kubernetesConfig, controllerName);
       if (configMap != null) {
         executionLogCallback.saveExecutionLog(
             "ConfigMap " + controllerName + " did not exist previously. Deleting on rollback");
         try {
-          kubernetesContainerService.deleteConfigMap(kubernetesConfig, controllerName);
+          kubernetesContainerService.deleteConfigMapFabric8(kubernetesConfig, controllerName);
         } catch (Exception e) {
           executionLogCallback.saveExecutionLog("Error deleting configMap: " + controllerName, LogLevel.ERROR);
           Misc.logAllMessages(e, executionLogCallback);
@@ -1324,14 +1324,14 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
                               .withData(secretMap.getData().entrySet().stream().collect(
                                   toMap(Entry::getKey, entry -> SECRET_MASK)))
                               .build()));
-      kubernetesContainerService.createOrReplaceSecret(kubernetesConfig, secretMap);
+      kubernetesContainerService.createOrReplaceSecretFabric8(kubernetesConfig, secretMap);
     } else {
-      Secret secretMap = kubernetesContainerService.getSecret(kubernetesConfig, controllerName);
+      Secret secretMap = kubernetesContainerService.getSecretFabric8(kubernetesConfig, controllerName);
       if (secretMap != null) {
         executionLogCallback.saveExecutionLog(
             "SecretMap " + controllerName + " did not exist previously. Deleting on rollback");
         try {
-          kubernetesContainerService.deleteSecret(kubernetesConfig, controllerName);
+          kubernetesContainerService.deleteSecretFabric8(kubernetesConfig, controllerName);
         } catch (Exception e) {
           executionLogCallback.saveExecutionLog("Error deleting secretMap: " + controllerName, LogLevel.ERROR);
           Misc.logAllMessages(e, executionLogCallback);
@@ -1812,8 +1812,8 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
               try {
                 kubernetesContainerService.deleteController(kubernetesConfig, controllerName);
                 kubernetesContainerService.deleteAutoscaler(kubernetesConfig, controllerName);
-                kubernetesContainerService.deleteConfigMap(kubernetesConfig, controllerName);
-                kubernetesContainerService.deleteSecret(kubernetesConfig, controllerName);
+                kubernetesContainerService.deleteConfigMapFabric8(kubernetesConfig, controllerName);
+                kubernetesContainerService.deleteSecretFabric8(kubernetesConfig, controllerName);
               } catch (Exception e) {
                 Misc.logAllMessages(e, executionLogCallback);
               }
@@ -1841,8 +1841,8 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
           try {
             kubernetesContainerService.deleteController(kubernetesConfig, controllerName);
             kubernetesContainerService.deleteAutoscaler(kubernetesConfig, controllerName);
-            kubernetesContainerService.deleteConfigMap(kubernetesConfig, controllerName);
-            kubernetesContainerService.deleteSecret(kubernetesConfig, controllerName);
+            kubernetesContainerService.deleteConfigMapFabric8(kubernetesConfig, controllerName);
+            kubernetesContainerService.deleteSecretFabric8(kubernetesConfig, controllerName);
           } catch (Exception e) {
             Misc.logAllMessages(e, executionLogCallback);
           }

@@ -122,8 +122,8 @@ public class K8sCanaryDeployTaskHandler extends K8sTaskHandler {
         client, resources, k8sDelegateTaskParams, getLogCallBack(k8sCanaryDeployTaskParameters, Apply), true);
     if (!success) {
       releaseHistory.setReleaseStatus(Status.Failed);
-      kubernetesContainerService.saveReleaseHistory(
-          kubernetesConfig, k8sCanaryDeployTaskParameters.getReleaseName(), releaseHistory.getAsYaml());
+      k8sTaskHelperBase.saveReleaseHistoryInConfigMap(kubernetesConfig, k8sCanaryDeployTaskParameters.getReleaseName(),
+          releaseHistory.getAsYaml(), k8sCanaryDeployTaskParameters.isDeprecateFabric8Enabled());
       return getFailureResponse();
     }
 
@@ -134,8 +134,8 @@ public class K8sCanaryDeployTaskHandler extends K8sTaskHandler {
 
     if (!success) {
       releaseHistory.setReleaseStatus(Status.Failed);
-      kubernetesContainerService.saveReleaseHistory(
-          kubernetesConfig, k8sCanaryDeployTaskParameters.getReleaseName(), releaseHistory.getAsYaml());
+      k8sTaskHelperBase.saveReleaseHistoryInConfigMap(kubernetesConfig, k8sCanaryDeployTaskParameters.getReleaseName(),
+          releaseHistory.getAsYaml(), k8sCanaryDeployTaskParameters.isDeprecateFabric8Enabled());
       return getFailureResponse();
     }
 
@@ -145,8 +145,8 @@ public class K8sCanaryDeployTaskHandler extends K8sTaskHandler {
 
     wrapUp(k8sDelegateTaskParams, getLogCallBack(k8sCanaryDeployTaskParameters, WrapUp));
 
-    kubernetesContainerService.saveReleaseHistory(
-        kubernetesConfig, k8sCanaryDeployTaskParameters.getReleaseName(), releaseHistory.getAsYaml());
+    k8sTaskHelperBase.saveReleaseHistoryInConfigMap(kubernetesConfig, k8sCanaryDeployTaskParameters.getReleaseName(),
+        releaseHistory.getAsYaml(), k8sCanaryDeployTaskParameters.isDeprecateFabric8Enabled());
 
     K8sCanaryDeployResponse k8sCanaryDeployResponse =
         K8sCanaryDeployResponse.builder()
@@ -208,8 +208,8 @@ public class K8sCanaryDeployTaskHandler extends K8sTaskHandler {
 
     client = Kubectl.client(k8sDelegateTaskParams.getKubectlPath(), k8sDelegateTaskParams.getKubeconfigPath());
 
-    String releaseHistoryData = kubernetesContainerService.fetchReleaseHistory(
-        kubernetesConfig, k8sCanaryDeployTaskParameters.getReleaseName());
+    String releaseHistoryData = k8sTaskHelperBase.getReleaseHistoryDataFromConfigMap(kubernetesConfig,
+        k8sCanaryDeployTaskParameters.getReleaseName(), k8sCanaryDeployTaskParameters.isDeprecateFabric8Enabled());
 
     releaseHistory = (StringUtils.isEmpty(releaseHistoryData)) ? ReleaseHistory.createNew()
                                                                : ReleaseHistory.createFromData(releaseHistoryData);

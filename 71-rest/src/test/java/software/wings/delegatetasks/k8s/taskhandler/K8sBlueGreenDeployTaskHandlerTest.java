@@ -169,8 +169,9 @@ public class K8sBlueGreenDeployTaskHandlerTest extends WingsBaseTest {
             any(ExecutionLogCallback.class));
     K8sTaskExecutionResponse response = spyHandler.executeTaskInternal(deployTaskParams, taskParams);
     assertThat(response.getCommandExecutionStatus()).isEqualTo(FAILURE);
-    verify(kubernetesContainerService, times(2))
-        .saveReleaseHistory(any(KubernetesConfig.class), eq("releaseName-statusCheck"), anyString());
+    verify(k8sTaskHelperBase, times(2))
+        .saveReleaseHistoryInConfigMap(
+            any(KubernetesConfig.class), eq("releaseName-statusCheck"), anyString(), eq(false));
 
     deployTaskParams.setReleaseName("releaseName-apply");
     doReturn(false)
@@ -179,8 +180,8 @@ public class K8sBlueGreenDeployTaskHandlerTest extends WingsBaseTest {
             any(ExecutionLogCallback.class), anyBoolean());
     response = spyHandler.executeTaskInternal(deployTaskParams, taskParams);
     assertThat(response.getCommandExecutionStatus()).isEqualTo(FAILURE);
-    verify(kubernetesContainerService)
-        .saveReleaseHistory(any(KubernetesConfig.class), eq("releaseName-apply"), anyString());
+    verify(k8sTaskHelperBase)
+        .saveReleaseHistoryInConfigMap(any(KubernetesConfig.class), eq("releaseName-apply"), anyString(), eq(false));
   }
 
   @InjectMocks private K8sBlueGreenDeployTaskHandler k8sBlueGreenDeployTaskHandler;
@@ -197,7 +198,7 @@ public class K8sBlueGreenDeployTaskHandlerTest extends WingsBaseTest {
     when(containerDeploymentDelegateHelper.getKubernetesConfig(any(K8sClusterConfig.class)))
         .thenReturn(KubernetesConfig.builder().build());
     doNothing().when(k8sTaskHelperBase).deleteSkippedManifestFiles(any(), any());
-    when(kubernetesContainerService.fetchReleaseHistory(any(), any())).thenReturn(null);
+    when(k8sTaskHelperBase.getReleaseHistoryDataFromConfigMap(any(), any(), anyBoolean())).thenReturn(null);
     when(k8sTaskHelper.renderTemplate(any(), any(), any(), any(), any(), any(), any(), any())).thenReturn(emptyList());
     doNothing().when(k8sTaskHelperBase).setNamespaceToKubernetesResourcesIfRequired(any(), any());
     when(k8sTaskHelperBase.readManifests(any(), any())).thenReturn(emptyList());
@@ -208,7 +209,7 @@ public class K8sBlueGreenDeployTaskHandlerTest extends WingsBaseTest {
     verify(k8sTaskHelper, times(1)).renderTemplate(any(), any(), any(), any(), any(), any(), any(), any());
     verify(k8sTaskHelperBase, times(1)).setNamespaceToKubernetesResourcesIfRequired(any(), any());
     verify(k8sTaskHelperBase, times(1)).deleteSkippedManifestFiles(any(), any());
-    verify(kubernetesContainerService, times(1)).fetchReleaseHistory(any(), any());
+    verify(k8sTaskHelperBase, times(1)).getReleaseHistoryDataFromConfigMap(any(), any(), anyBoolean());
     verify(containerDeploymentDelegateHelper, times(1)).getKubernetesConfig(any(K8sClusterConfig.class));
   }
 
@@ -224,7 +225,7 @@ public class K8sBlueGreenDeployTaskHandlerTest extends WingsBaseTest {
     when(containerDeploymentDelegateHelper.getKubernetesConfig(any(K8sClusterConfig.class)))
         .thenReturn(KubernetesConfig.builder().build());
     doNothing().when(k8sTaskHelperBase).deleteSkippedManifestFiles(any(), any());
-    when(kubernetesContainerService.fetchReleaseHistory(any(), any())).thenReturn(null);
+    when(k8sTaskHelperBase.getReleaseHistoryDataFromConfigMap(any(), any(), anyBoolean())).thenReturn(null);
     doNothing().when(k8sTaskHelperBase).setNamespaceToKubernetesResourcesIfRequired(any(), any());
     when(k8sTaskHelper.renderTemplate(any(), any(), any(), any(), any(), any(), any(), any())).thenReturn(emptyList());
     when(k8sTaskHelperBase.readManifests(any(), any())).thenReturn(emptyList());
@@ -235,7 +236,7 @@ public class K8sBlueGreenDeployTaskHandlerTest extends WingsBaseTest {
     verify(k8sTaskHelper, times(1)).renderTemplate(any(), any(), any(), any(), any(), any(), any(), any());
     verify(k8sTaskHelperBase, times(1)).setNamespaceToKubernetesResourcesIfRequired(any(), any());
     verify(k8sTaskHelperBase, times(1)).deleteSkippedManifestFiles(any(), any());
-    verify(kubernetesContainerService, times(1)).fetchReleaseHistory(any(), any());
+    verify(k8sTaskHelperBase, times(1)).getReleaseHistoryDataFromConfigMap(any(), any(), anyBoolean());
     verify(containerDeploymentDelegateHelper, times(1)).getKubernetesConfig(any(K8sClusterConfig.class));
   }
 
@@ -739,6 +740,137 @@ public class K8sBlueGreenDeployTaskHandlerTest extends WingsBaseTest {
 
     K8sTaskExecutionResponse response = handler.executeTask(deployTaskParameters, delegateTaskParams);
     assertThat(FAILURE).isEqualTo(response.getCommandExecutionStatus());
+  }
+
+  @Test
+  @Owner(developers = ACASIAN)
+  @Category(UnitTests.class)
+  public void shouldFetchReleaseDataUsingFabric8() throws Exception {
+    K8sBlueGreenDeployTaskParameters blueGreenDeployTaskParams =
+        K8sBlueGreenDeployTaskParameters.builder().skipDryRun(true).build();
+    K8sDelegateTaskParams delegateTaskParams = K8sDelegateTaskParams.builder().build();
+    ExecutionLogCallback executionLogCallback = new ExecutionLogCallback();
+
+    when(containerDeploymentDelegateHelper.getKubernetesConfig(any(K8sClusterConfig.class)))
+        .thenReturn(KubernetesConfig.builder().build());
+    doNothing().when(k8sTaskHelperBase).deleteSkippedManifestFiles(any(), any());
+    when(k8sTaskHelperBase.getReleaseHistoryDataFromConfigMap(any(), any(), anyBoolean())).thenReturn(null);
+    when(k8sTaskHelper.renderTemplate(any(), any(), any(), any(), any(), any(), any(), any())).thenReturn(emptyList());
+    doNothing().when(k8sTaskHelperBase).setNamespaceToKubernetesResourcesIfRequired(any(), any());
+    when(k8sTaskHelperBase.readManifests(any(), any())).thenReturn(emptyList());
+
+    k8sBlueGreenDeployTaskHandler.init(blueGreenDeployTaskParams, delegateTaskParams, executionLogCallback);
+    verify(k8sTaskHelperBase, times(1)).getReleaseHistoryDataFromConfigMap(any(), any(), eq(false));
+    verify(k8sTaskHelperBase, times(0)).getReleaseHistoryDataFromConfigMap(any(), any(), eq(true));
+  }
+
+  @Test
+  @Owner(developers = ACASIAN)
+  @Category(UnitTests.class)
+  public void shouldFetchReleaseDataUsingK8sClient() throws Exception {
+    K8sBlueGreenDeployTaskParameters blueGreenDeployTaskParams =
+        K8sBlueGreenDeployTaskParameters.builder().deprecateFabric8Enabled(true).skipDryRun(true).build();
+    K8sDelegateTaskParams delegateTaskParams = K8sDelegateTaskParams.builder().build();
+    ExecutionLogCallback executionLogCallback = new ExecutionLogCallback();
+
+    when(containerDeploymentDelegateHelper.getKubernetesConfig(any(K8sClusterConfig.class)))
+        .thenReturn(KubernetesConfig.builder().build());
+    doNothing().when(k8sTaskHelperBase).deleteSkippedManifestFiles(any(), any());
+    when(k8sTaskHelperBase.getReleaseHistoryDataFromConfigMap(any(), any(), anyBoolean())).thenReturn(null);
+    when(k8sTaskHelper.renderTemplate(any(), any(), any(), any(), any(), any(), any(), any())).thenReturn(emptyList());
+    doNothing().when(k8sTaskHelperBase).setNamespaceToKubernetesResourcesIfRequired(any(), any());
+    when(k8sTaskHelperBase.readManifests(any(), any())).thenReturn(emptyList());
+
+    k8sBlueGreenDeployTaskHandler.init(blueGreenDeployTaskParams, delegateTaskParams, executionLogCallback);
+    verify(k8sTaskHelperBase, times(1)).getReleaseHistoryDataFromConfigMap(any(), any(), eq(true));
+    verify(k8sTaskHelperBase, times(0)).getReleaseHistoryDataFromConfigMap(any(), any(), eq(false));
+  }
+
+  @Test
+  @Owner(developers = ACASIAN)
+  @Category(UnitTests.class)
+  public void shouldSaveReleaseHistoryUsingK8sClient() throws Exception {
+    K8sBlueGreenDeployTaskHandler spyHandler = spy(k8sBlueGreenDeployTaskHandler);
+    doReturn(true)
+        .when(k8sTaskHelper)
+        .fetchManifestFilesAndWriteToDirectory(
+            any(K8sDelegateManifestConfig.class), anyString(), any(ExecutionLogCallback.class), anyLong());
+    doReturn(executionLogCallback)
+        .when(k8sTaskHelper)
+        .getExecutionLogCallback(any(K8sBlueGreenDeployTaskParameters.class), anyString());
+    doReturn(true)
+        .when(spyHandler)
+        .init(any(K8sBlueGreenDeployTaskParameters.class), any(K8sDelegateTaskParams.class),
+            any(ExecutionLogCallback.class));
+    doReturn(true)
+        .when(spyHandler)
+        .prepareForBlueGreen(any(K8sBlueGreenDeployTaskParameters.class), any(K8sDelegateTaskParams.class),
+            any(ExecutionLogCallback.class));
+    on(spyHandler).set("managedWorkload", deployment());
+    on(spyHandler).set("currentRelease", new Release());
+    on(spyHandler).set("primaryService", primaryService());
+    on(spyHandler).set("stageService", stageService());
+    doReturn(true)
+        .when(k8sTaskHelperBase)
+        .applyManifests(any(Kubectl.class), anyList(), any(K8sDelegateTaskParams.class),
+            any(ExecutionLogCallback.class), anyBoolean());
+    doReturn(true)
+        .when(k8sTaskHelperBase)
+        .doStatusCheck(any(Kubectl.class), any(KubernetesResourceId.class), any(K8sDelegateTaskParams.class),
+            any(ExecutionLogCallback.class));
+    on(spyHandler)
+        .set("resources", new ArrayList<>(asList(primaryService(), deployment(), stageService(), configMap())));
+    doReturn("latest-rev")
+        .when(k8sTaskHelperBase)
+        .getLatestRevision(any(Kubectl.class), eq(deployment().getResourceId()), any(K8sDelegateTaskParams.class));
+
+    spyHandler.executeTaskInternal(K8sBlueGreenDeployTaskParameters.builder()
+                                       .releaseName("release-success")
+                                       .deprecateFabric8Enabled(true)
+                                       .k8sTaskType(K8sTaskType.BLUE_GREEN_DEPLOY)
+                                       .build(),
+        K8sDelegateTaskParams.builder()
+            .workingDirectory("./working-dir")
+            .kubectlPath("kubectl")
+            .kubeconfigPath("kubeconfig")
+            .build());
+
+    verify(k8sTaskHelper, times(1)).getK8sTaskExecutionResponse(any(K8sBlueGreenDeployResponse.class), eq(SUCCESS));
+    verify(k8sTaskHelperBase, times(2))
+        .saveReleaseHistoryInConfigMap(any(KubernetesConfig.class), eq("release-success"), anyString(), eq(true));
+    verify(k8sTaskHelperBase, times(0))
+        .saveReleaseHistoryInConfigMap(any(KubernetesConfig.class), eq("release-success"), anyString(), eq(false));
+
+    K8sBlueGreenDeployTaskParameters deployTaskParams = K8sBlueGreenDeployTaskParameters.builder()
+                                                            .deprecateFabric8Enabled(true)
+                                                            .releaseName("releaseName-statusCheck")
+                                                            .build();
+    K8sDelegateTaskParams taskParams = K8sDelegateTaskParams.builder().build();
+
+    doReturn(false)
+        .when(k8sTaskHelperBase)
+        .doStatusCheck(any(Kubectl.class), any(KubernetesResourceId.class), any(K8sDelegateTaskParams.class),
+            any(ExecutionLogCallback.class));
+    K8sTaskExecutionResponse response = spyHandler.executeTaskInternal(deployTaskParams, taskParams);
+    assertThat(response.getCommandExecutionStatus()).isEqualTo(FAILURE);
+    verify(k8sTaskHelperBase, times(2))
+        .saveReleaseHistoryInConfigMap(
+            any(KubernetesConfig.class), eq("releaseName-statusCheck"), anyString(), eq(true));
+    verify(k8sTaskHelperBase, times(0))
+        .saveReleaseHistoryInConfigMap(
+            any(KubernetesConfig.class), eq("releaseName-statusCheck"), anyString(), eq(false));
+
+    deployTaskParams.setReleaseName("releaseName-apply");
+    doReturn(false)
+        .when(k8sTaskHelperBase)
+        .applyManifests(any(Kubectl.class), anyList(), any(K8sDelegateTaskParams.class),
+            any(ExecutionLogCallback.class), anyBoolean());
+    response = spyHandler.executeTaskInternal(deployTaskParams, taskParams);
+    assertThat(response.getCommandExecutionStatus()).isEqualTo(FAILURE);
+    verify(k8sTaskHelperBase)
+        .saveReleaseHistoryInConfigMap(any(KubernetesConfig.class), eq("releaseName-apply"), anyString(), eq(true));
+    verify(k8sTaskHelperBase, times(0))
+        .saveReleaseHistoryInConfigMap(any(KubernetesConfig.class), eq("releaseName-apply"), anyString(), eq(false));
   }
 
   @Data

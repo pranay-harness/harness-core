@@ -13,6 +13,8 @@ import io.fabric8.kubernetes.client.KubernetesClient;
 import io.harness.container.ContainerInfo;
 import io.harness.k8s.model.KubernetesConfig;
 import io.harness.logging.LogCallback;
+import io.kubernetes.client.openapi.models.V1ConfigMap;
+import io.kubernetes.client.openapi.models.V1Secret;
 import io.kubernetes.client.openapi.models.V1Pod;
 import io.kubernetes.client.openapi.models.V1Service;
 import io.kubernetes.client.openapi.models.VersionInfo;
@@ -90,9 +92,15 @@ public interface KubernetesContainerService {
 
   void deleteIngress(KubernetesConfig kubernetesConfig, String name);
 
-  ConfigMap createOrReplaceConfigMap(KubernetesConfig kubernetesConfig, ConfigMap definition);
+  ConfigMap createOrReplaceConfigMapFabric8(KubernetesConfig kubernetesConfig, ConfigMap definition);
 
-  ConfigMap getConfigMap(KubernetesConfig kubernetesConfig, String name);
+  V1ConfigMap createOrReplaceConfigMap(KubernetesConfig kubernetesConfig, V1ConfigMap definition);
+
+  ConfigMap getConfigMapFabric8(KubernetesConfig kubernetesConfig, String name);
+
+  V1ConfigMap getConfigMap(KubernetesConfig kubernetesConfig, String name);
+
+  void deleteConfigMapFabric8(KubernetesConfig kubernetesConfig, String name);
 
   void deleteConfigMap(KubernetesConfig kubernetesConfig, String name);
 
@@ -108,11 +116,17 @@ public interface KubernetesContainerService {
 
   void createNamespaceIfNotExist(KubernetesConfig kubernetesConfig);
 
-  Secret getSecret(KubernetesConfig kubernetesConfig, String secretName);
+  Secret getSecretFabric8(KubernetesConfig kubernetesConfig, String secretName);
+
+  V1Secret getSecret(KubernetesConfig kubernetesConfig, String secretName);
+
+  void deleteSecretFabric8(KubernetesConfig kubernetesConfig, String name);
 
   void deleteSecret(KubernetesConfig kubernetesConfig, String name);
 
-  Secret createOrReplaceSecret(KubernetesConfig kubernetesConfig, Secret secret);
+  Secret createOrReplaceSecretFabric8(KubernetesConfig kubernetesConfig, Secret secret);
+
+  V1Secret createOrReplaceSecret(KubernetesConfig kubernetesConfig, V1Secret secret);
 
   List<Pod> getPods(KubernetesConfig kubernetesConfig, Map<String, String> labels);
 
@@ -121,14 +135,29 @@ public interface KubernetesContainerService {
   void waitForPodsToStop(KubernetesConfig kubernetesConfig, Map<String, String> labels, int serviceSteadyStateTimeout,
       List<Pod> originalPods, long startTime, LogCallback logCallback);
 
-  String fetchReleaseHistory(KubernetesConfig kubernetesConfig, String infraMappingId);
+  String fetchReleaseHistoryFromConfigMapFabric8(KubernetesConfig kubernetesConfig, String infraMappingId);
 
-  void saveReleaseHistory(KubernetesConfig kubernetesConfig, String infraMappingxId, String releaseHistory);
+  String fetchReleaseHistoryFromSecretsFabric8(KubernetesConfig kubernetesConfig, String infraMappingId);
+
+  String fetchReleaseHistoryFromConfigMap(KubernetesConfig kubernetesConfig, String infraMappingId);
 
   String fetchReleaseHistoryFromSecrets(KubernetesConfig kubernetesConfig, String infraMappingId);
 
+  void saveReleaseHistoryInConfigMapFabric8(
+      KubernetesConfig kubernetesConfig, String releaseName, String releaseHistory);
+
+  void saveReleaseHistoryInSecretsFabric8(KubernetesConfig kubernetesConfig, String releaseName, String releaseHistory);
+
+  V1ConfigMap saveReleaseHistoryInConfigMap(
+      KubernetesConfig kubernetesConfig, String releaseName, String releaseHistory);
+
+  V1Secret saveReleaseHistoryInSecrets(KubernetesConfig kubernetesConfig, String releaseName, String releaseHistory);
+
+  void saveReleaseHistoryFabric8(
+      KubernetesConfig kubernetesConfig, String releaseName, String releaseHistory, boolean storeInSecrets);
+
   void saveReleaseHistory(
-      KubernetesConfig kubernetesConfig, String infraMappingId, String releaseHistory, boolean storeInSecrets);
+      KubernetesConfig kubernetesConfig, String releaseName, String releaseHistory, boolean storeInSecrets);
 
   List<Pod> getRunningPodsWithLabelsFabric8(
       KubernetesConfig kubernetesConfig, String namespace, Map<String, String> labels);

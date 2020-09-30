@@ -217,7 +217,7 @@ public class K8sTaskHelperTest extends WingsBaseTest {
 
     Map<String, String> data = new HashMap<>();
     configMap.setData(data);
-    doReturn(configMap).when(mockKubernetesContainerService).getConfigMap(any(), anyString());
+    doReturn(configMap).when(mockKubernetesContainerService).getConfigMapFabric8(any(), anyString());
 
     // Empty release history
     List<KubernetesResourceId> kubernetesResourceIds = k8sTaskHelperBase.fetchAllResourcesForRelease(
@@ -266,7 +266,7 @@ public class K8sTaskHelperTest extends WingsBaseTest {
   public void testFetchAllResourcesForReleaseWhenMissingConfigMap() throws Exception {
     KubernetesConfig config = KubernetesConfig.builder().build();
 
-    doReturn(null).when(mockKubernetesContainerService).getConfigMap(config, "releaseName");
+    doReturn(null).when(mockKubernetesContainerService).getConfigMapFabric8(config, "releaseName");
     List<KubernetesResourceId> kubernetesResourceIds =
         k8sTaskHelperBase.fetchAllResourcesForRelease("releaseName", config, logCallback);
     assertThat(kubernetesResourceIds).isEmpty();
@@ -284,7 +284,7 @@ public class K8sTaskHelperTest extends WingsBaseTest {
 
     ConfigMap configMap = new ConfigMap();
     configMap.setKind(ConfigMap.name());
-    doReturn(configMap).when(mockKubernetesContainerService).getConfigMap(any(), anyString());
+    doReturn(configMap).when(mockKubernetesContainerService).getConfigMapFabric8(any(), anyString());
     List<KubernetesResourceId> kubernetesResourceIdList = getKubernetesResourceIdList();
     ReleaseHistory releaseHistory = ReleaseHistory.createNew();
     releaseHistory.setReleases(
@@ -1626,13 +1626,15 @@ public class K8sTaskHelperTest extends WingsBaseTest {
   @Test
   @Owner(developers = ACASIAN)
   @Category(UnitTests.class)
-  public void testShouldGetReleaseHistoryFromSecretFirst() {
+  public void testShouldGetReleaseHistoryFromSecretFirstFabric8() {
     KubernetesConfig kubernetesConfig = KubernetesConfig.builder().build();
-    Mockito.when(mockKubernetesContainerService.fetchReleaseHistoryFromSecrets(any(), any())).thenReturn("secret");
-    String releaseHistory = spyHelperBase.getReleaseHistoryData(kubernetesConfig, "release");
+    Mockito.when(mockKubernetesContainerService.fetchReleaseHistoryFromSecretsFabric8(any(), any()))
+        .thenReturn("secret");
+    String releaseHistory = spyHelperBase.getReleaseHistoryData(kubernetesConfig, "release", false);
     ArgumentCaptor<String> releaseArgumentCaptor = ArgumentCaptor.forClass(String.class);
-    verify(mockKubernetesContainerService).fetchReleaseHistoryFromSecrets(any(), releaseArgumentCaptor.capture());
-    verify(mockKubernetesContainerService, times(0)).fetchReleaseHistory(any(), any());
+    verify(mockKubernetesContainerService)
+        .fetchReleaseHistoryFromSecretsFabric8(any(), releaseArgumentCaptor.capture());
+    verify(mockKubernetesContainerService, times(0)).fetchReleaseHistoryFromConfigMapFabric8(any(), any());
 
     assertThat(releaseArgumentCaptor.getValue()).isEqualTo("release");
     assertThat(releaseHistory).isEqualTo("secret");
@@ -1641,14 +1643,48 @@ public class K8sTaskHelperTest extends WingsBaseTest {
   @Test
   @Owner(developers = ACASIAN)
   @Category(UnitTests.class)
-  public void testShouldGetReleaseHistoryConfigMapIfNotFoundInSecret() {
+  public void testShouldGetReleaseHistoryConfigMapIfNotFoundInSecretFabric8() {
+    KubernetesConfig kubernetesConfig = KubernetesConfig.builder().build();
+    Mockito.when(mockKubernetesContainerService.fetchReleaseHistoryFromSecretsFabric8(any(), any())).thenReturn(null);
+    Mockito.when(mockKubernetesContainerService.fetchReleaseHistoryFromConfigMapFabric8(any(), any()))
+        .thenReturn("configmap");
+    String releaseHistory = spyHelperBase.getReleaseHistoryData(kubernetesConfig, "release", false);
+    ArgumentCaptor<String> releaseArgumentCaptor = ArgumentCaptor.forClass(String.class);
+    verify(mockKubernetesContainerService, times(1)).fetchReleaseHistoryFromSecretsFabric8(any(), anyString());
+    verify(mockKubernetesContainerService, times(1))
+        .fetchReleaseHistoryFromConfigMapFabric8(any(), releaseArgumentCaptor.capture());
+
+    assertThat(releaseArgumentCaptor.getValue()).isEqualTo("release");
+    assertThat(releaseHistory).isEqualTo("configmap");
+  }
+
+  @Test
+  @Owner(developers = ACASIAN)
+  @Category(UnitTests.class)
+  public void testShouldGetReleaseHistoryFromSecretFirstK8sClient() {
+    KubernetesConfig kubernetesConfig = KubernetesConfig.builder().build();
+    Mockito.when(mockKubernetesContainerService.fetchReleaseHistoryFromSecrets(any(), any())).thenReturn("secret");
+    String releaseHistory = spyHelperBase.getReleaseHistoryData(kubernetesConfig, "release", true);
+    ArgumentCaptor<String> releaseArgumentCaptor = ArgumentCaptor.forClass(String.class);
+    verify(mockKubernetesContainerService).fetchReleaseHistoryFromSecrets(any(), releaseArgumentCaptor.capture());
+    verify(mockKubernetesContainerService, times(0)).fetchReleaseHistoryFromConfigMap(any(), any());
+
+    assertThat(releaseArgumentCaptor.getValue()).isEqualTo("release");
+    assertThat(releaseHistory).isEqualTo("secret");
+  }
+
+  @Test
+  @Owner(developers = ACASIAN)
+  @Category(UnitTests.class)
+  public void testShouldGetReleaseHistoryConfigMapIfNotFoundInSecretK8sClient() {
     KubernetesConfig kubernetesConfig = KubernetesConfig.builder().build();
     Mockito.when(mockKubernetesContainerService.fetchReleaseHistoryFromSecrets(any(), any())).thenReturn(null);
-    Mockito.when(mockKubernetesContainerService.fetchReleaseHistory(any(), any())).thenReturn("configmap");
-    String releaseHistory = spyHelperBase.getReleaseHistoryData(kubernetesConfig, "release");
+    Mockito.when(mockKubernetesContainerService.fetchReleaseHistoryFromConfigMap(any(), any())).thenReturn("configmap");
+    String releaseHistory = spyHelperBase.getReleaseHistoryData(kubernetesConfig, "release", true);
     ArgumentCaptor<String> releaseArgumentCaptor = ArgumentCaptor.forClass(String.class);
     verify(mockKubernetesContainerService, times(1)).fetchReleaseHistoryFromSecrets(any(), anyString());
-    verify(mockKubernetesContainerService, times(1)).fetchReleaseHistory(any(), releaseArgumentCaptor.capture());
+    verify(mockKubernetesContainerService, times(1))
+        .fetchReleaseHistoryFromConfigMap(any(), releaseArgumentCaptor.capture());
 
     assertThat(releaseArgumentCaptor.getValue()).isEqualTo("release");
     assertThat(releaseHistory).isEqualTo("configmap");

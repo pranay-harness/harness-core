@@ -135,8 +135,9 @@ public class K8sRollingDeployTaskHandler extends K8sTaskHandler {
       k8sRollingBaseHandler.setManagedWorkloadsInRelease(k8sDelegateTaskParams, managedWorkloads, release, client);
       k8sRollingBaseHandler.setCustomWorkloadsInRelease(customWorkloads, release);
 
-      kubernetesContainerService.saveReleaseHistory(kubernetesConfig, k8sRollingDeployTaskParameters.getReleaseName(),
-          releaseHistory.getAsYaml(), !customWorkloads.isEmpty());
+      k8sTaskHelperBase.saveReleaseHistory(kubernetesConfig, k8sRollingDeployTaskParameters.getReleaseName(),
+          releaseHistory.getAsYaml(), !customWorkloads.isEmpty(),
+          k8sRollingDeployTaskParameters.isDeprecateFabric8Enabled());
 
       List<KubernetesResourceId> managedWorkloadKubernetesResourceIds =
           managedWorkloads.stream().map(KubernetesResource::getResourceId).collect(Collectors.toList());
@@ -156,8 +157,9 @@ public class K8sRollingDeployTaskHandler extends K8sTaskHandler {
 
       if (!success || !customWorkloadsStatusSuccess) {
         releaseHistory.setReleaseStatus(Status.Failed);
-        kubernetesContainerService.saveReleaseHistory(kubernetesConfig, k8sRollingDeployTaskParameters.getReleaseName(),
-            releaseHistory.getAsYaml(), !customWorkloads.isEmpty());
+        k8sTaskHelperBase.saveReleaseHistory(kubernetesConfig, k8sRollingDeployTaskParameters.getReleaseName(),
+            releaseHistory.getAsYaml(), !customWorkloads.isEmpty(),
+            k8sRollingDeployTaskParameters.isDeprecateFabric8Enabled());
         return getFailureResponse();
       }
     }
@@ -169,8 +171,9 @@ public class K8sRollingDeployTaskHandler extends K8sTaskHandler {
         k8sDelegateTaskParams, k8sTaskHelper.getExecutionLogCallback(k8sRollingDeployTaskParameters, WrapUp), client);
 
     releaseHistory.setReleaseStatus(Status.Succeeded);
-    kubernetesContainerService.saveReleaseHistory(kubernetesConfig, k8sRollingDeployTaskParameters.getReleaseName(),
-        releaseHistory.getAsYaml(), !customWorkloads.isEmpty());
+    k8sTaskHelperBase.saveReleaseHistory(kubernetesConfig, k8sRollingDeployTaskParameters.getReleaseName(),
+        releaseHistory.getAsYaml(), !customWorkloads.isEmpty(),
+        k8sRollingDeployTaskParameters.isDeprecateFabric8Enabled());
 
     K8sRollingDeployResponse rollingSetupResponse =
         K8sRollingDeployResponse.builder()
@@ -205,9 +208,9 @@ public class K8sRollingDeployTaskHandler extends K8sTaskHandler {
     executionLogCallback.saveExecutionLog("Initializing..\n");
     kubernetesConfig = containerDeploymentDelegateHelper.getKubernetesConfig(request.getK8sClusterConfig());
     client = Kubectl.client(k8sDelegateTaskParams.getKubectlPath(), k8sDelegateTaskParams.getKubeconfigPath());
-
     try {
-      String releaseHistoryData = k8sTaskHelperBase.getReleaseHistoryData(kubernetesConfig, request.getReleaseName());
+      String releaseHistoryData = k8sTaskHelperBase.getReleaseHistoryData(
+          kubernetesConfig, request.getReleaseName(), request.isDeprecateFabric8Enabled());
       releaseHistory = (StringUtils.isEmpty(releaseHistoryData)) ? ReleaseHistory.createNew()
                                                                  : ReleaseHistory.createFromData(releaseHistoryData);
 

@@ -1605,7 +1605,7 @@ public class K8sTaskHelperBase {
       String releaseName, KubernetesConfig kubernetesConfig, LogCallback executionLogCallback) throws IOException {
     executionLogCallback.saveExecutionLog("Fetching all resources created for release: " + releaseName);
 
-    ConfigMap configMap = kubernetesContainerService.getConfigMap(kubernetesConfig, releaseName);
+    ConfigMap configMap = kubernetesContainerService.getConfigMapFabric8(kubernetesConfig, releaseName);
 
     if (configMap == null || isEmpty(configMap.getData()) || isBlank(configMap.getData().get(ReleaseHistoryKeyName))) {
       executionLogCallback.saveExecutionLog("No resource history was available");
@@ -1836,15 +1836,70 @@ public class K8sTaskHelperBase {
     };
   }
 
-  public String getReleaseHistoryData(KubernetesConfig kubernetesConfig, String releaseName) {
+  public String getReleaseHistoryData(
+      KubernetesConfig kubernetesConfig, String releaseName, boolean isDeprecateFabric8Enabled) {
+    return isDeprecateFabric8Enabled ? getReleaseHistoryDataK8sClient(kubernetesConfig, releaseName)
+                                     : getReleaseHistoryDataFabric8(kubernetesConfig, releaseName);
+  }
+
+  private String getReleaseHistoryDataFabric8(KubernetesConfig kubernetesConfig, String releaseName) {
+    String releaseHistoryData =
+        kubernetesContainerService.fetchReleaseHistoryFromSecretsFabric8(kubernetesConfig, releaseName);
+
+    if (isEmpty(releaseHistoryData)) {
+      releaseHistoryData =
+          kubernetesContainerService.fetchReleaseHistoryFromConfigMapFabric8(kubernetesConfig, releaseName);
+    }
+
+    return releaseHistoryData;
+  }
+
+  private String getReleaseHistoryDataK8sClient(KubernetesConfig kubernetesConfig, String releaseName) {
     String releaseHistoryData =
         kubernetesContainerService.fetchReleaseHistoryFromSecrets(kubernetesConfig, releaseName);
 
     if (isEmpty(releaseHistoryData)) {
-      releaseHistoryData = kubernetesContainerService.fetchReleaseHistory(kubernetesConfig, releaseName);
+      releaseHistoryData = kubernetesContainerService.fetchReleaseHistoryFromConfigMap(kubernetesConfig, releaseName);
     }
 
     return releaseHistoryData;
+  }
+
+  public String getReleaseHistoryDataFromConfigMap(
+      KubernetesConfig kubernetesConfig, String releaseName, boolean isDeprecateFabric8Enabled) {
+    if (isDeprecateFabric8Enabled) {
+      return kubernetesContainerService.fetchReleaseHistoryFromConfigMap(kubernetesConfig, releaseName);
+    }
+
+    return kubernetesContainerService.fetchReleaseHistoryFromConfigMapFabric8(kubernetesConfig, releaseName);
+  }
+
+  public void saveReleaseHistoryInConfigMap(KubernetesConfig kubernetesConfig, String releaseName,
+      String releaseHistoryAsYaml, boolean isDeprecateFabric8Enabled) {
+    if (isDeprecateFabric8Enabled) {
+      kubernetesContainerService.saveReleaseHistoryInConfigMap(kubernetesConfig, releaseName, releaseHistoryAsYaml);
+    } else {
+      kubernetesContainerService.saveReleaseHistoryInConfigMapFabric8(
+          kubernetesConfig, releaseName, releaseHistoryAsYaml);
+    }
+  }
+
+  public void saveReleaseHistory(KubernetesConfig kubernetesConfig, String releaseName, String releaseHistory,
+      boolean storeInSecrets, boolean isDeprecateFabric8Enabled) {
+    if (isDeprecateFabric8Enabled) {
+      kubernetesContainerService.saveReleaseHistory(kubernetesConfig, releaseName, releaseHistory, storeInSecrets);
+    } else {
+      kubernetesContainerService.saveReleaseHistoryFabric8(
+          kubernetesConfig, releaseName, releaseHistory, storeInSecrets);
+    }
+  }
+
+  public String getReleaseHistoryFromSecret(
+      KubernetesConfig kubernetesConfig, String releaseName, boolean isDeprecateFabric8Enabled) {
+    if (isDeprecateFabric8Enabled) {
+      return kubernetesContainerService.fetchReleaseHistoryFromSecrets(kubernetesConfig, releaseName);
+    }
+    return kubernetesContainerService.fetchReleaseHistoryFromSecretsFabric8(kubernetesConfig, releaseName);
   }
 
   public LogCallback getExecutionLogCallback(K8sRollingDeployRequest k8sRollingDeployRequest, String commandUnitName) {

@@ -1,6 +1,8 @@
 package io.harness.k8s;
 
+import static io.harness.data.encoding.EncodingUtils.decodeBase64;
 import static io.harness.data.encoding.EncodingUtils.encodeBase64;
+import static io.harness.data.encoding.EncodingUtils.encodeBase64ToByteArray;
 import static io.harness.k8s.KubernetesConvention.ReleaseHistoryKeyName;
 import static io.harness.k8s.model.KubernetesClusterAuthType.OIDC;
 import static io.harness.k8s.model.KubernetesClusterAuthType.USER_PASSWORD;
@@ -109,10 +111,22 @@ import io.kubernetes.client.openapi.models.V1PodList;
 import io.kubernetes.client.openapi.models.V1PodListBuilder;
 import io.kubernetes.client.openapi.models.V1PodStatus;
 import io.kubernetes.client.openapi.models.V1PodStatusBuilder;
+import io.kubernetes.client.openapi.models.V1ConfigMap;
+import io.kubernetes.client.openapi.models.V1ConfigMapBuilder;
+import io.kubernetes.client.openapi.models.V1ConfigMapList;
+import io.kubernetes.client.openapi.models.V1ConfigMapListBuilder;
+import io.kubernetes.client.openapi.models.V1ListMetaBuilder;
+import io.kubernetes.client.openapi.models.V1ObjectMetaBuilder;
+import io.kubernetes.client.openapi.models.V1Secret;
+import io.kubernetes.client.openapi.models.V1SecretBuilder;
+import io.kubernetes.client.openapi.models.V1SecretList;
+import io.kubernetes.client.openapi.models.V1SecretListBuilder;
 import io.kubernetes.client.openapi.models.V1Service;
 import io.kubernetes.client.openapi.models.V1ServiceBuilder;
 import io.kubernetes.client.openapi.models.V1ServiceList;
 import io.kubernetes.client.openapi.models.V1ServiceListBuilder;
+import io.kubernetes.client.openapi.models.V1Status;
+import io.kubernetes.client.openapi.models.V1StatusBuilder;
 import io.kubernetes.client.openapi.models.VersionInfo;
 import io.kubernetes.client.openapi.models.VersionInfoBuilder;
 import okhttp3.Call;
@@ -553,17 +567,17 @@ public class KubernetesContainerServiceImplTest extends CategoryTest {
   @Owner(developers = ANSHUL)
   @Category(UnitTests.class)
   public void testSecrets() {
-    Secret returnedSecret = kubernetesContainerService.getSecret(KUBERNETES_CONFIG, "");
+    Secret returnedSecret = kubernetesContainerService.getSecretFabric8(KUBERNETES_CONFIG, "");
     assertThat(returnedSecret).isNull();
 
     when(secretResource.get()).thenReturn(secret);
-    kubernetesContainerService.getSecret(KUBERNETES_CONFIG, "secret");
+    kubernetesContainerService.getSecretFabric8(KUBERNETES_CONFIG, "secret");
     verify(secretResource).get();
 
-    kubernetesContainerService.deleteSecret(KUBERNETES_CONFIG, "secret");
+    kubernetesContainerService.deleteSecretFabric8(KUBERNETES_CONFIG, "secret");
     verify(secretResource).delete();
 
-    kubernetesContainerService.createOrReplaceSecret(KUBERNETES_CONFIG, secret);
+    kubernetesContainerService.createOrReplaceSecretFabric8(KUBERNETES_CONFIG, secret);
     verify(namespacedSecrets).createOrReplace(secret);
   }
 
@@ -572,10 +586,10 @@ public class KubernetesContainerServiceImplTest extends CategoryTest {
   @Category(UnitTests.class)
   public void testConfigMap() {
     when(configMapResource.get()).thenReturn(configMap);
-    kubernetesContainerService.getConfigMap(KUBERNETES_CONFIG, "cm");
+    kubernetesContainerService.getConfigMapFabric8(KUBERNETES_CONFIG, "cm");
     verify(configMapResource).get();
 
-    kubernetesContainerService.deleteConfigMap(KUBERNETES_CONFIG, "cm-delete");
+    kubernetesContainerService.deleteConfigMapFabric8(KUBERNETES_CONFIG, "cm-delete");
     ArgumentCaptor<String> args = ArgumentCaptor.forClass(String.class);
     verify(namespacedConfigMaps, times(2)).withName(args.capture());
     assertThat(args.getValue()).isEqualTo("cm-delete");
@@ -585,11 +599,11 @@ public class KubernetesContainerServiceImplTest extends CategoryTest {
     objectMeta.setName("cm");
     replicationController.setMetadata(objectMeta);
     configMap.setMetadata(objectMeta);
-    kubernetesContainerService.createOrReplaceConfigMap(KUBERNETES_CONFIG, configMap);
+    kubernetesContainerService.createOrReplaceConfigMapFabric8(KUBERNETES_CONFIG, configMap);
     verify(namespacedConfigMaps).createOrReplace(configMap);
 
     when(kubernetesClient.configMaps()).thenThrow(new InvalidRequestException("test"));
-    ConfigMap returnedConfigMap = kubernetesContainerService.getConfigMap(KUBERNETES_CONFIG, "");
+    ConfigMap returnedConfigMap = kubernetesContainerService.getConfigMapFabric8(KUBERNETES_CONFIG, "");
     assertThat(returnedConfigMap).isNull();
   }
 
@@ -755,8 +769,9 @@ public class KubernetesContainerServiceImplTest extends CategoryTest {
   @Test
   @Owner(developers = ACASIAN)
   @Category(UnitTests.class)
-  public void testShouldFetchReleaseHistoryFromSecrets() {
-    String releaseHistory = kubernetesContainerService.fetchReleaseHistoryFromSecrets(KUBERNETES_CONFIG, "secret");
+  public void testShouldFetchReleaseHistoryFromSecretsFabric8() {
+    String releaseHistory =
+        kubernetesContainerService.fetchReleaseHistoryFromSecretsFabric8(KUBERNETES_CONFIG, "secret");
     ArgumentCaptor<String> args = ArgumentCaptor.forClass(String.class);
     verify(namespacedSecrets).withName(args.capture());
     assertThat(args.getValue()).isEqualTo("secret");
@@ -768,8 +783,9 @@ public class KubernetesContainerServiceImplTest extends CategoryTest {
   @Test
   @Owner(developers = ACASIAN)
   @Category(UnitTests.class)
-  public void testShouldFetchReleaseHistoryFromConfigMap() {
-    String releaseHistory = kubernetesContainerService.fetchReleaseHistory(KUBERNETES_CONFIG, "configmap");
+  public void testShouldFetchReleaseHistoryFromConfigMapFabric8() {
+    String releaseHistory =
+        kubernetesContainerService.fetchReleaseHistoryFromConfigMapFabric8(KUBERNETES_CONFIG, "configmap");
     ArgumentCaptor<String> args = ArgumentCaptor.forClass(String.class);
     verify(namespacedConfigMaps).withName(args.capture());
     assertThat(args.getValue()).isEqualTo("configmap");
@@ -781,8 +797,8 @@ public class KubernetesContainerServiceImplTest extends CategoryTest {
   @Test
   @Owner(developers = ACASIAN)
   @Category(UnitTests.class)
-  public void testShouldSaveReleaseHistoryInConfigMap() {
-    kubernetesContainerService.saveReleaseHistory(KUBERNETES_CONFIG, "release", "version=1.0");
+  public void testShouldSaveReleaseHistoryInConfigMapFabric8() {
+    kubernetesContainerService.saveReleaseHistoryInConfigMapFabric8(KUBERNETES_CONFIG, "release", "version=1.0");
     ArgumentCaptor<String> args = ArgumentCaptor.forClass(String.class);
     verify(namespacedConfigMaps, times(2)).withName(args.capture());
     assertThat(args.getValue()).isEqualTo("test-rn");
@@ -799,8 +815,8 @@ public class KubernetesContainerServiceImplTest extends CategoryTest {
   @Test
   @Owner(developers = ACASIAN)
   @Category(UnitTests.class)
-  public void testShouldSaveReleaseHistoryInConfigMapWhenFalse() {
-    kubernetesContainerService.saveReleaseHistory(KUBERNETES_CONFIG, "release", "version=1.0", false);
+  public void testShouldSaveReleaseHistoryInConfigMapFabric8WhenFalse() {
+    kubernetesContainerService.saveReleaseHistoryFabric8(KUBERNETES_CONFIG, "release", "version=1.0", false);
     ArgumentCaptor<String> args = ArgumentCaptor.forClass(String.class);
     verify(namespacedConfigMaps, times(2)).withName(args.capture());
     assertThat(args.getValue()).isEqualTo("test-rn");
@@ -817,8 +833,8 @@ public class KubernetesContainerServiceImplTest extends CategoryTest {
   @Test
   @Owner(developers = ACASIAN)
   @Category(UnitTests.class)
-  public void testShouldSaveReleaseHistoryInSecrets() {
-    kubernetesContainerService.saveReleaseHistoryInSecrets(KUBERNETES_CONFIG, "release", "version=2.0");
+  public void testShouldSaveReleaseHistoryInSecretsFabric8() {
+    kubernetesContainerService.saveReleaseHistoryInSecretsFabric8(KUBERNETES_CONFIG, "release", "version=2.0");
     ArgumentCaptor<String> args = ArgumentCaptor.forClass(String.class);
     verify(namespacedSecrets, times(1)).withName(args.capture());
     assertThat(args.getValue()).isEqualTo("release");
@@ -835,8 +851,8 @@ public class KubernetesContainerServiceImplTest extends CategoryTest {
   @Test
   @Owner(developers = ACASIAN)
   @Category(UnitTests.class)
-  public void testShouldSaveReleaseHistoryInSecretsWhenTrue() {
-    kubernetesContainerService.saveReleaseHistory(KUBERNETES_CONFIG, "release", "version=2.0", true);
+  public void testShouldSaveReleaseHistoryInSecretsFabric8WhenTrue() {
+    kubernetesContainerService.saveReleaseHistoryFabric8(KUBERNETES_CONFIG, "release", "version=2.0", true);
     ArgumentCaptor<String> args = ArgumentCaptor.forClass(String.class);
     verify(namespacedSecrets, times(1)).withName(args.capture());
     assertThat(args.getValue()).isEqualTo("release");
@@ -1056,5 +1072,337 @@ public class KubernetesContainerServiceImplTest extends CategoryTest {
 
     assertThatThrownBy(() -> kubernetesContainerService.getRunningPodsWithLabels(KUBERNETES_CONFIG, "default", labels))
         .hasMessageContaining("Unable to get running pods. Code: 401, message: {\"error\": \"unauthorized\"}");
+  }
+
+  @Test
+  @Owner(developers = ACASIAN)
+  @Category(UnitTests.class)
+  public void testGetConfigMap() throws Exception {
+    V1ConfigMap configMap = new V1ConfigMapBuilder().build();
+    V1ConfigMapList configMapList = new V1ConfigMapListBuilder().withItems(configMap).build();
+
+    when(k8sApiClient.execute(k8sApiCall, TypeToken.get(V1ConfigMapList.class).getType()))
+        .thenReturn(new ApiResponse<>(200, emptyMap(), configMapList));
+
+    V1ConfigMap result = kubernetesContainerService.getConfigMap(KUBERNETES_CONFIG, "configmap");
+    assertThat(result).isEqualTo(configMap);
+  }
+
+  @Test
+  @Owner(developers = ACASIAN)
+  @Category(UnitTests.class)
+  public void testShouldGetNullWhenNoConfigMapExists() throws Exception {
+    V1ConfigMapList configMapList = new V1ConfigMapListBuilder().build();
+
+    when(k8sApiClient.execute(k8sApiCall, TypeToken.get(V1ConfigMapList.class).getType()))
+        .thenReturn(new ApiResponse<>(200, emptyMap(), configMapList));
+
+    V1ConfigMap result = kubernetesContainerService.getConfigMap(KUBERNETES_CONFIG, "configmap");
+    assertThat(result).isNull();
+  }
+
+  @Test
+  @Owner(developers = ACASIAN)
+  @Category(UnitTests.class)
+  public void testGetConfigMapException() throws Exception {
+    when(k8sApiClient.execute(k8sApiCall, TypeToken.get(V1ConfigMapList.class).getType()))
+        .thenThrow(new ApiException(403, "", emptyMap(), "{error: \"cluster not found\"}"));
+
+    assertThatThrownBy(() -> kubernetesContainerService.getConfigMap(KUBERNETES_CONFIG, "configmap"))
+        .hasMessageContaining("Failed to get ConfigMap. Code: 403, message: {error: \"cluster not found\"}");
+  }
+
+  @Test
+  @Owner(developers = ACASIAN)
+  @Category(UnitTests.class)
+  public void testGetSecret() throws Exception {
+    V1Secret secret = new V1SecretBuilder().build();
+    V1SecretList secretList = new V1SecretListBuilder().withItems(secret).build();
+
+    when(k8sApiClient.execute(k8sApiCall, TypeToken.get(V1SecretList.class).getType()))
+        .thenReturn(new ApiResponse<>(200, emptyMap(), secretList));
+
+    V1Secret result = kubernetesContainerService.getSecret(KUBERNETES_CONFIG, "secret");
+    assertThat(result).isEqualTo(secret);
+  }
+
+  @Test
+  @Owner(developers = ACASIAN)
+  @Category(UnitTests.class)
+  public void testShouldGetNullWhenNoSecretExists() throws Exception {
+    V1SecretList secretList = new V1SecretListBuilder().build();
+
+    when(k8sApiClient.execute(k8sApiCall, TypeToken.get(V1SecretList.class).getType()))
+        .thenReturn(new ApiResponse<>(200, emptyMap(), secretList));
+
+    V1Secret result = kubernetesContainerService.getSecret(KUBERNETES_CONFIG, "secret");
+    assertThat(result).isNull();
+  }
+
+  @Test
+  @Owner(developers = ACASIAN)
+  @Category(UnitTests.class)
+  public void testGetSecretException() throws Exception {
+    when(k8sApiClient.execute(k8sApiCall, TypeToken.get(V1SecretList.class).getType()))
+        .thenThrow(new ApiException(403, "", emptyMap(), "{error: \"cluster not found\"}"));
+
+    assertThatThrownBy(() -> kubernetesContainerService.getSecret(KUBERNETES_CONFIG, "secret"))
+        .hasMessageContaining("Failed to get Secret. Code: 403, message: {error: \"cluster not found\"}");
+  }
+
+  @Test
+  @Owner(developers = ACASIAN)
+  @Category(UnitTests.class)
+  public void testShouldFetchReleaseHistoryFromSecrets() throws Exception {
+    V1Secret secret = new V1SecretBuilder().withData(ImmutableMap.of(ReleaseHistoryKeyName, "test".getBytes())).build();
+    V1SecretList secretList = new V1SecretListBuilder().withItems(secret).build();
+
+    when(k8sApiClient.execute(k8sApiCall, TypeToken.get(V1SecretList.class).getType()))
+        .thenReturn(new ApiResponse<>(200, emptyMap(), secretList));
+
+    String releaseHistory = kubernetesContainerService.fetchReleaseHistoryFromSecrets(KUBERNETES_CONFIG, "secret");
+
+    assertThat(releaseHistory).isEqualTo("test");
+  }
+
+  @Test
+  @Owner(developers = ACASIAN)
+  @Category(UnitTests.class)
+  public void testShouldFetchEmptyReleaseHistoryFromSecrets() throws Exception {
+    V1Secret secret = new V1SecretBuilder().build();
+    V1SecretList secretList = new V1SecretListBuilder().withItems(secret).build();
+
+    when(k8sApiClient.execute(k8sApiCall, TypeToken.get(V1SecretList.class).getType()))
+        .thenReturn(new ApiResponse<>(200, emptyMap(), secretList));
+
+    String releaseHistory = kubernetesContainerService.fetchReleaseHistoryFromSecrets(KUBERNETES_CONFIG, "secret");
+
+    assertThat(releaseHistory).isEmpty();
+  }
+
+  @Test
+  @Owner(developers = ACASIAN)
+  @Category(UnitTests.class)
+  public void testShouldFetchEmptyReleaseHistoryWhenNoSecrets() throws Exception {
+    V1SecretList secretList = new V1SecretListBuilder().build();
+
+    when(k8sApiClient.execute(k8sApiCall, TypeToken.get(V1SecretList.class).getType()))
+        .thenReturn(new ApiResponse<>(200, emptyMap(), secretList));
+
+    String releaseHistory = kubernetesContainerService.fetchReleaseHistoryFromSecrets(KUBERNETES_CONFIG, "secret");
+    assertThat(releaseHistory).isEmpty();
+  }
+
+  @Test
+  @Owner(developers = ACASIAN)
+  @Category(UnitTests.class)
+  public void testShouldFetchReleaseHistoryFromConfigMap() throws Exception {
+    V1ConfigMap configMap = new V1ConfigMapBuilder().withData(ImmutableMap.of(ReleaseHistoryKeyName, "test")).build();
+    V1ConfigMapList configMapList = new V1ConfigMapListBuilder().withItems(configMap).build();
+
+    when(k8sApiClient.execute(k8sApiCall, TypeToken.get(V1ConfigMapList.class).getType()))
+        .thenReturn(new ApiResponse<>(200, emptyMap(), configMapList));
+
+    String releaseHistory = kubernetesContainerService.fetchReleaseHistoryFromConfigMap(KUBERNETES_CONFIG, "configmap");
+    assertThat(releaseHistory).isEqualTo("test");
+  }
+
+  @Test
+  @Owner(developers = ACASIAN)
+  @Category(UnitTests.class)
+  public void testShouldFetchEmptyReleaseHistoryFromConfigMap() throws Exception {
+    V1ConfigMap configMap = new V1ConfigMapBuilder().build();
+    V1ConfigMapList configMapList = new V1ConfigMapListBuilder().withItems(configMap).build();
+
+    when(k8sApiClient.execute(k8sApiCall, TypeToken.get(V1ConfigMapList.class).getType()))
+        .thenReturn(new ApiResponse<>(200, emptyMap(), configMapList));
+
+    String releaseHistory = kubernetesContainerService.fetchReleaseHistoryFromConfigMap(KUBERNETES_CONFIG, "configmap");
+    assertThat(releaseHistory).isEmpty();
+  }
+
+  @Test
+  @Owner(developers = ACASIAN)
+  @Category(UnitTests.class)
+  public void testShouldFetchEmptyReleaseHistoryWhenNoConfigMapExists() throws Exception {
+    V1ConfigMapList configMapList = new V1ConfigMapListBuilder().build();
+
+    when(k8sApiClient.execute(k8sApiCall, TypeToken.get(V1ConfigMapList.class).getType()))
+        .thenReturn(new ApiResponse<>(200, emptyMap(), configMapList));
+
+    String releaseHistory = kubernetesContainerService.fetchReleaseHistoryFromConfigMap(KUBERNETES_CONFIG, "configmap");
+    assertThat(releaseHistory).isEmpty();
+  }
+
+  @Test
+  @Owner(developers = ACASIAN)
+  @Category(UnitTests.class)
+  public void testShouldUpdateReleaseHistoryInConfigMap() throws Exception {
+    V1ConfigMap configMap =
+        new V1ConfigMapBuilder()
+            .withMetadata(
+                new V1ObjectMetaBuilder().withNamespace(KUBERNETES_CONFIG.getNamespace()).withName("release").build())
+            .withData(ImmutableMap.of(ReleaseHistoryKeyName, "test"))
+            .build();
+    V1ConfigMapList configMapList = new V1ConfigMapListBuilder().withItems(configMap).build();
+
+    when(k8sApiClient.execute(k8sApiCall, TypeToken.get(V1ConfigMapList.class).getType()))
+        .thenReturn(new ApiResponse<>(200, emptyMap(), configMapList));
+
+    configMap.setData(ImmutableMap.of(ReleaseHistoryKeyName, "version=1.0"));
+    configMap.getMetadata().setNamespace("test");
+    when(k8sApiClient.execute(k8sApiCall, TypeToken.get(V1ConfigMap.class).getType()))
+        .thenReturn(new ApiResponse<>(200, emptyMap(), configMap));
+
+    V1ConfigMap result =
+        kubernetesContainerService.saveReleaseHistoryInConfigMap(KUBERNETES_CONFIG, "release", "version=1.0");
+    assertThat(result).isNotNull();
+    assertThat(result.getData().get(ReleaseHistoryKeyName)).isEqualTo("version=1.0");
+    assertThat(result.getMetadata().getNamespace()).isEqualTo("test");
+  }
+
+  @Test
+  @Owner(developers = ACASIAN)
+  @Category(UnitTests.class)
+  public void testShouldCreateReleaseHistoryInConfigMap() throws Exception {
+    V1ConfigMap configMap =
+        new V1ConfigMapBuilder()
+            .withMetadata(
+                new V1ObjectMetaBuilder().withNamespace(KUBERNETES_CONFIG.getNamespace()).withName("release").build())
+            .withData(ImmutableMap.of(ReleaseHistoryKeyName, "version=2.0"))
+            .build();
+
+    when(k8sApiClient.execute(k8sApiCall, TypeToken.get(V1ConfigMapList.class).getType()))
+        .thenReturn(new ApiResponse<>(200, emptyMap(), new V1ConfigMapList()));
+
+    when(k8sApiClient.execute(k8sApiCall, TypeToken.get(V1ConfigMap.class).getType()))
+        .thenReturn(new ApiResponse<>(200, emptyMap(), configMap));
+
+    V1ConfigMap result =
+        kubernetesContainerService.saveReleaseHistoryInConfigMap(KUBERNETES_CONFIG, "release", "version=2.0");
+    assertThat(result).isNotNull();
+    assertThat(result.getData().get(ReleaseHistoryKeyName)).isEqualTo("version=2.0");
+    assertThat(result.getMetadata().getNamespace()).isEqualTo("default");
+  }
+
+  @Test
+  @Owner(developers = ACASIAN)
+  @Category(UnitTests.class)
+  public void testShouldSaveReleaseHistoryInConfigMapWhenFalse() throws Exception {
+    V1ConfigMap configMap =
+        new V1ConfigMapBuilder()
+            .withMetadata(
+                new V1ObjectMetaBuilder().withNamespace(KUBERNETES_CONFIG.getNamespace()).withName("release").build())
+            .withData(ImmutableMap.of(ReleaseHistoryKeyName, "version=2.0"))
+            .build();
+
+    when(k8sApiClient.execute(k8sApiCall, TypeToken.get(V1ConfigMapList.class).getType()))
+        .thenReturn(new ApiResponse<>(200, emptyMap(), new V1ConfigMapList()));
+
+    when(k8sApiClient.execute(k8sApiCall, TypeToken.get(V1ConfigMap.class).getType()))
+        .thenReturn(new ApiResponse<>(200, emptyMap(), configMap));
+
+    kubernetesContainerService.saveReleaseHistory(KUBERNETES_CONFIG, "release", "version=2.0", false);
+
+    verify(k8sApiClient, times(1)).execute(k8sApiCall, TypeToken.get(V1ConfigMap.class).getType());
+  }
+
+  @Test
+  @Owner(developers = ACASIAN)
+  @Category(UnitTests.class)
+  public void testShouldUpdateReleaseHistoryInSecret() throws Exception {
+    V1Secret secret =
+        new V1SecretBuilder()
+            .withMetadata(
+                new V1ObjectMetaBuilder().withNamespace(KUBERNETES_CONFIG.getNamespace()).withName("release").build())
+            .withData(ImmutableMap.of(ReleaseHistoryKeyName, encodeBase64ToByteArray("test".getBytes())))
+            .build();
+    V1SecretList secretList = new V1SecretListBuilder().withItems(secret).build();
+
+    when(k8sApiClient.execute(k8sApiCall, TypeToken.get(V1SecretList.class).getType()))
+        .thenReturn(new ApiResponse<>(200, emptyMap(), secretList));
+
+    secret.setData(ImmutableMap.of(ReleaseHistoryKeyName, encodeBase64ToByteArray("version=1.0".getBytes())));
+    secret.getMetadata().setNamespace("test");
+    when(k8sApiClient.execute(k8sApiCall, TypeToken.get(V1Secret.class).getType()))
+        .thenReturn(new ApiResponse<>(200, emptyMap(), secret));
+
+    V1Secret result =
+        kubernetesContainerService.saveReleaseHistoryInSecrets(KUBERNETES_CONFIG, "release", "version=1.0");
+    assertThat(result).isNotNull();
+    assertThat(new String(decodeBase64(result.getData().get(ReleaseHistoryKeyName)))).isEqualTo("version=1.0");
+    assertThat(result.getMetadata().getNamespace()).isEqualTo("test");
+  }
+
+  @Test
+  @Owner(developers = ACASIAN)
+  @Category(UnitTests.class)
+  public void testShouldCreateReleaseHistoryInSecret() throws Exception {
+    V1Secret secret =
+        new V1SecretBuilder()
+            .withMetadata(
+                new V1ObjectMetaBuilder().withNamespace(KUBERNETES_CONFIG.getNamespace()).withName("release").build())
+            .withData(ImmutableMap.of(ReleaseHistoryKeyName, encodeBase64ToByteArray("version=2.0".getBytes())))
+            .build();
+
+    when(k8sApiClient.execute(k8sApiCall, TypeToken.get(V1SecretList.class).getType()))
+        .thenReturn(new ApiResponse<>(200, emptyMap(), new V1SecretList()));
+
+    when(k8sApiClient.execute(k8sApiCall, TypeToken.get(V1Secret.class).getType()))
+        .thenReturn(new ApiResponse<>(200, emptyMap(), secret));
+
+    V1Secret result =
+        kubernetesContainerService.saveReleaseHistoryInSecrets(KUBERNETES_CONFIG, "release", "version=2.0");
+    assertThat(result).isNotNull();
+    assertThat(new String(decodeBase64(result.getData().get(ReleaseHistoryKeyName)))).isEqualTo("version=2.0");
+    assertThat(result.getMetadata().getNamespace()).isEqualTo("default");
+  }
+
+  @Test
+  @Owner(developers = ACASIAN)
+  @Category(UnitTests.class)
+  public void testShouldCreateReleaseHistoryInSecretWhenTrue() throws Exception {
+    V1Secret secret =
+        new V1SecretBuilder()
+            .withMetadata(
+                new V1ObjectMetaBuilder().withNamespace(KUBERNETES_CONFIG.getNamespace()).withName("release").build())
+            .withData(ImmutableMap.of(ReleaseHistoryKeyName, encodeBase64ToByteArray("version=2.0".getBytes())))
+            .build();
+
+    when(k8sApiClient.execute(k8sApiCall, TypeToken.get(V1SecretList.class).getType()))
+        .thenReturn(new ApiResponse<>(200, emptyMap(), new V1SecretList()));
+
+    when(k8sApiClient.execute(k8sApiCall, TypeToken.get(V1Secret.class).getType()))
+        .thenReturn(new ApiResponse<>(200, emptyMap(), secret));
+
+    kubernetesContainerService.saveReleaseHistory(KUBERNETES_CONFIG, "release", "version=2.0", true);
+
+    verify(k8sApiClient, times(1)).execute(k8sApiCall, TypeToken.get(V1Secret.class).getType());
+  }
+
+  @Test
+  @Owner(developers = ACASIAN)
+  @Category(UnitTests.class)
+  public void testShouldDeleteSecret() throws Exception {
+    V1Status status = new V1StatusBuilder().withMetadata(new V1ListMetaBuilder().build()).build();
+    when(k8sApiClient.execute(k8sApiCall, TypeToken.get(V1Status.class).getType()))
+        .thenReturn(new ApiResponse<>(200, emptyMap(), status));
+
+    kubernetesContainerService.deleteSecret(KUBERNETES_CONFIG, "release");
+
+    verify(k8sApiClient, times(1)).execute(k8sApiCall, TypeToken.get(V1Status.class).getType());
+  }
+
+  @Test
+  @Owner(developers = ACASIAN)
+  @Category(UnitTests.class)
+  public void testShouldDeleteConfigMap() throws Exception {
+    V1Status status = new V1StatusBuilder().withMetadata(new V1ListMetaBuilder().build()).build();
+    when(k8sApiClient.execute(k8sApiCall, TypeToken.get(V1Status.class).getType()))
+        .thenReturn(new ApiResponse<>(200, emptyMap(), status));
+
+    kubernetesContainerService.deleteConfigMap(KUBERNETES_CONFIG, "release");
+
+    verify(k8sApiClient, times(1)).execute(k8sApiCall, TypeToken.get(V1Status.class).getType());
   }
 }
