@@ -14,6 +14,9 @@ import static java.util.Collections.singletonList;
 import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static software.wings.helpers.ext.jenkins.BuildDetails.Builder.aBuildDetails;
+import static software.wings.helpers.ext.jenkins.JenkinsJobPathBuilder.constructParentJobPath;
+import static software.wings.helpers.ext.jenkins.JenkinsJobPathBuilder.getJenkinsJobPath;
+import static software.wings.helpers.ext.jenkins.JenkinsJobPathBuilder.getJobPathFromJenkinsJobUrl;
 
 import com.google.common.base.Charsets;
 import com.google.common.collect.Lists;
@@ -23,12 +26,11 @@ import com.google.inject.assistedinject.Assisted;
 import com.google.inject.assistedinject.AssistedInject;
 
 import com.jayway.jsonpath.DocumentContext;
-import com.offbytwo.jenkins.JenkinsServer;
-import com.offbytwo.jenkins.client.JenkinsHttpClient;
 import com.offbytwo.jenkins.model.Artifact;
 import com.offbytwo.jenkins.model.Build;
 import com.offbytwo.jenkins.model.BuildResult;
 import com.offbytwo.jenkins.model.BuildWithDetails;
+import com.offbytwo.jenkins.model.Executable;
 import com.offbytwo.jenkins.model.ExtractHeader;
 import com.offbytwo.jenkins.model.FolderJob;
 import com.offbytwo.jenkins.model.Job;
@@ -44,6 +46,7 @@ import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.network.Http;
 import io.harness.serializer.JsonUtils;
+import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.NotImplementedException;
 import org.apache.commons.lang3.tuple.ImmutablePair;
@@ -51,6 +54,8 @@ import org.apache.commons.lang3.tuple.Pair;
 import org.apache.http.client.HttpResponseException;
 import org.apache.http.client.config.RequestConfig;
 import org.apache.http.impl.client.HttpClientBuilder;
+import software.wings.beans.JenkinsConfig;
+import software.wings.beans.command.JenkinsTaskParams;
 import software.wings.common.BuildDetailsComparator;
 import software.wings.helpers.ext.jenkins.BuildDetails.BuildStatus;
 
@@ -85,12 +90,13 @@ public class JenkinsImpl implements Jenkins {
   private final String FOLDER_JOB_CLASS_NAME = "com.cloudbees.hudson.plugins.folder.Folder";
   private final String MULTI_BRANCH_JOB_CLASS_NAME =
       "org.jenkinsci.plugins.workflow.multibranch.WorkflowMultiBranchProject";
+  private final String SERVER_ERROR = "Server Error";
 
   @Inject private ExecutorService executorService;
   @Inject private TimeLimiter timeLimiter;
 
-  private JenkinsServer jenkinsServer;
-  private JenkinsHttpClient jenkinsHttpClient;
+  private CustomJenkinsServer jenkinsServer;
+  private CustomJenkinsHttpClient jenkinsHttpClient;
 
   /**
    * Instantiates a new jenkins impl.
@@ -133,10 +139,10 @@ public class JenkinsImpl implements Jenkins {
   }
 
   /* (non-Javadoc)
-   * @see software.wings.helpers.ext.jenkins.Jenkins#getJob(java.lang.String)
+   * @see software.wings.helpers.ext.jenkins.Jenkins#getJobWithDetails(java.lang.String)
    */
   @Override
-  public JobWithDetails getJob(String jobname) {
+  public JobWithDetails getJobWithDetails(String jobname) {
     logger.info("Retrieving job {}", jobname);
     try {
       return timeLimiter.callWithTimeout(() -> {
@@ -146,30 +152,55 @@ public class JenkinsImpl implements Jenkins {
             continue;
           }
 
-          String decodedJobName = URLDecoder.decode(jobname, "UTF-8");
-          String parentJobName = null;
-          String parentJobUrl = null;
-          String childJobName;
-          String[] jobNameSplit = decodedJobName.split("/");
-          int parts = jobNameSplit.length;
-          if (parts > 1) {
-            parentJobUrl = constructParentJobUrl(jobNameSplit);
-            parentJobName = jobNameSplit[parts - 2];
-            childJobName = jobNameSplit[parts - 1];
-          } else {
-            childJobName = decodedJobName;
-          }
-
+          JobPathDetails jobPathDetails = constructJobPathDetails(jobname);
           JobWithDetails jobWithDetails;
-          FolderJob folderJob = null;
 
           try {
-            if (parentJobName != null && parentJobName.length() > 0) {
-              folderJob = new FolderJob(parentJobName, parentJobUrl);
-            }
-            jobWithDetails = jenkinsServer.getJob(folderJob, childJobName);
+            FolderJob folderJob = getFolderJob(jobPathDetails.getParentJobName(), jobPathDetails.getParentJobUrl());
+            jobWithDetails = jenkinsServer.getJob(folderJob, jobPathDetails.getChildJobName());
+
           } catch (HttpResponseException e) {
-            if (e.getStatusCode() == 500 || ExceptionUtils.getMessage(e).contains("Server Error")) {
+            if (e.getStatusCode() == 500 || ExceptionUtils.getMessage(e).contains(SERVER_ERROR)) {
+              logger.warn("Error occurred while retrieving job with details {}. Retrying ", jobname, e);
+              sleep(ofSeconds(1L));
+              continue;
+            } else {
+              throw e;
+            }
+          }
+          logger.info("Retrieving job with details {} success", jobname);
+          return singletonList(jobWithDetails).get(0);
+        }
+      }, 120L, TimeUnit.SECONDS, true);
+    } catch (Exception e) {
+      throw new ArtifactServerException(
+          "Failure in fetching job with details: " + ExceptionUtils.getMessage(e), e, USER);
+    }
+  }
+
+  /* (non-Javadoc)
+   * @see software.wings.helpers.ext.jenkins.Jenkins#getJob(java.lang.String)
+   */
+  @Override
+  public Job getJob(String jobname, JenkinsConfig jenkinsConfig) {
+    logger.info("Retrieving job {}", jobname);
+    try {
+      return timeLimiter.callWithTimeout(() -> {
+        while (true) {
+          if (jobname == null) {
+            sleep(ofSeconds(1L));
+            continue;
+          }
+
+          JobPathDetails jobPathDetails = constructJobPathDetails(jobname);
+          Job job;
+
+          try {
+            FolderJob folderJob = getFolderJob(jobPathDetails.getParentJobName(), jobPathDetails.getParentJobUrl());
+            job = jenkinsServer.createJob(folderJob, jobPathDetails.getChildJobName(), jenkinsConfig);
+
+          } catch (HttpResponseException e) {
+            if (e.getStatusCode() == 500 || ExceptionUtils.getMessage(e).contains(SERVER_ERROR)) {
               logger.warn("Error occurred while retrieving job {}. Retrying ", jobname, e);
               sleep(ofSeconds(1L));
               continue;
@@ -178,31 +209,12 @@ public class JenkinsImpl implements Jenkins {
             }
           }
           logger.info("Retrieving job {} success", jobname);
-          return singletonList(jobWithDetails).get(0);
+          return singletonList(job).get(0);
         }
       }, 120L, TimeUnit.SECONDS, true);
     } catch (Exception e) {
       throw new ArtifactServerException("Failure in fetching job: " + ExceptionUtils.getMessage(e), e, USER);
     }
-  }
-
-  private String constructParentJobUrl(String[] jobNameSplit) {
-    if (isEmpty(jobNameSplit)) {
-      return "/";
-    }
-
-    int parts = jobNameSplit.length;
-    int currentIndex = 0;
-    StringBuilder sb = new StringBuilder();
-    for (String jobName : jobNameSplit) {
-      if (currentIndex++ < (parts - 1)) {
-        sb.append("/job/");
-        sb.append(jobName);
-      }
-    }
-
-    sb.append('/');
-    return sb.toString();
   }
 
   @Override
@@ -315,7 +327,7 @@ public class JenkinsImpl implements Jenkins {
   @Override
   public List<BuildDetails> getBuildsForJob(String jobname, List<String> artifactPaths, int lastN, boolean allStatuses)
       throws IOException {
-    JobWithDetails jobWithDetails = getJob(jobname);
+    JobWithDetails jobWithDetails = getJobWithDetails(jobname);
     if (jobWithDetails == null) {
       return Lists.newArrayList();
     }
@@ -401,7 +413,7 @@ public class JenkinsImpl implements Jenkins {
 
   @Override
   public BuildDetails getLastSuccessfulBuildForJob(String jobName, List<String> artifactPaths) throws IOException {
-    JobWithDetails jobWithDetails = getJob(jobName);
+    JobWithDetails jobWithDetails = getJobWithDetails(jobName);
     if (jobWithDetails == null) {
       logger.info("Job {} does not exist", jobName);
       return null;
@@ -420,34 +432,37 @@ public class JenkinsImpl implements Jenkins {
    * @see software.wings.helpers.ext.jenkins.Jenkins#trigger(java.lang.String)
    */
   @Override
-  public QueueReference trigger(String jobname, Map<String, String> parameters) throws IOException {
-    JobWithDetails jobWithDetails = getJob(jobname);
-    if (jobWithDetails == null) {
+  public QueueReference trigger(String jobname, JenkinsTaskParams jenkinsTaskParams) throws IOException {
+    Map<String, String> parameters = jenkinsTaskParams.getParameters();
+    JenkinsConfig jenkinsConfig = jenkinsTaskParams.getJenkinsConfig();
+
+    Job job = getJob(jobname, jenkinsConfig);
+    if (job == null) {
       throw new ArtifactServerException("No job [" + jobname + "] found", USER);
     }
+
+    QueueReference queueReference;
     try {
-      QueueReference queueReference;
-      logger.info("Triggering job {} ", jobWithDetails.getUrl());
+      logger.info("Triggering job {} ", job.getUrl());
       if (isEmpty(parameters)) {
-        ExtractHeader location =
-            jobWithDetails.getClient().post(jobWithDetails.getUrl() + "build", null, ExtractHeader.class, true);
+        ExtractHeader location = job.getClient().post(job.getUrl() + "build", null, ExtractHeader.class, true);
         queueReference = new QueueReference(location.getLocation());
       } else {
-        queueReference = jobWithDetails.build(parameters, true);
+        queueReference = job.build(parameters, true);
       }
-      logger.info("Triggering job {} success ", jobWithDetails.getUrl());
+      logger.info("Triggering job {} success ", job.getUrl());
       return queueReference;
     } catch (HttpResponseException e) {
       if (e.getStatusCode() == 400 && isEmpty(parameters)) {
         throw new InvalidRequestException(
             format(
                 "Failed to trigger job %s with url %s.%nThis might be because the Jenkins job requires parameters but none were provided in the Jenkins step.",
-                jobname, jobWithDetails.getUrl()),
+                jobname, job.getUrl()),
             USER);
       }
       throw e;
     } catch (IOException e) {
-      throw new IOException(format("Failed to trigger job %s with url %s", jobname, jobWithDetails.getUrl()), e);
+      throw new IOException(format("Failed to trigger job %s with url %s", jobname, job.getUrl()), e);
     }
   }
 
@@ -490,7 +505,7 @@ public class JenkinsImpl implements Jenkins {
   @Override
   public Pair<String, InputStream> downloadArtifact(String jobname, String artifactpathRegex)
       throws IOException, URISyntaxException {
-    JobWithDetails jobDetails = getJob(jobname);
+    JobWithDetails jobDetails = getJobWithDetails(jobname);
     if (jobDetails == null) {
       return null;
     }
@@ -506,7 +521,7 @@ public class JenkinsImpl implements Jenkins {
   public Pair<String, InputStream> downloadArtifact(String jobname, String buildNo, String artifactpathRegex)
       throws IOException, URISyntaxException {
     logger.info("Downloading artifactpathRegex {}, buildNo {} and jobname {}", artifactpathRegex, buildNo, jobname);
-    JobWithDetails jobDetails = getJob(jobname);
+    JobWithDetails jobDetails = getJobWithDetails(jobname);
     if (jobDetails == null) {
       return null;
     }
@@ -515,12 +530,26 @@ public class JenkinsImpl implements Jenkins {
   }
 
   @Override
-  public Build getBuild(QueueReference queueItem) throws IOException {
-    QueueItem queueItem1 = jenkinsServer.getQueueItem(queueItem);
-    if (queueItem1 == null || queueItem1.getExecutable() == null) {
+  public Build getBuild(QueueReference queueReference, JenkinsConfig jenkinsConfig) throws IOException {
+    QueueItem queueItem = jenkinsServer.getQueueItem(queueReference);
+    String buildUrl = null;
+
+    if (jenkinsConfig.isUseConnectorUrlForJobExecution()) {
+      buildUrl = getBuildUrl(jenkinsConfig.getJenkinsUrl(), getJobPathFromJenkinsJobUrl(queueItem.getTask().getUrl()),
+          queueItem.getExecutable().getNumber().toString());
+
+      configureExecutable(queueItem, buildUrl);
+    }
+
+    if (queueItem == null || queueItem.getExecutable() == null) {
       return null;
     }
-    return jenkinsServer.getBuild(queueItem1);
+    Build build = jenkinsServer.getBuild(queueItem);
+
+    if (jenkinsConfig.isUseConnectorUrlForJobExecution()) {
+      return createBuild(build, buildUrl);
+    }
+    return build;
   }
 
   @Override
@@ -553,7 +582,7 @@ public class JenkinsImpl implements Jenkins {
           try {
             jsonString = jenkinsHttpClient.get(path);
           } catch (HttpResponseException e) {
-            if (e.getStatusCode() == 500 || ExceptionUtils.getMessage(e).contains("Server Error")) {
+            if (e.getStatusCode() == 500 || ExceptionUtils.getMessage(e).contains(SERVER_ERROR)) {
               logger.warn(
                   format("Error occurred while retrieving environment variables for job %s. Retrying", buildUrl), e);
               sleep(ofSeconds(1L));
@@ -676,5 +705,106 @@ public class JenkinsImpl implements Jenkins {
     }
     logger.info(format("Computed file size: [%d] bytes for artifact Path: %s", size, artifactPath));
     return size;
+  }
+
+  /**
+   * Configures new executable property for Queue item
+   *
+   * @param queueItem      the queue item
+   * @param buildUrl       the build URL
+   */
+  private void configureExecutable(QueueItem queueItem, String buildUrl) {
+    Executable executable = new Executable();
+    executable.setUrl(buildUrl);
+    executable.setNumber(queueItem.getExecutable().getNumber());
+    queueItem.setExecutable(executable);
+  }
+
+  /**
+   * Form and returns new build url from URL, job path and job name
+   *
+   * @param url          the URL
+   * @param jobPath      the job path
+   * @param jobNumber    the job number
+   * @return build url.
+   */
+  private String getBuildUrl(String url, String jobPath, String jobNumber) {
+    if (url.endsWith("/")) {
+      url = url.substring(0, url.length() - 1);
+    }
+
+    return url.concat(getJenkinsJobPath(jobPath)).concat(jobNumber).concat("/");
+  }
+
+  /**
+   * Creates build with new url and number
+   *
+   * @param build          existing build with Jenkins master URL
+   * @param buildUrl       build url with Jenkins connector URL
+   * @return new build.
+   */
+  private Build createBuild(Build build, String buildUrl) {
+    Build newBuild = new Build(build.getNumber(), buildUrl);
+    newBuild.setClient(jenkinsHttpClient);
+    return newBuild;
+  }
+
+  /**
+   * Constructs job path details by provided job name
+   *
+   * @param jobname        job name
+   * @return job path details.
+   */
+  private JobPathDetails constructJobPathDetails(String jobname) {
+    String parentJobName = null;
+    String parentJobUrl = null;
+    String childJobName;
+
+    try {
+      String decodedJobName = URLDecoder.decode(jobname, "UTF-8");
+
+      String[] jobNameSplit = decodedJobName.split("/");
+      int parts = jobNameSplit.length;
+      if (parts > 1) {
+        parentJobUrl = constructParentJobPath(jobNameSplit);
+        parentJobName = jobNameSplit[parts - 2];
+        childJobName = jobNameSplit[parts - 1];
+      } else {
+        childJobName = decodedJobName;
+      }
+
+      return new JobPathDetails(parentJobUrl, parentJobName, childJobName);
+
+    } catch (UnsupportedEncodingException e) {
+      throw new ArtifactServerException("Failure in decoding job name: " + ExceptionUtils.getMessage(e), e, USER);
+    }
+  }
+
+  /**
+   * Returns folder instance
+   *
+   * @param parentJobName      parent job name
+   * @param parentJobUrl       parent job url
+   * @return new folder.
+   */
+  private FolderJob getFolderJob(String parentJobName, String parentJobUrl) {
+    FolderJob folderJob = null;
+    if (parentJobName != null && parentJobName.length() > 0) {
+      folderJob = new FolderJob(parentJobName, parentJobUrl);
+    }
+    return folderJob;
+  }
+
+  @Data
+  private class JobPathDetails {
+    String parentJobUrl;
+    String parentJobName;
+    String childJobName;
+
+    JobPathDetails(String parentJobUrl, String parentJobName, String childJobName) {
+      this.parentJobUrl = parentJobUrl;
+      this.parentJobName = parentJobName;
+      this.childJobName = childJobName;
+    }
   }
 }

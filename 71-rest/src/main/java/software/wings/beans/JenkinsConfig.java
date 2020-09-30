@@ -44,6 +44,7 @@ public class JenkinsConfig extends SettingValue
   public static final String USERNAME_DEFAULT_TEXT = "UserName/Password";
 
   @Attributes(title = "Jenkins URL", required = true) @NotEmpty private String jenkinsUrl;
+  @Attributes(title = "Use Connector URL for Job execution") private boolean useConnectorUrlForJobExecution;
   @Attributes(
       title = "Authentication Mechanism", required = true, enums = {USERNAME_DEFAULT_TEXT, JenkinsUtils.TOKEN_FIELD})
   @NotEmpty
@@ -67,9 +68,10 @@ public class JenkinsConfig extends SettingValue
 
   @Builder
   public JenkinsConfig(String jenkinsUrl, String username, char[] password, String accountId, String encryptedPassword,
-      char[] token, String encryptedToken, String authMechanism) {
+      char[] token, String encryptedToken, String authMechanism, boolean useConnectorUrlForJobExecution) {
     super(SettingVariableTypes.JENKINS.name());
     this.jenkinsUrl = jenkinsUrl;
+    this.useConnectorUrlForJobExecution = useConnectorUrlForJobExecution;
     this.username = username;
     this.password = password == null ? null : password.clone();
     this.accountId = accountId;

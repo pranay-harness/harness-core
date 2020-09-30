@@ -162,7 +162,7 @@ public class JenkinsBuildServiceTest extends WingsBaseTest {
     JobWithDetails jobWithDetails = Mockito.mock(JobWithDetails.class, RETURNS_DEEP_STUBS);
     Artifact artifact = new Artifact();
     artifact.setRelativePath("relativePath");
-    when(jenkins.getJob(BUILD_JOB_NAME)).thenReturn(jobWithDetails);
+    when(jenkins.getJobWithDetails(BUILD_JOB_NAME)).thenReturn(jobWithDetails);
     when(jobWithDetails.getLastSuccessfulBuild().details().getArtifacts()).thenReturn(ImmutableList.of(artifact));
     assertThat(jenkinsBuildService.getArtifactPaths(BUILD_JOB_NAME, null, jenkinsConfig, null))
         .containsExactly("relativePath");
@@ -195,7 +195,7 @@ public class JenkinsBuildServiceTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void shouldTestGetJobParameters() {
     JobWithExtendedDetails jobWithDetails = Mockito.mock(JobWithExtendedDetails.class, RETURNS_DEEP_STUBS);
-    when(jenkins.getJob(BUILD_JOB_NAME)).thenReturn(jobWithDetails);
+    when(jenkins.getJobWithDetails(BUILD_JOB_NAME)).thenReturn(jobWithDetails);
     JobProperty jobProperty =
         JobProperty.builder()
             .parameterDefinitions(asList(

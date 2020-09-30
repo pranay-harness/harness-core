@@ -102,7 +102,7 @@ public class JenkinsTask extends AbstractDelegateRunnableTask {
                   jenkinsTaskParams.getAppId(), LogLevel.INFO,
                   "Triggering Jenkins Job : " + jenkinsTaskParams.getJobName(), RUNNING));
 
-          QueueReference queueItem = jenkins.trigger(jenkinsTaskParams.getJobName(), jenkinsTaskParams.getParameters());
+          QueueReference queueItem = jenkins.trigger(jenkinsTaskParams.getJobName(), jenkinsTaskParams);
           logger.info("Triggered Job successfully and queued Build  URL {} ",
               queueItem == null ? null : queueItem.getQueueItemUrlPart());
 
@@ -124,9 +124,10 @@ public class JenkinsTask extends AbstractDelegateRunnableTask {
             jenkinsExecutionResponse.setErrorMessage(msg);
           }
 
-          Build jenkinsBuild = waitForJobToStartExecution(jenkins, queueItem);
+          Build jenkinsBuild = waitForJobToStartExecution(jenkins, queueItem, jenkinsConfig);
           jenkinsExecutionResponse.setBuildNumber(String.valueOf(jenkinsBuild.getNumber()));
           jenkinsExecutionResponse.setJobUrl(jenkinsBuild.getUrl());
+
         } catch (WingsException e) {
           logService.save(getAccountId(),
               constructLog(jenkinsTaskParams.getActivityId(), jenkinsTaskParams.getUnitName(),
@@ -154,7 +155,8 @@ public class JenkinsTask extends AbstractDelegateRunnableTask {
           // Get jenkins build from queued URL
           logger.info(
               "The Jenkins queued url {} and retrieving build information", jenkinsTaskParams.getQueuedBuildUrl());
-          Build jenkinsBuild = jenkins.getBuild(new QueueReference(jenkinsTaskParams.getQueuedBuildUrl()));
+          Build jenkinsBuild =
+              jenkins.getBuild(new QueueReference(jenkinsTaskParams.getQueuedBuildUrl()), jenkinsConfig);
           if (jenkinsBuild == null) {
             logger.error(
                 "Error occurred while retrieving the build {} status.  Job might have been deleted between poll intervals",
@@ -344,13 +346,13 @@ public class JenkinsTask extends AbstractDelegateRunnableTask {
     }
   }
 
-  private Build waitForJobToStartExecution(Jenkins jenkins, QueueReference queueItem) {
+  private Build waitForJobToStartExecution(Jenkins jenkins, QueueReference queueItem, JenkinsConfig jenkinsConfig) {
     Build jenkinsBuild = null;
     do {
       logger.info("Waiting for job {} to start execution", queueItem);
       sleep(Duration.ofSeconds(1));
       try {
-        jenkinsBuild = jenkins.getBuild(queueItem);
+        jenkinsBuild = jenkins.getBuild(queueItem, jenkinsConfig);
         if (jenkinsBuild != null) {
           logger.info("Job started and Build No {}", jenkinsBuild.getNumber());
         }
