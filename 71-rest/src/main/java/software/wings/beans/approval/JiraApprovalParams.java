@@ -16,4 +16,5 @@ public class JiraApprovalParams {
   @Getter @Setter private String rejectionField;
   @Getter @Setter private String rejectionValue;
   @Getter @Setter private String issueId;
+  @Getter @Setter private String project;
 }

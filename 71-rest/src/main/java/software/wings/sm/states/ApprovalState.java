@@ -50,6 +50,7 @@ import io.harness.data.structure.EmptyPredicate;
 import io.harness.eraro.ErrorCode;
 import io.harness.eraro.Level;
 import io.harness.exception.ExceptionUtils;
+import io.harness.exception.HarnessJiraException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.expression.ExpressionEvaluator;
@@ -61,6 +62,7 @@ import lombok.Getter;
 import lombok.Setter;
 import lombok.experimental.FieldNameConstants;
 import lombok.extern.slf4j.Slf4j;
+import net.sf.json.JSONArray;
 import okhttp3.MediaType;
 import org.apache.commons.jexl3.JexlException;
 import org.apache.commons.lang3.StringUtils;
@@ -141,6 +143,7 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.StringJoiner;
+import java.util.stream.Collectors;
 
 @OwnedBy(CDC)
 @Slf4j
@@ -482,7 +485,13 @@ public class ApprovalState extends State implements SweepingOutputStateMixin {
   ExecutionResponse executeJiraApproval(
       ExecutionContext context, ApprovalStateExecutionData executionData, String approvalId) {
     JiraApprovalParams jiraApprovalParams = approvalStateParams.getJiraApprovalParams();
+    boolean areRequiredFieldsTemplatized = ExpressionEvaluator.containsVariablePattern(jiraApprovalParams.getProject())
+        || ExpressionEvaluator.containsVariablePattern(jiraApprovalParams.getRejectionValue())
+        || ExpressionEvaluator.containsVariablePattern(jiraApprovalParams.getApprovalValue());
     jiraApprovalParams.setIssueId(context.renderExpression(jiraApprovalParams.getIssueId()));
+    jiraApprovalParams.setApprovalValue(context.renderExpression(jiraApprovalParams.getApprovalValue()));
+    jiraApprovalParams.setRejectionValue(context.renderExpression(jiraApprovalParams.getRejectionValue()));
+    jiraApprovalParams.setProject(context.renderExpression(jiraApprovalParams.getProject()));
 
     if (ExpressionEvaluator.containsVariablePattern(jiraApprovalParams.getIssueId())) {
       return respondWithStatus(context, executionData, null,
@@ -498,6 +507,19 @@ public class ApprovalState extends State implements SweepingOutputStateMixin {
     executionData.setApprovalValue(jiraApprovalParams.getApprovalValue());
     executionData.setRejectionField(jiraApprovalParams.getRejectionField());
     executionData.setRejectionValue(jiraApprovalParams.getRejectionValue());
+
+    if (areRequiredFieldsTemplatized) {
+      try {
+        validateRequiredFields(context, jiraApprovalParams);
+      } catch (HarnessJiraException e) {
+        logger.error("Failing Approval Step due to: ", e);
+        return respondWithStatus(context, executionData, null,
+            ExecutionResponse.builder()
+                .executionStatus(FAILED)
+                .errorMessage(e.getMessage())
+                .stateExecutionData(executionData));
+      }
+    }
 
     JiraExecutionData jiraExecutionData = jiraHelperService.fetchIssue(
         jiraApprovalParams, app.getAccountId(), app.getAppId(), context.getWorkflowExecutionId(), approvalId);
@@ -563,6 +585,52 @@ public class ApprovalState extends State implements SweepingOutputStateMixin {
               .executionStatus(FAILED)
               .errorMessage("Failed to schedule Approval" + e.getMessage())
               .stateExecutionData(executionData));
+    }
+  }
+
+  private void validateRequiredFields(ExecutionContext context, JiraApprovalParams jiraApprovalParams) {
+    validateProject(context, jiraApprovalParams);
+    validateStatus(context, jiraApprovalParams);
+  }
+
+  private void validateStatus(ExecutionContext context, JiraApprovalParams jiraApprovalParams) {
+    List<String> allowedStatuses =
+        Arrays
+            .stream(((JSONArray) jiraHelperService.getStatuses(jiraApprovalParams.getJiraConnectorId(),
+                         jiraApprovalParams.getProject(), context.getAccountId(), context.getAppId()))
+                        .toArray())
+            .map(ob -> (net.sf.json.JSONObject) ob)
+            .flatMap(issue -> Arrays.stream(((JSONArray) issue.get("statuses")).toArray()))
+            .map(ob -> (net.sf.json.JSONObject) ob)
+            .map(statuses -> (String) statuses.get("name"))
+            .distinct()
+            .collect(Collectors.toList());
+    if (!allowedStatuses.contains(jiraApprovalParams.getApprovalValue())) {
+      throw new HarnessJiraException(String.format("Invalid approval status [%s]. Please, check out allowed values %s",
+                                         jiraApprovalParams.getApprovalValue(), allowedStatuses),
+          null);
+    }
+    if (StringUtils.isNotBlank(jiraApprovalParams.getRejectionValue())
+        && !allowedStatuses.contains(jiraApprovalParams.getRejectionValue())) {
+      throw new HarnessJiraException(String.format("Invalid rejection status [%s]. Please, check out allowed values %s",
+                                         jiraApprovalParams.getRejectionValue(), allowedStatuses),
+          null);
+    }
+  }
+
+  private void validateProject(ExecutionContext context, JiraApprovalParams jiraApprovalParams) {
+    List<String> projects = Arrays
+                                .stream(jiraHelperService
+                                            .getProjects(jiraApprovalParams.getJiraConnectorId(),
+                                                context.getAccountId(), context.getAppId())
+                                            .toArray())
+                                .map(ob -> (net.sf.json.JSONObject) ob)
+                                .map(existingProjects -> (String) existingProjects.get("key"))
+                                .collect(Collectors.toList());
+    if (!projects.contains(jiraApprovalParams.getProject())) {
+      throw new HarnessJiraException(String.format("Invalid project key [%s]. Please, check out allowed values: %s",
+                                         jiraApprovalParams.getProject(), projects),
+          null);
     }
   }
 
