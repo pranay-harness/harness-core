@@ -18,6 +18,8 @@ public interface InstanceDataDao {
 
   InstanceData upsert(InstanceEvent instanceEvent);
 
+  void upsert(List<InstanceEvent> instanceEvents);
+
   InstanceData upsert(InstanceInfo instanceInfo);
 
   InstanceData fetchInstanceData(String instanceId);
