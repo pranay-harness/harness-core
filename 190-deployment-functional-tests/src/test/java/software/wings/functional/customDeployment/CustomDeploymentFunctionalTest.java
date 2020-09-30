@@ -28,7 +28,7 @@ import com.google.inject.Inject;
 
 import io.harness.beans.ExecutionStatus;
 import io.harness.beans.WorkflowType;
-import io.harness.category.element.FunctionalTests;
+import io.harness.category.element.CDFunctionalTests;
 import io.harness.delegate.task.shell.ScriptType;
 import io.harness.functional.AbstractFunctionalTest;
 import io.harness.generator.ApplicationGenerator;
@@ -159,7 +159,7 @@ public class CustomDeploymentFunctionalTest extends AbstractFunctionalTest {
 
   @Test(timeout = TIMEOUT)
   @Owner(developers = TATHAGAT)
-  @Category(FunctionalTests.class)
+  @Category(CDFunctionalTests.class)
   public void testCustomDeploymentWorkflowSuccess() throws IOException {
     final String accountId = owners.obtainAccount().getUuid();
     resetCache(accountId);
@@ -193,7 +193,7 @@ public class CustomDeploymentFunctionalTest extends AbstractFunctionalTest {
 
   @Test(timeout = TIMEOUT)
   @Owner(developers = TATHAGAT)
-  @Category(FunctionalTests.class)
+  @Category(CDFunctionalTests.class)
   public void testEmptyFetchInstanceSciptFail() throws IOException {
     resetCache(owners.obtainAccount().getUuid());
     CustomDeploymentTypeTemplate customDeploymentTypeTemplate = CustomDeploymentTypeTemplate.builder()
@@ -242,7 +242,7 @@ public class CustomDeploymentFunctionalTest extends AbstractFunctionalTest {
 
   @Test(timeout = TIMEOUT)
   @Owner(developers = TATHAGAT)
-  @Category(FunctionalTests.class)
+  @Category(CDFunctionalTests.class)
   public void testTemplateLinkedWithInfraNotGetDeleted() throws IOException {
     assertThatThrownBy(() -> templateService.delete(owners.obtainAccount().getUuid(), template.getUuid()))
         .isInstanceOf(TemplateException.class);

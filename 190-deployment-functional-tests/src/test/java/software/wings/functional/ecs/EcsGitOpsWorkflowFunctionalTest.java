@@ -20,7 +20,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
 
 import io.harness.beans.WorkflowType;
-import io.harness.category.element.FunctionalTests;
+import io.harness.category.element.CDFunctionalTests;
 import io.harness.functional.AbstractFunctionalTest;
 import io.harness.generator.ApplicationGenerator;
 import io.harness.generator.ApplicationGenerator.Applications;
@@ -37,7 +37,6 @@ import io.harness.rule.Owner;
 import io.harness.testframework.restutils.WorkflowRestUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import software.wings.api.DeploymentType;
@@ -96,9 +95,8 @@ public class EcsGitOpsWorkflowFunctionalTest extends AbstractFunctionalTest {
   }
 
   @Test
-  @Owner(developers = ARVIND, intermittent = true)
-  @Category(FunctionalTests.class)
-  @Ignore("Enable once we figure out running these on nightly builds")
+  @Owner(developers = ARVIND)
+  @Category(CDFunctionalTests.class)
   public void shouldCreateLocalEcsWorkflow() throws Exception {
     service = serviceGenerator.ensureEcsRemoteTest(seed, owners, "Func_Test_Ecs_Git_Service_Local", StoreType.Local);
     assertThat(service).isNotNull();
