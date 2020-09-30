@@ -10,6 +10,7 @@ import static java.lang.String.format;
 import static software.wings.beans.Log.Builder.aLog;
 import static software.wings.common.Constants.WINDOWS_HOME_DIR;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.util.concurrent.TimeLimiter;
 import com.google.common.util.concurrent.UncheckedTimeoutException;
 import com.google.inject.Inject;
@@ -25,6 +26,7 @@ import io.harness.logging.ExceptionLogger;
 import lombok.extern.slf4j.Slf4j;
 import software.wings.beans.command.CommandExecutionContext;
 import software.wings.beans.command.CommandUnit;
+import software.wings.beans.command.ExecCommandUnit;
 import software.wings.beans.command.InitPowerShellCommandUnit;
 import software.wings.beans.command.ShellCommandExecutionContext;
 import software.wings.core.winrm.executors.WinRmExecutor;
@@ -65,8 +67,7 @@ public class WinRMCommandUnitExecutorServiceImpl implements CommandUnitExecutorS
 
     CommandExecutionStatus commandExecutionStatus = FAILURE;
 
-    String commandPath =
-        (commandUnit instanceof InitPowerShellCommandUnit) ? WINDOWS_HOME_DIR : context.getWindowsRuntimePath();
+    String commandPath = getCommandPath(commandUnit, context);
 
     WinRmSessionConfig winRmSessionConfig = context.winrmSessionConfig(commandUnit.getName(), commandPath);
     WinRmExecutor winRmExecutor =
@@ -180,5 +181,18 @@ public class WinRMCommandUnitExecutorServiceImpl implements CommandUnitExecutorS
 
     commandUnit.setCommandExecutionStatus(commandExecutionStatus);
     return commandExecutionStatus;
+  }
+
+  @VisibleForTesting
+  String getCommandPath(CommandUnit commandUnit, CommandExecutionContext context) {
+    String commandPath =
+        (commandUnit instanceof InitPowerShellCommandUnit) ? WINDOWS_HOME_DIR : context.getWindowsRuntimePath();
+
+    if (commandUnit instanceof ExecCommandUnit) {
+      if (((ExecCommandUnit) commandUnit).getCommandPath() != null) {
+        commandPath = ((ExecCommandUnit) commandUnit).getCommandPath();
+      }
+    }
+    return commandPath;
   }
 }
