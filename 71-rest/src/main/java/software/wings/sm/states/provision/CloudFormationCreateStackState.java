@@ -69,6 +69,7 @@ public class CloudFormationCreateStackState extends CloudFormationState {
     CloudFormationCreateStackRequestBuilder builder = CloudFormationCreateStackRequest.builder();
 
     String roleArnRendered = executionContext.renderExpression(getCloudFormationRoleArn());
+    String regionRendered = executionContext.renderExpression(getRegion());
     builder.cloudFormationRoleArn(roleArnRendered);
 
     if (provisioner.provisionByUrl()) {
@@ -101,7 +102,7 @@ public class CloudFormationCreateStackState extends CloudFormationState {
     }
     builder.stackNameSuffix(getStackNameSuffix(executionContext, provisioner.getUuid()))
         .customStackName(useCustomStackName ? executionContext.renderExpression(customStackName) : StringUtils.EMPTY)
-        .region(region)
+        .region(regionRendered)
         .commandType(CloudFormationCommandType.CREATE_STACK)
         .accountId(executionContext.getApp().getAccountId())
         .appId(executionContext.getApp().getUuid())
