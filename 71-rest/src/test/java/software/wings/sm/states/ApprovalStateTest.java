@@ -7,6 +7,7 @@ import static io.harness.beans.ExecutionStatus.REJECTED;
 import static io.harness.beans.ExecutionStatus.SKIPPED;
 import static io.harness.beans.ExecutionStatus.SUCCESS;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
+import static io.harness.rule.OwnerRule.AGORODETKI;
 import static io.harness.rule.OwnerRule.ANSHUL;
 import static io.harness.rule.OwnerRule.DHRUV;
 import static io.harness.rule.OwnerRule.PRABU;
@@ -56,6 +57,7 @@ import static software.wings.utils.WingsTestConstants.WORKFLOW_ID;
 import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import io.harness.beans.EmbeddedUser;
 import io.harness.beans.ExecutionStatus;
 import io.harness.beans.PageResponse;
@@ -67,9 +69,11 @@ import io.harness.exception.UnexpectedException;
 import io.harness.rule.Owner;
 import io.harness.serializer.KryoSerializer;
 import io.harness.waiter.WaitNotifyEngine;
+import net.sf.json.JSONArray;
 import org.apache.commons.jexl3.JexlException;
 import org.joor.Reflect;
 import org.junit.Before;
+import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.ArgumentCaptor;
@@ -133,6 +137,8 @@ import software.wings.sm.states.ApprovalState.ApprovalStateKeys;
 import software.wings.sm.states.ApprovalState.ApprovalStateType;
 import software.wings.sm.states.EnvState.EnvStateKeys;
 
+import java.io.File;
+import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -178,6 +184,15 @@ public class ApprovalStateTest extends WingsBaseTest {
   @InjectMocks private ApprovalState approvalState = new ApprovalState("ApprovalState");
 
   @Inject KryoSerializer kryoSerializer;
+
+  private static JSONArray projects;
+  private static Object statuses;
+
+  @BeforeClass
+  public static void readMockData() throws IOException {
+    projects = new ObjectMapper().readValue(new File("src/test/resources/mock_projects"), JSONArray.class);
+    statuses = new ObjectMapper().readValue(new File("src/test/resources/mock_statuses"), JSONArray.class);
+  }
 
   @Before
   public void setUp() throws Exception {
@@ -1293,5 +1308,82 @@ public class ApprovalStateTest extends WingsBaseTest {
         ApprovalStateExecutionDataKeys.variables, "test", ApprovalStateExecutionDataKeys.ticketType,
         ApprovalStateExecutionDataKeys.ticketUrl, ApprovalStateExecutionDataKeys.approvalFromSlack,
         ApprovalStateExecutionDataKeys.timeoutMillis, ApprovalStateExecutionDataKeys.approvalStateType);
+  }
+
+  @Test
+  @Owner(developers = AGORODETKI)
+  @Category(UnitTests.class)
+  public void shouldFailProjectValidation() throws IOException {
+    when(context.renderExpression("${project}")).thenReturn("UNKNOWN");
+    when(jiraHelperService.getProjects(anyString(), anyString(), anyString())).thenReturn(projects);
+
+    ApprovalStateParams approvalStateParams = new ApprovalStateParams();
+    JiraApprovalParams jiraApprovalParams = new JiraApprovalParams();
+    jiraApprovalParams.setProject("${project}");
+
+    approvalStateParams.setJiraApprovalParams(jiraApprovalParams);
+    approvalState.setApprovalStateParams(approvalStateParams);
+    ApprovalStateExecutionData executionData =
+        ApprovalStateExecutionData.builder().approvalStateType(ApprovalStateType.JIRA).build();
+
+    ExecutionResponse response = approvalState.executeJiraApproval(context, executionData, "id");
+
+    assertThat(response.getExecutionStatus()).isEqualTo(FAILED);
+    assertThat(response.getErrorMessage())
+        .isEqualTo("Invalid project key [UNKNOWN]. Please, check out allowed values: [PN, SPN, TPN]");
+  }
+
+  @Test
+  @Owner(developers = AGORODETKI)
+  @Category(UnitTests.class)
+  public void shouldFailApprovalStatusValidation() throws IOException {
+    when(context.renderExpression("${project}")).thenReturn("PN");
+    when(context.renderExpression("${approvalValue}")).thenReturn("UNKNOWN");
+    when(jiraHelperService.getProjects(anyString(), anyString(), anyString())).thenReturn(projects);
+    when(jiraHelperService.getStatuses(anyString(), anyString(), anyString(), anyString())).thenReturn(statuses);
+
+    ApprovalStateParams approvalStateParams = new ApprovalStateParams();
+    JiraApprovalParams jiraApprovalParams = new JiraApprovalParams();
+    jiraApprovalParams.setProject("${project}");
+    jiraApprovalParams.setApprovalValue("${approvalValue}");
+
+    approvalStateParams.setJiraApprovalParams(jiraApprovalParams);
+    approvalState.setApprovalStateParams(approvalStateParams);
+    ApprovalStateExecutionData executionData =
+        ApprovalStateExecutionData.builder().approvalStateType(ApprovalStateType.JIRA).build();
+
+    ExecutionResponse response = approvalState.executeJiraApproval(context, executionData, "id");
+
+    assertThat(response.getExecutionStatus()).isEqualTo(FAILED);
+    assertThat(response.getErrorMessage())
+        .isEqualTo("Invalid approval status [UNKNOWN]. Please, check out allowed values [To Do, In Progress, Done]");
+  }
+
+  @Test
+  @Owner(developers = AGORODETKI)
+  @Category(UnitTests.class)
+  public void shouldFailRejectionStatusValidation() throws IOException {
+    when(context.renderExpression("${project}")).thenReturn("PN");
+    when(context.renderExpression("${approvalValue}")).thenReturn("In Progress");
+    when(context.renderExpression("${rejectionValue}")).thenReturn("UNKNOWN");
+    when(jiraHelperService.getProjects(anyString(), anyString(), anyString())).thenReturn(projects);
+    when(jiraHelperService.getStatuses(anyString(), anyString(), anyString(), anyString())).thenReturn(statuses);
+
+    ApprovalStateParams approvalStateParams = new ApprovalStateParams();
+    JiraApprovalParams jiraApprovalParams = new JiraApprovalParams();
+    jiraApprovalParams.setProject("${project}");
+    jiraApprovalParams.setApprovalValue("${approvalValue}");
+    jiraApprovalParams.setRejectionValue("${rejectionValue}");
+
+    approvalStateParams.setJiraApprovalParams(jiraApprovalParams);
+    approvalState.setApprovalStateParams(approvalStateParams);
+    ApprovalStateExecutionData executionData =
+        ApprovalStateExecutionData.builder().approvalStateType(ApprovalStateType.JIRA).build();
+
+    ExecutionResponse response = approvalState.executeJiraApproval(context, executionData, "id");
+
+    assertThat(response.getExecutionStatus()).isEqualTo(FAILED);
+    assertThat(response.getErrorMessage())
+        .isEqualTo("Invalid rejection status [UNKNOWN]. Please, check out allowed values [To Do, In Progress, Done]");
   }
 }
