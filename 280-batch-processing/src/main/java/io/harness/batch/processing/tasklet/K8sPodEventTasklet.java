@@ -1,5 +1,7 @@
 package io.harness.batch.processing.tasklet;
 
+import com.google.common.collect.Lists;
+
 import io.harness.batch.processing.ccm.CCMJobConstants;
 import io.harness.batch.processing.ccm.InstanceEvent;
 import io.harness.batch.processing.ccm.InstanceEvent.EventType;
@@ -20,6 +22,7 @@ import org.springframework.batch.repeat.RepeatStatus;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Slf4j
 public class K8sPodEventTasklet implements Tasklet {
@@ -42,10 +45,12 @@ public class K8sPodEventTasklet implements Tasklet {
         new PublishedMessageReader(publishedMessageDao, accountId, messageType, startTime, endTime, batchSize);
     do {
       publishedMessageList = publishedMessageReader.getNext();
-      publishedMessageList.stream()
-          .map(this ::processPodEventMessage)
-          .filter(instanceInfo -> null != instanceInfo.getAccountId())
-          .forEach(instanceEvent -> instanceDataDao.upsert(instanceEvent));
+      List<InstanceEvent> instanceEvents = publishedMessageList.stream()
+                                               .map(this ::processPodEventMessage)
+                                               .filter(instanceInfo -> null != instanceInfo.getAccountId())
+                                               .collect(Collectors.toList());
+      Lists.partition(instanceEvents, 100)
+          .forEach(instanceEventPartitioned -> instanceDataDao.upsert(instanceEventPartitioned));
     } while (publishedMessageList.size() == batchSize);
     return null;
   }

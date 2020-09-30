@@ -37,6 +37,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Repository
@@ -63,9 +64,12 @@ public class InstanceDataDaoImpl implements InstanceDataDao {
                                     .filter(InstanceDataKeys.clusterId, instanceEvent.getClusterId())
                                     .filter(InstanceDataKeys.instanceId, instanceEvent.getInstanceId());
     InstanceData instanceData = query.get();
+    return updateInstanceLifecycleData(instanceEvent, instanceData);
+  }
+
+  private InstanceData updateInstanceLifecycleData(InstanceEvent instanceEvent, InstanceData instanceData) {
     if (null != instanceData) {
       UpdateOperations<InstanceData> updateOperations = hPersistence.createUpdateOperations(InstanceData.class);
-
       Instant instant = instanceEvent.getTimestamp();
       boolean updateRequired = false;
       switch (instanceEvent.getType()) {
@@ -87,14 +91,37 @@ public class InstanceDataDaoImpl implements InstanceDataDao {
           break;
       }
       if (updateRequired) {
+        Query<InstanceData> query = hPersistence.createQuery(InstanceData.class)
+                                        .filter(InstanceDataKeys.accountId, instanceEvent.getAccountId())
+                                        .filter(InstanceDataKeys.clusterId, instanceEvent.getClusterId())
+                                        .filter(InstanceDataKeys.instanceId, instanceEvent.getInstanceId());
         return hPersistence.upsert(query, updateOperations, upsertReturnOldOptions);
       } else {
         return instanceData;
       }
     } else {
-      logger.warn("Instance Event received before info event {}", instanceEvent.getInstanceId());
+      logger.debug("Instance Event received before info event {}", instanceEvent.getInstanceId());
     }
     return null;
+  }
+
+  @Override
+  public void upsert(List<InstanceEvent> instanceEvents) {
+    Map<String, List<InstanceData>> instanceDataMap = getInstanceData(instanceEvents);
+    instanceEvents.forEach(instanceEvent -> {
+      if (null != instanceDataMap.get(instanceEvent.getInstanceId())) {
+        List<InstanceData> instanceDataList = instanceDataMap.get(instanceEvent.getInstanceId());
+        instanceDataList.forEach(instanceData -> updateInstanceLifecycleData(instanceEvent, instanceData));
+      } else {
+        updateInstanceLifecycleData(instanceEvent, null);
+      }
+    });
+  }
+
+  private Map<String, List<InstanceData>> getInstanceData(List<InstanceEvent> instanceEvents) {
+    Set<String> instanceIds = instanceEvents.stream().map(InstanceEvent::getInstanceId).collect(Collectors.toSet());
+    List<InstanceData> instanceData = fetchInstanceData(instanceIds);
+    return instanceData.stream().collect(Collectors.groupingBy(InstanceData::getInstanceId));
   }
 
   @Override
