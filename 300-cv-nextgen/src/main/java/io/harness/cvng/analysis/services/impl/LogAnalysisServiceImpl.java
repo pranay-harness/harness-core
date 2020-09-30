@@ -1,5 +1,6 @@
 package io.harness.cvng.analysis.services.impl;
 
+import static io.harness.cvng.CVConstants.MONGO_QUERY_TIMEOUT_SEC;
 import static io.harness.cvng.CVConstants.SERVICE_BASE_URL;
 import static io.harness.cvng.analysis.CVAnalysisConstants.DEPLOYMENT_LOG_ANALYSIS_SAVE_PATH;
 import static io.harness.cvng.analysis.CVAnalysisConstants.LOG_ANALYSIS_RESOURCE;
@@ -51,6 +52,7 @@ import io.harness.cvng.verificationjob.services.api.VerificationJobInstanceServi
 import io.harness.persistence.HPersistence;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.http.client.utils.URIBuilder;
+import org.mongodb.morphia.query.FindOptions;
 
 import java.net.URISyntaxException;
 import java.time.Instant;
@@ -60,6 +62,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.TimeUnit;
 
 @Slf4j
 public class LogAnalysisServiceImpl implements LogAnalysisService {
@@ -160,15 +163,16 @@ public class LogAnalysisServiceImpl implements LogAnalysisService {
   @Override
   public List<LogAnalysisCluster> getPreviousAnalysis(
       String cvConfigId, Instant analysisStartTime, Instant analysisEndTime) {
-    List<LogAnalysisCluster> analysisClusters = hPersistence.createQuery(LogAnalysisCluster.class)
-                                                    .filter(LogAnalysisClusterKeys.cvConfigId, cvConfigId)
-                                                    .filter(LogAnalysisClusterKeys.isEvicted, false)
-                                                    .project(LogAnalysisClusterKeys.cvConfigId, true)
-                                                    .project(LogAnalysisClusterKeys.analysisMinute, true)
-                                                    .project(LogAnalysisClusterKeys.label, true)
-                                                    .project(LogAnalysisClusterKeys.text, true)
-                                                    .project(LogAnalysisClusterKeys.frequencyTrend, true)
-                                                    .asList();
+    List<LogAnalysisCluster> analysisClusters =
+        hPersistence.createQuery(LogAnalysisCluster.class)
+            .filter(LogAnalysisClusterKeys.cvConfigId, cvConfigId)
+            .filter(LogAnalysisClusterKeys.isEvicted, false)
+            .project(LogAnalysisClusterKeys.cvConfigId, true)
+            .project(LogAnalysisClusterKeys.analysisMinute, true)
+            .project(LogAnalysisClusterKeys.label, true)
+            .project(LogAnalysisClusterKeys.text, true)
+            .project(LogAnalysisClusterKeys.frequencyTrend, true)
+            .asList(new FindOptions().maxTime(MONGO_QUERY_TIMEOUT_SEC, TimeUnit.SECONDS));
     if (isNotEmpty(analysisClusters)) {
       return analysisClusters;
     }
@@ -292,7 +296,7 @@ public class LogAnalysisServiceImpl implements LogAnalysisService {
         .filter(LogAnalysisClusterKeys.cvConfigId, cvConfigId)
         .field(LogAnalysisClusterKeys.label)
         .in(labels)
-        .asList();
+        .asList(new FindOptions().maxTime(MONGO_QUERY_TIMEOUT_SEC, TimeUnit.SECONDS));
   }
 
   @Override
@@ -306,6 +310,6 @@ public class LogAnalysisServiceImpl implements LogAnalysisService {
         .lessThanOrEq(endTime)
         .field(LogAnalysisResultKeys.logAnalysisResults + "." + AnalysisResultKeys.tag)
         .in(tags)
-        .asList();
+        .asList(new FindOptions().maxTime(MONGO_QUERY_TIMEOUT_SEC, TimeUnit.SECONDS));
   }
 }
