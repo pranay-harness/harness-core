@@ -102,7 +102,7 @@ public class JenkinsTaskTest extends WingsBaseTest {
   public void setUp() throws Exception {
     on(jenkinsTask).set("jenkinsUtil", jenkinsUtil);
     when(jenkinsFactory.create(anyString(), anyString(), any(char[].class))).thenReturn(jenkins);
-    when(jenkins.getBuild(any(QueueReference.class))).thenReturn(build);
+    when(jenkins.getBuild(any(QueueReference.class), any(JenkinsConfig.class))).thenReturn(build);
     when(build.details()).thenReturn(buildWithDetails);
     when(buildWithDetails.isBuilding()).thenReturn(false);
     when(buildWithDetails.getConsoleOutputText()).thenReturn("console output");
@@ -117,14 +117,15 @@ public class JenkinsTaskTest extends WingsBaseTest {
     when(buildWithDetails.getDescription()).thenReturn("test-description");
 
     JenkinsTaskParams params = buildJenkinsTaskParams();
+    params.setParameters(Collections.emptyMap());
     params.setSubTaskType(JenkinsSubTaskType.START_TASK);
     params.setQueuedBuildUrl(jenkinsUrl);
 
     // Invoke Jenkins Start Task
-    when(jenkins.trigger(jobName, Collections.emptyMap())).thenReturn(new QueueReference(jenkinsUrl));
+    when(jenkins.trigger(jobName, params)).thenReturn(new QueueReference(jenkinsUrl));
     JenkinsState.JenkinsExecutionResponse response = jenkinsTask.run(params);
     verify(jenkinsFactory).create(jenkinsUrl, userName, password);
-    verify(jenkins).trigger(jobName, Collections.emptyMap());
+    verify(jenkins).trigger(jobName, params);
     assertThat(response.getExecutionStatus()).isEqualTo(ExecutionStatus.SUCCESS);
 
     // Invoke Jenkins Poll Task
@@ -142,14 +143,15 @@ public class JenkinsTaskTest extends WingsBaseTest {
     when(buildWithDetails.getResult()).thenReturn(BuildResult.FAILURE);
 
     JenkinsTaskParams params = buildJenkinsTaskParams();
+    params.setParameters(Collections.emptyMap());
     params.setSubTaskType(JenkinsSubTaskType.START_TASK);
     params.setQueuedBuildUrl(jenkinsUrl);
 
     // Jenkins Start Task
-    when(jenkins.trigger(jobName, Collections.emptyMap())).thenReturn(new QueueReference(jenkinsUrl));
+    when(jenkins.trigger(jobName, params)).thenReturn(new QueueReference(jenkinsUrl));
     JenkinsState.JenkinsExecutionResponse response = jenkinsTask.run(params);
     verify(jenkinsFactory).create(jenkinsUrl, userName, password);
-    verify(jenkins).trigger(jobName, Collections.emptyMap());
+    verify(jenkins).trigger(jobName, params);
     assertThat(response.getExecutionStatus()).isEqualTo(ExecutionStatus.SUCCESS);
 
     // Jenkins Poll Task
@@ -166,14 +168,15 @@ public class JenkinsTaskTest extends WingsBaseTest {
     when(buildWithDetails.getResult()).thenReturn(BuildResult.UNSTABLE);
 
     JenkinsTaskParams params = buildJenkinsTaskParams();
+    params.setParameters(Collections.emptyMap());
     params.setSubTaskType(JenkinsSubTaskType.START_TASK);
     params.setQueuedBuildUrl(jenkinsUrl);
 
     // Jenkins Start Task
-    when(jenkins.trigger(jobName, Collections.emptyMap())).thenReturn(new QueueReference(jenkinsUrl));
+    when(jenkins.trigger(jobName, params)).thenReturn(new QueueReference(jenkinsUrl));
     JenkinsState.JenkinsExecutionResponse response = jenkinsTask.run(params);
     verify(jenkinsFactory).create(jenkinsUrl, userName, password);
-    verify(jenkins).trigger(jobName, Collections.emptyMap());
+    verify(jenkins).trigger(jobName, params);
     assertThat(response.getExecutionStatus()).isEqualTo(ExecutionStatus.SUCCESS);
 
     // Jenkins Poll Task
@@ -189,13 +192,14 @@ public class JenkinsTaskTest extends WingsBaseTest {
     when(build.details()).thenThrow(new HttpResponseException(404, "Job Not found"));
 
     JenkinsTaskParams params = buildJenkinsTaskParams();
+    params.setParameters(Collections.emptyMap());
     params.setSubTaskType(JenkinsSubTaskType.START_TASK);
     params.setQueuedBuildUrl(jenkinsUrl);
 
     JenkinsState.JenkinsExecutionResponse response = jenkinsTask.run(params);
     verify(jenkinsFactory).create(jenkinsUrl, userName, password);
-    verify(jenkins).trigger(jobName, Collections.emptyMap());
-    verify(jenkins).getBuild(any(QueueReference.class));
+    verify(jenkins).trigger(jobName, params);
+    verify(jenkins).getBuild(any(QueueReference.class), any(JenkinsConfig.class));
     assertThat(response.getExecutionStatus()).isEqualTo(ExecutionStatus.FAILED);
     assertThat(response.getErrorMessage()).isNotEmpty();
   }
@@ -207,15 +211,16 @@ public class JenkinsTaskTest extends WingsBaseTest {
     when(buildWithDetails.getResult()).thenReturn(BuildResult.UNSTABLE);
 
     JenkinsTaskParams params = buildJenkinsTaskParams();
+    params.setParameters(Collections.emptyMap());
     params.setSubTaskType(JenkinsSubTaskType.START_TASK);
     params.setQueuedBuildUrl(jenkinsUrl);
     params.setUnstableSuccess(true);
 
-    when(jenkins.trigger(jobName, Collections.emptyMap())).thenReturn(new QueueReference(jenkinsUrl));
+    when(jenkins.trigger(jobName, params)).thenReturn(new QueueReference(jenkinsUrl));
     JenkinsState.JenkinsExecutionResponse response = jenkinsTask.run(params);
     verify(jenkinsFactory).create(jenkinsUrl, userName, password);
-    verify(jenkins).trigger(jobName, Collections.emptyMap());
-    verify(jenkins).getBuild(any(QueueReference.class));
+    verify(jenkins).trigger(jobName, params);
+    verify(jenkins).getBuild(any(QueueReference.class), any(JenkinsConfig.class));
     assertThat(response.getExecutionStatus()).isEqualTo(ExecutionStatus.SUCCESS);
 
     // Jenkins Poll Task
@@ -232,15 +237,16 @@ public class JenkinsTaskTest extends WingsBaseTest {
     when(buildWithDetails.getDescription()).thenReturn("test-description");
 
     JenkinsTaskParams params = buildJenkinsTaskParams();
+    params.setParameters(Collections.emptyMap());
     params.setSubTaskType(JenkinsSubTaskType.START_TASK);
     params.setQueuedBuildUrl(jenkinsUrl);
     params.setInjectEnvVars(true);
 
     // Invoke Jenkins Start Task
-    when(jenkins.trigger(jobName, Collections.emptyMap())).thenReturn(new QueueReference(jenkinsUrl));
+    when(jenkins.trigger(jobName, params)).thenReturn(new QueueReference(jenkinsUrl));
     JenkinsState.JenkinsExecutionResponse response = jenkinsTask.run(params);
     verify(jenkinsFactory).create(jenkinsUrl, userName, password);
-    verify(jenkins).trigger(jobName, Collections.emptyMap());
+    verify(jenkins).trigger(jobName, params);
     assertThat(response.getEnvVars()).isNullOrEmpty();
     assertThat(response.getExecutionStatus()).isEqualTo(ExecutionStatus.SUCCESS);
 
@@ -264,15 +270,16 @@ public class JenkinsTaskTest extends WingsBaseTest {
     when(buildWithDetails.getDescription()).thenReturn("test-description");
 
     JenkinsTaskParams params = buildJenkinsTaskParams();
+    params.setParameters(Collections.emptyMap());
     params.setSubTaskType(JenkinsSubTaskType.START_TASK);
     params.setQueuedBuildUrl(jenkinsUrl);
     params.setInjectEnvVars(true);
 
     // Invoke Jenkins Start Task
-    when(jenkins.trigger(jobName, Collections.emptyMap())).thenReturn(new QueueReference(jenkinsUrl));
+    when(jenkins.trigger(jobName, params)).thenReturn(new QueueReference(jenkinsUrl));
     JenkinsState.JenkinsExecutionResponse response = jenkinsTask.run(params);
     verify(jenkinsFactory).create(jenkinsUrl, userName, password);
-    verify(jenkins).trigger(jobName, Collections.emptyMap());
+    verify(jenkins).trigger(jobName, params);
     assertThat(response.getEnvVars()).isNullOrEmpty();
     assertThat(response.getExecutionStatus()).isEqualTo(ExecutionStatus.SUCCESS);
 
@@ -292,11 +299,12 @@ public class JenkinsTaskTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void shouldFailWhenTriggerJobAPIFails() throws Exception {
     JenkinsTaskParams params = buildJenkinsTaskParams();
+    params.setParameters(Collections.emptyMap());
     params.setSubTaskType(JenkinsSubTaskType.START_TASK);
     params.setQueuedBuildUrl(jenkinsUrl);
 
     // Jenkins Start Task
-    when(jenkins.trigger(jobName, Collections.emptyMap())).thenThrow(new GeneralException("Exception"));
+    when(jenkins.trigger(jobName, params)).thenThrow(new GeneralException("Exception"));
     JenkinsState.JenkinsExecutionResponse response = jenkinsTask.run(params);
     assertThat(response.getExecutionStatus()).isEqualTo(ExecutionStatus.FAILED);
     assertThat(response.getErrorMessage()).isNotEmpty();
@@ -307,11 +315,12 @@ public class JenkinsTaskTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void shouldFailWhenTriggerJobAPIFailsWithUnknownException() throws Exception {
     JenkinsTaskParams params = buildJenkinsTaskParams();
+    params.setParameters(Collections.emptyMap());
     params.setSubTaskType(JenkinsSubTaskType.START_TASK);
     params.setQueuedBuildUrl(jenkinsUrl);
 
     // Jenkins Start Task
-    when(jenkins.trigger(jobName, Collections.emptyMap())).then(invocationOnMock -> { throw new Exception(); });
+    when(jenkins.trigger(jobName, params)).then(invocationOnMock -> { throw new Exception(); });
     JenkinsState.JenkinsExecutionResponse response = jenkinsTask.run(params);
     assertThat(response.getExecutionStatus()).isEqualTo(ExecutionStatus.FAILED);
     assertThat(response.getErrorMessage()).isNotEmpty();

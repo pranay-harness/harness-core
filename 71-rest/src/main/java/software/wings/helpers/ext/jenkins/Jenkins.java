@@ -3,10 +3,13 @@ package software.wings.helpers.ext.jenkins;
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 
 import com.offbytwo.jenkins.model.Build;
+import com.offbytwo.jenkins.model.Job;
 import com.offbytwo.jenkins.model.JobWithDetails;
 import com.offbytwo.jenkins.model.QueueReference;
 import io.harness.annotations.dev.OwnedBy;
 import org.apache.commons.lang3.tuple.Pair;
+import software.wings.beans.JenkinsConfig;
+import software.wings.beans.command.JenkinsTaskParams;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -21,12 +24,20 @@ import javax.annotation.Nullable;
 @OwnedBy(CDC)
 public interface Jenkins {
   /**
+   * Gets the job with details.
+   *
+   * @param jobname the jobname
+   * @return the job
+   */
+  JobWithDetails getJobWithDetails(String jobname);
+
+  /**
    * Gets the job.
    *
    * @param jobname the jobname
    * @return the job
    */
-  JobWithDetails getJob(String jobname);
+  Job getJob(String jobname, JenkinsConfig jenkinsConfig);
 
   /**
    * Gets the child jobs for the given parent folder job. For the root level jobs, pass null.
@@ -71,12 +82,12 @@ public interface Jenkins {
   /**
    * Trigger queue reference.
    *
-   * @param jobname    the jobname
-   * @param parameters the parameters
-   * @return the queue reference
-   * @throws IOException the io exception
+   * @param jobname  the jobname
+   * @param jenkinsTaskParams  the parameters
+   * @return  the queue reference
+   * @throws IOException  the io exception
    */
-  QueueReference trigger(String jobname, Map<String, String> parameters) throws IOException;
+  QueueReference trigger(String jobname, JenkinsTaskParams jenkinsTaskParams) throws IOException;
 
   /**
    * Check status.
@@ -142,11 +153,12 @@ public interface Jenkins {
   /**
    * Gets build.
    *
-   * @param queueItem the queue item
-   * @return the build
-   * @throws IOException the io exception
+   * @param queueItem      the queue item
+   * @param jenkinsConfig  the jenkins configuration
+   * @return               the build
+   * @throws IOException   the io exception
    */
-  Build getBuild(QueueReference queueItem) throws IOException;
+  Build getBuild(QueueReference queueItem, JenkinsConfig jenkinsConfig) throws IOException;
 
   boolean isRunning();
 

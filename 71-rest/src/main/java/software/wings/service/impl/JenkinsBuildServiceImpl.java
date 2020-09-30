@@ -117,7 +117,7 @@ public class JenkinsBuildServiceImpl implements JenkinsBuildService {
     encryptionService.decrypt(jenkinsConfig, encryptionDetails);
     Jenkins jenkins = jenkinsUtil.getJenkins(jenkinsConfig);
     try {
-      JobWithDetails job = jenkins.getJob(jobName);
+      JobWithDetails job = jenkins.getJobWithDetails(jobName);
       return Lists.newArrayList(job.getLastSuccessfulBuild()
                                     .details()
                                     .getArtifacts()
@@ -203,7 +203,7 @@ public class JenkinsBuildServiceImpl implements JenkinsBuildService {
       logger.info("Retrieving Job with details for Job: {}", jobName);
       encryptionService.decrypt(jenkinsConfig, encryptionDetails);
       Jenkins jenkins = jenkinsUtil.getJenkins(jenkinsConfig);
-      JobWithDetails jobWithDetails = jenkins.getJob(jobName);
+      JobWithDetails jobWithDetails = jenkins.getJobWithDetails(jobName);
       List<JobParameter> parameters = new ArrayList<>();
       if (jobWithDetails != null) {
         JobWithExtendedDetails jobWithExtendedDetails = (JobWithExtendedDetails) jobWithDetails;

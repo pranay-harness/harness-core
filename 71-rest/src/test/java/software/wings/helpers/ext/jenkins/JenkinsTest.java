@@ -5,6 +5,7 @@ import static com.github.tomakehurst.wiremock.client.WireMock.get;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo;
 import static io.harness.rule.OwnerRule.AADITI;
 import static io.harness.rule.OwnerRule.BRETT;
+import static io.harness.rule.OwnerRule.MILOS;
 import static io.harness.rule.OwnerRule.RAMA;
 import static io.harness.rule.OwnerRule.RUSHABH;
 import static io.harness.rule.OwnerRule.SRINIVAS;
@@ -31,6 +32,8 @@ import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
+import software.wings.beans.JenkinsConfig;
+import software.wings.beans.command.JenkinsTaskParams;
 import software.wings.helpers.ext.jenkins.model.JobProperty;
 import software.wings.helpers.ext.jenkins.model.JobWithExtendedDetails;
 import software.wings.helpers.ext.jenkins.model.ParametersDefinitionProperty;
@@ -47,12 +50,15 @@ import java.util.Objects;
  * The Class JenkinsTest.
  */
 public class JenkinsTest extends CategoryTest {
+  private static final String JENKINS_URL = "http://localhost:8089";
+  private static final String USERNAME = "wingsbuild";
+  private static final String PASSWORD = "0db28aa0f4fc0685df9a216fc7af0ca96254b7c2";
+
   /**
    * The Wire mock rule.
    */
   @Rule public WireMockRule wireMockRule = new WireMockRule(8089);
-  private Jenkins jenkins =
-      new JenkinsImpl("http://localhost:8089", "wingsbuild", "0db28aa0f4fc0685df9a216fc7af0ca96254b7c2".toCharArray());
+  private Jenkins jenkins = new JenkinsImpl(JENKINS_URL, USERNAME, PASSWORD.toCharArray());
 
   public JenkinsTest() throws URISyntaxException {}
 
@@ -71,7 +77,7 @@ public class JenkinsTest extends CategoryTest {
   @Owner(developers = BRETT)
   @Category(UnitTests.class)
   public void shouldGetJobFromJenkins() throws IOException {
-    assertThat(jenkins.getJob("scheduler")).isNotNull();
+    assertThat(jenkins.getJobWithDetails("scheduler")).isNotNull();
   }
 
   /**
@@ -132,7 +138,7 @@ public class JenkinsTest extends CategoryTest {
   @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldReturnNullWhenJobDoesNotExist() throws URISyntaxException, IOException {
-    assertThat(jenkins.getJob("scheduler1")).isNull();
+    assertThat(jenkins.getJobWithDetails("scheduler1")).isNull();
   }
 
   /**
@@ -288,7 +294,11 @@ public class JenkinsTest extends CategoryTest {
   @Owner(developers = SRINIVAS)
   @Category(UnitTests.class)
   public void shouldTriggerJobWithParameters() throws IOException {
-    QueueReference queueItem = jenkins.trigger("todolist_war", ImmutableMap.of("Test", "Test"));
+    JenkinsTaskParams jenkinsTaskParams = JenkinsTaskParams.builder()
+                                              .parameters(ImmutableMap.of("Test", "Test"))
+                                              .jenkinsConfig(JenkinsConfig.builder().build())
+                                              .build();
+    QueueReference queueItem = jenkins.trigger("todolist_war", jenkinsTaskParams);
     assertThat(queueItem.getQueueItemUrlPart()).isNotNull();
   }
 
@@ -296,7 +306,8 @@ public class JenkinsTest extends CategoryTest {
   @Owner(developers = SRINIVAS)
   @Category(UnitTests.class)
   public void shouldFetchBuildFromQueueItem() throws IOException {
-    Build build = jenkins.getBuild(new QueueReference("http://localhost:8089/queue/item/27287"));
+    Build build =
+        jenkins.getBuild(new QueueReference("http://localhost:8089/queue/item/27287"), JenkinsConfig.builder().build());
     assertThat(build.getQueueId()).isEqualTo(27287);
   }
 
@@ -304,7 +315,11 @@ public class JenkinsTest extends CategoryTest {
   @Owner(developers = SRINIVAS)
   @Category(UnitTests.class)
   public void shouldTriggerJobWithoutParameters() throws IOException {
-    QueueReference queueItem = jenkins.trigger("todolist_war", Collections.emptyMap());
+    JenkinsTaskParams jenkinsTaskParams = JenkinsTaskParams.builder()
+                                              .parameters(Collections.emptyMap())
+                                              .jenkinsConfig(JenkinsConfig.builder().build())
+                                              .build();
+    QueueReference queueItem = jenkins.trigger("todolist_war", jenkinsTaskParams);
     assertThat(queueItem.getQueueItemUrlPart()).isNotNull();
   }
 
@@ -322,7 +337,7 @@ public class JenkinsTest extends CategoryTest {
   @Owner(developers = SRINIVAS)
   @Category(UnitTests.class)
   public void shouldTestGetJobParameters() {
-    JobWithDetails jobWithDetails = jenkins.getJob("todolist_promot");
+    JobWithDetails jobWithDetails = jenkins.getJobWithDetails("todolist_promot");
     assertThat(jobWithDetails).isNotNull();
     assertThat(jobWithDetails).isInstanceOf(JobWithExtendedDetails.class);
     JobWithExtendedDetails jobWithExtendedDetails = (JobWithExtendedDetails) jobWithDetails;
@@ -350,5 +365,40 @@ public class JenkinsTest extends CategoryTest {
   public void shouldTestGetFileSize() {
     long size = jenkins.getFileSize("scheduler", "57", "build/libs/docker-scheduler-1.0-SNAPSHOT-all.jar");
     assertThat(size).isGreaterThan(0);
+  }
+
+  @Test
+  @Owner(developers = MILOS)
+  @Category(UnitTests.class)
+  public void triggerJobWithParametersWithConnectorUrl() throws IOException {
+    JenkinsTaskParams jenkinsTaskParams =
+        JenkinsTaskParams.builder()
+            .parameters(ImmutableMap.of("Test", "Test"))
+            .jenkinsConfig(JenkinsConfig.builder().jenkinsUrl(JENKINS_URL).useConnectorUrlForJobExecution(true).build())
+            .build();
+    QueueReference queueItem = jenkins.trigger("todolist_war", jenkinsTaskParams);
+    assertThat(queueItem.getQueueItemUrlPart()).isNotNull();
+  }
+
+  @Test
+  @Owner(developers = MILOS)
+  @Category(UnitTests.class)
+  public void triggerJobWithoutParametersWithConnectorUrl() throws IOException {
+    JenkinsTaskParams jenkinsTaskParams =
+        JenkinsTaskParams.builder()
+            .parameters(Collections.emptyMap())
+            .jenkinsConfig(JenkinsConfig.builder().jenkinsUrl(JENKINS_URL).useConnectorUrlForJobExecution(true).build())
+            .build();
+    QueueReference queueItem = jenkins.trigger("todolist_war", jenkinsTaskParams);
+    assertThat(queueItem.getQueueItemUrlPart()).isNotNull();
+  }
+
+  @Test
+  @Owner(developers = MILOS)
+  @Category(UnitTests.class)
+  public void fetchBuildFromQueueItemWithConnectorURL() throws IOException {
+    Build build = jenkins.getBuild(new QueueReference("http://localhost:8089/queue/item/27287"),
+        JenkinsConfig.builder().jenkinsUrl(JENKINS_URL).useConnectorUrlForJobExecution(true).build());
+    assertThat(build.getNumber()).isEqualTo(21);
   }
 }
