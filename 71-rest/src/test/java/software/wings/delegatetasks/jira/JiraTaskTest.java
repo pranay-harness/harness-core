@@ -8,6 +8,7 @@ import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.beans.DelegateTaskPackage;
 import io.harness.delegate.beans.TaskData;
+import io.harness.jira.JiraCustomFieldValue;
 import io.harness.rule.Owner;
 import net.rcarz.jiraclient.Field;
 import net.rcarz.jiraclient.Issue.FluentCreate;
@@ -21,7 +22,6 @@ import org.mockito.Captor;
 import org.mockito.Mockito;
 import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
-import software.wings.beans.jira.JiraCustomFieldValue;
 import software.wings.beans.jira.JiraTaskParameters;
 
 import java.util.HashMap;
