@@ -17,7 +17,7 @@ import com.google.inject.Inject;
 import io.harness.beans.ExecutionStatus;
 import io.harness.beans.OrchestrationWorkflowType;
 import io.harness.beans.WorkflowType;
-import io.harness.category.element.FunctionalTests;
+import io.harness.category.element.CDFunctionalTests;
 import io.harness.functional.AbstractFunctionalTest;
 import io.harness.functional.utils.K8SUtils;
 import io.harness.generator.ApplicationGenerator;
@@ -108,8 +108,8 @@ public class AccountLevelGitConnectorFunctionalTest extends AbstractFunctionalTe
   }
 
   @Test(timeout = TIMEOUT)
-  @Owner(developers = ABOSII, intermittent = true)
-  @Category(FunctionalTests.class)
+  @Owner(developers = ABOSII)
+  @Category(CDFunctionalTests.class)
   public void testPcfUsingAccountLevelGitConnector() {
     Service service = createPCFService(getName("pcf", "service"));
     updateApplicationManifest(createServiceManifest(service, "pcf-app1", StoreType.Remote));
@@ -130,8 +130,8 @@ public class AccountLevelGitConnectorFunctionalTest extends AbstractFunctionalTe
   }
 
   @Test(timeout = TIMEOUT)
-  @Owner(developers = ABOSII, intermittent = true)
-  @Category(FunctionalTests.class)
+  @Owner(developers = ABOSII)
+  @Category(CDFunctionalTests.class)
   public void testK8sUsingAccountLevelGitConnector() {
     Service service = createK8sService(getName("k8s", "service"));
     updateApplicationManifest(createServiceManifest(service, "manifests/basic", StoreType.Remote));
@@ -152,7 +152,7 @@ public class AccountLevelGitConnectorFunctionalTest extends AbstractFunctionalTe
 
   @Test(timeout = TIMEOUT)
   @Owner(developers = ABOSII)
-  @Category(FunctionalTests.class)
+  @Category(CDFunctionalTests.class)
   @Ignore("There is no clear reason why this test is failing on jenkins. Will investigate it later")
   public void testHelmUsingAccountLevelGitConnector() {
     Service service = createHelmService("helm-account-level-git");

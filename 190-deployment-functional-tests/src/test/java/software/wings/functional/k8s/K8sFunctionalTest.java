@@ -6,7 +6,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import com.google.inject.Inject;
 
 import io.harness.beans.OrchestrationWorkflowType;
-import io.harness.category.element.FunctionalTests;
+import io.harness.category.element.CDFunctionalTests;
 import io.harness.functional.AbstractFunctionalTest;
 import io.harness.functional.utils.K8SUtils;
 import io.harness.generator.ApplicationGenerator;
@@ -23,7 +23,6 @@ import io.harness.rule.Owner;
 import io.harness.testframework.restutils.ArtifactStreamRestUtils;
 import io.harness.testframework.restutils.WorkflowRestUtils;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import software.wings.beans.Application;
@@ -62,24 +61,21 @@ public class K8sFunctionalTest extends AbstractFunctionalTest {
 
   @Test(timeout = TIMEOUT)
   @Owner(developers = YOGESH)
-  @Category(FunctionalTests.class)
-  @Ignore("Enable once we figure out running these on nightly builds")
+  @Category(CDFunctionalTests.class)
   public void testK8sRollingWorkflow() {
     testK8sWorkflow(OrchestrationWorkflowType.ROLLING);
   }
 
   @Test(timeout = TIMEOUT)
   @Owner(developers = YOGESH)
-  @Category({FunctionalTests.class})
-  @Ignore("Enable once we figure out running these on nightly builds")
+  @Category({CDFunctionalTests.class})
   public void testK8sCanaryWorkflow() {
     testK8sWorkflow(OrchestrationWorkflowType.CANARY);
   }
 
   @Test(timeout = TIMEOUT)
   @Owner(developers = YOGESH)
-  @Category(FunctionalTests.class)
-  @Ignore("Enable once we figure out running these on nightly builds")
+  @Category(CDFunctionalTests.class)
   public void testK8sBlueGreenWorkflow() {
     testK8sWorkflow(OrchestrationWorkflowType.BLUE_GREEN);
   }
