@@ -20,6 +20,8 @@ directories:
   22-timeout-engine
   22-wait-engine
   23-delegate-service-driver
+  24-common-entities
+  24-ng-manager-service-beans
   tools/bazel
 
 # Automatically includes all relevant targets under the 'directories' above
