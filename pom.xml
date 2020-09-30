@@ -1061,7 +1061,7 @@
             <dependency>
                 <groupId>net.rcarz</groupId>
                 <artifactId>jira-client</artifactId>
-                <version>0.8-SNAPSHOT</version>
+                <version>0.9-SNAPSHOT</version>
                 <exclusions>
                     <exclusion>
                         <groupId>junit</groupId>
