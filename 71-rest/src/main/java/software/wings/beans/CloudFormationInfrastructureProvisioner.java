@@ -25,7 +25,8 @@ import java.util.List;
 public class CloudFormationInfrastructureProvisioner extends InfrastructureProvisioner {
   private static String VARIABLE_KEY = "cloudformation";
   @NotEmpty @Trimmed(message = "Source type should not contain leading and trailing spaces") private String sourceType;
-  private String templateBody;
+  @Trimmed(message = "Template Body should not contain leading and trailing spaces") private String templateBody;
+  @Trimmed(message = "Template File Path should not contain leading and trailing spaces")
   private String templateFilePath;
   private GitFileConfig gitFileConfig;
 

@@ -8,6 +8,7 @@ import static io.harness.validation.Validator.notNullCheck;
 import static java.lang.String.format;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toMap;
+import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.atteo.evo.inflector.English.plural;
 
 import com.google.common.annotations.VisibleForTesting;
@@ -225,11 +226,9 @@ public class InfrastructureProvisionerServiceImpl implements InfrastructureProvi
     if (provisioner instanceof TerraformInfrastructureProvisioner) {
       validateTerraformProvisioner((TerraformInfrastructureProvisioner) provisioner);
     } else if (provisioner instanceof CloudFormationInfrastructureProvisioner) {
-      CloudFormationInfrastructureProvisioner cloudFormationInfrastructureProvisioner =
-          (CloudFormationInfrastructureProvisioner) provisioner;
-      if (cloudFormationInfrastructureProvisioner.provisionByGit()) {
-        gitFileConfigHelperService.validate(cloudFormationInfrastructureProvisioner.getGitFileConfig());
-      }
+      validateCloudFormationProvisioner((CloudFormationInfrastructureProvisioner) provisioner);
+    } else if (provisioner instanceof ShellScriptInfrastructureProvisioner) {
+      validateShellScriptProvisioner((ShellScriptInfrastructureProvisioner) provisioner);
     }
   }
 
@@ -778,6 +777,26 @@ public class InfrastructureProvisionerServiceImpl implements InfrastructureProvi
     if (!areVariablesValid) {
       throw new InvalidRequestException("The following characters are not allowed in terraform "
           + "variable names: . and $");
+    }
+  }
+
+  private void validateCloudFormationProvisioner(CloudFormationInfrastructureProvisioner cloudFormationProvisioner) {
+    if (cloudFormationProvisioner.provisionByGit()) {
+      gitFileConfigHelperService.validate(cloudFormationProvisioner.getGitFileConfig());
+    } else if (cloudFormationProvisioner.provisionByUrl()) {
+      if (isBlank(cloudFormationProvisioner.getTemplateFilePath())) {
+        throw new InvalidRequestException("Template File Path can not be empty", USER);
+      }
+    } else if (cloudFormationProvisioner.provisionByBody()) {
+      if (isBlank(cloudFormationProvisioner.getTemplateBody())) {
+        throw new InvalidRequestException("Template Body can not be empty", USER);
+      }
+    }
+  }
+
+  private void validateShellScriptProvisioner(ShellScriptInfrastructureProvisioner shellScriptProvisioner) {
+    if (isBlank(shellScriptProvisioner.getScriptBody())) {
+      throw new InvalidRequestException("Script Body can not be empty", USER);
     }
   }
 

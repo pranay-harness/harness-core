@@ -4,6 +4,7 @@ import static io.harness.rule.OwnerRule.ANSHUL;
 import static io.harness.rule.OwnerRule.ARVIND;
 import static io.harness.rule.OwnerRule.RIHAZ;
 import static io.harness.rule.OwnerRule.SATYAM;
+import static io.harness.rule.OwnerRule.TATHAGAT;
 import static io.harness.rule.OwnerRule.VAIBHAV_SI;
 import static io.harness.rule.OwnerRule.YOGESH;
 import static java.util.Arrays.asList;
@@ -26,6 +27,8 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 import static software.wings.beans.AwsInfrastructureMapping.Builder.anAwsInfrastructureMapping;
+import static software.wings.beans.CloudFormationSourceType.TEMPLATE_BODY;
+import static software.wings.beans.CloudFormationSourceType.TEMPLATE_URL;
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 import static software.wings.utils.WingsTestConstants.APP_ID;
@@ -52,6 +55,7 @@ import io.harness.context.ContextElementType;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.rule.Owner;
+import org.apache.commons.lang3.StringUtils;
 import org.joor.Reflect;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -134,6 +138,8 @@ public class InfrastructureProvisionerServiceImplTest extends WingsBaseTest {
   @Inject @InjectMocks InfrastructureProvisionerService infrastructureProvisionerService;
   @Inject @InjectMocks InfrastructureProvisionerServiceImpl infrastructureProvisionerServiceImpl;
   @Inject private WingsPersistence wingsPersistence;
+
+  private String blankString = "     ";
 
   @Test
   @Owner(developers = SATYAM)
@@ -829,5 +835,51 @@ public class InfrastructureProvisionerServiceImplTest extends WingsBaseTest {
                            -> infrastructureProvisionerService.getTerraformVariables(
                                APP_ID, SETTING_ID, ".", ACCOUNT_ID, "branch", repoName))
         .isInstanceOf(WingsException.class);
+  }
+
+  @Test
+  @Owner(developers = TATHAGAT)
+  @Category(UnitTests.class)
+  public void testBlankTempateFilePathpathNotAllowedInCfInfrastructureProvisioner() {
+    CloudFormationInfrastructureProvisioner provisioner = CloudFormationInfrastructureProvisioner.builder()
+                                                              .appId(APP_ID)
+                                                              .uuid(ID_KEY)
+                                                              .sourceType(TEMPLATE_URL.name())
+                                                              .templateFilePath(StringUtils.SPACE)
+                                                              .build();
+    assertThatThrownBy(() -> infrastructureProvisionerServiceImpl.validateProvisioner(provisioner))
+        .isInstanceOf(InvalidRequestException.class);
+    assertThatThrownBy(() -> infrastructureProvisionerServiceImpl.validateProvisioner(provisioner))
+        .hasMessage("Template File Path can not be empty");
+  }
+
+  @Test
+  @Owner(developers = TATHAGAT)
+  @Category(UnitTests.class)
+  public void testBlankTemplateBodyNotAllowedInCfInfrastructureProvisioner() {
+    CloudFormationInfrastructureProvisioner provisioner = CloudFormationInfrastructureProvisioner.builder()
+                                                              .appId(APP_ID)
+                                                              .uuid(ID_KEY)
+                                                              .sourceType(TEMPLATE_BODY.name())
+                                                              .templateBody(StringUtils.SPACE)
+                                                              .build();
+    assertThatThrownBy(() -> infrastructureProvisionerServiceImpl.validateProvisioner(provisioner))
+        .isInstanceOf(InvalidRequestException.class);
+    assertThatThrownBy(() -> infrastructureProvisionerServiceImpl.validateProvisioner(provisioner))
+        .hasMessage("Template Body can not be empty");
+  }
+
+  @Test
+  @Owner(developers = TATHAGAT)
+  @Category(UnitTests.class)
+  public void testBlankScriptBodyNotAllowedInShellScriptInfrastructureProvisioner() {
+    ShellScriptInfrastructureProvisioner shellScriptInfrastructureProvisioner =
+        ShellScriptInfrastructureProvisioner.builder().appId(APP_ID).uuid(ID_KEY).scriptBody(StringUtils.SPACE).build();
+    assertThatThrownBy(
+        () -> infrastructureProvisionerServiceImpl.validateProvisioner(shellScriptInfrastructureProvisioner))
+        .isInstanceOf(InvalidRequestException.class);
+    assertThatThrownBy(
+        () -> infrastructureProvisionerServiceImpl.validateProvisioner(shellScriptInfrastructureProvisioner))
+        .hasMessage("Script Body can not be empty");
   }
 }
