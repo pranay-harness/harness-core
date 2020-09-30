@@ -1,4 +1,4 @@
-package software.wings.graphql.schema.mutation.connector.input;
+package software.wings.graphql.schema.mutation.connector.input.helm;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import io.harness.utils.RequestField;
@@ -11,8 +11,8 @@ import software.wings.security.annotations.Scope;
 @Builder
 @Scope(PermissionAttribute.ResourceType.SETTING)
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class QLCustomCommitDetailsInput {
-  private RequestField<String> authorName;
-  private RequestField<String> authorEmailId;
-  private RequestField<String> commitMessage;
+public class QLAmazonS3PlatformInput {
+  private RequestField<String> awsCloudProvider;
+  private RequestField<String> bucketName;
+  private RequestField<String> region;
 }

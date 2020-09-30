@@ -2,6 +2,7 @@ package software.wings.graphql.datafetcher.connector;
 
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static software.wings.beans.SettingAttribute.SettingCategory.CONNECTOR;
+import static software.wings.beans.SettingAttribute.SettingCategory.HELM_REPO;
 
 import com.google.inject.Inject;
 
@@ -45,7 +46,7 @@ public class DeleteConnectorDataFetcher
 
   private void validateForDeletion(SettingAttribute settingAttribute, String connectorId) {
     if (settingAttribute == null || settingAttribute.getValue() == null
-        || CONNECTOR != settingAttribute.getCategory()) {
+        || (CONNECTOR != settingAttribute.getCategory() && HELM_REPO != settingAttribute.getCategory())) {
       throw new InvalidRequestException(String.format("Invalid connectorId: %s", connectorId));
     }
   }

@@ -1,12 +1,20 @@
 package software.wings.graphql.datafetcher.connector.utils;
 
 import io.harness.utils.RequestField;
-import software.wings.graphql.schema.mutation.connector.input.QLDockerConnectorInput;
-import software.wings.graphql.schema.mutation.connector.input.QLDockerConnectorInput.QLDockerConnectorInputBuilder;
-import software.wings.graphql.schema.mutation.connector.input.QLGitConnectorInput;
-import software.wings.graphql.schema.mutation.connector.input.QLGitConnectorInput.QLGitConnectorInputBuilder;
-import software.wings.graphql.schema.mutation.connector.input.QLNexusConnectorInput;
-import software.wings.graphql.schema.mutation.connector.input.QLNexusConnectorInput.QLNexusConnectorInputBuilder;
+import software.wings.graphql.schema.mutation.connector.input.docker.QLDockerConnectorInput;
+import software.wings.graphql.schema.mutation.connector.input.docker.QLDockerConnectorInput.QLDockerConnectorInputBuilder;
+import software.wings.graphql.schema.mutation.connector.input.git.QLGitConnectorInput;
+import software.wings.graphql.schema.mutation.connector.input.git.QLGitConnectorInput.QLGitConnectorInputBuilder;
+import software.wings.graphql.schema.mutation.connector.input.helm.QLAmazonS3PlatformInput;
+import software.wings.graphql.schema.mutation.connector.input.helm.QLAmazonS3PlatformInput.QLAmazonS3PlatformInputBuilder;
+import software.wings.graphql.schema.mutation.connector.input.helm.QLGCSPlatformInput;
+import software.wings.graphql.schema.mutation.connector.input.helm.QLGCSPlatformInput.QLGCSPlatformInputBuilder;
+import software.wings.graphql.schema.mutation.connector.input.helm.QLHelmConnectorInput;
+import software.wings.graphql.schema.mutation.connector.input.helm.QLHelmConnectorInput.QLHelmConnectorInputBuilder;
+import software.wings.graphql.schema.mutation.connector.input.helm.QLHttpServerPlatformInput;
+import software.wings.graphql.schema.mutation.connector.input.helm.QLHttpServerPlatformInput.QLHttpServerPlatformInputBuilder;
+import software.wings.graphql.schema.mutation.connector.input.nexus.QLNexusConnectorInput;
+import software.wings.graphql.schema.mutation.connector.input.nexus.QLNexusConnectorInput.QLNexusConnectorInputBuilder;
 
 public class Utility {
   public static QLGitConnectorInputBuilder getQlGitConnectorInputBuilder() {
@@ -36,5 +44,51 @@ public class Utility {
         .userName(RequestField.ofNullable("USER"))
         .passwordSecretId(RequestField.absent())
         .version(RequestField.absent());
+  }
+
+  public static QLHelmConnectorInputBuilder getQlHelmConnectorInputBuilder(
+      QLHttpServerPlatformInput qlHttpServerPlatformInput) {
+    return QLHelmConnectorInput.builder()
+        .name(RequestField.ofNullable("NAME"))
+        .httpServerPlatformDetails(RequestField.ofNullable(qlHttpServerPlatformInput))
+        .gcsPlatformDetails(RequestField.absent())
+        .amazonS3PlatformDetails(RequestField.absent());
+  }
+
+  public static QLHttpServerPlatformInputBuilder getQlHttpServerPlatformInputBuilder() {
+    return QLHttpServerPlatformInput.builder()
+        .URL(RequestField.ofNullable("URL"))
+        .userName(RequestField.ofNullable("USER"))
+        .passwordSecretId(RequestField.absent());
+  }
+
+  public static QLHelmConnectorInputBuilder getQlHelmConnectorInputBuilder(QLGCSPlatformInput qlgcsPlatformInput) {
+    return QLHelmConnectorInput.builder()
+        .name(RequestField.ofNullable("NAME"))
+        .gcsPlatformDetails(RequestField.ofNullable(qlgcsPlatformInput))
+        .httpServerPlatformDetails(RequestField.absent())
+        .amazonS3PlatformDetails(RequestField.absent());
+  }
+
+  public static QLGCSPlatformInputBuilder getQlGCSPlatformInputBuilder() {
+    return QLGCSPlatformInput.builder()
+        .googleCloudProvider(RequestField.ofNullable("GCP"))
+        .bucketName(RequestField.ofNullable("bucketName"));
+  }
+
+  public static QLHelmConnectorInputBuilder getQlHelmConnectorInputBuilder(
+      QLAmazonS3PlatformInput qlAmazonS3PlatformInput) {
+    return QLHelmConnectorInput.builder()
+        .name(RequestField.ofNullable("NAME"))
+        .amazonS3PlatformDetails(RequestField.ofNullable(qlAmazonS3PlatformInput))
+        .httpServerPlatformDetails(RequestField.absent())
+        .gcsPlatformDetails(RequestField.absent());
+  }
+
+  public static QLAmazonS3PlatformInputBuilder getQlAmazonS3PlatformInputBuilder() {
+    return QLAmazonS3PlatformInput.builder()
+        .awsCloudProvider(RequestField.ofNullable("AWS"))
+        .bucketName(RequestField.ofNullable("bucketName"))
+        .region(RequestField.ofNullable("region"));
   }
 }

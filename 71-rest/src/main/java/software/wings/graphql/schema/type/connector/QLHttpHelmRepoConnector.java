@@ -19,5 +19,9 @@ public class QLHttpHelmRepoConnector implements QLConnector {
   private Long createdAt;
   private QLUser createdBy;
 
+  private String URL;
+  private String userName;
+  private String passwordSecretId;
+
   public static class QLHttpHelmRepoConnectorBuilder implements QLConnectorBuilder {}
 }

@@ -13,6 +13,7 @@ input CreateConnectorInput {
   gitConnector: GitConnectorInput
   dockerConnector: DockerConnectorInput
   nexusConnector: NexusConnectorInput
+  helmConnector: HelmConnectorInput
 }
 
 input UpdateConnectorInput {
@@ -22,6 +23,7 @@ input UpdateConnectorInput {
   gitConnector: GitConnectorInput
   dockerConnector: DockerConnectorInput
   nexusConnector: NexusConnectorInput
+  helmConnector: UpdateHelmConnectorInput
 }
 
 input DeleteConnectorInput {
@@ -79,4 +81,35 @@ input NexusConnectorInput {
 enum NexusVersion {
   V2
   V3
+}
+
+input HelmConnectorInput {
+  name: String!
+  amazonS3PlatformDetails: AmazonS3PlatformInput
+  gcsPlatformDetails: GCSPlatformInput
+  httpServerPlatformDetails: HttpServerPlatformInput
+}
+
+input UpdateHelmConnectorInput {
+  name: String!
+  amazonS3PlatformDetails: AmazonS3PlatformInput
+  gcsPlatformDetails: GCSPlatformInput
+  httpServerPlatformDetails: HttpServerPlatformInput
+}
+
+input AmazonS3PlatformInput {
+  awsCloudProvider: String!
+  bucketName: String!
+  region: String!
+}
+
+input GCSPlatformInput {
+  googleCloudProvider: String!
+  bucketName: String!
+}
+
+input HttpServerPlatformInput {
+  URL: String!
+  userName: String
+  passwordSecretId: String
 }

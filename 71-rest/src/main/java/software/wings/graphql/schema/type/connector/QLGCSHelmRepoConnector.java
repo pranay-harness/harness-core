@@ -19,5 +19,8 @@ public class QLGCSHelmRepoConnector implements QLConnector {
   private Long createdAt;
   private QLUser createdBy;
 
+  private String googleCloudProvider;
+  private String bucketName;
+
   public static class QLGCSHelmRepoConnectorBuilder implements QLConnectorBuilder {}
 }

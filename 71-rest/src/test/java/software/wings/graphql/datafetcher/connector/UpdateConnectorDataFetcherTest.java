@@ -21,8 +21,12 @@ import static software.wings.graphql.datafetcher.connector.utils.ConnectorConsta
 import static software.wings.graphql.datafetcher.connector.utils.ConnectorConstants.SSH;
 import static software.wings.graphql.datafetcher.connector.utils.ConnectorConstants.URL;
 import static software.wings.graphql.datafetcher.connector.utils.ConnectorConstants.USERNAME;
+import static software.wings.graphql.datafetcher.connector.utils.Utility.getQlAmazonS3PlatformInputBuilder;
 import static software.wings.graphql.datafetcher.connector.utils.Utility.getQlDockerConnectorInputBuilder;
+import static software.wings.graphql.datafetcher.connector.utils.Utility.getQlGCSPlatformInputBuilder;
 import static software.wings.graphql.datafetcher.connector.utils.Utility.getQlGitConnectorInputBuilder;
+import static software.wings.graphql.datafetcher.connector.utils.Utility.getQlHelmConnectorInputBuilder;
+import static software.wings.graphql.datafetcher.connector.utils.Utility.getQlHttpServerPlatformInputBuilder;
 import static software.wings.graphql.datafetcher.connector.utils.Utility.getQlNexusConnectorInputBuilder;
 import static software.wings.security.PermissionAttribute.PermissionType.MANAGE_CONNECTORS;
 
@@ -42,18 +46,25 @@ import software.wings.beans.DockerConfig;
 import software.wings.beans.GitConfig;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.config.NexusConfig;
+import software.wings.beans.settings.helm.AmazonS3HelmRepoConfig;
+import software.wings.beans.settings.helm.GCSHelmRepoConfig;
+import software.wings.beans.settings.helm.HttpHelmRepoConfig;
 import software.wings.graphql.datafetcher.AbstractDataFetcherTest;
 import software.wings.graphql.datafetcher.MutationContext;
+import software.wings.graphql.datafetcher.connector.utils.Utility;
 import software.wings.graphql.schema.mutation.connector.input.QLConnectorInput;
-import software.wings.graphql.schema.mutation.connector.input.QLCustomCommitDetailsInput;
-import software.wings.graphql.schema.mutation.connector.input.QLDockerConnectorInput.QLDockerConnectorInputBuilder;
-import software.wings.graphql.schema.mutation.connector.input.QLGitConnectorInput.QLGitConnectorInputBuilder;
-import software.wings.graphql.schema.mutation.connector.input.QLNexusConnectorInput.QLNexusConnectorInputBuilder;
-import software.wings.graphql.schema.mutation.connector.input.QLNexusVersion;
+import software.wings.graphql.schema.mutation.connector.input.docker.QLDockerConnectorInput.QLDockerConnectorInputBuilder;
+import software.wings.graphql.schema.mutation.connector.input.git.QLCustomCommitDetailsInput;
+import software.wings.graphql.schema.mutation.connector.input.git.QLGitConnectorInput.QLGitConnectorInputBuilder;
+import software.wings.graphql.schema.mutation.connector.input.nexus.QLNexusConnectorInput.QLNexusConnectorInputBuilder;
+import software.wings.graphql.schema.mutation.connector.input.nexus.QLNexusVersion;
 import software.wings.graphql.schema.mutation.connector.payload.QLUpdateConnectorPayload;
 import software.wings.graphql.schema.type.QLConnectorType;
+import software.wings.graphql.schema.type.connector.QLAmazonS3HelmRepoConnector;
 import software.wings.graphql.schema.type.connector.QLDockerConnector;
+import software.wings.graphql.schema.type.connector.QLGCSHelmRepoConnector;
 import software.wings.graphql.schema.type.connector.QLGitConnector;
+import software.wings.graphql.schema.type.connector.QLHttpHelmRepoConnector;
 import software.wings.graphql.schema.type.connector.QLNexusConnector;
 import software.wings.security.annotations.AuthRule;
 import software.wings.security.encryption.EncryptedData;
@@ -493,9 +504,398 @@ public class UpdateConnectorDataFetcherTest extends AbstractDataFetcherTest {
 
     QLConnectorInput input = QLConnectorInput.builder()
                                  .connectorId(null)
-                                 .connectorType(QLConnectorType.DOCKER)
+                                 .connectorType(QLConnectorType.NEXUS)
                                  .nexusConnector(updateNexusConnectorInputBuilder.build())
                                  .build();
+    MutationContext context = MutationContext.builder().accountId(ACCOUNT_ID).build();
+
+    assertThatThrownBy(() -> dataFetcher.mutateAndFetch(input, context))
+        .isInstanceOf(InvalidRequestException.class)
+        .hasMessage("Connector ID is not provided");
+  }
+
+  // UPDATE HELM CONNECTOR TESTS
+  @Test
+  @Owner(developers = MILOS)
+  @Category(UnitTests.class)
+  public void updateHelmHttpServerConnector() {
+    SettingAttribute setting =
+        SettingAttribute.Builder.aSettingAttribute()
+            .withAccountId(ACCOUNT_ID)
+            .withCategory(SettingAttribute.SettingCategory.HELM_REPO)
+            .withValue(HttpHelmRepoConfig.builder().accountId(ACCOUNT_ID).chartRepoUrl(URL).build())
+            .build();
+
+    doReturn(setting).when(settingsService).getByAccount(ACCOUNT_ID, CONNECTOR_ID);
+
+    doReturn(SettingAttribute.Builder.aSettingAttribute()
+                 .withCategory(SettingAttribute.SettingCategory.HELM_REPO)
+                 .withValue(HttpHelmRepoConfig.builder().accountId(ACCOUNT_ID).chartRepoUrl(URL).build())
+                 .build())
+        .when(settingsService)
+        .updateWithSettingFields(setting, setting.getUuid(), GLOBAL_APP_ID);
+
+    doNothing()
+        .when(settingServiceHelper)
+        .updateSettingAttributeBeforeResponse(isA(SettingAttribute.class), isA(Boolean.class));
+
+    doReturn(QLHttpHelmRepoConnector.builder()).when(connectorsController).getConnectorBuilder(any());
+    doReturn(QLHttpHelmRepoConnector.builder()).when(connectorsController).populateConnector(any(), any());
+    doReturn(new EncryptedData()).when(secretManager).getSecretById(ACCOUNT_ID, PASSWORD);
+
+    QLUpdateConnectorPayload payload = dataFetcher.mutateAndFetch(
+        QLConnectorInput.builder()
+            .connectorId(CONNECTOR_ID)
+            .connectorType(QLConnectorType.HTTP_HELM_REPO)
+            .helmConnector(Utility
+                               .getQlHelmConnectorInputBuilder(getQlHttpServerPlatformInputBuilder()
+                                                                   .passwordSecretId(RequestField.ofNullable(PASSWORD))
+                                                                   .build())
+                               .build())
+            .build(),
+        MutationContext.builder().accountId(ACCOUNT_ID).build());
+
+    verify(settingsService, times(1)).getByAccount(ACCOUNT_ID, CONNECTOR_ID);
+    verify(settingsService, times(1)).updateWithSettingFields(setting, setting.getUuid(), GLOBAL_APP_ID);
+    verify(settingServiceHelper, times(1))
+        .updateSettingAttributeBeforeResponse(isA(SettingAttribute.class), isA(Boolean.class));
+
+    assertThat(payload.getConnector()).isNotNull();
+    assertThat(payload.getConnector()).isInstanceOf(QLHttpHelmRepoConnector.class);
+  }
+
+  @Test
+  @Owner(developers = MILOS)
+  @Category(UnitTests.class)
+  public void updateHelmHttpServerConnectorWithoutUsername() {
+    SettingAttribute setting =
+        SettingAttribute.Builder.aSettingAttribute()
+            .withCategory(SettingAttribute.SettingCategory.HELM_REPO)
+            .withValue(HttpHelmRepoConfig.builder().accountId(ACCOUNT_ID).chartRepoUrl(URL).build())
+            .build();
+
+    doReturn(setting).when(settingsService).getByAccount(ACCOUNT_ID, CONNECTOR_ID);
+
+    QLConnectorInput input =
+        QLConnectorInput.builder()
+            .connectorId(CONNECTOR_ID)
+            .connectorType(QLConnectorType.HTTP_HELM_REPO)
+            .helmConnector(Utility
+                               .getQlHelmConnectorInputBuilder(getQlHttpServerPlatformInputBuilder()
+                                                                   .userName(RequestField.absent())
+                                                                   .passwordSecretId(RequestField.ofNullable(PASSWORD))
+                                                                   .build())
+                               .build())
+            .build();
+    MutationContext context = MutationContext.builder().accountId(ACCOUNT_ID).build();
+
+    assertThatThrownBy(() -> dataFetcher.mutateAndFetch(input, context))
+        .isInstanceOf(InvalidRequestException.class)
+        .hasMessage("userName is not specified");
+  }
+
+  @Test
+  @Owner(developers = MILOS)
+  @Category(UnitTests.class)
+  public void updateHelmHttpServerConnectorWithoutConnectorType() {
+    QLConnectorInput input =
+        QLConnectorInput.builder()
+            .connectorId(CONNECTOR_ID)
+            .connectorType(null)
+            .helmConnector(
+                Utility.getQlHelmConnectorInputBuilder(getQlHttpServerPlatformInputBuilder().build()).build())
+            .build();
+    MutationContext context = MutationContext.builder().accountId(ACCOUNT_ID).build();
+
+    assertThatThrownBy(() -> dataFetcher.mutateAndFetch(input, context))
+        .isInstanceOf(InvalidRequestException.class)
+        .hasMessage("Invalid connector type provided");
+  }
+
+  @Test
+  @Owner(developers = MILOS)
+  @Category(UnitTests.class)
+  public void updateHelmHttpServerConnectorWithoutConnectorID() {
+    QLConnectorInput input =
+        QLConnectorInput.builder()
+            .connectorId(null)
+            .connectorType(QLConnectorType.HTTP_HELM_REPO)
+            .helmConnector(
+                Utility.getQlHelmConnectorInputBuilder(getQlHttpServerPlatformInputBuilder().build()).build())
+            .build();
+    MutationContext context = MutationContext.builder().accountId(ACCOUNT_ID).build();
+
+    assertThatThrownBy(() -> dataFetcher.mutateAndFetch(input, context))
+        .isInstanceOf(InvalidRequestException.class)
+        .hasMessage("Connector ID is not provided");
+  }
+
+  @Test
+  @Owner(developers = MILOS)
+  @Category(UnitTests.class)
+  public void updateHelmGCSConnector() {
+    SettingAttribute setting = SettingAttribute.Builder.aSettingAttribute()
+                                   .withAccountId(ACCOUNT_ID)
+                                   .withCategory(SettingAttribute.SettingCategory.HELM_REPO)
+                                   .withValue(GCSHelmRepoConfig.builder().accountId(ACCOUNT_ID).build())
+                                   .build();
+
+    doReturn(setting).when(settingsService).getByAccount(ACCOUNT_ID, CONNECTOR_ID);
+
+    doReturn(SettingAttribute.Builder.aSettingAttribute()
+                 .withCategory(SettingAttribute.SettingCategory.HELM_REPO)
+                 .withValue(GCSHelmRepoConfig.builder().accountId(ACCOUNT_ID).build())
+                 .build())
+        .when(settingsService)
+        .updateWithSettingFields(setting, setting.getUuid(), GLOBAL_APP_ID);
+
+    doNothing()
+        .when(settingServiceHelper)
+        .updateSettingAttributeBeforeResponse(isA(SettingAttribute.class), isA(Boolean.class));
+
+    doReturn(QLGCSHelmRepoConnector.builder()).when(connectorsController).getConnectorBuilder(any());
+    doReturn(QLGCSHelmRepoConnector.builder()).when(connectorsController).populateConnector(any(), any());
+    doReturn(new EncryptedData()).when(secretManager).getSecretById(ACCOUNT_ID, PASSWORD);
+    doReturn(setting).when(settingsService).getByAccountAndId(ACCOUNT_ID, "GCP");
+
+    QLUpdateConnectorPayload payload = dataFetcher.mutateAndFetch(
+        QLConnectorInput.builder()
+            .connectorId(CONNECTOR_ID)
+            .connectorType(QLConnectorType.GCS_HELM_REPO)
+            .helmConnector(
+                Utility
+                    .getQlHelmConnectorInputBuilder(
+                        getQlGCSPlatformInputBuilder().bucketName(RequestField.ofNullable("newBucketName")).build())
+                    .build())
+            .build(),
+        MutationContext.builder().accountId(ACCOUNT_ID).build());
+
+    verify(settingsService, times(1)).getByAccount(ACCOUNT_ID, CONNECTOR_ID);
+    verify(settingsService, times(1)).updateWithSettingFields(setting, setting.getUuid(), GLOBAL_APP_ID);
+    verify(settingServiceHelper, times(1))
+        .updateSettingAttributeBeforeResponse(isA(SettingAttribute.class), isA(Boolean.class));
+
+    assertThat(payload.getConnector()).isNotNull();
+    assertThat(payload.getConnector()).isInstanceOf(QLGCSHelmRepoConnector.class);
+  }
+
+  @Test
+  @Owner(developers = MILOS)
+  @Category(UnitTests.class)
+  public void updateHelmGCSConnectorWithoutProvider() {
+    SettingAttribute setting = SettingAttribute.Builder.aSettingAttribute()
+                                   .withCategory(SettingAttribute.SettingCategory.HELM_REPO)
+                                   .withValue(GCSHelmRepoConfig.builder().accountId(ACCOUNT_ID).build())
+                                   .build();
+
+    doReturn(setting).when(settingsService).getByAccount(ACCOUNT_ID, CONNECTOR_ID);
+
+    QLConnectorInput input =
+        QLConnectorInput.builder()
+            .connectorId(CONNECTOR_ID)
+            .connectorType(QLConnectorType.GCS_HELM_REPO)
+            .helmConnector(Utility
+                               .getQlHelmConnectorInputBuilder(
+                                   getQlGCSPlatformInputBuilder().googleCloudProvider(RequestField.absent()).build())
+                               .build())
+            .build();
+    MutationContext context = MutationContext.builder().accountId(ACCOUNT_ID).build();
+
+    assertThatThrownBy(() -> dataFetcher.mutateAndFetch(input, context))
+        .isInstanceOf(InvalidRequestException.class)
+        .hasMessage("Google Cloud provider is not specified for GCS hosting platform");
+  }
+
+  @Test
+  @Owner(developers = MILOS)
+  @Category(UnitTests.class)
+  public void updateHelmGCSConnectorWithoutBucketName() {
+    SettingAttribute setting = SettingAttribute.Builder.aSettingAttribute()
+                                   .withAccountId(ACCOUNT_ID)
+                                   .withCategory(SettingAttribute.SettingCategory.HELM_REPO)
+                                   .withValue(GCSHelmRepoConfig.builder().accountId(ACCOUNT_ID).build())
+                                   .build();
+
+    doReturn(setting).when(settingsService).getByAccount(ACCOUNT_ID, CONNECTOR_ID);
+    doReturn(setting).when(settingsService).getByAccountAndId(ACCOUNT_ID, "GCP");
+
+    QLConnectorInput input =
+        QLConnectorInput.builder()
+            .connectorId(CONNECTOR_ID)
+            .connectorType(QLConnectorType.GCS_HELM_REPO)
+            .helmConnector(Utility
+                               .getQlHelmConnectorInputBuilder(
+                                   getQlGCSPlatformInputBuilder().bucketName(RequestField.absent()).build())
+                               .build())
+            .build();
+    MutationContext context = MutationContext.builder().accountId(ACCOUNT_ID).build();
+
+    assertThatThrownBy(() -> dataFetcher.mutateAndFetch(input, context))
+        .isInstanceOf(InvalidRequestException.class)
+        .hasMessage("Bucket name is not specified for GCS hosting platform");
+  }
+
+  @Test
+  @Owner(developers = MILOS)
+  @Category(UnitTests.class)
+  public void updateHelmGCSConnectorWithoutConnectorType() {
+    QLConnectorInput input =
+        QLConnectorInput.builder()
+            .connectorId(CONNECTOR_ID)
+            .connectorType(null)
+            .helmConnector(Utility.getQlHelmConnectorInputBuilder(getQlGCSPlatformInputBuilder().build()).build())
+            .build();
+    MutationContext context = MutationContext.builder().accountId(ACCOUNT_ID).build();
+
+    assertThatThrownBy(() -> dataFetcher.mutateAndFetch(input, context))
+        .isInstanceOf(InvalidRequestException.class)
+        .hasMessage("Invalid connector type provided");
+  }
+
+  @Test
+  @Owner(developers = MILOS)
+  @Category(UnitTests.class)
+  public void updateHelmGCSConnectorWithoutConnectorID() {
+    QLConnectorInput input =
+        QLConnectorInput.builder()
+            .connectorId(null)
+            .connectorType(QLConnectorType.GCS_HELM_REPO)
+            .helmConnector(Utility.getQlHelmConnectorInputBuilder(getQlGCSPlatformInputBuilder().build()).build())
+            .build();
+    MutationContext context = MutationContext.builder().accountId(ACCOUNT_ID).build();
+
+    assertThatThrownBy(() -> dataFetcher.mutateAndFetch(input, context))
+        .isInstanceOf(InvalidRequestException.class)
+        .hasMessage("Connector ID is not provided");
+  }
+
+  @Test
+  @Owner(developers = MILOS)
+  @Category(UnitTests.class)
+  public void updateHelmAmazonS3Connector() {
+    SettingAttribute setting = SettingAttribute.Builder.aSettingAttribute()
+                                   .withAccountId(ACCOUNT_ID)
+                                   .withCategory(SettingAttribute.SettingCategory.HELM_REPO)
+                                   .withValue(AmazonS3HelmRepoConfig.builder().accountId(ACCOUNT_ID).build())
+                                   .build();
+
+    doReturn(setting).when(settingsService).getByAccount(ACCOUNT_ID, CONNECTOR_ID);
+
+    doReturn(SettingAttribute.Builder.aSettingAttribute()
+                 .withCategory(SettingAttribute.SettingCategory.HELM_REPO)
+                 .withValue(AmazonS3HelmRepoConfig.builder().accountId(ACCOUNT_ID).build())
+                 .build())
+        .when(settingsService)
+        .updateWithSettingFields(setting, setting.getUuid(), GLOBAL_APP_ID);
+
+    doNothing()
+        .when(settingServiceHelper)
+        .updateSettingAttributeBeforeResponse(isA(SettingAttribute.class), isA(Boolean.class));
+
+    doReturn(QLAmazonS3HelmRepoConnector.builder()).when(connectorsController).getConnectorBuilder(any());
+    doReturn(QLAmazonS3HelmRepoConnector.builder()).when(connectorsController).populateConnector(any(), any());
+    doReturn(new EncryptedData()).when(secretManager).getSecretById(ACCOUNT_ID, PASSWORD);
+    doReturn(setting).when(settingsService).getByAccountAndId(ACCOUNT_ID, "AWS");
+
+    QLUpdateConnectorPayload payload = dataFetcher.mutateAndFetch(
+        QLConnectorInput.builder()
+            .connectorId(CONNECTOR_ID)
+            .connectorType(QLConnectorType.AMAZON_S3_HELM_REPO)
+            .helmConnector(getQlHelmConnectorInputBuilder(
+                getQlAmazonS3PlatformInputBuilder().bucketName(RequestField.ofNullable("newBucketName")).build())
+                               .build())
+            .build(),
+        MutationContext.builder().accountId(ACCOUNT_ID).build());
+
+    verify(settingsService, times(1)).getByAccount(ACCOUNT_ID, CONNECTOR_ID);
+    verify(settingsService, times(1)).updateWithSettingFields(setting, setting.getUuid(), GLOBAL_APP_ID);
+    verify(settingServiceHelper, times(1))
+        .updateSettingAttributeBeforeResponse(isA(SettingAttribute.class), isA(Boolean.class));
+
+    assertThat(payload.getConnector()).isNotNull();
+    assertThat(payload.getConnector()).isInstanceOf(QLAmazonS3HelmRepoConnector.class);
+  }
+
+  @Test
+  @Owner(developers = MILOS)
+  @Category(UnitTests.class)
+  public void updateHelmAmazonS3ConnectorWithoutProvider() {
+    SettingAttribute setting = SettingAttribute.Builder.aSettingAttribute()
+                                   .withCategory(SettingAttribute.SettingCategory.HELM_REPO)
+                                   .withValue(AmazonS3HelmRepoConfig.builder().accountId(ACCOUNT_ID).build())
+                                   .build();
+
+    doReturn(setting).when(settingsService).getByAccount(ACCOUNT_ID, CONNECTOR_ID);
+
+    QLConnectorInput input =
+        QLConnectorInput.builder()
+            .connectorId(CONNECTOR_ID)
+            .connectorType(QLConnectorType.AMAZON_S3_HELM_REPO)
+            .helmConnector(getQlHelmConnectorInputBuilder(
+                getQlAmazonS3PlatformInputBuilder().awsCloudProvider(RequestField.absent()).build())
+                               .build())
+            .build();
+    MutationContext context = MutationContext.builder().accountId(ACCOUNT_ID).build();
+
+    assertThatThrownBy(() -> dataFetcher.mutateAndFetch(input, context))
+        .isInstanceOf(InvalidRequestException.class)
+        .hasMessage("AWS Cloud provider is not specified for Amazon S3 hosting platform");
+  }
+
+  @Test
+  @Owner(developers = MILOS)
+  @Category(UnitTests.class)
+  public void updateHelmAmazonS3ConnectorWithoutBucketName() {
+    SettingAttribute setting = SettingAttribute.Builder.aSettingAttribute()
+                                   .withAccountId(ACCOUNT_ID)
+                                   .withCategory(SettingAttribute.SettingCategory.HELM_REPO)
+                                   .withValue(AmazonS3HelmRepoConfig.builder().accountId(ACCOUNT_ID).build())
+                                   .build();
+
+    doReturn(setting).when(settingsService).getByAccount(ACCOUNT_ID, CONNECTOR_ID);
+    doReturn(setting).when(settingsService).getByAccountAndId(ACCOUNT_ID, "AWS");
+
+    QLConnectorInput input = QLConnectorInput.builder()
+                                 .connectorId(CONNECTOR_ID)
+                                 .connectorType(QLConnectorType.AMAZON_S3_HELM_REPO)
+                                 .helmConnector(getQlHelmConnectorInputBuilder(
+                                     getQlAmazonS3PlatformInputBuilder().bucketName(RequestField.absent()).build())
+                                                    .build())
+                                 .build();
+    MutationContext context = MutationContext.builder().accountId(ACCOUNT_ID).build();
+
+    assertThatThrownBy(() -> dataFetcher.mutateAndFetch(input, context))
+        .isInstanceOf(InvalidRequestException.class)
+        .hasMessage("Bucket name is not specified for Amazon S3 hosting platform");
+  }
+
+  @Test
+  @Owner(developers = MILOS)
+  @Category(UnitTests.class)
+  public void updateHelmAmazonS3ConnectorWithoutConnectorType() {
+    QLConnectorInput input =
+        QLConnectorInput.builder()
+            .connectorId(CONNECTOR_ID)
+            .connectorType(null)
+            .helmConnector(getQlHelmConnectorInputBuilder(getQlAmazonS3PlatformInputBuilder().build()).build())
+            .build();
+    MutationContext context = MutationContext.builder().accountId(ACCOUNT_ID).build();
+
+    assertThatThrownBy(() -> dataFetcher.mutateAndFetch(input, context))
+        .isInstanceOf(InvalidRequestException.class)
+        .hasMessage("Invalid connector type provided");
+  }
+
+  @Test
+  @Owner(developers = MILOS)
+  @Category(UnitTests.class)
+  public void updateHelmAmazonS3ConnectorWithoutConnectorID() {
+    QLConnectorInput input =
+        QLConnectorInput.builder()
+            .connectorId(null)
+            .connectorType(QLConnectorType.AMAZON_S3_HELM_REPO)
+            .helmConnector(getQlHelmConnectorInputBuilder(getQlAmazonS3PlatformInputBuilder().build()).build())
+            .build();
     MutationContext context = MutationContext.builder().accountId(ACCOUNT_ID).build();
 
     assertThatThrownBy(() -> dataFetcher.mutateAndFetch(input, context))

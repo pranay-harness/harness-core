@@ -8,8 +8,8 @@ import software.wings.beans.GitConfig;
 import software.wings.beans.SettingAttribute;
 import software.wings.graphql.datafetcher.connector.ConnectorsController;
 import software.wings.graphql.schema.mutation.connector.input.QLConnectorInput;
-import software.wings.graphql.schema.mutation.connector.input.QLCustomCommitDetailsInput;
-import software.wings.graphql.schema.mutation.connector.input.QLGitConnectorInput;
+import software.wings.graphql.schema.mutation.connector.input.git.QLCustomCommitDetailsInput;
+import software.wings.graphql.schema.mutation.connector.input.git.QLGitConnectorInput;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.security.SecretManager;
 

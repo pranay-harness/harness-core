@@ -20,6 +20,10 @@ public class ConnectorFactory {
         return new DockerConnector(secretManager, connectorsController);
       case NEXUS:
         return new NexusConnector(secretManager, connectorsController);
+      case AMAZON_S3_HELM_REPO:
+      case GCS_HELM_REPO:
+      case HTTP_HELM_REPO:
+        return new HelmConnector(secretManager, connectorsController, settingsService);
       default:
         throw new InvalidRequestException("Invalid connector Type");
     }
