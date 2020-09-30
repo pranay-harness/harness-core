@@ -50,8 +50,8 @@ import software.wings.graphql.schema.type.cloudProvider.QLKubernetesClusterCloud
 import software.wings.graphql.schema.type.cloudProvider.QLPcfCloudProvider;
 import software.wings.graphql.schema.type.cloudProvider.QLPhysicalDataCenterCloudProvider;
 import software.wings.graphql.schema.type.cloudProvider.QLSpotInstCloudProvider;
-import software.wings.graphql.schema.type.connector.QLAmazonS3HelmConnector;
-import software.wings.graphql.schema.type.connector.QLAmazonS3RepoConnector;
+import software.wings.graphql.schema.type.connector.QLAmazonS3Connector;
+import software.wings.graphql.schema.type.connector.QLAmazonS3HelmRepoConnector;
 import software.wings.graphql.schema.type.connector.QLApmVerificationConnector;
 import software.wings.graphql.schema.type.connector.QLAppDynamicsConnector;
 import software.wings.graphql.schema.type.connector.QLArtifactoryConnector;
@@ -280,7 +280,7 @@ public class TypeResolverManager {
         .put(TypeResolverManagerUnifaces.Connector,
             getResultTypeResolver(
                 ImmutableMap.<Class, String>builder()
-                    .put(QLAmazonS3RepoConnector.class, TypeResolverManagerTypes.AmazonS3Connector)
+                    .put(QLAmazonS3Connector.class, TypeResolverManagerTypes.AmazonS3Connector)
                     .put(QLApmVerificationConnector.class, TypeResolverManagerTypes.ApmVerificationConnector)
                     .put(QLAppDynamicsConnector.class, TypeResolverManagerTypes.AppDynamicsConnector)
                     .put(QLArtifactoryConnector.class, TypeResolverManagerTypes.ArtifactoryConnector)
@@ -311,7 +311,7 @@ public class TypeResolverManager {
                     .put(QLInstanaConnector.class, TypeResolverManagerTypes.InstanaCollector)
                     .put(QLGCSHelmRepoConnector.class, TypeResolverManagerTypes.GCSHelmRepoConnector)
                     .put(QLHttpHelmRepoConnector.class, TypeResolverManagerTypes.HttpHelmRepoConnector)
-                    .put(QLAmazonS3HelmConnector.class, TypeResolverManagerTypes.AmazonS3HelmRepoConnector)
+                    .put(QLAmazonS3HelmRepoConnector.class, TypeResolverManagerTypes.AmazonS3HelmRepoConnector)
                     .build()))
         .put(TypeResolverManagerUnifaces.Execution,
             getResultTypeResolver(ImmutableMap.<Class, String>builder()

@@ -8,7 +8,7 @@ import software.wings.beans.SettingAttribute;
 import software.wings.beans.config.NexusConfig;
 import software.wings.graphql.datafetcher.connector.ConnectorsController;
 import software.wings.graphql.schema.mutation.connector.input.QLConnectorInput;
-import software.wings.graphql.schema.mutation.connector.input.QLNexusConnectorInput;
+import software.wings.graphql.schema.mutation.connector.input.nexus.QLNexusConnectorInput;
 import software.wings.service.intfc.security.SecretManager;
 
 import java.util.Optional;

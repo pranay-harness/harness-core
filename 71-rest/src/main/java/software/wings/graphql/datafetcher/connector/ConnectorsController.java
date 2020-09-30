@@ -10,7 +10,8 @@ import software.wings.beans.SettingAttribute;
 import software.wings.graphql.datafetcher.user.UserController;
 import software.wings.graphql.schema.type.QLConnectorType;
 import software.wings.graphql.schema.type.QLCustomCommitDetails;
-import software.wings.graphql.schema.type.connector.QLAmazonS3RepoConnector;
+import software.wings.graphql.schema.type.connector.QLAmazonS3Connector;
+import software.wings.graphql.schema.type.connector.QLAmazonS3HelmRepoConnector;
 import software.wings.graphql.schema.type.connector.QLApmVerificationConnector;
 import software.wings.graphql.schema.type.connector.QLAppDynamicsConnector;
 import software.wings.graphql.schema.type.connector.QLArtifactoryConnector;
@@ -109,7 +110,7 @@ public class ConnectorsController {
       case ARTIFACTORY:
         return QLArtifactoryConnector.builder();
       case AMAZON_S3:
-        return QLAmazonS3RepoConnector.builder();
+        return QLAmazonS3Connector.builder();
       case GCS:
         return QLGCSConnector.builder();
       case GIT:
@@ -121,7 +122,7 @@ public class ConnectorsController {
       case HTTP_HELM_REPO:
         return QLHttpHelmRepoConnector.builder();
       case AMAZON_S3_HELM_REPO:
-        return QLAmazonS3RepoConnector.builder();
+        return QLAmazonS3HelmRepoConnector.builder();
       case GCS_HELM_REPO:
         return QLGCSHelmRepoConnector.builder();
       case CUSTOM:

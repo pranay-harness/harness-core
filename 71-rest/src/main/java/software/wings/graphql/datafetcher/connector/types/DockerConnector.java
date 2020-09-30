@@ -8,7 +8,7 @@ import software.wings.beans.DockerConfig;
 import software.wings.beans.SettingAttribute;
 import software.wings.graphql.datafetcher.connector.ConnectorsController;
 import software.wings.graphql.schema.mutation.connector.input.QLConnectorInput;
-import software.wings.graphql.schema.mutation.connector.input.QLDockerConnectorInput;
+import software.wings.graphql.schema.mutation.connector.input.docker.QLDockerConnectorInput;
 import software.wings.service.intfc.security.SecretManager;
 
 import java.util.Optional;
@@ -38,7 +38,7 @@ public class DockerConnector extends Connector {
                                                            .withCategory(SettingAttribute.SettingCategory.SETTING);
 
     if (dockerConnectorInput.getName().isPresent()) {
-      dockerConnectorInput.getName().getValue().ifPresent(settingAttributeBuilder::withName);
+      dockerConnectorInput.getName().getValue().ifPresent(name -> settingAttributeBuilder.withName(name.trim()));
     }
 
     return settingAttributeBuilder.build();
@@ -60,7 +60,7 @@ public class DockerConnector extends Connector {
     settingAttribute.setValue(dockerConfig);
 
     if (dockerConnectorInput.getName().isPresent()) {
-      dockerConnectorInput.getName().getValue().ifPresent(settingAttribute::setName);
+      dockerConnectorInput.getName().getValue().ifPresent(name -> settingAttribute.setName(name.trim()));
     }
   }
 
