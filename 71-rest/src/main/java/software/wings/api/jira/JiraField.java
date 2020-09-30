@@ -31,4 +31,8 @@ public class JiraField {
       this.isCustom = true;
     }
   }
+
+  public static JiraField getNewField(JSONObject object, String key) {
+    return new JiraField(object, key);
+  }
 }
