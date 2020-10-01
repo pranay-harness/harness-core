@@ -33,10 +33,11 @@ import javax.validation.executable.ValidateOnExecution;
  *
  * @author marklu on 2018-12-04
  */
-@OwnedBy(PL)
+
 @ValidateOnExecution
 @Singleton
 @Slf4j
+@OwnedBy(PL)
 public class FileServiceImpl implements FileService {
   private WingsPersistence wingsPersistence;
   private MongoFileServiceImpl mongoFileService;

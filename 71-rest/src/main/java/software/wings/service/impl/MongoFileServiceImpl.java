@@ -3,6 +3,7 @@ package software.wings.service.impl;
 import static com.google.common.collect.ImmutableMap.of;
 import static com.mongodb.client.model.Sorts.descending;
 import static com.mongodb.client.model.Sorts.orderBy;
+import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.persistence.HPersistence.DEFAULT_STORE;
 import static java.util.stream.Collectors.toList;
@@ -22,6 +23,7 @@ import com.mongodb.client.gridfs.GridFSFindIterable;
 import com.mongodb.client.gridfs.model.GridFSFile;
 import com.mongodb.client.gridfs.model.GridFSUploadOptions;
 import com.mongodb.client.model.Filters;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.ChecksumType;
 import io.harness.beans.FileMetadata;
 import io.harness.stream.BoundedInputStream;
@@ -51,6 +53,7 @@ import javax.validation.executable.ValidateOnExecution;
 @ValidateOnExecution
 @Singleton
 @Slf4j
+@OwnedBy(PL)
 public class MongoFileServiceImpl implements FileService {
   @Inject private WingsPersistence wingsPersistence;
 

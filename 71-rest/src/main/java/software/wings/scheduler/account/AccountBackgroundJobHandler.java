@@ -1,11 +1,13 @@
 package software.wings.scheduler.account;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.mongo.iterator.MongoPersistenceIterator.SchedulingType.REGULAR;
 import static java.time.Duration.ofMinutes;
 import static java.time.Duration.ofSeconds;
 
 import com.google.inject.Inject;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.iterator.PersistenceIteratorFactory;
 import io.harness.mongo.iterator.MongoPersistenceIterator;
 import io.harness.mongo.iterator.MongoPersistenceIterator.Handler;
@@ -16,6 +18,7 @@ import software.wings.backgroundjobs.AccountBackgroundJobService;
 import software.wings.beans.Account;
 import software.wings.beans.Account.AccountKeys;
 
+@OwnedBy(PL)
 public class AccountBackgroundJobHandler implements Handler<Account> {
   @Inject private PersistenceIteratorFactory persistenceIteratorFactory;
   @Inject private AccountBackgroundJobService accountBackgroundJobService;

@@ -1,7 +1,12 @@
 package software.wings.beans;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
+
+import io.harness.annotations.dev.OwnedBy;
+
 import java.util.Optional;
 
+@OwnedBy(PL)
 public enum AccountMigration {
   ESSENTIALS_TO_PAID(AccountType.ESSENTIALS, AccountType.PAID, false),
   TRIAL_TO_PAID(AccountType.TRIAL, AccountType.PAID, false),

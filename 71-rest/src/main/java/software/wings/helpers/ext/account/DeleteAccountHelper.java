@@ -1,5 +1,6 @@
 package software.wings.helpers.ext.account;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.persistence.HQuery.excludeAuthority;
 import static java.lang.reflect.Modifier.isAbstract;
@@ -15,6 +16,7 @@ import com.google.inject.Inject;
 import com.google.inject.name.Named;
 
 import io.harness.annotation.HarnessEntity;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.exception.GeneralException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.limits.checker.rate.UsageBucket;
@@ -54,6 +56,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+@OwnedBy(PL)
 @Slf4j
 public class DeleteAccountHelper {
   private static final String ACCOUNT_ID = "accountId";

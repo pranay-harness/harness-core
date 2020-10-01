@@ -1,7 +1,10 @@
 package software.wings.beans.alert;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
+
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import io.harness.annotation.HarnessEntity;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.mongo.index.FdIndex;
 import io.harness.persistence.AccountAccess;
 import lombok.AccessLevel;
@@ -20,6 +23,7 @@ import software.wings.beans.Base;
 import java.util.Collections;
 import java.util.Set;
 
+@OwnedBy(PL)
 @Getter
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 @AllArgsConstructor

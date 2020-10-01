@@ -1,8 +1,11 @@
 package software.wings.features;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
+
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.security.encryption.EncryptionConfig;
 import io.harness.security.encryption.EncryptionType;
 import lombok.extern.slf4j.Slf4j;
@@ -19,6 +22,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
+@OwnedBy(PL)
 @Singleton
 @Slf4j
 public class SecretsManagementFeature extends AbstractPremiumFeature implements ComplianceByRemovingUsage {

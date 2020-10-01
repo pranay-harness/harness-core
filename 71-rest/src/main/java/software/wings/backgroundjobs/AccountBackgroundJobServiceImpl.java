@@ -1,8 +1,11 @@
 package software.wings.backgroundjobs;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
+
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.perpetualtask.PerpetualTaskService;
 import io.harness.perpetualtask.PerpetualTaskState;
 import io.harness.perpetualtask.internal.PerpetualTaskRecord;
@@ -14,6 +17,7 @@ import software.wings.service.intfc.AccountService;
 
 import java.util.List;
 
+@OwnedBy(PL)
 @Slf4j
 public class AccountBackgroundJobServiceImpl implements AccountBackgroundJobService {
   @Inject @Named("BackgroundJobScheduler") private PersistentScheduler persistentScheduler;

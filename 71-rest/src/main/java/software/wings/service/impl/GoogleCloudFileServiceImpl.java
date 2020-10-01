@@ -1,5 +1,6 @@
 package software.wings.service.impl;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.persistence.HQuery.excludeAuthority;
@@ -22,6 +23,7 @@ import com.google.cloud.storage.StorageOptions;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.ChecksumType;
 import io.harness.beans.FileMetadata;
 import io.harness.data.structure.UUIDGenerator;
@@ -64,6 +66,7 @@ import java.util.stream.Collectors;
  */
 @Singleton
 @Slf4j
+@OwnedBy(PL)
 public class GoogleCloudFileServiceImpl implements FileService {
   private static final String METADATA_FILE_NAME = "fileName";
   private static final String GOOGLE_APPLICATION_CREDENTIALS_PATH = "GOOGLE_APPLICATION_CREDENTIALS";

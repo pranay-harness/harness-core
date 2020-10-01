@@ -1,5 +1,6 @@
 package software.wings.resources.secretsmanagement;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.eraro.ErrorCode.SECRET_MANAGEMENT_ERROR;
 import static io.harness.exception.WingsException.SRE;
@@ -12,6 +13,7 @@ import com.google.common.collect.Sets;
 import com.google.inject.Inject;
 
 import com.fasterxml.jackson.core.type.TypeReference;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.beans.SearchFilter.Operator;
@@ -70,6 +72,7 @@ import javax.ws.rs.core.MediaType;
 /**
  * Created by rsingh on 10/30/17.
  */
+@OwnedBy(PL)
 @Api("secrets")
 @Path("/secrets")
 @Produces("application/json")

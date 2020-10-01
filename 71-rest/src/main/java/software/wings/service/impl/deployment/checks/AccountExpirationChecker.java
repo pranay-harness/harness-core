@@ -1,17 +1,20 @@
 package software.wings.service.impl.deployment.checks;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.eraro.ErrorCode.GENERAL_ERROR;
 import static io.harness.exception.WingsException.USER;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.exception.WingsException;
 import software.wings.licensing.LicenseService;
 import software.wings.service.intfc.deployment.PreDeploymentChecker;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 
+@OwnedBy(PL)
 @Singleton
 @ParametersAreNonnullByDefault
 public class AccountExpirationChecker implements PreDeploymentChecker {

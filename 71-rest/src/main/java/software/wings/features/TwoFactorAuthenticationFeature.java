@@ -1,8 +1,11 @@
 package software.wings.features;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
+
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
+import io.harness.annotations.dev.OwnedBy;
 import software.wings.beans.EntityType;
 import software.wings.beans.User;
 import software.wings.features.api.AbstractPremiumFeature;
@@ -18,6 +21,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
+@OwnedBy(PL)
 @Singleton
 public class TwoFactorAuthenticationFeature extends AbstractPremiumFeature implements ComplianceByRemovingUsage {
   public static final String FEATURE_NAME = "TWO_FACTOR_AUTHENTICATION";

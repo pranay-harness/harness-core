@@ -1,11 +1,13 @@
 package software.wings.features;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
 import static io.harness.beans.SearchFilter.Operator.EQ;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.PageRequest;
 import software.wings.beans.EntityType;
 import software.wings.beans.security.access.Whitelist;
@@ -22,6 +24,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
+@OwnedBy(PL)
 @Singleton
 public class IpWhitelistingFeature extends AbstractPremiumFeature implements ComplianceByRemovingUsage {
   public static final String FEATURE_NAME = "IP_WHITELISTING";
