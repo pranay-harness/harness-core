@@ -2,6 +2,7 @@ package io.harness.batch.processing.tasklet;
 
 import com.google.common.collect.Lists;
 
+import io.harness.batch.processing.billing.writer.support.ClusterDataGenerationValidator;
 import io.harness.batch.processing.ccm.CCMJobConstants;
 import io.harness.batch.processing.ccm.InstanceEvent;
 import io.harness.batch.processing.ccm.InstanceEvent.EventType;
@@ -30,6 +31,7 @@ public class K8sPodEventTasklet implements Tasklet {
   @Autowired private BatchMainConfig config;
   @Autowired protected InstanceDataDao instanceDataDao;
   @Autowired private PublishedMessageDao publishedMessageDao;
+  @Autowired private ClusterDataGenerationValidator clusterDataGenerationValidator;
 
   @Override
   public RepeatStatus execute(StepContribution stepContribution, ChunkContext chunkContext) {
@@ -66,6 +68,11 @@ public class K8sPodEventTasklet implements Tasklet {
 
   public InstanceEvent process(PublishedMessage publishedMessage) {
     PodEvent podEvent = (PodEvent) publishedMessage.getMessage();
+    String accountId = publishedMessage.getAccountId();
+    String clusterId = podEvent.getClusterId();
+    if (!clusterDataGenerationValidator.shouldGenerateClusterData(accountId, clusterId)) {
+      return InstanceEvent.builder().build();
+    }
     EventType type = null;
     switch (podEvent.getType()) {
       case EVENT_TYPE_TERMINATED:
@@ -79,9 +86,9 @@ public class K8sPodEventTasklet implements Tasklet {
     }
 
     return InstanceEvent.builder()
-        .accountId(publishedMessage.getAccountId())
+        .accountId(accountId)
         .cloudProviderId(podEvent.getCloudProviderId())
-        .clusterId(podEvent.getClusterId())
+        .clusterId(clusterId)
         .instanceId(podEvent.getPodUid())
         .type(type)
         .timestamp(HTimestamps.toInstant(podEvent.getTimestamp()))
