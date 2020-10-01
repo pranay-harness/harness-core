@@ -76,7 +76,7 @@ public class CustomDeploymentInstanceHandler extends InstanceHandler implements 
 
     final CustomDeploymentTypeTemplate deploymentTypeTemplate = customDeploymentTypeService.fetchDeploymentTemplate(
         infrastructureMapping.getAccountId(), infrastructureMapping.getCustomDeploymentTemplateId(),
-        infrastructureMapping.getDeploymentTypeTemplateVersion());
+        ((CustomInfrastructureMapping) infrastructureMapping).getDeploymentTypeTemplateVersion());
 
     final List<Instance> instancesInDb = instanceService.getInstancesForAppAndInframapping(appId, infraMappingId);
 

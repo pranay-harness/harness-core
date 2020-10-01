@@ -77,6 +77,7 @@ public class CustomDeploymentPerpetualTaskExecutor implements PerpetualTaskExecu
               .environment(ImmutableMap.of(taskParams.getOutputPathKey(), outputPath))
               .scriptType(ScriptType.BASH)
               .executionId(taskId)
+              .commandUnitName("custom-deployment-instance-sync")
               .build();
 
       final ScriptProcessExecutor executor = shellExecutorFactory.getExecutor(shellExecutorConfig);

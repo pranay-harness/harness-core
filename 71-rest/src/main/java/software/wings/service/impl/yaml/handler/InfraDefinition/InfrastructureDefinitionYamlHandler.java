@@ -70,7 +70,6 @@ public class InfrastructureDefinitionYamlHandler extends BaseYamlHandler<Yaml, I
         .cloudProviderType(bean.getCloudProviderType())
         .provisioner(provisionerName)
         .deploymentTypeTemplateUri(deploymentTypeTemplateUri)
-        .deploymentTypeTemplateVersion(bean.getDeploymentTypeTemplateVersion())
         .build();
   }
 
@@ -106,11 +105,6 @@ public class InfrastructureDefinitionYamlHandler extends BaseYamlHandler<Yaml, I
       scopedToServicesId.add(getServiceId(appId, serviceName));
     }
     String infraDefinitionName = yamlHelper.getInfraDefinitionNameByAppIdYamlPath(yamlFilePath);
-    if (isNotEmpty(yaml.getDeploymentTypeTemplateUri())) {
-      bean.setDeploymentTypeTemplateId(customDeploymentTypeService.fetchDeploymentTemplateIdFromUri(
-          changeContext.getChange().getAccountId(), yaml.getDeploymentTypeTemplateUri()));
-      bean.setDeploymentTypeTemplateVersion(yaml.getDeploymentTypeTemplateVersion());
-    }
 
     // name is set for the case when infra definition is created on the git side since yaml does
     // not have a name field
@@ -121,6 +115,10 @@ public class InfrastructureDefinitionYamlHandler extends BaseYamlHandler<Yaml, I
     bean.setDeploymentType(yaml.getDeploymentType());
     bean.setScopedToServices(scopedToServicesId);
     bean.setInfrastructure(cloudProviderInfrastructure);
+    if (isNotEmpty(yaml.getDeploymentTypeTemplateUri())) {
+      bean.setDeploymentTypeTemplateId(customDeploymentTypeService.fetchDeploymentTemplateIdFromUri(
+          changeContext.getChange().getAccountId(), yaml.getDeploymentTypeTemplateUri()));
+    }
     if (isNotEmpty(yaml.getProvisioner())) {
       InfrastructureProvisioner infrastructureProvisioner =
           infrastructureProvisionerService.getByName(appId, yaml.getProvisioner());

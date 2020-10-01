@@ -25,6 +25,8 @@ public class CustomInfrastructure implements InfraMappingInfrastructureProvider,
   public static final String DUMMY_CLOUD_PROVIDER = "DUMMY_CLOUD_PROVIDER";
 
   @IncludeFieldMap @Expression(ALLOW_SECRETS) private List<NameValuePair> infraVariables;
+  @IncludeFieldMap private String deploymentTypeTemplateVersion;
+
   private transient String customDeploymentName;
 
   @Override
@@ -33,6 +35,7 @@ public class CustomInfrastructure implements InfraMappingInfrastructureProvider,
         CustomInfrastructureMapping.builder().infraVariables(infraVariables).build();
     infraMapping.setInfraMappingType(InfrastructureMappingType.CUSTOM.name());
     infraMapping.setComputeProviderSettingId(DUMMY_CLOUD_PROVIDER);
+    infraMapping.setDeploymentTypeTemplateVersion(deploymentTypeTemplateVersion);
     return infraMapping;
   }
 
@@ -61,11 +64,13 @@ public class CustomInfrastructure implements InfraMappingInfrastructureProvider,
   @JsonTypeName(InfrastructureType.CUSTOM_INFRASTRUCTURE)
   public static final class Yaml extends CloudProviderInfrastructureYaml {
     private List<NameValuePair> infraVariables;
+    private String deploymentTypeTemplateVersion;
 
     @Builder
-    public Yaml(String type, List<NameValuePair> infraVariables) {
+    public Yaml(String type, List<NameValuePair> infraVariables, String deploymentTypeTemplateVersion) {
       super(type);
       setInfraVariables(infraVariables);
+      setDeploymentTypeTemplateVersion(deploymentTypeTemplateVersion);
     }
 
     public Yaml() {

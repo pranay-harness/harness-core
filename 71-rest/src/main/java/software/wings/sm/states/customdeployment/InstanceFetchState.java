@@ -53,6 +53,7 @@ import software.wings.api.customdeployment.InstanceFetchStateExecutionData;
 import software.wings.api.instancedetails.InstanceInfoVariables;
 import software.wings.api.shellscript.provision.ShellScriptProvisionExecutionData;
 import software.wings.beans.Activity;
+import software.wings.beans.CustomInfrastructureMapping;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.Log.Builder;
 import software.wings.beans.LogColor;
@@ -150,9 +151,10 @@ public class InstanceFetchState extends State {
     final String infraMappingId = context.fetchInfraMappingId();
     final InfraMappingElement infraMappingElement = context.fetchInfraMappingElement();
     final InfrastructureMapping infrastructureMapping = infrastructureMappingService.get(appId, infraMappingId);
+
     final CustomDeploymentTypeTemplate deploymentTypeTemplate = customDeploymentTypeService.fetchDeploymentTemplate(
         accountId, infrastructureMapping.getCustomDeploymentTemplateId(),
-        infrastructureMapping.getDeploymentTypeTemplateVersion());
+        ((CustomInfrastructureMapping) infrastructureMapping).getDeploymentTypeTemplateVersion());
 
     try {
       validatePrerequisites(deploymentTypeTemplate);

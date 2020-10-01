@@ -73,14 +73,14 @@ public class InfrastructureDefinitionTest extends WingsBaseTest {
   @Owner(developers = YOGESH)
   @Category(UnitTests.class)
   public void testGetInfraMappingForCustomInfra() {
-    InfrastructureDefinition infraDef = InfrastructureDefinition.builder()
-                                            .infrastructure(CustomInfrastructure.builder().build())
-                                            .deploymentType(CUSTOM)
-                                            .cloudProviderType(CloudProviderType.CUSTOM)
-                                            .build()
-                                            .cloneForUpdate();
+    InfrastructureDefinition infraDef =
+        InfrastructureDefinition.builder()
+            .infrastructure(CustomInfrastructure.builder().deploymentTypeTemplateVersion("1.1").build())
+            .deploymentType(CUSTOM)
+            .cloudProviderType(CloudProviderType.CUSTOM)
+            .build()
+            .cloneForUpdate();
     infraDef.setDeploymentTypeTemplateId(WingsTestConstants.TEMPLATE_ID);
-    infraDef.setDeploymentTypeTemplateVersion("1.1");
 
     InfrastructureMapping infrastructureMapping = infraDef.getInfraMapping();
     assertThat(infraDef.getInfrastructure().getMappingClass()).isEqualTo(infrastructureMapping.getClass());
@@ -94,18 +94,19 @@ public class InfrastructureDefinitionTest extends WingsBaseTest {
   @Owner(developers = OwnerRule.YOGESH)
   @Category(UnitTests.class)
   public void testCloneForUpdate() {
-    final InfrastructureDefinition source = InfrastructureDefinition.builder()
-                                                .name("my-infra")
-                                                .provisionerId(WingsTestConstants.PROVISIONER_ID)
-                                                .cloudProviderType(CloudProviderType.CUSTOM)
-                                                .deploymentType(CUSTOM)
-                                                .infrastructure(CustomInfrastructure.builder().build())
-                                                .customDeploymentName("my-deployment")
-                                                .deploymentTypeTemplateId("my-deployment-id")
-                                                .appId(WingsTestConstants.APP_ID)
-                                                .accountId(WingsTestConstants.ACCOUNT_ID)
-                                                .scopedToServices(Arrays.asList(WingsTestConstants.SERVICE_ID))
-                                                .build();
+    final InfrastructureDefinition source =
+        InfrastructureDefinition.builder()
+            .name("my-infra")
+            .provisionerId(WingsTestConstants.PROVISIONER_ID)
+            .cloudProviderType(CloudProviderType.CUSTOM)
+            .deploymentType(CUSTOM)
+            .infrastructure(CustomInfrastructure.builder().deploymentTypeTemplateVersion("1.1").build())
+            .customDeploymentName("my-deployment")
+            .deploymentTypeTemplateId("my-deployment-id")
+            .appId(WingsTestConstants.APP_ID)
+            .accountId(WingsTestConstants.ACCOUNT_ID)
+            .scopedToServices(Arrays.asList(WingsTestConstants.SERVICE_ID))
+            .build();
 
     final InfrastructureDefinition target = source.cloneForUpdate();
 
@@ -113,7 +114,8 @@ public class InfrastructureDefinitionTest extends WingsBaseTest {
     assertThat(target.getProvisionerId()).isEqualTo(WingsTestConstants.PROVISIONER_ID);
     assertThat(target.getCloudProviderType()).isEqualTo(CloudProviderType.CUSTOM);
     assertThat(target.getDeploymentType()).isEqualTo(CUSTOM);
-    assertThat(target.getInfrastructure()).isEqualTo(CustomInfrastructure.builder().build());
+    assertThat(target.getInfrastructure())
+        .isEqualTo(CustomInfrastructure.builder().deploymentTypeTemplateVersion("1.1").build());
     assertThat(target.getCustomDeploymentName()).isEqualTo("my-deployment");
     assertThat(target.getDeploymentTypeTemplateId()).isEqualTo("my-deployment-id");
     assertThat(target.getAccountId()).isEqualTo(WingsTestConstants.ACCOUNT_ID);

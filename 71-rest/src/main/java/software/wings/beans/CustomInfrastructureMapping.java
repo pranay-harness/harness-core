@@ -16,6 +16,7 @@ import java.util.Optional;
 @Builder
 public class CustomInfrastructureMapping extends InfrastructureMapping {
   private List<NameValuePair> infraVariables;
+  private String deploymentTypeTemplateVersion;
 
   @Override
   public void applyProvisionerVariables(Map<String, Object> map,
