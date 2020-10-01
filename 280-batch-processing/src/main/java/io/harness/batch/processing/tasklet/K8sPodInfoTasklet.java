@@ -5,6 +5,7 @@ import static io.harness.ccm.cluster.entities.K8sWorkload.encodeDotsInKey;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 
 import io.harness.batch.processing.billing.timeseries.data.PrunedInstanceData;
+import io.harness.batch.processing.billing.writer.support.ClusterDataGenerationValidator;
 import io.harness.batch.processing.ccm.CCMJobConstants;
 import io.harness.batch.processing.ccm.ClusterType;
 import io.harness.batch.processing.ccm.InstanceInfo;
@@ -47,6 +48,7 @@ public class K8sPodInfoTasklet implements Tasklet {
   @Autowired private InstanceDataService instanceDataService;
   @Autowired private PublishedMessageDao publishedMessageDao;
   @Autowired private HarnessServiceInfoFetcher harnessServiceInfoFetcher;
+  @Autowired private ClusterDataGenerationValidator clusterDataGenerationValidator;
   private static final String POD = "Pod";
   private static final String KUBE_SYSTEM_NAMESPACE = "kube-system";
   private static final String KUBE_PROXY_POD_PREFIX = "kube-proxy";
@@ -89,6 +91,10 @@ public class K8sPodInfoTasklet implements Tasklet {
     PodInfo podInfo = (PodInfo) publishedMessage.getMessage();
     String podUid = podInfo.getPodUid();
     String clusterId = podInfo.getClusterId();
+
+    if (!clusterDataGenerationValidator.shouldGenerateClusterData(accountId, clusterId)) {
+      return InstanceInfo.builder().metaData(Collections.emptyMap()).build();
+    }
 
     InstanceData existingInstanceData = instanceDataService.fetchInstanceData(accountId, clusterId, podUid);
     if (null != existingInstanceData) {

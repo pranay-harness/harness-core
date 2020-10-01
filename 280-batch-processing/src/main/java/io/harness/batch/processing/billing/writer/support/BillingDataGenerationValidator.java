@@ -20,6 +20,7 @@ import java.util.concurrent.TimeUnit;
 @Slf4j
 public class BillingDataGenerationValidator {
   private final LastReceivedPublishedMessageDao lastReceivedPublishedMessageDao;
+  private ClusterDataGenerationValidator clusterDataGenerationValidator;
 
   LoadingCache<BillingDataGenerationValidator.CacheKey, Boolean> billingDataGenerationValidationCache =
       Caffeine.newBuilder()
@@ -34,11 +35,16 @@ public class BillingDataGenerationValidator {
   }
 
   @Inject
-  public BillingDataGenerationValidator(LastReceivedPublishedMessageDao lastReceivedPublishedMessageDao) {
+  public BillingDataGenerationValidator(LastReceivedPublishedMessageDao lastReceivedPublishedMessageDao,
+      ClusterDataGenerationValidator clusterDataGenerationValidator) {
     this.lastReceivedPublishedMessageDao = lastReceivedPublishedMessageDao;
+    this.clusterDataGenerationValidator = clusterDataGenerationValidator;
   }
 
   public boolean shouldGenerateBillingData(String accountId, String clusterId, Instant startTime) {
+    if (!clusterDataGenerationValidator.shouldGenerateClusterData(accountId, clusterId)) {
+      return false;
+    }
     final BillingDataGenerationValidator.CacheKey cacheKey =
         new BillingDataGenerationValidator.CacheKey(accountId, clusterId, startTime);
     return billingDataGenerationValidationCache.get(cacheKey);

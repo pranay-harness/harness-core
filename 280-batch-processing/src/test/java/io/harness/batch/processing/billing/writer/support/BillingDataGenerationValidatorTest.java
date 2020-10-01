@@ -2,6 +2,7 @@ package io.harness.batch.processing.billing.writer.support;
 
 import static io.harness.rule.OwnerRule.HITESH;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -23,11 +24,15 @@ public class BillingDataGenerationValidatorTest extends CategoryTest {
   private static final Instant START_TIME = Instant.now();
   private BillingDataGenerationValidator billingDataGenerationValidator;
   private LastReceivedPublishedMessageDao lastReceivedPublishedMessageDao;
+  private ClusterDataGenerationValidator clusterDataGenerationValidator;
 
   @Before
   public void setUp() {
     lastReceivedPublishedMessageDao = mock(LastReceivedPublishedMessageDao.class);
-    billingDataGenerationValidator = new BillingDataGenerationValidator(lastReceivedPublishedMessageDao);
+    clusterDataGenerationValidator = mock(ClusterDataGenerationValidator.class);
+    billingDataGenerationValidator =
+        new BillingDataGenerationValidator(lastReceivedPublishedMessageDao, clusterDataGenerationValidator);
+    when(clusterDataGenerationValidator.shouldGenerateClusterData(any(), any())).thenReturn(true);
   }
 
   @Test

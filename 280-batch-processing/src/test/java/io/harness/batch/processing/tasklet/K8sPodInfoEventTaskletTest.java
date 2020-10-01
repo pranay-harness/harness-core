@@ -16,6 +16,7 @@ import com.google.protobuf.Timestamp;
 
 import io.harness.CategoryTest;
 import io.harness.batch.processing.billing.timeseries.data.PrunedInstanceData;
+import io.harness.batch.processing.billing.writer.support.ClusterDataGenerationValidator;
 import io.harness.batch.processing.ccm.CCMJobConstants;
 import io.harness.batch.processing.ccm.InstanceEvent;
 import io.harness.batch.processing.ccm.InstanceInfo;
@@ -74,6 +75,7 @@ public class K8sPodInfoEventTaskletTest extends CategoryTest {
   @Mock private InstanceDataService instanceDataService;
   @Mock private PublishedMessageDao publishedMessageDao;
   @Mock private HarnessServiceInfoFetcher harnessServiceInfoFetcher;
+  @Mock private ClusterDataGenerationValidator clusterDataGenerationValidator;
 
   private static final String POD_UID = "pod_uid";
   private static final String POD_NAME = "pod_name";
@@ -107,6 +109,7 @@ public class K8sPodInfoEventTaskletTest extends CategoryTest {
   public void setup() {
     MockitoAnnotations.initMocks(this);
     when(config.getBatchQueryConfig()).thenReturn(BatchQueryConfig.builder().queryBatchSize(50).build());
+    when(clusterDataGenerationValidator.shouldGenerateClusterData(any(), any())).thenReturn(true);
   }
 
   @Test
