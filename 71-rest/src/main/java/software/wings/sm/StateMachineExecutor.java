@@ -1141,9 +1141,6 @@ public class StateMachineExecutor implements StateInspectionListener {
                          .build());
     } catch (Exception e) {
       logger.error("[AbortInstance] Error in discontinuing", e);
-    } catch (Throwable th) {
-      logger.error("[AbortInstance] Throwable thrown while discontinuing", th);
-      throw th;
     }
     if (!updated) {
       throw new WingsException(ErrorCode.STATE_DISCONTINUE_FAILED)
