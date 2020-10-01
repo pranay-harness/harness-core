@@ -6,6 +6,7 @@ import io.harness.secretmanagerclient.NGSecretManagerMetadata;
 import io.harness.secretmanagerclient.dto.VaultConfigDTO;
 import io.harness.secretmanagerclient.dto.VaultConfigUpdateDTO;
 import lombok.experimental.UtilityClass;
+import org.apache.commons.lang3.StringUtils;
 import software.wings.beans.VaultConfig;
 
 import java.util.Optional;
@@ -34,12 +35,18 @@ public class VaultConfigMapper {
 
   public static VaultConfig applyUpdate(VaultConfig vaultConfig, VaultConfigUpdateDTO vaultConfigDTO) {
     vaultConfig.setVaultUrl(vaultConfigDTO.getVaultUrl());
-    vaultConfig.setAuthToken(vaultConfigDTO.getAuthToken());
+    if (StringUtils.isEmpty(vaultConfigDTO.getAuthToken())) {
+      vaultConfig.setAuthToken(vaultConfigDTO.getAuthToken());
+    }
+    if (StringUtils.isEmpty(vaultConfigDTO.getAppRoleId())) {
+      vaultConfig.setAppRoleId(vaultConfigDTO.getAppRoleId());
+    }
+    if (StringUtils.isEmpty(vaultConfigDTO.getSecretId())) {
+      vaultConfig.setSecretId(vaultConfigDTO.getSecretId());
+    }
     vaultConfig.setSecretEngineName(vaultConfigDTO.getSecretEngineName());
     vaultConfig.setBasePath(vaultConfigDTO.getBasePath());
-    vaultConfig.setAppRoleId(vaultConfigDTO.getAppRoleId());
     vaultConfig.setRenewIntervalHours(vaultConfigDTO.getRenewIntervalHours());
-    vaultConfig.setSecretId(vaultConfigDTO.getSecretId());
     vaultConfig.setReadOnly(vaultConfigDTO.isReadOnly());
     vaultConfig.setDefault(vaultConfigDTO.isDefault());
     vaultConfig.setSecretEngineVersion(vaultConfigDTO.getSecretEngineVersion());

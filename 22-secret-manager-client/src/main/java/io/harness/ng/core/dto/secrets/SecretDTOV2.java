@@ -1,6 +1,8 @@
 package io.harness.ng.core.dto.secrets;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import io.harness.ng.core.models.Secret;
@@ -17,6 +19,7 @@ import javax.validation.constraints.NotNull;
 @Data
 @NoArgsConstructor
 @JsonIgnoreProperties(ignoreUnknown = true)
+@JsonInclude(Include.NON_NULL)
 public class SecretDTOV2 {
   @NotNull private SecretType type;
   @NotNull private String name;

@@ -85,8 +85,8 @@ public class NGSecretFileServiceImpl implements NGSecretFileService {
             .get(metadata.getAccountIdentifier(), metadata.getOrgIdentifier(), metadata.getProjectIdentifier(),
                 metadata.getIdentifier())
             .isPresent()) {
-      throw new SecretManagementException(
-          SECRET_MANAGEMENT_ERROR, "Secret with same identifier exists in this scope", USER);
+      throw new SecretManagementException(SECRET_MANAGEMENT_ERROR,
+          String.format("Secret with identifier [%s] exists in this scope", dto.getIdentifier()), USER);
     }
 
     // get secret manager with which the file is to be encrypted
