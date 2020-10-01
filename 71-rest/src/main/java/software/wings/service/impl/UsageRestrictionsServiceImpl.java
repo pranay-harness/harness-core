@@ -68,6 +68,7 @@ import software.wings.settings.UsageRestrictions.AppEnvRestriction;
 import software.wings.settings.UsageRestrictionsReferenceSummary;
 import software.wings.settings.UsageRestrictionsReferenceSummary.IdNameReference;
 
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
@@ -1070,6 +1071,9 @@ public class UsageRestrictionsServiceImpl implements UsageRestrictionsService {
     try (HIterator<SettingAttribute> iterator = getSettingAttributesWithUsageRestrictionsIterator(accountId)) {
       for (SettingAttribute settingAttribute : iterator) {
         UsageRestrictions usageRestrictions = settingServiceHelper.getUsageRestrictions(settingAttribute);
+        if (usageRestrictions == null) {
+          continue;
+        }
         for (AppEnvRestriction appEnvRestriction : usageRestrictions.getAppEnvRestrictions()) {
           GenericEntityFilter appFilter = appEnvRestriction.getAppFilter();
           if (FilterType.SELECTED.equals(appFilter.getFilterType()) && appFilter.getIds().contains(appId)) {
@@ -1083,6 +1087,9 @@ public class UsageRestrictionsServiceImpl implements UsageRestrictionsService {
     try (HIterator<EncryptedData> iterator = getEncryptedDataWithUsageRestrictionsIterator(accountId)) {
       for (EncryptedData encryptedData : iterator) {
         UsageRestrictions usageRestrictions = encryptedData.getUsageRestrictions();
+        if (usageRestrictions == null) {
+          continue;
+        }
         for (AppEnvRestriction appEnvRestriction : usageRestrictions.getAppEnvRestrictions()) {
           GenericEntityFilter appFilter = appEnvRestriction.getAppFilter();
           if (FilterType.SELECTED.equals(appFilter.getFilterType()) && appFilter.getIds().contains(appId)) {
@@ -1111,6 +1118,9 @@ public class UsageRestrictionsServiceImpl implements UsageRestrictionsService {
     try (HIterator<SettingAttribute> iterator = getSettingAttributesWithUsageRestrictionsIterator(accountId)) {
       for (SettingAttribute settingAttribute : iterator) {
         UsageRestrictions usageRestrictions = settingServiceHelper.getUsageRestrictions(settingAttribute);
+        if (usageRestrictions == null) {
+          continue;
+        }
         for (AppEnvRestriction appEnvRestriction : usageRestrictions.getAppEnvRestrictions()) {
           EnvFilter envFilter = appEnvRestriction.getEnvFilter();
           if (envFilter.getFilterTypes().contains(FilterType.SELECTED) && envFilter.getIds().contains(envId)) {
@@ -1124,6 +1134,9 @@ public class UsageRestrictionsServiceImpl implements UsageRestrictionsService {
     try (HIterator<EncryptedData> iterator = getEncryptedDataWithUsageRestrictionsIterator(accountId)) {
       for (EncryptedData encryptedData : iterator) {
         UsageRestrictions usageRestrictions = encryptedData.getUsageRestrictions();
+        if (usageRestrictions == null) {
+          continue;
+        }
         for (AppEnvRestriction appEnvRestriction : usageRestrictions.getAppEnvRestrictions()) {
           EnvFilter envFilter = appEnvRestriction.getEnvFilter();
           if (envFilter.getFilterTypes().contains(FilterType.SELECTED) && envFilter.getIds().contains(envId)) {
@@ -1223,25 +1236,20 @@ public class UsageRestrictionsServiceImpl implements UsageRestrictionsService {
   }
 
   private HIterator<SettingAttribute> getSettingAttributesWithUsageRestrictionsIterator(String accountId) {
-    return new HIterator<>(wingsPersistence.createQuery(SettingAttribute.class)
-                               .filter(SettingAttributeKeys.accountId, accountId)
-                               .field("usageRestrictions")
-                               .exists()
-                               .fetch());
+    return new HIterator<>(
+        wingsPersistence.createQuery(SettingAttribute.class).filter(SettingAttributeKeys.accountId, accountId).fetch());
   }
 
   private HIterator<EncryptedData> getEncryptedDataWithUsageRestrictionsIterator(String accountId) {
-    return new HIterator<>(wingsPersistence.createQuery(EncryptedData.class)
-                               .filter(EncryptedDataKeys.accountId, accountId)
-                               .field("usageRestrictions")
-                               .exists()
-                               .fetch());
+    return new HIterator<>(
+        wingsPersistence.createQuery(EncryptedData.class).filter(EncryptedDataKeys.accountId, accountId).fetch());
   }
 
   private int removeAppEnvReferencesInternal(UsageRestrictions usageRestrictions, String appId, String envId) {
     int count = 0;
 
-    Set<AppEnvRestriction> appEnvRestrictions = usageRestrictions.getAppEnvRestrictions();
+    Set<AppEnvRestriction> appEnvRestrictions =
+        usageRestrictions == null ? Collections.emptySet() : usageRestrictions.getAppEnvRestrictions();
     if (isEmpty(appEnvRestrictions)) {
       return count;
     }
@@ -1292,7 +1300,8 @@ public class UsageRestrictionsServiceImpl implements UsageRestrictionsService {
     int count = 0;
 
     Set<AppEnvRestriction> filteredAppEnvRestrictions = new LinkedHashSet<>();
-    Set<AppEnvRestriction> appEnvRestrictions = usageRestrictions.getAppEnvRestrictions();
+    Set<AppEnvRestriction> appEnvRestrictions =
+        usageRestrictions == null ? new HashSet<>() : usageRestrictions.getAppEnvRestrictions();
     for (AppEnvRestriction appEnvRestriction : appEnvRestrictions) {
       GenericEntityFilter appFilter = appEnvRestriction.getAppFilter();
       EnvFilter envFilter = appEnvRestriction.getEnvFilter();
