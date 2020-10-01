@@ -24,7 +24,6 @@ public class VaultConfigDTOMapper {
         .secretId(vaultConnectorDTO.getSecretId())
         .isDefault(vaultConnectorDTO.isDefault())
         .encryptionType(EncryptionType.VAULT)
-
         .tags(connector.getTags())
         .description(connector.getDescription())
         .build();
