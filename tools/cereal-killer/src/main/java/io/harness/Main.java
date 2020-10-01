@@ -1,5 +1,7 @@
 package io.harness;
 
+import static java.util.Collections.emptySet;
+
 import io.harness.checks.FlakeFinder;
 import io.harness.checks.ReportFinder;
 import io.harness.checks.ReportProcessor;
@@ -48,6 +50,9 @@ public class Main {
       case "check":
         check(args);
         break;
+      case "removeSkipped":
+        removeSkipped(args);
+        break;
       case "suppressFlakes":
         suppressFlakes(args);
         break;
@@ -65,6 +70,17 @@ public class Main {
       GoogleCloudMonitoring.uploadMetrics(args);
     } catch (Exception ex) {
       logger.error(String.format("Exception while uploading metrics: [%s]", ex.getMessage()), ex);
+    }
+  }
+
+  private static void removeSkipped(String[] args)
+      throws IOException, ParserConfigurationException, SAXException, TransformerException, XPathExpressionException {
+    String baseDir = args[1];
+    ReportProcessor reportProcessor = new ReportProcessor(emptySet());
+    List<String> surefireReports = new ReportFinder(baseDir).findSurefireReports();
+    for (String report : surefireReports) {
+      logger.info("Processing report file {}", report);
+      reportProcessor.removeFlakyTestsAndCheckSuccess(report);
     }
   }
 

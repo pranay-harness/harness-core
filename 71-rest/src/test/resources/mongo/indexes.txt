@@ -110,6 +110,8 @@ ceCluster {"name": "no_dup", "unique": true} {"accountId": 1, "infraAccountId": 
 ceCommunications {"name": "account_email_type", "unique": true} {"accountId": 1, "emailId": 1, "type": 1}
 ceCommunications {"name": "account_enabled_type", "background": true} {"accountId": 1, "enabled": 1, "type": 1}
 ceExceptionRecord {"name": "accountId_clusterId_createdAt", "background": true} {"accountId": 1, "clusterId": 1, "createdAt": 1}
+ceReportSchedule {"name": "account_enabled_type", "background": true} {"accountId": 1, "enabled": 1, "type": 1}
+ceReportSchedule {"name": "view_report_name", "unique": true} {"name": 1, "viewsId": 1}
 cloudFormationRollbackConfig {"name": "accountId_1", "background": true} {"accountId": 1}
 cloudFormationRollbackConfig {"name": "appId_1", "background": true} {"appId": 1}
 cloudFormationRollbackConfig {"name": "createdAt_1", "background": true} {"createdAt": 1}
