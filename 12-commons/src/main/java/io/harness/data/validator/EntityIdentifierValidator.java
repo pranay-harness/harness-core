@@ -38,8 +38,8 @@ public class EntityIdentifierValidator implements ConstraintValidator<EntityIden
     if (!matchesIdentifierPattern(identifier)) {
       context.disableDefaultConstraintViolation();
       context
-          .buildConstraintViolationWithTemplate(identifier
-              + "can be 64 characters long and only contain alphanumeric, underscore and $ characters,"
+          .buildConstraintViolationWithTemplate(
+              "can be 64 characters long and can only contain alphanumeric, underscore and $ characters,"
               + " and not start with a number")
           .addConstraintViolation();
       return false;
