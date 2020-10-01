@@ -49,9 +49,6 @@ public class ExecutionGraphMapper {
 
   @NonNull
   static ExecutionNodeAdjacencyList toExecutionNodeAdjacencyList(@NonNull EdgeList edgeList) {
-    return ExecutionNodeAdjacencyList.builder()
-        .children(edgeList.getEdges())
-        .next(edgeList.getNextIds().get(0))
-        .build();
+    return ExecutionNodeAdjacencyList.builder().children(edgeList.getEdges()).nextIds(edgeList.getNextIds()).build();
   }
 }

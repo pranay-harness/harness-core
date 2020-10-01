@@ -9,5 +9,5 @@ import java.util.List;
 @Builder
 public class ExecutionNodeAdjacencyList {
   List<String> children;
-  String next;
+  List<String> nextIds;
 }
