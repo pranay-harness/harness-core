@@ -14,8 +14,6 @@ import java.util.List;
 import javax.annotation.Nonnull;
 
 public interface NgPipelineExecutionService {
-  PlanExecution runPipeline(String pipelineYaml, String accountId, String orgId, String projectId, EmbeddedUser user);
-
   NGPipelineExecutionResponseDTO runPipelineWithInputSetPipelineYaml(String accountId, String orgIdentifier,
       String projectIdentifier, String pipelineIdentifier, String inputSetPipelineYaml, boolean useFQNIfErrorResponse,
       EmbeddedUser user);

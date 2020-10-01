@@ -6,11 +6,14 @@ import io.harness.cdng.pipeline.beans.resources.NGPipelineErrorResponseDTO;
 import io.harness.cdng.pipeline.beans.resources.NGPipelineErrorWrapperDTO;
 import io.harness.cdng.pipeline.beans.resources.NGPipelineExecutionResponseDTO;
 import io.harness.data.structure.EmptyPredicate;
+import io.harness.exception.InvalidRequestException;
 import io.harness.execution.PlanExecution;
 import io.harness.walktree.visitor.mergeinputset.beans.MergeInputSetErrorResponse;
 import io.harness.walktree.visitor.response.VisitorErrorResponseWrapper;
+import io.harness.yaml.utils.JsonPipelineUtils;
 import lombok.experimental.UtilityClass;
 
+import java.io.IOException;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
@@ -31,6 +34,13 @@ public class NGPipelineExecutionDTOMapper {
     if (!mergeInputSetResponse.isErrorResponse()) {
       return NGPipelineErrorWrapperDTO.builder().build();
     }
+    String errorPipelineResponse;
+    try {
+      errorPipelineResponse =
+          JsonPipelineUtils.writeYamlString(mergeInputSetResponse.getErrorPipeline()).replaceAll("---\n", "");
+    } catch (IOException e) {
+      throw new InvalidRequestException("Pipeline could not be converted to yaml.");
+    }
     Map<String, NGPipelineErrorResponseDTO> uuidToErrorResponseMap = new HashMap<>();
 
     if (EmptyPredicate.isNotEmpty(mergeInputSetResponse.getUuidToErrorResponseMap())) {
@@ -49,9 +59,8 @@ public class NGPipelineExecutionDTOMapper {
         uuidToErrorResponseMap.put(entry.getKey(), NGPipelineErrorResponseDTO.builder().errors(errorDTOS).build());
       }
     }
-
     return NGPipelineErrorWrapperDTO.builder()
-        .errorPipelineYaml(mergeInputSetResponse.getErrorPipelineYaml())
+        .errorPipelineYaml(errorPipelineResponse)
         .uuidToErrorResponseMap(uuidToErrorResponseMap)
         .build();
   }

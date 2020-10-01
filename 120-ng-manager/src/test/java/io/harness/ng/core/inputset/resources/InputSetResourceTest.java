@@ -20,6 +20,7 @@ import io.harness.cdng.inputset.beans.resource.MergeInputSetResponseDTO;
 import io.harness.cdng.inputset.helpers.InputSetMergeHelper;
 import io.harness.cdng.inputset.mappers.InputSetFilterHelper;
 import io.harness.cdng.inputset.services.impl.InputSetEntityServiceImpl;
+import io.harness.cdng.pipeline.NgPipeline;
 import io.harness.cdng.pipeline.beans.dto.CDPipelineResponseDTO;
 import io.harness.cdng.pipeline.service.PipelineService;
 import io.harness.ngpipeline.overlayinputset.beans.BaseInputSetEntity;
@@ -72,6 +73,7 @@ public class InputSetResourceTest extends CategoryTest {
   private String cdInputSetYaml;
   private String overlayInputSetYaml;
   private String pipelineYaml;
+  private NgPipeline ngPipeline;
 
   @Before
   public void setUp() throws IOException {
@@ -86,7 +88,8 @@ public class InputSetResourceTest extends CategoryTest {
     overlayInputSetYaml = Resources.toString(
         Objects.requireNonNull(classLoader.getResource(overlayInputSetFileName)), StandardCharsets.UTF_8);
 
-    pipelineYaml = "pipeline:\n\tname: pName\n\tidentifier: pID\n\t";
+    pipelineYaml = "pipeline:\n  name: pName\n  identifier: pID\n";
+    ngPipeline = NgPipeline.builder().name("pName").identifier("pID").build();
 
     cdInputSetResponseDTO = InputSetResponseDTO.builder()
                                 .accountId(ACCOUNT_ID)
@@ -274,7 +277,7 @@ public class InputSetResourceTest extends CategoryTest {
   @Owner(developers = ARCHIT)
   @Category(UnitTests.class)
   public void testGetMergeInputSetFromPipelineTemplate() {
-    MergeInputSetResponse mergeInputSetResponse = MergeInputSetResponse.builder().pipelineYaml(pipelineYaml).build();
+    MergeInputSetResponse mergeInputSetResponse = MergeInputSetResponse.builder().mergedPipeline(ngPipeline).build();
     List<String> inputSetReferences = Arrays.asList("input1", "input2");
     MergeInputSetRequestDTO mergeInputSetRequestDTO =
         MergeInputSetRequestDTO.builder().inputSetReferences(inputSetReferences).build();
@@ -288,6 +291,6 @@ public class InputSetResourceTest extends CategoryTest {
             .getMergeInputSetFromPipelineTemplate(
                 ACCOUNT_ID, ORG_IDENTIFIER, PROJ_IDENTIFIER, PIPELINE_IDENTIFIER, false, mergeInputSetRequestDTO)
             .getData();
-    assertThat(mergePipelineTemplate.getPipelineYaml()).isEqualTo(pipelineYaml);
+    assertThat(mergePipelineTemplate.getPipelineYaml().replaceAll("\"", "")).isEqualTo(pipelineYaml);
   }
 }

@@ -13,23 +13,10 @@ import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.repository.support.PageableExecutionUtils;
 
 import java.util.List;
-import java.util.Optional;
 
 @AllArgsConstructor(access = AccessLevel.PRIVATE, onConstructor = @__({ @Inject }))
 public class PipelineRepositoryImpl implements CustomPipelineRepository {
   MongoTemplate mongoTemplate;
-
-  // Created Dummy method for examples
-  @Override
-  public Optional<NgPipelineEntity> getPipelineByIdExample(String accountId, String pipelineId) {
-    Criteria criteria = new Criteria()
-                            .and(NgPipelineEntity.PipelineNGKeys.accountId)
-                            .is(accountId)
-                            .and(NgPipelineEntity.PipelineNGKeys.identifier)
-                            .is(pipelineId);
-    Query query = new Query(criteria);
-    return Optional.ofNullable(mongoTemplate.findOne(query, NgPipelineEntity.class));
-  }
 
   @Override
   public Page<NgPipelineEntity> findAll(Criteria criteria, Pageable pageable) {

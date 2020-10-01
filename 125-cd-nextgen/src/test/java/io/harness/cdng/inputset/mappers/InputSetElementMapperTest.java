@@ -16,6 +16,7 @@ import io.harness.cdng.inputset.beans.resource.InputSetResponseDTO;
 import io.harness.cdng.inputset.beans.resource.InputSetSummaryResponseDTO;
 import io.harness.cdng.inputset.beans.resource.MergeInputSetResponseDTO;
 import io.harness.cdng.inputset.beans.yaml.CDInputSet;
+import io.harness.cdng.pipeline.NgPipeline;
 import io.harness.ngpipeline.overlayinputset.beans.BaseInputSetEntity;
 import io.harness.ngpipeline.overlayinputset.beans.InputSetEntityType;
 import io.harness.ngpipeline.overlayinputset.beans.entities.OverlayInputSetEntity;
@@ -110,7 +111,6 @@ public class InputSetElementMapperTest extends CategoryTest {
                                             .build();
 
     requestMergeInputResponse = MergeInputSetResponse.builder()
-                                    .pipelineYaml("PIPELINE_YAML")
                                     .isErrorResponse(true)
                                     .uuidToErrorResponseMap(new HashMap<String, VisitorErrorResponseWrapper>() {
                                       {
@@ -118,10 +118,11 @@ public class InputSetElementMapperTest extends CategoryTest {
                                         put("input2", VisitorErrorResponseWrapper.builder().build());
                                       }
                                     })
+                                    .errorPipeline(NgPipeline.builder().name("pName").identifier("pID").build())
                                     .build();
     expectedMergeInputResponseDTO =
         MergeInputSetResponseDTO.builder()
-            .pipelineYaml("PIPELINE_YAML")
+            .pipelineYaml("")
             .isErrorResponse(true)
             .inputSetErrorWrapper(InputSetErrorWrapperDTO.builder()
                                       .uuidToErrorResponseMap(new HashMap<String, InputSetErrorResponseDTO>() {
@@ -130,6 +131,7 @@ public class InputSetElementMapperTest extends CategoryTest {
                                           put("input2", InputSetErrorResponseDTO.builder().build());
                                         }
                                       })
+                                      .errorPipelineYaml("pipeline:\n  name: pName\n  identifier: pID\n")
                                       .build())
             .build();
 
@@ -264,7 +266,7 @@ public class InputSetElementMapperTest extends CategoryTest {
 
     assertThat(mergeInputSetResponseDTO.getPipelineYaml()).isEqualTo(expectedMergeInputResponseDTO.getPipelineYaml());
     assertThat(mergeInputSetResponseDTO.getPipelineYaml()).isEqualTo(expectedMergeInputResponseDTO.getPipelineYaml());
-    assertThat(mergeInputSetResponseDTO.getInputSetErrorWrapper().getErrorPipelineYaml())
+    assertThat(mergeInputSetResponseDTO.getInputSetErrorWrapper().getErrorPipelineYaml().replaceAll("\"", ""))
         .isEqualTo(expectedMergeInputResponseDTO.getInputSetErrorWrapper().getErrorPipelineYaml());
     assertThat(mergeInputSetResponseDTO.isErrorResponse()).isEqualTo(expectedMergeInputResponseDTO.isErrorResponse());
     assertThat(mergeInputSetResponseDTO.getInputSetErrorWrapper().getUuidToErrorResponseMap().keySet().size())
