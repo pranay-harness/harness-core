@@ -34,6 +34,12 @@ public class ReportProcessor {
     return flakyTests.contains(testFqdn);
   }
 
+  private NodeList skipped(Document document) throws XPathExpressionException {
+    XPath xPath = XPathFactory.newInstance().newXPath();
+    String skippedXpath = "/testsuite/testcase[skipped]";
+    return (NodeList) xPath.compile(skippedXpath).evaluate(document, XPathConstants.NODESET);
+  }
+
   private NodeList failures(Document document) throws XPathExpressionException {
     XPath xPath = XPathFactory.newInstance().newXPath();
     String failuresXpath = "/testsuite/testcase[error|failure]";
@@ -76,6 +82,15 @@ public class ReportProcessor {
         success = false;
       }
     }
+
+    NodeList skippedNodeList = skipped(doc);
+    for (int i = 0; i < skippedNodeList.getLength(); i++) {
+      Node skippedNode = skippedNodeList.item(i);
+      testsuiteNode.removeChild(skippedNode);
+    }
+
+    // TODO: update the overal file statistics
+
     writeDocument(filePath, doc);
     return success;
   }
