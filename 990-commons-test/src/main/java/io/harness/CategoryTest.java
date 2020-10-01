@@ -7,8 +7,10 @@ import io.harness.rule.DistributeRule;
 import io.harness.rule.OwnerRule;
 import io.harness.rule.OwnerWatcherRule;
 import io.harness.rule.RepeatRule;
+import io.harness.rule.ThreadRule;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.Before;
+import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.rules.TestName;
 import org.junit.rules.TestRule;
@@ -17,6 +19,8 @@ import org.slf4j.LoggerFactory;
 
 @Slf4j
 public class CategoryTest {
+  @ClassRule public static ThreadRule threadRule = new ThreadRule();
+
   @Rule public OwnerWatcherRule ownerWatcherRule = new OwnerWatcherRule();
   @Rule public TestName testName = new TestName();
   @Rule public DistributeRule distributeRule = new DistributeRule();
