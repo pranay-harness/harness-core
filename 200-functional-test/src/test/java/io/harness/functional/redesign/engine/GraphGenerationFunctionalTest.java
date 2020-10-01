@@ -267,7 +267,7 @@ public class GraphGenerationFunctionalTest extends AbstractFunctionalTest {
   }
 
   @Test
-  @Owner(developers = ALEXEI)
+  @Owner(developers = ALEXEI, intermittent = true)
   @Category(FunctionalTests.class)
   public void shouldGenerateOrchestrationGraphWithBarriers() {
     List<String> nodeNames = Lists.newArrayList("Dummy Node 2", "barrier3", "Dummy Node 1", "barrier1", "Dummy Node 3",
@@ -329,7 +329,7 @@ public class GraphGenerationFunctionalTest extends AbstractFunctionalTest {
   }
 
   @Test
-  @Owner(developers = ALEXEI)
+  @Owner(developers = ALEXEI, intermittent = true)
   @Category(FunctionalTests.class)
   public void shouldGenerateOrchestrationGraphWithSkippedNodes() {
     List<String> nodeNames =
