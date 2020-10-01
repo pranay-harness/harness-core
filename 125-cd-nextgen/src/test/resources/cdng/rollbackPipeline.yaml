@@ -63,7 +63,7 @@ pipeline:
                         spec:
                           socketTimeoutMillis: 1000
                           method: GET
-                          url: c
+                          url: https://www.google.com/
                   rollbackSteps:
                     - step:
                         name: http sg1 rollback step 1

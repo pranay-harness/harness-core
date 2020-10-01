@@ -51,8 +51,10 @@ public class ExecutionGraphMapperTest extends CategoryTest {
     executionNodeMap.put("id3", executionNode3);
     executionNodeMap.put("id4", executionNode4);
 
-    ExecutionNodeAdjacencyList executionNodeAdjacencyList =
-        ExecutionNodeAdjacencyList.builder().children(Arrays.asList("id2", "id3")).next("id4").build();
+    ExecutionNodeAdjacencyList executionNodeAdjacencyList = ExecutionNodeAdjacencyList.builder()
+                                                                .children(Arrays.asList("id2", "id3"))
+                                                                .nextIds(Collections.singletonList("id4"))
+                                                                .build();
     Map<String, ExecutionNodeAdjacencyList> adjacencyListMap = new HashMap<>();
     adjacencyListMap.put("id1", executionNodeAdjacencyList);
 
