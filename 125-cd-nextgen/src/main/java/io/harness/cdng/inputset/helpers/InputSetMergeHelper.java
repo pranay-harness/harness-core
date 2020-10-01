@@ -112,7 +112,7 @@ public class InputSetMergeHelper {
     return runMergeInputSetVisitor(originalPipeline, inputSetPipelineElementList, useFQNIfErrorResponse);
   }
 
-  private NgPipeline getOriginalOrTemplatePipeline(String accountId, String orgIdentifier, String projectIdentifier,
+  public NgPipeline getOriginalOrTemplatePipeline(String accountId, String orgIdentifier, String projectIdentifier,
       String pipelineIdentifier, boolean isTemplateResponse) {
     Optional<CDPipelineResponseDTO> optionalPipeline =
         ngPipelineService.getPipeline(pipelineIdentifier, accountId, orgIdentifier, projectIdentifier);
@@ -259,36 +259,22 @@ public class InputSetMergeHelper {
    * Function to create MergeInputSet response to combine the result.
    */
   private MergeInputSetResponse toMergeInputSetResponse(MergeInputSetVisitor mergeInputSetVisitor) {
-    try {
-      boolean isErrorResponse = !mergeInputSetVisitor.isResultValidInputSet();
-      String pipelineResponse = "";
-      String errorPipelineResponse = "";
-      if (isErrorResponse) {
-        errorPipelineResponse = JsonPipelineUtils.writeYamlString(mergeInputSetVisitor.getCurrentObjectErrorResult())
-                                    .replaceAll("---\n", "");
+    boolean isErrorResponse = !mergeInputSetVisitor.isResultValidInputSet();
+    Map<String, VisitorErrorResponseWrapper> uuidToErrorResponseMap = new HashMap<>();
+    mergeInputSetVisitor.getUuidToErrorResponseMap().forEach((key, value) -> {
+      if (value instanceof VisitorErrorResponseWrapper) {
+        uuidToErrorResponseMap.put(key, (VisitorErrorResponseWrapper) value);
       } else {
-        pipelineResponse =
-            JsonPipelineUtils.writeYamlString(mergeInputSetVisitor.getCurrentObjectResult()).replaceAll("---\n", "");
+        throw new InvalidArgumentsException(
+            "Error Response from merge input set visitor should be of VisitorErrorResponseWrapper instance.");
       }
+    });
 
-      Map<String, VisitorErrorResponseWrapper> uuidToErrorResponseMap = new HashMap<>();
-      mergeInputSetVisitor.getUuidToErrorResponseMap().forEach((key, value) -> {
-        if (value instanceof VisitorErrorResponseWrapper) {
-          uuidToErrorResponseMap.put(key, (VisitorErrorResponseWrapper) value);
-        } else {
-          throw new InvalidArgumentsException(
-              "Error Response from merge input set visitor should be of VisitorErrorResponseWrapper instance.");
-        }
-      });
-
-      return MergeInputSetResponse.builder()
-          .pipelineYaml(pipelineResponse)
-          .isErrorResponse(isErrorResponse)
-          .errorPipelineYaml(errorPipelineResponse)
-          .uuidToErrorResponseMap(uuidToErrorResponseMap)
-          .build();
-    } catch (IOException e) {
-      throw new InvalidRequestException("Pipeline could not be converted to yaml.");
-    }
+    return MergeInputSetResponse.builder()
+        .mergedPipeline((NgPipeline) mergeInputSetVisitor.getCurrentObjectResult())
+        .isErrorResponse(isErrorResponse)
+        .errorPipeline((NgPipeline) mergeInputSetVisitor.getCurrentObjectErrorResult())
+        .uuidToErrorResponseMap(uuidToErrorResponseMap)
+        .build();
   }
 }

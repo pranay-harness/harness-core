@@ -18,9 +18,11 @@ import io.harness.ngpipeline.overlayinputset.beans.resource.OverlayInputSetRespo
 import io.harness.overlayinputset.OverlayInputSet;
 import io.harness.walktree.visitor.mergeinputset.beans.MergeInputSetErrorResponse;
 import io.harness.walktree.visitor.response.VisitorErrorResponseWrapper;
+import io.harness.yaml.utils.JsonPipelineUtils;
 import io.harness.yaml.utils.YamlPipelineUtils;
 import lombok.experimental.UtilityClass;
 
+import java.io.IOException;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
@@ -134,17 +136,35 @@ public class InputSetElementMapper {
   }
 
   public MergeInputSetResponseDTO toMergeInputSetResponseDTO(MergeInputSetResponse mergeInputSetResponse) {
-    return MergeInputSetResponseDTO.builder()
-        .pipelineYaml(mergeInputSetResponse.getPipelineYaml())
-        .isErrorResponse(mergeInputSetResponse.isErrorResponse())
-        .inputSetErrorWrapper(toInputSetErrorWrapperDTO(mergeInputSetResponse))
-        .build();
+    try {
+      String pipelineResponse = "";
+      if (!mergeInputSetResponse.isErrorResponse()) {
+        pipelineResponse =
+            JsonPipelineUtils.writeYamlString(mergeInputSetResponse.getMergedPipeline()).replaceAll("---\n", "");
+      }
+      return MergeInputSetResponseDTO.builder()
+          .pipelineYaml(pipelineResponse)
+          .isErrorResponse(mergeInputSetResponse.isErrorResponse())
+          .inputSetErrorWrapper(toInputSetErrorWrapperDTO(mergeInputSetResponse))
+          .build();
+    } catch (IOException e) {
+      throw new InvalidRequestException("Pipeline could not be converted to yaml.");
+    }
   }
 
   private InputSetErrorWrapperDTO toInputSetErrorWrapperDTO(MergeInputSetResponse mergeInputSetResponse) {
     if (!mergeInputSetResponse.isErrorResponse()) {
       return InputSetErrorWrapperDTO.builder().build();
     }
+
+    String errorPipelineResponse;
+    try {
+      errorPipelineResponse =
+          JsonPipelineUtils.writeYamlString(mergeInputSetResponse.getErrorPipeline()).replaceAll("---\n", "");
+    } catch (IOException e) {
+      throw new InvalidRequestException("Pipeline could not be converted to yaml.");
+    }
+
     Map<String, InputSetErrorResponseDTO> uuidToErrorResponseMap = new HashMap<>();
 
     if (EmptyPredicate.isNotEmpty(mergeInputSetResponse.getUuidToErrorResponseMap())) {
@@ -165,7 +185,7 @@ public class InputSetElementMapper {
     }
 
     return InputSetErrorWrapperDTO.builder()
-        .errorPipelineYaml(mergeInputSetResponse.getErrorPipelineYaml())
+        .errorPipelineYaml(errorPipelineResponse)
         .uuidToErrorResponseMap(uuidToErrorResponseMap)
         .build();
   }

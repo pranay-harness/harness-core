@@ -3,9 +3,7 @@ package io.harness.ng.orchestration;
 import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
 
-import io.harness.beans.EmbeddedUser;
 import io.harness.beans.Graph;
-import io.harness.cdng.pipeline.executions.service.NgPipelineExecutionService;
 import io.harness.dto.OrchestrationGraphDTO;
 import io.harness.engine.OrchestrationService;
 import io.harness.execution.PlanExecution;
@@ -20,7 +18,6 @@ import java.util.Map;
 import javax.validation.constraints.NotNull;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
-import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
@@ -34,10 +31,6 @@ public class NgOrchestrationResource {
   @Inject private OrchestrationService orchestrationService;
   @Inject private CustomExecutionService customExecutionService;
   @Inject private CustomExecutionProvider customExecutionProvider;
-  @Inject private NgPipelineExecutionService ngPipelineExecutionService;
-
-  private static final EmbeddedUser EMBEDDED_USER =
-      EmbeddedUser.builder().uuid("lv0euRhKRCyiXWzS7pOg6g").email("admin@harness.io").name("Admin").build();
 
   @GET
   @Path("/http-v2")
@@ -77,16 +70,6 @@ public class NgOrchestrationResource {
     PlanExecution execution = orchestrationService.startExecution(
         customExecutionProvider.provideTaskChainPlan(FacilitatorType.TASK_CHAIN_V3), getAbstractions(accountId, appId));
     return new RestResponse<>(execution);
-  }
-
-  @POST
-  @Path("/test-execution-plan")
-  @Consumes("text/plain")
-  @Produces("application/json")
-  @ApiOperation(value = "create and run an execution plan", nickname = "test-execution-plan")
-  public RestResponse<PlanExecution> testExecutionPlan(@QueryParam("accountId") String accountId, String pipelineYaml) {
-    return new RestResponse<>(
-        ngPipelineExecutionService.runPipeline(pipelineYaml, accountId, "orgid1", "projectid1", EMBEDDED_USER));
   }
 
   @GET

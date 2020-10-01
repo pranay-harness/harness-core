@@ -18,6 +18,7 @@ import io.harness.rule.Owner;
 import io.harness.rule.OwnerRule;
 import io.harness.walktree.visitor.mergeinputset.beans.MergeInputSetErrorResponse;
 import io.harness.walktree.visitor.response.VisitorErrorResponseWrapper;
+import io.harness.yaml.utils.JsonPipelineUtils;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
@@ -78,7 +79,9 @@ public class InputSetMergeHelperTest extends CDNGBaseTest {
             Stream.of("wrongInput1", "wrongInput2").collect(Collectors.toList()), false, true);
 
     assertThat(mergeInputSetResponse.isErrorResponse()).isTrue();
-    String errorPipelineYaml = mergeInputSetResponse.getErrorPipelineYaml().replaceAll("\"", "");
+    String errorPipelineYaml = JsonPipelineUtils.writeYamlString(mergeInputSetResponse.getErrorPipeline())
+                                   .replaceAll("---\n", "")
+                                   .replaceAll("\"", "");
     ClassLoader classLoader = getClass().getClassLoader();
     String expectedMergedPipelineYaml = Resources.toString(
         Objects.requireNonNull(classLoader.getResource("cdng/mergeInputSets/expectedErrorPipeline.yml")),
@@ -124,7 +127,9 @@ public class InputSetMergeHelperTest extends CDNGBaseTest {
     assertThat(mergeInputSetResponse.isErrorResponse()).isFalse();
     String expectedMergedPipelineYaml = Resources.toString(
         Objects.requireNonNull(classLoader.getResource(expectedResponseYamlFileName)), StandardCharsets.UTF_8);
-    String mergedPipelineYaml = mergeInputSetResponse.getPipelineYaml().replaceAll("\"", "");
+    String mergedPipelineYaml = JsonPipelineUtils.writeYamlString(mergeInputSetResponse.getMergedPipeline())
+                                    .replaceAll("---\n", "")
+                                    .replaceAll("\"", "");
     assertThat(mergedPipelineYaml).isEqualTo(expectedMergedPipelineYaml);
   }
 
@@ -137,7 +142,9 @@ public class InputSetMergeHelperTest extends CDNGBaseTest {
     ClassLoader classLoader = getClass().getClassLoader();
     String expectedMergedPipelineYaml = Resources.toString(
         Objects.requireNonNull(classLoader.getResource(expectedResponseYamlFileName)), StandardCharsets.UTF_8);
-    String mergedPipelineYaml = mergeInputSetResponse.getPipelineYaml().replaceAll("\"", "");
+    String mergedPipelineYaml = JsonPipelineUtils.writeYamlString(mergeInputSetResponse.getMergedPipeline())
+                                    .replaceAll("---\n", "")
+                                    .replaceAll("\"", "");
     assertThat(mergedPipelineYaml).isEqualTo(expectedMergedPipelineYaml);
   }
 

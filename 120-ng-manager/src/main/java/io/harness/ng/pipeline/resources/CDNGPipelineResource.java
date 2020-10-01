@@ -21,7 +21,6 @@ import io.harness.cdng.pipeline.executions.service.NgPipelineExecutionService;
 import io.harness.cdng.pipeline.mappers.PipelineValidationMapper;
 import io.harness.cdng.pipeline.service.PipelineService;
 import io.harness.cdng.service.beans.ServiceDefinitionType;
-import io.harness.execution.PlanExecution;
 import io.harness.ng.core.RestQueryFilterParser;
 import io.harness.ng.core.dto.ErrorDTO;
 import io.harness.ng.core.dto.FailureDTO;
@@ -43,7 +42,6 @@ import org.springframework.data.mongodb.core.query.Criteria;
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 import javax.ws.rs.Consumes;
@@ -163,26 +161,7 @@ public class CDNGPipelineResource {
   }
 
   @POST
-  @Path("/{identifier}/execute")
-  @Timed
-  @ExceptionMetered
-  @ApiOperation(value = "Execute a pipeline", nickname = "postPipelineExecute")
-  public ResponseDTO<PlanExecution> runPipeline(@NotNull @QueryParam(NGConstants.ACCOUNT_KEY) String accountId,
-      @NotNull @QueryParam(NGConstants.ORG_KEY) String orgIdentifier,
-      @NotNull @QueryParam(NGConstants.PROJECT_KEY) String projectIdentifier,
-      @PathParam("identifier") @NotEmpty String pipelineIdentifier) {
-    Optional<CDPipelineResponseDTO> cdPipelineRequestDTO =
-        ngPipelineService.getPipeline(pipelineIdentifier, accountId, orgIdentifier, projectIdentifier);
-    String yaml = "";
-    if (cdPipelineRequestDTO.isPresent()) {
-      yaml = cdPipelineRequestDTO.get().getYamlPipeline();
-    }
-    return ResponseDTO.newResponse(
-        ngPipelineExecutionService.runPipeline(yaml, accountId, orgIdentifier, projectIdentifier, EMBEDDED_USER));
-  }
-
-  @POST
-  @Path("/{identifier}/execute/inputSetYaml")
+  @Path("/execute/{identifier}")
   @Timed
   @ExceptionMetered
   @ApiImplicitParams({
@@ -197,14 +176,14 @@ public class CDNGPipelineResource {
       @NotNull @QueryParam(NGConstants.PROJECT_KEY) String projectIdentifier,
       @PathParam("identifier") @NotEmpty String pipelineIdentifier,
       @QueryParam("useFQNIfError") @DefaultValue("false") boolean useFQNIfErrorResponse,
-      @NotNull @ApiParam(hidden = true, type = "") String inputSetPipelineYaml) {
+      @ApiParam(hidden = true, type = "") String inputSetPipelineYaml) {
     return ResponseDTO.newResponse(
         ngPipelineExecutionService.runPipelineWithInputSetPipelineYaml(accountId, orgIdentifier, projectIdentifier,
             pipelineIdentifier, inputSetPipelineYaml, useFQNIfErrorResponse, EMBEDDED_USER));
   }
 
   @POST
-  @Path("/{identifier}/execute/inputSetList")
+  @Path("/execute/{identifier}/inputSetList")
   @Timed
   @ExceptionMetered
   @ApiOperation(
