@@ -46,7 +46,4 @@ public class GraphVertex implements Serializable {
 
   // skip
   private SkipType skipType;
-
-  private Subgraph subgraph;
-  private GraphVertex next;
 }

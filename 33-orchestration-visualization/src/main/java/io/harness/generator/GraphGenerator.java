@@ -15,7 +15,6 @@ import io.harness.annotations.Redesign;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.GraphVertex;
-import io.harness.beans.Subgraph;
 import io.harness.beans.converter.GraphVertexConverter;
 import io.harness.beans.internal.EdgeListInternal;
 import io.harness.beans.internal.OrchestrationAdjacencyListInternal;
@@ -23,7 +22,6 @@ import io.harness.data.Outcome;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.engine.outcomes.OutcomeService;
 import io.harness.exception.InvalidRequestException;
-import io.harness.exception.UnexpectedException;
 import io.harness.execution.NodeExecution;
 import io.harness.facilitator.modes.ExecutionMode;
 import lombok.extern.slf4j.Slf4j;
@@ -41,14 +39,6 @@ import java.util.Map;
 @Singleton
 public class GraphGenerator {
   @Inject private OutcomeService outcomeService;
-
-  public GraphVertex generateGraphVertexStartingFrom(String startingNodeExId, List<NodeExecution> nodeExecutions) {
-    if (EmptyPredicate.isEmpty(startingNodeExId)) {
-      logger.warn("Starting node cannot be null");
-      return null;
-    }
-    return generate(startingNodeExId, nodeExecutions);
-  }
 
   public OrchestrationAdjacencyListInternal generateAdjacencyList(
       String startingNodeExId, List<NodeExecution> nodeExecutions, boolean isOutcomePresent) {
@@ -114,11 +104,6 @@ public class GraphGenerator {
     return session.generateListStartingFrom(startingNodeExId, isOutcomePresent);
   }
 
-  GraphVertex generate(String startingNodeExId, List<NodeExecution> nodeExecutions) {
-    final GraphGeneratorSession session = createSession(nodeExecutions);
-    return session.generateGraph(startingNodeExId);
-  }
-
   private GraphGeneratorSession createSession(List<NodeExecution> nodeExecutions) {
     Map<String, NodeExecution> nodeExIdMap = obtainNodeExecutionMap(nodeExecutions);
     Map<String, List<String>> parentIdMap = obtainParentIdMap(nodeExecutions);
@@ -157,62 +142,6 @@ public class GraphGenerator {
     GraphGeneratorSession(Map<String, NodeExecution> nodeExIdMap, Map<String, List<String>> parentIdMap) {
       this.nodeExIdMap = nodeExIdMap;
       this.parentIdMap = parentIdMap;
-    }
-
-    private GraphVertex generateGraph(String nodeExId) {
-      NodeExecution currentNode = nodeExIdMap.get(nodeExId);
-      if (currentNode == null) {
-        throw new UnexpectedException("The node with id [" + nodeExId + "] is not found");
-      }
-
-      GraphVertex graphVertex = GraphVertex.builder()
-                                    .uuid(currentNode.getUuid())
-                                    .name(currentNode.getNode().getName())
-                                    .startTs(currentNode.getStartTs())
-                                    .endTs(currentNode.getEndTs())
-                                    .initialWaitDuration(currentNode.getInitialWaitDuration())
-                                    .lastUpdatedAt(currentNode.getLastUpdatedAt())
-                                    .stepType(currentNode.getNode().getStepType().getType())
-                                    .status(currentNode.getStatus())
-                                    .failureInfo(currentNode.getFailureInfo())
-                                    .stepParameters(currentNode.getResolvedStepParameters())
-                                    .interruptHistories(currentNode.getInterruptHistories())
-                                    .outcomes(outcomeService.findAllByRuntimeId(
-                                        currentNode.getAmbiance().getPlanExecutionId(), currentNode.getUuid()))
-                                    .retryIds(currentNode.getRetryIds())
-                                    .build();
-
-      if (parentIdMap.containsKey(currentNode.getUuid())) {
-        graphVertex.setSubgraph(new Subgraph(currentNode.getMode()));
-        if (currentNode.getMode() == ExecutionMode.CHILD_CHAIN) {
-          GraphVertex subgraph = new GraphVertex();
-          for (String nextChainNodeId : parentIdMap.get(currentNode.getUuid())) {
-            generateChain(subgraph, nextChainNodeId);
-          }
-          graphVertex.getSubgraph().getVertices().add(subgraph.getNext());
-        } else {
-          for (String nextNodeExId : parentIdMap.get(currentNode.getUuid())) {
-            GraphVertex subgraph = generateGraph(nextNodeExId);
-            graphVertex.getSubgraph().getVertices().add(subgraph);
-          }
-        }
-      }
-
-      if (currentNode.getNextId() != null) {
-        GraphVertex nextGraphVertex = generateGraph(currentNode.getNextId());
-        graphVertex.setNext(nextGraphVertex);
-      }
-
-      return graphVertex;
-    }
-
-    private void generateChain(GraphVertex vertex, String nextChainNodeId) {
-      GraphVertex currentVertex = vertex;
-      while (currentVertex.getNext() != null) {
-        currentVertex = currentVertex.getNext();
-      }
-
-      currentVertex.setNext(generateGraph(nextChainNodeId));
     }
 
     private OrchestrationAdjacencyListInternal generateListStartingFrom(

@@ -244,11 +244,9 @@
 33-orchestration-visualization/src/main/java/io/harness/OrchestrationVisualizationModule.java
 33-orchestration-visualization/src/main/java/io/harness/beans/EdgeList.java
 33-orchestration-visualization/src/main/java/io/harness/beans/EphemeralOrchestrationGraph.java
-33-orchestration-visualization/src/main/java/io/harness/beans/Graph.java
 33-orchestration-visualization/src/main/java/io/harness/beans/GraphVertex.java
 33-orchestration-visualization/src/main/java/io/harness/beans/OrchestrationAdjacencyList.java
 33-orchestration-visualization/src/main/java/io/harness/beans/OrchestrationGraph.java
-33-orchestration-visualization/src/main/java/io/harness/beans/Subgraph.java
 33-orchestration-visualization/src/main/java/io/harness/beans/converter/EdgeListConverter.java
 33-orchestration-visualization/src/main/java/io/harness/beans/converter/EphemeralOrchestrationGraphConverter.java
 33-orchestration-visualization/src/main/java/io/harness/beans/converter/GraphVertexConverter.java

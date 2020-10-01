@@ -3,7 +3,6 @@ package software.wings.resources;
 import com.google.inject.Inject;
 
 import io.harness.annotations.Redesign;
-import io.harness.beans.Graph;
 import io.harness.dto.OrchestrationGraphDTO;
 import io.harness.engine.interrupts.InterruptPackage;
 import io.harness.execution.PlanExecution;
@@ -120,12 +119,6 @@ public class CustomExecutionResource {
   @Path("/test-graph-plan")
   public RestResponse<PlanExecution> testGraphPlan() {
     return new RestResponse<>(customExecutionService.testGraphPlan());
-  }
-
-  @GET
-  @Path("/get-graph")
-  public RestResponse<Graph> getGraph(@QueryParam("planExecutionId") String planExecutionId) {
-    return new RestResponse<>(customExecutionService.getGraph(planExecutionId));
   }
 
   @GET

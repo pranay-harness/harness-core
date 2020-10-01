@@ -11,7 +11,6 @@ import io.harness.annotations.Redesign;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.EphemeralOrchestrationGraph;
-import io.harness.beans.Graph;
 import io.harness.beans.OrchestrationGraph;
 import io.harness.beans.converter.EphemeralOrchestrationGraphConverter;
 import io.harness.beans.internal.OrchestrationAdjacencyListInternal;
@@ -43,37 +42,6 @@ public class GraphGenerationServiceImpl implements GraphGenerationService {
   @Inject private GraphGenerator graphGenerator;
   @Inject @Named("EngineExecutorService") private ExecutorService executorService;
   @Inject private VertexSkipperService vertexSkipperService;
-
-  @Override
-  public Graph generateGraph(String planExecutionId) {
-    PlanExecution planExecution = planExecutionService.get(planExecutionId);
-    List<NodeExecution> nodeExecutions = nodeExecutionService.fetchNodeExecutionsWithoutOldRetries(planExecutionId);
-    if (EmptyPredicate.isEmpty(nodeExecutions)) {
-      throw new InvalidRequestException("No nodes found for planExecutionId [" + planExecutionId + "]");
-    }
-
-    long lastUpdated = nodeExecutions.stream().map(NodeExecution::getLastUpdatedAt).max(Long::compare).orElse(0L);
-
-    Graph cachedGraph = mongoStore.get(Graph.ALGORITHM_ID, Graph.STRUCTURE_HASH, planExecutionId, null);
-    if (cachedGraph != null && cachedGraph.getCacheContextOrder() >= lastUpdated) {
-      return cachedGraph;
-    }
-
-    Graph graphToBeCached = Graph.builder()
-                                .cacheKey(planExecutionId)
-                                .cacheContextOrder(lastUpdated)
-                                .cacheParams(null)
-                                .planExecutionId(planExecution.getUuid())
-                                .startTs(planExecution.getStartTs())
-                                .endTs(planExecution.getEndTs())
-                                .status(planExecution.getStatus())
-                                .graphVertex(graphGenerator.generateGraphVertexStartingFrom(
-                                    obtainStartingNodeExId(nodeExecutions), nodeExecutions))
-                                .build();
-
-    executorService.submit(() -> mongoStore.upsert(graphToBeCached, Duration.ofDays(10)));
-    return graphToBeCached;
-  }
 
   @Override
   public OrchestrationGraph getCachedOrchestrationGraph(String planExecutionId) {
