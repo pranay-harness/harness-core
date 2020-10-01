@@ -13,7 +13,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.deser.std.StdDeserializer;
 import io.harness.beans.ExecutionStatus;
-import io.harness.beans.Graph;
 import io.harness.category.element.FunctionalTests;
 import io.harness.data.Outcome;
 import io.harness.dto.OrchestrationGraphDTO;
@@ -76,20 +75,6 @@ public class GraphVisualizerTest extends AbstractFunctionalTest {
   @Owner(developers = ALEXEI)
   @Category(FunctionalTests.class)
   @Ignore("This test is used internally only")
-  public void shouldGenerateImage() throws IOException {
-    PlanExecution response =
-        executePlan(bearerToken, application.getAccountId(), application.getAppId(), "test-graph-plan");
-    assertThat(response.getStatus()).isEqualTo(Status.SUCCEEDED);
-
-    Graph harnessGraph = requestGraph(response.getUuid());
-    assertThat(harnessGraph).isNotNull();
-    graphVisualizer.generateImage(harnessGraph, "graph.png");
-  }
-
-  @Test
-  @Owner(developers = ALEXEI)
-  @Category(FunctionalTests.class)
-  @Ignore("This test is used internally only")
   public void shouldGenerateImageFromAdjacencyList() throws IOException {
     PlanExecution response =
         executePlan(bearerToken, application.getAccountId(), application.getAppId(), "test-graph-plan");
@@ -126,14 +111,6 @@ public class GraphVisualizerTest extends AbstractFunctionalTest {
     OrchestrationGraphDTO graph = requestOrchestrationGraph(response.getUuid());
     assertThat(graph).isNotNull();
     graphVisualizer.depthFirstTraversal(graph);
-  }
-
-  private Graph requestGraph(String planExecutionId) {
-    GenericType<RestResponse<Graph>> returnType = new GenericType<RestResponse<Graph>>() {};
-
-    RestResponse<Graph> response = internalRequest((GenericType) returnType, planExecutionId, "get-graph");
-
-    return response.getResource();
   }
 
   private OrchestrationGraphDTO requestOrchestrationGraph(String planExecutionId) {

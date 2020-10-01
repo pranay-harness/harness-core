@@ -3,7 +3,6 @@ package io.harness.ng.orchestration;
 import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
 
-import io.harness.beans.Graph;
 import io.harness.dto.OrchestrationGraphDTO;
 import io.harness.engine.OrchestrationService;
 import io.harness.execution.PlanExecution;
@@ -75,8 +74,8 @@ public class NgOrchestrationResource {
   @GET
   @Path("/get-graph")
   @ApiOperation(value = "generate graph for plan execution", nickname = "get-graph")
-  public RestResponse<Graph> getGraph(@QueryParam("planExecutionId") String planExecutionId) {
-    return new RestResponse<>(customExecutionService.getGraph(planExecutionId));
+  public RestResponse<OrchestrationGraphDTO> getGraph(@QueryParam("planExecutionId") String planExecutionId) {
+    return new RestResponse<>(customExecutionService.getOrchestrationGraphV2(planExecutionId));
   }
 
   @GET

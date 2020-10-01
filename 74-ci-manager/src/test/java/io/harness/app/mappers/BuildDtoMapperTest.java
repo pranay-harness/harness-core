@@ -40,7 +40,7 @@ public class BuildDtoMapperTest extends CIManagerTest {
   public void writePRBuildDto() {
     CIBuild ciBuild = getPRBuild();
 
-    when(graphGenerationService.generateGraph(EXECUTION_ID)).thenReturn(getGraph());
+    when(graphGenerationService.generateOrchestrationGraphV2(EXECUTION_ID)).thenReturn(getGraph());
 
     CIBuildResponseDTO responseDTO = buildDtoMapper.writeBuildDto(ciBuild, getPipeline());
     logger.info("Response: {}", responseDTO);
@@ -60,7 +60,7 @@ public class BuildDtoMapperTest extends CIManagerTest {
   public void writeBranchBuildDto() {
     CIBuild ciBuild = getBranchBuild();
 
-    when(graphGenerationService.generateGraph(EXECUTION_ID)).thenReturn(getGraph());
+    when(graphGenerationService.generateOrchestrationGraphV2(EXECUTION_ID)).thenReturn(getGraph());
     CIBuildResponseDTO responseDTO = buildDtoMapper.writeBuildDto(ciBuild, getPipeline());
     logger.info("Response: {}", responseDTO);
     assertEquals(responseDTO.getId(), BUILD_ID);

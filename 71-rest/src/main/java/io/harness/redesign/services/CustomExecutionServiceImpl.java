@@ -9,7 +9,6 @@ import com.google.inject.Singleton;
 import io.harness.annotations.Redesign;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.EmbeddedUser;
-import io.harness.beans.Graph;
 import io.harness.dto.OrchestrationGraphDTO;
 import io.harness.engine.OrchestrationService;
 import io.harness.engine.interrupts.InterruptManager;
@@ -170,11 +169,6 @@ public class CustomExecutionServiceImpl implements CustomExecutionService {
   }
 
   @Override
-  public Graph getGraph(String planExecutionId) {
-    return graphGenerationService.generateGraph(planExecutionId);
-  }
-
-  @Override
   public OrchestrationGraphDTO getOrchestrationGraph(String planExecutionId) {
     return graphGenerationService.generateOrchestrationGraph(planExecutionId);
   }
@@ -191,7 +185,7 @@ public class CustomExecutionServiceImpl implements CustomExecutionService {
 
   @Override
   public void getGraphVisualization(String executionPlanId, OutputStream output) throws IOException {
-    Graph graph = graphGenerationService.generateGraph(executionPlanId);
+    OrchestrationGraphDTO graph = graphGenerationService.generateOrchestrationGraph(executionPlanId);
     graphVisualizer.generateImage(graph, output);
   }
 

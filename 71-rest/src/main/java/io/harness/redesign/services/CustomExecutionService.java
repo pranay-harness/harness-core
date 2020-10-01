@@ -5,7 +5,6 @@ import static io.harness.annotations.dev.HarnessTeam.CDC;
 import io.harness.annotations.Redesign;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.EmbeddedUser;
-import io.harness.beans.Graph;
 import io.harness.dto.OrchestrationGraphDTO;
 import io.harness.engine.interrupts.InterruptPackage;
 import io.harness.execution.PlanExecution;
@@ -47,8 +46,6 @@ public interface CustomExecutionService {
   PlanExecution executeSectionChainRollbackPlan();
 
   PlanExecution testGraphPlan();
-
-  Graph getGraph(String executionPlanId);
 
   OrchestrationGraphDTO getOrchestrationGraph(String executionPlanId);
 

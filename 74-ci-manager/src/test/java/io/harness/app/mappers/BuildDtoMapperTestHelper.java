@@ -1,6 +1,5 @@
 package io.harness.app.mappers;
 
-import io.harness.beans.Graph;
 import io.harness.beans.execution.BranchWebhookEvent;
 import io.harness.beans.execution.CommitDetails;
 import io.harness.beans.execution.PRWebhookEvent;
@@ -9,6 +8,7 @@ import io.harness.beans.execution.WebhookGitUser;
 import io.harness.cdng.pipeline.NgPipeline;
 import io.harness.cdng.pipeline.beans.entities.NgPipelineEntity;
 import io.harness.ci.beans.entities.CIBuild;
+import io.harness.dto.OrchestrationGraphDTO;
 import io.harness.execution.status.Status;
 
 import java.util.Arrays;
@@ -68,7 +68,7 @@ public class BuildDtoMapperTestHelper {
         .build();
   }
 
-  public static Graph getGraph() {
-    return Graph.builder().planExecutionId(EXECUTION_ID).status(Status.SUCCEEDED).build();
+  public static OrchestrationGraphDTO getGraph() {
+    return OrchestrationGraphDTO.builder().planExecutionId(EXECUTION_ID).status(Status.SUCCEEDED).build();
   }
 }

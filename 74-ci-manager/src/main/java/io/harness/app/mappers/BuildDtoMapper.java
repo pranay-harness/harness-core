@@ -11,7 +11,6 @@ import io.harness.app.beans.entities.CIBuildBranchHook;
 import io.harness.app.beans.entities.CIBuildCommit;
 import io.harness.app.beans.entities.CIBuildPRHook;
 import io.harness.app.beans.entities.CIBuildPipeline;
-import io.harness.beans.Graph;
 import io.harness.beans.execution.BranchWebhookEvent;
 import io.harness.beans.execution.CommitDetails;
 import io.harness.beans.execution.ExecutionSource;
@@ -21,6 +20,7 @@ import io.harness.beans.execution.WebhookExecutionSource;
 import io.harness.beans.execution.WebhookGitUser;
 import io.harness.cdng.pipeline.beans.entities.NgPipelineEntity;
 import io.harness.ci.beans.entities.CIBuild;
+import io.harness.dto.OrchestrationGraphDTO;
 import io.harness.service.GraphGenerationService;
 
 import java.util.ArrayList;
@@ -66,7 +66,7 @@ public class BuildDtoMapper {
     }
 
     // TODO - CI-192 these values should be masked while sending to UI
-    Graph graph = graphGenerationService.generateGraph(ciBuild.getExecutionId());
+    OrchestrationGraphDTO graph = graphGenerationService.generateOrchestrationGraphV2(ciBuild.getExecutionId());
     ciBuildResponseDTO.setGraph(graph);
     return ciBuildResponseDTO;
   }
