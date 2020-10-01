@@ -71,10 +71,12 @@ public class PipelineStage {
     private String workflowName;
     private List<WorkflowVariable> workflowVariables = Lists.newArrayList();
     private Map<String, Object> properties = new HashMap<>();
+    private RuntimeInputsConfig.Yaml runtimeInputs;
 
     @Builder
     public Yaml(String type, String name, String stageName, boolean parallel, String workflowName,
-        List<WorkflowVariable> workflowVariables, Map<String, Object> properties, SkipCondition skipCondition) {
+        List<WorkflowVariable> workflowVariables, Map<String, Object> properties, SkipCondition skipCondition,
+        RuntimeInputsConfig.Yaml runtimeInputs) {
       super(type);
       this.name = name;
       this.stageName = stageName;
@@ -83,6 +85,7 @@ public class PipelineStage {
       this.workflowVariables = workflowVariables;
       this.properties = properties;
       this.skipCondition = skipCondition;
+      this.runtimeInputs = runtimeInputs;
     }
   }
 

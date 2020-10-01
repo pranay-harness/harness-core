@@ -129,6 +129,7 @@ public class PipelineYamlHandler extends BaseYamlHandler<Yaml, Pipeline> {
     Pipeline current = toBean(changeContext, changeSetContext, previous);
 
     current.setSyncFromGit(changeContext.getChange().isSyncFromGit());
+    current.setAccountId(changeContext.getChange().getAccountId());
     if (previous != null) {
       current.setUuid(previous.getUuid());
       current = pipelineService.update(current, false, true);
