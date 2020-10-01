@@ -2,8 +2,8 @@ package io.harness.skip.service.impl;
 
 import com.google.inject.Inject;
 
+import io.harness.beans.EphemeralOrchestrationGraph;
 import io.harness.beans.GraphVertex;
-import io.harness.dto.OrchestrationGraph;
 import io.harness.skip.SkipType;
 import io.harness.skip.factory.VertexSkipperFactory;
 import io.harness.skip.service.VertexSkipperService;
@@ -17,7 +17,7 @@ public class VertexSkipperServiceImpl implements VertexSkipperService {
   @Inject VertexSkipperFactory vertexSkipperFactory;
 
   @Override
-  public void removeSkippedVertices(OrchestrationGraph orchestrationGraph) {
+  public void removeSkippedVertices(EphemeralOrchestrationGraph orchestrationGraph) {
     Map<String, GraphVertex> graphVertexMap = orchestrationGraph.getAdjacencyList().getGraphVertexMap();
 
     graphVertexMap.values()
@@ -25,7 +25,7 @@ public class VertexSkipperServiceImpl implements VertexSkipperService {
         .filter(vertex -> vertex.getSkipType() != SkipType.NOOP)
         .collect(Collectors.toList())
         .stream()
-        .sorted(Comparator.comparing(GraphVertex::getStartTs))
+        .sorted(Comparator.comparing(GraphVertex::getLastUpdatedAt).reversed())
         .forEach(skippedVertex -> {
           VertexSkipper vertexSkipper = vertexSkipperFactory.obtainVertexSkipper(skippedVertex.getSkipType());
           vertexSkipper.skip(orchestrationGraph, skippedVertex);

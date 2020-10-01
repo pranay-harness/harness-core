@@ -11,7 +11,7 @@ import com.google.inject.Inject;
 
 import io.harness.OrchestrationVisualizationTest;
 import io.harness.ambiance.Ambiance;
-import io.harness.beans.OrchestrationGraphInternal;
+import io.harness.beans.OrchestrationGraph;
 import io.harness.cache.SpringMongoStore;
 import io.harness.category.element.UnitTests;
 import io.harness.engine.executions.plan.PlanExecutionService;
@@ -72,26 +72,24 @@ public class OrchestrationEndEventHandlerTest extends OrchestrationVisualization
                                    .eventType(ORCHESTRATION_END)
                                    .build();
 
-    OrchestrationGraphInternal orchestrationGraphInternal = OrchestrationGraphInternal.builder()
-                                                                .rootNodeIds(Lists.newArrayList(generateUuid()))
-                                                                .status(Status.RUNNING)
-                                                                .startTs(planExecution.getStartTs())
-                                                                .planExecutionId(planExecution.getUuid())
-                                                                .cacheKey(planExecution.getUuid())
-                                                                .cacheContextOrder(System.currentTimeMillis())
-                                                                .build();
-    mongoStore.upsert(orchestrationGraphInternal, Duration.ofDays(10));
+    OrchestrationGraph orchestrationGraph = OrchestrationGraph.builder()
+                                                .rootNodeIds(Lists.newArrayList(generateUuid()))
+                                                .status(Status.RUNNING)
+                                                .startTs(planExecution.getStartTs())
+                                                .planExecutionId(planExecution.getUuid())
+                                                .cacheKey(planExecution.getUuid())
+                                                .cacheContextOrder(System.currentTimeMillis())
+                                                .build();
+    mongoStore.upsert(orchestrationGraph, Duration.ofDays(10));
 
     orchestrationEndEventHandler.handleEvent(event);
 
     Awaitility.await().atMost(2, TimeUnit.SECONDS).pollInterval(500, TimeUnit.MILLISECONDS).until(() -> {
-      OrchestrationGraphInternal graphInternal =
-          graphGenerationService.getCachedOrchestrationGraphInternal(planExecution.getUuid());
+      OrchestrationGraph graphInternal = graphGenerationService.getCachedOrchestrationGraph(planExecution.getUuid());
       return graphInternal.getStatus() == Status.SUCCEEDED;
     });
 
-    OrchestrationGraphInternal updatedGraph =
-        graphGenerationService.getCachedOrchestrationGraphInternal(planExecution.getUuid());
+    OrchestrationGraph updatedGraph = graphGenerationService.getCachedOrchestrationGraph(planExecution.getUuid());
 
     assertThat(updatedGraph).isNotNull();
     assertThat(updatedGraph.getPlanExecutionId()).isEqualTo(planExecution.getUuid());

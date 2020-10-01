@@ -1,17 +1,21 @@
 package io.harness.skip.skipper;
 
-import io.harness.beans.EdgeList;
+import static io.harness.annotations.dev.HarnessTeam.CDC;
+
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.beans.EphemeralOrchestrationGraph;
 import io.harness.beans.GraphVertex;
-import io.harness.beans.OrchestrationAdjacencyList;
-import io.harness.dto.OrchestrationGraph;
+import io.harness.beans.internal.EdgeListInternal;
+import io.harness.beans.internal.OrchestrationAdjacencyListInternal;
 
 import java.util.List;
 import java.util.Map;
 
+@OwnedBy(CDC)
 public abstract class VertexSkipper {
-  public void remapRelations(OrchestrationGraph orchestrationGraph, GraphVertex skippedVertex) {
-    OrchestrationAdjacencyList adjacencyList = orchestrationGraph.getAdjacencyList();
-    EdgeList skippedVertexEdgeList = adjacencyList.getAdjacencyList().get(skippedVertex.getUuid());
+  public void remapRelations(EphemeralOrchestrationGraph orchestrationGraph, GraphVertex skippedVertex) {
+    OrchestrationAdjacencyListInternal adjacencyList = orchestrationGraph.getAdjacencyList();
+    EdgeListInternal skippedVertexEdgeList = adjacencyList.getAdjacencyMap().get(skippedVertex.getUuid());
 
     // remapping relations
     if (!skippedVertexEdgeList.getPrevIds().isEmpty()) {
@@ -28,16 +32,16 @@ public abstract class VertexSkipper {
     }
   }
 
-  public void removeVertex(OrchestrationAdjacencyList orchestrationAdjacencyList, String skippedVertexId) {
+  public void removeVertex(OrchestrationAdjacencyListInternal orchestrationAdjacencyList, String skippedVertexId) {
     orchestrationAdjacencyList.getGraphVertexMap().remove(skippedVertexId);
-    orchestrationAdjacencyList.getAdjacencyList().remove(skippedVertexId);
+    orchestrationAdjacencyList.getAdjacencyMap().remove(skippedVertexId);
   }
 
-  public abstract void skip(OrchestrationGraph orchestrationGraph, GraphVertex skippedVertex);
+  public abstract void skip(EphemeralOrchestrationGraph orchestrationGraph, GraphVertex skippedVertex);
 
   private void remapRelations(
-      OrchestrationAdjacencyList orchestrationAdjacencyList, String skippedVertexId, String precedingId) {
-    Map<String, EdgeList> adjacencyMap = orchestrationAdjacencyList.getAdjacencyList();
+      OrchestrationAdjacencyListInternal orchestrationAdjacencyList, String skippedVertexId, String precedingId) {
+    Map<String, EdgeListInternal> adjacencyMap = orchestrationAdjacencyList.getAdjacencyMap();
     List<String> skippedVertexNextIds = getNextIdsFor(adjacencyMap, skippedVertexId);
 
     if (precedingId != null && adjacencyMap.containsKey(precedingId)) {
@@ -56,8 +60,8 @@ public abstract class VertexSkipper {
   }
 
   private void remapRelationsForParent(
-      OrchestrationAdjacencyList orchestrationAdjacencyList, String skippedVertexId, String parentId) {
-    Map<String, EdgeList> adjacencyList = orchestrationAdjacencyList.getAdjacencyList();
+      OrchestrationAdjacencyListInternal orchestrationAdjacencyList, String skippedVertexId, String parentId) {
+    Map<String, EdgeListInternal> adjacencyList = orchestrationAdjacencyList.getAdjacencyMap();
     List<String> skippedVertexNextIds = getNextIdsFor(adjacencyList, skippedVertexId);
 
     if (adjacencyList.containsKey(parentId)) {
@@ -67,17 +71,17 @@ public abstract class VertexSkipper {
     }
 
     skippedVertexNextIds.forEach(nextId -> {
-      EdgeList edgeList = adjacencyList.get(nextId);
+      EdgeListInternal edgeList = adjacencyList.get(nextId);
       edgeList.setParentId(parentId);
       edgeList.getPrevIds().remove(skippedVertexId);
     });
   }
 
-  private List<String> getPrevIdsFor(Map<String, EdgeList> adjacencyList, String vertexId) {
+  private List<String> getPrevIdsFor(Map<String, EdgeListInternal> adjacencyList, String vertexId) {
     return adjacencyList.get(vertexId).getPrevIds();
   }
 
-  private List<String> getNextIdsFor(Map<String, EdgeList> adjacencyList, String vertexId) {
+  private List<String> getNextIdsFor(Map<String, EdgeListInternal> adjacencyList, String vertexId) {
     return adjacencyList.get(vertexId).getNextIds();
   }
 }

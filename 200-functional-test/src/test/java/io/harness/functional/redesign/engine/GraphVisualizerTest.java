@@ -16,7 +16,7 @@ import io.harness.beans.ExecutionStatus;
 import io.harness.beans.Graph;
 import io.harness.category.element.FunctionalTests;
 import io.harness.data.Outcome;
-import io.harness.dto.OrchestrationGraph;
+import io.harness.dto.OrchestrationGraphDTO;
 import io.harness.execution.PlanExecution;
 import io.harness.execution.status.Status;
 import io.harness.functional.AbstractFunctionalTest;
@@ -95,7 +95,7 @@ public class GraphVisualizerTest extends AbstractFunctionalTest {
         executePlan(bearerToken, application.getAccountId(), application.getAppId(), "test-graph-plan");
     assertThat(response.getStatus()).isEqualTo(Status.SUCCEEDED);
 
-    OrchestrationGraph harnessGraph = requestOrchestrationGraph(response.getUuid());
+    OrchestrationGraphDTO harnessGraph = requestOrchestrationGraph(response.getUuid());
     assertThat(harnessGraph).isNotNull();
     graphVisualizer.generateImage(harnessGraph, "orchestration-graph.png");
   }
@@ -109,7 +109,7 @@ public class GraphVisualizerTest extends AbstractFunctionalTest {
         executePlan(bearerToken, application.getAccountId(), application.getAppId(), "test-graph-plan");
     assertThat(response.getStatus()).isEqualTo(Status.SUCCEEDED);
 
-    OrchestrationGraph graph = requestOrchestrationGraph(response.getUuid());
+    OrchestrationGraphDTO graph = requestOrchestrationGraph(response.getUuid());
     assertThat(graph).isNotNull();
     graphVisualizer.breadthFirstTraversal(graph);
   }
@@ -123,7 +123,7 @@ public class GraphVisualizerTest extends AbstractFunctionalTest {
         executePlan(bearerToken, application.getAccountId(), application.getAppId(), "test-graph-plan");
     assertThat(response.getStatus()).isEqualTo(Status.SUCCEEDED);
 
-    OrchestrationGraph graph = requestOrchestrationGraph(response.getUuid());
+    OrchestrationGraphDTO graph = requestOrchestrationGraph(response.getUuid());
     assertThat(graph).isNotNull();
     graphVisualizer.depthFirstTraversal(graph);
   }
@@ -136,10 +136,11 @@ public class GraphVisualizerTest extends AbstractFunctionalTest {
     return response.getResource();
   }
 
-  private OrchestrationGraph requestOrchestrationGraph(String planExecutionId) {
-    GenericType<RestResponse<OrchestrationGraph>> returnType = new GenericType<RestResponse<OrchestrationGraph>>() {};
+  private OrchestrationGraphDTO requestOrchestrationGraph(String planExecutionId) {
+    GenericType<RestResponse<OrchestrationGraphDTO>> returnType =
+        new GenericType<RestResponse<OrchestrationGraphDTO>>() {};
 
-    RestResponse<OrchestrationGraph> response =
+    RestResponse<OrchestrationGraphDTO> response =
         internalRequest((GenericType) returnType, planExecutionId, "get-orchestration-graph");
 
     return response.getResource();

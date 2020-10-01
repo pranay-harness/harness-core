@@ -8,7 +8,7 @@ import com.google.inject.Inject;
 import io.harness.ambiance.Ambiance;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.GraphVertex;
-import io.harness.beans.OrchestrationGraphInternal;
+import io.harness.beans.OrchestrationGraph;
 import io.harness.beans.converter.GraphVertexConverter;
 import io.harness.engine.executions.node.NodeExecutionService;
 import io.harness.engine.outcomes.OutcomeService;
@@ -37,8 +37,7 @@ public class NodeExecutionStatusUpdateEventHandler implements OrchestrationEvent
 
     NodeExecution nodeExecution = nodeExecutionService.get(nodeExecutionId);
 
-    OrchestrationGraphInternal graph =
-        graphGenerationService.getCachedOrchestrationGraphInternal(ambiance.getPlanExecutionId());
+    OrchestrationGraph graph = graphGenerationService.getCachedOrchestrationGraph(ambiance.getPlanExecutionId());
 
     // return if there is no cache
     if (graph == null) {
@@ -56,7 +55,7 @@ public class NodeExecutionStatusUpdateEventHandler implements OrchestrationEvent
         }
         return newValue;
       });
-      graphGenerationService.cacheOrchestrationGraphInternal(graph);
+      graphGenerationService.cacheOrchestrationGraph(graph);
     }
   }
 }

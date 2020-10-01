@@ -6,7 +6,7 @@ import com.google.inject.Inject;
 import io.harness.beans.EmbeddedUser;
 import io.harness.beans.Graph;
 import io.harness.cdng.pipeline.executions.service.NgPipelineExecutionService;
-import io.harness.dto.OrchestrationGraph;
+import io.harness.dto.OrchestrationGraphDTO;
 import io.harness.engine.OrchestrationService;
 import io.harness.execution.PlanExecution;
 import io.harness.facilitator.FacilitatorType;
@@ -107,7 +107,8 @@ public class NgOrchestrationResource {
   @GET
   @Path("/get-graph-orchestration")
   @ApiOperation(value = "generate orchestration graph for plan execution", nickname = "get-graph-orchestration")
-  public RestResponse<OrchestrationGraph> getOrchestrationGraph(@QueryParam("planExecutionId") String planExecutionId) {
+  public RestResponse<OrchestrationGraphDTO> getOrchestrationGraph(
+      @QueryParam("planExecutionId") String planExecutionId) {
     return new RestResponse<>(customExecutionService.getOrchestrationGraph(planExecutionId));
   }
 

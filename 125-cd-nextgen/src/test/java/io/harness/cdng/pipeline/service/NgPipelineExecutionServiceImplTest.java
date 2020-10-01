@@ -14,7 +14,7 @@ import io.harness.cdng.pipeline.executions.beans.PipelineExecutionDetail;
 import io.harness.cdng.pipeline.executions.beans.PipelineExecutionSummary;
 import io.harness.cdng.pipeline.executions.repositories.PipelineExecutionRepository;
 import io.harness.cdng.pipeline.executions.service.NgPipelineExecutionServiceImpl;
-import io.harness.dto.OrchestrationGraph;
+import io.harness.dto.OrchestrationGraphDTO;
 import io.harness.engine.executions.node.NodeExecutionService;
 import io.harness.exception.InvalidRequestException;
 import io.harness.execution.NodeExecution;
@@ -63,7 +63,7 @@ public class NgPipelineExecutionServiceImplTest extends CategoryTest {
     doReturn(Optional.of(stageNodeExecution))
         .when(nodeExecutionService)
         .getByNodeIdentifier("stageId", "planExecutionId");
-    OrchestrationGraph orchestrationGraph = OrchestrationGraph.builder().build();
+    OrchestrationGraphDTO orchestrationGraph = OrchestrationGraphDTO.builder().build();
     doReturn(orchestrationGraph)
         .when(graphGenerationService)
         .generatePartialOrchestrationGraph("planNodeId", "planExecutionId");

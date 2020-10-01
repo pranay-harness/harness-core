@@ -5,7 +5,7 @@ import static io.harness.annotations.dev.HarnessTeam.CDC;
 import com.google.inject.Inject;
 
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.beans.OrchestrationGraphInternal;
+import io.harness.beans.OrchestrationGraph;
 import io.harness.engine.executions.plan.PlanExecutionService;
 import io.harness.execution.PlanExecution;
 import io.harness.execution.events.AsyncOrchestrationEventHandler;
@@ -25,10 +25,9 @@ public class OrchestrationEndEventHandler implements AsyncOrchestrationEventHand
     logger.info("Ending Execution for planExecutionId [{}] with status [{}].", planExecution.getUuid(),
         planExecution.getStatus());
 
-    OrchestrationGraphInternal cachedGraph =
-        graphGenerationService.getCachedOrchestrationGraphInternal(planExecution.getUuid());
+    OrchestrationGraph cachedGraph = graphGenerationService.getCachedOrchestrationGraph(planExecution.getUuid());
 
-    graphGenerationService.cacheOrchestrationGraphInternal(
+    graphGenerationService.cacheOrchestrationGraph(
         cachedGraph.withStatus(planExecution.getStatus()).withEndTs(planExecution.getEndTs()));
   }
 }

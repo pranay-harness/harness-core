@@ -10,7 +10,7 @@ import com.google.inject.Inject;
 
 import io.harness.OrchestrationVisualizationTest;
 import io.harness.ambiance.Ambiance;
-import io.harness.beans.OrchestrationGraphInternal;
+import io.harness.beans.OrchestrationGraph;
 import io.harness.category.element.UnitTests;
 import io.harness.engine.executions.plan.PlanExecutionService;
 import io.harness.exception.InvalidRequestException;
@@ -66,18 +66,16 @@ public class OrchestrationStartEventHandlerTest extends OrchestrationVisualizati
     orchestrationStartEventHandler.handleEvent(event);
 
     Awaitility.await().atMost(2, TimeUnit.SECONDS).pollInterval(500, TimeUnit.MILLISECONDS).until(() -> {
-      OrchestrationGraphInternal graphInternal =
-          graphGenerationService.getCachedOrchestrationGraphInternal(planExecution.getUuid());
+      OrchestrationGraph graphInternal = graphGenerationService.getCachedOrchestrationGraph(planExecution.getUuid());
       return graphInternal != null;
     });
 
-    OrchestrationGraphInternal orchestrationGraphInternal =
-        graphGenerationService.getCachedOrchestrationGraphInternal(planExecution.getUuid());
+    OrchestrationGraph orchestrationGraph = graphGenerationService.getCachedOrchestrationGraph(planExecution.getUuid());
 
-    assertThat(orchestrationGraphInternal).isNotNull();
-    assertThat(orchestrationGraphInternal.getPlanExecutionId()).isEqualTo(planExecution.getUuid());
-    assertThat(orchestrationGraphInternal.getStartTs()).isEqualTo(planExecution.getStartTs());
-    assertThat(orchestrationGraphInternal.getEndTs()).isNull();
-    assertThat(orchestrationGraphInternal.getStatus()).isEqualTo(planExecution.getStatus());
+    assertThat(orchestrationGraph).isNotNull();
+    assertThat(orchestrationGraph.getPlanExecutionId()).isEqualTo(planExecution.getUuid());
+    assertThat(orchestrationGraph.getStartTs()).isEqualTo(planExecution.getStartTs());
+    assertThat(orchestrationGraph.getEndTs()).isNull();
+    assertThat(orchestrationGraph.getStatus()).isEqualTo(planExecution.getStatus());
   }
 }

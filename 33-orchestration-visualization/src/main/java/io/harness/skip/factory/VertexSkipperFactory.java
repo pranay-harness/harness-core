@@ -1,16 +1,19 @@
 package io.harness.skip.factory;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static java.lang.String.format;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.skip.SkipType;
 import io.harness.skip.skipper.VertexSkipper;
 import io.harness.skip.skipper.impl.NoOpSkipper;
 import io.harness.skip.skipper.impl.SkipNodeSkipper;
 import io.harness.skip.skipper.impl.SkipTreeSkipper;
 
+@OwnedBy(CDC)
 @Singleton
 public class VertexSkipperFactory {
   @Inject private SkipNodeSkipper skipNodeSkipper;

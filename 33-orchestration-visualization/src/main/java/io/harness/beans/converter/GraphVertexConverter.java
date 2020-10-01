@@ -1,5 +1,7 @@
 package io.harness.beans.converter;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.GraphVertex;
 import io.harness.data.Outcome;
 import io.harness.execution.NodeExecution;
@@ -7,6 +9,7 @@ import lombok.experimental.UtilityClass;
 
 import java.util.List;
 
+@OwnedBy(HarnessTeam.CDC)
 @UtilityClass
 public class GraphVertexConverter {
   public GraphVertex convertFrom(NodeExecution nodeExecution) {

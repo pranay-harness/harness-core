@@ -6,8 +6,8 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.beans.OrchestrationAdjacencyList;
-import io.harness.beans.OrchestrationGraphInternal;
+import io.harness.beans.OrchestrationGraph;
+import io.harness.beans.internal.OrchestrationAdjacencyListInternal;
 import io.harness.engine.executions.plan.PlanExecutionService;
 import io.harness.execution.PlanExecution;
 import io.harness.execution.events.OrchestrationEvent;
@@ -32,21 +32,21 @@ public class OrchestrationStartEventHandler implements SyncOrchestrationEventHan
     logger.info("Starting Execution for planExecutionId [{}] with status [{}].", planExecution.getUuid(),
         planExecution.getStatus());
 
-    OrchestrationGraphInternal graphInternal = OrchestrationGraphInternal.builder()
-                                                   .cacheKey(planExecution.getUuid())
-                                                   .cacheParams(null)
-                                                   .cacheContextOrder(System.currentTimeMillis())
-                                                   .adjacencyList(OrchestrationAdjacencyList.builder()
-                                                                      .graphVertexMap(new HashMap<>())
-                                                                      .adjacencyList(new HashMap<>())
-                                                                      .build())
-                                                   .planExecutionId(planExecution.getUuid())
-                                                   .rootNodeIds(new ArrayList<>())
-                                                   .startTs(planExecution.getStartTs())
-                                                   .endTs(planExecution.getEndTs())
-                                                   .status(planExecution.getStatus())
-                                                   .build();
+    OrchestrationGraph graphInternal = OrchestrationGraph.builder()
+                                           .cacheKey(planExecution.getUuid())
+                                           .cacheParams(null)
+                                           .cacheContextOrder(System.currentTimeMillis())
+                                           .adjacencyList(OrchestrationAdjacencyListInternal.builder()
+                                                              .graphVertexMap(new HashMap<>())
+                                                              .adjacencyMap(new HashMap<>())
+                                                              .build())
+                                           .planExecutionId(planExecution.getUuid())
+                                           .rootNodeIds(new ArrayList<>())
+                                           .startTs(planExecution.getStartTs())
+                                           .endTs(planExecution.getEndTs())
+                                           .status(planExecution.getStatus())
+                                           .build();
 
-    graphGenerationService.cacheOrchestrationGraphInternal(graphInternal);
+    graphGenerationService.cacheOrchestrationGraph(graphInternal);
   }
 }
