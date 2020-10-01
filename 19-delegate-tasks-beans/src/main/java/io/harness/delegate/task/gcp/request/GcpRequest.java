@@ -13,7 +13,7 @@ import io.harness.security.encryption.EncryptedDataDetail;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 
-import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import javax.validation.constraints.NotNull;
 
@@ -32,12 +32,11 @@ public abstract class GcpRequest implements ExecutionCapabilityDemander {
 
   @Override
   public List<ExecutionCapability> fetchRequiredExecutionCapabilities() {
-    ArrayList<ExecutionCapability> executionCapabilities = new ArrayList<>();
     if (isNotBlank(delegateSelector)) {
-      executionCapabilities.add(SelectorCapability.builder().selectors(ImmutableSet.of(delegateSelector)).build());
+      return Collections.singletonList(
+          SelectorCapability.builder().selectors(ImmutableSet.of(delegateSelector)).build());
     }
-    executionCapabilities.add(
+    return Collections.singletonList(
         HttpConnectionExecutionCapabilityGenerator.buildHttpConnectionExecutionCapability(GCS_URL));
-    return executionCapabilities;
   }
 }
