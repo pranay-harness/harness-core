@@ -627,7 +627,7 @@
 71-rest/src/main/java/software/wings/graphql/schema/type/artifactSource/QLNexusRepositoryFormat.java
 71-rest/src/main/java/software/wings/graphql/schema/type/artifactSource/QLSFTPArtifactSource.java
 71-rest/src/main/java/software/wings/graphql/schema/type/artifactSource/QLSMBArtifactSource.java
-71-rest/src/main/java/software/wings/graphql/schema/type/connector/QLAmazonS3HelmConnector.java
+71-rest/src/main/java/software/wings/graphql/schema/type/connector/QLAmazonS3HelmRepoConnector.java
 71-rest/src/main/java/software/wings/graphql/schema/type/connector/QLArtifactoryConnector.java
 71-rest/src/main/java/software/wings/graphql/schema/type/connector/QLBambooConnector.java
 71-rest/src/main/java/software/wings/graphql/schema/type/connector/QLDockerConnector.java
