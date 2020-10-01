@@ -662,7 +662,8 @@ public class PcfSetupState extends State {
     boolean isInfraUpdated = false;
     if (stateExecutionData.isUseTempRoutes()) {
       List<String> tempRoutes = stateExecutionData.getTempRouteMaps();
-      if (EmptyPredicate.isEmpty(tempRoutes)) {
+      if (EmptyPredicate.isEmpty(tempRoutes)
+          || tempRoutes.stream().anyMatch(str -> str.startsWith("((") && str.endsWith("))"))) {
         tempRoutes = pcfSetupCommandResponse.getNewApplicationDetails().getUrls();
         isInfraUpdated = true;
         infrastructureMapping.setTempRouteMap(tempRoutes);
@@ -672,7 +673,8 @@ public class PcfSetupState extends State {
       setupSweepingOutputPcfBuilder.routeMaps(stateExecutionData.getRouteMaps());
     } else {
       List<String> routes = stateExecutionData.getRouteMaps();
-      if (EmptyPredicate.isEmpty(routes)) {
+      if (EmptyPredicate.isEmpty(routes)
+          || routes.stream().anyMatch(str -> str.startsWith("((") && str.endsWith("))"))) {
         routes = pcfSetupCommandResponse.getNewApplicationDetails().getUrls();
         isInfraUpdated = true;
         infrastructureMapping.setRouteMaps(routes);
