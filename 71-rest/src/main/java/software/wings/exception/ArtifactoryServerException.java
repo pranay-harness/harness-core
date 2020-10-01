@@ -1,5 +1,4 @@
 package software.wings.exception;
-
 import io.harness.eraro.ErrorCode;
 import io.harness.eraro.Level;
 import io.harness.exception.WingsException;

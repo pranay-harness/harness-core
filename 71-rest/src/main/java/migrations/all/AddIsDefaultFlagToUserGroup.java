@@ -1,13 +1,16 @@
 package migrations.all;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
 import static software.wings.beans.security.UserGroup.DEFAULT_USER_GROUPS;
 
 import com.google.inject.Singleton;
 
 import com.mongodb.DBObject;
+import io.harness.annotations.dev.OwnedBy;
 import lombok.extern.slf4j.Slf4j;
 import software.wings.beans.security.UserGroup;
 
+@OwnedBy(PL)
 @Slf4j
 @Singleton
 public class AddIsDefaultFlagToUserGroup extends AddFieldMigration {

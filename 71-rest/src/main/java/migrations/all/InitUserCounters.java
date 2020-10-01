@@ -1,9 +1,11 @@
 package migrations.all;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
 import static software.wings.beans.Account.GLOBAL_ACCOUNT_ID;
 
 import com.google.inject.Inject;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.limits.Action;
 import io.harness.limits.ActionType;
 import io.harness.limits.Counter;
@@ -18,6 +20,7 @@ import software.wings.service.intfc.UserService;
 
 import java.util.List;
 
+@OwnedBy(PL)
 public class InitUserCounters implements Migration {
   private static final Logger log = LoggerFactory.getLogger(InitUserCounters.class);
 

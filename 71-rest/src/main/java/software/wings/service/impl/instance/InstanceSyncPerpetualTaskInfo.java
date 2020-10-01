@@ -1,5 +1,8 @@
 package software.wings.service.impl.instance;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
+
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.mongo.index.FdIndex;
 import io.harness.persistence.AccountAccess;
 import io.harness.persistence.CreatedAtAccess;
@@ -20,6 +23,7 @@ import org.mongodb.morphia.annotations.Id;
 
 import java.util.List;
 
+@OwnedBy(PL)
 @Data
 @Builder
 @FieldDefaults(level = AccessLevel.PRIVATE)

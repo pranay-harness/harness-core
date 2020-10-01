@@ -1,5 +1,6 @@
 package software.wings.features;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 
@@ -7,6 +8,7 @@ import com.google.common.collect.Sets;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
+import io.harness.annotations.dev.OwnedBy;
 import software.wings.beans.User;
 import software.wings.beans.security.AccountPermissions;
 import software.wings.beans.security.AppPermission;
@@ -28,6 +30,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+@OwnedBy(PL)
 @Singleton
 public class RbacFeature extends AbstractUsageLimitedFeature implements ComplianceByLimitingUsage {
   @Inject private AuthHandler authHandler;

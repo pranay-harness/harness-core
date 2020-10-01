@@ -1,8 +1,11 @@
 package software.wings.service.impl;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
+
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.data.structure.CollectionUtils;
 import io.harness.exception.InvalidRequestException;
 import lombok.extern.slf4j.Slf4j;
@@ -21,6 +24,7 @@ import java.util.Optional;
 import java.util.Set;
 import javax.annotation.Nonnull;
 
+@OwnedBy(PL)
 @Singleton
 @Slf4j
 public class AlertNotificationRuleServiceImpl implements AlertNotificationRuleService {

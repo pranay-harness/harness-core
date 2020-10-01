@@ -1,10 +1,12 @@
 package software.wings.features;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
+import io.harness.annotations.dev.OwnedBy;
 import software.wings.features.api.AbstractUsageLimitedFeature;
 import software.wings.features.api.ComplianceByLimitingUsage;
 import software.wings.features.api.FeatureRestrictions;
@@ -14,6 +16,7 @@ import software.wings.service.intfc.UserService;
 import java.util.List;
 import java.util.Map;
 
+@OwnedBy(PL)
 @Singleton
 public class UsersFeature extends AbstractUsageLimitedFeature implements ComplianceByLimitingUsage {
   public static final String FEATURE_NAME = "USERS";
