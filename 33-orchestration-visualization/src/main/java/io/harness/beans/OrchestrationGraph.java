@@ -2,9 +2,8 @@ package io.harness.beans;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import com.fasterxml.jackson.annotation.JsonInclude;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.beans.internal.OrchestrationAdjacencyListInternal;
 import io.harness.cache.Distributable;
 import io.harness.cache.Nominal;
 import io.harness.execution.status.Status;
@@ -18,11 +17,8 @@ import java.util.List;
 @OwnedBy(CDC)
 @Value
 @Builder
-@JsonIgnoreProperties(ignoreUnknown = true)
-@JsonInclude(JsonInclude.Include.NON_NULL)
-public class OrchestrationGraphInternal implements Distributable, Nominal {
-  public static final long STRUCTURE_HASH =
-      ObjectStreamClass.lookup(OrchestrationGraphInternal.class).getSerialVersionUID();
+public class OrchestrationGraph implements Distributable, Nominal {
+  public static final long STRUCTURE_HASH = ObjectStreamClass.lookup(OrchestrationGraph.class).getSerialVersionUID();
   public static final long ALGORITHM_ID = 2;
 
   // cache variables
@@ -37,7 +33,7 @@ public class OrchestrationGraphInternal implements Distributable, Nominal {
   @Wither Status status;
 
   List<String> rootNodeIds;
-  OrchestrationAdjacencyList adjacencyList;
+  OrchestrationAdjacencyListInternal adjacencyList;
 
   @Override
   public long structureHash() {

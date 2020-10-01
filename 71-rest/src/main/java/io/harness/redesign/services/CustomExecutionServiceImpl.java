@@ -10,7 +10,7 @@ import io.harness.annotations.Redesign;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.EmbeddedUser;
 import io.harness.beans.Graph;
-import io.harness.dto.OrchestrationGraph;
+import io.harness.dto.OrchestrationGraphDTO;
 import io.harness.engine.OrchestrationService;
 import io.harness.engine.interrupts.InterruptManager;
 import io.harness.engine.interrupts.InterruptPackage;
@@ -164,22 +164,28 @@ public class CustomExecutionServiceImpl implements CustomExecutionService {
   }
 
   @Override
+  public PlanExecution executeSkipNode() {
+    return orchestrationService.startExecution(
+        customExecutionProvider.provideGraphTestPlanWithSkippedNodes(), getAbstractions());
+  }
+
+  @Override
   public Graph getGraph(String planExecutionId) {
     return graphGenerationService.generateGraph(planExecutionId);
   }
 
   @Override
-  public OrchestrationGraph getOrchestrationGraph(String planExecutionId) {
+  public OrchestrationGraphDTO getOrchestrationGraph(String planExecutionId) {
     return graphGenerationService.generateOrchestrationGraph(planExecutionId);
   }
 
   @Override
-  public OrchestrationGraph getOrchestrationGraphV2(String planExecutionId) {
+  public OrchestrationGraphDTO getOrchestrationGraphV2(String planExecutionId) {
     return graphGenerationService.generateOrchestrationGraphV2(planExecutionId);
   }
 
   @Override
-  public OrchestrationGraph getPartialOrchestrationGraph(String startingSetupNodeId, String executionPlanId) {
+  public OrchestrationGraphDTO getPartialOrchestrationGraph(String startingSetupNodeId, String executionPlanId) {
     return graphGenerationService.generatePartialOrchestrationGraph(startingSetupNodeId, executionPlanId);
   }
 

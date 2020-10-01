@@ -11,11 +11,11 @@ import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 
 import io.harness.OrchestrationVisualizationTest;
-import io.harness.beans.EdgeList;
+import io.harness.beans.EphemeralOrchestrationGraph;
 import io.harness.beans.GraphVertex;
-import io.harness.beans.OrchestrationAdjacencyList;
+import io.harness.beans.internal.EdgeListInternal;
+import io.harness.beans.internal.OrchestrationAdjacencyListInternal;
 import io.harness.category.element.UnitTests;
-import io.harness.dto.OrchestrationGraph;
 import io.harness.execution.status.Status;
 import io.harness.rule.Owner;
 import io.harness.skip.service.VertexSkipperService;
@@ -43,95 +43,95 @@ public class VertexSkipperServiceImplTest extends OrchestrationVisualizationTest
                                .uuid(generateUuid())
                                .name("previous")
                                .skipType(NOOP)
-                               .startTs(System.currentTimeMillis())
+                               .lastUpdatedAt(System.currentTimeMillis())
                                .build();
     GraphVertex current = GraphVertex.builder()
                               .uuid(generateUuid())
                               .name("current")
                               .skipType(SKIP_TREE)
-                              .startTs(System.currentTimeMillis())
+                              .lastUpdatedAt(System.currentTimeMillis())
                               .build();
     GraphVertex next = GraphVertex.builder()
                            .uuid(generateUuid())
                            .name("next")
                            .skipType(SKIP_NODE)
-                           .startTs(System.currentTimeMillis())
+                           .lastUpdatedAt(System.currentTimeMillis())
                            .build();
     GraphVertex currentChild1 = GraphVertex.builder()
                                     .uuid(generateUuid())
                                     .name("currentChild1")
                                     .skipType(NOOP)
-                                    .startTs(System.currentTimeMillis())
+                                    .lastUpdatedAt(System.currentTimeMillis())
                                     .build();
     GraphVertex currentChild2 = GraphVertex.builder()
                                     .uuid(generateUuid())
                                     .name("currentChild2")
                                     .skipType(NOOP)
-                                    .startTs(System.currentTimeMillis())
+                                    .lastUpdatedAt(System.currentTimeMillis())
                                     .build();
     List<GraphVertex> graphVertices = Lists.newArrayList(previous, current, next, currentChild1, currentChild2);
 
     Map<String, GraphVertex> graphVertexMap =
         graphVertices.stream().collect(Collectors.toMap(GraphVertex::getUuid, Function.identity()));
-    Map<String, EdgeList> adjacencyList = new HashMap<>();
+    Map<String, EdgeListInternal> adjacencyList = new HashMap<>();
     adjacencyList.put(previous.getUuid(),
-        EdgeList.builder()
+        EdgeListInternal.builder()
             .parentId(null)
             .prevIds(new ArrayList<>())
             .nextIds(Lists.newArrayList(current.getUuid()))
             .edges(new ArrayList<>())
             .build());
     adjacencyList.put(current.getUuid(),
-        EdgeList.builder()
+        EdgeListInternal.builder()
             .parentId(null)
             .prevIds(Lists.newArrayList(previous.getUuid()))
             .nextIds(Lists.newArrayList(next.getUuid()))
             .edges(Lists.newArrayList(currentChild1.getUuid(), currentChild2.getUuid()))
             .build());
     adjacencyList.put(next.getUuid(),
-        EdgeList.builder()
+        EdgeListInternal.builder()
             .parentId(null)
             .prevIds(Lists.newArrayList(current.getUuid()))
             .nextIds(new ArrayList<>())
             .edges(new ArrayList<>())
             .build());
     adjacencyList.put(currentChild1.getUuid(),
-        EdgeList.builder()
+        EdgeListInternal.builder()
             .parentId(current.getUuid())
             .prevIds(new ArrayList<>())
             .nextIds(new ArrayList<>())
             .edges(new ArrayList<>())
             .build());
     adjacencyList.put(currentChild2.getUuid(),
-        EdgeList.builder()
+        EdgeListInternal.builder()
             .parentId(current.getUuid())
             .prevIds(new ArrayList<>())
             .nextIds(new ArrayList<>())
             .edges(new ArrayList<>())
             .build());
 
-    OrchestrationGraph orchestrationGraph = OrchestrationGraph.builder()
-                                                .startTs(System.currentTimeMillis())
-                                                .endTs(System.currentTimeMillis())
-                                                .status(Status.SUCCEEDED)
-                                                .rootNodeIds(Collections.singletonList("someId"))
-                                                .planExecutionId(PLAN_EXECUTION_ID)
-                                                .adjacencyList(OrchestrationAdjacencyList.builder()
-                                                                   .graphVertexMap(graphVertexMap)
-                                                                   .adjacencyList(adjacencyList)
-                                                                   .build())
-                                                .build();
+    EphemeralOrchestrationGraph orchestrationGraph = EphemeralOrchestrationGraph.builder()
+                                                         .startTs(System.currentTimeMillis())
+                                                         .endTs(System.currentTimeMillis())
+                                                         .status(Status.SUCCEEDED)
+                                                         .rootNodeIds(Collections.singletonList("someId"))
+                                                         .planExecutionId(PLAN_EXECUTION_ID)
+                                                         .adjacencyList(OrchestrationAdjacencyListInternal.builder()
+                                                                            .graphVertexMap(graphVertexMap)
+                                                                            .adjacencyMap(adjacencyList)
+                                                                            .build())
+                                                         .build();
 
     vertexSkipperService.removeSkippedVertices(orchestrationGraph);
 
-    OrchestrationAdjacencyList updatedOrchestrationAdjacencyList = orchestrationGraph.getAdjacencyList();
+    OrchestrationAdjacencyListInternal updatedOrchestrationAdjacencyList = orchestrationGraph.getAdjacencyList();
     assertThat(updatedOrchestrationAdjacencyList).isNotNull();
 
     Map<String, GraphVertex> updatedGraphVertexMap = updatedOrchestrationAdjacencyList.getGraphVertexMap();
     assertThat(updatedGraphVertexMap).isNotEmpty();
     assertThat(updatedGraphVertexMap.values()).containsExactlyInAnyOrder(previous);
 
-    Map<String, EdgeList> updatedAdjacencyList = updatedOrchestrationAdjacencyList.getAdjacencyList();
+    Map<String, EdgeListInternal> updatedAdjacencyList = updatedOrchestrationAdjacencyList.getAdjacencyMap();
     assertThat(updatedAdjacencyList).isNotEmpty();
     assertThat(updatedAdjacencyList.keySet()).containsExactlyInAnyOrder(previous.getUuid());
 

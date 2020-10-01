@@ -17,11 +17,13 @@ import io.harness.beans.EdgeList;
 import io.harness.beans.Graph;
 import io.harness.beans.GraphVertex;
 import io.harness.beans.OrchestrationAdjacencyList;
-import io.harness.beans.OrchestrationGraphInternal;
+import io.harness.beans.OrchestrationGraph;
 import io.harness.beans.converter.GraphVertexConverter;
+import io.harness.beans.internal.EdgeListInternal;
+import io.harness.beans.internal.OrchestrationAdjacencyListInternal;
 import io.harness.cache.SpringMongoStore;
 import io.harness.category.element.UnitTests;
-import io.harness.dto.OrchestrationGraph;
+import io.harness.dto.OrchestrationGraphDTO;
 import io.harness.engine.executions.node.NodeExecutionRepository;
 import io.harness.engine.executions.plan.PlanExecutionService;
 import io.harness.exception.InvalidRequestException;
@@ -217,18 +219,17 @@ public class GraphGenerationServiceImplTest extends OrchestrationVisualizationTe
             .build();
     nodeExecutionRepository.save(dummyStart);
 
-    OrchestrationGraph graphResponse = graphGenerationService.generateOrchestrationGraph(planExecution.getUuid());
+    OrchestrationGraphDTO graphResponse = graphGenerationService.generateOrchestrationGraph(planExecution.getUuid());
     assertThat(graphResponse).isNotNull();
     assertThat(graphResponse.getAdjacencyList()).isNotNull();
     assertThat(graphResponse.getAdjacencyList().getGraphVertexMap()).isNotEmpty();
     assertThat(graphResponse.getAdjacencyList().getGraphVertexMap().size()).isEqualTo(1);
-    assertThat(graphResponse.getAdjacencyList().getAdjacencyList().get(graphResponse.getRootNodeIds().get(0)))
+    assertThat(graphResponse.getAdjacencyList().getAdjacencyMap().get(graphResponse.getRootNodeIds().get(0)))
         .isNotNull();
     assertThat(
-        graphResponse.getAdjacencyList().getAdjacencyList().get(graphResponse.getRootNodeIds().get(0)).getNextIds())
+        graphResponse.getAdjacencyList().getAdjacencyMap().get(graphResponse.getRootNodeIds().get(0)).getNextIds())
         .isEmpty();
-    assertThat(
-        graphResponse.getAdjacencyList().getAdjacencyList().get(graphResponse.getRootNodeIds().get(0)).getEdges())
+    assertThat(graphResponse.getAdjacencyList().getAdjacencyMap().get(graphResponse.getRootNodeIds().get(0)).getEdges())
         .isEmpty();
   }
 
@@ -254,31 +255,30 @@ public class GraphGenerationServiceImplTest extends OrchestrationVisualizationTe
             .build();
     nodeExecutionRepository.save(dummyStart);
 
-    OrchestrationAdjacencyList adjacencyListInternal =
-        OrchestrationAdjacencyList.builder()
+    OrchestrationAdjacencyListInternal adjacencyListInternal =
+        OrchestrationAdjacencyListInternal.builder()
             .graphVertexMap(ImmutableMap.of(dummyStart.getUuid(), GraphVertexConverter.convertFrom(dummyStart)))
-            .adjacencyList(ImmutableMap.of(
-                dummyStart.getUuid(), EdgeList.builder().edges(new ArrayList<>()).nextIds(new ArrayList<>()).build()))
+            .adjacencyMap(ImmutableMap.of(dummyStart.getUuid(),
+                EdgeListInternal.builder().edges(new ArrayList<>()).nextIds(new ArrayList<>()).build()))
             .build();
-    OrchestrationGraphInternal graphInternal = OrchestrationGraphInternal.builder()
-                                                   .rootNodeIds(Lists.newArrayList(dummyStart.getUuid()))
-                                                   .cacheKey(planExecution.getUuid())
-                                                   .adjacencyList(adjacencyListInternal)
-                                                   .build();
+    OrchestrationGraph graphInternal = OrchestrationGraph.builder()
+                                           .rootNodeIds(Lists.newArrayList(dummyStart.getUuid()))
+                                           .cacheKey(planExecution.getUuid())
+                                           .adjacencyList(adjacencyListInternal)
+                                           .build();
     mongoStore.upsert(graphInternal, Duration.ofDays(10));
 
-    OrchestrationGraph graphResponse = graphGenerationService.generateOrchestrationGraph(planExecution.getUuid());
+    OrchestrationGraphDTO graphResponse = graphGenerationService.generateOrchestrationGraph(planExecution.getUuid());
     assertThat(graphResponse).isNotNull();
     assertThat(graphResponse.getAdjacencyList()).isNotNull();
     assertThat(graphResponse.getAdjacencyList().getGraphVertexMap()).isNotEmpty();
     assertThat(graphResponse.getAdjacencyList().getGraphVertexMap().size()).isEqualTo(1);
-    assertThat(graphResponse.getAdjacencyList().getAdjacencyList().get(graphResponse.getRootNodeIds().get(0)))
+    assertThat(graphResponse.getAdjacencyList().getAdjacencyMap().get(graphResponse.getRootNodeIds().get(0)))
         .isNotNull();
     assertThat(
-        graphResponse.getAdjacencyList().getAdjacencyList().get(graphResponse.getRootNodeIds().get(0)).getNextIds())
+        graphResponse.getAdjacencyList().getAdjacencyMap().get(graphResponse.getRootNodeIds().get(0)).getNextIds())
         .isEmpty();
-    assertThat(
-        graphResponse.getAdjacencyList().getAdjacencyList().get(graphResponse.getRootNodeIds().get(0)).getEdges())
+    assertThat(graphResponse.getAdjacencyList().getAdjacencyMap().get(graphResponse.getRootNodeIds().get(0)).getEdges())
         .isEmpty();
   }
 
@@ -323,20 +323,20 @@ public class GraphGenerationServiceImplTest extends OrchestrationVisualizationTe
 
     Map<String, GraphVertex> graphVertexMap = new HashMap<>();
     graphVertexMap.put(dummyStart.getUuid(), GraphVertexConverter.convertFrom(dummyStart));
-    Map<String, EdgeList> adjacencyListMap = new HashMap<>();
-    adjacencyListMap.put(
-        dummyStart.getUuid(), EdgeList.builder().edges(new ArrayList<>()).nextIds(new ArrayList<>()).build());
+    Map<String, EdgeListInternal> adjacencyMap = new HashMap<>();
+    adjacencyMap.put(
+        dummyStart.getUuid(), EdgeListInternal.builder().edges(new ArrayList<>()).nextIds(new ArrayList<>()).build());
 
-    OrchestrationAdjacencyList adjacencyListInternal =
-        OrchestrationAdjacencyList.builder().graphVertexMap(graphVertexMap).adjacencyList(adjacencyListMap).build();
-    OrchestrationGraphInternal graphInternal = OrchestrationGraphInternal.builder()
-                                                   .rootNodeIds(Lists.newArrayList(dummyStart.getUuid()))
-                                                   .cacheKey(planExecution.getUuid())
-                                                   .adjacencyList(adjacencyListInternal)
-                                                   .build();
+    OrchestrationAdjacencyListInternal adjacencyListInternal =
+        OrchestrationAdjacencyListInternal.builder().graphVertexMap(graphVertexMap).adjacencyMap(adjacencyMap).build();
+    OrchestrationGraph graphInternal = OrchestrationGraph.builder()
+                                           .rootNodeIds(Lists.newArrayList(dummyStart.getUuid()))
+                                           .cacheKey(planExecution.getUuid())
+                                           .adjacencyList(adjacencyListInternal)
+                                           .build();
     mongoStore.upsert(graphInternal, Duration.ofDays(10));
 
-    OrchestrationGraph graphResponse = graphGenerationService.generateOrchestrationGraph(planExecution.getUuid());
+    OrchestrationGraphDTO graphResponse = graphGenerationService.generateOrchestrationGraph(planExecution.getUuid());
     assertThat(graphResponse).isNotNull();
 
     OrchestrationAdjacencyList orchestrationAdjacencyList = graphResponse.getAdjacencyList();
@@ -346,7 +346,7 @@ public class GraphGenerationServiceImplTest extends OrchestrationVisualizationTe
     assertThat(graphVertexMapResponse).isNotEmpty();
     assertThat(graphVertexMapResponse.size()).isEqualTo(2);
 
-    Map<String, EdgeList> adjacencyList = orchestrationAdjacencyList.getAdjacencyList();
+    Map<String, EdgeList> adjacencyList = orchestrationAdjacencyList.getAdjacencyMap();
     assertThat(adjacencyList.get(graphResponse.getRootNodeIds().get(0))).isNotNull();
     assertThat(adjacencyList.get(graphResponse.getRootNodeIds().get(0)).getNextIds()).isNotEmpty();
     assertThat(adjacencyList.get(graphResponse.getRootNodeIds().get(0)).getNextIds())
@@ -394,20 +394,19 @@ public class GraphGenerationServiceImplTest extends OrchestrationVisualizationTe
     nodeExecutionRepository.save(dummyStart);
     nodeExecutionRepository.save(dummyFinish);
 
-    OrchestrationGraph graphResponse = graphGenerationService.generatePartialOrchestrationGraph(
+    OrchestrationGraphDTO graphResponse = graphGenerationService.generatePartialOrchestrationGraph(
         dummyFinish.getNode().getUuid(), planExecution.getUuid());
     assertThat(graphResponse).isNotNull();
     assertThat(graphResponse.getRootNodeIds().get(0)).isEqualTo(dummyFinish.getUuid());
     assertThat(graphResponse.getAdjacencyList()).isNotNull();
     assertThat(graphResponse.getAdjacencyList().getGraphVertexMap()).isNotEmpty();
     assertThat(graphResponse.getAdjacencyList().getGraphVertexMap().size()).isEqualTo(1);
-    assertThat(graphResponse.getAdjacencyList().getAdjacencyList().get(graphResponse.getRootNodeIds().get(0)))
+    assertThat(graphResponse.getAdjacencyList().getAdjacencyMap().get(graphResponse.getRootNodeIds().get(0)))
         .isNotNull();
     assertThat(
-        graphResponse.getAdjacencyList().getAdjacencyList().get(graphResponse.getRootNodeIds().get(0)).getNextIds())
+        graphResponse.getAdjacencyList().getAdjacencyMap().get(graphResponse.getRootNodeIds().get(0)).getNextIds())
         .isEmpty();
-    assertThat(
-        graphResponse.getAdjacencyList().getAdjacencyList().get(graphResponse.getRootNodeIds().get(0)).getEdges())
+    assertThat(graphResponse.getAdjacencyList().getAdjacencyMap().get(graphResponse.getRootNodeIds().get(0)).getEdges())
         .isEmpty();
   }
 

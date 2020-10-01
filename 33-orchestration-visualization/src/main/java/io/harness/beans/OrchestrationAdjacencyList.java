@@ -17,5 +17,5 @@ import java.util.Map;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class OrchestrationAdjacencyList {
   Map<String, GraphVertex> graphVertexMap;
-  Map<String, EdgeList> adjacencyList;
+  Map<String, EdgeList> adjacencyMap;
 }

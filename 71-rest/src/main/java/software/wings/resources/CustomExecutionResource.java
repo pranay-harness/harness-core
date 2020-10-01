@@ -4,7 +4,7 @@ import com.google.inject.Inject;
 
 import io.harness.annotations.Redesign;
 import io.harness.beans.Graph;
-import io.harness.dto.OrchestrationGraph;
+import io.harness.dto.OrchestrationGraphDTO;
 import io.harness.engine.interrupts.InterruptPackage;
 import io.harness.execution.PlanExecution;
 import io.harness.interrupts.Interrupt;
@@ -130,20 +130,21 @@ public class CustomExecutionResource {
 
   @GET
   @Path("/get-orchestration-graph")
-  public RestResponse<OrchestrationGraph> getOrchestrationGraph(@QueryParam("planExecutionId") String planExecutionId) {
+  public RestResponse<OrchestrationGraphDTO> getOrchestrationGraph(
+      @QueryParam("planExecutionId") String planExecutionId) {
     return new RestResponse<>(customExecutionService.getOrchestrationGraph(planExecutionId));
   }
 
   @GET
   @Path("/get-orchestration-graph-v2")
-  public RestResponse<OrchestrationGraph> getOrchestrationGraphV2(
+  public RestResponse<OrchestrationGraphDTO> getOrchestrationGraphV2(
       @QueryParam("planExecutionId") String planExecutionId) {
     return new RestResponse<>(customExecutionService.getOrchestrationGraphV2(planExecutionId));
   }
 
   @GET
   @Path("/get-partial-orchestration-graph")
-  public RestResponse<OrchestrationGraph> getPartialOrchestrationGraph(
+  public RestResponse<OrchestrationGraphDTO> getPartialOrchestrationGraph(
       @QueryParam("startingSetupNodeId") String startingSetupNodeId,
       @QueryParam("planExecutionId") String planExecutionId) {
     return new RestResponse<>(
@@ -185,5 +186,11 @@ public class CustomExecutionResource {
   @Path("/skip-children")
   public RestResponse<PlanExecution> executeSkipChildren() {
     return new RestResponse<>(customExecutionService.executeSkipChildren());
+  }
+
+  @GET
+  @Path("/skip-node")
+  public RestResponse<PlanExecution> executeSkipNode() {
+    return new RestResponse<>(customExecutionService.executeSkipNode());
   }
 }

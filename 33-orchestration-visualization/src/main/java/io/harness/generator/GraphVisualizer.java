@@ -16,7 +16,7 @@ import io.harness.beans.EdgeList;
 import io.harness.beans.Graph;
 import io.harness.beans.GraphVertex;
 import io.harness.beans.OrchestrationAdjacencyList;
-import io.harness.dto.OrchestrationGraph;
+import io.harness.dto.OrchestrationGraphDTO;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.FilenameUtils;
 
@@ -66,7 +66,7 @@ public class GraphVisualizer {
     }
   }
 
-  public void generateImage(OrchestrationGraph graph, String filename) throws IOException {
+  public void generateImage(OrchestrationGraphDTO graph, String filename) throws IOException {
     MutableGraph mutableGraph = generateGraph(graph, graph.getRootNodeIds());
     addLinksToGraph(mutableGraph, graph);
 
@@ -77,7 +77,7 @@ public class GraphVisualizer {
     }
   }
 
-  private MutableGraph generateGraph(OrchestrationGraph graph, List<String> nodeIds) {
+  private MutableGraph generateGraph(OrchestrationGraphDTO graph, List<String> nodeIds) {
     MutableGraph mutableGraph = mutGraph().setDirected(true);
     List<MutableNode> linkSources =
         graph.getAdjacencyList()
@@ -91,7 +91,7 @@ public class GraphVisualizer {
     mutableGraph.add(linkSources);
 
     graph.getAdjacencyList()
-        .getAdjacencyList()
+        .getAdjacencyMap()
         .entrySet()
         .stream()
         .filter(entry -> nodeIds.contains(entry.getKey()))
@@ -109,11 +109,11 @@ public class GraphVisualizer {
     return mutableGraph;
   }
 
-  private void addLinksToGraph(MutableGraph mutableGraph, OrchestrationGraph orchestrationGraph) {
+  private void addLinksToGraph(MutableGraph mutableGraph, OrchestrationGraphDTO orchestrationGraph) {
     Map<String, GraphVertex> graphVertexMap = orchestrationGraph.getAdjacencyList().getGraphVertexMap();
     Set<MutableNode> nodes = (Set<MutableNode>) mutableGraph.nodes();
     nodes.forEach(node -> {
-      EdgeList edgeList = orchestrationGraph.getAdjacencyList().getAdjacencyList().get(node.attrs().get("ID"));
+      EdgeList edgeList = orchestrationGraph.getAdjacencyList().getAdjacencyMap().get(node.attrs().get("ID"));
       if (!edgeList.getEdges().isEmpty() && !edgeList.getNextIds().isEmpty()) {
         node.addLink(edgeList.getEdges().stream().map(s -> graphVertexMap.get(s).getName()).toArray(String[] ::new));
         node.addLink(graphVertexMap.get(edgeList.getNextIds().get(0)).getName());
@@ -125,7 +125,7 @@ public class GraphVisualizer {
     });
   }
 
-  public void breadthFirstTraversal(OrchestrationGraph graph) {
+  public void breadthFirstTraversal(OrchestrationGraphDTO graph) {
     breadthFirstTraversalInternal(graph.getRootNodeIds().get(0), graph.getAdjacencyList());
   }
 
@@ -149,8 +149,8 @@ public class GraphVisualizer {
       visited.add(graphVertex);
       logger.info(graphVertex.getName() + " ");
 
-      List<String> childIds = adjacencyList.getAdjacencyList().get(graphVertex.getUuid()).getEdges();
-      String nextId = adjacencyList.getAdjacencyList().get(graphVertex.getUuid()).getNextIds().get(0);
+      List<String> childIds = adjacencyList.getAdjacencyMap().get(graphVertex.getUuid()).getEdges();
+      String nextId = adjacencyList.getAdjacencyMap().get(graphVertex.getUuid()).getNextIds().get(0);
       if (childIds.isEmpty() && nextId == null) {
         continue;
       }
@@ -171,7 +171,7 @@ public class GraphVisualizer {
     }
   }
 
-  public void depthFirstTraversal(OrchestrationGraph graph) {
+  public void depthFirstTraversal(OrchestrationGraphDTO graph) {
     depthFirstTraversalInternal(graph.getRootNodeIds().get(0), graph.getAdjacencyList(), new HashSet<>());
   }
 
@@ -185,7 +185,7 @@ public class GraphVisualizer {
     visited.add(graphVertex.getUuid());
     logger.info(graphVertex.getName() + " ");
 
-    EdgeList edgeList = adjacencyList.getAdjacencyList().get(nodeId);
+    EdgeList edgeList = adjacencyList.getAdjacencyMap().get(nodeId);
     for (String child : edgeList.getEdges()) {
       depthFirstTraversalInternal(child, adjacencyList, visited);
     }

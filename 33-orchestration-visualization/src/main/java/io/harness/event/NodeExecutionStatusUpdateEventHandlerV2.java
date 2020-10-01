@@ -8,7 +8,7 @@ import com.google.inject.Inject;
 import io.harness.ambiance.Ambiance;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.GraphVertex;
-import io.harness.beans.OrchestrationGraphInternal;
+import io.harness.beans.OrchestrationGraph;
 import io.harness.beans.converter.GraphVertexConverter;
 import io.harness.engine.executions.node.NodeExecutionService;
 import io.harness.engine.outcomes.OutcomeService;
@@ -39,15 +39,15 @@ public class NodeExecutionStatusUpdateEventHandlerV2 implements AsyncOrchestrati
 
     NodeExecution nodeExecution = nodeExecutionService.get(nodeExecutionId);
 
-    OrchestrationGraphInternal graphInternal =
-        graphGenerationService.getCachedOrchestrationGraphInternal(ambiance.getPlanExecutionId());
+    OrchestrationGraph orchestrationGraph =
+        graphGenerationService.getCachedOrchestrationGraph(ambiance.getPlanExecutionId());
 
-    if (graphInternal.getRootNodeIds().isEmpty()) {
+    if (orchestrationGraph.getRootNodeIds().isEmpty()) {
       logger.info("Setting rootNodeId: [{}] for plan [{}]", nodeExecutionId, ambiance.getPlanExecutionId());
-      graphInternal.getRootNodeIds().add(nodeExecutionId);
+      orchestrationGraph.getRootNodeIds().add(nodeExecutionId);
     }
 
-    Map<String, GraphVertex> graphVertexMap = graphInternal.getAdjacencyList().getGraphVertexMap();
+    Map<String, GraphVertex> graphVertexMap = orchestrationGraph.getAdjacencyList().getGraphVertexMap();
     if (graphVertexMap.containsKey(nodeExecutionId)) {
       logger.info("Updating graph vertex for [{}] with status [{}]. PlanExecutionId: [{}]", nodeExecutionId,
           nodeExecution.getStatus(), ambiance.getPlanExecutionId());
@@ -61,8 +61,8 @@ public class NodeExecutionStatusUpdateEventHandlerV2 implements AsyncOrchestrati
     } else {
       logger.info("Adding graph vertex with id [{}] and status [{}]. PlanExecutionId: [{}]", nodeExecutionId,
           nodeExecution.getStatus(), ambiance.getPlanExecutionId());
-      graphGenerator.populateAdjacencyList(graphInternal.getAdjacencyList(), nodeExecution);
+      graphGenerator.populateAdjacencyList(orchestrationGraph.getAdjacencyList(), nodeExecution);
     }
-    graphGenerationService.cacheOrchestrationGraphInternal(graphInternal);
+    graphGenerationService.cacheOrchestrationGraph(orchestrationGraph);
   }
 }

@@ -23,7 +23,7 @@ import io.harness.cdng.pipeline.executions.repositories.PipelineExecutionReposit
 import io.harness.cdng.pipeline.mappers.ExecutionToDtoMapper;
 import io.harness.cdng.pipeline.mappers.NGPipelineExecutionDTOMapper;
 import io.harness.data.structure.EmptyPredicate;
-import io.harness.dto.OrchestrationGraph;
+import io.harness.dto.OrchestrationGraphDTO;
 import io.harness.engine.OrchestrationService;
 import io.harness.engine.executions.node.NodeExecutionService;
 import io.harness.exception.GeneralException;
@@ -140,7 +140,7 @@ public class NgPipelineExecutionServiceImpl implements NgPipelineExecutionServic
             format("No Graph node found corresponding to identifier: [%s], planExecutionId: [%s]", stageIdentifier,
                 planExecutionId));
       }
-      OrchestrationGraph orchestrationGraph = graphGenerationService.generatePartialOrchestrationGraph(
+      OrchestrationGraphDTO orchestrationGraph = graphGenerationService.generatePartialOrchestrationGraph(
           stageNode.get().getNode().getUuid(), planExecutionId);
       @NonNull ExecutionGraph executionGraph = ExecutionGraphMapper.toExecutionGraph(orchestrationGraph);
       pipelineExecutionDetailBuilder.stageGraph(executionGraph);

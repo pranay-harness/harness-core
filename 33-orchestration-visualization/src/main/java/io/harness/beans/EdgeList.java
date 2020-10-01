@@ -6,9 +6,7 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import io.harness.annotations.dev.OwnedBy;
 import lombok.Builder;
-import lombok.Setter;
 import lombok.Value;
-import lombok.experimental.NonFinal;
 
 import java.util.List;
 
@@ -18,9 +16,6 @@ import java.util.List;
 @JsonIgnoreProperties(ignoreUnknown = true)
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class EdgeList {
-  @NonFinal @Setter String parentId;
-  List<String> prevIds;
-  List<String> nextIds;
-
   List<String> edges;
+  List<String> nextIds;
 }

@@ -6,7 +6,7 @@ import io.harness.annotations.Redesign;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.EmbeddedUser;
 import io.harness.beans.Graph;
-import io.harness.dto.OrchestrationGraph;
+import io.harness.dto.OrchestrationGraphDTO;
 import io.harness.engine.interrupts.InterruptPackage;
 import io.harness.execution.PlanExecution;
 import io.harness.interrupts.Interrupt;
@@ -50,11 +50,11 @@ public interface CustomExecutionService {
 
   Graph getGraph(String executionPlanId);
 
-  OrchestrationGraph getOrchestrationGraph(String executionPlanId);
+  OrchestrationGraphDTO getOrchestrationGraph(String executionPlanId);
 
-  OrchestrationGraph getOrchestrationGraphV2(String executionPlanId);
+  OrchestrationGraphDTO getOrchestrationGraphV2(String executionPlanId);
 
-  OrchestrationGraph getPartialOrchestrationGraph(String startingSetupNodeId, String executionPlanId);
+  OrchestrationGraphDTO getPartialOrchestrationGraph(String startingSetupNodeId, String executionPlanId);
 
   void getGraphVisualization(String executionPlanId, OutputStream output) throws IOException;
 
@@ -69,6 +69,8 @@ public interface CustomExecutionService {
   PlanExecution executeResourceRestraintWithWaitPlan();
 
   PlanExecution executeSkipChildren();
+
+  PlanExecution executeSkipNode();
 
   Interrupt registerInterrupt(InterruptPackage interruptPackage);
 }

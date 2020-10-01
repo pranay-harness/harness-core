@@ -14,10 +14,10 @@ import com.google.inject.Inject;
 import io.harness.OrchestrationVisualizationTest;
 import io.harness.ambiance.Ambiance;
 import io.harness.ambiance.Level;
-import io.harness.beans.EdgeList;
 import io.harness.beans.GraphVertex;
-import io.harness.beans.OrchestrationAdjacencyList;
-import io.harness.beans.OrchestrationGraphInternal;
+import io.harness.beans.OrchestrationGraph;
+import io.harness.beans.internal.EdgeListInternal;
+import io.harness.beans.internal.OrchestrationAdjacencyListInternal;
 import io.harness.cache.SpringMongoStore;
 import io.harness.category.element.UnitTests;
 import io.harness.data.OutcomeInstance;
@@ -76,7 +76,7 @@ public class NodeExecutionStatusUpdateEventHandlerV2Test extends OrchestrationVi
             .build();
     eventHandlerV2.handleEvent(event);
 
-    verify(graphGenerationService, never()).getCachedOrchestrationGraphInternal(planExecutionId);
+    verify(graphGenerationService, never()).getCachedOrchestrationGraph(planExecutionId);
   }
 
   @Test
@@ -104,20 +104,20 @@ public class NodeExecutionStatusUpdateEventHandlerV2Test extends OrchestrationVi
     nodeExecutionService.save(dummyStart);
 
     // creating cached graph
-    OrchestrationGraphInternal cachedGraph = OrchestrationGraphInternal.builder()
-                                                 .cacheKey(planExecution.getUuid())
-                                                 .cacheParams(null)
-                                                 .cacheContextOrder(System.currentTimeMillis())
-                                                 .adjacencyList(OrchestrationAdjacencyList.builder()
-                                                                    .graphVertexMap(new HashMap<>())
-                                                                    .adjacencyList(new HashMap<>())
-                                                                    .build())
-                                                 .planExecutionId(planExecution.getUuid())
-                                                 .rootNodeIds(new ArrayList<>())
-                                                 .startTs(planExecution.getStartTs())
-                                                 .endTs(planExecution.getEndTs())
-                                                 .status(planExecution.getStatus())
-                                                 .build();
+    OrchestrationGraph cachedGraph = OrchestrationGraph.builder()
+                                         .cacheKey(planExecution.getUuid())
+                                         .cacheParams(null)
+                                         .cacheContextOrder(System.currentTimeMillis())
+                                         .adjacencyList(OrchestrationAdjacencyListInternal.builder()
+                                                            .graphVertexMap(new HashMap<>())
+                                                            .adjacencyMap(new HashMap<>())
+                                                            .build())
+                                         .planExecutionId(planExecution.getUuid())
+                                         .rootNodeIds(new ArrayList<>())
+                                         .startTs(planExecution.getStartTs())
+                                         .endTs(planExecution.getEndTs())
+                                         .status(planExecution.getStatus())
+                                         .build();
     mongoStore.upsert(cachedGraph, Duration.ofDays(10));
 
     // creating event
@@ -132,13 +132,11 @@ public class NodeExecutionStatusUpdateEventHandlerV2Test extends OrchestrationVi
     eventHandlerV2.handleEvent(event);
 
     Awaitility.await().atMost(2, TimeUnit.SECONDS).pollInterval(500, TimeUnit.MILLISECONDS).until(() -> {
-      OrchestrationGraphInternal graphInternal =
-          graphGenerationService.getCachedOrchestrationGraphInternal(planExecution.getUuid());
+      OrchestrationGraph graphInternal = graphGenerationService.getCachedOrchestrationGraph(planExecution.getUuid());
       return !graphInternal.getRootNodeIds().isEmpty();
     });
 
-    OrchestrationGraphInternal updatedGraph =
-        graphGenerationService.getCachedOrchestrationGraphInternal(planExecution.getUuid());
+    OrchestrationGraph updatedGraph = graphGenerationService.getCachedOrchestrationGraph(planExecution.getUuid());
 
     assertThat(updatedGraph).isNotNull();
     assertThat(updatedGraph.getPlanExecutionId()).isEqualTo(planExecution.getUuid());
@@ -146,7 +144,7 @@ public class NodeExecutionStatusUpdateEventHandlerV2Test extends OrchestrationVi
     assertThat(updatedGraph.getEndTs()).isNull();
     assertThat(updatedGraph.getRootNodeIds()).containsExactlyInAnyOrder(dummyStart.getUuid());
     assertThat(updatedGraph.getAdjacencyList().getGraphVertexMap().size()).isEqualTo(1);
-    assertThat(updatedGraph.getAdjacencyList().getAdjacencyList().size()).isEqualTo(1);
+    assertThat(updatedGraph.getAdjacencyList().getAdjacencyMap().size()).isEqualTo(1);
     assertThat(updatedGraph.getStatus()).isEqualTo(planExecution.getStatus());
   }
 
@@ -176,17 +174,18 @@ public class NodeExecutionStatusUpdateEventHandlerV2Test extends OrchestrationVi
     nodeExecutionService.save(dummyStart);
 
     // creating cached graph
-    OrchestrationGraphInternal cachedGraph =
-        OrchestrationGraphInternal.builder()
+    OrchestrationGraph cachedGraph =
+        OrchestrationGraph.builder()
             .cacheKey(planExecution.getUuid())
             .cacheParams(null)
             .cacheContextOrder(System.currentTimeMillis())
-            .adjacencyList(OrchestrationAdjacencyList.builder()
-                               .graphVertexMap(Maps.newHashMap(
-                                   dummyStart.getUuid(), convertNodeExecutionWithStatusSucceeded(dummyStart)))
-                               .adjacencyList(Maps.newHashMap(dummyStart.getUuid(),
-                                   EdgeList.builder().edges(new ArrayList<>()).nextIds(new ArrayList<>()).build()))
-                               .build())
+            .adjacencyList(
+                OrchestrationAdjacencyListInternal.builder()
+                    .graphVertexMap(
+                        Maps.newHashMap(dummyStart.getUuid(), convertNodeExecutionWithStatusSucceeded(dummyStart)))
+                    .adjacencyMap(Maps.newHashMap(dummyStart.getUuid(),
+                        EdgeListInternal.builder().edges(new ArrayList<>()).nextIds(new ArrayList<>()).build()))
+                    .build())
             .planExecutionId(planExecution.getUuid())
             .rootNodeIds(Lists.newArrayList(dummyStart.getUuid()))
             .startTs(planExecution.getStartTs())
@@ -217,13 +216,11 @@ public class NodeExecutionStatusUpdateEventHandlerV2Test extends OrchestrationVi
     eventHandlerV2.handleEvent(event);
 
     Awaitility.await().atMost(2, TimeUnit.SECONDS).pollInterval(500, TimeUnit.MILLISECONDS).until(() -> {
-      OrchestrationGraphInternal graphInternal =
-          graphGenerationService.getCachedOrchestrationGraphInternal(planExecution.getUuid());
+      OrchestrationGraph graphInternal = graphGenerationService.getCachedOrchestrationGraph(planExecution.getUuid());
       return graphInternal.getAdjacencyList().getGraphVertexMap().get(dummyStart.getUuid()).getStatus() == SUCCEEDED;
     });
 
-    OrchestrationGraphInternal updatedGraph =
-        graphGenerationService.getCachedOrchestrationGraphInternal(planExecution.getUuid());
+    OrchestrationGraph updatedGraph = graphGenerationService.getCachedOrchestrationGraph(planExecution.getUuid());
 
     assertThat(updatedGraph).isNotNull();
     assertThat(updatedGraph.getPlanExecutionId()).isEqualTo(planExecution.getUuid());
@@ -235,7 +232,7 @@ public class NodeExecutionStatusUpdateEventHandlerV2Test extends OrchestrationVi
     assertThat(graphVertexMap.size()).isEqualTo(1);
     assertThat(graphVertexMap.get(dummyStart.getUuid()).getStatus()).isEqualTo(SUCCEEDED);
     assertThat(graphVertexMap.get(dummyStart.getUuid()).getOutcomes()).containsExactlyInAnyOrder(dummyOutcome);
-    assertThat(updatedGraph.getAdjacencyList().getAdjacencyList().size()).isEqualTo(1);
+    assertThat(updatedGraph.getAdjacencyList().getAdjacencyMap().size()).isEqualTo(1);
     assertThat(updatedGraph.getStatus()).isEqualTo(planExecution.getStatus());
   }
 

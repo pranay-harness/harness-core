@@ -19,7 +19,7 @@ import io.harness.beans.Graph;
 import io.harness.beans.GraphVertex;
 import io.harness.category.element.FunctionalTests;
 import io.harness.data.Outcome;
-import io.harness.dto.OrchestrationGraph;
+import io.harness.dto.OrchestrationGraphDTO;
 import io.harness.execution.PlanExecution;
 import io.harness.execution.status.Status;
 import io.harness.facilitator.modes.ExecutionMode;
@@ -215,7 +215,7 @@ public class GraphGenerationFunctionalTest extends AbstractFunctionalTest {
         executePlan(bearerToken, application.getAccountId(), application.getAppId(), "test-graph-plan");
     assertThat(planExecutionResponse.getStatus()).isEqualTo(Status.SUCCEEDED);
 
-    OrchestrationGraph response =
+    OrchestrationGraphDTO response =
         requestOrchestrationGraph(null, planExecutionResponse.getUuid(), "get-orchestration-graph");
     assertThat(response).isNotNull();
   }
@@ -228,7 +228,7 @@ public class GraphGenerationFunctionalTest extends AbstractFunctionalTest {
         executePlan(bearerToken, application.getAccountId(), application.getAppId(), "test-graph-plan");
     assertThat(planExecutionResponse.getStatus()).isEqualTo(Status.SUCCEEDED);
 
-    OrchestrationGraph response =
+    OrchestrationGraphDTO response =
         requestOrchestrationGraph(null, planExecutionResponse.getUuid(), "get-orchestration-graph");
     assertThat(response).isNotNull();
 
@@ -241,7 +241,7 @@ public class GraphGenerationFunctionalTest extends AbstractFunctionalTest {
                                  .orElse(null);
     assertThat(forkVertex).isNotNull();
 
-    OrchestrationGraph partialOrchestrationResponse = requestOrchestrationGraph(
+    OrchestrationGraphDTO partialOrchestrationResponse = requestOrchestrationGraph(
         forkVertex.getPlanNodeId(), planExecutionResponse.getUuid(), "get-partial-orchestration-graph");
     assertThat(partialOrchestrationResponse).isNotNull();
     assertThat(partialOrchestrationResponse.getAdjacencyList().getGraphVertexMap().size()).isEqualTo(3);
@@ -252,11 +252,11 @@ public class GraphGenerationFunctionalTest extends AbstractFunctionalTest {
                    .map(GraphVertex::getName)
                    .collect(Collectors.toList()))
         .containsExactlyInAnyOrder("fork2", "http1", "http2");
-    assertThat(partialOrchestrationResponse.getAdjacencyList().getAdjacencyList().size()).isEqualTo(3);
+    assertThat(partialOrchestrationResponse.getAdjacencyList().getAdjacencyMap().size()).isEqualTo(3);
     assertThat(
-        partialOrchestrationResponse.getAdjacencyList().getAdjacencyList().get(forkVertex.getUuid()).getEdges().size())
+        partialOrchestrationResponse.getAdjacencyList().getAdjacencyMap().get(forkVertex.getUuid()).getEdges().size())
         .isEqualTo(2);
-    assertThat(partialOrchestrationResponse.getAdjacencyList().getAdjacencyList().get(forkVertex.getUuid()).getEdges())
+    assertThat(partialOrchestrationResponse.getAdjacencyList().getAdjacencyMap().get(forkVertex.getUuid()).getEdges())
         .containsExactlyInAnyOrderElementsOf(partialOrchestrationResponse.getAdjacencyList()
                                                  .getGraphVertexMap()
                                                  .values()
@@ -276,7 +276,7 @@ public class GraphGenerationFunctionalTest extends AbstractFunctionalTest {
         executePlan(bearerToken, application.getAccountId(), application.getAppId(), "multiple-barriers");
     assertThat(planExecutionResponse.getStatus()).isEqualTo(Status.SUCCEEDED);
 
-    OrchestrationGraph response =
+    OrchestrationGraphDTO response =
         requestOrchestrationGraph(null, planExecutionResponse.getUuid(), "get-orchestration-graph-v2");
     assertThat(response).isNotNull();
 
@@ -287,7 +287,7 @@ public class GraphGenerationFunctionalTest extends AbstractFunctionalTest {
     assertThat(response.getStatus()).isEqualTo(Status.SUCCEEDED);
 
     Map<String, GraphVertex> graphVertexMap = response.getAdjacencyList().getGraphVertexMap();
-    Map<String, EdgeList> adjacencyList = response.getAdjacencyList().getAdjacencyList();
+    Map<String, EdgeList> adjacencyList = response.getAdjacencyList().getAdjacencyMap();
     assertThat(graphVertexMap.size()).isEqualTo(9);
     assertThat(adjacencyList.size()).isEqualTo(9);
 
@@ -328,6 +328,67 @@ public class GraphGenerationFunctionalTest extends AbstractFunctionalTest {
     assertThat(adjacencyList.get(nameVertexMap.get("Dummy Node 4")).getNextIds()).isEmpty();
   }
 
+  @Test
+  @Owner(developers = ALEXEI)
+  @Category(FunctionalTests.class)
+  public void shouldGenerateOrchestrationGraphWithSkippedNodes() {
+    List<String> nodeNames =
+        Lists.newArrayList("dummy-start", "fork1", "section1", "section2", "dummy2", "dummy-final");
+    PlanExecution planExecutionResponse =
+        executePlan(bearerToken, application.getAccountId(), application.getAppId(), "skip-node");
+    assertThat(planExecutionResponse.getStatus()).isEqualTo(Status.SUCCEEDED);
+
+    OrchestrationGraphDTO response =
+        requestOrchestrationGraph(null, planExecutionResponse.getUuid(), "get-orchestration-graph-v2");
+    assertThat(response).isNotNull();
+
+    assertThat(response.getPlanExecutionId()).isEqualTo(planExecutionResponse.getUuid());
+    assertThat(response.getRootNodeIds()).isNotEmpty();
+    assertThat(response.getStartTs()).isNotNull();
+    assertThat(response.getEndTs()).isNotNull();
+    assertThat(response.getStatus()).isEqualTo(Status.SUCCEEDED);
+
+    Map<String, GraphVertex> graphVertexMap = response.getAdjacencyList().getGraphVertexMap();
+    Map<String, EdgeList> adjacencyList = response.getAdjacencyList().getAdjacencyMap();
+    assertThat(graphVertexMap.size()).isEqualTo(6);
+    assertThat(adjacencyList.size()).isEqualTo(6);
+
+    assertThat(
+        graphVertexMap.values().stream().map(GraphVertex::getStatus).allMatch(status -> Status.SUCCEEDED == status))
+        .isTrue();
+    assertThat(graphVertexMap.values().stream().map(GraphVertex::getName).collect(Collectors.toList()))
+        .containsExactlyInAnyOrderElementsOf(nodeNames);
+
+    Map<String, String> nameVertexMap = graphVertexMap.entrySet().stream().collect(
+        Collectors.toMap(entry -> entry.getValue().getName(), entry -> entry.getValue().getUuid()));
+
+    assertThat(adjacencyList.get(nameVertexMap.get("dummy-start")).getEdges()).isEmpty();
+    assertThat(adjacencyList.get(nameVertexMap.get("dummy-start")).getNextIds()).isNotEmpty();
+    assertThat(adjacencyList.get(nameVertexMap.get("dummy-start")).getNextIds())
+        .containsExactlyInAnyOrder(nameVertexMap.get("fork1"));
+
+    assertThat(adjacencyList.get(nameVertexMap.get("fork1")).getEdges()).isNotEmpty();
+    assertThat(adjacencyList.get(nameVertexMap.get("fork1")).getEdges())
+        .containsExactlyInAnyOrder(nameVertexMap.get("section1"), nameVertexMap.get("section2"));
+    assertThat(adjacencyList.get(nameVertexMap.get("fork1")).getNextIds()).isNotEmpty();
+    assertThat(adjacencyList.get(nameVertexMap.get("fork1")).getNextIds())
+        .containsExactlyInAnyOrder(nameVertexMap.get("dummy-final"));
+
+    assertThat(adjacencyList.get(nameVertexMap.get("section1")).getEdges()).isEmpty();
+    assertThat(adjacencyList.get(nameVertexMap.get("section1")).getNextIds()).isEmpty();
+
+    assertThat(adjacencyList.get(nameVertexMap.get("section2")).getEdges()).isNotEmpty();
+    assertThat(adjacencyList.get(nameVertexMap.get("section2")).getEdges())
+        .containsExactlyInAnyOrder(nameVertexMap.get("dummy2"));
+    assertThat(adjacencyList.get(nameVertexMap.get("section2")).getNextIds()).isEmpty();
+
+    assertThat(adjacencyList.get(nameVertexMap.get("dummy2")).getEdges()).isEmpty();
+    assertThat(adjacencyList.get(nameVertexMap.get("dummy2")).getNextIds()).isEmpty();
+
+    assertThat(adjacencyList.get(nameVertexMap.get("dummy-final")).getEdges()).isEmpty();
+    assertThat(adjacencyList.get(nameVertexMap.get("dummy-final")).getNextIds()).isEmpty();
+  }
+
   private Graph requestGraph(String planExecutionId, String requestUri) {
     GenericType<RestResponse<Graph>> returnType = new GenericType<RestResponse<Graph>>() {};
 
@@ -339,9 +400,10 @@ public class GraphGenerationFunctionalTest extends AbstractFunctionalTest {
     return response.getResource();
   }
 
-  private OrchestrationGraph requestOrchestrationGraph(
+  private OrchestrationGraphDTO requestOrchestrationGraph(
       String startingNodeId, String planExecutionId, String requestUri) {
-    GenericType<RestResponse<OrchestrationGraph>> returnType = new GenericType<RestResponse<OrchestrationGraph>>() {};
+    GenericType<RestResponse<OrchestrationGraphDTO>> returnType =
+        new GenericType<RestResponse<OrchestrationGraphDTO>>() {};
 
     Map<String, String> queryParams = new HashMap<>();
     queryParams.put("planExecutionId", planExecutionId);
@@ -350,7 +412,7 @@ public class GraphGenerationFunctionalTest extends AbstractFunctionalTest {
       queryParams.put("startingSetupNodeId", startingNodeId);
     }
 
-    RestResponse<OrchestrationGraph> response = internalRequest(returnType, queryParams, requestUri);
+    RestResponse<OrchestrationGraphDTO> response = internalRequest(returnType, queryParams, requestUri);
 
     return response.getResource();
   }

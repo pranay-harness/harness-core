@@ -4,7 +4,7 @@ import io.harness.beans.EdgeList;
 import io.harness.beans.GraphVertex;
 import io.harness.beans.OrchestrationAdjacencyList;
 import io.harness.cdng.pipeline.executions.ExecutionStatus;
-import io.harness.dto.OrchestrationGraph;
+import io.harness.dto.OrchestrationGraphDTO;
 import io.harness.executions.beans.ExecutionGraph;
 import io.harness.executions.beans.ExecutionGraph.ExecutionGraphBuilder;
 import io.harness.executions.beans.ExecutionNode;
@@ -18,7 +18,7 @@ public class ExecutionGraphMapper {
   private ExecutionGraphMapper() {}
 
   @NonNull
-  public static ExecutionGraph toExecutionGraph(@NonNull OrchestrationGraph orchestrationGraph) {
+  public static ExecutionGraph toExecutionGraph(@NonNull OrchestrationGraphDTO orchestrationGraph) {
     ExecutionGraphBuilder executionGraphBuilder =
         ExecutionGraph.builder().rootNodeId(orchestrationGraph.getRootNodeIds().get(0));
 
@@ -28,7 +28,7 @@ public class ExecutionGraphMapper {
     adjacencyList.getGraphVertexMap().forEach((key, value) -> nodeMap.put(key, toExecutionNode(value)));
 
     Map<String, ExecutionNodeAdjacencyList> nodeAdjacencyListMap = new HashMap<>();
-    adjacencyList.getAdjacencyList().forEach(
+    adjacencyList.getAdjacencyMap().forEach(
         (key, value) -> nodeAdjacencyListMap.put(key, toExecutionNodeAdjacencyList(value)));
 
     return executionGraphBuilder.nodeMap(nodeMap).nodeAdjacencyListMap(nodeAdjacencyListMap).build();

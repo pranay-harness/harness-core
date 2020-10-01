@@ -1,22 +1,26 @@
 package io.harness.serializer.kryo;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
+
 import com.esotericsoftware.kryo.Kryo;
-import io.harness.beans.EdgeList;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.Graph;
 import io.harness.beans.GraphVertex;
-import io.harness.beans.OrchestrationAdjacencyList;
-import io.harness.beans.OrchestrationGraphInternal;
+import io.harness.beans.OrchestrationGraph;
 import io.harness.beans.Subgraph;
+import io.harness.beans.internal.EdgeListInternal;
+import io.harness.beans.internal.OrchestrationAdjacencyListInternal;
 import io.harness.serializer.KryoRegistrar;
 
+@OwnedBy(CDC)
 public class OrchestrationVisualizationKryoRegistrar implements KryoRegistrar {
   @Override
   public void register(Kryo kryo) {
     kryo.register(Graph.class, 3301);
     kryo.register(GraphVertex.class, 3302);
     kryo.register(Subgraph.class, 3303);
-    kryo.register(OrchestrationGraphInternal.class, 3304);
-    kryo.register(OrchestrationAdjacencyList.class, 3305);
-    kryo.register(EdgeList.class, 3306);
+    kryo.register(OrchestrationGraph.class, 3304);
+    kryo.register(OrchestrationAdjacencyListInternal.class, 3305);
+    kryo.register(EdgeListInternal.class, 3306);
   }
 }

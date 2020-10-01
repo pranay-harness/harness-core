@@ -14,11 +14,11 @@ import com.google.inject.Singleton;
 import io.harness.annotations.Redesign;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.beans.EdgeList;
 import io.harness.beans.GraphVertex;
-import io.harness.beans.OrchestrationAdjacencyList;
 import io.harness.beans.Subgraph;
 import io.harness.beans.converter.GraphVertexConverter;
+import io.harness.beans.internal.EdgeListInternal;
+import io.harness.beans.internal.OrchestrationAdjacencyListInternal;
 import io.harness.data.Outcome;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.engine.outcomes.OutcomeService;
@@ -50,7 +50,7 @@ public class GraphGenerator {
     return generate(startingNodeExId, nodeExecutions);
   }
 
-  public OrchestrationAdjacencyList generateAdjacencyList(
+  public OrchestrationAdjacencyListInternal generateAdjacencyList(
       String startingNodeExId, List<NodeExecution> nodeExecutions, boolean isOutcomePresent) {
     if (isEmpty(startingNodeExId)) {
       logger.warn("Starting node cannot be null");
@@ -60,7 +60,7 @@ public class GraphGenerator {
   }
 
   public void populateAdjacencyList(
-      OrchestrationAdjacencyList adjacencyListInternal, List<NodeExecution> nodeExecutions) {
+      OrchestrationAdjacencyListInternal adjacencyListInternal, List<NodeExecution> nodeExecutions) {
     nodeExecutions.sort(Comparator.comparing(NodeExecution::getCreatedAt));
 
     for (NodeExecution nodeExecution : nodeExecutions) {
@@ -68,9 +68,10 @@ public class GraphGenerator {
     }
   }
 
-  public void populateAdjacencyList(OrchestrationAdjacencyList adjacencyListInternal, NodeExecution nodeExecution) {
+  public void populateAdjacencyList(
+      OrchestrationAdjacencyListInternal adjacencyListInternal, NodeExecution nodeExecution) {
     Map<String, GraphVertex> graphVertexMap = adjacencyListInternal.getGraphVertexMap();
-    Map<String, EdgeList> adjacencyList = adjacencyListInternal.getAdjacencyList();
+    Map<String, EdgeListInternal> adjacencyList = adjacencyListInternal.getAdjacencyMap();
 
     String currentUuid = nodeExecution.getUuid();
     graphVertexMap.put(currentUuid, GraphVertexConverter.convertFrom(nodeExecution));
@@ -78,35 +79,36 @@ public class GraphGenerator {
     // compute adjList
     String parentId = null;
     List<String> prevIds = new ArrayList<>();
-    List<String> nextIds = new ArrayList<>();
     if (isIdPresent(nodeExecution.getPreviousId())) {
       adjacencyList.get(nodeExecution.getPreviousId()).getNextIds().add(currentUuid);
       prevIds.add(nodeExecution.getPreviousId());
     } else if (isIdPresent(nodeExecution.getParentId())) {
       parentId = nodeExecution.getParentId();
-      EdgeList parentEdgeList = adjacencyList.get(parentId);
+      EdgeListInternal parentEdgeList = adjacencyList.get(parentId);
       if (isChainNonInitialVertex(graphVertexMap.get(parentId).getMode(), parentEdgeList)) {
         appendToChainEnd(adjacencyList, parentEdgeList.getEdges().get(0), currentUuid, prevIds);
       } else {
         parentEdgeList.getEdges().add(currentUuid);
       }
     }
-    if (isIdPresent(nodeExecution.getNextId())) {
-      nextIds.add(nodeExecution.getNextId());
-    }
     adjacencyList.put(currentUuid,
-        EdgeList.builder().edges(new ArrayList<>()).nextIds(nextIds).prevIds(prevIds).parentId(parentId).build());
+        EdgeListInternal.builder()
+            .edges(new ArrayList<>())
+            .nextIds(new ArrayList<>())
+            .prevIds(prevIds)
+            .parentId(parentId)
+            .build());
   }
 
   boolean isIdPresent(String id) {
     return EmptyPredicate.isNotEmpty(id);
   }
 
-  boolean isChainNonInitialVertex(ExecutionMode mode, EdgeList parentEdgeList) {
+  boolean isChainNonInitialVertex(ExecutionMode mode, EdgeListInternal parentEdgeList) {
     return isChainMode(mode) && !parentEdgeList.getEdges().isEmpty();
   }
 
-  OrchestrationAdjacencyList generateList(
+  OrchestrationAdjacencyListInternal generateList(
       String startingNodeExId, List<NodeExecution> nodeExecutions, boolean isOutcomePresent) {
     final GraphGeneratorSession session = createSession(nodeExecutions);
     return session.generateListStartingFrom(startingNodeExId, isOutcomePresent);
@@ -136,8 +138,8 @@ public class GraphGenerator {
   }
 
   private void appendToChainEnd(
-      Map<String, EdgeList> adjacencyList, String firstChainId, String nextId, List<String> prevIds) {
-    EdgeList edgeList = adjacencyList.get(firstChainId);
+      Map<String, EdgeListInternal> adjacencyList, String firstChainId, String nextId, List<String> prevIds) {
+    EdgeListInternal edgeList = adjacencyList.get(firstChainId);
     String nextEdgeId = firstChainId;
     while (!edgeList.getNextIds().isEmpty()) {
       nextEdgeId = edgeList.getNextIds().get(0);
@@ -213,14 +215,15 @@ public class GraphGenerator {
       currentVertex.setNext(generateGraph(nextChainNodeId));
     }
 
-    private OrchestrationAdjacencyList generateListStartingFrom(String startingNodeId, boolean isOutcomePresent) {
+    private OrchestrationAdjacencyListInternal generateListStartingFrom(
+        String startingNodeId, boolean isOutcomePresent) {
       if (startingNodeId == null) {
         throw new InvalidRequestException("The starting node id cannot be null");
       }
 
       Map<String, String> chainMap = new HashMap<>();
       Map<String, GraphVertex> graphVertexMap = new HashMap<>();
-      Map<String, EdgeList> adjacencyList = new HashMap<>();
+      Map<String, EdgeListInternal> adjacencyList = new HashMap<>();
 
       LinkedList<String> queue = new LinkedList<>();
       queue.add(startingNodeId);
@@ -272,10 +275,13 @@ public class GraphGenerator {
           nextIds.add(nextNodeId);
         }
 
-        adjacencyList.put(currentNodeId, EdgeList.builder().edges(edges).nextIds(nextIds).build());
+        adjacencyList.put(currentNodeId, EdgeListInternal.builder().edges(edges).nextIds(nextIds).build());
       }
 
-      return OrchestrationAdjacencyList.builder().graphVertexMap(graphVertexMap).adjacencyList(adjacencyList).build();
+      return OrchestrationAdjacencyListInternal.builder()
+          .graphVertexMap(graphVertexMap)
+          .adjacencyMap(adjacencyList)
+          .build();
     }
 
     /**

@@ -1,5 +1,11 @@
 package io.harness.skip.service;
 
-import io.harness.dto.OrchestrationGraph;
+import static io.harness.annotations.dev.HarnessTeam.CDC;
 
-public interface VertexSkipperService { void removeSkippedVertices(OrchestrationGraph orchestrationGraph); }
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.beans.EphemeralOrchestrationGraph;
+
+@OwnedBy(CDC)
+public interface VertexSkipperService {
+  void removeSkippedVertices(EphemeralOrchestrationGraph orchestrationGraph);
+}
