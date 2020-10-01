@@ -28,6 +28,7 @@ import software.wings.beans.Pipeline;
 import software.wings.beans.PipelineStage;
 import software.wings.beans.PipelineStage.PipelineStageElement;
 import software.wings.beans.PipelineStage.WorkflowVariable;
+import software.wings.beans.RuntimeInputsConfig;
 import software.wings.beans.SkipCondition;
 import software.wings.beans.Variable;
 import software.wings.beans.Workflow;
@@ -80,6 +81,7 @@ public class PipelineStageYamlHandler extends BaseYamlHandler<Yaml, PipelineStag
 
     String appId = yamlHelper.getAppId(change.getAccountId(), change.getFilePath());
     notNullCheck("Could not retrieve valid app from path: " + change.getFilePath(), appId, USER);
+    String accountId = appService.getAccountIdByAppId(appId);
 
     PipelineStage stage = PipelineStage.builder().build();
     stage.setName(yaml.getStageName());
@@ -106,7 +108,18 @@ public class PipelineStageYamlHandler extends BaseYamlHandler<Yaml, PipelineStag
       generateBeanForApprovalStage(yaml, appId, properties);
     }
 
+    RuntimeInputsConfig.Yaml yamlConfig = yaml.getRuntimeInputs();
+    RuntimeInputsConfig inputsConfig = null;
+    if (yamlConfig != null) {
+      inputsConfig = RuntimeInputsConfig.builder()
+                         .timeout(yamlConfig.getTimeout())
+                         .timeoutAction(yamlConfig.getTimeoutAction())
+                         .runtimeInputVariables(yamlConfig.getRuntimeInputVariables())
+                         .userGroupIds(getUserGroupUuids(yamlConfig.getUserGroupNames(), accountId))
+                         .build();
+    }
     pipelineStageElement = PipelineStageElement.builder()
+                               .runtimeInputsConfig(inputsConfig)
                                .uuid(stageElementId)
                                .disableAssertion(disableAssertion)
                                .name(yaml.getName())
@@ -164,24 +177,27 @@ public class PipelineStageYamlHandler extends BaseYamlHandler<Yaml, PipelineStag
         String.valueOf(properties));
   }
 
-  private Object getUserGroupUuids(
+  private List<String> getUserGroupUuids(
       List<String> userGroupNameList, String accountId, Map<String, Object> yamlProperties) {
     if (isEmpty(userGroupNameList)) {
       if (yamlProperties.get("templateExpressions") == null) {
         throw new InvalidRequestException("user groups cannot be empty in non templatized approval");
       }
     }
-    if (userGroupNameList != null) {
-      List<String> userGroupUuids = new ArrayList<>();
-      for (String userGroupName : userGroupNameList) {
-        UserGroup userGroup = userGroupService.fetchUserGroupByName(accountId, userGroupName);
-        notNullCheck("User group " + userGroupName + "doesn't exist", userGroup);
-        userGroupUuids.add(userGroup.getUuid());
-      }
-      return userGroupUuids;
-    } else {
-      return userGroupNameList;
+    return getUserGroupUuids(userGroupNameList, accountId);
+  }
+
+  private List<String> getUserGroupUuids(List<String> userGroupNameList, String accountId) {
+    if (userGroupNameList == null) {
+      return null;
     }
+    List<String> userGroupUuids = new ArrayList<>();
+    for (String userGroupName : userGroupNameList) {
+      UserGroup userGroup = userGroupService.fetchUserGroupByName(accountId, userGroupName);
+      notNullCheck("User group " + userGroupName + " doesn't exist", userGroup);
+      userGroupUuids.add(userGroup.getUuid());
+    }
+    return userGroupUuids;
   }
 
   private String resolveEnvironmentId(Yaml yaml, String appId, Map<String, Object> properties, Workflow workflow) {
@@ -225,6 +241,7 @@ public class PipelineStageYamlHandler extends BaseYamlHandler<Yaml, PipelineStag
 
   @Override
   public Yaml toYaml(PipelineStage bean, String appId) {
+    String accountId = appService.getAccountIdByAppId(appId);
     PipelineStageElement stageElement = bean.getPipelineStageElements().get(0);
     notNullCheck("Pipeline stage element is null", stageElement, USER);
 
@@ -238,6 +255,17 @@ public class PipelineStageYamlHandler extends BaseYamlHandler<Yaml, PipelineStag
       generateYamlForApprovalStage(appId, stageElement, outputProperties);
     }
 
+    RuntimeInputsConfig inputsConfig = stageElement.getRuntimeInputsConfig();
+    RuntimeInputsConfig.Yaml yamlConfig = null;
+    if (inputsConfig != null) {
+      yamlConfig = RuntimeInputsConfig.Yaml.builder()
+                       .timeout(inputsConfig.getTimeout())
+                       .timeoutAction(inputsConfig.getTimeoutAction())
+                       .runtimeInputVariables(inputsConfig.getRuntimeInputVariables())
+                       .userGroupNames(getUserGroupNames(inputsConfig.getUserGroupIds(), accountId))
+                       .build();
+    }
+
     return Yaml.builder()
         .name(stageElement.getName())
         .stageName(bean.getName())
@@ -247,6 +275,7 @@ public class PipelineStageYamlHandler extends BaseYamlHandler<Yaml, PipelineStag
         .workflowName(workflowName)
         .workflowVariables(pipelineStageVariables)
         .properties(outputProperties.isEmpty() ? null : outputProperties)
+        .runtimeInputs(yamlConfig)
         .build();
   }
 
@@ -321,7 +350,7 @@ public class PipelineStageYamlHandler extends BaseYamlHandler<Yaml, PipelineStag
     return workflowName;
   }
 
-  private Object getUserGroupNames(List<String> userGroupList, String accountId) {
+  private List<String> getUserGroupNames(List<String> userGroupList, String accountId) {
     List<String> userGroupNames = new ArrayList<>();
     for (String userGroupId : userGroupList) {
       UserGroup userGroup = userGroupService.get(accountId, userGroupId);

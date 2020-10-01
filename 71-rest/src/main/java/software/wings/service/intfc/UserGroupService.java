@@ -179,7 +179,8 @@ public interface UserGroupService extends OwnedByAccount, OwnedByApplication {
 
   List<UserGroup> getUserGroupsFromUserInvite(UserInvite userInvite);
 
-  UserGroup fetchUserGroupByName(@NotEmpty String accountId, @NotEmpty String groupName);
+  UserGroup fetchUserGroupByName(
+      @NotEmpty String accountId, @NotEmpty(message = "User group name cannot be null") String groupName);
 
   UserGroup getAdminUserGroup(String accountId);
 
