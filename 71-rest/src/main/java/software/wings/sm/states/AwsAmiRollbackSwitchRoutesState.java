@@ -35,4 +35,10 @@ public class AwsAmiRollbackSwitchRoutesState extends AwsAmiSwitchRoutesState {
   public void setDownsizeOldAsg(boolean downsizeOldAsg) {
     super.setDownsizeOldAsg(downsizeOldAsg);
   }
+
+  @Override
+  @SchemaIgnore
+  public Integer getTimeoutMillis() {
+    return super.getTimeoutMillis();
+  }
 }

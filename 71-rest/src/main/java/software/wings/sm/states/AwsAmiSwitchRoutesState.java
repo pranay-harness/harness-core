@@ -12,6 +12,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.inject.Inject;
 
 import com.github.reinert.jjschema.Attributes;
+import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.beans.DelegateTask;
 import io.harness.beans.ExecutionStatus;
 import io.harness.delegate.beans.TaskData;
@@ -101,6 +102,7 @@ public class AwsAmiSwitchRoutesState extends State {
   }
 
   @Override
+  @SchemaIgnore
   public Integer getTimeoutMillis(ExecutionContext context) {
     AmiServiceSetupElement serviceSetupElement =
         (AmiServiceSetupElement) awsAmiServiceHelper.getSetupElementFromSweepingOutput(
