@@ -69,7 +69,6 @@ public class InfrastructureDefinition
   Support for Custom Deployment
    */
   private String deploymentTypeTemplateId;
-  private String deploymentTypeTemplateVersion;
   private transient String customDeploymentName;
 
   @JsonIgnore
@@ -81,7 +80,6 @@ public class InfrastructureDefinition
     infrastructureMapping.setDeploymentType(deploymentType.name());
     infrastructureMapping.setComputeProviderType(cloudProviderType.name());
     infrastructureMapping.setProvisionerId(provisionerId);
-    infrastructureMapping.setDeploymentTypeTemplateVersion(getDeploymentTypeTemplateVersion());
     infrastructureMapping.setCustomDeploymentTemplateId(deploymentTypeTemplateId);
     return infrastructureMapping;
   }
@@ -123,13 +121,11 @@ public class InfrastructureDefinition
      Support for Custom Deployment
       */
     private String deploymentTypeTemplateUri;
-    private String deploymentTypeTemplateVersion;
 
     @Builder
     public Yaml(String type, String harnessApiVersion, CloudProviderType cloudProviderType,
         DeploymentType deploymentType, List<CloudProviderInfrastructureYaml> infrastructure,
-        List<String> scopedServices, String provisioner, String deploymentTypeTemplateUri,
-        String deploymentTypeTemplateVersion) {
+        List<String> scopedServices, String provisioner, String deploymentTypeTemplateUri) {
       super(type, harnessApiVersion);
       setCloudProviderType(cloudProviderType);
       setDeploymentType(deploymentType);
@@ -137,7 +133,6 @@ public class InfrastructureDefinition
       setScopedServices(scopedServices);
       setProvisioner(provisioner);
       setDeploymentTypeTemplateUri(deploymentTypeTemplateUri);
-      setDeploymentTypeTemplateVersion(deploymentTypeTemplateVersion);
     }
   }
 }

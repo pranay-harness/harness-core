@@ -1223,7 +1223,7 @@ public class ExecutionContextImpl implements DeploymentExecutionContext {
     } else if (DeploymentType.CUSTOM.name().equals(phaseElement.getDeploymentType())) {
       final CustomDeploymentTypeDTO customDeploymentTypeDTO = customDeploymentTypeService.get(
           infrastructureMapping.getAccountId(), infrastructureMapping.getCustomDeploymentTemplateId(),
-          infrastructureMapping.getDeploymentTypeTemplateVersion());
+          ((CustomInfrastructureMapping) infrastructureMapping).getDeploymentTypeTemplateVersion());
       final Map<String, String> infraVariables = applyOverrides(customDeploymentTypeDTO.getInfraVariables(),
           ((CustomInfrastructureMapping) infrastructureMapping).getInfraVariables());
       builder.custom(InfraMappingElement.Custom.builder().vars(infraVariables).build());

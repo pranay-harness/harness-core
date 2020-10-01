@@ -15,13 +15,17 @@ public class CustomInfrastructureYamlHandler
     return Yaml.builder()
         .type(InfrastructureType.CUSTOM_INFRASTRUCTURE)
         .infraVariables(bean.getInfraVariables())
+        .deploymentTypeTemplateVersion(bean.getDeploymentTypeTemplateVersion())
         .build();
   }
 
   @Override
   public CustomInfrastructure upsertFromYaml(ChangeContext<Yaml> changeContext, List<ChangeContext> changeSetContext) {
     Yaml yaml = changeContext.getYaml();
-    return CustomInfrastructure.builder().infraVariables(yaml.getInfraVariables()).build();
+    return CustomInfrastructure.builder()
+        .infraVariables(yaml.getInfraVariables())
+        .deploymentTypeTemplateVersion(yaml.getDeploymentTypeTemplateVersion())
+        .build();
   }
 
   @Override

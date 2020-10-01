@@ -5,6 +5,7 @@ deploymentType: CUSTOM
 deploymentTypeTemplateUri: Harness/My-Deployment-Types/My-Webshphere
 infrastructure:
 - type: CUSTOM
+  deploymentTypeTemplateVersion: '1'
   infraVariables:
   - name: clusterName
     value: production-us-east-1

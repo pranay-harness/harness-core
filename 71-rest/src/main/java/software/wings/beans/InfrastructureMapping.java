@@ -102,7 +102,6 @@ public abstract class InfrastructureMapping
   private boolean sample;
 
   @Getter @Setter private String customDeploymentTemplateId;
-  @Getter @Setter private String deploymentTypeTemplateVersion;
 
   /**
    * Instantiates a new Infrastructure mapping.

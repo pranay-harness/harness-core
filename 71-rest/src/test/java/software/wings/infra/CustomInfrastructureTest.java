@@ -30,6 +30,7 @@ public class CustomInfrastructureTest extends WingsBaseTest {
         CustomInfrastructure.builder()
             .customDeploymentName("my-deploymentype")
             .infraVariables(Arrays.asList(NameValuePair.builder().name("name").value("value").build()))
+            .deploymentTypeTemplateVersion("1.1")
             .build();
 
     final CustomInfrastructureMapping infraMapping =
@@ -40,6 +41,7 @@ public class CustomInfrastructureTest extends WingsBaseTest {
     assertThat(infraMapping.getInfraMappingType()).isEqualTo(InfrastructureMappingType.CUSTOM.name());
     assertThat(infraMapping.getComputeProviderSettingId()).isEqualTo(CustomInfrastructure.DUMMY_CLOUD_PROVIDER);
     assertThat(customInfrastructure.getCloudProviderId()).isEqualTo(CustomInfrastructure.DUMMY_CLOUD_PROVIDER);
+    assertThat(customInfrastructure.getDeploymentTypeTemplateVersion()).isEqualTo("1.1");
   }
 
   @Test

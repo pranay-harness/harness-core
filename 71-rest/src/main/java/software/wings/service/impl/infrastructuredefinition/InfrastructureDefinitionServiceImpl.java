@@ -545,7 +545,7 @@ public class InfrastructureDefinitionServiceImpl implements InfrastructureDefini
       notEmptyCheck("Deployment Template Must Be Present", infraDefinition.getDeploymentTypeTemplateId());
       final CustomDeploymentTypeDTO customDeploymentTypeDTO =
           customDeploymentTypeService.get(infraDefinition.getAccountId(), infraDefinition.getDeploymentTypeTemplateId(),
-              infraDefinition.getDeploymentTypeTemplateVersion());
+              ((CustomInfrastructure) infraDefinition.getInfrastructure()).getDeploymentTypeTemplateVersion());
       final CustomInfrastructure infra = (CustomInfrastructure) infraDefinition.getInfrastructure();
       validateInfraVariables(customDeploymentTypeDTO.getInfraVariables(), infra.getInfraVariables());
       infra.setInfraVariables(
