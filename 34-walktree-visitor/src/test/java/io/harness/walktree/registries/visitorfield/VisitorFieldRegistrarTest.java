@@ -5,7 +5,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import com.google.inject.Inject;
 
-import io.harness.WalkTreeBaseTest;
+import io.harness.WalkTreeTestBase;
 import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
 import io.harness.walktree.registries.registrars.VisitableFieldRegistrar;
@@ -17,7 +17,7 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
-public class VisitorFieldRegistrarTest extends WalkTreeBaseTest {
+public class VisitorFieldRegistrarTest extends WalkTreeTestBase {
   @Inject Map<String, VisitableFieldRegistrar> visitableFieldRegistrarMap;
 
   @Test

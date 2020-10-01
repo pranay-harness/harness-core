@@ -77,6 +77,7 @@ modules = [
     "//25-ng-async-task-grpc-server",
     "//25-ng-manager-service-driver",
     "//27-orchestration-persistence",
+    "//34-walktree-visitor",
 ]
 
 filegroup(

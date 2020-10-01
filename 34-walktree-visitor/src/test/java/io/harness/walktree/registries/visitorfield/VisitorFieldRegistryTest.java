@@ -6,7 +6,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import com.google.inject.Inject;
 
-import io.harness.WalkTreeBaseTest;
+import io.harness.WalkTreeTestBase;
 import io.harness.category.element.UnitTests;
 import io.harness.registries.exceptions.DuplicateRegistryException;
 import io.harness.registries.exceptions.UnregisteredKeyAccessException;
@@ -14,7 +14,7 @@ import io.harness.rule.Owner;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
-public class VisitorFieldRegistryTest extends WalkTreeBaseTest {
+public class VisitorFieldRegistryTest extends WalkTreeTestBase {
   @Inject VisitorFieldRegistry visitorFieldRegistry;
 
   @Test

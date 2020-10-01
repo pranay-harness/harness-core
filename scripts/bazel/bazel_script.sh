@@ -114,6 +114,7 @@ build_bazel_module 25-manager-delegate-service-driver
 build_bazel_module 25-ng-async-task-grpc-server
 build_bazel_module 25-ng-manager-service-driver
 build_bazel_module 27-orchestration-persistence
+build_bazel_module 34-walktree-visitor
 build_java_proto_module 13-grpc-api
 build_java_proto_module 19-delegate-tasks-beans
 build_java_proto_module 20-delegate-beans
