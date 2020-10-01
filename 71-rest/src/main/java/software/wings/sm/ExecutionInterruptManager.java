@@ -5,6 +5,7 @@
 package software.wings.sm;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
+import static io.harness.beans.ExecutionStatus.DISCONTINUING;
 import static io.harness.beans.ExecutionStatus.ERROR;
 import static io.harness.beans.ExecutionStatus.FAILED;
 import static io.harness.beans.ExecutionStatus.NEW;
@@ -99,7 +100,7 @@ public class ExecutionInterruptManager {
           .put(IGNORE, asList(PAUSED, WAITING))
           .put(RETRY, asList(WAITING, FAILED, ERROR))
           .put(ABORT, asList(NEW, STARTING, RUNNING, PAUSED, WAITING))
-          .put(MARK_EXPIRED, asList(NEW, STARTING, RUNNING, PAUSED, WAITING))
+          .put(MARK_EXPIRED, asList(NEW, STARTING, RUNNING, PAUSED, WAITING, DISCONTINUING))
           .put(PAUSE, asList(NEW, STARTING, RUNNING))
           .build();
 
