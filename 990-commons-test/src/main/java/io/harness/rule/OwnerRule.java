@@ -279,6 +279,28 @@ public class OwnerRule implements TestRule {
 
   private static String prDeveloperId = findDeveloperId(System.getenv(GHPRB_PULL_AUTHOR_EMAIL));
 
+  private static LeaderInfo buildLeaderInfo(String team, String user, String email) {
+    return LeaderInfo.builder().user(user).team(team).build();
+  }
+
+  private static LeaderInfo getLeaderInfoFromActiveDevInfo(String leaderName) {
+    DevInfo devInfo = active.get(leaderName);
+    return buildLeaderInfo(devInfo.getTeam(), leaderName, devInfo.getEmail());
+  }
+
+  private static final Map<String, LeaderInfo> leaderInfo =
+      ImmutableMap.<String, LeaderInfo>builder()
+          .put(PLATFORM, getLeaderInfoFromActiveDevInfo(VIKAS))
+          .put(CONTINUOUS_DEPLOYMENT_PLATFORM, getLeaderInfoFromActiveDevInfo(ANUBHAW))
+          .put(CONTINUOUS_DEPLOYMENT_CORE, getLeaderInfoFromActiveDevInfo(POOJA))
+          .put(CONTINUOUS_VERIFICATION, getLeaderInfoFromActiveDevInfo(SRIRAM))
+          .put(CONTINUOUS_EFFICIENCY, getLeaderInfoFromActiveDevInfo(PUNEET))
+          .put(CONTINUOUS_INTEGRATION, getLeaderInfoFromActiveDevInfo(SHIVAKUMAR))
+          .put(DEVELOPER_EXPERIENCE, getLeaderInfoFromActiveDevInfo(RAMA))
+          .put(SWAT, getLeaderInfoFromActiveDevInfo(BRETT))
+          .put(DELEGATE, getLeaderInfoFromActiveDevInfo(GEORGE))
+          .build();
+
   @Override
   public Statement apply(Statement statement, Description description) {
     Owner owner = description.getAnnotation(Owner.class);
@@ -413,13 +435,16 @@ public class OwnerRule implements TestRule {
     if (devInfo == null) {
       return;
     }
-
+    LeaderInfo teamLeader = leaderInfo.get(devInfo.getTeam());
     String identify = devInfo.getSlack() == null ? developer : "<@" + devInfo.getSlack() + ">";
 
     try {
       File file = new File(format("%s/owners/%s/%s", System.getProperty("java.io.tmpdir"), type, identify));
 
       file.getParentFile().mkdirs();
+      if (teamLeader != null && !teamLeader.getEmail().equals(devInfo.getEmail())) {
+        fileOwnerAs(teamLeader.getUser(), type + "/.leaders");
+      }
       if (!file.createNewFile()) {
         logger.debug("The owner {} was already set", identify);
       }
