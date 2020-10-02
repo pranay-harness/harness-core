@@ -5,7 +5,7 @@ import lombok.Value;
 
 @Value
 @Builder
-public class DevInfo {
+public class UserInfo {
   private String email;
   private String slack;
   private String jira;
