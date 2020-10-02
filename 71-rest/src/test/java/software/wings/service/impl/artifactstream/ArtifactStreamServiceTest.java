@@ -58,6 +58,7 @@ import com.google.inject.Inject;
 import io.harness.beans.EmbeddedUser;
 import io.harness.category.element.UnitTests;
 import io.harness.exception.InvalidRequestException;
+import io.harness.exception.ShellExecutionException;
 import io.harness.exception.WingsException;
 import io.harness.observer.Subject;
 import io.harness.persistence.HPersistence;
@@ -137,6 +138,7 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
   private static final String PACKAGE_NAME_MAVEN = "GROUP_ID:ARTIFACT_ID";
   private static final String PACKAGE_NAME_NUGET = "PACKAGE_NAME";
   private static final String SCRIPT_STRING = "echo Hello World!! and echo ${secrets.getValue(My Secret)}";
+  private static final String SCRIPT_STRING_WITH_ERROR = "echo 'Hello World!!";
   private static final String SCRIPT_STRING_UPDATED = "echo updated script";
 
   @Inject HPersistence persistence;
@@ -3243,6 +3245,25 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
     verify(artifactService, times(0)).deleteWhenArtifactSourceNameChanged(customArtifactStream);
     verify(triggerService).updateByArtifactStream(updatedArtifactStream.getUuid());
     verify(buildSourceService, times(1)).validateArtifactSource(savedArtifactSteam);
+  }
+
+  @Test
+  @Owner(developers = ROHITKARELIA)
+  @Category(UnitTests.class)
+  public void shouldThrowExceptionIfCustomArtifactSourceScriptHasErrors() {
+    ArtifactStream customArtifactStream = CustomArtifactStream.builder()
+                                              .accountId(ACCOUNT_ID)
+                                              .appId(APP_ID)
+                                              .serviceId(SERVICE_ID)
+                                              .name("Custom Artifact Stream" + System.currentTimeMillis())
+                                              .scripts(Arrays.asList(CustomArtifactStream.Script.builder()
+                                                                         .action(Action.FETCH_VERSIONS)
+                                                                         .scriptString(SCRIPT_STRING_WITH_ERROR)
+                                                                         .build()))
+                                              .build();
+
+    when(buildSourceService.validateArtifactSource(customArtifactStream)).thenThrow(ShellExecutionException.class);
+    assertThatThrownBy(() -> createArtifactStream(customArtifactStream)).isInstanceOf(ShellExecutionException.class);
   }
 
   @Test
