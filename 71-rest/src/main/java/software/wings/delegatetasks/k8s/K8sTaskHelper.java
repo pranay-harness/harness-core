@@ -5,7 +5,6 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.filesystem.FileIo.createDirectoryIfDoesNotExist;
 import static io.harness.govern.Switch.unhandled;
 import static io.harness.helm.HelmConstants.HELM_PATH_PLACEHOLDER;
-import static io.harness.k8s.K8sConstants.KUBECONFIG_FILENAME;
 import static io.harness.k8s.manifest.ManifestHelper.values_filename;
 import static io.harness.k8s.model.Kind.Namespace;
 import static io.harness.logging.LogLevel.ERROR;
@@ -55,7 +54,6 @@ import software.wings.delegatetasks.DelegateLogService;
 import software.wings.delegatetasks.helm.HelmTaskHelper;
 import software.wings.helpers.ext.helm.HelmCommandTemplateFactory;
 import software.wings.helpers.ext.helm.request.HelmChartConfigParams;
-import software.wings.helpers.ext.helm.request.HelmCommandRequest;
 import software.wings.helpers.ext.helm.response.HelmChartInfo;
 import software.wings.helpers.ext.k8s.request.K8sDelegateManifestConfig;
 import software.wings.helpers.ext.k8s.request.K8sDeleteTaskParameters;
@@ -86,12 +84,6 @@ public class K8sTaskHelper {
   @Inject private KustomizeTaskHelper kustomizeTaskHelper;
   @Inject private OpenShiftDelegateService openShiftDelegateService;
   @Inject private K8sTaskHelperBase k8sTaskHelperBase;
-
-  public boolean doHelmStatusCheck(Kubectl client, KubernetesResourceId resourceId,
-      HelmCommandRequest helmInstallCommandRequest, ExecutionLogCallback executionLogCallback) throws Exception {
-    return k8sTaskHelperBase.doStatusCheck(client, resourceId, helmInstallCommandRequest.getWorkingDir(),
-        helmInstallCommandRequest.getOcPath(), KUBECONFIG_FILENAME, executionLogCallback);
-  }
 
   public boolean doStatusCheckAllResourcesForHelm(Kubectl client, List<KubernetesResourceId> resourceIds, String ocPath,
       String workingDir, String namespace, String kubeconfigPath, ExecutionLogCallback executionLogCallback)
