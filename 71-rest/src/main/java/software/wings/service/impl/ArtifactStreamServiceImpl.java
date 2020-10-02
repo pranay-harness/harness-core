@@ -33,7 +33,6 @@ import static software.wings.beans.artifact.ArtifactStreamType.SFTP;
 import static software.wings.beans.artifact.ArtifactStreamType.SMB;
 import static software.wings.common.TemplateConstants.LATEST_TAG;
 
-import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
@@ -47,6 +46,7 @@ import io.harness.data.validator.EntityNameValidator;
 import io.harness.event.handler.impl.EventPublishHelper;
 import io.harness.exception.ExceptionUtils;
 import io.harness.exception.InvalidRequestException;
+import io.harness.exception.ShellExecutionException;
 import io.harness.exception.UnauthorizedUsageRestrictionsException;
 import io.harness.observer.Subject;
 import io.harness.persistence.CreatedAtAware;
@@ -142,6 +142,8 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
   // Restrict to docker only artifact streams.
   private static final List<String> dockerOnlyArtifactStreams = Collections.unmodifiableList(
       asList(ArtifactStreamType.DOCKER.name(), ECR.name(), GCR.name(), ACR.name(), CUSTOM.name()));
+  private static final String EXCEPTION_OBSERVERS_OF_ARTIFACT_STREAM =
+      "Encountered exception while informing the observers of Artifact Stream";
 
   @Inject private WingsPersistence wingsPersistence;
   @Inject private ExecutorService executorService;
@@ -551,7 +553,7 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
     try {
       subject.fireInform(ArtifactStreamServiceObxxxxxxxx:onSaved, artifactStream);
     } catch (Exception e) {
-      logger.error("Encountered exception while informing the observers of Artifact Stream", e);
+      logger.error(EXCEPTION_OBSERVERS_OF_ARTIFACT_STREAM, e);
     }
   }
 
@@ -924,7 +926,16 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
             artifactStream.fetchAppId(), artifactStream.getSettingId(), artifactStream.fetchArtifactStreamAttributes());
       }
     } else if (CUSTOM.name().equals(artifactStreamType) && artifactStream.shouldValidate()) {
-      buildSourceService.validateArtifactSource(artifactStream);
+      try {
+        buildSourceService.validateArtifactSource(artifactStream);
+      } catch (ShellExecutionException ex) {
+        String message = "Unable to execute script since it contains errors " + ex.getMessage();
+        if (ex.getCause() != null) {
+          message = message + ex.getCause().getMessage();
+        }
+        logger.warn(message, ex);
+        throw new ShellExecutionException("Error occurred during script execution. Please verify the script.");
+      }
     }
   }
 
@@ -946,7 +957,7 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
 
     List<String> serviceNames = services.stream().map(Service::getName).collect(toList());
     throw new InvalidRequestException(
-        format("Artifact Stream linked to Services [%s]", Joiner.on(", ").join(serviceNames)), USER);
+        format("Artifact Stream linked to Services [%s]", String.join(", ", serviceNames)), USER);
   }
 
   private void validateWorkflowUsages(String artifactStreamId) {
@@ -956,7 +967,7 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
     }
     List<String> workflowNames = workflows.stream().map(Workflow::getName).collect(toList());
     throw new InvalidRequestException(
-        format("Artifact Stream linked to Workflows [%s]", Joiner.on(", ").join(workflowNames)), USER);
+        format("Artifact Stream linked to Workflows [%s]", String.join(", ", workflowNames)), USER);
   }
 
   private void validateTriggerUsages(String accountId, String appId, String artifactStreamId) {
@@ -969,7 +980,7 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
 
     if (isNotEmpty(triggerNames)) {
       throw new InvalidRequestException(
-          format("Artifact Stream associated as a trigger action to triggers [%s]", Joiner.on(", ").join(triggerNames)),
+          format("Artifact Stream associated as a trigger action to triggers [%s]", String.join(", ", triggerNames)),
           USER);
     }
   }
