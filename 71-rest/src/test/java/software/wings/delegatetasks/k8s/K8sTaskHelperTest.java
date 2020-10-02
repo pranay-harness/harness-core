@@ -22,9 +22,11 @@ import static io.harness.rule.OwnerRule.VAIBHAV_SI;
 import static io.harness.rule.OwnerRule.YOGESH;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
+import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyBoolean;
 import static org.mockito.Matchers.anyList;
 import static org.mockito.Matchers.anyLong;
 import static org.mockito.Matchers.anyString;
@@ -88,6 +90,7 @@ import io.harness.k8s.model.Release;
 import io.harness.k8s.model.Release.Status;
 import io.harness.k8s.model.ReleaseHistory;
 import io.harness.logging.CommandExecutionStatus;
+import io.harness.logging.LogCallback;
 import io.harness.rule.Owner;
 import org.junit.Before;
 import org.junit.Test;
@@ -115,6 +118,8 @@ import software.wings.helpers.ext.helm.response.HelmChartInfo;
 import software.wings.helpers.ext.k8s.request.K8sApplyTaskParameters;
 import software.wings.helpers.ext.k8s.request.K8sDelegateManifestConfig;
 import software.wings.helpers.ext.k8s.request.K8sDeleteTaskParameters;
+import software.wings.helpers.ext.k8s.request.K8sRollingDeployRollbackTaskParameters;
+import software.wings.helpers.ext.k8s.request.K8sTaskParameters;
 import software.wings.helpers.ext.k8s.response.K8sApplyResponse;
 import software.wings.helpers.ext.k8s.response.K8sTaskExecutionResponse;
 import software.wings.helpers.ext.k8s.response.K8sTaskResponse;
@@ -122,6 +127,7 @@ import software.wings.helpers.ext.kustomize.KustomizeTaskHelper;
 import software.wings.helpers.ext.openshift.OpenShiftDelegateService;
 import software.wings.service.intfc.GitService;
 import software.wings.service.intfc.security.EncryptionService;
+import wiremock.com.google.common.collect.ImmutableList;
 import wiremock.com.google.common.collect.Lists;
 
 import java.io.File;
@@ -1688,5 +1694,88 @@ public class K8sTaskHelperTest extends WingsBaseTest {
 
     assertThat(releaseArgumentCaptor.getValue()).isEqualTo("release");
     assertThat(releaseHistory).isEqualTo("configmap");
+  }
+
+  @Test
+  @Owner(developers = ACASIAN)
+  @Category(UnitTests.class)
+  public void testShouldRunStatusCheckForHelmResources() throws Exception {
+    Kubectl client = Kubectl.client("kubectl", "config-path");
+    List<KubernetesResourceId> resourceId =
+        ImmutableList.of(KubernetesResourceId.builder().namespace("default").build());
+    helper.doStatusCheckAllResourcesForHelm(client, resourceId, "", ".", "default", "path", new ExecutionLogCallback());
+
+    verify(mockK8sTaskHelperBase, times(1))
+        .doStatusCheckForAllResources(any(Kubectl.class), anyList(), any(K8sDelegateTaskParams.class), anyString(),
+            any(ExecutionLogCallback.class), anyBoolean());
+  }
+
+  @Test
+  @Owner(developers = ACASIAN)
+  @Category(UnitTests.class)
+  public void testShouldGetEmptyResourcesFromRemoteManifests() throws Exception {
+    K8sDelegateTaskParams params = K8sDelegateTaskParams.builder()
+                                       .goTemplateClientPath(".")
+                                       .kubeconfigPath("kubeconfig")
+                                       .kubectlPath("kubectlPath")
+                                       .build();
+    K8sTaskParameters k8sTaskParameters = K8sRollingDeployRollbackTaskParameters.builder().build();
+    K8sDelegateManifestConfig config =
+        K8sDelegateManifestConfig.builder()
+            .manifestStoreTypes(Remote)
+            .manifestFiles(singletonList(ManifestFile.builder().accountId("1234").build()))
+            .build();
+
+    FileData fileData = FileData.builder().fileName("test").build();
+    Mockito.when(mockK8sTaskHelperBase.readFilesFromDirectory(anyString(), anyList(), any(ExecutionLogCallback.class)))
+        .thenReturn(singletonList(fileData));
+
+    Mockito
+        .when(mockK8sTaskHelperBase.renderManifestFilesForGoTemplate(
+            any(K8sDelegateTaskParams.class), anyList(), anyList(), any(LogCallback.class), anyLong()))
+        .thenReturn(emptyList());
+
+    List<KubernetesResource> resources =
+        helper.getResourcesFromManifests(params, config, "manifestDir", singletonList("file.yaml"),
+            singletonList("values.yaml"), "release", "default", new ExecutionLogCallback(), k8sTaskParameters);
+    assertThat(resources).isEmpty();
+  }
+
+  @Test
+  @Owner(developers = ACASIAN)
+  @Category(UnitTests.class)
+  public void testShouldGetResourcesFromRemoteManifests() throws Exception {
+    K8sDelegateTaskParams params = K8sDelegateTaskParams.builder()
+                                       .goTemplateClientPath(".")
+                                       .kubeconfigPath("kubeconfig")
+                                       .kubectlPath("kubectlPath")
+                                       .build();
+    K8sTaskParameters k8sTaskParameters = K8sRollingDeployRollbackTaskParameters.builder().build();
+    K8sDelegateManifestConfig config =
+        K8sDelegateManifestConfig.builder()
+            .manifestStoreTypes(Remote)
+            .manifestFiles(singletonList(ManifestFile.builder().accountId("1234").build()))
+            .build();
+    KubernetesResource resource = KubernetesResource.builder().spec("spec").build();
+
+    FileData fileData = FileData.builder().fileName("test").build();
+    Mockito.when(mockK8sTaskHelperBase.readFilesFromDirectory(anyString(), anyList(), any(ExecutionLogCallback.class)))
+        .thenReturn(singletonList(fileData));
+
+    Mockito
+        .when(mockK8sTaskHelperBase.renderManifestFilesForGoTemplate(
+            any(K8sDelegateTaskParams.class), anyList(), anyList(), any(LogCallback.class), anyLong()))
+        .thenReturn(singletonList(fileData));
+
+    Mockito.when(mockK8sTaskHelperBase.readManifests(anyList(), any(LogCallback.class)))
+        .thenReturn(singletonList(resource));
+    doNothing()
+        .when(mockK8sTaskHelperBase)
+        .setNamespaceToKubernetesResourcesIfRequired(singletonList(resource), "default");
+
+    List<KubernetesResource> resources =
+        helper.getResourcesFromManifests(params, config, "manifestDir", singletonList("file.yaml"),
+            singletonList("values.yaml"), "release", "default", new ExecutionLogCallback(), k8sTaskParameters);
+    assertThat(resources).isNotEmpty();
   }
 }

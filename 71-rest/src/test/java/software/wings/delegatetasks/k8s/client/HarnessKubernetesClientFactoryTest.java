@@ -1,5 +1,6 @@
 package software.wings.delegatetasks.k8s.client;
 
+import static io.harness.rule.OwnerRule.ACASIAN;
 import static io.harness.rule.OwnerRule.AVMOHAN;
 import static io.harness.rule.OwnerRule.BOJANA;
 import static io.harness.rule.OwnerRule.ROHIT;
@@ -12,6 +13,12 @@ import static org.powermock.api.mockito.PowerMockito.when;
 
 import com.google.inject.Inject;
 
+import io.fabric8.kubernetes.client.Adapters;
+import io.fabric8.kubernetes.client.DefaultKubernetesClient;
+import io.fabric8.kubernetes.client.ExtensionsAPIGroupClient;
+import io.fabric8.kubernetes.client.ExtensionsAPIGroupExtensionAdapter;
+import io.fabric8.kubernetes.client.GenericKubernetesClient;
+import io.fabric8.kubernetes.client.KubernetesClient;
 import io.harness.category.element.UnitTests;
 import io.harness.exception.InvalidRequestException;
 import io.harness.k8s.KubernetesHelperService;
@@ -22,6 +29,7 @@ import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import software.wings.WingsBaseTest;
+import software.wings.delegatetasks.k8s.exception.K8sClusterException;
 import software.wings.helpers.ext.container.ContainerDeploymentDelegateHelper;
 import software.wings.helpers.ext.k8s.request.K8sClusterConfig;
 
@@ -89,5 +97,45 @@ public class HarnessKubernetesClientFactoryTest extends WingsBaseTest {
     verify(kubernetesHelperService, times(1)).getKubernetesClient(kubernetesConfig);
     verify(containerDeploymentDelegateHelper, times(1)).getKubernetesConfig(k8sClusterConfig);
     assertThat(kubernetesConfig.getMasterUrl()).isEqualTo("https://int-capi-rancher.cncpl.us:443/k8s/clusters/c-pv9p9");
+  }
+
+  @Test
+  @Owner(developers = ACASIAN)
+  @Category(UnitTests.class)
+  public void shouldAdaptDefaultK8sClient() {
+    KubernetesConfig kubernetesConfig =
+        KubernetesConfig.builder().masterUrl("https://int-capi-rancher.cncpl.us:443/k8s/clusters/c-pv9p9").build();
+    K8sClusterConfig k8sClusterConfig = K8sClusterConfig.builder().build();
+    KubernetesClient client = new DefaultKubernetesClient();
+
+    when(containerDeploymentDelegateHelper.getKubernetesConfig(any(K8sClusterConfig.class)))
+        .thenReturn(kubernetesConfig);
+    when(kubernetesHelperService.getKubernetesClient(any(KubernetesConfig.class))).thenReturn(client);
+
+    Adapters.register(new ExtensionsAPIGroupExtensionAdapter());
+
+    harnessKubernetesClientFactory.newAdaptedClient(k8sClusterConfig, ExtensionsAPIGroupClient.class);
+
+    verify(kubernetesHelperService, times(1)).getKubernetesClient(kubernetesConfig);
+    verify(containerDeploymentDelegateHelper, times(1)).getKubernetesConfig(k8sClusterConfig);
+  }
+
+  @Test
+  @Owner(developers = ACASIAN)
+  @Category(UnitTests.class)
+  public void shouldThrowExceptionWhenNoAdaptableClient() {
+    KubernetesConfig kubernetesConfig =
+        KubernetesConfig.builder().masterUrl("https://int-capi-rancher.cncpl.us:443/k8s/clusters/c-pv9p9").build();
+    K8sClusterConfig k8sClusterConfig = K8sClusterConfig.builder().build();
+    when(containerDeploymentDelegateHelper.getKubernetesConfig(any(K8sClusterConfig.class)))
+        .thenReturn(kubernetesConfig);
+
+    try {
+      harnessKubernetesClientFactory.newAdaptedClient(k8sClusterConfig, GenericKubernetesClient.class);
+    } catch (Exception ex) {
+      verify(kubernetesHelperService, times(1)).getKubernetesClient(kubernetesConfig);
+      verify(containerDeploymentDelegateHelper, times(1)).getKubernetesConfig(k8sClusterConfig);
+      assertThat(ex).isInstanceOf(K8sClusterException.class);
+    }
   }
 }
