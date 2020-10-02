@@ -1,9 +1,14 @@
 package io.harness.rule;
 
+import static org.assertj.core.api.Assertions.assertThat;
+
 import lombok.extern.slf4j.Slf4j;
 import org.junit.rules.TestRule;
 import org.junit.runner.Description;
 import org.junit.runners.model.Statement;
+
+import java.util.Set;
+import java.util.stream.Collectors;
 
 @Slf4j
 public class ThreadRule implements TestRule {
@@ -12,17 +17,27 @@ public class ThreadRule implements TestRule {
     return new Statement() {
       @Override
       public void evaluate() throws Throwable {
-        int startThreads = Thread.activeCount();
+        Set<String> startThreads = collectThreads();
         statement.evaluate();
-        int endThreads = Thread.activeCount();
+        Set<String> endThreads = collectThreads();
 
-        if (endThreads > startThreads) {
-          String message = String.format("%d - threads leaked", endThreads - startThreads);
-          logger.error(message);
-          if ("enforce".equals(System.getenv("THREAD_LEAKS"))) {
-            throw new RuntimeException(message);
-          }
+        int max_allowed_thread_leaks =
+            Integer.parseInt(System.getenv().getOrDefault("MAX_ALLOWED_THREAD_LEAKS", "1000"));
+
+        int diff = endThreads.size() - startThreads.size();
+        if (diff > max_allowed_thread_leaks) {
+          assertThat(startThreads).isEqualTo(endThreads);
         }
+      }
+
+      private Set<String> collectThreads() {
+        return Thread.getAllStackTraces()
+            .keySet()
+            .stream()
+            .map(thread -> thread.getName())
+            .filter(thread -> !"main".equals(thread))
+            .filter(thread -> !"Finalizer".equals(thread))
+            .collect(Collectors.toSet());
       }
     };
   }
