@@ -121,7 +121,7 @@ public class K8sPodInfoTasklet implements Tasklet {
 
     PrunedInstanceData prunedInstanceData = instanceDataService.fetchPrunedInstanceDataWithName(
         accountId, clusterId, podInfo.getNodeName(), publishedMessage.getOccurredAt());
-    if (null != prunedInstanceData) {
+    if (null != prunedInstanceData && prunedInstanceData.getInstanceId() != null) {
       Map<String, String> nodeMetaData = prunedInstanceData.getMetaData();
       metaData.put(InstanceMetaDataConstants.REGION, nodeMetaData.get(InstanceMetaDataConstants.REGION));
       metaData.put(InstanceMetaDataConstants.ZONE, nodeMetaData.get(InstanceMetaDataConstants.ZONE));

@@ -51,6 +51,10 @@ if [[ "" != "$QUERY_BATCH_SIZE" ]]; then
   yq write -i $CONFIG_FILE batchQueryConfig.queryBatchSize "$QUERY_BATCH_SIZE"
 fi
 
+if [[ "" != "$SYNC_JOB_DISABLED" ]]; then
+  yq write -i $CONFIG_FILE batchQueryConfig.syncJobDisabled "$SYNC_JOB_DISABLED"
+fi
+
 if [[ "" != "$S3_SYNC_CONFIG_ACCESSKEY" ]]; then
   yq write -i $CONFIG_FILE awsS3SyncConfig.awsAccessKey "$S3_SYNC_CONFIG_ACCESSKEY"
 fi
