@@ -5,7 +5,7 @@ import static io.harness.rule.OwnerRule.PRASHANT;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-import io.harness.OrchestrationBeansTest;
+import io.harness.OrchestrationBeansTestBase;
 import io.harness.category.element.UnitTests;
 import io.harness.exception.InvalidRequestException;
 import io.harness.rule.Owner;
@@ -13,7 +13,7 @@ import io.harness.state.StepType;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
-public class PlanTest extends OrchestrationBeansTest {
+public class PlanTest extends OrchestrationBeansTestBase {
   private static final String PLAN_ID = generateUuid();
   private static final String DUMMY_NODE_1_ID = generateUuid();
   private static final String DUMMY_NODE_2_ID = generateUuid();

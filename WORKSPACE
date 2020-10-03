@@ -1173,6 +1173,8 @@ maven_install(
         "net.jodah:failsafe:2.2.0",
         "org.apache.commons:commons-email:1.5",
         "org.springframework:spring-core:5.2.6.RELEASE",
+        "com.google.auto.service:auto-service:1.0-rc6",
+        "org.hibernate:hibernate-validator:jar:5.2.4.Final",
     ],
     maven_install_json = "//:maven_install.json",
     repositories = [

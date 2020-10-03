@@ -6,7 +6,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import com.google.common.collect.ImmutableMap;
 
-import io.harness.OrchestrationBeansTest;
+import io.harness.OrchestrationBeansTestBase;
 import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
 import io.harness.state.StepType;
@@ -16,7 +16,7 @@ import org.junit.experimental.categories.Category;
 import java.util.ArrayList;
 import java.util.List;
 
-public class AmbianceTest extends OrchestrationBeansTest {
+public class AmbianceTest extends OrchestrationBeansTestBase {
   private static final String ACCOUNT_ID = generateUuid();
   private static final String APP_ID = generateUuid();
   private static final String EXECUTION_INSTANCE_ID = generateUuid();

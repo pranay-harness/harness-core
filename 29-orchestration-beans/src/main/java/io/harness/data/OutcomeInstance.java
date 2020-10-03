@@ -3,9 +3,7 @@ package io.harness.data;
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 
 import io.harness.ambiance.Level;
-import io.harness.ambiance.Level.LevelKeys;
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.data.OutcomeInstance.OutcomeInstanceKeys;
 import io.harness.data.validator.Trimmed;
 import io.harness.mongo.index.CdIndex;
 import io.harness.mongo.index.Field;
@@ -29,23 +27,16 @@ import java.util.List;
 @OwnedBy(CDC)
 @Value
 @Builder
-@FieldNameConstants(innerTypeName = "OutcomeInstanceKeys")
-
 @NgUniqueIndex(name = "levelRuntimeIdUniqueIdx",
-    fields =
-    {
-      @Field(OutcomeInstanceKeys.planExecutionId)
-      , @Field(OutcomeInstanceKeys.levelRuntimeIdIdx), @Field(OutcomeInstanceKeys.name)
-    })
-@CdIndex(name = "producedBySetupIdIdx",
-    fields =
-    {
-      @Field(OutcomeInstanceKeys.planExecutionId)
-      , @Field(OutcomeInstanceKeys.producedBy + "." + LevelKeys.setupId), @Field(OutcomeInstanceKeys.name)
-    })
-@CdIndex(name = "planExecutionIdIdx", fields = { @Field(OutcomeInstanceKeys.planExecutionId) })
+    fields = { @Field("planExecutionId")
+               , @Field("levelRuntimeIdIdx"), @Field("name") })
+@CdIndex(
+    name = "producedBySetupIdIdx", fields = { @Field("planExecutionId")
+                                              , @Field("producedBy.setupId"), @Field("name") })
+@CdIndex(name = "planExecutionIdIdx", fields = { @Field("planExecutionId") })
 @Entity(value = "outcomeInstances")
 @Document("outcomeInstances")
+@FieldNameConstants(innerTypeName = "OutcomeInstanceKeys")
 public class OutcomeInstance implements PersistentEntity, UuidAccess {
   @Wither @Id @org.mongodb.morphia.annotations.Id String uuid;
   @NotEmpty String planExecutionId;
