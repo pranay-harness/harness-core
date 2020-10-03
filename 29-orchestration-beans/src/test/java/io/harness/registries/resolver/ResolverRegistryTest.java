@@ -6,7 +6,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import com.google.inject.Inject;
 
-import io.harness.OrchestrationBeansTest;
+import io.harness.OrchestrationBeansTestBase;
 import io.harness.ambiance.Ambiance;
 import io.harness.category.element.UnitTests;
 import io.harness.references.RefObject;
@@ -22,7 +22,7 @@ import lombok.Value;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
-public class ResolverRegistryTest extends OrchestrationBeansTest {
+public class ResolverRegistryTest extends OrchestrationBeansTestBase {
   @Inject private ResolverRegistry resolverRegistry;
 
   @Test

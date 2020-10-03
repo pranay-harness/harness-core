@@ -5,9 +5,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import com.google.inject.Inject;
 
-import io.harness.OrchestrationBeansTest;
+import io.harness.OrchestrationBeansTestBase;
 import io.harness.category.element.UnitTests;
-import io.harness.execution.events.AsyncOrchestrationEventHandler;
 import io.harness.execution.events.AsyncOrchestrationEventHandlerProxy;
 import io.harness.execution.events.OrchestrationEvent;
 import io.harness.execution.events.OrchestrationEventHandler;
@@ -23,7 +22,7 @@ import org.junit.experimental.categories.Category;
 
 import java.util.List;
 
-public class OrchestrationEventHandlerRegistryTest extends OrchestrationBeansTest {
+public class OrchestrationEventHandlerRegistryTest extends OrchestrationBeansTestBase {
   @Inject OrchestrationEventHandlerRegistry registry;
 
   @Test
@@ -35,13 +34,13 @@ public class OrchestrationEventHandlerRegistryTest extends OrchestrationBeansTes
     OrchestrationSubject subject = registry.obtain(OrchestrationEventType.ORCHESTRATION_START);
     assertThat(subject).isNotNull();
     assertThat(subject).isInstanceOf(OrchestrationSubject.class);
-    List<SyncOrchestrationEventHandler> syncEventHandlers =
+    List<SyncOrchestrationEventHandlerProxy> syncEventHandlers =
         Reflect.on((Object) Reflect.on(subject).get("syncSubject")).get("observers");
     assertThat(syncEventHandlers).isNotEmpty();
     assertThat(syncEventHandlers).hasSize(1);
     assertThat(syncEventHandlers.get(0)).isInstanceOf(SyncOrchestrationEventHandlerProxy.class);
 
-    List<AsyncOrchestrationEventHandler> asyncEventHandlers =
+    List<AsyncOrchestrationEventHandlerProxy> asyncEventHandlers =
         Reflect.on((Object) Reflect.on(subject).get("asyncSubject")).get("observers");
     assertThat(asyncEventHandlers).isNotEmpty();
     assertThat(asyncEventHandlers).hasSize(1);

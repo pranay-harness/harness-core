@@ -23,8 +23,8 @@ import javax.validation.constraints.NotNull;
 @Redesign
 @Value
 @Builder
-@EqualsAndHashCode
 @FieldNameConstants(innerTypeName = "LevelKeys")
+@EqualsAndHashCode
 public class Level {
   String setupId;
   String runtimeId;

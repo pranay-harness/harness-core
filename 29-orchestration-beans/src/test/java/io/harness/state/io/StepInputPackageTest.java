@@ -5,7 +5,7 @@ import static io.harness.rule.OwnerRule.PRASHANT;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assumptions.assumeThat;
 
-import io.harness.OrchestrationBeansTest;
+import io.harness.OrchestrationBeansTestBase;
 import io.harness.category.element.UnitTests;
 import io.harness.references.SweepingOutputRefObject;
 import io.harness.rule.Owner;
@@ -15,7 +15,7 @@ import org.junit.experimental.categories.Category;
 
 import java.util.List;
 
-public class StepInputPackageTest extends OrchestrationBeansTest {
+public class StepInputPackageTest extends OrchestrationBeansTestBase {
   StepInputPackage inputPackage = StepInputPackage.builder()
                                       .input(ResolvedRefInput.builder()
                                                  .refObject(SweepingOutputRefObject.builder()

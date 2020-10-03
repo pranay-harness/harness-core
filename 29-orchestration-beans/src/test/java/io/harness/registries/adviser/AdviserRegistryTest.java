@@ -6,7 +6,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import com.google.inject.Inject;
 
-import io.harness.OrchestrationBeansTest;
+import io.harness.OrchestrationBeansTestBase;
 import io.harness.adviser.Advise;
 import io.harness.adviser.Adviser;
 import io.harness.adviser.AdviserType;
@@ -19,7 +19,7 @@ import io.harness.rule.Owner;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
-public class AdviserRegistryTest extends OrchestrationBeansTest {
+public class AdviserRegistryTest extends OrchestrationBeansTestBase {
   @Inject private AdviserRegistry adviserRegistry;
 
   @Test

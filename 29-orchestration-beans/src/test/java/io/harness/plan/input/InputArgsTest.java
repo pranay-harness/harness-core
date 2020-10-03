@@ -5,13 +5,13 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import com.google.common.collect.ImmutableMap;
 
-import io.harness.OrchestrationBeansTest;
+import io.harness.OrchestrationBeansTestBase;
 import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
-public class InputArgsTest extends OrchestrationBeansTest {
+public class InputArgsTest extends OrchestrationBeansTestBase {
   @Test
   @Owner(developers = GARVIT)
   @Category(UnitTests.class)
