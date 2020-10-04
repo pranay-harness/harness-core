@@ -2,6 +2,7 @@ package software.wings.delegatetasks.azure.taskhandler;
 
 import static io.harness.azure.model.AzureConstants.DOWN_SCALE_COMMAND_UNIT;
 import static io.harness.azure.model.AzureConstants.DOWN_SCALE_STEADY_STATE_WAIT_COMMAND_UNIT;
+import static io.harness.azure.model.AzureConstants.GALLERY_IMAGE_ID_PATTERN;
 import static io.harness.azure.model.AzureConstants.HARNESS_AUTOSCALING_GROUP_TAG_NAME;
 import static io.harness.azure.model.AzureConstants.NUMBER_OF_LATEST_VERSIONS_TO_KEEP;
 import static io.harness.azure.model.AzureConstants.SETUP_COMMAND_UNIT;
@@ -25,12 +26,22 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
+import com.microsoft.azure.management.compute.GalleryImage;
+import com.microsoft.azure.management.compute.GalleryImageIdentifier;
 import com.microsoft.azure.management.compute.VirtualMachineScaleSet;
 import io.harness.azure.model.AzureConfig;
+import io.harness.azure.model.AzureMachineImageArtifact;
+import io.harness.azure.model.AzureMachineImageArtifact.ImageType;
+import io.harness.azure.model.AzureMachineImageArtifact.MachineImageReference;
+import io.harness.azure.model.AzureMachineImageArtifact.MachineImageReference.OsState;
+import io.harness.azure.model.AzureMachineImageArtifact.OSType;
 import io.harness.azure.model.AzureUserAuthVMInstanceData;
 import io.harness.azure.model.AzureVMSSAutoScaleSettingsData;
+import io.harness.azure.model.AzureVMSSTagsData;
 import io.harness.azure.utility.AzureResourceUtility;
+import io.harness.delegate.beans.azure.AzureMachineImageArtifactDTO;
 import io.harness.delegate.beans.azure.AzureVMAuthDTO;
+import io.harness.delegate.beans.azure.GalleryImageDefinitionDTO;
 import io.harness.delegate.task.azure.AzureVMSSPreDeploymentData;
 import io.harness.delegate.task.azure.request.AzureVMSSSetupTaskParameters;
 import io.harness.delegate.task.azure.request.AzureVMSSTaskParameters;
@@ -254,9 +265,11 @@ public class AzureVMSSSetupTaskHandler extends AzureVMSSTaskHandler {
     String subscriptionId = setupTaskParameters.getSubscriptionId();
     String resourceGroupName = setupTaskParameters.getResourceGroupName();
     String baseVirtualMachineScaleSetName = setupTaskParameters.getBaseVMSSName();
-    String infraMappingId = setupTaskParameters.getInfraMappingId();
-    boolean isBlueGreen = setupTaskParameters.isBlueGreen();
+    AzureMachineImageArtifactDTO imageArtifactDTO = setupTaskParameters.getImageArtifactDTO();
 
+    AzureMachineImageArtifact imageArtifact =
+        getAzureMachineImageArtifact(azureConfig, subscriptionId, resourceGroupName, imageArtifactDTO, logCallback);
+    AzureVMSSTagsData azureVMSSTagsData = getAzureVMSSTagsData(setupTaskParameters, newHarnessRevision);
     AzureUserAuthVMInstanceData azureUserAuthVMInstanceData = buildUserAuthVMInstanceData(setupTaskParameters);
 
     // Get base VMSS based on provided scale set name, subscriptionId, resourceGroupName provided by task parameters
@@ -267,8 +280,64 @@ public class AzureVMSSSetupTaskHandler extends AzureVMSSTaskHandler {
     // Create new VMSS based on Base VMSS configuration
     logCallback.saveExecutionLog(
         format("Creating new Virtual Machine Scale Set [%s]", newVirtualMachineScaleSetName), INFO);
-    azureComputeClient.createVirtualMachineScaleSet(azureConfig, baseVirtualMachineScaleSet, infraMappingId,
-        newVirtualMachineScaleSetName, newHarnessRevision, azureUserAuthVMInstanceData, isBlueGreen);
+    azureComputeClient.createVirtualMachineScaleSet(azureConfig, baseVirtualMachineScaleSet,
+        newVirtualMachineScaleSetName, azureUserAuthVMInstanceData, imageArtifact, azureVMSSTagsData);
+  }
+
+  @VisibleForTesting
+  AzureMachineImageArtifact getAzureMachineImageArtifact(AzureConfig azureConfig, String subscriptionId,
+      String resourceGroupName, AzureMachineImageArtifactDTO azureMachineImageArtifactDTO,
+      ExecutionLogCallback logCallback) {
+    GalleryImageDefinitionDTO imageDefinition = azureMachineImageArtifactDTO.getImageDefinition();
+    String imageDefinitionName = imageDefinition.getDefinitionName();
+    String imageGalleryName = imageDefinition.getGalleryName();
+    String imageVersion = imageDefinition.getVersion();
+
+    String galleryImageId = String.format(GALLERY_IMAGE_ID_PATTERN, subscriptionId, resourceGroupName, imageGalleryName,
+        imageDefinitionName, imageVersion);
+
+    logCallback.saveExecutionLog(format("Start getting gallery image references id [%s]", galleryImageId), INFO);
+    Optional<GalleryImage> galleryImageOp = azureComputeClient.getGalleryImage(
+        azureConfig, subscriptionId, resourceGroupName, imageGalleryName, imageGalleryName);
+    GalleryImage galleryImage = galleryImageOp.orElseThrow(
+        ()
+            -> new InvalidRequestException(format(
+                "Image reference cannot be found, galleryImageId: %s, imageDefinitionName: %s, subscriptionId: %s, resourceGroupName: %s, imageVersion: %s",
+                imageGalleryName, imageDefinitionName, subscriptionId, resourceGroupName, imageVersion)));
+
+    String osState = galleryImage.osState().toString();
+    GalleryImageIdentifier identifier = galleryImage.identifier();
+    String publisher = identifier.publisher();
+    String offer = identifier.offer();
+    String sku = identifier.sku();
+
+    logCallback.saveExecutionLog(
+        format("Using gallery image id [%s], publisher [%s], offer [%s],sku [%s], osState [%s]", galleryImageId,
+            publisher, offer, sku, osState),
+        INFO);
+    return AzureMachineImageArtifact.builder()
+        .imageType(ImageType.valueOf(azureMachineImageArtifactDTO.getImageType().name()))
+        .osType(OSType.valueOf(azureMachineImageArtifactDTO.getImageOSType().name()))
+        .imageReference(MachineImageReference.builder()
+                            .id(galleryImageId)
+                            .publisher(publisher)
+                            .offer(offer)
+                            .sku(sku)
+                            .osState(OsState.fromString(osState))
+                            .version(imageVersion)
+                            .build())
+        .build();
+  }
+
+  private AzureVMSSTagsData getAzureVMSSTagsData(
+      AzureVMSSSetupTaskParameters setupTaskParameters, Integer newHarnessRevision) {
+    String infraMappingId = setupTaskParameters.getInfraMappingId();
+    boolean isBlueGreen = setupTaskParameters.isBlueGreen();
+    return AzureVMSSTagsData.builder()
+        .harnessRevision(newHarnessRevision)
+        .infraMappingId(infraMappingId)
+        .isBlueGreen(isBlueGreen)
+        .build();
   }
 
   private AzureUserAuthVMInstanceData buildUserAuthVMInstanceData(AzureVMSSSetupTaskParameters setupTaskParameters) {

@@ -27,10 +27,13 @@ import com.microsoft.azure.management.resources.Subscription;
 import io.harness.azure.client.AzureAutoScaleSettingsClient;
 import io.harness.azure.client.AzureComputeClient;
 import io.harness.azure.model.AzureConfig;
+import io.harness.azure.model.AzureMachineImageArtifact;
 import io.harness.azure.model.AzureUserAuthVMInstanceData;
 import io.harness.azure.model.AzureVMSSAutoScaleSettingsData;
+import io.harness.azure.model.AzureVMSSTagsData;
 import io.harness.azure.utility.AzureResourceUtility;
 import io.harness.category.element.UnitTests;
+import io.harness.delegate.beans.azure.AzureMachineImageArtifactDTO;
 import io.harness.delegate.beans.azure.AzureVMAuthDTO;
 import io.harness.delegate.beans.azure.AzureVMAuthType;
 import io.harness.delegate.task.azure.request.AzureVMSSSetupTaskParameters;
@@ -85,6 +88,7 @@ public class AzureVMSSSetupTaskHandlerTest extends WingsBaseTest {
     VirtualMachineScaleSet baseVirtualMachineScaleSet = mock(VirtualMachineScaleSet.class);
     AzureConfig azureConfig = AzureConfig.builder().build();
     AzureVMSSSetupTaskParameters azureVMSSSetupTaskParameters = buildAzureVMSSSetupTaskParameters();
+    AzureMachineImageArtifact azureMachineImageArtifact = mock(AzureMachineImageArtifact.class);
 
     Instant instant = Instant.now();
     Date dateVersion1 = Date.from(instant.minus(5, ChronoUnit.DAYS));
@@ -171,8 +175,8 @@ public class AzureVMSSSetupTaskHandlerTest extends WingsBaseTest {
             any(AzureConfig.class), eq("subscriptionId"), eq("resourceGroupName"), eq("mostRecentActiveVMSSName"));
     doNothing()
         .when(mockAzureComputeClient)
-        .createVirtualMachineScaleSet(any(AzureConfig.class), any(VirtualMachineScaleSet.class), eq("infraMappingId"),
-            anyString(), anyInt(), any(AzureUserAuthVMInstanceData.class), anyBoolean());
+        .createVirtualMachineScaleSet(any(AzureConfig.class), any(VirtualMachineScaleSet.class), anyString(),
+            any(AzureUserAuthVMInstanceData.class), any(AzureMachineImageArtifact.class), any(AzureVMSSTagsData.class));
 
     // buildAzureVMSSSetupTaskResponse
     doReturn(Optional.of("{baseScalingPolicies: {...}}"))
@@ -186,6 +190,11 @@ public class AzureVMSSSetupTaskHandlerTest extends WingsBaseTest {
         .getAutoScaleSettingJSONByTargetResourceId(
             any(AzureConfig.class), eq("resourceGroupName"), eq("mostRecentActiveVMSSId"));
 
+    doReturn(azureMachineImageArtifact)
+        .when(azureVMSSSetupTaskHandler)
+        .getAzureMachineImageArtifact(any(AzureConfig.class), eq("subscriptionId"), eq("resourceGroupName"),
+            any(AzureMachineImageArtifactDTO.class), any());
+
     AzureVMSSTaskExecutionResponse response =
         azureVMSSSetupTaskHandler.executeTaskInternal(azureVMSSSetupTaskParameters, azureConfig);
 
@@ -195,8 +204,8 @@ public class AzureVMSSSetupTaskHandlerTest extends WingsBaseTest {
             any(AzureConfig.class), eq("subscriptionId"), eq("resourceGroupName"), anyString());
 
     verify(mockAzureComputeClient, times(1))
-        .createVirtualMachineScaleSet(any(AzureConfig.class), any(VirtualMachineScaleSet.class), eq("infraMappingId"),
-            anyString(), anyInt(), any(AzureUserAuthVMInstanceData.class), anyBoolean());
+        .createVirtualMachineScaleSet(any(AzureConfig.class), any(VirtualMachineScaleSet.class), anyString(),
+            any(AzureUserAuthVMInstanceData.class), any(AzureMachineImageArtifact.class), any(AzureVMSSTagsData.class));
 
     assertThat(response).isNotNull();
     AzureVMSSTaskResponse azureVMSSTaskResponse = response.getAzureVMSSTaskResponse();
@@ -229,7 +238,6 @@ public class AzureVMSSSetupTaskHandlerTest extends WingsBaseTest {
         .appId("appId")
         .accountId("accountId")
         .activityId("activityId")
-        .artifactRevision("artifactRevision")
         .autoScalingSteadyStateVMSSTimeout(10)
         .baseVMSSName("baseVMSSName")
         .blueGreen(false)

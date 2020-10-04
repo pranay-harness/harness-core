@@ -94,4 +94,9 @@ public interface AzureConstants {
       "Parameter azureLoadBalancerDetail is required and cannot be null";
   String UNRECOGNIZED_PARAMETERS = "Parameters of unrecognized class: [%s] found while executing deploy step.";
   String UNRECOGNIZED_TASK = "Unrecognized task params while running azure vmss task: [%s]";
+  String GALLERY_NAME_NULL_VALIDATION_MSG = "Parameter galleryName is required and cannot be null";
+  String GALLERY_IMAGE_NAME_NULL_VALIDATION_MSG = "Parameter imageName is required and cannot be null";
+
+  String GALLERY_IMAGE_ID_PATTERN =
+      "/subscriptions/%s/resourceGroups/%s/providers/Microsoft.Compute/galleries/%s/images/%s/versions/%s";
 }

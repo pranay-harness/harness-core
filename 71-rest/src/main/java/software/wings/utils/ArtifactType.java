@@ -22,6 +22,8 @@ import static software.wings.beans.command.CommandUnitType.SETUP_ENV;
 import static software.wings.beans.command.DownloadArtifactCommandUnit.Builder.aDownloadArtifactCommandUnit;
 import static software.wings.beans.command.ExecCommandUnit.Builder.anExecCommandUnit;
 import static software.wings.service.impl.aws.model.AwsConstants.AMI_SETUP_COMMAND_NAME;
+import static software.wings.service.impl.workflow.WorkflowServiceHelper.AZURE_VMSS_DEPLOY;
+import static software.wings.service.impl.workflow.WorkflowServiceHelper.AZURE_VMSS_SETUP;
 import static software.wings.service.impl.workflow.WorkflowServiceHelper.PCF_RESIZE;
 import static software.wings.service.impl.workflow.WorkflowServiceHelper.PCF_SETUP;
 import static software.wings.sm.states.AwsAmiServiceDeployState.ASG_COMMAND_NAME;
@@ -671,7 +673,41 @@ public enum ArtifactType {
 
     @Override
     public List<Command> getDefaultCommands() {
-      return emptyList();
+      return asList(getAzureMachineImageSetupCommandUnit(), getAzureMachineImageDeployCommandUnit());
+    }
+
+    private Command getAzureMachineImageSetupCommandUnit() {
+      return aCommand()
+          .withCommandType(CommandType.SETUP)
+          .withGraph(aGraph()
+                         .withGraphName(AZURE_VMSS_SETUP)
+                         .addNodes(GraphNode.builder()
+                                       .origin(true)
+                                       .id(graphIdGenerator("node"))
+                                       .name(AZURE_VMSS_SETUP)
+                                       .type(AZURE_MACHINE_IMAGE.name())
+                                       .build())
+                         .buildPipeline())
+          .build();
+    }
+
+    /**
+     * Get Code Deploy Command
+     * @return
+     */
+    private Command getAzureMachineImageDeployCommandUnit() {
+      return aCommand()
+          .withCommandType(CommandType.INSTALL)
+          .withGraph(aGraph()
+                         .withGraphName(AZURE_VMSS_DEPLOY)
+                         .addNodes(GraphNode.builder()
+                                       .origin(true)
+                                       .id(graphIdGenerator("node"))
+                                       .name(AZURE_VMSS_DEPLOY)
+                                       .type(AZURE_MACHINE_IMAGE.name())
+                                       .build())
+                         .buildPipeline())
+          .build();
     }
   },
 
