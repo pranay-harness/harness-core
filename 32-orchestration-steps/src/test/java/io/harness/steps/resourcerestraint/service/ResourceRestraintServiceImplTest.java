@@ -13,7 +13,7 @@ import static org.mockito.Mockito.when;
 import com.google.inject.Inject;
 
 import io.fabric8.utils.Lists;
-import io.harness.OrchestrationStepsTest;
+import io.harness.OrchestrationStepsTestBase;
 import io.harness.ambiance.Ambiance;
 import io.harness.ambiance.Level;
 import io.harness.category.element.UnitTests;
@@ -39,7 +39,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
-public class ResourceRestraintServiceImplTest extends OrchestrationStepsTest {
+public class ResourceRestraintServiceImplTest extends OrchestrationStepsTestBase {
   private static final String PLAN = "PLAN";
   private static final String OTHER = "OTHER";
   @Inject private ResourceRestraintInstanceRepository restraintInstanceRepository;

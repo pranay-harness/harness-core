@@ -11,7 +11,7 @@ import static org.mockito.Mockito.when;
 import com.google.inject.Inject;
 import com.google.inject.Injector;
 
-import io.harness.OrchestrationTest;
+import io.harness.OrchestrationTestBase;
 import io.harness.category.element.UnitTests;
 import io.harness.execution.events.AsyncOrchestrationEventHandlerProxy;
 import io.harness.execution.events.OrchestrationEvent;
@@ -28,7 +28,7 @@ import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 
-public class OrchestrationEventEmitterTest extends OrchestrationTest {
+public class OrchestrationEventEmitterTest extends OrchestrationTestBase {
   @InjectMocks @Inject private OrchestrationEventEmitter eventEmitter;
   @InjectMocks @Inject private OrchestrationEventListener eventListener;
   @Mock OrchestrationEventHandlerRegistry registry;

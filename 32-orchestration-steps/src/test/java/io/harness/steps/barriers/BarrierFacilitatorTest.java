@@ -11,7 +11,7 @@ import static org.mockito.Mockito.when;
 import com.google.inject.Inject;
 
 import io.fabric8.utils.Lists;
-import io.harness.OrchestrationStepsTest;
+import io.harness.OrchestrationStepsTestBase;
 import io.harness.ambiance.Ambiance;
 import io.harness.category.element.UnitTests;
 import io.harness.facilitator.DefaultFacilitatorParams;
@@ -27,7 +27,7 @@ import org.mockito.Mock;
 
 import java.util.Collections;
 
-public class BarrierFacilitatorTest extends OrchestrationStepsTest {
+public class BarrierFacilitatorTest extends OrchestrationStepsTestBase {
   @Mock private BarrierService barrierService;
   @Inject @InjectMocks private BarrierFacilitator barrierFacilitator;
 

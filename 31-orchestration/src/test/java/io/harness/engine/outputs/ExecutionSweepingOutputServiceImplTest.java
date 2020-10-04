@@ -7,7 +7,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import com.google.inject.Inject;
 
-import io.harness.OrchestrationTest;
+import io.harness.OrchestrationTestBase;
 import io.harness.ambiance.Ambiance;
 import io.harness.ambiance.AmbianceUtils;
 import io.harness.ambiance.Level;
@@ -24,7 +24,7 @@ import io.harness.utils.DummySweepingOutput;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
-public class ExecutionSweepingOutputServiceImplTest extends OrchestrationTest {
+public class ExecutionSweepingOutputServiceImplTest extends OrchestrationTestBase {
   private static final String STEP_RUNTIME_ID = generateUuid();
   private static final String STEP_SETUP_ID = generateUuid();
 

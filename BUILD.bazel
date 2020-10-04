@@ -78,6 +78,9 @@ modules = [
     "//25-ng-manager-service-driver",
     "//27-orchestration-persistence",
     "//29-orchestration-beans",
+    "//31-orchestration",
+    "//32-orchestration-steps",
+    "//33-orchestration-visualization",
     "//34-walktree-visitor",
 ]
 

@@ -11,7 +11,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
 
-import io.harness.OrchestrationTest;
+import io.harness.OrchestrationTestBase;
 import io.harness.adviser.Advise;
 import io.harness.adviser.Adviser;
 import io.harness.adviser.AdviserObtainment;
@@ -49,7 +49,7 @@ import org.junit.experimental.categories.Category;
 import java.time.Duration;
 import java.util.Map;
 
-public class OrchestrationEngineTest extends OrchestrationTest {
+public class OrchestrationEngineTest extends OrchestrationTestBase {
   @Inject private AdviserRegistry adviserRegistry;
   @Inject private StepRegistry stepRegistry;
   @Inject private OrchestrationService orchestrationService;

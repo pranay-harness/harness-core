@@ -9,7 +9,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 
-import io.harness.OrchestrationVisualizationTest;
+import io.harness.OrchestrationVisualizationTestBase;
 import io.harness.ambiance.Ambiance;
 import io.harness.beans.OrchestrationGraph;
 import io.harness.cache.SpringMongoStore;
@@ -32,7 +32,7 @@ import java.util.concurrent.TimeUnit;
 /**
  * Test class for {@link OrchestrationEndEventHandler}
  */
-public class OrchestrationEndEventHandlerTest extends OrchestrationVisualizationTest {
+public class OrchestrationEndEventHandlerTest extends OrchestrationVisualizationTestBase {
   @Inject private SpringMongoStore mongoStore;
 
   @Inject PlanExecutionService planExecutionService;

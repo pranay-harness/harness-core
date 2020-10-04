@@ -1175,6 +1175,10 @@ maven_install(
         "org.springframework:spring-core:5.2.6.RELEASE",
         "com.google.auto.service:auto-service:1.0-rc6",
         "org.hibernate:hibernate-validator:jar:5.2.4.Final",
+        "ru.vyarus:guice-validator:1.2.0",
+        "guru.nidi:graphviz-java:0.16.3",
+        "guru.nidi.com.kitfox:svgSalamander:1.1.3",
+        "guru.nidi:graphviz-rough:0.16.3",
     ],
     maven_install_json = "//:maven_install.json",
     repositories = [
@@ -1194,7 +1198,7 @@ maven_install(
     artifacts = [
         "antlr:antlr:2.7.2",
         "org.antlr:antlr4-runtime:4.7.2",
-        "com.puppycrawl.tools:checkstyle:8.5",
+        "com.puppycrawl.tools:checkstyle:8.18",
         "commons-beanutils:commons-beanutils:1.9.2",
         "info.picocli:picocli:3.8.2",
         "commons-collections:commons-collections:3.2.2",

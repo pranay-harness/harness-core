@@ -6,7 +6,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import com.google.inject.Inject;
 
-import io.harness.OrchestrationTest;
+import io.harness.OrchestrationTestBase;
 import io.harness.category.element.UnitTests;
 import io.harness.execution.NodeExecution;
 import io.harness.execution.status.Status;
@@ -18,7 +18,7 @@ import io.harness.utils.AmbianceTestUtils;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
-public class NodeExecutionServiceImplTest extends OrchestrationTest {
+public class NodeExecutionServiceImplTest extends OrchestrationTestBase {
   @Inject private NodeExecutionService nodeExecutionService;
 
   @Test

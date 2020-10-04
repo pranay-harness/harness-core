@@ -6,7 +6,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import com.google.inject.Inject;
 
-import io.harness.OrchestrationTest;
+import io.harness.OrchestrationTestBase;
 import io.harness.ambiance.Ambiance;
 import io.harness.category.element.UnitTests;
 import io.harness.data.Outcome;
@@ -22,7 +22,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
-public class OutcomeServiceImplTest extends OrchestrationTest {
+public class OutcomeServiceImplTest extends OrchestrationTestBase {
   @Inject private OutcomeService outcomeService;
 
   @Test

@@ -14,7 +14,7 @@ import static org.mockito.Mockito.when;
 
 import com.google.inject.Inject;
 
-import io.harness.OrchestrationStepsTest;
+import io.harness.OrchestrationStepsTestBase;
 import io.harness.ambiance.Ambiance;
 import io.harness.ambiance.Level;
 import io.harness.category.element.UnitTests;
@@ -43,7 +43,7 @@ import org.mockito.Mock;
 
 import java.util.Collections;
 
-public class ResourceRestraintStepTest extends OrchestrationStepsTest {
+public class ResourceRestraintStepTest extends OrchestrationStepsTestBase {
   private static final String CLAIMANT_ID = generateUuid();
   private static final String RESOURCE_RESTRAINT_ID = generateUuid();
   private static final String RESOURCE_UNIT = generateUuid();

@@ -36,9 +36,9 @@
         <!--<module>25-ng-manager-service-driver</module>-->
         <!--<module>27-orchestration-persistence</module>-->
         <!--<module>29-orchestration-beans</module>-->
-        <module>31-orchestration</module>
-        <module>32-orchestration-steps</module>
-        <module>33-orchestration-visualization</module>
+        <!--<module>31-orchestration</module>-->
+        <!--<module>32-orchestration-steps</module>-->
+        <!--<module>33-orchestration-visualization</module>-->
         <!--<module>34-walktree-visitor</module>-->
         <module>35-yaml-beans</module>
         <module>38-execution-plan</module>

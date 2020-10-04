@@ -12,7 +12,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import com.google.inject.Inject;
 
-import io.harness.OrchestrationTest;
+import io.harness.OrchestrationTestBase;
 import io.harness.category.element.UnitTests;
 import io.harness.interrupts.Interrupt;
 import io.harness.rule.Owner;
@@ -22,7 +22,7 @@ import org.junit.experimental.categories.Category;
 
 import java.util.List;
 
-public class InterruptServiceImplTest extends OrchestrationTest {
+public class InterruptServiceImplTest extends OrchestrationTestBase {
   @Inject private InterruptService interruptService;
 
   @Test

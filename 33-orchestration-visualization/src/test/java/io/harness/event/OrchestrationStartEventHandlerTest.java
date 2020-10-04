@@ -8,7 +8,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import com.google.inject.Inject;
 
-import io.harness.OrchestrationVisualizationTest;
+import io.harness.OrchestrationVisualizationTestBase;
 import io.harness.ambiance.Ambiance;
 import io.harness.beans.OrchestrationGraph;
 import io.harness.category.element.UnitTests;
@@ -29,7 +29,7 @@ import java.util.concurrent.TimeUnit;
 /**
  * Test class for {@link OrchestrationStartEventHandler}
  */
-public class OrchestrationStartEventHandlerTest extends OrchestrationVisualizationTest {
+public class OrchestrationStartEventHandlerTest extends OrchestrationVisualizationTestBase {
   @Inject private PlanExecutionService planExecutionService;
   @Inject private GraphGenerationService graphGenerationService;
   @Inject private OrchestrationStartEventHandler orchestrationStartEventHandler;

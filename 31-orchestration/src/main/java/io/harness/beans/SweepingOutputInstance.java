@@ -20,7 +20,6 @@ import lombok.Getter;
 import lombok.Setter;
 import lombok.Singular;
 import lombok.Value;
-import lombok.experimental.FieldNameConstants;
 import lombok.experimental.NonFinal;
 import lombok.experimental.Wither;
 import org.mongodb.morphia.annotations.Entity;
@@ -70,22 +69,35 @@ import javax.validation.constraints.NotNull;
     })
 @Entity(value = "sweepingOutput2", noClassnameStored = true)
 @HarnessEntity(exportable = false)
-@FieldNameConstants(innerTypeName = "SweepingOutputKeys")
-public class SweepingOutputInstance implements PersistentEntity, UuidAccess, CreatedAtAware {
-  @Id private String uuid;
-  private String appId;
-  private String pipelineExecutionId;
-  @Singular private List<String> workflowExecutionIds;
-  private String phaseExecutionId;
-  private String stateExecutionId;
+public final class SweepingOutputInstance implements PersistentEntity, UuidAccess, CreatedAtAware {
+  @Id private final String uuid;
+  private final String appId;
+  private final String pipelineExecutionId;
+  @Singular private final List<String> workflowExecutionIds;
+  private final String phaseExecutionId;
+  private final String stateExecutionId;
   @NonFinal @Setter private long createdAt;
 
-  @NotNull @Trimmed private String name;
+  @NotNull @Trimmed private final String name;
 
-  @Getter private SweepingOutput value;
-  @Deprecated @Getter private byte[] output;
+  @Getter private final SweepingOutput value;
+  @Deprecated @Getter private final byte[] output;
 
   public enum Scope { PIPELINE, WORKFLOW, PHASE, STATE }
 
-  @FdTtlIndex private Date validUntil = Date.from(OffsetDateTime.now().plusMonths(6).toInstant());
+  @FdTtlIndex private final Date validUntil = Date.from(OffsetDateTime.now().plusMonths(6).toInstant());
+
+  public static final class SweepingOutputKeys {
+    public static final String uuid = "uuid";
+    public static final String appId = "appId";
+    public static final String pipelineExecutionId = "pipelineExecutionId";
+    public static final String workflowExecutionIds = "workflowExecutionIds";
+    public static final String phaseExecutionId = "phaseExecutionId";
+    public static final String stateExecutionId = "stateExecutionId";
+    public static final String createdAt = "createdAt";
+    public static final String name = "name";
+    public static final String value = "value";
+    public static final String output = "output";
+    public static final String validUntil = "validUntil";
+  }
 }

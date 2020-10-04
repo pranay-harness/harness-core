@@ -6,7 +6,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import com.google.inject.Inject;
 
-import io.harness.OrchestrationTest;
+import io.harness.OrchestrationTestBase;
 import io.harness.ambiance.Ambiance;
 import io.harness.category.element.UnitTests;
 import io.harness.facilitator.DefaultFacilitatorParams;
@@ -18,7 +18,7 @@ import org.junit.experimental.categories.Category;
 
 import java.time.Duration;
 
-public class AsyncFacilitatorTest extends OrchestrationTest {
+public class AsyncFacilitatorTest extends OrchestrationTestBase {
   @Inject private AsyncFacilitator asyncFacilitator;
 
   @Test

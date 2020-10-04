@@ -11,7 +11,7 @@ import static org.mockito.Mockito.verify;
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 
-import io.harness.OrchestrationVisualizationTest;
+import io.harness.OrchestrationVisualizationTestBase;
 import io.harness.ambiance.Ambiance;
 import io.harness.ambiance.Level;
 import io.harness.beans.GraphVertex;
@@ -51,7 +51,7 @@ import java.util.concurrent.TimeUnit;
 /**
  * Test class for {@link NodeExecutionStatusUpdateEventHandlerV2}
  */
-public class NodeExecutionStatusUpdateEventHandlerV2Test extends OrchestrationVisualizationTest {
+public class NodeExecutionStatusUpdateEventHandlerV2Test extends OrchestrationVisualizationTestBase {
   @Inject private PlanExecutionService planExecutionService;
   @Inject private SpringMongoStore mongoStore;
 

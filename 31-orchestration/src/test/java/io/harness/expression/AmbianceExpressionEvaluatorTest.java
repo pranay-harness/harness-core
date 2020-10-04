@@ -9,7 +9,7 @@ import static org.mockito.Mockito.when;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 
-import io.harness.OrchestrationTest;
+import io.harness.OrchestrationTestBase;
 import io.harness.ambiance.Ambiance;
 import io.harness.category.element.UnitTests;
 import io.harness.data.structure.EmptyPredicate;
@@ -28,7 +28,7 @@ import java.util.List;
 import java.util.Map;
 import javax.validation.constraints.NotNull;
 
-public class AmbianceExpressionEvaluatorTest extends OrchestrationTest {
+public class AmbianceExpressionEvaluatorTest extends OrchestrationTestBase {
   @Mock private PlanExecutionService planExecutionService;
 
   @Before

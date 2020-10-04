@@ -9,7 +9,7 @@ import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
 
-import io.harness.OrchestrationVisualizationTest;
+import io.harness.OrchestrationVisualizationTestBase;
 import io.harness.ambiance.Ambiance;
 import io.harness.ambiance.Level;
 import io.harness.beans.EdgeList;
@@ -50,7 +50,7 @@ import java.util.concurrent.ExecutorService;
 /**
  * Test class for {@link GraphGenerationServiceImpl}
  */
-public class GraphGenerationServiceImplTest extends OrchestrationVisualizationTest {
+public class GraphGenerationServiceImplTest extends OrchestrationVisualizationTestBase {
   @Inject private PlanExecutionService planExecutionService;
   @Inject private NodeExecutionRepository nodeExecutionRepository;
   @Inject private SpringMongoStore mongoStore;
