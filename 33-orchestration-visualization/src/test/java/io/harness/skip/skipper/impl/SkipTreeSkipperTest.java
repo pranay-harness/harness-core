@@ -9,7 +9,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 
-import io.harness.OrchestrationVisualizationTest;
+import io.harness.OrchestrationVisualizationTestBase;
 import io.harness.beans.EphemeralOrchestrationGraph;
 import io.harness.beans.GraphVertex;
 import io.harness.beans.internal.EdgeListInternal;
@@ -28,7 +28,7 @@ import java.util.Map;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
-public class SkipTreeSkipperTest extends OrchestrationVisualizationTest {
+public class SkipTreeSkipperTest extends OrchestrationVisualizationTestBase {
   private static final String PLAN_EXECUTION_ID = generateUuid();
 
   @Inject private SkipTreeSkipper skipTreeSkipper;

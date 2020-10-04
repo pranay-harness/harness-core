@@ -23,7 +23,6 @@ import lombok.Builder.Default;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.Singular;
-import lombok.experimental.FieldNameConstants;
 import lombok.experimental.UtilityClass;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Entity;
@@ -42,7 +41,6 @@ import javax.validation.constraints.NotNull;
 @EqualsAndHashCode(exclude = {"uuid", "createdAt", "lastUpdatedAt", "validUntil"})
 @Entity(value = "delegateTasks", noClassnameStored = true)
 @HarnessEntity(exportable = false)
-@FieldNameConstants(innerTypeName = "DelegateTaskKeys")
 @CdIndex(name = "index", fields = { @Field(DelegateTaskKeys.status)
                                     , @Field(DelegateTaskKeys.expiry) })
 @CdIndex(name = "rebroadcast",
@@ -185,6 +183,34 @@ public class DelegateTask
 
   @UtilityClass
   public static final class DelegateTaskKeys {
+    public static final String capabilityFrameworkEnabled = "capabilityFrameworkEnabled";
+    public static final String data = "data";
+    public static final String executionCapabilities = "executionCapabilities";
+    public static final String uuid = "uuid";
+    public static final String accountId = "accountId";
+    public static final String driverId = "driverId";
+    public static final String rank = "rank";
+    public static final String description = "description";
+    public static final String selectionLogsTrackingEnabled = "selectionLogsTrackingEnabled";
+    public static final String workflowExecutionId = "workflowExecutionId";
+    public static final String setupAbstractions = "setupAbstractions";
+    public static final String version = "version";
+    public static final String tags = "tags";
+    public static final String waitId = "waitId";
+    public static final String createdAt = "createdAt";
+    public static final String lastUpdatedAt = "lastUpdatedAt";
+    public static final String status = "status";
+    public static final String validationStartedAt = "validationStartedAt";
+    public static final String validatingDelegateIds = "validatingDelegateIds";
+    public static final String validationCompleteDelegateIds = "validationCompleteDelegateIds";
+    public static final String delegateId = "delegateId";
+    public static final String preAssignedDelegateId = "preAssignedDelegateId";
+    public static final String alreadyTriedDelegates = "alreadyTriedDelegates";
+    public static final String lastBroadcastAt = "lastBroadcastAt";
+    public static final String broadcastCount = "broadcastCount";
+    public static final String nextBroadcast = "nextBroadcast";
+    public static final String expiry = "expiry";
+    public static final String validUntil = "validUntil";
     public static final String data_parameters = data + "." + TaskDataKeys.parameters;
     public static final String data_taskType = data + "." + TaskDataKeys.taskType;
     public static final String data_timeout = data + "." + TaskDataKeys.timeout;

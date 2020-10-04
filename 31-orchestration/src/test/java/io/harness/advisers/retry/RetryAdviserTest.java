@@ -8,7 +8,7 @@ import static org.mockito.Mockito.when;
 import com.google.common.collect.ImmutableList;
 import com.google.inject.Inject;
 
-import io.harness.OrchestrationTest;
+import io.harness.OrchestrationTestBase;
 import io.harness.adviser.Advise;
 import io.harness.adviser.AdvisingEvent;
 import io.harness.adviser.advise.NextStepAdvise;
@@ -32,7 +32,7 @@ import org.mockito.Mock;
 
 import java.util.Arrays;
 
-public class RetryAdviserTest extends OrchestrationTest {
+public class RetryAdviserTest extends OrchestrationTestBase {
   public static final String DUMMY_NODE_ID = generateUuid();
   public static final String NODE_EXECUTION_ID = generateUuid();
   public static final String NODE_SETUP_ID = generateUuid();

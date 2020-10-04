@@ -6,7 +6,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import com.google.inject.Inject;
 
-import io.harness.OrchestrationTest;
+import io.harness.OrchestrationTestBase;
 import io.harness.adviser.advise.RetryAdvise;
 import io.harness.ambiance.Ambiance;
 import io.harness.ambiance.Level;
@@ -30,7 +30,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 
-public class RetryAdviseHandlerTest extends OrchestrationTest {
+public class RetryAdviseHandlerTest extends OrchestrationTestBase {
   @InjectMocks @Inject private RetryAdviseHandler retryAdviseHandler;
   @Inject private PlanExecutionService planExecutionService;
   @Inject private NodeExecutionService nodeExecutionService;

@@ -7,7 +7,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
 
-import io.harness.OrchestrationStepsTest;
+import io.harness.OrchestrationStepsTestBase;
 import io.harness.ambiance.Ambiance;
 import io.harness.category.element.UnitTests;
 import io.harness.execution.status.Status;
@@ -24,7 +24,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-public class ForkStepTest extends OrchestrationStepsTest {
+public class ForkStepTest extends OrchestrationStepsTestBase {
   @Inject private ForkStep forkStep;
 
   private static final String FIRST_CHILD_ID = generateUuid();

@@ -15,7 +15,7 @@ import static org.mockito.Mockito.when;
 import com.google.common.collect.Sets;
 import com.google.inject.Inject;
 
-import io.harness.OrchestrationStepsTest;
+import io.harness.OrchestrationStepsTestBase;
 import io.harness.category.element.UnitTests;
 import io.harness.distribution.constraint.Consumer.State;
 import io.harness.exception.WingsException;
@@ -35,7 +35,7 @@ import org.powermock.modules.junit4.PowerMockRunner;
 @RunWith(PowerMockRunner.class)
 @PrepareForTest(PersistenceIteratorFactory.class)
 @PowerMockIgnore({"javax.security.*", "javax.net.*"})
-public class ResourceRestraintPersistenceMonitorTest extends OrchestrationStepsTest {
+public class ResourceRestraintPersistenceMonitorTest extends OrchestrationStepsTestBase {
   @Mock private PersistenceIteratorFactory persistenceIteratorFactory;
   @Mock private ResourceRestraintService resourceRestraintService;
   @Inject @InjectMocks private ResourceRestraintPersistenceMonitor persistenceMonitor;

@@ -5,7 +5,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import com.google.inject.Inject;
 
-import io.harness.OrchestrationTest;
+import io.harness.OrchestrationTestBase;
 import io.harness.ambiance.Ambiance;
 import io.harness.category.element.UnitTests;
 import io.harness.engine.executions.plan.PlanExecutionService;
@@ -19,7 +19,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
-public class EngineExpressionServiceImplTest extends OrchestrationTest {
+public class EngineExpressionServiceImplTest extends OrchestrationTestBase {
   @Inject EngineExpressionService engineExpressionService;
   @Inject OutcomeService outcomeService;
   @Inject PlanExecutionService planExecutionService;

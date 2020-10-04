@@ -8,7 +8,7 @@ import static org.mockito.Mockito.when;
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 
-import io.harness.OrchestrationVisualizationTest;
+import io.harness.OrchestrationVisualizationTestBase;
 import io.harness.ambiance.Ambiance;
 import io.harness.ambiance.Level;
 import io.harness.beans.GraphVertex;
@@ -42,7 +42,7 @@ import java.util.Map;
 /**
  * Test class for {@link GraphGenerator}
  */
-public class GraphGeneratorTest extends OrchestrationVisualizationTest {
+public class GraphGeneratorTest extends OrchestrationVisualizationTestBase {
   private static final String PLAN_EXECUTION_ID = "planId";
   private static final String STARTING_EXECUTION_NODE_ID = "startID";
 

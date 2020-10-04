@@ -6,7 +6,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import com.google.inject.Inject;
 
-import io.harness.OrchestrationTest;
+import io.harness.OrchestrationTestBase;
 import io.harness.category.element.UnitTests;
 import io.harness.registries.registrar.FacilitatorRegistrar;
 import io.harness.rule.Owner;
@@ -19,7 +19,7 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
-public class OrchestrationFacilitatorRegistrarTest extends OrchestrationTest {
+public class OrchestrationFacilitatorRegistrarTest extends OrchestrationTestBase {
   @Inject Map<String, FacilitatorRegistrar> facilitatorRegistrars;
   @Test
   @Owner(developers = PRASHANT)

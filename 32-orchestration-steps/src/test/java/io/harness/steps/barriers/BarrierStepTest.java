@@ -12,7 +12,7 @@ import static org.mockito.Mockito.when;
 import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
 
-import io.harness.OrchestrationStepsTest;
+import io.harness.OrchestrationStepsTestBase;
 import io.harness.ambiance.Ambiance;
 import io.harness.ambiance.Level;
 import io.harness.category.element.UnitTests;
@@ -31,7 +31,7 @@ import org.mockito.Mock;
 
 import java.util.Collections;
 
-public class BarrierStepTest extends OrchestrationStepsTest {
+public class BarrierStepTest extends OrchestrationStepsTestBase {
   @Mock BarrierService barrierService;
   @Inject @InjectMocks BarrierStep barrierStep;
 

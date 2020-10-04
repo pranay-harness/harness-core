@@ -7,7 +7,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import com.google.inject.Inject;
 
-import io.harness.OrchestrationTest;
+import io.harness.OrchestrationTestBase;
 import io.harness.category.element.UnitTests;
 import io.harness.persistence.HPersistence;
 import io.harness.rule.Owner;
@@ -16,7 +16,7 @@ import org.junit.experimental.categories.Category;
 
 import java.io.IOException;
 
-public class StateInspectionServiceTest extends OrchestrationTest {
+public class StateInspectionServiceTest extends OrchestrationTestBase {
   @Inject private HPersistence persistence;
   @Inject private StateInspectionService stateInspectionService;
 

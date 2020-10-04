@@ -8,7 +8,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import com.google.inject.Inject;
 
-import io.harness.OrchestrationStepsTest;
+import io.harness.OrchestrationStepsTestBase;
 import io.harness.category.element.UnitTests;
 import io.harness.exception.InvalidRequestException;
 import io.harness.rule.Owner;
@@ -20,7 +20,7 @@ import org.junit.experimental.categories.Category;
 
 import java.util.List;
 
-public class BarrierServiceImplTest extends OrchestrationStepsTest {
+public class BarrierServiceImplTest extends OrchestrationStepsTestBase {
   @Inject private BarrierNodeRepository barrierNodeRepository;
   @Inject BarrierService barrierService;
 

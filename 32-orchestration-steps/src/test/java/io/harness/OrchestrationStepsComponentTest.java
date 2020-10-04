@@ -16,7 +16,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 
 @Slf4j
-public class OrchestrationStepsComponentTest extends OrchestrationStepsTest {
+public class OrchestrationStepsComponentTest extends OrchestrationStepsTestBase {
   @Inject private Map<String, TestExecution> tests;
 
   @Test

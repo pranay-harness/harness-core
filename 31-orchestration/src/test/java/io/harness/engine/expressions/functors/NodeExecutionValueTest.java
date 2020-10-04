@@ -9,7 +9,7 @@ import static org.mockito.Mockito.when;
 import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
 
-import io.harness.OrchestrationTest;
+import io.harness.OrchestrationTestBase;
 import io.harness.ambiance.Ambiance;
 import io.harness.ambiance.AmbianceUtils;
 import io.harness.ambiance.Level;
@@ -36,7 +36,7 @@ import org.mockito.junit.MockitoRule;
 
 import java.util.Collections;
 
-public class NodeExecutionValueTest extends OrchestrationTest {
+public class NodeExecutionValueTest extends OrchestrationTestBase {
   @Mock NodeExecutionService nodeExecutionService;
   @Mock OutcomeService outcomeService;
   @Inject private AmbianceUtils ambianceUtils;

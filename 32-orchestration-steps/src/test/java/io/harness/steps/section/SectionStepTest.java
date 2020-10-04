@@ -7,7 +7,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
 
-import io.harness.OrchestrationStepsTest;
+import io.harness.OrchestrationStepsTestBase;
 import io.harness.ambiance.Ambiance;
 import io.harness.category.element.UnitTests;
 import io.harness.execution.status.Status;
@@ -22,7 +22,7 @@ import org.junit.experimental.categories.Category;
 
 import java.util.Map;
 
-public class SectionStepTest extends OrchestrationStepsTest {
+public class SectionStepTest extends OrchestrationStepsTestBase {
   @Inject private SectionStep sectionState;
 
   private static final String CHILD_ID = generateUuid();
