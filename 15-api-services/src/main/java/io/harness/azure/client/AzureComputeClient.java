@@ -1,5 +1,6 @@
 package io.harness.azure.client;
 
+import com.microsoft.azure.management.compute.GalleryImage;
 import com.microsoft.azure.management.compute.VirtualMachineScaleSet;
 import com.microsoft.azure.management.compute.VirtualMachineScaleSetVM;
 import com.microsoft.azure.management.network.LoadBalancer;
@@ -8,6 +9,8 @@ import com.microsoft.azure.management.network.implementation.PublicIPAddressInne
 import com.microsoft.azure.management.resources.Subscription;
 import io.harness.azure.model.AzureConfig;
 import io.harness.azure.model.AzureUserAuthVMInstanceData;
+import io.harness.azure.model.AzureMachineImageArtifact;
+import io.harness.azure.model.AzureVMSSTagsData;
 
 import java.util.List;
 import java.util.Optional;
@@ -138,18 +141,16 @@ public interface AzureComputeClient {
 
   /**
    * Create a new Virtual Machine Scale Set based on base scale set.
-   *
    * @param azureConfig
    * @param baseVirtualMachineScaleSet
-   * @param infraMappingId
    * @param newVirtualMachineScaleSetName
-   * @param harnessRevision
    * @param azureUserAuthVMInstanceData
-   * @param isBlueGreen
+   * @param imageArtifact
+   * @param tags
    */
   void createVirtualMachineScaleSet(AzureConfig azureConfig, VirtualMachineScaleSet baseVirtualMachineScaleSet,
-      String infraMappingId, String newVirtualMachineScaleSetName, Integer harnessRevision,
-      AzureUserAuthVMInstanceData azureUserAuthVMInstanceData, boolean isBlueGreen);
+      String newVirtualMachineScaleSetName, AzureUserAuthVMInstanceData azureUserAuthVMInstanceData,
+      AzureMachineImageArtifact imageArtifact, AzureVMSSTagsData tags);
 
   /**
    * Attach virtual machine scale set to load balancer backend pools.
@@ -250,4 +251,17 @@ public interface AzureComputeClient {
    */
   List<VirtualMachineScaleSetNetworkInterface> listVMVirtualMachineScaleSetNetworkInterfaces(
       VirtualMachineScaleSetVM vm);
+
+  /**
+   * Get Gallery image.
+   *
+   * @param azureConfig
+   * @param subscriptionId
+   * @param resourceGroupName
+   * @param galleryName
+   * @param imageName
+   * @return
+   */
+  Optional<GalleryImage> getGalleryImage(
+      AzureConfig azureConfig, String subscriptionId, String resourceGroupName, String galleryName, String imageName);
 }

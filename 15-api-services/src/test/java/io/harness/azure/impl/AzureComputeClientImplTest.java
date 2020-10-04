@@ -41,6 +41,7 @@ import com.microsoft.rest.RestException;
 import io.harness.CategoryTest;
 import io.harness.azure.AzureClient;
 import io.harness.azure.model.AzureConfig;
+import io.harness.azure.model.AzureVMSSTagsData;
 import io.harness.category.element.UnitTests;
 import io.harness.network.Http;
 import io.harness.rule.Owner;
@@ -251,11 +252,11 @@ public class AzureComputeClientImplTest extends CategoryTest {
         put("tag_name_2", "tag_value_2");
       }
     });
+    AzureVMSSTagsData azureVMSSTagsData =
+        AzureVMSSTagsData.builder().harnessRevision(6).infraMappingId("infraMappingId").isBlueGreen(false).build();
 
-    int harnessRevision = 6;
-    boolean isBlueGreen = false;
     Map<String, String> result = azureComputeClient.getTagsForNewVMSS(
-        virtualMachineScaleSet, "infraMappingId", harnessRevision, "newVirtualMachineScaleSetName", isBlueGreen);
+        virtualMachineScaleSet, "newVirtualMachineScaleSetName", azureVMSSTagsData);
 
     assertThat(result).isNotNull();
     assertThat(result.get("tag_name_1")).isEqualTo("tag_value_1");

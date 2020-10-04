@@ -13,8 +13,12 @@ import io.harness.delegate.beans.SecretDetail;
 import io.harness.delegate.beans.TaskData;
 import io.harness.delegate.beans.artifact.ArtifactFileMetadata;
 import io.harness.delegate.beans.azure.AzureConfigDTO;
+import io.harness.delegate.beans.azure.AzureMachineImageArtifactDTO;
+import io.harness.delegate.beans.azure.AzureMachineImageArtifactDTO.ImageType;
+import io.harness.delegate.beans.azure.AzureMachineImageArtifactDTO.OSType;
 import io.harness.delegate.beans.azure.AzureVMAuthDTO;
 import io.harness.delegate.beans.azure.AzureVMAuthType;
+import io.harness.delegate.beans.azure.GalleryImageDefinitionDTO;
 import io.harness.delegate.beans.connector.ConnectorValidationResult;
 import io.harness.delegate.beans.connector.appdynamicsconnector.AppDynamicsConnectionTaskParams;
 import io.harness.delegate.beans.connector.appdynamicsconnector.AppDynamicsConnectionTaskResponse;
@@ -364,5 +368,9 @@ public class DelegateTasksBeansKryoRegister implements KryoRegistrar {
     kryo.register(AwsTaskType.class, 19360);
     kryo.register(AwsValidateTaskResponse.class, 19361);
     kryo.register(CrossAccountAccessDTO.class, 19362);
+    kryo.register(AzureMachineImageArtifactDTO.class, 19363);
+    kryo.register(GalleryImageDefinitionDTO.class, 19364);
+    kryo.register(OSType.class, 19365);
+    kryo.register(ImageType.class, 19366);
   }
 }

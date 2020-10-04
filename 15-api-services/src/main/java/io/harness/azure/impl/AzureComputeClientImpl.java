@@ -5,8 +5,9 @@ import static io.harness.azure.model.AzureConstants.BACKEND_POOLS_LIST_EMPTY_VAL
 import static io.harness.azure.model.AzureConstants.BASE_VIRTUAL_MACHINE_SCALE_SET_IS_NULL_VALIDATION_MSG;
 import static io.harness.azure.model.AzureConstants.BG_GREEN_TAG_VALUE;
 import static io.harness.azure.model.AzureConstants.BG_VERSION_TAG_NAME;
+import static io.harness.azure.model.AzureConstants.GALLERY_IMAGE_NAME_NULL_VALIDATION_MSG;
+import static io.harness.azure.model.AzureConstants.GALLERY_NAME_NULL_VALIDATION_MSG;
 import static io.harness.azure.model.AzureConstants.HARNESS_AUTOSCALING_GROUP_TAG_NAME;
-import static io.harness.azure.model.AzureConstants.HARNESS_REVISION_IS_NULL_VALIDATION_MSG;
 import static io.harness.azure.model.AzureConstants.NAME_TAG;
 import static io.harness.azure.model.AzureConstants.NEW_VIRTUAL_MACHINE_SCALE_SET_NAME_IS_NULL_VALIDATION_MSG;
 import static io.harness.azure.model.AzureConstants.NUMBER_OF_VM_INSTANCES_VALIDATION_MSG;
@@ -28,10 +29,12 @@ import static java.util.Objects.isNull;
 import static java.util.stream.Collectors.toMap;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.inject.Singleton;
 
 import com.microsoft.azure.PagedList;
 import com.microsoft.azure.management.Azure;
+import com.microsoft.azure.management.compute.GalleryImage;
 import com.microsoft.azure.management.compute.SshConfiguration;
 import com.microsoft.azure.management.compute.SshPublicKey;
 import com.microsoft.azure.management.compute.UpgradeMode;
@@ -49,7 +52,11 @@ import io.fabric8.utils.Objects;
 import io.harness.azure.AzureClient;
 import io.harness.azure.client.AzureComputeClient;
 import io.harness.azure.model.AzureConfig;
+import io.harness.azure.model.AzureMachineImageArtifact;
 import io.harness.azure.model.AzureUserAuthVMInstanceData;
+import io.harness.azure.model.AzureVMSSTagsData;
+import io.harness.azure.model.image.AzureMachineImage;
+import io.harness.azure.model.image.AzureMachineImageFactory;
 import io.harness.azure.utility.AzureResourceUtility;
 import io.harness.exception.InvalidRequestException;
 import lombok.extern.slf4j.Slf4j;
@@ -297,23 +304,24 @@ public class AzureComputeClientImpl extends AzureClient implements AzureComputeC
 
   @Override
   public void createVirtualMachineScaleSet(AzureConfig azureConfig, VirtualMachineScaleSet baseVirtualMachineScaleSet,
-      String infraMappingId, String newVirtualMachineScaleSetName, Integer harnessRevision,
-      AzureUserAuthVMInstanceData azureUserAuthVMInstanceData, boolean isBlueGreen) {
+      String newVirtualMachineScaleSetName, AzureUserAuthVMInstanceData azureUserAuthVMInstanceData,
+      AzureMachineImageArtifact imageArtifact, AzureVMSSTagsData tags) {
     if (isBlank(newVirtualMachineScaleSetName)) {
       throw new IllegalArgumentException(NEW_VIRTUAL_MACHINE_SCALE_SET_NAME_IS_NULL_VALIDATION_MSG);
     }
+
     Objects.notNull(baseVirtualMachineScaleSet, BASE_VIRTUAL_MACHINE_SCALE_SET_IS_NULL_VALIDATION_MSG);
-    Objects.notNull(harnessRevision, HARNESS_REVISION_IS_NULL_VALIDATION_MSG);
 
     Azure azure = getAzureClient(azureConfig);
     Objects.notNull(azure, AZURE_MANAGEMENT_CLIENT_NULL_VALIDATION_MSG);
 
-    Map<String, String> baseVMSSTags = getTagsForNewVMSS(
-        baseVirtualMachineScaleSet, infraMappingId, harnessRevision, newVirtualMachineScaleSetName, isBlueGreen);
+    Map<String, String> baseVMSSTags =
+        getTagsForNewVMSS(baseVirtualMachineScaleSet, newVirtualMachineScaleSetName, tags);
 
     VirtualMachineScaleSetInner inner = baseVirtualMachineScaleSet.inner();
 
     updateTags(inner, baseVMSSTags);
+    updateVMImage(inner, imageArtifact);
     updateUserData(inner, azureUserAuthVMInstanceData);
     updateCapacity(inner, 0);
 
@@ -324,13 +332,17 @@ public class AzureComputeClientImpl extends AzureClient implements AzureComputeC
       throw new InvalidRequestException(
           format("Error while creating virtual machine scale set, newVirtualMachineScaleSetName: %s, "
                   + "harnessRevision: %s, infraMappingId: %s",
-              newVirtualMachineScaleSetName, harnessRevision, infraMappingId),
+              newVirtualMachineScaleSetName, tags.getHarnessRevision(), tags.getInfraMappingId()),
           e);
     }
   }
 
-  public Map<String, String> getTagsForNewVMSS(VirtualMachineScaleSet baseVirtualMachineScaleSet, String infraMappingId,
-      Integer harnessRevision, String newVirtualMachineScaleSetName, boolean isBlueGreen) {
+  @VisibleForTesting
+  Map<String, String> getTagsForNewVMSS(
+      VirtualMachineScaleSet baseVirtualMachineScaleSet, String newVirtualMachineScaleSetName, AzureVMSSTagsData tags) {
+    Integer harnessRevision = tags.getHarnessRevision();
+    boolean isBlueGreen = tags.isBlueGreen();
+    String infraMappingId = tags.getInfraMappingId();
     List<String> harnessTagsList = Arrays.asList(HARNESS_AUTOSCALING_GROUP_TAG_NAME, NAME_TAG);
     Map<String, String> baseVMSSTags = baseVirtualMachineScaleSet.tags()
                                            .entrySet()
@@ -354,13 +366,29 @@ public class AzureComputeClientImpl extends AzureClient implements AzureComputeC
     inner.withTags(baseVMSSTags);
   }
 
+  private void updateVMImage(VirtualMachineScaleSetInner inner, AzureMachineImageArtifact imageArtifact) {
+    AzureMachineImage azureImage = AzureMachineImageFactory.getAzureImage(imageArtifact);
+    azureImage.updateVMSSInner(inner);
+  }
+
   private void updateUserData(
       VirtualMachineScaleSetInner inner, AzureUserAuthVMInstanceData azureUserAuthVMInstanceData) {
     VirtualMachineScaleSetOSProfile osProfile = inner.virtualMachineProfile().osProfile();
+    // Specialized images do not have an osProfile associated with them.
+    // All osProfile user data has already built on image.
+    if (osProfile == null) {
+      return;
+    }
 
+    String vmssAuthType = azureUserAuthVMInstanceData.getVmssAuthType();
+
+    if (osProfile.windowsConfiguration() != null && vmssAuthType.equals(VMSS_AUTH_TYPE_SSH_PUBLIC_KEY)) {
+      throw new IllegalArgumentException("Unable to set SSH on Windows image");
+    }
+
+    // only applied on generalized images
     String userName = azureUserAuthVMInstanceData.getUserName();
     String rootUsername = isBlank(userName) ? osProfile.adminUsername() : userName;
-    String vmssAuthType = azureUserAuthVMInstanceData.getVmssAuthType();
     osProfile.withAdminUsername(rootUsername);
 
     if (vmssAuthType.equals(VMSS_AUTH_TYPE_DEFAULT)) {
@@ -477,8 +505,9 @@ public class AzureComputeClientImpl extends AzureClient implements AzureComputeC
       try {
         Integer.parseInt(id);
       } catch (NumberFormatException e) {
-        logger.error(
-            format("Unable to convert VM instance id to numeric type, id: %s instanceIds: %s", id, instanceIds), e);
+        logger.error(format("Unable to convert VM instance id to numeric type, id: %s instanceIds: %s", id,
+                         Arrays.toString(instanceIds)),
+            e);
         return false;
       }
     }
@@ -493,6 +522,7 @@ public class AzureComputeClientImpl extends AzureClient implements AzureComputeC
     updateVMInstances(deAttachedVMSS, "*");
   }
 
+  @Override
   public void forceAttachVMSSToBackendPools(AzureConfig azureConfig, VirtualMachineScaleSet virtualMachineScaleSet,
       LoadBalancer primaryInternetFacingLoadBalancer, final String... backendPools) {
     VirtualMachineScaleSet attachedVMSS =
@@ -500,6 +530,7 @@ public class AzureComputeClientImpl extends AzureClient implements AzureComputeC
     updateVMInstances(attachedVMSS, "*");
   }
 
+  @Override
   public Optional<PublicIPAddressInner> getVMPublicIPAddress(VirtualMachineScaleSetVM vm) {
     PagedList<VirtualMachineScaleSetNetworkInterface> vmScaleSetNetworkInterfaces = vm.listNetworkInterfaces();
     if (vmScaleSetNetworkInterfaces.isEmpty()) {
@@ -517,6 +548,7 @@ public class AzureComputeClientImpl extends AzureClient implements AzureComputeC
     return Optional.of(publicIPAddressInner);
   }
 
+  @Override
   public List<VirtualMachineScaleSetNetworkInterface> listVMVirtualMachineScaleSetNetworkInterfaces(
       VirtualMachineScaleSetVM vm) {
     PagedList<VirtualMachineScaleSetNetworkInterface> vmScaleSetNetworkInterfaces = vm.listNetworkInterfaces();
@@ -524,5 +556,39 @@ public class AzureComputeClientImpl extends AzureClient implements AzureComputeC
       return Collections.emptyList();
     }
     return new ArrayList<>(vmScaleSetNetworkInterfaces);
+  }
+
+  @Override
+  public Optional<GalleryImage> getGalleryImage(
+      AzureConfig azureConfig, String subscriptionId, String resourceGroupName, String galleryName, String imageName) {
+    if (isBlank(subscriptionId)) {
+      throw new IllegalArgumentException(SUBSCRIPTION_ID_NULL_VALIDATION_MSG);
+    }
+    if (isBlank(resourceGroupName)) {
+      throw new IllegalArgumentException(RESOURCE_GROUP_NAME_NULL_VALIDATION_MSG);
+    }
+    if (isBlank(galleryName)) {
+      throw new IllegalArgumentException(GALLERY_NAME_NULL_VALIDATION_MSG);
+    }
+    if (isBlank(imageName)) {
+      throw new IllegalArgumentException(GALLERY_IMAGE_NAME_NULL_VALIDATION_MSG);
+    }
+
+    Azure azure = getAzureClient(azureConfig, subscriptionId);
+    Objects.notNull(azure, AZURE_MANAGEMENT_CLIENT_NULL_VALIDATION_MSG);
+
+    try {
+      logger.debug("Start getting gallery image, imageName {}, galleryName: {}, resourceGroupName: {}", imageName,
+          galleryName, resourceGroupName);
+      GalleryImage galleryImage = azure.galleryImages().getByGallery(resourceGroupName, galleryName, imageName);
+      if (galleryImage.name() == null || galleryImage.id() == null) {
+        return Optional.empty();
+      }
+      return Optional.of(galleryImage);
+    } catch (NullPointerException npe) {
+      logger.warn("Image can't be found, imageName{}, galleryName: {}, resourceGroupName: {}", imageName, galleryName,
+          resourceGroupName, npe);
+      return Optional.empty();
+    }
   }
 }

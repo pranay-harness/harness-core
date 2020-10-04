@@ -17,6 +17,7 @@ import io.harness.azure.model.AzureConstants;
 import io.harness.beans.DelegateTask;
 import io.harness.beans.ExecutionStatus;
 import io.harness.delegate.beans.TaskData;
+import io.harness.delegate.beans.azure.AzureMachineImageArtifactDTO;
 import io.harness.delegate.beans.azure.AzureVMAuthDTO;
 import io.harness.delegate.task.azure.request.AzureLoadBalancerDetailForBGDeployment;
 import io.harness.delegate.task.azure.request.AzureVMSSSetupTaskParameters;
@@ -41,7 +42,6 @@ import software.wings.beans.Environment;
 import software.wings.beans.ResizeStrategy;
 import software.wings.beans.Service;
 import software.wings.beans.TaskType;
-import software.wings.beans.artifact.Artifact;
 import software.wings.beans.command.CommandUnitDetails;
 import software.wings.service.impl.azure.manager.AzureVMSSCommandRequest;
 import software.wings.service.impl.azure.manager.AzureVMSSCommandRequest.AzureVMSSCommandRequestBuilder;
@@ -157,7 +157,8 @@ public class AzureVMSSSetupState extends State {
   private AzureVMSSTaskParameters buildAzureVMSSTaskParameters(ExecutionContext context, Application app,
       Service service, Environment env, String activityId,
       AzureVMSSInfrastructureMapping azureVMSSInfrastructureMapping) {
-    Artifact artifact = azureVMSSStateHelper.getArtifact((DeploymentExecutionContext) context, service.getUuid());
+    AzureMachineImageArtifactDTO imageArtifactDTO =
+        azureVMSSStateHelper.getAzureMachineImageArtifactDTO((DeploymentExecutionContext) context, service.getUuid());
 
     String baseVMSSName = azureVMSSInfrastructureMapping.getBaseVMSSName();
     String subscriptionId = azureVMSSInfrastructureMapping.getSubscriptionId();
@@ -168,7 +169,6 @@ public class AzureVMSSSetupState extends State {
     String accountId = app.getAccountId();
     String appId = app.getAppId();
     boolean isBlueGreen = azureVMSSStateHelper.isBlueGreenWorkflow(context);
-    String artifactRevision = artifact.getRevision();
     String envId = env.getUuid();
     String userData = azureVMSSStateHelper.getBase64EncodedUserData(context, app.getUuid(), service.getUuid());
 
@@ -198,7 +198,7 @@ public class AzureVMSSSetupState extends State {
         .blueGreen(isBlueGreen)
         .azureLoadBalancerDetail(azureLoadBalancerDetail)
         .vmssNamePrefix(vmssNamePrefixFixed)
-        .artifactRevision(artifactRevision)
+        .imageArtifactDTO(imageArtifactDTO)
         .baseVMSSName(baseVMSSName)
         .subscriptionId(subscriptionId)
         .resourceGroupName(resourceGroupName)

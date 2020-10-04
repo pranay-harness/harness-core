@@ -35,8 +35,10 @@ import io.harness.beans.TriggeredBy;
 import io.harness.context.ContextElementType;
 import io.harness.data.encoding.EncodingUtils;
 import io.harness.delegate.beans.azure.AzureConfigDTO;
+import io.harness.delegate.beans.azure.AzureMachineImageArtifactDTO;
 import io.harness.delegate.beans.azure.AzureVMAuthDTO;
 import io.harness.delegate.beans.azure.AzureVMAuthType;
+import io.harness.delegate.beans.azure.GalleryImageDefinitionDTO;
 import io.harness.delegate.task.azure.response.AzureVMInstanceData;
 import io.harness.delegate.task.azure.response.AzureVMSSTaskExecutionResponse;
 import io.harness.deployment.InstanceDetails;
@@ -67,6 +69,8 @@ import software.wings.beans.ServiceVariable;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.VMSSAuthType;
 import software.wings.beans.artifact.Artifact;
+import software.wings.beans.artifact.ArtifactStream;
+import software.wings.beans.artifact.ArtifactStreamAttributes;
 import software.wings.beans.command.AzureVMSSDummyCommandUnit;
 import software.wings.beans.command.Command;
 import software.wings.beans.command.CommandUnit;
@@ -74,6 +78,7 @@ import software.wings.beans.command.CommandUnitDetails;
 import software.wings.beans.container.UserDataSpecification;
 import software.wings.security.encryption.EncryptedData;
 import software.wings.service.intfc.ActivityService;
+import software.wings.service.intfc.ArtifactStreamService;
 import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.LogService;
 import software.wings.service.intfc.ServiceResourceService;
@@ -100,16 +105,47 @@ public class AzureVMSSStateHelper {
   @Inject private SettingsService settingsService;
   @Inject private SweepingOutputService sweepingOutputService;
   @Inject private SecretManager secretManager;
+  @Inject private ArtifactStreamService artifactStreamService;
   @Inject private LogService logService;
 
   public boolean isBlueGreenWorkflow(ExecutionContext context) {
     return BLUE_GREEN == context.getOrchestrationWorkflowType();
   }
 
+  public AzureMachineImageArtifactDTO getAzureMachineImageArtifactDTO(
+      DeploymentExecutionContext context, String serviceId) {
+    Artifact artifact = getArtifact(context, serviceId);
+    ArtifactStream artifactStream = getArtifactStream(artifact.getArtifactStreamId());
+    ArtifactStreamAttributes artifactStreamAttributes = artifactStream.fetchArtifactStreamAttributes();
+
+    String osType = artifactStreamAttributes.getOsType();
+    String imageType = artifactStreamAttributes.getImageType();
+    String galleryName = artifactStreamAttributes.getAzureImageGalleryName();
+    String imageDefinitionName = artifactStreamAttributes.getAzureImageDefinition();
+    String imageVersion = artifact.getRevision();
+
+    return AzureMachineImageArtifactDTO.builder()
+        .imageOSType(AzureMachineImageArtifactDTO.OSType.valueOf(osType))
+        .imageType(AzureMachineImageArtifactDTO.ImageType.valueOf(imageType))
+        .imageDefinition(GalleryImageDefinitionDTO.builder()
+                             .definitionName(imageDefinitionName)
+                             .galleryName(galleryName)
+                             .version(imageVersion)
+                             .build())
+        .build();
+  }
+
   public Artifact getArtifact(DeploymentExecutionContext context, String serviceId) {
     return Optional.ofNullable(context.getDefaultArtifactForService(serviceId))
         .orElseThrow(
             () -> new InvalidRequestException(format("Unable to find artifact for service id: %s", serviceId)));
+  }
+
+  public ArtifactStream getArtifactStream(String artifactStreamId) {
+    return Optional.ofNullable(artifactStreamService.get(artifactStreamId))
+        .orElseThrow(()
+                         -> new InvalidRequestException(
+                             format("Unable to find artifact stream for artifact stream id: %s", artifactStreamId)));
   }
 
   public ManagerExecutionLogCallback getExecutionLogCallback(Activity activity) {
