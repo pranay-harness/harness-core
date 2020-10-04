@@ -404,16 +404,6 @@ public class UserGroupPermissionsController {
     return userGroupAppPermissions;
   }
 
-  private void addAccountManagementPermission(Set<QLAccountPermissionType> qlAccountPermissionTypes) {
-    if (qlAccountPermissionTypes.contains(ADMINISTER_OTHER_ACCOUNT_FUNCTIONS)) {
-      qlAccountPermissionTypes.add(QLAccountPermissionType.MANAGE_APPLICATION_STACKS);
-      qlAccountPermissionTypes.add(QLAccountPermissionType.MANAGE_ALERT_NOTIFICATION_RULES);
-      qlAccountPermissionTypes.add(QLAccountPermissionType.MANAGE_AUTHENTICATION_SETTINGS);
-      qlAccountPermissionTypes.add(QLAccountPermissionType.MANAGE_IP_WHITELIST);
-      qlAccountPermissionTypes.add(QLAccountPermissionType.MANAGE_API_KEYS);
-    }
-  }
-
   // Populate the AccountPermission entity
   AccountPermissions populateUserGroupAccountPermissionEntity(QLUserGroupPermissions permissions) {
     if (permissions == null || permissions.getAccountPermissions() == null) {
@@ -430,7 +420,6 @@ public class UserGroupPermissionsController {
       throw new InvalidRequestException(
           "The permission MANAGE_USERS_AND_GROUPS cannot be set without setting READ_USERS_AND_GROUPS");
     }
-    addAccountManagementPermission(accountPermissionsInput);
     Set<PermissionType> accountPermissions =
         accountPermissionsInput.stream().map(this ::mapAccountPermissions).collect(Collectors.toSet());
     return AccountPermissions.builder().permissions(accountPermissions).build();
