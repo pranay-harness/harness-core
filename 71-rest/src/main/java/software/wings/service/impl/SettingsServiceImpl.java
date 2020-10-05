@@ -791,7 +791,8 @@ public class SettingsServiceImpl implements SettingsService {
         AwsS3BucketDetails updatedBucketDetails =
             awsCeConfigService.validateCURReportAccessAndReturnS3Config(awsConfig);
         s3BucketDetails.setRegion(updatedBucketDetails.getRegion());
-        s3BucketDetails.setS3Prefix(updatedBucketDetails.getS3Prefix());
+        String s3Prefix = updatedBucketDetails.getS3Prefix().equals("/") ? "" : updatedBucketDetails.getS3Prefix();
+        s3BucketDetails.setS3Prefix(s3Prefix);
 
         // Update Bucket Policy
         awsCeConfigService.updateBucketPolicy(awsConfig);
