@@ -9,6 +9,7 @@ import static io.harness.generator.constants.SettingsGeneratorConstants.PCF_END_
 import static io.harness.generator.constants.SettingsGeneratorConstants.PCF_KEY;
 import static io.harness.generator.constants.SettingsGeneratorConstants.PCF_USERNAME;
 import static io.harness.govern.Switch.unhandled;
+import static io.harness.testframework.framework.utils.SettingUtils.createEcsFunctionalTestGitAccountSetting;
 import static io.harness.testframework.framework.utils.SettingUtils.createEcsFunctionalTestGitRepoSetting;
 import static io.harness.testframework.framework.utils.SettingUtils.createGitHubRepoSetting;
 import static io.harness.testframework.framework.utils.SettingUtils.createPCFFunctionalTestGitRepoSetting;
@@ -135,6 +136,7 @@ public class SettingGenerator {
     AZURE_ARTIFACTS_CONNECTOR,
     PCF_FUNCTIONAL_TEST_GIT_REPO,
     ECS_FUNCTIONAL_TEST_GIT_REPO,
+    ECS_FUNCTIONAL_TEST_GIT_ACCOUNT,
     HELM_S3_CONNECTOR,
     ELK,
     ACCOUNT_LEVEL_GIT_CONNECTOR,
@@ -206,6 +208,8 @@ public class SettingGenerator {
         return ensurePCFGitRepo(seed, owners);
       case ECS_FUNCTIONAL_TEST_GIT_REPO:
         return ensureEcsGitRepo(seed, owners);
+      case ECS_FUNCTIONAL_TEST_GIT_ACCOUNT:
+        return ensureEcsGitAccount(seed, owners);
       case HELM_S3_CONNECTOR:
         return ensureHelmS3Connector(seed, owners);
       case ELK:
@@ -499,6 +503,12 @@ public class SettingGenerator {
   private SettingAttribute ensureEcsGitRepo(Randomizer.Seed seed, Owners owners) {
     SettingAttribute githubKey = ensurePredefined(seed, owners, GITHUB_TEST_CONNECTOR);
     SettingAttribute settingAttribute = createEcsFunctionalTestGitRepoSetting(githubKey);
+    return ensureSettingAttribute(seed, settingAttribute, owners);
+  }
+
+  private SettingAttribute ensureEcsGitAccount(Randomizer.Seed seed, Owners owners) {
+    SettingAttribute githubKey = ensurePredefined(seed, owners, GITHUB_TEST_CONNECTOR);
+    SettingAttribute settingAttribute = createEcsFunctionalTestGitAccountSetting(githubKey);
     return ensureSettingAttribute(seed, settingAttribute, owners);
   }
 

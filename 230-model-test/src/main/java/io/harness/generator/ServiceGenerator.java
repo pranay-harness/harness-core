@@ -2,6 +2,7 @@ package io.harness.generator;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.generator.ServiceGenerator.Services.KUBERNETES_GENERIC_TEST;
+import static io.harness.generator.SettingGenerator.Settings.ECS_FUNCTIONAL_TEST_GIT_ACCOUNT;
 import static io.harness.generator.SettingGenerator.Settings.ECS_FUNCTIONAL_TEST_GIT_REPO;
 import static io.harness.generator.SettingGenerator.Settings.PCF_FUNCTIONAL_TEST_GIT_REPO;
 import static io.harness.govern.Switch.unhandled;
@@ -274,7 +275,8 @@ public class ServiceGenerator {
     return service;
   }
 
-  public Service ensureEcsRemoteTest(Randomizer.Seed seed, Owners owners, String name, StoreType storeType) {
+  public Service ensureEcsRemoteTest(
+      Randomizer.Seed seed, Owners owners, String name, StoreType storeType, boolean accountConnector) {
     owners.obtainApplication(() -> applicationGenerator.ensurePredefined(seed, owners, Applications.GENERIC_TEST));
     owners.add(ensureService(seed, owners,
         builder().name(name).artifactType(ArtifactType.DOCKER).deploymentType(DeploymentType.ECS).build()));
@@ -289,15 +291,19 @@ public class ServiceGenerator {
                                                         .storeType(storeType)
                                                         .build();
     if (storeType == StoreType.Remote) {
-      final SettingAttribute gitConnectorSetting =
-          settingGenerator.ensurePredefined(seed, owners, ECS_FUNCTIONAL_TEST_GIT_REPO);
-      applicationManifest.setGitFileConfig(GitFileConfig.builder()
-                                               .connectorId(gitConnectorSetting.getUuid())
-                                               .branch("master")
-                                               .useBranch(true)
-                                               .serviceSpecFilePath("ecsgitops/servicespec.json")
-                                               .taskSpecFilePath("ecsgitops/containerspec.json")
-                                               .build());
+      final SettingAttribute gitConnectorSetting = settingGenerator.ensurePredefined(
+          seed, owners, accountConnector ? ECS_FUNCTIONAL_TEST_GIT_ACCOUNT : ECS_FUNCTIONAL_TEST_GIT_REPO);
+      GitFileConfig gitFileConfig = GitFileConfig.builder()
+                                        .connectorId(gitConnectorSetting.getUuid())
+                                        .branch("ecs-gitops-test")
+                                        .useBranch(true)
+                                        .serviceSpecFilePath("ecsgitops/servicespec.json")
+                                        .taskSpecFilePath("ecsgitops/containerspec_templatized.json")
+                                        .build();
+      if (accountConnector) {
+        gitFileConfig.setRepoName("arvind-test.git");
+      }
+      applicationManifest.setGitFileConfig(gitFileConfig);
     }
 
     applicationManifest.setAppId(service.getAppId());

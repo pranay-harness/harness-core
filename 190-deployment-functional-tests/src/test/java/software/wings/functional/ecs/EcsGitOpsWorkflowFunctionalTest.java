@@ -34,18 +34,22 @@ import io.harness.generator.Randomizer.Seed;
 import io.harness.generator.ServiceGenerator;
 import io.harness.generator.SettingGenerator;
 import io.harness.rule.Owner;
+import io.harness.testframework.restutils.ServiceVariablesUtils;
 import io.harness.testframework.restutils.WorkflowRestUtils;
 import lombok.extern.slf4j.Slf4j;
+import org.jetbrains.annotations.NotNull;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import software.wings.api.DeploymentType;
 import software.wings.beans.Application;
+import software.wings.beans.EntityType;
 import software.wings.beans.Environment;
 import software.wings.beans.GraphNode;
 import software.wings.beans.PhaseStep;
 import software.wings.beans.ResizeStrategy;
 import software.wings.beans.Service;
+import software.wings.beans.ServiceVariable;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.Workflow;
 import software.wings.beans.appmanifest.StoreType;
@@ -77,6 +81,7 @@ public class EcsGitOpsWorkflowFunctionalTest extends AbstractFunctionalTest {
   final String ECS_SERVICE_SETUP_CONSTANT = "ECS Service Setup";
   final String UPGRADE_CONTAINERS_CONSTANT = "Upgrade Containers";
   final String DEPLOY_CONTAINERS_CONSTANT = "Deploy Containers";
+  final String serviceName = "Func_Test_Ecs_Git_Service";
 
   private Application application;
   private Service service;
@@ -98,7 +103,37 @@ public class EcsGitOpsWorkflowFunctionalTest extends AbstractFunctionalTest {
   @Owner(developers = ARVIND)
   @Category(CDFunctionalTests.class)
   public void shouldCreateLocalEcsWorkflow() throws Exception {
-    service = serviceGenerator.ensureEcsRemoteTest(seed, owners, "Func_Test_Ecs_Git_Service_Local", StoreType.Local);
+    Workflow savedWorkflow = getWorkflow(StoreType.Local, false);
+    assertExecution(savedWorkflow, application.getUuid(), environment.getUuid());
+  }
+
+  @Test
+  @Owner(developers = ARVIND)
+  @Category(CDFunctionalTests.class)
+  public void shouldCreateRemoteEcsWorkflow() throws Exception {
+    Workflow savedWorkflow = getWorkflow(StoreType.Remote, false);
+
+    ServiceVariablesUtils.addOrGetServiceVariable(bearerToken, createServiceVariable("containerPort", "80"));
+    ServiceVariablesUtils.addOrGetServiceVariable(bearerToken, createServiceVariable("hostPort", "80"));
+
+    assertExecution(savedWorkflow, application.getUuid(), environment.getUuid());
+  }
+
+  @Test
+  @Owner(developers = ARVIND)
+  @Category(CDFunctionalTests.class)
+  public void shouldCreateRemoteAccountConnectorEcsWorkflow() throws Exception {
+    Workflow savedWorkflow = getWorkflow(StoreType.Remote, true);
+
+    ServiceVariablesUtils.addServiceVariable(bearerToken, createServiceVariable("containerPort", "80"));
+    ServiceVariablesUtils.addServiceVariable(bearerToken, createServiceVariable("hostPort", "80"));
+
+    assertExecution(savedWorkflow, application.getUuid(), environment.getUuid());
+  }
+
+  @NotNull
+  private Workflow getWorkflow(StoreType storeType, boolean accountConnector) {
+    service = serviceGenerator.ensureEcsRemoteTest(seed, owners, serviceName, storeType, accountConnector);
     assertThat(service).isNotNull();
 
     environment = environmentGenerator.ensurePredefined(seed, owners, Environments.GENERIC_TEST);
@@ -110,13 +145,25 @@ public class EcsGitOpsWorkflowFunctionalTest extends AbstractFunctionalTest {
 
     awsSettingAttribute = settingGenerator.ensurePredefined(seed, owners, AWS_TEST_CLOUD_PROVIDER);
 
-    Workflow basicEcsEc2TypeWorkflow = getEcsEc2TypeWorkflow(StoreType.Local);
+    Workflow basicEcsEc2TypeWorkflow = getEcsEc2TypeWorkflow(storeType);
     Workflow savedWorkflow = WorkflowRestUtils.createWorkflow(
         bearerToken, application.getAccountId(), application.getUuid(), basicEcsEc2TypeWorkflow);
-    savedWorkflow.setServiceId(service.getUuid());
     assertThat(savedWorkflow).isNotNull();
+    savedWorkflow.setServiceId(service.getUuid());
 
-    assertExecution(savedWorkflow, application.getUuid(), environment.getUuid());
+    return savedWorkflow;
+  }
+
+  public ServiceVariable createServiceVariable(String name, String value) {
+    ServiceVariable variable = ServiceVariable.builder().build();
+    variable.setAccountId(getAccount().getUuid());
+    variable.setAppId(service.getAppId());
+    variable.setValue(value.toCharArray());
+    variable.setName(name);
+    variable.setEntityType(EntityType.SERVICE);
+    variable.setType(ServiceVariable.Type.TEXT);
+    variable.setEntityId(service.getUuid());
+    return variable;
   }
 
   private Workflow getEcsEc2TypeWorkflow(StoreType storeType) {
