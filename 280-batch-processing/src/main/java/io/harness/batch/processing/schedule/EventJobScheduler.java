@@ -14,6 +14,7 @@ import io.harness.batch.processing.config.GcpScheduledQueryTriggerAction;
 import io.harness.batch.processing.metrics.ProductMetricsService;
 import io.harness.batch.processing.service.AccountExpiryCleanupService;
 import io.harness.batch.processing.service.impl.BatchJobBucketLogContext;
+import io.harness.batch.processing.service.impl.BatchJobRunningModeContext;
 import io.harness.batch.processing.service.impl.BatchJobTypeLogContext;
 import io.harness.batch.processing.service.impl.InstanceDataServiceImpl;
 import io.harness.batch.processing.service.intfc.BillingDataPipelineHealthStatusService;
@@ -186,7 +187,8 @@ public class EventJobScheduler {
       BatchJobBucket batchJobBucket = batchJobType.getBatchJobBucket();
       try (AutoLogContext ignore = new AccountLogContext(accountId, OVERRIDE_ERROR);
            AutoLogContext ignore1 = new BatchJobBucketLogContext(batchJobBucket.name(), OVERRIDE_ERROR);
-           AutoLogContext ignore2 = new BatchJobTypeLogContext(batchJobType.name(), OVERRIDE_ERROR)) {
+           AutoLogContext ignore2 = new BatchJobTypeLogContext(batchJobType.name(), OVERRIDE_ERROR);
+           AutoLogContext ignore3 = new BatchJobRunningModeContext(runningMode, OVERRIDE_ERROR)) {
         batchJobRunner.runJob(accountId, job, runningMode);
       }
     } catch (Exception ex) {

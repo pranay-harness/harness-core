@@ -85,7 +85,12 @@ public class InstanceBillingDataTasklet implements Tasklet {
           seekingDate = seekingDate.plus(1, ChronoUnit.MILLIS);
         }
       }
-      createBillingData(accountId, startTime, endTime, batchJobType, instanceDataLists);
+      try {
+        createBillingData(accountId, startTime, endTime, batchJobType, instanceDataLists);
+      } catch (Exception ex) {
+        logger.error("Exception in billing step", ex);
+        throw ex;
+      }
     } while (instanceDataLists.size() == batchSize);
     return null;
   }
