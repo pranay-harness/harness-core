@@ -128,6 +128,7 @@ build_bazel_module 50-delegate-task-grpc-service
 build_bazel_module 57-command-library-common
 build_bazel_module 64-events-framework
 build_bazel_module 70-delegate-agent
+build_bazel_module 70-delegate-service
 build_java_proto_module 13-grpc-api
 build_java_proto_module 19-delegate-tasks-beans
 build_java_proto_module 20-delegate-beans

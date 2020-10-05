@@ -50,7 +50,7 @@
         <module>69-connector-nextgen</module>
         <module>70-cv-nextgen-commons</module>
         <!--<module>70-delegate-agent</module>-->
-        <module>70-delegate-service</module>
+        <!--<module>70-delegate-service</module>-->
         <module>71-rest</module>
         <module>72-ci-beans</module>
         <module>72-event-server</module>
@@ -72,7 +72,6 @@
         <module>280-batch-processing</module>
         <module>300-cv-nextgen</module>
         <module>450-ce-views</module>
-
         <!--<module>990-commons-test</module>-->
     </modules>
     <scm>
