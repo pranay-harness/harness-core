@@ -1083,7 +1083,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
   private Workflow updateWorkflow(Workflow workflow, OrchestrationWorkflow orchestrationWorkflow,
       boolean onSaveCallNeeded, boolean infraChanged, boolean envChanged, boolean cloned, boolean migration) {
     String accountId = appService.getAccountIdByAppId(workflow.getAppId());
-    WorkflowServiceHelper.cleanupWorkflowStepSkipStrategies(orchestrationWorkflow);
+    WorkflowServiceHelper.cleanupWorkflowStrategies(orchestrationWorkflow);
     Workflow savedWorkflow = readWorkflow(workflow.getAppId(), workflow.getUuid());
 
     UpdateOperations<Workflow> ops = wingsPersistence.createUpdateOperations(Workflow.class);
@@ -1399,7 +1399,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
 
   @Override
   public PhaseStep updatePreDeployment(String appId, String workflowId, PhaseStep phaseStep) {
-    WorkflowServiceHelper.cleanupStepSkipStrategies(phaseStep);
+    WorkflowServiceHelper.cleanupPhaseStepStrategies(phaseStep);
     Workflow workflow = readWorkflow(appId, workflowId);
     notNullCheck("Workflow", workflow, USER);
     CanaryOrchestrationWorkflow orchestrationWorkflow =
@@ -1420,7 +1420,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
 
   @Override
   public PhaseStep updatePostDeployment(String appId, String workflowId, PhaseStep phaseStep) {
-    WorkflowServiceHelper.cleanupStepSkipStrategies(phaseStep);
+    WorkflowServiceHelper.cleanupPhaseStepStrategies(phaseStep);
     Workflow workflow = readWorkflow(appId, workflowId);
     notNullCheck("workflow", workflow, USER);
     CanaryOrchestrationWorkflow orchestrationWorkflow =
@@ -1600,7 +1600,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
       throw new InvalidRequestException("The direct workflow phase should not have rollback flag set!", USER_SRE);
     }
 
-    WorkflowServiceHelper.cleanupPhaseStepSkipStrategies(workflowPhase);
+    WorkflowServiceHelper.cleanupPhaseStrategies(workflowPhase);
     Workflow workflow = readWorkflow(appId, workflowId);
     if (workflow == null) {
       throw new InvalidArgumentsException(Pair.of("application", appId), Pair.of("workflow", workflowId),
@@ -1731,7 +1731,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
       throw new InvalidRequestException("The rollback workflow phase should have rollback flag set!", USER_SRE);
     }
 
-    WorkflowServiceHelper.cleanupPhaseStepSkipStrategies(rollbackWorkflowPhase);
+    WorkflowServiceHelper.cleanupPhaseStrategies(rollbackWorkflowPhase);
     Workflow workflow = readWorkflow(appId, workflowId);
     notNullCheck("workflow", workflow, USER);
     CanaryOrchestrationWorkflow orchestrationWorkflow =
