@@ -11,7 +11,7 @@ import javax.validation.constraints.NotNull;
 
 @Data
 @Builder
-@JsonTypeName("ServiceAccount")
+@JsonTypeName(KubernetesConfigConstants.SERVICE_ACCOUNT)
 public class KubernetesServiceAccountDTO extends KubernetesAuthCredentialDTO {
   @ApiModelProperty(dataType = "string") @NotNull @SecretReference SecretRefData serviceAccountTokenRef;
 }
