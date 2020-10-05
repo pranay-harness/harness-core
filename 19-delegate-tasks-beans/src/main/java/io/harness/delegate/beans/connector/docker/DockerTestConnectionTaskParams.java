@@ -3,12 +3,10 @@ package io.harness.delegate.beans.connector.docker;
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import io.harness.delegate.beans.executioncapability.ExecutionCapabilityDemander;
 import io.harness.delegate.task.TaskParameters;
-import io.harness.delegate.task.mixin.HttpConnectionExecutionCapabilityGenerator;
 import io.harness.security.encryption.EncryptedDataDetail;
 import lombok.Builder;
 import lombok.Value;
 
-import java.util.Collections;
 import java.util.List;
 
 @Value
@@ -19,8 +17,6 @@ public class DockerTestConnectionTaskParams implements TaskParameters, Execution
 
   @Override
   public List<ExecutionCapability> fetchRequiredExecutionCapabilities() {
-    return Collections.singletonList(HttpConnectionExecutionCapabilityGenerator.buildHttpConnectionExecutionCapability(
-        dockerConnector.getDockerRegistryUrl().endsWith("/") ? dockerConnector.getDockerRegistryUrl()
-                                                             : dockerConnector.getDockerRegistryUrl().concat("/")));
+    return dockerConnector.fetchRequiredExecutionCapabilities();
   }
 }
