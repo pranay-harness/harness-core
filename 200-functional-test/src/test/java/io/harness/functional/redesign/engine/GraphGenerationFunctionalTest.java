@@ -35,6 +35,8 @@ import io.restassured.config.RestAssuredConfig;
 import io.restassured.config.SSLConfig;
 import io.restassured.http.ContentType;
 import io.restassured.mapper.ObjectMapperType;
+import org.awaitility.Awaitility;
+import org.awaitility.Duration;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -46,6 +48,7 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 import javax.ws.rs.core.GenericType;
 
@@ -136,7 +139,7 @@ public class GraphGenerationFunctionalTest extends AbstractFunctionalTest {
   }
 
   @Test
-  @Owner(developers = ALEXEI, intermittent = true)
+  @Owner(developers = ALEXEI)
   @Category(FunctionalTests.class)
   public void shouldGenerateOrchestrationGraphWithBarriers() {
     List<String> nodeNames = Lists.newArrayList("Dummy Node 2", "barrier3", "Dummy Node 1", "barrier1", "Dummy Node 3",
@@ -198,7 +201,7 @@ public class GraphGenerationFunctionalTest extends AbstractFunctionalTest {
   }
 
   @Test
-  @Owner(developers = ALEXEI, intermittent = true)
+  @Owner(developers = ALEXEI)
   @Category(FunctionalTests.class)
   public void shouldGenerateOrchestrationGraphWithSkippedNodes() {
     List<String> nodeNames =
@@ -269,6 +272,12 @@ public class GraphGenerationFunctionalTest extends AbstractFunctionalTest {
     if (startingNodeId != null) {
       queryParams.put("startingSetupNodeId", startingNodeId);
     }
+
+    Awaitility.await().atMost(Duration.FIVE_MINUTES).pollInterval(5, TimeUnit.SECONDS).until(() -> {
+      RestResponse<OrchestrationGraphDTO> response = internalRequest(returnType, queryParams, requestUri);
+      return response.getResource().getEndTs() != null
+          && Status.finalStatuses().contains(response.getResource().getStatus());
+    });
 
     RestResponse<OrchestrationGraphDTO> response = internalRequest(returnType, queryParams, requestUri);
 
