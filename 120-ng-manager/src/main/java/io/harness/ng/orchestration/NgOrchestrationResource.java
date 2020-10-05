@@ -91,7 +91,7 @@ public class NgOrchestrationResource {
   @ApiOperation(value = "generate orchestration graph for plan execution", nickname = "get-graph-orchestration")
   public RestResponse<OrchestrationGraphDTO> getOrchestrationGraph(
       @QueryParam("planExecutionId") String planExecutionId) {
-    return new RestResponse<>(customExecutionService.getOrchestrationGraph(planExecutionId));
+    return new RestResponse<>(customExecutionService.getOrchestrationGraphV2(planExecutionId));
   }
 
   private Map<String, String> getAbstractions(String accountId, String appId) {

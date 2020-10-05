@@ -66,7 +66,7 @@ public class CDNGPipelineResourceTest extends CategoryTest {
   public void setUp() throws IOException {
     MockitoAnnotations.initMocks(this);
     ClassLoader classLoader = this.getClass().getClassLoader();
-    File file = new File(classLoader.getResource("pipeline.yaml").getFile());
+    File file = new File(classLoader.getResource("k8sPipeline.yaml").getFile());
     NgPipeline ngPipeline = YamlPipelineUtils.read(file.toURL(), NgPipeline.class);
     cdngPipelineResource = new CDNGPipelineResource(pipelineService, restQueryFilterParser, ngPipelineExecutionService);
     cdPipelineRequestDTO = CDPipelineRequestDTO.builder().ngPipeline(ngPipeline).build();
@@ -108,7 +108,7 @@ public class CDNGPipelineResourceTest extends CategoryTest {
   @Category(UnitTests.class)
   public void testCreatePipeline() {
     ClassLoader classLoader = this.getClass().getClassLoader();
-    File file = new File(classLoader.getResource("pipeline.yaml").getFile());
+    File file = new File(classLoader.getResource("k8sPipeline.yaml").getFile());
     doReturn(ngPipelineEntity.getIdentifier())
         .when(pipelineService)
         .createPipeline(Files.contentOf(file, Charset.defaultCharset()), ACCOUNT_ID, ORG_IDENTIFIER, PROJ_IDENTIFIER);

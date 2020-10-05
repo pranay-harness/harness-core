@@ -8,7 +8,6 @@ import io.harness.cdng.artifact.bean.yaml.DockerHubArtifactConfig;
 import io.harness.cdng.artifact.bean.yaml.GcrArtifactConfig;
 import io.harness.cdng.artifact.bean.yaml.SidecarArtifact;
 import io.harness.cdng.artifact.steps.ArtifactStepParameters;
-import io.harness.cdng.environment.steps.EnvironmentStepParameters;
 import io.harness.cdng.infra.beans.InfraMapping;
 import io.harness.cdng.infra.beans.InfraUseFromStage;
 import io.harness.cdng.infra.beans.K8sDirectInfraMapping;
@@ -55,7 +54,6 @@ public class NGMorphiaRegistrar implements MorphiaRegistrar {
     h.put("cdng.service.beans.ServiceUseFromStage$Overrides", Overrides.class);
     h.put("cdng.infra.beans.InfraUseFromStage$Overrides", InfraUseFromStage.Overrides.class);
     h.put("cdng.infra.beans.InfraUseFromStage", InfraUseFromStage.class);
-    h.put("cdng.environment.steps.EnvironmentStepParameters", EnvironmentStepParameters.class);
     h.put("cdng.infra.steps.InfraStepParameters", InfraStepParameters.class);
   }
 }
