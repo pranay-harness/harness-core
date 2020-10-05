@@ -1,12 +1,15 @@
 package io.harness.ng.core.entities;
 
+import static io.harness.mongo.CollationLocale.ENGLISH;
+import static io.harness.mongo.CollationStrength.PRIMARY;
+
 import io.harness.ModuleType;
 import io.harness.data.validator.EntityIdentifier;
 import io.harness.data.validator.EntityName;
 import io.harness.data.validator.Trimmed;
 import io.harness.mongo.index.CdIndex;
+import io.harness.mongo.index.CdUniqueIndexWithCollation;
 import io.harness.mongo.index.Field;
-import io.harness.mongo.index.NgUniqueIndex;
 import io.harness.ng.RsqlQueryable;
 import io.harness.ng.core.NGAccountAccess;
 import io.harness.ng.core.entities.Project.ProjectKeys;
@@ -32,10 +35,11 @@ import javax.validation.constraints.Size;
 @Data
 @Builder
 @FieldNameConstants(innerTypeName = "ProjectKeys")
-@NgUniqueIndex(name = "unique_accountIdentifier_organizationIdentifier_projectIdentifier",
+@CdUniqueIndexWithCollation(name = "unique_accountIdentifier_organizationIdentifier_projectIdentifier",
     fields =
     { @Field(ProjectKeys.accountIdentifier)
-      , @Field(ProjectKeys.orgIdentifier), @Field(ProjectKeys.identifier) })
+      , @Field(ProjectKeys.orgIdentifier), @Field(ProjectKeys.identifier) },
+    locale = ENGLISH, strength = PRIMARY)
 @CdIndex(name = "acctModulesOrgIdx",
     fields = { @Field(ProjectKeys.accountIdentifier)
                , @Field(ProjectKeys.modules), @Field(ProjectKeys.orgIdentifier) })

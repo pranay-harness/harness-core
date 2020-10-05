@@ -9,6 +9,7 @@ import static io.harness.mongo.IndexManagerCollectionSession.createCollectionSes
 import static io.harness.mongo.IndexManagerSession.Type.NORMAL_INDEX;
 import static io.harness.mongo.IndexManagerSession.Type.SPARSE_INDEX;
 import static io.harness.mongo.IndexManagerSession.Type.UNIQUE_INDEX;
+import static io.harness.mongo.IndexManagerSession.Type.UNIQUE_INDEX_WITH_COLLATION;
 import static io.harness.reflection.ReflectionUtils.fetchAnnotations;
 import static java.lang.String.join;
 import static java.lang.System.currentTimeMillis;
@@ -35,6 +36,7 @@ import io.harness.mongo.IndexCreator.IndexCreatorBuilder;
 import io.harness.mongo.IndexManager.Mode;
 import io.harness.mongo.index.CdIndex;
 import io.harness.mongo.index.CdSparseIndex;
+import io.harness.mongo.index.CdUniqueIndexWithCollation;
 import io.harness.mongo.index.FdIndex;
 import io.harness.mongo.index.FdSparseIndex;
 import io.harness.mongo.index.FdTtlIndex;
@@ -43,8 +45,10 @@ import io.harness.mongo.index.Field;
 import io.harness.mongo.index.NgUniqueIndex;
 import io.harness.mongo.index.migrator.Migrator;
 import io.harness.persistence.Store;
+import io.harness.serializer.JsonUtils;
 import io.harness.threading.Morpheus;
 import lombok.AllArgsConstructor;
+import lombok.SneakyThrows;
 import lombok.Value;
 import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.AdvancedDatastore;
@@ -54,6 +58,7 @@ import org.mongodb.morphia.annotations.Id;
 import org.mongodb.morphia.mapping.MappedClass;
 import org.mongodb.morphia.mapping.MappedField;
 
+import java.lang.annotation.Annotation;
 import java.lang.reflect.Modifier;
 import java.time.Duration;
 import java.util.ArrayList;
@@ -229,7 +234,7 @@ public class IndexManagerSession {
         type = SPARSE_INDEX;
       }
 
-      BasicDBObject options = indexOptions(indexName, type);
+      BasicDBObject options = indexOptions(indexName, type, null);
       if (fdTtlIndex != null) {
         options.put(EXPIRE_AFTER_SECONDS, fdTtlIndex.value());
       }
@@ -248,7 +253,7 @@ public class IndexManagerSession {
     throw new IndexManagerInspectException();
   }
 
-  enum Type { NORMAL_INDEX, UNIQUE_INDEX, SPARSE_INDEX }
+  enum Type { NORMAL_INDEX, UNIQUE_INDEX, SPARSE_INDEX, UNIQUE_INDEX_WITH_COLLATION }
 
   private static void creatorsForCompositeIndexes(
       MappedClass mc, DBCollection collection, Map<String, IndexCreator> creators) {
@@ -256,29 +261,42 @@ public class IndexManagerSession {
 
     Set<CdIndex> cdIndices = fetchAnnotations(mc.getClazz(), CdIndex.class);
     for (CdIndex cdIndex : cdIndices) {
-      IndexCreator newCreator =
-          buildtCompoundIndexCreator(cdIndex.name(), id, cdIndex.fields(), NORMAL_INDEX).collection(collection).build();
+      IndexCreator newCreator = buildtCompoundIndexCreator(cdIndex.name(), id, cdIndex.fields(), NORMAL_INDEX, cdIndex)
+                                    .collection(collection)
+                                    .build();
       checkWithTheOthers(creators, newCreator);
       putCreator(creators, newCreator.name(), newCreator);
     }
     Set<NgUniqueIndex> cdUniqueIndices = fetchAnnotations(mc.getClazz(), NgUniqueIndex.class);
     for (NgUniqueIndex index : cdUniqueIndices) {
+      IndexCreator newCreator = buildtCompoundIndexCreator(index.name(), id, index.fields(), UNIQUE_INDEX, index)
+                                    .collection(collection)
+                                    .build();
+      checkWithTheOthers(creators, newCreator);
+      putCreator(creators, newCreator.name(), newCreator);
+    }
+    Set<CdUniqueIndexWithCollation> cdUniqueIndicesWithCollation =
+        fetchAnnotations(mc.getClazz(), CdUniqueIndexWithCollation.class);
+    for (CdUniqueIndexWithCollation index : cdUniqueIndicesWithCollation) {
       IndexCreator newCreator =
-          buildtCompoundIndexCreator(index.name(), id, index.fields(), UNIQUE_INDEX).collection(collection).build();
+          buildtCompoundIndexCreator(index.name(), id, index.fields(), UNIQUE_INDEX_WITH_COLLATION, index)
+              .collection(collection)
+              .build();
       checkWithTheOthers(creators, newCreator);
       putCreator(creators, newCreator.name(), newCreator);
     }
     Set<CdSparseIndex> sparceIndexes = fetchAnnotations(mc.getClazz(), CdSparseIndex.class);
     for (CdSparseIndex index : sparceIndexes) {
-      IndexCreator newCreator =
-          buildtCompoundIndexCreator(index.name(), id, index.fields(), SPARSE_INDEX).collection(collection).build();
+      IndexCreator newCreator = buildtCompoundIndexCreator(index.name(), id, index.fields(), SPARSE_INDEX, index)
+                                    .collection(collection)
+                                    .build();
       checkWithTheOthers(creators, newCreator);
       putCreator(creators, newCreator.name(), newCreator);
     }
   }
 
   private static IndexCreatorBuilder buildtCompoundIndexCreator(
-      String indexName, String id, Field[] fields, Type type) {
+      String indexName, String id, Field[] fields, Type type, Annotation index) {
     BasicDBObject keys = new BasicDBObject();
 
     if (fields.length == 1 && !fields[0].value().contains(".")) {
@@ -293,16 +311,26 @@ public class IndexManagerSession {
       keys.append(field.value(), field.type().toIndexValue());
     }
 
-    BasicDBObject options = indexOptions(indexName, type);
+    BasicDBObject options = indexOptions(indexName, type, index);
 
     return IndexCreator.builder().keys(keys).options(options);
   }
 
-  private static BasicDBObject indexOptions(String indexName, Type type) {
+  @SneakyThrows
+  private static BasicDBObject indexOptions(String indexName, Type type, Annotation index) {
     BasicDBObject options = new BasicDBObject();
     options.put(NAME, indexName);
-    if (type == UNIQUE_INDEX) {
+    if (type == UNIQUE_INDEX || type == UNIQUE_INDEX_WITH_COLLATION) {
       options.put(UNIQUE, Boolean.TRUE);
+      if (type == UNIQUE_INDEX_WITH_COLLATION) {
+        CdUniqueIndexWithCollation cdUniqueIndexWithCollation = (CdUniqueIndexWithCollation) index;
+        Collation collation = Collation.builder()
+                                  .locale(cdUniqueIndexWithCollation.locale().getCode())
+                                  .strength(cdUniqueIndexWithCollation.strength().getCode())
+                                  .build();
+        BasicDBObject basicDBObject = BasicDBObject.parse(JsonUtils.asJson(collation));
+        options.put("collation", basicDBObject);
+      }
     } else {
       options.put(BACKGROUND, Boolean.TRUE);
     }

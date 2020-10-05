@@ -1,10 +1,13 @@
 package io.harness.ng.core.entities;
 
+import static io.harness.mongo.CollationLocale.ENGLISH;
+import static io.harness.mongo.CollationStrength.PRIMARY;
+
 import io.harness.data.validator.EntityIdentifier;
 import io.harness.data.validator.EntityName;
 import io.harness.data.validator.Trimmed;
+import io.harness.mongo.index.CdUniqueIndexWithCollation;
 import io.harness.mongo.index.Field;
-import io.harness.mongo.index.NgUniqueIndex;
 import io.harness.ng.core.NGAccountAccess;
 import io.harness.ng.core.entities.Organization.OrganizationKeys;
 import io.harness.persistence.PersistentEntity;
@@ -32,9 +35,10 @@ import javax.validation.constraints.Size;
 @Entity(value = "organizations", noClassnameStored = true)
 @Document("organizations")
 @TypeAlias("organizations")
-@NgUniqueIndex(name = "unique_accountIdentifier_organizationIdentifier",
+@CdUniqueIndexWithCollation(name = "unique_accountIdentifier_organizationIdentifier",
     fields = { @Field(OrganizationKeys.accountIdentifier)
-               , @Field(OrganizationKeys.identifier) })
+               , @Field(OrganizationKeys.identifier) }, locale = ENGLISH,
+    strength = PRIMARY)
 public class Organization implements PersistentEntity, NGAccountAccess {
   @Wither @Id @org.mongodb.morphia.annotations.Id String id;
   @Trimmed String accountIdentifier;
