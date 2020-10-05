@@ -1,13 +1,10 @@
 package software.wings.resources.secretsmanagement;
 
-import static io.harness.NGConstants.ACCOUNT_KEY;
-import static io.harness.NGConstants.IDENTIFIER_KEY;
-import static io.harness.NGConstants.ORG_KEY;
-import static io.harness.NGConstants.PROJECT_KEY;
 import static io.harness.exception.WingsException.USER;
 
 import com.google.inject.Inject;
 
+import io.harness.NGCommonEntityConstants;
 import io.harness.eraro.ErrorCode;
 import io.harness.rest.RestResponse;
 import io.harness.secretmanagerclient.dto.SecretManagerConfigDTO;
@@ -56,22 +53,25 @@ public class SecretManagerResourceNG {
   @Produces("application/json")
   @Consumes("application/json")
   public RestResponse<SecretManagerMetadataDTO> getMetadata(
-      @QueryParam(ACCOUNT_KEY) @NotNull String accountIdentifier, SecretManagerMetadataRequestDTO requestDTO) {
+      @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) @NotNull String accountIdentifier,
+      SecretManagerMetadataRequestDTO requestDTO) {
     return new RestResponse<>(ngSecretManagerService.getMetadata(accountIdentifier, requestDTO));
   }
 
   @GET
   @Path("{identifier}/validate")
   public RestResponse<Boolean> validateSecretManager(@PathParam("identifier") String identifier,
-      @QueryParam(ACCOUNT_KEY) String account, @QueryParam(ORG_KEY) String org,
-      @QueryParam(PROJECT_KEY) String project) {
+      @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String account,
+      @QueryParam(NGCommonEntityConstants.ORG_KEY) String org,
+      @QueryParam(NGCommonEntityConstants.PROJECT_KEY) String project) {
     return new RestResponse<>(ngSecretManagerService.validate(account, org, project, identifier));
   }
 
   @GET
   public RestResponse<List<SecretManagerConfigDTO>> getSecretManagers(
-      @QueryParam(ACCOUNT_KEY) @NotNull String accountIdentifier, @QueryParam(ORG_KEY) String orgIdentifier,
-      @QueryParam(PROJECT_KEY) String projectIdentifier) {
+      @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) @NotNull String accountIdentifier,
+      @QueryParam(NGCommonEntityConstants.ORG_KEY) String orgIdentifier,
+      @QueryParam(NGCommonEntityConstants.PROJECT_KEY) String projectIdentifier) {
     List<SecretManagerConfig> secretManagerConfigs =
         ngSecretManagerService.listSecretManagers(accountIdentifier, orgIdentifier, projectIdentifier);
     List<SecretManagerConfigDTO> dtoList = new ArrayList<>();
@@ -81,9 +81,11 @@ public class SecretManagerResourceNG {
 
   @GET
   @Path("{identifier}")
-  public RestResponse<SecretManagerConfigDTO> getSecretManager(@PathParam(IDENTIFIER_KEY) String identifier,
-      @QueryParam(ACCOUNT_KEY) @NotNull String accountIdentifier, @QueryParam(ORG_KEY) String orgIdentifier,
-      @QueryParam(PROJECT_KEY) String projectIdentifier) {
+  public RestResponse<SecretManagerConfigDTO> getSecretManager(
+      @PathParam(NGCommonEntityConstants.IDENTIFIER_KEY) String identifier,
+      @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) @NotNull String accountIdentifier,
+      @QueryParam(NGCommonEntityConstants.ORG_KEY) String orgIdentifier,
+      @QueryParam(NGCommonEntityConstants.PROJECT_KEY) String projectIdentifier) {
     Optional<SecretManagerConfig> secretManagerConfigOptional =
         ngSecretManagerService.getSecretManager(accountIdentifier, orgIdentifier, projectIdentifier, identifier);
     SecretManagerConfigDTO dto = null;
@@ -95,7 +97,8 @@ public class SecretManagerResourceNG {
 
   @GET
   @Path("global/{accountIdentifier}")
-  public RestResponse<SecretManagerConfigDTO> getGlobalSecretManager(@PathParam(ACCOUNT_KEY) String accountIdentifier) {
+  public RestResponse<SecretManagerConfigDTO> getGlobalSecretManager(
+      @PathParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier) {
     return new RestResponse<>(ngSecretManagerService.getGlobalSecretManager(accountIdentifier).toDTO(false));
   }
 
@@ -103,9 +106,12 @@ public class SecretManagerResourceNG {
   @Path("/{identifier}")
   @Produces("application/json")
   @Consumes("application/x-kryo")
-  public RestResponse<SecretManagerConfigDTO> updateSecretManager(@PathParam(IDENTIFIER_KEY) String identifier,
-      @QueryParam(ACCOUNT_KEY) @NotNull String accountIdentifier, @QueryParam(ORG_KEY) String orgIdentifier,
-      @QueryParam(PROJECT_KEY) String projectIdentifier, SecretManagerConfigUpdateDTO secretManagerConfigUpdateDTO) {
+  public RestResponse<SecretManagerConfigDTO> updateSecretManager(
+      @PathParam(NGCommonEntityConstants.IDENTIFIER_KEY) String identifier,
+      @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) @NotNull String accountIdentifier,
+      @QueryParam(NGCommonEntityConstants.ORG_KEY) String orgIdentifier,
+      @QueryParam(NGCommonEntityConstants.PROJECT_KEY) String projectIdentifier,
+      SecretManagerConfigUpdateDTO secretManagerConfigUpdateDTO) {
     Optional<SecretManagerConfig> secretManagerConfigOptional =
         ngSecretManagerService.getSecretManager(accountIdentifier, orgIdentifier, projectIdentifier, identifier);
     if (secretManagerConfigOptional.isPresent()) {
@@ -118,9 +124,11 @@ public class SecretManagerResourceNG {
 
   @DELETE
   @Path("/{identifier}")
-  public RestResponse<Boolean> deleteSecretManager(@QueryParam(ACCOUNT_KEY) String accountIdentifier,
-      @QueryParam(ORG_KEY) String orgIdentifier, @QueryParam(PROJECT_KEY) String projectIdentifier,
-      @PathParam(IDENTIFIER_KEY) String identifier) {
+  public RestResponse<Boolean> deleteSecretManager(
+      @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier,
+      @QueryParam(NGCommonEntityConstants.ORG_KEY) String orgIdentifier,
+      @QueryParam(NGCommonEntityConstants.PROJECT_KEY) String projectIdentifier,
+      @PathParam(NGCommonEntityConstants.IDENTIFIER_KEY) String identifier) {
     return new RestResponse<>(
         ngSecretManagerService.deleteSecretManager(accountIdentifier, orgIdentifier, projectIdentifier, identifier));
   }

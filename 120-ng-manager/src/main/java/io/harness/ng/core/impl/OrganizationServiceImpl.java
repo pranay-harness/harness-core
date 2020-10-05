@@ -1,7 +1,6 @@
 package io.harness.ng.core.impl;
 
 import static io.harness.NGConstants.HARNESS_SECRET_MANAGER_IDENTIFIER;
-import static io.harness.NGConstants.NAME_KEY;
 import static io.harness.eraro.ErrorCode.SECRET_MANAGEMENT_ERROR;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.exception.WingsException.USER_SRE;
@@ -18,6 +17,7 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
 
+import io.harness.NGCommonEntityConstants;
 import io.harness.connector.services.ConnectorService;
 import io.harness.data.validator.EntityNameValidator;
 import io.harness.exception.DuplicateFieldException;
@@ -120,7 +120,7 @@ public class OrganizationServiceImpl implements OrganizationService {
     Update update = getUpdate(organizationDTO);
     organizationDTO.setAccountIdentifier(accountIdentifier);
     organizationDTO.setIdentifier(identifier);
-    organizationDTO.setName(Optional.ofNullable(organizationDTO.getName()).orElse(NAME_KEY));
+    organizationDTO.setName(Optional.ofNullable(organizationDTO.getName()).orElse(NGCommonEntityConstants.NAME_KEY));
     validate(toOrganization(organizationDTO));
     Organization organization = organizationRepository.update(query, update);
     if (organization == null) {

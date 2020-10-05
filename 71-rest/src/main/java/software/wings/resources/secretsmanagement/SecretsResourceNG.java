@@ -1,14 +1,11 @@
 package software.wings.resources.secretsmanagement;
 
-import static io.harness.NGConstants.ACCOUNT_KEY;
-import static io.harness.NGConstants.ORG_KEY;
-import static io.harness.NGConstants.PAGE_KEY;
-import static io.harness.NGConstants.PROJECT_KEY;
-import static io.harness.NGConstants.SIZE_KEY;
 import static io.harness.beans.PageResponse.PageResponseBuilder.aPageResponse;
 
 import com.google.inject.Inject;
 
+import io.harness.NGCommonEntityConstants;
+import io.harness.NGResourceFilterConstants;
 import io.harness.beans.PageResponse;
 import io.harness.ng.core.NGAccessWithEncryptionConsumer;
 import io.harness.rest.RestResponse;
@@ -74,11 +71,12 @@ public class SecretsResourceNG {
 
   @GET
   public RestResponse<PageResponse<EncryptedDataDTO>> listSecrets(
-      @QueryParam(ACCOUNT_KEY) final String accountIdentifier, @QueryParam(ORG_KEY) final String orgIdentifier,
-      @QueryParam(PROJECT_KEY) final String projectIdentifier,
-      @QueryParam(PAGE_KEY) @DefaultValue("0") final String page,
-      @QueryParam(SIZE_KEY) @DefaultValue("100") final String size, @QueryParam("searchTerm") final String searchTerm,
-      @QueryParam("type") final SettingVariableTypes type) {
+      @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) final String accountIdentifier,
+      @QueryParam(NGCommonEntityConstants.ORG_KEY) final String orgIdentifier,
+      @QueryParam(NGCommonEntityConstants.PROJECT_KEY) final String projectIdentifier,
+      @QueryParam(NGResourceFilterConstants.PAGE_KEY) @DefaultValue("0") final String page,
+      @QueryParam(NGResourceFilterConstants.SIZE_KEY) @DefaultValue("100") final String size,
+      @QueryParam("searchTerm") final String searchTerm, @QueryParam("type") final SettingVariableTypes type) {
     PageResponse<EncryptedData> encryptedDataPageResponse;
     if (!StringUtils.isEmpty(searchTerm)) {
       List<EncryptedData> encryptedDataList =
@@ -95,8 +93,9 @@ public class SecretsResourceNG {
   @GET
   @Path("{identifier}")
   public RestResponse<EncryptedDataDTO> get(@PathParam("identifier") String identifier,
-      @QueryParam(ACCOUNT_KEY) final String accountIdentifier, @QueryParam(ORG_KEY) final String orgIdentifier,
-      @QueryParam(PROJECT_KEY) final String projectIdentifier) {
+      @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) final String accountIdentifier,
+      @QueryParam(NGCommonEntityConstants.ORG_KEY) final String orgIdentifier,
+      @QueryParam(NGCommonEntityConstants.PROJECT_KEY) final String projectIdentifier) {
     Optional<EncryptedData> encryptedDataOptional =
         ngSecretService.get(accountIdentifier, orgIdentifier, projectIdentifier, identifier);
     return new RestResponse<>(encryptedDataOptional.map(EncryptedDataMapper::toDTO).orElse(null));
@@ -106,16 +105,18 @@ public class SecretsResourceNG {
   @Path("{identifier}")
   @Consumes({"application/x-kryo"})
   public RestResponse<Boolean> updateSecret(@PathParam("identifier") String identifier,
-      @QueryParam(ACCOUNT_KEY) final String account, @QueryParam(ORG_KEY) final String org,
-      @QueryParam(PROJECT_KEY) final String project, SecretTextUpdateDTO dto) {
+      @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) final String account,
+      @QueryParam(NGCommonEntityConstants.ORG_KEY) final String org,
+      @QueryParam(NGCommonEntityConstants.PROJECT_KEY) final String project, SecretTextUpdateDTO dto) {
     return new RestResponse<>(ngSecretService.updateSecretText(account, org, project, identifier, dto));
   }
 
   @DELETE
   @Path("{identifier}")
   public RestResponse<Boolean> deleteSecret(@PathParam("identifier") String identifier,
-      @QueryParam(ACCOUNT_KEY) final String accountIdentifier, @QueryParam(ORG_KEY) final String orgIdentifier,
-      @QueryParam(PROJECT_KEY) final String projectIdentifier) {
+      @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) final String accountIdentifier,
+      @QueryParam(NGCommonEntityConstants.ORG_KEY) final String orgIdentifier,
+      @QueryParam(NGCommonEntityConstants.PROJECT_KEY) final String projectIdentifier) {
     return new RestResponse<>(
         ngSecretService.deleteSecretText(accountIdentifier, orgIdentifier, projectIdentifier, identifier));
   }

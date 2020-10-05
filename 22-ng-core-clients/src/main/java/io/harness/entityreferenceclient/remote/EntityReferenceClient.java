@@ -1,10 +1,6 @@
 package io.harness.entityreferenceclient.remote;
 
-import static io.harness.NGConstants.ACCOUNT_KEY;
-import static io.harness.NGConstants.IDENTIFIER_KEY;
-import static io.harness.NGConstants.ORG_KEY;
-import static io.harness.NGConstants.PROJECT_KEY;
-
+import io.harness.NGCommonEntityConstants;
 import io.harness.ng.core.dto.ResponseDTO;
 import io.harness.ng.core.entityReference.dto.EntityReferenceDTO;
 import org.hibernate.validator.constraints.NotEmpty;
@@ -25,7 +21,9 @@ public interface EntityReferenceClient {
       @Query("referredEntityFQN") String referredEntityFQN, @Query("referredByEntityFQN") String referredByEntityFQN);
 
   @GET(ENTITY_REFERENCE_API + "/isEntityReferenced")
-  Call<ResponseDTO<Boolean>> isEntityReferenced(@NotEmpty @Query(ACCOUNT_KEY) String accountIdentifier,
-      @Query(ORG_KEY) String orgIdentifier, @Query(PROJECT_KEY) String projectIdentifier,
-      @Query(IDENTIFIER_KEY) String identifier);
+  Call<ResponseDTO<Boolean>> isEntityReferenced(
+      @NotEmpty @Query(NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier,
+      @Query(NGCommonEntityConstants.ORG_KEY) String orgIdentifier,
+      @Query(NGCommonEntityConstants.PROJECT_KEY) String projectIdentifier,
+      @Query(NGCommonEntityConstants.IDENTIFIER_KEY) String identifier);
 }

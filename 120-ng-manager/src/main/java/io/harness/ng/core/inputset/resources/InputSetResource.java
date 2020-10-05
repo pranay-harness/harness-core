@@ -6,7 +6,9 @@ import com.google.inject.Inject;
 
 import com.codahale.metrics.annotation.ExceptionMetered;
 import com.codahale.metrics.annotation.Timed;
+import io.harness.NGCommonEntityConstants;
 import io.harness.NGConstants;
+import io.harness.NGResourceFilterConstants;
 import io.harness.cdng.inputset.beans.entities.CDInputSetEntity;
 import io.harness.cdng.inputset.beans.entities.MergeInputSetResponse;
 import io.harness.cdng.inputset.beans.resource.InputSetListType;
@@ -86,11 +88,11 @@ public class InputSetResource {
   @ApiOperation(value = "Gets an InputSet by identifier", nickname = "getInputSetForPipeline")
   public ResponseDTO<InputSetResponseDTO> getCDInputSet(
       @PathParam(NGConstants.INPUT_SET_IDENTIFIER_KEY) String inputSetIdentifier,
-      @NotNull @QueryParam(NGConstants.ACCOUNT_KEY) String accountId,
-      @NotNull @QueryParam(NGConstants.ORG_KEY) String orgIdentifier,
-      @NotNull @QueryParam(NGConstants.PROJECT_KEY) String projectIdentifier,
+      @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountId,
+      @NotNull @QueryParam(NGCommonEntityConstants.ORG_KEY) String orgIdentifier,
+      @NotNull @QueryParam(NGCommonEntityConstants.PROJECT_KEY) String projectIdentifier,
       @NotNull @QueryParam(NGConstants.PIPELINE_KEY) String pipelineIdentifier,
-      @QueryParam(NGConstants.DELETED_KEY) @DefaultValue("false") boolean deleted) {
+      @QueryParam(NGCommonEntityConstants.DELETED_KEY) @DefaultValue("false") boolean deleted) {
     Optional<BaseInputSetEntity> baseInputSetEntity = inputSetEntityService.get(
         accountId, orgIdentifier, projectIdentifier, pipelineIdentifier, inputSetIdentifier, deleted);
     return ResponseDTO.newResponse(
@@ -104,11 +106,11 @@ public class InputSetResource {
   @ApiOperation(value = "Gets an Overlay InputSet by identifier", nickname = "getOverlayInputSetForPipeline")
   public ResponseDTO<OverlayInputSetResponseDTO> getOverlayInputSet(
       @PathParam(NGConstants.INPUT_SET_IDENTIFIER_KEY) String inputSetIdentifier,
-      @NotNull @QueryParam(NGConstants.ACCOUNT_KEY) String accountId,
-      @NotNull @QueryParam(NGConstants.ORG_KEY) String orgIdentifier,
-      @NotNull @QueryParam(NGConstants.PROJECT_KEY) String projectIdentifier,
+      @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountId,
+      @NotNull @QueryParam(NGCommonEntityConstants.ORG_KEY) String orgIdentifier,
+      @NotNull @QueryParam(NGCommonEntityConstants.PROJECT_KEY) String projectIdentifier,
       @NotNull @QueryParam(NGConstants.PIPELINE_KEY) String pipelineIdentifier,
-      @QueryParam(NGConstants.DELETED_KEY) @DefaultValue("false") boolean deleted) {
+      @QueryParam(NGCommonEntityConstants.DELETED_KEY) @DefaultValue("false") boolean deleted) {
     Optional<BaseInputSetEntity> overlayInputSetEntity = inputSetEntityService.get(
         accountId, orgIdentifier, projectIdentifier, pipelineIdentifier, inputSetIdentifier, deleted);
     return ResponseDTO.newResponse(
@@ -124,9 +126,9 @@ public class InputSetResource {
   })
   @ApiOperation(value = "Create an InputSet For Pipeline", nickname = "createInputSetForPipeline")
   public ResponseDTO<InputSetResponseDTO>
-  createCDInputSet(@NotNull @QueryParam(NGConstants.ACCOUNT_KEY) String accountId,
-      @NotNull @QueryParam(NGConstants.ORG_KEY) String orgIdentifier,
-      @NotNull @QueryParam(NGConstants.PROJECT_KEY) String projectIdentifier,
+  createCDInputSet(@NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountId,
+      @NotNull @QueryParam(NGCommonEntityConstants.ORG_KEY) String orgIdentifier,
+      @NotNull @QueryParam(NGCommonEntityConstants.PROJECT_KEY) String projectIdentifier,
       @NotNull @QueryParam(NGConstants.PIPELINE_KEY) String pipelineIdentifier,
       @NotNull @ApiParam(hidden = true, type = "") String yaml) {
     CDInputSetEntity cdInputSetEntity =
@@ -145,9 +147,9 @@ public class InputSetResource {
   })
   @ApiOperation(value = "Create an Overlay InputSet For Pipeline", nickname = "createOverlayInputSetForPipeline")
   public ResponseDTO<OverlayInputSetResponseDTO>
-  createOverlayInputSet(@NotNull @QueryParam(NGConstants.ACCOUNT_KEY) String accountId,
-      @NotNull @QueryParam(NGConstants.ORG_KEY) String orgIdentifier,
-      @NotNull @QueryParam(NGConstants.PROJECT_KEY) String projectIdentifier,
+  createOverlayInputSet(@NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountId,
+      @NotNull @QueryParam(NGCommonEntityConstants.ORG_KEY) String orgIdentifier,
+      @NotNull @QueryParam(NGCommonEntityConstants.PROJECT_KEY) String projectIdentifier,
       @NotNull @QueryParam(NGConstants.PIPELINE_KEY) String pipelineIdentifier,
       @NotNull @ApiParam(hidden = true, type = "") String yaml) {
     OverlayInputSetEntity overlayInputSetEntity = InputSetElementMapper.toOverlayInputSetEntity(
@@ -167,9 +169,9 @@ public class InputSetResource {
   @ApiOperation(value = "Update an InputSet by identifier", nickname = "updateInputSetForPipeline")
   public ResponseDTO<InputSetResponseDTO>
   updateCDInputSet(@PathParam(NGConstants.INPUT_SET_IDENTIFIER_KEY) String inputSetIdentifier,
-      @NotNull @QueryParam(NGConstants.ACCOUNT_KEY) String accountId,
-      @NotNull @QueryParam(NGConstants.ORG_KEY) String orgIdentifier,
-      @NotNull @QueryParam(NGConstants.PROJECT_KEY) String projectIdentifier,
+      @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountId,
+      @NotNull @QueryParam(NGCommonEntityConstants.ORG_KEY) String orgIdentifier,
+      @NotNull @QueryParam(NGCommonEntityConstants.PROJECT_KEY) String projectIdentifier,
       @NotNull @QueryParam(NGConstants.PIPELINE_KEY) String pipelineIdentifier,
       @NotNull @ApiParam(hidden = true, type = "") String yaml) {
     CDInputSetEntity cdInputSetEntity = InputSetElementMapper.toCDInputSetEntityWithIdentifier(
@@ -189,9 +191,9 @@ public class InputSetResource {
   @ApiOperation(value = "Update an Overlay InputSet by identifier", nickname = "updateOverlayInputSetForPipeline")
   public ResponseDTO<OverlayInputSetResponseDTO>
   updateOverlayInputSet(@PathParam(NGConstants.INPUT_SET_IDENTIFIER_KEY) String inputSetIdentifier,
-      @NotNull @QueryParam(NGConstants.ACCOUNT_KEY) String accountId,
-      @NotNull @QueryParam(NGConstants.ORG_KEY) String orgIdentifier,
-      @NotNull @QueryParam(NGConstants.PROJECT_KEY) String projectIdentifier,
+      @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountId,
+      @NotNull @QueryParam(NGCommonEntityConstants.ORG_KEY) String orgIdentifier,
+      @NotNull @QueryParam(NGCommonEntityConstants.PROJECT_KEY) String projectIdentifier,
       @NotNull @QueryParam(NGConstants.PIPELINE_KEY) String pipelineIdentifier,
       @NotNull @ApiParam(hidden = true, type = "") String yaml) {
     OverlayInputSetEntity overlayInputSetEntity = InputSetElementMapper.toOverlayInputSetEntityWithIdentifier(
@@ -206,9 +208,9 @@ public class InputSetResource {
   @ExceptionMetered
   @ApiOperation(value = "Delete an inputSet by identifier", nickname = "deleteInputSetForPipeline")
   public ResponseDTO<Boolean> delete(@PathParam(NGConstants.INPUT_SET_IDENTIFIER_KEY) String inputSetIdentifier,
-      @NotNull @QueryParam(NGConstants.ACCOUNT_KEY) String accountId,
-      @NotNull @QueryParam(NGConstants.ORG_KEY) String orgIdentifier,
-      @NotNull @QueryParam(NGConstants.PROJECT_KEY) String projectIdentifier,
+      @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountId,
+      @NotNull @QueryParam(NGCommonEntityConstants.ORG_KEY) String orgIdentifier,
+      @NotNull @QueryParam(NGCommonEntityConstants.PROJECT_KEY) String projectIdentifier,
       @NotNull @QueryParam(NGConstants.PIPELINE_KEY) String pipelineIdentifier) {
     return ResponseDTO.newResponse(inputSetEntityService.delete(
         accountId, orgIdentifier, projectIdentifier, pipelineIdentifier, inputSetIdentifier));
@@ -219,14 +221,15 @@ public class InputSetResource {
   @ExceptionMetered
   @ApiOperation(value = "Gets InputSets list for a pipeline", nickname = "getInputSetsListForPipeline")
   public ResponseDTO<PageResponse<InputSetSummaryResponseDTO>> listInputSetsForPipeline(
-      @QueryParam(NGConstants.PAGE_KEY) @DefaultValue("0") int page,
-      @QueryParam(NGConstants.SIZE_KEY) @DefaultValue("100") int size,
-      @NotNull @QueryParam(NGConstants.ACCOUNT_KEY) String accountId,
-      @NotNull @QueryParam(NGConstants.ORG_KEY) String orgIdentifier,
-      @NotNull @QueryParam(NGConstants.PROJECT_KEY) String projectIdentifier,
+      @QueryParam(NGResourceFilterConstants.PAGE_KEY) @DefaultValue("0") int page,
+      @QueryParam(NGResourceFilterConstants.SIZE_KEY) @DefaultValue("100") int size,
+      @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountId,
+      @NotNull @QueryParam(NGCommonEntityConstants.ORG_KEY) String orgIdentifier,
+      @NotNull @QueryParam(NGCommonEntityConstants.PROJECT_KEY) String projectIdentifier,
       @NotNull @QueryParam(NGConstants.PIPELINE_KEY) String pipelineIdentifier,
       @QueryParam("inputSetType") @DefaultValue("ALL") InputSetListType inputSetListType,
-      @QueryParam(NGConstants.SEARCH_TERM_KEY) String searchTerm, @QueryParam(NGConstants.SORT_KEY) List<String> sort) {
+      @QueryParam(NGResourceFilterConstants.SEARCH_TERM_KEY) String searchTerm,
+      @QueryParam(NGResourceFilterConstants.SORT_KEY) List<String> sort) {
     Criteria criteria = InputSetFilterHelper.createCriteriaForGetList(
         accountId, orgIdentifier, projectIdentifier, pipelineIdentifier, inputSetListType, searchTerm, false);
     Pageable pageRequest;
@@ -246,9 +249,9 @@ public class InputSetResource {
   @ExceptionMetered
   @ApiOperation(value = "Get template from a pipeline yaml", nickname = "getTemplateFromPipeline")
   public ResponseDTO<InputSetTemplateResponseDTO> getTemplateFromPipeline(
-      @NotNull @QueryParam(NGConstants.ACCOUNT_KEY) String accountId,
-      @NotNull @QueryParam(NGConstants.ORG_KEY) String orgIdentifier,
-      @NotNull @QueryParam(NGConstants.PROJECT_KEY) String projectIdentifier,
+      @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountId,
+      @NotNull @QueryParam(NGCommonEntityConstants.ORG_KEY) String orgIdentifier,
+      @NotNull @QueryParam(NGCommonEntityConstants.PROJECT_KEY) String projectIdentifier,
       @NotNull @QueryParam(NGConstants.PIPELINE_KEY) String pipelineIdentifier) {
     Optional<CDPipelineResponseDTO> pipeline =
         ngPipelineService.getPipeline(pipelineIdentifier, accountId, orgIdentifier, projectIdentifier);
@@ -270,9 +273,9 @@ public class InputSetResource {
       value = "Merges given input sets list on pipeline and return input set template format of applied pipeline",
       nickname = "getMergeInputSetFromPipelineTemplateWithListInput")
   public ResponseDTO<MergeInputSetResponseDTO>
-  getMergeInputSetFromPipelineTemplate(@NotNull @QueryParam(NGConstants.ACCOUNT_KEY) String accountId,
-      @NotNull @QueryParam(NGConstants.ORG_KEY) String orgIdentifier,
-      @NotNull @QueryParam(NGConstants.PROJECT_KEY) String projectIdentifier,
+  getMergeInputSetFromPipelineTemplate(@NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountId,
+      @NotNull @QueryParam(NGCommonEntityConstants.ORG_KEY) String orgIdentifier,
+      @NotNull @QueryParam(NGCommonEntityConstants.PROJECT_KEY) String projectIdentifier,
       @NotNull @QueryParam(NGConstants.PIPELINE_KEY) String pipelineIdentifier,
       @QueryParam("useFQNIfError") @DefaultValue("false") boolean useFQNIfErrorResponse,
       @NotNull @Valid MergeInputSetRequestDTO mergeInputSetRequestDTO) {

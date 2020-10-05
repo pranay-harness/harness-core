@@ -1,9 +1,8 @@
 package io.harness.ng.core.remote;
 
-import static io.harness.NGConstants.ACCOUNT_KEY;
-
 import com.google.inject.Inject;
 
+import io.harness.NGCommonEntityConstants;
 import io.harness.ng.core.api.NGSecretManagerService;
 import io.harness.ng.core.dto.ErrorDTO;
 import io.harness.ng.core.dto.FailureDTO;
@@ -40,7 +39,8 @@ public class NGSecretManagerResource {
   @Path("meta-data")
   @ApiOperation(value = "Get metadata of secret manager", nickname = "getMetadata")
   public ResponseDTO<SecretManagerMetadataDTO> getSecretEngines(
-      @NotNull @QueryParam(ACCOUNT_KEY) String accountIdentifier, SecretManagerMetadataRequestDTO requestDTO) {
+      @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier,
+      SecretManagerMetadataRequestDTO requestDTO) {
     return ResponseDTO.newResponse(ngSecretManagerService.getMetadata(accountIdentifier, requestDTO));
   }
 }

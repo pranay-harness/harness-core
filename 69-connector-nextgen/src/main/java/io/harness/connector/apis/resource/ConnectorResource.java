@@ -1,18 +1,12 @@
 package io.harness.connector.apis.resource;
 
-import static io.harness.NGConstants.ACCOUNT_KEY;
-import static io.harness.NGConstants.IDENTIFIER_KEY;
-import static io.harness.NGConstants.ORG_KEY;
-import static io.harness.NGConstants.PAGE_KEY;
-import static io.harness.NGConstants.PROJECT_KEY;
-import static io.harness.NGConstants.SEARCH_TERM_KEY;
-import static io.harness.NGConstants.SIZE_KEY;
-import static io.harness.NGConstants.TYPE_KEY;
 import static io.harness.utils.PageUtils.getNGPageResponse;
 
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
 
+import io.harness.NGCommonEntityConstants;
+import io.harness.NGResourceFilterConstants;
 import io.harness.connector.apis.dto.ConnectorDTO;
 import io.harness.connector.apis.dto.ConnectorResponseDTO;
 import io.harness.connector.services.ConnectorService;
@@ -63,9 +57,11 @@ public class ConnectorResource {
   @GET
   @Path("{identifier}")
   @ApiOperation(value = "Get Connector", nickname = "getConnector")
-  public ResponseDTO<ConnectorResponseDTO> get(@NotEmpty @QueryParam(ACCOUNT_KEY) String accountIdentifier,
-      @QueryParam(ORG_KEY) String orgIdentifier, @QueryParam(PROJECT_KEY) String projectIdentifier,
-      @PathParam(IDENTIFIER_KEY) String connectorIdentifier) {
+  public ResponseDTO<ConnectorResponseDTO> get(
+      @NotEmpty @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier,
+      @QueryParam(NGCommonEntityConstants.ORG_KEY) String orgIdentifier,
+      @QueryParam(NGCommonEntityConstants.PROJECT_KEY) String projectIdentifier,
+      @PathParam(NGCommonEntityConstants.IDENTIFIER_KEY) String connectorIdentifier) {
     return ResponseDTO.newResponse(
         connectorService.get(accountIdentifier, orgIdentifier, projectIdentifier, connectorIdentifier).orElse(null));
   }
@@ -73,19 +69,25 @@ public class ConnectorResource {
   @GET
   @Path("validateUniqueIdentifier")
   @ApiOperation(value = "Validate Identifier is unique", nickname = "validateTheIdentifierIsUnique")
-  public ResponseDTO<Boolean> validateTheIdentifierIsUnique(@NotEmpty @QueryParam(ACCOUNT_KEY) String accountIdentifier,
-      @QueryParam(ORG_KEY) String orgIdentifier, @QueryParam(PROJECT_KEY) String projectIdentifier,
-      @QueryParam(IDENTIFIER_KEY) String connectorIdentifier) {
+  public ResponseDTO<Boolean> validateTheIdentifierIsUnique(
+      @NotEmpty @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier,
+      @QueryParam(NGCommonEntityConstants.ORG_KEY) String orgIdentifier,
+      @QueryParam(NGCommonEntityConstants.PROJECT_KEY) String projectIdentifier,
+      @QueryParam(NGCommonEntityConstants.IDENTIFIER_KEY) String connectorIdentifier) {
     return ResponseDTO.newResponse(connectorService.validateTheIdentifierIsUnique(
         accountIdentifier, orgIdentifier, projectIdentifier, connectorIdentifier));
   }
 
   @GET
   @ApiOperation(value = "Gets Connector list", nickname = "getConnectorList")
-  public ResponseDTO<PageResponse<ConnectorResponseDTO>> list(@QueryParam(PAGE_KEY) @DefaultValue("0") int page,
-      @QueryParam(SIZE_KEY) @DefaultValue("100") int size, @NotEmpty @QueryParam(ACCOUNT_KEY) String accountIdentifier,
-      @QueryParam(ORG_KEY) String orgIdentifier, @QueryParam(PROJECT_KEY) String projectIdentifier,
-      @QueryParam(SEARCH_TERM_KEY) String searchTerm, @QueryParam(TYPE_KEY) ConnectorType type,
+  public ResponseDTO<PageResponse<ConnectorResponseDTO>> list(
+      @QueryParam(NGResourceFilterConstants.PAGE_KEY) @DefaultValue("0") int page,
+      @QueryParam(NGResourceFilterConstants.SIZE_KEY) @DefaultValue("100") int size,
+      @NotEmpty @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier,
+      @QueryParam(NGCommonEntityConstants.ORG_KEY) String orgIdentifier,
+      @QueryParam(NGCommonEntityConstants.PROJECT_KEY) String projectIdentifier,
+      @QueryParam(NGResourceFilterConstants.SEARCH_TERM_KEY) String searchTerm,
+      @QueryParam(NGResourceFilterConstants.TYPE_KEY) ConnectorType type,
       @QueryParam(CATEGORY_KEY) ConnectorCategory category) {
     return ResponseDTO.newResponse(getNGPageResponse(connectorService.list(
         page, size, accountIdentifier, orgIdentifier, projectIdentifier, searchTerm, type, category)));
@@ -93,24 +95,25 @@ public class ConnectorResource {
 
   @POST
   @ApiOperation(value = "Creates a Connector", nickname = "createConnector")
-  public ResponseDTO<ConnectorResponseDTO> create(
-      @Valid @NotNull ConnectorDTO connector, @NotEmpty @QueryParam(ACCOUNT_KEY) String accountIdentifier) {
+  public ResponseDTO<ConnectorResponseDTO> create(@Valid @NotNull ConnectorDTO connector,
+      @NotEmpty @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier) {
     return ResponseDTO.newResponse(connectorService.create(connector, accountIdentifier));
   }
 
   @PUT
   @ApiOperation(value = "Updates a Connector", nickname = "updateConnector")
-  public ResponseDTO<ConnectorResponseDTO> update(
-      @NotNull @Valid ConnectorDTO connector, @NotEmpty @QueryParam(ACCOUNT_KEY) String accountIdentifier) {
+  public ResponseDTO<ConnectorResponseDTO> update(@NotNull @Valid ConnectorDTO connector,
+      @NotEmpty @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier) {
     return ResponseDTO.newResponse(connectorService.update(connector, accountIdentifier));
   }
 
   @DELETE
   @Path("{identifier}")
   @ApiOperation(value = "Delete a connector by identifier", nickname = "deleteConnector")
-  public ResponseDTO<Boolean> delete(@QueryParam(ACCOUNT_KEY) String accountIdentifier,
-      @QueryParam(ORG_KEY) String orgIdentifier, @QueryParam(PROJECT_KEY) String projectIdentifier,
-      @PathParam(IDENTIFIER_KEY) String connectorIdentifier) {
+  public ResponseDTO<Boolean> delete(@QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier,
+      @QueryParam(NGCommonEntityConstants.ORG_KEY) String orgIdentifier,
+      @QueryParam(NGCommonEntityConstants.PROJECT_KEY) String projectIdentifier,
+      @PathParam(NGCommonEntityConstants.IDENTIFIER_KEY) String connectorIdentifier) {
     return ResponseDTO.newResponse(
         connectorService.delete(accountIdentifier, orgIdentifier, projectIdentifier, connectorIdentifier));
   }
@@ -120,7 +123,7 @@ public class ConnectorResource {
   @Deprecated
   @ApiOperation(value = "Get the connectivity status of the Connector", nickname = "getConnectorStatus")
   public ResponseDTO<ConnectorValidationResult> validate(
-      ConnectorDTO connector, @QueryParam(ACCOUNT_KEY) String accountIdentifier) {
+      ConnectorDTO connector, @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier) {
     return ResponseDTO.newResponse(connectorService.validate(connector, accountIdentifier));
   }
 
@@ -128,8 +131,10 @@ public class ConnectorResource {
   @Path("testConnection/{identifier}")
   @ApiOperation(value = "Test the connection", nickname = "getTestConnectionResult")
   public ResponseDTO<ConnectorValidationResult> testConnection(
-      @NotEmpty @QueryParam(ACCOUNT_KEY) String accountIdentifier, @QueryParam(ORG_KEY) String orgIdentifier,
-      @QueryParam(PROJECT_KEY) String projectIdentifier, @PathParam(IDENTIFIER_KEY) String connectorIdentifier) {
+      @NotEmpty @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier,
+      @QueryParam(NGCommonEntityConstants.ORG_KEY) String orgIdentifier,
+      @QueryParam(NGCommonEntityConstants.PROJECT_KEY) String projectIdentifier,
+      @PathParam(NGCommonEntityConstants.IDENTIFIER_KEY) String connectorIdentifier) {
     return ResponseDTO.newResponse(
         connectorService.testConnection(accountIdentifier, orgIdentifier, projectIdentifier, connectorIdentifier));
   }
