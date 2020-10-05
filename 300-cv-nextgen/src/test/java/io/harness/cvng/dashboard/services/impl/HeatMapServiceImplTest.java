@@ -403,7 +403,7 @@ public class HeatMapServiceImplTest extends CvNextGenTest {
     String orgId = generateUuid();
 
     when(cvConfigService.getAvailableCategories(accountId, projectIdentifier))
-        .thenReturn(new HashSet<>(Arrays.asList(CVMonitoringCategory.PERFORMANCE, CVMonitoringCategory.QUALITY)));
+        .thenReturn(new HashSet<>(Arrays.asList(CVMonitoringCategory.PERFORMANCE, CVMonitoringCategory.ERRORS)));
     int numOfRiskUnits = 24;
     long riskStartBoundary = TimeUnit.MILLISECONDS.toMinutes(clock.instant().toEpochMilli());
     for (long minuteBoundry = riskStartBoundary;
@@ -413,7 +413,7 @@ public class HeatMapServiceImplTest extends CvNextGenTest {
           CVMonitoringCategory.PERFORMANCE, Instant.ofEpochMilli(TimeUnit.MINUTES.toMillis(minuteBoundry)),
           0.01 * minuteBoundry);
       heatMapService.updateRiskScore(accountId, projectIdentifier, serviceIdentifier + "2", envIdentifier,
-          CVMonitoringCategory.QUALITY, Instant.ofEpochMilli(TimeUnit.MINUTES.toMillis(minuteBoundry)),
+          CVMonitoringCategory.ERRORS, Instant.ofEpochMilli(TimeUnit.MINUTES.toMillis(minuteBoundry)),
           0.01 * minuteBoundry);
     }
 
@@ -424,7 +424,7 @@ public class HeatMapServiceImplTest extends CvNextGenTest {
     assertThat(categoryRiskMap.size()).isEqualTo(CVMonitoringCategory.values().length);
     assertThat(categoryRiskMap.containsKey(CVMonitoringCategory.PERFORMANCE)).isTrue();
     assertThat(categoryRiskMap.get(CVMonitoringCategory.PERFORMANCE)).isNotEqualTo(-1);
-    assertThat(categoryRiskMap.get(CVMonitoringCategory.QUALITY)).isEqualTo(-1);
+    assertThat(categoryRiskMap.get(CVMonitoringCategory.ERRORS)).isEqualTo(-1);
     assertThat(categoryRiskMap.get(CVMonitoringCategory.RESOURCES)).isEqualTo(-1);
   }
 
@@ -439,7 +439,7 @@ public class HeatMapServiceImplTest extends CvNextGenTest {
 
     when(cvConfigService.getEnvToServicesMap(accountId, orgId, projectIdentifier)).thenReturn(envServiceMap);
     when(cvConfigService.getAvailableCategories(accountId, projectIdentifier))
-        .thenReturn(new HashSet<>(Arrays.asList(CVMonitoringCategory.PERFORMANCE, CVMonitoringCategory.QUALITY)));
+        .thenReturn(new HashSet<>(Arrays.asList(CVMonitoringCategory.PERFORMANCE, CVMonitoringCategory.ERRORS)));
     int numOfRiskUnits = 24;
     long riskStartBoundary = TimeUnit.MILLISECONDS.toMinutes(clock.instant().toEpochMilli());
     for (long minuteBoundry = riskStartBoundary;
@@ -449,7 +449,7 @@ public class HeatMapServiceImplTest extends CvNextGenTest {
           CVMonitoringCategory.PERFORMANCE, Instant.ofEpochMilli(TimeUnit.MINUTES.toMillis(minuteBoundry)),
           0.01 * minuteBoundry);
       heatMapService.updateRiskScore(accountId, projectIdentifier, serviceIdentifier + "2", envIdentifier,
-          CVMonitoringCategory.QUALITY, Instant.ofEpochMilli(TimeUnit.MINUTES.toMillis(minuteBoundry)),
+          CVMonitoringCategory.ERRORS, Instant.ofEpochMilli(TimeUnit.MINUTES.toMillis(minuteBoundry)),
           0.01 * minuteBoundry);
     }
 
@@ -461,7 +461,7 @@ public class HeatMapServiceImplTest extends CvNextGenTest {
     assertThat(categoryRiskMap.size()).isEqualTo(CVMonitoringCategory.values().length);
     assertThat(categoryRiskMap.containsKey(CVMonitoringCategory.PERFORMANCE)).isTrue();
     assertThat(categoryRiskMap.get(CVMonitoringCategory.PERFORMANCE)).isNotEqualTo(-1);
-    assertThat(categoryRiskMap.get(CVMonitoringCategory.QUALITY)).isNotEqualTo(-1);
+    assertThat(categoryRiskMap.get(CVMonitoringCategory.ERRORS)).isNotEqualTo(-1);
     assertThat(categoryRiskMap.get(CVMonitoringCategory.RESOURCES)).isEqualTo(-1);
   }
 
@@ -476,7 +476,7 @@ public class HeatMapServiceImplTest extends CvNextGenTest {
 
     when(cvConfigService.getEnvToServicesMap(accountId, orgId, projectIdentifier)).thenReturn(envServiceMap);
     when(cvConfigService.getAvailableCategories(accountId, projectIdentifier))
-        .thenReturn(new HashSet<>(Arrays.asList(CVMonitoringCategory.PERFORMANCE, CVMonitoringCategory.QUALITY)));
+        .thenReturn(new HashSet<>(Arrays.asList(CVMonitoringCategory.PERFORMANCE, CVMonitoringCategory.ERRORS)));
     int numOfRiskUnits = 24;
     long riskStartBoundary = TimeUnit.MILLISECONDS.toMinutes(clock.instant().toEpochMilli());
     for (long minuteBoundry = riskStartBoundary;
@@ -486,7 +486,7 @@ public class HeatMapServiceImplTest extends CvNextGenTest {
           CVMonitoringCategory.PERFORMANCE, Instant.ofEpochMilli(TimeUnit.MINUTES.toMillis(minuteBoundry)),
           0.01 * minuteBoundry);
       heatMapService.updateRiskScore(accountId, projectIdentifier, serviceIdentifier + "2", envIdentifier,
-          CVMonitoringCategory.QUALITY, Instant.ofEpochMilli(TimeUnit.MINUTES.toMillis(minuteBoundry)),
+          CVMonitoringCategory.ERRORS, Instant.ofEpochMilli(TimeUnit.MINUTES.toMillis(minuteBoundry)),
           0.01 * minuteBoundry);
     }
 
@@ -496,10 +496,10 @@ public class HeatMapServiceImplTest extends CvNextGenTest {
     assertThat(categoryRiskMap).isNotNull();
     assertThat(categoryRiskMap.size()).isEqualTo(CVMonitoringCategory.values().length);
     assertThat(categoryRiskMap.containsKey(CVMonitoringCategory.PERFORMANCE)).isTrue();
-    assertThat(categoryRiskMap.containsKey(CVMonitoringCategory.QUALITY)).isTrue();
+    assertThat(categoryRiskMap.containsKey(CVMonitoringCategory.ERRORS)).isTrue();
 
     assertThat(categoryRiskMap.get(CVMonitoringCategory.PERFORMANCE)).isNotEqualTo(-1);
-    assertThat(categoryRiskMap.get(CVMonitoringCategory.QUALITY)).isNotEqualTo(-1);
+    assertThat(categoryRiskMap.get(CVMonitoringCategory.ERRORS)).isNotEqualTo(-1);
     assertThat(categoryRiskMap.get(CVMonitoringCategory.RESOURCES)).isEqualTo(-1);
   }
 
@@ -514,7 +514,7 @@ public class HeatMapServiceImplTest extends CvNextGenTest {
 
     when(cvConfigService.getEnvToServicesMap(accountId, orgId, projectIdentifier)).thenReturn(envServiceMap);
     when(cvConfigService.getAvailableCategories(accountId, projectIdentifier))
-        .thenReturn(new HashSet<>(Arrays.asList(CVMonitoringCategory.PERFORMANCE, CVMonitoringCategory.QUALITY)));
+        .thenReturn(new HashSet<>(Arrays.asList(CVMonitoringCategory.PERFORMANCE, CVMonitoringCategory.ERRORS)));
     int numOfRiskUnits = 24;
     long riskStartBoundary = TimeUnit.MILLISECONDS.toMinutes(clock.instant().toEpochMilli());
     for (long minuteBoundry = riskStartBoundary;
@@ -524,7 +524,7 @@ public class HeatMapServiceImplTest extends CvNextGenTest {
           CVMonitoringCategory.PERFORMANCE, Instant.ofEpochMilli(TimeUnit.MINUTES.toMillis(minuteBoundry)),
           0.01 * minuteBoundry);
       heatMapService.updateRiskScore(accountId, projectIdentifier, serviceIdentifier + "2", envIdentifier,
-          CVMonitoringCategory.QUALITY, Instant.ofEpochMilli(TimeUnit.MINUTES.toMillis(minuteBoundry)),
+          CVMonitoringCategory.ERRORS, Instant.ofEpochMilli(TimeUnit.MINUTES.toMillis(minuteBoundry)),
           0.01 * minuteBoundry);
     }
     // make the clock reflect a much newer time
@@ -538,7 +538,7 @@ public class HeatMapServiceImplTest extends CvNextGenTest {
     assertThat(categoryRiskMap.size()).isEqualTo(CVMonitoringCategory.values().length);
 
     assertThat(categoryRiskMap.get(CVMonitoringCategory.PERFORMANCE)).isEqualTo(-1);
-    assertThat(categoryRiskMap.get(CVMonitoringCategory.QUALITY)).isEqualTo(-1);
+    assertThat(categoryRiskMap.get(CVMonitoringCategory.ERRORS)).isEqualTo(-1);
     assertThat(categoryRiskMap.get(CVMonitoringCategory.RESOURCES)).isEqualTo(-1);
   }
 }

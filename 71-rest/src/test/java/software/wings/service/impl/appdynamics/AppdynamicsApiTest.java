@@ -1,7 +1,7 @@
 package software.wings.service.impl.appdynamics;
 
+import static io.harness.cvng.core.services.CVNextGenConstants.ERRORS_PACK_IDENTIFIER;
 import static io.harness.cvng.core.services.CVNextGenConstants.PERFORMANCE_PACK_IDENTIFIER;
-import static io.harness.cvng.core.services.CVNextGenConstants.QUALITY_PACK_IDENTIFIER;
 import static io.harness.cvng.core.services.CVNextGenConstants.RESOURCE_PACK_IDENTIFIER;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.rule.OwnerRule.RAGHU;
@@ -371,7 +371,7 @@ public class AppdynamicsApiTest extends WingsBaseTest {
         assertThat(metricPackData.getOverallStatus()).isEqualTo(ThirdPartyApiResponseStatus.SUCCESS);
       }
 
-      if (metricPackData.getMetricPackName().equals(QUALITY_PACK_IDENTIFIER)) {
+      if (metricPackData.getMetricPackName().equals(ERRORS_PACK_IDENTIFIER)) {
         assertThat(metricPackData.getOverallStatus()).isEqualTo(ThirdPartyApiResponseStatus.NO_DATA);
       }
 

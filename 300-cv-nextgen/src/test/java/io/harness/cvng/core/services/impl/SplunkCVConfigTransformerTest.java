@@ -40,13 +40,13 @@ public class SplunkCVConfigTransformerTest extends CVConfigTransformerTestBase {
   public void transformToDSConfig_withSplunkCVConfig() {
     SplunkCVConfig splunkCVConfig = new SplunkCVConfig();
     fillCommonFields(splunkCVConfig);
-    splunkCVConfig.setCategory(CVMonitoringCategory.QUALITY);
+    splunkCVConfig.setCategory(CVMonitoringCategory.ERRORS);
     splunkCVConfig.setQuery("exception");
     splunkCVConfig.setServiceInstanceIdentifier("host");
     SplunkDSConfig splunkDSConfig =
         splunkCVConfigTransformer.transformToDSConfig(Collections.singletonList(splunkCVConfig));
     assertThat(splunkDSConfig.getQuery()).isEqualTo("exception");
-    assertThat(splunkDSConfig.getEventType()).isEqualTo(CVMonitoringCategory.QUALITY.getDisplayName());
+    assertThat(splunkDSConfig.getEventType()).isEqualTo(CVMonitoringCategory.ERRORS.getDisplayName());
     assertThat(splunkDSConfig.getServiceInstanceIdentifier()).isEqualTo("host");
     assertThat(splunkDSConfig.getServiceIdentifier()).isEqualTo(splunkCVConfig.getServiceIdentifier());
   }
