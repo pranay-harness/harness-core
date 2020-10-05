@@ -102,7 +102,8 @@ public class KubernetesClusterConfigSerializationDeserializationTest extends Cat
     } catch (Exception ex) {
       Assert.fail("Encountered exception while serializing k8s connector " + ex.getMessage());
     }
-    String expectedResult = readFileAsString("src/test/resources/kubernetescluster/k8sConnector.json");
+    String expectedResult =
+        readFileAsString("69-connector-nextgen/src/test/resources/kubernetescluster/k8sConnector.json");
     try {
       JsonNode tree1 = objectMapper.readTree(expectedResult);
       JsonNode tree2 = objectMapper.readTree(connectorString);
@@ -118,7 +119,8 @@ public class KubernetesClusterConfigSerializationDeserializationTest extends Cat
   @Owner(developers = OwnerRule.DEEPAK)
   @Category(UnitTests.class)
   public void testDeserializationOfK8sConnector() {
-    String connectorInput = readFileAsString("src/test/resources/kubernetescluster/k8sConnector.json");
+    String connectorInput =
+        readFileAsString("69-connector-nextgen/src/test/resources/kubernetescluster/k8sConnector.json");
     ConnectorDTO inputConnector = null;
     try {
       inputConnector = objectMapper.readValue(connectorInput, ConnectorDTO.class);
@@ -141,7 +143,8 @@ public class KubernetesClusterConfigSerializationDeserializationTest extends Cat
     } catch (Exception ex) {
       Assert.fail("Encountered exception while serializing k8s connector " + ex.getMessage());
     }
-    String expectedResult = readFileAsString("src/test/resources/kubernetescluster/k8sClusterConfig.json");
+    String expectedResult =
+        readFileAsString("69-connector-nextgen/src/test/resources/kubernetescluster/k8sClusterConfig.json");
     try {
       JsonNode tree1 = objectMapper.readTree(expectedResult);
       JsonNode tree2 = objectMapper.readTree(connectorString);
@@ -157,7 +160,8 @@ public class KubernetesClusterConfigSerializationDeserializationTest extends Cat
   @Owner(developers = OwnerRule.DEEPAK)
   @Category(UnitTests.class)
   public void testDeserializationOfK8sClusterConfig() {
-    String connectorInput = readFileAsString("src/test/resources/kubernetescluster/k8sClusterConfig.json");
+    String connectorInput =
+        readFileAsString("69-connector-nextgen/src/test/resources/kubernetescluster/k8sClusterConfig.json");
     KubernetesClusterConfigDTO inputConnector = null;
     try {
       inputConnector = objectMapper.readValue(connectorInput, KubernetesClusterConfigDTO.class);

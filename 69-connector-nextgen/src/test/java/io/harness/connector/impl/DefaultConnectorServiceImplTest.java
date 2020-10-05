@@ -16,7 +16,7 @@ import static org.mockito.Mockito.when;
 import com.google.inject.Inject;
 
 import io.harness.category.element.UnitTests;
-import io.harness.connector.ConnectorsBaseTest;
+import io.harness.connector.ConnectorsTestBase;
 import io.harness.connector.apis.dto.ConnectorDTO;
 import io.harness.connector.apis.dto.ConnectorInfoDTO;
 import io.harness.connector.apis.dto.ConnectorResponseDTO;
@@ -59,7 +59,7 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Slf4j
-public class DefaultConnectorServiceImplTest extends ConnectorsBaseTest {
+public class DefaultConnectorServiceImplTest extends ConnectorsTestBase {
   @Mock KubernetesConnectionValidator kubernetesConnectionValidator;
   @Mock ConnectorRepository connectorRepository;
   @Mock private Map<String, ConnectionValidator> connectionValidatorMap;
