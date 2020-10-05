@@ -14,6 +14,7 @@ import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import javax.validation.constraints.NotNull;
 
 public interface PipelineService {
   String createPipeline(String yaml, String accountId, String orgId, String projectId);
@@ -29,4 +30,6 @@ public interface PipelineService {
   boolean deletePipeline(String accountId, String orgId, String projectId, String pipelineId);
   Optional<CDPipelineValidationInfo> validatePipeline(
       String pipelineId, String accountId, String orgId, String projectId);
+  Map<String, String> getPipelineIdentifierToName(
+      String accountId, String orgId, String projectId, @NotNull List<String> pipelineIdentifiers);
 }

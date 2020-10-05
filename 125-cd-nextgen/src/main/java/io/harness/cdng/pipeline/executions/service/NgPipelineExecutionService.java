@@ -5,6 +5,7 @@ import io.harness.cdng.pipeline.NgPipeline;
 import io.harness.cdng.pipeline.beans.resources.NGPipelineExecutionResponseDTO;
 import io.harness.cdng.pipeline.executions.beans.PipelineExecutionDetail;
 import io.harness.cdng.pipeline.executions.beans.PipelineExecutionSummary;
+import io.harness.cdng.service.beans.ServiceOutcome;
 import io.harness.execution.NodeExecution;
 import io.harness.execution.PlanExecution;
 import org.springframework.data.domain.Page;
@@ -34,4 +35,7 @@ public interface NgPipelineExecutionService {
 
   PipelineExecutionSummary updateStatusForGivenNode(
       String accountId, String orgId, String projectId, String planExecutionId, NodeExecution nodeExecution);
+
+  PipelineExecutionSummary addServiceInformationToPipelineExecutionNode(String accountId, String orgId,
+      String projectId, String planExecutionId, String nodeExecutionId, ServiceOutcome serviceOutcome);
 }

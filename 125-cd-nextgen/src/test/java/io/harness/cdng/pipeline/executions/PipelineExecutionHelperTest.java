@@ -10,15 +10,19 @@ import com.google.inject.Inject;
 import io.harness.beans.ParameterField;
 import io.harness.category.element.UnitTests;
 import io.harness.cdng.CDNGBaseTest;
+import io.harness.cdng.artifact.bean.DockerArtifactOutcome;
 import io.harness.cdng.environment.yaml.EnvironmentYaml;
 import io.harness.cdng.pipeline.DeploymentStage;
 import io.harness.cdng.pipeline.NgPipeline;
 import io.harness.cdng.pipeline.PipelineInfrastructure;
 import io.harness.cdng.pipeline.executions.beans.CDStageExecutionSummary;
+import io.harness.cdng.pipeline.executions.beans.DockerArtifactSummary;
 import io.harness.cdng.pipeline.executions.beans.ParallelStageExecutionSummary;
 import io.harness.cdng.pipeline.executions.beans.PipelineExecutionSummary;
+import io.harness.cdng.pipeline.executions.beans.ServiceExecutionSummary;
 import io.harness.cdng.service.beans.ServiceConfig;
 import io.harness.cdng.service.beans.ServiceDefinition;
+import io.harness.cdng.service.beans.ServiceOutcome;
 import io.harness.execution.NodeExecution;
 import io.harness.execution.status.Status;
 import io.harness.plan.PlanNode;
@@ -30,6 +34,7 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
 import java.io.IOException;
+import java.util.ArrayList;
 
 public class PipelineExecutionHelperTest extends CDNGBaseTest {
   @Inject PipelineExecutionHelper pipelineExecutionHelper;
@@ -61,8 +66,6 @@ public class PipelineExecutionHelperTest extends CDNGBaseTest {
 
     CDStageExecutionSummary executionSummary = CDStageExecutionSummary.builder()
                                                    .planNodeId("node1")
-                                                   .serviceIdentifier("serviceIdentifier")
-                                                   .serviceDefinitionType("Kubernetes")
                                                    .envIdentifier("envIdentifier")
                                                    .stageIdentifier("testIdentifier")
                                                    .executionStatus(ExecutionStatus.NOT_STARTED)
@@ -70,10 +73,10 @@ public class PipelineExecutionHelperTest extends CDNGBaseTest {
     assertThat(pipelineExecutionSummary.getStageExecutionSummarySummaryElements().size()).isEqualTo(1);
     assertThat(pipelineExecutionSummary.getStageExecutionSummarySummaryElements().get(0)).isEqualTo(executionSummary);
     assertThat(pipelineExecutionSummary.getEnvIdentifiers()).isEqualTo(Lists.newArrayList("envIdentifier"));
-    assertThat(pipelineExecutionSummary.getServiceIdentifiers()).isEqualTo(Lists.newArrayList("serviceIdentifier"));
+    assertThat(pipelineExecutionSummary.getServiceIdentifiers()).isEqualTo(new ArrayList<>());
     assertThat(pipelineExecutionSummary.getStageIdentifiers()).isEqualTo(Lists.newArrayList("testIdentifier"));
     assertThat(pipelineExecutionSummary.getStageTypes()).isEqualTo(Lists.newArrayList(DEPLOYMENT_STAGE_TYPE));
-    assertThat(pipelineExecutionSummary.getServiceDefinitionTypes()).isEqualTo(Lists.newArrayList("Kubernetes"));
+    assertThat(pipelineExecutionSummary.getServiceDefinitionTypes()).isEqualTo(new ArrayList<>());
   }
 
   @Test
@@ -106,8 +109,6 @@ public class PipelineExecutionHelperTest extends CDNGBaseTest {
 
     CDStageExecutionSummary executionSummary = CDStageExecutionSummary.builder()
                                                    .planNodeId("node1")
-                                                   .serviceIdentifier("serviceIdentifier")
-                                                   .serviceDefinitionType("Kubernetes")
                                                    .envIdentifier("envIdentifier")
                                                    .stageIdentifier("testIdentifier")
                                                    .executionStatus(ExecutionStatus.NOT_STARTED)
@@ -121,10 +122,10 @@ public class PipelineExecutionHelperTest extends CDNGBaseTest {
     assertThat(parallelStageExecutionSummary.getStageExecutionSummaries().size()).isEqualTo(1);
     assertThat(parallelStageExecutionSummary.getStageExecutionSummaries().get(0)).isEqualTo(executionSummary);
     assertThat(pipelineExecutionSummary.getEnvIdentifiers()).isEqualTo(Lists.newArrayList("envIdentifier"));
-    assertThat(pipelineExecutionSummary.getServiceIdentifiers()).isEqualTo(Lists.newArrayList("serviceIdentifier"));
+    assertThat(pipelineExecutionSummary.getServiceIdentifiers()).isEqualTo(new ArrayList<>());
     assertThat(pipelineExecutionSummary.getStageIdentifiers()).isEqualTo(Lists.newArrayList("testIdentifier"));
     assertThat(pipelineExecutionSummary.getStageTypes()).isEqualTo(Lists.newArrayList(DEPLOYMENT_STAGE_TYPE));
-    assertThat(pipelineExecutionSummary.getServiceDefinitionTypes()).isEqualTo(Lists.newArrayList("Kubernetes"));
+    assertThat(pipelineExecutionSummary.getServiceDefinitionTypes()).isEqualTo(new ArrayList<>());
   }
 
   @Test
@@ -159,5 +160,25 @@ public class PipelineExecutionHelperTest extends CDNGBaseTest {
     pipelineExecutionHelper.updatePipelineExecutionStatus(pipelineExecutionSummary,
         NodeExecution.builder().node(PlanNode.builder().uuid("node1").build()).status(Status.ERRORED).build());
     assertThat(pipelineExecutionSummary.getExecutionStatus()).isEqualTo(ExecutionStatus.FAILED);
+  }
+
+  @Test
+  @Owner(developers = SAHIL)
+  @Category(UnitTests.class)
+  public void testMapArtifactsOutcomeToSummary() {
+    ServiceOutcome.ArtifactsOutcome artifactsOutcome =
+        ServiceOutcome.ArtifactsOutcome.builder()
+            .primary(DockerArtifactOutcome.builder().primaryArtifact(true).imagePath("image").tag("tag").build())
+            .sidecars(Maps.of("sidecar1", DockerArtifactOutcome.builder().imagePath("image1").tag("tag1").build()))
+            .build();
+    ServiceExecutionSummary.ArtifactsSummary artifactsSummary =
+        ServiceExecutionSummary.ArtifactsSummary.builder()
+            .primary(DockerArtifactSummary.builder().imagePath("image").tag("tag").build())
+            .sidecar(DockerArtifactSummary.builder().imagePath("image1").tag("tag1").build())
+            .build();
+
+    ServiceExecutionSummary.ArtifactsSummary result = pipelineExecutionHelper.mapArtifactsOutcomeToSummary(
+        ServiceOutcome.builder().artifacts(artifactsOutcome).build());
+    assertThat(result).isEqualTo(artifactsSummary);
   }
 }

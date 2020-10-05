@@ -8,6 +8,7 @@ import com.google.inject.Inject;
 import com.codahale.metrics.annotation.ExceptionMetered;
 import com.codahale.metrics.annotation.Timed;
 import io.harness.cdng.pipeline.executions.beans.PipelineExecutionDetail;
+import io.harness.cdng.pipeline.executions.beans.PipelineExecutionSummary.PipelineExecutionSummaryKeys;
 import io.harness.cdng.pipeline.executions.beans.dto.PipelineExecutionSummaryDTO;
 import io.harness.cdng.pipeline.executions.service.NgPipelineExecutionServiceImpl;
 import io.harness.cdng.pipeline.mappers.ExecutionToDtoMapper;
@@ -24,6 +25,7 @@ import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 
+import java.util.Collections;
 import java.util.List;
 import javax.validation.constraints.NotNull;
 import javax.ws.rs.Consumes;
@@ -58,6 +60,9 @@ public class CDNGExecutionResource {
       @QueryParam("page") @DefaultValue("0") int page, @QueryParam("size") @DefaultValue("10") int size,
       @QueryParam("sort") List<String> sort) {
     logger.info("Get List of executions");
+    if (sort.isEmpty()) {
+      sort = Collections.singletonList(PipelineExecutionSummaryKeys.startedAt + ",desc");
+    }
     Page<PipelineExecutionSummaryDTO> pipelines =
         executionService.getExecutions(accountId, orgId, projectId, getPageRequest(page, size, sort))
             .map(ExecutionToDtoMapper::writeExecutionDto);

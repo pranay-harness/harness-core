@@ -15,13 +15,18 @@ import io.harness.cdng.pipeline.beans.resources.NGPipelineExecutionResponseDTO;
 import io.harness.cdng.pipeline.executions.ExecutionStatus;
 import io.harness.cdng.pipeline.executions.PipelineExecutionHelper;
 import io.harness.cdng.pipeline.executions.TriggerType;
+import io.harness.cdng.pipeline.executions.beans.CDStageExecutionSummary;
+import io.harness.cdng.pipeline.executions.beans.ExecutionTriggerInfo;
 import io.harness.cdng.pipeline.executions.beans.PipelineExecutionDetail;
 import io.harness.cdng.pipeline.executions.beans.PipelineExecutionDetail.PipelineExecutionDetailBuilder;
 import io.harness.cdng.pipeline.executions.beans.PipelineExecutionSummary;
 import io.harness.cdng.pipeline.executions.beans.PipelineExecutionSummary.PipelineExecutionSummaryKeys;
+import io.harness.cdng.pipeline.executions.beans.ServiceExecutionSummary;
 import io.harness.cdng.pipeline.executions.repositories.PipelineExecutionRepository;
 import io.harness.cdng.pipeline.mappers.ExecutionToDtoMapper;
 import io.harness.cdng.pipeline.mappers.NGPipelineExecutionDTOMapper;
+import io.harness.cdng.pipeline.service.PipelineService;
+import io.harness.cdng.service.beans.ServiceOutcome;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.dto.OrchestrationGraphDTO;
 import io.harness.engine.OrchestrationService;
@@ -47,17 +52,22 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.stream.Collectors;
 import javax.annotation.Nonnull;
 import javax.validation.constraints.NotNull;
 
 @Singleton
 public class NgPipelineExecutionServiceImpl implements NgPipelineExecutionService {
+  private static final EmbeddedUser EMBEDDED_USER =
+      EmbeddedUser.builder().uuid("lv0euRhKRCyiXWzS7pOg6g").email("admin@harness.io").name("Admin").build();
+
   @Inject private OrchestrationService orchestrationService;
   @Inject private ExecutionPlanCreatorService executionPlanCreatorService;
   @Inject private PipelineExecutionRepository pipelineExecutionRepository;
   @Inject private NodeExecutionService nodeExecutionService;
   @Inject private GraphGenerationService graphGenerationService;
   @Inject private PipelineExecutionHelper pipelineExecutionHelper;
+  @Inject private PipelineService pipelineService;
   @Inject private InputSetMergeHelper inputSetMergeHelper;
 
   @Override
@@ -97,7 +107,16 @@ public class NgPipelineExecutionServiceImpl implements NgPipelineExecutionServic
                             .and(PipelineExecutionSummaryKeys.projectIdentifier)
                             .is(projectId);
 
-    return pipelineExecutionRepository.findAll(criteria, pageable);
+    Page<PipelineExecutionSummary> pipelineExecutionSummaries = pipelineExecutionRepository.findAll(criteria, pageable);
+    List<String> pipelineIdentifiers = pipelineExecutionSummaries.get()
+                                           .map(PipelineExecutionSummary::getPipelineIdentifier)
+                                           .collect(Collectors.toList());
+    Map<String, String> pipelineIdentifierToNameMap =
+        pipelineService.getPipelineIdentifierToName(accountId, orgId, projectId, pipelineIdentifiers);
+    pipelineExecutionSummaries.get().forEach(pipelineExecutionSummary
+        -> pipelineExecutionSummary.setPipelineName(
+            pipelineIdentifierToNameMap.get(pipelineExecutionSummary.getPipelineIdentifier())));
+    return pipelineExecutionSummaries;
   }
 
   @Override
@@ -109,18 +128,19 @@ public class NgPipelineExecutionServiceImpl implements NgPipelineExecutionServic
         .stream()
         .filter(node -> Objects.equals(node.getGroup(), StepOutcomeGroup.STAGE.name()))
         .forEach(node -> stageIdentifierToPlanNodeId.put(node.getIdentifier(), node.getUuid()));
-    PipelineExecutionSummary pipelineExecutionSummary = PipelineExecutionSummary.builder()
-                                                            .accountIdentifier(accountId)
-                                                            .orgIdentifier(orgId)
-                                                            .projectIdentifier(projectId)
-                                                            .pipelineName(ngPipeline.getName())
-                                                            .pipelineIdentifier(ngPipeline.getIdentifier())
-                                                            .executionStatus(ExecutionStatus.RUNNING)
-                                                            .triggeredBy(getEmbeddedUser())
-                                                            .triggerType(TriggerType.MANUAL)
-                                                            .planExecutionId(planExecution.getUuid())
-                                                            .startedAt(planExecution.getStartTs())
-                                                            .build();
+    PipelineExecutionSummary pipelineExecutionSummary =
+        PipelineExecutionSummary.builder()
+            .accountIdentifier(accountId)
+            .orgIdentifier(orgId)
+            .projectIdentifier(projectId)
+            .pipelineName(ngPipeline.getName())
+            .pipelineIdentifier(ngPipeline.getIdentifier())
+            .executionStatus(ExecutionStatus.RUNNING)
+            .triggerInfo(
+                ExecutionTriggerInfo.builder().triggerType(TriggerType.MANUAL).triggeredBy(EMBEDDED_USER).build())
+            .planExecutionId(planExecution.getUuid())
+            .startedAt(planExecution.getStartTs())
+            .build();
     pipelineExecutionHelper.addStageSpecificDetailsToPipelineExecution(
         pipelineExecutionSummary, ngPipeline, stageIdentifierToPlanNodeId);
     return pipelineExecutionRepository.save(pipelineExecutionSummary);
@@ -170,6 +190,30 @@ public class NgPipelineExecutionServiceImpl implements NgPipelineExecutionServic
       pipelineExecutionHelper.updatePipelineExecutionStatus(pipelineExecutionSummary, nodeExecution);
     }
     return pipelineExecutionRepository.save(pipelineExecutionSummary);
+  }
+
+  @Override
+  public PipelineExecutionSummary addServiceInformationToPipelineExecutionNode(String accountId, String orgId,
+      String projectId, String planExecutionId, String nodeExecutionId, ServiceOutcome serviceOutcome) {
+    NodeExecution nodeExecution = nodeExecutionService.get(nodeExecutionId);
+    PipelineExecutionSummary pipelineExecutionSummary =
+        getByPlanExecutionId(accountId, orgId, projectId, planExecutionId);
+    CDStageExecutionSummary stageExecutionSummaryWrapper =
+        pipelineExecutionHelper.findStageExecutionSummaryByNodeExecutionId(
+            pipelineExecutionSummary.getStageExecutionSummarySummaryElements(), nodeExecution.getParentId());
+    ServiceExecutionSummary serviceExecutionSummary =
+        ServiceExecutionSummary.builder()
+            .identifier(serviceOutcome.getIdentifier())
+            .displayName(serviceOutcome.getDisplayName())
+            .deploymentType(serviceOutcome.getDeploymentType())
+            .artifacts(pipelineExecutionHelper.mapArtifactsOutcomeToSummary(serviceOutcome))
+            .build();
+    stageExecutionSummaryWrapper.setServiceExecutionSummary(serviceExecutionSummary);
+    stageExecutionSummaryWrapper.setServiceIdentifier(serviceExecutionSummary.getIdentifier());
+    pipelineExecutionSummary.addServiceIdentifier(serviceExecutionSummary.getIdentifier());
+    pipelineExecutionSummary.addServiceDefinitionType(serviceExecutionSummary.getDeploymentType());
+    pipelineExecutionRepository.save(pipelineExecutionSummary);
+    return pipelineExecutionSummary;
   }
 
   private NGPipelineExecutionResponseDTO getPipelineResponseDTO(String accountId, String orgIdentifier,

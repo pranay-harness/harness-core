@@ -5,6 +5,7 @@ import com.google.inject.Inject;
 import io.harness.cdng.pipeline.beans.entities.NgPipelineEntity;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
+import org.jetbrains.annotations.NotNull;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.mongodb.core.MongoTemplate;
@@ -29,6 +30,19 @@ public class PipelineRepositoryImpl implements CustomPipelineRepository {
   @Override
   public List<NgPipelineEntity> findAllWithCriteria(Criteria criteria) {
     Query query = new Query(criteria);
+    return mongoTemplate.find(query, NgPipelineEntity.class);
+  }
+
+  @Override
+  public List<NgPipelineEntity> findAllWithCriteriaAndProjectOnFields(
+      Criteria criteria, @NotNull List<String> includedFields, @NotNull List<String> excludedFields) {
+    Query query = new Query(criteria);
+    for (String field : includedFields) {
+      query.fields().include(field);
+    }
+    for (String field : excludedFields) {
+      query.fields().exclude(field);
+    }
     return mongoTemplate.find(query, NgPipelineEntity.class);
   }
 }

@@ -1,5 +1,7 @@
 package io.harness.cdng.artifact.bean;
 
+import io.harness.cdng.pipeline.executions.beans.ArtifactSummary;
+import io.harness.cdng.pipeline.executions.beans.DockerArtifactSummary;
 import lombok.Builder;
 import lombok.EqualsAndHashCode;
 import lombok.Value;
@@ -22,4 +24,9 @@ public class DockerArtifactOutcome implements ArtifactOutcome {
   String artifactType;
   /** Whether this config corresponds to primary artifact.*/
   boolean primaryArtifact;
+
+  @Override
+  public ArtifactSummary getArtifactSummary() {
+    return DockerArtifactSummary.builder().imagePath(getImagePath()).tag(getTag()).build();
+  }
 }

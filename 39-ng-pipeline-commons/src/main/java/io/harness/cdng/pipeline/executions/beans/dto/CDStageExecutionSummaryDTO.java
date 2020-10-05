@@ -2,6 +2,8 @@ package io.harness.cdng.pipeline.executions.beans.dto;
 
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import io.harness.cdng.pipeline.executions.ExecutionStatus;
+import io.harness.cdng.pipeline.executions.beans.ExecutionErrorInfo;
+import io.harness.cdng.pipeline.executions.beans.ServiceExecutionSummary;
 import lombok.Builder;
 import lombok.Data;
 
@@ -11,6 +13,7 @@ import lombok.Data;
 public class CDStageExecutionSummaryDTO implements StageExecutionSummaryDTO {
   String planExecutionId;
   String stageIdentifier;
+  ServiceExecutionSummary serviceInfo;
   String stageName;
   String serviceDefinitionType;
   ExecutionStatus executionStatus;
@@ -18,5 +21,5 @@ public class CDStageExecutionSummaryDTO implements StageExecutionSummaryDTO {
   Long endedAt;
   String serviceIdentifier;
   String envIdentifier;
-  String errorMsg;
+  ExecutionErrorInfo errorInfo;
 }

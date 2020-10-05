@@ -36,14 +36,15 @@ public class ExecutionToDtoMapper {
         .startedAt(pipelineExecutionSummary.getStartedAt())
         .executionStatus(pipelineExecutionSummary.getExecutionStatus())
         .tags(pipelineExecutionSummary.getTags())
-        .triggeredBy(pipelineExecutionSummary.getTriggeredBy())
-        .triggerType(pipelineExecutionSummary.getTriggerType())
+        .deploymentId("DeploymentIdPlaceHolder")
+        .triggerInfo(pipelineExecutionSummary.getTriggerInfo())
         .failedStagesCount(getCountForGivenStatus(
             pipelineExecutionSummary.getStageExecutionSummarySummaryElements(), ExecutionStatus.FAILED))
         .successfulStagesCount(getCountForGivenStatus(
             pipelineExecutionSummary.getStageExecutionSummarySummaryElements(), ExecutionStatus.SUCCESS))
         .runningStagesCount(getCountForGivenStatus(
             pipelineExecutionSummary.getStageExecutionSummarySummaryElements(), ExecutionStatus.RUNNING))
+        .errorInfo(pipelineExecutionSummary.getErrorInfo())
         .build();
   }
 
@@ -69,13 +70,14 @@ public class ExecutionToDtoMapper {
         .serviceDefinitionType(cdStageExecutionSummary.getServiceDefinitionType())
         .endedAt(cdStageExecutionSummary.getEndedAt())
         .envIdentifier(cdStageExecutionSummary.getEnvIdentifier())
-        .errorMsg(cdStageExecutionSummary.getErrorMsg())
+        .errorInfo(cdStageExecutionSummary.getErrorInfo())
         .planExecutionId(cdStageExecutionSummary.getPlanExecutionId())
         .serviceIdentifier(cdStageExecutionSummary.getServiceIdentifier())
         .stageIdentifier(cdStageExecutionSummary.getStageIdentifier())
         .stageName(cdStageExecutionSummary.getStageName())
         .startedAt(cdStageExecutionSummary.getStartedAt())
         .executionStatus(cdStageExecutionSummary.getExecutionStatus())
+        .serviceInfo(cdStageExecutionSummary.getServiceExecutionSummary())
         .build();
   }
 
