@@ -24,7 +24,7 @@ public class HarnessServiceInfoFetcher extends CacheUtils {
   private final CloudToHarnessMappingService cloudToHarnessMappingService;
   private final K8sLabelServiceInfoFetcher k8sLabelServiceInfoFetcher;
 
-  private final LoadingCache<CacheKey, HarnessServiceInfo> getHarnessServiceInfoCache;
+  public final LoadingCache<CacheKey, Optional<HarnessServiceInfo>> getHarnessServiceInfoCache;
 
   @Value
   private static class CacheKey {
@@ -39,15 +39,13 @@ public class HarnessServiceInfoFetcher extends CacheUtils {
       CloudToHarnessMappingService cloudToHarnessMappingService) {
     this.k8sLabelServiceInfoFetcher = k8sLabelServiceInfoFetcher;
     this.cloudToHarnessMappingService = cloudToHarnessMappingService;
-    this.getHarnessServiceInfoCache =
-        Caffeine.newBuilder()
-            .recordStats()
-            .expireAfterAccess(24, TimeUnit.HOURS)
-            .maximumSize(1_000)
-            .build(key
-                -> this.cloudToHarnessMappingService
-                       .getHarnessServiceInfo(key.accountId, key.computeProviderId, key.namespace, key.podName)
-                       .orElse(null));
+    this.getHarnessServiceInfoCache = Caffeine.newBuilder()
+                                          .recordStats()
+                                          .expireAfterAccess(24, TimeUnit.HOURS)
+                                          .maximumSize(1_000)
+                                          .build(key
+                                              -> this.cloudToHarnessMappingService.getHarnessServiceInfo(
+                                                  key.accountId, key.computeProviderId, key.namespace, key.podName));
   }
 
   public Optional<HarnessServiceInfo> fetchHarnessServiceInfo(
@@ -55,8 +53,8 @@ public class HarnessServiceInfoFetcher extends CacheUtils {
     try {
       Optional<HarnessServiceInfo> harnessServiceInfo = Optional.empty();
       if (labelsMap.containsKey(K8SV1_RELEASE_NAME) || labelsMap.containsKey(RELEASE_NAME)) {
-        harnessServiceInfo = Optional.ofNullable(
-            getHarnessServiceInfoCache.get(new CacheKey(accountId, computeProviderId, namespace, podName)));
+        harnessServiceInfo =
+            getHarnessServiceInfoCache.get(new CacheKey(accountId, computeProviderId, namespace, podName));
       }
       if (!harnessServiceInfo.isPresent()) {
         harnessServiceInfo = k8sLabelServiceInfoFetcher.fetchHarnessServiceInfoFromCache(accountId, labelsMap);

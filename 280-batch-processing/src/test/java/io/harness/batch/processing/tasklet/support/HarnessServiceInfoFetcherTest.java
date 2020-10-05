@@ -3,8 +3,12 @@ package io.harness.batch.processing.tasklet.support;
 import static io.harness.batch.processing.writer.constants.K8sCCMConstants.K8SV1_RELEASE_NAME;
 import static io.harness.batch.processing.writer.constants.K8sCCMConstants.RELEASE_NAME;
 import static io.harness.rule.OwnerRule.HITESH;
+import static io.harness.rule.OwnerRule.UTSAV;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import com.google.common.collect.ImmutableMap;
@@ -77,5 +81,24 @@ public class HarnessServiceInfoFetcherTest extends CategoryTest {
     when(k8sLabelServiceInfoFetcher.fetchHarnessServiceInfoFromCache(ACCOUNT_ID, labels)).thenThrow(Exception.class);
     assertThat(harnessServiceInfoFetcher.fetchHarnessServiceInfo(ACCOUNT_ID, SETTING_ID, NAMESPACE, POD_NAME, labels))
         .isNotPresent();
+  }
+
+  @Test
+  @Owner(developers = UTSAV)
+  @Category(UnitTests.class)
+  public void shouldCacheCloudToHarnessMappingServiceNotFound() {
+    ImmutableMap<String, String> labels = ImmutableMap.of(K8SV1_RELEASE_NAME, "value1");
+    when(k8sLabelServiceInfoFetcher.fetchHarnessServiceInfoFromCache(any(), any())).thenReturn(Optional.empty());
+    when(cloudToHarnessMappingService.getHarnessServiceInfo(any(), any(), any(), any())).thenReturn(Optional.empty());
+
+    Optional<HarnessServiceInfo> result =
+        harnessServiceInfoFetcher.fetchHarnessServiceInfo(ACCOUNT_ID, SETTING_ID, NAMESPACE, POD_NAME, labels);
+    assertThat(result.isPresent()).isFalse();
+
+    Optional<HarnessServiceInfo> resultRetry =
+        harnessServiceInfoFetcher.fetchHarnessServiceInfo(ACCOUNT_ID, SETTING_ID, NAMESPACE, POD_NAME, labels);
+    assertThat(resultRetry.isPresent()).isFalse();
+
+    verify(cloudToHarnessMappingService, times(1)).getHarnessServiceInfo(any(), any(), any(), any());
   }
 }
