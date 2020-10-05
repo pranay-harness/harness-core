@@ -59,6 +59,7 @@ public class RetryHelper {
   private NodeExecution cloneForRetry(NodeExecution nodeExecution, StepParameters parameters) {
     NodeExecution newNodeExecution = kryoSerializer.clone(nodeExecution);
     newNodeExecution.setStartTs(null);
+    newNodeExecution.setEndTs(null);
     newNodeExecution.setStatus(Status.QUEUED);
     List<String> retryIds = isEmpty(nodeExecution.getRetryIds()) ? new ArrayList<>() : nodeExecution.getRetryIds();
     retryIds.add(0, nodeExecution.getUuid());
