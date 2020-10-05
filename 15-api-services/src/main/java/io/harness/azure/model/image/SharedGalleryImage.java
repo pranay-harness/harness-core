@@ -25,6 +25,7 @@ public class SharedGalleryImage extends AzureMachineImage {
     if (OsState.SPECIALIZED == osState) {
       // specialized images should not have an osProfile associated with them
       inner.virtualMachineProfile().withOsProfile(null);
+      return;
     }
     // only applied on generalized images
     VirtualMachineScaleSetOSProfile osProfile = inner.virtualMachineProfile().osProfile();

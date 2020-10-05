@@ -298,7 +298,7 @@ public class AzureVMSSSetupTaskHandler extends AzureVMSSTaskHandler {
 
     logCallback.saveExecutionLog(format("Start getting gallery image references id [%s]", galleryImageId), INFO);
     Optional<GalleryImage> galleryImageOp = azureComputeClient.getGalleryImage(
-        azureConfig, subscriptionId, resourceGroupName, imageGalleryName, imageGalleryName);
+        azureConfig, subscriptionId, resourceGroupName, imageGalleryName, imageDefinitionName);
     GalleryImage galleryImage = galleryImageOp.orElseThrow(
         ()
             -> new InvalidRequestException(format(
