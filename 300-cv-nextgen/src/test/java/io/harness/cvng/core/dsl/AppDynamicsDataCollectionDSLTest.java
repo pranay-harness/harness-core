@@ -157,7 +157,7 @@ public class AppDynamicsDataCollectionDSLTest extends HoverflyCVNextGenTest {
             .metricPack(
                 metricPacks.stream()
                     .filter(
-                        metricPack -> metricPack.getIdentifier().equals(CVMonitoringCategory.QUALITY.getDisplayName()))
+                        metricPack -> metricPack.getIdentifier().equals(CVMonitoringCategory.ERRORS.getDisplayName()))
                     .findFirst()
                     .get()
                     .toDTO())
@@ -201,7 +201,7 @@ public class AppDynamicsDataCollectionDSLTest extends HoverflyCVNextGenTest {
             .metricPack(
                 metricPacks.stream()
                     .filter(
-                        metricPack -> metricPack.getIdentifier().equals(CVMonitoringCategory.QUALITY.getDisplayName()))
+                        metricPack -> metricPack.getIdentifier().equals(CVMonitoringCategory.ERRORS.getDisplayName()))
                     .findFirst()
                     .get()
                     .toDTO())

@@ -11,6 +11,7 @@ import io.harness.cvng.beans.CVMonitoringCategory;
 import io.harness.cvng.core.beans.DSConfig.CVConfigUpdateResult;
 import io.harness.cvng.core.entities.CVConfig;
 import io.harness.cvng.core.entities.SplunkCVConfig;
+import io.harness.cvng.core.services.CVNextGenConstants;
 import io.harness.rule.Owner;
 import org.junit.Before;
 import org.junit.Test;
@@ -28,7 +29,7 @@ public class SplunkDSConfigTest extends DSConfigTestBase {
     fillCommonFields(splunkDSConfig);
     splunkDSConfig.setQuery("exception");
     splunkDSConfig.setServiceInstanceIdentifier("host");
-    splunkDSConfig.setEventType("Quality");
+    splunkDSConfig.setEventType(CVNextGenConstants.ERRORS_PACK_IDENTIFIER);
     splunkDSConfig.setServiceIdentifier("harness");
   }
   @Test
@@ -76,7 +77,7 @@ public class SplunkDSConfigTest extends DSConfigTestBase {
     splunkCVConfig.setUuid(generateUuid());
     splunkCVConfig.setQuery("old query");
     splunkCVConfig.setServiceInstanceIdentifier("host123");
-    splunkCVConfig.setCategory(CVMonitoringCategory.QUALITY);
+    splunkCVConfig.setCategory(CVMonitoringCategory.ERRORS);
     return splunkCVConfig;
   }
 }

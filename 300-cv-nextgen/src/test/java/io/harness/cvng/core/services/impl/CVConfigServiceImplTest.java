@@ -274,7 +274,7 @@ public class CVConfigServiceImplTest extends CvNextGenTest {
       cvConfig.setProjectIdentifier(projectIdentifier);
       cvConfig.setServiceIdentifier(serviceIdentifier);
       cvConfig.setEnvIdentifier(envIdentifier);
-      cvConfig.setCategory(index++ % 2 == 0 ? CVMonitoringCategory.PERFORMANCE : CVMonitoringCategory.QUALITY);
+      cvConfig.setCategory(index++ % 2 == 0 ? CVMonitoringCategory.PERFORMANCE : CVMonitoringCategory.ERRORS);
     }
     save(cvConfigs);
     assertThat(cvConfigService.list(accountId, orgIdentifier, projectIdentifier, envIdentifier, serviceIdentifier,
@@ -296,7 +296,7 @@ public class CVConfigServiceImplTest extends CvNextGenTest {
       cvConfig.setProjectIdentifier(projectIdentifier);
       cvConfig.setServiceIdentifier(serviceIdentifier);
       cvConfig.setEnvIdentifier(envIdentifier);
-      cvConfig.setCategory(index++ % 2 == 0 ? CVMonitoringCategory.PERFORMANCE : CVMonitoringCategory.QUALITY);
+      cvConfig.setCategory(index++ % 2 == 0 ? CVMonitoringCategory.PERFORMANCE : CVMonitoringCategory.ERRORS);
     }
     save(cvConfigs);
     assertThat(

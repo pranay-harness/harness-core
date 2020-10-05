@@ -1,7 +1,7 @@
 package io.harness.cvng.core.services.impl;
 
+import static io.harness.cvng.core.services.CVNextGenConstants.ERRORS_PACK_IDENTIFIER;
 import static io.harness.cvng.core.services.CVNextGenConstants.PERFORMANCE_PACK_IDENTIFIER;
-import static io.harness.cvng.core.services.CVNextGenConstants.QUALITY_PACK_IDENTIFIER;
 import static io.harness.cvng.core.services.CVNextGenConstants.RESOURCE_PACK_IDENTIFIER;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.govern.Switch.unhandled;
@@ -274,7 +274,7 @@ public class MetricPackServiceImpl implements MetricPackService {
     switch (metricPack.getIdentifier()) {
       case PERFORMANCE_PACK_IDENTIFIER:
         return APPDYNAMICS_PERFORMANCE_PACK_DSL;
-      case QUALITY_PACK_IDENTIFIER:
+      case ERRORS_PACK_IDENTIFIER:
         return APPDYNAMICS_QUALITY_PACK_DSL;
       case RESOURCE_PACK_IDENTIFIER:
         return APPDYNAMICS_RESOURCE_PACK_DSL;

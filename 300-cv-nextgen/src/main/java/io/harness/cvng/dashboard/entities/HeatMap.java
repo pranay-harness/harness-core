@@ -94,8 +94,8 @@ public class HeatMap implements UuidAware, CreatedAtAware, AccountAccess, Persis
     FIVE_MIN(Duration.ofMinutes(5), Duration.ofHours(4)),
     FIFTEEN_MINUTES(Duration.ofMinutes(15), Duration.ofHours(12)),
     THIRTY_MINUTES(Duration.ofMinutes(30), Duration.ofDays(1)),
-    FOUR_HOURS(Duration.ofHours(4), Duration.ofDays(7)),
-    TWELVE_HOURS(Duration.ofHours(12), Duration.ofDays(30));
+    THREE_HOURS_THIRTY_MINUTES(Duration.ofMinutes(210), Duration.ofDays(7)),
+    FIFTEEN_HOURS(Duration.ofHours(15), Duration.ofDays(30));
 
     private Duration resolution;
     private Duration bucketSize;
@@ -118,7 +118,7 @@ public class HeatMap implements UuidAware, CreatedAtAware, AccountAccess, Persis
           return heatMapResolution;
         }
       }
-      return HeatMapResolution.TWELVE_HOURS;
+      return HeatMapResolution.FIFTEEN_HOURS;
     }
   }
 }
