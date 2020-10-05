@@ -34,9 +34,12 @@ directories:
   33-orchestration-visualization
   34-walktree-visitor
   35-yaml-beans
+  38-execution-plan
+  39-ng-pipeline-commons
   50-delegate-task-grpc-service
   57-command-library-common
   64-events-framework
+  70-delegate-agent
   tools/bazel
 
 # Automatically includes all relevant targets under the 'directories' above

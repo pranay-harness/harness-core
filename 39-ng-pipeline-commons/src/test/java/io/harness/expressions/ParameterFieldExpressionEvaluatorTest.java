@@ -11,7 +11,7 @@ import com.google.inject.Inject;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
-import io.harness.NGPipelineBaseTest;
+import io.harness.NGPipelineTestBase;
 import io.harness.ambiance.Ambiance;
 import io.harness.beans.ParameterField;
 import io.harness.category.element.UnitTests;
@@ -36,7 +36,7 @@ import java.util.List;
 import java.util.Map;
 import javax.validation.constraints.NotNull;
 
-public class ParameterFieldExpressionEvaluatorTest extends NGPipelineBaseTest {
+public class ParameterFieldExpressionEvaluatorTest extends NGPipelineTestBase {
   @Mock private PlanExecutionService planExecutionService;
   @Inject OrchestrationFieldRegistry orchestrationFieldRegistry;
   private ObjectMapper objectMapper;

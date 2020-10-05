@@ -15,7 +15,7 @@ import org.junit.experimental.categories.Category;
 import java.util.Map;
 
 @Slf4j
-public class NGPipelineComponentTest extends NGPipelineBaseTest {
+public class NGPipelineComponentTest extends NGPipelineTestBase {
   @Inject private Map<String, TestExecution> tests;
 
   @Test
