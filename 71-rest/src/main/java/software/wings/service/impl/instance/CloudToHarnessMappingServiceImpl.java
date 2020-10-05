@@ -33,6 +33,8 @@ import software.wings.beans.Account.AccountKeys;
 import software.wings.beans.Application;
 import software.wings.beans.Environment;
 import software.wings.beans.Environment.EnvironmentKeys;
+import software.wings.beans.HarnessTagLink;
+import software.wings.beans.HarnessTagLink.HarnessTagLinkKeys;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.InfrastructureMapping.InfrastructureMappingKeys;
 import software.wings.beans.LicenseInfo;
@@ -131,6 +133,14 @@ public class CloudToHarnessMappingServiceImpl implements CloudToHarnessMappingSe
     return persistence.createQuery(SettingAttribute.class)
         .filter(SettingAttributeKeys.accountId, accountId)
         .filter(SettingAttributeKeys.category, SettingCategory.CE_CONNECTOR)
+        .asList();
+  }
+
+  @Override
+  public List<HarnessTagLink> getTagLinksWithEntityId(String accountId, String entityId) {
+    return wingsPersistence.createQuery(HarnessTagLink.class)
+        .filter(HarnessTagLinkKeys.accountId, accountId)
+        .filter(HarnessTagLinkKeys.entityId, entityId)
         .asList();
   }
 

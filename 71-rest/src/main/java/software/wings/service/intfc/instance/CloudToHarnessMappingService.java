@@ -4,6 +4,7 @@ import io.harness.ccm.cluster.entities.CEUserInfo;
 import io.harness.ccm.config.GcpBillingAccount;
 import software.wings.api.DeploymentSummary;
 import software.wings.beans.Account;
+import software.wings.beans.HarnessTagLink;
 import software.wings.beans.ResourceLookup;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.SettingAttribute.SettingCategory;
@@ -25,6 +26,8 @@ public interface CloudToHarnessMappingService {
       String accountId, String computeProviderId, String namespace, String podName);
 
   Optional<SettingAttribute> getSettingAttribute(String id);
+
+  List<HarnessTagLink> getTagLinksWithEntityId(String accountId, String entityId);
 
   List<HarnessServiceInfo> getHarnessServiceInfoList(List<DeploymentSummary> deploymentSummaryList);
 
