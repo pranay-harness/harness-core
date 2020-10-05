@@ -33,8 +33,8 @@ public class InstanceDataServiceImpl extends CacheUtils implements InstanceDataS
   private final LoadingCache<CacheKey, PrunedInstanceData> instanceDataCache =
       Caffeine.newBuilder()
           .recordStats()
-          .expireAfterWrite(24, TimeUnit.HOURS)
-          .maximumSize(10_000)
+          .expireAfterAccess(24, TimeUnit.HOURS)
+          .maximumSize(15_000)
           .build(key -> pruneInstanceData(key.accountId, key.clusterId, key.instanceId, key.occurredAt));
 
   @Value
