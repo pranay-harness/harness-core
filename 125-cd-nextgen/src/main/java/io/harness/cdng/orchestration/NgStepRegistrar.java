@@ -5,7 +5,6 @@ import static io.harness.annotations.dev.HarnessTeam.CDC;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.cdng.artifact.steps.ArtifactForkStep;
 import io.harness.cdng.artifact.steps.ArtifactStep;
-import io.harness.cdng.environment.steps.EnvironmentStep;
 import io.harness.cdng.infra.steps.InfrastructureSectionStep;
 import io.harness.cdng.infra.steps.InfrastructureStep;
 import io.harness.cdng.k8s.K8sRollingRollbackStep;
@@ -48,7 +47,6 @@ public class NgStepRegistrar implements StepRegistrar {
     stateClasses.add(Pair.of(ManifestFetchStep.STEP_TYPE, ManifestFetchStep.class));
     stateClasses.add(Pair.of(PipelineSetupStep.STEP_TYPE, PipelineSetupStep.class));
     stateClasses.add(Pair.of(InfrastructureSectionStep.STEP_TYPE, InfrastructureSectionStep.class));
-    stateClasses.add(Pair.of(EnvironmentStep.STEP_TYPE, EnvironmentStep.class));
     stateClasses.add(Pair.of(InfrastructureStep.STEP_TYPE, InfrastructureStep.class));
     stateClasses.add(Pair.of(DeploymentStageStep.STEP_TYPE, DeploymentStageStep.class));
     stateClasses.add(Pair.of(ServiceStep.STEP_TYPE, ServiceStep.class));

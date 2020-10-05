@@ -5,19 +5,14 @@ import static io.harness.data.structure.UUIDGenerator.generateUuid;
 
 import com.google.inject.Inject;
 
-import io.harness.cdng.environment.steps.EnvironmentStep;
-import io.harness.cdng.environment.steps.EnvironmentStepParameters;
-import io.harness.cdng.environment.yaml.EnvironmentYaml;
 import io.harness.cdng.executionplan.utils.PlanCreatorConfigUtils;
 import io.harness.cdng.infra.steps.InfraStepParameters;
 import io.harness.cdng.infra.steps.InfrastructureStep;
-import io.harness.cdng.infra.yaml.Infrastructure;
 import io.harness.cdng.pipeline.CDStage;
 import io.harness.cdng.pipeline.DeploymentStage;
 import io.harness.cdng.pipeline.PipelineInfrastructure;
 import io.harness.cdng.stepsdependency.constants.OutcomeExpressionConstants;
 import io.harness.cdng.stepsdependency.utils.CDStepDependencyUtils;
-import io.harness.data.structure.EmptyPredicate;
 import io.harness.exception.InvalidArgumentsException;
 import io.harness.executionplan.core.ExecutionPlanCreationContext;
 import io.harness.executionplan.core.ExecutionPlanCreatorResponse;
@@ -44,44 +39,11 @@ public class InfraPlanCreator implements SupportDefinedExecutorPlanCreator<Pipel
       PipelineInfrastructure pipelineInfrastructure, ExecutionPlanCreationContext context) {
     PipelineInfrastructure actualInfraConfig = getActualInfraConfig(pipelineInfrastructure, context);
     PlanNode infraStepNode = getInfraStepNode(actualInfraConfig, context);
-    PlanNode envStepNode = getEnvStepNode(actualInfraConfig);
-    PlanNode infraSectionNode = getInfraSectionNode(infraStepNode, envStepNode);
+    PlanNode infraSectionNode = getInfraSectionNode(infraStepNode);
     return ExecutionPlanCreatorResponse.builder()
-        .planNode(envStepNode)
         .planNode(infraStepNode)
         .planNode(infraSectionNode)
         .startingNodeId(infraSectionNode.getUuid())
-        .build();
-  }
-
-  private PlanNode getEnvStepNode(PipelineInfrastructure pipelineInfrastructure) {
-    final String envNodeId = generateUuid();
-    EnvironmentYaml environment = pipelineInfrastructure.getEnvironment();
-    if (!environment.getName().isExpression() && EmptyPredicate.isEmpty(environment.getName().getValue())) {
-      environment.setName(environment.getIdentifier());
-    }
-    EnvironmentYaml environmentOverrides = null;
-    if (pipelineInfrastructure.getUseFromStage() != null
-        && pipelineInfrastructure.getUseFromStage().getOverrides() != null) {
-      environmentOverrides = pipelineInfrastructure.getUseFromStage().getOverrides().getEnvironment();
-      if (!environmentOverrides.getName().isExpression()
-          && EmptyPredicate.isEmpty(environmentOverrides.getName().getValue())) {
-        environmentOverrides.setName(environmentOverrides.getIdentifier());
-      }
-    }
-
-    final String environmentIdentifier = "environment";
-    return PlanNode.builder()
-        .uuid(envNodeId)
-        .name(environmentIdentifier)
-        .identifier(environmentIdentifier)
-        .stepType(EnvironmentStep.STEP_TYPE)
-        .facilitatorObtainment(
-            FacilitatorObtainment.builder().type(FacilitatorType.builder().type(FacilitatorType.SYNC).build()).build())
-        .stepParameters(EnvironmentStepParameters.builder()
-                            .environment(environment)
-                            .environmentOverrides(environmentOverrides)
-                            .build())
         .build();
   }
 
@@ -90,25 +52,14 @@ public class InfraPlanCreator implements SupportDefinedExecutorPlanCreator<Pipel
     final String infraNodeId = generateUuid();
     final String infraIdentifier = "infrastructureSpecification";
 
-    Infrastructure infraOverrides = null;
-    if (pipelineInfrastructure.getUseFromStage() != null
-        && pipelineInfrastructure.getUseFromStage().getOverrides() != null
-        && pipelineInfrastructure.getUseFromStage().getOverrides().getInfrastructureDefinition() != null) {
-      infraOverrides =
-          pipelineInfrastructure.getUseFromStage().getOverrides().getInfrastructureDefinition().getInfrastructure();
-    }
-
     PlanNodeBuilder planNodeBuilder =
         PlanNode.builder()
             .uuid(infraNodeId)
             .name(infraIdentifier)
             .identifier(infraIdentifier)
             .stepType(InfrastructureStep.STEP_TYPE)
-            .stepParameters(
-                InfraStepParameters.builder()
-                    .infrastructure(pipelineInfrastructure.getInfrastructureDefinition().getInfrastructure())
-                    .infrastructureOverrides(infraOverrides)
-                    .build())
+            .skipExpressionChain(true)
+            .stepParameters(InfraStepParameters.builder().pipelineInfrastructure(pipelineInfrastructure).build())
             .facilitatorObtainment(FacilitatorObtainment.builder()
                                        .type(FacilitatorType.builder().type(FacilitatorType.SYNC).build())
                                        .build());
@@ -123,7 +74,7 @@ public class InfraPlanCreator implements SupportDefinedExecutorPlanCreator<Pipel
     return planNodeBuilder.build();
   }
 
-  private PlanNode getInfraSectionNode(PlanNode infraStepNode, PlanNode envNode) {
+  private PlanNode getInfraSectionNode(PlanNode infraStepNode) {
     final String infraSectionNodeId = generateUuid();
 
     return PlanNode.builder()
@@ -131,10 +82,7 @@ public class InfraPlanCreator implements SupportDefinedExecutorPlanCreator<Pipel
         .name(PlanCreatorConstants.INFRA_SECTION_NODE_IDENTIFIER)
         .identifier(PlanCreatorConstants.INFRA_SECTION_NODE_IDENTIFIER)
         .stepType(SectionChainStep.STEP_TYPE)
-        .stepParameters(SectionChainStepParameters.builder()
-                            .childNodeId(envNode.getUuid())
-                            .childNodeId(infraStepNode.getUuid())
-                            .build())
+        .stepParameters(SectionChainStepParameters.builder().childNodeId(infraStepNode.getUuid()).build())
         .facilitatorObtainment(FacilitatorObtainment.builder()
                                    .type(FacilitatorType.builder().type(FacilitatorType.CHILD_CHAIN).build())
                                    .build())

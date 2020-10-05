@@ -13,6 +13,13 @@ pipeline:
             serviceDefinition:
               type: Kubernetes
               spec:
+                artifacts:
+                  primary:
+                    type: "Dockerhub"
+                    spec:
+                      dockerhubConnector: acc.docker
+                      imagePath: "library/nginx"
+                      tag: "1.19"
                 manifests:
                   - manifest:
                       identifier: baseValues
@@ -55,7 +62,7 @@ pipeline:
               type: KubernetesDirect
               spec:
                 # Spec for Infrastructure Type kubernetes-direct
-                connectorIdentifier: userNameAuth
+                connectorIdentifier: acc.argocd-account
                 # namespace
                 namespace: harness
                 # release name

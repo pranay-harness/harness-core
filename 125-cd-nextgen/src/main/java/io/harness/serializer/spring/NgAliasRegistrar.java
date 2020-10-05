@@ -8,7 +8,6 @@ import io.harness.cdng.artifact.bean.yaml.DockerHubArtifactConfig;
 import io.harness.cdng.artifact.bean.yaml.GcrArtifactConfig;
 import io.harness.cdng.artifact.bean.yaml.SidecarArtifact;
 import io.harness.cdng.artifact.steps.ArtifactStepParameters;
-import io.harness.cdng.environment.steps.EnvironmentStepParameters;
 import io.harness.cdng.environment.yaml.EnvironmentYaml;
 import io.harness.cdng.infra.InfrastructureDef;
 import io.harness.cdng.infra.beans.InfraUseFromStage;
@@ -92,7 +91,6 @@ public class NgAliasRegistrar implements AliasRegistrar {
     orchestrationElements.put("serviceUseFromStage_overrides", ServiceUseFromStage.Overrides.class);
     orchestrationElements.put("infraUseFromStage_overrides", InfraUseFromStage.Overrides.class);
     orchestrationElements.put("infraUseFromStage", InfraUseFromStage.class);
-    orchestrationElements.put("environmentStepParameters", EnvironmentStepParameters.class);
     orchestrationElements.put("infraStepParameters", InfraStepParameters.class);
     orchestrationElements.put("manifestOverrideSets", ManifestOverrideSets.class);
     orchestrationElements.put("artifactOverrideSets", ArtifactOverrideSets.class);
