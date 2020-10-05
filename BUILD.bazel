@@ -82,6 +82,7 @@ modules = [
     "//32-orchestration-steps",
     "//33-orchestration-visualization",
     "//34-walktree-visitor",
+    "//35-yaml-beans",
 ]
 
 filegroup(
