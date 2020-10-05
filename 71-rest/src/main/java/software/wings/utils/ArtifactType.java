@@ -7,6 +7,7 @@ import static software.wings.beans.Graph.Builder.aGraph;
 import static software.wings.beans.Graph.graphIdGenerator;
 import static software.wings.beans.command.Command.Builder.aCommand;
 import static software.wings.beans.command.CommandUnitType.AWS_AMI;
+import static software.wings.beans.command.CommandUnitType.AZURE_VMSS_DUMMY;
 import static software.wings.beans.command.CommandUnitType.CODE_DEPLOY;
 import static software.wings.beans.command.CommandUnitType.COMMAND;
 import static software.wings.beans.command.CommandUnitType.COPY_CONFIGS;
@@ -685,7 +686,7 @@ public enum ArtifactType {
                                        .origin(true)
                                        .id(graphIdGenerator("node"))
                                        .name(AZURE_VMSS_SETUP)
-                                       .type(AZURE_MACHINE_IMAGE.name())
+                                       .type(AZURE_VMSS_DUMMY.name())
                                        .build())
                          .buildPipeline())
           .build();
@@ -704,7 +705,7 @@ public enum ArtifactType {
                                        .origin(true)
                                        .id(graphIdGenerator("node"))
                                        .name(AZURE_VMSS_DEPLOY)
-                                       .type(AZURE_MACHINE_IMAGE.name())
+                                       .type(AZURE_VMSS_DUMMY.name())
                                        .build())
                          .buildPipeline())
           .build();
