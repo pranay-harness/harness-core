@@ -13,7 +13,7 @@ import com.mongodb.ServerAddress;
 import com.mongodb.client.MongoCollection;
 import de.bwaldvogel.mongo.MongoServer;
 import de.bwaldvogel.mongo.backend.memory.MemoryBackend;
-import io.harness.DelegateServiceTest;
+import io.harness.DelegateServiceTestBase;
 import io.harness.callback.DelegateCallback;
 import io.harness.callback.MongoDatabase;
 import io.harness.category.element.UnitTests;
@@ -31,7 +31,7 @@ import org.junit.experimental.categories.Category;
 
 import java.net.InetSocketAddress;
 
-public class MongoDelegateTaskResultsProviderTest extends DelegateServiceTest {
+public class MongoDelegateTaskResultsProviderTest extends DelegateServiceTestBase {
   @Inject DelegateCallbackRegistryImpl delegateCallbackRegistry;
   @Inject private KryoSerializer kryoSerializer;
 

@@ -11,7 +11,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import com.google.inject.Inject;
 
-import io.harness.DelegateServiceTest;
+import io.harness.DelegateServiceTestBase;
 import io.harness.callback.DelegateCallback;
 import io.harness.callback.HttpsClientEntrypoint;
 import io.harness.callback.MongoDatabase;
@@ -25,7 +25,7 @@ import io.harness.service.impl.MongoDelegateCallbackService;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
-public class DelegateCallbackRegistryTest extends DelegateServiceTest {
+public class DelegateCallbackRegistryTest extends DelegateServiceTestBase {
   @Inject HPersistence persistence;
   @Inject DelegateCallbackRegistryImpl delegateCallbackRegistry;
 

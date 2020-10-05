@@ -12,7 +12,7 @@ import static org.assertj.core.api.Assertions.assertThatCode;
 
 import com.google.inject.Inject;
 
-import io.harness.DelegateServiceTest;
+import io.harness.DelegateServiceTestBase;
 import io.harness.beans.DelegateTask;
 import io.harness.beans.DelegateTask.DelegateTaskBuilder;
 import io.harness.category.element.UnitTests;
@@ -24,7 +24,7 @@ import io.harness.threading.Morpheus;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
-public class DelegateTaskServiceTest extends DelegateServiceTest {
+public class DelegateTaskServiceTest extends DelegateServiceTestBase {
   @Inject HPersistence persistence;
   @Inject DelegateTaskService delegateTaskService;
 

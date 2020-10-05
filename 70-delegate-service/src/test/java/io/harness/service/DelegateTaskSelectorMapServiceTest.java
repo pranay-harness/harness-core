@@ -9,7 +9,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import com.google.inject.Inject;
 
-import io.harness.DelegateServiceTest;
+import io.harness.DelegateServiceTestBase;
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.beans.TaskGroup;
 import io.harness.delegate.beans.TaskSelectorMap;
@@ -26,7 +26,7 @@ import org.mockito.InjectMocks;
 import java.util.HashSet;
 import java.util.Set;
 
-public class DelegateTaskSelectorMapServiceTest extends DelegateServiceTest {
+public class DelegateTaskSelectorMapServiceTest extends DelegateServiceTestBase {
   private static final String ACCOUNT_ID = generateUuid();
   private static final TaskGroup HELM_TASK_GROUP = TaskGroup.HELM;
   @Inject private HPersistence hPersistence;
