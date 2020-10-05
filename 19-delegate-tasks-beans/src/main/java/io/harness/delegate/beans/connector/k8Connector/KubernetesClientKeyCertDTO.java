@@ -11,7 +11,7 @@ import javax.validation.constraints.NotNull;
 
 @Data
 @Builder
-@JsonTypeName("ClientKeyCert")
+@JsonTypeName(KubernetesConfigConstants.CLIENT_KEY_CERT)
 public class KubernetesClientKeyCertDTO extends KubernetesAuthCredentialDTO {
   @ApiModelProperty(dataType = "string") @SecretReference SecretRefData caCertRef;
   @ApiModelProperty(dataType = "string") @NotNull @SecretReference SecretRefData clientCertRef;

@@ -11,7 +11,7 @@ import javax.validation.constraints.NotNull;
 
 @Value
 @Builder
-@JsonTypeName("OpenIdConnect")
+@JsonTypeName(KubernetesConfigConstants.OPENID_CONNECT)
 public class KubernetesOpenIdConnectDTO extends KubernetesAuthCredentialDTO {
   @NotNull String oidcIssuerUrl;
   @NotNull String oidcUsername;
