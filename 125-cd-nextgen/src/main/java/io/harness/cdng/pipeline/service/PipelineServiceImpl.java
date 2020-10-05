@@ -41,6 +41,7 @@ import org.springframework.data.mongodb.core.query.Criteria;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
@@ -232,6 +233,27 @@ public class PipelineServiceImpl implements PipelineService {
                                                             .isError(true)
                                                             .build();
     return Optional.of(cdPipelineValidationInfo);
+  }
+
+  @Override
+  public Map<String, String> getPipelineIdentifierToName(
+      String accountId, String orgId, String projectId, List<String> pipelineIdentifiers) {
+    Criteria criteria = Criteria.where(PipelineNGKeys.accountId)
+                            .is(accountId)
+                            .and(PipelineNGKeys.projectIdentifier)
+                            .is(projectId)
+                            .and(PipelineNGKeys.orgIdentifier)
+                            .is(orgId)
+                            .and(PipelineNGKeys.identifier)
+                            .in(pipelineIdentifiers);
+    return pipelineRepository
+        .findAllWithCriteriaAndProjectOnFields(criteria,
+            Lists.newArrayList(PipelineNGKeys.ngPipeline + ".name", PipelineNGKeys.identifier, PipelineNGKeys.createdAt,
+                PipelineNGKeys.lastUpdatedAt),
+            new ArrayList<>())
+        .stream()
+        .collect(Collectors.toMap(
+            NgPipelineEntity::getIdentifier, ngPipelineEntity -> ngPipelineEntity.getNgPipeline().getName()));
   }
 
   private NgPipelineEntity get(String pipelineId, String accountId, String orgId, String projectId) {

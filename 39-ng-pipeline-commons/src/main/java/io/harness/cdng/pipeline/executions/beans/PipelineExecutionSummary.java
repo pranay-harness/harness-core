@@ -1,9 +1,7 @@
 package io.harness.cdng.pipeline.executions.beans;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import io.harness.beans.EmbeddedUser;
 import io.harness.cdng.pipeline.executions.ExecutionStatus;
-import io.harness.cdng.pipeline.executions.TriggerType;
 import io.harness.cdng.pipeline.executions.beans.PipelineExecutionSummary.PipelineExecutionSummaryKeys;
 import io.harness.mongo.index.Field;
 import io.harness.mongo.index.NgUniqueIndex;
@@ -46,9 +44,9 @@ public class PipelineExecutionSummary implements PersistentEntity {
   private ExecutionStatus executionStatus;
   private Long startedAt;
   private Long endedAt;
-  private EmbeddedUser triggeredBy;
-  private TriggerType triggerType;
+  private ExecutionTriggerInfo triggerInfo;
   private List<Tag> tags;
+  private ExecutionErrorInfo errorInfo;
   @Builder.Default private List<StageExecutionSummary> stageExecutionSummarySummaryElements = new ArrayList<>();
   @Builder.Default private List<String> stageIdentifiers = new ArrayList<>();
   @Builder.Default private List<String> serviceIdentifiers = new ArrayList<>();

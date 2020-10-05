@@ -5,13 +5,18 @@ import static io.harness.cdng.pipeline.executions.ExecutionStatus.getExecutionSt
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
+import io.harness.cdng.artifact.bean.ArtifactOutcome;
 import io.harness.cdng.pipeline.NgPipeline;
 import io.harness.cdng.pipeline.StageTypeToStageExecutionSummaryMapper;
 import io.harness.cdng.pipeline.executions.beans.CDStageExecutionSummary;
+import io.harness.cdng.pipeline.executions.beans.ExecutionErrorInfo;
 import io.harness.cdng.pipeline.executions.beans.ParallelStageExecutionSummary;
 import io.harness.cdng.pipeline.executions.beans.PipelineExecutionSummary;
+import io.harness.cdng.pipeline.executions.beans.ServiceExecutionSummary;
 import io.harness.cdng.pipeline.executions.beans.StageExecutionSummary;
 import io.harness.cdng.pipeline.executions.registries.StageTypeToStageExecutionMapperHelperRegistry;
+import io.harness.cdng.service.beans.ServiceOutcome;
+import io.harness.data.structure.EmptyPredicate;
 import io.harness.exception.UnknownStageElementWrapperException;
 import io.harness.execution.NodeExecution;
 import io.harness.yaml.core.ParallelStageElement;
@@ -22,6 +27,8 @@ import io.harness.yaml.core.intfc.StageType;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
+import java.util.stream.Collectors;
 
 @Singleton
 public class PipelineExecutionHelper {
@@ -54,12 +61,8 @@ public class PipelineExecutionHelper {
       }
       pipelineExecutionSummary.addEnvironmentIdentifier(
           stageTypeToStageExecutionSummaryMapper.getEnvironmentIdentifier(stageType));
-      pipelineExecutionSummary.addServiceIdentifier(
-          stageTypeToStageExecutionSummaryMapper.getServiceIdentifier(stageType));
       pipelineExecutionSummary.addStageIdentifier(stageType.getIdentifier());
       pipelineExecutionSummary.addNGStageType(stageType.getStageType());
-      pipelineExecutionSummary.addServiceDefinitionType(
-          stageTypeToStageExecutionSummaryMapper.getServiceDefinitionType(stageType));
       return stageExecutionSummary;
     }
     throw new UnknownStageElementWrapperException();
@@ -77,18 +80,47 @@ public class PipelineExecutionHelper {
 
   public void updateStageExecutionStatus(
       PipelineExecutionSummary pipelineExecutionSummary, NodeExecution nodeExecution) {
-    CDStageExecutionSummary cdStageExecutionSummary = getStageExecutionSummaryToBeUpdated(
+    CDStageExecutionSummary cdStageExecutionSummary = findStageExecutionSummaryByPlanNodeId(
         pipelineExecutionSummary.getStageExecutionSummarySummaryElements(), nodeExecution.getNode().getUuid());
     if (cdStageExecutionSummary == null) {
       return;
     }
     ExecutionStatus executionStatus = getExecutionStatus(nodeExecution.getStatus());
     cdStageExecutionSummary.setExecutionStatus(executionStatus);
+    if (cdStageExecutionSummary.getNodeExecutionId() == null) {
+      cdStageExecutionSummary.setNodeExecutionId(nodeExecution.getUuid());
+    }
     if (ExecutionStatus.isTerminal(executionStatus)) {
       cdStageExecutionSummary.setEndedAt(nodeExecution.getEndTs());
+      if (nodeExecution.getFailureInfo() != null) {
+        cdStageExecutionSummary.setErrorInfo(
+
+            ExecutionErrorInfo.builder().message(nodeExecution.getFailureInfo().getErrorMessage()).build());
+      }
     } else {
       cdStageExecutionSummary.setStartedAt(nodeExecution.getStartTs());
     }
+  }
+
+  public ServiceExecutionSummary.ArtifactsSummary mapArtifactsOutcomeToSummary(ServiceOutcome serviceOutcome) {
+    ServiceExecutionSummary.ArtifactsSummary.ArtifactsSummaryBuilder artifactsSummaryBuilder =
+        ServiceExecutionSummary.ArtifactsSummary.builder();
+
+    if (serviceOutcome.getArtifacts().getPrimary() != null) {
+      artifactsSummaryBuilder.primary(serviceOutcome.getArtifacts().getPrimary().getArtifactSummary());
+    }
+
+    if (EmptyPredicate.isNotEmpty(serviceOutcome.getArtifacts().getSidecars())) {
+      artifactsSummaryBuilder.sidecars(serviceOutcome.getArtifacts()
+                                           .getSidecars()
+                                           .values()
+                                           .stream()
+                                           .filter(Objects::nonNull)
+                                           .map(ArtifactOutcome::getArtifactSummary)
+                                           .collect(Collectors.toList()));
+    }
+
+    return artifactsSummaryBuilder.build();
   }
 
   public void updatePipelineExecutionStatus(
@@ -97,18 +129,38 @@ public class PipelineExecutionHelper {
     pipelineExecutionSummary.setExecutionStatus(executionStatus);
     if (ExecutionStatus.isTerminal(executionStatus)) {
       pipelineExecutionSummary.setEndedAt(nodeExecution.getEndTs());
+      if (nodeExecution.getFailureInfo() != null) {
+        pipelineExecutionSummary.setErrorInfo(
+            ExecutionErrorInfo.builder().message(nodeExecution.getFailureInfo().getErrorMessage()).build());
+      }
     } else {
       pipelineExecutionSummary.setStartedAt(nodeExecution.getStartTs());
     }
   }
 
-  private CDStageExecutionSummary getStageExecutionSummaryToBeUpdated(
+  public CDStageExecutionSummary findStageExecutionSummaryByNodeExecutionId(
+      List<StageExecutionSummary> stageExecutionSummaries, String nodeExecutionId) {
+    for (StageExecutionSummary stageExecutionSummary : stageExecutionSummaries) {
+      if (stageExecutionSummary instanceof ParallelStageExecutionSummary) {
+        ParallelStageExecutionSummary parallelStageExecutionSummary =
+            (ParallelStageExecutionSummary) stageExecutionSummary;
+        return findStageExecutionSummaryByNodeExecutionId(
+            parallelStageExecutionSummary.getStageExecutionSummaries(), nodeExecutionId);
+      } else if (stageExecutionSummary instanceof CDStageExecutionSummary
+          && ((CDStageExecutionSummary) stageExecutionSummary).getNodeExecutionId().equals(nodeExecutionId)) {
+        return (CDStageExecutionSummary) stageExecutionSummary;
+      }
+    }
+    return null;
+  }
+
+  public CDStageExecutionSummary findStageExecutionSummaryByPlanNodeId(
       List<StageExecutionSummary> stageExecutionSummaries, String planNodeId) {
     for (StageExecutionSummary stageExecutionSummary : stageExecutionSummaries) {
       if (stageExecutionSummary instanceof ParallelStageExecutionSummary) {
         ParallelStageExecutionSummary parallelStageExecutionSummary =
             (ParallelStageExecutionSummary) stageExecutionSummary;
-        return getStageExecutionSummaryToBeUpdated(
+        return findStageExecutionSummaryByPlanNodeId(
             parallelStageExecutionSummary.getStageExecutionSummaries(), planNodeId);
       } else if (stageExecutionSummary instanceof CDStageExecutionSummary
           && ((CDStageExecutionSummary) stageExecutionSummary).getPlanNodeId().equals(planNodeId)) {

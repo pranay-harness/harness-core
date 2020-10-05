@@ -4,18 +4,25 @@ import com.google.inject.Inject;
 
 import io.harness.ambiance.Ambiance;
 import io.harness.cdng.pipeline.executions.service.NgPipelineExecutionService;
+import io.harness.cdng.service.beans.ServiceOutcome;
+import io.harness.cdng.service.steps.ServiceStep;
 import io.harness.common.AmbianceHelper;
 import io.harness.engine.executions.node.NodeExecutionServiceImpl;
+import io.harness.engine.outcomes.OutcomeService;
 import io.harness.execution.NodeExecution;
 import io.harness.execution.events.OrchestrationEvent;
 import io.harness.execution.events.SyncOrchestrationEventHandler;
+import io.harness.execution.status.Status;
 import io.harness.executionplan.plancreator.beans.StepOutcomeGroup;
+import io.harness.plan.PlanNode;
 
 import java.util.Objects;
+import java.util.Optional;
 
 public class PipelineExecutionUpdateEventHandler implements SyncOrchestrationEventHandler {
   @Inject private NgPipelineExecutionService ngPipelineExecutionService;
   @Inject private NodeExecutionServiceImpl nodeExecutionService;
+  @Inject private OutcomeService outcomeService;
 
   @Override
   public void handleEvent(OrchestrationEvent event) {
@@ -24,12 +31,35 @@ public class PipelineExecutionUpdateEventHandler implements SyncOrchestrationEve
     String orgId = AmbianceHelper.getOrgIdentifier(ambiance);
     String projectId = AmbianceHelper.getProjectIdentifier(ambiance);
     String nodeExecutionId = ambiance.obtainCurrentRuntimeId();
+    String planExecutionId = ambiance.getPlanExecutionId();
     NodeExecution nodeExecution = nodeExecutionService.get(nodeExecutionId);
+    if (isServiceNodeAndCompleted(nodeExecution.getNode(), nodeExecution.getStatus())) {
+      Optional<ServiceOutcome> serviceOutcome = getServiceOutcome(nodeExecutionId, planExecutionId);
+      serviceOutcome.ifPresent(outcome
+          -> ngPipelineExecutionService.addServiceInformationToPipelineExecutionNode(
+              accountId, orgId, projectId, planExecutionId, nodeExecutionId, outcome));
+      return;
+    }
     if (!shouldHandle(nodeExecution.getNode().getGroup())) {
       return;
     }
     ngPipelineExecutionService.updateStatusForGivenNode(
         accountId, orgId, projectId, ambiance.getPlanExecutionId(), nodeExecution);
+  }
+
+  private Optional<ServiceOutcome> getServiceOutcome(String planNodeId, String planExecutionId) {
+    return outcomeService.findAllByRuntimeId(planExecutionId, planNodeId)
+        .stream()
+        .filter(outcome -> outcome instanceof ServiceOutcome)
+        .map(outcome -> (ServiceOutcome) outcome)
+        .findFirst();
+  }
+
+  private boolean isServiceNodeAndCompleted(PlanNode node, Status status) {
+    if (Objects.equals(node.getStepType(), ServiceStep.STEP_TYPE)) {
+      return status == Status.SUCCEEDED;
+    }
+    return false;
   }
 
   private boolean shouldHandle(String stepOutcomeGroup) {
