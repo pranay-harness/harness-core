@@ -88,6 +88,7 @@ import io.harness.beans.OrchestrationWorkflowType;
 import io.harness.beans.WorkflowType;
 import io.harness.category.element.UnitTests;
 import io.harness.data.structure.EmptyPredicate;
+import io.harness.exception.FailureType;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.rule.Owner;
@@ -104,10 +105,10 @@ import software.wings.beans.BuildWorkflow.BuildOrchestrationWorkflowBuilder;
 import software.wings.beans.CanaryOrchestrationWorkflow;
 import software.wings.beans.EntityType;
 import software.wings.beans.Environment;
+import software.wings.beans.FailureStrategy;
 import software.wings.beans.FeatureName;
 import software.wings.beans.GraphNode;
 import software.wings.beans.InfrastructureMapping;
-import software.wings.beans.OrchestrationWorkflow;
 import software.wings.beans.PhaseStep;
 import software.wings.beans.PhaseStepType;
 import software.wings.beans.PipelineStage.PipelineStageElement;
@@ -1418,11 +1419,29 @@ public class WorkflowServiceHelperTest extends WingsBaseTest {
   @Test(expected = Test.None.class)
   @Owner(developers = GARVIT)
   @Category(UnitTests.class)
-  public void testCleanupEmptyStepSkipStrategies() {
+  public void testCleanupEmptyPhaseStepStrategies() {
     // null phase step.
-    WorkflowServiceHelper.cleanupStepSkipStrategies(null);
+    WorkflowServiceHelper.cleanupPhaseStepStrategies(null);
     // empty step skip strategies.
-    WorkflowServiceHelper.cleanupStepSkipStrategies(aPhaseStep(PRE_DEPLOYMENT).build());
+    WorkflowServiceHelper.cleanupPhaseStepStrategies(aPhaseStep(PRE_DEPLOYMENT).build());
+  }
+
+  @Test
+  @Owner(developers = GARVIT)
+  @Category(UnitTests.class)
+  public void testCleanupFailureStrategies() {
+    FailureStrategy failureStrategy1 = FailureStrategy.builder().build();
+    PhaseStep phaseStep = aPhaseStep(PRE_DEPLOYMENT).withFailureStrategies(singletonList(failureStrategy1)).build();
+
+    WorkflowServiceHelper.cleanupPhaseStepStrategies(phaseStep);
+    assertThat(phaseStep.getFailureStrategies()).isNullOrEmpty();
+
+    FailureStrategy failureStrategy2 =
+        FailureStrategy.builder().failureTypes(singletonList(FailureType.APPLICATION_ERROR)).build();
+    phaseStep.setFailureStrategies(asList(failureStrategy1, failureStrategy2));
+    WorkflowServiceHelper.cleanupPhaseStepStrategies(phaseStep);
+    assertThat(phaseStep.getFailureStrategies()).isNotEmpty();
+    assertThat(phaseStep.getFailureStrategies().size()).isEqualTo(1);
   }
 
   @Test
@@ -1434,25 +1453,25 @@ public class WorkflowServiceHelperTest extends WingsBaseTest {
     StepSkipStrategy strategy3 = new StepSkipStrategy(SPECIFIC_STEPS, asList("id1", "id2"), "true");
     PhaseStep phaseStep = aPhaseStep(PRE_DEPLOYMENT).withStepSkipStrategies(singletonList(strategy1)).build();
 
-    WorkflowServiceHelper.cleanupStepSkipStrategies(phaseStep);
+    WorkflowServiceHelper.cleanupPhaseStepStrategies(phaseStep);
     assertThat(phaseStep.getStepSkipStrategies()).isNullOrEmpty();
 
     StepSkipStrategy strategy4 = new StepSkipStrategy(ALL_STEPS, null, "true");
     phaseStep.setStepSkipStrategies(singletonList(strategy4));
-    WorkflowServiceHelper.cleanupStepSkipStrategies(phaseStep);
+    WorkflowServiceHelper.cleanupPhaseStepStrategies(phaseStep);
     assertThat(phaseStep.getStepSkipStrategies()).isNotEmpty();
 
     phaseStep.setSteps(asList(prepareGraphNode(2), prepareGraphNode(3)));
     phaseStep.setStepSkipStrategies(singletonList(strategy1));
-    WorkflowServiceHelper.cleanupStepSkipStrategies(phaseStep);
+    WorkflowServiceHelper.cleanupPhaseStepStrategies(phaseStep);
     assertThat(phaseStep.getStepSkipStrategies()).isNullOrEmpty();
 
     phaseStep.setStepSkipStrategies(singletonList(strategy2));
-    WorkflowServiceHelper.cleanupStepSkipStrategies(phaseStep);
+    WorkflowServiceHelper.cleanupPhaseStepStrategies(phaseStep);
     assertThat(phaseStep.getStepSkipStrategies()).isNotEmpty();
 
     phaseStep.setStepSkipStrategies(singletonList(strategy3));
-    WorkflowServiceHelper.cleanupStepSkipStrategies(phaseStep);
+    WorkflowServiceHelper.cleanupPhaseStepStrategies(phaseStep);
     assertThat(phaseStep.getStepSkipStrategies()).isNotEmpty();
     assertThat(phaseStep.getStepSkipStrategies().size()).isEqualTo(1);
 
@@ -1468,25 +1487,29 @@ public class WorkflowServiceHelperTest extends WingsBaseTest {
   @Test(expected = Test.None.class)
   @Owner(developers = GARVIT)
   @Category(UnitTests.class)
-  public void testCleanupEmptyPhaseStepSkipStrategies() {
+  public void testCleanupEmptyPhaseStrategies() {
     // null phase.
-    WorkflowServiceHelper.cleanupPhaseStepSkipStrategies(null);
+    WorkflowServiceHelper.cleanupPhaseStrategies(null);
     // empty step skip strategies.
-    WorkflowServiceHelper.cleanupPhaseStepSkipStrategies(aWorkflowPhase().build());
+    WorkflowServiceHelper.cleanupPhaseStrategies(aWorkflowPhase().build());
   }
 
   @Test
   @Owner(developers = GARVIT)
   @Category(UnitTests.class)
-  public void testCleanupPhaseStepSkipStrategies() {
+  public void testCleanupPhaseStrategies() {
     PhaseStep phaseStep =
         aPhaseStep(PRE_DEPLOYMENT)
             .addStep(prepareGraphNode(2))
             .addStep(prepareGraphNode(3))
             .withStepSkipStrategies(singletonList(new StepSkipStrategy(SPECIFIC_STEPS, asList("id1", "id2"), "true")))
+            .withFailureStrategies(asList(FailureStrategy.builder().build(),
+                FailureStrategy.builder().failureTypes(singletonList(FailureType.APPLICATION_ERROR)).build()))
             .build();
     WorkflowPhase phase = aWorkflowPhase().phaseSteps(singletonList(phaseStep)).build();
-    WorkflowServiceHelper.cleanupPhaseStepSkipStrategies(phase);
+    WorkflowServiceHelper.cleanupPhaseStrategies(phase);
+    assertThat(phaseStep.getFailureStrategies()).isNotEmpty();
+    assertThat(phaseStep.getFailureStrategies().size()).isEqualTo(1);
     assertThat(phaseStep.getStepSkipStrategies()).isNotEmpty();
 
     StepSkipStrategy finalStrategy = phaseStep.getStepSkipStrategies().get(0);
@@ -1497,26 +1520,37 @@ public class WorkflowServiceHelperTest extends WingsBaseTest {
   @Test(expected = Test.None.class)
   @Owner(developers = GARVIT)
   @Category(UnitTests.class)
-  public void testCleanupEmptyWorkflowStepSkipStrategies() {
+  public void testCleanupEmptyWorkflowStrategies() {
     // null phase.
-    WorkflowServiceHelper.cleanupWorkflowStepSkipStrategies(null);
+    WorkflowServiceHelper.cleanupWorkflowStrategies(null);
     // empty step skip strategies.
-    WorkflowServiceHelper.cleanupWorkflowStepSkipStrategies(aCanaryOrchestrationWorkflow().build());
+    WorkflowServiceHelper.cleanupWorkflowStrategies(aCanaryOrchestrationWorkflow().build());
   }
 
   @Test(expected = Test.None.class)
   @Owner(developers = GARVIT)
   @Category(UnitTests.class)
-  public void testCleanupWorkflowStepSkipStrategies() {
+  public void testCleanupWorkflowStrategies() {
     PhaseStep phaseStep =
         aPhaseStep(PRE_DEPLOYMENT)
             .addStep(prepareGraphNode(2))
             .addStep(prepareGraphNode(3))
             .withStepSkipStrategies(singletonList(new StepSkipStrategy(SPECIFIC_STEPS, asList("id1", "id2"), "true")))
+            .withFailureStrategies(asList(FailureStrategy.builder().build(),
+                FailureStrategy.builder().failureTypes(singletonList(FailureType.APPLICATION_ERROR)).build()))
             .build();
     WorkflowPhase phase = aWorkflowPhase().phaseSteps(singletonList(phaseStep)).build();
-    OrchestrationWorkflow orchestrationWorkflow = aCanaryOrchestrationWorkflow().addWorkflowPhase(phase).build();
-    WorkflowServiceHelper.cleanupWorkflowStepSkipStrategies(orchestrationWorkflow);
+    CanaryOrchestrationWorkflow orchestrationWorkflow =
+        aCanaryOrchestrationWorkflow()
+            .addWorkflowPhase(phase)
+            .withFailureStrategies(asList(FailureStrategy.builder().build(),
+                FailureStrategy.builder().failureTypes(singletonList(FailureType.APPLICATION_ERROR)).build()))
+            .build();
+    WorkflowServiceHelper.cleanupWorkflowStrategies(orchestrationWorkflow);
+    assertThat(orchestrationWorkflow.getFailureStrategies()).isNotEmpty();
+    assertThat(orchestrationWorkflow.getFailureStrategies().size()).isEqualTo(1);
+    assertThat(phaseStep.getFailureStrategies()).isNotEmpty();
+    assertThat(phaseStep.getFailureStrategies().size()).isEqualTo(1);
     assertThat(phaseStep.getStepSkipStrategies()).isNotEmpty();
 
     StepSkipStrategy finalStrategy = phaseStep.getStepSkipStrategies().get(0);

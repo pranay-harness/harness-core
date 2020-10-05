@@ -110,6 +110,7 @@ import software.wings.beans.AwsInfrastructureMapping;
 import software.wings.beans.CanaryOrchestrationWorkflow;
 import software.wings.beans.EntityType;
 import software.wings.beans.Environment;
+import software.wings.beans.FailureStrategy;
 import software.wings.beans.FeatureName;
 import software.wings.beans.GraphNode;
 import software.wings.beans.GraphNode.GraphNodeBuilder;
@@ -169,6 +170,9 @@ import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
+import javax.validation.Validation;
+import javax.validation.Validator;
+import javax.validation.ValidatorFactory;
 
 @OwnedBy(CDC)
 @Singleton
@@ -2853,56 +2857,79 @@ public class WorkflowServiceHelper {
     return new ArrayList<>();
   }
 
-  public static void cleanupStepSkipStrategies(PhaseStep phaseStep) {
-    if (phaseStep == null || isEmpty(phaseStep.getStepSkipStrategies())) {
+  public static List<FailureStrategy> cleanupFailureStrategies(List<FailureStrategy> failureStrategies) {
+    if (isEmpty(failureStrategies)) {
+      return Collections.emptyList();
+    }
+
+    ValidatorFactory factory = Validation.buildDefaultValidatorFactory();
+    Validator validator = factory.getValidator();
+    return failureStrategies.stream()
+        .filter(failureStrategy -> isEmpty(validator.validate(failureStrategy)))
+        .collect(toList());
+  }
+
+  public static void cleanupPhaseStepStrategies(PhaseStep phaseStep) {
+    if (phaseStep == null) {
       return;
     }
 
     Set<String> stepIds = phaseStep.getSteps() == null
         ? Collections.emptySet()
         : phaseStep.getSteps().stream().map(GraphNode::getId).collect(Collectors.toSet());
-    phaseStep.setStepSkipStrategies(
-        phaseStep.getStepSkipStrategies()
-            .stream()
-            .filter(stepSkipStrategy -> {
-              if (stepSkipStrategy.getScope() == StepSkipStrategy.Scope.ALL_STEPS) {
-                return true;
-              }
+    if (isNotEmpty(phaseStep.getStepSkipStrategies())) {
+      phaseStep.setStepSkipStrategies(
+          phaseStep.getStepSkipStrategies()
+              .stream()
+              .filter(stepSkipStrategy -> {
+                if (stepSkipStrategy.getScope() == StepSkipStrategy.Scope.ALL_STEPS) {
+                  return true;
+                }
 
-              if (isNotEmpty(stepSkipStrategy.getStepIds())) {
-                stepSkipStrategy.setStepIds(
-                    stepSkipStrategy.getStepIds().stream().filter(stepIds::contains).collect(toList()));
-              }
+                if (isNotEmpty(stepSkipStrategy.getStepIds())) {
+                  stepSkipStrategy.setStepIds(
+                      stepSkipStrategy.getStepIds().stream().filter(stepIds::contains).collect(toList()));
+                }
 
-              return isNotEmpty(stepSkipStrategy.getStepIds());
-            })
-            .collect(toList()));
+                return isNotEmpty(stepSkipStrategy.getStepIds());
+              })
+              .collect(toList()));
+    }
+
+    if (isNotEmpty(phaseStep.getFailureStrategies())) {
+      phaseStep.setFailureStrategies(cleanupFailureStrategies(phaseStep.getFailureStrategies()));
+    }
   }
 
-  public static void cleanupPhaseStepSkipStrategies(WorkflowPhase workflowPhase) {
+  public static void cleanupPhaseStrategies(WorkflowPhase workflowPhase) {
     if (workflowPhase == null || isEmpty(workflowPhase.getPhaseSteps())) {
       return;
     }
 
     for (PhaseStep phaseStep : workflowPhase.getPhaseSteps()) {
-      cleanupStepSkipStrategies(phaseStep);
+      cleanupPhaseStepStrategies(phaseStep);
     }
   }
 
-  public static void cleanupWorkflowStepSkipStrategies(OrchestrationWorkflow orchestrationWorkflow) {
+  public static void cleanupWorkflowStrategies(OrchestrationWorkflow orchestrationWorkflow) {
     if (!(orchestrationWorkflow instanceof CanaryOrchestrationWorkflow)) {
       return;
     }
 
     CanaryOrchestrationWorkflow canaryOrchestrationWorkflow = (CanaryOrchestrationWorkflow) orchestrationWorkflow;
-    cleanupStepSkipStrategies(canaryOrchestrationWorkflow.getPreDeploymentSteps());
-    cleanupStepSkipStrategies(canaryOrchestrationWorkflow.getPostDeploymentSteps());
+    if (isNotEmpty(canaryOrchestrationWorkflow.getFailureStrategies())) {
+      canaryOrchestrationWorkflow.setFailureStrategies(
+          cleanupFailureStrategies(canaryOrchestrationWorkflow.getFailureStrategies()));
+    }
+
+    cleanupPhaseStepStrategies(canaryOrchestrationWorkflow.getPreDeploymentSteps());
+    cleanupPhaseStepStrategies(canaryOrchestrationWorkflow.getPostDeploymentSteps());
     if (isEmpty(canaryOrchestrationWorkflow.getWorkflowPhases())) {
       return;
     }
 
     for (WorkflowPhase workflowPhase : canaryOrchestrationWorkflow.getWorkflowPhases()) {
-      cleanupPhaseStepSkipStrategies(workflowPhase);
+      cleanupPhaseStrategies(workflowPhase);
     }
   }
 
