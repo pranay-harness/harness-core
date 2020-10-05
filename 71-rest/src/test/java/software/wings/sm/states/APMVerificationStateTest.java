@@ -135,6 +135,42 @@ public class APMVerificationStateTest extends APMStateVerificationTestBase {
   @Test
   @Owner(developers = PRAVEEN)
   @Category(UnitTests.class)
+  public void testBuildMetricInfoMap_withExpressions() throws IOException {
+    YamlUtils yamlUtils = new YamlUtils();
+    String yamlStr =
+        Resources.toString(APMVerificationStateTest.class.getResource("/apm/apm_config.yml"), Charsets.UTF_8);
+    List<APMVerificationState.MetricCollectionInfo> mcInfo =
+        yamlUtils.read(yamlStr, new TypeReference<List<APMVerificationState.MetricCollectionInfo>>() {});
+    mcInfo.get(2).getResponseMapping().setTxnNameJsonPath("${workflow.variable.jsonPath}");
+    apmVerificationState.setMetricCollectionInfos(mcInfo);
+    ExecutionContextImpl executionContext = mock(ExecutionContextImpl.class);
+    when(executionContext.renderExpression(anyString()))
+        .thenAnswer(invocation -> invocation.getArgumentAt(0, String.class));
+    when(executionContext.renderExpression("${workflow.variable.jsonPath}")).thenReturn("$.rendered.jsonPath");
+    Map<String, List<APMMetricInfo>> apmMetricInfos = APMVerificationState.buildMetricInfoMap(
+        apmVerificationState.getMetricCollectionInfos(), Optional.of(executionContext));
+    assertThat(3).isEqualTo(apmMetricInfos.size());
+    assertThat(2).isEqualTo(apmMetricInfos.get("query").size());
+    assertThat(apmMetricInfos.get("query").get(0).getResponseMappers().get("txnName").getFieldValue()).isNotNull();
+    assertThat(apmMetricInfos.get("query").get(1).getResponseMappers().get("txnName").getJsonPath()).isNotNull();
+
+    String body = "this is a dummy collection body";
+    assertThat(apmMetricInfos.get("queryWithHost" + URL_BODY_APPENDER + body)).hasSize(1);
+    assertThat(apmMetricInfos.get("queryWithHost" + URL_BODY_APPENDER + body).get(0).getBody()).isEqualTo(body);
+    assertThat(apmMetricInfos.get("queryWithHost" + URL_BODY_APPENDER + body).get(0).getMethod())
+        .isEqualTo(Method.POST);
+
+    assertThat(apmMetricInfos.get("queryWithHost")).hasSize(1);
+    APMMetricInfo metricWithHost = apmMetricInfos.get("queryWithHost").get(0);
+    assertThat(metricWithHost.getResponseMappers().get("host").getJsonPath()).isNotNull();
+
+    // Validate if the rendered expression is set as the json path.
+    assertThat(metricWithHost.getResponseMappers().get("txnName").getJsonPath()).isEqualTo("$.rendered.jsonPath");
+  }
+
+  @Test
+  @Owner(developers = PRAVEEN)
+  @Category(UnitTests.class)
   public void testValidateFields() {
     apmVerificationState.setMetricCollectionInfos(null);
     Map<String, String> invalidFields = apmVerificationState.validateFields();

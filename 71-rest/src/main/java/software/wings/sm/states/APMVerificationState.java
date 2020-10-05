@@ -429,6 +429,13 @@ public class APMVerificationState extends AbstractMetricAnalysisState {
       String evaluatedBody = context != null && context.isPresent()
           ? context.get().renderExpression(metricCollectionInfo.getCollectionBody())
           : metricCollectionInfo.getCollectionBody();
+
+      // render expressions for the responseMappers also.
+      if (context != null && context.isPresent()) {
+        metricCollectionInfo.setResponseMapping(
+            evaluateResponseMappingForExpressions(context.get(), metricCollectionInfo.getResponseMapping()));
+      }
+
       APMMetricInfo metricInfo = APMMetricInfo.builder()
                                      .metricName(metricCollectionInfo.getMetricName())
                                      .metricType(metricCollectionInfo.getMetricType())
@@ -441,6 +448,27 @@ public class APMVerificationState extends AbstractMetricAnalysisState {
       metricInfoMap.get(evaluatedUrl).add(metricInfo);
     }
     return metricInfoMap;
+  }
+
+  private static ResponseMapping evaluateResponseMappingForExpressions(
+      ExecutionContext context, ResponseMapping responseMapping) {
+    return ResponseMapping.builder()
+        .txnNameJsonPath(renderExpressionIfNotEmpty(context, responseMapping.getTxnNameJsonPath()))
+        .hostJsonPath(renderExpressionIfNotEmpty(context, responseMapping.getHostJsonPath()))
+        .metricValueJsonPath(renderExpressionIfNotEmpty(context, responseMapping.getMetricValueJsonPath()))
+        .timestampJsonPath(renderExpressionIfNotEmpty(context, responseMapping.getTimestampJsonPath()))
+        .timeStampFormat(responseMapping.getTimeStampFormat())
+        .hostRegex(renderExpressionIfNotEmpty(context, responseMapping.getHostRegex()))
+        .txnNameFieldValue(renderExpressionIfNotEmpty(context, responseMapping.getTxnNameFieldValue()))
+        .txnNameRegex(renderExpressionIfNotEmpty(context, responseMapping.getTxnNameRegex()))
+        .build();
+  }
+
+  private static String renderExpressionIfNotEmpty(ExecutionContext context, String fieldValue) {
+    if (isNotEmpty(fieldValue)) {
+      fieldValue = context.renderExpression(fieldValue);
+    }
+    return fieldValue;
   }
 
   public static List<APMMetricInfo> buildMetricInfoList(
