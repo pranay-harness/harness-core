@@ -146,7 +146,6 @@ public class OrchestrationEngine {
             .uuid(uuid)
             .node(node)
             .ambiance(cloned)
-            .startTs(System.currentTimeMillis())
             .status(Status.QUEUED)
             .notifyId(previousNodeExecution == null ? null : previousNodeExecution.getNotifyId())
             .parentId(previousNodeExecution == null ? null : previousNodeExecution.getParentId())
@@ -265,6 +264,7 @@ public class OrchestrationEngine {
     return Preconditions.checkNotNull(
         nodeExecutionService.updateStatusWithOps(ambiance.obtainCurrentRuntimeId(), Status.RUNNING, ops -> {
           ops.set(NodeExecutionKeys.mode, facilitatorResponse.getExecutionMode());
+          ops.set(NodeExecutionKeys.startTs, System.currentTimeMillis());
           setUnset(ops, NodeExecutionKeys.timeoutInstanceIds, registerTimeouts(nodeExecution));
         }));
   }
