@@ -33,6 +33,7 @@ directories:
   32-orchestration-steps
   33-orchestration-visualization
   34-walktree-visitor
+  35-yaml-beans
   tools/bazel
 
 # Automatically includes all relevant targets under the 'directories' above
