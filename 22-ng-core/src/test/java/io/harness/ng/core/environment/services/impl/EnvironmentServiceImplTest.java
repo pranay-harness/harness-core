@@ -8,7 +8,7 @@ import com.google.inject.Inject;
 
 import io.harness.category.element.UnitTests;
 import io.harness.exception.InvalidRequestException;
-import io.harness.ng.core.NGCoreBaseTest;
+import io.harness.ng.core.NGCoreTestBase;
 import io.harness.ng.core.environment.beans.Environment;
 import io.harness.ng.core.environment.dto.EnvironmentResponseDTO;
 import io.harness.ng.core.environment.mappers.EnvironmentFilterHelper;
@@ -25,7 +25,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
-public class EnvironmentServiceImplTest extends NGCoreBaseTest {
+public class EnvironmentServiceImplTest extends NGCoreTestBase {
   @Inject EnvironmentServiceImpl environmentService;
 
   @Test

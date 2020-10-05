@@ -6,7 +6,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import com.google.inject.Inject;
 
 import io.harness.category.element.UnitTests;
-import io.harness.ng.core.NGCoreBaseTest;
+import io.harness.ng.core.NGCoreTestBase;
 import io.harness.ng.core.activityhistory.ActivityHistoryTestHelper;
 import io.harness.ng.core.activityhistory.dto.NGActivityDTO;
 import io.harness.rule.Owner;
@@ -15,7 +15,7 @@ import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 import org.springframework.data.domain.Page;
 
-public class NGActivityServiceImplTest extends NGCoreBaseTest {
+public class NGActivityServiceImplTest extends NGCoreTestBase {
   @Inject @InjectMocks NGActivityServiceImpl activityHistoryService;
 
   @Test

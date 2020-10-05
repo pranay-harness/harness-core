@@ -1,5 +1,6 @@
 package io.harness.ng.core.activityhistory.entity;
 
+import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import lombok.Value;
 import lombok.experimental.SuperBuilder;
@@ -13,4 +14,5 @@ import org.springframework.data.annotation.TypeAlias;
 @Entity(value = "ngActivity", noClassnameStored = true)
 @Persistent
 @TypeAlias("io.harness.ng.core.activity.ConnectivityCheckDetail")
+@EqualsAndHashCode(callSuper = false)
 public class ConnectivityCheckDetail extends NGActivity {}

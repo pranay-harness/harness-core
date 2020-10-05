@@ -8,7 +8,7 @@ import com.google.inject.Inject;
 
 import io.harness.category.element.UnitTests;
 import io.harness.exception.InvalidRequestException;
-import io.harness.ng.core.NGCoreBaseTest;
+import io.harness.ng.core.NGCoreTestBase;
 import io.harness.ng.core.service.dto.ServiceResponseDTO;
 import io.harness.ng.core.service.entity.ServiceEntity;
 import io.harness.ng.core.service.mappers.ServiceElementMapper;
@@ -25,7 +25,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
-public class ServiceEntityServiceImplTest extends NGCoreBaseTest {
+public class ServiceEntityServiceImplTest extends NGCoreTestBase {
   @Inject ServiceEntityServiceImpl serviceEntityService;
 
   @Test

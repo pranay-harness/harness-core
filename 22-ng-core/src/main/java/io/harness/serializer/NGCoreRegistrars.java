@@ -4,6 +4,7 @@ import com.google.common.collect.ImmutableSet;
 
 import io.harness.morphia.MorphiaRegistrar;
 import io.harness.serializer.kryo.NGCoreKryoRegistrar;
+import io.harness.serializer.morphia.NGCoreMorphiaClassesRegistrar;
 import lombok.experimental.UtilityClass;
 
 @UtilityClass
@@ -17,5 +18,8 @@ public class NGCoreRegistrars {
           .build();
 
   public final ImmutableSet<Class<? extends MorphiaRegistrar>> morphiaRegistrars =
-      ImmutableSet.<Class<? extends MorphiaRegistrar>>builder().build();
+      ImmutableSet.<Class<? extends MorphiaRegistrar>>builder()
+          .addAll(PersistenceRegistrars.morphiaRegistrars)
+          .add(NGCoreMorphiaClassesRegistrar.class)
+          .build();
 }

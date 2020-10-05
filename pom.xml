@@ -19,7 +19,7 @@
         <!--<module>21-delegate-agent-beans</module>-->
         <!--<module>21-persistence</module>-->
         <!--<module>22-delegate-service-beans</module>-->
-        <module>22-ng-core</module>
+        <!--<module>22-ng-core</module>-->
         <!--<module>22-ng-delegate-service-beans</module>-->
         <!--<module>22-ng-project-n-orgs</module>-->
         <module>22-ng-core-clients</module>
