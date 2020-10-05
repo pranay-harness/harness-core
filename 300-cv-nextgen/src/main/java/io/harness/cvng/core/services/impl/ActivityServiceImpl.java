@@ -5,6 +5,8 @@ import com.google.inject.Inject;
 
 import io.harness.cvng.client.NextGenService;
 import io.harness.cvng.core.beans.ActivityDTO;
+import io.harness.cvng.core.beans.DeploymentActivityResultDTO;
+import io.harness.cvng.core.beans.DeploymentActivityResultDTO.DeploymentResultSummary;
 import io.harness.cvng.core.beans.DeploymentActivityVerificationResultDTO;
 import io.harness.cvng.core.entities.Activity;
 import io.harness.cvng.core.entities.Activity.ActivityKeys;
@@ -27,9 +29,12 @@ import org.mongodb.morphia.query.Sort;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
+import javax.ws.rs.NotFoundException;
 
 @Slf4j
 public class ActivityServiceImpl implements ActivityService {
@@ -68,15 +73,71 @@ public class ActivityServiceImpl implements ActivityService {
       deploymentActivityVerificationResultDTO.setTag(deploymentGroupByTag.getDeploymentTag());
       Activity firstActivity = deploymentGroupByTag.deploymentActivities.get(0);
       // TODO: do we need to implement caching?
-      String serviceName = nextGenService
-                               .getService(firstActivity.getServiceIdentifier(), firstActivity.getAccountIdentifier(),
-                                   firstActivity.getOrgIdentifier(), firstActivity.getProjectIdentifier())
-                               .getName();
+      String serviceName = getServiceNameFromActivity(firstActivity);
       deploymentActivityVerificationResultDTO.setServiceName(serviceName);
       results.add(deploymentActivityVerificationResultDTO);
     });
 
     return results;
+  }
+
+  @Override
+  public DeploymentActivityResultDTO getDeploymentActivityVerificationsByTag(
+      String accountId, String projectIdentifier, String deploymentTag) {
+    List<DeploymentGroupByTag> deploymentActivities =
+        getRecentDeploymentActivities(accountId, projectIdentifier)
+            .stream()
+            .filter(deploymentGroupByTag -> deploymentGroupByTag.getDeploymentTag().equals(deploymentTag))
+            .collect(Collectors.toList());
+
+    if (deploymentActivities.isEmpty()) {
+      throw new NotFoundException("No Deployment Activities were found for deployment tag: " + deploymentTag);
+    }
+
+    DeploymentResultSummary deploymentResultSummary =
+        DeploymentResultSummary.builder()
+            .preProductionDeploymentVerificationJobInstanceSummaries(new ArrayList<>())
+            .productionDeploymentVerificationJobInstanceSummaries(new ArrayList<>())
+            .postDeploymentVerificationJobInstanceSummaries(new ArrayList<>())
+            .build();
+    deploymentActivities.forEach(deploymentGroupByTag -> {
+      List<String> verificationJobInstanceIds =
+          getVerificationJobInstanceIds(deploymentGroupByTag.getDeploymentActivities());
+      verificationJobInstanceService.addResultsToDeploymentResultSummary(
+          verificationJobInstanceIds, deploymentResultSummary);
+    });
+    String serviceName = getServiceNameFromActivity(deploymentActivities.get(0).deploymentActivities.get(0));
+
+    DeploymentActivityResultDTO deploymentActivityResultDTO = DeploymentActivityResultDTO.builder()
+                                                                  .deploymentTag(deploymentTag)
+                                                                  .serviceName(serviceName)
+                                                                  .deploymentResultSummary(deploymentResultSummary)
+                                                                  .build();
+
+    Set<String> environments = collectAllEnvironments(deploymentActivityResultDTO);
+    deploymentActivityResultDTO.setEnvironments(environments);
+
+    return deploymentActivityResultDTO;
+  }
+
+  private Set<String> collectAllEnvironments(DeploymentActivityResultDTO deploymentActivityResultDTO) {
+    Set<String> environments = new HashSet<>();
+    deploymentActivityResultDTO.getDeploymentResultSummary()
+        .getPreProductionDeploymentVerificationJobInstanceSummaries()
+        .forEach(deploymentVerificationJobInstanceSummary
+            -> environments.add(deploymentVerificationJobInstanceSummary.getEnvironmentName()));
+
+    deploymentActivityResultDTO.getDeploymentResultSummary()
+        .getProductionDeploymentVerificationJobInstanceSummaries()
+        .forEach(deploymentVerificationJobInstanceSummary
+            -> environments.add(deploymentVerificationJobInstanceSummary.getEnvironmentName()));
+
+    deploymentActivityResultDTO.getDeploymentResultSummary()
+        .getPostDeploymentVerificationJobInstanceSummaries()
+        .forEach(deploymentVerificationJobInstanceSummary
+            -> environments.add(deploymentVerificationJobInstanceSummary.getEnvironmentName()));
+
+    return environments;
   }
 
   private List<String> getVerificationJobInstanceIds(List<DeploymentActivity> deploymentActivities) {
@@ -113,6 +174,14 @@ public class ActivityServiceImpl implements ActivityService {
     }
     return result;
   }
+
+  private String getServiceNameFromActivity(Activity activity) {
+    return nextGenService
+        .getService(activity.getServiceIdentifier(), activity.getAccountIdentifier(), activity.getOrgIdentifier(),
+            activity.getProjectIdentifier())
+        .getName();
+  }
+
   @Data
   @Builder
   private static class DeploymentGroupByTag {

@@ -153,7 +153,7 @@ public class VerificationJobInstance
     Duration total = getResolvedJob().getDuration();
     Duration completedTillNow = Duration.between(getStartTime(), endTime);
 
-    return (int) (completedTillNow.get(ChronoUnit.MILLIS) * 100.0 / total.get(ChronoUnit.MILLIS));
+    return (int) (completedTillNow.get(ChronoUnit.SECONDS) * 100.0 / total.get(ChronoUnit.SECONDS));
   }
 
   public Duration getTimeRemainingMs(Instant currentTime) {
