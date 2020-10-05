@@ -127,6 +127,7 @@ public class WebhookTriggerProcessorUtils {
         .commitId(commit.getSha())
         .message(commit.getMessage())
         .link(commit.getLink())
+        .timeStamp(commit.getCommitter().getDate().getSeconds() * 1000)
         .ownerEmail(commit.getAuthor().getEmail())
         .ownerId(commit.getAuthor().getLogin())
         .ownerName(commit.getAuthor().getName())
