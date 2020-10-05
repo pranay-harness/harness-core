@@ -11,7 +11,7 @@ import com.google.common.collect.Lists;
 import com.google.common.io.Resources;
 import com.google.inject.Inject;
 
-import io.harness.NGConstants;
+import io.harness.NGResourceFilterConstants;
 import io.harness.beans.ExecutionStrategyType;
 import io.harness.cdng.pipeline.NGStepType;
 import io.harness.cdng.pipeline.NgPipeline;
@@ -122,7 +122,7 @@ public class PipelineServiceImpl implements PipelineService {
                    .is(false);
     if (EmptyPredicate.isNotEmpty(searchTerm)) {
       Criteria searchCriteria = new Criteria().orOperator(
-          where(PipelineNGKeys.identifier).regex(searchTerm, NGConstants.CASE_INSENSITIVE_MONGO_OPTIONS));
+          where(PipelineNGKeys.identifier).regex(searchTerm, NGResourceFilterConstants.CASE_INSENSITIVE_MONGO_OPTIONS));
       criteria.andOperator(searchCriteria);
       // add name and tags in search when they are added to the entity
     }

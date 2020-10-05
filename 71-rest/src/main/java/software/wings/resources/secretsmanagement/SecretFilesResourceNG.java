@@ -1,15 +1,12 @@
 package software.wings.resources.secretsmanagement;
 
-import static io.harness.NGConstants.ACCOUNT_KEY;
 import static io.harness.NGConstants.FILE_KEY;
 import static io.harness.NGConstants.FILE_METADATA_KEY;
-import static io.harness.NGConstants.IDENTIFIER_KEY;
-import static io.harness.NGConstants.ORG_KEY;
-import static io.harness.NGConstants.PROJECT_KEY;
 import static software.wings.resources.secretsmanagement.EncryptedDataMapper.toDTO;
 
 import com.google.inject.Inject;
 
+import io.harness.NGCommonEntityConstants;
 import io.harness.exception.InvalidRequestException;
 import io.harness.rest.RestResponse;
 import io.harness.secretmanagerclient.dto.EncryptedDataDTO;
@@ -61,10 +58,12 @@ public class SecretFilesResourceNG {
   @PUT
   @Path("{identifier}")
   @Consumes(MediaType.MULTIPART_FORM_DATA)
-  public RestResponse<Boolean> update(@PathParam(IDENTIFIER_KEY) String identifier,
+  public RestResponse<Boolean> update(@PathParam(NGCommonEntityConstants.IDENTIFIER_KEY) String identifier,
       @FormDataParam(FILE_KEY) InputStream uploadedInputStream,
-      @QueryParam(ACCOUNT_KEY) @NotNull String accountIdentifier, @QueryParam(ORG_KEY) String orgIdentifier,
-      @QueryParam(PROJECT_KEY) String projectIdentifier, @FormDataParam(FILE_METADATA_KEY) String fileMetadata) {
+      @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) @NotNull String accountIdentifier,
+      @QueryParam(NGCommonEntityConstants.ORG_KEY) String orgIdentifier,
+      @QueryParam(NGCommonEntityConstants.PROJECT_KEY) String projectIdentifier,
+      @FormDataParam(FILE_METADATA_KEY) String fileMetadata) {
     if (StringUtils.isEmpty(fileMetadata)) {
       throw new InvalidRequestException("Meta data cannot be null/empty.");
     }

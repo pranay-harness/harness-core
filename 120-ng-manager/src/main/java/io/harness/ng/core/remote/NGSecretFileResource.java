@@ -1,20 +1,14 @@
 package io.harness.ng.core.remote;
 
-import static io.harness.NGConstants.ACCOUNT_KEY;
-import static io.harness.NGConstants.DESCRIPTION_KEY;
 import static io.harness.NGConstants.FILE_KEY;
-import static io.harness.NGConstants.IDENTIFIER_KEY;
-import static io.harness.NGConstants.NAME_KEY;
-import static io.harness.NGConstants.ORG_KEY;
-import static io.harness.NGConstants.PROJECT_KEY;
 import static io.harness.NGConstants.SECRET_MANAGER_KEY;
-import static io.harness.NGConstants.TAGS_KEY;
-import static io.harness.NGConstants.TYPE_KEY;
 import static io.harness.secretmanagerclient.SecretType.SecretFile;
 import static software.wings.resources.secretsmanagement.EncryptedDataMapper.toDTO;
 
 import com.google.inject.Inject;
 
+import io.harness.NGCommonEntityConstants;
+import io.harness.NGResourceFilterConstants;
 import io.harness.data.validator.EntityIdentifier;
 import io.harness.data.validator.SecretTypeAllowedValues;
 import io.harness.ng.core.api.NGSecretFileService;
@@ -76,13 +70,16 @@ public class NGSecretFileResource {
   @ApiOperation(value = "Update a secret file", nickname = "putSecretFile")
   @Consumes(MediaType.MULTIPART_FORM_DATA)
   public ResponseDTO<Boolean> update(@PathParam("identifier") @NotEmpty String pathIdentifier,
-      @NotNull @FormDataParam(FILE_KEY) InputStream uploadedInputStream, @FormDataParam(TAGS_KEY) String tagsString,
-      @NotNull @FormDataParam(NAME_KEY) String name, @NotNull @FormDataParam(ACCOUNT_KEY) String account,
-      @NotNull @SecretTypeAllowedValues(allowedValues = {SecretFile}) @FormDataParam(TYPE_KEY) SecretType secretType,
-      @FormDataParam(ORG_KEY) String org, @FormDataParam(PROJECT_KEY) String project,
+      @NotNull @FormDataParam(FILE_KEY) InputStream uploadedInputStream,
+      @FormDataParam(NGCommonEntityConstants.TAGS_KEY) String tagsString,
+      @NotNull @FormDataParam(NGCommonEntityConstants.NAME_KEY) String name,
+      @NotNull @FormDataParam(NGCommonEntityConstants.ACCOUNT_KEY) String account,
+      @NotNull @SecretTypeAllowedValues(allowedValues = {SecretFile}) @FormDataParam(NGResourceFilterConstants.TYPE_KEY)
+      SecretType secretType, @FormDataParam(NGCommonEntityConstants.ORG_KEY) String org,
+      @FormDataParam(NGCommonEntityConstants.PROJECT_KEY) String project,
       @NotNull @FormDataParam(SECRET_MANAGER_KEY) String secretManager,
-      @NotNull @EntityIdentifier @FormDataParam(IDENTIFIER_KEY) String identifier,
-      @FormDataParam(DESCRIPTION_KEY) String description) {
+      @NotNull @EntityIdentifier @FormDataParam(NGCommonEntityConstants.IDENTIFIER_KEY) String identifier,
+      @FormDataParam(NGCommonEntityConstants.DESCRIPTION_KEY) String description) {
     List<String> tags = new ArrayList<>();
     if (!StringUtils.isEmpty(tagsString)) {
       tags = Arrays.asList(tagsString.trim().split("\\s*,\\s*"));
@@ -107,7 +104,7 @@ public class NGSecretFileResource {
   @ApiOperation(value = "Update a secret file via yaml", nickname = "putSecretFileViaYaml")
   @Consumes({"application/yaml"})
   public ResponseDTO<Boolean> updateSecretFileViaYaml(
-      @PathParam(IDENTIFIER_KEY) @NotEmpty String identifier, @Valid SecretFileDTO dto) {
+      @PathParam(NGCommonEntityConstants.IDENTIFIER_KEY) @NotEmpty String identifier, @Valid SecretFileDTO dto) {
     return ResponseDTO.newResponse(ngSecretFileService.update(dto, null));
   }
 }

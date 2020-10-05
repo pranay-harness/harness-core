@@ -1,8 +1,8 @@
 package io.harness.ng.beans;
 
-import static io.harness.NGConstants.PAGE_KEY;
-import static io.harness.NGConstants.SIZE_KEY;
-import static io.harness.NGConstants.SORT_KEY;
+import static io.harness.NGResourceFilterConstants.PAGE_KEY;
+import static io.harness.NGResourceFilterConstants.SIZE_KEY;
+import static io.harness.NGResourceFilterConstants.SORT_KEY;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import io.harness.beans.SortOrder;

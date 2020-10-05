@@ -3,7 +3,7 @@ package io.harness.cdng.inputset.mappers;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static org.springframework.data.mongodb.core.query.Criteria.where;
 
-import io.harness.NGConstants;
+import io.harness.NGResourceFilterConstants;
 import io.harness.cdng.inputset.beans.entities.CDInputSetEntity;
 import io.harness.cdng.inputset.beans.entities.CDInputSetEntity.CDInputSetEntityKeys;
 import io.harness.cdng.inputset.beans.resource.InputSetListType;
@@ -41,9 +41,11 @@ public class InputSetFilterHelper {
     }
 
     if (EmptyPredicate.isNotEmpty(searchTerm)) {
-      Criteria searchCriteria = new Criteria().orOperator(
-          where(BaseInputSetEntityKeys.name).regex(searchTerm, NGConstants.CASE_INSENSITIVE_MONGO_OPTIONS),
-          where(BaseInputSetEntityKeys.identifier).regex(searchTerm, NGConstants.CASE_INSENSITIVE_MONGO_OPTIONS));
+      Criteria searchCriteria =
+          new Criteria().orOperator(where(BaseInputSetEntityKeys.name)
+                                        .regex(searchTerm, NGResourceFilterConstants.CASE_INSENSITIVE_MONGO_OPTIONS),
+              where(BaseInputSetEntityKeys.identifier)
+                  .regex(searchTerm, NGResourceFilterConstants.CASE_INSENSITIVE_MONGO_OPTIONS));
       criteria.andOperator(searchCriteria);
     }
 

@@ -6,7 +6,9 @@ import com.google.inject.Inject;
 
 import com.codahale.metrics.annotation.ExceptionMetered;
 import com.codahale.metrics.annotation.Timed;
+import io.harness.NGCommonEntityConstants;
 import io.harness.NGConstants;
+import io.harness.NGResourceFilterConstants;
 import io.harness.beans.EmbeddedUser;
 import io.harness.beans.ExecutionStrategyType;
 import io.harness.cdng.inputset.beans.resource.MergeInputSetRequestDTO;
@@ -80,9 +82,9 @@ public class CDNGPipelineResource {
   @ExceptionMetered
   @ApiOperation(value = "Gets a pipeline by identifier", nickname = "getPipeline")
   public ResponseDTO<CDPipelineResponseDTO> getPipelineByIdentifier(
-      @NotNull @QueryParam(NGConstants.ACCOUNT_KEY) String accountId,
-      @NotNull @QueryParam(NGConstants.ORG_KEY) String orgId,
-      @NotNull @QueryParam(NGConstants.PROJECT_KEY) String projectId,
+      @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountId,
+      @NotNull @QueryParam(NGCommonEntityConstants.ORG_KEY) String orgId,
+      @NotNull @QueryParam(NGCommonEntityConstants.PROJECT_KEY) String projectId,
       @PathParam(NGConstants.PIPELINE_KEY) String pipelineId) {
     logger.info("Get pipeline");
     return ResponseDTO.newResponse(ngPipelineService.getPipeline(pipelineId, accountId, orgId, projectId).orElse(null));
@@ -93,11 +95,12 @@ public class CDNGPipelineResource {
   @ExceptionMetered
   @ApiOperation(value = "Gets Pipeline list", nickname = "getPipelineList")
   public ResponseDTO<Page<CDPipelineSummaryResponseDTO>> getListOfPipelines(
-      @NotNull @QueryParam(NGConstants.ACCOUNT_KEY) String accountId,
-      @NotNull @QueryParam(NGConstants.ORG_KEY) String orgId,
-      @NotNull @QueryParam(NGConstants.PROJECT_KEY) String projectId, @QueryParam("filter") String filterQuery,
-      @QueryParam("page") @DefaultValue("0") int page, @QueryParam("size") @DefaultValue("25") int size,
-      @QueryParam("sort") List<String> sort, @QueryParam(NGConstants.SEARCH_TERM_KEY) String searchTerm) {
+      @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountId,
+      @NotNull @QueryParam(NGCommonEntityConstants.ORG_KEY) String orgId,
+      @NotNull @QueryParam(NGCommonEntityConstants.PROJECT_KEY) String projectId,
+      @QueryParam("filter") String filterQuery, @QueryParam("page") @DefaultValue("0") int page,
+      @QueryParam("size") @DefaultValue("25") int size, @QueryParam("sort") List<String> sort,
+      @QueryParam(NGResourceFilterConstants.SEARCH_TERM_KEY) String searchTerm) {
     logger.info("Get List of pipelines");
     Criteria criteria = restQueryFilterParser.getCriteriaFromFilterQuery(filterQuery, NgPipeline.class);
     Page<CDPipelineSummaryResponseDTO> pipelines = ngPipelineService.getPipelines(
@@ -114,9 +117,9 @@ public class CDNGPipelineResource {
   })
   @ApiOperation(value = "Create a Pipeline", nickname = "postPipeline")
   public ResponseDTO<String>
-  createPipeline(@NotNull @QueryParam(NGConstants.ACCOUNT_KEY) String accountId,
-      @NotNull @QueryParam(NGConstants.ORG_KEY) String orgId,
-      @NotNull @QueryParam(NGConstants.PROJECT_KEY) String projectId,
+  createPipeline(@NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountId,
+      @NotNull @QueryParam(NGCommonEntityConstants.ORG_KEY) String orgId,
+      @NotNull @QueryParam(NGCommonEntityConstants.PROJECT_KEY) String projectId,
       @NotNull @ApiParam(hidden = true, type = "") String yaml) {
     logger.info("Creating pipeline");
     return ResponseDTO.newResponse(ngPipelineService.createPipeline(yaml, accountId, orgId, projectId));
@@ -132,9 +135,9 @@ public class CDNGPipelineResource {
   })
   @ApiOperation(value = "Update a Pipeline", nickname = "putPipeline")
   public ResponseDTO<String>
-  updatePipeline(@NotNull @QueryParam(NGConstants.ACCOUNT_KEY) String accountId,
-      @NotNull @QueryParam(NGConstants.ORG_KEY) String orgId,
-      @NotNull @QueryParam(NGConstants.PROJECT_KEY) String projectId,
+  updatePipeline(@NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountId,
+      @NotNull @QueryParam(NGCommonEntityConstants.ORG_KEY) String orgId,
+      @NotNull @QueryParam(NGCommonEntityConstants.PROJECT_KEY) String projectId,
       @PathParam(NGConstants.PIPELINE_KEY) String pipelineId,
       @NotNull @ApiParam(hidden = true, type = "") String yaml) {
     logger.info("Updating pipeline");
@@ -147,9 +150,9 @@ public class CDNGPipelineResource {
   @ExceptionMetered
   @ApiOperation(value = "Validate a Pipeline", nickname = "validatePipeline")
   public ResponseDTO<CDPipelineValidationInfoDTO> validatePipeline(
-      @NotNull @QueryParam(NGConstants.ACCOUNT_KEY) String accountId,
-      @NotNull @QueryParam(NGConstants.ORG_KEY) String orgId,
-      @NotNull @QueryParam(NGConstants.PROJECT_KEY) String projectId,
+      @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountId,
+      @NotNull @QueryParam(NGCommonEntityConstants.ORG_KEY) String orgId,
+      @NotNull @QueryParam(NGCommonEntityConstants.PROJECT_KEY) String projectId,
       @QueryParam(NGConstants.PIPELINE_KEY) String pipelineId) throws IOException {
     logger.info("Validating pipeline");
     CDPipelineValidationInfo cdPipelineValidationInfo =
@@ -171,9 +174,9 @@ public class CDNGPipelineResource {
   @ApiOperation(
       value = "Execute a pipeline with inputSet pipeline yaml", nickname = "postPipelineExecuteWithInputSetYaml")
   public ResponseDTO<NGPipelineExecutionResponseDTO>
-  runPipelineWithInputSetPipelineYaml(@NotNull @QueryParam(NGConstants.ACCOUNT_KEY) String accountId,
-      @NotNull @QueryParam(NGConstants.ORG_KEY) String orgIdentifier,
-      @NotNull @QueryParam(NGConstants.PROJECT_KEY) String projectIdentifier,
+  runPipelineWithInputSetPipelineYaml(@NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountId,
+      @NotNull @QueryParam(NGCommonEntityConstants.ORG_KEY) String orgIdentifier,
+      @NotNull @QueryParam(NGCommonEntityConstants.PROJECT_KEY) String projectIdentifier,
       @PathParam("identifier") @NotEmpty String pipelineIdentifier,
       @QueryParam("useFQNIfError") @DefaultValue("false") boolean useFQNIfErrorResponse,
       @ApiParam(hidden = true, type = "") String inputSetPipelineYaml) {
@@ -189,9 +192,9 @@ public class CDNGPipelineResource {
   @ApiOperation(
       value = "Execute a pipeline with input set references list", nickname = "postPipelineExecuteWithInputSetList")
   public ResponseDTO<NGPipelineExecutionResponseDTO>
-  runPipelineWithInputSetIdentifierList(@NotNull @QueryParam(NGConstants.ACCOUNT_KEY) String accountId,
-      @NotNull @QueryParam(NGConstants.ORG_KEY) String orgIdentifier,
-      @NotNull @QueryParam(NGConstants.PROJECT_KEY) String projectIdentifier,
+  runPipelineWithInputSetIdentifierList(@NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountId,
+      @NotNull @QueryParam(NGCommonEntityConstants.ORG_KEY) String orgIdentifier,
+      @NotNull @QueryParam(NGCommonEntityConstants.PROJECT_KEY) String projectIdentifier,
       @PathParam("identifier") @NotEmpty String pipelineIdentifier,
       @QueryParam("useFQNIfError") @DefaultValue("false") boolean useFQNIfErrorResponse,
       @NotNull @Valid MergeInputSetRequestDTO mergeInputSetRequestDTO) {
@@ -245,9 +248,9 @@ public class CDNGPipelineResource {
   @DELETE
   @Path("/{pipelineIdentifier}")
   @ApiOperation(value = "Delete a pipeline", nickname = "softDeletePipeline")
-  public ResponseDTO<Boolean> deletePipeline(@NotNull @QueryParam(NGConstants.ACCOUNT_KEY) String accountId,
-      @NotNull @QueryParam(NGConstants.ORG_KEY) String orgId,
-      @NotNull @QueryParam(NGConstants.PROJECT_KEY) String projectId,
+  public ResponseDTO<Boolean> deletePipeline(@NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountId,
+      @NotNull @QueryParam(NGCommonEntityConstants.ORG_KEY) String orgId,
+      @NotNull @QueryParam(NGCommonEntityConstants.PROJECT_KEY) String projectId,
       @PathParam(NGConstants.PIPELINE_KEY) String pipelineId) {
     return ResponseDTO.newResponse(ngPipelineService.deletePipeline(accountId, orgId, projectId, pipelineId));
   }

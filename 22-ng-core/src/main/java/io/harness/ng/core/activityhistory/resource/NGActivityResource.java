@@ -1,14 +1,9 @@
 package io.harness.ng.core.activityhistory.resource;
 
-import static io.harness.NGConstants.ACCOUNT_KEY;
-import static io.harness.NGConstants.IDENTIFIER_KEY;
-import static io.harness.NGConstants.ORG_KEY;
-import static io.harness.NGConstants.PAGE_KEY;
-import static io.harness.NGConstants.PROJECT_KEY;
-import static io.harness.NGConstants.SIZE_KEY;
-
 import com.google.inject.Inject;
 
+import io.harness.NGCommonEntityConstants;
+import io.harness.NGResourceFilterConstants;
 import io.harness.ng.core.activityhistory.dto.NGActivityDTO;
 import io.harness.ng.core.activityhistory.service.NGActivityService;
 import io.harness.ng.core.dto.ResponseDTO;
@@ -37,10 +32,13 @@ public class NGActivityResource {
 
   @GET
   @ApiOperation(value = "Get Activities where this resource was used", nickname = "listEntityUsageActivity")
-  public ResponseDTO<Page<NGActivityDTO>> list(@QueryParam(PAGE_KEY) @DefaultValue("0") int page,
-      @QueryParam(SIZE_KEY) @DefaultValue("100") int size, @NotEmpty @QueryParam(ACCOUNT_KEY) String accountIdentifier,
-      @QueryParam(ORG_KEY) String orgIdentifier, @QueryParam(PROJECT_KEY) String projectIdentifier,
-      @QueryParam(IDENTIFIER_KEY) String referredEntityIdentifier) {
+  public ResponseDTO<Page<NGActivityDTO>> list(
+      @QueryParam(NGResourceFilterConstants.PAGE_KEY) @DefaultValue("0") int page,
+      @QueryParam(NGResourceFilterConstants.SIZE_KEY) @DefaultValue("100") int size,
+      @NotEmpty @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier,
+      @QueryParam(NGCommonEntityConstants.ORG_KEY) String orgIdentifier,
+      @QueryParam(NGCommonEntityConstants.PROJECT_KEY) String projectIdentifier,
+      @QueryParam(NGCommonEntityConstants.IDENTIFIER_KEY) String referredEntityIdentifier) {
     return ResponseDTO.newResponse(activityHistoryService.list(
         page, size, accountIdentifier, orgIdentifier, projectIdentifier, referredEntityIdentifier));
   }

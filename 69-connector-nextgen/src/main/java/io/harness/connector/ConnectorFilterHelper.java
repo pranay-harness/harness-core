@@ -1,12 +1,11 @@
 package io.harness.connector;
 
-import static io.harness.NGConstants.IDENTIFIER_KEY;
-import static io.harness.NGConstants.TAGS_KEY;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.springframework.data.mongodb.core.query.Criteria.where;
 
 import com.google.inject.Singleton;
 
+import io.harness.NGCommonEntityConstants;
 import io.harness.connector.entities.Connector.ConnectorKeys;
 import io.harness.delegate.beans.connector.ConnectorCategory;
 import io.harness.delegate.beans.connector.ConnectorType;
@@ -31,7 +30,8 @@ public class ConnectorFilterHelper {
 
     if (isNotBlank(searchTerm)) {
       Criteria seachCriteria = new Criteria().orOperator(where(ConnectorKeys.name).regex(searchTerm, "i"),
-          where(IDENTIFIER_KEY).regex(searchTerm, "i"), where(TAGS_KEY).regex(searchTerm, "i"));
+          where(NGCommonEntityConstants.IDENTIFIER_KEY).regex(searchTerm, "i"),
+          where(NGCommonEntityConstants.TAGS_KEY).regex(searchTerm, "i"));
       criteria.andOperator(seachCriteria);
     }
     return criteria;

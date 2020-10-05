@@ -1,8 +1,5 @@
 package io.harness.ng.core.remote;
 
-import static io.harness.NGConstants.ACCOUNT_KEY;
-import static io.harness.NGConstants.IDENTIFIER_KEY;
-import static io.harness.NGConstants.SEARCH_TERM_KEY;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.ng.core.remote.OrganizationMapper.writeDto;
 import static io.harness.utils.PageUtils.getNGPageResponse;
@@ -12,6 +9,8 @@ import static javax.ws.rs.core.HttpHeaders.IF_MATCH;
 import com.google.common.collect.ImmutableList;
 import com.google.inject.Inject;
 
+import io.harness.NGCommonEntityConstants;
+import io.harness.NGResourceFilterConstants;
 import io.harness.beans.SortOrder;
 import io.harness.ng.beans.PageRequest;
 import io.harness.ng.beans.PageResponse;
@@ -62,7 +61,8 @@ public class OrganizationResource {
   @POST
   @ApiOperation(value = "Create an Organization", nickname = "postOrganization")
   public ResponseDTO<OrganizationDTO> create(
-      @NotNull @QueryParam(ACCOUNT_KEY) String accountIdentifier, @NotNull @Valid OrganizationDTO organizationDTO) {
+      @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier,
+      @NotNull @Valid OrganizationDTO organizationDTO) {
     Organization updatedOrganization = organizationService.create(accountIdentifier, organizationDTO);
     return ResponseDTO.newResponse(updatedOrganization.getVersion().toString(), writeDto(updatedOrganization));
   }
@@ -70,8 +70,8 @@ public class OrganizationResource {
   @GET
   @Path("{identifier}")
   @ApiOperation(value = "Get an Organization by identifier", nickname = "getOrganization")
-  public ResponseDTO<OrganizationDTO> get(@NotNull @PathParam(IDENTIFIER_KEY) String identifier,
-      @NotNull @QueryParam(ACCOUNT_KEY) String accountIdentifier) {
+  public ResponseDTO<OrganizationDTO> get(@NotNull @PathParam(NGCommonEntityConstants.IDENTIFIER_KEY) String identifier,
+      @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier) {
     Optional<Organization> organizationOptional = organizationService.get(accountIdentifier, identifier);
     if (!organizationOptional.isPresent()) {
       throw new NotFoundException("Resource not found");
@@ -82,8 +82,9 @@ public class OrganizationResource {
 
   @GET
   @ApiOperation(value = "Get Organization list", nickname = "getOrganizationList")
-  public ResponseDTO<PageResponse<OrganizationDTO>> list(@NotNull @QueryParam(ACCOUNT_KEY) String accountIdentifier,
-      @QueryParam(SEARCH_TERM_KEY) String searchTerm, @BeanParam PageRequest pageRequest) {
+  public ResponseDTO<PageResponse<OrganizationDTO>> list(
+      @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier,
+      @QueryParam(NGResourceFilterConstants.SEARCH_TERM_KEY) String searchTerm, @BeanParam PageRequest pageRequest) {
     if (isEmpty(pageRequest.getSortOrders())) {
       SortOrder order = SortOrder.Builder.aSortOrder().withField("lastModifiedAt", SortOrder.OrderType.DESC).build();
       pageRequest.setSortOrders(ImmutableList.of(order));
@@ -99,7 +100,8 @@ public class OrganizationResource {
   @Path("{identifier}")
   @ApiOperation(value = "Update an Organization by identifier", nickname = "putOrganization")
   public ResponseDTO<OrganizationDTO> update(@HeaderParam(IF_MATCH) String ifMatch,
-      @NotNull @PathParam(IDENTIFIER_KEY) String identifier, @NotNull @QueryParam(ACCOUNT_KEY) String accountIdentifier,
+      @NotNull @PathParam(NGCommonEntityConstants.IDENTIFIER_KEY) String identifier,
+      @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier,
       @NotNull @Valid OrganizationDTO organizationDTO) {
     organizationDTO.setVersion(Optional.ofNullable(ifMatch).map(Long::parseLong).orElse(null));
     Organization updatedOrganization = organizationService.update(accountIdentifier, identifier, organizationDTO);
@@ -110,8 +112,8 @@ public class OrganizationResource {
   @Path("{identifier}")
   @ApiOperation(value = "Delete an Organization by identifier", nickname = "deleteOrganization")
   public ResponseDTO<Boolean> delete(@HeaderParam(IF_MATCH) String ifMatch,
-      @NotNull @PathParam(IDENTIFIER_KEY) String identifier,
-      @NotNull @QueryParam(ACCOUNT_KEY) String accountIdentifier) {
+      @NotNull @PathParam(NGCommonEntityConstants.IDENTIFIER_KEY) String identifier,
+      @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier) {
     return ResponseDTO.newResponse(organizationService.delete(
         accountIdentifier, identifier, Optional.ofNullable(ifMatch).map(Long::parseLong).orElse(null)));
   }

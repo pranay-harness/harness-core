@@ -1,16 +1,11 @@
 package io.harness.ng.core.remote;
 
-import static io.harness.NGConstants.ACCOUNT_KEY;
-import static io.harness.NGConstants.IDENTIFIER_KEY;
-import static io.harness.NGConstants.ORG_KEY;
-import static io.harness.NGConstants.PAGE_KEY;
-import static io.harness.NGConstants.PROJECT_KEY;
-import static io.harness.NGConstants.SEARCH_TERM_KEY;
-import static io.harness.NGConstants.SIZE_KEY;
 import static software.wings.resources.secretsmanagement.EncryptedDataMapper.toDTO;
 
 import com.google.inject.Inject;
 
+import io.harness.NGCommonEntityConstants;
+import io.harness.NGResourceFilterConstants;
 import io.harness.ng.beans.PageResponse;
 import io.harness.ng.core.api.NGSecretService;
 import io.harness.ng.core.dto.ErrorDTO;
@@ -72,10 +67,14 @@ public class NGSecretResource {
 
   @GET
   @ApiOperation(value = "Get secrets for an account", nickname = "listSecrets")
-  public ResponseDTO<PageResponse<EncryptedDataDTO>> list(@QueryParam(ACCOUNT_KEY) @NotNull String accountIdentifier,
-      @QueryParam(ORG_KEY) String orgIdentifier, @QueryParam(PROJECT_KEY) String projectIdentifier,
-      @QueryParam("type") SecretType secretType, @QueryParam(SEARCH_TERM_KEY) String searchTerm,
-      @QueryParam(PAGE_KEY) @DefaultValue("0") int page, @QueryParam(SIZE_KEY) @DefaultValue("100") int size) {
+  public ResponseDTO<PageResponse<EncryptedDataDTO>> list(
+      @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) @NotNull String accountIdentifier,
+      @QueryParam(NGCommonEntityConstants.ORG_KEY) String orgIdentifier,
+      @QueryParam(NGCommonEntityConstants.PROJECT_KEY) String projectIdentifier,
+      @QueryParam("type") SecretType secretType,
+      @QueryParam(NGResourceFilterConstants.SEARCH_TERM_KEY) String searchTerm,
+      @QueryParam(NGResourceFilterConstants.PAGE_KEY) @DefaultValue("0") int page,
+      @QueryParam(NGResourceFilterConstants.SIZE_KEY) @DefaultValue("100") int size) {
     PageResponse<EncryptedData> secrets =
         ngSecretService.list(accountIdentifier, orgIdentifier, projectIdentifier, secretType, searchTerm, page, size);
     PageResponse<EncryptedDataDTO> encryptedDataDTOPageResponse = PageResponse.<EncryptedDataDTO>builder()
@@ -95,9 +94,11 @@ public class NGSecretResource {
   @GET
   @Path("{identifier}")
   @ApiOperation(value = "Gets secret", nickname = "getSecret")
-  public ResponseDTO<EncryptedDataDTO> get(@PathParam(IDENTIFIER_KEY) @NotEmpty String identifier,
-      @QueryParam(ACCOUNT_KEY) @NotNull String accountIdentifier, @QueryParam(ORG_KEY) String orgIdentifier,
-      @QueryParam(PROJECT_KEY) String projectIdentifier) {
+  public ResponseDTO<EncryptedDataDTO> get(
+      @PathParam(NGCommonEntityConstants.IDENTIFIER_KEY) @NotEmpty String identifier,
+      @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) @NotNull String accountIdentifier,
+      @QueryParam(NGCommonEntityConstants.ORG_KEY) String orgIdentifier,
+      @QueryParam(NGCommonEntityConstants.PROJECT_KEY) String projectIdentifier) {
     EncryptedData encryptedData = ngSecretService.get(accountIdentifier, orgIdentifier, projectIdentifier, identifier);
     return ResponseDTO.newResponse(toDTO(encryptedData));
   }
@@ -107,7 +108,7 @@ public class NGSecretResource {
   @ApiOperation(value = "Update a secret text", nickname = "putSecretText")
   @Consumes({"application/json"})
   public ResponseDTO<Boolean> updateSecret(
-      @PathParam(IDENTIFIER_KEY) @NotEmpty String identifier, @Valid SecretTextDTO dto) {
+      @PathParam(NGCommonEntityConstants.IDENTIFIER_KEY) @NotEmpty String identifier, @Valid SecretTextDTO dto) {
     return ResponseDTO.newResponse(ngSecretService.update(dto, false));
   }
 
@@ -116,16 +117,18 @@ public class NGSecretResource {
   @Consumes({"application/yaml"})
   @ApiOperation(value = "Update a secret text via yaml", nickname = "putSecretTextViaYaml")
   public ResponseDTO<Boolean> updateSecretViaYaml(
-      @PathParam(IDENTIFIER_KEY) @NotEmpty String identifier, @Valid SecretTextDTO dto) {
+      @PathParam(NGCommonEntityConstants.IDENTIFIER_KEY) @NotEmpty String identifier, @Valid SecretTextDTO dto) {
     return ResponseDTO.newResponse(ngSecretService.update(dto, true));
   }
 
   @DELETE
   @Path("{identifier}")
   @ApiOperation(value = "Delete a secret text", nickname = "deleteSecret")
-  public ResponseDTO<Boolean> deleteSecret(@PathParam(IDENTIFIER_KEY) @NotEmpty String identifier,
-      @QueryParam(ACCOUNT_KEY) @NotNull String accountIdentifier, @QueryParam(ORG_KEY) String orgIdentifier,
-      @QueryParam(PROJECT_KEY) String projectIdentifier) {
+  public ResponseDTO<Boolean> deleteSecret(
+      @PathParam(NGCommonEntityConstants.IDENTIFIER_KEY) @NotEmpty String identifier,
+      @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) @NotNull String accountIdentifier,
+      @QueryParam(NGCommonEntityConstants.ORG_KEY) String orgIdentifier,
+      @QueryParam(NGCommonEntityConstants.PROJECT_KEY) String projectIdentifier) {
     return ResponseDTO.newResponse(
         ngSecretService.delete(accountIdentifier, orgIdentifier, projectIdentifier, identifier));
   }
