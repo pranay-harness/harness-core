@@ -94,6 +94,25 @@ public class SettingUtils {
         .build();
   }
 
+  public static SettingAttribute createEcsFunctionalTestGitAccountSetting(SettingAttribute githubKey) {
+    return aSettingAttribute()
+        .withCategory(CONNECTOR)
+        .withName("ecs-git-ops-functional-test")
+        .withAppId(githubKey.getAppId())
+        .withEnvId(githubKey.getEnvId())
+        .withAccountId(githubKey.getAccountId())
+        .withValue(
+            GitConfig.builder()
+                .repoUrl("https://github.com/wings-software")
+                .username(String.valueOf(new ScmSecret().decryptToCharArray(new SecretName("git_automation_username"))))
+                .password(new ScmSecret().decryptToCharArray(new SecretName("git_automation_password")))
+                .branch("master")
+                .accountId(githubKey.getAccountId())
+                .build())
+        .withUsageRestrictions(getAllAppAllEnvUsageRestrictions())
+        .build();
+  }
+
   public static SettingAttribute createTerraformMainGitRepoSetting(SettingAttribute githubKey, char[] password) {
     return aSettingAttribute()
         .withCategory(CONNECTOR)
