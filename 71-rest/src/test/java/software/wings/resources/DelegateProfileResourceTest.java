@@ -143,19 +143,25 @@ public class DelegateProfileResourceTest {
     assertThat(resource.getUuid()).isEqualTo(ID_KEY);
   }
 
+  @Test
   @Owner(developers = SANJA)
   @Category(UnitTests.class)
   public void shouldListDelegateProfilesV2() {
-    List<DelegateProfileDetails> delegateProfiles = asList(DelegateProfileDetails.builder().build());
-    when(delegateProfileManagerService.list(ACCOUNT_ID)).thenReturn(delegateProfiles);
-    RestResponse<List<DelegateProfileDetails>> restResponse =
+    PageRequest<DelegateProfileDetails> pageRequest = new PageRequest<>();
+    pageRequest.setOffset("0");
+
+    PageResponse<DelegateProfileDetails> pageResponse = new PageResponse<>();
+    pageResponse.setResponse(asList(DelegateProfileDetails.builder().build()));
+    pageResponse.setTotal(1l);
+
+    when(delegateProfileManagerService.list(ACCOUNT_ID, pageRequest)).thenReturn(pageResponse);
+    RestResponse<PageResponse<DelegateProfileDetails>> restResponse =
         RESOURCES.client()
             .target("/delegate-profiles/v2?accountId=" + ACCOUNT_ID)
             .request()
-            .get(new GenericType<RestResponse<List<DelegateProfileDetails>>>() {});
-    PageRequest<DelegateProfileDetails> pageRequest = new PageRequest<>();
-    pageRequest.setOffset("0");
-    verify(delegateProfileManagerService, times(1)).list(ACCOUNT_ID);
+            .get(new GenericType<RestResponse<PageResponse<DelegateProfileDetails>>>() {});
+
+    verify(delegateProfileManagerService, times(1)).list(ACCOUNT_ID, pageRequest);
     assertThat(restResponse.getResource().size()).isEqualTo(1);
     assertThat(restResponse.getResource().get(0)).isNotNull();
   }

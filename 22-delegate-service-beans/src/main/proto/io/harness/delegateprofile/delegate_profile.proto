@@ -6,6 +6,7 @@ option java_multiple_files = true;
 option go_package = "22_delegate_service_beans";
 
 import "20-delegate-beans/src/main/proto/io/harness/delegate/account.proto";
+import "22-delegate-service-beans/src/main/proto/io/harness/paging/paging.proto";
 
 // Profile global unique identifier
 message ProfileId {
@@ -39,4 +40,10 @@ message DelegateProfileGrpc {
   string startup_script = 7;
   repeated ProfileSelector selectors = 8;
   repeated ProfileScopingRule scoping_rules = 9;
+}
+
+message DelegateProfilePageResponseGrpc {
+  paging.PageRequestGrpc page_request = 1;
+  int64 total = 2;
+  repeated DelegateProfileGrpc response = 3;
 }
