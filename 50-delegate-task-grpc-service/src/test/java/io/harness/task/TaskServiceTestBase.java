@@ -7,7 +7,7 @@ import org.junit.Rule;
 import org.mockito.junit.MockitoJUnit;
 import org.mockito.junit.MockitoRule;
 
-public abstract class TaskServiceTest extends CategoryTest implements MockableTestMixin {
+public abstract class TaskServiceTestBase extends CategoryTest implements MockableTestMixin {
   @Rule public MockitoRule mockitoRule = MockitoJUnit.rule();
   @Rule public LifecycleRule lifecycleRule = new LifecycleRule();
   @Rule public TaskServiceRule taskServiceRule = new TaskServiceRule(lifecycleRule.getClosingFactory());

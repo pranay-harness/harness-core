@@ -120,6 +120,9 @@ build_bazel_module 32-orchestration-steps
 build_bazel_module 33-orchestration-visualization
 build_bazel_module 34-walktree-visitor
 build_bazel_module 35-yaml-beans
+build_bazel_module 50-delegate-task-grpc-service
+build_bazel_module 57-command-library-common
+build_bazel_module 64-events-framework
 build_java_proto_module 13-grpc-api
 build_java_proto_module 19-delegate-tasks-beans
 build_java_proto_module 20-delegate-beans

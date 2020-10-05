@@ -21,7 +21,7 @@ import io.harness.delegate.TaskId;
 import io.harness.grpc.DelegateServiceGrpcLiteClient;
 import io.harness.rule.Owner;
 import io.harness.serializer.KryoSerializer;
-import io.harness.task.TaskServiceTest;
+import io.harness.task.TaskServiceTestBase;
 import io.harness.task.TaskServiceTestHelper;
 import io.harness.task.converters.ResponseDataConverterRegistry;
 import io.harness.task.service.ExecuteParkedTaskRequest;
@@ -44,7 +44,7 @@ import org.mockito.Mock;
 
 import java.io.IOException;
 
-public class TaskServiceImplTest extends TaskServiceTest {
+public class TaskServiceImplTest extends TaskServiceTestBase {
   @Rule public GrpcCleanupRule grpcCleanupRule = new GrpcCleanupRule();
   @Mock private DelegateServiceGrpcLiteClient delegateServiceGrpcLiteClient;
   @Inject KryoSerializer kryoSerializer;

@@ -43,9 +43,9 @@
         <!--<module>35-yaml-beans</module>-->
         <module>38-execution-plan</module>
         <module>39-ng-pipeline-commons</module>
-        <module>50-delegate-task-grpc-service</module>
-        <module>57-command-library-common</module>
-        <module>64-events-framework</module>
+        <!--<module>50-delegate-task-grpc-service</module>-->
+        <!--<module>57-command-library-common</module>-->
+        <!--<module>64-events-framework</module>-->
         <module>68-cd-nextgen</module>
         <module>69-connector-nextgen</module>
         <module>70-cv-nextgen-commons</module>

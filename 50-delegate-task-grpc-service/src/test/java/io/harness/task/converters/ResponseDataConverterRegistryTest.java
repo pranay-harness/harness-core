@@ -9,14 +9,14 @@ import com.google.inject.Inject;
 import io.harness.category.element.UnitTests;
 import io.harness.exception.InvalidArgumentsException;
 import io.harness.rule.Owner;
-import io.harness.task.TaskServiceTest;
+import io.harness.task.TaskServiceTestBase;
 import io.harness.task.TaskServiceTestHelper;
 import io.harness.task.service.HTTPTaskResponse;
 import io.harness.task.service.TaskType;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
-public class ResponseDataConverterRegistryTest extends TaskServiceTest {
+public class ResponseDataConverterRegistryTest extends TaskServiceTestBase {
   @Inject ResponseDataConverterRegistry responseDataConverterRegistry;
 
   @Test

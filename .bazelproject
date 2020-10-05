@@ -34,6 +34,9 @@ directories:
   33-orchestration-visualization
   34-walktree-visitor
   35-yaml-beans
+  50-delegate-task-grpc-service
+  57-command-library-common
+  64-events-framework
   tools/bazel
 
 # Automatically includes all relevant targets under the 'directories' above

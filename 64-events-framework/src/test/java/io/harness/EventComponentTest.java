@@ -16,7 +16,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 
 @Slf4j
-public class EventComponentTest extends EventTest {
+public class EventComponentTest extends EventTestBase {
   @Inject private Map<String, TestExecution> tests;
 
   @Test
