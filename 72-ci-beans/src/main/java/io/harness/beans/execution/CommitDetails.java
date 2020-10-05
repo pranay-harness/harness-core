@@ -13,4 +13,5 @@ public class CommitDetails {
   private String ownerName;
   private String ownerId;
   private String ownerEmail;
+  private long timeStamp;
 }
