@@ -7,6 +7,7 @@ option go_package = "22_delegate_service_beans";
 
 import "20-delegate-beans/src/main/proto/io/harness/delegate/account.proto";
 import "22-delegate-service-beans/src/main/proto/io/harness/delegateprofile/delegate_profile.proto";
+import "22-delegate-service-beans/src/main/proto/io/harness/paging/paging.proto";
 
 service DelegateProfileService {
   rpc ListProfiles(ListProfilesRequest) returns (ListProfilesResponse);
@@ -22,10 +23,11 @@ service DelegateProfileService {
 
 message ListProfilesRequest {
   delegate.AccountId account_id = 1;
+  paging.PageRequestGrpc page_request = 2;
 }
 
 message ListProfilesResponse {
-  repeated DelegateProfileGrpc profiles = 1;
+  DelegateProfilePageResponseGrpc response = 1;
 }
 
 message GetProfileRequest {

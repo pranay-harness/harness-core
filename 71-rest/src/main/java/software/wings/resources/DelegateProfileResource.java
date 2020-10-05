@@ -169,8 +169,9 @@ public class DelegateProfileResource {
   @Path("/v2")
   @Timed
   @ExceptionMetered
-  public RestResponse<List<DelegateProfileDetails>> listV2(@QueryParam("accountId") @NotEmpty String accountId) {
-    return new RestResponse<>(delegateProfileManagerService.list(accountId));
+  public RestResponse<PageResponse<DelegateProfileDetails>> listV2(
+      @BeanParam PageRequest<DelegateProfileDetails> pageRequest, @QueryParam("accountId") @NotEmpty String accountId) {
+    return new RestResponse<>(delegateProfileManagerService.list(accountId, pageRequest));
   }
 
   @PUT

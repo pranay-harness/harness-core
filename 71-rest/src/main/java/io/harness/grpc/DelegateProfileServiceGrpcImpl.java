@@ -1,12 +1,17 @@
 package io.harness.grpc;
 
+import static io.harness.beans.PageRequest.PageRequestBuilder;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.delegate.beans.DelegateProfile.DelegateProfileKeys;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import io.grpc.stub.StreamObserver;
+import io.harness.beans.PageRequest;
+import io.harness.beans.PageResponse;
+import io.harness.beans.SearchFilter;
 import io.harness.delegate.AccountId;
 import io.harness.delegate.beans.DelegateProfile;
 import io.harness.delegate.beans.DelegateProfile.DelegateProfileBuilder;
@@ -14,6 +19,7 @@ import io.harness.delegate.beans.DelegateProfileScopingRule;
 import io.harness.delegateprofile.AddProfileRequest;
 import io.harness.delegateprofile.AddProfileResponse;
 import io.harness.delegateprofile.DelegateProfileGrpc;
+import io.harness.delegateprofile.DelegateProfilePageResponseGrpc;
 import io.harness.delegateprofile.DelegateProfileServiceGrpc.DelegateProfileServiceImplBase;
 import io.harness.delegateprofile.DeleteProfileRequest;
 import io.harness.delegateprofile.DeleteProfileResponse;
@@ -31,8 +37,8 @@ import io.harness.delegateprofile.UpdateProfileScopingRulesRequest;
 import io.harness.delegateprofile.UpdateProfileScopingRulesResponse;
 import io.harness.delegateprofile.UpdateProfileSelectorsRequest;
 import io.harness.delegateprofile.UpdateProfileSelectorsResponse;
+import io.harness.paging.PageRequestGrpc;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.NotImplementedException;
 import software.wings.service.intfc.DelegateProfileService;
 
 import java.util.HashMap;
@@ -41,6 +47,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 @Slf4j
 @Singleton
@@ -55,7 +62,16 @@ public class DelegateProfileServiceGrpcImpl extends DelegateProfileServiceImplBa
   @Override
   public void listProfiles(ListProfilesRequest request, StreamObserver<ListProfilesResponse> responseObserver) {
     try {
-      throw new NotImplementedException("We need to check if and how do we want to support paging through the grpc");
+      PageRequest<DelegateProfile> pageRequest = convertGrpcPageRequest(request.getPageRequest());
+      pageRequest.addFilter(DelegateProfileKeys.accountId, SearchFilter.Operator.EQ, request.getAccountId().getId());
+      PageResponse<DelegateProfile> pageResponse = delegateProfileService.list(pageRequest);
+      if (pageResponse != null) {
+        DelegateProfilePageResponseGrpc response = convertPageResponse(pageResponse);
+        responseObserver.onNext(ListProfilesResponse.newBuilder().setResponse(response).build());
+      } else {
+        responseObserver.onNext(ListProfilesResponse.newBuilder().build());
+      }
+      responseObserver.onCompleted();
     } catch (Exception ex) {
       logger.error("Unexpected error occurred while processing list profiles request.", ex);
       responseObserver.onError(io.grpc.Status.INTERNAL.withDescription(ex.getMessage()).asRuntimeException());
@@ -187,11 +203,19 @@ public class DelegateProfileServiceGrpcImpl extends DelegateProfileServiceImplBa
   private DelegateProfileGrpc convert(DelegateProfile delegateProfile) {
     DelegateProfileGrpc.Builder delegateProfileGrpcBuilder =
         DelegateProfileGrpc.newBuilder()
-            .setProfileId(ProfileId.newBuilder().setId(delegateProfile.getUuid()).build())
-            .setAccountId(AccountId.newBuilder().setId(delegateProfile.getAccountId()).build())
-            .setName(delegateProfile.getName())
             .setPrimary(delegateProfile.isPrimary())
             .setApprovalRequired(delegateProfile.isApprovalRequired());
+
+    if (isNotBlank(delegateProfile.getName())) {
+      delegateProfileGrpcBuilder.setName(delegateProfile.getName());
+    }
+    if (isNotBlank(delegateProfile.getUuid())) {
+      delegateProfileGrpcBuilder.setProfileId(ProfileId.newBuilder().setId(delegateProfile.getUuid()).build());
+    }
+
+    if (isNotBlank(delegateProfile.getAccountId())) {
+      delegateProfileGrpcBuilder.setAccountId(AccountId.newBuilder().setId(delegateProfile.getAccountId()).build());
+    }
 
     if (isNotBlank(delegateProfile.getDescription())) {
       delegateProfileGrpcBuilder.setDescription(delegateProfile.getDescription());
@@ -275,5 +299,41 @@ public class DelegateProfileServiceGrpcImpl extends DelegateProfileServiceImplBa
     }
 
     return scopingEntities;
+  }
+
+  private PageRequest<DelegateProfile> convertGrpcPageRequest(PageRequestGrpc pageRequestGrpc) {
+    PageRequestBuilder requestBuilder = PageRequestBuilder.aPageRequest();
+
+    String[] fieldsExcluded = new String[pageRequestGrpc.getFieldsExcludedList().size()];
+    Stream<String> fieldsExcludedStream = pageRequestGrpc.getFieldsExcludedList().stream().map(e -> e.toString());
+    fieldsExcluded = fieldsExcludedStream.collect(Collectors.toList()).toArray(fieldsExcluded);
+    requestBuilder.addFieldsExcluded(fieldsExcluded);
+
+    String[] fieldsIncluded = new String[pageRequestGrpc.getFieldsIncludedList().size()];
+    Stream<String> fieldsIncludedStream = pageRequestGrpc.getFieldsIncludedList().stream().map(e -> e.toString());
+    fieldsIncluded = fieldsIncludedStream.collect(Collectors.toList()).toArray(fieldsIncluded);
+    requestBuilder.addFieldsIncluded(fieldsIncluded);
+
+    requestBuilder.withLimit(pageRequestGrpc.getLimit());
+    requestBuilder.withOffset(pageRequestGrpc.getOffset());
+
+    return requestBuilder.build();
+  }
+
+  private PageRequestGrpc convert(PageRequest pageRequest) {
+    return PageRequestGrpc.newBuilder()
+        .setLimit(pageRequest.getLimit())
+        .addAllFieldsExcluded(pageRequest.getFieldsExcluded())
+        .addAllFieldsIncluded(pageRequest.getFieldsIncluded())
+        .setOffset(pageRequest.getOffset())
+        .build();
+  }
+
+  private DelegateProfilePageResponseGrpc convertPageResponse(PageResponse<DelegateProfile> pageResponse) {
+    DelegateProfilePageResponseGrpc.Builder builder = DelegateProfilePageResponseGrpc.newBuilder();
+    builder.setPageRequest(convert(pageResponse));
+    builder.addAllResponse(pageResponse.getResponse().stream().map(e -> convert(e)).collect(Collectors.toList()));
+    builder.setTotal(pageResponse.getTotal());
+    return builder.build();
   }
 }

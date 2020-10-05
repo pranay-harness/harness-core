@@ -8,6 +8,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import com.google.inject.Inject;
 
+import io.harness.beans.PageResponse;
 import io.harness.category.element.FunctionalTests;
 import io.harness.delegate.beans.DelegateProfile;
 import io.harness.delegate.beans.DelegateProfileDetails;
@@ -221,5 +222,36 @@ public class DelegateProfileApiFunctionalTest extends AbstractFunctionalTest {
 
     DelegateProfile profile = wingsPersistence.get(DelegateProfile.class, delegateProfileId);
     assertThat(profile).isNull();
+  }
+
+  @Test
+  @Owner(developers = SANJA)
+  @Category(FunctionalTests.class)
+  public void testListDelegateProfiles() {
+    wingsPersistence.save(
+        DelegateProfile.builder().accountId(getAccount().getUuid()).name(generateUuid()).description("test1").build());
+    String delegateProfileId2 = wingsPersistence.save(
+        DelegateProfile.builder().accountId(getAccount().getUuid()).name(generateUuid()).description("test2").build());
+    String delegateProfileId3 = wingsPersistence.save(
+        DelegateProfile.builder().accountId(getAccount().getUuid()).name(generateUuid()).description("test3").build());
+    // Get profile list
+    RestResponse<PageResponse<DelegateProfileDetails>> listRestResponse =
+        Setup.portal()
+            .auth()
+            .oauth2(bearerToken)
+            .queryParam(DelegateKeys.accountId, getAccount().getUuid())
+            .queryParam("fieldsIncluded", new String[] {"description", "accountId"})
+            .queryParam("limit", "2")
+            .get("/delegate-profiles/v2")
+            .as(new GenericType<RestResponse<PageResponse<DelegateProfileDetails>>>() {}.getType());
+
+    assertThat(listRestResponse.getResource()).isNotNull();
+    assertThat(listRestResponse.getResource().getLimit()).isEqualTo("2");
+    assertThat(listRestResponse.getResource().getFieldsIncluded()).isEqualTo(Arrays.asList("description", "accountId"));
+    assertThat(listRestResponse.getResource().getResponse().size()).isEqualTo(2);
+    assertThat(listRestResponse.getResource().getResponse().get(0).getDescription()).isEqualTo("test3");
+    assertThat(listRestResponse.getResource().getResponse().get(0).getName()).isEmpty();
+    assertThat(listRestResponse.getResource().getResponse().get(1).getDescription()).isEqualTo("test2");
+    assertThat(listRestResponse.getResource().getResponse().get(1).getName()).isEmpty();
   }
 }

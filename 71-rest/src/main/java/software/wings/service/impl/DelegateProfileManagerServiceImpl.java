@@ -1,5 +1,6 @@
 package software.wings.service.impl;
 
+import static io.harness.beans.PageResponse.PageResponseBuilder;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
@@ -7,18 +8,23 @@ import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
+import io.harness.beans.PageRequest;
+import io.harness.beans.PageRequest.PageRequestBuilder;
+import io.harness.beans.PageResponse;
 import io.harness.delegate.AccountId;
+import io.harness.delegate.beans.DelegateProfile;
 import io.harness.delegate.beans.DelegateProfileDetails;
 import io.harness.delegate.beans.DelegateProfileDetails.DelegateProfileDetailsBuilder;
 import io.harness.delegate.beans.ScopingRuleDetails;
 import io.harness.delegate.beans.ScopingRuleDetails.ScopingRuleDetailsKeys;
 import io.harness.delegateprofile.DelegateProfileGrpc;
+import io.harness.delegateprofile.DelegateProfilePageResponseGrpc;
 import io.harness.delegateprofile.ProfileId;
 import io.harness.delegateprofile.ProfileScopingRule;
 import io.harness.delegateprofile.ProfileSelector;
 import io.harness.delegateprofile.ScopingValues;
-import io.harness.exception.UnsupportedOperationException;
 import io.harness.grpc.DelegateProfileServiceGrpcClient;
+import io.harness.paging.PageRequestGrpc;
 import lombok.extern.slf4j.Slf4j;
 import software.wings.service.intfc.DelegateProfileManagerService;
 
@@ -29,6 +35,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 import javax.validation.executable.ValidateOnExecution;
 
 @Singleton
@@ -38,9 +45,15 @@ public class DelegateProfileManagerServiceImpl implements DelegateProfileManager
   @Inject private DelegateProfileServiceGrpcClient delegateProfileServiceGrpcClient;
 
   @Override
-  public List<DelegateProfileDetails> list(String accountId) {
-    logger.info("List delegate profiles");
-    throw new UnsupportedOperationException("not implemented");
+  public PageResponse<DelegateProfileDetails> list(String accountId, PageRequest<DelegateProfileDetails> pageRequest) {
+    DelegateProfilePageResponseGrpc pageResponse = delegateProfileServiceGrpcClient.listProfiles(
+        AccountId.newBuilder().setId(accountId).build(), convert(pageRequest));
+
+    if (pageResponse == null) {
+      return null;
+    }
+
+    return convert(pageResponse);
   }
 
   @Override
@@ -237,6 +250,48 @@ public class DelegateProfileManagerServiceImpl implements DelegateProfileManager
     }
 
     return delegateProfileDetailsBuilder.build();
+  }
+
+  private PageRequestGrpc convert(PageRequest pageRequest) {
+    return PageRequestGrpc.newBuilder()
+        .setLimit(pageRequest.getLimit())
+        .addAllFieldsExcluded(pageRequest.getFieldsExcluded())
+        .addAllFieldsIncluded(pageRequest.getFieldsIncluded())
+        .setOffset(pageRequest.getOffset())
+        .build();
+  }
+
+  private PageResponse<DelegateProfileDetails> convert(DelegateProfilePageResponseGrpc pageResponse) {
+    PageResponseBuilder<DelegateProfileDetails> responseBuilder = PageResponseBuilder.aPageResponse();
+    List<DelegateProfileDetails> responseList =
+        pageResponse.getResponseList().stream().map(a -> convert(a)).collect(Collectors.toList());
+    responseBuilder.withResponse(responseList);
+    responseBuilder.withTotal(pageResponse.getTotal());
+    PageRequest<DelegateProfile> pageRequest = convertGrpcPageRequest(pageResponse.getPageRequest());
+    responseBuilder.withFieldsExcluded(pageRequest.getFieldsExcluded());
+    responseBuilder.withFieldsIncluded(pageRequest.getFieldsIncluded());
+    responseBuilder.withLimit(pageRequest.getLimit());
+    responseBuilder.withOffset(pageRequest.getOffset());
+    return responseBuilder.build();
+  }
+
+  private PageRequest<DelegateProfile> convertGrpcPageRequest(PageRequestGrpc pageRequestGrpc) {
+    PageRequestBuilder requestBuilder = PageRequestBuilder.aPageRequest();
+
+    String[] fieldsExcluded = new String[pageRequestGrpc.getFieldsExcludedList().size()];
+    Stream<String> fieldsExcludedStream = pageRequestGrpc.getFieldsExcludedList().stream().map(e -> e.toString());
+    fieldsExcluded = fieldsExcludedStream.collect(Collectors.toList()).toArray(fieldsExcluded);
+    requestBuilder.addFieldsExcluded(fieldsExcluded);
+
+    String[] fieldsIncluded = new String[pageRequestGrpc.getFieldsIncludedList().size()];
+    Stream<String> fieldsIncludedStream = pageRequestGrpc.getFieldsIncludedList().stream().map(e -> e.toString());
+    fieldsIncluded = fieldsIncludedStream.collect(Collectors.toList()).toArray(fieldsIncluded);
+    requestBuilder.addFieldsIncluded(fieldsIncluded);
+
+    requestBuilder.withLimit(pageRequestGrpc.getLimit());
+    requestBuilder.withOffset(pageRequestGrpc.getOffset());
+
+    return requestBuilder.build();
   }
 
   private String extractScopingEntityId(Map<String, ScopingValues> scopingEntitiesMap, String entityId) {

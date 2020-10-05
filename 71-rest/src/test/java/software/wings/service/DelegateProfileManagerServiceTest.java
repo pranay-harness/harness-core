@@ -11,17 +11,20 @@ import static org.mockito.Mockito.when;
 
 import com.google.inject.Inject;
 
+import io.harness.beans.PageRequest;
+import io.harness.beans.PageResponse;
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.AccountId;
 import io.harness.delegate.beans.DelegateProfileDetails;
 import io.harness.delegate.beans.ScopingRuleDetails;
 import io.harness.delegate.beans.ScopingRuleDetails.ScopingRuleDetailsKeys;
 import io.harness.delegateprofile.DelegateProfileGrpc;
+import io.harness.delegateprofile.DelegateProfilePageResponseGrpc;
 import io.harness.delegateprofile.ProfileId;
 import io.harness.delegateprofile.ProfileScopingRule;
 import io.harness.delegateprofile.ScopingValues;
-import io.harness.exception.UnsupportedOperationException;
 import io.harness.grpc.DelegateProfileServiceGrpcClient;
+import io.harness.paging.PageRequestGrpc;
 import io.harness.rule.Owner;
 import io.harness.rule.OwnerRule;
 import org.assertj.core.api.Assertions;
@@ -55,9 +58,22 @@ public class DelegateProfileManagerServiceTest extends WingsBaseTest {
   @Owner(developers = OwnerRule.SANJA)
   @Category(UnitTests.class)
   public void shouldList() {
-    thrown.expect(UnsupportedOperationException.class);
-    thrown.expectMessage("not implemented");
-    delegateProfileManagerService.list(ACCOUNT_ID);
+    PageRequest<DelegateProfileDetails> pageRequest = new PageRequest<>();
+    pageRequest.setOffset("0");
+    pageRequest.setLimit("0");
+    DelegateProfilePageResponseGrpc delegateProfilePageResponseGrpc =
+        DelegateProfilePageResponseGrpc.newBuilder().build();
+
+    when(delegateProfileServiceGrpcClient.listProfiles(any(AccountId.class), any(PageRequestGrpc.class)))
+        .thenReturn(null)
+        .thenReturn(delegateProfilePageResponseGrpc);
+
+    PageResponse<DelegateProfileDetails> delegateProfileDetailsPageResponse =
+        delegateProfileManagerService.list(ACCOUNT_ID, pageRequest);
+    Assertions.assertThat(delegateProfileDetailsPageResponse).isNull();
+
+    delegateProfileDetailsPageResponse = delegateProfileManagerService.list(ACCOUNT_ID, pageRequest);
+    Assertions.assertThat(delegateProfileDetailsPageResponse).isNotNull();
   }
 
   @Test

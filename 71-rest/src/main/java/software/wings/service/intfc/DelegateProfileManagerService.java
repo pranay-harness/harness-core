@@ -1,12 +1,14 @@
 package software.wings.service.intfc;
 
+import io.harness.beans.PageRequest;
+import io.harness.beans.PageResponse;
 import io.harness.delegate.beans.DelegateProfileDetails;
 import io.harness.delegate.beans.ScopingRuleDetails;
 
 import java.util.List;
 
 public interface DelegateProfileManagerService {
-  List<DelegateProfileDetails> list(String accountId);
+  PageResponse<DelegateProfileDetails> list(String accountId, PageRequest<DelegateProfileDetails> pageRequest);
 
   DelegateProfileDetails get(String accountId, String delegateProfileId);
 

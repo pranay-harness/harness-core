@@ -23,17 +23,20 @@ import io.grpc.inprocess.InProcessChannelBuilder;
 import io.grpc.inprocess.InProcessServerBuilder;
 import io.grpc.testing.GrpcCleanupRule;
 import io.harness.MockableTestMixin;
+import io.harness.beans.PageResponse;
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.AccountId;
 import io.harness.delegate.beans.DelegateProfile;
 import io.harness.delegate.beans.DelegateProfileScopingRule;
 import io.harness.delegateprofile.DelegateProfileGrpc;
+import io.harness.delegateprofile.DelegateProfilePageResponseGrpc;
 import io.harness.delegateprofile.DelegateProfileServiceGrpc;
 import io.harness.delegateprofile.ProfileId;
 import io.harness.delegateprofile.ProfileScopingRule;
 import io.harness.delegateprofile.ProfileSelector;
 import io.harness.delegateprofile.ScopingValues;
 import io.harness.exception.DelegateServiceDriverException;
+import io.harness.paging.PageRequestGrpc;
 import io.harness.rule.Owner;
 import org.junit.Before;
 import org.junit.Rule;
@@ -105,10 +108,29 @@ public class DelegateProfileServiceGrpcImplTest extends WingsBaseTest implements
   @Owner(developers = MARKO)
   @Category(UnitTests.class)
   public void testListProfiles() {
-    assertThatThrownBy(
-        () -> delegateProfileServiceGrpcClient.listProfiles(AccountId.newBuilder().setId(generateUuid()).build()))
+    String accountId = generateUuid();
+    DelegateProfile delegateProfile = DelegateProfile.builder().accountId(accountId).description("description").build();
+
+    PageResponse<DelegateProfile> pageResponse = new PageResponse<>();
+    pageResponse.add(delegateProfile);
+
+    when(delegateProfileService.list(any()))
+        .thenThrow(new RuntimeException())
+        .thenReturn(null)
+        .thenReturn(pageResponse);
+
+    // Test exception
+    PageRequestGrpc pageRequestGrpc = PageRequestGrpc.newBuilder().setOffset("0").build();
+    assertThatThrownBy(()
+                           -> delegateProfileServiceGrpcClient.listProfiles(
+                               AccountId.newBuilder().setId(accountId).build(), pageRequestGrpc))
         .isInstanceOf(DelegateServiceDriverException.class)
         .hasMessage("Unexpected error occurred while listing profiles.");
+
+    DelegateProfilePageResponseGrpc delegateProfilePageResponseGrpc =
+        delegateProfileServiceGrpcClient.listProfiles(AccountId.newBuilder().setId(accountId).build(), pageRequestGrpc);
+
+    assertThat(delegateProfilePageResponseGrpc).isNotNull();
   }
 
   @Test

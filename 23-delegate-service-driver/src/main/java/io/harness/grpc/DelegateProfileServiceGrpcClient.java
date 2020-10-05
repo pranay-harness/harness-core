@@ -8,6 +8,7 @@ import io.harness.delegate.AccountId;
 import io.harness.delegateprofile.AddProfileRequest;
 import io.harness.delegateprofile.AddProfileResponse;
 import io.harness.delegateprofile.DelegateProfileGrpc;
+import io.harness.delegateprofile.DelegateProfilePageResponseGrpc;
 import io.harness.delegateprofile.DelegateProfileServiceGrpc.DelegateProfileServiceBlockingStub;
 import io.harness.delegateprofile.DeleteProfileRequest;
 import io.harness.delegateprofile.GetProfileRequest;
@@ -24,6 +25,7 @@ import io.harness.delegateprofile.UpdateProfileScopingRulesResponse;
 import io.harness.delegateprofile.UpdateProfileSelectorsRequest;
 import io.harness.delegateprofile.UpdateProfileSelectorsResponse;
 import io.harness.exception.DelegateServiceDriverException;
+import io.harness.paging.PageRequestGrpc;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.Collections;
@@ -39,12 +41,12 @@ public class DelegateProfileServiceGrpcClient {
     this.delegateProfileServiceBlockingStub = delegateProfileServiceBlockingStub;
   }
 
-  public List<DelegateProfileGrpc> listProfiles(AccountId accountId) {
+  public DelegateProfilePageResponseGrpc listProfiles(AccountId accountId, PageRequestGrpc pageRequest) {
     try {
       ListProfilesResponse listProfilesResponse = delegateProfileServiceBlockingStub.listProfiles(
-          ListProfilesRequest.newBuilder().setAccountId(accountId).build());
+          ListProfilesRequest.newBuilder().setAccountId(accountId).setPageRequest(pageRequest).build());
 
-      return listProfilesResponse.getProfilesList();
+      return listProfilesResponse.getResponse();
     } catch (StatusRuntimeException ex) {
       throw new DelegateServiceDriverException("Unexpected error occurred while listing profiles.", ex);
     }
