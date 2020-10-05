@@ -9,9 +9,13 @@ import io.harness.avro.Label;
 import io.harness.batch.processing.billing.timeseries.data.InstanceBillingData;
 import io.harness.batch.processing.billing.timeseries.service.impl.BillingDataServiceImpl;
 import io.harness.batch.processing.ccm.CCMJobConstants;
+import io.harness.batch.processing.ccm.InstanceType;
 import io.harness.batch.processing.config.BatchMainConfig;
 import io.harness.batch.processing.service.impl.GoogleCloudStorageServiceImpl;
+import io.harness.batch.processing.tasklet.dto.HarnessTags;
 import io.harness.batch.processing.tasklet.reader.BillingDataReader;
+import io.harness.batch.processing.tasklet.support.HarnessTagService;
+import io.harness.batch.processing.tasklet.support.K8SWorkloadService;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.avro.file.DataFileWriter;
 import org.apache.avro.io.DatumWriter;
@@ -30,8 +34,11 @@ import java.nio.file.Files;
 import java.time.Instant;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -40,6 +47,8 @@ public class ClusterDataToBigQueryTasklet implements Tasklet {
   @Autowired private BatchMainConfig config;
   @Autowired private BillingDataServiceImpl billingDataService;
   @Autowired private GoogleCloudStorageServiceImpl googleCloudStorageService;
+  @Autowired private K8SWorkloadService k8SWorkloadService;
+  @Autowired private HarnessTagService harnessTagService;
 
   private static final String defaultParentWorkingDirectory = "./avro/";
   private static final String defaultBillingDataFileName = "billing_data_%s_%s_%s.avro";
@@ -64,6 +73,7 @@ public class ClusterDataToBigQueryTasklet implements Tasklet {
     boolean avroFileWithSchemaExists = false;
     do {
       instanceBillingDataList = billingDataReader.getNext();
+      refreshLabelCache(accountId, instanceBillingDataList);
       List<ClusterBillingData> clusterBillingData = instanceBillingDataList.stream()
                                                         .map(this ::convertInstanceBillingDataToAVROObjects)
                                                         .collect(Collectors.toList());
@@ -80,6 +90,20 @@ public class ClusterDataToBigQueryTasklet implements Tasklet {
     Files.delete(billingDataFile.toPath());
 
     return null;
+  }
+
+  private void refreshLabelCache(String accountId, List<InstanceBillingData> instanceBillingDataList) {
+    Map<String, Set<String>> clusterWorkload =
+        instanceBillingDataList.stream()
+            .filter(instanceBillingData -> instanceBillingData.getInstanceType().equals(InstanceType.K8S_POD.name()))
+            .filter(instanceBillingData
+                -> null
+                    == k8SWorkloadService.getK8sWorkloadLabel(
+                           accountId, instanceBillingData.getClusterId(), instanceBillingData.getWorkloadName()))
+            .collect(Collectors.groupingBy(InstanceBillingData::getClusterId,
+                Collectors.mapping(InstanceBillingData::getWorkloadName, Collectors.toSet())));
+    clusterWorkload.forEach(
+        (cluster, workloadNames) -> k8SWorkloadService.updateK8sWorkloadLabelCache(accountId, cluster, workloadNames));
   }
 
   private void writeDataToAvro(String accountId, List<ClusterBillingData> instanceBillingDataAvro,
@@ -101,13 +125,14 @@ public class ClusterDataToBigQueryTasklet implements Tasklet {
   }
 
   private ClusterBillingData convertInstanceBillingDataToAVROObjects(InstanceBillingData instanceBillingData) {
+    String accountId = instanceBillingData.getAccountId();
     ClusterBillingData clusterBillingData = new ClusterBillingData();
     clusterBillingData.setAppid(instanceBillingData.getAppId());
     clusterBillingData.setEnvid(instanceBillingData.getEnvId());
     clusterBillingData.setRegion(instanceBillingData.getRegion());
     clusterBillingData.setServiceid(instanceBillingData.getServiceId());
     clusterBillingData.setCloudservicename(instanceBillingData.getCloudServiceName());
-    clusterBillingData.setAccountid(instanceBillingData.getAccountId());
+    clusterBillingData.setAccountid(accountId);
     clusterBillingData.setInstanceid(instanceBillingData.getInstanceId());
     clusterBillingData.setInstancename(instanceBillingData.getInstanceName());
     clusterBillingData.setClusterid(instanceBillingData.getClusterId());
@@ -158,20 +183,34 @@ public class ClusterDataToBigQueryTasklet implements Tasklet {
     clusterBillingData.setEndtime(instanceBillingData.getEndTimestamp());
     clusterBillingData.setStarttime(instanceBillingData.getStartTimestamp());
 
-    Label appLabel = new Label();
-    appLabel.setKey("appId");
-    appLabel.setValue(instanceBillingData.getAppId());
+    List<Label> labels = new ArrayList<>();
+    if (instanceBillingData.getInstanceType().equals(InstanceType.K8S_POD.name())) {
+      Map<String, String> k8sWorkloadLabel = k8SWorkloadService.getK8sWorkloadLabel(
+          accountId, instanceBillingData.getClusterId(), instanceBillingData.getWorkloadName());
 
-    Label envLabel = new Label();
-    envLabel.setKey("envId");
-    envLabel.setValue(instanceBillingData.getEnvId());
+      if (null != k8sWorkloadLabel) {
+        k8sWorkloadLabel.forEach((key, value) -> {
+          Label workloadLabel = new Label();
+          workloadLabel.setKey(key);
+          workloadLabel.setValue(value);
+          labels.add(workloadLabel);
+        });
+      }
+    }
 
-    Label serviceLabel = new Label();
-    serviceLabel.setKey("serviceId");
-    serviceLabel.setValue(instanceBillingData.getServiceId());
+    if (null != instanceBillingData.getAppId()) {
+      List<HarnessTags> harnessTags = harnessTagService.getHarnessTags(accountId, instanceBillingData.getAppId());
+      harnessTags.addAll(harnessTagService.getHarnessTags(accountId, instanceBillingData.getServiceId()));
+      harnessTags.addAll(harnessTagService.getHarnessTags(accountId, instanceBillingData.getEnvId()));
+      harnessTags.forEach(harnessTag -> {
+        Label harnessLabel = new Label();
+        harnessLabel.setKey(harnessTag.getKey());
+        harnessLabel.setValue(harnessTag.getValue());
+        labels.add(harnessLabel);
+      });
+    }
 
-    clusterBillingData.setLabels(Arrays.asList(appLabel, envLabel, serviceLabel));
-
+    clusterBillingData.setLabels(Arrays.asList(labels.toArray()));
     return clusterBillingData;
   }
 
