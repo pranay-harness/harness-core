@@ -15,7 +15,7 @@ import org.junit.experimental.categories.Category;
 import java.util.Map;
 
 @Slf4j
-public class NGCoreComponentTest extends NGCoreBaseTest {
+public class NGCoreComponentTest extends NGCoreTestBase {
   @Inject private Map<String, TestExecution> tests;
 
   @Test
@@ -24,7 +24,6 @@ public class NGCoreComponentTest extends NGCoreBaseTest {
   public void componentNGCoreTests() {
     for (Map.Entry<String, TestExecution> test : tests.entrySet()) {
       assertThatCode(() -> test.getValue().run()).as(test.getKey()).doesNotThrowAnyException();
-      logger.info("{} passed", test.getKey());
     }
   }
 }
