@@ -3,10 +3,10 @@ package io.harness.cvng.verificationjob.services.impl;
 import static io.harness.cvng.core.services.CVNextGenConstants.DATA_COLLECTION_DELAY;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.rule.OwnerRule.KAMAL;
+import static io.harness.rule.OwnerRule.NEMANJA;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Matchers.any;
-import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.verify;
@@ -23,6 +23,7 @@ import io.harness.cvng.beans.CVMonitoringCategory;
 import io.harness.cvng.beans.DataSourceType;
 import io.harness.cvng.client.NextGenService;
 import io.harness.cvng.client.VerificationManagerService;
+import io.harness.cvng.core.beans.DeploymentActivityResultDTO.DeploymentResultSummary;
 import io.harness.cvng.core.beans.DeploymentActivityVerificationResultDTO;
 import io.harness.cvng.core.entities.CVConfig;
 import io.harness.cvng.core.entities.DataCollectionTask;
@@ -55,6 +56,8 @@ import org.mockito.MockitoAnnotations;
 
 import java.time.Duration;
 import java.time.Instant;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
@@ -93,10 +96,21 @@ public class VerificationJobInstanceServiceImplTest extends CvNextGenTest {
     FieldUtils.writeField(verificationJobInstanceService, "nextGenService", nextGenService, true);
     when(verificationManagerService.createDeploymentVerificationPerpetualTask(any(), any(), any(), any(), any()))
         .thenReturn(perpetualTaskId);
-    when(nextGenService.getEnvironment(anyString(), anyString(), anyString(), anyString()))
+
+    when(nextGenService.getEnvironment("dev", accountId, orgIdentifier, projectIdentifier))
         .thenReturn(EnvironmentResponseDTO.builder()
                         .accountId(accountId)
-                        .identifier("production")
+                        .identifier("dev")
+                        .name("Harness dev")
+                        .type(EnvironmentType.PreProduction)
+                        .projectIdentifier(projectIdentifier)
+                        .orgIdentifier(orgIdentifier)
+                        .build());
+
+    when(nextGenService.getEnvironment("prod", accountId, orgIdentifier, projectIdentifier))
+        .thenReturn(EnvironmentResponseDTO.builder()
+                        .accountId(accountId)
+                        .identifier("prod")
                         .name("Harness prod")
                         .type(EnvironmentType.Production)
                         .projectIdentifier(projectIdentifier)
@@ -359,7 +373,7 @@ public class VerificationJobInstanceServiceImplTest extends CvNextGenTest {
   @Owner(developers = KAMAL)
   @Category(UnitTests.class)
   public void testGetAggregatedVerificationResult_queuedState() {
-    VerificationJobInstance verificationJobInstance = createVerificationJobInstance();
+    VerificationJobInstance verificationJobInstance = createVerificationJobInstance(verificationJobIdentifier, "prod");
     DeploymentActivityVerificationResultDTO deploymentActivityVerificationResultDTO =
         verificationJobInstanceService.getAggregatedVerificationResult(
             Collections.singletonList(verificationJobInstance.getUuid()));
@@ -375,6 +389,38 @@ public class VerificationJobInstanceServiceImplTest extends CvNextGenTest {
                        .durationMs(Duration.ofMinutes(15).toMillis())
                        .timeRemainingMs(1200000)
                        .build());
+  }
+
+  @Test
+  @Owner(developers = NEMANJA)
+  @Category(UnitTests.class)
+  public void testSetDeploymentJobSummaries() {
+    VerificationJobInstance devVerificationJobInstance =
+        createVerificationJobInstance("devVerificationJobInstance", "dev");
+    VerificationJobInstance prodVerificationJobInstance =
+        createVerificationJobInstance("prodVerificationJobInstance", "prod");
+
+    DeploymentResultSummary deploymentResultSummary =
+        DeploymentResultSummary.builder()
+            .preProductionDeploymentVerificationJobInstanceSummaries(new ArrayList<>())
+            .productionDeploymentVerificationJobInstanceSummaries(new ArrayList<>())
+            .postDeploymentVerificationJobInstanceSummaries(new ArrayList<>())
+            .build();
+
+    verificationJobInstanceService.addResultsToDeploymentResultSummary(
+        Arrays.asList(devVerificationJobInstance.getUuid(), prodVerificationJobInstance.getUuid()),
+        deploymentResultSummary);
+
+    assertThat(deploymentResultSummary.getPreProductionDeploymentVerificationJobInstanceSummaries().size())
+        .isEqualTo(1);
+    assertThat(deploymentResultSummary.getPreProductionDeploymentVerificationJobInstanceSummaries()
+                   .get(0)
+                   .getEnvironmentName())
+        .isEqualTo("Harness dev");
+    assertThat(deploymentResultSummary.getProductionDeploymentVerificationJobInstanceSummaries().size()).isEqualTo(1);
+    assertThat(
+        deploymentResultSummary.getProductionDeploymentVerificationJobInstanceSummaries().get(0).getEnvironmentName())
+        .isEqualTo("Harness prod");
   }
 
   private String getDataCollectionWorkerId(String verificationTaskId, String connectorId) {
@@ -434,5 +480,38 @@ public class VerificationJobInstanceServiceImplTest extends CvNextGenTest {
         .verificationTaskStartTimeMs(deploymentStartTimeMs + Duration.ofMinutes(2).toMillis())
         .dataCollectionDelayMs(Duration.ofMinutes(5).toMillis())
         .build();
+  }
+
+  private VerificationJobInstance createVerificationJobInstance(
+      String verificationJobIdentifier, String envIdentifier) {
+    verificationJobService.upsert(accountId, newVerificationJobDTO(verificationJobIdentifier, envIdentifier));
+    VerificationJob verificationJob = verificationJobService.getVerificationJob(accountId, verificationJobIdentifier);
+    VerificationJobInstance verificationJobInstance =
+        VerificationJobInstance.builder()
+            .accountId(accountId)
+            .executionStatus(ExecutionStatus.QUEUED)
+            .verificationJobIdentifier(verificationJobIdentifier)
+            .deploymentStartTime(Instant.ofEpochMilli(deploymentStartTimeMs))
+            .resolvedJob(verificationJob)
+            .startTime(Instant.ofEpochMilli(deploymentStartTimeMs + Duration.ofMinutes(2).toMillis()))
+            .build();
+    verificationJobInstanceService.create(verificationJobInstance);
+    verificationTaskService.create(accountId, cvConfigId, verificationJobInstance.getUuid());
+    return verificationJobInstance;
+  }
+
+  private VerificationJobDTO newVerificationJobDTO(String verificationJobIdentifier, String envIdentifier) {
+    CanaryVerificationJobDTO canaryVerificationJobDTO = new CanaryVerificationJobDTO();
+    canaryVerificationJobDTO.setIdentifier(verificationJobIdentifier);
+    canaryVerificationJobDTO.setJobName(generateUuid());
+    canaryVerificationJobDTO.setDataSources(Lists.newArrayList(DataSourceType.SPLUNK));
+    canaryVerificationJobDTO.setSensitivity(Sensitivity.MEDIUM.name());
+    canaryVerificationJobDTO.setServiceIdentifier(generateUuid());
+    canaryVerificationJobDTO.setOrgIdentifier(orgIdentifier);
+    canaryVerificationJobDTO.setProjectIdentifier(projectIdentifier);
+    canaryVerificationJobDTO.setEnvIdentifier(envIdentifier);
+    canaryVerificationJobDTO.setSensitivity(Sensitivity.MEDIUM.name());
+    canaryVerificationJobDTO.setDuration("15m");
+    return canaryVerificationJobDTO;
   }
 }

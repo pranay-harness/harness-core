@@ -19,6 +19,10 @@ import io.harness.cvng.analysis.services.api.DeploymentAnalysisService;
 import io.harness.cvng.beans.DataCollectionInfo;
 import io.harness.cvng.client.NextGenService;
 import io.harness.cvng.client.VerificationManagerService;
+import io.harness.cvng.core.beans.DeploymentActivityResultDTO.DeploymentResultSummary;
+import io.harness.cvng.core.beans.DeploymentActivityResultDTO.DeploymentVerificationJobInstanceSummary;
+import io.harness.cvng.core.beans.DeploymentActivityResultDTO.DeploymentVerificationJobInstanceSummary.DeploymentVerificationJobInstanceSummaryBuilder;
+import io.harness.cvng.core.beans.DeploymentActivityResultDTO.DeploymentVerificationStatus;
 import io.harness.cvng.core.beans.DeploymentActivityVerificationResultDTO;
 import io.harness.cvng.core.beans.DeploymentActivityVerificationResultDTO.DeploymentSummary;
 import io.harness.cvng.core.beans.TimeRange;
@@ -120,7 +124,8 @@ public class VerificationJobInstanceServiceImpl implements VerificationJobInstan
   public VerificationJobInstanceDTO get(String verificationJobInstanceId) {
     return getVerificationJobInstance(verificationJobInstanceId).toDTO();
   }
-  private List<VerificationJobInstance> get(List<String> verificationJobInstanceIds) {
+  @Override
+  public List<VerificationJobInstance> get(List<String> verificationJobInstanceIds) {
     return hPersistence.createQuery(VerificationJobInstance.class)
         .field(VerificationJobInstanceKeys.uuid)
         .in(verificationJobInstanceIds)
@@ -194,22 +199,10 @@ public class VerificationJobInstanceServiceImpl implements VerificationJobInstan
       List<String> verificationJobInstanceIds) {
     List<VerificationJobInstance> verificationJobInstances = get(verificationJobInstanceIds);
     List<VerificationJobInstance> postDeploymentVerificationJobInstances =
-        verificationJobInstances.stream()
-            .filter(verificationJobInstance
-                -> verificationJobInstance.getResolvedJob().getType() == VerificationJobType.HEALTH)
-            .collect(Collectors.toList());
-    // TODO: use cache to avoid duplicate calls and refactor the getEnv API
+        getPostDeploymentVerificationJobInstances(verificationJobInstances);
     Map<EnvironmentType, List<VerificationJobInstance>> preAndProductionDeploymentGroup =
-        verificationJobInstances.stream()
-            .filter(verificationJobInstance
-                -> verificationJobInstance.getResolvedJob().getType() != VerificationJobType.HEALTH)
-            .collect(groupingBy(verificationJobInstance -> {
-              VerificationJob resolvedJob = verificationJobInstance.getResolvedJob();
-              EnvironmentResponseDTO environmentResponseDTO =
-                  nextGenService.getEnvironment(resolvedJob.getEnvIdentifier(), resolvedJob.getAccountId(),
-                      resolvedJob.getOrgIdentifier(), resolvedJob.getProjectIdentifier());
-              return environmentResponseDTO.getType();
-            }));
+        getPreAndProductionDeploymentGroup(verificationJobInstances);
+
     return DeploymentActivityVerificationResultDTO.builder()
         .preProductionDeploymentSummary(
             getDeploymentSummary(preAndProductionDeploymentGroup.get(EnvironmentType.PreProduction)))
@@ -217,6 +210,87 @@ public class VerificationJobInstanceServiceImpl implements VerificationJobInstan
             getDeploymentSummary(preAndProductionDeploymentGroup.get(EnvironmentType.Production)))
         .postDeploymentSummary(getDeploymentSummary(postDeploymentVerificationJobInstances))
         .build();
+  }
+
+  @Override
+  public void addResultsToDeploymentResultSummary(
+      List<String> verificationJobInstanceIds, DeploymentResultSummary deploymentResultSummary) {
+    List<VerificationJobInstance> verificationJobInstances = get(verificationJobInstanceIds);
+    List<VerificationJobInstance> postDeploymentVerificationJobInstances =
+        getPostDeploymentVerificationJobInstances(verificationJobInstances);
+    Map<EnvironmentType, List<VerificationJobInstance>> preAndProductionDeploymentGroup =
+        getPreAndProductionDeploymentGroup(verificationJobInstances);
+    addDeploymentVerificationJobInstanceSummaries(preAndProductionDeploymentGroup.get(EnvironmentType.PreProduction),
+        deploymentResultSummary.getPreProductionDeploymentVerificationJobInstanceSummaries());
+    addDeploymentVerificationJobInstanceSummaries(preAndProductionDeploymentGroup.get(EnvironmentType.Production),
+        deploymentResultSummary.getProductionDeploymentVerificationJobInstanceSummaries());
+    addDeploymentVerificationJobInstanceSummaries(postDeploymentVerificationJobInstances,
+        deploymentResultSummary.getPostDeploymentVerificationJobInstanceSummaries());
+  }
+
+  private List<VerificationJobInstance> getPostDeploymentVerificationJobInstances(
+      List<VerificationJobInstance> verificationJobInstances) {
+    return verificationJobInstances.stream()
+        .filter(
+            verificationJobInstance -> verificationJobInstance.getResolvedJob().getType() == VerificationJobType.HEALTH)
+        .collect(Collectors.toList());
+  }
+
+  private Map<EnvironmentType, List<VerificationJobInstance>> getPreAndProductionDeploymentGroup(
+      List<VerificationJobInstance> verificationJobInstances) {
+    // TODO: use cache to avoid duplicate calls and refactor the getEnv API
+    return verificationJobInstances.stream()
+        .filter(
+            verificationJobInstance -> verificationJobInstance.getResolvedJob().getType() != VerificationJobType.HEALTH)
+        .collect(groupingBy(verificationJobInstance -> {
+          VerificationJob resolvedJob = verificationJobInstance.getResolvedJob();
+          EnvironmentResponseDTO environmentResponseDTO = getEnvironment(resolvedJob);
+          return environmentResponseDTO.getType();
+        }));
+  }
+
+  private void addDeploymentVerificationJobInstanceSummaries(List<VerificationJobInstance> verificationJobInstances,
+      List<DeploymentVerificationJobInstanceSummary> deploymentVerificationJobInstanceSummaries) {
+    if (!isEmpty(verificationJobInstances)) {
+      verificationJobInstances.forEach(verificationJobInstance -> {
+        DeploymentVerificationJobInstanceSummaryBuilder deploymentVerificationJobInstanceSummaryBuilder =
+            DeploymentVerificationJobInstanceSummary.builder()
+                .startTime(verificationJobInstance.getStartTime().toEpochMilli())
+                .durationMs(verificationJobInstance.getResolvedJob().getDuration().toMillis())
+                .progressPercentage(verificationJobInstance.getProgressPercentage())
+                .environmentName(getEnvironment(verificationJobInstance.getResolvedJob()).getName())
+                .jobName(verificationJobInstance.getResolvedJob().getJobName())
+                .verificationJobInstanceId(verificationJobInstance.getUuid())
+                .status(getDeploymentVerificationStatus(verificationJobInstance));
+        deploymentVerificationJobInstanceSummaries.add(deploymentVerificationJobInstanceSummaryBuilder.build());
+      });
+    }
+  }
+
+  private DeploymentVerificationStatus getDeploymentVerificationStatus(
+      VerificationJobInstance verificationJobInstance) {
+    switch (verificationJobInstance.getExecutionStatus()) {
+      case QUEUED:
+        return DeploymentVerificationStatus.NOT_STARTED;
+      case FAILED:
+      case TIMEOUT:
+        return DeploymentVerificationStatus.ERROR;
+      case RUNNING:
+        return DeploymentVerificationStatus.IN_PROGRESS;
+      case SUCCESS:
+        Optional<Double> riskScore = deploymentAnalysisService.getLatestRiskScore(
+            verificationJobInstance.getAccountId(), verificationJobInstance.getUuid());
+        if (riskScore.isPresent()) {
+          if (riskScore.get() < DEPLOYMENT_RISK_SCORE_FAILURE_THRESHOLD) {
+            return DeploymentVerificationStatus.SUCCESS;
+          } else {
+            return DeploymentVerificationStatus.ERROR;
+          }
+        }
+        return DeploymentVerificationStatus.ERROR;
+      default:
+        throw new IllegalStateException(verificationJobInstance.getExecutionStatus() + " not supported");
+    }
   }
 
   @Nullable
@@ -297,6 +371,11 @@ public class VerificationJobInstanceServiceImpl implements VerificationJobInstan
         .progress(progress)
         .notStarted(notStarted)
         .build();
+  }
+
+  private EnvironmentResponseDTO getEnvironment(VerificationJob verificationJob) {
+    return nextGenService.getEnvironment(verificationJob.getEnvIdentifier(), verificationJob.getAccountId(),
+        verificationJob.getOrgIdentifier(), verificationJob.getProjectIdentifier());
   }
 
   private String getDataCollectionWorkerId(VerificationJobInstance verificationJobInstance, String connectorId) {

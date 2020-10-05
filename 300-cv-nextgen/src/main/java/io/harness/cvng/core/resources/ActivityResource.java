@@ -6,6 +6,7 @@ import com.codahale.metrics.annotation.ExceptionMetered;
 import com.codahale.metrics.annotation.Timed;
 import io.harness.annotations.ExposeInternalException;
 import io.harness.cvng.core.beans.ActivityDTO;
+import io.harness.cvng.core.beans.DeploymentActivityResultDTO;
 import io.harness.cvng.core.beans.DeploymentActivityVerificationResultDTO;
 import io.harness.cvng.core.services.api.ActivityService;
 import io.harness.rest.RestResponse;
@@ -45,5 +46,13 @@ public class ActivityResource {
   public RestResponse<List<DeploymentActivityVerificationResultDTO>> getRecentDeploymentActivityVerifications(
       @QueryParam("accountId") String accountId, @QueryParam("projectIdentifier") String projectIdentifier) {
     return new RestResponse<>(activityService.getRecentDeploymentActivityVerifications(accountId, projectIdentifier));
+  }
+  @GET
+  @Path("deployment-activity-verifications/{deploymentTag}")
+  public RestResponse<DeploymentActivityResultDTO> getDeploymentActivityVerificationsByTag(
+      @QueryParam("accountId") String accountId, @QueryParam("projectIdentifier") String projectIdentifier,
+      @PathParam("deploymentTag") String deploymentTag) {
+    return new RestResponse(
+        activityService.getDeploymentActivityVerificationsByTag(accountId, projectIdentifier, deploymentTag));
   }
 }
