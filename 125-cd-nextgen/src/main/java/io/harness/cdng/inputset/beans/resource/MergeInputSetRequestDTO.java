@@ -1,7 +1,6 @@
 package io.harness.cdng.inputset.beans.resource;
 
-import static com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL;
-
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import io.swagger.annotations.ApiModel;
 import lombok.AccessLevel;
@@ -15,7 +14,8 @@ import java.util.List;
 @Value
 @Builder
 @FieldDefaults(level = AccessLevel.PRIVATE)
-@JsonInclude(NON_NULL)
+@JsonIgnoreProperties(ignoreUnknown = true)
+@JsonInclude(JsonInclude.Include.NON_NULL)
 @ApiModel("MergeInputSetRequest")
 public class MergeInputSetRequestDTO {
   @NotEmpty List<String> inputSetReferences;

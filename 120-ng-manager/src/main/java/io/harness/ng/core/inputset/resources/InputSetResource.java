@@ -18,6 +18,7 @@ import io.harness.cdng.inputset.beans.resource.InputSetTemplateResponseDTO;
 import io.harness.cdng.inputset.beans.resource.MergeInputSetRequestDTO;
 import io.harness.cdng.inputset.beans.resource.MergeInputSetResponseDTO;
 import io.harness.cdng.inputset.beans.yaml.CDInputSet;
+import io.harness.cdng.inputset.helpers.InputSetEntityValidationHelper;
 import io.harness.cdng.inputset.helpers.InputSetMergeHelper;
 import io.harness.cdng.inputset.mappers.InputSetElementMapper;
 import io.harness.cdng.inputset.mappers.InputSetFilterHelper;
@@ -52,6 +53,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.data.mongodb.core.query.Criteria;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
@@ -80,6 +82,7 @@ public class InputSetResource {
   private final InputSetEntityService inputSetEntityService;
   private final PipelineService ngPipelineService;
   private final InputSetMergeHelper inputSetMergeHelper;
+  private final InputSetEntityValidationHelper inputSetEntityValidationHelper;
 
   @GET
   @Path("{inputSetIdentifier}")
@@ -96,7 +99,7 @@ public class InputSetResource {
     Optional<BaseInputSetEntity> baseInputSetEntity = inputSetEntityService.get(
         accountId, orgIdentifier, projectIdentifier, pipelineIdentifier, inputSetIdentifier, deleted);
     return ResponseDTO.newResponse(
-        baseInputSetEntity.map(InputSetElementMapper::writeCDInputSetResponseDTO).orElse(null));
+        baseInputSetEntity.map(entity -> InputSetElementMapper.writeCDInputSetResponseDTO(entity, null)).orElse(null));
   }
 
   @GET
@@ -114,7 +117,7 @@ public class InputSetResource {
     Optional<BaseInputSetEntity> overlayInputSetEntity = inputSetEntityService.get(
         accountId, orgIdentifier, projectIdentifier, pipelineIdentifier, inputSetIdentifier, deleted);
     return ResponseDTO.newResponse(
-        overlayInputSetEntity.map(InputSetElementMapper::writeOverlayResponseDTO).orElse(null));
+        overlayInputSetEntity.map(entity -> InputSetElementMapper.writeOverlayResponseDTO(entity, null)).orElse(null));
   }
 
   @POST
@@ -133,8 +136,14 @@ public class InputSetResource {
       @NotNull @ApiParam(hidden = true, type = "") String yaml) {
     CDInputSetEntity cdInputSetEntity =
         InputSetElementMapper.toCDInputSetEntity(accountId, orgIdentifier, projectIdentifier, pipelineIdentifier, yaml);
+
+    MergeInputSetResponse mergeResponse = inputSetEntityValidationHelper.validateInputSetEntity(cdInputSetEntity);
+    if (mergeResponse.isErrorResponse()) {
+      return ResponseDTO.newResponse(InputSetElementMapper.writeCDInputSetResponseDTO(cdInputSetEntity, mergeResponse));
+    }
+
     BaseInputSetEntity createdEntity = inputSetEntityService.create(cdInputSetEntity);
-    return ResponseDTO.newResponse(InputSetElementMapper.writeCDInputSetResponseDTO(createdEntity));
+    return ResponseDTO.newResponse(InputSetElementMapper.writeCDInputSetResponseDTO(createdEntity, null));
   }
 
   @POST
@@ -154,8 +163,16 @@ public class InputSetResource {
       @NotNull @ApiParam(hidden = true, type = "") String yaml) {
     OverlayInputSetEntity overlayInputSetEntity = InputSetElementMapper.toOverlayInputSetEntity(
         accountId, orgIdentifier, projectIdentifier, pipelineIdentifier, yaml);
+
+    Map<String, String> invalidIdentifiers =
+        inputSetEntityValidationHelper.validateOverlayInputSetEntity(overlayInputSetEntity);
+    if (EmptyPredicate.isNotEmpty(invalidIdentifiers)) {
+      return ResponseDTO.newResponse(
+          InputSetElementMapper.writeOverlayResponseDTO(overlayInputSetEntity, invalidIdentifiers));
+    }
+
     BaseInputSetEntity createdEntity = inputSetEntityService.create(overlayInputSetEntity);
-    return ResponseDTO.newResponse(InputSetElementMapper.writeOverlayResponseDTO(createdEntity));
+    return ResponseDTO.newResponse(InputSetElementMapper.writeOverlayResponseDTO(createdEntity, null));
   }
 
   @PUT
@@ -176,8 +193,14 @@ public class InputSetResource {
       @NotNull @ApiParam(hidden = true, type = "") String yaml) {
     CDInputSetEntity cdInputSetEntity = InputSetElementMapper.toCDInputSetEntityWithIdentifier(
         accountId, orgIdentifier, projectIdentifier, pipelineIdentifier, inputSetIdentifier, yaml);
+
+    MergeInputSetResponse mergeResponse = inputSetEntityValidationHelper.validateInputSetEntity(cdInputSetEntity);
+    if (mergeResponse.isErrorResponse()) {
+      return ResponseDTO.newResponse(InputSetElementMapper.writeCDInputSetResponseDTO(cdInputSetEntity, mergeResponse));
+    }
+
     BaseInputSetEntity updatedInputSetEntity = inputSetEntityService.update(cdInputSetEntity);
-    return ResponseDTO.newResponse(InputSetElementMapper.writeCDInputSetResponseDTO(updatedInputSetEntity));
+    return ResponseDTO.newResponse(InputSetElementMapper.writeCDInputSetResponseDTO(updatedInputSetEntity, null));
   }
 
   @PUT
@@ -198,8 +221,16 @@ public class InputSetResource {
       @NotNull @ApiParam(hidden = true, type = "") String yaml) {
     OverlayInputSetEntity overlayInputSetEntity = InputSetElementMapper.toOverlayInputSetEntityWithIdentifier(
         accountId, orgIdentifier, projectIdentifier, pipelineIdentifier, inputSetIdentifier, yaml);
+
+    Map<String, String> invalidIdentifiers =
+        inputSetEntityValidationHelper.validateOverlayInputSetEntity(overlayInputSetEntity);
+    if (EmptyPredicate.isNotEmpty(invalidIdentifiers)) {
+      return ResponseDTO.newResponse(
+          InputSetElementMapper.writeOverlayResponseDTO(overlayInputSetEntity, invalidIdentifiers));
+    }
+
     BaseInputSetEntity updatedInputSetEntity = inputSetEntityService.update(overlayInputSetEntity);
-    return ResponseDTO.newResponse(InputSetElementMapper.writeOverlayResponseDTO(updatedInputSetEntity));
+    return ResponseDTO.newResponse(InputSetElementMapper.writeOverlayResponseDTO(updatedInputSetEntity, null));
   }
 
   @DELETE

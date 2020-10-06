@@ -17,6 +17,7 @@ import io.harness.cdng.inputset.beans.resource.InputSetResponseDTO;
 import io.harness.cdng.inputset.beans.resource.InputSetSummaryResponseDTO;
 import io.harness.cdng.inputset.beans.resource.MergeInputSetRequestDTO;
 import io.harness.cdng.inputset.beans.resource.MergeInputSetResponseDTO;
+import io.harness.cdng.inputset.helpers.InputSetEntityValidationHelper;
 import io.harness.cdng.inputset.helpers.InputSetMergeHelper;
 import io.harness.cdng.inputset.mappers.InputSetFilterHelper;
 import io.harness.cdng.inputset.services.impl.InputSetEntityServiceImpl;
@@ -46,7 +47,9 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 
@@ -54,6 +57,7 @@ public class InputSetResourceTest extends CategoryTest {
   @Mock InputSetEntityServiceImpl inputSetEntityService;
   @Mock PipelineService ngPipelineService;
   @Mock InputSetMergeHelper inputSetMergeHelper;
+  @Mock InputSetEntityValidationHelper inputSetEntityValidationHelper;
   @InjectMocks InputSetResource inputSetResource;
 
   InputSetResponseDTO cdInputSetResponseDTO;
@@ -64,6 +68,8 @@ public class InputSetResourceTest extends CategoryTest {
   OverlayInputSetEntity overlayInputSetEntity;
 
   CDPipelineResponseDTO cdPipelineResponseDTO;
+
+  MergeInputSetResponse mergeInputSetResponse;
 
   private final String IDENTIFIER = "identifier";
   private final String PIPELINE_IDENTIFIER = "pipeline_identifier";
@@ -99,6 +105,7 @@ public class InputSetResourceTest extends CategoryTest {
                                 .name(IDENTIFIER)
                                 .pipelineIdentifier(PIPELINE_IDENTIFIER)
                                 .inputSetYaml(cdInputSetYaml)
+                                .isErrorResponse(false)
                                 .build();
 
     overlayInputSetResponseDTO = OverlayInputSetResponseDTO.builder()
@@ -109,6 +116,7 @@ public class InputSetResourceTest extends CategoryTest {
                                      .name(IDENTIFIER)
                                      .pipelineIdentifier(PIPELINE_IDENTIFIER)
                                      .overlayInputSetYaml(overlayInputSetYaml)
+                                     .isErrorResponse(false)
                                      .build();
 
     inputSetSummaryResponseDTO = InputSetSummaryResponseDTO.builder()
@@ -125,6 +133,8 @@ public class InputSetResourceTest extends CategoryTest {
     setBaseEntityFields(overlayInputSetEntity, InputSetEntityType.OVERLAY_INPUT_SET, overlayInputSetYaml);
 
     cdPipelineResponseDTO = CDPipelineResponseDTO.builder().yamlPipeline(pipelineYaml).build();
+
+    mergeInputSetResponse = MergeInputSetResponse.builder().isErrorResponse(false).build();
   }
 
   private void setBaseEntityFields(BaseInputSetEntity baseInputSetEntity, InputSetEntityType type, String yaml) {
@@ -174,6 +184,7 @@ public class InputSetResourceTest extends CategoryTest {
   @Owner(developers = NAMAN)
   @Category(UnitTests.class)
   public void testCreateCDInputSet() {
+    doReturn(mergeInputSetResponse).when(inputSetEntityValidationHelper).validateInputSetEntity(any());
     doReturn(cdInputSetEntity).when(inputSetEntityService).create(any());
 
     InputSetResponseDTO inputSetResponseDTO1 =
@@ -188,6 +199,8 @@ public class InputSetResourceTest extends CategoryTest {
   @Owner(developers = NAMAN)
   @Category(UnitTests.class)
   public void testCreateOverlayInputSet() {
+    Map<String, String> emptyMap = new HashMap<>();
+    doReturn(emptyMap).when(inputSetEntityValidationHelper).validateOverlayInputSetEntity(any());
     doReturn(overlayInputSetEntity).when(inputSetEntityService).create(any());
 
     OverlayInputSetResponseDTO inputSetResponseDTO1 = inputSetResource
@@ -202,6 +215,7 @@ public class InputSetResourceTest extends CategoryTest {
   @Owner(developers = NAMAN)
   @Category(UnitTests.class)
   public void testUpdateCDInputSet() {
+    doReturn(mergeInputSetResponse).when(inputSetEntityValidationHelper).validateInputSetEntity(any());
     doReturn(cdInputSetEntity).when(inputSetEntityService).update(any());
 
     InputSetResponseDTO inputSetResponseDTO1 = inputSetResource
@@ -216,6 +230,8 @@ public class InputSetResourceTest extends CategoryTest {
   @Owner(developers = NAMAN)
   @Category(UnitTests.class)
   public void testUpdateOverlayInputSet() {
+    Map<String, String> emptyMap = new HashMap<>();
+    doReturn(emptyMap).when(inputSetEntityValidationHelper).validateOverlayInputSetEntity(any());
     doReturn(overlayInputSetEntity).when(inputSetEntityService).update(any());
 
     OverlayInputSetResponseDTO inputSetResponseDTO1 = inputSetResource

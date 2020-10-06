@@ -81,6 +81,7 @@ public class InputSetElementMapperTest extends CategoryTest {
                               .description(DESCRIPTION)
                               .pipelineIdentifier(PIPELINE_IDENTIFIER)
                               .inputSetYaml(cdInputSetYaml)
+                              .isErrorResponse(false)
                               .build();
 
     overlayInputSetResponseDTO = OverlayInputSetResponseDTO.builder()
@@ -92,6 +93,7 @@ public class InputSetElementMapperTest extends CategoryTest {
                                      .description(DESCRIPTION)
                                      .pipelineIdentifier(PIPELINE_IDENTIFIER)
                                      .overlayInputSetYaml(overlayInputSetYaml)
+                                     .isErrorResponse(false)
                                      .build();
 
     cdInputSetSummaryResponseDTO = InputSetSummaryResponseDTO.builder()
@@ -230,7 +232,7 @@ public class InputSetElementMapperTest extends CategoryTest {
   @Owner(developers = NAMAN)
   @Category(UnitTests.class)
   public void testWriteCDInputSetResponseDTO() {
-    InputSetResponseDTO response = InputSetElementMapper.writeCDInputSetResponseDTO(responseCdInputSetEntity);
+    InputSetResponseDTO response = InputSetElementMapper.writeCDInputSetResponseDTO(responseCdInputSetEntity, null);
     assertThat(response).isNotNull();
     assertThat(response).isEqualTo(inputSetResponseDTO);
   }
@@ -239,7 +241,8 @@ public class InputSetElementMapperTest extends CategoryTest {
   @Owner(developers = NAMAN)
   @Category(UnitTests.class)
   public void testWriteOverlayResponseDTO() {
-    OverlayInputSetResponseDTO response = InputSetElementMapper.writeOverlayResponseDTO(responseOverlayInputSetEntity);
+    OverlayInputSetResponseDTO response =
+        InputSetElementMapper.writeOverlayResponseDTO(responseOverlayInputSetEntity, null);
     assertThat(response).isNotNull();
     assertThat(response).isEqualTo(overlayInputSetResponseDTO);
   }

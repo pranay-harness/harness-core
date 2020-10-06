@@ -97,7 +97,17 @@ public class InputSetElementMapper {
     }
   }
 
-  public InputSetResponseDTO writeCDInputSetResponseDTO(BaseInputSetEntity cdInputSetEntity) {
+  public InputSetResponseDTO writeCDInputSetResponseDTO(
+      BaseInputSetEntity cdInputSetEntity, MergeInputSetResponse mergeResponse) {
+    InputSetErrorWrapperDTO inputSetErrorWrapperDTO;
+    boolean isErrorResponse;
+    if (mergeResponse == null) {
+      inputSetErrorWrapperDTO = null;
+      isErrorResponse = false;
+    } else {
+      inputSetErrorWrapperDTO = toInputSetErrorWrapperDTO(mergeResponse);
+      isErrorResponse = true;
+    }
     return InputSetResponseDTO.builder()
         .accountId(cdInputSetEntity.getAccountId())
         .orgIdentifier(cdInputSetEntity.getOrgIdentifier())
@@ -107,11 +117,15 @@ public class InputSetElementMapper {
         .inputSetYaml(cdInputSetEntity.getInputSetYaml())
         .name(cdInputSetEntity.getName())
         .description(cdInputSetEntity.getDescription())
+        .isErrorResponse(isErrorResponse)
+        .inputSetErrorWrapper(inputSetErrorWrapperDTO)
         .build();
   }
 
-  public OverlayInputSetResponseDTO writeOverlayResponseDTO(BaseInputSetEntity overlayInputSetEntity) {
+  public OverlayInputSetResponseDTO writeOverlayResponseDTO(
+      BaseInputSetEntity overlayInputSetEntity, Map<String, String> invalidIdentifiers) {
     List<String> references = ((OverlayInputSetEntity) overlayInputSetEntity).getInputSetReferences();
+    boolean isErrorResponse = EmptyPredicate.isNotEmpty(invalidIdentifiers);
     return OverlayInputSetResponseDTO.builder()
         .accountId(overlayInputSetEntity.getAccountId())
         .orgIdentifier(overlayInputSetEntity.getOrgIdentifier())
@@ -122,6 +136,8 @@ public class InputSetElementMapper {
         .name(overlayInputSetEntity.getName())
         .description(overlayInputSetEntity.getDescription())
         .inputSetReferences(references)
+        .isErrorResponse(isErrorResponse)
+        .invalidInputSetReferences(invalidIdentifiers)
         .build();
   }
 
