@@ -2045,6 +2045,10 @@
                                 <name>listener</name>
                                 <value>io.harness.OwnerTestListener</value>
                             </property>
+                            <property>
+                                <name>listener</name>
+                                <value>io.harness.rule.TestMetadataListener</value>
+                            </property>
                         </properties>
                     </configuration>
                 </plugin>
