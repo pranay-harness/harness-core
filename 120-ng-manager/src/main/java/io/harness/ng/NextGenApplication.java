@@ -5,7 +5,6 @@ import static io.harness.logging.LoggingInitializer.initializeLogging;
 import static io.harness.ng.NextGenConfiguration.getResourceClasses;
 import static io.harness.waiter.NgOrchestrationNotifyEventListener.NG_ORCHESTRATION;
 
-import com.google.common.util.concurrent.ServiceManager;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.google.inject.Key;
@@ -32,9 +31,6 @@ import io.harness.ng.core.exceptionmappers.NotFoundExceptionMapper;
 import io.harness.ng.core.exceptionmappers.OptimisticLockingFailureExceptionMapper;
 import io.harness.ng.core.exceptionmappers.WingsExceptionMapperV2;
 import io.harness.ng.core.invites.ext.mail.EmailNotificationListener;
-import io.harness.ng.core.perpetualtask.sample.SampleRemotePTaskServiceClient;
-import io.harness.perpetualtask.remote.RemotePerpetualTaskServiceClientRegistry;
-import io.harness.perpetualtask.remote.RemotePerpetualTaskType;
 import io.harness.persistence.HPersistence;
 import io.harness.queue.QueueListenerController;
 import io.harness.queue.QueuePublisher;
@@ -123,14 +119,8 @@ public class NextGenApplication extends Application<NextGenConfiguration> {
     registerManagedBeans(environment, injector);
     registerQueueListeners(injector);
     registerExecutionPlanCreators(injector);
-    registerRemotePerpetualTaskServiceClients(injector);
     registerAuthFilters(appConfig, environment, injector);
     MaintenanceController.forceMaintenance(false);
-
-    logger.info("Initializing gRPC server...");
-    ServiceManager serviceManager = injector.getInstance(ServiceManager.class).startAsync();
-    serviceManager.awaitHealthy();
-    Runtime.getRuntime().addShutdownHook(new Thread(() -> serviceManager.stopAsync().awaitStopped()));
   }
 
   private void registerManagedBeans(Environment environment, Injector injector) {
@@ -211,14 +201,6 @@ public class NextGenApplication extends Application<NextGenConfiguration> {
 
   private void registerExecutionPlanCreators(Injector injector) {
     injector.getInstance(ExecutionPlanCreatorRegistrar.class).register();
-  }
-
-  private void registerRemotePerpetualTaskServiceClients(Injector injector) {
-    logger.info("initializing RemotePerpetualTaskServiceClients");
-    final RemotePerpetualTaskServiceClientRegistry clientRegistry =
-        injector.getInstance(RemotePerpetualTaskServiceClientRegistry.class);
-    clientRegistry.registerClient(RemotePerpetualTaskType.REMOTE_SAMPLE.getTaskType(),
-        injector.getInstance(SampleRemotePTaskServiceClient.class));
   }
 
   private void registerAuthFilters(NextGenConfiguration configuration, Environment environment, Injector injector) {
