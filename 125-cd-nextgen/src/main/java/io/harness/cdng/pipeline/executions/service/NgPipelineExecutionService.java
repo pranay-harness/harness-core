@@ -3,8 +3,10 @@ package io.harness.cdng.pipeline.executions.service;
 import io.harness.beans.EmbeddedUser;
 import io.harness.cdng.pipeline.NgPipeline;
 import io.harness.cdng.pipeline.beans.resources.NGPipelineExecutionResponseDTO;
+import io.harness.cdng.pipeline.executions.ExecutionStatus;
 import io.harness.cdng.pipeline.executions.beans.PipelineExecutionDetail;
 import io.harness.cdng.pipeline.executions.beans.PipelineExecutionSummary;
+import io.harness.cdng.pipeline.executions.beans.PipelineExecutionSummaryFilter;
 import io.harness.cdng.service.beans.ServiceOutcome;
 import io.harness.execution.NodeExecution;
 import io.harness.execution.PlanExecution;
@@ -23,7 +25,8 @@ public interface NgPipelineExecutionService {
       String projectIdentifier, String pipelineIdentifier, List<String> inputSetReferences,
       boolean useFQNIfErrorResponse, EmbeddedUser user);
 
-  Page<PipelineExecutionSummary> getExecutions(String accountId, String orgId, String projectId, Pageable pageable);
+  Page<PipelineExecutionSummary> getExecutions(String accountId, String orgId, String projectId, Pageable pageable,
+      PipelineExecutionSummaryFilter pipelineExecutionSummaryFilter);
 
   PipelineExecutionSummary createPipelineExecutionSummary(
       String accountId, String orgId, String projectId, PlanExecution planExecution, NgPipeline ngPipeline);
@@ -38,4 +41,6 @@ public interface NgPipelineExecutionService {
 
   PipelineExecutionSummary addServiceInformationToPipelineExecutionNode(String accountId, String orgId,
       String projectId, String planExecutionId, String nodeExecutionId, ServiceOutcome serviceOutcome);
+
+  List<ExecutionStatus> getExecutionStatuses();
 }
