@@ -10,5 +10,6 @@ public interface LevelNodeQualifierName {
   String PARALLEL_STEP_ELEMENT = "parallel";
   String STEP_ELEMENT = "step";
   String STEP_GROUP = "stepGroup";
+  String NG_VARIABLES = "variables";
   String PATH_CONNECTOR = VisitorParentPathUtils.PATH_CONNECTOR;
 }

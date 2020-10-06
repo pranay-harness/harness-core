@@ -43,7 +43,6 @@ import io.harness.cdng.service.beans.StageOverridesConfig;
 import io.harness.cdng.service.steps.ServiceStepParameters;
 import io.harness.cdng.tasks.manifestFetch.step.ManifestFetchOutcome;
 import io.harness.cdng.tasks.manifestFetch.step.ManifestFetchParameters;
-import io.harness.cdng.variables.StageVariables;
 import io.harness.spring.AliasRegistrar;
 
 import java.util.Map;
@@ -77,7 +76,6 @@ public class NgAliasRegistrar implements AliasRegistrar {
     orchestrationElements.put("stageOverridesConfig", StageOverridesConfig.class);
     orchestrationElements.put("kubernetesServiceSpec", KubernetesServiceSpec.class);
     orchestrationElements.put("io.harness.cdng.pipeline.beans.entities.pipelinesNG", NgPipeline.class);
-    orchestrationElements.put("stageVariables", StageVariables.class);
     orchestrationElements.put("k8sManifest", K8sManifest.class);
     orchestrationElements.put("infrastructureDef", InfrastructureDef.class);
     orchestrationElements.put("serviceOutcome_artifactsOutcome", ServiceOutcome.ArtifactsOutcome.class);

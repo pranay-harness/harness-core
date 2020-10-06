@@ -1,15 +1,15 @@
-package io.harness.cdng.manifest.yaml;
+package io.harness.cdng.variables.beans;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import io.harness.cdng.visitor.LevelNodeQualifierName;
-import io.harness.cdng.visitor.helpers.manifest.ManifestOverridesVisitorHelper;
+import io.harness.cdng.visitor.helpers.variables.VariableOverridesVisitorHelper;
 import io.harness.data.validator.EntityIdentifier;
 import io.harness.walktree.beans.LevelNode;
-import io.harness.walktree.beans.VisitableChildren;
 import io.harness.walktree.visitor.SimpleVisitorHelper;
 import io.harness.walktree.visitor.Visitable;
 import io.harness.yaml.core.intfc.OverrideSetsWrapper;
+import io.harness.yaml.core.variables.NGVariable;
 import lombok.Builder;
 import lombok.Value;
 
@@ -19,26 +19,19 @@ import java.util.List;
 @Builder
 @JsonIgnoreProperties(ignoreUnknown = true)
 @JsonTypeName("overrideSet")
-@SimpleVisitorHelper(helperClass = ManifestOverridesVisitorHelper.class)
-public class ManifestOverrideSets implements OverrideSetsWrapper, Visitable {
+@SimpleVisitorHelper(helperClass = VariableOverridesVisitorHelper.class)
+public class NGVariableOverrideSets implements OverrideSetsWrapper, Visitable {
   @EntityIdentifier String identifier;
-  List<ManifestConfigWrapper> manifests;
+  List<NGVariable> variables;
 
   // For Visitor Framework Impl
   String metadata;
 
   @Override
-  public VisitableChildren getChildrenToWalk() {
-    VisitableChildren children = VisitableChildren.builder().build();
-    manifests.forEach(manifest -> children.add("manifests", manifest));
-    return children;
-  }
-
-  @Override
   public LevelNode getLevelNode() {
     return LevelNode.builder()
         .qualifierName(
-            LevelNodeQualifierName.MANIFEST_OVERRIDE_SETS + LevelNodeQualifierName.PATH_CONNECTOR + identifier)
+            LevelNodeQualifierName.VARIABLE_OVERRIDE_SETS + LevelNodeQualifierName.PATH_CONNECTOR + identifier)
         .build();
   }
 }

@@ -2,18 +2,39 @@ pipeline:
   name: My Deployment Pipeline
   identifier: myPipeline1
   description: This is my first pipeline. It is really concrete
+  variables:
+    - name: pipelineN1
+      type: String
+      value: stringValue1
+    - name: pipelineN2
+      type: Number
+      value: 11
   stages:
     - stage:
         name: qa
         identifier: qa
         type: Deployment
         spec:
+          variables:
+            - name: stageN1
+              type: String
+              value: stringValue2
+            - name: stageN2
+              type: Number
+              value: 12
           service:
             name: service1
             identifier: ${input}
             serviceDefinition:
               type: Kubernetes # Can it be type to make it consistent with other types
               spec:
+                variables:
+                  - name: serviceN1
+                    type: String
+                    value: stringValue3
+                  - name: serviceN2
+                    type: Number
+                    value: 13
                 artifacts:
                   primary:
                     type: Dockerhub
@@ -58,6 +79,13 @@ pipeline:
                                   branch: master
                                   paths:
                                     - test/spec
+                variableOverrideSets:
+                  - overrideSet:
+                      identifier: VariableoverrideSet
+                      variables:
+                        - name: o1
+                          type: Number
+                          value: 14
           infrastructure:
             environment:
               name: ${input}
@@ -132,6 +160,8 @@ pipeline:
                           branch: master
                           paths:
                             - test/prod/values.yaml
+              useVariableOverrideSets:
+                - VariableoverrideSet
               useManifestOverrideSets:
                 - overrideSet1
                 - overrideSet2

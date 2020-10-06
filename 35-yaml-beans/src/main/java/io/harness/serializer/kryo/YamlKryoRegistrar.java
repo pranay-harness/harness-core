@@ -7,6 +7,8 @@ import io.harness.serializer.KryoRegistrar;
 import io.harness.yaml.core.ExecutionElement;
 import io.harness.yaml.core.StageElement;
 import io.harness.yaml.core.StepElement;
+import io.harness.yaml.core.variables.NumberNGVariable;
+import io.harness.yaml.core.variables.StringNGVariable;
 
 public class YamlKryoRegistrar implements KryoRegistrar {
   @Override
@@ -16,5 +18,7 @@ public class YamlKryoRegistrar implements KryoRegistrar {
     kryo.register(StageElement.class, 35003);
     kryo.register(ExecutionElement.class, 35004);
     kryo.register(StepElement.class, 35005);
+    kryo.register(StringNGVariable.class, 35006);
+    kryo.register(NumberNGVariable.class, 35007);
   }
 }
