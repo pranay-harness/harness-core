@@ -20,8 +20,8 @@ public class ClusterDataGenerationValidatorTest extends CategoryTest {
   @Owner(developers = HITESH)
   @Category(UnitTests.class)
   public void shouldReturnFalseForCluster() {
-    boolean shouldGenerateClusterData =
-        clusterDataGenerationValidator.shouldGenerateClusterData("hW63Ny6rQaaGsKkVjE0pJA", "5ee1584f2aa4186d1c1852de");
+    boolean shouldGenerateClusterData = clusterDataGenerationValidator.shouldGenerateClusterData(
+        "hW63Ny6rQaaGsKkVjE0pJACBD", "5ee1584f2aa4186d1c1852de");
     assertThat(shouldGenerateClusterData).isFalse();
   }
 
@@ -29,10 +29,10 @@ public class ClusterDataGenerationValidatorTest extends CategoryTest {
   @Owner(developers = HITESH)
   @Category(UnitTests.class)
   public void shouldReturnTrueForCluster() {
-    boolean shouldGenerateClusterData =
-        clusterDataGenerationValidator.shouldGenerateClusterData("hW63Ny6rQaaGsKkVjE0pJA", "5ee154f2aa4186d1c1852de");
-    boolean shouldGenerateClusterDataRes =
-        clusterDataGenerationValidator.shouldGenerateClusterData("h63Ny6rQaaGsKkVjE0pJA", "5ee1584f2aa4186d1c1852d");
+    boolean shouldGenerateClusterData = clusterDataGenerationValidator.shouldGenerateClusterData(
+        "hW63Ny6rQaaGsKkVjE0pJACBD", "5ee154f2aa4186d1c1852de");
+    boolean shouldGenerateClusterDataRes = clusterDataGenerationValidator.shouldGenerateClusterData(
+        "hW63Ny6rQaaGsKkVjE0pJACBD", "5ee1584f2aa4186d1c1852d");
     assertThat(shouldGenerateClusterData).isTrue();
     assertThat(shouldGenerateClusterDataRes).isTrue();
   }
