@@ -66,7 +66,7 @@ public class NgPipelineExecutionServiceImplTest extends CategoryTest {
     OrchestrationGraphDTO orchestrationGraph = OrchestrationGraphDTO.builder().build();
     doReturn(orchestrationGraph)
         .when(graphGenerationService)
-        .generatePartialOrchestrationGraph("planNodeId", "planExecutionId");
+        .generatePartialOrchestrationGraphFromSetupNodeId("planNodeId", "planExecutionId");
     PowerMockito.mockStatic(ExecutionGraphMapper.class);
     ExecutionGraph executionGraph = ExecutionGraph.builder().build();
     when(ExecutionGraphMapper.toExecutionGraph(orchestrationGraph)).thenReturn(executionGraph);

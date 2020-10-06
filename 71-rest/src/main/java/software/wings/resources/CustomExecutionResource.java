@@ -145,6 +145,14 @@ public class CustomExecutionResource {
   }
 
   @GET
+  @Path("/get-partial-orchestration-graph-from-identifier")
+  public RestResponse<OrchestrationGraphDTO> getPartialOrchestrationGraphFromIdentifier(
+      @QueryParam("identifier") String identifier, @QueryParam("planExecutionId") String planExecutionId) {
+    return new RestResponse<>(
+        customExecutionService.getPartialOrchestrationGraphFromIdentifier(identifier, planExecutionId));
+  }
+
+  @GET
   @Path("/get-graph-visualization")
   @Produces("image/png")
   public StreamingOutput getGraphVisualization(@QueryParam("planExecutionId") String planExecutionId) {

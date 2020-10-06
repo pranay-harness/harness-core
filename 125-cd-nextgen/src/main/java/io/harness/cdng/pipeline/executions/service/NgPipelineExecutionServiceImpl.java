@@ -157,8 +157,9 @@ public class NgPipelineExecutionServiceImpl implements NgPipelineExecutionServic
             format("No Graph node found corresponding to identifier: [%s], planExecutionId: [%s]", stageIdentifier,
                 planExecutionId));
       }
-      OrchestrationGraphDTO orchestrationGraph = graphGenerationService.generatePartialOrchestrationGraph(
-          stageNode.get().getNode().getUuid(), planExecutionId);
+      OrchestrationGraphDTO orchestrationGraph =
+          graphGenerationService.generatePartialOrchestrationGraphFromSetupNodeId(
+              stageNode.get().getNode().getUuid(), planExecutionId);
       @NonNull ExecutionGraph executionGraph = ExecutionGraphMapper.toExecutionGraph(orchestrationGraph);
       pipelineExecutionDetailBuilder.stageGraph(executionGraph);
     }

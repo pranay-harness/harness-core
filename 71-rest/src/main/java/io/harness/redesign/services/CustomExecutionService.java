@@ -53,6 +53,8 @@ public interface CustomExecutionService {
 
   OrchestrationGraphDTO getPartialOrchestrationGraph(String startingSetupNodeId, String executionPlanId);
 
+  OrchestrationGraphDTO getPartialOrchestrationGraphFromIdentifier(String identifier, String executionPlanId);
+
   void getGraphVisualization(String executionPlanId, OutputStream output) throws IOException;
 
   PlanExecution executeSingleBarrierPlan();
