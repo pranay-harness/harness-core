@@ -2,6 +2,7 @@ package io.harness.serializer.kryo;
 
 import com.esotericsoftware.kryo.Kryo;
 import io.harness.beans.InputSetValidator;
+import io.harness.beans.InputSetValidatorType;
 import io.harness.beans.ParameterField;
 import io.harness.serializer.KryoRegistrar;
 import io.harness.yaml.core.ExecutionElement;
@@ -20,5 +21,6 @@ public class YamlKryoRegistrar implements KryoRegistrar {
     kryo.register(StepElement.class, 35005);
     kryo.register(StringNGVariable.class, 35006);
     kryo.register(NumberNGVariable.class, 35007);
+    kryo.register(InputSetValidatorType.class, 35008);
   }
 }
