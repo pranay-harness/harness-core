@@ -26,6 +26,7 @@ import io.dropwizard.setup.Bootstrap;
 import io.dropwizard.setup.Environment;
 import io.harness.delegate.beans.DelegateAsyncTaskResponse;
 import io.harness.delegate.beans.DelegateSyncTaskResponse;
+import io.harness.engine.events.OrchestrationEventListener;
 import io.harness.executionplan.CIExecutionPlanCreatorRegistrar;
 import io.harness.executionplan.ExecutionPlanModule;
 import io.harness.govern.ProviderModule;
@@ -235,6 +236,7 @@ public class CIManagerApplication extends Application<CIManagerConfiguration> {
   private void registerQueueListeners(Injector injector) {
     QueueListenerController queueListenerController = injector.getInstance(QueueListenerController.class);
     queueListenerController.register(injector.getInstance(OrchestrationNotifyEventListener.class), 5);
+    queueListenerController.register(injector.getInstance(OrchestrationEventListener.class), 1);
   }
 
   private void registerManagedBeans(Environment environment, Injector injector) {
