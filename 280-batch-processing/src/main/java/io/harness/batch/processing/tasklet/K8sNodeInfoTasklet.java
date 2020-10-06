@@ -54,7 +54,7 @@ public class K8sNodeInfoTasklet implements Tasklet {
 
   private static final String AWS_SPOT_INSTANCE = "spot";
   private static final String AZURE_SPOT_INSTANCE = "spot";
-  private static final boolean UPDATE_OLD_NODE_DATA = true;
+  private static final boolean UPDATE_OLD_NODE_DATA = false;
 
   @Override
   public RepeatStatus execute(StepContribution stepContribution, ChunkContext chunkContext) {
