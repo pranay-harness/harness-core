@@ -15,6 +15,8 @@ import io.harness.artifacts.docker.client.DockerRestClientFactory;
 import io.harness.artifacts.docker.client.DockerRestClientFactoryImpl;
 import io.harness.artifacts.docker.service.DockerRegistryService;
 import io.harness.artifacts.docker.service.DockerRegistryServiceImpl;
+import io.harness.aws.AwsClient;
+import io.harness.aws.AwsClientImpl;
 import io.harness.azure.client.AzureAutoScaleSettingsClient;
 import io.harness.azure.client.AzureComputeClient;
 import io.harness.azure.client.AzureMonitorClient;
@@ -697,6 +699,7 @@ public class DelegateModule extends AbstractModule {
     bind(AzureMonitorClient.class).to(AzureMonitorClientImpl.class);
     bind(NGGitService.class).to(NGGitServiceImpl.class);
     bind(GcpClient.class).to(GcpClientImpl.class);
+    bind(AwsClient.class).to(AwsClientImpl.class);
 
     // NG Delegate
     MapBinder<String, K8sRequestHandler> k8sTaskTypeToRequestHandler =
