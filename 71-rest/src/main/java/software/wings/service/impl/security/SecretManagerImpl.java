@@ -415,6 +415,7 @@ public class SecretManagerImpl implements SecretManager {
 
     SecretManagerConfig encryptionConfig =
         getSecretManager(accountId, encryptedData.getKmsId(), encryptedData.getEncryptionType());
+
     if (SecretManagerConfig.isTemplatized(encryptionConfig) && isNotEmpty(workflowExecutionId)) {
       encryptionConfig = updateRuntimeParametersAndGetConfig(workflowExecutionId, encryptionConfig);
     }
@@ -442,7 +443,8 @@ public class SecretManagerImpl implements SecretManager {
     } else {
       encryptedRecordData = SecretManager.buildRecordData(encryptedData);
     }
-
+    //[PL-12731]: Issue with morphia caching logic https://github.com/MorphiaOrg/morphia/issues/281.
+    encryptionConfig.setUuid(null);
     EncryptedDataDetail encryptedDataDetail;
     if (encryptionConfig.getEncryptionType() == CUSTOM) {
       encryptedDataDetail = customSecretsManagerEncryptionService.buildEncryptedDataDetail(
