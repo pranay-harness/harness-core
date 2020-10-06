@@ -59,7 +59,7 @@ public class CustomSecretsManagerEncryptionServiceImplTest extends CategoryTest 
     assertThat(encryptedDataDetail.getEncryptionConfig()).isEqualTo(config);
     assertThat(encryptedDataDetail.getEncryptedData()).isNotNull();
 
-    verify(expressionEvaluator, times(1)).substitute(eq(shellScript), any());
+    verify(expressionEvaluator, times(2)).substitute(eq(shellScript), any());
     verify(customSecretsManagerConnectorHelper, times(1)).setConnectorInConfig(eq(config), any());
     verify(managerDecryptionService, times(1)).decrypt(any(EncryptableSetting.class), any());
     verify(secretManager, times(1)).getEncryptionDetails(any(EncryptableSetting.class));
@@ -76,7 +76,7 @@ public class CustomSecretsManagerEncryptionServiceImplTest extends CategoryTest 
     when(expressionEvaluator.substitute(eq(shellScript), any())).thenReturn(shellScript);
     customSecretsManagerEncryptionService.validateSecret(encryptedData, config);
 
-    verify(expressionEvaluator, times(1)).substitute(eq(shellScript), any());
+    verify(expressionEvaluator, times(2)).substitute(eq(shellScript), any());
     verify(customSecretsManagerConnectorHelper, times(1)).setConnectorInConfig(any(), any());
     verify(managerDecryptionService, times(1)).decrypt(any(EncryptableSetting.class), any());
     verify(secretManager, times(1)).getEncryptionDetails(any(EncryptableSetting.class));

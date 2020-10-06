@@ -84,12 +84,13 @@ public class CustomSecretsManagerEncryptionServiceImpl implements CustomSecretsM
   private String resolveVariables(String accountId, String script, Set<EncryptedDataParams> parameters) {
     Map<String, Object> context = new HashMap<>();
     parameters.forEach(secretVariable -> context.put(secretVariable.getName(), secretVariable.getValue()));
+    String scriptWithResolvedVariables = expressionEvaluator.substitute(script, context);
     context.put("secrets",
         SecretFunctor.builder()
             .managerDecryptionService(managerDecryptionService)
             .secretManager(secretManager)
             .accountId(accountId)
             .build());
-    return expressionEvaluator.substitute(script, context);
+    return expressionEvaluator.substitute(scriptWithResolvedVariables, context);
   }
 }
