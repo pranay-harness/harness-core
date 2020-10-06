@@ -543,9 +543,10 @@ public class JiraTask extends AbstractDelegateRunnableTask {
         return Double.parseDouble(fieldValue);
       case "date":
       case "string":
-      case "timetracking":
       case "any":
         return fieldValue;
+      case "timetracking":
+        return fieldValue.replace(" ", "").replace("w", "w ").replace("d", "d ").replace("h", "h ").trim();
       case "datetime":
         return new Timestamp(Long.parseLong(fieldValue));
       case "multiselect":
