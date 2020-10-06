@@ -1,6 +1,7 @@
 package io.harness.cdng.pipeline.executions.service;
 
 import static java.lang.String.format;
+import static java.util.Objects.isNull;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
@@ -21,6 +22,7 @@ import io.harness.cdng.pipeline.executions.beans.PipelineExecutionDetail;
 import io.harness.cdng.pipeline.executions.beans.PipelineExecutionDetail.PipelineExecutionDetailBuilder;
 import io.harness.cdng.pipeline.executions.beans.PipelineExecutionSummary;
 import io.harness.cdng.pipeline.executions.beans.PipelineExecutionSummary.PipelineExecutionSummaryKeys;
+import io.harness.cdng.pipeline.executions.beans.PipelineExecutionSummaryFilter;
 import io.harness.cdng.pipeline.executions.beans.ServiceExecutionSummary;
 import io.harness.cdng.pipeline.executions.repositories.PipelineExecutionRepository;
 import io.harness.cdng.pipeline.mappers.ExecutionToDtoMapper;
@@ -47,6 +49,7 @@ import org.springframework.data.mongodb.core.query.Criteria;
 import software.wings.beans.User;
 import software.wings.security.UserThreadLocal;
 
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -98,15 +101,15 @@ public class NgPipelineExecutionServiceImpl implements NgPipelineExecutionServic
   }
 
   @Override
-  public Page<PipelineExecutionSummary> getExecutions(
-      String accountId, String orgId, String projectId, Pageable pageable) {
-    Criteria criteria = Criteria.where(PipelineExecutionSummaryKeys.accountIdentifier)
-                            .is(accountId)
-                            .and(PipelineExecutionSummaryKeys.orgIdentifier)
-                            .is(orgId)
-                            .and(PipelineExecutionSummaryKeys.projectIdentifier)
-                            .is(projectId);
-
+  public Page<PipelineExecutionSummary> getExecutions(String accountId, String orgId, String projectId,
+      Pageable pageable, PipelineExecutionSummaryFilter pipelineExecutionSummaryFilter) {
+    Criteria baseCriteria = Criteria.where(PipelineExecutionSummaryKeys.accountIdentifier)
+                                .is(accountId)
+                                .and(PipelineExecutionSummaryKeys.orgIdentifier)
+                                .is(orgId)
+                                .and(PipelineExecutionSummaryKeys.projectIdentifier)
+                                .is(projectId);
+    Criteria criteria = createPipelineExecutionSummaryFilterCriteria(baseCriteria, pipelineExecutionSummaryFilter);
     Page<PipelineExecutionSummary> pipelineExecutionSummaries = pipelineExecutionRepository.findAll(criteria, pageable);
     List<String> pipelineIdentifiers = pipelineExecutionSummaries.get()
                                            .map(PipelineExecutionSummary::getPipelineIdentifier)
@@ -117,6 +120,40 @@ public class NgPipelineExecutionServiceImpl implements NgPipelineExecutionServic
         -> pipelineExecutionSummary.setPipelineName(
             pipelineIdentifierToNameMap.get(pipelineExecutionSummary.getPipelineIdentifier())));
     return pipelineExecutionSummaries;
+  }
+
+  private Criteria createPipelineExecutionSummaryFilterCriteria(
+      Criteria criteria, PipelineExecutionSummaryFilter pipelineExecutionSummaryFilter) {
+    if (pipelineExecutionSummaryFilter == null) {
+      return criteria;
+    }
+    if (!EmptyPredicate.isEmpty(pipelineExecutionSummaryFilter.getExecutionStatuses())) {
+      criteria.and(PipelineExecutionSummaryKeys.executionStatus)
+          .in(pipelineExecutionSummaryFilter.getExecutionStatuses());
+    }
+    if (!isNull(pipelineExecutionSummaryFilter.getEnvironmentTypes())) {
+      criteria.and(PipelineExecutionSummaryKeys.environmentTypes)
+          .in(pipelineExecutionSummaryFilter.getEnvironmentTypes());
+    }
+    if (!isNull(pipelineExecutionSummaryFilter.getStartTime())) {
+      criteria.and(PipelineExecutionSummaryKeys.startedAt).gte(pipelineExecutionSummaryFilter.getStartTime());
+    }
+    if (!isNull(pipelineExecutionSummaryFilter.getEndTime())) {
+      criteria.and(PipelineExecutionSummaryKeys.endedAt).lte(pipelineExecutionSummaryFilter.getEndTime());
+    }
+    if (EmptyPredicate.isNotEmpty(pipelineExecutionSummaryFilter.getEnvIdentifiers())) {
+      criteria.and(PipelineExecutionSummaryKeys.envIdentifiers).in(pipelineExecutionSummaryFilter.getEnvIdentifiers());
+    }
+    if (EmptyPredicate.isNotEmpty(pipelineExecutionSummaryFilter.getServiceIdentifiers())) {
+      criteria.and(PipelineExecutionSummaryKeys.serviceIdentifiers)
+          .in(pipelineExecutionSummaryFilter.getServiceIdentifiers());
+    }
+    if (EmptyPredicate.isNotEmpty(pipelineExecutionSummaryFilter.getSearchTerm())) {
+      criteria.orOperator(Criteria.where(PipelineExecutionSummaryKeys.pipelineName)
+                              .regex(pipelineExecutionSummaryFilter.getSearchTerm(), "i"),
+          Criteria.where(PipelineExecutionSummaryKeys.tags).regex(pipelineExecutionSummaryFilter.getSearchTerm(), "i"));
+    }
+    return criteria;
   }
 
   @Override
@@ -215,6 +252,11 @@ public class NgPipelineExecutionServiceImpl implements NgPipelineExecutionServic
     pipelineExecutionSummary.addServiceDefinitionType(serviceExecutionSummary.getDeploymentType());
     pipelineExecutionRepository.save(pipelineExecutionSummary);
     return pipelineExecutionSummary;
+  }
+
+  @Override
+  public List<ExecutionStatus> getExecutionStatuses() {
+    return Arrays.asList(ExecutionStatus.values());
   }
 
   private NGPipelineExecutionResponseDTO getPipelineResponseDTO(String accountId, String orgIdentifier,

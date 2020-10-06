@@ -7,8 +7,10 @@ import com.google.inject.Inject;
 
 import com.codahale.metrics.annotation.ExceptionMetered;
 import com.codahale.metrics.annotation.Timed;
+import io.harness.cdng.pipeline.executions.ExecutionStatus;
 import io.harness.cdng.pipeline.executions.beans.PipelineExecutionDetail;
 import io.harness.cdng.pipeline.executions.beans.PipelineExecutionSummary.PipelineExecutionSummaryKeys;
+import io.harness.cdng.pipeline.executions.beans.PipelineExecutionSummaryFilter;
 import io.harness.cdng.pipeline.executions.beans.dto.PipelineExecutionSummaryDTO;
 import io.harness.cdng.pipeline.executions.service.NgPipelineExecutionServiceImpl;
 import io.harness.cdng.pipeline.mappers.ExecutionToDtoMapper;
@@ -56,15 +58,29 @@ public class CDNGExecutionResource {
   @ApiOperation(value = "Gets Executions list", nickname = "getListOfExecutions")
   public ResponseDTO<PageResponse<PipelineExecutionSummaryDTO>> getListOfExecutions(
       @NotNull @QueryParam("accountIdentifier") String accountId, @QueryParam("orgIdentifier") String orgId,
-      @NotNull @QueryParam("projectIdentifier") String projectId, @QueryParam("filter") String filterQuery,
+      @NotNull @QueryParam("projectIdentifier") String projectId,
+      @QueryParam("serviceIdentifiers") List<String> serviceIdentifiers,
+      @QueryParam("envIdentifiers") List<String> environmentIdentifiers,
+      @QueryParam("executionStatuses") List<ExecutionStatus> executionStatuses, @QueryParam("startTime") Long startTime,
+      @QueryParam("endTime") Long endTime, @QueryParam("searchTerm") String searchTerm,
       @QueryParam("page") @DefaultValue("0") int page, @QueryParam("size") @DefaultValue("10") int size,
       @QueryParam("sort") List<String> sort) {
     logger.info("Get List of executions");
     if (sort.isEmpty()) {
       sort = Collections.singletonList(PipelineExecutionSummaryKeys.startedAt + ",desc");
     }
+    PipelineExecutionSummaryFilter pipelineExecutionSummaryFilter = PipelineExecutionSummaryFilter.builder()
+                                                                        .searchTerm(searchTerm)
+                                                                        .serviceIdentifiers(serviceIdentifiers)
+                                                                        .envIdentifiers(environmentIdentifiers)
+                                                                        .startTime(startTime)
+                                                                        .endTime(endTime)
+                                                                        .executionStatuses(executionStatuses)
+                                                                        .build();
     Page<PipelineExecutionSummaryDTO> pipelines =
-        executionService.getExecutions(accountId, orgId, projectId, getPageRequest(page, size, sort))
+        executionService
+            .getExecutions(
+                accountId, orgId, projectId, getPageRequest(page, size, sort), pipelineExecutionSummaryFilter)
             .map(ExecutionToDtoMapper::writeExecutionDto);
     return ResponseDTO.newResponse(getNGPageResponse(pipelines));
   }
@@ -80,5 +96,14 @@ public class CDNGExecutionResource {
       @NotNull @PathParam("planExecutionId") String planExecutionId,
       @QueryParam("stageIdentifier") String stageIdentifier) {
     return ResponseDTO.newResponse(executionService.getPipelineExecutionDetail(planExecutionId, stageIdentifier));
+  }
+
+  @GET
+  @Timed
+  @ExceptionMetered
+  @ApiOperation(value = "Gets Execution Status list", nickname = "getExecutionStatuses")
+  @Path("/executionStatus")
+  public ResponseDTO<List<ExecutionStatus>> getExecutionStatuses() {
+    return ResponseDTO.newResponse(executionService.getExecutionStatuses());
   }
 }

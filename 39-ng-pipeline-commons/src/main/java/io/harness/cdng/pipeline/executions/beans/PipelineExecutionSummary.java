@@ -5,6 +5,7 @@ import io.harness.cdng.pipeline.executions.ExecutionStatus;
 import io.harness.cdng.pipeline.executions.beans.PipelineExecutionSummary.PipelineExecutionSummaryKeys;
 import io.harness.mongo.index.Field;
 import io.harness.mongo.index.NgUniqueIndex;
+import io.harness.ng.core.environment.beans.EnvironmentType;
 import io.harness.persistence.PersistentEntity;
 import io.harness.pipeline.executions.NGStageType;
 import io.harness.yaml.core.Tag;
@@ -53,6 +54,7 @@ public class PipelineExecutionSummary implements PersistentEntity {
   @Builder.Default private List<String> envIdentifiers = new ArrayList<>();
   @Builder.Default private List<String> serviceDefinitionTypes = new ArrayList<>();
   @Builder.Default private List<NGStageType> stageTypes = new ArrayList<>();
+  @Builder.Default private List<EnvironmentType> environmentTypes = new ArrayList<>();
 
   public void addStageExecutionSummaryElement(StageExecutionSummary stageExecutionSummary) {
     stageExecutionSummarySummaryElements.add(stageExecutionSummary);
