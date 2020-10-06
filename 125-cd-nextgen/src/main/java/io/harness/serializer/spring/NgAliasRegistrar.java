@@ -12,6 +12,7 @@ import io.harness.cdng.environment.yaml.EnvironmentYaml;
 import io.harness.cdng.infra.InfrastructureDef;
 import io.harness.cdng.infra.beans.InfraUseFromStage;
 import io.harness.cdng.infra.beans.K8sDirectInfraMapping;
+import io.harness.cdng.infra.beans.K8sDirectInfrastructureOutcome;
 import io.harness.cdng.infra.steps.InfraStepParameters;
 import io.harness.cdng.infra.yaml.K8SDirectInfrastructure;
 import io.harness.cdng.k8s.K8sRollingOutcome;
@@ -33,6 +34,7 @@ import io.harness.cdng.pipeline.NgPipeline;
 import io.harness.cdng.pipeline.PipelineInfrastructure;
 import io.harness.cdng.pipeline.beans.CDPipelineSetupParameters;
 import io.harness.cdng.pipeline.beans.DeploymentStageStepParameters;
+import io.harness.cdng.pipeline.beans.RollbackOptionalChildChainStepParameters;
 import io.harness.cdng.pipeline.stepinfo.HttpStepInfo;
 import io.harness.cdng.pipeline.stepinfo.ShellScriptStepInfo;
 import io.harness.cdng.service.beans.KubernetesServiceSpec;
@@ -96,5 +98,8 @@ public class NgAliasRegistrar implements AliasRegistrar {
     orchestrationElements.put("artifactSpecWrapper", ArtifactSpecWrapper.class);
     orchestrationElements.put("storeConfigWrapper", StoreConfigWrapper.class);
     orchestrationElements.put("serviceDefinition", ServiceDefinition.class);
+    orchestrationElements.put("cdng.infra.beans.K8sDirectInfrastructureOutcome", K8sDirectInfrastructureOutcome.class);
+    orchestrationElements.put(
+        "cdng.pipeline.beans.RollbackOptionalChildChainStepParameters", RollbackOptionalChildChainStepParameters.class);
   }
 }

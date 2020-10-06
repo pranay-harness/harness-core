@@ -43,6 +43,7 @@ public class ManagerRegistrars {
           .add(ManagerKryoRegistrar.class)
           .add(ProjectAndOrgKryoRegistrar.class)
           .addAll(NGCoreRegistrars.kryoRegistrars)
+          .addAll(ExecutionPlanModuleRegistrars.kryoRegistrars)
           .add(SecretManagerClientKryoRegistrar.class)
           .add(CvNextGenCommonsBeansKryoRegistrar.class)
           .add(YamlKryoRegistrar.class)
@@ -83,7 +84,6 @@ public class ManagerRegistrars {
           .addAll(OrchestrationStepsModuleRegistrars.aliasRegistrars)
           .addAll(OrchestrationVisualizationModuleRegistrars.aliasRegistrars)
           .addAll(OrchestrationVisualizationModuleRegistrars.aliasRegistrars)
-          .addAll(YamlBeansModuleRegistrars.aliasRegistrars)
           .addAll(ExecutionPlanModuleRegistrars.aliasRegistrars)
           .add(WingsAliasRegistrar.class)
           .build();
