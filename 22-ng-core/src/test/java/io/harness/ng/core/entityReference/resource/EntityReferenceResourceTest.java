@@ -5,7 +5,7 @@ import static org.mockito.Mockito.times;
 
 import io.harness.EntityType;
 import io.harness.category.element.UnitTests;
-import io.harness.ng.core.entityReference.dto.EntityReferenceDTO;
+import io.harness.ng.core.entityreference.dto.EntityReferenceDTO;
 import io.harness.ng.core.entityReference.service.EntityReferenceService;
 import io.harness.rule.Owner;
 import io.harness.rule.OwnerRule;

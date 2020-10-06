@@ -2,7 +2,7 @@ package io.harness.entityreferenceclient.remote;
 
 import io.harness.NGCommonEntityConstants;
 import io.harness.ng.core.dto.ResponseDTO;
-import io.harness.ng.core.entityReference.dto.EntityReferenceDTO;
+import io.harness.ng.core.entityreference.dto.EntityReferenceDTO;
 import org.hibernate.validator.constraints.NotEmpty;
 import retrofit2.Call;
 import retrofit2.http.Body;

@@ -9,7 +9,7 @@ import com.google.inject.Singleton;
 import io.harness.EntityType;
 import io.harness.entityreferenceclient.remote.EntityReferenceClient;
 import io.harness.ng.core.entityReference.EntityReferenceHelper;
-import io.harness.ng.core.entityReference.dto.EntityReferenceDTO;
+import io.harness.ng.core.entityreference.dto.EntityReferenceDTO;
 import io.harness.secretmanagerclient.dto.EncryptedDataDTO;
 import io.harness.utils.FullyQualifiedIdentifierHelper;
 import lombok.AccessLevel;

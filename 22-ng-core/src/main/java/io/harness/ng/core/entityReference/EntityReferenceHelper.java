@@ -3,7 +3,7 @@ package io.harness.ng.core.entityReference;
 import com.google.inject.Singleton;
 
 import io.harness.EntityType;
-import io.harness.ng.core.entityReference.dto.EntityReferenceDTO;
+import io.harness.ng.core.entityreference.dto.EntityReferenceDTO;
 
 @Singleton
 public class EntityReferenceHelper {

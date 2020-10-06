@@ -1,6 +1,6 @@
 package io.harness.ng.core.entityReference.service;
 
-import io.harness.ng.core.entityReference.dto.EntityReferenceDTO;
+import io.harness.ng.core.entityreference.dto.EntityReferenceDTO;
 import org.springframework.data.domain.Page;
 
 public interface EntityReferenceService {
