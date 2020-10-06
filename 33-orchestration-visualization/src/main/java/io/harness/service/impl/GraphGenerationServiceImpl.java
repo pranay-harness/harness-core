@@ -5,7 +5,6 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
-import com.google.inject.name.Named;
 
 import io.harness.annotations.Redesign;
 import io.harness.annotations.dev.HarnessTeam;
@@ -31,7 +30,6 @@ import io.harness.skip.service.VertexSkipperService;
 import java.time.Duration;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.ExecutorService;
 import java.util.stream.Collectors;
 
 @Redesign
@@ -42,7 +40,6 @@ public class GraphGenerationServiceImpl implements GraphGenerationService {
   @Inject private NodeExecutionService nodeExecutionService;
   @Inject private SpringMongoStore mongoStore;
   @Inject private OrchestrationAdjacencyListGenerator orchestrationAdjacencyListGenerator;
-  @Inject @Named("EngineExecutorService") private ExecutorService executorService;
   @Inject private VertexSkipperService vertexSkipperService;
 
   @Override
@@ -113,10 +110,20 @@ public class GraphGenerationServiceImpl implements GraphGenerationService {
   }
 
   @Override
-  public OrchestrationGraphDTO generatePartialOrchestrationGraph(String startingSetupNodeId, String planExecutionId) {
+  public OrchestrationGraphDTO generatePartialOrchestrationGraphFromSetupNodeId(
+      String startingSetupNodeId, String planExecutionId) {
     OrchestrationGraph orchestrationGraph = getCachedOrchestrationGraph(planExecutionId);
     return generatePartialGraph(
-        obtainStartingId(orchestrationGraph.getAdjacencyList().getGraphVertexMap(), startingSetupNodeId),
+        obtainStartingIdFromSetupNodeId(orchestrationGraph.getAdjacencyList().getGraphVertexMap(), startingSetupNodeId),
+        orchestrationGraph);
+  }
+
+  @Override
+  public OrchestrationGraphDTO generatePartialOrchestrationGraphFromIdentifier(
+      String identifier, String planExecutionId) {
+    OrchestrationGraph orchestrationGraph = getCachedOrchestrationGraph(planExecutionId);
+    return generatePartialGraph(
+        obtainStartingIdFromIdentifier(orchestrationGraph.getAdjacencyList().getGraphVertexMap(), identifier),
         orchestrationGraph);
   }
 
@@ -137,7 +144,7 @@ public class GraphGenerationServiceImpl implements GraphGenerationService {
     return OrchestrationGraphDTOConverter.convertFrom(ephemeralOrchestrationGraph);
   }
 
-  private String obtainStartingId(Map<String, GraphVertex> graphVertexMap, String startingSetupNodeId) {
+  private String obtainStartingIdFromSetupNodeId(Map<String, GraphVertex> graphVertexMap, String startingSetupNodeId) {
     return graphVertexMap.values()
         .stream()
         .filter(vertex -> vertex.getPlanNodeId().equals(startingSetupNodeId))
@@ -149,6 +156,25 @@ public class GraphGenerationServiceImpl implements GraphGenerationService {
               if (list.size() > 1) {
                 throw new InvalidRequestException("Repeated setupNodeIds are not supported. Check the plan for ["
                     + startingSetupNodeId + "] planNodeId");
+              }
+
+              return list.get(0);
+            }))
+        .getUuid();
+  }
+
+  private String obtainStartingIdFromIdentifier(Map<String, GraphVertex> graphVertexMap, String identifier) {
+    return graphVertexMap.values()
+        .stream()
+        .filter(vertex -> vertex.getIdentifier().equals(identifier))
+        .collect(Collectors.collectingAndThen(Collectors.toList(),
+            list -> {
+              if (list.isEmpty()) {
+                throw new InvalidRequestException("No nodes found for identifier [" + identifier + "]");
+              }
+              if (list.size() > 1) {
+                throw new InvalidRequestException(
+                    "Repeated identifiers are not supported. Check the plan for [" + identifier + "] identifier");
               }
 
               return list.get(0);

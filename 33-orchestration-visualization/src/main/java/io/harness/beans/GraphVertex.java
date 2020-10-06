@@ -29,6 +29,7 @@ import java.util.List;
 public class GraphVertex implements Serializable {
   private String uuid;
   private String planNodeId;
+  private String identifier;
   private String name;
   private Long startTs;
   private Long endTs;

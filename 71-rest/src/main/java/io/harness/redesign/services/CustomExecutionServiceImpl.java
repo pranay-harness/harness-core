@@ -180,7 +180,13 @@ public class CustomExecutionServiceImpl implements CustomExecutionService {
 
   @Override
   public OrchestrationGraphDTO getPartialOrchestrationGraph(String startingSetupNodeId, String executionPlanId) {
-    return graphGenerationService.generatePartialOrchestrationGraph(startingSetupNodeId, executionPlanId);
+    return graphGenerationService.generatePartialOrchestrationGraphFromSetupNodeId(
+        startingSetupNodeId, executionPlanId);
+  }
+
+  @Override
+  public OrchestrationGraphDTO getPartialOrchestrationGraphFromIdentifier(String identifier, String executionPlanId) {
+    return graphGenerationService.generatePartialOrchestrationGraphFromIdentifier(identifier, executionPlanId);
   }
 
   @Override

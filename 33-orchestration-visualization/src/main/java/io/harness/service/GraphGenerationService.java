@@ -11,7 +11,9 @@ import io.harness.dto.OrchestrationGraphDTO;
 public interface GraphGenerationService {
   OrchestrationGraph getCachedOrchestrationGraph(String planExecutionId);
   void cacheOrchestrationGraph(OrchestrationGraph adjacencyListInternal);
-  OrchestrationGraphDTO generateOrchestrationGraph(String planExecutionId);
+  @Deprecated OrchestrationGraphDTO generateOrchestrationGraph(String planExecutionId);
   OrchestrationGraphDTO generateOrchestrationGraphV2(String planExecutionId);
-  OrchestrationGraphDTO generatePartialOrchestrationGraph(String startingSetupNodeId, String planExecutionId);
+  OrchestrationGraphDTO generatePartialOrchestrationGraphFromSetupNodeId(
+      String startingSetupNodeId, String planExecutionId);
+  OrchestrationGraphDTO generatePartialOrchestrationGraphFromIdentifier(String identifier, String planExecutionId);
 }
