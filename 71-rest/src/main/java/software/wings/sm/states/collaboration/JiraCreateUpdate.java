@@ -736,6 +736,14 @@ public class JiraCreateUpdate extends State implements SweepingOutputStateMixin 
           results.put("Field value missing", "Value must be provided for " + customField.getKey());
           continue;
         }
+        if (StringUtils.isNotBlank(customField.getKey()) && customField.getKey().startsWith("TimeTracking:")
+            && StringUtils.isNotBlank(customField.getValue().getFieldValue())
+            && !ExpressionEvaluator.containsVariablePattern(customField.getValue().getFieldValue())
+            && !customField.getValue().getFieldValue().matches("^(\\d+(w ?))?(\\d+(d ?))?(\\d+(h ?))?(\\d+(m ?))?$")) {
+          logger.info(String.format("Invalid value format for %s field", customField.getKey()));
+          results.put("Invalid value format provided for field: " + customField.getKey(),
+              "Verify provided value: " + customField.getValue().getFieldValue());
+        }
         if (!checkIfRequiredFieldsAreTemplatized()) {
           JiraCustomFieldValue value = customField.getValue();
           if (value.getFieldType() == null) {
