@@ -188,7 +188,7 @@ public class PreAggregatedBillingDataHelper {
     }
   }
 
-  private String fetchStringValue(FieldValueList row, Field field) {
+  public static String fetchStringValue(FieldValueList row, Field field) {
     Object value = row.get(field.getName()).getValue();
     if (value != null) {
       return value.toString();
@@ -196,7 +196,7 @@ public class PreAggregatedBillingDataHelper {
     return getDefaultValue(field);
   }
 
-  protected String getDefaultValue(Field field) {
+  protected static String getDefaultValue(Field field) {
     switch (field.getName()) {
       case entityConstantRegion:
       case entityConstantRawTableGcpRegion:
@@ -232,10 +232,10 @@ public class PreAggregatedBillingDataHelper {
     }
   }
 
-  private double getNumericValue(FieldValueList row, Field field) {
+  public static double getNumericValue(FieldValueList row, Field field) {
     FieldValue value = row.get(field.getName());
     if (!value.isNull()) {
-      return billingDataHelper.getRoundedDoubleValue(value.getNumericValue().doubleValue());
+      return Math.round(value.getNumericValue().doubleValue() * 100D) / 100D;
     }
     return 0;
   }
@@ -256,7 +256,7 @@ public class PreAggregatedBillingDataHelper {
     return 0;
   }
 
-  private List<TimeSeriesDataPoints> convertTimeSeriesPointsMapToList(
+  public static List<TimeSeriesDataPoints> convertTimeSeriesPointsMapToList(
       Map<Timestamp, List<QLBillingDataPoint>> timeSeriesDataPointsMap) {
     return timeSeriesDataPointsMap.entrySet()
         .stream()

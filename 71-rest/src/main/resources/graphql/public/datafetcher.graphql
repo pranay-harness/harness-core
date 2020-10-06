@@ -123,4 +123,7 @@ enum DataFetcherEnum {
   exportExecutions
   viewFilterStats
   views
+  viewEntityStats
+  viewTimeSeriesStats
+  viewTrendStats
 }

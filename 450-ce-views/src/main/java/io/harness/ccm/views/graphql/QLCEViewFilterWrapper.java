@@ -7,9 +7,9 @@ import lombok.experimental.FieldDefaults;
 
 @Value
 @Builder
-@FieldDefaults(level = AccessLevel.PUBLIC)
-public class QLCEViewTimeFilter {
-  QLCEViewFieldInput field;
-  QLCEViewTimeFilterOperator operator;
-  Number value;
+@FieldDefaults(level = AccessLevel.PRIVATE)
+public class QLCEViewFilterWrapper {
+  QLCEViewFilter idFilter;
+  QLCEViewTimeFilter timeFilter;
+  String viewFilter;
 }
