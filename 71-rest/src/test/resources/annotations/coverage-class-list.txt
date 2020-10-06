@@ -259,7 +259,7 @@
 33-orchestration-visualization/src/main/java/io/harness/event/NodeExecutionStatusUpdateEventHandlerV2.java
 33-orchestration-visualization/src/main/java/io/harness/event/OrchestrationEndEventHandler.java
 33-orchestration-visualization/src/main/java/io/harness/event/OrchestrationStartEventHandler.java
-33-orchestration-visualization/src/main/java/io/harness/generator/GraphGenerator.java
+33-orchestration-visualization/src/main/java/io/harness/generator/OrchestrationAdjacencyListGenerator.java
 33-orchestration-visualization/src/main/java/io/harness/registrars/OrchestrationVisualizationModuleEventHandlerRegistrar.java
 33-orchestration-visualization/src/main/java/io/harness/serializer/OrchestrationVisualizationModuleRegistrars.java
 33-orchestration-visualization/src/main/java/io/harness/serializer/kryo/OrchestrationVisualizationKryoRegistrar.java

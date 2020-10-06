@@ -37,7 +37,7 @@ import java.util.Map;
 @Redesign
 @OwnedBy(HarnessTeam.CDC)
 @Singleton
-public class GraphGenerator {
+public class OrchestrationAdjacencyListGenerator {
   @Inject private OutcomeService outcomeService;
 
   public OrchestrationAdjacencyListInternal generateAdjacencyList(
@@ -90,6 +90,17 @@ public class GraphGenerator {
             .build());
   }
 
+  public OrchestrationAdjacencyListInternal generatePartialAdjacencyList(
+      String startingId, OrchestrationAdjacencyListInternal cachedAdjacencyList) {
+    OrchestrationAdjacencyListInternal adjacencyListInternal = OrchestrationAdjacencyListInternal.builder()
+                                                                   .graphVertexMap(new HashMap<>())
+                                                                   .adjacencyMap(new HashMap<>())
+                                                                   .build();
+    populateAdjacencyListStartingFrom(startingId, cachedAdjacencyList, adjacencyListInternal);
+
+    return adjacencyListInternal;
+  }
+
   boolean isIdPresent(String id) {
     return EmptyPredicate.isNotEmpty(id);
   }
@@ -133,6 +144,25 @@ public class GraphGenerator {
 
     prevIds.add(nextEdgeId);
     edgeList.getNextIds().add(nextId);
+  }
+
+  private void populateAdjacencyListStartingFrom(String startingId, OrchestrationAdjacencyListInternal listToTraverse,
+      OrchestrationAdjacencyListInternal listToPopulate) {
+    EdgeListInternal edgeListInternal = listToTraverse.getAdjacencyMap().get(startingId);
+    if (edgeListInternal == null) {
+      return;
+    }
+
+    for (String edgeId : edgeListInternal.getEdges()) {
+      populateAdjacencyListStartingFrom(edgeId, listToTraverse, listToPopulate);
+    }
+
+    for (String nextId : edgeListInternal.getNextIds()) {
+      populateAdjacencyListStartingFrom(nextId, listToTraverse, listToPopulate);
+    }
+
+    listToPopulate.getGraphVertexMap().put(startingId, listToTraverse.getGraphVertexMap().get(startingId));
+    listToPopulate.getAdjacencyMap().put(startingId, listToTraverse.getAdjacencyMap().get(startingId));
   }
 
   private class GraphGeneratorSession {

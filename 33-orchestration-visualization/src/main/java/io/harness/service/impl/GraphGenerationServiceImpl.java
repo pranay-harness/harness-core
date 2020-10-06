@@ -11,6 +11,7 @@ import io.harness.annotations.Redesign;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.EphemeralOrchestrationGraph;
+import io.harness.beans.GraphVertex;
 import io.harness.beans.OrchestrationGraph;
 import io.harness.beans.converter.EphemeralOrchestrationGraphConverter;
 import io.harness.beans.internal.OrchestrationAdjacencyListInternal;
@@ -23,12 +24,13 @@ import io.harness.engine.executions.plan.PlanExecutionService;
 import io.harness.exception.InvalidRequestException;
 import io.harness.execution.NodeExecution;
 import io.harness.execution.PlanExecution;
-import io.harness.generator.GraphGenerator;
+import io.harness.generator.OrchestrationAdjacencyListGenerator;
 import io.harness.service.GraphGenerationService;
 import io.harness.skip.service.VertexSkipperService;
 
 import java.time.Duration;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.stream.Collectors;
 
@@ -39,7 +41,7 @@ public class GraphGenerationServiceImpl implements GraphGenerationService {
   @Inject private PlanExecutionService planExecutionService;
   @Inject private NodeExecutionService nodeExecutionService;
   @Inject private SpringMongoStore mongoStore;
-  @Inject private GraphGenerator graphGenerator;
+  @Inject private OrchestrationAdjacencyListGenerator orchestrationAdjacencyListGenerator;
   @Inject @Named("EngineExecutorService") private ExecutorService executorService;
   @Inject private VertexSkipperService vertexSkipperService;
 
@@ -71,7 +73,7 @@ public class GraphGenerationServiceImpl implements GraphGenerationService {
               .filter(node -> !adjacencyList.getGraphVertexMap().containsKey(node.getUuid()))
               .collect(Collectors.toList());
       if (!newNodeExecutions.isEmpty()) {
-        graphGenerator.populateAdjacencyList(adjacencyList, newNodeExecutions);
+        orchestrationAdjacencyListGenerator.populateAdjacencyList(adjacencyList, newNodeExecutions);
         cacheOrchestrationGraph(orchestrationGraph);
       }
       EphemeralOrchestrationGraph ephemeralOrchestrationGraph =
@@ -91,7 +93,7 @@ public class GraphGenerationServiceImpl implements GraphGenerationService {
             .endTs(planExecution.getEndTs())
             .status(planExecution.getStatus())
             .rootNodeIds(Lists.newArrayList(rootNodeId))
-            .adjacencyList(graphGenerator.generateAdjacencyList(rootNodeId, nodeExecutions, false))
+            .adjacencyList(orchestrationAdjacencyListGenerator.generateAdjacencyList(rootNodeId, nodeExecutions, false))
             .build();
 
     cacheOrchestrationGraph(graph);
@@ -112,22 +114,22 @@ public class GraphGenerationServiceImpl implements GraphGenerationService {
 
   @Override
   public OrchestrationGraphDTO generatePartialOrchestrationGraph(String startingSetupNodeId, String planExecutionId) {
-    PlanExecution planExecution = planExecutionService.get(planExecutionId);
-    List<NodeExecution> nodeExecutions = nodeExecutionService.fetchNodeExecutionsWithoutOldRetries(planExecutionId);
-    if (isEmpty(nodeExecutions)) {
-      throw new InvalidRequestException("No nodes found for planExecutionId [" + planExecutionId + "]");
-    }
+    OrchestrationGraph orchestrationGraph = getCachedOrchestrationGraph(planExecutionId);
+    return generatePartialGraph(
+        obtainStartingId(orchestrationGraph.getAdjacencyList().getGraphVertexMap(), startingSetupNodeId),
+        orchestrationGraph);
+  }
 
-    String startingNodeId = obtainStartingNodeExId(nodeExecutions, startingSetupNodeId);
-
+  private OrchestrationGraphDTO generatePartialGraph(String startId, OrchestrationGraph orchestrationGraph) {
     EphemeralOrchestrationGraph ephemeralOrchestrationGraph =
         EphemeralOrchestrationGraph.builder()
-            .planExecutionId(planExecution.getUuid())
-            .startTs(planExecution.getStartTs())
-            .endTs(planExecution.getEndTs())
-            .status(planExecution.getStatus())
-            .rootNodeIds(Lists.newArrayList(startingNodeId))
-            .adjacencyList(graphGenerator.generateAdjacencyList(startingNodeId, nodeExecutions, true))
+            .planExecutionId(orchestrationGraph.getPlanExecutionId())
+            .rootNodeIds(Lists.newArrayList(startId))
+            .startTs(orchestrationGraph.getStartTs())
+            .endTs(orchestrationGraph.getEndTs())
+            .status(orchestrationGraph.getStatus())
+            .adjacencyList(orchestrationAdjacencyListGenerator.generatePartialAdjacencyList(
+                startId, orchestrationGraph.getAdjacencyList()))
             .build();
 
     vertexSkipperService.removeSkippedVertices(ephemeralOrchestrationGraph);
@@ -135,9 +137,10 @@ public class GraphGenerationServiceImpl implements GraphGenerationService {
     return OrchestrationGraphDTOConverter.convertFrom(ephemeralOrchestrationGraph);
   }
 
-  private String obtainStartingNodeExId(List<NodeExecution> nodeExecutions, String startingSetupNodeId) {
-    return nodeExecutions.stream()
-        .filter(node -> node.getAmbiance().obtainCurrentLevel().getSetupId().equals(startingSetupNodeId))
+  private String obtainStartingId(Map<String, GraphVertex> graphVertexMap, String startingSetupNodeId) {
+    return graphVertexMap.values()
+        .stream()
+        .filter(vertex -> vertex.getPlanNodeId().equals(startingSetupNodeId))
         .collect(Collectors.collectingAndThen(Collectors.toList(),
             list -> {
               if (list.isEmpty()) {

@@ -15,7 +15,7 @@ import io.harness.engine.outcomes.OutcomeService;
 import io.harness.execution.NodeExecution;
 import io.harness.execution.events.AsyncOrchestrationEventHandler;
 import io.harness.execution.events.OrchestrationEvent;
-import io.harness.generator.GraphGenerator;
+import io.harness.generator.OrchestrationAdjacencyListGenerator;
 import io.harness.service.GraphGenerationService;
 import lombok.extern.slf4j.Slf4j;
 
@@ -27,7 +27,7 @@ public class NodeExecutionStatusUpdateEventHandlerV2 implements AsyncOrchestrati
   @Inject private NodeExecutionService nodeExecutionService;
   @Inject private GraphGenerationService graphGenerationService;
   @Inject private OutcomeService outcomeService;
-  @Inject private GraphGenerator graphGenerator;
+  @Inject private OrchestrationAdjacencyListGenerator orchestrationAdjacencyListGenerator;
 
   @Override
   public void handleEvent(OrchestrationEvent event) {
@@ -61,7 +61,7 @@ public class NodeExecutionStatusUpdateEventHandlerV2 implements AsyncOrchestrati
     } else {
       logger.info("Adding graph vertex with id [{}] and status [{}]. PlanExecutionId: [{}]", nodeExecutionId,
           nodeExecution.getStatus(), ambiance.getPlanExecutionId());
-      graphGenerator.populateAdjacencyList(orchestrationGraph.getAdjacencyList(), nodeExecution);
+      orchestrationAdjacencyListGenerator.populateAdjacencyList(orchestrationGraph.getAdjacencyList(), nodeExecution);
     }
     graphGenerationService.cacheOrchestrationGraph(orchestrationGraph);
   }
