@@ -1,5 +1,5 @@
 # Filename: Dockerfile
-FROM python:3.6.11-slim
+FROM python:3.6.12-slim
 CMD ["/bin/bash"]
 
 #Update BaseOS packages
