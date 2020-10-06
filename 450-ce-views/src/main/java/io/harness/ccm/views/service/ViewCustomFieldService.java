@@ -10,5 +10,7 @@ public interface ViewCustomFieldService {
 
   List<ViewField> getCustomFields(String accountId);
 
+  List<ViewField> getCustomFieldsPerView(String viewId);
+
   ViewCustomField get(String uuid);
 }

@@ -11,6 +11,7 @@ import io.harness.ccm.views.service.ViewCustomFieldService;
 import io.harness.exception.InvalidRequestException;
 import lombok.extern.slf4j.Slf4j;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -44,6 +45,20 @@ public class ViewCustomFieldServiceImpl implements ViewCustomFieldService {
                    .fieldName(viewCustomField.getName())
                    .build())
         .collect(Collectors.toList());
+  }
+
+  @Override
+  public List<ViewField> getCustomFieldsPerView(String viewId) {
+    List<ViewCustomField> viewCustomFields = viewCustomFieldDao.findByViewId(viewId);
+    List<ViewField> viewFieldList = new ArrayList<>();
+    for (ViewCustomField field : viewCustomFields) {
+      viewFieldList.add(ViewField.builder()
+                            .fieldId(field.getUuid())
+                            .fieldName(field.getName())
+                            .identifier(ViewFieldIdentifier.CUSTOM)
+                            .build());
+    }
+    return viewFieldList;
   }
 
   public boolean validateViewCustomField(ViewCustomField viewCustomField) {

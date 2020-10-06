@@ -14,9 +14,14 @@ import com.healthmarketscience.sqlbuilder.SelectQuery;
 import com.healthmarketscience.sqlbuilder.custom.postgresql.PgLimitClause;
 import com.healthmarketscience.sqlbuilder.custom.postgresql.PgOffsetClause;
 import io.harness.ccm.views.dao.ViewCustomFieldDao;
+import io.harness.ccm.views.entities.ViewCondition;
 import io.harness.ccm.views.entities.ViewCustomField;
 import io.harness.ccm.views.entities.ViewField;
 import io.harness.ccm.views.entities.ViewFieldIdentifier;
+import io.harness.ccm.views.entities.ViewIdCondition;
+import io.harness.ccm.views.entities.ViewIdOperator;
+import io.harness.ccm.views.entities.ViewRule;
+import io.harness.ccm.views.entities.ViewTimeGranularity;
 import io.harness.exception.InvalidRequestException;
 import lombok.extern.slf4j.Slf4j;
 
@@ -32,10 +37,11 @@ public class ViewsQueryBuilder {
   @Inject ViewCustomFieldDao viewCustomFieldDao;
   private static final String leftJoinLabels = " LEFT JOIN UNNEST(labels) as labels";
   private static final String distinct = " DISTINCT(%s)";
+  private static final String aliasStartTimeMaxMin = "%s_%s";
   private static final String labelsFilter = "CONCAT(labels.key, ':', labels.value)";
 
-  public SelectQuery getQuery(List<QLCEViewRule> rules, List<QLCEViewFilter> filters,
-      List<QLCEViewTimeFilter> timeFilters, List<QLCEViewGroupBy> groupByList, List<QLCEViewAggregation> aggregations,
+  public SelectQuery getQuery(List<ViewRule> rules, List<QLCEViewFilter> filters, List<QLCEViewTimeFilter> timeFilters,
+      List<QLCEViewGroupBy> groupByList, List<QLCEViewAggregation> aggregations,
       List<QLCEViewSortCriteria> sortCriteriaList, List<ViewField> customFields) {
     SelectQuery selectQuery = new SelectQuery();
     boolean isLabelsPresent = false;
@@ -86,7 +92,7 @@ public class ViewsQueryBuilder {
       decorateQueryWithSortCriteria(selectQuery, sortCriteriaList);
     }
 
-    return null;
+    return selectQuery;
   }
 
   public ViewsQueryMetadata getFilterValuesQuery(
@@ -189,14 +195,15 @@ public class ViewsQueryBuilder {
   }
 
   private boolean evaluateLabelsPresent(
-      List<QLCEViewRule> rules, List<QLCEViewFilter> filters, List<QLCEViewFieldInput> groupByEntity) {
+      List<ViewRule> rules, List<QLCEViewFilter> filters, List<QLCEViewFieldInput> groupByEntity) {
     boolean labelFilterPresent =
         filters.stream().anyMatch(f -> f.getField().getIdentifier() == ViewFieldIdentifier.LABEL);
     boolean labelConditionPresent = false;
 
-    for (QLCEViewRule rule : rules) {
+    for (ViewRule rule : rules) {
       labelConditionPresent = labelConditionPresent
-          || rule.getConditions().stream().anyMatch(c -> c.getField().getIdentifier() == ViewFieldIdentifier.LABEL);
+          || rule.getViewConditions().stream().anyMatch(
+                 c -> ((ViewIdCondition) c).getViewField().getIdentifier() == ViewFieldIdentifier.LABEL);
     }
 
     boolean labelGroupByPresent = groupByEntity.stream().anyMatch(g -> g.getIdentifier() == ViewFieldIdentifier.LABEL);
@@ -211,7 +218,17 @@ public class ViewsQueryBuilder {
   }
 
   private void addOrderBy(SelectQuery selectQuery, QLCEViewSortCriteria sortCriteria) {
-    Object sortKey = getSQLObjectFromField(sortCriteria.getSortType());
+    Object sortKey;
+    switch (sortCriteria.getSortType()) {
+      case COST:
+        sortKey = ViewsMetaDataFields.COST.getAlias();
+        break;
+      case TIME:
+        sortKey = ViewsMetaDataFields.START_TIME.getAlias();
+        break;
+      default:
+        throw new InvalidRequestException("Sort type not supported");
+    }
     OrderObject.Dir dir =
         sortCriteria.getSortOrder() == QLCESortOrder.ASCENDING ? OrderObject.Dir.ASCENDING : OrderObject.Dir.DESCENDING;
     selectQuery.addCustomOrdering(sortKey, dir);
@@ -230,12 +247,22 @@ public class ViewsQueryBuilder {
           functionCall.addCustomParams(new CustomSql(ViewsMetaDataFields.COST.getFieldName())),
           ViewsMetaDataFields.COST.getFieldName()));
     }
+    if (aggregation.getColumnName().equals(ViewsMetaDataFields.START_TIME.getFieldName())) {
+      selectQuery.addCustomColumns(Converter.toCustomColumnSqlObject(
+          functionCall.addCustomParams(new CustomSql(ViewsMetaDataFields.START_TIME.getFieldName())),
+          String.format(
+              aliasStartTimeMaxMin, ViewsMetaDataFields.START_TIME.getFieldName(), aggregation.getOperationType())));
+    }
   }
 
   private FunctionCall getFunctionCallType(QLCEViewAggregateOperation operationType) {
     switch (operationType) {
       case SUM:
         return FunctionCall.sum();
+      case MAX:
+        return FunctionCall.max();
+      case MIN:
+        return FunctionCall.min();
       default:
         return null;
     }
@@ -264,25 +291,63 @@ public class ViewsQueryBuilder {
                                                      .filter(g -> g.getTimeTruncGroupBy() != null)
                                                      .map(QLCEViewGroupBy::getTimeTruncGroupBy)
                                                      .findFirst();
-      return first.orElse(QLCEViewTimeTruncGroupBy.builder().resolution(QLCEViewTimeGroupType.DAY).build());
+      return first.orElse(null);
     }
     return null;
   }
 
-  private Condition getConsolidatedRuleCondition(List<QLCEViewRule> rules) {
+  private Condition getConsolidatedRuleCondition(List<ViewRule> rules) {
     List<Condition> conditionList = new ArrayList<>();
-    for (QLCEViewRule rule : rules) {
+    for (ViewRule rule : rules) {
       conditionList.add(getPerRuleCondition(rule));
     }
     return getSqlOrCondition(conditionList);
   }
 
-  private Condition getPerRuleCondition(QLCEViewRule rule) {
+  private Condition getPerRuleCondition(ViewRule rule) {
     List<Condition> conditionList = new ArrayList<>();
-    for (QLCEViewFilter filter : rule.getConditions()) {
-      conditionList.add(getCondition(filter));
+    for (ViewCondition condition : rule.getViewConditions()) {
+      conditionList.add(getCondition(mapConditionToFilter((ViewIdCondition) condition)));
     }
     return getSqlAndCondition(conditionList);
+  }
+
+  private QLCEViewFilter mapConditionToFilter(ViewIdCondition condition) {
+    return QLCEViewFilter.builder()
+        .field(getViewFieldInput(condition.getViewField()))
+        .operator(mapViewIdOperatorToQLCEViewFilterOperator(condition.getViewOperator()))
+        .values(getStringArray(condition.getValues()))
+        .build();
+  }
+
+  private String[] getStringArray(List<String> values) {
+    return values.toArray(new String[values.size()]);
+  }
+
+  private QLCEViewFilterOperator mapViewIdOperatorToQLCEViewFilterOperator(ViewIdOperator operator) {
+    if (operator.equals(ViewIdOperator.IN)) {
+      return QLCEViewFilterOperator.IN;
+    } else if (operator.equals(ViewIdOperator.NOT_IN)) {
+      return QLCEViewFilterOperator.NOT_IN;
+    }
+    return null;
+  }
+
+  public QLCEViewTimeGroupType mapViewTimeGranularityToQLCEViewTimeGroupType(ViewTimeGranularity timeGranularity) {
+    if (timeGranularity.equals(ViewTimeGranularity.DAY)) {
+      return QLCEViewTimeGroupType.DAY;
+    } else if (timeGranularity.equals(ViewTimeGranularity.MONTH)) {
+      return QLCEViewTimeGroupType.MONTH;
+    }
+    return null;
+  }
+
+  public QLCEViewFieldInput getViewFieldInput(ViewField field) {
+    return QLCEViewFieldInput.builder()
+        .fieldId(field.getFieldId())
+        .fieldName(field.getFieldName())
+        .identifier(field.getIdentifier())
+        .build();
   }
 
   private static Condition getSqlAndCondition(List<Condition> conditionList) {
@@ -387,6 +452,8 @@ public class ViewsQueryBuilder {
         return BinaryCondition.equalTo(conditionKey, filter.getValues()[0]);
       case IN:
         return new InCondition(conditionKey, (Object[]) filter.getValues());
+      case NOT_IN:
+        return new InCondition(conditionKey, (Object[]) filter.getValues()).setNegate(true);
       default:
         throw new InvalidRequestException("Invalid View Filter operator: " + operator);
     }

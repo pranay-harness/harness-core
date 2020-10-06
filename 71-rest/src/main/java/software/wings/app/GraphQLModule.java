@@ -14,8 +14,11 @@ import io.harness.ccm.setup.graphql.EksClusterStatsDataFetcher;
 import io.harness.ccm.setup.graphql.InfraAccountConnectionDataFetcher;
 import io.harness.ccm.setup.graphql.LinkedAccountStatsDataFetcher;
 import io.harness.ccm.setup.graphql.OverviewPageStatsDataFetcher;
+import io.harness.ccm.views.graphql.ViewEntityStatsDataFetcher;
 import io.harness.ccm.views.graphql.ViewFieldsDataFetcher;
 import io.harness.ccm.views.graphql.ViewFilterStatsDataFetcher;
+import io.harness.ccm.views.graphql.ViewTimeSeriesStatsDataFetcher;
+import io.harness.ccm.views.graphql.ViewTrendStatsDataFetcher;
 import io.harness.ccm.views.graphql.ViewsDataFetcher;
 import org.dataloader.MappedBatchLoader;
 import org.hibernate.validator.constraints.NotBlank;
@@ -362,6 +365,10 @@ public class GraphQLModule extends AbstractModule {
     bindDataFetcherWithAnnotation(StartExecutionDataFetcher.class);
     bindDataFetcherWithAnnotation(ExecutionInputsDataFetcher.class);
     bindDataFetcherWithAnnotation(ExportExecutionsDataFetcher.class);
+    bindDataFetcherWithAnnotation(ViewEntityStatsDataFetcher.class);
+    bindDataFetcherWithAnnotation(ViewFilterStatsDataFetcher.class);
+    bindDataFetcherWithAnnotation(ViewTimeSeriesStatsDataFetcher.class);
+    bindDataFetcherWithAnnotation(ViewTrendStatsDataFetcher.class);
     bindDataFetcherWithAnnotation(ViewFilterStatsDataFetcher.class);
   }
 

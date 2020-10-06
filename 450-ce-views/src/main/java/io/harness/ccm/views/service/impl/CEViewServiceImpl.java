@@ -34,6 +34,12 @@ public class CEViewServiceImpl implements CEViewService {
     }
     return true;
   }
+
+  @Override
+  public CEView get(String uuid) {
+    return ceViewDao.get(uuid);
+  }
+
   @Override
   public List<QLCEView> getAllViews(String accountId) {
     List<CEView> viewList = ceViewDao.findByAccountId(accountId);

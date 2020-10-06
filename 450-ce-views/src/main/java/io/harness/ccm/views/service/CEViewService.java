@@ -7,5 +7,6 @@ import java.util.List;
 
 public interface CEViewService {
   CEView save(CEView ceView);
+  CEView get(String uuid);
   List<QLCEView> getAllViews(String accountId);
 }

@@ -3,6 +3,8 @@ package io.harness.ccm.views.graphql;
 public enum ViewsMetaDataFields {
   TIME_GRANULARITY("time_granularity", "time_granularity"),
   START_TIME("startTime", "startTime"),
+  START_TIME_MIN("startTime", "startTime_MIN"),
+  START_TIME_MAX("startTime", "startTime_MAX"),
   COST("cost", "cost"),
   LABEL_KEY("labels.key", "labels_key"),
   LABEL_VALUE("labels.value", "labels_value");

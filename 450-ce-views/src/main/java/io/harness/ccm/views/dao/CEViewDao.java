@@ -19,6 +19,10 @@ public class CEViewDao {
     return hPersistence.save(ceView) != null;
   }
 
+  public CEView get(String uuid) {
+    return hPersistence.createQuery(CEView.class).filter(CEViewKeys.uuid, uuid).get();
+  }
+
   public CEView findByName(String accountId, String name) {
     return hPersistence.createQuery(CEView.class)
         .filter(CEViewKeys.accountId, accountId)

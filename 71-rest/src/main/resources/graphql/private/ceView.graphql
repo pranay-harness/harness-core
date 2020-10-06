@@ -2,6 +2,31 @@ extend type Query {
   viewFields: viewFieldData @dataFetcher(name: viewFields)
   viewFilterStats(limit: Int, offset: Int, filters: [CEViewFilter]): viewFiterData @dataFetcher(name: viewFilterStats)
   views: ViewsData @dataFetcher(name: views)
+
+  viewEntityStats(
+    limit: Int
+    offset: Int
+    filters: [CEViewFilterWrapper]
+    aggregateFunction: [CEViewAggregation]
+    groupBy: [CEViewGroupBy]
+    sortCriteria: [CEViewSortCriteria]
+  ): ViewEntityStatsData @dataFetcher(name: viewEntityStats)
+
+  viewTimeSeriesStats(
+    limit: Int
+    offset: Int
+    filters: [CEViewFilterWrapper]
+    aggregateFunction: [CEViewAggregation]
+    groupBy: [CEViewGroupBy]
+    sortCriteria: [CEViewSortCriteria]
+  ): ViewTimeSeriesData @dataFetcher(name: viewTimeSeriesStats)
+
+  viewTrendStats(filters: [CEViewFilterWrapper], aggregateFunction: [CEViewAggregation]): ViewTrendStatsData
+    @dataFetcher(name: viewTrendStats)
+}
+
+type ViewTrendStatsData {
+  cost: BillingStatsInfo
 }
 
 type viewFiterData {
@@ -45,6 +70,12 @@ input CEViewRule {
   conditions: [CEViewFilter]!
 }
 
+input CEViewFilterWrapper {
+  timeFilter: CEViewTimeFilter
+  idFilter: CEViewFilter
+  viewFilter: String
+}
+
 input CEViewTimeFilter {
   field: viewFieldInput!
   operator: ViewTimeFilterOperator!
@@ -71,6 +102,7 @@ enum ViewTimeFilterOperator {
 enum ViewFilterOperator {
   EQUALS
   IN
+  NOT_IN
 }
 
 input CEViewAggregation {
@@ -80,6 +112,8 @@ input CEViewAggregation {
 
 enum ViewAggregateOperation {
   SUM
+  MAX
+  MIN
 }
 
 input CEViewGroupBy {
@@ -97,8 +131,13 @@ enum ViewTimeGroupType {
 }
 
 input CEViewSortCriteria {
-  sortType: viewFieldInput
+  sortType: ViewSortType
   sortOrder: SortOrder
+}
+
+enum ViewSortType {
+  TIME
+  COST
 }
 
 enum ViewFieldIdentifier {
@@ -123,4 +162,8 @@ type viewField {
   fieldId: String
   fieldName: String
   identifier: ViewFieldIdentifier
+}
+
+type ViewTimeSeriesData {
+  stats: [TimeSeriesDataPoints]
 }
