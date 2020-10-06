@@ -48,7 +48,6 @@ import io.dropwizard.setup.Bootstrap;
 import io.dropwizard.setup.Environment;
 import io.federecio.dropwizard.swagger.SwaggerBundle;
 import io.federecio.dropwizard.swagger.SwaggerBundleConfiguration;
-import io.harness.NgManagerServiceDriverModule;
 import io.harness.artifact.ArtifactCollectionPTaskServiceClient;
 import io.harness.cache.CacheModule;
 import io.harness.ccm.CEPerpetualTaskHandler;
@@ -96,7 +95,6 @@ import io.harness.ng.core.CorrelationFilter;
 import io.harness.perpetualtask.AwsAmiInstanceSyncPerpetualTaskClient;
 import io.harness.perpetualtask.AwsCodeDeployInstanceSyncPerpetualTaskClient;
 import io.harness.perpetualtask.CustomDeploymentInstanceSyncClient;
-import io.harness.perpetualtask.ForwardingPerpetualTaskServiceClient;
 import io.harness.perpetualtask.PerpetualTaskService;
 import io.harness.perpetualtask.PerpetualTaskServiceClientRegistry;
 import io.harness.perpetualtask.PerpetualTaskServiceImpl;
@@ -111,7 +109,6 @@ import io.harness.perpetualtask.instancesync.PcfInstanceSyncPerpetualTaskClient;
 import io.harness.perpetualtask.instancesync.SpotinstAmiInstanceSyncPerpetualTaskClient;
 import io.harness.perpetualtask.internal.PerpetualTaskRecordHandler;
 import io.harness.perpetualtask.k8s.watch.K8sWatchPerpetualTaskServiceClient;
-import io.harness.perpetualtask.remote.RemotePerpetualTaskType;
 import io.harness.persistence.HPersistence;
 import io.harness.persistence.Store;
 import io.harness.queue.QueueListener;
@@ -438,11 +435,6 @@ public class WingsApplication extends Application<MainConfiguration> {
     modules.add(new GrpcServiceConfigurationModule(
         configuration.getGrpcServerConfig(), configuration.getPortal().getJwtNextGenManagerSecret()));
 
-    if (configuration.isNgManagerAvailable()) {
-      modules.add(new NgManagerServiceDriverModule(
-          configuration.getGrpcClientConfig(), "manager", configuration.getPortal().getJwtNextGenManagerSecret()));
-    }
-
     modules.add(new ProviderModule() {
       @Provides
       @Singleton
@@ -483,7 +475,6 @@ public class WingsApplication extends Application<MainConfiguration> {
     registerObservers(injector);
 
     registerInprocPerpetualTaskServiceClients(injector);
-    registerRemotePerpetualTaskServiceClients(injector);
 
     registerCronJobs(injector);
 
@@ -606,20 +597,6 @@ public class WingsApplication extends Application<MainConfiguration> {
         injector.getInstance(CustomDeploymentInstanceSyncClient.class));
     clientRegistry.registerClient(
         PerpetualTaskType.MANIFEST_COLLECTION, injector.getInstance(ManifestCollectionPTaskServiceClient.class));
-  }
-
-  private void registerRemotePerpetualTaskServiceClients(Injector injector) {
-    final PerpetualTaskServiceClientRegistry clientRegistry =
-        injector.getInstance(Key.get(PerpetualTaskServiceClientRegistry.class));
-
-    asList(RemotePerpetualTaskType.values()).forEach(remotePerpetualTaskType -> {
-      String taskType = remotePerpetualTaskType.getTaskType();
-      String serviceId = remotePerpetualTaskType.getOwnerServiceId();
-      final ForwardingPerpetualTaskServiceClient instance =
-          new ForwardingPerpetualTaskServiceClient(taskType, serviceId);
-      injector.injectMembers(instance);
-      clientRegistry.registerClient(taskType, instance);
-    });
   }
 
   private void registerDatadogPublisherIfEnabled(MainConfiguration configuration) {
