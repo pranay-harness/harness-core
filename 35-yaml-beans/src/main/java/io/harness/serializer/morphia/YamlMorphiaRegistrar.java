@@ -5,6 +5,8 @@ import io.harness.morphia.MorphiaRegistrarHelperPut;
 import io.harness.yaml.core.intfc.Pipeline;
 import io.harness.yaml.core.intfc.WithIdentifier;
 import io.harness.yaml.core.nonyaml.WithNonYamlInfo;
+import io.harness.yaml.core.variables.NumberNGVariable;
+import io.harness.yaml.core.variables.StringNGVariable;
 
 import java.util.Set;
 
@@ -18,6 +20,7 @@ public class YamlMorphiaRegistrar implements MorphiaRegistrar {
 
   @Override
   public void registerImplementationClasses(MorphiaRegistrarHelperPut h, MorphiaRegistrarHelperPut w) {
-    // nothing to registrer
+    h.put("yaml.core.variables.StringNGVariable", StringNGVariable.class);
+    h.put("yaml.core.variables.NumberNGVariable", NumberNGVariable.class);
   }
 }

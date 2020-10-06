@@ -4,6 +4,7 @@ import io.harness.beans.ParameterField;
 import io.harness.cdng.pipeline.NgPipeline.NgPipelineKeys;
 import io.harness.cdng.visitor.helpers.cdpipeline.CDPipelineVisitorHelper;
 import io.harness.common.SwaggerConstants;
+import io.harness.data.structure.EmptyPredicate;
 import io.harness.data.validator.EntityIdentifier;
 import io.harness.data.validator.EntityName;
 import io.harness.mongo.index.Field;
@@ -18,6 +19,7 @@ import io.harness.walktree.visitor.validation.modes.PreInputSet;
 import io.harness.yaml.core.Tag;
 import io.harness.yaml.core.auxiliary.intfc.StageElementWrapper;
 import io.harness.yaml.core.intfc.Pipeline;
+import io.harness.yaml.core.variables.NGVariable;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Builder;
 import lombok.Data;
@@ -43,6 +45,8 @@ public class NgPipeline implements Pipeline, Visitable {
 
   @ApiModelProperty(dataType = SwaggerConstants.STRING_CLASSPATH) ParameterField<String> description;
   List<Tag> tags;
+
+  List<NGVariable> variables;
   @Singular List<StageElementWrapper> stages;
 
   // For Visitor Framework Impl
@@ -51,7 +55,12 @@ public class NgPipeline implements Pipeline, Visitable {
   @Override
   public VisitableChildren getChildrenToWalk() {
     VisitableChildren visitableChildren = VisitableChildren.builder().build();
-    stages.forEach(stage -> visitableChildren.add("stages", stage));
+    if (EmptyPredicate.isNotEmpty(variables)) {
+      variables.forEach(variable -> visitableChildren.add("variables", variable));
+    }
+    if (EmptyPredicate.isNotEmpty(stages)) {
+      stages.forEach(stage -> visitableChildren.add("stages", stage));
+    }
     return visitableChildren;
   }
 

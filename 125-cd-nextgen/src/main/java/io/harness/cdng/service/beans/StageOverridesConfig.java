@@ -11,6 +11,7 @@ import io.harness.walktree.beans.LevelNode;
 import io.harness.walktree.beans.VisitableChildren;
 import io.harness.walktree.visitor.SimpleVisitorHelper;
 import io.harness.walktree.visitor.Visitable;
+import io.harness.yaml.core.variables.NGVariable;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Builder;
 import lombok.Value;
@@ -21,6 +22,10 @@ import java.util.List;
 @Builder
 @SimpleVisitorHelper(helperClass = StageOverridesVisitorHelper.class)
 public class StageOverridesConfig implements Visitable {
+  List<NGVariable> variables;
+  @ApiModelProperty(dataType = SwaggerConstants.STRING_LIST_CLASSPATH)
+  ParameterField<List<String>> useVariableOverrideSets;
+
   @ApiModelProperty(dataType = SwaggerConstants.STRING_LIST_CLASSPATH)
   ParameterField<List<String>> useArtifactOverrideSets;
   ArtifactListConfig artifacts;
@@ -35,6 +40,10 @@ public class StageOverridesConfig implements Visitable {
   @Override
   public VisitableChildren getChildrenToWalk() {
     VisitableChildren children = VisitableChildren.builder().build();
+
+    if (EmptyPredicate.isNotEmpty(variables)) {
+      variables.forEach(ngVariable -> children.add("variables", ngVariable));
+    }
     children.add("artifacts", artifacts);
     if (EmptyPredicate.isNotEmpty(manifests)) {
       manifests.forEach(manifest -> children.add("manifests", manifest));

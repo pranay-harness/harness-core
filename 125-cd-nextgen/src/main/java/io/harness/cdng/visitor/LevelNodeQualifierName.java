@@ -7,7 +7,7 @@ import io.harness.walktree.visitor.utilities.VisitorParentPathUtils;
 public interface LevelNodeQualifierName {
   String ARTIFACT_SPEC_WRAPPER = "primary";
   String ARTIFACT_LIST_CONFIG = "artifacts";
-  String ARTIFACT_OVERRIDE_SETS = "overrideSet";
+  String ARTIFACT_OVERRIDE_SETS = "artifactOverrideSets";
   String SIDECAR_ARTIFACT_CONFIG = "sidecar";
   String ENVIRONMENT_YAML = "environment";
   String INFRASTRUCTURE_DEF = "infrastructureDefinition";
@@ -17,7 +17,7 @@ public interface LevelNodeQualifierName {
   String K8S_ROLLING_DEPLOY = StepSpecTypeConstants.K8S_ROLLING_DEPLOY;
   String MANIFEST_LIST_CONFIG = "manifests";
   String MANIFEST_CONFIG = "manifest";
-  String MANIFEST_OVERRIDE_SETS = "overrideSet";
+  String MANIFEST_OVERRIDE_SETS = "manifestOverrideSets";
   String STORE_CONFIG_WRAPPER = "store";
   String K8S_MANIFEST = ManifestType.K8Manifest;
   String SPEC = "spec";
@@ -30,6 +30,6 @@ public interface LevelNodeQualifierName {
   String SERVICE_USE_FROM_STAGE = "useFromStage";
   String SERVICE_USE_FROM_STAGE_OVERRIDES = "overrides";
   String STAGE_OVERRIDES_CONFIG = "stageOverrides";
-  String STAGE_VARIABLES = "stageVariables";
   String PATH_CONNECTOR = VisitorParentPathUtils.PATH_CONNECTOR;
+  String VARIABLE_OVERRIDE_SETS = "variableOverrideSets";
 }

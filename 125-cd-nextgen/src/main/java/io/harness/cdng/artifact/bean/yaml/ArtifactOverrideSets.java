@@ -30,6 +30,9 @@ public class ArtifactOverrideSets implements OverrideSetsWrapper, Visitable {
   }
   @Override
   public LevelNode getLevelNode() {
-    return LevelNode.builder().qualifierName(LevelNodeQualifierName.ARTIFACT_OVERRIDE_SETS).build();
+    return LevelNode.builder()
+        .qualifierName(
+            LevelNodeQualifierName.ARTIFACT_OVERRIDE_SETS + LevelNodeQualifierName.PATH_CONNECTOR + identifier)
+        .build();
   }
 }

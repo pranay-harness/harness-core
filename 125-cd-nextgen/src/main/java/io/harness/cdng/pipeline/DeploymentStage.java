@@ -4,20 +4,23 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import io.harness.beans.ParameterField;
 import io.harness.cdng.service.beans.ServiceConfig;
-import io.harness.cdng.variables.StageVariables;
 import io.harness.cdng.visitor.LevelNodeQualifierName;
 import io.harness.cdng.visitor.helpers.deploymentstage.DeploymentStageVisitorHelper;
 import io.harness.common.SwaggerConstants;
+import io.harness.data.structure.EmptyPredicate;
 import io.harness.pipeline.executions.NGStageType;
 import io.harness.walktree.beans.LevelNode;
 import io.harness.walktree.beans.VisitableChildren;
 import io.harness.walktree.visitor.SimpleVisitorHelper;
 import io.harness.walktree.visitor.Visitable;
 import io.harness.yaml.core.ExecutionElement;
+import io.harness.yaml.core.variables.NGVariable;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Builder;
 import lombok.Data;
 import lombok.Getter;
+
+import java.util.List;
 
 @Data
 @Builder
@@ -29,10 +32,10 @@ public class DeploymentStage implements CDStage, Visitable {
 
   @Getter(onMethod = @__(@JsonIgnore)) @JsonIgnore String identifier;
   @Getter(onMethod = @__(@JsonIgnore)) @JsonIgnore String name;
+  List<NGVariable> variables;
   ServiceConfig service;
   PipelineInfrastructure infrastructure;
   ExecutionElement execution;
-  StageVariables stageVariables;
   @ApiModelProperty(dataType = SwaggerConstants.STRING_CLASSPATH) ParameterField<String> skipCondition;
 
   // For Visitor Framework Impl
@@ -41,11 +44,13 @@ public class DeploymentStage implements CDStage, Visitable {
   @Override
   public VisitableChildren getChildrenToWalk() {
     VisitableChildren children = VisitableChildren.builder().build();
-    // the ordering [service,infrastructure, execution] is necessary
+    // the ordering [variables, service,infrastructure, execution] is necessary
+    if (EmptyPredicate.isNotEmpty(variables)) {
+      variables.forEach(ngVariable -> children.add("variables", ngVariable));
+    }
     children.add("service", service);
     children.add("infrastructure", infrastructure);
     children.add("execution", execution);
-    children.add("stageVariables", stageVariables);
     return children;
   }
 

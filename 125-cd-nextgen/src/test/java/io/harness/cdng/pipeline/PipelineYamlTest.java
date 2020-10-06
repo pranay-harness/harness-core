@@ -21,12 +21,16 @@ import io.harness.cdng.manifest.yaml.ManifestConfigWrapper;
 import io.harness.cdng.service.beans.KubernetesServiceSpec;
 import io.harness.cdng.service.beans.ServiceConfig;
 import io.harness.cdng.service.beans.StageOverridesConfig;
+import io.harness.cdng.variables.beans.NGVariableOverrideSets;
 import io.harness.rule.Owner;
 import io.harness.yaml.core.ParallelStepElement;
 import io.harness.yaml.core.StageElement;
 import io.harness.yaml.core.StepElement;
 import io.harness.yaml.core.auxiliary.intfc.ExecutionWrapper;
 import io.harness.yaml.core.auxiliary.intfc.StageElementWrapper;
+import io.harness.yaml.core.variables.NGVariableType;
+import io.harness.yaml.core.variables.NumberNGVariable;
+import io.harness.yaml.core.variables.StringNGVariable;
 import io.harness.yaml.utils.YamlPipelineUtils;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -45,10 +49,32 @@ public class PipelineYamlTest extends CategoryTest {
     NgPipeline ngPipeline = YamlPipelineUtils.read(testFile, NgPipeline.class);
     assertThat(ngPipeline.getIdentifier()).isEqualTo("myPipeline1");
     assertThat(ngPipeline.getStages().size()).isEqualTo(2);
+    assertThat(ngPipeline.getVariables().size()).isEqualTo(2);
+
+    assertThat(ngPipeline.getVariables().get(0)).isInstanceOf(StringNGVariable.class);
+    StringNGVariable stringVariable = (StringNGVariable) ngPipeline.getVariables().get(0);
+    assertThat(stringVariable.getName()).isEqualTo("pipelineN1");
+    assertThat(stringVariable.getType()).isEqualTo(NGVariableType.STRING);
+    assertThat(stringVariable.getValue().getValue()).isEqualTo("stringValue1");
+    NumberNGVariable numberNGVariable = (NumberNGVariable) ngPipeline.getVariables().get(1);
+    assertThat(numberNGVariable.getName()).isEqualTo("pipelineN2");
+    assertThat(numberNGVariable.getType()).isEqualTo(NGVariableType.NUMBER);
+    assertThat(numberNGVariable.getValue().getValue()).isEqualTo(11);
 
     // First Stage
     StageElementWrapper stageWrapper = ngPipeline.getStages().get(0);
     DeploymentStage deploymentStage = (DeploymentStage) ((StageElement) stageWrapper).getStageType();
+
+    // StageVariables
+    assertThat(deploymentStage.getVariables().size()).isEqualTo(2);
+    stringVariable = (StringNGVariable) deploymentStage.getVariables().get(0);
+    assertThat(stringVariable.getName()).isEqualTo("stageN1");
+    assertThat(stringVariable.getType()).isEqualTo(NGVariableType.STRING);
+    assertThat(stringVariable.getValue().getValue()).isEqualTo("stringValue2");
+    numberNGVariable = (NumberNGVariable) deploymentStage.getVariables().get(1);
+    assertThat(numberNGVariable.getName()).isEqualTo("stageN2");
+    assertThat(numberNGVariable.getType()).isEqualTo(NGVariableType.NUMBER);
+    assertThat(numberNGVariable.getValue().getValue()).isEqualTo(12);
 
     // Service
     ServiceConfig service = deploymentStage.getService();
@@ -57,6 +83,17 @@ public class PipelineYamlTest extends CategoryTest {
     assertThat(service.getIdentifier()).isInstanceOf(ParameterField.class);
     assertThat(service.getIdentifier().isExpression()).isTrue();
     assertThat(service.getIdentifier().getExpressionValue()).isEqualTo("${input}");
+
+    // Service Variables
+    assertThat(serviceSpec.getVariables().size()).isEqualTo(2);
+    stringVariable = (StringNGVariable) serviceSpec.getVariables().get(0);
+    assertThat(stringVariable.getName()).isEqualTo("serviceN1");
+    assertThat(stringVariable.getType()).isEqualTo(NGVariableType.STRING);
+    assertThat(stringVariable.getValue().getValue()).isEqualTo("stringValue3");
+    numberNGVariable = (NumberNGVariable) serviceSpec.getVariables().get(1);
+    assertThat(numberNGVariable.getName()).isEqualTo("serviceN2");
+    assertThat(numberNGVariable.getType()).isEqualTo(NGVariableType.NUMBER);
+    assertThat(numberNGVariable.getValue().getValue()).isEqualTo(13);
 
     // Primary Artifacts
     ArtifactConfig primary = serviceSpec.getArtifacts().getPrimary().getArtifactConfig();
@@ -99,6 +136,16 @@ public class PipelineYamlTest extends CategoryTest {
     assertThat(storeConfig.getConnectorIdentifier().isExpression()).isTrue();
     assertThat(storeConfig.getConnectorIdentifier().getExpressionValue()).isEqualTo("${input}");
     assertThat(storeConfig.getPaths().getInputSetValidator()).isNull();
+
+    // VariableOverrideSets
+    assertThat(serviceSpec.getVariableOverrideSets().size()).isEqualTo(1);
+    NGVariableOverrideSets ngVariableOverrideSets = serviceSpec.getVariableOverrideSets().get(0);
+    assertThat(ngVariableOverrideSets.getIdentifier()).isEqualTo("VariableoverrideSet");
+    assertThat(ngVariableOverrideSets.getVariables().size()).isEqualTo(1);
+    numberNGVariable = (NumberNGVariable) ngVariableOverrideSets.getVariables().get(0);
+    assertThat(numberNGVariable.getName()).isEqualTo("o1");
+    assertThat(numberNGVariable.getType()).isEqualTo(NGVariableType.NUMBER);
+    assertThat(numberNGVariable.getValue().getValue()).isEqualTo(14);
 
     // Infrastructure & environment
     PipelineInfrastructure infrastructure = deploymentStage.getInfrastructure();
@@ -166,5 +213,10 @@ public class PipelineYamlTest extends CategoryTest {
     assertThat(storeConfig.getConnectorIdentifier().isExpression()).isTrue();
     assertThat(storeConfig.getConnectorIdentifier().getExpressionValue()).isEqualTo("${input}");
     assertThat(storeConfig.getConnectorIdentifier().getInputSetValidator()).isNull();
+
+    // useVariableOverrideSets
+    List<String> variablesUseList = stageOverrides.getUseVariableOverrideSets().getValue();
+    assertThat(variablesUseList.size()).isEqualTo(1);
+    assertThat(variablesUseList.get(0)).isEqualTo("VariableoverrideSet");
   }
 }
