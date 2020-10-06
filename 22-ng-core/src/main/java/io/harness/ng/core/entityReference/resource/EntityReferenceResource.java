@@ -4,7 +4,7 @@ import com.google.inject.Inject;
 
 import io.harness.NGCommonEntityConstants;
 import io.harness.ng.core.dto.ResponseDTO;
-import io.harness.ng.core.entityReference.dto.EntityReferenceDTO;
+import io.harness.ng.core.entityreference.dto.EntityReferenceDTO;
 import io.harness.ng.core.entityReference.service.EntityReferenceService;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;

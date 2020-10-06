@@ -12,7 +12,7 @@ import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import io.harness.entityreferenceclient.remote.EntityReferenceClient;
 import io.harness.ng.core.entityReference.EntityReferenceHelper;
-import io.harness.ng.core.entityReference.dto.EntityReferenceDTO;
+import io.harness.ng.core.entityreference.dto.EntityReferenceDTO;
 import io.harness.rule.Owner;
 import io.harness.rule.OwnerRule;
 import io.harness.secretmanagerclient.dto.EncryptedDataDTO;

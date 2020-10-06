@@ -1,4 +1,4 @@
-package io.harness.ng.core.entityReference.dto;
+package io.harness.ng.core.entityreference.dto;
 
 import io.harness.EntityType;
 import lombok.Builder;

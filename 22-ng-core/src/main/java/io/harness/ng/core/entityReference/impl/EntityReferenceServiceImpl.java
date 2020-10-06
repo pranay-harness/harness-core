@@ -7,7 +7,7 @@ import com.google.inject.Singleton;
 
 import io.harness.exception.DuplicateFieldException;
 import io.harness.ng.core.entityReference.EntityReferenceFilterHelper;
-import io.harness.ng.core.entityReference.dto.EntityReferenceDTO;
+import io.harness.ng.core.entityreference.dto.EntityReferenceDTO;
 import io.harness.ng.core.entityReference.entity.EntityReference;
 import io.harness.ng.core.entityReference.entity.EntityReference.EntityReferenceKeys;
 import io.harness.ng.core.entityReference.mappers.EntityReferenceDTOtoEntity;
