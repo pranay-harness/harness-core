@@ -12,7 +12,7 @@ import org.springframework.stereotype.Component;
 @Slf4j
 public class ClusterDataGenerationValidator {
   public boolean shouldGenerateClusterData(String accountId, String clusterId) {
-    if (accountId.equals("hW63Ny6rQaaGsKkVjE0pJA")
+    if (accountId.equals("hW63Ny6rQaaGsKkVjE0pJACBD")
         && ImmutableSet
                .of("5ee15b482aa4186d1c9c1ef6", "5ee1584f2aa4186d1c1852de", "5ee158392aa4186d1c13e6b0",
                    "5ee158b22aa4186d1c2e927e", "5ee157962aa4186d1cf6c5fe", "5ee0eeaa2aa4186d1c1b01cd",
