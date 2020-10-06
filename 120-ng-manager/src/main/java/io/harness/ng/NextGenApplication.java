@@ -21,6 +21,7 @@ import io.federecio.dropwizard.swagger.SwaggerBundle;
 import io.federecio.dropwizard.swagger.SwaggerBundleConfiguration;
 import io.harness.cdng.executionplan.ExecutionPlanCreatorRegistrar;
 import io.harness.common.NGPipelineObjectMapperHelper;
+import io.harness.engine.events.OrchestrationEventListener;
 import io.harness.gitsync.core.runnable.GitChangeSetRunnable;
 import io.harness.maintenance.MaintenanceController;
 import io.harness.ng.core.CorrelationFilter;
@@ -174,6 +175,7 @@ public class NextGenApplication extends Application<NextGenConfiguration> {
     QueueListenerController queueListenerController = injector.getInstance(QueueListenerController.class);
     queueListenerController.register(injector.getInstance(NgOrchestrationNotifyEventListener.class), 5);
     queueListenerController.register(injector.getInstance(EmailNotificationListener.class), 1);
+    queueListenerController.register(injector.getInstance(OrchestrationEventListener.class), 1);
   }
 
   private void registerWaitEnginePublishers(Injector injector) {
