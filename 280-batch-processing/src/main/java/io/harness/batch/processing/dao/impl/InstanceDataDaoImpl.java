@@ -111,7 +111,9 @@ public class InstanceDataDaoImpl implements InstanceDataDao {
     instanceEvents.forEach(instanceEvent -> {
       if (null != instanceDataMap.get(instanceEvent.getInstanceId())) {
         List<InstanceData> instanceDataList = instanceDataMap.get(instanceEvent.getInstanceId());
-        instanceDataList.forEach(instanceData -> updateInstanceLifecycleData(instanceEvent, instanceData));
+        instanceDataList.stream()
+            .filter(instanceData -> instanceData.getClusterId().equals(instanceEvent.getClusterId()))
+            .forEach(instanceData -> updateInstanceLifecycleData(instanceEvent, instanceData));
       } else {
         updateInstanceLifecycleData(instanceEvent, null);
       }
