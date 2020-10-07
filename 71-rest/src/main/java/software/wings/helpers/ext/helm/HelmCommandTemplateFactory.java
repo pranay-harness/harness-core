@@ -26,7 +26,8 @@ public final class HelmCommandTemplateFactory {
     REPO_REMOVE,
     INIT,
     RENDER_CHART,
-    RENDER_SPECIFIC_CHART_FILE;
+    RENDER_SPECIFIC_CHART_FILE,
+    FETCH_ALL_VERSIONS;
   }
 
   /*
@@ -181,6 +182,14 @@ public final class HelmCommandTemplateFactory {
           case V2:
           default:
             return HelmConstants.V2Commands.HELM_RENDER_SPECIFIC_TEMPLATE;
+        }
+      case FETCH_ALL_VERSIONS:
+        switch (version) {
+          case V3:
+            return HelmConstants.V3Commands.HELM_FETCH_ALL_VERSIONS_COMMAND_TEMPLATE;
+          case V2:
+          default:
+            return HelmConstants.V2Commands.HELM_FETCH_ALL_VERSIONS_COMMAND_TEMPLATE;
         }
       default:
         throw new InvalidRequestException(format("Command Type [%s] is not supported", commandType.toString()));

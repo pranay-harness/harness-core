@@ -5,6 +5,7 @@ import static io.harness.k8s.model.HelmVersion.V2;
 import static io.harness.k8s.model.HelmVersion.V3;
 import static io.harness.rule.OwnerRule.ABOSII;
 import static io.harness.rule.OwnerRule.ACASIAN;
+import static io.harness.rule.OwnerRule.PRABU;
 import static io.harness.rule.OwnerRule.ROHITKARELIA;
 import static io.harness.rule.OwnerRule.YOGESH;
 import static java.lang.String.format;
@@ -18,14 +19,20 @@ import static org.mockito.Matchers.contains;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.anyString;
 import static org.mockito.Mockito.atLeastOnce;
+import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.doCallRealMethod;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
+import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
+import static software.wings.utils.WingsTestConstants.APP_ID;
 import static software.wings.utils.WingsTestConstants.LONG_TIMEOUT_INTERVAL;
+import static software.wings.utils.WingsTestConstants.MANIFEST_ID;
+import static software.wings.utils.WingsTestConstants.SERVICE_ID;
 
 import io.harness.beans.FileData;
 import io.harness.category.element.UnitTests;
@@ -44,6 +51,8 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Spy;
+import org.mockito.invocation.InvocationOnMock;
+import org.mockito.stubbing.Answer;
 import org.zeroturnaround.exec.ProcessExecutor;
 import org.zeroturnaround.exec.ProcessOutput;
 import org.zeroturnaround.exec.ProcessResult;
@@ -51,6 +60,7 @@ import org.zeroturnaround.exec.StartedProcess;
 import software.wings.WingsBaseTest;
 import software.wings.beans.AwsConfig;
 import software.wings.beans.GcpConfig;
+import software.wings.beans.appmanifest.HelmChart;
 import software.wings.beans.command.ExecutionLogCallback;
 import software.wings.beans.container.HelmChartSpecification;
 import software.wings.beans.settings.helm.AmazonS3HelmRepoConfig;
@@ -59,6 +69,7 @@ import software.wings.beans.settings.helm.HelmRepoConfig;
 import software.wings.beans.settings.helm.HttpHelmRepoConfig;
 import software.wings.helpers.ext.chartmuseum.ChartMuseumClient;
 import software.wings.helpers.ext.chartmuseum.ChartMuseumServer;
+import software.wings.helpers.ext.helm.request.HelmChartCollectionParams;
 import software.wings.helpers.ext.helm.request.HelmChartConfigParams;
 import software.wings.helpers.ext.helm.request.HelmCommandRequest;
 import software.wings.helpers.ext.helm.request.HelmInstallCommandRequest;
@@ -685,7 +696,245 @@ public class HelmTaskHelperTest extends WingsBaseTest {
         .containsExactlyInAnyOrder(file1, file2);
   }
 
+  @Owner(developers = PRABU)
+  @Category(UnitTests.class)
+  public void testReturnEmptyHelmChartsForEmptyResponse() throws Exception {
+    HttpHelmRepoConfig httpHelmRepoConfig =
+        HttpHelmRepoConfig.builder().accountId(ACCOUNT_ID).chartRepoUrl("http://127.0.0.1:1234").build();
+    HelmChartCollectionParams helmChartCollectionParams =
+        HelmChartCollectionParams.builder()
+            .accountId(ACCOUNT_ID)
+            .appId(APP_ID)
+            .appManifestId(MANIFEST_ID)
+            .serviceId(SERVICE_ID)
+            .helmChartConfigParams(getHelmChartConfigParams(httpHelmRepoConfig))
+            .build();
+    ChartMuseumServer chartMuseumServer = ChartMuseumServer.builder().build();
+
+    doReturn(new ProcessResult(0, null)).when(processExecutor).execute();
+    doAnswer(invocationOnMock -> invocationOnMock.getArgumentAt(0, String.class))
+        .when(helmTaskHelper)
+        .createDirectory("dir");
+    doReturn(processExecutor)
+        .when(helmTaskHelper)
+        .createProcessExecutorWithRedirectOutput(eq("v3/helm search repo repoName/chartName -l"), eq("dir"), any());
+
+    List<HelmChart> helmCharts = helmTaskHelper.fetchChartVersions(helmChartCollectionParams, "dir", 10000);
+    assertThat(helmCharts).isEmpty();
+    // One command for adding directory and another for fetching versions
+    verify(processExecutor, times(2)).execute();
+    verify(helmTaskHelper, times(1)).initHelm("dir", V3, 10000);
+
+    doReturn("No results Found")
+        .when(helmTaskHelper)
+        .executeCommandWithLogOutput(eq("v3/helm search repo repoName/chartName -l"), eq("dir"), anyString());
+    helmCharts = helmTaskHelper.fetchChartVersions(helmChartCollectionParams, "dir", 10000);
+    assertThat(helmCharts).isEmpty();
+  }
+
   @Test
+  @Owner(developers = PRABU)
+  @Category(UnitTests.class)
+  public void testFetchVersionsFromHttp() throws Exception {
+    HttpHelmRepoConfig httpHelmRepoConfig =
+        HttpHelmRepoConfig.builder().accountId(ACCOUNT_ID).chartRepoUrl("http://127.0.0.1:1234").build();
+    HelmChartCollectionParams helmChartCollectionParams =
+        HelmChartCollectionParams.builder()
+            .accountId(ACCOUNT_ID)
+            .appId(APP_ID)
+            .appManifestId(MANIFEST_ID)
+            .serviceId(SERVICE_ID)
+            .helmChartConfigParams(getHelmChartConfigParams(httpHelmRepoConfig))
+            .build();
+
+    ChartMuseumServer chartMuseumServer = ChartMuseumServer.builder().build();
+    doReturn(new ProcessResult(0, null)).when(processExecutor).execute();
+    doAnswer(invocationOnMock -> invocationOnMock.getArgumentAt(0, String.class))
+        .when(helmTaskHelper)
+        .createDirectory("dir");
+    doReturn("NAME\tCHART VERSION\tAPP VERSION\tDESCRIPTION\n"
+        + "repoName/chartName\t1\t0\tdesc\n"
+        + "repoName/chartName\t2\t0\tdesc")
+        .when(helmTaskHelper)
+        .executeCommandWithLogOutput(eq("v3/helm search repo repoName/chartName -l"), eq("dir"), anyString());
+
+    List<HelmChart> helmCharts = helmTaskHelper.fetchChartVersions(helmChartCollectionParams, "dir", 10000);
+    assertThat(helmCharts.size()).isEqualTo(2);
+    assertThat(helmCharts.get(0).getAccountId()).isEqualTo(ACCOUNT_ID);
+    assertThat(helmCharts.get(0).getAppId()).isEqualTo(APP_ID);
+    assertThat(helmCharts.get(0).getApplicationManifestId()).isEqualTo(MANIFEST_ID);
+    assertThat(helmCharts.get(0).getChartVersion()).isEqualTo("1");
+    assertThat(helmCharts.get(1).getChartVersion()).isEqualTo("2");
+    verify(processExecutor, times(2)).execute();
+
+    doReturn("WARNING: LONG_SINGLE_LINE_WARNING_MESSAGE.NAME\tCHART VERSION\tAPP VERSION\tDESCRIPTION\n"
+        + "chartName\t3\t0\tdesc\n"
+        + "chartName\t4\t0\tdesc\nchartNameOne\t5\t0\tdesc")
+        .when(helmTaskHelper)
+        .executeCommandWithLogOutput(eq("v3/helm search repo repoName/chartName -l"), eq("dir"), anyString());
+    helmCharts = helmTaskHelper.fetchChartVersions(helmChartCollectionParams, "dir", 10000);
+    assertThat(helmCharts).hasSize(2);
+    assertThat(helmCharts.get(0).getDescription()).isEqualTo("desc");
+    assertThat(helmCharts.get(0).getAppVersion()).isEqualTo("0");
+    assertThat(helmCharts.get(0).getChartVersion()).isEqualTo("3");
+    assertThat(helmCharts.get(1).getChartVersion()).isEqualTo("4");
+  }
+
+  @Test
+  @Owner(developers = PRABU)
+  @Category(UnitTests.class)
+  public void testFetchVersionsFromGcs() throws Exception {
+    GCSHelmRepoConfig gcsHelmRepoConfig =
+        GCSHelmRepoConfig.builder().accountId(ACCOUNT_ID).bucketName("bucketName").build();
+    HelmChartConfigParams helmChartConfigParams = getHelmChartConfigParams(gcsHelmRepoConfig);
+    HelmChartCollectionParams helmChartCollectionParams = HelmChartCollectionParams.builder()
+                                                              .accountId(ACCOUNT_ID)
+                                                              .appId(APP_ID)
+                                                              .appManifestId(MANIFEST_ID)
+                                                              .serviceId(SERVICE_ID)
+                                                              .helmChartConfigParams(helmChartConfigParams)
+                                                              .build();
+    ChartMuseumServer chartMuseumServer = ChartMuseumServer.builder().port(1234).build();
+
+    doReturn(chartMuseumServer)
+        .when(chartMuseumClient)
+        .startChartMuseumServer(gcsHelmRepoConfig, helmChartConfigParams.getConnectorConfig(),
+            HelmTaskHelper.RESOURCE_DIR_BASE, helmChartConfigParams.getBasePath());
+    doReturn(new ProcessResult(0, null)).when(processExecutor).execute();
+    doAnswer(invocationOnMock -> invocationOnMock.getArgumentAt(0, String.class))
+        .when(helmTaskHelper)
+        .createNewDirectoryAtPath(HelmTaskHelper.RESOURCE_DIR_BASE);
+    doReturn("NAME\tCHART VERSION\tAPP VERSION\tDESCRIPTION\n"
+        + "chartName\t1\t0\tdesc\n"
+        + "chartName\t2\t0\tdesc\nsuccess")
+        .when(helmTaskHelper)
+        .executeCommandWithLogOutput(eq("v3/helm search repo repoName/chartName -l"), eq("dir"), anyString());
+
+    List<HelmChart> helmCharts = helmTaskHelper.fetchChartVersions(helmChartCollectionParams, "dir", 10000);
+    assertThat(helmCharts.size()).isEqualTo(2);
+    assertThat(helmCharts.get(0).getAccountId()).isEqualTo(ACCOUNT_ID);
+    assertThat(helmCharts.get(0).getAppId()).isEqualTo(APP_ID);
+    assertThat(helmCharts.get(0).getApplicationManifestId()).isEqualTo(MANIFEST_ID);
+    assertThat(helmCharts.get(0).getChartVersion()).isEqualTo("1");
+    assertThat(helmCharts.get(1).getChartVersion()).isEqualTo("2");
+    verify(processExecutor, times(1)).execute();
+    verify(chartMuseumClient, times(1))
+        .startChartMuseumServer(gcsHelmRepoConfig, helmChartConfigParams.getConnectorConfig(),
+            HelmTaskHelper.RESOURCE_DIR_BASE, helmChartConfigParams.getBasePath());
+  }
+
+  @Test
+  @Owner(developers = PRABU)
+  @Category(UnitTests.class)
+  public void testFetchHelmVersionsForV2() throws Exception {
+    HttpHelmRepoConfig httpHelmRepoConfig =
+        HttpHelmRepoConfig.builder().accountId(ACCOUNT_ID).chartRepoUrl("http://127.0.0.1:1234").build();
+    HelmChartConfigParams helmChartConfigParams = getHelmChartConfigParams(httpHelmRepoConfig);
+    helmChartConfigParams.setHelmVersion(V2);
+    HelmChartCollectionParams helmChartCollectionParams = HelmChartCollectionParams.builder()
+                                                              .accountId(ACCOUNT_ID)
+                                                              .appId(APP_ID)
+                                                              .appManifestId(MANIFEST_ID)
+                                                              .serviceId(SERVICE_ID)
+                                                              .helmChartConfigParams(helmChartConfigParams)
+                                                              .build();
+
+    doReturn(new ProcessResult(0, null)).when(processExecutor).execute();
+    doAnswer(invocationOnMock -> invocationOnMock.getArgumentAt(0, String.class))
+        .when(helmTaskHelper)
+        .createDirectory("dir");
+    doAnswer(invocationOnMock -> invocationOnMock.getArgumentAt(0, String.class))
+        .when(helmTaskHelper)
+        .applyHelmHomePath("v2/helm search repoName/chartName -l ${HELM_HOME_PATH_FLAG}", "dir");
+    doReturn("NAME\tCHART VERSION\tAPP VERSION\tDESCRIPTION\n"
+        + "chartName\t1\t0\tdesc\n"
+        + "chartName\t2\t0\tdesc")
+        .when(helmTaskHelper)
+        .executeCommandWithLogOutput(
+            eq("v2/helm search repoName/chartName -l ${HELM_HOME_PATH_FLAG}"), eq("dir"), anyString());
+
+    List<HelmChart> helmCharts = helmTaskHelper.fetchChartVersions(helmChartCollectionParams, "dir", 10000);
+    assertThat(helmCharts.size()).isEqualTo(2);
+    assertThat(helmCharts.get(0).getAccountId()).isEqualTo(ACCOUNT_ID);
+    assertThat(helmCharts.get(0).getAppId()).isEqualTo(APP_ID);
+    assertThat(helmCharts.get(0).getApplicationManifestId()).isEqualTo(MANIFEST_ID);
+    assertThat(helmCharts.get(0).getChartVersion()).isEqualTo("1");
+    assertThat(helmCharts.get(1).getChartVersion()).isEqualTo("2");
+    // For helm version 2, we execute another command for helm init apart from add repo
+    verify(processExecutor, times(3)).execute();
+    verify(helmTaskHelper, times(1)).initHelm("dir", V2, 10000);
+  }
+
+  @Test
+  @Owner(developers = PRABU)
+  @Category({UnitTests.class})
+  public void testFetchVersionsTimesOut() throws Exception {
+    GCSHelmRepoConfig gcsHelmRepoConfig =
+        GCSHelmRepoConfig.builder().accountId(ACCOUNT_ID).bucketName("bucketName").build();
+    HelmChartConfigParams helmChartConfigParams = getHelmChartConfigParams(gcsHelmRepoConfig);
+    HelmChartCollectionParams helmChartCollectionParams = HelmChartCollectionParams.builder()
+                                                              .accountId(ACCOUNT_ID)
+                                                              .appId(APP_ID)
+                                                              .appManifestId(MANIFEST_ID)
+                                                              .serviceId(SERVICE_ID)
+                                                              .helmChartConfigParams(helmChartConfigParams)
+                                                              .build();
+    ChartMuseumServer chartMuseumServer = ChartMuseumServer.builder().port(1234).build();
+
+    doReturn(chartMuseumServer)
+        .when(chartMuseumClient)
+        .startChartMuseumServer(gcsHelmRepoConfig, helmChartConfigParams.getConnectorConfig(),
+            HelmTaskHelper.RESOURCE_DIR_BASE, helmChartConfigParams.getBasePath());
+    doAnswer(invocationOnMock -> invocationOnMock.getArgumentAt(0, String.class))
+        .when(helmTaskHelper)
+        .createNewDirectoryAtPath(HelmTaskHelper.RESOURCE_DIR_BASE);
+    doAnswer(new Answer() {
+      private int count = 0;
+
+      public Object answer(InvocationOnMock invocation) throws TimeoutException {
+        if (count++ == 0) {
+          return new ProcessResult(0, null);
+        }
+        throw new TimeoutException();
+      }
+    })
+        .when(processExecutor)
+        .execute();
+    doReturn(processExecutor)
+        .when(helmTaskHelper)
+        .createProcessExecutorWithRedirectOutput(eq("v3/helm search repo repoName/chartName -l"), eq("dir"), any());
+
+    assertThatThrownBy(() -> helmTaskHelper.fetchChartVersions(helmChartCollectionParams, "dir", 10000))
+        .isInstanceOf(HelmClientException.class)
+        .hasMessage("[Timed out] Helm chart fetch versions command failed ");
+  }
+
+  @Test
+  @Owner(developers = PRABU)
+  @Category({UnitTests.class})
+  public void testCleanupAfterCollection() throws Exception {
+    GCSHelmRepoConfig gcsHelmRepoConfig =
+        GCSHelmRepoConfig.builder().accountId(ACCOUNT_ID).bucketName("bucketName").build();
+    HelmChartConfigParams helmChartConfigParams = getHelmChartConfigParams(gcsHelmRepoConfig);
+    HelmChartCollectionParams helmChartCollectionParams = HelmChartCollectionParams.builder()
+                                                              .accountId(ACCOUNT_ID)
+                                                              .appId(APP_ID)
+                                                              .appManifestId(MANIFEST_ID)
+                                                              .serviceId(SERVICE_ID)
+                                                              .helmChartConfigParams(helmChartConfigParams)
+                                                              .build();
+    ChartMuseumServer chartMuseumServer = ChartMuseumServer.builder().port(1234).build();
+
+    doNothing().when(chartMuseumClient).stopChartMuseumServer(chartMuseumServer.getStartedProcess());
+    doReturn(new ProcessResult(0, null)).when(processExecutor).execute();
+    doNothing().when(helmTaskHelper).cleanup("dir");
+
+    helmTaskHelper.cleanupAfterCollection(helmChartCollectionParams, "dir", 10000);
+    verify(helmTaskHelper, times(1)).cleanup("dir");
+    verify(processExecutor, times(1)).execute();
+    verify(chartMuseumClient, never()).stopChartMuseumServer(chartMuseumServer.getStartedProcess());
+  }
+
   @Owner(developers = ABOSII)
   @Category(UnitTests.class)
   public void testInitHelm() throws Exception {

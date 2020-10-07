@@ -14,6 +14,7 @@ import io.harness.generator.ServiceGenerator;
 import io.harness.rule.Owner;
 import io.harness.testframework.restutils.GraphQLRestUtils;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import software.wings.beans.FeatureName;
@@ -95,6 +96,7 @@ public class GetServiceConnectionFunctionalTest extends AbstractFunctionalTest {
   @Test
   @Owner(developers = PRABU, intermittent = true)
   @Category(FunctionalTests.class)
+  @Ignore("This test is Flaky. Need to debug more by the test owner")
   public void testArtifactSourcesInServiceConnectionBamboo() {
     service = serviceGenerator.ensureBambooGenericTest(seed, owners, "Artifact Source Test-Bamboo2");
     resetCache(service.getAccountId());
@@ -133,6 +135,7 @@ public class GetServiceConnectionFunctionalTest extends AbstractFunctionalTest {
   @Test
   @Owner(developers = PRABU, intermittent = true)
   @Category(FunctionalTests.class)
+  @Ignore("This test is Flaky. Need to debug more by the test owner")
   public void testArtifactSourcesInServiceConnectionNexusMaven() {
     service = serviceGenerator.ensureNexusMavenGenericTest(seed, owners, "Artifact Source Test-NexusM");
     resetCache(service.getAccountId());
@@ -152,6 +155,7 @@ public class GetServiceConnectionFunctionalTest extends AbstractFunctionalTest {
   @Test
   @Owner(developers = PRABU, intermittent = true)
   @Category(FunctionalTests.class)
+  @Ignore("This test is Flaky. Need to debug more by the test owner")
   public void testArtifactSourcesInServiceConnectionNexusNpm() {
     service = serviceGenerator.ensureNexusNpmGenericTest(seed, owners, "Artifact Source Test-NexusN");
     resetCache(service.getAccountId());
@@ -228,6 +232,7 @@ public class GetServiceConnectionFunctionalTest extends AbstractFunctionalTest {
   @Test
   @Owner(developers = PRABU, intermittent = true)
   @Category(FunctionalTests.class)
+  @Ignore("This test is Flaky. Need to debug more by the test owner")
   public void testArtifactSourcesInServiceConnectionEcr() {
     service = serviceGenerator.ensureEcsTest(seed, owners, "Artifact Source Test-Ecr");
     resetCache(service.getAccountId());

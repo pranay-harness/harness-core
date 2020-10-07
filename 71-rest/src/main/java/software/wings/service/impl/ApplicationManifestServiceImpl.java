@@ -362,7 +362,9 @@ public class ApplicationManifestServiceImpl implements ApplicationManifestServic
     try {
       subject.fireInform(ApplicationManifestServiceObxxxxxxxx:onSaved, applicationManifest);
     } catch (Exception e) {
-      logger.error("Encountered exception while informing the observers of Application Manifest on save", e);
+      logger.error(
+          "Encountered exception while informing the observers of Application Manifest on save for app manifest: {}",
+          applicationManifest.getUuid(), e);
     }
   }
 
@@ -370,7 +372,9 @@ public class ApplicationManifestServiceImpl implements ApplicationManifestServic
     try {
       subject.fireInform(ApplicationManifestServiceObxxxxxxxx:onUpdated, applicationManifest);
     } catch (Exception e) {
-      logger.error("Encountered exception while informing the observers of Application Manifest on reset", e);
+      logger.error(
+          "Encountered exception while informing the observers of Application Manifest on resetfor app manifest: {}",
+          applicationManifest.getUuid(), e);
     }
   }
 
@@ -378,7 +382,9 @@ public class ApplicationManifestServiceImpl implements ApplicationManifestServic
     try {
       subject.fireInform(ApplicationManifestServiceObxxxxxxxx:onDeleted, applicationManifest);
     } catch (Exception e) {
-      logger.error("Encountered exception while informing the observers of Application Manifest on delete", e);
+      logger.error(
+          "Encountered exception while informing the observers of Application Manifest on delete for app manifest: {}",
+          applicationManifest.getUuid(), e);
     }
   }
 
@@ -388,42 +394,42 @@ public class ApplicationManifestServiceImpl implements ApplicationManifestServic
       HelmChartConfig oldHelmChartConfig = oldAppManifest.getHelmChartConfig();
       HelmChartConfig newHelmChartConfig = newAppManifest.getHelmChartConfig();
       return !oldHelmChartConfig.getConnectorId().equals(newHelmChartConfig.getConnectorId())
-          || !oldHelmChartConfig.getChartName().equals(newHelmChartConfig.getChartName());
+          || !oldHelmChartConfig.getChartName().equals(newHelmChartConfig.getChartName())
+          || !oldHelmChartConfig.getBasePath().equals(newHelmChartConfig.getBasePath());
     }
     return false;
   }
 
   @VisibleForTesting
-  void checkForUpdates(ApplicationManifest applicationManifest) {
-    ApplicationManifest savedAppManifest = getById(applicationManifest.getAppId(), applicationManifest.getUuid());
-
-    Boolean oldPollForChanges = savedAppManifest.getPollForChanges();
+  void checkForUpdates(ApplicationManifest oldAppManifest, ApplicationManifest applicationManifest) {
+    Boolean oldPollForChanges = oldAppManifest.getPollForChanges();
     Boolean curPollForChanges = applicationManifest.getPollForChanges();
 
     if (curPollForChanges == null) {
       if (Boolean.TRUE.equals(oldPollForChanges)) {
-        helmChartService.deleteByAppManifest(savedAppManifest.getAppId(), savedAppManifest.getUuid());
-        deletePerpetualTask(savedAppManifest);
+        helmChartService.deleteByAppManifest(oldAppManifest.getAppId(), oldAppManifest.getUuid());
+        deletePerpetualTask(oldAppManifest);
       }
     } else if (Boolean.TRUE.equals(curPollForChanges)) {
       if (oldPollForChanges == null || Boolean.FALSE.equals(oldPollForChanges)) {
         createPerpetualTask(applicationManifest);
       } else {
-        if (isHelmRepoOrChartNameChanged(savedAppManifest, applicationManifest)) {
-          helmChartService.deleteByAppManifest(savedAppManifest.getAppId(), savedAppManifest.getUuid());
+        if (isHelmRepoOrChartNameChanged(oldAppManifest, applicationManifest)) {
+          helmChartService.deleteByAppManifest(oldAppManifest.getAppId(), oldAppManifest.getUuid());
           resetPerpetualTask(applicationManifest);
         }
       }
     } else {
       if (Boolean.TRUE.equals(oldPollForChanges)) {
-        helmChartService.deleteByAppManifest(savedAppManifest.getAppId(), savedAppManifest.getUuid());
-        deletePerpetualTask(savedAppManifest);
+        helmChartService.deleteByAppManifest(oldAppManifest.getAppId(), oldAppManifest.getUuid());
+        deletePerpetualTask(oldAppManifest);
       }
     }
   }
 
   @VisibleForTesting
-  void handlePollForChangesToggle(ApplicationManifest applicationManifest, boolean isCreate, String accountId) {
+  void handlePollForChangesToggle(ApplicationManifest oldApplicationManifest, ApplicationManifest applicationManifest,
+      boolean isCreate, String accountId) {
     if (featureFlagService.isEnabled(FeatureName.HELM_CHART_AS_ARTIFACT, accountId)) {
       if (Boolean.TRUE.equals(applicationManifest.getPollForChanges())
           && applicationManifest.getStoreType() != HelmChartRepo) {
@@ -439,9 +445,21 @@ public class ApplicationManifestServiceImpl implements ApplicationManifestServic
         createPerpetualTask(applicationManifest);
       }
       if (!isCreate) {
-        checkForUpdates(applicationManifest);
+        checkForUpdates(oldApplicationManifest, applicationManifest);
       }
     }
+  }
+
+  @Override
+  public boolean updateFailedAttempts(String accountId, String appManifestId, int failedAttempts) {
+    Query<ApplicationManifest> query = wingsPersistence.createQuery(ApplicationManifest.class)
+                                           .filter(ApplicationManifestKeys.accountId, accountId)
+                                           .filter(ApplicationManifest.ID_KEY, appManifestId);
+
+    UpdateOperations<ApplicationManifest> updateOperations =
+        wingsPersistence.createUpdateOperations(ApplicationManifest.class)
+            .set(ApplicationManifestKeys.failedAttempts, failedAttempts);
+    return wingsPersistence.update(query, updateOperations).getUpdatedCount() == 1;
   }
 
   private ApplicationManifest upsertApplicationManifest(ApplicationManifest applicationManifest, boolean isCreate) {
@@ -476,10 +494,11 @@ public class ApplicationManifestServiceImpl implements ApplicationManifestServic
       applicationManifest.setAccountId(accountId);
     }
 
-    handlePollForChangesToggle(applicationManifest, isCreate, accountId);
-
+    ApplicationManifest oldAppManifest = isCreate ? null : getById(appId, applicationManifest.getUuid());
     ApplicationManifest savedApplicationManifest =
         wingsPersistence.saveAndGet(ApplicationManifest.class, applicationManifest);
+
+    handlePollForChangesToggle(oldAppManifest, applicationManifest, isCreate, accountId);
 
     Type type = isCreate ? Type.CREATE : Type.UPDATE;
     yamlPushService.pushYamlChangeSet(accountId, isCreate ? null : savedApplicationManifest, savedApplicationManifest,

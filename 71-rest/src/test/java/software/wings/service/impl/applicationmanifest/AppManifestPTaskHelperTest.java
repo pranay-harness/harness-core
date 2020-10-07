@@ -8,6 +8,7 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
+import static software.wings.utils.WingsTestConstants.APP_ID;
 import static software.wings.utils.WingsTestConstants.MANIFEST_ID;
 import static software.wings.utils.WingsTestConstants.PERPETUAL_TASK_ID;
 import static software.wings.utils.WingsTestConstants.SERVICE_ID;
@@ -26,18 +27,20 @@ import io.harness.rule.Owner;
 import io.harness.rule.OwnerRule;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
+import org.junit.runner.RunWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.runners.MockitoJUnitRunner;
 import software.wings.beans.appmanifest.ApplicationManifest;
+import software.wings.beans.appmanifest.StoreType;
 import software.wings.service.intfc.ApplicationManifestService;
 
-class AppManifestPTaskHelperTest extends CategoryTest {
+@RunWith(MockitoJUnitRunner.class)
+public class AppManifestPTaskHelperTest extends CategoryTest {
   @Mock private PerpetualTaskService perpetualTaskService;
-  @Mock ApplicationManifestService applicationManifestService;
-  @Inject @InjectMocks AppManifestPTaskHelper appManifestPTaskHelper;
-
-  void setUp() {}
+  @Mock private ApplicationManifestService applicationManifestService;
+  @Inject @InjectMocks private AppManifestPTaskHelper appManifestPTaskHelper;
 
   @Test
   @Owner(developers = OwnerRule.PRABU)
@@ -49,10 +52,10 @@ class AppManifestPTaskHelperTest extends CategoryTest {
     ArgumentCaptor<PerpetualTaskSchedule> scheduleCaptor = ArgumentCaptor.forClass(PerpetualTaskSchedule.class);
 
     when(applicationManifestService.attachPerpetualTask(ACCOUNT_ID, MANIFEST_ID, PERPETUAL_TASK_ID)).thenReturn(true);
-    appManifestPTaskHelper.createPerpetualTask(appManifest);
     when(perpetualTaskService.createTask(eq(PerpetualTaskType.MANIFEST_COLLECTION), eq(ACCOUNT_ID),
              clientContextCaptor.capture(), scheduleCaptor.capture(), eq(false), anyString()))
         .thenReturn(PERPETUAL_TASK_ID);
+    appManifestPTaskHelper.createPerpetualTask(appManifest);
 
     assertThat(
         clientContextCaptor.getValue().getClientParams().get(ManifestCollectionPTaskClientParamsKeys.appManifestId))
@@ -75,14 +78,16 @@ class AppManifestPTaskHelperTest extends CategoryTest {
   @Category(UnitTests.class)
   public void testDeletePerpetualTask() {
     ApplicationManifest applicationManifest = buildAppManifest();
-    appManifestPTaskHelper.deletePerpetualTask(applicationManifest, PERPETUAL_TASK_ID);
+    appManifestPTaskHelper.deletePerpetualTask(
+        PERPETUAL_TASK_ID, applicationManifest.getUuid(), applicationManifest.getAccountId());
     verify(perpetualTaskService, times(1)).deleteTask(ACCOUNT_ID, PERPETUAL_TASK_ID);
     verify(applicationManifestService, times(1)).detachPerpetualTask(PERPETUAL_TASK_ID);
   }
 
   private ApplicationManifest buildAppManifest() {
     ApplicationManifest applicationManifest =
-        ApplicationManifest.builder().accountId(ACCOUNT_ID).serviceId(SERVICE_ID).build();
+        ApplicationManifest.builder().accountId(ACCOUNT_ID).serviceId(SERVICE_ID).storeType(StoreType.Remote).build();
+    applicationManifest.setAppId(APP_ID);
     applicationManifest.setUuid(MANIFEST_ID);
     return applicationManifest;
   }

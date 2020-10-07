@@ -103,7 +103,7 @@ public class ArtifactPerpetualTaskExecutor implements PerpetualTaskExecutor {
     }
 
     // Add to cache and remove duplicates.
-    currCache.addArtifactCollectionResult(builds);
+    currCache.addCollectionResult(builds);
   }
 
   private void publishFromCache(String accountId, PerpetualTaskId taskId, ArtifactCollectionTaskParams taskParams,

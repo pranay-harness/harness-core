@@ -59,6 +59,8 @@ import io.harness.git.GitClientV2Impl;
 import io.harness.k8s.K8sGlobalConfigService;
 import io.harness.k8s.KubernetesContainerService;
 import io.harness.k8s.KubernetesContainerServiceImpl;
+import io.harness.perpetualtask.manifest.HelmRepositoryService;
+import io.harness.perpetualtask.manifest.ManifestRepositoryService;
 import io.harness.security.encryption.DelegateDecryptionService;
 import io.harness.security.encryption.SecretDecryptionService;
 import io.harness.shell.ShellExecutionService;
@@ -699,6 +701,7 @@ public class DelegateModule extends AbstractModule {
     bind(AzureMonitorClient.class).to(AzureMonitorClientImpl.class);
     bind(NGGitService.class).to(NGGitServiceImpl.class);
     bind(GcpClient.class).to(GcpClientImpl.class);
+    bind(ManifestRepositoryService.class).to(HelmRepositoryService.class);
     bind(AwsClient.class).to(AwsClientImpl.class);
 
     // NG Delegate

@@ -24,10 +24,12 @@ import java.util.Map;
 @OwnedBy(HarnessTeam.CDC)
 @CdIndex(name = "appId_serviceId", fields = { @Field("appId")
                                               , @Field("serviceId") })
+@CdIndex(name = "account_appManifestId", fields = { @Field("accountId")
+                                                    , @Field("applicationManifestId") })
 @Data
 @Builder
-@FieldNameConstants(innerTypeName = "HelmChartKeys")
 @Entity(value = "helmCharts", noClassnameStored = true)
+@FieldNameConstants(innerTypeName = "HelmChartKeys")
 public class HelmChart implements AccountAccess, NameAccess, PersistentEntity, UuidAware, CreatedAtAware,
                                   UpdatedAtAware, ApplicationAccess {
   @Id private String uuid;
@@ -39,5 +41,7 @@ public class HelmChart implements AccountAccess, NameAccess, PersistentEntity, U
   private String serviceId;
   private long createdAt;
   private long lastUpdatedAt;
+  private String appVersion;
+  private String description;
   private Map<String, String> metadata;
 }

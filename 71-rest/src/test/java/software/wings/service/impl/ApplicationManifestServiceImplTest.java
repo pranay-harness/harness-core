@@ -515,22 +515,23 @@ public class ApplicationManifestServiceImplTest extends WingsBaseTest {
 
     enableFeatureFlag();
     assertThatThrownBy(
-        () -> applicationManifestServiceImpl.handlePollForChangesToggle(applicationManifest, true, ACCOUNT_ID))
+        () -> applicationManifestServiceImpl.handlePollForChangesToggle(null, applicationManifest, true, ACCOUNT_ID))
         .isInstanceOf(InvalidRequestException.class);
 
     applicationManifest.setStoreType(HelmChartRepo);
 
     disableFeatureFlag();
-    applicationManifestServiceImpl.handlePollForChangesToggle(applicationManifest, true, ACCOUNT_ID);
+    applicationManifestServiceImpl.handlePollForChangesToggle(null, applicationManifest, true, ACCOUNT_ID);
     verify(applicationManifestServiceImpl, never()).createPerpetualTask(applicationManifest);
 
     enableFeatureFlag();
-    applicationManifestServiceImpl.handlePollForChangesToggle(applicationManifest, true, ACCOUNT_ID);
+    applicationManifestServiceImpl.handlePollForChangesToggle(null, applicationManifest, true, ACCOUNT_ID);
     verify(applicationManifestServiceImpl, times(1)).createPerpetualTask(applicationManifest);
 
     when(applicationManifestServiceImpl.getById(anyString(), anyString())).thenReturn(applicationManifest);
-    applicationManifestServiceImpl.handlePollForChangesToggle(applicationManifest, false, ACCOUNT_ID);
-    verify(applicationManifestServiceImpl, times(1)).checkForUpdates(applicationManifest);
+    applicationManifestServiceImpl.handlePollForChangesToggle(
+        applicationManifest, applicationManifest, false, ACCOUNT_ID);
+    verify(applicationManifestServiceImpl, times(1)).checkForUpdates(applicationManifest, applicationManifest);
   }
 
   private ApplicationManifest getHelmChartApplicationManifest() {
@@ -554,7 +555,7 @@ public class ApplicationManifestServiceImplTest extends WingsBaseTest {
     when(applicationManifestServiceImpl.getById(anyString(), anyString())).thenReturn(savedAppManifest);
 
     // savedAppManifest -> True, applicationManifest -> null
-    applicationManifestServiceImpl.checkForUpdates(applicationManifest);
+    applicationManifestServiceImpl.checkForUpdates(savedAppManifest, applicationManifest);
     verify(applicationManifestServiceImpl, times(1)).deletePerpetualTask(savedAppManifest);
     verify(helmChartService, times(1)).deleteByAppManifest(anyString(), anyString());
   }
@@ -573,7 +574,7 @@ public class ApplicationManifestServiceImplTest extends WingsBaseTest {
     // savedAppManifest -> True, applicationManifest -> True with different connector id
     when(applicationManifestServiceImpl.getById(anyString(), anyString())).thenReturn(savedAppManifest);
 
-    applicationManifestServiceImpl.checkForUpdates(applicationManifest);
+    applicationManifestServiceImpl.checkForUpdates(savedAppManifest, applicationManifest);
     verify(helmChartService, times(1)).deleteByAppManifest(anyString(), anyString());
     verify(applicationManifestServiceImpl, times(1)).resetPerpetualTask(applicationManifest);
   }
@@ -590,7 +591,7 @@ public class ApplicationManifestServiceImplTest extends WingsBaseTest {
 
     // savedAppManifest -> True, applicationManifest -> True with same connector id and chart name
     when(applicationManifestServiceImpl.getById(anyString(), anyString())).thenReturn(savedAppManifest);
-    applicationManifestServiceImpl.checkForUpdates(applicationManifest);
+    applicationManifestServiceImpl.checkForUpdates(savedAppManifest, applicationManifest);
     verify(helmChartService, never()).deleteByAppManifest(anyString(), anyString());
     verify(applicationManifestServiceImpl, never()).resetPerpetualTask(applicationManifest);
   }
@@ -607,7 +608,7 @@ public class ApplicationManifestServiceImplTest extends WingsBaseTest {
     applicationManifest.setPollForChanges(false);
 
     // savedAppManifest -> True, applicationManifest -> False
-    applicationManifestServiceImpl.checkForUpdates(applicationManifest);
+    applicationManifestServiceImpl.checkForUpdates(savedAppManifest, applicationManifest);
     verify(helmChartService, times(1)).deleteByAppManifest(anyString(), anyString());
     verify(applicationManifestServiceImpl, times(1)).deletePerpetualTask(savedAppManifest);
   }
@@ -624,7 +625,7 @@ public class ApplicationManifestServiceImplTest extends WingsBaseTest {
     applicationManifest.setPollForChanges(true);
 
     // savedAppManifest -> False, applicationManifest -> True
-    applicationManifestServiceImpl.checkForUpdates(applicationManifest);
+    applicationManifestServiceImpl.checkForUpdates(savedAppManifest, applicationManifest);
     verify(applicationManifestServiceImpl, times(1)).createPerpetualTask(applicationManifest);
   }
 
@@ -640,7 +641,7 @@ public class ApplicationManifestServiceImplTest extends WingsBaseTest {
     applicationManifest.setPollForChanges(true);
 
     // savedAppManifest -> null, applicationManifest -> True
-    applicationManifestServiceImpl.checkForUpdates(applicationManifest);
+    applicationManifestServiceImpl.checkForUpdates(savedAppManifest, applicationManifest);
     verify(applicationManifestServiceImpl, times(1)).createPerpetualTask(applicationManifest);
   }
 
@@ -671,13 +672,17 @@ public class ApplicationManifestServiceImplTest extends WingsBaseTest {
     applicationManifest.setPollForChanges(true);
     applicationManifest.setHelmChartConfig(HelmChartConfig.builder().chartVersion("v1").build());
 
-    assertThatThrownBy(
-        () -> applicationManifestServiceImpl.handlePollForChangesToggle(applicationManifest, true, ACCOUNT_ID))
+    assertThatThrownBy(() -> applicationManifestServiceImpl.checkForUpdates(applicationManifest, applicationManifest));
+
+    assertThatThrownBy(()
+                           -> applicationManifestServiceImpl.handlePollForChangesToggle(
+                               applicationManifest, applicationManifest, true, ACCOUNT_ID))
         .isInstanceOf(InvalidRequestException.class)
         .hasMessageContaining("No Helm Chart version is required when Poll for Manifest option is enabled.");
 
-    assertThatThrownBy(
-        () -> applicationManifestServiceImpl.handlePollForChangesToggle(applicationManifest, false, ACCOUNT_ID))
+    assertThatThrownBy(()
+                           -> applicationManifestServiceImpl.handlePollForChangesToggle(
+                               applicationManifest, applicationManifest, false, ACCOUNT_ID))
         .isInstanceOf(InvalidRequestException.class)
         .hasMessageContaining("No Helm Chart version is required when Poll for Manifest option is enabled.");
   }

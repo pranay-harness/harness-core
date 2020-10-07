@@ -37,7 +37,8 @@ public class ManifestPerpetualTaskManger implements ApplicationManifestServiceOb
   @Override
   public void onDeleted(ApplicationManifest applicationManifest) {
     if (applicationManifest.getPerpetualTaskId() != null) {
-      appManifestPTaskHelper.deletePerpetualTask(applicationManifest, applicationManifest.getPerpetualTaskId());
+      appManifestPTaskHelper.deletePerpetualTask(
+          applicationManifest.getPerpetualTaskId(), applicationManifest.getUuid(), applicationManifest.getAccountId());
     }
   }
 

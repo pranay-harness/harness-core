@@ -24,6 +24,7 @@ import io.harness.delegate.task.DelegateLogContext;
 import io.harness.delegate.task.TaskLogContext;
 import io.harness.logging.AccountLogContext;
 import io.harness.logging.AutoLogContext;
+import io.harness.manifest.ManifestCollectionResponseHandler;
 import io.harness.perpetualtask.PerpetualTaskLogContext;
 import io.harness.rest.RestResponse;
 import io.harness.security.annotations.DelegateAuth;
@@ -32,6 +33,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.hibernate.validator.constraints.NotEmpty;
 import software.wings.beans.Delegate;
 import software.wings.delegatetasks.buildsource.BuildSourceExecutionResponse;
+import software.wings.delegatetasks.manifest.ManifestCollectionExecutionResponse;
 import software.wings.delegatetasks.validation.DelegateConnectionResult;
 import software.wings.dl.WingsPersistence;
 import software.wings.helpers.ext.url.SubdomainUrlHelperIntfc;
@@ -69,12 +71,13 @@ public class DelegateAgentResource {
   private SubdomainUrlHelperIntfc subdomainUrlHelper;
   private ArtifactCollectionResponseHandler artifactCollectionResponseHandler;
   private InstanceHelper instanceHelper;
+  private ManifestCollectionResponseHandler manifestCollectionResponseHandler;
 
   @Inject
   public DelegateAgentResource(DelegateService delegateService, AccountService accountService,
       WingsPersistence wingsPersistence, DelegateRequestRateLimiter delegateRequestRateLimiter,
       SubdomainUrlHelperIntfc subdomainUrlHelper, ArtifactCollectionResponseHandler artifactCollectionResponseHandler,
-      InstanceHelper instanceHelper) {
+      InstanceHelper instanceHelper, ManifestCollectionResponseHandler manifestCollectionResponseHandler) {
     this.instanceHelper = instanceHelper;
     this.delegateService = delegateService;
     this.accountService = accountService;
@@ -82,6 +85,7 @@ public class DelegateAgentResource {
     this.delegateRequestRateLimiter = delegateRequestRateLimiter;
     this.subdomainUrlHelper = subdomainUrlHelper;
     this.artifactCollectionResponseHandler = artifactCollectionResponseHandler;
+    this.manifestCollectionResponseHandler = manifestCollectionResponseHandler;
   }
 
   @DelegateAuth
@@ -314,7 +318,9 @@ public class DelegateAgentResource {
       @QueryParam("accountId") @NotEmpty String accountId, BuildSourceExecutionResponse executionResponse) {
     try (AutoLogContext ignore1 = new AccountLogContext(accountId, OVERRIDE_ERROR);
          AutoLogContext ignore2 = new PerpetualTaskLogContext(perpetualTaskId, OVERRIDE_ERROR)) {
-      logger.info("Received artifact collection {}", executionResponse.getBuildSourceResponse().getBuildDetails());
+      if (executionResponse.getBuildSourceResponse() != null) {
+        logger.info("Received artifact collection {}", executionResponse.getBuildSourceResponse().getBuildDetails());
+      }
       artifactCollectionResponseHandler.processArtifactCollectionResult(accountId, perpetualTaskId, executionResponse);
     }
     return new RestResponse<>(true);
@@ -332,5 +338,22 @@ public class DelegateAgentResource {
       logger.error("Failed to process results for perpetual task: [{}]", perpetualTaskId.replaceAll("[\r\n]", ""), e);
     }
     return new RestResponse<>(true);
+  }
+
+  @DelegateAuth
+  @POST
+  @Path("manifest-collection/{perpetualTaskId}")
+  public RestResponse<Boolean> processManifestCollectionResult(
+      @PathParam("perpetualTaskId") @NotEmpty String perpetualTaskId,
+      @QueryParam("accountId") @NotEmpty String accountId, ManifestCollectionExecutionResponse executionResponse) {
+    try (AutoLogContext ignore1 = new AccountLogContext(accountId, OVERRIDE_ERROR);
+         AutoLogContext ignore2 = new PerpetualTaskLogContext(perpetualTaskId, OVERRIDE_ERROR)) {
+      if (executionResponse.getManifestCollectionResponse() != null) {
+        logger.info(
+            "Received manifest collection {}", executionResponse.getManifestCollectionResponse().getHelmCharts());
+      }
+      manifestCollectionResponseHandler.handleManifestCollectionResponse(accountId, perpetualTaskId, executionResponse);
+    }
+    return new RestResponse<>(Boolean.TRUE);
   }
 }

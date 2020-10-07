@@ -316,6 +316,7 @@
 71-rest/src/main/java/io/harness/execution/export/request/ExportExecutionsRequestSummary.java
 71-rest/src/main/java/io/harness/execution/export/request/ExportExecutionsUserParams.java
 71-rest/src/main/java/io/harness/manifest/ManifestCollectionPTaskServiceClient.java
+71-rest/src/main/java/io/harness/manifest/ManifestCollectionResponseHandler.java
 71-rest/src/main/java/io/harness/redesign/advisers/HttpResponseCodeSwitchAdviser.java
 71-rest/src/main/java/io/harness/redesign/advisers/HttpResponseCodeSwitchAdviserParameters.java
 71-rest/src/main/java/io/harness/redesign/services/CustomExecutionProvider.java
@@ -415,6 +416,7 @@
 71-rest/src/main/java/software/wings/beans/WorkflowPhase.java
 71-rest/src/main/java/software/wings/beans/WorkflowStepMeta.java
 71-rest/src/main/java/software/wings/beans/alert/ArtifactCollectionFailedAlert.java
+71-rest/src/main/java/software/wings/beans/alert/ManifestCollectionFailedAlert.java
 71-rest/src/main/java/software/wings/beans/appmanifest/HelmChart.java
 71-rest/src/main/java/software/wings/beans/approval/ApprovalPollingJobEntity.java
 71-rest/src/main/java/software/wings/beans/approval/ApprovalStateParams.java
@@ -514,6 +516,7 @@
 71-rest/src/main/java/software/wings/delegatetasks/collect/artifacts/NexusCollectionTask.java
 71-rest/src/main/java/software/wings/delegatetasks/jira/JiraTask.java
 71-rest/src/main/java/software/wings/delegatetasks/jira/ShellScriptApprovalTask.java
+71-rest/src/main/java/software/wings/delegatetasks/manifest/ManifestCollectionExecutionResponse.java
 71-rest/src/main/java/software/wings/delegatetasks/servicenow/ServicenowTask.java
 71-rest/src/main/java/software/wings/delegatetasks/validation/AcrValidation.java
 71-rest/src/main/java/software/wings/delegatetasks/validation/ArtifactoryValidation.java

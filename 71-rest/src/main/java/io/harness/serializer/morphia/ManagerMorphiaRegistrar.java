@@ -303,6 +303,7 @@ import software.wings.beans.alert.GitSyncErrorAlert;
 import software.wings.beans.alert.InstanceUsageLimitAlert;
 import software.wings.beans.alert.InvalidSMTPConfigAlert;
 import software.wings.beans.alert.KmsSetupAlert;
+import software.wings.beans.alert.ManifestCollectionFailedAlert;
 import software.wings.beans.alert.ManualInterventionNeededAlert;
 import software.wings.beans.alert.NoActiveDelegatesAlert;
 import software.wings.beans.alert.NoEligibleDelegatesAlert;
@@ -1230,6 +1231,7 @@ public class ManagerMorphiaRegistrar implements MorphiaRegistrar {
     w.put("beans.alert.InstanceUsageLimitAlert", InstanceUsageLimitAlert.class);
     w.put("beans.alert.InvalidSMTPConfigAlert", InvalidSMTPConfigAlert.class);
     w.put("beans.alert.KmsSetupAlert", KmsSetupAlert.class);
+    w.put("beans.alert.ManifestCollectionFailedAlert", ManifestCollectionFailedAlert.class);
     w.put("beans.alert.ManualInterventionNeededAlert", ManualInterventionNeededAlert.class);
     w.put("beans.alert.NoActiveDelegatesAlert", NoActiveDelegatesAlert.class);
     w.put("beans.alert.NoInstalledDelegatesAlert", NoInstalledDelegatesAlert.class);

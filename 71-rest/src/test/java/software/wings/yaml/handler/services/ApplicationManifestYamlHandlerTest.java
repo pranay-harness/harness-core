@@ -408,7 +408,7 @@ public class ApplicationManifestYamlHandlerTest extends BaseYamlHandlerTest {
   @Category(UnitTests.class)
   public void testFieldsInYaml() {
     int attributeDiff = attributeDiff(ApplicationManifest.class, ApplicationManifest.Yaml.class);
-    assertThat(attributeDiff).isEqualTo(7);
+    assertThat(attributeDiff).isEqualTo(8);
   }
 
   private String readResourceFile(String fileName) throws IOException {
