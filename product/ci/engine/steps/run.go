@@ -63,7 +63,7 @@ func NewRunStep(step *pb.UnitStep, tmpFilePath string, so output.StageOutput,
 // Executes customer provided run step commands with retries and timeout handling
 func (e *runStep) Run(ctx context.Context) (*output.StepOutput, int32, error) {
 	if err := e.validate(); err != nil {
-		e.log.Errorw("failed to validate run step", zap.Error(err))
+		e.log.Errorw("failed to validate run step", "step_id", e.id, zap.Error(err))
 		return nil, int32(1), err
 	}
 	if err := e.resolveJEXL(ctx); err != nil {
@@ -111,7 +111,7 @@ func (e *runStep) execute(ctx context.Context) (*output.StepOutput, int32, error
 
 	addonClient, err := newAddonClient(uint(e.containerPort), e.log)
 	if err != nil {
-		e.log.Errorw("Unable to create CI addon client", zap.Error(err))
+		e.log.Errorw("Unable to create CI addon client", "step_id", e.id, zap.Error(err))
 		return nil, int32(1), errors.Wrap(err, "Could not create CI Addon client")
 	}
 	defer addonClient.CloseConn()
@@ -120,7 +120,7 @@ func (e *runStep) execute(ctx context.Context) (*output.StepOutput, int32, error
 	arg := e.getExecuteStepArg()
 	ret, err := c.ExecuteStep(ctx, arg)
 	if err != nil {
-		e.log.Errorw("Execute run step RPC failed", "elapsed_time_ms", utils.TimeSince(st), zap.Error(err))
+		e.log.Errorw("Execute run step RPC failed", "step_id", e.id, "elapsed_time_ms", utils.TimeSince(st), zap.Error(err))
 		return nil, int32(1), err
 	}
 	e.log.Infow("Successfully executed step", "elapsed_time_ms", utils.TimeSince(st))

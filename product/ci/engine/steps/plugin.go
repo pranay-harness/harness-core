@@ -45,7 +45,7 @@ func NewPluginStep(step *pb.UnitStep, log *zap.SugaredLogger) PluginStep {
 // Executes customer provided plugin step
 func (e *pluginStep) Run(ctx context.Context) (int32, error) {
 	if err := e.validate(); err != nil {
-		e.log.Errorw("failed to validate plugin step", zap.Error(err))
+		e.log.Errorw("failed to validate plugin step", "step_id", e.id, zap.Error(err))
 		return int32(1), err
 	}
 	return e.execute(ctx)
@@ -68,7 +68,7 @@ func (e *pluginStep) execute(ctx context.Context) (int32, error) {
 
 	addonClient, err := newAddonClient(uint(e.containerPort), e.log)
 	if err != nil {
-		e.log.Errorw("Unable to create CI addon client", "elapsed_time_ms", utils.TimeSince(st), zap.Error(err))
+		e.log.Errorw("Unable to create CI addon client", "step_id", e.id, "elapsed_time_ms", utils.TimeSince(st), zap.Error(err))
 		return int32(1), errors.Wrap(err, "Could not create CI Addon client")
 	}
 	defer addonClient.CloseConn()
@@ -77,10 +77,10 @@ func (e *pluginStep) execute(ctx context.Context) (int32, error) {
 	arg := e.getExecuteStepArg()
 	ret, err := c.ExecuteStep(ctx, arg)
 	if err != nil {
-		e.log.Errorw("Plugin step RPC failed", "elapsed_time_ms", utils.TimeSince(st), zap.Error(err))
+		e.log.Errorw("Plugin step RPC failed", "step_id", e.id, "elapsed_time_ms", utils.TimeSince(st), zap.Error(err))
 		return int32(1), err
 	}
-	e.log.Infow("Successfully executed step", "elapsed_time_ms", utils.TimeSince(st))
+	e.log.Infow("Successfully executed step", "step_id", e.id, "elapsed_time_ms", utils.TimeSince(st))
 	return ret.GetNumRetries(), nil
 }
 
