@@ -12,10 +12,12 @@ import com.google.inject.Singleton;
 import com.google.inject.name.Named;
 
 import com.auth0.jwt.interfaces.Claim;
+import com.mongodb.MongoClientURI;
 import com.mongodb.client.result.UpdateResult;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.exception.DuplicateFieldException;
 import io.harness.exception.InvalidArgumentsException;
+import io.harness.mongo.MongoConfig;
 import io.harness.ng.core.invites.InviteOperationResponse;
 import io.harness.ng.core.invites.JWTGeneratorUtils;
 import io.harness.ng.core.invites.RetryUtils;
@@ -29,7 +31,6 @@ import io.harness.ng.core.invites.ext.mail.MailUtils;
 import io.harness.ng.core.invites.repositories.spring.InvitesRepository;
 import io.harness.ng.core.user.User;
 import io.harness.ng.core.user.services.api.NgUserService;
-import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import net.jodah.failsafe.Failsafe;
 import net.jodah.failsafe.RetryPolicy;
@@ -54,36 +55,39 @@ import java.util.function.Function;
 import javax.validation.constraints.NotNull;
 
 @Singleton
-@AllArgsConstructor(onConstructor = @__({ @Inject }))
 @Slf4j
 @OwnedBy(PL)
 public class InvitesServiceImpl implements InvitesService {
   private static final int INVITATION_VALIDITY_IN_DAYS = 30;
   private static final int LINK_VALIDITY_IN_DAYS = 7;
   private static final String MAIL_SUBJECT_FORMAT = "Invitation for project %s on Harness";
-  @Inject @Named("baseURL") private final String baseURL;
-  @Inject @Named("env") private final String env;
-  @Inject @Named("userVerificatonSecret") private final String jwtPasswordSecret;
+  private final String jwtPasswordSecret;
   private final JWTGeneratorUtils jwtGeneratorUtils;
   private final MailUtils mailUtils;
   private final NgUserService ngUserService;
-  private final MongoTransactionManager mongoTransactionManager;
+  private final InvitesRepository invitesRepository;
+  private final String verificationBaseUrl;
+  private final boolean useMongoTransactions;
+  private final TransactionTemplate transactionTemplate;
+
   private final RetryPolicy<Object> transactionRetryPolicy =
       RetryUtils.getRetryPolicy("[Retrying]: Failed to mark previous invites as stale; attempt: {}",
           "[Failed]: Failed to mark previous invites as stale; attempt: {}",
           ImmutableList.of(TransactionException.class), Duration.ofSeconds(1), 3, logger);
-  private final InvitesRepository invitesRepository;
-  private String verificationBaseUrl;
-  private TransactionTemplate transactionTemplate;
 
   @Inject
-  protected void setBaseURL() {
+  public InvitesServiceImpl(@Named("baseUrl") String baseURL, @Named("userVerificatonSecret") String jwtPasswordSecret,
+      MongoConfig mongoConfig, JWTGeneratorUtils jwtGeneratorUtils, MailUtils mailUtils, NgUserService ngUserService,
+      MongoTransactionManager mongoTransactionManager, InvitesRepository invitesRepository) {
+    this.jwtPasswordSecret = jwtPasswordSecret;
+    this.jwtGeneratorUtils = jwtGeneratorUtils;
+    this.mailUtils = mailUtils;
+    this.ngUserService = ngUserService;
+    this.invitesRepository = invitesRepository;
     verificationBaseUrl = baseURL + "invites/verify?token=%s&accountId=%s";
-  }
-
-  @Inject
-  protected void setTransactionTemplate() {
     transactionTemplate = new TransactionTemplate(mongoTransactionManager);
+    MongoClientURI uri = new MongoClientURI(mongoConfig.getUri());
+    useMongoTransactions = uri.getHosts().size() > 2;
   }
 
   @Override
@@ -119,7 +123,7 @@ public class InvitesServiceImpl implements InvitesService {
         return wrapperForTransactions(this ::newInviteHandler, invite);
       }
       Invite existingInvite = existingInviteOptional.get();
-      if (existingInvite.getApproved()) {
+      if (Boolean.TRUE.equals(existingInvite.getApproved())) {
         return InviteOperationResponse.ACCOUNT_INVITE_ACCEPTED;
       }
       resendInvitationMail(existingInvite);
@@ -164,7 +168,7 @@ public class InvitesServiceImpl implements InvitesService {
   }
 
   private <T, S> S wrapperForTransactions(Function<T, S> function, T arg) {
-    if (env.equalsIgnoreCase("dev")) {
+    if (!useMongoTransactions) {
       return function.apply(arg);
     } else {
       return Failsafe.with(transactionRetryPolicy)
@@ -173,7 +177,7 @@ public class InvitesServiceImpl implements InvitesService {
   }
 
   private <T, U, R> R wrapperForTransactions(BiFunction<T, U, R> function, T arg1, U arg2) {
-    if (env.equalsIgnoreCase("dev")) {
+    if (!useMongoTransactions) {
       return function.apply(arg1, arg2);
     } else {
       return Failsafe.with(transactionRetryPolicy)
