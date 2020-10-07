@@ -1,9 +1,13 @@
 package io.harness.generator;
 
+import static guru.nidi.graphviz.attribute.Rank.RankDir.TOP_TO_BOTTOM;
 import static guru.nidi.graphviz.model.Factory.mutGraph;
 import static guru.nidi.graphviz.model.Factory.mutNode;
+import static guru.nidi.graphviz.model.Factory.to;
 
+import guru.nidi.graphviz.attribute.Label;
 import guru.nidi.graphviz.attribute.MapAttributes;
+import guru.nidi.graphviz.attribute.Rank;
 import guru.nidi.graphviz.engine.Format;
 import guru.nidi.graphviz.engine.Graphviz;
 import guru.nidi.graphviz.engine.Renderer;
@@ -23,13 +27,13 @@ import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.OutputStream;
-import java.util.Collections;
+import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 @ExcludeRedesign
 @Slf4j
@@ -38,6 +42,7 @@ public class GraphVisualizer {
 
   public void generateImage(OrchestrationGraphDTO graph, OutputStream output) throws IOException {
     MutableGraph mutableGraph = generateGraph(graph, graph.getRootNodeIds());
+    addLinksToGraph(mutableGraph, graph);
     try (ByteArrayOutputStream os = new ByteArrayOutputStream()) {
       buildImageFromMutableGraph(mutableGraph).toOutputStream(os);
       output.write(os.toByteArray(), 0, os.size());
@@ -53,17 +58,7 @@ public class GraphVisualizer {
   }
 
   private MutableGraph generateGraph(OrchestrationGraphDTO graph, List<String> nodeIds) {
-    MutableGraph mutableGraph = mutGraph().setDirected(true);
-    List<MutableNode> linkSources =
-        graph.getAdjacencyList()
-            .getGraphVertexMap()
-            .entrySet()
-            .stream()
-            .filter(entry -> nodeIds.contains(entry.getKey()))
-            .map(entry
-                -> mutNode(entry.getValue().getName()).attrs().add(new MapAttributes<>().add("ID", entry.getKey())))
-            .collect(Collectors.toList());
-    mutableGraph.add(linkSources);
+    MutableGraph mutableGraph = mutGraph().setDirected(true).setStrict(true).graphAttrs().add(Rank.dir(TOP_TO_BOTTOM));
 
     graph.getAdjacencyList()
         .getAdjacencyMap()
@@ -71,14 +66,24 @@ public class GraphVisualizer {
         .stream()
         .filter(entry -> nodeIds.contains(entry.getKey()))
         .forEach(entry -> {
+          GraphVertex graphVertex = graph.getAdjacencyList().getGraphVertexMap().get(entry.getKey());
+          MutableNode node = mutNode(graphVertex.getName(), true)
+                                 .attrs()
+                                 .add(new MapAttributes<>().add("ID", entry.getKey()),
+                                     Label.of(graphVertex.getName())
+                                         .justify(Label.Justification.MIDDLE)
+                                         .locate(Label.Location.CENTER));
           if (!entry.getValue().getEdges().isEmpty()) {
-            MutableGraph cluster = mutGraph().setCluster(true).setName(entry.getKey()).setStrict(true);
+            MutableGraph cluster =
+                mutGraph().setCluster(true).setName(entry.getKey()).setDirected(true).setStrict(true);
             cluster.add(generateGraph(graph, entry.getValue().getEdges()));
-            mutableGraph.add(cluster);
+            cluster.graphAttrs().add(Label.of(graphVertex.getMode().name()).justify(Label.Justification.RIGHT));
+            cluster.addTo(mutableGraph);
           }
           if (!entry.getValue().getNextIds().isEmpty()) {
-            mutableGraph.add(generateGraph(graph, Collections.singletonList(entry.getValue().getNextIds().get(0))));
+            mutableGraph.add(generateGraph(graph, entry.getValue().getNextIds()));
           }
+          node.addTo(mutableGraph);
         });
 
     return mutableGraph;
@@ -86,16 +91,18 @@ public class GraphVisualizer {
 
   private void addLinksToGraph(MutableGraph mutableGraph, OrchestrationGraphDTO orchestrationGraph) {
     Map<String, GraphVertex> graphVertexMap = orchestrationGraph.getAdjacencyList().getGraphVertexMap();
-    Set<MutableNode> nodes = (Set<MutableNode>) mutableGraph.nodes();
+    List<MutableNode> nodes = new ArrayList<>(mutableGraph.nodes());
     nodes.forEach(node -> {
       EdgeList edgeList = orchestrationGraph.getAdjacencyList().getAdjacencyMap().get(node.attrs().get("ID"));
-      if (!edgeList.getEdges().isEmpty() && !edgeList.getNextIds().isEmpty()) {
-        node.addLink(edgeList.getEdges().stream().map(s -> graphVertexMap.get(s).getName()).toArray(String[] ::new));
-        node.addLink(graphVertexMap.get(edgeList.getNextIds().get(0)).getName());
-      } else if (!edgeList.getEdges().isEmpty()) {
-        node.addLink(edgeList.getEdges().stream().map(s -> graphVertexMap.get(s).getName()).toArray(String[] ::new));
-      } else if (!edgeList.getNextIds().isEmpty()) {
-        node.addLink(graphVertexMap.get(edgeList.getNextIds().get(0)).getName());
+      if (!edgeList.getEdges().isEmpty()) {
+        node.addLink(edgeList.getEdges()
+                         .stream()
+                         .map(s -> graphVertexMap.get(s).getName())
+                         .sorted(Comparator.comparing(String::toLowerCase))
+                         .toArray(String[] ::new));
+      }
+      for (String next : edgeList.getNextIds()) {
+        node.links().add(node.linkTo(to(mutNode(graphVertexMap.get(next).getName())).with(Label.of("next"))));
       }
     });
   }
