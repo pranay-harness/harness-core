@@ -34,8 +34,6 @@ import io.harness.serializer.KryoModule;
 import io.harness.serializer.KryoRegistrar;
 import io.harness.serializer.ManagerRegistrars;
 import io.harness.serializer.NGRegistrars;
-import io.harness.serializer.kryo.TestPersistenceKryoRegistrar;
-import io.harness.serializer.morphia.TestPersistenceMorphiaRegistrar;
 import io.harness.spring.AliasRegistrar;
 import io.harness.testlib.module.MongoRuleMixin;
 import io.harness.testlib.module.TestMongoModule;
@@ -72,19 +70,13 @@ public class CDNGTestRule implements InjectorRuleMixin, MethodRule, MongoRuleMix
       @Provides
       @Singleton
       Set<Class<? extends KryoRegistrar>> kryoRegistrars() {
-        return ImmutableSet.<Class<? extends KryoRegistrar>>builder()
-            .addAll(NGRegistrars.kryoRegistrars)
-            .add(TestPersistenceKryoRegistrar.class)
-            .build();
+        return ImmutableSet.<Class<? extends KryoRegistrar>>builder().addAll(NGRegistrars.kryoRegistrars).build();
       }
 
       @Provides
       @Singleton
       Set<Class<? extends MorphiaRegistrar>> morphiaRegistrars() {
-        return ImmutableSet.<Class<? extends MorphiaRegistrar>>builder()
-            .addAll(NGRegistrars.morphiaRegistrars)
-            .add(TestPersistenceMorphiaRegistrar.class)
-            .build();
+        return ImmutableSet.<Class<? extends MorphiaRegistrar>>builder().addAll(NGRegistrars.morphiaRegistrars).build();
       }
 
       @Provides

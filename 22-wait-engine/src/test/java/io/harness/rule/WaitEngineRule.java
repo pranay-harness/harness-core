@@ -30,8 +30,6 @@ import io.harness.queue.QueuePublisher;
 import io.harness.serializer.KryoModule;
 import io.harness.serializer.KryoRegistrar;
 import io.harness.serializer.PersistenceRegistrars;
-import io.harness.serializer.kryo.TestPersistenceKryoRegistrar;
-import io.harness.serializer.morphia.TestPersistenceMorphiaRegistrar;
 import io.harness.testlib.module.MongoRuleMixin;
 import io.harness.testlib.module.TestMongoModule;
 import io.harness.threading.CurrentThreadExecutor;
@@ -81,7 +79,6 @@ public class WaitEngineRule implements MethodRule, InjectorRuleMixin, MongoRuleM
       Set<Class<? extends KryoRegistrar>> kryoRegistrars() {
         return ImmutableSet.<Class<? extends KryoRegistrar>>builder()
             .addAll(WaitEngineRegistrars.kryoRegistrars)
-            .add(TestPersistenceKryoRegistrar.class)
             .build();
       }
 
@@ -90,7 +87,6 @@ public class WaitEngineRule implements MethodRule, InjectorRuleMixin, MongoRuleM
       Set<Class<? extends MorphiaRegistrar>> morphiaRegistrars() {
         return ImmutableSet.<Class<? extends MorphiaRegistrar>>builder()
             .addAll(WaitEngineRegistrars.morphiaRegistrars)
-            .add(TestPersistenceMorphiaRegistrar.class)
             .build();
       }
 

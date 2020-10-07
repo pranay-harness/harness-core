@@ -21,8 +21,6 @@ import io.harness.serializer.KryoModule;
 import io.harness.serializer.KryoRegistrar;
 import io.harness.serializer.NGPipelineRegistrars;
 import io.harness.serializer.OrchestrationBeansRegistrars;
-import io.harness.serializer.kryo.TestPersistenceKryoRegistrar;
-import io.harness.serializer.morphia.TestPersistenceMorphiaRegistrar;
 import io.harness.spring.AliasRegistrar;
 import io.harness.testlib.module.MongoRuleMixin;
 import io.harness.testlib.module.TestMongoModule;
@@ -61,7 +59,6 @@ public class NGPipelineCommonsTestRule implements MethodRule, InjectorRuleMixin,
       Set<Class<? extends KryoRegistrar>> kryoRegistrars() {
         return ImmutableSet.<Class<? extends KryoRegistrar>>builder()
             .addAll(NGPipelineRegistrars.kryoRegistrars)
-            .add(TestPersistenceKryoRegistrar.class)
             .build();
       }
 
@@ -70,7 +67,6 @@ public class NGPipelineCommonsTestRule implements MethodRule, InjectorRuleMixin,
       Set<Class<? extends MorphiaRegistrar>> morphiaRegistrars() {
         return ImmutableSet.<Class<? extends MorphiaRegistrar>>builder()
             .addAll(NGPipelineRegistrars.morphiaRegistrars)
-            .add(TestPersistenceMorphiaRegistrar.class)
             .build();
       }
 

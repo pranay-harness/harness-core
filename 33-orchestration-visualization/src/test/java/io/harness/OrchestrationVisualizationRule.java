@@ -29,8 +29,6 @@ import io.harness.serializer.KryoRegistrar;
 import io.harness.serializer.OrchestrationBeansRegistrars;
 import io.harness.serializer.OrchestrationVisualizationModuleRegistrars;
 import io.harness.serializer.kryo.OrchestrationVisualizationTestKryoRegistrar;
-import io.harness.serializer.kryo.TestPersistenceKryoRegistrar;
-import io.harness.serializer.morphia.TestPersistenceMorphiaRegistrar;
 import io.harness.spring.AliasRegistrar;
 import io.harness.testlib.module.MongoRuleMixin;
 import io.harness.testlib.module.TestMongoModule;
@@ -77,7 +75,6 @@ public class OrchestrationVisualizationRule implements MethodRule, InjectorRuleM
         return ImmutableSet.<Class<? extends KryoRegistrar>>builder()
             .addAll(OrchestrationVisualizationModuleRegistrars.kryoRegistrars)
             .add(OrchestrationVisualizationTestKryoRegistrar.class)
-            .add(TestPersistenceKryoRegistrar.class)
             .build();
       }
 
@@ -86,7 +83,6 @@ public class OrchestrationVisualizationRule implements MethodRule, InjectorRuleM
       Set<Class<? extends MorphiaRegistrar>> morphiaRegistrars() {
         return ImmutableSet.<Class<? extends MorphiaRegistrar>>builder()
             .addAll(OrchestrationVisualizationModuleRegistrars.morphiaRegistrars)
-            .add(TestPersistenceMorphiaRegistrar.class)
             .build();
       }
 
