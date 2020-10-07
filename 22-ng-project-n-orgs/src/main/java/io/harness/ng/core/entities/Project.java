@@ -5,7 +5,7 @@ import static io.harness.mongo.CollationStrength.PRIMARY;
 
 import io.harness.ModuleType;
 import io.harness.data.validator.EntityIdentifier;
-import io.harness.data.validator.EntityName;
+import io.harness.data.validator.NGEntityName;
 import io.harness.data.validator.Trimmed;
 import io.harness.mongo.index.CdIndex;
 import io.harness.mongo.index.CdUniqueIndexWithCollation;
@@ -54,7 +54,7 @@ public class Project implements PersistentEntity, NGAccountAccess {
   @Trimmed @EntityIdentifier String identifier;
   @Trimmed @EntityIdentifier String orgIdentifier;
 
-  @NotEmpty @EntityName(message = "name can only have a-z, A-Z, 0-9, - and _") String name;
+  @NGEntityName String name;
   @Trimmed @NotEmpty String color;
   @NotNull @Singular @Size(max = 1024) List<ModuleType> modules;
   @NotNull @Size(max = 1024) String description;

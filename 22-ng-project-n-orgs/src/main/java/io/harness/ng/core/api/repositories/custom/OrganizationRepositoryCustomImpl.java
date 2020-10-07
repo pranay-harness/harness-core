@@ -17,7 +17,7 @@ import org.springframework.data.repository.support.PageableExecutionUtils;
 
 import java.util.List;
 
-@AllArgsConstructor(access = AccessLevel.PRIVATE, onConstructor = @__({ @Inject }))
+@AllArgsConstructor(access = AccessLevel.PROTECTED, onConstructor = @__({ @Inject }))
 public class OrganizationRepositoryCustomImpl implements OrganizationRepositoryCustom {
   private final MongoTemplate mongoTemplate;
 

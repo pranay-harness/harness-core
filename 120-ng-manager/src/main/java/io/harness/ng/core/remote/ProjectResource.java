@@ -114,8 +114,9 @@ public class ProjectResource {
       @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier,
       @NotNull @QueryParam(NGCommonEntityConstants.ORG_KEY) String orgIdentifier,
       @NotNull @Valid ProjectDTO projectDTO) {
+    projectDTO.setVersion(Optional.ofNullable(ifMatch).map(Long::parseLong).orElse(null));
     Project updatedProject = projectService.update(accountIdentifier, orgIdentifier, identifier, projectDTO);
-    return ResponseDTO.newResponse(writeDTO(updatedProject));
+    return ResponseDTO.newResponse(updatedProject.getVersion().toString(), writeDTO(updatedProject));
   }
 
   @DELETE
