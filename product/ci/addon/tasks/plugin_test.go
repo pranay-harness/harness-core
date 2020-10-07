@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"fmt"
+	"os"
 	"os/exec"
 	"testing"
 
@@ -35,11 +36,11 @@ func TestPluginSuccess(t *testing.T) {
 		procWriter:        &buf,
 	}
 
-	oldImgEntrypoint := getImageEntrypoint
-	getImageEntrypoint = func(image string) ([]string, error) {
+	oldImgEntrypoint := getPublicEntrypoint
+	getPublicEntrypoint = func(image string) ([]string, error) {
 		return commands, nil
 	}
-	defer func() { getImageEntrypoint = oldImgEntrypoint }()
+	defer func() { getPublicEntrypoint = oldImgEntrypoint }()
 
 	cmdFactory.EXPECT().CmdContextWithSleep(gomock.Any(), cmdExitWaitTime, gomock.Any()).Return(cmd)
 	cmd.EXPECT().WithStdout(&buf).Return(cmd)
@@ -72,11 +73,11 @@ func TestPluginNonZeroStatus(t *testing.T) {
 		procWriter:        &buf,
 	}
 
-	oldImgEntrypoint := getImageEntrypoint
-	getImageEntrypoint = func(image string) ([]string, error) {
+	oldImgEntrypoint := getPublicEntrypoint
+	getPublicEntrypoint = func(image string) ([]string, error) {
 		return commands, nil
 	}
-	defer func() { getImageEntrypoint = oldImgEntrypoint }()
+	defer func() { getPublicEntrypoint = oldImgEntrypoint }()
 
 	cmdFactory.EXPECT().CmdContextWithSleep(gomock.Any(), cmdExitWaitTime, gomock.Any()).Return(cmd)
 	cmd.EXPECT().WithStdout(&buf).Return(cmd)
@@ -122,11 +123,11 @@ func TestPluginEntrypointErr(t *testing.T) {
 		},
 	}
 
-	oldImgEntrypoint := getImageEntrypoint
-	getImageEntrypoint = func(image string) ([]string, error) {
+	oldImgEntrypoint := getPublicEntrypoint
+	getPublicEntrypoint = func(image string) ([]string, error) {
 		return nil, fmt.Errorf("entrypoint not found")
 	}
-	defer func() { getImageEntrypoint = oldImgEntrypoint }()
+	defer func() { getPublicEntrypoint = oldImgEntrypoint }()
 
 	var buf bytes.Buffer
 	executor := NewPluginTask(step, log.Sugar(), &buf)
@@ -148,11 +149,61 @@ func TestPluginEmptyEntrypointErr(t *testing.T) {
 		},
 	}
 
-	oldImgEntrypoint := getImageEntrypoint
-	getImageEntrypoint = func(image string) ([]string, error) {
+	oldImgEntrypoint := getPublicEntrypoint
+	getPublicEntrypoint = func(image string) ([]string, error) {
 		return nil, nil
 	}
-	defer func() { getImageEntrypoint = oldImgEntrypoint }()
+	defer func() { getPublicEntrypoint = oldImgEntrypoint }()
+
+	var buf bytes.Buffer
+	executor := NewPluginTask(step, log.Sugar(), &buf)
+	_, err := executor.Run(ctx)
+	assert.NotNil(t, err)
+}
+
+func TestPrivatePluginEnvNotFoundErr(t *testing.T) {
+	ctrl, ctx := gomock.WithContext(context.Background(), t)
+	defer ctrl.Finish()
+
+	imgSecretEnv := "DOCKER_CONFIG"
+	log, _ := logs.GetObservedLogger(zap.InfoLevel)
+	step := &pb.UnitStep{
+		Id: "test",
+		Step: &pb.UnitStep_Plugin{
+			Plugin: &pb.PluginStep{
+				Image:          "plugin/drone-git",
+				ImageSecretEnv: imgSecretEnv,
+			},
+		},
+	}
+
+	var buf bytes.Buffer
+	executor := NewPluginTask(step, log.Sugar(), &buf)
+	_, err := executor.Run(ctx)
+	assert.NotNil(t, err)
+}
+
+func TestPrivatePluginErr(t *testing.T) {
+	ctrl, ctx := gomock.WithContext(context.Background(), t)
+	defer ctrl.Finish()
+
+	imgSecretEnv := "DOCKER_CONFIG"
+	imgSecret := "test"
+	log, _ := logs.GetObservedLogger(zap.InfoLevel)
+	step := &pb.UnitStep{
+		Id: "test",
+		Step: &pb.UnitStep_Plugin{
+			Plugin: &pb.PluginStep{
+				Image:          "plugin/drone-git",
+				ImageSecretEnv: imgSecretEnv,
+			},
+		},
+	}
+
+	if err := os.Setenv(imgSecretEnv, imgSecret); err != nil {
+		t.Fatalf("failed to set environment variable")
+	}
+	defer os.Unsetenv(imgSecretEnv)
 
 	var buf bytes.Buffer
 	executor := NewPluginTask(step, log.Sugar(), &buf)

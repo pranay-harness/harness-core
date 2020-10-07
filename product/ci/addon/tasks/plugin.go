@@ -4,8 +4,10 @@ import (
 	"context"
 	"fmt"
 	"io"
+	"os"
 	"time"
 
+	"github.com/pkg/errors"
 	"github.com/wings-software/portal/commons/go/lib/exec"
 	"github.com/wings-software/portal/commons/go/lib/utils"
 	"github.com/wings-software/portal/product/ci/addon/entrypoint"
@@ -22,7 +24,8 @@ const (
 )
 
 var (
-	getImageEntrypoint = entrypoint.GetPublicImage
+	getPublicEntrypoint  = entrypoint.PublicImage
+	getPrivateEntrypoint = entrypoint.PrivateImage
 )
 
 // PluginTask represents interface to execute a plugin step
@@ -36,6 +39,7 @@ type pluginTask struct {
 	timeoutSecs       int64
 	numRetries        int32
 	image             string
+	imageSecretEnv    string // Name of environment variable that stores the docker image secret. If not set, plugin is public.
 	log               *zap.SugaredLogger
 	procWriter        io.Writer
 	cmdContextFactory exec.CmdContextFactory
@@ -57,6 +61,7 @@ func NewPluginTask(step *pb.UnitStep, log *zap.SugaredLogger, w io.Writer) Plugi
 		id:                step.GetId(),
 		displayName:       step.GetDisplayName(),
 		image:             r.GetImage(),
+		imageSecretEnv:    r.GetImageSecretEnv(),
 		timeoutSecs:       timeoutSecs,
 		numRetries:        numRetries,
 		cmdContextFactory: exec.OsCommandContextGracefulWithLog(log),
@@ -81,8 +86,7 @@ func (e *pluginTask) execute(ctx context.Context, retryCount int32) error {
 	ctx, cancel := context.WithTimeout(ctx, time.Second*time.Duration(e.timeoutSecs))
 	defer cancel()
 
-	// TODO: Fetch entrypoint for private plugins
-	commands, err := getImageEntrypoint(e.image)
+	commands, err := e.getEntrypoint()
 	if err != nil {
 		logPluginErr(e.log, "failed to find entrypoint for plugin", e.id, commands, retryCount, start, err)
 		return err
@@ -113,6 +117,20 @@ func (e *pluginTask) execute(ctx context.Context, retryCount int32) error {
 		"elapsed_time_ms", utils.TimeSince(start),
 	)
 	return nil
+}
+
+func (e *pluginTask) getEntrypoint() ([]string, error) {
+	if e.imageSecretEnv == "" {
+		return getPublicEntrypoint(e.image)
+	}
+
+	imageSecretEnv, ok := os.LookupEnv(e.imageSecretEnv)
+	if !ok {
+		return nil, errors.New(
+			fmt.Sprintf("%s environment variable storing image secret is not set", e.imageSecretEnv))
+	}
+
+	return getPrivateEntrypoint(e.image, imageSecretEnv)
 }
 
 func logPluginErr(log *zap.SugaredLogger, errMsg, stepID string, cmds []string, retryCount int32, startTime time.Time, err error) {
