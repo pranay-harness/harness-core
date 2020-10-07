@@ -86,6 +86,53 @@ public class GoogleCloudMonitoring {
     }
   }
 
+  /*
+  public static void main(String[] args) {
+    uploadFailedTestsData(Arrays.asList(
+        FailedTestData.builder().author("satyam.shanker@harness.io").team("CDP").numFailedTests(2).build(),
+        FailedTestData.builder().author("user1@harness.io").team("CDP").numFailedTests(1).build(),
+        FailedTestData.builder().author("user2@harness.io").team("CDC").numFailedTests(1).build()
+    ));
+  }
+  */
+
+  public static void uploadFailedTestsData(List<FailedTestData> failedTests) {
+    if (failedTests == null || failedTests.size() == 0) {
+      return;
+    }
+    try (MetricServiceClient client = MetricServiceClient.create(
+             MetricServiceSettings.newBuilder()
+                 .setCredentialsProvider(FixedCredentialsProvider.create(
+                     ServiceAccountCredentials.fromStream(new FileInputStream(readEnvVar(CREDS_FILE_KEY)))))
+                 .build())) {
+      failedTests.forEach(failedTest -> {
+        List<Point> points = Collections.singletonList(
+            Point.newBuilder()
+                .setInterval(
+                    TimeInterval.newBuilder().setEndTime(Timestamps.fromMillis(System.currentTimeMillis())).build())
+                .setValue(TypedValue.newBuilder().setInt64Value(failedTest.getNumFailedTests()).build())
+                .build());
+        Map<String, String> metricLabels = new HashMap<>();
+        metricLabels.put("AUTHOR", failedTest.getAuthor());
+        metricLabels.put("TEAM", failedTest.getTeam());
+
+        String metricType = METRIC_TYPE_PREFIX + "/bnt/test/failedTests";
+        Metric metric = Metric.newBuilder().setType(metricType).putAllLabels(metricLabels).build();
+
+        TimeSeries timeSeries = TimeSeries.newBuilder().setMetric(metric).addAllPoints(points).build();
+        List<TimeSeries> timeSeriesList = new ArrayList<>();
+        timeSeriesList.add(timeSeries);
+
+        ProjectName name = ProjectName.of(PROJECT_ID);
+        CreateTimeSeriesRequest request =
+            CreateTimeSeriesRequest.newBuilder().setName(name.toString()).addAllTimeSeries(timeSeriesList).build();
+        client.createTimeSeries(request);
+      });
+    } catch (Exception ex) {
+      logger.error(String.format("Exception while uploading failed tests data: [%s]", ex.getMessage()), ex);
+    }
+  }
+
   public static void uploadMetrics(String[] args) throws Exception {
     if (args.length < 2) {
       throw new UnsupportedOperationException("Need upload operation metrics");
