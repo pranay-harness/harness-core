@@ -72,9 +72,6 @@ func (e *unitExecutor) validate(step *pb.UnitStep) error {
 // Executes a unit step
 func (e *unitExecutor) Run(ctx context.Context, step *pb.UnitStep, so output.StageOutput,
 	accountID string) (*output.StepOutput, error) {
-	// Ensure step_id is present as a parameter for all logs
-	e.log = e.log.With(zap.String("step_id", step.GetId()))
-
 	start := time.Now()
 	stepOutput, numRetries, err := e.execute(ctx, step, so)
 	timeTaken := time.Since(start)
@@ -84,7 +81,7 @@ func (e *unitExecutor) Run(ctx context.Context, step *pb.UnitStep, so output.Sta
 	statusErr := sendStepStatus(ctx, accountID, callbackToken, taskID, numRetries, timeTaken,
 		stepOutput, err, e.log)
 	if statusErr != nil {
-		e.log.Errorw("Failed to send step status. Bailing out stage execution", zap.Error(err))
+		e.log.Errorw("Failed to send step status. Bailing out stage execution", "step_id", step.GetId(), zap.Error(err))
 		return nil, statusErr
 	}
 	return stepOutput, err
@@ -104,13 +101,13 @@ func (e *unitExecutor) execute(ctx context.Context, step *pb.UnitStep,
 
 	switch x := step.GetStep().(type) {
 	case *pb.UnitStep_Run:
-		e.log.Infow("Run step info", "step", x.Run.String())
+		e.log.Infow("Run step info", "step", x.Run.String(), "step_id", step.GetId())
 		stepOutput, numRetries, err = runStep(step, e.tmpFilePath, so, e.log).Run(ctx)
 		if err != nil {
 			return nil, numRetries, err
 		}
 	case *pb.UnitStep_Plugin:
-		e.log.Infow("Plugin step info", "step", x.Plugin.String())
+		e.log.Infow("Plugin step info", "step", x.Plugin.String(), "step_id", step.GetId())
 		numRetries, err = pluginStep(step, e.log).Run(ctx)
 		if err != nil {
 			return nil, numRetries, err
@@ -121,7 +118,7 @@ func (e *unitExecutor) execute(ctx context.Context, step *pb.UnitStep,
 			return nil, numRetries, err
 		}
 		defer rl.Writer.Close()
-		e.log.Infow("Save cache step info", "step", x.SaveCache.String())
+		e.log.Infow("Save cache step info", "step", x.SaveCache.String(), "step_id", step.GetId())
 		stepOutput, err = saveCacheStep(step, e.tmpFilePath, so, fs, rl.BaseLogger).Run(ctx)
 		if err != nil {
 			return nil, numRetries, err
@@ -132,7 +129,7 @@ func (e *unitExecutor) execute(ctx context.Context, step *pb.UnitStep,
 			return nil, numRetries, err
 		}
 		defer rl.Writer.Close()
-		e.log.Infow("Restore cache step info", "step", x.RestoreCache.String())
+		e.log.Infow("Restore cache step info", "step", x.RestoreCache.String(), "step_id", step.GetId())
 		if err = restoreCacheStep(step, e.tmpFilePath, so, fs, rl.BaseLogger).Run(ctx); err != nil {
 			return nil, numRetries, err
 		}
@@ -142,7 +139,7 @@ func (e *unitExecutor) execute(ctx context.Context, step *pb.UnitStep,
 			return nil, numRetries, err
 		}
 		defer rl.Writer.Close()
-		e.log.Infow("Publishing artifact info", "step", x.PublishArtifacts.String())
+		e.log.Infow("Publishing artifact info", "step", x.PublishArtifacts.String(), "step_id", step.GetId())
 		if err = publishArtifactsStep(step, so, rl.BaseLogger).Run(ctx); err != nil {
 			return nil, numRetries, err
 		}
@@ -159,26 +156,26 @@ func (e *unitExecutor) Cleanup(ctx context.Context, step *pb.UnitStep) error {
 	switch x := step.GetStep().(type) {
 	case *pb.UnitStep_Run:
 		port := x.Run.GetContainerPort()
-		return e.stopAddonServer(ctx, uint(port))
+		return e.stopAddonServer(ctx, step.GetId(), uint(port))
 	case *pb.UnitStep_Plugin:
 		port := x.Plugin.GetContainerPort()
-		return e.stopAddonServer(ctx, uint(port))
+		return e.stopAddonServer(ctx, step.GetId(), uint(port))
 	}
 	return nil
 }
 
 // Stops CI-Addon GRPC server
-func (e *unitExecutor) stopAddonServer(ctx context.Context, port uint) error {
+func (e *unitExecutor) stopAddonServer(ctx context.Context, stepID string, port uint) error {
 	addonClient, err := newAddonClient(port, e.log)
 	if err != nil {
-		e.log.Errorw("Could not create CI Addon client", zap.Error(err))
+		e.log.Errorw("Could not create CI Addon client", "step_id", stepID, zap.Error(err))
 		return errors.Wrap(err, "Could not create CI Addon client")
 	}
 	defer addonClient.CloseConn()
 
 	_, err = addonClient.Client().SignalStop(ctx, &addonpb.SignalStopRequest{})
 	if err != nil {
-		e.log.Errorw("Unable to send Stop server request", zap.Error(err))
+		e.log.Errorw("Unable to send Stop server request", "step_id", stepID, zap.Error(err))
 		return errors.Wrap(err, "Could not send stop server request")
 	}
 	return nil
