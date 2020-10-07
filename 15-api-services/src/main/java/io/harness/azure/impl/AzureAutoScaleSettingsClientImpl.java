@@ -1,5 +1,6 @@
 package io.harness.azure.impl;
 
+import static io.harness.azure.model.AzureConstants.VMSS_AUTOSCALE_SUFIX;
 import static io.harness.exception.WingsException.USER;
 import static java.lang.String.format;
 import static java.util.Objects.isNull;
@@ -12,6 +13,7 @@ import com.microsoft.azure.management.Azure;
 import com.microsoft.azure.management.monitor.AutoscaleProfile;
 import com.microsoft.azure.management.monitor.AutoscaleSetting;
 import com.microsoft.azure.management.monitor.ScaleCapacity;
+import com.microsoft.azure.management.monitor.implementation.AutoscaleProfileInner;
 import com.microsoft.azure.management.monitor.implementation.AutoscaleSettingResourceInner;
 import com.microsoft.azure.serializer.AzureJacksonAdapter;
 import io.fabric8.utils.Objects;
@@ -24,6 +26,7 @@ import lombok.extern.slf4j.Slf4j;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -139,25 +142,24 @@ public class AzureAutoScaleSettingsClientImpl extends AzureClient implements Azu
           e, USER);
     }
 
-    String targetResourceUri = autoScaleSettingResourceInner.targetResourceUri();
-    String targetResourceName = autoScaleSettingResourceInner.name();
+    String newCustomAutoScalingSettingsName = getNewCustomAutoScalingSettingsName(targetResourceId);
 
-    if (!targetResourceId.equals(autoScaleSettingResourceInner.targetResourceUri())) {
-      throw new InvalidRequestException(
-          format("Target resource id doesn't match target resource uri, targetResourceId: %s, "
-                  + "targetResourceUri: %s, targetResourceName: %s",
-              targetResourceId, targetResourceUri, targetResourceName),
-          USER);
-    }
+    autoScaleSettingResourceInner.withTargetResourceUri(targetResourceId);
+    autoScaleSettingResourceInner.withAutoscaleSettingResourceName(newCustomAutoScalingSettingsName);
 
     // set min, max and desired capacity on default AutoScaleProfile
     setDefaultAutoScaleProfileCapacity(defaultProfileScaleCapacity, autoScaleSettingResourceInner);
+    setRulesMetricResourceUri(autoScaleSettingResourceInner, targetResourceId);
 
     logger.debug(
-        "Start creating or updating AutosScaleSetting by resourceGroupName: {}, targetResourceId: {}, targetResourceName: {}",
-        resourceGroupName, targetResourceId, targetResourceName);
+        "Start creating or updating AutosScaleSetting by resourceGroupName: {}, targetResourceId: {}, newCustomAutoScalingSettingsName: {}",
+        resourceGroupName, targetResourceId, newCustomAutoScalingSettingsName);
     azure.autoscaleSettings().inner().createOrUpdate(
-        resourceGroupName, targetResourceName, autoScaleSettingResourceInner);
+        resourceGroupName, newCustomAutoScalingSettingsName, autoScaleSettingResourceInner);
+  }
+
+  private String getNewCustomAutoScalingSettingsName(String targetResourceId) {
+    return targetResourceId.substring(targetResourceId.lastIndexOf('/') + 1).concat(VMSS_AUTOSCALE_SUFIX);
   }
 
   private void setDefaultAutoScaleProfileCapacity(
@@ -166,8 +168,28 @@ public class AzureAutoScaleSettingsClientImpl extends AzureClient implements Azu
       return;
     }
 
-    autoScaleSettingResourceInner.profiles().stream().findFirst().ifPresent(
-        ap -> ap.withCapacity(defaultProfileScaleCapacity));
+    autoScaleSettingResourceInner.profiles()
+        .stream()
+        .findFirst()
+        .map(AutoscaleProfileInner::capacity)
+        .ifPresent(capacity -> {
+          capacity.withMaximum(defaultProfileScaleCapacity.maximum());
+          capacity.withMinimum(defaultProfileScaleCapacity.minimum());
+          capacity.withDefaultProperty(defaultProfileScaleCapacity.defaultProperty());
+        });
+  }
+
+  private void setRulesMetricResourceUri(
+      AutoscaleSettingResourceInner autoScaleSettingResourceInner, String targetResourceUri) {
+    if (isNull(autoScaleSettingResourceInner)) {
+      return;
+    }
+
+    autoScaleSettingResourceInner.profiles()
+        .stream()
+        .map(AutoscaleProfileInner::rules)
+        .flatMap(Collection::stream)
+        .forEach(scaleRuleInner -> scaleRuleInner.metricTrigger().withMetricResourceUri(targetResourceUri));
   }
 
   @Override

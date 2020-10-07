@@ -99,4 +99,7 @@ public interface AzureConstants {
 
   String GALLERY_IMAGE_ID_PATTERN =
       "/subscriptions/%s/resourceGroups/%s/providers/Microsoft.Compute/galleries/%s/images/%s/versions/%s";
+  String VM_PROVISIONING_SUCCEEDED_STATUS = "Provisioning succeeded";
+  String VM_PROVISIONING_SPECIALIZED_STATUS = "VM specialized";
+  String VMSS_AUTOSCALE_SUFIX = "_Autoscale";
 }

@@ -245,6 +245,7 @@ public class AzureVMSSDeployState extends State {
         .newDesiredCount(newDesiredCount)
         .oldDesiredCount(oldDesiredCount)
         .autoScalingSteadyStateVMSSTimeout(azureVMSSSetupContextElement.getAutoScalingSteadyStateVMSSTimeout())
+        .baseScalingPolicyJSONs(azureVMSSSetupContextElement.getBaseVMSSScalingPolicyJSONs())
         .minInstances(azureVMSSSetupContextElement.getMinInstances())
         .maxInstances(azureVMSSSetupContextElement.getMaxInstances())
         .desiredInstances(azureVMSSSetupContextElement.getDesiredInstances())

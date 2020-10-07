@@ -144,7 +144,7 @@ public class AzureVMSSDeployTaskHandler extends AzureVMSSTaskHandler {
     String scaleSetName = scaleSet.name();
     String scaleSetId = scaleSet.id();
     String resourceGroupName = deployTaskParameters.getResourceGroupName();
-    logCallBack.saveExecutionLog(format("Clearing scaling policy for scale set = [%s]", scaleSetName));
+    logCallBack.saveExecutionLog(format("Clearing scaling policy for scale set: [%s]", scaleSetName));
     azureAutoScaleSettingsClient.clearAutoScaleSettingOnTargetResourceId(azureConfig, resourceGroupName, scaleSetId);
   }
 
@@ -173,7 +173,7 @@ public class AzureVMSSDeployTaskHandler extends AzureVMSSTaskHandler {
     String desired = String.valueOf(deployTaskParameters.getDesiredInstances());
     List<String> scalingPolicyJSONs = azureVMSSResizeDetail.getScalingPolicyJSONs();
     ScaleCapacity capacity = new ScaleCapacity();
-    capacity.withMinimum(minimum).withMinimum(maximum).withDefaultProperty(desired);
+    capacity.withMinimum(minimum).withMaximum(maximum).withDefaultProperty(desired);
 
     azureAutoScaleSettingsClient.attachAutoScaleSettingToTargetResourceId(
         azureConfig, resourceGroupName, scaleSetId, scalingPolicyJSONs, capacity);

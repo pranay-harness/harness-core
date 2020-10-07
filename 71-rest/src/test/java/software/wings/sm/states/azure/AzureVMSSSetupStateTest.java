@@ -16,6 +16,7 @@ import com.google.common.collect.ImmutableMap;
 
 import io.harness.beans.ExecutionStatus;
 import io.harness.category.element.UnitTests;
+import io.harness.delegate.task.azure.AzureVMSSPreDeploymentData;
 import io.harness.delegate.task.azure.response.AzureVMSSSetupTaskResponse;
 import io.harness.delegate.task.azure.response.AzureVMSSTaskExecutionResponse;
 import io.harness.logging.CommandExecutionStatus;
@@ -146,13 +147,15 @@ public class AzureVMSSSetupStateTest extends WingsBaseTest {
     doReturn(SUCCESS).when(azureVMSSStateHelper).getExecutionStatus(any());
     Map<String, ResponseData> responseMap = ImmutableMap.of(ACTIVITY_ID,
         AzureVMSSTaskExecutionResponse.builder()
-            .azureVMSSTaskResponse(AzureVMSSSetupTaskResponse.builder()
-                                       .lastDeployedVMSSName(lastDeployedVMSSName)
-                                       .newVirtualMachineScaleSetName(newVirtualMachineScaleSetName)
-                                       .maxInstances(1)
-                                       .minInstances(1)
-                                       .desiredInstances(1)
-                                       .build())
+            .azureVMSSTaskResponse(
+                AzureVMSSSetupTaskResponse.builder()
+                    .lastDeployedVMSSName(lastDeployedVMSSName)
+                    .newVirtualMachineScaleSetName(newVirtualMachineScaleSetName)
+                    .maxInstances(1)
+                    .minInstances(1)
+                    .desiredInstances(1)
+                    .preDeploymentData(AzureVMSSPreDeploymentData.builder().desiredCapacity(1).build())
+                    .build())
             .commandExecutionStatus(CommandExecutionStatus.SUCCESS)
             .build());
     AzureVMSSSetupStateExecutionData data = AzureVMSSSetupStateExecutionData.builder()

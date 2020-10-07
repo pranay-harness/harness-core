@@ -5,6 +5,7 @@ import static io.harness.logging.CommandExecutionStatus.SUCCESS;
 import static io.harness.rule.OwnerRule.ANIL;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyInt;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.doReturn;
@@ -18,6 +19,8 @@ import com.google.inject.Inject;
 import com.microsoft.azure.Page;
 import com.microsoft.azure.PagedList;
 import com.microsoft.azure.management.compute.VirtualMachineScaleSet;
+import com.microsoft.azure.management.compute.VirtualMachineScaleSet.UpdateStages.WithApply;
+import com.microsoft.azure.management.compute.VirtualMachineScaleSet.UpdateStages.WithPrimaryLoadBalancer;
 import com.microsoft.azure.management.compute.VirtualMachineScaleSetVM;
 import com.microsoft.azure.management.compute.implementation.VirtualMachineScaleSetVMInner;
 import com.microsoft.azure.management.network.PublicIPAddressDnsSettings;
@@ -35,11 +38,13 @@ import io.harness.delegate.task.azure.request.AzureVMSSDeployTaskParameters;
 import io.harness.delegate.task.azure.response.AzureVMSSDeployTaskResponse;
 import io.harness.delegate.task.azure.response.AzureVMSSTaskExecutionResponse;
 import io.harness.rule.Owner;
+import org.assertj.core.util.Arrays;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import rx.Observable;
 import software.wings.WingsBaseTest;
 
 import java.util.ArrayList;
@@ -73,6 +78,9 @@ public class AzureVMSSDeployTaskHandlerTest extends WingsBaseTest {
             eq(deployTaskParameters.getResourceGroupName()),
             eq(deployTaskParameters.getOldVirtualMachineScaleSetName()));
 
+    mockNewVirtualMachineScaleSetCapacity(newVirtualMachineScaleSet);
+    mockOldVirtualMachineScaleSetCapacity(oldVirtualMachineScaleSet);
+
     PagedList<VirtualMachineScaleSetVM> newVirtualMachineScaleSetList = buildScaleSetVMs(newInstancesSize);
     PagedList<VirtualMachineScaleSetVM> oldVirtualMachineScaleSetList = buildScaleSetVMs(oldInstancesSize);
 
@@ -87,6 +95,24 @@ public class AzureVMSSDeployTaskHandlerTest extends WingsBaseTest {
         .listVirtualMachineScaleSetVMs(any(AzureConfig.class), eq(deployTaskParameters.getSubscriptionId()),
             eq(deployTaskParameters.getResourceGroupName()),
             eq(deployTaskParameters.getOldVirtualMachineScaleSetName()));
+  }
+
+  private void mockOldVirtualMachineScaleSetCapacity(VirtualMachineScaleSet oldVirtualMachineScaleSet) {
+    WithPrimaryLoadBalancer oldWithPrimaryLoadBalancer = mock(WithPrimaryLoadBalancer.class);
+    doReturn(oldWithPrimaryLoadBalancer).when(oldVirtualMachineScaleSet).update();
+
+    WithApply oldVMSSWithApply = mock(WithApply.class);
+    doReturn(oldVMSSWithApply).when(oldWithPrimaryLoadBalancer).withCapacity(anyInt());
+    doReturn(Observable.from(Arrays.array(oldVirtualMachineScaleSet))).when(oldVMSSWithApply).applyAsync();
+  }
+
+  private void mockNewVirtualMachineScaleSetCapacity(VirtualMachineScaleSet newVirtualMachineScaleSet) {
+    WithPrimaryLoadBalancer newWithPrimaryLoadBalancer = mock(WithPrimaryLoadBalancer.class);
+    doReturn(newWithPrimaryLoadBalancer).when(newVirtualMachineScaleSet).update();
+
+    WithApply newVMSSWithApply = mock(WithApply.class);
+    doReturn(newVMSSWithApply).when(newWithPrimaryLoadBalancer).withCapacity(anyInt());
+    doReturn(Observable.from(Arrays.array(newWithPrimaryLoadBalancer))).when(newVMSSWithApply).applyAsync();
   }
 
   @Test
