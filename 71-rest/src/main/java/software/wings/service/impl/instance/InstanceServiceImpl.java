@@ -44,11 +44,13 @@ import software.wings.service.intfc.instance.InstanceService;
 
 import java.time.Duration;
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Collectors;
 import javax.validation.Valid;
 
@@ -176,7 +178,8 @@ public class InstanceServiceImpl implements InstanceService {
   private void pruneByEntity(String fieldName, String value) {
     Query<Instance> query = wingsPersistence.createQuery(Instance.class);
     query.filter(fieldName, value);
-    delete(query);
+    long currentTimeMillis = System.currentTimeMillis();
+    delete(query, currentTimeMillis);
 
     if ("appId".equals(fieldName)) {
       Query<SyncStatus> syncStatusQuery = wingsPersistence.createQuery(SyncStatus.class);
@@ -188,7 +191,8 @@ public class InstanceServiceImpl implements InstanceService {
   private void pruneByEntity(Map<String, String> inputs) {
     Query<Instance> query = wingsPersistence.createQuery(Instance.class);
     inputs.forEach((key, value) -> query.filter(key, value));
-    delete(query);
+    long currentTimeMillis = System.currentTimeMillis();
+    delete(query, currentTimeMillis);
 
     Query<SyncStatus> syncStatusQuery = wingsPersistence.createQuery(SyncStatus.class);
     inputs.forEach(syncStatusQuery::filter);
@@ -231,15 +235,21 @@ public class InstanceServiceImpl implements InstanceService {
 
   @Override
   public boolean delete(Set<String> instanceIdSet) {
-    Query<Instance> query = wingsPersistence.createQuery(Instance.class);
-    query.field("_id").in(instanceIdSet);
-    return delete(query);
+    final List<List<String>> partitions = Lists.partition(new ArrayList<>(instanceIdSet), 50);
+    AtomicBoolean result = new AtomicBoolean(true);
+    long currentTimeMillis = System.currentTimeMillis();
+    partitions.forEach(partition -> {
+      Query<Instance> query = wingsPersistence.createQuery(Instance.class);
+      query.field("_id").in(partition);
+      result.set(result.get() && delete(query, currentTimeMillis));
+    });
+    return result.get();
   }
 
-  private boolean delete(Query<Instance> query) {
-    long currentTimeMillis = System.currentTimeMillis();
+  private boolean delete(Query<Instance> query, long time) {
+    // todo(abhinav): find way to limit query and iterate
     UpdateOperations<Instance> updateOperations = wingsPersistence.createUpdateOperations(Instance.class);
-    setUnset(updateOperations, "deletedAt", currentTimeMillis);
+    setUnset(updateOperations, "deletedAt", time);
     setUnset(updateOperations, "isDeleted", true);
     wingsPersistence.update(query, updateOperations);
     return true;
