@@ -74,7 +74,6 @@ public class DefaultConnectorServiceImplTest extends ConnectorsTestBase {
   KubernetesClusterConfig connector;
   String accountIdentifier = "accountIdentifier";
   String passwordIdentifier = "passwordIdentifier";
-  String caCertRef = "acc" + SECRET_DELIMINITER + cacertIdentifier;
   @Rule public ExpectedException expectedEx = ExpectedException.none();
   SecretRefData passwordSecretRef;
   SecretRefData secretRefDataCACert;

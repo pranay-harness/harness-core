@@ -1,5 +1,6 @@
 package io.harness.connector.mappers.jira;
 
+import static io.harness.encryption.Scope.ACCOUNT;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.CategoryTest;
@@ -29,7 +30,7 @@ public class JiraEntityToDTOTest extends CategoryTest {
   public void createConnectorDTOTest() {
     String jiraUrl = "url";
     String userName = "dockerUserName";
-    String passwordRef = "acc.passwordRef";
+    String passwordRef = ACCOUNT + ".passwordRef";
 
     JiraConnector jiraConnector =
         JiraConnector.builder().jiraUrl(jiraUrl).username(userName).passwordRef(passwordRef).build();

@@ -1,5 +1,6 @@
 package io.harness.connector.mappers.docker;
 
+import static io.harness.encryption.Scope.ACCOUNT;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.CategoryTest;
@@ -33,7 +34,7 @@ public class DockerEntityToDTOTest extends CategoryTest {
   public void createConnectorDTOTest() {
     String dockerRegistryUrl = "url";
     String dockerUserName = "dockerUserName";
-    String passwordRef = "acc.passwordRef";
+    String passwordRef = ACCOUNT.getYamlRepresentation() + ".passwordRef";
 
     DockerConnector dockerConnector = DockerConnector.builder()
                                           .authType(DockerAuthType.USER_PASSWORD)

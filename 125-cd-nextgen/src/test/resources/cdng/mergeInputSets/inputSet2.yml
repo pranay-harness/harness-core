@@ -20,4 +20,4 @@ inputSet:
                         store:
                           type: Git
                           spec:
-                            connectorIdentifier: my-connector
+                            connectorRef: my-connector

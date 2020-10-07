@@ -1,5 +1,6 @@
 package io.harness.connector.impl;
 
+import static io.harness.encryption.Scope.ACCOUNT;
 import static io.harness.rule.OwnerRule.ABHINAV;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
@@ -45,7 +46,7 @@ public class GitConnectorValidatorTest extends CategoryTest {
   public void testConnectorValidationForFailedResponse() {
     GitConfigDTO gitConfig = GitConfigDTO.builder()
                                  .gitAuth(GitHTTPAuthenticationDTO.builder()
-                                              .passwordRef(SecretRefHelper.createSecretRef("acc.abcd"))
+                                              .passwordRef(SecretRefHelper.createSecretRef(ACCOUNT + "abcd"))
                                               .username("username")
                                               .build())
                                  .gitConnectionType(GitConnectionType.REPO)
@@ -65,17 +66,17 @@ public class GitConnectorValidatorTest extends CategoryTest {
   @Owner(developers = ABHINAV)
   @Category(UnitTests.class)
   public void testConnectorValidationForSuccessfulResponse() {
-    GitConfigDTO gitConfig = GitConfigDTO.builder()
-                                 .gitAuth(GitHTTPAuthenticationDTO.builder()
-                                              .passwordRef(SecretRefHelper.createSecretRef("acc.abcd"))
-
-                                              .username("username")
-                                              .build())
-                                 .gitAuthType(GitAuthType.HTTP)
-                                 .gitConnectionType(GitConnectionType.REPO)
-                                 .branchName("branchName")
-                                 .url("url")
-                                 .build();
+    GitConfigDTO gitConfig =
+        GitConfigDTO.builder()
+            .gitAuth(GitHTTPAuthenticationDTO.builder()
+                         .passwordRef(SecretRefHelper.createSecretRef(ACCOUNT.getYamlRepresentation() + ".abcd"))
+                         .username("username")
+                         .build())
+            .gitAuthType(GitAuthType.HTTP)
+            .gitConnectionType(GitConnectionType.REPO)
+            .branchName("branchName")
+            .url("url")
+            .build();
     GitCommandExecutionResponse gitResponse =
         GitCommandExecutionResponse.builder().gitCommandStatus(GitCommandStatus.SUCCESS).build();
     doReturn(null).when(secretManagerClientService).getEncryptionDetails(any());

@@ -1,5 +1,7 @@
 package io.harness.connector.mappers.splunkconnectormapper;
 
+import static io.harness.encryption.Scope.ACCOUNT;
+import static io.harness.encryption.SecretRefData.SECRET_DOT_DELIMINITER;
 import static io.harness.rule.OwnerRule.NEMANJA;
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -7,7 +9,6 @@ import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import io.harness.connector.entities.embedded.splunkconnector.SplunkConnector;
 import io.harness.delegate.beans.connector.splunkconnector.SplunkConnectorDTO;
-import io.harness.encryption.Scope;
 import io.harness.encryption.SecretRefData;
 import io.harness.rule.Owner;
 import org.junit.Before;
@@ -33,7 +34,7 @@ public class SplunkDTOToEntityTest extends CategoryTest {
     String splunkUrl = "splunkUrl";
     String accountId = "accountId";
 
-    SecretRefData secretRefData = SecretRefData.builder().identifier(encryptedPassword).scope(Scope.ACCOUNT).build();
+    SecretRefData secretRefData = SecretRefData.builder().identifier(encryptedPassword).scope(ACCOUNT).build();
     SplunkConnectorDTO splunkConnectorDTO = SplunkConnectorDTO.builder()
                                                 .username(username)
                                                 .passwordRef(secretRefData)
@@ -46,7 +47,8 @@ public class SplunkDTOToEntityTest extends CategoryTest {
     assertThat(splunkConnector.getUsername()).isEqualTo(splunkConnectorDTO.getUsername());
     assertThat(splunkConnector.getPasswordRef()).isNotNull();
     assertThat(splunkConnector.getPasswordRef())
-        .isEqualTo("acc." + splunkConnectorDTO.getPasswordRef().getIdentifier());
+        .isEqualTo(ACCOUNT.getYamlRepresentation() + SECRET_DOT_DELIMINITER
+            + splunkConnectorDTO.getPasswordRef().getIdentifier());
     assertThat(splunkConnector.getSplunkUrl()).isEqualTo(splunkConnectorDTO.getSplunkUrl());
     assertThat(splunkConnector.getAccountId()).isEqualTo(splunkConnectorDTO.getAccountId());
   }

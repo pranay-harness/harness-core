@@ -41,7 +41,7 @@ public class NGGitCommandTaskTest extends CategoryTest {
   @Mock NGGitService gitService;
   @Mock SecretDecryptionService encryptionService;
   String passwordIdentifier = "passwordIdentifier";
-  String passwordReference = "acc." + passwordIdentifier;
+  String passwordReference = "account." + passwordIdentifier;
 
   SecretRefData passwordRef = SecretRefHelper.createSecretRef(passwordReference);
   GitConfigDTO gitConfig =

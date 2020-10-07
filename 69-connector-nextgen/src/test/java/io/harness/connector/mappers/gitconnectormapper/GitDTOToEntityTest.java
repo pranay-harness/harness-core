@@ -17,6 +17,7 @@ import io.harness.delegate.beans.connector.gitconnector.GitConfigDTO;
 import io.harness.delegate.beans.connector.gitconnector.GitHTTPAuthenticationDTO;
 import io.harness.delegate.beans.connector.gitconnector.GitSSHAuthenticationDTO;
 import io.harness.delegate.beans.connector.gitconnector.GitSyncConfig;
+import io.harness.encryption.Scope;
 import io.harness.encryption.SecretRefData;
 import io.harness.rule.Owner;
 import org.junit.Before;
@@ -40,7 +41,7 @@ public class GitDTOToEntityTest extends CategoryTest {
     String url = "url";
     String userName = "userName";
     String passwordIdentifier = "passwordIdentifier";
-    String passwordReference = "acc." + passwordIdentifier;
+    String passwordReference = Scope.ACCOUNT.getYamlRepresentation() + "." + passwordIdentifier;
 
     SecretRefData passwordRef = SecretRefHelper.createSecretRef(passwordReference);
     CustomCommitAttributes customCommitAttributes = CustomCommitAttributes.builder()

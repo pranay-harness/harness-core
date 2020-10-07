@@ -42,7 +42,7 @@ public class DockerArtifactResource {
   @Path("getBuildDetails")
   @ApiOperation(value = "Gets docker build details", nickname = "getBuildDetailsForDocker")
   public ResponseDTO<DockerResponseDTO> getBuildDetails(@QueryParam("imagePath") String imagePath,
-      @QueryParam("dockerhubConnector") String dockerConnectorIdentifier, @QueryParam("accountId") String accountId,
+      @QueryParam("connectorRef") String dockerConnectorIdentifier, @QueryParam("accountId") String accountId,
       @QueryParam("orgIdentifier") String orgIdentifier, @QueryParam("projectIdentifier") String projectIdentifier) {
     IdentifierRef connectorRef =
         IdentifierRefHelper.getIdentifierRef(dockerConnectorIdentifier, accountId, orgIdentifier, projectIdentifier);
@@ -55,7 +55,7 @@ public class DockerArtifactResource {
   @Path("getLabels")
   @ApiOperation(value = "Gets docker labels", nickname = "getLabelsForDocker")
   public ResponseDTO<DockerResponseDTO> getLabels(@QueryParam("imagePath") String imagePath,
-      @QueryParam("dockerhubConnector") String dockerConnectorIdentifier, @QueryParam("accountId") String accountId,
+      @QueryParam("connectorRef") String dockerConnectorIdentifier, @QueryParam("accountId") String accountId,
       @QueryParam("orgIdentifier") String orgIdentifier, @QueryParam("projectIdentifier") String projectIdentifier,
       DockerRequestDTO requestDTO) {
     IdentifierRef connectorRef =
@@ -69,7 +69,7 @@ public class DockerArtifactResource {
   @Path("getLastSuccessfulBuild")
   @ApiOperation(value = "Gets docker last successful build", nickname = "getLastSuccessfulBuildForDocker")
   public ResponseDTO<DockerBuildDetailsDTO> getLastSuccessfulBuild(@QueryParam("imagePath") String imagePath,
-      @QueryParam("dockerhubConnector") String dockerConnectorIdentifier, @QueryParam("accountId") String accountId,
+      @QueryParam("connectorRef") String dockerConnectorIdentifier, @QueryParam("accountId") String accountId,
       @QueryParam("orgIdentifier") String orgIdentifier, @QueryParam("projectIdentifier") String projectIdentifier,
       DockerRequestDTO requestDTO) {
     IdentifierRef connectorRef =
@@ -82,7 +82,7 @@ public class DockerArtifactResource {
   @GET
   @Path("validateArtifactServer")
   @ApiOperation(value = "Validate docker artifact server", nickname = "validateArtifactServerForDocker")
-  public ResponseDTO<Boolean> validateArtifactServer(@QueryParam("dockerhubConnector") String dockerConnectorIdentifier,
+  public ResponseDTO<Boolean> validateArtifactServer(@QueryParam("connectorRef") String dockerConnectorIdentifier,
       @QueryParam("accountId") String accountId, @QueryParam("orgIdentifier") String orgIdentifier,
       @QueryParam("projectIdentifier") String projectIdentifier) {
     IdentifierRef connectorRef =
@@ -96,7 +96,7 @@ public class DockerArtifactResource {
   @Path("validateArtifactSource")
   @ApiOperation(value = "Validate docker image", nickname = "validateArtifactImageForDocker")
   public ResponseDTO<Boolean> validateArtifactImage(@QueryParam("imagePath") String imagePath,
-      @QueryParam("dockerhubConnector") String dockerConnectorIdentifier, @QueryParam("accountId") String accountId,
+      @QueryParam("connectorRef") String dockerConnectorIdentifier, @QueryParam("accountId") String accountId,
       @QueryParam("orgIdentifier") String orgIdentifier, @QueryParam("projectIdentifier") String projectIdentifier) {
     IdentifierRef connectorRef =
         IdentifierRefHelper.getIdentifierRef(dockerConnectorIdentifier, accountId, orgIdentifier, projectIdentifier);

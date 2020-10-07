@@ -24,7 +24,7 @@ pipeline:
           infrastructureDefinition:
             type: KubernetesDirect
             spec:
-              connectorIdentifier: myPipeline1.stages.qa.spec.infrastructure.infrastructureDefinition.spec.connectorIdentifier
+              connectorRef: myPipeline1.stages.qa.spec.infrastructure.infrastructureDefinition.spec.connectorRef
   - stage:
       identifier: prod
       type: Deployment
@@ -39,5 +39,5 @@ pipeline:
                   store:
                     type: Git
                     spec:
-                      connectorIdentifier: myPipeline1.stages.prod.spec.service.stageOverrides.manifests.prodOverride.spec.store.spec.connectorIdentifier
+                      connectorRef: myPipeline1.stages.prod.spec.service.stageOverrides.manifests.prodOverride.spec.store.spec.connectorRef
                       metadata: myPipeline1.stages.prod.spec.service.stageOverrides.manifests.prodOverride.spec.store.spec.metadata

@@ -65,8 +65,8 @@ public class IdentifierRefHelperTest extends CategoryTest {
     String orgIdentifier = null;
     String projectIdentifier = null;
     String identifier = "identifier";
-    IdentifierRef identifierRef =
-        IdentifierRefHelper.getIdentifierRef("acc." + identifier, accountIdentifier, orgIdentifier, projectIdentifier);
+    IdentifierRef identifierRef = IdentifierRefHelper.getIdentifierRef(
+        "account." + identifier, accountIdentifier, orgIdentifier, projectIdentifier);
 
     IdentifierRef expected = IdentifierRef.builder()
                                  .scope(Scope.ACCOUNT)
@@ -151,7 +151,7 @@ public class IdentifierRefHelperTest extends CategoryTest {
     String accountIdentifier = "accountIdentifier";
     String orgIdentifier = "orgIdentifier";
     String projectIdentifier = "projectIdentifier";
-    String identifier = "acc.identifier";
+    String identifier = "account.identifier";
     IdentifierRef identifierRef =
         IdentifierRefHelper.getIdentifierRef(identifier, accountIdentifier, orgIdentifier, projectIdentifier);
 

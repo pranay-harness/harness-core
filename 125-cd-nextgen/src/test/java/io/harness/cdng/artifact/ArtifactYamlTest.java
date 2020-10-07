@@ -57,8 +57,8 @@ public class ArtifactYamlTest extends CategoryTest {
     assertThat(dockerArtifact.getTagRegex().getValue()).isEqualTo("groov*");
     assertThat(dockerArtifact.isPrimaryArtifact()).isTrue();
     assertThat(dockerArtifact.getUniqueHash())
-        .isEqualTo(ArtifactUtils.generateUniqueHashFromStringList(Arrays.asList(
-            dockerArtifact.getDockerhubConnector().getValue(), dockerArtifact.getImagePath().getValue())));
+        .isEqualTo(ArtifactUtils.generateUniqueHashFromStringList(
+            Arrays.asList(dockerArtifact.getConnectorRef().getValue(), dockerArtifact.getImagePath().getValue())));
 
     SidecarArtifactWrapper sidecarArtifactWrapper = serviceSpec.getArtifacts().getSidecars().get(0);
     assertThat(sidecarArtifactWrapper).isInstanceOf(SidecarArtifact.class);

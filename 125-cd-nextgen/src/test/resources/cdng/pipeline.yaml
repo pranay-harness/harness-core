@@ -16,7 +16,7 @@ pipeline:
                 primary:
                   type: Dockerhub
                   spec:
-                    dockerhubConnector: "https://registry.hub.docker.com/"
+                    connectorRef: "https://registry.hub.docker.com/"
                     imagePath: "library/nginx"
                     tag: "1.19"
               manifests:   # {k8Manifest |  valuesOverride | pcfManifest |  HelmSourceRepo | HelmSourceRepo | Kustomize | openShift}
@@ -27,7 +27,7 @@ pipeline:
                     store:
                       type: Git
                       spec:
-                        connectorIdentifier: BBPSsTiCQ3OnD87_SHrSmw
+                        connectorRef: BBPSsTiCQ3OnD87_SHrSmw
                         gitFetchType: Branch
                         branch: master
                         paths:
@@ -60,7 +60,7 @@ pipeline:
                   store:
                     type: Git
                     spec:
-                      connectorIdentifier: BBPSsTiCQ3OnD87_SHrSmw
+                      connectorRef: BBPSsTiCQ3OnD87_SHrSmw
                       gitFetchType: Branch
                       branch: master
                       paths:
@@ -87,7 +87,7 @@ pipeline:
             type: KubernetesDirect
             spec:
               # Spec for Infrastructure Type kubernetes-direct
-              connectorIdentifier: 2JrX8ESYSTWbhBTPBu7slQ
+              connectorRef: 2JrX8ESYSTWbhBTPBu7slQ
               # namespace
               namespace: default
               # release name
@@ -148,7 +148,7 @@ pipeline:
                 primary:
                   type: Dockerhub
                   spec:
-                    dockerhubConnector: "https://registry.hub.docker.com/"
+                    connectorRef: "https://registry.hub.docker.com/"
                     imagePath: "library/nginx"
                     tag: "1.18"
               manifests:   # {k8Manifest |  valuesOverride | pcfManifest |  HelmSourceRepo | HelmSourceRepo | Kustomize | openShift}
@@ -159,7 +159,7 @@ pipeline:
                       store:
                         type: Git
                         spec:
-                          connectorIdentifier: BBPSsTiCQ3OnD87_SHrSmw
+                          connectorRef: BBPSsTiCQ3OnD87_SHrSmw
                           gitFetchType: Branch
                           branch: master
                           paths:
@@ -173,7 +173,7 @@ pipeline:
                     store:
                       type: Git
                       spec:
-                        connectorIdentifier: BBPSsTiCQ3OnD87_SHrSmw
+                        connectorRef: BBPSsTiCQ3OnD87_SHrSmw
                         gitFetchType: Branch
                         branch: master
                         paths:
@@ -199,7 +199,7 @@ pipeline:
             type: KubernetesDirect
             spec:
               # Spec for Infrastructure Type kubernetes-direct
-              connectorIdentifier: 2JrX8ESYSTWbhBTPBu7slQ
+              connectorRef: 2JrX8ESYSTWbhBTPBu7slQ
               # namespace
               namespace: default
               # release name

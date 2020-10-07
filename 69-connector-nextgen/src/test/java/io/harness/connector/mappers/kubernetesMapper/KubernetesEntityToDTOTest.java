@@ -2,6 +2,7 @@ package io.harness.connector.mappers.kubernetesMapper;
 
 import static io.harness.delegate.beans.connector.k8Connector.KubernetesCredentialType.INHERIT_FROM_DELEGATE;
 import static io.harness.delegate.beans.connector.k8Connector.KubernetesCredentialType.MANUAL_CREDENTIALS;
+import static io.harness.encryption.Scope.ACCOUNT;
 import static io.harness.encryption.SecretRefData.SECRET_DELIMINITER;
 import static io.harness.encryption.SecretRefData.SECRET_DOT_DELIMINITER;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -86,7 +87,7 @@ public class KubernetesEntityToDTOTest extends CategoryTest {
     String masterURL = "masterURL";
     String userName = "userName";
     String passwordIdentifier = "passwordIdentifier";
-    String passwordRef = "acc" + SECRET_DELIMINITER + passwordIdentifier;
+    String passwordRef = "account" + SECRET_DELIMINITER + passwordIdentifier;
     K8sUserNamePassword k8sUserNamePassword =
         K8sUserNamePassword.builder().userName(userName).passwordRef(passwordRef).build();
     KubernetesClusterDetails kubernetesClusterDetails = KubernetesClusterDetails.builder()
@@ -109,7 +110,7 @@ public class KubernetesEntityToDTOTest extends CategoryTest {
     String masterURL = "masterURL";
     String userName = "userName";
     String passwordIdentifier = "passwordIdentifier";
-    String passwordRef = "acc" + SECRET_DOT_DELIMINITER + passwordIdentifier;
+    String passwordRef = ACCOUNT + SECRET_DOT_DELIMINITER + passwordIdentifier;
     K8sUserNamePassword k8sUserNamePassword =
         K8sUserNamePassword.builder().userName(userName).passwordRef(passwordRef).build();
     KubernetesClusterDetails kubernetesClusterDetails = KubernetesClusterDetails.builder()
@@ -133,7 +134,7 @@ public class KubernetesEntityToDTOTest extends CategoryTest {
         (KubernetesUserNamePasswordDTO) credentialDTO.getAuth().getCredentials();
     assertThat(kubernetesUserNamePasswordDTO.getUsername()).isEqualTo(userName);
     assertThat(kubernetesUserNamePasswordDTO.getPasswordRef())
-        .isEqualTo(SecretRefData.builder().identifier(passwordIdentifier).scope(Scope.ACCOUNT).build());
+        .isEqualTo(SecretRefData.builder().identifier(passwordIdentifier).scope(ACCOUNT).build());
   }
 
   @Test
@@ -145,19 +146,17 @@ public class KubernetesEntityToDTOTest extends CategoryTest {
     String clientKeyPhraseIdenfiter = "clientKeyPhrase";
     String clientKeyAlgo = "clientKeyAlgo";
     String masterUrl = "https://abc.com";
-    String clientKeyRef = "acc" + SECRET_DOT_DELIMINITER + clientKeyIdentifer;
-    String clientCertRef = "acc" + SECRET_DOT_DELIMINITER + clientCertIdentifer;
-    String clientKeyPassPhraseRef = "acc" + SECRET_DOT_DELIMINITER + clientKeyPhraseIdenfiter;
+    String clientKeyRef = ACCOUNT.getYamlRepresentation() + SECRET_DOT_DELIMINITER + clientKeyIdentifer;
+    String clientCertRef = ACCOUNT.getYamlRepresentation() + SECRET_DOT_DELIMINITER + clientCertIdentifer;
+    String clientKeyPassPhraseRef = ACCOUNT.getYamlRepresentation() + SECRET_DOT_DELIMINITER + clientKeyPhraseIdenfiter;
     String cacertIdentifier = "cacertIdentifier";
-    String caCertRef = "acc" + SECRET_DOT_DELIMINITER + cacertIdentifier;
-    SecretRefData secretRefDataCACert =
-        SecretRefData.builder().identifier(cacertIdentifier).scope(Scope.ACCOUNT).build();
-    SecretRefData clientKeySecret = SecretRefData.builder().identifier(clientKeyIdentifer).scope(Scope.ACCOUNT).build();
-    SecretRefData clientCertSecret =
-        SecretRefData.builder().identifier(clientCertIdentifer).scope(Scope.ACCOUNT).build();
+    String caCertRef = ACCOUNT.getYamlRepresentation() + SECRET_DOT_DELIMINITER + cacertIdentifier;
+    SecretRefData secretRefDataCACert = SecretRefData.builder().identifier(cacertIdentifier).scope(ACCOUNT).build();
+    SecretRefData clientKeySecret = SecretRefData.builder().identifier(clientKeyIdentifer).scope(ACCOUNT).build();
+    SecretRefData clientCertSecret = SecretRefData.builder().identifier(clientCertIdentifer).scope(ACCOUNT).build();
     SecretRefData clientKeyPassPhraseSecret =
-        SecretRefData.builder().identifier(clientKeyPhraseIdenfiter).scope(Scope.ACCOUNT).build();
-    SecretRefData caCertSecretRef = SecretRefData.builder().identifier(caCertRef).scope(Scope.ACCOUNT).build();
+        SecretRefData.builder().identifier(clientKeyPhraseIdenfiter).scope(ACCOUNT).build();
+    SecretRefData caCertSecretRef = SecretRefData.builder().identifier(caCertRef).scope(ACCOUNT).build();
     K8sClientKeyCert k8sClientKeyCert = K8sClientKeyCert.builder()
                                             .caCertRef(caCertRef)
                                             .clientKeyRef(clientKeyRef)
@@ -202,13 +201,12 @@ public class KubernetesEntityToDTOTest extends CategoryTest {
     String oidcSecretIdentifer = "oidcSecretRef";
     String oidcUsername = "oidcUsername";
     String masterUrl = "https://abc.com";
-    String oidcClientIdRef = "acc" + SECRET_DOT_DELIMINITER + oidClientIdIdentifer;
-    String oidcPassordRef = "acc" + SECRET_DOT_DELIMINITER + oidcPasswordIdentifier;
-    String oidcSecretRef = "acc" + SECRET_DOT_DELIMINITER + oidcSecretIdentifer;
-    SecretRefData oidcClientId = SecretRefData.builder().identifier(oidClientIdIdentifer).scope(Scope.ACCOUNT).build();
-    SecretRefData oidcPassword =
-        SecretRefData.builder().identifier(oidcPasswordIdentifier).scope(Scope.ACCOUNT).build();
-    SecretRefData oidcSecret = SecretRefData.builder().identifier(oidcSecretIdentifer).scope(Scope.ACCOUNT).build();
+    String oidcClientIdRef = ACCOUNT.getYamlRepresentation() + SECRET_DOT_DELIMINITER + oidClientIdIdentifer;
+    String oidcPassordRef = ACCOUNT.getYamlRepresentation() + SECRET_DOT_DELIMINITER + oidcPasswordIdentifier;
+    String oidcSecretRef = ACCOUNT.getYamlRepresentation() + SECRET_DOT_DELIMINITER + oidcSecretIdentifer;
+    SecretRefData oidcClientId = SecretRefData.builder().identifier(oidClientIdIdentifer).scope(ACCOUNT).build();
+    SecretRefData oidcPassword = SecretRefData.builder().identifier(oidcPasswordIdentifier).scope(ACCOUNT).build();
+    SecretRefData oidcSecret = SecretRefData.builder().identifier(oidcSecretIdentifer).scope(ACCOUNT).build();
     K8sOpenIdConnect k8sOpenIdConnect = K8sOpenIdConnect.builder()
                                             .oidcClientIdRef(oidcClientIdRef)
                                             .oidcIssuerUrl(oidcIssuerUrl)
@@ -250,9 +248,9 @@ public class KubernetesEntityToDTOTest extends CategoryTest {
   public void testCreateK8ClusterConfigDTOForServiceAccount() {
     String masterURL = "masterURL";
     String serviceAccountKeyIdentifier = "serviceAccountKeyIdentifier";
-    String serviceAccountRef = "acc" + SECRET_DOT_DELIMINITER + serviceAccountKeyIdentifier;
+    String serviceAccountRef = ACCOUNT.getYamlRepresentation() + SECRET_DOT_DELIMINITER + serviceAccountKeyIdentifier;
     SecretRefData serviceAccountsecret =
-        SecretRefData.builder().identifier(serviceAccountKeyIdentifier).scope(Scope.ACCOUNT).build();
+        SecretRefData.builder().identifier(serviceAccountKeyIdentifier).scope(ACCOUNT).build();
     K8sServiceAccount k8sServiceAccount =
         K8sServiceAccount.builder().serviceAcccountTokenRef(serviceAccountRef).build();
     KubernetesClusterDetails kubernetesClusterDetails = KubernetesClusterDetails.builder()

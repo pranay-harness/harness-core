@@ -5,7 +5,7 @@
 		"dockerHub": {
 			"type": "object",
 			"properties": {
-				"connectorIdentifier": {
+				"connectorRef": {
 					"type": "string"
 				},
 				"imagePath": {

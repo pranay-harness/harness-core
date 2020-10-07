@@ -116,7 +116,7 @@ public class K8sRollingStep implements Step, TaskChainExecutable<K8sRollingStepP
     for (ValuesManifest valuesManifest : aggregatedValuesManifests) {
       if (ManifestStoreType.GIT.equals(valuesManifest.getStoreConfigWrapper().getStoreConfig().getKind())) {
         GitStore gitStore = (GitStore) valuesManifest.getStoreConfigWrapper().getStoreConfig();
-        String connectorId = gitStore.getConnectorIdentifier().getValue();
+        String connectorId = gitStore.getConnectorRef().getValue();
         ConnectorInfoDTO connectorDTO = k8sStepHelper.getConnector(connectorId, ambiance);
         List<EncryptedDataDetail> encryptedDataDetails =
             k8sStepHelper.getEncryptedDataDetails((GitConfigDTO) connectorDTO.getConnectorConfig(), ambiance);

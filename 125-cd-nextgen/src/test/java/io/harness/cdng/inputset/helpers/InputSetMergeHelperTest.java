@@ -101,14 +101,13 @@ public class InputSetMergeHelperTest extends CDNGBaseTest {
     expectedMessage = "Value inside input set cannot be another runtime expression.";
     validateAssertOnErrorResponse(uuidToErrorResponseMap, key, expectedIdentifier, expectedFieldName, expectedMessage);
 
-    key = "myPipeline1.stages.qa.spec.infrastructure.infrastructureDefinition.spec.connectorIdentifier";
-    expectedFieldName = "connectorIdentifier";
+    key = "myPipeline1.stages.qa.spec.infrastructure.infrastructureDefinition.spec.connectorRef";
+    expectedFieldName = "connectorRef";
     validateAssertOnErrorResponse(uuidToErrorResponseMap, key, expectedIdentifier, expectedFieldName, expectedMessage);
 
-    key =
-        "myPipeline1.stages.prod.spec.service.stageOverrides.manifests.prodOverride.spec.store.spec.connectorIdentifier";
+    key = "myPipeline1.stages.prod.spec.service.stageOverrides.manifests.prodOverride.spec.store.spec.connectorRef";
     expectedIdentifier = "wrongInput2";
-    expectedFieldName = "connectorIdentifier";
+    expectedFieldName = "connectorRef";
     validateAssertOnErrorResponse(uuidToErrorResponseMap, key, expectedIdentifier, expectedFieldName, expectedMessage);
 
     key = "myPipeline1.stages.prod.spec.service.stageOverrides.manifests.prodOverride.spec.store.spec.metadata";

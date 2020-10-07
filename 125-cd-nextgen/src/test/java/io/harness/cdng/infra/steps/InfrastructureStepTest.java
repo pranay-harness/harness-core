@@ -46,7 +46,7 @@ public class InfrastructureStepTest extends CategoryTest {
     String serviceIdentifier = "serviceIdentifier";
 
     Infrastructure infrastructureSpec = K8SDirectInfrastructure.builder()
-                                            .connectorIdentifier(ParameterField.createValueField(connector))
+                                            .connectorRef(ParameterField.createValueField(connector))
                                             .namespace(ParameterField.createValueField(namespace))
                                             .build();
 

@@ -1,5 +1,6 @@
 package io.harness.connector.mappers.appdynamicsconnectormapper;
 
+import static io.harness.encryption.Scope.ACCOUNT;
 import static io.harness.rule.OwnerRule.NEMANJA;
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -35,7 +36,7 @@ public class AppDynamicsDTOToEntityTest extends CategoryTest {
     String controllerUrl = "controllerUrl";
     String accountId = "accountId";
 
-    SecretRefData secretRefData = SecretRefData.builder().identifier(secretIdentifier).scope(Scope.ACCOUNT).build();
+    SecretRefData secretRefData = SecretRefData.builder().identifier(secretIdentifier).scope(ACCOUNT).build();
     AppDynamicsConnectorDTO appDynamicsConnectorDTO = AppDynamicsConnectorDTO.builder()
                                                           .username(username)
                                                           .passwordRef(secretRefData)
@@ -49,7 +50,7 @@ public class AppDynamicsDTOToEntityTest extends CategoryTest {
     assertThat(appDynamicsConnector.getUsername()).isEqualTo(appDynamicsConnectorDTO.getUsername());
     assertThat(appDynamicsConnector.getPasswordRef()).isNotNull();
     assertThat(appDynamicsConnector.getPasswordRef())
-        .isEqualTo("acc." + appDynamicsConnectorDTO.getPasswordRef().getIdentifier());
+        .isEqualTo(ACCOUNT.getYamlRepresentation() + "." + appDynamicsConnectorDTO.getPasswordRef().getIdentifier());
     assertThat(appDynamicsConnector.getAccountname()).isEqualTo(appDynamicsConnectorDTO.getAccountname());
     assertThat(appDynamicsConnector.getControllerUrl()).isEqualTo(appDynamicsConnectorDTO.getControllerUrl());
     assertThat(appDynamicsConnector.getAccountId()).isEqualTo(appDynamicsConnectorDTO.getAccountId());

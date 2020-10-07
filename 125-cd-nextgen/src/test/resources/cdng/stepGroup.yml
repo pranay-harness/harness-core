@@ -22,7 +22,7 @@ pipeline:
                           type: Git
                           # Git|Local
                           spec:
-                            connectorIdentifier: VWjzrm4KRZOJvIJGtQ6Wbw
+                            connectorRef: VWjzrm4KRZOJvIJGtQ6Wbw
                             gitFetchType: Branch
                             branch: master
                             paths:
@@ -41,7 +41,7 @@ pipeline:
               type: KubernetesDirect
               spec:
                 # Spec for Infrastructure Type kubernetes-direct
-                connectorIdentifier: userNameAuth
+                connectorRef: userNameAuth
                 # namespace
                 namespace: harness
                 # release name

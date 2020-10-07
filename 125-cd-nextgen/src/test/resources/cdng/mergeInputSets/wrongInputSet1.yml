@@ -50,7 +50,7 @@ inputSet:
                                   type: Git
                                   # Git|Local
                                   spec:
-                                    connectorIdentifier: my-git-connector
+                                    connectorRef: my-git-connector
                                     branch: masterOverride1
             infrastructure:
               environment:
@@ -59,7 +59,7 @@ inputSet:
               infrastructureDefinition:
                 type: KubernetesDirect
                 spec:
-                  connectorIdentifier: ${input}
+                  connectorRef: ${input}
                   namespace: prod
             execution:
               steps:

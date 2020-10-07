@@ -132,9 +132,9 @@ public class PipelineYamlTest extends CategoryTest {
     manifestConfigWrapper = serviceSpec.getManifestOverrideSets().get(0).getManifests().get(0);
     manifestConfig = (ManifestConfig) manifestConfigWrapper;
     storeConfig = (GitStore) manifestConfig.getManifestAttributes().getStoreConfig();
-    assertThat(storeConfig.getConnectorIdentifier()).isInstanceOf(ParameterField.class);
-    assertThat(storeConfig.getConnectorIdentifier().isExpression()).isTrue();
-    assertThat(storeConfig.getConnectorIdentifier().getExpressionValue()).isEqualTo("${input}");
+    assertThat(storeConfig.getConnectorRef()).isInstanceOf(ParameterField.class);
+    assertThat(storeConfig.getConnectorRef().isExpression()).isTrue();
+    assertThat(storeConfig.getConnectorRef().getExpressionValue()).isEqualTo("${input}");
     assertThat(storeConfig.getPaths().getInputSetValidator()).isNull();
 
     // VariableOverrideSets
@@ -209,10 +209,10 @@ public class PipelineYamlTest extends CategoryTest {
         .isEqualTo(InputSetValidatorType.REGEX);
     StageOverridesConfig stageOverrides = service.getStageOverrides();
     storeConfig = (GitStore) stageOverrides.getManifests().get(0).getManifestAttributes().getStoreConfig();
-    assertThat(storeConfig.getConnectorIdentifier()).isInstanceOf(ParameterField.class);
-    assertThat(storeConfig.getConnectorIdentifier().isExpression()).isTrue();
-    assertThat(storeConfig.getConnectorIdentifier().getExpressionValue()).isEqualTo("${input}");
-    assertThat(storeConfig.getConnectorIdentifier().getInputSetValidator()).isNull();
+    assertThat(storeConfig.getConnectorRef()).isInstanceOf(ParameterField.class);
+    assertThat(storeConfig.getConnectorRef().isExpression()).isTrue();
+    assertThat(storeConfig.getConnectorRef().getExpressionValue()).isEqualTo("${input}");
+    assertThat(storeConfig.getConnectorRef().getInputSetValidator()).isNull();
 
     // useVariableOverrideSets
     List<String> variablesUseList = stageOverrides.getUseVariableOverrideSets().getValue();

@@ -5,8 +5,8 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonValue;
 
 public enum NGVariableType {
-  STRING(NGVariableConstants.STRING_TYPE),
-  NUMBER(NGVariableConstants.NUMBER_TYPE);
+  @JsonProperty(NGVariableConstants.STRING_TYPE) STRING(NGVariableConstants.STRING_TYPE),
+  @JsonProperty(NGVariableConstants.NUMBER_TYPE) NUMBER(NGVariableConstants.NUMBER_TYPE);
 
   private final String yamlProperty;
 

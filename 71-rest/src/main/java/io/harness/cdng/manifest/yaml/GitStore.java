@@ -24,9 +24,7 @@ import java.util.List;
 @JsonTypeName(ManifestStoreType.GIT)
 @SimpleVisitorHelper(helperClass = GitStoreVisitorHelper.class)
 public class GitStore implements StoreConfig, Visitable {
-  @ApiModelProperty(dataType = SwaggerConstants.STRING_CLASSPATH)
-  @Wither
-  private ParameterField<String> connectorIdentifier;
+  @ApiModelProperty(dataType = SwaggerConstants.STRING_CLASSPATH) @Wither private ParameterField<String> connectorRef;
 
   @Wither private FetchType gitFetchType;
   @ApiModelProperty(dataType = SwaggerConstants.STRING_CLASSPATH) @Wither private ParameterField<String> branch;
@@ -46,7 +44,7 @@ public class GitStore implements StoreConfig, Visitable {
 
   public GitStore cloneInternal() {
     return GitStore.builder()
-        .connectorIdentifier(connectorIdentifier)
+        .connectorRef(connectorRef)
         .gitFetchType(gitFetchType)
         .branch(branch)
         .commitId(commitId)
@@ -58,8 +56,8 @@ public class GitStore implements StoreConfig, Visitable {
   public StoreConfig applyOverrides(StoreConfig overrideConfig) {
     GitStore gitStore = (GitStore) overrideConfig;
     GitStore resultantGitStore = this;
-    if (gitStore.getConnectorIdentifier() != null) {
-      resultantGitStore = resultantGitStore.withConnectorIdentifier(gitStore.getConnectorIdentifier());
+    if (gitStore.getConnectorRef() != null) {
+      resultantGitStore = resultantGitStore.withConnectorRef(gitStore.getConnectorRef());
     }
     if (gitStore.getPaths() != null) {
       resultantGitStore = resultantGitStore.withPaths(gitStore.getPaths());

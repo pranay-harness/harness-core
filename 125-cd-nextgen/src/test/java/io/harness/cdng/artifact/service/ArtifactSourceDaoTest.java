@@ -19,7 +19,7 @@ public class ArtifactSourceDaoTest extends CDNGBaseTest {
   @Inject ArtifactSourceDao artifactSourceDao;
 
   DockerArtifactSource dockerArtifactSource = DockerArtifactSource.builder()
-                                                  .dockerHubConnector("DOCKER_CONNECTOR")
+                                                  .connectorRef("DOCKER_CONNECTOR")
                                                   .imagePath("imagePath")
                                                   .accountId(WingsTestConstants.ACCOUNT_ID)
                                                   .uniqueHash("DOCKER_UNIQUE_HASH")

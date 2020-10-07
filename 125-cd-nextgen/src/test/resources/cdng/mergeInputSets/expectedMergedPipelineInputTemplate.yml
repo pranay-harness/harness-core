@@ -45,13 +45,13 @@ pipeline:
                         store:
                           type: Git
                           spec:
-                            connectorIdentifier: my-git-connector
+                            connectorRef: my-git-connector
                             branch: masterOverride2
         infrastructure:
           infrastructureDefinition:
             type: KubernetesDirect
             spec:
-              connectorIdentifier: ${input}
+              connectorRef: ${input}
               namespace: prod2
           environment:
             name: env
@@ -87,7 +87,7 @@ pipeline:
                   store:
                     type: Git
                     spec:
-                      connectorIdentifier: my-connector
+                      connectorRef: my-connector
                       branch: ${input}
         infrastructure:
           useFromStage:

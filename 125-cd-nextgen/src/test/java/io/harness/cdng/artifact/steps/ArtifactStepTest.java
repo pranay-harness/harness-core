@@ -85,7 +85,7 @@ public class ArtifactStepTest extends CategoryTest {
   private ArtifactStepParameters getStepParametersForDocker() {
     return ArtifactStepParameters.builder()
         .artifact(DockerHubArtifactConfig.builder()
-                      .dockerhubConnector(ParameterField.createValueField("CONNECTOR"))
+                      .connectorRef(ParameterField.createValueField("CONNECTOR"))
                       .imagePath(ParameterField.createValueField("imagePath"))
                       .tag(ParameterField.createValueField("tag"))
                       .build())
@@ -149,13 +149,12 @@ public class ArtifactStepTest extends CategoryTest {
   @Owner(developers = ARCHIT)
   @Category(UnitTests.class)
   public void testApplyArtifactOverrides() {
-    DockerHubArtifactConfig dockerHubArtifactConfig =
-        DockerHubArtifactConfig.builder()
-            .primaryArtifact(true)
-            .dockerhubConnector(ParameterField.createValueField("CONNECTOR"))
-            .imagePath(ParameterField.createValueField("IMAGE"))
-            .tag(ParameterField.createValueField("TAG1"))
-            .build();
+    DockerHubArtifactConfig dockerHubArtifactConfig = DockerHubArtifactConfig.builder()
+                                                          .primaryArtifact(true)
+                                                          .connectorRef(ParameterField.createValueField("CONNECTOR"))
+                                                          .imagePath(ParameterField.createValueField("IMAGE"))
+                                                          .tag(ParameterField.createValueField("TAG1"))
+                                                          .build();
     DockerHubArtifactConfig dockerHubArtifactConfig2 = DockerHubArtifactConfig.builder()
                                                            .imagePath(ParameterField.createValueField("IMAGE2"))
                                                            .tag(ParameterField.createValueField("TAG2"))
@@ -169,7 +168,7 @@ public class ArtifactStepTest extends CategoryTest {
     assertThat(finalArtifact).isInstanceOf(DockerHubArtifactConfig.class);
     DockerHubArtifactConfig artifact = (DockerHubArtifactConfig) finalArtifact;
     assertThat(artifact.isPrimaryArtifact()).isTrue();
-    assertThat(artifact.getDockerhubConnector().getValue()).isEqualTo("CONNECTOR");
+    assertThat(artifact.getConnectorRef().getValue()).isEqualTo("CONNECTOR");
     assertThat(artifact.getTag().getValue()).isEqualTo("TAG2");
     assertThat(artifact.getImagePath().getValue()).isEqualTo("IMAGE2");
     assertThat(artifact.getTagRegex()).isEqualTo(null);
