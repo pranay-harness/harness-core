@@ -59,7 +59,7 @@ public class TaskChainStrategy implements TaskExecuteStrategy {
     TaskChainResponse taskChainResponse;
     taskChainResponse = taskChainExecutable.startChainLink(
         ambiance, nodeExecution.getResolvedStepParameters(), invokerPackage.getInputPackage());
-    handleResponse(ambiance, taskChainResponse);
+    handleResponse(ambiance, nodeExecution, taskChainResponse);
   }
 
   @Override
@@ -80,7 +80,7 @@ public class TaskChainStrategy implements TaskExecuteStrategy {
       TaskChainResponse chainResponse =
           taskChainExecutable.executeNextLink(ambiance, nodeExecution.getResolvedStepParameters(), inputPackage,
               lastLinkResponse.getPassThroughData(), resumePackage.getResponseDataMap());
-      handleResponse(ambiance, chainResponse);
+      handleResponse(ambiance, nodeExecution, chainResponse);
     }
   }
 
@@ -89,9 +89,24 @@ public class TaskChainStrategy implements TaskExecuteStrategy {
     return (TaskChainExecutable) stepRegistry.obtain(node.getStepType());
   }
 
-  private void handleResponse(@NonNull Ambiance ambiance, @NonNull TaskChainResponse taskChainResponse) {
-    NodeExecution nodeExecution =
-        Preconditions.checkNotNull(nodeExecutionService.get(ambiance.obtainCurrentRuntimeId()));
+  private void handleResponse(
+      @NonNull Ambiance ambiance, NodeExecution nodeExecution, @NonNull TaskChainResponse taskChainResponse) {
+    if (taskChainResponse.isChainEnd()) {
+      TaskChainExecutable taskChainExecutable = extractTaskChainExecutable(nodeExecution);
+      nodeExecutionService.update(nodeExecution.getUuid(),
+          ops
+          -> ops.addToSet(NodeExecutionKeys.executableResponses,
+              TaskChainExecutableResponse.builder()
+                  .taskId(null)
+                  .taskMode(null)
+                  .chainEnd(true)
+                  .passThroughData(taskChainResponse.getPassThroughData())
+                  .build()));
+      StepResponse stepResponse = taskChainExecutable.finalizeExecution(
+          ambiance, nodeExecution.getResolvedStepParameters(), taskChainResponse.getPassThroughData(), null);
+      engine.handleStepResponse(nodeExecution.getUuid(), stepResponse);
+      return;
+    }
     TaskExecutor taskExecutor = taskExecutorMap.get(mode.name());
     String taskId = Preconditions.checkNotNull(
         taskExecutor.queueTask(ambiance.getSetupAbstractions(), taskChainResponse.getTask()));
