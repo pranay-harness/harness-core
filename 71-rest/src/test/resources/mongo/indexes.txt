@@ -3,18 +3,8 @@
 !!!custom_delegateSyncTaskResponses {"name": "validUntil_1", "background": true, "expireAfterSeconds": 0} {"validUntil": 1}
 !!!testDummies {"name": "appId_1", "background": true} {"appId": 1}
 !!!testDummies {"name": "createdAt_1", "background": true} {"createdAt": 1}
-!!!testIndexes {"name": "index", "background": true} {"name": 1, "test": 1}
-!!!testIndexes {"name": "sparseTest_1", "background": true, "sparse": true} {"sparseTest": 1}
-!!!testIndexes {"name": "sparse_index", "background": true, "sparse": true} {"name": 1, "sparseTest": 1}
-!!!testIndexes {"name": "test_1", "background": true} {"test": 1}
-!!!testIndexes {"name": "ttlTest_1", "background": true, "expireAfterSeconds": 11} {"ttlTest": 1}
-!!!testIndexes {"name": "uniqueTest_1", "unique": true} {"uniqueTest": 1}
 !!!testMongo {"name": "appId_1", "background": true} {"appId": 1}
 !!!testMongo {"name": "createdAt_1", "background": true} {"createdAt": 1}
-!!!testNoTopicQueue {"name": "earliestGet_1", "background": true, "expireAfterSeconds": 86400} {"earliestGet": 1}
-!!!testNoTopicQueue {"name": "next4", "background": true} {"topic": 1, "earliestGet": 1}
-!!!testTopicQueue {"name": "earliestGet_1", "background": true, "expireAfterSeconds": 86400} {"earliestGet": 1}
-!!!testTopicQueue {"name": "next4", "background": true} {"topic": 1, "earliestGet": 1}
 accounts {"name": "accountBackgroundJobCheckIteration_1", "background": true} {"accountBackgroundJobCheckIteration": 1}
 accounts {"name": "accountDeletionIteration_1", "background": true} {"accountDeletionIteration": 1}
 accounts {"name": "accountName_1", "unique": true} {"accountName": 1}

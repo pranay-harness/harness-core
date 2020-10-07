@@ -22,8 +22,6 @@ import io.harness.persistence.HPersistence;
 import io.harness.serializer.CvNextGenRegistrars;
 import io.harness.serializer.KryoModule;
 import io.harness.serializer.KryoRegistrar;
-import io.harness.serializer.kryo.TestPersistenceKryoRegistrar;
-import io.harness.serializer.morphia.TestPersistenceMorphiaRegistrar;
 import io.harness.testlib.module.MongoRuleMixin;
 import io.harness.testlib.module.TestMongoModule;
 import io.harness.threading.CurrentThreadExecutor;
@@ -61,7 +59,6 @@ public class CvNextGenRule implements MethodRule, InjectorRuleMixin, MongoRuleMi
       Set<Class<? extends KryoRegistrar>> kryoRegistrars() {
         return ImmutableSet.<Class<? extends KryoRegistrar>>builder()
             .addAll(CvNextGenRegistrars.kryoRegistrars)
-            .add(TestPersistenceKryoRegistrar.class)
             .build();
       }
 
@@ -70,7 +67,6 @@ public class CvNextGenRule implements MethodRule, InjectorRuleMixin, MongoRuleMi
       Set<Class<? extends MorphiaRegistrar>> morphiaRegistrars() {
         return ImmutableSet.<Class<? extends MorphiaRegistrar>>builder()
             .addAll(CvNextGenRegistrars.morphiaRegistrars)
-            .add(TestPersistenceMorphiaRegistrar.class)
             .build();
       }
 

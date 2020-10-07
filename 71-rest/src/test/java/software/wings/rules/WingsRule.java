@@ -58,9 +58,7 @@ import io.harness.serializer.KryoModule;
 import io.harness.serializer.KryoRegistrar;
 import io.harness.serializer.ManagerRegistrars;
 import io.harness.serializer.kryo.TestManagerKryoRegistrar;
-import io.harness.serializer.kryo.TestPersistenceKryoRegistrar;
 import io.harness.serializer.morphia.ManagerTestMorphiaRegistrar;
-import io.harness.serializer.morphia.TestPersistenceMorphiaRegistrar;
 import io.harness.serializer.spring.WingsTestSpringAliasRegistrar;
 import io.harness.service.DelegateServiceModule;
 import io.harness.spring.AliasRegistrar;
@@ -236,7 +234,6 @@ public class WingsRule implements MethodRule, InjectorRuleMixin, MongoRuleMixin 
     return ImmutableSet.<Class<? extends KryoRegistrar>>builder()
         .addAll(ManagerRegistrars.kryoRegistrars)
         .add(TestManagerKryoRegistrar.class)
-        .add(TestPersistenceKryoRegistrar.class)
         .build();
   }
 
@@ -244,7 +241,6 @@ public class WingsRule implements MethodRule, InjectorRuleMixin, MongoRuleMixin 
     return ImmutableSet.<Class<? extends MorphiaRegistrar>>builder()
         .addAll(ManagerRegistrars.morphiaRegistrars)
         .add(ManagerTestMorphiaRegistrar.class)
-        .add(TestPersistenceMorphiaRegistrar.class)
         .build();
   }
 

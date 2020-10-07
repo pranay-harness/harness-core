@@ -19,8 +19,6 @@ import io.harness.serializer.DelegateServiceRegistrars;
 import io.harness.serializer.KryoModule;
 import io.harness.serializer.KryoRegistrar;
 import io.harness.serializer.PersistenceRegistrars;
-import io.harness.serializer.kryo.TestPersistenceKryoRegistrar;
-import io.harness.serializer.morphia.TestPersistenceMorphiaRegistrar;
 import io.harness.service.DelegateServiceModule;
 import io.harness.testlib.module.MongoRuleMixin;
 import io.harness.testlib.module.TestMongoModule;
@@ -59,7 +57,6 @@ public class DelegateServiceRule implements MethodRule, InjectorRuleMixin, Mongo
       Set<Class<? extends KryoRegistrar>> kryoRegistrars() {
         return ImmutableSet.<Class<? extends KryoRegistrar>>builder()
             .addAll(DelegateServiceRegistrars.kryoRegistrars)
-            .add(TestPersistenceKryoRegistrar.class)
             .build();
       }
 
@@ -68,7 +65,6 @@ public class DelegateServiceRule implements MethodRule, InjectorRuleMixin, Mongo
       Set<Class<? extends MorphiaRegistrar>> morphiaRegistrars() {
         return ImmutableSet.<Class<? extends MorphiaRegistrar>>builder()
             .addAll(DelegateServiceRegistrars.morphiaRegistrars)
-            .add(TestPersistenceMorphiaRegistrar.class)
             .build();
       }
 

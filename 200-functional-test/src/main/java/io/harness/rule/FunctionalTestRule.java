@@ -57,10 +57,8 @@ import io.harness.serializer.KryoModule;
 import io.harness.serializer.KryoRegistrar;
 import io.harness.serializer.ManagerRegistrars;
 import io.harness.serializer.kryo.CvNextGenCommonsBeansKryoRegistrar;
-import io.harness.serializer.kryo.TestPersistenceKryoRegistrar;
 import io.harness.serializer.morphia.BatchProcessingMorphiaRegistrar;
 import io.harness.serializer.morphia.EventServerMorphiaRegistrar;
-import io.harness.serializer.morphia.TestPersistenceMorphiaRegistrar;
 import io.harness.service.DelegateServiceModule;
 import io.harness.spring.AliasRegistrar;
 import io.harness.testframework.framework.ManagerExecutor;
@@ -185,7 +183,6 @@ public class FunctionalTestRule implements MethodRule, InjectorRuleMixin, MongoR
         return ImmutableSet.<Class<? extends KryoRegistrar>>builder()
             .addAll(ManagerRegistrars.kryoRegistrars)
             .add(CvNextGenCommonsBeansKryoRegistrar.class)
-            .add(TestPersistenceKryoRegistrar.class)
             .build();
       }
 
@@ -196,7 +193,6 @@ public class FunctionalTestRule implements MethodRule, InjectorRuleMixin, MongoR
             .addAll(ManagerRegistrars.morphiaRegistrars)
             .add(EventServerMorphiaRegistrar.class)
             .add(BatchProcessingMorphiaRegistrar.class)
-            .add(TestPersistenceMorphiaRegistrar.class)
             .build();
       }
 

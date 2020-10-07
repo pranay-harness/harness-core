@@ -26,9 +26,7 @@ import io.harness.serializer.KryoRegistrar;
 import io.harness.serializer.ManagerRegistrars;
 import io.harness.serializer.kryo.CIBeansKryoRegistrar;
 import io.harness.serializer.kryo.CvNextGenCommonsBeansKryoRegistrar;
-import io.harness.serializer.kryo.TestPersistenceKryoRegistrar;
 import io.harness.serializer.morphia.CIBeansMorphiaRegistrar;
-import io.harness.serializer.morphia.TestPersistenceMorphiaRegistrar;
 import io.harness.spring.AliasRegistrar;
 import io.harness.testlib.module.MongoRuleMixin;
 import io.harness.testlib.module.TestMongoModule;
@@ -66,7 +64,6 @@ public class CIManagerRule implements MethodRule, InjectorRuleMixin, MongoRuleMi
             .addAll(ManagerRegistrars.kryoRegistrars)
             .add(CIBeansKryoRegistrar.class)
             .add(CvNextGenCommonsBeansKryoRegistrar.class)
-            .add(TestPersistenceKryoRegistrar.class)
             .build();
       }
 
@@ -76,7 +73,6 @@ public class CIManagerRule implements MethodRule, InjectorRuleMixin, MongoRuleMi
         return ImmutableSet.<Class<? extends MorphiaRegistrar>>builder()
             .addAll(ManagerRegistrars.morphiaRegistrars)
             .add(CIBeansMorphiaRegistrar.class)
-            .add(TestPersistenceMorphiaRegistrar.class)
             .build();
       }
 

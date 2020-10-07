@@ -15,8 +15,6 @@ import io.harness.serializer.KryoModule;
 import io.harness.serializer.KryoRegistrar;
 import io.harness.serializer.NGCoreRegistrars;
 import io.harness.serializer.PersistenceRegistrars;
-import io.harness.serializer.kryo.TestPersistenceKryoRegistrar;
-import io.harness.serializer.morphia.TestPersistenceMorphiaRegistrar;
 import io.harness.testlib.module.MongoRuleMixin;
 import io.harness.testlib.module.TestMongoModule;
 import io.harness.threading.CurrentThreadExecutor;
@@ -43,10 +41,7 @@ public class NGCoreTestRule implements InjectorRuleMixin, MethodRule, MongoRuleM
       @Provides
       @Singleton
       Set<Class<? extends KryoRegistrar>> kryoRegistrars() {
-        return ImmutableSet.<Class<? extends KryoRegistrar>>builder()
-            .addAll(NGCoreRegistrars.kryoRegistrars)
-            .add(TestPersistenceKryoRegistrar.class)
-            .build();
+        return ImmutableSet.<Class<? extends KryoRegistrar>>builder().addAll(NGCoreRegistrars.kryoRegistrars).build();
       }
 
       @Provides
@@ -54,7 +49,6 @@ public class NGCoreTestRule implements InjectorRuleMixin, MethodRule, MongoRuleM
       Set<Class<? extends MorphiaRegistrar>> morphiaRegistrars() {
         return ImmutableSet.<Class<? extends MorphiaRegistrar>>builder()
             .addAll(NGCoreRegistrars.morphiaRegistrars)
-            .add(TestPersistenceMorphiaRegistrar.class)
             .build();
       }
 
