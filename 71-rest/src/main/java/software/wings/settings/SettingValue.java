@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.fasterxml.jackson.annotation.JsonTypeInfo.As;
 import com.github.reinert.jjschema.SchemaIgnore;
+import io.harness.beans.UsageRestrictions;
 import io.harness.delegate.beans.executioncapability.ExecutionCapabilityDemander;
 import lombok.Data;
 import lombok.EqualsAndHashCode;

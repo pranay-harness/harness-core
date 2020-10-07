@@ -49,6 +49,7 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import io.harness.beans.Encryptable;
+import io.harness.beans.UsageRestrictions;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.encryption.EncryptionReflectUtils;
 import io.harness.exception.InvalidRequestException;
@@ -66,7 +67,6 @@ import software.wings.service.intfc.security.ManagerDecryptionService;
 import software.wings.service.intfc.security.SecretManager;
 import software.wings.settings.SettingValue;
 import software.wings.settings.SettingVariableTypes;
-import software.wings.settings.UsageRestrictions;
 import software.wings.yaml.YamlHelper;
 
 import java.lang.reflect.Field;

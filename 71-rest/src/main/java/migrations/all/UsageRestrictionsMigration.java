@@ -7,6 +7,11 @@ import static java.util.Arrays.asList;
 import com.google.common.collect.Sets;
 import com.google.inject.Inject;
 
+import io.harness.beans.EnvFilter;
+import io.harness.beans.EnvFilter.FilterType;
+import io.harness.beans.GenericEntityFilter;
+import io.harness.beans.UsageRestrictions;
+import io.harness.beans.UsageRestrictions.AppEnvRestriction;
 import io.harness.exception.WingsException;
 import io.harness.logging.ExceptionLogger;
 import io.harness.persistence.HIterator;
@@ -16,14 +21,9 @@ import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
 import software.wings.beans.SettingAttribute;
 import software.wings.dl.WingsPersistence;
-import software.wings.security.EnvFilter;
-import software.wings.security.EnvFilter.FilterType;
-import software.wings.security.GenericEntityFilter;
 import software.wings.security.encryption.EncryptedData;
 import software.wings.service.intfc.UsageRestrictionsService;
 import software.wings.settings.SettingVariableTypes;
-import software.wings.settings.UsageRestrictions;
-import software.wings.settings.UsageRestrictions.AppEnvRestriction;
 
 import java.util.HashSet;
 import java.util.Set;

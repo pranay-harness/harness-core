@@ -37,6 +37,7 @@ import com.google.inject.Inject;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.beans.SearchFilter.Operator;
+import io.harness.beans.UsageRestrictions;
 import io.harness.category.element.UnitTests;
 import io.harness.data.structure.CollectionUtils;
 import io.harness.exception.WingsException;
@@ -105,7 +106,6 @@ import software.wings.service.intfc.security.SecretManager;
 import software.wings.service.intfc.security.VaultService;
 import software.wings.service.intfc.yaml.YamlPushService;
 import software.wings.settings.SettingVariableTypes;
-import software.wings.settings.UsageRestrictions;
 
 import java.io.File;
 import java.io.FileInputStream;

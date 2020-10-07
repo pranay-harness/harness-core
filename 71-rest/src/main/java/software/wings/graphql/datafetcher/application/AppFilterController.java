@@ -2,6 +2,8 @@ package software.wings.graphql.datafetcher.application;
 
 import static com.google.common.collect.Iterables.getFirst;
 import static com.google.common.collect.Sets.difference;
+import static io.harness.beans.GenericEntityFilter.FilterType.ALL;
+import static io.harness.beans.GenericEntityFilter.FilterType.SELECTED;
 import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
 import static io.harness.beans.SearchFilter.Operator.IN;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
@@ -10,12 +12,11 @@ import static java.lang.String.format;
 import static java.lang.String.join;
 import static org.apache.commons.collections4.SetUtils.emptyIfNull;
 import static org.apache.commons.lang3.StringUtils.isBlank;
-import static software.wings.security.GenericEntityFilter.FilterType.ALL;
-import static software.wings.security.GenericEntityFilter.FilterType.SELECTED;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
+import io.harness.beans.GenericEntityFilter;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.beans.SearchFilter;
@@ -25,7 +26,6 @@ import software.wings.beans.Application;
 import software.wings.graphql.schema.type.QLAppFilter;
 import software.wings.graphql.schema.type.QLGenericFilterType;
 import software.wings.graphql.schema.type.secrets.QLAppScopeFilter;
-import software.wings.security.GenericEntityFilter;
 import software.wings.service.intfc.AppService;
 
 import java.util.Arrays;

@@ -15,6 +15,7 @@ import static org.mockito.MockitoAnnotations.initMocks;
 
 import com.google.inject.Inject;
 
+import io.harness.beans.UsageRestrictions;
 import io.harness.category.element.UnitTests;
 import io.harness.exception.WingsException;
 import io.harness.rule.Owner;
@@ -60,7 +61,6 @@ import software.wings.service.intfc.security.LocalEncryptionService;
 import software.wings.service.intfc.security.SecretManagementDelegateService;
 import software.wings.service.intfc.security.SecretManagerConfigService;
 import software.wings.settings.SettingVariableTypes;
-import software.wings.settings.UsageRestrictions;
 
 import java.io.IOException;
 import java.io.InputStream;

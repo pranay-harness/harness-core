@@ -10,21 +10,21 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.beans.EnvFilter;
+import io.harness.beans.EnvFilter.EnvFilterBuilder;
+import io.harness.beans.GenericEntityFilter;
+import io.harness.beans.GenericEntityFilter.GenericEntityFilterBuilder;
+import io.harness.beans.UsageRestrictions;
+import io.harness.beans.UsageRestrictions.AppEnvRestriction;
+import io.harness.beans.UsageRestrictions.UsageRestrictionsBuilder;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.WingsException;
 import software.wings.beans.Application;
 import software.wings.beans.Environment;
 import software.wings.beans.yaml.ChangeContext;
-import software.wings.security.EnvFilter;
-import software.wings.security.EnvFilter.EnvFilterBuilder;
-import software.wings.security.GenericEntityFilter;
-import software.wings.security.GenericEntityFilter.GenericEntityFilterBuilder;
 import software.wings.service.impl.yaml.handler.BaseYamlHandler;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.EnvironmentService;
-import software.wings.settings.UsageRestrictions;
-import software.wings.settings.UsageRestrictions.AppEnvRestriction;
-import software.wings.settings.UsageRestrictions.UsageRestrictionsBuilder;
 
 import java.util.List;
 import java.util.Set;

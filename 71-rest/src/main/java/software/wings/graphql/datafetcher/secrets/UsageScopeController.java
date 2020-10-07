@@ -5,6 +5,10 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
+import io.harness.beans.EnvFilter;
+import io.harness.beans.GenericEntityFilter;
+import io.harness.beans.UsageRestrictions;
+import io.harness.beans.UsageRestrictions.AppEnvRestriction;
 import io.harness.exception.InvalidRequestException;
 import software.wings.graphql.datafetcher.application.AppFilterController;
 import software.wings.graphql.datafetcher.environment.EnvFilterController;
@@ -13,10 +17,6 @@ import software.wings.graphql.schema.type.secrets.QLAppEnvScope;
 import software.wings.graphql.schema.type.secrets.QLAppScopeFilter;
 import software.wings.graphql.schema.type.secrets.QLEnvScopeFilter;
 import software.wings.graphql.schema.type.secrets.QLUsageScope;
-import software.wings.security.EnvFilter;
-import software.wings.security.GenericEntityFilter;
-import software.wings.settings.UsageRestrictions;
-import software.wings.settings.UsageRestrictions.AppEnvRestriction;
 
 import java.util.HashSet;
 import java.util.Set;

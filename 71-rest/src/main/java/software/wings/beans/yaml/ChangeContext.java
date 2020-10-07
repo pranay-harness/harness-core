@@ -1,9 +1,9 @@
 package software.wings.beans.yaml;
 
 import io.harness.persistence.PersistentEntity;
+import io.harness.yaml.BaseYaml;
 import lombok.Data;
 import software.wings.service.impl.yaml.handler.BaseYamlHandler;
-import software.wings.yaml.BaseYaml;
 
 import java.util.HashMap;
 import java.util.Map;

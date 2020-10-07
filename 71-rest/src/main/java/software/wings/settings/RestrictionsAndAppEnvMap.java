@@ -1,5 +1,6 @@
 package software.wings.settings;
 
+import io.harness.beans.UsageRestrictions;
 import lombok.Builder;
 import lombok.Data;
 

@@ -5,6 +5,7 @@ import static io.harness.annotations.dev.HarnessTeam.PL;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
+import io.harness.beans.UsageRestrictions;
 import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.security.encryption.EncryptionType;
 import io.harness.stream.BoundedInputStream;
@@ -20,7 +21,6 @@ import software.wings.security.encryption.SecretUsageLog;
 import software.wings.security.encryption.setupusage.SecretSetupUsage;
 import software.wings.service.intfc.security.SecretManager;
 import software.wings.settings.SettingVariableTypes;
-import software.wings.settings.UsageRestrictions;
 
 import java.io.File;
 import java.io.IOException;

@@ -5,6 +5,7 @@ import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
 import static software.wings.beans.SettingAttribute.SettingCategory.CONNECTOR;
 import static software.wings.utils.UsageRestrictionsUtils.getAllAppAllEnvUsageRestrictions;
 
+import io.harness.beans.UsageRestrictions;
 import io.harness.scm.ScmSecret;
 import io.harness.scm.SecretName;
 import io.restassured.path.json.JsonPath;
@@ -24,7 +25,6 @@ import software.wings.beans.SplunkConfig;
 import software.wings.beans.SumoConfig;
 import software.wings.beans.config.ArtifactoryConfig;
 import software.wings.beans.config.NexusConfig;
-import software.wings.settings.UsageRestrictions;
 
 import java.util.ArrayList;
 import java.util.List;

@@ -2,12 +2,12 @@ package software.wings.beans.container;
 
 import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
+import io.harness.yaml.BaseYaml;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import software.wings.stencils.DefaultValue;
-import software.wings.yaml.BaseYaml;
 
 import java.util.List;
 

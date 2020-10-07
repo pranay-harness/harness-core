@@ -40,6 +40,7 @@ import io.harness.CategoryTest;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageRequest.PageRequestBuilder;
 import io.harness.beans.PageResponse;
+import io.harness.beans.UsageRestrictions;
 import io.harness.category.element.UnitTests;
 import io.harness.data.structure.UUIDGenerator;
 import io.harness.eraro.ErrorCode;
@@ -96,7 +97,6 @@ import software.wings.service.intfc.security.LocalEncryptionService;
 import software.wings.service.intfc.security.SecretManagerConfigService;
 import software.wings.service.intfc.security.VaultService;
 import software.wings.settings.RestrictionsAndAppEnvMap;
-import software.wings.settings.UsageRestrictions;
 
 import java.io.FileInputStream;
 import java.io.InputStream;

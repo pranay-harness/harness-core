@@ -1,10 +1,10 @@
 package software.wings.yaml.setting;
 
+import io.harness.beans.UsageRestrictions;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import software.wings.settings.SettingValue;
-import software.wings.settings.UsageRestrictions;
 
 @Data
 @NoArgsConstructor

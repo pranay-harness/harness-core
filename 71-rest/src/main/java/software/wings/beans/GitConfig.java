@@ -8,6 +8,7 @@ import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.fasterxml.jackson.annotation.JsonView;
 import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
+import io.harness.beans.UsageRestrictions;
 import io.harness.data.validator.Trimmed;
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import io.harness.encryption.Encrypted;
@@ -27,7 +28,6 @@ import software.wings.beans.HostConnectionAttributes.AuthenticationScheme;
 import software.wings.jersey.JsonViews;
 import software.wings.settings.SettingValue;
 import software.wings.settings.SettingVariableTypes;
-import software.wings.settings.UsageRestrictions;
 import software.wings.yaml.setting.SourceRepoProviderYaml;
 
 import java.util.ArrayList;

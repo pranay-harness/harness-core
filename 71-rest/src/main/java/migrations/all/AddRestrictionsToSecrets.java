@@ -8,21 +8,21 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import com.google.common.collect.Sets;
 import com.google.inject.Inject;
 
+import io.harness.beans.EnvFilter;
+import io.harness.beans.EnvFilter.FilterType;
+import io.harness.beans.GenericEntityFilter;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.beans.SearchFilter.Operator;
+import io.harness.beans.UsageRestrictions;
+import io.harness.beans.UsageRestrictions.AppEnvRestriction;
 import lombok.extern.slf4j.Slf4j;
 import migrations.Migration;
 import software.wings.beans.Account;
-import software.wings.security.EnvFilter;
-import software.wings.security.EnvFilter.FilterType;
-import software.wings.security.GenericEntityFilter;
 import software.wings.security.encryption.EncryptedData;
 import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.security.SecretManager;
 import software.wings.settings.SettingVariableTypes;
-import software.wings.settings.UsageRestrictions;
-import software.wings.settings.UsageRestrictions.AppEnvRestriction;
 
 import java.util.List;
 

@@ -18,6 +18,7 @@ import static software.wings.beans.SettingAttribute.SettingCategory.CONNECTOR;
 
 import com.google.inject.Inject;
 
+import io.harness.beans.UsageRestrictions;
 import io.harness.category.element.UnitTests;
 import io.harness.exception.UnauthorizedUsageRestrictionsException;
 import io.harness.k8s.model.KubernetesClusterAuthType;
@@ -54,7 +55,6 @@ import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.UsageRestrictionsService;
 import software.wings.service.intfc.security.ManagerDecryptionService;
 import software.wings.service.intfc.security.SecretManager;
-import software.wings.settings.UsageRestrictions;
 import software.wings.yaml.YamlHelper;
 
 import java.lang.reflect.Field;

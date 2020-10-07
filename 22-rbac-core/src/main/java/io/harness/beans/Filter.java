@@ -1,4 +1,4 @@
-package software.wings.security;
+package io.harness.beans;
 
 import static io.harness.annotations.dev.HarnessTeam.PL;
 
@@ -8,17 +8,14 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.fasterxml.jackson.annotation.JsonTypeInfo.As;
 import com.fasterxml.jackson.annotation.JsonTypeInfo.Id;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.yaml.BaseYaml;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
-import software.wings.yaml.BaseYaml;
 
 import java.util.List;
 import java.util.Set;
 
-/**
- * @author rktummala on 02/08/18
- */
 @OwnedBy(PL)
 @Data
 @NoArgsConstructor

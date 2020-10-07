@@ -23,6 +23,7 @@ import static software.wings.utils.WingsTestConstants.SERVICE_NAME;
 import com.google.inject.Inject;
 
 import io.harness.exception.WingsException;
+import io.harness.yaml.BaseYaml;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import software.wings.api.CloudProviderType;
@@ -62,7 +63,6 @@ import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.WorkflowService;
 import software.wings.service.intfc.yaml.YamlPushService;
 import software.wings.utils.ArtifactType;
-import software.wings.yaml.BaseYaml;
 import software.wings.yaml.handler.BaseYamlHandlerTest;
 
 import java.util.Optional;
