@@ -10,6 +10,8 @@ import lombok.Data;
 
 import java.util.List;
 
+import java.util.Set;
+
 @Data
 @Builder
 @OwnedBy(CDC)
@@ -17,7 +19,9 @@ public class HelmChartCollectionParams implements ManifestCollectionParams {
   private String accountId;
   private String appId;
   private String appManifestId;
+  private String serviceId;
   private HelmChartConfigParams helmChartConfigParams;
+  private Set<String> publishedVersions;
 
   @Override
   public List<ExecutionCapability> fetchRequiredExecutionCapabilities() {

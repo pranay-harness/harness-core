@@ -37,7 +37,8 @@ public enum AlertType {
   ARTIFACT_COLLECTION_FAILED(Setup, Error, ArtifactCollectionFailedAlert.class),
   CONTINUOUS_VERIFICATION_ALERT(ContinuousVerification, Error, ContinuousVerificationAlertData.class),
   CONTINUOUS_VERIFICATION_DATA_COLLECTION_ALERT(
-      ContinuousVerification, Error, ContinuousVerificationDataCollectionAlert.class);
+      ContinuousVerification, Error, ContinuousVerificationDataCollectionAlert.class),
+  MANIFEST_COLLECTION_FAILED(Setup, Error, ManifestCollectionFailedAlert.class);
 
   @Getter private AlertCategory category;
   @Getter private AlertSeverity severity;

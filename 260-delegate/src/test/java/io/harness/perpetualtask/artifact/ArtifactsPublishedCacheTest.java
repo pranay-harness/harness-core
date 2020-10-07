@@ -29,15 +29,15 @@ public class ArtifactsPublishedCacheTest extends CategoryTest {
   @Category(UnitTests.class)
   public void testAddArtifactCollectionResult() {
     ArtifactsPublishedCache<BuildDetails> cache = prepareCache(asList("0.1.0", "0.2.0", "0.3.0"), false);
-    cache.addArtifactCollectionResult(prepareBuildDetails(asList("0.1.0", "0.4.0", "0.5.0")));
+    cache.addCollectionResult(prepareBuildDetails(asList("0.1.0", "0.4.0", "0.5.0")));
     assertThat(cache.needsToPublish()).isTrue();
     assertThat(cache.hasToBeDeletedArtifactKeys()).isFalse();
 
     cache = prepareCache(asList("0.1.0", "0.2.0", "0.3.0"), true);
-    cache.addArtifactCollectionResult(null);
+    cache.addCollectionResult(null);
     assertThat(cache.needsToPublish()).isFalse();
 
-    cache.addArtifactCollectionResult(prepareBuildDetails(asList("0.1.0", "0.4.0", "0.5.0")));
+    cache.addCollectionResult(prepareBuildDetails(asList("0.1.0", "0.4.0", "0.5.0")));
     assertThat(cache.needsToPublish()).isTrue();
     assertThat(cache.hasToBeDeletedArtifactKeys()).isTrue();
     assertThat(cache.getToBeDeletedArtifactKeys()).containsExactly("0.2.0", "0.3.0");
@@ -55,7 +55,7 @@ public class ArtifactsPublishedCacheTest extends CategoryTest {
   @Category(UnitTests.class)
   public void testRemoveDeletedArtifactKeys() {
     ArtifactsPublishedCache<BuildDetails> cache = prepareCache(asList("0.1.0", "0.2.0", "0.3.0"), true);
-    cache.addArtifactCollectionResult(prepareBuildDetails(asList("0.1.0", "0.4.0", "0.5.0")));
+    cache.addCollectionResult(prepareBuildDetails(asList("0.1.0", "0.4.0", "0.5.0")));
     cache.removeDeletedArtifactKeys(null);
     assertThat(cache.needsToPublish()).isTrue();
     assertThat(cache.hasToBeDeletedArtifactKeys()).isTrue();
@@ -77,7 +77,7 @@ public class ArtifactsPublishedCacheTest extends CategoryTest {
   @Category(UnitTests.class)
   public void testAddPublishedBuildDetails() {
     ArtifactsPublishedCache<BuildDetails> cache = prepareCache(asList("0.1.0", "0.2.0", "0.3.0"), true);
-    cache.addArtifactCollectionResult(prepareBuildDetails(asList("0.1.0", "0.4.0", "0.5.0")));
+    cache.addCollectionResult(prepareBuildDetails(asList("0.1.0", "0.4.0", "0.5.0")));
     cache.removeDeletedArtifactKeys(asList("0.2.0", "0.3.0"));
     assertThat(cache.needsToPublish()).isTrue();
     assertThat(cache.hasToBeDeletedArtifactKeys()).isFalse();
@@ -117,7 +117,7 @@ public class ArtifactsPublishedCacheTest extends CategoryTest {
   @Category(UnitTests.class)
   public void testEmptyInitialPublishedArtifactKeys() {
     ArtifactsPublishedCache<BuildDetails> cache = prepareCache(null, true);
-    cache.addArtifactCollectionResult(prepareBuildDetails(asList("0.1.0", "0.4.0", "0.5.0")));
+    cache.addCollectionResult(prepareBuildDetails(asList("0.1.0", "0.4.0", "0.5.0")));
     assertThat(cache.hasToBeDeletedArtifactKeys()).isFalse();
 
     ImmutablePair<List<BuildDetails>, Boolean> res = cache.getLimitedUnpublishedBuildDetails();
@@ -137,7 +137,7 @@ public class ArtifactsPublishedCacheTest extends CategoryTest {
                                 .boxed()
                                 .map(String::valueOf)
                                 .collect(Collectors.toList());
-    cache.addArtifactCollectionResult(prepareBuildDetails(buildNos));
+    cache.addCollectionResult(prepareBuildDetails(buildNos));
     assertThat(cache.hasToBeDeletedArtifactKeys()).isFalse();
 
     ImmutablePair<List<BuildDetails>, Boolean> res = cache.getLimitedUnpublishedBuildDetails();

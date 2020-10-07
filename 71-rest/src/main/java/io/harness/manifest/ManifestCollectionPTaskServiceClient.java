@@ -20,7 +20,7 @@ import java.util.Map;
 @OwnedBy(CDC)
 public class ManifestCollectionPTaskServiceClient implements PerpetualTaskServiceClient {
   private static final String APP_MANIFEST_ID = ManifestCollectionPTaskClientParamsKeys.appManifestId;
-  public static final String APP_ID = ManifestCollectionPTaskClientParamsKeys.appId;
+  private static final String APP_ID = ManifestCollectionPTaskClientParamsKeys.appId;
   @Inject private ManifestCollectionUtils manifestCollectionUtils;
   @Inject private KryoSerializer kryoSerializer;
 
@@ -41,7 +41,7 @@ public class ManifestCollectionPTaskServiceClient implements PerpetualTaskServic
   @Override
   public DelegateTask getValidationTask(PerpetualTaskClientContext clientContext, String accountId) {
     Map<String, String> clientParams = clientContext.getClientParams();
-    return manifestCollectionUtils.buildValidateTaskParams(
+    return manifestCollectionUtils.buildValidationTask(
         clientParams.get(APP_MANIFEST_ID), clientParams.get(ManifestCollectionPTaskClientParamsKeys.appId));
   }
 }

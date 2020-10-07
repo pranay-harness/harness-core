@@ -37,6 +37,7 @@ import io.harness.delegate.beans.DelegateScripts;
 import io.harness.delegate.beans.DelegateTaskEvent;
 import io.harness.delegate.beans.DelegateTaskPackage;
 import io.harness.delegate.beans.DelegateTaskResponse;
+import io.harness.manifest.ManifestCollectionResponseHandler;
 import io.harness.rest.RestResponse;
 import io.harness.rule.Owner;
 import lombok.extern.slf4j.Slf4j;
@@ -87,6 +88,8 @@ public class DelegateAgentResourceTest {
   private static InstanceHelper instanceSyncResponseHandler = mock(InstanceHelper.class);
   private static ArtifactCollectionResponseHandler artifactCollectionResponseHandler =
       mock(ArtifactCollectionResponseHandler.class);
+  private static ManifestCollectionResponseHandler manifestCollectionResponseHandler =
+      mock(ManifestCollectionResponseHandler.class);
 
   @Parameter public String apiUrl;
 
@@ -98,9 +101,9 @@ public class DelegateAgentResourceTest {
   @ClassRule
   public static final ResourceTestRule RESOURCES =
       ResourceTestRule.builder()
-          .instance(
-              new DelegateAgentResource(delegateService, accountService, wingsPersistence, delegateRequestRateLimiter,
-                  subdomainUrlHelper, artifactCollectionResponseHandler, instanceSyncResponseHandler))
+          .instance(new DelegateAgentResource(delegateService, accountService, wingsPersistence,
+              delegateRequestRateLimiter, subdomainUrlHelper, artifactCollectionResponseHandler,
+              instanceSyncResponseHandler, manifestCollectionResponseHandler))
           .instance(new AbstractBinder() {
             @Override
             protected void configure() {

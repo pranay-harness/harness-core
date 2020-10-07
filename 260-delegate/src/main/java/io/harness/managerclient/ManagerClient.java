@@ -14,6 +14,7 @@ import software.wings.beans.ConfigFile;
 import software.wings.beans.Delegate;
 import software.wings.beans.Log;
 import software.wings.delegatetasks.buildsource.BuildSourceExecutionResponse;
+import software.wings.delegatetasks.manifest.ManifestCollectionExecutionResponse;
 import software.wings.delegatetasks.validation.DelegateConnectionResult;
 import software.wings.service.impl.ThirdPartyApiCallLog;
 import software.wings.service.impl.analysis.LogElement;
@@ -60,4 +61,9 @@ public interface ManagerClient {
   @POST("agent/delegates/artifact-collection/{perpetualTaskId}")
   Call<RestResponse<Boolean>> publishArtifactCollectionResult(@Path("perpetualTaskId") String perpetualTaskId,
       @Query("accountId") String accountId, @Body BuildSourceExecutionResponse buildSourceExecutionResponse);
+
+  @POST("agent/delegates/manifest-collection/{perpetualTaskId}")
+  Call<RestResponse<Boolean>> publishManifestCollectionResult(@Path("perpetualTaskId") String perpetualTaskId,
+      @Query("accountId") String accountId,
+      @Body ManifestCollectionExecutionResponse manifestCollectionExecutionResponse);
 }

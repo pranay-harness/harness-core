@@ -43,6 +43,7 @@ public class ApplicationManifest extends Base implements AccountAccess {
   private enum ManifestCollectionStatus { UNSTABLE, COLLECTING, STABLE }
   private ManifestCollectionStatus collectionStatus;
   private String perpetualTaskId;
+  private int failedAttempts;
 
   public ApplicationManifest cloneInternal() {
     ApplicationManifest manifest = ApplicationManifest.builder()

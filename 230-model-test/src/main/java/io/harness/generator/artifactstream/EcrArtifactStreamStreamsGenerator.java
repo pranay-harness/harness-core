@@ -39,6 +39,7 @@ public class EcrArtifactStreamStreamsGenerator implements ArtifactStreamsGenerat
             .imageName("hello-world")
             .name("hello-world")
             .autoPopulate(true)
+            .metadataOnly(true)
             .settingId(settingAttribute.getUuid())
             .build();
     return ensureArtifactStream(seed, artifactStream, owners);
@@ -64,6 +65,7 @@ public class EcrArtifactStreamStreamsGenerator implements ArtifactStreamsGenerat
                                                                 .imageName(ecrArtifactStream.getImageName())
                                                                 .autoPopulate(ecrArtifactStream.isAutoPopulate())
                                                                 .settingId(ecrArtifactStream.getSettingId())
+                                                                .metadataOnly(true)
                                                                 .build(),
         owners);
   }

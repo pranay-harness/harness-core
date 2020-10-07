@@ -29,7 +29,7 @@ public class ArtifactoryArtifactStreamStreamsGenerator implements ArtifactStream
 
   @Override
   public ArtifactStream ensureArtifactStream(Seed seed, Owners owners, boolean atConnector) {
-    return ensureArtifactStream(seed, owners, atConnector, false);
+    return ensureArtifactStream(seed, owners, atConnector, true);
   }
 
   @Override

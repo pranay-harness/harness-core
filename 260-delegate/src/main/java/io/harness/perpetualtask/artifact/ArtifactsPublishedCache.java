@@ -3,6 +3,7 @@ package io.harness.perpetualtask.artifact;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 
 import lombok.AccessLevel;
+import lombok.Getter;
 import lombok.experimental.FieldDefaults;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 
@@ -50,7 +51,7 @@ public class ArtifactsPublishedCache<P> {
   // Max artifacts published to the manager in one call.
   public static final int ARTIFACT_ONE_TIME_PUBLISH_LIMIT = 500;
 
-  Set<String> publishedArtifactKeys;
+  @Getter Set<String> publishedArtifactKeys;
   Set<String> unpublishedArtifactKeys;
   List<P> unpublishedBuildDetails;
   Set<String> toBeDeletedArtifactKeys;
@@ -74,7 +75,7 @@ public class ArtifactsPublishedCache<P> {
    *
    * @param builds the new build details returned by third party-repo
    */
-  public void addArtifactCollectionResult(List<P> builds) {
+  public void addCollectionResult(List<P> builds) {
     if (isEmpty(builds)) {
       return;
     }

@@ -88,4 +88,6 @@ public interface ApplicationManifestService extends OwnedByService, OwnedByEnvir
   boolean detachPerpetualTask(@NotNull String perpetualTaskId);
 
   boolean attachPerpetualTask(String accountId, @NotNull String appManifestId, @NotNull String perpetualTaskId);
+
+  boolean updateFailedAttempts(String accountId, String appManifestId, int failedAttempts);
 }
