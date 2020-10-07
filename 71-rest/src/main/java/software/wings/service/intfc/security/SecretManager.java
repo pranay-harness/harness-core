@@ -8,6 +8,7 @@ import static io.harness.exception.WingsException.USER;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
+import io.harness.beans.UsageRestrictions;
 import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.security.encryption.EncryptedRecordData;
 import io.harness.security.encryption.EncryptionType;
@@ -25,7 +26,6 @@ import software.wings.service.impl.security.SecretManagementException;
 import software.wings.service.impl.security.SecretText;
 import software.wings.service.intfc.ownership.OwnedByAccount;
 import software.wings.settings.SettingVariableTypes;
-import software.wings.settings.UsageRestrictions;
 
 import java.io.File;
 import java.io.IOException;

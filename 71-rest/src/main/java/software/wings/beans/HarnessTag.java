@@ -18,6 +18,7 @@ import io.harness.persistence.PersistentEntity;
 import io.harness.persistence.UpdatedAtAware;
 import io.harness.persistence.UpdatedByAware;
 import io.harness.persistence.UuidAware;
+import io.harness.yaml.BaseYaml;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -29,7 +30,6 @@ import org.mongodb.morphia.annotations.Id;
 import software.wings.beans.HarnessTag.HarnessTagKeys;
 import software.wings.jersey.JsonViews;
 import software.wings.yaml.BaseEntityYaml;
-import software.wings.yaml.BaseYaml;
 
 import java.util.List;
 import java.util.Set;

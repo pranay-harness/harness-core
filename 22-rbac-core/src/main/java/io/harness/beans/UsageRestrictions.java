@@ -1,13 +1,11 @@
-package software.wings.settings;
+package io.harness.beans;
 
+import io.harness.yaml.BaseYaml;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
-import software.wings.security.EnvFilter;
-import software.wings.security.GenericEntityFilter;
-import software.wings.yaml.BaseYaml;
 
 import java.util.List;
 import java.util.Set;

@@ -21,6 +21,7 @@ import static software.wings.utils.WingsTestConstants.SERVICE_NAME;
 import static software.wings.utils.WingsTestConstants.SETTING_ID;
 import static software.wings.utils.WingsTestConstants.TEMPLATE_ID;
 
+import io.harness.yaml.BaseYaml;
 import org.mockito.Mock;
 import org.mongodb.morphia.Key;
 import software.wings.beans.AwsConfig;
@@ -43,7 +44,6 @@ import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.ServiceTemplateService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.utils.ArtifactType;
-import software.wings.yaml.BaseYaml;
 import software.wings.yaml.handler.BaseYamlHandlerTest;
 
 import java.util.Optional;

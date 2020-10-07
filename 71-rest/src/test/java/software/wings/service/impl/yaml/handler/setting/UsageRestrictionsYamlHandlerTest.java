@@ -14,6 +14,11 @@ import static software.wings.utils.WingsTestConstants.ENV_NAME;
 import com.google.common.collect.Sets;
 import com.google.inject.Inject;
 
+import io.harness.beans.EnvFilter;
+import io.harness.beans.GenericEntityFilter;
+import io.harness.beans.GenericEntityFilter.FilterType;
+import io.harness.beans.UsageRestrictions;
+import io.harness.beans.UsageRestrictions.AppEnvRestriction;
 import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
 import org.junit.Before;
@@ -27,15 +32,10 @@ import software.wings.beans.JenkinsConfig;
 import software.wings.beans.JenkinsConfig.VerificationYaml;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.SettingAttribute.SettingCategory;
-import software.wings.security.EnvFilter;
-import software.wings.security.GenericEntityFilter;
-import software.wings.security.GenericEntityFilter.FilterType;
 import software.wings.service.impl.yaml.handler.setting.verificationprovider.JenkinsConfigVerificationYamlHandler;
 import software.wings.service.impl.yaml.handler.usagerestrictions.UsageRestrictionsYamlHandler;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.EnvironmentService;
-import software.wings.settings.UsageRestrictions;
-import software.wings.settings.UsageRestrictions.AppEnvRestriction;
 import software.wings.yaml.handler.connectors.configyamlhandlers.BaseSettingValueConfigYamlHandlerTest;
 import software.wings.yaml.handler.connectors.configyamlhandlers.SettingValueYamlConfig;
 

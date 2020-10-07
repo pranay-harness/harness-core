@@ -5,6 +5,7 @@ import static software.wings.common.Constants.ACCOUNT_ID_KEY;
 
 import com.google.inject.Inject;
 
+import io.harness.beans.UsageRestrictions;
 import io.harness.data.validator.EntityNameValidator;
 import io.harness.encryption.EncryptionReflectUtils;
 import io.harness.persistence.HIterator;
@@ -21,7 +22,6 @@ import software.wings.security.encryption.EncryptedData.EncryptedDataKeys;
 import software.wings.security.encryption.EncryptedDataParent;
 import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.UsageRestrictionsService;
-import software.wings.settings.UsageRestrictions;
 import software.wings.yaml.gitSync.YamlGitConfig;
 
 import java.lang.reflect.Field;

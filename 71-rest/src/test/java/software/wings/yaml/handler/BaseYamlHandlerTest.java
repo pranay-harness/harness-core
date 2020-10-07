@@ -4,11 +4,11 @@ import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import com.fasterxml.jackson.dataformat.yaml.snakeyaml.Yaml;
+import io.harness.yaml.BaseYaml;
 import io.harness.yaml.YamlUtils;
 import org.junit.Rule;
 import org.junit.rules.ExpectedException;
 import software.wings.WingsBaseTest;
-import software.wings.yaml.BaseYaml;
 import software.wings.yaml.YamlHelper;
 
 import java.io.IOException;

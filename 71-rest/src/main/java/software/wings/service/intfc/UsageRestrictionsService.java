@@ -1,13 +1,13 @@
 package software.wings.service.intfc;
 
+import io.harness.beans.UsageRestrictions;
+import io.harness.beans.UsageRestrictions.AppEnvRestriction;
 import software.wings.beans.Base;
 import software.wings.beans.security.UserGroup;
 import software.wings.beans.security.restrictions.RestrictionsSummary;
 import software.wings.security.PermissionAttribute.Action;
 import software.wings.security.UserPermissionInfo;
 import software.wings.settings.RestrictionsAndAppEnvMap;
-import software.wings.settings.UsageRestrictions;
-import software.wings.settings.UsageRestrictions.AppEnvRestriction;
 import software.wings.settings.UsageRestrictionsReferenceSummary;
 
 import java.util.List;

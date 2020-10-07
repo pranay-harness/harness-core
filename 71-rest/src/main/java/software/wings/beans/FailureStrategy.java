@@ -2,12 +2,12 @@ package software.wings.beans;
 
 import io.harness.exception.FailureType;
 import io.harness.interrupts.RepairActionCode;
+import io.harness.yaml.BaseYaml;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import lombok.Value;
-import software.wings.yaml.BaseYaml;
 
 import java.util.ArrayList;
 import java.util.List;

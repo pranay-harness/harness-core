@@ -2,11 +2,11 @@ package software.wings.beans.container;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.github.reinert.jjschema.Attributes;
+import io.harness.yaml.BaseYaml;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
-import software.wings.yaml.BaseYaml;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 @Data

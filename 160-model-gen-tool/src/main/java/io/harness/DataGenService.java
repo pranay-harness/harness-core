@@ -33,6 +33,7 @@ import com.google.inject.name.Named;
 
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
+import io.harness.beans.UsageRestrictions;
 import io.harness.entity.ServiceSecretKey;
 import io.harness.entity.ServiceSecretKey.ServiceSecretKeyKeys;
 import io.harness.entity.ServiceSecretKey.ServiceType;
@@ -94,7 +95,6 @@ import software.wings.service.intfc.UserService;
 import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.service.intfc.WorkflowService;
 import software.wings.service.intfc.template.TemplateGalleryService;
-import software.wings.settings.UsageRestrictions;
 import software.wings.utils.ArtifactType;
 
 import java.io.IOException;

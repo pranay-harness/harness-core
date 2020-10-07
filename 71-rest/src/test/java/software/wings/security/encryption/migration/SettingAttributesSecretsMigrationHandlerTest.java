@@ -23,6 +23,7 @@ import static software.wings.settings.SettingVariableTypes.SECRET_TEXT;
 import com.google.common.collect.Sets;
 import com.google.inject.Inject;
 
+import io.harness.beans.UsageRestrictions;
 import io.harness.category.element.UnitTests;
 import io.harness.iterator.PersistenceIteratorFactory;
 import io.harness.mongo.iterator.MongoPersistenceIterator.MongoPersistenceIteratorBuilder;
@@ -57,7 +58,6 @@ import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.UsageRestrictionsService;
 import software.wings.service.intfc.newrelic.NewRelicService;
 import software.wings.settings.SettingVariableTypes;
-import software.wings.settings.UsageRestrictions;
 
 import java.util.ArrayList;
 import java.util.List;

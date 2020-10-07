@@ -1,5 +1,6 @@
 package software.wings.yaml;
 
+import io.harness.yaml.BaseYaml;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;

@@ -1,13 +1,13 @@
 package io.harness;
 
+import static io.harness.beans.EnvFilter.FilterType.NON_PROD;
+import static io.harness.beans.EnvFilter.FilterType.PROD;
+import static io.harness.beans.GenericEntityFilter.FilterType.ALL;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
 import static software.wings.graphql.utils.GraphQLConstants.GRAPHQL_QUERY_STRING;
 import static software.wings.graphql.utils.GraphQLConstants.HTTP_SERVLET_REQUEST;
 import static software.wings.security.AuthenticationFilter.API_KEY_HEADER;
-import static software.wings.security.EnvFilter.FilterType.NON_PROD;
-import static software.wings.security.EnvFilter.FilterType.PROD;
-import static software.wings.security.GenericEntityFilter.FilterType.ALL;
 import static software.wings.security.PermissionAttribute.Action.READ;
 import static software.wings.security.PermissionAttribute.Action.UPDATE;
 
@@ -18,6 +18,9 @@ import com.google.inject.Inject;
 import graphql.ExecutionInput;
 import graphql.GraphQL;
 import graphql.GraphQLContext;
+import io.harness.beans.EnvFilter;
+import io.harness.beans.GenericEntityFilter;
+import io.harness.beans.UsageRestrictions;
 import io.harness.ccm.billing.bigquery.BigQueryService;
 import io.harness.generator.AccountGenerator;
 import io.harness.generator.OwnerManager;
@@ -33,15 +36,12 @@ import software.wings.beans.Account;
 import software.wings.beans.User;
 import software.wings.beans.security.UserGroup;
 import software.wings.graphql.datafetcher.DataLoaderRegistryHelper;
-import software.wings.security.EnvFilter;
-import software.wings.security.GenericEntityFilter;
 import software.wings.security.UserPermissionInfo;
 import software.wings.security.UserRestrictionInfo;
 import software.wings.service.impl.security.auth.AuthHandler;
 import software.wings.service.intfc.AuthService;
 import software.wings.service.intfc.UsageRestrictionsService;
 import software.wings.service.intfc.UserService;
-import software.wings.settings.UsageRestrictions;
 
 import java.util.Arrays;
 import java.util.Collections;

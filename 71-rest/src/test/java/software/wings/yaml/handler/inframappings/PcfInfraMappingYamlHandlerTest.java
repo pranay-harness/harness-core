@@ -22,6 +22,7 @@ import com.google.inject.name.Named;
 import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
 import io.harness.scheduler.PersistentScheduler;
+import io.harness.yaml.BaseYaml;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -53,7 +54,6 @@ import software.wings.service.intfc.ServiceTemplateService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.yaml.YamlChangeSetService;
 import software.wings.service.intfc.yaml.YamlDirectoryService;
-import software.wings.yaml.BaseYaml;
 import software.wings.yaml.handler.BaseYamlHandlerTest;
 
 import java.util.Arrays;

@@ -3,6 +3,7 @@ package software.wings.beans;
 import static java.util.Collections.emptyList;
 
 import com.fasterxml.jackson.annotation.JsonTypeName;
+import io.harness.beans.UsageRestrictions;
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -10,7 +11,6 @@ import lombok.NoArgsConstructor;
 import software.wings.audit.ResourceType;
 import software.wings.settings.SettingValue;
 import software.wings.settings.SettingVariableTypes;
-import software.wings.settings.UsageRestrictions;
 import software.wings.yaml.setting.CloudProviderYaml;
 
 import java.util.List;

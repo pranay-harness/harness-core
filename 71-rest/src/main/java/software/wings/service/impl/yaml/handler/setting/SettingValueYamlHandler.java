@@ -6,6 +6,8 @@ import static software.wings.beans.yaml.YamlConstants.PATH_DELIMITER;
 
 import com.google.inject.Inject;
 
+import io.harness.beans.UsageRestrictions;
+import io.harness.beans.UsageRestrictions.Yaml;
 import io.harness.exception.HarnessException;
 import io.harness.exception.WingsException;
 import lombok.extern.slf4j.Slf4j;
@@ -22,8 +24,6 @@ import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.security.EncryptionService;
 import software.wings.service.intfc.security.SecretManager;
 import software.wings.settings.SettingValue;
-import software.wings.settings.UsageRestrictions;
-import software.wings.settings.UsageRestrictions.Yaml;
 
 import java.util.List;
 

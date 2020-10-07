@@ -2,11 +2,11 @@ package software.wings.utils;
 
 import com.google.common.collect.Sets;
 
-import software.wings.security.EnvFilter;
-import software.wings.security.GenericEntityFilter;
-import software.wings.security.GenericEntityFilter.FilterType;
-import software.wings.settings.UsageRestrictions;
-import software.wings.settings.UsageRestrictions.AppEnvRestriction;
+import io.harness.beans.EnvFilter;
+import io.harness.beans.GenericEntityFilter;
+import io.harness.beans.GenericEntityFilter.FilterType;
+import io.harness.beans.UsageRestrictions;
+import io.harness.beans.UsageRestrictions.AppEnvRestriction;
 
 /**
  * Helper class to

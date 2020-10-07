@@ -8,6 +8,7 @@ import io.harness.mongo.index.NgUniqueIndex;
 import io.harness.notifications.NotificationReceiverInfo;
 import io.harness.persistence.AccountAccess;
 import io.harness.persistence.NameAccess;
+import io.harness.yaml.BaseYaml;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -17,7 +18,6 @@ import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Reference;
 import software.wings.beans.notification.SlackNotificationSetting;
 import software.wings.yaml.BaseEntityYaml;
-import software.wings.yaml.BaseYaml;
 
 import java.util.ArrayList;
 import java.util.Collections;

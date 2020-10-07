@@ -1,4 +1,4 @@
-package software.wings.security;
+package io.harness.beans;
 
 import static io.harness.annotations.dev.HarnessTeam.PL;
 
@@ -11,24 +11,18 @@ import lombok.NoArgsConstructor;
 import java.util.List;
 import java.util.Set;
 
-/**
- *
- * @author rktummala on 02/21/18
- */
 @OwnedBy(PL)
 @Data
 @NoArgsConstructor
 @EqualsAndHashCode(callSuper = true)
-public class EnvFilter extends Filter {
+public class GenericEntityFilter extends Filter {
   public interface FilterType {
-    String PROD = "PROD";
-    String NON_PROD = "NON_PROD";
+    String ALL = "ALL";
     String SELECTED = "SELECTED";
 
     static boolean isValidFilterType(String filterType) {
       switch (filterType) {
-        case PROD:
-        case NON_PROD:
+        case ALL:
         case SELECTED:
           return true;
         default:
@@ -36,24 +30,25 @@ public class EnvFilter extends Filter {
       }
     }
   }
-  private Set<String> filterTypes;
+
+  private String filterType;
 
   @Builder
-  public EnvFilter(Set<String> ids, Set<String> filterTypes) {
+  public GenericEntityFilter(Set<String> ids, String filterType) {
     super(ids);
-    this.filterTypes = filterTypes;
+    this.filterType = filterType;
   }
 
   @Data
   @NoArgsConstructor
   @EqualsAndHashCode(callSuper = true)
   public static class Yaml extends Filter.Yaml {
-    private List<String> filterTypes;
+    private String filterType;
 
     @Builder
-    public Yaml(List<String> entityNames, List<String> filterTypes) {
-      super(entityNames);
-      this.filterTypes = filterTypes;
+    public Yaml(List<String> names, String filterType) {
+      super(names);
+      this.filterType = filterType;
     }
   }
 }

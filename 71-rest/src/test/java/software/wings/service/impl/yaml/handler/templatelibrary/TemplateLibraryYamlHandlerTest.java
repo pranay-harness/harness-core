@@ -10,6 +10,7 @@ import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 
 import com.google.inject.Inject;
 
+import io.harness.yaml.BaseYaml;
 import org.junit.Rule;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
@@ -26,7 +27,6 @@ import software.wings.service.impl.yaml.service.YamlHelper;
 import software.wings.service.intfc.EnvironmentService;
 import software.wings.service.intfc.template.TemplateGalleryService;
 import software.wings.service.intfc.yaml.YamlPushService;
-import software.wings.yaml.BaseYaml;
 import software.wings.yaml.handler.BaseYamlHandlerTest;
 
 import java.io.IOException;

@@ -16,6 +16,7 @@ directories:
   22-ng-core-clients
   22-ng-delegate-service-beans
   22-ng-project-n-orgs
+  22-rbac-core
   22-secret-manager-client
   22-timeout-engine
   22-wait-engine

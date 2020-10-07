@@ -5,6 +5,7 @@ import static io.harness.annotations.dev.HarnessTeam.CDC;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.beans.UsageRestrictions;
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import lombok.Builder;
 import lombok.Data;
@@ -14,7 +15,6 @@ import org.hibernate.validator.constraints.NotEmpty;
 import software.wings.audit.ResourceType;
 import software.wings.settings.SettingValue;
 import software.wings.settings.SettingVariableTypes;
-import software.wings.settings.UsageRestrictions;
 import software.wings.yaml.setting.ArtifactServerYaml;
 
 import java.util.List;

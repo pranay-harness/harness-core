@@ -9,6 +9,7 @@ import com.google.inject.Inject;
 
 import io.harness.exception.HarnessException;
 import io.harness.exception.WingsException;
+import io.harness.yaml.BaseYaml;
 import org.apache.commons.lang3.StringUtils;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
@@ -22,7 +23,6 @@ import software.wings.service.impl.yaml.handler.setting.SettingValueYamlHandler;
 import software.wings.service.impl.yaml.service.YamlHelper;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.security.SecretManager;
-import software.wings.yaml.BaseYaml;
 import software.wings.yaml.handler.BaseYamlHandlerTest;
 
 import java.io.IOException;

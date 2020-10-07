@@ -2,11 +2,11 @@ package software.wings.yaml.setting;
 
 import static software.wings.yaml.YamlHelper.ENCRYPTED_VALUE_STR;
 
+import io.harness.beans.UsageRestrictions;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import software.wings.settings.SettingValue;
-import software.wings.settings.UsageRestrictions;
 
 /**
  * @author rktummala on 11/18/17

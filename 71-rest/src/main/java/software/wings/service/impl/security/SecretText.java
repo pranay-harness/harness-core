@@ -4,11 +4,11 @@ import static io.harness.annotations.dev.HarnessTeam.PL;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.beans.UsageRestrictions;
 import io.harness.security.encryption.EncryptedDataParams;
 import lombok.Builder;
 import lombok.Data;
 import lombok.experimental.FieldNameConstants;
-import software.wings.settings.UsageRestrictions;
 
 import java.util.Map;
 import java.util.Set;
