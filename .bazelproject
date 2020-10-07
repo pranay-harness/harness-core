@@ -37,6 +37,7 @@ directories:
   35-yaml-beans
   38-execution-plan
   39-ng-pipeline-commons
+  40-pipeline-service
   50-delegate-task-grpc-service
   57-command-library-common
   64-events-framework
