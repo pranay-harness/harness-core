@@ -25,7 +25,7 @@ fi
 
 if [ "${RUN_BAZEL_TESTS}" == "true" ]
 then
-  bazel ${bazelrc} test --keep_going ${GCP} ${BAZEL_ARGUMENTS} -- //... -//product/... -//commons/...
+  bazel ${bazelrc} test --keep_going ${GCP} ${BAZEL_ARGUMENTS} -- //... -//product/... -//commons/... || true
 fi
 
 build_bazel_module() {
