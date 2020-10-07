@@ -214,9 +214,6 @@ public class AzureComputeClientImpl extends AzureClient implements AzureComputeC
     if (isBlank(resourceGroupName)) {
       throw new IllegalArgumentException(RESOURCE_GROUP_NAME_NULL_VALIDATION_MSG);
     }
-    if (isBlank(virtualMachineScaleSetName)) {
-      throw new IllegalArgumentException(VIRTUAL_MACHINE_SCALE_SET_ID_NULL_VALIDATION_MSG);
-    }
     if (isEmpty(virtualMachineScaleSetName)) {
       return Optional.empty();
     }
@@ -290,6 +287,7 @@ public class AzureComputeClientImpl extends AzureClient implements AzureComputeC
               + " newCapacity: %s",
           virtualMachineScaleSetName, subscriptionId, resourceGroupName, newCapacity));
     }
+
     Optional<VirtualMachineScaleSet> virtualMachineScaleSetOp =
         getVirtualMachineScaleSetByName(azureConfig, subscriptionId, resourceGroupName, virtualMachineScaleSetName);
 

@@ -320,6 +320,7 @@ public class AzureVMSSSetupState extends State {
         .minInstances(azureVMSSSetupTaskResponse.getMinInstances())
         .maxInstances(azureVMSSSetupTaskResponse.getMaxInstances())
         .desiredInstances(azureVMSSSetupTaskResponse.getDesiredInstances())
+        .oldDesiredCount(azureVMSSSetupTaskResponse.getPreDeploymentData().getDesiredCapacity())
         .preDeploymentData(azureVMSSSetupTaskResponse.getPreDeploymentData())
         .build();
   }

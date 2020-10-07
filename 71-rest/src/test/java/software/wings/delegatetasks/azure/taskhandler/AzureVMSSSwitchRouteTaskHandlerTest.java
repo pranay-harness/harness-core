@@ -9,7 +9,6 @@ import static org.mockito.Matchers.anyBoolean;
 import static org.mockito.Matchers.anyInt;
 import static org.mockito.Matchers.anyLong;
 import static org.mockito.Matchers.anyString;
-import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
@@ -36,11 +35,13 @@ import io.harness.delegate.task.azure.request.AzureLoadBalancerDetailForBGDeploy
 import io.harness.delegate.task.azure.request.AzureVMSSSwitchRouteTaskParameters;
 import io.harness.delegate.task.azure.response.AzureVMSSTaskExecutionResponse;
 import io.harness.rule.Owner;
+import org.assertj.core.util.Arrays;
 import org.jetbrains.annotations.NotNull;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import rx.Observable;
 import software.wings.WingsBaseTest;
 import software.wings.beans.command.ExecutionLogCallback;
 
@@ -108,6 +109,7 @@ public class AzureVMSSSwitchRouteTaskHandlerTest extends WingsBaseTest {
     pageList.add(newVirtualMachineScaleSetVM);
     doReturn(newVirtualMachineScaleSetVMs).when(newVirtualMachineScaleSet).virtualMachines();
     doReturn(pageList).when(newVirtualMachineScaleSetVMs).list();
+    doReturn(newVMSSName).when(newVirtualMachineScaleSet).name();
 
     // oldVirtualMachineScaleSet virtualMachines()
     VirtualMachineScaleSet oldVirtualMachineScaleSet = mock(VirtualMachineScaleSet.class);
@@ -117,6 +119,7 @@ public class AzureVMSSSwitchRouteTaskHandlerTest extends WingsBaseTest {
     oldPageList.add(oldVirtualMachineScaleSetVM);
     doReturn(oldVirtualMachineScaleSetVMs).when(oldVirtualMachineScaleSet).virtualMachines();
     doReturn(pageList).when(oldVirtualMachineScaleSetVMs).list();
+    doReturn(oldVMSSName).when(oldVirtualMachineScaleSet).name();
 
     // ExecutionLogCallback and TimeLimiter
     ExecutionLogCallback mockCallback = mock(ExecutionLogCallback.class);
@@ -151,14 +154,6 @@ public class AzureVMSSSwitchRouteTaskHandlerTest extends WingsBaseTest {
              azureConfig, oldVirtualMachineScaleSet, loadBalancer, prodBackendPool))
         .thenReturn(oldVirtualMachineScaleSet);
 
-    // updateVMSSCapacity()
-    when(azureComputeClient.updateVMSSCapacity(
-             any(), eq(newVMSSName), eq(subscriptionId), eq(resourceGroupName), anyInt()))
-        .thenReturn(newVirtualMachineScaleSet);
-    when(azureComputeClient.updateVMSSCapacity(
-             any(), eq(oldVMSSName), eq(subscriptionId), eq(resourceGroupName), anyInt()))
-        .thenReturn(oldVirtualMachineScaleSet);
-
     when(azureComputeClient.checkIsRequiredNumberOfVMInstances(any(), anyString(), anyString(), anyInt()))
         .thenReturn(true);
 
@@ -176,14 +171,18 @@ public class AzureVMSSSwitchRouteTaskHandlerTest extends WingsBaseTest {
     WithApply newWithApply = mock(WithApply.class);
     when(newVirtualMachineScaleSet.update()).thenReturn(newVMSSUpdater);
     when(newVMSSUpdater.withTag(anyString(), anyString())).thenReturn(newWithApply);
+    when(newVMSSUpdater.withCapacity(anyInt())).thenReturn(newWithApply);
     when(newWithApply.apply()).thenReturn(newVirtualMachineScaleSet);
+    when(newWithApply.applyAsync()).thenReturn(Observable.from(Arrays.array(newVirtualMachineScaleSet)));
 
     // oldVirtualMachineScaleSet updateTags()
     WithPrimaryLoadBalancer oldVMSSUpdater = mock(WithPrimaryLoadBalancer.class);
     WithApply oldWithApply = mock(WithApply.class);
     when(oldVirtualMachineScaleSet.update()).thenReturn(oldVMSSUpdater);
     when(oldVMSSUpdater.withTag(anyString(), anyString())).thenReturn(oldWithApply);
+    when(oldVMSSUpdater.withCapacity(anyInt())).thenReturn(oldWithApply);
     when(oldWithApply.apply()).thenReturn(oldVirtualMachineScaleSet);
+    when(oldWithApply.applyAsync()).thenReturn(Observable.from(Arrays.array(oldVirtualMachineScaleSet)));
 
     AzureLoadBalancerDetailForBGDeployment azureLoadBalancerDetail = AzureLoadBalancerDetailForBGDeployment.builder()
                                                                          .loadBalancerName(loadBalancerName)

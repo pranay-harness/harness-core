@@ -53,10 +53,6 @@ public class SharedGalleryImage extends AzureMachineImage {
     MachineImageReference artifactImageReference = image.getImageReference();
     ImageReference imageReference = new ImageReference();
     imageReference.withId(artifactImageReference.getId());
-    imageReference.withPublisher(artifactImageReference.getPublisher());
-    imageReference.withOffer(artifactImageReference.getOffer());
-    imageReference.withSku(artifactImageReference.getSku());
-    imageReference.withVersion(artifactImageReference.getVersion());
     return imageReference;
   }
 }
