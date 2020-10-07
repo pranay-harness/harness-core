@@ -89,6 +89,7 @@ public class UiApprovalCrudTest extends AbstractFunctionalTest {
     // Update Workflow's Approve Stage
     logger.info("Updating the graph node");
     PhaseStep phaseStep = new PhaseStep();
+    phaseStep.setName("Post-Deployment");
     phaseStep.setSteps(getUpdatedApprovalNode(userGroupIdNew));
     PhaseStep phaseStepUpdated =
         workflowService.updatePostDeployment(application.getUuid(), savedWorkflow.getUuid(), phaseStep);
