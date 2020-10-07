@@ -22,7 +22,7 @@ public class ArtifactResponseToOutcomeMapperTest extends CategoryTest {
   @Category(UnitTests.class)
   public void testToArtifactOutcome() {
     ArtifactConfig artifactConfig = DockerHubArtifactConfig.builder()
-                                        .dockerhubConnector(ParameterField.createValueField("connector"))
+                                        .connectorRef(ParameterField.createValueField("connector"))
                                         .imagePath(ParameterField.createValueField("IMAGE"))
                                         .build();
     ArtifactDelegateResponse artifactDelegateResponse = DockerArtifactDelegateResponse.builder().build();

@@ -44,7 +44,7 @@ pipeline:
                           type: Git
                           # Git|Local
                           spec:
-                            connectorIdentifier: ${input}
+                            connectorRef: ${input}
                             branch: ${input}
         infrastructure:
           environment:
@@ -53,7 +53,7 @@ pipeline:
           infrastructureDefinition:
             type: KubernetesDirect
             spec:
-              connectorIdentifier: ${input}
+              connectorRef: ${input}
               namespace: ${input}.allowedValues(jexl(${stage.name} == 'qa' ? 'dev1, qa1':'prod1, stage1'))
         execution:
           steps:
@@ -86,7 +86,7 @@ pipeline:
                   store:
                     type: Git
                     spec:
-                      connectorIdentifier: ${input}
+                      connectorRef: ${input}
                       branch: ${input}
         infrastructure:
           useFromStage:

@@ -42,7 +42,7 @@ pipeline:
                         store:
                           type: Git
                           spec:
-                            connectorIdentifier: ${input}
+                            connectorRef: ${input}
         infrastructure:
           infrastructureDefinition:
             type: KubernetesDirect
@@ -83,7 +83,7 @@ pipeline:
                   store:
                     type: Git
                     spec:
-                      connectorIdentifier: ${input}
+                      connectorRef: ${input}
         infrastructure:
           useFromStage:
             overrides:

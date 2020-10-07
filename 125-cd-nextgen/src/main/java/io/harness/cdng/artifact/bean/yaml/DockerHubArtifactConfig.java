@@ -38,7 +38,7 @@ public class DockerHubArtifactConfig implements ArtifactConfig, Visitable {
   /**
    * Docker hub registry connector.
    */
-  @ApiModelProperty(dataType = SwaggerConstants.STRING_CLASSPATH) @Wither ParameterField<String> dockerhubConnector;
+  @ApiModelProperty(dataType = SwaggerConstants.STRING_CLASSPATH) @Wither ParameterField<String> connectorRef;
   /**
    * Images in repos need to be referenced via a path.
    */
@@ -68,7 +68,7 @@ public class DockerHubArtifactConfig implements ArtifactConfig, Visitable {
 
   @Override
   public String getUniqueHash() {
-    List<String> valuesList = Arrays.asList(dockerhubConnector.getValue(), imagePath.getValue());
+    List<String> valuesList = Arrays.asList(connectorRef.getValue(), imagePath.getValue());
     return ArtifactUtils.generateUniqueHashFromStringList(valuesList);
   }
 
@@ -76,8 +76,8 @@ public class DockerHubArtifactConfig implements ArtifactConfig, Visitable {
   public ArtifactConfig applyOverrides(ArtifactConfig overrideConfig) {
     DockerHubArtifactConfig dockerHubArtifactConfig = (DockerHubArtifactConfig) overrideConfig;
     DockerHubArtifactConfig resultantConfig = this;
-    if (dockerHubArtifactConfig.getDockerhubConnector() != null) {
-      resultantConfig = resultantConfig.withDockerhubConnector(dockerHubArtifactConfig.getDockerhubConnector());
+    if (dockerHubArtifactConfig.getConnectorRef() != null) {
+      resultantConfig = resultantConfig.withConnectorRef(dockerHubArtifactConfig.getConnectorRef());
     }
     if (dockerHubArtifactConfig.getImagePath() != null) {
       resultantConfig = resultantConfig.withImagePath(dockerHubArtifactConfig.getImagePath());

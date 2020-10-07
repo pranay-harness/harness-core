@@ -22,7 +22,7 @@ pipeline:
                             store:
                               type: Git
                               spec:
-                                connectorIdentifier: my_git_connector
+                                connectorRef: my_git_connector
                                 gitFetchType: Branch
                                 branch: master
                                 paths:
@@ -40,7 +40,7 @@ pipeline:
                 infrastructureDefinition:
                   type: KubernetesDirect
                   spec:
-                    connectorIdentifier: myK8sConnector
+                    connectorRef: myK8sConnector
                     namespace: harness
                     releaseName: testingqa
               execution:
@@ -73,7 +73,7 @@ pipeline:
                             store:
                               type: Git
                               spec:
-                                connectorIdentifier: my_git_connector
+                                connectorRef: my_git_connector
                                 gitFetchType: Branch
                                 branch: master
                                 paths:
@@ -91,7 +91,7 @@ pipeline:
                 infrastructureDefinition:
                   type: KubernetesDirect
                   spec:
-                    connectorIdentifier: myK8sConnector
+                    connectorRef: myK8sConnector
                     namespace: harness
                     releaseName: testingqa
               execution:

@@ -20,7 +20,7 @@ import lombok.experimental.Wither;
 @JsonTypeName(InfrastructureKind.KUBERNETES_DIRECT)
 @SimpleVisitorHelper(helperClass = K8SDirectInfrastructureVisitorHelper.class)
 public class K8SDirectInfrastructure implements Infrastructure, Visitable {
-  @ApiModelProperty(dataType = SwaggerConstants.STRING_CLASSPATH) @Wither ParameterField<String> connectorIdentifier;
+  @ApiModelProperty(dataType = SwaggerConstants.STRING_CLASSPATH) @Wither ParameterField<String> connectorRef;
   @ApiModelProperty(dataType = SwaggerConstants.STRING_CLASSPATH) @Wither ParameterField<String> namespace;
   @ApiModelProperty(dataType = SwaggerConstants.STRING_CLASSPATH) @Wither ParameterField<String> releaseName;
 
@@ -30,7 +30,7 @@ public class K8SDirectInfrastructure implements Infrastructure, Visitable {
   @Override
   public InfraMapping getInfraMapping() {
     return K8sDirectInfraMapping.builder()
-        .k8sConnector(connectorIdentifier.getValue())
+        .k8sConnector(connectorRef.getValue())
         .namespace(namespace.getValue())
         .build();
   }
@@ -44,8 +44,8 @@ public class K8SDirectInfrastructure implements Infrastructure, Visitable {
   public Infrastructure applyOverrides(Infrastructure overrideConfig) {
     K8SDirectInfrastructure config = (K8SDirectInfrastructure) overrideConfig;
     K8SDirectInfrastructure resultantInfra = this;
-    if (config.getConnectorIdentifier() != null) {
-      resultantInfra = resultantInfra.withConnectorIdentifier(config.getConnectorIdentifier());
+    if (config.getConnectorRef() != null) {
+      resultantInfra = resultantInfra.withConnectorRef(config.getConnectorRef());
     }
     if (config.getNamespace() != null) {
       resultantInfra = resultantInfra.withNamespace(config.getNamespace());

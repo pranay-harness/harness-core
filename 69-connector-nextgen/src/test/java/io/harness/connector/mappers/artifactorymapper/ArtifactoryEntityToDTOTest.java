@@ -1,5 +1,6 @@
 package io.harness.connector.mappers.artifactorymapper;
 
+import static io.harness.encryption.Scope.ACCOUNT;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.CategoryTest;
@@ -33,7 +34,7 @@ public class ArtifactoryEntityToDTOTest extends CategoryTest {
   public void createConnectorDTOTest() {
     String artifactoryUrl = "url";
     String userName = "userName";
-    String passwordRef = "acc.passwordRef";
+    String passwordRef = ACCOUNT.getYamlRepresentation() + ".passwordRef";
 
     ArtifactoryConnector artifactoryConnector =
         ArtifactoryConnector.builder()

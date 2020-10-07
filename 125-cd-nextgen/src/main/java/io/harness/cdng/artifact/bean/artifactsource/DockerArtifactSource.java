@@ -12,15 +12,15 @@ import org.hibernate.validator.constraints.NotEmpty;
 @EqualsAndHashCode(callSuper = true)
 public class DockerArtifactSource extends ArtifactSource {
   /** Docker hub registry connector identifier. */
-  @NotEmpty String dockerHubConnector;
+  @NotEmpty String connectorRef;
   /** Images in repos need to be referenced via a path */
   @NotEmpty String imagePath;
 
   @Builder
   public DockerArtifactSource(String uuid, String accountId, ArtifactSourceType sourceType, String uniqueHash,
-      long createdAt, long lastUpdatedAt, Long version, String dockerHubConnector, String imagePath) {
+      long createdAt, long lastUpdatedAt, Long version, String connectorRef, String imagePath) {
     super(uuid, accountId, sourceType, uniqueHash, createdAt, lastUpdatedAt, version);
-    this.dockerHubConnector = dockerHubConnector;
+    this.connectorRef = connectorRef;
     this.imagePath = imagePath;
   }
 }

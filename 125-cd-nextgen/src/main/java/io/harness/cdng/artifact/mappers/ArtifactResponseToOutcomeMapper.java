@@ -27,7 +27,7 @@ public class ArtifactResponseToOutcomeMapper {
   private DockerArtifactOutcome getDockerArtifactOutcome(
       DockerHubArtifactConfig dockerConfig, DockerArtifactDelegateResponse dockerDelegateResponse) {
     return DockerArtifactOutcome.builder()
-        .dockerhubConnector(dockerConfig.getDockerhubConnector().getValue())
+        .connectorRef(dockerConfig.getConnectorRef().getValue())
         .imagePath(dockerConfig.getImagePath().getValue())
         .tag(dockerDelegateResponse.getTag())
         .tagRegex(dockerConfig.getTagRegex() != null ? dockerConfig.getTagRegex().getValue() : null)

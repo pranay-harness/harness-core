@@ -38,7 +38,7 @@ public class NGGitConnectionValidationTest extends CategoryTest {
   @Mock EncryptionService encryptionService;
 
   String passwordIdentifier = "passwordIdentifier";
-  String passwordReference = "acc." + passwordIdentifier;
+  String passwordReference = "account." + passwordIdentifier;
 
   SecretRefData passwordRef = SecretRefHelper.createSecretRef(passwordReference);
 

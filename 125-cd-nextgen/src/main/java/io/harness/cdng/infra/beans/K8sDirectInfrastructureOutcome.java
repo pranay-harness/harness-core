@@ -9,7 +9,7 @@ import lombok.Value;
 @Builder
 @JsonTypeName(InfrastructureKind.KUBERNETES_DIRECT)
 public class K8sDirectInfrastructureOutcome implements InfrastructureOutcome {
-  String connectorIdentifier;
+  String connectorRef;
   String namespace;
   String releaseName;
 

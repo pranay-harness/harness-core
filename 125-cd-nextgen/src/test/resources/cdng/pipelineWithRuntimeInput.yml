@@ -39,7 +39,7 @@ pipeline:
                   primary:
                     type: Dockerhub
                     spec:
-                      dockerhubConnector: npQuotecenter
+                      connectorRef: npQuotecenter
                       imagePath: ${input}
                       tag: "latest"
                   sidecars:
@@ -47,7 +47,7 @@ pipeline:
                         identifier: sidecar1
                         type: Dockerhub
                         spec:
-                          dockerhubConnector: myDocker2
+                          connectorRef: myDocker2
                           imagePath: "library/redis"
                           tag: ${input}
                 manifests:
@@ -58,7 +58,7 @@ pipeline:
                         store:
                           type: Git
                           spec:
-                            connectorIdentifier: myGitConnector
+                            connectorRef: myGitConnector
                             gitFetchType: Branch
                             branch: master
                             paths: ${input}.allowedValues(['paths1', 'master/paths2', 'paths3'])
@@ -74,7 +74,7 @@ pipeline:
                                 type: Git
                                 # Git|Local
                                 spec:
-                                  connectorIdentifier: ${input}
+                                  connectorRef: ${input}
                                   gitFetchType: Branch
                                   branch: master
                                   paths:
@@ -94,7 +94,7 @@ pipeline:
             infrastructureDefinition:
               type: KubernetesDirect
               spec:
-                connectorIdentifier: np-quotecenter_quotecenter-yin
+                connectorRef: np-quotecenter_quotecenter-yin
                 namespace: ${input}.allowedValues(jexl(${stage.name} == 'qa' ? 'dev1, qa1':'prod1, stage1'))
           execution:
             steps:
@@ -155,7 +155,7 @@ pipeline:
                       store:
                         type: Git
                         spec:
-                          connectorIdentifier: ${input}
+                          connectorRef: ${input}
                           gitFetchType: Branch
                           branch: master
                           paths:

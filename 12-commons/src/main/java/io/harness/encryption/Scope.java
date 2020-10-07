@@ -4,7 +4,7 @@ import java.util.Arrays;
 import java.util.Optional;
 
 public enum Scope {
-  ACCOUNT("acc"),
+  ACCOUNT("account"),
   ORG("org"),
   PROJECT("proj");
   private final String yamlRepresentation;

@@ -123,13 +123,7 @@ public class ConnectorMapperTest extends CategoryTest {
   @Owner(developers = OwnerRule.DEEPAK)
   @Category(UnitTests.class)
   public void testWriteDTOTest() {
-    String passwordIdentifier = "passwordRef";
-    String cacertIdentifier = "cacertIdentifier";
-    String passwordRef = "acc" + SECRET_DELIMINITER + this.passwordIdentifier;
-    String caCertRef = "acc" + SECRET_DELIMINITER + cacertIdentifier;
-    SecretRefData passcordSecretRef = SecretRefData.builder().identifier(passwordRef).scope(Scope.ACCOUNT).build();
-    SecretRefData secretRefDataCACert =
-        SecretRefData.builder().identifier(cacertIdentifier).scope(Scope.ACCOUNT).build();
+    String passwordRef = Scope.ACCOUNT.getYamlRepresentation() + SECRET_DELIMINITER + this.passwordIdentifier;
     K8sUserNamePassword k8sUserNamePassword =
         K8sUserNamePassword.builder().userName(userName).passwordRef(passwordRef).build();
     KubernetesClusterDetails kubernetesClusterDetails = KubernetesClusterDetails.builder()

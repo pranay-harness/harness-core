@@ -11,7 +11,7 @@ import lombok.Value;
 @EqualsAndHashCode(callSuper = false)
 public class DockerArtifactOutcome implements ArtifactOutcome {
   /** Docker hub registry connector. */
-  String dockerhubConnector;
+  String connectorRef;
   /** Images in repos need to be referenced via a path. */
   String imagePath;
   /** Tag refers to exact tag number. */

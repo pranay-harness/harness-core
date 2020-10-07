@@ -17,7 +17,7 @@ pipeline:
                   primary:
                     type: Dockerhub
                     spec:
-                      dockerhubConnector: myDocker1
+                      connectorRef: myDocker1
                       imagePath: "library/ubuntu"
                       tag: "latest"
                       tagRegex: "groov*"
@@ -26,14 +26,14 @@ pipeline:
                         identifier: sidecar1
                         type: Dockerhub
                         spec:
-                          dockerhubConnector: myDocker2
+                          connectorRef: myDocker2
                           imagePath: "library/redis"
                           tag: "latest"
                     - sidecar:
                         identifier: sidecar2
                         type: Dockerhub
                         spec:
-                          dockerhubConnector: myDocker3
+                          connectorRef: myDocker3
                           imagePath: "library/mongo"
                           tag: "latest"
           execution:
@@ -83,7 +83,7 @@ pipeline:
                   primary:
                     type: Dockerhub
                     spec:
-                      dockerhubConnector: myDocker4
+                      connectorRef: myDocker4
                       imagePath: "library/nginx"
                       tag: "latest"
           execution:

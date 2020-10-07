@@ -71,7 +71,7 @@ public class K8sStepHelperTest extends CategoryTest {
     doReturn(Optional.empty()).when(connectorService).get("account1", "org1", null, "abcConnector");
     doReturn(Optional.empty()).when(connectorService).get("account1", "org1", "project1", "abcConnector");
 
-    ConnectorInfoDTO actualConnector = k8sStepHelper.getConnector("acc.abcConnector", ambiance);
+    ConnectorInfoDTO actualConnector = k8sStepHelper.getConnector("account.abcConnector", ambiance);
     assertThat(actualConnector).isEqualTo(connectorDTO);
 
     assertThatThrownBy(() -> k8sStepHelper.getConnector("org.abcConnector", ambiance))

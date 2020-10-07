@@ -18,15 +18,14 @@ public class InfrastructureMapperTest extends CategoryTest {
   @Owner(developers = VAIBHAV_SI)
   @Category(UnitTests.class)
   public void testToOutcome() {
-    K8SDirectInfrastructure k8SDirectInfrastructure =
-        K8SDirectInfrastructure.builder()
-            .connectorIdentifier(ParameterField.createValueField("connectorId"))
-            .namespace(ParameterField.createValueField("namespace"))
-            .releaseName(ParameterField.createValueField("release"))
-            .build();
+    K8SDirectInfrastructure k8SDirectInfrastructure = K8SDirectInfrastructure.builder()
+                                                          .connectorRef(ParameterField.createValueField("connectorId"))
+                                                          .namespace(ParameterField.createValueField("namespace"))
+                                                          .releaseName(ParameterField.createValueField("release"))
+                                                          .build();
 
     K8sDirectInfrastructureOutcome k8sDirectInfrastructureOutcome = K8sDirectInfrastructureOutcome.builder()
-                                                                        .connectorIdentifier("connectorId")
+                                                                        .connectorRef("connectorId")
                                                                         .namespace("namespace")
                                                                         .releaseName("release")
                                                                         .build();

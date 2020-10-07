@@ -9,6 +9,6 @@ pipeline:
             infrastructureDefinition:
               type: KubernetesDirect
               spec:
-                connectorIdentifier: ${input}
+                connectorRef: ${input}
                 namespace: ${input}
                 releaseName: ${input}

@@ -1,5 +1,6 @@
 package io.harness.connector.mappers.kubernetesMapper;
 
+import static io.harness.encryption.Scope.ACCOUNT;
 import static io.harness.encryption.SecretRefData.SECRET_DELIMINITER;
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -67,7 +68,7 @@ public class KubernetesConfigCastHelperTest extends CategoryTest {
     String masterURL = "masterURL";
     String userName = "userName";
     String passwordIdentifier = "passwordIdentifier";
-    String passwordRef = "acc" + SECRET_DELIMINITER + passwordIdentifier;
+    String passwordRef = ACCOUNT.getYamlRepresentation() + SECRET_DELIMINITER + passwordIdentifier;
     K8sUserNamePassword k8sUserNamePassword =
         K8sUserNamePassword.builder().userName(userName).passwordRef(passwordRef).build();
     KubernetesClusterDetails kubernetesClusterDetails = KubernetesClusterDetails.builder()

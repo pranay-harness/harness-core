@@ -18,7 +18,7 @@ pipeline:
                 primary:
                   type: Dockerhub
                   spec:
-                    dockerhubConnector: npQuotecenter
+                    connectorRef: npQuotecenter
                     imagePath: image2
                     tag: latest
                 sidecars:
@@ -26,7 +26,7 @@ pipeline:
                     identifier: sidecar1
                     type: Dockerhub
                     spec:
-                      dockerhubConnector: myDocker2
+                      connectorRef: myDocker2
                       imagePath: sidecarimage
                       tag: tag2
               manifests:
@@ -37,7 +37,7 @@ pipeline:
                     store:
                       type: Git
                       spec:
-                        connectorIdentifier: myGitConnector
+                        connectorRef: myGitConnector
                         gitFetchType: Branch
                         branch: master
                         paths:
@@ -54,7 +54,7 @@ pipeline:
                         store:
                           type: Git
                           spec:
-                            connectorIdentifier: my-git-connector
+                            connectorRef: my-git-connector
                             gitFetchType: Branch
                             branch: masterOverride2
                             paths:
@@ -63,7 +63,7 @@ pipeline:
           infrastructureDefinition:
             type: KubernetesDirect
             spec:
-              connectorIdentifier: ${input}
+              connectorRef: ${input}
               namespace: prod2
           environment:
             name: env
@@ -136,7 +136,7 @@ pipeline:
                   store:
                     type: Git
                     spec:
-                      connectorIdentifier: my-connector
+                      connectorRef: my-connector
                       gitFetchType: Branch
                       branch: ${input}
                       paths:

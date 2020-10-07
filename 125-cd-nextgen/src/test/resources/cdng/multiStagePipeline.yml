@@ -16,7 +16,7 @@ pipeline:
                   primary:
                     type: Dockerhub
                     spec:
-                      dockerhubConnector: "https://registry.hub.docker.com/"
+                      connectorRef: "https://registry.hub.docker.com/"
                       imagePath: "library/nginx"
                       tag: "1.18"
                 manifests:   # {k8s |  values | pcf |  helmSourceRepo | helmSourceRepo | kustomize | openShift}
@@ -28,7 +28,7 @@ pipeline:
                           type: Git
                           # Git|Local
                           spec:
-                            connectorIdentifier: eJ9pksJFQDmjq6ZFbAoR-Q
+                            connectorRef: eJ9pksJFQDmjq6ZFbAoR-Q
                             gitFetchType: Branch
                             branch: master
                             paths:
@@ -42,7 +42,7 @@ pipeline:
                       store:
                         type: Git
                         spec:
-                          connectorIdentifier: eJ9pksJFQDmjq6ZFbAoR-Q
+                          connectorRef: eJ9pksJFQDmjq6ZFbAoR-Q
                           gitFetchType: Branch
                           branch: master
                           paths:
@@ -69,7 +69,7 @@ pipeline:
               type: KubernetesDirect
               spec:
                 # Spec for Infrastructure Type kubernetes-direct
-                connectorIdentifier: pEIkEiNPSgSUsbWDDyjNKw
+                connectorRef: pEIkEiNPSgSUsbWDDyjNKw
                 # namespace
                 namespace: harness
                 # release name
@@ -116,7 +116,7 @@ pipeline:
                       store:
                         type: Git
                         spec:
-                          connectorIdentifier: eJ9pksJFQDmjq6ZFbAoR-Q
+                          connectorRef: eJ9pksJFQDmjq6ZFbAoR-Q
                           gitFetchType: Branch
                           branch: master
                           paths:

@@ -7,7 +7,7 @@
         "type": "UsernamePassword",
         "spec": {
           "username": "userName",
-          "passwordRef": "acc.passwordRef"
+          "passwordRef": "account.passwordRef"
         }
       }
     }

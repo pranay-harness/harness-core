@@ -45,7 +45,7 @@ pipeline:
                               store:
                                 type: Git
                                 spec:
-                                  connectorIdentifier: my-git-connector
+                                  connectorRef: my-git-connector
                                   branch: masterOverride2
           infrastructure:
             infrastructureDefinition:
@@ -86,7 +86,7 @@ pipeline:
                       store:
                         type: Git
                         spec:
-                          connectorIdentifier: my-connector
+                          connectorRef: my-connector
           infrastructure:
             useFromStage:
               overrides:

@@ -36,7 +36,7 @@ public class GcrArtifactConfig implements ArtifactConfig, Visitable {
   /**
    * GCP connector to connect to Google Container Registry.
    */
-  @ApiModelProperty(dataType = SwaggerConstants.STRING_CLASSPATH) @Wither ParameterField<String> gcrConnector;
+  @ApiModelProperty(dataType = SwaggerConstants.STRING_CLASSPATH) @Wither ParameterField<String> connectorRef;
   /**
    * Registry where the artifact source is located.
    */
@@ -64,7 +64,7 @@ public class GcrArtifactConfig implements ArtifactConfig, Visitable {
 
   @Override
   public String getUniqueHash() {
-    List<String> valuesList = Arrays.asList(gcrConnector.getValue(), registryHostname.getValue(), imagePath.getValue());
+    List<String> valuesList = Arrays.asList(connectorRef.getValue(), registryHostname.getValue(), imagePath.getValue());
     return ArtifactUtils.generateUniqueHashFromStringList(valuesList);
   }
 
@@ -72,8 +72,8 @@ public class GcrArtifactConfig implements ArtifactConfig, Visitable {
   public ArtifactConfig applyOverrides(ArtifactConfig overrideConfig) {
     GcrArtifactConfig gcrArtifactSpecConfig = (GcrArtifactConfig) overrideConfig;
     GcrArtifactConfig resultantConfig = this;
-    if (gcrArtifactSpecConfig.getGcrConnector() != null) {
-      resultantConfig = resultantConfig.withGcrConnector(gcrArtifactSpecConfig.getGcrConnector());
+    if (gcrArtifactSpecConfig.getConnectorRef() != null) {
+      resultantConfig = resultantConfig.withConnectorRef(gcrArtifactSpecConfig.getConnectorRef());
     }
     if (gcrArtifactSpecConfig.getImagePath() != null) {
       resultantConfig = resultantConfig.withImagePath(gcrArtifactSpecConfig.getImagePath());
