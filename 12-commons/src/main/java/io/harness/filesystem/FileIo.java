@@ -2,6 +2,7 @@ package io.harness.filesystem;
 
 import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.govern.IgnoreThrowable.ignoredOnPurpose;
 import static io.harness.govern.Switch.noop;
 import static io.harness.threading.Morpheus.sleep;
 import static java.lang.System.currentTimeMillis;
@@ -49,11 +50,9 @@ public class FileIo {
 
   public static void createDirectoryIfDoesNotExist(final Path filePath) throws IOException {
     try {
-      if (!filePath.toFile().exists()) {
-        Files.createDirectories(filePath);
-      }
-    } catch (FileAlreadyExistsException e) {
-      // Ignore.
+      Files.createDirectories(filePath);
+    } catch (FileAlreadyExistsException exception) {
+      ignoredOnPurpose(exception);
     }
   }
 

@@ -13,7 +13,7 @@ import static io.harness.rule.OwnerRule.GEORGE;
 import static io.harness.rule.OwnerRule.PUNEET;
 import static io.harness.rule.OwnerRule.SATYAM;
 import static java.nio.file.Files.lines;
-import static java.time.Duration.ofSeconds;
+import static java.time.Duration.ofMinutes;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.CategoryTest;
@@ -154,7 +154,7 @@ public class FileIoTest extends CategoryTest {
     AtomicBoolean failed = new AtomicBoolean(false);
 
     Concurrent.test(100, n -> {
-      if (acquireLock(file, ofSeconds(1))) {
+      if (acquireLock(file, ofMinutes(1))) {
         if (re.tryLock()) {
           re.unlock();
         } else {
