@@ -7,6 +7,7 @@ import io.harness.beans.ParameterField;
 import io.harness.serializer.KryoRegistrar;
 import io.harness.yaml.core.ExecutionElement;
 import io.harness.yaml.core.StageElement;
+import io.harness.yaml.core.ParallelStepElement;
 import io.harness.yaml.core.StepElement;
 import io.harness.yaml.core.variables.NumberNGVariable;
 import io.harness.yaml.core.variables.StringNGVariable;
@@ -22,5 +23,6 @@ public class YamlKryoRegistrar implements KryoRegistrar {
     kryo.register(StringNGVariable.class, 35006);
     kryo.register(NumberNGVariable.class, 35007);
     kryo.register(InputSetValidatorType.class, 35008);
+    kryo.register(ParallelStepElement.class, 35009);
   }
 }
