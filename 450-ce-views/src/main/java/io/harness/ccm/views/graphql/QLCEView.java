@@ -1,6 +1,7 @@
 package io.harness.ccm.views.graphql;
 
 import io.harness.ccm.views.entities.ViewChartType;
+import io.harness.ccm.views.entities.ViewState;
 import io.harness.ccm.views.entities.ViewType;
 import lombok.AccessLevel;
 import lombok.Builder;
@@ -17,4 +18,5 @@ public class QLCEView {
   Long lastUpdatedAt;
   ViewChartType chartType;
   ViewType viewType;
+  ViewState viewState;
 }
