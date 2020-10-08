@@ -1,0 +1,48 @@
+# Do not use this file to generate build or add new packages. Utilize dockerfile-alpine-safe instead
+
+# Filename: Dockerfile
+FROM alpine:3.12
+CMD ["/bin/sh"]
+
+# replace with  secure repositories
+RUN sed -i '1 c https://alpine.global.ssl.fastly.net/alpine/v3.12/main' /etc/apk/repositories
+RUN sed -i '2 c https://alpine.global.ssl.fastly.net/alpine/v3.12/community' /etc/apk/repositories
+
+#upgrade existing packages
+RUN apk upgrade --available && sync
+
+# install Utilities
+RUN apk add --no-cache dpkg bash util-linux make strace procps curl gnupg nmap net-tools openntpd
+
+# install Openjdk8 [ver 242 is installed initially. New base image may add new version]
+RUN apk add --no-cache openjdk8
+RUN cp /usr/lib/jvm/java-1.8-openjdk/jre/lib/amd64/jli/libjli.so /lib/
+
+# install python3
+RUN apk add --no-cache python3
+
+#install pip
+RUN apk add --no-cache py-pip
+
+#install more packages like awscli & Kubectl
+RUN pip3 install --no-cache pyarmor 
+RUN pip3 install --no-cache awscli
+RUN curl -LO https://storage.googleapis.com/kubernetes-release/release/`curl -s https://storage.googleapis.com/kubernetes-release/release/stable.txt`/bin/linux/amd64/kubectl
+RUN chmod +x kubectl
+RUN mv kubectl /usr/local/bin/kubectl
+RUN kubectl version --client
+
+#install few more Utilities
+RUN apk add --no-cache protobuf build-base shadow
+
+#upgrade outdated packages
+
+#pip upgrade: install package pip-uprade-outdated, upgrade packages and uninstall additional package
+RUN pip list --outdated
+RUN pip install pip-upgrade-outdated
+RUN pip_upgrade_outdated -3 -v -x distlib -x rsa -x docutils
+RUN pip list --outdated
+RUN pip uninstall -y pip-upgrade-outdated
+
+#upgrade existing packages
+RUN apk upgrade --available && sync
