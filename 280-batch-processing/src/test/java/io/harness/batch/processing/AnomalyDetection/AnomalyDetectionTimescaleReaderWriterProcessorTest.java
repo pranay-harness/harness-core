@@ -12,7 +12,7 @@ import io.harness.batch.processing.anomalydetection.AnomalyDetectionConstants;
 import io.harness.batch.processing.anomalydetection.AnomalyDetectionTimeSeries;
 import io.harness.batch.processing.anomalydetection.TimeSeriesSpec;
 import io.harness.batch.processing.anomalydetection.processor.AnomalyDetectionStatsModelProcessor;
-import io.harness.batch.processing.anomalydetection.reader.AnomalyDetectionTimescaleReader;
+import io.harness.batch.processing.anomalydetection.reader.AnomalyDetectionClusterTimescaleReader;
 import io.harness.batch.processing.anomalydetection.service.impl.AnomalyDetectionTimescaleDataServiceImpl;
 import io.harness.batch.processing.anomalydetection.types.AnomalyDetectionModel;
 import io.harness.batch.processing.anomalydetection.types.AnomalyType;
@@ -43,7 +43,7 @@ import java.util.List;
 
 @RunWith(MockitoJUnitRunner.class)
 public class AnomalyDetectionTimescaleReaderWriterProcessorTest extends BatchProcessingBaseTest {
-  @InjectMocks private AnomalyDetectionTimescaleReader timescaleReader;
+  @InjectMocks private AnomalyDetectionClusterTimescaleReader timescaleReader;
   @InjectMocks private AnomalyDetectionStatsModelProcessor statsModelProcessor;
   @InjectMocks private AnomalyDetectionTimeScaleWriter timeScaleWriter;
   @Mock private AnomalyDetectionTimescaleDataServiceImpl dataService;
@@ -74,7 +74,7 @@ public class AnomalyDetectionTimescaleReaderWriterProcessorTest extends BatchPro
                                         .testStart(currentTime.minus(1, ChronoUnit.DAYS))
                                         .testEnd(currentTime)
                                         .build();
-    when(dataService.readClusterLevelData(timeSeriesSpec)).thenReturn(mockedAnomalyDetectionTimeSeriesList);
+    when(dataService.readData(timeSeriesSpec)).thenReturn(mockedAnomalyDetectionTimeSeriesList);
     mockAnomaliesList();
     mockTimeSeriesList();
   }

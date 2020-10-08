@@ -19,7 +19,7 @@ public class AnomalyDetectionStatsModelProcessor
 
   @Override
   public Anomaly process(AnomalyDetectionTimeSeries data) {
-    logger.info("processing cluster {}", data.getEntityId());
+    logger.info("processing {} {}", data.getEntityType().toString(), data.getEntityId());
     StatsModel model = StatsModel.builder().build();
     return model.detectAnomaly(data).get(0);
   }
