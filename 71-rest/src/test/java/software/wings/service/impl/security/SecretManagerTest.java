@@ -384,7 +384,10 @@ public class SecretManagerTest extends CategoryTest {
     when(kmsConfig.isGlobalKms()).thenReturn(false);
     when(secretManagerConfigService.getSecretManager(ACCOUNT_ID, kmsId)).thenReturn(kmsConfig);
     String refId = UUIDGenerator.generateUuid();
-    when(wingsPersistence.get(EncryptedData.class, refId)).thenReturn(mockEncryptedData);
+    Query<EncryptedData> query = mock(Query.class);
+    when(wingsPersistence.createQuery(EncryptedData.class)).thenReturn(query);
+    when(query.filter(any(), any())).thenReturn(query);
+    when(query.get()).thenReturn(mockEncryptedData);
 
     Optional<EncryptedDataDetail> encryptedDataDetails =
         secretManager.encryptedDataDetails(ACCOUNT_ID, "password", refId, null);
@@ -404,7 +407,10 @@ public class SecretManagerTest extends CategoryTest {
     when(kmsConfig.isGlobalKms()).thenReturn(true);
     when(kmsConfig.getEncryptionType()).thenReturn(EncryptionType.KMS);
     when(secretManagerConfigService.getSecretManager(ACCOUNT_ID, kmsId)).thenReturn(kmsConfig);
-    when(wingsPersistence.get(EncryptedData.class, jenkinsConfig.getEncryptedPassword())).thenReturn(mockEncryptedData);
+    Query<EncryptedData> query = mock(Query.class);
+    when(wingsPersistence.createQuery(EncryptedData.class)).thenReturn(query);
+    when(query.filter(any(), any())).thenReturn(query);
+    when(query.get()).thenReturn(mockEncryptedData);
     when(globalEncryptDecryptClient.convertEncryptedRecordToLocallyEncrypted(
              any(EncryptedData.class), any(String.class), any(EncryptionConfig.class)))
         .thenReturn(encryptedRecordData);
