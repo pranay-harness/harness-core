@@ -5,6 +5,7 @@ import com.google.inject.Singleton;
 import io.harness.batch.processing.anomalydetection.Anomaly;
 import io.harness.batch.processing.anomalydetection.AnomalyDetectionConstants;
 import io.harness.batch.processing.anomalydetection.AnomalyDetectionTimeSeries;
+import io.harness.batch.processing.anomalydetection.AnomalyDetectionTimeSeries.AnomalyDetectionTimeSeriesBuilder;
 import io.harness.batch.processing.anomalydetection.TimeSeriesSpec;
 import io.harness.batch.processing.anomalydetection.TimeSeriesUtils;
 import io.harness.timescaledb.DBUtils;
@@ -17,7 +18,6 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.sql.Statement;
 import java.sql.Timestamp;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
@@ -31,26 +31,44 @@ import java.util.stream.IntStream;
 public class AnomalyDetectionTimescaleDataServiceImpl {
   @Autowired private TimeScaleDBService timeScaleDBService;
   static final String CLUSTER_STATEMENT =
-      "SELECT STARTTIME AS STARTTIME ,  sum(BILLINGAMOUNT) AS COST ,CLUSTERID ,CLUSTERNAME from billing_data where ACCOUNTID = '%s' and STARTTIME >= '%s' and STARTTIME <= '%s' and instancetype IN ('ECS_TASK_FARGATE','ECS_CONTAINER_INSTANCE','K8S_NODE') group by CLUSTERID , STARTTIME , CLUSTERNAME  order by  CLUSTERID ,STARTTIME , CLUSTERNAME";
+      "SELECT STARTTIME AS STARTTIME ,  sum(BILLINGAMOUNT) AS COST ,CLUSTERID ,CLUSTERNAME from billing_data where ACCOUNTID = ? and STARTTIME >= ? and STARTTIME <= ? and instancetype IN ('ECS_TASK_FARGATE','ECS_CONTAINER_INSTANCE','K8S_NODE') group by CLUSTERID , STARTTIME , CLUSTERNAME  order by  CLUSTERID ,STARTTIME , CLUSTERNAME";
 
   static final String ANOMALY_INSERT_STATEMENT =
       "INSERT INTO ANOMALIES (ANOMALYTIME,ACCOUNTID,TIMEGRANULARITY,ENTITYID,ENTITYTYPE,CLUSTERID,CLUSTERNAME,WORKLOADNAME,WORKLOADTYPE,NAMESPACE,ANOMALYSCORE,ANOMALYTYPE,REPORTEDBY,ABSOLUTETHRESHOLD,RELATIVETHRESHOLD,PROBABILISTICTHRESHOLD) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?) ON CONFLICT DO NOTHING";
+  static final String NAMESPACE_STATEMENT =
+      "SELECT STARTTIME ,  sum(BILLINGAMOUNT) AS COST , NAMESPACE , CLUSTERID from billing_data where ACCOUNTID = ? and STARTTIME >= ? and STARTTIME <= ? and instancetype IN ('K8S_POD')  group by namespace , CLUSTERID , STARTTIME  order by  NAMESPACE, CLUSTERID ,STARTTIME ";
 
   private static final int MAX_RETRY_COUNT = 2;
 
-  public List<AnomalyDetectionTimeSeries> readClusterLevelData(TimeSeriesSpec timeSeriesSpec) {
+  public List<AnomalyDetectionTimeSeries> readData(TimeSeriesSpec timeSeriesSpec) {
     List<AnomalyDetectionTimeSeries> listClusterAnomalyDetectionTimeSeries = new ArrayList<>();
     boolean successfulRead = false;
-    String query = String.format(
-        CLUSTER_STATEMENT, timeSeriesSpec.getAccountId(), timeSeriesSpec.getTrainStart(), timeSeriesSpec.getTestEnd());
+
+    String queryStatement = "default";
+
+    switch (timeSeriesSpec.getEntityType()) {
+      case CLUSTER:
+        queryStatement = CLUSTER_STATEMENT;
+        break;
+      case NAMESPACE:
+        queryStatement = NAMESPACE_STATEMENT;
+        break;
+      default:
+        logger.error("entity type is undefined in timeseries spec");
+        break;
+    }
+
     ResultSet resultSet = null;
     if (timeScaleDBService.isValid()) {
       int retryCount = 0;
       while (!successfulRead && retryCount < MAX_RETRY_COUNT) {
         try (Connection dbConnection = timeScaleDBService.getDBConnection();
-             Statement statement = dbConnection.createStatement()) {
+             PreparedStatement statement = dbConnection.prepareStatement(queryStatement)) {
+          statement.setString(1, timeSeriesSpec.getAccountId());
+          statement.setTimestamp(2, Timestamp.from(timeSeriesSpec.getTrainStart()));
+          statement.setTimestamp(3, Timestamp.from(timeSeriesSpec.getTestEnd()));
           logger.debug("Prepared Statement in AnomalyDetectionTimescaleDataServiceImpl: {} ", statement);
-          resultSet = statement.executeQuery(query);
+          resultSet = statement.executeQuery();
           if (resultSet.next()) {
             listClusterAnomalyDetectionTimeSeries = readTimeSeriesFromResultSet(resultSet, timeSeriesSpec);
           }
@@ -88,17 +106,32 @@ public class AnomalyDetectionTimescaleDataServiceImpl {
 
   public AnomalyDetectionTimeSeries readNextTimeSeries(ResultSet resultSet, TimeSeriesSpec timeSeriesSpec)
       throws SQLException {
-    String clusterId = resultSet.getString("CLUSTERID");
-    String clusterName = resultSet.getString("CLUSTERNAME");
+    AnomalyDetectionTimeSeriesBuilder<?, ?> timeSeriesBuilder = AnomalyDetectionTimeSeries.builder();
 
-    AnomalyDetectionTimeSeries anomalyDetectionTimeSeries = AnomalyDetectionTimeSeries.builder()
-                                                                .accountId(timeSeriesSpec.getAccountId())
-                                                                .timeGranularity(timeSeriesSpec.getTimeGranularity())
-                                                                .entityId(clusterId)
-                                                                .entityType(timeSeriesSpec.getEntityType())
-                                                                .clusterId(clusterId)
-                                                                .clusterName(clusterName)
-                                                                .build();
+    timeSeriesBuilder.accountId(timeSeriesSpec.getAccountId()).timeGranularity(timeSeriesSpec.getTimeGranularity());
+
+    String entityId = "default";
+
+    switch (timeSeriesSpec.getEntityType()) {
+      case CLUSTER:
+        entityId = resultSet.getString("CLUSTERID");
+        timeSeriesBuilder.clusterId(entityId);
+        timeSeriesBuilder.clusterName(resultSet.getString("CLUSTERNAME"));
+        break;
+      case NAMESPACE:
+        entityId = resultSet.getString("NAMESPACE");
+        timeSeriesBuilder.clusterId(resultSet.getString("CLUSTERID"));
+        timeSeriesBuilder.namespace(entityId);
+        break;
+      case WORKLOAD:
+        break;
+      default:
+        logger.error("entity type is undefined in timeseries spec");
+        break;
+    }
+    timeSeriesBuilder.entityType(timeSeriesSpec.getEntityType()).entityId(entityId);
+
+    AnomalyDetectionTimeSeries anomalyDetectionTimeSeries = timeSeriesBuilder.build();
 
     anomalyDetectionTimeSeries.initialiseTrainData(
         timeSeriesSpec.getTrainStart(), timeSeriesSpec.getTrainEnd(), ChronoUnit.DAYS);
@@ -116,7 +149,7 @@ public class AnomalyDetectionTimescaleDataServiceImpl {
         DBUtils.close(resultSet);
         break;
       }
-    } while (resultSet.getString("CLUSTERID").equals(clusterId));
+    } while (resultSet.getString(timeSeriesSpec.getEntityIdentifier()).equals(entityId));
     return anomalyDetectionTimeSeries;
   }
 

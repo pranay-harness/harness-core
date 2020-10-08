@@ -20,4 +20,5 @@ public class TimeSeriesSpec {
   Instant testEnd;
   TimeGranularity timeGranularity;
   EntityType entityType;
+  String entityIdentifier;
 }

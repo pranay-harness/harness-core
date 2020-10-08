@@ -4,7 +4,8 @@ import io.harness.batch.processing.anomalydetection.Anomaly;
 import io.harness.batch.processing.anomalydetection.AnomalyDetectionConstants;
 import io.harness.batch.processing.anomalydetection.AnomalyDetectionTimeSeries;
 import io.harness.batch.processing.anomalydetection.processor.AnomalyDetectionStatsModelProcessor;
-import io.harness.batch.processing.anomalydetection.reader.AnomalyDetectionTimescaleReader;
+import io.harness.batch.processing.anomalydetection.reader.AnomalyDetectionClusterTimescaleReader;
+import io.harness.batch.processing.anomalydetection.reader.AnomalyDetectionNamespaceTimescaleReader;
 import io.harness.batch.processing.anomalydetection.writer.AnomalyDetectionTimeScaleWriter;
 import io.harness.batch.processing.ccm.BatchJobType;
 import lombok.extern.slf4j.Slf4j;
@@ -25,27 +26,43 @@ import org.springframework.context.annotation.Configuration;
 public class AnomalyDetectionConfiguration {
   @Bean
   @Qualifier(value = "anomalyDetectionDailyJob")
-  public Job anomalyDetectionDailyJob(
-      JobBuilderFactory jobBuilderFactory, Step statisticalModelDailyAnomalyDetectionStep) {
+  public Job anomalyDetectionDailyJob(JobBuilderFactory jobBuilderFactory,
+      Step statisticalModelClusterAnomalyDetectionStep, Step statisticalModelNamespaceAnomalyDetectionStep) {
     return jobBuilderFactory.get(BatchJobType.ANOMALY_DETECTION.name())
         .incrementer(new RunIdIncrementer())
-        .start(statisticalModelDailyAnomalyDetectionStep)
+        .start(statisticalModelNamespaceAnomalyDetectionStep)
+        .next(statisticalModelClusterAnomalyDetectionStep)
         .build();
   }
 
   @Bean
-  protected Step statisticalModelDailyAnomalyDetectionStep(StepBuilderFactory stepBuilderFactory) {
+  protected Step statisticalModelClusterAnomalyDetectionStep(StepBuilderFactory stepBuilderFactory) {
     return stepBuilderFactory.get("statisticalModelDailyAnomalyDetectionStep")
         .<AnomalyDetectionTimeSeries, Anomaly>chunk(AnomalyDetectionConstants.BATCH_SIZE)
-        .reader(anomalyDetectionTimescaleItemReader())
+        .reader(anomalyDetectionClusterTimescaleItemReader())
         .processor(anomalyDetectionStatModelProcessor())
         .writer(anomalyDetectionTimescaleWriter())
         .build();
   }
 
   @Bean
-  public ItemReader<AnomalyDetectionTimeSeries> anomalyDetectionTimescaleItemReader() {
-    return new AnomalyDetectionTimescaleReader();
+  protected Step statisticalModelNamespaceAnomalyDetectionStep(StepBuilderFactory stepBuilderFactory) {
+    return stepBuilderFactory.get("statisticalModelDailyAnomalyDetectionStep")
+        .<AnomalyDetectionTimeSeries, Anomaly>chunk(AnomalyDetectionConstants.BATCH_SIZE)
+        .reader(anomalyDetectionNamespaceTimescaleItemReader())
+        .processor(anomalyDetectionStatModelProcessor())
+        .writer(anomalyDetectionTimescaleWriter())
+        .build();
+  }
+
+  @Bean
+  public ItemReader<AnomalyDetectionTimeSeries> anomalyDetectionClusterTimescaleItemReader() {
+    return new AnomalyDetectionClusterTimescaleReader();
+  }
+
+  @Bean
+  public ItemReader<AnomalyDetectionTimeSeries> anomalyDetectionNamespaceTimescaleItemReader() {
+    return new AnomalyDetectionNamespaceTimescaleReader();
   }
 
   @Bean

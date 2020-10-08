@@ -88,6 +88,7 @@ public class AnomalyDetectionTimescaleDataServiceTest extends CategoryTest {
                                         .testEnd(END_DATE)
                                         .entityType(EntityType.CLUSTER)
                                         .timeGranularity(TimeGranularity.DAILY)
+                                        .entityIdentifier("CLUSTERID")
                                         .build();
 
     AnomalyDetectionTimeSeries anomalyDetectionTimeSeries =
