@@ -1201,6 +1201,7 @@ public class TriggerServiceImpl implements TriggerService {
     }
 
     WebHookTriggerCondition webHookTriggerCondition = (WebHookTriggerCondition) trigger.getCondition();
+
     if (existingTrigger.getCondition().getConditionType() != WEBHOOK) {
       return !webHookTriggerCondition.isCheckFileContentChanged() && webHookTriggerCondition.getGitConnectorId() == null
           && webHookTriggerCondition.getBranchName() == null && webHookTriggerCondition.getFilePaths() == null;
@@ -1208,8 +1209,19 @@ public class TriggerServiceImpl implements TriggerService {
 
     WebHookTriggerCondition existingWebHookTriggerCondition = (WebHookTriggerCondition) existingTrigger.getCondition();
 
-    return webHookTriggerCondition.isCheckFileContentChanged()
-        == existingWebHookTriggerCondition.isCheckFileContentChanged()
+    boolean isRepoNameSame = true;
+    boolean isCheckFileContentChangedSame = webHookTriggerCondition.isCheckFileContentChanged()
+        == existingWebHookTriggerCondition.isCheckFileContentChanged();
+
+    if (isCheckFileContentChangedSame) {
+      GitConfig gitConfig = settingsService.fetchGitConfigFromConnectorId(webHookTriggerCondition.getGitConnectorId());
+      if (GitConfig.UrlType.ACCOUNT == gitConfig.getUrlType()) {
+        isRepoNameSame =
+            Objects.equals(webHookTriggerCondition.getRepoName(), existingWebHookTriggerCondition.getRepoName());
+      }
+    }
+
+    return isCheckFileContentChangedSame && isRepoNameSame
         && Objects.equals(
                webHookTriggerCondition.getGitConnectorId(), existingWebHookTriggerCondition.getGitConnectorId())
         && Objects.equals(webHookTriggerCondition.getBranchName(), existingWebHookTriggerCondition.getBranchName())
@@ -1237,7 +1249,7 @@ public class TriggerServiceImpl implements TriggerService {
         trigger.setWebHookToken(webHookTriggerCondition.getWebHookToken().getWebHookToken());
         if (!validateWebhookTriggerCondition(trigger, existingTrigger)) {
           throw new InvalidRequestException(
-              "Deploy if files has changed, Git Connector, Branch Name, and File Paths cannot be changed on updating Trigger");
+              "Deploy if files has changed, Git Connector, Branch Name, Repo Name and File Paths cannot be changed on updating Trigger");
         }
         if (webHookTriggerCondition.isCheckFileContentChanged()) {
           logger.info("File paths to watch selected");

@@ -97,6 +97,8 @@ input WebhookConditionInput {
   gitConnectorId: String
   #Branch in which the filePaths exist.
   branchName: String
+  #Git repository name in case when Account level Git connector is provided
+  repoName: String
 }
 
 input GitHubEvent {
@@ -205,7 +207,7 @@ input ArtifactSelectionInput {
   artifactFilter: String
   #Workflow Id to select artifact from, Required when using LAST_DEPLOYED_WORKFLOW
   workflowId: String
-  #Pipeline Id to select artifact from, Required when using LAST_DEPLOYED_WORKFLOW
+  #Pipeline Id to select artifact from, Required when using LAST_DEPLOYED_PIPELINE
   pipelineId: String
 }
 
