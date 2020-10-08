@@ -43,8 +43,11 @@ public interface AzureConstants {
   String SETUP_COMMAND_UNIT = "Setup Virtual Machine Scale Set";
   String UP_SCALE_COMMAND_UNIT = "Upscale Virtual Machine Scale Set";
   String UP_SCALE_STEADY_STATE_WAIT_COMMAND_UNIT = "Upscale wait for steady state";
+  String DELETE_OLD_VIRTUAL_MACHINE_SCALE_SETS_COMMAND_UNIT = "Delete Old Virtual Machine Scale Sets";
   String DOWN_SCALE_COMMAND_UNIT = "Downscale Virtual Machine Scale Set";
+  String DOWN_SCALE_SETS_COMMAND_UNIT = "Downscale Virtual Machine Scale Sets";
   String DOWN_SCALE_STEADY_STATE_WAIT_COMMAND_UNIT = "Downscale wait for steady state";
+  String CREATE_NEW_VMSS_COMMAND_UNIT = "Create New Virtual Machine Scale Set";
   String DEPLOYMENT_STATUS = "Final Deployment status";
   String DEPLOYMENT_ERROR = "Failed Deployment status";
   String DELETE_NEW_VMSS = "Delete New Virtual Machine Scale Set";
@@ -97,9 +100,13 @@ public interface AzureConstants {
   String GALLERY_NAME_NULL_VALIDATION_MSG = "Parameter galleryName is required and cannot be null";
   String GALLERY_IMAGE_NAME_NULL_VALIDATION_MSG = "Parameter imageName is required and cannot be null";
 
+  // Patterns
   String GALLERY_IMAGE_ID_PATTERN =
       "/subscriptions/%s/resourceGroups/%s/providers/Microsoft.Compute/galleries/%s/images/%s/versions/%s";
+  String VMSS_AUTOSCALE_SUFIX = "_Autoscale";
+  String AUTO_SCALE_DEFAULT_PROFILE_PATTERN = "Auto created scale condition";
+
+  // VM provisioning statuses
   String VM_PROVISIONING_SUCCEEDED_STATUS = "Provisioning succeeded";
   String VM_PROVISIONING_SPECIALIZED_STATUS = "VM specialized";
-  String VMSS_AUTOSCALE_SUFIX = "_Autoscale";
 }

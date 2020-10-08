@@ -21,6 +21,7 @@ import io.harness.azure.AzureClient;
 import io.harness.azure.client.AzureAutoScaleSettingsClient;
 import io.harness.azure.model.AzureConfig;
 import io.harness.azure.model.AzureConstants;
+import io.harness.azure.utility.AzureResourceUtility;
 import io.harness.exception.InvalidRequestException;
 import lombok.extern.slf4j.Slf4j;
 
@@ -170,6 +171,8 @@ public class AzureAutoScaleSettingsClientImpl extends AzureClient implements Azu
 
     autoScaleSettingResourceInner.profiles()
         .stream()
+        .filter(java.util.Objects::nonNull)
+        .filter(profile -> AzureResourceUtility.isDefaultAutoScaleProfile(profile.name()))
         .findFirst()
         .map(AutoscaleProfileInner::capacity)
         .ifPresent(capacity -> {
@@ -222,7 +225,12 @@ public class AzureAutoScaleSettingsClientImpl extends AzureClient implements Azu
 
     if (autoScaleSettingOp.isPresent()) {
       AutoscaleSetting autoscaleSetting = autoScaleSettingOp.get();
-      return autoscaleSetting.profiles().entrySet().stream().findFirst().map(Map.Entry::getValue);
+      return autoscaleSetting.profiles()
+          .entrySet()
+          .stream()
+          .filter(profileEntry -> AzureResourceUtility.isDefaultAutoScaleProfile(profileEntry.getKey()))
+          .map(Map.Entry::getValue)
+          .findFirst();
     } else {
       return Optional.empty();
     }

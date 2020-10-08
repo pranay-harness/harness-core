@@ -19,6 +19,7 @@ import com.google.inject.Inject;
 import com.microsoft.azure.CloudException;
 import com.microsoft.azure.PagedList;
 import com.microsoft.azure.management.compute.InstanceViewStatus;
+import com.microsoft.azure.management.compute.VirtualMachineInstanceView;
 import com.microsoft.azure.management.compute.VirtualMachineScaleSet;
 import com.microsoft.azure.management.compute.VirtualMachineScaleSetVM;
 import io.harness.azure.client.AzureAutoScaleSettingsClient;
@@ -30,10 +31,11 @@ import io.harness.delegate.task.azure.response.AzureVMSSTaskExecutionResponse;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
+import org.jetbrains.annotations.NotNull;
 import software.wings.beans.command.ExecutionLogCallback;
 import software.wings.delegatetasks.DelegateLogService;
 
-import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
@@ -130,7 +132,7 @@ public abstract class AzureVMSSTaskHandler {
       timeLimiter.callWithTimeout(() -> {
         while (true) {
           logCallBack.saveExecutionLog(
-              format("Checking the status of:[%s] VM instances", virtualMachineScaleSet.name()), INFO);
+              format("Checking the status of: [%s] VM instances", virtualMachineScaleSet.name()), INFO);
           if (checkAllVMSSInstancesProvisioned(virtualMachineScaleSet, capacity, logCallBack)) {
             return Boolean.TRUE;
           }
@@ -138,7 +140,7 @@ public abstract class AzureVMSSTaskHandler {
         }
       }, autoScalingSteadyStateTimeout, TimeUnit.MINUTES, true);
     } catch (UncheckedTimeoutException e) {
-      logger.error("Timed out waiting for provisioning VMSS VM instances to desired capacity", e);
+      throw new InvalidRequestException("Timed out waiting for provisioning VMSS VM instances to desired capacity", e);
     } catch (WingsException e) {
       throw e;
     } catch (Exception e) {
@@ -160,16 +162,25 @@ public abstract class AzureVMSSTaskHandler {
       PagedList<VirtualMachineScaleSetVM> vmssInstanceList, ExecutionLogCallback logCallBack) {
     for (VirtualMachineScaleSetVM instance : vmssInstanceList) {
       String virtualMachineScaleSetVMName = instance.name();
-      String provisioningDisplayStatus = instance.instanceView().statuses().get(0).displayStatus();
+      String provisioningDisplayStatus = getProvisioningDisplayStatus(instance);
       logCallBack.saveExecutionLog(String.format("Virtual machine instance: [%s] provisioning state: [%s]",
           virtualMachineScaleSetVMName, provisioningDisplayStatus));
     }
   }
 
   private boolean isVMInstanceProvisioned(VirtualMachineScaleSetVM instance) {
-    List<InstanceViewStatus> instanceViewStatuses = instance.instanceView().statuses();
-    String provisioningDisplayStatus = instanceViewStatuses.get(0).displayStatus();
+    String provisioningDisplayStatus = getProvisioningDisplayStatus(instance);
     return provisioningDisplayStatus.equals(VM_PROVISIONING_SPECIALIZED_STATUS)
         || provisioningDisplayStatus.equals(VM_PROVISIONING_SUCCEEDED_STATUS);
+  }
+
+  @NotNull
+  private String getProvisioningDisplayStatus(VirtualMachineScaleSetVM instance) {
+    return Optional.ofNullable(instance)
+        .map(VirtualMachineScaleSetVM::instanceView)
+        .map(VirtualMachineInstanceView::statuses)
+        .map(instanceViewStatuses -> instanceViewStatuses.get(0))
+        .map(InstanceViewStatus::displayStatus)
+        .orElse(StringUtils.EMPTY);
   }
 }

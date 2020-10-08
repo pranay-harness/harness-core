@@ -1,6 +1,8 @@
 package io.harness.azure.utility;
 
+import static io.harness.azure.model.AzureConstants.AUTO_SCALE_DEFAULT_PROFILE_PATTERN;
 import static java.lang.String.format;
+import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
 import lombok.experimental.UtilityClass;
 
@@ -50,5 +52,9 @@ public class AzureResourceUtility {
       }
     }
     return 0;
+  }
+
+  public boolean isDefaultAutoScaleProfile(String profileName) {
+    return isNotBlank(profileName) && profileName.equalsIgnoreCase(AUTO_SCALE_DEFAULT_PROFILE_PATTERN);
   }
 }

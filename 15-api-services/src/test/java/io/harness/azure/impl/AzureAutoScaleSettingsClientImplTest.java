@@ -98,7 +98,7 @@ public class AzureAutoScaleSettingsClientImplTest extends CategoryTest {
         + "        \"targetResourceUri\": \"targetResourceId\",\n"
         + "        \"profiles\": [\n"
         + "            {\n"
-        + "                \"name\": \"Profile 1\",\n"
+        + "                \"name\": \"Auto created scale condition\",\n"
         + "                \"capacity\": {\n"
         + "                    \"minimum\": \"2\",\n"
         + "                    \"maximum\": \"2\",\n"
