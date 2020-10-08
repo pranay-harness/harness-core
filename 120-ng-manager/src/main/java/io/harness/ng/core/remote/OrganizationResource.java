@@ -4,7 +4,9 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.ng.core.remote.OrganizationMapper.writeDto;
 import static io.harness.utils.PageUtils.getNGPageResponse;
 import static io.harness.utils.PageUtils.getPageRequest;
+import static java.lang.Long.parseLong;
 import static javax.ws.rs.core.HttpHeaders.IF_MATCH;
+import static org.apache.commons.lang3.StringUtils.isNumeric;
 
 import com.google.common.collect.ImmutableList;
 import com.google.inject.Inject;
@@ -103,7 +105,7 @@ public class OrganizationResource {
       @NotNull @PathParam(NGCommonEntityConstants.IDENTIFIER_KEY) String identifier,
       @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier,
       @NotNull @Valid OrganizationDTO organizationDTO) {
-    organizationDTO.setVersion(Optional.ofNullable(ifMatch).map(Long::parseLong).orElse(null));
+    organizationDTO.setVersion(isNumeric(ifMatch) ? parseLong(ifMatch) : null);
     Organization updatedOrganization = organizationService.update(accountIdentifier, identifier, organizationDTO);
     return ResponseDTO.newResponse(updatedOrganization.getVersion().toString(), writeDto(updatedOrganization));
   }
@@ -114,7 +116,7 @@ public class OrganizationResource {
   public ResponseDTO<Boolean> delete(@HeaderParam(IF_MATCH) String ifMatch,
       @NotNull @PathParam(NGCommonEntityConstants.IDENTIFIER_KEY) String identifier,
       @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier) {
-    return ResponseDTO.newResponse(organizationService.delete(
-        accountIdentifier, identifier, Optional.ofNullable(ifMatch).map(Long::parseLong).orElse(null)));
+    return ResponseDTO.newResponse(
+        organizationService.delete(accountIdentifier, identifier, isNumeric(ifMatch) ? parseLong(ifMatch) : null));
   }
 }

@@ -87,7 +87,7 @@ public class OrganizationManagerHttpClientFactory implements Provider<Organizati
           .getUnsafeOkHttpClientBuilder(baseUrl, organizationManagerClientConfig.getConnectTimeOutSeconds(),
               organizationManagerClientConfig.getReadTimeOutSeconds())
           .connectionPool(new ConnectionPool())
-          .retryOnConnectionFailure(false)
+          .retryOnConnectionFailure(true)
           .addInterceptor(getAuthorizationInterceptor())
           .build();
     } catch (Exception e) {
