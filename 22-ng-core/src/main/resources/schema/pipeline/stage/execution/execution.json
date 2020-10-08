@@ -1,0 +1,12 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "properties": {
+    "steps": {
+      "$ref": "<<schema/pipeline/stage/execution/steps/steps.json>>"
+    },
+    "rollbackSteps": {
+      "$ref": "<<schema/pipeline/stage/execution/steps/steps.json>>"
+    }
+  }
+}

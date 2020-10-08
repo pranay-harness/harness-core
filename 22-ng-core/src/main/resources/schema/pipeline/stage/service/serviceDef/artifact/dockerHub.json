@@ -1,0 +1,16 @@
+{
+	"$schema": "http://json-schema.org/draft-07/schema#",
+	"type": "object",
+			"properties": {
+				"connectorRef": {
+					"type": "string"
+				},
+				"imagePath": {
+					"type": "string"
+				},
+				"tag": {
+					"type": "string"
+				}
+			}
+
+}

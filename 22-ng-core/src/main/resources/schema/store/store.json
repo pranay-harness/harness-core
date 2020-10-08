@@ -1,0 +1,81 @@
+{
+	"$schema": "http://json-schema.org/draft-07/schema#",
+	"type": "object",
+	"properties": {
+		"type": {
+			"enum": [
+				"Git",
+				"Local"
+			]
+		}
+	},
+	"allOf": [
+		{
+			"if": {
+				"properties": {
+					"type": {
+						"const": "Git"
+					}
+				}
+			},
+			"then": {
+				"properties": {
+					"spec": {
+						"type": "object",
+						"properties": {
+							"connectorIdentifier": {
+								"type": "string"
+							},
+							"paths": {
+								"type": "array",
+								"items": {
+									"type": "string"
+								}
+							},
+							"gitFetchType": {
+								"enum": [
+									"Branch",
+									"Commit"
+								]
+							}
+						},
+						"allOf": [
+							{
+								"if": {
+									"properties": {
+										"gitFetchType": {
+											"const": "Branch"
+										}
+									}
+								},
+								"then": {
+									"properties": {
+										"branch": {
+											"type": "string"
+										}
+									}
+								}
+							},
+							{
+								"if": {
+									"properties": {
+										"gitFetchType": {
+											"const": "Commit"
+										}
+									}
+								},
+								"then": {
+									"properties": {
+										"commit": {
+											"type": "string"
+										}
+									}
+								}
+							}
+						]
+					}
+				}
+			}
+		}
+	]
+}
