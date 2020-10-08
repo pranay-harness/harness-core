@@ -312,26 +312,11 @@ public abstract class AbstractFunctionalTest extends CategoryTest implements Gra
 
     logger.info("Invoking workflow execution");
 
-    WorkflowExecution workflowExecution = WorkflowRestUtils.startWorkflow(bearerToken, appId, envId, executionArgs);
+    WorkflowExecution workflowExecution = runWorkflow(bearerToken, appId, envId, executionArgs);
     assertThat(workflowExecution).isNotNull();
     logger.info("Waiting for execution to finish");
 
-    Awaitility.await()
-        .atMost(600, TimeUnit.SECONDS)
-        .pollInterval(15, TimeUnit.SECONDS)
-        .until(()
-                   -> Setup.portal()
-                          .auth()
-                          .oauth2(bearerToken)
-                          .queryParam("appId", appId)
-                          .get("/executions/" + workflowExecution.getUuid())
-                          .jsonPath()
-                          .<String>getJsonObject("resource.status")
-                          .equals(ExecutionStatus.SUCCESS.name()));
-
-    WorkflowExecution completedWorkflowExecution =
-        workflowExecutionService.getExecutionDetails(appId, workflowExecution.getUuid(), true);
-    logger.info("ECs Execution status: " + completedWorkflowExecution.getStatus());
-    assertThat(ExecutionStatus.SUCCESS == completedWorkflowExecution.getStatus());
+    logger.info("ECs Execution status: " + workflowExecution.getStatus());
+    assertThat(workflowExecution.getStatus()).isEqualTo(ExecutionStatus.SUCCESS);
   }
 }

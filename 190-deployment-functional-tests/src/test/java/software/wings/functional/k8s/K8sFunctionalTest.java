@@ -5,6 +5,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import com.google.inject.Inject;
 
+import io.harness.beans.ExecutionStatus;
 import io.harness.beans.OrchestrationWorkflowType;
 import io.harness.category.element.CDFunctionalTests;
 import io.harness.functional.AbstractFunctionalTest;
@@ -21,7 +22,6 @@ import io.harness.generator.ServiceGenerator;
 import io.harness.generator.ServiceGenerator.Services;
 import io.harness.rule.Owner;
 import io.harness.testframework.restutils.ArtifactStreamRestUtils;
-import io.harness.testframework.restutils.WorkflowRestUtils;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -33,18 +33,15 @@ import software.wings.beans.Workflow;
 import software.wings.beans.WorkflowExecution;
 import software.wings.beans.artifact.Artifact;
 import software.wings.infra.InfrastructureDefinition;
-import software.wings.service.impl.WorkflowExecutionServiceImpl;
 
 import java.util.Collections;
 
 public class K8sFunctionalTest extends AbstractFunctionalTest {
   @Inject private OwnerManager ownerManager;
   @Inject private ApplicationGenerator applicationGenerator;
-  @Inject private WorkflowExecutionServiceImpl workflowEonService;
   @Inject private ServiceGenerator serviceGenerator;
   @Inject private EnvironmentGenerator environmentGenerator;
   @Inject private InfrastructureDefinitionGenerator infrastructureDefinitionGenerator;
-  @Inject private K8SUtils k8SUtils;
 
   private static final long TIMEOUT = 1200000; // 20 minutes
 
@@ -117,25 +114,18 @@ public class K8sFunctionalTest extends AbstractFunctionalTest {
             infrastructureDefinition.getUuid(), workflowName, workflowType, bearerToken, application.getAccountId());
 
     // Deploy the workflow
-    WorkflowExecution workflowExecution =
-        WorkflowRestUtils.startWorkflow(bearerToken, application.getUuid(), savedEnvironment.getUuid(),
-            getExecutionArgs(savedWorkflow, savedEnvironment.getUuid(), savedService.getUuid()));
-    assertThat(workflowExecution).isNotNull();
-
-    k8SUtils.waitForWorkflowExecution(workflowExecution, 10, application.getUuid());
+    WorkflowExecution workflowExecution = runWorkflow(bearerToken, application.getUuid(), savedEnvironment.getUuid(),
+        getExecutionArgs(savedWorkflow, savedEnvironment.getUuid(), savedService.getUuid()));
 
     // create clean up workflow
     Workflow cleanupWorkflow =
         K8SUtils.createK8sCleanupWorkflow(application.getUuid(), savedEnvironment.getUuid(), savedService.getUuid(),
             infrastructureDefinition.getUuid(), workflowName, bearerToken, application.getAccountId());
 
-    // Deploy the workflow
-    WorkflowExecution cleanupWorkflowExecution =
-        WorkflowRestUtils.startWorkflow(bearerToken, application.getUuid(), savedEnvironment.getUuid(),
-            getExecutionArgs(cleanupWorkflow, savedEnvironment.getUuid(), savedService.getUuid()));
-    assertThat(cleanupWorkflowExecution).isNotNull();
+    runWorkflow(bearerToken, application.getUuid(), savedEnvironment.getUuid(),
+        getExecutionArgs(cleanupWorkflow, savedEnvironment.getUuid(), savedService.getUuid()));
 
-    k8SUtils.waitForWorkflowExecution(cleanupWorkflowExecution, 5, application.getUuid());
+    assertThat(workflowExecution.getStatus()).isEqualTo(ExecutionStatus.SUCCESS);
   }
 
   private ExecutionArgs getExecutionArgs(Workflow workflow, String envId, String serviceId) {

@@ -1,5 +1,6 @@
 package io.harness.generator;
 
+import static io.harness.generator.SettingGenerator.Settings.AWS_DEPLOYMENT_FUNCTIONAL_TESTS_CLOUD_PROVIDER;
 import static io.harness.generator.SettingGenerator.Settings.AWS_SPOTINST_TEST_CLOUD_PROVIDER;
 import static io.harness.generator.SettingGenerator.Settings.AWS_TEST_CLOUD_PROVIDER;
 import static io.harness.generator.SettingGenerator.Settings.AZURE_TEST_CLOUD_PROVIDER;
@@ -161,6 +162,7 @@ public class InfrastructureDefinitionGenerator {
     AZURE_WINRM_TEST,
     ECS_EC2_TEST,
     ECS_FARGATE_TEST,
+    ECS_DEPLOYMENT_FUNCTIONAL_TEST,
     K8S_ROLLING_TEST,
     K8S_CANARY_TEST,
     K8S_BLUE_GREEN_TEST,
@@ -194,6 +196,8 @@ public class InfrastructureDefinitionGenerator {
         return ensureAzureWinRMTest(seed, owners);
       case ECS_EC2_TEST:
         return ensureEcsEc2Test(seed, owners);
+      case ECS_DEPLOYMENT_FUNCTIONAL_TEST:
+        return ensureEcsEc2DeploymentTest(seed, owners);
       case K8S_ROLLING_TEST:
         return ensureK8sTest(seed, owners, "fn-test-rolling");
       case K8S_BLUE_GREEN_TEST:
@@ -343,6 +347,41 @@ public class InfrastructureDefinitionGenerator {
     return ensureInfrastructureDefinition(infrastructureDefinition);
   }
 
+  private InfrastructureDefinition ensureEcsEc2DeploymentTest(Randomizer.Seed seed, Owners owners) {
+    Environment environment = owners.obtainEnvironment();
+    if (environment == null) {
+      environment = environmentGenerator.ensurePredefined(seed, owners, Environments.GENERIC_TEST);
+      owners.add(environment);
+    }
+
+    final SettingAttribute ecsCloudProvider =
+        settingGenerator.ensurePredefined(seed, owners, AWS_DEPLOYMENT_FUNCTIONAL_TESTS_CLOUD_PROVIDER);
+    Service service = owners.obtainService();
+    if (service == null) {
+      service = serviceGenerator.ensurePredefined(seed, owners, Services.ECS_TEST);
+      owners.add(service);
+    }
+
+    InfrastructureDefinition infrastructureDefinition =
+        InfrastructureDefinition.builder()
+            .name("Ecs Ec2 type deployment Functional test" + System.currentTimeMillis())
+            .infrastructure(AwsEcsInfrastructure.builder()
+                                .cloudProviderId(ecsCloudProvider.getUuid())
+                                .region("us-east-1")
+                                .launchType("EC2")
+                                .assignPublicIp(false)
+                                .clusterName("deployment-functional-tests-cluster")
+                                .build())
+            .deploymentType(DeploymentType.ECS)
+            .cloudProviderType(CloudProviderType.AWS)
+            .scopedToServices(Collections.singletonList(service.getUuid()))
+            .envId(environment.getUuid())
+            .appId(owners.obtainApplication().getUuid())
+            .build();
+
+    return ensureInfrastructureDefinition(infrastructureDefinition);
+  }
+
   private InfrastructureDefinition ensureK8sTest(Randomizer.Seed seed, Owners owners, String namespace) {
     Environment environment = owners.obtainEnvironment();
     if (environment == null) {
@@ -382,7 +421,6 @@ public class InfrastructureDefinitionGenerator {
                                 .build())
             .deploymentType(DeploymentType.KUBERNETES)
             .cloudProviderType(CloudProviderType.GCP)
-            .scopedToServices(Collections.singletonList(service.getUuid()))
             .envId(environment.getUuid())
             .appId(owners.obtainApplication().getUuid())
             .build();

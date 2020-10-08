@@ -1,7 +1,7 @@
 package software.wings.functional.ecs;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
-import static io.harness.generator.SettingGenerator.Settings.AWS_TEST_CLOUD_PROVIDER;
+import static io.harness.generator.SettingGenerator.Settings.AWS_DEPLOYMENT_FUNCTIONAL_TESTS_CLOUD_PROVIDER;
 import static io.harness.rule.OwnerRule.ARVIND;
 import static org.assertj.core.api.Assertions.assertThat;
 import static software.wings.beans.BasicOrchestrationWorkflow.BasicOrchestrationWorkflowBuilder.aBasicOrchestrationWorkflow;
@@ -139,11 +139,12 @@ public class EcsGitOpsWorkflowFunctionalTest extends AbstractFunctionalTest {
     environment = environmentGenerator.ensurePredefined(seed, owners, Environments.GENERIC_TEST);
     assertThat(environment).isNotNull();
 
-    infrastructureDefinition =
-        infrastructureDefinitionGenerator.ensurePredefined(seed, owners, InfrastructureDefinitions.ECS_EC2_TEST);
+    infrastructureDefinition = infrastructureDefinitionGenerator.ensurePredefined(
+        seed, owners, InfrastructureDefinitions.ECS_DEPLOYMENT_FUNCTIONAL_TEST);
     assertThat(infrastructureDefinition).isNotNull();
 
-    awsSettingAttribute = settingGenerator.ensurePredefined(seed, owners, AWS_TEST_CLOUD_PROVIDER);
+    awsSettingAttribute =
+        settingGenerator.ensurePredefined(seed, owners, AWS_DEPLOYMENT_FUNCTIONAL_TESTS_CLOUD_PROVIDER);
 
     Workflow basicEcsEc2TypeWorkflow = getEcsEc2TypeWorkflow(storeType);
     Workflow savedWorkflow = WorkflowRestUtils.createWorkflow(

@@ -312,6 +312,17 @@ public class AccountLevelGitConnectorFunctionalTest extends AbstractFunctionalTe
     GraphNode pcfAppResize = workflowPhase.getPhaseSteps().get(1).getSteps().get(0);
     Map<String, Object> properties = pcfAppResize.getProperties();
     properties.put("instanceCount", "1");
+    GraphNode cleanupOrphanedRoutes =
+        GraphNode.builder()
+            .name("Cleanup Orphaned Routes")
+            .type("PCF_PLUGIN")
+            .properties(ImmutableMap.of("scriptString", "cf delete-orphaned-routes -f", "timeoutIntervalInMinutes", 3))
+            .build();
+    if (workflowPhase.getPhaseSteps().get(0).getSteps().size() > 1) {
+      workflowPhase.getPhaseSteps().get(0).getSteps().set(0, cleanupOrphanedRoutes);
+    } else {
+      workflowPhase.getPhaseSteps().get(0).getSteps().add(0, cleanupOrphanedRoutes);
+    }
 
     workflowService.updateWorkflow(workflow, false);
   }
