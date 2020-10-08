@@ -3,6 +3,9 @@ package io.harness.batch.processing.pricing.service.impl;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.apache.commons.codec.digest.DigestUtils.md5Hex;
 
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
+
 import com.github.benmanes.caffeine.cache.Cache;
 import com.github.benmanes.caffeine.cache.Caffeine;
 import io.harness.batch.processing.pricing.client.BanzaiPricingClient;
@@ -10,6 +13,7 @@ import io.harness.batch.processing.pricing.data.CloudProvider;
 import io.harness.batch.processing.pricing.data.EcsFargatePricingInfo;
 import io.harness.batch.processing.pricing.data.PricingResponse;
 import io.harness.batch.processing.pricing.data.VMComputePricingInfo;
+import io.harness.batch.processing.pricing.data.ZonePrice;
 import io.harness.batch.processing.pricing.service.intfc.VMPricingService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -19,6 +23,7 @@ import retrofit2.Response;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 @Slf4j
@@ -26,6 +31,7 @@ public class VMPricingServiceImpl implements VMPricingService {
   private final BanzaiPricingClient banzaiPricingClient;
 
   private static final String COMPUTE_SERVICE = "compute";
+  private static final String COMPUTE_CATEGORY = "General purpose";
 
   @Autowired
   public VMPricingServiceImpl(BanzaiPricingClient banzaiPricingClient) {
@@ -37,12 +43,39 @@ public class VMPricingServiceImpl implements VMPricingService {
   @Override
   public VMComputePricingInfo getComputeVMPricingInfo(String instanceType, String region, CloudProvider cloudProvider) {
     VMComputePricingInfo vmComputePricingInfo = getVMPricingInfoFromCache(instanceType, region, cloudProvider);
+    if (ImmutableSet.of("switzerlandnorth", "switzerlandwest").contains(instanceType)) {
+      region = "uksouth";
+    }
     if (null != vmComputePricingInfo) {
       return vmComputePricingInfo;
+    } else if (ImmutableSet.of("n2-standard-16").contains(instanceType)) {
+      return getCustomComputeVMPricingInfo(instanceType, region, cloudProvider);
     } else {
       refreshCache(region, COMPUTE_SERVICE, cloudProvider);
       return getVMPricingInfoFromCache(instanceType, region, cloudProvider);
     }
+  }
+
+  private VMComputePricingInfo getCustomComputeVMPricingInfo(
+      String instanceType, String region, CloudProvider cloudProvider) {
+    VMComputePricingInfo vmComputePricingInfo =
+        VMComputePricingInfo.builder()
+            .category(COMPUTE_CATEGORY)
+            .type(instanceType)
+            .onDemandPrice(0.7769)
+            .spotPrice(getZonePriceList(0.1880, region, ImmutableList.of("a", "b", "c")))
+            .networkPrice(0.0)
+            .cpusPerVm(16)
+            .memPerVm(64)
+            .build();
+    vmPricingInfoCache.put(getVMCacheKey(instanceType, region, cloudProvider), vmComputePricingInfo);
+    return vmComputePricingInfo;
+  }
+
+  private List<ZonePrice> getZonePriceList(double spotPrice, String region, List<String> zones) {
+    return zones.stream()
+        .map(zone -> ZonePrice.builder().price(spotPrice).zone(region + "-" + zone).build())
+        .collect(Collectors.toList());
   }
 
   @Override
