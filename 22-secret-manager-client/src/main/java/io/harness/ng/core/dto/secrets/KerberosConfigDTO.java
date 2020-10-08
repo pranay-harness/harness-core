@@ -1,6 +1,9 @@
 package io.harness.ng.core.dto.secrets;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonInclude.Include;
+import com.fasterxml.jackson.annotation.JsonTypeId;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import io.harness.ng.core.models.BaseSSHSpec;
@@ -19,10 +22,11 @@ import javax.validation.constraints.NotNull;
 @EqualsAndHashCode(callSuper = true)
 @JsonTypeName("Kerberos")
 @JsonIgnoreProperties(ignoreUnknown = true)
+@JsonInclude(Include.NON_NULL)
 public class KerberosConfigDTO extends BaseSSHSpecDTO {
   @NotNull private String principal;
   @NotNull private String realm;
-  @NotNull private TGTGenerationMethod tgtGenerationMethod;
+  @JsonTypeId private TGTGenerationMethod tgtGenerationMethod;
 
   @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, include = JsonTypeInfo.As.EXTERNAL_PROPERTY,
       property = "tgtGenerationMethod", visible = true)

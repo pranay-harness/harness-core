@@ -21,7 +21,6 @@ public class SecretTextSpecDTO extends SecretSpecDTO {
   @NotNull private String secretManagerIdentifier;
   @NotNull private ValueType valueType;
   private String value;
-  @JsonIgnore private boolean draft;
 
   @Override
   @JsonIgnore
@@ -34,7 +33,6 @@ public class SecretTextSpecDTO extends SecretSpecDTO {
     return SecretTextSpec.builder()
         .secretManagerIdentifier(getSecretManagerIdentifier())
         .valueType(getValueType())
-        .draft(isDraft())
         .build();
   }
 }

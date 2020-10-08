@@ -18,7 +18,6 @@ import javax.validation.constraints.NotNull;
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class SecretFileSpecDTO extends SecretSpecDTO {
   @NotNull private String secretManagerIdentifier;
-  @JsonIgnore private boolean draft;
 
   @Override
   @JsonIgnore
@@ -28,6 +27,6 @@ public class SecretFileSpecDTO extends SecretSpecDTO {
 
   @Override
   public SecretSpec toEntity() {
-    return SecretFileSpec.builder().secretManagerIdentifier(getSecretManagerIdentifier()).draft(isDraft()).build();
+    return SecretFileSpec.builder().secretManagerIdentifier(getSecretManagerIdentifier()).build();
   }
 }

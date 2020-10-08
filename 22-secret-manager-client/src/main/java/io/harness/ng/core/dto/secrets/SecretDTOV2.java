@@ -5,6 +5,8 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
+import io.harness.data.validator.EntityIdentifier;
+import io.harness.data.validator.EntityName;
 import io.harness.ng.core.models.Secret;
 import io.harness.secretmanagerclient.SecretType;
 import lombok.Builder;
@@ -22,12 +24,12 @@ import javax.validation.constraints.NotNull;
 @JsonInclude(Include.NON_NULL)
 public class SecretDTOV2 {
   @NotNull private SecretType type;
-  @NotNull private String name;
-  private String description;
-  @NotNull private String identifier;
-  private String orgIdentifier;
-  private String projectIdentifier;
+  @NotNull @EntityName private String name;
+  @NotNull @EntityIdentifier private String identifier;
+  @EntityIdentifier(allowBlank = true) private String orgIdentifier;
+  @EntityIdentifier(allowBlank = true) private String projectIdentifier;
   private Map<String, String> tags;
+  private String description;
 
   @JsonProperty("spec")
   @JsonTypeInfo(

@@ -1,5 +1,6 @@
 package io.harness.ng.core.models;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.fasterxml.jackson.annotation.JsonTypeName;
@@ -14,6 +15,7 @@ import lombok.EqualsAndHashCode;
 @Builder
 @EqualsAndHashCode(callSuper = true)
 @JsonTypeName("SSHKey")
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class SSHExecutionCredentialSpec extends SecretSpec {
   SSHAuthScheme authScheme;
   int port;

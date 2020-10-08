@@ -146,7 +146,7 @@ public class NGSecretResourceV2 {
   @Consumes(MediaType.MULTIPART_FORM_DATA)
   public ResponseDTO<Boolean> updateSecretFile(@PathParam("identifier") String identifier,
       @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) @NotNull String accountIdentifier,
-      @NotNull @FormDataParam("file") InputStream uploadedInputStream, @FormDataParam("spec") String spec) {
+      @FormDataParam("file") InputStream uploadedInputStream, @FormDataParam("spec") String spec) {
     SecretRequestWrapper dto = JsonUtils.asObject(spec, SecretRequestWrapper.class);
     return ResponseDTO.newResponse(ngSecretService.updateFile(accountIdentifier, dto.getSecret(), uploadedInputStream));
   }

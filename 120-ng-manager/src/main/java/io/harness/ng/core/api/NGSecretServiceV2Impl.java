@@ -67,14 +67,15 @@ public class NGSecretServiceV2Impl implements NGSecretServiceV2 {
   }
 
   @Override
-  public Secret create(String accountIdentifier, SecretDTOV2 dto) {
+  public Secret create(String accountIdentifier, SecretDTOV2 dto, boolean draft) {
     Secret secret = dto.toEntity();
+    secret.setDraft(draft);
     secret.setAccountIdentifier(accountIdentifier);
     return secretRepository.save(secret);
   }
 
   @Override
-  public boolean update(String accountIdentifier, SecretDTOV2 dto) {
+  public boolean update(String accountIdentifier, SecretDTOV2 dto, boolean draft) {
     Optional<Secret> secretOptional =
         get(accountIdentifier, dto.getOrgIdentifier(), dto.getProjectIdentifier(), dto.getIdentifier());
     if (secretOptional.isPresent()) {
@@ -84,6 +85,7 @@ public class NGSecretServiceV2Impl implements NGSecretServiceV2 {
       oldSecret.setName(newSecret.getName());
       oldSecret.setTags(newSecret.getTags());
       oldSecret.setSecretSpec(newSecret.getSecretSpec());
+      oldSecret.setDraft(oldSecret.isDraft() && draft);
       oldSecret.setType(newSecret.getType());
       secretRepository.save(oldSecret);
       return true;
@@ -113,7 +115,7 @@ public class NGSecretServiceV2Impl implements NGSecretServiceV2 {
                                                             .encryptionDetails(encryptionDetails)
                                                             .host(sshKeyValidationMetadata.getHost())
                                                             .build()})
-                              .timeout(TimeUnit.MINUTES.toMillis(1))
+                              .timeout(TimeUnit.SECONDS.toMillis(15))
                               .build();
       SSHConfigValidationTaskResponse responseData =
           managerDelegateServiceDriver.sendTask(accountIdentifier, setupAbstractions, taskData);
