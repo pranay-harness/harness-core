@@ -15,6 +15,8 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.experimental.Wither;
 
+import java.util.Map;
+
 @Data
 @Builder
 @SimpleVisitorHelper(helperClass = ServiceConfigVisitorHelper.class)
@@ -26,6 +28,7 @@ public class ServiceConfig implements OverridesApplier<ServiceConfig>, Visitable
   @ApiModelProperty(dataType = SwaggerConstants.STRING_CLASSPATH) @Wither private ParameterField<String> description;
   private ServiceDefinition serviceDefinition;
   @Wither private StageOverridesConfig stageOverrides;
+  @Wither Map<String, String> tags;
 
   // For Visitor Framework Impl
   String metadata;

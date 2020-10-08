@@ -75,10 +75,8 @@ pipeline:
             # If there is an existing environment with the specified name, the type of existing environment will be used.
             type: PreProduction
             tags:
-            - key: cloud
-              value: AWS
-            - key: team
-              value: cdp
+              cloud: AWS
+              team: cdp
           # Infrastructure Type. Options: kubernetes-cluster, kubernetes-direct, kubernetes-gke, ecs, data-center, etc. See Infrastructure Types. REQUIRED
           # Dynamic type ???
           infrastructureDefinition:

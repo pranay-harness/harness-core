@@ -6,10 +6,12 @@ import io.harness.data.validator.Trimmed;
 import io.harness.mongo.index.CdIndex;
 import io.harness.mongo.index.Field;
 import io.harness.mongo.index.NgUniqueIndex;
+import io.harness.ng.core.common.beans.Tag;
 import io.harness.ng.core.service.entity.ServiceEntity.ServiceEntityKeys;
 import io.harness.persistence.PersistentEntity;
 import lombok.Builder;
 import lombok.Data;
+import lombok.Singular;
 import lombok.experimental.FieldNameConstants;
 import lombok.experimental.Wither;
 import org.hibernate.validator.constraints.NotEmpty;
@@ -21,6 +23,7 @@ import org.springframework.data.annotation.TypeAlias;
 import org.springframework.data.annotation.Version;
 import org.springframework.data.mongodb.core.mapping.Document;
 
+import java.util.List;
 import javax.validation.constraints.Size;
 
 @Data
@@ -43,6 +46,7 @@ public class ServiceEntity implements PersistentEntity {
   @NotEmpty @EntityIdentifier String identifier;
   @Trimmed @NotEmpty String orgIdentifier;
   @Trimmed @NotEmpty String projectIdentifier;
+  @Wither @Singular @Size(max = 128) private List<Tag> tags;
 
   @NotEmpty @EntityName String name;
   @Size(max = 1024) String description;

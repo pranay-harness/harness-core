@@ -12,6 +12,8 @@ import lombok.Value;
 import lombok.experimental.FieldDefaults;
 import org.hibernate.validator.constraints.NotEmpty;
 
+import java.util.Map;
+
 @Value
 @Builder
 @FieldDefaults(level = AccessLevel.PRIVATE)
@@ -23,4 +25,5 @@ public class ServiceRequestDTO {
 
   @EntityName String name;
   String description;
+  Map<String, String> tags;
 }

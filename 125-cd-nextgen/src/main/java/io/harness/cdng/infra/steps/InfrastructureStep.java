@@ -1,5 +1,7 @@
 package io.harness.cdng.infra.steps;
 
+import static io.harness.ng.core.mapper.TagMapper.convertToList;
+
 import com.google.common.annotations.VisibleForTesting;
 import com.google.inject.Inject;
 
@@ -116,6 +118,7 @@ public class InfrastructureStep implements Step, SyncExecutable<InfraStepParamet
         .identifier(environmentYaml.getIdentifier().getValue())
         .orgIdentifier(orgIdentifier)
         .projectIdentifier(projectIdentifier)
+        .tags(convertToList(environmentYaml.getTags()))
         .build();
   }
 }

@@ -57,10 +57,8 @@ pipeline:
               identifier: stagingInfra
               type: PreProduction
               tags:
-                - key: cloud
-                  value: GCP
-                - key: team
-                  value: cdp
+                cloud: GCP
+                team: cdp
             # Infrastructure Type. Options: kubernetes-cluster, kubernetes-direct, kubernetes-gke, ecs, data-center, etc. See Infrastructure Types. REQUIRED
             # Dynamic type ???
             infrastructureDefinition:

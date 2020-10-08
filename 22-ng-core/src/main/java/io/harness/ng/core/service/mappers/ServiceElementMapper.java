@@ -1,5 +1,8 @@
 package io.harness.ng.core.service.mappers;
 
+import static io.harness.ng.core.mapper.TagMapper.convertToList;
+import static io.harness.ng.core.mapper.TagMapper.convertToMap;
+
 import io.harness.ng.core.service.dto.ServiceRequestDTO;
 import io.harness.ng.core.service.dto.ServiceResponseDTO;
 import io.harness.ng.core.service.entity.ServiceEntity;
@@ -15,6 +18,7 @@ public class ServiceElementMapper {
         .projectIdentifier(serviceRequestDTO.getProjectIdentifier())
         .name(serviceRequestDTO.getName())
         .description(serviceRequestDTO.getDescription())
+        .tags(convertToList(serviceRequestDTO.getTags()))
         .build();
   }
 
@@ -27,6 +31,7 @@ public class ServiceElementMapper {
         .name(serviceEntity.getName())
         .description(serviceEntity.getDescription())
         .deleted(serviceEntity.getDeleted())
+        .tags(convertToMap(serviceEntity.getTags()))
         .build();
   }
 }

@@ -3,8 +3,11 @@ package io.harness.ng.core.service.mappers;
 import static io.harness.rule.OwnerRule.ARCHIT;
 import static org.assertj.core.api.Assertions.assertThat;
 
+import com.google.common.collect.ImmutableMap;
+
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
+import io.harness.ng.core.common.beans.Tag;
 import io.harness.ng.core.service.dto.ServiceRequestDTO;
 import io.harness.ng.core.service.dto.ServiceResponseDTO;
 import io.harness.ng.core.service.entity.ServiceEntity;
@@ -13,19 +16,25 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
+import java.util.Arrays;
+import java.util.List;
+
 public class ServiceElementMapperTest extends CategoryTest {
   ServiceRequestDTO serviceRequestDTO;
   ServiceResponseDTO serviceResponseDTO;
   ServiceEntity responseServiceEntity;
   ServiceEntity requestServiceEntity;
+  List<Tag> tags;
 
   @Before
   public void setUp() {
+    tags = Arrays.asList(Tag.builder().key("k1").value("v1").build(), Tag.builder().key("k2").value("v2").build());
     serviceRequestDTO = ServiceRequestDTO.builder()
                             .identifier("IDENTIFIER")
                             .orgIdentifier("ORG_ID")
                             .projectIdentifier("PROJECT_ID")
                             .name("Service")
+                            .tags(ImmutableMap.of("k1", "v1", "k2", "v2"))
                             .build();
 
     serviceResponseDTO = ServiceResponseDTO.builder()
@@ -35,6 +44,7 @@ public class ServiceElementMapperTest extends CategoryTest {
                              .projectIdentifier("PROJECT_ID")
                              .name("Service")
                              .deleted(false)
+                             .tags(ImmutableMap.of("k1", "v1", "k2", "v2"))
                              .build();
     responseServiceEntity = ServiceEntity.builder()
                                 .id("UUID")
@@ -44,6 +54,7 @@ public class ServiceElementMapperTest extends CategoryTest {
                                 .projectIdentifier("PROJECT_ID")
                                 .name("Service")
                                 .deleted(false)
+                                .tags(tags)
                                 .build();
 
     requestServiceEntity = ServiceEntity.builder()
@@ -53,6 +64,7 @@ public class ServiceElementMapperTest extends CategoryTest {
                                .projectIdentifier("PROJECT_ID")
                                .name("Service")
                                .deleted(false)
+                               .tags(tags)
                                .build();
   }
 

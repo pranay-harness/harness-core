@@ -74,7 +74,7 @@ public class InfrastructureStepTest extends CategoryTest {
                                           .identifier(ParameterField.createValueField("test-id"))
                                           .name(ParameterField.createValueField("test-id"))
                                           .type(EnvironmentType.PreProduction)
-                                          .tags(Collections.emptyList())
+                                          .tags(Collections.emptyMap())
                                           .build();
 
     PipelineInfrastructure pipelineInfrastructure =

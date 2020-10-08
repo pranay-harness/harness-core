@@ -1,12 +1,14 @@
 package io.harness.ng.core.service.resources;
 
 import static io.harness.rule.OwnerRule.ARCHIT;
+import static java.util.Collections.singletonMap;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.doReturn;
 import static software.wings.beans.Service.ServiceKeys;
 
 import io.harness.NgManagerTest;
 import io.harness.category.element.UnitTests;
+import io.harness.ng.core.common.beans.Tag;
 import io.harness.ng.core.service.dto.ServiceRequestDTO;
 import io.harness.ng.core.service.dto.ServiceResponseDTO;
 import io.harness.ng.core.service.entity.ServiceEntity;
@@ -25,6 +27,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.mongodb.core.query.Criteria;
 
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
@@ -36,14 +39,17 @@ public class ServiceResourceTest extends NgManagerTest {
   ServiceRequestDTO serviceRequestDTO;
   ServiceResponseDTO serviceResponseDTO;
   ServiceEntity serviceEntity;
+  List<Tag> tags;
 
   @Before
   public void setUp() {
+    tags = Arrays.asList(Tag.builder().key("k1").value("v1").build());
     serviceRequestDTO = ServiceRequestDTO.builder()
                             .identifier("IDENTIFIER")
                             .orgIdentifier("ORG_ID")
                             .projectIdentifier("PROJECT_ID")
                             .name("Service")
+                            .tags(singletonMap("k1", "v1"))
                             .build();
 
     serviceResponseDTO = ServiceResponseDTO.builder()
@@ -52,6 +58,7 @@ public class ServiceResourceTest extends NgManagerTest {
                              .orgIdentifier("ORG_ID")
                              .projectIdentifier("PROJECT_ID")
                              .name("Service")
+                             .tags(singletonMap("k1", "v1"))
                              .build();
     serviceEntity = ServiceEntity.builder()
                         .accountId("ACCOUNT_ID")
@@ -59,6 +66,7 @@ public class ServiceResourceTest extends NgManagerTest {
                         .orgIdentifier("ORG_ID")
                         .projectIdentifier("PROJECT_ID")
                         .name("Service")
+                        .tags(tags)
                         .build();
   }
 

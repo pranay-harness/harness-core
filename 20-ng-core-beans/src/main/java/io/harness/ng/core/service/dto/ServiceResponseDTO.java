@@ -6,6 +6,8 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.experimental.FieldDefaults;
 
+import java.util.Map;
+
 @Data
 @Builder
 @FieldDefaults(level = AccessLevel.PRIVATE)
@@ -18,4 +20,5 @@ public class ServiceResponseDTO {
   String name;
   String description;
   boolean deleted;
+  Map<String, String> tags;
 }

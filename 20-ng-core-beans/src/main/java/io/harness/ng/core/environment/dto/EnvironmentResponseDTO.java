@@ -7,6 +7,8 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.experimental.FieldDefaults;
 
+import java.util.Map;
+
 @Data
 @Builder
 @FieldDefaults(level = AccessLevel.PRIVATE)
@@ -20,4 +22,5 @@ public class EnvironmentResponseDTO {
   String description;
   EnvironmentType type;
   boolean deleted;
+  Map<String, String> tags;
 }

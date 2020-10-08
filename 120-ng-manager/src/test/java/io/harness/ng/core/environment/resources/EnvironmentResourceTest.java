@@ -1,11 +1,13 @@
 package io.harness.ng.core.environment.resources;
 
 import static io.harness.rule.OwnerRule.ARCHIT;
+import static java.util.Collections.singletonMap;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.doReturn;
 
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
+import io.harness.ng.core.common.beans.Tag;
 import io.harness.ng.core.environment.beans.Environment;
 import io.harness.ng.core.environment.beans.EnvironmentType;
 import io.harness.ng.core.environment.dto.EnvironmentRequestDTO;
@@ -26,6 +28,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.data.mongodb.core.query.Criteria;
 import software.wings.beans.Environment.EnvironmentKeys;
 
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
@@ -37,9 +40,11 @@ public class EnvironmentResourceTest extends CategoryTest {
   EnvironmentRequestDTO environmentRequestDTO;
   EnvironmentResponseDTO environmentResponseDTO;
   Environment environmentEntity;
+  List<Tag> tags;
 
   @Before
   public void setUp() {
+    tags = Arrays.asList(Tag.builder().key("k1").value("v1").build());
     MockitoAnnotations.initMocks(this);
     environmentResource = new EnvironmentResource(environmentService);
     environmentRequestDTO = EnvironmentRequestDTO.builder()
@@ -48,6 +53,7 @@ public class EnvironmentResourceTest extends CategoryTest {
                                 .projectIdentifier("PROJECT_ID")
                                 .name("ENV")
                                 .type(EnvironmentType.PreProduction)
+                                .tags(singletonMap("k1", "v1"))
                                 .build();
 
     environmentResponseDTO = EnvironmentResponseDTO.builder()
@@ -57,6 +63,7 @@ public class EnvironmentResourceTest extends CategoryTest {
                                  .projectIdentifier("PROJECT_ID")
                                  .name("ENV")
                                  .type(EnvironmentType.PreProduction)
+                                 .tags(singletonMap("k1", "v1"))
                                  .build();
 
     environmentEntity = Environment.builder()
@@ -66,6 +73,7 @@ public class EnvironmentResourceTest extends CategoryTest {
                             .projectIdentifier("PROJECT_ID")
                             .name("ENV")
                             .type(EnvironmentType.PreProduction)
+                            .tags(tags)
                             .build();
   }
 

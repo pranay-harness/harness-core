@@ -32,10 +32,8 @@ pipeline:
               identifier: stagingInfra
               type: PreProduction
               tags:
-                - key: cloud
-                  value: GCP
-                - key: team
-                  value: cdp
+                cloud: GCP
+                team: cdp
             infrastructureDefinition:
               type: KubernetesDirect
               spec:

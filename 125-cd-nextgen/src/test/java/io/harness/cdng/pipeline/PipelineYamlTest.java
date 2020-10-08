@@ -1,6 +1,8 @@
 package io.harness.cdng.pipeline;
 
+import static io.harness.ng.core.mapper.TagMapper.convertToList;
 import static io.harness.rule.OwnerRule.ARCHIT;
+import static java.util.stream.Collectors.toSet;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.CategoryTest;
@@ -22,6 +24,7 @@ import io.harness.cdng.service.beans.KubernetesServiceSpec;
 import io.harness.cdng.service.beans.ServiceConfig;
 import io.harness.cdng.service.beans.StageOverridesConfig;
 import io.harness.cdng.variables.beans.NGVariableOverrideSets;
+import io.harness.ng.core.common.beans.Tag;
 import io.harness.rule.Owner;
 import io.harness.yaml.core.ParallelStepElement;
 import io.harness.yaml.core.StageElement;
@@ -38,6 +41,7 @@ import org.junit.experimental.categories.Category;
 import java.io.IOException;
 import java.net.URL;
 import java.util.List;
+import java.util.Set;
 
 public class PipelineYamlTest extends CategoryTest {
   @Test
@@ -78,6 +82,13 @@ public class PipelineYamlTest extends CategoryTest {
 
     // Service
     ServiceConfig service = deploymentStage.getService();
+
+    // Test Service Tags
+    List<Tag> tags = convertToList(service.getTags());
+    assertThat(tags.size()).isEqualTo(2);
+    Set<String> tagStrings = tags.stream().map(tag -> tag.getKey() + ": " + tag.getValue()).collect(toSet());
+    assertThat(tagStrings).containsOnly("k1: v1", "k2: v2");
+
     KubernetesServiceSpec serviceSpec = (KubernetesServiceSpec) service.getServiceDefinition().getServiceSpec();
     assertThat(serviceSpec).isNotNull();
     assertThat(service.getIdentifier()).isInstanceOf(ParameterField.class);
@@ -156,6 +167,13 @@ public class PipelineYamlTest extends CategoryTest {
     assertThat(environment.getName()).isInstanceOf(ParameterField.class);
     assertThat(environment.getName().isExpression()).isTrue();
     assertThat(environment.getName().getExpressionValue()).isEqualTo("${input}");
+
+    // Assert Env Tags
+    assertThat(environment.getTags().size()).isEqualTo(2);
+    assertThat(environment.getTags().keySet()).containsOnly("envType", "envRegion");
+    assertThat(environment.getTags().get("envType")).isEqualTo("prod");
+    assertThat(environment.getTags().get("envRegion")).isEqualTo("us-east1");
+
     K8SDirectInfrastructure infraDefinition =
         (K8SDirectInfrastructure) infrastructure.getInfrastructureDefinition().getInfrastructure();
     assertThat(infraDefinition.getNamespace()).isInstanceOf(ParameterField.class);
