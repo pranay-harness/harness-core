@@ -1,4 +1,4 @@
-package io.harness.beans;
+package software.wings.security;
 
 import io.harness.yaml.BaseYaml;
 import lombok.AllArgsConstructor;

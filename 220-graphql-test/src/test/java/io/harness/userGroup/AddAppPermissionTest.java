@@ -2,9 +2,9 @@ package io.harness.userGroup;
 
 import static com.google.common.collect.Iterables.getFirst;
 import static com.google.common.collect.Iterables.getLast;
-import static io.harness.beans.GenericEntityFilter.FilterType.ALL;
 import static io.harness.rule.OwnerRule.DEEPAK;
 import static org.assertj.core.api.Assertions.assertThat;
+import static software.wings.security.GenericEntityFilter.FilterType.ALL;
 import static software.wings.security.PermissionAttribute.Action.CREATE;
 import static software.wings.security.PermissionAttribute.Action.DELETE;
 import static software.wings.security.PermissionAttribute.Action.READ;
@@ -15,7 +15,6 @@ import static software.wings.security.PermissionAttribute.PermissionType.SERVICE
 import com.google.inject.Inject;
 
 import io.harness.GraphQLTest;
-import io.harness.beans.GenericEntityFilter;
 import io.harness.category.element.UnitTests;
 import io.harness.category.layer.GraphQLTests;
 import io.harness.multiline.MultilineStringMixin;
@@ -26,6 +25,7 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import software.wings.beans.security.AppPermission;
 import software.wings.beans.security.UserGroup;
+import software.wings.security.GenericEntityFilter;
 import software.wings.security.PermissionAttribute;
 import software.wings.service.intfc.UserGroupService;
 

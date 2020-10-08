@@ -1,10 +1,10 @@
 package io.harness.serializer.morphia;
 
-import io.harness.beans.EnvFilter;
-import io.harness.beans.GenericEntityFilter;
-import io.harness.beans.WorkflowFilter;
 import io.harness.morphia.MorphiaRegistrar;
 import io.harness.morphia.MorphiaRegistrarHelperPut;
+import software.wings.security.EnvFilter;
+import software.wings.security.GenericEntityFilter;
+import software.wings.security.WorkflowFilter;
 
 import java.util.Set;
 
@@ -14,8 +14,8 @@ public class RbacCoreMorphiaRegistrar implements MorphiaRegistrar {
 
   @Override
   public void registerImplementationClasses(MorphiaRegistrarHelperPut h, MorphiaRegistrarHelperPut w) {
-    w.put("beans.EnvFilter", EnvFilter.class);
-    w.put("beans.GenericEntityFilter", GenericEntityFilter.class);
-    w.put("beans.WorkflowFilter", WorkflowFilter.class);
+    w.put("security.EnvFilter", EnvFilter.class);
+    w.put("security.GenericEntityFilter", GenericEntityFilter.class);
+    w.put("security.WorkflowFilter", WorkflowFilter.class);
   }
 }

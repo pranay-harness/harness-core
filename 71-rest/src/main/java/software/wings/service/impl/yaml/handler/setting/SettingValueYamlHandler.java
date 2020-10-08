@@ -6,8 +6,6 @@ import static software.wings.beans.yaml.YamlConstants.PATH_DELIMITER;
 
 import com.google.inject.Inject;
 
-import io.harness.beans.UsageRestrictions;
-import io.harness.beans.UsageRestrictions.Yaml;
 import io.harness.exception.HarnessException;
 import io.harness.exception.WingsException;
 import lombok.extern.slf4j.Slf4j;
@@ -16,6 +14,8 @@ import software.wings.beans.SettingAttribute;
 import software.wings.beans.SettingAttribute.SettingCategory;
 import software.wings.beans.yaml.ChangeContext;
 import software.wings.beans.yaml.YamlType;
+import software.wings.security.UsageRestrictions;
+import software.wings.security.UsageRestrictions.Yaml;
 import software.wings.service.impl.SettingServiceHelper;
 import software.wings.service.impl.yaml.handler.BaseYamlHandler;
 import software.wings.service.impl.yaml.handler.usagerestrictions.UsageRestrictionsYamlHandler;

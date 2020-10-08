@@ -6,7 +6,6 @@ import static software.wings.beans.Application.ApplicationKeys;
 
 import com.google.inject.Inject;
 
-import io.harness.beans.GenericEntityFilter;
 import io.harness.persistence.HIterator;
 import lombok.extern.slf4j.Slf4j;
 import migrations.Migration;
@@ -15,6 +14,7 @@ import software.wings.beans.security.AppPermission;
 import software.wings.beans.security.UserGroup;
 import software.wings.beans.security.UserGroup.UserGroupKeys;
 import software.wings.dl.WingsPersistence;
+import software.wings.security.GenericEntityFilter;
 import software.wings.service.intfc.UserGroupService;
 
 import java.util.HashSet;

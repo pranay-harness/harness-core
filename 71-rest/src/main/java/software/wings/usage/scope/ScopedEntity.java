@@ -1,6 +1,6 @@
 package software.wings.usage.scope;
 
-import io.harness.beans.UsageRestrictions;
+import software.wings.security.UsageRestrictions;
 
 /**
  * Interface to represent usage scope of entities

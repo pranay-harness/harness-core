@@ -5,7 +5,6 @@ import static software.wings.common.Constants.ACCOUNT_ID_KEY;
 
 import com.google.inject.Inject;
 
-import io.harness.beans.UsageRestrictions;
 import io.harness.data.validator.EntityNameValidator;
 import io.harness.encryption.EncryptionReflectUtils;
 import io.harness.persistence.HIterator;
@@ -17,6 +16,7 @@ import software.wings.beans.SettingAttribute;
 import software.wings.beans.SettingAttribute.SettingAttributeKeys;
 import software.wings.beans.SettingAttribute.SettingCategory;
 import software.wings.dl.WingsPersistence;
+import software.wings.security.UsageRestrictions;
 import software.wings.security.encryption.EncryptedData;
 import software.wings.security.encryption.EncryptedData.EncryptedDataKeys;
 import software.wings.security.encryption.EncryptedDataParent;

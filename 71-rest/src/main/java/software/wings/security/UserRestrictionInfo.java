@@ -3,7 +3,6 @@ package software.wings.security;
 import static io.harness.annotations.dev.HarnessTeam.PL;
 
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.beans.UsageRestrictions;
 import lombok.Builder;
 import lombok.Data;
 

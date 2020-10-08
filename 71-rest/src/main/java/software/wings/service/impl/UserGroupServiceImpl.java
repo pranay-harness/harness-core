@@ -39,7 +39,6 @@ import com.google.inject.name.Named;
 
 import com.mongodb.ReadPreference;
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.beans.GenericEntityFilter;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageRequest.PageRequestBuilder;
 import io.harness.beans.PageResponse;
@@ -81,6 +80,7 @@ import software.wings.beans.sso.SSOType;
 import software.wings.dl.WingsPersistence;
 import software.wings.features.RbacFeature;
 import software.wings.features.api.UsageLimitedFeature;
+import software.wings.security.GenericEntityFilter;
 import software.wings.security.PermissionAttribute;
 import software.wings.security.PermissionAttribute.PermissionType;
 import software.wings.security.UserThreadLocal;

@@ -53,10 +53,6 @@ import static software.wings.security.PermissionAttribute.PermissionType.WORKFLO
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
-import io.harness.beans.EnvFilter;
-import io.harness.beans.Filter;
-import io.harness.beans.GenericEntityFilter;
-import io.harness.beans.WorkflowFilter;
 import io.harness.exception.DuplicateFieldException;
 import io.harness.exception.InvalidRequestException;
 import lombok.extern.slf4j.Slf4j;
@@ -84,8 +80,12 @@ import software.wings.graphql.schema.type.permissions.QLServicePermissions;
 import software.wings.graphql.schema.type.permissions.QLUserGroupPermissions;
 import software.wings.graphql.schema.type.permissions.QLWorkflowFilterType;
 import software.wings.graphql.schema.type.permissions.QLWorkflowPermissions;
+import software.wings.security.EnvFilter;
+import software.wings.security.Filter;
+import software.wings.security.GenericEntityFilter;
 import software.wings.security.PermissionAttribute.Action;
 import software.wings.security.PermissionAttribute.PermissionType;
+import software.wings.security.WorkflowFilter;
 
 import java.util.Collections;
 import java.util.EnumSet;

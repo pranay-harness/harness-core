@@ -18,7 +18,6 @@ import static software.wings.beans.SettingAttribute.SettingCategory.CONNECTOR;
 
 import com.google.inject.Inject;
 
-import io.harness.beans.UsageRestrictions;
 import io.harness.category.element.UnitTests;
 import io.harness.exception.UnauthorizedUsageRestrictionsException;
 import io.harness.k8s.model.KubernetesClusterAuthType;
@@ -51,6 +50,7 @@ import software.wings.beans.settings.azureartifacts.AzureArtifactsPATConfig;
 import software.wings.beans.settings.helm.GCSHelmRepoConfig;
 import software.wings.beans.settings.helm.HttpHelmRepoConfig;
 import software.wings.helpers.ext.mail.SmtpConfig;
+import software.wings.security.UsageRestrictions;
 import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.UsageRestrictionsService;
 import software.wings.service.intfc.security.ManagerDecryptionService;

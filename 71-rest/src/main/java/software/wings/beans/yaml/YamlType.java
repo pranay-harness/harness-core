@@ -46,7 +46,6 @@ import static software.wings.beans.yaml.YamlConstants.WORKFLOWS_FOLDER;
 import static software.wings.beans.yaml.YamlConstants.YAML_EXPRESSION;
 import static software.wings.utils.Utils.generatePath;
 
-import io.harness.beans.UsageRestrictions;
 import software.wings.beans.Application;
 import software.wings.beans.ConfigFile;
 import software.wings.beans.EntityType;
@@ -88,6 +87,7 @@ import software.wings.beans.trigger.Trigger;
 import software.wings.beans.workflow.StepSkipStrategy;
 import software.wings.infra.CloudProviderInfrastructure;
 import software.wings.infra.InfrastructureDefinition;
+import software.wings.security.UsageRestrictions;
 import software.wings.settings.SettingValue;
 import software.wings.verification.CVConfiguration;
 import software.wings.yaml.trigger.PayloadSourceYaml;

@@ -1,4 +1,4 @@
-package io.harness.beans;
+package software.wings.security;
 
 import lombok.Data;
 import lombok.EqualsAndHashCode;

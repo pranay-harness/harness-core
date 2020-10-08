@@ -7,7 +7,6 @@ import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
-import io.harness.beans.UsageRestrictions;
 import io.harness.exception.InvalidRequestException;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
@@ -17,6 +16,7 @@ import software.wings.graphql.schema.type.secrets.QLEncryptedTextInput;
 import software.wings.graphql.schema.type.secrets.QLEncryptedTextUpdate;
 import software.wings.graphql.schema.type.secrets.QLSecretType;
 import software.wings.graphql.schema.type.secrets.QLUsageScope;
+import software.wings.security.UsageRestrictions;
 import software.wings.security.encryption.EncryptedData;
 import software.wings.service.impl.security.SecretText;
 import software.wings.service.intfc.security.SecretManager;

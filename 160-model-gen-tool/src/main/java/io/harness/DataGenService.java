@@ -33,7 +33,6 @@ import com.google.inject.name.Named;
 
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
-import io.harness.beans.UsageRestrictions;
 import io.harness.entity.ServiceSecretKey;
 import io.harness.entity.ServiceSecretKey.ServiceSecretKeyKeys;
 import io.harness.entity.ServiceSecretKey.ServiceType;
@@ -83,6 +82,7 @@ import software.wings.beans.SystemCatalog;
 import software.wings.beans.Workflow;
 import software.wings.beans.loginSettings.LoginSettingsService;
 import software.wings.dl.WingsPersistence;
+import software.wings.security.UsageRestrictions;
 import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.AppContainerService;
 import software.wings.service.intfc.EnvironmentService;
