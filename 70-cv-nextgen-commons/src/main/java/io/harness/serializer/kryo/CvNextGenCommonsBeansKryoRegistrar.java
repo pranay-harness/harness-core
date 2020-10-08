@@ -6,9 +6,13 @@ import com.esotericsoftware.kryo.Kryo;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.cvng.beans.AppDynamicsDataCollectionInfo;
 import io.harness.cvng.beans.AppdynamicsValidationResponse;
+import io.harness.cvng.beans.CVDataCollectionInfo;
 import io.harness.cvng.beans.CVMonitoringCategory;
 import io.harness.cvng.beans.DataCollectionConnectorBundle;
+import io.harness.cvng.beans.DataCollectionType;
 import io.harness.cvng.beans.DataSourceType;
+import io.harness.cvng.beans.K8ActivityDataCollectionInfo;
+import io.harness.cvng.beans.KubernetesActivitySourceDTO;
 import io.harness.cvng.beans.MetricPackDTO;
 import io.harness.cvng.beans.MetricPackDTO.MetricDefinitionDTO;
 import io.harness.cvng.beans.SplunkSavedSearch;
@@ -56,5 +60,9 @@ public class CvNextGenCommonsBeansKryoRegistrar implements KryoRegistrar {
     kryo.register(TimeSeriesThresholdComparisonType.class, 9025);
     kryo.register(TimeSeriesThresholdType.class, 9026);
     kryo.register(TimeSeriesCustomThresholdActions.class, 9027);
+    kryo.register(DataCollectionType.class, 9028);
+    kryo.register(CVDataCollectionInfo.class, 9029);
+    kryo.register(K8ActivityDataCollectionInfo.class, 9030);
+    kryo.register(KubernetesActivitySourceDTO.class, 9031);
   }
 }

@@ -1,17 +1,22 @@
 package io.harness.cvng.core.services.impl;
 
+import static io.harness.persistence.HQuery.excludeAuthority;
+
 import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
 
+import io.harness.cvng.beans.ActivityDTO;
+import io.harness.cvng.beans.ActivityType;
 import io.harness.cvng.client.NextGenService;
-import io.harness.cvng.core.beans.ActivityDTO;
+import io.harness.cvng.core.activity.entities.Activity;
+import io.harness.cvng.core.activity.entities.Activity.ActivityKeys;
+import io.harness.cvng.core.activity.entities.CustomActivity;
+import io.harness.cvng.core.activity.entities.DeploymentActivity;
+import io.harness.cvng.core.activity.entities.KubernetesActivity;
+import io.harness.cvng.core.activity.services.api.KubernetesActivitySourceService;
 import io.harness.cvng.core.beans.DeploymentActivityResultDTO;
 import io.harness.cvng.core.beans.DeploymentActivityResultDTO.DeploymentResultSummary;
 import io.harness.cvng.core.beans.DeploymentActivityVerificationResultDTO;
-import io.harness.cvng.core.entities.Activity;
-import io.harness.cvng.core.entities.Activity.ActivityKeys;
-import io.harness.cvng.core.entities.Activity.ActivityType;
-import io.harness.cvng.core.entities.DeploymentActivity;
 import io.harness.cvng.core.services.api.ActivityService;
 import io.harness.cvng.core.services.api.WebhookService;
 import io.harness.cvng.verificationjob.entities.VerificationJob;
@@ -43,6 +48,7 @@ public class ActivityServiceImpl implements ActivityService {
   @Inject private HPersistence hPersistence;
   @Inject private VerificationJobInstanceService verificationJobInstanceService;
   @Inject private VerificationJobService verificationJobService;
+  @Inject private KubernetesActivitySourceService kubernetesActivitySourceService;
   @Inject private NextGenService nextGenService;
 
   @Override
@@ -50,13 +56,12 @@ public class ActivityServiceImpl implements ActivityService {
     webhookService.validateWebhookToken(
         webhookToken, activityDTO.getProjectIdentifier(), activityDTO.getOrgIdentifier());
     Preconditions.checkNotNull(activityDTO);
-    Activity activity = activityDTO.toEntity();
+    Activity activity = getActivityFromDTO(activityDTO);
     activity.validate();
     if (activity.getType().equals(ActivityType.DEPLOYMENT)) {
       // TODO: Remove this "if" when we have support for all types of verification trigger from activity.
       activity.setVerificationJobInstanceIds(createVerificationJobInstances(activity));
     }
-    logger.info("Registering a new activity of type {} for account {}", activity.getType(), accountId);
     hPersistence.save(activity);
   }
 
@@ -148,7 +153,7 @@ public class ActivityServiceImpl implements ActivityService {
   }
   private List<DeploymentGroupByTag> getRecentDeploymentActivities(String accountId, String projectIdentifier) {
     List<DeploymentActivity> activities =
-        (List<DeploymentActivity>) (List<?>) hPersistence.createQuery(Activity.class)
+        (List<DeploymentActivity>) (List<?>) hPersistence.createQuery(Activity.class, excludeAuthority)
             .filter(ActivityKeys.accountIdentifier, accountId)
             .filter(ActivityKeys.projectIdentifier, projectIdentifier)
             .filter(ActivityKeys.type, ActivityType.DEPLOYMENT)
@@ -234,5 +239,25 @@ public class ActivityServiceImpl implements ActivityService {
         .deploymentStartTime(activity.getActivityStartTime())
         .resolvedJob(verificationJob)
         .build();
+  }
+
+  public Activity getActivityFromDTO(ActivityDTO activityDTO) {
+    Activity activity;
+    switch (activityDTO.getType()) {
+      case DEPLOYMENT:
+        activity = DeploymentActivity.builder().build();
+        break;
+      case INFRASTRUCTURE:
+        activity = KubernetesActivity.builder().build();
+        break;
+      case CUSTOM:
+        activity = CustomActivity.builder().build();
+        break;
+      default:
+        throw new IllegalStateException("Invalid type " + activityDTO.getType());
+    }
+
+    activity.fromDTO(activityDTO);
+    return activity;
   }
 }

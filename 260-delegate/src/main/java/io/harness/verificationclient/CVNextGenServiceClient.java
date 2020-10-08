@@ -1,5 +1,6 @@
 package io.harness.verificationclient;
 
+import static io.harness.cvng.core.services.CVNextGenConstants.ACTIVITY_RESOURCE;
 import static io.harness.cvng.core.services.CVNextGenConstants.DELEGATE_DATA_COLLECTION;
 import static io.harness.cvng.core.services.CVNextGenConstants.DELEGATE_DATA_COLLECTION_TASK;
 import static io.harness.cvng.core.services.CVNextGenConstants.HOST_RECORD_RESOURCE_PATH;
@@ -8,6 +9,7 @@ import static io.harness.cvng.core.services.CVNextGenConstants.LOG_RECORD_RESOUR
 import io.harness.cvng.beans.DataCollectionTaskDTO;
 import io.harness.cvng.beans.DataCollectionTaskDTO.DataCollectionTaskResult;
 import io.harness.cvng.beans.HostRecordDTO;
+import io.harness.cvng.beans.KubernetesActivityDTO;
 import io.harness.cvng.beans.LogRecordDTO;
 import io.harness.cvng.beans.TimeSeriesDataCollectionRecord;
 import io.harness.rest.RestResponse;
@@ -40,4 +42,8 @@ public interface CVNextGenServiceClient {
   @POST(DELEGATE_DATA_COLLECTION_TASK + "/update-status")
   Call<RestResponse<Void>> updateTaskStatus(
       @Query("accountId") String accountId, @Body DataCollectionTaskResult dataCollectionTaskResult);
+
+  @POST(ACTIVITY_RESOURCE + "/kubernetes-activities")
+  Call<RestResponse<Boolean>> saveKubernetesActivities(@Query("accountId") String accountId,
+      @Query("activitySourceId") String activitySourceId, @Body List<KubernetesActivityDTO> activityDTOS);
 }

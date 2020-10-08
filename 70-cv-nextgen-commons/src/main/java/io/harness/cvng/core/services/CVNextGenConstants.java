@@ -22,4 +22,5 @@ public interface CVNextGenConstants {
   String SPLUNK_RESOURCE_PATH = "cv-nextgen/splunk/";
   String SPLUNK_SAVED_SEARCH_PATH = "saved-searches";
   String SPLUNK_VALIDATION_RESPONSE_PATH = "validation";
+  String ACTIVITY_RESOURCE = "activity";
 }

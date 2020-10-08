@@ -20,11 +20,11 @@ import com.google.protobuf.ByteString;
 import io.harness.DelegateTest;
 import io.harness.category.element.UnitTests;
 import io.harness.cvng.beans.AppDynamicsDataCollectionInfo;
+import io.harness.cvng.beans.CVDataCollectionInfo;
 import io.harness.cvng.beans.DataCollectionTaskDTO;
 import io.harness.cvng.beans.MetricPackDTO;
 import io.harness.cvng.beans.MetricPackDTO.MetricDefinitionDTO;
 import io.harness.cvng.core.services.CVNextGenConstants;
-import io.harness.cvng.perpetualtask.CVDataCollectionInfo;
 import io.harness.data.structure.CollectionUtils;
 import io.harness.datacollection.DataCollectionDSLService;
 import io.harness.datacollection.entity.RuntimeParameters;
@@ -36,7 +36,6 @@ import io.harness.perpetualtask.PerpetualTaskExecutionParams;
 import io.harness.perpetualtask.PerpetualTaskId;
 import io.harness.rest.RestResponse;
 import io.harness.rule.Owner;
-import io.harness.rule.OwnerRule;
 import io.harness.security.encryption.SecretDecryptionService;
 import io.harness.serializer.KryoSerializer;
 import io.harness.verificationclient.CVNextGenServiceClient;
@@ -146,7 +145,7 @@ public class DataCollectionPerpetualTaskExecutorTest extends DelegateTest {
   }
 
   @Test
-  @Owner(developers = OwnerRule.RAGHU)
+  @Owner(developers = KAMAL)
   @Category({UnitTests.class})
   public void testDataCollection_executeDSL() {
     createTaskParams(CVNextGenConstants.PERFORMANCE_PACK_IDENTIFIER, "dsl");

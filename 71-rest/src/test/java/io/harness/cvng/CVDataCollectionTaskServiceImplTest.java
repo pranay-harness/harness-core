@@ -12,6 +12,7 @@ import com.google.inject.Inject;
 import io.harness.category.element.UnitTests;
 import io.harness.connector.apis.dto.ConnectorInfoDTO;
 import io.harness.cvng.beans.DataCollectionConnectorBundle;
+import io.harness.cvng.beans.DataCollectionType;
 import io.harness.cvng.perpetualtask.CVDataCollectionTaskService;
 import io.harness.delegate.beans.connector.appdynamicsconnector.AppDynamicsConnectorDTO;
 import io.harness.encryption.Scope;
@@ -70,6 +71,7 @@ public class CVDataCollectionTaskServiceImplTest extends WingsBaseTest {
         DataCollectionConnectorBundle.builder()
             .params(params)
             .connectorDTO(ConnectorInfoDTO.builder().connectorConfig(appDynamicsConnectorDTO).build())
+            .dataCollectionType(DataCollectionType.CV)
             .build();
     String taskId = dataCollectionTaskService.create(accountId, orgIdentifier, projectIdentifier, bundle);
     assertThat(taskId).isNotNull();
@@ -102,6 +104,7 @@ public class CVDataCollectionTaskServiceImplTest extends WingsBaseTest {
         DataCollectionConnectorBundle.builder()
             .params(params)
             .connectorDTO(ConnectorInfoDTO.builder().connectorConfig(appDynamicsConnectorDTO).build())
+            .dataCollectionType(DataCollectionType.CV)
             .build();
     String taskId = dataCollectionTaskService.create(accountId, orgIdentifier, projectIdentifier, bundle);
 
@@ -116,6 +119,7 @@ public class CVDataCollectionTaskServiceImplTest extends WingsBaseTest {
         DataCollectionConnectorBundle.builder()
             .params(params)
             .connectorDTO(ConnectorInfoDTO.builder().connectorConfig(appDynamicsConnectorDTO2).build())
+            .dataCollectionType(DataCollectionType.CV)
             .build();
     String duplicateTaskId = dataCollectionTaskService.create(accountId, orgIdentifier, projectIdentifier, bundle2);
     assertThat(taskId).isEqualTo(duplicateTaskId);
@@ -141,6 +145,7 @@ public class CVDataCollectionTaskServiceImplTest extends WingsBaseTest {
         DataCollectionConnectorBundle.builder()
             .params(params)
             .connectorDTO(ConnectorInfoDTO.builder().connectorConfig(appDynamicsConnectorDTO).build())
+            .dataCollectionType(DataCollectionType.CV)
             .build();
     String taskId = dataCollectionTaskService.create(accountId, orgIdentifier, projectIdentifier, bundle);
     assertThat(taskId).isNotNull();

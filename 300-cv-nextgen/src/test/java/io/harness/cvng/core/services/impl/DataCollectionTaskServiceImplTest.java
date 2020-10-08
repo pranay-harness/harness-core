@@ -6,7 +6,7 @@ import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.rule.OwnerRule.KAMAL;
 import static io.harness.rule.OwnerRule.NEMANJA;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.Matchers.anyString;
+import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.spy;
@@ -25,6 +25,7 @@ import io.harness.cvng.beans.DataCollectionExecutionStatus;
 import io.harness.cvng.beans.DataCollectionInfo;
 import io.harness.cvng.beans.DataCollectionTaskDTO;
 import io.harness.cvng.beans.DataCollectionTaskDTO.DataCollectionTaskResult;
+import io.harness.cvng.beans.DataCollectionType;
 import io.harness.cvng.beans.DataSourceType;
 import io.harness.cvng.beans.SplunkDataCollectionInfo;
 import io.harness.cvng.client.VerificationManagerService;
@@ -389,8 +390,8 @@ public class DataCollectionTaskServiceImplTest extends CvNextGenTest {
     VerificationManagerService verificationManagerService = mock(VerificationManagerService.class);
     FieldUtils.writeField(dataCollectionTaskService, "verificationManagerService", verificationManagerService, true);
 
-    when(verificationManagerService.createServiceGuardPerpetualTask(
-             eq(accountId), eq(cvConfigId), anyString(), anyString(), anyString(), eq(cvConfigId)))
+    when(verificationManagerService.createDataCollectionTask(
+             eq(accountId), eq("orgIdentifier"), eq("projectIdentifier"), eq(DataCollectionType.CV), any()))
         .thenReturn(taskId);
     AppDynamicsCVConfig cvConfig = getCVConfig();
 
@@ -425,8 +426,8 @@ public class DataCollectionTaskServiceImplTest extends CvNextGenTest {
     VerificationManagerService verificationManagerService = mock(VerificationManagerService.class);
     FieldUtils.writeField(dataCollectionTaskService, "verificationManagerService", verificationManagerService, true);
 
-    when(verificationManagerService.createServiceGuardPerpetualTask(
-             eq(accountId), eq(cvConfigId), anyString(), anyString(), anyString(), eq(cvConfigId)))
+    when(verificationManagerService.createDataCollectionTask(
+             eq(accountId), eq("orgIdentifier"), eq("projectIdentifier"), eq(DataCollectionType.CV), any()))
         .thenReturn(taskId);
     SplunkCVConfig cvConfig = getSplunkCVConfig();
 
@@ -478,6 +479,7 @@ public class DataCollectionTaskServiceImplTest extends CvNextGenTest {
     cvConfig.setGroupId(generateUuid());
     cvConfig.setApplicationName("applicationName");
     cvConfig.setTierName("tierName");
+    cvConfig.setOrgIdentifier("orgIdentifier");
     cvConfig.setMetricPack(
         metricPackService.getMetricPacks(accountId, "projectId", DataSourceType.APP_DYNAMICS).get(0));
     return cvConfig;
@@ -493,6 +495,7 @@ public class DataCollectionTaskServiceImplTest extends CvNextGenTest {
     cvConfig.setConnectorIdentifier(generateUuid());
     cvConfig.setServiceIdentifier("serviceIdentifier");
     cvConfig.setEnvIdentifier("envIdentifier");
+    cvConfig.setOrgIdentifier("orgIdentifier");
     cvConfig.setGroupId(generateUuid());
     cvConfig.setQuery("excetpion");
     cvConfig.setServiceInstanceIdentifier("host");

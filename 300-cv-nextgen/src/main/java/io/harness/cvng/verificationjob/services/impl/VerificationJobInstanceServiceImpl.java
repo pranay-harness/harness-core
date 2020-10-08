@@ -17,6 +17,7 @@ import com.google.inject.name.Names;
 
 import io.harness.cvng.analysis.services.api.DeploymentAnalysisService;
 import io.harness.cvng.beans.DataCollectionInfo;
+import io.harness.cvng.beans.DataCollectionType;
 import io.harness.cvng.client.NextGenService;
 import io.harness.cvng.client.VerificationManagerService;
 import io.harness.cvng.core.beans.DeploymentActivityResultDTO.DeploymentResultSummary;
@@ -27,7 +28,9 @@ import io.harness.cvng.core.beans.DeploymentActivityVerificationResultDTO;
 import io.harness.cvng.core.beans.DeploymentActivityVerificationResultDTO.DeploymentSummary;
 import io.harness.cvng.core.beans.TimeRange;
 import io.harness.cvng.core.entities.CVConfig;
+import io.harness.cvng.core.entities.CVConfig.CVConfigKeys;
 import io.harness.cvng.core.entities.DataCollectionTask;
+import io.harness.cvng.core.entities.DataCollectionTask.DataCollectionTaskKeys;
 import io.harness.cvng.core.entities.MetricCVConfig;
 import io.harness.cvng.core.services.api.CVConfigService;
 import io.harness.cvng.core.services.api.DataCollectionInfoMapper;
@@ -55,6 +58,7 @@ import java.time.Clock;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -149,9 +153,12 @@ public class VerificationJobInstanceServiceImpl implements VerificationJobInstan
 
     connectorIds.forEach(connectorId -> {
       String dataCollectionWorkerId = getDataCollectionWorkerId(verificationJobInstance, connectorId);
-      perpetualTaskIds.add(verificationManagerService.createDeploymentVerificationPerpetualTask(
-          verificationJobInstance.getAccountId(), connectorId, verificationJob.getOrgIdentifier(),
-          verificationJob.getProjectIdentifier(), dataCollectionWorkerId));
+      Map<String, String> params = new HashMap<>();
+      params.put(DataCollectionTaskKeys.dataCollectionWorkerId, dataCollectionWorkerId);
+      params.put(CVConfigKeys.connectorIdentifier, connectorId);
+
+      perpetualTaskIds.add(verificationManagerService.createDataCollectionTask(verificationJobInstance.getAccountId(),
+          verificationJob.getOrgIdentifier(), verificationJob.getProjectIdentifier(), DataCollectionType.CV, params));
     });
     setPerpetualTaskIds(verificationJobInstance, perpetualTaskIds);
     createDataCollectionTasks(verificationJobInstance, verificationJob, cvConfigs);

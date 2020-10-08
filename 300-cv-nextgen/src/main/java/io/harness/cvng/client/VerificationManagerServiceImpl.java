@@ -1,13 +1,13 @@
 package io.harness.cvng.client;
 
+import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
 
 import io.harness.connector.apis.dto.ConnectorInfoDTO;
 import io.harness.cvng.beans.DataCollectionConnectorBundle;
+import io.harness.cvng.beans.DataCollectionType;
 import io.harness.cvng.core.entities.CVConfig.CVConfigKeys;
-import io.harness.cvng.core.entities.DataCollectionTask.DataCollectionTaskKeys;
 
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -18,46 +18,22 @@ public class VerificationManagerServiceImpl implements VerificationManagerServic
   @Inject private RequestExecutor requestExecutor;
   @Inject private NextGenService nextGenService;
   @Override
-  public String createServiceGuardPerpetualTask(String accountId, String cvConfigId, String connectorIdentifier,
-      String orgIdentifier, String projectIdentifier, String dataCollectionWorkerId) {
+  public String createDataCollectionTask(String accountId, String orgIdentifier, String projectIdentifier,
+      DataCollectionType dataCollectionType, Map<String, String> params) {
     // Need to write this to handle retries, exception etc in a proper way.
-
+    Preconditions.checkState(params.containsKey(CVConfigKeys.connectorIdentifier));
     Optional<ConnectorInfoDTO> connectorDTO =
-        nextGenService.get(accountId, connectorIdentifier, orgIdentifier, projectIdentifier);
+        nextGenService.get(accountId, params.get(CVConfigKeys.connectorIdentifier), orgIdentifier, projectIdentifier);
     if (!connectorDTO.isPresent()) {
-      throw new InternalServerErrorException("Failed to retrieve connector with id: " + connectorIdentifier);
+      throw new InternalServerErrorException(
+          "Failed to retrieve connector with id: " + params.get(CVConfigKeys.connectorIdentifier));
     }
 
-    Map<String, String> params = new HashMap<>();
-    params.put(DataCollectionTaskKeys.dataCollectionWorkerId, dataCollectionWorkerId);
-    params.put(DataCollectionTaskKeys.cvConfigId, cvConfigId);
-    params.put(CVConfigKeys.connectorIdentifier, connectorIdentifier);
-
-    DataCollectionConnectorBundle bundle =
-        DataCollectionConnectorBundle.builder().connectorDTO(connectorDTO.get()).params(params).build();
-
-    return requestExecutor
-        .execute(verificationManagerClient.createDataCollectionPerpetualTask(
-            accountId, orgIdentifier, projectIdentifier, bundle))
-        .getResource();
-  }
-
-  @Override
-  public String createDeploymentVerificationPerpetualTask(String accountId, String connectorIdentifier,
-      String orgIdentifier, String projectIdentifier, String dataCollectionWorkerId) {
-    // TODO(telemetry): counter
-    Optional<ConnectorInfoDTO> connectorDTO =
-        nextGenService.get(accountId, connectorIdentifier, orgIdentifier, projectIdentifier);
-    if (!connectorDTO.isPresent()) {
-      throw new InternalServerErrorException("Failed to retrieve connector with id: " + connectorIdentifier);
-    }
-
-    Map<String, String> params = new HashMap<>();
-    params.put(DataCollectionTaskKeys.dataCollectionWorkerId, dataCollectionWorkerId);
-    params.put(CVConfigKeys.connectorIdentifier, connectorIdentifier);
-
-    DataCollectionConnectorBundle bundle =
-        DataCollectionConnectorBundle.builder().connectorDTO(connectorDTO.get()).params(params).build();
+    DataCollectionConnectorBundle bundle = DataCollectionConnectorBundle.builder()
+                                               .connectorDTO(connectorDTO.get())
+                                               .params(params)
+                                               .dataCollectionType(dataCollectionType)
+                                               .build();
 
     return requestExecutor
         .execute(verificationManagerClient.createDataCollectionPerpetualTask(

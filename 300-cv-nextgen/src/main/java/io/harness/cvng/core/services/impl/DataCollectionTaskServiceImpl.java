@@ -11,9 +11,11 @@ import com.google.inject.name.Names;
 import io.harness.cvng.beans.DataCollectionExecutionStatus;
 import io.harness.cvng.beans.DataCollectionTaskDTO;
 import io.harness.cvng.beans.DataCollectionTaskDTO.DataCollectionTaskResult;
+import io.harness.cvng.beans.DataCollectionType;
 import io.harness.cvng.client.VerificationManagerService;
 import io.harness.cvng.core.beans.TimeRange;
 import io.harness.cvng.core.entities.CVConfig;
+import io.harness.cvng.core.entities.CVConfig.CVConfigKeys;
 import io.harness.cvng.core.entities.DataCollectionTask;
 import io.harness.cvng.core.entities.DataCollectionTask.DataCollectionTaskKeys;
 import io.harness.cvng.core.entities.MetricCVConfig;
@@ -33,7 +35,9 @@ import org.mongodb.morphia.query.UpdateOperations;
 import java.time.Clock;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
@@ -214,9 +218,13 @@ public class DataCollectionTaskServiceImpl implements DataCollectionTaskService 
     DataCollectionTask dataCollectionTask =
         getDataCollectionTask(cvConfig, dataCollectionRange.getStartTime(), dataCollectionRange.getEndTime());
     dataCollectionTask.setDataCollectionWorkerId(cvConfig.getUuid());
-    String dataCollectionTaskId = verificationManagerService.createServiceGuardPerpetualTask(cvConfig.getAccountId(),
-        cvConfig.getUuid(), cvConfig.getConnectorIdentifier(), cvConfig.getOrgIdentifier(),
-        cvConfig.getProjectIdentifier(), dataCollectionTask.getDataCollectionWorkerId());
+    Map<String, String> params = new HashMap<>();
+    params.put(DataCollectionTaskKeys.dataCollectionWorkerId, cvConfig.getUuid());
+    params.put(DataCollectionTaskKeys.cvConfigId, cvConfig.getUuid());
+    params.put(CVConfigKeys.connectorIdentifier, cvConfig.getConnectorIdentifier());
+
+    String dataCollectionTaskId = verificationManagerService.createDataCollectionTask(cvConfig.getAccountId(),
+        cvConfig.getOrgIdentifier(), cvConfig.getProjectIdentifier(), DataCollectionType.CV, params);
     save(dataCollectionTask);
     cvConfigService.setCollectionTaskId(cvConfig.getUuid(), dataCollectionTaskId);
 

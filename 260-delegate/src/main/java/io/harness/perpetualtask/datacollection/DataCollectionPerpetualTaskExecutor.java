@@ -7,11 +7,11 @@ import com.google.inject.Inject;
 import com.google.inject.name.Named;
 
 import io.harness.beans.DecryptableEntity;
+import io.harness.cvng.beans.CVDataCollectionInfo;
 import io.harness.cvng.beans.DataCollectionInfo;
 import io.harness.cvng.beans.DataCollectionTaskDTO;
 import io.harness.cvng.beans.DataCollectionTaskDTO.DataCollectionTaskResult;
 import io.harness.cvng.beans.LogDataCollectionInfo;
-import io.harness.cvng.perpetualtask.CVDataCollectionInfo;
 import io.harness.datacollection.DataCollectionDSLService;
 import io.harness.datacollection.entity.LogDataRecord;
 import io.harness.datacollection.entity.RuntimeParameters;
@@ -59,15 +59,15 @@ public class DataCollectionPerpetualTaskExecutor implements PerpetualTaskExecuto
       PerpetualTaskId taskId, PerpetualTaskExecutionParams params, Instant heartbeatTime) {
     DataCollectionPerpetualTaskParams taskParams =
         AnyUtils.unpack(params.getCustomizedParams(), DataCollectionPerpetualTaskParams.class);
-    logger.info("Executing for !! cvConfigId: {} verificationTaskId: {}", taskParams.getDataCollectionWorkerId());
-    CVDataCollectionInfo cvDataCollectionInfo =
+    logger.info("Executing for !! verificationTaskId: {}", taskParams.getDataCollectionWorkerId());
+    CVDataCollectionInfo dataCollectionInfo =
         (CVDataCollectionInfo) kryoSerializer.asObject(taskParams.getDataCollectionInfo().toByteArray());
-    logger.info("DataCollectionInfo {} ", cvDataCollectionInfo);
+    logger.info("DataCollectionInfo {} ", dataCollectionInfo);
     DataCollectionTaskDTO dataCollectionTask;
-    secretDecryptionService.decrypt(cvDataCollectionInfo.getConnectorConfigDTO() instanceof DecryptableEntity
-            ? (DecryptableEntity) cvDataCollectionInfo.getConnectorConfigDTO()
+    secretDecryptionService.decrypt(dataCollectionInfo.getConnectorConfigDTO() instanceof DecryptableEntity
+            ? (DecryptableEntity) dataCollectionInfo.getConnectorConfigDTO()
             : null,
-        cvDataCollectionInfo.getEncryptedDataDetails());
+        dataCollectionInfo.getEncryptedDataDetails());
     dataCollectionDSLService.registerDatacollectionExecutorService(dataCollectionService);
     try {
       // TODO: What happens if this task takes more time then the schedule?
@@ -78,7 +78,7 @@ public class DataCollectionPerpetualTaskExecutor implements PerpetualTaskExecuto
           break;
         } else {
           logger.info("Next task to process: ", dataCollectionTask);
-          run(taskParams, cvDataCollectionInfo.getConnectorConfigDTO(), dataCollectionTask);
+          run(taskParams, dataCollectionInfo.getConnectorConfigDTO(), dataCollectionTask);
         }
       }
     } catch (IOException e) {
