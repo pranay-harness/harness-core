@@ -110,6 +110,10 @@ public class CloudWatchState extends AbstractMetricAnalysisState {
   public void setAnalysisServerConfigId(String analysisServerConfigId) {
     this.analysisServerConfigId = analysisServerConfigId;
   }
+  @Override
+  protected boolean isEmptyTestNodesAllowed() {
+    return shouldDoLambdaVerification;
+  }
 
   @Override
   protected String triggerAnalysisDataCollection(ExecutionContext context, AnalysisContext analysisContext,
