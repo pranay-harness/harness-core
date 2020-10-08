@@ -26,6 +26,7 @@ import io.harness.logging.ExceptionLogger;
 import lombok.extern.slf4j.Slf4j;
 import software.wings.beans.command.CommandExecutionContext;
 import software.wings.beans.command.CommandUnit;
+import software.wings.beans.command.CommandUnitType;
 import software.wings.beans.command.ExecCommandUnit;
 import software.wings.beans.command.InitPowerShellCommandUnit;
 import software.wings.beans.command.ShellCommandExecutionContext;
@@ -188,8 +189,9 @@ public class WinRMCommandUnitExecutorServiceImpl implements CommandUnitExecutorS
     String commandPath =
         (commandUnit instanceof InitPowerShellCommandUnit) ? WINDOWS_HOME_DIR : context.getWindowsRuntimePath();
 
-    if (commandUnit instanceof ExecCommandUnit) {
-      if (((ExecCommandUnit) commandUnit).getCommandPath() != null) {
+    if (commandUnit.getCommandUnitType() == CommandUnitType.EXEC
+        || commandUnit.getCommandUnitType() == CommandUnitType.SETUP_ENV) {
+      if (commandUnit instanceof ExecCommandUnit && ((ExecCommandUnit) commandUnit).getCommandPath() != null) {
         commandPath = ((ExecCommandUnit) commandUnit).getCommandPath();
       }
     }

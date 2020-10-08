@@ -56,6 +56,7 @@ import software.wings.beans.WinRmConnectionAttributes;
 import software.wings.beans.command.CommandExecutionContext;
 import software.wings.beans.command.CommandUnit;
 import software.wings.beans.command.ExecCommandUnit;
+import software.wings.beans.command.SetupEnvCommandUnit;
 import software.wings.beans.infrastructure.Host;
 import software.wings.core.winrm.executors.WinRmExecutor;
 import software.wings.core.winrm.executors.WinRmExecutorFactory;
@@ -421,6 +422,12 @@ public class WinRMCommandUnitExecutorServiceImplTest extends WingsBaseTest {
     ExecCommandUnit execCommandUnit = anExecCommandUnit().withCommandString(EXEC_CMD).withCommandPath("test").build();
     commandPath =
         winRMCommandUnitExecutorService.getCommandPath(execCommandUnit, commandExecutionContextBuider.build());
+    assertThat(commandPath).isEqualTo("test");
+
+    SetupEnvCommandUnit setupEnvCommandUnit = new SetupEnvCommandUnit();
+    setupEnvCommandUnit.setCommandPath("test");
+    commandPath =
+        winRMCommandUnitExecutorService.getCommandPath(setupEnvCommandUnit, commandExecutionContextBuider.build());
     assertThat(commandPath).isEqualTo("test");
   }
 }
