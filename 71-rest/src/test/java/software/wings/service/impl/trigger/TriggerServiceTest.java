@@ -2808,7 +2808,7 @@ public class TriggerServiceTest extends WingsBaseTest {
     assertThatThrownBy(() -> triggerService.update(trigger, false))
         .isInstanceOf(InvalidRequestException.class)
         .hasMessageContaining(
-            "Deploy if files has changed, Git Connector, Branch Name, and File Paths cannot be changed on updating Trigger");
+            "Deploy if files has changed, Git Connector, Branch Name, Repo Name and File Paths cannot be changed on updating Trigger");
   }
 
   @Test
@@ -2842,10 +2842,8 @@ public class TriggerServiceTest extends WingsBaseTest {
     WebHookTriggerCondition webHookTriggerCondition = (WebHookTriggerCondition) webhookTrigger.getCondition();
     triggerService.save(webhookTrigger);
 
-    webHookTriggerCondition.setCheckFileContentChanged(false);
-    validateUpdate(webhookTrigger);
-
     webHookTriggerCondition.setCheckFileContentChanged(true);
+
     webHookTriggerCondition.setBranchName(null);
     validateUpdate(webhookTrigger);
 
@@ -2855,6 +2853,19 @@ public class TriggerServiceTest extends WingsBaseTest {
 
     webHookTriggerCondition.setGitConnectorId(UUID);
     webHookTriggerCondition.setFilePaths(asList("test1.yaml", "test2.yaml"));
+    validateUpdate(webhookTrigger);
+
+    webHookTriggerCondition.setFilePaths(asList("index.yaml"));
+    webHookTriggerCondition.setRepoName("repoUpdated");
+    validateUpdate(webhookTrigger);
+
+    webHookTriggerCondition.setRepoName("");
+    validateUpdate(webhookTrigger);
+
+    webHookTriggerCondition.setRepoName(" ");
+    validateUpdate(webhookTrigger);
+
+    webHookTriggerCondition.setRepoName(null);
     validateUpdate(webhookTrigger);
   }
 }

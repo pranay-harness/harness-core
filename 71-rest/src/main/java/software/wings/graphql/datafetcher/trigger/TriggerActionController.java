@@ -174,15 +174,31 @@ public class TriggerActionController {
               type = validateAndResolveFromTriggeringPipelineArtifactSelectionType(qlCreateOrUpdateTriggerInput);
               break;
             case LAST_COLLECTED:
+              if (EmptyPredicate.isEmpty(e.getArtifactSourceId())) {
+                throw new InvalidRequestException(
+                    "Artifact Source Id to select artifact from is required when using LAST_COLLECTED", USER);
+              }
               type = validateAndResolveLastCollectedArtifactSelectionType(e);
               break;
             case FROM_PAYLOAD_SOURCE:
+              if (EmptyPredicate.isEmpty(e.getArtifactSourceId())) {
+                throw new InvalidRequestException(
+                    "Artifact Source Id to select artifact from is required when using FROM_PAYLOAD_SOURCE", USER);
+              }
               type = validateAndResolveFromPayloadSourceArtifactSelectionType(qlCreateOrUpdateTriggerInput, e);
               break;
             case LAST_DEPLOYED_PIPELINE:
+              if (EmptyPredicate.isEmpty(e.getPipelineId())) {
+                throw new InvalidRequestException(
+                    "Pipeline Id to select artifact from is required when using LAST_DEPLOYED_PIPELINE", USER);
+              }
               type = validateAndResolveLastDeployedPipelineArtifactSelectionType(qlCreateOrUpdateTriggerInput);
               break;
             case LAST_DEPLOYED_WORKFLOW:
+              if (EmptyPredicate.isEmpty(e.getWorkflowId())) {
+                throw new InvalidRequestException(
+                    "Workflow Id to select artifact from is required when using LAST_DEPLOYED_WORKFLOW", USER);
+              }
               type = validateAndResolveLastDeployedWorkflowArtifactSelectionType(qlCreateOrUpdateTriggerInput);
               break;
             default:
