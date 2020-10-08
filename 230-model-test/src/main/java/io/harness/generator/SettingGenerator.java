@@ -1,5 +1,6 @@
 package io.harness.generator;
 
+import static io.harness.generator.SettingGenerator.Settings.AWS_DEPLOYMENT_FUNCTIONAL_TESTS_CLOUD_PROVIDER;
 import static io.harness.generator.SettingGenerator.Settings.AWS_SPOTINST_TEST_CLOUD_PROVIDER;
 import static io.harness.generator.SettingGenerator.Settings.AWS_TEST_CLOUD_PROVIDER;
 import static io.harness.generator.SettingGenerator.Settings.DEV_TEST_CONNECTOR;
@@ -107,6 +108,7 @@ public class SettingGenerator {
 
   public enum Settings {
     AWS_TEST_CLOUD_PROVIDER,
+    AWS_DEPLOYMENT_FUNCTIONAL_TESTS_CLOUD_PROVIDER,
     AZURE_TEST_CLOUD_PROVIDER,
     AWS_SPOTINST_TEST_CLOUD_PROVIDER,
     SPOTINST_TEST_CLOUD_PROVIDER,
@@ -150,6 +152,8 @@ public class SettingGenerator {
     switch (predefined) {
       case AWS_TEST_CLOUD_PROVIDER:
         return ensureAwsTest(seed, owners);
+      case AWS_DEPLOYMENT_FUNCTIONAL_TESTS_CLOUD_PROVIDER:
+        return ensureAwsDeploymentFunctionalTestsCloudProvider(seed, owners);
       case AZURE_TEST_CLOUD_PROVIDER:
         return ensureAzureTestCloudProvider(seed, owners);
       case AWS_SPOTINST_TEST_CLOUD_PROVIDER:
@@ -425,6 +429,25 @@ public class SettingGenerator {
                                "AKIA4GYQC5QTQPI2UHMY".toCharArray())
                            .secretKey(/*scmSecret.decryptToCharArray(new SecretName("aws_playground_secret_key")*/
                                "bw/H3t2Sm079NnnX/Xs2BhNJkKa3PJAME8PDlCEK".toCharArray())
+                           .accountId(account.getUuid())
+                           .build())
+            .withUsageRestrictions(getAllAppAllEnvUsageRestrictions())
+            .build();
+    return ensureSettingAttribute(seed, settingAttribute, owners);
+  }
+
+  public SettingAttribute ensureAwsDeploymentFunctionalTestsCloudProvider(Randomizer.Seed seed, Owners owners) {
+    final Account account = accountGenerator.ensurePredefined(seed, owners, Accounts.GENERIC_TEST);
+    SettingAttribute settingAttribute =
+        aSettingAttribute()
+            .withCategory(CLOUD_PROVIDER)
+            .withName(AWS_DEPLOYMENT_FUNCTIONAL_TESTS_CLOUD_PROVIDER.name())
+            .withAppId(GLOBAL_APP_ID)
+            .withEnvId(GLOBAL_ENV_ID)
+            .withAccountId(account.getUuid())
+            .withValue(AwsConfig.builder()
+                           .accessKey(scmSecret.decryptToCharArray(new SecretName("aws_qa_setup_access_key")))
+                           .secretKey(scmSecret.decryptToCharArray(new SecretName("aws_qa_setup_secret_key")))
                            .accountId(account.getUuid())
                            .build())
             .withUsageRestrictions(getAllAppAllEnvUsageRestrictions())
