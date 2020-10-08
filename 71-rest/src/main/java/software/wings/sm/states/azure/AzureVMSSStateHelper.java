@@ -1,9 +1,12 @@
 package software.wings.sm.states.azure;
 
 import static com.google.common.collect.Lists.newArrayList;
+import static io.harness.azure.model.AzureConstants.CREATE_NEW_VMSS_COMMAND_UNIT;
 import static io.harness.azure.model.AzureConstants.DELETE_NEW_VMSS;
+import static io.harness.azure.model.AzureConstants.DELETE_OLD_VIRTUAL_MACHINE_SCALE_SETS_COMMAND_UNIT;
 import static io.harness.azure.model.AzureConstants.DEPLOYMENT_STATUS;
 import static io.harness.azure.model.AzureConstants.DOWN_SCALE_COMMAND_UNIT;
+import static io.harness.azure.model.AzureConstants.DOWN_SCALE_SETS_COMMAND_UNIT;
 import static io.harness.azure.model.AzureConstants.DOWN_SCALE_STEADY_STATE_WAIT_COMMAND_UNIT;
 import static io.harness.azure.model.AzureConstants.SETUP_COMMAND_UNIT;
 import static io.harness.azure.model.AzureConstants.STEADY_STATE_TIMEOUT_REGEX;
@@ -372,8 +375,11 @@ public class AzureVMSSStateHelper {
   }
 
   public List<CommandUnit> generateSetupCommandUnits() {
-    return ImmutableList.of(
-        new AzureVMSSDummyCommandUnit(SETUP_COMMAND_UNIT), new AzureVMSSDummyCommandUnit(DEPLOYMENT_STATUS));
+    return ImmutableList.of(new AzureVMSSDummyCommandUnit(SETUP_COMMAND_UNIT),
+        new AzureVMSSDummyCommandUnit(DOWN_SCALE_SETS_COMMAND_UNIT),
+        new AzureVMSSDummyCommandUnit(DOWN_SCALE_STEADY_STATE_WAIT_COMMAND_UNIT),
+        new AzureVMSSDummyCommandUnit(DELETE_OLD_VIRTUAL_MACHINE_SCALE_SETS_COMMAND_UNIT),
+        new AzureVMSSDummyCommandUnit(CREATE_NEW_VMSS_COMMAND_UNIT), new AzureVMSSDummyCommandUnit(DEPLOYMENT_STATUS));
   }
 
   public AzureVMSSStateData populateStateData(ExecutionContext context) {

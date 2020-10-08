@@ -1,6 +1,8 @@
 package software.wings.delegatetasks.azure.taskhandler;
 
 import static io.harness.azure.model.AzureConstants.DEFAULT_AZURE_VMSS_TIMEOUT_MIN;
+import static io.harness.azure.model.AzureConstants.DEPLOYMENT_ERROR;
+import static io.harness.azure.model.AzureConstants.DEPLOYMENT_STATUS;
 import static io.harness.azure.model.AzureConstants.DOWN_SCALE_COMMAND_UNIT;
 import static io.harness.azure.model.AzureConstants.DOWN_SCALE_STEADY_STATE_WAIT_COMMAND_UNIT;
 import static io.harness.azure.model.AzureConstants.SKIP_RESIZE_SCALE_SET;
@@ -232,13 +234,13 @@ public class AzureVMSSDeployTaskHandler extends AzureVMSSTaskHandler {
     int newScaleSetInstancesSize = deployTaskResponse.getVmInstancesAdded().size();
     int oldScaleSetInstancesSize = deployTaskResponse.getVmInstancesExisting().size();
 
-    ExecutionLogCallback logCallBack = getLogCallBack(deployTaskParameters, deployTaskParameters.getCommandName());
+    ExecutionLogCallback logCallBack = getLogCallBack(deployTaskParameters, DEPLOYMENT_STATUS);
     logCallBack.saveExecutionLog(
-        format("Total number of new instances deployed for Scale Set = [%s] is [%d] ",
+        format("Total number of new instances deployed for Scale Set: [%s] is [%d] ",
             isEmpty(newVirtualMachineScaleSetName) ? "" : newVirtualMachineScaleSetName, newScaleSetInstancesSize),
         INFO);
     logCallBack.saveExecutionLog(
-        format("Total number of instances for old Scale Set [%s] is [%d]",
+        format("Total number of instances for old Scale Set: [%s] is [%d]",
             isEmpty(oldVirtualMachineScaleSetName) ? "" : newVirtualMachineScaleSetName, oldScaleSetInstancesSize),
         INFO, SUCCESS);
 
@@ -250,7 +252,7 @@ public class AzureVMSSDeployTaskHandler extends AzureVMSSTaskHandler {
 
   private AzureVMSSTaskExecutionResponse logAndGenerateSFailureResponse(
       Exception ex, AzureVMSSDeployTaskParameters deployTaskParameters) {
-    ExecutionLogCallback logCallBack = getLogCallBack(deployTaskParameters, deployTaskParameters.getCommandName());
+    ExecutionLogCallback logCallBack = getLogCallBack(deployTaskParameters, DEPLOYMENT_ERROR);
     String errorMessage = ExceptionUtils.getMessage(ex);
     logCallBack.saveExecutionLog(format("Exception: [%s].", errorMessage), ERROR);
     logger.error(errorMessage, ex);

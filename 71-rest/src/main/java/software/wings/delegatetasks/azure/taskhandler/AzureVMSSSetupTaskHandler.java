@@ -1,6 +1,9 @@
 package software.wings.delegatetasks.azure.taskhandler;
 
-import static io.harness.azure.model.AzureConstants.DOWN_SCALE_COMMAND_UNIT;
+import static io.harness.azure.model.AzureConstants.CREATE_NEW_VMSS_COMMAND_UNIT;
+import static io.harness.azure.model.AzureConstants.DELETE_OLD_VIRTUAL_MACHINE_SCALE_SETS_COMMAND_UNIT;
+import static io.harness.azure.model.AzureConstants.DEPLOYMENT_STATUS;
+import static io.harness.azure.model.AzureConstants.DOWN_SCALE_SETS_COMMAND_UNIT;
 import static io.harness.azure.model.AzureConstants.DOWN_SCALE_STEADY_STATE_WAIT_COMMAND_UNIT;
 import static io.harness.azure.model.AzureConstants.GALLERY_IMAGE_ID_PATTERN;
 import static io.harness.azure.model.AzureConstants.HARNESS_AUTOSCALING_GROUP_TAG_NAME;
@@ -53,6 +56,7 @@ import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import software.wings.beans.command.ExecutionLogCallback;
 
 import java.util.Comparator;
@@ -75,46 +79,35 @@ public class AzureVMSSSetupTaskHandler extends AzureVMSSTaskHandler {
   protected AzureVMSSTaskExecutionResponse executeTaskInternal(
       AzureVMSSTaskParameters azureVMSSTaskParameters, AzureConfig azureConfig) {
     AzureVMSSSetupTaskParameters setupTaskParameters = (AzureVMSSSetupTaskParameters) azureVMSSTaskParameters;
-    ExecutionLogCallback logCallback = getLogCallBack(azureVMSSTaskParameters, SETUP_COMMAND_UNIT);
+    ExecutionLogCallback setupLogCallback = getLogCallBack(azureVMSSTaskParameters, SETUP_COMMAND_UNIT);
 
-    logCallback.saveExecutionLog("Starting Azure Virtual Machine Scale Set Setup", INFO);
+    setupLogCallback.saveExecutionLog("Starting Azure Virtual Machine Scale Set Setup", INFO);
 
-    logCallback.saveExecutionLog("Getting all Harness managed Virtual Machine Scale Sets", INFO);
     List<VirtualMachineScaleSet> harnessVMSSSortedByCreationTimeReverse =
-        getHarnessMangedVMSSSortedByCreationTime(azureConfig, setupTaskParameters);
-    logCallback.saveExecutionLog(
-        format("Found [%s] Harness manged Virtual Machine Scale Sets", harnessVMSSSortedByCreationTimeReverse.size()),
-        INFO);
+        logAndGetHarnessMangedVMSSSortedByCreationTime(azureConfig, setupTaskParameters, setupLogCallback);
 
-    logCallback.saveExecutionLog(
-        "Getting the most recent active Virtual Machine Scale Set with non zero capacity", INFO);
-    VirtualMachineScaleSet mostRecentActiveVMSS = getMostRecentActiveVMSS(harnessVMSSSortedByCreationTimeReverse);
-    logCallback.saveExecutionLog(mostRecentActiveVMSS != null
-            ? format("Found most recent active Virtual Machine Scale Set: [%s]", mostRecentActiveVMSS.name())
-            : "Couldn't find most recent active Virtual Machine Scale Set with non zero capacity",
-        INFO);
+    VirtualMachineScaleSet mostRecentActiveVMSS =
+        logAndGetMostRecentActiveVMSS(harnessVMSSSortedByCreationTimeReverse, setupLogCallback);
 
-    downsizeLatestVersionsKeptVMSSs(
+    Integer newHarnessRevision = logAndGetNewHarnessRevision(harnessVMSSSortedByCreationTimeReverse, setupLogCallback);
+
+    String newVirtualMachineScaleSetName =
+        logAndGetNewVirtualMachineScaleSetName(setupTaskParameters, newHarnessRevision, setupLogCallback);
+
+    downsizeLatestOlderVersions(
         azureConfig, setupTaskParameters, harnessVMSSSortedByCreationTimeReverse, mostRecentActiveVMSS);
-    deleteVMSSsOlderThenLatestVersionsToKeep(
-        azureConfig, harnessVMSSSortedByCreationTimeReverse, mostRecentActiveVMSS, logCallback);
 
-    logCallback.saveExecutionLog("Getting the new revision of Virtual Machine Scale Set", INFO);
-    Integer newHarnessRevision = getNewHarnessRevision(harnessVMSSSortedByCreationTimeReverse);
-    logCallback.saveExecutionLog(format("New revision of Virtual Machine Scale Set: [%s]", newHarnessRevision), INFO);
+    deleteVMSSsOlderThenLatestVersionsToKeep(azureConfig, harnessVMSSSortedByCreationTimeReverse, mostRecentActiveVMSS,
+        getLogCallBack(azureVMSSTaskParameters, DELETE_OLD_VIRTUAL_MACHINE_SCALE_SETS_COMMAND_UNIT));
 
-    logCallback.saveExecutionLog("Getting the new name of Virtual Machine Scale Set", INFO);
-    String newVirtualMachineScaleSetName = getNewVirtualMachineScaleSetName(setupTaskParameters, newHarnessRevision);
-    logCallback.saveExecutionLog(
-        format("New name of Virtual Machine Scale Set: [%s]", newVirtualMachineScaleSetName), INFO);
-
-    createVirtualMachineScaleSet(
-        azureConfig, setupTaskParameters, newHarnessRevision, newVirtualMachineScaleSetName, logCallback);
+    createVirtualMachineScaleSet(azureConfig, setupTaskParameters, newHarnessRevision, newVirtualMachineScaleSetName,
+        getLogCallBack(azureVMSSTaskParameters, CREATE_NEW_VMSS_COMMAND_UNIT));
 
     AzureVMSSSetupTaskResponse azureVMSSSetupTaskResponse = buildAzureVMSSSetupTaskResponse(
         azureConfig, newHarnessRevision, newVirtualMachineScaleSetName, mostRecentActiveVMSS, setupTaskParameters);
 
-    logCallback.saveExecutionLog(
+    ExecutionLogCallback finalLogCallback = getLogCallBack(azureVMSSTaskParameters, DEPLOYMENT_STATUS);
+    finalLogCallback.saveExecutionLog(
         format("Completed Azure VMSS Setup with new scale set name: [%s]", newVirtualMachineScaleSetName), INFO,
         CommandExecutionStatus.SUCCESS);
 
@@ -122,6 +115,75 @@ public class AzureVMSSSetupTaskHandler extends AzureVMSSTaskHandler {
         .commandExecutionStatus(SUCCESS)
         .azureVMSSTaskResponse(azureVMSSSetupTaskResponse)
         .build();
+  }
+
+  @NotNull
+  private String logAndGetNewVirtualMachineScaleSetName(AzureVMSSSetupTaskParameters setupTaskParameters,
+      Integer newHarnessRevision, ExecutionLogCallback setupLogCallback) {
+    setupLogCallback.saveExecutionLog("Getting the new name of Virtual Machine Scale Set", INFO);
+    String newVirtualMachineScaleSetName = getNewVirtualMachineScaleSetName(setupTaskParameters, newHarnessRevision);
+    setupLogCallback.saveExecutionLog(
+        format("New name of Virtual Machine Scale Set: [%s]", newVirtualMachineScaleSetName), INFO);
+    return newVirtualMachineScaleSetName;
+  }
+
+  @NotNull
+  private String getNewVirtualMachineScaleSetName(
+      AzureVMSSSetupTaskParameters setupTaskParameters, Integer harnessRevision) {
+    String vmssNamePrefix = setupTaskParameters.getVmssNamePrefix();
+    if (isBlank(vmssNamePrefix)) {
+      throw new InvalidRequestException("Virtual Machine Scale Set prefix name can't be null or empty");
+    }
+    return AzureResourceUtility.getVMSSName(vmssNamePrefix, harnessRevision);
+  }
+
+  @NotNull
+  private Integer logAndGetNewHarnessRevision(
+      List<VirtualMachineScaleSet> harnessVMSSSortedByCreationTimeReverse, ExecutionLogCallback setupLogCallback) {
+    setupLogCallback.saveExecutionLog("Getting the new revision of Virtual Machine Scale Set", INFO);
+    Integer newHarnessRevision = getNewHarnessRevision(harnessVMSSSortedByCreationTimeReverse);
+    setupLogCallback.saveExecutionLog(
+        format("New revision of Virtual Machine Scale Set: [%s]", newHarnessRevision), INFO);
+    return newHarnessRevision;
+  }
+
+  @NotNull
+  private Integer getNewHarnessRevision(List<VirtualMachineScaleSet> harnessManagedVMSS) {
+    int latestMaxRevision = getHarnessManagedScaleSetsLatestRevision(harnessManagedVMSS);
+    return latestMaxRevision + 1;
+  }
+
+  @Nullable
+  private VirtualMachineScaleSet logAndGetMostRecentActiveVMSS(
+      List<VirtualMachineScaleSet> harnessVMSSSortedByCreationTimeReverse, ExecutionLogCallback setupLogCallback) {
+    setupLogCallback.saveExecutionLog(
+        "Getting the most recent active Virtual Machine Scale Set with non zero capacity", INFO);
+    VirtualMachineScaleSet mostRecentActiveVMSS = getMostRecentActiveVMSS(harnessVMSSSortedByCreationTimeReverse);
+    setupLogCallback.saveExecutionLog(mostRecentActiveVMSS != null
+            ? format("Found most recent active Virtual Machine Scale Set: [%s]", mostRecentActiveVMSS.name())
+            : "Couldn't find most recent active Virtual Machine Scale Set with non zero capacity",
+        INFO);
+    return mostRecentActiveVMSS;
+  }
+
+  private VirtualMachineScaleSet getMostRecentActiveVMSS(List<VirtualMachineScaleSet> harnessManagedScaleSets) {
+    return harnessManagedScaleSets.stream()
+        .filter(Objects::nonNull)
+        .filter(scaleSet -> scaleSet.capacity() > 0)
+        .findFirst()
+        .orElse(null);
+  }
+
+  @NotNull
+  private List<VirtualMachineScaleSet> logAndGetHarnessMangedVMSSSortedByCreationTime(AzureConfig azureConfig,
+      AzureVMSSSetupTaskParameters setupTaskParameters, ExecutionLogCallback setupLogCallback) {
+    setupLogCallback.saveExecutionLog("Getting all Harness managed Virtual Machine Scale Sets", INFO);
+    List<VirtualMachineScaleSet> harnessVMSSSortedByCreationTimeReverse =
+        getHarnessMangedVMSSSortedByCreationTime(azureConfig, setupTaskParameters);
+    setupLogCallback.saveExecutionLog(
+        format("Found [%s] Harness manged Virtual Machine Scale Sets", harnessVMSSSortedByCreationTimeReverse.size()),
+        INFO);
+    return harnessVMSSSortedByCreationTimeReverse;
   }
 
   private List<VirtualMachineScaleSet> getHarnessMangedVMSSSortedByCreationTime(
@@ -165,17 +227,8 @@ public class AzureVMSSSetupTaskHandler extends AzureVMSSTaskHandler {
     return harnessManagedVMSS.stream().sorted(createdTimeComparator).collect(Collectors.toList());
   }
 
-  private VirtualMachineScaleSet getMostRecentActiveVMSS(List<VirtualMachineScaleSet> harnessManagedScaleSets) {
-    return harnessManagedScaleSets.stream()
-        .filter(Objects::nonNull)
-        .filter(scaleSet -> scaleSet.capacity() > 0)
-        .findFirst()
-        .orElse(null);
-  }
-
-  private void downsizeLatestVersionsKeptVMSSs(AzureConfig azureConfig,
-      AzureVMSSSetupTaskParameters setupTaskParameters, List<VirtualMachineScaleSet> sortedHarnessManagedVMSSs,
-      VirtualMachineScaleSet mostRecentActiveVMSS) {
+  private void downsizeLatestOlderVersions(AzureConfig azureConfig, AzureVMSSSetupTaskParameters setupTaskParameters,
+      List<VirtualMachineScaleSet> sortedHarnessManagedVMSSs, VirtualMachineScaleSet mostRecentActiveVMSS) {
     if (isEmpty(sortedHarnessManagedVMSSs) || mostRecentActiveVMSS == null) {
       return;
     }
@@ -200,12 +253,22 @@ public class AzureVMSSSetupTaskHandler extends AzureVMSSTaskHandler {
   public void downsizeVMSSs(AzureConfig azureConfig, AzureVMSSSetupTaskParameters setupTaskParameters,
       List<VirtualMachineScaleSet> vmssForDownsize, String subscriptionId, String resourceGroupName,
       int autoScalingSteadyStateTimeout) {
+    ExecutionLogCallback downScaleSetsLogger = getLogCallBack(setupTaskParameters, DOWN_SCALE_SETS_COMMAND_UNIT);
     vmssForDownsize.stream().filter(vmss -> vmss.capacity() > 0).forEach(vmss -> {
       String virtualMachineScaleSetName = vmss.name();
+      logAndClearAutoScaleSettingOnTargetResourceId(azureConfig, resourceGroupName, vmss, downScaleSetsLogger);
       updateVMSSCapacityAndWaitForSteadyState(azureConfig, setupTaskParameters, virtualMachineScaleSetName,
-          subscriptionId, resourceGroupName, 0, autoScalingSteadyStateTimeout, DOWN_SCALE_COMMAND_UNIT,
+          subscriptionId, resourceGroupName, 0, autoScalingSteadyStateTimeout, DOWN_SCALE_SETS_COMMAND_UNIT,
           DOWN_SCALE_STEADY_STATE_WAIT_COMMAND_UNIT);
     });
+  }
+
+  public void logAndClearAutoScaleSettingOnTargetResourceId(AzureConfig azureConfig, String resourceGroupName,
+      VirtualMachineScaleSet vmss, ExecutionLogCallback downScaleSetsLogger) {
+    String virtualMachineScaleSetName = vmss.name();
+    downScaleSetsLogger.saveExecutionLog(format("Clear autoscale settings: [%s]", virtualMachineScaleSetName), INFO);
+    azureAutoScaleSettingsClient.clearAutoScaleSettingOnTargetResourceId(azureConfig, resourceGroupName, vmss.id());
+    downScaleSetsLogger.saveExecutionLog("Autoscale settings deleted successfully ", INFO);
   }
 
   private void deleteVMSSsOlderThenLatestVersionsToKeep(AzureConfig azureConfig,
@@ -245,12 +308,6 @@ public class AzureVMSSSetupTaskHandler extends AzureVMSSTaskHandler {
     executionLogCallback.saveExecutionLog("Successfully deleted Virtual Scale Sets", INFO);
   }
 
-  @NotNull
-  private Integer getNewHarnessRevision(List<VirtualMachineScaleSet> harnessManagedVMSS) {
-    int latestMaxRevision = getHarnessManagedScaleSetsLatestRevision(harnessManagedVMSS);
-    return latestMaxRevision + 1;
-  }
-
   private int getHarnessManagedScaleSetsLatestRevision(List<VirtualMachineScaleSet> harnessManagedScaleSets) {
     return harnessManagedScaleSets.stream().mapToInt(this ::getScaleSetLatestRevision).max().orElse(0);
   }
@@ -263,16 +320,6 @@ public class AzureVMSSSetupTaskHandler extends AzureVMSSTaskHandler {
         .mapToInt(tagEntry -> getRevisionFromTag(tagEntry.getValue()))
         .max()
         .orElse(0);
-  }
-
-  @NotNull
-  private String getNewVirtualMachineScaleSetName(
-      AzureVMSSSetupTaskParameters setupTaskParameters, Integer harnessRevision) {
-    String vmssNamePrefix = setupTaskParameters.getVmssNamePrefix();
-    if (isBlank(vmssNamePrefix)) {
-      throw new InvalidRequestException("Virtual Machine Scale Set prefix name can't be null or empty");
-    }
-    return AzureResourceUtility.getVMSSName(vmssNamePrefix, harnessRevision);
   }
 
   private void createVirtualMachineScaleSet(AzureConfig azureConfig, AzureVMSSSetupTaskParameters setupTaskParameters,
