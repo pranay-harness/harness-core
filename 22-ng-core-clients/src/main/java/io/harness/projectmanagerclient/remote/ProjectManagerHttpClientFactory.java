@@ -86,7 +86,7 @@ public class ProjectManagerHttpClientFactory implements Provider<ProjectManagerC
           .getUnsafeOkHttpClientBuilder(baseUrl, projectManagerClientConfig.getConnectTimeOutSeconds(),
               projectManagerClientConfig.getReadTimeOutSeconds())
           .connectionPool(new ConnectionPool())
-          .retryOnConnectionFailure(false)
+          .retryOnConnectionFailure(true)
           .addInterceptor(getAuthorizationInterceptor())
           .build();
     } catch (Exception e) {

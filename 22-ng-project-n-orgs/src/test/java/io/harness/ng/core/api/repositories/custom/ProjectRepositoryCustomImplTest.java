@@ -1,6 +1,8 @@
 package io.harness.ng.core.api.repositories.custom;
 
 import static io.harness.rule.OwnerRule.KARAN;
+import static java.util.Collections.emptyList;
+import static java.util.Collections.singletonList;
 import static junit.framework.TestCase.assertEquals;
 import static junit.framework.TestCase.assertFalse;
 import static junit.framework.TestCase.assertTrue;
@@ -20,7 +22,10 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.ArgumentCaptor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.mongodb.core.MongoTemplate;
+import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.query.Update;
 
@@ -32,6 +37,29 @@ public class ProjectRepositoryCustomImplTest {
   public void setup() {
     mongoTemplate = mock(MongoTemplate.class);
     projectRepository = new ProjectRepositoryCustomImpl(mongoTemplate);
+  }
+
+  @Test
+  @Owner(developers = KARAN)
+  @Category(UnitTests.class)
+  public void testFindAll() {
+    Project project = Project.builder()
+                          .accountIdentifier(randomAlphabetic(10))
+                          .orgIdentifier(randomAlphabetic(10))
+                          .identifier(randomAlphabetic(10))
+                          .name(randomAlphabetic(10))
+                          .color(randomAlphabetic(10))
+                          .build();
+    Pageable pageable = Pageable.unpaged();
+
+    when(mongoTemplate.find(any(Query.class), eq(Project.class))).thenReturn(singletonList(project));
+    when(mongoTemplate.count(any(Query.class), eq(Project.class))).thenReturn(1L);
+
+    Page<Project> projects = projectRepository.findAll(new Criteria(), pageable);
+
+    assertEquals(pageable, projects.getPageable());
+    assertEquals(1, projects.getContent().size());
+    assertEquals(project, projects.getContent().get(0));
   }
 
   @Test

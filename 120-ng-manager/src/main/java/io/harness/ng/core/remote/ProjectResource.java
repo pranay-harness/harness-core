@@ -4,7 +4,9 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.ng.core.remote.ProjectMapper.writeDTO;
 import static io.harness.utils.PageUtils.getNGPageResponse;
 import static io.harness.utils.PageUtils.getPageRequest;
+import static java.lang.Long.parseLong;
 import static javax.ws.rs.core.HttpHeaders.IF_MATCH;
+import static org.apache.commons.lang3.StringUtils.isNumeric;
 
 import com.google.common.collect.ImmutableList;
 import com.google.inject.Inject;
@@ -114,7 +116,7 @@ public class ProjectResource {
       @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier,
       @NotNull @QueryParam(NGCommonEntityConstants.ORG_KEY) String orgIdentifier,
       @NotNull @Valid ProjectDTO projectDTO) {
-    projectDTO.setVersion(Optional.ofNullable(ifMatch).map(Long::parseLong).orElse(null));
+    projectDTO.setVersion(isNumeric(ifMatch) ? parseLong(ifMatch) : null);
     Project updatedProject = projectService.update(accountIdentifier, orgIdentifier, identifier, projectDTO);
     return ResponseDTO.newResponse(updatedProject.getVersion().toString(), writeDTO(updatedProject));
   }
@@ -127,6 +129,6 @@ public class ProjectResource {
       @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier,
       @NotNull @QueryParam(NGCommonEntityConstants.ORG_KEY) String orgIdentifier) {
     return ResponseDTO.newResponse(projectService.delete(
-        accountIdentifier, orgIdentifier, identifier, Optional.ofNullable(ifMatch).map(Long::parseLong).orElse(null)));
+        accountIdentifier, orgIdentifier, identifier, isNumeric(ifMatch) ? parseLong(ifMatch) : null));
   }
 }
