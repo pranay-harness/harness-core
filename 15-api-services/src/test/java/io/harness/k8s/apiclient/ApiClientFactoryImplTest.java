@@ -1,5 +1,6 @@
 package io.harness.k8s.apiclient;
 
+import static io.harness.rule.OwnerRule.ABOSII;
 import static io.harness.rule.OwnerRule.AVMOHAN;
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -10,6 +11,7 @@ import io.harness.rule.Owner;
 import io.kubernetes.client.openapi.ApiClient;
 import io.kubernetes.client.openapi.auth.ApiKeyAuth;
 import okio.ByteString;
+import org.apache.commons.codec.binary.Base64;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -128,6 +130,22 @@ public class ApiClientFactoryImplTest extends CategoryTest {
                                             .masterUrl("https://34.66.78.221")
                                             .clientCert(TEST_CERT.toCharArray())
                                             .clientKey(TEST_KEY.toCharArray())
+                                            .build();
+
+    ApiClient client = apiClientFactory.getClient(kubernetesConfig);
+    assertThat(client.getBasePath()).isEqualTo("https://34.66.78.221");
+    assertThat(client.isVerifyingSsl()).isEqualTo(false);
+    assertThat(client.getKeyManagers()).isNotEmpty();
+  }
+
+  @Test
+  @Owner(developers = ABOSII)
+  @Category(UnitTests.class)
+  public void testGetClientWithClientCertificateAuthBase64Encoded() {
+    KubernetesConfig kubernetesConfig = KubernetesConfig.builder()
+                                            .masterUrl("https://34.66.78.221")
+                                            .clientCert(Base64.encodeBase64String(TEST_CERT.getBytes()).toCharArray())
+                                            .clientKey(Base64.encodeBase64String(TEST_KEY.getBytes()).toCharArray())
                                             .build();
 
     ApiClient client = apiClientFactory.getClient(kubernetesConfig);

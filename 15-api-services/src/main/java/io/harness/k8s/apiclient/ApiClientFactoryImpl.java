@@ -17,6 +17,7 @@ import io.kubernetes.client.util.credentials.ClientCertificateAuthentication;
 import io.kubernetes.client.util.credentials.UsernamePasswordAuthentication;
 import okhttp3.OkHttpClient;
 
+import java.util.Base64;
 import java.util.concurrent.TimeUnit;
 
 @Singleton
@@ -49,9 +50,8 @@ public class ApiClientFactoryImpl implements ApiClientFactory {
       clientBuilder.setAuthentication(new UsernamePasswordAuthentication(
           new String(kubernetesConfig.getUsername()), new String(kubernetesConfig.getPassword())));
     } else if (kubernetesConfig.getClientCert() != null && kubernetesConfig.getClientKey() != null) {
-      clientBuilder.setAuthentication(
-          new ClientCertificateAuthentication(new String(kubernetesConfig.getClientCert()).getBytes(UTF_8),
-              new String(kubernetesConfig.getClientKey()).getBytes(UTF_8)));
+      clientBuilder.setAuthentication(new ClientCertificateAuthentication(
+          decodeIfRequired(kubernetesConfig.getClientCert()), decodeIfRequired(kubernetesConfig.getClientKey())));
     } else if (tokenRetriever != null && KubernetesClusterAuthType.OIDC == kubernetesConfig.getAuthType()) {
       clientBuilder.setAuthentication(new AccessTokenAuthentication(tokenRetriever.getOidcIdToken(kubernetesConfig)));
     }
@@ -60,5 +60,15 @@ public class ApiClientFactoryImpl implements ApiClientFactory {
     OkHttpClient httpClient = apiClient.getHttpClient().newBuilder().readTimeout(0, TimeUnit.SECONDS).build();
     apiClient.setHttpClient(httpClient);
     return apiClient;
+  }
+
+  // try catch is used as logic to detect if value is in base64 or not and no need to keep exception context
+  @SuppressWarnings("squid:S1166")
+  private static byte[] decodeIfRequired(char[] data) {
+    try {
+      return Base64.getDecoder().decode(new String(data));
+    } catch (IllegalArgumentException ignore) {
+      return new String(data).getBytes(UTF_8);
+    }
   }
 }
