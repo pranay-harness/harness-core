@@ -1,8 +1,8 @@
 package io.harness.ccm;
 
-import static io.harness.beans.EnvFilter.FilterType.NON_PROD;
-import static io.harness.beans.EnvFilter.FilterType.PROD;
-import static io.harness.beans.GenericEntityFilter.FilterType.ALL;
+import static software.wings.security.EnvFilter.FilterType.NON_PROD;
+import static software.wings.security.EnvFilter.FilterType.PROD;
+import static software.wings.security.GenericEntityFilter.FilterType.ALL;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -10,15 +10,15 @@ import com.google.common.collect.Sets;
 import com.google.inject.Inject;
 
 import com.segment.analytics.messages.TrackMessage;
-import io.harness.beans.EnvFilter;
-import io.harness.beans.GenericEntityFilter;
-import io.harness.beans.UsageRestrictions;
 import io.harness.ccm.config.CCMConfig;
 import io.harness.event.handler.impl.segment.SegmentHelper;
 import lombok.extern.slf4j.Slf4j;
 import software.wings.beans.Delegate;
 import software.wings.beans.KubernetesClusterConfig;
 import software.wings.beans.SettingAttribute;
+import software.wings.security.EnvFilter;
+import software.wings.security.GenericEntityFilter;
+import software.wings.security.UsageRestrictions;
 import software.wings.service.impl.DelegateObserver;
 import software.wings.service.intfc.SettingsService;
 

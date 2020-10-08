@@ -23,7 +23,6 @@ import static software.wings.settings.SettingVariableTypes.SECRET_TEXT;
 import com.google.common.collect.Sets;
 import com.google.inject.Inject;
 
-import io.harness.beans.UsageRestrictions;
 import io.harness.category.element.UnitTests;
 import io.harness.iterator.PersistenceIteratorFactory;
 import io.harness.mongo.iterator.MongoPersistenceIterator.MongoPersistenceIteratorBuilder;
@@ -51,6 +50,7 @@ import software.wings.beans.AppDynamicsConfig;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.SettingAttribute.SettingCategory;
 import software.wings.dl.WingsPersistence;
+import software.wings.security.UsageRestrictions;
 import software.wings.security.encryption.EncryptedData;
 import software.wings.security.encryption.EncryptedDataParent;
 import software.wings.service.impl.SettingValidationService;

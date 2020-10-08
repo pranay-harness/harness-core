@@ -1,11 +1,11 @@
 package io.harness.serializer.kryo;
 
 import com.esotericsoftware.kryo.Kryo;
-import io.harness.beans.EnvFilter;
-import io.harness.beans.GenericEntityFilter;
-import io.harness.beans.UsageRestrictions;
-import io.harness.beans.WorkflowFilter;
 import io.harness.serializer.KryoRegistrar;
+import software.wings.security.EnvFilter;
+import software.wings.security.GenericEntityFilter;
+import software.wings.security.UsageRestrictions;
+import software.wings.security.WorkflowFilter;
 
 public class RbacCoreKryoRegistrar implements KryoRegistrar {
   @Override

@@ -1,4 +1,4 @@
-package io.harness.beans;
+package software.wings.security;
 
 import static io.harness.annotations.dev.HarnessTeam.PL;
 

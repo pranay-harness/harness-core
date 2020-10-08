@@ -49,7 +49,6 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import io.harness.beans.Encryptable;
-import io.harness.beans.UsageRestrictions;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.encryption.EncryptionReflectUtils;
 import io.harness.exception.InvalidRequestException;
@@ -61,6 +60,7 @@ import org.apache.commons.lang3.StringUtils;
 import software.wings.annotation.EncryptableSetting;
 import software.wings.beans.FeatureName;
 import software.wings.beans.SettingAttribute;
+import software.wings.security.UsageRestrictions;
 import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.UsageRestrictionsService;
 import software.wings.service.intfc.security.ManagerDecryptionService;

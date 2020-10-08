@@ -15,7 +15,6 @@ import static org.mockito.MockitoAnnotations.initMocks;
 
 import com.google.inject.Inject;
 
-import io.harness.beans.UsageRestrictions;
 import io.harness.category.element.UnitTests;
 import io.harness.exception.WingsException;
 import io.harness.rule.Owner;
@@ -48,6 +47,7 @@ import software.wings.beans.User;
 import software.wings.delegatetasks.DelegateProxyFactory;
 import software.wings.features.api.PremiumFeature;
 import software.wings.resources.secretsmanagement.CyberArkResource;
+import software.wings.security.UsageRestrictions;
 import software.wings.security.UserThreadLocal;
 import software.wings.security.encryption.EncryptedData;
 import software.wings.security.encryption.EncryptedData.EncryptedDataKeys;

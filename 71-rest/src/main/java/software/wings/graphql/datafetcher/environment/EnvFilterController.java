@@ -2,9 +2,6 @@ package software.wings.graphql.datafetcher.environment;
 
 import static com.google.common.collect.Iterables.getFirst;
 import static com.google.common.collect.Sets.difference;
-import static io.harness.beans.EnvFilter.FilterType.NON_PROD;
-import static io.harness.beans.EnvFilter.FilterType.PROD;
-import static io.harness.beans.EnvFilter.FilterType.SELECTED;
 import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
 import static io.harness.beans.SearchFilter.Operator.IN;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
@@ -13,11 +10,13 @@ import static java.lang.String.format;
 import static java.lang.String.join;
 import static org.apache.commons.collections4.SetUtils.emptyIfNull;
 import static software.wings.graphql.schema.type.QLEnvFilterType.PRODUCTION_ENVIRONMENTS;
+import static software.wings.security.EnvFilter.FilterType.NON_PROD;
+import static software.wings.security.EnvFilter.FilterType.PROD;
+import static software.wings.security.EnvFilter.FilterType.SELECTED;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
-import io.harness.beans.EnvFilter;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.beans.SearchFilter;
@@ -26,6 +25,7 @@ import software.wings.beans.Environment;
 import software.wings.graphql.schema.type.QLEnvFilter;
 import software.wings.graphql.schema.type.QLEnvFilterType;
 import software.wings.graphql.schema.type.secrets.QLEnvScopeFilter;
+import software.wings.security.EnvFilter;
 import software.wings.service.intfc.EnvironmentService;
 
 import java.util.Collections;

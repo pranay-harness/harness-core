@@ -6,12 +6,12 @@ import com.google.inject.Inject;
 
 import com.codahale.metrics.annotation.ExceptionMetered;
 import com.codahale.metrics.annotation.Timed;
-import io.harness.beans.UsageRestrictions;
 import io.harness.rest.RestResponse;
 import io.swagger.annotations.Api;
 import org.hibernate.validator.constraints.NotEmpty;
 import software.wings.beans.security.restrictions.RestrictionsSummary;
 import software.wings.security.PermissionAttribute.ResourceType;
+import software.wings.security.UsageRestrictions;
 import software.wings.security.annotations.AuthRule;
 import software.wings.security.annotations.Scope;
 import software.wings.service.intfc.UsageRestrictionsService;
