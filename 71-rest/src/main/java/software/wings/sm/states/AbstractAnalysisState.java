@@ -697,8 +697,10 @@ public abstract class AbstractAnalysisState extends State {
       controlNodes = Sets.difference(allNodes, allPhaseNewNodes);
     }
     if (!skipVerification) {
-      // this is part of the contract with CDP team to always have test node if skipVerification is false.
-      Preconditions.checkState(isNotEmpty(testNodes), "Could not find newly deployed instances.");
+      if (!isEmptyTestNodesAllowed()) {
+        // this is part of the contract with CDP team to always have test node if skipVerification is false.
+        Preconditions.checkState(isNotEmpty(testNodes), "Could not find newly deployed instances.");
+      }
     }
     return CVInstanceApiResponse.builder()
         .controlNodes(controlNodes)
@@ -714,5 +716,9 @@ public abstract class AbstractAnalysisState extends State {
     private Set<String> testNodes;
     private boolean skipVerification;
     private Optional<Integer> newNodesTrafficShiftPercent;
+  }
+
+  protected boolean isEmptyTestNodesAllowed() {
+    return false;
   }
 }
