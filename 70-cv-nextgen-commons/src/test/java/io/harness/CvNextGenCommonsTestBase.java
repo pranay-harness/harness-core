@@ -8,7 +8,7 @@ import org.mockito.junit.MockitoJUnit;
 import org.mockito.junit.MockitoRule;
 
 @Slf4j
-public abstract class CvNextGenCommonsTest extends CategoryTest {
+public abstract class CvNextGenCommonsTestBase extends CategoryTest {
   @Rule public MockitoRule mockitoRule = MockitoJUnit.rule();
   @Rule public LifecycleRule lifecycleRule = new LifecycleRule();
   @Rule public CVNextGenCommonTestRule cvNextGenCommonTestRule = new CVNextGenCommonTestRule();
