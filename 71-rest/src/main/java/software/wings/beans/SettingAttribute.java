@@ -54,6 +54,7 @@ import static software.wings.settings.SettingVariableTypes.WINRM_CONNECTION_ATTR
 
 import com.google.common.collect.Lists;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.annotation.HarnessEntity;
 import io.harness.annotations.dev.OwnedBy;
@@ -68,20 +69,30 @@ import io.harness.mongo.index.Field;
 import io.harness.mongo.index.IndexType;
 import io.harness.mongo.index.NgUniqueIndex;
 import io.harness.persistence.AccountAccess;
+import io.harness.persistence.CreatedAtAware;
+import io.harness.persistence.CreatedByAware;
 import io.harness.persistence.NameAccess;
+import io.harness.persistence.PersistentEntity;
+import io.harness.persistence.UpdatedAtAware;
+import io.harness.persistence.UpdatedByAware;
+import io.harness.persistence.UuidAware;
 import io.harness.security.encryption.EncryptionType;
+import io.harness.validation.Update;
 import io.harness.yaml.BaseYaml;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
 import lombok.experimental.FieldNameConstants;
 import lombok.experimental.UtilityClass;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Entity;
+import org.mongodb.morphia.annotations.Id;
 import org.mongodb.morphia.annotations.Transient;
 import software.wings.beans.SettingAttribute.SettingAttributeKeys;
 import software.wings.beans.artifact.ArtifactStreamSummary;
+import software.wings.beans.entityinterface.ApplicationAccess;
 import software.wings.settings.SettingValue;
 import software.wings.settings.SettingVariableTypes;
 import software.wings.settings.validation.ConnectivityValidationAttributes;
@@ -90,6 +101,7 @@ import java.util.Collections;
 import java.util.List;
 import javax.annotation.Nonnull;
 import javax.validation.Valid;
+import javax.validation.constraints.NotNull;
 
 /**
  * Created by anubhaw on 5/16/16.
@@ -117,17 +129,47 @@ import javax.validation.Valid;
     fields = { @Field("value.type")
                , @Field("secretsMigrated"), @Field("accountId") })
 @Data
-@EqualsAndHashCode(callSuper = false)
+@EqualsAndHashCode(of = {"uuid", "appId"}, callSuper = false)
 @FieldNameConstants(innerTypeName = "SettingAttributeKeys")
 @Entity(value = "settingAttributes")
 @HarnessEntity(exportable = true)
-public class SettingAttribute extends Base implements NameAccess, PersistentRegularIterable, AccountAccess {
+public class SettingAttribute
+    implements PersistentEntity, UuidAware, CreatedAtAware, CreatedByAware, UpdatedAtAware, UpdatedByAware,
+               ApplicationAccess, NameAccess, PersistentRegularIterable, AccountAccess {
+  public static final String ID_KEY = "_id";
+  public static final String ACCOUNT_ID_KEY = "accountId";
   public static final String CATEGORY_KEY = "category";
   public static final String ENV_ID_KEY = "envId";
   public static final String NAME_KEY = "name";
   public static final String VALUE_TYPE_KEY = "value.type";
 
   @NotEmpty private String envId = GLOBAL_ENV_ID;
+  @Id @NotNull(groups = {Update.class}) @SchemaIgnore private String uuid;
+  @FdIndex @NotNull @SchemaIgnore protected String appId;
+  @SchemaIgnore private EmbeddedUser createdBy;
+  @SchemaIgnore @FdIndex private long createdAt;
+
+  @JsonIgnore @SchemaIgnore private EmbeddedUser lastUpdatedBy;
+  @SchemaIgnore @NotNull private long lastUpdatedAt;
+  @JsonIgnore
+  @SchemaIgnore
+  @Transient
+  private transient String entityYamlPath; // TODO:: remove it with changeSet batching
+
+  @JsonIgnore
+  @SchemaIgnore
+  public String getEntityYamlPath() {
+    return entityYamlPath;
+  }
+
+  @Setter @JsonIgnore @SchemaIgnore private transient boolean syncFromGit;
+
+  @JsonIgnore
+  @SchemaIgnore
+  public boolean isSyncFromGit() {
+    return syncFromGit;
+  }
+
   @NotEmpty String accountId;
   @NotEmpty @EntityName @Trimmed(message = "cannot have trailing whitespace") private String name;
   @Valid private SettingValue value;

@@ -155,7 +155,7 @@ public class UsageRestrictionsServiceImplTest extends CategoryTest {
     when(mockWingsPersistence.createQuery(SettingAttribute.class)).thenReturn(query);
 
     when(mockWingsPersistence.query(eq(SettingAttribute.class), any(PageRequest.class))).thenReturn(pageResponse);
-    when(mockWingsPersistence.saveAndGet(eq(SettingAttribute.class), any(SettingAttribute.class)))
+    when(mockWingsPersistence.save(any(SettingAttribute.class)))
         .thenAnswer(
             (Answer<SettingAttribute>) invocationOnMock -> (SettingAttribute) invocationOnMock.getArguments()[1]);
     when(appService.get(anyString())).thenReturn(application);

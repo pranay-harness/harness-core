@@ -107,7 +107,7 @@ public class HeatMapApiIntegrationTest extends BaseIntegrationTest {
                            .withEnvId(savedEnv.getUuid())
                            .withAppId(savedApp.getUuid())
                            .build();
-    settingAttributeId = wingsPersistence.saveAndGet(SettingAttribute.class, settingAttribute).getUuid();
+    settingAttributeId = wingsPersistence.save(settingAttribute);
 
     createPrometheusConfig();
     createNewRelicConfig();

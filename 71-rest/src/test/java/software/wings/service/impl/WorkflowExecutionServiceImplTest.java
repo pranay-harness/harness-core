@@ -1695,8 +1695,9 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
 
     ServiceTemplate serviceTemplate = getServiceTemplate(service);
 
-    SettingAttribute computeProvider = wingsPersistence.saveAndGet(SettingAttribute.class,
-        aSettingAttribute().withAppId(app.getUuid()).withValue(aPhysicalDataCenterConfig().build()).build());
+    SettingAttribute computeProvider =
+        aSettingAttribute().withAppId(app.getUuid()).withValue(aPhysicalDataCenterConfig().build()).build();
+    wingsPersistence.save(computeProvider);
 
     final InfrastructureDefinition infraDefinition = createInfraDefinition(computeProvider, "Name4", "host1");
 
@@ -1715,8 +1716,9 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
 
     ServiceTemplate serviceTemplate2 = getServiceTemplate(service2);
 
-    SettingAttribute computeProvider = wingsPersistence.saveAndGet(SettingAttribute.class,
-        aSettingAttribute().withAppId(app.getUuid()).withValue(aPhysicalDataCenterConfig().build()).build());
+    SettingAttribute computeProvider =
+        aSettingAttribute().withAppId(app.getUuid()).withValue(aPhysicalDataCenterConfig().build()).build();
+    wingsPersistence.save(computeProvider);
 
     final InfrastructureDefinition infrastructureDefinition =
         infrastructureDefinitionService.save(InfrastructureDefinition.builder()
@@ -2036,8 +2038,9 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
 
     ServiceTemplate serviceTemplate = getServiceTemplate(service);
 
-    SettingAttribute computeProvider = wingsPersistence.saveAndGet(SettingAttribute.class,
-        aSettingAttribute().withAppId(app.getUuid()).withValue(aPhysicalDataCenterConfig().build()).build());
+    SettingAttribute computeProvider =
+        aSettingAttribute().withAppId(app.getUuid()).withValue(aPhysicalDataCenterConfig().build()).build();
+    wingsPersistence.save(computeProvider);
 
     final InfrastructureDefinition infraDefinition = createInfraDefinition(computeProvider, "Name4", "host1");
 

@@ -166,7 +166,8 @@ public class CVConfigurationIntegrationTest extends BaseIntegrationTest {
                            .withEnvId(envId)
                            .withAppId(appId)
                            .build();
-    settingAttributeId = wingsPersistence.saveAndGet(SettingAttribute.class, settingAttribute).getUuid();
+    settingAttributeId = wingsPersistence.save(settingAttribute);
+    settingAttributeId = settingAttribute.getUuid();
 
     service = Service.builder().name("someServiceName").appId(appId).build();
     serviceId = wingsPersistence.saveAndGet(Service.class, service).getUuid();

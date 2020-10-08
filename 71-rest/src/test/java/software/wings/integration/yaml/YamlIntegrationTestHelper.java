@@ -125,7 +125,8 @@ public class YamlIntegrationTestHelper {
                            .build())
             .build();
 
-    return wingsPersistence.saveAndGet(SettingAttribute.class, gitConnector);
+    wingsPersistence.save(gitConnector);
+    return gitConnector;
   }
 
   public void decryptGitConfig(
