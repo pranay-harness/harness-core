@@ -149,6 +149,7 @@ import software.wings.api.pcf.PcfSetupStateExecutionData;
 import software.wings.api.pcf.SetupSweepingOutputPcf;
 import software.wings.api.pcf.SwapRouteRollbackSweepingOutputPcf;
 import software.wings.api.shellscript.provision.ShellScriptProvisionExecutionData;
+import software.wings.api.terraform.TerraformOutputVariables;
 import software.wings.api.terraform.TerraformProvisionInheritPlanElement;
 import software.wings.audit.AuditHeader;
 import software.wings.audit.AuditRecord;
@@ -1639,6 +1640,7 @@ public class ManagerMorphiaRegistrar implements MorphiaRegistrar {
     w.put("api.CustomDeploymentTypeInfo", CustomDeploymentTypeInfo.class);
     w.put("beans.command.FetchInstancesCommandUnit", FetchInstancesCommandUnit.class);
     w.put("api.AwsAmiInfoVariables", AwsAmiInfoVariables.class);
+    w.put("api.terraform.TerraformOutputVariables", TerraformOutputVariables.class);
 
     MorphiaRegistrarHelperPut sm = (name, clazz) -> w.put("sm.states.spotinst." + name, clazz);
 

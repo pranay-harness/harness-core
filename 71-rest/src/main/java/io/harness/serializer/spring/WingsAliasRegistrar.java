@@ -27,6 +27,7 @@ import software.wings.api.pcf.DeploySweepingOutputPcf;
 import software.wings.api.pcf.InfoVariables;
 import software.wings.api.pcf.SetupSweepingOutputPcf;
 import software.wings.api.pcf.SwapRouteRollbackSweepingOutputPcf;
+import software.wings.api.terraform.TerraformOutputVariables;
 import software.wings.beans.InfraMappingSweepingOutput;
 import software.wings.beans.PcfConfig;
 import software.wings.helpers.ext.helm.response.HelmChartInfo;
@@ -77,5 +78,6 @@ public class WingsAliasRegistrar implements AliasRegistrar {
     orchestrationElements.put("pcfAppSetupTimeDetails", PcfAppSetupTimeDetails.class);
     orchestrationElements.put("pcfCommandRequest", PcfCommandRequest.class);
     orchestrationElements.put("awsAmiInfoVariables", AwsAmiInfoVariables.class);
+    orchestrationElements.put("terraformOutputVariables", TerraformOutputVariables.class);
   }
 }

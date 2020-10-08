@@ -27,7 +27,11 @@ public class TerraformOutputInfoElement implements ContextElement {
     return null;
   }
 
+  /**
+   * @deprecated use {@link software.wings.api.terraform.TerraformOutputVariables} instead for storing outputs
+   */
   @Override
+  @Deprecated
   public Map<String, Object> paramMap(ExecutionContext context) {
     HashMap<String, Object> paramMap = new HashMap<>();
     paramMap.put("terraform", outputVariables);
@@ -39,6 +43,14 @@ public class TerraformOutputInfoElement implements ContextElement {
     return null;
   }
 
+  public Map<String, Object> getOutputVariables() {
+    return outputVariables;
+  }
+
+  /**
+   * @deprecated use {@link software.wings.api.terraform.TerraformOutputVariables} instead for storing outputs
+   */
+  @Deprecated
   public void addOutPuts(Map<String, Object> newMap) {
     if (outputVariables == null) {
       outputVariables = new HashMap<>();
