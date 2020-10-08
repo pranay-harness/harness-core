@@ -58,6 +58,8 @@ public class CvNextGenCommonsRule implements MethodRule, InjectorRuleMixin, Mong
             .build();
       }
 
+      @Provides
+      @Singleton
       Set<Class<? extends MorphiaRegistrar>> morphiaRegistrars() {
         return ImmutableSet.<Class<? extends MorphiaRegistrar>>builder()
             .addAll(CvNextGenCommonsRegistrars.morphiaRegistrars)

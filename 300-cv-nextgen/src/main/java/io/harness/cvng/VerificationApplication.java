@@ -54,6 +54,8 @@ import io.harness.cvng.verificationjob.entities.VerificationJobInstance.Executio
 import io.harness.cvng.verificationjob.entities.VerificationJobInstance.VerificationJobInstanceKeys;
 import io.harness.cvng.verificationjob.jobs.CreateDeploymentDataCollectionTaskHandler;
 import io.harness.cvng.verificationjob.jobs.DeletePerpetualTasksHandler;
+import io.harness.delegate.beans.DelegateAsyncTaskResponse;
+import io.harness.delegate.beans.DelegateSyncTaskResponse;
 import io.harness.govern.ProviderModule;
 import io.harness.health.HealthService;
 import io.harness.iterator.PersistenceIterator;
@@ -188,7 +190,10 @@ public class VerificationApplication extends Application<VerificationConfigurati
       @Singleton
       @Named("morphiaClasses")
       Map<Class, String> morphiaCustomCollectionNames() {
-        return ImmutableMap.<Class, String>builder().build();
+        return ImmutableMap.<Class, String>builder()
+            .put(DelegateSyncTaskResponse.class, "cvng_delegateSyncTaskResponses")
+            .put(DelegateAsyncTaskResponse.class, "cvng_delegateAsyncTaskResponses")
+            .build();
       }
     });
 

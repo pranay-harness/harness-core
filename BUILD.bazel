@@ -91,6 +91,7 @@ modules = [
     "//57-command-library-common",
     "//64-events-framework",
     "//69-connector-nextgen",
+    "//70-cv-nextgen-commons",
     "//70-delegate-agent",
     "//70-delegate-service",
 ]
