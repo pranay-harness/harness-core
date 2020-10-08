@@ -407,7 +407,10 @@ public class SecretManagerImpl implements SecretManager {
   @Override
   public Optional<EncryptedDataDetail> encryptedDataDetails(
       String accountId, String fieldName, String encryptedDataId, String workflowExecutionId) {
-    EncryptedData encryptedData = wingsPersistence.get(EncryptedData.class, encryptedDataId);
+    EncryptedData encryptedData = wingsPersistence.createQuery(EncryptedData.class)
+                                      .filter(EncryptedDataKeys.accountId, accountId)
+                                      .filter(ID_KEY, encryptedDataId)
+                                      .get();
     if (encryptedData == null) {
       logger.info("No encrypted record set for field {} for id: {}", fieldName, encryptedDataId);
       return Optional.empty();
