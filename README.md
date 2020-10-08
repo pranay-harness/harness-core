@@ -3,24 +3,24 @@ Portal Project Dev environment setup instructions
 ## On MacOS
 
 ### Prerequisities
-1. Install Homebrew:
+#####1. Install Homebrew:
 
    `/usr/bin/ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)"`
 
-2. Install Java 8 download : 
+#####2. Install Java 8 download : 
 NOTE: Brew will download and install latest version of OpenJDK/JRE, its recommended to install OpenJDK/JRE_1.8.0_242 to be in sync with version everyone is using in the team.
 
 Download OpenJDK 1.8-242 JRE Installer from [Java archive downloads](https://adoptopenjdk.net/archive.html), unzip it, then set `JAVA_HOME`, and `PATH` accordingly.
 
-3. Install maven :
+#####3. Install maven :
 
    `brew install maven`
 
 
-4. Install npm (used for front-end):
+#####4. Install npm (used for front-end):
    `brew install npm`
 
-5. **Set up JAVA_HOME: create or add this to your bash profile `~/.bash_profile` file and add following line:**
+#####5. **Set up JAVA_HOME: create or add this to your bash profile `~/.bash_profile` file and add following line:**
 
 ```
    ulimit -u 8192
@@ -28,14 +28,14 @@ Download OpenJDK 1.8-242 JRE Installer from [Java archive downloads](https://ado
   
 ```
 
-6. Update /etc/hosts to reflect your hostname
+#####6. Update /etc/hosts to reflect your hostname
 ```
 255.255.255.255	broadcasthost
 127.0.0.1  <your hostname>
 ::1        <your hostname>
 ```
 
-7. Download and install buf
+#####7. Download and install buf
 Complete this step only if you actively working with the protocol buffer files.
 
 ```
@@ -49,11 +49,11 @@ To check if your protobuf files are according to the coding standards execute in
     buf check lint
 ```
 
-8. Bazel install
+#####8. Bazel install
 ```
-    curl -LO https://github.com/bazelbuild/bazel/releases/download/3.3.1/bazel-3.3.1-installer-darwin-x86_64.sh
-    chmod +x bazel-3.3.1-installer-darwin-x86_64.sh
-    ./bazel-3.3.1-installer-darwin-x86_64.sh --user
+    curl -LO https://github.com/bazelbuild/bazel/releases/download/3.5.0/bazel-3.5.0-installer-darwin-x86_64.sh
+    chmod +x bazel-3.5.0-installer-darwin-x86_64.sh
+    ./bazel-3.5.0-installer-darwin-x86_64.sh --user
 
 ```
 Open .bash_profile
@@ -69,6 +69,18 @@ Close the terminal and verify it.
 ```
    bazel --version   
 ```
+
+Create a file .bazelrc in your portal repo root with the following content
+```
+    import bazelrc.local
+    build --define=ABSOLUTE_JAVABASE=<Java home path>
+```
+Here is a sample .bazelrc
+```
+import bazelrc.local
+build --define=ABSOLUTE_JAVABASE=/Library/Java/JavaVirtualMachines/jdk1.8.0_202.jdk/Contents/Home
+```
+
 ### Github setup
 
 1. Create harness dedicated github account. Use your harness email.
@@ -332,7 +344,7 @@ https://github.com/wings-software/portal/wiki/Troubleshooting-running-java-proce
 ```lang=bash
 portal/tools/go/go_setup.sh
 ```
-### Install Bazel
+### Install Bazel (3.5.0+)
 4. On mac: `brew install bazel`
    * Other platforms: Install bazel locally by following user guide [here](https://docs.bazel.build/versions/master/install.html). Note that bazel version is automatically managed since then and is guaranteed to be same across all machines for each specific revision.
 
