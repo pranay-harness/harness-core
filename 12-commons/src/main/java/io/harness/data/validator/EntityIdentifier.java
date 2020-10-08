@@ -20,4 +20,6 @@ public @interface EntityIdentifier {
   String message() default "Invalid Identifier";
   Class<?>[] groups() default {};
   Class<? extends Payload>[] payload() default {};
+
+  boolean allowBlank() default false;
 }

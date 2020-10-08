@@ -11,4 +11,5 @@ public class SecretResponseWrapper {
   @NotNull private SecretDTOV2 secret;
   private Long createdAt;
   private Long updatedAt;
+  private boolean draft;
 }

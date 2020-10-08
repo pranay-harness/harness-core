@@ -42,6 +42,7 @@ public class NGSecretFileServiceImpl implements NGSecretFileService {
   private final WingsPersistence wingsPersistence;
   private final SecretManagerConfigService secretManagerConfigService;
   private final FileService fileService;
+  private final SecretManager secretManager;
 
   private EncryptedData encrypt(String accountIdentifier, SecretManagerConfig secretManagerConfig, String name,
       byte[] bytes, EncryptedData savedEncryptedData) {
@@ -120,7 +121,7 @@ public class NGSecretFileServiceImpl implements NGSecretFileService {
       savedEncryptedData.setAccountId(metadata.getAccountIdentifier());
       metadata.setSecretManagerName(secretManagerConfigOptional.get().getName()); // TODO{phoenikx} remove this later
       savedEncryptedData.setNgMetadata(metadata);
-      wingsPersistence.save(savedEncryptedData);
+      secretManager.saveEncryptedData(savedEncryptedData);
 
       return savedEncryptedData;
     } else {
@@ -185,7 +186,7 @@ public class NGSecretFileServiceImpl implements NGSecretFileService {
         encryptedData.getNgMetadata().setTags(dto.getTags());
 
         // save to DB and return
-        wingsPersistence.save(encryptedData);
+        secretManager.saveEncryptedData(savedEncryptedData);
         return true;
       } else {
         throw new SecretManagementException(

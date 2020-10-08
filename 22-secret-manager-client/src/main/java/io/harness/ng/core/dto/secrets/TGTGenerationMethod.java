@@ -1,3 +1,3 @@
 package io.harness.ng.core.dto.secrets;
 
-public enum TGTGenerationMethod { KeyTabFilePath, Password, None }
+public enum TGTGenerationMethod { KeyTabFilePath, Password }

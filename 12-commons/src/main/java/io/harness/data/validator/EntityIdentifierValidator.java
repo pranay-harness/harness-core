@@ -1,6 +1,6 @@
 package io.harness.data.validator;
 
-import static org.apache.commons.lang3.StringUtils.isNotBlank;
+import static org.apache.commons.lang3.StringUtils.isBlank;
 
 import com.google.common.annotations.VisibleForTesting;
 
@@ -22,15 +22,20 @@ public class EntityIdentifierValidator implements ConstraintValidator<EntityIden
           .of("or", "and", "eq", "ne", "lt", "gt", "le", "ge", "div", "mod", "not", "null", "true", "false", "new",
               "var", "return")
           .collect(Collectors.toCollection(HashSet::new));
+  private boolean allowBlank;
 
   @Override
   public void initialize(EntityIdentifier constraintAnnotation) {
     // Nothing to initialize
+    allowBlank = constraintAnnotation.allowBlank();
   }
 
   @Override
   public boolean isValid(String identifier, ConstraintValidatorContext context) {
-    if (!isNotBlank(identifier)) {
+    if (allowBlank && isBlank(identifier)) {
+      return true;
+    }
+    if (!allowBlank && isBlank(identifier)) {
       context.disableDefaultConstraintViolation();
       context.buildConstraintViolationWithTemplate("cannot be empty").addConstraintViolation();
       return false;

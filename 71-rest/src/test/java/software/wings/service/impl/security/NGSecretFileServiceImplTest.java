@@ -33,6 +33,7 @@ import software.wings.service.intfc.security.LocalEncryptionService;
 import software.wings.service.intfc.security.NGSecretFileServiceImpl;
 import software.wings.service.intfc.security.NGSecretManagerService;
 import software.wings.service.intfc.security.NGSecretService;
+import software.wings.service.intfc.security.SecretManager;
 import software.wings.service.intfc.security.SecretManagerConfigService;
 import software.wings.service.intfc.security.VaultService;
 
@@ -48,6 +49,7 @@ public class NGSecretFileServiceImplTest extends WingsBaseTest {
   @Mock private WingsPersistence wingsPersistence;
   @Mock private SecretManagerConfigService secretManagerConfigService;
   @Mock private FileService fileService;
+  @Mock private SecretManager secretManager;
   private NGSecretFileServiceImpl ngSecretFileService;
   private static final String ACCOUNT = "Account";
   private static final String IDENTIFIER = "Account";
@@ -56,8 +58,9 @@ public class NGSecretFileServiceImplTest extends WingsBaseTest {
 
   @Before
   public void setup() {
-    ngSecretFileService = spy(new NGSecretFileServiceImpl(ngSecretManagerService, ngSecretService, vaultService,
-        gcpKmsService, localEncryptionService, wingsPersistence, secretManagerConfigService, fileService));
+    ngSecretFileService =
+        spy(new NGSecretFileServiceImpl(ngSecretManagerService, ngSecretService, vaultService, gcpKmsService,
+            localEncryptionService, wingsPersistence, secretManagerConfigService, fileService, secretManager));
   }
 
   private SecretFileDTO getSecretFileDTO() {
@@ -89,7 +92,7 @@ public class NGSecretFileServiceImplTest extends WingsBaseTest {
     assertThat(savedData.getName()).isEqualTo(encryptedData.getName());
     verify(secretManagerConfigService).decryptEncryptionConfigSecrets(any(), any(), anyBoolean());
     verify(vaultService).encryptFile(any(), any(), any(), any(byte[].class), any());
-    verify(wingsPersistence).save(any(EncryptedData.class));
+    verify(secretManager).saveEncryptedData(any(EncryptedData.class));
   }
 
   @Test
@@ -143,7 +146,7 @@ public class NGSecretFileServiceImplTest extends WingsBaseTest {
     verify(ngSecretService, times(0)).deleteSecretInSecretManager(any(), any(), any());
     verify(secretManagerConfigService).decryptEncryptionConfigSecrets(any(), any(), anyBoolean());
     verify(vaultService).encryptFile(any(), any(), any(), any(byte[].class), any());
-    verify(wingsPersistence).save(any(EncryptedData.class));
+    verify(secretManager).saveEncryptedData(any(EncryptedData.class));
   }
 
   @Test
@@ -165,7 +168,7 @@ public class NGSecretFileServiceImplTest extends WingsBaseTest {
     verify(ngSecretService, times(1)).deleteSecretInSecretManager(any(), any(), any());
     verify(secretManagerConfigService).decryptEncryptionConfigSecrets(any(), any(), anyBoolean());
     verify(vaultService).encryptFile(any(), any(), any(), any(byte[].class), any());
-    verify(wingsPersistence).save(any(EncryptedData.class));
+    verify(secretManager).saveEncryptedData(any(EncryptedData.class));
   }
 
   @Test

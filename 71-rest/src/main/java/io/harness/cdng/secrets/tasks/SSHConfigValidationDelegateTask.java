@@ -21,7 +21,6 @@ import io.harness.ng.core.dto.secrets.SSHKeyPathCredentialDTO;
 import io.harness.ng.core.dto.secrets.SSHKeyReferenceCredentialDTO;
 import io.harness.ng.core.dto.secrets.SSHKeySpecDTO;
 import io.harness.ng.core.dto.secrets.SSHPasswordCredentialDTO;
-import io.harness.ng.core.dto.secrets.TGTGenerationMethod;
 import io.harness.ng.core.dto.secrets.TGTKeyTabFilePathSpecDTO;
 import io.harness.ng.core.dto.secrets.TGTPasswordSpecDTO;
 import io.harness.security.encryption.SecretDecryptionService;
@@ -106,11 +105,10 @@ public class SSHConfigValidationDelegateTask extends AbstractDelegateRunnableTas
 
   private void generateKerberosBuilder(
       SSHTaskParams sshTaskParams, KerberosConfigDTO kerberosConfigDTO, SshSessionConfig.Builder builder) {
-    KerberosConfigBuilder kerberosConfig =
-        KerberosConfig.builder()
-            .principal(kerberosConfigDTO.getPrincipal())
-            .realm(kerberosConfigDTO.getRealm())
-            .generateTGT(kerberosConfigDTO.getTgtGenerationMethod() != TGTGenerationMethod.None);
+    KerberosConfigBuilder kerberosConfig = KerberosConfig.builder()
+                                               .principal(kerberosConfigDTO.getPrincipal())
+                                               .realm(kerberosConfigDTO.getRealm())
+                                               .generateTGT(kerberosConfigDTO.getTgtGenerationMethod() != null);
     switch (kerberosConfigDTO.getTgtGenerationMethod()) {
       case Password:
         TGTPasswordSpecDTO tgtPasswordSpecDTO = (TGTPasswordSpecDTO) kerberosConfigDTO.getSpec();

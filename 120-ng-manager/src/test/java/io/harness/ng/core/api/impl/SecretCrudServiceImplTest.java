@@ -4,6 +4,7 @@ import static io.harness.rule.OwnerRule.PHOENIKX;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.fail;
 import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.atLeastOnce;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.verify;
@@ -64,14 +65,14 @@ public class SecretCrudServiceImplTest extends CategoryTest {
     EncryptedDataDTO encryptedDataDTO = EncryptedDataDTO.builder().type(SecretType.SecretText).build();
     Secret secret = Secret.builder().build();
     when(secretTextService.create(any(), any())).thenReturn(encryptedDataDTO);
-    when(ngSecretServiceV2.create(any(), any())).thenReturn(secret);
+    when(ngSecretServiceV2.create(any(), any(), eq(false))).thenReturn(secret);
 
     SecretDTOV2 secretDTOV2 = SecretDTOV2.builder().type(SecretType.SecretText).build();
     SecretResponseWrapper responseWrapper = secretCrudService.create("account", secretDTOV2);
     assertThat(responseWrapper).isNotNull();
 
     verify(secretTextService).create(any(), any());
-    verify(ngSecretServiceV2).create(any(), any());
+    verify(ngSecretServiceV2).create(any(), any(), eq(false));
   }
 
   @Test
@@ -96,7 +97,7 @@ public class SecretCrudServiceImplTest extends CategoryTest {
   public void testUpdate() {
     SecretDTOV2 secretDTOV2 = SecretDTOV2.builder().type(SecretType.SecretText).build();
     when(secretTextService.update(any(), any())).thenReturn(true);
-    when(ngSecretServiceV2.update(any(), any())).thenReturn(true);
+    when(ngSecretServiceV2.update(any(), any(), eq(false))).thenReturn(true);
 
     boolean success = secretCrudService.update("account", secretDTOV2);
 
@@ -112,7 +113,7 @@ public class SecretCrudServiceImplTest extends CategoryTest {
     EncryptedDataDTO encryptedDataDTO = EncryptedDataDTO.builder().build();
     when(secretManagerClient.createSecretFile(any(), any()).execute())
         .thenReturn(Response.success(new RestResponse<>(encryptedDataDTO)));
-    when(ngSecretServiceV2.create(any(), any())).thenReturn(secret);
+    when(ngSecretServiceV2.create(any(), any(), eq(false))).thenReturn(secret);
     doNothing().when(secretEntityReferenceHelper).createEntityReferenceForSecret(any());
 
     SecretResponseWrapper created =
@@ -120,7 +121,7 @@ public class SecretCrudServiceImplTest extends CategoryTest {
     assertThat(created).isNotNull();
 
     verify(secretManagerClient, atLeastOnce()).createSecretFile(any(), any());
-    verify(ngSecretServiceV2).create(any(), any());
+    verify(ngSecretServiceV2).create(any(), any(), eq(false));
     verify(secretEntityReferenceHelper).createEntityReferenceForSecret(any());
   }
 
@@ -157,14 +158,14 @@ public class SecretCrudServiceImplTest extends CategoryTest {
                                   .build();
     when(secretManagerClient.updateSecretFile(any(), any(), any(), any(), any(), any()).execute())
         .thenReturn(Response.success(new RestResponse<>(true)));
-    when(ngSecretServiceV2.update(any(), any())).thenReturn(true);
+    when(ngSecretServiceV2.update(any(), any(), eq(false))).thenReturn(true);
 
     boolean success = secretCrudService.updateFile("account", secretDTOV2, new StringInputStream("string"));
 
     assertThat(success).isTrue();
     verify(secretManagerClient, atLeastOnce()).getSecret(any(), any(), any(), any());
     verify(secretManagerClient, atLeastOnce()).updateSecretFile(any(), any(), any(), any(), any(), any());
-    verify(ngSecretServiceV2).update(any(), any());
+    verify(ngSecretServiceV2).update(any(), any(), eq(false));
   }
 
   @Test

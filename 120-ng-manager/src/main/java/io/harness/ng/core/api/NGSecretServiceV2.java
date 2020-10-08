@@ -14,9 +14,9 @@ public interface NGSecretServiceV2 {
 
   boolean delete(String accountIdentifier, String orgIdentifier, String projectIdentifier, String identifier);
 
-  Secret create(String accountIdentifier, SecretDTOV2 dto);
+  Secret create(String accountIdentifier, SecretDTOV2 dto, boolean draft);
 
-  boolean update(String accountIdentifier, SecretDTOV2 dto);
+  boolean update(String accountIdentifier, SecretDTOV2 dto, boolean draft);
 
   SecretValidationResultDTO validateSecret(String accountIdentifier, String orgIdentifier, String projectIdentifier,
       String identifier, SecretValidationMetaData metadata);

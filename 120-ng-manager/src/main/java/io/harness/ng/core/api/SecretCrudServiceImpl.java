@@ -34,6 +34,7 @@ import io.harness.stream.BoundedInputStream;
 import io.harness.utils.PageUtils;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
+import okhttp3.RequestBody;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.data.domain.Page;
 import org.springframework.data.mongodb.core.query.Criteria;
@@ -51,9 +52,6 @@ import javax.validation.constraints.NotNull;
 @Slf4j
 public class SecretCrudServiceImpl implements SecretCrudService {
   private final SecretManagerClient secretManagerClient;
-  private final SecretModifyService secretTextService;
-  private final SecretModifyService secretFileService;
-  private final SecretModifyService sshSecretService;
   private final NGSecretServiceV2 ngSecretService;
   private final FileUploadLimit fileUploadLimit;
   private final SecretEntityReferenceHelper secretEntityReferenceHelper;
@@ -67,9 +65,6 @@ public class SecretCrudServiceImpl implements SecretCrudService {
       SecretEntityReferenceHelper secretEntityReferenceHelper, FileUploadLimit fileUploadLimit,
       NGSecretServiceV2 ngSecretService) {
     this.secretManagerClient = secretManagerClient;
-    this.secretTextService = secretTextService;
-    this.secretFileService = secretFileService;
-    this.sshSecretService = sshSecretService;
     this.fileUploadLimit = fileUploadLimit;
     this.secretEntityReferenceHelper = secretEntityReferenceHelper;
     this.ngSecretService = ngSecretService;
@@ -91,6 +86,7 @@ public class SecretCrudServiceImpl implements SecretCrudService {
         .secret(secret.toDTO())
         .updatedAt(secret.getLastModifiedAt())
         .createdAt(secret.getCreatedAt())
+        .draft(secret.isDraft())
         .build();
   }
 
@@ -99,7 +95,7 @@ public class SecretCrudServiceImpl implements SecretCrudService {
     EncryptedDataDTO encryptedData = getService(dto.getType()).create(accountIdentifier, dto);
     if (Optional.ofNullable(encryptedData).isPresent()) {
       secretEntityReferenceHelper.createEntityReferenceForSecret(encryptedData);
-      Secret secret = ngSecretService.create(accountIdentifier, dto);
+      Secret secret = ngSecretService.create(accountIdentifier, dto, false);
       return getResponseWrapper(secret);
     }
     throw new SecretManagementException(SECRET_MANAGEMENT_ERROR, "Unable to create secret remotely.", USER);
@@ -110,7 +106,13 @@ public class SecretCrudServiceImpl implements SecretCrudService {
     if (!dto.getSpec().isValidYaml()) {
       throw new InvalidRequestException("Yaml not valid.", USER);
     }
-    return create(accountIdentifier, dto);
+    EncryptedDataDTO encryptedData = getService(dto.getType()).create(accountIdentifier, dto);
+    if (Optional.ofNullable(encryptedData).isPresent()) {
+      secretEntityReferenceHelper.createEntityReferenceForSecret(encryptedData);
+      Secret secret = ngSecretService.create(accountIdentifier, dto, true);
+      return getResponseWrapper(secret);
+    }
+    throw new SecretManagementException(SECRET_MANAGEMENT_ERROR, "Unable to create secret remotely.", USER);
   }
 
   @Override
@@ -172,7 +174,7 @@ public class SecretCrudServiceImpl implements SecretCrudService {
     boolean remoteUpdateSuccess = getService(dto.getType()).update(accountIdentifier, dto);
     boolean localUpdateSuccess = false;
     if (remoteUpdateSuccess) {
-      localUpdateSuccess = ngSecretService.update(accountIdentifier, dto);
+      localUpdateSuccess = ngSecretService.update(accountIdentifier, dto, false);
     }
     if (remoteUpdateSuccess && localUpdateSuccess) {
       return true;
@@ -190,7 +192,20 @@ public class SecretCrudServiceImpl implements SecretCrudService {
     if (!dto.getSpec().isValidYaml()) {
       throw new InvalidRequestException("Invalid Yaml", USER);
     }
-    return update(accountIdentifier, dto);
+    boolean remoteUpdateSuccess = getService(dto.getType()).update(accountIdentifier, dto);
+    boolean localUpdateSuccess = false;
+    if (remoteUpdateSuccess) {
+      localUpdateSuccess = ngSecretService.update(accountIdentifier, dto, true);
+    }
+    if (remoteUpdateSuccess && localUpdateSuccess) {
+      return true;
+    }
+    if (!remoteUpdateSuccess) {
+      throw new SecretManagementException(SECRET_MANAGEMENT_ERROR, "Unable to update secret remotely", USER);
+    } else {
+      throw new SecretManagementException(
+          SECRET_MANAGEMENT_ERROR, "Unable to update secret locally, data might be inconsistent", USER);
+    }
   }
 
   @SneakyThrows
@@ -215,7 +230,7 @@ public class SecretCrudServiceImpl implements SecretCrudService {
                 new BoundedInputStream(inputStream, fileUploadLimit.getEncryptedFileLimit())))));
     if (Optional.ofNullable(encryptedData).isPresent()) {
       secretEntityReferenceHelper.createEntityReferenceForSecret(encryptedData);
-      Secret secret = ngSecretService.create(accountIdentifier, dto);
+      Secret secret = ngSecretService.create(accountIdentifier, dto, false);
       return getResponseWrapper(secret);
     }
     throw new SecretManagementException(SECRET_MANAGEMENT_ERROR, "Unable to create secret file remotely", USER);
@@ -230,14 +245,18 @@ public class SecretCrudServiceImpl implements SecretCrudService {
     if (encryptedDataDTO == null || !specDTO.getSecretManagerIdentifier().equals(encryptedDataDTO.getSecretManager())) {
       throw new InvalidRequestException("Cannot update secret manager after creating secret.", USER);
     }
-    SecretFileUpdateDTO updateDTO =
+    SecretFileUpdateDTO secretFileUpdateDTO =
         SecretFileUpdateDTO.builder().name(dto.getName()).tags(null).description(dto.getDescription()).build();
-    boolean success = getResponse(secretManagerClient.updateSecretFile(dto.getIdentifier(), accountIdentifier,
-        dto.getOrgIdentifier(), dto.getProjectIdentifier(), getRequestBody(JsonUtils.asJson(updateDTO)),
-        getRequestBody(
-            ByteStreams.toByteArray(new BoundedInputStream(inputStream, fileUploadLimit.getEncryptedFileLimit())))));
+    RequestBody file = null;
+    if (inputStream != null) {
+      file = getRequestBody(
+          ByteStreams.toByteArray(new BoundedInputStream(inputStream, fileUploadLimit.getEncryptedFileLimit())));
+    }
+    RequestBody metadata = getRequestBody(JsonUtils.asJson(secretFileUpdateDTO));
+    boolean success = getResponse(secretManagerClient.updateSecretFile(
+        dto.getIdentifier(), accountIdentifier, dto.getOrgIdentifier(), dto.getProjectIdentifier(), file, metadata));
     if (success) {
-      return ngSecretService.update(accountIdentifier, dto);
+      return ngSecretService.update(accountIdentifier, dto, false);
     }
     throw new SecretManagementException(SECRET_MANAGEMENT_ERROR, "Unable to update secret file remotely", USER);
   }

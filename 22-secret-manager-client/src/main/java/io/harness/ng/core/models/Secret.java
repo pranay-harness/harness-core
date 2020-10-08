@@ -41,6 +41,12 @@ public class Secret {
   String description;
   Map<String, String> tags;
   SecretType type;
+  Boolean draft;
+
+  public boolean isDraft() {
+    return draft != null && draft;
+  }
+
   @JsonTypeInfo(
       use = JsonTypeInfo.Id.NAME, include = JsonTypeInfo.As.EXTERNAL_PROPERTY, property = "type", visible = true)
   SecretSpec secretSpec;
