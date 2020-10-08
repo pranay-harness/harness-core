@@ -90,9 +90,11 @@ import software.wings.utils.ApplicationManifestUtils;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -172,7 +174,7 @@ public class PcfPluginState extends State {
     final Activity activity = createActivity(context, serviceManifestRemote);
     String repoRoot = "/";
     if (serviceManifestRemote) {
-      repoRoot = getRepoRoot(serviceManifest);
+      repoRoot = context.renderExpression(getRepoRoot(serviceManifest));
     }
     final List<String> pathsFromScript = findPathFromScript(renderedScript, repoRoot);
 
@@ -204,7 +206,7 @@ public class PcfPluginState extends State {
 
   @VisibleForTesting
   List<String> findPathFromScript(String rendredScript, String repoRoot) {
-    final List<String> finalPathLists = new ArrayList<>();
+    final Set<String> finalPathLists = new HashSet<>();
     final List<String> repoRootPrefixPathList =
         findPathFromScript(rendredScript, PATH_REGEX_REPO_ROOT_PATTERN, FILE_START_REPO_ROOT_REGEX, FILE_END_REGEX);
     List<String> serviceManifestPrefixPathList = findPathFromScript(
@@ -219,7 +221,7 @@ public class PcfPluginState extends State {
 
     finalPathLists.addAll(repoRootPrefixPathList);
     finalPathLists.addAll(serviceManifestPrefixPathList);
-    return finalPathLists;
+    return new ArrayList<>(finalPathLists);
   }
 
   private String removeTrailingSlash(String s) {
