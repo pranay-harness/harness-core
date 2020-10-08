@@ -73,7 +73,12 @@ input CEViewRule {
 input CEViewFilterWrapper {
   timeFilter: CEViewTimeFilter
   idFilter: CEViewFilter
-  viewFilter: String
+  viewMetadataFilter: CEViewMetadataFilter
+}
+
+input CEViewMetadataFilter {
+  viewId: String
+  isPreview: Boolean
 }
 
 input CEViewTimeFilter {
