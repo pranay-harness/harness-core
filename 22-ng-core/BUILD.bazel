@@ -22,6 +22,7 @@ java_library(
         "@maven//:com_google_guava_guava",
         "@maven//:com_google_inject_guice",
         "@maven//:com_squareup_retrofit2_retrofit",
+        "@maven//:commons_io_commons_io",
         "@maven//:io_swagger_swagger_annotations",
         "@maven//:javax_annotation_javax_annotation_api",
         "@maven//:javax_validation_validation_api",
@@ -42,6 +43,9 @@ java_library(
 java_library(
     name = "module",
     srcs = glob(["src/main/**/*.java"]),
+    resources = [
+        "//22-ng-core/src/main/resources:resource",
+    ],
     visibility = ["//visibility:public"],
     deps = [
         "maven_deps",
@@ -67,6 +71,9 @@ java_library(
 java_library(
     name = "tests",
     srcs = glob(["src/test/**/*.java"]),
+    resources = [
+        "//22-ng-core/src/test/resources:resource",
+    ],
     visibility = ["//visibility:public"],
     deps = [
         "maven_deps",

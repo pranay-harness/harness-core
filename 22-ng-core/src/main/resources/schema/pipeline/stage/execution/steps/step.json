@@ -1,0 +1,69 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "properties": {
+    "name": {
+      "type": "string"
+    },
+    "identifier": {
+      "type": "string"
+    },
+    "type": {
+      "enum": [
+        "K8sRollingDeploy",
+        "K8sRollingRollback",
+        "ShellScript"
+      ]
+    }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "type": {
+            "const": "K8sRollingDeploy"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "spec": {
+            "$ref": "<<schema/pipeline/stage/execution/steps/k8sRollingDeploy.json>>"
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "type": {
+            "const": "K8sRollingRollback"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "spec": {
+            "$ref": "<<schema/pipeline/stage/execution/steps/k8sRollingRollback.json>>"
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "type": {
+            "const": "ShellScript"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "spec": {
+            "$ref": "<<schema/pipeline/stage/execution/steps/shellScript.json>>"
+          }
+        }
+      }
+    }
+  ]
+}

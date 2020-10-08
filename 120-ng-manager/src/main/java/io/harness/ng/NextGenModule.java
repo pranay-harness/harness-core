@@ -16,6 +16,7 @@ import io.harness.OrchestrationModule;
 import io.harness.OrchestrationModuleConfig;
 import io.harness.OrchestrationStepsModule;
 import io.harness.OrchestrationVisualizationModule;
+import io.harness.YamlBaseUrlServiceImpl;
 import io.harness.callback.DelegateCallback;
 import io.harness.callback.DelegateCallbackToken;
 import io.harness.callback.MongoDatabase;
@@ -47,6 +48,7 @@ import io.harness.ng.core.gitsync.GitSyncManagerInterface;
 import io.harness.ng.core.gitsync.YamlHandler;
 import io.harness.ng.core.impl.OrganizationServiceImpl;
 import io.harness.ng.core.impl.ProjectServiceImpl;
+import io.harness.ng.core.schema.YamlBaseUrlService;
 import io.harness.ng.core.services.OrganizationService;
 import io.harness.ng.core.services.ProjectService;
 import io.harness.ng.gitsync.NgCoreGitChangeSetProcessorServiceImpl;
@@ -84,7 +86,6 @@ public class NextGenModule extends AbstractModule {
   public static final String SECRET_MANAGER_CONNECTOR_SERVICE = "secretManagerConnectorService";
   public static final String CONNECTOR_DECORATOR_SERVICE = "connectorDecoratorService";
   private final NextGenConfiguration appConfig;
-
   public NextGenModule(NextGenConfiguration appConfig) {
     this.appConfig = appConfig;
   }
@@ -124,7 +125,6 @@ public class NextGenModule extends AbstractModule {
   protected void configure() {
     install(VersionModule.getInstance());
     install(DelegateServiceDriverModule.getInstance());
-
     bind(NextGenConfiguration.class).toInstance(appConfig);
 
     install(new ProviderModule() {
@@ -239,6 +239,7 @@ public class NextGenModule extends AbstractModule {
         .to(SecretManagerConnectorServiceImpl.class);
     bind(GitChangeProcessorService.class).to(NgCoreGitChangeSetProcessorServiceImpl.class);
     bindYamlHandlers();
+    bind(YamlBaseUrlService.class).to(YamlBaseUrlServiceImpl.class);
   }
 
   @Provides

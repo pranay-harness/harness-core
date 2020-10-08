@@ -1,0 +1,25 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "properties": {
+    "type": {
+      "enum": [
+        "KubernetesDirect"
+      ]
+    }
+  },
+  "if": {
+    "properties": {
+      "type": {
+        "const": "KubernetesDirect"
+      }
+    }
+  },
+  "then": {
+    "properties": {
+      "spec": {
+        "$ref": "<<schema/pipeline/stage/infra/infraDef/kubernetesDirect.json>>"
+      }
+    }
+  }
+}
