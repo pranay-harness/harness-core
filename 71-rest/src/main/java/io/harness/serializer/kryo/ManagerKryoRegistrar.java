@@ -23,7 +23,6 @@ import io.harness.ccm.license.CeLicenseInfo;
 import io.harness.ccm.license.CeLicenseType;
 import io.harness.cdng.manifest.yaml.GitStore;
 import io.harness.cdng.manifest.yaml.StoreConfig;
-import io.harness.cvng.perpetualtask.CVDataCollectionInfo;
 import io.harness.delegate.beans.executioncapability.KustomizeCapability;
 import io.harness.delegate.task.ListNotifyResponseData;
 import io.harness.perpetualtask.internal.AssignmentTaskResponse;
@@ -1708,7 +1707,6 @@ public class ManagerKryoRegistrar implements KryoRegistrar {
     kryo.register(AwsAmiTrafficShiftAlbSwitchRouteRequest.class, 7435);
     kryo.register(AwsAmiTrafficShiftAlbStateExecutionData.class, 7436);
     kryo.register(KustomizeCapability.class, 7437);
-    kryo.register(CVDataCollectionInfo.class, 7438);
     kryo.register(GcbOptions.class, 7439);
     kryo.register(GcbTriggerBuildSpec.class, 7440);
     kryo.register(GcbRemoteBuildSpec.class, 7441);

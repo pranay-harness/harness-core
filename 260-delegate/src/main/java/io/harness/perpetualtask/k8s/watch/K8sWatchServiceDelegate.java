@@ -69,7 +69,7 @@ public class K8sWatchServiceDelegate {
 
   @Value
   @Builder
-  static class WatcherGroup implements Closeable {
+  public static class WatcherGroup implements Closeable {
     String watchId;
     SharedInformerFactory sharedInformerFactory;
 

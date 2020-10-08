@@ -14,6 +14,8 @@ import io.harness.perpetualtask.artifact.ArtifactCollectionTaskParams;
 import io.harness.perpetualtask.artifact.ArtifactPerpetualTaskExecutor;
 import io.harness.perpetualtask.datacollection.DataCollectionPerpetualTaskExecutor;
 import io.harness.perpetualtask.datacollection.DataCollectionPerpetualTaskParams;
+import io.harness.perpetualtask.datacollection.K8ActivityCollectionPerpetualTaskExecutor;
+import io.harness.perpetualtask.datacollection.K8ActivityCollectionPerpetualTaskParams;
 import io.harness.perpetualtask.ecs.EcsPerpetualTaskExecutor;
 import io.harness.perpetualtask.ecs.EcsPerpetualTaskParams;
 import io.harness.perpetualtask.example.SamplePerpetualTaskExecutor;
@@ -64,6 +66,8 @@ public class PerpetualTaskWorkerModule extends AbstractModule {
         .to(ContainerInstanceSyncPerpetualTaskExecutor.class);
     mapBinder.addBinding(DataCollectionPerpetualTaskParams.class.getSimpleName())
         .to(DataCollectionPerpetualTaskExecutor.class);
+    mapBinder.addBinding(K8ActivityCollectionPerpetualTaskParams.class.getSimpleName())
+        .to(K8ActivityCollectionPerpetualTaskExecutor.class);
     mapBinder.addBinding(CustomDeploymentInstanceSyncTaskParams.class.getSimpleName())
         .to(CustomDeploymentPerpetualTaskExecutor.class);
     mapBinder.addBinding(ManifestCollectionTaskParams.class.getSimpleName()).to(ManifestPerpetualTaskExecutor.class);

@@ -33,6 +33,9 @@ import io.federecio.dropwizard.swagger.SwaggerBundle;
 import io.federecio.dropwizard.swagger.SwaggerBundleConfiguration;
 import io.harness.cvng.client.NextGenClientModule;
 import io.harness.cvng.client.VerificationManagerClientModule;
+import io.harness.cvng.core.activity.entities.KubernetesActivitySource;
+import io.harness.cvng.core.activity.entities.KubernetesActivitySource.KubernetesActivitySourceKeys;
+import io.harness.cvng.core.activity.jobs.K8ActivityCollectionHandler;
 import io.harness.cvng.core.entities.CVConfig;
 import io.harness.cvng.core.entities.CVConfig.CVConfigKeys;
 import io.harness.cvng.core.entities.DeletedCVConfig;
@@ -206,7 +209,7 @@ public class VerificationApplication extends Application<VerificationConfigurati
     registerResources(environment, injector);
     registerOrchestrationIterator(injector);
     registerVerificationTaskOrchestrationIterator(injector);
-    registerCVConfigDataCollectionTaskIterator(injector);
+    registerDataCollectionTaskIterator(injector);
     registerVerificationTaskIterator(injector);
     registerDeleteDataCollectionWorkersIterator(injector);
     registerExceptionMappers(environment.jersey());
@@ -273,7 +276,7 @@ public class VerificationApplication extends Application<VerificationConfigurati
         () -> analysisOrchestrationIterator.process(), 0, 20, TimeUnit.SECONDS);
   }
 
-  private void registerCVConfigDataCollectionTaskIterator(Injector injector) {
+  private void registerDataCollectionTaskIterator(Injector injector) {
     ScheduledThreadPoolExecutor dataCollectionExecutor = new ScheduledThreadPoolExecutor(
         5, new ThreadFactoryBuilder().setNameFormat("cv-config-data-collection-iterator").build());
     CVConfigDataCollectionHandler cvConfigDataCollectionHandler =
@@ -296,6 +299,25 @@ public class VerificationApplication extends Application<VerificationConfigurati
             .build();
     injector.injectMembers(dataCollectionIterator);
     dataCollectionExecutor.scheduleAtFixedRate(() -> dataCollectionIterator.process(), 0, 30, TimeUnit.SECONDS);
+
+    K8ActivityCollectionHandler k8ActivityCollectionHandler = injector.getInstance(K8ActivityCollectionHandler.class);
+    PersistenceIterator activityCollectionIterator =
+        MongoPersistenceIterator.<KubernetesActivitySource, MorphiaFilterExpander<KubernetesActivitySource>>builder()
+            .mode(PersistenceIterator.ProcessMode.PUMP)
+            .clazz(KubernetesActivitySource.class)
+            .fieldName(KubernetesActivitySourceKeys.dataCollectionTaskIteration)
+            .targetInterval(ofMinutes(1))
+            .acceptableNoAlertDelay(ofMinutes(1))
+            .executorService(dataCollectionExecutor)
+            .semaphore(new Semaphore(5))
+            .handler(k8ActivityCollectionHandler)
+            .schedulingType(REGULAR)
+            .filterExpander(query -> query.criteria(KubernetesActivitySourceKeys.dataCollectionTaskId).doesNotExist())
+            .persistenceProvider(injector.getInstance(MorphiaPersistenceProvider.class))
+            .redistribute(true)
+            .build();
+    injector.injectMembers(activityCollectionIterator);
+    dataCollectionExecutor.scheduleAtFixedRate(() -> activityCollectionIterator.process(), 0, 30, TimeUnit.SECONDS);
   }
 
   private void registerDeleteDataCollectionWorkersIterator(Injector injector) {

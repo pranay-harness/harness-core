@@ -1,4 +1,4 @@
-package io.harness.cvng.core.entities;
+package io.harness.cvng.core.activity.entities;
 
 import static io.harness.cvng.core.utils.ErrorMessageUtils.generateErrorMessageFromParam;
 
@@ -7,6 +7,9 @@ import com.google.common.base.Preconditions;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import io.harness.annotation.HarnessEntity;
+import io.harness.cvng.beans.ActivityDTO;
+import io.harness.cvng.beans.ActivityDTO.VerificationJobRuntimeDetails;
+import io.harness.cvng.beans.ActivityType;
 import io.harness.mongo.index.FdIndex;
 import io.harness.mongo.index.FdTtlIndex;
 import io.harness.persistence.CreatedAtAware;
@@ -14,7 +17,6 @@ import io.harness.persistence.PersistentEntity;
 import io.harness.persistence.UpdatedAtAware;
 import io.harness.persistence.UuidAware;
 import lombok.AllArgsConstructor;
-import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
@@ -24,9 +26,9 @@ import org.mongodb.morphia.annotations.Id;
 
 import java.time.Instant;
 import java.time.OffsetDateTime;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
-import java.util.Map;
 import javax.validation.constraints.NotNull;
 
 @Data
@@ -60,6 +62,24 @@ public abstract class Activity implements PersistentEntity, UuidAware, CreatedAt
 
   public abstract ActivityType getType();
 
+  public abstract void fromDTO(ActivityDTO activityDTO);
+
+  public void addCommonFileds(ActivityDTO activityDTO) {
+    setAccountIdentifier(activityDTO.getAccountIdentifier());
+    setProjectIdentifier(activityDTO.getProjectIdentifier());
+    setOrgIdentifier(activityDTO.getOrgIdentifier());
+    setServiceIdentifier(activityDTO.getServiceIdentifier());
+    setEnvironmentIdentifier(activityDTO.getEnvironmentIdentifier());
+    setActivityName(activityDTO.getName());
+    setVerificationJobRuntimeDetails(activityDTO.getVerificationJobRuntimeDetails() == null
+            ? null
+            : new ArrayList<>(activityDTO.getVerificationJobRuntimeDetails()));
+    setActivityStartTime(Instant.ofEpochMilli(activityDTO.getActivityStartTime()));
+    setActivityEndTime(
+        activityDTO.getActivityEndTime() != null ? Instant.ofEpochMilli(activityDTO.getActivityEndTime()) : null);
+    setTags(activityDTO.getTags());
+  }
+
   public abstract void validateActivityParams();
 
   public void validate() {
@@ -69,18 +89,5 @@ public abstract class Activity implements PersistentEntity, UuidAware, CreatedAt
     Preconditions.checkNotNull(activityName, generateErrorMessageFromParam(ActivityKeys.activityName));
     Preconditions.checkNotNull(activityStartTime, generateErrorMessageFromParam(ActivityKeys.activityStartTime));
     this.validateActivityParams();
-  }
-
-  public enum ActivityType {
-    DEPLOYMENT,
-    INFRASTRUCTURE,
-    CUSTOM;
-  }
-
-  @Data
-  @Builder
-  public static class VerificationJobRuntimeDetails {
-    String verificationJobIdentifier;
-    Map<String, String> runtimeValues;
   }
 }

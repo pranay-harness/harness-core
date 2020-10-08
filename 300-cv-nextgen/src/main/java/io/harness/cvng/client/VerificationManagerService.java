@@ -1,12 +1,13 @@
 package io.harness.cvng.client;
 
+import io.harness.cvng.beans.DataCollectionType;
+
 import java.util.List;
+import java.util.Map;
 
 public interface VerificationManagerService {
-  String createServiceGuardPerpetualTask(String accountId, String cvConfigId, String connectorIdentifier,
-      String orgIdentifier, String projectIdentifier, String dataCollectionWorkerId);
-  String createDeploymentVerificationPerpetualTask(String accountId, String connectorIdentifier, String orgIdentifier,
-      String projectIdentifier, String dataCollectionWorkerId);
+  String createDataCollectionTask(String accountId, String orgIdentifier, String projectIdentifier,
+      DataCollectionType dataCollectionType, Map<String, String> params);
   void deletePerpetualTask(String accountId, String perpetualTaskId);
 
   void deletePerpetualTasks(String accountId, List<String> perpetualTaskIds);

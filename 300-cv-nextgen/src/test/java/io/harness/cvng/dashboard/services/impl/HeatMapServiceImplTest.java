@@ -101,10 +101,6 @@ public class HeatMapServiceImplTest extends CvNextGenTest {
     heatMapService.updateRiskScore(
         accountId, projectIdentifier, serviceIdentifier, envIdentifier, CVMonitoringCategory.PERFORMANCE, instant, 0.6);
     verifyUpdates(instant, 0.6);
-    List<HeatMap> heatMaps;
-    HeatMap heatMap;
-    Set<HeatMapRisk> heatMapRisks;
-    HeatMapRisk heatMapRisk;
 
     // update and test
     heatMapService.updateRiskScore(

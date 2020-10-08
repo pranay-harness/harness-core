@@ -1,0 +1,101 @@
+package io.harness.cvng.core.activity.services.impl;
+
+import com.google.common.base.Preconditions;
+import com.google.inject.Inject;
+
+import io.harness.cvng.beans.DataCollectionType;
+import io.harness.cvng.beans.KubernetesActivityDTO;
+import io.harness.cvng.beans.KubernetesActivitySourceDTO.KubernetesActivitySourceDTOKeys;
+import io.harness.cvng.client.VerificationManagerService;
+import io.harness.cvng.core.activity.beans.KubernetesActivitySourceDTO;
+import io.harness.cvng.core.activity.entities.Activity;
+import io.harness.cvng.core.activity.entities.KubernetesActivitySource;
+import io.harness.cvng.core.activity.entities.KubernetesActivitySource.KubernetesActivitySourceKeys;
+import io.harness.cvng.core.activity.services.api.KubernetesActivitySourceService;
+import io.harness.cvng.core.entities.CVConfig.CVConfigKeys;
+import io.harness.cvng.core.entities.DataCollectionTask.DataCollectionTaskKeys;
+import io.harness.cvng.core.services.api.ActivityService;
+import io.harness.persistence.HPersistence;
+import lombok.extern.slf4j.Slf4j;
+import org.mongodb.morphia.query.Query;
+import org.mongodb.morphia.query.UpdateOperations;
+
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
+
+@Slf4j
+public class KubernetesActivitySourceServiceImpl implements KubernetesActivitySourceService {
+  @Inject private VerificationManagerService verificationManagerService;
+  @Inject private HPersistence hPersistence;
+  @Inject private ActivityService activityService;
+
+  @Override
+  public KubernetesActivitySource getActivitySource(String activitySourceId) {
+    return hPersistence.get(KubernetesActivitySource.class, activitySourceId);
+  }
+
+  @Override
+  public String saveKubernetesSource(
+      String accountId, String orgIdentifier, String projectIdentifier, KubernetesActivitySourceDTO activitySourceDTO) {
+    return hPersistence.save(KubernetesActivitySource.builder()
+                                 .accountId(accountId)
+                                 .orgIdentifier(orgIdentifier)
+                                 .projectIdentifier(projectIdentifier)
+                                 .uuid(activitySourceDTO.getUuid())
+                                 .connectorIdentifier(activitySourceDTO.getConnectorIdentifier())
+                                 .serviceIdentifier(activitySourceDTO.getServiceIdentifier())
+                                 .envIdentifier(activitySourceDTO.getEnvIdentifier())
+                                 .namespace(activitySourceDTO.getNamespace())
+                                 .clusterName(activitySourceDTO.getClusterName())
+                                 .workloadName(activitySourceDTO.getWorkloadName())
+                                 .build());
+  }
+
+  @Override
+  public boolean saveKubernetesActivities(
+      String accountId, String activitySourceId, List<KubernetesActivityDTO> activities) {
+    KubernetesActivitySource activitySource = getActivitySource(activitySourceId);
+    Preconditions.checkNotNull(activitySource, "No source found with {}", activitySourceId);
+    activities.forEach(activity -> {
+      activity.setAccountIdentifier(accountId);
+      activity.setOrgIdentifier(activitySource.getOrgIdentifier());
+      activity.setProjectIdentifier(activitySource.getProjectIdentifier());
+      activity.setServiceIdentifier(activitySource.getServiceIdentifier());
+      activity.setEnvironmentIdentifier(activitySource.getEnvIdentifier());
+    });
+
+    List<Activity> kubernetesActivities =
+        activities.stream()
+            .map(kubernetesActivityDTO -> activityService.getActivityFromDTO(kubernetesActivityDTO))
+            .collect(Collectors.toList());
+    hPersistence.save(kubernetesActivities);
+    return true;
+  }
+
+  @Override
+  public void enqueueDataCollectionTask(KubernetesActivitySource activitySource) {
+    logger.info("Enqueuing activitySourceId for the first time: {}", activitySource.getUuid());
+
+    Map<String, String> params = new HashMap<>();
+    params.put(CVConfigKeys.connectorIdentifier, activitySource.getConnectorIdentifier());
+    params.put(DataCollectionTaskKeys.dataCollectionWorkerId, activitySource.getUuid());
+    params.put(KubernetesActivitySourceDTOKeys.namespace, activitySource.getNamespace());
+    params.put(KubernetesActivitySourceDTOKeys.clusterName, activitySource.getClusterName());
+    params.put(KubernetesActivitySourceDTOKeys.workloadName, activitySource.getWorkloadName());
+
+    String dataCollectionTaskId = verificationManagerService.createDataCollectionTask(activitySource.getAccountId(),
+        activitySource.getOrgIdentifier(), activitySource.getProjectIdentifier(), DataCollectionType.KUBERNETES,
+        params);
+
+    UpdateOperations<KubernetesActivitySource> updateOperations =
+        hPersistence.createUpdateOperations(KubernetesActivitySource.class)
+            .set(KubernetesActivitySourceKeys.dataCollectionTaskId, dataCollectionTaskId);
+    Query<KubernetesActivitySource> query = hPersistence.createQuery(KubernetesActivitySource.class)
+                                                .filter(KubernetesActivitySourceKeys.uuid, activitySource.getUuid());
+    hPersistence.update(query, updateOperations);
+
+    logger.info("Enqueued activity source successfully: {}", activitySource.getUuid());
+  }
+}

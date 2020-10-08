@@ -28,6 +28,8 @@ import io.harness.cvng.client.NextGenService;
 import io.harness.cvng.client.NextGenServiceImpl;
 import io.harness.cvng.client.VerificationManagerService;
 import io.harness.cvng.client.VerificationManagerServiceImpl;
+import io.harness.cvng.core.activity.services.api.KubernetesActivitySourceService;
+import io.harness.cvng.core.activity.services.impl.KubernetesActivitySourceServiceImpl;
 import io.harness.cvng.core.services.api.ActivityService;
 import io.harness.cvng.core.services.api.AppDynamicsService;
 import io.harness.cvng.core.services.api.CVConfigService;
@@ -171,6 +173,7 @@ public class CVServiceModule extends AbstractModule {
       bind(DeploymentTimeSeriesAnalysisService.class).to(DeploymentTimeSeriesAnalysisServiceImpl.class);
       bind(NextGenService.class).to(NextGenServiceImpl.class);
       bind(HostRecordService.class).to(HostRecordServiceImpl.class);
+      bind(KubernetesActivitySourceService.class).to(KubernetesActivitySourceServiceImpl.class);
       bind(DeploymentLogAnalysisService.class).to(DeploymentLogAnalysisServiceImpl.class);
       bind(DeploymentAnalysisService.class).to(DeploymentAnalysisServiceImpl.class);
     } catch (IOException e) {

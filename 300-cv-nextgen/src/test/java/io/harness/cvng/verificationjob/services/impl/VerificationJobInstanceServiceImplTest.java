@@ -20,13 +20,16 @@ import com.google.inject.Inject;
 import io.harness.CvNextGenTest;
 import io.harness.category.element.UnitTests;
 import io.harness.cvng.beans.CVMonitoringCategory;
+import io.harness.cvng.beans.DataCollectionType;
 import io.harness.cvng.beans.DataSourceType;
 import io.harness.cvng.client.NextGenService;
 import io.harness.cvng.client.VerificationManagerService;
 import io.harness.cvng.core.beans.DeploymentActivityResultDTO.DeploymentResultSummary;
 import io.harness.cvng.core.beans.DeploymentActivityVerificationResultDTO;
 import io.harness.cvng.core.entities.CVConfig;
+import io.harness.cvng.core.entities.CVConfig.CVConfigKeys;
 import io.harness.cvng.core.entities.DataCollectionTask;
+import io.harness.cvng.core.entities.DataCollectionTask.DataCollectionTaskKeys;
 import io.harness.cvng.core.entities.SplunkCVConfig;
 import io.harness.cvng.core.services.api.CVConfigService;
 import io.harness.cvng.core.services.api.DataCollectionTaskService;
@@ -59,7 +62,9 @@ import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 public class VerificationJobInstanceServiceImplTest extends CvNextGenTest {
@@ -94,7 +99,7 @@ public class VerificationJobInstanceServiceImplTest extends CvNextGenTest {
     FieldUtils.writeField(
         verificationJobInstanceService, "verificationManagerService", verificationManagerService, true);
     FieldUtils.writeField(verificationJobInstanceService, "nextGenService", nextGenService, true);
-    when(verificationManagerService.createDeploymentVerificationPerpetualTask(any(), any(), any(), any(), any()))
+    when(verificationManagerService.createDataCollectionTask(any(), any(), any(), any(), any()))
         .thenReturn(perpetualTaskId);
 
     when(nextGenService.getEnvironment("dev", accountId, orgIdentifier, projectIdentifier))
@@ -196,15 +201,20 @@ public class VerificationJobInstanceServiceImplTest extends CvNextGenTest {
     job.setAccountId(accountId);
     job.setIdentifier(verificationJobIdentifier);
     hPersistence.save(job);
-    cvConfigService.save(newCVConfig());
+    CVConfig cvConfig = cvConfigService.save(newCVConfig());
     String verificationTaskId = verificationJobInstanceService.create(accountId, newVerificationJobInstanceDTO());
     VerificationJobInstance verificationJobInstance =
         verificationJobInstanceService.getVerificationJobInstance(verificationTaskId);
     verificationJobInstance.setResolvedJob(job);
     verificationJobInstanceService.createDataCollectionTasks(verificationJobInstance);
+    Map<String, String> params = new HashMap<>();
+    params.put(DataCollectionTaskKeys.dataCollectionWorkerId,
+        UUID.nameUUIDFromBytes((verificationJobInstance.getUuid() + ":" + connectorId).getBytes(Charsets.UTF_8))
+            .toString());
+    params.put(CVConfigKeys.connectorIdentifier, connectorId);
     verify(verificationManagerService)
-        .createDeploymentVerificationPerpetualTask(eq(accountId), eq(connectorId), eq(orgIdentifier),
-            eq(projectIdentifier), eq(getDataCollectionWorkerId(verificationTaskId, connectorId)));
+        .createDataCollectionTask(
+            eq(accountId), eq(orgIdentifier), eq(projectIdentifier), eq(DataCollectionType.CV), eq(params));
     VerificationJobInstance saved = verificationJobInstanceService.getVerificationJobInstance(verificationTaskId);
     assertThat(saved.getPerpetualTaskIds()).isEqualTo(Lists.newArrayList(perpetualTaskId));
   }

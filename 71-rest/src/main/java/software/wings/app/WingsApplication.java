@@ -2,6 +2,7 @@ package software.wings.app;
 
 import static com.google.common.collect.ImmutableMap.of;
 import static com.google.inject.matcher.Matchers.not;
+import static io.harness.data.structure.CollectionUtils.emptyIfNull;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.lock.mongo.MongoPersistentLocker.LOCKS_STORE;
@@ -34,6 +35,9 @@ import com.google.inject.name.Names;
 
 import com.codahale.metrics.MetricRegistry;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.introspect.Annotated;
+import com.fasterxml.jackson.databind.introspect.JacksonAnnotationIntrospector;
+import com.fasterxml.jackson.databind.jsontype.NamedType;
 import com.github.dirkraft.dropwizard.fileassets.FileAssetsBundle;
 import com.palominolabs.metrics.guice.MetricsInstrumentationModule;
 import io.dropwizard.Application;
@@ -116,7 +120,7 @@ import io.harness.queue.QueueListenerController;
 import io.harness.queue.QueuePublisher;
 import io.harness.queue.TimerScheduledExecutorService;
 import io.harness.scheduler.PersistentScheduler;
-import io.harness.serializer.JsonSubtypeResolver;
+import io.harness.serializer.AnnotationAwareJsonSubtypeResolver;
 import io.harness.serializer.KryoRegistrar;
 import io.harness.serializer.ManagerRegistrars;
 import io.harness.service.DelegateServiceModule;
@@ -316,8 +320,22 @@ public class WingsApplication extends Application<MainConfiguration> {
 
   public static void configureObjectMapper(final ObjectMapper mapper) {
     mapper.addMixIn(AssetsConfiguration.class, AssetsConfigurationMixin.class);
-    mapper.setSubtypeResolver(new JsonSubtypeResolver(mapper.getSubtypeResolver()));
+    final AnnotationAwareJsonSubtypeResolver subtypeResolver =
+        AnnotationAwareJsonSubtypeResolver.newInstance(mapper.getSubtypeResolver());
+    mapper.setSubtypeResolver(subtypeResolver);
     mapper.setConfig(mapper.getSerializationConfig().withView(JsonViews.Public.class));
+    mapper.setAnnotationIntrospector(new JacksonAnnotationIntrospector() {
+      // defining a different serialVersionUID then base. We don't care about serializing it.
+      private static final long serialVersionUID = 7777451630128399020L;
+      @Override
+      public List<NamedType> findSubtypes(Annotated a) {
+        final List<NamedType> subtypesFromSuper = super.findSubtypes(a);
+        if (isNotEmpty(subtypesFromSuper)) {
+          return subtypesFromSuper;
+        }
+        return emptyIfNull(subtypeResolver.findSubtypes(a));
+      }
+    });
   }
 
   @Override

@@ -1,4 +1,4 @@
-package io.harness.cvng.core.entities;
+package io.harness.cvng.core.activity.entities;
 
 import static io.harness.cvng.core.services.CVNextGenConstants.DATA_COLLECTION_DELAY;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
@@ -7,13 +7,16 @@ import com.google.common.base.Preconditions;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonTypeName;
+import io.harness.cvng.beans.ActivityDTO;
+import io.harness.cvng.beans.ActivityType;
+import io.harness.cvng.beans.DeploymentActivityDTO;
 import io.harness.cvng.core.utils.DateTimeUtils;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 import lombok.Getter;
-import lombok.experimental.FieldNameConstants;
 
 import java.time.Duration;
 import java.time.Instant;
@@ -22,9 +25,9 @@ import javax.validation.constraints.NotNull;
 
 @JsonTypeName("DEPLOYMENT")
 @Data
-@FieldNameConstants(innerTypeName = "DeploymentActivityKeys")
 @Builder
 @AllArgsConstructor
+@EqualsAndHashCode(callSuper = true)
 public class DeploymentActivity extends Activity {
   Long dataCollectionDelayMs;
   Set<String> oldVersionHosts;
@@ -36,6 +39,20 @@ public class DeploymentActivity extends Activity {
   @Override
   public ActivityType getType() {
     return ActivityType.DEPLOYMENT;
+  }
+
+  @Override
+  public void fromDTO(ActivityDTO activityDTO) {
+    Preconditions.checkState(activityDTO instanceof DeploymentActivityDTO);
+    DeploymentActivityDTO deploymentActivityDTO = (DeploymentActivityDTO) activityDTO;
+    setDataCollectionDelayMs(deploymentActivityDTO.getDataCollectionDelayMs());
+    setOldVersionHosts(deploymentActivityDTO.getOldVersionHosts());
+    setNewVersionHosts(deploymentActivityDTO.getNewVersionHosts());
+    setNewHostsTrafficSplitPercentage(deploymentActivityDTO.getNewHostsTrafficSplitPercentage());
+    setDeploymentTag(deploymentActivityDTO.getDeploymentTag());
+    setVerificationStartTime(deploymentActivityDTO.getVerificationStartTime());
+    setType(ActivityType.DEPLOYMENT);
+    addCommonFileds(activityDTO);
   }
 
   @Override

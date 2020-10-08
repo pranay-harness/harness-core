@@ -1,6 +1,7 @@
 package io.harness.cvng.core.services.api;
 
-import io.harness.cvng.core.beans.ActivityDTO;
+import io.harness.cvng.beans.ActivityDTO;
+import io.harness.cvng.core.activity.entities.Activity;
 import io.harness.cvng.core.beans.DeploymentActivityResultDTO;
 import io.harness.cvng.core.beans.DeploymentActivityVerificationResultDTO;
 
@@ -14,4 +15,6 @@ public interface ActivityService {
 
   DeploymentActivityResultDTO getDeploymentActivityVerificationsByTag(
       String accountId, String projectIdentifier, String deploymentTag);
+
+  Activity getActivityFromDTO(ActivityDTO activityDTO);
 }
