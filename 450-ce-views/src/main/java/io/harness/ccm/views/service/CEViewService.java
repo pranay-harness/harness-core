@@ -8,5 +8,7 @@ import java.util.List;
 public interface CEViewService {
   CEView save(CEView ceView);
   CEView get(String uuid);
+  CEView update(CEView ceView);
+  boolean delete(String uuid, String accountId);
   List<QLCEView> getAllViews(String accountId);
 }

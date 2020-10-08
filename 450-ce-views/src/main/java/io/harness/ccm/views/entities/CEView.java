@@ -19,6 +19,7 @@ import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Id;
 
 import java.util.List;
+import javax.validation.constraints.Size;
 
 @Data
 @Builder
@@ -29,16 +30,16 @@ import java.util.List;
 public class CEView implements PersistentEntity, UuidAware, CreatedAtAware, UpdatedAtAware, AccountAccess,
                                CreatedByAware, UpdatedByAware {
   @Id String uuid;
-
-  @NotBlank String name;
-  @NotBlank String accountId;
+  @Size(min = 1, max = 32, message = "for view must be between 1 and 32 characters long") @NotBlank String name;
+  String accountId;
   @NotBlank String viewVersion;
 
   ViewTimeRange viewTimeRange;
   List<ViewRule> viewRules;
   ViewVisualization viewVisualization;
-  ViewType viewType;
+  ViewType viewType = ViewType.CUSTOMER;
 
+  ViewState viewState = ViewState.DRAFT;
   long createdAt;
   long lastUpdatedAt;
   private EmbeddedUser createdBy;
