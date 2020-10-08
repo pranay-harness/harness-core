@@ -86,7 +86,7 @@ public class ConfigFile extends BaseFile implements EncryptableSetting {
 
   private String overridePath;
 
-  @NotNull(groups = {Create.class}) @FormDataParam("configOverrideType") private ConfigOverrideType configOverrideType;
+  @FormDataParam("configOverrideType") private ConfigOverrideType configOverrideType;
   @FormDataParam("configOverrideExpression") private String configOverrideExpression;
 
   @FormDataParam("instances") private List<String> instances;
