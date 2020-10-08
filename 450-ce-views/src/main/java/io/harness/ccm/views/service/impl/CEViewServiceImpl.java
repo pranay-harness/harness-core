@@ -5,6 +5,7 @@ import com.google.inject.Singleton;
 
 import io.harness.ccm.views.dao.CEViewDao;
 import io.harness.ccm.views.entities.CEView;
+import io.harness.ccm.views.entities.ViewState;
 import io.harness.ccm.views.graphql.QLCEView;
 import io.harness.ccm.views.service.CEViewService;
 import io.harness.exception.InvalidRequestException;
@@ -23,6 +24,7 @@ public class CEViewServiceImpl implements CEViewService {
   @Override
   public CEView save(CEView ceView) {
     validateView(ceView);
+    ceView.setViewState(ViewState.DRAFT);
     ceViewDao.save(ceView);
     return ceView;
   }
@@ -38,6 +40,16 @@ public class CEViewServiceImpl implements CEViewService {
   @Override
   public CEView get(String uuid) {
     return ceViewDao.get(uuid);
+  }
+
+  @Override
+  public CEView update(CEView ceView) {
+    return ceViewDao.update(ceView);
+  }
+
+  @Override
+  public boolean delete(String uuid, String accountId) {
+    return ceViewDao.delete(uuid, accountId);
   }
 
   @Override
