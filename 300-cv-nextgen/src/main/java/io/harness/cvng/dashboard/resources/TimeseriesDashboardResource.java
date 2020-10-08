@@ -11,6 +11,7 @@ import io.harness.cvng.dashboard.services.api.TimeSeriesDashboardService;
 import io.harness.ng.beans.PageResponse;
 import io.harness.rest.RestResponse;
 import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiOperation;
 
 import javax.validation.constraints.NotNull;
 import javax.ws.rs.DefaultValue;
@@ -30,8 +31,10 @@ public class TimeseriesDashboardResource {
   @Path("anomalous-metric-data")
   @Timed
   @ExceptionMetered
-  public RestResponse<PageResponse<TimeSeriesMetricDataDTO>> getAnomalousMetricData(
-      @NotNull @QueryParam("accountId") String accountId,
+  @ApiOperation(
+      value = "get anomalous time series data in a given time range", nickname = "getAnomalousMetricDashboardData")
+  public RestResponse<PageResponse<TimeSeriesMetricDataDTO>>
+  getAnomalousMetricData(@NotNull @QueryParam("accountId") String accountId,
       @NotNull @QueryParam("projectIdentifier") String projectIdentifier,
       @NotNull @QueryParam("orgIdentifier") String orgIdentifier,
       @QueryParam("environmentIdentifier") String environmentIdentifier,
@@ -49,6 +52,7 @@ public class TimeseriesDashboardResource {
   @Path("metric-data")
   @Timed
   @ExceptionMetered
+  @ApiOperation(value = "get all time series data in a given time range", nickname = "getMetricData")
   public RestResponse<PageResponse<TimeSeriesMetricDataDTO>> getMetricData(
       @NotNull @QueryParam("accountId") String accountId,
       @NotNull @QueryParam("projectIdentifier") String projectIdentifier,

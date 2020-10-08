@@ -11,6 +11,7 @@ import io.harness.cvng.dashboard.beans.HeatMapDTO;
 import io.harness.cvng.dashboard.services.api.HeatMapService;
 import io.harness.rest.RestResponse;
 import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiOperation;
 
 import java.time.Instant;
 import java.util.List;
@@ -32,6 +33,7 @@ public class HeatMapResource {
   @GET
   @Timed
   @ExceptionMetered
+  @ApiOperation(value = "get heatmap for a time range", nickname = "getHeatMap")
   public RestResponse<Map<CVMonitoringCategory, SortedSet<HeatMapDTO>>> getHeatMap(
       @QueryParam("accountId") @NotNull final String accountId,
       @QueryParam("projectIdentifier") @NotNull final String projectIdentifier,
@@ -47,6 +49,7 @@ public class HeatMapResource {
   @Path("/category-risks")
   @Timed
   @ExceptionMetered
+  @ApiOperation(value = "get current risk for all categories", nickname = "getCategoryRiskMap")
   public RestResponse<Map<CVMonitoringCategory, Integer>> getCategoryRiskMap(
       @QueryParam("accountId") @NotNull final String accountId,
       @QueryParam("orgIdentifier") @NotNull final String orgIdentifier,
@@ -61,6 +64,7 @@ public class HeatMapResource {
   @Path("/env-service-risks")
   @Timed
   @ExceptionMetered
+  @ApiOperation(value = "get current risks for each env/service combination", nickname = "getEnvServiceRisks")
   public RestResponse<List<EnvServiceRiskDTO>> getEnvServiceRisks(
       @QueryParam("accountId") @NotNull final String accountId,
       @QueryParam("orgIdentifier") @NotNull final String orgIdentifier,

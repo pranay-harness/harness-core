@@ -8,6 +8,7 @@ import io.harness.annotations.ExposeInternalException;
 import io.harness.cvng.verificationjob.beans.VerificationJobInstanceDTO;
 import io.harness.cvng.verificationjob.services.api.VerificationJobInstanceService;
 import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiOperation;
 import retrofit2.http.Body;
 
 import javax.validation.Valid;
@@ -25,6 +26,7 @@ public class VerificationJobInstanceResource {
   @POST
   @Timed
   @ExceptionMetered
+  @ApiOperation(value = "creates a job for verification", nickname = "createVerificationJobInstance")
   public void create(@QueryParam("accountId") @Valid final String accountId,
       @Body VerificationJobInstanceDTO verificationJobInstanceDTO) {
     // TODO: we will need separate token based auth mechanism for this so that the third party systems can call us.

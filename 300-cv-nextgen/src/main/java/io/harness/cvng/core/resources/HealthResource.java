@@ -16,6 +16,7 @@ import io.harness.health.HealthService;
 import io.harness.rest.RestResponse;
 import io.harness.security.annotations.PublicApi;
 import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiOperation;
 import lombok.extern.slf4j.Slf4j;
 
 import javax.ws.rs.Consumes;
@@ -42,6 +43,7 @@ public class HealthResource {
   @GET
   @Timed
   @ExceptionMetered
+  @ApiOperation(value = "get health for CVNG service", nickname = "getCvHealthStatus")
   public RestResponse<String> get() throws Exception {
     if (getMaintenanceFlag()) {
       logger.info("In maintenance mode. Throwing exception to prevent traffic.");

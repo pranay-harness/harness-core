@@ -17,6 +17,7 @@ import io.harness.rest.RestResponse;
 import io.harness.security.annotations.DelegateAuth;
 import io.harness.security.annotations.PublicApi;
 import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiOperation;
 import retrofit2.http.Body;
 
 import java.util.List;
@@ -41,23 +42,29 @@ public class ActivityResource {
   @Timed
   @ExceptionMetered
   @Path("{webHookToken}")
-  public void registerKubernetesSource(@PathParam("webHookToken") String webHookToken,
+  @ApiOperation(value = "registers an activity", nickname = "registerActivity")
+  public void registerActivity(@PathParam("webHookToken") String webHookToken,
       @QueryParam("accountId") @Valid final String accountId, @Body ActivityDTO activityDTO) {
     activityService.register(accountId, webHookToken, activityDTO);
   }
 
   @GET
   @Path("recent-deployment-activity-verifications")
-  public RestResponse<List<DeploymentActivityVerificationResultDTO>> getRecentDeploymentActivityVerifications(
+  @ApiOperation(
+      value = "get recent deployment activity verification", nickname = "getRecentDeploymentActivityVerifications")
+  public RestResponse<List<DeploymentActivityVerificationResultDTO>>
+  getRecentDeploymentActivityVerifications(
       @QueryParam("accountId") String accountId, @QueryParam("projectIdentifier") String projectIdentifier) {
     return new RestResponse<>(activityService.getRecentDeploymentActivityVerifications(accountId, projectIdentifier));
   }
 
   @GET
   @Path("deployment-activity-verifications/{deploymentTag}")
-  public RestResponse<DeploymentActivityResultDTO> getDeploymentActivityVerificationsByTag(
-      @QueryParam("accountId") String accountId, @QueryParam("projectIdentifier") String projectIdentifier,
-      @PathParam("deploymentTag") String deploymentTag) {
+  @ApiOperation(
+      value = "get deployment activities for given build tag", nickname = "getDeploymentActivityVerificationsByTag")
+  public RestResponse<DeploymentActivityResultDTO>
+  getDeploymentActivityVerificationsByTag(@QueryParam("accountId") String accountId,
+      @QueryParam("projectIdentifier") String projectIdentifier, @PathParam("deploymentTag") String deploymentTag) {
     return new RestResponse(
         activityService.getDeploymentActivityVerificationsByTag(accountId, projectIdentifier, deploymentTag));
   }
@@ -66,6 +73,7 @@ public class ActivityResource {
   @Timed
   @ExceptionMetered
   @Path("/kubernetes-source")
+  @ApiOperation(value = "register a kubernetes event source", nickname = "registerKubernetesSource")
   public RestResponse<String> registerKubernetesSource(@QueryParam("accountId") @NotNull String accountId,
       @QueryParam("orgIdentifier") @NotNull String orgIdentifier,
       @QueryParam("projectIdentifier") @NotNull String projectIdentifier,
@@ -79,6 +87,7 @@ public class ActivityResource {
   @ExceptionMetered
   @DelegateAuth
   @Path("/kubernetes-activities")
+  @ApiOperation(value = "saves a list of kubernetes activities", nickname = "saveKubernetesActivities")
   public RestResponse<Boolean> saveKubernetesActivities(@QueryParam("accountId") @NotNull String accountId,
       @QueryParam("activitySourceId") @NotNull String activitySourceId,
       @NotNull @Valid @Body List<KubernetesActivityDTO> activities) {

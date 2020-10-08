@@ -12,6 +12,7 @@ import io.harness.cvng.core.services.api.AppDynamicsService;
 import io.harness.rest.RestResponse;
 import io.harness.security.annotations.LearningEngineAuth;
 import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiOperation;
 import retrofit2.http.Body;
 
 import java.util.List;
@@ -34,6 +35,7 @@ public class AppDynamicsResource {
   @Timed
   @ExceptionMetered
   @LearningEngineAuth
+  @ApiOperation(value = "get metric data for given metric packs", nickname = "getAppdynamicsMetricData")
   public RestResponse<Set<AppdynamicsValidationResponse>> getMetricData(
       @QueryParam("accountId") @NotNull String accountId, @QueryParam("orgIdentifier") @NotNull String orgIdentifier,
       @QueryParam("projectIdentifier") @NotNull String projectIdentifier,
@@ -48,6 +50,7 @@ public class AppDynamicsResource {
   @Path("/applications")
   @Timed
   @ExceptionMetered
+  @ApiOperation(value = "get all appdynamics applications", nickname = "getAppdynamicsApplications")
   public RestResponse<List<AppDynamicsApplication>> getAllApplications(
       @NotNull @QueryParam("accountId") String accountId,
       @NotNull @QueryParam("connectorIdentifier") final String connectorIdentifier,
@@ -61,6 +64,7 @@ public class AppDynamicsResource {
   @Path("/tiers")
   @Timed
   @ExceptionMetered
+  @ApiOperation(value = "get all appdynamics tiers for an application", nickname = "getAppdynamicsTiers")
   public RestResponse<Set<AppDynamicsTier>> getAllTiers(@NotNull @QueryParam("accountId") String accountId,
       @NotNull @QueryParam("connectorIdentifier") final String connectorIdentifier,
       @QueryParam("orgIdentifier") @NotNull String orgIdentifier,

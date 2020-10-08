@@ -15,6 +15,7 @@ import io.harness.cvng.core.beans.TimeSeriesMetricDefinition;
 import io.harness.rest.RestResponse;
 import io.harness.security.annotations.LearningEngineAuth;
 import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiOperation;
 import lombok.extern.slf4j.Slf4j;
 
 import java.time.Instant;
@@ -39,6 +40,7 @@ public class TrendAnalysisResource {
   @Timed
   @ExceptionMetered
   @LearningEngineAuth
+  @ApiOperation(value = "save time series data for trend analysis", nickname = "getTestDataForTrend")
   public RestResponse<Map<String, Map<String, List<Double>>>> getTestData(
       @NotNull @QueryParam("verificationTaskId") String verificationTaskId,
       @NotNull @QueryParam("analysisStartTime") String epochStartInstant,
@@ -53,6 +55,7 @@ public class TrendAnalysisResource {
   @Timed
   @LearningEngineAuth
   @ExceptionMetered
+  @ApiOperation(value = "save time series analysis", nickname = "saveServiceGuardTrendAnalysis")
   public RestResponse<Void> saveServiceGuardAnalysis(
       @NotNull @QueryParam("taskId") String taskId, ServiceGuardMetricAnalysisDTO analysisBody) {
     trendAnalysisService.saveAnalysis(taskId, analysisBody);
@@ -64,6 +67,7 @@ public class TrendAnalysisResource {
   @Timed
   @ExceptionMetered
   @LearningEngineAuth
+  @ApiOperation(value = "get metric template for analysis", nickname = "getMetricTimeSeriesTemplateForTrend")
   public RestResponse<List<TimeSeriesMetricDefinition>> getMetricTemplate() {
     return new RestResponse<>(trendAnalysisService.getTimeSeriesMetricDefinitions());
   }

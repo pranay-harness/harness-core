@@ -9,6 +9,7 @@ import io.harness.cvng.verificationjob.beans.VerificationJobDTO;
 import io.harness.cvng.verificationjob.services.api.VerificationJobService;
 import io.harness.rest.RestResponse;
 import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiOperation;
 import retrofit2.http.Body;
 
 import java.util.List;
@@ -29,6 +30,7 @@ public class VerificationJobResource {
   @GET
   @Timed
   @ExceptionMetered
+  @ApiOperation(value = "gets the verification job for an identifier", nickname = "getVerificationJob")
   public RestResponse<VerificationJobDTO> get(
       @QueryParam("accountId") @Valid final String accountId, @QueryParam("identifier") String identifier) {
     return new RestResponse<>(verificationJobService.getVerificationJobDTO(accountId, identifier));
@@ -37,6 +39,7 @@ public class VerificationJobResource {
   @PUT
   @Timed
   @ExceptionMetered
+  @ApiOperation(value = "upserts a verification job for an identifier", nickname = "upsertVerificationJob")
   public void upsert(
       @QueryParam("accountId") @Valid final String accountId, @Body VerificationJobDTO verificationJobDTO) {
     verificationJobService.upsert(accountId, verificationJobDTO);
@@ -45,7 +48,8 @@ public class VerificationJobResource {
   @DELETE
   @Timed
   @ExceptionMetered
-  public void deleteByGroup(
+  @ApiOperation(value = "deletes a verification job for an identifier", nickname = "deleteVerificationJob")
+  public void delete(
       @QueryParam("accountId") @Valid final String accountId, @QueryParam("identifier") String identifier) {
     verificationJobService.delete(accountId, identifier);
   }
@@ -54,6 +58,7 @@ public class VerificationJobResource {
   @Timed
   @ExceptionMetered
   @Path("/list")
+  @ApiOperation(value = "lists all verification jobs for an identifier", nickname = "listVerificationJobs")
   public RestResponse<List<VerificationJobDTO>> list(@QueryParam("accountId") @Valid final String accountId,
       @QueryParam("projectIdentifier") String projectIdentifier, @QueryParam("orgIdentifier") String orgIdentifier) {
     return new RestResponse<>(verificationJobService.list(accountId, projectIdentifier, orgIdentifier));

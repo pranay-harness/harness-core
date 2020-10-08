@@ -13,6 +13,7 @@ import io.harness.cvng.analysis.services.api.LearningEngineTaskService;
 import io.harness.rest.RestResponse;
 import io.harness.security.annotations.LearningEngineAuth;
 import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiOperation;
 
 import java.util.List;
 import javax.ws.rs.GET;
@@ -31,6 +32,7 @@ public class LearningEngineTaskResource {
   @Timed
   @ExceptionMetered
   @LearningEngineAuth
+  @ApiOperation(value = "get next LE task to be processed", nickname = "getNextLearningTask")
   public RestResponse<LearningEngineTask> getNextTask(@QueryParam("taskTypes") List<LearningEngineTaskType> taskTypes) {
     if (taskTypes == null) {
       return new RestResponse<>(learningEngineTaskService.getNextAnalysisTask());
@@ -43,6 +45,7 @@ public class LearningEngineTaskResource {
   @Timed
   @ExceptionMetered
   @LearningEngineAuth
+  @ApiOperation(value = "mark task failed", nickname = "markLearningTaskFailure")
   public RestResponse<Boolean> markFailure(@QueryParam("taskId") String taskId) {
     learningEngineTaskService.markFailure(taskId);
     return new RestResponse<>(true);

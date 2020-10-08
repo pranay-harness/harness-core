@@ -12,6 +12,7 @@ import io.harness.cvng.core.services.api.HostRecordService;
 import io.harness.rest.RestResponse;
 import io.harness.security.annotations.DelegateAuth;
 import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiOperation;
 import retrofit2.http.Body;
 
 import java.util.List;
@@ -32,7 +33,10 @@ public class HostRecordResource {
   @Timed
   @ExceptionMetered
   @DelegateAuth
-  public RestResponse<Void> saveHostRecords(
+  @ApiOperation(
+      value = "saves hosts collected while doing canary verification", nickname = "saveVerificationHostRecords")
+  public RestResponse<Void>
+  saveHostRecords(
       @QueryParam("accountId") @NotNull String accountId, @NotNull @Valid @Body List<HostRecordDTO> hostRecordDTOs) {
     hostRecordService.save(hostRecordDTOs);
     return new RestResponse<>(null);

@@ -11,6 +11,7 @@ import io.harness.cvng.analysis.services.api.DeploymentLogAnalysisService;
 import io.harness.ng.beans.PageResponse;
 import io.harness.rest.RestResponse;
 import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiOperation;
 
 import java.util.List;
 import javax.ws.rs.GET;
@@ -31,7 +32,8 @@ public class DeploymentLogAnalysisResource {
   @Path("/{verificationJobInstanceId}/clusters")
   @Timed
   @ExceptionMetered
-  public RestResponse<List<LogAnalysisClusterChartDTO>> getMetrics(
+  @ApiOperation(value = "get logs for given verificationJob", nickname = "getLogAnalysisClusters")
+  public RestResponse<List<LogAnalysisClusterChartDTO>> getLogAnalysisClusters(
       @PathParam("verificationJobInstanceId") String verificationJobInstanceId,
       @QueryParam("accountId") String accountId) {
     return new RestResponse(deploymentLogAnalysisService.getLogAnalysisClusters(accountId, verificationJobInstanceId));
@@ -41,7 +43,8 @@ public class DeploymentLogAnalysisResource {
   @GET
   @Timed
   @ExceptionMetered
-  public RestResponse<PageResponse<LogAnalysisClusterDTO>> getMetrics(
+  @ApiOperation(value = "get logs for given verificationJob", nickname = "getLogAnalysisResult")
+  public RestResponse<PageResponse<LogAnalysisClusterDTO>> getLogAnalysisResult(
       @PathParam("verificationJobInstanceId") String verificationJobInstanceId,
       @QueryParam("accountId") String accountId, @QueryParam("label") Integer label,
       @QueryParam("pageNumber") int pageNumber) {

@@ -12,6 +12,7 @@ import io.harness.cvng.core.services.api.DataCollectionTaskService;
 import io.harness.rest.RestResponse;
 import io.harness.security.annotations.DelegateAuth;
 import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiOperation;
 
 import java.util.Optional;
 import javax.validation.constraints.NotNull;
@@ -32,6 +33,7 @@ public class DataCollectionTaskResource {
   @Timed
   @ExceptionMetered
   @DelegateAuth
+  @ApiOperation(value = "gets next task for data collection", nickname = "getNextDataCollectionTask")
   public RestResponse<Optional<DataCollectionTaskDTO>> getNextTask(@QueryParam("accountId") @NotNull String accountId,
       @QueryParam("dataCollectionWorkerId") String dataCollectionWorkerId) {
     return new RestResponse<>(dataCollectionTaskService.getNextTaskDTO(accountId, dataCollectionWorkerId));
@@ -42,6 +44,7 @@ public class DataCollectionTaskResource {
   @Timed
   @ExceptionMetered
   @DelegateAuth
+  @ApiOperation(value = "updates status for data collection task", nickname = "updateDataCollectionTask")
   public RestResponse<Void> updateTaskStatus(
       @QueryParam("accountId") @NotNull String accountId, DataCollectionTaskResult dataCollectionTaskResult) {
     dataCollectionTaskService.updateTaskStatus(dataCollectionTaskResult);

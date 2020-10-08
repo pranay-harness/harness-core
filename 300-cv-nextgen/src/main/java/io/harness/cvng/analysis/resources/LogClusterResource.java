@@ -12,6 +12,7 @@ import io.harness.cvng.analysis.services.api.LogClusterService;
 import io.harness.rest.RestResponse;
 import io.harness.security.annotations.LearningEngineAuth;
 import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiOperation;
 
 import java.time.Instant;
 import java.util.List;
@@ -32,6 +33,7 @@ public class LogClusterResource {
   @Timed
   @ExceptionMetered
   @LearningEngineAuth
+  @ApiOperation(value = "get test log data for a clustering", nickname = "getTestLogDataForClustering")
   public RestResponse<List<LogClusterDTO>> getTestData(@QueryParam("verificationTaskId") String verificationTaskId,
       @QueryParam("clusterLevel") LogClusterLevel logClusterLevel, @QueryParam("startTime") Long startTime,
       @QueryParam("endTime") Long endTime, @QueryParam("host") String host) {
@@ -45,6 +47,7 @@ public class LogClusterResource {
   @Timed
   @LearningEngineAuth
   @ExceptionMetered
+  @ApiOperation(value = "saves clustered log data", nickname = "saveClusteredData")
   public RestResponse<Boolean> saveClusteredData(@QueryParam("taskId") String taskId,
       @QueryParam("verificationTaskId") String verificationTaskId, @QueryParam("timestamp") String timestamp,
       @QueryParam("clusterLevel") LogClusterLevel clusterLevel, List<LogClusterDTO> clusterDTO) {

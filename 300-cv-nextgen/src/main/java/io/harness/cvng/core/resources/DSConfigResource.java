@@ -11,6 +11,7 @@ import io.harness.cvng.core.services.api.DSConfigService;
 import io.harness.cvng.dashboard.beans.EnvToServicesDTO;
 import io.harness.rest.RestResponse;
 import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiOperation;
 import retrofit2.http.Body;
 
 import java.util.List;
@@ -33,6 +34,7 @@ public class DSConfigResource {
   @GET
   @Timed
   @ExceptionMetered
+  @ApiOperation(value = "gets list of data source configs", nickname = "getDataSourceConfigs")
   public RestResponse<List<DSConfig>> getDataSourceCVConfigs(@QueryParam("accountId") @Valid final String accountId,
       @QueryParam("connectorIdentifier") String connectorIdentifier, @QueryParam("productName") String productName) {
     return new RestResponse<>(dsConfigService.list(accountId, connectorIdentifier, productName));
@@ -41,6 +43,7 @@ public class DSConfigResource {
   @PUT
   @Timed
   @ExceptionMetered
+  @ApiOperation(value = "saves a data source config", nickname = "saveDataSourceCVConfig")
   public void saveDataSourceCVConfig(@QueryParam("accountId") @Valid final String accountId, @Body DSConfig dsConfig) {
     dsConfigService.upsert(dsConfig);
   }
@@ -48,6 +51,7 @@ public class DSConfigResource {
   @DELETE
   @Timed
   @ExceptionMetered
+  @ApiOperation(value = "deletes all data source configs for a group", nickname = "deleteDataSourceCVConfigByGroup")
   public void deleteByGroup(@QueryParam("accountId") @Valid final String accountId,
       @QueryParam("connectorIdentifier") String connectorIdentifier, @QueryParam("productName") String productName,
       @QueryParam("identifier") String identifier) {
@@ -58,8 +62,11 @@ public class DSConfigResource {
   @Path("/env-to-services")
   @Timed
   @ExceptionMetered
-  public RestResponse<List<EnvToServicesDTO>> getEnvToServicesList(
-      @QueryParam("accountId") @NotNull final String accountId, @QueryParam("orgIdentifier") String orgIdentifier,
+  @ApiOperation(value = "gets list of env to services mapping for which data sources are configured",
+      nickname = "getEnvToServicesList")
+  public RestResponse<List<EnvToServicesDTO>>
+  getEnvToServicesList(@QueryParam("accountId") @NotNull final String accountId,
+      @QueryParam("orgIdentifier") String orgIdentifier,
       @QueryParam("projectIdentifier") @NotNull final String projectIdentifier) {
     return new RestResponse<>(cvConfigService.getEnvToServicesList(accountId, orgIdentifier, projectIdentifier));
   }

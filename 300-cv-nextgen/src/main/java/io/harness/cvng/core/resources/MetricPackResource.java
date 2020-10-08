@@ -12,6 +12,7 @@ import io.harness.cvng.core.entities.TimeSeriesThreshold;
 import io.harness.cvng.core.services.api.MetricPackService;
 import io.harness.rest.RestResponse;
 import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiOperation;
 import retrofit2.http.Body;
 
 import java.util.List;
@@ -34,6 +35,7 @@ public class MetricPackResource {
   @GET
   @Timed
   @ExceptionMetered
+  @ApiOperation(value = "get all metric packs for a connector type", nickname = "getMetricPacks")
   public RestResponse<List<MetricPackDTO>> getMetricPacks(@QueryParam("accountId") @NotNull String accountId,
       @QueryParam("projectIdentifier") @NotNull String projectIdentifier,
       @QueryParam("dataSourceType") @NotNull DataSourceType dataSourceType) {
@@ -43,6 +45,7 @@ public class MetricPackResource {
   @POST
   @Timed
   @ExceptionMetered
+  @ApiOperation(value = "saves a metric pack for a connector type", nickname = "saveMetricPacks")
   public RestResponse<Boolean> saveMetricPacks(@QueryParam("accountId") @NotNull String accountId,
       @QueryParam("projectIdentifier") @NotNull String projectIdentifier,
       @QueryParam("dataSourceType") @NotNull DataSourceType dataSourceType,
@@ -55,6 +58,7 @@ public class MetricPackResource {
   @Path("/thresholds")
   @Timed
   @ExceptionMetered
+  @ApiOperation(value = "get custom thresholds for a given metric pack", nickname = "getMetricPackThresholds")
   public RestResponse<List<TimeSeriesThreshold>> getMetricPackThresholds(
       @QueryParam("accountId") @NotNull String accountId,
       @QueryParam("projectIdentifier") @NotNull String projectIdentifier,
@@ -68,6 +72,7 @@ public class MetricPackResource {
   @Path("/thresholds")
   @Timed
   @ExceptionMetered
+  @ApiOperation(value = "saves custom thresholds for a given metric pack", nickname = "saveMetricPackThresholds")
   public RestResponse<List<String>> saveMetricPackThresholds(@QueryParam("accountId") @NotNull String accountId,
       @QueryParam("projectIdentifier") @NotNull String projectIdentifier,
       @QueryParam("dataSourceType") @NotNull DataSourceType dataSourceType,
@@ -80,6 +85,7 @@ public class MetricPackResource {
   @Path("/thresholds")
   @Timed
   @ExceptionMetered
+  @ApiOperation(value = "deletes custom thresholds for a given metric pack", nickname = "deleteMetricPackThresholds")
   public RestResponse<Boolean> deleteMetricPackThresholds(@QueryParam("accountId") @NotNull String accountId,
       @QueryParam("projectIdentifier") @NotNull String projectIdentifier,
       @QueryParam("thresholdId") @NotNull String thresholdId) {
