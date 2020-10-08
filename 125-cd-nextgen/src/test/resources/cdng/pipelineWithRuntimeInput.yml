@@ -25,6 +25,9 @@ pipeline:
           service:
             name: service1
             identifier: ${input}
+            tags:
+              k1: v1
+              k2: v2
             serviceDefinition:
               type: Kubernetes # Can it be type to make it consistent with other types
               spec:
@@ -91,6 +94,9 @@ pipeline:
               name: ${input}
               identifier: ${input}
               type: PreProduction
+              tags:
+                envType: prod
+                envRegion: us-east1
             infrastructureDefinition:
               type: KubernetesDirect
               spec:

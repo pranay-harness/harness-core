@@ -5,7 +5,6 @@ import io.harness.cdng.visitor.LevelNodeQualifierName;
 import io.harness.cdng.visitor.helpers.pipelineinfrastructure.EnvironmentYamlVisitorHelper;
 import io.harness.common.SwaggerConstants;
 import io.harness.data.structure.EmptyPredicate;
-import io.harness.ng.core.common.beans.Tag;
 import io.harness.ng.core.environment.beans.EnvironmentType;
 import io.harness.walktree.beans.LevelNode;
 import io.harness.walktree.visitor.SimpleVisitorHelper;
@@ -16,7 +15,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.experimental.Wither;
 
-import java.util.List;
+import java.util.Map;
 
 @Data
 @Builder
@@ -26,7 +25,7 @@ public class EnvironmentYaml implements OverridesApplier<EnvironmentYaml>, Visit
   @ApiModelProperty(dataType = SwaggerConstants.STRING_CLASSPATH) @Wither ParameterField<String> identifier;
   @ApiModelProperty(dataType = SwaggerConstants.STRING_CLASSPATH) @Wither private ParameterField<String> description;
   @Wither EnvironmentType type;
-  @Wither List<Tag> tags;
+  @Wither Map<String, String> tags;
 
   // For Visitor Framework Impl
   String metadata;

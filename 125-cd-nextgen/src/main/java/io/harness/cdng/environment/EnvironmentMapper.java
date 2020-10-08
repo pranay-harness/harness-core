@@ -1,5 +1,7 @@
 package io.harness.cdng.environment;
 
+import static io.harness.ng.core.mapper.TagMapper.convertToList;
+
 import io.harness.cdng.environment.yaml.EnvironmentYaml;
 import lombok.experimental.UtilityClass;
 
@@ -12,7 +14,7 @@ public class EnvironmentMapper {
         .identifier(environmentYaml.getIdentifier().getValue())
         .name(environmentYaml.getName() != null ? environmentYaml.getName().getValue() : "")
         .description(environmentYaml.getDescription() != null ? environmentYaml.getDescription().getValue() : "")
-        .tags(environmentYaml.getTags())
+        .tags(convertToList(environmentYaml.getTags()))
         .type(environmentYaml.getType())
         .build();
   }

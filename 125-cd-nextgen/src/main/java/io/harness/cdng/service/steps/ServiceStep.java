@@ -1,6 +1,7 @@
 package io.harness.cdng.service.steps;
 
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.ng.core.mapper.TagMapper.convertToList;
 import static java.util.stream.Collectors.toList;
 
 import com.google.common.annotations.VisibleForTesting;
@@ -157,6 +158,7 @@ public class ServiceStep implements Step, ChildrenExecutable<ServiceStepParamete
         .projectIdentifier(projectIdentifier)
         .orgIdentifier(orgIdentifier)
         .accountId(accountId)
+        .tags(convertToList(serviceConfig.getTags()))
         .build();
   }
 }

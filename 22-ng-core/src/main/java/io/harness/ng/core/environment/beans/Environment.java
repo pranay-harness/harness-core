@@ -52,7 +52,7 @@ public class Environment implements PersistentEntity {
   @EntityName private String name;
   @Size(max = 1024) String description;
   @NotEmpty private EnvironmentType type;
-  @NotNull @Singular @Size(max = 128) private List<Tag> tags;
+  @Wither @Singular @Size(max = 128) private List<Tag> tags;
 
   @Wither @CreatedDate Long createdAt;
   @Wither @LastModifiedDate Long lastModifiedAt;

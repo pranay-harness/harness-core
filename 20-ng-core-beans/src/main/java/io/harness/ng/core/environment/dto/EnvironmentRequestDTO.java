@@ -14,6 +14,8 @@ import lombok.Value;
 import lombok.experimental.FieldDefaults;
 import org.hibernate.validator.constraints.NotEmpty;
 
+import java.util.Map;
+
 @Value
 @Builder
 @FieldDefaults(level = AccessLevel.PRIVATE)
@@ -23,7 +25,7 @@ public class EnvironmentRequestDTO {
   @ApiModelProperty(required = true) @NotEmpty String orgIdentifier;
   @ApiModelProperty(required = true) @NotEmpty String projectIdentifier;
   @ApiModelProperty(required = true) @NotEmpty @EntityIdentifier String identifier;
-
+  Map<String, String> tags;
   @EntityName String name;
   String description;
   @ApiModelProperty(required = true) EnvironmentType type;

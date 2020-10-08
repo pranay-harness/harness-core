@@ -1,5 +1,8 @@
 package io.harness.ng.core.environment.mappers;
 
+import static io.harness.ng.core.mapper.TagMapper.convertToList;
+import static io.harness.ng.core.mapper.TagMapper.convertToMap;
+
 import io.harness.ng.core.environment.beans.Environment;
 import io.harness.ng.core.environment.dto.EnvironmentRequestDTO;
 import io.harness.ng.core.environment.dto.EnvironmentResponseDTO;
@@ -16,6 +19,7 @@ public class EnvironmentMapper {
         .name(environmentRequestDTO.getName())
         .description(environmentRequestDTO.getDescription())
         .type(environmentRequestDTO.getType())
+        .tags(convertToList(environmentRequestDTO.getTags()))
         .build();
   }
 
@@ -29,6 +33,7 @@ public class EnvironmentMapper {
         .description(environment.getDescription())
         .type(environment.getType())
         .deleted(environment.getDeleted())
+        .tags(convertToMap(environment.getTags()))
         .build();
   }
 }
