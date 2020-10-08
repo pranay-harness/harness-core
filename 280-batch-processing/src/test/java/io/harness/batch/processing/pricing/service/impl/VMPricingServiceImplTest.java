@@ -61,6 +61,19 @@ public class VMPricingServiceImplTest extends CategoryTest {
   @Test
   @Owner(developers = HITESH)
   @Category(UnitTests.class)
+  public void testGetCustomComputeVMPricingInfo() throws IOException {
+    VMComputePricingInfo computeVMPricingInfo =
+        vmPricingService.getComputeVMPricingInfo("n2-standard-16", REGION, CloudProvider.GCP);
+    assertThat(computeVMPricingInfo).isNotNull();
+    assertThat(computeVMPricingInfo.getCpusPerVm()).isEqualTo(16.0);
+    assertThat(computeVMPricingInfo.getMemPerVm()).isEqualTo(64.0);
+    assertThat(computeVMPricingInfo.getOnDemandPrice()).isEqualTo(0.7769);
+    assertThat(computeVMPricingInfo.getType()).isEqualTo("n2-standard-16");
+  }
+
+  @Test
+  @Owner(developers = HITESH)
+  @Category(UnitTests.class)
   public void testShouldReturnNullVMPricingInfo() throws IOException {
     Call<PricingResponse> pricingInfoCall = mock(Call.class);
     when(pricingInfoCall.execute()).thenThrow(IOException.class);
