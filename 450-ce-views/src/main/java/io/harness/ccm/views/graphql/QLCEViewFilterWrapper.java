@@ -11,5 +11,5 @@ import lombok.experimental.FieldDefaults;
 public class QLCEViewFilterWrapper {
   QLCEViewFilter idFilter;
   QLCEViewTimeFilter timeFilter;
-  String viewFilter;
+  QLCEViewMetadataFilter viewMetadataFilter;
 }

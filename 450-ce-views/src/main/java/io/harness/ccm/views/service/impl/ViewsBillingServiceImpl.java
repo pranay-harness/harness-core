@@ -29,6 +29,7 @@ import io.harness.ccm.views.graphql.QLCEViewFieldInput;
 import io.harness.ccm.views.graphql.QLCEViewFilter;
 import io.harness.ccm.views.graphql.QLCEViewFilterWrapper;
 import io.harness.ccm.views.graphql.QLCEViewGroupBy;
+import io.harness.ccm.views.graphql.QLCEViewMetadataFilter;
 import io.harness.ccm.views.graphql.QLCEViewSortCriteria;
 import io.harness.ccm.views.graphql.QLCEViewTimeFilter;
 import io.harness.ccm.views.graphql.QLCEViewTimeFilterOperator;
@@ -89,8 +90,7 @@ public class ViewsBillingServiceImpl implements ViewsBillingService {
   public List<QLCEViewEntityStatsDataPoint> getEntityStatsDataPoints(BigQuery bigQuery,
       List<QLCEViewFilterWrapper> filters, List<QLCEViewGroupBy> groupBy, List<QLCEViewAggregation> aggregateFunction,
       List<QLCEViewSortCriteria> sort, String cloudProviderTableName) {
-    SelectQuery query = getQuery(filters, groupBy, aggregateFunction, sort);
-    query.addCustomFromTable(cloudProviderTableName);
+    SelectQuery query = getQuery(filters, groupBy, aggregateFunction, sort, cloudProviderTableName, false);
     QueryJobConfiguration queryConfig = QueryJobConfiguration.newBuilder(query.toString()).build();
     TableResult result;
     try {
@@ -107,8 +107,7 @@ public class ViewsBillingServiceImpl implements ViewsBillingService {
   public TableResult getTimeSeriesStats(BigQuery bigQuery, List<QLCEViewFilterWrapper> filters,
       List<QLCEViewGroupBy> groupBy, List<QLCEViewAggregation> aggregateFunction, List<QLCEViewSortCriteria> sort,
       String cloudProviderTableName) {
-    SelectQuery query = getQuery(filters, groupBy, aggregateFunction, sort);
-    query.addCustomFromTable(cloudProviderTableName);
+    SelectQuery query = getQuery(filters, groupBy, aggregateFunction, sort, cloudProviderTableName, true);
     QueryJobConfiguration queryConfig = QueryJobConfiguration.newBuilder(query.toString()).build();
     try {
       return bigQuery.query(queryConfig);
@@ -125,13 +124,12 @@ public class ViewsBillingServiceImpl implements ViewsBillingService {
     List<ViewRule> viewRuleList = new ArrayList<>();
     List<QLCEViewFilter> idFilters = getIdFilters(filters);
     List<QLCEViewTimeFilter> timeFilters = getTimeFilters(filters);
-    SelectQuery query = getTrendStatsQuery(filters, idFilters, timeFilters, aggregateFunction, viewRuleList);
-    query.addCustomFromTable(cloudProviderTableName);
+    SelectQuery query =
+        getTrendStatsQuery(filters, idFilters, timeFilters, aggregateFunction, viewRuleList, cloudProviderTableName);
 
     List<QLCEViewTimeFilter> trendTimeFilters = getTrendFilters(timeFilters);
-    SelectQuery prevTrendStatsQuery =
-        getTrendStatsQuery(filters, idFilters, trendTimeFilters, aggregateFunction, viewRuleList);
-    prevTrendStatsQuery.addCustomFromTable(cloudProviderTableName);
+    SelectQuery prevTrendStatsQuery = getTrendStatsQuery(
+        filters, idFilters, trendTimeFilters, aggregateFunction, viewRuleList, cloudProviderTableName);
 
     Instant trendStartInstant =
         Instant.ofEpochMilli(getTimeFilter(trendTimeFilters, QLCEViewTimeFilterOperator.AFTER).getValue().longValue());
@@ -252,45 +250,54 @@ public class ViewsBillingServiceImpl implements ViewsBillingService {
   }
 
   private SelectQuery getTrendStatsQuery(List<QLCEViewFilterWrapper> filters, List<QLCEViewFilter> idFilters,
-      List<QLCEViewTimeFilter> timeFilters, List<QLCEViewAggregation> aggregateFunction, List<ViewRule> viewRuleList) {
-    Optional<QLCEViewFilterWrapper> viewUUIDFilter = getViewFilter(filters);
-    if (viewUUIDFilter.isPresent()) {
-      final String viewId = viewUUIDFilter.get().getViewFilter();
+      List<QLCEViewTimeFilter> timeFilters, List<QLCEViewAggregation> aggregateFunction, List<ViewRule> viewRuleList,
+      String cloudProviderTableName) {
+    Optional<QLCEViewFilterWrapper> viewMetadataFilter = getViewMetadataFilter(filters);
+    if (viewMetadataFilter.isPresent()) {
+      final String viewId = viewMetadataFilter.get().getViewMetadataFilter().getViewId();
       CEView ceView = viewService.get(viewId);
       viewRuleList = ceView.getViewRules();
     }
     return viewsQueryBuilder.getQuery(viewRuleList, idFilters, timeFilters, Collections.EMPTY_LIST, aggregateFunction,
-        Collections.EMPTY_LIST, Collections.EMPTY_LIST);
+        Collections.EMPTY_LIST, Collections.EMPTY_LIST, cloudProviderTableName);
   }
 
   private SelectQuery getQuery(List<QLCEViewFilterWrapper> filters, List<QLCEViewGroupBy> groupBy,
-      List<QLCEViewAggregation> aggregateFunction, List<QLCEViewSortCriteria> sort) {
+      List<QLCEViewAggregation> aggregateFunction, List<QLCEViewSortCriteria> sort, String cloudProviderTableName,
+      boolean isTimeTruncGroupByRequired) {
     List<ViewRule> viewRuleList = new ArrayList<>();
     List<QLCEViewGroupBy> modifiedGroupBy = new ArrayList<>();
     List<ViewField> customFields = new ArrayList<>();
 
-    Optional<QLCEViewFilterWrapper> viewUUIDFilter = getViewFilter(filters);
-    if (viewUUIDFilter.isPresent()) {
-      final String viewId = viewUUIDFilter.get().getViewFilter();
-      customFields = customFieldService.getCustomFieldsPerView(viewId);
-      CEView ceView = viewService.get(viewId);
-      viewRuleList = ceView.getViewRules();
-      if (ceView.getViewVisualization() != null) {
-        ViewVisualization viewVisualization = ceView.getViewVisualization();
-        ViewField defaultGroupByField = viewVisualization.getGroupBy();
-        ViewTimeGranularity defaultTimeGranularity = viewVisualization.getGranularity();
-        modifiedGroupBy = getModifiedGroupBy(groupBy, defaultGroupByField, defaultTimeGranularity);
+    Optional<QLCEViewFilterWrapper> viewMetadataFilter = getViewMetadataFilter(filters);
+
+    if (viewMetadataFilter.isPresent()) {
+      QLCEViewMetadataFilter metadataFilter = viewMetadataFilter.get().getViewMetadataFilter();
+      final String viewId = metadataFilter.getViewId();
+      if (!metadataFilter.isPreview()) {
+        CEView ceView = viewService.get(viewId);
+        viewRuleList = ceView.getViewRules();
+        if (ceView.getViewVisualization() != null) {
+          ViewVisualization viewVisualization = ceView.getViewVisualization();
+          ViewField defaultGroupByField = viewVisualization.getGroupBy();
+          ViewTimeGranularity defaultTimeGranularity = viewVisualization.getGranularity();
+          modifiedGroupBy =
+              getModifiedGroupBy(groupBy, defaultGroupByField, defaultTimeGranularity, isTimeTruncGroupByRequired);
+        }
+      } else {
+        modifiedGroupBy = groupBy;
       }
+      customFields = customFieldService.getCustomFieldsPerView(viewId);
     }
     List<QLCEViewFilter> idFilters = getIdFilters(filters);
     List<QLCEViewTimeFilter> timeFilters = getTimeFilters(filters);
 
-    return viewsQueryBuilder.getQuery(
-        viewRuleList, idFilters, timeFilters, modifiedGroupBy, aggregateFunction, sort, customFields);
+    return viewsQueryBuilder.getQuery(viewRuleList, idFilters, timeFilters, modifiedGroupBy, aggregateFunction, sort,
+        customFields, cloudProviderTableName);
   }
 
-  private static Optional<QLCEViewFilterWrapper> getViewFilter(List<QLCEViewFilterWrapper> filters) {
-    return filters.stream().filter(f -> f.getViewFilter() != null).findFirst();
+  private static Optional<QLCEViewFilterWrapper> getViewMetadataFilter(List<QLCEViewFilterWrapper> filters) {
+    return filters.stream().filter(f -> f.getViewMetadataFilter().getViewId() != null).findFirst();
   }
 
   private static List<QLCEViewTimeFilter> getTimeFilters(List<QLCEViewFilterWrapper> filters) {
@@ -307,8 +314,8 @@ public class ViewsBillingServiceImpl implements ViewsBillingService {
   /*
    * This method is overriding the Group By passed by the UI with the defaults selected by user while creating the View
    * */
-  private List<QLCEViewGroupBy> getModifiedGroupBy(
-      List<QLCEViewGroupBy> groupByList, ViewField defaultGroupByField, ViewTimeGranularity defaultTimeGranularity) {
+  private List<QLCEViewGroupBy> getModifiedGroupBy(List<QLCEViewGroupBy> groupByList, ViewField defaultGroupByField,
+      ViewTimeGranularity defaultTimeGranularity, boolean isTimeTruncGroupByRequired) {
     List<QLCEViewGroupBy> modifiedGroupBy = new ArrayList<>();
     Optional<QLCEViewGroupBy> timeTruncGroupBy =
         groupByList.stream().filter(g -> g.getTimeTruncGroupBy() != null).findFirst();
@@ -317,26 +324,22 @@ public class ViewsBillingServiceImpl implements ViewsBillingService {
         groupByList.stream().filter(g -> g.getEntityGroupBy() != null).findFirst();
 
     if (timeTruncGroupBy.isPresent()) {
-      if (defaultGroupByField == null) {
-        modifiedGroupBy.add(
-            QLCEViewGroupBy.builder()
-                .timeTruncGroupBy(QLCEViewTimeTruncGroupBy.builder()
-                                      .resolution(viewsQueryBuilder.mapViewTimeGranularityToQLCEViewTimeGroupType(
-                                          defaultTimeGranularity))
-                                      .build())
-                .build());
-      } else {
-        modifiedGroupBy.add(timeTruncGroupBy.get());
-      }
+      modifiedGroupBy.add(timeTruncGroupBy.get());
+    } else if (isTimeTruncGroupByRequired) {
+      modifiedGroupBy.add(
+          QLCEViewGroupBy.builder()
+              .timeTruncGroupBy(QLCEViewTimeTruncGroupBy.builder()
+                                    .resolution(viewsQueryBuilder.mapViewTimeGranularityToQLCEViewTimeGroupType(
+                                        defaultTimeGranularity))
+                                    .build())
+              .build());
     }
 
     if (entityGroupBy.isPresent()) {
-      if (defaultGroupByField == null) {
-        modifiedGroupBy.add(
-            QLCEViewGroupBy.builder().entityGroupBy(viewsQueryBuilder.getViewFieldInput(defaultGroupByField)).build());
-      } else {
-        modifiedGroupBy.add(entityGroupBy.get());
-      }
+      modifiedGroupBy.add(entityGroupBy.get());
+    } else {
+      modifiedGroupBy.add(
+          QLCEViewGroupBy.builder().entityGroupBy(viewsQueryBuilder.getViewFieldInput(defaultGroupByField)).build());
     }
     return modifiedGroupBy;
   }
@@ -379,14 +382,6 @@ public class ViewsBillingServiceImpl implements ViewsBillingService {
 
   private long getTimeStampValue(FieldValueList row, Field field) {
     FieldValue value = row.get(field.getName());
-    if (!value.isNull()) {
-      return value.getTimestampValue();
-    }
-    return 0;
-  }
-
-  private long getTimeStampValue(FieldValueList row, String fieldName) {
-    FieldValue value = row.get(fieldName);
     if (!value.isNull()) {
       return value.getTimestampValue();
     }
