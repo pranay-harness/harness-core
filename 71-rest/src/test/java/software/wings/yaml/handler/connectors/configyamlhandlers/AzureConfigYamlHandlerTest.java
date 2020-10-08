@@ -19,6 +19,7 @@ import org.mockito.Mock;
 import software.wings.beans.AzureConfig;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.SettingAttribute.SettingCategory;
+import software.wings.beans.cloudprovider.azure.AzureEnvironmentType;
 import software.wings.service.impl.yaml.handler.setting.cloudprovider.AzureConfigYamlHandler;
 import software.wings.service.intfc.AccountService;
 
@@ -72,6 +73,7 @@ public class AzureConfigYamlHandlerTest extends BaseSettingValueConfigYamlHandle
                                                    .tenantId(tenantId)
                                                    .key(key.toCharArray())
                                                    .accountId(ACCOUNT_ID)
+                                                   .azureEnvironmentType(AzureEnvironmentType.AZURE)
                                                    .build())
                                     .build());
   }

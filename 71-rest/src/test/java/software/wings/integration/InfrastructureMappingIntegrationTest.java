@@ -94,10 +94,11 @@ public class InfrastructureMappingIntegrationTest extends BaseIntegrationTest {
   @Owner(developers = ANUBHAW)
   @Category(DeprecatedIntegrationTests.class)
   public void shouldSelectServiceInstances() {
-    SettingAttribute hostConnectionAttr = wingsPersistence.saveAndGet(
-        SettingAttribute.class, aSettingAttribute().withAccountId(app.getAccountId()).withName("hca").build());
-    SettingAttribute computeProviderSetting = wingsPersistence.saveAndGet(
-        SettingAttribute.class, aSettingAttribute().withAccountId(app.getAccountId()).withName("DC").build());
+    SettingAttribute hostConnectionAttr = aSettingAttribute().withAccountId(app.getAccountId()).withName("hca").build();
+    wingsPersistence.save(hostConnectionAttr);
+    SettingAttribute computeProviderSetting =
+        aSettingAttribute().withAccountId(app.getAccountId()).withName("DC").build();
+    wingsPersistence.save(computeProviderSetting);
 
     String serviceTemplateId = (String) serviceTemplateService
                                    .getTemplateRefKeysByService(app.getUuid(), service.getUuid(), environment.getUuid())
@@ -189,23 +190,26 @@ public class InfrastructureMappingIntegrationTest extends BaseIntegrationTest {
         serviceTemplateService.getTemplateRefKeysByService(app.getUuid(), service.getUuid(), environment.getUuid());
     String serviceTemplateId = (String) templateRefKeysByService.get(0).getId();
 
-    SettingAttribute hostConnectionAttr = wingsPersistence.saveAndGet(SettingAttribute.class,
-        aSettingAttribute()
-            .withAppId(app.getUuid())
-            .withValue(HostConnectionAttributes.Builder.aHostConnectionAttributes()
-                           .withAccessType(AccessType.KEY)
-                           .withConnectionType(ConnectionType.SSH)
-                           .withKey("wingsKey".toCharArray())
-                           .build())
-            .build());
-    SettingAttribute computeProviderSetting = wingsPersistence.saveAndGet(SettingAttribute.class,
+    SettingAttribute hostConnectionAttr = aSettingAttribute()
+                                              .withAppId(app.getUuid())
+                                              .withValue(HostConnectionAttributes.Builder.aHostConnectionAttributes()
+                                                             .withAccessType(AccessType.KEY)
+                                                             .withConnectionType(ConnectionType.SSH)
+                                                             .withKey("wingsKey".toCharArray())
+                                                             .build())
+                                              .build();
+    wingsPersistence.save(hostConnectionAttr);
+
+    SettingAttribute computeProviderSetting =
         aSettingAttribute()
             .withAppId(app.getUuid())
             .withValue(AwsConfig.builder()
                            .accessKey(scmSecret.decryptToCharArray(new SecretName("aws_config_access_key")))
                            .secretKey(scmSecret.decryptToCharArray(new SecretName("aws_setting_attribute_secret_key")))
                            .build())
-            .build());
+            .build();
+
+    wingsPersistence.save(computeProviderSetting);
 
     AwsInfrastructureMapping awsInfrastructureMapping =
         anAwsInfrastructureMapping()
@@ -229,7 +233,7 @@ public class InfrastructureMappingIntegrationTest extends BaseIntegrationTest {
         serviceTemplateService.getTemplateRefKeysByService(app.getUuid(), service.getUuid(), environment.getUuid());
     String serviceTemplateId = (String) templateRefKeysByService.get(0).getId();
 
-    SettingAttribute hostConnectionAttr = wingsPersistence.saveAndGet(SettingAttribute.class,
+    SettingAttribute hostConnectionAttr =
         aSettingAttribute()
             .withAppId(app.getUuid())
             .withValue(HostConnectionAttributes.Builder.aHostConnectionAttributes()
@@ -237,15 +241,19 @@ public class InfrastructureMappingIntegrationTest extends BaseIntegrationTest {
                            .withConnectionType(ConnectionType.SSH)
                            .withKey(scmSecret.decryptToCharArray(new SecretName("generic_ssh_key")))
                            .build())
-            .build());
-    SettingAttribute computeProviderSetting = wingsPersistence.saveAndGet(SettingAttribute.class,
+            .build();
+
+    wingsPersistence.save(hostConnectionAttr);
+    SettingAttribute computeProviderSetting =
         aSettingAttribute()
             .withAppId(app.getUuid())
             .withValue(AwsConfig.builder()
                            .accessKey(scmSecret.decryptToCharArray(new SecretName("aws_config_access_key")))
                            .secretKey(scmSecret.decryptToCharArray(new SecretName("aws_setting_attribute_secret_key")))
                            .build())
-            .build());
+            .build();
+
+    wingsPersistence.save(computeProviderSetting);
 
     // TODO(brett): Create aws autoscaling group and reference in inframapping
     AwsInfrastructureMapping awsInfrastructureMapping =

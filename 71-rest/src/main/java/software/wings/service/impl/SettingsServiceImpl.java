@@ -579,16 +579,14 @@ public class SettingsServiceImpl implements SettingsService {
       }
     }
 
-    SettingAttribute createdSettingAttribute =
-        duplicateCheck(()
-                           -> wingsPersistence.saveAndGet(SettingAttribute.class, settingAttribute),
-            "name", settingAttribute.getName());
-    if (createdSettingAttribute != null && !createdSettingAttribute.isSample()) {
-      if (SettingCategory.CLOUD_PROVIDER == createdSettingAttribute.getCategory()) {
+    String createdSettingAttributeId =
+        duplicateCheck(() -> wingsPersistence.save(settingAttribute), "name", settingAttribute.getName());
+    if (isNotBlank(createdSettingAttributeId) && !settingAttribute.isSample()) {
+      if (SettingCategory.CLOUD_PROVIDER == settingAttribute.getCategory()) {
         eventPublishHelper.publishAccountEvent(settingAttribute.getAccountId(),
             AccountEvent.builder().accountEventType(AccountEventType.CLOUD_PROVIDER_CREATED).build(), true, true);
-      } else if (settingServiceHelper.isConnectorCategory(createdSettingAttribute.getCategory())
-          && settingServiceHelper.isArtifactServer(createdSettingAttribute.getValue().getSettingType())) {
+      } else if (settingServiceHelper.isConnectorCategory(settingAttribute.getCategory())
+          && settingServiceHelper.isArtifactServer(settingAttribute.getValue().getSettingType())) {
         eventPublishHelper.publishAccountEvent(settingAttribute.getAccountId(),
             AccountEvent.builder().accountEventType(AccountEventType.ARTIFACT_REPO_CREATED).build(), true, true);
       }
@@ -598,7 +596,7 @@ public class SettingsServiceImpl implements SettingsService {
         && settingAttribute.getValue().getSettingType() == SettingVariableTypes.APM_VERIFICATION) {
       apmVerificationService.addParents(settingAttribute);
     }
-    return createdSettingAttribute;
+    return settingAttribute;
   }
 
   @Override

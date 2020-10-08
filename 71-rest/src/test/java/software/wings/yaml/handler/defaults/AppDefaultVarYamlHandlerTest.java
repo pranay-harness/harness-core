@@ -132,6 +132,7 @@ public class AppDefaultVarYamlHandlerTest extends BaseYamlHandlerTest {
     changeContext.setYaml(yamlObject);
 
     List<SettingAttribute> createdSettingAttributes = yamlHandler.upsertFromYaml(changeContext, asList(changeContext));
+    resetPresetFields(createdSettingAttributes);
     compareSettingAttributes(v1_settingAttributeList, createdSettingAttributes);
 
     Yaml yaml = yamlHandler.toYaml(this.v1_settingAttributeList, APP_ID);
@@ -144,6 +145,7 @@ public class AppDefaultVarYamlHandlerTest extends BaseYamlHandlerTest {
     assertThat(yamlContent).isEqualTo(v1_validYamlContent);
 
     List<SettingAttribute> settingAttributesFromGet = yamlHandler.get(ACCOUNT_ID, validYamlFilePath);
+    resetPresetFields(settingAttributesFromGet);
     compareSettingAttributes(v1_settingAttributeList, settingAttributesFromGet);
 
     gitFileChange.setFileContent(v2_validYamlContent);
@@ -153,6 +155,7 @@ public class AppDefaultVarYamlHandlerTest extends BaseYamlHandlerTest {
 
     List<SettingAttribute> v2_createdSettingAttributes =
         yamlHandler.upsertFromYaml(changeContext, asList(changeContext));
+    resetPresetFields(v2_createdSettingAttributes);
     compareSettingAttributes(v2_settingAttributeList, v2_createdSettingAttributes);
 
     yamlHandler.delete(changeContext);
@@ -190,5 +193,14 @@ public class AppDefaultVarYamlHandlerTest extends BaseYamlHandlerTest {
   private void compareSettingAttributes(List<SettingAttribute> lhs, List<SettingAttribute> rhs) {
     assertThat(rhs).hasSize(lhs.size());
     assertThat(lhs).containsAll(rhs);
+  }
+
+  private void resetPresetFields(List<SettingAttribute> createdSettingAttributes) {
+    createdSettingAttributes.forEach(settingAttribute -> {
+      settingAttribute.setUuid(null);
+      settingAttribute.setCreatedBy(null);
+      settingAttribute.setCreatedAt(0);
+      settingAttribute.setLastUpdatedAt(0);
+    });
   }
 }

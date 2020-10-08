@@ -24,6 +24,7 @@ import org.junit.experimental.categories.Category;
 import org.junit.runner.RunWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.Mockito;
 import org.powermock.core.classloader.annotations.PowerMockIgnore;
 import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
@@ -60,6 +61,7 @@ public class SettingAttributeValidateConnectivityHandlerTest extends WingsBaseTe
     settingAttributeValidateConnectivityHandler.handle(settingAttribute);
     assertThat(settingAttribute.getConnectivityError()).isEqualTo(errMsg);
     verify(settingsService).update(eq(settingAttribute), eq(false));
+    resetMocks();
 
     errMsg = "e2";
     settingAttribute = SettingAttribute.Builder.aSettingAttribute().withUuid(SETTING_ID).build();
@@ -68,6 +70,7 @@ public class SettingAttributeValidateConnectivityHandlerTest extends WingsBaseTe
     settingAttributeValidateConnectivityHandler.handle(settingAttribute);
     assertThat(settingAttribute.getConnectivityError()).isEqualTo(errMsg);
     verify(settingsService).update(eq(settingAttribute), eq(false));
+    resetMocks();
 
     errMsg = "e3";
     settingAttribute = SettingAttribute.Builder.aSettingAttribute().withUuid(SETTING_ID).build();
@@ -76,6 +79,7 @@ public class SettingAttributeValidateConnectivityHandlerTest extends WingsBaseTe
     settingAttributeValidateConnectivityHandler.handle(settingAttribute);
     assertThat(settingAttribute.getConnectivityError()).isEqualTo(errMsg);
     verify(settingsService).update(eq(settingAttribute), eq(false));
+    resetMocks();
 
     String oldErrMsg = "eold";
     errMsg = "e4";
@@ -85,6 +89,7 @@ public class SettingAttributeValidateConnectivityHandlerTest extends WingsBaseTe
     settingAttributeValidateConnectivityHandler.handle(settingAttribute);
     assertThat(settingAttribute.getConnectivityError()).isEqualTo(errMsg);
     verify(settingsService).update(eq(settingAttribute), eq(false));
+    resetMocks();
 
     settingAttribute =
         SettingAttribute.Builder.aSettingAttribute().withUuid(SETTING_ID).withConnectivityError(oldErrMsg).build();
@@ -148,5 +153,11 @@ public class SettingAttributeValidateConnectivityHandlerTest extends WingsBaseTe
     when(settingValidationService.validate(settingAttribute)).thenReturn(true);
     settingAttributeValidateConnectivityHandler.handle(settingAttribute);
     verify(settingsService).update(eq(settingAttribute), eq(true));
+  }
+
+  private void resetMocks() {
+    Mockito.reset(settingValidationService);
+    Mockito.reset(settingsService);
+    Mockito.reset(persistenceIteratorFactory);
   }
 }

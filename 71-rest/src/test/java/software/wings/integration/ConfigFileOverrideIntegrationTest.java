@@ -225,8 +225,8 @@ public class ConfigFileOverrideIntegrationTest extends WingsBaseTest {
   }
 
   private List<Host> importAndGetHosts(String appId, String envId) {
-    SettingAttribute settingAttribute =
-        wingsPersistence.saveAndGet(SettingAttribute.class, aSettingAttribute().withAppId(appId).build());
+    SettingAttribute settingAttribute = aSettingAttribute().withAppId(appId).build();
+    wingsPersistence.save(settingAttribute);
     Host baseHost = aHost()
                         .withAppId(appId)
                         .withHostConnAttr(settingAttribute.getUuid())

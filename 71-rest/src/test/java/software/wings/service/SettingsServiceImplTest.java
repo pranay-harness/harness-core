@@ -185,13 +185,12 @@ public class SettingsServiceImplTest extends WingsBaseTest {
     spyQuery = spy(wingsPersistence.createQuery(SettingAttribute.class));
     when(mockWingsPersistence.createQuery(SettingAttribute.class)).thenReturn(spyQuery);
     when(mockWingsPersistence.query(eq(SettingAttribute.class), any(PageRequest.class))).thenReturn(pageResponse);
-    when(mockWingsPersistence.saveAndGet(eq(SettingAttribute.class), any(SettingAttribute.class)))
-        .thenAnswer(new Answer<SettingAttribute>() {
-          @Override
-          public SettingAttribute answer(InvocationOnMock invocationOnMock) throws Throwable {
-            return (SettingAttribute) invocationOnMock.getArguments()[1];
-          }
-        });
+    when(mockWingsPersistence.save(any(SettingAttribute.class))).thenAnswer(new Answer<String>() {
+      @Override
+      public String answer(InvocationOnMock invocationOnMock) throws Throwable {
+        return ((SettingAttribute) invocationOnMock.getArguments()[0]).getUuid();
+      }
+    });
     when(appService.get(anyString())).thenReturn(application);
     when(application.getAccountId()).thenReturn("ACCOUNT_ID");
     when(appService.get(TARGET_APP_ID)).thenReturn(Application.Builder.anApplication().accountId(ACCOUNT_ID).build());
@@ -221,7 +220,7 @@ public class SettingsServiceImplTest extends WingsBaseTest {
                              .withAccountId("ACCOUNT_ID")
                              .withValue(StringValue.Builder.aStringValue().build())
                              .build());
-    verify(mockWingsPersistence).saveAndGet(eq(SettingAttribute.class), any(SettingAttribute.class));
+    verify(mockWingsPersistence).save(any(SettingAttribute.class));
   }
 
   /**

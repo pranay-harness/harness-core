@@ -68,14 +68,15 @@ public class YamlGitConfigRefactoringMigration implements Migration {
           logger.info("Creating GitConnector for yaml from YamlGitConfig {}", yamlGitConfig.getUuid());
           GitConfig gitConfig = getGitConfig(yamlGitConfig, encryptedData);
 
-          SettingAttribute settingAttributeForGit = wingsPersistence.saveAndGet(SettingAttribute.class,
+          SettingAttribute settingAttributeForGit =
               SettingAttribute.Builder.aSettingAttribute()
                   .withAccountId(yamlGitConfig.getAccountId())
                   .withValue(gitConfig)
                   .withCategory(SettingCategory.CONNECTOR)
                   .withName(EntityNameValidator.getMappedString(settingAttributeForGitName))
                   .withUsageRestrictions(defaultUsageRestrictions)
-                  .build());
+                  .build();
+          wingsPersistence.save(settingAttributeForGit);
 
           logger.info("Created GitConnector from YamlGitConfig {}", yamlGitConfig.getUuid());
           logger.info("Updating YamlGitConfig with newly created GitConnector");
