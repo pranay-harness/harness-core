@@ -25,6 +25,7 @@ public class CEViewServiceImpl implements CEViewService {
   public CEView save(CEView ceView) {
     validateView(ceView);
     ceView.setViewState(ViewState.DRAFT);
+    ceView.setUuid(null);
     ceViewDao.save(ceView);
     return ceView;
   }
@@ -64,6 +65,7 @@ public class CEViewServiceImpl implements CEViewService {
                                  .lastUpdatedAt(view.getLastUpdatedAt())
                                  .chartType(view.getViewVisualization().getChartType())
                                  .viewType(view.getViewType())
+                                 .viewState(view.getViewState())
                                  .build());
     }
     return graphQLViewObjList;

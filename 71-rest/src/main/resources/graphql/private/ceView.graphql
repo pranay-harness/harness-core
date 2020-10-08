@@ -45,6 +45,7 @@ type View {
   lastUpdatedAt: Number
   chartType: ViewChartType
   viewType: ViewType
+  viewState: ViewState
 }
 
 enum ViewChartType {
@@ -54,6 +55,11 @@ enum ViewChartType {
 enum ViewType {
   SAMPLE
   CUSTOMER
+}
+
+enum ViewState {
+  DRAFT
+  COMPLETED
 }
 
 type ViewEntityStatsData {
