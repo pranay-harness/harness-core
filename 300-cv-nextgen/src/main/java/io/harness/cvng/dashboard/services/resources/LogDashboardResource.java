@@ -13,6 +13,7 @@ import io.harness.ng.beans.PageResponse;
 import io.harness.rest.RestResponse;
 import io.harness.security.annotations.LearningEngineAuth;
 import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiOperation;
 
 import java.util.SortedSet;
 import javax.validation.constraints.NotNull;
@@ -34,6 +35,7 @@ public class LogDashboardResource {
   @Timed
   @ExceptionMetered
   @LearningEngineAuth
+  @ApiOperation(value = "get anomalous logs for a time range", nickname = "getAnomalousLogs")
   public RestResponse<PageResponse<AnalyzedLogDataDTO>> getAnomalousLogs(@QueryParam("accountId") String accountId,
       @NotNull @QueryParam("projectIdentifier") String projectIdentifier,
       @NotNull @QueryParam("orgIdentifier") String orgIdentifier,
@@ -53,6 +55,7 @@ public class LogDashboardResource {
   @Timed
   @ExceptionMetered
   @LearningEngineAuth
+  @ApiOperation(value = "get all logs for a time range", nickname = "getAllLogs")
   public RestResponse<PageResponse<AnalyzedLogDataDTO>> getAllLogs(@QueryParam("accountId") String accountId,
       @NotNull @QueryParam("projectIdentifier") String projectIdentifier,
       @NotNull @QueryParam("orgIdentifier") String orgIdentifier,
@@ -72,6 +75,7 @@ public class LogDashboardResource {
   @Timed
   @ExceptionMetered
   @LearningEngineAuth
+  @ApiOperation(value = "get a sorted tag vs logs list", nickname = "getTagCount")
   public RestResponse<SortedSet<LogDataByTag>> getTagCount(@QueryParam("accountId") String accountId,
       @NotNull @QueryParam("projectIdentifier") String projectIdentifier,
       @NotNull @QueryParam("orgIdentifier") String orgIdentifier,

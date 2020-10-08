@@ -7,6 +7,7 @@ import com.codahale.metrics.annotation.Timed;
 import io.harness.cvng.core.services.api.WebhookService;
 import io.harness.rest.RestResponse;
 import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiOperation;
 
 import javax.validation.Valid;
 import javax.ws.rs.DELETE;
@@ -25,6 +26,7 @@ public class WebhookResource {
   @Path("create-token")
   @Timed
   @ExceptionMetered
+  @ApiOperation(value = "creates a webhook token to register activities", nickname = "createWebhookToken")
   public RestResponse<String> createToken(@QueryParam("accountId") @Valid final String accountId,
       @QueryParam("projectIdentifier") final String projectIdentifier,
       @QueryParam("orgIdentifier") final String orgIdentifier) {
@@ -35,6 +37,7 @@ public class WebhookResource {
   @Path("recreate-token")
   @Timed
   @ExceptionMetered
+  @ApiOperation(value = "recreates a webhook token to register activities", nickname = "recreateWebhookToken")
   public RestResponse<String> recreateToken(@QueryParam("accountId") @Valid final String accountId,
       @QueryParam("projectIdentifier") final String projectIdentifier,
       @QueryParam("orgIdentifier") final String orgIdentifier) {
@@ -45,6 +48,7 @@ public class WebhookResource {
   @Path("delete-token")
   @Timed
   @ExceptionMetered
+  @ApiOperation(value = "deletes a webhook token", nickname = "deleteWebhookToken")
   public void deleteToken(@QueryParam("accountId") @Valid final String accountId,
       @QueryParam("projectIdentifier") final String projectIdentifier,
       @QueryParam("orgIdentifier") final String orgIdentifier) {

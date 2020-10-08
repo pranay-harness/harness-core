@@ -18,6 +18,7 @@ import io.harness.cvng.analysis.services.api.LogAnalysisService;
 import io.harness.rest.RestResponse;
 import io.harness.security.annotations.LearningEngineAuth;
 import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiOperation;
 import lombok.extern.slf4j.Slf4j;
 
 import java.time.Instant;
@@ -41,6 +42,7 @@ public class LogAnalysisResource {
   @Timed
   @ExceptionMetered
   @LearningEngineAuth
+  @ApiOperation(value = "get test log data for a verification job", nickname = "getTestLogData")
   public RestResponse<List<LogClusterDTO>> getTestData(@QueryParam("verificationTaskId") String verificationTaskId,
       @NotNull @QueryParam("analysisStartTime") Long analysisStartTime,
       @NotNull @QueryParam("analysisEndTime") Long analysisEndTime) {
@@ -53,6 +55,7 @@ public class LogAnalysisResource {
   @Timed
   @ExceptionMetered
   @LearningEngineAuth
+  @ApiOperation(value = "get previous log analysis for a data source config", nickname = "getPreviousLogAnalysis")
   public RestResponse<List<LogAnalysisCluster>> getPreviousAnalysis(@QueryParam("cvConfigId") String cvConfigId,
       @QueryParam("analysisStartTime") String analysisStartTime,
       @QueryParam("analysisEndTime") String analysisEndTime) {
@@ -67,6 +70,7 @@ public class LogAnalysisResource {
   @Timed
   @LearningEngineAuth
   @ExceptionMetered
+  @ApiOperation(value = "saves log risk analysis for a data source config", nickname = "saveServiceGuardLogAnalysis")
   public RestResponse<Boolean> saveServiceGuardAnalysis(@QueryParam("taskId") String taskId,
       @QueryParam("cvConfigId") String cvConfigId, @QueryParam("analysisStartTime") String analysisStartTime,
       @QueryParam("analysisEndTime") String analysisEndTime, LogAnalysisDTO analysisBody) {
@@ -81,6 +85,7 @@ public class LogAnalysisResource {
   @Timed
   @LearningEngineAuth
   @ExceptionMetered
+  @ApiOperation(value = "saves log risk analysis for a deployment verification", nickname = "saveDeploymentAnalysis")
   public RestResponse<Void> saveDeploymentAnalysis(
       @QueryParam("taskId") String taskId, DeploymentLogAnalysisDTO deploymentLogAnalysisDTO) {
     logAnalysisService.saveAnalysis(taskId, deploymentLogAnalysisDTO);

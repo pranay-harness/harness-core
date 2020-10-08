@@ -9,6 +9,7 @@ import io.harness.cvng.beans.SplunkValidationResponse;
 import io.harness.cvng.core.services.api.SplunkService;
 import io.harness.rest.RestResponse;
 import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiOperation;
 import org.hibernate.validator.constraints.NotEmpty;
 
 import java.util.List;
@@ -28,6 +29,7 @@ public class SplunkResource {
   @Path("saved-searches")
   @Timed
   @ExceptionMetered
+  @ApiOperation(value = "gets saved searches in splunk", nickname = "getSavedSearches")
   public RestResponse<List<SplunkSavedSearch>> getSavedSearches(@QueryParam("accountId") @Valid final String accountId,
       @QueryParam("connectorIdentifier") String connectorIdentifier,
       @QueryParam("orgIdentifier") @NotNull String orgIdentifier,
@@ -41,6 +43,7 @@ public class SplunkResource {
   @Path("validation")
   @Timed
   @ExceptionMetered
+  @ApiOperation(value = "validates given setting for splunk data source", nickname = "getValidationResponseForSplunk")
   public RestResponse<SplunkValidationResponse> getValidationResponse(
       @NotNull @QueryParam("accountId") final String accountId,
       @NotNull @QueryParam("connectorIdentifier") String connectorIdentifier,

@@ -11,6 +11,7 @@ import io.harness.cvng.core.services.api.TimeSeriesService;
 import io.harness.rest.RestResponse;
 import io.harness.security.annotations.DelegateAuth;
 import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiOperation;
 import retrofit2.http.Body;
 
 import java.util.List;
@@ -31,6 +32,7 @@ public class DataCollectionResource {
   @Timed
   @ExceptionMetered
   @DelegateAuth
+  @ApiOperation(value = "save time series records", nickname = "saveTimeSeriesData")
   public RestResponse<Boolean> saveTimeSeriesData(@QueryParam("accountId") @NotNull String accountId,
       @NotNull @Valid @Body List<TimeSeriesDataCollectionRecord> dataCollectionRecords) {
     return new RestResponse<>(timeSeriesService.save(dataCollectionRecords));

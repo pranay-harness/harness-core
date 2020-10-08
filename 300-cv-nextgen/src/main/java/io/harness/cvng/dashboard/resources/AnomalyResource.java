@@ -10,6 +10,7 @@ import io.harness.cvng.dashboard.beans.AnomalyDTO;
 import io.harness.cvng.dashboard.services.api.AnomalyService;
 import io.harness.rest.RestResponse;
 import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiOperation;
 
 import java.time.Instant;
 import java.util.List;
@@ -29,6 +30,7 @@ public class AnomalyResource {
   @GET
   @Timed
   @ExceptionMetered
+  @ApiOperation(value = "get list of anomalies in a given time range", nickname = "getAnomalies")
   public RestResponse<List<AnomalyDTO>> getAnomalies(@QueryParam("accountId") @NotNull final String accountId,
       @QueryParam("serviceIdentifier") @NotNull final String serviceIdentifier,
       @QueryParam("envIdentifier") @NotNull final String envIdentifier,

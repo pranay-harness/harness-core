@@ -18,6 +18,7 @@ import io.harness.cvng.core.beans.TimeSeriesMetricDefinition;
 import io.harness.rest.RestResponse;
 import io.harness.security.annotations.LearningEngineAuth;
 import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiOperation;
 import lombok.extern.slf4j.Slf4j;
 
 import java.time.Instant;
@@ -42,6 +43,7 @@ public class TimeSeriesAnalysisResource {
   @Timed
   @ExceptionMetered
   @LearningEngineAuth
+  @ApiOperation(value = "get test timeseries data for a data source config", nickname = "getTestTimesereisData")
   public RestResponse<Map<String, Map<String, List<Double>>>> getTestData(@QueryParam("cvConfigId") String cvConfigId,
       @QueryParam("verificationTaskId") String verificationTaskId,
       @QueryParam("analysisStartTime") String epochStartInstant,
@@ -57,6 +59,7 @@ public class TimeSeriesAnalysisResource {
   @Path("/time-series-data")
   @Timed
   @ExceptionMetered
+  @ApiOperation(value = "get test timeseries data for a verification job", nickname = "getTimeSeriesRecords")
   public RestResponse<List<TimeSeriesRecordDTO>> getTimeSeriesRecords(
       @QueryParam("verificationTaskId") @NotNull String verificationTaskId,
       @QueryParam("startTime") @NotNull Long startTime, @QueryParam("endTime") @NotNull Long endTime) {
@@ -69,6 +72,7 @@ public class TimeSeriesAnalysisResource {
   @Timed
   @ExceptionMetered
   @LearningEngineAuth
+  @ApiOperation(value = "get risk analysis cumulative sums", nickname = "getCumulativeSums")
   public RestResponse<Map<String, Map<String, TimeSeriesCumulativeSums.MetricSum>>> getCumulativeSums(
       @QueryParam("cvConfigId") String cvConfigId, @QueryParam("analysisStartTime") String epochStartInstant,
       @QueryParam("analysisEndTime") String epochEndInstant) {
@@ -82,6 +86,7 @@ public class TimeSeriesAnalysisResource {
   @Timed
   @LearningEngineAuth
   @ExceptionMetered
+  @ApiOperation(value = "get previous anomalies for a data source config", nickname = "getPreviousAnomalies")
   public RestResponse<Map<String, Map<String, List<TimeSeriesAnomalies>>>> getPreviousAnomalies(
       @QueryParam("cvConfigId") String cvConfigId) {
     return new RestResponse<>(timeSeriesAnalysisService.getLongTermAnomalies(cvConfigId));
@@ -93,6 +98,7 @@ public class TimeSeriesAnalysisResource {
   @Timed
   @LearningEngineAuth
   @ExceptionMetered
+  @ApiOperation(value = "get short term history for a data source config", nickname = "getShortTermHistory")
   public RestResponse<Map<String, Map<String, List<Double>>>> getShortTermHistory(
       @QueryParam("cvConfigId") String cvConfigId) {
     return new RestResponse<>(timeSeriesAnalysisService.getShortTermHistory(cvConfigId));
@@ -104,6 +110,7 @@ public class TimeSeriesAnalysisResource {
   @Timed
   @LearningEngineAuth
   @ExceptionMetered
+  @ApiOperation(value = "get metric template for a verification job", nickname = "getMetricTimeSeriesTemplate")
   public RestResponse<List<TimeSeriesMetricDefinition>> getMetricTemplate(
       @QueryParam("verificationTaskId") String verificationTaskId) {
     return new RestResponse<>(timeSeriesAnalysisService.getMetricTemplate(verificationTaskId));
@@ -115,8 +122,10 @@ public class TimeSeriesAnalysisResource {
   @Timed
   @LearningEngineAuth
   @ExceptionMetered
-  public RestResponse<Boolean> saveServiceGuardAnalysis(
-      @QueryParam("taskId") String taskId, ServiceGuardMetricAnalysisDTO analysisBody) {
+  @ApiOperation(
+      value = "save time series analysis for a data source config", nickname = "saveServiceGuardTimeseriesAnalysis")
+  public RestResponse<Boolean>
+  saveServiceGuardAnalysis(@QueryParam("taskId") String taskId, ServiceGuardMetricAnalysisDTO analysisBody) {
     timeSeriesAnalysisService.saveAnalysis(taskId, analysisBody);
     return new RestResponse<>(true);
   }
@@ -127,8 +136,11 @@ public class TimeSeriesAnalysisResource {
   @Timed
   @LearningEngineAuth
   @ExceptionMetered
-  public RestResponse<Void> saveVerificationTaskAnalysis(@QueryParam("taskId") String taskId,
-      @QueryParam("endTime") long endTime, DeploymentTimeSeriesAnalysisDTO analysisBody) {
+  @ApiOperation(
+      value = "save time series analysis for a deployment verification", nickname = "saveVerificationTaskAnalysis")
+  public RestResponse<Void>
+  saveVerificationTaskAnalysis(@QueryParam("taskId") String taskId, @QueryParam("endTime") long endTime,
+      DeploymentTimeSeriesAnalysisDTO analysisBody) {
     timeSeriesAnalysisService.saveAnalysis(taskId, analysisBody);
     return new RestResponse<>(null);
   }

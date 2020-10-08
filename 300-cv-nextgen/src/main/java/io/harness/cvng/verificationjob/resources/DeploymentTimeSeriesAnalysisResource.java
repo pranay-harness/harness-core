@@ -10,6 +10,7 @@ import io.harness.cvng.analysis.services.api.DeploymentTimeSeriesAnalysisService
 import io.harness.rest.RestResponse;
 import io.harness.security.annotations.LearningEngineAuth;
 import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiOperation;
 
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
@@ -30,6 +31,7 @@ public class DeploymentTimeSeriesAnalysisResource {
   @Timed
   @LearningEngineAuth
   @ExceptionMetered
+  @ApiOperation(value = "get metrics for given verificationJob", nickname = "getMetrics")
   public RestResponse<TransactionMetricInfoSummaryPageDTO> getMetrics(
       @PathParam("verificationJobInstanceId") String verificationJobInstanceId,
       @QueryParam("accountId") String accountId, @QueryParam("anomalousMetricsOnly") boolean anomalousMetricsOnly,
