@@ -156,6 +156,7 @@ import software.wings.api.pcf.PcfSetupStateExecutionData;
 import software.wings.api.pcf.SetupSweepingOutputPcf;
 import software.wings.api.pcf.SwapRouteRollbackSweepingOutputPcf;
 import software.wings.api.shellscript.provision.ShellScriptProvisionExecutionData;
+import software.wings.api.terraform.TerraformOutputVariables;
 import software.wings.api.terraform.TerraformProvisionInheritPlanElement;
 import software.wings.beans.APMValidateCollectorConfig;
 import software.wings.beans.APMVerificationConfig;
@@ -1757,5 +1758,6 @@ public class ManagerKryoRegistrar implements KryoRegistrar {
     kryo.register(AzureVMSSDeployExecutionSummary.class, 8060);
 
     kryo.register(PerpetualTaskCapabilityCheckResponse.class, 8061);
+    kryo.register(TerraformOutputVariables.class, 8062);
   }
 }
