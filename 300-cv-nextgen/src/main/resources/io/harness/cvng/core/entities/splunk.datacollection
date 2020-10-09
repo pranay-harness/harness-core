@@ -6,9 +6,22 @@ Var:bodyMap.put("earliest_time", Env:startTimeSeconds)
 Var:bodyMap.put("latest_time", Env:endTimeSeconds)
 Var job = sync-call(url=Var:jobsUrl, header=Env:commonHeaders, body=Var:bodyMap, bodyType=FORM_URL_ENCODED)
 Var jobId = extract(Var:job, $.sid)
+sleep(500)
 Var resultsUrl = concat(Env:baseUrl, "services/search/jobs/", Var:jobId, "/results?output_mode=json&count=", Env:maxCount)
-Var rawResults = sync-call(url=Var:resultsUrl, header=Env:commonHeaders)
-Var results = extract(Var:rawResults,$.results)
+Var rawResults = sync-call-with-code(url=Var:resultsUrl, header=Env:commonHeaders)
+Var respCode = Var:rawResults[1]
+print Var:respCode
+Var httpOk = 200
+while Var:respCode not equal to Var:httpOk {
+  sleep(1000)
+  rawResults = sync-call-with-code(url=Var:resultsUrl, header=Env:commonHeaders)
+  respCode = Var:rawResults[1]
+  print Var:respCode
+  sleep(1000)
+}
+Var resultData = Var:rawResults[0]
+print Var:resultData
+Var results = extract(Var:resultData,$.results)
 Var logs = []
 foreach rawLog in Var:results {
     Var hostname = extract(Var:rawLog, Env:serviceInstanceIdentifier)
