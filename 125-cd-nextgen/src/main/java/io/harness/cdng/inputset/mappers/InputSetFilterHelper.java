@@ -4,8 +4,8 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static org.springframework.data.mongodb.core.query.Criteria.where;
 
 import io.harness.NGResourceFilterConstants;
-import io.harness.cdng.inputset.beans.entities.CDInputSetEntity;
-import io.harness.cdng.inputset.beans.entities.CDInputSetEntity.CDInputSetEntityKeys;
+import io.harness.cdng.inputset.beans.entities.InputSetEntity;
+import io.harness.cdng.inputset.beans.entities.InputSetEntity.CDInputSetEntityKeys;
 import io.harness.cdng.inputset.beans.resource.InputSetListType;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.ngpipeline.overlayinputset.beans.BaseInputSetEntity;
@@ -65,7 +65,7 @@ public class InputSetFilterHelper {
     update.set(BaseInputSetEntityKeys.deleted, false);
 
     if (baseInputSetEntity.getInputSetType() == InputSetEntityType.INPUT_SET) {
-      getUpdateOperationsCDInputSet((CDInputSetEntity) baseInputSetEntity, update);
+      getUpdateOperationsCDInputSet((InputSetEntity) baseInputSetEntity, update);
     } else if (baseInputSetEntity.getInputSetType() == InputSetEntityType.OVERLAY_INPUT_SET) {
       getUpdateOperationsOverlayInputSet((OverlayInputSetEntity) baseInputSetEntity, update);
     }
@@ -73,8 +73,8 @@ public class InputSetFilterHelper {
     return update;
   }
 
-  private void getUpdateOperationsCDInputSet(CDInputSetEntity cdInputSetEntity, Update update) {
-    update.set(CDInputSetEntityKeys.cdInputSet, cdInputSetEntity.getCdInputSet());
+  private void getUpdateOperationsCDInputSet(InputSetEntity inputSetEntity, Update update) {
+    update.set(CDInputSetEntityKeys.inputSetConfig, inputSetEntity.getInputSetConfig());
     update.set(BaseInputSetEntityKeys.inputSetType, InputSetEntityType.INPUT_SET);
   }
 

@@ -10,7 +10,7 @@ import com.google.common.io.Resources;
 
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
-import io.harness.cdng.inputset.beans.entities.CDInputSetEntity;
+import io.harness.cdng.inputset.beans.entities.InputSetEntity;
 import io.harness.cdng.inputset.beans.entities.MergeInputSetResponse;
 import io.harness.cdng.inputset.beans.resource.InputSetListType;
 import io.harness.cdng.inputset.beans.resource.InputSetResponseDTO;
@@ -22,7 +22,7 @@ import io.harness.cdng.inputset.helpers.InputSetMergeHelper;
 import io.harness.cdng.inputset.mappers.InputSetFilterHelper;
 import io.harness.cdng.inputset.services.impl.InputSetEntityServiceImpl;
 import io.harness.cdng.pipeline.NgPipeline;
-import io.harness.cdng.pipeline.beans.dto.CDPipelineResponseDTO;
+import io.harness.cdng.pipeline.beans.dto.NGPipelineResponseDTO;
 import io.harness.cdng.pipeline.service.PipelineService;
 import io.harness.ngpipeline.overlayinputset.beans.BaseInputSetEntity;
 import io.harness.ngpipeline.overlayinputset.beans.BaseInputSetEntity.BaseInputSetEntityKeys;
@@ -64,10 +64,10 @@ public class InputSetResourceTest extends CategoryTest {
   OverlayInputSetResponseDTO overlayInputSetResponseDTO;
   InputSetSummaryResponseDTO inputSetSummaryResponseDTO;
 
-  CDInputSetEntity cdInputSetEntity;
+  InputSetEntity inputSetEntity;
   OverlayInputSetEntity overlayInputSetEntity;
 
-  CDPipelineResponseDTO cdPipelineResponseDTO;
+  NGPipelineResponseDTO ngPipelineResponseDTO;
 
   MergeInputSetResponse mergeInputSetResponse;
 
@@ -126,13 +126,13 @@ public class InputSetResourceTest extends CategoryTest {
                                      .inputSetType(InputSetEntityType.INPUT_SET)
                                      .build();
 
-    cdInputSetEntity = CDInputSetEntity.builder().build();
-    setBaseEntityFields(cdInputSetEntity, InputSetEntityType.INPUT_SET, cdInputSetYaml);
+    inputSetEntity = InputSetEntity.builder().build();
+    setBaseEntityFields(inputSetEntity, InputSetEntityType.INPUT_SET, cdInputSetYaml);
 
     overlayInputSetEntity = OverlayInputSetEntity.builder().build();
     setBaseEntityFields(overlayInputSetEntity, InputSetEntityType.OVERLAY_INPUT_SET, overlayInputSetYaml);
 
-    cdPipelineResponseDTO = CDPipelineResponseDTO.builder().yamlPipeline(pipelineYaml).build();
+    ngPipelineResponseDTO = NGPipelineResponseDTO.builder().yamlPipeline(pipelineYaml).build();
 
     mergeInputSetResponse = MergeInputSetResponse.builder().isErrorResponse(false).build();
   }
@@ -152,13 +152,13 @@ public class InputSetResourceTest extends CategoryTest {
   @Owner(developers = NAMAN)
   @Category(UnitTests.class)
   public void testGetCDInputSet() {
-    doReturn(Optional.of(cdInputSetEntity))
+    doReturn(Optional.of(inputSetEntity))
         .when(inputSetEntityService)
         .get(ACCOUNT_ID, ORG_IDENTIFIER, PROJ_IDENTIFIER, PIPELINE_IDENTIFIER, IDENTIFIER, false);
 
     InputSetResponseDTO inputSetResponseDTO1 =
         inputSetResource
-            .getCDInputSet(IDENTIFIER, ACCOUNT_ID, ORG_IDENTIFIER, PROJ_IDENTIFIER, PIPELINE_IDENTIFIER, false)
+            .getInputSet(IDENTIFIER, ACCOUNT_ID, ORG_IDENTIFIER, PROJ_IDENTIFIER, PIPELINE_IDENTIFIER, false)
             .getData();
 
     assertThat(inputSetResponseDTO1).isEqualTo(cdInputSetResponseDTO);
@@ -185,11 +185,11 @@ public class InputSetResourceTest extends CategoryTest {
   @Category(UnitTests.class)
   public void testCreateCDInputSet() {
     doReturn(mergeInputSetResponse).when(inputSetEntityValidationHelper).validateInputSetEntity(any());
-    doReturn(cdInputSetEntity).when(inputSetEntityService).create(any());
+    doReturn(inputSetEntity).when(inputSetEntityService).create(any());
 
     InputSetResponseDTO inputSetResponseDTO1 =
         inputSetResource
-            .createCDInputSet(ACCOUNT_ID, ORG_IDENTIFIER, PROJ_IDENTIFIER, PIPELINE_IDENTIFIER, cdInputSetYaml)
+            .createInputSet(ACCOUNT_ID, ORG_IDENTIFIER, PROJ_IDENTIFIER, PIPELINE_IDENTIFIER, cdInputSetYaml)
             .getData();
 
     assertThat(inputSetResponseDTO1).isEqualTo(cdInputSetResponseDTO);
@@ -216,10 +216,10 @@ public class InputSetResourceTest extends CategoryTest {
   @Category(UnitTests.class)
   public void testUpdateCDInputSet() {
     doReturn(mergeInputSetResponse).when(inputSetEntityValidationHelper).validateInputSetEntity(any());
-    doReturn(cdInputSetEntity).when(inputSetEntityService).update(any());
+    doReturn(inputSetEntity).when(inputSetEntityService).update(any());
 
     InputSetResponseDTO inputSetResponseDTO1 = inputSetResource
-                                                   .updateCDInputSet(IDENTIFIER, ACCOUNT_ID, ORG_IDENTIFIER,
+                                                   .updateInputSet(IDENTIFIER, ACCOUNT_ID, ORG_IDENTIFIER,
                                                        PROJ_IDENTIFIER, PIPELINE_IDENTIFIER, cdInputSetYaml)
                                                    .getData();
 
@@ -262,7 +262,7 @@ public class InputSetResourceTest extends CategoryTest {
   public void testListServicesWithDESCSort() {
     Criteria criteria = InputSetFilterHelper.createCriteriaForGetList("", "", "", "", InputSetListType.ALL, "", false);
     Pageable pageable = PageRequest.of(0, 10, Sort.by(Sort.Direction.DESC, BaseInputSetEntityKeys.createdAt));
-    final Page<CDInputSetEntity> serviceList = new PageImpl<>(Collections.singletonList(cdInputSetEntity), pageable, 1);
+    final Page<InputSetEntity> serviceList = new PageImpl<>(Collections.singletonList(inputSetEntity), pageable, 1);
     doReturn(serviceList).when(inputSetEntityService).list(criteria, pageable);
 
     List<InputSetSummaryResponseDTO> content =
@@ -279,7 +279,7 @@ public class InputSetResourceTest extends CategoryTest {
   @Owner(developers = NAMAN)
   @Category(UnitTests.class)
   public void testGetTemplateFromPipeline() {
-    doReturn(Optional.of(cdPipelineResponseDTO)).when(ngPipelineService).getPipeline(any(), any(), any(), any());
+    doReturn(Optional.of(ngPipelineResponseDTO)).when(ngPipelineService).getPipeline(any(), any(), any(), any());
     doReturn("").when(inputSetMergeHelper).getTemplateFromPipeline(pipelineYaml);
 
     String responseTemplateYaml =

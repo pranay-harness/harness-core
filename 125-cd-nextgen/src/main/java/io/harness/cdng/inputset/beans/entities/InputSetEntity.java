@@ -1,7 +1,7 @@
 package io.harness.cdng.inputset.beans.entities;
 
 import io.harness.annotation.HarnessEntity;
-import io.harness.cdng.inputset.beans.yaml.CDInputSet;
+import io.harness.cdng.inputset.beans.yaml.InputSetConfig;
 import io.harness.ngpipeline.overlayinputset.beans.BaseInputSetEntity;
 import lombok.Builder;
 import lombok.Data;
@@ -17,6 +17,6 @@ import org.springframework.data.mongodb.core.mapping.Document;
 @Document("inputSetsNG")
 @TypeAlias("io.harness.cdng.inputset.beans.entities.CDInputSetEntity")
 @HarnessEntity(exportable = true)
-public class CDInputSetEntity extends BaseInputSetEntity {
-  private CDInputSet cdInputSet;
+public class InputSetEntity extends BaseInputSetEntity {
+  private InputSetConfig inputSetConfig;
 }

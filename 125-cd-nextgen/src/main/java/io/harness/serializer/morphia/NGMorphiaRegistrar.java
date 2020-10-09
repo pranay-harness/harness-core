@@ -12,7 +12,7 @@ import io.harness.cdng.infra.beans.InfraMapping;
 import io.harness.cdng.infra.beans.InfraUseFromStage;
 import io.harness.cdng.infra.beans.K8sDirectInfraMapping;
 import io.harness.cdng.infra.steps.InfraStepParameters;
-import io.harness.cdng.inputset.beans.entities.CDInputSetEntity;
+import io.harness.cdng.inputset.beans.entities.InputSetEntity;
 import io.harness.cdng.pipeline.beans.entities.NgPipelineEntity;
 import io.harness.cdng.service.beans.ServiceConfig;
 import io.harness.cdng.service.beans.ServiceOutcome;
@@ -34,7 +34,7 @@ public class NGMorphiaRegistrar implements MorphiaRegistrar {
     set.add(DockerArtifactSource.class);
     set.add(ArtifactSource.class);
     set.add(NgPipelineEntity.class);
-    set.add(CDInputSetEntity.class);
+    set.add(InputSetEntity.class);
   }
 
   @Override

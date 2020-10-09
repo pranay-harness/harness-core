@@ -12,4 +12,6 @@ public class NGCommonEntityConstants {
   public static final String TAGS_KEY = "tags";
   public static final String DESCRIPTION_KEY = "description";
   public static final String DELETED_KEY = "deleted";
+  public static final String PIPELINE_KEY = "pipelineIdentifier";
+  public static final String INPUT_SET_IDENTIFIER_KEY = "inputSetIdentifier";
 }

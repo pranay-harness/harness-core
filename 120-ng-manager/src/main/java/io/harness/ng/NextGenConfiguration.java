@@ -29,7 +29,7 @@ public class NextGenConfiguration extends Configuration {
   public static final String BASE_PACKAGE = "io.harness.ng";
   public static final String CONNECTOR_PACKAGE = "io.harness.connector.apis.resource";
   public static final String GIT_SYNC_PACKAGE = "io.harness.gitsync";
-  public static final String CDNG_RESOURCES_PACKAGE = "io.harness.cdng.resources";
+  public static final String CDNG_RESOURCES_PACKAGE = "io.harness.cdng";
   public static final String OVERLAY_INPUT_SET_RESOURCE_PACKAGE = "io.harness.ngpipeline";
   @JsonProperty("swagger") private SwaggerBundleConfiguration swaggerBundleConfiguration;
   @JsonProperty("mongo") private MongoConfig mongoConfig;

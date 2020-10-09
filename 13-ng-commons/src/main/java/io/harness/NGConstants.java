@@ -10,6 +10,4 @@ public class NGConstants {
   public static final String HARNESS_SECRET_MANAGER_IDENTIFIER = "harnessSecretManager";
   public static final String ENTITY_REFERENCE_LOG_PREFIX = "ENTITY_REFERENCE :";
   public static final String HARNESS_BLUE = "#0063F7";
-  public static final String PIPELINE_KEY = "pipelineIdentifier";
-  public static final String INPUT_SET_IDENTIFIER_KEY = "inputSetIdentifier";
 }
