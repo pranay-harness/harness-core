@@ -186,7 +186,7 @@ public class VerificationJobTest extends CategoryTest {
     testVerificationJob.setSensitivity(Sensitivity.MEDIUM);
     testVerificationJob.setServiceIdentifier(generateUuid(), false);
     testVerificationJob.setEnvIdentifier(generateUuid(), false);
-    testVerificationJob.setBaseLineVerificationTaskIdentifier(generateUuid());
+    testVerificationJob.setBaselineVerificationJobInstanceId(generateUuid());
     testVerificationJob.setDuration(Duration.ofMinutes(5));
     testVerificationJob.setProjectIdentifier(generateUuid());
     testVerificationJob.setOrgIdentifier(generateUuid());

@@ -49,8 +49,10 @@ public abstract class LearningEngineTask implements PersistentEntity, UuidAware,
     LOG_CLUSTER,
     SERVICE_GUARD_LOG_ANALYSIS,
     CANARY_LOG_ANALYSIS,
+    TEST_LOG_ANALYSIS,
     TIME_SERIES_CANARY,
-    SERVICE_GUARD_FEEDBACK_ANALYSIS
+    SERVICE_GUARD_FEEDBACK_ANALYSIS,
+    TIME_SERIES_LOAD_TEST
   }
 
   public enum ExecutionStatus { QUEUED, RUNNING, FAILED, SUCCESS, TIMEOUT }

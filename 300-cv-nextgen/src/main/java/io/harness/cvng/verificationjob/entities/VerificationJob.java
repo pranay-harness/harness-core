@@ -34,6 +34,7 @@ import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import javax.validation.constraints.NotNull;
 
 @Data
@@ -81,7 +82,7 @@ public abstract class VerificationJob
   }
 
   protected abstract void validateParams();
-  public abstract TimeRange getPreDeploymentTimeRange(Instant deploymentStartTime);
+  public abstract Optional<TimeRange> getPreDeploymentTimeRange(Instant deploymentStartTime);
   public abstract List<TimeRange> getDataCollectionTimeRanges(Instant startTime);
   protected void populateCommonFields(VerificationJobDTO verificationJobDTO) {
     verificationJobDTO.setIdentifier(this.identifier);
@@ -168,10 +169,19 @@ public abstract class VerificationJob
     return this;
   }
 
+  public abstract boolean collectHostData();
+
   @Data
   @Builder
   public static class RuntimeParameter {
     boolean isRuntimeParam;
     String value;
+
+    public String string() {
+      if (isRuntimeParam) {
+        return "${input}";
+      }
+      return value;
+    }
   }
 }

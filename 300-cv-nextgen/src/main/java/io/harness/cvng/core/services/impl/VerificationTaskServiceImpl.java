@@ -8,6 +8,8 @@ import io.harness.cvng.CVConstants;
 import io.harness.cvng.core.entities.VerificationTask;
 import io.harness.cvng.core.entities.VerificationTask.VerificationTaskKeys;
 import io.harness.cvng.core.services.api.VerificationTaskService;
+import io.harness.cvng.verificationjob.entities.TestVerificationJob;
+import io.harness.cvng.verificationjob.entities.VerificationJobInstance;
 import io.harness.persistence.HPersistence;
 
 import java.time.Clock;
@@ -60,6 +62,16 @@ public class VerificationTaskServiceImpl implements VerificationTaskService {
   }
 
   @Override
+  public String getVerificationTaskId(String cvConfigId, String verificationJobInstanceId) {
+    Preconditions.checkNotNull(verificationJobInstanceId, "verificationJobInstanceId should not be null");
+    return hPersistence.createQuery(VerificationTask.class)
+        .filter(VerificationTaskKeys.verificationJobInstanceId, verificationJobInstanceId)
+        .filter(VerificationTaskKeys.cvConfigId, cvConfigId)
+        .get()
+        .getUuid();
+  }
+
+  @Override
   public Set<String> getVerificationTaskIds(String accountId, String verificationJobInstanceId) {
     Set<String> results = hPersistence.createQuery(VerificationTask.class)
                               .filter(VerificationTaskKeys.accountId, accountId)
@@ -96,5 +108,19 @@ public class VerificationTaskServiceImpl implements VerificationTaskService {
   public void removeCVConfigMappings(String cvConfigId) {
     hPersistence.delete(
         hPersistence.createQuery(VerificationTask.class).filter(VerificationTaskKeys.cvConfigId, cvConfigId));
+  }
+
+  @Override
+  public String findBaselineVerificationTaskId(
+      String currentVerificationTaskId, VerificationJobInstance verificationJobInstance) {
+    Preconditions.checkState(verificationJobInstance.getResolvedJob() instanceof TestVerificationJob,
+        "getResolvedJob has to be instance of TestVerificationJob");
+    TestVerificationJob testVerificationJob = (TestVerificationJob) verificationJobInstance.getResolvedJob();
+    String baselineVerificationJobInstanceId = testVerificationJob.getBaselineVerificationJobInstanceId();
+    if (baselineVerificationJobInstanceId == null) {
+      return null;
+    }
+    String cvConfigId = getCVConfigId(currentVerificationTaskId);
+    return getVerificationTaskId(cvConfigId, baselineVerificationJobInstanceId);
   }
 }

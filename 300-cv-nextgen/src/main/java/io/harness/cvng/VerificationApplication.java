@@ -214,8 +214,8 @@ public class VerificationApplication extends Application<VerificationConfigurati
     registerResources(environment, injector);
     registerOrchestrationIterator(injector);
     registerVerificationTaskOrchestrationIterator(injector);
+    registerVerificationJobInstanceDataCollectionTaskIterator(injector);
     registerDataCollectionTaskIterator(injector);
-    registerVerificationTaskIterator(injector);
     registerDeleteDataCollectionWorkersIterator(injector);
     registerExceptionMappers(environment.jersey());
     registerCVConfigCleanupIterator(injector);
@@ -353,9 +353,9 @@ public class VerificationApplication extends Application<VerificationConfigurati
     verificationTaskExecutor.scheduleAtFixedRate(() -> dataCollectionIterator.process(), 0, 30, TimeUnit.SECONDS);
   }
 
-  private void registerVerificationTaskIterator(Injector injector) {
+  private void registerVerificationJobInstanceDataCollectionTaskIterator(Injector injector) {
     ScheduledThreadPoolExecutor verificationTaskExecutor = new ScheduledThreadPoolExecutor(
-        5, new ThreadFactoryBuilder().setNameFormat("verification-task-data-collection-iterator").build());
+        5, new ThreadFactoryBuilder().setNameFormat("verification-job-instance-data-collection-iterator").build());
     CreateDeploymentDataCollectionTaskHandler handler =
         injector.getInstance(CreateDeploymentDataCollectionTaskHandler.class);
     // TODO: setup alert if this goes above acceptable threshold.

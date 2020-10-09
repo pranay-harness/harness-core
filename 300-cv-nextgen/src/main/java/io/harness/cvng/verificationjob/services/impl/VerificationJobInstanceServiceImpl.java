@@ -80,6 +80,7 @@ public class VerificationJobInstanceServiceImpl implements VerificationJobInstan
   @Inject private NextGenService nextGenService;
   @Inject private DeploymentAnalysisService deploymentAnalysisService;
   @Inject private Clock clock;
+  // TODO: this is only used in test. Get rid of this API
   @Override
   public String create(String accountId, VerificationJobInstanceDTO verificationJobInstanceDTO) {
     // TODO: Is this API even needed anymore ?
@@ -146,23 +147,20 @@ public class VerificationJobInstanceServiceImpl implements VerificationJobInstan
     VerificationJob verificationJob = verificationJobInstance.getResolvedJob();
     Preconditions.checkNotNull(verificationJob);
     List<CVConfig> cvConfigs = cvConfigService.find(verificationJob.getAccountId(), verificationJob.getDataSources());
-    Set<String> connectorIds = cvConfigs.stream().map(CVConfig::getConnectorIdentifier).collect(Collectors.toSet());
-    // TODO: Keeping it one perpetual task per connector. We need to figure this one out based on the next gen
-    // connectors.
+    Set<String> connectorIdentifiers =
+        cvConfigs.stream().map(CVConfig::getConnectorIdentifier).collect(Collectors.toSet());
     List<String> perpetualTaskIds = new ArrayList<>();
-
-    connectorIds.forEach(connectorId -> {
-      String dataCollectionWorkerId = getDataCollectionWorkerId(verificationJobInstance, connectorId);
+    connectorIdentifiers.forEach(connectorIdentifier -> {
+      String dataCollectionWorkerId = getDataCollectionWorkerId(verificationJobInstance, connectorIdentifier);
       Map<String, String> params = new HashMap<>();
       params.put(DataCollectionTaskKeys.dataCollectionWorkerId, dataCollectionWorkerId);
-      params.put(CVConfigKeys.connectorIdentifier, connectorId);
-
+      params.put(CVConfigKeys.connectorIdentifier, connectorIdentifier);
       perpetualTaskIds.add(verificationManagerService.createDataCollectionTask(verificationJobInstance.getAccountId(),
           verificationJob.getOrgIdentifier(), verificationJob.getProjectIdentifier(), DataCollectionType.CV, params));
     });
-    setPerpetualTaskIds(verificationJobInstance, perpetualTaskIds);
     createDataCollectionTasks(verificationJobInstance, verificationJob, cvConfigs);
     markRunning(verificationJobInstance.getUuid());
+    setPerpetualTaskIds(verificationJobInstance, perpetualTaskIds);
   }
 
   @Override
@@ -195,7 +193,7 @@ public class VerificationJobInstanceServiceImpl implements VerificationJobInstan
   }
 
   @Override
-  public TimeRange getPreDeploymentTimeRange(String verificationJobInstanceId) {
+  public Optional<TimeRange> getPreDeploymentTimeRange(String verificationJobInstanceId) {
     VerificationJobInstance verificationJobInstance = getVerificationJobInstance(verificationJobInstanceId);
     VerificationJob verificationJob = verificationJobInstance.getResolvedJob();
     return verificationJob.getPreDeploymentTimeRange(verificationJobInstance.getDeploymentStartTime());
@@ -392,7 +390,7 @@ public class VerificationJobInstanceServiceImpl implements VerificationJobInstan
 
   private void createDataCollectionTasks(
       VerificationJobInstance verificationJobInstance, VerificationJob verificationJob, List<CVConfig> cvConfigs) {
-    TimeRange preDeploymentTimeRange =
+    Optional<TimeRange> preDeploymentTimeRange =
         verificationJob.getPreDeploymentTimeRange(verificationJobInstance.getDeploymentStartTime());
     List<TimeRange> timeRanges =
         verificationJob.getDataCollectionTimeRanges(roundDownTo1MinBoundary(verificationJobInstance.getStartTime()));
@@ -404,30 +402,33 @@ public class VerificationJobInstanceServiceImpl implements VerificationJobInstan
       DataCollectionInfoMapper dataCollectionInfoMapper =
           injector.getInstance(Key.get(DataCollectionInfoMapper.class, Names.named(cvConfig.getType().name())));
 
-      DataCollectionInfo preDeploymentDataCollectionInfo = dataCollectionInfoMapper.toDataCollectionInfo(cvConfig);
-      preDeploymentDataCollectionInfo.setDataCollectionDsl(cvConfig.getVerificationJobDataCollectionDsl());
-      preDeploymentDataCollectionInfo.setCollectHostData(true);
-      dataCollectionTasks.add(DataCollectionTask.builder()
-                                  .verificationTaskId(verificationTaskId)
-                                  .dataCollectionWorkerId(getDataCollectionWorkerId(
-                                      verificationJobInstance, cvConfig.getConnectorIdentifier()))
-                                  .startTime(preDeploymentTimeRange.getStartTime())
-                                  .endTime(preDeploymentTimeRange.getEndTime())
-                                  .validAfter(preDeploymentTimeRange.getEndTime()
-                                                  .plus(verificationJobInstance.getDataCollectionDelay())
-                                                  .toEpochMilli())
-                                  .accountId(verificationJob.getAccountId())
-                                  .status(QUEUED)
-                                  .dataCollectionInfo(preDeploymentDataCollectionInfo)
-                                  .queueAnalysis(cvConfig.queueAnalysisForPreDeploymentTask())
-                                  .build());
+      if (preDeploymentTimeRange.isPresent()) {
+        DataCollectionInfo preDeploymentDataCollectionInfo = dataCollectionInfoMapper.toDataCollectionInfo(cvConfig);
+        preDeploymentDataCollectionInfo.setDataCollectionDsl(cvConfig.getDataCollectionDsl());
+        preDeploymentDataCollectionInfo.setCollectHostData(verificationJob.collectHostData());
+        dataCollectionTasks.add(DataCollectionTask.builder()
+                                    .verificationTaskId(verificationTaskId)
+                                    .dataCollectionWorkerId(getDataCollectionWorkerId(
+                                        verificationJobInstance, cvConfig.getConnectorIdentifier()))
+                                    .startTime(preDeploymentTimeRange.get().getStartTime())
+                                    .endTime(preDeploymentTimeRange.get().getEndTime())
+                                    .validAfter(preDeploymentTimeRange.get()
+                                                    .getEndTime()
+                                                    .plus(verificationJobInstance.getDataCollectionDelay())
+                                                    .toEpochMilli())
+                                    .accountId(verificationJob.getAccountId())
+                                    .status(QUEUED)
+                                    .dataCollectionInfo(preDeploymentDataCollectionInfo)
+                                    .queueAnalysis(cvConfig.queueAnalysisForPreDeploymentTask())
+                                    .build());
+      }
 
       timeRanges.forEach(timeRange -> {
         DataCollectionInfo dataCollectionInfo = dataCollectionInfoMapper.toDataCollectionInfo(cvConfig);
         // TODO: For Now the DSL is same for both. We need to see how this evolves when implementation other provider.
         // Keeping this simple for now.
-        dataCollectionInfo.setDataCollectionDsl(cvConfig.getVerificationJobDataCollectionDsl());
-        dataCollectionInfo.setCollectHostData(true);
+        dataCollectionInfo.setDataCollectionDsl(cvConfig.getDataCollectionDsl());
+        dataCollectionInfo.setCollectHostData(verificationJob.collectHostData());
         dataCollectionTasks.add(
             DataCollectionTask.builder()
                 .verificationTaskId(verificationTaskId)

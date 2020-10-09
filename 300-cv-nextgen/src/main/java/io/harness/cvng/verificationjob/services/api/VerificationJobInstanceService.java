@@ -8,6 +8,7 @@ import io.harness.cvng.verificationjob.entities.VerificationJobInstance;
 import io.harness.cvng.verificationjob.entities.VerificationJobInstance.ProgressLog;
 
 import java.util.List;
+import java.util.Optional;
 
 public interface VerificationJobInstanceService {
   String create(String accountId, VerificationJobInstanceDTO verificationJobInstanceDTO);
@@ -15,11 +16,11 @@ public interface VerificationJobInstanceService {
   List<String> create(List<VerificationJobInstance> verificationJobInstances);
   VerificationJobInstanceDTO get(String verificationTaskId);
   List<VerificationJobInstance> get(List<String> verificationJobInstanceIds);
-  VerificationJobInstance getVerificationJobInstance(String verificationTaskId);
+  VerificationJobInstance getVerificationJobInstance(String verificationJobInstanceId);
   void createDataCollectionTasks(VerificationJobInstance verificationJobInstance);
   void logProgress(String verificationJobInstanceId, ProgressLog progressLog);
   void deletePerpetualTasks(VerificationJobInstance entity);
-  TimeRange getPreDeploymentTimeRange(String verificationJobInstanceId);
+  Optional<TimeRange> getPreDeploymentTimeRange(String verificationJobInstanceId);
   DeploymentActivityVerificationResultDTO getAggregatedVerificationResult(List<String> verificationJobInstanceIds);
   void addResultsToDeploymentResultSummary(
       List<String> verificationJobInstanceIds, DeploymentResultSummary deploymentResultSummary);

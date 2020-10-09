@@ -45,6 +45,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
+import javax.annotation.Nullable;
 
 @Slf4j
 public class LogClusterServiceImpl implements LogClusterService {
@@ -116,15 +117,24 @@ public class LogClusterServiceImpl implements LogClusterService {
     }
     VerificationJobInstance verificationJobInstance = verificationJobInstanceService.getVerificationJobInstance(
         verificationTaskService.getVerificationJobInstanceId(input.getVerificationTaskId()));
-    TimeRange preDeploymentTimeRange =
+    // test data for test verification will be different
+    Optional<TimeRange> preDeploymentTimeRange =
         verificationJobInstanceService.getPreDeploymentTimeRange(verificationJobInstance.getUuid());
-    Instant startTime = preDeploymentTimeRange.getStartTime();
-    Instant endTime = input.getEndTime();
-    String testDataUrl =
-        buildTestDataUrlForLogClustering(input.getVerificationTaskId(), LogClusterLevel.L2, startTime, endTime);
+    String testDataUrl;
+    if (preDeploymentTimeRange.isPresent()) {
+      Instant startTime = preDeploymentTimeRange.get().getStartTime();
+      Instant endTime = input.getEndTime();
+      testDataUrl =
+          buildTestDataUrlForLogClustering(input.getVerificationTaskId(), LogClusterLevel.L2, startTime, endTime);
+    } else {
+      testDataUrl = buildTestDataUrlForLogClustering(verificationTaskService.findBaselineVerificationTaskId(
+                                                         input.getVerificationTaskId(), verificationJobInstance),
+          input.getVerificationTaskId(), verificationJobInstance.getStartTime(), input.getEndTime());
+    }
     return Optional.of(createLogClusterLearningEngineTask(
         input.getVerificationTaskId(), timeForL2Task, LogClusterLevel.L2, testDataUrl));
   }
+
   private List<LogRecord> getLogRecordsForMinute(String cvConfigId, Instant timestamp) {
     return logRecordService.getLogRecords(cvConfigId, timestamp, timestamp.plus(Duration.ofMinutes(1)));
   }
@@ -164,6 +174,19 @@ public class LogClusterServiceImpl implements LogClusterService {
     return getUriString(uriBuilder);
   }
 
+  private String buildTestDataUrlForLogClustering(
+      @Nullable String baselineVerificationTaskId, String verificationTaskId, Instant startTime, Instant endTime) {
+    URIBuilder uriBuilder = new URIBuilder();
+    uriBuilder.setPath(SERVICE_BASE_URL + "/" + LOG_CLUSTER_RESOURCE + "/l1-test-verification-test-data");
+    if (baselineVerificationTaskId != null) {
+      uriBuilder.addParameter("baselineVerificationTaskId", baselineVerificationTaskId);
+    }
+    uriBuilder.addParameter(ClusteredLogKeys.verificationTaskId, verificationTaskId);
+    uriBuilder.addParameter("startTime", String.valueOf(startTime.toEpochMilli()));
+    uriBuilder.addParameter("endTime", String.valueOf(endTime.toEpochMilli()));
+    return getUriString(uriBuilder);
+  }
+
   private String buildClusterSaveUrl(
       String verificationTaskId, Instant timestamp, String taskId, LogClusterLevel clusterLevel) {
     URIBuilder uriBuilder = new URIBuilder();
@@ -197,13 +220,30 @@ public class LogClusterServiceImpl implements LogClusterService {
     }
   }
 
+  @Override
+  public List<LogClusterDTO> getL1TestVerificationTestData(
+      @Nullable String baselineVerificationTaskId, String verificationTaskId, Instant startTime, Instant endTime) {
+    List<LogClusterDTO> baselineData = new ArrayList<>();
+    if (baselineVerificationTaskId != null) {
+      baselineData = hPersistence.createQuery(ClusteredLog.class, excludeAuthority)
+                         .filter(ClusteredLogKeys.verificationTaskId, baselineVerificationTaskId)
+                         .filter(ClusteredLogKeys.clusterLevel, LogClusterLevel.L1)
+                         .asList()
+                         .stream()
+                         .map(ClusteredLog::toDTO)
+                         .collect(Collectors.toList());
+    }
+    List<LogClusterDTO> logClusterData =
+        getClusteredLogData(verificationTaskId, startTime, endTime, LogClusterLevel.L1);
+    logClusterData.addAll(baselineData);
+    return logClusterData;
+  }
+
   private List<LogClusterDTO> getTestDataForL1Clustering(
       String verificationTaskId, Instant startTime, Instant endTime) {
     List<LogClusterDTO> clusterData = new ArrayList<>();
     List<LogRecord> logRecords = logRecordService.getLogRecords(verificationTaskId, startTime, endTime);
-    if (logRecords != null) {
-      logRecords.forEach(record -> clusterData.add(record.toLogClusterDTO()));
-    }
+    logRecords.forEach(record -> clusterData.add(record.toLogClusterDTO()));
     return clusterData;
   }
 
@@ -219,9 +259,6 @@ public class LogClusterServiceImpl implements LogClusterService {
                                            .field(ClusteredLogKeys.timestamp)
                                            .lessThan(endTime)
                                            .asList();
-    if (clusteredLogs == null) {
-      return null;
-    }
     clusteredLogs.forEach(clusteredLog -> clusterData.add(clusteredLog.toDTO()));
     return clusterData;
   }

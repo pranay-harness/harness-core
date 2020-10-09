@@ -16,6 +16,7 @@ import io.swagger.annotations.ApiOperation;
 
 import java.time.Instant;
 import java.util.List;
+import javax.validation.constraints.NotNull;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
@@ -39,6 +40,20 @@ public class LogClusterResource {
       @QueryParam("endTime") Long endTime, @QueryParam("host") String host) {
     return new RestResponse<>(logClusterService.getDataForLogCluster(
         verificationTaskId, Instant.ofEpochMilli(startTime), Instant.ofEpochMilli(endTime), host, logClusterLevel));
+  }
+  @Produces({"application/json", "application/v1+json"})
+  @GET
+  @Path("/l1-test-verification-test-data")
+  @Timed
+  @ExceptionMetered
+  @LearningEngineAuth
+  @ApiOperation(value = "get test log data of L1 clustering", nickname = "getL1LogClusteringDataForTestVerification")
+  public RestResponse<List<LogClusterDTO>> getL1TestVerificationTestData(
+      @QueryParam("baselineVerificationTaskId") String baselineVerificationTaskId,
+      @NotNull @QueryParam("verificationTaskId") String verificationTaskId,
+      @NotNull @QueryParam("startTime") Long startTime, @NotNull @QueryParam("endTime") Long endTime) {
+    return new RestResponse<>(logClusterService.getL1TestVerificationTestData(baselineVerificationTaskId,
+        verificationTaskId, Instant.ofEpochMilli(startTime), Instant.ofEpochMilli(endTime)));
   }
 
   @Produces({"application/json", "application/v1+json"})

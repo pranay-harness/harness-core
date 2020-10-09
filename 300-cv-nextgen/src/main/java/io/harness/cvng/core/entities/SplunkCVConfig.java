@@ -46,11 +46,6 @@ public class SplunkCVConfig extends LogCVConfig {
     return DSL;
   }
 
-  @Override
-  public String getVerificationJobDataCollectionDsl() {
-    return getDataCollectionDsl();
-  }
-
   private static String readDSL(String fileName) {
     try {
       return Resources.toString(SplunkCVConfig.class.getResource(fileName), StandardCharsets.UTF_8);

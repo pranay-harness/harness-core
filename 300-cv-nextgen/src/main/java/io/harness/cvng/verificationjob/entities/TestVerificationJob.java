@@ -17,25 +17,44 @@ import lombok.experimental.FieldNameConstants;
 import java.time.Instant;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 @Data
 @FieldNameConstants(innerTypeName = "TestVerificationJobKeys")
 @NoArgsConstructor
 @EqualsAndHashCode(callSuper = true)
 public class TestVerificationJob extends VerificationJob {
-  private Sensitivity sensitivity;
-  private String baseLineVerificationTaskIdentifier;
+  private RuntimeParameter sensitivity;
+  private String baselineVerificationJobInstanceId;
   @Override
   public VerificationJobType getType() {
     return VerificationJobType.TEST;
+  }
+
+  public Sensitivity getSensitivity() {
+    if (sensitivity.isRuntimeParam()) {
+      return null;
+    }
+    return Sensitivity.valueOf(sensitivity.getValue());
+  }
+
+  public void setSensitivity(String sensitivity, boolean isRuntimeParam) {
+    this.sensitivity = sensitivity == null
+        ? null
+        : RuntimeParameter.builder().isRuntimeParam(isRuntimeParam).value(sensitivity).build();
+  }
+
+  public void setSensitivity(Sensitivity sensitivity) {
+    this.sensitivity =
+        sensitivity == null ? null : RuntimeParameter.builder().isRuntimeParam(false).value(sensitivity.name()).build();
   }
 
   @Override
   public VerificationJobDTO getVerificationJobDTO() {
     TestVerificationJobDTO testVerificationJobDTO = new TestVerificationJobDTO();
     populateCommonFields(testVerificationJobDTO);
-    testVerificationJobDTO.setSensitivity(sensitivity);
-    testVerificationJobDTO.setBaselineVerificationTaskIdentifier(baseLineVerificationTaskIdentifier);
+    testVerificationJobDTO.setSensitivity(this.sensitivity.string());
+    testVerificationJobDTO.setBaselineVerificationJobInstanceId(baselineVerificationJobInstanceId);
     return testVerificationJobDTO;
   }
 
@@ -45,8 +64,8 @@ public class TestVerificationJob extends VerificationJob {
   }
 
   @Override
-  public TimeRange getPreDeploymentTimeRange(Instant deploymentStartTime) {
-    throw new UnsupportedOperationException("Not implemented");
+  public Optional<TimeRange> getPreDeploymentTimeRange(Instant deploymentStartTime) {
+    return Optional.empty();
   }
 
   @Override
@@ -56,4 +75,9 @@ public class TestVerificationJob extends VerificationJob {
 
   @Override
   public void resolveJobParams(Map<String, String> runtimeParameters) {}
+
+  @Override
+  public boolean collectHostData() {
+    return false;
+  }
 }
