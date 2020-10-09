@@ -129,8 +129,10 @@ public class DeploymentTimeSeriesAnalysisServiceImpl implements DeploymentTimeSe
   private boolean filterByHostName(DeploymentTimeSeriesAnalysisDTO.HostData hostData, String hostName) {
     if (StringUtils.isBlank(hostName)) {
       return true;
+    } else if (hostData.getHostName().isPresent()) {
+      return hostName.equals(hostData.getHostName().get());
     } else {
-      return hostName.equals(hostData.getHostName());
+      return false;
     }
   }
 

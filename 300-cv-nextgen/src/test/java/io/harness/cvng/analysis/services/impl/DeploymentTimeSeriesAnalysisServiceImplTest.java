@@ -87,8 +87,13 @@ public class DeploymentTimeSeriesAnalysisServiceImplTest extends CvNextGenTest {
         .isEqualTo(2.5); // ensures that sorting based on score from transaction works
     assertThat(transactionMetricInfoSummaryPageDTO.getPageResponse().getContent().get(0).getNodes().size())
         .isEqualTo(2);
-    assertThat(
-        transactionMetricInfoSummaryPageDTO.getPageResponse().getContent().get(0).getNodes().first().getHostName())
+    assertThat(transactionMetricInfoSummaryPageDTO.getPageResponse()
+                   .getContent()
+                   .get(0)
+                   .getNodes()
+                   .first()
+                   .getHostName()
+                   .get())
         .isEqualTo("node2");
     assertThat(transactionMetricInfoSummaryPageDTO.getPageResponse().getContent().get(0).getNodes().first().getScore())
         .isEqualTo(2); // checks that sorting per node works correctly
@@ -112,8 +117,13 @@ public class DeploymentTimeSeriesAnalysisServiceImplTest extends CvNextGenTest {
     assertThat(transactionMetricInfoSummaryPageDTO.getPageResponse().getContent()).isNotNull();
     assertThat(transactionMetricInfoSummaryPageDTO.getPageResponse().getContent().get(0).getNodes().size())
         .isEqualTo(1);
-    assertThat(
-        transactionMetricInfoSummaryPageDTO.getPageResponse().getContent().get(0).getNodes().first().getHostName())
+    assertThat(transactionMetricInfoSummaryPageDTO.getPageResponse()
+                   .getContent()
+                   .get(0)
+                   .getNodes()
+                   .first()
+                   .getHostName()
+                   .get())
         .isEqualTo("node1");
   }
 
@@ -177,8 +187,13 @@ public class DeploymentTimeSeriesAnalysisServiceImplTest extends CvNextGenTest {
         .isEqualTo(2.5);
     assertThat(transactionMetricInfoSummaryPageDTO.getPageResponse().getContent().get(0).getNodes().size())
         .isEqualTo(1);
-    assertThat(
-        transactionMetricInfoSummaryPageDTO.getPageResponse().getContent().get(0).getNodes().first().getHostName())
+    assertThat(transactionMetricInfoSummaryPageDTO.getPageResponse()
+                   .getContent()
+                   .get(0)
+                   .getNodes()
+                   .first()
+                   .getHostName()
+                   .get())
         .isEqualTo("node2");
   }
   @Test
