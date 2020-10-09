@@ -248,7 +248,7 @@ public class SshHelperUtils {
   }
 
   public static boolean executeLocalCommand(String cmdString, LogCallback logCallback) {
-    String[] commandList = new String[] {"sh", "-c", cmdString};
+    String[] commandList = new String[] {"/bin/bash", "-c", cmdString};
     ProcessExecutor processExecutor = new ProcessExecutor()
                                           .command(commandList)
                                           .directory(new File(System.getProperty("user.home")))
