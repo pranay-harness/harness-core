@@ -4,6 +4,7 @@ import lombok.Builder;
 import lombok.Value;
 
 import java.util.List;
+import java.util.Optional;
 import javax.validation.constraints.NotNull;
 
 @Value
@@ -33,10 +34,16 @@ public class DeploymentTimeSeriesAnalysisDTO {
     List<Double> controlData;
     List<Double> testData;
 
+    public Optional<String> getHostName() {
+      return Optional.ofNullable(hostName);
+    }
+
     @Override
     public int compareTo(@NotNull HostData o) {
       int result = Double.compare(o.getScore(), this.getScore());
-      return result == 0 ? o.getHostName().compareTo(this.getHostName()) : result;
+      return result == 0 && o.getHostName().isPresent() && this.getHostName().isPresent()
+          ? o.getHostName().get().compareTo(this.getHostName().get())
+          : result;
     }
   }
 
@@ -47,6 +54,7 @@ public class DeploymentTimeSeriesAnalysisDTO {
     String metricName;
     int risk;
     Double score;
+    // TODO: For load test, this is overall data. Figure out a better name that suits for both canary and load test
     List<HostData> hostData;
   }
 }
