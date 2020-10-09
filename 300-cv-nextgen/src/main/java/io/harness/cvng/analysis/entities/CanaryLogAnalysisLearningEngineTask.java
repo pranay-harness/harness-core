@@ -14,9 +14,7 @@ import java.util.Set;
 @NoArgsConstructor
 @AllArgsConstructor
 @EqualsAndHashCode(callSuper = true)
-public class LogCanaryAnalysisLearningEngineTask extends LearningEngineTask {
-  private String controlDataUrl;
-  private String testDataUrl;
+public class CanaryLogAnalysisLearningEngineTask extends LogAnalysisLearningEngineTask {
   private Set<String> controlHosts;
 
   public Set<String> getControlHosts() {

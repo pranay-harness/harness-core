@@ -7,6 +7,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.anySet;
 import static org.mockito.Mockito.mock;
 
+import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.google.inject.Inject;
 
@@ -16,6 +17,7 @@ import io.harness.cvng.analysis.beans.DeploymentLogAnalysisDTO;
 import io.harness.cvng.analysis.beans.LogAnalysisDTO;
 import io.harness.cvng.analysis.beans.LogClusterDTO;
 import io.harness.cvng.analysis.beans.LogClusterLevel;
+import io.harness.cvng.analysis.entities.CanaryLogAnalysisLearningEngineTask;
 import io.harness.cvng.analysis.entities.ClusteredLog;
 import io.harness.cvng.analysis.entities.DeploymentLogAnalysis;
 import io.harness.cvng.analysis.entities.LearningEngineTask;
@@ -27,17 +29,24 @@ import io.harness.cvng.analysis.entities.LogAnalysisCluster.LogAnalysisClusterKe
 import io.harness.cvng.analysis.entities.LogAnalysisResult;
 import io.harness.cvng.analysis.entities.LogAnalysisResult.AnalysisResult;
 import io.harness.cvng.analysis.entities.LogAnalysisResult.LogAnalysisResultKeys;
-import io.harness.cvng.analysis.entities.LogCanaryAnalysisLearningEngineTask;
+import io.harness.cvng.analysis.entities.TestLogAnalysisLearningEngineTask;
 import io.harness.cvng.analysis.services.api.DeploymentLogAnalysisService;
 import io.harness.cvng.analysis.services.api.LearningEngineTaskService;
 import io.harness.cvng.analysis.services.api.LogAnalysisService;
 import io.harness.cvng.beans.CVMonitoringCategory;
+import io.harness.cvng.beans.DataSourceType;
 import io.harness.cvng.core.entities.CVConfig;
 import io.harness.cvng.core.entities.SplunkCVConfig;
 import io.harness.cvng.core.services.api.CVConfigService;
 import io.harness.cvng.core.services.api.VerificationTaskService;
 import io.harness.cvng.models.VerificationType;
 import io.harness.cvng.statemachine.beans.AnalysisInput;
+import io.harness.cvng.verificationjob.beans.Sensitivity;
+import io.harness.cvng.verificationjob.beans.TestVerificationJobDTO;
+import io.harness.cvng.verificationjob.entities.TestVerificationJob;
+import io.harness.cvng.verificationjob.entities.VerificationJob;
+import io.harness.cvng.verificationjob.entities.VerificationJobInstance;
+import io.harness.cvng.verificationjob.services.api.VerificationJobInstanceService;
 import io.harness.persistence.HPersistence;
 import io.harness.rule.Owner;
 import org.apache.commons.lang3.reflect.FieldUtils;
@@ -65,6 +74,10 @@ public class LogAnalysisServiceImplTest extends CvNextGenTest {
   @Inject private CVConfigService cvConfigService;
   @Inject private VerificationTaskService verificationTaskService;
   @Inject private DeploymentLogAnalysisService deploymentLogAnalysisService;
+  @Inject private VerificationJobInstanceService verificationJobInstanceService;
+  private String verificationJobIdentifier;
+  private Instant instant;
+  private String accountId;
 
   @Before
   public void setUp() {
@@ -72,6 +85,8 @@ public class LogAnalysisServiceImplTest extends CvNextGenTest {
     CVConfig cvConfig = createCVConfig();
     cvConfigService.save(cvConfig);
     cvConfigId = cvConfig.getUuid();
+    accountId = generateUuid();
+    instant = Instant.parse("2020-07-27T10:44:11.000Z");
     verificationTaskId = verificationTaskService.getServiceGuardVerificationTaskId(cvConfig.getAccountId(), cvConfigId);
   }
 
@@ -184,11 +199,10 @@ public class LogAnalysisServiceImplTest extends CvNextGenTest {
   @Owner(developers = KAMAL)
   @Category(UnitTests.class)
   public void testSaveAnalysis_deployment() {
-    LogCanaryAnalysisLearningEngineTask task = LogCanaryAnalysisLearningEngineTask.builder()
-                                                   .controlHosts(Sets.newHashSet("host1", "host2"))
-                                                   .controlDataUrl("controlData")
-                                                   .testDataUrl("testData")
-                                                   .build();
+    CanaryLogAnalysisLearningEngineTask task =
+        CanaryLogAnalysisLearningEngineTask.builder().controlHosts(Sets.newHashSet("host1", "host2")).build();
+    task.setControlDataUrl("controlData");
+    task.setTestDataUrl("testData");
     fillCommon(task, LearningEngineTaskType.CANARY_LOG_ANALYSIS);
     learningEngineTaskService.createLearningEngineTask(task);
     DeploymentLogAnalysisDTO deploymentLogAnalysisDTO = createDeploymentAnalysisDTO();
@@ -279,6 +293,68 @@ public class LogAnalysisServiceImplTest extends CvNextGenTest {
         cvConfigId, Arrays.asList(LogAnalysisResult.LogAnalysisTag.UNKNOWN), start, end);
 
     assertThat(analysisResults.size()).isEqualTo(1);
+  }
+  @Test
+  @Owner(developers = KAMAL)
+  @Category(UnitTests.class)
+  public void testScheduleDeploymentLogAnalysisTask_testVerificationWithNullBaseline() {
+    VerificationJobInstance verificationJobInstance = newVerificationJobInstance();
+    String verificationJobInstanceId = verificationJobInstanceService.create(verificationJobInstance);
+    String verificationTaskId = verificationTaskService.create(accountId, cvConfigId, verificationJobInstanceId);
+    AnalysisInput input = AnalysisInput.builder()
+                              .verificationTaskId(verificationTaskId)
+                              .startTime(instant.plus(5, ChronoUnit.MINUTES))
+                              .endTime(instant.plus(6, ChronoUnit.MINUTES))
+                              .build();
+    String taskId = logAnalysisService.scheduleDeploymentLogAnalysisTask(input);
+    assertThat(taskId).isNotNull();
+
+    LearningEngineTask task = hPersistence.get(LearningEngineTask.class, taskId);
+    TestLogAnalysisLearningEngineTask testLogAnalysisLearningEngineTask = (TestLogAnalysisLearningEngineTask) task;
+    assertThat(task).isNotNull();
+    assertThat(task.getVerificationTaskId()).isEqualTo(verificationTaskId);
+    assertThat(Duration.between(task.getAnalysisStartTime(), input.getStartTime())).isZero();
+    assertThat(Duration.between(task.getAnalysisEndTime(), input.getEndTime())).isZero();
+    assertThat(task.getAnalysisType().name()).isEqualTo(LearningEngineTaskType.TEST_LOG_ANALYSIS.name());
+    assertThat(testLogAnalysisLearningEngineTask.getControlDataUrl()).isNull();
+    assertThat(testLogAnalysisLearningEngineTask.getTestDataUrl())
+        .isEqualTo("/cv-nextgen/log-analysis/test-data?verificationTaskId=" + verificationTaskId
+            + "&analysisStartTime=1595846771000&analysisEndTime=1595847011000");
+  }
+
+  @Test
+  @Owner(developers = KAMAL)
+  @Category(UnitTests.class)
+  public void testScheduleDeploymentLogAnalysisTask_testVerificationWithBaseline() {
+    VerificationJobInstance verificationJobInstance = newVerificationJobInstance();
+    VerificationJobInstance baseline = newVerificationJobInstance();
+    String baselineJobInstanceId = verificationJobInstanceService.create(verificationJobInstance);
+    ((TestVerificationJob) verificationJobInstance.getResolvedJob())
+        .setBaselineVerificationJobInstanceId(baselineJobInstanceId);
+    String verificationJobInstanceId = verificationJobInstanceService.create(verificationJobInstance);
+    String baselineVerificationTaskId = verificationTaskService.create(accountId, cvConfigId, baselineJobInstanceId);
+    String verificationTaskId = verificationTaskService.create(accountId, cvConfigId, verificationJobInstanceId);
+    AnalysisInput input = AnalysisInput.builder()
+                              .verificationTaskId(verificationTaskId)
+                              .startTime(instant.plus(5, ChronoUnit.MINUTES))
+                              .endTime(instant.plus(6, ChronoUnit.MINUTES))
+                              .build();
+    String taskId = logAnalysisService.scheduleDeploymentLogAnalysisTask(input);
+    assertThat(taskId).isNotNull();
+
+    LearningEngineTask task = hPersistence.get(LearningEngineTask.class, taskId);
+    TestLogAnalysisLearningEngineTask testLogAnalysisLearningEngineTask = (TestLogAnalysisLearningEngineTask) task;
+    assertThat(task).isNotNull();
+    assertThat(task.getVerificationTaskId()).isEqualTo(verificationTaskId);
+    assertThat(Duration.between(task.getAnalysisStartTime(), input.getStartTime())).isZero();
+    assertThat(Duration.between(task.getAnalysisEndTime(), input.getEndTime())).isZero();
+    assertThat(task.getAnalysisType().name()).isEqualTo(LearningEngineTaskType.TEST_LOG_ANALYSIS.name());
+    assertThat(testLogAnalysisLearningEngineTask.getControlDataUrl())
+        .isEqualTo("/cv-nextgen/log-analysis/test-data?verificationTaskId=" + baselineVerificationTaskId
+            + "&analysisStartTime=1595846771000&analysisEndTime=1595847671000");
+    assertThat(testLogAnalysisLearningEngineTask.getTestDataUrl())
+        .isEqualTo("/cv-nextgen/log-analysis/test-data?verificationTaskId=" + verificationTaskId
+            + "&analysisStartTime=1595846771000&analysisEndTime=1595847011000");
   }
 
   private List<ClusteredLog> createClusteredLogRecords(Instant startTime, Instant endTime) {
@@ -382,5 +458,31 @@ public class LogAnalysisServiceImplTest extends CvNextGenTest {
     learningEngineTask.setFailureUrl("failure-url");
     learningEngineTask.setAnalysisStartTime(Instant.now().minus(Duration.ofMinutes(10)));
     learningEngineTask.setAnalysisEndTime(Instant.now());
+  }
+
+  private VerificationJob newTestVerificationJob() {
+    TestVerificationJobDTO testVerificationJob = new TestVerificationJobDTO();
+    testVerificationJob.setIdentifier(verificationJobIdentifier);
+    testVerificationJob.setJobName(generateUuid());
+    testVerificationJob.setDataSources(Lists.newArrayList(DataSourceType.SPLUNK));
+    testVerificationJob.setSensitivity(Sensitivity.MEDIUM.name());
+    testVerificationJob.setServiceIdentifier(generateUuid());
+    testVerificationJob.setOrgIdentifier(generateUuid());
+    testVerificationJob.setProjectIdentifier(generateUuid());
+    testVerificationJob.setEnvIdentifier(generateUuid());
+    testVerificationJob.setSensitivity(Sensitivity.MEDIUM.name());
+    testVerificationJob.setDuration("15m");
+    return testVerificationJob.getVerificationJob();
+  }
+
+  private VerificationJobInstance newVerificationJobInstance() {
+    return VerificationJobInstance.builder()
+        .accountId(accountId)
+        .verificationJobIdentifier(verificationJobIdentifier)
+        .deploymentStartTime(instant)
+        .startTime(instant.plus(Duration.ofMinutes(2)))
+        .dataCollectionDelay(Duration.ofMinutes(5))
+        .resolvedJob(newTestVerificationJob())
+        .build();
   }
 }

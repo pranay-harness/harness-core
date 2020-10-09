@@ -22,6 +22,8 @@ public interface LogClusterService {
   Map<String, ExecutionStatus> getTaskStatus(Set<String> taskIds);
   List<LogClusterDTO> getDataForLogCluster(
       String verificationTaskId, Instant startTime, Instant endTime, String host, LogClusterLevel clusterLevel);
+  List<LogClusterDTO> getL1TestVerificationTestData(
+      String baselineVerificationTaskId, String verificationTaskId, Instant startTime, Instant endTime);
   List<LogClusterDTO> getClusteredLogData(
       String cvConfigId, Instant startTime, Instant endTime, LogClusterLevel clusterLevel);
   void saveClusteredData(List<LogClusterDTO> logClusterDTO, String verificationTaskId, Instant timestamp, String taskId,

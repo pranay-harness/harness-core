@@ -23,8 +23,10 @@ import io.harness.cvng.statemachine.entities.DeploymentLogClusterState;
 import io.harness.cvng.statemachine.entities.PreDeploymentLogClusterState;
 import io.harness.cvng.statemachine.entities.ServiceGuardLogClusterState;
 import io.harness.cvng.statemachine.entities.ServiceGuardTimeSeriesAnalysisState;
+import io.harness.cvng.statemachine.entities.TestTimeSeriesAnalysisState;
 import io.harness.cvng.statemachine.exception.AnalysisStateMachineException;
 import io.harness.cvng.statemachine.services.intfc.AnalysisStateMachineService;
+import io.harness.cvng.verificationjob.beans.VerificationJobType;
 import io.harness.cvng.verificationjob.entities.VerificationJobInstance;
 import io.harness.cvng.verificationjob.services.api.VerificationJobInstanceService;
 import io.harness.cvng.verificationjob.services.api.VerificationJobService;
@@ -35,6 +37,7 @@ import org.mongodb.morphia.query.Sort;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
+import java.util.Optional;
 
 @Slf4j
 public class AnalysisStateMachineServiceImpl implements AnalysisStateMachineService {
@@ -247,13 +250,21 @@ public class AnalysisStateMachineServiceImpl implements AnalysisStateMachineServ
       CVConfig cvConfigForDeployment = cvConfigService.get(verificationTask.getCvConfigId());
       Preconditions.checkNotNull(verificationJobInstance, "verificationJobInstance can not be null");
       Preconditions.checkNotNull(cvConfigForDeployment, "cvConfigForDeployment can not be null");
-
+      // TODO: find right place for these conditions
       switch (cvConfigForDeployment.getVerificationType()) {
         case TIME_SERIES:
-          CanaryTimeSeriesAnalysisState canaryTimeSeriesAnalysisState = CanaryTimeSeriesAnalysisState.builder().build();
-          canaryTimeSeriesAnalysisState.setStatus(AnalysisStatus.CREATED);
-          canaryTimeSeriesAnalysisState.setInputs(inputForAnalysis);
-          stateMachine.setCurrentState(canaryTimeSeriesAnalysisState);
+          if (verificationJobInstance.getResolvedJob().getType() == VerificationJobType.TEST) {
+            TestTimeSeriesAnalysisState testTimeSeriesAnalysisState = TestTimeSeriesAnalysisState.builder().build();
+            testTimeSeriesAnalysisState.setStatus(AnalysisStatus.CREATED);
+            testTimeSeriesAnalysisState.setInputs(inputForAnalysis);
+            stateMachine.setCurrentState(testTimeSeriesAnalysisState);
+          } else {
+            CanaryTimeSeriesAnalysisState canaryTimeSeriesAnalysisState =
+                CanaryTimeSeriesAnalysisState.builder().build();
+            canaryTimeSeriesAnalysisState.setStatus(AnalysisStatus.CREATED);
+            canaryTimeSeriesAnalysisState.setInputs(inputForAnalysis);
+            stateMachine.setCurrentState(canaryTimeSeriesAnalysisState);
+          }
           break;
         case LOG:
           AnalysisState analysisState = createDeploymentLogState(inputForAnalysis, verificationJobInstance);
@@ -270,9 +281,9 @@ public class AnalysisStateMachineServiceImpl implements AnalysisStateMachineServ
 
   private AnalysisState createDeploymentLogState(
       AnalysisInput analysisInput, VerificationJobInstance verificationJobInstance) {
-    TimeRange preDeploymentTimeRange =
+    Optional<TimeRange> preDeploymentTimeRange =
         verificationJobInstanceService.getPreDeploymentTimeRange(verificationJobInstance.getUuid());
-    if (preDeploymentTimeRange.equals(analysisInput.getTimeRange())) {
+    if (preDeploymentTimeRange.isPresent() && preDeploymentTimeRange.equals(analysisInput.getTimeRange())) {
       // first task so needs to enqueue clustering task
       PreDeploymentLogClusterState preDeploymentLogClusterState = PreDeploymentLogClusterState.builder().build();
       preDeploymentLogClusterState.setClusterLevel(LogClusterLevel.L1);

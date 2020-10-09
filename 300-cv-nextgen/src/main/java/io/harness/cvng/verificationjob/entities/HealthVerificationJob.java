@@ -12,6 +12,7 @@ import lombok.experimental.FieldNameConstants;
 import java.time.Instant;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 @Data
 @FieldNameConstants(innerTypeName = "HealthVerificationJobKeys")
@@ -34,7 +35,7 @@ public class HealthVerificationJob extends VerificationJob {
   protected void validateParams() {}
 
   @Override
-  public TimeRange getPreDeploymentTimeRange(Instant deploymentStartTime) {
+  public Optional<TimeRange> getPreDeploymentTimeRange(Instant deploymentStartTime) {
     throw new UnsupportedOperationException("Not implemented");
   }
 
@@ -45,4 +46,9 @@ public class HealthVerificationJob extends VerificationJob {
 
   @Override
   public void resolveJobParams(Map<String, String> runtimeParameters) {}
+
+  @Override
+  public boolean collectHostData() {
+    return false;
+  }
 }

@@ -12,8 +12,8 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @EqualsAndHashCode(callSuper = true)
 public class TestVerificationJobDTO extends VerificationJobDTO {
-  private Sensitivity sensitivity;
-  private String baselineVerificationTaskIdentifier; // Define it in a better way once verification task is implemented.
+  private String sensitivity;
+  private String baselineVerificationJobInstanceId;
   @Override
   public VerificationJobType getType() {
     return VerificationJobType.TEST;
@@ -22,8 +22,8 @@ public class TestVerificationJobDTO extends VerificationJobDTO {
   public VerificationJob getVerificationJob() {
     TestVerificationJob testVerificationJob = new TestVerificationJob();
     populateCommonFields(testVerificationJob);
-    testVerificationJob.setSensitivity(sensitivity);
-    testVerificationJob.setBaseLineVerificationTaskIdentifier(baselineVerificationTaskIdentifier);
+    testVerificationJob.setSensitivity(sensitivity, isRuntimeParam(sensitivity));
+    testVerificationJob.setBaselineVerificationJobInstanceId(baselineVerificationJobInstanceId);
     return testVerificationJob;
   }
 }

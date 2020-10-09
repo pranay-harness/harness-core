@@ -137,11 +137,11 @@ public class VerificationJobServiceImplTest extends CvNextGenTest {
     testVerificationJobDTO.setIdentifier(identifier);
     testVerificationJobDTO.setJobName(generateUuid());
     testVerificationJobDTO.setDataSources(Lists.newArrayList(DataSourceType.APP_DYNAMICS));
-    testVerificationJobDTO.setBaselineVerificationTaskIdentifier(null);
-    testVerificationJobDTO.setSensitivity(Sensitivity.MEDIUM);
+    testVerificationJobDTO.setBaselineVerificationJobInstanceId(null);
+    testVerificationJobDTO.setSensitivity(Sensitivity.MEDIUM.name());
     testVerificationJobDTO.setServiceIdentifier(generateUuid());
     testVerificationJobDTO.setEnvIdentifier(generateUuid());
-    testVerificationJobDTO.setBaselineVerificationTaskIdentifier(generateUuid());
+    testVerificationJobDTO.setBaselineVerificationJobInstanceId(generateUuid());
     testVerificationJobDTO.setDuration("15m");
     testVerificationJobDTO.setProjectIdentifier(generateUuid());
     testVerificationJobDTO.setOrgIdentifier(generateUuid());

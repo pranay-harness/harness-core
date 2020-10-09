@@ -32,11 +32,6 @@ public class AppDynamicsCVConfig extends MetricCVConfig {
   }
 
   @Override
-  public String getVerificationJobDataCollectionDsl() {
-    return this.getDataCollectionDsl();
-  }
-
-  @Override
   protected void validateParams() {
     checkNotNull(applicationName, generateErrorMessageFromParam(AppDynamicsCVConfigKeys.applicationName));
     checkNotNull(tierName, generateErrorMessageFromParam(AppDynamicsCVConfigKeys.tierName));

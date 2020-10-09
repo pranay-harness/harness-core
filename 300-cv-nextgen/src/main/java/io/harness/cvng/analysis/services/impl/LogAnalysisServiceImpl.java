@@ -18,19 +18,21 @@ import io.harness.cvng.analysis.beans.DeploymentLogAnalysisDTO;
 import io.harness.cvng.analysis.beans.LogAnalysisDTO;
 import io.harness.cvng.analysis.beans.LogClusterDTO;
 import io.harness.cvng.analysis.beans.LogClusterLevel;
+import io.harness.cvng.analysis.entities.CanaryLogAnalysisLearningEngineTask;
 import io.harness.cvng.analysis.entities.DeploymentLogAnalysis;
 import io.harness.cvng.analysis.entities.LearningEngineTask;
 import io.harness.cvng.analysis.entities.LearningEngineTask.ExecutionStatus;
 import io.harness.cvng.analysis.entities.LearningEngineTask.LearningEngineTaskType;
 import io.harness.cvng.analysis.entities.LogAnalysisCluster;
 import io.harness.cvng.analysis.entities.LogAnalysisCluster.LogAnalysisClusterKeys;
+import io.harness.cvng.analysis.entities.LogAnalysisLearningEngineTask;
 import io.harness.cvng.analysis.entities.LogAnalysisRecord.LogAnalysisRecordKeys;
 import io.harness.cvng.analysis.entities.LogAnalysisResult;
 import io.harness.cvng.analysis.entities.LogAnalysisResult.AnalysisResult.AnalysisResultKeys;
 import io.harness.cvng.analysis.entities.LogAnalysisResult.LogAnalysisResultKeys;
 import io.harness.cvng.analysis.entities.LogAnalysisResult.LogAnalysisTag;
-import io.harness.cvng.analysis.entities.LogCanaryAnalysisLearningEngineTask;
 import io.harness.cvng.analysis.entities.ServiceGuardLogAnalysisTask;
+import io.harness.cvng.analysis.entities.TestLogAnalysisLearningEngineTask;
 import io.harness.cvng.analysis.services.api.DeploymentLogAnalysisService;
 import io.harness.cvng.analysis.services.api.LearningEngineTaskService;
 import io.harness.cvng.analysis.services.api.LogAnalysisService;
@@ -46,6 +48,7 @@ import io.harness.cvng.core.utils.DateTimeUtils;
 import io.harness.cvng.dashboard.services.api.HeatMapService;
 import io.harness.cvng.statemachine.beans.AnalysisInput;
 import io.harness.cvng.statemachine.beans.AnalysisStatus;
+import io.harness.cvng.verificationjob.entities.TestVerificationJob;
 import io.harness.cvng.verificationjob.entities.VerificationJobInstance;
 import io.harness.cvng.verificationjob.entities.VerificationJobInstance.ProgressLog;
 import io.harness.cvng.verificationjob.services.api.VerificationJobInstanceService;
@@ -61,6 +64,7 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
@@ -110,27 +114,42 @@ public class LogAnalysisServiceImpl implements LogAnalysisService {
 
   @Override
   public String scheduleDeploymentLogAnalysisTask(AnalysisInput analysisInput) {
-    LogCanaryAnalysisLearningEngineTask task = createDeploymentLogAnalysisTask(analysisInput);
+    LogAnalysisLearningEngineTask task = createLogCanaryAnalysisLearningEngineTask(analysisInput);
     logger.info("Scheduling LogCanaryAnalysisLearningEngineTask {}", task);
     return learningEngineTaskService.createLearningEngineTask(task);
   }
 
-  private LogCanaryAnalysisLearningEngineTask createDeploymentLogAnalysisTask(AnalysisInput input) {
+  private LogAnalysisLearningEngineTask createLogCanaryAnalysisLearningEngineTask(AnalysisInput input) {
     String taskId = generateUuid();
     VerificationTask verificationTask = verificationTaskService.get(input.getVerificationTaskId());
-    TimeRange preDeploymentTimeRange =
+    Optional<TimeRange> preDeploymentTimeRange =
         verificationJobInstanceService.getPreDeploymentTimeRange(verificationTask.getVerificationJobInstanceId());
     VerificationJobInstance verificationJobInstance =
         verificationJobInstanceService.getVerificationJobInstance(verificationTask.getVerificationJobInstanceId());
-    LogCanaryAnalysisLearningEngineTask task =
-        LogCanaryAnalysisLearningEngineTask.builder()
-            .controlDataUrl(createDeploymentDataUrl(input.getVerificationTaskId(),
-                preDeploymentTimeRange.getStartTime(), preDeploymentTimeRange.getEndTime()))
-            .testDataUrl(createDeploymentDataUrl(
-                input.getVerificationTaskId(), verificationJobInstance.getStartTime(), input.getEndTime()))
-            .controlHosts(getControlHosts(input.getVerificationTaskId(), preDeploymentTimeRange))
-            .build();
-    task.setAnalysisType(LearningEngineTaskType.CANARY_LOG_ANALYSIS);
+    LogAnalysisLearningEngineTask task = null;
+    if (preDeploymentTimeRange.isPresent()) {
+      task = CanaryLogAnalysisLearningEngineTask.builder()
+                 .controlHosts(getControlHosts(input.getVerificationTaskId(), preDeploymentTimeRange.get()))
+                 .build();
+      task.setControlDataUrl(createDeploymentDataUrl(input.getVerificationTaskId(),
+          preDeploymentTimeRange.get().getStartTime(), preDeploymentTimeRange.get().getEndTime()));
+      task.setAnalysisType(LearningEngineTaskType.CANARY_LOG_ANALYSIS);
+    } else {
+      TestVerificationJob testVerificationJob = (TestVerificationJob) verificationJobInstance.getResolvedJob();
+      String baselineVerificationJobInstanceId = testVerificationJob.getBaselineVerificationJobInstanceId();
+      task = TestLogAnalysisLearningEngineTask.builder().build();
+      task.setAnalysisType(LearningEngineTaskType.TEST_LOG_ANALYSIS);
+      if (baselineVerificationJobInstanceId != null) {
+        VerificationJobInstance baselineVerificationJobInstance =
+            verificationJobInstanceService.getVerificationJobInstance(baselineVerificationJobInstanceId);
+        String baselineVerificationTaskId = verificationTaskService.findBaselineVerificationTaskId(
+            input.getVerificationTaskId(), verificationJobInstance);
+        task.setControlDataUrl(createDeploymentDataUrl(baselineVerificationTaskId,
+            baselineVerificationJobInstance.getStartTime(), baselineVerificationJobInstance.getEndTime()));
+      }
+    }
+    task.setTestDataUrl(createDeploymentDataUrl(
+        input.getVerificationTaskId(), verificationJobInstance.getStartTime(), input.getEndTime()));
     task.setAnalysisStartTime(input.getStartTime());
     task.setVerificationTaskId(input.getVerificationTaskId());
     task.setFailureUrl(learningEngineTaskService.createFailureUrl(taskId));
@@ -140,6 +159,7 @@ public class LogAnalysisServiceImpl implements LogAnalysisService {
     task.setUuid(taskId);
     return task;
   }
+
   private Set<String> getControlHosts(String verificationTaskId, TimeRange preDeploymentTimeRange) {
     return hostRecordService.get(
         verificationTaskId, preDeploymentTimeRange.getStartTime(), preDeploymentTimeRange.getEndTime());

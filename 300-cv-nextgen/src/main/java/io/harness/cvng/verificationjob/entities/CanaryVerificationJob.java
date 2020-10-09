@@ -56,6 +56,8 @@ public class CanaryVerificationJob extends VerificationJob {
   @Override
   public VerificationJobDTO getVerificationJobDTO() {
     CanaryVerificationJobDTO canaryVerificationJobDTO = new CanaryVerificationJobDTO();
+    canaryVerificationJobDTO.setSensitivity(this.sensitivity.string());
+    canaryVerificationJobDTO.setTrafficSplitPercentage(trafficSplitPercentage);
     populateCommonFields(canaryVerificationJobDTO);
     return canaryVerificationJobDTO;
   }
@@ -70,11 +72,11 @@ public class CanaryVerificationJob extends VerificationJob {
   }
 
   @Override
-  public TimeRange getPreDeploymentTimeRange(Instant deploymentStartTime) {
-    return TimeRange.builder()
-        .startTime(deploymentStartTime.minus(PRE_DEPLOYMENT_DATA_COLLECTION_DURATION))
-        .endTime(deploymentStartTime)
-        .build();
+  public Optional<TimeRange> getPreDeploymentTimeRange(Instant deploymentStartTime) {
+    return Optional.of(TimeRange.builder()
+                           .startTime(deploymentStartTime.minus(PRE_DEPLOYMENT_DATA_COLLECTION_DURATION))
+                           .endTime(deploymentStartTime)
+                           .build());
   }
 
   @Override
@@ -93,5 +95,10 @@ public class CanaryVerificationJob extends VerificationJob {
           break;
       }
     });
+  }
+
+  @Override
+  public boolean collectHostData() {
+    return true;
   }
 }

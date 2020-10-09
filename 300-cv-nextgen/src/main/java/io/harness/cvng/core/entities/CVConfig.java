@@ -109,6 +109,5 @@ public abstract class CVConfig
   public abstract TimeRange getFirstTimeDataCollectionTimeRange();
 
   @JsonIgnore public abstract String getDataCollectionDsl();
-  @JsonIgnore public abstract String getVerificationJobDataCollectionDsl();
   public abstract boolean queueAnalysisForPreDeploymentTask();
 }
