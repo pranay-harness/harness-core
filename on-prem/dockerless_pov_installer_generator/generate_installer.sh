@@ -120,7 +120,7 @@ function setupDelegateJars(){
 
       done
 
-      for version in v0.1-dev; do
+      for version in v0.1-dev v0.2-dev; do
 
         echo "Copying harness-pywinrm  ${version} binaries for ${platform}"
 
