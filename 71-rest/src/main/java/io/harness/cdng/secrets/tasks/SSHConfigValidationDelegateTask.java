@@ -16,6 +16,7 @@ import io.harness.delegate.beans.secrets.SSHConfigValidationTaskResponse;
 import io.harness.delegate.task.AbstractDelegateRunnableTask;
 import io.harness.delegate.task.TaskParameters;
 import io.harness.ng.core.dto.secrets.KerberosConfigDTO;
+import io.harness.ng.core.dto.secrets.SSHAuthDTO;
 import io.harness.ng.core.dto.secrets.SSHConfigDTO;
 import io.harness.ng.core.dto.secrets.SSHKeyPathCredentialDTO;
 import io.harness.ng.core.dto.secrets.SSHKeyReferenceCredentialDTO;
@@ -47,13 +48,14 @@ public class SSHConfigValidationDelegateTask extends AbstractDelegateRunnableTas
   private SshSessionConfig getSSHSessionConfig(SSHTaskParams sshTaskParams) {
     SSHKeySpecDTO sshKeySpecDTO = sshTaskParams.getSshKeySpec();
     SshSessionConfig.Builder builder = aSshSessionConfig().withPort(sshKeySpecDTO.getPort());
-    switch (sshKeySpecDTO.getAuthScheme()) {
+    SSHAuthDTO authDTO = sshKeySpecDTO.getAuth();
+    switch (authDTO.getAuthScheme()) {
       case SSH:
-        SSHConfigDTO sshConfigDTO = (SSHConfigDTO) sshKeySpecDTO.getSpec();
+        SSHConfigDTO sshConfigDTO = (SSHConfigDTO) authDTO.getSpec();
         generateSSHBuilder(sshTaskParams, sshConfigDTO, builder);
         break;
       case Kerberos:
-        KerberosConfigDTO kerberosConfigDTO = (KerberosConfigDTO) sshKeySpecDTO.getSpec();
+        KerberosConfigDTO kerberosConfigDTO = (KerberosConfigDTO) authDTO.getSpec();
         generateKerberosBuilder(sshTaskParams, kerberosConfigDTO, builder);
         break;
       default:

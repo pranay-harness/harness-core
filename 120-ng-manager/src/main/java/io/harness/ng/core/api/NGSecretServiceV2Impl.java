@@ -128,12 +128,12 @@ public class NGSecretServiceV2Impl implements NGSecretServiceV2 {
   }
 
   private List<EncryptedDataDetail> getSSHKeyEncryptionDetails(SSHKeySpecDTO secretSpecDTO, BaseNGAccess baseNGAccess) {
-    switch (secretSpecDTO.getAuthScheme()) {
+    switch (secretSpecDTO.getAuth().getAuthScheme()) {
       case SSH:
-        SSHConfigDTO sshConfigDTO = (SSHConfigDTO) secretSpecDTO.getSpec();
+        SSHConfigDTO sshConfigDTO = (SSHConfigDTO) secretSpecDTO.getAuth().getSpec();
         return getSSHEncryptionDetails(sshConfigDTO, baseNGAccess);
       case Kerberos:
-        KerberosConfigDTO kerberosConfigDTO = (KerberosConfigDTO) secretSpecDTO.getSpec();
+        KerberosConfigDTO kerberosConfigDTO = (KerberosConfigDTO) secretSpecDTO.getAuth().getSpec();
         return getKerberosEncryptionDetails(kerberosConfigDTO, baseNGAccess);
       default:
         return emptyList();
