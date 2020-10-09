@@ -16,4 +16,5 @@ import java.util.List;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class QLNodeAndPodDetailsTableData implements QLData {
   List<QLNodeAndPodDetailsTableRow> data;
+  String info;
 }

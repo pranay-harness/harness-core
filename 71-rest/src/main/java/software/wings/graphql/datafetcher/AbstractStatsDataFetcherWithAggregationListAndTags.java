@@ -304,8 +304,10 @@ public abstract class AbstractStatsDataFetcherWithAggregationListAndTags<A, F, G
                                   .map(dataPoint -> getWorkloadNameFromId(dataPoint.getKey().getId()))
                                   .collect(Collectors.toSet());
     Set<K8sWorkload> labelLinks = k8sLabelHelper.getLabelLinks(accountId, entityIdSet, groupByLabel.getName());
-    Map<String, K8sWorkload> entityIdLabelLinkMap = labelLinks.stream().collect(Collectors.toMap(
-        k8sWorkload -> k8sWorkload.getNamespace() + BillingStatsDefaultKeys.TOKEN + k8sWorkload.getName(), identity()));
+    Map<String, K8sWorkload> entityIdLabelLinkMap = labelLinks.stream().collect(Collectors.toMap(k8sWorkload
+        -> k8sWorkload.getClusterId() + BillingStatsDefaultKeys.TOKEN + k8sWorkload.getNamespace()
+            + BillingStatsDefaultKeys.TOKEN + k8sWorkload.getName(),
+        identity()));
 
     ArrayMap<String, QLBillingDataPoint> labelNameDataPointMap = new ArrayMap<>();
     ArrayMap<String, Long> numberOfDataPoints = new ArrayMap<>();
@@ -449,15 +451,17 @@ public abstract class AbstractStatsDataFetcherWithAggregationListAndTags<A, F, G
     }
     Set<String> entityIdSet = dataPoints.stream().map(QLEntityTableData::getWorkloadName).collect(Collectors.toSet());
     Set<K8sWorkload> labelLinks = k8sLabelHelper.getLabelLinks(accountId, entityIdSet, groupByLabel.getName());
-    Map<String, K8sWorkload> entityIdLabelLinkMap = labelLinks.stream().collect(Collectors.toMap(
-        k8sWorkload -> k8sWorkload.getName() + BillingStatsDefaultKeys.TOKEN + k8sWorkload.getNamespace(), identity()));
+    Map<String, K8sWorkload> entityIdLabelLinkMap = labelLinks.stream().collect(Collectors.toMap(k8sWorkload
+        -> k8sWorkload.getClusterId() + BillingStatsDefaultKeys.TOKEN + k8sWorkload.getNamespace()
+            + BillingStatsDefaultKeys.TOKEN + k8sWorkload.getName(),
+        identity()));
 
     ArrayMap<String, QLEntityTableData> labelNameDataPointMap = new ArrayMap<>();
     ArrayMap<String, Long> numberOfDataPoints = new ArrayMap<>();
     ArrayMap<String, Double> aggregatedPrevBillingAmount = new ArrayMap<>();
     String labelName = groupByLabel.getName();
     dataPoints.removeIf(dataPoint -> {
-      String entityId = dataPoint.getWorkloadName() + BillingStatsDefaultKeys.TOKEN + dataPoint.getNamespace();
+      String entityId = dataPoint.getId();
       K8sWorkload workload = entityIdLabelLinkMap.get(entityId);
       String label;
       if (workload == null) {

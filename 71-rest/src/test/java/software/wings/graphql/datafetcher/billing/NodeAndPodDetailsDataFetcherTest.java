@@ -144,7 +144,7 @@ public class NodeAndPodDetailsDataFetcherTest extends AbstractDataFetcherTest {
     List<QLBillingDataFilter> filters = new ArrayList<>();
     filters.add(makeClusterFilter(clusterIdFilterValues));
     filters.add(makeTimeFilter(0L));
-    List<QLCCMGroupBy> groupBy = Arrays.asList(makeNodeEntityGroupBy());
+    List<QLCCMGroupBy> groupBy = Arrays.asList(makeNodeEntityGroupBy(), makeClusterEntityGroupBy());
     List<QLBillingSortCriteria> sortCriteria = Arrays.asList(makeAscByAmountSortingCriteria());
     List<QLCCMAggregationFunction> aggregationFunctions = Arrays.asList(makeBillingAmtAggregation(),
         makeIdleCostAggregation(), makeUnallocatedCostAggregation(), makeNetworkCostAggregation());
@@ -153,7 +153,7 @@ public class NodeAndPodDetailsDataFetcherTest extends AbstractDataFetcherTest {
         ACCOUNT_ID, aggregationFunctions, filters, groupBy, sortCriteria, LIMIT, OFFSET);
 
     assertThat(data).isNotNull();
-    assertThat(data.getData().get(0).getId()).isEqualTo(INSTANCE_ID);
+    assertThat(data.getData().get(0).getId()).isEqualTo(CLUSTER_ID + ":" + INSTANCE_ID);
     assertThat(data.getData().get(0).getTotalCost()).isEqualTo(10.0);
     assertThat(data.getData().get(0).getIdleCost()).isEqualTo(3.0);
     assertThat(data.getData().get(0).getUnallocatedCost()).isEqualTo(4.0);
@@ -214,6 +214,8 @@ public class NodeAndPodDetailsDataFetcherTest extends AbstractDataFetcherTest {
     when(resultSet.getDouble("UNALLOCATEDCOST")).thenAnswer((Answer<Double>) invocation -> 4.0 + doubleVal[2]++);
     when(resultSet.getDouble("NETWORKCOST")).thenAnswer((Answer<Double>) invocation -> 3.0 + doubleVal[3]++);
     when(resultSet.getString("INSTANCEID")).thenAnswer((Answer<String>) invocation -> INSTANCE_ID);
+    when(resultSet.getString("CLUSTERID")).thenAnswer((Answer<String>) invocation -> CLUSTER_ID);
+    when(resultSet.getString("CLUSTERNAME")).thenAnswer((Answer<String>) invocation -> CLUSTER1_NAME);
 
     returnResultSet(1);
   }
@@ -258,6 +260,11 @@ public class NodeAndPodDetailsDataFetcherTest extends AbstractDataFetcherTest {
   private QLCCMGroupBy makePodEntityGroupBy() {
     QLCCMEntityGroupBy podGroupBy = QLCCMEntityGroupBy.Pod;
     return QLCCMGroupBy.builder().entityGroupBy(podGroupBy).build();
+  }
+
+  private QLCCMGroupBy makeClusterEntityGroupBy() {
+    QLCCMEntityGroupBy clusterGroupBy = QLCCMEntityGroupBy.Cluster;
+    return QLCCMGroupBy.builder().entityGroupBy(clusterGroupBy).build();
   }
 
   private QLBillingDataFilter makeClusterFilter(String[] values) {

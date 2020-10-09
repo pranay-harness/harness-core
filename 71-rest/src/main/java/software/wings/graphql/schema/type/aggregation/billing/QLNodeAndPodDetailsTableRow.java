@@ -14,6 +14,7 @@ import software.wings.security.annotations.Scope;
 public class QLNodeAndPodDetailsTableRow {
   String name;
   String id;
+  String nodeId;
   String namespace;
   String workload;
   String clusterName;

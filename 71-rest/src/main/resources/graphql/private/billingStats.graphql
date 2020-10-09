@@ -247,6 +247,7 @@ type SunburstGridDataPoint {
 
 type BillingEntityData {
   data: [BillingEntityDataPoint]
+  info: String
 }
 
 type BillingFilterDataPoint {
@@ -323,6 +324,7 @@ type BillingStackedTimeSeriesData {
   cpuLimit: [BillingStackedTimeSeriesDataPoint]
   memoryLimit: [BillingStackedTimeSeriesDataPoint]
   label: String
+  info: String
 }
 
 type GcpBillingTimeSeriesStats {
@@ -426,10 +428,12 @@ enum EnvType {
 
 type NodeAndPodData {
   data: [NodeAndPodDataPoint]
+  info: String
 }
 
 type NodeAndPodDataPoint {
   id: String
+  nodeId: String
   name: String
   namespace: String
   workload: String

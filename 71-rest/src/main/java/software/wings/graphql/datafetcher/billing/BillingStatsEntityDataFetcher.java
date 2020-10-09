@@ -1,6 +1,7 @@
 package software.wings.graphql.datafetcher.billing;
 
 import static java.lang.String.format;
+import static software.wings.graphql.datafetcher.billing.BillingDataQueryBuilder.INVALID_FILTER_MSG;
 
 import com.google.inject.Inject;
 
@@ -49,6 +50,7 @@ public class BillingStatsEntityDataFetcher
   @Inject BillingDataQueryBuilder billingDataQueryBuilder;
   @Inject QLBillingStatsHelper statsHelper;
   private static String OFFSET_AND_LIMIT_QUERY = " OFFSET %s LIMIT %s";
+  private static final String EMPTY = "";
 
   @Override
   @AuthRule(permissionType = PermissionType.LOGGED_IN)
@@ -81,7 +83,6 @@ public class BillingStatsEntityDataFetcher
     boolean successful = false;
     int retryCount = 0;
     List<QLCCMEntityGroupBy> groupByEntityList = billingDataQueryBuilder.getGroupByEntity(groupByList);
-    groupByEntityList = getReorderedGroupByEntityList(groupByEntityList);
     List<QLBillingDataTagAggregation> groupByTagList = getGroupByTag(groupByList);
     List<QLBillingDataLabelAggregation> groupByLabelList = getGroupByLabel(groupByList);
     QLCCMTimeSeriesAggregation groupByTime = billingDataQueryBuilder.getGroupByTime(groupByList);
@@ -89,7 +90,12 @@ public class BillingStatsEntityDataFetcher
     if (!groupByTagList.isEmpty()) {
       groupByEntityList = getGroupByEntityListFromTags(groupByList, groupByEntityList, groupByTagList);
     } else if (!groupByLabelList.isEmpty()) {
+      groupByEntityList.add(QLCCMEntityGroupBy.Cluster);
       groupByEntityList = getGroupByEntityListFromLabels(groupByList, groupByEntityList, groupByLabelList);
+    }
+
+    if (!billingDataQueryBuilder.isFilterCombinationValid(filters, groupByEntityList)) {
+      return QLEntityTableListData.builder().data(new ArrayList<>()).info(INVALID_FILTER_MSG).build();
     }
 
     queryData = billingDataQueryBuilder.formQuery(
@@ -109,7 +115,7 @@ public class BillingStatsEntityDataFetcher
            Statement statement = connection.createStatement()) {
         resultSet = statement.executeQuery(queryData.getQuery());
         successful = true;
-        return generateEntityData(queryData, resultSet, entityIdToPrevBillingAmountData, filters);
+        return generateEntityData(queryData, resultSet, entityIdToPrevBillingAmountData, filters, groupByEntityList);
       } catch (SQLException e) {
         retryCount++;
         if (retryCount >= MAX_RETRY) {
@@ -129,9 +135,13 @@ public class BillingStatsEntityDataFetcher
   }
 
   private QLEntityTableListData generateEntityData(BillingDataQueryMetadata queryData, ResultSet resultSet,
-      Map<String, QLBillingAmountData> entityIdToPrevBillingAmountData, List<QLBillingDataFilter> filters)
-      throws SQLException {
+      Map<String, QLBillingAmountData> entityIdToPrevBillingAmountData, List<QLBillingDataFilter> filters,
+      List<QLCCMEntityGroupBy> groupByEntityList) throws SQLException {
     List<QLEntityTableData> entityTableListData = new ArrayList<>();
+    boolean addNamespaceToEntityId = queryData.groupByFields.contains(BillingDataMetaDataFields.WORKLOADNAME);
+    boolean addClusterIdToEntityId = billingDataQueryBuilder.isClusterDrilldown(groupByEntityList);
+    boolean addAppIdToEntityId = billingDataQueryBuilder.isApplicationDrillDown(groupByEntityList);
+
     while (resultSet != null && resultSet.next()) {
       String entityId = BillingStatsDefaultKeys.ENTITYID;
       String type = BillingStatsDefaultKeys.TYPE;
@@ -165,6 +175,7 @@ public class BillingStatsEntityDataFetcher
       String appId = entityId;
       int efficiencyScore = BillingStatsDefaultKeys.EFFICIENCY_SCORE;
       int efficiencyScoreTrendPercentage = BillingStatsDefaultKeys.EFFICIENCY_SCORE_TREND;
+      String additionalInfo = "";
 
       for (BillingDataMetaDataFields field : queryData.getFieldNames()) {
         switch (field) {
@@ -174,6 +185,10 @@ public class BillingStatsEntityDataFetcher
             name = statsHelper.getEntityName(field, entityId);
             applicationName = name;
             appId = entityId;
+            if (addAppIdToEntityId) {
+              additionalInfo =
+                  additionalInfo.equals(EMPTY) ? appId : additionalInfo + BillingStatsDefaultKeys.TOKEN + appId;
+            }
             break;
           case SERVICEID:
           case TASKID:
@@ -200,10 +215,7 @@ public class BillingStatsEntityDataFetcher
             break;
           case WORKLOADNAME:
             workloadName = resultSet.getString(field.getFieldName());
-            // Whenever group by workloadName is present, group bu namespace is also added in form query
-            // To make sure that workloads with identical names across different namespaces are not grouped together
-            entityId = resultSet.getString(BillingDataMetaDataFields.NAMESPACE.getFieldName())
-                + BillingStatsDefaultKeys.TOKEN + resultSet.getString(field.getFieldName());
+            entityId = resultSet.getString(field.getFieldName());
             break;
           case WORKLOADTYPE:
             workloadType = resultSet.getString(field.getFieldName());
@@ -212,6 +224,10 @@ public class BillingStatsEntityDataFetcher
             namespace
             = resultSet.getString(field.getFieldName());
             entityId = resultSet.getString(field.getFieldName());
+            if (addNamespaceToEntityId) {
+              additionalInfo =
+                  additionalInfo.equals(EMPTY) ? namespace : additionalInfo + BillingStatsDefaultKeys.TOKEN + namespace;
+            }
             break;
           case IDLECOST:
             idleCost = billingDataHelper.roundingDoubleFieldValue(field, resultSet);
@@ -234,6 +250,10 @@ public class BillingStatsEntityDataFetcher
             name = statsHelper.getEntityName(field, entityId);
             clusterName = name;
             clusterId = entityId;
+            if (addClusterIdToEntityId) {
+              additionalInfo =
+                  additionalInfo.equals(EMPTY) ? clusterId : additionalInfo + BillingStatsDefaultKeys.TOKEN + clusterId;
+            }
             break;
           case MAXCPUUTILIZATION:
             maxCpuUtilization = billingDataHelper.roundingDoubleFieldPercentageValue(field, resultSet);
@@ -259,6 +279,10 @@ public class BillingStatsEntityDataFetcher
           default:
             break;
         }
+      }
+
+      if (!additionalInfo.equals(EMPTY)) {
+        entityId = additionalInfo + BillingStatsDefaultKeys.TOKEN + entityId;
       }
 
       if (totalCost > 0.0) {
@@ -377,44 +401,6 @@ public class BillingStatsEntityDataFetcher
       unallocatedCostForClusters.put(clusterId, unallocatedCost);
     }
     return unallocatedCostForClusters;
-  }
-
-  // This is to reorder group by entity list if group by cloudServiceName/launchType/task is present
-  // to obtain relevant ID in response
-  private List<QLCCMEntityGroupBy> getReorderedGroupByEntityList(List<QLCCMEntityGroupBy> groupByEntityList) {
-    List<QLCCMEntityGroupBy> reorderedGroupByList = new ArrayList<>();
-    boolean isCloudServiceNamePresent = false;
-    boolean isLaunchTypePresent = false;
-    boolean isTaskIdPresent = false;
-
-    for (QLCCMEntityGroupBy entityGroupBy : groupByEntityList) {
-      switch (entityGroupBy) {
-        case LaunchType:
-          isLaunchTypePresent = true;
-          break;
-        case CloudServiceName:
-          isCloudServiceNamePresent = true;
-          break;
-        case TaskId:
-          isTaskIdPresent = true;
-          break;
-        default:
-          reorderedGroupByList.add(entityGroupBy);
-          break;
-      }
-    }
-
-    if (isLaunchTypePresent) {
-      reorderedGroupByList.add(QLCCMEntityGroupBy.LaunchType);
-    }
-    if (isCloudServiceNamePresent) {
-      reorderedGroupByList.add(QLCCMEntityGroupBy.CloudServiceName);
-    }
-    if (isTaskIdPresent) {
-      reorderedGroupByList.add(QLCCMEntityGroupBy.TaskId);
-    }
-
-    return reorderedGroupByList;
   }
 
   @Override

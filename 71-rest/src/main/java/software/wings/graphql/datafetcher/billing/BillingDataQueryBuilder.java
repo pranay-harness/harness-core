@@ -77,6 +77,8 @@ public class BillingDataQueryBuilder {
   public static final String BILLING_DATA_HOURLY_TABLE = "billing_data_hourly t0";
   private static final long ONE_DAY_MILLIS = 86400000;
   private static final String EMPTY = "";
+  protected static final String INVALID_FILTER_MSG = "Invalid combination of group by and filters";
+  private static final String UNALLOCATED = "Unallocated";
   @Inject TagHelper tagHelper;
   @Inject K8sLabelHelper k8sLabelHelper;
   @Inject EnvironmentServiceImpl environmentService;
@@ -121,6 +123,8 @@ public class BillingDataQueryBuilder {
         && !isGroupByEntityPresent(groupBy, QLCCMEntityGroupBy.Namespace)) {
       groupBy.add(0, QLCCMEntityGroupBy.Namespace);
     }
+    // Reorder group by entity list to first group by cluster/application
+    groupBy = getGroupByOrderedByDrillDown(groupBy);
 
     decorateQueryWithAggregations(selectQuery, aggregateFunction, fieldNames);
     if (isCostTrendQuery) {
@@ -142,6 +146,8 @@ public class BillingDataQueryBuilder {
       decorateQueryWithNodeOrPodGroupBy(fieldNames, selectQuery, groupBy, groupByFields, filters);
     }
 
+    // To change node instance id filter to parent instance id filter in case of group by namespace/workload
+    filters = getUpdatedInstanceIdFilter(filters, groupBy);
     if (!Lists.isNullOrEmpty(filters)) {
       filters = processFilterForTagsAndLabels(accountId, filters);
       decorateQueryWithFilters(selectQuery, filters);
@@ -156,13 +162,6 @@ public class BillingDataQueryBuilder {
     queryMetaDataBuilder.sortCriteria(finalSortCriteria);
     queryMetaDataBuilder.filters(filters);
     return queryMetaDataBuilder.build();
-  }
-
-  protected BillingDataQueryMetadata formTrendStatsQuery(
-      String accountId, QLCCMAggregationFunction aggregateFunction, List<QLBillingDataFilter> filters) {
-    List<QLCCMAggregationFunction> aggregationFunctions = new ArrayList<>();
-    aggregationFunctions.add(aggregateFunction);
-    return formTrendStatsQuery(accountId, aggregationFunctions, filters);
   }
 
   protected BillingDataQueryMetadata formTrendStatsQuery(
@@ -230,6 +229,7 @@ public class BillingDataQueryBuilder {
       decorateQueryWithNodeOrPodGroupBy(fieldNames, selectQuery, groupBy, groupByFields, filters);
     }
 
+    addFiltersToExcludeUnallocatedRows(filters, groupBy);
     if (!Lists.isNullOrEmpty(filters)) {
       filters = processFilterForTagsAndLabels(accountId, filters);
       filters = filters.stream()
@@ -319,6 +319,7 @@ public class BillingDataQueryBuilder {
     }
 
     if (isValidGroupBy(groupBy)) {
+      decorateQueryWithGroupBy(fieldNames, selectQuery, groupBy, groupByFields);
       decorateQueryWithNodeOrPodGroupBy(fieldNames, selectQuery, groupBy, groupByFields, filters);
     }
 
@@ -669,6 +670,8 @@ public class BillingDataQueryBuilder {
         return schema.getTaskId();
       case InstanceType:
         return schema.getInstanceType();
+      case InstanceName:
+        return schema.getInstanceName();
       case WorkloadName:
         return schema.getWorkloadName();
       case Namespace:
@@ -748,6 +751,9 @@ public class BillingDataQueryBuilder {
         break;
       case CloudProvider:
         groupBy = schema.getCloudProviderId();
+        break;
+      case InstanceName:
+        groupBy = schema.getInstanceName();
         break;
       case Pod:
       case Node:
@@ -945,7 +951,7 @@ public class BillingDataQueryBuilder {
     return aggregationFunctions.stream().anyMatch(agg -> agg.getColumnName().equals("unallocatedcost"));
   }
 
-  private void addInstanceTypeFilter(List<QLBillingDataFilter> filters) {
+  protected void addInstanceTypeFilter(List<QLBillingDataFilter> filters) {
     if (!isInstanceTypeFilterPresent(filters)) {
       List<String> instanceTypeValues = new ArrayList<>();
       instanceTypeValues.add("ECS_TASK_FARGATE");
@@ -1075,8 +1081,6 @@ public class BillingDataQueryBuilder {
             List<QLBillingDataTagType> tagEntityTypes = new ArrayList<>();
             if (tagFilter.getEntityType() == null) {
               tagEntityTypes.add(QLBillingDataTagType.APPLICATION);
-              tagEntityTypes.add(QLBillingDataTagType.SERVICE);
-              tagEntityTypes.add(QLBillingDataTagType.ENVIRONMENT);
             } else {
               tagEntityTypes.add(tagFilter.getEntityType());
             }
@@ -1337,11 +1341,16 @@ public class BillingDataQueryBuilder {
     fieldNames.add(CeActivePodCountMetaDataFields.PODCOUNT);
   }
 
-  private boolean isClusterDrilldown(List<QLCCMEntityGroupBy> groupByList) {
+  protected boolean isClusterDrilldown(List<QLCCMEntityGroupBy> groupByList) {
     return groupByList.stream().anyMatch(groupBy
         -> groupBy == QLCCMEntityGroupBy.WorkloadName || groupBy == QLCCMEntityGroupBy.Namespace
             || groupBy == QLCCMEntityGroupBy.CloudServiceName || groupBy == QLCCMEntityGroupBy.TaskId
             || groupBy == QLCCMEntityGroupBy.LaunchType);
+  }
+
+  protected boolean isApplicationDrillDown(List<QLCCMEntityGroupBy> groupByList) {
+    return groupByList.stream().anyMatch(
+        groupBy -> groupBy == QLCCMEntityGroupBy.Service || groupBy == QLCCMEntityGroupBy.Environment);
   }
 
   protected boolean showUnallocatedCost(List<QLCCMEntityGroupBy> groupBy, List<QLBillingDataFilter> filters) {
@@ -1365,7 +1374,167 @@ public class BillingDataQueryBuilder {
         values.addAll(Arrays.asList(filter.getTaskId().getValues()));
       }
     }
-    showUnallocated = !values.contains("Unallocated");
+    showUnallocated = !values.contains(UNALLOCATED);
     return isClusterDrillDown && showUnallocated;
+  }
+
+  protected List<QLCCMEntityGroupBy> getGroupByOrderedByDrillDown(List<QLCCMEntityGroupBy> groupByEntityList) {
+    List<QLCCMEntityGroupBy> reorderedList = new ArrayList<>();
+
+    // This is to reorder group by entity list if group by cloudServiceName/launchType/task is present
+    // to obtain relevant ID in response
+    List<QLCCMEntityGroupBy> ecsEntitiesReorderedList = new ArrayList<>();
+    boolean isCloudServiceNamePresent = false;
+    boolean isLaunchTypePresent = false;
+    boolean isTaskIdPresent = false;
+
+    for (QLCCMEntityGroupBy entityGroupBy : groupByEntityList) {
+      switch (entityGroupBy) {
+        case LaunchType:
+          isLaunchTypePresent = true;
+          break;
+        case CloudServiceName:
+          isCloudServiceNamePresent = true;
+          break;
+        case TaskId:
+          isTaskIdPresent = true;
+          break;
+        default:
+          ecsEntitiesReorderedList.add(entityGroupBy);
+          break;
+      }
+    }
+
+    if (isLaunchTypePresent) {
+      ecsEntitiesReorderedList.add(QLCCMEntityGroupBy.LaunchType);
+    }
+    if (isCloudServiceNamePresent) {
+      ecsEntitiesReorderedList.add(QLCCMEntityGroupBy.CloudServiceName);
+    }
+    if (isTaskIdPresent) {
+      ecsEntitiesReorderedList.add(QLCCMEntityGroupBy.TaskId);
+    }
+
+    // This is to first group by cluster/ application
+    if (ecsEntitiesReorderedList.contains(QLCCMEntityGroupBy.Cluster)) {
+      reorderedList.add(QLCCMEntityGroupBy.Cluster);
+      for (QLCCMEntityGroupBy groupBy : ecsEntitiesReorderedList) {
+        if (groupBy != QLCCMEntityGroupBy.Cluster) {
+          reorderedList.add(groupBy);
+        }
+      }
+    } else if (ecsEntitiesReorderedList.contains(QLCCMEntityGroupBy.Application)) {
+      reorderedList.add(QLCCMEntityGroupBy.Application);
+      for (QLCCMEntityGroupBy groupBy : ecsEntitiesReorderedList) {
+        if (groupBy != QLCCMEntityGroupBy.Application) {
+          reorderedList.add(groupBy);
+        }
+      }
+    } else {
+      reorderedList = ecsEntitiesReorderedList;
+    }
+    return reorderedList;
+  }
+
+  // In case of group by namespace/workload/labels, change instanceId filter to parentInstanceId filter
+  private List<QLBillingDataFilter> getUpdatedInstanceIdFilter(
+      List<QLBillingDataFilter> filters, List<QLCCMEntityGroupBy> groupBy) {
+    List<QLBillingDataFilter> updatedFilters = new ArrayList<>();
+    if (groupBy.contains(QLCCMEntityGroupBy.WorkloadName) || groupBy.contains(QLCCMEntityGroupBy.Namespace)) {
+      for (QLBillingDataFilter filter : filters) {
+        if (filter.getNodeInstanceId() != null) {
+          QLIdFilter filterValues = filter.getNodeInstanceId();
+          updatedFilters.add(QLBillingDataFilter.builder()
+                                 .parentInstanceId(QLIdFilter.builder()
+                                                       .operator(filterValues.getOperator())
+                                                       .values(filterValues.getValues())
+                                                       .build())
+                                 .build());
+        } else {
+          updatedFilters.add(filter);
+        }
+      }
+      logger.info("Updated filters {}", updatedFilters);
+      return updatedFilters;
+    }
+    return filters;
+  }
+
+  protected boolean isFilterCombinationValid(List<QLBillingDataFilter> filters, List<QLCCMEntityGroupBy> groupBy) {
+    if (groupBy.contains(QLCCMEntityGroupBy.Application) || groupBy.contains(QLCCMEntityGroupBy.Service)
+        || groupBy.contains(QLCCMEntityGroupBy.Environment) || groupBy.contains(QLCCMEntityGroupBy.CloudProvider)) {
+      for (QLBillingDataFilter filter : filters) {
+        if (filter.getApplication() == null && filter.getService() == null && filter.getEnvironment() == null
+            && filter.getCloudProvider() == null && filter.getTag() == null && filter.getStartTime() == null
+            && filter.getEndTime() == null) {
+          return false;
+        }
+      }
+    } else if (groupBy.contains(QLCCMEntityGroupBy.WorkloadName) || groupBy.contains(QLCCMEntityGroupBy.Namespace)) {
+      for (QLBillingDataFilter filter : filters) {
+        if (filter.getWorkloadName() == null && filter.getNamespace() == null && filter.getNodeInstanceId() == null
+            && filter.getCluster() == null && filter.getLabel() == null && filter.getInstanceType() == null
+            && filter.getStartTime() == null && filter.getEndTime() == null) {
+          return false;
+        }
+      }
+    } else if (groupBy.contains(QLCCMEntityGroupBy.Node)) {
+      for (QLBillingDataFilter filter : filters) {
+        if (filter.getNodeInstanceId() == null && filter.getCluster() == null && filter.getInstanceType() == null
+            && filter.getStartTime() == null && filter.getEndTime() == null) {
+          return false;
+        }
+      }
+    } else if (groupBy.contains(QLCCMEntityGroupBy.CloudServiceName) || groupBy.contains(QLCCMEntityGroupBy.TaskId)
+        || groupBy.contains(QLCCMEntityGroupBy.LaunchType)) {
+      for (QLBillingDataFilter filter : filters) {
+        if (filter.getCloudServiceName() == null && filter.getLaunchType() == null && filter.getTaskId() == null
+            && filter.getCluster() == null && filter.getInstanceType() == null && filter.getStartTime() == null
+            && filter.getEndTime() == null) {
+          return false;
+        }
+      }
+    }
+    return true;
+  }
+
+  protected void addFiltersToExcludeUnallocatedRows(
+      List<QLBillingDataFilter> filters, List<QLCCMEntityGroupBy> groupBy) {
+    String[] values = {UNALLOCATED};
+    for (QLCCMEntityGroupBy entityGroupBy : groupBy) {
+      switch (entityGroupBy) {
+        case WorkloadName:
+          filters.add(QLBillingDataFilter.builder()
+                          .workloadName(QLIdFilter.builder().operator(QLIdOperator.NOT_IN).values(values).build())
+                          .build());
+          break;
+        case Namespace:
+          filters.add(QLBillingDataFilter.builder()
+                          .namespace(QLIdFilter.builder().operator(QLIdOperator.NOT_IN).values(values).build())
+                          .build());
+          break;
+        case CloudServiceName:
+          filters.add(QLBillingDataFilter.builder()
+                          .cloudServiceName(QLIdFilter.builder().operator(QLIdOperator.NOT_IN).values(values).build())
+                          .build());
+          break;
+        case TaskId:
+          filters.add(QLBillingDataFilter.builder()
+                          .taskId(QLIdFilter.builder().operator(QLIdOperator.NOT_IN).values(values).build())
+                          .build());
+          break;
+        case LaunchType:
+          filters.add(QLBillingDataFilter.builder()
+                          .launchType(QLIdFilter.builder().operator(QLIdOperator.NOT_IN).values(values).build())
+                          .build());
+          break;
+        default:
+          break;
+      }
+    }
+  }
+
+  protected List<QLBillingDataFilter> removeInstanceTypeFilter(List<QLBillingDataFilter> filters) {
+    return filters.stream().filter(filter -> filter.getInstanceType() == null).collect(Collectors.toList());
   }
 }
