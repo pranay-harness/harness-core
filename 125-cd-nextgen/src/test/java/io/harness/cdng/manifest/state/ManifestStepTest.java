@@ -1,4 +1,4 @@
-package io.harness.cdng.manifest;
+package io.harness.cdng.manifest.state;
 
 import static io.harness.rule.OwnerRule.ARCHIT;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -6,8 +6,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 import io.harness.CategoryTest;
 import io.harness.beans.ParameterField;
 import io.harness.category.element.UnitTests;
-import io.harness.cdng.manifest.state.ManifestStep;
-import io.harness.cdng.manifest.state.ManifestStepParameters;
 import io.harness.cdng.manifest.yaml.GitStore;
 import io.harness.cdng.manifest.yaml.ManifestConfig;
 import io.harness.cdng.manifest.yaml.ManifestConfigWrapper;
@@ -16,7 +14,6 @@ import io.harness.cdng.manifest.yaml.StoreConfigWrapper;
 import io.harness.cdng.manifest.yaml.kinds.K8sManifest;
 import io.harness.cdng.manifest.yaml.kinds.ValuesManifest;
 import io.harness.delegate.beans.storeconfig.FetchType;
-import io.harness.execution.status.Status;
 import io.harness.rule.Owner;
 import io.harness.state.io.StepResponse;
 import org.junit.Test;
@@ -114,21 +111,11 @@ public class ManifestStepTest extends CategoryTest {
     ManifestConfigWrapper manifestConfig5 =
         ManifestConfig.builder().identifier("valuesManifest1").manifestAttributes(valuesManifest2).build();
 
-    ManifestStepParameters manifestStepParameters =
-        ManifestStepParameters.builder()
-            .serviceSpecManifests(Arrays.asList(manifestConfig1, manifestConfig2))
-            .manifestOverrideSets(Collections.singletonList(manifestConfig4))
-            .stageOverrideManifests(Arrays.asList(manifestConfig3, manifestConfig5))
-            .build();
+    StepResponse.StepOutcome stepOutcome =
+        manifestStep.processManifests(Arrays.asList(manifestConfig1, manifestConfig2),
+            Collections.singletonList(manifestConfig4), Arrays.asList(manifestConfig3, manifestConfig5));
 
-    StepResponse stepResponse = manifestStep.executeSync(null, manifestStepParameters, null, null);
-
-    assertThat(stepResponse.getStatus()).isEqualTo(Status.SUCCEEDED);
-    assertThat(stepResponse.getStepOutcomes().size()).isEqualTo(1);
-
-    StepResponse.StepOutcome stepOutcome = stepResponse.getStepOutcomes().iterator().next();
     ManifestOutcome manifestOutcome = (ManifestOutcome) stepOutcome.getOutcome();
-
     assertThat(manifestOutcome.getManifestAttributes()).isNotEmpty();
     assertThat(manifestOutcome.getManifestAttributes().size()).isEqualTo(3);
     assertThat(manifestOutcome.getManifestAttributes()).containsOnly(k8Manifest1, k8Manifest3, valuesManifest2);

@@ -91,7 +91,7 @@ public class TaskChainStrategy implements TaskExecuteStrategy {
 
   private void handleResponse(
       @NonNull Ambiance ambiance, NodeExecution nodeExecution, @NonNull TaskChainResponse taskChainResponse) {
-    if (taskChainResponse.isChainEnd()) {
+    if (taskChainResponse.isChainEnd() && taskChainResponse.getTask() == null) {
       TaskChainExecutable taskChainExecutable = extractTaskChainExecutable(nodeExecution);
       nodeExecutionService.update(nodeExecution.getUuid(),
           ops

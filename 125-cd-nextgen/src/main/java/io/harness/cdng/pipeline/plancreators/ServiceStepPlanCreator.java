@@ -1,7 +1,5 @@
 package io.harness.cdng.pipeline.plancreators;
 
-import static io.harness.cdng.executionplan.CDPlanCreatorType.ARTIFACT_FORK_PLAN_CREATOR;
-import static io.harness.cdng.executionplan.CDPlanCreatorType.MANIFEST_PLAN_CREATOR;
 import static io.harness.cdng.executionplan.CDPlanCreatorType.SERVICE_PLAN_CREATOR;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static java.util.Collections.singletonList;
@@ -23,11 +21,9 @@ import io.harness.data.structure.EmptyPredicate;
 import io.harness.exception.InvalidArgumentsException;
 import io.harness.executionplan.core.AbstractPlanCreatorWithChildren;
 import io.harness.executionplan.core.ExecutionPlanCreationContext;
-import io.harness.executionplan.core.ExecutionPlanCreator;
 import io.harness.executionplan.core.ExecutionPlanCreatorResponse;
 import io.harness.executionplan.core.PlanCreatorSearchContext;
 import io.harness.executionplan.core.SupportDefinedExecutorPlanCreator;
-import io.harness.executionplan.service.ExecutionPlanCreatorHelper;
 import io.harness.executionplan.stepsdependency.StepDependencyService;
 import io.harness.executionplan.stepsdependency.instructors.OutcomeRefStepDependencyInstructor;
 import io.harness.facilitator.FacilitatorObtainment;
@@ -36,8 +32,6 @@ import io.harness.plan.PlanNode;
 import io.harness.plan.PlanNode.PlanNodeBuilder;
 import lombok.extern.slf4j.Slf4j;
 
-import java.util.HashMap;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
@@ -45,51 +39,26 @@ import java.util.Map;
 @Slf4j
 public class ServiceStepPlanCreator
     extends AbstractPlanCreatorWithChildren<ServiceConfig> implements SupportDefinedExecutorPlanCreator<ServiceConfig> {
-  @Inject private ExecutionPlanCreatorHelper executionPlanCreatorHelper;
   @Inject private StepDependencyService stepDependencyService;
 
   @Override
   public Map<String, List<ExecutionPlanCreatorResponse>> createPlanForChildren(
       ServiceConfig serviceConfig, ExecutionPlanCreationContext context) {
-    Map<String, List<ExecutionPlanCreatorResponse>> childrenPlanMap = new HashMap<>();
-    ServiceConfig actualServiceConfig = getActualServiceConfig(serviceConfig, context);
-    final ExecutionPlanCreatorResponse planForArtifacts = getPlanForArtifacts(context, actualServiceConfig);
-    final ExecutionPlanCreatorResponse planForManifests = getPlanForManifests(context, actualServiceConfig);
-    childrenPlanMap.put("ARTIFACTS", singletonList(planForArtifacts));
-    childrenPlanMap.put("MANIFESTS", singletonList(planForManifests));
-    return childrenPlanMap;
+    return null;
   }
 
   @Override
   public ExecutionPlanCreatorResponse createPlanForSelf(ServiceConfig serviceConfig,
       Map<String, List<ExecutionPlanCreatorResponse>> planForChildrenMap, ExecutionPlanCreationContext context) {
     ServiceConfig actualServiceConfig = getActualServiceConfig(serviceConfig, context);
-    ExecutionPlanCreatorResponse planForArtifacts = planForChildrenMap.get("ARTIFACTS").get(0);
-    ExecutionPlanCreatorResponse planForManifests = planForChildrenMap.get("MANIFESTS").get(0);
-
-    // Add artifactNodes and ManifestNode as children
-    List<String> childNodeIds = new LinkedList<>();
-    if (EmptyPredicate.isNotEmpty(planForArtifacts.getPlanNodes())) {
-      childNodeIds.add(planForArtifacts.getStartingNodeId());
-    }
-    if (EmptyPredicate.isNotEmpty(planForManifests.getPlanNodes())) {
-      childNodeIds.add(planForManifests.getStartingNodeId());
-    }
-
-    List<PlanNode> planNodes = new LinkedList<>();
-    planNodes.addAll(planForArtifacts.getPlanNodes());
-    planNodes.addAll(planForManifests.getPlanNodes());
-
-    final PlanNode serviceExecutionNode = prepareServiceNode(actualServiceConfig, childNodeIds, context);
+    final PlanNode serviceExecutionNode = prepareServiceNode(actualServiceConfig, context);
     return ExecutionPlanCreatorResponse.builder()
         .planNode(serviceExecutionNode)
-        .planNodes(planNodes)
         .startingNodeId(serviceExecutionNode.getUuid())
         .build();
   }
 
-  private PlanNode prepareServiceNode(
-      ServiceConfig serviceConfig, List<String> childNodeIds, ExecutionPlanCreationContext context) {
+  private PlanNode prepareServiceNode(ServiceConfig serviceConfig, ExecutionPlanCreationContext context) {
     final String serviceNodeUid = generateUuid();
 
     if (!serviceConfig.getName().isExpression() && EmptyPredicate.isEmpty(serviceConfig.getName().getValue())) {
@@ -112,13 +81,10 @@ public class ServiceStepPlanCreator
             .name(serviceIdentifier)
             .identifier(serviceIdentifier)
             .stepType(ServiceStep.STEP_TYPE)
-            .stepParameters(ServiceStepParameters.builder()
-                                .parallelNodeIds(childNodeIds)
-                                .service(serviceConfig)
-                                .serviceOverrides(serviceOverrides)
-                                .build())
+            .stepParameters(
+                ServiceStepParameters.builder().service(serviceConfig).serviceOverrides(serviceOverrides).build())
             .facilitatorObtainment(FacilitatorObtainment.builder()
-                                       .type(FacilitatorType.builder().type(FacilitatorType.CHILDREN).build())
+                                       .type(FacilitatorType.builder().type(FacilitatorType.TASK_CHAIN_V3).build())
                                        .build());
 
     // Adding dependency provider.
@@ -148,23 +114,6 @@ public class ServiceStepPlanCreator
       }
     }
     return serviceConfig;
-  }
-
-  private ExecutionPlanCreatorResponse getPlanForArtifacts(
-      ExecutionPlanCreationContext context, ServiceConfig serviceConfig) {
-    return executionPlanCreatorHelper
-        .getExecutionPlanCreator(ARTIFACT_FORK_PLAN_CREATOR.getName(), serviceConfig, context,
-            "No execution plan creator found for artifact fork execution")
-        .createPlan(serviceConfig, context);
-  }
-
-  private ExecutionPlanCreatorResponse getPlanForManifests(
-      ExecutionPlanCreationContext context, ServiceConfig serviceConfig) {
-    final ExecutionPlanCreator<ServiceConfig> executionPlanCreator =
-        executionPlanCreatorHelper.getExecutionPlanCreator(MANIFEST_PLAN_CREATOR.getName(), serviceConfig, context,
-            "No execution plan creator found for Manifests execution");
-
-    return executionPlanCreator.createPlan(serviceConfig, context);
   }
 
   @Override

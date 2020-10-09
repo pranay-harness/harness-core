@@ -64,14 +64,8 @@ public class PipelinePlanTest extends CDNGBaseTest {
 
     List<PlanNode> serviceNodesList = getNodesByIdentifier(planNodes, "service");
     assertThat(serviceNodesList.size()).isEqualTo(2);
-    List<PlanNode> artifactsNodesList = getNodesByIdentifier(planNodes, "artifacts");
-    assertThat(artifactsNodesList.size()).isEqualTo(2);
-    List<PlanNode> primaryArtifactNodesList = getNodesByIdentifier(planNodes, "primary");
-    assertThat(primaryArtifactNodesList.size()).isEqualTo(2);
     List<PlanNode> infrastructureNodesList = getNodesByIdentifier(planNodes, "infrastructure");
     assertThat(infrastructureNodesList.size()).isEqualTo(2);
-    List<PlanNode> manifestsNodesList = getNodesByIdentifier(planNodes, "MANIFESTS");
-    assertThat(manifestsNodesList.size()).isEqualTo(2);
 
     List<PlanNode> executionNodesList = getNodesByIdentifier(planNodes, "execution");
     assertThat(executionNodesList.size()).isEqualTo(2);
