@@ -6,27 +6,25 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import io.harness.ng.core.dto.secrets.SSHKeySpecDTO;
 import io.harness.ng.core.dto.secrets.SecretSpecDTO;
-import io.harness.secretmanagerclient.SSHAuthScheme;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
+
+import java.util.Optional;
 
 @Data
 @Builder
 @EqualsAndHashCode(callSuper = true)
 @JsonTypeName("SSHKey")
-@JsonIgnoreProperties(ignoreUnknown = true)
 public class SSHExecutionCredentialSpec extends SecretSpec {
-  SSHAuthScheme authScheme;
   int port;
-
-  @JsonProperty("spec")
-  @JsonTypeInfo(
-      use = JsonTypeInfo.Id.NAME, include = JsonTypeInfo.As.EXTERNAL_PROPERTY, property = "authScheme", visible = true)
-  BaseSSHSpec sshSpec;
+  SSHAuth auth;
 
   @Override
   public SecretSpecDTO toDTO() {
-    return SSHKeySpecDTO.builder().port(getPort()).authScheme(getAuthScheme()).spec(getSshSpec().toDTO()).build();
+    return SSHKeySpecDTO.builder()
+        .port(getPort())
+        .auth(Optional.ofNullable(auth).map(SSHAuth::toDTO).orElse(null))
+        .build();
   }
 }
