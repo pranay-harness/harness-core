@@ -2,6 +2,7 @@ package io.harness.cdng.artifact.steps;
 
 import static io.harness.rule.OwnerRule.ARCHIT;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.when;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 
@@ -22,10 +23,8 @@ import io.harness.delegate.task.artifacts.docker.DockerArtifactDelegateResponse;
 import io.harness.delegate.task.artifacts.request.ArtifactTaskParameters;
 import io.harness.delegate.task.artifacts.response.ArtifactTaskExecutionResponse;
 import io.harness.delegate.task.artifacts.response.ArtifactTaskResponse;
-import io.harness.execution.status.Status;
 import io.harness.logging.CommandExecutionStatus;
 import io.harness.rule.Owner;
-import io.harness.state.io.StepResponse;
 import io.harness.state.io.StepResponse.StepOutcome;
 import io.harness.tasks.ResponseData;
 import io.harness.tasks.Task;
@@ -68,7 +67,7 @@ public class ArtifactStepTest extends CategoryTest {
         .thenReturn(getDelegateRequest());
     when(artifactStepHelper.getArtifactStepTaskType(artifactStep.applyArtifactsOverlay(stepParameters)))
         .thenReturn(TaskType.DOCKER_ARTIFACT_TASK_NG.name());
-    Task task = artifactStep.obtainTask(ambiance, stepParameters, null);
+    Task task = artifactStep.getTask(ambiance, stepParameters);
     assertThat(task).isInstanceOf(SimpleHDelegateTask.class);
     SimpleHDelegateTask delegateTask = (SimpleHDelegateTask) task;
     assertThat(delegateTask.getAccountId()).isEqualTo(ACCOUNT_ID);
@@ -113,12 +112,9 @@ public class ArtifactStepTest extends CategoryTest {
             .artifactTaskExecutionResponse(
                 ArtifactTaskExecutionResponse.builder().artifactDelegateResponse(dockerArtifactAttributes).build())
             .build();
-    responseDataMap.put("KEY", taskResponse);
-    StepResponse stepResponse = artifactStep.handleTaskResult(null, stepParameters, responseDataMap);
-    assertThat(stepResponse).isInstanceOf(StepResponse.class);
-    assertThat(stepResponse.getStatus()).isEqualTo(Status.SUCCEEDED);
-    assertThat(stepResponse.getStepOutcomes().size()).isEqualTo(1);
-    StepOutcome stepOutcome = stepResponse.getStepOutcomes().iterator().next();
+
+    StepOutcome stepOutcome = artifactStep.processDelegateResponse(taskResponse, stepParameters);
+
     assertThat(stepOutcome.getOutcome()).isInstanceOf(DockerArtifactOutcome.class);
     DockerArtifactOutcome outcome = (DockerArtifactOutcome) stepOutcome.getOutcome();
     assertThat(outcome.getImagePath()).isEqualTo("imagePath");
@@ -131,18 +127,15 @@ public class ArtifactStepTest extends CategoryTest {
   public void shouldHandleFailTaskResultForDocker() {
     ErrorNotifyResponseData errorNotifyResponseData =
         ErrorNotifyResponseData.builder().errorMessage("Mock error").build();
-    responseDataMap.put("KEY", errorNotifyResponseData);
     ArtifactStepParameters stepParameters = getStepParametersForDocker();
-    StepResponse stepResponse = artifactStep.handleTaskResult(null, stepParameters, responseDataMap);
-    assertThat(stepResponse.getStatus()).isEqualTo(Status.FAILED);
-    assertThat(stepResponse.getFailureInfo().getErrorMessage()).isEqualTo("Mock error");
+    assertThatThrownBy(() -> artifactStep.processDelegateResponse(errorNotifyResponseData, stepParameters))
+        .hasMessageContaining("Mock error");
 
     // Failure from ArtifactTaskResponse
     ArtifactTaskResponse taskResponse =
         ArtifactTaskResponse.builder().commandExecutionStatus(CommandExecutionStatus.FAILURE).build();
-    responseDataMap.put("KEY", taskResponse);
-    stepResponse = artifactStep.handleTaskResult(null, stepParameters, responseDataMap);
-    assertThat(stepResponse.getStatus()).isEqualTo(Status.FAILED);
+    assertThatThrownBy(() -> artifactStep.processDelegateResponse(taskResponse, stepParameters))
+        .hasMessageContaining("Delegate task failed");
   }
 
   @Test

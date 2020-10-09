@@ -61,6 +61,7 @@ public class CDNGPipelineResourceTest extends CategoryTest {
   private final String ACCOUNT_ID = "account_id";
   private final String ORG_IDENTIFIER = "orgId";
   private final String PROJ_IDENTIFIER = "projId";
+  private final String PIPELINE_IDENTIFIER = "k8s";
 
   @Before
   public void setUp() throws IOException {
@@ -76,7 +77,7 @@ public class CDNGPipelineResourceTest extends CategoryTest {
                            .accountId(ACCOUNT_ID)
                            .projectIdentifier(PROJ_IDENTIFIER)
                            .orgIdentifier(ORG_IDENTIFIER)
-                           .identifier("managerServiceDeployment")
+                           .identifier(PIPELINE_IDENTIFIER)
                            .ngPipeline(ngPipeline)
                            .build();
     cdPipelineSummaryResponseDTO = CDPipelineSummaryResponseDTO.builder()
@@ -96,8 +97,7 @@ public class CDNGPipelineResourceTest extends CategoryTest {
         .when(pipelineService)
         .getPipeline(cdPipelineRequestDTO.getNgPipeline().getIdentifier(), ACCOUNT_ID, ORG_IDENTIFIER, PROJ_IDENTIFIER);
     CDPipelineResponseDTO pipelineResponse =
-        cdngPipelineResource
-            .getPipelineByIdentifier(ACCOUNT_ID, ORG_IDENTIFIER, PROJ_IDENTIFIER, "managerServiceDeployment")
+        cdngPipelineResource.getPipelineByIdentifier(ACCOUNT_ID, ORG_IDENTIFIER, PROJ_IDENTIFIER, PIPELINE_IDENTIFIER)
             .getData();
     assertThat(pipelineResponse).isNotNull();
     assertThat(pipelineResponse).isEqualTo(cdPipelineResponseDTO);

@@ -3,14 +3,11 @@ package io.harness.cdng.executionplan;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
-import io.harness.cdng.pipeline.plancreators.ArtifactForkPlanCreator;
-import io.harness.cdng.pipeline.plancreators.ArtifactStepPlanCreator;
 import io.harness.cdng.pipeline.plancreators.CDExecutionPlanCreator;
 import io.harness.cdng.pipeline.plancreators.DeploymentStagePlanCreator;
 import io.harness.cdng.pipeline.plancreators.DeploymentStageRollbackPlanCreator;
 import io.harness.cdng.pipeline.plancreators.ExecutionRollbackPlanCreator;
 import io.harness.cdng.pipeline.plancreators.InfraPlanCreator;
-import io.harness.cdng.pipeline.plancreators.ManifestStepPlanCreator;
 import io.harness.cdng.pipeline.plancreators.ParallelStepGroupRollbackPlanCreator;
 import io.harness.cdng.pipeline.plancreators.PipelinePlanCreator;
 import io.harness.cdng.pipeline.plancreators.ServiceStepPlanCreator;
@@ -37,11 +34,8 @@ public class ExecutionPlanCreatorRegistrar {
   @Inject private StepGroupPlanCreator stepGroupPlanCreator;
   @Inject private ParallelStepPlanCreator parallelStepPlanCreator;
   @Inject private ParallelStagePlanCreator parallelStagePlanCreator;
-  @Inject private ArtifactStepPlanCreator artifactStepPlanCreator;
-  @Inject private ManifestStepPlanCreator manifestStepPlanCreator;
   @Inject private ServiceStepPlanCreator serviceStepPlanCreator;
   @Inject private InfraPlanCreator infraPlanCreator;
-  @Inject private ArtifactForkPlanCreator artifactForkPlanCreator;
   @Inject private DeploymentStageRollbackPlanCreator deploymentStageRollbackPlanCreator;
   @Inject private StepGroupsRollbackPlanCreator stepGroupsRollbackPlanCreator;
   @Inject private StepGroupRollbackPlanCreator stepGroupRollbackPlanCreator;
@@ -54,11 +48,8 @@ public class ExecutionPlanCreatorRegistrar {
     register(deploymentStagePlanCreator);
     register(cdExecutionPlanCreator);
     register(parallelStepPlanCreator);
-    register(artifactStepPlanCreator);
-    register(manifestStepPlanCreator);
     register(serviceStepPlanCreator);
     register(infraPlanCreator);
-    register(artifactForkPlanCreator);
     register(stagesPlanCreator);
     register(genericStepPlanCreator);
     register(stepGroupPlanCreator);

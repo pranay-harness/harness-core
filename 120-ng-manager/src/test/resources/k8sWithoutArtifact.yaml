@@ -1,6 +1,6 @@
 pipeline:
-  name: "Manager Service Deployment"
-  identifier: k8s
+  name: "k8s Without Artifact"
+  identifier: k8sWithoutArtifact
   stages:
     - stage:
         identifier: qaStage
@@ -13,13 +13,6 @@ pipeline:
             serviceDefinition:
               type: Kubernetes
               spec:
-                artifacts:
-                  primary:
-                    type: "Dockerhub"
-                    spec:
-                      connectorRef: account.docker
-                      imagePath: "library/nginx"
-                      tag: "1.19"
                 manifests:
                   - manifest:
                       identifier: baseValues
@@ -47,7 +40,7 @@ pipeline:
                             gitFetchType: Branch
                             branch: master
                             paths:
-                              - test/baseValues.yaml
+                              - test/baseValuesWithArtifact.yaml
                               - test/qa/values_1.yaml
           infrastructure:
             environment:

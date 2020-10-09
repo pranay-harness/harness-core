@@ -21,7 +21,6 @@ import io.harness.cdng.k8s.K8sRollingRollbackStepParameters;
 import io.harness.cdng.k8s.K8sRollingStepInfo;
 import io.harness.cdng.k8s.K8sRollingStepParameters;
 import io.harness.cdng.k8s.K8sRollingStepPassThroughData;
-import io.harness.cdng.manifest.state.ManifestStepParameters;
 import io.harness.cdng.manifest.yaml.GitStore;
 import io.harness.cdng.manifest.yaml.ManifestConfig;
 import io.harness.cdng.manifest.yaml.ManifestOutcome;
@@ -70,7 +69,6 @@ public class NgAliasRegistrar implements AliasRegistrar {
     orchestrationElements.put("manifestFetchOutcome", ManifestFetchOutcome.class);
     orchestrationElements.put("manifestFetchParameters", ManifestFetchParameters.class);
     orchestrationElements.put("manifestOutcome", ManifestOutcome.class);
-    orchestrationElements.put("manifestStepParameters", ManifestStepParameters.class);
     orchestrationElements.put("pipelineInfrastructure", PipelineInfrastructure.class);
     orchestrationElements.put("serviceOutcome", ServiceOutcome.class);
     orchestrationElements.put("serviceStepParameters", ServiceStepParameters.class);

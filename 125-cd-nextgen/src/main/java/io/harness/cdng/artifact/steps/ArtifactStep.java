@@ -3,15 +3,21 @@ package io.harness.cdng.artifact.steps;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
+import com.google.inject.Singleton;
 
 import io.harness.ambiance.Ambiance;
+import io.harness.beans.ParameterField;
 import io.harness.cdng.artifact.bean.ArtifactConfig;
 import io.harness.cdng.artifact.bean.ArtifactOutcome;
+import io.harness.cdng.artifact.bean.yaml.ArtifactListConfig;
+import io.harness.cdng.artifact.bean.yaml.ArtifactOverrideSets;
 import io.harness.cdng.artifact.mappers.ArtifactResponseToOutcomeMapper;
+import io.harness.cdng.artifact.steps.ArtifactStepParameters.ArtifactStepParametersBuilder;
 import io.harness.cdng.artifact.utils.ArtifactStepHelper;
 import io.harness.cdng.artifact.utils.ArtifactUtils;
 import io.harness.cdng.orchestration.StepUtils;
-import io.harness.cdng.pipeline.steps.NGStepTypes;
+import io.harness.cdng.service.beans.ServiceConfig;
+import io.harness.cdng.stepsdependency.constants.OutcomeExpressionConstants;
 import io.harness.common.AmbianceHelper;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.delegate.beans.DelegateResponseData;
@@ -23,37 +29,28 @@ import io.harness.delegate.task.artifacts.request.ArtifactTaskParameters;
 import io.harness.delegate.task.artifacts.response.ArtifactTaskResponse;
 import io.harness.exception.ArtifactServerException;
 import io.harness.exception.InvalidArgumentsException;
-import io.harness.execution.status.Status;
-import io.harness.facilitator.modes.task.TaskExecutable;
-import io.harness.state.Step;
-import io.harness.state.StepType;
-import io.harness.state.io.FailureInfo;
-import io.harness.state.io.StepInputPackage;
-import io.harness.state.io.StepResponse;
+import io.harness.exception.InvalidRequestException;
 import io.harness.state.io.StepResponse.StepOutcome;
-import io.harness.state.io.StepResponse.StepResponseBuilder;
 import io.harness.tasks.Cd1SetupFields;
-import io.harness.tasks.ResponseData;
 import io.harness.tasks.Task;
-import lombok.AccessLevel;
-import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
+import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
+import java.util.function.BiConsumer;
+import java.util.stream.Collectors;
 
-@AllArgsConstructor(access = AccessLevel.PACKAGE, onConstructor = @__({ @Inject }))
+@Singleton
 @Slf4j
-public class ArtifactStep implements Step, TaskExecutable<ArtifactStepParameters> {
-  public static final StepType STEP_TYPE = StepType.builder().type(NGStepTypes.ARTIFACT_STEP).build();
-  private final ArtifactStepHelper artifactStepHelper;
+public class ArtifactStep {
+  @Inject private ArtifactStepHelper artifactStepHelper;
   // Default timeout of 1 minute.
   private static final long DEFAULT_TIMEOUT = TimeUnit.MINUTES.toMillis(1);
 
-  @Override
-  public Task obtainTask(Ambiance ambiance, ArtifactStepParameters stepParameters, StepInputPackage inputPackage) {
+  public Task getTask(Ambiance ambiance, ArtifactStepParameters stepParameters) {
     logger.info("Executing deployment stage with params [{}]", stepParameters);
     ArtifactConfig finalArtifact = applyArtifactsOverlay(stepParameters);
     String accountId = AmbianceHelper.getAccountId(ambiance);
@@ -75,46 +72,35 @@ public class ArtifactStep implements Step, TaskExecutable<ArtifactStepParameters
         accountId, taskData, ImmutableMap.of(Cd1SetupFields.APP_ID_FIELD, accountId));
   }
 
-  @Override
-  public StepResponse handleTaskResult(
-      Ambiance ambiance, ArtifactStepParameters stepParameters, Map<String, ResponseData> responseDataMap) {
-    StepResponseBuilder stepResponseBuilder = StepResponse.builder();
-    DelegateResponseData notifyResponseData = (DelegateResponseData) responseDataMap.values().iterator().next();
-
+  public StepOutcome processDelegateResponse(
+      DelegateResponseData notifyResponseData, ArtifactStepParameters stepParameters) {
     if (notifyResponseData instanceof ArtifactTaskResponse) {
       ArtifactTaskResponse taskResponse = (ArtifactTaskResponse) notifyResponseData;
       switch (taskResponse.getCommandExecutionStatus()) {
         case SUCCESS:
-          stepResponseBuilder.status(Status.SUCCEEDED);
-          stepResponseBuilder.stepOutcome(getStepOutcome(taskResponse, stepParameters));
-          break;
+          return getStepOutcome(taskResponse, stepParameters);
         case FAILURE:
-          stepResponseBuilder.status(Status.FAILED);
-          stepResponseBuilder.failureInfo(FailureInfo.builder().errorMessage(taskResponse.getErrorMessage()).build());
-          break;
+          throw new ArtifactServerException("Delegate task failed with msg: " + taskResponse.getErrorMessage());
         default:
           throw new ArtifactServerException(
               "Unhandled type CommandExecutionStatus: " + taskResponse.getCommandExecutionStatus().name());
       }
     } else if (notifyResponseData instanceof ErrorNotifyResponseData) {
-      stepResponseBuilder.status(Status.FAILED);
-      stepResponseBuilder.failureInfo(
-          FailureInfo.builder().errorMessage(((ErrorNotifyResponseData) notifyResponseData).getErrorMessage()).build());
-      return stepResponseBuilder.build();
+      throw new ArtifactServerException(
+          "Delegate task failed with msg: " + ((ErrorNotifyResponseData) notifyResponseData).getErrorMessage());
     } else {
-      logger.error("Unhandled DelegateResponseData class " + notifyResponseData.getClass().getCanonicalName());
+      throw new ArtifactServerException(
+          "Unhandled DelegateResponseData class " + notifyResponseData.getClass().getCanonicalName());
     }
-
-    return stepResponseBuilder.build();
   }
 
-  @VisibleForTesting
-  StepOutcome getStepOutcome(ArtifactTaskResponse taskResponse, ArtifactStepParameters stepParameters) {
+  public StepOutcome getStepOutcome(ArtifactTaskResponse taskResponse, ArtifactStepParameters stepParameters) {
     ArtifactOutcome artifact = ArtifactResponseToOutcomeMapper.toArtifactOutcome(applyArtifactsOverlay(stepParameters),
         taskResponse.getArtifactTaskExecutionResponse().getArtifactDelegateResponses().get(0));
-    String outcomeKey = ArtifactUtils.SIDECAR_ARTIFACT + "." + artifact.getIdentifier();
+    String outcomeKey =
+        OutcomeExpressionConstants.ARTIFACTS + ArtifactUtils.SIDECAR_ARTIFACT + "." + artifact.getIdentifier();
     if (artifact.isPrimaryArtifact()) {
-      outcomeKey = ArtifactUtils.PRIMARY_ARTIFACT;
+      outcomeKey = OutcomeExpressionConstants.ARTIFACTS + ArtifactUtils.PRIMARY_ARTIFACT;
     }
     return StepOutcome.builder().name(outcomeKey).outcome(artifact).build();
   }
@@ -139,5 +125,73 @@ public class ArtifactStep implements Step, TaskExecutable<ArtifactStepParameters
       resultantArtifact = resultantArtifact.applyOverrides(artifact);
     }
     return resultantArtifact;
+  }
+
+  public List<ArtifactConfig> getArtifactOverrideSetsApplicable(ServiceConfig serviceConfig) {
+    List<ArtifactConfig> artifacts = new LinkedList<>();
+    if (serviceConfig.getStageOverrides() != null
+        && !ParameterField.isEmpty(serviceConfig.getStageOverrides().getUseArtifactOverrideSets())) {
+      for (String useArtifactOverrideSet : serviceConfig.getStageOverrides().getUseArtifactOverrideSets().getValue()) {
+        List<ArtifactOverrideSets> artifactOverrideSetsList =
+            serviceConfig.getServiceDefinition()
+                .getServiceSpec()
+                .getArtifactOverrideSets()
+                .stream()
+                .filter(o -> o.getIdentifier().equals(useArtifactOverrideSet))
+                .collect(Collectors.toList());
+        if (artifactOverrideSetsList.size() != 1) {
+          throw new InvalidRequestException("Artifact Override Set is not defined properly.");
+        }
+        ArtifactListConfig artifactListConfig = artifactOverrideSetsList.get(0).getArtifacts();
+        artifacts.addAll(ArtifactUtils.convertArtifactListIntoArtifacts(artifactListConfig));
+      }
+    }
+    return artifacts;
+  }
+
+  public void mapArtifactsToIdentifier(Map<String, ArtifactStepParametersBuilder> artifactsMap,
+      List<ArtifactConfig> artifactsList, BiConsumer<ArtifactStepParametersBuilder, ArtifactConfig> consumer) {
+    if (EmptyPredicate.isNotEmpty(artifactsList)) {
+      for (ArtifactConfig artifact : artifactsList) {
+        String key = ArtifactUtils.getArtifactKey(artifact);
+        if (artifactsMap.containsKey(key)) {
+          consumer.accept(artifactsMap.get(key), artifact);
+        } else {
+          ArtifactStepParametersBuilder builder = ArtifactStepParameters.builder();
+          consumer.accept(builder, artifact);
+          artifactsMap.put(key, builder);
+        }
+      }
+    }
+  }
+
+  public List<ArtifactStepParameters> getArtifactsWithCorrespondingOverrides(ServiceConfig serviceConfig) {
+    Map<String, ArtifactStepParametersBuilder> artifactsMap = new HashMap<>();
+    ArtifactListConfig artifacts = serviceConfig.getServiceDefinition().getServiceSpec().getArtifacts();
+    if (artifacts != null) {
+      if (artifacts.getPrimary() == null) {
+        throw new InvalidArgumentsException("Primary artifact cannot be null.");
+      }
+      // Add service artifacts.
+      List<ArtifactConfig> serviceSpecArtifacts = ArtifactUtils.convertArtifactListIntoArtifacts(artifacts);
+      mapArtifactsToIdentifier(artifactsMap, serviceSpecArtifacts, ArtifactStepParametersBuilder::artifact);
+    }
+
+    // Add Artifact Override Sets.
+    List<ArtifactConfig> artifactOverrideSetsApplicable = getArtifactOverrideSetsApplicable(serviceConfig);
+    mapArtifactsToIdentifier(
+        artifactsMap, artifactOverrideSetsApplicable, ArtifactStepParametersBuilder::artifactOverrideSet);
+
+    // Add Stage Overrides.
+    if (serviceConfig.getStageOverrides() != null && serviceConfig.getStageOverrides().getArtifacts() != null) {
+      ArtifactListConfig stageOverrides = serviceConfig.getStageOverrides().getArtifacts();
+      List<ArtifactConfig> stageOverridesArtifacts = ArtifactUtils.convertArtifactListIntoArtifacts(stageOverrides);
+      mapArtifactsToIdentifier(
+          artifactsMap, stageOverridesArtifacts, ArtifactStepParametersBuilder::artifactStageOverride);
+    }
+
+    List<ArtifactStepParameters> mappedArtifacts = new LinkedList<>();
+    artifactsMap.forEach((key, value) -> mappedArtifacts.add(value.build()));
+    return mappedArtifacts;
   }
 }

@@ -1,58 +1,90 @@
 package io.harness.cdng.manifest.state;
 
 import static io.harness.cdng.manifest.ManifestConstants.MANIFESTS;
-import static io.harness.cdng.pipeline.steps.NGStepTypes.MANIFEST_STEP;
 
-import io.harness.ambiance.Ambiance;
+import com.google.common.annotations.VisibleForTesting;
+import com.google.inject.Singleton;
+
+import io.harness.beans.ParameterField;
 import io.harness.cdng.manifest.yaml.ManifestAttributes;
 import io.harness.cdng.manifest.yaml.ManifestConfigWrapper;
 import io.harness.cdng.manifest.yaml.ManifestOutcome;
+import io.harness.cdng.service.beans.ServiceConfig;
 import io.harness.data.structure.EmptyPredicate;
-import io.harness.execution.status.Status;
-import io.harness.facilitator.PassThroughData;
-import io.harness.facilitator.modes.sync.SyncExecutable;
-import io.harness.state.Step;
-import io.harness.state.StepType;
-import io.harness.state.io.StepInputPackage;
-import io.harness.state.io.StepResponse;
+import io.harness.exception.InvalidRequestException;
+import io.harness.state.io.StepResponse.StepOutcome;
 import io.harness.yaml.core.intfc.WithIdentifier;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+@Singleton
 @Slf4j
-public class ManifestStep implements Step, SyncExecutable<ManifestStepParameters> {
-  public static final StepType STEP_TYPE = StepType.builder().type(MANIFEST_STEP).build();
+public class ManifestStep {
+  public StepOutcome processManifests(ServiceConfig serviceConfig) {
+    List<ManifestConfigWrapper> serviceSpecManifests =
+        serviceConfig.getServiceDefinition().getServiceSpec().getManifests();
+    List<ManifestConfigWrapper> manifestOverrideSets = getManifestOverrideSetsApplicable(serviceConfig);
 
-  @Override
-  public StepResponse executeSync(Ambiance ambiance, ManifestStepParameters manifestStepParameters,
-      StepInputPackage inputPackage, PassThroughData passThroughData) {
+    List<ManifestConfigWrapper> stageOverrideManifests = new LinkedList<>();
+    if (serviceConfig.getStageOverrides() != null) {
+      stageOverrideManifests = serviceConfig.getStageOverrides().getManifests();
+    }
+
+    return processManifests(serviceSpecManifests, manifestOverrideSets, stageOverrideManifests);
+  }
+
+  private List<ManifestConfigWrapper> getManifestOverrideSetsApplicable(ServiceConfig serviceConfig) {
+    List<ManifestConfigWrapper> manifestOverrideSets = new LinkedList<>();
+    if (serviceConfig.getStageOverrides() != null
+        && !ParameterField.isEmpty(serviceConfig.getStageOverrides().getUseManifestOverrideSets())) {
+      serviceConfig.getStageOverrides()
+          .getUseManifestOverrideSets()
+          .getValue()
+          .stream()
+          .map(useManifestOverrideSet
+              -> serviceConfig.getServiceDefinition()
+                     .getServiceSpec()
+                     .getManifestOverrideSets()
+                     .stream()
+                     .filter(o -> o.getIdentifier().equals(useManifestOverrideSet))
+                     .findFirst())
+          .forEachOrdered(optionalManifestOverrideSets -> {
+            if (!optionalManifestOverrideSets.isPresent()) {
+              throw new InvalidRequestException("Manifest Override Set is not defined.");
+            }
+            manifestOverrideSets.addAll(optionalManifestOverrideSets.get().getManifests());
+          });
+    }
+    return manifestOverrideSets;
+  }
+
+  @VisibleForTesting
+  StepOutcome processManifests(List<ManifestConfigWrapper> serviceSpecManifests,
+      List<ManifestConfigWrapper> manifestOverrideSets, List<ManifestConfigWrapper> stageOverrideManifests) {
     Map<String, ManifestAttributes> identifierToManifestMap = new HashMap<>();
 
     // 1. Get Manifests belonging to KubernetesServiceSpec
-    if (EmptyPredicate.isNotEmpty(manifestStepParameters.getServiceSpecManifests())) {
-      identifierToManifestMap = manifestStepParameters.getServiceSpecManifests().stream().collect(
+    if (EmptyPredicate.isNotEmpty(serviceSpecManifests)) {
+      identifierToManifestMap = serviceSpecManifests.stream().collect(
           Collectors.toMap(WithIdentifier::getIdentifier, ManifestConfigWrapper::getManifestAttributes, (a, b) -> b));
     }
 
     // 2. Apply Override Sets
-    applyManifestOverlay(identifierToManifestMap, manifestStepParameters.getManifestOverrideSets());
+    applyManifestOverlay(identifierToManifestMap, manifestOverrideSets);
 
     // 3. Get Manifests belonging to Stage Overrides
-    applyManifestOverlay(identifierToManifestMap, manifestStepParameters.getStageOverrideManifests());
+    applyManifestOverlay(identifierToManifestMap, stageOverrideManifests);
 
-    return StepResponse.builder()
-        .status(Status.SUCCEEDED)
-        .stepOutcome(StepResponse.StepOutcome.builder()
-                         .name(MANIFESTS.toLowerCase())
-                         .outcome(ManifestOutcome.builder()
-                                      .manifestAttributes(new ArrayList<>(identifierToManifestMap.values()))
-                                      .build())
-                         .build())
+    return StepOutcome.builder()
+        .name(MANIFESTS.toLowerCase())
+        .outcome(
+            ManifestOutcome.builder().manifestAttributes(new ArrayList<>(identifierToManifestMap.values())).build())
         .build();
   }
 
