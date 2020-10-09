@@ -123,10 +123,10 @@ public class InputSetEntityServiceImpl implements InputSetEntityService {
     }
   }
 
-  private Criteria getInputSetEqualityCriteria(@Valid BaseInputSetEntity requestCDInputSet, boolean deleted) {
-    return getInputSetEqualityCriteria(requestCDInputSet.getAccountId(), requestCDInputSet.getOrgIdentifier(),
-        requestCDInputSet.getProjectIdentifier(), requestCDInputSet.getPipelineIdentifier(),
-        requestCDInputSet.getIdentifier(), deleted);
+  private Criteria getInputSetEqualityCriteria(@Valid BaseInputSetEntity requestInputSet, boolean deleted) {
+    return getInputSetEqualityCriteria(requestInputSet.getAccountId(), requestInputSet.getOrgIdentifier(),
+        requestInputSet.getProjectIdentifier(), requestInputSet.getPipelineIdentifier(),
+        requestInputSet.getIdentifier(), deleted);
   }
 
   private Criteria getInputSetEqualityCriteria(String accountId, String orgIdentifier, String projectIdentifier,

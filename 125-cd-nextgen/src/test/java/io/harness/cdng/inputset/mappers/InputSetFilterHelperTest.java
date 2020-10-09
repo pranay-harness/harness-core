@@ -5,7 +5,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
-import io.harness.cdng.inputset.beans.entities.CDInputSetEntity;
+import io.harness.cdng.inputset.beans.entities.InputSetEntity;
 import io.harness.cdng.inputset.beans.resource.InputSetListType;
 import io.harness.ngpipeline.overlayinputset.beans.BaseInputSetEntity.BaseInputSetEntityKeys;
 import io.harness.ngpipeline.overlayinputset.beans.InputSetEntityType;
@@ -95,11 +95,11 @@ public class InputSetFilterHelperTest extends CategoryTest {
   @Owner(developers = NAMAN)
   @Category(UnitTests.class)
   public void testGetUpdateOperations() {
-    CDInputSetEntity cdInputSetEntity = CDInputSetEntity.builder().build();
-    cdInputSetEntity.setInputSetType(InputSetEntityType.INPUT_SET);
-    Update updateOperations = InputSetFilterHelper.getUpdateOperations(cdInputSetEntity);
+    InputSetEntity inputSetEntity = InputSetEntity.builder().build();
+    inputSetEntity.setInputSetType(InputSetEntityType.INPUT_SET);
+    Update updateOperations = InputSetFilterHelper.getUpdateOperations(inputSetEntity);
     Set<String> stringSet = ((Document) updateOperations.getUpdateObject().get("$set")).keySet();
-    PropertyDescriptor[] propertyDescriptors = BeanUtils.getPropertyDescriptors(CDInputSetEntity.class);
+    PropertyDescriptor[] propertyDescriptors = BeanUtils.getPropertyDescriptors(InputSetEntity.class);
     Set<String> excludedFields =
         new HashSet<>(Arrays.asList(BaseInputSetEntityKeys.id, BaseInputSetEntityKeys.createdAt,
             BaseInputSetEntityKeys.lastModifiedAt, BaseInputSetEntityKeys.version, "class"));
@@ -131,7 +131,7 @@ public class InputSetFilterHelperTest extends CategoryTest {
   public void testGetUpdateOperationsForDelete() {
     Update updateOperations = InputSetFilterHelper.getUpdateOperationsForDelete();
     Set<String> stringSet = ((Document) updateOperations.getUpdateObject().get("$set")).keySet();
-    PropertyDescriptor[] propertyDescriptors = BeanUtils.getPropertyDescriptors(CDInputSetEntity.class);
+    PropertyDescriptor[] propertyDescriptors = BeanUtils.getPropertyDescriptors(InputSetEntity.class);
 
     for (PropertyDescriptor propertyDescriptor : propertyDescriptors) {
       if (propertyDescriptor.getName().equals("deleted")) {

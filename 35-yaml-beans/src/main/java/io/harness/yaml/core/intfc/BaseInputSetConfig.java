@@ -8,4 +8,4 @@ import com.fasterxml.jackson.annotation.JsonTypeName;
 
 @JsonTypeInfo(use = NAME, include = WRAPPER_OBJECT)
 @JsonTypeName("inputSet")
-public interface InputSet extends WithIdentifier {}
+public interface BaseInputSetConfig extends WithIdentifier {}

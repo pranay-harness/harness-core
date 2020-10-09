@@ -8,7 +8,7 @@ import com.google.inject.Inject;
 
 import io.harness.category.element.UnitTests;
 import io.harness.cdng.CDNGBaseTest;
-import io.harness.cdng.inputset.beans.entities.CDInputSetEntity;
+import io.harness.cdng.inputset.beans.entities.InputSetEntity;
 import io.harness.cdng.inputset.beans.entities.MergeInputSetResponse;
 import io.harness.cdng.inputset.mappers.InputSetElementMapper;
 import io.harness.cdng.inputset.services.InputSetEntityService;
@@ -177,9 +177,9 @@ public class InputSetMergeHelperTest extends CDNGBaseTest {
     ClassLoader classLoader = getClass().getClassLoader();
     String inputYaml =
         Resources.toString(Objects.requireNonNull(classLoader.getResource(inputSetFileName)), StandardCharsets.UTF_8);
-    CDInputSetEntity cdInputSetEntity =
-        InputSetElementMapper.toCDInputSetEntity(ACCOUNT_ID, ORG_ID, PROJECT_ID, PIPELINE_ID, inputYaml);
-    inputSetEntityService.create(cdInputSetEntity);
+    InputSetEntity inputSetEntity =
+        InputSetElementMapper.toInputSetEntity(ACCOUNT_ID, ORG_ID, PROJECT_ID, PIPELINE_ID, inputYaml);
+    inputSetEntityService.create(inputSetEntity);
   }
 
   private void addOverlayInputSetToDB() throws IOException {

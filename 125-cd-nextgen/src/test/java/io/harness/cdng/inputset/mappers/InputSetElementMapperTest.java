@@ -8,14 +8,14 @@ import com.google.common.io.Resources;
 
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
-import io.harness.cdng.inputset.beans.entities.CDInputSetEntity;
+import io.harness.cdng.inputset.beans.entities.InputSetEntity;
 import io.harness.cdng.inputset.beans.entities.MergeInputSetResponse;
 import io.harness.cdng.inputset.beans.resource.InputSetErrorResponseDTO;
 import io.harness.cdng.inputset.beans.resource.InputSetErrorWrapperDTO;
 import io.harness.cdng.inputset.beans.resource.InputSetResponseDTO;
 import io.harness.cdng.inputset.beans.resource.InputSetSummaryResponseDTO;
 import io.harness.cdng.inputset.beans.resource.MergeInputSetResponseDTO;
-import io.harness.cdng.inputset.beans.yaml.CDInputSet;
+import io.harness.cdng.inputset.beans.yaml.InputSetConfig;
 import io.harness.cdng.pipeline.NgPipeline;
 import io.harness.ngpipeline.overlayinputset.beans.BaseInputSetEntity;
 import io.harness.ngpipeline.overlayinputset.beans.InputSetEntityType;
@@ -43,8 +43,8 @@ public class InputSetElementMapperTest extends CategoryTest {
   OverlayInputSetEntity requestOverlayInputSetEntity;
   OverlayInputSetEntity responseOverlayInputSetEntity;
 
-  CDInputSetEntity requestCdInputSetEntity;
-  CDInputSetEntity responseCdInputSetEntity;
+  InputSetEntity requestInputSetEntity;
+  InputSetEntity responseInputSetEntity;
 
   MergeInputSetResponse requestMergeInputResponse;
   MergeInputSetResponseDTO expectedMergeInputResponseDTO;
@@ -66,7 +66,7 @@ public class InputSetElementMapperTest extends CategoryTest {
     String inputSetFileName = "input-set-test-file.yaml";
     cdInputSetYaml =
         Resources.toString(Objects.requireNonNull(classLoader.getResource(inputSetFileName)), StandardCharsets.UTF_8);
-    CDInputSet inputSetObject = YamlPipelineUtils.read(cdInputSetYaml, CDInputSet.class);
+    InputSetConfig inputSetObject = YamlPipelineUtils.read(cdInputSetYaml, InputSetConfig.class);
 
     String overlayInputSetFileName = "overlay-input-set-test-file.yaml";
     overlayInputSetYaml = Resources.toString(
@@ -137,10 +137,10 @@ public class InputSetElementMapperTest extends CategoryTest {
                                       .build())
             .build();
 
-    requestCdInputSetEntity = CDInputSetEntity.builder().cdInputSet(inputSetObject).build();
-    responseCdInputSetEntity = CDInputSetEntity.builder().cdInputSet(inputSetObject).build();
-    setBaseEntityFields(requestCdInputSetEntity, InputSetEntityType.INPUT_SET, cdInputSetYaml);
-    setBaseEntityFields(responseCdInputSetEntity, InputSetEntityType.INPUT_SET, cdInputSetYaml);
+    requestInputSetEntity = InputSetEntity.builder().inputSetConfig(inputSetObject).build();
+    responseInputSetEntity = InputSetEntity.builder().inputSetConfig(inputSetObject).build();
+    setBaseEntityFields(requestInputSetEntity, InputSetEntityType.INPUT_SET, cdInputSetYaml);
+    setBaseEntityFields(responseInputSetEntity, InputSetEntityType.INPUT_SET, cdInputSetYaml);
 
     requestOverlayInputSetEntity = OverlayInputSetEntity.builder().build();
     responseOverlayInputSetEntity = OverlayInputSetEntity.builder().build();
@@ -164,34 +164,34 @@ public class InputSetElementMapperTest extends CategoryTest {
   @Owner(developers = NAMAN)
   @Category(UnitTests.class)
   public void testToCDInputSetEntity() {
-    CDInputSetEntity mappedInputSet = InputSetElementMapper.toCDInputSetEntity(
+    InputSetEntity mappedInputSet = InputSetElementMapper.toInputSetEntity(
         ACCOUNT_ID, ORG_IDENTIFIER, PROJ_IDENTIFIER, PIPELINE_IDENTIFIER, cdInputSetYaml);
     assertThat(mappedInputSet).isNotNull();
-    assertThat(mappedInputSet.getIdentifier()).isEqualTo(requestCdInputSetEntity.getIdentifier());
-    assertThat(mappedInputSet.getAccountId()).isEqualTo(requestCdInputSetEntity.getAccountId());
-    assertThat(mappedInputSet.getOrgIdentifier()).isEqualTo(requestCdInputSetEntity.getOrgIdentifier());
-    assertThat(mappedInputSet.getProjectIdentifier()).isEqualTo(requestCdInputSetEntity.getProjectIdentifier());
-    assertThat(mappedInputSet.getPipelineIdentifier()).isEqualTo(requestCdInputSetEntity.getPipelineIdentifier());
-    assertThat(mappedInputSet.getName()).isEqualTo(requestCdInputSetEntity.getName());
-    assertThat(mappedInputSet.getDescription()).isEqualTo(requestCdInputSetEntity.getDescription());
-    assertThat(mappedInputSet.getInputSetYaml()).isEqualTo(requestCdInputSetEntity.getInputSetYaml());
+    assertThat(mappedInputSet.getIdentifier()).isEqualTo(requestInputSetEntity.getIdentifier());
+    assertThat(mappedInputSet.getAccountId()).isEqualTo(requestInputSetEntity.getAccountId());
+    assertThat(mappedInputSet.getOrgIdentifier()).isEqualTo(requestInputSetEntity.getOrgIdentifier());
+    assertThat(mappedInputSet.getProjectIdentifier()).isEqualTo(requestInputSetEntity.getProjectIdentifier());
+    assertThat(mappedInputSet.getPipelineIdentifier()).isEqualTo(requestInputSetEntity.getPipelineIdentifier());
+    assertThat(mappedInputSet.getName()).isEqualTo(requestInputSetEntity.getName());
+    assertThat(mappedInputSet.getDescription()).isEqualTo(requestInputSetEntity.getDescription());
+    assertThat(mappedInputSet.getInputSetYaml()).isEqualTo(requestInputSetEntity.getInputSetYaml());
   }
 
   @Test
   @Owner(developers = NAMAN)
   @Category(UnitTests.class)
   public void testToCDInputSetEntityWithIdentifier() {
-    CDInputSetEntity mappedInputSet = InputSetElementMapper.toCDInputSetEntityWithIdentifier(
+    InputSetEntity mappedInputSet = InputSetElementMapper.toInputSetEntityWithIdentifier(
         ACCOUNT_ID, ORG_IDENTIFIER, PROJ_IDENTIFIER, PIPELINE_IDENTIFIER, IDENTIFIER, cdInputSetYaml);
     assertThat(mappedInputSet).isNotNull();
-    assertThat(mappedInputSet.getIdentifier()).isEqualTo(requestCdInputSetEntity.getIdentifier());
-    assertThat(mappedInputSet.getAccountId()).isEqualTo(requestCdInputSetEntity.getAccountId());
-    assertThat(mappedInputSet.getOrgIdentifier()).isEqualTo(requestCdInputSetEntity.getOrgIdentifier());
-    assertThat(mappedInputSet.getProjectIdentifier()).isEqualTo(requestCdInputSetEntity.getProjectIdentifier());
-    assertThat(mappedInputSet.getPipelineIdentifier()).isEqualTo(requestCdInputSetEntity.getPipelineIdentifier());
-    assertThat(mappedInputSet.getName()).isEqualTo(requestCdInputSetEntity.getName());
-    assertThat(mappedInputSet.getDescription()).isEqualTo(requestCdInputSetEntity.getDescription());
-    assertThat(mappedInputSet.getInputSetYaml()).isEqualTo(requestCdInputSetEntity.getInputSetYaml());
+    assertThat(mappedInputSet.getIdentifier()).isEqualTo(requestInputSetEntity.getIdentifier());
+    assertThat(mappedInputSet.getAccountId()).isEqualTo(requestInputSetEntity.getAccountId());
+    assertThat(mappedInputSet.getOrgIdentifier()).isEqualTo(requestInputSetEntity.getOrgIdentifier());
+    assertThat(mappedInputSet.getProjectIdentifier()).isEqualTo(requestInputSetEntity.getProjectIdentifier());
+    assertThat(mappedInputSet.getPipelineIdentifier()).isEqualTo(requestInputSetEntity.getPipelineIdentifier());
+    assertThat(mappedInputSet.getName()).isEqualTo(requestInputSetEntity.getName());
+    assertThat(mappedInputSet.getDescription()).isEqualTo(requestInputSetEntity.getDescription());
+    assertThat(mappedInputSet.getInputSetYaml()).isEqualTo(requestInputSetEntity.getInputSetYaml());
   }
 
   @Test
@@ -232,7 +232,7 @@ public class InputSetElementMapperTest extends CategoryTest {
   @Owner(developers = NAMAN)
   @Category(UnitTests.class)
   public void testWriteCDInputSetResponseDTO() {
-    InputSetResponseDTO response = InputSetElementMapper.writeCDInputSetResponseDTO(responseCdInputSetEntity, null);
+    InputSetResponseDTO response = InputSetElementMapper.writeInputSetResponseDTO(responseInputSetEntity, null);
     assertThat(response).isNotNull();
     assertThat(response).isEqualTo(inputSetResponseDTO);
   }
@@ -251,7 +251,7 @@ public class InputSetElementMapperTest extends CategoryTest {
   @Owner(developers = NAMAN)
   @Category(UnitTests.class)
   public void testWriteSummaryResponseDTO() {
-    InputSetSummaryResponseDTO response = InputSetElementMapper.writeSummaryResponseDTO(responseCdInputSetEntity);
+    InputSetSummaryResponseDTO response = InputSetElementMapper.writeSummaryResponseDTO(responseInputSetEntity);
     assertThat(response).isNotNull();
     assertThat(response).isEqualTo(cdInputSetSummaryResponseDTO);
 

@@ -3,16 +3,11 @@ package io.harness.cdng.pipeline.executions.service;
 import static java.lang.String.format;
 import static java.util.Objects.isNull;
 
-import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import io.harness.beans.EmbeddedUser;
-import io.harness.cdng.common.beans.SetupAbstractionKeys;
-import io.harness.cdng.inputset.beans.entities.MergeInputSetResponse;
-import io.harness.cdng.inputset.helpers.InputSetMergeHelper;
 import io.harness.cdng.pipeline.NgPipeline;
-import io.harness.cdng.pipeline.beans.resources.NGPipelineExecutionResponseDTO;
 import io.harness.cdng.pipeline.executions.ExecutionStatus;
 import io.harness.cdng.pipeline.executions.PipelineExecutionHelper;
 import io.harness.cdng.pipeline.executions.TriggerType;
@@ -26,28 +21,22 @@ import io.harness.cdng.pipeline.executions.beans.PipelineExecutionSummaryFilter;
 import io.harness.cdng.pipeline.executions.beans.ServiceExecutionSummary;
 import io.harness.cdng.pipeline.executions.repositories.PipelineExecutionRepository;
 import io.harness.cdng.pipeline.mappers.ExecutionToDtoMapper;
-import io.harness.cdng.pipeline.mappers.NGPipelineExecutionDTOMapper;
 import io.harness.cdng.pipeline.service.PipelineService;
 import io.harness.cdng.service.beans.ServiceOutcome;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.dto.OrchestrationGraphDTO;
-import io.harness.engine.OrchestrationService;
 import io.harness.engine.executions.node.NodeExecutionService;
 import io.harness.exception.InvalidRequestException;
 import io.harness.execution.NodeExecution;
 import io.harness.execution.PlanExecution;
 import io.harness.executionplan.plancreator.beans.StepOutcomeGroup;
-import io.harness.executionplan.service.ExecutionPlanCreatorService;
 import io.harness.executions.beans.ExecutionGraph;
 import io.harness.executions.mapper.ExecutionGraphMapper;
-import io.harness.plan.Plan;
 import io.harness.service.GraphGenerationService;
 import lombok.NonNull;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.mongodb.core.query.Criteria;
-import software.wings.beans.User;
-import software.wings.security.UserThreadLocal;
 
 import java.util.Arrays;
 import java.util.HashMap;
@@ -57,48 +46,17 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Collectors;
 import javax.annotation.Nonnull;
-import javax.validation.constraints.NotNull;
 
 @Singleton
 public class NgPipelineExecutionServiceImpl implements NgPipelineExecutionService {
   private static final EmbeddedUser EMBEDDED_USER =
       EmbeddedUser.builder().uuid("lv0euRhKRCyiXWzS7pOg6g").email("admin@harness.io").name("Admin").build();
 
-  @Inject private OrchestrationService orchestrationService;
-  @Inject private ExecutionPlanCreatorService executionPlanCreatorService;
   @Inject private PipelineExecutionRepository pipelineExecutionRepository;
   @Inject private NodeExecutionService nodeExecutionService;
   @Inject private GraphGenerationService graphGenerationService;
   @Inject private PipelineExecutionHelper pipelineExecutionHelper;
   @Inject private PipelineService pipelineService;
-  @Inject private InputSetMergeHelper inputSetMergeHelper;
-
-  @Override
-  public NGPipelineExecutionResponseDTO runPipelineWithInputSetPipelineYaml(@NotNull String accountId,
-      @NotNull String orgIdentifier, @NotNull String projectIdentifier, @NotNull String pipelineIdentifier,
-      String inputSetPipelineYaml, boolean useFQNIfErrorResponse, EmbeddedUser user) {
-    MergeInputSetResponse mergeInputSetResponse;
-    if (EmptyPredicate.isEmpty(inputSetPipelineYaml)) {
-      NgPipeline pipeline = inputSetMergeHelper.getOriginalOrTemplatePipeline(
-          accountId, orgIdentifier, projectIdentifier, pipelineIdentifier, false);
-      mergeInputSetResponse = MergeInputSetResponse.builder().mergedPipeline(pipeline).build();
-    } else {
-      mergeInputSetResponse = inputSetMergeHelper.getMergePipelineYamlFromInputSetPipelineYaml(accountId, orgIdentifier,
-          projectIdentifier, pipelineIdentifier, inputSetPipelineYaml, false, useFQNIfErrorResponse);
-    }
-    return getPipelineResponseDTO(accountId, orgIdentifier, projectIdentifier, mergeInputSetResponse, user);
-  }
-
-  @Override
-  public NGPipelineExecutionResponseDTO runPipelineWithInputSetReferencesList(String accountId, String orgIdentifier,
-      String projectIdentifier, String pipelineIdentifier, List<String> inputSetReferences,
-      boolean useFQNIfErrorResponse, EmbeddedUser user) {
-    MergeInputSetResponse mergeInputSetResponse =
-        inputSetMergeHelper.getMergePipelineYamlFromInputIdentifierList(accountId, orgIdentifier, projectIdentifier,
-            pipelineIdentifier, inputSetReferences, false, useFQNIfErrorResponse);
-
-    return getPipelineResponseDTO(accountId, orgIdentifier, projectIdentifier, mergeInputSetResponse, user);
-  }
 
   @Override
   public Page<PipelineExecutionSummary> getExecutions(String accountId, String orgId, String projectId,
@@ -257,45 +215,5 @@ public class NgPipelineExecutionServiceImpl implements NgPipelineExecutionServic
   @Override
   public List<ExecutionStatus> getExecutionStatuses() {
     return Arrays.asList(ExecutionStatus.values());
-  }
-
-  private NGPipelineExecutionResponseDTO getPipelineResponseDTO(String accountId, String orgIdentifier,
-      String projectIdentifier, MergeInputSetResponse mergeInputSetResponse, EmbeddedUser user) {
-    if (mergeInputSetResponse.isErrorResponse()) {
-      return NGPipelineExecutionDTOMapper.toNGPipelineResponseDTO(null, mergeInputSetResponse);
-    }
-    PlanExecution planExecution = startPipelinePlanExecution(
-        accountId, orgIdentifier, projectIdentifier, mergeInputSetResponse.getMergedPipeline(), user);
-    return NGPipelineExecutionDTOMapper.toNGPipelineResponseDTO(planExecution, mergeInputSetResponse);
-  }
-
-  private PlanExecution startPipelinePlanExecution(
-      String accountId, String orgIdentifier, String projectIdentifier, NgPipeline finalPipeline, EmbeddedUser user) {
-    Map<String, Object> contextAttributes = new HashMap<>();
-    final Plan planForPipeline =
-        executionPlanCreatorService.createPlanForPipeline(finalPipeline, accountId, contextAttributes);
-
-    if (user == null) {
-      user = getEmbeddedUser();
-    }
-    ImmutableMap.Builder<String, String> abstractionsBuilder =
-        ImmutableMap.<String, String>builder()
-            .put(SetupAbstractionKeys.accountId, accountId)
-            .put(SetupAbstractionKeys.orgIdentifier, orgIdentifier)
-            .put(SetupAbstractionKeys.projectIdentifier, projectIdentifier);
-    if (user != null) {
-      abstractionsBuilder.put(SetupAbstractionKeys.userId, user.getUuid())
-          .put(SetupAbstractionKeys.userName, user.getName())
-          .put(SetupAbstractionKeys.userEmail, user.getEmail());
-    }
-    return orchestrationService.startExecution(planForPipeline, abstractionsBuilder.build());
-  }
-
-  private EmbeddedUser getEmbeddedUser() {
-    User user = UserThreadLocal.get();
-    if (user == null) {
-      return EmbeddedUser.builder().build();
-    }
-    return EmbeddedUser.builder().uuid(user.getUuid()).email(user.getEmail()).name(user.getName()).build();
   }
 }

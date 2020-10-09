@@ -8,7 +8,7 @@ import com.google.inject.Inject;
 
 import io.harness.category.element.UnitTests;
 import io.harness.cdng.CDNGBaseTest;
-import io.harness.cdng.inputset.beans.entities.CDInputSetEntity;
+import io.harness.cdng.inputset.beans.entities.InputSetEntity;
 import io.harness.cdng.inputset.beans.resource.InputSetListType;
 import io.harness.cdng.inputset.mappers.InputSetElementMapper;
 import io.harness.cdng.inputset.mappers.InputSetFilterHelper;
@@ -43,29 +43,29 @@ public class InputSetEntityServiceImplTest extends CDNGBaseTest {
   @Test
   @Owner(developers = NAMAN)
   @Category(UnitTests.class)
-  public void testServiceLayerOnCDInputSet() {
+  public void testServiceLayerOnInputSet() {
     String ORG_IDENTIFIER = "orgId";
     String PROJ_IDENTIFIER = "projId";
     String PIPELINE_IDENTIFIER = "pipeline_identifier";
     String IDENTIFIER = "identifier";
     String ACCOUNT_ID = "account_id";
 
-    CDInputSetEntity cdInputSetEntity = CDInputSetEntity.builder().build();
-    cdInputSetEntity.setAccountId(ACCOUNT_ID);
-    cdInputSetEntity.setOrgIdentifier(ORG_IDENTIFIER);
-    cdInputSetEntity.setProjectIdentifier(PROJ_IDENTIFIER);
-    cdInputSetEntity.setPipelineIdentifier(PIPELINE_IDENTIFIER);
-    cdInputSetEntity.setIdentifier(IDENTIFIER);
-    cdInputSetEntity.setName("Input Set");
+    InputSetEntity inputSetEntity = InputSetEntity.builder().build();
+    inputSetEntity.setAccountId(ACCOUNT_ID);
+    inputSetEntity.setOrgIdentifier(ORG_IDENTIFIER);
+    inputSetEntity.setProjectIdentifier(PROJ_IDENTIFIER);
+    inputSetEntity.setPipelineIdentifier(PIPELINE_IDENTIFIER);
+    inputSetEntity.setIdentifier(IDENTIFIER);
+    inputSetEntity.setName("Input Set");
 
     // Create
-    BaseInputSetEntity createdInputSet = inputSetEntityService.create(cdInputSetEntity);
+    BaseInputSetEntity createdInputSet = inputSetEntityService.create(inputSetEntity);
     assertThat(createdInputSet).isNotNull();
-    assertThat(createdInputSet.getAccountId()).isEqualTo(cdInputSetEntity.getAccountId());
-    assertThat(createdInputSet.getOrgIdentifier()).isEqualTo(cdInputSetEntity.getOrgIdentifier());
-    assertThat(createdInputSet.getProjectIdentifier()).isEqualTo(cdInputSetEntity.getProjectIdentifier());
-    assertThat(createdInputSet.getIdentifier()).isEqualTo(cdInputSetEntity.getIdentifier());
-    assertThat(createdInputSet.getName()).isEqualTo(cdInputSetEntity.getName());
+    assertThat(createdInputSet.getAccountId()).isEqualTo(inputSetEntity.getAccountId());
+    assertThat(createdInputSet.getOrgIdentifier()).isEqualTo(inputSetEntity.getOrgIdentifier());
+    assertThat(createdInputSet.getProjectIdentifier()).isEqualTo(inputSetEntity.getProjectIdentifier());
+    assertThat(createdInputSet.getIdentifier()).isEqualTo(inputSetEntity.getIdentifier());
+    assertThat(createdInputSet.getName()).isEqualTo(inputSetEntity.getName());
 
     // Get
     Optional<BaseInputSetEntity> getInputSet =
@@ -74,28 +74,27 @@ public class InputSetEntityServiceImplTest extends CDNGBaseTest {
     assertThat(getInputSet.get()).isEqualTo(createdInputSet);
 
     // Update
-    CDInputSetEntity updatedCdInputSetEntity = CDInputSetEntity.builder().build();
-    updatedCdInputSetEntity.setAccountId(ACCOUNT_ID);
-    updatedCdInputSetEntity.setOrgIdentifier(ORG_IDENTIFIER);
-    updatedCdInputSetEntity.setProjectIdentifier(PROJ_IDENTIFIER);
-    updatedCdInputSetEntity.setPipelineIdentifier(PIPELINE_IDENTIFIER);
-    updatedCdInputSetEntity.setIdentifier(IDENTIFIER);
-    updatedCdInputSetEntity.setName("Input Set Updated");
+    InputSetEntity updatedInputSetEntity = InputSetEntity.builder().build();
+    updatedInputSetEntity.setAccountId(ACCOUNT_ID);
+    updatedInputSetEntity.setOrgIdentifier(ORG_IDENTIFIER);
+    updatedInputSetEntity.setProjectIdentifier(PROJ_IDENTIFIER);
+    updatedInputSetEntity.setPipelineIdentifier(PIPELINE_IDENTIFIER);
+    updatedInputSetEntity.setIdentifier(IDENTIFIER);
+    updatedInputSetEntity.setName("Input Set Updated");
 
-    BaseInputSetEntity updatedCdInputSetResponse = inputSetEntityService.update(updatedCdInputSetEntity);
-    assertThat(updatedCdInputSetResponse.getAccountId()).isEqualTo(updatedCdInputSetEntity.getAccountId());
-    assertThat(updatedCdInputSetResponse.getOrgIdentifier()).isEqualTo(updatedCdInputSetEntity.getOrgIdentifier());
-    assertThat(updatedCdInputSetResponse.getProjectIdentifier())
-        .isEqualTo(updatedCdInputSetEntity.getProjectIdentifier());
-    assertThat(updatedCdInputSetResponse.getIdentifier()).isEqualTo(updatedCdInputSetEntity.getIdentifier());
-    assertThat(updatedCdInputSetResponse.getName()).isEqualTo(updatedCdInputSetEntity.getName());
-    assertThat(updatedCdInputSetResponse.getDescription()).isEqualTo(updatedCdInputSetEntity.getDescription());
+    BaseInputSetEntity updatedInputSetResponse = inputSetEntityService.update(updatedInputSetEntity);
+    assertThat(updatedInputSetResponse.getAccountId()).isEqualTo(updatedInputSetEntity.getAccountId());
+    assertThat(updatedInputSetResponse.getOrgIdentifier()).isEqualTo(updatedInputSetEntity.getOrgIdentifier());
+    assertThat(updatedInputSetResponse.getProjectIdentifier()).isEqualTo(updatedInputSetEntity.getProjectIdentifier());
+    assertThat(updatedInputSetResponse.getIdentifier()).isEqualTo(updatedInputSetEntity.getIdentifier());
+    assertThat(updatedInputSetResponse.getName()).isEqualTo(updatedInputSetEntity.getName());
+    assertThat(updatedInputSetResponse.getDescription()).isEqualTo(updatedInputSetEntity.getDescription());
 
     // Update non existing entity
-    updatedCdInputSetEntity.setAccountId("newAccountId");
-    assertThatThrownBy(() -> inputSetEntityService.update(updatedCdInputSetEntity))
+    updatedInputSetEntity.setAccountId("newAccountId");
+    assertThatThrownBy(() -> inputSetEntityService.update(updatedInputSetEntity))
         .isInstanceOf(InvalidRequestException.class);
-    updatedCdInputSetEntity.setAccountId(ACCOUNT_ID);
+    updatedInputSetEntity.setAccountId(ACCOUNT_ID);
 
     // Delete
     boolean delete =
@@ -149,14 +148,14 @@ public class InputSetEntityServiceImplTest extends CDNGBaseTest {
     updatedOverlayInputSetEntity.setIdentifier(IDENTIFIER);
     updatedOverlayInputSetEntity.setName("Input Set Updated");
 
-    BaseInputSetEntity updatedCdInputSetResponse = inputSetEntityService.update(updatedOverlayInputSetEntity);
-    assertThat(updatedCdInputSetResponse.getAccountId()).isEqualTo(updatedOverlayInputSetEntity.getAccountId());
-    assertThat(updatedCdInputSetResponse.getOrgIdentifier()).isEqualTo(updatedOverlayInputSetEntity.getOrgIdentifier());
-    assertThat(updatedCdInputSetResponse.getProjectIdentifier())
+    BaseInputSetEntity updatedInputSetResponse = inputSetEntityService.update(updatedOverlayInputSetEntity);
+    assertThat(updatedInputSetResponse.getAccountId()).isEqualTo(updatedOverlayInputSetEntity.getAccountId());
+    assertThat(updatedInputSetResponse.getOrgIdentifier()).isEqualTo(updatedOverlayInputSetEntity.getOrgIdentifier());
+    assertThat(updatedInputSetResponse.getProjectIdentifier())
         .isEqualTo(updatedOverlayInputSetEntity.getProjectIdentifier());
-    assertThat(updatedCdInputSetResponse.getIdentifier()).isEqualTo(updatedOverlayInputSetEntity.getIdentifier());
-    assertThat(updatedCdInputSetResponse.getName()).isEqualTo(updatedOverlayInputSetEntity.getName());
-    assertThat(updatedCdInputSetResponse.getDescription()).isEqualTo(updatedOverlayInputSetEntity.getDescription());
+    assertThat(updatedInputSetResponse.getIdentifier()).isEqualTo(updatedOverlayInputSetEntity.getIdentifier());
+    assertThat(updatedInputSetResponse.getName()).isEqualTo(updatedOverlayInputSetEntity.getName());
+    assertThat(updatedInputSetResponse.getDescription()).isEqualTo(updatedOverlayInputSetEntity.getDescription());
 
     // Update non existing entity
     updatedOverlayInputSetEntity.setAccountId("newAccountId");
@@ -181,18 +180,18 @@ public class InputSetEntityServiceImplTest extends CDNGBaseTest {
     final String ORG_IDENTIFIER = "orgId";
     final String PROJ_IDENTIFIER = "projId";
     final String PIPELINE_IDENTIFIER = "pipeline_identifier";
-    final String CD_IDENTIFIER = "cdIdentifier";
-    final String CD_IDENTIFIER_2 = "cdIdentifier2";
+    final String IDENTIFIER = "Identifier";
+    final String IDENTIFIER_2 = "Identifier2";
     final String OVERLAY_IDENTIFIER = "overlayIdentifier";
     final String ACCOUNT_ID = "account_id";
 
-    CDInputSetEntity cdInputSetEntity = CDInputSetEntity.builder().build();
-    cdInputSetEntity.setAccountId(ACCOUNT_ID);
-    cdInputSetEntity.setOrgIdentifier(ORG_IDENTIFIER);
-    cdInputSetEntity.setProjectIdentifier(PROJ_IDENTIFIER);
-    cdInputSetEntity.setPipelineIdentifier(PIPELINE_IDENTIFIER);
-    cdInputSetEntity.setIdentifier(CD_IDENTIFIER);
-    cdInputSetEntity.setName("Input Set");
+    InputSetEntity inputSetEntity = InputSetEntity.builder().build();
+    inputSetEntity.setAccountId(ACCOUNT_ID);
+    inputSetEntity.setOrgIdentifier(ORG_IDENTIFIER);
+    inputSetEntity.setProjectIdentifier(PROJ_IDENTIFIER);
+    inputSetEntity.setPipelineIdentifier(PIPELINE_IDENTIFIER);
+    inputSetEntity.setIdentifier(IDENTIFIER);
+    inputSetEntity.setName("Input Set");
 
     OverlayInputSetEntity overlayInputSetEntity = OverlayInputSetEntity.builder().build();
     overlayInputSetEntity.setAccountId(ACCOUNT_ID);
@@ -202,7 +201,7 @@ public class InputSetEntityServiceImplTest extends CDNGBaseTest {
     overlayInputSetEntity.setIdentifier(OVERLAY_IDENTIFIER);
     overlayInputSetEntity.setName("Input Set");
 
-    BaseInputSetEntity createdCDInputSet = inputSetEntityService.create(cdInputSetEntity);
+    BaseInputSetEntity createdInputSet = inputSetEntityService.create(inputSetEntity);
     BaseInputSetEntity createdOverlayInputSet = inputSetEntityService.create(overlayInputSetEntity);
 
     Criteria criteriaFromFilter = InputSetFilterHelper.createCriteriaForGetList(
@@ -213,23 +212,22 @@ public class InputSetEntityServiceImplTest extends CDNGBaseTest {
     assertThat(list.getContent()).isNotNull();
     assertThat(list.getContent().size()).isEqualTo(2);
     assertThat(InputSetElementMapper.writeSummaryResponseDTO(list.getContent().get(0)))
-        .isEqualTo(InputSetElementMapper.writeSummaryResponseDTO(createdCDInputSet));
+        .isEqualTo(InputSetElementMapper.writeSummaryResponseDTO(createdInputSet));
     assertThat(InputSetElementMapper.writeSummaryResponseDTO(list.getContent().get(1)))
         .isEqualTo(InputSetElementMapper.writeSummaryResponseDTO(createdOverlayInputSet));
 
     // Add another entity.
-    CDInputSetEntity cdInputSetEntity2 = CDInputSetEntity.builder().build();
-    cdInputSetEntity2.setAccountId(ACCOUNT_ID);
-    cdInputSetEntity2.setOrgIdentifier(ORG_IDENTIFIER);
-    cdInputSetEntity2.setProjectIdentifier(PROJ_IDENTIFIER);
-    cdInputSetEntity2.setPipelineIdentifier(PIPELINE_IDENTIFIER);
-    cdInputSetEntity2.setIdentifier(CD_IDENTIFIER_2);
-    cdInputSetEntity2.setName("Input Set");
+    InputSetEntity inputSetEntity2 = InputSetEntity.builder().build();
+    inputSetEntity2.setAccountId(ACCOUNT_ID);
+    inputSetEntity2.setOrgIdentifier(ORG_IDENTIFIER);
+    inputSetEntity2.setProjectIdentifier(PROJ_IDENTIFIER);
+    inputSetEntity2.setPipelineIdentifier(PIPELINE_IDENTIFIER);
+    inputSetEntity2.setIdentifier(IDENTIFIER_2);
+    inputSetEntity2.setName("Input Set");
 
-    BaseInputSetEntity createdCDInputSet2 = inputSetEntityService.create(cdInputSetEntity2);
-    List<BaseInputSetEntity> givenInputSetList =
-        inputSetEntityService.getGivenInputSetList(ACCOUNT_ID, ORG_IDENTIFIER, PROJ_IDENTIFIER, PIPELINE_IDENTIFIER,
-            Stream.of(CD_IDENTIFIER_2, OVERLAY_IDENTIFIER).collect(Collectors.toSet()));
-    assertThat(givenInputSetList).containsExactlyInAnyOrder(createdCDInputSet2, overlayInputSetEntity);
+    BaseInputSetEntity createdInputSet2 = inputSetEntityService.create(inputSetEntity2);
+    List<BaseInputSetEntity> givenInputSetList = inputSetEntityService.getGivenInputSetList(ACCOUNT_ID, ORG_IDENTIFIER,
+        PROJ_IDENTIFIER, PIPELINE_IDENTIFIER, Stream.of(IDENTIFIER_2, OVERLAY_IDENTIFIER).collect(Collectors.toSet()));
+    assertThat(givenInputSetList).containsExactlyInAnyOrder(createdInputSet2, overlayInputSetEntity);
   }
 }

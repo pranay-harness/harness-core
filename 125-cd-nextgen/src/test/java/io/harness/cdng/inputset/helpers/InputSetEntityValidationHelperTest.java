@@ -7,7 +7,7 @@ import static org.mockito.Mockito.doReturn;
 
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
-import io.harness.cdng.inputset.beans.entities.CDInputSetEntity;
+import io.harness.cdng.inputset.beans.entities.InputSetEntity;
 import io.harness.cdng.inputset.services.impl.InputSetEntityServiceImpl;
 import io.harness.ngpipeline.overlayinputset.beans.BaseInputSetEntity;
 import io.harness.ngpipeline.overlayinputset.beans.InputSetEntityType;
@@ -50,10 +50,10 @@ public class InputSetEntityValidationHelperTest extends CategoryTest {
 
     List<BaseInputSetEntity> referencesInDB = new ArrayList<>();
     for (int i = 0; i < 4; i++) {
-      BaseInputSetEntity cdInputSet = CDInputSetEntity.builder().build();
-      cdInputSet.setIdentifier("inputSet" + i);
-      cdInputSet.setInputSetType(InputSetEntityType.INPUT_SET);
-      referencesInDB.add(cdInputSet);
+      BaseInputSetEntity inputSetEntity = InputSetEntity.builder().build();
+      inputSetEntity.setIdentifier("inputSet" + i);
+      inputSetEntity.setInputSetType(InputSetEntityType.INPUT_SET);
+      referencesInDB.add(inputSetEntity);
     }
     doReturn(referencesInDB).when(inputSetEntityService).getGivenInputSetList(any(), any(), any(), any(), any());
 

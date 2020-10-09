@@ -1,6 +1,6 @@
 package io.harness.cdng.inputset.mappers;
 
-import io.harness.cdng.inputset.beans.entities.CDInputSetEntity;
+import io.harness.cdng.inputset.beans.entities.InputSetEntity;
 import io.harness.cdng.inputset.beans.entities.MergeInputSetResponse;
 import io.harness.cdng.inputset.beans.resource.InputSetErrorDTO;
 import io.harness.cdng.inputset.beans.resource.InputSetErrorResponseDTO;
@@ -8,7 +8,7 @@ import io.harness.cdng.inputset.beans.resource.InputSetErrorWrapperDTO;
 import io.harness.cdng.inputset.beans.resource.InputSetResponseDTO;
 import io.harness.cdng.inputset.beans.resource.InputSetSummaryResponseDTO;
 import io.harness.cdng.inputset.beans.resource.MergeInputSetResponseDTO;
-import io.harness.cdng.inputset.beans.yaml.CDInputSet;
+import io.harness.cdng.inputset.beans.yaml.InputSetConfig;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.exception.InvalidRequestException;
 import io.harness.ngpipeline.overlayinputset.beans.BaseInputSetEntity;
@@ -30,34 +30,34 @@ import java.util.Map;
 
 @UtilityClass
 public class InputSetElementMapper {
-  public CDInputSetEntity toCDInputSetEntity(
+  public InputSetEntity toInputSetEntity(
       String accountId, String orgIdentifier, String projectIdentifier, String pipelineIdentifier, String yaml) {
     try {
-      CDInputSet inputSet = YamlPipelineUtils.read(yaml, CDInputSet.class);
-      CDInputSetEntity cdInputSetEntity = CDInputSetEntity.builder().cdInputSet(inputSet).build();
-      cdInputSetEntity.setAccountId(accountId);
-      cdInputSetEntity.setOrgIdentifier(orgIdentifier);
-      cdInputSetEntity.setProjectIdentifier(projectIdentifier);
-      cdInputSetEntity.setPipelineIdentifier(pipelineIdentifier);
-      cdInputSetEntity.setIdentifier(inputSet.getIdentifier());
-      cdInputSetEntity.setName(inputSet.getName());
-      cdInputSetEntity.setDescription(inputSet.getDescription());
-      cdInputSetEntity.setInputSetType(InputSetEntityType.INPUT_SET);
-      cdInputSetEntity.setInputSetYaml(yaml);
-      return cdInputSetEntity;
+      InputSetConfig inputSet = YamlPipelineUtils.read(yaml, InputSetConfig.class);
+      InputSetEntity inputSetEntity = InputSetEntity.builder().inputSetConfig(inputSet).build();
+      inputSetEntity.setAccountId(accountId);
+      inputSetEntity.setOrgIdentifier(orgIdentifier);
+      inputSetEntity.setProjectIdentifier(projectIdentifier);
+      inputSetEntity.setPipelineIdentifier(pipelineIdentifier);
+      inputSetEntity.setIdentifier(inputSet.getIdentifier());
+      inputSetEntity.setName(inputSet.getName());
+      inputSetEntity.setDescription(inputSet.getDescription());
+      inputSetEntity.setInputSetType(InputSetEntityType.INPUT_SET);
+      inputSetEntity.setInputSetYaml(yaml);
+      return inputSetEntity;
     } catch (Exception e) {
       throw new InvalidRequestException("Cannot create inputSet entity due to " + e.getMessage());
     }
   }
 
-  public CDInputSetEntity toCDInputSetEntityWithIdentifier(String accountId, String orgIdentifier,
-      String projectIdentifier, String pipelineIdentifier, String inputSetIdentifier, String yaml) {
+  public InputSetEntity toInputSetEntityWithIdentifier(String accountId, String orgIdentifier, String projectIdentifier,
+      String pipelineIdentifier, String inputSetIdentifier, String yaml) {
     try {
-      CDInputSet inputSet = YamlPipelineUtils.read(yaml, CDInputSet.class);
+      InputSetConfig inputSet = YamlPipelineUtils.read(yaml, InputSetConfig.class);
       if (!inputSet.getIdentifier().equals(inputSetIdentifier)) {
         throw new InvalidRequestException("Input set identifier in yaml is invalid");
       }
-      return toCDInputSetEntity(accountId, orgIdentifier, projectIdentifier, pipelineIdentifier, yaml);
+      return toInputSetEntity(accountId, orgIdentifier, projectIdentifier, pipelineIdentifier, yaml);
     } catch (Exception e) {
       throw new InvalidRequestException("Cannot create inputSet entity due to " + e.getMessage());
     }
@@ -97,7 +97,7 @@ public class InputSetElementMapper {
     }
   }
 
-  public InputSetResponseDTO writeCDInputSetResponseDTO(
+  public InputSetResponseDTO writeInputSetResponseDTO(
       BaseInputSetEntity cdInputSetEntity, MergeInputSetResponse mergeResponse) {
     InputSetErrorWrapperDTO inputSetErrorWrapperDTO;
     boolean isErrorResponse;

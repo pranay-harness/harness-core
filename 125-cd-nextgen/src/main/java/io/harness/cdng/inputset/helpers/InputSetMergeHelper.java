@@ -3,11 +3,11 @@ package io.harness.cdng.inputset.helpers;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
-import io.harness.cdng.inputset.beans.entities.CDInputSetEntity;
+import io.harness.cdng.inputset.beans.entities.InputSetEntity;
 import io.harness.cdng.inputset.beans.entities.MergeInputSetResponse;
 import io.harness.cdng.inputset.services.InputSetEntityService;
 import io.harness.cdng.pipeline.NgPipeline;
-import io.harness.cdng.pipeline.beans.dto.CDPipelineResponseDTO;
+import io.harness.cdng.pipeline.beans.dto.NGPipelineResponseDTO;
 import io.harness.cdng.pipeline.service.PipelineService;
 import io.harness.exception.InvalidArgumentsException;
 import io.harness.exception.InvalidRequestException;
@@ -114,14 +114,14 @@ public class InputSetMergeHelper {
 
   public NgPipeline getOriginalOrTemplatePipeline(String accountId, String orgIdentifier, String projectIdentifier,
       String pipelineIdentifier, boolean isTemplateResponse) {
-    Optional<CDPipelineResponseDTO> optionalPipeline =
+    Optional<NGPipelineResponseDTO> optionalPipeline =
         ngPipelineService.getPipeline(pipelineIdentifier, accountId, orgIdentifier, projectIdentifier);
     if (!optionalPipeline.isPresent()) {
       throw new InvalidRequestException("Pipeline doesn't exist for given identifier: " + pipelineIdentifier);
     }
-    CDPipelineResponseDTO cdPipelineResponseDTO = optionalPipeline.get();
-    NgPipeline originalPipeline = cdPipelineResponseDTO.getNgPipeline();
-    String pipelineYaml = cdPipelineResponseDTO.getYamlPipeline();
+    NGPipelineResponseDTO ngPipelineResponseDTO = optionalPipeline.get();
+    NgPipeline originalPipeline = ngPipelineResponseDTO.getNgPipeline();
+    String pipelineYaml = ngPipelineResponseDTO.getYamlPipeline();
 
     if (isTemplateResponse) {
       originalPipeline = getTemplateObjectFromPipelineYaml(pipelineYaml);
@@ -206,10 +206,10 @@ public class InputSetMergeHelper {
   private MergeVisitorInputSetElement getVisitorInputSetElement(
       String inputSetIdentifier, BaseInputSetEntity baseInputSetEntity) {
     if (baseInputSetEntity.getInputSetType() == InputSetEntityType.INPUT_SET) {
-      CDInputSetEntity inputSetEntity = (CDInputSetEntity) baseInputSetEntity;
+      InputSetEntity inputSetEntity = (InputSetEntity) baseInputSetEntity;
       return MergeVisitorInputSetElement.builder()
           .inputSetIdentifier(inputSetIdentifier)
-          .inputSetElement(inputSetEntity.getCdInputSet().getPipeline())
+          .inputSetElement(inputSetEntity.getInputSetConfig().getPipeline())
           .build();
     }
     return null;

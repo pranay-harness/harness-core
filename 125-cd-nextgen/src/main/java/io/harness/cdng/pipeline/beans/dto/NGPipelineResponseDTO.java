@@ -15,7 +15,7 @@ import java.util.List;
 @JsonIgnoreProperties(ignoreUnknown = true)
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @ApiModel("NGPipelineResponse")
-public class CDPipelineResponseDTO {
+public class NGPipelineResponseDTO {
   NgPipeline ngPipeline;
   List<String> executionsPlaceHolder;
   private String yamlPipeline;
