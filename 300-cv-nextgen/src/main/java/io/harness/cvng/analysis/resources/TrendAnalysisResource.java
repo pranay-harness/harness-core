@@ -10,6 +10,7 @@ import com.google.inject.Inject;
 import com.codahale.metrics.annotation.ExceptionMetered;
 import com.codahale.metrics.annotation.Timed;
 import io.harness.cvng.analysis.beans.ServiceGuardMetricAnalysisDTO;
+import io.harness.cvng.analysis.beans.TimeSeriesRecordDTO;
 import io.harness.cvng.analysis.services.api.TrendAnalysisService;
 import io.harness.cvng.core.beans.TimeSeriesMetricDefinition;
 import io.harness.rest.RestResponse;
@@ -20,7 +21,6 @@ import lombok.extern.slf4j.Slf4j;
 
 import java.time.Instant;
 import java.util.List;
-import java.util.Map;
 import javax.validation.constraints.NotNull;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
@@ -41,7 +41,7 @@ public class TrendAnalysisResource {
   @ExceptionMetered
   @LearningEngineAuth
   @ApiOperation(value = "save time series data for trend analysis", nickname = "getTestDataForTrend")
-  public RestResponse<Map<String, Map<String, List<Double>>>> getTestData(
+  public RestResponse<List<TimeSeriesRecordDTO>> getTestData(
       @NotNull @QueryParam("verificationTaskId") String verificationTaskId,
       @NotNull @QueryParam("analysisStartTime") String epochStartInstant,
       @NotNull @QueryParam("analysisEndTime") String epochEndInstant) {

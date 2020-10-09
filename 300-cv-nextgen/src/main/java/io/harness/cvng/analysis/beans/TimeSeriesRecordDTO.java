@@ -9,6 +9,6 @@ public class TimeSeriesRecordDTO {
   String host;
   String metricName;
   String groupName;
-  long timestamp;
+  long epochMinute;
   double metricValue;
 }

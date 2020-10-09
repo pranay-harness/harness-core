@@ -16,6 +16,7 @@ import io.harness.cvng.analysis.beans.DeploymentTimeSeriesAnalysisDTO;
 import io.harness.cvng.analysis.beans.ServiceGuardMetricAnalysisDTO;
 import io.harness.cvng.analysis.beans.ServiceGuardTxnMetricAnalysisDataDTO;
 import io.harness.cvng.analysis.beans.TimeSeriesAnomalies;
+import io.harness.cvng.analysis.beans.TimeSeriesRecordDTO;
 import io.harness.cvng.analysis.entities.DeploymentTimeSeriesAnalysis;
 import io.harness.cvng.analysis.entities.LearningEngineTask;
 import io.harness.cvng.analysis.entities.LearningEngineTask.LearningEngineTaskType;
@@ -148,12 +149,11 @@ public class TimeSeriesAnalysisServiceImplTest extends CvNextGenTest {
     List<TimeSeriesRecord> records = getTimeSeriesRecords();
     hPersistence.save(records);
     Instant start = Instant.parse("2020-07-07T02:40:00.000Z");
-    Map<String, Map<String, List<Double>>> testData =
-        timeSeriesAnalysisService.getTestData(cvConfigId, start, start.plus(5, ChronoUnit.MINUTES));
+    List<TimeSeriesRecordDTO> testData =
+        timeSeriesAnalysisService.getTimeSeriesRecordDTOs(cvConfigId, start, start.plus(5, ChronoUnit.MINUTES));
 
     assertThat(testData).isNotNull();
-    assertThat(testData.size()).isEqualTo(61);
-    testData.forEach((txn, metricMap) -> { assertThat(metricMap.size()).isEqualTo(2); });
+    assertThat(testData.size()).isEqualTo(122);
   }
 
   @Test

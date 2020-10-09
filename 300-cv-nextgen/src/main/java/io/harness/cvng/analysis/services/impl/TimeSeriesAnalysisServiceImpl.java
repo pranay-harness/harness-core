@@ -14,7 +14,6 @@ import io.harness.cvng.analysis.beans.DeploymentTimeSeriesAnalysisDTO;
 import io.harness.cvng.analysis.beans.ServiceGuardMetricAnalysisDTO;
 import io.harness.cvng.analysis.beans.TimeSeriesAnomalies;
 import io.harness.cvng.analysis.beans.TimeSeriesRecordDTO;
-import io.harness.cvng.analysis.beans.TimeSeriesTestDataDTO;
 import io.harness.cvng.analysis.entities.DeploymentTimeSeriesAnalysis;
 import io.harness.cvng.analysis.entities.LearningEngineTask;
 import io.harness.cvng.analysis.entities.LearningEngineTask.ExecutionStatus;
@@ -242,14 +241,11 @@ public class TimeSeriesAnalysisServiceImpl implements TimeSeriesAnalysisService 
   }
 
   private String createTestDataUrl(AnalysisInput input) {
-    Instant startForTestData = input.getEndTime().truncatedTo(ChronoUnit.SECONDS).minus(125, ChronoUnit.MINUTES);
-
     URIBuilder uriBuilder = new URIBuilder();
-    uriBuilder.setPath(SERVICE_BASE_URL + "/" + TIMESERIES_ANALYSIS_RESOURCE + "/timeseries-serviceguard-test-data");
-    uriBuilder.addParameter("cvConfigId", input.getCvConfigId());
+    uriBuilder.setPath(SERVICE_BASE_URL + "/" + TIMESERIES_ANALYSIS_RESOURCE + "/time-series-data");
     uriBuilder.addParameter("verificationTaskId", input.getVerificationTaskId());
-    uriBuilder.addParameter("analysisStartTime", startForTestData.toString());
-    uriBuilder.addParameter("analysisEndTime", input.getEndTime().toString());
+    uriBuilder.addParameter("startTime", Long.toString(input.getStartTime().toEpochMilli()));
+    uriBuilder.addParameter("endTime", Long.toString(input.getEndTime().toEpochMilli()));
     return getUriString(uriBuilder);
   }
 
@@ -288,15 +284,6 @@ public class TimeSeriesAnalysisServiceImpl implements TimeSeriesAnalysisService 
       return cumulativeSums.convertToMap();
     }
     return Collections.emptyMap();
-  }
-
-  @Override
-  public Map<String, Map<String, List<Double>>> getTestData(
-      String verificationTaskId, Instant startTime, Instant endTime) {
-    TimeSeriesTestDataDTO testDataDTO =
-        timeSeriesService.getTxnMetricDataForRange(verificationTaskId, startTime, endTime, null, null);
-
-    return testDataDTO.getTransactionMetricValues();
   }
 
   @Override

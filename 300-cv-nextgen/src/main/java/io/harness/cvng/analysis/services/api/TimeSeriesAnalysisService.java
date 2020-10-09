@@ -24,8 +24,6 @@ public interface TimeSeriesAnalysisService {
   Map<String, ExecutionStatus> getTaskStatus(String verificationTaskId, Set<String> taskIds);
   Map<String, Map<String, TimeSeriesCumulativeSums.MetricSum>> getCumulativeSums(
       String cvConfigId, Instant startTime, Instant endTime);
-  Map<String, Map<String, List<Double>>> getTestData(
-      String cvConfigId, Instant epochStartMinute, Instant epochEndMinute);
   Map<String, Map<String, List<Double>>> getShortTermHistory(String cvConfigId);
   Map<String, Map<String, List<TimeSeriesAnomalies>>> getLongTermAnomalies(String cvConfigId);
   List<TimeSeriesMetricDefinition> getMetricTemplate(String cvConfigId);
