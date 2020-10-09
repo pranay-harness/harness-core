@@ -1,5 +1,7 @@
 package software.wings.graphql.datafetcher.billing;
 
+import static software.wings.graphql.datafetcher.billing.BillingDataQueryBuilder.INVALID_FILTER_MSG;
+
 import com.google.inject.Inject;
 
 import graphql.schema.DataFetchingEnvironment;
@@ -28,8 +30,10 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import javax.validation.constraints.NotNull;
 
 @Slf4j
@@ -76,6 +80,9 @@ public class NodeAndPodDetailsDataFetcher
     List<QLCCMEntityGroupBy> groupByEntityList = billingDataQueryBuilder.getGroupByEntity(groupByList);
     QLCCMTimeSeriesAggregation groupByTime = billingDataQueryBuilder.getGroupByTime(groupByList);
 
+    if (!billingDataQueryBuilder.isFilterCombinationValid(filters, groupByEntityList)) {
+      return QLNodeAndPodDetailsTableData.builder().data(new ArrayList<>()).info(INVALID_FILTER_MSG).build();
+    }
     queryData = billingDataQueryBuilder.formNodeAndPodDetailsQuery(
         accountId, filters, aggregateFunction, groupByEntityList, groupByTime, sortCriteria, limit, offset);
 
@@ -173,26 +180,40 @@ public class NodeAndPodDetailsDataFetcher
 
   private QLNodeAndPodDetailsTableData getFieldsFromInstanceData(
       QLNodeAndPodDetailsTableData costData, List<QLBillingDataFilter> filters) {
-    List<String> instanceIds = new ArrayList<>();
+    Set<String> instanceIds = new HashSet<>();
+    List<String> instanceIdsWithCluster = new ArrayList<>();
     Map<String, QLNodeAndPodDetailsTableRow> instanceIdToCostData = new HashMap<>();
-    costData.getData().forEach(entry -> {
-      instanceIdToCostData.put(entry.getId(), entry);
-      instanceIds.add(entry.getId());
-    });
-
-    List<InstanceData> instanceData = instanceDataService.fetchInstanceDataForGivenInstances(instanceIds);
-    Map<String, InstanceData> instanceIdToInstanceData = new HashMap<>();
-    instanceData.forEach(entry -> instanceIdToInstanceData.put(entry.getInstanceId(), entry));
-
     String instanceType = getInstanceType(filters);
 
     if (instanceType.equals(INSTANCE_TYPE_NODE)) {
+      costData.getData().forEach(entry -> {
+        instanceIdToCostData.put(entry.getClusterId() + BillingStatsDefaultKeys.TOKEN + entry.getId(), entry);
+        instanceIds.add(entry.getId());
+        instanceIdsWithCluster.add(entry.getClusterId() + BillingStatsDefaultKeys.TOKEN + entry.getId());
+      });
+    } else if (instanceType.equals(INSTANCE_TYPE_PODS)) {
+      costData.getData().forEach(entry -> {
+        instanceIdToCostData.put(entry.getId(), entry);
+        instanceIds.add(entry.getId());
+        instanceIdsWithCluster.add(entry.getId());
+      });
+    }
+
+    List<InstanceData> instanceData =
+        instanceDataService.fetchInstanceDataForGivenInstances(new ArrayList<>(instanceIds));
+    Map<String, InstanceData> instanceIdToInstanceData = new HashMap<>();
+
+    if (instanceType.equals(INSTANCE_TYPE_NODE)) {
+      instanceData.forEach(entry
+          -> instanceIdToInstanceData.put(
+              entry.getClusterId() + BillingStatsDefaultKeys.TOKEN + entry.getInstanceId(), entry));
       return QLNodeAndPodDetailsTableData.builder()
-          .data(getDataForNodes(instanceIdToCostData, instanceIdToInstanceData, instanceIds))
+          .data(getDataForNodes(instanceIdToCostData, instanceIdToInstanceData, instanceIdsWithCluster))
           .build();
     } else if (instanceType.equals(INSTANCE_TYPE_PODS)) {
+      instanceData.forEach(entry -> instanceIdToInstanceData.put(entry.getInstanceId(), entry));
       return QLNodeAndPodDetailsTableData.builder()
-          .data(getDataForPods(instanceIdToCostData, instanceIdToInstanceData, instanceIds))
+          .data(getDataForPods(instanceIdToCostData, instanceIdToInstanceData, new ArrayList<>(instanceIds)))
           .build();
     }
 
@@ -201,18 +222,20 @@ public class NodeAndPodDetailsDataFetcher
 
   private List<QLNodeAndPodDetailsTableRow> getDataForNodes(
       Map<String, QLNodeAndPodDetailsTableRow> instanceIdToCostData, Map<String, InstanceData> instanceIdToInstanceData,
-      List<String> instanceIds) {
+      List<String> instanceIdsWithCluster) {
     List<QLNodeAndPodDetailsTableRow> entityTableListData = new ArrayList<>();
-    instanceIds.forEach(instanceId -> {
-      if (!instanceIdToInstanceData.containsKey(instanceId) || !instanceIdToCostData.containsKey(instanceId)
-          || instanceIdToInstanceData.get(instanceId).getUsageStartTime() == null) {
+    instanceIdsWithCluster.forEach(instanceIdWithCluster -> {
+      if (!instanceIdToInstanceData.containsKey(instanceIdWithCluster)
+          || !instanceIdToCostData.containsKey(instanceIdWithCluster)
+          || instanceIdToInstanceData.get(instanceIdWithCluster).getUsageStartTime() == null) {
         return;
       }
-      InstanceData entry = instanceIdToInstanceData.get(instanceId);
-      QLNodeAndPodDetailsTableRow costDataEntry = instanceIdToCostData.get(entry.getInstanceId());
+      InstanceData entry = instanceIdToInstanceData.get(instanceIdWithCluster);
+      QLNodeAndPodDetailsTableRow costDataEntry = instanceIdToCostData.get(instanceIdWithCluster);
       QLNodeAndPodDetailsTableRowBuilder builder = QLNodeAndPodDetailsTableRow.builder();
       builder.name(entry.getInstanceName())
-          .id(entry.getInstanceId())
+          .id(costDataEntry.getClusterId() + BillingStatsDefaultKeys.TOKEN + entry.getInstanceId())
+          .nodeId(entry.getInstanceId())
           .clusterName(costDataEntry.getClusterName())
           .clusterId(costDataEntry.getClusterId())
           .nodePoolName(entry.getMetaData().getOrDefault(NODE_POOL_NAME, "-"))

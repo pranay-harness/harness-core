@@ -273,7 +273,8 @@ public class BillingStatsFilterValuesDataFetcherTest extends AbstractDataFetcher
   public void testFetchMethodInBillingStatsFilterValuesDataFetcherForKubernetes() {
     String[] clusterValues = new String[] {CLUSTER1_ID};
 
-    List<QLBillingDataFilter> filters = Arrays.asList(makeClusterFilter(clusterValues));
+    List<QLBillingDataFilter> filters = new ArrayList<>();
+    filters.add(makeClusterFilter(clusterValues));
     List<QLCCMGroupBy> groupBy = Arrays.asList(makeWorkloadNameEntityGroupBy(), makeNamespaceEntityGroupBy());
     List<QLBillingSortCriteria> sortCriteria = Arrays.asList(makeSortingCriteria(QLBillingSortType.Workload));
 
@@ -303,7 +304,8 @@ public class BillingStatsFilterValuesDataFetcherTest extends AbstractDataFetcher
   public void testFetchMethodInBillingStatsFilterValuesDataFetcherForEcs() {
     String[] clusterValues = new String[] {CLUSTER1_ID};
 
-    List<QLBillingDataFilter> filters = Arrays.asList(makeClusterFilter(clusterValues));
+    List<QLBillingDataFilter> filters = new ArrayList<>();
+    filters.add(makeClusterFilter(clusterValues));
     List<QLCCMGroupBy> groupBy =
         Arrays.asList(makeCloudServiceNameEntityGroupBy(), makeTaskIdEntityGroupBy(), makeLaunchTypeEntityGroupBy());
     List<QLBillingSortCriteria> sortCriteria = Arrays.asList(makeSortingCriteria(QLBillingSortType.TaskId));
@@ -660,6 +662,8 @@ public class BillingStatsFilterValuesDataFetcherTest extends AbstractDataFetcher
     when(resultSet.getString("CLOUDSERVICENAME"))
         .thenAnswer((Answer<String>) invocation -> CLOUD_SERVICE_NAME_ACCOUNT1);
     when(resultSet.getString("INSTANCEID"))
+        .thenAnswer((Answer<String>) invocation -> INSTANCE1_SERVICE1_ENV1_APP1_ACCOUNT1);
+    when(resultSet.getString("INSTANCENAME"))
         .thenAnswer((Answer<String>) invocation -> INSTANCE1_SERVICE1_ENV1_APP1_ACCOUNT1);
     when(resultSet.getLong("COUNT")).thenAnswer((Answer<Long>) invocation -> 100L);
 

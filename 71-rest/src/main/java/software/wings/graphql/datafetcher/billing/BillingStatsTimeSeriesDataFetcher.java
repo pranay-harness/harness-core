@@ -1,5 +1,7 @@
 package software.wings.graphql.datafetcher.billing;
 
+import static software.wings.graphql.datafetcher.billing.BillingDataQueryBuilder.INVALID_FILTER_MSG;
+
 import com.google.common.collect.Sets;
 import com.google.inject.Inject;
 
@@ -60,6 +62,7 @@ public class BillingStatsTimeSeriesDataFetcher
   private static final long ONE_HOUR_SEC = 3600;
   private static final long ONE_DAY_SEC = 86400;
   private static final String UNALLOCATED_COST_ENTRY = "Unallocated";
+  private static final String EMPTY = "";
 
   @Override
   @AuthRule(permissionType = PermissionType.LOGGED_IN)
@@ -100,13 +103,20 @@ public class BillingStatsTimeSeriesDataFetcher
     Map<Long, Double> unallocatedCostMapping = null;
     if (billingDataQueryBuilder.showUnallocatedCost(groupByEntityList, filters)) {
       unallocatedCostMapping = getUnallocatedCostData(accountId, filters, groupByList);
+      filters = billingDataQueryBuilder.removeInstanceTypeFilter(filters);
     }
 
     if (!groupByTagList.isEmpty()) {
       groupByEntityList = getGroupByEntityListFromTags(groupByList, groupByEntityList, groupByTagList);
     } else if (!groupByLabelList.isEmpty()) {
+      groupByEntityList.add(QLCCMEntityGroupBy.Cluster);
       groupByEntityList = getGroupByEntityListFromLabels(groupByList, groupByEntityList, groupByLabelList);
     }
+
+    if (!billingDataQueryBuilder.isFilterCombinationValid(filters, groupByEntityList)) {
+      return QLBillingStackedTimeSeriesData.builder().data(null).info(INVALID_FILTER_MSG).build();
+    }
+    billingDataQueryBuilder.addFiltersToExcludeUnallocatedRows(filters, groupByEntityList);
 
     queryData = billingDataQueryBuilder.formQuery(accountId, filters, aggregateFunction, groupByEntityList, groupByTime,
         sortCriteria, !isGroupByNodeOrPodPresent(groupByEntityList));
@@ -118,8 +128,8 @@ public class BillingStatsTimeSeriesDataFetcher
            Statement statement = connection.createStatement()) {
         resultSet = statement.executeQuery(queryData.getQuery());
         successful = true;
-        return generateStackedTimeSeriesData(
-            queryData, resultSet, getMinStartTimeFromFilters(filters), timePeriod, unallocatedCostMapping);
+        return generateStackedTimeSeriesData(queryData, resultSet, getMinStartTimeFromFilters(filters), timePeriod,
+            unallocatedCostMapping, groupByEntityList);
       } catch (SQLException e) {
         retryCount++;
         if (retryCount >= MAX_RETRY) {
@@ -139,8 +149,8 @@ public class BillingStatsTimeSeriesDataFetcher
   }
 
   protected QLBillingStackedTimeSeriesData generateStackedTimeSeriesData(BillingDataQueryMetadata queryData,
-      ResultSet resultSet, long startTimeFromFilters, long timePeriod, Map<Long, Double> unallocatedCostMapping)
-      throws SQLException {
+      ResultSet resultSet, long startTimeFromFilters, long timePeriod, Map<Long, Double> unallocatedCostMapping,
+      List<QLCCMEntityGroupBy> groupByEntityList) throws SQLException {
     Map<Long, List<QLBillingTimeDataPoint>> qlTimeDataPointMap = new LinkedHashMap<>();
     Map<Long, List<QLBillingTimeDataPoint>> qlTimeCpuPointMap = new LinkedHashMap<>();
     Map<Long, List<QLBillingTimeDataPoint>> qlTimeMemoryPointMap = new LinkedHashMap<>();
@@ -157,9 +167,12 @@ public class BillingStatsTimeSeriesDataFetcher
     // Checking if namespace should be appended to entity Id in order to distinguish between same workloadNames across
     // Distinct namespaces
     boolean addNamespaceToEntityId = queryData.groupByFields.contains(BillingDataMetaDataFields.WORKLOADNAME);
-    String additionalInfo = "";
+    boolean addClusterIdToEntityId = billingDataQueryBuilder.isClusterDrilldown(groupByEntityList)
+        || groupByEntityList.contains(QLCCMEntityGroupBy.Node);
+    boolean addAppIdToEntityId = billingDataQueryBuilder.isApplicationDrillDown(groupByEntityList);
 
     do {
+      String additionalInfo = "";
       QLBillingTimeDataPointBuilder dataPointBuilder = QLBillingTimeDataPoint.builder();
       // For First Level Idle Cost Drill Down
       QLBillingTimeDataPointBuilder cpuPointBuilder = QLBillingTimeDataPoint.builder();
@@ -253,15 +266,22 @@ public class BillingStatsTimeSeriesDataFetcher
             }
             break;
           case STRING:
+            // Group by has been re-arranged such that additional info gets populated first
             if ((addNamespaceToEntityId && field == BillingDataMetaDataFields.NAMESPACE)
+                || (addClusterIdToEntityId && field == BillingDataMetaDataFields.CLUSTERID)
+                || (addAppIdToEntityId && field == BillingDataMetaDataFields.APPID)
                 || field == BillingDataMetaDataFields.INSTANCENAME) {
-              additionalInfo = resultSet.getString(field.getFieldName());
+              additionalInfo = additionalInfo.equals(EMPTY)
+                  ? resultSet.getString(field.getFieldName())
+                  : additionalInfo + BillingStatsDefaultKeys.TOKEN + resultSet.getString(field.getFieldName());
               break;
             }
 
             String entityId = resultSet.getString(field.getFieldName());
-            String idWithInfo =
-                addNamespaceToEntityId ? additionalInfo + BillingStatsDefaultKeys.TOKEN + entityId : entityId;
+            String idWithInfo = (addNamespaceToEntityId || addClusterIdToEntityId || addAppIdToEntityId)
+                    && !additionalInfo.equals(EMPTY)
+                ? additionalInfo + BillingStatsDefaultKeys.TOKEN + entityId
+                : entityId;
             cpuPointBuilder.key(buildQLReference(field, entityId, idWithInfo, resultSet));
             memoryPointBuilder.key(buildQLReference(field, entityId, idWithInfo, resultSet));
             dataPointBuilder.key(buildQLReference(field, entityId, idWithInfo, resultSet));
@@ -527,6 +547,9 @@ public class BillingStatsTimeSeriesDataFetcher
     }
     Map<String, Double> aggregatedData = new HashMap<>();
     QLBillingStackedTimeSeriesData data = (QLBillingStackedTimeSeriesData) qlData;
+    if (data.getData() == null) {
+      return qlData;
+    }
     data.getData().forEach(dataPoint -> {
       for (QLBillingDataPoint entry : dataPoint.getValues()) {
         String key = entry.getKey().getId();
@@ -545,6 +568,7 @@ public class BillingStatsTimeSeriesDataFetcher
         .memoryIdleCost(data.getMemoryIdleCost())
         .cpuUtilMetrics(data.getCpuUtilMetrics())
         .memoryUtilMetrics(data.getMemoryUtilMetrics())
+        .info(data.getInfo())
         .build();
   }
 
@@ -625,7 +649,7 @@ public class BillingStatsTimeSeriesDataFetcher
     QLCCMTimeSeriesAggregation groupByTime = billingDataQueryBuilder.getGroupByTime(groupByList);
 
     queryData = billingDataQueryBuilder.formQuery(
-        accountId, filters, aggregateFunction, Collections.emptyList(), groupByTime, Collections.emptyList(), false);
+        accountId, filters, aggregateFunction, Collections.emptyList(), groupByTime, Collections.emptyList(), true);
     logger.info("BillingStatsTimeSeriesDataFetcher query for unallocated cost: {}", queryData.getQuery());
     logger.info(queryData.getQuery());
 

@@ -20,4 +20,5 @@ public class QLBillingStackedTimeSeriesData implements QLData {
   List<QLBillingStackedTimeSeriesDataPoint> memoryRequest;
   List<QLBillingStackedTimeSeriesDataPoint> memoryLimit;
   String label;
+  String info;
 }

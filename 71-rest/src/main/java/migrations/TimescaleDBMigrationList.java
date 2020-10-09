@@ -5,6 +5,7 @@ import com.google.common.collect.ImmutableList;
 import lombok.experimental.UtilityClass;
 import migrations.timescaledb.AddCostEvents;
 import migrations.timescaledb.AddDeploymentTagsToDeployment;
+import migrations.timescaledb.AddExplorerV2Indices;
 import migrations.timescaledb.AddFieldsToServiceGuardStats;
 import migrations.timescaledb.AddFieldsToWorkflowCVMetrics;
 import migrations.timescaledb.AddIdleUnallocatedColumns;
@@ -75,6 +76,7 @@ public class TimescaleDBMigrationList {
         .add(Pair.of(30, CreateBudgetAlerts.class))
         .add(Pair.of(31, CreatePodCountTable.class))
         .add(Pair.of(32, CreateAnomaliesData.class))
+        .add(Pair.of(33, AddExplorerV2Indices.class))
         .build();
   }
 }

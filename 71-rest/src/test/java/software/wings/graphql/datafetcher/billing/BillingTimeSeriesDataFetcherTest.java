@@ -214,8 +214,8 @@ public class BillingTimeSeriesDataFetcherTest extends AbstractDataFetcherTest {
     String[] cloudServiceNameFilterValues = new String[] {CLOUD_SERVICE_NAME_ACCOUNT1};
 
     List<QLCCMGroupBy> groupBy = Arrays.asList(makeCloudServiceNameEntityGroupBy(), makeStartTimeEntityGroupBy());
-    List<QLBillingDataFilter> filters =
-        Collections.singletonList(makeCloudServiceNameFilter(cloudServiceNameFilterValues));
+    List<QLBillingDataFilter> filters = new ArrayList<>();
+    filters.add(makeCloudServiceNameFilter(cloudServiceNameFilterValues));
     List<QLBillingSortCriteria> sortCriteria = Arrays.asList(makeAscByAmountSortingCriteria());
 
     QLBillingStackedTimeSeriesData data = (QLBillingStackedTimeSeriesData) billingStatsTimeSeriesDataFetcher.fetch(
@@ -239,7 +239,8 @@ public class BillingTimeSeriesDataFetcherTest extends AbstractDataFetcherTest {
     String[] serviceValues = new String[] {SERVICE1_ID_APP1_ACCOUNT1};
 
     List<QLCCMGroupBy> groupBy = Arrays.asList(makeServiceEntityGroupBy(), makeStartTimeEntityGroupBy());
-    List<QLBillingDataFilter> filters = Collections.singletonList(makeServiceFilter(serviceValues));
+    List<QLBillingDataFilter> filters = new ArrayList<>();
+    filters.add(makeServiceFilter(serviceValues));
     List<QLBillingSortCriteria> sortCriteria = Arrays.asList(makeAscByAmountSortingCriteria());
 
     QLBillingStackedTimeSeriesData data = (QLBillingStackedTimeSeriesData) billingStatsTimeSeriesDataFetcher.fetch(
@@ -330,7 +331,8 @@ public class BillingTimeSeriesDataFetcherTest extends AbstractDataFetcherTest {
     String[] instanceIdValues = new String[] {INSTANCE1_SERVICE1_ENV1_APP1_ACCOUNT1};
 
     List<QLCCMGroupBy> groupBy = Arrays.asList(makeInstanceIdEntityGroupBy(), makeStartTimeEntityGroupBy());
-    List<QLBillingDataFilter> filters = Collections.singletonList(makeTaskIdFilter(instanceIdValues));
+    List<QLBillingDataFilter> filters = new ArrayList<>();
+    filters.add(makeTaskIdFilter(instanceIdValues));
     List<QLBillingSortCriteria> sortCriteria = Arrays.asList(makeAscByAmountSortingCriteria());
 
     QLBillingStackedTimeSeriesData data = (QLBillingStackedTimeSeriesData) billingStatsTimeSeriesDataFetcher.fetch(
@@ -355,7 +357,8 @@ public class BillingTimeSeriesDataFetcherTest extends AbstractDataFetcherTest {
     String[] launchTypeValues = new String[] {LAUNCH_TYPE1};
 
     List<QLCCMGroupBy> groupBy = Arrays.asList(makeLaunchTypeEntityGroupBy(), makeStartTimeEntityGroupBy());
-    List<QLBillingDataFilter> filters = Collections.singletonList(makeLaunchTypeFilter(launchTypeValues));
+    List<QLBillingDataFilter> filters = new ArrayList<>();
+    filters.add(makeLaunchTypeFilter(launchTypeValues));
     List<QLBillingSortCriteria> sortCriteria = Arrays.asList(makeAscByAmountSortingCriteria());
 
     QLBillingStackedTimeSeriesData data = (QLBillingStackedTimeSeriesData) billingStatsTimeSeriesDataFetcher.fetch(
@@ -403,7 +406,8 @@ public class BillingTimeSeriesDataFetcherTest extends AbstractDataFetcherTest {
     String[] namespaceValues = new String[] {NAMESPACE1};
 
     List<QLCCMGroupBy> groupBy = Arrays.asList(makeNamespaceEntityGroupBy(), makeStartTimeEntityGroupBy());
-    List<QLBillingDataFilter> filters = Collections.singletonList(makeNamespaceFilter(namespaceValues));
+    List<QLBillingDataFilter> filters = new ArrayList<>();
+    filters.add(makeNamespaceFilter(namespaceValues));
     List<QLBillingSortCriteria> sortCriteria = Arrays.asList(makeAscByAmountSortingCriteria());
 
     QLBillingStackedTimeSeriesData data = (QLBillingStackedTimeSeriesData) billingStatsTimeSeriesDataFetcher.fetch(
@@ -504,7 +508,7 @@ public class BillingTimeSeriesDataFetcherTest extends AbstractDataFetcherTest {
   @Owner(developers = SHUBHANSHU)
   @Category(UnitTests.class)
   public void testFetchAndPostFetchMethodsInBillingTimeSeriesDataFetcherWithTagAggregation() {
-    List<QLCCMGroupBy> groupBy = Arrays.asList(makeServiceEntityGroupBy(), makeApplicationTagGroupBy(TAG_TEAM));
+    List<QLCCMGroupBy> groupBy = Arrays.asList(makeApplicationTagGroupBy(TAG_TEAM));
     List<QLBillingDataFilter> filters = new ArrayList<>();
     List<QLBillingSortCriteria> sortCriteria = Arrays.asList(makeAscByAmountSortingCriteria());
 
@@ -513,7 +517,6 @@ public class BillingTimeSeriesDataFetcherTest extends AbstractDataFetcherTest {
 
     assertThat(aggregationFunction.get(0).getColumnName()).isEqualTo("billingamount");
     assertThat(aggregationFunction.get(0).getOperationType()).isEqualTo(QLCCMAggregateOperation.SUM);
-    assertThat(groupBy.get(1).getTagAggregation().getTagName()).isEqualTo(TAG_TEAM);
     assertThat(sortCriteria.get(0).getSortType()).isEqualTo(QLBillingSortType.Amount);
     assertThat(sortCriteria.get(0).getSortOrder()).isEqualTo(QLSortOrder.ASCENDING);
     assertThat(data).isNotNull();

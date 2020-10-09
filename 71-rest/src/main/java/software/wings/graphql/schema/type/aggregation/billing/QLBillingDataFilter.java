@@ -24,6 +24,7 @@ public class QLBillingDataFilter implements EntityFilter {
   private QLIdFilter launchType;
   private QLIdFilter taskId;
   private QLIdFilter instanceType;
+  private QLIdFilter instanceName;
   private QLIdFilter namespace;
   private QLIdFilter workloadName;
   private QLIdFilter cloudProvider;
@@ -71,6 +72,9 @@ public class QLBillingDataFilter implements EntityFilter {
     }
     if (filter.getInstanceType() != null) {
       filterTypes.add(QLBillingDataFilterType.InstanceType);
+    }
+    if (filter.getInstanceName() != null) {
+      filterTypes.add(QLBillingDataFilterType.InstanceName);
     }
     if (filter.getNamespace() != null) {
       filterTypes.add(QLBillingDataFilterType.Namespace);
@@ -157,6 +161,8 @@ public class QLBillingDataFilter implements EntityFilter {
         return filter.getTagSearch();
       case AlertTime:
         return filter.getAlertTime();
+      case InstanceName:
+        return filter.getInstanceName();
       default:
         throw new InvalidRequestException("Unsupported type " + type);
     }
