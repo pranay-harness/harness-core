@@ -39,29 +39,13 @@ public class TimeSeriesAnalysisResource {
   @Inject TimeSeriesAnalysisService timeSeriesAnalysisService;
 
   @GET
-  @Path("/timeseries-serviceguard-test-data")
-  @Timed
-  @ExceptionMetered
-  @LearningEngineAuth
-  @ApiOperation(value = "get test timeseries data for a data source config", nickname = "getTestTimesereisData")
-  public RestResponse<Map<String, Map<String, List<Double>>>> getTestData(@QueryParam("cvConfigId") String cvConfigId,
-      @QueryParam("verificationTaskId") String verificationTaskId,
-      @QueryParam("analysisStartTime") String epochStartInstant,
-      @QueryParam("analysisEndTime") String epochEndInstant) {
-    if (verificationTaskId == null) {
-      verificationTaskId = cvConfigId;
-    }
-    return new RestResponse<>(timeSeriesAnalysisService.getTestData(
-        verificationTaskId, Instant.parse(epochStartInstant), Instant.parse(epochEndInstant)));
-  }
-
-  @GET
   @Path("/time-series-data")
   @Timed
   @ExceptionMetered
-  @ApiOperation(value = "get test timeseries data for a verification job", nickname = "getTimeSeriesRecords")
-  public RestResponse<List<TimeSeriesRecordDTO>> getTimeSeriesRecords(
-      @QueryParam("verificationTaskId") @NotNull String verificationTaskId,
+  @ApiOperation(
+      value = "get test timeseries data for a verification job and risk analysis", nickname = "getTimeSeriesRecords")
+  public RestResponse<List<TimeSeriesRecordDTO>>
+  getTimeSeriesRecords(@QueryParam("verificationTaskId") @NotNull String verificationTaskId,
       @QueryParam("startTime") @NotNull Long startTime, @QueryParam("endTime") @NotNull Long endTime) {
     return new RestResponse<>(timeSeriesAnalysisService.getTimeSeriesRecordDTOs(
         verificationTaskId, Instant.ofEpochMilli(startTime), Instant.ofEpochMilli(endTime)));

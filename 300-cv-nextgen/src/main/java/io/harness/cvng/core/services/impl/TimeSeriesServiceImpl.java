@@ -350,14 +350,15 @@ public class TimeSeriesServiceImpl implements TimeSeriesService {
     timeSeriesRecords.forEach(timeSeriesRecord -> {
       for (TimeSeriesRecord.TimeSeriesGroupValue record : timeSeriesRecord.getTimeSeriesGroupValues()) {
         if (record.getTimeStamp().compareTo(startTime) >= 0 && record.getTimeStamp().compareTo(endTime) < 0) {
-          TimeSeriesRecordDTO timeSeriesRecordDTO = TimeSeriesRecordDTO.builder()
-                                                        .groupName(record.getGroupName())
-                                                        .host(timeSeriesRecord.getHost())
-                                                        .metricName(timeSeriesRecord.getMetricName())
-                                                        .timestamp(record.getTimeStamp().toEpochMilli())
-                                                        .verificationTaskId(timeSeriesRecord.getVerificationTaskId())
-                                                        .metricValue(record.getMetricValue())
-                                                        .build();
+          TimeSeriesRecordDTO timeSeriesRecordDTO =
+              TimeSeriesRecordDTO.builder()
+                  .groupName(record.getGroupName())
+                  .host(timeSeriesRecord.getHost())
+                  .metricName(timeSeriesRecord.getMetricName())
+                  .epochMinute(TimeUnit.MILLISECONDS.toMinutes(record.getTimeStamp().toEpochMilli()))
+                  .verificationTaskId(timeSeriesRecord.getVerificationTaskId())
+                  .metricValue(record.getMetricValue())
+                  .build();
           timeSeriesRecordDTOS.add(timeSeriesRecordDTO);
         }
       }

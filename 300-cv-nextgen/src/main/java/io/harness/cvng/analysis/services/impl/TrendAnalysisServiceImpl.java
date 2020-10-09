@@ -22,6 +22,7 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import io.harness.cvng.analysis.beans.ServiceGuardMetricAnalysisDTO;
 import io.harness.cvng.analysis.beans.ServiceGuardTxnMetricAnalysisDataDTO;
 import io.harness.cvng.analysis.beans.TimeSeriesAnomalies;
+import io.harness.cvng.analysis.beans.TimeSeriesRecordDTO;
 import io.harness.cvng.analysis.entities.LearningEngineTask;
 import io.harness.cvng.analysis.entities.LearningEngineTask.ExecutionStatus;
 import io.harness.cvng.analysis.entities.LearningEngineTask.LearningEngineTaskType;
@@ -172,28 +173,28 @@ public class TrendAnalysisServiceImpl implements TrendAnalysisService {
   }
 
   @Override
-  public Map<String, Map<String, List<Double>>> getTestData(
-      String verificationTaskId, Instant startTime, Instant endTime) {
+  public List<TimeSeriesRecordDTO> getTestData(String verificationTaskId, Instant startTime, Instant endTime) {
     List<LogAnalysisCluster> logAnalysisClusters = hPersistence.createQuery(LogAnalysisCluster.class, excludeAuthority)
                                                        .filter(LogAnalysisClusterKeys.cvConfigId, verificationTaskId)
                                                        .filter(LogAnalysisClusterKeys.isEvicted, Boolean.FALSE)
                                                        .asList();
     if (isEmpty(logAnalysisClusters)) {
-      return new HashMap<>();
+      return new ArrayList<>();
     }
 
-    Map<String, Map<String, List<Double>>> testData = new HashMap<>();
+    List<TimeSeriesRecordDTO> testData = new ArrayList<>();
     logAnalysisClusters.forEach(logAnalysisCluster -> {
-      List<Double> testDataForCluster = getTestDataForCluster(logAnalysisCluster, startTime, endTime);
       String groupName = String.valueOf(logAnalysisCluster.getLabel());
-      testData.put(groupName, new HashMap<>());
-      testData.get(groupName).put(TREND_METRIC_NAME, testDataForCluster);
+      List<TimeSeriesRecordDTO> testDataForCluster =
+          getTestDataForCluster(logAnalysisCluster, startTime, endTime, groupName);
+      testData.addAll(testDataForCluster);
     });
     return testData;
   }
 
-  private List<Double> getTestDataForCluster(LogAnalysisCluster cluster, Instant startTime, Instant endTime) {
-    List<Double> testData = new ArrayList<>();
+  private List<TimeSeriesRecordDTO> getTestDataForCluster(
+      LogAnalysisCluster cluster, Instant startTime, Instant endTime, String groupName) {
+    List<TimeSeriesRecordDTO> testData = new ArrayList<>();
     int index = cluster.getFrequencyTrend().size() - 1;
     while (index >= 0) {
       Frequency frequency = cluster.getFrequencyTrend().get(index);
@@ -202,7 +203,12 @@ public class TrendAnalysisServiceImpl implements TrendAnalysisService {
         break;
       }
       if (timestamp.isBefore(endTime)) {
-        testData.add(Double.valueOf(frequency.getCount()));
+        testData.add(TimeSeriesRecordDTO.builder()
+                         .groupName(groupName)
+                         .metricName(TREND_METRIC_NAME)
+                         .metricValue(Double.valueOf(frequency.getCount()))
+                         .epochMinute(frequency.getTimestamp())
+                         .build());
       }
       index--;
     }

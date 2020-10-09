@@ -238,7 +238,7 @@ public class LogClusterServiceImpl implements LogClusterService {
     });
     hPersistence.save(clusteredLogList);
 
-    logger.info("Saved {} clustered logs for verificationTaskId {} with clusterLevel {} and timestamp {} ",
+    logger.info("Saved {} clustered logs for verificationTaskId {} with clusterLevel {} and epochMinute {} ",
         verificationTaskId, clusterLevel, timestamp);
     learningEngineTaskService.markCompleted(taskId);
   }

@@ -13,6 +13,7 @@ import io.harness.category.element.UnitTests;
 import io.harness.cvng.analysis.beans.ServiceGuardMetricAnalysisDTO;
 import io.harness.cvng.analysis.beans.ServiceGuardTxnMetricAnalysisDataDTO;
 import io.harness.cvng.analysis.beans.TimeSeriesAnomalies;
+import io.harness.cvng.analysis.beans.TimeSeriesRecordDTO;
 import io.harness.cvng.analysis.entities.LearningEngineTask;
 import io.harness.cvng.analysis.entities.LearningEngineTask.LearningEngineTaskType;
 import io.harness.cvng.analysis.entities.LogAnalysisCluster;
@@ -100,10 +101,10 @@ public class TrendAnalysisServiceImplTest extends CvNextGenTest {
     List<LogAnalysisCluster> logAnalysisClusters = createLogAnalysisClusters(start, end);
     hPersistence.save(logAnalysisClusters);
 
-    Map<String, Map<String, List<Double>>> testData = trendAnalysisService.getTestData(verificationTaskId, start, end);
+    List<TimeSeriesRecordDTO> testData = trendAnalysisService.getTestData(verificationTaskId, start, end);
 
     assertThat(testData).isNotNull();
-    assertThat(testData.size()).isEqualTo(logAnalysisClusters.size());
+    assertThat(testData.size()).isEqualTo(10);
   }
 
   @Test
