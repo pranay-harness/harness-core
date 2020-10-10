@@ -25,9 +25,13 @@ public class MockServer {
     ResourceBundle resourceBundle = ResourceBundle.getBundle(APPLICATION);
     int httpPort = Integer.parseInt(resourceBundle.getString(HTTP_PORT));
     int httpsPort = Integer.parseInt(resourceBundle.getString(HTTPS_PORT));
-    wireMockServer =
-        new WireMockServer(wireMockConfig().port(httpPort).httpsPort(httpsPort).disableRequestJournal().notifier(
-            new ConsoleNotifier(true)));
+    wireMockServer = new WireMockServer(wireMockConfig()
+                                            .port(httpPort)
+                                            .httpsPort(httpsPort)
+                                            .disableRequestJournal()
+                                            .notifier(new ConsoleNotifier(true))
+                                            .asynchronousResponseEnabled(true)
+                                            .asynchronousResponseThreads(50));
   }
 
   public void start() {
