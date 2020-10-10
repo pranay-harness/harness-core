@@ -3,6 +3,7 @@ package io.harness.ccm.views.service;
 import io.harness.ccm.views.entities.CEReportSchedule;
 import org.springframework.scheduling.support.CronSequenceGenerator;
 
+import java.util.Date;
 import java.util.List;
 
 public interface CEReportScheduleService {
@@ -19,4 +20,8 @@ public interface CEReportScheduleService {
   void deleteAllByView(String viewsId, String accountId);
   // Delete a report schedule by its document uuid.
   void delete(String uuid, String accountId);
+  // Get all matching schedules for this time
+  List<CEReportSchedule> getAllMatchingSchedules(String accountId, Date reportTime);
+  // Update just the next execution time
+  List<CEReportSchedule> updateNextExecution(String accountId, CEReportSchedule schedule);
 }

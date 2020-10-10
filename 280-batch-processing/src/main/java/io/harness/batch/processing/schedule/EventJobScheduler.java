@@ -10,8 +10,10 @@ import io.harness.batch.processing.billing.timeseries.service.impl.WeeklyReportS
 import io.harness.batch.processing.budgets.service.impl.BudgetAlertsServiceImpl;
 import io.harness.batch.processing.ccm.BatchJobBucket;
 import io.harness.batch.processing.ccm.BatchJobType;
+import io.harness.batch.processing.config.BatchMainConfig;
 import io.harness.batch.processing.config.GcpScheduledQueryTriggerAction;
 import io.harness.batch.processing.metrics.ProductMetricsService;
+import io.harness.batch.processing.reports.ScheduledReportServiceImpl;
 import io.harness.batch.processing.service.AccountExpiryCleanupService;
 import io.harness.batch.processing.service.impl.BatchJobBucketLogContext;
 import io.harness.batch.processing.service.impl.BatchJobRunningModeContext;
@@ -46,6 +48,7 @@ public class EventJobScheduler {
   @Autowired private CloudToHarnessMappingService cloudToHarnessMappingService;
   @Autowired private K8sUtilizationGranularDataServiceImpl k8sUtilizationGranularDataService;
   @Autowired private WeeklyReportServiceImpl weeklyReportService;
+  @Autowired private ScheduledReportServiceImpl scheduledReportService;
   @Autowired private BillingDataServiceImpl billingDataService;
   @Autowired private BillingDataPipelineHealthStatusService billingDataPipelineHealthStatusService;
   @Autowired private GcpScheduledQueryTriggerAction gcpScheduledQueryTriggerAction;
@@ -55,7 +58,7 @@ public class EventJobScheduler {
   @Autowired private HarnessServiceInfoFetcher harnessServiceInfoFetcher;
   @Autowired private InstanceDataServiceImpl instanceDataService;
   @Autowired private K8sLabelServiceInfoFetcher k8sLabelServiceInfoFetcher;
-
+  @Autowired private BatchMainConfig batchMainConfig;
   @PostConstruct
   public void orderJobs() {
     jobs.sort(Comparator.comparingInt(job -> BatchJobType.valueOf(job.getName()).getOrder()));
@@ -151,6 +154,17 @@ public class EventJobScheduler {
       logger.info("Weekly billing report generated and send");
     } catch (Exception ex) {
       logger.error("Exception while running weeklyReportJob", ex);
+    }
+  }
+
+  @Scheduled(cron = "0 30 * * * *") // Run every 30 mins. Change to 0 */10 * * * * for every 10 mins for testing
+  public void runScheduledReportJob() {
+    // In case jobs take longer time, the jobs will be queued and executed in turn
+    try {
+      scheduledReportService.generateAndSendScheduledReport();
+      logger.info("Scheduled reports generated and sent");
+    } catch (Exception ex) {
+      logger.error("Exception while running runScheduledReportJob", ex);
     }
   }
 

@@ -25,5 +25,6 @@ public class BatchMainConfig {
   @JsonProperty("billingDataPipelineConfig") private BillingDataPipelineConfig billingDataPipelineConfig;
   @JsonProperty("smtp") private SmtpConfig smtpConfig;
   @JsonProperty("segmentConfig") private SegmentConfig segmentConfig;
+  @JsonProperty("reportScheduleConfig") private ReportScheduleConfig reportScheduleConfig;
   @JsonProperty("baseUrl") private String baseUrl;
 }

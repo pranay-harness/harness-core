@@ -56,3 +56,7 @@ segmentConfig:
   apiKey: "segment_api_key"
 
 baseUrl: https://localhost:8000
+
+reportScheduleConfig:
+  enabled: false
+  templateName: "ce_cluster_data_generated"

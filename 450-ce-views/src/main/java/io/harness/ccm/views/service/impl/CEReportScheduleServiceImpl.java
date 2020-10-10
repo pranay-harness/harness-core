@@ -66,4 +66,18 @@ public class CEReportScheduleServiceImpl implements CEReportScheduleService {
       ceReportScheduleDao.delete(entry.getUuid(), accountId);
     }
   }
+
+  @Override
+  public List<CEReportSchedule> getAllMatchingSchedules(String accountId, Date jobTime) {
+    return ceReportScheduleDao.getAllMatchingSchedules(accountId, jobTime);
+  }
+
+  @Override
+  public List<CEReportSchedule> updateNextExecution(String accountId, CEReportSchedule schedule) {
+    CronSequenceGenerator cronSequenceGenerator = new CronSequenceGenerator(schedule.getUserCron());
+    Date next = cronSequenceGenerator.next(new Date());
+    logger.info("Updated next Execution Time: " + next);
+    schedule.setNextExecution(next);
+    return ceReportScheduleDao.updateNextExecution(accountId, schedule);
+  }
 }

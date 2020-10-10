@@ -10,6 +10,7 @@ import org.mongodb.morphia.query.FindOptions;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
 
+import java.util.Date;
 import java.util.List;
 
 @Slf4j
@@ -67,6 +68,7 @@ public class CEReportScheduleDao {
             .set(CEReportScheduleKeys.recipients, schedule.getRecipients())
             .set(CEReportScheduleKeys.nextExecution, schedule.getNextExecution());
     persistence.update(query, updateOperations);
+    logger.info(query.toString());
     return query.asList(new FindOptions());
   }
 
@@ -87,5 +89,33 @@ public class CEReportScheduleDao {
                       .field(CEReportScheduleKeys.viewsId)
                       .equal(viewsId);
     return persistence.delete(query);
+  }
+
+  public List<CEReportSchedule> getAllMatchingSchedules(String accountId, Date timeUpto) {
+    Query<CEReportSchedule> query = persistence.createQuery(CEReportSchedule.class)
+                                        .field(CEReportScheduleKeys.enabled)
+                                        .equal(true)
+                                        .field(CEReportScheduleKeys.accountId)
+                                        .equal(accountId)
+                                        .field(CEReportScheduleKeys.nextExecution)
+                                        .lessThanOrEq(timeUpto);
+    logger.info("Retrieving all report schedules <= this time {} for account {}", timeUpto.toString(), accountId);
+    logger.info(query.toString());
+    return query.asList();
+  }
+
+  public List<CEReportSchedule> updateNextExecution(String accountId, CEReportSchedule schedule) {
+    logger.info("Updating next execution for reportId {}  and accountId {}", schedule.getUuid(), accountId);
+    Query query = persistence.createQuery(CEReportSchedule.class)
+                      .field(CEReportScheduleKeys.accountId)
+                      .equal(accountId)
+                      .field(CEReportScheduleKeys.uuid)
+                      .equal(schedule.getUuid());
+    UpdateOperations<CEReportSchedule> updateOperations =
+        persistence.createUpdateOperations(CEReportSchedule.class)
+            .set(CEReportScheduleKeys.nextExecution, schedule.getNextExecution());
+    persistence.update(query, updateOperations);
+    logger.info(query.toString());
+    return query.asList(new FindOptions());
   }
 }
