@@ -58,6 +58,8 @@ import io.harness.steps.section.chain.SectionChainStepParameters;
 import software.wings.app.MainConfiguration;
 import software.wings.sm.states.ShellScriptState;
 
+import java.time.Duration;
+
 @OwnedBy(CDC)
 @Redesign
 @Singleton
@@ -1520,7 +1522,10 @@ public class CustomExecutionProvider {
                   .identifier("barrier1")
                   .name("barrier1")
                   .stepType(BarrierStep.STEP_TYPE)
-                  .stepParameters(BarrierStepParameters.builder().identifier("BAR1").timeoutInMillis(60000).build())
+                  .stepParameters(BarrierStepParameters.builder()
+                                      .identifier("BAR1")
+                                      .timeoutInMillis(Duration.ofMinutes(10).toMillis())
+                                      .build())
                   .facilitatorObtainment(FacilitatorObtainment.builder()
                                              .type(FacilitatorType.builder().type(FacilitatorType.BARRIER).build())
                                              .build())
@@ -1535,7 +1540,10 @@ public class CustomExecutionProvider {
                   .identifier("barrier2")
                   .name("barrier2")
                   .stepType(BarrierStep.STEP_TYPE)
-                  .stepParameters(BarrierStepParameters.builder().identifier("BAR1").timeoutInMillis(60000).build())
+                  .stepParameters(BarrierStepParameters.builder()
+                                      .identifier("BAR1")
+                                      .timeoutInMillis(Duration.ofMinutes(10).toMillis())
+                                      .build())
                   .facilitatorObtainment(FacilitatorObtainment.builder()
                                              .type(FacilitatorType.builder().type(FacilitatorType.BARRIER).build())
                                              .build())
@@ -1550,7 +1558,10 @@ public class CustomExecutionProvider {
                   .identifier("barrier3")
                   .name("barrier3")
                   .stepType(BarrierStep.STEP_TYPE)
-                  .stepParameters(BarrierStepParameters.builder().identifier("BAR2").timeoutInMillis(60000).build())
+                  .stepParameters(BarrierStepParameters.builder()
+                                      .identifier("BAR2")
+                                      .timeoutInMillis(Duration.ofMinutes(10).toMillis())
+                                      .build())
                   .facilitatorObtainment(FacilitatorObtainment.builder()
                                              .type(FacilitatorType.builder().type(FacilitatorType.BARRIER).build())
                                              .build())
