@@ -2275,9 +2275,16 @@ public class DelegateServiceImpl implements DelegateService {
                                             .doesNotExist();
       wingsPersistence.update(updateQuery, updateOperations);
 
+      long requiredDelegateCapabilites = 0;
+      if (delegateTask.getExecutionCapabilities() != null) {
+        requiredDelegateCapabilites = delegateTask.getExecutionCapabilities()
+                                          .stream()
+                                          .filter(e -> e.evaluationMode() == ExecutionCapability.EvaluationMode.AGENT)
+                                          .count();
+      }
       // If all delegate task capabilities were evaluated and they were ok, we can assign the task
       if ((featureFlagService.isEnabled(DISABLE_DELEGATE_CAPABILITY_FRAMEWORK, delegateTask.getAccountId())
-              || size(delegateTask.getExecutionCapabilities()) == size(results))
+              || requiredDelegateCapabilites == size(results))
           && results.stream().allMatch(DelegateConnectionResult::isValidated)) {
         return assignTask(delegateId, taskId, delegateTask);
       }
