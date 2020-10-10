@@ -12,4 +12,5 @@ public class AzureVMSSResizeDetail {
   private int desiredCount;
   private List<String> scalingPolicyJSONs;
   private boolean attachScalingPolicy;
+  private String scalingPolicyMessage;
 }

@@ -32,7 +32,7 @@ public class AzureVMSSRollbackState extends AzureVMSSDeployState {
   @Inject private transient SweepingOutputService sweepingOutputService;
 
   public AzureVMSSRollbackState(String name) {
-    super(name, AZURE_VMSS_ROLLBACK.name());
+    super(name, AZURE_VMSS_ROLLBACK);
   }
 
   @Override

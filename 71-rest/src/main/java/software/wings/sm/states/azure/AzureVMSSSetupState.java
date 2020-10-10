@@ -1,15 +1,22 @@
 package software.wings.sm.states.azure;
 
+import static io.harness.azure.model.AzureConstants.CREATE_NEW_VMSS_COMMAND_UNIT;
 import static io.harness.azure.model.AzureConstants.DEFAULT_AZURE_VMSS_DESIRED_INSTANCES;
 import static io.harness.azure.model.AzureConstants.DEFAULT_AZURE_VMSS_MAX_INSTANCES;
 import static io.harness.azure.model.AzureConstants.DEFAULT_AZURE_VMSS_MIN_INSTANCES;
 import static io.harness.azure.model.AzureConstants.DEFAULT_AZURE_VMSS_TIMEOUT_MIN;
+import static io.harness.azure.model.AzureConstants.DELETE_OLD_VIRTUAL_MACHINE_SCALE_SETS_COMMAND_UNIT;
+import static io.harness.azure.model.AzureConstants.DEPLOYMENT_ERROR;
+import static io.harness.azure.model.AzureConstants.DOWN_SCALE_COMMAND_UNIT;
+import static io.harness.azure.model.AzureConstants.DOWN_SCALE_STEADY_STATE_WAIT_COMMAND_UNIT;
+import static io.harness.azure.model.AzureConstants.SETUP_COMMAND_UNIT;
 import static io.harness.exception.ExceptionUtils.getMessage;
 import static java.util.Collections.singletonList;
 import static java.util.concurrent.TimeUnit.MINUTES;
 import static software.wings.beans.ResizeStrategy.RESIZE_NEW_FIRST;
 import static software.wings.sm.StateType.AZURE_VMSS_SETUP;
 
+import com.google.common.collect.ImmutableList;
 import com.google.inject.Inject;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
@@ -42,21 +49,21 @@ import software.wings.beans.Environment;
 import software.wings.beans.ResizeStrategy;
 import software.wings.beans.Service;
 import software.wings.beans.TaskType;
+import software.wings.beans.command.AzureVMSSDummyCommandUnit;
+import software.wings.beans.command.CommandUnit;
 import software.wings.beans.command.CommandUnitDetails;
 import software.wings.service.impl.azure.manager.AzureVMSSCommandRequest;
 import software.wings.service.impl.azure.manager.AzureVMSSCommandRequest.AzureVMSSCommandRequestBuilder;
 import software.wings.service.intfc.DelegateService;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionResponse;
-import software.wings.sm.State;
-import software.wings.sm.states.ManagerExecutionLogCallback;
 
 import java.util.List;
 import java.util.Map;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 @Slf4j
-public class AzureVMSSSetupState extends State {
+public class AzureVMSSSetupState extends AbstractAzureState {
   public static final String AZURE_VMSS_SETUP_COMMAND_NAME = AzureConstants.AZURE_VMSS_SETUP_COMMAND_NAME;
 
   @Getter @Setter private String virtualMachineScaleSetName;
@@ -73,7 +80,7 @@ public class AzureVMSSSetupState extends State {
   @Inject private transient AzureVMSSStateHelper azureVMSSStateHelper;
 
   public AzureVMSSSetupState(String name) {
-    super(name, AZURE_VMSS_SETUP.name());
+    super(name, AZURE_VMSS_SETUP);
   }
 
   @Override
@@ -109,10 +116,8 @@ public class AzureVMSSSetupState extends State {
     // create and save activity
     Activity activity =
         azureVMSSStateHelper.createAndSaveActivity(context, null, getStateType(), AZURE_VMSS_SETUP_COMMAND_NAME,
-            CommandUnitDetails.CommandUnitType.AZURE_VMSS_SETUP, azureVMSSStateHelper.generateSetupCommandUnits());
+            CommandUnitDetails.CommandUnitType.AZURE_VMSS_SETUP, getCommandUnits(context, resizeStrategy));
     String activityId = activity.getUuid();
-
-    ManagerExecutionLogCallback executionLogCallback = azureVMSSStateHelper.getExecutionLogCallback(activity);
 
     AzureVMSSInfrastructureMapping azureVMSSInfrastructureMapping =
         azureVMSSStateHelper.getAzureVMSSInfrastructureMapping(context.fetchInfraMappingId(), appId);
@@ -129,7 +134,6 @@ public class AzureVMSSSetupState extends State {
     AzureVMSSSetupStateExecutionData azureVMSSSetupStateExecutionData =
         buildAzureVMSSSetupStateExecutionData(context, activityId, azureVMSSInfrastructureMapping.getUuid());
 
-    executionLogCallback.saveExecutionLog("Starting Azure VMSS Setup");
     DelegateTask delegateTask =
         DelegateTask.builder()
             .accountId(app.getAccountId())
@@ -345,5 +349,14 @@ public class AzureVMSSSetupState extends State {
     stateExecutionData.setMaxInstances(azureVMSSSetupTaskResponse.getMaxInstances());
 
     return stateExecutionData;
+  }
+
+  @Override
+  public List<CommandUnit> getCommandUnits(ExecutionContext context, ResizeStrategy resizeStrategy) {
+    return ImmutableList.of(new AzureVMSSDummyCommandUnit(SETUP_COMMAND_UNIT),
+        new AzureVMSSDummyCommandUnit(DOWN_SCALE_COMMAND_UNIT),
+        new AzureVMSSDummyCommandUnit(DOWN_SCALE_STEADY_STATE_WAIT_COMMAND_UNIT),
+        new AzureVMSSDummyCommandUnit(DELETE_OLD_VIRTUAL_MACHINE_SCALE_SETS_COMMAND_UNIT),
+        new AzureVMSSDummyCommandUnit(CREATE_NEW_VMSS_COMMAND_UNIT), new AzureVMSSDummyCommandUnit(DEPLOYMENT_ERROR));
   }
 }

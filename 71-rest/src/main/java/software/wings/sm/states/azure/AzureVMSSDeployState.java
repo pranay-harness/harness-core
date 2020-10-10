@@ -1,7 +1,14 @@
 package software.wings.sm.states.azure;
 
 import static com.google.common.collect.Lists.newArrayList;
+import static io.harness.azure.model.AzureConstants.DELETE_NEW_VMSS;
+import static io.harness.azure.model.AzureConstants.DEPLOYMENT_ERROR;
+import static io.harness.azure.model.AzureConstants.DEPLOYMENT_STATUS;
+import static io.harness.azure.model.AzureConstants.DOWN_SCALE_COMMAND_UNIT;
+import static io.harness.azure.model.AzureConstants.DOWN_SCALE_STEADY_STATE_WAIT_COMMAND_UNIT;
 import static io.harness.azure.model.AzureConstants.SKIP_VMSS_DEPLOY;
+import static io.harness.azure.model.AzureConstants.UP_SCALE_COMMAND_UNIT;
+import static io.harness.azure.model.AzureConstants.UP_SCALE_STEADY_STATE_WAIT_COMMAND_UNIT;
 import static io.harness.beans.ExecutionStatus.SKIPPED;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.exception.ExceptionUtils.getMessage;
@@ -9,6 +16,7 @@ import static java.util.concurrent.TimeUnit.MINUTES;
 import static software.wings.beans.InstanceUnitType.PERCENTAGE;
 import static software.wings.sm.StateType.AZURE_VMSS_DEPLOY;
 
+import com.google.common.collect.ImmutableList;
 import com.google.inject.Inject;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
@@ -16,6 +24,7 @@ import com.github.reinert.jjschema.Attributes;
 import io.harness.azure.model.AzureConstants;
 import io.harness.beans.DelegateTask;
 import io.harness.beans.ExecutionStatus;
+import io.harness.beans.OrchestrationWorkflowType;
 import io.harness.context.ContextElementType;
 import io.harness.delegate.beans.TaskData;
 import io.harness.delegate.task.azure.request.AzureVMSSDeployTaskParameters;
@@ -43,6 +52,7 @@ import software.wings.beans.ResizeStrategy;
 import software.wings.beans.Service;
 import software.wings.beans.TaskType;
 import software.wings.beans.artifact.Artifact;
+import software.wings.beans.command.AzureVMSSDummyCommandUnit;
 import software.wings.beans.command.CommandUnit;
 import software.wings.beans.command.CommandUnitDetails;
 import software.wings.service.impl.azure.manager.AzureVMSSCommandRequest;
@@ -50,7 +60,7 @@ import software.wings.service.intfc.DelegateService;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionResponse;
 import software.wings.sm.InstanceStatusSummary;
-import software.wings.sm.State;
+import software.wings.sm.StateType;
 import software.wings.sm.states.InstanceUnitTypeDataProvider;
 import software.wings.sm.states.ManagerExecutionLogCallback;
 import software.wings.stencils.DefaultValue;
@@ -63,7 +73,7 @@ import java.util.Map;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 @Slf4j
-public class AzureVMSSDeployState extends State {
+public class AzureVMSSDeployState extends AbstractAzureState {
   public static final String AZURE_VMSS_DEPLOY_COMMAND_NAME = AzureConstants.AZURE_VMSS_DEPLOY_COMMAND_NAME;
 
   @Attributes(title = "Desired Instances (cumulative)") @Getter @Setter private Integer instanceCount;
@@ -79,10 +89,10 @@ public class AzureVMSSDeployState extends State {
   @Inject private transient DelegateService delegateService;
 
   public AzureVMSSDeployState(String name) {
-    super(name, AZURE_VMSS_DEPLOY.name());
+    super(name, AZURE_VMSS_DEPLOY);
   }
 
-  public AzureVMSSDeployState(String name, String stateType) {
+  public AzureVMSSDeployState(String name, StateType stateType) {
     super(name, stateType);
   }
 
@@ -129,10 +139,9 @@ public class AzureVMSSDeployState extends State {
     Artifact artifact = azureVMSSStateHelper.getArtifact((DeploymentExecutionContext) context, service.getUuid());
 
     // create and save activity
-    List<CommandUnit> commandUnitList = azureVMSSStateHelper.generateDeployCommandUnits(
-        context, azureVMSSSetupContextElement.getResizeStrategy(), isRollback());
     Activity activity = azureVMSSStateHelper.createAndSaveActivity(context, artifact, AZURE_VMSS_DEPLOY_COMMAND_NAME,
-        getStateType(), CommandUnitDetails.CommandUnitType.AZURE_VMSS_DEPLOY, commandUnitList);
+        getStateType(), CommandUnitDetails.CommandUnitType.AZURE_VMSS_DEPLOY,
+        getCommandUnits(context, azureVMSSSetupContextElement.getResizeStrategy()));
     String activityId = activity.getUuid();
 
     ManagerExecutionLogCallback executionLogCallback = azureVMSSStateHelper.getExecutionLogCallback(activity);
@@ -374,5 +383,34 @@ public class AzureVMSSDeployState extends State {
       invalidFields.put("instanceCount", "Instance count needs to be populated");
     }
     return invalidFields;
+  }
+
+  @Override
+  public List<CommandUnit> getCommandUnits(ExecutionContext context, ResizeStrategy resizeStrategy) {
+    List<CommandUnit> commandUnitList;
+    if (OrchestrationWorkflowType.BLUE_GREEN == context.getOrchestrationWorkflowType()) {
+      commandUnitList = ImmutableList.of(new AzureVMSSDummyCommandUnit(UP_SCALE_COMMAND_UNIT),
+          new AzureVMSSDummyCommandUnit(UP_SCALE_STEADY_STATE_WAIT_COMMAND_UNIT),
+          new AzureVMSSDummyCommandUnit(DEPLOYMENT_STATUS), new AzureVMSSDummyCommandUnit(DEPLOYMENT_ERROR));
+    } else {
+      commandUnitList = newArrayList();
+      if (isRollback() || ResizeStrategy.RESIZE_NEW_FIRST == resizeStrategy) {
+        commandUnitList.add(new AzureVMSSDummyCommandUnit(UP_SCALE_COMMAND_UNIT));
+        commandUnitList.add(new AzureVMSSDummyCommandUnit(UP_SCALE_STEADY_STATE_WAIT_COMMAND_UNIT));
+        commandUnitList.add(new AzureVMSSDummyCommandUnit(DOWN_SCALE_COMMAND_UNIT));
+        commandUnitList.add(new AzureVMSSDummyCommandUnit(DOWN_SCALE_STEADY_STATE_WAIT_COMMAND_UNIT));
+      } else {
+        commandUnitList.add(new AzureVMSSDummyCommandUnit(DOWN_SCALE_COMMAND_UNIT));
+        commandUnitList.add(new AzureVMSSDummyCommandUnit(DOWN_SCALE_STEADY_STATE_WAIT_COMMAND_UNIT));
+        commandUnitList.add(new AzureVMSSDummyCommandUnit(UP_SCALE_COMMAND_UNIT));
+        commandUnitList.add(new AzureVMSSDummyCommandUnit(UP_SCALE_STEADY_STATE_WAIT_COMMAND_UNIT));
+      }
+      if (isRollback()) {
+        commandUnitList.add(new AzureVMSSDummyCommandUnit(DELETE_NEW_VMSS));
+      }
+      commandUnitList.add(new AzureVMSSDummyCommandUnit(DEPLOYMENT_STATUS));
+      commandUnitList.add(new AzureVMSSDummyCommandUnit(DEPLOYMENT_ERROR));
+    }
+    return commandUnitList;
   }
 }

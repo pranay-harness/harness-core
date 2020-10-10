@@ -37,6 +37,7 @@ import io.harness.delegate.beans.azure.AzureMachineImageArtifactDTO;
 import io.harness.delegate.beans.azure.AzureVMAuthDTO;
 import io.harness.delegate.beans.azure.AzureVMAuthType;
 import io.harness.delegate.task.azure.request.AzureVMSSSetupTaskParameters;
+import io.harness.delegate.task.azure.request.AzureVMSSTaskParameters;
 import io.harness.delegate.task.azure.response.AzureVMSSSetupTaskResponse;
 import io.harness.delegate.task.azure.response.AzureVMSSTaskExecutionResponse;
 import io.harness.delegate.task.azure.response.AzureVMSSTaskResponse;
@@ -111,7 +112,10 @@ public class AzureVMSSSetupTaskHandlerTest extends WingsBaseTest {
     doReturn(1).when(virtualMachineScaleSetVersion2).capacity();
     doReturn("virtualMachineScaleSetVersion2ShouldBeDownSizedId").when(virtualMachineScaleSetVersion2).id();
     doReturn("virtualMachineScaleSetVersion2ShouldBeDownSized").when(virtualMachineScaleSetVersion2).name();
-
+    doNothing()
+        .when(azureVMSSSetupTaskHandler)
+        .updateVMSSCapacityAndWaitForSteadyState(any(AzureConfig.class), any(AzureVMSSTaskParameters.class),
+            anyString(), anyString(), anyString(), anyInt(), anyInt(), anyString(), anyString());
     Date dateVersion3 = Date.from(instant.minus(3, ChronoUnit.DAYS));
     when(virtualMachineScaleSetVersion3.tags()).thenReturn(new HashMap<String, String>() {
       {
@@ -177,7 +181,6 @@ public class AzureVMSSSetupTaskHandlerTest extends WingsBaseTest {
         .when(mockAzureComputeClient)
         .createVirtualMachineScaleSet(any(AzureConfig.class), any(VirtualMachineScaleSet.class), anyString(),
             any(AzureUserAuthVMInstanceData.class), any(AzureMachineImageArtifact.class), any(AzureVMSSTagsData.class));
-
     // buildAzureVMSSSetupTaskResponse
     doReturn(Optional.of("{baseScalingPolicies: {...}}"))
         .when(mockAzureAutoScaleSettingsClient)

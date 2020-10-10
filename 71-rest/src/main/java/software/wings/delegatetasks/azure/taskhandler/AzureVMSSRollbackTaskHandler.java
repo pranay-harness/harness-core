@@ -1,6 +1,7 @@
 package software.wings.delegatetasks.azure.taskhandler;
 
 import static io.harness.azure.model.AzureConstants.DELETE_NEW_VMSS;
+import static io.harness.azure.model.AzureConstants.NO_SCALING_POLICY_DURING_DOWN_SIZING;
 import static io.harness.azure.model.AzureConstants.REQUEST_DELETE_SCALE_SET;
 import static io.harness.azure.model.AzureConstants.SUCCESS_DELETE_SCALE_SET;
 import static io.harness.logging.CommandExecutionStatus.FAILURE;
@@ -51,6 +52,7 @@ public class AzureVMSSRollbackTaskHandler extends AzureVMSSDeployTaskHandler {
         .desiredCount(desiredCountForUpSize)
         .scalingPolicyJSONs(baseScalingPolicyJSONs)
         .attachScalingPolicy(true)
+        .scalingPolicyMessage("Attaching scaling policy for VMSS: [%s]")
         .build();
   }
 
@@ -64,6 +66,7 @@ public class AzureVMSSRollbackTaskHandler extends AzureVMSSDeployTaskHandler {
         .desiredCount(desiredCountForDownSize)
         .scalingPolicyJSONs(baseScalingPolicyJSONs)
         .attachScalingPolicy(false)
+        .scalingPolicyMessage(NO_SCALING_POLICY_DURING_DOWN_SIZING)
         .build();
   }
 

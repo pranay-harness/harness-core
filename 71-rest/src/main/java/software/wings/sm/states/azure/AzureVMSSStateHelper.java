@@ -1,17 +1,6 @@
 package software.wings.sm.states.azure;
 
-import static com.google.common.collect.Lists.newArrayList;
-import static io.harness.azure.model.AzureConstants.CREATE_NEW_VMSS_COMMAND_UNIT;
-import static io.harness.azure.model.AzureConstants.DELETE_NEW_VMSS;
-import static io.harness.azure.model.AzureConstants.DELETE_OLD_VIRTUAL_MACHINE_SCALE_SETS_COMMAND_UNIT;
-import static io.harness.azure.model.AzureConstants.DEPLOYMENT_STATUS;
-import static io.harness.azure.model.AzureConstants.DOWN_SCALE_COMMAND_UNIT;
-import static io.harness.azure.model.AzureConstants.DOWN_SCALE_SETS_COMMAND_UNIT;
-import static io.harness.azure.model.AzureConstants.DOWN_SCALE_STEADY_STATE_WAIT_COMMAND_UNIT;
-import static io.harness.azure.model.AzureConstants.SETUP_COMMAND_UNIT;
 import static io.harness.azure.model.AzureConstants.STEADY_STATE_TIMEOUT_REGEX;
-import static io.harness.azure.model.AzureConstants.UP_SCALE_COMMAND_UNIT;
-import static io.harness.azure.model.AzureConstants.UP_SCALE_STEADY_STATE_WAIT_COMMAND_UNIT;
 import static io.harness.beans.OrchestrationWorkflowType.BLUE_GREEN;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
@@ -26,13 +15,11 @@ import static software.wings.beans.Log.Builder.aLog;
 import static software.wings.beans.ServiceVariable.Type.ENCRYPTED_TEXT;
 import static software.wings.sm.InstanceStatusSummary.InstanceStatusSummaryBuilder.anInstanceStatusSummary;
 
-import com.google.common.collect.ImmutableList;
 import com.google.common.primitives.Ints;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import io.harness.beans.ExecutionStatus;
-import io.harness.beans.OrchestrationWorkflowType;
 import io.harness.beans.SweepingOutputInstance;
 import io.harness.beans.TriggeredBy;
 import io.harness.context.ContextElementType;
@@ -66,7 +53,6 @@ import software.wings.beans.DeploymentExecutionContext;
 import software.wings.beans.Environment;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.Log;
-import software.wings.beans.ResizeStrategy;
 import software.wings.beans.Service;
 import software.wings.beans.ServiceVariable;
 import software.wings.beans.SettingAttribute;
@@ -74,7 +60,6 @@ import software.wings.beans.VMSSAuthType;
 import software.wings.beans.artifact.Artifact;
 import software.wings.beans.artifact.ArtifactStream;
 import software.wings.beans.artifact.ArtifactStreamAttributes;
-import software.wings.beans.command.AzureVMSSDummyCommandUnit;
 import software.wings.beans.command.Command;
 import software.wings.beans.command.CommandUnit;
 import software.wings.beans.command.CommandUnitDetails;
@@ -344,42 +329,6 @@ public class AzureVMSSStateHelper {
   public ExecutionStatus getExecutionStatus(AzureVMSSTaskExecutionResponse executionResponse) {
     return executionResponse.getCommandExecutionStatus() == CommandExecutionStatus.SUCCESS ? ExecutionStatus.SUCCESS
                                                                                            : ExecutionStatus.FAILED;
-  }
-
-  public List<CommandUnit> generateDeployCommandUnits(
-      ExecutionContext context, ResizeStrategy resizeStrategy, boolean isRollback) {
-    List<CommandUnit> commandUnitList = null;
-    if (OrchestrationWorkflowType.BLUE_GREEN == context.getOrchestrationWorkflowType()) {
-      commandUnitList = ImmutableList.of(new AzureVMSSDummyCommandUnit(UP_SCALE_COMMAND_UNIT),
-          new AzureVMSSDummyCommandUnit(UP_SCALE_STEADY_STATE_WAIT_COMMAND_UNIT),
-          new AzureVMSSDummyCommandUnit(DEPLOYMENT_STATUS));
-    } else {
-      commandUnitList = newArrayList();
-      if (isRollback || ResizeStrategy.RESIZE_NEW_FIRST == resizeStrategy) {
-        commandUnitList.add(new AzureVMSSDummyCommandUnit(UP_SCALE_COMMAND_UNIT));
-        commandUnitList.add(new AzureVMSSDummyCommandUnit(UP_SCALE_STEADY_STATE_WAIT_COMMAND_UNIT));
-        commandUnitList.add(new AzureVMSSDummyCommandUnit(DOWN_SCALE_COMMAND_UNIT));
-        commandUnitList.add(new AzureVMSSDummyCommandUnit(DOWN_SCALE_STEADY_STATE_WAIT_COMMAND_UNIT));
-      } else {
-        commandUnitList.add(new AzureVMSSDummyCommandUnit(DOWN_SCALE_COMMAND_UNIT));
-        commandUnitList.add(new AzureVMSSDummyCommandUnit(DOWN_SCALE_STEADY_STATE_WAIT_COMMAND_UNIT));
-        commandUnitList.add(new AzureVMSSDummyCommandUnit(UP_SCALE_COMMAND_UNIT));
-        commandUnitList.add(new AzureVMSSDummyCommandUnit(UP_SCALE_STEADY_STATE_WAIT_COMMAND_UNIT));
-      }
-      if (isRollback) {
-        commandUnitList.add(new AzureVMSSDummyCommandUnit(DELETE_NEW_VMSS));
-      }
-      commandUnitList.add(new AzureVMSSDummyCommandUnit(DEPLOYMENT_STATUS));
-    }
-    return commandUnitList;
-  }
-
-  public List<CommandUnit> generateSetupCommandUnits() {
-    return ImmutableList.of(new AzureVMSSDummyCommandUnit(SETUP_COMMAND_UNIT),
-        new AzureVMSSDummyCommandUnit(DOWN_SCALE_SETS_COMMAND_UNIT),
-        new AzureVMSSDummyCommandUnit(DOWN_SCALE_STEADY_STATE_WAIT_COMMAND_UNIT),
-        new AzureVMSSDummyCommandUnit(DELETE_OLD_VIRTUAL_MACHINE_SCALE_SETS_COMMAND_UNIT),
-        new AzureVMSSDummyCommandUnit(CREATE_NEW_VMSS_COMMAND_UNIT), new AzureVMSSDummyCommandUnit(DEPLOYMENT_STATUS));
   }
 
   public AzureVMSSStateData populateStateData(ExecutionContext context) {

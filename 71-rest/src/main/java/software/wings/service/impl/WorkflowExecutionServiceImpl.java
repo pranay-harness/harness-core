@@ -293,6 +293,7 @@ import software.wings.sm.states.ElementStateExecutionData;
 import software.wings.sm.states.ForkState.ForkStateExecutionData;
 import software.wings.sm.states.HoldingScope;
 import software.wings.sm.states.RepeatState.RepeatStateExecutionData;
+import software.wings.sm.states.azure.AzureVMSSDeployStateExecutionData;
 import software.wings.sm.states.spotinst.SpotInstDeployStateExecutionData;
 import software.wings.sm.status.StateStatusUpdateInfo;
 import software.wings.sm.status.WorkflowStatusPropagator;
@@ -3413,6 +3414,11 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
               instanceStatusSummaries.addAll(helmDeployStateExecutionData.getNewInstanceStatusSummaries());
             }
           }
+        } else if (nextStateType == StateType.AZURE_VMSS_DEPLOY
+            && next.fetchStateExecutionData() instanceof AzureVMSSDeployStateExecutionData) {
+          AzureVMSSDeployStateExecutionData azureVMSSDeployStateExecutionData =
+              (AzureVMSSDeployStateExecutionData) next.fetchStateExecutionData();
+          instanceStatusSummaries.addAll(azureVMSSDeployStateExecutionData.getNewInstanceStatusSummaries());
         } else if (nextStateType == StateType.KUBERNETES_STEADY_STATE_CHECK) {
           KubernetesSteadyStateCheckExecutionData kubernetesSteadyStateCheckExecutionData =
               (KubernetesSteadyStateCheckExecutionData) next.fetchStateExecutionData();

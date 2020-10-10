@@ -3,6 +3,7 @@ package software.wings.delegatetasks.azure.taskhandler;
 import static io.harness.azure.model.AzureConstants.DEFAULT_AZURE_VMSS_DESIRED_INSTANCES;
 import static io.harness.azure.model.AzureConstants.DEFAULT_AZURE_VMSS_MAX_INSTANCES;
 import static io.harness.azure.model.AzureConstants.DEFAULT_AZURE_VMSS_MIN_INSTANCES;
+import static io.harness.logging.CommandExecutionStatus.SUCCESS;
 import static io.harness.logging.LogLevel.INFO;
 import static java.lang.String.format;
 import static java.util.Collections.emptyList;
@@ -64,7 +65,7 @@ public class AzureAutoScaleHelper {
 
     logCallback.saveExecutionLog(format("Using currently running min: [%d], max: [%d], desired: [%d] from VMSS: [%s]",
                                      minInstances, maxInstances, desiredInstances, mostRecentActiveVMSSName),
-        INFO);
+        INFO, SUCCESS);
 
     return AzureVMSSAutoScaleSettingsData.builder()
         .minInstances(minInstances)
@@ -79,8 +80,8 @@ public class AzureAutoScaleHelper {
     int desiredInstances = DEFAULT_AZURE_VMSS_DESIRED_INSTANCES;
 
     logCallback.saveExecutionLog(
-        format("Using default min: [%d], max: [%d], desired: [%d]", minInstances, maxInstances, desiredInstances),
-        INFO);
+        format("Using default min: [%d], max: [%d], desired: [%d]", minInstances, maxInstances, desiredInstances), INFO,
+        SUCCESS);
     return AzureVMSSAutoScaleSettingsData.builder()
         .minInstances(minInstances)
         .maxInstances(maxInstances)
@@ -94,9 +95,10 @@ public class AzureAutoScaleHelper {
     int maxInstances = setupTaskParameters.getMaxInstances();
     int desiredInstances = setupTaskParameters.getDesiredInstances();
 
-    logCallback.saveExecutionLog(format("Using workflow input min: [%d], max: [%d] and desired: [%d]", minInstances,
-                                     maxInstances, desiredInstances),
-        INFO);
+    logCallback.saveExecutionLog(
+        format("Using user defined input min: [%d], max: [%d] and desired: [%d] for deployment", minInstances,
+            maxInstances, desiredInstances),
+        INFO, SUCCESS);
 
     return AzureVMSSAutoScaleSettingsData.builder()
         .minInstances(minInstances)
