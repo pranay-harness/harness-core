@@ -31,12 +31,15 @@ public class IndexManager {
     try {
       IndexManagerSession session = new IndexManagerSession(datastore, migrators, mode == null ? MANUAL : mode);
       if (session.ensureIndexes(morphia, store) && mode == INSPECT) {
-        logger.info("the inspection finished");
         throw new IndexManagerInspectException();
       }
     } catch (IndexManagerReadOnlyException exception) {
       ignoredOnPurpose(exception);
       logger.warn("The user has read only access.");
+    } finally {
+      if (mode == INSPECT || mode == MANUAL) {
+        logger.info("the inspection finished");
+      }
     }
   }
 
