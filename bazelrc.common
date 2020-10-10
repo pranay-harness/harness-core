@@ -12,4 +12,4 @@ build --test_output=errors
 build --strict_java_deps=strict
 build --java_header_compilation=false
 build --test_env=LC_ALL="en_US.UTF-8"
-build --javacopt=-XepDisableAllChecks
+build --javacopt=' -XepDisableAllChecks'
