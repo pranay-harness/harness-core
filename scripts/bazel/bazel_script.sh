@@ -1,4 +1,4 @@
-set -e
+set -ex
 
 local_repo=${HOME}/.m2/repository
 BAZEL_ARGUMENTS=
@@ -7,12 +7,15 @@ then
   GCP="--google_credentials=${GCP_KEY}"
   bazelrc=--bazelrc=bazelrc.remote
   local_repo=/root/.m2/repository
-  BAZEL_ARGUMENTS="${BAZEL_ARGUMENTS} --test_env=DISTRIBUTE_TESTING_WORKER=${DISTRIBUTE_TESTING_WORKER}"
-  BAZEL_ARGUMENTS="${BAZEL_ARGUMENTS} --test_env=DISTRIBUTE_TESTING_WORKERS=${DISTRIBUTE_TESTING_WORKERS}"
+  if [ ! -z "${DISTRIBUTE_TESTING_WORKER}" ]
+  then
+    BAZEL_ARGUMENTS="${BAZEL_ARGUMENTS} --test_env=DISTRIBUTE_TESTING_WORKER=${DISTRIBUTE_TESTING_WORKER}"
+    BAZEL_ARGUMENTS="${BAZEL_ARGUMENTS} --test_env=DISTRIBUTE_TESTING_WORKERS=${DISTRIBUTE_TESTING_WORKERS}"
+  fi
 fi
 
-BAZEL_DIRS=${HOME}/.bazel-dirs/
-BAZEL_ARGUMENTS="--experimental_convenience_symlinks=normal --symlink_prefix=${BAZEL_DIRS}"
+BAZEL_DIRS=${HOME}/.bazel-dirs
+BAZEL_ARGUMENTS="${BAZEL_ARGUMENTS} --experimental_convenience_symlinks=normal --symlink_prefix=${BAZEL_DIRS}/"
 
 if [[ ! -z "${OVERRIDE_LOCAL_M2}" ]]; then
   local_repo=${OVERRIDE_LOCAL_M2}
@@ -70,9 +73,11 @@ build_java_proto_module() {
 build_proto_module() {
   module=$1
   modulePath=$2
-  bazel ${bazelrc} build //${modulePath}/... ${GCP} ${BAZEL_ARGUMENTS} --javacopt=' -XepDisableAllChecks'
+  bazel ${bazelrc} build //${modulePath}:all ${GCP} ${BAZEL_ARGUMENTS} --experimental_remote_download_outputs=all
 
   bazel_library=`echo ${module} | tr '-' '_'`
+
+  ls -la ${BAZEL_DIRS}/bin/${modulePath}
 
   mvn -B install:install-file \
    -Dfile=${BAZEL_DIRS}/bin/${modulePath}/lib${bazel_library}_java_proto.jar \
