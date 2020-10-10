@@ -13,6 +13,7 @@ import org.springframework.context.annotation.Profile;
 import org.springframework.data.mongodb.MongoDbFactory;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.SimpleMongoDbFactory;
+import software.wings.security.ThreadLocalUserProvider;
 
 @Configuration
 @Slf4j
@@ -21,6 +22,7 @@ public class BatchMongoConfiguration {
     final String eventsMongoUri = config.getEventsMongo().getUri();
     if (isNotEmpty(eventsMongoUri) && !eventsMongoUri.equals(config.getHarnessMongo().getUri())) {
       hPersistence.register(EVENTS_STORE, eventsMongoUri);
+      hPersistence.registerUserProvider(new ThreadLocalUserProvider());
     }
   }
 

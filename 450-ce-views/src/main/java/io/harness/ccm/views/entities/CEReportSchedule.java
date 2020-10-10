@@ -4,7 +4,6 @@ import io.harness.annotation.StoreIn;
 import io.harness.beans.EmbeddedUser;
 import io.harness.mongo.index.CdIndex;
 import io.harness.mongo.index.Field;
-import io.harness.mongo.index.NgUniqueIndex;
 import io.harness.persistence.AccountAccess;
 import io.harness.persistence.CreatedAtAware;
 import io.harness.persistence.CreatedByAware;
@@ -24,10 +23,9 @@ import org.mongodb.morphia.annotations.Id;
 import java.util.Date;
 import javax.validation.constraints.Size;
 
-@NgUniqueIndex(name = "view_report_name", fields = { @Field("name")
-                                                     , @Field("viewsId") })
-@CdIndex(name = "account_enabled_type", fields = { @Field("accountId")
-                                                   , @Field("enabled"), @Field("type") })
+@CdIndex(name = "account_enabled_type",
+    fields = { @Field("accountId")
+               , @Field("enabled"), @Field("name"), @Field("viewsId"), @Field("type") })
 @Data
 @Builder
 @FieldNameConstants(innerTypeName = "CEReportScheduleKeys")
