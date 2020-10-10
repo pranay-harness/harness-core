@@ -83,8 +83,7 @@ public abstract class AzureVMSSTaskHandler {
 
   protected void createAndFinishEmptyExecutionLog(
       AzureVMSSTaskParameters taskParameters, String commandUnit, String message) {
-    ExecutionLogCallback logCallback;
-    logCallback = getLogCallBack(taskParameters, commandUnit);
+    ExecutionLogCallback logCallback = getLogCallBack(taskParameters, commandUnit);
     logCallback.saveExecutionLog(message, INFO, SUCCESS);
   }
 
@@ -111,8 +110,9 @@ public abstract class AzureVMSSTaskHandler {
 
     logCallBack = getLogCallBack(parameters, waitCommandUnit);
     waitForVMSSToBeDownSized(vmss, capacity, autoScalingSteadyStateTimeout, logCallBack);
-    logCallBack.saveExecutionLog(
-        "All VM instances are " + (capacity == 0 ? "deleted " : "provisioned ") + "successfully", INFO, SUCCESS);
+    String message =
+        "All the VM instances of VMSS: [%s] are " + (capacity == 0 ? "deleted " : "provisioned ") + "successfully";
+    logCallBack.saveExecutionLog(format(message, virtualMachineScaleSetName), INFO);
   }
 
   private VirtualMachineScaleSet getVirtualMachineScaleSet(
@@ -130,9 +130,9 @@ public abstract class AzureVMSSTaskHandler {
       int autoScalingSteadyStateTimeout, ExecutionLogCallback logCallBack) {
     try {
       timeLimiter.callWithTimeout(() -> {
+        logCallBack.saveExecutionLog(
+            format("Checking the status of: [%s] VM instances", virtualMachineScaleSet.name()), INFO);
         while (true) {
-          logCallBack.saveExecutionLog(
-              format("Checking the status of: [%s] VM instances", virtualMachineScaleSet.name()), INFO);
           if (checkAllVMSSInstancesProvisioned(virtualMachineScaleSet, capacity, logCallBack)) {
             return Boolean.TRUE;
           }
@@ -140,12 +140,15 @@ public abstract class AzureVMSSTaskHandler {
         }
       }, autoScalingSteadyStateTimeout, TimeUnit.MINUTES, true);
     } catch (UncheckedTimeoutException e) {
-      throw new InvalidRequestException("Timed out waiting for provisioning VMSS VM instances to desired capacity", e);
+      String message = "Timed out waiting for provisioning VMSS VM instances to desired capacity";
+      logCallBack.saveExecutionLog(message, ERROR, FAILURE);
+      throw new InvalidRequestException(message, e);
     } catch (WingsException e) {
       throw e;
     } catch (Exception e) {
-      throw new InvalidRequestException(
-          "Error while waiting for provisioning VMSS VM instances to desired capacity", e);
+      String message = "Error while waiting for provisioning VMSS VM instances to desired capacity";
+      logCallBack.saveExecutionLog(message, ERROR, FAILURE);
+      throw new InvalidRequestException(message, e);
     }
   }
 

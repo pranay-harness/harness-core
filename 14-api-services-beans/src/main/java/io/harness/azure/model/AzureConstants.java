@@ -45,7 +45,6 @@ public interface AzureConstants {
   String UP_SCALE_STEADY_STATE_WAIT_COMMAND_UNIT = "Upscale wait for steady state";
   String DELETE_OLD_VIRTUAL_MACHINE_SCALE_SETS_COMMAND_UNIT = "Delete Old Virtual Machine Scale Sets";
   String DOWN_SCALE_COMMAND_UNIT = "Downscale Virtual Machine Scale Set";
-  String DOWN_SCALE_SETS_COMMAND_UNIT = "Downscale Virtual Machine Scale Sets";
   String DOWN_SCALE_STEADY_STATE_WAIT_COMMAND_UNIT = "Downscale wait for steady state";
   String CREATE_NEW_VMSS_COMMAND_UNIT = "Create New Virtual Machine Scale Set";
   String DEPLOYMENT_STATUS = "Final Deployment status";
@@ -62,6 +61,9 @@ public interface AzureConstants {
   String SUCCESS_DELETE_SCALE_SET = "Virtual Machine Scale Set: [%s] deleted successfully";
   String SWAP_ROUTE_FAILURE = "Azure Virtual Machine Scale Set swap route failed with error ";
   String SETUP_ELEMENT_NOT_FOUND = "Did not find Setup element of class AzureVMSSSetupContextElement";
+  String NO_VMSS_FOR_DOWN_SIZING = "No old Virtual Machine Scale Set was found with non-zero capacity for down scale";
+  String NO_VMSS_FOR_DELETION = "No old Virtual Machine Scale Set was found for deletion";
+  String NO_SCALING_POLICY_DURING_DOWN_SIZING = "Not attaching scaling policy to VMSS: [%s] while down sizing it";
 
   // Validation messages
   String RESOURCE_GROUP_NAME_NULL_VALIDATION_MSG = "Parameter resourceGroupName is required and cannot be null";
