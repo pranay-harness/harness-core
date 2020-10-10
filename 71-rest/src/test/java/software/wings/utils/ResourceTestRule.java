@@ -27,7 +27,6 @@ import org.junit.rules.TestRule;
 import org.junit.runner.Description;
 import org.junit.runners.model.Statement;
 import software.wings.exception.ConstraintViolationExceptionMapper;
-import software.wings.jersey.KryoFeature;
 import software.wings.jersey.KryoMessageBodyProvider;
 
 import java.util.HashMap;
@@ -140,7 +139,8 @@ public class ResourceTestRule implements TestRule {
     private void configure(ResourceTestRule resourceTestRule) {
       register(new ConstraintViolationExceptionMapper());
       register(new JacksonMessageBodyProvider(resourceTestRule.mapper));
-      register(KryoFeature.class);
+      // TODO: refactor to allow initialization of KryoFeature
+      // register(KryoFeature.class);
 
       property(ServerProperties.RESPONSE_SET_STATUS_OVER_SEND_ERROR, "true");
 
