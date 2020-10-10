@@ -1,20 +1,21 @@
 package software.wings.jersey;
 
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
+
 import javax.ws.rs.core.Configuration;
 import javax.ws.rs.core.Feature;
 import javax.ws.rs.core.FeatureContext;
 
-/**
- * Created by peeyushaggarwal on 1/13/17.
- */
+@Singleton
 public class KryoFeature implements Feature {
-  public KryoFeature() {}
+  @Inject KryoMessageBodyProvider kryoMessageBodyProvider;
 
   @Override
   public boolean configure(FeatureContext context) {
     Configuration config = context.getConfiguration();
-    if (!config.isRegistered(KryoMessageBodyProvider.class)) {
-      context.register(KryoMessageBodyProvider.class);
+    if (kryoMessageBodyProvider != null && !config.isRegistered(kryoMessageBodyProvider)) {
+      context.register(kryoMessageBodyProvider);
     }
 
     return true;

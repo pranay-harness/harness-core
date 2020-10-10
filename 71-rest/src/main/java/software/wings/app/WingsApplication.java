@@ -500,7 +500,7 @@ public class WingsApplication extends Application<MainConfiguration> {
 
     registerAuditResponseFilter(environment, injector);
 
-    registerJerseyProviders(environment);
+    registerJerseyProviders(environment, injector);
 
     registerCharsetResponseFilter(environment, injector);
 
@@ -925,8 +925,8 @@ public class WingsApplication extends Application<MainConfiguration> {
         .start();
   }
 
-  private void registerJerseyProviders(Environment environment) {
-    environment.jersey().register(KryoFeature.class);
+  private void registerJerseyProviders(Environment environment, Injector injector) {
+    environment.jersey().register(injector.getInstance(KryoFeature.class));
     environment.jersey().register(EarlyEofExceptionMapper.class);
     environment.jersey().register(JsonProcessingExceptionMapper.class);
     environment.jersey().register(ConstraintViolationExceptionMapper.class);

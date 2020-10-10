@@ -1,8 +1,10 @@
 package software.wings.jersey;
 
 import com.google.common.io.ByteStreams;
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
 
-import io.harness.serializer.KryoUtils;
+import io.harness.serializer.KryoSerializer;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.IOException;
@@ -19,17 +21,13 @@ import javax.ws.rs.ext.MessageBodyReader;
 import javax.ws.rs.ext.MessageBodyWriter;
 import javax.ws.rs.ext.Provider;
 
-/**
- * @author peeyushaggarwal
- */
 @Slf4j
 @Provider
 @Consumes("application/x-kryo")
 @Produces("application/x-kryo")
+@Singleton
 public class KryoMessageBodyProvider implements MessageBodyWriter<Object>, MessageBodyReader<Object> {
-  //
-  // MessageBodyWriter
-  //
+  @Inject KryoSerializer kryoSerializer;
 
   @Override
   public long getSize(final Object object, final Class<?> type, final Type genericType, final Annotation[] annotations,
@@ -51,7 +49,7 @@ public class KryoMessageBodyProvider implements MessageBodyWriter<Object>, Messa
     try {
       // We are seeing occasional failures writing delegate tasks where it fails with broken pipe.
       // Separating the kryo serialization from writing to the stream to identify the real cause of the issue.
-      bytes = KryoUtils.asBytes(object);
+      bytes = kryoSerializer.asBytes(object);
       entityStream.write(bytes);
       entityStream.flush();
     } catch (Exception e) {
@@ -75,6 +73,6 @@ public class KryoMessageBodyProvider implements MessageBodyWriter<Object>, Messa
       final MediaType mediaType, final MultivaluedMap<String, String> httpHeaders, final InputStream entityStream)
       throws IOException, WebApplicationException {
     byte[] bytes = ByteStreams.toByteArray(entityStream);
-    return KryoUtils.asObject(bytes);
+    return kryoSerializer.asObject(bytes);
   }
 }
