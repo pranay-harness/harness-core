@@ -86,13 +86,17 @@ public class DelegateStackdriverLogAppenderTest extends CategoryTest {
   @Owner(developers = BRETT)
   @Category(UnitTests.class)
   public void shouldSubmit() {
-    String message = "my log message";
+    String message1 = "my log message1";
     for (int i = 0; i < MIN_BATCH_SIZE; ++i) {
-      log(INFO, message);
+      log(INFO, message1);
     }
-    waitForMessage(INFO, message);
-    BlockingQueue<LogEntry> logQueue = appender.getLogQueue();
-    await().atMost(30L, TimeUnit.SECONDS).until(logQueue::isEmpty);
+    waitForMessage(INFO, message1);
+
+    String message2 = "my log message2";
+    for (int i = 0; i < MIN_BATCH_SIZE; ++i) {
+      log(INFO, message2);
+    }
+    waitForMessage(INFO, message2);
   }
 
   private void log(Level level, String message) {
