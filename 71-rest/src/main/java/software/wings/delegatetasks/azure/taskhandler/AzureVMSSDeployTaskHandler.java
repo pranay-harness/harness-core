@@ -129,8 +129,20 @@ public class AzureVMSSDeployTaskHandler extends AzureVMSSTaskHandler {
 
   private void downSizeScaleSet(AzureConfig azureConfig, AzureVMSSDeployTaskParameters deployTaskParameters) {
     AzureVMSSResizeDetail scaleSetDetailsForDownSizing = getScaleSetDetailsForDownSizing(deployTaskParameters);
+    if (deployTaskParameters.isBlueGreen()) {
+      createAndLogSkipDownSizeMessage(deployTaskParameters, scaleSetDetailsForDownSizing.getScaleSetName());
+      return;
+    }
     resizeScaleSet(azureConfig, deployTaskParameters, DOWN_SCALE_COMMAND_UNIT,
         DOWN_SCALE_STEADY_STATE_WAIT_COMMAND_UNIT, scaleSetDetailsForDownSizing);
+  }
+
+  private void createAndLogSkipDownSizeMessage(
+      AzureVMSSDeployTaskParameters deployTaskParameters, String scaleSetName) {
+    String message = format("BG deployment, hence skipping downsize production scale set: [%s] in deploy step",
+        isEmpty(scaleSetName) ? EMPTY : scaleSetName);
+    handleExecutionLog(
+        deployTaskParameters, message, DOWN_SCALE_COMMAND_UNIT, DOWN_SCALE_STEADY_STATE_WAIT_COMMAND_UNIT);
   }
 
   private void resizeScaleSet(AzureConfig azureConfig, AzureVMSSDeployTaskParameters deployTaskParameters,
@@ -138,7 +150,7 @@ public class AzureVMSSDeployTaskHandler extends AzureVMSSTaskHandler {
     String scaleSetName = azureVMSSResizeDetail.getScaleSetName();
     Optional<VirtualMachineScaleSet> scaleSet = getScaleSet(azureConfig, deployTaskParameters, scaleSetName);
     if (!scaleSet.isPresent()) {
-      handleNonPresenceOfScaleSet(deployTaskParameters, scaleSetName, scaleCommandUnit, waitCommandUnit);
+      createAndLogSkipReSizeMessage(deployTaskParameters, scaleCommandUnit, waitCommandUnit, scaleSetName);
       return;
     }
 
@@ -151,6 +163,12 @@ public class AzureVMSSDeployTaskHandler extends AzureVMSSTaskHandler {
         azureConfig, deployTaskParameters, scaleSetName, desiredCount, scaleCommandUnit, waitCommandUnit);
     attachScalingPolicy(
         azureConfig, virtualMachineScaleSet, deployTaskParameters, azureVMSSResizeDetail, waitCommandUnit);
+  }
+
+  private void createAndLogSkipReSizeMessage(AzureVMSSDeployTaskParameters deployTaskParameters,
+      String scaleCommandUnit, String waitCommandUnit, String scaleSetName) {
+    String message = format(SKIP_RESIZE_SCALE_SET, isEmpty(scaleSetName) ? EMPTY : scaleSetName);
+    handleExecutionLog(deployTaskParameters, message, scaleCommandUnit, waitCommandUnit);
   }
 
   private void clearScalingPolicy(AzureConfig azureConfig, VirtualMachineScaleSet scaleSet,
@@ -198,9 +216,8 @@ public class AzureVMSSDeployTaskHandler extends AzureVMSSTaskHandler {
         azureConfig, resourceGroupName, scaleSetId, scalingPolicyJSONs, capacity);
   }
 
-  private void handleNonPresenceOfScaleSet(AzureVMSSDeployTaskParameters deployTaskParameters, String scaleSetName,
+  private void handleExecutionLog(AzureVMSSDeployTaskParameters deployTaskParameters, String message,
       String scaleCommandUnit, String waitCommandUnit) {
-    String message = format(SKIP_RESIZE_SCALE_SET, isEmpty(scaleSetName) ? EMPTY : scaleSetName);
     logger.warn(message);
     createAndFinishEmptyExecutionLog(deployTaskParameters, scaleCommandUnit, message);
     createAndFinishEmptyExecutionLog(deployTaskParameters, waitCommandUnit, message);

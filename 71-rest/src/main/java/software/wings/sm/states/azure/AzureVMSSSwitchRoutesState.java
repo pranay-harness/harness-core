@@ -97,7 +97,7 @@ public class AzureVMSSSwitchRoutesState extends State {
 
   protected ExecutionResponse executeInternal(ExecutionContext context) {
     Activity activity = azureVMSSStateHelper.createAndSaveActivity(
-        context, null, AZURE_VMSS_SWAP_ROUTE, getStateType(), AZURE_VMSS_SWAP, getCommandUnits());
+        context, null, getStateType(), AZURE_VMSS_SWAP_ROUTE, AZURE_VMSS_SWAP, getCommandUnits());
     ManagerExecutionLogCallback executionLogCallback = azureVMSSStateHelper.getExecutionLogCallback(activity);
 
     try {

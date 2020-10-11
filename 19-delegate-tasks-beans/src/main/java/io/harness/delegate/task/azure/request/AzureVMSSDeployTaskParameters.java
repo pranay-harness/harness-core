@@ -24,6 +24,7 @@ public class AzureVMSSDeployTaskParameters extends AzureVMSSTaskParameters {
   private String subscriptionId;
   private String resourceGroupName;
   private boolean rollback;
+  private boolean isBlueGreen;
   private List<String> baseScalingPolicyJSONs;
   private AzureVMSSPreDeploymentData preDeploymentData;
 
@@ -32,8 +33,8 @@ public class AzureVMSSDeployTaskParameters extends AzureVMSSTaskParameters {
       Integer timeoutIntervalInMin, AzureVMSSTaskType commandType, boolean resizeNewFirst,
       String newVirtualMachineScaleSetName, String oldVirtualMachineScaleSetName, Integer newDesiredCount,
       Integer oldDesiredCount, Integer autoScalingSteadyStateVMSSTimeout, int minInstances, int maxInstances,
-      int desiredInstances, boolean rollback, List<String> baseScalingPolicyJSONs, String subscriptionId,
-      String resourceGroupName, AzureVMSSPreDeploymentData preDeploymentData) {
+      int desiredInstances, boolean rollback, boolean isBlueGreen, List<String> baseScalingPolicyJSONs,
+      String subscriptionId, String resourceGroupName, AzureVMSSPreDeploymentData preDeploymentData) {
     super(appId, accountId, activityId, commandName, timeoutIntervalInMin, AZURE_VMSS_DEPLOY);
     this.resizeNewFirst = resizeNewFirst;
     this.newVirtualMachineScaleSetName = newVirtualMachineScaleSetName;
@@ -47,6 +48,7 @@ public class AzureVMSSDeployTaskParameters extends AzureVMSSTaskParameters {
     this.subscriptionId = subscriptionId;
     this.resourceGroupName = resourceGroupName;
     this.rollback = rollback;
+    this.isBlueGreen = isBlueGreen;
     this.baseScalingPolicyJSONs = baseScalingPolicyJSONs;
     this.preDeploymentData = preDeploymentData;
   }

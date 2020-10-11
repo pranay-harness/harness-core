@@ -1,15 +1,14 @@
 package software.wings.delegatetasks.azure.taskhandler;
 
 import static io.harness.azure.model.AzureConstants.AZURE_LOAD_BALANCER_DETAIL_NULL_VALIDATION_MSG;
+import static io.harness.azure.model.AzureConstants.AZURE_VMSS_SWAP_BACKEND_POOL;
 import static io.harness.azure.model.AzureConstants.BG_BLUE_TAG_VALUE;
 import static io.harness.azure.model.AzureConstants.BG_GREEN_TAG_VALUE;
 import static io.harness.azure.model.AzureConstants.BG_ROLLBACK_COMMAND_UNIT;
-import static io.harness.azure.model.AzureConstants.BG_SWAP_ROUTES_COMMAND_UNIT;
 import static io.harness.azure.model.AzureConstants.BG_VERSION_TAG_NAME;
 import static io.harness.azure.model.AzureConstants.DOWN_SCALE_COMMAND_UNIT;
 import static io.harness.azure.model.AzureConstants.DOWN_SCALE_STEADY_STATE_WAIT_COMMAND_UNIT;
 import static io.harness.azure.model.AzureConstants.NEW_VMSS_NAME_NULL_VALIDATION_MSG;
-import static io.harness.azure.model.AzureConstants.OLD_VMSS_NAME_NULL_VALIDATION_MSG;
 import static io.harness.azure.model.AzureConstants.UP_SCALE_COMMAND_UNIT;
 import static io.harness.azure.model.AzureConstants.UP_SCALE_STEADY_STATE_WAIT_COMMAND_UNIT;
 import static io.harness.logging.CommandExecutionStatus.SUCCESS;
@@ -70,24 +69,24 @@ public class AzureVMSSSwitchRouteTaskHandler extends AzureVMSSTaskHandler {
   }
 
   private void validateTaskParams(AzureVMSSSwitchRouteTaskParameters switchRouteTaskParameters) {
-    String newVMSSName = switchRouteTaskParameters.getNewVMSSName();
-    String oldVMSSName = switchRouteTaskParameters.getOldVMSSName();
     AzureLoadBalancerDetailForBGDeployment azureLoadBalancerDetail =
         switchRouteTaskParameters.getAzureLoadBalancerDetail();
+    String newVMSSName = switchRouteTaskParameters.getNewVMSSName();
+
+    if (isNull(azureLoadBalancerDetail)) {
+      throw new InvalidArgumentsException(AZURE_LOAD_BALANCER_DETAIL_NULL_VALIDATION_MSG);
+    }
 
     if (isBlank(newVMSSName)) {
       throw new InvalidArgumentsException(NEW_VMSS_NAME_NULL_VALIDATION_MSG);
-    }
-    if (isBlank(oldVMSSName)) {
-      throw new InvalidArgumentsException(OLD_VMSS_NAME_NULL_VALIDATION_MSG);
-    }
-    if (isNull(azureLoadBalancerDetail)) {
-      throw new InvalidArgumentsException(AZURE_LOAD_BALANCER_DETAIL_NULL_VALIDATION_MSG);
     }
   }
 
   private VirtualMachineScaleSet getVirtualMachineScaleSet(
       AzureConfig azureConfig, AzureVMSSSwitchRouteTaskParameters switchRouteTaskParameters, String vmssName) {
+    if (isBlank(vmssName)) {
+      return null;
+    }
     String subscriptionId = switchRouteTaskParameters.getSubscriptionId();
     String resourceGroupName = switchRouteTaskParameters.getResourceGroupName();
 
@@ -115,9 +114,12 @@ public class AzureVMSSSwitchRouteTaskHandler extends AzureVMSSTaskHandler {
   private void executeSwapRoutes(AzureConfig azureConfig, AzureVMSSSwitchRouteTaskParameters switchRouteTaskParameters,
       VirtualMachineScaleSet newVMSS, VirtualMachineScaleSet oldVMSS, LoadBalancer loadBalancer) {
     ExecutionLogCallback bgSwapRoutesLogCallback =
-        getLogCallBack(switchRouteTaskParameters, BG_SWAP_ROUTES_COMMAND_UNIT);
+        getLogCallBack(switchRouteTaskParameters, AZURE_VMSS_SWAP_BACKEND_POOL);
+    bgSwapRoutesLogCallback.saveExecutionLog("Star BG swap routes");
     executeSwapRoutesNewVMSS(azureConfig, switchRouteTaskParameters, newVMSS, loadBalancer, bgSwapRoutesLogCallback);
-    executeSwapRoutesOldVMSS(azureConfig, oldVMSS, switchRouteTaskParameters, bgSwapRoutesLogCallback);
+    if (oldVMSS != null) {
+      executeSwapRoutesOldVMSS(azureConfig, oldVMSS, switchRouteTaskParameters, bgSwapRoutesLogCallback);
+    }
   }
 
   private void executeSwapRoutesNewVMSS(AzureConfig azureConfig,
@@ -190,7 +192,10 @@ public class AzureVMSSSwitchRouteTaskHandler extends AzureVMSSTaskHandler {
   private void executeRollback(AzureConfig azureConfig, AzureVMSSSwitchRouteTaskParameters switchRouteTaskParameters,
       VirtualMachineScaleSet newVMSS, VirtualMachineScaleSet oldVMSS, LoadBalancer loadBalancer) {
     ExecutionLogCallback bgRollbackLogCallback = getLogCallBack(switchRouteTaskParameters, BG_ROLLBACK_COMMAND_UNIT);
-    executeRollbackOldVMSS(azureConfig, switchRouteTaskParameters, oldVMSS, loadBalancer, bgRollbackLogCallback);
+    bgRollbackLogCallback.saveExecutionLog("Start BG swap rollback");
+    if (oldVMSS != null) {
+      executeRollbackOldVMSS(azureConfig, switchRouteTaskParameters, oldVMSS, loadBalancer, bgRollbackLogCallback);
+    }
     executeRollbackNewVMSS(azureConfig, switchRouteTaskParameters, newVMSS, bgRollbackLogCallback);
   }
 
@@ -238,9 +243,16 @@ public class AzureVMSSSwitchRouteTaskHandler extends AzureVMSSTaskHandler {
     detachNewVMSSFromProdBackendPool(
         azureConfig, newVMSS, azureLoadBalancerDetail, timeoutIntervalInMin, bgRollbackLogCallback);
     addTagsToVMSS(newVMSS, BG_VERSION_TAG_NAME, BG_GREEN_TAG_VALUE);
+    String vmssName = newVMSS.name();
+    bgRollbackLogCallback.saveExecutionLog(
+        format("Start clearing auto scale policy on Virtual Machine Scale Set: [%s]", vmssName));
     clearAutoScalePolicyFromVMSS(azureConfig, newVMSS, resourceGroupName);
+    bgRollbackLogCallback.saveExecutionLog(
+        format("Start down sizing Virtual Machine Scale Set: [%s] to capacity [0]", vmssName));
     scaleDownVMSSToZeroCapacityAndWait(azureConfig, switchRouteTaskParameters, newVMSS);
+    bgRollbackLogCallback.saveExecutionLog(format("Start deleting Virtual Machine Scale Set: [%s]", vmssName));
     deleteVMSS(azureConfig, newVMSS);
+    bgRollbackLogCallback.saveExecutionLog(format("Successful deleted Virtual Machine Scale Set: [%s]", vmssName));
   }
 
   private void detachNewVMSSFromProdBackendPool(AzureConfig azureConfig, VirtualMachineScaleSet newVMSS,
@@ -257,8 +269,12 @@ public class AzureVMSSSwitchRouteTaskHandler extends AzureVMSSTaskHandler {
 
   private void waitForUpdatingVMInstances(
       VirtualMachineScaleSet vmss, int timeoutIntervalInMin, ExecutionLogCallback logCallback) {
-    List<String> vmIds =
-        vmss.virtualMachines().list().stream().map(VirtualMachineScaleSetVM::id).collect(Collectors.toList());
+    List<String> vmIds = vmss.virtualMachines()
+                             .list()
+                             .stream()
+                             .map(VirtualMachineScaleSetVM::id)
+                             .map(this ::getVMSSVMId)
+                             .collect(Collectors.toList());
 
     try {
       timeLimiter.callWithTimeout(() -> {
@@ -275,6 +291,14 @@ public class AzureVMSSSwitchRouteTaskHandler extends AzureVMSSTaskHandler {
     } catch (Exception e) {
       throw new InvalidRequestException("Error while updating Virtual Machine Scale Set VM instances", e);
     }
+  }
+
+  private String getVMSSVMId(String vmId) {
+    int slashIndex = vmId.lastIndexOf('/');
+    if (slashIndex == -1) {
+      throw new InvalidRequestException(format("Unable to get Virtual Machine Scale Set VM id: %s", vmId));
+    }
+    return vmId.substring(slashIndex + 1);
   }
 
   private void scaleDownVMSSToZeroCapacityAndWait(AzureConfig azureConfig,

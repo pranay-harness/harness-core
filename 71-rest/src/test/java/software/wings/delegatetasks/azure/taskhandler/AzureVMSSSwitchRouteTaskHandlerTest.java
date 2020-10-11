@@ -104,6 +104,7 @@ public class AzureVMSSSwitchRouteTaskHandlerTest extends WingsBaseTest {
     // newVirtualMachineScaleSet virtualMachines()
     VirtualMachineScaleSet newVirtualMachineScaleSet = mock(VirtualMachineScaleSet.class);
     VirtualMachineScaleSetVM newVirtualMachineScaleSetVM = mock(VirtualMachineScaleSetVM.class);
+    doReturn("/subscription/new-vm-is/-1").when(newVirtualMachineScaleSetVM).id();
     VirtualMachineScaleSetVMs newVirtualMachineScaleSetVMs = mock(VirtualMachineScaleSetVMs.class);
     PagedList<VirtualMachineScaleSetVM> pageList = getPageList();
     pageList.add(newVirtualMachineScaleSetVM);
@@ -114,6 +115,7 @@ public class AzureVMSSSwitchRouteTaskHandlerTest extends WingsBaseTest {
     // oldVirtualMachineScaleSet virtualMachines()
     VirtualMachineScaleSet oldVirtualMachineScaleSet = mock(VirtualMachineScaleSet.class);
     VirtualMachineScaleSetVM oldVirtualMachineScaleSetVM = mock(VirtualMachineScaleSetVM.class);
+    doReturn("/subscription/old-vm-is/-1").when(oldVirtualMachineScaleSetVM).id();
     VirtualMachineScaleSetVMs oldVirtualMachineScaleSetVMs = mock(VirtualMachineScaleSetVMs.class);
     PagedList<VirtualMachineScaleSetVM> oldPageList = getPageList();
     oldPageList.add(oldVirtualMachineScaleSetVM);

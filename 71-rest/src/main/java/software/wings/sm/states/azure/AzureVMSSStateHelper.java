@@ -336,6 +336,7 @@ public class AzureVMSSStateHelper {
     Service service = getServiceByAppId(context, application.getUuid());
     String serviceId = getServiceId(context);
     Artifact artifact = getArtifact((DeploymentExecutionContext) context, service.getUuid());
+    Environment environment = getEnvironment(context);
     AzureVMSSInfrastructureMapping azureVMSSInfrastructureMapping =
         getAzureVMSSInfrastructureMapping(context.fetchInfraMappingId(), application.getUuid());
     AzureConfig azureConfig = getAzureConfig(azureVMSSInfrastructureMapping.getComputeProviderSettingId());
@@ -347,6 +348,7 @@ public class AzureVMSSStateHelper {
         .service(service)
         .serviceId(serviceId)
         .artifact(artifact)
+        .environment(environment)
         .infrastructureMapping(azureVMSSInfrastructureMapping)
         .azureConfig(azureConfig)
         .azureEncryptedDataDetails(encryptedDataDetails)
