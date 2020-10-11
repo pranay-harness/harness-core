@@ -3,14 +3,12 @@ package io.harness.connector.validator;
 import com.google.inject.Singleton;
 import io.harness.delegate.beans.connector.ConnectorConfigDTO;
 import io.harness.delegate.beans.connector.ConnectorValidationResult;
-import io.harness.delegate.beans.connector.artifactoryconnector.ArtifactoryConnectorDTO;
+import io.harness.delegate.beans.connector.nexusconnector.NexusConnectorDTO;
 import io.harness.delegate.task.TaskParameters;
-import lombok.extern.slf4j.Slf4j;
 
-@Slf4j
 @Singleton
-public class ArtifactoryConnectionValidator
-    extends AbstractConnectorValidator implements ConnectionValidator<ArtifactoryConnectorDTO> {
+public class NexusConnectorValidator
+    extends AbstractConnectorValidator implements ConnectionValidator<NexusConnectorDTO> {
   @Override
   public <T extends ConnectorConfigDTO> TaskParameters getTaskParameters(
       T connectorConfig, String accountIdentifier, String orgIdentifier, String projectIdentifier) {
@@ -24,7 +22,8 @@ public class ArtifactoryConnectionValidator
 
   @Override
   public ConnectorValidationResult validate(
-      ArtifactoryConnectorDTO connectorDTO, String accountIdentifier, String orgIdentifier, String projectIdentifier) {
+      NexusConnectorDTO connectorDTO, String accountIdentifier, String orgIdentifier, String projectIdentifier) {
+    // making always true.
     return ConnectorValidationResult.builder().valid(true).build();
   }
 }

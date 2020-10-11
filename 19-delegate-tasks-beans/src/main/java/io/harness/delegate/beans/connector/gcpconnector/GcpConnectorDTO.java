@@ -11,6 +11,8 @@ import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import lombok.experimental.FieldDefaults;
 
+import javax.validation.Valid;
+
 @Data
 @Builder
 @NoArgsConstructor
@@ -20,5 +22,5 @@ import lombok.experimental.FieldDefaults;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @ApiModel("GcpConnector")
 public class GcpConnectorDTO extends ConnectorConfigDTO {
-  GcpConnectorCredentialDTO credential;
+  @Valid GcpConnectorCredentialDTO credential;
 }

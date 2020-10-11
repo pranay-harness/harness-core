@@ -21,7 +21,8 @@ public enum ConnectorType {
   @JsonProperty("Gcp") GCP("Gcp"),
   @JsonProperty("Aws") AWS("Aws"),
   @JsonProperty("Artifactory") ARTIFACTORY("Artifactory"),
-  @JsonProperty("Jira") JIRA("Jira");
+  @JsonProperty("Jira") JIRA("Jira"),
+  @JsonProperty("Nexus") NEXUS("Nexus");
 
   private final String displayName;
 

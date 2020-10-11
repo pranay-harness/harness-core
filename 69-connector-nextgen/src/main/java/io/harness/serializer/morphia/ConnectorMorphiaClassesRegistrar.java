@@ -25,6 +25,8 @@ import io.harness.connector.entities.embedded.kubernetescluster.KubernetesCluste
 import io.harness.connector.entities.embedded.kubernetescluster.KubernetesClusterDetails;
 import io.harness.connector.entities.embedded.kubernetescluster.KubernetesDelegateDetails;
 import io.harness.connector.entities.embedded.localconnector.LocalConnector;
+import io.harness.connector.entities.embedded.nexusconnector.NexusConnector;
+import io.harness.connector.entities.embedded.nexusconnector.NexusUserNamePasswordAuthentication;
 import io.harness.connector.entities.embedded.splunkconnector.SplunkConnector;
 import io.harness.connector.entities.embedded.vaultconnector.VaultConnector;
 import io.harness.morphia.MorphiaRegistrar;
@@ -48,6 +50,7 @@ public class ConnectorMorphiaClassesRegistrar implements MorphiaRegistrar {
     set.add(AwsConfig.class);
     set.add(ArtifactoryConnector.class);
     set.add(JiraConnector.class);
+    set.add(NexusConnector.class);
   }
 
   @Override
@@ -69,5 +72,7 @@ public class ConnectorMorphiaClassesRegistrar implements MorphiaRegistrar {
         DockerUserNamePasswordAuthentication.class);
     h.put("connector.entities.embedded.artifactoryconnector.ArtifactoryUserNamePasswordAuthentication",
         ArtifactoryUserNamePasswordAuthentication.class);
+    h.put("connector.entities.embedded.nexusconnector.NexusUserNamePasswordAuthentication",
+        NexusUserNamePasswordAuthentication.class);
   }
 }

@@ -3,7 +3,6 @@ package io.harness.connector;
 import com.google.inject.AbstractModule;
 import com.google.inject.multibindings.MapBinder;
 import com.google.inject.name.Names;
-
 import io.harness.connector.impl.DefaultConnectorServiceImpl;
 import io.harness.connector.mappers.ConnectorConfigSummaryDTOMapper;
 import io.harness.connector.mappers.ConnectorDTOToEntityMapper;
@@ -38,6 +37,8 @@ import io.harness.connector.mappers.jira.JiraEntityToDTO;
 import io.harness.connector.mappers.kubernetesMapper.KubernetesConfigSummaryMapper;
 import io.harness.connector.mappers.kubernetesMapper.KubernetesDTOToEntity;
 import io.harness.connector.mappers.kubernetesMapper.KubernetesEntityToDTO;
+import io.harness.connector.mappers.nexusmapper.NexusDTOToEntity;
+import io.harness.connector.mappers.nexusmapper.NexusEntityToDTO;
 import io.harness.connector.mappers.splunkconnectormapper.SplunkConnectorSummaryMapper;
 import io.harness.connector.mappers.splunkconnectormapper.SplunkDTOToEntity;
 import io.harness.connector.mappers.splunkconnectormapper.SplunkEntityToDTO;
@@ -50,6 +51,7 @@ import io.harness.connector.validator.DockerConnectionValidator;
 import io.harness.connector.validator.GcpConnectorValidator;
 import io.harness.connector.validator.GitConnectorValidator;
 import io.harness.connector.validator.KubernetesConnectionValidator;
+import io.harness.connector.validator.NexusConnectorValidator;
 import io.harness.connector.validator.SplunkConnectionValidator;
 import io.harness.delegate.beans.connector.ConnectorType;
 import io.harness.persistence.HPersistence;
@@ -74,6 +76,7 @@ public class ConnectorModule extends AbstractModule {
     connectorValidatorMapBinder.addBinding(ConnectorType.AWS.getDisplayName()).to(AwsConnectorValidator.class);
     connectorValidatorMapBinder.addBinding(ConnectorType.ARTIFACTORY.getDisplayName())
         .to(ArtifactoryConnectionValidator.class);
+    connectorValidatorMapBinder.addBinding(ConnectorType.NEXUS.getDisplayName()).to(NexusConnectorValidator.class);
 
     MapBinder<String, ConnectorDTOToEntityMapper> connectorDTOToEntityMapBinder =
         MapBinder.newMapBinder(binder(), String.class, ConnectorDTOToEntityMapper.class);
@@ -92,6 +95,7 @@ public class ConnectorModule extends AbstractModule {
     connectorDTOToEntityMapBinder.addBinding(ConnectorType.ARTIFACTORY.getDisplayName())
         .to(ArtifactoryDTOToEntity.class);
     connectorDTOToEntityMapBinder.addBinding(ConnectorType.JIRA.getDisplayName()).to(JiraDTOToEntity.class);
+    connectorDTOToEntityMapBinder.addBinding(ConnectorType.NEXUS.getDisplayName()).to(NexusDTOToEntity.class);
 
     MapBinder<String, ConnectorEntityToDTOMapper> connectorEntityToDTOMapper =
         MapBinder.newMapBinder(binder(), String.class, ConnectorEntityToDTOMapper.class);
@@ -108,6 +112,7 @@ public class ConnectorModule extends AbstractModule {
     connectorEntityToDTOMapper.addBinding(ConnectorType.AWS.getDisplayName()).to(AwsEntityToDTO.class);
     connectorEntityToDTOMapper.addBinding(ConnectorType.ARTIFACTORY.getDisplayName()).to(ArtifactoryEntityToDTO.class);
     connectorEntityToDTOMapper.addBinding(ConnectorType.JIRA.getDisplayName()).to(JiraEntityToDTO.class);
+    connectorEntityToDTOMapper.addBinding(ConnectorType.NEXUS.getDisplayName()).to(NexusEntityToDTO.class);
 
     MapBinder<String, ConnectorConfigSummaryDTOMapper> connectorConfigSummaryDTOMapper =
         MapBinder.newMapBinder(binder(), String.class, ConnectorConfigSummaryDTOMapper.class);
