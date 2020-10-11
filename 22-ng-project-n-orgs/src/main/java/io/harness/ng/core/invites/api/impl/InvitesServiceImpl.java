@@ -78,14 +78,14 @@ public class InvitesServiceImpl implements InvitesService {
   @Inject
   public InvitesServiceImpl(@Named("baseUrl") String baseURL, @Named("userVerificatonSecret") String jwtPasswordSecret,
       MongoConfig mongoConfig, JWTGeneratorUtils jwtGeneratorUtils, MailUtils mailUtils, NgUserService ngUserService,
-      MongoTransactionManager mongoTransactionManager, InvitesRepository invitesRepository) {
+      TransactionTemplate transactionTemplate, InvitesRepository invitesRepository) {
     this.jwtPasswordSecret = jwtPasswordSecret;
     this.jwtGeneratorUtils = jwtGeneratorUtils;
     this.mailUtils = mailUtils;
     this.ngUserService = ngUserService;
     this.invitesRepository = invitesRepository;
+    this.transactionTemplate = transactionTemplate;
     verificationBaseUrl = baseURL + "invites/verify?token=%s&accountId=%s";
-    transactionTemplate = new TransactionTemplate(mongoTransactionManager);
     MongoClientURI uri = new MongoClientURI(mongoConfig.getUri());
     useMongoTransactions = uri.getHosts().size() > 2;
   }
@@ -221,9 +221,7 @@ public class InvitesServiceImpl implements InvitesService {
     invitesRepository.updateInvite(invite.getId(), update);
   }
 
-  //  Do it like events, or eager reports? Not a good idea to wait till email goes through
-  @Override
-  public boolean sendInvitationMail(Invite invite) {
+  private boolean sendInvitationMail(Invite invite) {
     updateJWTTokenInInvite(invite);
     String url = String.format(verificationBaseUrl, invite.getInviteToken(), invite.getAccountIdentifier());
     String subject = String.format(MAIL_SUBJECT_FORMAT, invite.getProjectIdentifier());
@@ -266,7 +264,7 @@ public class InvitesServiceImpl implements InvitesService {
     return returnInviteOptional;
   }
 
-  public Boolean approveUserRequest(Invite invite, Role role) {
+  private Boolean approveUserRequest(Invite invite, Role role) {
     if (invite == null || role == null) {
       return Boolean.FALSE;
     }
@@ -285,7 +283,7 @@ public class InvitesServiceImpl implements InvitesService {
     return Boolean.TRUE;
   }
 
-  public void updateCreationDate(Invite invite) {
+  private void updateCreationDate(Invite invite) {
     Update update = new Update()
                         .set(InviteKeys.createdAt, new Date())
                         .set(InviteKeys.validUntil,

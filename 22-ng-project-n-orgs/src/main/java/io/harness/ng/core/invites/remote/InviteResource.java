@@ -78,7 +78,8 @@ public class InviteResource {
 
   @GET
   @ApiOperation(value = "Get all invites for the queried project", nickname = "getInvites")
-  public ResponseDTO<PageResponse<InviteDTO>> get(@QueryParam("accountIdentifier") @NotEmpty String accountIdentifier,
+  public ResponseDTO<PageResponse<InviteDTO>> getInvites(
+      @QueryParam("accountIdentifier") @NotEmpty String accountIdentifier,
       @QueryParam("orgIdentifier") @NotEmpty String orgIdentifier,
       @QueryParam("projectIdentifier") @NotEmpty String projectIdentifier, @BeanParam PageRequest pageRequest) {
     if (isEmpty(pageRequest.getSortOrders())) {

@@ -48,11 +48,11 @@ import java.util.Date;
 @OwnedBy(PL)
 public class Invite implements PersistentEntity, NGAccountAccess {
   @Trimmed @NotEmpty String accountIdentifier;
-  @Id @org.mongodb.morphia.annotations.Id @EntityIdentifier String id;
+  @Wither @Id @org.mongodb.morphia.annotations.Id @EntityIdentifier String id;
   @Trimmed @NotEmpty String orgIdentifier;
   @Trimmed @NotEmpty String projectIdentifier;
   @Wither @NotEmpty @EntityName @Email String email;
-  @NotEmpty Role role;
+  @Wither @NotEmpty Role role;
   String name;
   @NonNull InviteType inviteType;
   @CreatedDate Long createdAt;
