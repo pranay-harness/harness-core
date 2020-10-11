@@ -12,6 +12,7 @@ import static software.wings.utils.WingsTestConstants.UUID;
 
 import com.google.inject.Inject;
 
+import io.harness.beans.PageRequest;
 import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
 import org.junit.Test;
@@ -49,7 +50,7 @@ public class HelmChartServiceTest extends WingsBaseTest {
         .uuid(UUID + version)
         .applicationManifestId(APPLICATION_MANIFEST_ID)
         .serviceId(SERVICE_ID)
-        .chartVersion(version)
+        .version(version)
         .build();
   }
 
@@ -65,12 +66,17 @@ public class HelmChartServiceTest extends WingsBaseTest {
                                  .applicationManifestId(APPLICATION_MANIFEST_ID)
                                  .serviceId("serviceId")
                                  .build();
+
     helmChartService.create(newHelmChart);
     List<HelmChart> helmCharts =
         helmChartService.listHelmChartsForService(aPageRequest()
                                                       .addFilter(HelmChartKeys.appId, EQ, APP_ID)
                                                       .addFilter(HelmChartKeys.serviceId, EQ, SERVICE_ID)
                                                       .build());
+    assertThat(helmCharts).containsOnly(helmChart);
+
+    helmCharts = helmChartService.listHelmChartsForService(APP_ID, SERVICE_ID, new PageRequest<>());
+
     assertThat(helmCharts).containsOnly(helmChart);
   }
 
@@ -95,6 +101,17 @@ public class HelmChartServiceTest extends WingsBaseTest {
   @Test
   @Owner(developers = PRABU)
   @Category(UnitTests.class)
+  public void shouldGetLastCollectedHelmChart() {
+    helmChartService.create(helmChart);
+    HelmChart newHelmChart = generateHelmChartWithVersion("2.0");
+    helmChartService.create(newHelmChart);
+    HelmChart outHelmChart = helmChartService.getLastCollectedManifest(ACCOUNT_ID, APPLICATION_MANIFEST_ID);
+    assertThat(outHelmChart).isEqualTo(newHelmChart);
+  }
+
+  @Test
+  @Owner(developers = PRABU)
+  @Category(UnitTests.class)
   public void testListHelmChartsForApplicationManifest() {
     helmChartService.create(helmChart);
     HelmChart newHelmChart = HelmChart.builder()
@@ -107,6 +124,19 @@ public class HelmChartServiceTest extends WingsBaseTest {
     helmChartService.create(newHelmChart);
     List<HelmChart> helmCharts = helmChartService.listHelmChartsForAppManifest(ACCOUNT_ID, APPLICATION_MANIFEST_ID);
     assertThat(helmCharts).containsOnly(helmChart);
+  }
+
+  @Test
+  @Owner(developers = PRABU)
+  @Category(UnitTests.class)
+  public void shouldListByIds() {
+    helmChartService.create(helmChart);
+    HelmChart newHelmChart = generateHelmChartWithVersion("2.0");
+    HelmChart newHelmChart2 = generateHelmChartWithVersion("3.0");
+    helmChartService.create(newHelmChart);
+    helmChartService.create(newHelmChart2);
+    List<HelmChart> outHelmCharts = helmChartService.listByIds(ACCOUNT_ID, Arrays.asList("UUID1.0", "UUID2.0"));
+    assertThat(outHelmCharts).containsExactlyInAnyOrder(helmChart, newHelmChart);
   }
 
   @Test

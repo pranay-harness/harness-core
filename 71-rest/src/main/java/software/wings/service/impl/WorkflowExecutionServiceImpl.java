@@ -60,6 +60,7 @@ import static software.wings.beans.ApprovalDetails.Action.APPROVE;
 import static software.wings.beans.ApprovalDetails.Action.REJECT;
 import static software.wings.beans.ElementExecutionSummary.ElementExecutionSummaryBuilder.anElementExecutionSummary;
 import static software.wings.beans.EntityType.DEPLOYMENT;
+import static software.wings.beans.FeatureName.HELM_CHART_AS_ARTIFACT;
 import static software.wings.beans.PipelineExecution.Builder.aPipelineExecution;
 import static software.wings.beans.config.ArtifactSourceable.ARTIFACT_SOURCE_DOCKER_CONFIG_NAME_KEY;
 import static software.wings.beans.config.ArtifactSourceable.ARTIFACT_SOURCE_DOCKER_CONFIG_PLACEHOLDER;
@@ -204,6 +205,7 @@ import software.wings.beans.alert.AlertData;
 import software.wings.beans.alert.AlertType;
 import software.wings.beans.alert.DeploymentRateApproachingLimitAlert;
 import software.wings.beans.alert.UsageLimitExceededAlert;
+import software.wings.beans.appmanifest.HelmChart;
 import software.wings.beans.artifact.Artifact;
 import software.wings.beans.artifact.ArtifactStream;
 import software.wings.beans.baseline.WorkflowExecutionBaseline;
@@ -260,6 +262,7 @@ import software.wings.service.intfc.UserGroupService;
 import software.wings.service.intfc.WorkflowExecutionBaselineService;
 import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.service.intfc.WorkflowService;
+import software.wings.service.intfc.applicationmanifest.HelmChartService;
 import software.wings.service.intfc.compliance.GovernanceConfigService;
 import software.wings.service.intfc.deployment.AccountExpiryCheck;
 import software.wings.service.intfc.deployment.PreDeploymentChecker;
@@ -384,6 +387,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
   @Inject private DeploymentAuthHandler deploymentAuthHandler;
   @Inject private AuthService authService;
   @Inject private KryoSerializer kryoSerializer;
+  @Inject private HelmChartService helmChartService;
 
   @Inject @RateLimitCheck private PreDeploymentChecker deployLimitChecker;
   @Inject @ServiceInstanceUsage private PreDeploymentChecker siUsageChecker;
@@ -1193,6 +1197,9 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
     if (isNotEmpty(executionArgs.getArtifacts())) {
       stdParams.setArtifactIds(executionArgs.getArtifacts().stream().map(Artifact::getUuid).collect(toList()));
     }
+    if (isNotEmpty(executionArgs.getHelmCharts())) {
+      stdParams.setHelmChartIds(executionArgs.getHelmCharts().stream().map(HelmChart::getUuid).collect(toList()));
+    }
     if (isNotEmpty(executionArgs.getWorkflowVariables())) {
       stdParams.setWorkflowVariables(executionArgs.getWorkflowVariables());
     }
@@ -1834,6 +1841,10 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
 
   public void populateArtifactsAndServices(WorkflowExecution workflowExecution, WorkflowStandardParams stdParams,
       Set<String> keywords, ExecutionArgs executionArgs, String accountId) {
+    if (featureFlagService.isEnabled(HELM_CHART_AS_ARTIFACT, accountId)) {
+      populateHelmChartsInWorkflowExecution(workflowExecution, keywords, executionArgs, accountId);
+    }
+
     if (featureFlagService.isEnabled(FeatureName.ARTIFACT_STREAM_REFACTOR, accountId)) {
       populateArtifacts(workflowExecution, stdParams, keywords, executionArgs, accountId);
       return;
@@ -1919,6 +1930,42 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
 
     // Set the services in the context.
     stdParams.setServices(services);
+  }
+
+  private void populateHelmChartsInWorkflowExecution(
+      WorkflowExecution workflowExecution, Set<String> keywords, ExecutionArgs executionArgs, String accountId) {
+    if (isEmpty(executionArgs.getHelmCharts())) {
+      return;
+    }
+    List<String> helmChartIds = executionArgs.getHelmCharts()
+                                    .stream()
+                                    .map(HelmChart::getUuid)
+                                    .filter(Objects::nonNull)
+                                    .distinct()
+                                    .collect(toList());
+
+    List<HelmChart> helmCharts = helmChartService.listByIds(accountId, helmChartIds);
+
+    if (helmCharts == null || helmChartIds.size() != helmCharts.size()) {
+      logger.error("helmChartIds from executionArgs contains invalid helmCharts");
+      throw new InvalidRequestException("Invalid helm chart");
+    }
+
+    List<String> serviceIds =
+        isEmpty(workflowExecution.getServiceIds()) ? new ArrayList<>() : workflowExecution.getServiceIds();
+
+    List<HelmChart> filteredHelmCharts =
+        helmCharts.stream().filter(chart -> serviceIds.contains(chart.getServiceId())).collect(toList());
+
+    filteredHelmCharts.forEach(helmChart -> {
+      keywords.addAll(Arrays.asList(helmChart.getName(), helmChart.getVersion(), helmChart.getDescription()));
+      if (isNotEmpty(helmChart.getMetadata())) {
+        keywords.addAll(helmChart.getMetadata().values());
+      }
+    });
+
+    executionArgs.setHelmCharts(helmCharts);
+    workflowExecution.setHelmCharts(filteredHelmCharts);
   }
 
   private void populateArtifacts(WorkflowExecution workflowExecution, WorkflowStandardParams stdParams,
@@ -2383,6 +2430,15 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
                                      .map(artifactId -> Artifact.Builder.anArtifact().withUuid(artifactId).build())
                                      .collect(toList());
       executionArgs.setArtifacts(artifacts);
+    }
+
+    if (isEmpty(executionArgs.getHelmCharts()) && isNotEmpty(executionArgs.getManifestVariables())) {
+      List<HelmChart> manifests =
+          executionArgs.getManifestVariables()
+              .stream()
+              .map(manifestVariable -> HelmChart.builder().uuid(manifestVariable.getValue()).build())
+              .collect(toList());
+      executionArgs.setHelmCharts(manifests);
     }
 
     switch (executionArgs.getWorkflowType()) {

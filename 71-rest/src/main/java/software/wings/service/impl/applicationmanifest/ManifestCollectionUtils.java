@@ -81,7 +81,7 @@ public class ManifestCollectionUtils {
   private Set<String> getPublishedVersionsForAppManifest(String accountId, String appManifestId) {
     List<HelmChart> helmCharts = helmChartService.listHelmChartsForAppManifest(accountId, appManifestId);
     return helmCharts == null ? new HashSet<>()
-                              : helmCharts.stream().map(HelmChart::getChartVersion).collect(Collectors.toSet());
+                              : helmCharts.stream().map(HelmChart::getVersion).collect(Collectors.toSet());
   }
 
   private HelmChartConfigParamsBuilder constructHelmChartConfigParamsBuilder(

@@ -3,6 +3,7 @@ package software.wings.service.impl;
 import static io.harness.rule.OwnerRule.ADWAIT;
 import static io.harness.rule.OwnerRule.ARVIND;
 import static io.harness.rule.OwnerRule.INDER;
+import static io.harness.rule.OwnerRule.PRABU;
 import static io.harness.rule.OwnerRule.VAIBHAV_SI;
 import static io.harness.rule.OwnerRule.YOGESH;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -27,7 +28,11 @@ import static software.wings.beans.appmanifest.StoreType.OC_TEMPLATES;
 import static software.wings.beans.appmanifest.StoreType.Remote;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 import static software.wings.utils.WingsTestConstants.APP_ID;
+import static software.wings.utils.WingsTestConstants.BUCKET_NAME;
+import static software.wings.utils.WingsTestConstants.MANIFEST_ID;
 import static software.wings.utils.WingsTestConstants.SERVICE_ID;
+import static software.wings.utils.WingsTestConstants.SETTING_ID;
+import static software.wings.utils.WingsTestConstants.SETTING_NAME;
 
 import com.google.inject.Inject;
 
@@ -53,13 +58,17 @@ import software.wings.beans.HelmChartConfig.HelmChartConfigBuilder;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.appmanifest.AppManifestKind;
 import software.wings.beans.appmanifest.ApplicationManifest;
+import software.wings.beans.settings.helm.GCSHelmRepoConfig;
 import software.wings.dl.WingsPersistence;
+import software.wings.helpers.ext.helm.HelmHelper;
 import software.wings.helpers.ext.kustomize.KustomizeConfig;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.applicationmanifest.HelmChartService;
 import software.wings.service.intfc.yaml.YamlPushService;
+
+import java.util.Map;
 
 public class ApplicationManifestServiceImplTest extends WingsBaseTest {
   @Rule public ExpectedException thrown = ExpectedException.none();
@@ -71,6 +80,7 @@ public class ApplicationManifestServiceImplTest extends WingsBaseTest {
   @Inject private WingsPersistence wingsPersistence;
   @Mock private FeatureFlagService featureFlagService;
   @Mock private HelmChartService helmChartService;
+  @Spy private HelmHelper helmHelper;
 
   @Before
   public void setup() {
@@ -685,5 +695,28 @@ public class ApplicationManifestServiceImplTest extends WingsBaseTest {
                                applicationManifest, applicationManifest, false, ACCOUNT_ID))
         .isInstanceOf(InvalidRequestException.class)
         .hasMessageContaining("No Helm Chart version is required when Poll for Manifest option is enabled.");
+  }
+
+  @Test
+  @Owner(developers = PRABU)
+  @Category(UnitTests.class)
+  public void shouldFetchHelmChartConfigProperties() {
+    ApplicationManifest applicationManifest =
+        ApplicationManifest.builder()
+            .storeType(HelmChartRepo)
+            .helmChartConfig(
+                HelmChartConfig.builder().connectorId(SETTING_ID).chartName("chart").basePath("base_path").build())
+            .build();
+    applicationManifest.setUuid(MANIFEST_ID);
+    when(applicationManifestServiceImpl.getById(APP_ID, MANIFEST_ID)).thenReturn(applicationManifest);
+    GCSHelmRepoConfig helmRepoConfig = GCSHelmRepoConfig.builder().bucketName(BUCKET_NAME).build();
+    when(settingsService.get(SETTING_ID))
+        .thenReturn(aSettingAttribute().withName(SETTING_NAME).withValue(helmRepoConfig).build());
+
+    Map<String, String> properties = applicationManifestServiceImpl.fetchAppManifestProperties(APP_ID, MANIFEST_ID);
+    assertThat(properties.get("url")).isEqualTo("gs://" + BUCKET_NAME + "/base_path");
+    assertThat(properties.get("basePath")).isEqualTo("base_path");
+    assertThat(properties.get("repositoryName")).isEqualTo(SETTING_NAME);
+    assertThat(properties.get("bucketName")).isEqualTo(BUCKET_NAME);
   }
 }

@@ -383,6 +383,8 @@ public interface WingsTestConstants {
   String TERRAFORM_STATE_FILE_ID = "TERRAFORM_STATE_FILE_ID";
   String UUID = "UUID";
 
+  String HELM_CHART_ID = "HELM_CHART_ID";
+
   /**
    * The constant URL.
    */

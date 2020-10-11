@@ -763,8 +763,8 @@ public class HelmTaskHelperTest extends WingsBaseTest {
     assertThat(helmCharts.get(0).getAccountId()).isEqualTo(ACCOUNT_ID);
     assertThat(helmCharts.get(0).getAppId()).isEqualTo(APP_ID);
     assertThat(helmCharts.get(0).getApplicationManifestId()).isEqualTo(MANIFEST_ID);
-    assertThat(helmCharts.get(0).getChartVersion()).isEqualTo("1");
-    assertThat(helmCharts.get(1).getChartVersion()).isEqualTo("2");
+    assertThat(helmCharts.get(0).getVersion()).isEqualTo("1");
+    assertThat(helmCharts.get(1).getVersion()).isEqualTo("2");
     verify(processExecutor, times(2)).execute();
 
     doReturn("WARNING: LONG_SINGLE_LINE_WARNING_MESSAGE.NAME\tCHART VERSION\tAPP VERSION\tDESCRIPTION\n"
@@ -776,8 +776,8 @@ public class HelmTaskHelperTest extends WingsBaseTest {
     assertThat(helmCharts).hasSize(2);
     assertThat(helmCharts.get(0).getDescription()).isEqualTo("desc");
     assertThat(helmCharts.get(0).getAppVersion()).isEqualTo("0");
-    assertThat(helmCharts.get(0).getChartVersion()).isEqualTo("3");
-    assertThat(helmCharts.get(1).getChartVersion()).isEqualTo("4");
+    assertThat(helmCharts.get(0).getVersion()).isEqualTo("3");
+    assertThat(helmCharts.get(1).getVersion()).isEqualTo("4");
   }
 
   @Test
@@ -815,8 +815,8 @@ public class HelmTaskHelperTest extends WingsBaseTest {
     assertThat(helmCharts.get(0).getAccountId()).isEqualTo(ACCOUNT_ID);
     assertThat(helmCharts.get(0).getAppId()).isEqualTo(APP_ID);
     assertThat(helmCharts.get(0).getApplicationManifestId()).isEqualTo(MANIFEST_ID);
-    assertThat(helmCharts.get(0).getChartVersion()).isEqualTo("1");
-    assertThat(helmCharts.get(1).getChartVersion()).isEqualTo("2");
+    assertThat(helmCharts.get(0).getVersion()).isEqualTo("1");
+    assertThat(helmCharts.get(1).getVersion()).isEqualTo("2");
     verify(processExecutor, times(1)).execute();
     verify(chartMuseumClient, times(1))
         .startChartMuseumServer(gcsHelmRepoConfig, helmChartConfigParams.getConnectorConfig(),
@@ -858,8 +858,8 @@ public class HelmTaskHelperTest extends WingsBaseTest {
     assertThat(helmCharts.get(0).getAccountId()).isEqualTo(ACCOUNT_ID);
     assertThat(helmCharts.get(0).getAppId()).isEqualTo(APP_ID);
     assertThat(helmCharts.get(0).getApplicationManifestId()).isEqualTo(MANIFEST_ID);
-    assertThat(helmCharts.get(0).getChartVersion()).isEqualTo("1");
-    assertThat(helmCharts.get(1).getChartVersion()).isEqualTo("2");
+    assertThat(helmCharts.get(0).getVersion()).isEqualTo("1");
+    assertThat(helmCharts.get(1).getVersion()).isEqualTo("2");
     // For helm version 2, we execute another command for helm init apart from add repo
     verify(processExecutor, times(3)).execute();
     verify(helmTaskHelper, times(1)).initHelm("dir", V2, 10000);

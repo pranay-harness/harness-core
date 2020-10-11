@@ -212,7 +212,7 @@ public class ManifestCollectionResponseHandlerTest extends CategoryTest {
         .uuid(UUID + version)
         .applicationManifestId(MANIFEST_ID)
         .serviceId(SERVICE_ID)
-        .chartVersion(version)
+        .version(version)
         .build();
   }
 }

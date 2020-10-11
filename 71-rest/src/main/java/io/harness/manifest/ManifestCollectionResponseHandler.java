@@ -118,7 +118,7 @@ public class ManifestCollectionResponseHandler {
     if (isNotEmpty(manifestsCollected)) {
       if (!helmChartService.addCollectedHelmCharts(accountId, appManifestId, manifestsCollected)) {
         logger.error("Error in saving one or more collected manifest versions: {}",
-            manifestsCollected.stream().map(HelmChart::getChartVersion).collect(toSet()));
+            manifestsCollected.stream().map(HelmChart::getVersion).collect(toSet()));
         return;
       }
 
@@ -126,7 +126,7 @@ public class ManifestCollectionResponseHandler {
         logger.warn("Collected {} versions in single attempt", manifestsCollected.size());
       }
       manifestsCollected.stream().limit(MAX_LOGS).forEach(
-          manifest -> logger.info("Collected new version {}", manifest.getChartVersion()));
+          manifest -> logger.info("Collected new version {}", manifest.getVersion()));
     }
   }
 }

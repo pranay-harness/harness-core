@@ -35,6 +35,7 @@ import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 import static software.wings.utils.WingsTestConstants.APP_ID;
 import static software.wings.utils.WingsTestConstants.PIPELINE_ID;
 import static software.wings.utils.WingsTestConstants.PIPELINE_NAME;
+import static software.wings.utils.WingsTestConstants.SERVICE_ID;
 import static software.wings.utils.WingsTestConstants.WORKFLOW_ID;
 import static software.wings.utils.WingsTestConstants.WORKFLOW_NAME;
 import static software.wings.utils.WingsTestConstants.mockChecker;
@@ -42,6 +43,7 @@ import static software.wings.utils.WingsTestConstants.mockChecker;
 import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
 
+import io.harness.beans.OrchestrationWorkflowType;
 import io.harness.category.element.UnitTests;
 import io.harness.exception.InvalidRequestException;
 import io.harness.limits.LimitCheckerFactory;
@@ -61,6 +63,7 @@ import org.powermock.modules.junit4.PowerMockRunner;
 import software.wings.WingsBaseTest;
 import software.wings.api.DeploymentType;
 import software.wings.beans.FeatureName;
+import software.wings.beans.ManifestVariable;
 import software.wings.beans.Pipeline;
 import software.wings.beans.PipelineStage;
 import software.wings.beans.PipelineStage.PipelineStageElement;
@@ -68,6 +71,7 @@ import software.wings.beans.RuntimeInputsConfig;
 import software.wings.beans.Variable;
 import software.wings.beans.VariableType;
 import software.wings.beans.Workflow;
+import software.wings.beans.deployment.DeploymentMetadata;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.FeatureFlagService;
@@ -1152,5 +1156,75 @@ public class PipelineServiceImplTest extends WingsBaseTest {
         () -> pipelineServiceImpl.setPipelineVariables(workflow, pipelineStageElement, pipelineVars, false))
         .isInstanceOf(InvalidRequestException.class)
         .hasMessage("Variable entityVal is not marked as runtime in all pipeline stages");
+  }
+
+  @Test
+  @Owner(developers = PRABU)
+  @Category(UnitTests.class)
+  public void testMergeManifestVariables() {
+    Workflow workflow1 =
+        aWorkflow()
+            .accountId(ACCOUNT_ID)
+            .uuid(WORKFLOW_ID)
+            .orchestrationWorkflow(
+                aCanaryOrchestrationWorkflow().withOrchestrationWorkflowType(OrchestrationWorkflowType.BASIC).build())
+            .build();
+    Workflow workflow2 =
+        aWorkflow()
+            .accountId(ACCOUNT_ID)
+            .uuid(WORKFLOW_ID + 2)
+            .orchestrationWorkflow(
+                aCanaryOrchestrationWorkflow().withOrchestrationWorkflowType(OrchestrationWorkflowType.BASIC).build())
+            .build();
+
+    DeploymentMetadata deploymentMetadata =
+        DeploymentMetadata.builder()
+            .manifestRequiredServiceIds(asList(SERVICE_ID, SERVICE_ID + 2))
+            .manifestVariables(asList(ManifestVariable.builder().serviceId(SERVICE_ID).build(),
+                ManifestVariable.builder().serviceId(SERVICE_ID + 2).build()))
+            .build();
+    DeploymentMetadata deploymentMetadata2 =
+        DeploymentMetadata.builder()
+            .manifestRequiredServiceIds(asList(SERVICE_ID))
+            .manifestVariables(asList(ManifestVariable.builder().serviceId(SERVICE_ID).build()))
+            .build();
+    PipelineStage ps1 =
+        PipelineStage.builder()
+            .pipelineStageElements(asList(PipelineStageElement.builder()
+                                              .type("ENV_STATE")
+                                              .disableAssertion("false")
+                                              .properties(Collections.singletonMap("workflowId", WORKFLOW_ID))
+                                              .build()))
+            .build();
+    PipelineStage ps2 =
+        PipelineStage.builder()
+            .pipelineStageElements(asList(PipelineStageElement.builder()
+                                              .type("ENV_STATE")
+                                              .disableAssertion("false")
+                                              .properties(Collections.singletonMap("workflowId", WORKFLOW_ID + 2))
+                                              .build()))
+            .build();
+    Pipeline pipeline = Pipeline.builder().appId(APP_ID).pipelineStages(asList(ps1, ps2)).build();
+
+    when(mockWorkflowService.readWorkflowWithoutServices(APP_ID, WORKFLOW_ID)).thenReturn(workflow1);
+    when(mockWorkflowService.readWorkflowWithoutServices(APP_ID, WORKFLOW_ID + 2)).thenReturn(workflow2);
+    when(mockWorkflowService.fetchDeploymentMetadata(eq(APP_ID), eq(workflow1), any(), any(), any(), eq(false), any(),
+             eq(DeploymentMetadata.Include.ARTIFACT_SERVICE)))
+        .thenReturn(deploymentMetadata);
+    when(mockWorkflowService.fetchDeploymentMetadata(eq(APP_ID), eq(workflow2), any(), any(), any(), eq(false), any(),
+             eq(DeploymentMetadata.Include.ARTIFACT_SERVICE)))
+        .thenReturn(deploymentMetadata2);
+    when(featureFlagService.isEnabled(FeatureName.HELM_CHART_AS_ARTIFACT, ACCOUNT_ID)).thenReturn(true);
+
+    DeploymentMetadata pipelineDeploymentMetadata = pipelineServiceImpl.fetchDeploymentMetadata(
+        APP_ID, pipeline, Collections.EMPTY_LIST, Collections.EMPTY_LIST, DeploymentMetadata.Include.ARTIFACT_SERVICE);
+    assertThat(pipelineDeploymentMetadata).isNotNull();
+    assertThat(pipelineDeploymentMetadata.getManifestRequiredServiceIds()).containsExactly(SERVICE_ID, SERVICE_ID + 2);
+    assertThat(pipelineDeploymentMetadata.getManifestVariables()).hasSize(2);
+    assertThat(pipelineDeploymentMetadata.getManifestVariables().get(0).getServiceId()).isEqualTo(SERVICE_ID);
+    assertThat(pipelineDeploymentMetadata.getManifestVariables().get(0).getWorkflowIds())
+        .containsExactly(WORKFLOW_ID, WORKFLOW_ID + 2);
+    assertThat(pipelineDeploymentMetadata.getManifestVariables().get(1).getServiceId()).isEqualTo(SERVICE_ID + 2);
+    assertThat(pipelineDeploymentMetadata.getManifestVariables().get(1).getWorkflowIds()).containsExactly(WORKFLOW_ID);
   }
 }

@@ -18,6 +18,7 @@ import static io.harness.exception.HintException.MOVE_TO_THE_PARENT_OBJECT;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.exception.WingsException.USER_SRE;
 import static io.harness.expression.ExpressionEvaluator.DEFAULT_ARTIFACT_VARIABLE_NAME;
+import static io.harness.expression.ExpressionEvaluator.DEFAULT_HELMCHART_VARIABLE_NAME;
 import static io.harness.expression.ExpressionEvaluator.matchesVariablePattern;
 import static io.harness.govern.Switch.noop;
 import static io.harness.govern.Switch.unhandled;
@@ -45,8 +46,10 @@ import static software.wings.api.DeploymentType.SSH;
 import static software.wings.beans.Application.GLOBAL_APP_ID;
 import static software.wings.beans.CanaryWorkflowExecutionAdvisor.ROLLBACK_PROVISIONERS;
 import static software.wings.beans.EntityType.ARTIFACT;
+import static software.wings.beans.EntityType.HELM_CHART;
 import static software.wings.beans.EntityType.SERVICE;
 import static software.wings.beans.EntityType.WORKFLOW;
+import static software.wings.beans.FeatureName.HELM_CHART_AS_ARTIFACT;
 import static software.wings.beans.NotificationRule.NotificationRuleBuilder.aNotificationRule;
 import static software.wings.common.InfrastructureConstants.INFRA_ID_EXPRESSION;
 import static software.wings.common.WorkflowConstants.WORKFLOW_INFRAMAPPING_VALIDATION_MESSAGE;
@@ -62,10 +65,12 @@ import static software.wings.sm.StateType.COMMAND;
 import static software.wings.sm.StateType.ECS_DAEMON_SERVICE_SETUP;
 import static software.wings.sm.StateType.ECS_SERVICE_DEPLOY;
 import static software.wings.sm.StateType.ECS_SERVICE_SETUP;
+import static software.wings.sm.StateType.HELM_DEPLOY;
 import static software.wings.sm.StateType.HTTP;
 import static software.wings.sm.StateType.K8S_APPLY;
 import static software.wings.sm.StateType.K8S_BLUE_GREEN_DEPLOY;
 import static software.wings.sm.StateType.K8S_CANARY_DEPLOY;
+import static software.wings.sm.StateType.K8S_DELETE;
 import static software.wings.sm.StateType.K8S_DEPLOYMENT_ROLLING;
 import static software.wings.sm.StateType.KUBERNETES_DEPLOY;
 import static software.wings.sm.StateType.KUBERNETES_SETUP;
@@ -148,6 +153,7 @@ import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.InfrastructureMappingType;
 import software.wings.beans.LastDeployedArtifactInformation;
 import software.wings.beans.LastDeployedArtifactInformation.LastDeployedArtifactInformationBuilder;
+import software.wings.beans.ManifestVariable;
 import software.wings.beans.NotificationRule;
 import software.wings.beans.OrchestrationWorkflow;
 import software.wings.beans.PhaseStep;
@@ -171,6 +177,12 @@ import software.wings.beans.WorkflowExecution;
 import software.wings.beans.WorkflowExecution.WorkflowExecutionKeys;
 import software.wings.beans.WorkflowPhase;
 import software.wings.beans.WorkflowStepMeta;
+import software.wings.beans.appmanifest.ApplicationManifest;
+import software.wings.beans.appmanifest.ApplicationManifestSummary;
+import software.wings.beans.appmanifest.HelmChart;
+import software.wings.beans.appmanifest.LastDeployedHelmChartInformation;
+import software.wings.beans.appmanifest.LastDeployedHelmChartInformation.LastDeployedHelmChartInformationBuilder;
+import software.wings.beans.appmanifest.ManifestSummary;
 import software.wings.beans.artifact.Artifact;
 import software.wings.beans.artifact.ArtifactStream;
 import software.wings.beans.artifact.ArtifactStreamSummary;
@@ -204,6 +216,7 @@ import software.wings.service.impl.workflow.creation.abstractfactories.AbstractW
 import software.wings.service.impl.workflow.creation.abstractfactories.AbstractWorkflowFactory.Category;
 import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.AppService;
+import software.wings.service.intfc.ApplicationManifestService;
 import software.wings.service.intfc.ArtifactService;
 import software.wings.service.intfc.ArtifactStreamService;
 import software.wings.service.intfc.ArtifactStreamServiceBindingService;
@@ -225,6 +238,7 @@ import software.wings.service.intfc.TriggerService;
 import software.wings.service.intfc.UserGroupService;
 import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.service.intfc.WorkflowService;
+import software.wings.service.intfc.applicationmanifest.HelmChartService;
 import software.wings.service.intfc.ownership.OwnedByWorkflow;
 import software.wings.service.intfc.personalization.PersonalizationService;
 import software.wings.service.intfc.template.TemplateService;
@@ -312,6 +326,11 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
 
   private static final List<String> pcfArtifactNeededStateTypes = Arrays.asList(PCF_SETUP.name(), PCF_RESIZE.name());
 
+  private static final List<String> helmManifestNeededStateTypes = Arrays.asList(HELM_DEPLOY.name());
+
+  private static final List<String> k8sManifestNeededStateTypes = Arrays.asList(K8S_DEPLOYMENT_ROLLING.name(),
+      K8S_CANARY_DEPLOY.name(), K8S_BLUE_GREEN_DEPLOY.name(), K8S_APPLY.name(), K8S_DELETE.name());
+
   private static final Comparator<Stencil> stencilDefaultSorter =
       Comparator.comparingInt((Stencil o) -> o.getStencilCategory().getDisplayOrder())
           .thenComparingInt(Stencil::getDisplayOrder)
@@ -356,6 +375,8 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
   @Inject private ServiceVariableService serviceVariableService;
   @Inject private ServiceTemplateService serviceTemplateService;
   @Inject private ArtifactService artifactService;
+  @Inject private HelmChartService helmChartService;
+  @Inject private ApplicationManifestService applicationManifestService;
 
   @Inject private QueuePublisher<PruneEvent> pruneQueue;
   @Inject private HarnessTagService harnessTagService;
@@ -2009,13 +2030,17 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
         artifactRequiredServiceIds = new ArrayList<>();
       }
 
+      List<String> manifestRequiredServiceIds = new ArrayList<>();
+      Map<String, Service> serviceCache = new HashMap<>();
+
       String accountId = appService.getAccountIdByAppId(appId);
       List<ArtifactVariable> artifactVariables = new ArrayList<>();
       if (featureFlagService.isEnabled(FeatureName.ARTIFACT_STREAM_REFACTOR, accountId)) {
         fetchArtifactNeededServiceIds(
             appId, workflow, workflowVariables, artifactRequiredServiceIds, artifactVariables);
       } else {
-        fetchArtifactNeededServiceIds(appId, workflow, workflowVariables, artifactRequiredServiceIds);
+        fetchArtifactAndManifestNeededServiceIds(
+            appId, workflow, workflowVariables, artifactRequiredServiceIds, manifestRequiredServiceIds, serviceCache);
         if (isNotEmpty(artifactRequiredServiceIds)) {
           for (String serviceId : artifactRequiredServiceIds) {
             List<String> allowedArtifactStreams =
@@ -2032,6 +2057,23 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
                                       .build());
           }
         }
+        if (featureFlagService.isEnabled(HELM_CHART_AS_ARTIFACT, accountId)) {
+          deploymentMetadataBuilder.manifestVariables(
+              manifestRequiredServiceIds.stream()
+                  .map(serviceId
+                      -> ManifestVariable.builder()
+                             .type(VariableType.MANIFEST)
+                             .name(DEFAULT_HELMCHART_VARIABLE_NAME)
+                             .serviceId(serviceId)
+                             .lastDeployedHelmChartInformation(includeList.contains(Include.LAST_DEPLOYED_ARTIFACT)
+                                     ? fetchLastDeployedHelmChart(workflow, serviceId)
+                                     : null)
+                             .applicationManifestSummary(
+                                 prepareApplicationManifestSummary(serviceId, accountId, appId, workflowExecution))
+                             .serviceName(getServiceNameFromCache(serviceCache, serviceId, appId))
+                             .build())
+                  .collect(toList()));
+        }
       }
 
       // Update artifact variables with display info and artifact stream summaries.
@@ -2042,6 +2084,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
       }
 
       deploymentMetadataBuilder.artifactRequiredServiceIds(artifactRequiredServiceIds);
+      deploymentMetadataBuilder.manifestRequiredServiceIds(manifestRequiredServiceIds);
     }
 
     if (includeList.contains(Include.DEPLOYMENT_TYPE)) {
@@ -2064,16 +2107,97 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
     return deploymentMetadataBuilder.build();
   }
 
+  private String getServiceNameFromCache(Map<String, Service> serviceCache, String serviceId, String appId) {
+    Service service = serviceCache.computeIfAbsent(serviceId, id -> serviceResourceService.get(appId, id));
+    if (service == null) {
+      return "";
+    }
+    return service.getName();
+  }
+
+  private ApplicationManifestSummary prepareApplicationManifestSummary(
+      String serviceId, String accountId, String appId, WorkflowExecution workflowExecution) {
+    ApplicationManifest applicationManifest = applicationManifestService.getManifestByServiceId(appId, serviceId);
+    if (applicationManifest == null || applicationManifest.getHelmChartConfig() == null) {
+      return null;
+    }
+    HelmChart lastCollectedHelmChart =
+        helmChartService.getLastCollectedManifest(accountId, applicationManifest.getUuid());
+    Optional<HelmChart> helmChartOptional = (workflowExecution != null && workflowExecution.getHelmCharts() != null)
+        ? workflowExecution.getHelmCharts().stream().filter(chart -> serviceId.equals(chart.getServiceId())).findFirst()
+        : Optional.empty();
+    return ApplicationManifestSummary.builder()
+        .appManifestId(applicationManifest.getUuid())
+        .settingId(applicationManifest.getHelmChartConfig().getConnectorId())
+        .defaultManifest(
+            helmChartOptional
+                .map(chart -> ManifestSummary.builder().uuid(chart.getUuid()).versionNo(chart.getVersion()).build())
+                .orElse(null))
+        .lastCollectedManifest(lastCollectedHelmChart == null ? null
+                                                              : ManifestSummary.builder()
+                                                                    .uuid(lastCollectedHelmChart.getUuid())
+                                                                    .versionNo(lastCollectedHelmChart.getVersion())
+                                                                    .build())
+        .build();
+  }
+
+  @VisibleForTesting
+  public LastDeployedHelmChartInformation fetchLastDeployedHelmChart(Workflow workflow, String serviceId) {
+    WorkflowExecution lastWorkflowExecution = getLastSuccessfulWorkflowExecution(workflow);
+    if (lastWorkflowExecution == null || isEmpty(lastWorkflowExecution.getHelmCharts())) {
+      return null;
+    }
+    List<HelmChart> lastHelmCharts = lastWorkflowExecution.getHelmCharts();
+    return populateLastDeployedHelmChartInfo(lastHelmCharts, lastWorkflowExecution, serviceId);
+  }
+
+  private LastDeployedHelmChartInformation populateLastDeployedHelmChartInfo(
+      List<HelmChart> lastHelmCharts, WorkflowExecution lastWorkflowExecution, String serviceId) {
+    Optional<HelmChart> requiredHelmChart =
+        lastHelmCharts.stream().filter(helmChart -> serviceId.equals(helmChart.getServiceId())).findFirst();
+    if (isHelmChartPresentInAppManifest(requiredHelmChart, serviceId, lastWorkflowExecution.getAppId())) {
+      LastDeployedHelmChartInformationBuilder lastDeployedHelmChartInfoBuilder =
+          LastDeployedHelmChartInformation.builder()
+              .helmchart(requiredHelmChart.get())
+              .executionStartTime(lastWorkflowExecution.getStartTs());
+      if (lastWorkflowExecution.getPipelineExecutionId() != null) {
+        PipelineSummary pipelineSummary = lastWorkflowExecution.getPipelineSummary();
+        lastDeployedHelmChartInfoBuilder = lastDeployedHelmChartInfoBuilder.executionEntityType(WorkflowType.PIPELINE)
+                                               .executionId(lastWorkflowExecution.getPipelineExecutionId());
+        if (pipelineSummary != null) {
+          lastDeployedHelmChartInfoBuilder =
+              lastDeployedHelmChartInfoBuilder
+                  .executionEntityId(lastWorkflowExecution.getPipelineSummary().getPipelineId())
+                  .executionEntityName(lastWorkflowExecution.getPipelineSummary().getPipelineName());
+        }
+      } else {
+        lastDeployedHelmChartInfoBuilder =
+            lastDeployedHelmChartInfoBuilder.executionEntityType(WorkflowType.ORCHESTRATION)
+                .executionId(lastWorkflowExecution.getUuid())
+                .executionEntityId(lastWorkflowExecution.getWorkflowId())
+                .executionEntityName(lastWorkflowExecution.getName())
+                .envId(lastWorkflowExecution.getEnvId());
+      }
+      return lastDeployedHelmChartInfoBuilder.build();
+    }
+    return null;
+  }
+
+  private boolean isHelmChartPresentInAppManifest(
+      Optional<HelmChart> requiredHelmChart, String serviceId, String appId) {
+    if (requiredHelmChart.isPresent()) {
+      List<HelmChart> presentHelmCharts =
+          helmChartService.listHelmChartsForService(appId, serviceId, new PageRequest<>());
+      return presentHelmCharts.stream().anyMatch(
+          helmChart -> requiredHelmChart.get().getUuid().equals(helmChart.getUuid()));
+    }
+    return false;
+  }
+
   @VisibleForTesting
   public LastDeployedArtifactInformation fetchLastDeployedArtifact(
       Workflow workflow, List<String> allowedArtifactStreams, String serviceId) {
-    WorkflowExecution lastWorkflowExecution = wingsPersistence.createQuery(WorkflowExecution.class)
-                                                  .filter(WorkflowExecutionKeys.accountId, workflow.getAccountId())
-                                                  .filter(WorkflowExecutionKeys.appId, workflow.getAppId())
-                                                  .filter(WorkflowExecutionKeys.workflowId, workflow.getUuid())
-                                                  .filter(WorkflowExecutionKeys.status, SUCCESS)
-                                                  .order(Sort.descending(WorkflowExecutionKeys.createdAt))
-                                                  .get();
+    WorkflowExecution lastWorkflowExecution = getLastSuccessfulWorkflowExecution(workflow);
 
     if (lastWorkflowExecution != null) {
       List<Artifact> lastArtifacts = lastWorkflowExecution.getArtifacts();
@@ -2084,6 +2208,16 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
       }
     }
     return null;
+  }
+
+  private WorkflowExecution getLastSuccessfulWorkflowExecution(Workflow workflow) {
+    return wingsPersistence.createQuery(WorkflowExecution.class)
+        .filter(WorkflowExecutionKeys.accountId, workflow.getAccountId())
+        .filter(WorkflowExecutionKeys.appId, workflow.getAppId())
+        .filter(WorkflowExecutionKeys.workflowId, workflow.getUuid())
+        .filter(WorkflowExecutionKeys.status, SUCCESS)
+        .order(Sort.descending(WorkflowExecutionKeys.createdAt))
+        .get();
   }
 
   private LastDeployedArtifactInformation populateLastDeployedArtifactInfo(List<Artifact> lastArtifacts,
@@ -2366,7 +2500,8 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
   public Set<EntityType> fetchRequiredEntityTypes(String appId, Workflow workflow) {
     List<String> artifactNeededServiceIds = new ArrayList<>();
     Set<EntityType> requiredEntityTypes = new HashSet<>();
-    fetchArtifactNeededServiceIds(appId, workflow, null, artifactNeededServiceIds);
+    fetchArtifactAndManifestNeededServiceIds(
+        appId, workflow, null, artifactNeededServiceIds, new ArrayList<>(), new HashMap<String, Service>());
     if (isNotEmpty(artifactNeededServiceIds)) {
       // At least one service needs artifact..so add required entity type as ARTIFACT
       requiredEntityTypes.add(ARTIFACT);
@@ -2374,8 +2509,9 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
     return requiredEntityTypes;
   }
 
-  private void fetchArtifactNeededServiceIds(
-      String appId, Workflow workflow, Map<String, String> workflowVariables, List<String> artifactNeededServiceIds) {
+  private void fetchArtifactAndManifestNeededServiceIds(String appId, Workflow workflow,
+      Map<String, String> workflowVariables, List<String> artifactNeededServiceIds,
+      List<String> manifestNeededServiceIds, Map<String, Service> serviceCache) {
     notNullCheck("Workflow does not exist", workflow, USER);
     OrchestrationWorkflow orchestrationWorkflow = workflow.getOrchestrationWorkflow();
     notNullCheck("Orchestration workflow not associated", orchestrationWorkflow, USER);
@@ -2384,20 +2520,23 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
       Set<EntityType> requiredEntityTypes = new HashSet<>();
       CanaryOrchestrationWorkflow canaryOrchestrationWorkflow = (CanaryOrchestrationWorkflow) orchestrationWorkflow;
 
-      // Service cache.
-      Map<String, Service> serviceCache = new HashMap<>();
-
+      List<String> pollingDisabledServiceIds = new ArrayList<>();
       updateRequiredEntityTypes(appId, null, canaryOrchestrationWorkflow.getPreDeploymentSteps(), requiredEntityTypes,
-          null, null, serviceCache);
+          null, null, serviceCache, pollingDisabledServiceIds);
 
-      boolean preDeploymentStepNeededArtifact = requiredEntityTypes.contains(EntityType.ARTIFACT);
+      updateRequiredEntityTypes(appId, null, canaryOrchestrationWorkflow.getPostDeploymentSteps(), requiredEntityTypes,
+          null, null, serviceCache, pollingDisabledServiceIds);
+
+      boolean preOrPostDeploymentStepNeededArtifact = requiredEntityTypes.contains(EntityType.ARTIFACT);
+      boolean preOrPostDeploymentStepNeededManifest = requiredEntityTypes.contains(HELM_CHART);
 
       Set<EntityType> phaseRequiredEntityTypes =
           canaryOrchestrationWorkflow.getWorkflowPhases()
               .stream()
               .flatMap(phase
                   -> updateRequiredEntityTypes(appId, phase, workflowVariables, artifactNeededServiceIds, serviceCache,
-                      preDeploymentStepNeededArtifact)
+                      preOrPostDeploymentStepNeededArtifact, manifestNeededServiceIds,
+                      preOrPostDeploymentStepNeededManifest, pollingDisabledServiceIds)
                          .stream())
               .collect(Collectors.toSet());
 
@@ -2410,7 +2549,8 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
               .stream()
               .flatMap(phase
                   -> updateRequiredEntityTypes(appId, phase, workflowVariables, artifactNeededServiceIds, serviceCache,
-                      preDeploymentStepNeededArtifact)
+                      preOrPostDeploymentStepNeededArtifact, manifestNeededServiceIds,
+                      preOrPostDeploymentStepNeededManifest, pollingDisabledServiceIds)
                          .stream())
               .collect(Collectors.toSet());
 
@@ -2425,7 +2565,8 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
 
   private Set<EntityType> updateRequiredEntityTypes(String appId, WorkflowPhase workflowPhase,
       Map<String, String> workflowVaraibles, List<String> artifactNeededServiceIds, Map<String, Service> serviceCache,
-      boolean preDeploymentStepNeededArtifact) {
+      boolean preOrPostDeploymentStepNeededArtifact, List<String> manifestRequiredServiceIds,
+      boolean preOrPostDeploymentStepNeededManifest, List<String> pollingDisabledServices) {
     Set<EntityType> requiredEntityTypes = new HashSet<>();
 
     if (workflowPhase == null || workflowPhase.getPhaseSteps() == null) {
@@ -2443,17 +2584,30 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
     }
 
     if (serviceId != null) {
+      if (manifestRequiredServiceIds.contains(serviceId)) {
+        requiredEntityTypes.add(HELM_CHART);
+      }
       if (artifactNeededServiceIds.contains(serviceId)) {
         requiredEntityTypes.add(EntityType.ARTIFACT);
+      }
+      if (artifactNeededServiceIds.contains(serviceId) && manifestRequiredServiceIds.contains(serviceId)) {
         return requiredEntityTypes;
       }
       if (matchesVariablePattern(serviceId)) {
         return requiredEntityTypes;
       }
-      if (preDeploymentStepNeededArtifact) {
+      if (preOrPostDeploymentStepNeededArtifact) {
         if (!artifactNeededServiceIds.contains(serviceId)) {
           artifactNeededServiceIds.add(serviceId);
         }
+      }
+      if (preOrPostDeploymentStepNeededManifest) {
+        if (!manifestRequiredServiceIds.contains(serviceId)
+            && hasPollingEnabled(serviceId, appId, pollingDisabledServices)) {
+          manifestRequiredServiceIds.add(serviceId);
+        }
+      }
+      if (preOrPostDeploymentStepNeededArtifact && preOrPostDeploymentStepNeededManifest) {
         return requiredEntityTypes;
       }
     }
@@ -2462,14 +2616,14 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
       if (phaseStep.getSteps() == null) {
         continue;
       }
-      if (requiredEntityTypes.contains(EntityType.ARTIFACT)) {
+      if (requiredEntityTypes.contains(EntityType.ARTIFACT) && requiredEntityTypes.contains(HELM_CHART)) {
         // Check if service already included. Then, no need to go over service and steps
-        if (artifactNeededServiceIds.contains(serviceId)) {
+        if (artifactNeededServiceIds.contains(serviceId) && manifestRequiredServiceIds.contains(serviceId)) {
           return requiredEntityTypes;
         }
       }
-      updateRequiredEntityTypes(
-          appId, serviceId, phaseStep, requiredEntityTypes, workflowPhase, workflowVaraibles, serviceCache);
+      updateRequiredEntityTypes(appId, serviceId, phaseStep, requiredEntityTypes, workflowPhase, workflowVaraibles,
+          serviceCache, pollingDisabledServices);
     }
 
     if (requiredEntityTypes.contains(EntityType.ARTIFACT)) {
@@ -2478,12 +2632,33 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
       }
     }
 
+    if (requiredEntityTypes.contains(HELM_CHART)) {
+      if (serviceId != null && !manifestRequiredServiceIds.contains(serviceId)) {
+        manifestRequiredServiceIds.add(serviceId);
+      }
+    }
+
     return requiredEntityTypes;
+  }
+
+  private boolean hasPollingEnabled(String serviceId, String appId, List<String> pollingDisabledServices) {
+    if (serviceId == null) {
+      return false;
+    }
+    if (pollingDisabledServices.contains(serviceId)) {
+      return false;
+    }
+    ApplicationManifest appManifest = applicationManifestService.getManifestByServiceId(appId, serviceId);
+    if (appManifest != null && Boolean.TRUE.equals(appManifest.getPollForChanges())) {
+      return true;
+    }
+    pollingDisabledServices.add(serviceId);
+    return false;
   }
 
   private void updateRequiredEntityTypes(String appId, String serviceId, PhaseStep phaseStep,
       Set<EntityType> requiredEntityTypes, WorkflowPhase workflowPhase, Map<String, String> workflowVariables,
-      Map<String, Service> serviceCache) {
+      Map<String, Service> serviceCache, List<String> pollingDisabledServices) {
     boolean artifactNeeded = false;
     String accountId = appService.getAccountIdByAppId(appId);
     for (GraphNode step : phaseStep.getSteps()) {
@@ -2535,25 +2710,17 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
             }
           }
         }
-      } else if (HTTP.name().equals(step.getType())
-          && (isArtifactNeeded(step.getProperties().get("url"), step.getProperties().get("body"),
-                 step.getProperties().get("assertion")))) {
+      } else if (HTTP.name().equals(step.getType()) && (isArtifactNeeded(getHttpStepTemplatizableProperties(step)))) {
         artifactNeeded = true;
         break;
       } else if (SHELL_SCRIPT.name().equals(step.getType())
-          && (isArtifactNeeded(step.getProperties().get("scriptString")))) {
+          && (isArtifactNeeded(getShellScriptTemplatizableProperties(step)))) {
         artifactNeeded = true;
         break;
-      } else if (CLOUD_FORMATION_CREATE_STACK.name().equals(step.getType())) {
-        List<Map> variables = (List<Map>) step.getProperties().get("variables");
-        if (variables != null) {
-          List<String> values = (List<String>) variables.stream()
-                                    .flatMap(element -> element.values().stream())
-                                    .collect(Collectors.toList());
-          if (isArtifactNeeded(values.toArray())) {
-            artifactNeeded = true;
-          }
-        }
+      } else if (CLOUD_FORMATION_CREATE_STACK.name().equals(step.getType())
+          && isArtifactNeeded(getCloudFormationCreateTemplatizableProperties(step))) {
+        artifactNeeded = true;
+        break;
       } else if (kubernetesArtifactNeededStateTypes.contains(step.getType())
           || ecsArtifactNeededStateTypes.contains(step.getType())
           || azureMachineImageArtifactNeededStateTypes.contains(step.getType())
@@ -2605,10 +2772,64 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
       }
     }
 
+    if (featureFlagService.isEnabled(HELM_CHART_AS_ARTIFACT, accountId)
+        && hasPollingEnabled(serviceId, appId, pollingDisabledServices)
+        && phaseStep.getSteps().stream().anyMatch(this ::checkManifestNeededForStep)) {
+      requiredEntityTypes.add(HELM_CHART);
+    }
+
     if (artifactNeeded) {
       requiredEntityTypes.add(ARTIFACT);
       phaseStep.setArtifactNeeded(true);
     }
+  }
+
+  private Object[] getHttpStepTemplatizableProperties(GraphNode step) {
+    return new Object[] {
+        step.getProperties().get("url"), step.getProperties().get("body"), step.getProperties().get("assertion")};
+  }
+
+  private Object getShellScriptTemplatizableProperties(GraphNode step) {
+    return step.getProperties().get("scriptString");
+  }
+
+  private boolean checkManifestNeededForStep(GraphNode step) {
+    if (step.getTemplateUuid() != null) {
+      if (isNotEmpty(step.getTemplateVariables())) {
+        List<String> values = step.getTemplateVariables()
+                                  .stream()
+                                  .filter(variable -> isNotEmpty(variable.getValue()))
+                                  .map(Variable::getValue)
+                                  .collect(toList());
+        if (isNotEmpty(values)) {
+          if (isManifestNeeded(values.toArray())) {
+            return true;
+          }
+        }
+      }
+    }
+    if (k8sManifestNeededStateTypes.contains(step.getType()) || helmManifestNeededStateTypes.contains(step.getType())) {
+      return true;
+    } else if (HTTP.name().equals(step.getType()) && (isManifestNeeded(getHttpStepTemplatizableProperties(step)))) {
+      return true;
+    } else if (SHELL_SCRIPT.name().equals(step.getType())
+        && (isManifestNeeded(getShellScriptTemplatizableProperties(step)))) {
+      return true;
+    } else if (CLOUD_FORMATION_CREATE_STACK.name().equals(step.getType())
+        && isManifestNeeded(getCloudFormationCreateTemplatizableProperties(step))) {
+      return true;
+    }
+    return false;
+  }
+
+  private Object[] getCloudFormationCreateTemplatizableProperties(GraphNode step) {
+    List<Map> variables = (List<Map>) step.getProperties().get("variables");
+    if (variables != null) {
+      List<String> values =
+          (List<String>) variables.stream().flatMap(element -> element.values().stream()).collect(Collectors.toList());
+      return values.toArray();
+    }
+    return new Object[0];
   }
 
   private void fetchArtifactNeededServiceIds(String appId, Workflow workflow, Map<String, String> workflowVariablesMap,
@@ -2990,18 +3211,12 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
           }
         }
       } else if (HTTP.name().equals(step.getType())) {
-        updateArtifactVariablesNeeded(serviceArtifactVariableNames, step.getProperties().get("url"),
-            step.getProperties().get("body"), step.getProperties().get("assertion"));
+        updateArtifactVariablesNeeded(serviceArtifactVariableNames, getHttpStepTemplatizableProperties(step));
       } else if (SHELL_SCRIPT.name().equals(step.getType())) {
-        updateArtifactVariablesNeeded(serviceArtifactVariableNames, step.getProperties().get("scriptString"));
+        updateArtifactVariablesNeeded(serviceArtifactVariableNames, getShellScriptTemplatizableProperties(step));
       } else if (CLOUD_FORMATION_CREATE_STACK.name().equals(step.getType())) {
-        List<Map> variables = (List<Map>) step.getProperties().get("variables");
-        if (variables != null) {
-          List<String> values = (List<String>) variables.stream()
-                                    .flatMap(element -> element.values().stream())
-                                    .collect(Collectors.toList());
-          updateArtifactVariablesNeeded(serviceArtifactVariableNames, values.toArray());
-        }
+        updateArtifactVariablesNeeded(
+            serviceArtifactVariableNames, getCloudFormationCreateTemplatizableProperties(step));
       } else if (kubernetesArtifactNeededStateTypes.contains(step.getType())
           || ecsArtifactNeededStateTypes.contains(step.getType())
           || azureMachineImageArtifactNeededStateTypes.contains(step.getType())
@@ -3062,6 +3277,10 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
   private boolean isArtifactNeeded(Object... args) {
     return Arrays.stream(args).anyMatch(arg
         -> arg != null && (((String) arg).contains("${artifact.") || ((String) arg).contains("${ARTIFACT_FILE_NAME}")));
+  }
+
+  private boolean isManifestNeeded(Object... args) {
+    return Arrays.stream(args).anyMatch(arg -> arg != null && (((String) arg).contains("${helmChart.")));
   }
 
   private void updateArtifactVariablesNeeded(Set<String> serviceArtifactVariableNames, Object... args) {

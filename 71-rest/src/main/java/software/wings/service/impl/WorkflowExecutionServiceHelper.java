@@ -28,6 +28,7 @@ import software.wings.beans.Service;
 import software.wings.beans.Variable;
 import software.wings.beans.Workflow;
 import software.wings.beans.WorkflowExecution;
+import software.wings.beans.appmanifest.HelmChart;
 import software.wings.beans.artifact.Artifact;
 import software.wings.beans.deployment.WorkflowVariablesMetadata;
 import software.wings.service.intfc.FeatureFlagService;
@@ -168,6 +169,10 @@ public class WorkflowExecutionServiceHelper {
     stdParams.setEnvId(envId);
     if (isNotEmpty(executionArgs.getArtifacts())) {
       stdParams.setArtifactIds(executionArgs.getArtifacts().stream().map(Artifact::getUuid).collect(toList()));
+    }
+
+    if (isNotEmpty(executionArgs.getHelmCharts())) {
+      stdParams.setHelmChartIds(executionArgs.getHelmCharts().stream().map(HelmChart::getUuid).collect(toList()));
     }
 
     stdParams.setExecutionCredential(executionArgs.getExecutionCredential());

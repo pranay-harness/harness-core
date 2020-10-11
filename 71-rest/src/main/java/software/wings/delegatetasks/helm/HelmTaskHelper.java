@@ -766,7 +766,9 @@ public class HelmTaskHelper {
                        .applicationManifestId(manifestCollectionParams.getAppManifestId())
                        .serviceId(manifestCollectionParams.getServiceId())
                        .name(manifestCollectionParams.getHelmChartConfigParams().getChartName())
-                       .chartVersion(record.get(1))
+                       .version(record.get(1))
+                       .displayName(
+                           manifestCollectionParams.getHelmChartConfigParams().getChartName() + "-" + record.get(1))
                        .appVersion(record.size() > 2 ? record.get(2) : null)
                        .description(record.size() > 3 ? record.get(3) : null)
                        .build())

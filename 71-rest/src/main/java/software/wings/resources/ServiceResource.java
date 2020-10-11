@@ -5,6 +5,7 @@ import static io.harness.beans.SearchFilter.Operator.IN;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.exception.WingsException.USER;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
+import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
 import com.google.inject.Inject;
 
@@ -23,6 +24,7 @@ import software.wings.beans.Service;
 import software.wings.beans.Setup.SetupStatus;
 import software.wings.beans.appmanifest.AppManifestKind;
 import software.wings.beans.appmanifest.ApplicationManifest;
+import software.wings.beans.appmanifest.HelmChart;
 import software.wings.beans.appmanifest.ManifestFile;
 import software.wings.beans.artifact.ArtifactStream;
 import software.wings.beans.artifact.ArtifactStreamBinding;
@@ -42,6 +44,7 @@ import software.wings.security.annotations.Scope;
 import software.wings.service.intfc.ApplicationManifestService;
 import software.wings.service.intfc.ArtifactStreamServiceBindingService;
 import software.wings.service.intfc.ServiceResourceService;
+import software.wings.service.intfc.applicationmanifest.HelmChartService;
 import software.wings.stencils.Stencil;
 
 import java.util.List;
@@ -71,6 +74,7 @@ public class ServiceResource {
   private ServiceResourceService serviceResourceService;
   @Inject ApplicationManifestService applicationManifestService;
   @Inject ArtifactStreamServiceBindingService artifactStreamServiceBindingService;
+  @Inject HelmChartService helmChartService;
 
   /**
    * Instantiates a new service resource.
@@ -804,6 +808,20 @@ public class ServiceResource {
       @QueryParam("deploymentTypeTemplateId") String deploymentTypeTemplateId) {
     return new RestResponse<>(
         serviceResourceService.listByDeploymentType(appId, deploymentType, deploymentTypeTemplateId));
+  }
+
+  @GET
+  @Path("{serviceId}/chart-versions")
+  @Timed
+  @ExceptionMetered
+  @AuthRule(permissionType = PermissionType.SERVICE, action = Action.READ)
+  public RestResponse<PageResponse<HelmChart>> getHelmChartVersions(@QueryParam("appId") String appId,
+      @PathParam("serviceId") String serviceId, @BeanParam PageRequest<HelmChart> pageRequest) {
+    if (isNotBlank(appId)) {
+      pageRequest.addFilter("appId", EQ, appId);
+    }
+    pageRequest.addFilter("serviceId", EQ, serviceId);
+    return new RestResponse<>(helmChartService.listHelmChartsForService(pageRequest));
   }
 
   @PUT

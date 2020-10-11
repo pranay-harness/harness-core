@@ -67,8 +67,7 @@ public class ManifestPerpetualTaskExecutor implements PerpetualTaskExecutor {
 
     ArtifactsPublishedCache<HelmChart> appManifestCache = cache.get(appManifestId,
         id
-        -> new ArtifactsPublishedCache<>(
-            manifestCollectionParams.getPublishedVersions(), HelmChart::getChartVersion, true));
+        -> new ArtifactsPublishedCache<>(manifestCollectionParams.getPublishedVersions(), HelmChart::getVersion, true));
 
     String perpetualTaskId = taskId.getId();
     try (AutoLogContext ignore1 = new PerpetualTaskLogContext(perpetualTaskId, OVERRIDE_ERROR);
@@ -122,7 +121,7 @@ public class ManifestPerpetualTaskExecutor implements PerpetualTaskExecutor {
       appManifestCache.addPublishedBuildDetails(unpublishedVersions);
       publishFromCache(appManifestCache, expiryTime, params, taskId);
       logger.info("Published {} manifest versions to manager",
-          unpublishedVersions.stream().map(HelmChart::getChartVersion).collect(Collectors.joining(",")));
+          unpublishedVersions.stream().map(HelmChart::getVersion).collect(Collectors.joining(",")));
     }
   }
 

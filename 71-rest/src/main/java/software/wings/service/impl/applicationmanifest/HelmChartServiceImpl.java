@@ -1,7 +1,9 @@
 package software.wings.service.impl.applicationmanifest;
 
+import static io.harness.beans.SearchFilter.Operator.EQ;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static java.util.stream.Collectors.toList;
+import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
 import com.google.inject.Inject;
 
@@ -11,6 +13,7 @@ import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.data.structure.EmptyPredicate;
 import org.mongodb.morphia.query.Query;
+import org.mongodb.morphia.query.Sort;
 import software.wings.beans.appmanifest.HelmChart;
 import software.wings.beans.appmanifest.HelmChart.HelmChartKeys;
 import software.wings.dl.WingsPersistence;
@@ -32,6 +35,36 @@ public class HelmChartServiceImpl implements HelmChartService {
   @Override
   public PageResponse<HelmChart> listHelmChartsForService(PageRequest<HelmChart> pageRequest) {
     return wingsPersistence.query(HelmChart.class, pageRequest);
+  }
+
+  @Override
+  public PageResponse<HelmChart> listHelmChartsForService(
+      String appId, String serviceId, PageRequest<HelmChart> pageRequest) {
+    if (isNotBlank(serviceId)) {
+      pageRequest.addFilter(HelmChartKeys.serviceId, EQ, serviceId);
+    }
+    if (isNotBlank(appId)) {
+      pageRequest.addFilter(HelmChartKeys.appId, EQ, appId);
+    }
+    return listHelmChartsForService(pageRequest);
+  }
+
+  @Override
+  public HelmChart getLastCollectedManifest(String accountId, String applicationManifestUuid) {
+    return wingsPersistence.createQuery(HelmChart.class)
+        .filter(HelmChartKeys.accountId, accountId)
+        .filter(HelmChartKeys.applicationManifestId, applicationManifestUuid)
+        .order(Sort.descending(HelmChartKeys.createdAt))
+        .get();
+  }
+
+  @Override
+  public List<HelmChart> listByIds(String accountId, List<String> helmChartIds) {
+    return wingsPersistence.createQuery(HelmChart.class)
+        .filter(HelmChartKeys.accountId, accountId)
+        .field(HelmChartKeys.uuid)
+        .in(helmChartIds)
+        .asList();
   }
 
   @Override
@@ -58,7 +91,7 @@ public class HelmChartServiceImpl implements HelmChartService {
     Query<HelmChart> query = wingsPersistence.createQuery(HelmChart.class)
                                  .filter(HelmChartKeys.accountId, accountId)
                                  .filter(HelmChartKeys.applicationManifestId, appManifestId)
-                                 .field(HelmChartKeys.chartVersion)
+                                 .field(HelmChartKeys.version)
                                  .in(toBeDeletedVersions);
     return wingsPersistence.delete(query);
   }
@@ -68,13 +101,13 @@ public class HelmChartServiceImpl implements HelmChartService {
     List<HelmChart> helmCharts = wingsPersistence.createQuery(HelmChart.class)
                                      .filter(HelmChartKeys.accountId, accountId)
                                      .filter(HelmChartKeys.applicationManifestId, appManifestId)
-                                     .project(HelmChartKeys.chartVersion, true)
+                                     .project(HelmChartKeys.version, true)
                                      .asList();
 
-    List<String> versionsPresent = helmCharts.stream().map(HelmChart::getChartVersion).collect(toList());
+    List<String> versionsPresent = helmCharts.stream().map(HelmChart::getVersion).collect(toList());
 
     List<HelmChart> newHelmCharts = manifestsCollected.stream()
-                                        .filter(helmChart -> !versionsPresent.contains(helmChart.getChartVersion()))
+                                        .filter(helmChart -> !versionsPresent.contains(helmChart.getVersion()))
                                         .collect(toList());
     if (EmptyPredicate.isEmpty(newHelmCharts)) {
       return true;

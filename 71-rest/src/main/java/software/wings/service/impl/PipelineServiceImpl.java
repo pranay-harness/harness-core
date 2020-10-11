@@ -81,6 +81,7 @@ import software.wings.beans.EntityType;
 import software.wings.beans.Event.Type;
 import software.wings.beans.FailureStrategy;
 import software.wings.beans.FeatureName;
+import software.wings.beans.ManifestVariable;
 import software.wings.beans.OrchestrationWorkflow;
 import software.wings.beans.Pipeline;
 import software.wings.beans.Pipeline.PipelineKeys;
@@ -119,6 +120,7 @@ import software.wings.service.intfc.yaml.YamlPushService;
 import software.wings.sm.StateMachine;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -1754,9 +1756,11 @@ public class PipelineServiceImpl implements PipelineService {
     }
     DeploymentMetadata finalDeploymentMetadata = DeploymentMetadata.builder()
                                                      .artifactRequiredServiceIds(artifactNeededServiceIds)
+                                                     .manifestRequiredServiceIds(new ArrayList<>())
                                                      .envIds(envIds)
                                                      .deploymentTypes(new ArrayList<>())
                                                      .artifactVariables(new ArrayList<>())
+                                                     .manifestVariables(new ArrayList<>())
                                                      .build();
 
     boolean isBuildPipeline = false;
@@ -1809,16 +1813,41 @@ public class PipelineServiceImpl implements PipelineService {
       Workflow workflow, DeploymentMetadata finalDeploymentMetadata, DeploymentMetadata deploymentMetadata) {
     mergeLists(
         finalDeploymentMetadata.getArtifactRequiredServiceIds(), deploymentMetadata.getArtifactRequiredServiceIds());
+    mergeLists(
+        finalDeploymentMetadata.getManifestRequiredServiceIds(), deploymentMetadata.getManifestRequiredServiceIds());
     mergeLists(finalDeploymentMetadata.getEnvIds(), deploymentMetadata.getEnvIds());
     mergeLists(finalDeploymentMetadata.getDeploymentTypes(), deploymentMetadata.getDeploymentTypes());
 
-    if (isEmpty(deploymentMetadata.getArtifactVariables())) {
+    if (isNotEmpty(deploymentMetadata.getArtifactVariables())) {
+      List<ArtifactVariable> finalArtifactVariables = finalDeploymentMetadata.getArtifactVariables();
+      for (ArtifactVariable artifactVariable : deploymentMetadata.getArtifactVariables()) {
+        mergeArtifactVariable(finalArtifactVariables, artifactVariable, workflow.getUuid());
+      }
+    }
+
+    if (featureFlagService.isEnabled(FeatureName.HELM_CHART_AS_ARTIFACT, workflow.getAccountId())
+        && isNotEmpty(deploymentMetadata.getManifestVariables())) {
+      List<ManifestVariable> finalManifestVariables = finalDeploymentMetadata.getManifestVariables();
+      deploymentMetadata.getManifestVariables().forEach(
+          manifestVariable -> mergeManifestVariable(finalManifestVariables, manifestVariable, workflow.getUuid()));
+    }
+  }
+
+  private void mergeManifestVariable(
+      List<ManifestVariable> finalManifestVariables, ManifestVariable manifestVariable, String workflowId) {
+    if (manifestVariable == null) {
       return;
     }
 
-    List<ArtifactVariable> finalArtifactVariables = finalDeploymentMetadata.getArtifactVariables();
-    for (ArtifactVariable artifactVariable : deploymentMetadata.getArtifactVariables()) {
-      mergeArtifactVariable(finalArtifactVariables, artifactVariable, workflow.getUuid());
+    Optional<ManifestVariable> duplicateVariable =
+        finalManifestVariables.stream()
+            .filter(variable -> variable.getServiceId().equals(manifestVariable.getServiceId()))
+            .findFirst();
+    if (duplicateVariable.isPresent()) {
+      duplicateVariable.get().getWorkflowIds().add(workflowId);
+    } else {
+      manifestVariable.setWorkflowIds(new ArrayList<>(Arrays.asList(workflowId)));
+      finalManifestVariables.add(manifestVariable);
     }
   }
 

@@ -27,6 +27,7 @@ import java.util.regex.Pattern;
  */
 public class ExpressionEvaluator {
   public static final String DEFAULT_ARTIFACT_VARIABLE_NAME = "artifact";
+  public static final String DEFAULT_HELMCHART_VARIABLE_NAME = "helmChart";
   public static final String ARTIFACT_FILE_NAME_VARIABLE = "ARTIFACT_FILE_NAME";
 
   public static final Pattern wingsVariablePattern = Pattern.compile("\\$\\{[^{}]*}");

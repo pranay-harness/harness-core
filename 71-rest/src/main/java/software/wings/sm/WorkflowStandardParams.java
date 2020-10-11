@@ -32,11 +32,13 @@ import software.wings.beans.Environment;
 import software.wings.beans.ErrorStrategy;
 import software.wings.beans.ExecutionCredential;
 import software.wings.beans.FeatureName;
+import software.wings.beans.appmanifest.HelmChart;
 import software.wings.beans.artifact.Artifact;
 import software.wings.common.InstanceExpressionProcessor;
 import software.wings.helpers.ext.url.SubdomainUrlHelperIntfc;
 import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.AppService;
+import software.wings.service.intfc.ApplicationManifestService;
 import software.wings.service.intfc.ArtifactService;
 import software.wings.service.intfc.ArtifactStreamService;
 import software.wings.service.intfc.ArtifactStreamServiceBindingService;
@@ -45,6 +47,7 @@ import software.wings.service.intfc.EnvironmentService;
 import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.ServiceTemplateService;
 import software.wings.service.intfc.WorkflowExecutionService;
+import software.wings.service.intfc.applicationmanifest.HelmChartService;
 import software.wings.service.intfc.sweepingoutput.SweepingOutputService;
 
 import java.net.URISyntaxException;
@@ -86,10 +89,13 @@ public class WorkflowStandardParams implements ExecutionContextAware, ContextEle
 
   @Inject private transient FeatureFlagService featureFlagService;
   @Inject private transient SubdomainUrlHelperIntfc subdomainUrlHelper;
+  @Inject private transient HelmChartService helmChartService;
+  @Inject private transient ApplicationManifestService applicationManifestService;
 
   private String appId;
   private String envId;
   private List<String> artifactIds;
+  private List<String> helmChartIds;
   private WorkflowElement workflowElement;
 
   // TODO: centralized in-memory executionCredential and special encrypted mapping
@@ -98,6 +104,7 @@ public class WorkflowStandardParams implements ExecutionContextAware, ContextEle
   @JsonIgnore private transient Application app;
   @JsonIgnore @Transient private transient Environment env;
   @JsonIgnore @Transient private transient List<Artifact> artifacts;
+  @JsonIgnore @Transient private transient List<HelmChart> helmCharts;
   @JsonIgnore @Transient private transient Account account;
 
   private List<ServiceElement> services;
@@ -182,9 +189,29 @@ public class WorkflowStandardParams implements ExecutionContextAware, ContextEle
         Artifact artifact = getArtifactForService(serviceId);
         ExecutionContextImpl.addArtifactToContext(artifactStreamService, accountId, map, artifact, buildSourceService);
       }
+      if (featureFlagService.isEnabled(FeatureName.HELM_CHART_AS_ARTIFACT, accountId)) {
+        HelmChart helmChart = getHelmChartForService(serviceId);
+        ExecutionContextImpl.addHelmChartToContext(appId, map, helmChart, applicationManifestService);
+      }
     }
 
     return map;
+  }
+
+  private HelmChart getHelmChartForService(String serviceId) {
+    getHelmCharts();
+    if (isEmpty(helmCharts)) {
+      return null;
+    }
+
+    return helmCharts.stream().filter(helmChart -> serviceId.equals(helmChart.getServiceId())).findFirst().orElse(null);
+  }
+
+  public List<HelmChart> getHelmCharts() {
+    if (isEmpty(helmCharts) && isNotEmpty(helmChartIds)) {
+      helmCharts = helmChartService.listByIds(getApp().getAccountId(), helmChartIds);
+    }
+    return helmCharts;
   }
 
   private String buildAbsoluteUrl(String fragment, String accountId) {
@@ -266,6 +293,24 @@ public class WorkflowStandardParams implements ExecutionContextAware, ContextEle
    */
   public void setArtifactIds(List<String> artifactIds) {
     this.artifactIds = artifactIds;
+  }
+
+  /**
+   * Gets helm chart ids.
+   *
+   * @return the helm chart ids
+   */
+  public List<String> getHelmChartIds() {
+    return helmChartIds;
+  }
+
+  /**
+   * Sets artifact ids.
+   *
+   * @param helmChartIds the helm chart ids
+   */
+  public void setHelmChartIds(List<String> helmChartIds) {
+    this.helmChartIds = helmChartIds;
   }
 
   /**
