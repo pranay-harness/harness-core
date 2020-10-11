@@ -131,5 +131,9 @@ public enum ContextElementType {
 
   TERRAFORM_INHERIT_PLAN,
 
-  AZURE_VMSS_SETUP
+  AZURE_VMSS_SETUP,
+
+  HELM_CHART,
+
+  MANIFEST_VARIABLE
 }

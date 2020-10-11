@@ -209,11 +209,10 @@ public class ManifestPerpetualTaskExecutorTest extends DelegateTest {
                 : Response.success(new RestResponse<>()));
 
     // New build details: 3-510, unpublished: 4-510, toBeDeleted: 1-2
-    List<HelmChart> helmCharts =
-        IntStream.rangeClosed(3, ArtifactsPublishedCache.ARTIFACT_ONE_TIME_PUBLISH_LIMIT + 10)
-            .boxed()
-            .map(versionNo -> HelmChart.builder().chartVersion(String.valueOf(versionNo)).build())
-            .collect(Collectors.toList());
+    List<HelmChart> helmCharts = IntStream.rangeClosed(3, ArtifactsPublishedCache.ARTIFACT_ONE_TIME_PUBLISH_LIMIT + 10)
+                                     .boxed()
+                                     .map(versionNo -> HelmChart.builder().version(String.valueOf(versionNo)).build())
+                                     .collect(Collectors.toList());
 
     if (throwErrorWhileCollection) {
       when(manifestRepositoryService.collectManifests(any(ManifestCollectionParams.class)))

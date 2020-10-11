@@ -33,9 +33,10 @@ import java.util.Map;
 public class HelmChart implements AccountAccess, NameAccess, PersistentEntity, UuidAware, CreatedAtAware,
                                   UpdatedAtAware, ApplicationAccess {
   @Id private String uuid;
-  @Trimmed private String chartVersion;
+  @Trimmed private String version;
   @FdIndex private String applicationManifestId;
   private String name;
+  private String displayName;
   @FdIndex private String accountId;
   private String appId;
   private String serviceId;

@@ -9,6 +9,7 @@ import static io.harness.rule.OwnerRule.GARVIT;
 import static io.harness.rule.OwnerRule.GEORGE;
 import static io.harness.rule.OwnerRule.HARSH;
 import static io.harness.rule.OwnerRule.POOJA;
+import static io.harness.rule.OwnerRule.PRABU;
 import static io.harness.rule.OwnerRule.RAMA;
 import static io.harness.rule.OwnerRule.UJJAWAL;
 import static io.harness.rule.OwnerRule.YOGESH;
@@ -25,6 +26,7 @@ import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.spy;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static software.wings.beans.CanaryOrchestrationWorkflow.CanaryOrchestrationWorkflowBuilder.aCanaryOrchestrationWorkflow;
@@ -46,6 +48,7 @@ import static software.wings.utils.WingsTestConstants.APP_NAME;
 import static software.wings.utils.WingsTestConstants.COMPANY_NAME;
 import static software.wings.utils.WingsTestConstants.DEFAULT_VERSION;
 import static software.wings.utils.WingsTestConstants.ENV_ID;
+import static software.wings.utils.WingsTestConstants.HELM_CHART_ID;
 import static software.wings.utils.WingsTestConstants.PIPELINE_ID;
 import static software.wings.utils.WingsTestConstants.SERVICE_ID;
 import static software.wings.utils.WingsTestConstants.SERVICE_INSTANCE_ID;
@@ -107,6 +110,7 @@ import software.wings.beans.User;
 import software.wings.beans.Variable;
 import software.wings.beans.Workflow;
 import software.wings.beans.WorkflowExecution;
+import software.wings.beans.appmanifest.HelmChart;
 import software.wings.beans.deployment.DeploymentMetadata;
 import software.wings.beans.security.UserGroup;
 import software.wings.dl.WingsPersistence;
@@ -123,14 +127,18 @@ import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.UserGroupService;
 import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.service.intfc.WorkflowService;
+import software.wings.service.intfc.applicationmanifest.HelmChartService;
 import software.wings.sm.StateExecutionData;
 import software.wings.sm.StateExecutionInstance;
 import software.wings.sm.StateMachineExecutionSimulator;
+import software.wings.sm.WorkflowStandardParams;
 
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * The Class workflowExecutionServiceTest.
@@ -159,6 +167,7 @@ public class WorkflowExecutionServiceTest extends WingsBaseTest {
   @Mock WorkflowExecutionServiceHelper workflowExecutionServiceHelper;
   @Mock AuthService authService;
   @Mock private AccountExpirationChecker accountExpirationChecker;
+  @Mock private HelmChartService helmChartService;
 
   @Inject private WingsPersistence wingsPersistence1;
 
@@ -949,5 +958,67 @@ public class WorkflowExecutionServiceTest extends WingsBaseTest {
     workflowExecutionService.triggerPipelineExecution(APP_ID, PIPELINE_ID, executionArgs, null);
     verify(deploymentAuthHandler).authorizePipelineExecution(eq(APP_ID), eq(PIPELINE_ID));
     verify(authService).checkIfUserAllowedToDeployPipelineToEnv(eq(APP_ID), eq(ENV_ID));
+  }
+
+  @Test
+  @Owner(developers = PRABU)
+  @Category(UnitTests.class)
+  public void shouldPopulateHelmChartsInWorkflowExecution() {
+    when(featureFlagService.isEnabled(FeatureName.HELM_CHART_AS_ARTIFACT, ACCOUNT_ID)).thenReturn(true);
+    when(featureFlagService.isEnabled(FeatureName.ARTIFACT_STREAM_REFACTOR, ACCOUNT_ID)).thenReturn(false);
+    WorkflowExecution workflowExecution = createNewWorkflowExecution();
+    workflowExecution.setServiceIds(asList(SERVICE_ID + 1, SERVICE_ID + 2));
+
+    Set<String> keywords = new HashSet<>();
+    ExecutionArgs executionArgs = new ExecutionArgs();
+    HelmChart helmChart1 = generateHelmChart(1);
+    HelmChart helmChart2 = generateHelmChart(2);
+    HelmChart helmChart3 = generateHelmChart(3);
+    executionArgs.setHelmCharts(asList(HelmChart.builder().uuid(HELM_CHART_ID + 1).build(),
+        HelmChart.builder().uuid(HELM_CHART_ID + 2).build(), HelmChart.builder().uuid(HELM_CHART_ID + 3).build()));
+
+    when(helmChartService.listByIds(ACCOUNT_ID, asList(HELM_CHART_ID + 1, HELM_CHART_ID + 2, HELM_CHART_ID + 3)))
+        .thenReturn(asList(helmChart1, helmChart2, helmChart3));
+    workflowExecutionServiceSpy.populateArtifactsAndServices(
+        workflowExecution, new WorkflowStandardParams(), keywords, executionArgs, ACCOUNT_ID);
+
+    assertThat(executionArgs.getHelmCharts()).containsExactly(helmChart1, helmChart2, helmChart3);
+    assertThat(workflowExecution.getHelmCharts()).containsExactly(helmChart1, helmChart2);
+    assertThat(keywords).containsExactlyInAnyOrder("chart", "description", "v1", "v2", "value");
+    verify(helmChartService, times(1)).listByIds(anyString(), anyList());
+  }
+
+  @Test(expected = InvalidRequestException.class)
+  @Owner(developers = PRABU)
+  @Category(UnitTests.class)
+  public void shouldThrowExceptionForInvalidHelmChart() {
+    when(featureFlagService.isEnabled(FeatureName.HELM_CHART_AS_ARTIFACT, ACCOUNT_ID)).thenReturn(true);
+    when(featureFlagService.isEnabled(FeatureName.ARTIFACT_STREAM_REFACTOR, ACCOUNT_ID)).thenReturn(false);
+    WorkflowExecution workflowExecution = createNewWorkflowExecution();
+    workflowExecution.setServiceIds(asList(SERVICE_ID + 1, SERVICE_ID + 2));
+
+    Set<String> keywords = new HashSet<>();
+    ExecutionArgs executionArgs = new ExecutionArgs();
+    HelmChart helmChart1 = generateHelmChart(1);
+    HelmChart helmChart2 = generateHelmChart(2);
+    executionArgs.setHelmCharts(asList(HelmChart.builder().uuid(HELM_CHART_ID + 1).build(),
+        HelmChart.builder().uuid(HELM_CHART_ID + 2).build(), HelmChart.builder().uuid(HELM_CHART_ID + 3).build()));
+
+    when(helmChartService.listByIds(ACCOUNT_ID, asList(HELM_CHART_ID + 1, HELM_CHART_ID + 2, HELM_CHART_ID + 3)))
+        .thenReturn(asList(helmChart1, helmChart2));
+    workflowExecutionServiceSpy.populateArtifactsAndServices(
+        workflowExecution, new WorkflowStandardParams(), keywords, executionArgs, ACCOUNT_ID);
+    verify(helmChartService, times(1)).listByIds(anyString(), anyList());
+  }
+
+  private HelmChart generateHelmChart(int version) {
+    return HelmChart.builder()
+        .uuid(HELM_CHART_ID + version)
+        .name("chart")
+        .description("description")
+        .metadata(Collections.singletonMap("key", "value"))
+        .serviceId(SERVICE_ID + version)
+        .version("v" + version)
+        .build();
   }
 }

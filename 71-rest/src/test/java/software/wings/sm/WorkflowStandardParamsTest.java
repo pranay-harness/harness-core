@@ -2,11 +2,13 @@ package software.wings.sm;
 
 import static io.harness.rule.OwnerRule.BRETT;
 import static io.harness.rule.OwnerRule.GARVIT;
+import static io.harness.rule.OwnerRule.PRABU;
 import static io.harness.rule.OwnerRule.PRASHANT;
 import static io.harness.rule.OwnerRule.SRINIVAS;
 import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.joor.Reflect.on;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static software.wings.beans.Application.Builder.anApplication;
 import static software.wings.beans.Environment.Builder.anEnvironment;
@@ -20,6 +22,8 @@ import static software.wings.utils.WingsTestConstants.APP_ID;
 import static software.wings.utils.WingsTestConstants.ARTIFACT_ID;
 import static software.wings.utils.WingsTestConstants.ARTIFACT_STREAM_ID;
 import static software.wings.utils.WingsTestConstants.COMPANY_NAME;
+import static software.wings.utils.WingsTestConstants.HELM_CHART_ID;
+import static software.wings.utils.WingsTestConstants.MANIFEST_ID;
 import static software.wings.utils.WingsTestConstants.SERVICE_ID;
 import static software.wings.utils.WingsTestConstants.SERVICE_NAME;
 import static software.wings.utils.WingsTestConstants.mockChecker;
@@ -46,10 +50,12 @@ import software.wings.beans.Account;
 import software.wings.beans.Application;
 import software.wings.beans.Environment;
 import software.wings.beans.FeatureName;
+import software.wings.beans.appmanifest.HelmChart;
 import software.wings.beans.artifact.Artifact;
 import software.wings.scheduler.BackgroundJobScheduler;
 import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.AppService;
+import software.wings.service.intfc.ApplicationManifestService;
 import software.wings.service.intfc.ArtifactService;
 import software.wings.service.intfc.ArtifactStreamService;
 import software.wings.service.intfc.ArtifactStreamServiceBindingService;
@@ -57,9 +63,12 @@ import software.wings.service.intfc.EnvironmentService;
 import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.SettingsService;
+import software.wings.service.intfc.applicationmanifest.HelmChartService;
 import software.wings.settings.SettingVariableTypes;
 
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
@@ -92,6 +101,8 @@ public class WorkflowStandardParamsTest extends WingsBaseTest {
   @Mock private LimitCheckerFactory limitCheckerFactory;
   @Mock private ServiceResourceService serviceResourceService;
   @Mock private FeatureFlagService featureFlagService;
+  @Mock private HelmChartService helmChartService;
+  @Mock private ApplicationManifestService applicationManifestService;
 
   @Before
   public void setup() {
@@ -300,5 +311,84 @@ public class WorkflowStandardParamsTest extends WingsBaseTest {
     Account account = (Account) map.get(ContextElement.ACCOUNT);
     assertThat(account).isNotNull();
     assertThat(account.getDefaults()).isNotEmpty();
+  }
+
+  @Test
+  @Owner(developers = PRABU)
+  @Category(UnitTests.class)
+  public void shouldSetCorrectHelmChartInContext() {
+    when(limitCheckerFactory.getInstance(Mockito.any())).thenReturn(mockChecker());
+    WorkflowStandardParams std = new WorkflowStandardParams();
+    injector.injectMembers(std);
+
+    Application app = anApplication().name("AppA").accountId(ACCOUNT_ID).build();
+    app = appService.save(app);
+    std.setAppId(app.getUuid());
+    List<String> helmChartIds = Arrays.asList(HELM_CHART_ID + 1, HELM_CHART_ID + 2);
+    std.setHelmChartIds(helmChartIds);
+    String chartName = "chart";
+    HelmChart helmChart1 = createHelmChart(chartName, 1);
+    HelmChart helmChart2 = createHelmChart(chartName, 2);
+    ServiceElement serviceElement = ServiceElement.builder().uuid(SERVICE_ID + 1).name(SERVICE_NAME).build();
+
+    when(context.fetchServiceElement()).thenReturn(serviceElement);
+    when(helmChartService.listByIds(ACCOUNT_ID, helmChartIds)).thenReturn(Arrays.asList(helmChart1, helmChart2));
+    when(applicationManifestService.fetchAppManifestProperties(app.getUuid(), MANIFEST_ID))
+        .thenReturn(Collections.singletonMap("url", "helmRepoUrl"));
+    when(featureFlagService.isEnabled(FeatureName.HELM_CHART_AS_ARTIFACT, ACCOUNT_ID)).thenReturn(true);
+    on(std).set("helmChartService", helmChartService);
+    on(std).set("applicationManifestService", applicationManifestService);
+    on(std).set("featureFlagService", featureFlagService);
+
+    Map<String, Object> paramMap = std.paramMap(context);
+    HelmChart helmChart = (HelmChart) paramMap.get(ContextElement.HELM_CHART);
+    assertThat(helmChart).isNotNull();
+    assertThat(helmChart.getUuid()).isEqualTo(HELM_CHART_ID + 1);
+    assertThat(helmChart.getName()).isEqualTo(chartName);
+    assertThat(helmChart.getMetadata().get("url")).isEqualTo("helmRepoUrl");
+  }
+
+  private HelmChart createHelmChart(String chartName, int version) {
+    return HelmChart.builder()
+        .serviceId(SERVICE_ID + version)
+        .applicationManifestId(MANIFEST_ID)
+        .uuid(HELM_CHART_ID + version)
+        .name(chartName)
+        .build();
+  }
+
+  @Test
+  @Owner(developers = PRABU)
+  @Category(UnitTests.class)
+  public void shouldSetNullHelmChartIfAbsent() {
+    when(limitCheckerFactory.getInstance(Mockito.any())).thenReturn(mockChecker());
+    WorkflowStandardParams std = new WorkflowStandardParams();
+    injector.injectMembers(std);
+
+    Application app = anApplication().name("AppA").accountId(ACCOUNT_ID).build();
+    app = appService.save(app);
+    std.setAppId(app.getUuid());
+
+    List<String> helmChartIds = Arrays.asList(HELM_CHART_ID + 1);
+    String chartName = "chart";
+    HelmChart helmChart1 = createHelmChart(chartName, 1);
+    on(std).set("helmChartService", helmChartService);
+    on(std).set("featureFlagService", featureFlagService);
+
+    when(featureFlagService.isEnabled(FeatureName.HELM_CHART_AS_ARTIFACT, ACCOUNT_ID)).thenReturn(false);
+    Map<String, Object> paramMap = std.paramMap(context);
+    assertThat(paramMap.get(ContextElement.HELM_CHART)).isNull();
+
+    when(featureFlagService.isEnabled(FeatureName.HELM_CHART_AS_ARTIFACT, ACCOUNT_ID)).thenReturn(true);
+    paramMap = std.paramMap(context);
+    assertThat(paramMap.get(ContextElement.HELM_CHART)).isNull();
+
+    std.setHelmChartIds(Arrays.asList(HELM_CHART_ID + 1));
+    ServiceElement serviceElement = ServiceElement.builder().uuid(SERVICE_ID + 2).name(SERVICE_NAME).build();
+    when(context.fetchServiceElement()).thenReturn(serviceElement);
+    when(helmChartService.listByIds(ACCOUNT_ID, helmChartIds)).thenReturn(Arrays.asList(helmChart1));
+    paramMap = std.paramMap(context);
+    assertThat(paramMap.get(ContextElement.HELM_CHART)).isNull();
+    verify(helmChartService).listByIds(ACCOUNT_ID, helmChartIds);
   }
 }

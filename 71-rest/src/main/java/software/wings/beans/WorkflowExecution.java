@@ -43,6 +43,7 @@ import org.mongodb.morphia.annotations.Transient;
 import software.wings.beans.Environment.EnvironmentType;
 import software.wings.beans.ExecutionArgs.ExecutionArgsKeys;
 import software.wings.beans.WorkflowExecution.WorkflowExecutionKeys;
+import software.wings.beans.appmanifest.HelmChart;
 import software.wings.beans.artifact.Artifact;
 import software.wings.beans.concurrency.ConcurrencyStrategy;
 import software.wings.beans.entityinterface.KeywordsAware;
@@ -234,6 +235,7 @@ public class WorkflowExecution
   private ApiKeyInfo triggeringApiKeyInfo;
 
   private List<Artifact> artifacts;
+  private List<HelmChart> helmCharts;
 
   private Set<String> keywords;
   private boolean onDemandRollback;

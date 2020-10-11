@@ -12,6 +12,7 @@ import lombok.Getter;
 import lombok.Setter;
 import lombok.experimental.FieldNameConstants;
 import org.mongodb.morphia.annotations.Transient;
+import software.wings.beans.appmanifest.HelmChart;
 import software.wings.beans.artifact.Artifact;
 
 import java.util.List;
@@ -54,4 +55,7 @@ public class ExecutionArgs {
   private List<String> hosts;
   // If any variable is Runtime and Default values is provided
   private boolean continueWithDefaultValues;
+  private List<HelmChart> helmCharts;
+  private List<ManifestVariable> manifestVariables;
+  private Map<String, String> helmChartIdNames;
 }

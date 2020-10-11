@@ -257,5 +257,7 @@ public enum EntityType {
 
   JENKINS_SERVER,
 
-  SECRETS_MANAGER
+  SECRETS_MANAGER,
+
+  HELM_CHART
 }

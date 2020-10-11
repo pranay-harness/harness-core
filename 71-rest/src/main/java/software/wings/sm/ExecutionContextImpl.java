@@ -24,6 +24,7 @@ import static software.wings.service.intfc.ServiceVariableService.EncryptedField
 import static software.wings.service.intfc.ServiceVariableService.EncryptedFieldMode.OBTAIN_VALUE;
 import static software.wings.sm.ContextElement.ARTIFACT;
 import static software.wings.sm.ContextElement.ENVIRONMENT_VARIABLE;
+import static software.wings.sm.ContextElement.HELM_CHART;
 import static software.wings.sm.ContextElement.SAFE_DISPLAY_SERVICE_VARIABLE;
 import static software.wings.sm.ContextElement.SERVICE_VARIABLE;
 
@@ -96,6 +97,7 @@ import software.wings.beans.ServiceVariable;
 import software.wings.beans.ServiceVariable.Type;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.Variable;
+import software.wings.beans.appmanifest.HelmChart;
 import software.wings.beans.artifact.Artifact;
 import software.wings.beans.artifact.ArtifactStream;
 import software.wings.beans.customdeployment.CustomDeploymentTypeDTO;
@@ -114,6 +116,7 @@ import software.wings.service.impl.StateExecutionInstanceLogContext;
 import software.wings.service.impl.SweepingOutputServiceImpl;
 import software.wings.service.impl.WorkflowExecutionLogContext;
 import software.wings.service.impl.WorkflowLogContext;
+import software.wings.service.intfc.ApplicationManifestService;
 import software.wings.service.intfc.ArtifactService;
 import software.wings.service.intfc.ArtifactStreamService;
 import software.wings.service.intfc.ArtifactStreamServiceBindingService;
@@ -128,6 +131,7 @@ import software.wings.service.intfc.ServiceVariableService;
 import software.wings.service.intfc.ServiceVariableService.EncryptedFieldMode;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.StateExecutionService;
+import software.wings.service.intfc.applicationmanifest.HelmChartService;
 import software.wings.service.intfc.customdeployment.CustomDeploymentTypeService;
 import software.wings.service.intfc.security.ManagerDecryptionService;
 import software.wings.service.intfc.security.SecretManager;
@@ -185,6 +189,7 @@ public class ExecutionContextImpl implements DeploymentExecutionContext {
   @Inject private transient ArtifactStreamServiceBindingService artifactStreamServiceBindingService;
   @Inject private transient KryoSerializer kryoSerializer;
   @Inject private transient CustomDeploymentTypeService customDeploymentTypeService;
+  @Inject private transient HelmChartService helmChartService;
 
   private StateMachine stateMachine;
   private StateExecutionInstance stateExecutionInstance;
@@ -294,6 +299,17 @@ public class ExecutionContextImpl implements DeploymentExecutionContext {
       builder.serviceInstanceId(instanceElement.getUuid());
       builder.hostName(instanceElement.getHost().getHostName());
     }
+  }
+
+  public static void addHelmChartToContext(String appId, Map<String, Object> map, HelmChart helmChart,
+      ApplicationManifestService applicationManifestService) {
+    if (helmChart == null) {
+      return;
+    }
+
+    helmChart.setMetadata(
+        applicationManifestService.fetchAppManifestProperties(appId, helmChart.getApplicationManifestId()));
+    map.put(HELM_CHART, helmChart);
   }
 
   @Override
@@ -603,6 +619,12 @@ public class ExecutionContextImpl implements DeploymentExecutionContext {
     } else {
       return getArtifactForService(serviceId);
     }
+  }
+
+  @Override
+  public List<HelmChart> getHelmCharts() {
+    WorkflowStandardParams workflowStandardParams = fetchWorkflowStandardParamsFromContext();
+    return workflowStandardParams.getHelmCharts();
   }
 
   @Override

@@ -170,6 +170,15 @@ public abstract class ExpressionBuilder {
   protected static final String HTTP_RESPONSE_CODE = "httpResponseCode";
   protected static final String HTTP_RESPONSE_BODY = "httpResponseBody";
 
+  protected static final String HELM_CHART_NAME = "helmChart.name";
+  protected static final String HELM_CHART_DESCRIPTION = "helmChart.description";
+  protected static final String HELM_CHART_DISPLAY_NAME = "helmChart.displayName";
+  protected static final String HELM_CHART_VERSION = "helmChart.version";
+  protected static final String HELM_CHART_URL = "helmChart.metadata.url";
+  protected static final String HELM_CHART_BASE_PATH = "helmChart.metadata.basePath";
+  protected static final String HELM_CHART_REPO_NAME = "helmChart.metadata.repositoryName";
+  protected static final String HELM_CHART_BUCKET_NAME = "helmChart.metadata.bucketName";
+
   @Inject private ServiceVariableService serviceVariablesService;
   @Inject private ServiceTemplateService serviceTemplateService;
 
@@ -220,6 +229,9 @@ public abstract class ExpressionBuilder {
     expressions.addAll(asList(INFRA_ROUTE_PCF, INFRA_TEMP_ROUTE_PCF));
     expressions.add(WorkflowStandardParams.DEPLOYMENT_TRIGGERED_BY);
     expressions.addAll(asList(INFRA_CUSTOM_VARS));
+
+    expressions.addAll(asList(HELM_CHART_BASE_PATH, HELM_CHART_DESCRIPTION, HELM_CHART_NAME, HELM_CHART_REPO_NAME,
+        HELM_CHART_URL, HELM_CHART_VERSION, HELM_CHART_BUCKET_NAME, HELM_CHART_DISPLAY_NAME));
 
     return expressions;
   }

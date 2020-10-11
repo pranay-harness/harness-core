@@ -49,9 +49,11 @@ import software.wings.beans.DeploymentExecutionContext;
 import software.wings.beans.EntityType;
 import software.wings.beans.ExecutionArgs;
 import software.wings.beans.FeatureName;
+import software.wings.beans.ManifestVariable;
 import software.wings.beans.VariableType;
 import software.wings.beans.Workflow;
 import software.wings.beans.WorkflowExecution;
+import software.wings.beans.appmanifest.HelmChart;
 import software.wings.beans.artifact.Artifact;
 import software.wings.service.impl.EnvironmentServiceImpl;
 import software.wings.service.impl.workflow.WorkflowServiceHelper;
@@ -209,15 +211,23 @@ public class EnvState extends State {
       }
     }
 
-    List<Artifact> artifacts = ((DeploymentExecutionContext) context).getArtifacts();
-    List<ArtifactVariable> artifactVariables =
-        getArtifactVariables((DeploymentExecutionContext) context, workflowStandardParams);
+    DeploymentExecutionContext deploymentExecutionContext = (DeploymentExecutionContext) context;
+    List<Artifact> artifacts = deploymentExecutionContext.getArtifacts();
+    List<ArtifactVariable> artifactVariables = getArtifactVariables(deploymentExecutionContext, workflowStandardParams);
 
     ExecutionArgs executionArgs = new ExecutionArgs();
     executionArgs.setWorkflowType(WorkflowType.ORCHESTRATION);
     executionArgs.setOrchestrationId(workflowId);
     executionArgs.setArtifacts(artifacts);
     executionArgs.setArtifactVariables(artifactVariables);
+
+    if (featureFlagService.isEnabled(FeatureName.HELM_CHART_AS_ARTIFACT, context.getAccountId())) {
+      List<HelmChart> helmCharts = deploymentExecutionContext.getHelmCharts();
+      List<ManifestVariable> manifestVariables = getManifestVariables(workflowStandardParams);
+      executionArgs.setHelmCharts(helmCharts);
+      executionArgs.setManifestVariables(manifestVariables);
+    }
+
     executionArgs.setExecutionCredential(aSSHExecutionCredential().withExecutionType(SSH).build());
     executionArgs.setTriggeredFromPipeline(true);
     executionArgs.setPipelineId(pipelineId);
@@ -247,6 +257,11 @@ public class EnvState extends State {
           .stateExecutionData(envStateExecutionData)
           .build();
     }
+  }
+
+  private List<ManifestVariable> getManifestVariables(WorkflowStandardParams workflowStandardParams) {
+    return Optional.ofNullable(workflowStandardParams.getWorkflowElement().getManifestVariables())
+        .orElse(new ArrayList<>());
   }
 
   private List<ArtifactVariable> getArtifactVariables(

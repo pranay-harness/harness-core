@@ -57,6 +57,7 @@ import software.wings.beans.GitFileConfig.GitFileConfigKeys;
 import software.wings.beans.HelmChartConfig;
 import software.wings.beans.HelmChartConfig.HelmChartConfigKeys;
 import software.wings.beans.Service;
+import software.wings.beans.SettingAttribute;
 import software.wings.beans.TaskType;
 import software.wings.beans.appmanifest.AppManifestKind;
 import software.wings.beans.appmanifest.ApplicationManifest;
@@ -65,17 +66,23 @@ import software.wings.beans.appmanifest.ApplicationManifest.ApplicationManifestK
 import software.wings.beans.appmanifest.ManifestFile;
 import software.wings.beans.appmanifest.ManifestFile.ManifestFileKeys;
 import software.wings.beans.appmanifest.StoreType;
+import software.wings.beans.settings.helm.AmazonS3HelmRepoConfig;
+import software.wings.beans.settings.helm.GCSHelmRepoConfig;
+import software.wings.beans.settings.helm.HelmRepoConfig;
 import software.wings.beans.yaml.GitCommandExecutionResponse;
 import software.wings.beans.yaml.GitCommandExecutionResponse.GitCommandStatus;
 import software.wings.beans.yaml.GitFetchFilesFromMultipleRepoResult;
 import software.wings.beans.yaml.GitFetchFilesResult;
 import software.wings.dl.WingsPersistence;
+import software.wings.helpers.ext.helm.HelmHelper;
+import software.wings.helpers.ext.helm.request.HelmChartConfigParams;
 import software.wings.helpers.ext.k8s.request.K8sValuesLocation;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ApplicationManifestService;
 import software.wings.service.intfc.DelegateService;
 import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.ServiceResourceService;
+import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.applicationmanifest.ApplicationManifestServiceObserver;
 import software.wings.service.intfc.applicationmanifest.HelmChartService;
 import software.wings.service.intfc.yaml.YamlDirectoryService;
@@ -103,6 +110,10 @@ import javax.validation.executable.ValidateOnExecution;
 @Slf4j
 public class ApplicationManifestServiceImpl implements ApplicationManifestService {
   private static final int ALLOWED_SIZE_IN_BYTES = 1024 * 1024; // 1 MiB
+  private static final String CHART_URL = "url";
+  private static final String BASE_PATH = "basePath";
+  private static final String REPOSITORY_NAME = "repositoryName";
+  private static final String BUCKET_NAME = "bucketName";
 
   @Inject private WingsPersistence wingsPersistence;
   @Inject private AppService appService;
@@ -115,6 +126,8 @@ public class ApplicationManifestServiceImpl implements ApplicationManifestServic
   @Inject private FeatureFlagService featureFlagService;
   @Inject @Getter private Subject<ApplicationManifestServiceObserver> subject = new Subject<>();
   @Inject private HelmChartService helmChartService;
+  @Inject private SettingsService settingsService;
+  @Inject private HelmHelper helmHelper;
 
   private static long MAX_MANIFEST_FILES_PER_APPLICATION_MANIFEST = 50L;
 
@@ -356,6 +369,41 @@ public class ApplicationManifestServiceImpl implements ApplicationManifestServic
     UpdateResults updateResults = wingsPersistence.update(query, updateOperations);
 
     return updateResults.getUpdatedCount() == 1;
+  }
+
+  @Override
+  public Map<String, String> fetchAppManifestProperties(String appId, String applicationManifestId) {
+    ApplicationManifest applicationManifest = getById(appId, applicationManifestId);
+    Map<String, String> properties = new HashMap<>();
+    if (applicationManifest == null || applicationManifest.getHelmChartConfig() == null) {
+      return properties;
+    }
+
+    HelmChartConfig helmChartConfig = applicationManifest.getHelmChartConfig();
+    SettingAttribute settingAttribute = settingsService.get(helmChartConfig.getConnectorId());
+    notNullCheck("Helm repo config not found with id " + helmChartConfig.getConnectorId(), settingAttribute);
+
+    HelmRepoConfig helmRepoConfig = (HelmRepoConfig) settingAttribute.getValue();
+    properties.put(CHART_URL,
+        helmHelper.getRepoUrlForHelmRepoConfig(HelmChartConfigParams.builder()
+                                                   .basePath(helmChartConfig.getBasePath())
+                                                   .chartName(helmChartConfig.getChartName())
+                                                   .helmRepoConfig(helmRepoConfig)
+                                                   .build()));
+    properties.put(BASE_PATH, helmChartConfig.getBasePath());
+    properties.put(REPOSITORY_NAME, settingAttribute.getName());
+    properties.put(BUCKET_NAME, getBucketName(helmRepoConfig));
+
+    return properties;
+  }
+
+  private String getBucketName(HelmRepoConfig helmRepoConfig) {
+    if (helmRepoConfig instanceof GCSHelmRepoConfig) {
+      return ((GCSHelmRepoConfig) helmRepoConfig).getBucketName();
+    } else if (helmRepoConfig instanceof AmazonS3HelmRepoConfig) {
+      return ((AmazonS3HelmRepoConfig) helmRepoConfig).getBucketName();
+    }
+    return null;
   }
 
   void createPerpetualTask(@NotNull ApplicationManifest applicationManifest) {

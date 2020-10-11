@@ -1,6 +1,7 @@
 package software.wings.beans;
 
 import software.wings.api.artifact.ServiceArtifactVariableElement;
+import software.wings.beans.appmanifest.HelmChart;
 import software.wings.beans.artifact.Artifact;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.WorkflowStandardParams;
@@ -20,4 +21,6 @@ public interface DeploymentExecutionContext extends ExecutionContext {
   Map<String, Artifact> getArtifactsForService(String serviceId);
 
   Artifact getDefaultArtifactForService(String serviceId);
+
+  List<HelmChart> getHelmCharts();
 }

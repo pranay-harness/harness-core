@@ -12,6 +12,7 @@ import software.wings.service.intfc.ownership.OwnedByService;
 import software.wings.yaml.directory.DirectoryNode;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import javax.annotation.Nonnull;
 import javax.validation.constraints.NotNull;
@@ -88,6 +89,8 @@ public interface ApplicationManifestService extends OwnedByService, OwnedByEnvir
   boolean detachPerpetualTask(@NotNull String perpetualTaskId);
 
   boolean attachPerpetualTask(String accountId, @NotNull String appManifestId, @NotNull String perpetualTaskId);
+
+  Map<String, String> fetchAppManifestProperties(String appId, String applicationManifestId);
 
   boolean updateFailedAttempts(String accountId, String appManifestId, int failedAttempts);
 }

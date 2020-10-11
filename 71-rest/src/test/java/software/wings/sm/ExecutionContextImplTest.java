@@ -6,6 +6,7 @@ import static io.harness.rule.OwnerRule.BRETT;
 import static io.harness.rule.OwnerRule.GARVIT;
 import static io.harness.rule.OwnerRule.GEORGE;
 import static io.harness.rule.OwnerRule.NAMAN;
+import static io.harness.rule.OwnerRule.PRABU;
 import static io.harness.rule.OwnerRule.SATYAM;
 import static io.harness.rule.OwnerRule.SRINIVAS;
 import static io.harness.rule.OwnerRule.UJJAWAL;
@@ -38,6 +39,7 @@ import static software.wings.utils.WingsTestConstants.APP_ID;
 import static software.wings.utils.WingsTestConstants.ARTIFACT_ID;
 import static software.wings.utils.WingsTestConstants.ARTIFACT_STREAM_ID;
 import static software.wings.utils.WingsTestConstants.ENV_ID;
+import static software.wings.utils.WingsTestConstants.HELM_CHART_ID;
 import static software.wings.utils.WingsTestConstants.PIPELINE_EXECUTION_ID;
 import static software.wings.utils.WingsTestConstants.SERVICE_ID;
 import static software.wings.utils.WingsTestConstants.mockChecker;
@@ -97,6 +99,7 @@ import software.wings.beans.ServiceTemplate;
 import software.wings.beans.ServiceVariable;
 import software.wings.beans.ServiceVariable.Type;
 import software.wings.beans.Variable;
+import software.wings.beans.appmanifest.HelmChart;
 import software.wings.beans.artifact.Artifact;
 import software.wings.beans.customdeployment.CustomDeploymentTypeDTO;
 import software.wings.infra.GoogleKubernetesEngine;
@@ -112,6 +115,7 @@ import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.ServiceTemplateService;
 import software.wings.service.intfc.SettingsService;
+import software.wings.service.intfc.applicationmanifest.HelmChartService;
 import software.wings.service.intfc.customdeployment.CustomDeploymentTypeService;
 import software.wings.service.intfc.sweepingoutput.SweepingOutputInquiry;
 import software.wings.service.intfc.sweepingoutput.SweepingOutputService;
@@ -119,6 +123,8 @@ import software.wings.settings.SettingVariableTypes;
 import software.wings.utils.WingsTestConstants;
 
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -145,6 +151,7 @@ public class ExecutionContextImplTest extends WingsBaseTest {
   @Mock private SweepingOutputService sweepingOutputService;
   @Mock private CustomDeploymentTypeService customDeploymentTypeService;
   @Mock private InfrastructureMappingService infrastructureMappingService;
+  @Mock HelmChartService helmChartService;
   @Mock private InfrastructureDefinitionService infrastructureDefinitionService;
 
   @Before
@@ -1061,6 +1068,33 @@ public class ExecutionContextImplTest extends WingsBaseTest {
     testIfVariablesEmpty();
     testIfNoOverrideInInfra();
     testIfOverridenInInfra();
+  }
+
+  @Test
+  @Owner(developers = PRABU)
+  @Category(UnitTests.class)
+  public void shouldFetchHelmChartsFromWorkflowStandardParamsIfNoManifestVariable() {
+    StateExecutionInstance stateExecutionInstance = mock(StateExecutionInstance.class);
+    WorkflowStandardParams workflowStandardParams = new WorkflowStandardParams();
+    on(workflowStandardParams).set("app", anApplication().uuid(APP_ID).build());
+
+    LinkedList<ContextElement> contextElements = new LinkedList<>();
+    contextElements.push(workflowStandardParams);
+    List<String> helmChartId = Collections.singletonList(HELM_CHART_ID);
+
+    when(stateExecutionInstance.getContextElements()).thenReturn(contextElements);
+    workflowStandardParams.setHelmChartIds(helmChartId);
+    on(workflowStandardParams).set("helmCharts", asList(HelmChart.builder().uuid(HELM_CHART_ID).name("chart").build()));
+    ExecutionContextImpl context = new ExecutionContextImpl(new StateExecutionInstance());
+    on(context).set("stateExecutionInstance", stateExecutionInstance);
+    on(context).set("helmChartService", helmChartService);
+
+    List<HelmChart> helmCharts = context.getHelmCharts();
+    assertThat(helmCharts).isNotNull();
+    assertThat(helmCharts).hasSize(1);
+    assertThat(helmCharts.get(0).getUuid()).isEqualTo(HELM_CHART_ID);
+    assertThat(helmCharts.get(0).getName()).isEqualTo("chart");
+    verify(helmChartService, never()).listByIds(any(), any());
   }
 
   private void testIfOverridenInInfra() {

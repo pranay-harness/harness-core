@@ -23,6 +23,7 @@ public interface ContextElement {
   String INSTANCE = "instance";
   String PCF_INSTANCE = "pcfinstance";
   String ARTIFACT = "artifact";
+  String HELM_CHART = "helmChart";
   String SERVICE_VARIABLE = "serviceVariable";
   String ENVIRONMENT_VARIABLE = "environmentVariable";
   String SAFE_DISPLAY_SERVICE_VARIABLE = "safeDisplayServiceVariable";
