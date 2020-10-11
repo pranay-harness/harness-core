@@ -22,6 +22,8 @@ import io.harness.queue.QueueConsumer;
 import io.harness.queue.QueueListener;
 import io.harness.queue.QueuePublisher;
 import io.harness.remote.client.ServiceHttpClientConfig;
+import org.springframework.data.mongodb.MongoTransactionManager;
+import org.springframework.transaction.support.TransactionTemplate;
 
 public class InviteModule extends AbstractModule {
   private final ServiceHttpClientConfig serviceHttpClientConfig;
@@ -64,6 +66,12 @@ public class InviteModule extends AbstractModule {
   @Singleton
   protected String getUserVerificationSecret(NextGenConfiguration nextGenConfiguration) {
     return nextGenConfiguration.getNextGenConfig().getUserVerificationSecret();
+  }
+
+  @Provides
+  @Singleton
+  protected TransactionTemplate getTransactionTemplate(MongoTransactionManager mongoTransactionManager) {
+    return new TransactionTemplate(mongoTransactionManager);
   }
 
   @Provides

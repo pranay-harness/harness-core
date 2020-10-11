@@ -23,8 +23,6 @@ public interface InvitesService {
 
   Optional<Invite> deleteInvite(String inviteId);
 
-  boolean sendInvitationMail(Invite invite);
-
   Optional<Invite> verify(String jwtToken);
 
   Optional<Invite> updateInvite(Invite invite);
