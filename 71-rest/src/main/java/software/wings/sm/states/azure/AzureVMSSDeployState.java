@@ -261,6 +261,7 @@ public class AzureVMSSDeployState extends AbstractAzureState {
         .resourceGroupName(azureVMSSInfrastructureMapping.getResourceGroupName())
         .subscriptionId(azureVMSSInfrastructureMapping.getSubscriptionId())
         .rollback(isRollback())
+        .isBlueGreen(azureVMSSSetupContextElement.isBlueGreen())
         .preDeploymentData(azureVMSSSetupContextElement.getPreDeploymentData())
         .build();
   }

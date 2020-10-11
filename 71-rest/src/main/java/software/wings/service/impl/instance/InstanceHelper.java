@@ -538,6 +538,10 @@ public class InstanceHelper {
       case SPOTINST_DEPLOY:
       case SPOTINST_ROLLBACK:
       case SPOTINST_LISTENER_UPDATE_ROLLBACK:
+      case AZURE_VMSS_DEPLOY:
+      case AZURE_VMSS_ROLLBACK:
+      case AZURE_VMSS_SWITCH_ROUTES:
+      case AZURE_VMSS_SWITCH_ROLLBACK:
       case CUSTOM_DEPLOYMENT_PHASE_STEP:
         return true;
       default:

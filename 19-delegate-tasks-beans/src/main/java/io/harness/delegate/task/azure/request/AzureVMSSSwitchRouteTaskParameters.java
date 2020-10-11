@@ -1,5 +1,7 @@
 package io.harness.delegate.task.azure.request;
 
+import static io.harness.delegate.task.azure.request.AzureVMSSTaskParameters.AzureVMSSTaskType.AZURE_VMSS_SWITCH_ROUTE;
+
 import io.harness.delegate.task.azure.AzureVMSSPreDeploymentData;
 import lombok.Builder;
 import lombok.Data;
@@ -22,7 +24,7 @@ public class AzureVMSSSwitchRouteTaskParameters extends AzureVMSSTaskParameters 
       Integer autoScalingSteadyStateVMSSTimeout, AzureVMSSTaskType commandType, String oldVMSSName, String newVMSSName,
       boolean downscaleOldVMSS, boolean rollback, AzureVMSSPreDeploymentData preDeploymentData,
       AzureLoadBalancerDetailForBGDeployment azureLoadBalancerDetail, String subscriptionId, String resourceGroupName) {
-    super(appId, accountId, activityId, commandName, autoScalingSteadyStateVMSSTimeout, commandType);
+    super(appId, accountId, activityId, commandName, autoScalingSteadyStateVMSSTimeout, AZURE_VMSS_SWITCH_ROUTE);
     this.subscriptionId = subscriptionId;
     this.resourceGroupName = resourceGroupName;
     this.oldVMSSName = oldVMSSName;

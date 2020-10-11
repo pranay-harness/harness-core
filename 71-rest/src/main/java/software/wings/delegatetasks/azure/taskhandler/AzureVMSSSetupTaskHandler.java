@@ -34,6 +34,7 @@ import com.google.inject.Singleton;
 import com.microsoft.azure.management.compute.GalleryImage;
 import com.microsoft.azure.management.compute.GalleryImageIdentifier;
 import com.microsoft.azure.management.compute.VirtualMachineScaleSet;
+import com.microsoft.azure.management.network.LoadBalancer;
 import io.harness.azure.model.AzureConfig;
 import io.harness.azure.model.AzureMachineImageArtifact;
 import io.harness.azure.model.AzureMachineImageArtifact.ImageType;
@@ -48,6 +49,7 @@ import io.harness.delegate.beans.azure.AzureMachineImageArtifactDTO;
 import io.harness.delegate.beans.azure.AzureVMAuthDTO;
 import io.harness.delegate.beans.azure.GalleryImageDefinitionDTO;
 import io.harness.delegate.task.azure.AzureVMSSPreDeploymentData;
+import io.harness.delegate.task.azure.request.AzureLoadBalancerDetailForBGDeployment;
 import io.harness.delegate.task.azure.request.AzureVMSSSetupTaskParameters;
 import io.harness.delegate.task.azure.request.AzureVMSSTaskParameters;
 import io.harness.delegate.task.azure.response.AzureVMSSSetupTaskResponse;
@@ -84,6 +86,8 @@ public class AzureVMSSSetupTaskHandler extends AzureVMSSTaskHandler {
 
     setupLogCallback.saveExecutionLog("Starting Azure Virtual Machine Scale Set Setup", INFO);
 
+    validateSetupTaskParameters(setupTaskParameters);
+
     List<VirtualMachineScaleSet> harnessVMSSSortedByCreationTimeReverse =
         logAndGetHarnessMangedVMSSSortedByCreationTime(azureConfig, setupTaskParameters, setupLogCallback);
 
@@ -104,6 +108,11 @@ public class AzureVMSSSetupTaskHandler extends AzureVMSSTaskHandler {
     createVirtualMachineScaleSet(azureConfig, setupTaskParameters, newHarnessRevision, newVirtualMachineScaleSetName,
         getLogCallBack(azureVMSSTaskParameters, CREATE_NEW_VMSS_COMMAND_UNIT));
 
+    if (setupTaskParameters.isBlueGreen()) {
+      attachNewCreatedVMSSToStageBackendPool(
+          azureConfig, setupTaskParameters, newVirtualMachineScaleSetName, setupLogCallback);
+    }
+
     AzureVMSSSetupTaskResponse azureVMSSSetupTaskResponse = buildAzureVMSSSetupTaskResponse(
         azureConfig, newHarnessRevision, newVirtualMachineScaleSetName, mostRecentActiveVMSS, setupTaskParameters);
 
@@ -111,6 +120,19 @@ public class AzureVMSSSetupTaskHandler extends AzureVMSSTaskHandler {
         .commandExecutionStatus(SUCCESS)
         .azureVMSSTaskResponse(azureVMSSSetupTaskResponse)
         .build();
+  }
+
+  private void validateSetupTaskParameters(AzureVMSSSetupTaskParameters setupTaskParameters) {
+    boolean isBlueGreen = setupTaskParameters.isBlueGreen();
+    AzureLoadBalancerDetailForBGDeployment azureLoadBalancerDetail = setupTaskParameters.getAzureLoadBalancerDetail();
+    if (isBlueGreen
+        && (azureLoadBalancerDetail == null || isBlank(azureLoadBalancerDetail.getLoadBalancerName())
+               || isBlank(azureLoadBalancerDetail.getStageBackendPool())
+               || isBlank(azureLoadBalancerDetail.getProdBackendPool()))) {
+      throw new InvalidRequestException(
+          format("LoadBalancer pool details are empty or null, azureLoadBalancerDetail: %s",
+              azureLoadBalancerDetail == null ? null : azureLoadBalancerDetail.toString()));
+    }
   }
 
   @NotNull
@@ -454,6 +476,34 @@ public class AzureVMSSSetupTaskHandler extends AzureVMSSTaskHandler {
       throw new InvalidRequestException(errorMessage);
     }
     return baseVirtualMachineScaleSetOp.get();
+  }
+
+  private void attachNewCreatedVMSSToStageBackendPool(AzureConfig azureConfig,
+      AzureVMSSSetupTaskParameters setupTaskParameters, String newVirtualMachineScaleSetName,
+      ExecutionLogCallback setupLogCallback) {
+    AzureLoadBalancerDetailForBGDeployment azureLoadBalancerDetail = setupTaskParameters.getAzureLoadBalancerDetail();
+    String stageBackendPool = azureLoadBalancerDetail.getStageBackendPool();
+    String loadBalancerName = azureLoadBalancerDetail.getLoadBalancerName();
+    String subscriptionId = setupTaskParameters.getSubscriptionId();
+    String resourceGroupName = setupTaskParameters.getResourceGroupName();
+
+    LoadBalancer loadBalancer = getLoadBalancer(azureConfig, loadBalancerName, resourceGroupName);
+
+    setupLogCallback.saveExecutionLog(format(
+        "Sending request to attach Virtual Machine Scale Set:[%s] to load balancer: [%s], stage backend pool:[%s]",
+        newVirtualMachineScaleSetName, loadBalancerName, stageBackendPool));
+    azureComputeClient.attachVMSSToBackendPools(
+        azureConfig, loadBalancer, subscriptionId, resourceGroupName, newVirtualMachineScaleSetName, stageBackendPool);
+    setupLogCallback.saveExecutionLog("Successful attached Virtual Machine Scale Set to stage backend pool");
+  }
+
+  private LoadBalancer getLoadBalancer(AzureConfig azureConfig, String loadBalancerName, String resourceGroupName) {
+    Optional<LoadBalancer> loadBalancerOp =
+        azureNetworkClient.getLoadBalancerByName(azureConfig, resourceGroupName, loadBalancerName);
+    return loadBalancerOp.orElseThrow(
+        ()
+            -> new InvalidRequestException(format(
+                "Not found load balancer with name: %s, resourceGroupName: %s", loadBalancerName, resourceGroupName)));
   }
 
   private AzureVMSSSetupTaskResponse buildAzureVMSSSetupTaskResponse(AzureConfig azureConfig, Integer harnessRevision,
