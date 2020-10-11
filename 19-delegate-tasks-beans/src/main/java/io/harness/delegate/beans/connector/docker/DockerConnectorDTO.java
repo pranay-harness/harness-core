@@ -13,9 +13,10 @@ import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import lombok.experimental.FieldDefaults;
 
+import javax.validation.Valid;
+import javax.validation.constraints.NotNull;
 import java.util.Collections;
 import java.util.List;
-import javax.validation.constraints.NotNull;
 
 @Data
 @Builder
@@ -26,7 +27,7 @@ import javax.validation.constraints.NotNull;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class DockerConnectorDTO extends ConnectorConfigDTO implements ExecutionCapabilityDemander {
   @NotNull String dockerRegistryUrl;
-  DockerAuthenticationDTO auth;
+  @Valid DockerAuthenticationDTO auth;
 
   @Override
   public List<ExecutionCapability> fetchRequiredExecutionCapabilities() {

@@ -34,7 +34,7 @@ public class ArtifactoryDTOToEntity implements ConnectorDTOToEntityMapper<Artifa
 
   @Override
   public List<ConnectorCategory> getConnectorCategory() {
-    return Collections.singletonList(ConnectorCategory.CLOUD_PROVIDER);
+    return Collections.singletonList(ConnectorCategory.ARTIFACTORY);
   }
 
   private ArtifactoryUserNamePasswordAuthentication createArtifactoryAuthentication(

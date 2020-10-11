@@ -6,7 +6,6 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
-
 import io.harness.connector.apis.dto.ConnectorConfigSummaryDTO;
 import io.harness.connector.apis.dto.ConnectorSummaryDTO;
 import io.harness.connector.apis.dto.ConnectorSummaryDTO.ConnectorSummaryDTOBuilder;

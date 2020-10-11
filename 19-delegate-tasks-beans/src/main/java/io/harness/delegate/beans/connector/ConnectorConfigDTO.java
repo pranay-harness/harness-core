@@ -11,6 +11,7 @@ import io.harness.delegate.beans.connector.gitconnector.GitConfigDTO;
 import io.harness.delegate.beans.connector.jira.JiraConnectorDTO;
 import io.harness.delegate.beans.connector.k8Connector.KubernetesClusterConfigDTO;
 import io.harness.delegate.beans.connector.localconnector.LocalConnectorDTO;
+import io.harness.delegate.beans.connector.nexusconnector.NexusConnectorDTO;
 import io.harness.delegate.beans.connector.splunkconnector.SplunkConnectorDTO;
 import io.harness.delegate.beans.connector.vaultconnector.VaultConnectorDTO;
 import io.swagger.annotations.ApiModel;
@@ -21,6 +22,6 @@ import io.swagger.annotations.ApiModel;
     subTypes = {KubernetesClusterConfigDTO.class, GitConfigDTO.class, DockerConnectorDTO.class,
         SplunkConnectorDTO.class, AppDynamicsConnectorDTO.class, VaultConnectorDTO.class, LocalConnectorDTO.class,
         GcpKmsConnectorDTO.class, GcpConnectorDTO.class, AwsConnectorDTO.class, ArtifactoryConnectorDTO.class,
-        JiraConnectorDTO.class},
+        JiraConnectorDTO.class, NexusConnectorDTO.class},
     discriminator = "type")
 public abstract class ConnectorConfigDTO {}
