@@ -8,12 +8,13 @@ import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Builder;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 
 @Data
-@Builder
+@NoArgsConstructor
 @JsonIgnoreProperties(ignoreUnknown = true)
 @ApiModel("NexusAuthentication")
 public class NexusAuthenticationDTO {
@@ -29,4 +30,10 @@ public class NexusAuthenticationDTO {
   @NotNull
   @Valid
   NexusAuthCredentialsDTO credentials;
+
+  @Builder
+  public NexusAuthenticationDTO(NexusAuthType authType, NexusAuthCredentialsDTO credentials) {
+    this.authType = authType;
+    this.credentials = credentials;
+  }
 }
