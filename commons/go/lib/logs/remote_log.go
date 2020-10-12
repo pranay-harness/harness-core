@@ -7,7 +7,13 @@ import (
 )
 
 // defaultLimit is the default maximum log size in bytes.
-const defaultLimit = 5242880 // 5MB
+const (
+	defaultLimit = 5242880 // 5MB
+	messageKey   = "msg"
+	levelKey     = "level"
+	nameKey      = "logger"
+	defaultLevel = "info"
+)
 
 type RemoteLogger struct {
 	BaseLogger *zap.SugaredLogger
@@ -21,9 +27,9 @@ func NewRemoteLogger(client client.Client, key string) (*RemoteLogger, error) {
 	w := NewRemoteWriter(client, key)
 	ws := zapcore.AddSync(w)
 	encoderCfg := zapcore.EncoderConfig{
-		MessageKey:     "msg",
-		LevelKey:       "level",
-		NameKey:        "logger",
+		MessageKey:     messageKey,
+		LevelKey:       levelKey,
+		NameKey:        nameKey,
 		EncodeLevel:    zapcore.LowercaseLevelEncoder,
 		EncodeTime:     zapcore.ISO8601TimeEncoder,
 		EncodeDuration: zapcore.StringDurationEncoder,

@@ -18,7 +18,7 @@ require (
 	github.com/opentracing/opentracing-go v1.1.0
 	github.com/pkg/errors v0.9.1
 	github.com/satori/go.uuid v1.2.0
-	github.com/stretchr/testify v1.5.1
+	github.com/stretchr/testify v1.6.1
 	github.com/wings-software/portal/product/log-service v0.0.0-00010101000000-000000000000
 	go.uber.org/zap v1.15.0
 	google.golang.org/api v0.24.0

@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"os"
 
-	ciclient "github.com/wings-software/portal/product/log-service/client/ci"
 	"github.com/wings-software/portal/commons/go/lib/logs"
+	ciclient "github.com/wings-software/portal/product/log-service/client/ci"
 )
 
 const (

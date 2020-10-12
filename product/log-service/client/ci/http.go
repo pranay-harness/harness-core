@@ -7,14 +7,15 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/wings-software/portal/product/log-service/client"
-	"github.com/wings-software/portal/product/log-service/logger"
-	"github.com/wings-software/portal/product/log-service/stream"
 	"io"
 	"io/ioutil"
 	"net/http"
 	"strings"
 	"time"
+
+	"github.com/wings-software/portal/product/log-service/client"
+	"github.com/wings-software/portal/product/log-service/logger"
+	"github.com/wings-software/portal/product/log-service/stream"
 )
 
 var _ client.Client = (*HTTPClient)(nil)

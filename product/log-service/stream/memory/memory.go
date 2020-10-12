@@ -74,6 +74,7 @@ func (s *Streamer) Info(ctx context.Context) *stream.Info {
 		info.Streams[key] = stream.Stats{
 			Size: len(str.hist),
 			Subs: len(str.list),
+			TTL:  "-1", // no TTL for memory streams
 		}
 		str.Unlock()
 	}
