@@ -38,7 +38,7 @@
                               <p style="font-size:24px;color:#77787b;line-height:30px;font-weight:normal;margin-left: 12px;">
                                 Hi ${(name)},
                                 <br><br> Your Harness trial has expired and your account has not been switched to <a href="https://app.harness.io">Community Edition</a>
-                                <br><br> All data in your trial account will be permanently deleted in 60 days.
+                                <br><br> All data in your trial account will be permanently deleted in 30 days.
                                 <br> <br> To continue using Harness free forever, you can switch your account to the <a href="https://app.harness.io">Community Edition</a>
                                 <tr>
                                     <td align="center" valign="top" style="-webkit-font-smoothing: antialiased; text-size-adjust: 100%; -ms-text-size-adjust: 100%; -webkit-text-size-adjust: 100%; line-height: 100%; mso-table-lspace: 0pt; mso-table-rspace: 0pt; border-spacing: 0; margin: 0; padding: 0; padding-left: 6.25%; padding-right: 6.25%; width: 87.5%; padding-top: 0px; height: 70px; border-collapse: collapse;" height="70" class="button" width="87.5%">

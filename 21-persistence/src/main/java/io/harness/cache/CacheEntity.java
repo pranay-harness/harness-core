@@ -8,6 +8,7 @@ import io.harness.mongo.index.FdIndex;
 import io.harness.mongo.index.FdTtlIndex;
 import io.harness.mongo.index.Field;
 import io.harness.mongo.index.NgUniqueIndex;
+import io.harness.persistence.AccountAccess;
 import io.harness.persistence.PersistentEntity;
 import lombok.Builder;
 import lombok.Value;
@@ -25,7 +26,7 @@ import java.util.Date;
 @FieldNameConstants(innerTypeName = "CacheEntityKeys")
 @Entity(value = "cache")
 @HarnessEntity(exportable = false)
-public class CacheEntity implements PersistentEntity {
+public class CacheEntity implements PersistentEntity, AccountAccess {
   long contextValue;
   @Id String canonicalKey;
 

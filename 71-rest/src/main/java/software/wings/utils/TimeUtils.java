@@ -1,7 +1,15 @@
 package software.wings.utils;
 
+import static java.time.DayOfWeek.SATURDAY;
+import static java.time.DayOfWeek.SUNDAY;
+
 import org.joda.time.DateTimeConstants;
 import software.wings.graphql.schema.type.aggregation.audit.QLTimeUnit;
+
+import java.time.DayOfWeek;
+import java.time.LocalDate;
+import java.time.ZoneId;
+import java.time.temporal.ChronoField;
 
 /**
  * @author vardan
@@ -27,5 +35,12 @@ public final class TimeUtils {
       default:
         return 0;
     }
+  }
+
+  public static boolean isWeekend() {
+    LocalDate currentDate = LocalDate.now(ZoneId.of(ZoneId.SHORT_IDS.get("PST")));
+    DayOfWeek currentDay = DayOfWeek.of(currentDate.get(ChronoField.DAY_OF_WEEK));
+
+    return currentDay == SATURDAY || currentDay == SUNDAY;
   }
 }

@@ -533,4 +533,6 @@ public interface UserService extends OwnedByAccount {
   void loadUserGroupsForUsers(List<User> users, String accountId);
 
   void setNewDefaultAccountId(User user);
+
+  boolean isUserPresent(String userId);
 }

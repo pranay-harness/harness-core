@@ -1,1 +1,0 @@
-Harness delegate(s) deleted

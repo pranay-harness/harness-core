@@ -2202,6 +2202,12 @@ public class UserServiceImpl implements UserService {
     return user;
   }
 
+  @Override
+  public boolean isUserPresent(String userId) {
+    User user = wingsPersistence.get(User.class, userId);
+    return user != null;
+  }
+
   private void loadSupportAccounts(User user) {
     if (user == null) {
       return;

@@ -199,6 +199,7 @@ import software.wings.beans.Delegate;
 import software.wings.beans.DelegateConnection;
 import software.wings.beans.DelegateScope;
 import software.wings.beans.DelegateSequenceConfig;
+import software.wings.beans.DeletedEntity;
 import software.wings.beans.DeploymentPreference;
 import software.wings.beans.DeploymentSpecification;
 import software.wings.beans.DirectKubernetesInfrastructureMapping;
@@ -1094,6 +1095,7 @@ public class ManagerMorphiaRegistrar implements MorphiaRegistrar {
     set.add(YamlVersion.class);
     set.add(SecretManagerRuntimeParameters.class);
     set.add(HelmChart.class);
+    set.add(DeletedEntity.class);
   }
 
   @Override

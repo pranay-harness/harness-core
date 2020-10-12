@@ -12,6 +12,7 @@ import io.harness.perpetualtask.internal.PerpetualTaskRecord;
 import io.harness.scheduler.PersistentScheduler;
 import lombok.extern.slf4j.Slf4j;
 import org.quartz.SchedulerException;
+import software.wings.beans.Account;
 import software.wings.beans.AccountStatus;
 import software.wings.service.intfc.AccountService;
 
@@ -27,45 +28,27 @@ public class AccountBackgroundJobServiceImpl implements AccountBackgroundJobServ
   @Override
   public void manageBackgroundJobsForAccount(String accountId) {
     String accountStatus = accountService.getAccountStatus(accountId);
-    if (!AccountStatus.DELETED.equals(accountStatus)) {
-      managePerpetualTasks(accountId);
-      manageQuartzJobs(accountId);
+    if (AccountStatus.DELETED.equals(accountStatus)) {
+      return;
+    }
+
+    boolean isBackgroundJobsDisabled = isBackgroundJobsDisabledForAccount(accountId);
+
+    if (AccountStatus.ACTIVE.equals(accountStatus)) {
+      if (isBackgroundJobsDisabled) {
+        resumeAllPerpetualTasksForAccount(accountId);
+        resumeAllQuartzJobsForAccount(accountId);
+        accountService.updateBackgroundJobsDisabled(accountId, false);
+      }
     }
   }
 
-  private void managePerpetualTasks(String accountId) {
-    if (isAccountDisabled(accountId)) {
-      pauseAllPerpetualTasksForAccount(accountId);
-    } else {
-      resumeAllPerpetualTasksForAccount(accountId);
-    }
-  }
-
-  private void manageQuartzJobs(String accountId) {
+  private void resumeAllQuartzJobsForAccount(String accountId) {
+    logger.info("Resuming all Quartz jobs for account {}", accountId);
     try {
-      if (isAccountDisabled(accountId)) {
-        logger.info("Pausing all Quartz jobs for account {}", accountId);
-        persistentScheduler.pauseAllQuartzJobsForAccount(accountId);
-      } else {
-        logger.info("Resuming all Quartz jobs for account {}", accountId);
-        persistentScheduler.resumeAllQuartzJobsForAccount(accountId);
-      }
+      persistentScheduler.resumeAllQuartzJobsForAccount(accountId);
     } catch (SchedulerException ex) {
-      logger.error("Exception occurred at manageQuartzJobs() for account {}", accountId, ex);
-    }
-  }
-
-  /**
-   * Pauses all perpetual tasks for a given account
-   * @param accountId
-   */
-  private void pauseAllPerpetualTasksForAccount(String accountId) {
-    List<PerpetualTaskRecord> perpetualTasksList = perpetualTaskService.listAllTasksForAccount(accountId);
-    logger.info("Pausing all perpetual tasks for account {}", accountId);
-    for (PerpetualTaskRecord perpetualTask : perpetualTasksList) {
-      if (PerpetualTaskState.TASK_PAUSED != perpetualTask.getState()) {
-        perpetualTaskService.pauseTask(accountId, perpetualTask.getUuid());
-      }
+      logger.error("Exception occurred while resuming Quartz jobs for account {}", accountId, ex);
     }
   }
 
@@ -83,8 +66,8 @@ public class AccountBackgroundJobServiceImpl implements AccountBackgroundJobServ
     }
   }
 
-  private boolean isAccountDisabled(String accountId) {
-    String accountStatus = accountService.getAccountStatus(accountId);
-    return !AccountStatus.ACTIVE.equals(accountStatus);
+  private boolean isBackgroundJobsDisabledForAccount(String accountId) {
+    Account account = accountService.get(accountId);
+    return account.isBackgroundJobsDisabled();
   }
 }

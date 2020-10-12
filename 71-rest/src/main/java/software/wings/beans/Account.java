@@ -83,6 +83,11 @@ public class Account extends Base implements PersistentRegularIterable {
   @JsonIgnore
   private long lastLicenseExpiryReminderSentAt;
 
+  @Getter(onMethod = @__({ @JsonIgnore }))
+  @Setter(onMethod = @__({ @JsonIgnore }))
+  @JsonIgnore
+  private List<Long> licenseExpiryRemindersSentAt;
+
   @JsonIgnore private transient EncryptionInterface encryption;
   private boolean twoFactorAdminEnforced;
 
@@ -104,6 +109,8 @@ public class Account extends Base implements PersistentRegularIterable {
   private Set<TechStack> techStacks;
 
   private boolean oauthEnabled;
+
+  @Getter @Setter @JsonIgnore private boolean backgroundJobsDisabled;
 
   @FdIndex @Getter @Setter private boolean isHarnessSupportAccessAllowed = true;
 
@@ -473,10 +480,12 @@ public class Account extends Base implements PersistentRegularIterable {
     private boolean emailSentToSales;
     private Set<String> whitelistedDomains;
     private long lastLicenseExpiryReminderSentAt;
+    private List<Long> licenseExpiryRemindersSentAt;
     private boolean oauthEnabled;
     private boolean cloudCostEnabled;
     private boolean ceK8sEventCollectionEnabled;
     private String subdomainUrl;
+    private boolean backgroundJobsDisabled;
     private boolean isHarnessSupportAccessAllowed = true;
 
     private Builder() {}
@@ -575,6 +584,11 @@ public class Account extends Base implements PersistentRegularIterable {
       return this;
     }
 
+    public Builder withLicenseExpiryRemindersSentAt(List<Long> licenseExpiryRemindersSentAt) {
+      this.licenseExpiryRemindersSentAt = licenseExpiryRemindersSentAt;
+      return this;
+    }
+
     public Builder withOauthEnabled(boolean oauthEnabled) {
       this.oauthEnabled = oauthEnabled;
       return this;
@@ -600,6 +614,11 @@ public class Account extends Base implements PersistentRegularIterable {
       return this;
     }
 
+    public Builder withBackgroundJobsDisabled(boolean isDisabled) {
+      this.backgroundJobsDisabled = isDisabled;
+      return this;
+    }
+
     public Builder but() {
       return anAccount()
           .withCompanyName(companyName)
@@ -620,8 +639,10 @@ public class Account extends Base implements PersistentRegularIterable {
           .withEmailSentToSales(emailSentToSales)
           .withWhitelistedDomains(whitelistedDomains)
           .withLastLicenseExpiryReminderSentAt(lastLicenseExpiryReminderSentAt)
+          .withLicenseExpiryRemindersSentAt(licenseExpiryRemindersSentAt)
           .withOauthEnabled(oauthEnabled)
-          .withSubdomainUrl(subdomainUrl);
+          .withSubdomainUrl(subdomainUrl)
+          .withBackgroundJobsDisabled(backgroundJobsDisabled);
     }
 
     public Account build() {
@@ -644,11 +665,13 @@ public class Account extends Base implements PersistentRegularIterable {
       account.setEmailSentToSales(emailSentToSales);
       account.setWhitelistedDomains(whitelistedDomains);
       account.setLastLicenseExpiryReminderSentAt(lastLicenseExpiryReminderSentAt);
+      account.setLicenseExpiryRemindersSentAt(licenseExpiryRemindersSentAt);
       account.setOauthEnabled(oauthEnabled);
       account.setCloudCostEnabled(cloudCostEnabled);
       account.setCeAutoCollectK8sEvents(ceK8sEventCollectionEnabled);
       account.setSubdomainUrl(subdomainUrl);
       account.setHarnessSupportAccessAllowed(isHarnessSupportAccessAllowed);
+      account.setBackgroundJobsDisabled(backgroundJobsDisabled);
       return account;
     }
   }

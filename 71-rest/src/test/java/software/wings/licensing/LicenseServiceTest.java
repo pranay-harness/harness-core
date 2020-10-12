@@ -3,7 +3,13 @@ package software.wings.licensing;
 import static io.harness.data.encoding.EncodingUtils.decodeBase64;
 import static io.harness.rule.OwnerRule.MEHUL;
 import static io.harness.rule.OwnerRule.RAMA;
+import static io.harness.rule.OwnerRule.VOJIN;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyString;
+import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.spy;
+import static org.mockito.Mockito.when;
 import static software.wings.beans.Account.Builder.anAccount;
 import static software.wings.common.Constants.HARNESS_NAME;
 import static software.wings.service.intfc.instance.licensing.InstanceLimitProvider.DEFAULT_SI_USAGE_LIMITS;
@@ -21,7 +27,9 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.junit.rules.ExpectedException;
 import org.mockito.InjectMocks;
+import org.mockito.Mock;
 import software.wings.WingsBaseTest;
+import software.wings.app.MainConfiguration;
 import software.wings.beans.Account;
 import software.wings.beans.AccountStatus;
 import software.wings.beans.AccountType;
@@ -29,7 +37,9 @@ import software.wings.beans.LicenseInfo;
 import software.wings.service.impl.LicenseUtils;
 import software.wings.service.intfc.AccountService;
 
+import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -39,6 +49,8 @@ public class LicenseServiceTest extends WingsBaseTest {
   @InjectMocks @Inject private AccountService accountService;
   @InjectMocks @Inject private LicenseServiceImpl licenseService;
 
+  @Mock private MainConfiguration mainConfiguration;
+
   @Rule public ExpectedException thrown = ExpectedException.none();
 
   private static final long oneDayTimeDiff = 86400000L;
@@ -46,6 +58,9 @@ public class LicenseServiceTest extends WingsBaseTest {
   private static final String TRIAL_EXPIRATION_DAY_0_TEMPLATE = "trial_expiration_day0";
   private static final String TRIAL_EXPIRATION_DAY_29_TEMPLATE = "trial_expiration_day29";
   private static final String TRIAL_EXPIRATION_DAY_30_TEMPLATE = "trial_expiration_day30";
+  private static final String TRIAL_EXPIRATION_DAY_60_TEMPLATE = "trial_expiration_day60";
+  private static final String TRIAL_EXPIRATION_DAY_89_TEMPLATE = "trial_expiration_day89";
+  private static final String TRIAL_EXPIRATION_BEFORE_DELETION_TEMPLATE = "trial_expiration_before_deletion";
 
   @Before
   public void setup() throws IllegalAccessException {
@@ -418,15 +433,19 @@ public class LicenseServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = MEHUL)
+  @Owner(developers = VOJIN)
   @Category(UnitTests.class)
   public void getEmailTemplateNameForTrialAccountExpiration() {
     long currentTime = System.currentTimeMillis();
     long expiryTime = currentTime + 1000;
     long oneDayAfterExpiry = expiryTime + oneDayTimeDiff;
     long twoDaysAfterExpiry = expiryTime + (2 * oneDayTimeDiff);
-    long twentyNineDaysAfterExpiry = expiryTime + (29 * oneDayTimeDiff);
     long thirtyDaysAfterExpiry = expiryTime + (30 * oneDayTimeDiff);
+    long sixtyDaysAfterExpiry = expiryTime + (60 * oneDayTimeDiff);
+    long eightyNineDaysAfterExpiry = expiryTime + (89 * oneDayTimeDiff);
+    long ninetyDaysAfterExpiry = expiryTime + (90 * oneDayTimeDiff);
+    long ninetyFifeDaysAfterExpiry = expiryTime + (95 * oneDayTimeDiff);
+
     LicenseInfo licenseInfo = new LicenseInfo();
     licenseInfo.setAccountType(AccountType.TRIAL);
     licenseInfo.setAccountStatus(AccountStatus.EXPIRED);
@@ -446,16 +465,124 @@ public class LicenseServiceTest extends WingsBaseTest {
     account = accountService.get(account.getUuid());
     assertThat(licenseService.getEmailTemplateName(account, oneDayAfterExpiry + 10000, expiryTime)).isNull();
     assertThat(licenseService.getEmailTemplateName(account, twoDaysAfterExpiry, expiryTime)).isNull();
-    assertThat(licenseService.getEmailTemplateName(account, twentyNineDaysAfterExpiry, expiryTime))
-        .isEqualTo(TRIAL_EXPIRATION_DAY_29_TEMPLATE);
-    licenseService.updateLastLicenseExpiryReminderSentAt(account.getUuid(), twentyNineDaysAfterExpiry);
-    account = accountService.get(account.getUuid());
-    assertThat(licenseService.getEmailTemplateName(account, twentyNineDaysAfterExpiry + 10000, expiryTime)).isNull();
+
     assertThat(licenseService.getEmailTemplateName(account, thirtyDaysAfterExpiry, expiryTime))
         .isEqualTo(TRIAL_EXPIRATION_DAY_30_TEMPLATE);
     licenseService.updateLastLicenseExpiryReminderSentAt(account.getUuid(), thirtyDaysAfterExpiry);
     account = accountService.get(account.getUuid());
     assertThat(licenseService.getEmailTemplateName(account, thirtyDaysAfterExpiry + 10000, expiryTime)).isNull();
+
+    assertThat(licenseService.getEmailTemplateName(account, sixtyDaysAfterExpiry, expiryTime))
+        .isEqualTo(TRIAL_EXPIRATION_DAY_60_TEMPLATE);
+    licenseService.updateLastLicenseExpiryReminderSentAt(account.getUuid(), sixtyDaysAfterExpiry);
+    account = accountService.get(account.getUuid());
+    assertThat(licenseService.getEmailTemplateName(account, sixtyDaysAfterExpiry + 10000, expiryTime)).isNull();
+    assertThat(licenseService.getEmailTemplateName(account, eightyNineDaysAfterExpiry, expiryTime))
+        .isEqualTo(TRIAL_EXPIRATION_DAY_89_TEMPLATE);
+    licenseService.updateLastLicenseExpiryReminderSentAt(account.getUuid(), eightyNineDaysAfterExpiry);
+    account = accountService.get(account.getUuid());
+
+    assertThat(licenseService.getEmailTemplateName(account, ninetyDaysAfterExpiry, expiryTime))
+        .isEqualTo(TRIAL_EXPIRATION_BEFORE_DELETION_TEMPLATE);
+    licenseService.updateLastLicenseExpiryReminderSentAt(account.getUuid(), ninetyDaysAfterExpiry);
+    account = accountService.get(account.getUuid());
+    assertThat(licenseService.getEmailTemplateName(account, ninetyDaysAfterExpiry + 10000, expiryTime)).isNull();
+
+    assertThat(licenseService.getEmailTemplateName(account, ninetyFifeDaysAfterExpiry, expiryTime))
+        .isEqualTo(TRIAL_EXPIRATION_BEFORE_DELETION_TEMPLATE);
+    licenseService.updateLastLicenseExpiryReminderSentAt(account.getUuid(), ninetyFifeDaysAfterExpiry);
+    account = accountService.get(account.getUuid());
+    assertThat(licenseService.getEmailTemplateName(account, ninetyFifeDaysAfterExpiry + 10000, expiryTime)).isNull();
+  }
+
+  @Test
+  @Owner(developers = MEHUL)
+  @Category(UnitTests.class)
+  public void shouldHandleTrialAccountExpiration() throws InterruptedException {
+    long currentTime = System.currentTimeMillis();
+    long expiryTime = currentTime + 1000;
+    LicenseInfo licenseInfo = new LicenseInfo();
+    licenseInfo.setAccountType(AccountType.TRIAL);
+    licenseInfo.setAccountStatus(AccountStatus.ACTIVE);
+    licenseInfo.setExpiryTime(expiryTime);
+
+    Account account = accountService.save(anAccount()
+                                              .withCompanyName(HARNESS_NAME)
+                                              .withAccountName(HARNESS_NAME)
+                                              .withAccountKey(ACCOUNT_KEY)
+                                              .withLicenseInfo(licenseInfo)
+                                              .build(),
+        false);
+    TimeUnit.SECONDS.sleep(2);
+    LicenseServiceImpl licenseServiceSpy = spy(licenseService);
+    doReturn(true).when(licenseServiceSpy).sendEmailToAccountAdmin(any(), anyString());
+    licenseServiceSpy.checkForLicenseExpiry(account);
+    account = accountService.get(account.getUuid());
+    long lastLicenseExpiryReminderSentAtUpdatedValue = account.getLastLicenseExpiryReminderSentAt();
+    assertThat(lastLicenseExpiryReminderSentAtUpdatedValue)
+        .isBetween(System.currentTimeMillis() - 10000, System.currentTimeMillis() + 10000);
+    assertThat(account.getLicenseInfo().getAccountStatus()).isEqualTo(AccountStatus.EXPIRED);
+  }
+
+  @Test
+  @Owner(developers = VOJIN)
+  @Category(UnitTests.class)
+  public void shouldUpdateAccountStatusAfterNinetyDaysOfExpiry() {
+    LicenseInfo licenseInfo = new LicenseInfo();
+    licenseInfo.setAccountType(AccountType.TRIAL);
+    licenseInfo.setAccountStatus(AccountStatus.EXPIRED);
+
+    long currentTime = System.currentTimeMillis();
+    List<Long> licenseExpiryRemindersSentAt = new ArrayList<>();
+    licenseExpiryRemindersSentAt.add(currentTime - 30 * oneDayTimeDiff);
+    licenseExpiryRemindersSentAt.add(currentTime - 60 * oneDayTimeDiff);
+    licenseExpiryRemindersSentAt.add(currentTime - oneDayTimeDiff);
+
+    Account account = accountService.save(anAccount()
+                                              .withCompanyName(HARNESS_NAME)
+                                              .withAccountName(HARNESS_NAME)
+                                              .withAccountKey(ACCOUNT_KEY)
+                                              .withLicenseInfo(licenseInfo)
+                                              .withLicenseExpiryRemindersSentAt(licenseExpiryRemindersSentAt)
+                                              .build(),
+        false);
+    LicenseServiceImpl licenseServiceSpy = spy(licenseService);
+    doReturn(true).when(licenseServiceSpy).sendEmailToAccountAdmin(any(), anyString());
+    licenseServiceSpy.handleTrialAccountExpiration(account, currentTime - 90 * oneDayTimeDiff);
+    Account accountFromDB = accountService.get(account.getUuid());
+    assertThat(accountFromDB.getLicenseInfo().getAccountStatus()).isEqualTo(AccountStatus.MARKED_FOR_DELETION);
+  }
+
+  @Test
+  @Owner(developers = VOJIN)
+  @Category(UnitTests.class)
+  public void shouldNotUpdateAccountStatusAfterNinetyDaysOfExpiry() throws InterruptedException {
+    LicenseInfo licenseInfo = new LicenseInfo();
+    licenseInfo.setAccountType(AccountType.TRIAL);
+    licenseInfo.setAccountStatus(AccountStatus.EXPIRED);
+
+    long currentTime = System.currentTimeMillis();
+    List<Long> licenseExpiryRemindersSentAt = new ArrayList<>();
+    licenseExpiryRemindersSentAt.add(currentTime - 60 * oneDayTimeDiff);
+    licenseExpiryRemindersSentAt.add(currentTime - oneDayTimeDiff);
+
+    Account account = accountService.save(anAccount()
+                                              .withCompanyName(HARNESS_NAME)
+                                              .withAccountName(HARNESS_NAME)
+                                              .withAccountKey(ACCOUNT_KEY)
+                                              .withLicenseInfo(licenseInfo)
+                                              .withLicenseExpiryRemindersSentAt(licenseExpiryRemindersSentAt)
+                                              .build(),
+        false);
+    LicenseServiceImpl licenseServiceSpy = spy(licenseService);
+    when(mainConfiguration.getNumberOfRemindersBeforeAccountDeletion()).thenReturn(3);
+    doReturn(true).when(licenseServiceSpy).sendEmailToAccountAdmin(any(), anyString());
+    licenseServiceSpy.handleTrialAccountExpiration(account, currentTime - 90 * oneDayTimeDiff);
+    Account accountFromDB = accountService.get(account.getUuid());
+    assertThat(accountFromDB.getLicenseInfo().getAccountStatus()).isNotEqualTo(AccountStatus.MARKED_FOR_DELETION);
+    assertThat(accountFromDB.getLastLicenseExpiryReminderSentAt())
+        .isBetween(System.currentTimeMillis() - 10000, System.currentTimeMillis() + 10000);
+    assertThat(accountFromDB.getLicenseExpiryRemindersSentAt().size()).isEqualTo(3);
   }
 
   private String getEncryptedString(LicenseInfo licenseInfo) {

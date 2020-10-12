@@ -51,6 +51,7 @@ import io.harness.data.structure.EmptyPredicate;
 import io.harness.data.structure.UUIDGenerator;
 import io.harness.delegate.beans.DelegateConfiguration;
 import io.harness.eraro.ErrorCode;
+import io.harness.eraro.Level;
 import io.harness.event.handler.impl.EventPublishHelper;
 import io.harness.event.handler.impl.segment.SegmentGroupEventJobService;
 import io.harness.event.model.Event;
@@ -119,6 +120,7 @@ import software.wings.beans.trigger.Trigger;
 import software.wings.beans.trigger.TriggerConditionType;
 import software.wings.dl.GenericDbCache;
 import software.wings.dl.WingsPersistence;
+import software.wings.exception.AccountNotFoundException;
 import software.wings.features.GovernanceFeature;
 import software.wings.helpers.ext.account.DeleteAccountHelper;
 import software.wings.helpers.ext.mail.EmailData;
@@ -456,7 +458,10 @@ public class AccountServiceImpl implements AccountService {
   @Override
   public Account get(String accountId) {
     Account account = wingsPersistence.get(Account.class, accountId);
-    notNullCheck("Account is null for the given id:" + accountId, account, USER);
+    if (account == null) {
+      throw new AccountNotFoundException("Account is not found for the given id:" + accountId, null,
+          ErrorCode.ACCOUNT_DOES_NOT_EXIST, Level.ERROR, USER, null);
+    }
     LicenseUtils.decryptLicenseInfo(account, false);
     return account;
   }
@@ -469,10 +474,6 @@ public class AccountServiceImpl implements AccountService {
   @Override
   public String getAccountStatus(String accountId) {
     Account account = getFromCacheWithFallback(accountId);
-    if (account == null) {
-      // Account was hard/physically deleted case
-      return AccountStatus.DELETED;
-    }
     LicenseInfo licenseInfo = account.getLicenseInfo();
     return licenseInfo == null ? AccountStatus.ACTIVE : licenseInfo.getAccountStatus();
   }
@@ -497,25 +498,18 @@ public class AccountServiceImpl implements AccountService {
 
   @Override
   public boolean delete(String accountId) {
-    logger.info("Started deleting account '{}'", accountId);
     Account account = wingsPersistence.get(Account.class, accountId);
     if (null == account) {
       return false;
     }
-
-    dbCache.invalidate(Account.class, accountId);
-    deleteQuartzJobs(accountId);
-    List<String> entitiesRemainingForDeletion = deleteAccountHelper.deleteAllEntities(accountId);
-    logger.info("Could not delete {} collections for account {}", entitiesRemainingForDeletion, accountId);
-    logger.info("Successfully deleted account {}", accountId);
-    return wingsPersistence.delete(account);
+    return deleteAccountHelper.deleteAccount(accountId);
   }
 
   @Override
   public void deleteAccount(String accountId) {
     String accountStatus = getAccountStatus(accountId);
     if (AccountStatus.MARKED_FOR_DELETION.equals(accountStatus)) {
-      deleteAccountHelper.handleMarkedForDeletion(accountId);
+      deleteAccountHelper.deleteAccount(accountId);
     }
   }
 
@@ -907,6 +901,15 @@ public class AccountServiceImpl implements AccountService {
         .stream()
         .map(Account::getUuid)
         .collect(Collectors.toSet());
+  }
+
+  @Override
+  public void updateBackgroundJobsDisabled(String accountId, boolean isDisabled) {
+    UpdateOperations<Account> updateOperations = wingsPersistence.createUpdateOperations(Account.class);
+    updateOperations.set(AccountKeys.backgroundJobsDisabled, isDisabled);
+
+    wingsPersistence.update(
+        wingsPersistence.createQuery(Account.class).filter(Mapper.ID_KEY, accountId), updateOperations);
   }
 
   @Override

@@ -24,27 +24,32 @@ import io.harness.limits.checker.rate.UsageBucket.UsageBucketKeys;
 import io.harness.perpetualtask.PerpetualTaskService;
 import io.harness.persistence.AccountAccess;
 import io.harness.persistence.HIterator;
+import io.harness.persistence.HPersistence;
 import io.harness.persistence.PersistentEntity;
 import io.harness.scheduler.PersistentScheduler;
 import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.Morphia;
+import org.mongodb.morphia.query.Query;
+import org.mongodb.morphia.query.UpdateOperations;
 import org.quartz.SchedulerException;
 import org.reflections.Reflections;
 import software.wings.beans.Account;
-import software.wings.beans.AccountStatus;
 import software.wings.beans.Application;
 import software.wings.beans.Application.ApplicationKeys;
 import software.wings.beans.BugsnagTab;
+import software.wings.beans.DeletedEntity;
+import software.wings.beans.DeletedEntity.DeletedEntityKeys;
+import software.wings.beans.DeletedEntity.DeletedEntityType;
 import software.wings.beans.ErrorData;
 import software.wings.beans.User;
 import software.wings.beans.entityinterface.ApplicationAccess;
 import software.wings.beans.sso.SSOSettings;
-import software.wings.dl.WingsPersistence;
 import software.wings.scheduler.events.segment.SegmentGroupEventJobContext;
 import software.wings.scheduler.events.segment.SegmentGroupEventJobContext.SegmentGroupEventJobContextKeys;
 import software.wings.service.impl.SSOSettingServiceImpl;
 import software.wings.service.impl.ServiceClassLocator;
 import software.wings.service.intfc.AccountService;
+import software.wings.service.intfc.DelegateService;
 import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.UserService;
 import software.wings.service.intfc.ownership.OwnedByAccount;
@@ -66,16 +71,19 @@ public class DeleteAccountHelper {
   private static final Set<Class<? extends PersistentEntity>> separateDeletionEntities =
       new HashSet<>(Arrays.asList(Account.class, User.class, SSOSettings.class));
 
+  private static final int CURRENT_DELETION_ALGO_NUM = 1;
+
   @Inject private AccountService accountService;
   @Inject private Morphia morphia;
   @Inject ServiceClassLocator serviceClassLocator;
   @Inject private SSOSettingServiceImpl ssoSettingService;
   @Inject private UserService userService;
-  @Inject private WingsPersistence wingsPersistence;
+  @Inject private HPersistence hPersistence;
   @Inject @Named("BackgroundJobScheduler") private PersistentScheduler persistentScheduler;
   @Inject private PerpetualTaskService perpetualTaskService;
   @Inject private FeatureFlagService featureFlagService;
   @Inject private BugsnagErrorReporter bugsnagErrorReporter;
+  @Inject private DelegateService delegateService;
 
   public List<String> deleteAllEntities(String accountId) {
     List<String> entitiesRemainingForDeletion = new ArrayList<>();
@@ -130,8 +138,8 @@ public class DeleteAccountHelper {
       if (!isAbstract(entity.getModifiers()) && PersistentEntity.class.isAssignableFrom(entity)) {
         logger.info("Deleting account level collection {}", collectionName);
         Class<? extends PersistentEntity> persistentEntity = entity.asSubclass(PersistentEntity.class);
-        wingsPersistence.delete(
-            wingsPersistence.createQuery(persistentEntity, excludeAuthority).filter(ACCOUNT_ID_KEY, accountId));
+        hPersistence.delete(
+            hPersistence.createQuery(persistentEntity, excludeAuthority).filter(ACCOUNT_ID_KEY, accountId));
       }
     } catch (Exception e) {
       logger.error(
@@ -161,10 +169,10 @@ public class DeleteAccountHelper {
 
   private boolean deleteAppLevelDocuments(String accountId, Class<? extends PersistentEntity> entry) {
     try (HIterator<Application> applicationsInAccount = new HIterator<>(
-             wingsPersistence.createQuery(Application.class).filter(ApplicationKeys.accountId, accountId).fetch())) {
+             hPersistence.createQuery(Application.class).filter(ApplicationKeys.accountId, accountId).fetch())) {
       while (applicationsInAccount.hasNext()) {
         Application application = applicationsInAccount.next();
-        wingsPersistence.delete(wingsPersistence.createQuery(entry).filter(APP_ID, application.getUuid()));
+        hPersistence.delete(hPersistence.createQuery(entry).filter(APP_ID, application.getUuid()));
       }
     } catch (Exception e) {
       logger.error("Issue while deleting app level documents for this collection {}", entry.getName(), e);
@@ -187,8 +195,8 @@ public class DeleteAccountHelper {
         deleteAppLevelDocuments(accountId, entry);
         logger.info(
             "Deleting account level documents from collection {} and count of account level records deleted are {}",
-            entry.getName(), wingsPersistence.createQuery(entry).filter(ACCOUNT_ID, accountId).count());
-        wingsPersistence.delete(wingsPersistence.createQuery(entry).filter(ACCOUNT_ID, accountId));
+            entry.getName(), hPersistence.createQuery(entry).filter(ACCOUNT_ID, accountId).count());
+        hPersistence.delete(hPersistence.createQuery(entry).filter(ACCOUNT_ID, accountId));
       } catch (Exception e) {
         logger.error("Issue while deleting account level documents this collection {}", entry.getName(), e);
       }
@@ -198,7 +206,7 @@ public class DeleteAccountHelper {
       users.forEach(user -> userService.delete(accountId, user.getUuid()));
     }
     ssoSettingService.deleteByAccountId(accountId);
-    return wingsPersistence.delete(Account.class, accountId);
+    return hPersistence.delete(Account.class, accountId);
   }
 
   private Set<Class<? extends PersistentEntity>> findExportableEntityTypes() {
@@ -226,15 +234,40 @@ public class DeleteAccountHelper {
     return morphia.getMapper().getCollectionName(clazz);
   }
 
-  public void handleMarkedForDeletion(String accountId) {
+  /** With any change of deletion logic CURRENT_DELETION_ALGO_NUM value should be incremented **/
+  public boolean deleteAccount(String accountId) {
+    logger.info("Deleting data for account {}. Deletion algo version: {}", accountId, CURRENT_DELETION_ALGO_NUM);
     deleteQuartzJobsForAccount(accountId);
     deletePerpetualTasksForAccount(accountId);
+    delegateService.deleteByAccountId(accountId);
     List<String> entitiesRemainingForDeletion = deleteAllEntities(accountId);
     if (isEmpty(entitiesRemainingForDeletion)) {
-      accountService.updateAccountStatus(accountId, AccountStatus.DELETED);
+      logger.info("Deleting account entry {}", accountId);
+      hPersistence.delete(Account.class, accountId);
+      upsertDeletedEntity(accountId);
+      return true;
     } else {
+      logger.info("Not all entities are deleted for account {}", accountId);
       reportToBugsnag(accountId, entitiesRemainingForDeletion);
+      return false;
     }
+  }
+
+  public void handleDeletedAccount(DeletedEntity deletedAccount) {
+    if (CURRENT_DELETION_ALGO_NUM > deletedAccount.getDeletionAlgoNum()) {
+      deleteAccount(deletedAccount.getEntityId());
+    }
+  }
+
+  private void upsertDeletedEntity(String accountId) {
+    Query<DeletedEntity> query =
+        hPersistence.createQuery(DeletedEntity.class).filter(DeletedEntityKeys.entityId, accountId);
+    UpdateOperations<DeletedEntity> updateOperations =
+        hPersistence.createUpdateOperations(DeletedEntity.class)
+            .set(DeletedEntityKeys.entityId, accountId)
+            .set(DeletedEntityKeys.entityType, DeletedEntityType.ACCOUNT)
+            .set(DeletedEntityKeys.deletionAlgoNum, CURRENT_DELETION_ALGO_NUM);
+    hPersistence.upsert(query, updateOperations);
   }
 
   private void deleteQuartzJobsForAccount(String accountId) {
@@ -258,24 +291,23 @@ public class DeleteAccountHelper {
 
   @VisibleForTesting
   void removeAccountFromUsageBucketsCollection(String accountId) {
-    wingsPersistence.delete(wingsPersistence.createQuery(UsageBucket.class, excludeAuthority)
-                                .field(UsageBucketKeys.key)
-                                .contains(accountId));
+    hPersistence.delete(
+        hPersistence.createQuery(UsageBucket.class, excludeAuthority).field(UsageBucketKeys.key).contains(accountId));
   }
 
   @VisibleForTesting
   void removeAccountFromSegmentGroupEventContextCollection(String accountId) {
     try (HIterator<SegmentGroupEventJobContext> iterator =
-             new HIterator<>(wingsPersistence.createQuery(SegmentGroupEventJobContext.class, excludeAuthority)
+             new HIterator<>(hPersistence.createQuery(SegmentGroupEventJobContext.class, excludeAuthority)
                                  .filter(SegmentGroupEventJobContextKeys.accountIds, accountId)
                                  .fetch())) {
       while (iterator.hasNext()) {
         SegmentGroupEventJobContext eventJobContext = iterator.next();
         eventJobContext.getAccountIds().remove(accountId);
         if (eventJobContext.getAccountIds().isEmpty()) {
-          wingsPersistence.delete(eventJobContext);
+          hPersistence.delete(eventJobContext);
         } else {
-          wingsPersistence.save(eventJobContext);
+          hPersistence.save(eventJobContext);
         }
       }
     }

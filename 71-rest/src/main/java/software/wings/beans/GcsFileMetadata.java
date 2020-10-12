@@ -4,6 +4,7 @@ import io.harness.annotation.HarnessEntity;
 import io.harness.beans.ChecksumType;
 import io.harness.delegate.service.DelegateAgentFileService.FileBucket;
 import io.harness.mongo.index.FdIndex;
+import io.harness.persistence.AccountAccess;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -35,8 +36,8 @@ import java.util.Map;
 @Entity(value = "gcsFileMetadata", noClassnameStored = true)
 @HarnessEntity(exportable = true)
 @FieldNameConstants(innerTypeName = "GcsFileMetadataKeys")
-public class GcsFileMetadata extends Base {
-  @NotEmpty private String accountId;
+public class GcsFileMetadata extends Base implements AccountAccess {
+  @NotEmpty @FdIndex private String accountId;
   @NotEmpty @FdIndex private String fileId; // Mongo GridFs fileId.
   @NotEmpty @FdIndex private String gcsFileId;
   @NotEmpty private String fileName;

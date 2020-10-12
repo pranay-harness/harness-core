@@ -1,1 +1,1 @@
-Your Harness account has been deleted
+Your Harness account will be deleted in 60 days

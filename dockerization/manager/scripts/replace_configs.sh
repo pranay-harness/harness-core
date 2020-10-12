@@ -676,6 +676,10 @@ if [[ "" != "$NG_MANAGER_TARGET" ]]; then
   yq write -i $CONFIG_FILE grpcClientConfig.target "$NG_MANAGER_TARGET"
 fi
 
+if [[ "" != "$REMINDERS_BEFORE_ACCOUNT_DELETION" ]]; then
+  yq write -i $CONFIG_FILE numberOfRemindersBeforeAccountDeletion "$REMINDERS_BEFORE_ACCOUNT_DELETION"
+fi
+
 if [[ "" != "$COMMAND_LIBRARY_PUBLISHING_ALLOWED" ]]; then
   yq write -i $CONFIG_FILE commandLibraryServiceConfig.publishingAllowed "$COMMAND_LIBRARY_PUBLISHING_ALLOWED"
 fi

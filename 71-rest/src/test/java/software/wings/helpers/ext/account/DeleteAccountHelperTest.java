@@ -1,8 +1,10 @@
 package software.wings.helpers.ext.account;
 
+import static io.harness.persistence.HQuery.excludeAuthority;
 import static io.harness.rule.OwnerRule.ANKIT;
 import static io.harness.rule.OwnerRule.MEHUL;
 import static io.harness.rule.OwnerRule.UJJAWAL;
+import static io.harness.rule.OwnerRule.VOJIN;
 import static java.util.Collections.EMPTY_LIST;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
@@ -43,6 +45,7 @@ import software.wings.beans.Account;
 import software.wings.beans.AccountStatus;
 import software.wings.beans.AccountType;
 import software.wings.beans.Application;
+import software.wings.beans.DeletedEntity;
 import software.wings.beans.FeatureFlag;
 import software.wings.beans.FeatureName;
 import software.wings.beans.LicenseInfo;
@@ -51,6 +54,7 @@ import software.wings.beans.User;
 import software.wings.beans.entityinterface.ApplicationAccess;
 import software.wings.licensing.LicenseService;
 import software.wings.scheduler.events.segment.SegmentGroupEventJobContext;
+import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.UserService;
 
 import java.util.ArrayList;
@@ -66,6 +70,7 @@ public class DeleteAccountHelperTest extends WingsBaseTest {
   @Mock @Named("BackgroundJobScheduler") private PersistentScheduler persistentScheduler;
   @Mock private LicenseService licenseService;
   @Inject private Morphia morphia;
+  @Inject FeatureFlagService featureFlagService;
 
   private final String appId = UUID.randomUUID().toString();
   private static final String GROUP_NAME = "GROUP_NAME";
@@ -296,10 +301,38 @@ public class DeleteAccountHelperTest extends WingsBaseTest {
     when(licenseService.updateAccountLicense(anyString(), any())).thenReturn(true);
     wingsPersistence.save(account);
 
-    deleteAccountHelperSpy.handleMarkedForDeletion(ACCOUNT_ID);
+    deleteAccountHelperSpy.deleteAccount(ACCOUNT_ID);
 
     verify(persistentScheduler, times(1)).deleteAllQuartzJobsForAccount(ACCOUNT_ID);
     verify(perpetualTaskService, times(1)).deleteAllTasksForAccount(ACCOUNT_ID);
+  }
+
+  @Test
+  @Owner(developers = VOJIN)
+  @Category(UnitTests.class)
+  public void testDeletedEntityInsertion() throws SchedulerException {
+    Account account = createAccount(AccountStatus.MARKED_FOR_DELETION);
+    JobKey jobKey = new JobKey(JOB_NAME, GROUP_NAME);
+    PerpetualTaskRecord perpetualTaskRecord =
+        PerpetualTaskRecord.builder().accountId(ACCOUNT_ID).uuid(PERPETUAL_TASK_UUID).build();
+    DeleteAccountHelper deleteAccountHelperSpy = spy(deleteAccountHelper);
+
+    when(deleteAccountHelperSpy.deleteAllEntities(ACCOUNT_ID)).thenReturn(EMPTY_LIST);
+    when(persistentScheduler.getAllJobKeysForAccount(ACCOUNT_ID)).thenReturn(Collections.singletonList(jobKey));
+    when(perpetualTaskService.listAllTasksForAccount(ACCOUNT_ID))
+        .thenReturn(Collections.singletonList(perpetualTaskRecord));
+    when(licenseService.updateAccountLicense(anyString(), any())).thenReturn(true);
+    wingsPersistence.save(account);
+
+    deleteAccountHelperSpy.deleteAccount(ACCOUNT_ID);
+
+    List<DeletedEntity> deletedEntities = wingsPersistence.createQuery(DeletedEntity.class, excludeAuthority)
+                                              .field("entityId")
+                                              .equal(ACCOUNT_ID)
+                                              .asList();
+
+    assertThat(deletedEntities.size()).isEqualTo(1);
+    assertThat(deletedEntities.get(0).getEntityId()).isEqualTo(ACCOUNT_ID);
   }
 
   @Test

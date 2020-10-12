@@ -7,6 +7,7 @@ import io.harness.annotation.HarnessEntity;
 import io.harness.mongo.index.CdIndex;
 import io.harness.mongo.index.Field;
 import io.harness.mongo.index.NgUniqueIndex;
+import io.harness.persistence.AccountAccess;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -31,7 +32,7 @@ import javax.validation.constraints.NotNull;
 @EqualsAndHashCode(callSuper = false)
 @Entity(value = "versionedTemplate", noClassnameStored = true)
 @HarnessEntity(exportable = true)
-public class VersionedTemplate extends Base {
+public class VersionedTemplate extends Base implements AccountAccess {
   public static final String TEMPLATE_ID_KEY = "templateId";
   public static final String VERSION_KEY = "version";
 

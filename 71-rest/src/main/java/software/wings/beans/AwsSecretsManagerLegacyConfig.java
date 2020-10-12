@@ -8,6 +8,7 @@ import io.harness.annotation.HarnessEntity;
 import io.harness.encryption.Encrypted;
 import io.harness.mongo.index.Field;
 import io.harness.mongo.index.NgUniqueIndex;
+import io.harness.persistence.AccountAccess;
 import io.harness.security.encryption.EncryptionConfig;
 import io.harness.security.encryption.EncryptionType;
 import lombok.AllArgsConstructor;
@@ -37,7 +38,7 @@ import software.wings.delegatetasks.validation.AbstractSecretManagerValidation;
 @HarnessEntity(exportable = false)
 @JsonIgnoreProperties(ignoreUnknown = true)
 @FieldNameConstants(innerTypeName = "AwsSecretsManagerConfigKeys")
-public class AwsSecretsManagerLegacyConfig extends Base implements EncryptionConfig {
+public class AwsSecretsManagerLegacyConfig extends Base implements EncryptionConfig, AccountAccess {
   @Attributes(title = "Name", required = true) private String name;
 
   @Attributes(title = "AWS Access Key", required = true)

@@ -187,4 +187,6 @@ public interface AccountService {
   Set<String> getAccountsWithDisabledHarnessUserGroupAccess();
 
   void setServiceGuardAccount(String accountId, ServiceGuardLimitDTO serviceGuardLimitDTO);
+
+  void updateBackgroundJobsDisabled(String accountId, boolean isDisabled);
 }

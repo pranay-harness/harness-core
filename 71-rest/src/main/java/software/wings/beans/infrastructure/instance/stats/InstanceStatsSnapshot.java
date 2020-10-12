@@ -6,6 +6,7 @@ import io.harness.annotation.HarnessEntity;
 import io.harness.mongo.index.FdIndex;
 import io.harness.mongo.index.Field;
 import io.harness.mongo.index.NgUniqueIndex;
+import io.harness.persistence.AccountAccess;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.EqualsAndHashCode;
@@ -32,7 +33,7 @@ import java.util.List;
 @NgUniqueIndex(name = "accountId_timestamp_unique_idx", fields = { @Field("accountId")
                                                                    , @Field("timestamp") })
 @FieldNameConstants(innerTypeName = "InstanceStatsSnapshotKeys")
-public class InstanceStatsSnapshot extends Base {
+public class InstanceStatsSnapshot extends Base implements AccountAccess {
   private static final List<EntityType> ENTITY_TYPES_TO_AGGREGATE_ON = Arrays.asList(EntityType.APPLICATION);
 
   @NonFinal @FdIndex private Instant timestamp;
