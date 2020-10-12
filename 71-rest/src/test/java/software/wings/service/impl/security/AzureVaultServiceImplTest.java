@@ -17,6 +17,7 @@ import static org.mockito.MockitoAnnotations.initMocks;
 
 import com.google.inject.Inject;
 
+import io.harness.beans.EncryptedData;
 import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
 import org.apache.commons.io.FileUtils;
@@ -34,7 +35,6 @@ import software.wings.beans.AccountType;
 import software.wings.beans.AzureVaultConfig;
 import software.wings.delegatetasks.DelegateProxyFactory;
 import software.wings.dl.WingsPersistence;
-import software.wings.security.encryption.EncryptedData;
 import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.security.AzureSecretsManagerService;
 import software.wings.service.intfc.security.SecretManagementDelegateService;

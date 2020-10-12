@@ -11,6 +11,8 @@ import static org.apache.commons.lang3.RandomStringUtils.randomAlphanumeric;
 
 import com.google.inject.Inject;
 
+import io.harness.beans.EncryptedData;
+import io.harness.beans.SecretText;
 import io.harness.category.element.FunctionalTests;
 import io.harness.data.structure.UUIDGenerator;
 import io.harness.functional.AbstractFunctionalTest;
@@ -27,8 +29,6 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import software.wings.beans.AzureVaultConfig;
 import software.wings.dl.WingsPersistence;
-import software.wings.security.encryption.EncryptedData;
-import software.wings.service.impl.security.SecretText;
 import software.wings.service.intfc.security.SecretManagementDelegateService;
 
 import java.util.List;

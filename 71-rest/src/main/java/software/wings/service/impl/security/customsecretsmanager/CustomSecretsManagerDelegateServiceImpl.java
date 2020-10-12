@@ -14,13 +14,13 @@ import com.google.inject.Singleton;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.delegate.command.CommandExecutionResult;
 import io.harness.exception.CommandExecutionException;
+import io.harness.exception.SecretManagementDelegateException;
 import io.harness.security.encryption.EncryptedRecord;
 import software.wings.beans.command.ShellExecutionData;
 import software.wings.beans.delegation.ShellScriptParameters;
 import software.wings.delegatetasks.ShellScriptTaskHandler;
 import software.wings.delegatetasks.validation.ShellScriptValidationHandler;
 import software.wings.security.encryption.secretsmanagerconfigs.CustomSecretsManagerConfig;
-import software.wings.service.impl.security.SecretManagementDelegateException;
 import software.wings.service.intfc.security.CustomSecretsManagerDelegateService;
 
 @OwnedBy(PL)

@@ -11,6 +11,9 @@ import static software.wings.settings.SettingVariableTypes.APM_VERIFICATION;
 import com.google.common.collect.Sets;
 import com.google.inject.Inject;
 
+import io.harness.beans.EncryptedData;
+import io.harness.beans.EncryptedDataParent;
+import io.harness.beans.SecretText;
 import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
 import org.apache.commons.lang3.reflect.FieldUtils;
@@ -24,12 +27,9 @@ import software.wings.beans.APMVerificationConfig;
 import software.wings.beans.FeatureName;
 import software.wings.beans.SettingAttribute;
 import software.wings.resources.secretsmanagement.SecretManagementResource;
-import software.wings.security.encryption.EncryptedData;
-import software.wings.security.encryption.EncryptedDataParent;
 import software.wings.security.encryption.setupusage.SecretSetupUsage;
 import software.wings.security.encryption.setupusage.SecretSetupUsageService;
 import software.wings.service.impl.SettingValidationService;
-import software.wings.service.impl.security.SecretText;
 import software.wings.service.intfc.apm.ApmVerificationService;
 import software.wings.service.intfc.newrelic.NewRelicService;
 

@@ -15,6 +15,7 @@ import com.google.inject.Singleton;
 import com.google.inject.name.Named;
 
 import io.harness.exception.InvalidRequestException;
+import io.harness.exception.SecretManagementException;
 import io.harness.ng.beans.PageResponse;
 import io.harness.ng.core.api.impl.SecretEntityReferenceHelper;
 import io.harness.ng.core.dto.secrets.SecretDTOV2;
@@ -39,7 +40,6 @@ import org.apache.commons.lang3.StringUtils;
 import org.springframework.data.domain.Page;
 import org.springframework.data.mongodb.core.query.Criteria;
 import software.wings.app.FileUploadLimit;
-import software.wings.service.impl.security.SecretManagementException;
 
 import java.io.InputStream;
 import java.util.EnumMap;

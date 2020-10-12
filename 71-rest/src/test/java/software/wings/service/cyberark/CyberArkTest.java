@@ -15,9 +15,13 @@ import static org.mockito.MockitoAnnotations.initMocks;
 
 import com.google.inject.Inject;
 
+import io.harness.beans.EncryptedData;
+import io.harness.beans.EncryptedData.EncryptedDataKeys;
+import io.harness.beans.SecretText;
 import io.harness.category.element.UnitTests;
 import io.harness.exception.WingsException;
 import io.harness.rule.Owner;
+import io.harness.secretmanagers.SecretManagerConfigService;
 import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.security.encryption.EncryptionType;
 import io.harness.serializer.KryoSerializer;
@@ -49,17 +53,13 @@ import software.wings.features.api.PremiumFeature;
 import software.wings.resources.secretsmanagement.CyberArkResource;
 import software.wings.security.UsageRestrictions;
 import software.wings.security.UserThreadLocal;
-import software.wings.security.encryption.EncryptedData;
-import software.wings.security.encryption.EncryptedData.EncryptedDataKeys;
 import software.wings.service.impl.AuditServiceHelper;
 import software.wings.service.impl.security.GlobalEncryptDecryptClient;
-import software.wings.service.impl.security.SecretText;
 import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.security.CyberArkService;
 import software.wings.service.intfc.security.KmsService;
 import software.wings.service.intfc.security.LocalEncryptionService;
 import software.wings.service.intfc.security.SecretManagementDelegateService;
-import software.wings.service.intfc.security.SecretManagerConfigService;
 import software.wings.settings.SettingVariableTypes;
 
 import java.io.IOException;

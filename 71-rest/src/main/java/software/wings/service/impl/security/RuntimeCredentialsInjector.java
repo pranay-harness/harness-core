@@ -3,7 +3,7 @@ package software.wings.service.impl.security;
 import static io.harness.annotations.dev.HarnessTeam.PL;
 
 import io.harness.annotations.dev.OwnedBy;
-import software.wings.beans.SecretManagerConfig;
+import io.harness.beans.SecretManagerConfig;
 
 import java.util.Map;
 import java.util.Optional;

@@ -5,6 +5,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import com.google.inject.Inject;
 
+import io.harness.beans.EncryptedData;
+import io.harness.beans.SecretText;
 import io.harness.category.element.FunctionalTests;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.functional.AbstractFunctionalTest;
@@ -22,8 +24,6 @@ import org.junit.experimental.categories.Category;
 import software.wings.beans.AwsSecretsManagerConfig;
 import software.wings.beans.CyberArkConfig;
 import software.wings.dl.WingsPersistence;
-import software.wings.security.encryption.EncryptedData;
-import software.wings.service.impl.security.SecretText;
 import software.wings.service.intfc.security.SecretManagementDelegateService;
 
 import java.io.InputStream;

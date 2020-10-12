@@ -3,12 +3,12 @@ package software.wings.service.intfc.security;
 import static io.harness.annotations.dev.HarnessTeam.PL;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.beans.EncryptedData;
+import io.harness.beans.SecretChangeLog;
+import io.harness.helpers.ext.vault.SecretEngineSummary;
+import io.harness.helpers.ext.vault.VaultAppRoleLoginResult;
 import software.wings.beans.VaultConfig;
 import software.wings.beans.alert.KmsSetupAlert;
-import software.wings.security.encryption.EncryptedData;
-import software.wings.security.encryption.SecretChangeLog;
-import software.wings.service.impl.security.vault.SecretEngineSummary;
-import software.wings.service.impl.security.vault.VaultAppRoleLoginResult;
 import software.wings.settings.SettingVariableTypes;
 
 import java.io.File;

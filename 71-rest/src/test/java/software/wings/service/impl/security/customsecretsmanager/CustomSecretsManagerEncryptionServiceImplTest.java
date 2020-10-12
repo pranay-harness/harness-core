@@ -15,6 +15,7 @@ import static software.wings.settings.SettingVariableTypes.HOST_CONNECTION_ATTRI
 import com.google.inject.Inject;
 
 import io.harness.CategoryTest;
+import io.harness.beans.EncryptedData;
 import io.harness.category.element.UnitTests;
 import io.harness.expression.ExpressionEvaluator;
 import io.harness.rule.Owner;
@@ -25,7 +26,6 @@ import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import software.wings.annotation.EncryptableSetting;
-import software.wings.security.encryption.EncryptedData;
 import software.wings.security.encryption.secretsmanagerconfigs.CustomSecretsManagerConfig;
 import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.security.ManagerDecryptionService;

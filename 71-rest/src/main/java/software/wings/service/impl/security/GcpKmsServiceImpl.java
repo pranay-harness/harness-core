@@ -21,14 +21,15 @@ import com.google.common.io.Files;
 import com.google.inject.Inject;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.beans.EncryptedData;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.data.structure.UUIDGenerator;
+import io.harness.exception.SecretManagementException;
 import io.harness.exception.WingsException;
 import lombok.extern.slf4j.Slf4j;
 import software.wings.beans.BaseFile;
 import software.wings.beans.GcpKmsConfig;
 import software.wings.beans.SyncTaskContext;
-import software.wings.security.encryption.EncryptedData;
 import software.wings.service.intfc.FileService;
 import software.wings.service.intfc.security.GcpKmsService;
 import software.wings.service.intfc.security.GcpSecretsManagerService;

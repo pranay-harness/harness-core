@@ -11,6 +11,7 @@ import static org.mockito.Mockito.when;
 import com.google.inject.Inject;
 
 import io.harness.CategoryTest;
+import io.harness.beans.EncryptedData;
 import io.harness.category.element.UnitTests;
 import io.harness.data.structure.UUIDGenerator;
 import io.harness.delegate.beans.DelegateTaskPackage;
@@ -31,7 +32,6 @@ import org.mockito.junit.MockitoJUnit;
 import org.mockito.junit.MockitoRule;
 import retrofit2.Call;
 import software.wings.beans.KmsConfig;
-import software.wings.security.encryption.EncryptedData;
 
 import java.util.HashMap;
 import java.util.Map;

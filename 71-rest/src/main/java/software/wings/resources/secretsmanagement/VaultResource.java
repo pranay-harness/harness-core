@@ -8,6 +8,7 @@ import com.google.inject.Inject;
 
 import com.codahale.metrics.annotation.ExceptionMetered;
 import com.codahale.metrics.annotation.Timed;
+import io.harness.helpers.ext.vault.SecretEngineSummary;
 import io.harness.logging.AccountLogContext;
 import io.harness.logging.AutoLogContext;
 import io.harness.rest.RestResponse;
@@ -16,7 +17,6 @@ import lombok.extern.slf4j.Slf4j;
 import software.wings.beans.VaultConfig;
 import software.wings.security.annotations.AuthRule;
 import software.wings.security.annotations.Scope;
-import software.wings.service.impl.security.vault.SecretEngineSummary;
 import software.wings.service.intfc.security.VaultService;
 
 import java.util.List;

@@ -4,15 +4,15 @@ import static javax.ws.rs.core.MediaType.MULTIPART_FORM_DATA;
 
 import com.google.gson.JsonElement;
 
+import io.harness.beans.EncryptedData;
 import io.harness.beans.PageResponse;
+import io.harness.beans.SecretText;
 import io.harness.rest.RestResponse;
 import io.harness.testframework.framework.Setup;
 import io.harness.testframework.framework.utils.SecretsUtils;
 import io.restassured.mapper.ObjectMapperType;
 import lombok.extern.slf4j.Slf4j;
 import software.wings.beans.VaultConfig;
-import software.wings.security.encryption.EncryptedData;
-import software.wings.service.impl.security.SecretText;
 import software.wings.settings.SettingVariableTypes;
 
 import java.io.File;

@@ -6,6 +6,7 @@ import static org.junit.runners.Parameterized.Parameter;
 import static org.junit.runners.Parameterized.Parameters;
 
 import io.harness.category.element.UnitTests;
+import io.harness.helpers.ext.azure.AzureParsedSecretReference;
 import io.harness.rule.Owner;
 import org.junit.Rule;
 import org.junit.Test;

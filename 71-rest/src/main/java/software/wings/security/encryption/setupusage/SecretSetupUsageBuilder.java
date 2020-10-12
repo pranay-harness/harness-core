@@ -3,7 +3,7 @@ package software.wings.security.encryption.setupusage;
 import static io.harness.annotations.dev.HarnessTeam.PL;
 
 import io.harness.annotations.dev.OwnedBy;
-import software.wings.security.encryption.EncryptedDataParent;
+import io.harness.beans.EncryptedDataParent;
 import software.wings.security.encryption.EncryptionDetail;
 
 import java.util.Map;

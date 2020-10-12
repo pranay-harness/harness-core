@@ -9,6 +9,8 @@ import static org.powermock.api.mockito.PowerMockito.doNothing;
 
 import com.google.inject.Inject;
 
+import io.harness.beans.EncryptedData;
+import io.harness.beans.SecretText;
 import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
 import io.harness.utils.RequestField;
@@ -21,8 +23,6 @@ import software.wings.graphql.schema.mutation.secrets.input.QLCreateSecretInput;
 import software.wings.graphql.schema.type.secrets.QLEncryptedTextInput;
 import software.wings.graphql.schema.type.secrets.QLEncryptedTextUpdate;
 import software.wings.graphql.schema.type.secrets.QLSecretType;
-import software.wings.security.encryption.EncryptedData;
-import software.wings.service.impl.security.SecretText;
 import software.wings.service.intfc.security.SecretManager;
 
 /*

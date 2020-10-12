@@ -3,6 +3,8 @@ package io.harness.functional.secrets;
 import static io.harness.rule.OwnerRule.NATARAJA;
 import static org.assertj.core.api.Assertions.assertThat;
 
+import io.harness.beans.EncryptedData;
+import io.harness.beans.SecretText;
 import io.harness.category.element.FunctionalTests;
 import io.harness.functional.AbstractFunctionalTest;
 import io.harness.rule.Owner;
@@ -13,8 +15,6 @@ import org.apache.commons.lang3.StringUtils;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
-import software.wings.security.encryption.EncryptedData;
-import software.wings.service.impl.security.SecretText;
 
 import java.util.List;
 

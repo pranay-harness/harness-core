@@ -22,6 +22,7 @@ import io.harness.connector.services.ConnectorService;
 import io.harness.data.validator.EntityNameValidator;
 import io.harness.exception.DuplicateFieldException;
 import io.harness.exception.InvalidRequestException;
+import io.harness.exception.SecretManagementException;
 import io.harness.ng.core.api.NGSecretManagerService;
 import io.harness.ng.core.api.repositories.spring.OrganizationRepository;
 import io.harness.ng.core.dto.OrganizationDTO;
@@ -38,7 +39,6 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.query.Update;
-import software.wings.service.impl.security.SecretManagementException;
 
 import java.util.Optional;
 

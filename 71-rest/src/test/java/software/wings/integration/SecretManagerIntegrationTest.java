@@ -5,6 +5,7 @@ import static javax.ws.rs.client.Entity.entity;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 import static org.assertj.core.api.Assertions.assertThat;
 
+import io.harness.beans.SecretText;
 import io.harness.category.element.DeprecatedIntegrationTests;
 import io.harness.rest.RestResponse;
 import io.harness.rule.Owner;
@@ -14,7 +15,6 @@ import org.glassfish.jersey.media.multipart.MultiPart;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
-import software.wings.service.impl.security.SecretText;
 
 import javax.ws.rs.client.Entity;
 import javax.ws.rs.client.WebTarget;

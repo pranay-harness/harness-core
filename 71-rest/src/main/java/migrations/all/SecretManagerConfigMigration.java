@@ -5,6 +5,7 @@ import static io.harness.persistence.HQuery.excludeAuthority;
 import com.google.inject.Inject;
 
 import io.harness.persistence.HIterator;
+import io.harness.secretmanagers.SecretManagerConfigService;
 import lombok.extern.slf4j.Slf4j;
 import migrations.Migration;
 import software.wings.beans.AwsSecretsManagerConfig;
@@ -14,7 +15,6 @@ import software.wings.beans.KmsLegacyConfig;
 import software.wings.beans.VaultConfig;
 import software.wings.beans.VaultLegacyConfig;
 import software.wings.dl.WingsPersistence;
-import software.wings.service.intfc.security.SecretManagerConfigService;
 
 /**
  * @author marklu on 2019-06-05

@@ -1,8 +1,8 @@
 package software.wings.service.intfc.security;
 
+import io.harness.beans.SecretManagerConfig;
 import io.harness.secretmanagerclient.dto.SecretManagerMetadataDTO;
 import io.harness.secretmanagerclient.dto.SecretManagerMetadataRequestDTO;
-import software.wings.beans.SecretManagerConfig;
 
 import java.util.List;
 import java.util.Optional;

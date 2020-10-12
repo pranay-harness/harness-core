@@ -3,8 +3,8 @@ package software.wings.service.impl.security;
 import static io.harness.annotations.dev.HarnessTeam.PL;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.beans.EncryptedData;
 import software.wings.beans.AzureVaultConfig;
-import software.wings.security.encryption.EncryptedData;
 import software.wings.settings.SettingVariableTypes;
 
 import java.io.File;

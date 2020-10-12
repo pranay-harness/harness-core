@@ -1,8 +1,8 @@
 package software.wings.service.intfc.security;
 
+import io.harness.beans.EncryptedData;
 import io.harness.secretmanagerclient.dto.SecretFileDTO;
 import io.harness.secretmanagerclient.dto.SecretFileUpdateDTO;
-import software.wings.security.encryption.EncryptedData;
 
 import java.io.InputStream;
 

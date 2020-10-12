@@ -39,6 +39,7 @@ import static software.wings.utils.WingsTestConstants.USER_NAME;
 import com.google.common.collect.Sets;
 
 import io.harness.CategoryTest;
+import io.harness.beans.EncryptedData;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.beans.PageResponse.PageResponseBuilder;
@@ -86,7 +87,6 @@ import software.wings.security.UserRequestContext;
 import software.wings.security.UserRestrictionInfo;
 import software.wings.security.UserRestrictionInfo.UserRestrictionInfoBuilder;
 import software.wings.security.UserThreadLocal;
-import software.wings.security.encryption.EncryptedData;
 import software.wings.service.impl.security.auth.AuthHandler;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.EnvironmentService;

@@ -5,12 +5,12 @@ import static software.wings.utils.UsageRestrictionsUtils.getAllAppAllEnvUsageRe
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
+import io.harness.beans.EncryptedData;
+import io.harness.beans.SecretText;
 import io.harness.generator.OwnerManager.Owners;
 import io.harness.scm.ScmSecret;
 import io.harness.scm.SecretName;
 import software.wings.beans.Account;
-import software.wings.security.encryption.EncryptedData;
-import software.wings.service.impl.security.SecretText;
 import software.wings.service.intfc.security.SecretManager;
 
 @Singleton

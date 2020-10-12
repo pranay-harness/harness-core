@@ -6,11 +6,13 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import com.google.inject.Inject;
 
+import io.harness.beans.SecretManagerConfig;
 import io.harness.category.element.UnitTests;
 import io.harness.category.layer.GraphQLTests;
 import io.harness.generator.AccountGenerator;
 import io.harness.multiline.MultilineStringMixin;
 import io.harness.rule.Owner;
+import io.harness.secretmanagers.SecretManagerConfigService;
 import io.harness.security.encryption.EncryptionType;
 import io.harness.testframework.graphql.QLTestObject;
 import org.junit.Before;
@@ -20,11 +22,9 @@ import software.wings.beans.Account;
 import software.wings.beans.AccountType;
 import software.wings.beans.AwsSecretsManagerConfig;
 import software.wings.beans.KmsConfig;
-import software.wings.beans.SecretManagerConfig;
 import software.wings.beans.VaultConfig;
 import software.wings.graphql.schema.type.secretManagers.QLSecretManager.QLSecretManagerKeys;
 import software.wings.graphql.schema.type.secretManagers.QLSecretManagerType;
-import software.wings.service.intfc.security.SecretManagerConfigService;
 
 import java.util.List;
 

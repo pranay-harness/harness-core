@@ -3,13 +3,13 @@ package io.harness.secret;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
+import io.harness.beans.SecretText;
 import io.harness.generator.AccountGenerator;
 import io.harness.generator.OwnerManager;
 import io.harness.generator.Randomizer;
 import lombok.Data;
 import software.wings.beans.Account;
 import software.wings.graphql.schema.type.secrets.QLEncryptedText;
-import software.wings.service.impl.security.SecretText;
 import software.wings.service.intfc.security.SecretManager;
 
 @Singleton

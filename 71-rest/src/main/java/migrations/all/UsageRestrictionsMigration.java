@@ -7,6 +7,7 @@ import static java.util.Arrays.asList;
 import com.google.common.collect.Sets;
 import com.google.inject.Inject;
 
+import io.harness.beans.EncryptedData;
 import io.harness.exception.WingsException;
 import io.harness.logging.ExceptionLogger;
 import io.harness.persistence.HIterator;
@@ -21,7 +22,6 @@ import software.wings.security.EnvFilter.FilterType;
 import software.wings.security.GenericEntityFilter;
 import software.wings.security.UsageRestrictions;
 import software.wings.security.UsageRestrictions.AppEnvRestriction;
-import software.wings.security.encryption.EncryptedData;
 import software.wings.service.intfc.UsageRestrictionsService;
 import software.wings.settings.SettingVariableTypes;
 

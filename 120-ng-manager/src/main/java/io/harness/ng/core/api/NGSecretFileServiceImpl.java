@@ -11,7 +11,9 @@ import com.google.common.io.ByteStreams;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
+import io.harness.beans.EncryptedData;
 import io.harness.exception.InvalidRequestException;
+import io.harness.exception.SecretManagementException;
 import io.harness.secretmanagerclient.SecretType;
 import io.harness.secretmanagerclient.dto.SecretFileDTO;
 import io.harness.secretmanagerclient.dto.SecretFileUpdateDTO;
@@ -24,8 +26,6 @@ import lombok.extern.slf4j.Slf4j;
 import okhttp3.MediaType;
 import okhttp3.RequestBody;
 import org.apache.commons.lang3.tuple.Pair;
-import software.wings.security.encryption.EncryptedData;
-import software.wings.service.impl.security.SecretManagementException;
 
 import java.io.IOException;
 import java.util.Optional;

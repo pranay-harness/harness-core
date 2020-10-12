@@ -6,6 +6,7 @@ import static software.wings.service.impl.security.customsecretsmanager.CustomSe
 
 import com.github.reinert.jjschema.Attributes;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.beans.SecretManagerConfig;
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import io.harness.delegate.beans.executioncapability.ExecutionCapabilityDemander;
 import io.harness.delegate.task.mixin.ProcessExecutorCapabilityGenerator;
@@ -20,7 +21,6 @@ import lombok.ToString;
 import lombok.experimental.FieldNameConstants;
 import org.hibernate.validator.constraints.NotEmpty;
 import software.wings.annotation.EncryptableSetting;
-import software.wings.beans.SecretManagerConfig;
 import software.wings.delegatetasks.validation.capabilities.ShellConnectionCapability;
 
 import java.util.ArrayList;

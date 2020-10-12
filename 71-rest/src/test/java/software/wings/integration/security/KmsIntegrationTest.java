@@ -1,9 +1,11 @@
 package software.wings.integration.security;
 
+import static io.harness.beans.EncryptedData.PARENT_ID_KEY;
 import static io.harness.rule.OwnerRule.UTKARSH;
 import static org.assertj.core.api.Assertions.assertThat;
-import static software.wings.security.encryption.EncryptedData.PARENT_ID_KEY;
 
+import io.harness.beans.EncryptedData;
+import io.harness.beans.SecretManagerConfig;
 import io.harness.category.element.DeprecatedIntegrationTests;
 import io.harness.rule.Owner;
 import org.junit.Before;
@@ -11,8 +13,6 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import software.wings.beans.Account;
 import software.wings.beans.KmsConfig;
-import software.wings.beans.SecretManagerConfig;
-import software.wings.security.encryption.EncryptedData;
 
 import java.io.IOException;
 

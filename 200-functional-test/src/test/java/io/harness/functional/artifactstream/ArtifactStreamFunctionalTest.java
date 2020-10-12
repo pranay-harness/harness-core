@@ -8,6 +8,7 @@ import static software.wings.beans.template.artifactsource.CustomRepositoryMappi
 
 import com.google.inject.Inject;
 
+import io.harness.beans.SecretText;
 import io.harness.category.element.FunctionalTests;
 import io.harness.functional.AbstractFunctionalTest;
 import io.harness.generator.ApplicationGenerator;
@@ -35,7 +36,6 @@ import software.wings.beans.artifact.ArtifactStreamType;
 import software.wings.beans.artifact.CustomArtifactStream;
 import software.wings.beans.artifact.CustomArtifactStream.Script;
 import software.wings.beans.template.artifactsource.CustomRepositoryMapping;
-import software.wings.service.impl.security.SecretText;
 
 import java.util.ArrayList;
 import java.util.List;

@@ -13,8 +13,10 @@ import static software.wings.beans.Application.GLOBAL_APP_ID;
 
 import com.google.inject.Inject;
 
+import io.harness.beans.EncryptedData;
 import io.harness.category.element.UnitTests;
 import io.harness.data.structure.UUIDGenerator;
+import io.harness.exception.SecretManagementException;
 import io.harness.expression.SecretString;
 import io.harness.rule.Owner;
 import io.harness.security.encryption.EncryptionType;
@@ -33,7 +35,6 @@ import software.wings.beans.alert.Alert;
 import software.wings.beans.alert.AlertType;
 import software.wings.beans.alert.KmsSetupAlert;
 import software.wings.security.UserThreadLocal;
-import software.wings.security.encryption.EncryptedData;
 import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.AlertService;
 import software.wings.service.intfc.HarnessUserGroupService;

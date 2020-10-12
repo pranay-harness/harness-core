@@ -5,6 +5,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
+import io.harness.beans.EncryptedData;
 import io.harness.category.element.UnitTests;
 import io.harness.rest.RestResponse;
 import io.harness.rule.Owner;
@@ -14,7 +15,6 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import software.wings.WingsBaseTest;
 import software.wings.resources.secretsmanagement.SecretsResourceNG;
-import software.wings.security.encryption.EncryptedData;
 import software.wings.service.intfc.security.NGSecretService;
 import software.wings.settings.SettingVariableTypes;
 

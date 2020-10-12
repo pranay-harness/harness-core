@@ -16,6 +16,8 @@ import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.beans.DelegateTaskPackage;
 import io.harness.delegate.beans.TaskData;
+import io.harness.helpers.ext.vault.VaultRestClient;
+import io.harness.helpers.ext.vault.VaultRestClientFactory;
 import io.harness.network.Http;
 import io.harness.rule.Owner;
 import io.harness.security.encryption.EncryptedDataDetail;
@@ -34,8 +36,6 @@ import software.wings.beans.NewRelicConfig;
 import software.wings.beans.VaultConfig;
 import software.wings.delegatetasks.validation.DelegateConnectionResult;
 import software.wings.delegatetasks.validation.NewRelicValidation;
-import software.wings.helpers.ext.vault.VaultRestClient;
-import software.wings.helpers.ext.vault.VaultRestClientFactory;
 import software.wings.service.impl.newrelic.NewRelicDataCollectionInfo;
 import software.wings.service.impl.security.SecretManagementDelegateServiceImpl;
 

@@ -22,6 +22,7 @@ import static software.wings.utils.WingsTestConstants.mockChecker;
 
 import com.google.inject.Inject;
 
+import io.harness.beans.EncryptedData;
 import io.harness.category.element.DeprecatedIntegrationTests;
 import io.harness.delegate.service.DelegateAgentFileService.FileBucket;
 import io.harness.limits.LimitCheckerFactory;
@@ -48,7 +49,6 @@ import software.wings.beans.ServiceTemplate;
 import software.wings.beans.SyncTaskContext;
 import software.wings.delegatetasks.DelegateProxyFactory;
 import software.wings.rules.SetupScheduler;
-import software.wings.security.encryption.EncryptedData;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ConfigService;
 import software.wings.service.intfc.FileService;

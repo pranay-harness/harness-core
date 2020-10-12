@@ -20,6 +20,10 @@ import com.google.inject.Singleton;
 
 import com.mongodb.DuplicateKeyException;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.beans.EncryptedData;
+import io.harness.beans.EncryptedData.EncryptedDataKeys;
+import io.harness.beans.EncryptedDataParent;
+import io.harness.exception.SecretManagementException;
 import io.harness.exception.WingsException;
 import io.harness.security.encryption.EncryptionType;
 import io.harness.serializer.KryoSerializer;
@@ -28,9 +32,6 @@ import org.mongodb.morphia.query.Query;
 import software.wings.beans.CyberArkConfig;
 import software.wings.beans.CyberArkConfig.CyberArkConfigKeys;
 import software.wings.beans.SyncTaskContext;
-import software.wings.security.encryption.EncryptedData;
-import software.wings.security.encryption.EncryptedData.EncryptedDataKeys;
-import software.wings.security.encryption.EncryptedDataParent;
 import software.wings.service.intfc.security.CyberArkService;
 import software.wings.service.intfc.security.SecretManagementDelegateService;
 

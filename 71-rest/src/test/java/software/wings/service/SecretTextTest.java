@@ -34,9 +34,13 @@ import static software.wings.utils.ArtifactType.JAR;
 
 import com.google.inject.Inject;
 
+import io.harness.beans.EncryptedData;
+import io.harness.beans.EncryptedData.EncryptedDataKeys;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.beans.SearchFilter.Operator;
+import io.harness.beans.SecretChangeLog;
+import io.harness.beans.SecretText;
 import io.harness.category.element.UnitTests;
 import io.harness.data.structure.CollectionUtils;
 import io.harness.exception.WingsException;
@@ -85,12 +89,8 @@ import software.wings.resources.ServiceVariableResource;
 import software.wings.resources.secretsmanagement.SecretManagementResource;
 import software.wings.security.UsageRestrictions;
 import software.wings.security.UserThreadLocal;
-import software.wings.security.encryption.EncryptedData;
-import software.wings.security.encryption.EncryptedData.EncryptedDataKeys;
-import software.wings.security.encryption.SecretChangeLog;
 import software.wings.security.encryption.setupusage.SecretSetupUsage;
 import software.wings.service.impl.UsageRestrictionsServiceImplTest;
-import software.wings.service.impl.security.SecretText;
 import software.wings.service.impl.security.auth.ConfigFileAuthHandler;
 import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.AppService;

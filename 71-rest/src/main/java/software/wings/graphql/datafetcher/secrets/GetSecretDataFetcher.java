@@ -7,6 +7,7 @@ import static software.wings.settings.SettingVariableTypes.WINRM_CONNECTION_ATTR
 
 import com.google.inject.Inject;
 
+import io.harness.beans.EncryptedData;
 import io.harness.exception.InvalidRequestException;
 import software.wings.beans.SettingAttribute;
 import software.wings.graphql.datafetcher.AbstractObjectDataFetcher;
@@ -15,7 +16,6 @@ import software.wings.graphql.schema.type.secrets.QLSecret;
 import software.wings.graphql.schema.type.secrets.QLSecretType;
 import software.wings.security.PermissionAttribute;
 import software.wings.security.annotations.AuthRule;
-import software.wings.security.encryption.EncryptedData;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.security.SecretManager;
 import software.wings.settings.SettingValue;

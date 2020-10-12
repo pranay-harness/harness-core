@@ -8,7 +8,9 @@ import com.google.inject.Inject;
 
 import io.harness.CategoryTest;
 import io.harness.MockableTestMixin;
+import io.harness.beans.EncryptedData;
 import io.harness.eraro.ErrorCode;
+import io.harness.exception.SecretManagementException;
 import io.harness.exception.WingsException;
 import io.harness.queue.QueueConsumer;
 import io.harness.security.encryption.EncryptedRecord;
@@ -40,8 +42,6 @@ import software.wings.beans.WinRmConnectionAttributes.AuthenticationScheme;
 import software.wings.dl.WingsPersistence;
 import software.wings.resources.secretsmanagement.SecretManagementResource;
 import software.wings.rules.WingsRule;
-import software.wings.security.encryption.EncryptedData;
-import software.wings.service.impl.security.SecretManagementException;
 import software.wings.service.impl.security.kms.KmsEncryptDecryptClient;
 import software.wings.service.intfc.ConfigService;
 import software.wings.service.intfc.FeatureFlagService;

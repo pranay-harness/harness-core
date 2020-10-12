@@ -28,15 +28,15 @@ import com.google.protobuf.ByteString;
 import com.github.benmanes.caffeine.cache.Cache;
 import com.github.benmanes.caffeine.cache.Caffeine;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.beans.EncryptedData;
 import io.harness.delegate.exception.DelegateRetryableException;
 import io.harness.exception.InvalidArgumentsException;
+import io.harness.exception.SecretManagementDelegateException;
 import io.harness.security.SimpleEncryption;
 import io.harness.security.encryption.EncryptedRecord;
 import io.harness.security.encryption.EncryptionType;
 import lombok.extern.slf4j.Slf4j;
 import software.wings.beans.GcpKmsConfig;
-import software.wings.security.encryption.EncryptedData;
-import software.wings.service.impl.security.SecretManagementDelegateException;
 import software.wings.service.impl.security.kms.KmsEncryptDecryptClient.KmsEncryptionKeyCacheKey;
 
 import java.io.ByteArrayInputStream;

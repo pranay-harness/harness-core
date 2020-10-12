@@ -5,12 +5,12 @@ import com.google.inject.Inject;
 import com.mongodb.BasicDBObject;
 import com.mongodb.BulkWriteOperation;
 import com.mongodb.DBCollection;
+import io.harness.beans.SecretUsageLog;
+import io.harness.beans.SecretUsageLog.SecretUsageLogKeys;
 import io.harness.persistence.HIterator;
 import lombok.extern.slf4j.Slf4j;
 import migrations.Migration;
 import software.wings.dl.WingsPersistence;
-import software.wings.security.encryption.SecretUsageLog;
-import software.wings.security.encryption.SecretUsageLog.SecretUsageLogKeys;
 
 import java.time.Instant;
 import java.time.ZoneOffset;

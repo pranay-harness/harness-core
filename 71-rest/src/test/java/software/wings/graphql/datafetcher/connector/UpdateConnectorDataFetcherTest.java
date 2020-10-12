@@ -32,6 +32,7 @@ import static software.wings.security.PermissionAttribute.PermissionType.MANAGE_
 
 import com.google.inject.Inject;
 
+import io.harness.beans.EncryptedData;
 import io.harness.category.element.UnitTests;
 import io.harness.exception.InvalidRequestException;
 import io.harness.rule.Owner;
@@ -67,7 +68,6 @@ import software.wings.graphql.schema.type.connector.QLGitConnector;
 import software.wings.graphql.schema.type.connector.QLHttpHelmRepoConnector;
 import software.wings.graphql.schema.type.connector.QLNexusConnector;
 import software.wings.security.annotations.AuthRule;
-import software.wings.security.encryption.EncryptedData;
 import software.wings.service.impl.SettingServiceHelper;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.security.SecretManager;

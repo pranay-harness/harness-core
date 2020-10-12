@@ -6,11 +6,11 @@ import static software.wings.security.PermissionAttribute.PermissionType.LOGGED_
 import com.google.inject.Inject;
 
 import graphql.schema.DataFetchingEnvironment;
+import io.harness.beans.SecretManagerConfig;
+import io.harness.beans.SecretManagerConfig.SecretManagerConfigKeys;
 import org.mongodb.morphia.query.FieldEnd;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.Sort;
-import software.wings.beans.SecretManagerConfig;
-import software.wings.beans.SecretManagerConfig.SecretManagerConfigKeys;
 import software.wings.beans.SettingAttribute;
 import software.wings.graphql.datafetcher.AbstractConnectionV2DataFetcher;
 import software.wings.graphql.datafetcher.DataFetcherUtils;

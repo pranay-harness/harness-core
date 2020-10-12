@@ -6,12 +6,12 @@ import static io.harness.encryption.EncryptionReflectUtils.getEncryptedRefField;
 import com.google.common.collect.Sets;
 
 import io.harness.beans.Encryptable;
+import io.harness.beans.EncryptedDataParent;
 import io.harness.reflection.ReflectionUtils;
 import io.harness.security.encryption.EncryptionType;
 import lombok.NonNull;
 import lombok.experimental.UtilityClass;
 import software.wings.annotation.EncryptableSetting;
-import software.wings.security.encryption.EncryptedDataParent;
 import software.wings.security.encryption.SecretParentsUpdateDetail;
 
 import java.lang.reflect.Field;

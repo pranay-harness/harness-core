@@ -8,6 +8,8 @@ import static software.wings.beans.alert.AlertType.InvalidKMS;
 
 import com.google.inject.Inject;
 
+import io.harness.beans.SecretManagerConfig;
+import io.harness.beans.SecretManagerConfig.SecretManagerConfigKeys;
 import io.harness.iterator.PersistenceIteratorFactory;
 import io.harness.mongo.iterator.MongoPersistenceIterator;
 import io.harness.mongo.iterator.MongoPersistenceIterator.Handler;
@@ -16,8 +18,6 @@ import io.harness.mongo.iterator.provider.MorphiaPersistenceProvider;
 import io.harness.security.encryption.EncryptionType;
 import io.harness.workers.background.AccountStatusBasedEntityProcessController;
 import lombok.extern.slf4j.Slf4j;
-import software.wings.beans.SecretManagerConfig;
-import software.wings.beans.SecretManagerConfig.SecretManagerConfigKeys;
 import software.wings.beans.VaultConfig;
 import software.wings.beans.alert.KmsSetupAlert;
 import software.wings.service.intfc.AccountService;

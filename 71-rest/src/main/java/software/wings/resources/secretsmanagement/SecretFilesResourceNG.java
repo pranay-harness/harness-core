@@ -7,6 +7,7 @@ import static software.wings.resources.secretsmanagement.EncryptedDataMapper.toD
 import com.google.inject.Inject;
 
 import io.harness.NGCommonEntityConstants;
+import io.harness.beans.EncryptedData;
 import io.harness.exception.InvalidRequestException;
 import io.harness.rest.RestResponse;
 import io.harness.secretmanagerclient.dto.EncryptedDataDTO;
@@ -19,7 +20,6 @@ import org.apache.commons.lang3.StringUtils;
 import org.glassfish.jersey.media.multipart.FormDataParam;
 import software.wings.app.FileUploadLimit;
 import software.wings.security.annotations.NextGenManagerAuth;
-import software.wings.security.encryption.EncryptedData;
 import software.wings.service.intfc.security.NGSecretFileService;
 
 import java.io.InputStream;

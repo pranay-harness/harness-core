@@ -6,6 +6,7 @@ import com.google.inject.Inject;
 
 import io.harness.NGCommonEntityConstants;
 import io.harness.NGResourceFilterConstants;
+import io.harness.beans.EncryptedData;
 import io.harness.beans.PageResponse;
 import io.harness.ng.core.NGAccessWithEncryptionConsumer;
 import io.harness.rest.RestResponse;
@@ -17,7 +18,6 @@ import io.swagger.annotations.Api;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import software.wings.security.annotations.NextGenManagerAuth;
-import software.wings.security.encryption.EncryptedData;
 import software.wings.service.intfc.security.NGSecretService;
 import software.wings.settings.SettingVariableTypes;
 

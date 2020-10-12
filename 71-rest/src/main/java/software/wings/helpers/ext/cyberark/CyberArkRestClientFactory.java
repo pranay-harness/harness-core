@@ -5,6 +5,7 @@ import static io.harness.eraro.ErrorCode.CYBERARK_OPERATION_ERROR;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.harness.data.structure.EmptyPredicate;
+import io.harness.exception.SecretManagementDelegateException;
 import io.harness.exception.WingsException;
 import io.harness.network.Http;
 import lombok.experimental.UtilityClass;
@@ -17,7 +18,6 @@ import org.bouncycastle.util.io.pem.PemReader;
 import retrofit2.Retrofit;
 import retrofit2.converter.jackson.JacksonConverterFactory;
 import software.wings.beans.CyberArkConfig;
-import software.wings.service.impl.security.SecretManagementDelegateException;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;

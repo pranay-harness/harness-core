@@ -15,16 +15,17 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.beans.EncryptedData;
 import io.harness.data.structure.UUIDGenerator;
+import io.harness.exception.SecretManagementException;
+import io.harness.secretmanagers.SecretManagerConfigService;
 import io.harness.security.EncryptionUtils;
 import io.harness.security.SimpleEncryption;
 import lombok.extern.slf4j.Slf4j;
 import software.wings.beans.BaseFile;
 import software.wings.beans.LocalEncryptionConfig;
-import software.wings.security.encryption.EncryptedData;
 import software.wings.service.intfc.FileService;
 import software.wings.service.intfc.security.LocalEncryptionService;
-import software.wings.service.intfc.security.SecretManagerConfigService;
 import software.wings.settings.SettingVariableTypes;
 
 import java.io.ByteArrayInputStream;

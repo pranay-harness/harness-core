@@ -9,29 +9,30 @@ import com.google.inject.Inject;
 import com.google.inject.name.Named;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.beans.EncryptedData;
+import io.harness.beans.SecretManagerConfig;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.InvalidRequestException;
+import io.harness.exception.SecretManagementException;
 import io.harness.exception.WingsException;
 import io.harness.expression.SecretString;
+import io.harness.secretmanagers.SecretManagerConfigService;
 import io.harness.security.SimpleEncryption;
 import io.harness.security.encryption.EncryptionType;
 import lombok.extern.slf4j.Slf4j;
 import software.wings.beans.Account;
 import software.wings.beans.Event.Type;
 import software.wings.beans.KmsConfig;
-import software.wings.beans.SecretManagerConfig;
 import software.wings.beans.alert.AlertType;
 import software.wings.beans.alert.KmsSetupAlert;
 import software.wings.delegatetasks.DelegateProxyFactory;
 import software.wings.dl.WingsPersistence;
 import software.wings.features.SecretsManagementFeature;
 import software.wings.features.api.PremiumFeature;
-import software.wings.security.encryption.EncryptedData;
 import software.wings.service.impl.AuditServiceHelper;
 import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.AlertService;
 import software.wings.service.intfc.security.KmsService;
-import software.wings.service.intfc.security.SecretManagerConfigService;
 
 import java.util.UUID;
 

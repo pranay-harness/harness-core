@@ -11,7 +11,6 @@ import io.harness.serializer.kryo.ManagerKryoRegistrar;
 import io.harness.serializer.kryo.OrchestrationStepsKryoRegistrar;
 import io.harness.serializer.kryo.OrchestrationVisualizationKryoRegistrar;
 import io.harness.serializer.kryo.ProjectAndOrgKryoRegistrar;
-import io.harness.serializer.kryo.SecretManagerClientKryoRegistrar;
 import io.harness.serializer.kryo.YamlKryoRegistrar;
 import io.harness.serializer.morphia.CommonEntitiesMorphiaRegister;
 import io.harness.serializer.morphia.ConnectorMorphiaClassesRegistrar;
@@ -24,8 +23,6 @@ import io.harness.serializer.morphia.ManagerMorphiaRegistrar;
 import io.harness.serializer.morphia.NGCoreMorphiaClassesRegistrar;
 import io.harness.serializer.morphia.OrchestrationStepsMorphiaRegistrar;
 import io.harness.serializer.morphia.ProjectAndOrgMorphiaRegistrar;
-import io.harness.serializer.morphia.SMCoreMorphiaRegistrar;
-import io.harness.serializer.morphia.SecretManagerClientMorphiaRegistrar;
 import io.harness.serializer.morphia.ViewsMorphiaRegistrar;
 import io.harness.serializer.spring.WingsAliasRegistrar;
 import io.harness.spring.AliasRegistrar;
@@ -45,7 +42,7 @@ public class ManagerRegistrars {
           .addAll(NGCoreRegistrars.kryoRegistrars)
           .addAll(ExecutionPlanModuleRegistrars.kryoRegistrars)
           .addAll(RbacCoreRegistrars.kryoRegistrars)
-          .add(SecretManagerClientKryoRegistrar.class)
+          .addAll(SMCoreRegistrars.kryoRegistrars)
           .add(CvNextGenCommonsBeansKryoRegistrar.class)
           .add(YamlKryoRegistrar.class)
           // temporary:
@@ -66,11 +63,10 @@ public class ManagerRegistrars {
           .add(CommonEntitiesMorphiaRegister.class)
           .addAll(NGCoreRegistrars.morphiaRegistrars)
           .addAll(RbacCoreRegistrars.morphiaRegistrars)
-          .add(SecretManagerClientMorphiaRegistrar.class)
+          .addAll(SMCoreRegistrars.morphiaRegistrars)
           .add(DelegateServiceBeansMorphiaRegistrar.class)
           .add(NGCoreMorphiaClassesRegistrar.class)
           .add(ConnectorMorphiaClassesRegistrar.class)
-          .add(SMCoreMorphiaRegistrar.class)
           .add(EventMorphiaRegistrar.class)
           .add(DelegateServiceMorphiaRegistrar.class)
           .add(ViewsMorphiaRegistrar.class)
