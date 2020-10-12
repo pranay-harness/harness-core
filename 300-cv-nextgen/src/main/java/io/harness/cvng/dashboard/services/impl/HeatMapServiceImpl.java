@@ -73,9 +73,9 @@ public class HeatMapServiceImpl implements HeatMapService {
     options.upsert(true);
     for (HeatMapResolution heatMapResolution : HeatMapResolution.values()) {
       Instant bucketStartTime = getBoundaryOfResolution(timeStamp, heatMapResolution.getBucketSize());
-      Instant bucketEndTime = bucketStartTime.plusMillis(heatMapResolution.getBucketSize().toMillis() - 1);
+      Instant bucketEndTime = bucketStartTime.plusMillis(heatMapResolution.getBucketSize().toMillis());
       Instant heatMapStartTime = getBoundaryOfResolution(timeStamp, heatMapResolution.getResolution());
-      Instant heatMapEndTime = heatMapStartTime.plusMillis(heatMapResolution.getResolution().toMillis() - 1);
+      Instant heatMapEndTime = heatMapStartTime.plusMillis(heatMapResolution.getResolution().toMillis());
 
       Query<HeatMap> heatMapQuery = hPersistence.createQuery(HeatMap.class)
                                         .filter(HeatMapKeys.projectIdentifier, projectIdentifier)
@@ -139,7 +139,7 @@ public class HeatMapServiceImpl implements HeatMapService {
 
         heatMapDTOS.add(HeatMapDTO.builder()
                             .startTime(timeStampMs)
-                            .endTime(timeStampMs + heatMapResolution.getResolution().toMillis() - 1)
+                            .endTime(timeStampMs + heatMapResolution.getResolution().toMillis())
                             .build());
       }
       heatMaps.put(category, heatMapDTOS);
