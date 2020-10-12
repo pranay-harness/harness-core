@@ -5,6 +5,7 @@ import com.google.inject.Singleton;
 
 import io.harness.ccm.views.dao.CEViewDao;
 import io.harness.ccm.views.entities.CEView;
+import io.harness.ccm.views.entities.ViewChartType;
 import io.harness.ccm.views.entities.ViewState;
 import io.harness.ccm.views.graphql.QLCEView;
 import io.harness.ccm.views.service.CEViewService;
@@ -58,12 +59,17 @@ public class CEViewServiceImpl implements CEViewService {
     List<CEView> viewList = ceViewDao.findByAccountId(accountId);
     List<QLCEView> graphQLViewObjList = new ArrayList<>();
     for (CEView view : viewList) {
+      ViewChartType vChartType = null;
+      if (view.getViewVisualization() != null) {
+        // For DRAFT support, no visualizations have been set at this point
+        vChartType = view.getViewVisualization().getChartType();
+      }
       graphQLViewObjList.add(QLCEView.builder()
                                  .id(view.getUuid())
                                  .name(view.getName())
                                  .createdAt(view.getCreatedAt())
                                  .lastUpdatedAt(view.getLastUpdatedAt())
-                                 .chartType(view.getViewVisualization().getChartType())
+                                 .chartType(vChartType)
                                  .viewType(view.getViewType())
                                  .viewState(view.getViewState())
                                  .build());
