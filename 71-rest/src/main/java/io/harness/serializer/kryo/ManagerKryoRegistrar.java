@@ -511,6 +511,7 @@ import software.wings.helpers.ext.k8s.request.K8sRollingDeployTaskParameters;
 import software.wings.helpers.ext.k8s.request.K8sScaleTaskParameters;
 import software.wings.helpers.ext.k8s.request.K8sTaskParameters;
 import software.wings.helpers.ext.k8s.request.K8sTrafficSplitTaskParameters;
+import software.wings.helpers.ext.k8s.response.CiK8sTaskResponse;
 import software.wings.helpers.ext.k8s.response.K8sApplyResponse;
 import software.wings.helpers.ext.k8s.response.K8sBlueGreenDeployResponse;
 import software.wings.helpers.ext.k8s.response.K8sCanaryDeployResponse;
@@ -1756,6 +1757,7 @@ public class ManagerKryoRegistrar implements KryoRegistrar {
     kryo.register(AzureVMSSDeployExecutionSummary.class, 8060);
 
     kryo.register(PerpetualTaskCapabilityCheckResponse.class, 8061);
-    kryo.register(TerraformOutputVariables.class, 8062);
+    kryo.register(CiK8sTaskResponse.class, 8062);
+    kryo.register(TerraformOutputVariables.class, 8063);
   }
 }

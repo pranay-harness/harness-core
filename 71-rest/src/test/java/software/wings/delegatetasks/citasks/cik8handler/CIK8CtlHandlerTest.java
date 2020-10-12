@@ -20,6 +20,8 @@ import static software.wings.delegatetasks.citasks.cik8handler.params.CIConstant
 import static software.wings.delegatetasks.citasks.cik8handler.params.CIConstants.POD_PENDING_PHASE;
 import static software.wings.delegatetasks.citasks.cik8handler.params.CIConstants.POD_RUNNING_PHASE;
 import static software.wings.delegatetasks.citasks.cik8handler.params.CIConstants.POD_WAIT_UNTIL_READY_SLEEP_SECS;
+import static software.wings.helpers.ext.k8s.response.PodStatus.Status.ERROR;
+import static software.wings.helpers.ext.k8s.response.PodStatus.Status.RUNNING;
 
 import com.google.inject.Provider;
 
@@ -373,7 +375,7 @@ public class CIK8CtlHandlerTest extends WingsBaseTest {
     when(mockPodNonNamespacedOp.withName(podName)).thenReturn(mockPodNamed);
     when(mockPodNamed.get()).thenReturn(pod);
 
-    assertEquals(true, cik8CtlHandler.waitUntilPodIsReady(client, podName, namespace));
+    assertEquals(RUNNING, cik8CtlHandler.waitUntilPodIsReady(client, podName, namespace).getStatus());
   }
 
   @Test()
@@ -388,7 +390,7 @@ public class CIK8CtlHandlerTest extends WingsBaseTest {
     when(mockPodNonNamespacedOp.withName(podName)).thenReturn(mockPodNamed);
     when(mockPodNamed.get()).thenReturn(pod);
 
-    assertEquals(false, cik8CtlHandler.waitUntilPodIsReady(client, podName, namespace));
+    assertEquals(ERROR, cik8CtlHandler.waitUntilPodIsReady(client, podName, namespace).getStatus());
   }
 
   @Test()
@@ -410,7 +412,7 @@ public class CIK8CtlHandlerTest extends WingsBaseTest {
     when(mockPodNonNamespacedOp.withName(podName)).thenReturn(mockPodNamed);
     when(mockPodNamed.get()).thenReturn(pod2);
 
-    assertEquals(true, cik8CtlHandler.waitUntilPodIsReady(client, podName, namespace));
+    assertEquals(RUNNING, cik8CtlHandler.waitUntilPodIsReady(client, podName, namespace).getStatus());
   }
 
   @Test(expected = TimeoutException.class)
