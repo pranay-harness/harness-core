@@ -363,7 +363,7 @@ public class JiraTask extends AbstractDelegateRunnableTask {
           firstIssueInListData = JiraIssueData.builder().description(parameters.getDescription()).build();
         }
       } catch (JiraException j) {
-        String errorMessage = "Failed to update jira issue : " + issueId;
+        String errorMessage = "Failed to update Jira Issue for Id: " + issueId + ". " + extractResponseMessage(j);
         logger.error(errorMessage, j);
         return JiraExecutionData.builder()
             .executionStatus(ExecutionStatus.FAILED)
@@ -502,7 +502,8 @@ public class JiraTask extends AbstractDelegateRunnableTask {
       logger.error("Unable to create a new Jira ticket", e);
       return JiraExecutionData.builder()
           .executionStatus(ExecutionStatus.FAILED)
-          .errorMessage("Unable to create a new Jira ticket. " + ExceptionUtils.getMessage(e))
+          .errorMessage(
+              "Unable to create a new Jira ticket. " + ExceptionUtils.getMessage(e) + " " + extractResponseMessage(e))
           .jiraServerResponse(extractResponseMessage(e))
           .build();
     } catch (WingsException e) {
@@ -664,7 +665,7 @@ public class JiraTask extends AbstractDelegateRunnableTask {
           .jiraIssueData(JiraIssueData.builder().description(issue.getDescription()).build())
           .build();
     } catch (JiraException e) {
-      String error = "Unable to fetch Jira for id: " + parameters.getIssueId();
+      String error = "Unable to fetch Jira Issue for Id: " + parameters.getIssueId() + "  " + extractResponseMessage(e);
       logger.error(error, e);
       return JiraExecutionData.builder().executionStatus(ExecutionStatus.FAILED).errorMessage(error).build();
     }
