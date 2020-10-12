@@ -195,7 +195,11 @@ public class EventJobScheduler {
                   .contains(accountId)) {
         return;
       }
-      if (BatchJobType.CLUSTER_DATA_TO_BIG_QUERY == batchJobType && !accountId.equals("zEaak-FLS425IEO7OLzMUg")) {
+      if (BatchJobType.CLUSTER_DATA_TO_BIG_QUERY == batchJobType
+          && !ImmutableSet
+                  .of("wFHXHD0RRQWoO8tIZT5YVw", "kmpySmUISimoRrJL6NL73w", "zEaak-FLS425IEO7OLzMUg",
+                      "TlKfvX4wQNmRmxkZrPXEgQ")
+                  .contains(accountId)) {
         return;
       }
       BatchJobBucket batchJobBucket = batchJobType.getBatchJobBucket();
