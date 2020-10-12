@@ -8,12 +8,13 @@ import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Builder;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 
 @Data
-@Builder
+@NoArgsConstructor
 @JsonIgnoreProperties(ignoreUnknown = true)
 @ApiModel("ArtifactoryAuthentication")
 public class ArtifactoryAuthenticationDTO {
@@ -21,6 +22,7 @@ public class ArtifactoryAuthenticationDTO {
   @NotNull
   @JsonProperty("type")
   ArtifactoryAuthType authType;
+
   @JsonProperty("spec")
   @JsonTypeInfo(
       use = JsonTypeInfo.Id.NAME, property = "type", include = JsonTypeInfo.As.EXTERNAL_PROPERTY, visible = true)
@@ -30,4 +32,10 @@ public class ArtifactoryAuthenticationDTO {
   @NotNull
   @Valid
   ArtifactoryAuthCredentialsDTO credentials;
+
+  @Builder
+  public ArtifactoryAuthenticationDTO(ArtifactoryAuthType authType, ArtifactoryAuthCredentialsDTO credentials) {
+    this.authType = authType;
+    this.credentials = credentials;
+  }
 }
