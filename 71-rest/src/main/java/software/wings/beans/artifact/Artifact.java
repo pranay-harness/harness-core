@@ -14,6 +14,7 @@ import io.harness.delegate.beans.artifact.ArtifactFileMetadata;
 import io.harness.mongo.index.CdIndex;
 import io.harness.mongo.index.FdIndex;
 import io.harness.mongo.index.Field;
+import io.harness.mongo.index.IndexType;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.experimental.FieldNameConstants;
@@ -43,6 +44,11 @@ import java.util.Map;
                                                           , @Field("metadata.artifactPath") })
 @CdIndex(name = "artifactStream_revision", fields = { @Field("artifactStreamId")
                                                       , @Field("revision") })
+@CdIndex(name = "appId_artifactStreamId_createdAt_status",
+    fields =
+    {
+      @Field("appId"), @Field("artifactStreamId"), @Field(value = "createdAt", type = IndexType.DESC), @Field("status")
+    })
 @FieldNameConstants(innerTypeName = "ArtifactKeys")
 @Entity(value = "artifacts", noClassnameStored = true)
 @HarnessEntity(exportable = true)
