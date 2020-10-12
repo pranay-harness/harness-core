@@ -147,7 +147,7 @@ public class HeatMapServiceImplTest extends CvNextGenTest {
           .isEqualTo(Instant.ofEpochMilli(instant.toEpochMilli()
               - Math.floorMod(instant.toEpochMilli(), heatMapResolution.getBucketSize().toMillis())));
       assertThat(heatMap.getHeatMapBucketEndTime())
-          .isEqualTo(heatMap.getHeatMapBucketStartTime().plusMillis(heatMapResolution.getBucketSize().toMillis() - 1));
+          .isEqualTo(heatMap.getHeatMapBucketStartTime().plusMillis(heatMapResolution.getBucketSize().toMillis()));
       Set<HeatMapRisk> heatMapRisks = heatMap.getHeatMapRisks();
       assertThat(heatMapRisks.size()).isEqualTo(1);
       HeatMapRisk heatMapRisk = heatMapRisks.iterator().next();
@@ -155,7 +155,7 @@ public class HeatMapServiceImplTest extends CvNextGenTest {
           .isEqualTo(Instant.ofEpochMilli(instant.toEpochMilli()
               - Math.floorMod(instant.toEpochMilli(), heatMapResolution.getResolution().toMillis())));
       assertThat(heatMapRisk.getEndTime())
-          .isEqualTo(heatMapRisk.getStartTime().plusMillis(heatMapResolution.getResolution().toMillis() - 1));
+          .isEqualTo(heatMapRisk.getStartTime().plusMillis(heatMapResolution.getResolution().toMillis()));
       assertThat(heatMapRisk.getRiskScore()).isEqualTo(riskScore, offset(0.001));
     }
   }
@@ -250,7 +250,7 @@ public class HeatMapServiceImplTest extends CvNextGenTest {
       assertThat(heatMapDTO)
           .isEqualTo(HeatMapDTO.builder()
                          .startTime(TimeUnit.MINUTES.toMillis(i))
-                         .endTime(TimeUnit.MINUTES.toMillis(i) + FIVE_MIN.getResolution().toMillis() - 1)
+                         .endTime(TimeUnit.MINUTES.toMillis(i) + FIVE_MIN.getResolution().toMillis())
                          .build());
     }
     int numOfRiskUnits = 24;
@@ -276,13 +276,13 @@ public class HeatMapServiceImplTest extends CvNextGenTest {
         assertThat(heatMapDTO)
             .isEqualTo(HeatMapDTO.builder()
                            .startTime(TimeUnit.MINUTES.toMillis(i))
-                           .endTime(TimeUnit.MINUTES.toMillis(i) + FIVE_MIN.getResolution().toMillis() - 1)
+                           .endTime(TimeUnit.MINUTES.toMillis(i) + FIVE_MIN.getResolution().toMillis())
                            .build());
       } else {
         assertThat(heatMapDTO)
             .isEqualTo(HeatMapDTO.builder()
                            .startTime(TimeUnit.MINUTES.toMillis(i))
-                           .endTime(TimeUnit.MINUTES.toMillis(i) + FIVE_MIN.getResolution().toMillis() - 1)
+                           .endTime(TimeUnit.MINUTES.toMillis(i) + FIVE_MIN.getResolution().toMillis())
                            .riskScore(i * 0.01)
                            .build());
       }
@@ -309,7 +309,7 @@ public class HeatMapServiceImplTest extends CvNextGenTest {
       assertThat(heatMapDTO)
           .isEqualTo(HeatMapDTO.builder()
                          .startTime(TimeUnit.MINUTES.toMillis(i))
-                         .endTime(TimeUnit.MINUTES.toMillis(i) + FIFTEEN_MINUTES.getResolution().toMillis() - 1)
+                         .endTime(TimeUnit.MINUTES.toMillis(i) + FIFTEEN_MINUTES.getResolution().toMillis())
                          .build());
     }
     int numOfRiskUnits = 42;
@@ -336,13 +336,13 @@ public class HeatMapServiceImplTest extends CvNextGenTest {
         assertThat(heatMapDTO)
             .isEqualTo(HeatMapDTO.builder()
                            .startTime(TimeUnit.MINUTES.toMillis(i))
-                           .endTime(TimeUnit.MINUTES.toMillis(i) + FIFTEEN_MINUTES.getResolution().toMillis() - 1)
+                           .endTime(TimeUnit.MINUTES.toMillis(i) + FIFTEEN_MINUTES.getResolution().toMillis())
                            .build());
       } else {
         assertThat(heatMapDTO)
             .isEqualTo(HeatMapDTO.builder()
                            .startTime(TimeUnit.MINUTES.toMillis(i))
-                           .endTime(TimeUnit.MINUTES.toMillis(i) + FIFTEEN_MINUTES.getResolution().toMillis() - 1)
+                           .endTime(TimeUnit.MINUTES.toMillis(i) + FIFTEEN_MINUTES.getResolution().toMillis())
                            .riskScore((i + 10) * 0.01)
                            .build());
       }
