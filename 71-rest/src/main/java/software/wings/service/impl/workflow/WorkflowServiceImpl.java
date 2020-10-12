@@ -1218,8 +1218,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
       throw new InvalidRequestException(message, USER);
     }
 
-    if (workflowExecutionService.workflowExecutionsRunning(
-            workflow.getWorkflowType(), workflow.getAppId(), workflow.getUuid())) {
+    if (workflowExecutionService.runningExecutionsPresent(workflow.getAppId(), workflow.getUuid())) {
       throw new InvalidRequestException(
           format("Workflow: [%s] couldn't be deleted", workflow.getName()), WORKFLOW_EXECUTION_IN_PROGRESS, USER);
     }
