@@ -4,6 +4,7 @@ import static io.harness.cdng.orchestration.StepUtils.createStepResponseFromChil
 
 import io.harness.ambiance.Ambiance;
 import io.harness.cdng.pipeline.beans.DeploymentStageStepParameters;
+import io.harness.executions.steps.ExecutionNodeType;
 import io.harness.facilitator.modes.child.ChildExecutable;
 import io.harness.facilitator.modes.child.ChildExecutableResponse;
 import io.harness.state.Step;
@@ -17,7 +18,8 @@ import java.util.Map;
 
 @Slf4j
 public class DeploymentStageStep implements Step, ChildExecutable<DeploymentStageStepParameters> {
-  public static final StepType STEP_TYPE = StepType.builder().type(NGStepTypes.DEPLOYMENT_STAGE_STEP).build();
+  public static final StepType STEP_TYPE =
+      StepType.builder().type(ExecutionNodeType.DEPLOYMENT_STAGE_STEP.getName()).build();
 
   @Override
   public ChildExecutableResponse obtainChild(

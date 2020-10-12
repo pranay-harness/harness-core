@@ -14,12 +14,12 @@ import io.harness.cdng.infra.beans.InfraMapping;
 import io.harness.cdng.infra.beans.InfrastructureOutcome;
 import io.harness.cdng.infra.yaml.Infrastructure;
 import io.harness.cdng.pipeline.PipelineInfrastructure;
-import io.harness.cdng.pipeline.steps.NGStepTypes;
 import io.harness.cdng.stepsdependency.constants.OutcomeExpressionConstants;
 import io.harness.common.AmbianceHelper;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.execution.status.Status;
 import io.harness.executionplan.plancreator.beans.StepOutcomeGroup;
+import io.harness.executions.steps.ExecutionNodeType;
 import io.harness.facilitator.PassThroughData;
 import io.harness.facilitator.modes.sync.SyncExecutable;
 import io.harness.ng.core.environment.beans.Environment;
@@ -31,7 +31,7 @@ import io.harness.state.io.StepResponse;
 import io.harness.state.io.StepResponse.StepOutcome;
 
 public class InfrastructureStep implements Step, SyncExecutable<InfraStepParameters> {
-  public static final StepType STEP_TYPE = StepType.builder().type(NGStepTypes.INFRASTRUCTURE).build();
+  public static final StepType STEP_TYPE = StepType.builder().type(ExecutionNodeType.INFRASTRUCTURE.getName()).build();
 
   @Inject private EnvironmentService environmentService;
 

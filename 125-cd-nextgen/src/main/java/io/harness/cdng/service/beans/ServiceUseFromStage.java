@@ -1,7 +1,7 @@
 package io.harness.cdng.service.beans;
 
 import io.harness.beans.ParameterField;
-import io.harness.cdng.visitor.LevelNodeQualifierName;
+import io.harness.cdng.visitor.YamlTypes;
 import io.harness.cdng.visitor.helpers.serviceconfig.ServiceUseFromOverridesVisitorHelper;
 import io.harness.cdng.visitor.helpers.serviceconfig.ServiceUseFromStageVisitorHelper;
 import io.harness.common.SwaggerConstants;
@@ -32,7 +32,7 @@ public class ServiceUseFromStage implements Serializable, Visitable {
 
   @Override
   public LevelNode getLevelNode() {
-    return LevelNode.builder().qualifierName(LevelNodeQualifierName.SERVICE_USE_FROM_STAGE).build();
+    return LevelNode.builder().qualifierName(YamlTypes.SERVICE_USE_FROM_STAGE).build();
   }
 
   @Override
@@ -51,7 +51,7 @@ public class ServiceUseFromStage implements Serializable, Visitable {
 
     @Override
     public LevelNode getLevelNode() {
-      return LevelNode.builder().qualifierName(LevelNodeQualifierName.SERVICE_USE_FROM_STAGE_OVERRIDES).build();
+      return LevelNode.builder().qualifierName(YamlTypes.SERVICE_USE_FROM_STAGE_OVERRIDES).build();
     }
   }
 }

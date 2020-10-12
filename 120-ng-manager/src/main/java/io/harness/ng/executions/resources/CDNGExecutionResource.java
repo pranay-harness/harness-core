@@ -14,6 +14,7 @@ import io.harness.cdng.pipeline.executions.beans.PipelineExecutionSummaryFilter;
 import io.harness.cdng.pipeline.executions.beans.dto.PipelineExecutionSummaryDTO;
 import io.harness.cdng.pipeline.executions.service.NgPipelineExecutionServiceImpl;
 import io.harness.cdng.pipeline.mappers.ExecutionToDtoMapper;
+import io.harness.executions.steps.ExecutionNodeType;
 import io.harness.ng.beans.PageResponse;
 import io.harness.ng.core.dto.ErrorDTO;
 import io.harness.ng.core.dto.FailureDTO;
@@ -29,6 +30,7 @@ import org.springframework.data.domain.Page;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import javax.validation.constraints.NotNull;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DefaultValue;
@@ -105,5 +107,14 @@ public class CDNGExecutionResource {
   @Path("/executionStatus")
   public ResponseDTO<List<ExecutionStatus>> getExecutionStatuses() {
     return ResponseDTO.newResponse(executionService.getExecutionStatuses());
+  }
+
+  @GET
+  @Timed
+  @ExceptionMetered
+  @ApiOperation(value = "Gets Step Types to Yaml Type Mapping", nickname = "getStepTypesToYamlTypeMapping")
+  @Path("/step-types")
+  public ResponseDTO<Map<ExecutionNodeType, String>> getStepTypeToYamlTypeMapping() {
+    return ResponseDTO.newResponse(executionService.getStepTypeToYamlTypeMapping());
   }
 }

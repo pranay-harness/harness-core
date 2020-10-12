@@ -11,6 +11,7 @@ import io.harness.cdng.infra.steps.InfrastructureStep;
 import io.harness.cdng.pipeline.CDStage;
 import io.harness.cdng.pipeline.DeploymentStage;
 import io.harness.cdng.pipeline.PipelineInfrastructure;
+import io.harness.cdng.pipeline.steps.NGSectionStep;
 import io.harness.cdng.stepsdependency.constants.OutcomeExpressionConstants;
 import io.harness.cdng.stepsdependency.utils.CDStepDependencyUtils;
 import io.harness.exception.InvalidArgumentsException;
@@ -25,7 +26,6 @@ import io.harness.facilitator.FacilitatorObtainment;
 import io.harness.facilitator.FacilitatorType;
 import io.harness.plan.PlanNode;
 import io.harness.plan.PlanNode.PlanNodeBuilder;
-import io.harness.steps.section.chain.SectionChainStep;
 import io.harness.steps.section.chain.SectionChainStepParameters;
 
 import java.util.Collections;
@@ -81,7 +81,7 @@ public class InfraPlanCreator implements SupportDefinedExecutorPlanCreator<Pipel
         .uuid(infraSectionNodeId)
         .name(PlanCreatorConstants.INFRA_SECTION_NODE_IDENTIFIER)
         .identifier(PlanCreatorConstants.INFRA_SECTION_NODE_IDENTIFIER)
-        .stepType(SectionChainStep.STEP_TYPE)
+        .stepType(NGSectionStep.STEP_TYPE)
         .stepParameters(SectionChainStepParameters.builder().childNodeId(infraStepNode.getUuid()).build())
         .facilitatorObtainment(FacilitatorObtainment.builder()
                                    .type(FacilitatorType.builder().type(FacilitatorType.CHILD_CHAIN).build())

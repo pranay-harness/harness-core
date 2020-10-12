@@ -7,7 +7,7 @@ import io.harness.cdng.manifest.yaml.ManifestConfigWrapper;
 import io.harness.cdng.manifest.yaml.ManifestOverrideSets;
 import io.harness.cdng.service.ServiceSpec;
 import io.harness.cdng.variables.beans.NGVariableOverrideSets;
-import io.harness.cdng.visitor.LevelNodeQualifierName;
+import io.harness.cdng.visitor.YamlTypes;
 import io.harness.cdng.visitor.helpers.serviceconfig.KubernetesServiceSpecVisitorHelper;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.walktree.beans.LevelNode;
@@ -63,6 +63,6 @@ public class KubernetesServiceSpec implements ServiceSpec, Visitable {
 
   @Override
   public LevelNode getLevelNode() {
-    return LevelNode.builder().qualifierName(LevelNodeQualifierName.KUBERNETES_SERVICE_SPEC).build();
+    return LevelNode.builder().qualifierName(YamlTypes.KUBERNETES_SERVICE_SPEC).build();
   }
 }

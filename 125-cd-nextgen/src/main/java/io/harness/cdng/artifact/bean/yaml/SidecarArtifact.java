@@ -8,7 +8,7 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import io.harness.cdng.artifact.bean.ArtifactConfig;
 import io.harness.cdng.artifact.bean.SidecarArtifactWrapper;
-import io.harness.cdng.visitor.LevelNodeQualifierName;
+import io.harness.cdng.visitor.YamlTypes;
 import io.harness.cdng.visitor.helpers.artifact.SidecarArtifactVisitorHelper;
 import io.harness.data.validator.EntityIdentifier;
 import io.harness.delegate.task.artifacts.ArtifactSourceType;
@@ -53,6 +53,6 @@ public class SidecarArtifact implements SidecarArtifactWrapper, Visitable {
 
   @Override
   public LevelNode getLevelNode() {
-    return LevelNode.builder().qualifierName(LevelNodeQualifierName.SIDECAR_ARTIFACT_CONFIG).build();
+    return LevelNode.builder().qualifierName(YamlTypes.SIDECAR_ARTIFACT_CONFIG).build();
   }
 }

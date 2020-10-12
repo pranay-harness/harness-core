@@ -18,7 +18,6 @@ import io.harness.cdng.manifest.yaml.StoreConfig;
 import io.harness.cdng.manifest.yaml.StoreConfigWrapper;
 import io.harness.cdng.manifest.yaml.kinds.K8sManifest;
 import io.harness.cdng.manifest.yaml.kinds.ValuesManifest;
-import io.harness.cdng.pipeline.steps.NGStepTypes;
 import io.harness.cdng.service.beans.ServiceOutcome;
 import io.harness.cdng.stepsdependency.constants.OutcomeExpressionConstants;
 import io.harness.cdng.stepsdependency.utils.CDStepDependencyUtils;
@@ -41,6 +40,7 @@ import io.harness.exception.WingsException;
 import io.harness.execution.status.Status;
 import io.harness.executionplan.stepsdependency.StepDependencyService;
 import io.harness.executionplan.stepsdependency.StepDependencySpec;
+import io.harness.executions.steps.ExecutionNodeType;
 import io.harness.facilitator.PassThroughData;
 import io.harness.facilitator.modes.chain.task.TaskChainExecutable;
 import io.harness.facilitator.modes.chain.task.TaskChainResponse;
@@ -68,7 +68,7 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 public class K8sRollingStep implements Step, TaskChainExecutable<K8sRollingStepParameters> {
-  public static final StepType STEP_TYPE = StepType.builder().type(NGStepTypes.K8S_ROLLING).build();
+  public static final StepType STEP_TYPE = StepType.builder().type(ExecutionNodeType.K8S_ROLLING.getName()).build();
 
   @Inject private EngineExpressionService engineExpressionService;
   @Inject private K8sStepHelper k8sStepHelper;

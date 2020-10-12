@@ -6,7 +6,7 @@ import com.fasterxml.jackson.annotation.JsonTypeName;
 import io.harness.beans.ParameterField;
 import io.harness.cdng.artifact.bean.ArtifactConfig;
 import io.harness.cdng.artifact.utils.ArtifactUtils;
-import io.harness.cdng.visitor.LevelNodeQualifierName;
+import io.harness.cdng.visitor.YamlTypes;
 import io.harness.cdng.visitor.helpers.artifact.GcrArtifactConfigVisitorHelper;
 import io.harness.common.SwaggerConstants;
 import io.harness.data.validator.EntityIdentifier;
@@ -86,6 +86,6 @@ public class GcrArtifactConfig implements ArtifactConfig, Visitable {
 
   @Override
   public LevelNode getLevelNode() {
-    return LevelNode.builder().qualifierName(LevelNodeQualifierName.SPEC).build();
+    return LevelNode.builder().qualifierName(YamlTypes.SPEC).build();
   }
 }

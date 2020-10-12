@@ -1,10 +1,10 @@
 package io.harness.cdng.visitor;
 
 import io.harness.cdng.manifest.ManifestType;
-import io.harness.cdng.pipeline.stepinfo.StepSpecTypeConstants;
+import io.harness.executions.steps.StepSpecTypeConstants;
 import io.harness.walktree.visitor.utilities.VisitorParentPathUtils;
 
-public interface LevelNodeQualifierName {
+public interface YamlTypes {
   String ARTIFACT_SPEC_WRAPPER = "primary";
   String ARTIFACT_LIST_CONFIG = "artifacts";
   String ARTIFACT_OVERRIDE_SETS = "artifactOverrideSets";

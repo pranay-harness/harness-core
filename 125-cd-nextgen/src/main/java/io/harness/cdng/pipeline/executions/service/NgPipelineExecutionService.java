@@ -8,10 +8,12 @@ import io.harness.cdng.pipeline.executions.beans.PipelineExecutionSummaryFilter;
 import io.harness.cdng.service.beans.ServiceOutcome;
 import io.harness.execution.NodeExecution;
 import io.harness.execution.PlanExecution;
+import io.harness.executions.steps.ExecutionNodeType;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
 import java.util.List;
+import java.util.Map;
 import javax.annotation.Nonnull;
 
 public interface NgPipelineExecutionService {
@@ -33,4 +35,6 @@ public interface NgPipelineExecutionService {
       String projectId, String planExecutionId, String nodeExecutionId, ServiceOutcome serviceOutcome);
 
   List<ExecutionStatus> getExecutionStatuses();
+
+  Map<ExecutionNodeType, String> getStepTypeToYamlTypeMapping();
 }

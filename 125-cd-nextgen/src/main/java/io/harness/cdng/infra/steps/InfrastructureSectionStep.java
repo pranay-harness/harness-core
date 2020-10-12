@@ -1,8 +1,8 @@
 package io.harness.cdng.infra.steps;
 
 import io.harness.ambiance.Ambiance;
-import io.harness.cdng.pipeline.steps.NGStepTypes;
 import io.harness.execution.status.Status;
+import io.harness.executions.steps.ExecutionNodeType;
 import io.harness.facilitator.modes.child.ChildExecutable;
 import io.harness.facilitator.modes.child.ChildExecutableResponse;
 import io.harness.state.Step;
@@ -15,7 +15,8 @@ import io.harness.tasks.ResponseData;
 import java.util.Map;
 
 public class InfrastructureSectionStep implements Step, ChildExecutable<SectionStepParameters> {
-  public static final StepType STEP_TYPE = StepType.builder().type(NGStepTypes.INFRASTRUCTURE_SECTION).build();
+  public static final StepType STEP_TYPE =
+      StepType.builder().type(ExecutionNodeType.INFRASTRUCTURE_SECTION.getName()).build();
 
   @Override
   public ChildExecutableResponse obtainChild(

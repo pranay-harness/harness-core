@@ -6,10 +6,9 @@ import io.harness.beans.ParameterField;
 import io.harness.cdng.executionplan.CDStepDependencyKey;
 import io.harness.cdng.executionplan.utils.PlanCreatorFacilitatorUtils;
 import io.harness.cdng.pipeline.CDStepInfo;
-import io.harness.cdng.pipeline.stepinfo.StepSpecTypeConstants;
 import io.harness.cdng.stepsdependency.constants.OutcomeExpressionConstants;
 import io.harness.cdng.stepsdependency.utils.CDStepDependencyUtils;
-import io.harness.cdng.visitor.LevelNodeQualifierName;
+import io.harness.cdng.visitor.YamlTypes;
 import io.harness.cdng.visitor.helpers.cdstepinfo.K8sRollingStepInfoVisitorHelper;
 import io.harness.executionplan.core.ExecutionPlanCreationContext;
 import io.harness.executionplan.stepsdependency.StepDependencyService;
@@ -17,6 +16,7 @@ import io.harness.executionplan.stepsdependency.StepDependencySpec;
 import io.harness.executionplan.stepsdependency.bean.KeyAwareStepDependencySpec;
 import io.harness.executionplan.stepsdependency.instructors.OutcomeRefStepDependencyInstructor;
 import io.harness.executionplan.utils.ParentPathInfoUtils;
+import io.harness.executions.steps.StepSpecTypeConstants;
 import io.harness.state.StepType;
 import io.harness.walktree.beans.LevelNode;
 import io.harness.walktree.visitor.SimpleVisitorHelper;
@@ -95,6 +95,6 @@ public class K8sRollingStepInfo extends K8sRollingStepParameters implements CDSt
 
   @Override
   public LevelNode getLevelNode() {
-    return LevelNode.builder().qualifierName(LevelNodeQualifierName.K8S_ROLLING_DEPLOY).build();
+    return LevelNode.builder().qualifierName(YamlTypes.K8S_ROLLING_DEPLOY).build();
   }
 }

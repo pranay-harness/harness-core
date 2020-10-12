@@ -4,9 +4,10 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import io.harness.cdng.executionplan.utils.PlanCreatorFacilitatorUtils;
 import io.harness.cdng.pipeline.CDStepInfo;
-import io.harness.cdng.visitor.LevelNodeQualifierName;
+import io.harness.cdng.visitor.YamlTypes;
 import io.harness.cdng.visitor.helpers.cdstepinfo.ShellScriptStepInfoVisitorHelper;
 import io.harness.delegate.task.shell.ScriptType;
+import io.harness.executions.steps.StepSpecTypeConstants;
 import io.harness.redesign.states.shell.ShellScriptStep;
 import io.harness.redesign.states.shell.ShellScriptStepParameters;
 import io.harness.state.StepType;
@@ -60,6 +61,6 @@ public class ShellScriptStepInfo extends ShellScriptStepParameters implements CD
 
   @Override
   public LevelNode getLevelNode() {
-    return LevelNode.builder().qualifierName(LevelNodeQualifierName.SHELL_SCRIPT_STEP).build();
+    return LevelNode.builder().qualifierName(YamlTypes.SHELL_SCRIPT_STEP).build();
   }
 }
