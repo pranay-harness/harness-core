@@ -18,7 +18,7 @@ import javax.validation.constraints.Size;
 @Value
 @Builder
 public class FailureStrategy {
-  @NotNull @Size(min = 1) private List<FailureType> failureTypes;
+  @NotNull @Size(min = 1, message = "should not be empty") private List<FailureType> failureTypes;
   private ExecutionScope executionScope;
   private RepairActionCode repairActionCode;
   private int retryCount;
