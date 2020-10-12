@@ -1,6 +1,7 @@
 package io.harness.cdng.pipeline.service;
 
 import static io.harness.exception.WingsException.USER_SRE;
+import static java.lang.String.format;
 import static org.springframework.data.mongodb.core.query.Criteria.where;
 
 import com.google.common.collect.Lists;
@@ -8,8 +9,8 @@ import com.google.inject.Inject;
 
 import io.harness.NGResourceFilterConstants;
 import io.harness.cdng.pipeline.NgPipeline;
-import io.harness.cdng.pipeline.beans.dto.CDPipelineSummaryResponseDTO;
 import io.harness.cdng.pipeline.beans.dto.NGPipelineResponseDTO;
+import io.harness.cdng.pipeline.beans.dto.NGPipelineSummaryResponseDTO;
 import io.harness.cdng.pipeline.beans.entities.NgPipelineEntity;
 import io.harness.cdng.pipeline.beans.entities.NgPipelineEntity.PipelineNGKeys;
 import io.harness.cdng.pipeline.mappers.PipelineDtoMapper;
@@ -33,7 +34,7 @@ import java.util.NoSuchElementException;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
-public class PipelineServiceImpl implements PipelineService {
+public class NGPipelineServiceImpl implements NGPipelineService {
   @Inject PipelineRepository pipelineRepository;
 
   @Override
@@ -47,8 +48,7 @@ public class PipelineServiceImpl implements PipelineService {
     } catch (IOException e) {
       throw new GeneralException("Error while de-serializing pipeline. is this valid Yaml? - " + e.getMessage(), e);
     } catch (DuplicateKeyException ex) {
-      throw new DuplicateFieldException(
-          String.format("Pipeline already exists under project %s ", projectId), USER_SRE, ex);
+      throw new DuplicateFieldException(format("Pipeline already exists under project %s ", projectId), USER_SRE, ex);
     }
   }
 
@@ -75,32 +75,17 @@ public class PipelineServiceImpl implements PipelineService {
   }
 
   @Override
-  public Optional<NGPipelineResponseDTO> getPipeline(
+  public Optional<NGPipelineResponseDTO> getPipelineResponseDTO(
       String pipelineId, String accountId, String orgId, String projectId) {
     NgPipelineEntity pipelineEntity = get(pipelineId, accountId, orgId, projectId);
     return Optional.of(pipelineEntity).map(PipelineDtoMapper::writePipelineDto);
   }
 
   @Override
-  public Page<CDPipelineSummaryResponseDTO> getPipelines(
+  public Page<NGPipelineSummaryResponseDTO> getPipelinesSummary(
       String accountId, String orgId, String projectId, Criteria criteria, Pageable pageable, String searchTerm) {
     // TODO: Remove usage of mongotemplate from here and move to repository
-    criteria = criteria.and(PipelineNGKeys.accountId)
-                   .is(accountId)
-                   .and(PipelineNGKeys.projectIdentifier)
-                   .is(projectId)
-                   .and(PipelineNGKeys.orgIdentifier)
-                   .is(orgId)
-                   .and(PipelineNGKeys.deleted)
-                   .is(false);
-    if (EmptyPredicate.isNotEmpty(searchTerm)) {
-      Criteria searchCriteria = new Criteria().orOperator(
-          where(PipelineNGKeys.identifier).regex(searchTerm, NGResourceFilterConstants.CASE_INSENSITIVE_MONGO_OPTIONS));
-      criteria.andOperator(searchCriteria);
-      // add name and tags in search when they are added to the entity
-    }
-
-    Page<NgPipelineEntity> list = pipelineRepository.findAll(criteria, pageable);
+    Page<NgPipelineEntity> list = listPipelines(accountId, orgId, projectId, criteria, pageable, searchTerm);
     return list.map(PipelineDtoMapper::preparePipelineSummary);
   }
 
@@ -146,5 +131,41 @@ public class PipelineServiceImpl implements PipelineService {
     } else {
       throw new PipelineDoesNotExistException(pipelineId);
     }
+  }
+
+  @Override
+  public NgPipelineEntity getPipeline(String uuid) {
+    // TODO Validate accountId and fix read pipeline code
+    return pipelineRepository.findById(uuid).orElseThrow(
+        () -> new IllegalArgumentException(format("Pipeline id:%s not found", uuid)));
+  }
+
+  @Override
+  public NgPipelineEntity getPipeline(String pipelineId, String accountId, String orgId, String projectId) {
+    return pipelineRepository
+        .findByAccountIdAndOrgIdentifierAndProjectIdentifierAndIdentifierAndDeletedNot(
+            accountId, orgId, projectId, pipelineId, true)
+        .orElseThrow(() -> new IllegalArgumentException(format("Pipeline id:%s not found", pipelineId)));
+  }
+
+  @Override
+  public Page<NgPipelineEntity> listPipelines(
+      String accountId, String orgId, String projectId, Criteria criteria, Pageable pageable, String searchTerm) {
+    criteria = criteria.and(PipelineNGKeys.accountId)
+                   .is(accountId)
+                   .and(PipelineNGKeys.projectIdentifier)
+                   .is(projectId)
+                   .and(PipelineNGKeys.orgIdentifier)
+                   .is(orgId)
+                   .and(PipelineNGKeys.deleted)
+                   .is(false);
+    if (EmptyPredicate.isNotEmpty(searchTerm)) {
+      Criteria searchCriteria = new Criteria().orOperator(
+          where(PipelineNGKeys.identifier).regex(searchTerm, NGResourceFilterConstants.CASE_INSENSITIVE_MONGO_OPTIONS));
+      criteria.andOperator(searchCriteria);
+      // add name and tags in search when they are added to the entity
+    }
+
+    return pipelineRepository.findAll(criteria, pageable);
   }
 }

@@ -11,10 +11,10 @@ import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import io.harness.cdng.pipeline.NgPipeline;
 import io.harness.cdng.pipeline.beans.dto.CDPipelineRequestDTO;
-import io.harness.cdng.pipeline.beans.dto.CDPipelineSummaryResponseDTO;
 import io.harness.cdng.pipeline.beans.dto.NGPipelineResponseDTO;
+import io.harness.cdng.pipeline.beans.dto.NGPipelineSummaryResponseDTO;
 import io.harness.cdng.pipeline.beans.entities.NgPipelineEntity;
-import io.harness.cdng.pipeline.service.PipelineServiceImpl;
+import io.harness.cdng.pipeline.service.NGPipelineService;
 import io.harness.ng.core.RestQueryFilterParser;
 import io.harness.rule.Owner;
 import io.harness.utils.PageTestUtils;
@@ -39,14 +39,14 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
-public class CDNGPipelineResourceTest extends CategoryTest {
-  @Mock PipelineServiceImpl pipelineService;
-  CDNGPipelineResource cdngPipelineResource;
+public class NGPipelineResourceTest extends CategoryTest {
+  @Mock NGPipelineService ngPipelineService;
+  NGPipelineResource ngPipelineResource;
   @Mock RestQueryFilterParser restQueryFilterParser;
   NGPipelineResponseDTO ngPipelineResponseDTO;
   CDPipelineRequestDTO cdPipelineRequestDTO;
   NgPipelineEntity ngPipelineEntity;
-  CDPipelineSummaryResponseDTO cdPipelineSummaryResponseDTO;
+  NGPipelineSummaryResponseDTO ngPipelineSummaryResponseDTO;
 
   private final String ACCOUNT_ID = "account_id";
   private final String ORG_IDENTIFIER = "orgId";
@@ -59,7 +59,7 @@ public class CDNGPipelineResourceTest extends CategoryTest {
     ClassLoader classLoader = this.getClass().getClassLoader();
     File file = new File(classLoader.getResource("k8sPipeline.yaml").getFile());
     NgPipeline ngPipeline = YamlPipelineUtils.read(file.toURL(), NgPipeline.class);
-    cdngPipelineResource = new CDNGPipelineResource(pipelineService, restQueryFilterParser);
+    ngPipelineResource = new NGPipelineResource(ngPipelineService, restQueryFilterParser);
     cdPipelineRequestDTO = CDPipelineRequestDTO.builder().ngPipeline(ngPipeline).build();
     ngPipelineResponseDTO =
         NGPipelineResponseDTO.builder().ngPipeline(ngPipeline).executionsPlaceHolder(new ArrayList<>()).build();
@@ -70,7 +70,7 @@ public class CDNGPipelineResourceTest extends CategoryTest {
                            .identifier(PIPELINE_IDENTIFIER)
                            .ngPipeline(ngPipeline)
                            .build();
-    cdPipelineSummaryResponseDTO = CDPipelineSummaryResponseDTO.builder()
+    ngPipelineSummaryResponseDTO = ngPipelineSummaryResponseDTO.builder()
                                        .identifier("pipelineID")
                                        .name("pipelineName")
                                        .numOfStages(0)
@@ -84,10 +84,11 @@ public class CDNGPipelineResourceTest extends CategoryTest {
   @Category(UnitTests.class)
   public void testGetPipeline() throws IOException {
     doReturn(Optional.of(ngPipelineResponseDTO))
-        .when(pipelineService)
-        .getPipeline(cdPipelineRequestDTO.getNgPipeline().getIdentifier(), ACCOUNT_ID, ORG_IDENTIFIER, PROJ_IDENTIFIER);
+        .when(ngPipelineService)
+        .getPipelineResponseDTO(
+            cdPipelineRequestDTO.getNgPipeline().getIdentifier(), ACCOUNT_ID, ORG_IDENTIFIER, PROJ_IDENTIFIER);
     NGPipelineResponseDTO pipelineResponse =
-        cdngPipelineResource.getPipelineByIdentifier(ACCOUNT_ID, ORG_IDENTIFIER, PROJ_IDENTIFIER, PIPELINE_IDENTIFIER)
+        ngPipelineResource.getPipelineByIdentifier(ACCOUNT_ID, ORG_IDENTIFIER, PROJ_IDENTIFIER, PIPELINE_IDENTIFIER)
             .getData();
     assertThat(pipelineResponse).isNotNull();
     assertThat(pipelineResponse).isEqualTo(ngPipelineResponseDTO);
@@ -100,9 +101,9 @@ public class CDNGPipelineResourceTest extends CategoryTest {
     ClassLoader classLoader = this.getClass().getClassLoader();
     File file = new File(classLoader.getResource("k8sPipeline.yaml").getFile());
     doReturn(ngPipelineEntity.getIdentifier())
-        .when(pipelineService)
+        .when(ngPipelineService)
         .createPipeline(Files.contentOf(file, Charset.defaultCharset()), ACCOUNT_ID, ORG_IDENTIFIER, PROJ_IDENTIFIER);
-    String yamlIdentifierActual = cdngPipelineResource
+    String yamlIdentifierActual = ngPipelineResource
                                       .createPipeline(ACCOUNT_ID, ORG_IDENTIFIER, PROJ_IDENTIFIER,
                                           Files.contentOf(file, Charset.defaultCharset()))
                                       .getData();
@@ -113,30 +114,31 @@ public class CDNGPipelineResourceTest extends CategoryTest {
   @Owner(developers = NAMAN)
   @Category(UnitTests.class)
   public void testGetListOfPipelines() {
-    List<CDPipelineSummaryResponseDTO> emptySummaryResponseList = new ArrayList<>();
+    List<NGPipelineSummaryResponseDTO> emptySummaryResponseList = new ArrayList<>();
     doReturn(PageTestUtils.getPage(emptySummaryResponseList, 0))
-        .when(pipelineService)
-        .getPipelines(anyString(), anyString(), anyString(), any(Criteria.class), any(Pageable.class), anyString());
-    assertThat(
-        cdngPipelineResource.getListOfPipelines(ACCOUNT_ID, ORG_IDENTIFIER, PROJ_IDENTIFIER, "", 10, 10, null, "")
-            .getData()
-            .isEmpty())
+        .when(ngPipelineService)
+        .getPipelinesSummary(
+            anyString(), anyString(), anyString(), any(Criteria.class), any(Pageable.class), anyString());
+    assertThat(ngPipelineResource.getListOfPipelines(ACCOUNT_ID, ORG_IDENTIFIER, PROJ_IDENTIFIER, "", 10, 10, null, "")
+                   .getData()
+                   .isEmpty())
         .isTrue();
 
     Pageable pageable = PageUtils.getPageRequest(0, 10, null);
-    Page<CDPipelineSummaryResponseDTO> summaryResponseDTOs =
-        new PageImpl<>(Collections.singletonList(cdPipelineSummaryResponseDTO), pageable, 1);
+    Page<NGPipelineSummaryResponseDTO> summaryResponseDTOs =
+        new PageImpl<>(Collections.singletonList(ngPipelineSummaryResponseDTO), pageable, 1);
     doReturn(summaryResponseDTOs)
-        .when(pipelineService)
-        .getPipelines(anyString(), anyString(), anyString(), any(Criteria.class), any(Pageable.class), anyString());
+        .when(ngPipelineService)
+        .getPipelinesSummary(
+            anyString(), anyString(), anyString(), any(Criteria.class), any(Pageable.class), anyString());
 
-    List<CDPipelineSummaryResponseDTO> content =
-        cdngPipelineResource.getListOfPipelines(ACCOUNT_ID, ORG_IDENTIFIER, PROJ_IDENTIFIER, "", 10, 10, null, "")
+    List<NGPipelineSummaryResponseDTO> content =
+        ngPipelineResource.getListOfPipelines(ACCOUNT_ID, ORG_IDENTIFIER, PROJ_IDENTIFIER, "", 10, 10, null, "")
             .getData()
             .getContent();
 
     assertThat(content).isNotNull();
     assertThat(content.size()).isEqualTo(1);
-    assertThat(content.get(0)).isEqualTo(cdPipelineSummaryResponseDTO);
+    assertThat(content.get(0)).isEqualTo(ngPipelineSummaryResponseDTO);
   }
 }

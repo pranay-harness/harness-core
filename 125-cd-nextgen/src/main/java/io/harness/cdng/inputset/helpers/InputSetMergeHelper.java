@@ -8,7 +8,7 @@ import io.harness.cdng.inputset.beans.entities.MergeInputSetResponse;
 import io.harness.cdng.inputset.services.InputSetEntityService;
 import io.harness.cdng.pipeline.NgPipeline;
 import io.harness.cdng.pipeline.beans.dto.NGPipelineResponseDTO;
-import io.harness.cdng.pipeline.service.PipelineService;
+import io.harness.cdng.pipeline.service.NGPipelineService;
 import io.harness.exception.InvalidArgumentsException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.ngpipeline.overlayinputset.beans.BaseInputSetEntity;
@@ -38,7 +38,7 @@ import java.util.stream.Collectors;
 @AllArgsConstructor(onConstructor = @__({ @Inject }))
 public class InputSetMergeHelper {
   private final InputSetEntityService inputSetEntityService;
-  private final PipelineService ngPipelineService;
+  private final NGPipelineService ngPipelineService;
   private final SimpleVisitorFactory simpleVisitorFactory;
 
   /**
@@ -115,7 +115,7 @@ public class InputSetMergeHelper {
   public NgPipeline getOriginalOrTemplatePipeline(String accountId, String orgIdentifier, String projectIdentifier,
       String pipelineIdentifier, boolean isTemplateResponse) {
     Optional<NGPipelineResponseDTO> optionalPipeline =
-        ngPipelineService.getPipeline(pipelineIdentifier, accountId, orgIdentifier, projectIdentifier);
+        ngPipelineService.getPipelineResponseDTO(pipelineIdentifier, accountId, orgIdentifier, projectIdentifier);
     if (!optionalPipeline.isPresent()) {
       throw new InvalidRequestException("Pipeline doesn't exist for given identifier: " + pipelineIdentifier);
     }

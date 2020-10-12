@@ -83,6 +83,7 @@ public class CIManagerApplication extends Application<CIManagerConfiguration> {
   private static final Logger logger = org.slf4j.LoggerFactory.getLogger(CIManagerApplication.class);
   private static final String APP_NAME = "CI Manager Service Application";
   public static final String BASE_PACKAGE = "io.harness.app.resources";
+  public static final String NG_PIPELINE_PACKAGE = "io.harness.ng.pipeline.resources";
 
   public static void main(String[] args) throws Exception {
     Runtime.getRuntime().addShutdownHook(new Thread(() -> {
@@ -93,8 +94,11 @@ public class CIManagerApplication extends Application<CIManagerConfiguration> {
   }
 
   public static Collection<Class<?>> getResourceClasses() {
-    Reflections reflections = new Reflections(BASE_PACKAGE);
-    return reflections.getTypesAnnotatedWith(Path.class);
+    Reflections basePackageClasses = new Reflections(BASE_PACKAGE);
+    Set<Class<?>> classSet = basePackageClasses.getTypesAnnotatedWith(Path.class);
+    Reflections pipelinePackageClasses = new Reflections(NG_PIPELINE_PACKAGE);
+    classSet.addAll(pipelinePackageClasses.getTypesAnnotatedWith(Path.class));
+    return classSet;
   }
 
   @Override

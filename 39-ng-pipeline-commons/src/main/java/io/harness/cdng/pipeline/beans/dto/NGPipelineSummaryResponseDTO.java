@@ -14,7 +14,7 @@ import java.util.List;
 @JsonIgnoreProperties(ignoreUnknown = true)
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @ApiModel("NGPipelineSummaryResponse")
-public class CDPipelineSummaryResponseDTO {
+public class NGPipelineSummaryResponseDTO {
   String name;
   String identifier;
   String description;

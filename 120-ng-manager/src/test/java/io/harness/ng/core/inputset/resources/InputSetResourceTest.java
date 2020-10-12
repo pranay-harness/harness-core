@@ -23,7 +23,7 @@ import io.harness.cdng.inputset.mappers.InputSetFilterHelper;
 import io.harness.cdng.inputset.services.impl.InputSetEntityServiceImpl;
 import io.harness.cdng.pipeline.NgPipeline;
 import io.harness.cdng.pipeline.beans.dto.NGPipelineResponseDTO;
-import io.harness.cdng.pipeline.service.PipelineService;
+import io.harness.cdng.pipeline.service.NGPipelineService;
 import io.harness.ngpipeline.overlayinputset.beans.BaseInputSetEntity;
 import io.harness.ngpipeline.overlayinputset.beans.BaseInputSetEntity.BaseInputSetEntityKeys;
 import io.harness.ngpipeline.overlayinputset.beans.InputSetEntityType;
@@ -55,7 +55,7 @@ import java.util.Optional;
 
 public class InputSetResourceTest extends CategoryTest {
   @Mock InputSetEntityServiceImpl inputSetEntityService;
-  @Mock PipelineService ngPipelineService;
+  @Mock NGPipelineService ngPipelineService;
   @Mock InputSetMergeHelper inputSetMergeHelper;
   @Mock InputSetEntityValidationHelper inputSetEntityValidationHelper;
   @InjectMocks InputSetResource inputSetResource;
@@ -279,7 +279,9 @@ public class InputSetResourceTest extends CategoryTest {
   @Owner(developers = NAMAN)
   @Category(UnitTests.class)
   public void testGetTemplateFromPipeline() {
-    doReturn(Optional.of(ngPipelineResponseDTO)).when(ngPipelineService).getPipeline(any(), any(), any(), any());
+    doReturn(Optional.of(ngPipelineResponseDTO))
+        .when(ngPipelineService)
+        .getPipelineResponseDTO(any(), any(), any(), any());
     doReturn("").when(inputSetMergeHelper).getTemplateFromPipeline(pipelineYaml);
 
     String responseTemplateYaml =

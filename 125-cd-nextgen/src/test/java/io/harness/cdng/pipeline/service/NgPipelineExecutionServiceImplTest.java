@@ -71,7 +71,7 @@ public class NgPipelineExecutionServiceImplTest extends CategoryTest {
   @Mock private NodeExecutionService nodeExecutionService;
   @Mock private GraphGenerationService graphGenerationService;
   @Mock private PipelineExecutionRepository pipelineExecutionRepository;
-  @Mock private PipelineService pipelineService;
+  @Mock private NGPipelineService ngPipelineService;
   @Mock private PipelineExecutionHelper pipelineExecutionHelper;
   @InjectMocks
   private final NgPipelineExecutionServiceImpl ngPipelineExecutionService = spy(new NgPipelineExecutionServiceImpl());
@@ -140,7 +140,7 @@ public class NgPipelineExecutionServiceImplTest extends CategoryTest {
     ArgumentCaptor<Criteria> criteriaArgumentCaptor = ArgumentCaptor.forClass(Criteria.class);
     when(pipelineExecutionRepository.findAll(any(Criteria.class), any(Pageable.class)))
         .thenReturn(getPage(emptyList(), 0));
-    when(pipelineService.getPipelineIdentifierToName(any(), anyString(), anyString(), any()))
+    when(ngPipelineService.getPipelineIdentifierToName(any(), anyString(), anyString(), any()))
         .thenReturn(new HashMap<>());
     PipelineExecutionSummaryFilter pipelineExecutionSummaryFilter =
         PipelineExecutionSummaryFilter.builder()
@@ -157,7 +157,7 @@ public class NgPipelineExecutionServiceImplTest extends CategoryTest {
         ACCOUNT_ID, ORG_ID, PROJECT_ID, Pageable.unpaged(), pipelineExecutionSummaryFilter);
 
     verify(pipelineExecutionRepository).findAll(criteriaArgumentCaptor.capture(), any(Pageable.class));
-    verify(pipelineService).getPipelineIdentifierToName(any(), anyString(), anyString(), any());
+    verify(ngPipelineService).getPipelineIdentifierToName(any(), anyString(), anyString(), any());
 
     Criteria criteria = criteriaArgumentCaptor.getValue();
     Document criteriaObject = criteria.getCriteriaObject();

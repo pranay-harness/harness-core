@@ -6,9 +6,9 @@ import com.google.inject.Inject;
 
 import com.codahale.metrics.annotation.ExceptionMetered;
 import com.codahale.metrics.annotation.Timed;
-import io.harness.app.intfc.CIPipelineService;
 import io.harness.beans.executionargs.CIExecutionArgs;
 import io.harness.cdng.pipeline.beans.entities.NgPipelineEntity;
+import io.harness.cdng.pipeline.service.NGPipelineService;
 import io.harness.ci.beans.entities.BuildNumber;
 import io.harness.core.ci.services.BuildNumberService;
 import io.harness.core.trigger.WebhookTriggerProcessor;
@@ -37,7 +37,7 @@ import javax.ws.rs.core.Response;
 @AllArgsConstructor(onConstructor = @__({ @Inject }))
 @Slf4j
 public class CIWebhookTriggerResource {
-  private CIPipelineService ciPipelineService;
+  private NGPipelineService ngPipelineService;
   private CIPipelineExecutionService ciPipelineExecutionService;
   @Inject private SCMGrpc.SCMBlockingStub scmBlockingStub;
   private WebhookTriggerProcessor webhookTriggerProcessor;
@@ -59,7 +59,7 @@ public class CIWebhookTriggerResource {
   public RestResponse<String> runPipelineFromTrigger(
       @PathParam("id") String pipelineId, String eventPayload, @Context HttpHeaders httpHeaders) {
     try {
-      NgPipelineEntity ngPipelineEntity = ciPipelineService.readPipeline(pipelineId);
+      NgPipelineEntity ngPipelineEntity = ngPipelineService.getPipeline(pipelineId);
       BuildNumber buildNumber = buildNumberService.increaseBuildNumber(ngPipelineEntity.getAccountId(),
           ngPipelineEntity.getOrgIdentifier(), ngPipelineEntity.getProjectIdentifier());
       CIExecutionArgs ciExecutionArgs =

@@ -16,6 +16,7 @@ public class CIBuildFilterDTO {
   @NotNull String orgIdentifier;
   @NotNull String projectIdentifier;
   String userIdentifier;
+  String pipelineName;
   String branch;
   List<String> tags;
 }

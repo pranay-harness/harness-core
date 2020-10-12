@@ -9,12 +9,12 @@ import com.google.inject.Singleton;
 
 import io.harness.app.beans.dto.CIBuildFilterDTO;
 import io.harness.app.beans.dto.CIBuildResponseDTO;
-import io.harness.app.beans.dto.CIPipelineFilterDTO;
 import io.harness.app.dao.repositories.CIBuildInfoRepository;
 import io.harness.app.intfc.CIBuildInfoService;
-import io.harness.app.intfc.CIPipelineService;
 import io.harness.app.mappers.BuildDtoMapper;
+import io.harness.cdng.pipeline.NgPipeline.NgPipelineKeys;
 import io.harness.cdng.pipeline.beans.entities.NgPipelineEntity;
+import io.harness.cdng.pipeline.service.NGPipelineService;
 import io.harness.ci.beans.entities.CIBuild;
 import lombok.AllArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -31,7 +31,7 @@ import javax.ws.rs.NotFoundException;
 @Singleton
 @AllArgsConstructor(onConstructor = @__({ @Inject }))
 public class CIBuildInfoServiceImpl implements CIBuildInfoService {
-  @Inject private CIPipelineService ciPipelineService;
+  @Inject private NGPipelineService ngPipelineService;
   private final CIBuildInfoRepository ciBuildInfoRepository;
   private final BuildDtoMapper buildDtoMapper;
   private static final String gitIdAttr = "executionSource.user.gitId";
@@ -45,7 +45,7 @@ public class CIBuildInfoServiceImpl implements CIBuildInfoService {
 
     CIBuild ciBuild = ciBuildOptional.get();
     NgPipelineEntity ngPipelineEntity =
-        ciPipelineService.readPipeline(ciBuild.getPipelineIdentifier(), accountId, orgId, projectId);
+        ngPipelineService.getPipeline(ciBuild.getPipelineIdentifier(), accountId, orgId, projectId);
     return buildDtoMapper.writeBuildDto(ciBuild, ngPipelineEntity);
   }
 
@@ -82,15 +82,20 @@ public class CIBuildInfoServiceImpl implements CIBuildInfoService {
   }
 
   private Map<String, NgPipelineEntity> getPipelines(CIBuildFilterDTO ciBuildFilterDTO) {
-    CIPipelineFilterDTO ciPipelineFilterDTO = CIPipelineFilterDTO.builder()
-                                                  .accountIdentifier(ciBuildFilterDTO.getAccountIdentifier())
-                                                  .orgIdentifier(ciBuildFilterDTO.getOrgIdentifier())
-                                                  .projectIdentifier(ciBuildFilterDTO.getProjectIdentifier())
-                                                  .tags(ciBuildFilterDTO.getTags())
-                                                  .build();
     Map<String, NgPipelineEntity> ngPipelineEntityMap = new HashMap<>();
-    ciPipelineService.getPipelines(ciPipelineFilterDTO)
-        .forEach(ngPipelineEntity -> ngPipelineEntityMap.put(ngPipelineEntity.getIdentifier(), ngPipelineEntity));
+    Criteria criteria = new Criteria();
+    if (isNotBlank(ciBuildFilterDTO.getPipelineName())) {
+      criteria.and(NgPipelineKeys.name).is(ciBuildFilterDTO.getPipelineName());
+    }
+    if (isNotEmpty(ciBuildFilterDTO.getTags())) {
+      criteria.and(NgPipelineKeys.tags).in(ciBuildFilterDTO.getTags());
+    }
+
+    Page<NgPipelineEntity> pipelineEntities =
+        ngPipelineService.listPipelines(ciBuildFilterDTO.getAccountIdentifier(), ciBuildFilterDTO.getOrgIdentifier(),
+            ciBuildFilterDTO.getProjectIdentifier(), criteria, Pageable.unpaged(), null);
+    pipelineEntities.getContent().forEach(
+        ngPipelineEntity -> ngPipelineEntityMap.put(ngPipelineEntity.getIdentifier(), ngPipelineEntity));
     return ngPipelineEntityMap;
   }
 }

@@ -4,14 +4,12 @@ import com.google.inject.Inject;
 
 import com.codahale.metrics.annotation.ExceptionMetered;
 import com.codahale.metrics.annotation.Timed;
-import io.harness.app.intfc.CIPipelineService;
-import io.harness.app.yaml.YAML;
 import io.harness.beans.executionargs.CIExecutionArgs;
 import io.harness.cdng.pipeline.beans.entities.NgPipelineEntity;
+import io.harness.cdng.pipeline.service.NGPipelineService;
 import io.harness.ci.beans.entities.BuildNumber;
 import io.harness.core.ci.services.BuildNumberService;
 import io.harness.impl.CIPipelineExecutionService;
-import io.harness.ng.core.dto.ResponseDTO;
 import io.harness.rest.RestResponse;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
@@ -21,7 +19,6 @@ import org.hibernate.validator.constraints.NotEmpty;
 
 import javax.validation.constraints.NotNull;
 import javax.ws.rs.Consumes;
-import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
@@ -35,35 +32,9 @@ import javax.ws.rs.QueryParam;
 @AllArgsConstructor(onConstructor = @__({ @Inject }))
 @Slf4j
 public class CIPipelineResource {
-  private CIPipelineService ciPipelineService;
+  private NGPipelineService ngPipelineService;
   private CIPipelineExecutionService ciPipelineExecutionService;
   private BuildNumberService buildNumberService;
-
-  @POST
-  @Timed
-  @ExceptionMetered
-  @ApiOperation(value = "Create a CI Pipeline", nickname = "postPipeline")
-  @Path("/pipelines")
-  public RestResponse<String> createPipeline(@NotNull @QueryParam("accountIdentifier") String accountId,
-      @QueryParam("orgIdentifier") String orgId, @NotNull @QueryParam("projectIdentifier") String projectId,
-      @NotNull String yaml) {
-    logger.info("Creating pipeline");
-    NgPipelineEntity ngPipelineEntity = ciPipelineService.createPipelineFromYAML(
-        YAML.builder().pipelineYAML(yaml).build(), accountId, orgId, projectId);
-    return new RestResponse<>(ngPipelineEntity.getUuid());
-  }
-
-  @GET
-  @Timed
-  @ExceptionMetered
-  @ApiOperation(value = "Gets a CI pipeline by identifier", nickname = "getPipeline")
-  @Path("/pipelines/{pipelineIdentifier}")
-  public ResponseDTO<NgPipelineEntity> getPipelineByIdentifier(
-      @NotNull @QueryParam("accountIdentifier") String accountId, @QueryParam("orgIdentifier") String orgId,
-      @QueryParam("projectIdentifier") String projectId, @PathParam("pipelineIdentifier") String pipelineId) {
-    logger.info("Fetching pipeline");
-    return ResponseDTO.newResponse(ciPipelineService.readPipeline(pipelineId, accountId, orgId, projectId));
-  }
 
   @POST
   @Path("/pipelines/{identifier}/run")
@@ -74,9 +45,8 @@ public class CIPipelineResource {
       @QueryParam("orgIdentifier") String orgId, @QueryParam("projectIdentifier") String projectId,
       @PathParam("identifier") @NotEmpty String pipelineId) {
     try {
-      NgPipelineEntity ngPipelineEntity = ciPipelineService.readPipeline(pipelineId, accountId, orgId, projectId);
-      BuildNumber buildNumber = buildNumberService.increaseBuildNumber(ngPipelineEntity.getAccountId(),
-          ngPipelineEntity.getOrgIdentifier(), ngPipelineEntity.getProjectIdentifier());
+      NgPipelineEntity ngPipelineEntity = ngPipelineService.getPipeline(pipelineId, accountId, orgId, projectId);
+      BuildNumber buildNumber = buildNumberService.increaseBuildNumber(accountId, orgId, projectId);
       // TODO create manual execution source
       CIExecutionArgs ciExecutionArgs = CIExecutionArgs.builder().buildNumber(buildNumber).build();
       ciPipelineExecutionService.executePipeline(ngPipelineEntity, ciExecutionArgs, 1L);
