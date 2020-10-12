@@ -1,43 +1,42 @@
-package software.wings.scheduler.account;
+package software.wings.scheduler;
 
-import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.mongo.iterator.MongoPersistenceIterator.SchedulingType.REGULAR;
+import static java.time.Duration.ofHours;
 import static java.time.Duration.ofMinutes;
 import static java.time.Duration.ofSeconds;
 import static software.wings.utils.TimeUtils.isWeekend;
 
 import com.google.inject.Inject;
 
-import io.harness.annotations.dev.OwnedBy;
 import io.harness.iterator.PersistenceIteratorFactory;
 import io.harness.mongo.iterator.MongoPersistenceIterator;
 import io.harness.mongo.iterator.MongoPersistenceIterator.Handler;
 import io.harness.mongo.iterator.filter.MorphiaFilterExpander;
 import io.harness.mongo.iterator.provider.MorphiaPersistenceProvider;
-import software.wings.app.JobsFrequencyConfig;
-import software.wings.beans.Account;
-import software.wings.beans.Account.AccountKeys;
-import software.wings.service.intfc.AccountService;
+import lombok.extern.slf4j.Slf4j;
+import software.wings.beans.DeletedEntity;
+import software.wings.beans.DeletedEntity.DeletedEntityKeys;
+import software.wings.beans.DeletedEntity.DeletedEntityType;
+import software.wings.helpers.ext.account.DeleteAccountHelper;
 
-@OwnedBy(PL)
-public class DeleteAccountHandler implements Handler<Account> {
+@Slf4j
+public class DeletedEntityHandler implements Handler<DeletedEntity> {
   @Inject private PersistenceIteratorFactory persistenceIteratorFactory;
-  @Inject private AccountService accountService;
-  @Inject private JobsFrequencyConfig jobsFrequencyConfig;
-  @Inject private MorphiaPersistenceProvider<Account> persistenceProvider;
+  @Inject private MorphiaPersistenceProvider<DeletedEntity> persistenceProvider;
+  @Inject private DeleteAccountHelper deleteAccountHelper;
 
   public void registerIterators() {
     persistenceIteratorFactory.createPumpIteratorWithDedicatedThreadPool(
         PersistenceIteratorFactory.PumpExecutorOptions.builder()
-            .name("DeleteAccountIterator")
+            .name("DeletedEntityIterator")
             .poolSize(1)
             .interval(ofSeconds(30))
             .build(),
-        DeleteAccountHandler.class,
-        MongoPersistenceIterator.<Account, MorphiaFilterExpander<Account>>builder()
-            .clazz(Account.class)
-            .fieldName(AccountKeys.accountDeletionIteration)
-            .targetInterval(ofMinutes(jobsFrequencyConfig.getAccountDeletionJobFrequencyInMinutes()))
+        DeletedEntityHandler.class,
+        MongoPersistenceIterator.<DeletedEntity, MorphiaFilterExpander<DeletedEntity>>builder()
+            .clazz(DeletedEntity.class)
+            .fieldName(DeletedEntityKeys.nextIteration)
+            .targetInterval(ofHours(12))
             .acceptableNoAlertDelay(ofMinutes(Integer.MAX_VALUE))
             .acceptableExecutionTime(ofSeconds(120))
             .persistenceProvider(persistenceProvider)
@@ -47,10 +46,15 @@ public class DeleteAccountHandler implements Handler<Account> {
   }
 
   @Override
-  public void handle(Account account) {
-    // Delete accounts only on weekend
+  public void handle(DeletedEntity entity) {
+    // handle deleted entities only on weekend
     if (isWeekend()) {
-      accountService.deleteAccount(account.getUuid());
+      DeletedEntityType entityType = entity.getEntityType();
+      if (entityType.equals(DeletedEntityType.ACCOUNT)) {
+        deleteAccountHelper.handleDeletedAccount(entity);
+      } else {
+        logger.error("Unknown entity type: {}", entityType);
+      }
     }
   }
 }

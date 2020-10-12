@@ -5,6 +5,7 @@ import io.harness.mongo.index.CdIndex;
 import io.harness.mongo.index.Field;
 import io.harness.mongo.index.IndexType;
 import io.harness.mongo.index.NgUniqueIndex;
+import io.harness.persistence.AccountAccess;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -40,7 +41,7 @@ import software.wings.beans.template.TemplateVersion.TemplateVersionKeys;
 @EqualsAndHashCode(callSuper = false)
 @Entity(value = "templateVersions", noClassnameStored = true)
 @HarnessEntity(exportable = true)
-public class TemplateVersion extends Base {
+public class TemplateVersion extends Base implements AccountAccess {
   public static final long INITIAL_VERSION = 1;
   public static final String TEMPLATE_UUID_KEY = "templateUuid";
   private String changeType;

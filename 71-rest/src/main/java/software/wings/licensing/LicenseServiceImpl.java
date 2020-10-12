@@ -15,6 +15,7 @@ import io.harness.event.handler.impl.EventPublishHelper;
 import io.harness.exception.InvalidRequestException;
 import lombok.extern.slf4j.Slf4j;
 import org.hibernate.validator.constraints.NotEmpty;
+import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
 import software.wings.app.MainConfiguration;
 import software.wings.beans.Account;
@@ -49,6 +50,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
 /**
  *
@@ -64,10 +66,10 @@ public class LicenseServiceImpl implements LicenseService {
   private static final String EMAIL_BODY_ACCOUNT_ABOUT_TO_EXPIRE = "Customer License is about to Expire";
 
   private static final String TRIAL_EXPIRATION_DAY_0_TEMPLATE = "trial_expiration_day0";
-  private static final String TRIAL_EXPIRATION_DAY_4_TEMPLATE = "trial_expiration_day4";
-  private static final String TRIAL_EXPIRATION_DAY_23_TEMPLATE = "trial_expiration_day23";
-  private static final String TRIAL_EXPIRATION_DAY_29_TEMPLATE = "trial_expiration_day29";
   private static final String TRIAL_EXPIRATION_DAY_30_TEMPLATE = "trial_expiration_day30";
+  private static final String TRIAL_EXPIRATION_DAY_60_TEMPLATE = "trial_expiration_day60";
+  private static final String TRIAL_EXPIRATION_DAY_89_TEMPLATE = "trial_expiration_day89";
+  private static final String TRIAL_EXPIRATION_BEFORE_DELETION_TEMPLATE = "trial_expiration_before_deletion";
 
   private final AccountService accountService;
   private final WingsPersistence wingsPersistence;
@@ -81,6 +83,8 @@ public class LicenseServiceImpl implements LicenseService {
   private final AccountDao accountDao;
   private List<String> trialDefaultContacts;
   private List<String> paidDefaultContacts;
+
+  @Inject private MainConfiguration mainConfiguration;
 
   @Inject
   public LicenseServiceImpl(AccountService accountService, AccountDao accountDao, WingsPersistence wingsPersistence,
@@ -161,10 +165,48 @@ public class LicenseServiceImpl implements LicenseService {
           sendEmailToSales(account, expiryTime, accountType, EMAIL_SUBJECT_ACCOUNT_EXPIRED, EMAIL_BODY_ACCOUNT_EXPIRED,
               accountType.equals(AccountType.PAID) ? paidDefaultContacts : trialDefaultContacts);
         }
+        if (accountType.equals(AccountType.TRIAL) && !AccountStatus.DELETED.equals(accountStatus)
+            && !account.isPovAccount()) {
+          handleTrialAccountExpiration(account, expiryTime);
+        }
       }
     } catch (Exception e) {
       logger.warn("Failed to check license info", e);
     }
+  }
+
+  @VisibleForTesting
+  void handleTrialAccountExpiration(Account account, long expiryTime) {
+    long expiredSinceDays = TimeUnit.MILLISECONDS.toDays(System.currentTimeMillis() - expiryTime);
+    LicenseInfo licenseInfo = account.getLicenseInfo();
+    if (expiredSinceDays >= 90 && !AccountStatus.MARKED_FOR_DELETION.equals(licenseInfo.getAccountStatus())
+        && allRemindersSent(account)) {
+      updateAccountStatusToMarkedForDeletion(account);
+    } else {
+      String templateName = getEmailTemplateName(account, System.currentTimeMillis(), expiryTime);
+      if (templateName != null) {
+        logger.info("Sending trial account expiration email with template name {} to account {}", templateName,
+            account.getUuid());
+        boolean emailSent = sendEmailToAccountAdmin(account.getUuid(), templateName);
+        if (emailSent) {
+          updateLastLicenseExpiryReminderSentAt(account.getUuid(), System.currentTimeMillis());
+        } else {
+          logger.warn("Couldn't send trial expiration email to customer for account {}", account.getUuid());
+        }
+      }
+    }
+  }
+
+  private boolean allRemindersSent(Account account) {
+    List<Long> remindersSentAt = account.getLicenseExpiryRemindersSentAt();
+    return remindersSentAt != null
+        && remindersSentAt.size() >= mainConfiguration.getNumberOfRemindersBeforeAccountDeletion();
+  }
+
+  private void updateAccountStatusToMarkedForDeletion(Account account) {
+    LicenseInfo licenseInfo = account.getLicenseInfo();
+    licenseInfo.setAccountStatus(AccountStatus.MARKED_FOR_DELETION);
+    updateAccountLicense(account.getUuid(), licenseInfo);
   }
 
   @VisibleForTesting
@@ -177,14 +219,14 @@ public class LicenseServiceImpl implements LicenseService {
     if (lastReminderSentSinceDays > 0) {
       if (expiredSinceDays <= 1) {
         templateName = TRIAL_EXPIRATION_DAY_0_TEMPLATE;
-      } else if (expiredSinceDays == 4) {
-        templateName = TRIAL_EXPIRATION_DAY_4_TEMPLATE;
-      } else if (expiredSinceDays == 23) {
-        templateName = TRIAL_EXPIRATION_DAY_23_TEMPLATE;
-      } else if (expiredSinceDays == 29) {
-        templateName = TRIAL_EXPIRATION_DAY_29_TEMPLATE;
       } else if (expiredSinceDays == 30) {
         templateName = TRIAL_EXPIRATION_DAY_30_TEMPLATE;
+      } else if (expiredSinceDays == 60) {
+        templateName = TRIAL_EXPIRATION_DAY_60_TEMPLATE;
+      } else if (expiredSinceDays == 89) {
+        templateName = TRIAL_EXPIRATION_DAY_89_TEMPLATE;
+      } else if (expiredSinceDays >= 90) {
+        templateName = TRIAL_EXPIRATION_BEFORE_DELETION_TEMPLATE;
       }
     }
     return templateName;
@@ -192,7 +234,12 @@ public class LicenseServiceImpl implements LicenseService {
 
   @VisibleForTesting
   void updateLastLicenseExpiryReminderSentAt(String accountId, long time) {
-    wingsPersistence.updateField(Account.class, accountId, AccountKeys.lastLicenseExpiryReminderSentAt, time);
+    Query<Account> query = wingsPersistence.createQuery(Account.class).field(AccountKeys.uuid).equal(accountId);
+    UpdateOperations<Account> updateOperations = wingsPersistence.createUpdateOperations(Account.class);
+    updateOperations.push(AccountKeys.licenseExpiryRemindersSentAt, time);
+    updateOperations.set(AccountKeys.lastLicenseExpiryReminderSentAt, time);
+    wingsPersistence.update(query, updateOperations);
+
     dbCache.invalidate(Account.class, accountId);
   }
 
@@ -261,26 +308,38 @@ public class LicenseServiceImpl implements LicenseService {
    */
   @VisibleForTesting
   boolean sendEmailToAccountAdmin(String accountId, String templateName) {
-    UserGroup adminUserGroup = userGroupService.getAdminUserGroup(accountId);
-    boolean emailSent = false;
-
-    for (String memberId : adminUserGroup.getMemberIds()) {
-      User user = userService.get(memberId);
+    List<User> users = getUsersToSendTrialExpirationReminderTo(accountId);
+    boolean emailSent = users.isEmpty();
+    for (User user : users) {
       String name = !user.getName().isEmpty() ? user.getName() : "there";
       Map<String, String> templateModel = new HashMap<>();
       templateModel.put("name", name);
       EmailData emailData = EmailData.builder()
-                                .to(Arrays.asList(user.getEmail()))
+                                .to(Collections.singletonList(user.getEmail()))
                                 .templateName(templateName)
                                 .templateModel(templateModel)
                                 .accountId(accountId)
                                 .build();
       emailData.setCc(Collections.emptyList());
       emailData.setRetries(3);
-      emailSent = emailSent || emailNotificationService.send(emailData);
+      logger.info("Sending trial expiration reminder for account {} to account admin {}", accountId, user.getEmail());
+      boolean emailSentToAdmin = emailNotificationService.send(emailData);
+      emailSent = emailSent || emailSentToAdmin;
+      logger.info("Trial expiration reminder for account {} sent to account admin {} successfully {}", accountId,
+          user.getEmail(), emailSentToAdmin);
     }
     logger.info("Trial account expiration email with template name {} sent successfully {}", templateName, emailSent);
     return emailSent;
+  }
+
+  private List<User> getUsersToSendTrialExpirationReminderTo(String accountId) {
+    UserGroup adminUserGroup = userGroupService.getAdminUserGroup(accountId);
+    return isEmpty(adminUserGroup.getMemberIds()) ? Collections.emptyList()
+                                                  : adminUserGroup.getMemberIds()
+                                                        .stream()
+                                                        .filter(userService::isUserPresent)
+                                                        .map(userService::get)
+                                                        .collect(Collectors.toList());
   }
 
   @Override

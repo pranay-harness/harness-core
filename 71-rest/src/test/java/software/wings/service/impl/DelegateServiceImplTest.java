@@ -68,7 +68,6 @@ import software.wings.beans.DelegateConnection.DelegateConnectionKeys;
 import software.wings.beans.TaskType;
 import software.wings.features.api.UsageLimitedFeature;
 import software.wings.helpers.ext.mail.EmailData;
-import software.wings.processingcontrollers.DelegateProcessingController;
 import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.AssignDelegateService;
 import software.wings.service.intfc.DelegateSelectionLogsService;
@@ -94,7 +93,6 @@ public class DelegateServiceImplTest extends WingsBaseTest {
   @Mock private AssignDelegateService assignDelegateService;
   @Mock private FeatureFlagService featureFlagService;
   @Mock private DelegateSelectionLogsService delegateSelectionLogsService;
-  @Mock private DelegateProcessingController delegateProcessingController;
   @InjectMocks @Spy private DelegateServiceImpl spydelegateService;
   @Inject private KryoSerializer kryoSerializer;
 
@@ -138,7 +136,6 @@ public class DelegateServiceImplTest extends WingsBaseTest {
               .build());
       new Thread(delegateSyncService).start();
     });
-    when(delegateProcessingController.canProcessAccount(anyString())).thenReturn(true);
     thread.start();
     DelegateResponseData responseData = delegateService.executeTask(delegateTask);
     assertThat(responseData instanceof HttpStateExecutionResponse).isTrue();

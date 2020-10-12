@@ -177,6 +177,7 @@ delegateTasks {"name": "validUntil_1", "background": true, "expireAfterSeconds":
 delegates {"name": "accountId_1", "background": true} {"accountId": 1}
 delegates {"name": "createdAt_1", "background": true} {"createdAt": 1}
 delegates {"name": "validUntil_1", "background": true, "expireAfterSeconds": 0} {"validUntil": 1}
+deletedEntities {"name": "nextIteration_1", "background": true} {"nextIteration": 1}
 deploymentEventQueue {"name": "earliestGet_1", "background": true, "expireAfterSeconds": 86400} {"earliestGet": 1}
 deploymentEventQueue {"name": "next4", "background": true} {"topic": 1, "earliestGet": 1}
 deploymentReconciliation {"name": "accountId_durationEndTs", "background": true} {"accountId": 1, "durationEndTs": 1}
@@ -267,6 +268,7 @@ gcpBillingJobEntity {"name": "accountId_1", "background": true} {"accountId": 1}
 gcpBillingJobEntity {"name": "nextIteration_1", "background": true} {"nextIteration": 1}
 gcpServiceAccount {"name": "no_dup", "unique": true} {"accountId": 1, "serviceAccountId": 1}
 gcpUsageReport {"name": "accountId_startTimestamp_unique_idx", "unique": true} {"accountId": 1, "startTimestamp": 1}
+gcsFileMetadata {"name": "accountId_1", "background": true} {"accountId": 1}
 gcsFileMetadata {"name": "appId_1", "background": true} {"appId": 1}
 gcsFileMetadata {"name": "createdAt_1", "background": true} {"createdAt": 1}
 gcsFileMetadata {"name": "entityId_1", "background": true} {"entityId": 1}
@@ -445,6 +447,7 @@ logMlFeedbackRecords {"name": "logFeedbackUniqueIdx", "unique": true} {"applicat
 logMlFeedbackRecords {"name": "serviceId_1", "background": true} {"serviceId": 1}
 logMlFeedbackRecords {"name": "stateExecutionId_1", "background": true} {"stateExecutionId": 1}
 logMlFeedbackRecords {"name": "workflowExecutionId_1", "background": true} {"workflowExecutionId": 1}
+loginSettings {"name": "accountId_1", "background": true} {"accountId": 1}
 managerConfiguration {"name": "appId_1", "background": true} {"appId": 1}
 managerConfiguration {"name": "createdAt_1", "background": true} {"createdAt": 1}
 manifestFile {"name": "accountId_1", "background": true} {"accountId": 1}
@@ -478,6 +481,7 @@ notificationBatch {"name": "createdAt_1", "background": true} {"createdAt": 1}
 notificationGroups {"name": "appId_1", "background": true} {"appId": 1}
 notificationGroups {"name": "createdAt_1", "background": true} {"createdAt": 1}
 notificationGroups {"name": "yaml", "unique": true} {"accountId": 1, "name": 1}
+notifications {"name": "accountId_1", "background": true} {"accountId": 1}
 notifications {"name": "appId_1", "background": true} {"appId": 1}
 notifications {"name": "createdAt_1", "background": true} {"createdAt": 1}
 notifyQueue {"name": "earliestGet_1", "background": true, "expireAfterSeconds": 86400} {"earliestGet": 1}

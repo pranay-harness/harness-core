@@ -6,9 +6,12 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.iterator.PersistentIterable;
 import io.harness.mongo.EntityProcessController;
 import io.harness.persistence.AccountAccess;
+import lombok.extern.slf4j.Slf4j;
 import software.wings.beans.AccountStatus;
+import software.wings.exception.AccountNotFoundException;
 import software.wings.service.intfc.AccountService;
 
+@Slf4j
 @OwnedBy(PL)
 public class AccountStatusBasedEntityProcessController<T extends PersistentIterable & AccountAccess>
     implements EntityProcessController<T> {
@@ -21,7 +24,14 @@ public class AccountStatusBasedEntityProcessController<T extends PersistentItera
   @Override
   public boolean shouldProcessEntity(T entity) {
     String accountId = entity.getAccountId();
-    String accountStatus = accountService.getAccountStatus(accountId);
+    String accountStatus;
+
+    try {
+      accountStatus = accountService.getAccountStatus(accountId);
+    } catch (AccountNotFoundException ex) {
+      logger.warn("Skipping processing entity. Account {} does not exist", accountId, ex);
+      return false;
+    }
     return AccountStatus.ACTIVE.equals(accountStatus);
   }
 }

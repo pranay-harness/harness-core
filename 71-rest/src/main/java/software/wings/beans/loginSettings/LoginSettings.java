@@ -3,6 +3,7 @@ package software.wings.beans.loginSettings;
 import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.annotation.HarnessEntity;
 import io.harness.beans.EmbeddedUser;
+import io.harness.mongo.index.FdIndex;
 import io.harness.persistence.AccountAccess;
 import io.harness.persistence.PersistentEntity;
 import io.harness.persistence.UpdatedAtAware;
@@ -25,7 +26,7 @@ import javax.validation.constraints.NotNull;
 public class LoginSettings implements PersistentEntity, UuidAware, UpdatedAtAware, UpdatedByAware, AccountAccess {
   @Id @NotNull @SchemaIgnore private String uuid;
 
-  @NotNull private String accountId;
+  @FdIndex @NotNull private String accountId;
   @SchemaIgnore private EmbeddedUser lastUpdatedBy;
   @SchemaIgnore private long lastUpdatedAt;
 

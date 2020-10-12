@@ -59,6 +59,7 @@ executionLogStorageMode: MONGO
 fileStorageMode: MONGO
 clusterName: ""
 bugsnagApiKey: ""
+numberOfRemindersBeforeAccountDeletion: 3
 
 jobsFrequencyConfig:
   accountLicenseCheckJobFrequencyInMinutes: 60

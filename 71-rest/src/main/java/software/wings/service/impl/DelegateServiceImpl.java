@@ -26,7 +26,6 @@ import static io.harness.delegate.message.ManagerMessageConstants.MIGRATE;
 import static io.harness.delegate.message.ManagerMessageConstants.SELF_DESTRUCT;
 import static io.harness.delegate.message.ManagerMessageConstants.USE_CDN;
 import static io.harness.delegate.message.ManagerMessageConstants.USE_STORAGE_PROXY;
-import static io.harness.eraro.ErrorCode.ACCOUNT_DISABLED;
 import static io.harness.eraro.ErrorCode.USAGE_LIMITS_EXCEEDED;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.govern.Switch.noop;
@@ -120,7 +119,6 @@ import io.harness.delegate.task.DelegateLogContext;
 import io.harness.delegate.task.TaskLogContext;
 import io.harness.delegate.task.TaskParameters;
 import io.harness.environment.SystemEnvironment;
-import io.harness.eraro.Level;
 import io.harness.event.handler.impl.EventPublishHelper;
 import io.harness.exception.CriticalExpressionEvaluationException;
 import io.harness.exception.ExceptionUtils;
@@ -203,7 +201,6 @@ import software.wings.core.managerConfiguration.ConfigurationController;
 import software.wings.delegatetasks.delegatecapability.CapabilityHelper;
 import software.wings.delegatetasks.validation.DelegateConnectionResult;
 import software.wings.dl.WingsPersistence;
-import software.wings.exception.AccountDisabledException;
 import software.wings.expression.ManagerPreExecutionExpressionEvaluator;
 import software.wings.expression.SecretFunctor;
 import software.wings.expression.SecretManagerFunctor;
@@ -217,7 +214,6 @@ import software.wings.helpers.ext.pcf.request.PcfRunPluginCommandRequest;
 import software.wings.helpers.ext.url.SubdomainUrlHelperIntfc;
 import software.wings.jre.JreConfig;
 import software.wings.licensing.LicenseService;
-import software.wings.processingcontrollers.DelegateProcessingController;
 import software.wings.service.impl.EventEmitter.Channel;
 import software.wings.service.impl.artifact.ArtifactCollectionUtils;
 import software.wings.service.impl.infra.InfraDownloadService;
@@ -340,7 +336,6 @@ public class DelegateServiceImpl implements DelegateService {
   @Inject private ConfigurationController configurationController;
   @Inject private DelegateSelectionLogsService delegateSelectionLogsService;
   @Inject private DelegateConnectionDao delegateConnectionDao;
-  @Inject private DelegateProcessingController delegateProcessingController;
   @Inject private SystemEnvironment sysenv;
   @Inject private DelegateSyncService delegateSyncService;
   @Inject private DelegateTaskService delegateTaskService;
@@ -1939,10 +1934,6 @@ public class DelegateServiceImpl implements DelegateService {
 
   @Override
   public String queueTask(DelegateTask task) {
-    if (!delegateProcessingController.canProcessAccount(task.getAccountId())) {
-      throw new AccountDisabledException(
-          "Account is disabled. Delegates cannot execute tasks", null, ACCOUNT_DISABLED, Level.ERROR, USER, null);
-    }
     task.getData().setAsync(true);
     if (task.getUuid() == null) {
       task.setUuid(generateUuid());
@@ -1986,10 +1977,6 @@ public class DelegateServiceImpl implements DelegateService {
 
   @Override
   public <T extends DelegateResponseData> T executeTask(DelegateTask task) {
-    if (!delegateProcessingController.canProcessAccount(task.getAccountId())) {
-      throw new AccountDisabledException(
-          "Account is disabled. Delegates cannot execute tasks", null, ACCOUNT_DISABLED, Level.ERROR, USER, null);
-    }
     scheduleSyncTask(task);
     return delegateSyncService.waitForTask(
         task.getUuid(), task.calcDescription(), Duration.ofMillis(task.getData().getTimeout()));
@@ -2097,11 +2084,6 @@ public class DelegateServiceImpl implements DelegateService {
 
   @Override
   public String queueParkedTask(String accountId, String taskId) {
-    if (!delegateProcessingController.canProcessAccount(accountId)) {
-      throw new AccountDisabledException(
-          "Account is disabled. Delegates cannot execute tasks", null, ACCOUNT_DISABLED, Level.ERROR, USER, null);
-    }
-
     DelegateTask task = wingsPersistence.createQuery(DelegateTask.class)
                             .filter(DelegateTaskKeys.accountId, accountId)
                             .filter(DelegateTaskKeys.uuid, taskId)

@@ -182,10 +182,12 @@ import software.wings.notification.EmailNotificationListener;
 import software.wings.prune.PruneEntityListener;
 import software.wings.resources.AppResource;
 import software.wings.scheduler.AccountPasswordExpirationJob;
+import software.wings.scheduler.DeletedEntityHandler;
 import software.wings.scheduler.InstancesPurgeJob;
 import software.wings.scheduler.UsageMetricsHandler;
 import software.wings.scheduler.VaultSecretManagerRenewalHandler;
 import software.wings.scheduler.YamlChangeSetPruneJob;
+import software.wings.scheduler.account.DeleteAccountHandler;
 import software.wings.scheduler.account.LicenseCheckHandler;
 import software.wings.scheduler.approval.ApprovalPollingHandler;
 import software.wings.scheduler.audit.EntityAuditRecordHandler;
@@ -894,7 +896,9 @@ public class WingsApplication extends Application<MainConfiguration> {
     injector.getInstance(io.harness.steps.barriers.service.BarrierServiceImpl.class).registerIterators();
     injector.getInstance(CeLicenseExpiryHandler.class).registerIterators();
     injector.getInstance(ResourceRestraintPersistenceMonitor.class).registerIterators();
+    injector.getInstance(DeleteAccountHandler.class).registerIterators();
     injector.getInstance(TimeoutEngine.class).registerIterators();
+    injector.getInstance(DeletedEntityHandler.class).registerIterators();
   }
 
   private void registerCronJobs(Injector injector) {

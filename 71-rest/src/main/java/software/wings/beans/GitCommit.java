@@ -8,6 +8,7 @@ import io.harness.mongo.index.FdIndex;
 import io.harness.mongo.index.Field;
 import io.harness.mongo.index.IndexType;
 import io.harness.mongo.index.NgUniqueIndex;
+import io.harness.persistence.AccountAccess;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -49,7 +50,7 @@ import java.util.List;
                , @Field(value = GitCommitKeys.createdAt, type = IndexType.DESC), })
 @HarnessEntity(exportable = true)
 @FieldNameConstants(innerTypeName = "GitCommitKeys")
-public class GitCommit extends Base {
+public class GitCommit extends Base implements AccountAccess {
   private String accountId;
   private String yamlGitConfigId;
   private String commitId;

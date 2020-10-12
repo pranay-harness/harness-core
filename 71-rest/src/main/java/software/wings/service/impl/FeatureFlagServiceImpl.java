@@ -87,13 +87,6 @@ public class FeatureFlagServiceImpl implements FeatureFlagService {
       featureFlag.setAccountIds(Sets.newHashSet());
     }
 
-    // cannot update if it is globally enabled
-    if (featureFlag.isEnabled()) {
-      logger.info("Feature flag is enabled globally, disable it first to enable or disable for account.");
-      throw new InvalidRequestException(
-          "Feature flag is enabled globally, cannot enable/disable for account " + accountId);
-    }
-
     if (enabled) {
       featureFlag.getAccountIds().add(accountId);
     } else {

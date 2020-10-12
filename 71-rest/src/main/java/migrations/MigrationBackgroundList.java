@@ -58,6 +58,7 @@ import migrations.all.DeleteInvalidServiceGuardConfigs;
 import migrations.all.DeleteOrphanNotificationGroups;
 import migrations.all.DeleteStaleSlackConfigs;
 import migrations.all.DeleteStaleThirdPartyApiCallLogsMigration;
+import migrations.all.DeletedAccountStatusMigration;
 import migrations.all.DisableServiceGuardsWithDeletedConnectorsMigration;
 import migrations.all.ExplodeLogMLFeedbackRecordsMigration;
 import migrations.all.FetchAndSaveAccounts;
@@ -71,6 +72,7 @@ import migrations.all.InitServiceCounters;
 import migrations.all.InitWorkflowCounters;
 import migrations.all.InvalidCVConfigDeletionMigration;
 import migrations.all.K8sStatesTimeoutMigration;
+import migrations.all.LicenseExpiryReminderTimeMigration;
 import migrations.all.LogAnalysisAddExecutionIdMigration;
 import migrations.all.LogAnalysisBaselineMigration;
 import migrations.all.MarkSendMailFlagAsTrueInUserGroup;
@@ -290,6 +292,8 @@ public class MigrationBackgroundList {
         .add(Pair.of(175, BaseMigration.class))
         .add(Pair.of(176, AddAccountIdToStateExecutionInstance.class))
         .add(Pair.of(177, AddAccountIdToStateMachine.class))
+        .add(Pair.of(178, DeletedAccountStatusMigration.class))
+        .add(Pair.of(179, LicenseExpiryReminderTimeMigration.class))
         .build();
   }
 }
