@@ -111,19 +111,25 @@ public class BillingTrendStatsDataFetcher extends AbstractStatsDataFetcherWithAg
     int previousEfficiencyScore;
     int efficiencyTrend = BillingStatsDefaultKeys.EFFICIENCY_SCORE_TREND;
 
-    if (currentBillingAmount.getTotalCostData() != null
-        && currentBillingAmount.getTotalCostData().getCost().compareTo(BigDecimal.ZERO) > 0
-        && currentBillingAmount.getIdleCostData() != null && currentBillingAmount.getUnallocatedCostData() != null) {
-      QLStatsBreakdownInfo currentCostStats =
-          QLStatsBreakdownInfo.builder()
-              .idle(currentBillingAmount.getIdleCostData().getCost())
-              .total(currentBillingAmount.getTotalCostData().getCost())
-              .unallocated(currentBillingAmount.getUnallocatedCostData().getCost())
-              .utilized(currentBillingAmount.getTotalCostData()
-                            .getCost()
-                            .subtract(currentBillingAmount.getUnallocatedCostData().getCost())
-                            .subtract(currentBillingAmount.getIdleCostData().getCost()))
-              .build();
+    if (currentBillingAmount.getTotalCostData() != null && currentBillingAmount.getIdleCostData() != null
+        && currentBillingAmount.getTotalCostData().getCost().compareTo(BigDecimal.ZERO) > 0) {
+      BigDecimal unallocatedCost;
+
+      if (currentBillingAmount.getUnallocatedCostData() == null) {
+        unallocatedCost = BigDecimal.ZERO;
+      } else {
+        unallocatedCost = currentBillingAmount.getUnallocatedCostData().getCost();
+      }
+      BigDecimal utilized = currentBillingAmount.getTotalCostData()
+                                .getCost()
+                                .subtract(currentBillingAmount.getIdleCostData().getCost())
+                                .subtract(unallocatedCost);
+      QLStatsBreakdownInfo currentCostStats = QLStatsBreakdownInfo.builder()
+                                                  .idle(currentBillingAmount.getIdleCostData().getCost())
+                                                  .total(currentBillingAmount.getTotalCostData().getCost())
+                                                  .unallocated(unallocatedCost)
+                                                  .utilized(utilized)
+                                                  .build();
 
       currentEfficiencyScore = billingDataHelper.calculateEfficiencyScore(currentCostStats);
     }
@@ -133,20 +139,26 @@ public class BillingTrendStatsDataFetcher extends AbstractStatsDataFetcherWithAg
     QLTrendStatsCostData prevBillingAmountData = getBillingAmountData(accountId, aggregateFunction, trendFilters);
 
     if (prevBillingAmountData != null && prevBillingAmountData.getTotalCostData() != null
-        && prevBillingAmountData.getIdleCostData() != null && prevBillingAmountData.getUnallocatedCostData() != null
-        && prevBillingAmountData.getTotalCostData().getCost().compareTo(BigDecimal.ZERO) > 0
-        && prevBillingAmountData.getIdleCostData().getCost().compareTo(BigDecimal.ZERO) >= 0
-        && prevBillingAmountData.getUnallocatedCostData().getCost().compareTo(BigDecimal.ZERO) >= 0) {
-      QLStatsBreakdownInfo previousCostStats =
-          QLStatsBreakdownInfo.builder()
-              .idle(prevBillingAmountData.getIdleCostData().getCost())
-              .total(prevBillingAmountData.getTotalCostData().getCost())
-              .unallocated(prevBillingAmountData.getUnallocatedCostData().getCost())
-              .utilized(prevBillingAmountData.getTotalCostData()
-                            .getCost()
-                            .subtract(prevBillingAmountData.getUnallocatedCostData().getCost())
-                            .subtract(prevBillingAmountData.getIdleCostData().getCost()))
-              .build();
+        && prevBillingAmountData.getIdleCostData() != null
+        && prevBillingAmountData.getTotalCostData().getCost().compareTo(BigDecimal.ZERO) > 0) {
+      BigDecimal unallocatedCost;
+
+      if (prevBillingAmountData.getUnallocatedCostData() == null) {
+        unallocatedCost = BigDecimal.ZERO;
+      } else {
+        unallocatedCost = prevBillingAmountData.getUnallocatedCostData().getCost();
+      }
+      BigDecimal utilized = prevBillingAmountData.getTotalCostData()
+                                .getCost()
+                                .subtract(prevBillingAmountData.getIdleCostData().getCost())
+                                .subtract(unallocatedCost);
+
+      QLStatsBreakdownInfo previousCostStats = QLStatsBreakdownInfo.builder()
+                                                   .idle(prevBillingAmountData.getIdleCostData().getCost())
+                                                   .total(prevBillingAmountData.getTotalCostData().getCost())
+                                                   .unallocated(unallocatedCost)
+                                                   .utilized(utilized)
+                                                   .build();
 
       previousEfficiencyScore = billingDataHelper.calculateEfficiencyScore(previousCostStats);
       if (previousEfficiencyScore > 0) {
