@@ -12,10 +12,10 @@ import static software.wings.service.impl.WebHookServiceImpl.X_GIT_HUB_EVENT;
 
 import com.google.inject.Inject;
 
-import io.harness.app.intfc.CIPipelineService;
 import io.harness.app.resources.CIWebhookTriggerResource;
 import io.harness.category.element.UnitTests;
 import io.harness.cdng.pipeline.beans.entities.NgPipelineEntity;
+import io.harness.cdng.pipeline.service.NGPipelineService;
 import io.harness.core.trigger.WebhookTriggerProcessor;
 import io.harness.core.trigger.WebhookTriggerProcessorUtils;
 import io.harness.impl.CIPipelineExecutionService;
@@ -36,7 +36,7 @@ import javax.ws.rs.core.MultivaluedHashMap;
 import javax.ws.rs.core.MultivaluedMap;
 
 public class WebhookExecutionTest extends CIManagerTest {
-  @Mock private CIPipelineService ciPipelineService;
+  @Mock private NGPipelineService ngPipelineService;
   @Mock private CIPipelineExecutionService ciPipelineExecutionService;
   @Mock private WebhookTriggerProcessorUtils webhookTriggerProcessorUtils;
   @Inject private WebhookTriggerProcessor webhookTriggerProcessor;
@@ -49,7 +49,7 @@ public class WebhookExecutionTest extends CIManagerTest {
   public void setup() {
     MockitoAnnotations.initMocks(this);
     on(webhookTriggerResource).set("webhookTriggerProcessor", webhookTriggerProcessor);
-    on(webhookTriggerResource).set("ciPipelineService", ciPipelineService);
+    on(webhookTriggerResource).set("ngPipelineService", ngPipelineService);
     on(webhookTriggerResource).set("ciPipelineExecutionService", ciPipelineExecutionService);
     on(webhookTriggerProcessor).set("webhookTriggerProcessorUtils", webhookTriggerProcessorUtils);
   }
@@ -62,7 +62,7 @@ public class WebhookExecutionTest extends CIManagerTest {
     ClassLoader classLoader = getClass().getClassLoader();
     NgPipelineEntity ngPipelineEntity = getPipeline();
     File file = new File(classLoader.getResource("github_pull_request.json").getFile());
-    when(ciPipelineService.readPipeline(PIPELINE_ID)).thenReturn(ngPipelineEntity);
+    when(ngPipelineService.getPipeline(PIPELINE_ID)).thenReturn(ngPipelineEntity);
     when(httpHeaders.getRequestHeaders()).thenReturn(headersMultiMap);
     when(httpHeaders.getHeaderString(X_GIT_HUB_EVENT)).thenReturn("push");
 

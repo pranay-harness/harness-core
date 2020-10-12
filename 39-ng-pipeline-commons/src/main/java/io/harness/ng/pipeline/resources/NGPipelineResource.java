@@ -7,9 +7,9 @@ import com.google.inject.Inject;
 import io.harness.NGCommonEntityConstants;
 import io.harness.NGResourceFilterConstants;
 import io.harness.cdng.pipeline.NgPipeline;
-import io.harness.cdng.pipeline.beans.dto.CDPipelineSummaryResponseDTO;
 import io.harness.cdng.pipeline.beans.dto.NGPipelineResponseDTO;
-import io.harness.cdng.pipeline.service.PipelineService;
+import io.harness.cdng.pipeline.beans.dto.NGPipelineSummaryResponseDTO;
+import io.harness.cdng.pipeline.service.NGPipelineService;
 import io.harness.ng.core.RestQueryFilterParser;
 import io.harness.ng.core.dto.ErrorDTO;
 import io.harness.ng.core.dto.FailureDTO;
@@ -51,8 +51,8 @@ import javax.ws.rs.QueryParam;
       , @ApiResponse(code = 500, response = ErrorDTO.class, message = "Internal server error")
     })
 @Slf4j
-public class CDNGPipelineResource {
-  private final PipelineService ngPipelineService;
+public class NGPipelineResource {
+  private final NGPipelineService ngPipelineService;
   private final RestQueryFilterParser restQueryFilterParser;
 
   @GET
@@ -64,12 +64,13 @@ public class CDNGPipelineResource {
       @NotNull @QueryParam(NGCommonEntityConstants.PROJECT_KEY) String projectId,
       @PathParam(NGCommonEntityConstants.PIPELINE_KEY) String pipelineId) {
     logger.info("Get pipeline");
-    return ResponseDTO.newResponse(ngPipelineService.getPipeline(pipelineId, accountId, orgId, projectId).orElse(null));
+    return ResponseDTO.newResponse(
+        ngPipelineService.getPipelineResponseDTO(pipelineId, accountId, orgId, projectId).orElse(null));
   }
 
   @GET
   @ApiOperation(value = "Gets Pipeline list", nickname = "getPipelineList")
-  public ResponseDTO<Page<CDPipelineSummaryResponseDTO>> getListOfPipelines(
+  public ResponseDTO<Page<NGPipelineSummaryResponseDTO>> getListOfPipelines(
       @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountId,
       @NotNull @QueryParam(NGCommonEntityConstants.ORG_KEY) String orgId,
       @NotNull @QueryParam(NGCommonEntityConstants.PROJECT_KEY) String projectId,
@@ -78,7 +79,7 @@ public class CDNGPipelineResource {
       @QueryParam(NGResourceFilterConstants.SEARCH_TERM_KEY) String searchTerm) {
     logger.info("Get List of pipelines");
     Criteria criteria = restQueryFilterParser.getCriteriaFromFilterQuery(filterQuery, NgPipeline.class);
-    Page<CDPipelineSummaryResponseDTO> pipelines = ngPipelineService.getPipelines(
+    Page<NGPipelineSummaryResponseDTO> pipelines = ngPipelineService.getPipelinesSummary(
         accountId, orgId, projectId, criteria, getPageRequest(page, size, sort), searchTerm);
     return ResponseDTO.newResponse(pipelines);
   }

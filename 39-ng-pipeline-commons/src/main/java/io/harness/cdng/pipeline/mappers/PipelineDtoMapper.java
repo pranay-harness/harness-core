@@ -1,7 +1,7 @@
 package io.harness.cdng.pipeline.mappers;
 
 import io.harness.cdng.pipeline.NgPipeline;
-import io.harness.cdng.pipeline.beans.dto.CDPipelineSummaryResponseDTO;
+import io.harness.cdng.pipeline.beans.dto.NGPipelineSummaryResponseDTO;
 import io.harness.cdng.pipeline.beans.dto.NGPipelineResponseDTO;
 import io.harness.cdng.pipeline.beans.entities.NgPipelineEntity;
 import io.harness.yaml.core.ParallelStageElement;
@@ -34,8 +34,8 @@ public class PipelineDtoMapper {
         .executionsPlaceHolder(new ArrayList<>())
         .build();
   }
-  public CDPipelineSummaryResponseDTO preparePipelineSummary(NgPipelineEntity ngPipelineEntity) {
-    return CDPipelineSummaryResponseDTO.builder()
+  public NGPipelineSummaryResponseDTO preparePipelineSummary(NgPipelineEntity ngPipelineEntity) {
+    return NGPipelineSummaryResponseDTO.builder()
         .identifier(ngPipelineEntity.getIdentifier())
         .description((String) ngPipelineEntity.getNgPipeline().getDescription().getJsonFieldValue())
         .name(ngPipelineEntity.getNgPipeline().getName())

@@ -14,8 +14,8 @@ import io.harness.cdng.inputset.services.impl.InputSetEntityServiceImpl;
 import io.harness.cdng.pipeline.executions.registries.StageTypeToStageExecutionMapperRegistryModule;
 import io.harness.cdng.pipeline.executions.service.NgPipelineExecutionService;
 import io.harness.cdng.pipeline.executions.service.NgPipelineExecutionServiceImpl;
-import io.harness.cdng.pipeline.service.PipelineService;
-import io.harness.cdng.pipeline.service.PipelineServiceImpl;
+import io.harness.cdng.pipeline.service.NGPipelineService;
+import io.harness.cdng.pipeline.service.NGPipelineServiceImpl;
 import io.harness.ng.core.NGCoreModule;
 import io.harness.registrars.NGStageTypeToStageExecutionSummaryMapperRegistrar;
 import io.harness.registrars.OrchestrationExecutionEventHandlerRegistrar;
@@ -42,7 +42,7 @@ public class NGModule extends AbstractModule {
     install(StageTypeToStageExecutionMapperRegistryModule.getInstance());
 
     bind(ArtifactSourceService.class).to(ArtifactSourceServiceImpl.class);
-    bind(PipelineService.class).to(PipelineServiceImpl.class);
+    bind(NGPipelineService.class).to(NGPipelineServiceImpl.class);
     bind(NgPipelineExecutionService.class).to(NgPipelineExecutionServiceImpl.class);
     bind(DockerResourceService.class).to(DockerResourceServiceImpl.class);
     bind(InputSetEntityService.class).to(InputSetEntityServiceImpl.class);

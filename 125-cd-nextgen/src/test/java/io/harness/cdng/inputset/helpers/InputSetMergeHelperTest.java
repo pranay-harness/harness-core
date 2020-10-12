@@ -12,7 +12,7 @@ import io.harness.cdng.inputset.beans.entities.InputSetEntity;
 import io.harness.cdng.inputset.beans.entities.MergeInputSetResponse;
 import io.harness.cdng.inputset.mappers.InputSetElementMapper;
 import io.harness.cdng.inputset.services.InputSetEntityService;
-import io.harness.cdng.pipeline.service.PipelineService;
+import io.harness.cdng.pipeline.service.NGPipelineService;
 import io.harness.ngpipeline.overlayinputset.beans.entities.OverlayInputSetEntity;
 import io.harness.rule.Owner;
 import io.harness.rule.OwnerRule;
@@ -31,7 +31,7 @@ import java.util.stream.Stream;
 
 public class InputSetMergeHelperTest extends CDNGBaseTest {
   @Inject InputSetMergeHelper inputSetMergeHelper;
-  @Inject PipelineService ngPipelineService;
+  @Inject NGPipelineService ngPipelineService;
   @Inject InputSetEntityService inputSetEntityService;
 
   private final String ACCOUNT_ID = "accountId";

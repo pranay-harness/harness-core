@@ -1274,6 +1274,7 @@ maven_install(
         "org.yaml:snakeyaml:1.26",
         "org.zeroturnaround:zt-exec:1.9",
         "ru.vyarus:guice-validator:1.2.0",
+        "com.github.rutledgepaulv:rest-query-engine:0.7.1",
         #            "net.rcarz:jira-client:0.9-SNAPSHOT",
     ],
     maven_install_json = "//:maven_install.json",

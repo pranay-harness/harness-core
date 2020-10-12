@@ -17,10 +17,10 @@ import static org.mockito.Mockito.when;
 import io.harness.app.beans.dto.CIBuildFilterDTO;
 import io.harness.app.beans.dto.CIBuildResponseDTO;
 import io.harness.app.dao.repositories.CIBuildInfoRepository;
-import io.harness.app.intfc.CIPipelineService;
 import io.harness.app.mappers.BuildDtoMapper;
 import io.harness.category.element.UnitTests;
 import io.harness.cdng.pipeline.beans.entities.NgPipelineEntity;
+import io.harness.cdng.pipeline.service.NGPipelineService;
 import io.harness.ci.beans.entities.CIBuild;
 import io.harness.rule.Owner;
 import org.junit.Test;
@@ -28,6 +28,7 @@ import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 
@@ -38,7 +39,7 @@ import javax.ws.rs.NotFoundException;
 public class CIBuildInfoServiceImplTest extends CIManagerTest {
   @Mock private CIBuildInfoRepository ciBuildInfoRepository;
   @Mock private BuildDtoMapper buildDtoMapper;
-  @Mock private CIPipelineService ciPipelineService;
+  @Mock private NGPipelineService ngPipelineService;
   @InjectMocks CIBuildInfoServiceImpl ciBuildInfoService;
 
   @Test(expected = NotFoundException.class)
@@ -60,7 +61,7 @@ public class CIBuildInfoServiceImplTest extends CIManagerTest {
     CIBuildResponseDTO ciBuildResponseDTO = getBasicBuildDTO();
     when(ciBuildInfoRepository.getBuildById(ACCOUNT_ID, ORG_ID, PROJECT_ID, BUILD_ID))
         .thenReturn(Optional.ofNullable(ciBuild));
-    when(ciPipelineService.readPipeline(PIPELINE_ID, ACCOUNT_ID, ORG_ID, PROJECT_ID)).thenReturn(ngPipelineEntity);
+    when(ngPipelineService.getPipeline(PIPELINE_ID, ACCOUNT_ID, ORG_ID, PROJECT_ID)).thenReturn(ngPipelineEntity);
     when(buildDtoMapper.writeBuildDto(ciBuild, ngPipelineEntity)).thenReturn(ciBuildResponseDTO);
     CIBuildResponseDTO responseDTO = ciBuildInfoService.getBuild(BUILD_ID, ACCOUNT_ID, ORG_ID, PROJECT_ID);
     assertEquals(responseDTO.getId(), BUILD_ID);
@@ -73,7 +74,8 @@ public class CIBuildInfoServiceImplTest extends CIManagerTest {
   public void getBuilds() {
     CIBuildFilterDTO ciBuildFilterDTO = CIBuildFilterDTO.builder().build();
     Pageable pageable = PageRequest.of(1, 5);
-    when(ciPipelineService.getPipelines(any())).thenReturn(Arrays.asList(getPipeline()));
+    when(ngPipelineService.listPipelines(any(), any(), any(), any(), any(), any()))
+        .thenReturn(new PageImpl(Arrays.asList(getPipeline())));
     when(ciBuildInfoRepository.getBuilds(any(), any())).thenReturn(Page.empty());
     Page<CIBuildResponseDTO> responseDTO = ciBuildInfoService.getBuilds(ciBuildFilterDTO, pageable);
     assertEquals(responseDTO.getTotalElements(), 0);
@@ -85,7 +87,8 @@ public class CIBuildInfoServiceImplTest extends CIManagerTest {
   public void getBuildsWithFilters() {
     CIBuildFilterDTO ciBuildFilterDTO = getBuildFilter();
     Pageable pageable = PageRequest.of(1, 5);
-    when(ciPipelineService.getPipelines(any())).thenReturn(Arrays.asList(getPipeline()));
+    when(ngPipelineService.listPipelines(any(), any(), any(), any(), any(), any()))
+        .thenReturn(new PageImpl(Arrays.asList(getPipeline())));
     when(ciBuildInfoRepository.getBuilds(any(), any())).thenReturn(Page.empty());
     Page<CIBuildResponseDTO> responseDTO = ciBuildInfoService.getBuilds(ciBuildFilterDTO, pageable);
     assertEquals(responseDTO.getTotalElements(), 0);

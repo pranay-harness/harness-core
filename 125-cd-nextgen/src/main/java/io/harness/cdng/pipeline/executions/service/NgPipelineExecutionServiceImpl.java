@@ -21,7 +21,7 @@ import io.harness.cdng.pipeline.executions.beans.PipelineExecutionSummaryFilter;
 import io.harness.cdng.pipeline.executions.beans.ServiceExecutionSummary;
 import io.harness.cdng.pipeline.executions.repositories.PipelineExecutionRepository;
 import io.harness.cdng.pipeline.mappers.ExecutionToDtoMapper;
-import io.harness.cdng.pipeline.service.PipelineService;
+import io.harness.cdng.pipeline.service.NGPipelineService;
 import io.harness.cdng.service.beans.ServiceOutcome;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.dto.OrchestrationGraphDTO;
@@ -57,7 +57,7 @@ public class NgPipelineExecutionServiceImpl implements NgPipelineExecutionServic
   @Inject private NodeExecutionService nodeExecutionService;
   @Inject private GraphGenerationService graphGenerationService;
   @Inject private PipelineExecutionHelper pipelineExecutionHelper;
-  @Inject private PipelineService pipelineService;
+  @Inject private NGPipelineService ngPipelineService;
 
   @Override
   public Page<PipelineExecutionSummary> getExecutions(String accountId, String orgId, String projectId,
@@ -74,7 +74,7 @@ public class NgPipelineExecutionServiceImpl implements NgPipelineExecutionServic
                                            .map(PipelineExecutionSummary::getPipelineIdentifier)
                                            .collect(Collectors.toList());
     Map<String, String> pipelineIdentifierToNameMap =
-        pipelineService.getPipelineIdentifierToName(accountId, orgId, projectId, pipelineIdentifiers);
+        ngPipelineService.getPipelineIdentifierToName(accountId, orgId, projectId, pipelineIdentifiers);
     pipelineExecutionSummaries.get().forEach(pipelineExecutionSummary
         -> pipelineExecutionSummary.setPipelineName(
             pipelineIdentifierToNameMap.get(pipelineExecutionSummary.getPipelineIdentifier())));

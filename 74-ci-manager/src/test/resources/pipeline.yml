@@ -1,6 +1,7 @@
 pipeline:
   identifier: cipipeline
   name: Integration Pipeline
+  description: testDescription
   stages:
   - stage:
       identifier: masterBuildUpload

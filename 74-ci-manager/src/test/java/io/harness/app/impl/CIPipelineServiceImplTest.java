@@ -10,12 +10,12 @@ import static org.mockito.Mockito.when;
 import com.google.inject.Inject;
 
 import io.harness.app.beans.dto.CIPipelineFilterDTO;
-import io.harness.app.yaml.YAML;
 import io.harness.beans.ParameterField;
 import io.harness.beans.stages.IntegrationStage;
 import io.harness.category.element.UnitTests;
 import io.harness.cdng.pipeline.NgPipeline;
 import io.harness.cdng.pipeline.beans.entities.NgPipelineEntity;
+import io.harness.cdng.pipeline.service.NGPipelineService;
 import io.harness.ngpipeline.pipeline.repository.PipelineRepository;
 import io.harness.rule.Owner;
 import io.harness.yaml.core.ExecutionElement;
@@ -26,6 +26,9 @@ import org.junit.experimental.categories.Category;
 import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.mongodb.core.query.Criteria;
 
 import java.util.Arrays;
 import java.util.List;
@@ -35,22 +38,21 @@ import java.util.Scanner;
 
 public class CIPipelineServiceImplTest extends CIManagerTest {
   @Mock private PipelineRepository pipelineRepository;
-  @InjectMocks @Inject CIPipelineServiceImpl ciPipelineService;
+  @InjectMocks @Inject NGPipelineService ngPipelineService;
   private final String ACCOUNT_ID = "ACCOUNT_ID";
   private final String ORG_ID = "ORG_ID";
   private final String PROJECT_ID = "PROJECT_ID";
   private final String TAG = "foo";
-  private YAML yaml;
+  private String inputYaml;
   private NgPipelineEntity pipeline;
 
   @Before
   public void setUp() {
-    String yamlString = new Scanner(
+    inputYaml = new Scanner(
         Objects.requireNonNull(this.getClass().getClassLoader().getResourceAsStream("pipeline.yml")), "UTF-8")
-                            .useDelimiter("\\A")
-                            .next();
+                    .useDelimiter("\\A")
+                    .next();
 
-    yaml = YAML.builder().pipelineYAML(yamlString).build();
     pipeline =
         NgPipelineEntity.builder()
             .identifier("testIdentifier")
@@ -76,7 +78,7 @@ public class CIPipelineServiceImplTest extends CIManagerTest {
     when(pipelineRepository.save(any(NgPipelineEntity.class))).thenReturn(pipeline);
     when(pipelineRepository.findById("testId")).thenReturn(Optional.ofNullable(pipeline));
 
-    ciPipelineService.createPipelineFromYAML(yaml, ACCOUNT_ID, ORG_ID, PROJECT_ID);
+    ngPipelineService.createPipeline(inputYaml, ACCOUNT_ID, ORG_ID, PROJECT_ID);
 
     verify(pipelineRepository).save(pipelineCaptor.capture());
     NgPipelineEntity ngPipelineEntity = pipelineCaptor.getValue();
@@ -107,13 +109,12 @@ public class CIPipelineServiceImplTest extends CIManagerTest {
     when(pipelineRepository.save(any(NgPipelineEntity.class))).thenReturn(pipeline);
     when(pipelineRepository.findById("testId")).thenReturn(Optional.ofNullable(pipeline));
 
-    ciPipelineService.createPipeline(pipeline);
+    ngPipelineService.createPipeline(inputYaml, ACCOUNT_ID, ORG_ID, PROJECT_ID);
 
     verify(pipelineRepository).save(pipelineCaptor.capture());
     NgPipelineEntity pipelineEntity = pipelineCaptor.getValue();
-    assertThat(pipelineEntity.getIdentifier()).isEqualTo("testIdentifier");
+    assertThat(pipelineEntity.getIdentifier()).isEqualTo("cipipeline");
     assertThat(pipelineEntity.getNgPipeline().getDescription().getValue()).isEqualTo("testDescription");
-    assertThat(pipelineEntity.getUuid()).isEqualTo("testUUID");
   }
 
   @Test
@@ -124,11 +125,10 @@ public class CIPipelineServiceImplTest extends CIManagerTest {
              ACCOUNT_ID, ORG_ID, PROJECT_ID, "testId", true))
         .thenReturn(Optional.ofNullable(pipeline));
 
-    NgPipelineEntity ngPipelineEntity = ciPipelineService.readPipeline("testId", ACCOUNT_ID, ORG_ID, PROJECT_ID);
+    NgPipelineEntity ngPipelineEntity = ngPipelineService.getPipeline("testId", ACCOUNT_ID, ORG_ID, PROJECT_ID);
 
     assertThat(ngPipelineEntity.getIdentifier()).isEqualTo("testIdentifier");
     assertThat(ngPipelineEntity.getNgPipeline().getDescription().getValue()).isEqualTo("testDescription");
-    assertThat(ngPipelineEntity.getUuid()).isEqualTo("testUUID");
   }
 
   @Test
@@ -136,12 +136,16 @@ public class CIPipelineServiceImplTest extends CIManagerTest {
   @Category(UnitTests.class)
   public void getPipelines() {
     CIPipelineFilterDTO ciPipelineFilterDTO = getPipelineFilter();
-    when(pipelineRepository.findAllWithCriteria(any())).thenReturn(Arrays.asList(pipeline));
+    when(pipelineRepository.findAll(any(), any())).thenReturn(new PageImpl<>(Arrays.asList(pipeline)));
 
-    List<NgPipelineEntity> ngPipelineEntityList = ciPipelineService.getPipelines(ciPipelineFilterDTO);
-    assertThat(ngPipelineEntityList).isNotEmpty();
+    List<NgPipelineEntity> pipelineEntities =
+        ngPipelineService
+            .listPipelines(ciPipelineFilterDTO.getAccountIdentifier(), ciPipelineFilterDTO.getOrgIdentifier(),
+                ciPipelineFilterDTO.getProjectIdentifier(), new Criteria(), Pageable.unpaged(), null)
+            .getContent();
+    assertThat(pipelineEntities).isNotEmpty();
 
-    NgPipelineEntity ngPipelineEntity = ngPipelineEntityList.get(0);
+    NgPipelineEntity ngPipelineEntity = pipelineEntities.get(0);
     assertThat(ngPipelineEntity.getIdentifier()).isEqualTo("testIdentifier");
     assertThat(ngPipelineEntity.getNgPipeline().getDescription().getValue()).isEqualTo("testDescription");
     assertThat(ngPipelineEntity.getUuid()).isEqualTo("testUUID");
