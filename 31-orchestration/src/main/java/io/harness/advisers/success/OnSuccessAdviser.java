@@ -15,16 +15,17 @@ import io.harness.annotations.dev.OwnedBy;
 
 @OwnedBy(CDC)
 @Redesign
-public class OnSuccessAdviser implements Adviser {
+public class OnSuccessAdviser implements Adviser<OnSuccessAdviserParameters> {
   public static final AdviserType ADVISER_TYPE = AdviserType.builder().type(AdviserType.ON_SUCCESS).build();
 
   @Override
-  public Advise onAdviseEvent(AdvisingEvent advisingEvent) {
-    if (!positiveStatuses().contains(advisingEvent.getToStatus())) {
-      return null;
-    }
-    OnSuccessAdviserParameters parameters =
-        (OnSuccessAdviserParameters) Preconditions.checkNotNull(advisingEvent.getAdviserParameters());
+  public Advise onAdviseEvent(AdvisingEvent<OnSuccessAdviserParameters> advisingEvent) {
+    OnSuccessAdviserParameters parameters = Preconditions.checkNotNull(advisingEvent.getAdviserParameters());
     return NextStepAdvise.builder().nextNodeId(parameters.getNextNodeId()).build();
+  }
+
+  @Override
+  public boolean canAdvise(AdvisingEvent<OnSuccessAdviserParameters> advisingEvent) {
+    return positiveStatuses().contains(advisingEvent.getToStatus());
   }
 }

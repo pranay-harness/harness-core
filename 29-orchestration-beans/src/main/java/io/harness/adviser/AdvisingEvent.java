@@ -18,10 +18,10 @@ import java.util.List;
 @Value
 @Builder
 @Redesign
-public class AdvisingEvent {
+public class AdvisingEvent<T extends AdviserParameters> {
   @NonNull Ambiance ambiance;
   List<StepOutcomeRef> stepOutcomeRef;
-  AdviserParameters adviserParameters;
+  T adviserParameters;
   Status toStatus;
   Status fromStatus;
   FailureInfo failureInfo;
