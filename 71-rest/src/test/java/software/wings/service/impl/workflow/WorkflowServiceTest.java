@@ -807,7 +807,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
   public void deleteWorkflowExecutionInProgress() {
     Workflow workflow = createCustomWorkflow();
     String uuid = workflow.getUuid();
-    when(workflowExecutionService.workflowExecutionsRunning(WorkflowType.ORCHESTRATION, APP_ID, uuid)).thenReturn(true);
+    when(workflowExecutionService.runningExecutionsPresent(APP_ID, uuid)).thenReturn(true);
     when(pipelineService.listPipelines(any(PageRequest.class))).thenReturn(aPageResponse().build());
     workflowService.deleteWorkflow(APP_ID, uuid);
     workflow = workflowService.readWorkflow(APP_ID, uuid, null);
