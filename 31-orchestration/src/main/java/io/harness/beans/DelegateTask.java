@@ -2,16 +2,17 @@ package io.harness.beans;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 
+import com.google.common.collect.ImmutableList;
+
 import io.harness.annotation.HarnessEntity;
-import io.harness.beans.DelegateTask.DelegateTaskKeys;
 import io.harness.delegate.beans.DelegateTaskRank;
 import io.harness.delegate.beans.TaskData;
 import io.harness.delegate.beans.TaskData.TaskDataKeys;
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import io.harness.delegate.task.HDelegateTask;
-import io.harness.mongo.index.CdIndex;
+import io.harness.mongo.index.CompoundMongoIndex;
 import io.harness.mongo.index.FdTtlIndex;
-import io.harness.mongo.index.Field;
+import io.harness.mongo.index.MongoIndex;
 import io.harness.persistence.AccountAccess;
 import io.harness.persistence.CreatedAtAware;
 import io.harness.persistence.PersistentEntity;
@@ -23,6 +24,7 @@ import lombok.Builder.Default;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.Singular;
+import lombok.experimental.FieldNameConstants;
 import lombok.experimental.UtilityClass;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Entity;
@@ -41,22 +43,33 @@ import javax.validation.constraints.NotNull;
 @EqualsAndHashCode(exclude = {"uuid", "createdAt", "lastUpdatedAt", "validUntil"})
 @Entity(value = "delegateTasks", noClassnameStored = true)
 @HarnessEntity(exportable = false)
-@CdIndex(name = "index", fields = { @Field(DelegateTaskKeys.status)
-                                    , @Field(DelegateTaskKeys.expiry) })
-@CdIndex(name = "rebroadcast",
-    fields =
-    {
-      @Field(DelegateTaskKeys.version)
-      , @Field(DelegateTaskKeys.status), @Field(DelegateTaskKeys.delegateId), @Field(DelegateTaskKeys.nextBroadcast)
-    })
-@CdIndex(name = "pulling",
-    fields =
-    {
-      @Field(DelegateTaskKeys.accountId)
-      , @Field(DelegateTaskKeys.status), @Field("data.async"), @Field(DelegateTaskKeys.expiry),
-    })
+@FieldNameConstants(innerTypeName = "DelegateTaskKeys")
 public class DelegateTask
     implements PersistentEntity, UuidAware, CreatedAtAware, UpdatedAtAware, AccountAccess, HDelegateTask {
+  public static List<MongoIndex> mongoIndexes() {
+    return ImmutableList.<MongoIndex>builder()
+        .add(CompoundMongoIndex.builder()
+                 .name("index")
+                 .field(DelegateTaskKeys.status)
+                 .field(DelegateTaskKeys.expiry)
+                 .build())
+        .add(CompoundMongoIndex.builder()
+                 .name("rebroadcast")
+                 .field(DelegateTaskKeys.version)
+                 .field(DelegateTaskKeys.status)
+                 .field(DelegateTaskKeys.delegateId)
+                 .field(DelegateTaskKeys.nextBroadcast)
+                 .build())
+        .add(CompoundMongoIndex.builder()
+                 .name("pulling")
+                 .field(DelegateTaskKeys.accountId)
+                 .field(DelegateTaskKeys.status)
+                 .field(DelegateTaskKeys.data_async)
+                 .field(DelegateTaskKeys.expiry)
+                 .build())
+        .build();
+  }
+
   // TODO: this is temporary to propagate if the compatibility framework is enabled for particular task
   private boolean capabilityFrameworkEnabled;
 
@@ -183,34 +196,6 @@ public class DelegateTask
 
   @UtilityClass
   public static final class DelegateTaskKeys {
-    public static final String capabilityFrameworkEnabled = "capabilityFrameworkEnabled";
-    public static final String data = "data";
-    public static final String executionCapabilities = "executionCapabilities";
-    public static final String uuid = "uuid";
-    public static final String accountId = "accountId";
-    public static final String driverId = "driverId";
-    public static final String rank = "rank";
-    public static final String description = "description";
-    public static final String selectionLogsTrackingEnabled = "selectionLogsTrackingEnabled";
-    public static final String workflowExecutionId = "workflowExecutionId";
-    public static final String setupAbstractions = "setupAbstractions";
-    public static final String version = "version";
-    public static final String tags = "tags";
-    public static final String waitId = "waitId";
-    public static final String createdAt = "createdAt";
-    public static final String lastUpdatedAt = "lastUpdatedAt";
-    public static final String status = "status";
-    public static final String validationStartedAt = "validationStartedAt";
-    public static final String validatingDelegateIds = "validatingDelegateIds";
-    public static final String validationCompleteDelegateIds = "validationCompleteDelegateIds";
-    public static final String delegateId = "delegateId";
-    public static final String preAssignedDelegateId = "preAssignedDelegateId";
-    public static final String alreadyTriedDelegates = "alreadyTriedDelegates";
-    public static final String lastBroadcastAt = "lastBroadcastAt";
-    public static final String broadcastCount = "broadcastCount";
-    public static final String nextBroadcast = "nextBroadcast";
-    public static final String expiry = "expiry";
-    public static final String validUntil = "validUntil";
     public static final String data_parameters = data + "." + TaskDataKeys.parameters;
     public static final String data_taskType = data + "." + TaskDataKeys.taskType;
     public static final String data_timeout = data + "." + TaskDataKeys.timeout;
