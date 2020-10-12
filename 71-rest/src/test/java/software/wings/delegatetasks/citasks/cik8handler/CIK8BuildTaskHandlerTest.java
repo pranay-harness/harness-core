@@ -17,6 +17,8 @@ import static software.wings.delegatetasks.citasks.cik8handler.CIK8BuildTaskHand
 import static software.wings.delegatetasks.citasks.cik8handler.CIK8BuildTaskHandlerTestHelper.getCustomVarSecret;
 import static software.wings.delegatetasks.citasks.cik8handler.CIK8BuildTaskHandlerTestHelper.getEncryptedDetails;
 import static software.wings.delegatetasks.citasks.cik8handler.CIK8BuildTaskHandlerTestHelper.getPublishArtifactSecrets;
+import static software.wings.helpers.ext.k8s.response.PodStatus.Status.ERROR;
+import static software.wings.helpers.ext.k8s.response.PodStatus.Status.RUNNING;
 
 import io.fabric8.kubernetes.api.model.PodBuilder;
 import io.fabric8.kubernetes.api.model.Secret;
@@ -42,6 +44,7 @@ import software.wings.beans.ci.pod.ImageDetailsWithConnector;
 import software.wings.beans.ci.pod.PodParams;
 import software.wings.delegatetasks.citasks.cik8handler.pod.CIK8PodSpecBuilder;
 import software.wings.helpers.ext.k8s.response.K8sTaskExecutionResponse;
+import software.wings.helpers.ext.k8s.response.PodStatus;
 import software.wings.service.intfc.security.EncryptionService;
 
 import java.io.UnsupportedEncodingException;
@@ -148,7 +151,7 @@ public class CIK8BuildTaskHandlerTest extends WingsBaseTest {
     when(kubeCtlHandler.createPod(kubernetesClient, podBuilder.build(), namespace)).thenReturn(podBuilder.build());
     when(kubeCtlHandler.waitUntilPodIsReady(
              kubernetesClient, cik8BuildTaskParams.getCik8PodParams().getName(), namespace))
-        .thenReturn(false);
+        .thenReturn(PodStatus.builder().status(ERROR).build());
 
     K8sTaskExecutionResponse response = cik8BuildTaskHandler.executeTaskInternal(cik8BuildTaskParams);
     assertEquals(CommandExecutionStatus.FAILURE, response.getCommandExecutionStatus());
@@ -173,7 +176,7 @@ public class CIK8BuildTaskHandlerTest extends WingsBaseTest {
     when(kubeCtlHandler.createPod(kubernetesClient, podBuilder.build(), namespace)).thenReturn(podBuilder.build());
     when(kubeCtlHandler.waitUntilPodIsReady(
              kubernetesClient, cik8BuildTaskParams.getCik8PodParams().getName(), namespace))
-        .thenReturn(false);
+        .thenReturn(PodStatus.builder().status(ERROR).build());
 
     K8sTaskExecutionResponse response = cik8BuildTaskHandler.executeTaskInternal(cik8BuildTaskParams);
     assertEquals(CommandExecutionStatus.FAILURE, response.getCommandExecutionStatus());
@@ -211,7 +214,7 @@ public class CIK8BuildTaskHandlerTest extends WingsBaseTest {
     when(kubeCtlHandler.createPod(kubernetesClient, podBuilder.build(), namespace)).thenReturn(podBuilder.build());
     when(kubeCtlHandler.waitUntilPodIsReady(
              kubernetesClient, cik8BuildTaskParams.getCik8PodParams().getName(), namespace))
-        .thenReturn(true);
+        .thenReturn(PodStatus.builder().status(RUNNING).build());
     K8sTaskExecutionResponse response = cik8BuildTaskHandler.executeTaskInternal(cik8BuildTaskParams);
     assertEquals(CommandExecutionStatus.SUCCESS, response.getCommandExecutionStatus());
   }
@@ -253,7 +256,7 @@ public class CIK8BuildTaskHandlerTest extends WingsBaseTest {
     when(kubeCtlHandler.createPod(kubernetesClient, podBuilder.build(), namespace)).thenReturn(podBuilder.build());
     when(kubeCtlHandler.waitUntilPodIsReady(
              kubernetesClient, cik8BuildTaskParams.getCik8PodParams().getName(), namespace))
-        .thenReturn(true);
+        .thenReturn(PodStatus.builder().status(RUNNING).build());
     K8sTaskExecutionResponse response = cik8BuildTaskHandler.executeTaskInternal(cik8BuildTaskParams);
     assertEquals(CommandExecutionStatus.SUCCESS, response.getCommandExecutionStatus());
   }

@@ -32,6 +32,7 @@ import software.wings.beans.ci.pod.EncryptedVariableWithType;
 import software.wings.beans.ci.pod.ImageDetailsWithConnector;
 import software.wings.beans.ci.pod.SecretParams;
 import software.wings.delegatetasks.citasks.cik8handler.params.CIConstants;
+import software.wings.helpers.ext.k8s.response.PodStatus;
 
 import java.io.ByteArrayOutputStream;
 import java.io.UnsupportedEncodingException;
@@ -39,6 +40,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeoutException;
+import java.util.stream.Collectors;
 
 /**
  * Helper class to interact with K8 cluster for CRUD operation on K8 entities.
@@ -128,7 +130,7 @@ public class CIK8CtlHandler {
   }
 
   // Waits for the pod to exit PENDING state and returns true if pod is in RUNNING state, else false.
-  public boolean waitUntilPodIsReady(KubernetesClient kubernetesClient, String podName, String namespace)
+  public PodStatus waitUntilPodIsReady(KubernetesClient kubernetesClient, String podName, String namespace)
       throws InterruptedException, TimeoutException {
     int waitTimeSec = 0;
     while (waitTimeSec < POD_MAX_WAIT_UNTIL_READY_SECS) {
@@ -137,8 +139,16 @@ public class CIK8CtlHandler {
         throw new PodNotFoundException(format("Pod %s is not present in namespace %s", podName, namespace));
       }
 
-      if (!isPodInPendingState(pod)) {
-        return isPodInRunningState(pod);
+      if (isPodInRunningState(pod)) {
+        return PodStatus.builder().status(PodStatus.Status.RUNNING).build();
+      } else if (!isPodInPendingState(pod)) {
+        List<String> posStatusLogs = pod.getStatus()
+                                         .getConditions()
+                                         .stream()
+                                         .filter(condition -> condition != null)
+                                         .map(condition -> condition.getMessage())
+                                         .collect(Collectors.toList());
+        return PodStatus.builder().status(PodStatus.Status.ERROR).errorMessage(String.join(" ", posStatusLogs)).build();
       }
 
       sleeper.sleep((long) (POD_WAIT_UNTIL_READY_SLEEP_SECS * 1000));
