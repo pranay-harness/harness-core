@@ -23,17 +23,14 @@ import java.util.Map;
 
 @OwnedBy(CDC)
 @Redesign
-public class HttpResponseCodeSwitchAdviser implements Adviser {
+public class HttpResponseCodeSwitchAdviser implements Adviser<HttpResponseCodeSwitchAdviserParameters> {
   public static final AdviserType ADVISER_TYPE = AdviserType.builder().type("HTTP_RESPONSE_CODE_SWITCH").build();
   @Inject private OutcomeService outcomeService;
 
   @Override
-  public Advise onAdviseEvent(AdvisingEvent advisingEvent) {
-    if (!positiveStatuses().contains(advisingEvent.getToStatus())) {
-      return null;
-    }
+  public Advise onAdviseEvent(AdvisingEvent<HttpResponseCodeSwitchAdviserParameters> advisingEvent) {
     HttpResponseCodeSwitchAdviserParameters parameters =
-        (HttpResponseCodeSwitchAdviserParameters) Preconditions.checkNotNull(advisingEvent.getAdviserParameters());
+        Preconditions.checkNotNull(advisingEvent.getAdviserParameters());
     // This will be changed to obtain via output type
     Outcome outcome = outcomeService.fetchOutcome(advisingEvent.getStepOutcomeRef()
                                                       .stream()
@@ -53,5 +50,10 @@ public class HttpResponseCodeSwitchAdviser implements Adviser {
       throw new InvalidRequestException(
           "Not able to process Response For response code: " + httpStateExecutionData.getHttpResponseCode());
     }
+  }
+
+  @Override
+  public boolean canAdvise(AdvisingEvent<HttpResponseCodeSwitchAdviserParameters> advisingEvent) {
+    return positiveStatuses().contains(advisingEvent.getToStatus());
   }
 }

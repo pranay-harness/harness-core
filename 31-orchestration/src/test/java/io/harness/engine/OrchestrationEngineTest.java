@@ -232,6 +232,11 @@ public class OrchestrationEngineTest extends OrchestrationTestBase {
     public Advise onAdviseEvent(AdvisingEvent advisingEvent) {
       return null;
     }
+
+    @Override
+    public boolean canAdvise(AdvisingEvent advisingEvent) {
+      return false;
+    }
   }
 
   private static class TestSyncStep implements Step, SyncExecutable {

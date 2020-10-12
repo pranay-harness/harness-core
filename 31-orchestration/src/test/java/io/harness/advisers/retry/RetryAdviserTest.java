@@ -11,18 +11,21 @@ import com.google.inject.Inject;
 import io.harness.OrchestrationTestBase;
 import io.harness.adviser.Advise;
 import io.harness.adviser.AdvisingEvent;
+import io.harness.adviser.AdvisingEvent.AdvisingEventBuilder;
 import io.harness.adviser.advise.NextStepAdvise;
 import io.harness.adviser.advise.RetryAdvise;
 import io.harness.ambiance.Ambiance;
 import io.harness.ambiance.Level;
 import io.harness.category.element.UnitTests;
 import io.harness.engine.executions.node.NodeExecutionService;
+import io.harness.exception.FailureType;
 import io.harness.execution.NodeExecution;
 import io.harness.execution.status.Status;
 import io.harness.interrupts.RepairActionCode;
 import io.harness.plan.PlanNode;
 import io.harness.rule.Owner;
 import io.harness.state.StepType;
+import io.harness.state.io.FailureInfo;
 import io.harness.utils.AmbianceTestUtils;
 import org.junit.Before;
 import org.junit.Test;
@@ -31,6 +34,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 
 import java.util.Arrays;
+import java.util.EnumSet;
 
 public class RetryAdviserTest extends OrchestrationTestBase {
   public static final String DUMMY_NODE_ID = generateUuid();
@@ -60,16 +64,6 @@ public class RetryAdviserTest extends OrchestrationTestBase {
   @Test
   @Owner(developers = PRASHANT)
   @Category(UnitTests.class)
-  public void shouldTestInvalidStatus() {
-    AdvisingEvent advisingEvent =
-        AdvisingEvent.builder().ambiance(AmbianceTestUtils.buildAmbiance()).toStatus(Status.SUCCEEDED).build();
-    Advise advise = retryAdviser.onAdviseEvent(advisingEvent);
-    assertThat(advise).isNull();
-  }
-
-  @Test
-  @Owner(developers = PRASHANT)
-  @Category(UnitTests.class)
   public void shouldTestValidStatus() {
     NodeExecution nodeExecution = NodeExecution.builder()
                                       .uuid(NODE_EXECUTION_ID)
@@ -84,11 +78,11 @@ public class RetryAdviserTest extends OrchestrationTestBase {
                                       .status(Status.FAILED)
                                       .build();
     when(nodeExecutionService.get(ambiance.obtainCurrentRuntimeId())).thenReturn(nodeExecution);
-    AdvisingEvent advisingEvent = AdvisingEvent.builder()
-                                      .ambiance(ambiance)
-                                      .toStatus(Status.FAILED)
-                                      .adviserParameters(getRetryParamsWithIgnore())
-                                      .build();
+    AdvisingEvent<RetryAdviserParameters> advisingEvent = AdvisingEvent.<RetryAdviserParameters>builder()
+                                                              .ambiance(ambiance)
+                                                              .toStatus(Status.FAILED)
+                                                              .adviserParameters(getRetryParamsWithIgnore())
+                                                              .build();
     Advise advise = retryAdviser.onAdviseEvent(advisingEvent);
     assertThat(advise).isInstanceOf(RetryAdvise.class);
     RetryAdvise retryAdvise = (RetryAdvise) advise;
@@ -115,11 +109,11 @@ public class RetryAdviserTest extends OrchestrationTestBase {
             .retryIds(Arrays.asList(generateUuid(), generateUuid(), generateUuid(), generateUuid()))
             .build();
     when(nodeExecutionService.get(ambiance.obtainCurrentRuntimeId())).thenReturn(nodeExecution);
-    AdvisingEvent advisingEvent = AdvisingEvent.builder()
-                                      .ambiance(ambiance)
-                                      .toStatus(Status.FAILED)
-                                      .adviserParameters(getRetryParamsWithIgnore())
-                                      .build();
+    AdvisingEvent<RetryAdviserParameters> advisingEvent = AdvisingEvent.<RetryAdviserParameters>builder()
+                                                              .ambiance(ambiance)
+                                                              .toStatus(Status.FAILED)
+                                                              .adviserParameters(getRetryParamsWithIgnore())
+                                                              .build();
     Advise advise = retryAdviser.onAdviseEvent(advisingEvent);
     assertThat(advise).isInstanceOf(RetryAdvise.class);
     RetryAdvise retryAdvise = (RetryAdvise) advise;
@@ -146,15 +140,46 @@ public class RetryAdviserTest extends OrchestrationTestBase {
             .retryIds(Arrays.asList(generateUuid(), generateUuid(), generateUuid(), generateUuid(), generateUuid()))
             .build();
     when(nodeExecutionService.get(ambiance.obtainCurrentRuntimeId())).thenReturn(nodeExecution);
-    AdvisingEvent advisingEvent = AdvisingEvent.builder()
-                                      .ambiance(ambiance)
-                                      .toStatus(Status.FAILED)
-                                      .adviserParameters(getRetryParamsWithIgnore())
-                                      .build();
+    AdvisingEvent<RetryAdviserParameters> advisingEvent = AdvisingEvent.<RetryAdviserParameters>builder()
+                                                              .ambiance(ambiance)
+                                                              .toStatus(Status.FAILED)
+                                                              .adviserParameters(getRetryParamsWithIgnore())
+                                                              .build();
     Advise advise = retryAdviser.onAdviseEvent(advisingEvent);
     assertThat(advise).isInstanceOf(NextStepAdvise.class);
     NextStepAdvise nextStepAdvise = (NextStepAdvise) advise;
     assertThat(nextStepAdvise.getNextNodeId()).isEqualTo(DUMMY_NODE_ID);
+  }
+
+  @Test
+  @Owner(developers = PRASHANT)
+  @Category(UnitTests.class)
+  public void shouldTestCanAdvise() {
+    AdvisingEventBuilder<RetryAdviserParameters> advisingEventBuilder =
+        AdvisingEvent.<RetryAdviserParameters>builder()
+            .ambiance(ambiance)
+            .toStatus(Status.FAILED)
+            .adviserParameters(getRetryParamsWithIgnore());
+
+    AdvisingEvent<RetryAdviserParameters> authFailEvent =
+        advisingEventBuilder
+            .failureInfo(FailureInfo.builder()
+                             .errorMessage("Auth Error")
+                             .failureTypes(EnumSet.of(FailureType.AUTHENTICATION))
+                             .build())
+            .build();
+    boolean canAdvise = retryAdviser.canAdvise(authFailEvent);
+    assertThat(canAdvise).isTrue();
+
+    AdvisingEvent<RetryAdviserParameters> appFailEvent =
+        advisingEventBuilder
+            .failureInfo(FailureInfo.builder()
+                             .errorMessage("Application Error")
+                             .failureTypes(EnumSet.of(FailureType.APPLICATION_ERROR))
+                             .build())
+            .build();
+    canAdvise = retryAdviser.canAdvise(appFailEvent);
+    assertThat(canAdvise).isFalse();
   }
 
   private static RetryAdviserParameters getRetryParamsWithIgnore() {
@@ -163,6 +188,7 @@ public class RetryAdviserTest extends OrchestrationTestBase {
         .waitIntervalList(ImmutableList.of(2, 5))
         .repairActionCodeAfterRetry(RepairActionCode.IGNORE)
         .nextNodeId(DUMMY_NODE_ID)
+        .applicableFailureTypes(EnumSet.of(FailureType.AUTHENTICATION))
         .build();
   }
 }

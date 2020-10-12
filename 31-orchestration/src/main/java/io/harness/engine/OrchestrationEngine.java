@@ -97,6 +97,7 @@ import javax.validation.constraints.NotNull;
  * Please do not use this class outside of orchestration module. All the interactions with engine must be done via
  * {@link OrchestrationService}. This is for the internal workings of the engine
  */
+@SuppressWarnings({"rawtypes", "unchecked"})
 @Slf4j
 @Redesign
 @OwnedBy(CDC)
@@ -290,23 +291,22 @@ public class OrchestrationEngine {
       endTransition(updatedNodeExecution);
       return;
     }
-    Advise advise;
     for (AdviserObtainment obtainment : node.getAdviserObtainments()) {
       Adviser adviser = adviserRegistry.obtain(obtainment.getType());
       injector.injectMembers(adviser);
-      advise = adviser.onAdviseEvent(AdvisingEvent.builder()
-                                         .ambiance(nodeExecution.getAmbiance())
-                                         .stepOutcomeRef(nodeExecution.getOutcomeRefs())
-                                         .toStatus(status)
-                                         .fromStatus(nodeExecution.getStatus())
-                                         .adviserParameters(obtainment.getParameters())
-                                         .failureInfo(nodeExecution.getFailureInfo())
-                                         .build());
-      if (advise != null) {
-        Advise finalAdvise = advise;
+      AdvisingEvent advisingEvent = AdvisingEvent.builder()
+                                        .ambiance(nodeExecution.getAmbiance())
+                                        .stepOutcomeRef(nodeExecution.getOutcomeRefs())
+                                        .toStatus(status)
+                                        .fromStatus(nodeExecution.getStatus())
+                                        .adviserParameters(obtainment.getParameters())
+                                        .failureInfo(nodeExecution.getFailureInfo())
+                                        .build();
+      if (adviser.canAdvise(advisingEvent)) {
+        Advise advise = adviser.onAdviseEvent(advisingEvent);
         NodeExecution updatedNodeExecution =
             nodeExecutionService.updateStatusWithOps(nodeExecution.getUuid(), status, ops -> {
-              if (AdviseType.isWaitingAdviseType(finalAdvise.getType())) {
+              if (AdviseType.isWaitingAdviseType(advise.getType())) {
                 ops.set(NodeExecutionKeys.endTs, System.currentTimeMillis());
               }
             });

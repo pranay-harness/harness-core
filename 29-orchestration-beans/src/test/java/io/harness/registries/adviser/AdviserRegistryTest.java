@@ -50,5 +50,10 @@ public class AdviserRegistryTest extends OrchestrationBeansTestBase {
     public Advise onAdviseEvent(AdvisingEvent advisingEvent) {
       return null;
     }
+
+    @Override
+    public boolean canAdvise(AdvisingEvent advisingEvent) {
+      return false;
+    }
   }
 }

@@ -20,22 +20,21 @@ import io.harness.annotations.Redesign;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.engine.executions.node.NodeExecutionService;
 import io.harness.execution.NodeExecution;
+import io.harness.state.io.FailureInfo;
 
+import java.util.Collections;
 import java.util.List;
 
 @OwnedBy(CDC)
 @Redesign
-public class RetryAdviser implements Adviser {
+public class RetryAdviser implements Adviser<RetryAdviserParameters> {
   @Inject private NodeExecutionService nodeExecutionService;
 
   public static final AdviserType ADVISER_TYPE = AdviserType.builder().type(AdviserType.RETRY).build();
 
   @Override
-  public Advise onAdviseEvent(AdvisingEvent advisingEvent) {
-    if (!retryableStatuses().contains(advisingEvent.getToStatus())) {
-      return null;
-    }
-    RetryAdviserParameters parameters = (RetryAdviserParameters) advisingEvent.getAdviserParameters();
+  public Advise onAdviseEvent(AdvisingEvent<RetryAdviserParameters> advisingEvent) {
+    RetryAdviserParameters parameters = advisingEvent.getAdviserParameters();
     Ambiance ambiance = advisingEvent.getAmbiance();
     NodeExecution nodeExecution =
         Preconditions.checkNotNull(nodeExecutionService.get(ambiance.obtainCurrentRuntimeId()));
@@ -44,6 +43,17 @@ public class RetryAdviser implements Adviser {
       return RetryAdvise.builder().retryNodeExecutionId(nodeExecution.getUuid()).waitInterval(waitInterval).build();
     }
     return handlePostRetry(parameters);
+  }
+
+  @Override
+  public boolean canAdvise(AdvisingEvent<RetryAdviserParameters> advisingEvent) {
+    boolean canAdvise = retryableStatuses().contains(advisingEvent.getToStatus());
+    FailureInfo failureInfo = advisingEvent.getFailureInfo();
+    RetryAdviserParameters parameters = advisingEvent.getAdviserParameters();
+    if (failureInfo != null && !isEmpty(failureInfo.getFailureTypes())) {
+      return canAdvise && !Collections.disjoint(parameters.getApplicableFailureTypes(), failureInfo.getFailureTypes());
+    }
+    return canAdvise;
   }
 
   private Advise handlePostRetry(RetryAdviserParameters parameters) {
