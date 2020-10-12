@@ -184,7 +184,7 @@ public class LogAnalysisServiceImpl implements LogAnalysisService {
   public List<LogAnalysisCluster> getPreviousAnalysis(
       String cvConfigId, Instant analysisStartTime, Instant analysisEndTime) {
     List<LogAnalysisCluster> analysisClusters =
-        hPersistence.createQuery(LogAnalysisCluster.class)
+        hPersistence.createQuery(LogAnalysisCluster.class, excludeAuthority)
             .filter(LogAnalysisClusterKeys.cvConfigId, cvConfigId)
             .filter(LogAnalysisClusterKeys.isEvicted, false)
             .project(LogAnalysisClusterKeys.cvConfigId, true)
@@ -223,7 +223,7 @@ public class LogAnalysisServiceImpl implements LogAnalysisService {
     CVConfig cvConfig = cvConfigService.get(cvConfigId);
 
     heatMapService.updateRiskScore(cvConfig.getAccountId(), cvConfig.getProjectIdentifier(),
-        cvConfig.getServiceIdentifier(), cvConfig.getEnvIdentifier(), cvConfig.getCategory(), analysisEndTime,
+        cvConfig.getServiceIdentifier(), cvConfig.getEnvIdentifier(), cvConfig.getCategory(), analysisStartTime,
         analysisBody.getScore());
   }
 
