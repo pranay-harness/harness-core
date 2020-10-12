@@ -35,6 +35,7 @@ java_library(
         "@maven//:net_jodah_failsafe",
         "@maven//:org_apache_commons_commons_email",
         "@maven//:org_apache_commons_commons_lang3",
+        "@maven//:org_apache_httpcomponents_httpcore",
         "@maven//:org_codehaus_jackson_jackson_core_asl",
         "@maven//:org_freemarker_freemarker",
         "@maven//:org_hibernate_hibernate_validator",

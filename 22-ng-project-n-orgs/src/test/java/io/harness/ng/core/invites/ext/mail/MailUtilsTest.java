@@ -1,13 +1,18 @@
 package io.harness.ng.core.invites.ext.mail;
 
+import static io.harness.rule.OwnerRule.ANKUSH;
 import static org.apache.commons.lang3.RandomStringUtils.randomAlphabetic;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 
 import io.harness.CategoryTest;
+import io.harness.category.element.UnitTests;
 import io.harness.queue.QueuePublisher;
+import io.harness.rule.Owner;
 import org.junit.Before;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
@@ -37,4 +42,9 @@ public class MailUtilsTest extends CategoryTest {
     emailData.setRetries(2);
     emailData.setAccountId(accountIdentifier);
   }
+
+  @Test
+  @Owner(developers = ANKUSH)
+  @Category(UnitTests.class)
+  public void dummy() {}
 }
