@@ -354,6 +354,8 @@ public class CVConfigurationServiceImpl implements CVConfigurationService {
         getUpdateOperations(cvConfiguration.getStateType(), cvConfiguration, savedConfiguration);
     try {
       wingsPersistence.update(savedConfiguration, updateOperations);
+      yamlPushService.pushYamlChangeSet(cvConfiguration.getAccountId(), savedConfiguration, cvConfiguration,
+          Type.UPDATE, false, !savedConfiguration.getName().equals(cvConfiguration.getName()));
     } catch (DuplicateKeyException ex) {
       throw new VerificationOperationException(ErrorCode.SERVICE_GUARD_CONFIGURATION_ERROR,
           "A Service Verification with the name " + cvConfiguration.getName()

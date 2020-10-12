@@ -90,4 +90,37 @@ public class CVConfigurationTest extends WingsBaseTest {
     assertThatThrownBy(() -> cvConfiguration.setAlertThreshold(-0.01)).isInstanceOf(IllegalArgumentException.class);
     assertThatThrownBy(() -> cvConfiguration.setAlertThreshold(1.01)).isInstanceOf(IllegalArgumentException.class);
   }
+
+  @Test
+  @Owner(developers = SOWMYA)
+  @Category(UnitTests.class)
+  public void testSetNumOfOccurrencesForAlert_validNumOccurrencesAlerts() {
+    CVConfiguration cvConfiguration = new CVConfiguration();
+
+    cvConfiguration.setNumOfOccurrencesForAlert(1);
+    assertThat(cvConfiguration.getNumOfOccurrencesForAlert()).isEqualTo(1);
+
+    cvConfiguration.setNumOfOccurrencesForAlert(2);
+    assertThat(cvConfiguration.getNumOfOccurrencesForAlert()).isEqualTo(2);
+
+    cvConfiguration.setNumOfOccurrencesForAlert(3);
+    assertThat(cvConfiguration.getNumOfOccurrencesForAlert()).isEqualTo(3);
+
+    cvConfiguration.setNumOfOccurrencesForAlert(4);
+    assertThat(cvConfiguration.getNumOfOccurrencesForAlert()).isEqualTo(4);
+  }
+
+  @Test
+  @Owner(developers = SOWMYA)
+  @Category(UnitTests.class)
+  public void testSetNumOfOccurrencesForAlert_invalidNumOccurrencesAlerts() {
+    CVConfiguration cvConfiguration = new CVConfiguration();
+
+    assertThatThrownBy(() -> cvConfiguration.setNumOfOccurrencesForAlert(6))
+        .isInstanceOf(IllegalArgumentException.class);
+    assertThatThrownBy(() -> cvConfiguration.setNumOfOccurrencesForAlert(0))
+        .isInstanceOf(IllegalArgumentException.class);
+    assertThatThrownBy(() -> cvConfiguration.setNumOfOccurrencesForAlert(-1))
+        .isInstanceOf(IllegalArgumentException.class);
+  }
 }

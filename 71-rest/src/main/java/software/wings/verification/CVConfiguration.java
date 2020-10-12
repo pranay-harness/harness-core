@@ -2,6 +2,7 @@ package software.wings.verification;
 
 import static java.lang.Boolean.parseBoolean;
 import static software.wings.common.VerificationConstants.CV_24x7_STATE_EXECUTION;
+import static software.wings.common.VerificationConstants.MAX_NUM_ALERT_OCCURRENCES;
 
 import com.google.common.base.Preconditions;
 
@@ -81,6 +82,12 @@ public class CVConfiguration extends Base implements NameAccess {
     Preconditions.checkArgument(
         threshold >= 0.0 && threshold <= 1.0, "Provided alert threshold is not between 0 and 1");
     this.alertThreshold = threshold;
+  }
+
+  public void setNumOfOccurrencesForAlert(int occurrences) {
+    Preconditions.checkArgument(occurrences > 0 && occurrences <= MAX_NUM_ALERT_OCCURRENCES,
+        "Provided number of occurrences for alert is not between 0 and " + MAX_NUM_ALERT_OCCURRENCES);
+    this.numOfOccurrencesForAlert = occurrences;
   }
 
   @Data
