@@ -1,14 +1,18 @@
 package software.wings.service.impl.yaml.handler.workflow;
 
 import static io.harness.rule.OwnerRule.AADITI;
+import static io.harness.rule.OwnerRule.HINGER;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.when;
+import static software.wings.beans.Account.GLOBAL_ACCOUNT_ID;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 import static software.wings.utils.WingsTestConstants.APP_ID;
 import static software.wings.utils.WingsTestConstants.ARTIFACT_STREAM_ID;
 import static software.wings.utils.WingsTestConstants.SERVICE_ID;
 import static software.wings.utils.WingsTestConstants.SETTING_ID;
+import static software.wings.utils.WingsTestConstants.TEMPLATE_ID;
 
 import com.google.inject.Inject;
 
@@ -21,8 +25,13 @@ import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import software.wings.beans.Application;
+import software.wings.beans.GraphNode;
 import software.wings.beans.Service;
 import software.wings.beans.artifact.NexusArtifactStream;
+import software.wings.beans.command.CommandType;
+import software.wings.beans.template.Template;
+import software.wings.beans.template.TemplateType;
+import software.wings.beans.template.command.SshCommandTemplate;
 import software.wings.beans.yaml.ChangeContext;
 import software.wings.beans.yaml.GitFileChange;
 import software.wings.beans.yaml.YamlType;
@@ -31,7 +40,9 @@ import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ArtifactStreamService;
 import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.ServiceResourceService;
+import software.wings.service.intfc.template.TemplateService;
 import software.wings.sm.StateType;
+import software.wings.sm.StepType;
 import software.wings.utils.RepositoryFormat;
 import software.wings.yaml.handler.BaseYamlHandlerTest;
 import software.wings.yaml.workflow.StepYaml;
@@ -47,6 +58,7 @@ public class StepYamlHandlerTest extends BaseYamlHandlerTest {
   @Mock private ServiceResourceService serviceResourceService;
   @Mock private YamlHelper yamlHelper;
   private NexusArtifactStream nexusArtifactStream;
+  @Mock private TemplateService templateService;
 
   @Before
   public void setUp() {
@@ -178,5 +190,40 @@ public class StepYamlHandlerTest extends BaseYamlHandlerTest {
                                                   .build();
     nexusArtifactStream.setArtifactStreamParameterized(true);
     return nexusArtifactStream;
+  }
+
+  /*
+  This test is used to check that if the template of Service Command is used in Workflow Step,
+  Then commandType = OTHER is ensured in properties in Step Yaml.This is due to check on UI for displaying command
+  Template. (CDC-6787)
+   */
+  @Test
+  @Owner(developers = HINGER)
+  @Category(UnitTests.class)
+  public void testToYamlAddCommandTypeWhenUsingServiceCommandTemplate() {
+    GraphNode aStep = GraphNode.builder()
+                          .type(StepType.COMMAND.name())
+                          .templateUuid(TEMPLATE_ID)
+                          .name("serviceCommandTemplateStep")
+                          .build();
+
+    SshCommandTemplate sshCommandTemplate = SshCommandTemplate.builder().commandType(CommandType.OTHER).build();
+
+    // Template of type SSH (Service Command) will have property commandType = OTHER in yaml. This test is due to
+    // condition on UI.
+    Template template = Template.builder()
+                            .name("temp")
+                            .appId(APP_ID)
+                            .type(TemplateType.SSH.name())
+                            .accountId(GLOBAL_ACCOUNT_ID)
+                            .templateObject(sshCommandTemplate)
+                            .build();
+
+    when(templateService.makeNamespacedTemplareUri(any(), any())).thenReturn("TEMPLATE_URI");
+    when(templateService.get(TEMPLATE_ID)).thenReturn(template);
+
+    StepYaml yaml = stepYamlHandler.toYaml(aStep, APP_ID);
+    assertThat(yaml).isNotNull();
+    assertThat(yaml.getProperties().get("commandType")).isEqualTo(CommandType.OTHER.name());
   }
 }

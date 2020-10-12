@@ -30,9 +30,11 @@ import software.wings.beans.Service;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.TemplateExpression;
 import software.wings.beans.artifact.ArtifactStream;
+import software.wings.beans.command.CommandType;
 import software.wings.beans.template.Template;
 import software.wings.beans.template.TemplateHelper;
 import software.wings.beans.template.TemplateMetadata;
+import software.wings.beans.template.TemplateType;
 import software.wings.beans.template.dto.ImportedTemplateDetails;
 import software.wings.beans.yaml.ChangeContext;
 import software.wings.beans.yaml.YamlConstants;
@@ -158,6 +160,10 @@ public class StepYamlHandler extends BaseYamlHandler<StepYaml, GraphNode> {
       notNullCheck(String.format("Template with uri %s is not found.", templateUri), template);
       importedTemplateDetail = TemplateHelper.getImportedTemplateDetails(template, templateVersion);
       templateMetadata = template.getTemplateMetadata();
+
+      if (TemplateType.SSH.toString().equals(template.getType())) {
+        outputProperties.put("commandType", CommandType.OTHER);
+      }
     }
 
     return GraphNode.builder()
@@ -276,6 +282,9 @@ public class StepYamlHandler extends BaseYamlHandler<StepYaml, GraphNode> {
         List<String> templateProperties = templateService.fetchTemplateProperties(template);
         if (templateProperties != null && outputProperties != null) {
           outputProperties.keySet().removeAll(templateProperties);
+        }
+        if (TemplateType.SSH.toString().equals(template.getType())) {
+          outputProperties.put("commandType", CommandType.OTHER.name());
         }
       }
     }

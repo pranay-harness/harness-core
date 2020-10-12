@@ -401,6 +401,7 @@ public class MigrationList {
         .add(Pair.of(344, RemoveDeprecatedApplicationsCreatePermission.class))
         .add(Pair.of(345, ManageConfigAsCodePermissionMigration.class))
         .add(Pair.of(346, AddManageTagsPermission.class))
+        .add(Pair.of(347, BaseMigration.class))
         .build();
   }
 }
