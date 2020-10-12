@@ -20,7 +20,8 @@ import javax.validation.constraints.NotNull;
   , @JsonSubTypes.Type(value = PipelineTriggerCondition.class, name = "PIPELINE_COMPLETION"),
       @JsonSubTypes.Type(value = ScheduledTriggerCondition.class, name = "SCHEDULED"),
       @JsonSubTypes.Type(value = WebHookTriggerCondition.class, name = "WEBHOOK"),
-      @JsonSubTypes.Type(value = NewInstanceTriggerCondition.class, name = "NEW_INSTANCE")
+      @JsonSubTypes.Type(value = NewInstanceTriggerCondition.class, name = "NEW_INSTANCE"),
+      @JsonSubTypes.Type(value = ManifestTriggerCondition.class, name = "NEW_MANIFEST")
 })
 @Data
 @FieldNameConstants(innerTypeName = "TriggerConditionKeys")

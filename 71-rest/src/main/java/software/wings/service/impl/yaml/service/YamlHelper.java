@@ -891,4 +891,16 @@ public class YamlHelper {
         return null;
     }
   }
+
+  public Service getServiceByName(String appId, String serviceName) {
+    return serviceResourceService.getServiceByName(appId, serviceName);
+  }
+
+  public ApplicationManifest getManifestByServiceId(String appId, String serviceId) {
+    return applicationManifestService.getManifestByServiceId(appId, serviceId);
+  }
+
+  public String getServiceNameFromServiceId(String appId, String serviceId) {
+    return serviceResourceService.getName(appId, serviceId);
+  }
 }

@@ -28,6 +28,7 @@ import static software.wings.beans.trigger.ArtifactSelection.Type.LAST_COLLECTED
 import static software.wings.beans.trigger.ArtifactSelection.Type.LAST_DEPLOYED;
 import static software.wings.beans.trigger.ArtifactSelection.Type.PIPELINE_SOURCE;
 import static software.wings.beans.trigger.ArtifactSelection.Type.WEBHOOK_VARIABLE;
+import static software.wings.beans.trigger.TriggerConditionType.NEW_MANIFEST;
 import static software.wings.beans.trigger.TriggerConditionType.SCHEDULED;
 import static software.wings.beans.trigger.TriggerConditionType.WEBHOOK;
 import static software.wings.beans.trigger.WebhookSource.BITBUCKET;
@@ -79,6 +80,7 @@ import software.wings.beans.Variable;
 import software.wings.beans.WebHookToken;
 import software.wings.beans.Workflow;
 import software.wings.beans.WorkflowExecution;
+import software.wings.beans.appmanifest.ApplicationManifest;
 import software.wings.beans.artifact.Artifact;
 import software.wings.beans.artifact.ArtifactStream;
 import software.wings.beans.deployment.DeploymentMetadata;
@@ -86,12 +88,14 @@ import software.wings.beans.deployment.DeploymentMetadata.Include;
 import software.wings.beans.instance.dashboard.ArtifactSummary;
 import software.wings.beans.trigger.ArtifactSelection;
 import software.wings.beans.trigger.ArtifactTriggerCondition;
+import software.wings.beans.trigger.ManifestTriggerCondition;
 import software.wings.beans.trigger.NewInstanceTriggerCondition;
 import software.wings.beans.trigger.PipelineTriggerCondition;
 import software.wings.beans.trigger.ScheduledTriggerCondition;
 import software.wings.beans.trigger.ServiceInfraWorkflow;
 import software.wings.beans.trigger.Trigger;
 import software.wings.beans.trigger.Trigger.TriggerKeys;
+import software.wings.beans.trigger.TriggerCondition;
 import software.wings.beans.trigger.TriggerExecution;
 import software.wings.beans.trigger.TriggerExecution.Status;
 import software.wings.beans.trigger.WebHookTriggerCondition;
@@ -112,6 +116,7 @@ import software.wings.service.impl.TriggerLogContext;
 import software.wings.service.impl.security.auth.AuthHandler;
 import software.wings.service.impl.workflow.WorkflowServiceTemplateHelper;
 import software.wings.service.intfc.AppService;
+import software.wings.service.intfc.ApplicationManifestService;
 import software.wings.service.intfc.ArtifactCollectionService;
 import software.wings.service.intfc.ArtifactService;
 import software.wings.service.intfc.ArtifactStreamService;
@@ -136,11 +141,13 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Objects;
+import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.regex.PatternSyntaxException;
 import java.util.stream.Collectors;
@@ -168,6 +175,7 @@ public class TriggerServiceImpl implements TriggerService {
   @Inject private HarnessTagService harnessTagService;
   @Inject private YamlPushService yamlPushService;
   @Inject private ArtifactStreamServiceBindingService artifactStreamServiceBindingService;
+  @Inject private ApplicationManifestService applicationManifestService;
 
   @Value
   @Builder
@@ -197,6 +205,8 @@ public class TriggerServiceImpl implements TriggerService {
 
   private PageResponse<Trigger> postProcessTriggers(PageResponse<Trigger> response) {
     if (response != null && isNotEmpty(response.getResponse())) {
+      Set<String> serviceIds = new HashSet<>();
+      String appId = "";
       for (Trigger trigger : response.getResponse()) {
         if (isNotEmpty(trigger.getArtifactSelections())) {
           for (ArtifactSelection artifactSelection : trigger.getArtifactSelections()) {
@@ -208,6 +218,25 @@ public class TriggerServiceImpl implements TriggerService {
             }
           }
         }
+        if (trigger.getCondition() != null && trigger.getCondition().getConditionType() == NEW_MANIFEST) {
+          appId = trigger.getAppId();
+          ManifestTriggerCondition triggerCondition = (ManifestTriggerCondition) trigger.getCondition();
+          serviceIds.add(triggerCondition.getServiceId());
+        }
+      }
+      if (isNotEmpty(serviceIds)) {
+        Map<String, String> mapServiceIdToServiceName = serviceResourceService.getServiceNames(appId, serviceIds);
+        for (Trigger trigger : response.getResponse()) {
+          if (trigger.getCondition() != null && trigger.getCondition().getConditionType() == NEW_MANIFEST) {
+            ManifestTriggerCondition triggerCondition = (ManifestTriggerCondition) trigger.getCondition();
+            String serviceName = mapServiceIdToServiceName.get(triggerCondition.getServiceId());
+            if (serviceName == null) {
+              triggerCondition.setServiceName(triggerCondition.getServiceId());
+            } else {
+              triggerCondition.setServiceName(serviceName);
+            }
+          }
+        }
       }
     }
     return response;
@@ -215,7 +244,14 @@ public class TriggerServiceImpl implements TriggerService {
 
   @Override
   public Trigger get(String appId, String triggerId) {
-    return wingsPersistence.getWithAppId(Trigger.class, appId, triggerId);
+    Trigger trigger = wingsPersistence.getWithAppId(Trigger.class, appId, triggerId);
+    TriggerCondition condition = trigger.getCondition();
+    if (condition.getConditionType() == NEW_MANIFEST) {
+      ManifestTriggerCondition manifestTriggerCondition = (ManifestTriggerCondition) condition;
+      String name = serviceResourceService.getName(appId, manifestTriggerCondition.getServiceId());
+      manifestTriggerCondition.setServiceName(name);
+    }
+    return trigger;
   }
 
   @Override
@@ -1297,9 +1333,37 @@ public class TriggerServiceImpl implements TriggerService {
         notNullCheck("NewInstanceTriggerCondition", newInstanceTriggerCondition, USER);
         validateAndSetServiceInfraWorkflows(trigger);
         break;
+      case NEW_MANIFEST:
+        validateAndSetNewManifestCondition(trigger);
+        break;
       default:
         throw new InvalidRequestException("Invalid trigger condition type", USER);
     }
+  }
+
+  private void validateAndSetNewManifestCondition(Trigger trigger) {
+    ManifestTriggerCondition manifestTriggerCondition = (ManifestTriggerCondition) trigger.getCondition();
+    String appId = trigger.getAppId();
+    ApplicationManifest applicationManifest =
+        applicationManifestService.getById(appId, manifestTriggerCondition.getAppManifestId());
+    notNullCheck("Application Manifest must exist for the given service", applicationManifest, USER);
+    if (!featureFlagService.isEnabled(FeatureName.HELM_CHART_AS_ARTIFACT, applicationManifest.getAccountId())) {
+      throw new InvalidRequestException("Invalid trigger condition type", USER);
+    }
+    if (!Boolean.TRUE.equals(applicationManifest.getPollForChanges())) {
+      throw new InvalidRequestException("Cannot select service for which poll for manifest is not enabled", USER);
+    }
+    try {
+      if (isNotEmpty(manifestTriggerCondition.getVersionRegex())) {
+        compile(manifestTriggerCondition.getVersionRegex());
+      }
+    } catch (PatternSyntaxException pe) {
+      throw new InvalidRequestException("Invalid versionRegex, Please provide a valid regex", USER);
+    }
+    Service service = serviceResourceService.get(appId, applicationManifest.getServiceId());
+    notNullCheck("Service does not exist", service, USER);
+    manifestTriggerCondition.setServiceId(service.getUuid());
+    manifestTriggerCondition.setServiceName(service.getName());
   }
 
   private WebHookToken getExistingWebhookToken(Trigger existingTrigger) {

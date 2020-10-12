@@ -17,6 +17,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyBoolean;
 import static org.mockito.Matchers.anyMap;
+import static org.mockito.Matchers.anySet;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.never;
@@ -51,6 +52,7 @@ import static software.wings.service.impl.trigger.TriggerServiceTestHelper.build
 import static software.wings.service.impl.trigger.TriggerServiceTestHelper.buildJenkinsArtifactStream;
 import static software.wings.service.impl.trigger.TriggerServiceTestHelper.buildNewArtifactTrigger;
 import static software.wings.service.impl.trigger.TriggerServiceTestHelper.buildNewInstanceTrigger;
+import static software.wings.service.impl.trigger.TriggerServiceTestHelper.buildNewManifestTrigger;
 import static software.wings.service.impl.trigger.TriggerServiceTestHelper.buildNexusArtifactStream;
 import static software.wings.service.impl.trigger.TriggerServiceTestHelper.buildPipeline;
 import static software.wings.service.impl.trigger.TriggerServiceTestHelper.buildPipelineCondTrigger;
@@ -77,6 +79,7 @@ import static software.wings.utils.WingsTestConstants.FILE_NAME;
 import static software.wings.utils.WingsTestConstants.INFRA_DEFINITION_ID;
 import static software.wings.utils.WingsTestConstants.INFRA_MAPPING_ID;
 import static software.wings.utils.WingsTestConstants.INFRA_NAME;
+import static software.wings.utils.WingsTestConstants.MANIFEST_ID;
 import static software.wings.utils.WingsTestConstants.PIPELINE_ID;
 import static software.wings.utils.WingsTestConstants.SERVICE_ID;
 import static software.wings.utils.WingsTestConstants.SERVICE_ID_CHANGED;
@@ -119,6 +122,8 @@ import software.wings.beans.Variable;
 import software.wings.beans.WebHookToken;
 import software.wings.beans.Workflow;
 import software.wings.beans.WorkflowExecution;
+import software.wings.beans.appmanifest.ApplicationManifest;
+import software.wings.beans.appmanifest.StoreType;
 import software.wings.beans.artifact.Artifact;
 import software.wings.beans.artifact.ArtifactStream;
 import software.wings.beans.artifact.JenkinsArtifactStream;
@@ -128,6 +133,7 @@ import software.wings.beans.deployment.DeploymentMetadata.Include;
 import software.wings.beans.instance.dashboard.ArtifactSummary;
 import software.wings.beans.trigger.ArtifactSelection;
 import software.wings.beans.trigger.ArtifactTriggerCondition;
+import software.wings.beans.trigger.ManifestTriggerCondition;
 import software.wings.beans.trigger.NewInstanceTriggerCondition;
 import software.wings.beans.trigger.PipelineTriggerCondition;
 import software.wings.beans.trigger.ScheduledTriggerCondition;
@@ -146,6 +152,7 @@ import software.wings.scheduler.ScheduledTriggerJob;
 import software.wings.service.impl.AuditServiceHelper;
 import software.wings.service.impl.trigger.TriggerServiceImpl.TriggerIdempotentResult;
 import software.wings.service.intfc.AppService;
+import software.wings.service.intfc.ApplicationManifestService;
 import software.wings.service.intfc.ArtifactCollectionService;
 import software.wings.service.intfc.ArtifactService;
 import software.wings.service.intfc.ArtifactStreamService;
@@ -199,6 +206,7 @@ public class TriggerServiceTest extends WingsBaseTest {
   @Mock private SettingsService settingsService;
   @Mock private TriggerAuthHandler triggerAuthHandler;
   @Mock private TriggerExecutionService triggerExecutionService;
+  @Mock private ApplicationManifestService applicationManifestService;
 
   @Inject @InjectMocks TriggerServiceHelper triggerServiceHelper;
   @Inject @InjectMocks private TriggerService triggerService;
@@ -209,6 +217,8 @@ public class TriggerServiceTest extends WingsBaseTest {
       buildPipelineWebhookTriggerWithFileContentChanged("testRepo", "master", UUID, PUSH, "index.yaml");
 
   Trigger artifactConditionTrigger = buildArtifactTrigger();
+
+  Trigger newManifestConditionTrigger = buildNewManifestTrigger();
 
   Trigger artifactConditionTriggerWithArtifactSelections = buildArtifactTriggerWithArtifactSelections();
 
@@ -2867,5 +2877,159 @@ public class TriggerServiceTest extends WingsBaseTest {
 
     webHookTriggerCondition.setRepoName(null);
     validateUpdate(webhookTrigger);
+  }
+
+  private void setUpForNewManifestCondition() {
+    ApplicationManifest applicationManifest = ApplicationManifest.builder()
+                                                  .accountId(ACCOUNT_ID)
+                                                  .serviceId(SERVICE_ID)
+                                                  .pollForChanges(Boolean.TRUE)
+                                                  .storeType(StoreType.HelmChartRepo)
+                                                  .build();
+    applicationManifest.setUuid(MANIFEST_ID);
+    when(applicationManifestService.getById(anyString(), anyString())).thenReturn(applicationManifest);
+    when(featureFlagService.isEnabled(FeatureName.HELM_CHART_AS_ARTIFACT, ACCOUNT_ID)).thenReturn(true);
+    when(serviceResourceService.get(APP_ID, SERVICE_ID))
+        .thenReturn(Service.builder().uuid(SERVICE_ID).name(CATALOG_SERVICE_NAME).build());
+  }
+
+  @Test
+  @Owner(developers = INDER)
+  @Category(UnitTests.class)
+  public void shouldSaveWithOnNewManifestCondition() {
+    setUpForNewManifestCondition();
+
+    Trigger trigger = triggerService.save(newManifestConditionTrigger);
+    assertThat(trigger.getUuid()).isNotEmpty();
+    assertThat(trigger.getCondition()).isInstanceOf(ManifestTriggerCondition.class);
+    assertThat(((ManifestTriggerCondition) trigger.getCondition()).getServiceId()).isNotNull().isEqualTo(SERVICE_ID);
+    assertThat(((ManifestTriggerCondition) trigger.getCondition()).getAppManifestId())
+        .isNotNull()
+        .isEqualTo(MANIFEST_ID);
+  }
+
+  @Test
+  @Owner(developers = INDER)
+  @Category(UnitTests.class)
+  public void shouldNotSaveOrUpdateNewManifestConditionWithFFOff() {
+    setUpForNewManifestCondition();
+
+    Trigger savedTrigger = triggerService.save(newManifestConditionTrigger);
+    assertThat(savedTrigger).isNotNull();
+
+    when(featureFlagService.isEnabled(FeatureName.HELM_CHART_AS_ARTIFACT, ACCOUNT_ID)).thenReturn(false);
+
+    assertThatThrownBy(() -> triggerService.save(newManifestConditionTrigger))
+        .isInstanceOf(InvalidRequestException.class)
+        .hasMessage("Invalid trigger condition type");
+
+    assertThatThrownBy(() -> triggerService.update(newManifestConditionTrigger, false))
+        .isInstanceOf(InvalidRequestException.class)
+        .hasMessage("Invalid trigger condition type");
+  }
+
+  @Test
+  @Owner(developers = INDER)
+  @Category(UnitTests.class)
+  public void shouldNotSaveOrUpdateIfPollingDisabled() {
+    setUpForNewManifestCondition();
+
+    Trigger savedTrigger = triggerService.save(newManifestConditionTrigger);
+    assertThat(savedTrigger).isNotNull();
+
+    ApplicationManifest applicationManifest = ApplicationManifest.builder()
+                                                  .accountId(ACCOUNT_ID)
+                                                  .serviceId(SERVICE_ID)
+                                                  .pollForChanges(Boolean.FALSE)
+                                                  .storeType(StoreType.HelmChartRepo)
+                                                  .build();
+    applicationManifest.setUuid(MANIFEST_ID);
+    when(applicationManifestService.getById(anyString(), anyString())).thenReturn(applicationManifest);
+
+    assertThatThrownBy(() -> triggerService.save(newManifestConditionTrigger))
+        .isInstanceOf(InvalidRequestException.class)
+        .hasMessage("Cannot select service for which poll for manifest is not enabled");
+
+    assertThatThrownBy(() -> triggerService.update(newManifestConditionTrigger, false))
+        .isInstanceOf(InvalidRequestException.class)
+        .hasMessage("Cannot select service for which poll for manifest is not enabled");
+  }
+
+  @Test
+  @Owner(developers = INDER)
+  @Category(UnitTests.class)
+  public void shouldNotSaveOrUpdateWithIncorrectRegex() {
+    setUpForNewManifestCondition();
+
+    Trigger savedTrigger = triggerService.save(newManifestConditionTrigger);
+    assertThat(savedTrigger).isNotNull();
+
+    Trigger newTrigger = buildNewManifestTrigger();
+    newTrigger.setCondition(ManifestTriggerCondition.builder()
+                                .appManifestId(MANIFEST_ID)
+                                .serviceName(SERVICE_NAME)
+                                .versionRegex("**")
+                                .build());
+
+    assertThatThrownBy(() -> triggerService.save(newTrigger))
+        .isInstanceOf(InvalidRequestException.class)
+        .hasMessage("Invalid versionRegex, Please provide a valid regex");
+
+    assertThatThrownBy(() -> triggerService.update(newTrigger, false))
+        .isInstanceOf(InvalidRequestException.class)
+        .hasMessage("Invalid versionRegex, Please provide a valid regex");
+  }
+
+  @Test
+  @Owner(developers = INDER)
+  @Category(UnitTests.class)
+  public void testGetNewManifestConditionTrigger() {
+    setUpForNewManifestCondition();
+
+    Trigger savedTrigger = triggerService.save(newManifestConditionTrigger);
+    assertThat(savedTrigger).isNotNull();
+    assertThat(savedTrigger.getAppId()).isEqualTo(APP_ID);
+
+    when(serviceResourceService.getName(anyString(), anyString())).thenReturn(SERVICE_NAME);
+
+    Trigger trigger = triggerService.get(savedTrigger.getAppId(), savedTrigger.getUuid());
+    assertThat(trigger).isNotNull();
+    assertThat(trigger.getCondition()).isInstanceOf(ManifestTriggerCondition.class);
+    assertThat(((ManifestTriggerCondition) trigger.getCondition()).getServiceId()).isNotNull().isEqualTo(SERVICE_ID);
+    assertThat(((ManifestTriggerCondition) trigger.getCondition()).getAppManifestId())
+        .isNotNull()
+        .isEqualTo(MANIFEST_ID);
+    assertThat(((ManifestTriggerCondition) trigger.getCondition()).getServiceName())
+        .isNotNull()
+        .isEqualTo(SERVICE_NAME);
+  }
+
+  @Test
+  @Owner(developers = INDER)
+  @Category(UnitTests.class)
+  public void shouldListTriggersWithServiceName() {
+    setUpForNewManifestCondition();
+
+    Trigger newManifestTrigger = buildNewManifestTrigger();
+    newManifestTrigger.setUuid("TRIGGER_ID_1");
+    Trigger trigger1 = triggerService.save(newManifestTrigger);
+    assertThat(trigger1).isNotNull();
+
+    Trigger trigger2 = triggerService.save(artifactConditionTrigger);
+    assertThat(trigger2).isNotNull();
+
+    when(serviceResourceService.getServiceNames(anyString(), anySet()))
+        .thenReturn(Collections.singletonMap(SERVICE_ID, SERVICE_NAME));
+
+    PageRequest<Trigger> pageRequest = new PageRequest<>();
+    PageResponse<Trigger> triggers = triggerService.list(pageRequest, false, null);
+    assertThat(triggers).hasSize(2);
+    for (Trigger trigger : triggers) {
+      if (trigger.getUuid().equals("TRIGGER_ID_1")) {
+        assertThat(trigger.getCondition()).isNotNull();
+        ManifestTriggerCondition condition = (ManifestTriggerCondition) trigger.getCondition();
+        assertThat(condition.getServiceName()).isNotNull().isEqualTo(SERVICE_NAME);
+      }
+    }
   }
 }

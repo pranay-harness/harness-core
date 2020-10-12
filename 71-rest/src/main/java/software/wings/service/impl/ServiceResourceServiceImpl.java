@@ -230,6 +230,7 @@ import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
+import javax.annotation.Nonnull;
 import javax.validation.executable.ValidateOnExecution;
 
 /**
@@ -1012,6 +1013,27 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
         .stream()
         .map(Service::getName)
         .collect(toList());
+  }
+
+  @Override
+  public Map<String, String> getServiceNames(String appId, @Nonnull Set<String> serviceIds) {
+    if (isEmpty(serviceIds)) {
+      return Collections.emptyMap();
+    }
+    List<Service> serviceList = wingsPersistence.createQuery(Service.class)
+                                    .field(ServiceKeys.appId)
+                                    .equal(appId)
+                                    .field(ServiceKeys.uuid)
+                                    .in(serviceIds)
+                                    .project(ServiceKeys.name, true)
+                                    .project(ServiceKeys.uuid, true)
+                                    .asList();
+
+    Map<String, String> mapServiceIdToServiceName = new HashMap<>();
+    for (Service service : serviceList) {
+      mapServiceIdToServiceName.put(service.getUuid(), service.getName());
+    }
+    return mapServiceIdToServiceName;
   }
 
   @Override

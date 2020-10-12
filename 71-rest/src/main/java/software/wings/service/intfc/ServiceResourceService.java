@@ -35,6 +35,7 @@ import software.wings.sm.ContextElement;
 import software.wings.stencils.Stencil;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import javax.annotation.Nonnull;
 import javax.validation.Valid;
@@ -130,6 +131,8 @@ public interface ServiceResourceService extends OwnedByApplication {
    * @return List of service names
    */
   List<String> getNames(@NotEmpty String accountId, @Nonnull List<String> serviceIds);
+
+  Map<String, String> getServiceNames(@NotEmpty String appId, @Nonnull Set<String> serviceIds);
 
   /**
    * Gets the.

@@ -43,6 +43,7 @@ import static software.wings.beans.artifact.ArtifactStreamType.NEXUS;
 import static software.wings.beans.artifact.ArtifactStreamType.SFTP;
 import static software.wings.beans.artifact.ArtifactStreamType.SMB;
 import static software.wings.beans.trigger.TriggerConditionType.NEW_ARTIFACT;
+import static software.wings.beans.trigger.TriggerConditionType.NEW_MANIFEST;
 import static software.wings.beans.trigger.TriggerConditionType.PIPELINE_COMPLETION;
 import static software.wings.beans.trigger.TriggerConditionType.SCHEDULED;
 import static software.wings.beans.trigger.TriggerConditionType.WEBHOOK;
@@ -209,6 +210,7 @@ import software.wings.verification.SplunkCVConfigurationYamlHandler;
 import software.wings.verification.StackDriverMetricsCVConfigurationYamlHandler;
 import software.wings.verification.StackdriverCVConfigurationYamlHandler;
 import software.wings.yaml.trigger.ArtifactTriggerConditionHandler;
+import software.wings.yaml.trigger.ManifestTriggerConditionHandler;
 import software.wings.yaml.trigger.PipelineTriggerConditionHandler;
 import software.wings.yaml.trigger.ScheduledTriggerConditionHandler;
 import software.wings.yaml.trigger.WebhookTriggerConditionHandler;
@@ -442,6 +444,7 @@ public class YamlModule extends CommandLibrarySharedModule {
     triggerYamlHelperMapBinder.addBinding(NEW_ARTIFACT.name()).to(ArtifactTriggerConditionHandler.class);
     triggerYamlHelperMapBinder.addBinding(WEBHOOK.name()).to(WebhookTriggerConditionHandler.class);
     triggerYamlHelperMapBinder.addBinding(PIPELINE_COMPLETION.name()).to(PipelineTriggerConditionHandler.class);
+    triggerYamlHelperMapBinder.addBinding(NEW_MANIFEST.name()).to(ManifestTriggerConditionHandler.class);
 
     MapBinder<String, PayloadSourceYamlHandler> payloadSourceMapBinder =
         MapBinder.newMapBinder(binder(), String.class, PayloadSourceYamlHandler.class);

@@ -1217,6 +1217,27 @@ public class ApplicationManifestServiceImpl implements ApplicationManifestServic
   }
 
   @Override
+  public PageResponse<ApplicationManifest> listPollingEnabled(
+      PageRequest<ApplicationManifest> pageRequest, String appId) {
+    PageResponse<ApplicationManifest> pageResponse = wingsPersistence.query(ApplicationManifest.class, pageRequest);
+    List<ApplicationManifest> applicationManifests = pageResponse.getResponse();
+    Set<String> serviceIds =
+        applicationManifests.stream().map(ApplicationManifest::getServiceId).collect(Collectors.toSet());
+    Map<String, String> mapServiceIdToServiceName = serviceResourceService.getServiceNames(appId, serviceIds);
+    List<ApplicationManifest> appManifestWithNoServices = new ArrayList<>();
+    for (ApplicationManifest applicationManifest : applicationManifests) {
+      String serviceName = mapServiceIdToServiceName.get(applicationManifest.getServiceId());
+      if (serviceName == null) {
+        appManifestWithNoServices.add(applicationManifest);
+      } else {
+        applicationManifest.setServiceName(serviceName);
+      }
+    }
+    applicationManifests.removeAll(appManifestWithNoServices);
+    return pageResponse;
+  }
+
+  @Override
   public PageResponse<ApplicationManifest> list(PageRequest<ApplicationManifest> pageRequest) {
     return wingsPersistence.query(ApplicationManifest.class, pageRequest);
   }

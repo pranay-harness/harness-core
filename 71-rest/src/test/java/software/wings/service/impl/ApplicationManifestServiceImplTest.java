@@ -1,5 +1,7 @@
 package software.wings.service.impl;
 
+import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
+import static io.harness.beans.SearchFilter.Operator.EQ;
 import static io.harness.rule.OwnerRule.ADWAIT;
 import static io.harness.rule.OwnerRule.ARVIND;
 import static io.harness.rule.OwnerRule.INDER;
@@ -10,6 +12,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anySet;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.doNothing;
@@ -31,11 +34,14 @@ import static software.wings.utils.WingsTestConstants.APP_ID;
 import static software.wings.utils.WingsTestConstants.BUCKET_NAME;
 import static software.wings.utils.WingsTestConstants.MANIFEST_ID;
 import static software.wings.utils.WingsTestConstants.SERVICE_ID;
+import static software.wings.utils.WingsTestConstants.SERVICE_NAME;
 import static software.wings.utils.WingsTestConstants.SETTING_ID;
 import static software.wings.utils.WingsTestConstants.SETTING_NAME;
 
 import com.google.inject.Inject;
 
+import io.harness.beans.PageRequest;
+import io.harness.beans.PageResponse;
 import io.harness.category.element.UnitTests;
 import io.harness.exception.InvalidRequestException;
 import io.harness.rule.Owner;
@@ -64,10 +70,13 @@ import software.wings.helpers.ext.helm.HelmHelper;
 import software.wings.helpers.ext.kustomize.KustomizeConfig;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.FeatureFlagService;
+import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.applicationmanifest.HelmChartService;
 import software.wings.service.intfc.yaml.YamlPushService;
 
+import java.util.Collections;
+import java.util.List;
 import java.util.Map;
 
 public class ApplicationManifestServiceImplTest extends WingsBaseTest {
@@ -81,6 +90,7 @@ public class ApplicationManifestServiceImplTest extends WingsBaseTest {
   @Mock private FeatureFlagService featureFlagService;
   @Mock private HelmChartService helmChartService;
   @Spy private HelmHelper helmHelper;
+  @Mock private ServiceResourceService serviceResourceService;
 
   @Before
   public void setup() {
@@ -718,5 +728,42 @@ public class ApplicationManifestServiceImplTest extends WingsBaseTest {
     assertThat(properties.get("basePath")).isEqualTo("base_path");
     assertThat(properties.get("repositoryName")).isEqualTo(SETTING_NAME);
     assertThat(properties.get("bucketName")).isEqualTo(BUCKET_NAME);
+  }
+
+  private void setUpForListPollingEnabled() {
+    ApplicationManifest applicationManifest = getHelmChartApplicationManifest();
+    applicationManifest.setAppId(APP_ID);
+    wingsPersistence.save(applicationManifest);
+
+    ApplicationManifest applicationManifest1 = getHelmChartApplicationManifest();
+    applicationManifest1.setAppId(APP_ID);
+    applicationManifest1.setPollForChanges(true);
+    wingsPersistence.save(applicationManifest1);
+
+    ApplicationManifest applicationManifest2 = getHelmChartApplicationManifest();
+    applicationManifest2.setAppId(APP_ID);
+    applicationManifest2.setPollForChanges(true);
+    applicationManifest2.setServiceId("SERVICE_ID_1");
+    wingsPersistence.save(applicationManifest2);
+
+    when(serviceResourceService.getServiceNames(anyString(), anySet()))
+        .thenReturn(Collections.singletonMap(SERVICE_ID, SERVICE_NAME));
+  }
+
+  @Test
+  @Owner(developers = INDER)
+  @Category(UnitTests.class)
+  public void testListPollingEnabled() {
+    setUpForListPollingEnabled();
+    PageRequest<ApplicationManifest> pageRequest =
+        aPageRequest().addFilter("appId", EQ, APP_ID).addFilter("pollForChanges", EQ, true).build();
+
+    PageResponse<ApplicationManifest> pageResponse =
+        applicationManifestServiceImpl.listPollingEnabled(pageRequest, APP_ID);
+    List<ApplicationManifest> applicationManifestList = pageResponse.getResponse();
+    assertThat(applicationManifestList).isNotNull().hasSize(1);
+    ApplicationManifest savedAppManifest = applicationManifestList.get(0);
+    assertThat(savedAppManifest.getPollForChanges()).isTrue();
+    assertThat(savedAppManifest.getServiceName()).isNotNull().isEqualTo(SERVICE_NAME);
   }
 }
