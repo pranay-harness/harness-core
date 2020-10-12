@@ -12,6 +12,8 @@ import com.google.common.collect.Sets;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
+import io.harness.beans.EncryptedData;
+import io.harness.beans.EncryptedData.EncryptedDataKeys;
 import io.harness.beans.PageRequest.PageRequestBuilder;
 import io.harness.beans.PageResponse;
 import io.harness.beans.SearchFilter.Operator;
@@ -52,8 +54,6 @@ import software.wings.security.UserRequestContext;
 import software.wings.security.UserRestrictionInfo;
 import software.wings.security.UserThreadLocal;
 import software.wings.security.WorkflowFilter;
-import software.wings.security.encryption.EncryptedData;
-import software.wings.security.encryption.EncryptedData.EncryptedDataKeys;
 import software.wings.service.impl.security.auth.AuthHandler;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.EnvironmentService;

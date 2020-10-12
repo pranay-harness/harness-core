@@ -1,14 +1,15 @@
 package software.wings.graphql.datafetcher.secretManager;
+
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static software.wings.security.PermissionAttribute.PermissionType.LOGGED_IN;
 
 import com.google.inject.Inject;
 
+import io.harness.beans.SecretManagerConfig;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.persistence.HIterator;
 import io.harness.persistence.HPersistence;
-import software.wings.beans.SecretManagerConfig;
 import software.wings.beans.SettingAttribute.SettingAttributeKeys;
 import software.wings.graphql.datafetcher.AbstractObjectDataFetcher;
 import software.wings.graphql.schema.query.QLSecretManagerQueryParameters;

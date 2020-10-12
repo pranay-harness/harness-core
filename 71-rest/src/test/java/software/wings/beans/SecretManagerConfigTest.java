@@ -6,13 +6,13 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.fail;
 
 import io.harness.CategoryTest;
+import io.harness.beans.SecretManagerConfig.SecretManagerConfigKeys;
 import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
 import io.harness.security.encryption.EncryptionType;
 import org.apache.commons.lang3.reflect.FieldUtils;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
-import software.wings.beans.SecretManagerConfig.SecretManagerConfigKeys;
 
 import java.security.SecureRandom;
 

@@ -2,6 +2,7 @@ package software.wings.service.impl.security;
 
 import static com.google.common.collect.Sets.newHashSet;
 import static io.harness.annotations.dev.HarnessTeam.PL;
+import static io.harness.beans.EncryptedData.PARENT_ID_KEY;
 import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
 import static io.harness.beans.PageResponse.PageResponseBuilder.aPageResponse;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
@@ -41,7 +42,6 @@ import static software.wings.beans.Environment.GLOBAL_ENV_ID;
 import static software.wings.beans.ServiceVariable.ServiceVariableKeys;
 import static software.wings.security.EnvFilter.FilterType.NON_PROD;
 import static software.wings.security.EnvFilter.FilterType.PROD;
-import static software.wings.security.encryption.EncryptedData.PARENT_ID_KEY;
 import static software.wings.service.impl.security.AbstractSecretServiceImpl.checkNotNull;
 import static software.wings.service.impl.security.AbstractSecretServiceImpl.checkState;
 import static software.wings.service.impl.security.AbstractSecretServiceImpl.encryptLocal;
@@ -64,18 +64,29 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.mongodb.DuplicateKeyException;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.EmbeddedUser;
+import io.harness.beans.EncryptedData;
+import io.harness.beans.EncryptedData.EncryptedDataKeys;
+import io.harness.beans.EncryptedDataParent;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.beans.SearchFilter;
 import io.harness.beans.SearchFilter.Operator;
+import io.harness.beans.SecretChangeLog;
+import io.harness.beans.SecretChangeLog.SecretChangeLogKeys;
+import io.harness.beans.SecretManagerConfig;
+import io.harness.beans.SecretText;
+import io.harness.beans.SecretText.SecretTextKeys;
+import io.harness.beans.SecretUsageLog;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.InvalidRequestException;
+import io.harness.exception.SecretManagementException;
 import io.harness.exception.WingsException;
 import io.harness.logging.AccountLogContext;
 import io.harness.logging.AutoLogContext;
 import io.harness.persistence.HIterator;
 import io.harness.persistence.UuidAware;
 import io.harness.queue.QueuePublisher;
+import io.harness.secretmanagers.SecretManagerConfigService;
 import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.security.encryption.EncryptedDataParams;
 import io.harness.security.encryption.EncryptedRecordData;
@@ -104,7 +115,6 @@ import software.wings.beans.Event.Type;
 import software.wings.beans.GcpKmsConfig;
 import software.wings.beans.KmsConfig;
 import software.wings.beans.LocalEncryptionConfig;
-import software.wings.beans.SecretManagerConfig;
 import software.wings.beans.SecretManagerRuntimeParameters;
 import software.wings.beans.SecretManagerRuntimeParameters.SecretManagerRuntimeParametersKeys;
 import software.wings.beans.ServiceVariable;
@@ -121,18 +131,11 @@ import software.wings.security.PermissionAttribute.Action;
 import software.wings.security.UsageRestrictions;
 import software.wings.security.UsageRestrictions.AppEnvRestriction;
 import software.wings.security.UserThreadLocal;
-import software.wings.security.encryption.EncryptedData;
-import software.wings.security.encryption.EncryptedData.EncryptedDataKeys;
-import software.wings.security.encryption.EncryptedDataParent;
-import software.wings.security.encryption.SecretChangeLog;
-import software.wings.security.encryption.SecretChangeLog.SecretChangeLogKeys;
-import software.wings.security.encryption.SecretUsageLog;
 import software.wings.security.encryption.secretsmanagerconfigs.CustomSecretsManagerConfig;
 import software.wings.security.encryption.setupusage.SecretSetupUsage;
 import software.wings.security.encryption.setupusage.SecretSetupUsageService;
 import software.wings.service.impl.AuditServiceHelper;
 import software.wings.service.impl.SettingServiceHelper;
-import software.wings.service.impl.security.SecretText.SecretTextKeys;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.EnvironmentService;
 import software.wings.service.intfc.FeatureFlagService;
@@ -148,7 +151,6 @@ import software.wings.service.intfc.security.GcpSecretsManagerService;
 import software.wings.service.intfc.security.KmsService;
 import software.wings.service.intfc.security.LocalEncryptionService;
 import software.wings.service.intfc.security.SecretManager;
-import software.wings.service.intfc.security.SecretManagerConfigService;
 import software.wings.service.intfc.security.VaultService;
 import software.wings.settings.RestrictionsAndAppEnvMap;
 import software.wings.settings.SettingVariableTypes;
@@ -1350,7 +1352,7 @@ public class SecretManagerImpl implements SecretManager {
   public EncryptedData getSecretById(String accountId, String id) {
     return wingsPersistence.createQuery(EncryptedData.class)
         .filter(EncryptedDataKeys.accountId, accountId)
-        .filter(EncryptedData.ID_KEY, id)
+        .filter(EncryptedDataKeys.ID_KEY, id)
         .get();
   }
 

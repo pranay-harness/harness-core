@@ -8,6 +8,7 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import com.google.common.collect.Sets;
 import com.google.inject.Inject;
 
+import io.harness.beans.EncryptedData;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.beans.SearchFilter.Operator;
@@ -19,7 +20,6 @@ import software.wings.security.EnvFilter.FilterType;
 import software.wings.security.GenericEntityFilter;
 import software.wings.security.UsageRestrictions;
 import software.wings.security.UsageRestrictions.AppEnvRestriction;
-import software.wings.security.encryption.EncryptedData;
 import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.security.SecretManager;
 import software.wings.settings.SettingVariableTypes;

@@ -16,20 +16,20 @@ import com.google.inject.Inject;
 
 import com.mongodb.DuplicateKeyException;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.beans.EncryptedData;
+import io.harness.beans.EncryptedData.EncryptedDataKeys;
+import io.harness.beans.SecretManagerConfig;
+import io.harness.beans.SecretManagerConfig.SecretManagerConfigKeys;
 import io.harness.eraro.Level;
 import io.harness.exception.InvalidArgumentsException;
 import io.harness.exception.NoResultFoundException;
+import io.harness.exception.SecretManagementException;
 import io.harness.security.encryption.EncryptedDataParams;
 import lombok.NonNull;
 import org.mongodb.morphia.query.Query;
-import software.wings.beans.SecretManagerConfig;
-import software.wings.beans.SecretManagerConfig.SecretManagerConfigKeys;
-import software.wings.security.encryption.EncryptedData;
-import software.wings.security.encryption.EncryptedData.EncryptedDataKeys;
 import software.wings.security.encryption.secretsmanagerconfigs.CustomSecretsManagerConfig;
 import software.wings.security.encryption.secretsmanagerconfigs.CustomSecretsManagerShellScript;
 import software.wings.service.impl.security.AbstractSecretServiceImpl;
-import software.wings.service.impl.security.SecretManagementException;
 import software.wings.service.intfc.security.CustomSecretsManagerEncryptionService;
 import software.wings.service.intfc.security.CustomSecretsManagerService;
 

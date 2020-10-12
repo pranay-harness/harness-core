@@ -1,9 +1,9 @@
 package software.wings.testutils.encryptionsamples;
 
+import io.harness.beans.EncryptedData;
 import io.harness.persistence.UuidAware;
 import lombok.Builder;
 import lombok.Data;
-import software.wings.security.encryption.EncryptedData;
 
 @Data
 @Builder

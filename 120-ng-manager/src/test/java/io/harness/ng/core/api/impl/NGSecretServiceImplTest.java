@@ -16,6 +16,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import io.harness.CategoryTest;
+import io.harness.beans.EncryptedData;
 import io.harness.category.element.UnitTests;
 import io.harness.exception.UnexpectedException;
 import io.harness.rest.RestResponse;
@@ -32,7 +33,6 @@ import org.junit.experimental.categories.Category;
 import retrofit2.Call;
 import retrofit2.Response;
 import software.wings.resources.secretsmanagement.EncryptedDataMapper;
-import software.wings.security.encryption.EncryptedData;
 
 import java.io.IOException;
 

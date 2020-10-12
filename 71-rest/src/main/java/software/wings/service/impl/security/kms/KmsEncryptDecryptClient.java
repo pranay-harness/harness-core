@@ -27,7 +27,9 @@ import com.amazonaws.services.kms.model.GenerateDataKeyRequest;
 import com.amazonaws.services.kms.model.GenerateDataKeyResult;
 import com.github.benmanes.caffeine.cache.Cache;
 import com.github.benmanes.caffeine.cache.Caffeine;
+import io.harness.beans.EncryptedData;
 import io.harness.delegate.exception.DelegateRetryableException;
+import io.harness.exception.SecretManagementDelegateException;
 import io.harness.security.SimpleEncryption;
 import io.harness.security.encryption.EncryptedRecord;
 import io.harness.security.encryption.EncryptionType;
@@ -36,8 +38,6 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.extern.slf4j.Slf4j;
 import software.wings.beans.KmsConfig;
-import software.wings.security.encryption.EncryptedData;
-import software.wings.service.impl.security.SecretManagementDelegateException;
 
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;

@@ -17,10 +17,13 @@ import static software.wings.settings.SettingVariableTypes.SERVICE_VARIABLE;
 import com.google.common.collect.Sets;
 import com.google.inject.Inject;
 
+import io.harness.beans.EncryptedData;
+import io.harness.beans.EncryptedDataParent;
 import io.harness.category.element.UnitTests;
 import io.harness.data.structure.UUIDGenerator;
 import io.harness.exception.InvalidArgumentsException;
 import io.harness.rule.Owner;
+import io.harness.secretmanagers.SecretManagerConfigService;
 import io.harness.security.encryption.EncryptionType;
 import org.junit.Before;
 import org.junit.Test;
@@ -30,11 +33,8 @@ import org.mockito.Mock;
 import software.wings.WingsBaseTest;
 import software.wings.beans.Account;
 import software.wings.beans.AccountType;
-import software.wings.security.encryption.EncryptedData;
-import software.wings.security.encryption.EncryptedDataParent;
 import software.wings.security.encryption.EncryptionDetail;
 import software.wings.service.intfc.FeatureFlagService;
-import software.wings.service.intfc.security.SecretManagerConfigService;
 import software.wings.settings.SettingVariableTypes;
 
 import java.util.HashMap;

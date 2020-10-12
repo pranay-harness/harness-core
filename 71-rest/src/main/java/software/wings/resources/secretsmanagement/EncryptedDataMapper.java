@@ -3,6 +3,8 @@ package software.wings.resources.secretsmanagement;
 import static io.harness.eraro.ErrorCode.SECRET_MANAGEMENT_ERROR;
 import static io.harness.exception.WingsException.ADMIN_SRE;
 
+import io.harness.beans.EncryptedData;
+import io.harness.exception.SecretManagementException;
 import io.harness.secretmanagerclient.NGEncryptedDataMetadata;
 import io.harness.secretmanagerclient.SecretType;
 import io.harness.secretmanagerclient.ValueType;
@@ -12,8 +14,6 @@ import io.harness.secretmanagerclient.dto.SecretTextUpdateDTO;
 import lombok.experimental.UtilityClass;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.beanutils.BeanUtils;
-import software.wings.security.encryption.EncryptedData;
-import software.wings.service.impl.security.SecretManagementException;
 
 import java.util.Optional;
 

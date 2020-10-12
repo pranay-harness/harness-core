@@ -12,17 +12,18 @@ import com.google.common.io.ByteStreams;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
+import io.harness.beans.EncryptedData;
+import io.harness.beans.SecretManagerConfig;
+import io.harness.exception.SecretManagementException;
 import io.harness.secretmanagerclient.NGEncryptedDataMetadata;
 import io.harness.secretmanagerclient.dto.SecretFileDTO;
 import io.harness.secretmanagerclient.dto.SecretFileUpdateDTO;
+import io.harness.secretmanagers.SecretManagerConfigService;
 import lombok.AllArgsConstructor;
 import software.wings.beans.GcpKmsConfig;
 import software.wings.beans.LocalEncryptionConfig;
-import software.wings.beans.SecretManagerConfig;
 import software.wings.beans.VaultConfig;
 import software.wings.dl.WingsPersistence;
-import software.wings.security.encryption.EncryptedData;
-import software.wings.service.impl.security.SecretManagementException;
 import software.wings.service.intfc.FileService;
 import software.wings.settings.SettingVariableTypes;
 

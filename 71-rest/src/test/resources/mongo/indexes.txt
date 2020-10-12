@@ -206,7 +206,6 @@ encryptedRecords {"name": "accountIdentifierEntityIdentifierIdx", "background": 
 encryptedRecords {"name": "accountOrgProjectIdx", "background": true, "sparse": true} {"ngMetadata.accountIdentifier": 1, "ngMetadata.orgIdentifier": 1, "ngMetadata.projectIdentifier": 1}
 encryptedRecords {"name": "acctKmsIdx", "background": true} {"accountId": 1, "kmsId": 1}
 encryptedRecords {"name": "acctNameIdx", "unique": true} {"accountId": 1, "name": 1}
-encryptedRecords {"name": "appId_1", "background": true} {"appId": 1}
 encryptedRecords {"name": "createdAt_1", "background": true} {"createdAt": 1}
 encryptedRecords {"name": "encryptionKey_1", "background": true} {"encryptionKey": 1}
 encryptedRecords {"name": "keywords_1", "background": true} {"keywords": 1}
@@ -546,7 +545,6 @@ schema {"name": "createdAt_1", "background": true} {"createdAt": 1}
 searchDistributedLocks {"name": "heartbeat_1", "background": true, "expireAfterSeconds": 70} {"heartbeat": 1}
 searchDistributedLocks {"name": "uuid_1", "background": true} {"uuid": 1}
 secretChangeLogs {"name": "acctEncryptedDataIdx", "background": true} {"accountId": 1, "encryptedDataId": 1}
-secretChangeLogs {"name": "appId_1", "background": true} {"appId": 1}
 secretChangeLogs {"name": "createdAt_1", "background": true} {"createdAt": 1}
 secretManagerRuntimeParameters {"name": "executionId_1", "background": true} {"executionId": 1}
 secretManagers {"name": "accountId_1", "background": true} {"accountId": 1}

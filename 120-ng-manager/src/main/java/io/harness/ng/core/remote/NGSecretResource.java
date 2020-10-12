@@ -6,6 +6,7 @@ import com.google.inject.Inject;
 
 import io.harness.NGCommonEntityConstants;
 import io.harness.NGResourceFilterConstants;
+import io.harness.beans.EncryptedData;
 import io.harness.ng.beans.PageResponse;
 import io.harness.ng.core.api.NGSecretService;
 import io.harness.ng.core.dto.ErrorDTO;
@@ -21,7 +22,6 @@ import io.swagger.annotations.ApiResponses;
 import lombok.AllArgsConstructor;
 import org.hibernate.validator.constraints.NotEmpty;
 import software.wings.resources.secretsmanagement.EncryptedDataMapper;
-import software.wings.security.encryption.EncryptedData;
 
 import java.util.stream.Collectors;
 import javax.validation.Valid;

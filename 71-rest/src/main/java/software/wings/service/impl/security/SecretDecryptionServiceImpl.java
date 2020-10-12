@@ -13,6 +13,8 @@ import io.harness.beans.DecryptableEntity;
 import io.harness.delegate.exception.DelegateRetryableException;
 import io.harness.encryption.SecretRefData;
 import io.harness.exception.ExceptionUtils;
+import io.harness.exception.SecretManagementDelegateException;
+import io.harness.exception.SecretManagementException;
 import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.security.encryption.SecretDecryptionService;
 import lombok.extern.slf4j.Slf4j;

@@ -6,9 +6,9 @@ import com.google.inject.Inject;
 import io.harness.datahandler.models.AccountSummary;
 import io.harness.limits.ConfiguredLimit;
 import io.harness.limits.configuration.LimitConfigurationService;
+import io.harness.secretmanagers.SecretManagerConfigService;
 import software.wings.beans.Account;
 import software.wings.service.intfc.DelegateService;
-import software.wings.service.intfc.security.SecretManagerConfigService;
 import software.wings.service.intfc.verification.CVConfigurationService;
 
 import java.util.List;

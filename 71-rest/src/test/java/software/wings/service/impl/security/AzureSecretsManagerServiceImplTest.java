@@ -12,6 +12,7 @@ import static org.mockito.MockitoAnnotations.initMocks;
 
 import com.google.inject.Inject;
 
+import io.harness.beans.EncryptedData;
 import io.harness.category.element.UnitTests;
 import io.harness.exception.AzureKeyVaultOperationException;
 import io.harness.exception.InvalidRequestException;
@@ -29,7 +30,6 @@ import software.wings.beans.AccountType;
 import software.wings.beans.AzureVaultConfig;
 import software.wings.dl.WingsPersistence;
 import software.wings.features.api.PremiumFeature;
-import software.wings.security.encryption.EncryptedData;
 import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.security.AzureSecretsManagerService;
 

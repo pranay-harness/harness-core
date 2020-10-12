@@ -14,6 +14,7 @@ import static software.wings.settings.SettingVariableTypes.WINRM_CONNECTION_ATTR
 
 import com.google.inject.Inject;
 
+import io.harness.beans.EncryptedData;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.UnexpectedException;
 import lombok.extern.slf4j.Slf4j;
@@ -24,7 +25,6 @@ import software.wings.graphql.schema.mutation.secrets.input.QLDeleteSecretInput;
 import software.wings.graphql.schema.mutation.secrets.payload.QLDeleteSecretPayload;
 import software.wings.graphql.schema.type.secrets.QLSecretType;
 import software.wings.security.annotations.AuthRule;
-import software.wings.security.encryption.EncryptedData;
 import software.wings.service.impl.security.auth.SecretAuthHandler;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.security.SecretManager;

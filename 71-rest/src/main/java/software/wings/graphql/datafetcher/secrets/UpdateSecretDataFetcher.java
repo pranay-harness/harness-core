@@ -4,6 +4,7 @@ import static software.wings.security.PermissionAttribute.PermissionType.LOGGED_
 
 import com.google.inject.Inject;
 
+import io.harness.beans.EncryptedData;
 import io.harness.exception.InvalidRequestException;
 import lombok.extern.slf4j.Slf4j;
 import software.wings.beans.SettingAttribute;
@@ -16,7 +17,6 @@ import software.wings.graphql.schema.type.secrets.QLSSHCredentialUpdate;
 import software.wings.graphql.schema.type.secrets.QLSecret;
 import software.wings.graphql.schema.type.secrets.QLWinRMCredentialUpdate;
 import software.wings.security.annotations.AuthRule;
-import software.wings.security.encryption.EncryptedData;
 import software.wings.service.impl.security.auth.SecretAuthHandler;
 import software.wings.service.intfc.security.SecretManager;
 

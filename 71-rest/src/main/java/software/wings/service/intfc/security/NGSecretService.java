@@ -1,13 +1,13 @@
 package software.wings.service.intfc.security;
 
 import io.harness.beans.DecryptableEntity;
+import io.harness.beans.EncryptedData;
 import io.harness.beans.PageResponse;
+import io.harness.beans.SecretManagerConfig;
 import io.harness.ng.core.NGAccess;
 import io.harness.secretmanagerclient.dto.SecretTextDTO;
 import io.harness.secretmanagerclient.dto.SecretTextUpdateDTO;
 import io.harness.security.encryption.EncryptedDataDetail;
-import software.wings.beans.SecretManagerConfig;
-import software.wings.security.encryption.EncryptedData;
 import software.wings.settings.SettingVariableTypes;
 
 import java.util.List;

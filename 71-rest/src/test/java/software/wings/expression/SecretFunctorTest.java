@@ -10,6 +10,7 @@ import static software.wings.expression.SecretFunctor.Mode.CASCADING;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 import static software.wings.utils.WingsTestConstants.APP_ID;
 
+import io.harness.beans.EncryptedData;
 import io.harness.category.element.UnitTests;
 import io.harness.data.structure.UUIDGenerator;
 import io.harness.expression.SecretString;
@@ -23,7 +24,6 @@ import org.mockito.Mockito;
 import org.mockito.stubbing.Answer;
 import software.wings.WingsBaseTest;
 import software.wings.beans.ServiceVariable;
-import software.wings.security.encryption.EncryptedData;
 import software.wings.service.intfc.security.ManagerDecryptionService;
 import software.wings.service.intfc.security.SecretManager;
 

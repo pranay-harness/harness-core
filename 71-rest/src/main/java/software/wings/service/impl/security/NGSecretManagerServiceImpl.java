@@ -6,8 +6,13 @@ import static io.harness.security.encryption.EncryptionType.VAULT;
 
 import com.google.inject.Inject;
 
+import io.harness.beans.SecretManagerConfig;
+import io.harness.beans.SecretManagerConfig.SecretManagerConfigKeys;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.exception.DuplicateFieldException;
+import io.harness.exception.SecretManagementException;
+import io.harness.helpers.ext.vault.SecretEngineSummary;
+import io.harness.helpers.ext.vault.VaultAppRoleLoginResult;
 import io.harness.secretmanagerclient.NGMetadata.NGMetadataKeys;
 import io.harness.secretmanagerclient.NGSecretManagerMetadata;
 import io.harness.secretmanagerclient.NGSecretManagerMetadata.NGSecretManagerMetadataKeys;
@@ -18,23 +23,19 @@ import io.harness.secretmanagerclient.dto.VaultAuthTokenCredentialDTO;
 import io.harness.secretmanagerclient.dto.VaultMetadataRequestSpecDTO;
 import io.harness.secretmanagerclient.dto.VaultMetadataSpecDTO;
 import io.harness.secretmanagerclient.dto.VaultSecretEngineDTO;
+import io.harness.secretmanagers.SecretManagerConfigService;
 import io.harness.security.encryption.AccessType;
 import io.harness.security.encryption.EncryptionType;
 import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.query.Query;
 import software.wings.beans.GcpKmsConfig;
 import software.wings.beans.LocalEncryptionConfig;
-import software.wings.beans.SecretManagerConfig;
-import software.wings.beans.SecretManagerConfig.SecretManagerConfigKeys;
 import software.wings.beans.VaultConfig;
 import software.wings.dl.WingsPersistence;
-import software.wings.service.impl.security.vault.SecretEngineSummary;
-import software.wings.service.impl.security.vault.VaultAppRoleLoginResult;
 import software.wings.service.intfc.security.GcpSecretsManagerService;
 import software.wings.service.intfc.security.LocalEncryptionService;
 import software.wings.service.intfc.security.NGSecretManagerService;
 import software.wings.service.intfc.security.SecretManager;
-import software.wings.service.intfc.security.SecretManagerConfigService;
 import software.wings.service.intfc.security.VaultService;
 
 import java.util.List;

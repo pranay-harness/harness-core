@@ -1,5 +1,6 @@
 package software.wings.security.encryption.migration;
 
+import static io.harness.beans.EncryptedData.EncryptedDataKeys;
 import static io.harness.mongo.iterator.MongoPersistenceIterator.MongoPersistenceIteratorBuilder;
 import static io.harness.rule.OwnerRule.VIKAS;
 import static io.harness.security.encryption.EncryptionType.GCP_KMS;
@@ -12,12 +13,12 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static software.wings.beans.FeatureName.ACTIVE_MIGRATION_FROM_AWS_TO_GCP_KMS;
-import static software.wings.security.encryption.EncryptedData.EncryptedDataKeys;
 import static software.wings.security.encryption.migration.EncryptedDataAwsToGcpKmsMigrationHandler.MAX_RETRY_COUNT;
 
 import com.google.inject.Inject;
 
 import groovy.util.logging.Slf4j;
+import io.harness.beans.EncryptedData;
 import io.harness.category.element.UnitTests;
 import io.harness.data.structure.UUIDGenerator;
 import io.harness.iterator.PersistenceIteratorFactory;
@@ -46,7 +47,6 @@ import software.wings.beans.FeatureFlag;
 import software.wings.beans.GcpKmsConfig;
 import software.wings.beans.KmsConfig;
 import software.wings.dl.WingsPersistence;
-import software.wings.security.encryption.EncryptedData;
 import software.wings.service.impl.security.GlobalEncryptDecryptClient;
 import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.FileService;

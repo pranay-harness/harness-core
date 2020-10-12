@@ -13,13 +13,13 @@ import io.harness.delegate.beans.connector.gcpkmsconnector.GcpKmsConnectorDTO;
 import io.harness.delegate.beans.connector.localconnector.LocalConnectorDTO;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.InvalidRequestException;
+import io.harness.exception.SecretManagementException;
 import io.harness.exception.WingsException;
 import io.harness.secretmanagerclient.dto.GcpKmsConfigDTO;
 import io.harness.secretmanagerclient.dto.SecretManagerConfigDTO;
 import io.harness.security.encryption.EncryptionType;
 import lombok.experimental.UtilityClass;
 import org.apache.commons.lang3.tuple.Pair;
-import software.wings.service.impl.security.SecretManagementException;
 
 import java.util.List;
 import java.util.Set;

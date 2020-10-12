@@ -38,6 +38,7 @@ import static software.wings.utils.WingsTestConstants.TEMPLATE_ID;
 import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
 
+import io.harness.beans.EncryptedData;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.beans.SearchFilter.Operator;
@@ -61,7 +62,6 @@ import software.wings.beans.EntityVersion.ChangeType;
 import software.wings.beans.ServiceTemplate;
 import software.wings.beans.ServiceVariable;
 import software.wings.dl.WingsPersistence;
-import software.wings.security.encryption.EncryptedData;
 import software.wings.service.impl.AuditServiceHelper;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.EntityVersionService;

@@ -5,17 +5,17 @@ import static io.harness.exception.WingsException.USER;
 import com.google.inject.Inject;
 
 import io.harness.NGCommonEntityConstants;
+import io.harness.beans.SecretManagerConfig;
 import io.harness.eraro.ErrorCode;
+import io.harness.exception.SecretManagementException;
+import io.harness.mappers.SecretManagerConfigMapper;
 import io.harness.rest.RestResponse;
 import io.harness.secretmanagerclient.dto.SecretManagerConfigDTO;
 import io.harness.secretmanagerclient.dto.SecretManagerConfigUpdateDTO;
 import io.harness.secretmanagerclient.dto.SecretManagerMetadataDTO;
 import io.harness.secretmanagerclient.dto.SecretManagerMetadataRequestDTO;
 import io.swagger.annotations.Api;
-import software.wings.beans.SecretManagerConfig;
-import software.wings.resources.secretsmanagement.mappers.SecretManagerConfigMapper;
 import software.wings.security.annotations.NextGenManagerAuth;
-import software.wings.service.impl.security.SecretManagementException;
 import software.wings.service.intfc.security.NGSecretManagerService;
 
 import java.util.ArrayList;

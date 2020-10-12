@@ -16,6 +16,8 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import io.harness.beans.DelegateTask;
+import io.harness.beans.EncryptedData;
+import io.harness.beans.EncryptedData.EncryptedDataKeys;
 import io.harness.beans.ExecutionStatus;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageRequest.PageRequestBuilder;
@@ -84,7 +86,6 @@ import software.wings.infra.InfrastructureDefinition;
 import software.wings.infra.PhysicalInfra;
 import software.wings.infra.ProvisionerAware;
 import software.wings.prune.PruneEvent;
-import software.wings.security.encryption.EncryptedData;
 import software.wings.service.impl.aws.model.AwsCFTemplateParamsData;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.DelegateService;
@@ -865,8 +866,8 @@ public class InfrastructureProvisionerServiceImpl implements InfrastructureProvi
         .filter(entry -> "ENCRYPTED_TEXT".equals(entry.getValueType()))
         .collect(toMap(NameValuePair::getName, entry -> {
           final EncryptedData encryptedData = wingsPersistence.createQuery(EncryptedData.class)
-                                                  .filter(EncryptedData.ACCOUNT_ID_KEY, accountId)
-                                                  .filter(EncryptedData.ID_KEY, entry.getValue())
+                                                  .filter(EncryptedDataKeys.accountId, accountId)
+                                                  .filter(EncryptedDataKeys.ID_KEY, entry.getValue())
                                                   .get();
 
           if (encryptedData == null) {

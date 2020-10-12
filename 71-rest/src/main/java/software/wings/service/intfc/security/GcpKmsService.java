@@ -3,8 +3,8 @@ package software.wings.service.intfc.security;
 import static io.harness.annotations.dev.HarnessTeam.PL;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.beans.EncryptedData;
 import software.wings.beans.GcpKmsConfig;
-import software.wings.security.encryption.EncryptedData;
 
 import java.io.File;
 import java.io.OutputStream;

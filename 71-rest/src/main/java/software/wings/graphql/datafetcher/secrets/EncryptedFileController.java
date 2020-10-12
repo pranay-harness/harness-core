@@ -2,9 +2,9 @@ package software.wings.graphql.datafetcher.secrets;
 
 import com.google.inject.Inject;
 
+import io.harness.beans.EncryptedData;
 import software.wings.graphql.schema.type.secrets.QLEncryptedFile;
 import software.wings.graphql.schema.type.secrets.QLSecretType;
-import software.wings.security.encryption.EncryptedData;
 
 import javax.validation.constraints.NotNull;
 

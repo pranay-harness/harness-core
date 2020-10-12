@@ -12,6 +12,8 @@ import static software.wings.utils.WingsReflectionUtils.getEncryptableSetting;
 import static software.wings.utils.WingsReflectionUtils.isSetByYaml;
 
 import io.harness.CategoryTest;
+import io.harness.beans.EncryptedData;
+import io.harness.beans.EncryptedDataParent;
 import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
 import io.harness.security.encryption.EncryptionType;
@@ -19,8 +21,6 @@ import org.apache.commons.lang3.reflect.FieldUtils;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import software.wings.annotation.EncryptableSetting;
-import software.wings.security.encryption.EncryptedData;
-import software.wings.security.encryption.EncryptedDataParent;
 import software.wings.security.encryption.SecretParentsUpdateDetail;
 import software.wings.settings.SettingVariableTypes;
 import software.wings.testutils.encryptionsamples.SampleEncryptableSetting;

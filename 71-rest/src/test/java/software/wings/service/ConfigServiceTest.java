@@ -28,6 +28,7 @@ import static software.wings.utils.WingsTestConstants.TEMPLATE_ID;
 
 import com.google.inject.Inject;
 
+import io.harness.beans.EncryptedData;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.beans.SearchFilter.Operator;
@@ -51,7 +52,6 @@ import software.wings.beans.EntityType;
 import software.wings.beans.EntityVersion;
 import software.wings.beans.ServiceTemplate;
 import software.wings.dl.WingsPersistence;
-import software.wings.security.encryption.EncryptedData;
 import software.wings.service.impl.security.auth.ConfigFileAuthHandler;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ConfigService;

@@ -11,6 +11,8 @@ import static software.wings.settings.SettingVariableTypes.CONFIG_FILE;
 import com.google.common.collect.Sets;
 import com.google.inject.Inject;
 
+import io.harness.beans.EncryptedData;
+import io.harness.beans.EncryptedDataParent;
 import io.harness.beans.PageResponse;
 import io.harness.category.element.UnitTests;
 import io.harness.data.structure.UUIDGenerator;
@@ -29,8 +31,6 @@ import software.wings.beans.ConfigFile;
 import software.wings.beans.ConfigFile.ConfigFileKeys;
 import software.wings.beans.EntityType;
 import software.wings.beans.ServiceTemplate;
-import software.wings.security.encryption.EncryptedData;
-import software.wings.security.encryption.EncryptedDataParent;
 import software.wings.security.encryption.EncryptionDetail;
 import software.wings.security.encryption.setupusage.SecretSetupUsage;
 import software.wings.service.intfc.ConfigService;

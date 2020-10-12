@@ -13,6 +13,7 @@ import static software.wings.graphql.datafetcher.connector.utils.ConnectorConsta
 import static software.wings.graphql.datafetcher.connector.utils.ConnectorConstants.SSH;
 import static software.wings.graphql.datafetcher.connector.utils.Utility.getQlGitConnectorInputBuilder;
 
+import io.harness.beans.EncryptedData;
 import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
 import io.harness.utils.RequestField;
@@ -29,7 +30,6 @@ import software.wings.graphql.schema.mutation.connector.input.QLConnectorInput;
 import software.wings.graphql.schema.mutation.connector.input.git.QLCustomCommitDetailsInput;
 import software.wings.graphql.schema.mutation.connector.input.git.QLGitConnectorInput;
 import software.wings.graphql.schema.type.connector.QLGitConnector;
-import software.wings.security.encryption.EncryptedData;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.security.SecretManager;
 

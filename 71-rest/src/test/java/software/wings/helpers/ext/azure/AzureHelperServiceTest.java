@@ -1,5 +1,7 @@
 package software.wings.helpers.ext.azure;
 
+import static io.harness.beans.AzureEnvironmentType.AZURE;
+import static io.harness.beans.AzureEnvironmentType.AZURE_US_GOVERNMENT;
 import static io.harness.data.encoding.EncodingUtils.encodeBase64;
 import static io.harness.rule.OwnerRule.ABOSII;
 import static io.harness.rule.OwnerRule.ANSHUL;
@@ -18,8 +20,6 @@ import static org.mockito.Mockito.verify;
 import static org.powermock.api.mockito.PowerMockito.mock;
 import static org.powermock.api.mockito.PowerMockito.when;
 import static org.powermock.api.mockito.PowerMockito.whenNew;
-import static software.wings.beans.cloudprovider.azure.AzureEnvironmentType.AZURE;
-import static software.wings.beans.cloudprovider.azure.AzureEnvironmentType.AZURE_US_GOVERNMENT;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 
 import com.microsoft.azure.Page;
@@ -61,6 +61,7 @@ import com.microsoft.azure.management.resources.fluentcore.arm.Region;
 import com.microsoft.azure.management.resources.implementation.SubscriptionInner;
 import com.microsoft.rest.LogLevel;
 import com.microsoft.rest.RestException;
+import io.harness.beans.AzureEnvironmentType;
 import io.harness.category.element.UnitTests;
 import io.harness.k8s.model.KubernetesConfig;
 import io.harness.network.Http;
@@ -84,7 +85,6 @@ import software.wings.WingsBaseTest;
 import software.wings.beans.AzureConfig;
 import software.wings.beans.AzureTagDetails;
 import software.wings.beans.AzureVaultConfig;
-import software.wings.beans.cloudprovider.azure.AzureEnvironmentType;
 import software.wings.helpers.ext.azure.AksGetCredentialsResponse.AksGetCredentialProperties;
 import software.wings.service.intfc.security.EncryptionService;
 

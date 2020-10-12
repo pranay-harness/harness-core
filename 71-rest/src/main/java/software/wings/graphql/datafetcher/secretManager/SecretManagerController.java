@@ -1,7 +1,7 @@
 package software.wings.graphql.datafetcher.secretManager;
 
+import io.harness.beans.SecretManagerConfig;
 import lombok.experimental.UtilityClass;
-import software.wings.beans.SecretManagerConfig;
 import software.wings.graphql.schema.type.secretManagers.QLSecretManager.QLSecretManagerBuilder;
 
 @UtilityClass

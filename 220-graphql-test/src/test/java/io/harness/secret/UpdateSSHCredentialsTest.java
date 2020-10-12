@@ -6,6 +6,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import com.google.inject.Inject;
 
 import io.harness.GraphQLTest;
+import io.harness.beans.SecretText;
 import io.harness.category.element.UnitTests;
 import io.harness.category.layer.GraphQLTests;
 import io.harness.generator.AccountGenerator;
@@ -18,7 +19,6 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import software.wings.beans.Account;
-import software.wings.service.impl.security.SecretText;
 import software.wings.service.intfc.security.SecretManager;
 
 public class UpdateSSHCredentialsTest extends GraphQLTest {

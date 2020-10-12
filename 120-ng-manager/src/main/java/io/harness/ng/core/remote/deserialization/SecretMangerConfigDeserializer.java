@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.DeserializationContext;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.deser.std.StdDeserializer;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import io.harness.beans.SecretManagerConfig;
 import io.harness.security.encryption.EncryptionType;
 import software.wings.beans.AwsSecretsManagerConfig;
 import software.wings.beans.AzureVaultConfig;
@@ -12,7 +13,6 @@ import software.wings.beans.CyberArkConfig;
 import software.wings.beans.GcpKmsConfig;
 import software.wings.beans.KmsConfig;
 import software.wings.beans.LocalEncryptionConfig;
-import software.wings.beans.SecretManagerConfig;
 import software.wings.beans.VaultConfig;
 import software.wings.security.encryption.secretsmanagerconfigs.CustomSecretsManagerConfig;
 

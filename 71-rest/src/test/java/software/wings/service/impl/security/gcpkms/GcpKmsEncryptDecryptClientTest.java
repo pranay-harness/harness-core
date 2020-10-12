@@ -21,9 +21,11 @@ import com.google.common.util.concurrent.TimeLimiter;
 import com.google.protobuf.ByteString;
 
 import io.harness.CategoryTest;
+import io.harness.beans.EncryptedData;
 import io.harness.category.element.UnitTests;
 import io.harness.data.structure.UUIDGenerator;
 import io.harness.delegate.exception.DelegateRetryableException;
+import io.harness.exception.SecretManagementDelegateException;
 import io.harness.rule.Owner;
 import io.harness.security.encryption.EncryptedRecord;
 import io.harness.security.encryption.EncryptionType;
@@ -37,8 +39,6 @@ import org.powermock.core.classloader.annotations.PowerMockIgnore;
 import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
 import software.wings.beans.GcpKmsConfig;
-import software.wings.security.encryption.EncryptedData;
-import software.wings.service.impl.security.SecretManagementDelegateException;
 import software.wings.settings.SettingVariableTypes;
 
 import java.nio.charset.StandardCharsets;

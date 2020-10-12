@@ -9,6 +9,7 @@ import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 
 import com.google.inject.Inject;
 
+import io.harness.beans.AzureEnvironmentType;
 import io.harness.category.element.UnitTests;
 import io.harness.ccm.config.CCMSettingService;
 import io.harness.rule.Owner;
@@ -19,7 +20,6 @@ import org.mockito.Mock;
 import software.wings.beans.AzureConfig;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.SettingAttribute.SettingCategory;
-import software.wings.beans.cloudprovider.azure.AzureEnvironmentType;
 import software.wings.service.impl.yaml.handler.setting.cloudprovider.AzureConfigYamlHandler;
 import software.wings.service.intfc.AccountService;
 

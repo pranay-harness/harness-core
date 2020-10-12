@@ -5,13 +5,13 @@ import static io.harness.annotations.dev.HarnessTeam.PL;
 import com.google.inject.Inject;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.beans.EncryptedData;
 import io.harness.expression.ExpressionEvaluator;
 import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.security.encryption.EncryptedDataParams;
 import io.harness.security.encryption.EncryptedRecordData;
 import lombok.extern.slf4j.Slf4j;
 import software.wings.expression.SecretFunctor;
-import software.wings.security.encryption.EncryptedData;
 import software.wings.security.encryption.secretsmanagerconfigs.CustomSecretsManagerConfig;
 import software.wings.security.encryption.secretsmanagerconfigs.CustomSecretsManagerShellScript;
 import software.wings.service.intfc.FeatureFlagService;

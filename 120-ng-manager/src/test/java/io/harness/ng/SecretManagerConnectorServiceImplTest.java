@@ -19,6 +19,7 @@ import io.harness.connector.services.ConnectorService;
 import io.harness.delegate.beans.connector.ConnectorType;
 import io.harness.delegate.beans.connector.vaultconnector.VaultConnectorDTO;
 import io.harness.exception.InvalidRequestException;
+import io.harness.exception.SecretManagementException;
 import io.harness.ng.core.api.NGSecretManagerService;
 import io.harness.rule.Owner;
 import io.harness.secretmanagerclient.dto.SecretManagerConfigDTO;
@@ -26,7 +27,6 @@ import io.harness.secretmanagerclient.dto.VaultConfigDTO;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
-import software.wings.service.impl.security.SecretManagementException;
 
 import java.io.IOException;
 

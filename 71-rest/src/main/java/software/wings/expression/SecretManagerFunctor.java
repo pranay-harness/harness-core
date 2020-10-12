@@ -7,6 +7,7 @@ import static io.harness.exception.WingsException.USER;
 import static software.wings.beans.ServiceVariable.Type.ENCRYPTED_TEXT;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.beans.EncryptedData;
 import io.harness.delegate.beans.SecretDetail;
 import io.harness.exception.FunctorException;
 import io.harness.exception.InvalidRequestException;
@@ -19,7 +20,6 @@ import lombok.Builder.Default;
 import lombok.Value;
 import software.wings.beans.FeatureName;
 import software.wings.beans.ServiceVariable;
-import software.wings.security.encryption.EncryptedData;
 import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.security.ManagerDecryptionService;
 import software.wings.service.intfc.security.SecretManager;

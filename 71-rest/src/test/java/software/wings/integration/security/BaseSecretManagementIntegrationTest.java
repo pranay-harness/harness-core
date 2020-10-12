@@ -8,26 +8,26 @@ import static org.assertj.core.api.Assertions.fail;
 
 import com.google.inject.Inject;
 
+import io.harness.beans.EncryptedData;
+import io.harness.beans.SecretChangeLog;
+import io.harness.beans.SecretManagerConfig;
+import io.harness.beans.SecretText;
 import io.harness.delegate.service.DelegateAgentFileService.FileBucket;
 import io.harness.exception.WingsException;
 import io.harness.expression.SecretString;
+import io.harness.helpers.ext.vault.SecretEngineSummary;
 import io.harness.rest.RestResponse;
 import io.harness.scm.SecretName;
+import io.harness.secretmanagers.SecretManagerConfigService;
 import org.apache.commons.io.IOUtils;
 import org.glassfish.jersey.media.multipart.FormDataBodyPart;
 import org.glassfish.jersey.media.multipart.MultiPart;
 import org.junit.Before;
 import software.wings.beans.KmsConfig;
-import software.wings.beans.SecretManagerConfig;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.VaultConfig;
 import software.wings.integration.BaseIntegrationTest;
-import software.wings.security.encryption.EncryptedData;
-import software.wings.security.encryption.SecretChangeLog;
-import software.wings.service.impl.security.SecretText;
-import software.wings.service.impl.security.vault.SecretEngineSummary;
 import software.wings.service.intfc.security.SecretManagementDelegateService;
-import software.wings.service.intfc.security.SecretManagerConfigService;
 import software.wings.settings.SettingVariableTypes;
 
 import java.io.File;

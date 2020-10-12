@@ -16,6 +16,7 @@ import static software.wings.utils.WingsTestConstants.mockChecker;
 
 import com.google.inject.Inject;
 
+import io.harness.beans.EncryptedData;
 import io.harness.category.element.DeprecatedIntegrationTests;
 import io.harness.limits.LimitCheckerFactory;
 import io.harness.rule.Owner;
@@ -35,7 +36,6 @@ import software.wings.beans.ServiceVariable;
 import software.wings.beans.ServiceVariable.OverrideType;
 import software.wings.beans.ServiceVariable.Type;
 import software.wings.rules.SetupScheduler;
-import software.wings.security.encryption.EncryptedData;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.ServiceTemplateService;

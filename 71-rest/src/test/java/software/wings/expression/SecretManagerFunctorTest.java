@@ -11,6 +11,7 @@ import static org.mockito.Mockito.when;
 import static software.wings.beans.ServiceVariable.Type.ENCRYPTED_TEXT;
 import static software.wings.utils.WingsTestConstants.ENV_ID;
 
+import io.harness.beans.EncryptedData;
 import io.harness.category.element.UnitTests;
 import io.harness.data.algorithm.HashGenerator;
 import io.harness.data.structure.UUIDGenerator;
@@ -26,7 +27,6 @@ import org.mockito.stubbing.Answer;
 import software.wings.WingsBaseTest;
 import software.wings.beans.KmsConfig;
 import software.wings.beans.ServiceVariable;
-import software.wings.security.encryption.EncryptedData;
 import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.security.ManagerDecryptionService;
 import software.wings.service.intfc.security.SecretManager;

@@ -18,8 +18,8 @@ import io.harness.delegate.beans.connector.ConnectorType;
 import io.harness.delegate.beans.connector.ConnectorValidationResult;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.InvalidRequestException;
+import io.harness.exception.SecretManagementException;
 import org.springframework.data.domain.Page;
-import software.wings.service.impl.security.SecretManagementException;
 
 import java.util.Optional;
 import javax.validation.constraints.NotNull;

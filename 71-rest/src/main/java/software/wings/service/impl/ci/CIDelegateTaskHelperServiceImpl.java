@@ -10,6 +10,7 @@ import static software.wings.settings.SettingVariableTypes.SECRET_TEXT;
 import com.google.inject.Inject;
 
 import io.harness.beans.DelegateTask;
+import io.harness.beans.EncryptedData;
 import io.harness.delegate.beans.DelegateResponseData;
 import io.harness.delegate.beans.TaskData;
 import io.harness.security.encryption.EncryptableSettingWithEncryptionDetails;
@@ -33,7 +34,6 @@ import software.wings.beans.ci.pod.CIK8PodParams;
 import software.wings.beans.ci.pod.EncryptedVariableWithType;
 import software.wings.beans.ci.pod.ImageDetailsWithConnector;
 import software.wings.helpers.ext.k8s.response.K8sTaskExecutionResponse;
-import software.wings.security.encryption.EncryptedData;
 import software.wings.service.intfc.DelegateService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.security.SecretManager;

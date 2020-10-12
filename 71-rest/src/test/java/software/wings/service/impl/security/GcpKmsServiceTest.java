@@ -16,6 +16,7 @@ import static org.mockito.MockitoAnnotations.initMocks;
 import com.google.common.io.Files;
 import com.google.inject.Inject;
 
+import io.harness.beans.EncryptedData;
 import io.harness.category.element.UnitTests;
 import io.harness.data.structure.UUIDGenerator;
 import io.harness.rule.Owner;
@@ -40,7 +41,6 @@ import software.wings.beans.GcpKmsConfig;
 import software.wings.beans.User;
 import software.wings.delegatetasks.DelegateProxyFactory;
 import software.wings.security.UserThreadLocal;
-import software.wings.security.encryption.EncryptedData;
 import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.FileService;
 import software.wings.service.intfc.security.GcpKmsService;

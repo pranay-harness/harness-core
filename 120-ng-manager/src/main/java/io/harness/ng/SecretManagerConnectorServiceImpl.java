@@ -17,12 +17,12 @@ import io.harness.connector.services.ConnectorService;
 import io.harness.delegate.beans.connector.ConnectorCategory;
 import io.harness.delegate.beans.connector.ConnectorType;
 import io.harness.delegate.beans.connector.ConnectorValidationResult;
+import io.harness.exception.SecretManagementException;
 import io.harness.ng.core.api.NGSecretManagerService;
 import io.harness.secretmanagerclient.dto.SecretManagerConfigDTO;
 import io.harness.secretmanagerclient.dto.SecretManagerConfigUpdateDTO;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
-import software.wings.service.impl.security.SecretManagementException;
 
 import java.util.Optional;
 import javax.validation.Valid;

@@ -9,6 +9,9 @@ import static org.assertj.core.api.Assertions.fail;
 
 import com.google.inject.Inject;
 
+import io.harness.beans.EncryptedData;
+import io.harness.beans.EncryptedData.EncryptedDataKeys;
+import io.harness.beans.EncryptedDataParent;
 import io.harness.category.element.UnitTests;
 import io.harness.data.structure.UUIDGenerator;
 import io.harness.rule.Owner;
@@ -23,7 +26,6 @@ import software.wings.beans.Account;
 import software.wings.beans.AccountType;
 import software.wings.beans.KmsConfig;
 import software.wings.dl.WingsPersistence;
-import software.wings.security.encryption.EncryptedData.EncryptedDataKeys;
 import software.wings.service.intfc.FeatureFlagService;
 import software.wings.settings.SettingVariableTypes;
 
