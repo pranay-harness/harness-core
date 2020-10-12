@@ -1,14 +1,21 @@
 package service;
 
+import static io.harness.rule.OwnerRule.MARKO;
 import static io.harness.rule.OwnerRule.SANJA;
 import static io.harness.rule.OwnerRule.VUK;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.fail;
+import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.when;
 
 import com.google.common.base.Charsets;
+import com.google.common.util.concurrent.TimeLimiter;
 
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
+import io.harness.delegate.beans.DelegateConfiguration;
+import io.harness.rest.RestResponse;
 import io.harness.rule.Owner;
 import io.harness.watcher.service.WatcherServiceImpl;
 import org.apache.commons.io.FileUtils;
@@ -16,17 +23,27 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.reflect.FieldUtils;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
-import org.mockito.Mockito;
+import org.junit.runner.RunWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.Spy;
+import org.mockito.runners.MockitoJUnitRunner;
 
 import java.io.File;
 import java.io.IOException;
 import java.net.URL;
+import java.time.Clock;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
+import java.util.concurrent.Callable;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
 
+@RunWith(MockitoJUnitRunner.class)
 public class WatcherServiceImplTest extends CategoryTest {
-  private WatcherServiceImpl watcherService = Mockito.spy(WatcherServiceImpl.class);
+  @Mock private TimeLimiter timeLimiter;
+  @InjectMocks @Spy private WatcherServiceImpl watcherService;
 
   @Test
   @Owner(developers = VUK)
@@ -182,6 +199,126 @@ public class WatcherServiceImplTest extends CategoryTest {
     String contentsExpected = StringUtils.join('\n', configWatcherExpectedLines);
 
     assertThat(contentsActual).isEqualTo(contentsExpected);
+  }
+
+  @Test
+  @Owner(developers = MARKO)
+  @Category(UnitTests.class)
+  public void testDownloadRunScriptsBeforeRestartingDelegateAndWatcherWhenDiskFull() throws IllegalAccessException {
+    FieldUtils.writeField(watcherService, "lastAvailableDiskSpace", new AtomicLong(Long.MAX_VALUE), true);
+
+    boolean downloadSuccesful = watcherService.downloadRunScriptsBeforeRestartingDelegateAndWatcher();
+
+    assertThat(downloadSuccesful).isFalse();
+  }
+
+  @Test
+  @Owner(developers = MARKO)
+  @Category(UnitTests.class)
+  public void testDownloadRunScriptsBeforeRestartingDelegateAndWatcherWhenNoAvailableDelegateVersions()
+      throws IllegalAccessException {
+    FieldUtils.writeField(watcherService, "lastAvailableDiskSpace", new AtomicLong(-1L), true);
+
+    boolean downloadSuccesful = watcherService.downloadRunScriptsBeforeRestartingDelegateAndWatcher();
+
+    assertThat(downloadSuccesful).isFalse();
+  }
+
+  @Test
+  @Owner(developers = MARKO)
+  @Category(UnitTests.class)
+  public void testDownloadRunScriptsBeforeRestartingDelegateAndWatcherWithDelegateVersions() throws Exception {
+    FieldUtils.writeField(watcherService, "lastAvailableDiskSpace", new AtomicLong(-1L), true);
+    DelegateConfiguration delegateConfiguration =
+        DelegateConfiguration.builder().delegateVersions(Arrays.asList("1", "2")).build();
+
+    RestResponse<DelegateConfiguration> restResponse =
+        RestResponse.Builder.aRestResponse().withResource(delegateConfiguration).build();
+    when(timeLimiter.callWithTimeout(any(Callable.class), eq(15L), eq(TimeUnit.SECONDS), eq(true)))
+        .thenReturn(restResponse);
+
+    boolean downloadSuccesful = watcherService.downloadRunScriptsBeforeRestartingDelegateAndWatcher();
+
+    assertThat(downloadSuccesful).isTrue();
+  }
+
+  @Test
+  @Owner(developers = MARKO)
+  @Category(UnitTests.class)
+  public void testDownloadRunScriptsBeforeRestartingDelegateAndWatcherWithIOException() throws Exception {
+    FieldUtils.writeField(watcherService, "lastAvailableDiskSpace", new AtomicLong(-1L), true);
+    DelegateConfiguration delegateConfiguration =
+        DelegateConfiguration.builder().delegateVersions(Arrays.asList("1", "2")).build();
+
+    RestResponse<DelegateConfiguration> restResponse =
+        RestResponse.Builder.aRestResponse().withResource(delegateConfiguration).build();
+    when(timeLimiter.callWithTimeout(any(Callable.class), eq(15L), eq(TimeUnit.SECONDS), eq(true)))
+        .thenReturn(restResponse);
+    IOException ioException = new IOException("test");
+    when(timeLimiter.callWithTimeout(any(Callable.class), eq(1L), eq(TimeUnit.MINUTES), eq(true)))
+        .thenThrow(ioException);
+
+    boolean downloadSuccesful = watcherService.downloadRunScriptsBeforeRestartingDelegateAndWatcher();
+    assertThat(downloadSuccesful).isFalse();
+
+    when(timeLimiter.callWithTimeout(any(Callable.class), eq(1L), eq(TimeUnit.MINUTES), eq(true)))
+        .thenThrow(Exception.class);
+    downloadSuccesful = watcherService.downloadRunScriptsBeforeRestartingDelegateAndWatcher();
+    assertThat(downloadSuccesful).isFalse();
+  }
+
+  @Test
+  @Owner(developers = MARKO)
+  @Category(UnitTests.class)
+  public void testSwitchStorage() {
+    try {
+      watcherService.switchStorage();
+    } catch (Exception ex) {
+      fail(ex.getMessage());
+    }
+  }
+
+  @Test
+  @Owner(developers = MARKO)
+  @Category(UnitTests.class)
+  public void testRestartWatcherToUpgradeJre() {
+    try {
+      watcherService.restartWatcherToUpgradeJre("openjdk");
+    } catch (Exception ex) {
+      fail(ex.getMessage());
+    }
+  }
+
+  @Test
+  @Owner(developers = MARKO)
+  @Category(UnitTests.class)
+  public void testRestartDelegateToUpgradeJre() {
+    try {
+      FieldUtils.writeField(watcherService, "clock", Clock.systemDefaultZone(), true);
+      watcherService.restartDelegateToUpgradeJre("oracle", "openjdk");
+    } catch (Exception ex) {
+      fail(ex.getMessage());
+    }
+  }
+
+  @Test
+  @Owner(developers = MARKO)
+  @Category(UnitTests.class)
+  public void testFindExpectedDelegateVersionsShouldReturnNull() throws Exception {
+    DelegateConfiguration delegateConfiguration =
+        DelegateConfiguration.builder().delegateVersions(Arrays.asList("1", "2")).build();
+
+    RestResponse<DelegateConfiguration> restResponse =
+        RestResponse.Builder.aRestResponse().withResource(delegateConfiguration).build();
+    when(timeLimiter.callWithTimeout(any(Callable.class), eq(15L), eq(TimeUnit.SECONDS), eq(true)))
+        .thenReturn(restResponse)
+        .thenReturn(null);
+
+    List<String> expectedDelegateVersions = watcherService.findExpectedDelegateVersions();
+    assertThat(expectedDelegateVersions).containsExactlyInAnyOrder("1", "2");
+
+    expectedDelegateVersions = watcherService.findExpectedDelegateVersions();
+    assertThat(expectedDelegateVersions).isNull();
   }
 
   private File getFileFromResources(String fileName) {

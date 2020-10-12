@@ -209,8 +209,8 @@ public class FunctionalTestRule implements MethodRule, InjectorRuleMixin, MongoR
       @Named("morphiaClasses")
       Map<Class, String> morphiaCustomCollectionNames() {
         return ImmutableMap.<Class, String>builder()
-            .put(DelegateSyncTaskResponse.class, "delegateSyncTaskResponses")
-            .put(DelegateAsyncTaskResponse.class, "delegateAsyncTaskResponses")
+            .put(DelegateSyncTaskResponse.class, "!!!custom_delegateSyncTaskResponses")
+            .put(DelegateAsyncTaskResponse.class, "!!!custom_delegateAsyncTaskResponses")
             .build();
       }
 
