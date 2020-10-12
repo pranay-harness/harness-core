@@ -4,6 +4,7 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.data.structure.ListUtils.OneAndOnlyOne.MANY;
 import static io.harness.data.structure.ListUtils.OneAndOnlyOne.NONE;
 import static io.harness.data.structure.ListUtils.oneAndOnlyOne;
+import static io.harness.govern.IgnoreThrowable.ignoredOnPurpose;
 import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
 import static io.harness.mongo.IndexManagerCollectionSession.createCollectionSession;
 import static io.harness.mongo.IndexManagerSession.Type.NORMAL_INDEX;
@@ -42,6 +43,7 @@ import io.harness.mongo.index.FdSparseIndex;
 import io.harness.mongo.index.FdTtlIndex;
 import io.harness.mongo.index.FdUniqueIndex;
 import io.harness.mongo.index.Field;
+import io.harness.mongo.index.MongoIndex;
 import io.harness.mongo.index.NgUniqueIndex;
 import io.harness.mongo.index.migrator.Migrator;
 import io.harness.persistence.Store;
@@ -59,6 +61,8 @@ import org.mongodb.morphia.mapping.MappedClass;
 import org.mongodb.morphia.mapping.MappedField;
 
 import java.lang.annotation.Annotation;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.time.Duration;
 import java.util.ArrayList;
@@ -203,6 +207,21 @@ public class IndexManagerSession {
 
   public static Map<String, IndexCreator> indexCreators(MappedClass mc, DBCollection collection) {
     Map<String, IndexCreator> creators = new HashMap<>();
+
+    try {
+      Method indexes = mc.getClazz().getMethod("mongoIndexes");
+      List<MongoIndex> mongoIndexList = (List<MongoIndex>) indexes.invoke(null);
+      String id = indexedFieldName(mc);
+      for (MongoIndex mongoIndex : mongoIndexList) {
+        IndexCreator creator = mongoIndex.createBuilder(id).collection(collection).build();
+        putCreator(creators, creator);
+      }
+    } catch (NoSuchMethodException exception) {
+      ignoredOnPurpose(exception);
+    } catch (IllegalAccessException | InvocationTargetException exception) {
+      logger.error("", exception);
+    }
+
     creatorsForFieldIndexes(mc, collection, creators);
     creatorsForCompositeIndexes(mc, collection, creators);
     return creators;
@@ -239,8 +258,7 @@ public class IndexManagerSession {
         options.put(EXPIRE_AFTER_SECONDS, fdTtlIndex.value());
       }
 
-      putCreator(
-          creators, indexName, IndexCreator.builder().collection(collection).keys(dbObject).options(options).build());
+      putCreator(creators, IndexCreator.builder().collection(collection).keys(dbObject).options(options).build());
     }
   }
 
@@ -265,7 +283,7 @@ public class IndexManagerSession {
                                     .collection(collection)
                                     .build();
       checkWithTheOthers(creators, newCreator);
-      putCreator(creators, newCreator.name(), newCreator);
+      putCreator(creators, newCreator);
     }
     Set<NgUniqueIndex> cdUniqueIndices = fetchAnnotations(mc.getClazz(), NgUniqueIndex.class);
     for (NgUniqueIndex index : cdUniqueIndices) {
@@ -273,7 +291,7 @@ public class IndexManagerSession {
                                     .collection(collection)
                                     .build();
       checkWithTheOthers(creators, newCreator);
-      putCreator(creators, newCreator.name(), newCreator);
+      putCreator(creators, newCreator);
     }
     Set<CdUniqueIndexWithCollation> cdUniqueIndicesWithCollation =
         fetchAnnotations(mc.getClazz(), CdUniqueIndexWithCollation.class);
@@ -283,7 +301,7 @@ public class IndexManagerSession {
               .collection(collection)
               .build();
       checkWithTheOthers(creators, newCreator);
-      putCreator(creators, newCreator.name(), newCreator);
+      putCreator(creators, newCreator);
     }
     Set<CdSparseIndex> sparceIndexes = fetchAnnotations(mc.getClazz(), CdSparseIndex.class);
     for (CdSparseIndex index : sparceIndexes) {
@@ -291,7 +309,7 @@ public class IndexManagerSession {
                                     .collection(collection)
                                     .build();
       checkWithTheOthers(creators, newCreator);
-      putCreator(creators, newCreator.name(), newCreator);
+      putCreator(creators, newCreator);
     }
   }
 
@@ -340,7 +358,8 @@ public class IndexManagerSession {
     return options;
   }
 
-  private static void putCreator(Map<String, IndexCreator> creators, String indexName, IndexCreator newCreator) {
+  private static void putCreator(Map<String, IndexCreator> creators, IndexCreator newCreator) {
+    String indexName = newCreator.name();
     creators.merge(indexName, newCreator, (old, current) -> {
       logger.error(
           "Indexes {} and {} have the same name {}", current.getKeys().toString(), old.getKeys().toString(), indexName);
