@@ -739,24 +739,28 @@ public class WatcherServiceImpl implements WatcherService {
     return false;
   }
 
-  private void switchStorage() {
+  @VisibleForTesting
+  public void switchStorage() {
     logger.info("Switching Storage");
-    downloadRunScriptsBeforeRestartingDelegateAndWatcher();
-    restartDelegate();
-    restartWatcher();
+    boolean downloadSuccessful = downloadRunScriptsBeforeRestartingDelegateAndWatcher();
+    if (downloadSuccessful) {
+      restartDelegate();
+      restartWatcher();
+    } else {
+      logger.warn("Download of run scripts was not successful. Skipping restart for switching storage.");
+    }
   }
 
-  private void downloadRunScriptsBeforeRestartingDelegateAndWatcher() {
-    // TODO: it seems wrong that we are not handling the issues with this method and going forward in the consuming
-    //       methods. We should return false if we are unable to download the scripts.
+  @VisibleForTesting
+  public boolean downloadRunScriptsBeforeRestartingDelegateAndWatcher() {
     if (isDiskFull()) {
-      return;
+      return false;
     }
 
     try {
       List<String> expectedDelegateVersions = findExpectedDelegateVersions();
       if (expectedDelegateVersions == null) {
-        return;
+        return false;
       }
 
       for (String expectedVersion : expectedDelegateVersions) {
@@ -772,9 +776,13 @@ public class WatcherServiceImpl implements WatcherService {
         logger.error("Download run script, Disk space is full. Free space: {}", lastAvailableDiskSpace.get());
       }
       logger.error("Error download run script", ioe);
+      return false;
     } catch (Exception e) {
       logger.error("Error downloading or starting run script", e);
+      return false;
     }
+
+    return true;
   }
 
   private void restartDelegate() {
@@ -797,13 +805,18 @@ public class WatcherServiceImpl implements WatcherService {
    * @param migrateToJreVersion
    * @throws Exception
    */
-  private void restartDelegateToUpgradeJre(String delegateJreVersion, String migrateToJreVersion) {
+  @VisibleForTesting
+  public void restartDelegateToUpgradeJre(String delegateJreVersion, String migrateToJreVersion) {
     if (!delegateJreVersion.equals(migrateToJreVersion)
         && clock.millis() - delegateRestartedToUpgradeJreAt > DELEGATE_RESTART_TO_UPGRADE_JRE_TIMEOUT) {
       logger.debug("Delegate JRE: {} MigrateTo JRE: {} ", delegateJreVersion, migrateToJreVersion);
-      downloadRunScriptsBeforeRestartingDelegateAndWatcher();
-      delegateRestartedToUpgradeJreAt = clock.millis();
-      restartDelegate();
+      boolean downloadSuccessful = downloadRunScriptsBeforeRestartingDelegateAndWatcher();
+      if (downloadSuccessful) {
+        delegateRestartedToUpgradeJreAt = clock.millis();
+        restartDelegate();
+      } else {
+        logger.warn("Download of run scripts was not successful. Skipping restart for delegate JRE upgrade.");
+      }
     }
   }
 
@@ -812,12 +825,17 @@ public class WatcherServiceImpl implements WatcherService {
    * @param migrateToJreVersion
    * @throws Exception
    */
-  private void restartWatcherToUpgradeJre(String migrateToJreVersion) {
+  @VisibleForTesting
+  public void restartWatcherToUpgradeJre(String migrateToJreVersion) {
     if (!migrateToJreVersion.equals(watcherJreVersion) && !watcherRestartedToUpgradeJre) {
       logger.debug("Watcher JRE: {} MigrateTo JRE: {} ", watcherJreVersion, migrateToJreVersion);
-      downloadRunScriptsBeforeRestartingDelegateAndWatcher();
-      watcherRestartedToUpgradeJre = true;
-      restartWatcher();
+      boolean downloadSuccessful = downloadRunScriptsBeforeRestartingDelegateAndWatcher();
+      if (downloadSuccessful) {
+        watcherRestartedToUpgradeJre = true;
+        restartWatcher();
+      } else {
+        logger.warn("Download of run scripts was not successful. Skipping restart for watcher JRE upgrade.");
+      }
     }
   }
 
@@ -840,7 +858,8 @@ public class WatcherServiceImpl implements WatcherService {
     }
   }
 
-  private List<String> findExpectedDelegateVersions() {
+  @VisibleForTesting
+  public List<String> findExpectedDelegateVersions() {
     try {
       if (multiVersion) {
         RestResponse<DelegateConfiguration> restResponse = timeLimiter.callWithTimeout(
