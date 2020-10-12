@@ -50,6 +50,8 @@ public class BatchJobScheduledDataServiceImpl implements BatchJobScheduledDataSe
           }
           return connectorCreationTime;
         }
+      } else if (batchJobType == BatchJobType.CLUSTER_DATA_TO_BIG_QUERY) {
+        instant = Instant.now().minus(45, ChronoUnit.DAYS).truncatedTo(ChronoUnit.DAYS);
       } else {
         instant = lastReceivedPublishedMessageDao.getFirstEventReceivedTime(accountId);
       }
