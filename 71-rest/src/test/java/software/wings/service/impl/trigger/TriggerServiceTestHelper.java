@@ -25,9 +25,11 @@ import static software.wings.utils.WingsTestConstants.ARTIFACT_STREAM_ID;
 import static software.wings.utils.WingsTestConstants.ENTITY_ID;
 import static software.wings.utils.WingsTestConstants.ENV_ID;
 import static software.wings.utils.WingsTestConstants.INFRA_MAPPING_ID;
+import static software.wings.utils.WingsTestConstants.MANIFEST_ID;
 import static software.wings.utils.WingsTestConstants.PIPELINE_ID;
 import static software.wings.utils.WingsTestConstants.SERVICE_ID;
 import static software.wings.utils.WingsTestConstants.SERVICE_ID_CHANGED;
+import static software.wings.utils.WingsTestConstants.SERVICE_NAME;
 import static software.wings.utils.WingsTestConstants.SETTING_ID;
 import static software.wings.utils.WingsTestConstants.SETTING_NAME;
 import static software.wings.utils.WingsTestConstants.TRIGGER_ID;
@@ -55,6 +57,7 @@ import software.wings.beans.artifact.JenkinsArtifactStream;
 import software.wings.beans.artifact.NexusArtifactStream;
 import software.wings.beans.trigger.ArtifactSelection;
 import software.wings.beans.trigger.ArtifactTriggerCondition;
+import software.wings.beans.trigger.ManifestTriggerCondition;
 import software.wings.beans.trigger.NewInstanceTriggerCondition;
 import software.wings.beans.trigger.PipelineAction;
 import software.wings.beans.trigger.PipelineTriggerCondition;
@@ -161,6 +164,20 @@ public class TriggerServiceTestHelper {
         .appId(APP_ID)
         .name(TRIGGER_NAME)
         .condition(ArtifactTriggerCondition.builder().artifactStreamId(ARTIFACT_STREAM_ID_1).build())
+        .build();
+  }
+
+  public static Trigger buildNewManifestTrigger() {
+    return Trigger.builder()
+        .workflowId(PIPELINE_ID)
+        .uuid(TRIGGER_ID)
+        .appId(APP_ID)
+        .name(TRIGGER_NAME)
+        .condition(ManifestTriggerCondition.builder()
+                       .appManifestId(MANIFEST_ID)
+                       .serviceName(SERVICE_NAME)
+                       .versionRegex("chart")
+                       .build())
         .build();
   }
 

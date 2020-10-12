@@ -478,6 +478,7 @@
 71-rest/src/main/java/software/wings/beans/trigger/CustomPayloadSource.java
 71-rest/src/main/java/software/wings/beans/trigger/GitHubPayloadSource.java
 71-rest/src/main/java/software/wings/beans/trigger/GitLabsPayloadSource.java
+71-rest/src/main/java/software/wings/beans/trigger/ManifestTriggerCondition.java
 71-rest/src/main/java/software/wings/beans/trigger/NewInstanceTriggerCondition.java
 71-rest/src/main/java/software/wings/beans/trigger/PipelineAction.java
 71-rest/src/main/java/software/wings/beans/trigger/PipelineTriggerCondition.java
@@ -981,6 +982,8 @@
 71-rest/src/main/java/software/wings/yaml/trigger/CustomPayloadSourceYaml.java
 71-rest/src/main/java/software/wings/yaml/trigger/GithubPayloadSourceYaml.java
 71-rest/src/main/java/software/wings/yaml/trigger/GitlabPayloadSourceYaml.java
+71-rest/src/main/java/software/wings/yaml/trigger/ManifestTriggerConditionHandler.java
+71-rest/src/main/java/software/wings/yaml/trigger/ManifestTriggerConditionYaml.java
 71-rest/src/main/java/software/wings/yaml/trigger/PayloadSourceYaml.java
 71-rest/src/main/java/software/wings/yaml/trigger/PipelineTriggerConditionHandler.java
 71-rest/src/main/java/software/wings/yaml/trigger/PipelineTriggerConditionYaml.java

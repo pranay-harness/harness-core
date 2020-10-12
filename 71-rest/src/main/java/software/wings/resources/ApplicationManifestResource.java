@@ -180,4 +180,18 @@ public class ApplicationManifestResource {
 
     return new RestResponse<>(applicationManifestService.list(pageRequest));
   }
+
+  @GET
+  @Path("list-with-polling-enabled")
+  @Timed
+  @ExceptionMetered
+  public RestResponse<PageResponse<ApplicationManifest>> listPollingEnabled(
+      @QueryParam("appId") String appId, @BeanParam PageRequest<ApplicationManifest> pageRequest) {
+    if (isNotBlank(appId)) {
+      pageRequest.addFilter("appId", EQ, appId);
+      pageRequest.addFilter("pollForChanges", EQ, true);
+    }
+
+    return new RestResponse<>(applicationManifestService.listPollingEnabled(pageRequest, appId));
+  }
 }

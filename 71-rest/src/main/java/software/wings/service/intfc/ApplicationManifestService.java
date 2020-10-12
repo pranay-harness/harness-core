@@ -84,6 +84,8 @@ public interface ApplicationManifestService extends OwnedByService, OwnedByEnvir
 
   PageResponse<ApplicationManifest> list(PageRequest<ApplicationManifest> pageRequest);
 
+  PageResponse<ApplicationManifest> listPollingEnabled(PageRequest<ApplicationManifest> pageRequest, String appId);
+
   List<ManifestFile> getOverrideManifestFilesByEnvId(String appId, String envId);
 
   boolean detachPerpetualTask(@NotNull String perpetualTaskId);

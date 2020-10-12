@@ -22,7 +22,8 @@ import software.wings.yaml.BaseYamlWithType;
   @Type(value = ScheduleTriggerConditionYaml.class, name = "SCHEDULED")
   , @Type(value = ArtifactTriggerConditionYaml.class, name = "NEW_ARTIFACT"),
       @Type(value = PipelineTriggerConditionYaml.class, name = "PIPELINE_COMPLETION"),
-      @Type(value = WebhookEventTriggerConditionYaml.class, name = "WEBHOOK")
+      @Type(value = WebhookEventTriggerConditionYaml.class, name = "WEBHOOK"),
+      @Type(value = ManifestTriggerConditionYaml.class, name = "NEW_MANIFEST")
 })
 public abstract class TriggerConditionYaml extends BaseYamlWithType {
   public TriggerConditionYaml(String type) {
