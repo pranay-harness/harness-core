@@ -11,8 +11,8 @@ import (
 	"os/exec"
 
 	"github.com/alexflint/go-arg"
-	ciclient "github.com/wings-software/portal/product/log-service/client/ci"
 	"github.com/wings-software/portal/commons/go/lib/logs"
+	ciclient "github.com/wings-software/portal/product/log-service/client/ci"
 	"go.uber.org/zap"
 )
 

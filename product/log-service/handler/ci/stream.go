@@ -73,8 +73,7 @@ func HandleWrite(s stream.Stream) http.HandlerFunc {
 				Errorln("api: cannot unmsrshal input")
 			return
 		}
-		// TODO(bradrydzewski) we should alter the Write method to
-		// accept a slice of log entries instead of a single log entry.
+
 		if err := s.Write(ctx, key, in...); err != nil {
 			if err != nil {
 				util.WriteInternalError(w, err)
@@ -101,6 +100,7 @@ func HandleTail(s stream.Stream) http.HandlerFunc {
 		h.Set("Cache-Control", "no-cache")
 		h.Set("Connection", "keep-alive")
 		h.Set("X-Accel-Buffering", "no")
+		h.Set("Access-Control-Allow-Origin", "*")
 
 		f, ok := w.(http.Flusher)
 		if !ok {
@@ -151,6 +151,8 @@ func HandleTail(s stream.Stream) http.HandlerFunc {
 // stream information to the http.Response.
 func HandleInfo(stream stream.Stream) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		h := w.Header()
+		h.Set("Access-Control-Allow-Origin", "*")
 		ctx := context.Background()
 		inf := stream.Info(ctx)
 		enc := json.NewEncoder(w)

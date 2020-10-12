@@ -11,7 +11,9 @@ import (
 	"github.com/wings-software/portal/product/log-service/store"
 	"github.com/wings-software/portal/product/log-service/store/bolt"
 	"github.com/wings-software/portal/product/log-service/store/minio"
+	"github.com/wings-software/portal/product/log-service/stream"
 	"github.com/wings-software/portal/product/log-service/stream/memory"
+	"github.com/wings-software/portal/product/log-service/stream/redis"
 
 	"github.com/joho/godotenv"
 	"github.com/sirupsen/logrus"
@@ -64,7 +66,15 @@ func (c *serverCommand) run(*kingpin.ParseContext) error {
 	}
 
 	// create the stream server.
-	stream := memory.New()
+	var stream stream.Stream
+	if config.Redis.Endpoint != "" {
+		stream = redis.New(config.Redis.Endpoint, config.Redis.Password)
+		logrus.Infof("configuring log stream to use Redis: %s", config.Redis.Endpoint)
+	} else {
+		// create the in-memory stream
+		stream = memory.New()
+		logrus.Infoln("configuring log stream to use in-memory stream")
+	}
 
 	// create the http server.
 	server := server.Server{
@@ -85,9 +95,11 @@ func (c *serverCommand) run(*kingpin.ParseContext) error {
 	}()
 	go func() {
 		select {
-		case <-s:
+		case val := <-s:
+			logrus.Infof("received OS Signal to exit xxxxxxxx %s", val)
 			cancel()
 		case <-ctx.Done():
+			logrus.Infoln("received a done signal to exit server")
 		}
 	}()
 
@@ -98,6 +110,10 @@ func (c *serverCommand) run(*kingpin.ParseContext) error {
 	if err == context.Canceled {
 		logrus.Infoln("program gracefully terminated")
 		return nil
+	}
+
+	if err != nil {
+		logrus.Errorf("program terminated with error: %s", err)
 	}
 
 	return err

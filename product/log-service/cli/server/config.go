@@ -26,6 +26,11 @@ type Config struct {
 		Endpoint  string `envconfig:"LOG_SERVICE_MINIO_ENDPOINT"`
 		PathStyle bool   `envconfig:"LOG_SERVICE_MINIO_PATH_STYLE"`
 	}
+
+	Redis struct {
+		Endpoint string `envconfig:"LOG_SERVICE_REDIS_ENDPOINT"`
+		Password string `envconfig:"LOG_SERVICE_REDIS_PASSWORD"`
+	}
 }
 
 // Load loads the configuration from the environment.

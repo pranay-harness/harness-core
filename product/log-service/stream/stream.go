@@ -4,6 +4,7 @@ package stream
 import (
 	"context"
 	"errors"
+	"time"
 )
 
 // ErrNotFound is returned when a stream is not registered
@@ -31,9 +32,11 @@ type Stream interface {
 
 // Line represents a line in the logs.
 type Line struct {
-	Number    int    `json:"pos"`
-	Message   string `json:"out"`
-	Timestamp int64  `json:"time"`
+	Level     string            `json:"level"`
+	Number    int               `json:"pos"`
+	Message   string            `json:"out"`
+	Timestamp time.Time         `json:"time"`
+	Args      map[string]string `json:"args"`
 }
 
 // Info provides internal stream information. This can be
@@ -46,9 +49,11 @@ type Info struct {
 }
 
 // Stats provides statistics about an individual stream,
-// including the size of the stream and the number of
-// subscribers.
+// including the size of the stream, the number of
+// subscribers and the TTL. These values will be -1 if
+// not set.
 type Stats struct {
-	Size int `json:"size"`
-	Subs int `json:"subscribers"`
+	Size int    `json:"size"`
+	Subs int    `json:"subscribers"`
+	TTL  string `json:"ttl"` // Unix time
 }

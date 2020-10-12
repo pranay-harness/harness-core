@@ -62,6 +62,8 @@ func HandleUploadLink(store store.Store) http.HandlerFunc {
 // a blob fromt the datastore and copies to the http.Response.
 func HandleDownload(store store.Store) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		h := w.Header()
+		h.Set("Access-Control-Allow-Origin", "*")
 		ctx := r.Context()
 
 		key := ParseKeyFromURL(r)
@@ -85,6 +87,8 @@ func HandleDownload(store store.Store) http.HandlerFunc {
 // a signed link to download a blob to the datastore.
 func HandleDownloadLink(store store.Store) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		h := w.Header()
+		h.Set("Access-Control-Allow-Origin", "*")
 		ctx := r.Context()
 
 		key := ParseKeyFromURL(r)
@@ -111,6 +115,8 @@ func HandleDownloadLink(store store.Store) http.HandlerFunc {
 // a blob from the datastore.
 func HandleDelete(store store.Store) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		h := w.Header()
+		h.Set("Access-Control-Allow-Origin", "*")
 		ctx := r.Context()
 
 		key := ParseKeyFromURL(r)

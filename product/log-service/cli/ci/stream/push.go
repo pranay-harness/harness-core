@@ -61,12 +61,12 @@ func registerPush(app *kingpin.CmdClause) {
 	cmd.Arg("message", "line message").
 		StringVar(&c.line.Message)
 
+	cmd.Arg("level", "severity of message").
+		StringVar(&c.line.Level)
+
 	cmd.Flag("line", "line number").
 		Default("0").
 		IntVar(&c.line.Number)
-
-	cmd.Flag("timestamp", "line timestamp").
-		Int64Var(&c.line.Timestamp)
 
 	cmd.Flag("server", "server endpoint").
 		Default("http://localhost:8080").

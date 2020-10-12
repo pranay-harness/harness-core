@@ -101,9 +101,9 @@ func TestStreamerInfo(t *testing.T) {
 
 	want := &stream.Info{
 		Streams: map[string]stream.Stats{
-			"1": {Subs: 2},
-			"2": {Subs: 1},
-			"3": {Subs: 0},
+			"1": {Subs: 2, TTL: "-1"},
+			"2": {Subs: 1, TTL: "-1"},
+			"3": {Subs: 0, TTL: "-1"},
 		},
 	}
 

@@ -7,6 +7,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"fmt"
 	"strings"
 	"sync"
 	"time"
@@ -31,6 +32,7 @@ type RemoteWriter struct {
 	interval time.Duration
 	pending  []*stream.Line
 	history  []*stream.Line
+	prev     []byte
 
 	closed bool
 	close  chan struct{}
@@ -38,7 +40,7 @@ type RemoteWriter struct {
 }
 
 // NewWriter returns a new writer
-func NewRemoteWriter(client client.Client, key string) StreamWriter {
+func NewRemoteWriter(client client.Client, key string) *RemoteWriter {
 	b := &RemoteWriter{
 		client:   client,
 		key:      key,
@@ -62,14 +64,52 @@ func (b *RemoteWriter) SetInterval(interval time.Duration) {
 	b.interval = interval
 }
 
+// Convert converts a byte slice to a line format used by the log service
+func (b *RemoteWriter) Convert(p string) *stream.Line {
+	var jsonMap map[string]interface{}
+	args := make(map[string]string)
+	err := json.Unmarshal([]byte(p), &jsonMap)
+	msg, ok1 := jsonMap[messageKey]
+	level, ok2 := jsonMap[levelKey]
+	if err != nil || !ok1 || !ok2 {
+		// If the message is not in JSON, just use the bytes as the `Message` field
+		return &stream.Line{
+			Level:     defaultLevel,
+			Message:   p,
+			Number:    b.num,
+			Timestamp: time.Now(),
+			Args:      args,
+		}
+	}
+	// Parse all the arguments into Args
+	for k, v := range jsonMap {
+		args[k] = fmt.Sprintf("%v", v)
+	}
+	return &stream.Line{
+		Level:     fmt.Sprintf("%v", level),
+		Message:   fmt.Sprintf("%v", msg),
+		Number:    b.num,
+		Timestamp: time.Now(),
+		Args:      args,
+	}
+}
+
 // Write uploads the live log stream to the server.
 func (b *RemoteWriter) Write(p []byte) (n int, err error) {
-	for _, part := range split(p) {
-		line := &stream.Line{
-			Number:    b.num,
-			Message:   part,
-			Timestamp: int64(time.Since(b.now).Seconds()),
-		}
+	var res []byte
+	// Return if a new line character is not present in the input.
+	// Commands like `mvn` flush character by character so this prevents
+	// spamming of single-character logs.
+	if !bytes.Contains(p, []byte("\n")) {
+		b.prev = append(b.prev, p...)
+		return len(p), nil
+	}
+
+	res = append(b.prev, p...)
+	b.prev = []byte{}
+
+	for _, part := range split(res) {
+		line := b.Convert(part)
 
 		for b.size+len(p) > b.limit {
 			b.stop() // buffer is full, stop streaming data
@@ -80,7 +120,7 @@ func (b *RemoteWriter) Write(p []byte) (n int, err error) {
 		b.size = b.size + len(part)
 		b.num++
 
-		if b.stopped() == false {
+		if !b.stopped() {
 			b.Lock()
 			b.pending = append(b.pending, line)
 			b.Unlock()
@@ -107,6 +147,10 @@ func (b *RemoteWriter) Open() error {
 // the server.
 func (b *RemoteWriter) Close() error {
 	if b.stop() {
+		// Flush anything waiting on a new line
+		if len(b.prev) > 0 {
+			b.Write([]byte("\n"))
+		}
 		b.flush()
 	}
 	err := b.upload()
@@ -121,9 +165,12 @@ func (b *RemoteWriter) upload() error {
 	data := new(bytes.Buffer)
 	for _, line := range b.history {
 		buf := new(bytes.Buffer)
-		json.NewEncoder(buf).Encode(line)
+		if err := json.NewEncoder(buf).Encode(line); err != nil {
+			return err
+		}
 		data.Write(buf.Bytes())
 	}
+
 	err := b.client.Upload(context.Background(), b.key, data)
 	return err
 }
@@ -155,7 +202,7 @@ func (b *RemoteWriter) clear() {
 func (b *RemoteWriter) stop() bool {
 	b.Lock()
 	var closed bool
-	if b.closed == false {
+	if !b.closed {
 		close(b.close)
 		closed = true
 		b.closed = true
