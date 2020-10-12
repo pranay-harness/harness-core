@@ -2,7 +2,7 @@ package io.harness.cdng.infra.beans;
 
 import io.harness.cdng.environment.yaml.EnvironmentYaml;
 import io.harness.cdng.infra.InfrastructureDef;
-import io.harness.cdng.visitor.LevelNodeQualifierName;
+import io.harness.cdng.visitor.YamlTypes;
 import io.harness.cdng.visitor.helpers.pipelineinfrastructure.InfraUseFromOverridesVisitorHelper;
 import io.harness.cdng.visitor.helpers.pipelineinfrastructure.InfraUseFromStageVisitorHelper;
 import io.harness.walktree.beans.LevelNode;
@@ -36,7 +36,7 @@ public class InfraUseFromStage implements Serializable, Visitable {
 
   @Override
   public LevelNode getLevelNode() {
-    return LevelNode.builder().qualifierName(LevelNodeQualifierName.INFRA_USE_FROM_STAGE).build();
+    return LevelNode.builder().qualifierName(YamlTypes.INFRA_USE_FROM_STAGE).build();
   }
 
   @Data
@@ -57,7 +57,7 @@ public class InfraUseFromStage implements Serializable, Visitable {
 
     @Override
     public LevelNode getLevelNode() {
-      return LevelNode.builder().qualifierName(LevelNodeQualifierName.INFRA_USE_FROM_STAGE_OVERRIDES).build();
+      return LevelNode.builder().qualifierName(YamlTypes.INFRA_USE_FROM_STAGE_OVERRIDES).build();
     }
   }
 }

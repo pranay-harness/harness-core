@@ -6,7 +6,7 @@ import static com.fasterxml.jackson.annotation.JsonTypeInfo.Id.NAME;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.fasterxml.jackson.annotation.JsonTypeName;
-import io.harness.cdng.visitor.LevelNodeQualifierName;
+import io.harness.cdng.visitor.YamlTypes;
 import io.harness.cdng.visitor.helpers.manifest.ManifestConfigVisitorHelper;
 import io.harness.data.validator.EntityIdentifier;
 import io.harness.walktree.beans.LevelNode;
@@ -19,7 +19,7 @@ import lombok.NoArgsConstructor;
 
 @Data
 @NoArgsConstructor
-@JsonTypeName(LevelNodeQualifierName.MANIFEST_CONFIG)
+@JsonTypeName(YamlTypes.MANIFEST_CONFIG)
 @SimpleVisitorHelper(helperClass = ManifestConfigVisitorHelper.class)
 public class ManifestConfig implements ManifestConfigWrapper, Visitable {
   @EntityIdentifier String identifier;
@@ -60,7 +60,7 @@ public class ManifestConfig implements ManifestConfigWrapper, Visitable {
   @Override
   public LevelNode getLevelNode() {
     return LevelNode.builder()
-        .qualifierName(LevelNodeQualifierName.MANIFEST_LIST_CONFIG + LevelNodeQualifierName.PATH_CONNECTOR + identifier)
+        .qualifierName(YamlTypes.MANIFEST_LIST_CONFIG + YamlTypes.PATH_CONNECTOR + identifier)
         .build();
   }
 }

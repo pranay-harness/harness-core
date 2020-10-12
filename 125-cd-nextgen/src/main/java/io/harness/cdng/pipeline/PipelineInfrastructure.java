@@ -3,7 +3,7 @@ package io.harness.cdng.pipeline;
 import io.harness.cdng.environment.yaml.EnvironmentYaml;
 import io.harness.cdng.infra.InfrastructureDef;
 import io.harness.cdng.infra.beans.InfraUseFromStage;
-import io.harness.cdng.visitor.LevelNodeQualifierName;
+import io.harness.cdng.visitor.YamlTypes;
 import io.harness.cdng.visitor.helpers.pipelineinfrastructure.PipelineInfrastructureVisitorHelper;
 import io.harness.walktree.beans.LevelNode;
 import io.harness.walktree.beans.VisitableChildren;
@@ -39,6 +39,6 @@ public class PipelineInfrastructure implements Visitable {
 
   @Override
   public LevelNode getLevelNode() {
-    return LevelNode.builder().qualifierName(LevelNodeQualifierName.PIPELINE_INFRASTRUCTURE).build();
+    return LevelNode.builder().qualifierName(YamlTypes.PIPELINE_INFRASTRUCTURE).build();
   }
 }

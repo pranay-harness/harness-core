@@ -3,7 +3,7 @@ package io.harness.cdng.service.beans;
 import io.harness.beans.ParameterField;
 import io.harness.cdng.artifact.bean.yaml.ArtifactListConfig;
 import io.harness.cdng.manifest.yaml.ManifestConfigWrapper;
-import io.harness.cdng.visitor.LevelNodeQualifierName;
+import io.harness.cdng.visitor.YamlTypes;
 import io.harness.cdng.visitor.helpers.serviceconfig.StageOverridesVisitorHelper;
 import io.harness.common.SwaggerConstants;
 import io.harness.data.structure.EmptyPredicate;
@@ -53,6 +53,6 @@ public class StageOverridesConfig implements Visitable {
 
   @Override
   public LevelNode getLevelNode() {
-    return LevelNode.builder().qualifierName(LevelNodeQualifierName.STAGE_OVERRIDES_CONFIG).build();
+    return LevelNode.builder().qualifierName(YamlTypes.STAGE_OVERRIDES_CONFIG).build();
   }
 }

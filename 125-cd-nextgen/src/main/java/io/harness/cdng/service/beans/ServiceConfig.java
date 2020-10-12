@@ -2,7 +2,7 @@ package io.harness.cdng.service.beans;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import io.harness.beans.ParameterField;
-import io.harness.cdng.visitor.LevelNodeQualifierName;
+import io.harness.cdng.visitor.YamlTypes;
 import io.harness.cdng.visitor.helpers.serviceconfig.ServiceConfigVisitorHelper;
 import io.harness.common.SwaggerConstants;
 import io.harness.walktree.beans.LevelNode;
@@ -61,6 +61,6 @@ public class ServiceConfig implements OverridesApplier<ServiceConfig>, Visitable
 
   @Override
   public LevelNode getLevelNode() {
-    return LevelNode.builder().qualifierName(LevelNodeQualifierName.SERVICE_CONFIG).build();
+    return LevelNode.builder().qualifierName(YamlTypes.SERVICE_CONFIG).build();
   }
 }

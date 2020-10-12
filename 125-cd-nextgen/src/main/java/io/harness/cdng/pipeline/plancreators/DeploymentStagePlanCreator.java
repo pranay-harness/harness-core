@@ -17,6 +17,7 @@ import io.harness.advisers.fail.OnFailAdviserParameters;
 import io.harness.cdng.executionplan.utils.PlanCreatorConfigUtils;
 import io.harness.cdng.pipeline.DeploymentStage;
 import io.harness.cdng.pipeline.PipelineInfrastructure;
+import io.harness.cdng.pipeline.steps.NGSectionStep;
 import io.harness.cdng.service.beans.ServiceConfig;
 import io.harness.executionplan.core.AbstractPlanCreatorWithChildren;
 import io.harness.executionplan.core.ExecutionPlanCreationContext;
@@ -30,7 +31,6 @@ import io.harness.executionplan.service.ExecutionPlanCreatorHelper;
 import io.harness.facilitator.FacilitatorObtainment;
 import io.harness.facilitator.FacilitatorType;
 import io.harness.plan.PlanNode;
-import io.harness.steps.section.chain.SectionChainStep;
 import io.harness.steps.section.chain.SectionChainStepParameters;
 import io.harness.yaml.core.ExecutionElement;
 import lombok.extern.slf4j.Slf4j;
@@ -108,7 +108,7 @@ public class DeploymentStagePlanCreator extends AbstractPlanCreatorWithChildren<
         .uuid(deploymentStageUid)
         .name(deploymentStage.getName())
         .identifier(deploymentStage.getIdentifier())
-        .stepType(SectionChainStep.STEP_TYPE)
+        .stepType(NGSectionStep.STEP_TYPE)
         .group(StepOutcomeGroup.STAGE.name())
         .stepParameters(SectionChainStepParameters.builder()
                             .childNodeId(planForService.getStartingNodeId())

@@ -1,7 +1,7 @@
 package io.harness.cdng.environment.yaml;
 
 import io.harness.beans.ParameterField;
-import io.harness.cdng.visitor.LevelNodeQualifierName;
+import io.harness.cdng.visitor.YamlTypes;
 import io.harness.cdng.visitor.helpers.pipelineinfrastructure.EnvironmentYamlVisitorHelper;
 import io.harness.common.SwaggerConstants;
 import io.harness.data.structure.EmptyPredicate;
@@ -53,6 +53,6 @@ public class EnvironmentYaml implements OverridesApplier<EnvironmentYaml>, Visit
 
   @Override
   public LevelNode getLevelNode() {
-    return LevelNode.builder().qualifierName(LevelNodeQualifierName.ENVIRONMENT_YAML).build();
+    return LevelNode.builder().qualifierName(YamlTypes.ENVIRONMENT_YAML).build();
   }
 }

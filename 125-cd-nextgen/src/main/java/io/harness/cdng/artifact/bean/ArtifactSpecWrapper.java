@@ -5,7 +5,7 @@ import static com.fasterxml.jackson.annotation.JsonTypeInfo.Id.NAME;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
-import io.harness.cdng.visitor.LevelNodeQualifierName;
+import io.harness.cdng.visitor.YamlTypes;
 import io.harness.cdng.visitor.helpers.artifact.ArtifactSpecWrapperVisitorHelper;
 import io.harness.delegate.task.artifacts.ArtifactSourceType;
 import io.harness.walktree.beans.LevelNode;
@@ -49,6 +49,6 @@ public class ArtifactSpecWrapper implements Visitable {
 
   @Override
   public LevelNode getLevelNode() {
-    return LevelNode.builder().qualifierName(LevelNodeQualifierName.ARTIFACT_SPEC_WRAPPER).build();
+    return LevelNode.builder().qualifierName(YamlTypes.ARTIFACT_SPEC_WRAPPER).build();
   }
 }

@@ -33,6 +33,7 @@ import io.harness.execution.NodeExecution;
 import io.harness.executionplan.plancreator.beans.StepOutcomeGroup;
 import io.harness.executions.beans.ExecutionGraph;
 import io.harness.executions.mapper.ExecutionGraphMapper;
+import io.harness.executions.steps.ExecutionNodeType;
 import io.harness.ng.core.environment.beans.EnvironmentType;
 import io.harness.plan.PlanNode;
 import io.harness.rule.Owner;
@@ -55,6 +56,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.mongodb.core.query.Criteria;
 
 import java.util.HashMap;
+import java.util.Map;
 import java.util.Optional;
 
 @RunWith(PowerMockRunner.class)
@@ -72,7 +74,7 @@ public class NgPipelineExecutionServiceImplTest extends CategoryTest {
   @Mock private PipelineService pipelineService;
   @Mock private PipelineExecutionHelper pipelineExecutionHelper;
   @InjectMocks
-  private NgPipelineExecutionServiceImpl ngPipelineExecutionService = spy(new NgPipelineExecutionServiceImpl());
+  private final NgPipelineExecutionServiceImpl ngPipelineExecutionService = spy(new NgPipelineExecutionServiceImpl());
 
   @Test
   @Owner(developers = VAIBHAV_SI)
@@ -195,5 +197,17 @@ public class NgPipelineExecutionServiceImplTest extends CategoryTest {
     doReturn(Optional.empty()).when(nodeExecutionService).getByNodeIdentifier(anyString(), anyString());
     assertThatThrownBy(() -> ngPipelineExecutionService.getPipelineExecutionDetail("planId", "stageId"))
         .isInstanceOf(InvalidRequestException.class);
+  }
+
+  @Test
+  @Owner(developers = VAIBHAV_SI)
+  @Category(UnitTests.class)
+  public void testGetStepTypeToYamlTypeMapping() {
+    Map<ExecutionNodeType, String> stepTypeToYamlTypeMapping =
+        ngPipelineExecutionService.getStepTypeToYamlTypeMapping();
+
+    assertThat(stepTypeToYamlTypeMapping.size()).isEqualTo(ExecutionNodeType.values().length);
+    assertThat(stepTypeToYamlTypeMapping.get(ExecutionNodeType.DEPLOYMENT_STAGE_STEP))
+        .isEqualTo(ExecutionNodeType.DEPLOYMENT_STAGE_STEP.getYamlType());
   }
 }

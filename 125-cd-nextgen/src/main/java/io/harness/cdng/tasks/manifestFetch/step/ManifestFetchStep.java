@@ -12,7 +12,6 @@ import com.google.inject.Inject;
 import io.harness.ambiance.Ambiance;
 import io.harness.beans.ExecutionStatus;
 import io.harness.cdng.orchestration.StepUtils;
-import io.harness.cdng.pipeline.steps.NGStepTypes;
 import io.harness.cdng.tasks.manifestFetch.ManifestFetchHelper;
 import io.harness.cdng.tasks.manifestFetch.step.ManifestFetchOutcome.ManifestFetchOutcomeBuilder;
 import io.harness.common.AmbianceHelper;
@@ -21,6 +20,7 @@ import io.harness.delegate.beans.TaskData.TaskDataBuilder;
 import io.harness.delegate.task.git.GitFetchFilesConfig;
 import io.harness.delegate.task.git.GitFetchRequest;
 import io.harness.execution.status.Status;
+import io.harness.executions.steps.ExecutionNodeType;
 import io.harness.facilitator.modes.task.TaskExecutable;
 import io.harness.state.Step;
 import io.harness.state.StepType;
@@ -43,7 +43,7 @@ import java.util.concurrent.TimeUnit;
 
 @Slf4j
 public class ManifestFetchStep implements Step, TaskExecutable<ManifestFetchParameters> {
-  public static final StepType STEP_TYPE = StepType.builder().type(NGStepTypes.MANIFEST_FETCH).build();
+  public static final StepType STEP_TYPE = StepType.builder().type(ExecutionNodeType.MANIFEST_FETCH.getName()).build();
   @Inject ManifestFetchHelper manifestFetchHelper;
 
   // Default timeout of 1 minute.

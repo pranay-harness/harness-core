@@ -32,6 +32,7 @@ import io.harness.execution.PlanExecution;
 import io.harness.executionplan.plancreator.beans.StepOutcomeGroup;
 import io.harness.executions.beans.ExecutionGraph;
 import io.harness.executions.mapper.ExecutionGraphMapper;
+import io.harness.executions.steps.ExecutionNodeType;
 import io.harness.service.GraphGenerationService;
 import lombok.NonNull;
 import org.springframework.data.domain.Page;
@@ -215,5 +216,11 @@ public class NgPipelineExecutionServiceImpl implements NgPipelineExecutionServic
   @Override
   public List<ExecutionStatus> getExecutionStatuses() {
     return Arrays.asList(ExecutionStatus.values());
+  }
+
+  @Override
+  public Map<ExecutionNodeType, String> getStepTypeToYamlTypeMapping() {
+    return Arrays.stream(ExecutionNodeType.values())
+        .collect(Collectors.toMap(executionStepType -> executionStepType, ExecutionNodeType::getYamlType, (a, b) -> b));
   }
 }

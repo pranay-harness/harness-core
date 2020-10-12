@@ -2,7 +2,7 @@ package io.harness.cdng.manifest.yaml;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonTypeName;
-import io.harness.cdng.visitor.LevelNodeQualifierName;
+import io.harness.cdng.visitor.YamlTypes;
 import io.harness.cdng.visitor.helpers.manifest.ManifestOverridesVisitorHelper;
 import io.harness.data.validator.EntityIdentifier;
 import io.harness.walktree.beans.LevelNode;
@@ -37,8 +37,7 @@ public class ManifestOverrideSets implements OverrideSetsWrapper, Visitable {
   @Override
   public LevelNode getLevelNode() {
     return LevelNode.builder()
-        .qualifierName(
-            LevelNodeQualifierName.MANIFEST_OVERRIDE_SETS + LevelNodeQualifierName.PATH_CONNECTOR + identifier)
+        .qualifierName(YamlTypes.MANIFEST_OVERRIDE_SETS + YamlTypes.PATH_CONNECTOR + identifier)
         .build();
   }
 }

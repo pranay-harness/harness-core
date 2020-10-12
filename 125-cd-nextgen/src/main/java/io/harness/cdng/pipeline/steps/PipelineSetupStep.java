@@ -5,6 +5,7 @@ import static io.harness.cdng.orchestration.StepUtils.createStepResponseFromChil
 import io.harness.ambiance.Ambiance;
 import io.harness.cdng.pipeline.beans.CDPipelineSetupParameters;
 import io.harness.execution.status.Status;
+import io.harness.executions.steps.ExecutionNodeType;
 import io.harness.facilitator.PassThroughData;
 import io.harness.facilitator.modes.child.ChildExecutable;
 import io.harness.facilitator.modes.child.ChildExecutableResponse;
@@ -21,7 +22,7 @@ import java.util.Map;
 
 @Slf4j
 public class PipelineSetupStep implements Step, SyncExecutable, ChildExecutable<CDPipelineSetupParameters> {
-  public static final StepType STEP_TYPE = StepType.builder().type(NGStepTypes.PIPELINE_SETUP).build();
+  public static final StepType STEP_TYPE = StepType.builder().type(ExecutionNodeType.PIPELINE_SETUP.getName()).build();
 
   @Override
   public StepResponse executeSync(Ambiance ambiance, StepParameters stepParameters, StepInputPackage inputPackage,

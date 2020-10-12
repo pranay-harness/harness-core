@@ -15,7 +15,6 @@ import io.harness.cdng.artifact.steps.ArtifactStepParameters;
 import io.harness.cdng.manifest.state.ManifestStep;
 import io.harness.cdng.manifest.yaml.ManifestAttributes;
 import io.harness.cdng.manifest.yaml.ManifestOutcome;
-import io.harness.cdng.pipeline.steps.NGStepTypes;
 import io.harness.cdng.service.beans.ServiceConfig;
 import io.harness.cdng.service.beans.ServiceOutcome;
 import io.harness.cdng.service.beans.ServiceOutcome.ArtifactsOutcome.ArtifactsOutcomeBuilder;
@@ -27,6 +26,7 @@ import io.harness.delegate.beans.DelegateResponseData;
 import io.harness.engine.outcomes.OutcomeService;
 import io.harness.execution.status.Status;
 import io.harness.executionplan.plancreator.beans.StepOutcomeGroup;
+import io.harness.executions.steps.ExecutionNodeType;
 import io.harness.facilitator.PassThroughData;
 import io.harness.facilitator.modes.chain.task.TaskChainExecutable;
 import io.harness.facilitator.modes.chain.task.TaskChainResponse;
@@ -51,7 +51,7 @@ import java.util.Optional;
 
 @Slf4j
 public class ServiceStep implements Step, TaskChainExecutable<ServiceStepParameters> {
-  public static final StepType STEP_TYPE = StepType.builder().type(NGStepTypes.SERVICE_STEP).build();
+  public static final StepType STEP_TYPE = StepType.builder().type(ExecutionNodeType.SERVICE.getName()).build();
 
   @Inject private OutcomeService outcomeService;
   @Inject private ServiceEntityService serviceEntityService;

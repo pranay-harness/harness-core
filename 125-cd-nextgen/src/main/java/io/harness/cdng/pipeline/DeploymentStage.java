@@ -4,7 +4,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import io.harness.beans.ParameterField;
 import io.harness.cdng.service.beans.ServiceConfig;
-import io.harness.cdng.visitor.LevelNodeQualifierName;
+import io.harness.cdng.visitor.YamlTypes;
 import io.harness.cdng.visitor.helpers.deploymentstage.DeploymentStageVisitorHelper;
 import io.harness.common.SwaggerConstants;
 import io.harness.data.structure.EmptyPredicate;
@@ -60,6 +60,6 @@ public class DeploymentStage implements CDStage, Visitable {
   }
 
   public LevelNode getLevelNode() {
-    return LevelNode.builder().qualifierName(LevelNodeQualifierName.SPEC).build();
+    return LevelNode.builder().qualifierName(YamlTypes.SPEC).build();
   }
 }

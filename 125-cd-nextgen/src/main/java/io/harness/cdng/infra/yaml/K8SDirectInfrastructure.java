@@ -4,7 +4,7 @@ import com.fasterxml.jackson.annotation.JsonTypeName;
 import io.harness.beans.ParameterField;
 import io.harness.cdng.infra.beans.InfraMapping;
 import io.harness.cdng.infra.beans.K8sDirectInfraMapping;
-import io.harness.cdng.visitor.LevelNodeQualifierName;
+import io.harness.cdng.visitor.YamlTypes;
 import io.harness.cdng.visitor.helpers.pipelineinfrastructure.K8SDirectInfrastructureVisitorHelper;
 import io.harness.common.SwaggerConstants;
 import io.harness.walktree.beans.LevelNode;
@@ -58,6 +58,6 @@ public class K8SDirectInfrastructure implements Infrastructure, Visitable {
 
   @Override
   public LevelNode getLevelNode() {
-    return LevelNode.builder().qualifierName(LevelNodeQualifierName.SPEC).build();
+    return LevelNode.builder().qualifierName(YamlTypes.SPEC).build();
   }
 }

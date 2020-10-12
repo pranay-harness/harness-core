@@ -9,6 +9,7 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import io.harness.cdng.executionplan.CDPlanCreatorType;
+import io.harness.cdng.pipeline.steps.NGSectionStep;
 import io.harness.executionplan.core.AbstractPlanCreatorWithChildren;
 import io.harness.executionplan.core.ExecutionPlanCreationContext;
 import io.harness.executionplan.core.ExecutionPlanCreator;
@@ -22,7 +23,6 @@ import io.harness.executionplan.service.ExecutionPlanCreatorHelper;
 import io.harness.facilitator.FacilitatorObtainment;
 import io.harness.facilitator.FacilitatorType;
 import io.harness.plan.PlanNode;
-import io.harness.steps.section.chain.SectionChainStep;
 import io.harness.steps.section.chain.SectionChainStepParameters;
 import io.harness.yaml.core.ExecutionElement;
 import io.harness.yaml.core.auxiliary.intfc.ExecutionWrapper;
@@ -90,7 +90,7 @@ public class CDExecutionPlanCreator extends AbstractPlanCreatorWithChildren<Exec
         .uuid(nodeId)
         .name(EXECUTION_NODE_IDENTIFIER)
         .identifier(EXECUTION_NODE_IDENTIFIER)
-        .stepType(SectionChainStep.STEP_TYPE)
+        .stepType(NGSectionStep.STEP_TYPE)
         .group(StepOutcomeGroup.EXECUTION.name())
         .stepParameters(SectionChainStepParameters.builder()
                             .childNodeIds(planForSteps.stream()

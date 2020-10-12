@@ -1,4 +1,4 @@
-package io.harness.cdng.pipeline.stepinfo;
+package io.harness.executions.steps;
 
 public interface StepSpecTypeConstants {
   String HTTP = "Http";
