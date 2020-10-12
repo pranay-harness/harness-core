@@ -31,6 +31,7 @@ import software.wings.beans.SecretManagerConfig;
 import software.wings.beans.VaultConfig;
 import software.wings.dl.WingsPersistence;
 import software.wings.security.encryption.EncryptedData;
+import software.wings.service.intfc.FileService;
 import software.wings.service.intfc.security.GcpKmsService;
 import software.wings.service.intfc.security.LocalEncryptionService;
 import software.wings.service.intfc.security.NGSecretManagerService;
@@ -49,6 +50,7 @@ public class NGSecretServiceImplTest extends WingsBaseTest {
   @Mock private GcpKmsService gcpKmsService;
   @Mock private LocalEncryptionService localEncryptionService;
   @Mock private WingsPersistence wingsPersistence;
+  @Mock private FileService fileService;
   @Mock private SecretManagerConfigService secretManagerConfigService;
   private static final String ACCOUNT = "Account";
   private static final String IDENTIFIER = "Account";
@@ -57,7 +59,7 @@ public class NGSecretServiceImplTest extends WingsBaseTest {
   @Before
   public void setup() {
     ngSecretService = spy(new NGSecretServiceImpl(ngSecretManagerService, secretManager, vaultService, gcpKmsService,
-        localEncryptionService, wingsPersistence, secretManagerConfigService));
+        localEncryptionService, wingsPersistence, fileService, secretManagerConfigService));
   }
 
   @Test

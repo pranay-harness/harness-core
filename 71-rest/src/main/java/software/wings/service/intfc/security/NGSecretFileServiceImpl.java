@@ -158,15 +158,15 @@ public class NGSecretFileServiceImpl implements NGSecretFileService {
       if (secretManagerConfigOptional.isPresent()) {
         // If name has changed, delete the old file (we do not allow reference with files)
         if (!dto.getName().equals(encryptedData.getName())) {
-          switch (secretManagerConfigOptional.get().getEncryptionType()) {
-            case LOCAL:
-            case GCP_KMS:
-              fileService.deleteFile(String.valueOf(encryptedData.getEncryptedValue()), CONFIGS);
-              break;
-            default:
-              ngSecretService.deleteSecretInSecretManager(
-                  account, encryptedData.getEncryptionKey(), secretManagerConfigOptional.get());
-          }
+          ngSecretService.deleteSecretInSecretManager(
+              account, encryptedData.getEncryptionKey(), secretManagerConfigOptional.get());
+        }
+        switch (secretManagerConfigOptional.get().getEncryptionType()) {
+          case LOCAL:
+          case GCP_KMS:
+            fileService.deleteFile(String.valueOf(encryptedData.getEncryptedValue()), CONFIGS);
+            break;
+          default:
         }
 
         // decrypt secrets of secret manager before sending secret manager config to delegate
@@ -186,7 +186,7 @@ public class NGSecretFileServiceImpl implements NGSecretFileService {
         encryptedData.getNgMetadata().setTags(dto.getTags());
 
         // save to DB and return
-        secretManager.saveEncryptedData(savedEncryptedData);
+        secretManager.saveEncryptedData(encryptedData);
         return true;
       } else {
         throw new SecretManagementException(

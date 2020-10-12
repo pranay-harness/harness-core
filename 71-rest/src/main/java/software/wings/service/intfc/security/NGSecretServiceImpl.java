@@ -1,6 +1,7 @@
 package software.wings.service.intfc.security;
 
 import static io.harness.beans.SearchFilter.Operator.EQ;
+import static io.harness.delegate.service.DelegateAgentFileService.FileBucket.CONFIGS;
 import static io.harness.eraro.ErrorCode.ENCRYPT_DECRYPT_ERROR;
 import static io.harness.eraro.ErrorCode.INVALID_REQUEST;
 import static io.harness.eraro.ErrorCode.SECRET_MANAGEMENT_ERROR;
@@ -36,6 +37,7 @@ import software.wings.resources.secretsmanagement.EncryptedDataMapper;
 import software.wings.security.encryption.EncryptedData;
 import software.wings.security.encryption.EncryptedData.EncryptedDataKeys;
 import software.wings.service.impl.security.SecretManagementException;
+import software.wings.service.intfc.FileService;
 import software.wings.settings.SettingVariableTypes;
 
 import java.lang.reflect.Field;
@@ -63,6 +65,7 @@ public class NGSecretServiceImpl implements NGSecretService {
   private final GcpKmsService gcpKmsService;
   private final LocalEncryptionService localEncryptionService;
   private final WingsPersistence wingsPersistence;
+  private final FileService fileService;
   private final SecretManagerConfigService secretManagerConfigService;
 
   private EncryptedData encrypt(
@@ -238,7 +241,15 @@ public class NGSecretServiceImpl implements NGSecretService {
         if (!Optional.ofNullable(encryptedData.getPath()).isPresent()) {
           deleteSecretInSecretManager(accountIdentifier, encryptedData.getPath(), secretManagerConfigOptional.get());
         }
-
+        if (encryptedData.getType() == SettingVariableTypes.CONFIG_FILE) {
+          switch (secretManagerConfigOptional.get().getEncryptionType()) {
+            case LOCAL:
+            case GCP_KMS:
+              fileService.deleteFile(String.valueOf(encryptedData.getEncryptedValue()), CONFIGS);
+              break;
+            default:
+          }
+        }
         // delete secret text finally in db
         return wingsPersistence.delete(EncryptedData.class, encryptedData.getUuid());
       }
