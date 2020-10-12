@@ -4,6 +4,7 @@ import static software.wings.beans.HostConnectionAttributes.AccessType.USER_PASS
 import static software.wings.beans.HostConnectionAttributes.AuthenticationScheme.KERBEROS;
 import static software.wings.core.ssh.executors.SshSessionConfig.Builder.aSshSessionConfig;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Charsets;
 
 import com.jcraft.jsch.JSch;
@@ -18,6 +19,7 @@ import software.wings.utils.SshHelperUtils;
 
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.util.Arrays;
 
 /**
  * Created by anubhaw on 2/8/16.
@@ -98,20 +100,24 @@ public class SshSessionFactory {
         jsch.addIdentity(keyPath, EncryptionUtils.toBytes(config.getKeyPassphrase(), Charsets.UTF_8));
       }
       session = jsch.getSession(config.getUserName(), config.getHost(), config.getPort());
-    } else if (config.getKey() != null && config.getKey().length > 0) {
-      logger.info("SSH using Key");
-      if (null == config.getKeyPassphrase()) {
-        jsch.addIdentity(config.getKeyName(), EncryptionUtils.toBytes(config.getKey(), Charsets.UTF_8), null, null);
-      } else {
-        jsch.addIdentity(config.getKeyName(), EncryptionUtils.toBytes(config.getKey(), Charsets.UTF_8), null,
-            EncryptionUtils.toBytes(config.getKeyPassphrase(), Charsets.UTF_8));
-      }
-      session = jsch.getSession(config.getUserName(), config.getHost(), config.getPort());
     } else {
-      logger.warn("User password on commandline is not supported...");
-      session = jsch.getSession(config.getUserName(), config.getHost(), config.getPort());
-      session.setPassword(new String(config.getPassword()));
-      session.setUserInfo(new SshUserInfo(new String(config.getPassword())));
+      if (config.getKey() != null && config.getKey().length > 0) {
+        // Copy Key because EncryptionUtils has a side effect of modifying the original array
+        final char[] copyOfKey = getCopyOfKey(config);
+        logger.info("SSH using Key");
+        if (null == config.getKeyPassphrase()) {
+          jsch.addIdentity(config.getKeyName(), EncryptionUtils.toBytes(copyOfKey, Charsets.UTF_8), null, null);
+        } else {
+          jsch.addIdentity(config.getKeyName(), EncryptionUtils.toBytes(copyOfKey, Charsets.UTF_8), null,
+              EncryptionUtils.toBytes(config.getKeyPassphrase(), Charsets.UTF_8));
+        }
+        session = jsch.getSession(config.getUserName(), config.getHost(), config.getPort());
+      } else {
+        logger.warn("User password on commandline is not supported...");
+        session = jsch.getSession(config.getUserName(), config.getHost(), config.getPort());
+        session.setPassword(new String(config.getPassword()));
+        session.setUserInfo(new SshUserInfo(new String(config.getPassword())));
+      }
     }
     session.setConfig("StrictHostKeyChecking", "no");
     session.setTimeout(config.getSshSessionTimeout());
@@ -120,6 +126,11 @@ public class SshSessionFactory {
     session.connect(config.getSshConnectionTimeout());
 
     return session;
+  }
+
+  @VisibleForTesting
+  static char[] getCopyOfKey(SshSessionConfig config) {
+    return Arrays.copyOf(config.getKey(), config.getKey().length);
   }
 
   public static void generateTGTUsingSshConfig(SshSessionConfig config, LogCallback logCallback) throws JSchException {
