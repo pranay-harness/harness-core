@@ -13,6 +13,8 @@ import static java.time.Duration.ofSeconds;
 import static org.apache.cxf.ws.addressing.ContextUtils.generateUUID;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.Matchers.eq;
+import static org.mockito.Mockito.verify;
 import static software.wings.beans.Account.Builder.anAccount;
 import static software.wings.beans.Environment.Builder.anEnvironment;
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
@@ -39,6 +41,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.Mock;
+import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
 import software.wings.WingsBaseTest;
 import software.wings.alerts.AlertStatus;
@@ -47,6 +50,7 @@ import software.wings.beans.Account;
 import software.wings.beans.Application;
 import software.wings.beans.DatadogConfig;
 import software.wings.beans.Environment;
+import software.wings.beans.Event;
 import software.wings.beans.Service;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.alert.Alert;
@@ -55,7 +59,6 @@ import software.wings.beans.alert.AlertType;
 import software.wings.beans.alert.UsageLimitExceededAlert;
 import software.wings.beans.alert.cv.ContinuousVerificationAlertData;
 import software.wings.beans.alert.cv.ContinuousVerificationDataCollectionAlert;
-import software.wings.delegatetasks.cv.DataCollectionException;
 import software.wings.metrics.MetricType;
 import software.wings.metrics.TimeSeriesMetricDefinition;
 import software.wings.service.impl.analysis.AnalysisTolerance;
@@ -77,6 +80,7 @@ import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.verification.CVConfigurationService;
+import software.wings.service.intfc.yaml.YamlPushService;
 import software.wings.sm.StateType;
 import software.wings.sm.states.APMVerificationState;
 import software.wings.sm.states.APMVerificationState.MetricCollectionInfo;
@@ -118,6 +122,7 @@ public class CVConfigurationServiceImplTest extends WingsBaseTest {
   @Inject private AccountService accountService;
   @Inject private EnvironmentService environmentService;
   @Inject private ServiceResourceService serviceResourceService;
+  @Mock private YamlPushService yamlPushService;
 
   private String accountId;
   private String appId;
@@ -130,6 +135,7 @@ public class CVConfigurationServiceImplTest extends WingsBaseTest {
         wingsPersistence.save(Application.Builder.anApplication().name(generateUuid()).accountId(accountId).build());
     MockitoAnnotations.initMocks(this);
     FieldUtils.writeField(cvConfigurationService, "featureFlagService", featureFlagService, true);
+    FieldUtils.writeField(cvConfigurationService, "yamlPushService", yamlPushService, true);
   }
 
   @Test
@@ -240,6 +246,48 @@ public class CVConfigurationServiceImplTest extends WingsBaseTest {
     PrometheusCVServiceConfiguration savedConfig = (PrometheusCVServiceConfiguration) wingsPersistence.get(
         CVConfiguration.class, cvServiceConfiguration.getUuid());
     assertThat(savedConfig.getTimeSeriesToAnalyze()).isEqualTo(timeSeriesToAnalyze);
+  }
+
+  @Test
+  @Owner(developers = SOWMYA)
+  @Category(UnitTests.class)
+  public void testUpdateConfiguration_pushYamlChangeSet() {
+    List<TimeSeries> timeSeriesToAnalyze = new ArrayList<>();
+
+    timeSeriesToAnalyze.add(TimeSeries.builder()
+                                .metricName("cpu")
+                                .metricType(MetricType.INFRA.name())
+                                .txnName("test")
+                                .url("url1{pod_name=x}")
+                                .build());
+
+    timeSeriesToAnalyze.add(TimeSeries.builder()
+                                .metricName("error")
+                                .metricType(MetricType.ERROR.name())
+                                .txnName("test")
+                                .url("url2{pod_name=x}")
+                                .build());
+
+    timeSeriesToAnalyze.add(TimeSeries.builder()
+                                .metricName("throughput")
+                                .metricType(MetricType.THROUGHPUT.name())
+                                .txnName("test")
+                                .url("url3{pod_name=x}")
+                                .build());
+
+    PrometheusCVServiceConfiguration cvServiceConfiguration =
+        PrometheusCVServiceConfiguration.builder().timeSeriesToAnalyze(timeSeriesToAnalyze).build();
+    addBasePropertiesToCVConfig(cvServiceConfiguration, StateType.PROMETHEUS);
+    wingsPersistence.save(cvServiceConfiguration);
+
+    PrometheusCVServiceConfiguration newConfig = (PrometheusCVServiceConfiguration) cvServiceConfiguration.deepCopy();
+    newConfig.setEnabled24x7(true);
+    cvConfigurationService.updateConfiguration(
+        accountId, appId, StateType.PROMETHEUS, newConfig, cvServiceConfiguration.getUuid());
+
+    verify(yamlPushService, Mockito.times(1))
+        .pushYamlChangeSet(
+            eq(accountId), eq(cvServiceConfiguration), eq(newConfig), eq(Event.Type.UPDATE), eq(false), eq(false));
   }
 
   @Test
@@ -648,29 +696,6 @@ public class CVConfigurationServiceImplTest extends WingsBaseTest {
     LogsCVConfiguration updatedConfig = cvConfigurationService.getConfiguration(logsCVConfiguration.getUuid());
     assertThat(updatedConfig).isNotNull();
     assertThat(updatedConfig.getAlertPriority()).isEqualTo(FeedbackPriority.P3);
-  }
-
-  @Test(expected = DataCollectionException.class)
-  @Owner(developers = PRAVEEN)
-  @Category(UnitTests.class)
-  public void testCreate_invalidNumAlertOccurrences() throws Exception {
-    StackDriverMetricCVConfiguration configuration = createStackDriverConfig(accountId);
-    configuration.setNumOfOccurrencesForAlert(10);
-    String cvConfigId = cvConfigurationService.saveConfiguration(
-        accountId, "LQWs27mPS7OrwCwDmT8aBA", StateType.STACK_DRIVER, configuration);
-  }
-
-  @Test(expected = DataCollectionException.class)
-  @Owner(developers = PRAVEEN)
-  @Category(UnitTests.class)
-  public void testUpdateConfiguration_invalidNumOccurrencesAlerts() throws Exception {
-    LogsCVConfiguration logsCVConfiguration = createLogsCVConfig(true);
-    logsCVConfiguration.setUuid(generateUuid());
-    cvConfigurationService.saveToDatabase(logsCVConfiguration, true);
-
-    logsCVConfiguration.setAlertPriority(FeedbackPriority.P3);
-    logsCVConfiguration.setNumOfOccurrencesForAlert(6);
-    cvConfigurationService.updateConfiguration(logsCVConfiguration, logsCVConfiguration.getAppId());
   }
 
   @Test
