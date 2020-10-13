@@ -1,10 +1,14 @@
 package io.harness.functional;
 
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.persistence.HQuery.excludeAuthority;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.data.domain.Sort.Direction;
 import static org.springframework.data.mongodb.core.query.Criteria.where;
 import static org.springframework.data.mongodb.core.query.Query.query;
+import static software.wings.beans.infrastructure.instance.Instance.InstanceKeys;
+import static software.wings.sm.StateExecutionInstance.StateExecutionInstanceKeys;
 
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
@@ -47,6 +51,7 @@ import org.junit.Rule;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.query.Query;
+import software.wings.api.PhaseStepExecutionData;
 import software.wings.beans.Account;
 import software.wings.beans.ExecutionArgs;
 import software.wings.beans.ExecutionCredential.ExecutionType;
@@ -56,6 +61,7 @@ import software.wings.beans.User;
 import software.wings.beans.Workflow;
 import software.wings.beans.WorkflowExecution;
 import software.wings.beans.artifact.Artifact;
+import software.wings.beans.infrastructure.instance.Instance;
 import software.wings.beans.security.UserGroup;
 import software.wings.dl.WingsPersistence;
 import software.wings.graphql.datafetcher.DataLoaderRegistryHelper;
@@ -66,9 +72,13 @@ import software.wings.service.impl.security.auth.AuthHandler;
 import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.UserService;
 import software.wings.service.intfc.WorkflowExecutionService;
+import software.wings.service.intfc.instance.InstanceService;
+import software.wings.sm.PhaseStepExecutionSummary;
+import software.wings.sm.StateExecutionInstance;
 
 import java.io.IOException;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -90,6 +100,7 @@ public abstract class AbstractFunctionalTest extends CategoryTest implements Gra
   @Inject @Named("orchestrationMongoTemplate") private MongoTemplate mongoTemplate;
   @Inject CommandLibraryServiceExecutor commandLibraryServiceExecutor;
   @Inject FeatureFlagService featureFlagService;
+  @Inject private InstanceService instanceService;
 
   @Override
   public DataLoaderRegistry getDataLoaderRegistry() {
@@ -206,6 +217,61 @@ public abstract class AbstractFunctionalTest extends CategoryTest implements Gra
     return getPlanExecution(original.getUuid());
   }
 
+  protected void logStateExecutionInstanceErrors(WorkflowExecution workflowExecution) {
+    if (workflowExecution != null && workflowExecution.getStatus() != ExecutionStatus.FAILED) {
+      logger.info("Workflow execution didn't failed, skipping this step");
+      return;
+    }
+
+    List<StateExecutionInstance> stateExecutionInstances =
+        wingsPersistence.createQuery(StateExecutionInstance.class)
+            .filter(StateExecutionInstanceKeys.executionUuid, workflowExecution.getUuid())
+            .filter(StateExecutionInstanceKeys.status, ExecutionStatus.FAILED)
+            .asList();
+
+    if (isEmpty(stateExecutionInstances)) {
+      logger.info("No FAILED state execution instances found for workflow {}", workflowExecution.getUuid());
+      return;
+    }
+
+    stateExecutionInstances.stream()
+        .map(stateExecutionInstance -> stateExecutionInstance.getStateExecutionMap().values())
+        .flatMap(Collection::stream)
+        .filter(stateExecutionData
+            -> stateExecutionData.getStatus() == ExecutionStatus.FAILED
+                || stateExecutionData.getStatus() == ExecutionStatus.ERROR)
+        .forEach(stateExecutionData -> {
+          logger.info("Analyzing failed state: {}", stateExecutionData.getStateName());
+          if (isNotEmpty(stateExecutionData.getErrorMsg())) {
+            logger.info(
+                "State: {} failed with error: {}", stateExecutionData.getStateName(), stateExecutionData.getErrorMsg());
+          } else {
+            logger.info("No error message found for state: {}, checking phase execution summary...",
+                stateExecutionData.getStateName());
+          }
+          if (stateExecutionData instanceof PhaseStepExecutionData) {
+            PhaseStepExecutionData phaseStepExecutionData = (PhaseStepExecutionData) stateExecutionData;
+            PhaseStepExecutionSummary phaseStepExecutionSummary = phaseStepExecutionData.getPhaseStepExecutionSummary();
+            if (phaseStepExecutionSummary != null) {
+              phaseStepExecutionSummary.getStepExecutionSummaryList()
+                  .stream()
+                  .filter(stepExecutionSummary
+                      -> stepExecutionSummary.getStatus() == ExecutionStatus.ERROR
+                          || stepExecutionSummary.getStatus() == ExecutionStatus.FAILED)
+                  .forEach(stepExecutionSummary
+                      -> logger.info("Phase step execution failed at state: {} and step name: {} with message: {}",
+                          stateExecutionData.getStateName(), stepExecutionSummary.getStepName(),
+                          stepExecutionSummary.getMessage()));
+            }
+          } else {
+            logger.info(
+                "No phase step execution summary found for state: {}. ¯\\_(ツ)_/¯", stateExecutionData.getStateName());
+          }
+
+          logger.info("Analysis completed for failed state: {}", stateExecutionData.getStateName());
+        });
+  }
+
   private PlanExecution startPlanExecution(String bearerToken, String accountId, String appId, String planType) {
     GenericType<RestResponse<PlanExecution>> returnType = new GenericType<RestResponse<PlanExecution>>() {};
 
@@ -313,10 +379,40 @@ public abstract class AbstractFunctionalTest extends CategoryTest implements Gra
     logger.info("Invoking workflow execution");
 
     WorkflowExecution workflowExecution = runWorkflow(bearerToken, appId, envId, executionArgs);
+    logStateExecutionInstanceErrors(workflowExecution);
     assertThat(workflowExecution).isNotNull();
     logger.info("Waiting for execution to finish");
-
+    assertInstanceCount(workflowExecution.getStatus(), appId, savedWorkflow.getServiceId(),
+        workflowExecution.getInfraMappingIds().get(0));
     logger.info("ECs Execution status: " + workflowExecution.getStatus());
     assertThat(workflowExecution.getStatus()).isEqualTo(ExecutionStatus.SUCCESS);
+  }
+
+  protected void assertInstanceCount(
+      ExecutionStatus workflowExecutionStatus, String appId, String serviceId, String infraMappingId) {
+    if (workflowExecutionStatus != ExecutionStatus.SUCCESS) {
+      return;
+    }
+
+    List<Instance> instances = getActiveInstancesConditional(appId, serviceId, infraMappingId);
+    assertThat(instances.size()).isGreaterThanOrEqualTo(1);
+  }
+
+  private List<Instance> getActiveInstancesConditional(String appId, String serviceId, String infraMappingId) {
+    Awaitility.await().atMost(5, TimeUnit.MINUTES).pollInterval(5, TimeUnit.SECONDS).until(() -> {
+      List<Instance> instances = getActiveInstances(appId, serviceId, infraMappingId);
+      return instances != null && instances.size() >= 1;
+    });
+
+    return getActiveInstances(appId, serviceId, infraMappingId);
+  }
+
+  private List<Instance> getActiveInstances(String appId, String serviceId, String infraMappingId) {
+    return wingsPersistence.createQuery(Instance.class)
+        .filter(InstanceKeys.appId, appId)
+        .filter(InstanceKeys.infraMappingId, infraMappingId)
+        .filter(InstanceKeys.serviceId, serviceId)
+        .filter(InstanceKeys.isDeleted, Boolean.FALSE)
+        .asList();
   }
 }
