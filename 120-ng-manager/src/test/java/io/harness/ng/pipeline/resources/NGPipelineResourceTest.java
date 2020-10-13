@@ -70,7 +70,7 @@ public class NGPipelineResourceTest extends CategoryTest {
                            .identifier(PIPELINE_IDENTIFIER)
                            .ngPipeline(ngPipeline)
                            .build();
-    ngPipelineSummaryResponseDTO = ngPipelineSummaryResponseDTO.builder()
+    ngPipelineSummaryResponseDTO = NGPipelineSummaryResponseDTO.builder()
                                        .identifier("pipelineID")
                                        .name("pipelineName")
                                        .numOfStages(0)

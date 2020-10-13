@@ -12,6 +12,7 @@ import java.util.List;
 public class PipelineExecutionSummaryFilter {
   List<String> serviceIdentifiers;
   List<String> envIdentifiers;
+  List<String> pipelineIdentifiers;
   List<ExecutionStatus> executionStatuses;
   EnvironmentType environmentTypes;
   Long startTime;

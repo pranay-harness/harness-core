@@ -4,6 +4,7 @@ import static io.harness.rule.OwnerRule.SAHIL;
 import static io.harness.rule.OwnerRule.VAIBHAV_SI;
 import static io.harness.utils.PageTestUtils.getPage;
 import static java.util.Collections.emptyList;
+import static java.util.Collections.singletonList;
 import static junit.framework.TestCase.assertEquals;
 import static junit.framework.TestCase.assertTrue;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -21,19 +22,24 @@ import io.harness.category.element.UnitTests;
 import io.harness.cdng.pipeline.executions.ExecutionStatus;
 import io.harness.cdng.pipeline.executions.PipelineExecutionHelper;
 import io.harness.cdng.pipeline.executions.beans.PipelineExecutionDetail;
+import io.harness.cdng.pipeline.executions.beans.PipelineExecutionInterruptType;
 import io.harness.cdng.pipeline.executions.beans.PipelineExecutionSummary;
 import io.harness.cdng.pipeline.executions.beans.PipelineExecutionSummary.PipelineExecutionSummaryKeys;
 import io.harness.cdng.pipeline.executions.beans.PipelineExecutionSummaryFilter;
 import io.harness.cdng.pipeline.executions.repositories.PipelineExecutionRepository;
 import io.harness.cdng.pipeline.executions.service.NgPipelineExecutionServiceImpl;
 import io.harness.dto.OrchestrationGraphDTO;
+import io.harness.engine.OrchestrationService;
 import io.harness.engine.executions.node.NodeExecutionService;
+import io.harness.engine.interrupts.InterruptPackage;
 import io.harness.exception.InvalidRequestException;
 import io.harness.execution.NodeExecution;
 import io.harness.executionplan.plancreator.beans.StepOutcomeGroup;
 import io.harness.executions.beans.ExecutionGraph;
 import io.harness.executions.mapper.ExecutionGraphMapper;
 import io.harness.executions.steps.ExecutionNodeType;
+import io.harness.interrupts.ExecutionInterruptType;
+import io.harness.interrupts.Interrupt;
 import io.harness.ng.core.environment.beans.EnvironmentType;
 import io.harness.plan.PlanNode;
 import io.harness.rule.Owner;
@@ -69,6 +75,7 @@ public class NgPipelineExecutionServiceImplTest extends CategoryTest {
 
   @Rule public MockitoRule mockitoRule = MockitoJUnit.rule();
   @Mock private NodeExecutionService nodeExecutionService;
+  @Mock private OrchestrationService orchestrationService;
   @Mock private GraphGenerationService graphGenerationService;
   @Mock private PipelineExecutionRepository pipelineExecutionRepository;
   @Mock private NGPipelineService ngPipelineService;
@@ -136,6 +143,27 @@ public class NgPipelineExecutionServiceImplTest extends CategoryTest {
   @Test
   @Owner(developers = SAHIL)
   @Category(UnitTests.class)
+  public void testRegisterInterrupt() {
+    InterruptPackage interruptPackage =
+        InterruptPackage.builder()
+            .interruptType(PipelineExecutionInterruptType.ABORT.getExecutionInterruptType())
+            .planExecutionId(PLAN_EXECUTION_ID)
+            .build();
+    when(orchestrationService.registerInterrupt(interruptPackage))
+        .thenReturn(Interrupt.builder()
+                        .uuid("uuid")
+                        .type(ExecutionInterruptType.ABORT_ALL)
+                        .planExecutionId(PLAN_EXECUTION_ID)
+                        .build());
+
+    ngPipelineExecutionService.registerInterrupt(PipelineExecutionInterruptType.ABORT, PLAN_EXECUTION_ID);
+
+    verify(orchestrationService).registerInterrupt(interruptPackage);
+  }
+
+  @Test
+  @Owner(developers = SAHIL)
+  @Category(UnitTests.class)
   public void testGetExecutions() {
     ArgumentCaptor<Criteria> criteriaArgumentCaptor = ArgumentCaptor.forClass(Criteria.class);
     when(pipelineExecutionRepository.findAll(any(Criteria.class), any(Pageable.class)))
@@ -150,6 +178,7 @@ public class NgPipelineExecutionServiceImplTest extends CategoryTest {
             .envIdentifiers(Lists.newArrayList("envId"))
             .serviceIdentifiers(Lists.newArrayList("serviceId"))
             .environmentTypes(EnvironmentType.Production)
+            .pipelineIdentifiers(singletonList("pipelineId"))
             .startTime(0L)
             .build();
 
@@ -162,13 +191,14 @@ public class NgPipelineExecutionServiceImplTest extends CategoryTest {
     Criteria criteria = criteriaArgumentCaptor.getValue();
     Document criteriaObject = criteria.getCriteriaObject();
 
-    assertEquals(10, criteriaObject.size());
+    assertEquals(11, criteriaObject.size());
     assertTrue(criteriaObject.containsKey(PipelineExecutionSummaryKeys.executionStatus));
     assertTrue(criteriaObject.containsKey(PipelineExecutionSummaryKeys.environmentTypes));
     assertTrue(criteriaObject.containsKey(PipelineExecutionSummaryKeys.startedAt));
     assertTrue(criteriaObject.containsKey(PipelineExecutionSummaryKeys.endedAt));
     assertTrue(criteriaObject.containsKey(PipelineExecutionSummaryKeys.envIdentifiers));
     assertTrue(criteriaObject.containsKey(PipelineExecutionSummaryKeys.serviceIdentifiers));
+    assertTrue(criteriaObject.containsKey(PipelineExecutionSummaryKeys.pipelineIdentifier));
   }
 
   private void shouldReturnStageGraph() {
