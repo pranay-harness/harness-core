@@ -2220,8 +2220,8 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
     if (taskData.getParameters() != null && taskData.getParameters().length == 1
         && taskData.getParameters()[0] instanceof TaskParameters) {
       logger.info("Applying DelegateExpression Evaluator for delegateTask");
-      ExpressionReflectionUtils.applyExpression(
-          taskData.getParameters()[0], value -> delegateExpressionEvaluator.substitute(value, new HashMap<>()));
+      ExpressionReflectionUtils.applyExpression(taskData.getParameters()[0],
+          (secretMode, value) -> delegateExpressionEvaluator.substitute(value, new HashMap<>()));
     }
   }
 

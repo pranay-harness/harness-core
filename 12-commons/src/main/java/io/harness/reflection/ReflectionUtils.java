@@ -59,13 +59,14 @@ public class ReflectionUtils {
     return declaredFields;
   }
 
-  public interface Functor { String update(String o); }
+  public interface Functor<T extends Annotation> { String update(T annotation, String o); }
 
-  public static void updateFieldValues(Object o, Predicate<Field> predicate, Functor functor) {
+  public static <T extends Annotation> void updateAnnotatedField(Class<T> cls, Object o, Functor<T> functor) {
     Class<?> c = o.getClass();
     while (c.getSuperclass() != null) {
       for (Field f : c.getDeclaredFields()) {
-        if (predicate.test(f)) {
+        T annotation = (T) f.getAnnotation(cls);
+        if (annotation != null) {
           boolean isAccessible = f.isAccessible();
           f.setAccessible(true);
           try {
@@ -74,13 +75,13 @@ public class ReflectionUtils {
               if (object instanceof List) {
                 List objectList = (List) object;
                 for (int i = 0; i < objectList.size(); i++) {
-                  objectList.set(i, functor.update((String) objectList.get(i)));
+                  objectList.set(i, functor.update(annotation, (String) objectList.get(i)));
                 }
               } else if (object instanceof Map) {
                 Map objectMap = (Map) object;
-                objectMap.replaceAll((k, v) -> functor.update((String) v));
+                objectMap.replaceAll((k, v) -> functor.update(annotation, (String) v));
               } else {
-                String value = functor.update((String) object);
+                String value = functor.update(annotation, (String) object);
                 f.set(o, value);
               }
             }

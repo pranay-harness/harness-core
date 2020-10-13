@@ -28,6 +28,7 @@ import static io.harness.delegate.message.ManagerMessageConstants.USE_CDN;
 import static io.harness.delegate.message.ManagerMessageConstants.USE_STORAGE_PROXY;
 import static io.harness.eraro.ErrorCode.USAGE_LIMITS_EXCEEDED;
 import static io.harness.exception.WingsException.USER;
+import static io.harness.expression.Expression.SecretsMode.DISALLOW_SECRETS;
 import static io.harness.govern.Switch.noop;
 import static io.harness.k8s.KubernetesConvention.getAccountIdentifier;
 import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
@@ -1583,8 +1584,7 @@ public class DelegateServiceImpl implements DelegateService {
           savedDelegate = saveDelegate(delegate);
         } else {
           throw new LimitsExceededException(
-              String.format(
-                  "Can not add delegate to the account. Maximum [%d] delegates are supported", maxUsageAllowed),
+              format("Can not add delegate to the account. Maximum [%d] delegates are supported", maxUsageAllowed),
               USAGE_LIMITS_EXCEEDED, USER);
         }
       }
@@ -2129,6 +2129,9 @@ public class DelegateServiceImpl implements DelegateService {
 
     checkTaskRankRateLimit(task.getRank());
 
+    // Make this call to make sure there are no secrets in disallowed expressions
+    resolvePreAssignmentExpressions(task, SecretManagerFunctor.Mode.PREVIEW);
+
     wingsPersistence.save(task);
   }
 
@@ -2460,7 +2463,7 @@ public class DelegateServiceImpl implements DelegateService {
       timedoutDelegates = "no delegates timedout";
     }
 
-    return String.format("No eligible delegates could perform the required capabilities for this task: [ %s ]%n"
+    return format("No eligible delegates could perform the required capabilities for this task: [ %s ]%n"
             + "  -  The capabilities were tested by the following delegates: [ %s ]%n"
             + "  -  Following delegates were validating but never returned: [ %s ]%n"
             + "  -  Other delegates (if any) may have been offline or were not eligible due to tag or scope restrictions.",
@@ -2566,16 +2569,25 @@ public class DelegateServiceImpl implements DelegateService {
               .capabilityFrameworkEnabled(delegateTask.isCapabilityFrameworkEnabled())
               .executionCapabilities(executionCapabilityList);
 
-      if (delegateTask.getData().getParameters().length != 1
+      if (delegateTask.getData().getParameters() == null || delegateTask.getData().getParameters().length != 1
           || !(delegateTask.getData().getParameters()[0] instanceof TaskParameters)) {
         return delegateTaskPackageBuilder.build();
       }
 
-      ExpressionReflectionUtils.applyExpression(delegateTask.getData().getParameters()[0],
-          value -> managerPreExecutionExpressionEvaluator.substitute(value, new HashMap<>()));
-
       SecretManagerFunctor secretManagerFunctor =
           (SecretManagerFunctor) managerPreExecutionExpressionEvaluator.getSecretManagerFunctor();
+
+      ExpressionReflectionUtils.applyExpression(delegateTask.getData().getParameters()[0], (secretMode, value) -> {
+        if (value == null) {
+          return null;
+        }
+        String substituted = managerPreExecutionExpressionEvaluator.substitute(value, new HashMap<>());
+        if (secretManagerFunctor != null && secretMode == DISALLOW_SECRETS
+            && secretManagerFunctor.getEvaluatedSecrets().size() > 0) {
+          throw new InvalidRequestException(format("Expression %s is not allowed to have secrets.", substituted));
+        }
+        return substituted;
+      });
 
       if (secretManagerFunctor == null) {
         return null;
@@ -3587,12 +3599,12 @@ public class DelegateServiceImpl implements DelegateService {
 
   private void sendEmailAboutDelegatesOverUsage(String accountId, int numDelegates) {
     Account account = accountService.get(accountId);
-    String body = String.format(
+    String body = format(
         "Account is using more than [%d] delegates. Account Id : [%s], Company Name : [%s], Account Name : [%s], Delegate Count : [%d]",
         delegatesFeature.getMaxUsageAllowedForAccount(accountId), accountId, account.getCompanyName(),
         account.getAccountName(), numDelegates);
-    String subjectMail = String.format(
-        "Found account with more than %d delegates", delegatesFeature.getMaxUsageAllowedForAccount(accountId));
+    String subjectMail =
+        format("Found account with more than %d delegates", delegatesFeature.getMaxUsageAllowedForAccount(accountId));
 
     emailNotificationService.send(EmailData.builder()
                                       .hasHtml(false)

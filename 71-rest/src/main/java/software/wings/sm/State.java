@@ -341,8 +341,8 @@ public abstract class State {
     context.resetPreparedCache();
     if (task.getData().getParameters().length == 1 && task.getData().getParameters()[0] instanceof TaskParameters) {
       task.setWorkflowExecutionId(context.getWorkflowExecutionId());
-      ExpressionReflectionUtils.applyExpression(
-          task.getData().getParameters()[0], value -> context.renderExpression(value, stateExecutionContext));
+      ExpressionReflectionUtils.applyExpression(task.getData().getParameters()[0],
+          (secretMode, value) -> context.renderExpression(value, stateExecutionContext));
     }
   }
 

@@ -93,7 +93,6 @@ import io.harness.logging.Misc;
 import io.harness.observer.Subject;
 import io.harness.queue.QueuePublisher;
 import io.harness.reflection.ReflectionUtils;
-import io.harness.reflection.ReflectionUtils.Functor;
 import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.spotinst.model.ElastiGroup;
 import io.harness.spotinst.model.ElastiGroupCapacity;
@@ -861,7 +860,8 @@ public class InfrastructureDefinitionServiceImpl implements InfrastructureDefini
     final ManagerPreviewExpressionEvaluator expressionEvaluator =
         ManagerPreviewExpressionEvaluator.evaluatorWithSecretExpressionFormat();
     // This is to ensure resolved secrets are not stored in DB
-    final Functor safeExpressionResolver = buildSecretSafeFunctor(context, expressionEvaluator);
+    final ExpressionReflectionUtils.Functor safeExpressionResolver =
+        buildSecretSafeFunctor(context, expressionEvaluator);
 
     if (isEmpty(infrastructureDefinition.getProvisionerId())) {
       for (Entry<String, Object> entry : fieldMapForClass.entrySet()) {
@@ -897,11 +897,11 @@ public class InfrastructureDefinitionServiceImpl implements InfrastructureDefini
     return true;
   }
 
-  private Functor buildSecretSafeFunctor(
+  private ExpressionReflectionUtils.Functor buildSecretSafeFunctor(
       ExecutionContext context, ManagerPreviewExpressionEvaluator expressionEvaluator) {
-    return val -> {
+    return (secretMode, value) -> {
       context.resetPreparedCache();
-      return expressionEvaluator.substitute(context.renderExpression(val,
+      return expressionEvaluator.substitute(context.renderExpression(value,
                                                 StateExecutionContext.builder()
                                                     .expressionFunctorToken(HashGenerator.generateIntegerHash())
                                                     .adoptDelegateDecryption(true)
