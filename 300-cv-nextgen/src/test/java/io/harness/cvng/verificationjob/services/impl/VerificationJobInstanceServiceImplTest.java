@@ -442,10 +442,10 @@ public class VerificationJobInstanceServiceImplTest extends CvNextGenTest {
     canaryVerificationJobDTO.setJobName(generateUuid());
     canaryVerificationJobDTO.setDataSources(Lists.newArrayList(DataSourceType.SPLUNK));
     canaryVerificationJobDTO.setSensitivity(Sensitivity.MEDIUM.name());
-    canaryVerificationJobDTO.setServiceIdentifier(generateUuid());
+    canaryVerificationJobDTO.setServiceIdentifier("service");
     canaryVerificationJobDTO.setOrgIdentifier(orgIdentifier);
     canaryVerificationJobDTO.setProjectIdentifier(projectIdentifier);
-    canaryVerificationJobDTO.setEnvIdentifier(generateUuid());
+    canaryVerificationJobDTO.setEnvIdentifier("env");
     canaryVerificationJobDTO.setSensitivity(Sensitivity.MEDIUM.name());
     canaryVerificationJobDTO.setDuration("15m");
     return canaryVerificationJobDTO;
@@ -458,9 +458,10 @@ public class VerificationJobInstanceServiceImplTest extends CvNextGenTest {
     cvConfig.setVerificationType(VerificationType.LOG);
     cvConfig.setAccountId(accountId);
     cvConfig.setConnectorIdentifier(connectorId);
-    cvConfig.setServiceIdentifier(generateUuid());
-    cvConfig.setEnvIdentifier(generateUuid());
-    cvConfig.setProjectIdentifier(generateUuid());
+    cvConfig.setServiceIdentifier("service");
+    cvConfig.setEnvIdentifier("env");
+    cvConfig.setProjectIdentifier(projectIdentifier);
+    cvConfig.setOrgIdentifier(orgIdentifier);
     cvConfig.setGroupId("groupId");
     cvConfig.setCategory(CVMonitoringCategory.PERFORMANCE);
     cvConfig.setProductName("productName");

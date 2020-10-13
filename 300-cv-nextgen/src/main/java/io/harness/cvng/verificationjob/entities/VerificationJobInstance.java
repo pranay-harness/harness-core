@@ -27,6 +27,7 @@ import java.time.Duration;
 import java.time.Instant;
 import java.time.OffsetDateTime;
 import java.time.temporal.ChronoUnit;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.Date;
 import java.util.List;
@@ -166,7 +167,8 @@ public class VerificationJobInstance
       if (percentage == 0) {
         return getResolvedJob().getDuration().plus(Duration.ofMinutes(5));
       }
-      Duration durationTillNow = Duration.between(getStartTime(), currentTime);
+      Duration durationTillNow = Duration.between(
+          Collections.max(Arrays.asList(getStartTime(), Instant.ofEpochMilli(createdAt))), currentTime);
       Duration durationFor1Percent = Duration.ofMillis(durationTillNow.toMillis() / percentage);
       return Duration.ofMillis((100 - percentage) * durationFor1Percent.toMillis());
     }

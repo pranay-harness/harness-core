@@ -19,6 +19,7 @@ import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Id;
 
 import java.time.Instant;
+import java.util.Collections;
 import java.util.List;
 
 @Data
@@ -41,4 +42,18 @@ public class DeploymentLogAnalysis
   private List<Cluster> clusters;
   private ResultSummary resultSummary;
   private List<HostSummary> hostSummaries;
+
+  public List<Cluster> getClusters() {
+    if (this.clusters == null) {
+      return Collections.emptyList();
+    }
+    return clusters;
+  }
+
+  public List<HostSummary> getHostSummaries() {
+    if (this.hostSummaries == null) {
+      return Collections.emptyList();
+    }
+    return hostSummaries;
+  }
 }

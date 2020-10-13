@@ -139,7 +139,8 @@ public class CVConfigServiceImplTest extends CvNextGenTest {
   public void testFind_filterByAccountAndDataSourceTypesIfExist() {
     CVConfig cvConfig = createCVConfig();
     CVConfig updated = save(cvConfig);
-    List<CVConfig> results = cvConfigService.find(accountId, Lists.newArrayList(DataSourceType.SPLUNK));
+    List<CVConfig> results = cvConfigService.find(
+        accountId, orgIdentifier, projectIdentifier, "service", "env", Lists.newArrayList(DataSourceType.SPLUNK));
     assertThat(results).hasSize(1);
     assertThat(results.get(0).getUuid()).isEqualTo(updated.getUuid());
   }
@@ -150,7 +151,8 @@ public class CVConfigServiceImplTest extends CvNextGenTest {
   public void testFind_filterByAccountAndDataSourceTypesIfDoesNotExist() {
     CVConfig cvConfig = createCVConfig();
     save(cvConfig);
-    List<CVConfig> results = cvConfigService.find(accountId, Lists.newArrayList(DataSourceType.APP_DYNAMICS));
+    List<CVConfig> results = cvConfigService.find(
+        accountId, orgIdentifier, projectIdentifier, "service", "env", Lists.newArrayList(DataSourceType.APP_DYNAMICS));
     assertThat(results).hasSize(0);
   }
 
@@ -396,7 +398,7 @@ public class CVConfigServiceImplTest extends CvNextGenTest {
     appDynamicsDSConfig.setConnectorIdentifier(connectorIdentifier);
     appDynamicsDSConfig.setApplicationName(identifier);
     appDynamicsDSConfig.setProductName(productName);
-    appDynamicsDSConfig.setEnvIdentifier("harnessProd");
+    appDynamicsDSConfig.setEnvIdentifier("env");
     appDynamicsDSConfig.setAccountId(accountId);
     appDynamicsDSConfig.setProjectIdentifier(projectIdentifier);
     appDynamicsDSConfig.setOrgIdentifier(orgIdentifier);
@@ -438,9 +440,10 @@ public class CVConfigServiceImplTest extends CvNextGenTest {
     cvConfig.setVerificationType(VerificationType.LOG);
     cvConfig.setAccountId(accountId);
     cvConfig.setConnectorIdentifier(connectorIdentifier);
-    cvConfig.setServiceIdentifier(generateUuid());
-    cvConfig.setEnvIdentifier(generateUuid());
-    cvConfig.setProjectIdentifier(generateUuid());
+    cvConfig.setServiceIdentifier("service");
+    cvConfig.setEnvIdentifier("env");
+    cvConfig.setOrgIdentifier(orgIdentifier);
+    cvConfig.setProjectIdentifier(projectIdentifier);
     cvConfig.setGroupId(groupId);
     cvConfig.setCategory(CVMonitoringCategory.PERFORMANCE);
     cvConfig.setProductName(productName);

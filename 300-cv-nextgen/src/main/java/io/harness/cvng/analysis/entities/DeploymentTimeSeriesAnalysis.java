@@ -17,6 +17,7 @@ import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Id;
 
 import java.time.Instant;
+import java.util.Collections;
 import java.util.List;
 
 @Data
@@ -40,4 +41,18 @@ public class DeploymentTimeSeriesAnalysis
   private Double score;
   private List<DeploymentTimeSeriesAnalysisDTO.HostInfo> hostSummaries;
   private List<DeploymentTimeSeriesAnalysisDTO.TransactionMetricHostData> transactionMetricSummaries;
+
+  public List<DeploymentTimeSeriesAnalysisDTO.TransactionMetricHostData> getTransactionMetricSummaries() {
+    if (this.transactionMetricSummaries == null) {
+      return Collections.emptyList();
+    }
+    return transactionMetricSummaries;
+  }
+
+  public List<DeploymentTimeSeriesAnalysisDTO.HostInfo> getHostSummaries() {
+    if (hostSummaries == null) {
+      return Collections.emptyList();
+    }
+    return hostSummaries;
+  }
 }
