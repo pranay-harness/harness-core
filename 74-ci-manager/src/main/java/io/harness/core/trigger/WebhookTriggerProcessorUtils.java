@@ -9,6 +9,8 @@ import io.grpc.StatusRuntimeException;
 import io.harness.beans.execution.BranchWebhookEvent;
 import io.harness.beans.execution.CommitDetails;
 import io.harness.beans.execution.PRWebhookEvent;
+import io.harness.beans.execution.Repository;
+import io.harness.beans.execution.WebhookBaseAttributes;
 import io.harness.beans.execution.WebhookEvent;
 import io.harness.beans.execution.WebhookExecutionSource;
 import io.harness.beans.execution.WebhookGitUser;
@@ -22,6 +24,7 @@ import io.harness.product.ci.scm.proto.PullRequest;
 import io.harness.product.ci.scm.proto.PullRequestHook;
 import io.harness.product.ci.scm.proto.PushHook;
 import io.harness.product.ci.scm.proto.SCMGrpc;
+import io.harness.product.ci.scm.proto.Signature;
 import io.harness.product.ci.scm.proto.User;
 import lombok.extern.slf4j.Slf4j;
 
@@ -52,7 +55,7 @@ public class WebhookTriggerProcessorUtils {
                                                               .setHeader(header.build())
                                                               .build());
     } catch (StatusRuntimeException e) {
-      logger.error("Failed to parse webhook payload", eventPayload);
+      logger.error("Failed to parse webhook payload {}", eventPayload);
       throw e;
     }
 
@@ -66,6 +69,9 @@ public class WebhookTriggerProcessorUtils {
       return convertPullRequestHook(prHook);
     } else if (parseWebhookResponse.hasPush()) {
       PushHook pushHook = parseWebhookResponse.getPush();
+      if (pushHook.getRef().startsWith("refs/tags/")) {
+        throw new InvalidRequestException("Tag event not supported", USER);
+      }
       return converPushHook(pushHook);
     } else {
       logger.error("Unknown webhook event");
@@ -75,7 +81,7 @@ public class WebhookTriggerProcessorUtils {
 
   private WebhookExecutionSource convertPullRequestHook(PullRequestHook prHook) {
     WebhookGitUser webhookGitUser = convertUser(prHook.getSender());
-    WebhookEvent webhookEvent = convertPRWebhookEvent(prHook.getPr());
+    WebhookEvent webhookEvent = convertPRWebhookEvent(prHook);
 
     return WebhookExecutionSource.builder().user(webhookGitUser).webhookEvent(webhookEvent).build();
   }
@@ -96,20 +102,68 @@ public class WebhookTriggerProcessorUtils {
         .branchName(pushHook.getRepo().getBranch())
         .link(pushHook.getRepo().getLink())
         .commitDetailsList(commitDetailsList)
+        .repository(convertRepository(pushHook.getRepo()))
+        .baseAttributes(convertPushHookBaseAttributes(pushHook))
         .build();
   }
 
-  private WebhookEvent convertPRWebhookEvent(PullRequest pullRequest) {
+  private WebhookEvent convertPRWebhookEvent(PullRequestHook prHook) {
     // TODO Add commit details
+    PullRequest pr = prHook.getPr();
     return PRWebhookEvent.builder()
-        .sourceBranch(pullRequest.getSource())
-        .targetBranch(pullRequest.getTarget())
-        .pullRequestLink(pullRequest.getLink())
-        .pullRequestBody(pullRequest.getBody())
-        .pullRequestId(pullRequest.getNumber())
-        .title(pullRequest.getTitle())
-        .closed(pullRequest.getClosed())
-        .merged(pullRequest.getMerged())
+        .sourceBranch(pr.getSource())
+        .targetBranch(pr.getTarget())
+        .pullRequestLink(pr.getLink())
+        .pullRequestBody(pr.getBody())
+        .pullRequestId(pr.getNumber())
+        .title(pr.getTitle())
+        .closed(pr.getClosed())
+        .merged(pr.getMerged())
+        .repository(convertRepository(prHook.getRepo()))
+        .baseAttributes(convertPrHookBaseAttributes(prHook))
+        .build();
+  }
+
+  private WebhookBaseAttributes convertPrHookBaseAttributes(PullRequestHook prHook) {
+    PullRequest pr = prHook.getPr();
+    User author = prHook.getPr().getAuthor();
+    String message = pr.getBody();
+    if (message.equals("")) {
+      message = pr.getTitle();
+    }
+    return WebhookBaseAttributes.builder()
+        .link(pr.getLink())
+        .message(message)
+        .before(pr.getBase().getSha())
+        .after(pr.getSha())
+        .ref(pr.getRef())
+        .source(pr.getSource())
+        .target(pr.getTarget())
+        .authorLogin(author.getLogin())
+        .authorName(author.getName())
+        .authorEmail(author.getEmail())
+        .authorAvatar(author.getAvatar())
+        .sender(prHook.getSender().getLogin())
+        .action(prHook.getAction().toString().toLowerCase())
+        .build();
+  }
+
+  private WebhookBaseAttributes convertPushHookBaseAttributes(PushHook pushHook) {
+    String trimmedRef = pushHook.getRef().replaceFirst("^refs/heads/", "");
+    Signature author = pushHook.getCommit().getAuthor();
+    return WebhookBaseAttributes.builder()
+        .link(pushHook.getCommit().getLink())
+        .message(pushHook.getCommit().getMessage())
+        .before(pushHook.getBefore())
+        .after(pushHook.getAfter())
+        .ref(pushHook.getRef())
+        .source(trimmedRef)
+        .target(trimmedRef)
+        .authorLogin(author.getLogin())
+        .authorName(author.getName())
+        .authorEmail(author.getEmail())
+        .authorAvatar(author.getAvatar())
+        .sender(pushHook.getSender().getLogin())
         .build();
   }
 
@@ -131,6 +185,19 @@ public class WebhookTriggerProcessorUtils {
         .ownerEmail(commit.getAuthor().getEmail())
         .ownerId(commit.getAuthor().getLogin())
         .ownerName(commit.getAuthor().getName())
+        .build();
+  }
+
+  private Repository convertRepository(io.harness.product.ci.scm.proto.Repository repo) {
+    return Repository.builder()
+        .name(repo.getName())
+        .namespace(repo.getNamespace())
+        .slug(repo.getNamespace() + "/" + repo.getName())
+        .link(repo.getLink())
+        .branch(repo.getBranch())
+        .isPrivate(repo.getPrivate())
+        .httpURL(repo.getClone())
+        .sshURL(repo.getCloneSsh())
         .build();
   }
 

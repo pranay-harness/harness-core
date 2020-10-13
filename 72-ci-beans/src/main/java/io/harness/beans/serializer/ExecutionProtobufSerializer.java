@@ -6,6 +6,7 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import io.harness.beans.steps.CIStepInfo;
+import io.harness.beans.steps.stepinfo.PluginStepInfo;
 import io.harness.beans.steps.stepinfo.PublishStepInfo;
 import io.harness.beans.steps.stepinfo.RestoreCacheStepInfo;
 import io.harness.beans.steps.stepinfo.RunStepInfo;
@@ -32,6 +33,7 @@ public class ExecutionProtobufSerializer implements ProtobufSerializer<Execution
   @Inject private PublishStepProtobufSerializer publishStepProtobufSerializer;
   @Inject private SaveCacheStepProtobufSerializer saveCacheStepProtobufSerializer;
   @Inject private RestoreCacheStepProtobufSerializer restoreCacheStepProtobufSerializer;
+  @Inject private PluginStepProtobufSerializer pluginStepProtobufSerializer;
 
   @Override
   public String serialize(ExecutionElement object) {
@@ -78,6 +80,8 @@ public class ExecutionProtobufSerializer implements ProtobufSerializer<Execution
       switch (ciStepInfo.getNonYamlInfo().getStepInfoType()) {
         case RUN:
           return runStepProtobufSerializer.convertRunStepInfo((RunStepInfo) ciStepInfo);
+        case PLUGIN:
+          return pluginStepProtobufSerializer.convertPluginStepInfo((PluginStepInfo) ciStepInfo);
         case SAVE_CACHE:
           return saveCacheStepProtobufSerializer.convertSaveCacheStepInfo((SaveCacheStepInfo) ciStepInfo);
         case RESTORE_CACHE:

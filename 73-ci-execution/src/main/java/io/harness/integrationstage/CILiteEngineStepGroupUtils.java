@@ -1,7 +1,6 @@
 package io.harness.integrationstage;
 
 import static io.harness.beans.steps.CIStepInfoType.CIStepExecEnvironment;
-import static io.harness.beans.steps.CIStepInfoType.CIStepExecEnvironment.CI_LITE_ENGINE;
 import static io.harness.beans.steps.CIStepInfoType.CIStepExecEnvironment.CI_MANAGER;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
@@ -9,6 +8,7 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
+import io.harness.beans.executionargs.CIExecutionArgs;
 import io.harness.beans.stages.IntegrationStage;
 import io.harness.beans.steps.CIStepInfo;
 import io.harness.beans.steps.stepinfo.LiteEngineTaskStepInfo;
@@ -32,8 +32,8 @@ public class CILiteEngineStepGroupUtils {
   @Inject private LiteEngineTaskStepGenerator liteEngineTaskStepGenerator;
   private static final SecureRandom random = new SecureRandom();
 
-  public List<ExecutionWrapper> createExecutionWrapperWithLiteEngineSteps(
-      IntegrationStage integrationStage, String branchName, String gitConnectorIdentifier, String accountId) {
+  public List<ExecutionWrapper> createExecutionWrapperWithLiteEngineSteps(IntegrationStage integrationStage,
+      CIExecutionArgs ciExecutionArgs, String branchName, String gitConnectorIdentifier, String accountId) {
     String buildNumber = BUILD_NUMBER + random.nextInt(100000); // TODO Have incremental build number
 
     List<ExecutionWrapper> mainEngineExecutionSections = new ArrayList<>();
@@ -57,7 +57,7 @@ public class CILiteEngineStepGroupUtils {
           liteEngineCounter++;
           ExecutionWrapper liteEngineStepExecutionWrapper =
               fetchLiteEngineStepExecutionWrapper(liteEngineExecutionSections, liteEngineCounter, integrationStage,
-                  branchName, gitConnectorIdentifier, buildNumber, usePVC, accountId);
+                  ciExecutionArgs, branchName, gitConnectorIdentifier, buildNumber, usePVC, accountId);
 
           mainEngineExecutionSections.add(liteEngineStepExecutionWrapper);
           // Also execute each lite engine step individually on main engine
@@ -72,8 +72,9 @@ public class CILiteEngineStepGroupUtils {
 
     if (isNotEmpty(liteEngineExecutionSections)) {
       liteEngineCounter++;
-      ExecutionWrapper liteEngineStepExecutionWrapper = fetchLiteEngineStepExecutionWrapper(liteEngineExecutionSections,
-          liteEngineCounter, integrationStage, branchName, gitConnectorIdentifier, buildNumber, usePVC, accountId);
+      ExecutionWrapper liteEngineStepExecutionWrapper =
+          fetchLiteEngineStepExecutionWrapper(liteEngineExecutionSections, liteEngineCounter, integrationStage,
+              ciExecutionArgs, branchName, gitConnectorIdentifier, buildNumber, usePVC, accountId);
 
       mainEngineExecutionSections.add(liteEngineStepExecutionWrapper);
       // Also execute each lite engine step individually on main engine
@@ -84,12 +85,11 @@ public class CILiteEngineStepGroupUtils {
   }
 
   private ExecutionWrapper fetchLiteEngineStepExecutionWrapper(List<ExecutionWrapper> liteEngineExecutionSections,
-      Integer liteEngineCounter, IntegrationStage integrationStage, String branchName, String gitConnectorIdentifier,
-      String buildNumber, boolean usePVC, String accountId) {
-    Integer parallelism = calculateParallelism(liteEngineExecutionSections);
+      Integer liteEngineCounter, IntegrationStage integrationStage, CIExecutionArgs ciExecutionArgs, String branchName,
+      String gitConnectorIdentifier, String buildNumber, boolean usePVC, String accountId) {
     LiteEngineTaskStepInfo liteEngineTaskStepInfo = liteEngineTaskStepGenerator.createLiteEngineTaskStepInfo(
         ExecutionElement.builder().steps(liteEngineExecutionSections).build(), branchName, gitConnectorIdentifier,
-        integrationStage, buildNumber, parallelism, liteEngineCounter, usePVC, accountId);
+        integrationStage, ciExecutionArgs, buildNumber, liteEngineCounter, usePVC, accountId);
 
     return StepElement.builder()
         .identifier(LITE_ENGINE_TASK + liteEngineCounter)
@@ -124,29 +124,6 @@ public class CILiteEngineStepGroupUtils {
       }
     }
     return false;
-  }
-
-  private Integer calculateParallelism(List<ExecutionWrapper> executionSections) {
-    int parallelism = 1;
-    for (ExecutionWrapper executionWrapper : executionSections) {
-      if (executionWrapper != null) {
-        if (executionWrapper instanceof ParallelStepElement) {
-          ParallelStepElement parallel = (ParallelStepElement) executionWrapper;
-          CIStepExecEnvironment ciStepExecEnvironment = validateAndFetchParallelStepsType(parallel);
-          if (ciStepExecEnvironment == CI_LITE_ENGINE) {
-            int parallelRunStepsCount =
-                (int) parallel.getSections()
-                    .stream()
-                    .filter(executionWrapperInParallel -> executionWrapperInParallel instanceof StepElement)
-                    .map(executionWrapperInParallel -> (StepElement) executionWrapperInParallel)
-                    .filter(stepElement -> stepElement.getType().equals(YAML_RUN_STEP_STRING))
-                    .count();
-            parallelism = Math.max(parallelism, parallelRunStepsCount);
-          }
-        }
-      }
-    }
-    return parallelism;
   }
 
   private CIStepExecEnvironment validateAndFetchParallelStepsType(ParallelStepElement parallel) {

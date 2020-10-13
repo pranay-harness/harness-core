@@ -24,6 +24,7 @@ import io.harness.beans.steps.stepinfo.BuildEnvSetupStepInfo;
 import io.harness.beans.steps.stepinfo.CleanupStepInfo;
 import io.harness.beans.steps.stepinfo.GitCloneStepInfo;
 import io.harness.beans.steps.stepinfo.LiteEngineTaskStepInfo;
+import io.harness.beans.steps.stepinfo.PluginStepInfo;
 import io.harness.beans.steps.stepinfo.PublishStepInfo;
 import io.harness.beans.steps.stepinfo.RestoreCacheStepInfo;
 import io.harness.beans.steps.stepinfo.RunStepInfo;
@@ -42,6 +43,7 @@ import io.harness.beans.yaml.extended.CustomVariables;
 import io.harness.beans.yaml.extended.artifact.DockerHubArtifactStreamYaml;
 import io.harness.beans.yaml.extended.connector.GitConnectorYaml;
 import io.harness.beans.yaml.extended.container.Container;
+import io.harness.beans.yaml.extended.container.ContainerResource;
 import io.harness.beans.yaml.extended.infrastrucutre.K8sDirectInfraYaml;
 import io.harness.beans.yaml.extended.infrastrucutre.K8sGCPInfraYaml;
 import io.harness.ci.beans.entities.BuildNumber;
@@ -115,5 +117,8 @@ public class CIBeansKryoRegistrar implements KryoRegistrar {
     kryo.register(WebhookTriggerExecutionInputSet.class, 100055);
     kryo.register(ExecutionSource.Type.class, 100056);
     kryo.register(CiStepOutcome.class, 100057);
+    kryo.register(PluginStepInfo.class, 100058);
+    kryo.register(ContainerResource.class, 100059);
+    kryo.register(ContainerResource.Limit.class, 100060);
   }
 }

@@ -6,6 +6,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import com.google.inject.Inject;
 
 import io.harness.beans.environment.K8BuildJobEnvInfo;
+import io.harness.beans.executionargs.CIExecutionArgs;
 import io.harness.beans.steps.stepinfo.LiteEngineTaskStepInfo;
 import io.harness.category.element.UnitTests;
 import io.harness.executionplan.CIExecutionPlanTestHelper;
@@ -26,9 +27,11 @@ public class CILiteEngineStepGroupUtilsTest extends CIExecutionTest {
   @Owner(developers = ALEKSANDAR)
   @Category(UnitTests.class)
   public void createExecutionWrapperWithLiteEngineSteps() {
+    CIExecutionArgs ciExecutionArgs = ciExecutionPlanTestHelper.getCIExecutionArgs();
     List<ExecutionWrapper> executionWrapperWithLiteEngineSteps =
         ciLiteEngineStepGroupUtils.createExecutionWrapperWithLiteEngineSteps(
-            ciExecutionPlanTestHelper.getIntegrationStage(), "master", "testGitConnector", "accountId");
+            ciExecutionPlanTestHelper.getIntegrationStage(), ciExecutionArgs, "master", "testGitConnector",
+            "accountId");
 
     List<ExecutionWrapper> expectedExecutionWrapper = ciExecutionPlanTestHelper.getExpectedExecutionWrappers();
     expectedExecutionWrapper.addAll(ciExecutionPlanTestHelper.getIntegrationStage().getExecution().getSteps());

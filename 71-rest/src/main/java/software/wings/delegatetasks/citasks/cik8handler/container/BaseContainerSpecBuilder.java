@@ -98,9 +98,13 @@ public abstract class BaseContainerSpecBuilder {
 
     ResourceRequirements resourceRequirements = getResourceRequirements(containerParams.getContainerResourceParams());
 
+    String imageName = imageDetails.getName();
+    if (isNotEmpty(imageDetails.getTag())) {
+      imageName = imageName + ":" + imageDetails.getTag();
+    }
     ContainerBuilder containerBuilder = new ContainerBuilder()
                                             .withName(containerParams.getName())
-                                            .withImage(imageDetails.getName() + ":" + imageDetails.getTag())
+                                            .withImage(imageName)
                                             .withCommand(containerParams.getCommands())
                                             .withArgs(containerParams.getArgs())
                                             .withEnv(envVars)

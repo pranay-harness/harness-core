@@ -8,6 +8,7 @@ import org.hibernate.validator.constraints.NotEmpty;
 import software.wings.beans.ci.pod.PVCParams;
 
 import java.util.List;
+import javax.validation.constraints.NotNull;
 
 /**
  * Stores all details require to spawn pod
@@ -20,6 +21,8 @@ public class PodSetupInfo {
   private PodSetupParams podSetupParams;
   private PVCParams pvcParams;
   @NotEmpty private String name;
+  @NotNull private Integer stageMemoryRequest;
+  @NotNull private Integer stageCpuRequest;
 
   @Data
   @Builder

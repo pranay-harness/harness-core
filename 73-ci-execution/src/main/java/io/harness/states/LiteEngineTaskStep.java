@@ -7,6 +7,7 @@ import com.google.inject.Inject;
 
 import io.harness.ambiance.Ambiance;
 import io.harness.beans.steps.stepinfo.LiteEngineTaskStepInfo;
+import io.harness.beans.steps.stepinfo.PluginStepInfo;
 import io.harness.beans.steps.stepinfo.PublishStepInfo;
 import io.harness.beans.steps.stepinfo.RestoreCacheStepInfo;
 import io.harness.beans.steps.stepinfo.RunStepInfo;
@@ -99,6 +100,13 @@ public class LiteEngineTaskStep implements Step, SyncExecutable<LiteEngineTaskSt
       String taskId = queueDelegateTask(ambiance, runStepInfo.getTimeout(), accountId, executor);
       runStepInfo.setCallbackId(taskId);
       taskIds.put(runStepInfo.getIdentifier(), taskId);
+    }
+
+    if (stepElement.getType().equals("plugin")) {
+      PluginStepInfo pluginStepInfo = (PluginStepInfo) stepElement.getStepSpecType();
+      String taskId = queueDelegateTask(ambiance, pluginStepInfo.getTimeout(), accountId, executor);
+      pluginStepInfo.setCallbackId(taskId);
+      taskIds.put(pluginStepInfo.getIdentifier(), taskId);
     }
 
     if (stepElement.getType().equals("publishArtifacts")) {
