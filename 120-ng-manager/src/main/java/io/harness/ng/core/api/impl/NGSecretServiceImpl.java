@@ -27,6 +27,7 @@ import software.wings.resources.secretsmanagement.EncryptedDataMapper;
 
 import java.util.Optional;
 import java.util.stream.Collectors;
+import javax.validation.constraints.NotNull;
 
 @AllArgsConstructor(onConstructor = @__({ @Inject }))
 @Singleton
@@ -62,8 +63,8 @@ public class NGSecretServiceImpl implements NGSecretService {
   }
 
   @Override
-  public PageResponse<EncryptedData> list(String accountIdentifier, String orgIdentifier, String projectIdentifier,
-      SecretType secretType, String searchTerm, int page, int size) {
+  public PageResponse<EncryptedData> list(@NotNull String accountIdentifier, String orgIdentifier,
+      String projectIdentifier, SecretType secretType, String searchTerm, int page, int size) {
     io.harness.beans.PageResponse<EncryptedDataDTO> pageResponse =
         getResponse(secretManagerClient.listSecrets(accountIdentifier, orgIdentifier, projectIdentifier,
             toSettingVariableType(secretType), searchTerm, page, size));

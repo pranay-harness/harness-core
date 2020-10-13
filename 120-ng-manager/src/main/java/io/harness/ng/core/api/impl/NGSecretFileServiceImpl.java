@@ -1,4 +1,4 @@
-package io.harness.ng.core.api;
+package io.harness.ng.core.api.impl;
 
 import static io.harness.eraro.ErrorCode.SECRET_MANAGEMENT_ERROR;
 import static io.harness.exception.WingsException.SRE;
@@ -14,6 +14,8 @@ import com.google.inject.Singleton;
 import io.harness.beans.EncryptedData;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.SecretManagementException;
+import io.harness.ng.core.api.NGSecretFileService;
+import io.harness.ng.core.api.NGSecretService;
 import io.harness.secretmanagerclient.SecretType;
 import io.harness.secretmanagerclient.dto.SecretFileDTO;
 import io.harness.secretmanagerclient.dto.SecretFileUpdateDTO;

@@ -15,6 +15,7 @@ import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.List;
+import javax.validation.constraints.NotNull;
 
 @AllArgsConstructor(onConstructor = @__({ @Inject }))
 @Singleton
@@ -23,13 +24,14 @@ public class NGSecretManagerServiceImpl implements NGSecretManagerService {
   private final SecretManagerClient secretManagerClient;
 
   @Override
-  public SecretManagerConfigDTO createSecretManager(SecretManagerConfigDTO secretManagerConfig) {
+  public SecretManagerConfigDTO createSecretManager(@NotNull SecretManagerConfigDTO secretManagerConfig) {
     return getResponse(secretManagerClient.createSecretManager(secretManagerConfig));
   }
 
   @Override
-  public SecretManagerConfigDTO updateSecretManager(String accountIdentifier, String orgIdentifier,
-      String projectIdentifier, String identifier, SecretManagerConfigUpdateDTO secretManagerConfigUpdateDTO) {
+  public SecretManagerConfigDTO updateSecretManager(@NotNull String accountIdentifier, String orgIdentifier,
+      String projectIdentifier, @NotNull String identifier,
+      @NotNull SecretManagerConfigUpdateDTO secretManagerConfigUpdateDTO) {
     return getResponse(secretManagerClient.updateSecretManager(
         identifier, accountIdentifier, orgIdentifier, projectIdentifier, secretManagerConfigUpdateDTO));
   }
@@ -42,7 +44,7 @@ public class NGSecretManagerServiceImpl implements NGSecretManagerService {
 
   @Override
   public SecretManagerConfigDTO getSecretManager(
-      String accountIdentifier, String orgIdentifier, String projectIdentifier, String identifier) {
+      @NotNull String accountIdentifier, String orgIdentifier, String projectIdentifier, @NotNull String identifier) {
     return getResponse(
         secretManagerClient.getSecretManager(identifier, accountIdentifier, orgIdentifier, projectIdentifier));
   }
@@ -53,19 +55,21 @@ public class NGSecretManagerServiceImpl implements NGSecretManagerService {
   }
 
   @Override
-  public SecretManagerMetadataDTO getMetadata(String accountIdentifier, SecretManagerMetadataRequestDTO requestDTO) {
+  public SecretManagerMetadataDTO getMetadata(
+      @NotNull String accountIdentifier, SecretManagerMetadataRequestDTO requestDTO) {
     return getResponse(secretManagerClient.getSecretManagerMetadata(accountIdentifier, requestDTO));
   }
 
   @Override
-  public boolean validate(String accountIdentifier, String orgIdentifier, String projectIdentifier, String identifier) {
+  public boolean validate(
+      @NotNull String accountIdentifier, String orgIdentifier, String projectIdentifier, @NotNull String identifier) {
     return getResponse(
         secretManagerClient.validateSecretManager(identifier, accountIdentifier, orgIdentifier, projectIdentifier));
   }
 
   @Override
   public boolean deleteSecretManager(
-      String accountIdentifier, String orgIdentifier, String projectIdentifier, String identifier) {
+      @NotNull String accountIdentifier, String orgIdentifier, String projectIdentifier, @NotNull String identifier) {
     return getResponse(
         secretManagerClient.deleteSecretManager(identifier, accountIdentifier, orgIdentifier, projectIdentifier));
   }

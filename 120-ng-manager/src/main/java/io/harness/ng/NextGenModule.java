@@ -42,7 +42,7 @@ import io.harness.ng.core.CoreModule;
 import io.harness.ng.core.InviteModule;
 import io.harness.ng.core.SecretManagementModule;
 import io.harness.ng.core.api.NGSecretServiceV2;
-import io.harness.ng.core.api.NGSecretServiceV2Impl;
+import io.harness.ng.core.api.impl.NGSecretServiceV2Impl;
 import io.harness.ng.core.gitsync.GitChangeProcessorService;
 import io.harness.ng.core.gitsync.GitSyncManagerInterface;
 import io.harness.ng.core.gitsync.YamlHandler;
