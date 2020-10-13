@@ -12,6 +12,7 @@ import io.harness.rule.Owner;
 import io.kubernetes.client.informer.cache.Store;
 import io.kubernetes.client.openapi.models.V1Deployment;
 import io.kubernetes.client.openapi.models.V1DeploymentBuilder;
+import io.kubernetes.client.openapi.models.V1ObjectMetaBuilder;
 import io.kubernetes.client.openapi.models.V1PodBuilder;
 import io.kubernetes.client.openapi.models.V1ReplicaSet;
 import io.kubernetes.client.openapi.models.V1ReplicaSetBuilder;
@@ -28,6 +29,7 @@ import java.util.Map;
 public class K8sControllerFetcherTest extends CategoryTest {
   @Mock private Store<V1Deployment> deploymentStore;
   @Mock private Store<V1ReplicaSet> replicaSetStore;
+  @Mock private CrdWorkloadFetcher crdWorkloadFetcher;
 
   private K8sControllerFetcher k8sControllerFetcher;
 
@@ -60,7 +62,7 @@ public class K8sControllerFetcherTest extends CategoryTest {
                         .endMetadata()
                         .build());
     Map<String, Store<?>> stores = ImmutableMap.of("Deployment", deploymentStore, "ReplicaSet", replicaSetStore);
-    k8sControllerFetcher = new K8sControllerFetcher(stores);
+    k8sControllerFetcher = new K8sControllerFetcher(stores, crdWorkloadFetcher);
   }
 
   @Test
@@ -117,6 +119,20 @@ public class K8sControllerFetcherTest extends CategoryTest {
   @Owner(developers = AVMOHAN)
   @Category(UnitTests.class)
   public void testWorkloadForUnknownWorkloadKind() throws Exception {
+    when(crdWorkloadFetcher.getWorkload(CrdWorkloadFetcher.WorkloadReference.builder()
+                                            .apiVersion("apps/v1")
+                                            .namespace("harness")
+                                            .name("event-service-foobar")
+                                            .uid("6105c171-44f7-4254-86ad-26badd9ba7fe")
+                                            .kind("FooBar")
+                                            .build()))
+        .thenReturn(Workload.of("FooBar",
+            new V1ObjectMetaBuilder()
+                .withName("event-service-foobar")
+                .withUid("6105c171-44f7-4254-86ad-26badd9ba7fe")
+                .addToLabels("key1", "val1")
+                .addToLabels("key2", "val2")
+                .build()));
     assertThat(k8sControllerFetcher.getTopLevelOwner(new V1PodBuilder()
                                                          .withNewMetadata()
                                                          .withName("event-service-65f7f468b4-fs2fm")
@@ -136,6 +152,8 @@ public class K8sControllerFetcherTest extends CategoryTest {
                        .setUid("6105c171-44f7-4254-86ad-26badd9ba7fe")
                        .setKind("FooBar")
                        .setName("event-service-foobar")
+                       .putLabels("key1", "val1")
+                       .putLabels("key2", "val2")
                        .build());
   }
 }

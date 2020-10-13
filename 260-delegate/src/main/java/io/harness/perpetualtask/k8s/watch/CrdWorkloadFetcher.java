@@ -1,0 +1,122 @@
+package io.harness.perpetualtask.k8s.watch;
+
+import com.google.common.base.Suppliers;
+
+import com.github.benmanes.caffeine.cache.Caffeine;
+import com.github.benmanes.caffeine.cache.LoadingCache;
+import io.kubernetes.client.openapi.ApiClient;
+import io.kubernetes.client.openapi.JSON;
+import io.kubernetes.client.openapi.apis.ApiextensionsV1Api;
+import io.kubernetes.client.openapi.apis.CustomObjectsApi;
+import io.kubernetes.client.openapi.models.V1CustomResourceDefinition;
+import io.kubernetes.client.openapi.models.V1CustomResourceDefinitionList;
+import io.kubernetes.client.openapi.models.V1CustomResourceDefinitionNames;
+import io.kubernetes.client.openapi.models.V1ObjectMeta;
+import io.kubernetes.client.openapi.models.V1ObjectMetaBuilder;
+import lombok.Builder;
+import lombok.Value;
+import lombok.extern.slf4j.Slf4j;
+
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Optional;
+import java.util.concurrent.TimeUnit;
+import java.util.function.Supplier;
+
+/**
+ * Used for getting details of CRD workload types that we don't watch.
+ */
+@Slf4j
+public class CrdWorkloadFetcher {
+  @Value
+  @Builder
+  public static class WorkloadReference {
+    String namespace;
+    String name;
+    String kind;
+    String apiVersion;
+    String uid;
+  }
+
+  @Value
+  public static class HavingMetadataObject {
+    V1ObjectMeta metadata;
+  }
+
+  private final ApiClient apiClient;
+  private final LoadingCache<WorkloadReference, Workload> workloadCache;
+  private final Supplier<Map<String, String>> kindToPluralMapSupplier;
+
+  public CrdWorkloadFetcher(ApiClient apiClient) {
+    this.apiClient = apiClient;
+    workloadCache = Caffeine.newBuilder().expireAfterWrite(10, TimeUnit.MINUTES).build(this ::getWorkloadInternal);
+    kindToPluralMapSupplier = Suppliers.memoizeWithExpiration(this ::loadKindToPluralMap, 10, TimeUnit.MINUTES);
+  }
+
+  private Map<String, String> loadKindToPluralMap() {
+    Map<String, String> plurals = new HashMap<>();
+    ApiextensionsV1Api apiextensionsV1Api = new ApiextensionsV1Api(apiClient);
+    try {
+      V1CustomResourceDefinitionList v1CustomResourceDefinitionList =
+          apiextensionsV1Api.listCustomResourceDefinition(null, null, null, null, null, null, null, null, null);
+      for (V1CustomResourceDefinition crd : v1CustomResourceDefinitionList.getItems()) {
+        V1CustomResourceDefinitionNames names = crd.getSpec().getNames();
+        plurals.put(names.getKind(), names.getPlural());
+      }
+
+    } catch (Exception e) {
+      logger.warn("Error listing CRDs", e);
+    }
+    return plurals;
+  }
+
+  private String getPluralForKind(String kind) {
+    return Optional
+        .ofNullable(kindToPluralMapSupplier.get().get(kind))
+        // fallback (works for regular nouns)
+        .orElseGet(() -> {
+          String singular = kind.toLowerCase();
+          return singular.endsWith("s") ? singular + "es" : singular + "s";
+        });
+  }
+
+  public Workload getWorkload(WorkloadReference workloadReference) {
+    return workloadCache.get(workloadReference);
+  }
+
+  private Workload getWorkloadInternal(WorkloadReference workloadRef) {
+    // Try getting the details of the workload using the generic api
+    //    Handle permission missing case - log a warning and have same behavior as current
+    V1ObjectMeta knownMetadata = new V1ObjectMetaBuilder()
+                                     .withName(workloadRef.getName())
+                                     .withNamespace(workloadRef.getNamespace())
+                                     .withUid(workloadRef.getUid())
+                                     .build();
+    try {
+      String apiVersion = workloadRef.getApiVersion();
+      String[] parts = apiVersion.split("/");
+      String group;
+      String version;
+      if (parts.length == 1) {
+        group = "core";
+        version = parts[0];
+      } else {
+        group = parts[0];
+        version = parts[1];
+      }
+      CustomObjectsApi api = new CustomObjectsApi(apiClient);
+      String pluralName = getPluralForKind(workloadRef.getKind());
+      Object workloadObject =
+          api.getNamespacedCustomObject(group, version, workloadRef.getNamespace(), pluralName, workloadRef.getName());
+      JSON json = apiClient.getJSON();
+      HavingMetadataObject havingMetadataObject =
+          json.deserialize(json.serialize(workloadObject), HavingMetadataObject.class);
+      return Workload.of(
+          workloadRef.getKind(), Optional.ofNullable(havingMetadataObject.getMetadata()).orElse(knownMetadata));
+    } catch (Exception e) {
+      logger.warn("Encountered error trying to fetch custom workload details", e);
+      // fallback to return a workload with the metadata we already know (without others like labels)
+      return Workload.of(workloadRef.getKind(), knownMetadata);
+    }
+  }
+}

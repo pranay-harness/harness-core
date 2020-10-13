@@ -120,7 +120,8 @@ public class K8sWatchServiceDelegate {
       Map<String, Store<?>> stores = KNOWN_WORKLOAD_TYPES.entrySet().stream().collect(Collectors.toMap(
           Map.Entry::getKey, e -> sharedInformerFactory.getExistingSharedIndexInformer(e.getValue()).getIndexer()));
 
-      K8sControllerFetcher controllerFetcher = new K8sControllerFetcher(stores);
+      CrdWorkloadFetcher crdWorkloadFetcher = new CrdWorkloadFetcher(apiClient);
+      K8sControllerFetcher controllerFetcher = new K8sControllerFetcher(stores, crdWorkloadFetcher);
 
       watcherFactory.createNodeWatcher(apiClient, clusterDetails, sharedInformerFactory);
       watcherFactory.createPVWatcher(apiClient, clusterDetails, sharedInformerFactory);
