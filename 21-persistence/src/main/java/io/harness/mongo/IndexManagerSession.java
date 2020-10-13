@@ -12,6 +12,7 @@ import static io.harness.mongo.IndexManagerSession.Type.SPARSE_INDEX;
 import static io.harness.mongo.IndexManagerSession.Type.UNIQUE_INDEX;
 import static io.harness.mongo.IndexManagerSession.Type.UNIQUE_INDEX_WITH_COLLATION;
 import static io.harness.reflection.ReflectionUtils.fetchAnnotations;
+import static java.lang.String.format;
 import static java.lang.String.join;
 import static java.lang.System.currentTimeMillis;
 import static java.time.Duration.ofDays;
@@ -369,9 +370,9 @@ public class IndexManagerSession {
 
   private static void checkWithTheOthers(Map<String, IndexCreator> creators, IndexCreator newCreator) {
     for (IndexCreator creator : creators.values()) {
-      if (creator.sameKeySet(newCreator)) {
-        logger.error("Index {} and {} have the same set of keys", newCreator.getOptions().toString(),
-            creator.getOptions().toString());
+      if (creator.sameKeysOrderAndValues(newCreator.getKeys())) {
+        throw new Error(format("Index %s and %s have the same keys and values", newCreator.getOptions().toString(),
+            creator.getOptions().toString()));
       }
 
       if (creator.isSubsequence(newCreator)) {
