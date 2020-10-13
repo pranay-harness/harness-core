@@ -27,6 +27,8 @@ java_library(
         "@maven//:com_fasterxml_jackson_datatype_jackson_datatype_jdk8",
         "@maven//:com_fasterxml_jackson_datatype_jackson_datatype_jsr310",
         "@maven//:com_fasterxml_uuid_java_uuid_generator",
+        "@maven//:com_github_ben_manes_caffeine_caffeine",
+        "@maven//:com_github_ben_manes_caffeine_jcache",
         "@maven//:com_github_reinert_jjschema",
         "@maven//:com_google_auth_google_auth_library_credentials",
         "@maven//:com_google_auth_google_auth_library_oauth2_http",

@@ -14,10 +14,14 @@ import io.harness.perpetualtask.PerpetualTaskListRequest;
 import io.harness.perpetualtask.PerpetualTaskListResponse;
 import io.harness.perpetualtask.PerpetualTaskResponse;
 import io.harness.perpetualtask.PerpetualTaskService;
+import lombok.extern.slf4j.Slf4j;
 
+import java.time.Duration;
+import java.time.Instant;
 import java.util.List;
 
 @Singleton
+@Slf4j
 public class PerpetualTaskServiceGrpc
     extends io.harness.perpetualtask.PerpetualTaskServiceGrpc.PerpetualTaskServiceImplBase {
   @Inject private PerpetualTaskService perpetualTaskService;
@@ -25,10 +29,15 @@ public class PerpetualTaskServiceGrpc
   @Override
   public void perpetualTaskList(
       PerpetualTaskListRequest request, StreamObserver<PerpetualTaskListResponse> responseObserver) {
+    logger.info("perpetualTaskList invoked");
+    Instant start = Instant.now();
     List<PerpetualTaskAssignDetails> perpetualTaskAssignDetails =
         perpetualTaskService.listAssignedTasks(request.getDelegateId().getId());
     PerpetualTaskListResponse response =
         PerpetualTaskListResponse.newBuilder().addAllPerpetualTaskAssignDetails(perpetualTaskAssignDetails).build();
+    Instant end = Instant.now();
+    Duration duration = Duration.between(start, end);
+    logger.info("perpetualTaskList duration:{}", duration);
     responseObserver.onNext(response);
     responseObserver.onCompleted();
   }

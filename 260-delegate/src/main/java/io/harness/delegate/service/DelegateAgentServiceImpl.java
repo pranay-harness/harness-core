@@ -345,6 +345,9 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
   public void run(boolean watched) {
     try {
       accountId = delegateConfiguration.getAccountId();
+      if (perpetualTaskWorker != null) {
+        perpetualTaskWorker.setAccountId(accountId);
+      }
       logger.info("Delegate will start running on JRE {}", System.getProperty(JAVA_VERSION));
       startTime = clock.millis();
       DelegateStackdriverLogAppender.setTimeLimiter(timeLimiter);
@@ -489,6 +492,8 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
       }
 
       logger.info("Delegate started");
+      logger.info("Manager Authority:{}, Manager Target:{}", delegateConfiguration.getManagerAuthority(),
+          delegateConfiguration.getManagerTarget());
 
       startProfileCheck();
 
