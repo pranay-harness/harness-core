@@ -4,9 +4,12 @@ import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.delegate.beans.DelegateTaskEvent.DelegateTaskEventBuilder;
 import static io.harness.logging.CommandExecutionStatus.SUCCESS;
 import static io.harness.rule.OwnerRule.ANKIT;
+import static io.harness.rule.OwnerRule.MATT;
 import static io.harness.rule.OwnerRule.NIKOLA;
 import static io.harness.rule.OwnerRule.ROHITKARELIA;
 import static io.harness.rule.OwnerRule.SRINIVAS;
+import static java.net.URLEncoder.encode;
+import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.Collections.singletonList;
 import static javax.ws.rs.client.Entity.entity;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -23,6 +26,7 @@ import static software.wings.utils.WingsTestConstants.DELEGATE_ID;
 import static software.wings.utils.WingsTestConstants.STATE_EXECUTION_ID;
 
 import com.google.common.collect.Lists;
+import com.google.protobuf.Any;
 
 import io.harness.artifact.ArtifactCollectionResponseHandler;
 import io.harness.category.element.UnitTests;
@@ -37,6 +41,10 @@ import io.harness.delegate.beans.DelegateScripts;
 import io.harness.delegate.beans.DelegateTaskEvent;
 import io.harness.delegate.beans.DelegateTaskPackage;
 import io.harness.delegate.beans.DelegateTaskResponse;
+import io.harness.managerclient.GetDelegatePropertiesRequest;
+import io.harness.managerclient.GetDelegatePropertiesResponse;
+import io.harness.managerclient.WatcherVersion;
+import io.harness.managerclient.WatcherVersionQuery;
 import io.harness.manifest.ManifestCollectionResponseHandler;
 import io.harness.rest.RestResponse;
 import io.harness.rule.Owner;
@@ -68,6 +76,7 @@ import software.wings.service.intfc.DelegateService;
 import software.wings.utils.ResourceTestRule;
 
 import java.io.IOException;
+import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.List;
 import javax.servlet.http.HttpServletRequest;
@@ -133,6 +142,33 @@ public class DelegateAgentResourceTest {
 
     verify(accountService, atLeastOnce()).getDelegateConfiguration(ACCOUNT_ID);
     assertThat(restResponse.getResource()).isInstanceOf(DelegateConfiguration.class).isNotNull();
+  }
+
+  @Test
+  @Owner(developers = MATT)
+  @Category(UnitTests.class)
+  public void shouldGetWatcherProperty() throws UnsupportedEncodingException {
+    String watcherVersion = "watcher version";
+    DelegateConfiguration delegateConfiguration =
+        DelegateConfiguration.builder().watcherVersion(watcherVersion).build();
+    when(accountService.getDelegateConfiguration(ACCOUNT_ID)).thenReturn(delegateConfiguration);
+    String query = GetDelegatePropertiesRequest.newBuilder()
+                       .setAccountId(ACCOUNT_ID)
+                       .addRequestEntry(Any.pack(WatcherVersionQuery.newBuilder().build()))
+                       .build()
+                       .toString();
+    RestResponse<String> restResponse =
+        RESOURCES.client()
+            .target("/agent/delegates/properties?request=" + encode(query, UTF_8.toString()))
+            .request()
+            .get(new GenericType<RestResponse<String>>() {});
+    verify(accountService, atLeastOnce()).getDelegateConfiguration(ACCOUNT_ID);
+    assertThat(restResponse.getResource())
+        .isEqualTo(
+            GetDelegatePropertiesResponse.newBuilder()
+                .addResponseEntry(Any.pack(WatcherVersion.newBuilder().setWatcherVersion(watcherVersion).build()))
+                .build()
+                .toString());
   }
 
   @Test
