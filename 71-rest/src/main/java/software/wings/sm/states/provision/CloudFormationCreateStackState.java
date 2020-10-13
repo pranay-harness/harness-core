@@ -2,29 +2,62 @@ package software.wings.sm.states.provision;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.delegate.beans.TaskData.DEFAULT_ASYNC_CALL_TIMEOUT;
+import static io.harness.exception.WingsException.USER;
+import static io.harness.validation.Validator.notNullCheck;
 import static java.lang.String.format;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
 import static software.wings.beans.Application.GLOBAL_APP_ID;
 import static software.wings.beans.TaskType.CLOUD_FORMATION_TASK;
+import static software.wings.beans.TaskType.FETCH_S3_FILE_TASK;
+import static software.wings.beans.TaskType.GIT_FETCH_FILES_TASK;
 
 import com.google.inject.Inject;
 
+import com.amazonaws.services.cloudformation.model.Parameter;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.MapperFeature;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.github.reinert.jjschema.Attributes;
+import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.beans.DelegateTask;
+import io.harness.beans.ExecutionStatus;
+import io.harness.beans.SweepingOutputInstance;
 import io.harness.context.ContextElementType;
 import io.harness.delegate.beans.TaskData;
+import io.harness.exception.InvalidArgumentsException;
 import io.harness.exception.InvalidRequestException;
-import io.harness.exception.WingsException;
+import io.harness.git.model.GitFile;
 import io.harness.logging.CommandExecutionStatus;
 import io.harness.tasks.Cd1SetupFields;
+import io.harness.tasks.ResponseData;
+import lombok.Getter;
+import lombok.Setter;
 import org.apache.commons.lang3.StringUtils;
+import org.jetbrains.annotations.NotNull;
+import software.wings.api.ScriptStateExecutionData;
 import software.wings.api.cloudformation.CloudFormationElement;
 import software.wings.api.cloudformation.CloudFormationOutputInfoElement;
 import software.wings.api.cloudformation.CloudFormationRollbackInfoElement;
+import software.wings.beans.Application;
 import software.wings.beans.AwsConfig;
 import software.wings.beans.CloudFormationInfrastructureProvisioner;
+import software.wings.beans.Environment;
 import software.wings.beans.GitConfig;
+import software.wings.beans.GitFetchFilesConfig;
+import software.wings.beans.GitFetchFilesTaskParams;
+import software.wings.beans.GitFileConfig;
+import software.wings.beans.NameValuePair;
+import software.wings.beans.s3.FetchS3FilesCommandParams;
+import software.wings.beans.s3.FetchS3FilesExecutionResponse;
+import software.wings.beans.s3.S3File;
+import software.wings.beans.s3.S3FileRequest;
+import software.wings.beans.yaml.GitCommandExecutionResponse;
+import software.wings.beans.yaml.GitFetchFilesFromMultipleRepoResult;
+import software.wings.helpers.ext.cloudformation.CloudFormationCompletionFlag;
 import software.wings.helpers.ext.cloudformation.request.CloudFormationCommandRequest.CloudFormationCommandType;
 import software.wings.helpers.ext.cloudformation.request.CloudFormationCreateStackRequest;
 import software.wings.helpers.ext.cloudformation.request.CloudFormationCreateStackRequest.CloudFormationCreateStackRequestBuilder;
@@ -33,28 +66,64 @@ import software.wings.helpers.ext.cloudformation.response.CloudFormationCreateSt
 import software.wings.helpers.ext.cloudformation.response.ExistingStackInfo;
 import software.wings.service.impl.GitConfigHelperService;
 import software.wings.service.intfc.AppService;
+import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionContextImpl;
+import software.wings.sm.ExecutionResponse;
 import software.wings.sm.StateType;
+import software.wings.sm.WorkflowStandardParams;
 import software.wings.utils.GitUtilsManager;
 
+import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 public class CloudFormationCreateStackState extends CloudFormationState {
-  private static final String COMMAND_UNIT = "Create Stack";
+  private static final String CREATE_STACK_COMMAND_UNIT = "Create Stack";
+  private static final String FETCH_FILES_COMMAND_UNIT = "Fetch Files";
+  private static final String CF_PARAMETERS = "Cloud Formation parameters";
+  private static final String BUCKET_KEY_DELIMITER = "\\.s3\\.amazonaws\\.com/";
+  private static final String PROTOCOL_DELIMITER = ".*//";
+  private static final String PARAMETERS_FILE_PATH_PATTERN = PROTOCOL_DELIMITER + ".*" + BUCKET_KEY_DELIMITER + ".*";
   @Inject private transient AppService appService;
   @Inject private transient GitUtilsManager gitUtilsManager;
   @Inject private GitConfigHelperService gitConfigHelperService;
+  @Inject private InfrastructureMappingService infrastructureMappingService;
+
+  @Attributes(title = "Parameters file path") @Getter @Setter protected List<String> parametersFilePaths;
+  @Attributes(title = "Use parameters file") @Getter @Setter protected boolean useParametersFile;
+
+  @Setter @JsonIgnore @SchemaIgnore private boolean fileFetched;
+
+  @JsonIgnore
+  @SchemaIgnore
+  public boolean isFileFetched() {
+    return fileFetched;
+  }
 
   public CloudFormationCreateStackState(String name) {
     super(name, StateType.CLOUD_FORMATION_CREATE_STACK.name());
   }
 
   @Override
-  protected String commandUnit() {
-    return COMMAND_UNIT;
+  protected List<String> commandUnits() {
+    List<String> commandUnints = new ArrayList<>();
+    if (useParametersFile) {
+      commandUnints.add(FETCH_FILES_COMMAND_UNIT);
+    }
+    commandUnints.add(mainCommandUnit());
+    return commandUnints;
+  }
+
+  @Override
+  protected String mainCommandUnit() {
+    return CREATE_STACK_COMMAND_UNIT;
   }
 
   private void ensureNonEmptyStringField(String field, String fieldName) {
@@ -64,15 +133,29 @@ public class CloudFormationCreateStackState extends CloudFormationState {
   }
 
   @Override
-  protected DelegateTask buildDelegateTask(ExecutionContextImpl executionContext,
+  protected ExecutionResponse executeInternal(ExecutionContext context, String activityId) {
+    CloudFormationInfrastructureProvisioner provisioner = getProvisioner(context);
+
+    ExecutionContextImpl executionContext = (ExecutionContextImpl) context;
+    if (provisioner.provisionByGit() && useParametersFile && !isFileFetched()) {
+      return buildAndQueueGitCommandTask(executionContext, provisioner, activityId);
+    }
+    return super.executeInternal(context, activityId);
+  }
+
+  @Override
+  protected ExecutionResponse buildAndQueueDelegateTask(ExecutionContextImpl executionContext,
       CloudFormationInfrastructureProvisioner provisioner, AwsConfig awsConfig, String activityId) {
     CloudFormationCreateStackRequestBuilder builder = CloudFormationCreateStackRequest.builder();
 
     String roleArnRendered = executionContext.renderExpression(getCloudFormationRoleArn());
     String regionRendered = executionContext.renderExpression(getRegion());
-    builder.cloudFormationRoleArn(roleArnRendered);
+    builder.cloudFormationRoleArn(roleArnRendered).region(regionRendered);
 
     if (provisioner.provisionByUrl()) {
+      if (useParametersFile && !isFileFetched()) {
+        return buildAndQueueFetchS3FilesTask(executionContext, awsConfig, activityId);
+      }
       ensureNonEmptyStringField(provisioner.getTemplateFilePath(), "Template Url");
       builder.createType(CloudFormationCreateStackRequest.CLOUD_FORMATION_STACK_CREATE_URL)
           .data(executionContext.renderExpression(provisioner.getTemplateFilePath()));
@@ -98,22 +181,40 @@ public class CloudFormationCreateStackState extends CloudFormationState {
               secretManager.getEncryptionDetails(gitConfig, GLOBAL_APP_ID, executionContext.getWorkflowExecutionId()))
           .gitConfig(gitConfig);
     } else {
-      throw new WingsException("Create type is not set on cloud provisioner");
+      throw new InvalidRequestException("Create type is not set on cloud provisioner");
     }
+    return buildAndQueueCreateStackTask(executionContext, provisioner, awsConfig, activityId, builder);
+  }
+
+  private ExecutionResponse buildAndQueueCreateStackTask(ExecutionContextImpl executionContext,
+      CloudFormationInfrastructureProvisioner provisioner, AwsConfig awsConfig, String activityId,
+      CloudFormationCreateStackRequestBuilder builder) {
     builder.stackNameSuffix(getStackNameSuffix(executionContext, provisioner.getUuid()))
         .customStackName(useCustomStackName ? executionContext.renderExpression(customStackName) : StringUtils.EMPTY)
-        .region(regionRendered)
         .commandType(CloudFormationCommandType.CREATE_STACK)
         .accountId(executionContext.getApp().getAccountId())
         .appId(executionContext.getApp().getUuid())
         .activityId(activityId)
-        .commandName(commandUnit())
+        .commandName(mainCommandUnit())
         .variables(infrastructureProvisionerService.extractTextVariables(getVariables(), executionContext))
         .encryptedVariables(
             infrastructureProvisionerService.extractEncryptedTextVariables(getVariables(), executionContext.getAppId()))
         .awsConfig(awsConfig);
     CloudFormationCreateStackRequest request = builder.build();
     setTimeOutOnRequest(request);
+    DelegateTask delegateTask = getCreateStackDelegateTask(executionContext, awsConfig, activityId, request);
+
+    String delegateTaskId = delegateService.queueTask(delegateTask);
+    return ExecutionResponse.builder()
+        .async(true)
+        .correlationIds(Collections.singletonList(activityId))
+        .delegateTaskId(delegateTaskId)
+        .stateExecutionData(ScriptStateExecutionData.builder().activityId(activityId).build())
+        .build();
+  }
+
+  private DelegateTask getCreateStackDelegateTask(ExecutionContextImpl executionContext, AwsConfig awsConfig,
+      String activityId, CloudFormationCreateStackRequest request) {
     return DelegateTask.builder()
         .accountId(executionContext.getApp().getAccountId())
         .waitId(activityId)
@@ -127,6 +228,158 @@ public class CloudFormationCreateStackState extends CloudFormationState {
                           awsConfig, GLOBAL_APP_ID, executionContext.getWorkflowExecutionId())})
                   .timeout(defaultIfNullTimeout(DEFAULT_ASYNC_CALL_TIMEOUT))
                   .build())
+        .build();
+  }
+
+  private ExecutionResponse buildAndQueueGitCommandTask(
+      ExecutionContextImpl executionContext, CloudFormationInfrastructureProvisioner provisioner, String activityId) {
+    GitFileConfig gitFileConfig = provisioner.getGitFileConfig();
+    if (gitFileConfig.getFilePathList() == null) {
+      gitFileConfig.setFilePathList(new ArrayList<>());
+    }
+    getParametersFilePaths().forEach(parametersFilePath
+        -> gitFileConfig.getFilePathList().add(executionContext.renderExpression(parametersFilePath)));
+
+    String sourceRepoSettingId = provisioner.getGitFileConfig().getConnectorId();
+    GitConfig gitConfig = gitUtilsManager.getGitConfig(sourceRepoSettingId);
+    String branch = provisioner.getGitFileConfig().getBranch();
+    ensureNonEmptyStringField(sourceRepoSettingId, "sourceRepoSettingId");
+    if (isNotEmpty(branch)) {
+      gitConfig.setBranch(branch);
+    }
+    gitConfig.setReference(provisioner.getGitFileConfig().getCommitId());
+    gitConfigHelperService.convertToRepoGitConfig(gitConfig, provisioner.getGitFileConfig().getRepoName());
+
+    DelegateTask gitFetchFileTask =
+        createGitFetchFileAsyncTask(executionContext, activityId, gitConfig, provisioner.getGitFileConfig());
+    return queueFetchFileTask(executionContext, activityId, gitFetchFileTask);
+  }
+
+  private ExecutionResponse buildAndQueueFetchS3FilesTask(
+      ExecutionContextImpl executionContext, AwsConfig awsConfig, String activityId) {
+    FetchS3FilesCommandParams fetchS3FilesCommandParams =
+        createFetchS3FilesCommandParams(executionContext, awsConfig, activityId);
+
+    DelegateTask s3FetchFileTask =
+        DelegateTask.builder()
+            .accountId(executionContext.getApp().getAccountId())
+            .tags(isNotEmpty(awsConfig.getTag()) ? singletonList(awsConfig.getTag()) : null)
+            .setupAbstraction(Cd1SetupFields.APP_ID_FIELD, executionContext.getApp().getUuid())
+            .setupAbstraction(Cd1SetupFields.ENV_ID_FIELD, executionContext.getEnv().getUuid())
+            .uuid(generateUuid())
+            .data(TaskData.builder()
+                      .async(true)
+                      .taskType(FETCH_S3_FILE_TASK.name())
+                      .parameters(new Object[] {fetchS3FilesCommandParams})
+                      .timeout(defaultIfNullTimeout(DEFAULT_ASYNC_CALL_TIMEOUT))
+                      .build())
+            .build();
+
+    return queueFetchFileTask(executionContext, activityId, s3FetchFileTask);
+  }
+
+  private ExecutionResponse queueFetchFileTask(
+      ExecutionContextImpl executionContext, String activityId, DelegateTask fetchFileTask) {
+    delegateService.queueTask(fetchFileTask);
+    appendDelegateTaskDetails(executionContext, fetchFileTask);
+
+    return ExecutionResponse.builder()
+        .async(true)
+        .correlationIds(Collections.singletonList(fetchFileTask.getUuid()))
+        .stateExecutionData(ScriptStateExecutionData.builder().activityId(activityId).build())
+        .build();
+  }
+
+  private FetchS3FilesCommandParams createFetchS3FilesCommandParams(
+      ExecutionContextImpl executionContext, AwsConfig awsConfig, String activityId) {
+    setParametersFilePaths(
+        getParametersFilePaths().stream().map(executionContext::renderExpression).collect(Collectors.toList()));
+    validateFilePaths();
+    Map<String, List<String>> buckets = getBucketsFilesMap();
+    List<S3FileRequest> s3FileRequests = new ArrayList<>();
+    buckets.forEach(
+        (bucketName,
+            fileKeys) -> s3FileRequests.add(S3FileRequest.builder().bucketName(bucketName).fileKeys(fileKeys).build()));
+
+    return FetchS3FilesCommandParams.builder()
+        .activityId(activityId)
+        .encryptionDetails(
+            secretManager.getEncryptionDetails(awsConfig, GLOBAL_APP_ID, executionContext.getWorkflowExecutionId()))
+        .awsConfig(awsConfig)
+        .appId(executionContext.getApp().getAppId())
+        .accountId(executionContext.getApp().getAccountId())
+        .executionLogName(FETCH_FILES_COMMAND_UNIT)
+        .s3FileRequests(s3FileRequests)
+        .build();
+  }
+
+  @NotNull
+  private Map<String, List<String>> getBucketsFilesMap() {
+    Map<String, List<String>> buckets = new HashMap<>();
+    getParametersFilePaths().forEach(parametersFilePath -> {
+      String[] s3Details = parametersFilePath.split(BUCKET_KEY_DELIMITER);
+      String bucketName = s3Details[0].split(PROTOCOL_DELIMITER)[1];
+      String fileKey = s3Details[1];
+      if (buckets.get(bucketName) == null) {
+        buckets.put(bucketName, new ArrayList<>(Collections.singletonList(fileKey)));
+      } else {
+        buckets.get(bucketName).add(fileKey);
+      }
+    });
+    return buckets;
+  }
+
+  private void validateFilePaths() {
+    getParametersFilePaths().forEach(parametersFilePath -> {
+      if (!parametersFilePath.matches(PARAMETERS_FILE_PATH_PATTERN)) {
+        throw new InvalidRequestException(String.format("The %s format is not valid", parametersFilePath));
+      }
+    });
+  }
+
+  public DelegateTask createGitFetchFileAsyncTask(
+      ExecutionContext context, String activityId, GitConfig gitConfig, GitFileConfig gitFileConfig) {
+    Application app = context.getApp();
+    Environment env = ((ExecutionContextImpl) context).getEnv();
+    notNullCheck("Environment is null", env, USER);
+
+    GitFetchFilesTaskParams fetchFilesTaskParams =
+        createGitFetchFilesTaskParams(context, activityId, gitConfig, gitFileConfig, app);
+
+    return DelegateTask.builder()
+        .accountId(app.getAccountId())
+        .setupAbstraction(Cd1SetupFields.APP_ID_FIELD, app.getUuid())
+        .setupAbstraction(Cd1SetupFields.ENV_ID_FIELD, env.getUuid())
+        .uuid(generateUuid())
+        .data(TaskData.builder()
+                  .async(true)
+                  .taskType(GIT_FETCH_FILES_TASK.name())
+                  .parameters(new Object[] {fetchFilesTaskParams})
+                  .timeout(defaultIfNullTimeout(DEFAULT_ASYNC_CALL_TIMEOUT))
+                  .build())
+        .build();
+  }
+
+  @NotNull
+  private GitFetchFilesTaskParams createGitFetchFilesTaskParams(
+      ExecutionContext context, String activityId, GitConfig gitConfig, GitFileConfig gitFileConfig, Application app) {
+    GitFetchFilesConfig gitFetchFilesConfig = GitFetchFilesConfig.builder()
+                                                  .gitConfig(gitConfig)
+                                                  .gitFileConfig(gitFileConfig)
+                                                  .encryptedDataDetails(secretManager.getEncryptionDetails(
+                                                      gitConfig, GLOBAL_APP_ID, context.getWorkflowExecutionId()))
+                                                  .build();
+
+    Map<String, GitFetchFilesConfig> gitFetchFileConfigMap =
+        Collections.singletonMap(CF_PARAMETERS, gitFetchFilesConfig);
+
+    return GitFetchFilesTaskParams.builder()
+        .appId(app.getAppId())
+        .accountId(app.getAccountId())
+        .activityId(activityId)
+        .gitFetchFilesConfigMap(gitFetchFileConfigMap)
+        .isFinalState(false)
+        .executionLogName(FETCH_FILES_COMMAND_UNIT)
         .build();
   }
 
@@ -162,5 +415,123 @@ public class CloudFormationCreateStackState extends CloudFormationState {
       return Arrays.asList(rollbackElement, outputElement);
     }
     return emptyList();
+  }
+
+  @Override
+  public ExecutionResponse handleAsyncResponse(ExecutionContext context, Map<String, ResponseData> response) {
+    ResponseData responseData = response.values().iterator().next();
+    if (responseData instanceof GitCommandExecutionResponse) {
+      return handleResponseFromGitCommand(response, context);
+    } else if (responseData instanceof FetchS3FilesExecutionResponse) {
+      return handleFetchS3FilesExecutionResponse(response, context);
+    } else {
+      saveCompletionFlag(context);
+      return super.handleAsyncResponse(context, response);
+    }
+  }
+
+  private ExecutionResponse handleResponseFromGitCommand(Map<String, ResponseData> response, ExecutionContext context) {
+    WorkflowStandardParams workflowStandardParams = context.getContextElement(ContextElementType.STANDARD);
+    String appId = workflowStandardParams.getAppId();
+    String activityId = ((ScriptStateExecutionData) context.getStateExecutionData()).getActivityId();
+    GitCommandExecutionResponse executionResponse = (GitCommandExecutionResponse) response.values().iterator().next();
+    ExecutionStatus executionStatus =
+        executionResponse.getGitCommandStatus() == GitCommandExecutionResponse.GitCommandStatus.SUCCESS
+        ? ExecutionStatus.SUCCESS
+        : ExecutionStatus.FAILED;
+
+    if (ExecutionStatus.FAILED == executionStatus) {
+      activityService.updateStatus(activityId, appId, executionStatus);
+      return ExecutionResponse.builder().executionStatus(ExecutionStatus.FAILED).build();
+    } else {
+      setParametersFilePaths(
+          getParametersFilePaths().stream().map(context::renderExpression).collect(Collectors.toList()));
+      GitFetchFilesFromMultipleRepoResult gitCommandResult =
+          (GitFetchFilesFromMultipleRepoResult) executionResponse.getGitCommandResult();
+      gitCommandResult.getFilesFromMultipleRepo()
+          .get(CF_PARAMETERS)
+          .getFiles()
+          .stream()
+          .filter(gitFile -> getParametersFilePaths().contains(gitFile.getFilePath()))
+          .map(GitFile::getFileContent)
+          .map(this ::getParametersFromJson)
+          .forEach(this ::addNewVariables);
+    }
+    setFileFetched(true);
+    return executeInternal(context, ((ScriptStateExecutionData) context.getStateExecutionData()).getActivityId());
+  }
+
+  private ExecutionResponse handleFetchS3FilesExecutionResponse(
+      Map<String, ResponseData> response, ExecutionContext context) {
+    WorkflowStandardParams workflowStandardParams = context.getContextElement(ContextElementType.STANDARD);
+    String appId = workflowStandardParams.getAppId();
+    String activityId = ((ScriptStateExecutionData) context.getStateExecutionData()).getActivityId();
+    FetchS3FilesExecutionResponse executionResponse =
+        (FetchS3FilesExecutionResponse) response.values().iterator().next();
+    ExecutionStatus executionStatus =
+        executionResponse.getCommandStatus() == FetchS3FilesExecutionResponse.FetchS3FilesCommandStatus.SUCCESS
+        ? ExecutionStatus.SUCCESS
+        : ExecutionStatus.FAILED;
+
+    if (ExecutionStatus.FAILED == executionStatus) {
+      activityService.updateStatus(activityId, appId, executionStatus);
+      return ExecutionResponse.builder().executionStatus(ExecutionStatus.FAILED).build();
+    } else {
+      setParametersFilePaths(
+          getParametersFilePaths().stream().map(context::renderExpression).collect(Collectors.toList()));
+      Map<String, List<String>> buckets = getBucketsFilesMap();
+      executionResponse.getS3FetchFileResult().getS3Buckets().forEach(s3Bucket -> {
+        if (buckets.get(s3Bucket.getName()) != null) {
+          s3Bucket.getS3Files()
+              .stream()
+              .filter(s3File -> buckets.get(s3Bucket.getName()).contains(s3File.getFileKey()))
+              .map(S3File::getFileContent)
+              .map(this ::getParametersFromJson)
+              .forEach(this ::addNewVariables);
+        }
+      });
+    }
+    setFileFetched(true);
+    return executeInternal(context, ((ScriptStateExecutionData) context.getStateExecutionData()).getActivityId());
+  }
+
+  private void saveCompletionFlag(ExecutionContext context) {
+    CloudFormationCompletionFlag cloudFormationCompletionFlag = getCloudFormationCompletionFlag(context);
+    if (cloudFormationCompletionFlag == null) {
+      sweepingOutputService.save(context.prepareSweepingOutputBuilder(SweepingOutputInstance.Scope.WORKFLOW)
+                                     .name(getCompletionStatusFlagSweepingOutputName())
+                                     .value(CloudFormationCompletionFlag.builder().createStackCompleted(true).build())
+                                     .build());
+    }
+  }
+
+  private List<Parameter> getParametersFromJson(String parametersJson) {
+    ObjectMapper mapper = new ObjectMapper();
+    List<Parameter> parameters;
+    mapper.configure(MapperFeature.ACCEPT_CASE_INSENSITIVE_PROPERTIES, true);
+    try {
+      parameters = mapper.readValue(parametersJson, new TypeReference<List<Parameter>>() {});
+    } catch (IOException e) {
+      throw new InvalidArgumentsException("Failed to Deserialize json" + e);
+    }
+    return parameters;
+  }
+
+  private void addNewVariables(List<Parameter> parameters) {
+    if (isNotEmpty(parameters)) {
+      if (isEmpty(getVariables())) {
+        setVariables(new ArrayList<>());
+      }
+      Set<String> variablesKeySet = getVariables().stream().map(NameValuePair::getName).collect(Collectors.toSet());
+      parameters.forEach(parameter -> {
+        if (!variablesKeySet.contains(parameter.getParameterKey())) {
+          getVariables().add(NameValuePair.builder()
+                                 .name(parameter.getParameterKey())
+                                 .value(parameter.getParameterValue())
+                                 .valueType("TEXT")
+                                 .build());
+        }
+      });
+    }
   }
 }

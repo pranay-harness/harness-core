@@ -15,7 +15,6 @@ import com.google.common.collect.Sets;
 import com.google.inject.Inject;
 
 import com.github.reinert.jjschema.Attributes;
-import io.harness.beans.DelegateTask;
 import io.harness.beans.ExecutionStatus;
 import io.harness.beans.TriggeredBy;
 import io.harness.context.ContextElementType;
@@ -48,6 +47,7 @@ import software.wings.beans.infrastructure.CloudFormationRollbackConfig;
 import software.wings.beans.infrastructure.CloudFormationRollbackConfig.CloudFormationRollbackConfigKeys;
 import software.wings.common.TemplateExpressionProcessor;
 import software.wings.dl.WingsPersistence;
+import software.wings.helpers.ext.cloudformation.CloudFormationCompletionFlag;
 import software.wings.helpers.ext.cloudformation.request.CloudFormationCommandRequest;
 import software.wings.helpers.ext.cloudformation.request.CloudFormationCreateStackRequest;
 import software.wings.helpers.ext.cloudformation.response.CloudFormationCommandExecutionResponse;
@@ -61,6 +61,8 @@ import software.wings.service.intfc.InfrastructureProvisionerService;
 import software.wings.service.intfc.LogService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.security.SecretManager;
+import software.wings.service.intfc.sweepingoutput.SweepingOutputInquiry;
+import software.wings.service.intfc.sweepingoutput.SweepingOutputService;
 import software.wings.settings.SettingVariableTypes;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionContextImpl;
@@ -71,15 +73,15 @@ import software.wings.sm.WorkflowStandardParams;
 import software.wings.sm.states.ManagerExecutionLogCallback;
 import software.wings.stencils.DefaultValue;
 
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 @FieldNameConstants(innerTypeName = "CloudFormationStateKeys")
 public abstract class CloudFormationState extends State {
-  @Inject private transient ActivityService activityService;
+  @Inject protected transient ActivityService activityService;
   @Inject private transient SettingsService settingsService;
   @Inject private transient AppService appService;
   @Inject protected transient DelegateService delegateService;
@@ -88,6 +90,7 @@ public abstract class CloudFormationState extends State {
   @Inject protected transient LogService logService;
   @Inject protected transient TemplateExpressionProcessor templateExpressionProcessor;
   @Inject protected transient WingsPersistence wingsPersistence;
+  @Inject protected SweepingOutputService sweepingOutputService;
 
   @Attributes(title = "Provisioner") @Getter @Setter protected String provisionerId;
   @Attributes(title = "Region") @DefaultValue("us-east-1") @Getter @Setter protected String region = "us-east-1";
@@ -104,8 +107,9 @@ public abstract class CloudFormationState extends State {
   public CloudFormationState(String name, String stateType) {
     super(name, stateType);
   }
-  protected abstract String commandUnit();
-  protected abstract DelegateTask buildDelegateTask(ExecutionContextImpl executionContext,
+  protected abstract List<String> commandUnits();
+  protected abstract String mainCommandUnit();
+  protected abstract ExecutionResponse buildAndQueueDelegateTask(ExecutionContextImpl executionContext,
       CloudFormationInfrastructureProvisioner provisioner, AwsConfig awsConfig, String activityId);
   protected abstract List<CloudFormationElement> handleResponse(
       CloudFormationCommandResponse commandResponse, ExecutionContext context);
@@ -150,7 +154,7 @@ public abstract class CloudFormationState extends State {
     return builder.build();
   }
 
-  private CloudFormationInfrastructureProvisioner getProvisioner(ExecutionContext context) {
+  protected CloudFormationInfrastructureProvisioner getProvisioner(ExecutionContext context) {
     InfrastructureProvisioner infrastructureProvisioner =
         infrastructureProvisionerService.get(context.getAppId(), provisionerId);
 
@@ -190,16 +194,7 @@ public abstract class CloudFormationState extends State {
       awsConfig = getAwsConfig(awsConfigId);
     }
 
-    DelegateTask delegateTask =
-        buildDelegateTask(executionContext, cloudFormationInfrastructureProvisioner, awsConfig, activityId);
-
-    String delegateTaskId = delegateService.queueTask(delegateTask);
-    return ExecutionResponse.builder()
-        .async(true)
-        .correlationIds(Collections.singletonList(activityId))
-        .delegateTaskId(delegateTaskId)
-        .stateExecutionData(ScriptStateExecutionData.builder().activityId(activityId).build())
-        .build();
+    return buildAndQueueDelegateTask(executionContext, cloudFormationInfrastructureProvisioner, awsConfig, activityId);
   }
 
   protected void setTimeOutOnRequest(CloudFormationCommandRequest request) {
@@ -219,7 +214,7 @@ public abstract class CloudFormationState extends State {
                                  .appId(context.getAppId())
                                  .activityId(scriptStateExecutionData.getActivityId())
                                  .logLevel(LogLevel.INFO)
-                                 .commandUnitName(commandUnit())
+                                 .commandUnitName(mainCommandUnit())
                                  .executionResult(CommandExecutionStatus.RUNNING);
 
     ManagerExecutionLogCallback executionLogCallback =
@@ -258,8 +253,10 @@ public abstract class CloudFormationState extends State {
             .commandType(getStateType())
             .workflowExecutionId(executionContext.getWorkflowExecutionId())
             .workflowId(executionContext.getWorkflowId())
-            .commandUnits(Collections.singletonList(
-                Builder.aCommand().withName(commandUnit()).withCommandType(CommandType.OTHER).build()))
+            .commandUnits(commandUnits()
+                              .stream()
+                              .map(s -> Builder.aCommand().withName(s).withCommandType(CommandType.OTHER).build())
+                              .collect(Collectors.toList()))
             .status(ExecutionStatus.RUNNING)
             .triggeredBy(TriggeredBy.builder()
                              .email(workflowStandardParams.getCurrentUser().getEmail())
@@ -345,5 +342,15 @@ public abstract class CloudFormationState extends State {
                               .workflowExecutionId(context.getWorkflowExecutionId())
                               .entityId(getStackNameSuffix(context, provisionerId))
                               .build());
+  }
+
+  protected CloudFormationCompletionFlag getCloudFormationCompletionFlag(ExecutionContext context) {
+    SweepingOutputInquiry inquiry =
+        context.prepareSweepingOutputInquiryBuilder().name(getCompletionStatusFlagSweepingOutputName()).build();
+    return sweepingOutputService.findSweepingOutput(inquiry);
+  }
+
+  protected String getCompletionStatusFlagSweepingOutputName() {
+    return String.format("CloudFormationCompletionFlag %s", provisionerId);
   }
 }
