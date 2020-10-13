@@ -3509,7 +3509,7 @@ public class DelegateServiceImpl implements DelegateService {
       String accountId, String delegateId, String delegateConnectionId, ConnectionMode connectionMode) {
     switch (connectionMode) {
       case POLLING:
-        throw new DuplicateDelegateException();
+        throw new DuplicateDelegateException(delegateId, delegateConnectionId);
       case STREAMING:
         broadcasterFactory.lookup(STREAM_DELEGATE + accountId, true)
             .broadcast(SELF_DESTRUCT + delegateId + "-" + delegateConnectionId);
