@@ -130,6 +130,7 @@ import io.harness.exception.LimitsExceededException;
 import io.harness.exception.UnexpectedException;
 import io.harness.expression.ExpressionEvaluator;
 import io.harness.expression.ExpressionReflectionUtils;
+import io.harness.k8s.model.response.CEK8sDelegatePrerequisite;
 import io.harness.lock.AcquiredLock;
 import io.harness.lock.PersistentLocker;
 import io.harness.logging.AccountLogContext;
@@ -173,6 +174,8 @@ import org.mongodb.morphia.query.UpdateOperations;
 import software.wings.app.DelegateGrpcConfig;
 import software.wings.app.MainConfiguration;
 import software.wings.beans.Account;
+import software.wings.beans.CEDelegateStatus;
+import software.wings.beans.CEDelegateStatus.CEDelegateStatusBuilder;
 import software.wings.beans.Delegate;
 import software.wings.beans.Delegate.DelegateKeys;
 import software.wings.beans.Delegate.Status;
@@ -228,6 +231,7 @@ import software.wings.service.intfc.EmailNotificationService;
 import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.FileService;
 import software.wings.service.intfc.ServiceTemplateService;
+import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.security.ManagerDecryptionService;
 import software.wings.service.intfc.security.SecretManager;
 import software.wings.utils.DelegateTaskUtils;
@@ -344,6 +348,7 @@ public class DelegateServiceImpl implements DelegateService {
   @Inject private EmailNotificationService emailNotificationService;
   @Inject private DelegateGrpcConfig delegateGrpcConfig;
   @Inject private DelegateTaskSelectorMapService taskSelectorMapService;
+  @Inject private SettingsService settingsService;
 
   @Inject @Named(DelegatesFeature.FEATURE_NAME) private UsageLimitedFeature delegatesFeature;
   @Inject @Getter private Subject<DelegateObserver> subject = new Subject<>();
@@ -409,6 +414,55 @@ public class DelegateServiceImpl implements DelegateService {
         .distinct()
         .sorted(naturalOrder())
         .collect(toList());
+  }
+
+  @Override
+  public CEDelegateStatus validateCEDelegate(String accountId, String delegateName) {
+    Delegate delegate = wingsPersistence.createQuery(Delegate.class)
+                            .filter(DelegateKeys.accountId, accountId)
+                            .field(DelegateKeys.delegateName)
+                            .exists()
+                            .filter(DelegateKeys.delegateName, delegateName)
+                            .get();
+
+    if (delegate == null) {
+      return CEDelegateStatus.builder().found(false).build();
+    }
+
+    CEDelegateStatusBuilder ceDelegateStatus = CEDelegateStatus.builder()
+                                                   .found(true)
+                                                   .ceEnabled(delegate.isCeEnabled())
+                                                   .delegateName(delegate.getDelegateName())
+                                                   .delegateType(delegate.getDelegateType())
+                                                   .uuid(delegate.getUuid())
+                                                   .lastHeartBeat(delegate.getLastHeartBeat())
+                                                   .status(delegate.getStatus())
+                                                   .build()
+                                                   .toBuilder();
+
+    // check delegate connections, if it's active
+    List<DelegateStatus.DelegateInner.DelegateConnectionInner> activelyConnectedDelegates =
+        delegateConnectionDao.list(accountId, delegate.getUuid())
+            .stream()
+            .map(delegateConnection
+                -> DelegateStatus.DelegateInner.DelegateConnectionInner.builder()
+                       .uuid(delegateConnection.getUuid())
+                       .lastHeartbeat(delegateConnection.getLastHeartbeat())
+                       .version(delegateConnection.getVersion())
+                       .build())
+            .collect(toList());
+    if (activelyConnectedDelegates.isEmpty()) {
+      return ceDelegateStatus.build();
+    }
+
+    // verify metrics server and ce permissions
+    final CEK8sDelegatePrerequisite cek8sDelegatePrerequisite =
+        settingsService.validateCEDelegateSetting(accountId, delegateName);
+
+    return ceDelegateStatus.connections(activelyConnectedDelegates)
+        .metricsServerCheck(cek8sDelegatePrerequisite.getMetricsServer())
+        .permissionRuleList(cek8sDelegatePrerequisite.getPermissions())
+        .build();
   }
 
   @Override

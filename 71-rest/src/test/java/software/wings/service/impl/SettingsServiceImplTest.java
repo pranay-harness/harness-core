@@ -2,7 +2,9 @@ package software.wings.service.impl;
 
 import static io.harness.ccm.license.CeLicenseType.LIMITED_TRIAL;
 import static io.harness.rule.OwnerRule.ARVIND;
+import static io.harness.rule.OwnerRule.DELEGATE;
 import static io.harness.rule.OwnerRule.HANTANG;
+import static io.harness.rule.OwnerRule.UTSAV;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
@@ -28,6 +30,7 @@ import io.harness.ccm.config.CCMSettingService;
 import io.harness.ccm.license.CeLicenseInfo;
 import io.harness.ccm.setup.service.support.intfc.AWSCEConfigValidationService;
 import io.harness.exception.InvalidRequestException;
+import io.harness.k8s.model.response.CEK8sDelegatePrerequisite;
 import io.harness.rule.Owner;
 import io.harness.rule.OwnerRule;
 import org.apache.commons.lang3.reflect.FieldUtils;
@@ -90,6 +93,7 @@ public class SettingsServiceImplTest extends WingsBaseTest {
   @Mock private AccountService accountService;
   @Mock private CCMSettingService ccmSettingService;
   @Mock private SettingAttributeDao settingAttributeDao;
+  @Mock private SettingValidationService settingValidationService;
   @Mock @Named(GitOpsFeature.FEATURE_NAME) private UsageLimitedFeature gitOpsFeature;
   @Mock @Named(CeCloudAccountFeature.FEATURE_NAME) private UsageLimitedFeature ceCloudAccountFeature;
 
@@ -129,6 +133,22 @@ public class SettingsServiceImplTest extends WingsBaseTest {
     List<SettingAttribute> settingAttributes = Arrays.asList(settingAttribute1, settingAttribute2);
     when(settingAttributeDao.list(eq(ACCOUNT_ID), any(SettingCategory.class))).thenReturn(settingAttributes);
     settingsService.checkCeTrialLimit(settingAttribute);
+  }
+
+  @Test
+  @Owner(developers = UTSAV)
+  @Category(UnitTests.class)
+  public void shouldValidateCEDelegateSetting() throws IllegalAccessException {
+    FieldUtils.writeField(settingsService, "wingsPersistence", wingsPersistence, true);
+
+    when(settingValidationService.validateCEK8sDelegateSetting(any()))
+        .thenReturn(CEK8sDelegatePrerequisite.builder().build());
+
+    CEK8sDelegatePrerequisite response = settingsService.validateCEDelegateSetting(ACCOUNT_ID, DELEGATE);
+
+    verify(settingValidationService, times(0)).validateCEK8sDelegateSetting(any());
+    assertThat(response.getMetricsServer()).isNull();
+    assertThat(response.getPermissions()).isNull();
   }
 
   @Test

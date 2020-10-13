@@ -28,6 +28,7 @@ import io.harness.exception.InvalidArgumentsException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.UnknownEnumTypeException;
 import io.harness.exception.WingsException;
+import io.harness.k8s.model.response.CEK8sDelegatePrerequisite;
 import io.harness.logging.CommandExecutionStatus;
 import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.tasks.Cd1SetupFields;
@@ -367,6 +368,23 @@ public class SettingValidationService {
     } catch (Exception e) {
       throw new InvalidRequestException(ExceptionUtils.getMessage(e), USER);
     }
+  }
+
+  public CEK8sDelegatePrerequisite validateCEK8sDelegateSetting(SettingAttribute settingAttribute) {
+    SettingValue settingValue = settingAttribute.getValue();
+
+    SyncTaskContext syncTaskContext =
+        SyncTaskContext.builder().accountId(settingAttribute.getAccountId()).timeout(DEFAULT_SYNC_CALL_TIMEOUT).build();
+    ContainerService containerService = delegateProxyFactory.get(ContainerService.class, syncTaskContext);
+
+    String namespace = "default";
+    ContainerServiceParams containerServiceParams = ContainerServiceParams.builder()
+                                                        .settingAttribute(settingAttribute)
+                                                        .encryptionDetails(fetchEncryptionDetails(settingValue))
+                                                        .namespace(namespace)
+                                                        .build();
+
+    return containerService.validateCEK8sDelegate(containerServiceParams);
   }
 
   private void validateAwsConfig(SettingAttribute settingAttribute, List<EncryptedDataDetail> encryptedDataDetails) {

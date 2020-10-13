@@ -74,6 +74,7 @@ import io.harness.k8s.model.K8sContainer;
 import io.harness.k8s.model.K8sPod;
 import io.harness.k8s.model.KubernetesClusterAuthType;
 import io.harness.k8s.model.OidcGrantType;
+import io.harness.k8s.model.response.CEK8sDelegatePrerequisite;
 import io.harness.logging.CommandExecutionStatus;
 import io.harness.pcf.model.ManifestType;
 import io.harness.security.encryption.EncryptableSettingWithEncryptionDetails;
@@ -146,6 +147,10 @@ public class ApiServiceBeansKryoRegister implements KryoRegistrar {
     kryo.register(PurgeGlobalContextData.class, 7173);
     kryo.register(EcsContainerDetails.class, 7179);
     kryo.register(OidcGrantType.class, 7318);
+
+    kryo.register(CEK8sDelegatePrerequisite.class, 7490);
+    kryo.register(CEK8sDelegatePrerequisite.MetricsServerCheck.class, 7491);
+    kryo.register(CEK8sDelegatePrerequisite.Rule.class, 7492);
 
     kryo.register(ElastiGroup.class, 1025);
     kryo.register(ElastiGroupCapacity.class, 1026);

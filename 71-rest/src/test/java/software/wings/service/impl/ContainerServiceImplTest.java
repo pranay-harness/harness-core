@@ -26,6 +26,7 @@ import io.harness.category.element.UnitTests;
 import io.harness.exception.InvalidRequestException;
 import io.harness.k8s.KubernetesContainerService;
 import io.harness.k8s.model.KubernetesConfig;
+import io.harness.k8s.model.response.CEK8sDelegatePrerequisite;
 import io.harness.rule.Owner;
 import io.harness.rule.OwnerRule;
 import org.junit.Test;
@@ -191,5 +192,27 @@ public class ContainerServiceImplTest extends WingsBaseTest {
 
     Set<String> controllerNames = containerService.getControllerNames(containerServiceParams, emptyMap());
     assertThat(controllerNames).contains("deployment-name");
+  }
+
+  @Test
+  @Owner(developers = UTSAV)
+  @Category(UnitTests.class)
+  public void testValidateCEK8sDelegate() {
+    ContainerServiceParams containerServiceParams =
+        ContainerServiceParams.builder()
+            .settingAttribute(SettingAttribute.Builder.aSettingAttribute()
+                                  .withValue(KubernetesClusterConfig.builder().build())
+                                  .build())
+            .build();
+
+    when(kubernetesContainerService.validateMetricsServer(any())).thenReturn(null);
+    when(kubernetesContainerService.validateCEResourcePermissions(any())).thenReturn(null);
+
+    CEK8sDelegatePrerequisite cek8sDelegatePrerequisite =
+        containerService.validateCEK8sDelegate(containerServiceParams);
+
+    assertThat(cek8sDelegatePrerequisite).isNotNull();
+    assertThat(cek8sDelegatePrerequisite.getMetricsServer()).isNull();
+    assertThat(cek8sDelegatePrerequisite.getPermissions()).isNull();
   }
 }

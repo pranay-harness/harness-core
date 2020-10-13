@@ -2,10 +2,11 @@ package io.harness.k8s;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
 import static com.github.tomakehurst.wiremock.client.WireMock.get;
+import static com.github.tomakehurst.wiremock.client.WireMock.post;
+import static com.github.tomakehurst.wiremock.client.WireMock.postRequestedFor;
 import static com.github.tomakehurst.wiremock.client.WireMock.stubFor;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlPathEqualTo;
 import static io.harness.k8s.K8sResourceValidator.DENIED_RESPOSE_FORMAT;
-import static io.harness.k8s.K8sResourceValidator.FAILED_RESPOSE_FORMAT;
 import static io.harness.rule.OwnerRule.UTSAV;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -17,9 +18,11 @@ import static org.mockito.Mockito.doThrow;
 import com.google.common.collect.ImmutableList;
 import com.google.gson.Gson;
 
+import com.github.tomakehurst.wiremock.client.WireMock;
 import com.github.tomakehurst.wiremock.junit.WireMockRule;
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
+import io.harness.k8s.model.response.CEK8sDelegatePrerequisite;
 import io.harness.rule.Owner;
 import io.harness.threading.CurrentThreadExecutor;
 import io.kubernetes.client.openapi.ApiClient;
@@ -43,7 +46,7 @@ import org.mockito.junit.MockitoJUnit;
 import org.mockito.junit.MockitoRule;
 
 import java.util.ArrayList;
-import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 
@@ -59,7 +62,7 @@ public class K8sResourceValidatorImplTest extends CategoryTest {
   private V1SelfSubjectAccessReviewSpec v1SelfSubjectAccessReviewSpec;
   private V1SelfSubjectAccessReview v1SelfSubjectAccessReview;
   private List<V1ResourceAttributes> v1ResourceAttributesList;
-  private ExecutorService executorService = new CurrentThreadExecutor();
+  private final ExecutorService executorService = new CurrentThreadExecutor();
   private ApiClient apiClient;
 
   final String GROUP = "apps";
@@ -82,7 +85,7 @@ public class K8sResourceValidatorImplTest extends CategoryTest {
     v1SelfSubjectAccessReview =
         new V1SelfSubjectAccessReview().spec(v1SelfSubjectAccessReviewSpec).status(v1SubjectAccessReviewStatus);
 
-    v1ResourceAttributesList = Arrays.asList(v1ResourceAttributes);
+    v1ResourceAttributesList = Collections.singletonList(v1ResourceAttributes);
 
     doReturn(v1SelfSubjectAccessReview)
         .when(authorizationV1Api)
@@ -92,7 +95,7 @@ public class K8sResourceValidatorImplTest extends CategoryTest {
   @Test
   @Owner(developers = UTSAV)
   @Category(UnitTests.class)
-  public void shouldValidateWithStringInput() {
+  public void shouldValidateWithStringInput() throws ApiException {
     V1SubjectAccessReviewStatus status = k8sResourceValidator.validate(authorizationV1Api, GROUP, VERB, RESOURCE);
     assertThat(status).isNotNull();
     assertThat(status.getAllowed()).isTrue();
@@ -102,7 +105,7 @@ public class K8sResourceValidatorImplTest extends CategoryTest {
   @Test
   @Owner(developers = UTSAV)
   @Category(UnitTests.class)
-  public void shouldValidateWithV1ResourceAttributesPermissionGranted() {
+  public void shouldValidateWithV1ResourceAttributesPermissionGranted() throws ApiException {
     V1SubjectAccessReviewStatus status = k8sResourceValidator.validate(authorizationV1Api, v1ResourceAttributes);
     assertThat(status).isNotNull();
     assertThat(status.getAllowed()).isTrue();
@@ -112,7 +115,7 @@ public class K8sResourceValidatorImplTest extends CategoryTest {
   @Test
   @Owner(developers = UTSAV)
   @Category(UnitTests.class)
-  public void shouldValidateWithV1ResourceAttributesPermissionNotGranted() {
+  public void shouldValidateWithV1ResourceAttributesPermissionNotGranted() throws ApiException {
     v1SubjectAccessReviewStatus = v1SubjectAccessReviewStatus.allowed(false).reason(REASON);
 
     V1SubjectAccessReviewStatus status = k8sResourceValidator.validate(authorizationV1Api, v1ResourceAttributes);
@@ -160,8 +163,8 @@ public class K8sResourceValidatorImplTest extends CategoryTest {
   @Owner(developers = UTSAV)
   @Category(UnitTests.class)
   public void shouldExtractResponseAsStringWhenAllPermissionGranted() {
-    String response = k8sResourceValidator.buildResponse(
-        Arrays.asList(v1ResourceAttributes), Arrays.asList(v1SubjectAccessReviewStatus));
+    String response = K8sResourceValidatorImpl.buildResponse(
+        Collections.singletonList(v1ResourceAttributes), Collections.singletonList(v1SubjectAccessReviewStatus));
 
     assertThat(response).isNotNull().isEmpty();
   }
@@ -172,8 +175,8 @@ public class K8sResourceValidatorImplTest extends CategoryTest {
   public void shouldBuildResponseAsStringWhenOnePermissionNotGranted() {
     v1SubjectAccessReviewStatus = v1SubjectAccessReviewStatus.allowed(false).reason(REASON);
 
-    String response =
-        k8sResourceValidator.buildResponse(v1ResourceAttributesList, Arrays.asList(v1SubjectAccessReviewStatus));
+    String response = K8sResourceValidatorImpl.buildResponse(
+        v1ResourceAttributesList, Collections.singletonList(v1SubjectAccessReviewStatus));
 
     assertThat(response).isNotNull().isEqualTo(String.format(DENIED_RESPOSE_FORMAT, v1ResourceAttributes.getVerb(),
         v1ResourceAttributes.getResource(), v1ResourceAttributes.getGroup()));
@@ -183,8 +186,8 @@ public class K8sResourceValidatorImplTest extends CategoryTest {
   @Owner(developers = UTSAV)
   @Category(UnitTests.class)
   public void shouldBuildResponseAsStringWhenOnePermissionGranted() {
-    String response = k8sResourceValidator.buildResponse(
-        Arrays.asList(v1ResourceAttributes), Arrays.asList(v1SubjectAccessReviewStatus));
+    String response = K8sResourceValidatorImpl.buildResponse(
+        Collections.singletonList(v1ResourceAttributes), Collections.singletonList(v1SubjectAccessReviewStatus));
 
     assertThat(response).isNotNull().isEmpty();
   }
@@ -193,7 +196,7 @@ public class K8sResourceValidatorImplTest extends CategoryTest {
   @Owner(developers = UTSAV)
   @Category(UnitTests.class)
   public void shouldBuildv1ResourceAttributesList() {
-    List<V1ResourceAttributes> list = k8sResourceValidator.v1ResourceAttributesListBuilder(
+    List<V1ResourceAttributes> list = K8sResourceValidatorImpl.v1ResourceAttributesListBuilder(
         new String[] {GROUP}, new String[] {RESOURCE, RESOURCE}, new String[] {VERB, VERB, VERB});
 
     assertThat(list).isNotNull();
@@ -209,11 +212,11 @@ public class K8sResourceValidatorImplTest extends CategoryTest {
     List<V1SubjectAccessReviewStatus> statuses =
         k8sResourceValidator.validate(authorizationV1Api, v1ResourceAttributesList, 10);
 
-    String response = k8sResourceValidator.buildResponse(Arrays.asList(v1ResourceAttributes), statuses);
+    String response = K8sResourceValidatorImpl.buildResponse(Collections.singletonList(v1ResourceAttributes), statuses);
 
     assertThat(statuses).isNotNull();
     assertThat(statuses.size()).isEqualTo(1);
-    assertThat(response).isNotNull().isEqualTo(FAILED_RESPOSE_FORMAT, v1ResourceAttributes.getVerb(),
+    assertThat(response).isNotNull().isEqualTo(DENIED_RESPOSE_FORMAT, v1ResourceAttributes.getVerb(),
         v1ResourceAttributes.getResource(), v1ResourceAttributes.getGroup());
   }
 
@@ -250,5 +253,36 @@ public class K8sResourceValidatorImplTest extends CategoryTest {
     assertThatThrownBy(() -> k8sResourceValidator.validateMetricsServer(apiClient))
         .isInstanceOf(ApiException.class)
         .hasMessageContaining("Not Found");
+  }
+
+  @Test
+  @Owner(developers = UTSAV)
+  @Category(UnitTests.class)
+  public void testValidateCEPermissions2AllPermissionsGranted() {
+    stubFor(post(urlPathEqualTo("/apis/authorization.k8s.io/v1/selfsubjectaccessreviews"))
+                .willReturn(aResponse().withStatus(200).withBody(new Gson().toJson(v1SelfSubjectAccessReview))));
+
+    List<CEK8sDelegatePrerequisite.Rule> requiredPermissions = k8sResourceValidator.validateCEPermissions2(apiClient);
+
+    WireMock.verify(postRequestedFor(urlPathEqualTo("/apis/authorization.k8s.io/v1/selfsubjectaccessreviews")));
+    assertThat(requiredPermissions).isNotNull();
+    assertThat(requiredPermissions).isEmpty();
+  }
+
+  @Test
+  @Owner(developers = UTSAV)
+  @Category(UnitTests.class)
+  public void testValidateCEPermissions2NoneGranted() {
+    v1SubjectAccessReviewStatus = v1SubjectAccessReviewStatus.allowed(false).reason(REASON);
+
+    stubFor(post(urlPathEqualTo("/apis/authorization.k8s.io/v1/selfsubjectaccessreviews"))
+                .willReturn(aResponse().withStatus(200).withBody(new Gson().toJson(v1SelfSubjectAccessReview))));
+
+    List<CEK8sDelegatePrerequisite.Rule> requiredPermissions = k8sResourceValidator.validateCEPermissions2(apiClient);
+
+    WireMock.verify(postRequestedFor(urlPathEqualTo("/apis/authorization.k8s.io/v1/selfsubjectaccessreviews")));
+    assertThat(requiredPermissions).isNotNull();
+    assertThat(requiredPermissions).isNotEmpty();
+    assertThat(requiredPermissions.get(0).getMessage()).isEqualTo(REASON);
   }
 }

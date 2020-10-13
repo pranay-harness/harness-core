@@ -5,6 +5,7 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
 
+import io.harness.k8s.model.response.CEK8sDelegatePrerequisite;
 import io.kubernetes.client.openapi.ApiClient;
 import io.kubernetes.client.openapi.ApiException;
 import io.kubernetes.client.openapi.apis.ApisApi;
@@ -13,6 +14,7 @@ import io.kubernetes.client.openapi.models.V1ResourceAttributes;
 import io.kubernetes.client.openapi.models.V1ResourceAttributesBuilder;
 import io.kubernetes.client.openapi.models.V1SelfSubjectAccessReviewBuilder;
 import io.kubernetes.client.openapi.models.V1SubjectAccessReviewStatus;
+import io.kubernetes.client.openapi.models.V1SubjectAccessReviewStatusBuilder;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.ArrayList;
@@ -35,26 +37,23 @@ public class K8sResourceValidatorImpl implements K8sResourceValidator {
   }
 
   @Override
-  public V1SubjectAccessReviewStatus validate(
-      AuthorizationV1Api apiClient, String group, String verb, String resource) {
+  public V1SubjectAccessReviewStatus validate(AuthorizationV1Api apiClient, String group, String verb, String resource)
+      throws ApiException {
     return this.validate(
         apiClient, new V1ResourceAttributesBuilder().withGroup(group).withVerb(verb).withResource(resource).build());
   }
 
   @Override
-  public V1SubjectAccessReviewStatus validate(AuthorizationV1Api apiClient, V1ResourceAttributes v1ResourceAttributes) {
-    try {
-      return apiClient
-          .createSelfSubjectAccessReview(new V1SelfSubjectAccessReviewBuilder()
-                                             .withNewSpec()
-                                             .withResourceAttributes(v1ResourceAttributes)
-                                             .endSpec()
-                                             .build(),
-              null, null, null)
-          .getStatus();
-    } catch (ApiException e) {
-      return null;
-    }
+  public V1SubjectAccessReviewStatus validate(AuthorizationV1Api apiClient, V1ResourceAttributes v1ResourceAttributes)
+      throws ApiException {
+    return apiClient
+        .createSelfSubjectAccessReview(new V1SelfSubjectAccessReviewBuilder()
+                                           .withNewSpec()
+                                           .withResourceAttributes(v1ResourceAttributes)
+                                           .endSpec()
+                                           .build(),
+            null, null, null)
+        .getStatus();
   }
 
   @Override
@@ -71,7 +70,15 @@ public class K8sResourceValidatorImpl implements K8sResourceValidator {
             try {
               return x.get();
             } catch (Exception ex) {
-              return null;
+              String message = "BACKEND_ERROR";
+              if (ex.getMessage() != null && ex.getMessage().contains("ApiException")) {
+                message = "ApiException";
+              }
+              return new V1SubjectAccessReviewStatusBuilder()
+                  .withAllowed(false)
+                  .withDenied(true)
+                  .withEvaluationError(message)
+                  .build();
             }
           })
           .collect(Collectors.toList());
@@ -81,7 +88,8 @@ public class K8sResourceValidatorImpl implements K8sResourceValidator {
     }
   }
 
-  public String buildResponse(List<V1ResourceAttributes> cePermissions, List<V1SubjectAccessReviewStatus> statuses) {
+  public static String buildResponse(
+      List<V1ResourceAttributes> cePermissions, List<V1SubjectAccessReviewStatus> statuses) {
     StringBuilder st = new StringBuilder();
 
     IntStream.range(0, statuses.size()).forEach(i -> {
@@ -97,7 +105,7 @@ public class K8sResourceValidatorImpl implements K8sResourceValidator {
     return st.toString();
   }
 
-  public List<V1ResourceAttributes> v1ResourceAttributesListBuilder(
+  public static List<V1ResourceAttributes> v1ResourceAttributesListBuilder(
       String[] apiGroups, String[] resources, String[] verbs) {
     List<V1ResourceAttributes> list = new ArrayList<>();
     for (String group : apiGroups) {
@@ -110,25 +118,65 @@ public class K8sResourceValidatorImpl implements K8sResourceValidator {
     return list;
   }
 
-  public String validateCEPermissions(ApiClient apiClient) {
-    AuthorizationV1Api authorizationV1Api = new AuthorizationV1Api(apiClient);
+  private static List<V1ResourceAttributes> getAllCEPermissionsRequired() {
     List<V1ResourceAttributes> cePermissions = new ArrayList<>();
 
-    cePermissions.addAll(ImmutableList.copyOf(this.v1ResourceAttributesListBuilder(new String[] {""},
+    cePermissions.addAll(ImmutableList.copyOf(v1ResourceAttributesListBuilder(new String[] {""},
         new String[] {"pods", "nodes", "events", "namespaces"}, new String[] {"get", "list", "watch"})));
 
-    cePermissions.addAll(ImmutableList.copyOf(this.v1ResourceAttributesListBuilder(new String[] {"apps", "extensions"},
+    cePermissions.addAll(ImmutableList.copyOf(v1ResourceAttributesListBuilder(new String[] {"apps", "extensions"},
         new String[] {"statefulsets", "deployments", "daemonsets", "replicasets"},
         new String[] {"get", "list", "watch"})));
 
-    cePermissions.addAll(ImmutableList.copyOf(this.v1ResourceAttributesListBuilder(
+    cePermissions.addAll(ImmutableList.copyOf(v1ResourceAttributesListBuilder(
         new String[] {"batch"}, new String[] {"jobs", "cronjobs"}, new String[] {"get", "list", "watch"})));
 
-    cePermissions.addAll(ImmutableList.copyOf(this.v1ResourceAttributesListBuilder(
+    cePermissions.addAll(ImmutableList.copyOf(v1ResourceAttributesListBuilder(
         new String[] {"metrics.k8s.io"}, new String[] {"pods", "nodes"}, new String[] {"get", "list"})));
+
+    return cePermissions;
+  }
+
+  public String validateCEPermissions(ApiClient apiClient) {
+    AuthorizationV1Api authorizationV1Api = new AuthorizationV1Api(apiClient);
+    final List<V1ResourceAttributes> cePermissions = getAllCEPermissionsRequired();
 
     List<V1SubjectAccessReviewStatus> response = this.validate(authorizationV1Api, cePermissions, 10);
 
-    return this.buildResponse(cePermissions, response);
+    return buildResponse(cePermissions, response);
+  }
+
+  @Override
+  public List<CEK8sDelegatePrerequisite.Rule> validateCEPermissions2(ApiClient apiClient) {
+    AuthorizationV1Api authorizationV1Api = new AuthorizationV1Api(apiClient);
+    final List<V1ResourceAttributes> cePermissions = getAllCEPermissionsRequired();
+
+    List<CEK8sDelegatePrerequisite.Rule> ruleList = new ArrayList<>();
+
+    List<V1SubjectAccessReviewStatus> statuses = this.validate(authorizationV1Api, cePermissions, 10);
+
+    for (int i = 0; i < statuses.size(); i++) {
+      V1ResourceAttributes resourceAttributes = cePermissions.get(i);
+      String message = null;
+      if (null == statuses.get(i)) {
+        message = "BACKEND_ERROR";
+      } else if (!statuses.get(i).getAllowed()) {
+        if (statuses.get(i).getReason() != null) {
+          message = statuses.get(i).getReason();
+        } else if (statuses.get(i).getEvaluationError() != null) {
+          message = statuses.get(i).getEvaluationError();
+        }
+      }
+      if (message != null) {
+        ruleList.add(CEK8sDelegatePrerequisite.Rule.builder()
+                         .apiGroups(resourceAttributes.getGroup())
+                         .resources(resourceAttributes.getResource())
+                         .verbs(resourceAttributes.getVerb())
+                         .message(message)
+                         .build());
+      }
+    }
+
+    return ruleList;
   }
 }
