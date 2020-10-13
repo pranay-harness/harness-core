@@ -370,7 +370,8 @@ public class VerificationApplication extends Application<VerificationConfigurati
             .semaphore(new Semaphore(5))
             .handler(handler)
             .schedulingType(REGULAR)
-            .filterExpander(query -> query.criteria(VerificationJobInstanceKeys.perpetualTaskIds).doesNotExist())
+            // TODO: find a way to implement retry logic.
+            .filterExpander(query -> query.filter(VerificationJobInstanceKeys.executionStatus, ExecutionStatus.QUEUED))
             .persistenceProvider(injector.getInstance(MorphiaPersistenceProvider.class))
             .redistribute(true)
             .build();

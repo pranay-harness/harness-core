@@ -6,6 +6,7 @@ import static io.harness.cvng.core.utils.DateTimeUtils.roundDownTo1MinBoundary;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
+import static io.harness.persistence.HQuery.excludeAuthority;
 import static java.util.stream.Collectors.groupingBy;
 
 import com.google.common.base.Charsets;
@@ -131,7 +132,7 @@ public class VerificationJobInstanceServiceImpl implements VerificationJobInstan
   }
   @Override
   public List<VerificationJobInstance> get(List<String> verificationJobInstanceIds) {
-    return hPersistence.createQuery(VerificationJobInstance.class)
+    return hPersistence.createQuery(VerificationJobInstance.class, excludeAuthority)
         .field(VerificationJobInstanceKeys.uuid)
         .in(verificationJobInstanceIds)
         .asList();
@@ -146,7 +147,9 @@ public class VerificationJobInstanceServiceImpl implements VerificationJobInstan
   public void createDataCollectionTasks(VerificationJobInstance verificationJobInstance) {
     VerificationJob verificationJob = verificationJobInstance.getResolvedJob();
     Preconditions.checkNotNull(verificationJob);
-    List<CVConfig> cvConfigs = cvConfigService.find(verificationJob.getAccountId(), verificationJob.getDataSources());
+    List<CVConfig> cvConfigs = cvConfigService.find(verificationJob.getAccountId(), verificationJob.getOrgIdentifier(),
+        verificationJob.getProjectIdentifier(), verificationJob.getServiceIdentifier(),
+        verificationJob.getEnvIdentifier(), verificationJob.getDataSources());
     Set<String> connectorIdentifiers =
         cvConfigs.stream().map(CVConfig::getConnectorIdentifier).collect(Collectors.toSet());
     List<String> perpetualTaskIds = new ArrayList<>();

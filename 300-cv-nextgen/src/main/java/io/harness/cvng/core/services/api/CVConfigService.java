@@ -27,7 +27,8 @@ public interface CVConfigService {
   List<String> getProductNames(String accountId, String connectorIdentifier);
 
   void setCollectionTaskId(String uuid, String dataCollectionTaskId);
-  List<CVConfig> find(String accountId, List<DataSourceType> dataSourceTypes);
+  List<CVConfig> find(String accountId, String orgIdentifier, String projectIdentifier, String serviceIdentifier,
+      String envIdentifier, List<DataSourceType> dataSourceTypes);
   List<EnvToServicesDTO> getEnvToServicesList(String accountId, String orgIdentifier, String projectIdentifier);
   Map<String, Set<String>> getEnvToServicesMap(String accountId, String orgIdentifier, String projectIdentifier);
   Set<CVMonitoringCategory> getAvailableCategories(String accountId, String projectIdentifier);

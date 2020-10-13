@@ -3,6 +3,7 @@ package io.harness.cvng.analysis.beans;
 import lombok.Builder;
 import lombok.Value;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import javax.validation.constraints.NotNull;
@@ -14,6 +15,20 @@ public class DeploymentTimeSeriesAnalysisDTO {
   Double score;
   List<HostInfo> hostSummaries;
   List<TransactionMetricHostData> transactionMetricSummaries;
+
+  public List<TransactionMetricHostData> getTransactionMetricSummaries() {
+    if (this.transactionMetricSummaries == null) {
+      return Collections.emptyList();
+    }
+    return transactionMetricSummaries;
+  }
+
+  public List<HostInfo> getHostSummaries() {
+    if (hostSummaries == null) {
+      return Collections.emptyList();
+    }
+    return hostSummaries;
+  }
 
   @Value
   @Builder

@@ -66,10 +66,16 @@ public class CVConfigServiceImpl implements CVConfigService {
   }
 
   @Override
-  public List<CVConfig> find(String accountId, List<DataSourceType> dataSourceTypes) {
+  public List<CVConfig> find(String accountId, String orgIdentifier, String projectIdentifier, String serviceIdentifier,
+      String envIdentifier, List<DataSourceType> dataSourceTypes) {
     Preconditions.checkNotNull(accountId);
-    List<CVConfig> cvConfigs =
-        hPersistence.createQuery(CVConfig.class).filter(CVConfigKeys.accountId, accountId).asList();
+    List<CVConfig> cvConfigs = hPersistence.createQuery(CVConfig.class)
+                                   .filter(CVConfigKeys.accountId, accountId)
+                                   .filter(CVConfigKeys.projectIdentifier, projectIdentifier)
+                                   .filter(CVConfigKeys.orgIdentifier, orgIdentifier)
+                                   .filter(CVConfigKeys.serviceIdentifier, serviceIdentifier)
+                                   .filter(CVConfigKeys.envIdentifier, envIdentifier)
+                                   .asList();
     return cvConfigs.stream()
         .filter(cvConfig -> dataSourceTypes.contains(cvConfig.getType()))
         .collect(Collectors.toList());
