@@ -219,8 +219,9 @@ public class AzureVMSSInstanceHandler extends InstanceHandler implements Instanc
         finalDeploymentSummary = getDeploymentSummaryForInstanceCreation(deploymentSummary, rollback);
       }
       vmIdsToBeAdded.forEach(vmId -> {
+        AzureVMData azureVMData = latestVMIdToVMDataMap.get(vmId);
         InstanceBuilder instanceBuilder = buildInstanceBase(null, infrastructureMapping, finalDeploymentSummary);
-        InstanceInfo instanceInfo = AzureVMSSInstanceInfo.builder().vmssId(vmssId).azureVMId(vmId).build();
+        InstanceInfo instanceInfo = toAzureVMSSInstanceInfo(vmssId, azureVMData);
         instanceBuilder.instanceInfo(instanceInfo);
         Instance instance = instanceBuilder.build();
         instanceService.save(instance);
@@ -228,6 +229,16 @@ public class AzureVMSSInstanceHandler extends InstanceHandler implements Instanc
 
       logger.info("Instances to be added {}", vmIdsToBeAdded.size());
     }
+  }
+
+  private AzureVMSSInstanceInfo toAzureVMSSInstanceInfo(String vmssId, AzureVMData azureVMData) {
+    return AzureVMSSInstanceInfo.builder()
+        .vmssId(vmssId)
+        .azureVMId(azureVMData.getId())
+        .host(azureVMData.getIp())
+        .instanceType(azureVMData.getSize())
+        .state(azureVMData.getPowerState())
+        .build();
   }
 
   private void handleAzureVMDelete(

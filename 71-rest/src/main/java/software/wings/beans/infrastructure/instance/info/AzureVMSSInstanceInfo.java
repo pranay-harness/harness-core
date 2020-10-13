@@ -10,4 +10,7 @@ import lombok.EqualsAndHashCode;
 public class AzureVMSSInstanceInfo extends InstanceInfo {
   private String vmssId;
   private String azureVMId;
+  private String host;
+  private String state;
+  private String instanceType;
 }

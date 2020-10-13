@@ -111,4 +111,7 @@ public interface AzureConstants {
   // VM provisioning statuses
   String VM_PROVISIONING_SUCCEEDED_STATUS = "Provisioning succeeded";
   String VM_PROVISIONING_SPECIALIZED_STATUS = "VM specialized";
+
+  // VM power statuses
+  String VM_POWER_STATE_PREFIX = "PowerState/";
 }

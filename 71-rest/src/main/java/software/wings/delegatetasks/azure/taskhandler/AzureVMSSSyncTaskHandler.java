@@ -1,11 +1,13 @@
 package software.wings.delegatetasks.azure.taskhandler;
 
+import static io.harness.azure.model.AzureConstants.VM_POWER_STATE_PREFIX;
 import static io.harness.logging.CommandExecutionStatus.SUCCESS;
 import static java.lang.String.format;
 import static org.apache.commons.lang3.StringUtils.EMPTY;
 
 import com.google.inject.Singleton;
 
+import com.microsoft.azure.management.compute.PowerState;
 import com.microsoft.azure.management.compute.VirtualMachineScaleSet;
 import com.microsoft.azure.management.compute.VirtualMachineScaleSetVM;
 import com.microsoft.azure.management.network.LoadBalancer;
@@ -203,7 +205,20 @@ public class AzureVMSSSyncTaskHandler extends AzureVMSSTaskHandler {
       String publicIp = publicIPAddressOp.map(PublicIPAddressInner::ipAddress).orElse(EMPTY);
       String publicDnsName =
           publicIPAddressOp.map(PublicIPAddressInner::dnsSettings).map(PublicIPAddressDnsSettings::fqdn).orElse(EMPTY);
-      return AzureVMData.builder().id(id).ip(publicIp).publicDns(publicDnsName).build();
+      String powerState = fixPowerState(vm.powerState());
+      String size = vm.size() != null ? vm.size().toString() : EMPTY;
+      return AzureVMData.builder()
+          .id(id)
+          .ip(publicIp)
+          .publicDns(publicDnsName)
+          .powerState(powerState)
+          .size(size)
+          .build();
     };
+  }
+
+  @NotNull
+  private String fixPowerState(PowerState ps) {
+    return ps != null ? ps.toString().replace(VM_POWER_STATE_PREFIX, EMPTY) : EMPTY;
   }
 }
