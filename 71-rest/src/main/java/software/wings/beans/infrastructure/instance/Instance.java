@@ -29,7 +29,6 @@ import software.wings.beans.infrastructure.instance.key.PodInstanceKey;
  */
 @Data
 @EqualsAndHashCode(callSuper = true)
-
 @CdIndex(name = "instance_index1", fields = { @Field("appId")
                                               , @Field("isDeleted"), @Field("deletedAt") })
 @CdIndex(name = "instance_index2",
@@ -54,13 +53,8 @@ import software.wings.beans.infrastructure.instance.key.PodInstanceKey;
 @CdIndex(name = "instance_index11",
     fields = { @Field("infraMappingId")
                , @Field("appId"), @Field("createdAt"), @Field("isDeleted") })
-
 @CdIndex(name = "instance_index12", fields = { @Field("accountId")
                                                , @Field("createdAt"), @Field("isDeleted") })
-
-@CdIndex(name = "instance_index13", fields = { @Field("accountId")
-                                               , @Field("createdAt"), @Field("deletedAt") })
-
 @FieldNameConstants(innerTypeName = "InstanceKeys")
 @Entity(value = "instance", noClassnameStored = true)
 @HarnessEntity(exportable = false)

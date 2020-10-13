@@ -77,8 +77,6 @@ build_proto_module() {
 
   bazel_library=`echo ${module} | tr '-' '_'`
 
-  ls -la ${BAZEL_DIRS}/bin/${modulePath}
-
   mvn -B install:install-file \
    -Dfile=${BAZEL_DIRS}/bin/${modulePath}/lib${bazel_library}_java_proto.jar \
    -DgroupId=software.wings \
