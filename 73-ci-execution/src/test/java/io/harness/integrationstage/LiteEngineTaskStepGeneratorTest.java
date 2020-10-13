@@ -6,6 +6,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import com.google.inject.Inject;
 
 import io.harness.beans.environment.K8BuildJobEnvInfo;
+import io.harness.beans.executionargs.CIExecutionArgs;
 import io.harness.beans.stages.IntegrationStage;
 import io.harness.beans.steps.stepinfo.LiteEngineTaskStepInfo;
 import io.harness.category.element.UnitTests;
@@ -30,14 +31,14 @@ public class LiteEngineTaskStepGeneratorTest extends CIExecutionTest {
     String gitConnectorIdentifier = "testGitConnector";
     IntegrationStage integrationStage = ciExecutionPlanTestHelper.getIntegrationStage();
     String buildNumber = "buildnumber22850";
-    Integer parallelism = 2;
     Integer liteEngineCounter = 1;
     boolean usePVC = true;
     String accountId = "accountId";
 
+    CIExecutionArgs ciExecutionArgs = ciExecutionPlanTestHelper.getCIExecutionArgs();
     LiteEngineTaskStepInfo actual =
         liteEngineTaskStepGenerator.createLiteEngineTaskStepInfo(executionElement, branchName, gitConnectorIdentifier,
-            integrationStage, buildNumber, parallelism, liteEngineCounter, usePVC, accountId);
+            integrationStage, ciExecutionArgs, buildNumber, liteEngineCounter, usePVC, accountId);
     ((K8BuildJobEnvInfo) actual.getBuildJobEnvInfo())
         .getPodsSetupInfo()
         .getPodSetupInfoList()
@@ -70,14 +71,14 @@ public class LiteEngineTaskStepGeneratorTest extends CIExecutionTest {
     String gitConnectorIdentifier = "testGitConnector";
     IntegrationStage integrationStage = ciExecutionPlanTestHelper.getIntegrationStage();
     String buildNumber = "buildnumber22850";
-    Integer parallelism = 2;
     Integer liteEngineCounter = 2;
     boolean usePVC = true;
     String accountId = "accountId";
 
+    CIExecutionArgs ciExecutionArgs = ciExecutionPlanTestHelper.getCIExecutionArgs();
     LiteEngineTaskStepInfo actual =
         liteEngineTaskStepGenerator.createLiteEngineTaskStepInfo(executionElement, branchName, gitConnectorIdentifier,
-            integrationStage, buildNumber, parallelism, liteEngineCounter, usePVC, accountId);
+            integrationStage, ciExecutionArgs, buildNumber, liteEngineCounter, usePVC, accountId);
     ((K8BuildJobEnvInfo) actual.getBuildJobEnvInfo())
         .getPodsSetupInfo()
         .getPodSetupInfoList()

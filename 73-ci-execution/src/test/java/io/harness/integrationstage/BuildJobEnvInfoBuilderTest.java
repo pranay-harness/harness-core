@@ -7,6 +7,7 @@ import com.google.inject.Inject;
 
 import io.harness.beans.environment.BuildJobEnvInfo;
 import io.harness.beans.environment.K8BuildJobEnvInfo;
+import io.harness.beans.executionargs.CIExecutionArgs;
 import io.harness.category.element.UnitTests;
 import io.harness.executionplan.CIExecutionPlanTestHelper;
 import io.harness.executionplan.CIExecutionTest;
@@ -22,8 +23,10 @@ public class BuildJobEnvInfoBuilderTest extends CIExecutionTest {
   @Owner(developers = ALEKSANDAR)
   @Category(UnitTests.class)
   public void getCIBuildJobEnvInfo() {
-    K8BuildJobEnvInfo actual = (K8BuildJobEnvInfo) buildJobEnvInfoBuilder.getCIBuildJobEnvInfo(
-        ciExecutionPlanTestHelper.getIntegrationStage(), true, "buildnumber22850", 2);
+    CIExecutionArgs ciExecutionArgs = ciExecutionPlanTestHelper.getCIExecutionArgs();
+    K8BuildJobEnvInfo actual =
+        (K8BuildJobEnvInfo) buildJobEnvInfoBuilder.getCIBuildJobEnvInfo(ciExecutionPlanTestHelper.getIntegrationStage(),
+            ciExecutionArgs, ciExecutionPlanTestHelper.getExecutionSectionsWithLESteps(), true, "buildnumber22850");
     actual.getPodsSetupInfo().getPodSetupInfoList().forEach(podSetupInfo -> podSetupInfo.setName(""));
     actual.getPodsSetupInfo().getPodSetupInfoList().forEach(
         podSetupInfo -> podSetupInfo.getPvcParams().setClaimName(""));

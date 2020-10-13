@@ -16,24 +16,24 @@ import lombok.Data;
 import software.wings.jersey.JsonViews;
 
 import java.beans.ConstructorProperties;
-import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import javax.validation.constraints.Max;
 import javax.validation.constraints.Min;
 import javax.validation.constraints.NotNull;
 
 @Data
-@JsonTypeName("run")
+@JsonTypeName("plugin")
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class RunStepInfo implements CIStepInfo {
+public class PluginStepInfo implements CIStepInfo {
   public static final int DEFAULT_RETRY = 1;
   public static final int DEFAULT_TIMEOUT = 60 * 60 * 2; // 2 hour
 
   @JsonView(JsonViews.Internal.class)
   @NotNull
   public static final TypeInfo typeInfo = TypeInfo.builder()
-                                              .stepInfoType(CIStepInfoType.RUN)
-                                              .stepType(StepType.builder().type(CIStepInfoType.RUN.name()).build())
+                                              .stepInfoType(CIStepInfoType.PLUGIN)
+                                              .stepType(StepType.builder().type(CIStepInfoType.PLUGIN.name()).build())
                                               .build();
 
   @JsonIgnore private String callbackId;
@@ -42,31 +42,24 @@ public class RunStepInfo implements CIStepInfo {
   private String name;
   @Min(MIN_RETRY) @Max(MAX_RETRY) private int retry;
   @Min(MIN_TIMEOUT) @Max(MAX_TIMEOUT) private int timeout;
-  @NotNull private List<String> command;
-  private List<String> envVariables;
-  private String envVarsOutput;
-  private List<String> output;
 
+  private Map<String, String> settings;
   @NotNull private String image;
   private String connector;
   private ContainerResource resources;
   @Builder
 
-  @ConstructorProperties({"callbackId", "port", "identifier", "name", "retry", "timeout", "command", "envVariables",
-      "envVarsOutput", "output", "image", "connector", "environment", "resources"})
-  public RunStepInfo(String callbackId, Integer port, String identifier, String name, Integer retry, Integer timeout,
-      List<String> command, List<String> envVariables, String envVarsOutput, List<String> output, String image,
-      String connector, ContainerResource resources) {
+  @ConstructorProperties(
+      {"callbackId", "port", "identifier", "name", "retry", "timeout", "settings", "image", "connector", "resources"})
+  public PluginStepInfo(String callbackId, Integer port, String identifier, String name, Integer retry, Integer timeout,
+      Map<String, String> settings, String image, String connector, ContainerResource resources) {
     this.callbackId = callbackId;
     this.port = port;
     this.identifier = identifier;
     this.name = name;
     this.retry = Optional.ofNullable(retry).orElse(DEFAULT_RETRY);
     this.timeout = Optional.ofNullable(timeout).orElse(DEFAULT_TIMEOUT);
-    this.command = command;
-    this.envVariables = envVariables;
-    this.envVarsOutput = envVarsOutput;
-    this.output = output;
+    this.settings = settings;
     this.image = image;
     this.connector = connector;
     this.resources = resources;

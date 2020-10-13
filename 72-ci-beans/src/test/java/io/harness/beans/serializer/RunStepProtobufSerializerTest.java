@@ -25,7 +25,9 @@ public class RunStepProtobufSerializerTest extends CIBeansTest {
   public static final int TIMEOUT = 100;
   public static final String CALLBACK_ID = "callbackId";
   public static final int RETRY = 2;
+  public static final Integer PORT = 8000;
   @Inject ProtobufSerializer<RunStepInfo> protobufSerializer;
+
   @Test
   @Owner(developers = ALEKSANDAR)
   @Category(UnitTests.class)
@@ -39,6 +41,7 @@ public class RunStepProtobufSerializerTest extends CIBeansTest {
                                   .output(Arrays.asList(OUTPUT))
                                   .build();
     runStepInfo.setCallbackId(CALLBACK_ID);
+    runStepInfo.setPort(PORT);
     String serialize = protobufSerializer.serialize(runStepInfo);
     UnitStep runStep = UnitStep.parseFrom(Base64.decodeBase64(serialize));
     assertThat(runStep.getId()).isEqualTo(RUN_STEP_ID);
@@ -46,5 +49,6 @@ public class RunStepProtobufSerializerTest extends CIBeansTest {
     assertThat(runStep.getRun().getContext().getNumRetries()).isEqualTo(RETRY);
     assertThat(runStep.getRun().getContext().getExecutionTimeoutSecs()).isEqualTo(TIMEOUT);
     assertThat(runStep.getRun().getCommands(0)).isEqualTo(MVN_CLEAN_INSTALL);
+    assertThat(runStep.getRun().getContainerPort()).isEqualTo(PORT);
   }
 }

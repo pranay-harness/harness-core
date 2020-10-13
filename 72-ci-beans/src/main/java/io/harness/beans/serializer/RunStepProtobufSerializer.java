@@ -25,6 +25,7 @@ public class RunStepProtobufSerializer implements ProtobufSerializer<RunStepInfo
   public UnitStep convertRunStepInfo(RunStepInfo runStepInfo) {
     RunStep.Builder runStepBuilder = RunStep.newBuilder();
     runStepBuilder.addAllCommands(runStepInfo.getCommand());
+    runStepBuilder.setContainerPort(runStepInfo.getPort());
     if (runStepInfo.getOutput() != null) {
       runStepBuilder.addAllEnvVarOutputs(runStepInfo.getOutput());
     }

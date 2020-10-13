@@ -21,6 +21,8 @@ public class PRWebhookEvent implements WebhookEvent {
   private boolean closed;
   private boolean merged;
   private List<CommitDetails> commitDetailsList;
+  private Repository repository;
+  private WebhookBaseAttributes baseAttributes;
 
   @Override
   public Type getType() {

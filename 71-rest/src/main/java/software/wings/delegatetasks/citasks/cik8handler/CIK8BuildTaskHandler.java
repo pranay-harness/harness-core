@@ -234,7 +234,7 @@ public class CIK8BuildTaskHandler implements CIBuildTaskHandler {
       }
 
       if (isNotEmpty(containerParams.getContainerSecrets().getPublishArtifactEncryptedValues())
-          && containerParams.getContainerType() == CIContainerType.ADD_ON) {
+          && containerParams.getContainerType() == CIContainerType.LITE_ENGINE) {
         Map<String, String> publishArtifactSecretData =
             getAndUpdatePublishArtifactSecretData(publishArtifactEncryptedValues, containerParams, secretName);
         secretData.putAll(publishArtifactSecretData);

@@ -4,6 +4,7 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import io.harness.beans.environment.BuildJobEnvInfo;
+import io.harness.beans.executionargs.CIExecutionArgs;
 import io.harness.beans.stages.IntegrationStage;
 import io.harness.beans.steps.stepinfo.LiteEngineTaskStepInfo;
 import io.harness.yaml.core.ExecutionElement;
@@ -14,11 +15,11 @@ public class LiteEngineTaskStepGenerator {
   @Inject private BuildJobEnvInfoBuilder buildJobEnvInfoBuilder;
 
   LiteEngineTaskStepInfo createLiteEngineTaskStepInfo(ExecutionElement executionElement, String branchName,
-      String gitConnectorIdentifier, IntegrationStage integrationStage, String buildNumber, Integer parallelism,
-      Integer liteEngineCounter, boolean usePVC, String accountId) {
+      String gitConnectorIdentifier, IntegrationStage integrationStage, CIExecutionArgs ciExecutionArgs,
+      String buildNumber, Integer liteEngineCounter, boolean usePVC, String accountId) {
     boolean isFirstPod = isFirstPod(liteEngineCounter);
-    BuildJobEnvInfo buildJobEnvInfo =
-        buildJobEnvInfoBuilder.getCIBuildJobEnvInfo(integrationStage, isFirstPod, buildNumber, parallelism);
+    BuildJobEnvInfo buildJobEnvInfo = buildJobEnvInfoBuilder.getCIBuildJobEnvInfo(
+        integrationStage, ciExecutionArgs, executionElement.getSteps(), isFirstPod, buildNumber);
     if (isFirstPod) {
       return LiteEngineTaskStepInfo.builder()
           .identifier(LITE_ENGINE_TASK + liteEngineCounter)

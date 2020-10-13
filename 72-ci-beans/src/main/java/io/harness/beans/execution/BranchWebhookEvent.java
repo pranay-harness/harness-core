@@ -15,6 +15,8 @@ public class BranchWebhookEvent implements WebhookEvent {
   private String branchName;
   private String link;
   private List<CommitDetails> commitDetailsList;
+  private Repository repository;
+  private WebhookBaseAttributes baseAttributes;
 
   @Override
   public Type getType() {

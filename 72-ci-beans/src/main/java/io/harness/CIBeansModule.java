@@ -5,12 +5,14 @@ import com.google.inject.TypeLiteral;
 
 import graph.GraphOperations;
 import io.harness.beans.serializer.ExecutionProtobufSerializer;
+import io.harness.beans.serializer.PluginStepProtobufSerializer;
 import io.harness.beans.serializer.ProtobufSerializer;
 import io.harness.beans.serializer.PublishStepProtobufSerializer;
 import io.harness.beans.serializer.RestoreCacheStepProtobufSerializer;
 import io.harness.beans.serializer.RunStepProtobufSerializer;
 import io.harness.beans.serializer.SaveCacheStepProtobufSerializer;
 import io.harness.beans.steps.CIStepInfo;
+import io.harness.beans.steps.stepinfo.PluginStepInfo;
 import io.harness.beans.steps.stepinfo.PublishStepInfo;
 import io.harness.beans.steps.stepinfo.RestoreCacheStepInfo;
 import io.harness.beans.steps.stepinfo.RunStepInfo;
@@ -32,6 +34,7 @@ public class CIBeansModule extends AbstractModule {
     bind(new TypeLiteral<GraphOperations<CIStepInfo>>() {}).toInstance(new GraphOperations<>());
     bind(new TypeLiteral<ProtobufSerializer<ExecutionElement>>() {}).toInstance(new ExecutionProtobufSerializer());
     bind(new TypeLiteral<ProtobufSerializer<RunStepInfo>>() {}).toInstance(new RunStepProtobufSerializer());
+    bind(new TypeLiteral<ProtobufSerializer<PluginStepInfo>>() {}).toInstance(new PluginStepProtobufSerializer());
     bind(new TypeLiteral<ProtobufSerializer<SaveCacheStepInfo>>() {}).toInstance(new SaveCacheStepProtobufSerializer());
     bind(new TypeLiteral<ProtobufSerializer<RestoreCacheStepInfo>>() {})
         .toInstance(new RestoreCacheStepProtobufSerializer());
