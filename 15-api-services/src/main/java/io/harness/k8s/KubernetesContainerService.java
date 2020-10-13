@@ -12,6 +12,7 @@ import io.fabric8.kubernetes.api.model.extensions.Ingress;
 import io.fabric8.kubernetes.client.KubernetesClient;
 import io.harness.container.ContainerInfo;
 import io.harness.k8s.model.KubernetesConfig;
+import io.harness.k8s.model.response.CEK8sDelegatePrerequisite;
 import io.harness.logging.LogCallback;
 import io.kubernetes.client.openapi.models.V1ConfigMap;
 import io.kubernetes.client.openapi.models.V1Pod;
@@ -183,4 +184,8 @@ public interface KubernetesContainerService {
   String getConfigFileContent(KubernetesConfig config);
 
   HasMetadata getController(KubernetesConfig kubernetesConfig, String name, String namespace);
+
+  CEK8sDelegatePrerequisite.MetricsServerCheck validateMetricsServer(KubernetesConfig kubernetesConfig);
+
+  List<CEK8sDelegatePrerequisite.Rule> validateCEResourcePermissions(KubernetesConfig kubernetesConfig);
 }

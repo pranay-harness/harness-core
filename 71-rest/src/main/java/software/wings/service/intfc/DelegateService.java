@@ -20,6 +20,7 @@ import io.harness.validation.Create;
 import org.glassfish.jersey.media.multipart.FormDataContentDisposition;
 import org.mongodb.morphia.query.Query;
 import ru.vyarus.guice.validator.group.annotation.ValidationGroups;
+import software.wings.beans.CEDelegateStatus;
 import software.wings.beans.Delegate;
 import software.wings.beans.DelegateStatus;
 import software.wings.delegatetasks.validation.DelegateConnectionResult;
@@ -157,4 +158,6 @@ public interface DelegateService extends OwnedByAccount {
   void delegateDisconnected(String accountId, String delegateId, String delegateConnectionId);
 
   void deleteAllDelegatesExceptOne(String accountId, long shutdownInterval);
+
+  CEDelegateStatus validateCEDelegate(String accountId, String delegateName);
 }

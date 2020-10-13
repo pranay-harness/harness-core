@@ -6,6 +6,7 @@ import static io.harness.rule.OwnerRule.MARKO;
 import static io.harness.rule.OwnerRule.PRAVEEN;
 import static io.harness.rule.OwnerRule.ROHITKARELIA;
 import static io.harness.rule.OwnerRule.SANJA;
+import static io.harness.rule.OwnerRule.UTSAV;
 import static java.util.Arrays.asList;
 import static javax.ws.rs.client.Entity.entity;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -13,6 +14,7 @@ import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyBoolean;
 import static org.mockito.Matchers.anyList;
 import static org.mockito.Matchers.anyString;
+import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.atLeastOnce;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
@@ -34,12 +36,14 @@ import io.harness.rest.RestResponse;
 import io.harness.rule.Owner;
 import org.apache.commons.io.IOUtils;
 import org.glassfish.hk2.utilities.binding.AbstractBinder;
+import org.joda.time.DateTime;
 import org.junit.ClassRule;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.junit.runners.Parameterized.Parameter;
 import org.junit.runners.Parameterized.Parameters;
 import org.mockito.ArgumentCaptor;
+import software.wings.beans.CEDelegateStatus;
 import software.wings.beans.Delegate;
 import software.wings.beans.DelegateScalingGroup;
 import software.wings.beans.DelegateStatus;
@@ -175,6 +179,27 @@ public class DelegateSetupResourceTest {
                                                     .get(new GenericType<RestResponse<DelegateStatus>>() {});
     verify(delegateService, atLeastOnce()).getDelegateStatusWithScalingGroups(ACCOUNT_ID);
     assertThat(restResponse.getResource().getScalingGroups()).isEqualTo(scalingGroups);
+  }
+
+  @Test
+  @Owner(developers = UTSAV)
+  @Category(UnitTests.class)
+  public void shouldValidateCEDelegate() {
+    long lastHeartBeart = DateTime.now().getMillis();
+    when(delegateService.validateCEDelegate(any(), any()))
+        .thenReturn(
+            CEDelegateStatus.builder().found(true).delegateName(DELEGATE_NAME).lastHeartBeat(lastHeartBeart).build());
+
+    RestResponse<CEDelegateStatus> restResponse =
+        RESOURCES.client()
+            .target("/setup/delegates/validate-ce-delegate?accountId=" + ACCOUNT_ID + "&delegateName=" + DELEGATE_NAME)
+            .request()
+            .get(new GenericType<RestResponse<CEDelegateStatus>>() {});
+
+    verify(delegateService, atLeastOnce()).validateCEDelegate(eq(ACCOUNT_ID), eq(DELEGATE_NAME));
+    assertThat(restResponse.getResource().getFound()).isTrue();
+    assertThat(restResponse.getResource().getDelegateName()).isEqualTo(DELEGATE_NAME);
+    assertThat(restResponse.getResource().getLastHeartBeat()).isEqualTo(lastHeartBeart);
   }
 
   @Test

@@ -27,6 +27,7 @@ import io.harness.exception.WingsException;
 import io.harness.helm.HelmConstants;
 import io.harness.k8s.KubernetesContainerService;
 import io.harness.k8s.model.KubernetesConfig;
+import io.harness.k8s.model.response.CEK8sDelegatePrerequisite;
 import io.harness.security.encryption.EncryptedDataDetail;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.tuple.Pair;
@@ -296,14 +297,30 @@ public class ContainerServiceImpl implements ContainerService {
 
   @Override
   public Boolean validateCE(ContainerServiceParams containerServiceParams) {
-    String namespace = containerServiceParams.getNamespace();
+    KubernetesConfig kubernetesConfig = getKubernetesConfigFromParams(containerServiceParams);
+    kubernetesContainerService.validateCEPermissions(kubernetesConfig);
+    return true;
+  }
+
+  @Override
+  public CEK8sDelegatePrerequisite validateCEK8sDelegate(ContainerServiceParams containerServiceParams) {
+    KubernetesConfig kubernetesConfig = getKubernetesConfigFromParams(containerServiceParams);
+
+    CEK8sDelegatePrerequisite.MetricsServerCheck metricsServerCheck =
+        kubernetesContainerService.validateMetricsServer(kubernetesConfig);
+    List<CEK8sDelegatePrerequisite.Rule> ruleList =
+        kubernetesContainerService.validateCEResourcePermissions(kubernetesConfig);
+
+    return CEK8sDelegatePrerequisite.builder().metricsServer(metricsServerCheck).permissions(ruleList).build();
+  }
+
+  private KubernetesConfig getKubernetesConfigFromParams(ContainerServiceParams containerServiceParams) {
     SettingValue value = containerServiceParams.getSettingAttribute().getValue();
     Preconditions.checkInstanceOf(
         KubernetesClusterConfig.class, value, "SettingAttribute should be instanceof KubernetesClusterConfig.");
+
     KubernetesClusterConfig kubernetesClusterConfig = (KubernetesClusterConfig) value;
-    KubernetesConfig kubernetesConfig = kubernetesClusterConfig.createKubernetesConfig(namespace);
-    kubernetesContainerService.validateCEPermissions(kubernetesConfig);
-    return true;
+    return kubernetesClusterConfig.createKubernetesConfig(containerServiceParams.getNamespace());
   }
 
   @Override

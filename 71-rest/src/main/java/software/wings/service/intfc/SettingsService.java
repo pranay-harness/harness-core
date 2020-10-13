@@ -5,6 +5,7 @@ import static io.harness.annotations.dev.HarnessTeam.CDC;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
+import io.harness.k8s.model.response.CEK8sDelegatePrerequisite;
 import io.harness.validation.Create;
 import io.harness.validation.Update;
 import org.hibernate.validator.constraints.NotEmpty;
@@ -156,4 +157,6 @@ public interface SettingsService extends OwnedByAccount, OwnedBySettingAttribute
   String getSSHKeyName(String sshSettingId);
 
   String getSSHSettingId(String accountId, String sshKeyName);
+
+  CEK8sDelegatePrerequisite validateCEDelegateSetting(String accountId, String delegateName);
 }

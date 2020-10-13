@@ -71,6 +71,7 @@ import io.harness.exception.ExceptionUtils;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.UnauthorizedUsageRestrictionsException;
 import io.harness.exception.WingsException;
+import io.harness.k8s.model.response.CEK8sDelegatePrerequisite;
 import io.harness.observer.Rejection;
 import io.harness.observer.Subject;
 import io.harness.persistence.CreatedAtAware;
@@ -597,6 +598,28 @@ public class SettingsServiceImpl implements SettingsService {
       apmVerificationService.addParents(settingAttribute);
     }
     return settingAttribute;
+  }
+
+  @Override
+  public CEK8sDelegatePrerequisite validateCEDelegateSetting(String accountId, String delegateName) {
+    List<SettingAttribute> settingAttributeList =
+        this.getGlobalSettingAttributesByType(accountId, SettingVariableTypes.KUBERNETES_CLUSTER.name());
+    if (settingAttributeList.isEmpty()) {
+      settingAttributeList = this.getGlobalSettingAttributesByType(accountId, SettingVariableTypes.KUBERNETES.name());
+    }
+    SettingAttribute settingAttribute =
+        settingAttributeList.stream()
+            .filter(sa
+                -> sa.getValue() instanceof KubernetesClusterConfig
+                    && delegateName.equals(((KubernetesClusterConfig) sa.getValue()).getDelegateName()))
+            .findFirst()
+            .orElse(null);
+
+    if (settingAttribute == null) {
+      logger.info("No settings associated with [accountId:{}, delegateName:{}]", accountId, delegateName);
+      return CEK8sDelegatePrerequisite.builder().build();
+    }
+    return settingValidationService.validateCEK8sDelegateSetting(settingAttribute);
   }
 
   @Override

@@ -121,6 +121,7 @@ import io.harness.k8s.kubectl.Kubectl;
 import io.harness.k8s.model.Kind;
 import io.harness.k8s.model.KubernetesClusterAuthType;
 import io.harness.k8s.model.KubernetesConfig;
+import io.harness.k8s.model.response.CEK8sDelegatePrerequisite;
 import io.harness.k8s.oidc.OidcTokenRetriever;
 import io.harness.logging.LogCallback;
 import io.harness.logging.LogLevel;
@@ -490,6 +491,26 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
     if (!result.isEmpty()) {
       throw new InvalidRequestException(format(RESOURCE_PERMISSION_REQUIRED, result));
     }
+  }
+
+  @Override
+  public CEK8sDelegatePrerequisite.MetricsServerCheck validateMetricsServer(KubernetesConfig kubernetesConfig) {
+    try {
+      boolean isInstalled =
+          k8sResourceValidator.validateMetricsServer(kubernetesHelperService.getApiClient(kubernetesConfig));
+      return CEK8sDelegatePrerequisite.MetricsServerCheck.builder().isInstalled(isInstalled).build();
+    } catch (ApiException ex) {
+      logger.error("validateMetricsServer:ApiException ", ex);
+      return CEK8sDelegatePrerequisite.MetricsServerCheck.builder()
+          .isInstalled(false)
+          .message(ex.getCode() + ":" + ex.getResponseBody())
+          .build();
+    }
+  }
+
+  @Override
+  public List<CEK8sDelegatePrerequisite.Rule> validateCEResourcePermissions(KubernetesConfig kubernetesConfig) {
+    return k8sResourceValidator.validateCEPermissions2(kubernetesHelperService.getApiClient(kubernetesConfig));
   }
 
   @Override

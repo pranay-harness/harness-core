@@ -9,6 +9,7 @@ import static io.harness.rule.OwnerRule.DEEPAK;
 import static io.harness.rule.OwnerRule.GEORGE;
 import static io.harness.rule.OwnerRule.MARKO;
 import static io.harness.rule.OwnerRule.ROHITKARELIA;
+import static io.harness.rule.OwnerRule.UTSAV;
 import static io.harness.rule.OwnerRule.VUK;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.awaitility.Awaitility.await;
@@ -27,6 +28,7 @@ import static org.mockito.Mockito.when;
 import static software.wings.beans.FeatureName.REVALIDATE_WHITELISTED_DELEGATE;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 import static software.wings.utils.WingsTestConstants.APP_ID;
+import static software.wings.utils.WingsTestConstants.DELEGATE_NAME;
 
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
@@ -42,6 +44,7 @@ import io.harness.delegate.beans.DelegateTaskResponse;
 import io.harness.delegate.beans.DelegateTaskResponse.ResponseCode;
 import io.harness.delegate.beans.TaskData;
 import io.harness.delegate.task.http.HttpTaskParameters;
+import io.harness.k8s.model.response.CEK8sDelegatePrerequisite;
 import io.harness.rule.Owner;
 import io.harness.selection.log.BatchDelegateSelectionLog;
 import io.harness.serializer.KryoSerializer;
@@ -51,6 +54,7 @@ import io.harness.service.intfc.DelegateCallbackService;
 import io.harness.tasks.Cd1SetupFields;
 import org.atmosphere.cpr.Broadcaster;
 import org.atmosphere.cpr.BroadcasterFactory;
+import org.joda.time.DateTime;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -59,6 +63,7 @@ import org.mockito.Mock;
 import org.mockito.Spy;
 import software.wings.WingsBaseTest;
 import software.wings.beans.Account;
+import software.wings.beans.CEDelegateStatus;
 import software.wings.beans.Delegate;
 import software.wings.beans.Delegate.DelegateBuilder;
 import software.wings.beans.Delegate.DelegateKeys;
@@ -73,6 +78,7 @@ import software.wings.service.intfc.AssignDelegateService;
 import software.wings.service.intfc.DelegateSelectionLogsService;
 import software.wings.service.intfc.EmailNotificationService;
 import software.wings.service.intfc.FeatureFlagService;
+import software.wings.service.intfc.SettingsService;
 import software.wings.sm.states.HttpState.HttpStateExecutionResponse;
 
 import java.util.ArrayList;
@@ -93,6 +99,7 @@ public class DelegateServiceImplTest extends WingsBaseTest {
   @Mock private AssignDelegateService assignDelegateService;
   @Mock private FeatureFlagService featureFlagService;
   @Mock private DelegateSelectionLogsService delegateSelectionLogsService;
+  @Mock private SettingsService settingsService;
   @InjectMocks @Spy private DelegateServiceImpl spydelegateService;
   @Inject private KryoSerializer kryoSerializer;
 
@@ -311,6 +318,42 @@ public class DelegateServiceImplTest extends WingsBaseTest {
     boolean checkingValidationForRandomName =
         delegateService.validateThatDelegateNameIsUnique(ACCOUNT_ID, String.valueOf(System.currentTimeMillis()));
     assertThat(checkingValidationForRandomName).isTrue();
+  }
+
+  @Test
+  @Owner(developers = UTSAV)
+  @Category(UnitTests.class)
+  public void testValidateCEDelegate() {
+    long lastHeartBeart = DateTime.now().getMillis();
+    Delegate delegate =
+        createDelegateBuilder().accountId(ACCOUNT_ID).delegateName(DELEGATE_NAME).uuid(generateUuid()).build();
+    wingsPersistence.save(delegate);
+
+    DelegateConnection delegateConnection = DelegateConnection.builder()
+                                                .accountId(ACCOUNT_ID)
+                                                .delegateId(delegate.getUuid())
+                                                .lastHeartbeat(lastHeartBeart)
+                                                .disconnected(false)
+                                                .build();
+    wingsPersistence.save(delegateConnection);
+
+    when(settingsService.validateCEDelegateSetting(any(), any()))
+        .thenReturn(CEK8sDelegatePrerequisite.builder().build());
+
+    CEDelegateStatus ceDelegateStatus = delegateService.validateCEDelegate(ACCOUNT_ID, DELEGATE_NAME);
+
+    verify(settingsService, times(1)).validateCEDelegateSetting(eq(ACCOUNT_ID), eq(DELEGATE_NAME));
+
+    assertThat(ceDelegateStatus).isNotNull();
+    assertThat(ceDelegateStatus.getFound()).isTrue();
+    assertThat(ceDelegateStatus.getUuid()).isEqualTo(delegate.getUuid());
+    assertThat(ceDelegateStatus.getMetricsServerCheck()).isNull();
+    assertThat(ceDelegateStatus.getPermissionRuleList()).isNull();
+    assertThat(ceDelegateStatus.getLastHeartBeat()).isGreaterThanOrEqualTo(lastHeartBeart);
+    assertThat(ceDelegateStatus.getDelegateName()).isEqualTo(DELEGATE_NAME);
+
+    assertThat(ceDelegateStatus.getConnections()).hasSizeGreaterThan(0);
+    assertThat(ceDelegateStatus.getConnections().get(0).getLastHeartbeat()).isEqualTo(lastHeartBeart);
   }
 
   @Test

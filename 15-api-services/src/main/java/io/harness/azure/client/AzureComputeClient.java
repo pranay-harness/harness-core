@@ -8,8 +8,8 @@ import com.microsoft.azure.management.network.VirtualMachineScaleSetNetworkInter
 import com.microsoft.azure.management.network.implementation.PublicIPAddressInner;
 import com.microsoft.azure.management.resources.Subscription;
 import io.harness.azure.model.AzureConfig;
-import io.harness.azure.model.AzureUserAuthVMInstanceData;
 import io.harness.azure.model.AzureMachineImageArtifact;
+import io.harness.azure.model.AzureUserAuthVMInstanceData;
 import io.harness.azure.model.AzureVMSSTagsData;
 
 import java.util.List;

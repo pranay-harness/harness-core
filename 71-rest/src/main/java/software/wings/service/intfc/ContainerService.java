@@ -1,5 +1,6 @@
 package software.wings.service.intfc;
 
+import io.harness.k8s.model.response.CEK8sDelegatePrerequisite;
 import software.wings.beans.TaskType;
 import software.wings.beans.infrastructure.instance.info.ContainerInfo;
 import software.wings.delegatetasks.DelegateTaskType;
@@ -24,6 +25,9 @@ public interface ContainerService {
   Boolean validate(ContainerServiceParams containerServiceParams);
 
   @DelegateTaskType(TaskType.CONTAINER_CE_VALIDATION) Boolean validateCE(ContainerServiceParams containerServiceParams);
+
+  @DelegateTaskType(TaskType.CE_DELEGATE_VALIDATION)
+  CEK8sDelegatePrerequisite validateCEK8sDelegate(ContainerServiceParams containerServiceParams);
 
   @DelegateTaskType(TaskType.LIST_CLUSTERS) List<String> listClusters(ContainerServiceParams containerServiceParams);
 
