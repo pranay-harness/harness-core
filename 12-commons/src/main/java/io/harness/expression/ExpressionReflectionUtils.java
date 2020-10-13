@@ -1,11 +1,15 @@
 package io.harness.expression;
 
+import io.harness.expression.Expression.SecretsMode;
 import io.harness.reflection.ReflectionUtils;
 import lombok.experimental.UtilityClass;
 
 @UtilityClass
 public class ExpressionReflectionUtils {
-  public static void applyExpression(Object o, ReflectionUtils.Functor functor) {
-    ReflectionUtils.updateFieldValues(o, f -> f.isAnnotationPresent(Expression.class), functor);
+  public interface Functor { String update(SecretsMode mode, String value); }
+
+  public static void applyExpression(Object object, Functor functor) {
+    ReflectionUtils.<Expression>updateAnnotatedField(Expression.class, object,
+        (expression, value) -> functor.update(SecretsMode.valueOf(expression.value()), value));
   }
 }

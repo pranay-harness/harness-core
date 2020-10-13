@@ -631,8 +631,8 @@ public class K8sStateHelper {
     if (delegateTask.getData().getParameters().length == 1
         && delegateTask.getData().getParameters()[0] instanceof TaskParameters) {
       delegateTask.setWorkflowExecutionId(context.getWorkflowExecutionId());
-      ExpressionReflectionUtils.applyExpression(
-          delegateTask.getData().getParameters()[0], value -> context.renderExpression(value, stateExecutionContext));
+      ExpressionReflectionUtils.applyExpression(delegateTask.getData().getParameters()[0],
+          (secretMode, value) -> context.renderExpression(value, stateExecutionContext));
     }
 
     ManagerPreviewExpressionEvaluator expressionEvaluator = new ManagerPreviewExpressionEvaluator();

@@ -137,8 +137,7 @@ public class ReflectionUtilsTest extends CategoryTest {
   public void updateField() {
     Field dummy = Field.builder().build();
     dummy.annotatedField = "test";
-    ReflectionUtils.updateFieldValues(
-        dummy, f -> f.isAnnotationPresent(DummyAnnotation.class), value -> value + " hello world");
+    ReflectionUtils.updateAnnotatedField(DummyAnnotation.class, dummy, (annotation, value) -> value + " hello world");
     assertThat(dummy.annotatedField).isEqualTo("test hello world");
   }
 
@@ -151,8 +150,7 @@ public class ReflectionUtilsTest extends CategoryTest {
     a.add("one");
     a.add("two");
     dummy.annotatedListField = a;
-    ReflectionUtils.updateFieldValues(
-        dummy, f -> f.isAnnotationPresent(DummyAnnotation.class), value -> value + " hello world");
+    ReflectionUtils.updateAnnotatedField(DummyAnnotation.class, dummy, (annotation, value) -> value + " hello world");
     assertThat(dummy.annotatedListField).isEqualTo(ImmutableList.of("one hello world", "two hello world"));
   }
 

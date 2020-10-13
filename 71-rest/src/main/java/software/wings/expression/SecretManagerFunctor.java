@@ -4,6 +4,7 @@ import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.exception.WingsException.USER;
+import static java.lang.String.format;
 import static software.wings.beans.ServiceVariable.Type.ENCRYPTED_TEXT;
 
 import io.harness.annotations.dev.OwnedBy;
@@ -33,10 +34,7 @@ import java.util.stream.Collectors;
 @Value
 @Builder
 public class SecretManagerFunctor implements ExpressionFunctor, SecretManagerFunctorInterface {
-  public enum Mode {
-    APPLY,
-    DRY_RUN,
-  }
+  public enum Mode { APPLY, DRY_RUN, PREVIEW }
   private Mode mode;
   private FeatureFlagService featureFlagService;
   private ManagerDecryptionService managerDecryptionService;
@@ -67,6 +65,8 @@ public class SecretManagerFunctor implements ExpressionFunctor, SecretManagerFun
   private Object returnValue(String secretName, Object value) {
     if (mode == Mode.DRY_RUN) {
       return "${secretManager.obtain(\"" + secretName + "\", " + expressionFunctorToken + ")}";
+    } else if (mode == Mode.PREVIEW) {
+      return format(SecretManagerPreviewFunctor.SECRET_NAME_FORMATTER, secretName);
     }
     return value;
   }

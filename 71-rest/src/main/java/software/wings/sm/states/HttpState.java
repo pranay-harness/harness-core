@@ -562,13 +562,13 @@ public class HttpState extends State implements SweepingOutputStateMixin {
   private void renderTaskParameters(ExecutionContext context, StateExecutionData stateExecutionData,
       TaskParameters parameters, int expressionFunctorToken) {
     ExpressionReflectionUtils.applyExpression(parameters,
-        value
-        -> context.renderExpression(value,
-            StateExecutionContext.builder()
-                .stateExecutionData(stateExecutionData)
-                .adoptDelegateDecryption(true)
-                .expressionFunctorToken(expressionFunctorToken)
-                .build()));
+        (secretMode, value)
+            -> context.renderExpression(value,
+                StateExecutionContext.builder()
+                    .stateExecutionData(stateExecutionData)
+                    .adoptDelegateDecryption(true)
+                    .expressionFunctorToken(expressionFunctorToken)
+                    .build()));
   }
 
   private String scheduleDelegateTask(DelegateTask task) {
