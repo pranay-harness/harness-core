@@ -9,4 +9,6 @@ public class AzureVMData {
   private String id;
   private String ip;
   private String publicDns;
+  private String powerState;
+  private String size;
 }

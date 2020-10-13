@@ -46,10 +46,15 @@ public class AzureVMSSInstanceSyncPerpetualTaskCreatorTest extends WingsBaseTest
   @Owner(developers = OwnerRule.SATYAM)
   @Category(UnitTests.class)
   public void testCreatePerpetualTasks() {
-    doReturn(singletonList(
-                 Instance.builder()
-                     .instanceInfo(AzureVMSSInstanceInfo.builder().vmssId("vmss-id").azureVMId("azure-vm-id").build())
-                     .build()))
+    doReturn(singletonList(Instance.builder()
+                               .instanceInfo(AzureVMSSInstanceInfo.builder()
+                                                 .vmssId("vmss-id")
+                                                 .azureVMId("azure-vm-id")
+                                                 .instanceType("instance-type")
+                                                 .host("host-ip")
+                                                 .state("state")
+                                                 .build())
+                               .build()))
         .when(mockInstanceService)
         .getInstancesForAppAndInframapping(anyString(), anyString());
     doReturn("perp-tesk-id")
