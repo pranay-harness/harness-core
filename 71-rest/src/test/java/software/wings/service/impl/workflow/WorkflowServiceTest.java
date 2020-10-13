@@ -14,6 +14,7 @@ import static io.harness.rule.OwnerRule.GEORGE;
 import static io.harness.rule.OwnerRule.HARSH;
 import static io.harness.rule.OwnerRule.INDER;
 import static io.harness.rule.OwnerRule.KAMAL;
+import static io.harness.rule.OwnerRule.MILOS;
 import static io.harness.rule.OwnerRule.PRASHANT;
 import static io.harness.rule.OwnerRule.RUSHABH;
 import static io.harness.rule.OwnerRule.SATYAM;
@@ -2490,6 +2491,16 @@ public class WorkflowServiceTest extends WingsBaseTest {
     Workflow workflow1 = createCanaryWorkflow();
     List<Variable> userVariables = newArrayList(aVariable().name("name1").value("value").fixed(true).build(),
         aVariable().name("name1").value("value").fixed(true).build());
+
+    workflowService.updateUserVariables(workflow1.getAppId(), workflow1.getUuid(), userVariables);
+  }
+
+  @Test(expected = InvalidRequestException.class)
+  @Owner(developers = MILOS)
+  @Category(UnitTests.class)
+  public void shouldNotUpdateUserVariablesWithDashInName() {
+    Workflow workflow1 = createCanaryWorkflow();
+    List<Variable> userVariables = newArrayList(aVariable().name("name-1").value("value").fixed(true).build());
 
     workflowService.updateUserVariables(workflow1.getAppId(), workflow1.getUuid(), userVariables);
   }

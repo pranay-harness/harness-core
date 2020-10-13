@@ -15,6 +15,7 @@ import com.google.inject.Inject;
 
 import io.harness.beans.WorkflowType;
 import io.harness.exception.HarnessException;
+import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import lombok.Builder;
 import lombok.Data;
@@ -74,18 +75,18 @@ public abstract class WorkflowYamlHandler<Y extends WorkflowYaml> extends BaseYa
       throws HarnessException {
     String accountId = changeContext.getChange().getAccountId();
     String yamlFilePath = changeContext.getChange().getFilePath();
-    Workflow previous = get(accountId, yamlFilePath);
+    Workflow previousWorkflow = get(accountId, yamlFilePath);
 
     WorkflowBuilder workflowBuilder = WorkflowBuilder.aWorkflow();
-    toBean(changeContext, changeSetContext, workflowBuilder, previous);
+    toBean(changeContext, changeSetContext, workflowBuilder, previousWorkflow);
 
     workflowBuilder.syncFromGit(changeContext.getChange().isSyncFromGit());
     Workflow current;
 
-    if (previous != null) {
-      previous.setSyncFromGit(changeContext.getChange().isSyncFromGit());
-      workflowBuilder.uuid(previous.getUuid());
-      current = workflowService.updateLinkedWorkflow(workflowBuilder.build(), previous, true);
+    if (previousWorkflow != null) {
+      previousWorkflow.setSyncFromGit(changeContext.getChange().isSyncFromGit());
+      workflowBuilder.uuid(previousWorkflow.getUuid());
+      current = workflowService.updateLinkedWorkflow(workflowBuilder.build(), previousWorkflow, true);
     } else {
       current = workflowService.createWorkflow(workflowBuilder.build());
     }
@@ -95,7 +96,7 @@ public abstract class WorkflowYamlHandler<Y extends WorkflowYaml> extends BaseYa
   }
 
   private void toBean(ChangeContext<Y> changeContext, List<ChangeContext> changeContextList, WorkflowBuilder workflow,
-      Workflow previous) throws HarnessException {
+      Workflow previousWorkflow) throws HarnessException {
     WorkflowYaml yaml = changeContext.getYaml();
     Change change = changeContext.getChange();
 
@@ -113,29 +114,29 @@ public abstract class WorkflowYamlHandler<Y extends WorkflowYaml> extends BaseYa
       // phases
       List<WorkflowPhase> phaseList = Lists.newArrayList();
       if (yaml.getPhases() != null) {
-        phaseList = yaml.getPhases()
-                        .stream()
-                        .map(workflowPhaseYaml -> {
-                          try {
-                            ChangeContext.Builder clonedContextBuilder =
-                                cloneFileChangeContext(changeContext, workflowPhaseYaml);
-                            ChangeContext clonedContext = clonedContextBuilder.build();
-                            clonedContext.getEntityIdMap().put(EntityType.ENVIRONMENT.name(), envId);
-                            clonedContext.getProperties().put(YamlConstants.IS_ROLLBACK, false);
-                            clonedContext.getProperties().put("IS_BUILD", yaml instanceof BuildWorkflowYaml);
+        phaseList =
+            yaml.getPhases()
+                .stream()
+                .map(workflowPhaseYaml -> {
+                  try {
+                    ChangeContext.Builder clonedContextBuilder =
+                        cloneFileChangeContext(changeContext, workflowPhaseYaml);
+                    ChangeContext clonedContext = clonedContextBuilder.build();
+                    clonedContext.getEntityIdMap().put(EntityType.ENVIRONMENT.name(), envId);
+                    clonedContext.getProperties().put(YamlConstants.IS_ROLLBACK, false);
+                    clonedContext.getProperties().put("IS_BUILD", yaml instanceof BuildWorkflowYaml);
 
-                            WorkflowPhase workflowPhase =
-                                phaseYamlHandler.upsertFromYaml(clonedContext, changeContextList);
-                            String workflowPhaseId = getPreviousWorkflowPhaseId(workflowPhase.getName(), previous);
-                            if (workflowPhaseId != null) {
-                              workflowPhase.setUuid(workflowPhaseId);
-                            }
-                            return workflowPhase;
-                          } catch (HarnessException e) {
-                            throw new WingsException(e);
-                          }
-                        })
-                        .collect(toList());
+                    WorkflowPhase workflowPhase = phaseYamlHandler.upsertFromYaml(clonedContext, changeContextList);
+                    String workflowPhaseId = getPreviousWorkflowPhaseId(workflowPhase.getName(), previousWorkflow);
+                    if (workflowPhaseId != null) {
+                      workflowPhase.setUuid(workflowPhaseId);
+                    }
+                    return workflowPhase;
+                  } catch (HarnessException e) {
+                    throw new WingsException(e);
+                  }
+                })
+                .collect(toList());
       }
 
       Map<String, WorkflowPhase> workflowPhaseMap =
@@ -157,7 +158,7 @@ public abstract class WorkflowYamlHandler<Y extends WorkflowYaml> extends BaseYa
                     clonedContext.getProperties().put("IS_BUILD", yaml instanceof BuildWorkflowYaml);
 
                     WorkflowPhase workflowPhase = phaseYamlHandler.upsertFromYaml(clonedContext, changeContextList);
-                    String workflowPhaseId = getPreviousWorkflowPhaseId(workflowPhase.getName(), previous);
+                    String workflowPhaseId = getPreviousWorkflowPhaseId(workflowPhase.getName(), previousWorkflow);
                     if (workflowPhaseId != null) {
                       workflowPhase.setUuid(workflowPhaseId);
                     }
@@ -186,8 +187,10 @@ public abstract class WorkflowYamlHandler<Y extends WorkflowYaml> extends BaseYa
                               try {
                                 ChangeContext.Builder clonedContext =
                                     cloneFileChangeContext(changeContext, userVariable);
-                                return variableYamlHandler.upsertFromYaml(clonedContext.build(), changeContextList);
-                              } catch (HarnessException e) {
+                                return variableYamlHandler.upsertFromYaml(clonedContext.build(), previousWorkflow);
+                              } catch (InvalidRequestException e) {
+                                throw new InvalidRequestException(e.getMessage(), e);
+                              } catch (WingsException e) {
                                 throw new WingsException(e);
                               }
                             })

@@ -899,7 +899,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
       WorkflowServiceTemplateHelper.transformEnvTemplateExpressions(workflow, orchestrationWorkflow);
 
       // Validate Workflow Variables
-      validateWorkflowVariables(orchestrationWorkflow);
+      validateWorkflowVariables(workflow, orchestrationWorkflow);
 
       orchestrationWorkflow.onSave();
       workflowServiceTemplateHelper.populatePropertiesFromWorkflow(workflow);
@@ -1089,8 +1089,9 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
     }
 
     if (!migration) {
+      Workflow savedWorkflow = readWorkflow(workflow.getAppId(), workflow.getUuid());
       validateWorkflowNameForDuplicates(workflow);
-      validateWorkflowVariables(orchestrationWorkflow);
+      validateWorkflowVariables(savedWorkflow, orchestrationWorkflow);
     }
     return updateWorkflow(workflow, orchestrationWorkflow, true, false, false, false, migration);
   }
@@ -1966,6 +1967,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
     }
     Workflow workflow = readWorkflow(appId, workflowId);
     notNullCheck("Workflow was deleted", workflow, USER);
+
     CanaryOrchestrationWorkflow orchestrationWorkflow =
         (CanaryOrchestrationWorkflow) workflow.getOrchestrationWorkflow();
     notNullCheck(ORCHESTRATION_WORKFLOW, orchestrationWorkflow, USER);
@@ -1976,24 +1978,39 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
     return orchestrationWorkflow.getUserVariables();
   }
 
-  private void validateWorkflowVariables(OrchestrationWorkflow orchestrationWorkflow) {
+  private void validateWorkflowVariables(Workflow savedWorkflow, OrchestrationWorkflow orchestrationWorkflow) {
     if (orchestrationWorkflow == null || isEmpty(orchestrationWorkflow.getUserVariables())) {
       return;
     }
+
     Set<String> variableNames = new HashSet<>();
-    List<Variable> userVariables = orchestrationWorkflow.getUserVariables();
-    for (Variable variable : userVariables) {
+    List<Variable> existingVariables = savedWorkflow.getOrchestrationWorkflow().getUserVariables();
+    List<Variable> newUserVariables = orchestrationWorkflow.getUserVariables();
+
+    for (Variable variable : newUserVariables) {
+      String variableName = variable.getName();
       String defaultValue = variable.getValue();
+
+      // Check only if new variables contain hyphens. Old variables should not be checked for backward compatibility
+      if (existingVariables.stream().allMatch(existingVariable -> !existingVariable.getName().equals(variableName))) {
+        if (variableName.contains("-")) {
+          throw new InvalidRequestException(
+              format("Adding variable name %s with hyphens (dashes) is not allowed", variableName));
+        }
+      }
+
       if (variable.isFixed()) {
         if (isBlank(defaultValue)) {
           throw new InvalidRequestException(
-              "Workflow Variable value is mandatory for Fixed Variable Name [" + variable.getName() + "]", USER);
+              "Workflow Variable value is mandatory for Fixed Variable Name [" + variableName + "]", USER);
         }
       }
-      if (!variableNames.add(variable.getName())) {
+
+      if (!variableNames.add(variableName)) {
         throw new InvalidRequestException(
-            "Duplicate variable name [" + variable.getName() + "]. Duplicates are not allowed.", USER);
+            "Duplicate variable name [" + variableName + "]. Duplicates are not allowed.", USER);
       }
+
       if (isNotEmpty(variable.getAllowedValues())) {
         variable.setAllowedList(CsvParser.parse(variable.getAllowedValues()));
         if (isNotEmpty(defaultValue)) {

@@ -236,7 +236,13 @@ public class ServiceYamlHandler extends BaseYamlHandler<Yaml, Service> {
     }
 
     for (NameValuePair.Yaml configVar : yaml.getConfigVariables()) {
-      if (!serviceVariablesMap.containsKey(configVar.getName())) {
+      String configVarName = configVar.getName();
+      // Check only if new variables contain hyphens. Old variables should not be checked for backward compatibility
+      if (!serviceVariablesMap.containsKey(configVarName)) {
+        if (configVarName.contains("-")) {
+          throw new InvalidRequestException(
+              format("Adding variable name %s with hyphens (dashes) is not allowed", configVarName));
+        }
         configVarsToAdd.add(configVar);
       }
     }

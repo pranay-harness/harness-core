@@ -6,6 +6,7 @@ import static io.harness.delegate.task.shell.ScriptType.BASH;
 import static io.harness.rule.OwnerRule.AADITI;
 import static io.harness.rule.OwnerRule.ABHINAV;
 import static io.harness.rule.OwnerRule.GARVIT;
+import static io.harness.rule.OwnerRule.MILOS;
 import static io.harness.rule.OwnerRule.SRINIVAS;
 import static io.harness.rule.OwnerRule.UTKARSH;
 import static java.util.Arrays.asList;
@@ -338,6 +339,38 @@ public class TemplateServiceTest extends TemplateBaseTestHelper {
     assertThat(updatedTemplate).isNotNull();
     assertThat(updatedTemplate.getVersion()).isEqualTo(5L);
     assertThat(updatedTemplate.getVariables()).containsExactly(var1);
+  }
+
+  @Test(expected = InvalidRequestException.class)
+  @Owner(developers = MILOS)
+  @Category(UnitTests.class)
+  public void shouldNotUpdateTemplateVariables() {
+    Template template = getSshCommandTemplate();
+
+    Template savedTemplate = templateService.save(template);
+
+    assertThat(savedTemplate).isNotNull();
+    assertThat(savedTemplate.getAppId()).isNotNull().isEqualTo(GLOBAL_APP_ID);
+    assertThat(savedTemplate.getKeywords())
+        .isNotEmpty()
+        .contains(TEMPLATE_CUSTOM_KEYWORD.toLowerCase(), savedTemplate.getName().toLowerCase());
+    assertThat(savedTemplate.getVersion()).isEqualTo(1);
+    SshCommandTemplate SshCommandTemplate = (SshCommandTemplate) savedTemplate.getTemplateObject();
+    assertThat(SshCommandTemplate).isNotNull();
+    assertThat(SshCommandTemplate.getCommandType()).isEqualTo(START);
+    assertThat(SshCommandTemplate.getCommandUnits()).isNotEmpty();
+    assertThat(SshCommandTemplate.getCommandUnits()).extracting(CommandUnit::getName).contains("Start");
+    assertThat(savedTemplate.getVariables()).isNullOrEmpty();
+
+    Variable var1 = VariableBuilder.aVariable()
+                        .type(VariableType.TEXT)
+                        .name("var-1")
+                        .mandatory(false)
+                        .description("variable description")
+                        .build();
+    savedTemplate.setVariables(asList(var1));
+
+    templateService.update(savedTemplate);
   }
 
   @Test(expected = ConstraintViolationException.class)
