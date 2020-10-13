@@ -1,9 +1,13 @@
 package software.wings.resources;
 
 import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
+import static java.util.stream.Collectors.toList;
 import static software.wings.security.PermissionAttribute.ResourceType.DELEGATE;
 
 import com.google.inject.Inject;
+import com.google.protobuf.Any;
+import com.google.protobuf.TextFormat;
+import com.google.protobuf.TextFormat.ParseException;
 
 import com.codahale.metrics.annotation.ExceptionMetered;
 import com.codahale.metrics.annotation.Timed;
@@ -22,8 +26,13 @@ import io.harness.delegate.beans.DelegateTaskPackage;
 import io.harness.delegate.beans.DelegateTaskResponse;
 import io.harness.delegate.task.DelegateLogContext;
 import io.harness.delegate.task.TaskLogContext;
+import io.harness.exception.WingsException;
 import io.harness.logging.AccountLogContext;
 import io.harness.logging.AutoLogContext;
+import io.harness.managerclient.DelegateVersions;
+import io.harness.managerclient.GetDelegatePropertiesRequest;
+import io.harness.managerclient.GetDelegatePropertiesResponse;
+import io.harness.managerclient.WatcherVersion;
 import io.harness.manifest.ManifestCollectionResponseHandler;
 import io.harness.perpetualtask.PerpetualTaskLogContext;
 import io.harness.rest.RestResponse;
@@ -97,6 +106,45 @@ public class DelegateAgentResource {
       @QueryParam("accountId") @NotEmpty String accountId) {
     try (AutoLogContext ignore1 = new AccountLogContext(accountId, OVERRIDE_ERROR)) {
       return new RestResponse<>(accountService.getDelegateConfiguration(accountId));
+    }
+  }
+
+  @DelegateAuth
+  @GET
+  @Path("properties")
+  @Timed
+  @ExceptionMetered
+  public RestResponse<String> getDelegateProperties(@QueryParam("request") @NotEmpty String request)
+      throws ParseException {
+    GetDelegatePropertiesRequest requestProto = TextFormat.parse(request, GetDelegatePropertiesRequest.class);
+    String accountId = requestProto.getAccountId();
+    try (AutoLogContext ignore1 = new AccountLogContext(accountId, OVERRIDE_ERROR)) {
+      return new RestResponse<>(
+          GetDelegatePropertiesResponse.newBuilder()
+              .addAllResponseEntry(
+                  requestProto.getRequestEntryList()
+                      .stream()
+                      .map(requestEntry -> {
+                        switch (requestEntry.getTypeUrl().split("/")[1]) {
+                          case "io.harness.managerclient.WatcherVersionQuery":
+                            return Any.pack(
+                                WatcherVersion.newBuilder()
+                                    .setWatcherVersion(
+                                        accountService.getDelegateConfiguration(accountId).getWatcherVersion())
+                                    .build());
+                          case "io.harness.managerclient.DelegateVersionsQuery":
+                            return Any.pack(
+                                DelegateVersions.newBuilder()
+                                    .addAllDelegateVersion(
+                                        accountService.getDelegateConfiguration(accountId).getDelegateVersions())
+                                    .build());
+                          default:
+                            throw new WingsException("invalid type: " + requestEntry.getTypeUrl());
+                        }
+                      })
+                      .collect(toList()))
+              .build()
+              .toString());
     }
   }
 
