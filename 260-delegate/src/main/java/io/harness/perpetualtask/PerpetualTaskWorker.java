@@ -24,6 +24,8 @@ import io.harness.perpetualtask.grpc.PerpetualTaskServiceGrpcClient;
 import io.harness.threading.Schedulable;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
+import org.slf4j.Marker;
+import org.slf4j.MarkerFactory;
 
 import java.time.Duration;
 import java.util.ArrayList;
@@ -43,6 +45,7 @@ import java.util.concurrent.atomic.AtomicReference;
 @Slf4j
 @Singleton
 public class PerpetualTaskWorker {
+  private static final Marker THROTTLED = MarkerFactory.getMarker("THROTTLED");
   @Getter private final Map<PerpetualTaskId, PerpetualTaskAssignRecord> runningTaskMap = new ConcurrentHashMap<>();
 
   private TimeLimiter perpetualTaskTimeLimiter;
@@ -55,6 +58,7 @@ public class PerpetualTaskWorker {
 
   private AtomicBoolean running = new AtomicBoolean(false);
   private final AtomicReference<PerpetualTaskWorkerService> svcHolder = new AtomicReference<>();
+  private String accountId;
 
   private class PerpetualTaskWorkerService extends AbstractScheduledService {
     PerpetualTaskWorkerService() {
@@ -81,8 +85,11 @@ public class PerpetualTaskWorker {
     this.factoryMap = factoryMap;
     this.perpetualTaskTimeLimiter = new SimpleTimeLimiter(perpetualTaskExecutor);
     this.perpetualTaskTimeoutExecutor = perpetualTaskTimeoutExecutor;
-
     backoffScheduler = new BackoffScheduler(getClass().getSimpleName(), Duration.ofMinutes(4), Duration.ofMinutes(14));
+  }
+
+  public void setAccountId(String accountId) {
+    this.accountId = accountId;
   }
 
   private void handleTasks() {
@@ -116,7 +123,8 @@ public class PerpetualTaskWorker {
 
       backoffScheduler.recordSuccess();
     } catch (StatusRuntimeException ex) {
-      logger.error("Grpc status exception in perpetual task worker. Backing off...", ex);
+      logger.error(
+          THROTTLED, "Grpc status exception in perpetual task worker for account:{}. Backing off...", accountId, ex);
       backoffScheduler.recordFailure();
     } catch (Exception ex) {
       logger.error("Exception in perpetual task worker ", ex);

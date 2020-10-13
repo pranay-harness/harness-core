@@ -230,6 +230,8 @@ public class WatcherServiceImpl implements WatcherService {
       messageService.removeData(WATCHER_DATA, NEXT_WATCHER);
 
       logger.info(upgrade ? "[New] Watcher upgraded" : "Watcher started");
+      logger.info("Publish Authority:{}, Publish Target:{}", watcherConfiguration.getPublishAuthority(),
+          watcherConfiguration.getPublishTarget());
 
       String proxyHost = System.getProperty("https.proxyHost");
 

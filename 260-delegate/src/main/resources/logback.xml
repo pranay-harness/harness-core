@@ -1,5 +1,12 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <configuration>
+    <turboFilter class="io.harness.logging.ExpiringDuplicateMessageFilter">
+        <allowedRepetitions>0</allowedRepetitions>
+        <cacheSize>300</cacheSize>
+        <expireAfterWriteSeconds>3600</expireAfterWriteSeconds>
+        <includeMarkers>THROTTLED</includeMarkers>
+    </turboFilter>
+
     <statusListener class="ch.qos.logback.core.status.NopStatusListener"/>
 
     <contextListener class="software.wings.delegate.app.DelegateLoggerStartupListener"/>
@@ -48,4 +55,5 @@
         <appender-ref ref="REST2"/>
         <appender-ref ref="stdout"/>
     </root>
+
 </configuration>
