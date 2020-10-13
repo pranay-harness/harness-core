@@ -3,6 +3,7 @@ package io.harness.serializer.kryo;
 import com.esotericsoftware.kryo.Kryo;
 import io.harness.delegate.beans.SSHTaskParams;
 import io.harness.ng.core.dto.secrets.KerberosConfigDTO;
+import io.harness.ng.core.dto.secrets.SSHAuthDTO;
 import io.harness.ng.core.dto.secrets.SSHConfigDTO;
 import io.harness.ng.core.dto.secrets.SSHCredentialType;
 import io.harness.ng.core.dto.secrets.SSHKeyPathCredentialDTO;
@@ -54,5 +55,6 @@ public class SecretManagerClientKryoRegistrar implements KryoRegistrar {
     kryo.register(SSHPasswordCredentialDTO.class, 543231);
     kryo.register(SSHKeyPathCredentialDTO.class, 543232);
     kryo.register(KerberosConfigDTO.class, 543233);
+    kryo.register(SSHAuthDTO.class, 543234);
   }
 }

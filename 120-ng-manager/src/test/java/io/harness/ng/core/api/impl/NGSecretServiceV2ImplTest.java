@@ -14,7 +14,6 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Maps;
 
 import io.harness.CategoryTest;
-import io.harness.ManagerDelegateServiceDriver;
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.beans.secrets.SSHConfigValidationTaskResponse;
 import io.harness.encryption.SecretRefData;
@@ -37,6 +36,7 @@ import io.harness.rule.Owner;
 import io.harness.secretmanagerclient.SSHAuthScheme;
 import io.harness.secretmanagerclient.SecretType;
 import io.harness.secretmanagerclient.services.api.SecretManagerClientService;
+import io.harness.service.DelegateGrpcClientWrapper;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -49,7 +49,7 @@ import java.util.Optional;
 public class NGSecretServiceV2ImplTest extends CategoryTest {
   private SecretRepository secretRepository;
   private SecretManagerClientService secretManagerClientService;
-  private ManagerDelegateServiceDriver managerDelegateServiceDriver;
+  private DelegateGrpcClientWrapper delegateGrpcClientWrapper;
   private NGSecretServiceV2Impl secretServiceV2;
   private NGSecretServiceV2Impl secretServiceV2Spy;
 
@@ -57,9 +57,9 @@ public class NGSecretServiceV2ImplTest extends CategoryTest {
   public void setup() {
     secretRepository = mock(SecretRepository.class);
     secretManagerClientService = mock(SecretManagerClientService.class);
-    managerDelegateServiceDriver = mock(ManagerDelegateServiceDriver.class);
+    delegateGrpcClientWrapper = mock(DelegateGrpcClientWrapper.class);
     secretServiceV2 =
-        new NGSecretServiceV2Impl(secretRepository, secretManagerClientService, managerDelegateServiceDriver);
+        new NGSecretServiceV2Impl(secretRepository, secretManagerClientService, delegateGrpcClientWrapper);
     secretServiceV2Spy = spy(secretServiceV2);
   }
 
@@ -176,7 +176,7 @@ public class NGSecretServiceV2ImplTest extends CategoryTest {
                              .build());
     doReturn(Optional.of(secret)).when(secretServiceV2Spy).get(any(), any(), any(), any());
     when(secretManagerClientService.getEncryptionDetails(any(), any())).thenReturn(new ArrayList<>());
-    when(managerDelegateServiceDriver.sendTask(any(), any(), any()))
+    when(delegateGrpcClientWrapper.executeSyncTask(any()))
         .thenReturn(SSHConfigValidationTaskResponse.builder().connectionSuccessful(true).build());
     SecretValidationResultDTO resultDTO =
         secretServiceV2Spy.validateSecret("account", null, null, "identifier", getMetadata());
@@ -203,7 +203,7 @@ public class NGSecretServiceV2ImplTest extends CategoryTest {
                              .build());
     doReturn(Optional.of(secret)).when(secretServiceV2Spy).get(any(), any(), any(), any());
     when(secretManagerClientService.getEncryptionDetails(any(), any())).thenReturn(new ArrayList<>());
-    when(managerDelegateServiceDriver.sendTask(any(), any(), any()))
+    when(delegateGrpcClientWrapper.executeSyncTask(any()))
         .thenReturn(SSHConfigValidationTaskResponse.builder().connectionSuccessful(true).build());
     SecretValidationResultDTO resultDTO =
         secretServiceV2Spy.validateSecret("account", null, null, "identifier", getMetadata());
@@ -228,7 +228,7 @@ public class NGSecretServiceV2ImplTest extends CategoryTest {
             .build());
     doReturn(Optional.of(secret)).when(secretServiceV2Spy).get(any(), any(), any(), any());
     when(secretManagerClientService.getEncryptionDetails(any(), any())).thenReturn(new ArrayList<>());
-    when(managerDelegateServiceDriver.sendTask(any(), any(), any()))
+    when(delegateGrpcClientWrapper.executeSyncTask(any()))
         .thenReturn(SSHConfigValidationTaskResponse.builder().connectionSuccessful(true).build());
     SecretValidationResultDTO resultDTO =
         secretServiceV2Spy.validateSecret("account", null, null, "identifier", getMetadata());
@@ -254,7 +254,7 @@ public class NGSecretServiceV2ImplTest extends CategoryTest {
                              .build());
     doReturn(Optional.of(secret)).when(secretServiceV2Spy).get(any(), any(), any(), any());
     when(secretManagerClientService.getEncryptionDetails(any(), any())).thenReturn(new ArrayList<>());
-    when(managerDelegateServiceDriver.sendTask(any(), any(), any()))
+    when(delegateGrpcClientWrapper.executeSyncTask(any()))
         .thenReturn(SSHConfigValidationTaskResponse.builder().connectionSuccessful(true).build());
     SecretValidationResultDTO resultDTO =
         secretServiceV2Spy.validateSecret("account", null, null, "identifier", getMetadata());

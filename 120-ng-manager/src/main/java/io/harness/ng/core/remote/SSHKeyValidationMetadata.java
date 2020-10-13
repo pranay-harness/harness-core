@@ -5,10 +5,16 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
+import javax.validation.constraints.NotNull;
+
 @Data
 @Builder
 @EqualsAndHashCode(callSuper = true)
 @JsonTypeName("SSHKey")
 public class SSHKeyValidationMetadata extends SecretValidationMetaData {
-  private String host;
+  @NotNull private String host;
+
+  public void setHost(String host) {
+    this.host = host.trim();
+  }
 }

@@ -29,6 +29,7 @@ import io.harness.secretmanagerclient.services.SecretManagerClientServiceImpl;
 import io.harness.secretmanagerclient.services.api.SecretManagerClientService;
 import io.harness.serializer.KryoRegistrar;
 import io.harness.serializer.NextGenRegistrars;
+import io.harness.service.DelegateGrpcClientWrapper;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -82,6 +83,13 @@ public class SecretManagementModuleTest extends CategoryTest {
       @Singleton
       ManagerDelegateServiceDriver registerDriver() {
         return mock(ManagerDelegateServiceDriver.class);
+      }
+    });
+    modules.add(new ProviderModule() {
+      @Provides
+      @Singleton
+      DelegateGrpcClientWrapper registerDelegateGrpcClientWrapper() {
+        return mock(DelegateGrpcClientWrapper.class);
       }
     });
     modules.add(secretManagementModule);
