@@ -2,13 +2,13 @@ package io.harness.ng.core.api.impl;
 
 import static java.util.Collections.emptyList;
 
-import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
-import io.harness.ManagerDelegateServiceDriver;
+import io.harness.beans.DelegateTaskRequest;
+import io.harness.delegate.beans.DelegateResponseData;
+import io.harness.delegate.beans.RemoteMethodReturnValueData;
 import io.harness.delegate.beans.SSHTaskParams;
-import io.harness.delegate.beans.TaskData;
 import io.harness.delegate.beans.secrets.SSHConfigValidationTaskResponse;
 import io.harness.ng.core.BaseNGAccess;
 import io.harness.ng.core.api.NGSecretServiceV2;
@@ -30,17 +30,17 @@ import io.harness.ng.core.remote.SecretValidationResultDTO;
 import io.harness.secretmanagerclient.SecretType;
 import io.harness.secretmanagerclient.services.api.SecretManagerClientService;
 import io.harness.security.encryption.EncryptedDataDetail;
+import io.harness.service.DelegateGrpcClientWrapper;
 import io.harness.utils.PageUtils;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.mongodb.core.query.Criteria;
 
+import java.time.Duration;
 import java.util.Collections;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
-import java.util.concurrent.TimeUnit;
 import javax.validation.constraints.NotNull;
 
 @Singleton
@@ -49,7 +49,7 @@ import javax.validation.constraints.NotNull;
 public class NGSecretServiceV2Impl implements NGSecretServiceV2 {
   private final SecretRepository secretRepository;
   private final SecretManagerClientService secretManagerClientService;
-  private final ManagerDelegateServiceDriver managerDelegateServiceDriver;
+  private final DelegateGrpcClientWrapper delegateGrpcClientWrapper;
 
   @Override
   public Optional<Secret> get(
@@ -109,25 +109,31 @@ public class NGSecretServiceV2Impl implements NGSecretServiceV2 {
                                       .projectIdentifier(projectIdentifier)
                                       .build();
       List<EncryptedDataDetail> encryptionDetails = getSSHKeyEncryptionDetails(secretSpecDTO, baseNGAccess);
-      Map<String, String> setupAbstractions = ImmutableMap.of("accountId", accountIdentifier);
-      TaskData taskData = TaskData.builder()
-                              .async(false)
-                              .taskType("NG_SSH_VALIDATION")
-                              .parameters(new Object[] {SSHTaskParams.builder()
-                                                            .sshKeySpec(secretSpecDTO)
-                                                            .encryptionDetails(encryptionDetails)
-                                                            .host(sshKeyValidationMetadata.getHost())
-                                                            .build()})
-                              .timeout(TimeUnit.SECONDS.toMillis(15))
-                              .build();
-      SSHConfigValidationTaskResponse responseData =
-          managerDelegateServiceDriver.sendTask(accountIdentifier, setupAbstractions, taskData);
-      return SecretValidationResultDTO.builder()
-          .success(responseData.isConnectionSuccessful())
-          .message(responseData.getErrorMessage())
-          .build();
+      DelegateTaskRequest delegateTaskRequest = DelegateTaskRequest.builder()
+                                                    .accountId(accountIdentifier)
+                                                    .taskType("NG_SSH_VALIDATION")
+                                                    .taskParameters(SSHTaskParams.builder()
+                                                                        .host(sshKeyValidationMetadata.getHost())
+                                                                        .encryptionDetails(encryptionDetails)
+                                                                        .sshKeySpec(secretSpecDTO)
+                                                                        .build())
+                                                    .executionTimeout(Duration.ofMinutes(2L))
+                                                    .build();
+      DelegateResponseData delegateResponseData = this.delegateGrpcClientWrapper.executeSyncTask(delegateTaskRequest);
+      if (delegateResponseData instanceof RemoteMethodReturnValueData) {
+        return SecretValidationResultDTO.builder()
+            .success(false)
+            .message(((RemoteMethodReturnValueData) delegateResponseData).getException().getMessage())
+            .build();
+      } else if (delegateResponseData instanceof SSHConfigValidationTaskResponse) {
+        SSHConfigValidationTaskResponse responseData = (SSHConfigValidationTaskResponse) delegateResponseData;
+        return SecretValidationResultDTO.builder()
+            .success(responseData.isConnectionSuccessful())
+            .message(responseData.getErrorMessage())
+            .build();
+      }
     }
-    return SecretValidationResultDTO.builder().success(false).message("Validation failed").build();
+    return SecretValidationResultDTO.builder().success(false).message("Validation failed.").build();
   }
 
   private List<EncryptedDataDetail> getSSHKeyEncryptionDetails(SSHKeySpecDTO secretSpecDTO, BaseNGAccess baseNGAccess) {

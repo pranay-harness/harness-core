@@ -66,7 +66,7 @@ public class NGSecretResourceV2 {
       @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) @NotNull String accountIdentifier,
       @QueryParam(NGCommonEntityConstants.ORG_KEY) String orgIdentifier,
       @QueryParam(NGCommonEntityConstants.PROJECT_KEY) String projectIdentifier,
-      @QueryParam(NGCommonEntityConstants.IDENTIFIER_KEY) String identifier, SecretValidationMetaData metadata) {
+      @QueryParam(NGCommonEntityConstants.IDENTIFIER_KEY) String identifier, @Valid SecretValidationMetaData metadata) {
     return ResponseDTO.newResponse(
         ngSecretService.validateSecret(accountIdentifier, orgIdentifier, projectIdentifier, identifier, metadata));
   }

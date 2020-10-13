@@ -27,6 +27,7 @@ import io.harness.serializer.KryoModule;
 import io.harness.serializer.KryoRegistrar;
 import io.harness.serializer.ManagerRegistrars;
 import io.harness.serializer.NextGenRegistrars;
+import io.harness.service.DelegateGrpcClientWrapper;
 import io.harness.spring.AliasRegistrar;
 import io.harness.testlib.module.MongoRuleMixin;
 import io.harness.testlib.module.TestMongoModule;
@@ -66,6 +67,13 @@ public class NgManagerRule implements MethodRule, InjectorRuleMixin, MongoRuleMi
       protected void configure() {
         bind(HPersistence.class).to(MongoPersistence.class);
         bind(ManagerDelegateServiceDriver.class).toInstance(mock(ManagerDelegateServiceDriver.class));
+      }
+    });
+    modules.add(new ProviderModule() {
+      @Provides
+      @Singleton
+      DelegateGrpcClientWrapper registerDelegateGrpcClientWrapper() {
+        return mock(DelegateGrpcClientWrapper.class);
       }
     });
     modules.add(mongoTypeModule(annotations));
