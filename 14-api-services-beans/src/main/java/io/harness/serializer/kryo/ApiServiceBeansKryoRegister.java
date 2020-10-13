@@ -47,6 +47,7 @@ import io.fabric8.kubernetes.client.KubernetesClientException;
 import io.harness.aws.AwsAccessKeyCredential;
 import io.harness.aws.AwsConfig;
 import io.harness.aws.CrossAccountAccess;
+import io.harness.azure.model.AzureVMData;
 import io.harness.azure.model.SubscriptionData;
 import io.harness.azure.model.VirtualMachineScaleSetData;
 import io.harness.container.ContainerInfo;
@@ -169,6 +170,7 @@ public class ApiServiceBeansKryoRegister implements KryoRegistrar {
     kryo.register(SubscriptionData.class, 1414);
     kryo.register(VirtualMachineScaleSetData.class, 1415);
     kryo.register(InstanceDetails.AZURE_VMSS.class, 1416);
+    kryo.register(AzureVMData.class, 1417);
 
     kryo.register(SettingVariableTypes.class, 5131);
 

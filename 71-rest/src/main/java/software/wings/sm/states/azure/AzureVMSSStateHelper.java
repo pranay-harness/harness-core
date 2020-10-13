@@ -11,6 +11,7 @@ import static java.lang.String.format;
 import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang3.StringUtils.EMPTY;
 import static org.apache.commons.lang3.StringUtils.isBlank;
+import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static software.wings.beans.Log.Builder.aLog;
 import static software.wings.beans.ServiceVariable.Type.ENCRYPTED_TEXT;
 import static software.wings.sm.InstanceStatusSummary.InstanceStatusSummaryBuilder.anInstanceStatusSummary;
@@ -86,6 +87,8 @@ import java.util.concurrent.TimeUnit;
 @Slf4j
 @Singleton
 public class AzureVMSSStateHelper {
+  public static final String VIRTUAL_MACHINE_SCALE_SET_ID_PATTERN =
+      "/subscriptions/%s/resourceGroups/%s/providers/Microsoft.Compute/virtualMachineScaleSets/%s";
   @Inject private ServiceResourceService serviceResourceService;
   @Inject private ActivityService activityService;
   @Inject private AzureStateHelper azureStateHelper;
@@ -425,5 +428,12 @@ public class AzureVMSSStateHelper {
     for (EncryptedDataDetail encryptedDataDetail : vmAuthDTOEncryptionDetails) {
       encryptedDataDetail.setFieldName(secretRefFieldName);
     }
+  }
+
+  public String getVMSSIdFromName(
+      String subscriptionId, String resourceGroupName, String newVirtualMachineScaleSetName) {
+    return isNotBlank(newVirtualMachineScaleSetName)
+        ? format(VIRTUAL_MACHINE_SCALE_SET_ID_PATTERN, subscriptionId, resourceGroupName, newVirtualMachineScaleSetName)
+        : EMPTY;
   }
 }

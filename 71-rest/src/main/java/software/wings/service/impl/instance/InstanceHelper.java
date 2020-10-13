@@ -469,7 +469,8 @@ public class InstanceHelper {
         || deploymentSummary.getContainerDeploymentKey() != null || deploymentSummary.getAwsAmiDeploymentKey() != null
         || deploymentSummary.getAwsCodeDeployDeploymentKey() != null
         || deploymentSummary.getSpotinstAmiDeploymentKey() != null
-        || deploymentSummary.getAwsLambdaDeploymentKey() != null || deploymentSummary.getCustomDeploymentKey() != null;
+        || deploymentSummary.getAwsLambdaDeploymentKey() != null
+        || deploymentSummary.getAzureVMSSDeploymentKey() != null || deploymentSummary.getCustomDeploymentKey() != null;
   }
 
   private void processDeploymentSummaries(
