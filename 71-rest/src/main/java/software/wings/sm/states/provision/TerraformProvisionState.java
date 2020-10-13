@@ -67,7 +67,6 @@ import software.wings.api.TerraformApplyMarkerParam;
 import software.wings.api.TerraformExecutionData;
 import software.wings.api.TerraformOutputInfoElement;
 import software.wings.api.TerraformPlanParam;
-import software.wings.api.terraform.TerraformOutputVariables;
 import software.wings.api.terraform.TerraformProvisionInheritPlanElement;
 import software.wings.app.MainConfiguration;
 import software.wings.beans.Activity;
@@ -374,10 +373,13 @@ public abstract class TerraformProvisionState extends State {
     }
 
     saveUserInputs(context, terraformExecutionData, terraformProvisioner);
-
+    TerraformOutputInfoElement outputInfoElement = context.getContextElement(ContextElementType.TERRAFORM_PROVISION);
+    if (outputInfoElement == null) {
+      outputInfoElement = TerraformOutputInfoElement.builder().build();
+    }
     if (terraformExecutionData.getOutputs() != null) {
       Map<String, Object> outputs = parseOutputs(terraformExecutionData.getOutputs());
-      saveOutputs(context, outputs);
+      outputInfoElement.addOutPuts(outputs);
       ManagerExecutionLogCallback executionLogCallback = infrastructureProvisionerService.getManagerExecutionCallback(
           terraformProvisioner.getAppId(), terraformExecutionData.getActivityId(), commandUnit().name());
       infrastructureProvisionerService.regenerateInfrastructureMappings(
@@ -389,6 +391,8 @@ public abstract class TerraformProvisionState extends State {
     // subsequent execution
     return ExecutionResponse.builder()
         .stateExecutionData(terraformExecutionData)
+        .contextElement(outputInfoElement)
+        .notifyElement(outputInfoElement)
         .executionStatus(terraformExecutionData.getExecutionStatus())
         .errorMessage(terraformExecutionData.getErrorMessage())
         .build();
@@ -464,30 +468,6 @@ public abstract class TerraformProvisionState extends State {
     if (isNotEmpty(workspace)) {
       updateProvisionerWorkspaces(terraformProvisioner, workspace);
     }
-  }
-
-  private void saveOutputs(ExecutionContext context, Map<String, Object> outputs) {
-    TerraformOutputInfoElement outputInfoElement = context.getContextElement(ContextElementType.TERRAFORM_PROVISION);
-    SweepingOutputInstance instance = sweepingOutputService.find(
-        context.prepareSweepingOutputInquiryBuilder().name(TerraformOutputVariables.SWEEPING_OUTPUT_NAME).build());
-    TerraformOutputVariables terraformOutputVariables =
-        instance != null ? (TerraformOutputVariables) instance.getValue() : new TerraformOutputVariables();
-
-    terraformOutputVariables.putAll(outputs);
-    if (outputInfoElement != null) {
-      // Ensure that we're not missing any variables during migration from context element to sweeping output
-      // can be removed with the next releases
-      terraformOutputVariables.putAll(outputInfoElement.getOutputVariables());
-    }
-
-    if (instance != null) {
-      sweepingOutputService.deleteById(context.getAppId(), instance.getUuid());
-    }
-
-    sweepingOutputService.save(context.prepareSweepingOutputBuilder(SweepingOutputInstance.Scope.WORKFLOW)
-                                   .name(TerraformOutputVariables.SWEEPING_OUTPUT_NAME)
-                                   .value(terraformOutputVariables)
-                                   .build());
   }
 
   protected void updateProvisionerWorkspaces(
