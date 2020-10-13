@@ -3,8 +3,10 @@ package io.harness.cdng.pipeline.executions.service;
 import io.harness.cdng.pipeline.NgPipeline;
 import io.harness.cdng.pipeline.executions.ExecutionStatus;
 import io.harness.cdng.pipeline.executions.beans.PipelineExecutionDetail;
+import io.harness.cdng.pipeline.executions.beans.PipelineExecutionInterruptType;
 import io.harness.cdng.pipeline.executions.beans.PipelineExecutionSummary;
 import io.harness.cdng.pipeline.executions.beans.PipelineExecutionSummaryFilter;
+import io.harness.cdng.pipeline.executions.beans.dto.PipelineExecutionInterruptDTO;
 import io.harness.cdng.service.beans.ServiceOutcome;
 import io.harness.execution.NodeExecution;
 import io.harness.execution.PlanExecution;
@@ -35,6 +37,9 @@ public interface NgPipelineExecutionService {
       String projectId, String planExecutionId, String nodeExecutionId, ServiceOutcome serviceOutcome);
 
   List<ExecutionStatus> getExecutionStatuses();
+
+  PipelineExecutionInterruptDTO registerInterrupt(
+      PipelineExecutionInterruptType executionInterruptType, String planExecutionId);
 
   Map<ExecutionNodeType, String> getStepTypeToYamlTypeMapping();
 }

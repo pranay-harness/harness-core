@@ -9,8 +9,10 @@ import com.codahale.metrics.annotation.ExceptionMetered;
 import com.codahale.metrics.annotation.Timed;
 import io.harness.cdng.pipeline.executions.ExecutionStatus;
 import io.harness.cdng.pipeline.executions.beans.PipelineExecutionDetail;
+import io.harness.cdng.pipeline.executions.beans.PipelineExecutionInterruptType;
 import io.harness.cdng.pipeline.executions.beans.PipelineExecutionSummary.PipelineExecutionSummaryKeys;
 import io.harness.cdng.pipeline.executions.beans.PipelineExecutionSummaryFilter;
+import io.harness.cdng.pipeline.executions.beans.dto.PipelineExecutionInterruptDTO;
 import io.harness.cdng.pipeline.executions.beans.dto.PipelineExecutionSummaryDTO;
 import io.harness.cdng.pipeline.executions.service.NgPipelineExecutionServiceImpl;
 import io.harness.cdng.pipeline.mappers.ExecutionToDtoMapper;
@@ -63,6 +65,7 @@ public class CDNGExecutionResource {
       @NotNull @QueryParam("projectIdentifier") String projectId,
       @QueryParam("serviceIdentifiers") List<String> serviceIdentifiers,
       @QueryParam("envIdentifiers") List<String> environmentIdentifiers,
+      @QueryParam("pipelineIdentifiers") List<String> pipelineIdentifiers,
       @QueryParam("executionStatuses") List<ExecutionStatus> executionStatuses, @QueryParam("startTime") Long startTime,
       @QueryParam("endTime") Long endTime, @QueryParam("searchTerm") String searchTerm,
       @QueryParam("page") @DefaultValue("0") int page, @QueryParam("size") @DefaultValue("10") int size,
@@ -75,6 +78,7 @@ public class CDNGExecutionResource {
                                                                         .searchTerm(searchTerm)
                                                                         .serviceIdentifiers(serviceIdentifiers)
                                                                         .envIdentifiers(environmentIdentifiers)
+                                                                        .pipelineIdentifiers(pipelineIdentifiers)
                                                                         .startTime(startTime)
                                                                         .endTime(endTime)
                                                                         .executionStatuses(executionStatuses)
@@ -116,5 +120,18 @@ public class CDNGExecutionResource {
   @Path("/step-types")
   public ResponseDTO<Map<ExecutionNodeType, String>> getStepTypeToYamlTypeMapping() {
     return ResponseDTO.newResponse(executionService.getStepTypeToYamlTypeMapping());
+  }
+
+  @GET
+  @Timed
+  @ExceptionMetered
+  @ApiOperation(value = "pause, resume or stop the pipeline executions", nickname = "handleInterrupt")
+  @Path("/interrupt/{planExecutionId}")
+  public ResponseDTO<PipelineExecutionInterruptDTO> handleInterrupt(
+      @NotNull @QueryParam("accountIdentifier") String accountId, @NotNull @QueryParam("orgIdentifier") String orgId,
+      @NotNull @QueryParam("projectIdentifier") String projectId,
+      @NotNull @QueryParam("interruptType") PipelineExecutionInterruptType executionInterruptType,
+      @NotNull @PathParam("planExecutionId") String planExecutionId) {
+    return ResponseDTO.newResponse(executionService.registerInterrupt(executionInterruptType, planExecutionId));
   }
 }

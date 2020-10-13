@@ -24,6 +24,7 @@ import io.harness.facilitator.modes.child.ChildExecutableResponse;
 import io.harness.facilitator.modes.children.ChildrenExecutableResponse;
 import io.harness.facilitator.modes.task.TaskExecutableResponse;
 import io.harness.interrupts.ExecutionInterruptType;
+import io.harness.interrupts.InterruptEffect;
 import io.harness.interrupts.RepairActionCode;
 import io.harness.plan.PlanNode;
 import io.harness.plan.input.InputArgs;
@@ -82,6 +83,7 @@ public class OrchestrationBeansKryoRegistrar implements KryoRegistrar {
 
     kryo.register(TaskMode.class, 2532);
     kryo.register(SkipType.class, 2533);
+    kryo.register(InterruptEffect.class, 2534);
 
     // Add moved/old classes here
     // Keeping the same id for moved classes

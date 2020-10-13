@@ -1,5 +1,7 @@
 package io.harness.cdng.pipeline.executions.service;
 
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static java.lang.String.format;
 import static java.util.Objects.isNull;
 
@@ -15,17 +17,20 @@ import io.harness.cdng.pipeline.executions.beans.CDStageExecutionSummary;
 import io.harness.cdng.pipeline.executions.beans.ExecutionTriggerInfo;
 import io.harness.cdng.pipeline.executions.beans.PipelineExecutionDetail;
 import io.harness.cdng.pipeline.executions.beans.PipelineExecutionDetail.PipelineExecutionDetailBuilder;
+import io.harness.cdng.pipeline.executions.beans.PipelineExecutionInterruptType;
 import io.harness.cdng.pipeline.executions.beans.PipelineExecutionSummary;
 import io.harness.cdng.pipeline.executions.beans.PipelineExecutionSummary.PipelineExecutionSummaryKeys;
 import io.harness.cdng.pipeline.executions.beans.PipelineExecutionSummaryFilter;
 import io.harness.cdng.pipeline.executions.beans.ServiceExecutionSummary;
+import io.harness.cdng.pipeline.executions.beans.dto.PipelineExecutionInterruptDTO;
 import io.harness.cdng.pipeline.executions.repositories.PipelineExecutionRepository;
 import io.harness.cdng.pipeline.mappers.ExecutionToDtoMapper;
 import io.harness.cdng.pipeline.service.NGPipelineService;
 import io.harness.cdng.service.beans.ServiceOutcome;
-import io.harness.data.structure.EmptyPredicate;
 import io.harness.dto.OrchestrationGraphDTO;
+import io.harness.engine.OrchestrationService;
 import io.harness.engine.executions.node.NodeExecutionService;
+import io.harness.engine.interrupts.InterruptPackage;
 import io.harness.exception.InvalidRequestException;
 import io.harness.execution.NodeExecution;
 import io.harness.execution.PlanExecution;
@@ -33,6 +38,7 @@ import io.harness.executionplan.plancreator.beans.StepOutcomeGroup;
 import io.harness.executions.beans.ExecutionGraph;
 import io.harness.executions.mapper.ExecutionGraphMapper;
 import io.harness.executions.steps.ExecutionNodeType;
+import io.harness.interrupts.Interrupt;
 import io.harness.service.GraphGenerationService;
 import lombok.NonNull;
 import org.springframework.data.domain.Page;
@@ -58,6 +64,7 @@ public class NgPipelineExecutionServiceImpl implements NgPipelineExecutionServic
   @Inject private GraphGenerationService graphGenerationService;
   @Inject private PipelineExecutionHelper pipelineExecutionHelper;
   @Inject private NGPipelineService ngPipelineService;
+  @Inject private OrchestrationService orchestrationService;
 
   @Override
   public Page<PipelineExecutionSummary> getExecutions(String accountId, String orgId, String projectId,
@@ -86,7 +93,7 @@ public class NgPipelineExecutionServiceImpl implements NgPipelineExecutionServic
     if (pipelineExecutionSummaryFilter == null) {
       return criteria;
     }
-    if (!EmptyPredicate.isEmpty(pipelineExecutionSummaryFilter.getExecutionStatuses())) {
+    if (!isEmpty(pipelineExecutionSummaryFilter.getExecutionStatuses())) {
       criteria.and(PipelineExecutionSummaryKeys.executionStatus)
           .in(pipelineExecutionSummaryFilter.getExecutionStatuses());
     }
@@ -100,14 +107,18 @@ public class NgPipelineExecutionServiceImpl implements NgPipelineExecutionServic
     if (!isNull(pipelineExecutionSummaryFilter.getEndTime())) {
       criteria.and(PipelineExecutionSummaryKeys.endedAt).lte(pipelineExecutionSummaryFilter.getEndTime());
     }
-    if (EmptyPredicate.isNotEmpty(pipelineExecutionSummaryFilter.getEnvIdentifiers())) {
+    if (isNotEmpty(pipelineExecutionSummaryFilter.getEnvIdentifiers())) {
       criteria.and(PipelineExecutionSummaryKeys.envIdentifiers).in(pipelineExecutionSummaryFilter.getEnvIdentifiers());
     }
-    if (EmptyPredicate.isNotEmpty(pipelineExecutionSummaryFilter.getServiceIdentifiers())) {
+    if (isNotEmpty(pipelineExecutionSummaryFilter.getPipelineIdentifiers())) {
+      criteria.and(PipelineExecutionSummaryKeys.pipelineIdentifier)
+          .in(pipelineExecutionSummaryFilter.getPipelineIdentifiers());
+    }
+    if (isNotEmpty(pipelineExecutionSummaryFilter.getServiceIdentifiers())) {
       criteria.and(PipelineExecutionSummaryKeys.serviceIdentifiers)
           .in(pipelineExecutionSummaryFilter.getServiceIdentifiers());
     }
-    if (EmptyPredicate.isNotEmpty(pipelineExecutionSummaryFilter.getSearchTerm())) {
+    if (isNotEmpty(pipelineExecutionSummaryFilter.getSearchTerm())) {
       criteria.orOperator(Criteria.where(PipelineExecutionSummaryKeys.pipelineName)
                               .regex(pipelineExecutionSummaryFilter.getSearchTerm(), "i"),
           Criteria.where(PipelineExecutionSummaryKeys.tags).regex(pipelineExecutionSummaryFilter.getSearchTerm(), "i"));
@@ -146,7 +157,7 @@ public class NgPipelineExecutionServiceImpl implements NgPipelineExecutionServic
   public PipelineExecutionDetail getPipelineExecutionDetail(@Nonnull String planExecutionId, String stageIdentifier) {
     PipelineExecutionDetailBuilder pipelineExecutionDetailBuilder = PipelineExecutionDetail.builder();
 
-    if (EmptyPredicate.isNotEmpty(stageIdentifier)) {
+    if (isNotEmpty(stageIdentifier)) {
       Optional<NodeExecution> stageNode = nodeExecutionService.getByNodeIdentifier(stageIdentifier, planExecutionId);
       if (!stageNode.isPresent()) {
         throw new InvalidRequestException(
@@ -216,6 +227,21 @@ public class NgPipelineExecutionServiceImpl implements NgPipelineExecutionServic
   @Override
   public List<ExecutionStatus> getExecutionStatuses() {
     return Arrays.asList(ExecutionStatus.values());
+  }
+
+  @Override
+  public PipelineExecutionInterruptDTO registerInterrupt(
+      PipelineExecutionInterruptType executionInterruptType, String planExecutionId) {
+    InterruptPackage interruptPackage = InterruptPackage.builder()
+                                            .interruptType(executionInterruptType.getExecutionInterruptType())
+                                            .planExecutionId(planExecutionId)
+                                            .build();
+    Interrupt interrupt = orchestrationService.registerInterrupt(interruptPackage);
+    return PipelineExecutionInterruptDTO.builder()
+        .id(interrupt.getUuid())
+        .planExecutionId(interrupt.getPlanExecutionId())
+        .type(executionInterruptType)
+        .build();
   }
 
   @Override
