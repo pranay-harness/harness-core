@@ -21,6 +21,7 @@ import io.harness.cvng.core.beans.AppDynamicsDSConfig;
 import io.harness.cvng.core.entities.MetricPack;
 import io.harness.cvng.core.services.api.CVConfigService;
 import io.harness.cvng.core.services.api.DSConfigService;
+import io.harness.cvng.dashboard.beans.CategoryRisksDTO;
 import io.harness.cvng.dashboard.beans.HeatMapDTO;
 import io.harness.cvng.dashboard.entities.HeatMap;
 import io.harness.cvng.dashboard.entities.HeatMap.HeatMapKeys;
@@ -413,11 +414,14 @@ public class HeatMapServiceImplTest extends CvNextGenTest {
           0.01 * minuteBoundry);
     }
 
-    Map<CVMonitoringCategory, Integer> categoryRiskMap =
+    CategoryRisksDTO categoryRisk =
         heatMapService.getCategoryRiskScores(accountId, orgId, projectIdentifier, serviceIdentifier, envIdentifier);
 
-    assertThat(categoryRiskMap).isNotNull();
-    assertThat(categoryRiskMap.size()).isEqualTo(CVMonitoringCategory.values().length);
+    assertThat(categoryRisk).isNotNull();
+    assertThat(categoryRisk.getCategoryRisks().size()).isEqualTo(CVMonitoringCategory.values().length);
+    Map<CVMonitoringCategory, Integer> categoryRiskMap = new HashMap<>();
+    categoryRisk.getCategoryRisks().forEach(
+        categoryRisks -> { categoryRiskMap.put(categoryRisks.getCategory(), categoryRisks.getRisk()); });
     assertThat(categoryRiskMap.containsKey(CVMonitoringCategory.PERFORMANCE)).isTrue();
     assertThat(categoryRiskMap.get(CVMonitoringCategory.PERFORMANCE)).isNotEqualTo(-1);
     assertThat(categoryRiskMap.get(CVMonitoringCategory.ERRORS)).isEqualTo(-1);
@@ -449,12 +453,17 @@ public class HeatMapServiceImplTest extends CvNextGenTest {
           0.01 * minuteBoundry);
     }
 
-    Map<CVMonitoringCategory, Integer> categoryRiskMap =
+    CategoryRisksDTO categoryRisk =
         heatMapService.getCategoryRiskScores(accountId, orgId, projectIdentifier, null, envIdentifier);
 
-    assertThat(categoryRiskMap).isNotNull();
+    assertThat(categoryRisk).isNotNull();
 
-    assertThat(categoryRiskMap.size()).isEqualTo(CVMonitoringCategory.values().length);
+    assertThat(categoryRisk.getCategoryRisks().size()).isEqualTo(CVMonitoringCategory.values().length);
+    assertThat(categoryRisk).isNotNull();
+    assertThat(categoryRisk.getCategoryRisks().size()).isEqualTo(CVMonitoringCategory.values().length);
+    Map<CVMonitoringCategory, Integer> categoryRiskMap = new HashMap<>();
+    categoryRisk.getCategoryRisks().forEach(
+        categoryRisks -> { categoryRiskMap.put(categoryRisks.getCategory(), categoryRisks.getRisk()); });
     assertThat(categoryRiskMap.containsKey(CVMonitoringCategory.PERFORMANCE)).isTrue();
     assertThat(categoryRiskMap.get(CVMonitoringCategory.PERFORMANCE)).isNotEqualTo(-1);
     assertThat(categoryRiskMap.get(CVMonitoringCategory.ERRORS)).isNotEqualTo(-1);
@@ -486,11 +495,17 @@ public class HeatMapServiceImplTest extends CvNextGenTest {
           0.01 * minuteBoundry);
     }
 
-    Map<CVMonitoringCategory, Integer> categoryRiskMap =
+    CategoryRisksDTO categoryRisk =
         heatMapService.getCategoryRiskScores(accountId, orgId, projectIdentifier, null, null);
 
-    assertThat(categoryRiskMap).isNotNull();
-    assertThat(categoryRiskMap.size()).isEqualTo(CVMonitoringCategory.values().length);
+    assertThat(categoryRisk).isNotNull();
+
+    assertThat(categoryRisk.getCategoryRisks().size()).isEqualTo(CVMonitoringCategory.values().length);
+    assertThat(categoryRisk).isNotNull();
+    assertThat(categoryRisk.getCategoryRisks().size()).isEqualTo(CVMonitoringCategory.values().length);
+    Map<CVMonitoringCategory, Integer> categoryRiskMap = new HashMap<>();
+    categoryRisk.getCategoryRisks().forEach(
+        categoryRisks -> { categoryRiskMap.put(categoryRisks.getCategory(), categoryRisks.getRisk()); });
     assertThat(categoryRiskMap.containsKey(CVMonitoringCategory.PERFORMANCE)).isTrue();
     assertThat(categoryRiskMap.containsKey(CVMonitoringCategory.ERRORS)).isTrue();
 
@@ -527,11 +542,17 @@ public class HeatMapServiceImplTest extends CvNextGenTest {
     clock = Clock.fixed(Instant.parse("2020-04-23T10:02:06Z"), ZoneOffset.UTC);
     FieldUtils.writeField(heatMapService, "clock", clock, true);
 
-    Map<CVMonitoringCategory, Integer> categoryRiskMap =
+    CategoryRisksDTO categoryRisk =
         heatMapService.getCategoryRiskScores(accountId, orgId, projectIdentifier, null, null);
 
-    assertThat(categoryRiskMap).isNotNull();
-    assertThat(categoryRiskMap.size()).isEqualTo(CVMonitoringCategory.values().length);
+    assertThat(categoryRisk).isNotNull();
+
+    assertThat(categoryRisk.getCategoryRisks().size()).isEqualTo(CVMonitoringCategory.values().length);
+    assertThat(categoryRisk).isNotNull();
+    assertThat(categoryRisk.getCategoryRisks().size()).isEqualTo(CVMonitoringCategory.values().length);
+    Map<CVMonitoringCategory, Integer> categoryRiskMap = new HashMap<>();
+    categoryRisk.getCategoryRisks().forEach(
+        categoryRisks -> { categoryRiskMap.put(categoryRisks.getCategory(), categoryRisks.getRisk()); });
 
     assertThat(categoryRiskMap.get(CVMonitoringCategory.PERFORMANCE)).isEqualTo(-1);
     assertThat(categoryRiskMap.get(CVMonitoringCategory.ERRORS)).isEqualTo(-1);

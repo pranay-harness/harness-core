@@ -6,6 +6,7 @@ import com.codahale.metrics.annotation.ExceptionMetered;
 import com.codahale.metrics.annotation.Timed;
 import io.harness.annotations.ExposeInternalException;
 import io.harness.cvng.beans.CVMonitoringCategory;
+import io.harness.cvng.dashboard.beans.CategoryRisksDTO;
 import io.harness.cvng.dashboard.beans.EnvServiceRiskDTO;
 import io.harness.cvng.dashboard.beans.HeatMapDTO;
 import io.harness.cvng.dashboard.services.api.HeatMapService;
@@ -50,8 +51,7 @@ public class HeatMapResource {
   @Timed
   @ExceptionMetered
   @ApiOperation(value = "get current risk for all categories", nickname = "getCategoryRiskMap")
-  public RestResponse<Map<CVMonitoringCategory, Integer>> getCategoryRiskMap(
-      @QueryParam("accountId") @NotNull final String accountId,
+  public RestResponse<CategoryRisksDTO> getCategoryRiskMap(@QueryParam("accountId") @NotNull final String accountId,
       @QueryParam("orgIdentifier") @NotNull final String orgIdentifier,
       @QueryParam("projectIdentifier") @NotNull final String projectIdentifier,
       @QueryParam("serviceIdentifier") final String serviceIdentifier,
