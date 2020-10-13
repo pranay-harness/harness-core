@@ -1307,7 +1307,13 @@ public class SettingsServiceImpl implements SettingsService {
       }
     } else {
       if (!featureFlagService.isEnabled(FeatureName.ARTIFACT_STREAM_REFACTOR, connectorSetting.getAccountId())) {
-        List<ArtifactStream> artifactStreams = artifactStreamService.listBySettingId(connectorSetting.getUuid());
+        List<String> allAccountApps = appService.getAppIdsByAccountId(connectorSetting.getAccountId());
+        List<ArtifactStream> artifactStreams =
+            artifactStreamService.listBySettingId(connectorSetting.getUuid())
+                .stream()
+                .filter(artifactStream -> allAccountApps.contains(artifactStream.getAppId()))
+                .filter(artifactStream -> serviceResourceService.get(artifactStream.getServiceId()) != null)
+                .collect(toList());
         if (!artifactStreams.isEmpty()) {
           List<String> artifactStreamNames = artifactStreams.stream()
                                                  .map(ArtifactStream::getSourceName)
