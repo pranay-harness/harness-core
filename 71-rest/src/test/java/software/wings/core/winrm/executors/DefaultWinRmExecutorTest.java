@@ -51,7 +51,7 @@ public class DefaultWinRmExecutorTest extends CategoryTest {
   @Before
   public void setUp() throws Exception {
     MockitoAnnotations.initMocks(this);
-    spyDefaultWinRmExecutor = new DefaultWinRmExecutor(logService, delegateFileManager, config, true);
+    spyDefaultWinRmExecutor = new DefaultWinRmExecutor(logService, delegateFileManager, true, config, true);
     simpleCommand = "$test=\"someruntimepath\"\n"
         + "echo $test\n"
         + "if($test){\n"
@@ -107,7 +107,7 @@ public class DefaultWinRmExecutorTest extends CategoryTest {
   @Category(UnitTests.class)
   public void testCleanUpFilesDisableEncodingFFOn() {
     DefaultWinRmExecutor defaultWinRmExecutorFFOn =
-        new DefaultWinRmExecutor(logService, delegateFileManager, config, true);
+        new DefaultWinRmExecutor(logService, delegateFileManager, true, config, true);
     defaultWinRmExecutorFFOn.cleanupFiles(winRmSession, "PSFileName.ps1");
     verify(winRmSession, times(1)).executeCommandString(any(), any(), any());
   }
@@ -117,7 +117,7 @@ public class DefaultWinRmExecutorTest extends CategoryTest {
   @Category(UnitTests.class)
   public void testpsWrappedCommandWithEncodingWithProfile() {
     when(config.isUseNoProfile()).thenReturn(true);
-    spyDefaultWinRmExecutor = new DefaultWinRmExecutor(logService, delegateFileManager, config, true);
+    spyDefaultWinRmExecutor = new DefaultWinRmExecutor(logService, delegateFileManager, true, config, true);
     String poweshellCommand = spyDefaultWinRmExecutor.psWrappedCommandWithEncoding(simpleCommand);
     assertThat(poweshellCommand.contains("NoProfile")).isTrue();
   }

@@ -65,8 +65,8 @@ public class ScriptProcessExecutor extends AbstractScriptExecutor {
    */
   @Inject
   public ScriptProcessExecutor(DelegateFileManager delegateFileManager, DelegateLogService logService,
-      ScriptExecutionContext shellExecutorConfig) {
-    super(delegateFileManager, logService);
+      boolean shouldSaveExecutionLogs, ScriptExecutionContext shellExecutorConfig) {
+    super(delegateFileManager, logService, shouldSaveExecutionLogs);
     this.config = (ShellExecutorConfig) shellExecutorConfig;
     this.scriptType = ((ShellExecutorConfig) shellExecutorConfig).getScriptType();
   }
@@ -329,16 +329,18 @@ public class ScriptProcessExecutor extends AbstractScriptExecutor {
   }
 
   private void saveExecutionLog(String line, LogLevel level, CommandExecutionStatus commandExecutionStatus) {
-    logService.save(config.getAccountId(),
-        aLog()
-            .appId(config.getAppId())
-            .activityId(config.getExecutionId())
-            .logLevel(level)
-            .commandUnitName(config.getCommandUnitName())
-            .hostName("localhost")
-            .logLine(line)
-            .executionResult(commandExecutionStatus)
-            .build());
+    if (shouldSaveExecutionLogs) {
+      logService.save(config.getAccountId(),
+          aLog()
+              .appId(config.getAppId())
+              .activityId(config.getExecutionId())
+              .logLevel(level)
+              .commandUnitName(config.getCommandUnitName())
+              .hostName("localhost")
+              .logLine(line)
+              .executionResult(commandExecutionStatus)
+              .build());
+    }
   }
 
   private String processPowerShellScript(String scriptString) {

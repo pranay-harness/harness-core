@@ -100,9 +100,9 @@ public class ScriptSshExecutor extends AbstractScriptExecutor {
    * @param logService          the log service
    */
   @Inject
-  public ScriptSshExecutor(
-      DelegateFileManager delegateFileManager, DelegateLogService logService, ScriptExecutionContext config) {
-    super(delegateFileManager, logService);
+  public ScriptSshExecutor(DelegateFileManager delegateFileManager, DelegateLogService logService,
+      boolean shouldSaveExecutionLogs, ScriptExecutionContext config) {
+    super(delegateFileManager, logService, shouldSaveExecutionLogs);
     if (isEmpty(((SshSessionConfig) config).getExecutionId())) {
       throw new WingsException(INVALID_EXECUTION_ID);
     }

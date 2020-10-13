@@ -65,6 +65,8 @@ public abstract class AbstractScriptExecutor implements ScriptExecutor {
    */
   protected DelegateFileManager delegateFileManager;
 
+  protected boolean shouldSaveExecutionLogs;
+
   /**
    * Instantiates a new abstract ssh executor.
    *
@@ -72,9 +74,11 @@ public abstract class AbstractScriptExecutor implements ScriptExecutor {
    * @param logService          the log service
    */
   @Inject
-  public AbstractScriptExecutor(DelegateFileManager delegateFileManager, DelegateLogService logService) {
+  public AbstractScriptExecutor(
+      DelegateFileManager delegateFileManager, DelegateLogService logService, boolean shouldSaveExecutionLogs) {
     this.logService = logService;
     this.delegateFileManager = delegateFileManager;
+    this.shouldSaveExecutionLogs = shouldSaveExecutionLogs;
   }
 
   @Override
@@ -285,42 +289,48 @@ public abstract class AbstractScriptExecutor implements ScriptExecutor {
   }
 
   protected void saveExecutionLog(String line, CommandExecutionStatus commandExecutionStatus) {
-    logService.save(getAccountId(),
-        aLog()
-            .appId(getAppId())
-            .activityId(getExecutionId())
-            .logLevel(INFO)
-            .commandUnitName(getCommandUnitName())
-            .hostName(getHost())
-            .logLine(line)
-            .executionResult(commandExecutionStatus)
-            .build());
+    if (shouldSaveExecutionLogs) {
+      logService.save(getAccountId(),
+          aLog()
+              .appId(getAppId())
+              .activityId(getExecutionId())
+              .logLevel(INFO)
+              .commandUnitName(getCommandUnitName())
+              .hostName(getHost())
+              .logLine(line)
+              .executionResult(commandExecutionStatus)
+              .build());
+    }
   }
 
   protected void saveExecutionLogError(String line) {
-    logService.save(getAccountId(),
-        aLog()
-            .appId(getAppId())
-            .activityId(getExecutionId())
-            .logLevel(ERROR)
-            .commandUnitName(getCommandUnitName())
-            .hostName(getHost())
-            .logLine(line)
-            .executionResult(RUNNING)
-            .build());
+    if (shouldSaveExecutionLogs) {
+      logService.save(getAccountId(),
+          aLog()
+              .appId(getAppId())
+              .activityId(getExecutionId())
+              .logLevel(ERROR)
+              .commandUnitName(getCommandUnitName())
+              .hostName(getHost())
+              .logLine(line)
+              .executionResult(RUNNING)
+              .build());
+    }
   }
 
   protected void saveExecutionLogWarn(String line) {
-    logService.save(getAccountId(),
-        aLog()
-            .appId(getAppId())
-            .activityId(getExecutionId())
-            .logLevel(WARN)
-            .commandUnitName(getCommandUnitName())
-            .hostName(getHost())
-            .logLine(line)
-            .executionResult(RUNNING)
-            .build());
+    if (shouldSaveExecutionLogs) {
+      logService.save(getAccountId(),
+          aLog()
+              .appId(getAppId())
+              .activityId(getExecutionId())
+              .logLevel(WARN)
+              .commandUnitName(getCommandUnitName())
+              .hostName(getHost())
+              .logLine(line)
+              .executionResult(RUNNING)
+              .build());
+    }
   }
 
   /**

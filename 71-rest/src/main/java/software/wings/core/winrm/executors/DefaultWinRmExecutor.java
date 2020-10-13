@@ -60,13 +60,15 @@ public class DefaultWinRmExecutor implements WinRmExecutor {
   private final WinRmSessionConfig config;
   protected DelegateFileManager delegateFileManager;
   private boolean disableCommandEncoding;
+  private boolean shouldSaveExecutionLogs;
   private String powershell = "Powershell ";
   private static final int SPLITLISTOFCOMMANDSBY = 20;
 
   DefaultWinRmExecutor(DelegateLogService logService, DelegateFileManager delegateFileManager,
-      WinRmSessionConfig config, boolean disableCommandEncoding) {
+      boolean shouldSaveExecutionLogs, WinRmSessionConfig config, boolean disableCommandEncoding) {
     this.logService = logService;
     this.delegateFileManager = delegateFileManager;
+    this.shouldSaveExecutionLogs = shouldSaveExecutionLogs;
     this.config = config;
     this.disableCommandEncoding = disableCommandEncoding;
 
@@ -357,16 +359,18 @@ public class DefaultWinRmExecutor implements WinRmExecutor {
   }
 
   private void saveExecutionLog(String line, LogLevel level, CommandExecutionStatus commandExecutionStatus) {
-    logService.save(config.getAccountId(),
-        aLog()
-            .appId(config.getAppId())
-            .activityId(config.getExecutionId())
-            .logLevel(level)
-            .commandUnitName(config.getCommandUnitName())
-            .hostName(config.getHostname())
-            .logLine(line)
-            .executionResult(commandExecutionStatus)
-            .build());
+    if (shouldSaveExecutionLogs) {
+      logService.save(config.getAccountId(),
+          aLog()
+              .appId(config.getAppId())
+              .activityId(config.getExecutionId())
+              .logLevel(level)
+              .commandUnitName(config.getCommandUnitName())
+              .hostName(config.getHostname())
+              .logLine(line)
+              .executionResult(commandExecutionStatus)
+              .build());
+    }
   }
 
   public ExecutionLogCallback getExecutionLogCallback(String commandUnit) {

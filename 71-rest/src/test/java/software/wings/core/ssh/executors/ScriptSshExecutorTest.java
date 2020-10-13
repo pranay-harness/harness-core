@@ -33,7 +33,7 @@ public class ScriptSshExecutorTest extends CategoryTest {
   public void setup() throws Exception {
     when(sshSessionConfig.getExecutionId()).thenReturn("ID");
     scriptSshExecutor =
-        PowerMockito.spy(new ScriptSshExecutor(delegateFileManager, delegateLogService, sshSessionConfig));
+        PowerMockito.spy(new ScriptSshExecutor(delegateFileManager, delegateLogService, true, sshSessionConfig));
     PowerMockito.doReturn(ENV_VAR_VALUE).when(scriptSshExecutor, "getEnvVarValue", "Path");
     PowerMockito.doReturn(ENV_VAR_VALUE).when(scriptSshExecutor, "getEnvVarValue", "HOME");
   }

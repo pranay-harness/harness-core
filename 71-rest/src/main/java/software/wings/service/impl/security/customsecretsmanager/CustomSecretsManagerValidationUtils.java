@@ -88,7 +88,8 @@ public class CustomSecretsManagerValidationUtils {
             .winrmConnectionEncryptedDataDetails(new ArrayList<>())
             .activityId(UUIDGenerator.generateUuid())
             .appId(GLOBAL_APP_ID)
-            .outputVars(OUTPUT_VARIABLE);
+            .outputVars(OUTPUT_VARIABLE)
+            .saveExecutionLogs(false);
 
     if (!customSecretsManagerConfig.isExecuteOnDelegate()) {
       if (customSecretsManagerConfig.getRemoteHostConnector().getSettingType() == HOST_CONNECTION_ATTRIBUTES) {
