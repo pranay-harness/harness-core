@@ -21,7 +21,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.stubbing.Answer;
 import software.wings.beans.User;
-import software.wings.graphql.datafetcher.AbstractDataFetcherTest;
+import software.wings.graphql.datafetcher.AbstractDataFetcherTestBase;
 import software.wings.graphql.datafetcher.DataFetcherUtils;
 import software.wings.graphql.datafetcher.billing.BillingDataQueryMetadata;
 import software.wings.graphql.datafetcher.billing.QLBillingAmountData;
@@ -43,7 +43,7 @@ import java.sql.Timestamp;
 import java.util.Arrays;
 import java.util.Collections;
 
-public class BudgetTimescaleQueryHelperTest extends AbstractDataFetcherTest {
+public class BudgetTimescaleQueryHelperTest extends AbstractDataFetcherTestBase {
   @Mock TimeScaleDBService timeScaleDBService;
   @Mock private DataFetcherUtils utils;
   @Inject @InjectMocks BudgetTimescaleQueryHelper queryHelper;

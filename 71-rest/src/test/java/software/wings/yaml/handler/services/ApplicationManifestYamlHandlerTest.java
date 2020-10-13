@@ -51,13 +51,13 @@ import software.wings.service.intfc.EnvironmentService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.utils.WingsTestConstants;
-import software.wings.yaml.handler.BaseYamlHandlerTest;
+import software.wings.yaml.handler.YamlHandlerTestBase;
 
 import java.io.File;
 import java.io.IOException;
 import java.net.URISyntaxException;
 
-public class ApplicationManifestYamlHandlerTest extends BaseYamlHandlerTest {
+public class ApplicationManifestYamlHandlerTest extends YamlHandlerTestBase {
   @Mock private AppService appService;
   @Mock private ServiceResourceService serviceResourceService;
   @Mock private SettingsService settingsService;

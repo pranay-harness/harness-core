@@ -41,7 +41,7 @@ import java.util.Arrays;
 /**
  * @author rktummala on 1/9/18
  */
-public class BasicWorkflowYamlHandlerTest extends BaseWorkflowYamlHandlerTest {
+public class BasicWorkflowYamlHandlerTest extends WorkflowYamlHandlerTestBase {
   @Mock private LimitCheckerFactory limitCheckerFactory;
   @InjectMocks @Inject private BasicWorkflowYamlHandler yamlHandler;
 

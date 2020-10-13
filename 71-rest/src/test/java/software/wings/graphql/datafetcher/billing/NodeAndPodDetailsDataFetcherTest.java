@@ -24,7 +24,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.stubbing.Answer;
 import software.wings.beans.User;
-import software.wings.graphql.datafetcher.AbstractDataFetcherTest;
+import software.wings.graphql.datafetcher.AbstractDataFetcherTestBase;
 import software.wings.graphql.datafetcher.DataFetcherUtils;
 import software.wings.graphql.schema.type.aggregation.QLData;
 import software.wings.graphql.schema.type.aggregation.QLIdFilter;
@@ -52,7 +52,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public class NodeAndPodDetailsDataFetcherTest extends AbstractDataFetcherTest {
+public class NodeAndPodDetailsDataFetcherTest extends AbstractDataFetcherTestBase {
   @Mock TimeScaleDBService timeScaleDBService;
   @Mock private DataFetcherUtils utils;
   @Mock QLBillingStatsHelper statsHelper;

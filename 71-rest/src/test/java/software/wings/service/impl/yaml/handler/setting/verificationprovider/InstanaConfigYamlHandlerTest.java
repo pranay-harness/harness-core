@@ -17,12 +17,12 @@ import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 import software.wings.beans.InstanaConfig;
 import software.wings.beans.SettingAttribute;
-import software.wings.yaml.handler.connectors.configyamlhandlers.BaseSettingValueConfigYamlHandlerTest;
+import software.wings.yaml.handler.connectors.configyamlhandlers.SettingValueConfigYamlHandlerTestBase;
 import software.wings.yaml.handler.connectors.configyamlhandlers.SettingValueYamlConfig;
 
 import java.util.UUID;
 
-public class InstanaConfigYamlHandlerTest extends BaseSettingValueConfigYamlHandlerTest {
+public class InstanaConfigYamlHandlerTest extends SettingValueConfigYamlHandlerTestBase {
   @InjectMocks @Inject private InstanaConfigYamlHandler yamlHandler;
 
   public static final String url = "https://plum-io0hp4gn.instana.io/";

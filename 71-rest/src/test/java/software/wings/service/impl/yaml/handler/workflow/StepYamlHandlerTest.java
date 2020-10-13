@@ -44,13 +44,13 @@ import software.wings.service.intfc.template.TemplateService;
 import software.wings.sm.StateType;
 import software.wings.sm.StepType;
 import software.wings.utils.RepositoryFormat;
-import software.wings.yaml.handler.BaseYamlHandlerTest;
+import software.wings.yaml.handler.YamlHandlerTestBase;
 import software.wings.yaml.workflow.StepYaml;
 
 import java.util.HashMap;
 import java.util.Map;
 
-public class StepYamlHandlerTest extends BaseYamlHandlerTest {
+public class StepYamlHandlerTest extends YamlHandlerTestBase {
   @InjectMocks @Inject private StepYamlHandler stepYamlHandler;
   @Mock private FeatureFlagService featureFlagService;
   @Mock private ArtifactStreamService artifactStreamService;

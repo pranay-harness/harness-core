@@ -37,9 +37,9 @@ import software.wings.service.intfc.ArtifactStreamService;
 import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.utils.RepositoryFormat;
-import software.wings.yaml.handler.BaseYamlHandlerTest;
+import software.wings.yaml.handler.YamlHandlerTestBase;
 
-public class NexusArtifactStreamYamlHandlerTest extends BaseYamlHandlerTest {
+public class NexusArtifactStreamYamlHandlerTest extends YamlHandlerTestBase {
   @InjectMocks @Inject private NexusArtifactStreamYamlHandler yamlHandler;
   @Mock AppService appService;
   @Mock ArtifactStreamService artifactStreamService;

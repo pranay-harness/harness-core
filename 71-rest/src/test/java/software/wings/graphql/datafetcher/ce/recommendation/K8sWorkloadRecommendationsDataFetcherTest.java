@@ -18,7 +18,7 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import software.wings.beans.Account;
 import software.wings.beans.User;
-import software.wings.graphql.datafetcher.AbstractDataFetcherTest;
+import software.wings.graphql.datafetcher.AbstractDataFetcherTestBase;
 import software.wings.graphql.datafetcher.ce.recommendation.dto.QLContainerRecommendation;
 import software.wings.graphql.datafetcher.ce.recommendation.dto.QLK8SWorkloadRecommendationConnection;
 import software.wings.graphql.datafetcher.ce.recommendation.dto.QLK8sWorkloadFilter;
@@ -39,7 +39,7 @@ import java.time.Duration;
 import java.time.Instant;
 import java.util.List;
 
-public class K8sWorkloadRecommendationsDataFetcherTest extends AbstractDataFetcherTest {
+public class K8sWorkloadRecommendationsDataFetcherTest extends AbstractDataFetcherTestBase {
   private static final QLPageQueryParameters DUMMY_PAGE_QUERY_PARAMS = new QLPageQueryParameters() {
     @Override
     public int getLimit() {

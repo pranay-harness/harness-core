@@ -27,7 +27,7 @@ import software.wings.beans.yaml.ChangeContext;
 import software.wings.beans.yaml.YamlType;
 import software.wings.service.impl.yaml.handler.setting.cloudprovider.PcfConfigYamlHandler;
 
-public class PcfConfigYamlHandlerTest extends BaseSettingValueConfigYamlHandlerTest {
+public class PcfConfigYamlHandlerTest extends SettingValueConfigYamlHandlerTestBase {
   @InjectMocks @Inject private PcfConfigYamlHandler yamlHandler;
   public static final String endpointUrl = "link.com";
 

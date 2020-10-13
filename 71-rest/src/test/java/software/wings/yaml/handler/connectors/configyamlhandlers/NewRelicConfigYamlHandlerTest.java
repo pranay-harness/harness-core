@@ -20,7 +20,7 @@ import software.wings.beans.SettingAttribute;
 import software.wings.beans.SettingAttribute.SettingCategory;
 import software.wings.service.impl.yaml.handler.setting.verificationprovider.NewRelicConfigYamlHandler;
 
-public class NewRelicConfigYamlHandlerTest extends BaseSettingValueConfigYamlHandlerTest {
+public class NewRelicConfigYamlHandlerTest extends SettingValueConfigYamlHandlerTestBase {
   @InjectMocks @Inject private NewRelicConfigYamlHandler yamlHandler;
 
   public static final String url = "https://api.newrelic.com";

@@ -63,14 +63,14 @@ import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.WorkflowService;
 import software.wings.service.intfc.yaml.YamlPushService;
 import software.wings.utils.ArtifactType;
-import software.wings.yaml.handler.BaseYamlHandlerTest;
+import software.wings.yaml.handler.YamlHandlerTestBase;
 
 import java.util.Optional;
 
 /**
  * @author rktummala on 1/11/18
  */
-public abstract class BaseWorkflowYamlHandlerTest extends BaseYamlHandlerTest {
+public abstract class WorkflowYamlHandlerTestBase extends YamlHandlerTestBase {
   protected InfrastructureMapping infrastructureMapping = getInfraMapping();
   protected InfrastructureDefinition infrastructureDefinition = getInfraDefinition();
   protected Service service = getService();

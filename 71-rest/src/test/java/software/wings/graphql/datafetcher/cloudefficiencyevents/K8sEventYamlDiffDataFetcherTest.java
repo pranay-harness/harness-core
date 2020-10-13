@@ -15,12 +15,12 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import software.wings.graphql.datafetcher.AbstractDataFetcherTest;
+import software.wings.graphql.datafetcher.AbstractDataFetcherTestBase;
 import software.wings.graphql.schema.query.QLK8sEventYamlDiffQueryParameters;
 
 import java.sql.SQLException;
 
-public class K8sEventYamlDiffDataFetcherTest extends AbstractDataFetcherTest {
+public class K8sEventYamlDiffDataFetcherTest extends AbstractDataFetcherTestBase {
   @Mock K8sYamlDao k8sYamlDao;
   @Inject @InjectMocks K8sEventYamlDiffDataFetcher k8sEventYamlDiffDataFetcher;
 

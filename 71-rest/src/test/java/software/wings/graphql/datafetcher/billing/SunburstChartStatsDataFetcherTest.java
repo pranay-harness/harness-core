@@ -24,7 +24,7 @@ import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.stubbing.Answer;
-import software.wings.graphql.datafetcher.AbstractDataFetcherTest;
+import software.wings.graphql.datafetcher.AbstractDataFetcherTestBase;
 import software.wings.graphql.datafetcher.billing.BillingDataQueryMetadata.BillingDataMetaDataFields;
 import software.wings.graphql.schema.type.aggregation.QLData;
 import software.wings.graphql.schema.type.aggregation.QLSortOrder;
@@ -48,7 +48,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 
-public class SunburstChartStatsDataFetcherTest extends AbstractDataFetcherTest {
+public class SunburstChartStatsDataFetcherTest extends AbstractDataFetcherTestBase {
   @Inject @InjectMocks SunburstChartStatsDataFetcher sunburstChartStatsDataFetcher;
   @Mock BillingDataQueryBuilder billingDataQueryBuilder;
   @Mock TimeScaleDBService timeScaleDBService;

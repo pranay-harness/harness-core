@@ -23,7 +23,7 @@ import software.wings.beans.yaml.ChangeContext;
 import software.wings.service.impl.yaml.handler.inframapping.AwsAmiInfraMappingYamlHandler;
 import software.wings.service.intfc.InfrastructureMappingService;
 
-public class AwsAmiInfraMappingYamlHandlerTest extends BaseInfraMappingYamlHandlerTest {
+public class AwsAmiInfraMappingYamlHandlerTest extends BaseInfraMappingYamlHandlerTestBase {
   private String validYamlContent = "harnessApiVersion: '1.0'\n"
       + "type: AWS_AMI\n"
       + "amiDeploymentType: AWS_ASG\n"

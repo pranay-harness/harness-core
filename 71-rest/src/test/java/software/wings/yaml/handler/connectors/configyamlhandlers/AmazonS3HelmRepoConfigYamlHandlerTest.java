@@ -23,7 +23,7 @@ import software.wings.beans.settings.helm.AmazonS3HelmRepoConfig;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.impl.yaml.handler.setting.artifactserver.AmazonS3HelmRepoConfigYamlHandler;
 
-public class AmazonS3HelmRepoConfigYamlHandlerTest extends BaseSettingValueConfigYamlHandlerTest {
+public class AmazonS3HelmRepoConfigYamlHandlerTest extends SettingValueConfigYamlHandlerTestBase {
   @InjectMocks @Inject private AmazonS3HelmRepoConfigYamlHandler yamlHandler;
   @InjectMocks @Inject private WingsPersistence wingsPersistence;
 

@@ -22,7 +22,7 @@ import software.wings.service.impl.yaml.handler.setting.verificationprovider.Spl
 
 /**/
 
-public class SplunkConfigYamlHandlerTest extends BaseSettingValueConfigYamlHandlerTest {
+public class SplunkConfigYamlHandlerTest extends SettingValueConfigYamlHandlerTestBase {
   @InjectMocks @Inject private SplunkConfigYamlHandler yamlHandler;
 
   public static final String url = "https://ec2-52-54-103-49.compute-1.amazonaws.com:8089";

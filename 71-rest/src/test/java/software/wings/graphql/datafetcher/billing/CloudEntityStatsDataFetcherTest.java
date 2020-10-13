@@ -26,7 +26,7 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import software.wings.graphql.datafetcher.AbstractDataFetcherTest;
+import software.wings.graphql.datafetcher.AbstractDataFetcherTestBase;
 import software.wings.graphql.schema.type.aggregation.QLData;
 import software.wings.graphql.schema.type.aggregation.QLIdOperator;
 import software.wings.graphql.schema.type.aggregation.QLSortOrder;
@@ -36,7 +36,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
-public class CloudEntityStatsDataFetcherTest extends AbstractDataFetcherTest {
+public class CloudEntityStatsDataFetcherTest extends AbstractDataFetcherTestBase {
   @Mock CloudBillingHelper cloudBillingHelper;
   @Mock PreAggregateBillingServiceImpl preAggregateBillingService;
   @InjectMocks CloudEntityStatsDataFetcher cloudEntityStatsDataFetcher;

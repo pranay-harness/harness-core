@@ -16,7 +16,7 @@ import io.harness.rule.Owner;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
-import software.wings.graphql.datafetcher.AbstractDataFetcherTest;
+import software.wings.graphql.datafetcher.AbstractDataFetcherTestBase;
 import software.wings.graphql.datafetcher.billing.BillingStatsDefaultKeys;
 import software.wings.graphql.schema.query.QLClustersQueryParameters;
 import software.wings.graphql.schema.type.QLK8sLabelConnection;
@@ -35,7 +35,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-public class k8sLabelConnectionDataFetcherTest extends AbstractDataFetcherTest {
+public class k8sLabelConnectionDataFetcherTest extends AbstractDataFetcherTestBase {
   @Inject private K8sLabelConnectionDataFetcher k8sLabelConnectionDataFetcher;
 
   @Inject private K8sWorkloadDao k8sWorkloadDao;

@@ -18,7 +18,7 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import software.wings.graphql.datafetcher.AbstractDataFetcherTest;
+import software.wings.graphql.datafetcher.AbstractDataFetcherTestBase;
 import software.wings.graphql.schema.query.QLBudgetQueryParameters;
 import software.wings.graphql.schema.type.aggregation.budget.QLBudgetTableData;
 
@@ -26,7 +26,7 @@ import java.sql.SQLException;
 import java.util.Arrays;
 import java.util.List;
 
-public class BudgetListDataFetcherTest extends AbstractDataFetcherTest {
+public class BudgetListDataFetcherTest extends AbstractDataFetcherTestBase {
   @Mock BudgetServiceImpl budgetService;
   @InjectMocks BudgetListDataFetcher budgetListDataFetcher;
 

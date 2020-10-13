@@ -25,12 +25,12 @@ import software.wings.beans.SettingAttribute.SettingCategory;
 import software.wings.beans.yaml.Change;
 import software.wings.beans.yaml.ChangeContext;
 import software.wings.service.impl.jenkins.JenkinsUtils;
-import software.wings.yaml.handler.connectors.configyamlhandlers.BaseSettingValueConfigYamlHandlerTest;
+import software.wings.yaml.handler.connectors.configyamlhandlers.SettingValueConfigYamlHandlerTestBase;
 import software.wings.yaml.handler.connectors.configyamlhandlers.SettingValueYamlConfig;
 
 import java.util.Collections;
 
-public class JenkinsConfigVerificationYamlHandlerTest extends BaseSettingValueConfigYamlHandlerTest {
+public class JenkinsConfigVerificationYamlHandlerTest extends SettingValueConfigYamlHandlerTestBase {
   @InjectMocks @Inject private JenkinsConfigVerificationYamlHandler yamlHandler;
   public static final String url = "https://jenkins.wings.software";
 

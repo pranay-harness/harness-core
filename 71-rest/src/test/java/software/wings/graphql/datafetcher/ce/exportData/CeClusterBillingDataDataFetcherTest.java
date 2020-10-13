@@ -27,7 +27,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.stubbing.Answer;
 import software.wings.beans.User;
-import software.wings.graphql.datafetcher.AbstractDataFetcherTest;
+import software.wings.graphql.datafetcher.AbstractDataFetcherTestBase;
 import software.wings.graphql.datafetcher.DataFetcherUtils;
 import software.wings.graphql.datafetcher.ce.exportData.dto.QLCEAggregation;
 import software.wings.graphql.datafetcher.ce.exportData.dto.QLCEAggregationFunction;
@@ -70,7 +70,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-public class CeClusterBillingDataDataFetcherTest extends AbstractDataFetcherTest {
+public class CeClusterBillingDataDataFetcherTest extends AbstractDataFetcherTestBase {
   @Mock TimeScaleDBService timeScaleDBService;
   @Mock private DataFetcherUtils utils;
   @Mock TagHelper tagHelper;

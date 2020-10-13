@@ -37,7 +37,7 @@ import java.io.IOException;
  * @author rktummala on 1/9/18
  */
 @SetupScheduler
-public class ApplicationYamlHandlerTest extends BaseYamlHandlerTest {
+public class ApplicationYamlHandlerTest extends YamlHandlerTestBase {
   @InjectMocks @Inject YamlHelper yamlHelper;
   @InjectMocks @Inject AppService appService;
   @InjectMocks @Inject private ApplicationYamlHandler yamlHandler;

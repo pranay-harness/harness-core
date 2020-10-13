@@ -19,12 +19,12 @@ import java.util.List;
 // import software.wings.resources.yaml.SetupYamlResource;
 
 /**
- * The SetupYamlResourceTest class.
+ * The SetupYamlResourceTestBase class.
  *
  * @author bsollish
  */
 @Slf4j
-public abstract class SetupYamlResourceTest extends CategoryTest {
+public abstract class SetupYamlResourceTestBase extends CategoryTest {
   // create mocks
   private static final AppService appService = mock(AppService.class);
   private static final SettingsService settingsService = mock(SettingsService.class);

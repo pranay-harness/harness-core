@@ -38,14 +38,14 @@ import software.wings.service.impl.yaml.service.YamlHelper;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.UserGroupService;
 import software.wings.service.intfc.WorkflowService;
-import software.wings.yaml.handler.BaseYamlHandlerTest;
+import software.wings.yaml.handler.YamlHandlerTestBase;
 
 import java.io.File;
 import java.io.IOException;
 import java.net.URISyntaxException;
 import java.util.Collections;
 
-public class PipelineStageYamlHandlerTest extends BaseYamlHandlerTest {
+public class PipelineStageYamlHandlerTest extends YamlHandlerTestBase {
   @InjectMocks @Inject private PipelineStageYamlHandler pipelineStageYamlHandler;
   @Mock private YamlHelper yamlHelper;
   @Mock private AppService appService;

@@ -36,10 +36,10 @@ import software.wings.service.impl.yaml.handler.setting.verificationprovider.Jen
 import software.wings.service.impl.yaml.handler.usagerestrictions.UsageRestrictionsYamlHandler;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.EnvironmentService;
-import software.wings.yaml.handler.connectors.configyamlhandlers.BaseSettingValueConfigYamlHandlerTest;
+import software.wings.yaml.handler.connectors.configyamlhandlers.SettingValueConfigYamlHandlerTestBase;
 import software.wings.yaml.handler.connectors.configyamlhandlers.SettingValueYamlConfig;
 
-public class UsageRestrictionsYamlHandlerTest extends BaseSettingValueConfigYamlHandlerTest {
+public class UsageRestrictionsYamlHandlerTest extends SettingValueConfigYamlHandlerTestBase {
   @Mock private AppService appService;
   @Mock private EnvironmentService environmentService;
   @InjectMocks @Inject private UsageRestrictionsYamlHandler usageRestrictionsYamlHandler;

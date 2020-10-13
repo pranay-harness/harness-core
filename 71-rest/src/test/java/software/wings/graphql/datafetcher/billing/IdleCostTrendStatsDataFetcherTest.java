@@ -21,7 +21,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.stubbing.Answer;
 import software.wings.beans.User;
-import software.wings.graphql.datafetcher.AbstractDataFetcherTest;
+import software.wings.graphql.datafetcher.AbstractDataFetcherTestBase;
 import software.wings.graphql.datafetcher.DataFetcherUtils;
 import software.wings.graphql.datafetcher.billing.BillingDataQueryMetadata.BillingDataMetaDataFields;
 import software.wings.graphql.schema.type.aggregation.QLIdFilter;
@@ -44,7 +44,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
-public class IdleCostTrendStatsDataFetcherTest extends AbstractDataFetcherTest {
+public class IdleCostTrendStatsDataFetcherTest extends AbstractDataFetcherTestBase {
   @Mock private DataFetcherUtils utils;
   @Mock TimeScaleDBService timeScaleDBService;
   @Inject @InjectMocks IdleCostTrendStatsDataFetcher idleCostTrendStatsDataFetcher;

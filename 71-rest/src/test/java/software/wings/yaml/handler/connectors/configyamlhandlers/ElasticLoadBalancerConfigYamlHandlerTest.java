@@ -29,7 +29,7 @@ import software.wings.service.intfc.InfrastructureMappingService;
 import java.util.ArrayList;
 import java.util.List;
 
-public class ElasticLoadBalancerConfigYamlHandlerTest extends BaseSettingValueConfigYamlHandlerTest {
+public class ElasticLoadBalancerConfigYamlHandlerTest extends SettingValueConfigYamlHandlerTestBase {
   @InjectMocks @Inject private ElasticLoadBalancerConfigYamlHandler yamlHandler;
   @Mock InfrastructureMappingService infrastructureMappingService;
   @Mock InfrastructureMapping infrastructureMapping;

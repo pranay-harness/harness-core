@@ -36,7 +36,7 @@ import software.wings.yaml.templatelibrary.PcfCommandTemplateYaml;
 
 import java.io.IOException;
 
-public class PcfCommandTemplateYamlHandlerTest extends TemplateLibraryYamlHandlerTest {
+public class PcfCommandTemplateYamlHandlerTest extends TemplateLibraryYamlHandlerTestBase {
   private String templateName = "test-pcf-command";
 
   @InjectMocks @Inject private PcfCommandTemplateYamlHandler yamlHandler;

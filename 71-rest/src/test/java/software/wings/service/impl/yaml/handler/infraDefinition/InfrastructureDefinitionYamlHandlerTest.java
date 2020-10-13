@@ -68,7 +68,7 @@ import software.wings.service.intfc.InfrastructureProvisionerService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.customdeployment.CustomDeploymentTypeService;
-import software.wings.yaml.handler.BaseYamlHandlerTest;
+import software.wings.yaml.handler.YamlHandlerTestBase;
 
 import java.io.File;
 import java.io.IOException;
@@ -76,7 +76,7 @@ import java.net.URISyntaxException;
 import java.util.Arrays;
 import java.util.Optional;
 
-public class InfrastructureDefinitionYamlHandlerTest extends BaseYamlHandlerTest {
+public class InfrastructureDefinitionYamlHandlerTest extends YamlHandlerTestBase {
   @Mock private YamlHelper mockYamlHelper;
   @Mock private SettingsService mockSettingsService;
   @Mock private YamlHandlerFactory mockYamlHandlerFactory;

@@ -19,7 +19,7 @@ import software.wings.beans.SettingAttribute.SettingCategory;
 import software.wings.beans.settings.azureartifacts.AzureArtifactsPATConfig;
 import software.wings.service.impl.yaml.handler.setting.artifactserver.AzureArtifactsPATConfigYamlHandler;
 
-public class AzureArtifactsPATConfigYamlHandlerTest extends BaseSettingValueConfigYamlHandlerTest {
+public class AzureArtifactsPATConfigYamlHandlerTest extends SettingValueConfigYamlHandlerTestBase {
   @InjectMocks @Inject private AzureArtifactsPATConfigYamlHandler yamlHandler;
 
   private Class yamlClass = AzureArtifactsPATConfig.Yaml.class;

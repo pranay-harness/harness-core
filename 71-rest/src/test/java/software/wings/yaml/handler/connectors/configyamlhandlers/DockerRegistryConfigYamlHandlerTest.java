@@ -20,7 +20,7 @@ import software.wings.beans.SettingAttribute;
 import software.wings.beans.SettingAttribute.SettingCategory;
 import software.wings.service.impl.yaml.handler.setting.artifactserver.DockerRegistryConfigYamlHandler;
 
-public class DockerRegistryConfigYamlHandlerTest extends BaseSettingValueConfigYamlHandlerTest {
+public class DockerRegistryConfigYamlHandlerTest extends SettingValueConfigYamlHandlerTestBase {
   @InjectMocks @Inject private DockerRegistryConfigYamlHandler yamlHandler;
 
   public static final String url = "https://registry.hub.docker.com/v2/";

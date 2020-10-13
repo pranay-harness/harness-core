@@ -14,14 +14,14 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import software.wings.graphql.datafetcher.AbstractDataFetcherTest;
+import software.wings.graphql.datafetcher.AbstractDataFetcherTestBase;
 import software.wings.graphql.schema.query.QLNoOpQueryParameters;
 import software.wings.graphql.schema.type.aggregation.billing.QLBatchLastProcessedData;
 
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 
-public class BillingJobProcessedDataFetcherTest extends AbstractDataFetcherTest {
+public class BillingJobProcessedDataFetcherTest extends AbstractDataFetcherTestBase {
   @Inject @InjectMocks BillingJobProcessedDataFetcher billingJobProcessedDataFetcher;
   @Mock private BatchJobScheduledDataDao batchJobScheduledDataDao;
 

@@ -50,7 +50,7 @@ import software.wings.beans.config.NexusConfig;
 import software.wings.beans.settings.helm.AmazonS3HelmRepoConfig;
 import software.wings.beans.settings.helm.GCSHelmRepoConfig;
 import software.wings.beans.settings.helm.HttpHelmRepoConfig;
-import software.wings.graphql.datafetcher.AbstractDataFetcherTest;
+import software.wings.graphql.datafetcher.AbstractDataFetcherTestBase;
 import software.wings.graphql.datafetcher.MutationContext;
 import software.wings.graphql.datafetcher.connector.utils.Utility;
 import software.wings.graphql.schema.mutation.connector.input.QLConnectorInput;
@@ -75,7 +75,7 @@ import software.wings.service.intfc.security.SecretManager;
 import java.lang.reflect.Method;
 import java.sql.SQLException;
 
-public class UpdateConnectorDataFetcherTest extends AbstractDataFetcherTest {
+public class UpdateConnectorDataFetcherTest extends AbstractDataFetcherTestBase {
   @Mock private SettingsService settingsService;
   @Mock private SettingServiceHelper settingServiceHelper;
   @Mock private ConnectorsController connectorsController;

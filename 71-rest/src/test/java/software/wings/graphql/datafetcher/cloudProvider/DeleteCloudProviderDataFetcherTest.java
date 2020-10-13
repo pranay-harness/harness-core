@@ -17,14 +17,14 @@ import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import software.wings.beans.PcfConfig;
 import software.wings.beans.SettingAttribute;
-import software.wings.graphql.datafetcher.AbstractDataFetcherTest;
+import software.wings.graphql.datafetcher.AbstractDataFetcherTestBase;
 import software.wings.graphql.datafetcher.MutationContext;
 import software.wings.graphql.schema.mutation.cloudProvider.QLDeleteCloudProviderInput;
 import software.wings.service.intfc.SettingsService;
 
 import java.sql.SQLException;
 
-public class DeleteCloudProviderDataFetcherTest extends AbstractDataFetcherTest {
+public class DeleteCloudProviderDataFetcherTest extends AbstractDataFetcherTestBase {
   private static final String CLOUD_PROVIDER_ID = "CP-ID";
   private static final String ACCOUNT_ID = "ACCOUNT-ID";
 

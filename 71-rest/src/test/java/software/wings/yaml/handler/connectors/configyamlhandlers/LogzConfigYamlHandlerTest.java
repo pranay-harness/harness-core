@@ -20,7 +20,7 @@ import software.wings.beans.SettingAttribute.SettingCategory;
 import software.wings.beans.config.LogzConfig;
 import software.wings.service.impl.yaml.handler.setting.verificationprovider.LogzConfigYamlHandler;
 
-public class LogzConfigYamlHandlerTest extends BaseSettingValueConfigYamlHandlerTest {
+public class LogzConfigYamlHandlerTest extends SettingValueConfigYamlHandlerTestBase {
   @InjectMocks @Inject private LogzConfigYamlHandler yamlHandler;
 
   public static final String url = "https://wingsnfr.saas.appdynamics.com:443/controller";

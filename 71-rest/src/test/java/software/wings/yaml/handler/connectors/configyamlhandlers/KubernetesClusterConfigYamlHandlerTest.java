@@ -32,7 +32,7 @@ import software.wings.beans.yaml.ChangeContext;
 import software.wings.beans.yaml.YamlType;
 import software.wings.service.impl.yaml.handler.setting.cloudprovider.KubernetesClusterConfigYamlHandler;
 
-public class KubernetesClusterConfigYamlHandlerTest extends BaseSettingValueConfigYamlHandlerTest {
+public class KubernetesClusterConfigYamlHandlerTest extends SettingValueConfigYamlHandlerTestBase {
   @Mock private CCMSettingService ccmSettingService;
   @Mock private CCMConfigYamlHandler ccmConfigYamlHandler;
   @InjectMocks @Inject private KubernetesClusterConfigYamlHandler yamlHandler;

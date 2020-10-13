@@ -18,7 +18,7 @@ import software.wings.beans.yaml.YamlType;
 import software.wings.service.impl.yaml.handler.setting.sourcerepoprovider.GitConfigYamlHandler;
 import software.wings.settings.SettingValue;
 
-public class GitConfigYamlHandlerTest extends BaseSettingValueConfigYamlHandlerTest {
+public class GitConfigYamlHandlerTest extends SettingValueConfigYamlHandlerTestBase {
   @InjectMocks @Inject private GitConfigYamlHandler yamlHandler;
   public static final String username = "dummyUsername";
   public static final String password = "dummyPassword";

@@ -31,7 +31,7 @@ import software.wings.service.impl.yaml.service.YamlHelper;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.settings.SettingValue;
-import software.wings.yaml.handler.BaseYamlHandlerTest;
+import software.wings.yaml.handler.YamlHandlerTestBase;
 
 import java.io.IOException;
 import java.util.List;
@@ -41,7 +41,7 @@ import javax.validation.ConstraintViolationException;
  * @author rktummala on 1/19/18
  */
 @SetupScheduler
-public class AppDefaultVarYamlHandlerTest extends BaseYamlHandlerTest {
+public class AppDefaultVarYamlHandlerTest extends YamlHandlerTestBase {
   @Mock YamlHelper yamlHelper;
   @Mock AppService appService;
   @InjectMocks @Inject private SettingsService settingsService;

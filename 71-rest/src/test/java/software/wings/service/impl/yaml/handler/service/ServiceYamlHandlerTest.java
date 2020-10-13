@@ -49,14 +49,14 @@ import software.wings.service.intfc.customdeployment.CustomDeploymentTypeService
 import software.wings.service.intfc.security.SecretManager;
 import software.wings.utils.ArtifactType;
 import software.wings.utils.WingsTestConstants;
-import software.wings.yaml.handler.BaseYamlHandlerTest;
+import software.wings.yaml.handler.YamlHandlerTestBase;
 
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
-public class ServiceYamlHandlerTest extends BaseYamlHandlerTest {
+public class ServiceYamlHandlerTest extends YamlHandlerTestBase {
   @Mock YamlHelper yamlHelper;
   @Mock HarnessTagYamlHelper harnessTagYamlHelper;
   @Mock SecretManager secretManager;

@@ -14,14 +14,14 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import software.wings.beans.Pipeline;
 import software.wings.beans.User;
-import software.wings.graphql.datafetcher.AbstractDataFetcherTest;
+import software.wings.graphql.datafetcher.AbstractDataFetcherTestBase;
 import software.wings.graphql.schema.query.QLPipelineQueryParameters;
 import software.wings.graphql.schema.type.QLPipeline;
 import software.wings.security.UserThreadLocal;
 
 import java.sql.SQLException;
 
-public class PipelineDataFetcherTest extends AbstractDataFetcherTest {
+public class PipelineDataFetcherTest extends AbstractDataFetcherTestBase {
   @Inject PipelineDataFetcher pipelineDataFetcher;
   @Before
   public void setup() throws SQLException {

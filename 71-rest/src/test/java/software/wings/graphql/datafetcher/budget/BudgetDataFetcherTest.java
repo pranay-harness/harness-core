@@ -23,7 +23,7 @@ import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import software.wings.beans.User;
-import software.wings.graphql.datafetcher.AbstractDataFetcherTest;
+import software.wings.graphql.datafetcher.AbstractDataFetcherTestBase;
 import software.wings.graphql.datafetcher.DataFetcherUtils;
 import software.wings.graphql.schema.query.QLBudgetQueryParameters;
 import software.wings.graphql.schema.type.aggregation.budget.QLBudgetDataList;
@@ -31,7 +31,7 @@ import software.wings.security.UserThreadLocal;
 
 import java.sql.SQLException;
 
-public class BudgetDataFetcherTest extends AbstractDataFetcherTest {
+public class BudgetDataFetcherTest extends AbstractDataFetcherTestBase {
   @Mock BudgetService budgetService;
   @Mock private DataFetcherUtils utils;
   @InjectMocks BudgetDataFetcher budgetDataFetcher;

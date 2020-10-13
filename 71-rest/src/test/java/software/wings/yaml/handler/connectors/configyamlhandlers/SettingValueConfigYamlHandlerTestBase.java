@@ -23,11 +23,11 @@ import software.wings.service.impl.yaml.handler.setting.SettingValueYamlHandler;
 import software.wings.service.impl.yaml.service.YamlHelper;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.security.SecretManager;
-import software.wings.yaml.handler.BaseYamlHandlerTest;
+import software.wings.yaml.handler.YamlHandlerTestBase;
 
 import java.io.IOException;
 
-public abstract class BaseSettingValueConfigYamlHandlerTest extends BaseYamlHandlerTest {
+public abstract class SettingValueConfigYamlHandlerTestBase extends YamlHandlerTestBase {
   @InjectMocks @Inject protected SecretManager secretManager;
   @InjectMocks @Inject protected YamlHelper yamlHelper;
   @InjectMocks @Inject protected SettingsService settingsService;

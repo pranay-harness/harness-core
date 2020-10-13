@@ -22,7 +22,7 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import software.wings.graphql.datafetcher.AbstractDataFetcherTest;
+import software.wings.graphql.datafetcher.AbstractDataFetcherTestBase;
 import software.wings.graphql.schema.type.aggregation.QLData;
 import software.wings.graphql.schema.type.aggregation.QLIdOperator;
 import software.wings.graphql.schema.type.aggregation.QLTimeOperator;
@@ -32,7 +32,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
-public class GcpBillingEntityStatsDataFetcherTest extends AbstractDataFetcherTest {
+public class GcpBillingEntityStatsDataFetcherTest extends AbstractDataFetcherTestBase {
   @Mock GcpBillingServiceImpl gcpBillingServiceImpl;
   @InjectMocks @Inject GcpBillingEntityStatsDataFetcher entityStatsDataFetcher;
 

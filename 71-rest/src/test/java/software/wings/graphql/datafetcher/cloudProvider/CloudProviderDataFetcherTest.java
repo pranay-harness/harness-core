@@ -14,7 +14,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import software.wings.beans.User;
-import software.wings.graphql.datafetcher.AbstractDataFetcherTest;
+import software.wings.graphql.datafetcher.AbstractDataFetcherTestBase;
 import software.wings.graphql.schema.query.QLCloudProviderQueryParameters;
 import software.wings.graphql.schema.type.cloudProvider.QLCloudProvider;
 import software.wings.graphql.schema.type.cloudProvider.QLPhysicalDataCenterCloudProvider;
@@ -22,7 +22,7 @@ import software.wings.security.UserThreadLocal;
 
 import java.sql.SQLException;
 
-public class CloudProviderDataFetcherTest extends AbstractDataFetcherTest {
+public class CloudProviderDataFetcherTest extends AbstractDataFetcherTestBase {
   public static final String CLOUD_PROVIDER2_NAME = "CLOUD_PROVIDER2_NAME";
 
   @Inject CloudProviderDataFetcher cloudProviderDataFetcher;

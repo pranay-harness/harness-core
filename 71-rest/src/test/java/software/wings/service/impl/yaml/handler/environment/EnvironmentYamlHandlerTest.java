@@ -62,7 +62,7 @@ import software.wings.service.intfc.ServiceTemplateService;
 import software.wings.service.intfc.ServiceVariableService;
 import software.wings.service.intfc.security.SecretManager;
 import software.wings.utils.WingsTestConstants;
-import software.wings.yaml.handler.BaseYamlHandlerTest;
+import software.wings.yaml.handler.YamlHandlerTestBase;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -77,7 +77,7 @@ import java.util.stream.Collectors;
  * @author rktummala on 1/9/18
  */
 @SetupScheduler
-public class EnvironmentYamlHandlerTest extends BaseYamlHandlerTest {
+public class EnvironmentYamlHandlerTest extends YamlHandlerTestBase {
   @Mock AppService appService;
   @Mock HarnessTagYamlHelper harnessTagYamlHelper;
   @Mock ServiceTemplateService mockServiceTemplateService;

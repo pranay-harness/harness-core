@@ -23,7 +23,7 @@ import software.wings.beans.yaml.ChangeContext;
 import software.wings.service.impl.yaml.handler.inframapping.AwsInfraMappingYamlHandler;
 import software.wings.service.intfc.InfrastructureMappingService;
 
-public class AwsInfraMappingYamlHandlerTest extends BaseInfraMappingYamlHandlerTest {
+public class AwsInfraMappingYamlHandlerTest extends BaseInfraMappingYamlHandlerTestBase {
   private String validYamlContent1 = "harnessApiVersion: '1.0'\n"
       + "type: AWS_SSH\n"
       + "computeProviderName: aws\n"

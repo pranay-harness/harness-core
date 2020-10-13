@@ -44,11 +44,11 @@ import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.ServiceTemplateService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.utils.ArtifactType;
-import software.wings.yaml.handler.BaseYamlHandlerTest;
+import software.wings.yaml.handler.YamlHandlerTestBase;
 
 import java.util.Optional;
 
-public class BaseInfraMappingYamlHandlerTest extends BaseYamlHandlerTest {
+public class BaseInfraMappingYamlHandlerTestBase extends YamlHandlerTestBase {
   protected Service service =
       Service.builder().name(SERVICE_NAME).appId(APP_ID).uuid(SERVICE_ID).artifactType(ArtifactType.DOCKER).build();
 

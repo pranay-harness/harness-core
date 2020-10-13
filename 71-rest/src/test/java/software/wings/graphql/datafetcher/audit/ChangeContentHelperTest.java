@@ -20,7 +20,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import software.wings.beans.Account;
 import software.wings.beans.User;
-import software.wings.graphql.datafetcher.AbstractDataFetcherTest;
+import software.wings.graphql.datafetcher.AbstractDataFetcherTestBase;
 import software.wings.graphql.datafetcher.Principal;
 import software.wings.resources.graphql.TriggeredByType;
 import software.wings.service.intfc.AccountService;
@@ -28,7 +28,7 @@ import software.wings.service.intfc.UserService;
 
 import java.net.URISyntaxException;
 
-public class ChangeContentHelperTest extends AbstractDataFetcherTest {
+public class ChangeContentHelperTest extends AbstractDataFetcherTestBase {
   @Mock private SegmentHandler segmentHandler;
   @Inject @InjectMocks private ChangeContentHelper changeContentHelper;
   @Mock private AccountService accountService;

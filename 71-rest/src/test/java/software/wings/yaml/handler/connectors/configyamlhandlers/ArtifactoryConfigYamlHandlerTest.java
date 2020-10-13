@@ -20,7 +20,7 @@ import software.wings.beans.SettingAttribute.SettingCategory;
 import software.wings.beans.config.ArtifactoryConfig;
 import software.wings.service.impl.yaml.handler.setting.artifactserver.ArtifactoryConfigYamlHandler;
 
-public class ArtifactoryConfigYamlHandlerTest extends BaseSettingValueConfigYamlHandlerTest {
+public class ArtifactoryConfigYamlHandlerTest extends SettingValueConfigYamlHandlerTestBase {
   @InjectMocks @Inject private ArtifactoryConfigYamlHandler yamlHandler;
 
   public static final String url = "https://harness.jfrog.io/harness";

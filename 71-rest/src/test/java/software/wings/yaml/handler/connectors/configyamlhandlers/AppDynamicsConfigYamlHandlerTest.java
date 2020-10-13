@@ -20,7 +20,7 @@ import software.wings.beans.SettingAttribute;
 import software.wings.beans.SettingAttribute.SettingCategory;
 import software.wings.service.impl.yaml.handler.setting.verificationprovider.AppDynamicsConfigYamlHandler;
 
-public class AppDynamicsConfigYamlHandlerTest extends BaseSettingValueConfigYamlHandlerTest {
+public class AppDynamicsConfigYamlHandlerTest extends SettingValueConfigYamlHandlerTestBase {
   @InjectMocks @Inject private AppDynamicsConfigYamlHandler yamlHandler;
 
   public static final String url = "https://wingsnfr.saas.appdynamics.com:443/controller";

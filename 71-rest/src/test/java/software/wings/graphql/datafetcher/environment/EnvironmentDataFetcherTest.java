@@ -14,14 +14,14 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import software.wings.beans.Environment;
 import software.wings.beans.User;
-import software.wings.graphql.datafetcher.AbstractDataFetcherTest;
+import software.wings.graphql.datafetcher.AbstractDataFetcherTestBase;
 import software.wings.graphql.schema.query.QLEnvironmentQueryParameters;
 import software.wings.graphql.schema.type.QLEnvironment;
 import software.wings.security.UserThreadLocal;
 
 import java.sql.SQLException;
 
-public class EnvironmentDataFetcherTest extends AbstractDataFetcherTest {
+public class EnvironmentDataFetcherTest extends AbstractDataFetcherTestBase {
   @Inject EnvironmentDataFetcher environmentDataFetcher;
   @Before
   public void setup() throws SQLException {

@@ -33,7 +33,7 @@ import software.wings.yaml.templatelibrary.HttpTemplateYaml;
 
 import java.io.IOException;
 
-public class HttpTemplateYamlHandlerTest extends TemplateLibraryYamlHandlerTest {
+public class HttpTemplateYamlHandlerTest extends TemplateLibraryYamlHandlerTestBase {
   @InjectMocks @Inject private HttpTemplateYamlHandler yamlHandler;
   @Mock private TemplateService templateService;
 

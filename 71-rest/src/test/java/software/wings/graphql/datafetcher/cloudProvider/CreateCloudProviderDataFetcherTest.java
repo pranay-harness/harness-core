@@ -28,7 +28,7 @@ import software.wings.beans.PcfConfig;
 import software.wings.beans.PhysicalDataCenterConfig;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.SpotInstConfig;
-import software.wings.graphql.datafetcher.AbstractDataFetcherTest;
+import software.wings.graphql.datafetcher.AbstractDataFetcherTestBase;
 import software.wings.graphql.datafetcher.MutationContext;
 import software.wings.graphql.schema.mutation.cloudProvider.QLAzureCloudProviderInput;
 import software.wings.graphql.schema.mutation.cloudProvider.QLCreateCloudProviderInput;
@@ -63,7 +63,7 @@ import software.wings.settings.SettingVariableTypes;
 
 import java.sql.SQLException;
 
-public class CreateCloudProviderDataFetcherTest extends AbstractDataFetcherTest {
+public class CreateCloudProviderDataFetcherTest extends AbstractDataFetcherTestBase {
   private static final String CLOUD_PROVIDER_ID = "CP-ID";
   private static final String ACCOUNT_ID = "ACCOUNT-ID";
 

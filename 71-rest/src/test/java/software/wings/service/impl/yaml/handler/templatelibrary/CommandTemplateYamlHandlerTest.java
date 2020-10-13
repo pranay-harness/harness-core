@@ -35,7 +35,7 @@ import software.wings.yaml.templatelibrary.CommandTemplateYaml;
 
 import java.io.IOException;
 
-public class CommandTemplateYamlHandlerTest extends TemplateLibraryYamlHandlerTest {
+public class CommandTemplateYamlHandlerTest extends TemplateLibraryYamlHandlerTestBase {
   @InjectMocks @Inject private CommandTemplateYamlHandler yamlHandler;
   @Mock private TemplateService templateService;
   @Mock private YamlHandlerFactory yamlHandlerFactory;

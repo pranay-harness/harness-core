@@ -18,14 +18,14 @@ import org.mockito.MockitoAnnotations;
 import software.wings.beans.GitConfig;
 import software.wings.beans.PcfConfig;
 import software.wings.beans.SettingAttribute;
-import software.wings.graphql.datafetcher.AbstractDataFetcherTest;
+import software.wings.graphql.datafetcher.AbstractDataFetcherTestBase;
 import software.wings.graphql.datafetcher.MutationContext;
 import software.wings.graphql.schema.mutation.connector.input.QLDeleteConnectorInput;
 import software.wings.service.intfc.SettingsService;
 
 import java.sql.SQLException;
 
-public class DeleteConnectorDataFetcherTest extends AbstractDataFetcherTest {
+public class DeleteConnectorDataFetcherTest extends AbstractDataFetcherTestBase {
   private static final String CONNECTOR_ID = "CP-ID";
   private static final String ACCOUNT_ID = "ACCOUNT-ID";
 
