@@ -157,7 +157,7 @@ public class AzureVMSSDeployState extends AbstractAzureState {
     int oldDesiredCount = getOldDesiredCount(azureVMSSSetupContextElement, newDesiredCount);
 
     AzureVMSSDeployStateExecutionData azureVMSSDeployStateExecutionData = buildAzureVMSSDeployStateExecutionData(
-        azureVMSSSetupContextElement, activity, newDesiredCount, oldDesiredCount);
+        azureVMSSSetupContextElement, azureVMSSInfrastructureMapping, activity, newDesiredCount, oldDesiredCount);
 
     AzureVMSSTaskParameters azureVmssTaskParameters = buildAzureVMSSTaskParameters(app, activityId,
         azureVMSSInfrastructureMapping, azureVMSSSetupContextElement, newDesiredCount, oldDesiredCount);
@@ -224,15 +224,27 @@ public class AzureVMSSDeployState extends AbstractAzureState {
   }
 
   private AzureVMSSDeployStateExecutionData buildAzureVMSSDeployStateExecutionData(
-      AzureVMSSSetupContextElement azureVMSSSetupContextElement, Activity activity, int newDesiredCount,
+      AzureVMSSSetupContextElement azureVMSSSetupContextElement,
+      AzureVMSSInfrastructureMapping azureVMSSInfrastructureMapping, Activity activity, int newDesiredCount,
       int oldDesiredCount) {
+    String subscriptionId = azureVMSSInfrastructureMapping.getSubscriptionId();
+    String resourceGroupName = azureVMSSInfrastructureMapping.getResourceGroupName();
+    String newVirtualMachineScaleSetName = azureVMSSSetupContextElement.getNewVirtualMachineScaleSetName();
+    String newVirtualMachineScaleSetId =
+        azureVMSSStateHelper.getVMSSIdFromName(subscriptionId, resourceGroupName, newVirtualMachineScaleSetName);
+    String oldVirtualMachineScaleSetName = azureVMSSSetupContextElement.getOldVirtualMachineScaleSetName();
+    String oldVirtualMachineScaleSetId =
+        azureVMSSStateHelper.getVMSSIdFromName(subscriptionId, resourceGroupName, oldVirtualMachineScaleSetName);
+
     return AzureVMSSDeployStateExecutionData.builder()
         .activityId(activity.getUuid())
         .infraMappingId(azureVMSSSetupContextElement.getInfraMappingId())
         .commandName(AZURE_VMSS_DEPLOY_COMMAND_NAME)
-        .newVirtualMachineScaleSetName(azureVMSSSetupContextElement.getNewVirtualMachineScaleSetName())
+        .newVirtualMachineScaleSetName(newVirtualMachineScaleSetName)
+        .newVirtualMachineScaleSetId(newVirtualMachineScaleSetId)
         .newDesiredCount(newDesiredCount)
-        .oldVirtualMachineScaleSetName(azureVMSSSetupContextElement.getOldVirtualMachineScaleSetName())
+        .oldVirtualMachineScaleSetName(oldVirtualMachineScaleSetName)
+        .oldVirtualMachineScaleSetId(oldVirtualMachineScaleSetId)
         .oldDesiredCount(oldDesiredCount)
         .build();
   }
