@@ -1,9 +1,11 @@
 package software.wings.service.impl.yaml.handler.service;
 
 import static io.harness.rule.OwnerRule.AADITI;
+import static io.harness.rule.OwnerRule.MILOS;
 import static io.harness.rule.OwnerRule.YOGESH;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyBoolean;
 import static org.mockito.Matchers.anyString;
@@ -74,10 +76,10 @@ public class ServiceYamlHandlerTest extends YamlHandlerTestBase {
   public void setUp() throws Exception {
     Application application = Builder.anApplication().accountId(ACCOUNT_ID).uuid(APP_ID).build();
     ServiceVariable enc_1 =
-        ServiceVariable.builder().name("enc-1").type(Type.ENCRYPTED_TEXT).value("some-secret".toCharArray()).build();
+        ServiceVariable.builder().name("enc_1").type(Type.ENCRYPTED_TEXT).value("some-secret".toCharArray()).build();
     ServiceVariable enc_2 =
-        ServiceVariable.builder().name("enc-2").type(Type.ENCRYPTED_TEXT).value("other-secret".toCharArray()).build();
-    ServiceVariable var_1 = ServiceVariable.builder().name("var-1").type(Type.TEXT).value("var".toCharArray()).build();
+        ServiceVariable.builder().name("enc_2").type(Type.ENCRYPTED_TEXT).value("other-secret".toCharArray()).build();
+    ServiceVariable var_1 = ServiceVariable.builder().name("var_1").type(Type.TEXT).value("var".toCharArray()).build();
     service = Service.builder()
                   .appId(APP_ID)
                   .uuid(SERVICE_ID)
@@ -229,7 +231,7 @@ public class ServiceYamlHandlerTest extends YamlHandlerTestBase {
     ChangeContext<Yaml> changeContext = getChangeContext(yaml);
 
     NameValuePair.Yaml newServiceVar = NameValuePair.Yaml.builder()
-                                           .name("enc-3")
+                                           .name("enc_3")
                                            .value("safeharness:new-secret")
                                            .valueType(Type.ENCRYPTED_TEXT.name())
                                            .build();
@@ -241,5 +243,29 @@ public class ServiceYamlHandlerTest extends YamlHandlerTestBase {
     assertThat(
         captor.getAllValues().stream().map(ServiceVariable::getValue).map(String::valueOf).collect(Collectors.toList()))
         .containsExactlyInAnyOrder("new-secret");
+  }
+
+  @Test(expected = InvalidRequestException.class)
+  @Owner(developers = MILOS)
+  @Category(UnitTests.class)
+  public void testAddNewServiceVariableWithDashInName() {
+    when(yamlHelper.getService(APP_ID, validYamlFilePath)).thenReturn(service);
+
+    Yaml yaml = serviceYamlHandler.toYaml(service, APP_ID);
+    ChangeContext<Yaml> changeContext = getChangeContext(yaml);
+
+    NameValuePair.Yaml newServiceVar = NameValuePair.Yaml.builder()
+                                           .name("enc-4")
+                                           .value("safeharness:new-secret")
+                                           .valueType(Type.ENCRYPTED_TEXT.name())
+                                           .build();
+    yaml.getConfigVariables().add(newServiceVar);
+    when(yamlHelper.extractEncryptedRecordId(eq("safeharness:new-secret"), anyString())).thenReturn("new-secret");
+    Service fromYaml = serviceYamlHandler.upsertFromYaml(changeContext, null);
+    assertThat(fromYaml).isNotNull();
+    verify(serviceVariableService, times(1)).save(captor.capture(), anyBoolean());
+    assertThatThrownBy(() -> serviceYamlHandler.upsertFromYaml(changeContext, null))
+        .isInstanceOf(InvalidRequestException.class)
+        .hasMessageContaining("Adding variable name enc-4 with hyphens (dashes) is not allowed");
   }
 }

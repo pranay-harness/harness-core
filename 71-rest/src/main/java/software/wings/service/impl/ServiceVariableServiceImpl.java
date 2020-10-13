@@ -141,9 +141,15 @@ public class ServiceVariableServiceImpl implements ServiceVariableService {
 
   private void validateServiceVariable(ServiceVariable serviceVariable) {
     if (serviceVariable.getType() == TEXT || serviceVariable.getType() == ENCRYPTED_TEXT) {
-      if (serviceVariable.getValue() == null) {
+      String variableName = serviceVariable.getName();
+
+      if (variableName.contains("-")) {
         throw new InvalidRequestException(
-            format("Service Variable [%s] value cannot be empty", serviceVariable.getName()));
+            format("Adding variable name %s with hyphens (dashes) is not allowed", variableName));
+      }
+
+      if (serviceVariable.getValue() == null) {
+        throw new InvalidRequestException(format("Service Variable [%s] value cannot be empty", variableName));
       } else {
         checkDuplicateNameServiceVariable(serviceVariable);
       }

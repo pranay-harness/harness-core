@@ -10,6 +10,7 @@ import com.google.inject.Singleton;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.HarnessException;
+import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import lombok.extern.slf4j.Slf4j;
 import software.wings.beans.AllowedValueYaml;
@@ -20,6 +21,7 @@ import software.wings.beans.Variable;
 import software.wings.beans.Variable.VariableBuilder;
 import software.wings.beans.VariableType;
 import software.wings.beans.VariableYaml;
+import software.wings.beans.Workflow;
 import software.wings.beans.artifact.ArtifactStream;
 import software.wings.beans.yaml.ChangeContext;
 import software.wings.service.impl.yaml.handler.ArtifactVariableYamlHelper;
@@ -46,34 +48,47 @@ public class VariableYamlHandler extends BaseYamlHandler<VariableYaml, Variable>
   @Inject AppService appService;
   @Inject ArtifactVariableYamlHelper artifactVariableYamlHelper;
 
-  private Variable toBean(ChangeContext<VariableYaml> changeContext) {
+  private Variable toBean(ChangeContext<VariableYaml> changeContext, Workflow previousWorkflow) {
     VariableYaml yaml = changeContext.getYaml();
     VariableType variableType = Utils.getEnumFromString(VariableType.class, yaml.getType());
     String accountId = changeContext.getChange().getAccountId();
+    String variableName = yaml.getName();
     if (variableType != null && variableType == VariableType.ARTIFACT) {
       if (featureFlagService.isEnabled(FeatureName.ARTIFACT_STREAM_REFACTOR, accountId)) {
         List<String> allowedList =
-            artifactVariableYamlHelper.computeAllowedList(accountId, yaml.getAllowedList(), yaml.getName());
+            artifactVariableYamlHelper.computeAllowedList(accountId, yaml.getAllowedList(), variableName);
         return VariableBuilder.aVariable()
             .description(yaml.getDescription())
             .fixed(yaml.isFixed())
             .mandatory(yaml.isMandatory())
-            .name(yaml.getName())
+            .name(variableName)
             .type(variableType)
             .value(yaml.getValue())
             .allowedValues(String.join(",", allowedList)) // convert to comma separated and set this
             .build();
       } else {
         throw new WingsException(
-            format("Variable type ARTIFACT not supported, skipping processing of variable [%s]", yaml.getName()),
+            format("Variable type ARTIFACT not supported, skipping processing of variable [%s]", variableName),
             WingsException.USER);
       }
     }
+
+    if (previousWorkflow != null) {
+      List<Variable> variables = previousWorkflow.getOrchestrationWorkflow().getUserVariables();
+      // Check only if new variables contain hyphens. Old variables should not be checked for backward compatibility
+      if (variables.stream().allMatch(variable -> !variable.getName().equals(variableName))) {
+        if (variableName.contains("-")) {
+          throw new InvalidRequestException(
+              format("Adding variable name %s with hyphens (dashes) is not allowed", variableName));
+        }
+      }
+    }
+
     return VariableBuilder.aVariable()
         .description(yaml.getDescription())
         .fixed(yaml.isFixed())
         .mandatory(yaml.isMandatory())
-        .name(yaml.getName())
+        .name(variableName)
         .type(variableType)
         .value(yaml.getValue())
         .allowedValues(yaml.getAllowedValues()) // convert to comma separated and set this
@@ -132,7 +147,7 @@ public class VariableYamlHandler extends BaseYamlHandler<VariableYaml, Variable>
   @Override
   public Variable upsertFromYaml(ChangeContext<VariableYaml> changeContext, List<ChangeContext> changeSetContext)
       throws HarnessException {
-    return toBean(changeContext);
+    return toBean(changeContext, null);
   }
 
   @Override
@@ -148,5 +163,10 @@ public class VariableYamlHandler extends BaseYamlHandler<VariableYaml, Variable>
   @Override
   public void delete(ChangeContext<VariableYaml> changeContext) {
     // Do nothing
+  }
+
+  public Variable upsertFromYaml(ChangeContext<VariableYaml> changeContext, Workflow previousWorkflow)
+      throws WingsException {
+    return toBean(changeContext, previousWorkflow);
   }
 }

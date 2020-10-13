@@ -190,7 +190,7 @@ public class TemplateServiceImpl implements TemplateService {
     if (template.getGalleryId() == null) {
       throw new InvalidRequestException("Gallery ID must be set to save imported template.");
     }
-    validateTemplateVariables(template.getVariables());
+    validateTemplateVariables(template.getVariables(), null);
     setTemplateFolderForImportedTemplate(template);
     saveOrUpdate(template);
     processTemplate(template);
@@ -246,7 +246,7 @@ public class TemplateServiceImpl implements TemplateService {
     Long templateVersionNumber = template.getVersion();
     if (newVersionDownload) {
       VersionedTemplate newVersionedTemplate = buildTemplateDetails(template, template.getUuid());
-      validateTemplateVariables(newVersionedTemplate.getVariables());
+      validateTemplateVariables(newVersionedTemplate.getVariables(), oldTemplate);
       TemplateVersion templateVersion = getTemplateVersionForCommand(template, template.getUuid(),
           getImportedTemplateVersion(template.getImportedTemplateDetails(), template.getAccountId()));
       newVersionedTemplate.setVersion(templateVersion.getVersion());
@@ -271,7 +271,7 @@ public class TemplateServiceImpl implements TemplateService {
   @Override
   @ValidationGroups(Create.class)
   public Template save(Template template) {
-    validateTemplateVariables(template.getVariables());
+    validateTemplateVariables(template.getVariables(), null);
     if (template.getTemplateMetadata() != null) {
       processTemplateMetadata(template, false);
     }
@@ -368,7 +368,7 @@ public class TemplateServiceImpl implements TemplateService {
     }
     template.setKeywords(trimmedLowercaseSet(generatedKeywords));
     VersionedTemplate newVersionedTemplate = buildTemplateDetails(template, template.getUuid());
-    validateTemplateVariables(newVersionedTemplate.getVariables());
+    validateTemplateVariables(newVersionedTemplate.getVariables(), oldTemplate);
     boolean templateObjectChanged = checkTemplateDetailsChanged(
         template, oldTemplate.getTemplateObject(), newVersionedTemplate.getTemplateObject());
 
@@ -406,16 +406,37 @@ public class TemplateServiceImpl implements TemplateService {
     }
   }
 
-  private void validateTemplateVariables(List<Variable> templateVariables) {
+  private void validateTemplateVariables(List<Variable> templateVariables, Template oldTemplate) {
     if (isNotEmpty(templateVariables)) {
       Set<String> variableNames = new HashSet<>();
+
       for (Variable variable : templateVariables) {
-        if (!variableNames.contains(variable.getName())) {
-          variableNames.add(variable.getName());
+        String variableName = variable.getName();
+
+        if (oldTemplate != null && oldTemplate.getVariables() != null) {
+          // On update check only if new variables contain hyphens.
+          // Old variables will not be checked for backward compatibility.
+          if (oldTemplate.getVariables().stream().allMatch(
+                  existingVariable -> !existingVariable.getName().equals(variableName))) {
+            checkVariableNamesContainDashes(variableName);
+          }
+        } else {
+          checkVariableNamesContainDashes(variableName);
+        }
+
+        if (!variableNames.contains(variableName)) {
+          variableNames.add(variableName);
         } else {
           throw new InvalidRequestException("Template contains duplicate variables", USER);
         }
       }
+    }
+  }
+
+  private void checkVariableNamesContainDashes(String variableName) {
+    if (variableName.contains("-")) {
+      throw new InvalidRequestException(
+          format("Adding variable name %s with hyphens (dashes) is not allowed", variableName));
     }
   }
 

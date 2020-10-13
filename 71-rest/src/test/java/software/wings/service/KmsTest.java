@@ -1373,7 +1373,7 @@ public class KmsTest extends WingsBaseTest {
                                                 .instances(Collections.singletonList(generateUuid()))
                                                 .expression(generateUuid())
                                                 .accountId(accountId)
-                                                .name(generateUuid())
+                                                .name("var1")
                                                 .value(generateUuid().toCharArray())
                                                 .type(Type.ENCRYPTED_TEXT)
                                                 .build();
