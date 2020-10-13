@@ -44,6 +44,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.security.MessageDigest;
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Stream;
 
@@ -139,11 +140,14 @@ public class GitClientHelper {
     }
   }
 
-  public void addFiles(List<GitFile> gitFiles, Path path, String repoPath) {
+  public void addFiles(List<GitFile> gitFiles, Set<String> uniqueFilePaths, Path path, String repoPath) {
     if (gitFiles == null || path == null) {
       throw new WingsException(GENERAL_ERROR, "GitFiles arg is null, will cause NPE", SRE);
     }
-
+    String filePath = getFilePath(path, repoPath);
+    if (uniqueFilePaths.contains(filePath)) {
+      return;
+    }
     StringBuilder contentBuilder = new StringBuilder();
     try (Stream<String> stream = Files.lines(path, StandardCharsets.UTF_8)) {
       stream.forEach(s -> contentBuilder.append(s).append("\n"));
@@ -151,9 +155,7 @@ public class GitClientHelper {
       logger.error("Failed to read file Content {}", path.toString());
       throw new WingsException(GENERAL_ERROR, "Failed to read file Content {}", e);
     }
-
-    String filePath = getFilePath(path, repoPath);
-
+    uniqueFilePaths.add(filePath);
     gitFiles.add(GitFile.builder().filePath(filePath).fileContent(contentBuilder.toString()).build());
   }
 

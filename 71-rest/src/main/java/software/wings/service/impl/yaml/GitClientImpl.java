@@ -113,7 +113,9 @@ import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.function.Predicate;
 import java.util.stream.Stream;
 
@@ -749,7 +751,7 @@ public class GitClientImpl implements GitClient {
   @VisibleForTesting
   public List<GitFile> getFilteredGitFiles(GitConfig gitConfig, GitFetchFilesRequest gitRequest, String repoPath) {
     List<GitFile> gitFiles = new ArrayList<>();
-
+    Set<String> uniqueFilePaths = new HashSet<>();
     gitRequest.getFilePaths().forEach(filePath -> {
       try {
         Path repoFilePath = Paths.get(repoPath + "/" + filePath);
@@ -757,7 +759,7 @@ public class GitClientImpl implements GitClient {
         paths.filter(Files::isRegularFile)
             .filter(path -> !path.toString().contains(".git"))
             .filter(matchingFilesExtensions(gitRequest))
-            .forEach(path -> gitClientHelper.addFiles(gitFiles, path, repoPath));
+            .forEach(path -> gitClientHelper.addFiles(gitFiles, uniqueFilePaths, path, repoPath));
       } catch (Exception e) {
         resetWorkingDir(gitConfig, gitRequest.getGitConnectorId());
 

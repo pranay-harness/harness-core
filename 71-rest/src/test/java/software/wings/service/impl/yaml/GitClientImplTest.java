@@ -11,6 +11,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.assertj.core.api.Fail.fail;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyList;
+import static org.mockito.Matchers.anySet;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -353,7 +354,7 @@ public class GitClientImplTest extends WingsBaseTest {
     FileIo.writeUtf8StringToFile(Paths.get(folderPath, "file1").toString(), "file1Content");
 
     gitClient.getFilteredGitFiles(gitConfig, gitFetchFilesRequest, repoPath);
-    verify(gitClientHelper, times(1)).addFiles(anyList(), any(), any());
+    verify(gitClientHelper, times(1)).addFiles(anyList(), anySet(), any(), any());
     FileIo.deleteDirectoryAndItsContentIfExists(repoPath);
   }
 
