@@ -39,7 +39,7 @@ public class BuildDtoMapper {
   public CIBuildResponseDTO writeBuildDto(CIBuild ciBuild, NgPipelineEntity ngPipelineEntity) throws InternalError {
     if (ngPipelineEntity == null) {
       throw new InternalError(
-          format("pipeline:% for build:%s", ciBuild.getPipelineIdentifier(), ciBuild.getBuildNumber()));
+          format("pipeline:%s for build:%s", ciBuild.getPipelineIdentifier(), ciBuild.getBuildNumber()));
     }
     CIBuildResponseDTO ciBuildResponseDTO = CIBuildResponseDTO.builder()
                                                 .id(ciBuild.getBuildNumber())
@@ -120,6 +120,7 @@ public class BuildDtoMapper {
         .ownerEmail(commit.getOwnerEmail())
         .ownerId(commit.getOwnerId())
         .ownerName(commit.getOwnerName())
+        .timeStamp(commit.getTimeStamp())
         .build();
   }
 }

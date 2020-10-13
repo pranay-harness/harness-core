@@ -18,4 +18,5 @@ public class CIBuildCommit {
   private String ownerName;
   private String ownerId;
   private String ownerEmail;
+  private long timeStamp;
 }
