@@ -1,10 +1,13 @@
 package software.wings.sm.states.k8s;
 
+import static io.harness.rule.OwnerRule.ABOSII;
 import static io.harness.rule.OwnerRule.BOJANA;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyList;
 import static org.mockito.Matchers.anyString;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -13,10 +16,13 @@ import static org.mockito.Mockito.when;
 import io.harness.beans.ExecutionStatus;
 import io.harness.category.element.UnitTests;
 import io.harness.context.ContextElementType;
+import io.harness.exception.InvalidArgumentsException;
+import io.harness.exception.InvalidRequestException;
 import io.harness.k8s.model.IstioDestinationWeight;
 import io.harness.logging.CommandExecutionStatus;
 import io.harness.rule.Owner;
 import io.harness.tasks.ResponseData;
+import org.apache.commons.lang3.tuple.Pair;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -88,6 +94,28 @@ public class K8sTrafficSplitStateTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(developers = ABOSII)
+  @Category(UnitTests.class)
+  public void testExecuteWingsException() {
+    InvalidArgumentsException exceptionToBeThrown = new InvalidArgumentsException(Pair.of("arg", "missing"));
+
+    doThrow(exceptionToBeThrown).when(k8sStateHelper).getContainerInfrastructureMapping(context);
+
+    assertThatThrownBy(() -> k8sTrafficSplitState.execute(context)).isSameAs(exceptionToBeThrown);
+  }
+
+  @Test
+  @Owner(developers = ABOSII)
+  @Category(UnitTests.class)
+  public void testExecuteAnyException() {
+    IllegalStateException exceptionToBeThrown = new IllegalStateException();
+
+    doThrow(exceptionToBeThrown).when(k8sStateHelper).getContainerInfrastructureMapping(context);
+
+    assertThatThrownBy(() -> k8sTrafficSplitState.execute(context)).isInstanceOf(InvalidRequestException.class);
+  }
+
+  @Test
   @Owner(developers = BOJANA)
   @Category(UnitTests.class)
   public void testHandleAsyncResponse() {
@@ -99,5 +127,40 @@ public class K8sTrafficSplitStateTest extends WingsBaseTest {
     ExecutionResponse executionResponse = k8sTrafficSplitState.handleAsyncResponse(context, response);
     assertThat(executionResponse.getExecutionStatus()).isEqualTo(ExecutionStatus.SUCCESS);
     verify(activityService, times(1)).updateStatus(anyString(), anyString(), any(ExecutionStatus.class));
+  }
+
+  @Test
+  @Owner(developers = ABOSII)
+  @Category(UnitTests.class)
+  public void testHandleAsyncResponseWingsException() {
+    K8sTaskExecutionResponse k8sTaskExecutionResponse =
+        K8sTaskExecutionResponse.builder().commandExecutionStatus(CommandExecutionStatus.SUCCESS).build();
+    Map<String, ResponseData> response = new HashMap<>();
+    response.put("k8sTaskExecutionResponse", k8sTaskExecutionResponse);
+    InvalidArgumentsException exceptionToBeThrown = new InvalidArgumentsException(Pair.of("arg", "missing"));
+
+    doThrow(exceptionToBeThrown)
+        .when(activityService)
+        .updateStatus(anyString(), anyString(), any(ExecutionStatus.class));
+
+    assertThatThrownBy(() -> k8sTrafficSplitState.handleAsyncResponse(context, response)).isSameAs(exceptionToBeThrown);
+  }
+
+  @Test
+  @Owner(developers = ABOSII)
+  @Category(UnitTests.class)
+  public void testHandleAsyncResponseAnyException() {
+    K8sTaskExecutionResponse k8sTaskExecutionResponse =
+        K8sTaskExecutionResponse.builder().commandExecutionStatus(CommandExecutionStatus.SUCCESS).build();
+    Map<String, ResponseData> response = new HashMap<>();
+    response.put("k8sTaskExecutionResponse", k8sTaskExecutionResponse);
+    IllegalStateException exceptionToBeThrown = new IllegalStateException();
+
+    doThrow(exceptionToBeThrown)
+        .when(activityService)
+        .updateStatus(anyString(), anyString(), any(ExecutionStatus.class));
+
+    assertThatThrownBy(() -> k8sTrafficSplitState.handleAsyncResponse(context, response))
+        .isInstanceOf(InvalidRequestException.class);
   }
 }

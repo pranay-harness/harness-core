@@ -147,6 +147,7 @@ import software.wings.helpers.ext.helm.response.HelmValuesFetchTaskResponse;
 import software.wings.helpers.ext.k8s.request.K8sClusterConfig;
 import software.wings.helpers.ext.k8s.request.K8sDelegateManifestConfig;
 import software.wings.helpers.ext.k8s.request.K8sRollingDeployTaskParameters;
+import software.wings.helpers.ext.k8s.request.K8sTaskParameters;
 import software.wings.helpers.ext.k8s.request.K8sValuesLocation;
 import software.wings.helpers.ext.k8s.response.K8sInstanceSyncResponse;
 import software.wings.helpers.ext.k8s.response.K8sTaskExecutionResponse;
@@ -1540,5 +1541,26 @@ public class K8sStateHelperTest extends WingsBaseTest {
     verify(sweepingOutputService, times(1)).findSweepingOutput(any(SweepingOutputInquiry.class));
     verify(instanceService, never()).getInstancesForAppAndInframapping(anyString(), anyString());
     verify(sweepingOutputService, never()).ensure(any(SweepingOutputInstance.class));
+  }
+
+  @Test
+  @Owner(developers = ABOSII)
+  @Category(UnitTests.class)
+  public void testGetAppId() {
+    WorkflowStandardParams standardParams =
+        WorkflowStandardParams.Builder.aWorkflowStandardParams().withAppId(APP_ID).build();
+    context.pushContextElement(standardParams);
+
+    assertThat(k8sStateHelper.getAppId(context)).isEqualTo(APP_ID);
+  }
+
+  @Test
+  @Owner(developers = ABOSII)
+  @Category(UnitTests.class)
+  public void testFetchTagsFromK8sTaskParamsEmpty() {
+    K8sTaskParameters nullK8sClusterConfig = K8sRollingDeployTaskParameters.builder().build();
+
+    assertThat(k8sStateHelper.fetchTagsFromK8sTaskParams(null)).isEmpty();
+    assertThat(k8sStateHelper.fetchTagsFromK8sTaskParams(nullK8sClusterConfig)).isEmpty();
   }
 }

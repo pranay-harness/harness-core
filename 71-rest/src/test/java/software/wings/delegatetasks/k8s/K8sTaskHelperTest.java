@@ -25,6 +25,7 @@ import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
+import static org.joor.Reflect.on;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyBoolean;
 import static org.mockito.Matchers.anyList;
@@ -1421,6 +1422,29 @@ public class K8sTaskHelperTest extends WingsBaseTest {
         ".", new ArrayList<>(), "release", "namespace", executionLogCallback, K8sApplyTaskParameters.builder().build());
 
     assertThat(manifestFiles.size()).isEqualTo(1);
+  }
+
+  @Test
+  @Owner(developers = ABOSII)
+  @Category(UnitTests.class)
+  public void testRenderTemplateRemoteRepo() throws Exception {
+    final String workingDirectory = ".";
+    final String manifestDirectory = "manifests/";
+    K8sDelegateTaskParams k8sDelegateTaskParams =
+        K8sDelegateTaskParams.builder().workingDirectory(workingDirectory).helmPath("helm").build();
+    K8sDelegateManifestConfig manifestConfig = K8sDelegateManifestConfig.builder().manifestStoreTypes(Remote).build();
+    List<FileData> manifestFiles = emptyList();
+    on(helper).set("k8sTaskHelperBase", spyHelperBase);
+
+    doReturn(manifestFiles).when(spyHelperBase).readManifestFilesFromDirectory(manifestDirectory);
+
+    helper.renderTemplate(k8sDelegateTaskParams, manifestConfig, manifestDirectory, emptyList(), "release", "namespace",
+        executionLogCallback, K8sApplyTaskParameters.builder().build());
+
+    verify(spyHelperBase, times(1)).readManifestFilesFromDirectory(manifestDirectory);
+    verify(spyHelperBase, times(1))
+        .renderManifestFilesForGoTemplate(
+            k8sDelegateTaskParams, manifestFiles, emptyList(), executionLogCallback, 600000);
   }
 
   @Test
