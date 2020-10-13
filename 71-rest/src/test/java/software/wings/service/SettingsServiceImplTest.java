@@ -61,6 +61,7 @@ import static software.wings.utils.WingsTestConstants.JOB_NAME;
 import static software.wings.utils.WingsTestConstants.PASSWORD;
 import static software.wings.utils.WingsTestConstants.REPOSITORY_NAME;
 import static software.wings.utils.WingsTestConstants.SECRET_KEY;
+import static software.wings.utils.WingsTestConstants.SERVICE_ID;
 import static software.wings.utils.WingsTestConstants.SETTING_ID;
 import static software.wings.utils.WingsTestConstants.SETTING_NAME;
 import static software.wings.utils.WingsTestConstants.TARGET_APP_ID;
@@ -101,6 +102,7 @@ import software.wings.beans.GitConfig;
 import software.wings.beans.HostConnectionAttributes;
 import software.wings.beans.HostConnectionAttributes.AccessType;
 import software.wings.beans.JenkinsConfig;
+import software.wings.beans.Service;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.SettingAttribute.SettingCategory;
 import software.wings.beans.StringValue;
@@ -133,6 +135,7 @@ import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ArtifactStreamService;
 import software.wings.service.intfc.InfrastructureDefinitionService;
 import software.wings.service.intfc.InfrastructureMappingService;
+import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.UserGroupService;
 import software.wings.service.intfc.security.SecretManager;
@@ -169,6 +172,7 @@ public class SettingsServiceImplTest extends WingsBaseTest {
   @Mock private AccountService accountService;
   @Mock private SettingServiceHelper settingServiceHelper;
   @Mock private GitConfigHelperService gitConfigHelperService;
+  @Mock private ServiceResourceService serviceResourceService;
 
   @InjectMocks @Inject private SettingsService settingsService;
 
@@ -368,7 +372,7 @@ public class SettingsServiceImplTest extends WingsBaseTest {
   @Test
   @Owner(developers = ANUBHAW)
   @Category(UnitTests.class)
-  public void shouldThroeExceptionIfReferencedConnectorDeleted() {
+  public void shouldThrowExceptionIfReferencedConnectorDeleted() {
     SettingAttribute settingAttribute = aSettingAttribute()
                                             .withAppId("APP_ID")
                                             .withAccountId("ACCOUNT_ID")
@@ -384,10 +388,14 @@ public class SettingsServiceImplTest extends WingsBaseTest {
     when(mockWingsPersistence.get(SettingAttribute.class, SETTING_ID)).thenReturn(settingAttribute);
     when(artifactStreamService.listBySettingId(anyString()))
         .thenReturn(
-            aPageResponse().withResponse(asList(JenkinsArtifactStream.builder().sourceName(JOB_NAME).build())).build());
+            aPageResponse()
+                .withResponse(asList(
+                    JenkinsArtifactStream.builder().sourceName(JOB_NAME).appId(APP_ID).serviceId(SERVICE_ID).build()))
+                .build());
     when(settingServiceHelper.userHasPermissionsToChangeEntity(eq(settingAttribute), anyString(), any()))
         .thenReturn(true);
-
+    when(appService.getAppIdsByAccountId(ACCOUNT_ID)).thenReturn(Collections.singletonList(APP_ID));
+    when(serviceResourceService.get(SERVICE_ID)).thenReturn(Service.builder().build());
     assertThatThrownBy(() -> settingsService.delete(APP_ID, SETTING_ID))
         .isInstanceOf(WingsException.class)
         .hasMessage("Connector [SETTING_NAME] is referenced by 1 Artifact Source [JOB_NAME].");
