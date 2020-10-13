@@ -1,6 +1,7 @@
 package io.harness.cvng.dashboard.services.api;
 
 import io.harness.cvng.beans.CVMonitoringCategory;
+import io.harness.cvng.dashboard.beans.CategoryRisksDTO;
 import io.harness.cvng.dashboard.beans.EnvServiceRiskDTO;
 import io.harness.cvng.dashboard.beans.HeatMapDTO;
 
@@ -19,7 +20,7 @@ public interface HeatMapService {
       @NotNull String projectIdentifier, String serviceIdentifier, String envIdentifier, @NotNull Instant startTime,
       @NotNull Instant endTime);
 
-  Map<CVMonitoringCategory, Integer> getCategoryRiskScores(@NotNull String accountId, @NotNull String orgIdentifier,
+  CategoryRisksDTO getCategoryRiskScores(@NotNull String accountId, @NotNull String orgIdentifier,
       @NotNull String projectIdentifier, String serviceIdentifier, String envIdentifier);
 
   List<EnvServiceRiskDTO> getEnvServiceRiskScores(
