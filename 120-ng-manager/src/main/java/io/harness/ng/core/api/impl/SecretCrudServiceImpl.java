@@ -1,4 +1,4 @@
-package io.harness.ng.core.api;
+package io.harness.ng.core.api.impl;
 
 import static io.harness.eraro.ErrorCode.SECRET_MANAGEMENT_ERROR;
 import static io.harness.exception.WingsException.SRE;
@@ -17,7 +17,9 @@ import com.google.inject.name.Named;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.SecretManagementException;
 import io.harness.ng.beans.PageResponse;
-import io.harness.ng.core.api.impl.SecretEntityReferenceHelper;
+import io.harness.ng.core.api.NGSecretServiceV2;
+import io.harness.ng.core.api.SecretCrudService;
+import io.harness.ng.core.api.SecretModifyService;
 import io.harness.ng.core.dto.secrets.SecretDTOV2;
 import io.harness.ng.core.dto.secrets.SecretFileSpecDTO;
 import io.harness.ng.core.dto.secrets.SecretResponseWrapper;
@@ -117,7 +119,7 @@ public class SecretCrudServiceImpl implements SecretCrudService {
 
   @Override
   public Optional<SecretResponseWrapper> get(
-      String accountIdentifier, String orgIdentifier, String projectIdentifier, String identifier) {
+      @NotNull String accountIdentifier, String orgIdentifier, String projectIdentifier, @NotNull String identifier) {
     Optional<Secret> secretV2Optional =
         ngSecretService.get(accountIdentifier, orgIdentifier, projectIdentifier, identifier);
     if (secretV2Optional.isPresent()) {

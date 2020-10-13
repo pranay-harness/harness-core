@@ -1,4 +1,4 @@
-package io.harness.ng.core.api;
+package io.harness.ng.core.api.impl;
 
 import static java.util.Collections.emptyList;
 
@@ -11,6 +11,7 @@ import io.harness.delegate.beans.SSHTaskParams;
 import io.harness.delegate.beans.TaskData;
 import io.harness.delegate.beans.secrets.SSHConfigValidationTaskResponse;
 import io.harness.ng.core.BaseNGAccess;
+import io.harness.ng.core.api.NGSecretServiceV2;
 import io.harness.ng.core.api.repositories.spring.SecretRepository;
 import io.harness.ng.core.dto.secrets.KerberosConfigDTO;
 import io.harness.ng.core.dto.secrets.SSHConfigDTO;
@@ -40,6 +41,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
+import javax.validation.constraints.NotNull;
 
 @Singleton
 @AllArgsConstructor(onConstructor = @__({ @Inject }))
@@ -51,13 +53,14 @@ public class NGSecretServiceV2Impl implements NGSecretServiceV2 {
 
   @Override
   public Optional<Secret> get(
-      String accountIdentifier, String orgIdentifier, String projectIdentifier, String identifier) {
+      @NotNull String accountIdentifier, String orgIdentifier, String projectIdentifier, @NotNull String identifier) {
     return secretRepository.findByAccountIdentifierAndOrgIdentifierAndProjectIdentifierAndIdentifier(
         accountIdentifier, orgIdentifier, projectIdentifier, identifier);
   }
 
   @Override
-  public boolean delete(String accountIdentifier, String orgIdentifier, String projectIdentifier, String identifier) {
+  public boolean delete(
+      @NotNull String accountIdentifier, String orgIdentifier, String projectIdentifier, @NotNull String identifier) {
     Optional<Secret> secretV2Optional = get(accountIdentifier, orgIdentifier, projectIdentifier, identifier);
     if (secretV2Optional.isPresent()) {
       secretRepository.delete(secretV2Optional.get());
@@ -94,8 +97,8 @@ public class NGSecretServiceV2Impl implements NGSecretServiceV2 {
   }
 
   @Override
-  public SecretValidationResultDTO validateSecret(String accountIdentifier, String orgIdentifier,
-      String projectIdentifier, String identifier, SecretValidationMetaData metadata) {
+  public SecretValidationResultDTO validateSecret(@NotNull String accountIdentifier, String orgIdentifier,
+      String projectIdentifier, @NotNull String identifier, @NotNull SecretValidationMetaData metadata) {
     Optional<Secret> secretV2Optional = get(accountIdentifier, orgIdentifier, projectIdentifier, identifier);
     if (secretV2Optional.isPresent() && secretV2Optional.get().getType() == SecretType.SSHKey) {
       SSHKeyValidationMetadata sshKeyValidationMetadata = (SSHKeyValidationMetadata) metadata;
@@ -140,7 +143,7 @@ public class NGSecretServiceV2Impl implements NGSecretServiceV2 {
     }
   }
 
-  private List<EncryptedDataDetail> getSSHEncryptionDetails(SSHConfigDTO sshConfigDTO, BaseNGAccess baseNGAccess) {
+  List<EncryptedDataDetail> getSSHEncryptionDetails(SSHConfigDTO sshConfigDTO, BaseNGAccess baseNGAccess) {
     switch (sshConfigDTO.getCredentialType()) {
       case Password:
         SSHPasswordCredentialDTO sshPasswordCredentialDTO = (SSHPasswordCredentialDTO) sshConfigDTO.getSpec();

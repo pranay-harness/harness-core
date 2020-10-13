@@ -2,11 +2,15 @@ package io.harness.ng.core.api.impl;
 
 import static io.github.benas.randombeans.api.EnhancedRandom.random;
 import static io.harness.rule.OwnerRule.KARAN;
+import static io.harness.rule.OwnerRule.PHOENIKX;
 import static io.harness.rule.OwnerRule.VIKAS;
 import static org.apache.http.HttpStatus.SC_BAD_GATEWAY;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.fail;
 import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyInt;
+import static org.mockito.Mockito.RETURNS_DEEP_STUBS;
+import static org.mockito.Mockito.atLeastOnce;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
@@ -17,10 +21,13 @@ import static org.mockito.Mockito.when;
 
 import io.harness.CategoryTest;
 import io.harness.beans.EncryptedData;
+import io.harness.beans.PageResponse;
 import io.harness.category.element.UnitTests;
+import io.harness.exception.InvalidRequestException;
 import io.harness.exception.UnexpectedException;
 import io.harness.rest.RestResponse;
 import io.harness.rule.Owner;
+import io.harness.secretmanagerclient.ValueType;
 import io.harness.secretmanagerclient.dto.EncryptedDataDTO;
 import io.harness.secretmanagerclient.dto.SecretTextDTO;
 import io.harness.secretmanagerclient.remote.SecretManagerClient;
@@ -35,6 +42,7 @@ import retrofit2.Response;
 import software.wings.resources.secretsmanagement.EncryptedDataMapper;
 
 import java.io.IOException;
+import java.util.ArrayList;
 
 public class NGSecretServiceImplTest extends CategoryTest {
   private SecretManagerClient secretManagerClient;
@@ -49,7 +57,7 @@ public class NGSecretServiceImplTest extends CategoryTest {
 
   @Before
   public void doSetup() {
-    secretManagerClient = mock(SecretManagerClient.class);
+    secretManagerClient = mock(SecretManagerClient.class, RETURNS_DEEP_STUBS);
     secretEntityReferenceHelper = mock(SecretEntityReferenceHelper.class);
     ngSecretService = new NGSecretServiceImpl(secretManagerClient, secretEntityReferenceHelper);
     spyNGSecretService = spy(ngSecretService);
@@ -346,5 +354,76 @@ public class NGSecretServiceImplTest extends CategoryTest {
       // not required
     }
     verify(secretEntityReferenceHelper, times(0)).deleteSecretEntityReferenceWhenSecretGetsDeleted(any());
+  }
+
+  @Test
+  @Owner(developers = PHOENIKX)
+  @Category(UnitTests.class)
+  public void testListSecrets() throws IOException {
+    PageResponse<EncryptedDataDTO> dtoPageResponse = new PageResponse<>();
+    dtoPageResponse.setResponse(new ArrayList<>());
+    dtoPageResponse.setPageSize(0);
+    dtoPageResponse.setTotal(0L);
+    dtoPageResponse.setLimit("0");
+    dtoPageResponse.setOffset("100");
+    when(secretManagerClient.listSecrets(any(), any(), any(), any(), any(), anyInt(), anyInt()).execute())
+        .thenReturn(Response.success(new RestResponse<>(dtoPageResponse)));
+    io.harness.ng.beans.PageResponse<EncryptedData> response =
+        ngSecretService.list("account", null, null, null, null, 0, 10);
+
+    assertThat(response).isNotNull();
+    verify(secretManagerClient, atLeastOnce()).listSecrets(any(), any(), any(), any(), any(), anyInt(), anyInt());
+  }
+
+  @Test
+  @Owner(developers = PHOENIKX)
+  @Category(UnitTests.class)
+  public void testCreateSecretViaYaml() throws IOException {
+    EncryptedDataDTO dto = random(EncryptedDataDTO.class);
+    RestResponse<EncryptedDataDTO> restResponse = new RestResponse<>(dto);
+    Response<RestResponse<EncryptedDataDTO>> response = Response.success(restResponse);
+    Call<RestResponse<EncryptedDataDTO>> restResponseCall = mock(Call.class);
+    SecretTextDTO randomSecretText = random(SecretTextDTO.class);
+    randomSecretText.setValue(null);
+
+    when(secretManagerClient.createSecret(any())).thenReturn(restResponseCall);
+    when(restResponseCall.execute()).thenReturn(response);
+
+    EncryptedData savedData = ngSecretService.create(randomSecretText, true);
+    assertThat(savedData).isNotNull();
+    assertThat(savedData.getName()).isEqualTo(dto.getName());
+    verify(secretEntityReferenceHelper, times(1)).createEntityReferenceForSecret(any());
+  }
+
+  @Test
+  @Owner(developers = PHOENIKX)
+  @Category(UnitTests.class)
+  public void testCreateSecret_valueCannotBePresentInYaml() {
+    SecretTextDTO randomSecretText = random(SecretTextDTO.class);
+    randomSecretText.setValue("abcde");
+    randomSecretText.setValueType(ValueType.Inline);
+
+    try {
+      ngSecretService.create(randomSecretText, true);
+      fail("Should not reach here");
+    } catch (InvalidRequestException exception) {
+      // ignore
+    }
+  }
+
+  @Test
+  @Owner(developers = PHOENIKX)
+  @Category(UnitTests.class)
+  public void testUpdateSecret_valueCannotBePresentInYaml() {
+    SecretTextDTO randomSecretText = random(SecretTextDTO.class);
+    randomSecretText.setValue("abcde");
+    randomSecretText.setValueType(ValueType.Inline);
+
+    try {
+      ngSecretService.update(randomSecretText, true);
+      fail("Should not reach here");
+    } catch (InvalidRequestException exception) {
+      // ignore
+    }
   }
 }

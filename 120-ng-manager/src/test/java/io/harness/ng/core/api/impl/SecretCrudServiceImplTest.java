@@ -1,9 +1,11 @@
 package io.harness.ng.core.api.impl;
 
+import static io.github.benas.randombeans.api.EnhancedRandom.random;
 import static io.harness.rule.OwnerRule.PHOENIKX;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.fail;
 import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyInt;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.atLeastOnce;
 import static org.mockito.Mockito.doNothing;
@@ -11,12 +13,14 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.mockito.MockitoAnnotations.initMocks;
 
+import com.google.common.collect.Lists;
+
 import com.amazonaws.util.StringInputStream;
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import io.harness.exception.InvalidRequestException;
+import io.harness.ng.beans.PageResponse;
 import io.harness.ng.core.api.NGSecretServiceV2;
-import io.harness.ng.core.api.SecretCrudServiceImpl;
 import io.harness.ng.core.api.SecretModifyService;
 import io.harness.ng.core.dto.secrets.SecretDTOV2;
 import io.harness.ng.core.dto.secrets.SecretFileSpecDTO;
@@ -36,10 +40,13 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.Answers;
 import org.mockito.Mock;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
 import retrofit2.Response;
 import software.wings.app.FileUploadLimit;
 
 import java.io.IOException;
+import java.util.Optional;
 
 public class SecretCrudServiceImplTest extends CategoryTest {
   @Mock(answer = Answers.RETURNS_DEEP_STUBS) private SecretManagerClient secretManagerClient;
@@ -73,6 +80,26 @@ public class SecretCrudServiceImplTest extends CategoryTest {
 
     verify(secretTextService).create(any(), any());
     verify(ngSecretServiceV2).create(any(), any(), eq(false));
+  }
+
+  @Test
+  @Owner(developers = PHOENIKX)
+  @Category(UnitTests.class)
+  public void testCreateViaYaml() {
+    EncryptedDataDTO encryptedDataDTO = EncryptedDataDTO.builder().type(SecretType.SecretText).build();
+    Secret secret = Secret.builder().build();
+    when(secretTextService.create(any(), any())).thenReturn(encryptedDataDTO);
+    when(ngSecretServiceV2.create(any(), any(), eq(true))).thenReturn(secret);
+
+    SecretDTOV2 secretDTOV2 = SecretDTOV2.builder()
+                                  .type(SecretType.SecretText)
+                                  .spec(SecretTextSpecDTO.builder().valueType(ValueType.Inline).build())
+                                  .build();
+    SecretResponseWrapper responseWrapper = secretCrudService.createViaYaml("account", secretDTOV2);
+    assertThat(responseWrapper).isNotNull();
+
+    verify(secretTextService).create(any(), any());
+    verify(ngSecretServiceV2).create(any(), any(), eq(true));
   }
 
   @Test
@@ -177,5 +204,48 @@ public class SecretCrudServiceImplTest extends CategoryTest {
     SecretValidationResultDTO resultDTO = secretCrudService.validateSecret(
         "account", "org", "project", "identifier", SSHKeyValidationMetadata.builder().host("host").build());
     assertThat(resultDTO).isNotNull();
+  }
+
+  @Test
+  @Owner(developers = PHOENIKX)
+  @Category(UnitTests.class)
+  public void testGet() {
+    when(ngSecretServiceV2.get(any(), any(), any(), any())).thenReturn(Optional.ofNullable(Secret.builder().build()));
+    Optional<SecretResponseWrapper> secretResponseWrapper = secretCrudService.get("account", null, null, "identifier");
+    assertThat(secretResponseWrapper).isPresent();
+    verify(ngSecretServiceV2).get(any(), any(), any(), any());
+  }
+
+  @Test
+  @Owner(developers = PHOENIKX)
+  @Category(UnitTests.class)
+  public void testList() {
+    when(ngSecretServiceV2.list(any(), anyInt(), anyInt()))
+        .thenReturn(new PageImpl<>(Lists.newArrayList(Secret.builder().build()), PageRequest.of(0, 10), 1));
+    PageResponse<SecretResponseWrapper> secretPage =
+        secretCrudService.list("account", "org", "proj", SecretType.SSHKey, "abc", 0, 100);
+    assertThat(secretPage.getContent()).isNotEmpty();
+    assertThat(secretPage.getContent().size()).isEqualTo(1);
+    verify(ngSecretServiceV2).list(any(), anyInt(), anyInt());
+  }
+
+  @Test
+  @Owner(developers = PHOENIKX)
+  @Category(UnitTests.class)
+  public void testDelete() throws IOException {
+    EncryptedDataDTO encryptedDataDTO = random(EncryptedDataDTO.class);
+    when(secretManagerClient.getSecret(any(), any(), any(), any()).execute())
+        .thenReturn(Response.success(new RestResponse<>(encryptedDataDTO)));
+    when(secretManagerClient.deleteSecret(any(), any(), any(), any()).execute())
+        .thenReturn(Response.success(new RestResponse<>(true)));
+    when(ngSecretServiceV2.delete(any(), any(), any(), any())).thenReturn(true);
+    doNothing().when(secretEntityReferenceHelper).deleteSecretEntityReferenceWhenSecretGetsDeleted(any());
+    boolean success = secretCrudService.delete("account", null, null, "identifier");
+
+    assertThat(success).isTrue();
+    verify(secretManagerClient, atLeastOnce()).getSecret(any(), any(), any(), any());
+    verify(secretManagerClient, atLeastOnce()).deleteSecret(any(), any(), any(), any());
+    verify(ngSecretServiceV2, atLeastOnce()).delete(any(), any(), any(), any());
+    verify(secretEntityReferenceHelper, atLeastOnce()).deleteSecretEntityReferenceWhenSecretGetsDeleted(any());
   }
 }

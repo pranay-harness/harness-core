@@ -3,7 +3,10 @@ package io.harness.ng.core.api.impl;
 import static io.github.benas.randombeans.api.EnhancedRandom.random;
 import static io.harness.rule.OwnerRule.PHOENIKX;
 import static org.mockito.Matchers.any;
+import static org.mockito.Mockito.RETURNS_DEEP_STUBS;
+import static org.mockito.Mockito.atLeastOnce;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import com.google.common.collect.Lists;
@@ -12,23 +15,27 @@ import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import io.harness.rest.RestResponse;
 import io.harness.rule.Owner;
+import io.harness.secretmanagerclient.dto.LocalConfigDTO;
 import io.harness.secretmanagerclient.dto.SecretManagerConfigDTO;
+import io.harness.secretmanagerclient.dto.SecretManagerMetadataDTO;
 import io.harness.secretmanagerclient.dto.VaultConfigDTO;
+import io.harness.secretmanagerclient.dto.VaultConfigUpdateDTO;
+import io.harness.secretmanagerclient.dto.VaultMetadataSpecDTO;
 import io.harness.secretmanagerclient.remote.SecretManagerClient;
+import io.harness.security.encryption.EncryptionType;
 import org.assertj.core.api.Assertions;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
-import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
 import retrofit2.Call;
 import retrofit2.Response;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 
 public class NGSecretManagerServiceImplTest extends CategoryTest {
-  @Mock SecretManagerClient secretManagerClient;
+  SecretManagerClient secretManagerClient;
   private final String ACCOUNT_IDENTIFIER = "ACCOUNT_ID";
   private final String ORG_IDENTIFIER = "ACCOUNT_ID";
   private final String PROJECT_IDENTIFIER = "ACCOUNT_ID";
@@ -38,7 +45,7 @@ public class NGSecretManagerServiceImplTest extends CategoryTest {
 
   @Before
   public void doSetup() {
-    MockitoAnnotations.initMocks(this);
+    secretManagerClient = mock(SecretManagerClient.class, RETURNS_DEEP_STUBS);
     ngSecretManagerService = new NGSecretManagerServiceImpl(secretManagerClient);
   }
 
@@ -87,5 +94,69 @@ public class NGSecretManagerServiceImplTest extends CategoryTest {
 
     Assertions.assertThat(secretManagerConfigList).isNotEmpty();
     Assertions.assertThat(secretManagerConfigList).isEqualTo(secretManagerConfigs);
+  }
+
+  @Test
+  @Owner(developers = PHOENIKX)
+  @Category(UnitTests.class)
+  public void testValidateSecretManager() throws IOException {
+    when(secretManagerClient.validateSecretManager(any(), any(), any(), any()).execute())
+        .thenReturn(Response.success(new RestResponse<>(true)));
+
+    boolean success = ngSecretManagerService.validate("account", null, null, "identifier");
+    Assertions.assertThat(success).isTrue();
+    verify(secretManagerClient, atLeastOnce()).validateSecretManager(any(), any(), any(), any());
+  }
+
+  @Test
+  @Owner(developers = PHOENIKX)
+  @Category(UnitTests.class)
+  public void testGetMetadata() throws IOException {
+    when(secretManagerClient.getSecretManagerMetadata(any(), any()).execute())
+        .thenReturn(Response.success(
+            new RestResponse<>(SecretManagerMetadataDTO.builder()
+                                   .encryptionType(EncryptionType.VAULT)
+                                   .spec(VaultMetadataSpecDTO.builder().secretEngines(new ArrayList<>()).build())
+                                   .build())));
+    SecretManagerMetadataDTO metadataDTO = ngSecretManagerService.getMetadata("Account", null);
+
+    Assertions.assertThat(metadataDTO).isNotNull();
+    verify(secretManagerClient, atLeastOnce()).getSecretManagerMetadata(any(), any());
+  }
+
+  @Test
+  @Owner(developers = PHOENIKX)
+  @Category(UnitTests.class)
+  public void testGetGlobalSecretManager() throws IOException {
+    when(secretManagerClient.getGlobalSecretManager(any()).execute())
+        .thenReturn(Response.success(new RestResponse<>(LocalConfigDTO.builder().build())));
+    SecretManagerConfigDTO responseDTO = ngSecretManagerService.getGlobalSecretManager("Account");
+
+    Assertions.assertThat(responseDTO).isNotNull();
+    verify(secretManagerClient, atLeastOnce()).getGlobalSecretManager(any());
+  }
+
+  @Test
+  @Owner(developers = PHOENIKX)
+  @Category(UnitTests.class)
+  public void testGetSecretManager() throws IOException {
+    when(secretManagerClient.getSecretManager(any(), any(), any(), any()).execute())
+        .thenReturn(Response.success(new RestResponse<>(LocalConfigDTO.builder().build())));
+    SecretManagerConfigDTO secretManagerConfigDTO =
+        ngSecretManagerService.getSecretManager("account", null, null, "identifier");
+    Assertions.assertThat(secretManagerConfigDTO).isNotNull();
+    verify(secretManagerClient, atLeastOnce()).getSecretManager(any(), any(), any(), any());
+  }
+
+  @Test
+  @Owner(developers = PHOENIKX)
+  @Category(UnitTests.class)
+  public void testUpdateSecretManager() throws IOException {
+    when(secretManagerClient.updateSecretManager(any(), any(), any(), any(), any()).execute())
+        .thenReturn(Response.success(new RestResponse<>(LocalConfigDTO.builder().build())));
+    SecretManagerConfigDTO secretManagerConfigDTO = ngSecretManagerService.updateSecretManager(
+        "account", null, null, "identifier", VaultConfigUpdateDTO.builder().build());
+    Assertions.assertThat(secretManagerConfigDTO).isNotNull();
+    verify(secretManagerClient, atLeastOnce()).updateSecretManager(any(), any(), any(), any(), any());
   }
 }

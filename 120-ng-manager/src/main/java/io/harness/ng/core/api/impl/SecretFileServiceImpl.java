@@ -1,4 +1,4 @@
-package io.harness.ng.core.api;
+package io.harness.ng.core.api.impl;
 
 import static io.harness.exception.WingsException.USER;
 import static io.harness.remote.client.RestClientUtils.getResponse;
@@ -7,6 +7,7 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import io.harness.exception.InvalidRequestException;
+import io.harness.ng.core.api.SecretModifyService;
 import io.harness.ng.core.dto.secrets.SecretDTOV2;
 import io.harness.ng.core.dto.secrets.SecretFileSpecDTO;
 import io.harness.secretmanagerclient.dto.EncryptedDataDTO;
