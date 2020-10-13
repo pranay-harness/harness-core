@@ -44,19 +44,21 @@ public class AzureMachineImageBuildServiceImpl implements AzureMachineImageBuild
     metadata.put("subscriptionId", streamAttributes.getSubscriptionId());
     metadata.put("imageDefinitionName", streamAttributes.getAzureImageDefinition());
     metadata.put("imageType", streamAttributes.getImageType());
-    return azureHelperService
-        .listImageDefinitionVersions(azureConfig, encryptionDetails, streamAttributes.getSubscriptionId(),
-            streamAttributes.getAzureResourceGroup(), streamAttributes.getAzureImageGalleryName(),
-            streamAttributes.getAzureImageDefinition())
-        .stream()
-        .map(version
-            -> BuildDetails.Builder.aBuildDetails()
-                   .withMetadata(metadata)
-                   .withNumber(version.getName())
-                   .withRevision(version.getName())
-                   .withUiDisplayName("Image: " + version.getName())
-                   .build())
-        .collect(Collectors.toList());
+    return wrapNewBuildsWithLabels(
+        azureHelperService
+            .listImageDefinitionVersions(azureConfig, encryptionDetails, streamAttributes.getSubscriptionId(),
+                streamAttributes.getAzureResourceGroup(), streamAttributes.getAzureImageGalleryName(),
+                streamAttributes.getAzureImageDefinition())
+            .stream()
+            .map(version
+                -> BuildDetails.Builder.aBuildDetails()
+                       .withMetadata(metadata)
+                       .withNumber(version.getName())
+                       .withRevision(version.getName())
+                       .withUiDisplayName("Image: " + version.getName())
+                       .build())
+            .collect(Collectors.toList()),
+        streamAttributes, azureConfig);
   }
 
   @Override
