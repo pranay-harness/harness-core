@@ -1,6 +1,7 @@
 package software.wings.sm.states.k8s;
 
 import static io.harness.delegate.task.k8s.K8sTaskType.DEPLOYMENT_ROLLING;
+import static io.harness.logging.CommandExecutionStatus.FAILURE;
 import static io.harness.logging.CommandExecutionStatus.SUCCESS;
 import static io.harness.rule.OwnerRule.ABOSII;
 import static io.harness.rule.OwnerRule.ANSHUL;
@@ -18,15 +19,19 @@ import static software.wings.beans.GcpKubernetesInfrastructureMapping.Builder.aG
 import static software.wings.sm.StateExecutionInstance.Builder.aStateExecutionInstance;
 import static software.wings.sm.StateType.K8S_DEPLOYMENT_ROLLING;
 import static software.wings.sm.states.k8s.K8sRollingDeploy.K8S_ROLLING_DEPLOY_COMMAND_NAME;
+import static software.wings.sm.states.k8s.K8sStateHelper.getSafeTimeoutInMillis;
 import static software.wings.utils.WingsTestConstants.ACTIVITY_ID;
+import static software.wings.utils.WingsTestConstants.APP_ID;
 import static software.wings.utils.WingsTestConstants.STATE_NAME;
 
 import com.google.common.collect.ImmutableMap;
 
+import io.harness.beans.ExecutionStatus;
 import io.harness.category.element.UnitTests;
 import io.harness.k8s.K8sCommandUnitConstants;
 import io.harness.k8s.model.K8sPod;
 import io.harness.rule.Owner;
+import io.harness.tasks.ResponseData;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -52,11 +57,13 @@ import software.wings.service.intfc.FeatureFlagService;
 import software.wings.sm.ExecutionContextImpl;
 import software.wings.sm.ExecutionResponse;
 import software.wings.sm.StateExecutionInstance;
+import software.wings.sm.WorkflowStandardParams;
 import software.wings.utils.ApplicationManifestUtils;
 
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class K8sRollingDeployTest extends WingsBaseTest {
   private static final String RELEASE_NAME = "releaseName";
@@ -106,6 +113,16 @@ public class K8sRollingDeployTest extends WingsBaseTest {
     assertThat(taskParams.getCommandName()).isEqualTo(K8S_ROLLING_DEPLOY_COMMAND_NAME);
     assertThat(taskParams.getTimeoutIntervalInMin()).isEqualTo(10);
     assertThat(taskParams.isSkipDryRun()).isTrue();
+  }
+
+  @Test
+  @Owner(developers = ABOSII)
+  @Category(UnitTests.class)
+  public void testDelegateExecuteToK8sStateHelper() {
+    k8sRollingDeploy.execute(context);
+    verify(k8sStateHelper, times(1))
+        .executeWrapperWithManifest(
+            k8sRollingDeploy, context, getSafeTimeoutInMillis(k8sRollingDeploy.getTimeoutMillis()));
   }
 
   @Test
@@ -168,5 +185,40 @@ public class K8sRollingDeployTest extends WingsBaseTest {
   public void testStateType() {
     String stateType = k8sRollingDeploy.stateType();
     assertThat(stateType).isEqualTo(K8S_DEPLOYMENT_ROLLING.name());
+  }
+
+  @Test
+  @Owner(developers = ABOSII)
+  @Category(UnitTests.class)
+  public void testHandleAsyncResponseForK8sTaskFailed() {
+    Application app = Application.Builder.anApplication().uuid(APP_ID).build();
+    K8sStateExecutionData stateExecutionData = K8sStateExecutionData.builder().build();
+    WorkflowStandardParams standardParams =
+        WorkflowStandardParams.Builder.aWorkflowStandardParams().withAppId(APP_ID).build();
+    stateExecutionInstance.setStateExecutionMap(
+        ImmutableMap.of(stateExecutionInstance.getDisplayName(), stateExecutionData));
+    K8sTaskExecutionResponse taskResponse = K8sTaskExecutionResponse.builder().commandExecutionStatus(FAILURE).build();
+
+    context.pushContextElement(standardParams);
+    doReturn(app).when(appService).get(APP_ID);
+    doReturn(ACTIVITY_ID).when(k8sStateHelper).getActivityId(context);
+
+    ExecutionResponse executionResponse =
+        k8sRollingDeploy.handleAsyncResponseForK8sTask(context, ImmutableMap.of(ACTIVITY_ID, taskResponse));
+
+    verify(activityService, times(1)).updateStatus(ACTIVITY_ID, APP_ID, ExecutionStatus.FAILED);
+    assertThat(executionResponse.getExecutionStatus()).isEqualTo(ExecutionStatus.FAILED);
+    assertThat(executionResponse.getStateExecutionData()).isEqualTo(stateExecutionData);
+  }
+
+  @Test
+  @Owner(developers = ABOSII)
+  @Category(UnitTests.class)
+  public void testDelegateHandleAsyncResponseToK8sStateHelper() {
+    K8sTaskExecutionResponse response = K8sTaskExecutionResponse.builder().build();
+    Map<String, ResponseData> responseMap = ImmutableMap.of(ACTIVITY_ID, response);
+
+    k8sRollingDeploy.handleAsyncResponse(context, responseMap);
+    verify(k8sStateHelper, times(1)).handleAsyncResponseWrapper(k8sRollingDeploy, context, responseMap);
   }
 }

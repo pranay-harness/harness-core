@@ -1,6 +1,7 @@
 package software.wings.sm.states.k8s;
 
 import static io.harness.delegate.task.k8s.K8sTaskType.CANARY_DEPLOY;
+import static io.harness.logging.CommandExecutionStatus.FAILURE;
 import static io.harness.logging.CommandExecutionStatus.SUCCESS;
 import static io.harness.rule.OwnerRule.ABOSII;
 import static io.harness.rule.OwnerRule.ANSHUL;
@@ -23,11 +24,13 @@ import static software.wings.sm.StateExecutionInstance.Builder.aStateExecutionIn
 import static software.wings.sm.StateType.K8S_CANARY_DEPLOY;
 import static software.wings.sm.states.k8s.K8sCanaryDeploy.K8S_CANARY_DEPLOY_COMMAND_NAME;
 import static software.wings.utils.WingsTestConstants.ACTIVITY_ID;
+import static software.wings.utils.WingsTestConstants.APP_ID;
 import static software.wings.utils.WingsTestConstants.STATE_NAME;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 
+import io.harness.beans.ExecutionStatus;
 import io.harness.category.element.UnitTests;
 import io.harness.expression.VariableResolverTracker;
 import io.harness.k8s.K8sCommandUnitConstants;
@@ -41,6 +44,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import software.wings.WingsBaseTest;
 import software.wings.api.InstanceElementListParam;
+import software.wings.api.k8s.K8sElement;
 import software.wings.api.k8s.K8sStateExecutionData;
 import software.wings.beans.InstanceUnitType;
 import software.wings.beans.appmanifest.AppManifestKind;
@@ -195,5 +199,60 @@ public class K8sCanaryDeployTest extends WingsBaseTest {
   public void testStateType() {
     String stateType = k8sCanaryDeploy.stateType();
     assertThat(stateType).isEqualTo(K8S_CANARY_DEPLOY.name());
+  }
+
+  @Test
+  @Owner(developers = ABOSII)
+  @Category(UnitTests.class)
+  public void testDelegateExecuteToK8sStateHelper() {
+    k8sCanaryDeploy.execute(context);
+    verify(k8sStateHelper, times(1))
+        .executeWrapperWithManifest(
+            k8sCanaryDeploy, context, K8sStateHelper.getSafeTimeoutInMillis(k8sCanaryDeploy.getTimeoutMillis()));
+  }
+
+  @Test
+  @Owner(developers = ABOSII)
+  @Category(UnitTests.class)
+  public void testHandleAsyncResponseForK8sTaskFailed() {
+    setupHandleAsyncResponsePrerequisites();
+    K8sTaskExecutionResponse taskResponse = K8sTaskExecutionResponse.builder().commandExecutionStatus(FAILURE).build();
+
+    ExecutionResponse executionResponse =
+        k8sCanaryDeploy.handleAsyncResponseForK8sTask(context, ImmutableMap.of(ACTIVITY_ID, taskResponse));
+
+    verify(activityService, times(1)).updateStatus(ACTIVITY_ID, APP_ID, ExecutionStatus.FAILED);
+
+    assertThat(executionResponse.getExecutionStatus()).isEqualTo(ExecutionStatus.FAILED);
+  }
+
+  @Test
+  @Owner(developers = ABOSII)
+  @Category(UnitTests.class)
+  public void testHandleAsyncResponseForK8sTaskFailedWithCanaryWorkload() {
+    setupHandleAsyncResponsePrerequisites();
+    K8sTaskExecutionResponse taskResponse =
+        K8sTaskExecutionResponse.builder()
+            .commandExecutionStatus(FAILURE)
+            .k8sTaskResponse(K8sCanaryDeployResponse.builder().canaryWorkload("workload").build())
+            .build();
+
+    ExecutionResponse executionResponse =
+        k8sCanaryDeploy.handleAsyncResponseForK8sTask(context, ImmutableMap.of(ACTIVITY_ID, taskResponse));
+
+    verify(activityService, times(1)).updateStatus(ACTIVITY_ID, APP_ID, ExecutionStatus.FAILED);
+    verify(k8sStateHelper, times(1)).saveK8sElement(context, K8sElement.builder().canaryWorkload("workload").build());
+
+    assertThat(executionResponse.getExecutionStatus()).isEqualTo(ExecutionStatus.FAILED);
+  }
+
+  private void setupHandleAsyncResponsePrerequisites() {
+    K8sStateExecutionData stateExecutionData = K8sStateExecutionData.builder().activityId(ACTIVITY_ID).build();
+    WorkflowStandardParams standardParams =
+        WorkflowStandardParams.Builder.aWorkflowStandardParams().withAppId(APP_ID).build();
+
+    context.pushContextElement(standardParams);
+    stateExecutionInstance.setStateExecutionMap(
+        ImmutableMap.of(stateExecutionInstance.getDisplayName(), stateExecutionData));
   }
 }

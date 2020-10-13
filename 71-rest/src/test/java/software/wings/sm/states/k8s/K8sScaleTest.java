@@ -1,14 +1,17 @@
 package software.wings.sm.states.k8s;
 
+import static io.harness.rule.OwnerRule.ABOSII;
 import static io.harness.rule.OwnerRule.ANSHUL;
 import static io.harness.rule.OwnerRule.BOJANA;
 import static io.harness.rule.OwnerRule.YOGESH;
 import static java.util.Collections.emptyMap;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyList;
 import static org.mockito.Matchers.anyMap;
 import static org.mockito.Matchers.anyString;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.times;
@@ -24,10 +27,13 @@ import com.google.common.collect.ImmutableMap;
 
 import io.harness.beans.ExecutionStatus;
 import io.harness.category.element.UnitTests;
+import io.harness.exception.InvalidArgumentsException;
+import io.harness.exception.InvalidRequestException;
 import io.harness.expression.VariableResolverTracker;
 import io.harness.logging.CommandExecutionStatus;
 import io.harness.rule.Owner;
 import io.harness.tasks.ResponseData;
+import org.apache.commons.lang3.tuple.Pair;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -155,6 +161,26 @@ public class K8sScaleTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(developers = ABOSII)
+  @Category(UnitTests.class)
+  public void testExecuteWingsException() {
+    InvalidArgumentsException exceptionToBeThrown = new InvalidArgumentsException(Pair.of("args", "missing"));
+    doThrow(exceptionToBeThrown).when(k8sStateHelper).getContainerInfrastructureMapping(context);
+
+    assertThatThrownBy(() -> k8sScale.execute(context)).isSameAs(exceptionToBeThrown);
+  }
+
+  @Test
+  @Owner(developers = ABOSII)
+  @Category(UnitTests.class)
+  public void testExecuteAnyException() {
+    IllegalStateException exceptionToBeThrown = new IllegalStateException();
+    doThrow(exceptionToBeThrown).when(k8sStateHelper).getContainerInfrastructureMapping(context);
+
+    assertThatThrownBy(() -> k8sScale.execute(context)).isInstanceOf(InvalidRequestException.class);
+  }
+
+  @Test
   @Owner(developers = BOJANA)
   @Category(UnitTests.class)
   public void testHandleAsyncResponse() {
@@ -167,5 +193,35 @@ public class K8sScaleTest extends WingsBaseTest {
     when(k8sStateHelper.getInstanceElementListParam(anyList())).thenReturn(InstanceElementListParam.builder().build());
     k8sScale.handleAsyncResponse(context, response);
     verify(activityService, times(1)).updateStatus(anyString(), anyString(), any(ExecutionStatus.class));
+  }
+
+  @Test
+  @Owner(developers = ABOSII)
+  @Category(UnitTests.class)
+  public void testHandleAsyncResponseWingsException() {
+    K8sTaskExecutionResponse response = K8sTaskExecutionResponse.builder().build();
+    InvalidArgumentsException exceptionToBeThrown = new InvalidArgumentsException(Pair.of("args", "missing"));
+
+    doThrow(exceptionToBeThrown)
+        .when(activityService)
+        .updateStatus(anyString(), anyString(), any(ExecutionStatus.class));
+
+    assertThatThrownBy(() -> k8sScale.handleAsyncResponse(context, ImmutableMap.of(ACTIVITY_ID, response)))
+        .isSameAs(exceptionToBeThrown);
+  }
+
+  @Test
+  @Owner(developers = ABOSII)
+  @Category(UnitTests.class)
+  public void testHandleAsyncResponseAnyException() {
+    K8sTaskExecutionResponse response = K8sTaskExecutionResponse.builder().build();
+    IllegalStateException exceptionToBeThrown = new IllegalStateException();
+
+    doThrow(exceptionToBeThrown)
+        .when(activityService)
+        .updateStatus(anyString(), anyString(), any(ExecutionStatus.class));
+
+    assertThatThrownBy(() -> k8sScale.handleAsyncResponse(context, ImmutableMap.of(ACTIVITY_ID, response)))
+        .isInstanceOf(InvalidRequestException.class);
   }
 }

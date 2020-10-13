@@ -1,6 +1,7 @@
 package software.wings.sm.states.k8s;
 
 import static io.harness.delegate.task.k8s.K8sTaskType.BLUE_GREEN_DEPLOY;
+import static io.harness.logging.CommandExecutionStatus.FAILURE;
 import static io.harness.logging.CommandExecutionStatus.SUCCESS;
 import static io.harness.rule.OwnerRule.ABOSII;
 import static io.harness.rule.OwnerRule.ANSHUL;
@@ -19,10 +20,12 @@ import static software.wings.sm.StateExecutionInstance.Builder.aStateExecutionIn
 import static software.wings.sm.StateType.K8S_BLUE_GREEN_DEPLOY;
 import static software.wings.sm.states.k8s.K8sBlueGreenDeploy.K8S_BLUE_GREEN_DEPLOY_COMMAND_NAME;
 import static software.wings.utils.WingsTestConstants.ACTIVITY_ID;
+import static software.wings.utils.WingsTestConstants.APP_ID;
 import static software.wings.utils.WingsTestConstants.STATE_NAME;
 
 import com.google.common.collect.ImmutableMap;
 
+import io.harness.beans.ExecutionStatus;
 import io.harness.category.element.UnitTests;
 import io.harness.k8s.K8sCommandUnitConstants;
 import io.harness.k8s.model.K8sPod;
@@ -168,5 +171,36 @@ public class K8sBlueGreenDeployTest extends WingsBaseTest {
   public void testStateType() {
     String stateType = k8sBlueGreenDeploy.stateType();
     assertThat(stateType).isEqualTo(K8S_BLUE_GREEN_DEPLOY.name());
+  }
+
+  @Test
+  @Owner(developers = ABOSII)
+  @Category(UnitTests.class)
+  public void testDelegateExecuteToK8sStateHelper() {
+    k8sBlueGreenDeploy.execute(context);
+    verify(k8sStateHelper, times(1))
+        .executeWrapperWithManifest(
+            k8sBlueGreenDeploy, context, K8sStateHelper.getSafeTimeoutInMillis(k8sBlueGreenDeploy.getTimeoutMillis()));
+  }
+
+  @Test
+  @Owner(developers = ABOSII)
+  @Category(UnitTests.class)
+  public void testHandleAsyncResponseForK8sTaskFailed() {
+    K8sStateExecutionData stateExecutionData = K8sStateExecutionData.builder().build();
+    K8sTaskExecutionResponse taskExecutionResponse =
+        K8sTaskExecutionResponse.builder().commandExecutionStatus(FAILURE).build();
+
+    stateExecutionInstance.setStateExecutionMap(
+        ImmutableMap.of(stateExecutionInstance.getDisplayName(), stateExecutionData));
+    doReturn(ACTIVITY_ID).when(k8sStateHelper).getActivityId(context);
+    doReturn(APP_ID).when(k8sStateHelper).getAppId(context);
+
+    ExecutionResponse executionResponse =
+        k8sBlueGreenDeploy.handleAsyncResponseForK8sTask(context, ImmutableMap.of(ACTIVITY_ID, taskExecutionResponse));
+
+    verify(activityService, times(1)).updateStatus(ACTIVITY_ID, APP_ID, ExecutionStatus.FAILED);
+    assertThat(executionResponse.getExecutionStatus()).isEqualTo(ExecutionStatus.FAILED);
+    assertThat(executionResponse.getStateExecutionData()).isEqualTo(stateExecutionData);
   }
 }
