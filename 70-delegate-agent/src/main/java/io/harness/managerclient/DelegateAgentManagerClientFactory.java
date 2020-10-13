@@ -19,10 +19,19 @@ import okhttp3.Request.Builder;
 import retrofit2.Retrofit;
 import retrofit2.converter.jackson.JacksonConverterFactory;
 
+import java.io.IOException;
+import java.io.InputStream;
+import java.security.KeyStore;
+import java.security.KeyStoreException;
+import java.security.NoSuchAlgorithmException;
+import java.security.cert.CertificateException;
+import java.security.cert.CertificateFactory;
+import java.security.cert.X509Certificate;
 import java.util.concurrent.TimeUnit;
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.SSLSocketFactory;
 import javax.net.ssl.TrustManager;
+import javax.net.ssl.TrustManagerFactory;
 import javax.net.ssl.X509TrustManager;
 
 public class DelegateAgentManagerClientFactory implements Provider<DelegateAgentManagerClient> {
@@ -54,13 +63,78 @@ public class DelegateAgentManagerClientFactory implements Provider<DelegateAgent
     objectMapper.registerModule(new JavaTimeModule());
     Retrofit retrofit = new Retrofit.Builder()
                             .baseUrl(baseUrl)
-                            .client(getUnsafeOkHttpClient())
+                            .client(getSafeOkHttpClient())
                             .addConverterFactory(kryoConverterFactory)
                             .addConverterFactory(JacksonConverterFactory.create(objectMapper))
                             .build();
     return retrofit.create(DelegateAgentManagerClient.class);
   }
 
+  private OkHttpClient getSafeOkHttpClient() {
+    try {
+      KeyStore keyStore = getKeyStore();
+
+      TrustManagerFactory trustManagerFactory =
+          TrustManagerFactory.getInstance(TrustManagerFactory.getDefaultAlgorithm());
+      trustManagerFactory.init(keyStore);
+      TrustManager[] trustManagers = trustManagerFactory.getTrustManagers();
+
+      SSLContext sslContext = SSLContext.getInstance("TLS");
+      sslContext.init(null, trustManagers, null);
+
+      return Http.getOkHttpClientWithProxyAuthSetup()
+          .connectionPool(new ConnectionPool())
+          .retryOnConnectionFailure(true)
+          .addInterceptor(new DelegateAuthInterceptor(tokenGenerator))
+          .sslSocketFactory(sslContext.getSocketFactory(), (X509TrustManager) trustManagers[0])
+          .addInterceptor(chain -> {
+            Builder request = chain.request().newBuilder().addHeader(
+                "User-Agent", "delegate/" + versionInfoManager.getVersionInfo().getVersion());
+            if (sendVersionHeader) {
+              request.addHeader("Version", versionInfoManager.getVersionInfo().getVersion());
+            }
+            return chain.proceed(request.build());
+          })
+          .addInterceptor(chain -> FibonacciBackOff.executeForEver(() -> chain.proceed(chain.request())))
+          // During this call we not just query the task but we also obtain the secret on the manager side
+          // we need to give enough time for the call to finish.
+          .readTimeout(2, TimeUnit.MINUTES)
+          .build();
+    } catch (Exception e) {
+      throw new RuntimeException(e);
+    }
+  }
+
+  private KeyStore getKeyStore() throws IOException, KeyStoreException, CertificateException, NoSuchAlgorithmException {
+    KeyStore keyStore = KeyStore.getInstance(KeyStore.getDefaultType());
+    keyStore.load(null, null);
+
+    // Load self-signed certificate created only for the purpose of local development
+    try (InputStream certInputStream = getClass().getClassLoader().getResourceAsStream("localhost.pem")) {
+      keyStore.setCertificateEntry(
+          "localhost", (X509Certificate) CertificateFactory.getInstance("X509").generateCertificate(certInputStream));
+    }
+
+    // Load all trusted issuers from default java trust store
+    TrustManagerFactory defaultTrustManagerFactory =
+        TrustManagerFactory.getInstance(TrustManagerFactory.getDefaultAlgorithm());
+    defaultTrustManagerFactory.init((KeyStore) null);
+    for (TrustManager trustManager : defaultTrustManagerFactory.getTrustManagers()) {
+      if (trustManager instanceof X509TrustManager) {
+        for (X509Certificate acceptedIssuer : ((X509TrustManager) trustManager).getAcceptedIssuers()) {
+          keyStore.setCertificateEntry(acceptedIssuer.getSubjectDN().getName(), acceptedIssuer);
+        }
+      }
+    }
+
+    return keyStore;
+  }
+
+  /**
+   * Let's keep this method for now, since we might want to give the options to customers to keep the unsafe way of
+   * ignoring all certificate issues
+   * @return
+   */
   private OkHttpClient getUnsafeOkHttpClient() {
     try {
       // Install the all-trusting trust manager
