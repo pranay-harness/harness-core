@@ -45,6 +45,7 @@ directories:
   70-cv-nextgen-commons
   70-delegate-agent
   70-delegate-service
+  450-ce-views
   tools/bazel
 
 # Automatically includes all relevant targets under the 'directories' above

@@ -138,6 +138,7 @@ build_bazel_module 69-connector-nextgen
 build_bazel_module 70-cv-nextgen-commons
 build_bazel_module 70-delegate-agent
 build_bazel_module 70-delegate-service
+build_bazel_module 450-ce-views
 build_java_proto_module 13-grpc-api
 build_java_proto_module 19-delegate-tasks-beans
 build_java_proto_module 20-delegate-beans
