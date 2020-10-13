@@ -1386,7 +1386,7 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
   }
 
   private void sendHeartbeat(DelegateParamsBuilder builder, Socket socket) {
-    if (!shouldContactManager()) {
+    if (!shouldContactManager() || !acquireTasks.get()) {
       return;
     }
 
@@ -1443,7 +1443,7 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
   }
 
   private void sendHeartbeatWhenPollingEnabled(DelegateParamsBuilder builder) {
-    if (!shouldContactManager()) {
+    if (!shouldContactManager() || !acquireTasks.get()) {
       return;
     }
 
