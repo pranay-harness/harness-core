@@ -7,21 +7,23 @@ import static java.util.Optional.ofNullable;
 
 import io.kubernetes.client.informer.cache.Store;
 import io.kubernetes.client.openapi.models.V1ObjectMeta;
-import io.kubernetes.client.openapi.models.V1ObjectMetaBuilder;
 import io.kubernetes.client.openapi.models.V1OwnerReference;
 import io.kubernetes.client.openapi.models.V1Pod;
 import io.kubernetes.client.util.ObjectAccessor;
 import io.kubernetes.client.util.exception.ObjectMetaReflectException;
-import lombok.Value;
+import lombok.extern.slf4j.Slf4j;
 
 import java.util.Map;
 import javax.validation.constraints.NotNull;
 
+@Slf4j
 public class K8sControllerFetcher {
   private final Map<String, Store<?>> stores;
+  private final CrdWorkloadFetcher crdWorkloadFetcher;
 
-  public K8sControllerFetcher(Map<String, Store<?>> stores) {
+  public K8sControllerFetcher(Map<String, Store<?>> stores, CrdWorkloadFetcher crdWorkloadFetcher) {
     this.stores = stores;
+    this.crdWorkloadFetcher = crdWorkloadFetcher;
   }
 
   private Workload getTopLevelController(Workload workload) {
@@ -60,13 +62,16 @@ public class K8sControllerFetcher {
         return Workload.of(ownerReference.getKind(), getObjectMeta(workload));
       }
     }
+
     // This indicates it is not one of the well-known workloads.
-    return Workload.of(ownerReference.getKind(),
-        new V1ObjectMetaBuilder()
-            .withName(ownerReference.getName())
-            .withNamespace(namespace)
-            .withUid(ownerReference.getUid())
-            .build());
+    // So delegate to the CrdWorkloadFetcher.
+    return crdWorkloadFetcher.getWorkload(CrdWorkloadFetcher.WorkloadReference.builder()
+                                              .namespace(namespace)
+                                              .name(ownerReference.getName())
+                                              .kind(ownerReference.getKind())
+                                              .apiVersion(ownerReference.getApiVersion())
+                                              .uid(ownerReference.getUid())
+                                              .build());
   }
 
   private V1ObjectMeta getObjectMeta(@NotNull Object workloadResource) {
@@ -87,11 +92,5 @@ public class K8sControllerFetcher {
         .setUid(topLevelOwner.getObjectMeta().getUid())
         .putAllLabels(ofNullable(topLevelOwner.getObjectMeta().getLabels()).orElse(emptyMap()))
         .build();
-  }
-
-  @Value(staticConstructor = "of")
-  private static class Workload {
-    String kind;
-    V1ObjectMeta objectMeta;
   }
 }
