@@ -14,14 +14,14 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import software.wings.beans.User;
 import software.wings.beans.Workflow;
-import software.wings.graphql.datafetcher.AbstractDataFetcherTest;
+import software.wings.graphql.datafetcher.AbstractDataFetcherTestBase;
 import software.wings.graphql.schema.query.QLWorkflowQueryParameters;
 import software.wings.graphql.schema.type.QLWorkflow;
 import software.wings.security.UserThreadLocal;
 
 import java.sql.SQLException;
 
-public class WorkflowDataFetcherTest extends AbstractDataFetcherTest {
+public class WorkflowDataFetcherTest extends AbstractDataFetcherTestBase {
   @Inject WorkflowDataFetcher workflowDataFetcher;
   @Before
   public void setup() throws SQLException {

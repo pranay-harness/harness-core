@@ -36,11 +36,11 @@ import software.wings.service.impl.yaml.service.YamlHelper;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ArtifactStreamService;
 import software.wings.service.intfc.SettingsService;
-import software.wings.yaml.handler.BaseYamlHandlerTest;
+import software.wings.yaml.handler.YamlHandlerTestBase;
 
 import java.util.List;
 
-public class AmiArtifactStreamYamlHandlerTest extends BaseYamlHandlerTest {
+public class AmiArtifactStreamYamlHandlerTest extends YamlHandlerTestBase {
   @InjectMocks @Inject private AmiArtifactStreamYamlHandler yamlHandler;
   @Mock AppService appService;
   @Mock ArtifactStreamService artifactStreamService;

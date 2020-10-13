@@ -19,7 +19,7 @@ import software.wings.beans.SettingAttribute.SettingCategory;
 import software.wings.beans.settings.helm.HttpHelmRepoConfig;
 import software.wings.service.impl.yaml.handler.setting.artifactserver.HttpHelmRepoConfigYamlHandler;
 
-public class HttpHelmRepoConfigYamlHandlerTest extends BaseSettingValueConfigYamlHandlerTest {
+public class HttpHelmRepoConfigYamlHandlerTest extends SettingValueConfigYamlHandlerTestBase {
   @InjectMocks @Inject private HttpHelmRepoConfigYamlHandler yamlHandler;
 
   private Class yamlClass = HttpHelmRepoConfig.Yaml.class;

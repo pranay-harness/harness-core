@@ -23,7 +23,7 @@ import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.stubbing.Answer;
-import software.wings.graphql.datafetcher.AbstractDataFetcherTest;
+import software.wings.graphql.datafetcher.AbstractDataFetcherTestBase;
 import software.wings.graphql.schema.type.aggregation.QLData;
 import software.wings.graphql.schema.type.aggregation.QLIdFilter;
 import software.wings.graphql.schema.type.aggregation.QLIdOperator;
@@ -45,7 +45,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.StringJoiner;
 
-public class EfficiencyStatsDataFetcherTest extends AbstractDataFetcherTest {
+public class EfficiencyStatsDataFetcherTest extends AbstractDataFetcherTestBase {
   @InjectMocks @Inject EfficiencyStatsDataFetcher efficiencyStatsDataFetcher;
   @Mock TimeScaleDBService timeScaleDBService;
   @Mock BillingDataHelper billingDataHelper;

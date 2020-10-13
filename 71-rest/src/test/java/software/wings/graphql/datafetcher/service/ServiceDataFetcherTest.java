@@ -14,14 +14,14 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import software.wings.beans.Service;
 import software.wings.beans.User;
-import software.wings.graphql.datafetcher.AbstractDataFetcherTest;
+import software.wings.graphql.datafetcher.AbstractDataFetcherTestBase;
 import software.wings.graphql.schema.query.QLServiceQueryParameters;
 import software.wings.graphql.schema.type.QLService;
 import software.wings.security.UserThreadLocal;
 
 import java.sql.SQLException;
 
-public class ServiceDataFetcherTest extends AbstractDataFetcherTest {
+public class ServiceDataFetcherTest extends AbstractDataFetcherTestBase {
   @Inject ServiceDataFetcher serviceDataFetcher;
   @Before
   public void setup() throws SQLException {

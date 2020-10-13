@@ -38,13 +38,13 @@ import software.wings.service.intfc.InfrastructureProvisionerService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.utils.WingsTestConstants;
-import software.wings.yaml.handler.BaseYamlHandlerTest;
+import software.wings.yaml.handler.YamlHandlerTestBase;
 
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
 
-public class TerraformInfrastructureProvisionerYamlHandlerTest extends BaseYamlHandlerTest {
+public class TerraformInfrastructureProvisionerYamlHandlerTest extends YamlHandlerTestBase {
   @Mock private YamlHelper mockYamlHelper;
   @Mock private InfrastructureProvisionerService mockInfrastructureProvisionerService;
   @Mock private ServiceResourceService mockServiceResourceService;

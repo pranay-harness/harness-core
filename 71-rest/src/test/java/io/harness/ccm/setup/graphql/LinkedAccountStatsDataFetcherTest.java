@@ -13,7 +13,7 @@ import org.junit.experimental.categories.Category;
 import software.wings.beans.User;
 import software.wings.beans.ce.CECloudAccount;
 import software.wings.beans.ce.CECloudAccount.AccountStatus;
-import software.wings.graphql.datafetcher.AbstractDataFetcherTest;
+import software.wings.graphql.datafetcher.AbstractDataFetcherTestBase;
 import software.wings.graphql.schema.type.aggregation.QLIdFilter;
 import software.wings.graphql.schema.type.aggregation.QLIdOperator;
 import software.wings.graphql.schema.type.aggregation.QLSortOrder;
@@ -23,7 +23,7 @@ import java.sql.SQLException;
 import java.util.Arrays;
 import java.util.List;
 
-public class LinkedAccountStatsDataFetcherTest extends AbstractDataFetcherTest {
+public class LinkedAccountStatsDataFetcherTest extends AbstractDataFetcherTestBase {
   @Inject LinkedAccountStatsDataFetcher linkedAccountStatsDataFetcher;
 
   private static final String INFRA_ACCOUNT_ID = "infraAccountId";

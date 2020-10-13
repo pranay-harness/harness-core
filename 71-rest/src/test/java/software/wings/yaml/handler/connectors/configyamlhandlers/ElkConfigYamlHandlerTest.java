@@ -23,7 +23,7 @@ import software.wings.beans.SettingAttribute.SettingCategory;
 import software.wings.service.impl.analysis.ElkConnector;
 import software.wings.service.impl.yaml.handler.setting.verificationprovider.ElkConfigYamlHandler;
 
-public class ElkConfigYamlHandlerTest extends BaseSettingValueConfigYamlHandlerTest {
+public class ElkConfigYamlHandlerTest extends SettingValueConfigYamlHandlerTestBase {
   @InjectMocks @Inject private ElkConfigYamlHandler yamlHandler;
 
   public static final String url = "https://ec2-34-207-78-53.compute-1.amazonaws.com:9200/";

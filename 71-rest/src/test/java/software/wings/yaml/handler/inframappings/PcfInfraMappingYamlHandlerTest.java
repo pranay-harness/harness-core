@@ -54,11 +54,11 @@ import software.wings.service.intfc.ServiceTemplateService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.yaml.YamlChangeSetService;
 import software.wings.service.intfc.yaml.YamlDirectoryService;
-import software.wings.yaml.handler.BaseYamlHandlerTest;
+import software.wings.yaml.handler.YamlHandlerTestBase;
 
 import java.util.Arrays;
 
-public class PcfInfraMappingYamlHandlerTest extends BaseYamlHandlerTest {
+public class PcfInfraMappingYamlHandlerTest extends YamlHandlerTestBase {
   @Mock private SettingsService settingsService;
   @Mock private ServiceResourceService serviceResourceService;
   @Mock private ServiceTemplateService serviceTemplateService;

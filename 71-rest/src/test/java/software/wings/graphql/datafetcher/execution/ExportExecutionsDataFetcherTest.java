@@ -30,7 +30,7 @@ import org.mongodb.morphia.query.FieldEnd;
 import org.mongodb.morphia.query.Query;
 import software.wings.beans.WorkflowExecution;
 import software.wings.dl.WingsPersistence;
-import software.wings.graphql.datafetcher.AbstractDataFetcherTest;
+import software.wings.graphql.datafetcher.AbstractDataFetcherTestBase;
 import software.wings.graphql.datafetcher.MutationContext;
 import software.wings.graphql.schema.mutation.execution.export.QLExportExecutionsInput;
 import software.wings.graphql.schema.mutation.execution.export.QLExportExecutionsPayload;
@@ -42,7 +42,7 @@ import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.Collections;
 
-public class ExportExecutionsDataFetcherTest extends AbstractDataFetcherTest {
+public class ExportExecutionsDataFetcherTest extends AbstractDataFetcherTestBase {
   private static final String ACCOUNT_ID = "ACCOUNT_ID";
 
   @InjectMocks @Inject private ExportExecutionsDataFetcher exportExecutionsDataFetcher;

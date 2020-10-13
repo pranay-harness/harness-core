@@ -20,7 +20,7 @@ import software.wings.beans.SettingAttribute.SettingCategory;
 import software.wings.helpers.ext.mail.SmtpConfig;
 import software.wings.service.impl.yaml.handler.setting.collaborationprovider.SmtpConfigYamlHandler;
 
-public class SmtpConfigYamlHandlerTest extends BaseSettingValueConfigYamlHandlerTest {
+public class SmtpConfigYamlHandlerTest extends SettingValueConfigYamlHandlerTestBase {
   @InjectMocks @Inject private SmtpConfigYamlHandler yamlHandler;
 
   public static final String url = "smtp.gmail.com";

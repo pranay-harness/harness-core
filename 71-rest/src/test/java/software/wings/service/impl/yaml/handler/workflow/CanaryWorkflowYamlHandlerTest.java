@@ -34,7 +34,7 @@ import software.wings.yaml.workflow.CanaryWorkflowYaml;
 /**
  * @author rktummala on 1/10/18
  */
-public class CanaryWorkflowYamlHandlerTest extends BaseWorkflowYamlHandlerTest {
+public class CanaryWorkflowYamlHandlerTest extends WorkflowYamlHandlerTestBase {
   private String workflowName = "canary";
 
   @InjectMocks @Inject private CanaryWorkflowYamlHandler yamlHandler;

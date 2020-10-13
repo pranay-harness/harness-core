@@ -32,9 +32,9 @@ import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.InfrastructureProvisionerService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.utils.WingsTestConstants;
-import software.wings.yaml.handler.BaseYamlHandlerTest;
+import software.wings.yaml.handler.YamlHandlerTestBase;
 
-public class CloudFormationInfrastructureProvisionerYamlHandlerTest extends BaseYamlHandlerTest {
+public class CloudFormationInfrastructureProvisionerYamlHandlerTest extends YamlHandlerTestBase {
   @Mock private YamlHelper mockYamlHelper;
   @Mock private InfrastructureProvisionerService mockInfrastructureProvisionerService;
   @Mock private ServiceResourceService mockServiceResourceService;

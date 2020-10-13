@@ -20,7 +20,7 @@ import software.wings.beans.SettingAttribute.SettingCategory;
 import software.wings.beans.SumoConfig;
 import software.wings.service.impl.yaml.handler.setting.verificationprovider.SumoConfigYamlHandler;
 
-public class SumoConfigYamlHandlerTest extends BaseSettingValueConfigYamlHandlerTest {
+public class SumoConfigYamlHandlerTest extends SettingValueConfigYamlHandlerTestBase {
   @InjectMocks @Inject private SumoConfigYamlHandler yamlHandler;
 
   public static final String url = "https://api.us2.sumologic.com/api/v1/";

@@ -65,9 +65,9 @@ import software.wings.service.intfc.ServiceTemplateService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.yaml.YamlDirectoryService;
 import software.wings.utils.ArtifactType;
-import software.wings.yaml.handler.BaseYamlHandlerTest;
+import software.wings.yaml.handler.YamlHandlerTestBase;
 
-public class EcsInfraMappingYamlHandlerTest extends BaseYamlHandlerTest {
+public class EcsInfraMappingYamlHandlerTest extends YamlHandlerTestBase {
   @Mock protected SettingsService settingsService;
   @Mock protected ServiceResourceService serviceResourceService;
   @Mock protected ServiceTemplateService serviceTemplateService;

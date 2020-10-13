@@ -11,7 +11,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import software.wings.beans.User;
-import software.wings.graphql.datafetcher.AbstractDataFetcherTest;
+import software.wings.graphql.datafetcher.AbstractDataFetcherTestBase;
 import software.wings.graphql.schema.query.QLCloudProvidersQueryParameters;
 import software.wings.graphql.schema.type.aggregation.QLIdFilter;
 import software.wings.graphql.schema.type.aggregation.QLIdOperator;
@@ -24,7 +24,7 @@ import java.sql.SQLException;
 import java.util.Arrays;
 import java.util.List;
 
-public class CloudProviderConnectionDataFetcherTest extends AbstractDataFetcherTest {
+public class CloudProviderConnectionDataFetcherTest extends AbstractDataFetcherTestBase {
   @Inject CloudProviderConnectionDataFetcher cloudProviderDataFetcher;
   @Before
   public void setup() throws SQLException {

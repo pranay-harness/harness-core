@@ -12,9 +12,9 @@ import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import software.wings.app.MainConfiguration;
-import software.wings.graphql.datafetcher.AbstractDataFetcherTest;
+import software.wings.graphql.datafetcher.AbstractDataFetcherTestBase;
 
-public class InfraAccountConnectionDataFetcherTest extends AbstractDataFetcherTest {
+public class InfraAccountConnectionDataFetcherTest extends AbstractDataFetcherTestBase {
   @InjectMocks InfraAccountConnectionDataFetcher infraAccountConnectionDataFetcher;
 
   @Mock private MainConfiguration mainConfiguration;

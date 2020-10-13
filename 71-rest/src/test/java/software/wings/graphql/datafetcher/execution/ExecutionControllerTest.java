@@ -28,7 +28,7 @@ import org.mockito.Mock;
 import software.wings.beans.Service;
 import software.wings.beans.artifact.Artifact;
 import software.wings.beans.artifact.NexusArtifactStream;
-import software.wings.graphql.datafetcher.AbstractDataFetcherTest;
+import software.wings.graphql.datafetcher.AbstractDataFetcherTestBase;
 import software.wings.graphql.schema.mutation.execution.input.QLArtifactInputType;
 import software.wings.graphql.schema.mutation.execution.input.QLArtifactValueInput;
 import software.wings.graphql.schema.mutation.execution.input.QLParameterValueInput;
@@ -44,7 +44,7 @@ import software.wings.utils.RepositoryFormat;
 import java.util.ArrayList;
 import java.util.List;
 
-public class ExecutionControllerTest extends AbstractDataFetcherTest {
+public class ExecutionControllerTest extends AbstractDataFetcherTestBase {
   @Mock ServiceResourceService serviceResourceService;
   @Mock ArtifactStreamService artifactStreamService;
   @Mock ArtifactStreamHelper artifactStreamHelper;

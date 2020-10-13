@@ -42,13 +42,13 @@ import software.wings.service.impl.yaml.handler.YamlHandlerFactory;
 import software.wings.service.impl.yaml.handler.command.ExecCommandUnitYamlHandler;
 import software.wings.service.intfc.template.TemplateService;
 import software.wings.yaml.command.CommandRefYaml;
-import software.wings.yaml.handler.BaseYamlHandlerTest;
+import software.wings.yaml.handler.YamlHandlerTestBase;
 
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
 
-public class CommandTemplateRefYamlHandlerTest extends BaseYamlHandlerTest {
+public class CommandTemplateRefYamlHandlerTest extends YamlHandlerTestBase {
   @Mock private YamlHandlerFactory yamlHandlerFactory;
   @Mock private TemplateService templateService;
   @InjectMocks @Inject private CommandTemplateRefYamlHandler commandTemplateRefYamlHandler;

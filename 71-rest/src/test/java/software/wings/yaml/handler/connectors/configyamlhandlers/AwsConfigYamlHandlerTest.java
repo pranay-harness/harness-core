@@ -16,7 +16,7 @@ import software.wings.beans.yaml.ChangeContext;
 import software.wings.beans.yaml.YamlType;
 import software.wings.service.impl.yaml.handler.setting.cloudprovider.AwsConfigYamlHandler;
 
-public class AwsConfigYamlHandlerTest extends BaseSettingValueConfigYamlHandlerTest {
+public class AwsConfigYamlHandlerTest extends SettingValueConfigYamlHandlerTestBase {
   @InjectMocks @Inject private AwsConfigYamlHandler yamlHandler;
 
   public static final String SAMPLE_STRING = "sample-string";

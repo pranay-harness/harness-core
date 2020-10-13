@@ -23,7 +23,7 @@ import software.wings.beans.SettingAttribute.SettingCategory;
 import software.wings.service.impl.yaml.handler.setting.cloudprovider.AzureConfigYamlHandler;
 import software.wings.service.intfc.AccountService;
 
-public class AzureConfigYamlHandlerTest extends BaseSettingValueConfigYamlHandlerTest {
+public class AzureConfigYamlHandlerTest extends SettingValueConfigYamlHandlerTestBase {
   @Mock AccountService accountService;
   @Mock CCMSettingService ccmSettingService;
   @InjectMocks @Inject private AzureConfigYamlHandler yamlHandler;

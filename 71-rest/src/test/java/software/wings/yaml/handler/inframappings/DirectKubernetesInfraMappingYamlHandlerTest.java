@@ -52,9 +52,9 @@ import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.security.SecretManager;
 import software.wings.service.intfc.yaml.YamlDirectoryService;
 import software.wings.utils.ArtifactType;
-import software.wings.yaml.handler.BaseYamlHandlerTest;
+import software.wings.yaml.handler.YamlHandlerTestBase;
 
-public class DirectKubernetesInfraMappingYamlHandlerTest extends BaseYamlHandlerTest {
+public class DirectKubernetesInfraMappingYamlHandlerTest extends YamlHandlerTestBase {
   @Mock protected SettingsService settingsService;
   @Mock protected ServiceResourceService serviceResourceService;
   @Mock protected ServiceTemplateService serviceTemplateService;

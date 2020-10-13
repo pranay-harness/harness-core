@@ -39,7 +39,7 @@ import software.wings.service.impl.yaml.service.YamlHelper;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.InfrastructureProvisionerService;
 import software.wings.service.intfc.ServiceResourceService;
-import software.wings.yaml.handler.BaseYamlHandlerTest;
+import software.wings.yaml.handler.YamlHandlerTestBase;
 
 import java.io.File;
 import java.io.IOException;
@@ -47,7 +47,7 @@ import java.net.URISyntaxException;
 import java.util.Arrays;
 import java.util.List;
 
-public class ShellScriptProvisionerYamlHandlerTest extends BaseYamlHandlerTest {
+public class ShellScriptProvisionerYamlHandlerTest extends YamlHandlerTestBase {
   private static final String NAME = "yamlTest";
   private static final String SCRIPT_BODY = "script";
   private final String resourcePath = "./yaml";

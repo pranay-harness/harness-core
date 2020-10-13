@@ -20,7 +20,7 @@ import software.wings.beans.SettingAttribute;
 import software.wings.beans.SettingAttribute.SettingCategory;
 import software.wings.service.impl.yaml.handler.setting.collaborationprovider.JiraConfigYamlHandler;
 
-public class JiraConfigYamlHandlerTest extends BaseSettingValueConfigYamlHandlerTest {
+public class JiraConfigYamlHandlerTest extends SettingValueConfigYamlHandlerTestBase {
   @InjectMocks @Inject private JiraConfigYamlHandler yamlHandler;
 
   public static final String url = "jira.com";

@@ -70,7 +70,7 @@ import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.TriggerService;
 import software.wings.service.intfc.UserGroupService;
-import software.wings.yaml.handler.BaseYamlHandlerTest;
+import software.wings.yaml.handler.YamlHandlerTestBase;
 import software.wings.yaml.trigger.ArtifactTriggerConditionHandler;
 import software.wings.yaml.trigger.ManifestTriggerConditionHandler;
 import software.wings.yaml.trigger.PipelineTriggerConditionHandler;
@@ -86,7 +86,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
-public class TriggerYamlHandlerTest extends BaseYamlHandlerTest {
+public class TriggerYamlHandlerTest extends YamlHandlerTestBase {
   @Mock private YamlHelper mockYamlHelper;
   @Mock private YamlHandlerFactory mockYamlHandlerFactory;
 

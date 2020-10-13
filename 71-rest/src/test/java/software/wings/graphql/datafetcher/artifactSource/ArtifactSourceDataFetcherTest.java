@@ -22,7 +22,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import software.wings.beans.artifact.NexusArtifactStream;
 import software.wings.beans.artifact.SmbArtifactStream;
-import software.wings.graphql.datafetcher.AbstractDataFetcherTest;
+import software.wings.graphql.datafetcher.AbstractDataFetcherTestBase;
 import software.wings.graphql.schema.query.QLArtifactSourceQueryParam;
 import software.wings.graphql.schema.type.artifactSource.QLArtifactSource;
 import software.wings.graphql.schema.type.artifactSource.QLNexusArtifactSource;
@@ -32,7 +32,7 @@ import software.wings.service.intfc.ArtifactStreamService;
 import java.util.ArrayList;
 import java.util.List;
 
-public class ArtifactSourceDataFetcherTest extends AbstractDataFetcherTest {
+public class ArtifactSourceDataFetcherTest extends AbstractDataFetcherTestBase {
   @Mock private ArtifactStreamService artifactStreamService;
   @Inject @InjectMocks private ArtifactSourceDataFetcher artifactSourceDataFetcher;
 

@@ -29,7 +29,7 @@ import org.mockito.stubbing.Answer;
 import software.wings.app.MainConfiguration;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.ce.CEAwsConfig;
-import software.wings.graphql.datafetcher.AbstractDataFetcherTest;
+import software.wings.graphql.datafetcher.AbstractDataFetcherTestBase;
 import software.wings.settings.SettingValue;
 import software.wings.settings.SettingVariableTypes;
 
@@ -42,7 +42,7 @@ import java.time.temporal.ChronoUnit;
 import java.util.Arrays;
 import java.util.concurrent.TimeUnit;
 
-public class OverviewPageStatsDataFetcherTest extends AbstractDataFetcherTest {
+public class OverviewPageStatsDataFetcherTest extends AbstractDataFetcherTestBase {
   @Spy @InjectMocks OverviewPageStatsDataFetcher overviewPageStatsDataFetcher;
   @Mock TimeScaleDBService timeScaleDBService;
   @Mock ResultSet applicationResultSet;

@@ -20,7 +20,7 @@ import software.wings.beans.SettingAttribute;
 import software.wings.beans.SettingAttribute.SettingCategory;
 import software.wings.service.impl.yaml.handler.setting.artifactserver.BambooConfigYamlHandler;
 
-public class BambooConfigYamlHandlerTest extends BaseSettingValueConfigYamlHandlerTest {
+public class BambooConfigYamlHandlerTest extends SettingValueConfigYamlHandlerTestBase {
   @InjectMocks @Inject private BambooConfigYamlHandler yamlHandler;
 
   public static final String url = "http://ec2-34-205-16-35.compute-1.amazonaws.com:8085/";

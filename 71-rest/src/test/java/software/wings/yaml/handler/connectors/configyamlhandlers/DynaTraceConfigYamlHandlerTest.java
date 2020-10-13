@@ -23,7 +23,7 @@ import software.wings.service.impl.yaml.handler.setting.verificationprovider.Dyn
 /**
  * Created by rsingh on 2/12/18.
  */
-public class DynaTraceConfigYamlHandlerTest extends BaseSettingValueConfigYamlHandlerTest {
+public class DynaTraceConfigYamlHandlerTest extends SettingValueConfigYamlHandlerTestBase {
   @InjectMocks @Inject private DynaTraceConfigYamlHandler yamlHandler;
 
   public static final String url = "https://bdv73347.live.dynatrace.com";

@@ -32,7 +32,7 @@ import org.mockito.Mock;
 import org.mockito.stubbing.Answer;
 import software.wings.beans.HarnessTag;
 import software.wings.beans.User;
-import software.wings.graphql.datafetcher.AbstractDataFetcherTest;
+import software.wings.graphql.datafetcher.AbstractDataFetcherTestBase;
 import software.wings.graphql.datafetcher.DataFetcherUtils;
 import software.wings.graphql.schema.type.aggregation.QLIdFilter;
 import software.wings.graphql.schema.type.aggregation.QLIdOperator;
@@ -63,7 +63,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-public class BillingStatsFilterValuesDataFetcherTest extends AbstractDataFetcherTest {
+public class BillingStatsFilterValuesDataFetcherTest extends AbstractDataFetcherTestBase {
   @Mock TimeScaleDBService timeScaleDBService;
   @Mock private DataFetcherUtils utils;
   @Mock private DataFetchingEnvironment environment;

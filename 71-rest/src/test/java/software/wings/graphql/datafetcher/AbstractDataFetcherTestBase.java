@@ -47,7 +47,7 @@ import software.wings.service.intfc.instance.InstanceService;
 import software.wings.settings.SettingValue;
 import software.wings.settings.SettingVariableTypes;
 
-public abstract class AbstractDataFetcherTest extends WingsBaseTest {
+public abstract class AbstractDataFetcherTestBase extends WingsBaseTest {
   public static final String TAG_TEAM = "TEAM";
   public static final String TAG_VALUE_TEAM1 = "TEAM1";
   public static final String TAG_VALUE_TEAM2 = "TEAM2";

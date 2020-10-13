@@ -38,7 +38,7 @@ import software.wings.yaml.templatelibrary.ShellScriptTemplateYaml;
 
 import java.io.IOException;
 
-public class ShellScriptTemplateYamlHandlerTest extends TemplateLibraryYamlHandlerTest {
+public class ShellScriptTemplateYamlHandlerTest extends TemplateLibraryYamlHandlerTestBase {
   private String templateName = "test-shell-script";
 
   @InjectMocks @Inject private ShellScriptTemplateYamlHandler yamlHandler;

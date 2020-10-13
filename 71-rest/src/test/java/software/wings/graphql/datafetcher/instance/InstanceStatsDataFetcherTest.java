@@ -25,7 +25,7 @@ import org.mockito.Mock;
 import org.mockito.stubbing.Answer;
 import software.wings.beans.Environment.EnvironmentType;
 import software.wings.beans.User;
-import software.wings.graphql.datafetcher.AbstractDataFetcherTest;
+import software.wings.graphql.datafetcher.AbstractDataFetcherTestBase;
 import software.wings.graphql.schema.type.aggregation.QLAggregatedData;
 import software.wings.graphql.schema.type.aggregation.QLData;
 import software.wings.graphql.schema.type.aggregation.QLDataPoint;
@@ -60,7 +60,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 @FieldNameConstants(innerTypeName = "InstanceStatsDataFetcherTestKeys")
-public class InstanceStatsDataFetcherTest extends AbstractDataFetcherTest {
+public class InstanceStatsDataFetcherTest extends AbstractDataFetcherTestBase {
   @Mock TimeScaleDBService timeScaleDBService;
   @Inject @InjectMocks InstanceTimeSeriesDataHelper instanceTimeSeriesDataHelper;
   @Inject @InjectMocks InstanceStatsDataFetcher dataFetcher;

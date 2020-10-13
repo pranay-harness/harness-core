@@ -20,7 +20,7 @@ import software.wings.beans.SettingAttribute.SettingCategory;
 import software.wings.beans.config.NexusConfig;
 import software.wings.service.impl.yaml.handler.setting.artifactserver.NexusConfigYamlHandler;
 
-public class NexusConfigYamlHandlerTest extends BaseSettingValueConfigYamlHandlerTest {
+public class NexusConfigYamlHandlerTest extends SettingValueConfigYamlHandlerTestBase {
   @InjectMocks @Inject private NexusConfigYamlHandler yamlHandler;
 
   public static final String url = "https://nexus.wings.software/";

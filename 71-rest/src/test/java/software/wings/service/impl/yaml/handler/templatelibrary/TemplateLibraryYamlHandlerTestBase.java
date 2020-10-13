@@ -27,11 +27,11 @@ import software.wings.service.impl.yaml.service.YamlHelper;
 import software.wings.service.intfc.EnvironmentService;
 import software.wings.service.intfc.template.TemplateGalleryService;
 import software.wings.service.intfc.yaml.YamlPushService;
-import software.wings.yaml.handler.BaseYamlHandlerTest;
+import software.wings.yaml.handler.YamlHandlerTestBase;
 
 import java.io.IOException;
 
-public abstract class TemplateLibraryYamlHandlerTest extends BaseYamlHandlerTest {
+public abstract class TemplateLibraryYamlHandlerTestBase extends YamlHandlerTestBase {
   @Rule public MockitoRule mockitoRule = MockitoJUnit.rule();
   @Mock protected YamlHelper yamlHelper;
   @Mock protected YamlHandlerFactory yamlHandlerFactory;

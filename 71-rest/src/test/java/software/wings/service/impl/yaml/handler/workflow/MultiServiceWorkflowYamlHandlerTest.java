@@ -33,7 +33,7 @@ import software.wings.yaml.workflow.MultiServiceWorkflowYaml;
 /**
  * @author rktummala on 1/10/18
  */
-public class MultiServiceWorkflowYamlHandlerTest extends BaseWorkflowYamlHandlerTest {
+public class MultiServiceWorkflowYamlHandlerTest extends WorkflowYamlHandlerTestBase {
   private String workflowName = "multiService";
 
   @InjectMocks @Inject private MultiServiceWorkflowYamlHandler yamlHandler;

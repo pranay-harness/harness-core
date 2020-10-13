@@ -14,7 +14,7 @@ import software.wings.beans.AwsCrossAccountAttributes;
 import software.wings.beans.AwsS3BucketDetails;
 import software.wings.beans.User;
 import software.wings.beans.ce.CEAwsConfig;
-import software.wings.graphql.datafetcher.AbstractDataFetcherTest;
+import software.wings.graphql.datafetcher.AbstractDataFetcherTestBase;
 import software.wings.graphql.schema.type.aggregation.QLIdFilter;
 import software.wings.graphql.schema.type.aggregation.QLIdOperator;
 import software.wings.security.UserThreadLocal;
@@ -24,7 +24,7 @@ import java.sql.SQLException;
 import java.util.Arrays;
 import java.util.List;
 
-public class CeConnectorDataFetcherTest extends AbstractDataFetcherTest {
+public class CeConnectorDataFetcherTest extends AbstractDataFetcherTestBase {
   @Inject CeConnectorDataFetcher ceConnectorDataFetcher;
 
   private static final String CUR_REPORT_NAME = "curReportName";

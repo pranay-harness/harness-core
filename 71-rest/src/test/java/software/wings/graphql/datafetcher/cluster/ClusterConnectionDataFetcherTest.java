@@ -18,7 +18,7 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.Mock;
 import software.wings.beans.User;
-import software.wings.graphql.datafetcher.AbstractDataFetcherTest;
+import software.wings.graphql.datafetcher.AbstractDataFetcherTestBase;
 import software.wings.graphql.schema.query.QLClustersQueryParameters;
 import software.wings.graphql.schema.type.QLClusterConnection;
 import software.wings.security.UserThreadLocal;
@@ -28,7 +28,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
-public class ClusterConnectionDataFetcherTest extends AbstractDataFetcherTest {
+public class ClusterConnectionDataFetcherTest extends AbstractDataFetcherTestBase {
   @Mock ClusterRecordService clusterRecordService;
   @Inject ClusterConnectionDataFetcher clusterConnectionDataFetcher;
 

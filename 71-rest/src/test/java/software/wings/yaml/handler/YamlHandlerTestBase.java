@@ -16,7 +16,7 @@ import java.io.IOException;
 /**
  * @author rktummala on 1/9/18
  */
-public class BaseYamlHandlerTest extends WingsBaseTest {
+public class YamlHandlerTestBase extends WingsBaseTest {
   @Rule public ExpectedException thrown = ExpectedException.none();
 
   protected String getYamlContent(BaseYaml yaml) {

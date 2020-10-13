@@ -23,7 +23,7 @@ import software.wings.beans.yaml.ChangeContext;
 import software.wings.service.impl.yaml.handler.inframapping.CodeDeployInfraMappingYamlHandler;
 import software.wings.service.intfc.InfrastructureMappingService;
 
-public class CodeDeployInfraMappingYamlHandlerTest extends BaseInfraMappingYamlHandlerTest {
+public class CodeDeployInfraMappingYamlHandlerTest extends BaseInfraMappingYamlHandlerTestBase {
   private String validYamlContent = "harnessApiVersion: '1.0'\n"
       + "type: AWS_AWS_CODEDEPLOY\n"
       + "applicationName: CustomTodolist\n"

@@ -80,7 +80,7 @@ import software.wings.service.intfc.yaml.YamlDirectoryService;
 import software.wings.service.intfc.yaml.YamlGitService;
 import software.wings.sm.StateType;
 import software.wings.utils.WingsTestConstants.MockChecker;
-import software.wings.yaml.handler.BaseYamlHandlerTest;
+import software.wings.yaml.handler.YamlHandlerTestBase;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -93,7 +93,7 @@ import java.util.Map;
  * @author rktummala on 1/9/18
  */
 @SetupScheduler
-public class PipelineYamlHandlerUserGroupTest extends BaseYamlHandlerTest {
+public class PipelineYamlHandlerUserGroupTest extends YamlHandlerTestBase {
   @Mock AppService appService;
   @Mock YamlGitService yamlGitService;
   @Mock InfrastructureMappingService infrastructureMappingService;

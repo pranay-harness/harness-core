@@ -38,7 +38,7 @@ import software.wings.yaml.workflow.BuildWorkflowYaml;
 /**
  * @author rktummala on 1/10/18
  */
-public class BuildWorkflowYamlHandlerTest extends BaseWorkflowYamlHandlerTest {
+public class BuildWorkflowYamlHandlerTest extends WorkflowYamlHandlerTestBase {
   private String workflowName = "build";
 
   @InjectMocks @Inject private BuildWorkflowYamlHandler yamlHandler;
