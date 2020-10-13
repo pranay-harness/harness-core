@@ -55,7 +55,6 @@ import static io.harness.govern.IgnoreThrowable.ignoredOnPurpose;
 import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
 import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_NESTS;
 import static io.harness.logging.Misc.getDurationString;
-import static io.harness.managerclient.ManagerClientFactory.TRUST_ALL_CERTS;
 import static io.harness.network.Localhost.getLocalHostAddress;
 import static io.harness.network.Localhost.getLocalHostName;
 import static io.harness.network.SafeHttpCall.execute;
@@ -194,8 +193,6 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
 import java.nio.file.attribute.PosixFilePermission;
-import java.security.KeyManagementException;
-import java.security.NoSuchAlgorithmException;
 import java.time.Clock;
 import java.time.Duration;
 import java.util.ArrayList;
@@ -222,9 +219,7 @@ import java.util.function.Consumer;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import javax.annotation.Nullable;
-import javax.net.ssl.SSLContext;
 import javax.net.ssl.SSLException;
-import javax.net.ssl.TrustManager;
 import javax.validation.constraints.NotNull;
 
 @Singleton
@@ -429,9 +424,6 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
       logger.info("[New] Delegate registered in {} ms", clock.millis() - start);
       DelegateStackdriverLogAppender.setDelegateId(delegateId);
 
-      SSLContext sslContext = javax.net.ssl.SSLContext.getInstance("SSL");
-      sslContext.init(null, TRUST_ALL_CERTS.toArray(new TrustManager[1]), new java.security.SecureRandom());
-
       if (isPollingForTasksEnabled()) {
         logger.info("Polling is enabled for Delegate");
         pollingForTasks.set(true);
@@ -594,7 +586,7 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
     } catch (InterruptedException e) {
       Thread.currentThread().interrupt();
       logger.error("Exception while starting/running delegate", e);
-    } catch (RuntimeException | IOException | NoSuchAlgorithmException | KeyManagementException e) {
+    } catch (RuntimeException | IOException e) {
       logger.error("Exception while starting/running delegate", e);
     }
   }
