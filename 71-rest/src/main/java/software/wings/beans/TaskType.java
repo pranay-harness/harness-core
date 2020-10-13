@@ -91,6 +91,7 @@ import software.wings.delegatetasks.jira.JiraTask;
 import software.wings.delegatetasks.jira.ShellScriptApprovalTask;
 import software.wings.delegatetasks.k8s.K8sTask;
 import software.wings.delegatetasks.pcf.PcfCommandTask;
+import software.wings.delegatetasks.s3.S3FetchFilesTask;
 import software.wings.delegatetasks.servicenow.ServicenowTask;
 import software.wings.delegatetasks.shellscript.provisioner.ShellScriptProvisionTask;
 import software.wings.delegatetasks.spotinst.SpotInstTask;
@@ -405,6 +406,7 @@ public enum TaskType {
 
   CUSTOM_LOG_COLLECTION_TASK(TaskGroup.LOG, LogDataCollectionTask.class, APMValidation.class),
   CLOUD_FORMATION_TASK(TaskGroup.CLOUD_FORMATION, CloudFormationCommandTask.class, AwsConnectionValidation.class),
+  FETCH_S3_FILE_TASK(TaskGroup.AWS, S3FetchFilesTask.class, AwsConnectionValidation.class),
 
   TERRAFORM_PROVISION_TASK(TaskGroup.TERRAFORM, TerraformProvisionTask.class, TerraformValidation.class),
   TERRAFORM_INPUT_VARIABLES_OBTAIN_TASK(

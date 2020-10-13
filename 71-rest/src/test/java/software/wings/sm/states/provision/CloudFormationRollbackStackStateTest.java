@@ -3,6 +3,7 @@ package software.wings.sm.states.provision;
 import static io.harness.logging.CommandExecutionStatus.SUCCESS;
 import static io.harness.rule.OwnerRule.BOJANA;
 import static io.harness.rule.OwnerRule.SATYAM;
+import static io.harness.rule.OwnerRule.TMACARI;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -58,6 +59,7 @@ import software.wings.beans.NameValuePair;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.infrastructure.CloudFormationRollbackConfig;
 import software.wings.dl.WingsPersistence;
+import software.wings.helpers.ext.cloudformation.CloudFormationCompletionFlag;
 import software.wings.helpers.ext.cloudformation.request.CloudFormationCommandRequest;
 import software.wings.helpers.ext.cloudformation.request.CloudFormationCreateStackRequest;
 import software.wings.helpers.ext.cloudformation.request.CloudFormationDeleteStackRequest;
@@ -71,6 +73,8 @@ import software.wings.service.intfc.InfrastructureProvisionerService;
 import software.wings.service.intfc.LogService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.security.SecretManager;
+import software.wings.service.intfc.sweepingoutput.SweepingOutputInquiry;
+import software.wings.service.intfc.sweepingoutput.SweepingOutputService;
 import software.wings.sm.ExecutionContextImpl;
 import software.wings.sm.ExecutionResponse;
 import software.wings.sm.WorkflowStandardParams;
@@ -89,6 +93,7 @@ public class CloudFormationRollbackStackStateTest extends WingsBaseTest {
   @Mock private LogService mockLogService;
   @Mock private WingsPersistence mockWingsPersistence;
   @Mock private ExecutionContextImpl mockContext;
+  @Mock private SweepingOutputService sweepingOutputService;
 
   @InjectMocks private CloudFormationRollbackStackState state = new CloudFormationRollbackStackState("stateName");
 
@@ -163,6 +168,10 @@ public class CloudFormationRollbackStackStateTest extends WingsBaseTest {
     doReturn(singletonList(stackElement)).when(mockContext).getContextElementList(any());
     state.setProvisionerId(PROVISIONER_ID);
     state.setTimeoutMillis(1000);
+    doReturn(SweepingOutputInquiry.builder()).when(mockContext).prepareSweepingOutputInquiryBuilder();
+    doReturn(CloudFormationCompletionFlag.builder().createStackCompleted(true).build())
+        .when(sweepingOutputService)
+        .findSweepingOutput(any());
     ExecutionResponse response = state.execute(mockContext);
     assertThat(response.getExecutionStatus()).isEqualTo(ExecutionStatus.SUCCESS);
     ArgumentCaptor<DelegateTask> captor = ArgumentCaptor.forClass(DelegateTask.class);
@@ -187,6 +196,10 @@ public class CloudFormationRollbackStackStateTest extends WingsBaseTest {
   @Owner(developers = BOJANA)
   @Category(UnitTests.class)
   public void testExecuteInternalWithSavedElement() {
+    doReturn(SweepingOutputInquiry.builder()).when(mockContext).prepareSweepingOutputInquiryBuilder();
+    doReturn(CloudFormationCompletionFlag.builder().createStackCompleted(true).build())
+        .when(sweepingOutputService)
+        .findSweepingOutput(any());
     ExecutionResponse response = state.executeInternal(mockContext, ACTIVITY_ID);
     ScriptStateExecutionData stateExecutionData = (ScriptStateExecutionData) response.getStateExecutionData();
     assertThat(stateExecutionData.getActivityId()).isEqualTo(ACTIVITY_ID);
@@ -198,6 +211,10 @@ public class CloudFormationRollbackStackStateTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void testExecuteInternalTypeCreateBody() {
     //   no variables and create type is of type create body
+    doReturn(SweepingOutputInquiry.builder()).when(mockContext).prepareSweepingOutputInquiryBuilder();
+    doReturn(CloudFormationCompletionFlag.builder().createStackCompleted(true).build())
+        .when(sweepingOutputService)
+        .findSweepingOutput(any());
     cloudFormationRollbackConfig.setVariables(null);
     cloudFormationRollbackConfig.setBody("body");
     cloudFormationRollbackConfig.setCreateType(CloudFormationCreateStackRequest.CLOUD_FORMATION_STACK_CREATE_BODY);
@@ -224,10 +241,38 @@ public class CloudFormationRollbackStackStateTest extends WingsBaseTest {
     doReturn(singletonList(stackElement)).when(mockContext).getContextElementList(any());
 
     state.provisionerId = PROVISIONER_ID;
+    doReturn(SweepingOutputInquiry.builder()).when(mockContext).prepareSweepingOutputInquiryBuilder();
+    doReturn(CloudFormationCompletionFlag.builder().createStackCompleted(true).build())
+        .when(sweepingOutputService)
+        .findSweepingOutput(any());
     ExecutionResponse response = state.executeInternal(mockContext, ACTIVITY_ID);
     ScriptStateExecutionData stateExecutionData = (ScriptStateExecutionData) response.getStateExecutionData();
     assertThat(stateExecutionData.getActivityId()).isEqualTo(ACTIVITY_ID);
     verifyDelegate(CloudFormationCreateStackRequest.CLOUD_FORMATION_STACK_CREATE_URL, "url", true, true);
+  }
+
+  @Test
+  @Owner(developers = TMACARI)
+  @Category(UnitTests.class)
+  public void testExecuteInternalWhenRollBackSkipped() {
+    Application application = new Application();
+    application.setAccountId(ACCOUNT_ID);
+    when(mockContext.getApp()).thenReturn(application);
+
+    when(mockContext.getWorkflowExecutionId()).thenReturn(WORKFLOW_EXECUTION_ID);
+
+    CloudFormationRollbackInfoElement stackElement = CloudFormationRollbackInfoElement.builder()
+                                                         .stackExisted(false)
+                                                         .provisionerId(PROVISIONER_ID)
+                                                         .awsConfigId("awsConfigId")
+                                                         .build();
+    doReturn(singletonList(stackElement)).when(mockContext).getContextElementList(any());
+
+    state.provisionerId = PROVISIONER_ID;
+    doReturn(SweepingOutputInquiry.builder()).when(mockContext).prepareSweepingOutputInquiryBuilder();
+    doReturn(null).when(sweepingOutputService).findSweepingOutput(any());
+    ExecutionResponse response = state.executeInternal(mockContext, ACTIVITY_ID);
+    assertThat(response.getExecutionStatus()).isEqualTo(ExecutionStatus.SKIPPED);
   }
 
   @Test

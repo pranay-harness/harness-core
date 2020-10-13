@@ -4,8 +4,10 @@ import static io.harness.logging.CommandExecutionStatus.FAILURE;
 import static io.harness.logging.CommandExecutionStatus.SUCCESS;
 import static io.harness.rule.OwnerRule.ARVIND;
 import static io.harness.rule.OwnerRule.BOJANA;
+import static io.harness.rule.OwnerRule.TMACARI;
 import static java.util.Collections.emptyList;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyList;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
@@ -20,6 +22,7 @@ import static software.wings.beans.CloudFormationSourceType.TEMPLATE_URL;
 import static software.wings.beans.Environment.Builder.anEnvironment;
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
 import static software.wings.beans.TaskType.CLOUD_FORMATION_TASK;
+import static software.wings.beans.TaskType.FETCH_S3_FILE_TASK;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 import static software.wings.utils.WingsTestConstants.ACTIVITY_ID;
 import static software.wings.utils.WingsTestConstants.APP_ID;
@@ -33,8 +36,11 @@ import com.google.common.collect.ImmutableMap;
 
 import io.harness.beans.DelegateTask;
 import io.harness.beans.ExecutionStatus;
+import io.harness.beans.SweepingOutputInstance;
 import io.harness.category.element.UnitTests;
 import io.harness.context.ContextElementType;
+import io.harness.exception.WingsException;
+import io.harness.git.model.GitFile;
 import io.harness.logging.CommandExecutionStatus;
 import io.harness.rule.Owner;
 import io.harness.tasks.ResponseData;
@@ -57,9 +63,20 @@ import software.wings.beans.AwsConfig;
 import software.wings.beans.CloudFormationInfrastructureProvisioner;
 import software.wings.beans.Environment;
 import software.wings.beans.GitConfig;
+import software.wings.beans.GitFetchFilesConfig;
+import software.wings.beans.GitFetchFilesTaskParams;
 import software.wings.beans.GitFileConfig;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.TemplateExpression;
+import software.wings.beans.s3.FetchS3FilesCommandParams;
+import software.wings.beans.s3.FetchS3FilesExecutionResponse;
+import software.wings.beans.s3.S3Bucket;
+import software.wings.beans.s3.S3FetchFileResult;
+import software.wings.beans.s3.S3File;
+import software.wings.beans.s3.S3FileRequest;
+import software.wings.beans.yaml.GitCommandExecutionResponse;
+import software.wings.beans.yaml.GitFetchFilesFromMultipleRepoResult;
+import software.wings.beans.yaml.GitFetchFilesResult;
 import software.wings.common.TemplateExpressionProcessor;
 import software.wings.dl.WingsPersistence;
 import software.wings.helpers.ext.cloudformation.request.CloudFormationCommandRequest;
@@ -74,8 +91,11 @@ import software.wings.service.intfc.ActivityService;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.DelegateService;
 import software.wings.service.intfc.InfrastructureProvisionerService;
+import software.wings.service.intfc.LogService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.security.SecretManager;
+import software.wings.service.intfc.sweepingoutput.SweepingOutputInquiry;
+import software.wings.service.intfc.sweepingoutput.SweepingOutputService;
 import software.wings.settings.SettingVariableTypes;
 import software.wings.sm.ExecutionContextImpl;
 import software.wings.sm.ExecutionResponse;
@@ -103,11 +123,15 @@ public class CloudFormationCreateStackStateTest extends WingsBaseTest {
   @Mock private DelegateService delegateService;
   @Spy private GitClientHelper gitClientHelper;
   @Spy private GitConfigHelperService gitConfigHelperService;
+  @Mock private SweepingOutputService sweepingOutputService;
+  @Mock private LogService logService;
 
-  @InjectMocks private CloudFormationCreateStackState state = new CloudFormationCreateStackState("stateName");
+  @InjectMocks @Spy private CloudFormationCreateStackState state = new CloudFormationCreateStackState("stateName");
 
   private AwsConfig awsConfig = AwsConfig.builder().tag(TAG_NAME).build();
   private static final String repoUrl = "http://xyz.com/z.git";
+  private static final String PARAMETERS_FILE_CONTENT =
+      "[{\"ParameterKey\": \"name\",\"ParameterValue\": \"value\"},{\"ParameterKey\": \"name2\",\"ParameterValue\": \"value2\"}]";
 
   @Before
   public void setUp() {
@@ -117,15 +141,105 @@ public class CloudFormationCreateStackStateTest extends WingsBaseTest {
     doReturn(env).when(mockParams).fetchRequiredEnv();
 
     Application application = new Application();
+    application.setAppId(APP_ID);
     application.setAccountId(ACCOUNT_ID);
     application.setUuid(UUID);
     when(mockContext.getApp()).thenReturn(application);
+    when(mockContext.getEnv()).thenReturn(env);
 
     Answer<String> doReturnSameValue = invocation -> invocation.getArgumentAt(0, String.class);
     doAnswer(doReturnSameValue).when(mockContext).renderExpression(anyString());
 
     SettingAttribute settingAttribute = aSettingAttribute().withValue(awsConfig).build();
     doReturn(settingAttribute).when(settingsService).get(anyString());
+  }
+
+  @Test
+  @Owner(developers = TMACARI)
+  @Category(UnitTests.class)
+  public void buildDelegateTaskProvisionByUrlWithParametersFile() {
+    CloudFormationInfrastructureProvisioner provisioner = CloudFormationInfrastructureProvisioner.builder()
+                                                              .sourceType(TEMPLATE_URL.name())
+                                                              .templateFilePath(TEMPLATE_FILE_PATH)
+                                                              .build();
+    state.setFileFetched(false);
+    state.setUseParametersFile(true);
+    state.setParametersFilePaths(
+        Collections.singletonList("https://harness-test-bucket.s3.amazonaws.com/parameters.json"));
+    state.buildAndQueueDelegateTask(mockContext, provisioner, awsConfig, ACTIVITY_ID);
+    ArgumentCaptor<DelegateTask> captor = ArgumentCaptor.forClass(DelegateTask.class);
+    verify(delegateService).queueTask(captor.capture());
+    DelegateTask delegateTask = captor.getValue();
+    assertThat(delegateTask.getAccountId()).isEqualTo(ACCOUNT_ID);
+    assertThat(delegateTask.getData().getParameters()).isNotNull();
+    assertThat(delegateTask.getData().getParameters().length).isEqualTo(1);
+    assertThat(delegateTask.getData().getTaskType()).isEqualTo(FETCH_S3_FILE_TASK.name());
+    FetchS3FilesCommandParams fetchS3FilesCommandParams =
+        (FetchS3FilesCommandParams) delegateTask.getData().getParameters()[0];
+    assertThat(fetchS3FilesCommandParams.getAccountId()).isEqualTo(ACCOUNT_ID);
+    assertThat(fetchS3FilesCommandParams.getAppId()).isEqualTo(APP_ID);
+    assertThat(fetchS3FilesCommandParams.getAwsConfig()).isEqualTo(awsConfig);
+    List<S3FileRequest> s3FileRequests = fetchS3FilesCommandParams.getS3FileRequests();
+    assertThat(s3FileRequests.get(0).getBucketName()).isEqualTo("harness-test-bucket");
+    assertThat(s3FileRequests.get(0).getFileKeys().get(0)).isEqualTo("parameters.json");
+  }
+
+  @Test(expected = WingsException.class)
+  @Owner(developers = TMACARI)
+  @Category(UnitTests.class)
+  public void buildDelegateTaskProvisionByUrlWithInvalidParametersFileUrl() {
+    CloudFormationInfrastructureProvisioner provisioner = CloudFormationInfrastructureProvisioner.builder()
+                                                              .sourceType(TEMPLATE_URL.name())
+                                                              .templateFilePath(TEMPLATE_FILE_PATH)
+                                                              .build();
+    state.setFileFetched(false);
+    state.setUseParametersFile(true);
+    state.setParametersFilePaths(
+        Collections.singletonList("https://harness-test-bucket.s.amazonaws.com/parameters.json"));
+    state.buildAndQueueDelegateTask(mockContext, provisioner, awsConfig, ACTIVITY_ID);
+  }
+
+  @Test
+  @Owner(developers = TMACARI)
+  @Category(UnitTests.class)
+  public void buildDelegateTaskProvisionByGitRepoWithParametersFile() {
+    CloudFormationInfrastructureProvisioner provisioner = CloudFormationInfrastructureProvisioner.builder()
+                                                              .sourceType(GIT.name())
+                                                              .gitFileConfig(GitFileConfig.builder()
+                                                                                 .connectorId("sourceRepoSettingId")
+                                                                                 .branch("gitBranch")
+                                                                                 .commitId("commitId")
+                                                                                 .build())
+                                                              .build();
+
+    GitConfig gitConfig = GitConfig.builder().urlType(GitConfig.UrlType.REPO).repoUrl(repoUrl).build();
+    when(gitUtilsManager.getGitConfig("sourceRepoSettingId")).thenReturn(gitConfig);
+    when(mockInfrastructureProvisionerService.get(anyString(), anyString())).thenReturn(provisioner);
+    state.setFileFetched(false);
+    state.setUseParametersFile(true);
+    state.setParametersFilePaths(Collections.singletonList("parameters.json"));
+    state.executeInternal(mockContext, ACTIVITY_ID);
+    ArgumentCaptor<DelegateTask> captor = ArgumentCaptor.forClass(DelegateTask.class);
+    verify(delegateService).queueTask(captor.capture());
+    DelegateTask delegateTask = captor.getValue();
+
+    assertThat(delegateTask.getAccountId()).isEqualTo(ACCOUNT_ID);
+
+    GitFetchFilesTaskParams request = (GitFetchFilesTaskParams) delegateTask.getData().getParameters()[0];
+    assertThat(request.getAccountId()).isEqualTo(ACCOUNT_ID);
+    assertThat(request.getAppId()).isEqualTo(APP_ID);
+    assertThat(request.getActivityId()).isEqualTo(ACTIVITY_ID);
+
+    GitFetchFilesConfig gitFetchFilesConfig = request.getGitFetchFilesConfigMap().get("Cloud Formation parameters");
+    GitConfig fileMapGitConfig = gitFetchFilesConfig.getGitConfig();
+    assertThat(fileMapGitConfig.getBranch()).isEqualTo("gitBranch");
+    assertThat(fileMapGitConfig.getReference()).isEqualTo("commitId");
+    assertThat(fileMapGitConfig.getRepoName()).isNull();
+    assertThat(fileMapGitConfig.getRepoUrl()).isEqualTo(repoUrl);
+
+    GitFileConfig gitFileConfig = gitFetchFilesConfig.getGitFileConfig();
+    assertThat(gitFileConfig).isEqualTo(provisioner.getGitFileConfig());
+    assertThat(gitFileConfig.getFilePathList().get(0)).isEqualTo("parameters.json");
   }
 
   @Test
@@ -137,7 +251,10 @@ public class CloudFormationCreateStackStateTest extends WingsBaseTest {
                                                               .templateFilePath(TEMPLATE_FILE_PATH)
                                                               .build();
 
-    DelegateTask delegateTask = state.buildDelegateTask(mockContext, provisioner, awsConfig, ACTIVITY_ID);
+    state.buildAndQueueDelegateTask(mockContext, provisioner, awsConfig, ACTIVITY_ID);
+    ArgumentCaptor<DelegateTask> captor = ArgumentCaptor.forClass(DelegateTask.class);
+    verify(delegateService).queueTask(captor.capture());
+    DelegateTask delegateTask = captor.getValue();
     verifyDelegateTask(delegateTask, true);
     CloudFormationCreateStackRequest request =
         (CloudFormationCreateStackRequest) delegateTask.getData().getParameters()[0];
@@ -156,7 +273,10 @@ public class CloudFormationCreateStackStateTest extends WingsBaseTest {
                                                               .build();
     state.customStackName = "customStackName";
     state.useCustomStackName = true;
-    DelegateTask delegateTask = state.buildDelegateTask(mockContext, provisioner, awsConfig, ACTIVITY_ID);
+    state.buildAndQueueDelegateTask(mockContext, provisioner, awsConfig, ACTIVITY_ID);
+    ArgumentCaptor<DelegateTask> captor = ArgumentCaptor.forClass(DelegateTask.class);
+    verify(delegateService).queueTask(captor.capture());
+    DelegateTask delegateTask = captor.getValue();
     verifyDelegateTask(delegateTask, true);
     CloudFormationCreateStackRequest request =
         (CloudFormationCreateStackRequest) delegateTask.getData().getParameters()[0];
@@ -181,7 +301,10 @@ public class CloudFormationCreateStackStateTest extends WingsBaseTest {
     GitConfig gitConfig = GitConfig.builder().urlType(GitConfig.UrlType.REPO).repoUrl(repoUrl).build();
     when(gitUtilsManager.getGitConfig("sourceRepoSettingId")).thenReturn(gitConfig);
 
-    DelegateTask delegateTask = state.buildDelegateTask(mockContext, provisioner, awsConfig, ACTIVITY_ID);
+    state.buildAndQueueDelegateTask(mockContext, provisioner, awsConfig, ACTIVITY_ID);
+    ArgumentCaptor<DelegateTask> captor = ArgumentCaptor.forClass(DelegateTask.class);
+    verify(delegateService).queueTask(captor.capture());
+    DelegateTask delegateTask = captor.getValue();
     verifyDelegateTask(delegateTask, true);
     CloudFormationCreateStackRequest request =
         (CloudFormationCreateStackRequest) delegateTask.getData().getParameters()[0];
@@ -210,7 +333,10 @@ public class CloudFormationCreateStackStateTest extends WingsBaseTest {
     GitConfig gitConfig = GitConfig.builder().urlType(GitConfig.UrlType.ACCOUNT).repoUrl("http://xyz.com").build();
     when(gitUtilsManager.getGitConfig("sourceRepoSettingId")).thenReturn(gitConfig);
 
-    DelegateTask delegateTask = state.buildDelegateTask(mockContext, provisioner, awsConfig, ACTIVITY_ID);
+    state.buildAndQueueDelegateTask(mockContext, provisioner, awsConfig, ACTIVITY_ID);
+    ArgumentCaptor<DelegateTask> captor = ArgumentCaptor.forClass(DelegateTask.class);
+    verify(delegateService).queueTask(captor.capture());
+    DelegateTask delegateTask = captor.getValue();
     verifyDelegateTask(delegateTask, true);
     CloudFormationCreateStackRequest request =
         (CloudFormationCreateStackRequest) delegateTask.getData().getParameters()[0];
@@ -236,6 +362,8 @@ public class CloudFormationCreateStackStateTest extends WingsBaseTest {
             "stackId", existingStackInfo, cloudFormationRollbackInfo);
 
     TemplateExpression templateExpression = TemplateExpression.builder().build();
+    doReturn(SweepingOutputInquiry.builder()).when(mockContext).prepareSweepingOutputInquiryBuilder();
+    doReturn(SweepingOutputInstance.builder()).when(mockContext).prepareSweepingOutputBuilder(any());
     doReturn(ScriptStateExecutionData.builder().build()).when(mockContext).getStateExecutionData();
     when(templateExpressionProcessor.getTemplateExpression(anyList(), anyString())).thenReturn(templateExpression);
 
@@ -265,6 +393,116 @@ public class CloudFormationCreateStackStateTest extends WingsBaseTest {
     testHandleAsyncResponse(createStackResponse);
   }
 
+  @Test
+  @Owner(developers = TMACARI)
+  @Category(UnitTests.class)
+  public void testHandAsyncResponseForGitFetchFiles() {
+    state.setParametersFilePaths(Collections.singletonList("filePath"));
+    WorkflowStandardParams workflowStandardParams = new WorkflowStandardParams();
+    workflowStandardParams.setAppId(APP_ID);
+    doReturn(SweepingOutputInquiry.builder()).when(mockContext).prepareSweepingOutputInquiryBuilder();
+    doReturn(SweepingOutputInstance.builder()).when(mockContext).prepareSweepingOutputBuilder(any());
+    doReturn(workflowStandardParams).when(mockContext).getContextElement(ContextElementType.STANDARD);
+    doReturn(ScriptStateExecutionData.builder().activityId(ACTIVITY_ID).build())
+        .when(mockContext)
+        .getStateExecutionData();
+    doReturn(ExecutionResponse.builder().build()).when(state).executeInternal(any(), any());
+    Map<String, ResponseData> delegateResponse = ImmutableMap.of(ACTIVITY_ID,
+        GitCommandExecutionResponse.builder()
+            .gitCommandStatus(GitCommandExecutionResponse.GitCommandStatus.SUCCESS)
+            .gitCommandResult(
+                GitFetchFilesFromMultipleRepoResult.builder()
+                    .filesFromMultipleRepo(Collections.singletonMap("Cloud Formation parameters",
+                        GitFetchFilesResult.builder()
+                            .files(Collections.singletonList(
+                                GitFile.builder().filePath("filePath").fileContent(PARAMETERS_FILE_CONTENT).build()))
+                            .build()))
+                    .build())
+            .build());
+    state.handleAsyncResponse(mockContext, delegateResponse);
+    assertThat(state.getVariables().size()).isEqualTo(2);
+    assertThat(state.isFileFetched()).isTrue();
+  }
+
+  @Test
+  @Owner(developers = TMACARI)
+  @Category(UnitTests.class)
+  public void testHandAsyncFailureResponseForGitFetchFiles() {
+    WorkflowStandardParams workflowStandardParams = new WorkflowStandardParams();
+    workflowStandardParams.setAppId(APP_ID);
+    doReturn(SweepingOutputInquiry.builder()).when(mockContext).prepareSweepingOutputInquiryBuilder();
+    doReturn("workfloExecutionId").when(mockContext).getWorkflowExecutionId();
+    doReturn(SweepingOutputInstance.builder()).when(mockContext).prepareSweepingOutputBuilder(any());
+    doReturn(workflowStandardParams).when(mockContext).getContextElement(ContextElementType.STANDARD);
+    doReturn(ScriptStateExecutionData.builder().activityId(ACTIVITY_ID).build())
+        .when(mockContext)
+        .getStateExecutionData();
+    doReturn(ExecutionResponse.builder().build()).when(state).executeInternal(any(), any());
+    Map<String, ResponseData> delegateResponse = ImmutableMap.of(ACTIVITY_ID,
+        GitCommandExecutionResponse.builder()
+            .gitCommandStatus(GitCommandExecutionResponse.GitCommandStatus.FAILURE)
+            .build());
+    ExecutionResponse response = state.handleAsyncResponse(mockContext, delegateResponse);
+    assertThat(response.getExecutionStatus()).isEqualTo(ExecutionStatus.FAILED);
+  }
+
+  @Test
+  @Owner(developers = TMACARI)
+  @Category(UnitTests.class)
+  public void testHandAsyncResponseForS3FetchFiles() {
+    state.setParametersFilePaths(
+        Collections.singletonList("https://harness-test-bucket.s3.amazonaws.com/parameters.json"));
+    WorkflowStandardParams workflowStandardParams = new WorkflowStandardParams();
+    workflowStandardParams.setAppId(APP_ID);
+    doReturn(SweepingOutputInquiry.builder()).when(mockContext).prepareSweepingOutputInquiryBuilder();
+    doReturn(SweepingOutputInstance.builder()).when(mockContext).prepareSweepingOutputBuilder(any());
+    doReturn(workflowStandardParams).when(mockContext).getContextElement(ContextElementType.STANDARD);
+    doReturn(ScriptStateExecutionData.builder().activityId(ACTIVITY_ID).build())
+        .when(mockContext)
+        .getStateExecutionData();
+    doReturn(ExecutionResponse.builder().build()).when(state).executeInternal(any(), any());
+    FetchS3FilesExecutionResponse fetchS3FilesExecutionResponse =
+        FetchS3FilesExecutionResponse.builder()
+            .commandStatus(FetchS3FilesExecutionResponse.FetchS3FilesCommandStatus.SUCCESS)
+            .s3FetchFileResult(S3FetchFileResult.builder()
+                                   .s3Buckets(Collections.singletonList(
+                                       S3Bucket.builder()
+                                           .name("harness-test-bucket")
+                                           .s3Files(Collections.singletonList(S3File.builder()
+                                                                                  .fileKey("parameters.json")
+                                                                                  .fileContent(PARAMETERS_FILE_CONTENT)
+                                                                                  .build()))
+                                           .build()))
+                                   .build())
+            .build();
+    Map<String, ResponseData> delegateResponse = ImmutableMap.of(ACTIVITY_ID, fetchS3FilesExecutionResponse);
+    state.handleAsyncResponse(mockContext, delegateResponse);
+    assertThat(state.getVariables().size()).isEqualTo(2);
+    assertThat(state.isFileFetched()).isTrue();
+  }
+
+  @Test
+  @Owner(developers = TMACARI)
+  @Category(UnitTests.class)
+  public void testHandAsyncFailureResponseFors3FetchFiles() {
+    WorkflowStandardParams workflowStandardParams = new WorkflowStandardParams();
+    workflowStandardParams.setAppId(APP_ID);
+    doReturn(SweepingOutputInquiry.builder()).when(mockContext).prepareSweepingOutputInquiryBuilder();
+    doReturn("workfloExecutionId").when(mockContext).getWorkflowExecutionId();
+    doReturn(SweepingOutputInstance.builder()).when(mockContext).prepareSweepingOutputBuilder(any());
+    doReturn(workflowStandardParams).when(mockContext).getContextElement(ContextElementType.STANDARD);
+    doReturn(ScriptStateExecutionData.builder().activityId(ACTIVITY_ID).build())
+        .when(mockContext)
+        .getStateExecutionData();
+    doReturn(ExecutionResponse.builder().build()).when(state).executeInternal(any(), any());
+    Map<String, ResponseData> delegateResponse = ImmutableMap.of(ACTIVITY_ID,
+        FetchS3FilesExecutionResponse.builder()
+            .commandStatus(FetchS3FilesExecutionResponse.FetchS3FilesCommandStatus.FAILURE)
+            .build());
+    ExecutionResponse response = state.handleAsyncResponse(mockContext, delegateResponse);
+    assertThat(response.getExecutionStatus()).isEqualTo(ExecutionStatus.FAILED);
+  }
+
   private void testHandleAsyncResponse(CloudFormationCreateStackResponse createStackResponse) {
     // no template expressions
     state.setTemplateExpressions(null);
@@ -282,6 +520,7 @@ public class CloudFormationCreateStackStateTest extends WingsBaseTest {
     executionResponse.getContextElements().forEach(
         contextElement -> cloudFormationElementList.add((CloudFormationElement) contextElement));
     verifyResponse(cloudFormationElementList, false, "awsConfigId");
+    verify(sweepingOutputService).save(any());
   }
 
   private void verifyResponse(
@@ -313,6 +552,8 @@ public class CloudFormationCreateStackStateTest extends WingsBaseTest {
             .commandExecutionStatus(FAILURE)
             .commandResponse(CloudFormationCreateStackResponse.builder().commandExecutionStatus(FAILURE).build())
             .build());
+    doReturn(SweepingOutputInquiry.builder()).when(mockContext).prepareSweepingOutputInquiryBuilder();
+    doReturn(SweepingOutputInstance.builder()).when(mockContext).prepareSweepingOutputBuilder(any());
     ExecutionResponse response = state.handleAsyncResponse(mockContext, delegateResponse);
     assertThat(response.getExecutionStatus()).isEqualTo(ExecutionStatus.FAILED);
   }

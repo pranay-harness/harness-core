@@ -12,6 +12,7 @@ import io.harness.beans.DelegateTask;
 import io.harness.delegate.beans.TaskData;
 import io.harness.tasks.Cd1SetupFields;
 import org.apache.commons.lang3.StringUtils;
+import software.wings.api.ScriptStateExecutionData;
 import software.wings.api.cloudformation.CloudFormationElement;
 import software.wings.beans.AwsConfig;
 import software.wings.beans.CloudFormationInfrastructureProvisioner;
@@ -20,8 +21,10 @@ import software.wings.helpers.ext.cloudformation.request.CloudFormationDeleteSta
 import software.wings.helpers.ext.cloudformation.response.CloudFormationCommandResponse;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionContextImpl;
+import software.wings.sm.ExecutionResponse;
 import software.wings.sm.StateType;
 
+import java.util.Collections;
 import java.util.List;
 
 public class CloudFormationDeleteStackState extends CloudFormationState {
@@ -32,12 +35,17 @@ public class CloudFormationDeleteStackState extends CloudFormationState {
   }
 
   @Override
-  protected String commandUnit() {
+  protected List<String> commandUnits() {
+    return Collections.singletonList(mainCommandUnit());
+  }
+
+  @Override
+  protected String mainCommandUnit() {
     return COMMAND_UNIT;
   }
 
   @Override
-  protected DelegateTask buildDelegateTask(ExecutionContextImpl executionContext,
+  protected ExecutionResponse buildAndQueueDelegateTask(ExecutionContextImpl executionContext,
       CloudFormationInfrastructureProvisioner provisioner, AwsConfig awsConfig, String activityId) {
     notNullCheck("Application cannot be null", executionContext.getApp());
 
@@ -52,23 +60,31 @@ public class CloudFormationDeleteStackState extends CloudFormationState {
             .accountId(executionContext.getApp().getAccountId())
             .appId(executionContext.getApp().getUuid())
             .activityId(activityId)
-            .commandName(commandUnit())
+            .commandName(mainCommandUnit())
             .awsConfig(awsConfig)
             .build();
     setTimeOutOnRequest(request);
-    return DelegateTask.builder()
-        .accountId(executionContext.getApp().getAccountId())
-        .waitId(activityId)
-        .tags(isNotEmpty(request.getAwsConfig().getTag()) ? singletonList(request.getAwsConfig().getTag()) : null)
-        .setupAbstraction(Cd1SetupFields.APP_ID_FIELD, executionContext.getApp().getUuid())
-        .data(TaskData.builder()
-                  .async(true)
-                  .taskType(CLOUD_FORMATION_TASK.name())
-                  .parameters(new Object[] {request,
-                      secretManager.getEncryptionDetails(
-                          awsConfig, GLOBAL_APP_ID, executionContext.getWorkflowExecutionId())})
-                  .timeout(defaultIfNullTimeout(DEFAULT_ASYNC_CALL_TIMEOUT))
-                  .build())
+    DelegateTask delegateTask =
+        DelegateTask.builder()
+            .accountId(executionContext.getApp().getAccountId())
+            .waitId(activityId)
+            .tags(isNotEmpty(request.getAwsConfig().getTag()) ? singletonList(request.getAwsConfig().getTag()) : null)
+            .setupAbstraction(Cd1SetupFields.APP_ID_FIELD, executionContext.getApp().getUuid())
+            .data(TaskData.builder()
+                      .async(true)
+                      .taskType(CLOUD_FORMATION_TASK.name())
+                      .parameters(new Object[] {request,
+                          secretManager.getEncryptionDetails(
+                              awsConfig, GLOBAL_APP_ID, executionContext.getWorkflowExecutionId())})
+                      .timeout(defaultIfNullTimeout(DEFAULT_ASYNC_CALL_TIMEOUT))
+                      .build())
+            .build();
+    String delegateTaskId = delegateService.queueTask(delegateTask);
+    return ExecutionResponse.builder()
+        .async(true)
+        .correlationIds(Collections.singletonList(activityId))
+        .delegateTaskId(delegateTaskId)
+        .stateExecutionData(ScriptStateExecutionData.builder().activityId(activityId).build())
         .build();
   }
 

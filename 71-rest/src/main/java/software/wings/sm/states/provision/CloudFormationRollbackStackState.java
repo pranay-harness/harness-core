@@ -1,5 +1,6 @@
 package software.wings.sm.states.provision;
 
+import static io.harness.beans.ExecutionStatus.SKIPPED;
 import static io.harness.beans.ExecutionStatus.SUCCESS;
 import static io.harness.context.ContextElementType.CLOUD_FORMATION_ROLLBACK;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
@@ -13,7 +14,7 @@ import static software.wings.beans.TaskType.CLOUD_FORMATION_TASK;
 import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.beans.DelegateTask;
 import io.harness.delegate.beans.TaskData;
-import io.harness.exception.WingsException;
+import io.harness.exception.InvalidRequestException;
 import io.harness.persistence.HIterator;
 import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.tasks.Cd1SetupFields;
@@ -27,6 +28,7 @@ import software.wings.beans.CloudFormationInfrastructureProvisioner;
 import software.wings.beans.NameValuePair;
 import software.wings.beans.infrastructure.CloudFormationRollbackConfig;
 import software.wings.beans.infrastructure.CloudFormationRollbackConfig.CloudFormationRollbackConfigKeys;
+import software.wings.helpers.ext.cloudformation.CloudFormationCompletionFlag;
 import software.wings.helpers.ext.cloudformation.request.CloudFormationCommandRequest.CloudFormationCommandType;
 import software.wings.helpers.ext.cloudformation.request.CloudFormationCreateStackRequest;
 import software.wings.helpers.ext.cloudformation.request.CloudFormationCreateStackRequest.CloudFormationCreateStackRequestBuilder;
@@ -52,10 +54,14 @@ public class CloudFormationRollbackStackState extends CloudFormationState {
   }
 
   @Override
-  protected String commandUnit() {
-    return COMMAND_UNIT;
+  protected List<String> commandUnits() {
+    return Collections.singletonList(mainCommandUnit());
   }
 
+  @Override
+  protected String mainCommandUnit() {
+    return COMMAND_UNIT;
+  }
   @Override
   @SchemaIgnore
   public String getProvisionerId() {
@@ -99,9 +105,9 @@ public class CloudFormationRollbackStackState extends CloudFormationState {
   }
 
   @Override
-  protected DelegateTask buildDelegateTask(ExecutionContextImpl executionContext,
+  protected ExecutionResponse buildAndQueueDelegateTask(ExecutionContextImpl executionContext,
       CloudFormationInfrastructureProvisioner provisioner, AwsConfig awsConfig, String activityId) {
-    throw new WingsException("Method should not be called");
+    throw new InvalidRequestException("Method should not be called");
   }
 
   @Override
@@ -214,7 +220,7 @@ public class CloudFormationRollbackStackState extends CloudFormationState {
                                                      .accountId(context.getAccountId())
                                                      .appId(context.getAppId())
                                                      .cloudFormationRoleArn(roleArnRendered)
-                                                     .commandName(commandUnit())
+                                                     .commandName(mainCommandUnit())
                                                      .activityId(activityId)
                                                      .variables(textVariables)
                                                      .encryptedVariables(encryptedTextVariables)
@@ -247,6 +253,11 @@ public class CloudFormationRollbackStackState extends CloudFormationState {
 
   @Override
   protected ExecutionResponse executeInternal(ExecutionContext context, String activityId) {
+    CloudFormationCompletionFlag cloudFormationCompletionFlag = getCloudFormationCompletionFlag(context);
+    if (cloudFormationCompletionFlag == null || !cloudFormationCompletionFlag.isCreateStackCompleted()) {
+      return ExecutionResponse.builder().executionStatus(SKIPPED).errorMessage("Skipping rollback").build();
+    }
+
     ExecutionResponse executionResponse = executeInternalWithSavedElement(context, activityId);
     if (executionResponse != null) {
       logger.info("Cloud Formation Rollback. Rollback done via DB stored config for execution: [%s]",
@@ -279,7 +290,7 @@ public class CloudFormationRollbackStackState extends CloudFormationState {
               .cloudFormationRoleArn(executionContext.renderExpression(getCloudFormationRoleArn()))
               .appId(executionContext.getApp().getUuid())
               .activityId(activityId)
-              .commandName(commandUnit())
+              .commandName(mainCommandUnit())
               .awsConfig(awsConfig)
               .build();
 
@@ -312,7 +323,7 @@ public class CloudFormationRollbackStackState extends CloudFormationState {
           .cloudFormationRoleArn(executionContext.renderExpression(getCloudFormationRoleArn()))
           .appId(executionContext.fetchRequiredApp().getUuid())
           .activityId(activityId)
-          .commandName(commandUnit())
+          .commandName(mainCommandUnit())
           .variables(stackElement.getOldStackParameters())
           .awsConfig(awsConfig);
       CloudFormationCreateStackRequest request = builder.build();
