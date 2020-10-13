@@ -4,8 +4,8 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonValue;
 
 public enum GitAuthType {
-  @JsonProperty("Http") HTTP("Http"),
-  @JsonProperty("Ssh") SSH("Ssh");
+  @JsonProperty(GitConfigConstants.HTTP) HTTP("Http"),
+  @JsonProperty(GitConfigConstants.SSH) SSH("Ssh");
 
   private final String displayName;
 
