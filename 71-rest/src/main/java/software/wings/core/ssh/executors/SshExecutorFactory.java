@@ -21,6 +21,10 @@ public class SshExecutorFactory {
    * @return the executor
    */
   public ScriptExecutor getExecutor(SshSessionConfig sshSessionConfig) {
-    return new ScriptSshExecutor(fileService, logService, sshSessionConfig);
+    return new ScriptSshExecutor(fileService, logService, true, sshSessionConfig);
+  }
+
+  public ScriptExecutor getExecutor(SshSessionConfig sshSessionConfig, boolean shouldSaveExecutionLogs) {
+    return new ScriptSshExecutor(fileService, logService, shouldSaveExecutionLogs, sshSessionConfig);
   }
 }

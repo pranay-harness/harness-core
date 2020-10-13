@@ -14,6 +14,10 @@ public class ShellExecutorFactory {
   @Inject private DelegateFileManager fileService;
 
   public ScriptProcessExecutor getExecutor(ScriptExecutionContext config) {
-    return new ScriptProcessExecutor(fileService, logService, config);
+    return new ScriptProcessExecutor(fileService, logService, true, config);
+  }
+
+  public ScriptProcessExecutor getExecutor(ScriptExecutionContext config, boolean shouldSaveExecutionLogs) {
+    return new ScriptProcessExecutor(fileService, logService, shouldSaveExecutionLogs, config);
   }
 }

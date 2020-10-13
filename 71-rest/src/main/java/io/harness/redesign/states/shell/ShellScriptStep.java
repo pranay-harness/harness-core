@@ -213,7 +213,8 @@ public class ShellScriptStep implements Step, TaskExecutable<ShellScriptStepPara
             .kerberosConfig(kerberosConfig)
             .localOverrideFeatureFlag(
                 featureFlagService.isEnabled(LOCAL_DELEGATE_CONFIG_OVERRIDE, getAccountId(ambiance)))
-            .keyName(keyName);
+            .keyName(keyName)
+            .saveExecutionLogs(true);
 
     return DelegateTask.builder()
         .accountId(getAccountId(ambiance))

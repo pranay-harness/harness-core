@@ -12,6 +12,12 @@ public class WinRmExecutorFactory {
   @Inject private DelegateFileManager delegateFileManager;
 
   public WinRmExecutor getExecutor(WinRmSessionConfig config, boolean disableCommandEncoding) {
-    return new DefaultWinRmExecutor(logService, delegateFileManager, config, disableCommandEncoding);
+    return new DefaultWinRmExecutor(logService, delegateFileManager, true, config, disableCommandEncoding);
+  }
+
+  public WinRmExecutor getExecutor(
+      WinRmSessionConfig config, boolean disableCommandEncoding, boolean shouldSaveExecutionLogs) {
+    return new DefaultWinRmExecutor(
+        logService, delegateFileManager, shouldSaveExecutionLogs, config, disableCommandEncoding);
   }
 }

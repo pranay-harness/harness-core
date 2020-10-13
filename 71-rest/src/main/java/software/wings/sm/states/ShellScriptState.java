@@ -407,7 +407,8 @@ public class ShellScriptState extends State implements SweepingOutputStateMixin 
                 featureFlagService.isEnabled(LOCAL_DELEGATE_CONFIG_OVERRIDE, executionContext.getApp().getAccountId()))
             .keyName(keyName)
             .disableWinRMCommandEncodingFFSet(
-                featureFlagService.isEnabled(DISABLE_WINRM_COMMAND_ENCODING, executionContext.getApp().getAccountId()));
+                featureFlagService.isEnabled(DISABLE_WINRM_COMMAND_ENCODING, executionContext.getApp().getAccountId()))
+            .saveExecutionLogs(true);
     // TODO: This has to be enabled once CS team gives go ahead
     //    if (featureFlagService.isEnabled(FeatureName.SHELL_SCRIPT_ENV,
     //    workflowStandardParams.getApp().getAccountId())) {

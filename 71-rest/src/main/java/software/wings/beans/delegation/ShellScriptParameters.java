@@ -74,6 +74,7 @@ public class ShellScriptParameters implements TaskParameters, ActivityAccess, Ex
   private final KerberosConfig kerberosConfig;
   private final String keyName;
   private final boolean localOverrideFeatureFlag;
+  private final boolean saveExecutionLogs;
   boolean disableWinRMCommandEncodingFFSet; // DISABLE_WINRM_COMMAND_ENCODING
 
   private Map<String, String> getResolvedEnvironmentVariables() {

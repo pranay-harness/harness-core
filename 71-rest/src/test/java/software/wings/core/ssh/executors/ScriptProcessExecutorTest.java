@@ -64,7 +64,7 @@ public class ScriptProcessExecutorTest extends WingsBaseTest {
                               .workingDirectory("/tmp")
                               .environment(env)
                               .build();
-    scriptProcessExecutor = new ScriptProcessExecutor(delegateFileManager, logService, shellExecutorConfig);
+    scriptProcessExecutor = new ScriptProcessExecutor(delegateFileManager, logService, true, shellExecutorConfig);
     on(scriptProcessExecutor).set("logService", logService);
     on(scriptProcessExecutor).set("delegateFileManager", delegateFileManager);
 
@@ -97,7 +97,7 @@ public class ScriptProcessExecutorTest extends WingsBaseTest {
                               .scriptType(ScriptType.BASH)
                               .environment(env)
                               .build();
-    scriptProcessExecutor = new ScriptProcessExecutor(delegateFileManager, logService, shellExecutorConfig);
+    scriptProcessExecutor = new ScriptProcessExecutor(delegateFileManager, logService, true, shellExecutorConfig);
     on(scriptProcessExecutor).set("logService", logService);
     on(scriptProcessExecutor).set("delegateFileManager", delegateFileManager);
 
@@ -126,7 +126,7 @@ public class ScriptProcessExecutorTest extends WingsBaseTest {
                               .workingDirectory("/tmp")
                               .environment(env)
                               .build();
-    scriptProcessExecutor = new ScriptProcessExecutor(delegateFileManager, logService, shellExecutorConfig);
+    scriptProcessExecutor = new ScriptProcessExecutor(delegateFileManager, logService, true, shellExecutorConfig);
     on(scriptProcessExecutor).set("logService", logService);
     on(scriptProcessExecutor).set("delegateFileManager", delegateFileManager);
 
@@ -150,7 +150,7 @@ public class ScriptProcessExecutorTest extends WingsBaseTest {
                               .scriptType(ScriptType.BASH)
                               .environment(env)
                               .build();
-    scriptProcessExecutor = new ScriptProcessExecutor(delegateFileManager, logService, shellExecutorConfig);
+    scriptProcessExecutor = new ScriptProcessExecutor(delegateFileManager, logService, true, shellExecutorConfig);
     on(scriptProcessExecutor).set("logService", logService);
     on(scriptProcessExecutor).set("delegateFileManager", delegateFileManager);
 
@@ -165,7 +165,7 @@ public class ScriptProcessExecutorTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void testScpOneFileSuccess() throws IOException {
     scriptProcessExecutor =
-        new ScriptProcessExecutor(delegateFileManager, logService, ShellExecutorConfig.builder().build());
+        new ScriptProcessExecutor(delegateFileManager, logService, true, ShellExecutorConfig.builder().build());
     on(scriptProcessExecutor).set("logService", logService);
     on(scriptProcessExecutor).set("delegateFileManager", delegateFileManager);
 
@@ -201,7 +201,7 @@ public class ScriptProcessExecutorTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void testScpOneFileFails() {
     scriptProcessExecutor =
-        new ScriptProcessExecutor(delegateFileManager, logService, ShellExecutorConfig.builder().build());
+        new ScriptProcessExecutor(delegateFileManager, logService, true, ShellExecutorConfig.builder().build());
     on(scriptProcessExecutor).set("logService", logService);
     on(scriptProcessExecutor).set("delegateFileManager", delegateFileManager);
 

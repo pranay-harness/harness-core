@@ -39,8 +39,8 @@ public class ShellScriptTaskHandler {
 
   public CommandExecutionResult handle(ShellScriptParameters parameters) {
     if (parameters.isExecuteOnDelegate()) {
-      ScriptProcessExecutor executor =
-          shellExecutorFactory.getExecutor(parameters.processExecutorConfig(containerDeploymentDelegateHelper));
+      ScriptProcessExecutor executor = shellExecutorFactory.getExecutor(
+          parameters.processExecutorConfig(containerDeploymentDelegateHelper), parameters.isSaveExecutionLogs());
       List<String> items = new ArrayList<>();
       if (parameters.getOutputVars() != null && StringUtils.isNotEmpty(parameters.getOutputVars().trim())) {
         items = Arrays.asList(parameters.getOutputVars().split("\\s*,\\s*"));
@@ -56,7 +56,7 @@ public class ShellScriptTaskHandler {
       case SSH: {
         try {
           SshSessionConfig expectedSshConfig = parameters.sshSessionConfig(encryptionService);
-          ScriptExecutor executor = sshExecutorFactory.getExecutor(expectedSshConfig);
+          ScriptExecutor executor = sshExecutorFactory.getExecutor(expectedSshConfig, parameters.isSaveExecutionLogs());
           List<String> items = new ArrayList<>();
           if (parameters.getOutputVars() != null && StringUtils.isNotEmpty(parameters.getOutputVars().trim())) {
             items = Arrays.asList(parameters.getOutputVars().split("\\s*,\\s*"));
@@ -72,8 +72,8 @@ public class ShellScriptTaskHandler {
       case WINRM: {
         try {
           WinRmSessionConfig winRmSessionConfig = parameters.winrmSessionConfig(encryptionService);
-          WinRmExecutor executor =
-              winrmExecutorFactory.getExecutor(winRmSessionConfig, parameters.isDisableWinRMCommandEncodingFFSet());
+          WinRmExecutor executor = winrmExecutorFactory.getExecutor(
+              winRmSessionConfig, parameters.isDisableWinRMCommandEncodingFFSet(), parameters.isSaveExecutionLogs());
           List<String> items = new ArrayList<>();
           if (parameters.getOutputVars() != null && StringUtils.isNotEmpty(parameters.getOutputVars().trim())) {
             items = Arrays.asList(parameters.getOutputVars().split("\\s*,\\s*"));

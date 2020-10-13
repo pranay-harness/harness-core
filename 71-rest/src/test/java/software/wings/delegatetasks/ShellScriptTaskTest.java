@@ -12,6 +12,7 @@ import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyBoolean;
 import static org.mockito.Matchers.anyList;
 import static org.mockito.Matchers.anyString;
+import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static software.wings.beans.HostConnectionAttributes.AccessType.KEY;
@@ -119,7 +120,7 @@ public class ShellScriptTaskTest extends WingsBaseTest {
   public void shouldExecuteBashScriptSuccessfullyOnDelegate() {
     ArgumentCaptor<ShellExecutorConfig> shellExecutorConfigArgumentCaptor =
         ArgumentCaptor.forClass(ShellExecutorConfig.class);
-    when(shellExecutorFactory.getExecutor(any(ShellExecutorConfig.class))).thenReturn(scriptProcessExecutor);
+    when(shellExecutorFactory.getExecutor(any(ShellExecutorConfig.class), eq(true))).thenReturn(scriptProcessExecutor);
     Map<String, String> map = new HashMap<>();
     map.put("A", "aaa");
     map.put("B", "bbb");
@@ -140,6 +141,7 @@ public class ShellScriptTaskTest extends WingsBaseTest {
                                        .script("export A=\"aaa\"\n"
                                            + "export B=\"bbb\"")
                                        .outputVars("A,B")
+                                       .saveExecutionLogs(true)
                                        .build();
 
     CommandExecutionResult commandExecutionResult = shellScriptTask.run(params);
@@ -150,7 +152,7 @@ public class ShellScriptTaskTest extends WingsBaseTest {
     assertThat(shellExecutionData.getSweepingOutputEnvVariables()).isNotEmpty();
     assertThat(shellExecutionData.getSweepingOutputEnvVariables()).containsEntry("A", "aaa");
     assertThat(shellExecutionData.getSweepingOutputEnvVariables()).containsEntry("B", "bbb");
-    verify(shellExecutorFactory).getExecutor(shellExecutorConfigArgumentCaptor.capture());
+    verify(shellExecutorFactory).getExecutor(shellExecutorConfigArgumentCaptor.capture(), eq(true));
     ShellExecutorConfig shellExecutorConfig = shellExecutorConfigArgumentCaptor.getValue();
     assertThat(shellExecutorConfig).isNotNull();
     assertThat(shellExecutorConfig.getAccountId()).isEqualTo(ACCOUNT_ID);
@@ -174,8 +176,9 @@ public class ShellScriptTaskTest extends WingsBaseTest {
                                        .scriptType(BASH)
                                        .script("exit 1")
                                        .outputVars("A,B")
+                                       .saveExecutionLogs(true)
                                        .build();
-    when(shellExecutorFactory.getExecutor(any())).thenReturn(scriptProcessExecutor);
+    when(shellExecutorFactory.getExecutor(any(), eq(true))).thenReturn(scriptProcessExecutor);
     when(scriptProcessExecutor.executeCommandString(anyString(), anyList()))
         .thenReturn(CommandExecutionResult.builder().status(CommandExecutionStatus.FAILURE).build());
     CommandExecutionResult commandExecutionResult = shellScriptTask.run(params);
@@ -196,10 +199,11 @@ public class ShellScriptTaskTest extends WingsBaseTest {
                                        .script("Write-Host hello")
                                        .connectionType(SSH)
                                        .executeOnDelegate(true)
+                                       .saveExecutionLogs(true)
                                        .build();
 
     ArgumentCaptor<String> scriptStringCaptor = ArgumentCaptor.forClass(String.class);
-    when(shellExecutorFactory.getExecutor(any(ShellExecutorConfig.class))).thenReturn(scriptProcessExecutor);
+    when(shellExecutorFactory.getExecutor(any(ShellExecutorConfig.class), eq(true))).thenReturn(scriptProcessExecutor);
     when(scriptProcessExecutor.executeCommandString(scriptStringCaptor.capture(), anyList()))
         .thenReturn(CommandExecutionResult.builder()
                         .status(CommandExecutionStatus.SUCCESS)
@@ -246,16 +250,17 @@ public class ShellScriptTaskTest extends WingsBaseTest {
             .accessType(KEY)
             .authenticationScheme(AuthenticationScheme.SSH_KEY)
             .keyName("KEY_NAME")
+            .saveExecutionLogs(true)
             .build();
 
     ArgumentCaptor<SshSessionConfig> sshSessionConfigArgumentCaptor = ArgumentCaptor.forClass(SshSessionConfig.class);
-    when(sshExecutorFactory.getExecutor(any(SshSessionConfig.class))).thenReturn(scriptSshExecutor);
+    when(sshExecutorFactory.getExecutor(any(SshSessionConfig.class), eq(true))).thenReturn(scriptSshExecutor);
     when(scriptSshExecutor.executeCommandString(anyString(), anyList()))
         .thenReturn(CommandExecutionResult.builder().status(CommandExecutionStatus.SUCCESS).build());
     CommandExecutionResult commandExecutionResult = shellScriptTask.run(params);
     assertThat(commandExecutionResult).isNotNull();
     assertThat(commandExecutionResult.getStatus()).isEqualTo(CommandExecutionStatus.SUCCESS);
-    verify(sshExecutorFactory).getExecutor(sshSessionConfigArgumentCaptor.capture());
+    verify(sshExecutorFactory).getExecutor(sshSessionConfigArgumentCaptor.capture(), eq(true));
     SshSessionConfig sshSessionConfig = sshSessionConfigArgumentCaptor.getValue();
     assertThat(sshSessionConfig).isNotNull();
     assertThat(sshSessionConfig.getAccountId()).isEqualTo(ACCOUNT_ID);
@@ -299,17 +304,18 @@ public class ShellScriptTaskTest extends WingsBaseTest {
                                                                       .build())
                                        .workingDirectory("%TEMP%")
                                        .environment(Collections.EMPTY_MAP)
+                                       .saveExecutionLogs(true)
                                        .build();
     ArgumentCaptor<WinRmSessionConfig> winRmSessionConfigArgumentCaptor =
         ArgumentCaptor.forClass(WinRmSessionConfig.class);
-    when(winrmExecutorFactory.getExecutor(any(WinRmSessionConfig.class), anyBoolean()))
+    when(winrmExecutorFactory.getExecutor(any(WinRmSessionConfig.class), anyBoolean(), eq(true)))
         .thenReturn(defaultWinRmExecutor);
     when(defaultWinRmExecutor.executeCommandString(anyString(), anyList()))
         .thenReturn(CommandExecutionResult.builder().status(CommandExecutionStatus.SUCCESS).build());
     CommandExecutionResult commandExecutionResult = shellScriptTask.run(params);
     assertThat(commandExecutionResult).isNotNull();
     assertThat(commandExecutionResult.getStatus()).isEqualTo(CommandExecutionStatus.SUCCESS);
-    verify(winrmExecutorFactory).getExecutor(winRmSessionConfigArgumentCaptor.capture(), anyBoolean());
+    verify(winrmExecutorFactory).getExecutor(winRmSessionConfigArgumentCaptor.capture(), anyBoolean(), eq(true));
     WinRmSessionConfig winRmSessionConfig = winRmSessionConfigArgumentCaptor.getValue();
     assertThat(winRmSessionConfig).isNotNull();
     assertThat(winRmSessionConfig.getAccountId()).isEqualTo(ACCOUNT_ID);
