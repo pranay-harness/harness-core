@@ -166,7 +166,7 @@ public class LicenseServiceImpl implements LicenseService {
               accountType.equals(AccountType.PAID) ? paidDefaultContacts : trialDefaultContacts);
         }
         if (accountType.equals(AccountType.TRIAL) && !AccountStatus.DELETED.equals(accountStatus)
-            && !account.isPovAccount()) {
+            && !account.isPovAccount() && !account.isCloudCostEnabled()) {
           handleTrialAccountExpiration(account, expiryTime);
         }
       }
