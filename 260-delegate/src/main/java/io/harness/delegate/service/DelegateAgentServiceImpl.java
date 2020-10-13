@@ -45,7 +45,6 @@ import static io.harness.delegate.message.MessageConstants.WATCHER_PROCESS;
 import static io.harness.delegate.message.MessageConstants.WATCHER_VERSION;
 import static io.harness.delegate.message.MessengerType.DELEGATE;
 import static io.harness.delegate.message.MessengerType.WATCHER;
-import static io.harness.eraro.ErrorCode.DUPLICATE_DELEGATE_EXCEPTION;
 import static io.harness.eraro.ErrorCode.EXPIRED_TOKEN;
 import static io.harness.eraro.ErrorCode.INVALID_TOKEN;
 import static io.harness.expression.SecretString.SECRET_MASK;
@@ -249,6 +248,9 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
   private static final String DELEGATE_TYPE = System.getenv().get("DELEGATE_TYPE");
   private static final String DELEGATE_GROUP_NAME = System.getenv().get("DELEGATE_GROUP_NAME");
   private static final String START_SH = "start.sh";
+  private static final String DUPLICATE_DELEGATE_ERROR_MESSAGE =
+      "Duplicate delegate with same delegateId:%s and connectionId:%s exists";
+
   public static final String JAVA_VERSION = "java.version";
 
   private static volatile String delegateId;
@@ -845,7 +847,8 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
         String errorResponse = response.errorBody().string();
         if (errorResponse.contains(INVALID_TOKEN.name())) {
           initiateSelfDestruct();
-        } else if (errorResponse.contains(DUPLICATE_DELEGATE_EXCEPTION.name())) {
+        } else if (errorResponse.contains(
+                       String.format(DUPLICATE_DELEGATE_ERROR_MESSAGE, delegateId, delegateConnectionId))) {
           // TODO: re-enable only after additional check for the delegateConnectionId is added
           // initiateSelfDestruct();
         } else if (response.code() == EXPIRED_TOKEN.getStatus().getCode()) {
