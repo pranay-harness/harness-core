@@ -29,8 +29,8 @@ public class DeletedEntityHandler implements Handler<DeletedEntity> {
     persistenceIteratorFactory.createPumpIteratorWithDedicatedThreadPool(
         PersistenceIteratorFactory.PumpExecutorOptions.builder()
             .name("DeletedEntityIterator")
-            .poolSize(1)
-            .interval(ofSeconds(30))
+            .poolSize(2)
+            .interval(ofMinutes(1))
             .build(),
         DeletedEntityHandler.class,
         MongoPersistenceIterator.<DeletedEntity, MorphiaFilterExpander<DeletedEntity>>builder()

@@ -30,8 +30,8 @@ public class DeleteAccountHandler implements Handler<Account> {
     persistenceIteratorFactory.createPumpIteratorWithDedicatedThreadPool(
         PersistenceIteratorFactory.PumpExecutorOptions.builder()
             .name("DeleteAccountIterator")
-            .poolSize(1)
-            .interval(ofSeconds(30))
+            .poolSize(2)
+            .interval(ofMinutes(1))
             .build(),
         DeleteAccountHandler.class,
         MongoPersistenceIterator.<Account, MorphiaFilterExpander<Account>>builder()
