@@ -404,7 +404,8 @@ public class TimeSeriesAnalysisServiceImpl implements TimeSeriesAnalysisService 
     if (cvConfig != null) {
       double risk = analysis.getOverallMetricScores().values().stream().mapToDouble(score -> score).max().orElse(0.0);
       heatMapService.updateRiskScore(cvConfig.getAccountId(), cvConfig.getProjectIdentifier(),
-          cvConfig.getServiceIdentifier(), cvConfig.getEnvIdentifier(), cvConfig.getCategory(), startTime, risk);
+          cvConfig.getServiceIdentifier(), cvConfig.getEnvIdentifier(), cvConfig, cvConfig.getCategory(), startTime,
+          risk);
 
       handleAnomalyOpenOrClose(cvConfig.getAccountId(), cvConfigId, startTime, endTime, risk, riskSummary);
       timeSeriesService.updateRiskScores(cvConfigId, riskSummary);

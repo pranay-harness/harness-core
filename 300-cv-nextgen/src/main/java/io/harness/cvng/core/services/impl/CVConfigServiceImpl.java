@@ -256,4 +256,11 @@ public class CVConfigServiceImpl implements CVConfigService {
     });
     return configsToReturn;
   }
+
+  @Override
+  public boolean isProductionConfig(CVConfig cvConfig) {
+    EnvironmentResponseDTO environment = nextGenService.getEnvironment(cvConfig.getEnvIdentifier(),
+        cvConfig.getAccountId(), cvConfig.getOrgIdentifier(), cvConfig.getProjectIdentifier());
+    return EnvironmentType.Production.equals(environment.getType());
+  }
 }

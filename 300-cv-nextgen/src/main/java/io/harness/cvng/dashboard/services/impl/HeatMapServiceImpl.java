@@ -12,6 +12,7 @@ import com.google.inject.Inject;
 import com.mongodb.BasicDBObject;
 import com.mongodb.client.model.DBCollectionUpdateOptions;
 import io.harness.cvng.beans.CVMonitoringCategory;
+import io.harness.cvng.core.entities.CVConfig;
 import io.harness.cvng.core.services.api.CVConfigService;
 import io.harness.cvng.dashboard.beans.CategoryRisksDTO;
 import io.harness.cvng.dashboard.beans.CategoryRisksDTO.CategoryRisk;
@@ -58,15 +59,17 @@ public class HeatMapServiceImpl implements HeatMapService {
 
   @Override
   public void updateRiskScore(String accountId, String projectIdentifier, String serviceIdentifier,
-      String envIdentifier, CVMonitoringCategory category, Instant timeStamp, double riskScore) {
+      String envIdentifier, CVConfig cvConfig, CVMonitoringCategory category, Instant timeStamp, double riskScore) {
     // update for service/env
     updateRiskScore(category, accountId, projectIdentifier, serviceIdentifier, envIdentifier, timeStamp, riskScore);
 
-    // update for env
-    updateRiskScore(category, accountId, projectIdentifier, null, envIdentifier, timeStamp, riskScore);
+    if (cvConfigService.isProductionConfig(cvConfig)) {
+      // update for env
+      updateRiskScore(category, accountId, projectIdentifier, null, envIdentifier, timeStamp, riskScore);
 
-    // update for project
-    updateRiskScore(category, accountId, projectIdentifier, null, null, timeStamp, riskScore);
+      // update for project
+      updateRiskScore(category, accountId, projectIdentifier, null, null, timeStamp, riskScore);
+    }
   }
 
   private void updateRiskScore(CVMonitoringCategory category, String accountId, String projectIdentifier,

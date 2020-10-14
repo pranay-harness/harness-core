@@ -34,4 +34,5 @@ public interface CVConfigService {
   Set<CVMonitoringCategory> getAvailableCategories(String accountId, String projectIdentifier);
   List<CVConfig> getConfigsOfProductionEnvironments(String accountId, String orgIdentifier, String projectIdentifier,
       String environmentIdentifier, String serviceIdentifier, CVMonitoringCategory monitoringCategory);
+  boolean isProductionConfig(CVConfig cvConfig);
 }

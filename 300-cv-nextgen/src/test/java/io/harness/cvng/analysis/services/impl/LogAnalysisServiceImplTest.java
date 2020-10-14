@@ -39,6 +39,7 @@ import io.harness.cvng.core.entities.CVConfig;
 import io.harness.cvng.core.entities.SplunkCVConfig;
 import io.harness.cvng.core.services.api.CVConfigService;
 import io.harness.cvng.core.services.api.VerificationTaskService;
+import io.harness.cvng.dashboard.services.api.HeatMapService;
 import io.harness.cvng.models.VerificationType;
 import io.harness.cvng.statemachine.beans.AnalysisInput;
 import io.harness.cvng.verificationjob.beans.Sensitivity;
@@ -53,6 +54,7 @@ import org.apache.commons.lang3.reflect.FieldUtils;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
+import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
 
@@ -75,12 +77,13 @@ public class LogAnalysisServiceImplTest extends CvNextGenTest {
   @Inject private VerificationTaskService verificationTaskService;
   @Inject private DeploymentLogAnalysisService deploymentLogAnalysisService;
   @Inject private VerificationJobInstanceService verificationJobInstanceService;
+  @Mock private HeatMapService heatMapService;
   private String verificationJobIdentifier;
   private Instant instant;
   private String accountId;
 
   @Before
-  public void setUp() {
+  public void setUp() throws Exception {
     MockitoAnnotations.initMocks(this);
     CVConfig cvConfig = createCVConfig();
     cvConfigService.save(cvConfig);
@@ -88,6 +91,7 @@ public class LogAnalysisServiceImplTest extends CvNextGenTest {
     accountId = generateUuid();
     instant = Instant.parse("2020-07-27T10:44:11.000Z");
     verificationTaskId = verificationTaskService.getServiceGuardVerificationTaskId(cvConfig.getAccountId(), cvConfigId);
+    FieldUtils.writeField(logAnalysisService, "heatMapService", heatMapService, true);
   }
 
   @Test
