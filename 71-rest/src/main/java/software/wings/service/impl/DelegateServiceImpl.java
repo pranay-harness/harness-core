@@ -60,6 +60,7 @@ import static software.wings.beans.Event.Builder.anEvent;
 import static software.wings.beans.FeatureName.DISABLE_DELEGATE_CAPABILITY_FRAMEWORK;
 import static software.wings.beans.FeatureName.USE_CDN_FOR_STORAGE_FILES;
 import static software.wings.beans.alert.AlertType.NoEligibleDelegates;
+import static software.wings.expression.SecretManagerFunctor.Mode.CHECK_FOR_SECRETS;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Charsets;
@@ -2166,7 +2167,7 @@ public class DelegateServiceImpl implements DelegateService {
     checkTaskRankRateLimit(task.getRank());
 
     // Make this call to make sure there are no secrets in disallowed expressions
-    resolvePreAssignmentExpressions(task, SecretManagerFunctor.Mode.PREVIEW);
+    resolvePreAssignmentExpressions(task, CHECK_FOR_SECRETS);
 
     wingsPersistence.save(task);
   }
@@ -2622,7 +2623,7 @@ public class DelegateServiceImpl implements DelegateService {
             && secretManagerFunctor.getEvaluatedSecrets().size() > 0) {
           throw new InvalidRequestException(format("Expression %s is not allowed to have secrets.", substituted));
         }
-        return substituted;
+        return mode == CHECK_FOR_SECRETS ? value : substituted;
       });
 
       if (secretManagerFunctor == null) {

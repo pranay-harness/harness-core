@@ -34,7 +34,7 @@ import java.util.stream.Collectors;
 @Value
 @Builder
 public class SecretManagerFunctor implements ExpressionFunctor, SecretManagerFunctorInterface {
-  public enum Mode { APPLY, DRY_RUN, PREVIEW }
+  public enum Mode { APPLY, DRY_RUN, CHECK_FOR_SECRETS }
   private Mode mode;
   private FeatureFlagService featureFlagService;
   private ManagerDecryptionService managerDecryptionService;
@@ -65,7 +65,7 @@ public class SecretManagerFunctor implements ExpressionFunctor, SecretManagerFun
   private Object returnValue(String secretName, Object value) {
     if (mode == Mode.DRY_RUN) {
       return "${secretManager.obtain(\"" + secretName + "\", " + expressionFunctorToken + ")}";
-    } else if (mode == Mode.PREVIEW) {
+    } else if (mode == Mode.CHECK_FOR_SECRETS) {
       return format(SecretManagerPreviewFunctor.SECRET_NAME_FORMATTER, secretName);
     }
     return value;
