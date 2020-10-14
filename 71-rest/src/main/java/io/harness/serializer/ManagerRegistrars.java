@@ -26,6 +26,7 @@ import io.harness.serializer.morphia.ProjectAndOrgMorphiaRegistrar;
 import io.harness.serializer.morphia.ViewsMorphiaRegistrar;
 import io.harness.serializer.spring.WingsAliasRegistrar;
 import io.harness.spring.AliasRegistrar;
+import io.serializer.registrars.NGCommonsRegistrars;
 import lombok.experimental.UtilityClass;
 import org.mongodb.morphia.converters.TypeConverter;
 
@@ -39,6 +40,7 @@ public class ManagerRegistrars {
           .add(OrchestrationVisualizationKryoRegistrar.class)
           .add(ManagerKryoRegistrar.class)
           .add(ProjectAndOrgKryoRegistrar.class)
+          .addAll(NGCommonsRegistrars.kryoRegistrars)
           .addAll(NGCoreRegistrars.kryoRegistrars)
           .addAll(ExecutionPlanModuleRegistrars.kryoRegistrars)
           .addAll(RbacCoreRegistrars.kryoRegistrars)
@@ -61,6 +63,7 @@ public class ManagerRegistrars {
           .add(ProjectAndOrgMorphiaRegistrar.class)
           .add(InvitesMorphiaRegistrar.class)
           .add(CommonEntitiesMorphiaRegister.class)
+          .addAll(NGCommonsRegistrars.morphiaRegistrars)
           .addAll(NGCoreRegistrars.morphiaRegistrars)
           .addAll(RbacCoreRegistrars.morphiaRegistrars)
           .addAll(SMCoreRegistrars.morphiaRegistrars)
