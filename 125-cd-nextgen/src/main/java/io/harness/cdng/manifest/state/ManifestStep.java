@@ -42,7 +42,7 @@ public class ManifestStep {
   private List<ManifestConfigWrapper> getManifestOverrideSetsApplicable(ServiceConfig serviceConfig) {
     List<ManifestConfigWrapper> manifestOverrideSets = new LinkedList<>();
     if (serviceConfig.getStageOverrides() != null
-        && !ParameterField.isEmpty(serviceConfig.getStageOverrides().getUseManifestOverrideSets())) {
+        && !ParameterField.isNull(serviceConfig.getStageOverrides().getUseManifestOverrideSets())) {
       serviceConfig.getStageOverrides()
           .getUseManifestOverrideSets()
           .getValue()

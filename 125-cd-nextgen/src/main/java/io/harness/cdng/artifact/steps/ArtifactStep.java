@@ -130,7 +130,7 @@ public class ArtifactStep {
   public List<ArtifactConfig> getArtifactOverrideSetsApplicable(ServiceConfig serviceConfig) {
     List<ArtifactConfig> artifacts = new LinkedList<>();
     if (serviceConfig.getStageOverrides() != null
-        && !ParameterField.isEmpty(serviceConfig.getStageOverrides().getUseArtifactOverrideSets())) {
+        && !ParameterField.isNull(serviceConfig.getStageOverrides().getUseArtifactOverrideSets())) {
       for (String useArtifactOverrideSet : serviceConfig.getStageOverrides().getUseArtifactOverrideSets().getValue()) {
         List<ArtifactOverrideSets> artifactOverrideSetsList =
             serviceConfig.getServiceDefinition()

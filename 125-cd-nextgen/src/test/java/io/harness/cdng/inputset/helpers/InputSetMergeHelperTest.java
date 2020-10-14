@@ -10,6 +10,7 @@ import io.harness.category.element.UnitTests;
 import io.harness.cdng.CDNGBaseTest;
 import io.harness.cdng.inputset.beans.entities.InputSetEntity;
 import io.harness.cdng.inputset.beans.entities.MergeInputSetResponse;
+import io.harness.cdng.inputset.beans.yaml.InputSetConfig;
 import io.harness.cdng.inputset.mappers.InputSetElementMapper;
 import io.harness.cdng.inputset.services.InputSetEntityService;
 import io.harness.cdng.pipeline.service.NGPipelineService;
@@ -19,6 +20,7 @@ import io.harness.rule.OwnerRule;
 import io.harness.walktree.visitor.mergeinputset.beans.MergeInputSetErrorResponse;
 import io.harness.walktree.visitor.response.VisitorErrorResponseWrapper;
 import io.harness.yaml.utils.JsonPipelineUtils;
+import io.harness.yaml.utils.YamlPipelineUtils;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
@@ -201,5 +203,24 @@ public class InputSetMergeHelperTest extends CDNGBaseTest {
     assertThat(errorResponse.getIdentifierOfErrorSource()).isEqualTo(expectedIdentifier);
     assertThat(errorResponse.getFieldName()).isEqualTo(expectedFieldName);
     assertThat(errorResponse.getMessage()).isEqualTo(expectedMessage);
+  }
+
+  @Test
+  @Owner(developers = NAMAN)
+  @Category(UnitTests.class)
+  public void testRemoveRuntimeInputFromInputSet() throws IOException {
+    ClassLoader classLoader = getClass().getClassLoader();
+    String filename = "input-set-with-runtime-input.yaml";
+    String inputSetYaml =
+        Resources.toString(Objects.requireNonNull(classLoader.getResource(filename)), StandardCharsets.UTF_8);
+    InputSetEntity entity =
+        InputSetEntity.builder().inputSetConfig(YamlPipelineUtils.read(inputSetYaml, InputSetConfig.class)).build();
+    entity.setIdentifier("identifier");
+    entity = inputSetMergeHelper.removeRuntimeInputs(entity);
+
+    String clearedFileName = "input-set-with-runtime-input-cleared.yaml";
+    String clearedInputSetYaml =
+        Resources.toString(Objects.requireNonNull(classLoader.getResource(clearedFileName)), StandardCharsets.UTF_8);
+    assertThat(entity.getInputSetYaml()).isEqualTo(clearedInputSetYaml);
   }
 }

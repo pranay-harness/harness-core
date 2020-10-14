@@ -28,8 +28,8 @@ public class SimpleVisitorFactory {
     return mergeInputSetVisitor;
   }
 
-  public InputSetTemplateVisitor obtainInputSetTemplateVisitor() {
-    InputSetTemplateVisitor inputSetTemplateVisitor = new InputSetTemplateVisitor(injector);
+  public InputSetTemplateVisitor obtainInputSetTemplateVisitor(boolean keepRuntimeInput) {
+    InputSetTemplateVisitor inputSetTemplateVisitor = new InputSetTemplateVisitor(injector, keepRuntimeInput);
     injector.injectMembers(inputSetTemplateVisitor);
     return inputSetTemplateVisitor;
   }

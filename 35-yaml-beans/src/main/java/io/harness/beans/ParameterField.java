@@ -119,7 +119,15 @@ public class ParameterField<T> implements OrchestrationField, VisitorFieldWrappe
     return VISITOR_FIELD_TYPE;
   }
 
-  public static boolean isEmpty(ParameterField<?> actualField) {
-    return actualField == null || actualField.equals(ParameterField.ofNull()) || actualField.getValue() == null;
+  public static boolean isNull(ParameterField<?> actualField) {
+    if (actualField == null) {
+      return true;
+    }
+    if (actualField.getExpressionValue() != null || actualField.getInputSetValidator() != null
+        || actualField.getResponseField() != null || actualField.getValue() != null) {
+      return false;
+    }
+    // Every flag should be false.
+    return !actualField.isExpression() && !actualField.isJsonResponseField() && !actualField.isTypeString();
   }
 }

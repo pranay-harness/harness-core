@@ -5,6 +5,7 @@ import com.google.inject.Singleton;
 
 import io.harness.cdng.inputset.beans.entities.InputSetEntity;
 import io.harness.cdng.inputset.beans.entities.MergeInputSetResponse;
+import io.harness.cdng.inputset.beans.yaml.InputSetConfig;
 import io.harness.cdng.inputset.services.InputSetEntityService;
 import io.harness.cdng.pipeline.NgPipeline;
 import io.harness.cdng.pipeline.beans.dto.NGPipelineResponseDTO;
@@ -46,22 +47,26 @@ public class InputSetMergeHelper {
    */
   public String getTemplateFromPipeline(String pipelineYaml) {
     try {
-      NgPipeline result = getTemplateObjectFromPipelineYaml(pipelineYaml);
+      NgPipeline result = getTemplateObjectFromPipelineYaml(pipelineYaml, true);
       return JsonPipelineUtils.writeYamlString(result).replaceAll("---\n", "");
     } catch (IOException e) {
       throw new InvalidRequestException("Pipeline could not be converted to template");
     }
   }
 
-  private NgPipeline getTemplateObjectFromPipelineYaml(String pipelineYaml) {
-    InputSetTemplateVisitor visitor = simpleVisitorFactory.obtainInputSetTemplateVisitor();
+  private NgPipeline getTemplateObjectFromPipelineYaml(String pipelineYaml, boolean keepRuntimeInput) {
     try {
-      NgPipeline pipeline = YamlPipelineUtils.read(pipelineYaml, NgPipeline.class);
-      visitor.walkElementTree(pipeline);
-      return (NgPipeline) visitor.getCurrentObject();
+      return getTemplateObjectFromPipelineObject(
+          YamlPipelineUtils.read(pipelineYaml, NgPipeline.class), keepRuntimeInput);
     } catch (IOException e) {
       throw new InvalidRequestException("Pipeline could not be converted to template");
     }
+  }
+
+  public NgPipeline getTemplateObjectFromPipelineObject(NgPipeline pipeline, boolean keepRuntimeInput) {
+    InputSetTemplateVisitor visitor = simpleVisitorFactory.obtainInputSetTemplateVisitor(keepRuntimeInput);
+    visitor.walkElementTree(pipeline);
+    return (NgPipeline) visitor.getCurrentObject();
   }
 
   /**
@@ -71,13 +76,9 @@ public class InputSetMergeHelper {
   public MergeInputSetResponse getMergePipelineYamlFromInputSetPipelineYaml(String accountId, String orgIdentifier,
       String projectIdentifier, String pipelineIdentifier, String inputSetPipelineYaml, boolean isTemplateResponse,
       boolean useFQNIfErrorResponse) {
-    try {
-      NgPipeline inputSetPipeline = YamlPipelineUtils.read(inputSetPipelineYaml, NgPipeline.class);
-      return getMergePipelineYamlFromInputSetPipelineYaml(accountId, orgIdentifier, projectIdentifier,
-          pipelineIdentifier, "inputSet", inputSetPipeline, isTemplateResponse, useFQNIfErrorResponse);
-    } catch (IOException e) {
-      throw new InvalidRequestException("InputSet Pipeline is not correct.");
-    }
+    NgPipeline inputSetPipeline = getTemplateObjectFromPipelineYaml(inputSetPipelineYaml, false);
+    return getMergePipelineYamlFromInputSetPipelineYaml(accountId, orgIdentifier, projectIdentifier, pipelineIdentifier,
+        "inputSet", inputSetPipeline, isTemplateResponse, useFQNIfErrorResponse);
   }
 
   /**
@@ -124,7 +125,7 @@ public class InputSetMergeHelper {
     String pipelineYaml = ngPipelineResponseDTO.getYamlPipeline();
 
     if (isTemplateResponse) {
-      originalPipeline = getTemplateObjectFromPipelineYaml(pipelineYaml);
+      originalPipeline = getTemplateObjectFromPipelineYaml(pipelineYaml, true);
     }
     return originalPipeline;
   }
@@ -276,5 +277,30 @@ public class InputSetMergeHelper {
         .errorPipeline((NgPipeline) mergeInputSetVisitor.getCurrentObjectErrorResult())
         .uuidToErrorResponseMap(uuidToErrorResponseMap)
         .build();
+  }
+
+  public InputSetEntity removeRuntimeInputs(InputSetEntity entity) {
+    InputSetTemplateVisitor visitor = simpleVisitorFactory.obtainInputSetTemplateVisitor(false);
+    visitor.walkElementTree(entity.getInputSetConfig().getPipeline());
+    if (!visitor.isEntityChanged()) {
+      return entity;
+    }
+    NgPipeline clearedContents = (NgPipeline) visitor.getCurrentObject();
+    InputSetConfig clearedConfig = InputSetConfig.builder()
+                                       .identifier(entity.getIdentifier())
+                                       .name(entity.getName())
+                                       .description(entity.getDescription())
+                                       .pipeline(clearedContents)
+                                       .build();
+    String clearedYaml;
+    try {
+      clearedYaml = JsonPipelineUtils.writeYamlString(clearedConfig).replaceAll("---\n", "");
+    } catch (IOException e) {
+      throw new InvalidRequestException("Pipeline could not be converted to template" + e.getMessage());
+    }
+    entity.setInputSetConfig(clearedConfig);
+    entity.setInputSetYaml(clearedYaml);
+
+    return entity;
   }
 }
