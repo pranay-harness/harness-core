@@ -35,10 +35,12 @@ import org.springframework.batch.repeat.RepeatStatus;
 import org.springframework.beans.factory.annotation.Autowired;
 import software.wings.beans.instance.HarnessServiceInfo;
 
+import java.time.Instant;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 @Slf4j
 public class K8sPodInfoTasklet implements Tasklet {
@@ -69,10 +71,20 @@ public class K8sPodInfoTasklet implements Tasklet {
         new PublishedMessageReader(publishedMessageDao, accountId, messageType, startTime, endTime, batchSize);
     do {
       publishedMessageList = publishedMessageReader.getNext();
-      publishedMessageList.stream()
-          .map(this ::processPodInfoMessage)
+      if (InstanceMetaDataConstants.SLOW_ACCOUNT.equals(accountId)) {
+        logger.info("Started Processing for size: {} {}", publishedMessageList.size(), Instant.now());
+      }
+      List<InstanceInfo> collect =
+          publishedMessageList.stream().map(this ::processPodInfoMessage).collect(Collectors.toList());
+      if (InstanceMetaDataConstants.SLOW_ACCOUNT.equals(accountId)) {
+        logger.info("Ended Processing for size: {} {}", publishedMessageList.size(), Instant.now());
+      }
+      collect.stream()
           .filter(instanceInfo -> instanceInfo.getMetaData().containsKey(InstanceMetaDataConstants.INSTANCE_CATEGORY))
           .forEach(instanceInfo -> instanceDataDao.upsert(instanceInfo));
+      if (InstanceMetaDataConstants.SLOW_ACCOUNT.equals(accountId)) {
+        logger.info("Ended upsert for size: {} {}", publishedMessageList.size(), Instant.now());
+      }
     } while (publishedMessageList.size() == batchSize);
     return null;
   }

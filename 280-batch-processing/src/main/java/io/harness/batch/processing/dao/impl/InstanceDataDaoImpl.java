@@ -183,7 +183,8 @@ public class InstanceDataDaoImpl implements InstanceDataDao {
 
       InstanceData savedInstanceData = hPersistence.upsert(query, updateOperations, upsertReturnNewOptions);
 
-      if (savedInstanceData.getHarnessServiceInfo() != null) {
+      if (savedInstanceData.getHarnessServiceInfo() != null
+          && !InstanceMetaDataConstants.SLOW_ACCOUNT.equals(instanceInfo.getAccountId())) {
         try {
           updateDeploymentEvent(savedInstanceData);
         } catch (Exception e) {
@@ -197,8 +198,9 @@ public class InstanceDataDaoImpl implements InstanceDataDao {
       Map<String, String> oldInstanceMetaData = instanceData.getMetaData();
       Map<String, String> newInstanceMetaData = instanceInfo.getMetaData();
 
-      if (InstanceMetaDataUtils.carryUpdatedMapKeyFromTo(newInstanceMetaData,
-              oldInstanceMetaData)) { // carry updated (key,value) from newInstanceMetaData to oldInstanceMetaData
+      if (false
+          && InstanceMetaDataUtils.carryUpdatedMapKeyFromTo(newInstanceMetaData,
+                 oldInstanceMetaData)) { // carry updated (key,value) from newInstanceMetaData to oldInstanceMetaData
         UpdateOperations<InstanceData> updateOperations = hPersistence.createUpdateOperations(InstanceData.class);
         updateOperations.set(InstanceDataKeys.metaData, oldInstanceMetaData);
         return hPersistence.upsert(query, updateOperations, upsertReturnNewOptions);
