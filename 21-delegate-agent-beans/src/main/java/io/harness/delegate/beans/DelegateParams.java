@@ -23,6 +23,7 @@ public class DelegateParams {
   String delegateType;
   String delegateRandomToken;
   String sequenceNum;
+  String location;
   long lastHeartBeat;
 
   boolean sampleDelegate;

@@ -927,6 +927,26 @@ public class DelegateServiceTest extends WingsBaseTest {
   @Owner(developers = SANJA)
   @Category(UnitTests.class)
   public void shouldRegisterHeartbeatSendSelfDestruct() throws IllegalAccessException, InterruptedException {
+    Delegate delegate = createDelegateBuilder()
+                            .accountId(ACCOUNT_ID)
+                            .uuid(DELEGATE_ID)
+                            .hostName(HOST_NAME)
+                            .description(DESCRIPTION)
+                            .delegateType(ECS)
+                            .ip("127.0.0.1")
+                            .delegateGroupName(DELEGATE_GROUP_NAME)
+                            .version(VERSION)
+                            .proxy(false)
+                            .polllingModeEnabled(false)
+                            .sampleDelegate(false)
+                            .build();
+    DelegateProfile primaryDelegateProfile =
+        createDelegateProfileBuilder().accountId(delegate.getAccountId()).primary(true).build();
+
+    delegate.setDelegateProfileId(primaryDelegateProfile.getUuid());
+    when(delegatesFeature.getMaxUsageAllowedForAccount(ACCOUNT_ID)).thenReturn(Integer.MAX_VALUE);
+    when(delegateProfileService.fetchPrimaryProfile(delegate.getAccountId())).thenReturn(primaryDelegateProfile);
+    delegateService.add(delegate);
     DelegateConnectionDao mockConnectionDao = Mockito.mock(DelegateConnectionDao.class);
     FieldUtils.writeField(delegateService, "delegateConnectionDao", mockConnectionDao, true);
     when(broadcasterFactory.lookup(anyString(), eq(true))).thenReturn(broadcaster);
@@ -951,16 +971,41 @@ public class DelegateServiceTest extends WingsBaseTest {
   public void shouldRegisterHeartbeatThrowException() throws IllegalAccessException, InterruptedException {
     try {
       thrown.expect(DuplicateDelegateException.class);
+      Delegate delegate = createDelegateBuilder()
+                              .accountId(ACCOUNT_ID)
+                              .uuid(DELEGATE_ID)
+                              .hostName(HOST_NAME)
+                              .description(DESCRIPTION)
+                              .delegateType(ECS)
+                              .ip("127.0.0.1")
+                              .delegateGroupName(DELEGATE_GROUP_NAME)
+                              .version(VERSION)
+                              .proxy(false)
+                              .polllingModeEnabled(false)
+                              .sampleDelegate(false)
+                              .build();
+      DelegateProfile primaryDelegateProfile =
+          createDelegateProfileBuilder().accountId(delegate.getAccountId()).primary(true).build();
+
+      delegate.setDelegateProfileId(primaryDelegateProfile.getUuid());
+      when(delegatesFeature.getMaxUsageAllowedForAccount(ACCOUNT_ID)).thenReturn(Integer.MAX_VALUE);
+      when(delegateProfileService.fetchPrimaryProfile(delegate.getAccountId())).thenReturn(primaryDelegateProfile);
+      delegateService.add(delegate);
+
       DelegateConnectionDao mockConnectionDao = Mockito.mock(DelegateConnectionDao.class);
       FieldUtils.writeField(delegateService, "delegateConnectionDao", mockConnectionDao, true);
       String delegateConnectionId = generateTimeBasedUuid();
       Thread.sleep(2L);
       String newerDelegateConnectionId = generateTimeBasedUuid();
-      DelegateConnection newerExistingConnection = DelegateConnection.builder().uuid(newerDelegateConnectionId).build();
+      DelegateConnection newerExistingConnection =
+          DelegateConnection.builder().uuid(newerDelegateConnectionId).location("/location1").build();
       when(mockConnectionDao.findAndDeletePreviousConnections(ACCOUNT_ID, DELEGATE_ID, delegateConnectionId, VERSION))
           .thenReturn(newerExistingConnection);
-      DelegateConnectionHeartbeat heartbeat =
-          DelegateConnectionHeartbeat.builder().version(VERSION).delegateConnectionId(delegateConnectionId).build();
+      DelegateConnectionHeartbeat heartbeat = DelegateConnectionHeartbeat.builder()
+                                                  .version(VERSION)
+                                                  .delegateConnectionId(delegateConnectionId)
+                                                  .location("/location2")
+                                                  .build();
 
       delegateService.registerHeartbeat(ACCOUNT_ID, DELEGATE_ID, heartbeat, ConnectionMode.POLLING);
       verify(mockConnectionDao)

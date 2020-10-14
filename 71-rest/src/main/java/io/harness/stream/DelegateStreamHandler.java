@@ -31,7 +31,6 @@ import org.atmosphere.handler.AtmosphereHandlerAdapter;
 import org.atmosphere.interceptor.AtmosphereResourceLifecycleInterceptor;
 import software.wings.beans.Delegate;
 import software.wings.beans.Delegate.Status;
-import software.wings.service.impl.DelegateConnectionDao;
 import software.wings.service.intfc.AuthService;
 import software.wings.service.intfc.DelegateService;
 
@@ -49,7 +48,6 @@ public class DelegateStreamHandler extends AtmosphereHandlerAdapter {
 
   @Inject private AuthService authService;
   @Inject private DelegateService delegateService;
-  @Inject private DelegateConnectionDao delegateConnectionDao;
 
   @Override
   public void onRequest(AtmosphereResource resource) throws IOException {
@@ -119,6 +117,7 @@ public class DelegateStreamHandler extends AtmosphereHandlerAdapter {
             DelegateConnectionHeartbeat.builder()
                 .delegateConnectionId(delegateConnectionId)
                 .version(delegateVersion)
+                .location(delegate.getLocation())
                 .build(),
             ConnectionMode.STREAMING);
       }

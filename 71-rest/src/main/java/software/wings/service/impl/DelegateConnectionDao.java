@@ -108,7 +108,7 @@ public class DelegateConnectionDao {
   }
 
   public DelegateConnection upsertCurrentConnection(
-      String accountId, String delegateId, String delegateConnectionId, String version) {
+      String accountId, String delegateId, String delegateConnectionId, String version, String location) {
     Query<DelegateConnection> query = persistence.createQuery(DelegateConnection.class)
                                           .filter(DelegateConnectionKeys.accountId, accountId)
                                           .filter(DelegateConnectionKeys.uuid, delegateConnectionId);
@@ -123,6 +123,9 @@ public class DelegateConnectionDao {
             .set(DelegateConnectionKeys.disconnected, Boolean.FALSE)
             .set(DelegateConnectionKeys.validUntil,
                 Date.from(OffsetDateTime.now().plusMinutes(TTL.toMinutes()).toInstant()));
+    if (location != null) {
+      updateOperations.set(DelegateConnectionKeys.location, location);
+    }
 
     return persistence.upsert(query, updateOperations, HPersistence.upsertReturnOldOptions);
   }
