@@ -17,9 +17,6 @@ public class ProjectAndOrgMorphiaRegistrar implements MorphiaRegistrar {
   public void registerClasses(Set<Class> set) {
     set.add(Project.class);
     set.add(Organization.class);
-    set.add(NGAccess.class);
-    set.add(NGProjectAccess.class);
-    set.add(NGOrgAccess.class);
     set.add(ProjectAccess.class);
     set.add(OrganizationAccess.class);
   }
