@@ -1,5 +1,6 @@
 digraph G {
   compound=true;
+  newrank=true;
 
   service_api_beans [shape=rect color=green label="service api beans"];
 
@@ -31,14 +32,25 @@ digraph G {
     delegate_service_beans [shape=rect color=green label="delegate service beans"];
   }
 
+  subgraph cluster_delegate_service
+  {
+	label = "delegate service";
+
+    rank=same
+    delegate_service_agent [shape=rect label="agent APIs"];
+    delegate_service_ui [shape=rect label="UI APIs"];
+    delegate_service_managers [shape=rect label="manager APIs"];
+  }
+
   subgraph {
     rank=same
     edge[style=invis];
     delegate_agent [shape=rect label="delegate agent"];
-    delegate_service [shape=rect label="delegate service"];
     manager_cx [shape=rect label="manager Cx"];
-    delegate_agent -> delegate_service-> manager_cx;
+    delegate_agent -> manager_cx;
   }
+
+  delegate_service_managers -> orchestration[style=invis];
 
 
   service_api -> service_api_beans;
@@ -67,8 +79,8 @@ digraph G {
 
   delegate_service_driver -> delegate_service_beans;
 
-  delegate_service -> delegate_service_beans;
-  delegate_service -> delegate_agent_beans;
+  delegate_service_managers -> delegate_service_beans;
+  delegate_service_agent -> delegate_agent_beans;
 
   manager_cx -> delegate_service_driver;
   manager_cx -> delegate_tasks_beans;
