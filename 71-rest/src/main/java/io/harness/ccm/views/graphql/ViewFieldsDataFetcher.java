@@ -33,7 +33,11 @@ public class ViewFieldsDataFetcher extends AbstractObjectDataFetcher<QLCEViewFie
 
   private QLCEViewFieldIdentifierData getViewField(
       List<QLCEViewField> ceViewFieldList, ViewFieldIdentifier viewFieldIdentifier) {
-    return QLCEViewFieldIdentifierData.builder().identifier(viewFieldIdentifier).values(ceViewFieldList).build();
+    return QLCEViewFieldIdentifierData.builder()
+        .identifier(viewFieldIdentifier)
+        .identifierName(viewFieldIdentifier.getDisplayName())
+        .values(ceViewFieldList)
+        .build();
   }
 
   private QLCEViewFieldIdentifierData getViewCustomField(List<ViewField> customFields) {
@@ -45,6 +49,10 @@ public class ViewFieldsDataFetcher extends AbstractObjectDataFetcher<QLCEViewFie
                                                          .identifier(field.getIdentifier())
                                                          .build())
                                               .collect(Collectors.toList());
-    return QLCEViewFieldIdentifierData.builder().identifier(ViewFieldIdentifier.CUSTOM).values(ceViewFieldList).build();
+    return QLCEViewFieldIdentifierData.builder()
+        .identifier(ViewFieldIdentifier.CUSTOM)
+        .identifierName(ViewFieldIdentifier.CUSTOM.getDisplayName())
+        .values(ceViewFieldList)
+        .build();
   }
 }
