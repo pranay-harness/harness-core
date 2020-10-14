@@ -465,6 +465,10 @@ public class ApplicationManifestServiceImpl implements ApplicationManifestServic
         if (isHelmRepoOrChartNameChanged(oldAppManifest, applicationManifest)) {
           helmChartService.deleteByAppManifest(oldAppManifest.getAppId(), oldAppManifest.getUuid());
           resetPerpetualTask(applicationManifest);
+        } else {
+          if (oldAppManifest.getPerpetualTaskId() == null) {
+            createPerpetualTask(applicationManifest);
+          }
         }
       }
     } else {
