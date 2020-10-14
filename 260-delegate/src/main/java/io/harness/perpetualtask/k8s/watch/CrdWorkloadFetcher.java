@@ -5,6 +5,7 @@ import com.google.common.base.Suppliers;
 import com.github.benmanes.caffeine.cache.Caffeine;
 import com.github.benmanes.caffeine.cache.LoadingCache;
 import io.kubernetes.client.openapi.ApiClient;
+import io.kubernetes.client.openapi.ApiException;
 import io.kubernetes.client.openapi.JSON;
 import io.kubernetes.client.openapi.apis.ApiextensionsV1Api;
 import io.kubernetes.client.openapi.apis.CustomObjectsApi;
@@ -28,6 +29,8 @@ import java.util.function.Supplier;
  */
 @Slf4j
 public class CrdWorkloadFetcher {
+  private volatile boolean tripped;
+
   @Value
   @Builder
   public static class WorkloadReference {
@@ -48,6 +51,7 @@ public class CrdWorkloadFetcher {
   private final Supplier<Map<String, String>> kindToPluralMapSupplier;
 
   public CrdWorkloadFetcher(ApiClient apiClient) {
+    this.tripped = false;
     this.apiClient = apiClient;
     workloadCache = Caffeine.newBuilder().expireAfterWrite(10, TimeUnit.MINUTES).build(this ::getWorkloadInternal);
     kindToPluralMapSupplier = Suppliers.memoizeWithExpiration(this ::loadKindToPluralMap, 10, TimeUnit.MINUTES);
@@ -64,6 +68,8 @@ public class CrdWorkloadFetcher {
         plurals.put(names.getKind(), names.getPlural());
       }
 
+    } catch (ApiException e) {
+      logger.warn("Encountered ApiException listing CRDs, code: {}, body: {}", e.getCode(), e.getResponseBody(), e);
     } catch (Exception e) {
       logger.warn("Error listing CRDs", e);
     }
@@ -92,6 +98,9 @@ public class CrdWorkloadFetcher {
                                      .withNamespace(workloadRef.getNamespace())
                                      .withUid(workloadRef.getUid())
                                      .build();
+    if (tripped) {
+      return Workload.of(workloadRef.getKind(), knownMetadata);
+    }
     try {
       String apiVersion = workloadRef.getApiVersion();
       String[] parts = apiVersion.split("/");
@@ -113,6 +122,15 @@ public class CrdWorkloadFetcher {
           json.deserialize(json.serialize(workloadObject), HavingMetadataObject.class);
       return Workload.of(
           workloadRef.getKind(), Optional.ofNullable(havingMetadataObject.getMetadata()).orElse(knownMetadata));
+    } catch (ApiException e) {
+      logger.warn(
+          "Encountered ApiException fetching custom workload, code: {}, body: {}", e.getCode(), e.getResponseBody(), e);
+      if (e.getCode() == 400 || e.getCode() == 401 || e.getCode() == 403 || e.getCode() == 404) {
+        logger.warn("Tripping future calls. Response code is {}", e.getCode());
+        tripped = true;
+      }
+      // fallback to return a workload with the metadata we already know (without others like labels)
+      return Workload.of(workloadRef.getKind(), knownMetadata);
     } catch (Exception e) {
       logger.warn("Encountered error trying to fetch custom workload details", e);
       // fallback to return a workload with the metadata we already know (without others like labels)
