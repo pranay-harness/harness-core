@@ -14,6 +14,7 @@ import lombok.Builder.Default;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.experimental.FieldNameConstants;
+import org.jetbrains.annotations.NotNull;
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Id;
 import org.mongodb.morphia.annotations.PrePersist;
@@ -31,7 +32,7 @@ import java.util.Set;
 @FieldNameConstants(innerTypeName = "TimeSeriesRecordKeys")
 @Entity(value = "timeSeriesRecords", noClassnameStored = true)
 @HarnessEntity(exportable = false)
-public class TimeSeriesRecord implements CreatedAtAware, AccountAccess, PersistentEntity {
+public class TimeSeriesRecord implements CreatedAtAware, AccountAccess, PersistentEntity, Comparable<TimeSeriesRecord> {
   @Id private String uuid;
   @FdIndex private String accountId;
   @FdIndex private String cvConfigId;
@@ -49,6 +50,14 @@ public class TimeSeriesRecord implements CreatedAtAware, AccountAccess, Persiste
   @Default
   @FdTtlIndex
   private Date validUntil = Date.from(OffsetDateTime.now().plusDays(180).toInstant());
+
+  @Override
+  public int compareTo(@NotNull TimeSeriesRecord o) {
+    if (!bucketStartTime.equals(o.bucketStartTime)) {
+      return bucketStartTime.compareTo(o.bucketStartTime);
+    }
+    return metricName.compareTo(o.metricName);
+  }
 
   @Data
   @Builder

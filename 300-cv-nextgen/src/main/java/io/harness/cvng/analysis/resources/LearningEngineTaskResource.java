@@ -17,6 +17,7 @@ import io.swagger.annotations.ApiOperation;
 
 import java.util.List;
 import javax.ws.rs.GET;
+import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
@@ -40,7 +41,7 @@ public class LearningEngineTaskResource {
     return new RestResponse<>(learningEngineTaskService.getNextAnalysisTask(taskTypes));
   }
 
-  @GET
+  @POST
   @Path(MARK_FAILURE_PATH)
   @Timed
   @ExceptionMetered

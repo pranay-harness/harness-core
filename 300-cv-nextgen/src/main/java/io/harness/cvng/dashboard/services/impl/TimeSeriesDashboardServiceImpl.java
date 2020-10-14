@@ -1,5 +1,7 @@
 package io.harness.cvng.dashboard.services.impl;
 
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
+
 import com.google.inject.Inject;
 
 import io.harness.cvng.beans.CVMonitoringCategory;
@@ -7,6 +9,7 @@ import io.harness.cvng.core.entities.CVConfig;
 import io.harness.cvng.core.entities.TimeSeriesRecord;
 import io.harness.cvng.core.services.api.CVConfigService;
 import io.harness.cvng.core.services.api.TimeSeriesService;
+import io.harness.cvng.core.utils.CVParallelExecutor;
 import io.harness.cvng.dashboard.beans.TimeSeriesMetricDataDTO;
 import io.harness.cvng.dashboard.services.api.TimeSeriesDashboardService;
 import io.harness.ng.beans.PageResponse;
@@ -14,20 +17,24 @@ import io.harness.persistence.HPersistence;
 
 import java.time.Instant;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.SortedSet;
 import java.util.TreeSet;
+import java.util.concurrent.Callable;
 import java.util.stream.Collectors;
 
 public class TimeSeriesDashboardServiceImpl implements TimeSeriesDashboardService {
   @Inject private CVConfigService cvConfigService;
   @Inject private HPersistence hPersistence;
   @Inject private TimeSeriesService timeSeriesService;
+  @Inject private CVParallelExecutor cvParallelExecutor;
 
   @Override
   public PageResponse<TimeSeriesMetricDataDTO> getSortedMetricData(String accountId, String projectIdentifier,
@@ -57,25 +64,86 @@ public class TimeSeriesDashboardServiceImpl implements TimeSeriesDashboardServic
         accountId, orgIdentifier, projectIdentifier, environmentIdentifier, serviceIdentifier, monitoringCategory);
     List<String> cvConfigIds = cvConfigList.stream().map(CVConfig::getUuid).collect(Collectors.toList());
 
-    List<TimeSeriesRecord> timeSeriesRecordsfromDB =
-        timeSeriesService.getTimeSeriesRecordsForConfigs(cvConfigIds, startTime, endTime, anomalousOnly);
+    List<Callable<List<TimeSeriesRecord>>> recordsPerId = new ArrayList<>();
 
-    List<TimeSeriesRecord> timeSeriesRecords = Collections.synchronizedList(new ArrayList<>());
-    if (!anomalousOnly) {
-      timeSeriesRecords.addAll(timeSeriesRecordsfromDB);
-    } else {
-      // it is possible that there are some transactions with good risk and some with bad.
-      // We want to surface only those with bad. So filter out the good ones.
-      // TODO: Move this to executor service once the log PR goes in
-      timeSeriesRecordsfromDB.parallelStream().forEach(timeSeriesRecord -> {
-        Set<TimeSeriesRecord.TimeSeriesGroupValue> groupValuesWithLowRisk = timeSeriesRecord.getTimeSeriesGroupValues()
-                                                                                .stream()
-                                                                                .filter(gv -> gv.getRiskScore() <= 0)
-                                                                                .collect(Collectors.toSet());
-        groupValuesWithLowRisk.stream().map(timeSeriesRecord.getTimeSeriesGroupValues()::remove);
-        timeSeriesRecords.add(timeSeriesRecord);
+    cvConfigIds.forEach(cvConfigId -> {
+      recordsPerId.add(() -> {
+        List<TimeSeriesRecord> timeSeriesRecordsfromDB =
+            timeSeriesService.getTimeSeriesRecordsForConfigs(Arrays.asList(cvConfigId), startTime, endTime, false);
+        List<TimeSeriesRecord> timeSeriesRecords = Collections.synchronizedList(new ArrayList<>());
+        if (isEmpty(timeSeriesRecordsfromDB)) {
+          return timeSeriesRecords;
+        }
+        if (!anomalousOnly) {
+          timeSeriesRecords.addAll(timeSeriesRecordsfromDB);
+        } else {
+          // it is possible that there are some transactions with good risk and some with bad.
+          // We want to surface only those with bad. So filter out the good ones.
+          SortedSet<TimeSeriesRecord> recordsForConfig = new TreeSet<>();
+          recordsForConfig.addAll(timeSeriesRecordsfromDB);
+          Instant analysisTime = recordsForConfig.last().getBucketStartTime();
+
+          List<TimeSeriesRecord> lastAnalysisRecords =
+              timeSeriesRecordsfromDB.stream()
+                  .filter(record -> record.getBucketStartTime().equals(analysisTime))
+                  .collect(Collectors.toList());
+
+          Map<String, List<String>> riskMetricGroupNamesMap = new HashMap<>();
+
+          lastAnalysisRecords.forEach(timeSeriesRecord -> {
+            Set<TimeSeriesRecord.TimeSeriesGroupValue> groupValuesWithRisk = timeSeriesRecord.getTimeSeriesGroupValues()
+                                                                                 .stream()
+                                                                                 .filter(gv -> gv.getRiskScore() > 0)
+                                                                                 .collect(Collectors.toSet());
+            riskMetricGroupNamesMap.put(timeSeriesRecord.getMetricName(), new ArrayList<>());
+
+            groupValuesWithRisk.forEach(
+                gv -> riskMetricGroupNamesMap.get(timeSeriesRecord.getMetricName()).add(gv.getGroupName()));
+          });
+
+          for (TimeSeriesRecord tsRecord : timeSeriesRecordsfromDB) {
+            String metricName = tsRecord.getMetricName();
+            if (riskMetricGroupNamesMap.containsKey(metricName)) {
+              Iterator<TimeSeriesRecord.TimeSeriesGroupValue> groupValueIterator =
+                  tsRecord.getTimeSeriesGroupValues().iterator();
+              Set<TimeSeriesRecord.TimeSeriesGroupValue> badGroupValues = new HashSet<>();
+              for (; groupValueIterator.hasNext();) {
+                TimeSeriesRecord.TimeSeriesGroupValue gv = groupValueIterator.next();
+                String groupName = gv.getGroupName();
+                if (!riskMetricGroupNamesMap.get(metricName).contains(groupName)) {
+                  groupValueIterator.remove();
+                } else {
+                  badGroupValues.add(gv);
+                }
+              }
+
+              tsRecord.setTimeSeriesGroupValues(badGroupValues);
+              // remove all those GroupValues that doent belong in the risk list.
+              //              Set<TimeSeriesRecord.TimeSeriesGroupValue> groupValuesWithLowRisk =
+              //                  tsRecord.getTimeSeriesGroupValues()
+              //                      .stream()
+              //                      .filter(gv ->
+              //                      !riskMetricGroupNamesMap.get(metricName).contains(gv.getGroupName()))
+              //                      .collect(Collectors.toSet());
+              //              Set<TimeSeriesRecord.TimeSeriesGroupValue> groupValues =
+              //              tsRecord.getTimeSeriesGroupValues(); groupValues.stream().filter(gv -> gv.getRiskScore() >
+              //              0).map(tsRecord.getTimeSeriesGroupValues()::remove); for
+              //              (TimeSeriesRecord.TimeSeriesGroupValue groupValue : groupValuesWithLowRisk) {
+              //                groupValues.remove(groupValue);
+              //              }
+              // groupValuesWithLowRisk.stream().map(tsRecord.getTimeSeriesGroupValues()::remove);
+              timeSeriesRecords.add(tsRecord);
+            }
+          }
+        }
+        return timeSeriesRecords;
       });
-    }
+    });
+
+    List<List<TimeSeriesRecord>> timeSeriesThatMatter = cvParallelExecutor.executeParallel(recordsPerId);
+
+    List<TimeSeriesRecord> timeSeriesRecords = new ArrayList<>();
+    timeSeriesThatMatter.forEach(timeSeriesRecords::addAll);
 
     Map<String, TimeSeriesMetricDataDTO> transactionMetricDataMap = new HashMap<>();
 
@@ -122,9 +190,11 @@ public class TimeSeriesDashboardServiceImpl implements TimeSeriesDashboardServic
       i++;
     }
 
+    int totalNumPages = sortedMetricdata.size() / size + 1;
+
     return PageResponse.<TimeSeriesMetricDataDTO>builder()
         .pageSize(size)
-        .totalPages(sortedMetricdata.size() / size)
+        .totalPages(totalNumPages)
         .totalItems(sortedMetricdata.size())
         .pageIndex(returnList.size() == 0 ? -1 : page)
         .empty(returnList.size() == 0)

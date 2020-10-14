@@ -223,8 +223,8 @@ public class LogAnalysisServiceImpl implements LogAnalysisService {
     CVConfig cvConfig = cvConfigService.get(cvConfigId);
 
     heatMapService.updateRiskScore(cvConfig.getAccountId(), cvConfig.getProjectIdentifier(),
-        cvConfig.getServiceIdentifier(), cvConfig.getEnvIdentifier(), cvConfig.getCategory(), analysisStartTime,
-        analysisBody.getScore());
+        cvConfig.getServiceIdentifier(), cvConfig.getEnvIdentifier(), cvConfig, cvConfig.getCategory(),
+        analysisStartTime, analysisBody.getScore());
   }
 
   @Override

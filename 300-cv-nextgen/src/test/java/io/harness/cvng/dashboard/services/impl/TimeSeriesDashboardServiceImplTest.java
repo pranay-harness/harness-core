@@ -130,6 +130,32 @@ public class TimeSeriesDashboardServiceImplTest extends CvNextGenTest {
   @Test
   @Owner(developers = PRAVEEN)
   @Category(UnitTests.class)
+  public void testGetSortedAnomalousMetricData_noAnomalies() throws Exception {
+    Instant start = Instant.parse("2020-07-07T02:40:00.000Z");
+    Instant end = start.plus(5, ChronoUnit.MINUTES);
+    String cvConfigId = generateUuid();
+    when(timeSeriesService.getTimeSeriesRecordsForConfigs(any(), any(), any(), anyBoolean()))
+        .thenReturn(getTimeSeriesRecords(cvConfigId, false));
+    List<String> cvConfigs = Arrays.asList(cvConfigId);
+    AppDynamicsCVConfig cvConfig = new AppDynamicsCVConfig();
+    cvConfig.setUuid(cvConfigId);
+    when(cvConfigService.getConfigsOfProductionEnvironments(accountId, orgIdentifier, projectIdentifier, envIdentifier,
+             serviceIdentifier, CVMonitoringCategory.PERFORMANCE))
+        .thenReturn(Arrays.asList(cvConfig));
+
+    PageResponse<TimeSeriesMetricDataDTO> response = timeSeriesDashboardService.getSortedAnomalousMetricData(accountId,
+        projectIdentifier, orgIdentifier, envIdentifier, serviceIdentifier, CVMonitoringCategory.PERFORMANCE,
+        start.toEpochMilli(), end.toEpochMilli(), 0, 10);
+    verify(cvConfigService)
+        .getConfigsOfProductionEnvironments(accountId, orgIdentifier, projectIdentifier, envIdentifier,
+            serviceIdentifier, CVMonitoringCategory.PERFORMANCE);
+    assertThat(response).isNotNull();
+    assertThat(response.getContent()).isEmpty();
+  }
+
+  @Test
+  @Owner(developers = PRAVEEN)
+  @Category(UnitTests.class)
   public void testGetSortedAnomalousMetricData_noCategory() throws Exception {
     Instant start = Instant.parse("2020-07-07T02:40:00.000Z");
     Instant end = start.plus(5, ChronoUnit.MINUTES);
@@ -178,12 +204,12 @@ public class TimeSeriesDashboardServiceImplTest extends CvNextGenTest {
         .thenReturn(Arrays.asList(cvConfig));
 
     PageResponse<TimeSeriesMetricDataDTO> response = timeSeriesDashboardService.getSortedAnomalousMetricData(accountId,
-        projectIdentifier, generateUuid(), envIdentifier, serviceIdentifier, CVMonitoringCategory.PERFORMANCE,
-        start.toEpochMilli(), end.toEpochMilli(), 2, 3);
+        projectIdentifier, orgIdentifier, envIdentifier, serviceIdentifier, CVMonitoringCategory.PERFORMANCE,
+        start.toEpochMilli(), end.toEpochMilli(), 0, 3);
 
     assertThat(response).isNotNull();
     assertThat(response.getContent()).isNotEmpty();
-    assertThat(response.getTotalPages()).isEqualTo(40);
+    assertThat(response.getTotalPages()).isEqualTo(41);
     assertThat(response.getContent().size()).isEqualTo(3);
     response.getContent().forEach(timeSeriesMetricDataDTO -> {
       assertThat(timeSeriesMetricDataDTO.getMetricDataList()).isNotEmpty();
