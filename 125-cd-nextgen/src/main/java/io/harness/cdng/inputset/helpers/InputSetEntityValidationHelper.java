@@ -6,6 +6,7 @@ import com.google.inject.Singleton;
 import io.harness.cdng.inputset.beans.entities.InputSetEntity;
 import io.harness.cdng.inputset.beans.entities.MergeInputSetResponse;
 import io.harness.cdng.inputset.services.InputSetEntityService;
+import io.harness.cdng.pipeline.NgPipeline;
 import io.harness.ngpipeline.overlayinputset.beans.BaseInputSetEntity;
 import io.harness.ngpipeline.overlayinputset.beans.InputSetEntityType;
 import io.harness.ngpipeline.overlayinputset.beans.entities.OverlayInputSetEntity;
@@ -29,10 +30,10 @@ public class InputSetEntityValidationHelper {
   private final String identifierNotFoundMsg = "Reference does not exist";
 
   public MergeInputSetResponse validateInputSetEntity(InputSetEntity inputSetEntity) {
+    NgPipeline pipeline = inputSetEntity.getInputSetConfig().getPipeline();
     return inputSetMergeHelper.getMergePipelineYamlFromInputSetPipelineYaml(inputSetEntity.getAccountId(),
         inputSetEntity.getOrgIdentifier(), inputSetEntity.getProjectIdentifier(),
-        inputSetEntity.getPipelineIdentifier(), inputSetEntity.getIdentifier(),
-        inputSetEntity.getInputSetConfig().getPipeline(), true, false);
+        inputSetEntity.getPipelineIdentifier(), inputSetEntity.getIdentifier(), pipeline, true, false);
   }
 
   public Map<String, String> validateOverlayInputSetEntity(OverlayInputSetEntity overlayInputSetEntity) {

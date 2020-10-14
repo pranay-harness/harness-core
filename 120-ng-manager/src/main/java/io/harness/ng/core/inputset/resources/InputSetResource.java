@@ -128,6 +128,8 @@ public class InputSetResource {
     InputSetEntity inputSetEntity =
         InputSetElementMapper.toInputSetEntity(accountId, orgIdentifier, projectIdentifier, pipelineIdentifier, yaml);
 
+    inputSetEntity = inputSetMergeHelper.removeRuntimeInputs(inputSetEntity);
+
     MergeInputSetResponse mergeResponse = inputSetEntityValidationHelper.validateInputSetEntity(inputSetEntity);
     if (mergeResponse.isErrorResponse()) {
       return ResponseDTO.newResponse(InputSetElementMapper.writeInputSetResponseDTO(inputSetEntity, mergeResponse));
@@ -180,6 +182,8 @@ public class InputSetResource {
       @NotNull @ApiParam(hidden = true, type = "") String yaml) {
     InputSetEntity inputSetEntity = InputSetElementMapper.toInputSetEntityWithIdentifier(
         accountId, orgIdentifier, projectIdentifier, pipelineIdentifier, inputSetIdentifier, yaml);
+
+    inputSetEntity = inputSetMergeHelper.removeRuntimeInputs(inputSetEntity);
 
     MergeInputSetResponse mergeResponse = inputSetEntityValidationHelper.validateInputSetEntity(inputSetEntity);
     if (mergeResponse.isErrorResponse()) {
