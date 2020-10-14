@@ -208,7 +208,7 @@ public class DelegateTaskSelectorMapServiceTest extends DelegateServiceTestBase 
   @Category(UnitTests.class)
   public void shouldGetTaskSelectorMap() {
     String accountId = generateUuid();
-    String taskGroup = TaskGroup.HTTP.name();
+    TaskGroup taskGroup = TaskGroup.HTTP;
 
     Set<String> commandMapSelectors = new HashSet<>();
     commandMapSelectors.add("e");
@@ -232,7 +232,7 @@ public class DelegateTaskSelectorMapServiceTest extends DelegateServiceTestBase 
   @Owner(developers = VUK)
   @Category(UnitTests.class)
   public void shouldNotGetTaskSelectorMap() {
-    TaskSelectorMap getTaskSelectorMap = taskSelectorMapService.get(ACCOUNT_ID, TaskGroup.HTTP.name());
+    TaskSelectorMap getTaskSelectorMap = taskSelectorMapService.get(ACCOUNT_ID, TaskGroup.HTTP);
     assertThat(getTaskSelectorMap).isNull();
   }
 }

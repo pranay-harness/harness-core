@@ -160,4 +160,6 @@ public interface DelegateService extends OwnedByAccount {
   void deleteAllDelegatesExceptOne(String accountId, long shutdownInterval);
 
   CEDelegateStatus validateCEDelegate(String accountId, String delegateName);
+
+  void convertToExecutionCapability(DelegateTask task);
 }
