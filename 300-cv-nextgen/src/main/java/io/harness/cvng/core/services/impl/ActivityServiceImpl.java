@@ -65,6 +65,10 @@ public class ActivityServiceImpl implements ActivityService {
     hPersistence.save(activity);
   }
 
+  public String createActivity(Activity activity) {
+    return hPersistence.save(activity);
+  }
+
   @Override
   public List<DeploymentActivityVerificationResultDTO> getRecentDeploymentActivityVerifications(
       String accountId, String projectIdentifier) {
@@ -109,7 +113,7 @@ public class ActivityServiceImpl implements ActivityService {
       List<String> verificationJobInstanceIds =
           getVerificationJobInstanceIds(deploymentGroupByTag.getDeploymentActivities());
       verificationJobInstanceService.addResultsToDeploymentResultSummary(
-          verificationJobInstanceIds, deploymentResultSummary);
+          accountId, verificationJobInstanceIds, deploymentResultSummary);
     });
     String serviceName = getServiceNameFromActivity(deploymentActivities.get(0).deploymentActivities.get(0));
 
@@ -178,6 +182,22 @@ public class ActivityServiceImpl implements ActivityService {
       deploymentGroupByTag.addDeploymentActivity(activity);
     }
     return result;
+  }
+
+  @Override
+  public String getDeploymentTagFromActivity(String accountId, String verificationJobInstanceId) {
+    DeploymentActivity deploymentActivity =
+        (DeploymentActivity) hPersistence.createQuery(Activity.class, excludeAuthority)
+            .filter(ActivityKeys.accountIdentifier, accountId)
+            .filter(ActivityKeys.type, ActivityType.DEPLOYMENT)
+            .field(ActivityKeys.verificationJobInstanceIds)
+            .hasThisOne(verificationJobInstanceId)
+            .get();
+    if (deploymentActivity != null) {
+      return deploymentActivity.getDeploymentTag();
+    } else {
+      throw new IllegalStateException("Activity not found for verificationJobInstanceId: " + verificationJobInstanceId);
+    }
   }
 
   private String getServiceNameFromActivity(Activity activity) {

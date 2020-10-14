@@ -11,6 +11,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyList;
+import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -319,7 +320,7 @@ public class ActivityServiceImplTest extends CvNextGenTest {
     when(verificationJobService.getVerificationJob(accountId, verificationJob.getIdentifier()))
         .thenReturn(verificationJob);
     when(verificationJobInstanceService.create(anyList())).thenReturn(Arrays.asList("taskId1"));
-    doNothing().when(verificationJobInstanceService).addResultsToDeploymentResultSummary(anyList(), any());
+    doNothing().when(verificationJobInstanceService).addResultsToDeploymentResultSummary(anyString(), anyList(), any());
     List<VerificationJobRuntimeDetails> verificationJobDetails = new ArrayList<>();
     Map<String, String> runtimeParams = new HashMap<>();
     runtimeParams.put(JOB_IDENTIFIER_KEY, verificationJob.getIdentifier());

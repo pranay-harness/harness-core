@@ -1,5 +1,6 @@
 package io.harness.cvng.core.beans;
 
+import io.harness.cvng.verificationjob.beans.AdditionalInfo;
 import lombok.Builder;
 import lombok.Data;
 import lombok.Value;
@@ -26,6 +27,7 @@ public class DeploymentActivityResultDTO {
     String jobName;
     String verificationJobInstanceId;
     DeploymentVerificationStatus status;
+    AdditionalInfo additionalInfo;
   }
 
   @Value

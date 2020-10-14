@@ -23,5 +23,5 @@ public interface VerificationJobInstanceService {
   Optional<TimeRange> getPreDeploymentTimeRange(String verificationJobInstanceId);
   DeploymentActivityVerificationResultDTO getAggregatedVerificationResult(List<String> verificationJobInstanceIds);
   void addResultsToDeploymentResultSummary(
-      List<String> verificationJobInstanceIds, DeploymentResultSummary deploymentResultSummary);
+      String accountId, List<String> verificationJobInstanceIds, DeploymentResultSummary deploymentResultSummary);
 }

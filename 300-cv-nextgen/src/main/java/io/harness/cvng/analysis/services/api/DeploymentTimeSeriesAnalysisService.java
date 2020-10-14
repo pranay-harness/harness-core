@@ -12,4 +12,6 @@ public interface DeploymentTimeSeriesAnalysisService {
       boolean anomalousMetricsOnly, String hostName, int pageNumber);
   List<DeploymentTimeSeriesAnalysis> getAnalysisResults(String verificationTaskId);
   Optional<Double> getLatestRiskScore(String accountId, String verificationJobInstanceId);
+  DeploymentTimeSeriesAnalysis getLatestDeploymentTimeSeriesAnalysis(
+      String accountId, String verificationJobInstanceId);
 }

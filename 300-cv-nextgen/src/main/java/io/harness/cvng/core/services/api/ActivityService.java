@@ -17,4 +17,8 @@ public interface ActivityService {
       String accountId, String projectIdentifier, String deploymentTag);
 
   Activity getActivityFromDTO(ActivityDTO activityDTO);
+
+  String getDeploymentTagFromActivity(String accountId, String verificationJobInstanceId);
+
+  String createActivity(Activity activity);
 }

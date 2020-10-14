@@ -19,4 +19,6 @@ public interface DeploymentLogAnalysisService {
       String accountId, String verificationJobInstanceId, Integer label, int pageNumber);
 
   Optional<Double> getLatestRiskScore(String accountId, String verificationJobInstanceId);
+
+  DeploymentLogAnalysis getLatestDeploymentLogAnalysis(String accountId, String verificationJobInstanceId);
 }
