@@ -3,6 +3,7 @@ package software.wings.service.impl.instance;
 import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
 import static io.harness.beans.PageResponse.PageResponseBuilder.aPageResponse;
 import static io.harness.beans.SearchFilter.Operator.EQ;
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.mongo.MongoUtils.setUnset;
 import static io.harness.validation.Validator.nullCheck;
 
@@ -45,6 +46,7 @@ import software.wings.service.intfc.instance.InstanceService;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -233,16 +235,33 @@ public class InstanceServiceImpl implements InstanceService {
     pruneByEntity(map);
   }
 
+  // Note: This method shouldn't be called with already deleted instance ids.
   @Override
   public boolean delete(Set<String> instanceIdSet) {
     final List<List<String>> partitions = Lists.partition(new ArrayList<>(instanceIdSet), 50);
     AtomicBoolean result = new AtomicBoolean(true);
     long currentTimeMillis = System.currentTimeMillis();
+
     partitions.forEach(partition -> {
+      Query<Instance> queryDeletedAlready = wingsPersistence.createQuery(Instance.class);
+      queryDeletedAlready.field("_id").in(partition);
+      queryDeletedAlready.field(InstanceKeys.isDeleted).equal(true);
+      queryDeletedAlready.project(InstanceKeys.accountId, true);
+      queryDeletedAlready.project("_id", true);
+      List<Instance> deletedInstances = queryDeletedAlready.asList();
+
+      if (isNotEmpty(deletedInstances)) {
+        final List<String> idList = deletedInstances.stream().map(Instance::getUuid).collect(Collectors.toList());
+        logger.error("Found some deleted instances that are being deleted again. accountId: [{}], instanceIds:[{}]",
+            deletedInstances.get(0).getAccountId(), idList);
+      }
+
       Query<Instance> query = wingsPersistence.createQuery(Instance.class);
       query.field("_id").in(partition);
+      query.field(InstanceKeys.isDeleted).equal(false);
       result.set(result.get() && delete(query, currentTimeMillis));
     });
+    logger.info("Instance Sync Delete Stack trace: " + Arrays.toString(Thread.currentThread().getStackTrace()));
     return result.get();
   }
 
