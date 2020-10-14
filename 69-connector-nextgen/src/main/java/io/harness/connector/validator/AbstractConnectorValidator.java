@@ -5,8 +5,10 @@ import com.google.inject.Inject;
 import io.harness.beans.DecryptableEntity;
 import io.harness.beans.DelegateTaskRequest;
 import io.harness.delegate.beans.DelegateResponseData;
+import io.harness.delegate.beans.ErrorNotifyResponseData;
 import io.harness.delegate.beans.connector.ConnectorConfigDTO;
 import io.harness.delegate.task.TaskParameters;
+import io.harness.exception.InvalidRequestException;
 import io.harness.ng.core.BaseNGAccess;
 import io.harness.ng.core.NGAccess;
 import io.harness.secretmanagerclient.services.api.SecretManagerClientService;
@@ -30,7 +32,12 @@ public abstract class AbstractConnectorValidator {
             .executionTimeout(Duration.ofMinutes(2))
             .build();
 
-    return delegateGrpcClientWrapper.executeSyncTask(delegateTaskRequest);
+    DelegateResponseData responseData = delegateGrpcClientWrapper.executeSyncTask(delegateTaskRequest);
+    if (responseData instanceof ErrorNotifyResponseData) {
+      ErrorNotifyResponseData errorNotifyResponseData = (ErrorNotifyResponseData) responseData;
+      throw new InvalidRequestException(errorNotifyResponseData.getErrorMessage());
+    }
+    return responseData;
   }
 
   public List<EncryptedDataDetail> getEncryptionDetail(

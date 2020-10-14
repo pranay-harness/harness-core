@@ -163,9 +163,7 @@ public class DefaultConnectorServiceImpl implements ConnectorService {
 
   public ConnectorValidationResult validate(ConnectorDTO connectorRequest, String accountIdentifier) {
     ConnectorInfoDTO connector = connectorRequest.getConnectorInfo();
-    ConnectionValidator connectionValidator = connectionValidatorMap.get(connector.getConnectorType().toString());
-    return connectionValidator.validate(connector.getConnectorConfig(), accountIdentifier, connector.getOrgIdentifier(),
-        connector.getProjectIdentifier());
+    return validateSafely(connector, accountIdentifier, connector.getOrgIdentifier(), connector.getProjectIdentifier());
   }
 
   public boolean validateTheIdentifierIsUnique(
@@ -185,16 +183,8 @@ public class DefaultConnectorServiceImpl implements ConnectorService {
     if (connectorOptional.isPresent()) {
       ConnectorResponseDTO connectorDTO = connectorMapper.writeDTO(connectorOptional.get());
       ConnectorInfoDTO connectorInfo = connectorDTO.getConnector();
-      ConnectionValidator connectionValidator = connectionValidatorMap.get(connectorInfo.getConnectorType().toString());
-      ConnectorValidationResult validationResult;
-      try {
-        validationResult = connectionValidator.validate(
-            connectorInfo.getConnectorConfig(), accountIdentifier, orgIdentifier, projectIdentifier);
-      } catch (Exception ex) {
-        logger.info(String.format(
-            "Test Connection failed for connector [%s] with error [%s]", fullyQualifiedIdentifier, ex.getMessage()));
-        validationResult = ConnectorValidationResult.builder().build();
-      }
+      ConnectorValidationResult validationResult =
+          validateSafely(connectorInfo, accountIdentifier, orgIdentifier, projectIdentifier);
       long connectivityTestedAt = System.currentTimeMillis();
       validationResult.setTestedAt(connectivityTestedAt);
       updateConnectivityStatusOfConnector(
@@ -204,6 +194,21 @@ public class DefaultConnectorServiceImpl implements ConnectorService {
       throw new InvalidRequestException(
           createConnectorNotFoundMessage(accountIdentifier, orgIdentifier, projectIdentifier, connectorIdentifier));
     }
+  }
+
+  private ConnectorValidationResult validateSafely(
+      ConnectorInfoDTO connectorInfo, String accountIdentifier, String orgIdentifier, String projectIdentifier) {
+    ConnectionValidator connectionValidator = connectionValidatorMap.get(connectorInfo.getConnectorType().toString());
+    ConnectorValidationResult validationResult;
+    try {
+      validationResult = connectionValidator.validate(
+          connectorInfo.getConnectorConfig(), accountIdentifier, orgIdentifier, projectIdentifier);
+    } catch (Exception ex) {
+      logger.info("Test Connection failed for connector with identifier[{}] in account[{}] with error [{}]",
+          connectorInfo.getIdentifier(), accountIdentifier, ex.getMessage());
+      validationResult = ConnectorValidationResult.builder().valid(false).build();
+    }
+    return validationResult;
   }
 
   private void updateConnectivityStatusOfConnector(Connector connector,
