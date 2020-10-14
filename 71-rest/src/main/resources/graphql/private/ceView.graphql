@@ -160,12 +160,22 @@ enum ViewFieldIdentifier {
   LABEL
 }
 
+enum ViewFieldIdentifierName {
+  Cluster
+  AWS
+  GCP
+  Custom
+  Common
+  Label
+}
+
 type viewFieldData {
   fieldIdentifierData: [viewFieldIdentifierData]
 }
 
 type viewFieldIdentifierData {
   identifier: ViewFieldIdentifier
+  identifierName: ViewFieldIdentifierName
   values: [viewField]
 }
 

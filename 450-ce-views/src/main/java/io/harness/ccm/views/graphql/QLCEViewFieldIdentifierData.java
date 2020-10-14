@@ -14,4 +14,5 @@ import java.util.List;
 public class QLCEViewFieldIdentifierData {
   List<QLCEViewField> values;
   ViewFieldIdentifier identifier;
+  String identifierName;
 }
