@@ -353,6 +353,7 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
       connectionHeartbeat = DelegateConnectionHeartbeat.builder()
                                 .delegateConnectionId(delegateConnectionId)
                                 .version(getVersion())
+                                .location(Paths.get("").toAbsolutePath().toString())
                                 .build();
 
       if (watched) {
@@ -418,6 +419,7 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
                                           //.proxy(set to true if there is a system proxy)
                                           .polllingModeEnabled(delegateConfiguration.isPollForTasks())
                                           .sampleDelegate(isSample)
+                                          .location(Paths.get("").toAbsolutePath().toString())
                                           .ceEnabled(Boolean.parseBoolean(System.getenv("ENABlE_CE")));
 
       delegateId = registerDelegate(builder);
@@ -1404,6 +1406,7 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
                                                    .stream()
                                                    .map(DelegateTaskPackage::getDelegateTaskId)
                                                    .collect(toList()))
+              .location(Paths.get("").toAbsolutePath().toString())
               .build();
 
       try {
@@ -1460,6 +1463,7 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
                                                    .stream()
                                                    .map(DelegateTaskPackage::getDelegateTaskId)
                                                    .collect(toList()))
+              .location(Paths.get("").toAbsolutePath().toString())
               .build();
       lastHeartbeatSentAt.set(clock.millis());
       Delegate delegate = Delegate.builder()
@@ -1480,6 +1484,7 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
                               .polllingModeEnabled(delegateParams.isPolllingModeEnabled())
                               .sampleDelegate(delegateParams.isSampleDelegate())
                               .currentlyExecutingDelegateTasks(delegateParams.getCurrentlyExecutingDelegateTasks())
+                              .location(delegateParams.getLocation())
                               .build();
       RestResponse<Delegate> delegateResponse = execute(managerClient.delegateHeartbeat(accountId, delegate));
       long now = clock.millis();

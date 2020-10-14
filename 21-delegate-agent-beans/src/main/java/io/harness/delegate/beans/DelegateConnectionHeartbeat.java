@@ -8,4 +8,5 @@ import lombok.Value;
 public class DelegateConnectionHeartbeat {
   private String delegateConnectionId;
   private String version;
+  private String location;
 }

@@ -64,6 +64,8 @@ public class Delegate implements PersistentEntity, UuidAware, CreatedAtAware, Ac
 
   @Transient private String useJreVersion;
 
+  @Transient private String location;
+
   private List<DelegateScope> includeScopes;
   private List<DelegateScope> excludeScopes;
   private List<String> tags;

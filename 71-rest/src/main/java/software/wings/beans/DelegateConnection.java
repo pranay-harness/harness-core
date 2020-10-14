@@ -47,6 +47,7 @@ public class DelegateConnection implements PersistentEntity, UuidAware, AccountA
   @NotEmpty private String accountId;
   @NotEmpty private String delegateId;
   private String version;
+  private String location;
   private long lastHeartbeat;
   private boolean disconnected;
 

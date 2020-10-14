@@ -109,6 +109,7 @@ import io.harness.delegate.beans.DelegateTaskPackage.DelegateTaskPackageBuilder;
 import io.harness.delegate.beans.DelegateTaskRank;
 import io.harness.delegate.beans.DelegateTaskResponse;
 import io.harness.delegate.beans.DelegateTaskResponse.ResponseCode;
+import io.harness.delegate.beans.DelegateType;
 import io.harness.delegate.beans.DuplicateDelegateException;
 import io.harness.delegate.beans.ErrorNotifyResponseData;
 import io.harness.delegate.beans.NoAvailableDelegatesException;
@@ -3070,7 +3071,7 @@ public class DelegateServiceImpl implements DelegateService {
   public void registerHeartbeat(
       String accountId, String delegateId, DelegateConnectionHeartbeat heartbeat, ConnectionMode connectionMode) {
     DelegateConnection previousDelegateConnection = delegateConnectionDao.upsertCurrentConnection(
-        accountId, delegateId, heartbeat.getDelegateConnectionId(), heartbeat.getVersion());
+        accountId, delegateId, heartbeat.getDelegateConnectionId(), heartbeat.getVersion(), heartbeat.getLocation());
 
     if (previousDelegateConnection == null) {
       DelegateConnection existingConnection = delegateConnectionDao.findAndDeletePreviousConnections(
@@ -3079,10 +3080,19 @@ public class DelegateServiceImpl implements DelegateService {
         UUID currentUUID = convertFromBase64(heartbeat.getDelegateConnectionId());
         UUID existingUUID = convertFromBase64(existingConnection.getUuid());
         if (existingUUID.timestamp() > currentUUID.timestamp()) {
-          logger.error(
-              "Newer delegate connection found for the delegate id! Will initiate self destruct sequence for the current delegate.");
-          destroyTheCurrentDelegate(accountId, delegateId, heartbeat.getDelegateConnectionId(), connectionMode);
-          delegateConnectionDao.replaceWithNewerConnection(heartbeat.getDelegateConnectionId(), existingConnection);
+          Delegate delegate = get(accountId, delegateId, false);
+          boolean sameShellScriptDelegateLocation = DelegateType.SHELL_SCRIPT.equals(delegate.getDelegateType())
+              && (isEmpty(heartbeat.getLocation()) || isEmpty(existingConnection.getLocation())
+                     || heartbeat.getLocation().equals(existingConnection.getLocation()));
+          if (!sameShellScriptDelegateLocation) {
+            logger.error(
+                "Newer delegate connection found for the delegate id! Will initiate self destruct sequence for the current delegate.");
+            destroyTheCurrentDelegate(accountId, delegateId, heartbeat.getDelegateConnectionId(), connectionMode);
+            delegateConnectionDao.replaceWithNewerConnection(heartbeat.getDelegateConnectionId(), existingConnection);
+          } else {
+            logger.error("Delegate restarted");
+          }
+
         } else {
           logger.error("Delegate restarted");
         }
