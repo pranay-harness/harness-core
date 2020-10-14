@@ -1,5 +1,6 @@
 package io.harness.service.intfc;
 
+import io.harness.delegate.beans.TaskGroup;
 import io.harness.delegate.beans.TaskSelectorMap;
 
 import java.util.List;
@@ -55,5 +56,5 @@ public interface DelegateTaskSelectorMapService {
    * @param taskGroup
    * @return
    */
-  TaskSelectorMap get(String accountId, String taskGroup);
+  TaskSelectorMap get(String accountId, TaskGroup taskGroup);
 }

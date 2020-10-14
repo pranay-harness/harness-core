@@ -8,6 +8,7 @@ import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
+import io.harness.delegate.beans.TaskGroup;
 import io.harness.delegate.beans.TaskSelectorMap;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.NoResultFoundException;
@@ -114,7 +115,7 @@ public class DelegateTaskSelectorMapServiceImpl implements DelegateTaskSelectorM
   }
 
   @Override
-  public TaskSelectorMap get(String accountId, String taskGroup) {
+  public TaskSelectorMap get(String accountId, TaskGroup taskGroup) {
     return hPersistence.createQuery(TaskSelectorMap.class)
         .filter(TaskSelectorMapKeys.accountId, accountId)
         .filter(TaskSelectorMapKeys.taskGroup, taskGroup)

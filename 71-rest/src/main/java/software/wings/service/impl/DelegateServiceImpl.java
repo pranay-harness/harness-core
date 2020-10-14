@@ -114,7 +114,10 @@ import io.harness.delegate.beans.ErrorNotifyResponseData;
 import io.harness.delegate.beans.NoAvailableDelegatesException;
 import io.harness.delegate.beans.NoInstalledDelegatesException;
 import io.harness.delegate.beans.RemoteMethodReturnValueData;
+import io.harness.delegate.beans.TaskGroup;
+import io.harness.delegate.beans.TaskSelectorMap;
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
+import io.harness.delegate.beans.executioncapability.SelectorCapability;
 import io.harness.delegate.service.DelegateAgentFileService.FileBucket;
 import io.harness.delegate.task.DelegateLogContext;
 import io.harness.delegate.task.TaskLogContext;
@@ -2100,6 +2103,35 @@ public class DelegateServiceImpl implements DelegateService {
 
   @VisibleForTesting
   @Override
+  public void convertToExecutionCapability(DelegateTask task) {
+    Set<ExecutionCapability> selectorCapabilities = new HashSet<>();
+
+    if (isNotEmpty(task.getTags())) {
+      SelectorCapability selectorCapability =
+          SelectorCapability.builder().selectors(new HashSet<>(task.getTags())).build();
+
+      selectorCapabilities.add(selectorCapability);
+    }
+
+    if (task.getData() != null && task.getData().getTaskType() != null) {
+      TaskGroup taskGroup = TaskType.valueOf(task.getData().getTaskType()).getTaskGroup();
+      TaskSelectorMap mapFromTaskType = taskSelectorMapService.get(task.getAccountId(), taskGroup);
+      if (mapFromTaskType != null && isNotEmpty(mapFromTaskType.getSelectors())) {
+        SelectorCapability selectorCapability =
+            SelectorCapability.builder().selectors(mapFromTaskType.getSelectors()).build();
+        selectorCapabilities.add(selectorCapability);
+      }
+    }
+
+    if (task.getExecutionCapabilities() == null) {
+      task.setExecutionCapabilities(new ArrayList<>(selectorCapabilities));
+    } else {
+      task.getExecutionCapabilities().addAll(selectorCapabilities);
+    }
+  }
+
+  @VisibleForTesting
+  @Override
   public void saveDelegateTask(DelegateTask task, DelegateTask.Status taskStatus) {
     task.setStatus(taskStatus);
     task.setVersion(getVersion());
@@ -2119,7 +2151,10 @@ public class DelegateServiceImpl implements DelegateService {
       task.setExpiry(currentTimeMillis() + task.getData().getTimeout());
     }
 
+    // order of these three calls is important, first capabilities are created, then appended, then used in
+    // pickFirstAttemptDelegate
     generateCapabilitiesForTaskIfFeatureEnabled(task);
+    convertToExecutionCapability(task);
     task.setPreAssignedDelegateId(assignDelegateService.pickFirstAttemptDelegate(task));
 
     // Ensure that broadcast happens at least 5 seconds from current time for async tasks

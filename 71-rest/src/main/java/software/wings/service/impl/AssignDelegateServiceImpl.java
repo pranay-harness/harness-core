@@ -132,10 +132,9 @@ public class AssignDelegateServiceImpl implements AssignDelegateService {
       return false;
     }
 
-    List<String> taskSelectors = extractSelectors(task);
     boolean canAssign = canAssignDelegateScopes(batch, delegate, task)
         && canAssignDelegateProfileScopes(batch, delegate, task.getSetupAbstractions())
-        && canAssignSelectors(batch, delegate, taskSelectors);
+        && canAssignSelectors(batch, delegate, task.getExecutionCapabilities());
 
     if (canAssign) {
       delegateSelectionLogsService.logCanAssign(batch, task.getAccountId(), delegateId);
@@ -164,7 +163,7 @@ public class AssignDelegateServiceImpl implements AssignDelegateService {
 
   @Override
   public boolean canAssign(BatchDelegateSelectionLog batch, String delegateId, String accountId, String appId,
-      String envId, String infraMappingId, TaskGroup taskGroup, List<String> tags,
+      String envId, String infraMappingId, TaskGroup taskGroup, List<ExecutionCapability> executionCapabilities,
       Map<String, String> taskSetupAbstractions) {
     Delegate delegate = delegateService.get(accountId, delegateId, false);
     if (delegate == null) {
@@ -172,7 +171,7 @@ public class AssignDelegateServiceImpl implements AssignDelegateService {
     }
     return canAssignDelegateScopes(batch, delegate, appId, envId, infraMappingId, taskGroup)
         && canAssignDelegateProfileScopes(batch, delegate, taskSetupAbstractions)
-        && canAssignSelectors(batch, delegate, tags);
+        && canAssignSelectors(batch, delegate, executionCapabilities);
   }
 
   private boolean canAssignDelegateScopes(BatchDelegateSelectionLog batch, Delegate delegate, DelegateTask task) {
@@ -262,8 +261,18 @@ public class AssignDelegateServiceImpl implements AssignDelegateService {
     return true;
   }
 
-  private boolean canAssignSelectors(BatchDelegateSelectionLog batch, Delegate delegate, List<String> tags) {
-    if (isEmpty(tags)) {
+  private boolean canAssignSelectors(
+      BatchDelegateSelectionLog batch, Delegate delegate, List<ExecutionCapability> executionCapabilities) {
+    if (isEmpty(executionCapabilities)) {
+      return true;
+    }
+
+    List<SelectorCapability> selectorsCapabilityList = executionCapabilities.stream()
+                                                           .filter(c -> c instanceof SelectorCapability)
+                                                           .map(c -> (SelectorCapability) c)
+                                                           .collect(Collectors.toList());
+
+    if (isEmpty(selectorsCapabilityList)) {
       return true;
     }
 
@@ -276,10 +285,13 @@ public class AssignDelegateServiceImpl implements AssignDelegateService {
 
     boolean canAssignSelector = true;
 
-    for (String selector : trimmedLowercaseSet(tags)) {
-      if (!delegateSelectors.contains(selector)) {
-        delegateSelectionLogsService.logMissingSelector(batch, delegate.getAccountId(), delegate.getUuid(), selector);
-        canAssignSelector = false;
+    for (SelectorCapability selectorCapability : selectorsCapabilityList) {
+      Set<String> selectors = selectorCapability.getSelectors();
+      for (String selector : trimmedLowercaseSet(selectors)) {
+        if (!delegateSelectors.contains(selector)) {
+          delegateSelectionLogsService.logMissingSelector(batch, delegate.getAccountId(), delegate.getUuid(), selector);
+          canAssignSelector = false;
+        }
       }
     }
 
@@ -555,7 +567,7 @@ public class AssignDelegateServiceImpl implements AssignDelegateService {
           if (delegate != null) {
             msg.append(" ===> ").append(delegate.getHostName()).append(": ");
             boolean canAssignScope = canAssignDelegateScopes(null, delegate, delegateTask);
-            boolean canAssignTags = canAssignSelectors(null, delegate, delegateTask.getTags());
+            boolean canAssignTags = canAssignSelectors(null, delegate, delegateTask.getExecutionCapabilities());
             if (!canAssignScope) {
               msg.append("Not in scope");
             }
