@@ -11,6 +11,8 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.google.protobuf.Timestamp;
 
+import com.github.benmanes.caffeine.cache.Cache;
+import com.github.benmanes.caffeine.cache.Caffeine;
 import io.harness.event.client.EventPublisher;
 import io.harness.event.payloads.CeExceptionMessage;
 import io.harness.grpc.utils.AnyUtils;
@@ -43,21 +45,23 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 @Singleton
 @Slf4j
 public class K8SWatchTaskExecutor implements PerpetualTaskExecutor {
   private static final String MESSAGE_PROCESSOR_TYPE = "EXCEPTION";
-  private Map<String, String> taskWatchIdMap = new ConcurrentHashMap<>();
-  private Map<String, K8sMetricCollector> metricCollectors = new ConcurrentHashMap<>();
-  private Map<String, Instant> clusterSyncLastPublished = new ConcurrentHashMap<>();
+  private final Map<String, String> taskWatchIdMap = new ConcurrentHashMap<>();
+  private final Map<String, K8sMetricCollector> metricCollectors = new ConcurrentHashMap<>();
+  private final Map<String, Instant> clusterSyncLastPublished = new ConcurrentHashMap<>();
 
   private final EventPublisher eventPublisher;
   private final K8sWatchServiceDelegate k8sWatchServiceDelegate;
   private final ApiClientFactoryImpl apiClientFactory;
   private final KryoSerializer kryoSerializer;
   private final ContainerDeploymentDelegateHelper containerDeploymentDelegateHelper;
+  private final Cache<Class<? extends Throwable>, Boolean> recentlyLoggedExceptions;
 
   @Inject
   public K8SWatchTaskExecutor(EventPublisher eventPublisher, K8sWatchServiceDelegate k8sWatchServiceDelegate,
@@ -68,6 +72,7 @@ public class K8SWatchTaskExecutor implements PerpetualTaskExecutor {
     this.apiClientFactory = apiClientFactory;
     this.kryoSerializer = kryoSerializer;
     this.containerDeploymentDelegateHelper = containerDeploymentDelegateHelper;
+    recentlyLoggedExceptions = Caffeine.newBuilder().expireAfterWrite(10, TimeUnit.MINUTES).build();
   }
 
   @Override
@@ -108,12 +113,14 @@ public class K8SWatchTaskExecutor implements PerpetualTaskExecutor {
             .collectAndPublishMetrics(now);
 
       } catch (JsonSyntaxException ex) {
+        logIfNotSeenRecently(ex, "Encountered json deserialization error");
         publishError(CeExceptionMessage.newBuilder()
                          .setClusterId(watchTaskParams.getClusterId())
                          .setMessage(ex.toString())
                          .build(),
             taskId);
       } catch (ApiException ex) {
+        logIfNotSeenRecently(ex, "Encountered api exception");
         publishError(CeExceptionMessage.newBuilder()
                          .setClusterId(watchTaskParams.getClusterId())
                          .setMessage(format(
@@ -125,6 +132,13 @@ public class K8SWatchTaskExecutor implements PerpetualTaskExecutor {
       }
       return PerpetualTaskResponse.builder().responseCode(200).responseMessage("success").build();
     }
+  }
+
+  private void logIfNotSeenRecently(Exception ex, String msg) {
+    recentlyLoggedExceptions.get(ex.getClass(), k -> {
+      logger.error(msg, ex);
+      return Boolean.TRUE;
+    });
   }
 
   private void publishError(CeExceptionMessage ceExceptionMessage, PerpetualTaskId taskId) {
