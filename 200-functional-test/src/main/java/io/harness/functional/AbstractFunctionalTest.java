@@ -225,6 +225,7 @@ public abstract class AbstractFunctionalTest extends CategoryTest implements Gra
 
     List<StateExecutionInstance> stateExecutionInstances =
         wingsPersistence.createQuery(StateExecutionInstance.class)
+            .filter(StateExecutionInstanceKeys.accountId, workflowExecution.getAccountId())
             .filter(StateExecutionInstanceKeys.executionUuid, workflowExecution.getUuid())
             .filter(StateExecutionInstanceKeys.status, ExecutionStatus.FAILED)
             .asList();
