@@ -33,6 +33,7 @@ public class InstanceMetaDataConstants {
   public static final String PV_TYPE = "pv_type";
   public static final String STORAGE_CLASS = "storage_class";
   public static final String POD_CAPACITY = "pod_capacity";
+  public static final String SLOW_ACCOUNT = "SFByhonVQvGJX0SbY82rjA";
 
   private InstanceMetaDataConstants() {}
 }
