@@ -39,6 +39,7 @@ import io.harness.cvng.core.services.api.DataCollectionTaskService;
 import io.harness.cvng.core.services.api.MetricPackService;
 import io.harness.cvng.core.services.api.VerificationTaskService;
 import io.harness.cvng.statemachine.beans.AnalysisStatus;
+import io.harness.cvng.verificationjob.beans.AdditionalInfo;
 import io.harness.cvng.verificationjob.beans.VerificationJobInstanceDTO;
 import io.harness.cvng.verificationjob.beans.VerificationJobType;
 import io.harness.cvng.verificationjob.entities.VerificationJob;
@@ -222,17 +223,19 @@ public class VerificationJobInstanceServiceImpl implements VerificationJobInstan
 
   @Override
   public void addResultsToDeploymentResultSummary(
-      List<String> verificationJobInstanceIds, DeploymentResultSummary deploymentResultSummary) {
+      String accountId, List<String> verificationJobInstanceIds, DeploymentResultSummary deploymentResultSummary) {
     List<VerificationJobInstance> verificationJobInstances = get(verificationJobInstanceIds);
     List<VerificationJobInstance> postDeploymentVerificationJobInstances =
         getPostDeploymentVerificationJobInstances(verificationJobInstances);
     Map<EnvironmentType, List<VerificationJobInstance>> preAndProductionDeploymentGroup =
         getPreAndProductionDeploymentGroup(verificationJobInstances);
-    addDeploymentVerificationJobInstanceSummaries(preAndProductionDeploymentGroup.get(EnvironmentType.PreProduction),
+    addDeploymentVerificationJobInstanceSummaries(accountId,
+        preAndProductionDeploymentGroup.get(EnvironmentType.PreProduction),
         deploymentResultSummary.getPreProductionDeploymentVerificationJobInstanceSummaries());
-    addDeploymentVerificationJobInstanceSummaries(preAndProductionDeploymentGroup.get(EnvironmentType.Production),
+    addDeploymentVerificationJobInstanceSummaries(accountId,
+        preAndProductionDeploymentGroup.get(EnvironmentType.Production),
         deploymentResultSummary.getProductionDeploymentVerificationJobInstanceSummaries());
-    addDeploymentVerificationJobInstanceSummaries(postDeploymentVerificationJobInstances,
+    addDeploymentVerificationJobInstanceSummaries(accountId, postDeploymentVerificationJobInstances,
         deploymentResultSummary.getPostDeploymentVerificationJobInstanceSummaries());
   }
 
@@ -257,7 +260,8 @@ public class VerificationJobInstanceServiceImpl implements VerificationJobInstan
         }));
   }
 
-  private void addDeploymentVerificationJobInstanceSummaries(List<VerificationJobInstance> verificationJobInstances,
+  private void addDeploymentVerificationJobInstanceSummaries(String accountId,
+      List<VerificationJobInstance> verificationJobInstances,
       List<DeploymentVerificationJobInstanceSummary> deploymentVerificationJobInstanceSummaries) {
     if (!isEmpty(verificationJobInstances)) {
       verificationJobInstances.forEach(verificationJobInstance -> {
@@ -269,9 +273,23 @@ public class VerificationJobInstanceServiceImpl implements VerificationJobInstan
                 .environmentName(getEnvironment(verificationJobInstance.getResolvedJob()).getName())
                 .jobName(verificationJobInstance.getResolvedJob().getJobName())
                 .verificationJobInstanceId(verificationJobInstance.getUuid())
-                .status(getDeploymentVerificationStatus(verificationJobInstance));
+                .status(getDeploymentVerificationStatus(verificationJobInstance))
+                .additionalInfo(getAdditionalInfo(accountId, verificationJobInstance));
         deploymentVerificationJobInstanceSummaries.add(deploymentVerificationJobInstanceSummaryBuilder.build());
       });
+    }
+  }
+
+  //  TODO find the right place for this switch case
+  private AdditionalInfo getAdditionalInfo(String accountId, VerificationJobInstance verificationJobInstance) {
+    switch (verificationJobInstance.getResolvedJob().getType()) {
+      case CANARY:
+        return deploymentAnalysisService.getCanaryDeploymentAdditionalInfo(accountId, verificationJobInstance);
+      case TEST:
+        return deploymentAnalysisService.getLoadTestAdditionalInfo(accountId, verificationJobInstance);
+      default:
+        throw new IllegalStateException(
+            "Failed to get additional info due to unknown type: " + verificationJobInstance.getResolvedJob().getType());
     }
   }
 

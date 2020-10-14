@@ -41,6 +41,22 @@ public class HostRecordServiceImpl implements HostRecordService {
         .collect(Collectors.toSet());
   }
 
+  @Override
+  public Set<String> get(Set<String> verificationTaskIds, Instant startTime, Instant endTime) {
+    List<HostRecord> hostRecords = hPersistence.createQuery(HostRecord.class)
+                                       .field(HostRecordKeys.verificationTaskId)
+                                       .in(verificationTaskIds)
+                                       .field(HostRecordKeys.startTime)
+                                       .greaterThanOrEq(startTime)
+                                       .field(HostRecordKeys.endTime)
+                                       .lessThanOrEq(endTime)
+                                       .asList();
+    return hostRecords.stream()
+        .map(hostRecord -> hostRecord.getHosts())
+        .flatMap(hosts -> hosts.stream())
+        .collect(Collectors.toSet());
+  }
+
   private void saveRecords(List<HostRecord> hostRecords) {
     hPersistence.save(hostRecords);
   }

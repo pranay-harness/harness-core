@@ -10,4 +10,5 @@ public interface HostRecordService {
   void save(HostRecordDTO hostRecordDTO);
   void save(List<HostRecordDTO> hostRecordDTOs);
   Set<String> get(String verificationTaskId, Instant startTime, Instant endTime);
+  Set<String> get(Set<String> verificationTaskIds, Instant startTime, Instant endTime);
 }

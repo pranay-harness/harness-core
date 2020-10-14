@@ -169,7 +169,8 @@ public class DeploymentTimeSeriesAnalysisServiceImpl implements DeploymentTimeSe
     }
   }
 
-  private DeploymentTimeSeriesAnalysis getLatestDeploymentTimeSeriesAnalysis(
+  @Override
+  public DeploymentTimeSeriesAnalysis getLatestDeploymentTimeSeriesAnalysis(
       String accountId, String verificationJobInstanceId) {
     Set<String> verificationTaskIds =
         verificationTaskService.getVerificationTaskIds(accountId, verificationJobInstanceId);

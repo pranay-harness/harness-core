@@ -417,7 +417,7 @@ public class VerificationJobInstanceServiceImplTest extends CvNextGenTest {
             .postDeploymentVerificationJobInstanceSummaries(new ArrayList<>())
             .build();
 
-    verificationJobInstanceService.addResultsToDeploymentResultSummary(
+    verificationJobInstanceService.addResultsToDeploymentResultSummary(accountId,
         Arrays.asList(devVerificationJobInstance.getUuid(), prodVerificationJobInstance.getUuid()),
         deploymentResultSummary);
 

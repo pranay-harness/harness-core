@@ -132,8 +132,8 @@ public class DeploymentLogAnalysisServiceImpl implements DeploymentLogAnalysisSe
         .content(returnList)
         .build();
   }
-
-  private DeploymentLogAnalysis getLatestDeploymentLogAnalysis(String accountId, String verificationJobInstanceId) {
+  @Override
+  public DeploymentLogAnalysis getLatestDeploymentLogAnalysis(String accountId, String verificationJobInstanceId) {
     Set<String> verificationTaskIds =
         verificationTaskService.getVerificationTaskIds(accountId, verificationJobInstanceId);
     return hPersistence.createQuery(DeploymentLogAnalysis.class)
