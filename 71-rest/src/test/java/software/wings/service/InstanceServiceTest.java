@@ -20,6 +20,7 @@ import io.harness.beans.SearchFilter.Operator;
 import io.harness.category.element.UnitTests;
 import io.harness.data.structure.UUIDGenerator;
 import io.harness.rule.Owner;
+import lombok.extern.slf4j.Slf4j;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -38,6 +39,7 @@ import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.instance.InstanceService;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
@@ -47,6 +49,7 @@ import java.util.stream.Collectors;
  *
  * @author rktummala
  */
+@Slf4j
 public class InstanceServiceTest extends WingsBaseTest {
   @Mock private AccountService accountService;
   @Mock private AppService appService;
@@ -181,6 +184,44 @@ public class InstanceServiceTest extends WingsBaseTest {
 
     instanceAfterDelete = instanceService.get(instanceId, true);
     assertThat(instanceAfterDelete).isNotNull();
+  }
+
+  @Test
+  @Owner(developers = ABHINAV)
+  @Category(UnitTests.class)
+  public void testManyDelete() {
+    List<Instance> instances = new ArrayList<>();
+    final long currentTimeMillis = System.currentTimeMillis();
+    final Instance instanceDeleted1 =
+        instanceService.save(buildInstance(UUIDGenerator.generateUuid(), true, currentTimeMillis, false));
+    final Instance instanceDeleted2 =
+        instanceService.save(buildInstance(UUIDGenerator.generateUuid(), true, currentTimeMillis, true));
+    int total = 0;
+    while (total < 500) {
+      instances.add(instanceService.save(buildInstance(UUIDGenerator.generateUuid(), false, 0L, false)));
+      instances.add(instanceService.save(buildInstance(UUIDGenerator.generateUuid(), false, 0L, true)));
+      total += 2;
+    }
+    final List<String> idList = instances.stream().map(Instance::getUuid).collect(Collectors.toList());
+    Set<String> idSet = new HashSet<>(idList);
+    idSet.add(instanceDeleted1.getUuid());
+    idSet.add(instanceDeleted2.getUuid());
+    instanceService.delete(idSet);
+
+    final long deletedAt = instanceService.get(idSet.iterator().next(), true).getDeletedAt();
+
+    for (Instance instance : instances) {
+      Instance instanceAfterDelete = instanceService.get(instance.getUuid(), true);
+      assertThat(instanceAfterDelete.getDeletedAt()).isEqualTo(deletedAt);
+      assertThat(instanceAfterDelete.isDeleted()).isEqualTo(true);
+    }
+    Instance instanceAfterDelete1 = instanceService.get(instanceDeleted1.getUuid(), true);
+    assertThat(instanceAfterDelete1.getDeletedAt()).isEqualTo(currentTimeMillis);
+    assertThat(instanceAfterDelete1.isDeleted()).isEqualTo(true);
+
+    Instance instanceAfterDelete2 = instanceService.get(instanceDeleted2.getUuid(), true);
+    assertThat(instanceAfterDelete2.getDeletedAt()).isEqualTo(currentTimeMillis);
+    assertThat(instanceAfterDelete2.isDeleted()).isEqualTo(true);
   }
 
   private void compare(Instance lhs, Instance rhs) {
