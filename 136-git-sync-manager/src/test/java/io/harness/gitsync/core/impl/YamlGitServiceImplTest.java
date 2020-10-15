@@ -20,7 +20,6 @@ import static software.wings.utils.WingsTestConstants.SETTING_ID;
 import com.google.inject.Inject;
 
 import io.harness.CategoryTest;
-import io.harness.ManagerDelegateServiceDriver;
 import io.harness.category.element.UnitTests;
 import io.harness.connector.apis.dto.ConnectorInfoDTO;
 import io.harness.delegate.beans.connector.ConnectorType;
@@ -67,7 +66,6 @@ public class YamlGitServiceImplTest extends CategoryTest {
   @Inject YamlGitFolderConfigRepository yamlGitFolderConfigRepository;
   @Mock YamlGitConfigService yamlGitConfigService;
   @Mock SecretManagerClientService ngSecretService;
-  @Mock ManagerDelegateServiceDriver managerDelegateServiceDriver;
   @Mock GitSyncErrorService gitSyncErrorService;
   @Mock WaitNotifyEngine waitNotifyEngine;
   @Mock private HttpHeaders httpHeaders;
@@ -111,7 +109,6 @@ public class YamlGitServiceImplTest extends CategoryTest {
                              .build()))
         .when(yamlGitConfigService)
         .getGitConnector(any(), any(), any(), any());
-    doReturn("1234").when(managerDelegateServiceDriver).sendTaskAsync(any(), any(), any());
     yamlGitService.handleHarnessChangeSet(yamlChangeSet, ACCOUNTID);
     verify(waitNotifyEngine, times(1)).waitForAllOn(any(), any(), any());
   }

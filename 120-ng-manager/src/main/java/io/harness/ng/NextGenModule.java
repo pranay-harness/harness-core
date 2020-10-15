@@ -11,7 +11,6 @@ import com.google.inject.multibindings.Multibinder;
 import com.google.inject.name.Named;
 import com.google.inject.name.Names;
 
-import io.harness.ManagerDelegateServiceDriverModule;
 import io.harness.OrchestrationModule;
 import io.harness.OrchestrationModuleConfig;
 import io.harness.OrchestrationStepsModule;
@@ -54,7 +53,6 @@ import io.harness.ng.core.services.ProjectService;
 import io.harness.ng.gitsync.NgCoreGitChangeSetProcessorServiceImpl;
 import io.harness.ng.gitsync.handlers.ConnectorYamlHandler;
 import io.harness.ng.orchestration.NgDelegate2TaskExecutor;
-import io.harness.ng.orchestration.NgDelegateTaskExecutor;
 import io.harness.queue.QueueController;
 import io.harness.redesign.services.CustomExecutionService;
 import io.harness.redesign.services.CustomExecutionServiceImpl;
@@ -149,7 +147,6 @@ public class NextGenModule extends AbstractModule {
     bind(CustomExecutionService.class).to(CustomExecutionServiceImpl.class);
     MapBinder<String, TaskExecutor> taskExecutorMap =
         MapBinder.newMapBinder(binder(), String.class, TaskExecutor.class);
-    taskExecutorMap.addBinding(TaskMode.DELEGATE_TASK_V2.name()).to(NgDelegateTaskExecutor.class);
     taskExecutorMap.addBinding(TaskMode.DELEGATE_TASK_V3.name()).to(NgDelegate2TaskExecutor.class);
     install(new ValidationModule(getValidatorFactory()));
     install(MongoModule.getInstance());
@@ -163,8 +160,6 @@ public class NextGenModule extends AbstractModule {
     install(new SecretManagementModule());
     install(new SecretManagementClientModule(
         this.appConfig.getServiceHttpClientConfig(), this.appConfig.getNextGenConfig().getManagerServiceSecret()));
-    install(new ManagerDelegateServiceDriverModule(this.appConfig.getGrpcClientConfig(),
-        this.appConfig.getNextGenConfig().getManagerServiceSecret(), NextGenConfiguration.SERVICE_ID));
     install(new DelegateServiceDriverGrpcClientModule(this.appConfig.getNextGenConfig().getManagerServiceSecret(),
         this.appConfig.getGrpcClientConfig().getTarget(), this.appConfig.getGrpcClientConfig().getAuthority()));
     install(new EntityReferenceClientModule(this.appConfig.getNgManagerClientConfig(),

@@ -23,7 +23,6 @@ java_library(
         "//22-secret-manager-client:module",
         "//22-wait-engine:module",
         "//23-delegate-service-driver:module",
-        "//25-manager-delegate-service-driver:module",
         "//29-orchestration-beans:module",
         "//35-yaml-beans:module",
         "@maven//:com_fasterxml_jackson_core_jackson_annotations",

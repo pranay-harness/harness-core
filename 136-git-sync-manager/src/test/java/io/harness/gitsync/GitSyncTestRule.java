@@ -11,7 +11,6 @@ import com.google.inject.Provides;
 import com.google.inject.Singleton;
 import com.google.inject.name.Names;
 
-import io.harness.ManagerDelegateServiceDriver;
 import io.harness.connector.services.ConnectorService;
 import io.harness.factory.ClosingFactory;
 import io.harness.govern.ProviderModule;
@@ -55,7 +54,6 @@ public class GitSyncTestRule implements InjectorRuleMixin, MethodRule, MongoRule
       @Override
       protected void configure() {
         bind(HPersistence.class).to(MongoPersistence.class);
-        bind(ManagerDelegateServiceDriver.class).toInstance(mock(ManagerDelegateServiceDriver.class));
         bind(ConnectorService.class)
             .annotatedWith(Names.named(DEFAULT_CONNECTOR_SERVICE))
             .toInstance(mock(ConnectorService.class));

@@ -4,6 +4,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.delegate.beans.git.GitCommandType.COMMIT_AND_PUSH;
 import static io.harness.delegate.beans.git.GitCommandType.DIFF;
 import static io.harness.exception.WingsException.USER;
@@ -26,7 +27,6 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import com.fasterxml.jackson.core.type.TypeReference;
-import io.harness.ManagerDelegateServiceDriver;
 import io.harness.connector.apis.dto.ConnectorFilter;
 import io.harness.connector.apis.dto.ConnectorInfoDTO;
 import io.harness.data.structure.NullSafeImmutableMap;
@@ -89,7 +89,6 @@ public class YamlGitServiceImpl implements YamlGitService {
   private GitSyncErrorService gitSyncErrorService;
   private GitCommitService gitCommitService;
   private WebhookEventUtils webhookEventUtils;
-  private ManagerDelegateServiceDriver managerDelegateServiceDriver;
   private YamlChangeSetService yamlChangeSetService;
 
   private final String GIT_YAML_LOG_PREFIX = "GIT_YAML_LOG_PREFIX";
@@ -142,7 +141,9 @@ public class YamlGitServiceImpl implements YamlGitService {
     TaskData taskData = getTaskDataForCommitAndPush(yamlChangeSet, gitFileChange, yamlGitConfig, connector.get(),
         accountId, yamlChangeSet.getOrganizationId(), yamlChangeSet.getProjectId());
     Map<String, String> setupAbstractions = ImmutableMap.of("accountId", accountId);
-    String taskId = managerDelegateServiceDriver.sendTaskAsync(accountId, setupAbstractions, taskData);
+    // TODO (abhinav) : Adopt this to use delegate 2.0 . Meanwhile replacing taskId with some dummy string
+    // String taskId = managerDelegateServiceDriver.sendTaskAsync(accountId, setupAbstractions, taskData);
+    String taskId = generateUuid();
 
     waitNotifyEngine.waitForAllOn(NG_ORCHESTRATION,
         new GitCommandCallback(accountId, yamlChangeSet.getUuid(), COMMIT_AND_PUSH, yamlGitConfig.getGitConnectorId(),
@@ -420,8 +421,9 @@ public class YamlGitServiceImpl implements YamlGitService {
     TaskData taskData = getTaskDataForDiff(yamlChangeSet, yamlGitConfig, connector.get(), accountId,
         yamlChangeSet.getOrganizationId(), yamlChangeSet.getProjectId(), lastProcessedCommitId, endCommitId);
     Map<String, String> setupAbstractions = ImmutableMap.of("accountId", accountId);
-    String taskId = managerDelegateServiceDriver.sendTaskAsync(accountId, setupAbstractions, taskData);
-
+    // TODO (abhinav) : Adopt this to use delegate 2.0 . Meanwhile replacing taskId with some dummy string
+    // String taskId = managerDelegateServiceDriver.sendTaskAsync(accountId, setupAbstractions, taskData);
+    String taskId = generateUuid();
     waitNotifyEngine.waitForAllOn(NG_ORCHESTRATION,
         new GitCommandCallback(accountId, yamlChangeSet.getUuid(), DIFF, yamlGitConfig.getGitConnectorId(),
             yamlGitConfig.getRepo(), yamlGitConfig.getBranch(), yamlGitConfig),
