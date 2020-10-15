@@ -8,9 +8,11 @@ import com.google.common.collect.ImmutableList;
 import com.google.inject.Inject;
 
 import io.harness.beans.ExecutionStatus;
-import io.harness.category.element.FunctionalTests;
+import io.harness.category.element.CDFunctionalTests;
 import io.harness.functional.AbstractFunctionalTest;
 import io.harness.functional.WorkflowUtils;
+import io.harness.generator.ApplicationGenerator;
+import io.harness.generator.EnvironmentGenerator;
 import io.harness.generator.InfrastructureDefinitionGenerator;
 import io.harness.generator.OwnerManager;
 import io.harness.generator.OwnerManager.Owners;
@@ -20,11 +22,13 @@ import io.harness.generator.WorkflowGenerator;
 import io.harness.rule.Owner;
 import io.harness.testframework.restutils.ArtifactRestUtils;
 import io.harness.testframework.restutils.InfrastructureDefinitionRestUtils;
+import io.harness.testframework.restutils.WorkflowRestUtils;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
+import software.wings.beans.Application;
 import software.wings.beans.AwsAmiInfrastructureMapping;
+import software.wings.beans.Environment;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.InfrastructureType;
 import software.wings.beans.Service;
@@ -43,6 +47,8 @@ public class AmiWorkflowFunctionalTest extends AbstractFunctionalTest {
   @Inject private OwnerManager ownerManager;
   @Inject private ServiceGenerator serviceGenerator;
   @Inject private InfrastructureDefinitionGenerator infrastructureDefinitionGenerator;
+  @Inject private ApplicationGenerator applicationGenerator;
+  @Inject private EnvironmentGenerator environmentGenerator;
   @Inject private InfrastructureMappingService infrastructureMappingService;
 
   @Inject private WorkflowGenerator workflowGenerator;
@@ -53,16 +59,19 @@ public class AmiWorkflowFunctionalTest extends AbstractFunctionalTest {
   private Owners owners;
 
   private Service service;
+  private Application application;
+  private Environment environment;
 
   @Before
   public void setUp() {
     owners = ownerManager.create();
+    application = applicationGenerator.ensurePredefined(seed, owners, ApplicationGenerator.Applications.GENERIC_TEST);
+    environment = environmentGenerator.ensurePredefined(seed, owners, EnvironmentGenerator.Environments.GENERIC_TEST);
   }
 
   @Test
   @Owner(developers = YOGESH)
-  @Category(FunctionalTests.class)
-  @Ignore("Enable once feature flag is enabled for infra refactor")
+  @Category(CDFunctionalTests.class)
   public void shouldRunAwsAmiWorkflow() {
     service = serviceGenerator.ensureAmiGenericTest(seed, owners, "aws-ami");
     final String accountId = service.getAccountId();
@@ -77,7 +86,8 @@ public class AmiWorkflowFunctionalTest extends AbstractFunctionalTest {
 
     Workflow bgWorkflow = workflowUtils.createAwsAmiBGWorkflow("ami-bg-", service, amiInfrastructureDefinition);
 
-    bgWorkflow = workflowGenerator.ensureWorkflow(seed, owners, bgWorkflow);
+    bgWorkflow =
+        WorkflowRestUtils.createWorkflow(bearerToken, application.getAccountId(), application.getUuid(), bgWorkflow);
 
     resetCache(service.getAccountId());
 
@@ -112,13 +122,14 @@ public class AmiWorkflowFunctionalTest extends AbstractFunctionalTest {
     assertThat(amiInfraMapping.getSpotinstElastiGroupJson()).isEqualTo(amiInfrastructure.getSpotinstElastiGroupJson());
 
     assertThat(workflowExecution.getStatus()).isEqualTo(ExecutionStatus.SUCCESS);
+    assertInstanceCount(
+        workflowExecution.getStatus(), appId, bgWorkflow.getServiceId(), workflowExecution.getInfraMappingIds().get(0));
     // TODO: delete ASG
   }
 
   @Test
   @Owner(developers = ROHIT_KUMAR)
-  @Category(FunctionalTests.class)
-  @Ignore("Enable once feature flag is enabled for infra refactor")
+  @Category(CDFunctionalTests.class)
   public void shouldRunAwsAmiWorkflow_Launchtemplate() {
     service = serviceGenerator.ensureAmiGenericTest(seed, owners, "aws-ami-lt");
     final String accountId = service.getAccountId();
@@ -134,8 +145,8 @@ public class AmiWorkflowFunctionalTest extends AbstractFunctionalTest {
 
     Workflow bgWorkflow = workflowUtils.createAwsAmiBGWorkflow("ami-bg-lt-", service, amiInfrastructureDefinition);
 
-    bgWorkflow = workflowGenerator.ensureWorkflow(seed, owners, bgWorkflow);
-
+    bgWorkflow =
+        WorkflowRestUtils.createWorkflow(bearerToken, application.getAccountId(), application.getUuid(), bgWorkflow);
     resetCache(service.getAccountId());
 
     Artifact artifact = ArtifactRestUtils.waitAndFetchArtifactByArtfactStream(

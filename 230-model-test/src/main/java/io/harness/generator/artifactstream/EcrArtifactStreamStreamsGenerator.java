@@ -30,7 +30,7 @@ public class EcrArtifactStreamStreamsGenerator implements ArtifactStreamsGenerat
     Service service = owners.obtainService();
     Application application = owners.obtainApplication();
     final SettingAttribute settingAttribute =
-        settingGenerator.ensurePredefined(seed, owners, Settings.AWS_TEST_CLOUD_PROVIDER);
+        settingGenerator.ensurePredefined(seed, owners, Settings.AWS_DEPLOYMENT_FUNCTIONAL_TESTS_CLOUD_PROVIDER);
     ArtifactStream artifactStream =
         EcrArtifactStream.builder()
             .appId(atConnector ? GLOBAL_APP_ID : application.getUuid())
