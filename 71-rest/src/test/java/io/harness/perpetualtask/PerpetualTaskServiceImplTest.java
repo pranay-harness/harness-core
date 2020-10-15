@@ -4,16 +4,13 @@ import static io.harness.rule.OwnerRule.GEORGE;
 import static io.harness.rule.OwnerRule.HITESH;
 import static io.harness.rule.OwnerRule.VUK;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.Mockito.when;
 
 import com.google.inject.Inject;
 import com.google.protobuf.Any;
-import com.google.protobuf.Message;
 import com.google.protobuf.util.Durations;
 
 import io.harness.category.element.UnitTests;
 import io.harness.data.structure.UUIDGenerator;
-import io.harness.delegate.AbortTaskRequest;
 import io.harness.perpetualtask.ecs.EcsPerpetualTaskServiceClient;
 import io.harness.perpetualtask.instancesync.AwsSshInstanceSyncPerpetualTaskParams;
 import io.harness.perpetualtask.internal.PerpetualTaskRecord;
@@ -292,41 +289,6 @@ public class PerpetualTaskServiceImplTest extends WingsBaseTest {
     perpetualTaskService.appointDelegate(accountId, taskId, delegateId2, 1L);
     assertThat(testBroadcastAggregateSet).isNotNull();
     assertThat(testBroadcastAggregateSet).size().isEqualTo(2);
-  }
-
-  @Test
-  @Owner(developers = VUK)
-  @Category(UnitTests.class)
-  public void testPerpetualTaskContext() {
-    PerpetualTaskClientContext clientContext = clientContext();
-    PerpetualTaskRecord perpetualTaskRecord = PerpetualTaskRecord.builder()
-                                                  .accountId(ACCOUNT_ID)
-                                                  .perpetualTaskType(PerpetualTaskType.K8S_WATCH)
-                                                  .clientContext(clientContext())
-                                                  .delegateId(DELEGATE_ID)
-                                                  .intervalSeconds(1L)
-                                                  .timeoutMillis(2L)
-                                                  .build();
-    perpetualTaskRecord.setClientContext(clientContext);
-
-    PerpetualTaskSchedule schedule = PerpetualTaskSchedule.newBuilder()
-                                         .setInterval(Durations.fromSeconds(perpetualTaskRecord.getIntervalSeconds()))
-                                         .setTimeout(Durations.fromMillis(perpetualTaskRecord.getTimeoutMillis()))
-                                         .build();
-
-    Message perpetualTaskParams = AbortTaskRequest.newBuilder().build();
-    when(client.getTaskParams(clientContext)).thenReturn(perpetualTaskParams);
-
-    String taskId = perpetualTaskRecordDao.save(perpetualTaskRecord);
-
-    PerpetualTaskExecutionContext perpetualTaskContext = perpetualTaskService.perpetualTaskContext(taskId);
-
-    PerpetualTaskRecord task = perpetualTaskRecordDao.getTask(taskId);
-
-    assertThat(task).isNotNull();
-    assertThat(perpetualTaskContext).isNotNull();
-    assertThat(task.getUuid()).isEqualTo(taskId);
-    assertThat(perpetualTaskContext.getTaskSchedule()).isEqualTo(schedule);
   }
 
   public PerpetualTaskClientContext clientContext() {

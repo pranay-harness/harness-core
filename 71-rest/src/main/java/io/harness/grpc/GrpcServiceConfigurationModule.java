@@ -14,7 +14,6 @@ import com.google.inject.multibindings.Multibinder;
 import io.grpc.BindableService;
 import io.grpc.ServerInterceptor;
 import io.harness.delegate.DelegateServiceGrpc;
-import io.harness.delegate.NgDelegateTaskServiceGrpc;
 import io.harness.delegateprofile.DelegateProfileServiceGrpc;
 import io.harness.grpc.auth.DelegateAuthServerInterceptor;
 import io.harness.grpc.auth.ServiceInfo;
@@ -58,8 +57,6 @@ public class GrpcServiceConfigurationModule extends AbstractModule {
         .toInstance(ServiceInfo.builder().id("delegate-service").secret(serviceSecret).build());
     stringServiceInfoMapBinder.addBinding(DelegateProfileServiceGrpc.SERVICE_NAME)
         .toInstance(ServiceInfo.builder().id("delegate-profile-service").secret(serviceSecret).build());
-    stringServiceInfoMapBinder.addBinding(NgDelegateTaskServiceGrpc.SERVICE_NAME)
-        .toInstance(ServiceInfo.builder().id("ng-manager").secret(serviceSecret).build());
 
     Multibinder<GrpcExceptionMapper> expectionMapperMultibinder =
         Multibinder.newSetBinder(binder(), GrpcExceptionMapper.class);

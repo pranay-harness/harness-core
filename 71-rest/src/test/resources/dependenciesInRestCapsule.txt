@@ -632,7 +632,6 @@ software.wings:22-wait-engine:jar:0.0.1-SNAPSHOT
 software.wings:23-delegate-service-driver:jar:0.0.1-SNAPSHOT
 software.wings:23-sm-core:jar:0.0.1-SNAPSHOT
 software.wings:24-common-entities:jar:0.0.1-SNAPSHOT
-software.wings:24-manager-delegate-service-beans:jar:0.0.1-SNAPSHOT
 software.wings:27-orchestration-persistence:jar:0.0.1-SNAPSHOT
 software.wings:29-orchestration-beans:jar:0.0.1-SNAPSHOT
 software.wings:31-orchestration:jar:0.0.1-SNAPSHOT
