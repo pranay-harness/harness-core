@@ -1,4 +1,4 @@
-package io.harness.perpetualtask.k8s.metrics.client.model.common;
+package io.harness.k8s.model;
 
 import io.kubernetes.client.openapi.models.V1ListMeta;
 

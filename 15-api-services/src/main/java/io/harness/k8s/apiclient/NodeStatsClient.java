@@ -2,7 +2,6 @@ package io.harness.k8s.apiclient;
 
 import com.google.gson.Gson;
 import com.google.gson.JsonElement;
-import com.google.gson.JsonSyntaxException;
 
 import io.kubernetes.client.extended.generic.KubernetesApiResponse;
 import io.kubernetes.client.extended.generic.options.ListOptions;
@@ -12,6 +11,7 @@ import io.kubernetes.client.openapi.ApiException;
 import io.kubernetes.client.openapi.Pair;
 import io.kubernetes.client.openapi.apis.CustomObjectsApi;
 import io.kubernetes.client.openapi.models.V1Status;
+import lombok.SneakyThrows;
 import okhttp3.Call;
 import okhttp3.HttpUrl;
 
@@ -182,6 +182,7 @@ public class NodeStatsClient<ApiType> {
     return new KubernetesApiResponse<>(gson.fromJson(element, dataClass));
   }
 
+  @SneakyThrows
   private <DataType> KubernetesApiResponse<DataType> executeCall(
       ApiClient apiClient, Class<DataType> dataClass, CallBuilder callBuilder) {
     try {
@@ -193,16 +194,21 @@ public class NodeStatsClient<ApiType> {
       if (e.getCause() instanceof IOException) {
         throw new IllegalStateException(e.getCause()); // make this a checked exception?
       }
+      throw e;
+      // we are not utilizing the v1Status response right now.
+      /*
       final V1Status status;
       try {
         status = apiClient.getJSON().deserialize(e.getResponseBody(), V1Status.class);
       } catch (JsonSyntaxException jsonEx) {
-        throw new RuntimeException(jsonEx);
+        // make sure that the api server response is not lost while re-throwing the exception.
+        throw new JsonSyntaxException(e.getResponseBody());
       }
       if (null == status) { // the response body can be something unexpected sometimes..
         throw new RuntimeException(e.getResponseBody());
       }
       return new KubernetesApiResponse<>(status, e.getCode());
+       */
     }
   }
 
