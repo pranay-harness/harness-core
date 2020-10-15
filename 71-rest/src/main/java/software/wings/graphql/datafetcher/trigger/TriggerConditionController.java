@@ -111,7 +111,7 @@ public class TriggerConditionController {
         // There is no gateway for On-prem
         // For SAAS, all calls should be routed via gateway:
         // https://harness.atlassian.net/browse/CDC-8897?focusedCommentId=126140
-        if (mainConfiguration.getDeployMode() != DeployMode.ONPREM) {
+        if (!DeployMode.isOnPrem(mainConfiguration.getDeployMode().getDeployedAs())) {
           if (!webhookUrl.endsWith("/")) {
             webhookUrl += "/";
           }
