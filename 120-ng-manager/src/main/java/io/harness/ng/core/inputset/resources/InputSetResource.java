@@ -20,7 +20,7 @@ import io.harness.cdng.inputset.helpers.InputSetMergeHelper;
 import io.harness.cdng.inputset.mappers.InputSetElementMapper;
 import io.harness.cdng.inputset.mappers.InputSetFilterHelper;
 import io.harness.cdng.inputset.services.InputSetEntityService;
-import io.harness.cdng.pipeline.beans.dto.NGPipelineResponseDTO;
+import io.harness.cdng.pipeline.beans.entities.NgPipelineEntity;
 import io.harness.cdng.pipeline.service.NGPipelineService;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.exception.InvalidRequestException;
@@ -268,10 +268,10 @@ public class InputSetResource {
       @NotNull @QueryParam(NGCommonEntityConstants.ORG_KEY) String orgIdentifier,
       @NotNull @QueryParam(NGCommonEntityConstants.PROJECT_KEY) String projectIdentifier,
       @NotNull @QueryParam(NGCommonEntityConstants.PIPELINE_KEY) String pipelineIdentifier) {
-    Optional<NGPipelineResponseDTO> optionalNGPipelineResponseDTO =
-        ngPipelineService.getPipelineResponseDTO(pipelineIdentifier, accountId, orgIdentifier, projectIdentifier);
-    if (optionalNGPipelineResponseDTO.isPresent()) {
-      String pipelineYaml = optionalNGPipelineResponseDTO.get().getYamlPipeline();
+    Optional<NgPipelineEntity> optionalNgPipelineEntity =
+        ngPipelineService.get(accountId, orgIdentifier, projectIdentifier, pipelineIdentifier, false);
+    if (optionalNgPipelineEntity.isPresent()) {
+      String pipelineYaml = optionalNgPipelineEntity.get().getYamlPipeline();
       String inputSetTemplate = inputSetMergeHelper.getTemplateFromPipeline(pipelineYaml);
       return ResponseDTO.newResponse(
           InputSetTemplateResponseDTO.builder().inputSetTemplateYaml(inputSetTemplate).build());

@@ -8,7 +8,7 @@ import io.harness.cdng.inputset.beans.entities.MergeInputSetResponse;
 import io.harness.cdng.inputset.beans.yaml.InputSetConfig;
 import io.harness.cdng.inputset.services.InputSetEntityService;
 import io.harness.cdng.pipeline.NgPipeline;
-import io.harness.cdng.pipeline.beans.dto.NGPipelineResponseDTO;
+import io.harness.cdng.pipeline.beans.entities.NgPipelineEntity;
 import io.harness.cdng.pipeline.service.NGPipelineService;
 import io.harness.exception.InvalidArgumentsException;
 import io.harness.exception.InvalidRequestException;
@@ -115,14 +115,15 @@ public class InputSetMergeHelper {
 
   public NgPipeline getOriginalOrTemplatePipeline(String accountId, String orgIdentifier, String projectIdentifier,
       String pipelineIdentifier, boolean isTemplateResponse) {
-    Optional<NGPipelineResponseDTO> optionalPipeline =
-        ngPipelineService.getPipelineResponseDTO(pipelineIdentifier, accountId, orgIdentifier, projectIdentifier);
-    if (!optionalPipeline.isPresent()) {
+    Optional<NgPipelineEntity> optionalNgPipelineEntity =
+        ngPipelineService.get(accountId, orgIdentifier, projectIdentifier, pipelineIdentifier, false);
+    if (!optionalNgPipelineEntity.isPresent()) {
       throw new InvalidRequestException("Pipeline doesn't exist for given identifier: " + pipelineIdentifier);
     }
-    NGPipelineResponseDTO ngPipelineResponseDTO = optionalPipeline.get();
-    NgPipeline originalPipeline = ngPipelineResponseDTO.getNgPipeline();
-    String pipelineYaml = ngPipelineResponseDTO.getYamlPipeline();
+    NgPipelineEntity ngPipelineEntity = optionalNgPipelineEntity.get();
+
+    NgPipeline originalPipeline = ngPipelineEntity.getNgPipeline();
+    String pipelineYaml = ngPipelineEntity.getYamlPipeline();
 
     if (isTemplateResponse) {
       originalPipeline = getTemplateObjectFromPipelineYaml(pipelineYaml, true);

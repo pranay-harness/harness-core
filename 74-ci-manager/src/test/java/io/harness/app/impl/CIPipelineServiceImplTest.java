@@ -7,16 +7,15 @@ import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import com.google.inject.Inject;
-
 import io.harness.app.beans.dto.CIPipelineFilterDTO;
 import io.harness.beans.ParameterField;
 import io.harness.beans.stages.IntegrationStage;
 import io.harness.category.element.UnitTests;
 import io.harness.cdng.pipeline.NgPipeline;
 import io.harness.cdng.pipeline.beans.entities.NgPipelineEntity;
-import io.harness.cdng.pipeline.service.NGPipelineService;
-import io.harness.ngpipeline.pipeline.repository.PipelineRepository;
+import io.harness.cdng.pipeline.mappers.PipelineDtoMapper;
+import io.harness.cdng.pipeline.service.NGPipelineServiceImpl;
+import io.harness.ngpipeline.pipeline.repository.spring.NgPipelineRepository;
 import io.harness.rule.Owner;
 import io.harness.yaml.core.ExecutionElement;
 import io.harness.yaml.core.StageElement;
@@ -37,8 +36,8 @@ import java.util.Optional;
 import java.util.Scanner;
 
 public class CIPipelineServiceImplTest extends CIManagerTest {
-  @Mock private PipelineRepository pipelineRepository;
-  @InjectMocks @Inject NGPipelineService ngPipelineService;
+  @Mock private NgPipelineRepository ngPipelineRepository;
+  @InjectMocks NGPipelineServiceImpl ngPipelineService;
   private final String ACCOUNT_ID = "ACCOUNT_ID";
   private final String ORG_ID = "ORG_ID";
   private final String PROJECT_ID = "PROJECT_ID";
@@ -75,12 +74,12 @@ public class CIPipelineServiceImplTest extends CIManagerTest {
   @Category(UnitTests.class)
   public void createPipelineFromYAML() {
     ArgumentCaptor<NgPipelineEntity> pipelineCaptor = ArgumentCaptor.forClass(NgPipelineEntity.class);
-    when(pipelineRepository.save(any(NgPipelineEntity.class))).thenReturn(pipeline);
-    when(pipelineRepository.findById("testId")).thenReturn(Optional.ofNullable(pipeline));
+    when(ngPipelineRepository.save(any(NgPipelineEntity.class))).thenReturn(pipeline);
+    when(ngPipelineRepository.findById("testId")).thenReturn(Optional.ofNullable(pipeline));
 
-    ngPipelineService.createPipeline(inputYaml, ACCOUNT_ID, ORG_ID, PROJECT_ID);
+    ngPipelineService.create(PipelineDtoMapper.toPipelineEntity(ACCOUNT_ID, ORG_ID, PROJECT_ID, inputYaml));
 
-    verify(pipelineRepository).save(pipelineCaptor.capture());
+    verify(ngPipelineRepository).save(pipelineCaptor.capture());
     NgPipelineEntity ngPipelineEntity = pipelineCaptor.getValue();
     assertThat(ngPipelineEntity).isNotNull();
     assertThat(ngPipelineEntity.getIdentifier()).isEqualTo("cipipeline");
@@ -106,12 +105,12 @@ public class CIPipelineServiceImplTest extends CIManagerTest {
   @Category(UnitTests.class)
   public void createPipeline() {
     ArgumentCaptor<NgPipelineEntity> pipelineCaptor = ArgumentCaptor.forClass(NgPipelineEntity.class);
-    when(pipelineRepository.save(any(NgPipelineEntity.class))).thenReturn(pipeline);
-    when(pipelineRepository.findById("testId")).thenReturn(Optional.ofNullable(pipeline));
+    when(ngPipelineRepository.save(any(NgPipelineEntity.class))).thenReturn(pipeline);
+    when(ngPipelineRepository.findById("testId")).thenReturn(Optional.ofNullable(pipeline));
 
-    ngPipelineService.createPipeline(inputYaml, ACCOUNT_ID, ORG_ID, PROJECT_ID);
+    ngPipelineService.create(PipelineDtoMapper.toPipelineEntity(ACCOUNT_ID, ORG_ID, PROJECT_ID, inputYaml));
 
-    verify(pipelineRepository).save(pipelineCaptor.capture());
+    verify(ngPipelineRepository).save(pipelineCaptor.capture());
     NgPipelineEntity pipelineEntity = pipelineCaptor.getValue();
     assertThat(pipelineEntity.getIdentifier()).isEqualTo("cipipeline");
     assertThat(pipelineEntity.getNgPipeline().getDescription().getValue()).isEqualTo("testDescription");
@@ -121,9 +120,9 @@ public class CIPipelineServiceImplTest extends CIManagerTest {
   @Owner(developers = ALEKSANDAR)
   @Category(UnitTests.class)
   public void readPipeline() {
-    when(pipelineRepository.findByAccountIdAndOrgIdentifierAndProjectIdentifierAndIdentifierAndDeletedNot(
+    when(ngPipelineRepository.findByAccountIdAndOrgIdentifierAndProjectIdentifierAndIdentifierAndDeletedNot(
              ACCOUNT_ID, ORG_ID, PROJECT_ID, "testId", true))
-        .thenReturn(Optional.ofNullable(pipeline));
+        .thenReturn(Optional.of(pipeline));
 
     NgPipelineEntity ngPipelineEntity = ngPipelineService.getPipeline("testId", ACCOUNT_ID, ORG_ID, PROJECT_ID);
 
@@ -136,7 +135,7 @@ public class CIPipelineServiceImplTest extends CIManagerTest {
   @Category(UnitTests.class)
   public void getPipelines() {
     CIPipelineFilterDTO ciPipelineFilterDTO = getPipelineFilter();
-    when(pipelineRepository.findAll(any(), any())).thenReturn(new PageImpl<>(Arrays.asList(pipeline)));
+    when(ngPipelineRepository.findAll(any(), any())).thenReturn(new PageImpl<>(Arrays.asList(pipeline)));
 
     List<NgPipelineEntity> pipelineEntities =
         ngPipelineService
