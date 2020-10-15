@@ -1,0 +1,112 @@
+{
+  "type": "object",
+  "properties": {
+    "connectionType": {
+      "enum": [
+        "Account",
+        "Repo"
+      ]
+    },
+    "url": {
+      "type": "string"
+    },
+    "branchName": {
+      "type": "string"
+    },
+    "type": {
+      "enum": [
+        "Http",
+        "Ssh"
+      ]
+    },
+    "gitSync": {
+      "type": "object",
+      "properties": {
+        "enabled": {
+          "type": "boolean"
+        },
+        "syncEnabled": {
+          "type": "boolean"
+        },
+        "customCommitAttributes": {
+          "properties": {
+            "authorName": {
+              "type": "string"
+            },
+            "authorEmail": {
+              "type": "string"
+            },
+            "commitMessage": {
+              "type": "string"
+            }
+          }
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  "required": [
+    "connectionType",
+    "url",
+    "type",
+    "gitSync",
+    "branchName",
+    "spec"
+  ],
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "type": {
+            "const": "Http"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "spec": {
+            "type": "object",
+            "properties": {
+              "username": {
+                "type": "string"
+              },
+              "passwordRef": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "username",
+              "passwordRef"
+            ],
+            "additionalProperties": false
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "type": {
+            "const": "Ssh"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "spec": {
+            "type": "object",
+            "properties": {
+              "sshKeyRef": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "sshKeyRef"
+            ],
+            "additionalProperties": false
+          }
+        }
+      }
+    }
+  ]
+}
