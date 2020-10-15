@@ -2,7 +2,6 @@ package software.wings.sm.states;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.beans.ExecutionStatus.FAILED;
-import static io.harness.beans.ExecutionStatus.SKIPPED;
 import static io.harness.beans.ExecutionStatus.SUCCESS;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
@@ -28,6 +27,7 @@ import io.harness.delegate.beans.DelegateResponseData;
 import io.harness.exception.ExceptionUtils;
 import io.harness.exception.WingsException;
 import io.harness.interrupts.ExecutionInterruptType;
+import io.harness.interrupts.RepairActionCode;
 import io.harness.logging.ExceptionLogger;
 import io.harness.logging.Misc;
 import io.harness.tasks.ResponseData;
@@ -35,7 +35,6 @@ import lombok.Getter;
 import lombok.Setter;
 import lombok.experimental.FieldNameConstants;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.jexl3.JexlException;
 import org.apache.commons.lang3.StringUtils;
 import org.mongodb.morphia.annotations.Transient;
 import software.wings.api.ArtifactCollectionExecutionData;
@@ -70,7 +69,6 @@ import software.wings.sm.ExecutionInterrupt;
 import software.wings.sm.ExecutionResponse;
 import software.wings.sm.ExecutionResponse.ExecutionResponseBuilder;
 import software.wings.sm.State;
-import software.wings.sm.StateExecutionContext;
 import software.wings.sm.StateExecutionInstance;
 import software.wings.sm.StateType;
 import software.wings.sm.WorkflowStandardParams;
@@ -94,7 +92,7 @@ import java.util.stream.Collectors;
 @Attributes(title = "Env")
 @Slf4j
 @FieldNameConstants(innerTypeName = "EnvStateKeys")
-public class EnvState extends State {
+public class EnvState extends State implements WorkflowState {
   public static final Integer ENV_STATE_TIMEOUT_MILLIS = 7 * 24 * 60 * 60 * 1000;
 
   // NOTE: This field should no longer be used. It contains incorrect/stale values.
@@ -117,6 +115,11 @@ public class EnvState extends State {
 
   @JsonIgnore @SchemaIgnore private Map<String, String> workflowVariables;
 
+  @Setter @SchemaIgnore List<String> runtimeInputVariables;
+  @Setter @SchemaIgnore long timeout;
+  @Setter @SchemaIgnore List<String> userGroupIds;
+  @Setter @SchemaIgnore RepairActionCode timeoutAction;
+
   @Transient @Inject private WorkflowService workflowService;
   @Transient @Inject private WorkflowExecutionService executionService;
   @Transient @Inject private ArtifactService artifactService;
@@ -127,6 +130,7 @@ public class EnvState extends State {
   @Getter @Setter @JsonIgnore private boolean disable;
 
   @Getter @Setter private String disableAssertion;
+  @Getter @Setter private boolean continued;
 
   public EnvState(String name) {
     super(name, StateType.ENV_STATE.name());
@@ -137,16 +141,9 @@ public class EnvState extends State {
    */
   @Override
   public ExecutionResponse execute(ExecutionContext context) {
-    if (disableAssertion != null && disableAssertion.equals("true")) {
-      return ExecutionResponse.builder()
-          .executionStatus(SKIPPED)
-          .errorMessage(getName() + " step in " + context.getPipelineStageName() + " has been skipped")
-          .stateExecutionData(anEnvStateExecutionData().build())
-          .build();
-    }
-
     WorkflowStandardParams workflowStandardParams = context.getContextElement(ContextElementType.STANDARD);
     String appId = workflowStandardParams.getAppId();
+    String accountId = context.getAccountId();
     Workflow workflow = workflowService.readWorkflowWithoutServices(appId, workflowId);
     EnvStateExecutionData envStateExecutionData = anEnvStateExecutionData().withWorkflowId(workflowId).build();
     if (workflow == null || workflow.getOrchestrationWorkflow() == null) {
@@ -157,57 +154,10 @@ public class EnvState extends State {
           .build();
     }
 
-    if (isNotEmpty(disableAssertion)) {
-      try {
-        ExecutionContextImpl contextImpl = (ExecutionContextImpl) context;
-        if (contextImpl.getStateExecutionInstance() != null
-            && isNotEmpty(contextImpl.getStateExecutionInstance().getContextElements())) {
-          WorkflowStandardParams stdParams =
-              (WorkflowStandardParams) contextImpl.getStateExecutionInstance().getContextElements().get(0);
-          if (stdParams.getWorkflowElement() != null) {
-            stdParams.getWorkflowElement().setName(workflow.getName());
-            stdParams.getWorkflowElement().setDescription(workflow.getDescription());
-          }
-        }
-
-        Object resultObj = context.evaluateExpression(
-            disableAssertion, StateExecutionContext.builder().stateExecutionData(envStateExecutionData).build());
-        if (!(resultObj instanceof Boolean)) {
-          return ExecutionResponse.builder()
-              .executionStatus(FAILED)
-              .errorMessage("Skip Assertion Evaluation Failed : Expression '" + disableAssertion
-                  + "' did not return a boolean value")
-              .stateExecutionData(envStateExecutionData)
-              .build();
-        }
-
-        boolean assertionResult = (boolean) resultObj;
-        if (assertionResult) {
-          return ExecutionResponse.builder()
-              .executionStatus(SKIPPED)
-              .errorMessage(getName() + " step in " + context.getPipelineStageName()
-                  + " has been skipped based on assertion expression [" + disableAssertion + "]")
-              .stateExecutionData(envStateExecutionData)
-              .build();
-        }
-      } catch (JexlException je) {
-        logger.error("Skip Assertion Evaluation Failed", je);
-        String jexlError = Optional.ofNullable(je.getMessage()).orElse("");
-        if (jexlError.contains(":")) {
-          jexlError = jexlError.split(":")[1];
-        }
-        return ExecutionResponse.builder()
-            .executionStatus(FAILED)
-            .errorMessage("Skip Assertion Evaluation Failed : " + jexlError)
-            .stateExecutionData(envStateExecutionData)
-            .build();
-      } catch (Exception e) {
-        logger.error("Skip Assertion Evaluation Failed", e);
-        return ExecutionResponse.builder()
-            .executionStatus(FAILED)
-            .errorMessage("Skip Assertion Evaluation Failed : " + (e.getMessage() != null ? e.getMessage() : ""))
-            .stateExecutionData(envStateExecutionData)
-            .build();
+    if (isNotEmpty(disableAssertion) && !featureFlagService.isEnabled(FeatureName.RUNTIME_INPUT_PIPELINE, accountId)) {
+      ExecutionResponse response = checkDisableAssertion((ExecutionContextImpl) context, workflowService, logger);
+      if (response != null) {
+        return response;
       }
     }
 
@@ -503,6 +453,22 @@ public class EnvState extends State {
   }
   public Map<String, String> getWorkflowVariables() {
     return workflowVariables;
+  }
+
+  public List<String> getRuntimeInputVariables() {
+    return runtimeInputVariables;
+  }
+
+  public long getTimeout() {
+    return timeout;
+  }
+
+  public List<String> getUserGroupIds() {
+    return userGroupIds;
+  }
+
+  public RepairActionCode getTimeoutAction() {
+    return timeoutAction;
   }
 
   public String getStageName() {

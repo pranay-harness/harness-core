@@ -24,6 +24,11 @@ import software.wings.api.DeploymentType;
 import software.wings.api.WorkflowElement;
 import software.wings.beans.CanaryOrchestrationWorkflow;
 import software.wings.beans.ExecutionArgs;
+import software.wings.beans.FeatureName;
+import software.wings.beans.Pipeline;
+import software.wings.beans.PipelineStage;
+import software.wings.beans.PipelineStage.PipelineStageElement;
+import software.wings.beans.RuntimeInputsConfig;
 import software.wings.beans.Service;
 import software.wings.beans.Variable;
 import software.wings.beans.Workflow;
@@ -40,6 +45,7 @@ import software.wings.service.intfc.WorkflowService;
 import software.wings.sm.StateMachine;
 import software.wings.sm.WorkflowStandardParams;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -78,8 +84,20 @@ public class WorkflowExecutionServiceHelper {
 
     Map<String, String> oldWorkflowVariablesValueMap = workflowExecution.getExecutionArgs().getWorkflowVariables();
     if (isEmpty(oldWorkflowVariablesValueMap)) {
-      return new WorkflowVariablesMetadata(
-          workflowVariables, workflowVariables.stream().anyMatch(variable -> ENTITY == variable.getType()));
+      if (featureFlagService.isEnabled(FeatureName.RUNTIME_INPUT_PIPELINE, workflowExecution.getAccountId())) {
+        boolean changed = false;
+        for (Variable variable : workflowVariables) {
+          if (!Boolean.TRUE.equals(variable.getRuntimeInput()) && variable.isMandatory()) {
+            changed = true;
+            break;
+          }
+        }
+
+        return new WorkflowVariablesMetadata(workflowVariables, changed);
+      } else {
+        return new WorkflowVariablesMetadata(
+            workflowVariables, workflowVariables.stream().anyMatch(variable -> ENTITY == variable.getType()));
+      }
     }
 
     boolean changed = populateWorkflowVariablesValues(workflowVariables, new HashMap<>(oldWorkflowVariablesValueMap));
@@ -265,12 +283,15 @@ public class WorkflowExecutionServiceHelper {
       List<Variable> workflowVariables, Map<String, String> oldWorkflowVariablesMap) {
     // NOTE: workflowVariables and oldWorkflowVariablesMap are not empty.
     // oldEntityVariableNames is a set of all the names of old ENTITY workflow variables.
+    if (oldWorkflowVariablesMap == null) {
+      oldWorkflowVariablesMap = new HashMap<>();
+    }
     boolean resetEntities = false;
     for (Variable variable : workflowVariables) {
       String name = variable.getName();
       boolean isEntity = ENTITY == variable.getType();
       boolean oldVariablePresent = oldWorkflowVariablesMap.containsKey(name);
-      if (!oldVariablePresent) {
+      if (!oldVariablePresent && !Boolean.TRUE.equals(variable.getRuntimeInput())) {
         // A new workflow variable.
         if (isEntity) {
           // If there is a new workflow variable of type ENTITY set resetEntities = true.
@@ -315,5 +336,63 @@ public class WorkflowExecutionServiceHelper {
       cdPageCandidate = false;
     }
     return cdPageCandidate;
+  }
+
+  public WorkflowVariablesMetadata fetchWorkflowVariablesForRunningExecution(
+      String appId, String workflowExecutionId, String pipelineStageElementId) {
+    List<Variable> workflowVariables =
+        fetchWorkflowVariablesRunningPipeline(appId, workflowExecutionId, pipelineStageElementId);
+    return new WorkflowVariablesMetadata(workflowVariables);
+  }
+
+  private List<Variable> fetchWorkflowVariablesRunningPipeline(
+      String appId, String pipelineExecutionId, String pipelineStageElementId) {
+    WorkflowExecution pipelineExecution = workflowExecutionService.getWorkflowExecution(appId, pipelineExecutionId);
+
+    notNullCheck("No Executions found for given PipelineExecutionId " + pipelineExecutionId, pipelineExecution);
+    String pipelineId = pipelineExecution.getWorkflowId();
+    Pipeline pipeline = pipelineService.readPipelineResolvedVariablesLoopedInfo(
+        appId, pipelineId, pipelineExecution.getExecutionArgs().getWorkflowVariables());
+
+    notNullCheck("No pipeline associated with given executionId:  " + pipelineExecutionId, pipeline);
+
+    List<PipelineStage> pipelineStages = pipeline.getPipelineStages();
+    if (isEmpty(pipelineStages)) {
+      throw new InvalidRequestException("Given Pipeline does not contain any Stages", USER);
+    }
+    for (PipelineStage pipelineStage : pipelineStages) {
+      PipelineStageElement pipelineStageElement = pipelineStage.getPipelineStageElements().get(0);
+      if (pipelineStageElement.getUuid().equals(pipelineStageElementId)) {
+        Map<String, String> resolvedVariablesValues = pipelineStageElement.getWorkflowVariables();
+        String workflowId = (String) pipelineStageElement.getProperties().get("workflowId");
+        if (isEmpty(workflowId)) {
+          throw new InvalidRequestException(
+              String.format("No workflow found in pipelineStage: %s for given stageElementId: %s ",
+                  pipelineStageElement.getName(), pipelineStageElementId));
+        }
+
+        Workflow workflow = workflowService.readWorkflow(appId, workflowId);
+        notNullCheck(
+            "NOt able to load workflow associated with given PipelineStageElementId: " + pipelineStageElementId,
+            workflow);
+        notNullCheck(
+            "NOt able to load workflow associated with given PipelineStageElementId: " + pipelineStageElementId,
+            workflow.getOrchestrationWorkflow());
+        List<Variable> variables = workflow.getOrchestrationWorkflow().getUserVariables();
+        if (isEmpty(variables)) {
+          return variables;
+        }
+
+        RuntimeInputsConfig runtimeInputsConfig = pipelineStageElement.getRuntimeInputsConfig();
+        if (runtimeInputsConfig == null || isEmpty(runtimeInputsConfig.getRuntimeInputVariables())) {
+          return new ArrayList<>();
+        }
+
+        List<String> runtimeVarNames = runtimeInputsConfig.getRuntimeInputVariables();
+        return variables.stream().filter(t -> runtimeVarNames.contains(t.getName())).collect(toList());
+      }
+    }
+    throw new InvalidRequestException(
+        " No PipelineStage found for given PipelineStageElementId: " + pipelineStageElementId);
   }
 }

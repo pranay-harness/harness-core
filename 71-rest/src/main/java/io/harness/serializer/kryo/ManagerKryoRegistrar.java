@@ -60,6 +60,7 @@ import software.wings.api.CommandStepExecutionSummary;
 import software.wings.api.ContainerRollbackRequestElement;
 import software.wings.api.ContainerServiceData;
 import software.wings.api.ContainerServiceElement;
+import software.wings.api.ContinuePipelineResponseData;
 import software.wings.api.DeploymentType;
 import software.wings.api.EcsServiceExecutionData;
 import software.wings.api.EcsSetupElement;
@@ -222,6 +223,7 @@ import software.wings.beans.NotificationChannelType;
 import software.wings.beans.PcfConfig;
 import software.wings.beans.Permission;
 import software.wings.beans.PhaseStepType;
+import software.wings.beans.PipelineStageExecutionAdvisor;
 import software.wings.beans.PrometheusConfig;
 import software.wings.beans.ResizeStrategy;
 import software.wings.beans.Role;
@@ -1745,5 +1747,7 @@ public class ManagerKryoRegistrar implements KryoRegistrar {
     kryo.register(PerpetualTaskCapabilityCheckResponse.class, 8061);
     kryo.register(CiK8sTaskResponse.class, 8062);
     kryo.register(TerraformOutputVariables.class, 8063);
+    kryo.register(PipelineStageExecutionAdvisor.class, 8072);
+    kryo.register(ContinuePipelineResponseData.class, 8073);
   }
 }

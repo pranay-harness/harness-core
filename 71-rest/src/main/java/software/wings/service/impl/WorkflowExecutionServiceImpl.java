@@ -16,6 +16,7 @@ import static io.harness.beans.ExecutionStatus.STARTING;
 import static io.harness.beans.ExecutionStatus.SUCCESS;
 import static io.harness.beans.ExecutionStatus.WAITING;
 import static io.harness.beans.ExecutionStatus.activeStatuses;
+import static io.harness.beans.ExecutionStatus.isActiveStatus;
 import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
 import static io.harness.beans.PageRequest.UNLIMITED;
 import static io.harness.beans.SearchFilter.Operator.EQ;
@@ -124,6 +125,7 @@ import io.harness.queue.QueuePublisher;
 import io.harness.serializer.KryoSerializer;
 import io.harness.serializer.MapperUtils;
 import io.harness.steps.resourcerestraint.beans.ResourceConstraint;
+import io.harness.tasks.ResponseData;
 import io.harness.waiter.WaitNotifyEngine;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -139,6 +141,7 @@ import software.wings.api.ApprovalStateExecutionData;
 import software.wings.api.ArtifactCollectionExecutionData;
 import software.wings.api.AwsAmiDeployStateExecutionData;
 import software.wings.api.CommandStateExecutionData;
+import software.wings.api.ContinuePipelineResponseData;
 import software.wings.api.DeploymentType;
 import software.wings.api.EnvStateExecutionData;
 import software.wings.api.HelmDeployStateExecutionData;
@@ -172,6 +175,7 @@ import software.wings.beans.CountsByStatuses;
 import software.wings.beans.CustomOrchestrationWorkflow;
 import software.wings.beans.DeploymentExecutionContext;
 import software.wings.beans.ElementExecutionSummary;
+import software.wings.beans.EntityType;
 import software.wings.beans.EntityVersion;
 import software.wings.beans.EntityVersion.ChangeType;
 import software.wings.beans.EnvSummary;
@@ -190,14 +194,17 @@ import software.wings.beans.PipelineExecution;
 import software.wings.beans.PipelineStage;
 import software.wings.beans.PipelineStage.PipelineStageElement;
 import software.wings.beans.PipelineStageExecution;
+import software.wings.beans.PipelineStageExecutionAdvisor;
 import software.wings.beans.PipelineStageGroupedInfo;
 import software.wings.beans.RequiredExecutionArgs;
 import software.wings.beans.ResourceConstraintInstance;
+import software.wings.beans.RuntimeInputsConfig;
 import software.wings.beans.Service;
 import software.wings.beans.ServiceInstance;
 import software.wings.beans.StateExecutionElement;
 import software.wings.beans.StateExecutionInterrupt;
 import software.wings.beans.User;
+import software.wings.beans.Variable;
 import software.wings.beans.Workflow;
 import software.wings.beans.WorkflowExecution;
 import software.wings.beans.WorkflowExecution.WorkflowExecutionKeys;
@@ -271,6 +278,7 @@ import software.wings.service.intfc.deployment.ServiceInstanceUsage;
 import software.wings.service.intfc.sweepingoutput.SweepingOutputService;
 import software.wings.sm.ContextElement;
 import software.wings.sm.ExecutionContext;
+import software.wings.sm.ExecutionContextImpl;
 import software.wings.sm.ExecutionEventAdvisor;
 import software.wings.sm.ExecutionInterrupt;
 import software.wings.sm.ExecutionInterrupt.ExecutionInterruptKeys;
@@ -683,8 +691,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
                     .estimatedTime(estimatedTime)
                     .build());
 
-          } else if (APPROVAL.name().equals(stateExecutionInstance.getStateType())
-              || APPROVAL_RESUME.name().equals(stateExecutionInstance.getStateType())) {
+          } else {
             PipelineStageExecution stageExecution =
                 PipelineStageExecution.builder()
                     .parallelInfo(ParallelInfo.builder().groupIndex(pipelineStageElement.getParallelIndex()).build())
@@ -694,62 +701,72 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
                     .status(stateExecutionInstance.getStatus())
                     .stateName(stateExecutionInstance.getDisplayName())
                     .startTs(stateExecutionInstance.getStartTs())
+                    .triggeredBy(workflowExecution.getTriggeredBy())
+                    .expiryTs(stateExecutionInstance.getExpiryTs())
                     .endTs(stateExecutionInstance.getEndTs())
                     .build();
+
             StateExecutionData stateExecutionData = stateExecutionInstance.fetchStateExecutionData();
 
-            if (stateExecutionData instanceof ApprovalStateExecutionData) {
+            if (stateExecutionData instanceof SkipStateExecutionData) {
               stageExecution.setStateExecutionData(stateExecutionData);
+              stageExecution.setMessage(stateExecutionData.getErrorMsg());
+              stageExecutionDataList.add(stageExecution);
+            } else if (APPROVAL.name().equals(stateExecutionInstance.getStateType())
+                || APPROVAL_RESUME.name().equals(stateExecutionInstance.getStateType())) {
+              if (stateExecutionData instanceof ApprovalStateExecutionData) {
+                stageExecution.setStateExecutionData(stateExecutionData);
 
-              ApprovalStateExecutionData approvalStateExecutionData = (ApprovalStateExecutionData) stateExecutionData;
-              approvalStateExecutionData.setUserGroupList(
-                  userGroupService.fetchUserGroupNamesFromIds(approvalStateExecutionData.getUserGroups()));
-              approvalStateExecutionData.setAuthorized(verifyAuthorizedToAcceptOrReject(
-                  approvalStateExecutionData.getUserGroups(), pipeline.getAppId(), pipelineExecution.getPipelineId()));
-              approvalStateExecutionData.setAppId(pipeline.getAppId());
-              approvalStateExecutionData.setWorkflowId(pipelineExecution.getPipelineId());
-            }
-            stageExecution.setMessage(stateExecutionData != null ? stateExecutionData.getErrorMsg() : "");
-            stageExecutionDataList.add(stageExecution);
-
-          } else if (ENV_STATE.name().equals(stateExecutionInstance.getStateType())
-              || ENV_RESUME_STATE.name().equals(stateExecutionInstance.getStateType())) {
-            PipelineStageExecution stageExecution =
-                PipelineStageExecution.builder()
-                    .parallelInfo(ParallelInfo.builder().groupIndex(pipelineStageElement.getParallelIndex()).build())
-                    .pipelineStageElementId(pipelineStageElement.getUuid())
-                    .stateUuid(pipelineStageElement.getUuid())
-                    .stateType(pipelineStageElement.getType())
-                    .stateName(pipelineStageElement.getName())
-                    .status(stateExecutionInstance.getStatus())
-                    .startTs(stateExecutionInstance.getStartTs())
-                    .looped(true)
-                    .endTs(stateExecutionInstance.getEndTs())
-                    .build();
-            StateExecutionData stateExecutionData = stateExecutionInstance.fetchStateExecutionData();
-
-            if (stateExecutionData instanceof EnvStateExecutionData) {
-              EnvStateExecutionData envStateExecutionData = (EnvStateExecutionData) stateExecutionData;
-              if (envStateExecutionData.getWorkflowExecutionId() != null) {
-                WorkflowExecution workflowExecution2 = getExecutionDetailsWithoutGraph(
-                    workflowExecution.getAppId(), envStateExecutionData.getWorkflowExecutionId());
-                workflowExecution2.setStateMachine(null);
-
-                stageExecution.setWorkflowExecutions(asList(workflowExecution2));
-                stageExecution.setStatus(workflowExecution2.getStatus());
+                ApprovalStateExecutionData approvalStateExecutionData = (ApprovalStateExecutionData) stateExecutionData;
+                approvalStateExecutionData.setUserGroupList(
+                    userGroupService.fetchUserGroupNamesFromIds(approvalStateExecutionData.getUserGroups()));
+                approvalStateExecutionData.setAuthorized(
+                    verifyAuthorizedToAcceptOrReject(approvalStateExecutionData.getUserGroups(), pipeline.getAppId(),
+                        pipelineExecution.getPipelineId()));
+                approvalStateExecutionData.setAppId(pipeline.getAppId());
+                approvalStateExecutionData.setWorkflowId(pipelineExecution.getPipelineId());
               }
-              stageExecution.setMessage(envStateExecutionData.getErrorMsg());
-            }
-            stageExecutionDataList.add(stageExecution);
+              stageExecution.setMessage(stateExecutionData != null ? stateExecutionData.getErrorMsg() : "");
+              stageExecutionDataList.add(stageExecution);
 
-          } else if ((ENV_LOOP_STATE.name().equals(stateExecutionInstance.getStateType())
-                         || ENV_LOOP_RESUME_STATE.name().equals(stateExecutionInstance.getStateType()))
-              && featureFlagService.isEnabled(
-                     FeatureName.MULTISELECT_INFRA_PIPELINE, workflowExecution.getAccountId())) {
-            handleEnvLoopStateExecutionData(workflowExecution.getAppId(), stateExecutionInstanceMap,
-                stageExecutionDataList, stateExecutionInstance, pipelineStageElement);
-          } else {
-            throw new InvalidRequestException("Unknown stateType " + stateExecutionInstance.getStateType());
+            } else if (ENV_STATE.name().equals(stateExecutionInstance.getStateType())
+                || ENV_RESUME_STATE.name().equals(stateExecutionInstance.getStateType())) {
+              if (stateExecutionData instanceof EnvStateExecutionData) {
+                EnvStateExecutionData envStateExecutionData = (EnvStateExecutionData) stateExecutionData;
+                if (featureFlagService.isEnabled(
+                        FeatureName.RUNTIME_INPUT_PIPELINE, workflowExecution.getAccountId())) {
+                  setWaitingForInputFlag(stateExecutionInstance, stageExecution);
+                }
+                if (envStateExecutionData.getWorkflowExecutionId() != null) {
+                  WorkflowExecution workflowExecution2 = getExecutionDetailsWithoutGraph(
+                      workflowExecution.getAppId(), envStateExecutionData.getWorkflowExecutionId());
+                  workflowExecution2.setStateMachine(null);
+
+                  stageExecution.setWorkflowExecutions(asList(workflowExecution2));
+                  stageExecution.setStatus(workflowExecution2.getStatus());
+                }
+                stageExecution.setMessage(envStateExecutionData.getErrorMsg());
+              }
+              stageExecutionDataList.add(stageExecution);
+            } else if ((ENV_LOOP_STATE.name().equals(stateExecutionInstance.getStateType())
+                           || ENV_LOOP_RESUME_STATE.name().equals(stateExecutionInstance.getStateType()))
+                && featureFlagService.isEnabled(
+                       FeatureName.MULTISELECT_INFRA_PIPELINE, workflowExecution.getAccountId())) {
+              if (featureFlagService.isEnabled(FeatureName.RUNTIME_INPUT_PIPELINE, workflowExecution.getAccountId())) {
+                setWaitingForInputFlag(stateExecutionInstance, stageExecution);
+              }
+              if (stateExecutionData instanceof ForkStateExecutionData) {
+                handleEnvLoopStateExecutionData(workflowExecution.getAppId(), stateExecutionInstanceMap,
+                    stageExecutionDataList, (ForkStateExecutionData) stateExecutionData, pipelineStageElement);
+              } else if (stateExecutionData instanceof EnvStateExecutionData) {
+                EnvStateExecutionData envStateExecutionData = (EnvStateExecutionData) stateExecutionData;
+                stageExecution.setMessage(envStateExecutionData.getErrorMsg());
+                stageExecutionDataList.add(stageExecution);
+              }
+
+            } else {
+              throw new InvalidRequestException("Unknown stateType " + stateExecutionInstance.getStateType());
+            }
           }
         });
 
@@ -784,48 +801,51 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
     }
   }
 
+  private void setWaitingForInputFlag(
+      StateExecutionInstance stateExecutionInstance, PipelineStageExecution stageExecution) {
+    stageExecution.setWaitingForInputs(stateExecutionInstance.isWaitingForInputs());
+    if (stateExecutionInstance.getStatus() != PAUSED) {
+      stageExecution.setWaitingForInputs(false);
+    }
+  }
+
   private void handleEnvLoopStateExecutionData(String appId,
       ImmutableMap<String, StateExecutionInstance> stateExecutionInstanceMap,
-      List<PipelineStageExecution> stageExecutionDataList, StateExecutionInstance stateExecutionInstance,
+      List<PipelineStageExecution> stageExecutionDataList, ForkStateExecutionData envStateExecutionData,
       PipelineStageElement pipelineStageElement) {
-    StateExecutionData stateExecutionData = stateExecutionInstance.fetchStateExecutionData();
-
-    if (stateExecutionData instanceof ForkStateExecutionData) {
-      ForkStateExecutionData envStateExecutionData = (ForkStateExecutionData) stateExecutionData;
-      if (isNotEmpty(envStateExecutionData.getForkStateNames())) {
-        for (String element : envStateExecutionData.getForkStateNames()) {
-          StateExecutionInstance executionInstanceLooped = stateExecutionInstanceMap.get(element);
-          if (executionInstanceLooped == null) {
-            continue;
-          }
-          PipelineStageExecution stageExecution =
-              PipelineStageExecution.builder()
-                  .parallelInfo(ParallelInfo.builder().groupIndex(pipelineStageElement.getParallelIndex()).build())
-                  .pipelineStageElementId(pipelineStageElement.getUuid())
-                  .stateUuid(executionInstanceLooped.getUuid())
-                  .stateType(executionInstanceLooped.getStateType())
-                  .stateName(executionInstanceLooped.getStateName())
-                  .status(executionInstanceLooped.getStatus())
-                  .startTs(executionInstanceLooped.getStartTs())
-                  .endTs(executionInstanceLooped.getEndTs())
-                  .looped(true)
-                  .build();
-
-          StateExecutionData stateExecutionDataLooped = executionInstanceLooped.fetchStateExecutionData();
-          if (stateExecutionDataLooped instanceof EnvStateExecutionData) {
-            EnvStateExecutionData envStateExecutionDataLooped = (EnvStateExecutionData) stateExecutionDataLooped;
-            if (envStateExecutionDataLooped.getWorkflowExecutionId() != null) {
-              WorkflowExecution workflowExecution2 =
-                  getExecutionDetailsWithoutGraph(appId, envStateExecutionDataLooped.getWorkflowExecutionId());
-              workflowExecution2.setStateMachine(null);
-
-              stageExecution.setWorkflowExecutions(asList(workflowExecution2));
-              stageExecution.setStatus(workflowExecution2.getStatus());
-            }
-            stageExecution.setMessage(envStateExecutionDataLooped.getErrorMsg());
-          }
-          stageExecutionDataList.add(stageExecution);
+    if (isNotEmpty(envStateExecutionData.getForkStateNames())) {
+      for (String element : envStateExecutionData.getForkStateNames()) {
+        StateExecutionInstance executionInstanceLooped = stateExecutionInstanceMap.get(element);
+        if (executionInstanceLooped == null) {
+          continue;
         }
+        PipelineStageExecution stageExecution =
+            PipelineStageExecution.builder()
+                .parallelInfo(ParallelInfo.builder().groupIndex(pipelineStageElement.getParallelIndex()).build())
+                .pipelineStageElementId(pipelineStageElement.getUuid())
+                .stateUuid(executionInstanceLooped.getUuid())
+                .stateType(executionInstanceLooped.getStateType())
+                .stateName(executionInstanceLooped.getStateName())
+                .status(executionInstanceLooped.getStatus())
+                .startTs(executionInstanceLooped.getStartTs())
+                .endTs(executionInstanceLooped.getEndTs())
+                .looped(true)
+                .build();
+
+        StateExecutionData stateExecutionDataLooped = executionInstanceLooped.fetchStateExecutionData();
+        if (stateExecutionDataLooped instanceof EnvStateExecutionData) {
+          EnvStateExecutionData envStateExecutionDataLooped = (EnvStateExecutionData) stateExecutionDataLooped;
+          if (envStateExecutionDataLooped.getWorkflowExecutionId() != null) {
+            WorkflowExecution workflowExecution2 =
+                getExecutionDetailsWithoutGraph(appId, envStateExecutionDataLooped.getWorkflowExecutionId());
+            workflowExecution2.setStateMachine(null);
+
+            stageExecution.setWorkflowExecutions(asList(workflowExecution2));
+            stageExecution.setStatus(workflowExecution2.getStatus());
+          }
+          stageExecution.setMessage(envStateExecutionDataLooped.getErrorMsg());
+        }
+        stageExecutionDataList.add(stageExecution);
       }
     }
   }
@@ -1206,6 +1226,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
     // Setting  exclude hosts with same artifact
     stdParams.setExcludeHostsWithSameArtifact(executionArgs.isExcludeHostsWithSameArtifact());
     stdParams.setNotifyTriggeredUserOnly(executionArgs.isNotifyTriggeredUserOnly());
+    stdParams.setContinueWithDefaultValues(executionArgs.isContinueWithDefaultValues());
 
     if (pipelineResumeId != null) {
       stdParams.setWorkflowElement(WorkflowElement.builder().pipelineResumeUuid(pipelineResumeId).build());
@@ -1359,6 +1380,10 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
   private WorkflowExecution triggerExecution(WorkflowExecution workflowExecution, StateMachine stateMachine,
       WorkflowExecutionUpdate workflowExecutionUpdate, WorkflowStandardParams stdParams, Trigger trigger,
       Pipeline pipeline, Workflow workflow, ContextElement... contextElements) {
+    if (featureFlagService.isEnabled(FeatureName.RUNTIME_INPUT_PIPELINE, pipeline.getAccountId())) {
+      return triggerExecution(workflowExecution, stateMachine, new PipelineStageExecutionAdvisor(),
+          workflowExecutionUpdate, stdParams, trigger, pipeline, workflow, contextElements);
+    }
     return triggerExecution(workflowExecution, stateMachine, null, workflowExecutionUpdate, stdParams, trigger,
         pipeline, workflow, contextElements);
   }
@@ -2420,17 +2445,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
 
     checkDeploymentRateLimit(accountId, appId);
 
-    if (isEmpty(executionArgs.getArtifacts()) && isNotEmpty(executionArgs.getArtifactVariables())) {
-      // Artifact Variables are passed but not artifacts. For backwards compatibility, set artifacts in executionArgs.
-      List<Artifact> artifacts = executionArgs.getArtifactVariables()
-                                     .stream()
-                                     .map(ArtifactVariable::getValue)
-                                     .filter(Objects::nonNull)
-                                     .distinct()
-                                     .map(artifactId -> Artifact.Builder.anArtifact().withUuid(artifactId).build())
-                                     .collect(toList());
-      executionArgs.setArtifacts(artifacts);
-    }
+    setArtifactsFromArtifactVariables(executionArgs);
 
     if (isEmpty(executionArgs.getHelmCharts()) && isNotEmpty(executionArgs.getManifestVariables())) {
       List<HelmChart> manifests =
@@ -2462,6 +2477,20 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
 
       default:
         throw new WingsException(ErrorCode.INVALID_ARGUMENT).addParam("args", "workflowType");
+    }
+  }
+
+  private void setArtifactsFromArtifactVariables(ExecutionArgs executionArgs) {
+    if (isEmpty(executionArgs.getArtifacts()) && isNotEmpty(executionArgs.getArtifactVariables())) {
+      // Artifact Variables are passed but not artifacts. For backwards compatibility, set artifacts in executionArgs.
+      List<Artifact> artifacts = executionArgs.getArtifactVariables()
+                                     .stream()
+                                     .map(ArtifactVariable::getValue)
+                                     .filter(Objects::nonNull)
+                                     .distinct()
+                                     .map(artifactId -> Artifact.Builder.anArtifact().withUuid(artifactId).build())
+                                     .collect(toList());
+      executionArgs.setArtifacts(artifacts);
     }
   }
 
@@ -2681,8 +2710,60 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
 
   @Override
   public WorkflowVariablesMetadata fetchWorkflowVariables(
-      String appId, ExecutionArgs executionArgs, String workflowExecutionId) {
+      String appId, ExecutionArgs executionArgs, String workflowExecutionId, String pipelineStageElementId) {
+    if (isNotEmpty(pipelineStageElementId)) {
+      return workflowExecutionServiceHelper.fetchWorkflowVariablesForRunningExecution(
+          appId, workflowExecutionId, pipelineStageElementId);
+    }
     return workflowExecutionServiceHelper.fetchWorkflowVariables(appId, executionArgs, workflowExecutionId);
+  }
+
+  @Override
+  public DeploymentMetadata fetchDeploymentMetadataRunningPipeline(String appId, ExecutionArgs executionArgs,
+      boolean withDefaultArtifact, String workflowExecutionId, String pipelineStageElementId) {
+    if (isEmpty(workflowExecutionId) || isEmpty(pipelineStageElementId)) {
+      throw new InvalidRequestException(
+          "ExecutionId and PipelineStageElementId is required to check Inputs for a running execution");
+    }
+
+    WorkflowExecution workflowExecution = getWorkflowExecution(appId, workflowExecutionId);
+    if (workflowExecution.getPipelineExecution() == null) {
+      throw new InvalidRequestException("The given ExecutionId is invalid. Please give a valid PipelineExecutionId");
+    }
+
+    String pipelineId = workflowExecution.getWorkflowId();
+    Pipeline pipeline = pipelineService.getPipeline(appId, pipelineId);
+    notNullCheck("Couldnt load a pipeline associated with given executionId: " + workflowExecutionId, pipeline);
+
+    List<PipelineStage> pipelineStages = pipeline.getPipelineStages();
+    if (isEmpty(pipelineStages)) {
+      throw new InvalidRequestException("The given pipeline does not contain any stage");
+    }
+
+    Include[] includes = new Include[] {ENVIRONMENT, ARTIFACT_SERVICE, DEPLOYMENT_TYPE};
+
+    for (PipelineStage pipelineStage : pipelineStages) {
+      PipelineStageElement pipelineStageElement = pipelineStage.getPipelineStageElements().get(0);
+      if (pipelineStageElement.getUuid().equals(pipelineStageElementId)) {
+        if (pipelineStageElement.getProperties().get("workflowId") == null) {
+          throw new InvalidRequestException(
+              "Could find a workflow associated with given PipelineStage: " + pipelineStageElementId);
+        }
+        String workflowId = (String) pipelineStageElement.getProperties().get("workflowId");
+        Workflow workflow = workflowService.readWorkflow(appId, workflowId);
+        notNullCheck(
+            "NOt able to load workflow associated with given PipelineStageElementId: " + pipelineStageElementId,
+            workflow);
+        notNullCheck(
+            "NOt able to load workflow associated with given PipelineStageElementId: " + pipelineStageElementId,
+            workflow.getOrchestrationWorkflow());
+        return workflowService.fetchDeploymentMetadata(appId, workflow, executionArgs.getWorkflowVariables(), null,
+            null, withDefaultArtifact, workflowExecution, includes);
+      }
+    }
+
+    throw new InvalidRequestException(
+        " No PipelineStage found for given PipelineStageElementId: " + pipelineStageElementId);
   }
 
   @Override
@@ -2765,6 +2846,190 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
         .project(WorkflowExecutionKeys.name, true)
         .project(WorkflowExecutionKeys.status, true)
         .asList();
+  }
+
+  @Override
+  public boolean continuePipelineStage(
+      String appId, String pipelineExecutionId, String pipelineStageElementId, ExecutionArgs executionArgs) {
+    setArtifactsFromArtifactVariables(executionArgs);
+
+    WorkflowExecution pipelineExecution =
+        wingsPersistence.getWithAppId(WorkflowExecution.class, appId, pipelineExecutionId);
+    notNullCheck("Invalid executionId: " + pipelineExecutionId, pipelineExecution);
+    validateContinuePipeline(appId, pipelineExecution, pipelineStageElementId, executionArgs);
+
+    StateExecutionInstance stateExecutionInstance =
+        getStateExecutionInstancePipelineStage(appId, pipelineExecutionId, pipelineStageElementId);
+    if (stateExecutionInstance.getStatus() != PAUSED) {
+      throw new InvalidRequestException("Pipeline stage is not in paused state");
+    }
+    ExecutionContextImpl context =
+        stateMachineExecutor.getExecutionContext(appId, pipelineExecutionId, stateExecutionInstance.getUuid());
+
+    WorkflowStandardParams workflowStandardParams = context.getContextElement(ContextElementType.STANDARD);
+    notNullCheck("Couldnt continue thie pipelineStage, might be expired", workflowStandardParams);
+    List<Artifact> artifacts = executionArgs.getArtifacts();
+    if (isNotEmpty(artifacts)) {
+      addArtifactsToWorkflowExecution(pipelineExecution, workflowStandardParams, executionArgs, artifacts);
+      updateWorkflowExecutionArtifacts(
+          appId, pipelineExecutionId, pipelineExecution.getArtifacts(), executionArgs.getArtifacts());
+    }
+
+    LinkedList<ContextElement> contextElements = stateExecutionInstance.getContextElements();
+    contextElements.push(workflowStandardParams);
+
+    UpdateOperations<StateExecutionInstance> ops =
+        wingsPersistence.createUpdateOperations(StateExecutionInstance.class);
+    ops.set(StateExecutionInstanceKeys.contextElements, contextElements);
+    wingsPersistence.findAndModify(
+        wingsPersistence.createQuery(StateExecutionInstance.class).filter("_id", stateExecutionInstance.getUuid()), ops,
+        HPersistence.returnNewOptions);
+
+    ResponseData responseData = new ContinuePipelineResponseData(executionArgs.getWorkflowVariables(), null);
+    waitNotifyEngine.doneWith(
+        StateMachineExecutor.getContinuePipelineWaitId(
+            stateExecutionInstance.getPipelineStageElementId(), stateExecutionInstance.getExecutionUuid()),
+        responseData);
+    return true;
+  }
+
+  private void validateContinuePipeline(
+      String appId, WorkflowExecution pipelineExecution, String pipelineStageElementId, ExecutionArgs executionArgs) {
+    validatePipelineExecution(pipelineExecution.getUuid(), pipelineExecution);
+
+    PipelineStageExecution pipelineStageExecution =
+        pipelineExecution.getPipelineExecution()
+            .getPipelineStageExecutions()
+            .stream()
+            .filter(t -> t.getPipelineStageElementId().equals(pipelineStageElementId))
+            .findFirst()
+            .orElse(null);
+    validatePipelineStageExecution(pipelineStageElementId, pipelineStageExecution);
+
+    String pipelineId = pipelineExecution.getWorkflowId();
+    Pipeline pipeline = pipelineService.readPipelineResolvedVariablesLoopedInfo(
+        appId, pipelineId, pipelineExecution.getExecutionArgs().getWorkflowVariables());
+    validateRBAC(appId, pipelineId, pipeline);
+
+    List<PipelineStage> pipelineStages = pipeline.getPipelineStages();
+    notNullCheck("Pipeline doesnt contain any stages. PipelineID: " + pipelineId, pipelineStages);
+
+    String workflowId = null;
+    RuntimeInputsConfig runtimeInputsConfig = null;
+    for (PipelineStage pipelineStage : pipelineStages) {
+      PipelineStageElement pipelineStageElement = pipelineStage.getPipelineStageElements().get(0);
+      if (pipelineStageElement.getUuid().equals(pipelineStageElementId)
+          && pipelineStageElement.getProperties().get("workflowId") != null) {
+        workflowId = (String) pipelineStageElement.getProperties().get("workflowId");
+        runtimeInputsConfig = pipelineStageElement.getRuntimeInputsConfig();
+        break;
+      }
+    }
+    notNullCheck("Cannot find workflow associated with given PipelineStage: " + pipelineStageElementId, workflowId);
+    notNullCheck("No Runtime Input Vars for the given PipelineStage: " + pipelineStageElementId, runtimeInputsConfig);
+    if (isEmpty(runtimeInputsConfig.getRuntimeInputVariables())) {
+      throw new InvalidRequestException(
+          "NO Runtime Input Vars for the given PipelineStage: \" + pipelineStageElementId");
+    }
+
+    Workflow workflow = workflowService.readWorkflow(appId, workflowId);
+    notNullCheck("Cannot find workflow associated with given PipelineStage: " + pipelineStageElementId, workflow);
+    notNullCheck("Cannot find workflow associated with given PipelineStage: " + pipelineStageElementId,
+        workflow.getOrchestrationWorkflow());
+
+    List<Variable> workflowVariables = workflow.getOrchestrationWorkflow().getUserVariables();
+    Map<String, String> runtimeVariableValues = executionArgs.getWorkflowVariables();
+
+    Variable envVarInStage = workflowVariables.stream()
+                                 .filter(t -> EntityType.ENVIRONMENT.equals(t.obtainEntityType()))
+                                 .findFirst()
+                                 .orElse(null);
+    List<String> runtimeVarsInStage = runtimeInputsConfig.getRuntimeInputVariables();
+
+    if (envVarInStage != null && runtimeVarsInStage.contains(envVarInStage.getName())) {
+      String envValueInStage = runtimeVariableValues.get(envVarInStage.getName());
+      authService.checkIfUserAllowedToDeployPipelineToEnv(appId, envValueInStage);
+    }
+    List<String> extraVars = new ArrayList<>();
+    for (String key : runtimeVariableValues.keySet()) {
+      if (!runtimeVarsInStage.contains(key)) {
+        extraVars.add(key);
+      }
+    }
+
+    if (isNotEmpty(extraVars)) {
+      throw new InvalidRequestException(
+          "Cannot override value for variables: " + extraVars.toString() + " These are not marked runtime in stage");
+    }
+
+    validateRequiredVariables(workflowVariables, runtimeVariableValues);
+
+    List<Artifact> existingArtifacts = pipelineExecution.getArtifacts();
+    List<Artifact> newArtifacts = executionArgs.getArtifacts();
+    validateArtifactOverrides(existingArtifacts, newArtifacts);
+  }
+
+  private void validateArtifactOverrides(List<Artifact> existingArtifacts, List<Artifact> newArtifacts) {}
+
+  private void validateRequiredVariables(List<Variable> workflowVariables, Map<String, String> runtimeVariableValues) {}
+
+  private void validateRBAC(String appId, String pipelineId, Pipeline pipeline) {
+    User user = UserThreadLocal.get();
+    if (user != null) {
+      deploymentAuthHandler.authorizePipelineExecution(appId, pipelineId);
+      if (isNotEmpty(pipeline.getEnvIds())) {
+        pipeline.getEnvIds().forEach(s -> authService.checkIfUserAllowedToDeployPipelineToEnv(appId, s));
+      }
+    }
+  }
+
+  private void validatePipelineStageExecution(
+      String pipelineStageElementId, PipelineStageExecution pipelineStageExecution) {
+    if (pipelineStageExecution == null) {
+      throw new InvalidRequestException(
+          "Cannot continue Pipeline stage, PipelineStageExecution not founfd for Id: " + pipelineStageElementId);
+    }
+
+    if (pipelineStageExecution.getStatus() != PAUSED) {
+      throw new InvalidRequestException(
+          "Cannot continue Pipeline stage, PipelineStageExecution is not Paused. current status: "
+          + pipelineStageExecution.getStatus());
+    }
+
+    if (!pipelineStageExecution.getStateType().equals(ENV_STATE.name())
+        && !pipelineStageExecution.getStateType().equals(ENV_LOOP_STATE.name())) {
+      throw new InvalidRequestException(
+          "Cannot continue Pipeline stage, PipelineStageExecution is not a valid workflow state. Statetype = "
+          + pipelineStageExecution.getStateType());
+    }
+  }
+
+  private void validatePipelineExecution(String pipelineExecutionId, WorkflowExecution pipelineExecution) {
+    if (pipelineExecution.getPipelineExecution() == null) {
+      throw new InvalidRequestException("Cannot continue Pipeline, Not a valid executionId: " + pipelineExecutionId);
+    }
+
+    if (!isActiveStatus(pipelineExecution.getStatus())) {
+      throw new InvalidRequestException(
+          "Cannot continue Pipeline stage, Pipeline is not active anymore. PipelineExecutionId: "
+          + pipelineExecutionId);
+    }
+  }
+
+  public StateExecutionInstance getStateExecutionInstancePipelineStage(
+      String appId, String pipelineExecutionId, String pipelineStageElementId) {
+    StateExecutionInstance stateExecutionInstances =
+        wingsPersistence.createQuery(StateExecutionInstance.class)
+            .filter(StateExecutionInstanceKeys.appId, appId)
+            .filter(StateExecutionInstanceKeys.executionUuid, pipelineExecutionId)
+            .filter(StateExecutionInstanceKeys.pipelineStageElementId, pipelineStageElementId)
+            .get();
+
+    if (stateExecutionInstances == null) {
+      throw new InvalidRequestException("Couldnt find any StateExecutionInstance fot given executionId: "
+          + pipelineExecutionId + " and pipelineStageElementId: " + pipelineStageElementId);
+    }
+    return stateExecutionInstances;
   }
 
   @Override

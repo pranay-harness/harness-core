@@ -798,6 +798,7 @@ public class TriggerServiceImpl implements TriggerService {
     executionArgs.setWorkflowType(trigger.getWorkflowType());
     executionArgs.setExcludeHostsWithSameArtifact(trigger.isExcludeHostsWithSameArtifact());
     executionArgs.setCreatedByType(CreatedByType.TRIGGER);
+    executionArgs.setContinueWithDefaultValues(trigger.isContinueWithDefaultValues());
 
     if (parameters != null) {
       executionArgs.setWorkflowVariables(parameters);

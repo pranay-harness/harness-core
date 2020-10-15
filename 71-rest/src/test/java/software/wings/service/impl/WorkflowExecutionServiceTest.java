@@ -818,7 +818,7 @@ public class WorkflowExecutionServiceTest extends WingsBaseTest {
     ExecutionArgs executionArgs = new ExecutionArgs();
     executionArgs.setWorkflowType(WorkflowType.ORCHESTRATION);
     executionArgs.setOrchestrationId(WORKFLOW_ID);
-    workflowExecutionService.fetchWorkflowVariables(APP_ID, executionArgs, null);
+    workflowExecutionService.fetchWorkflowVariables(APP_ID, executionArgs, null, null);
     verify(workflowExecutionServiceHelper).fetchWorkflowVariables(APP_ID, executionArgs, null);
   }
 

@@ -13,6 +13,7 @@ import io.harness.beans.OrchestrationWorkflowType;
 import io.harness.beans.WorkflowType;
 import io.harness.context.ContextElementType;
 import io.harness.delegate.beans.DelegateTaskDetails;
+import io.harness.interrupts.RepairActionCode;
 import io.harness.mongo.index.CdIndex;
 import io.harness.mongo.index.FdIndex;
 import io.harness.mongo.index.FdTtlIndex;
@@ -84,6 +85,10 @@ public class StateExecutionInstance
   private ContextElement contextElement;
   private boolean contextTransition;
   private boolean rollback;
+  private boolean waitingForInputs;
+  // For when the State was waiting for Inputs.
+  private RepairActionCode actionOnTimeout;
+  private boolean continued;
 
   @Deprecated
   /**

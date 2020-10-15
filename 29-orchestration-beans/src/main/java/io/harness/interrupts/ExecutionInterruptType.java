@@ -21,6 +21,10 @@ public enum ExecutionInterruptType {
    */
   PAUSE("Pause execution of the current node"),
   /**
+   * Pause state event as state needs more inputs from User.
+   */
+  PAUSE_FOR_INPUTS("Pause execution of the current node"),
+  /**
    * Pause all state event.
    */
   PAUSE_ALL("Pause execution of all nodes for the current workflow"),
@@ -58,7 +62,11 @@ public enum ExecutionInterruptType {
 
   ROLLBACK_DONE("Rollback Done"),
 
-  MARK_EXPIRED("Mark the node as expired");
+  MARK_EXPIRED("Mark the node as expired"),
+
+  CONTINUE_WITH_DEFAULTS("Run the same execution Instance with default values"),
+
+  CONTINUE_PIPELINE_STAGE("Run the env state with runtime values");
 
   private String description;
 

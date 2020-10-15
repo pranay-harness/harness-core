@@ -122,6 +122,7 @@ public class WorkflowStandardParams implements ExecutionContextAware, ContextEle
 
   private boolean excludeHostsWithSameArtifact;
   @Getter @Setter private boolean notifyTriggeredUserOnly;
+  @Getter @Setter private boolean continueWithDefaultValues;
   @Getter @Setter private List<String> executionHosts;
 
   @JsonIgnore private EmbeddedUser currentUser;
