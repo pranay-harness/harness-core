@@ -2,7 +2,7 @@
 
 if [[ -v "HZ_CLUSTER_NAME" ]]; then
 #If cluster name is not found , disable hazelcast .
-    sed -i "s|<name>dev|<name>${HZ_CLUSTER_NAME}|" /opt/harness/hazelcast.xml
+    sed -i "s|<name>dev|<name>${HZ_CLUSTER_NAME}-hzcluster|" /opt/harness/hazelcast.xml
     sed -i "s|<password>dev-pass|<password>${HZ_CLUSTER_NAME}-pass|" /opt/harness/hazelcast.xml
     sed -i "s|<property name=\"tag-value\">cluster1|<property name=\"tag-value\">${HZ_CLUSTER_NAME}|" /opt/harness/hazelcast.xml
 fi
