@@ -1,4 +1,4 @@
-package io.harness.perpetualtask.k8s.metrics.client.model.common;
+package io.harness.k8s.model;
 
 /**
  * Equivalence to TypeMeta from kubernetes/client-go.

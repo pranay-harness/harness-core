@@ -8,9 +8,9 @@ import static com.github.tomakehurst.wiremock.client.WireMock.urlMatching;
 import static com.github.tomakehurst.wiremock.client.WireMock.verify;
 import static io.harness.rule.OwnerRule.UTSAV;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import com.google.common.io.Resources;
-import com.google.gson.JsonSyntaxException;
 
 import com.github.tomakehurst.wiremock.junit.WireMockRule;
 import io.harness.CategoryTest;
@@ -23,6 +23,7 @@ import io.harness.perpetualtask.k8s.metrics.client.model.node.NodeMetricsList;
 import io.harness.perpetualtask.k8s.metrics.client.model.pod.PodMetrics;
 import io.harness.perpetualtask.k8s.metrics.client.model.pod.PodMetricsList;
 import io.harness.rule.Owner;
+import io.kubernetes.client.openapi.ApiException;
 import io.kubernetes.client.openapi.JSON;
 import io.kubernetes.client.openapi.apis.CoreV1Api;
 import io.kubernetes.client.util.ClientBuilder;
@@ -39,7 +40,8 @@ import java.nio.charset.StandardCharsets;
 
 @RunWith(MockitoJUnitRunner.class)
 public class DefaultK8sMetricsClientTest extends CategoryTest {
-  @Rule public WireMockRule wireMockRule = new WireMockRule(65218);
+  private static final String NOT_FOUND_MSG = "Not Found";
+  @Rule public WireMockRule wireMockRule = new WireMockRule(0);
 
   JSON json;
   String resourceToString;
@@ -80,23 +82,25 @@ public class DefaultK8sMetricsClientTest extends CategoryTest {
     assertThat(response.getKind()).isEqualTo(NodeMetricsList.class.getSimpleName());
     assertThat(response.getApiVersion()).isEqualTo(METRICS_API_VERSION);
 
-    assertThat(response.getItems()).hasSizeGreaterThan(0);
+    assertThat(response.getItems()).isNotEmpty();
     assertThat(response.getItems().get(0)).isInstanceOf(NodeMetrics.class);
     assertThat(response.getItems().get(0).getKind()).isEqualTo(NodeMetrics.class.getSimpleName());
     assertThat(response.getItems().get(0).getMetadata()).isNotNull();
     assertThat(response.getItems().get(0).getMetadata().getName()).isNotEmpty();
   }
 
-  @Test(expected = JsonSyntaxException.class)
+  @Test
   @Owner(developers = UTSAV)
   @Category(UnitTests.class)
-  public void nodeMetricsClientTestThrowsJsonSyntaxException() {
+  public void nodeMetricsClientTestThrowsApiExceptionWithMessage() {
     resourceToString = "404 page not found\n";
 
     stubFor(get(urlMatching("^/apis/" + METRICS_API_VERSION + "/nodes" + URL_REGEX_SUFFIX))
                 .willReturn(aResponse().withStatus(404).withBody(resourceToString)));
 
-    k8sMetricsClient.nodeMetrics().list().getObject();
+    assertThatThrownBy(() -> k8sMetricsClient.nodeMetrics().list())
+        .isExactlyInstanceOf(ApiException.class)
+        .hasMessageContaining(NOT_FOUND_MSG);
   }
 
   @Test
@@ -116,7 +120,7 @@ public class DefaultK8sMetricsClientTest extends CategoryTest {
     assertThat(response.getKind()).isEqualTo(PodMetricsList.class.getSimpleName());
     assertThat(response.getApiVersion()).isEqualTo(METRICS_API_VERSION);
 
-    assertThat(response.getItems()).hasSizeGreaterThan(0);
+    assertThat(response.getItems()).isNotEmpty();
     assertThat(response.getItems().get(0)).isInstanceOf(PodMetrics.class);
     assertThat(response.getItems().get(0).getKind()).isEqualTo(PodMetrics.class.getSimpleName());
     assertThat(response.getItems().get(0).getMetadata()).isNotNull();
@@ -141,7 +145,7 @@ public class DefaultK8sMetricsClientTest extends CategoryTest {
     assertThat(resourceToString).isNotNull().isNotEmpty();
     assertThat(response).isNotNull().isEqualTo(expected);
 
-    assertThat(response.getItems()).hasSizeGreaterThan(0);
+    assertThat(response.getItems()).isNotEmpty();
     assertThat(response.getItems().get(0)).isInstanceOf(PodStats.class);
     assertThat(response.getItems().get(0).getVolumeList().get(0)).isInstanceOf(Volume.class);
 
@@ -158,16 +162,18 @@ public class DefaultK8sMetricsClientTest extends CategoryTest {
     assertThat(volume.getPvcRef().getNamespace()).isEqualTo("delegate-scope");
   }
 
-  @Test(expected = JsonSyntaxException.class)
+  @Test
   @Owner(developers = UTSAV)
   @Category(UnitTests.class)
-  public void podMetricsClientTestThrowsJsonSyntaxException() {
+  public void podMetricsClientTestThrowsApiExceptionWithMessage() {
     resourceToString = "404 page not found\n";
 
     stubFor(get(urlMatching("^/apis/" + METRICS_API_VERSION + "/pods" + URL_REGEX_SUFFIX))
                 .willReturn(aResponse().withStatus(404).withBody(resourceToString)));
 
-    k8sMetricsClient.podMetrics().list().getObject();
+    assertThatThrownBy(() -> k8sMetricsClient.podMetrics().list())
+        .isExactlyInstanceOf(ApiException.class)
+        .hasMessageContaining(NOT_FOUND_MSG);
   }
 
   private String getResourceAsString(String filename) throws IOException {

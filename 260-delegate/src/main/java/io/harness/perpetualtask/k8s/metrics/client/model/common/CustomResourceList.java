@@ -4,6 +4,8 @@ import com.google.gson.annotations.SerializedName;
 
 import com.fasterxml.jackson.databind.JsonDeserializer;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import io.harness.k8s.model.KubernetesListObject;
+import io.harness.k8s.model.KubernetesObject;
 import io.kubernetes.client.openapi.models.V1ListMeta;
 import lombok.EqualsAndHashCode;
 
