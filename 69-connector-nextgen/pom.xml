@@ -76,11 +76,6 @@
         </dependency>
         <dependency>
             <groupId>software.wings</groupId>
-            <artifactId>25-manager-delegate-service-driver</artifactId>
-            <version>${project.parent.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>software.wings</groupId>
             <artifactId>35-yaml-beans</artifactId>
             <version>0.0.1-SNAPSHOT</version>
             <scope>compile</scope>

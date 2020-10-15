@@ -57,7 +57,6 @@ public class ConnectorTestRule implements InjectorRuleMixin, MethodRule, MongoRu
       @Override
       protected void configure() {
         bind(HPersistence.class).to(MongoPersistence.class);
-        bind(ManagerDelegateServiceDriver.class).toInstance(mock(ManagerDelegateServiceDriver.class));
         bind(ProjectService.class).toInstance(mock(ProjectService.class));
         bind(OrganizationService.class).toInstance(mock(OrganizationService.class));
         bind(SecretManagerClientService.class).toInstance(mock(SecretManagerClientService.class));
