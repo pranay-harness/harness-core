@@ -12,6 +12,7 @@ java_library(
     visibility = ["//visibility:public"],
     exports = [
         "//12-commons:module",
+        "//13-ng-commons:module",
         "//14-api-services-beans:module",
         "@maven//:com_amazonaws_aws_java_sdk_autoscaling",
         "@maven//:com_amazonaws_aws_java_sdk_cloudformation",
