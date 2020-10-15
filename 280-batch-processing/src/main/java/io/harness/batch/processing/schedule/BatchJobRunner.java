@@ -74,6 +74,7 @@ public class BatchJobRunner {
     BatchJobScheduleTimeProvider batchJobScheduleTimeProvider =
         new BatchJobScheduleTimeProvider(startAt, endAt, duration, chronoUnit);
     Instant startInstant = startAt;
+    Instant jobsStartTime = Instant.now();
     while (batchJobScheduleTimeProvider.hasNext()) {
       Instant endInstant = batchJobScheduleTimeProvider.next();
       if (null != endInstant && checkDependentJobFinished(accountId, startInstant, dependentBatchJobs)
@@ -106,6 +107,12 @@ public class BatchJobRunner {
           break;
         }
       } else {
+        break;
+      }
+
+      long totalTimeTaken = Duration.between(jobsStartTime, Instant.now()).toMinutes();
+      if (totalTimeTaken >= 30) {
+        logger.warn("Job was taking more time so terminated next runs {}", totalTimeTaken);
         break;
       }
     }
