@@ -147,6 +147,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.StringWriter;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.Enumeration;
@@ -979,6 +980,43 @@ public class YamlServiceImpl<Y extends BaseYaml, B extends Base> implements Yaml
       return prepareFailedYAMLOperationResponse(
           ex.getMessage(), ex.getFailedYamlFileChangeMap(), ex.getChangeContextList(), ex.getChangeList());
     }
+  }
+
+  @Override
+  public FileOperationStatus upsertYAMLFile(String accountId, String yamlFilePath, String yamlContent) {
+    if (yamlContent.isEmpty()) {
+      throw new InvalidArgumentsException(Pair.of("Input YAML", "cannot be empty"));
+    }
+    try {
+      List changeList = Arrays.asList(GitFileChange.Builder.aGitFileChange()
+                                          .withFilePath(yamlFilePath)
+                                          .withFileContent(yamlContent)
+                                          .withChangeType(ChangeType.ADD)
+                                          .withAccountId(accountId)
+                                          .build());
+      List<ChangeContext> processedChangeList = processChangeSet(changeList);
+      if (!processedChangeList.isEmpty()) {
+        final ChangeContext changeContext = processedChangeList.get(0);
+        return FileOperationStatus.builder()
+            .status(FileOperationStatus.Status.SUCCESS)
+            .errorMssg("")
+            .yamlFilePath(changeContext.getChange().getFilePath())
+            .build();
+      }
+    } catch (YamlProcessingException ex) {
+      logger.warn(String.format("Unable to process yaml file for account %s, error: %s", accountId, ex));
+      if (ex != null && !isEmpty(ex.getFailedYamlFileChangeMap())) {
+        final Map.Entry<String, ChangeWithErrorMsg> entry =
+            ex.getFailedYamlFileChangeMap().entrySet().iterator().next();
+        final ChangeWithErrorMsg changeWithErrorMsg = entry.getValue();
+        return FileOperationStatus.builder()
+            .status(FileOperationStatus.Status.FAILED)
+            .errorMssg(changeWithErrorMsg.getErrorMsg())
+            .yamlFilePath(changeWithErrorMsg.getChange().getFilePath())
+            .build();
+      }
+    }
+    return null;
   }
 
   private YamlOperationResponse prepareFailedYAMLOperationResponse(final String errorMessage,

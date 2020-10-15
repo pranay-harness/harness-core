@@ -154,4 +154,36 @@ public class YAMLResourceTest extends AbstractFunctionalTest {
     assertThat(yamlOperationResponse.getResponseStatus()).isEqualByComparingTo(YamlOperationResponse.Status.FAILED);
     assertThat(yamlOperationResponse.getFilesStatus()).isNull();
   }
+
+  @Test
+  @Owner(developers = VARDAN_BANSAL)
+  @Category(FunctionalTests.class)
+  public void test_upsertEntity() {
+    final String yamlFilePath = "Setup/Applications/test app/Index.yaml";
+    final Response response = Setup.portal()
+                                  .auth()
+                                  .oauth2(bearerToken)
+                                  .queryParam("accountId", getAccount().getUuid())
+                                  .queryParam("yamlFilePath", yamlFilePath)
+                                  .contentType("multipart/form-data")
+                                  .multiPart("yamlContent",
+                                      "harnessApiVersion: '1.0'\n"
+                                          + "type: APPLICATION")
+                                  .post("/setup-as-code/yaml/upsert-entity");
+    assertThat(response.getStatusCode() == HttpStatus.SC_OK).isTrue();
+    assertThat(response.body()).isNotNull();
+    FileOperationStatus fileOperationStatus;
+    try {
+      JSONObject responseObj = new JSONObject(response.body().print());
+      assertThat(responseObj).isNotNull();
+      final JSONObject resource = responseObj.getJSONObject("resource");
+      assertThat(resource).isNotNull();
+      ObjectMapper mapper = new ObjectMapper();
+      fileOperationStatus = mapper.readValue(resource.toString(), FileOperationStatus.class);
+      assertThat(fileOperationStatus.getYamlFilePath().equals(yamlFilePath));
+      assertThat(fileOperationStatus.getStatus().equals(FileOperationStatus.Status.SUCCESS));
+    } catch (JSONException | IOException err) {
+      logger.error(err.toString());
+    }
+  }
 }
