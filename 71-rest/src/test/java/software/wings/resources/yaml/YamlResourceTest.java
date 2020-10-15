@@ -24,7 +24,7 @@ public class YamlResourceTest extends CategoryTest {
     final Method[] methods = YamlResource.class.getMethods();
     Set<String> methodWithManageConfigPermission = new HashSet<>(Arrays.asList("deleteYAMLEntities",
         "upsertYAMLEntities", "fullSyncAccount", "processYamlFilesAsZip", "discardGitSyncError", "discardGitSyncError",
-        "updateGitConfig", "delete", "saveGitConfig", "pushDirectory"));
+        "updateGitConfig", "delete", "saveGitConfig", "pushDirectory", "upsertYAMLEntity"));
     for (Method method : methods) {
       if (methodWithManageConfigPermission.contains(method.getName())) {
         AuthRule annotation = method.getAnnotation(AuthRule.class);

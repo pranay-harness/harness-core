@@ -60,6 +60,7 @@ import software.wings.infra.InfrastructureDefinition;
 import software.wings.security.PermissionAttribute.Action;
 import software.wings.security.UserThreadLocal;
 import software.wings.security.annotations.AuthRule;
+import software.wings.security.annotations.ExternalFacingApiAuth;
 import software.wings.security.annotations.Scope;
 import software.wings.service.intfc.AuthService;
 import software.wings.service.intfc.HarnessUserGroupService;
@@ -70,6 +71,7 @@ import software.wings.service.intfc.yaml.YamlGitService;
 import software.wings.service.intfc.yaml.YamlResourceService;
 import software.wings.service.intfc.yaml.clone.YamlCloneService;
 import software.wings.service.intfc.yaml.sync.YamlService;
+import software.wings.yaml.FileOperationStatus;
 import software.wings.yaml.YamlHelper;
 import software.wings.yaml.YamlOperationResponse;
 import software.wings.yaml.YamlPayload;
@@ -642,6 +644,7 @@ public class YamlResource {
   @Path("/directory")
   @Timed
   @ExceptionMetered
+  @ExternalFacingApiAuth
   public RestResponse<DirectoryNode> getDirectory(
       @QueryParam("accountId") String accountId, @QueryParam("appId") String appId) {
     return new RestResponse<>(yamlDirectoryService.getDirectory(accountId, appId));
@@ -1182,6 +1185,7 @@ public class YamlResource {
   @Path("/yaml-content")
   @Timed
   @ExceptionMetered
+  @ExternalFacingApiAuth
   public RestResponse<YamlPayload> getYamlForFilePath(@QueryParam("accountId") String accountId,
       @QueryParam("yamlFilePath") String yamlFilePath, @QueryParam("yamlSubType") String yamlSubType,
       @QueryParam("applicationId") String applicationId) {
@@ -1202,10 +1206,23 @@ public class YamlResource {
   @Timed
   @ExceptionMetered
   @AuthRule(permissionType = MANAGE_CONFIG_AS_CODE)
+  @ExternalFacingApiAuth
   public RestResponse<YamlOperationResponse> upsertYAMLEntities(@QueryParam("accountId") @NotEmpty String accountId,
       @FormDataParam("file") InputStream uploadedInputStream) throws IOException {
     return new RestResponse<>(yamlService.upsertYAMLFilesAsZip(accountId,
         new BoundedInputStream(uploadedInputStream, configuration.getFileUploadLimits().getAppContainerLimit())));
+  }
+
+  @POST
+  @Path("upsert-entity")
+  @Consumes(MULTIPART_FORM_DATA)
+  @Timed
+  @ExceptionMetered
+  @AuthRule(permissionType = MANAGE_CONFIG_AS_CODE)
+  @ExternalFacingApiAuth
+  public RestResponse<FileOperationStatus> upsertYAMLEntity(@QueryParam("accountId") @NotEmpty String accountId,
+      @QueryParam("yamlFilePath") @NotEmpty String yamlFilePath, @FormDataParam("yamlContent") String yamlContent) {
+    return new RestResponse<>(yamlService.upsertYAMLFile(accountId, yamlFilePath, yamlContent));
   }
 
   @DELETE
@@ -1213,6 +1230,7 @@ public class YamlResource {
   @Timed
   @ExceptionMetered
   @AuthRule(permissionType = MANAGE_CONFIG_AS_CODE)
+  @ExternalFacingApiAuth
   public RestResponse<YamlOperationResponse> deleteYAMLEntities(
       @QueryParam("accountId") @NotEmpty String accountId, @QueryParam("filePaths") @NotEmpty List<String> filePaths) {
     return new RestResponse<>(yamlService.deleteYAMLByPaths(accountId, filePaths));
