@@ -14,6 +14,7 @@ java_library(
         "//12-commons:module",
         "//21-persistence:module",
         "//22-timeout-engine:module",
+        "//28-pms-beans:module",
         "//31-orchestration:module",
         "@maven//:com_fasterxml_jackson_core_jackson_annotations",
         "@maven//:com_google_code_findbugs_annotations",

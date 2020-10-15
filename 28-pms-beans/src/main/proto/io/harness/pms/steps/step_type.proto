@@ -1,0 +1,9 @@
+syntax = "proto3";
+
+package io.harness.pms.steps;
+
+option java_multiple_files = true;
+
+message StepType {
+  string type = 1;
+}
