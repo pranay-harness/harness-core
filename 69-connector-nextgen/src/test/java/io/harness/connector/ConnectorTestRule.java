@@ -11,7 +11,6 @@ import com.google.inject.Provides;
 import com.google.inject.Singleton;
 import com.google.inject.TypeLiteral;
 
-import io.harness.ManagerDelegateServiceDriver;
 import io.harness.callback.DelegateCallbackToken;
 import io.harness.entityreferenceclient.EntityReferenceClientModule;
 import io.harness.entityreferenceclient.NGManagerClientConfig;
