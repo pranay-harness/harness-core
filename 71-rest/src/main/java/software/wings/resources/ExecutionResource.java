@@ -9,6 +9,7 @@ import static java.lang.String.format;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static software.wings.common.InfrastructureConstants.QUEUING_RC_NAME;
 import static software.wings.security.PermissionAttribute.Action.EXECUTE;
+import static software.wings.security.PermissionAttribute.Action.EXECUTE_PIPELINE;
 import static software.wings.security.PermissionAttribute.Action.READ;
 import static software.wings.security.PermissionAttribute.PermissionType.DEPLOYMENT;
 
@@ -227,6 +228,32 @@ public class ExecutionResource {
   @POST
   @Timed
   @ExceptionMetered
+  @Path("continueExecution")
+  // We are handling the check programmatically for now, since we don't have enough info in the query / path parameters
+  @AuthRule(permissionType = DEPLOYMENT, action = EXECUTE_PIPELINE, skipAuth = true)
+  public RestResponse<Boolean> continueExecution(@QueryParam("appId") String appId,
+      @QueryParam("pipelineStageElementId") String pipelineStageElementId,
+      @QueryParam("pipelineExecutionId") String pipelineExecutionId, ExecutionArgs executionArgs) {
+    // add auth
+    if (executionArgs != null) {
+      if (isNotEmpty(executionArgs.getArtifactVariables())) {
+        for (ArtifactVariable artifactVariable : executionArgs.getArtifactVariables()) {
+          if (isEmpty(artifactVariable.getValue()) && artifactVariable.getArtifactStreamMetadata() == null) {
+            throw new InvalidRequestException(
+                format("No value provided for artifact variable: [%s] ", artifactVariable.getName()), USER);
+          }
+        }
+      }
+      executionArgs.setCreatedByType(CreatedByType.USER);
+    }
+
+    return new RestResponse<>(workflowExecutionService.continuePipelineStage(
+        appId, pipelineExecutionId, pipelineStageElementId, executionArgs));
+  }
+
+  @POST
+  @Timed
+  @ExceptionMetered
   @Path("triggerResume")
   @AuthRule(permissionType = DEPLOYMENT, action = EXECUTE, skipAuth = true)
   public RestResponse<WorkflowExecution> triggerPipelineResumeExecution(@QueryParam("appId") String appId,
@@ -390,9 +417,10 @@ public class ExecutionResource {
   @ExceptionMetered
   @AuthRule(permissionType = PermissionType.LOGGED_IN)
   public RestResponse<WorkflowVariablesMetadata> getWorkflowVariables(@QueryParam("appId") String appId,
-      @QueryParam("workflowExecutionId") String workflowExecutionId, ExecutionArgs executionArgs) {
-    return new RestResponse<>(
-        workflowExecutionService.fetchWorkflowVariables(appId, executionArgs, workflowExecutionId));
+      @QueryParam("workflowExecutionId") String workflowExecutionId,
+      @QueryParam("pipelineStageElementId") String pipelineStageElementId, ExecutionArgs executionArgs) {
+    return new RestResponse<>(workflowExecutionService.fetchWorkflowVariables(
+        appId, executionArgs, workflowExecutionId, pipelineStageElementId));
   }
 
   @POST
@@ -403,7 +431,13 @@ public class ExecutionResource {
   public RestResponse<DeploymentMetadata> getDeploymentMetadata(@QueryParam("appId") String appId,
       @QueryParam("withDefaultArtifact") boolean withDefaultArtifact,
       @QueryParam("workflowExecutionId") String workflowExecutionId,
+      @DefaultValue("false") @QueryParam("isRunningExecution") boolean isRunningExecution,
+      @QueryParam("pipelineStageElementId") String pipelineStageElementId,
       @QueryParam("withLastDeployedInfo") boolean withLastDeployedInfo, ExecutionArgs executionArgs) {
+    if (isRunningExecution) {
+      return new RestResponse<>(workflowExecutionService.fetchDeploymentMetadataRunningPipeline(
+          appId, executionArgs, withDefaultArtifact, workflowExecutionId, pipelineStageElementId));
+    }
     return new RestResponse<>(workflowExecutionService.fetchDeploymentMetadata(
         appId, executionArgs, withDefaultArtifact, workflowExecutionId, withLastDeployedInfo));
   }

@@ -28,7 +28,9 @@ import static io.harness.eraro.ErrorCode.INVALID_ARGUMENT;
 import static io.harness.eraro.ErrorCode.STATE_NOT_FOR_TYPE;
 import static io.harness.exception.WingsException.ExecutionContext.MANAGER;
 import static io.harness.govern.Switch.unhandled;
+import static io.harness.interrupts.ExecutionInterruptType.CONTINUE_PIPELINE_STAGE;
 import static io.harness.interrupts.ExecutionInterruptType.PAUSE_ALL;
+import static io.harness.interrupts.ExecutionInterruptType.PAUSE_FOR_INPUTS;
 import static io.harness.interrupts.ExecutionInterruptType.RESUME_ALL;
 import static io.harness.interrupts.ExecutionInterruptType.RETRY;
 import static io.harness.threading.Morpheus.quietSleep;
@@ -43,8 +45,10 @@ import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 import static software.wings.beans.ExecutionScope.WORKFLOW;
+import static software.wings.beans.NotificationRule.NotificationRuleBuilder.aNotificationRule;
 import static software.wings.beans.alert.AlertType.ManualInterventionNeeded;
 import static software.wings.common.NotificationMessageResolver.NotificationMessageType.MANUAL_INTERVENTION_NEEDED_NOTIFICATION;
+import static software.wings.common.NotificationMessageResolver.NotificationMessageType.NEEDS_RUNTIME_INPUTS;
 import static software.wings.sm.ExecutionInterrupt.ExecutionInterruptBuilder.anExecutionInterrupt;
 import static software.wings.sm.StateExecutionData.StateExecutionDataBuilder.aStateExecutionData;
 import static software.wings.sm.StateExecutionInstance.Builder.aStateExecutionInstance;
@@ -88,6 +92,7 @@ import org.mongodb.morphia.FindAndModifyOptions;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
 import org.mongodb.morphia.query.UpdateResults;
+import software.wings.api.ContinuePipelineResponseData;
 import software.wings.api.SkipStateExecutionData;
 import software.wings.beans.Account;
 import software.wings.beans.Application;
@@ -96,6 +101,7 @@ import software.wings.beans.Environment;
 import software.wings.beans.ErrorStrategy;
 import software.wings.beans.InformationNotification;
 import software.wings.beans.NotificationRule;
+import software.wings.beans.Pipeline;
 import software.wings.beans.Workflow;
 import software.wings.beans.WorkflowExecution;
 import software.wings.beans.alert.AlertType;
@@ -110,6 +116,7 @@ import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.DelegateService;
 import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.NotificationService;
+import software.wings.service.intfc.PipelineService;
 import software.wings.service.intfc.StateExecutionService;
 import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.service.intfc.WorkflowService;
@@ -172,6 +179,7 @@ public class StateMachineExecutor implements StateInspectionListener {
   @Inject private WorkflowExecutionService workflowExecutionService;
   @Inject private WorkflowNotificationHelper workflowNotificationHelper;
   @Inject private WorkflowService workflowService;
+  @Inject private PipelineService pipelineService;
   @Inject private SweepingOutputService sweepingOutputService;
   @Inject private PipelineConfig pipelineConfig;
   @Inject private KryoSerializer kryoSerializer;
@@ -422,6 +430,12 @@ public class StateMachineExecutor implements StateInspectionListener {
     startExecution(sm, stateExecutionInstance);
   }
 
+  void startExecutionRuntime(String appId, String executionUuid, String stateExecutionInstanceId, StateMachine sm) {
+    StateExecutionInstance stateExecutionInstance =
+        getStateExecutionInstance(appId, executionUuid, stateExecutionInstanceId);
+    startExecution(sm, stateExecutionInstance);
+  }
+
   /**
    * Start execution.
    *
@@ -470,6 +484,15 @@ public class StateMachineExecutor implements StateInspectionListener {
 
         if (resumeAll.isPresent()) {
           reason = resumeAll.get();
+        }
+
+        Optional<ExecutionInterrupt> continueFromUI =
+            executionInterrupts.stream()
+                .filter(ei -> ei != null && ei.getExecutionInterruptType() == CONTINUE_PIPELINE_STAGE)
+                .findFirst();
+
+        if (continueFromUI.isPresent()) {
+          reason = continueFromUI.get();
         }
       }
     }
@@ -524,48 +547,10 @@ public class StateMachineExecutor implements StateInspectionListener {
     ExecutionResponse executionResponse = null;
     WingsException ex = null;
     try {
-      StateMachine stateMachine = context.getStateMachine();
-      State currentState =
-          stateMachine.getState(stateExecutionInstance.getChildStateMachineId(), stateExecutionInstance.getStateName());
-      notNullCheck("currentState", currentState);
+      State currentState = getStateForExecution(context, stateExecutionInstance);
+      executionResponse = getExecutionResponseWithAdvise(context, executionResponse, currentState);
 
-      logger.info("startStateExecution for State {} of type {}", currentState.getName(), currentState.getStateType());
-
-      if (stateExecutionInstance.getStateParams() != null) {
-        MapperUtils.mapObject(stateExecutionInstance.getStateParams(), currentState);
-      }
-      injector.injectMembers(currentState);
-      ExecutionEventAdvice executionEventAdvice = invokeAdvisors(ExecutionEvent.builder()
-                                                                     .failureTypes(EnumSet.noneOf(FailureType.class))
-                                                                     .context(context)
-                                                                     .state(currentState)
-                                                                     .build());
-      if (executionEventAdvice != null && executionEventAdvice.isSkipState()) {
-        executionResponse = skipStateExecutionResponse(executionEventAdvice);
-      } else {
-        executionResponse = currentState.execute(context);
-      }
-
-      Map<String, Map<Object, Integer>> usage = context.getVariableResolverTracker().getUsage();
-      ManagerPreviewExpressionEvaluator expressionEvaluator = new ManagerPreviewExpressionEvaluator();
-
-      if (isNotEmpty(usage)) {
-        List<ExpressionVariableUsage.Item> items = new ArrayList<>();
-        usage.forEach(
-            (expression, values)
-                -> values.forEach(
-                    (expressionValue, count)
-                        -> items.add(ExpressionVariableUsage.Item.builder()
-                                         .expression(expression)
-                                         .value(expressionEvaluator.substitute(expressionValue.toString(), emptyMap()))
-                                         .count(count)
-                                         .build())));
-
-        stateInspectionService.append(
-            context.getStateExecutionInstance().getUuid(), ExpressionVariableUsage.builder().variables(items).build());
-      }
-
-      handleExecuteResponse(context, executionResponse);
+      handleResponse(context, executionResponse);
     } catch (WingsException exception) {
       ex = exception;
     } catch (Exception exception) {
@@ -575,6 +560,65 @@ public class StateMachineExecutor implements StateInspectionListener {
     if (ex != null) {
       handleExecuteResponseException(context, ex);
     }
+  }
+
+  private void handleResponse(ExecutionContextImpl context, ExecutionResponse executionResponse) {
+    Map<String, Map<Object, Integer>> usage = context.getVariableResolverTracker().getUsage();
+    ManagerPreviewExpressionEvaluator expressionEvaluator = new ManagerPreviewExpressionEvaluator();
+
+    if (isNotEmpty(usage)) {
+      List<ExpressionVariableUsage.Item> items = new ArrayList<>();
+      usage.forEach(
+          (expression, values)
+              -> values.forEach(
+                  (expressionValue, count)
+                      -> items.add(ExpressionVariableUsage.Item.builder()
+                                       .expression(expression)
+                                       .value(expressionEvaluator.substitute(expressionValue.toString(), emptyMap()))
+                                       .count(count)
+                                       .build())));
+
+      stateInspectionService.append(
+          context.getStateExecutionInstance().getUuid(), ExpressionVariableUsage.builder().variables(items).build());
+    }
+
+    handleExecuteResponse(context, executionResponse);
+  }
+
+  private ExecutionResponse getExecutionResponseWithAdvise(
+      ExecutionContextImpl context, ExecutionResponse executionResponse, State currentState) {
+    ExecutionEventAdvice executionEventAdvice = invokeAdvisors(ExecutionEvent.builder()
+                                                                   .failureTypes(EnumSet.noneOf(FailureType.class))
+                                                                   .context(context)
+                                                                   .state(currentState)
+                                                                   .build());
+    if (executionEventAdvice != null) {
+      if (executionEventAdvice.isSkipState()) {
+        executionResponse = skipStateExecutionResponse(executionEventAdvice);
+      } else if (executionEventAdvice.getExecutionInterruptType() == PAUSE_FOR_INPUTS) {
+        executionResponse = executionEventAdvice.getExecutionResponse();
+      } else if (executionEventAdvice.getExecutionResponse() != null) {
+        executionResponse = executionEventAdvice.getExecutionResponse();
+      }
+    } else {
+      executionResponse = currentState.execute(context);
+    }
+    return executionResponse;
+  }
+
+  public State getStateForExecution(ExecutionContextImpl context, StateExecutionInstance stateExecutionInstance) {
+    StateMachine stateMachine = context.getStateMachine();
+    State currentState =
+        stateMachine.getState(stateExecutionInstance.getChildStateMachineId(), stateExecutionInstance.getStateName());
+    notNullCheck("currentState", currentState);
+
+    logger.info("startStateExecution for State {} of type {}", currentState.getName(), currentState.getStateType());
+
+    if (stateExecutionInstance.getStateParams() != null) {
+      MapperUtils.mapObject(stateExecutionInstance.getStateParams(), currentState);
+    }
+    injector.injectMembers(currentState);
+    return currentState;
   }
 
   @VisibleForTesting
@@ -679,7 +723,7 @@ public class StateMachineExecutor implements StateInspectionListener {
                                                                      .context(context)
                                                                      .state(currentState)
                                                                      .build());
-      if (executionEventAdvice != null && !executionEventAdvice.isSkipState()) {
+      if (executionEventAdvice != null && !executionEventAdvice.isSkipState() && SKIPPED != status) {
         return handleExecutionEventAdvice(context, stateExecutionInstance, status, executionEventAdvice);
       } else if (isPositiveStatus(status)) {
         return successTransition(context);
@@ -735,7 +779,8 @@ public class StateMachineExecutor implements StateInspectionListener {
     // NOTE: Pre-requisites for calling this function:
     // - executionEventAdvice != null
     // - !executionEventAdvice.isSkipState()
-    if (executionEventAdvice == null || executionEventAdvice.isSkipState()) {
+    if (executionEventAdvice == null || executionEventAdvice.isSkipState()
+        || executionEventAdvice.getExecutionInterruptType() == null) {
       return stateExecutionInstance;
     }
 
@@ -770,6 +815,24 @@ public class StateMachineExecutor implements StateInspectionListener {
         // Open an alert
         openAnAlert(context, stateExecutionInstance);
         sendManualInterventionNeededNotification(context);
+        break;
+      }
+      case PAUSE_FOR_INPUTS: {
+        logger.info(
+            "Updating expiryTs to Timeout value so that state is paused until timeout. stateExecutionInstance id: {}, name: {}",
+            stateExecutionInstance.getUuid(), stateExecutionInstance.getDisplayName());
+        // update expiry and status to paused/waiting
+        updateStateExecutionInstanceForRuntimeInputs(stateExecutionInstance, status, executionEventAdvice);
+        NotifyCallback callback = new PipelineConitnueWithInputsCallback(stateExecutionInstance.getAppId(),
+            stateExecutionInstance.getExecutionUuid(), stateExecutionInstance.getUuid(),
+            stateExecutionInstance.getPipelineStageElementId());
+        waitNotifyEngine.waitForAllOn(ORCHESTRATION, callback,
+            getContinuePipelineWaitId(
+                stateExecutionInstance.getPipelineStageElementId(), stateExecutionInstance.getExecutionUuid()));
+
+        // Open an alert
+        openAnAlert(context, stateExecutionInstance);
+        sendRuntimeInputNeededNotification(context, executionEventAdvice.getUserGroupIdsToNotify());
         break;
       }
       case NEXT_STEP:
@@ -825,6 +888,37 @@ public class StateMachineExecutor implements StateInspectionListener {
     return stateExecutionInstance;
   }
 
+  public static String getContinuePipelineWaitId(String pipelineStageElementId, String pipelineExecutionId) {
+    return pipelineStageElementId + "_" + pipelineExecutionId;
+  }
+
+  private void updateStateExecutionInstanceForRuntimeInputs(StateExecutionInstance stateExecutionInstance,
+      ExecutionStatus status, ExecutionEventAdvice executionEventAdvice) {
+    UpdateOperations<StateExecutionInstance> ops =
+        wingsPersistence.createUpdateOperations(StateExecutionInstance.class);
+    stateExecutionInstance.setStatus(PAUSED);
+    stateExecutionInstance.setWaitingForInputs(true);
+    stateExecutionInstance.setActionOnTimeout(executionEventAdvice.getActionOnTimeout());
+    ops.set(StateExecutionInstanceKeys.status, PAUSED);
+    ops.set(StateExecutionInstanceKeys.waitingForInputs, true);
+    ops.set(StateExecutionInstanceKeys.actionOnTimeout, executionEventAdvice.getActionOnTimeout());
+    ops.set(StateExecutionInstanceKeys.expiryTs, System.currentTimeMillis() + executionEventAdvice.getTimeout());
+
+    Query<StateExecutionInstance> query =
+        wingsPersistence.createQuery(StateExecutionInstance.class)
+            .filter(StateExecutionInstanceKeys.appId, stateExecutionInstance.getAppId())
+            .filter(StateExecutionInstanceKeys.uuid, stateExecutionInstance.getUuid());
+    UpdateResults updateResult = wingsPersistence.update(query, ops);
+    if (updateResult == null || updateResult.getWriteResult() == null || updateResult.getWriteResult().getN() != 1) {
+      logger.error("StateExecutionInstance status could not be updated - "
+              + "stateExecutionInstance: {},  status: {}",
+          stateExecutionInstance.getUuid(), status);
+    }
+
+    statusUpdateSubject.fireInform(StateStatusUpdate::stateExecutionStatusUpdated,
+        StateStatusUpdateInfo.buildFromStateExecutionInstance(stateExecutionInstance, false));
+  }
+
   private boolean checkIfOnDemand(String appId, String executionUuid) {
     return workflowExecutionService.checkIfOnDemand(appId, executionUuid);
   }
@@ -861,6 +955,24 @@ public class StateMachineExecutor implements StateInspectionListener {
             .notificationTemplateVariables(placeholderValues)
             .build(),
         notificationRules);
+  }
+
+  protected void sendRuntimeInputNeededNotification(ExecutionContextImpl context, List<String> userGroupIds) {
+    Application app = context.getApp();
+    notNullCheck("app", app);
+    Pipeline pipeline = pipelineService.readPipeline(app.getAppId(), context.getWorkflowId(), false);
+    notNullCheck("Pipeline does not exist for given Id: " + context.getWorkflowId(), pipeline);
+
+    Map<String, String> placeholderValues = getManualInterventionPlaceholderValues(context);
+    NotificationRule rule = aNotificationRule().withUserGroupIds(userGroupIds).build();
+
+    notificationService.sendNotificationAsync(InformationNotification.builder()
+                                                  .appId(app.getName())
+                                                  .accountId(app.getAccountId())
+                                                  .notificationTemplateId(NEEDS_RUNTIME_INPUTS.name())
+                                                  .notificationTemplateVariables(placeholderValues)
+                                                  .build(),
+        Collections.singletonList(rule));
   }
 
   private void openAnAlert(ExecutionContextImpl context, StateExecutionInstance stateExecutionInstance) {
@@ -1228,6 +1340,7 @@ public class StateMachineExecutor implements StateInspectionListener {
    */
   private StateExecutionInstance clone(StateExecutionInstance stateExecutionInstance, State nextState) {
     StateExecutionInstance cloned = kryoSerializer.clone(stateExecutionInstance);
+    cloned.setContinued(false);
     cloned.setInterruptHistory(null);
     cloned.setStateExecutionDataHistory(null);
     cloned.setDedicatedInterruptCount(null);
@@ -1322,8 +1435,10 @@ public class StateMachineExecutor implements StateInspectionListener {
       return false;
     }
     statusUpdateSubject.fireInform(StateStatusUpdate::stateExecutionStatusUpdated,
-        StateStatusUpdateInfo.buildFromStateExecutionInstance(
-            stateExecutionInstance, reason != null && RESUME_ALL == reason.getExecutionInterruptType()));
+        StateStatusUpdateInfo.buildFromStateExecutionInstance(stateExecutionInstance,
+            reason != null
+                && (RESUME_ALL == reason.getExecutionInterruptType()
+                       || CONTINUE_PIPELINE_STAGE == reason.getExecutionInterruptType())));
 
     return true;
   }
@@ -1537,6 +1652,18 @@ public class StateMachineExecutor implements StateInspectionListener {
         case MARK_SUCCESS: {
           ExecutionContextImpl context = getExecutionContext(workflowExecutionInterrupt);
           executorService.execute(new SmExecutionResumer(context, this, SUCCESS));
+          break;
+        }
+
+        case CONTINUE_WITH_DEFAULTS: {
+          StateExecutionInstance stateExecutionInstance = getStateExecutionInstance(
+              workflowExecutionInterrupt.getAppId(), workflowExecutionInterrupt.getExecutionUuid(),
+              workflowExecutionInterrupt.getStateExecutionInstanceId());
+          ContinuePipelineResponseData responseData =
+              new ContinuePipelineResponseData(null, workflowExecutionInterrupt);
+          waitNotifyEngine.doneWith(getContinuePipelineWaitId(stateExecutionInstance.getPipelineStageElementId(),
+                                        stateExecutionInstance.getExecutionUuid()),
+              responseData);
           break;
         }
 

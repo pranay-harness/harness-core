@@ -76,6 +76,8 @@ public class Trigger extends Base implements NameAccess, TagAware, ApplicationAc
   @JsonIgnore @FdIndex private String webHookToken;
   private WorkflowType workflowType;
   private Map<String, String> workflowVariables;
+  // If any variable is Runtime and Default values is provided
+  private boolean continueWithDefaultValues;
   private List<ServiceInfraWorkflow> serviceInfraWorkflows;
   private boolean excludeHostsWithSameArtifact;
   private transient List<HarnessTagLink> tagLinks;

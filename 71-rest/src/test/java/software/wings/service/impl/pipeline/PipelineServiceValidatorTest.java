@@ -135,7 +135,7 @@ public class PipelineServiceValidatorTest extends WingsBaseTest {
       pipelineServiceValidator.validateRuntimeInputsConfig(pipelineStageElement, "ACCOUNT_ID", Collections.emptyList());
     })
         .isInstanceOf(InvalidRequestException.class)
-        .hasMessage("Timeout value should be greater than 1 secs");
+        .hasMessage("Timeout value should be greater than 1 minute");
 
     RuntimeInputsConfig runtimeInputsConfig3 =
         RuntimeInputsConfig.builder().runtimeInputVariables(asList("var1", "var2")).timeout(950L).build();
@@ -145,10 +145,10 @@ public class PipelineServiceValidatorTest extends WingsBaseTest {
       pipelineServiceValidator.validateRuntimeInputsConfig(pipelineStageElement, "ACCOUNT_ID", Collections.emptyList());
     })
         .isInstanceOf(InvalidRequestException.class)
-        .hasMessage("Timeout value should be greater than 1 secs");
+        .hasMessage("Timeout value should be greater than 1 minute");
 
     RuntimeInputsConfig runtimeInputsConfig4 =
-        RuntimeInputsConfig.builder().runtimeInputVariables(asList("var1", "var2")).timeout(2000L).build();
+        RuntimeInputsConfig.builder().runtimeInputVariables(asList("var1", "var2")).timeout(60001L).build();
     pipelineStageElement.setRuntimeInputsConfig(runtimeInputsConfig4);
 
     assertThatThrownBy(() -> {
@@ -159,7 +159,7 @@ public class PipelineServiceValidatorTest extends WingsBaseTest {
 
     RuntimeInputsConfig runtimeInputsConfig7 = RuntimeInputsConfig.builder()
                                                    .runtimeInputVariables(asList("var1", "var2"))
-                                                   .timeout(2000L)
+                                                   .timeout(60001L)
                                                    .timeoutAction(RepairActionCode.END_EXECUTION)
                                                    .build();
     pipelineStageElement.setRuntimeInputsConfig(runtimeInputsConfig7);
@@ -173,7 +173,7 @@ public class PipelineServiceValidatorTest extends WingsBaseTest {
     when(userGroupService.get(any(), any())).thenReturn(null);
     RuntimeInputsConfig runtimeInputsConfig5 = RuntimeInputsConfig.builder()
                                                    .runtimeInputVariables(asList("var1", "var2"))
-                                                   .timeout(2000L)
+                                                   .timeout(60001L)
                                                    .userGroupIds(asList("UG_ID"))
                                                    .timeoutAction(RepairActionCode.END_EXECUTION)
                                                    .build();
@@ -188,7 +188,7 @@ public class PipelineServiceValidatorTest extends WingsBaseTest {
     when(userGroupService.get(any(), any())).thenReturn(UserGroup.builder().build());
     RuntimeInputsConfig runtimeInputsConfig6 = RuntimeInputsConfig.builder()
                                                    .runtimeInputVariables(asList("var1", "var2"))
-                                                   .timeout(2000L)
+                                                   .timeout(60001L)
                                                    .userGroupIds(asList("UG_ID"))
                                                    .timeoutAction(RepairActionCode.END_EXECUTION)
                                                    .build();
@@ -205,7 +205,7 @@ public class PipelineServiceValidatorTest extends WingsBaseTest {
     PipelineStageElement pipelineStageElement = builder().workflowVariables(ImmutableMap.of("var1", "abc")).build();
     RuntimeInputsConfig runtimeInputsConfig = RuntimeInputsConfig.builder()
                                                   .runtimeInputVariables(asList("var1", "var2"))
-                                                  .timeout(2000L)
+                                                  .timeout(60001L)
                                                   .userGroupIds(asList("UG_ID"))
                                                   .timeoutAction(RepairActionCode.END_EXECUTION)
                                                   .build();
@@ -226,7 +226,7 @@ public class PipelineServiceValidatorTest extends WingsBaseTest {
     PipelineStageElement pipelineStageElement = builder().workflowVariables(ImmutableMap.of("var1", "abc")).build();
     RuntimeInputsConfig runtimeInputsConfig = RuntimeInputsConfig.builder()
                                                   .runtimeInputVariables(asList("var1", "var2"))
-                                                  .timeout(2000L)
+                                                  .timeout(60001L)
                                                   .userGroupIds(asList("UG_ID"))
                                                   .timeoutAction(RepairActionCode.END_EXECUTION)
                                                   .build();
@@ -258,7 +258,7 @@ public class PipelineServiceValidatorTest extends WingsBaseTest {
     PipelineStageElement pipelineStageElement = builder().workflowVariables(ImmutableMap.of("var1", "${abc}")).build();
     RuntimeInputsConfig runtimeInputsConfig = RuntimeInputsConfig.builder()
                                                   .runtimeInputVariables(asList("var1"))
-                                                  .timeout(2000L)
+                                                  .timeout(60001L)
                                                   .userGroupIds(asList("UG_ID"))
                                                   .timeoutAction(RepairActionCode.END_EXECUTION)
                                                   .build();

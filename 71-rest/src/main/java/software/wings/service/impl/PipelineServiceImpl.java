@@ -1545,7 +1545,7 @@ public class PipelineServiceImpl implements PipelineService {
 
   private void resolveEnvIds(List<String> envIds, Map<String, String> pseWorkflowVariables, Workflow workflow) {
     String envId = workflowService.resolveEnvironmentId(workflow, pseWorkflowVariables);
-    if (envId != null && !envIds.contains(envId)) {
+    if (envId != null && !envIds.contains(envId) && !matchesVariablePattern(envId)) {
       envIds.add(envId);
     }
   }
@@ -1934,7 +1934,7 @@ public class PipelineServiceImpl implements PipelineService {
             throw new InvalidArgumentsException("Pipeline step name can only have a-z, A-Z, 0-9, -, (, ) and _", USER);
           }
 
-          String accountId = pipeline.getAccountId();
+          String accountId = appService.getAccountIdByAppId(pipeline.getAppId());
           if (!ENV_STATE.name().equals(stageElement.getType())) {
             continue;
           }

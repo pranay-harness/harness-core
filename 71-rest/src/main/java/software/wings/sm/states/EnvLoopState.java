@@ -9,6 +9,7 @@ import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.ExecutionStatus;
 import io.harness.beans.ExecutionStatusResponseData;
+import io.harness.interrupts.RepairActionCode;
 import io.harness.tasks.ResponseData;
 import lombok.Getter;
 import lombok.Setter;
@@ -19,6 +20,7 @@ import software.wings.api.ForkElement;
 import software.wings.beans.LoopEnvStateParams;
 import software.wings.beans.LoopEnvStateParams.LoopEnvStateParamsBuilder;
 import software.wings.service.impl.workflow.WorkflowServiceImpl;
+import software.wings.service.intfc.FeatureFlagService;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionContextImpl;
 import software.wings.sm.ExecutionResponse;
@@ -38,7 +40,7 @@ import java.util.Map;
 @OwnedBy(CDC)
 @Slf4j
 @FieldNameConstants(innerTypeName = "EnvLoopStateKeys")
-public class EnvLoopState extends State {
+public class EnvLoopState extends State implements WorkflowState {
   @EnumData(enumDataProvider = WorkflowServiceImpl.class) @Getter @Setter private String workflowId;
 
   @Getter @Setter private String pipelineId;
@@ -48,12 +50,20 @@ public class EnvLoopState extends State {
   @Getter @Setter private String loopedVarName;
   @Getter @Setter private List<String> loopedValues;
 
-  @JsonIgnore private Map<String, String> workflowVariables;
+  @JsonIgnore @SchemaIgnore private Map<String, String> workflowVariables;
+
+  @Setter @SchemaIgnore List<String> runtimeInputVariables;
+  @Setter @SchemaIgnore long timeout;
+  @Setter @SchemaIgnore List<String> userGroupIds;
+  @Setter @SchemaIgnore RepairActionCode timeoutAction;
 
   @Getter @Setter @JsonIgnore private boolean disable;
 
   @Getter @Setter private String disableAssertion;
+  @Getter @Setter private boolean continued;
+
   @Transient @Inject private StateExecutionInstanceHelper instanceHelper;
+  @Transient @Inject private FeatureFlagService featureFlagService;
 
   public EnvLoopState(String name) {
     super(name, StateType.ENV_LOOP_STATE.name());
@@ -139,6 +149,26 @@ public class EnvLoopState extends State {
       properties.put(EnvLoopStateKeys.disableAssertion, "true");
     }
     super.parseProperties(properties);
+  }
+
+  public Map<String, String> getWorkflowVariables() {
+    return workflowVariables;
+  }
+
+  public List<String> getRuntimeInputVariables() {
+    return runtimeInputVariables;
+  }
+
+  public long getTimeout() {
+    return timeout;
+  }
+
+  public List<String> getUserGroupIds() {
+    return userGroupIds;
+  }
+
+  public RepairActionCode getTimeoutAction() {
+    return timeoutAction;
   }
 
   @SchemaIgnore

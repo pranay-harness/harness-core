@@ -32,6 +32,7 @@ import static io.harness.govern.Switch.noop;
 import static io.harness.govern.Switch.unhandled;
 import static io.harness.interrupts.ExecutionInterruptType.ABORT;
 import static io.harness.interrupts.ExecutionInterruptType.ABORT_ALL;
+import static io.harness.interrupts.ExecutionInterruptType.CONTINUE_PIPELINE_STAGE;
 import static io.harness.interrupts.ExecutionInterruptType.IGNORE;
 import static io.harness.interrupts.ExecutionInterruptType.MARK_EXPIRED;
 import static io.harness.interrupts.ExecutionInterruptType.PAUSE;
@@ -187,6 +188,7 @@ public class ExecutionInterruptManager {
         sendNotification(executionInterrupt, PAUSED);
         break;
       case RESUME_ALL:
+      case CONTINUE_WITH_DEFAULTS:
         sendNotification(executionInterrupt, RESUMED);
         break;
       case ABORT_ALL:
@@ -230,6 +232,7 @@ public class ExecutionInterruptManager {
         case ABORT:
         case MARK_EXPIRED:
         case RESUME_ALL:
+        case CONTINUE_WITH_DEFAULTS:
         case MARK_SUCCESS:
         case MARK_FAILED:
         case END_EXECUTION:
@@ -288,7 +291,7 @@ public class ExecutionInterruptManager {
     }
   }
 
-  private void seize(ExecutionInterrupt executionInterrupt) {
+  public void seize(ExecutionInterrupt executionInterrupt) {
     UpdateOperations<ExecutionInterrupt> updateOps =
         wingsPersistence.createUpdateOperations(ExecutionInterrupt.class).set("seized", true);
     wingsPersistence.update(executionInterrupt, updateOps);
@@ -351,14 +354,14 @@ public class ExecutionInterruptManager {
    * @return the workflow execution event
    */
   public List<ExecutionInterrupt> checkForExecutionInterrupt(String appId, String executionUuid) {
-    PageRequest<ExecutionInterrupt> req =
-        aPageRequest()
-            .addFilter("appId", EQ, appId)
-            .addFilter("executionUuid", EQ, executionUuid)
-            .addFilter("executionInterruptType", IN, ABORT_ALL, PAUSE_ALL, RESUME_ALL, ROLLBACK)
-            .addFilter("seized", EQ, false)
-            .addOrder(ExecutionInterrupt.CREATED_AT_KEY, OrderType.DESC)
-            .build();
+    PageRequest<ExecutionInterrupt> req = aPageRequest()
+                                              .addFilter("appId", EQ, appId)
+                                              .addFilter("executionUuid", EQ, executionUuid)
+                                              .addFilter("executionInterruptType", IN, ABORT_ALL, PAUSE_ALL, RESUME_ALL,
+                                                  ROLLBACK, CONTINUE_PIPELINE_STAGE)
+                                              .addFilter("seized", EQ, false)
+                                              .addOrder(ExecutionInterrupt.CREATED_AT_KEY, OrderType.DESC)
+                                              .build();
     PageResponse<ExecutionInterrupt> res = wingsPersistence.query(ExecutionInterrupt.class, req);
     if (res == null) {
       return null;

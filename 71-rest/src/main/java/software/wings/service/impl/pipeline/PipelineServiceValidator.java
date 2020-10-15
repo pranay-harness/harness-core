@@ -45,8 +45,8 @@ public class PipelineServiceValidator {
     }
 
     if (isNotEmpty(runtimeInputsConfig.getRuntimeInputVariables())) {
-      if (runtimeInputsConfig.getTimeout() < 1000) {
-        throw new InvalidRequestException("Timeout value should be greater than 1 secs", USER);
+      if (runtimeInputsConfig.getTimeout() < 60000) {
+        throw new InvalidRequestException("Timeout value should be greater than 1 minute", USER);
       }
       nullCheckForInvalidRequest(runtimeInputsConfig.getTimeoutAction(), "Timeout Action cannot be null", USER);
       if (!isPipelineRuntimeTimeoutAction(runtimeInputsConfig.getTimeoutAction())) {

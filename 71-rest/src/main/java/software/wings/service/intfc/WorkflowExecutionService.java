@@ -117,7 +117,10 @@ public interface WorkflowExecutionService extends StateStatusUpdate {
   RequiredExecutionArgs getRequiredExecutionArgs(String appId, String envId, ExecutionArgs executionArgs);
 
   WorkflowVariablesMetadata fetchWorkflowVariables(
-      String appId, ExecutionArgs executionArgs, String workflowExecutionId);
+      String appId, ExecutionArgs executionArgs, String workflowExecutionId, String pipelineStageElementId);
+
+  DeploymentMetadata fetchDeploymentMetadataRunningPipeline(String appId, ExecutionArgs executionArgs,
+      boolean withDefaultArtifact, String workflowExecutionId, String pipelineStageElementId);
 
   DeploymentMetadata fetchDeploymentMetadata(String appId, ExecutionArgs executionArgs, boolean withDefaultArtifact,
       String workflowExecutionId, boolean withLastDeployedInfo);
@@ -270,4 +273,10 @@ public interface WorkflowExecutionService extends StateStatusUpdate {
   List<String> runningExecutionsForEnvironment(String appId, String environmentId);
 
   List<WorkflowExecution> getRunningExecutionsForInfraDef(@NotEmpty String appId, @NotEmpty String infraDefinitionId);
+
+  boolean continuePipelineStage(
+      String appId, String pipelineExecutionId, String pipelineStageElementId, ExecutionArgs executionArgs);
+
+  StateExecutionInstance getStateExecutionInstancePipelineStage(
+      String appId, String pipelineExecutionId, String pipelineStageElementId);
 }

@@ -13,13 +13,15 @@ import java.util.Map;
 @OwnedBy(CDC)
 public class SkipStateExecutionData extends StateExecutionData {
   private String skipAssertionExpression;
+  private String workflowId;
 
   @Builder
   public SkipStateExecutionData(String stateName, String stateType, Long startTs, Long endTs, ExecutionStatus status,
       String errorMsg, Integer waitInterval, ContextElement element, Map<String, Object> stateParams,
-      Map<String, Object> templateVariable, String skipAssertionExpression) {
+      Map<String, Object> templateVariable, String skipAssertionExpression, String workflowId) {
     super(stateName, stateType, startTs, endTs, status, errorMsg, waitInterval, element, stateParams, templateVariable);
     this.skipAssertionExpression = skipAssertionExpression;
+    this.workflowId = workflowId;
   }
 
   public String getSkipAssertionExpression() {
@@ -28,6 +30,14 @@ public class SkipStateExecutionData extends StateExecutionData {
 
   public void setSkipAssertionExpression(String skipAssertionExpression) {
     this.skipAssertionExpression = skipAssertionExpression;
+  }
+
+  public String getWorkflowId() {
+    return workflowId;
+  }
+
+  public void setWorkflowId(String workflowId) {
+    this.workflowId = workflowId;
   }
 
   @Override

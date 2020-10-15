@@ -4,13 +4,19 @@ import static io.harness.annotations.dev.HarnessTeam.CDC;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.interrupts.ExecutionInterruptType;
+import io.harness.interrupts.RepairActionCode;
+import lombok.Getter;
+import lombok.Setter;
 
+import java.util.List;
 import java.util.Map;
 
 /**
  * Created by rishi on 1/26/17.
  */
 @OwnedBy(CDC)
+@Getter
+@Setter
 public class ExecutionEventAdvice {
   private ExecutionInterruptType executionInterruptType;
   private String nextStateName;
@@ -22,86 +28,10 @@ public class ExecutionEventAdvice {
   private boolean skipState;
   private String skipExpression;
   private String skipError;
-
-  public ExecutionInterruptType getExecutionInterruptType() {
-    return executionInterruptType;
-  }
-
-  public void setExecutionInterruptType(ExecutionInterruptType executionInterruptType) {
-    this.executionInterruptType = executionInterruptType;
-  }
-
-  public String getNextStateName() {
-    return nextStateName;
-  }
-
-  public void setNextStateName(String nextStateName) {
-    this.nextStateName = nextStateName;
-  }
-
-  public String getNextChildStateMachineId() {
-    return nextChildStateMachineId;
-  }
-
-  public void setNextChildStateMachineId(String nextChildStateMachineId) {
-    this.nextChildStateMachineId = nextChildStateMachineId;
-  }
-
-  public String getNextStateDisplayName() {
-    return nextStateDisplayName;
-  }
-
-  public void setNextStateDisplayName(String nextStateDisplayName) {
-    this.nextStateDisplayName = nextStateDisplayName;
-  }
-
-  public Integer getWaitInterval() {
-    return waitInterval;
-  }
-
-  public void setWaitInterval(Integer waitInterval) {
-    this.waitInterval = waitInterval;
-  }
-
-  public Map<String, Object> getStateParams() {
-    return stateParams;
-  }
-
-  public void setStateParams(Map<String, Object> stateParams) {
-    this.stateParams = stateParams;
-  }
-
-  public String getRollbackPhaseName() {
-    return rollbackPhaseName;
-  }
-
-  public void setRollbackPhaseName(String rollbackPhaseName) {
-    this.rollbackPhaseName = rollbackPhaseName;
-  }
-
-  public boolean isSkipState() {
-    return skipState;
-  }
-
-  public void setSkipState(boolean skipState) {
-    this.skipState = skipState;
-  }
-
-  public String getSkipExpression() {
-    return skipExpression;
-  }
-
-  public void setSkipExpression(String skipExpression) {
-    this.skipExpression = skipExpression;
-  }
-
-  public String getSkipError() {
-    return skipError;
-  }
-
-  public void setSkipError(String skipError) {
-    this.skipError = skipError;
-  }
+  private RepairActionCode actionOnTimeout;
+  private Long timeout;
+  private List<String> userGroupIdsToNotify;
+  private ExecutionResponse executionResponse;
 
   public static final class ExecutionEventAdviceBuilder {
     private ExecutionInterruptType executionInterruptType;
@@ -114,6 +44,10 @@ public class ExecutionEventAdvice {
     private boolean skipState;
     private String skipExpression;
     private String skipError;
+    private Long timeout;
+    private RepairActionCode actionOnTimeout;
+    private List<String> userGroupIdsToNotify;
+    private ExecutionResponse executionResponse;
 
     private ExecutionEventAdviceBuilder() {}
 
@@ -171,6 +105,26 @@ public class ExecutionEventAdvice {
       return this;
     }
 
+    public ExecutionEventAdviceBuilder withActionOnTimeout(RepairActionCode actionOnTimeout) {
+      this.actionOnTimeout = actionOnTimeout;
+      return this;
+    }
+
+    public ExecutionEventAdviceBuilder withTimeout(Long timeout) {
+      this.timeout = timeout;
+      return this;
+    }
+
+    public ExecutionEventAdviceBuilder withUserGroupIdsToNotify(List<String> userGroupIdsToNotify) {
+      this.userGroupIdsToNotify = userGroupIdsToNotify;
+      return this;
+    }
+
+    public ExecutionEventAdviceBuilder withExecutionResponse(ExecutionResponse executionResponse) {
+      this.executionResponse = executionResponse;
+      return this;
+    }
+
     public ExecutionEventAdvice build() {
       ExecutionEventAdvice executionEventAdvice = new ExecutionEventAdvice();
       executionEventAdvice.setExecutionInterruptType(executionInterruptType);
@@ -183,6 +137,10 @@ public class ExecutionEventAdvice {
       executionEventAdvice.setSkipState(skipState);
       executionEventAdvice.setSkipExpression(skipExpression);
       executionEventAdvice.setSkipError(skipError);
+      executionEventAdvice.setActionOnTimeout(actionOnTimeout);
+      executionEventAdvice.setTimeout(timeout);
+      executionEventAdvice.setExecutionResponse(executionResponse);
+      executionEventAdvice.setUserGroupIdsToNotify(userGroupIdsToNotify);
       return executionEventAdvice;
     }
   }

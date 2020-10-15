@@ -11,4 +11,8 @@ public class StateMachineIssueException extends WingsException {
     super(null, null, errorCode, Level.ERROR, null, null);
     super.param(DETAILS_KEY, details);
   }
+
+  public StateMachineIssueException(Exception e) {
+    super(null, e, null, Level.ERROR, null, null);
+  }
 }

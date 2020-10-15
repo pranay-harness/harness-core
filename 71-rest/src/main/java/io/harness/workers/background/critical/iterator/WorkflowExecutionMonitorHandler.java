@@ -6,6 +6,7 @@ import static io.harness.beans.ExecutionStatus.PREPARING;
 import static io.harness.beans.ExecutionStatus.flowingStatuses;
 import static io.harness.exception.WingsException.ExecutionContext.MANAGER;
 import static io.harness.interrupts.ExecutionInterruptType.MARK_EXPIRED;
+import static io.harness.interrupts.RepairActionCode.CONTINUE_WITH_DEFAULTS;
 import static software.wings.sm.ExecutionInterrupt.ExecutionInterruptBuilder.anExecutionInterrupt;
 
 import com.google.inject.Inject;
@@ -13,6 +14,7 @@ import com.google.inject.Singleton;
 
 import io.harness.beans.ExecutionStatus;
 import io.harness.exception.WingsException;
+import io.harness.interrupts.ExecutionInterruptType;
 import io.harness.iterator.PersistenceIteratorFactory;
 import io.harness.iterator.PersistenceIteratorFactory.PumpExecutorOptions;
 import io.harness.logging.AutoLogContext;
@@ -105,12 +107,23 @@ public class WorkflowExecutionMonitorHandler implements Handler<WorkflowExecutio
           }
 
           logger.info("Expired StateExecutionInstance found: {}", stateExecutionInstance.getUuid());
-          ExecutionInterrupt executionInterrupt = anExecutionInterrupt()
-                                                      .executionInterruptType(MARK_EXPIRED)
-                                                      .appId(stateExecutionInstance.getAppId())
-                                                      .executionUuid(stateExecutionInstance.getExecutionUuid())
-                                                      .stateExecutionInstanceId(stateExecutionInstance.getUuid())
-                                                      .build();
+          ExecutionInterrupt executionInterrupt;
+          if (stateExecutionInstance.isWaitingForInputs()
+              && CONTINUE_WITH_DEFAULTS == stateExecutionInstance.getActionOnTimeout()) {
+            executionInterrupt = anExecutionInterrupt()
+                                     .executionInterruptType(ExecutionInterruptType.CONTINUE_WITH_DEFAULTS)
+                                     .appId(stateExecutionInstance.getAppId())
+                                     .executionUuid(stateExecutionInstance.getExecutionUuid())
+                                     .stateExecutionInstanceId(stateExecutionInstance.getUuid())
+                                     .build();
+          } else {
+            executionInterrupt = anExecutionInterrupt()
+                                     .executionInterruptType(MARK_EXPIRED)
+                                     .appId(stateExecutionInstance.getAppId())
+                                     .executionUuid(stateExecutionInstance.getExecutionUuid())
+                                     .stateExecutionInstanceId(stateExecutionInstance.getUuid())
+                                     .build();
+          }
 
           executionInterruptManager.registerExecutionInterrupt(executionInterrupt);
         }

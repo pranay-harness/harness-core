@@ -282,6 +282,13 @@ public class StateMachine implements PersistentEntity, UuidAware, CreatedAtAware
     if (pipelineStageElement.getWorkflowVariables() != null) {
       properties.put(EnvStateKeys.workflowVariables, pipelineStageElement.getWorkflowVariables());
     }
+    if (pipelineStageElement.getRuntimeInputsConfig() != null) {
+      properties.put(
+          EnvStateKeys.runtimeInputVariables, pipelineStageElement.getRuntimeInputsConfig().getRuntimeInputVariables());
+      properties.put(EnvStateKeys.timeout, pipelineStageElement.getRuntimeInputsConfig().getTimeout());
+      properties.put(EnvStateKeys.timeoutAction, pipelineStageElement.getRuntimeInputsConfig().getTimeoutAction());
+      properties.put(EnvStateKeys.userGroupIds, pipelineStageElement.getRuntimeInputsConfig().getUserGroupIds());
+    }
     state.parseProperties(properties);
     state.resolveProperties();
     addState(state);
