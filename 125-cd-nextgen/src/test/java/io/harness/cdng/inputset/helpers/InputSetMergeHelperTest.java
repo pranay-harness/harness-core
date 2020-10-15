@@ -13,6 +13,7 @@ import io.harness.cdng.inputset.beans.entities.MergeInputSetResponse;
 import io.harness.cdng.inputset.beans.yaml.InputSetConfig;
 import io.harness.cdng.inputset.mappers.InputSetElementMapper;
 import io.harness.cdng.inputset.services.InputSetEntityService;
+import io.harness.cdng.pipeline.mappers.PipelineDtoMapper;
 import io.harness.cdng.pipeline.service.NGPipelineService;
 import io.harness.ngpipeline.overlayinputset.beans.entities.OverlayInputSetEntity;
 import io.harness.rule.Owner;
@@ -172,7 +173,7 @@ public class InputSetMergeHelperTest extends CDNGBaseTest {
     String pipelineYaml =
         Resources.toString(Objects.requireNonNull(classLoader.getResource(pipelineFilename)), StandardCharsets.UTF_8);
 
-    ngPipelineService.createPipeline(pipelineYaml, ACCOUNT_ID, ORG_ID, PROJECT_ID);
+    ngPipelineService.create(PipelineDtoMapper.toPipelineEntity(ACCOUNT_ID, ORG_ID, PROJECT_ID, pipelineYaml));
   }
 
   private void addInputSetToDB(String inputSetFileName) throws IOException {

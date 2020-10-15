@@ -20,9 +20,9 @@ import io.harness.cdng.inputset.beans.resource.MergeInputSetResponseDTO;
 import io.harness.cdng.inputset.helpers.InputSetEntityValidationHelper;
 import io.harness.cdng.inputset.helpers.InputSetMergeHelper;
 import io.harness.cdng.inputset.mappers.InputSetFilterHelper;
-import io.harness.cdng.inputset.services.impl.InputSetEntityServiceImpl;
+import io.harness.cdng.inputset.services.InputSetEntityService;
 import io.harness.cdng.pipeline.NgPipeline;
-import io.harness.cdng.pipeline.beans.dto.NGPipelineResponseDTO;
+import io.harness.cdng.pipeline.beans.entities.NgPipelineEntity;
 import io.harness.cdng.pipeline.service.NGPipelineService;
 import io.harness.ngpipeline.overlayinputset.beans.BaseInputSetEntity;
 import io.harness.ngpipeline.overlayinputset.beans.BaseInputSetEntity.BaseInputSetEntityKeys;
@@ -54,7 +54,7 @@ import java.util.Objects;
 import java.util.Optional;
 
 public class InputSetResourceTest extends CategoryTest {
-  @Mock InputSetEntityServiceImpl inputSetEntityService;
+  @Mock InputSetEntityService inputSetEntityService;
   @Mock NGPipelineService ngPipelineService;
   @Mock InputSetMergeHelper inputSetMergeHelper;
   @Mock InputSetEntityValidationHelper inputSetEntityValidationHelper;
@@ -67,7 +67,7 @@ public class InputSetResourceTest extends CategoryTest {
   InputSetEntity inputSetEntity;
   OverlayInputSetEntity overlayInputSetEntity;
 
-  NGPipelineResponseDTO ngPipelineResponseDTO;
+  NgPipelineEntity ngPipelineEntity;
 
   MergeInputSetResponse mergeInputSetResponse;
 
@@ -132,7 +132,7 @@ public class InputSetResourceTest extends CategoryTest {
     overlayInputSetEntity = OverlayInputSetEntity.builder().build();
     setBaseEntityFields(overlayInputSetEntity, InputSetEntityType.OVERLAY_INPUT_SET, overlayInputSetYaml);
 
-    ngPipelineResponseDTO = NGPipelineResponseDTO.builder().yamlPipeline(pipelineYaml).build();
+    ngPipelineEntity = NgPipelineEntity.builder().yamlPipeline(pipelineYaml).build();
 
     mergeInputSetResponse = MergeInputSetResponse.builder().isErrorResponse(false).build();
   }
@@ -279,9 +279,9 @@ public class InputSetResourceTest extends CategoryTest {
   @Owner(developers = NAMAN)
   @Category(UnitTests.class)
   public void testGetTemplateFromPipeline() {
-    doReturn(Optional.of(ngPipelineResponseDTO))
+    doReturn(Optional.of(ngPipelineEntity))
         .when(ngPipelineService)
-        .getPipelineResponseDTO(any(), any(), any(), any());
+        .get(ACCOUNT_ID, ORG_IDENTIFIER, PROJ_IDENTIFIER, PIPELINE_IDENTIFIER, false);
     doReturn("").when(inputSetMergeHelper).getTemplateFromPipeline(pipelineYaml);
 
     String responseTemplateYaml =

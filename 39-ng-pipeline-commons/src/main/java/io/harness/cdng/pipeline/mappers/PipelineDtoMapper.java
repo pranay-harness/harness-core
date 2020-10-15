@@ -4,17 +4,36 @@ import io.harness.cdng.pipeline.NgPipeline;
 import io.harness.cdng.pipeline.beans.dto.NGPipelineResponseDTO;
 import io.harness.cdng.pipeline.beans.dto.NGPipelineSummaryResponseDTO;
 import io.harness.cdng.pipeline.beans.entities.NgPipelineEntity;
+import io.harness.exception.InvalidRequestException;
 import io.harness.yaml.core.ParallelStageElement;
 import io.harness.yaml.core.StageElement;
 import io.harness.yaml.core.auxiliary.intfc.StageElementWrapper;
+import io.harness.yaml.utils.YamlPipelineUtils;
 import lombok.experimental.UtilityClass;
 
+import java.io.IOException;
 import java.security.SecureRandom;
 import java.util.ArrayList;
 import java.util.List;
 
 @UtilityClass
 public class PipelineDtoMapper {
+  public NgPipelineEntity toPipelineEntity(String accountId, String orgId, String projectId, String yaml) {
+    try {
+      NgPipeline ngPipeline = YamlPipelineUtils.read(yaml, NgPipeline.class);
+      return NgPipelineEntity.builder()
+          .ngPipeline(ngPipeline)
+          .yamlPipeline(yaml)
+          .accountId(accountId)
+          .orgIdentifier(orgId)
+          .projectIdentifier(projectId)
+          .identifier(ngPipeline.getIdentifier())
+          .build();
+    } catch (IOException e) {
+      throw new InvalidRequestException("Cannot create inputSet entity due to " + e.getMessage());
+    }
+  }
+
   public NgPipelineEntity toPipelineEntity(
       String accountId, String orgId, String projectId, String yaml, NgPipeline ngPipeline) {
     return NgPipelineEntity.builder()
@@ -34,6 +53,7 @@ public class PipelineDtoMapper {
         .executionsPlaceHolder(new ArrayList<>())
         .build();
   }
+
   public NGPipelineSummaryResponseDTO preparePipelineSummary(NgPipelineEntity ngPipelineEntity) {
     return NGPipelineSummaryResponseDTO.builder()
         .identifier(ngPipelineEntity.getIdentifier())

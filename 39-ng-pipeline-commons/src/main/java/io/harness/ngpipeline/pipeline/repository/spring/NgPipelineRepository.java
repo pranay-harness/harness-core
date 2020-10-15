@@ -1,16 +1,15 @@
-package io.harness.ngpipeline.pipeline.repository;
+package io.harness.ngpipeline.pipeline.repository.spring;
 
 import io.harness.annotation.HarnessRepo;
 import io.harness.cdng.pipeline.beans.entities.NgPipelineEntity;
+import io.harness.ngpipeline.pipeline.repository.custom.NgPipelineRepositoryCustom;
 import org.springframework.data.repository.PagingAndSortingRepository;
-import org.springframework.data.repository.Repository;
 
 import java.util.Optional;
 
 @HarnessRepo
-public interface PipelineRepository extends PagingAndSortingRepository<NgPipelineEntity, String>,
-                                            Repository<NgPipelineEntity, String>, CustomPipelineRepository {
-  <S extends NgPipelineEntity> S save(S pipelineEntity);
+public interface NgPipelineRepository
+    extends PagingAndSortingRepository<NgPipelineEntity, String>, NgPipelineRepositoryCustom {
   Optional<NgPipelineEntity> findByAccountIdAndOrgIdentifierAndProjectIdentifierAndIdentifierAndDeletedNot(
       String accountId, String orgIdentifier, String projectIdentifier, String identifier, boolean notDeleted);
 }

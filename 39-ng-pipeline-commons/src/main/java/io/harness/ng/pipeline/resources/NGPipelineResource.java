@@ -1,44 +1,36 @@
 package io.harness.ng.pipeline.resources;
 
-import static io.harness.utils.PageUtils.getPageRequest;
-
 import com.google.inject.Inject;
-
 import io.harness.NGCommonEntityConstants;
 import io.harness.NGResourceFilterConstants;
 import io.harness.cdng.pipeline.NgPipeline;
 import io.harness.cdng.pipeline.beans.dto.NGPipelineResponseDTO;
 import io.harness.cdng.pipeline.beans.dto.NGPipelineSummaryResponseDTO;
+import io.harness.cdng.pipeline.beans.entities.NgPipelineEntity;
+import io.harness.cdng.pipeline.beans.entities.NgPipelineEntity.PipelineNGKeys;
+import io.harness.cdng.pipeline.mappers.PipelineDtoMapper;
 import io.harness.cdng.pipeline.service.NGPipelineService;
+import io.harness.data.structure.EmptyPredicate;
 import io.harness.ng.core.RestQueryFilterParser;
 import io.harness.ng.core.dto.ErrorDTO;
 import io.harness.ng.core.dto.FailureDTO;
 import io.harness.ng.core.dto.ResponseDTO;
-import io.swagger.annotations.Api;
-import io.swagger.annotations.ApiImplicitParam;
-import io.swagger.annotations.ApiImplicitParams;
-import io.swagger.annotations.ApiOperation;
-import io.swagger.annotations.ApiParam;
-import io.swagger.annotations.ApiResponse;
-import io.swagger.annotations.ApiResponses;
+import io.harness.ngpipeline.pipeline.mappers.NgPipelineFilterHelper;
+import io.harness.utils.PageUtils;
+import io.swagger.annotations.*;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.data.mongodb.core.query.Criteria;
 
-import java.util.List;
 import javax.validation.constraints.NotNull;
-import javax.ws.rs.Consumes;
-import javax.ws.rs.DELETE;
-import javax.ws.rs.DefaultValue;
-import javax.ws.rs.GET;
-import javax.ws.rs.POST;
-import javax.ws.rs.PUT;
-import javax.ws.rs.Path;
-import javax.ws.rs.PathParam;
-import javax.ws.rs.Produces;
-import javax.ws.rs.QueryParam;
+import javax.ws.rs.*;
+import java.util.List;
+import java.util.Optional;
 
 @Api("pipelines")
 @Path("pipelines")
@@ -64,8 +56,8 @@ public class NGPipelineResource {
       @NotNull @QueryParam(NGCommonEntityConstants.PROJECT_KEY) String projectId,
       @PathParam(NGCommonEntityConstants.PIPELINE_KEY) String pipelineId) {
     logger.info("Get pipeline");
-    return ResponseDTO.newResponse(
-        ngPipelineService.getPipelineResponseDTO(pipelineId, accountId, orgId, projectId).orElse(null));
+    Optional<NgPipelineEntity> ngPipelineEntity = ngPipelineService.get(accountId, orgId, projectId, pipelineId, false);
+    return ResponseDTO.newResponse(ngPipelineEntity.map(PipelineDtoMapper::writePipelineDto).orElse(null));
   }
 
   @GET
@@ -79,8 +71,18 @@ public class NGPipelineResource {
       @QueryParam(NGResourceFilterConstants.SEARCH_TERM_KEY) String searchTerm) {
     logger.info("Get List of pipelines");
     Criteria criteria = restQueryFilterParser.getCriteriaFromFilterQuery(filterQuery, NgPipeline.class);
-    Page<NGPipelineSummaryResponseDTO> pipelines = ngPipelineService.getPipelinesSummary(
-        accountId, orgId, projectId, criteria, getPageRequest(page, size, sort), searchTerm);
+    criteria.andOperator(
+        NgPipelineFilterHelper.createCriteriaForGetList(accountId, orgId, projectId, searchTerm, false));
+    Pageable pageRequest;
+    if (EmptyPredicate.isEmpty(sort)) {
+      pageRequest = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, PipelineNGKeys.createdAt));
+    } else {
+      pageRequest = PageUtils.getPageRequest(page, size, sort);
+    }
+
+    Page<NGPipelineSummaryResponseDTO> pipelines =
+        ngPipelineService.list(criteria, pageRequest).map(PipelineDtoMapper::preparePipelineSummary);
+
     return ResponseDTO.newResponse(pipelines);
   }
 
@@ -96,7 +98,10 @@ public class NGPipelineResource {
       @NotNull @QueryParam(NGCommonEntityConstants.PROJECT_KEY) String projectId,
       @NotNull @ApiParam(hidden = true, type = "") String yaml) {
     logger.info("Creating pipeline");
-    return ResponseDTO.newResponse(ngPipelineService.createPipeline(yaml, accountId, orgId, projectId));
+    NgPipelineEntity ngPipelineEntity = PipelineDtoMapper.toPipelineEntity(accountId, orgId, projectId, yaml);
+    NgPipelineEntity createdEntity = ngPipelineService.create(ngPipelineEntity);
+
+    return ResponseDTO.newResponse(createdEntity.getIdentifier());
   }
 
   @PUT
@@ -113,7 +118,10 @@ public class NGPipelineResource {
       @PathParam(NGCommonEntityConstants.PIPELINE_KEY) String pipelineId,
       @NotNull @ApiParam(hidden = true, type = "") String yaml) {
     logger.info("Updating pipeline");
-    return ResponseDTO.newResponse(ngPipelineService.updatePipeline(yaml, accountId, orgId, projectId, pipelineId));
+    NgPipelineEntity ngPipelineEntity = PipelineDtoMapper.toPipelineEntity(accountId, orgId, projectId, yaml);
+    NgPipelineEntity createdEntity = ngPipelineService.update(ngPipelineEntity);
+
+    return ResponseDTO.newResponse(createdEntity.getIdentifier());
   }
 
   @DELETE
@@ -123,6 +131,6 @@ public class NGPipelineResource {
       @NotNull @QueryParam(NGCommonEntityConstants.ORG_KEY) String orgId,
       @NotNull @QueryParam(NGCommonEntityConstants.PROJECT_KEY) String projectId,
       @PathParam(NGCommonEntityConstants.PIPELINE_KEY) String pipelineId) {
-    return ResponseDTO.newResponse(ngPipelineService.deletePipeline(accountId, orgId, projectId, pipelineId));
+    return ResponseDTO.newResponse(ngPipelineService.delete(accountId, orgId, projectId, pipelineId));
   }
 }
