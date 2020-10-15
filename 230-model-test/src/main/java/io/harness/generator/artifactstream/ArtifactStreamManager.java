@@ -54,7 +54,7 @@ public class ArtifactStreamManager {
 
   public ArtifactStream ensurePredefined(Seed seed, Owners owners, ArtifactStreams predefined, boolean atConnector) {
     ArtifactStreamsGenerator streamsGenerator = streamGeneratorFactory.getArtifactStreamGenerator(predefined);
-    return streamsGenerator.ensureArtifactStream(seed, owners, atConnector);
+    return streamsGenerator.ensureArtifactStream(seed, owners);
   }
 
   public ArtifactStream ensurePredefined(

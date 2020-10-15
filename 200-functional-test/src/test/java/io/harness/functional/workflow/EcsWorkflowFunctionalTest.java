@@ -2,7 +2,7 @@ package io.harness.functional.workflow;
 
 import static io.harness.beans.WorkflowType.ORCHESTRATION;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
-import static io.harness.generator.SettingGenerator.Settings.AWS_TEST_CLOUD_PROVIDER;
+import static io.harness.generator.SettingGenerator.Settings.AWS_DEPLOYMENT_FUNCTIONAL_TESTS_CLOUD_PROVIDER;
 import static io.harness.rule.OwnerRule.ADWAIT;
 import static org.assertj.core.api.Assertions.assertThat;
 import static software.wings.beans.BuildWorkflow.BuildOrchestrationWorkflowBuilder.aBuildOrchestrationWorkflow;
@@ -23,6 +23,7 @@ import com.google.inject.Inject;
 
 import io.harness.beans.ExecutionStatus;
 import io.harness.beans.WorkflowType;
+import io.harness.category.element.CDFunctionalTests;
 import io.harness.category.element.FunctionalTests;
 import io.harness.functional.AbstractFunctionalTest;
 import io.harness.functional.WorkflowUtils;
@@ -120,11 +121,12 @@ public class EcsWorkflowFunctionalTest extends AbstractFunctionalTest {
     environment = environmentGenerator.ensurePredefined(seed, owners, Environments.GENERIC_TEST);
     assertThat(environment).isNotNull();
 
-    infrastructureDefinition =
-        infrastructureDefinitionGenerator.ensurePredefined(seed, owners, InfrastructureDefinitions.ECS_EC2_TEST);
+    infrastructureDefinition = infrastructureDefinitionGenerator.ensurePredefined(
+        seed, owners, InfrastructureDefinitions.ECS_DEPLOYMENT_FUNCTIONAL_TEST);
     assertThat(infrastructureDefinition).isNotNull();
 
-    awsSettingAttribute = settingGenerator.ensurePredefined(seed, owners, AWS_TEST_CLOUD_PROVIDER);
+    awsSettingAttribute =
+        settingGenerator.ensurePredefined(seed, owners, AWS_DEPLOYMENT_FUNCTIONAL_TESTS_CLOUD_PROVIDER);
 
     artifactStream = artifactStreamManager.ensurePredefined(seed, owners, ArtifactStreams.HARNESS_SAMPLE_ECR);
     assertThat(artifactStream).isNotNull();
@@ -148,7 +150,7 @@ public class EcsWorkflowFunctionalTest extends AbstractFunctionalTest {
 
   @Test
   @Owner(developers = ADWAIT)
-  @Category(FunctionalTests.class)
+  @Category(CDFunctionalTests.class)
   @Ignore("TODO: please provide clear motivation why this test is ignored")
   public void shouldCreateDaemonEcsWorkflow() throws Exception {
     Workflow workflow = getEcsEc2TypeDaemonWorkflow();
@@ -159,7 +161,7 @@ public class EcsWorkflowFunctionalTest extends AbstractFunctionalTest {
 
   @Test
   @Owner(developers = ADWAIT)
-  @Category(FunctionalTests.class)
+  @Category(CDFunctionalTests.class)
   @Ignore("TODO: please provide clear motivation why this test is ignored")
   public void shouldCreateCanaryEcsWorkflow() throws Exception {
     Workflow workflow = getEcsEc2TypeCanaryWorkflow();
@@ -170,7 +172,8 @@ public class EcsWorkflowFunctionalTest extends AbstractFunctionalTest {
   }
 
   private Workflow createAndAssertWorkflow(Workflow workflow) {
-    Workflow savedWorkflow = workflowService.createWorkflow(workflow);
+    Workflow savedWorkflow =
+        WorkflowRestUtils.createWorkflow(bearerToken, application.getAccountId(), application.getUuid(), workflow);
     assertThat(savedWorkflow).isNotNull();
     assertThat(savedWorkflow.getUuid()).isNotEmpty();
     assertThat(savedWorkflow.getWorkflowType()).isEqualTo(ORCHESTRATION);

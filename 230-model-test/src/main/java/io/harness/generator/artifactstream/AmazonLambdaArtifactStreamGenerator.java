@@ -24,7 +24,7 @@ public class AmazonLambdaArtifactStreamGenerator extends AmazonS3ArtifactStreamS
     Application application = owners.obtainApplication();
 
     final SettingAttribute settingAttribute =
-        settingGenerator.ensurePredefined(seed, owners, Settings.AWS_TEST_CLOUD_PROVIDER);
+        settingGenerator.ensurePredefined(seed, owners, Settings.AWS_DEPLOYMENT_FUNCTIONAL_TESTS_CLOUD_PROVIDER);
 
     return ensureArtifactStream(seed,
         AmazonS3ArtifactStream.builder()

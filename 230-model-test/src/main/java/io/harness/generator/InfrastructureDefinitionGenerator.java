@@ -324,7 +324,8 @@ public class InfrastructureDefinitionGenerator {
       owners.add(service);
     }
 
-    final SettingAttribute ecsCloudProvider = settingGenerator.ensurePredefined(seed, owners, AWS_TEST_CLOUD_PROVIDER);
+    final SettingAttribute ecsCloudProvider =
+        settingGenerator.ensurePredefined(seed, owners, AWS_DEPLOYMENT_FUNCTIONAL_TESTS_CLOUD_PROVIDER);
 
     InfrastructureDefinition infrastructureDefinition =
         InfrastructureDefinition.builder()
@@ -370,7 +371,7 @@ public class InfrastructureDefinitionGenerator {
                                 .region("us-east-1")
                                 .launchType("EC2")
                                 .assignPublicIp(false)
-                                .clusterName("deployment-functional-tests-cluster")
+                                .clusterName("qa-test-cluster")
                                 .build())
             .deploymentType(DeploymentType.ECS)
             .cloudProviderType(CloudProviderType.AWS)
@@ -751,11 +752,12 @@ public class InfrastructureDefinitionGenerator {
 
   private InfrastructureDefinition ensureAwsEcs(Randomizer.Seed seed, Owners owners, String bearerToken) {
     Environment environment = ensureEnv(seed, owners);
-    final SettingAttribute awsCloudProvider = settingGenerator.ensurePredefined(seed, owners, AWS_TEST_CLOUD_PROVIDER);
+    final SettingAttribute awsCloudProvider =
+        settingGenerator.ensurePredefined(seed, owners, AWS_DEPLOYMENT_FUNCTIONAL_TESTS_CLOUD_PROVIDER);
 
     AwsEcsInfrastructure awsEcsInfrastructure = AwsEcsInfrastructure.builder()
                                                     .region("us-east-1")
-                                                    .clusterName("qb-dev-cluster")
+                                                    .clusterName("qa-test-cluster")
                                                     .cloudProviderId(awsCloudProvider.getUuid())
                                                     .launchType(LaunchType.EC2.toString())
                                                     .build();
@@ -839,7 +841,8 @@ public class InfrastructureDefinitionGenerator {
     final String accountId = environment.getAccountId();
     final String appId = environment.getAppId();
 
-    final SettingAttribute awsCloudProvider = settingGenerator.ensurePredefined(seed, owners, AWS_TEST_CLOUD_PROVIDER);
+    final SettingAttribute awsCloudProvider =
+        settingGenerator.ensurePredefined(seed, owners, AWS_DEPLOYMENT_FUNCTIONAL_TESTS_CLOUD_PROVIDER);
 
     List<String> autoScalingGroups = InfrastructureDefinitionRestUtils.listAutoScalingGroups(
         bearerToken, accountId, appId, awsCloudProvider.getUuid(), region);
@@ -850,7 +853,7 @@ public class InfrastructureDefinitionGenerator {
   }
   private InfrastructureDefinition ensureAwsAmiWithLaunchTemplate(
       Randomizer.Seed seed, Owners owners, String bearerToken) {
-    return ensureAwsAmi(seed, owners, "asg-ami-functional-test", "aws-ami-lt-infradef");
+    return ensureAwsAmi(seed, owners, "AMI-BASE-ASG-TODOLIST", "aws-ami-lt-infradef");
   }
 
   private InfrastructureDefinition ensureAwsAmi(
@@ -858,7 +861,8 @@ public class InfrastructureDefinitionGenerator {
     Environment environment = ensureEnv(seed, owners);
     final String region = "us-east-1";
 
-    final SettingAttribute awsCloudProvider = settingGenerator.ensurePredefined(seed, owners, AWS_TEST_CLOUD_PROVIDER);
+    final SettingAttribute awsCloudProvider =
+        settingGenerator.ensurePredefined(seed, owners, AWS_DEPLOYMENT_FUNCTIONAL_TESTS_CLOUD_PROVIDER);
     AwsAmiInfrastructure awsAmiInfrastructure = AwsAmiInfrastructure.builder()
                                                     .cloudProviderId(awsCloudProvider.getUuid())
                                                     .region(region)
@@ -922,9 +926,10 @@ public class InfrastructureDefinitionGenerator {
 
   private InfrastructureDefinition ensureAwsLambda(Randomizer.Seed seed, Owners owners, String bearerToken) {
     Environment environment = ensureEnv(seed, owners);
-    final String region = "us-east-1";
+    final String region = "us-east-2";
 
-    final SettingAttribute awsCloudProvider = settingGenerator.ensurePredefined(seed, owners, AWS_TEST_CLOUD_PROVIDER);
+    final SettingAttribute awsCloudProvider =
+        settingGenerator.ensurePredefined(seed, owners, AWS_DEPLOYMENT_FUNCTIONAL_TESTS_CLOUD_PROVIDER);
 
     AwsLambdaInfrastructure awsLambdaInfrastructure = AwsLambdaInfrastructure.builder()
                                                           .cloudProviderId(awsCloudProvider.getUuid())

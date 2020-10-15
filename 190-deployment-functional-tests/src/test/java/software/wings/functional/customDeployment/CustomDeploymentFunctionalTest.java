@@ -372,7 +372,6 @@ public class CustomDeploymentFunctionalTest extends AbstractFunctionalTest {
                                       .daemonSet(false)
                                       .infraDefinitionId(infrastructureDefinition.getUuid())
                                       .infraDefinitionName(infrastructureDefinition.getName())
-                                      .computeProviderId(DUMMY_CLOUD_PROVIDER)
                                       .phaseSteps(phaseSteps)
                                       .build())
                 .build())

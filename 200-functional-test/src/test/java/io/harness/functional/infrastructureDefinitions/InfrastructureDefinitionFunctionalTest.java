@@ -7,9 +7,12 @@ import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
 
 import io.harness.beans.WorkflowType;
+import io.harness.category.element.CDFunctionalTests;
 import io.harness.category.element.FunctionalTests;
 import io.harness.functional.AbstractFunctionalTest;
 import io.harness.functional.WorkflowUtils;
+import io.harness.generator.ApplicationGenerator;
+import io.harness.generator.EnvironmentGenerator;
 import io.harness.generator.InfrastructureDefinitionGenerator;
 import io.harness.generator.InfrastructureDefinitionGenerator.InfrastructureDefinitions;
 import io.harness.generator.OwnerManager;
@@ -31,6 +34,8 @@ import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import software.wings.api.DeploymentType;
+import software.wings.beans.Application;
+import software.wings.beans.Environment;
 import software.wings.beans.ExecutionArgs;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.InfrastructureType;
@@ -65,6 +70,8 @@ public class InfrastructureDefinitionFunctionalTest extends AbstractFunctionalTe
   @Inject private PipelineGenerator pipelineGenerator;
   @Inject private WorkflowUtils workflowUtils;
   @Inject private WorkflowExecutionService workflowExecutionService;
+  @Inject private ApplicationGenerator applicationGenerator;
+  @Inject private EnvironmentGenerator environmentGenerator;
 
   @Inject private ServiceResourceService serviceResourceService;
   @Inject private InfrastructureMappingService infrastructureMappingService;
@@ -73,12 +80,16 @@ public class InfrastructureDefinitionFunctionalTest extends AbstractFunctionalTe
   private final Seed seed = new Seed(0);
   private Owners owners;
 
+  private Application application;
+  private Environment environment;
   private Service service;
   private InfrastructureDefinition infrastructureDefinition;
 
   @Before
   public void setUp() {
     owners = ownerManager.create();
+    application = applicationGenerator.ensurePredefined(seed, owners, ApplicationGenerator.Applications.GENERIC_TEST);
+    environment = environmentGenerator.ensurePredefined(seed, owners, EnvironmentGenerator.Environments.GENERIC_TEST);
   }
 
   @Test
@@ -105,7 +116,8 @@ public class InfrastructureDefinitionFunctionalTest extends AbstractFunctionalTe
     resetCache(service.getAccountId());
 
     Workflow workflow = workflowUtils.createCanarySshWorkflow("ec2-ssh-", service, infrastructureDefinition);
-    workflow = workflowGenerator.ensureWorkflow(seed, owners, workflow);
+    workflow =
+        WorkflowRestUtils.createWorkflow(bearerToken, application.getAccountId(), application.getUuid(), workflow);
 
     Artifact artifact = getArtifact(service, service.getAppId());
     executeWorkflow(workflow, service, Arrays.asList(artifact), ImmutableMap.<String, String>builder().build());
@@ -113,7 +125,7 @@ public class InfrastructureDefinitionFunctionalTest extends AbstractFunctionalTe
 
   @Test
   @Owner(developers = YOGESH)
-  @Category(FunctionalTests.class)
+  @Category(CDFunctionalTests.class)
   @Ignore("Enable once feature flag is enabled")
   public void shouldCreateAndRunAwsEcsEc2Workflow() {
     service = serviceGenerator.ensureEcsTest(seed, owners, "ecs-service");
@@ -132,7 +144,8 @@ public class InfrastructureDefinitionFunctionalTest extends AbstractFunctionalTe
     assertThat(elbTargetGroups).isNotEmpty();
 
     Workflow workflow = workflowUtils.getEcsEc2TypeCanaryWorkflow("ecs-ec2-", service, infrastructureDefinition);
-    workflow = workflowGenerator.ensureWorkflow(seed, owners, workflow);
+    workflow =
+        WorkflowRestUtils.createWorkflow(bearerToken, application.getAccountId(), application.getUuid(), workflow);
 
     Artifact artifact = getArtifact(service, service.getAppId());
     executeWorkflow(workflow, service, Arrays.asList(artifact), ImmutableMap.<String, String>builder().build());
@@ -140,11 +153,9 @@ public class InfrastructureDefinitionFunctionalTest extends AbstractFunctionalTe
 
   @Test
   @Owner(developers = YOGESH)
-  @Category(FunctionalTests.class)
-  @Ignore("Enable once feature flag is enabled")
+  @Category(CDFunctionalTests.class)
   public void shouldCreateAndRunAwsLambdaWorkflow() {
     service = serviceGenerator.ensureAwsLambdaGenericTest(seed, owners, "lambda-service");
-    resetCache(service.getAccountId());
     infrastructureDefinition =
         infrastructureDefinitionGenerator.ensurePredefined(seed, owners, InfrastructureType.AWS_LAMBDA, bearerToken);
 
@@ -152,7 +163,8 @@ public class InfrastructureDefinitionFunctionalTest extends AbstractFunctionalTe
     checkListInfraDefinitionByService(service, infrastructureDefinition);
 
     Workflow workflow = workflowUtils.createBasicWorkflow("aws-lamda-", service, infrastructureDefinition);
-    workflow = workflowGenerator.ensureWorkflow(seed, owners, workflow);
+    workflow =
+        WorkflowRestUtils.createWorkflow(bearerToken, application.getAccountId(), application.getUuid(), workflow);
 
     Artifact artifact = getArtifact(service, service.getAppId());
     executeWorkflow(workflow, service, Arrays.asList(artifact), ImmutableMap.<String, String>builder().build());
@@ -308,6 +320,8 @@ public class InfrastructureDefinitionFunctionalTest extends AbstractFunctionalTe
     ExecutionArgs executionArgs = prepareExecutionArgs(workflow, artifacts, workflowVariables);
     WorkflowExecution workflowExecution = WorkflowRestUtils.startWorkflow(bearerToken, appId, envId, executionArgs);
     workflowUtils.checkForWorkflowSuccess(workflowExecution);
+    assertInstanceCount(
+        workflowExecution.getStatus(), appId, workflow.getServiceId(), workflowExecution.getInfraMappingIds().get(0));
   }
 
   private Artifact getArtifact(Service service, String appId) {

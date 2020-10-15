@@ -450,12 +450,13 @@ public class ServiceGenerator {
       LambdaSpecification lambdaSpecification =
           LambdaSpecification.builder()
               .serviceId(service.getUuid())
-              .defaults(DefaultSpecification.builder().runtime("nodejs8.10").memorySize(128).timeout(3).build())
+              .defaults(DefaultSpecification.builder().runtime("nodejs12.x").memorySize(128).timeout(3).build())
               .functions(Collections.singletonList(FunctionSpecification.builder()
                                                        .functionName("functional-test-lambda")
                                                        .memorySize(128)
-                                                       .runtime("nodejs8.10")
+                                                       .runtime("nodejs12.x")
                                                        .handler("index.handler")
+                                                       .timeout(3)
                                                        .build()))
               .build();
       lambdaSpecification.setAppId(owners.obtainApplication().getUuid());
