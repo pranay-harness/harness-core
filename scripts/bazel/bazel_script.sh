@@ -114,9 +114,6 @@ build_bazel_module 22-wait-engine
 build_bazel_module 23-delegate-service-driver
 build_bazel_module 23-sm-core
 build_bazel_module 24-common-entities
-build_bazel_module 24-ng-manager-service-beans
-build_bazel_module 25-ng-async-task-grpc-server
-build_bazel_module 25-ng-manager-service-driver
 build_bazel_module 27-orchestration-persistence
 build_bazel_module 29-orchestration-beans
 build_bazel_module 31-orchestration
