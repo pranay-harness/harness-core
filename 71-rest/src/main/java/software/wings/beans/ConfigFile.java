@@ -141,6 +141,7 @@ public class ConfigFile extends BaseFile implements EncryptableSetting {
 
   public ConfigFile cloneInternal() {
     ConfigFile configFile = ConfigFile.builder()
+                                .description(getDescription())
                                 .envId(getEnvId())
                                 .entityType(getEntityType())
                                 .entityId(getEntityId())
