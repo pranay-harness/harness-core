@@ -1,7 +1,6 @@
 package io.harness.batch.processing.tasklet.support;
 
 import static io.harness.batch.processing.writer.constants.K8sCCMConstants.K8SV1_RELEASE_NAME;
-import static io.harness.batch.processing.writer.constants.K8sCCMConstants.RELEASE_NAME;
 
 import com.google.inject.Inject;
 
@@ -52,7 +51,7 @@ public class HarnessServiceInfoFetcher extends CacheUtils {
       String accountId, String computeProviderId, String namespace, String podName, Map<String, String> labelsMap) {
     try {
       Optional<HarnessServiceInfo> harnessServiceInfo = Optional.empty();
-      if (labelsMap.containsKey(K8SV1_RELEASE_NAME) || labelsMap.containsKey(RELEASE_NAME)) {
+      if (labelsMap.containsKey(K8SV1_RELEASE_NAME)) {
         harnessServiceInfo =
             getHarnessServiceInfoCache.get(new CacheKey(accountId, computeProviderId, namespace, podName));
       }
