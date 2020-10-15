@@ -3,12 +3,12 @@ package software.wings.yaml;
 import static software.wings.beans.yaml.YamlConstants.FIELD_HARNESS_API_VERSION;
 import static software.wings.beans.yaml.YamlConstants.FIELD_TYPE;
 
-import com.fasterxml.jackson.dataformat.yaml.snakeyaml.introspector.BeanAccess;
-import com.fasterxml.jackson.dataformat.yaml.snakeyaml.introspector.Property;
-import com.fasterxml.jackson.dataformat.yaml.snakeyaml.introspector.PropertyUtils;
 import io.harness.exception.ExceptionUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
+import org.yaml.snakeyaml.introspector.BeanAccess;
+import org.yaml.snakeyaml.introspector.Property;
+import org.yaml.snakeyaml.introspector.PropertyUtils;
 
 import java.io.Serializable;
 import java.util.Collection;
