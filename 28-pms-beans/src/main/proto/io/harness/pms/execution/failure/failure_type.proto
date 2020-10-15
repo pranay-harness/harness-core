@@ -1,0 +1,13 @@
+syntax = "proto3";
+
+package io.harness.pms.execution;
+
+option java_multiple_files = true;
+
+enum FailureType {
+  DELEGATE_PROVISIONING = 0;
+  CONNECTIVITY = 1;
+  AUTHENTICATION = 2;
+  VERIFICATION_FAILURE = 3;
+  APPLICATION_ERROR = 4;
+}
