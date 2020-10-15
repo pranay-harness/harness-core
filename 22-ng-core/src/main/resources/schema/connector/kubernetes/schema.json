@@ -1,0 +1,227 @@
+{
+    "type": "object",
+    "properties": {
+      "credential": {
+        "type": "object",
+        "properties": {
+          "type": {
+            "enum": [
+              "InheritFromDelegate",
+              "ManualConfig"
+            ]
+          }
+        },
+        "allOf": [
+          {
+            "if": {
+              "properties": {
+                "type": {
+                  "const": "InheritFromDelegate"
+                }
+              }
+            },
+            "then": {
+              "properties": {
+                "spec": {
+                  "properties": {
+                    "delegateName": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "delegateName"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          {
+            "if": {
+              "properties": {
+                "type": {
+                  "const": "ManualConfig"
+                }
+              }
+            },
+            "then": {
+              "properties": {
+                "spec": {
+                  "type": "object",
+                  "properties": {
+                    "masterUrl": {
+                      "type": "string"
+                    },
+                    "auth": {
+                      "type": "object",
+                      "properties": {
+                        "type": {
+                          "enum": [
+                            "UserPassword",
+                            "ClientKeyCert",
+                            "ServiceAccount",
+                            "OpenIdConnect"
+                          ]
+                        }
+                      },
+                      "allOf": [
+                        {
+                          "if": {
+                            "properties": {
+                              "type": {
+                                "const": "UserPassword"
+                              }
+                            }
+                          },
+                          "then": {
+                            "properties": {
+                              "spec": {
+                                "type": "object",
+                                "properties": {
+                                  "username": {
+                                    "type": "string",
+                                    "description": "Username for the Kubernetes cluster. Required"
+                                  },
+                                  "passwordRef": {
+                                    "type": "string",
+                                    "description": "# Password for the Kubernetes cluster. Reference to secret (either secret name or identifier). Required"
+                                  }
+                                },
+                                "required": [
+                                  "username",
+                                  "passwordRef"
+                                ],
+                                "additionalProperties": false
+                              }
+                            }
+                          }
+                        },
+                        {
+                          "if": {
+                            "properties": {
+                              "type": {
+                                "const": "ClientKeyCert"
+                              }
+                            }
+                          },
+                          "then": {
+                            "properties": {
+                              "spec": {
+                                "type": "object",
+                                "properties": {
+                                  "caCertRef": {
+                                    "type": "string",
+                                    "description": "Root certificate used to validate client certificates presented to the API server. Optional"
+                                  },
+                                  "clientCertRef": {
+                                    "type": "string",
+                                    "description": "Client certificate for the cluster. Required"
+                                  },
+                                  "clientKeyRef": {
+                                    "type": "string",
+                                    "description": "Client key for the client certificate. Required"
+                                  },
+                                  "clientKeyPassphraseRef": {
+                                    "type": "string",
+                                    "description": "Client key passphrase. Required"
+                                  },
+                                  "clientKeyAlgo": {
+                                    "type": "string",
+                                    "description": "Encryption algorithm used when the certificate was created. Typically, RSA"
+                                  }
+                                },
+                                "required": [
+                                  "clientCertRef",
+                                  "clientKeyRef",
+                                  "clientKeyPassphraseRef"
+                                ],
+                                "additionalProperties": false
+                              }
+                            }
+                          }
+                        },
+                        {
+                          "if": {
+                            "properties": {
+                              "type": {
+                                "const": "ServiceAccount"
+                              }
+                            }
+                          },
+                          "then": {
+                            "properties": {
+                              "spec": {
+                                "type": "object",
+                                "properties": {
+                                  "serviceAccountTokenRef": {
+                                    "type": "string",
+                                    "description": "Service account token for the service accoun. Required"
+                                  }
+                                },
+                                "required": [
+                                  "serviceAccountTokenRef"
+                                ],
+                                "additionalProperties": false
+                              }
+                            }
+                          }
+                        },
+                        {
+                          "if": {
+                            "properties": {
+                              "type": {
+                                "const": "OpenIdConnect"
+                              }
+                            }
+                          },
+                          "then": {
+                            "properties": {
+                              "spec": {
+                                "type": "object",
+                                "properties": {
+                                  "oidcIssuerUrl": {
+                                    "type": "string",
+                                    "description": "URL of the provider which allows the API server to discover public signing keys. Required"
+                                  },
+                                  "oidcClientIdRef": {
+                                    "type": "string",
+                                    "description": "Public identifier for the client that is required for all OAuth flows. Required"
+                                  },
+                                  "oidcUsername": {
+                                    "type": "string",
+                                    "description": "Login credentials for a user assigned to the provider app. Optional"
+                                  },
+                                  "oidcPasswordRef": {
+                                    "type": "string",
+                                    "description": "Login credentials for a user assigned to the provider app. Optional"
+                                  },
+                                  "oidcSecretRef": {
+                                    "type": "string",
+                                    "description": "The client secret for the app. Optional"
+                                  },
+                                  "oidcScopes": {
+                                    "type": "string",
+                                    "description": "OIDC scopes are used by an application during authentication to authorize access to a user's details, like name and picture. Optional"
+                                  }
+                                },
+                                "required": [
+                                  "oidcIssuerUrl",
+                                  "oidcClientIdRef"
+                                ],
+                                "additionalProperties": false
+                              }
+                            }
+                          }
+                        }
+                      ]
+                    }
+                  },
+                  "additionalProperties": false
+                }
+              }
+            }
+          }
+        ]
+      }
+    }
+  }

@@ -51,6 +51,9 @@ public class YamlSchemaResource {
   public Response getSchemaFile(@QueryParam("filename") String fileName) {
     try {
       String fileNameDecoded = URLDecoder.decode(fileName, Charsets.UTF_8.name());
+      if (fileNameDecoded.endsWith("/")) {
+        fileNameDecoded = fileNameDecoded.substring(0, fileNameDecoded.length() - 1);
+      }
       try (InputStream inputStream = getResourceAsStream(fileNameDecoded)) {
         File file = File.createTempFile("temp", ".json");
         copyInputStreamToFile(inputStream, file);

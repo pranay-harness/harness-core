@@ -1,0 +1,100 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "properties": {
+    "name": {
+      "type": "string",
+      "description": "Name of the connector. Required"
+    },
+    "identifier": {
+      "type": "string",
+      "description": "Non-changeable identifier of the connector, can not contain spaces or special chars. Required"
+    },
+    "description": {
+      "type": "string",
+      "description": "Description of the connector. Required"
+    },
+    "orgIdentifier": {
+      "type": "string",
+      "description": "Org ID. OPTIONAL"
+    },
+    "projectIdentifier": {
+      "type": "string",
+      "description": "Project ID. OPTIONAL"
+    },
+    "tags": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "type": {
+      "enum": [
+        "K8sCluster",
+        "Git",
+        "DockerRegistry",
+        "Local",
+        "GcpKms",
+        "Vault"
+      ],
+      "description": "Connector type. See list of all connector types available. Required"
+    }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "type": {
+            "const": "K8sCluster"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "spec": {
+            "$ref": "<<schema/connector/kubernetes/schema.json>>"
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "type": {
+            "const": "Git"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "spec":{
+            "$ref": "<<schema/connector/git/schema.json>>"
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "type": {
+            "const": "DockerRegistry"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "spec": {
+            "$ref": "<<schema/connector/docker/schema.json>>"
+          }
+        }
+      }
+    }
+  ],
+  "required": [
+    "name",
+    "identifier",
+    "type",
+    "spec"
+  ],
+  "additionalProperties": true
+}
