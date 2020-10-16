@@ -3,14 +3,18 @@ package io.harness.service.impl;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.delegate.beans.TaskSelectorMap.TaskSelectorMapKeys;
+import static io.harness.govern.IgnoreThrowable.ignoredOnPurpose;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
+import com.mongodb.DuplicateKeyException;
 import io.harness.delegate.beans.TaskGroup;
 import io.harness.delegate.beans.TaskSelectorMap;
 import io.harness.eraro.ErrorCode;
+import io.harness.exception.DuplicateFieldException;
+import io.harness.exception.InvalidRequestException;
 import io.harness.exception.NoResultFoundException;
 import io.harness.persistence.HPersistence;
 import io.harness.service.intfc.DelegateTaskSelectorMapService;
@@ -37,22 +41,16 @@ public class DelegateTaskSelectorMapServiceImpl implements DelegateTaskSelectorM
       logger.warn("Task selector list cannot be empty.");
       throw new IllegalArgumentException("Task selector list cannot be empty.");
     }
-    TaskSelectorMap existing = hPersistence.createQuery(TaskSelectorMap.class)
-                                   .filter(TaskSelectorMapKeys.accountId, taskSelectorMap.getAccountId())
-                                   .filter(TaskSelectorMapKeys.taskGroup, taskSelectorMap.getTaskGroup())
-                                   .get();
-    if (existing == null) {
+
+    try {
       hPersistence.save(taskSelectorMap);
-      existing = taskSelectorMap;
-    } else {
-      existing.setSelectors(taskSelectorMap.getSelectors());
-      hPersistence.update(existing,
-          hPersistence.createUpdateOperations(TaskSelectorMap.class)
-              .set(TaskSelectorMapKeys.selectors, taskSelectorMap.getSelectors()));
+    } catch (DuplicateKeyException e) {
+      ignoredOnPurpose(e);
+      throw new InvalidRequestException("Task selector map with given task group already exists for this account");
     }
 
     logger.info("Added task selector map: {}", taskSelectorMap.getUuid());
-    return existing;
+    return taskSelectorMap;
   }
 
   @Override
