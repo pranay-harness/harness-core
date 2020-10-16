@@ -448,6 +448,9 @@ public class OwnerRule implements TestRule {
     createSlackFile(leader, type + "-leaders");
   }
 
+  private static String root =
+      System.getenv().getOrDefault("TEST_OWNERS_ROOT_DIR", System.getProperty("java.io.tmpdir") + "/owners");
+
   private static void createSlackFile(String developer, String directory) {
     UserInfo userInfo = active.get(developer);
     if (userInfo == null) {
@@ -456,7 +459,7 @@ public class OwnerRule implements TestRule {
     String identify = userInfo.getSlack() == null ? developer : "<@" + userInfo.getSlack() + ">";
 
     try {
-      File file = new File(format("%s/owners/%s/%s", System.getProperty("java.io.tmpdir"), directory, identify));
+      File file = new File(format("%s/%s/%s", root, directory, identify));
 
       file.getParentFile().mkdirs();
       if (file.createNewFile()) {
