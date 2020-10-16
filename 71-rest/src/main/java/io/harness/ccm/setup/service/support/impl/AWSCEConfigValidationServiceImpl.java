@@ -14,6 +14,7 @@ import com.amazonaws.services.costandusagereport.model.DescribeReportDefinitions
 import com.amazonaws.services.costandusagereport.model.ReportDefinition;
 import com.amazonaws.services.organizations.AWSOrganizationsClient;
 import com.amazonaws.services.organizations.AWSOrganizationsClientBuilder;
+import com.amazonaws.services.organizations.model.AWSOrganizationsNotInUseException;
 import com.amazonaws.services.organizations.model.AccessDeniedException;
 import com.amazonaws.services.organizations.model.ListAccountsRequest;
 import com.amazonaws.services.organizations.model.ListAccountsResult;
@@ -180,6 +181,9 @@ public class AWSCEConfigValidationServiceImpl implements AWSCEConfigValidationSe
 
     try {
       isOrganisationalReadAccessValid = validateOrganisationReadOnlyAccess(credentialsProvider);
+    } catch (AWSOrganizationsNotInUseException ex) {
+      throw new InvalidArgumentsException(
+          ImmutablePair.of(validationFailureKey, "Your account must be a member of an organization."));
     } catch (AccessDeniedException accessDeniedException) {
       throw new InvalidArgumentsException(ImmutablePair.of(
           validationFailureKey, accessDeniedException.getServiceName() + " " + accessDeniedException.getErrorCode()));
