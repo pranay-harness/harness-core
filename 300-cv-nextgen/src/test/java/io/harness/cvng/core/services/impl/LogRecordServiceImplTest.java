@@ -28,14 +28,12 @@ public class LogRecordServiceImplTest extends CvNextGenTest {
   @Inject private HPersistence hPersistence;
   @Inject private LogRecordService logRecordService;
   private String accountId;
-  private String cvConfigId;
   private long timestamp;
   private String verificationTaskId;
   @Before
   public void setup() {
     accountId = generateUuid();
     verificationTaskId = generateUuid();
-    cvConfigId = generateUuid();
     timestamp = Instant.now().toEpochMilli();
   }
   @Test
@@ -46,11 +44,11 @@ public class LogRecordServiceImplTest extends CvNextGenTest {
     logRecordService.save(logRecordDTOs);
     List<LogRecord> logRecords = hPersistence.createQuery(LogRecord.class)
                                      .filter(LogRecordKeys.accountId, accountId)
-                                     .filter(LogRecordKeys.cvConfigId, cvConfigId)
+                                     .filter(LogRecordKeys.verificationTaskId, verificationTaskId)
                                      .asList();
     assertThat(logRecords).hasSize(3);
     logRecords.forEach(logRecord -> {
-      assertThat(logRecord.getCvConfigId()).isEqualTo(cvConfigId);
+      assertThat(logRecord.getVerificationTaskId()).isEqualTo(verificationTaskId);
       assertThat(logRecord.getAccountId()).isEqualTo(accountId);
       assertThat(logRecord.getHost()).isEqualTo("host");
       assertThat(logRecord.getLog()).isEqualTo("log message");
@@ -68,7 +66,7 @@ public class LogRecordServiceImplTest extends CvNextGenTest {
         Instant.ofEpochMilli(timestamp).plus(Duration.ofMillis(1)));
     assertThat(logRecords).hasSize(3);
     logRecords.forEach(logRecord -> {
-      assertThat(logRecord.getCvConfigId()).isEqualTo(cvConfigId);
+      assertThat(logRecord.getVerificationTaskId()).isEqualTo(verificationTaskId);
       assertThat(logRecord.getAccountId()).isEqualTo(accountId);
       assertThat(logRecord.getHost()).isEqualTo("host");
       assertThat(logRecord.getLog()).isEqualTo("log message");
@@ -78,7 +76,6 @@ public class LogRecordServiceImplTest extends CvNextGenTest {
 
   private LogRecordDTO create() {
     return LogRecordDTO.builder()
-        .cvConfigId(cvConfigId)
         .verificationTaskId(verificationTaskId)
         .accountId(accountId)
         .timestamp(timestamp)

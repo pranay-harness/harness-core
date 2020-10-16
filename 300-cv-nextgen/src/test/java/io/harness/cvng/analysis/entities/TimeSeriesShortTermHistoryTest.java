@@ -54,8 +54,10 @@ public class TimeSeriesShortTermHistoryTest extends CategoryTest {
   @Owner(developers = PRAVEEN)
   @Category(UnitTests.class)
   public void testConvertToMap_null() {
-    TimeSeriesShortTermHistory shortTermHistory =
-        TimeSeriesShortTermHistory.builder().cvConfigId(generateUuid()).transactionMetricHistories(null).build();
+    TimeSeriesShortTermHistory shortTermHistory = TimeSeriesShortTermHistory.builder()
+                                                      .verificationTaskId(generateUuid())
+                                                      .transactionMetricHistories(null)
+                                                      .build();
 
     Map<String, Map<String, List<Double>>> map = shortTermHistory.convertToMap();
     assertThat(map.size()).isEqualTo(0);
@@ -66,7 +68,7 @@ public class TimeSeriesShortTermHistoryTest extends CategoryTest {
   @Category(UnitTests.class)
   public void testConvertToMap() {
     TimeSeriesShortTermHistory shortTermHistory = TimeSeriesShortTermHistory.builder()
-                                                      .cvConfigId(generateUuid())
+                                                      .verificationTaskId(generateUuid())
                                                       .transactionMetricHistories(buildShortTermHistory())
                                                       .build();
 

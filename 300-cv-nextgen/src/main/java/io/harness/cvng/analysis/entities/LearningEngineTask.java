@@ -29,7 +29,6 @@ import java.time.Instant;
 @HarnessEntity(exportable = true)
 public abstract class LearningEngineTask implements PersistentEntity, UuidAware, CreatedAtAware, UpdatedAtAware {
   @Id private String uuid;
-  private String cvConfigId;
   private String verificationTaskId;
   private long createdAt;
   private long lastUpdatedAt;

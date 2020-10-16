@@ -47,7 +47,7 @@ public abstract class TimeSeriesAnalysisState extends AnalysisState {
   public AnalysisStatus getExecutionStatus() {
     if (!getStatus().equals(AnalysisStatus.SUCCESS)) {
       Map<String, ExecutionStatus> taskStatuses = timeSeriesAnalysisService.getTaskStatus(
-          getInputs().getCvConfigId(), new HashSet<>(Arrays.asList(workerTaskId)));
+          getInputs().getVerificationTaskId(), new HashSet<>(Arrays.asList(workerTaskId)));
       ExecutionStatus taskStatus = taskStatuses.get(workerTaskId);
       // This could be common code for all states.
       switch (taskStatus) {

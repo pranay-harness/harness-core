@@ -11,6 +11,7 @@ import io.harness.cvng.analysis.services.api.LogAnalysisService;
 import io.harness.cvng.beans.CVMonitoringCategory;
 import io.harness.cvng.core.entities.CVConfig;
 import io.harness.cvng.core.services.api.CVConfigService;
+import io.harness.cvng.core.services.api.VerificationTaskService;
 import io.harness.cvng.core.utils.CVParallelExecutor;
 import io.harness.cvng.dashboard.beans.AnalyzedLogDataDTO;
 import io.harness.cvng.dashboard.beans.AnalyzedLogDataDTO.FrequencyDTO;
@@ -43,6 +44,7 @@ public class LogDashboardServiceImpl implements LogDashboardService {
   @Inject private LogAnalysisService logAnalysisService;
   @Inject private CVConfigService cvConfigService;
   @Inject private CVParallelExecutor cvParallelExecutor;
+  @Inject private VerificationTaskService verificationTaskService;
 
   @Override
   public PageResponse<AnalyzedLogDataDTO> getAnomalousLogs(String accountId, String projectIdentifier,
@@ -73,8 +75,9 @@ public class LogDashboardServiceImpl implements LogDashboardService {
         accountId, orgIdentifier, projectIdentifier, environmentIdentifer, serviceIdentifier, category);
     List<String> cvConfigIds = configs.stream().map(CVConfig::getUuid).collect(Collectors.toList());
     for (String cvConfigId : cvConfigIds) {
-      List<LogAnalysisResult> analysisResults =
-          logAnalysisService.getAnalysisResults(cvConfigId, Arrays.asList(LogAnalysisTag.values()), startTime, endTime);
+      String verificationTaskId = verificationTaskService.create(accountId, cvConfigId);
+      List<LogAnalysisResult> analysisResults = logAnalysisService.getAnalysisResults(
+          verificationTaskId, Arrays.asList(LogAnalysisTag.values()), startTime, endTime);
       analysisResults.forEach(result -> {
         Long analysisTime = result.getAnalysisStartTime().toEpochMilli();
         if (!logTagCountMap.containsKey(analysisTime)) {
@@ -135,8 +138,8 @@ public class LogDashboardServiceImpl implements LogDashboardService {
       logDataCallables.add(() -> {
         List<AnalysisResult> analysisResults = cvConfigAnalysisResultMap.get(cvConfigId);
         Set<Long> labels = analysisResults.stream().map(AnalysisResult::getLabel).collect(Collectors.toSet());
-
-        List<LogAnalysisCluster> clusters = logAnalysisService.getAnalysisClusters(cvConfigId, labels);
+        String verificationTaskId = verificationTaskService.getServiceGuardVerificationTaskId(accountId, cvConfigId);
+        List<LogAnalysisCluster> clusters = logAnalysisService.getAnalysisClusters(verificationTaskId, labels);
         return mergeClusterWithResults(analysisResults, clusters, startTime, endTime);
       });
     });

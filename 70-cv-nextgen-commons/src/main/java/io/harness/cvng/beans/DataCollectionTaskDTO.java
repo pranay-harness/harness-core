@@ -10,7 +10,6 @@ import java.time.Instant;
 public class DataCollectionTaskDTO {
   String uuid;
   String accountId;
-  String cvConfigId;
   String verificationTaskId;
   DataCollectionInfo dataCollectionInfo;
   Instant startTime;

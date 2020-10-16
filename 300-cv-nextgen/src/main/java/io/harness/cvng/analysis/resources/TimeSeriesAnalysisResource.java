@@ -9,7 +9,7 @@ import com.google.inject.Inject;
 import com.codahale.metrics.annotation.ExceptionMetered;
 import com.codahale.metrics.annotation.Timed;
 import io.harness.cvng.analysis.beans.DeploymentTimeSeriesAnalysisDTO;
-import io.harness.cvng.analysis.beans.ServiceGuardMetricAnalysisDTO;
+import io.harness.cvng.analysis.beans.ServiceGuardTimeSeriesAnalysisDTO;
 import io.harness.cvng.analysis.beans.TimeSeriesAnomalies;
 import io.harness.cvng.analysis.beans.TimeSeriesRecordDTO;
 import io.harness.cvng.analysis.entities.TimeSeriesCumulativeSums;
@@ -58,10 +58,11 @@ public class TimeSeriesAnalysisResource {
   @LearningEngineAuth
   @ApiOperation(value = "get risk analysis cumulative sums", nickname = "getCumulativeSums")
   public RestResponse<Map<String, Map<String, TimeSeriesCumulativeSums.MetricSum>>> getCumulativeSums(
-      @QueryParam("cvConfigId") String cvConfigId, @QueryParam("analysisStartTime") String epochStartInstant,
+      @QueryParam("verificationTaskId") String verificationTaskId,
+      @QueryParam("analysisStartTime") String epochStartInstant,
       @QueryParam("analysisEndTime") String epochEndInstant) {
     return new RestResponse<>(timeSeriesAnalysisService.getCumulativeSums(
-        cvConfigId, Instant.parse(epochStartInstant), Instant.parse(epochEndInstant)));
+        verificationTaskId, Instant.parse(epochStartInstant), Instant.parse(epochEndInstant)));
   }
 
   @Produces({"application/json", "application/v1+json"})
@@ -72,8 +73,8 @@ public class TimeSeriesAnalysisResource {
   @ExceptionMetered
   @ApiOperation(value = "get previous anomalies for a data source config", nickname = "getPreviousAnomalies")
   public RestResponse<Map<String, Map<String, List<TimeSeriesAnomalies>>>> getPreviousAnomalies(
-      @QueryParam("cvConfigId") String cvConfigId) {
-    return new RestResponse<>(timeSeriesAnalysisService.getLongTermAnomalies(cvConfigId));
+      @QueryParam("verificationTaskId") String verificationTaskId) {
+    return new RestResponse<>(timeSeriesAnalysisService.getLongTermAnomalies(verificationTaskId));
   }
 
   @Produces({"application/json", "application/v1+json"})
@@ -84,8 +85,8 @@ public class TimeSeriesAnalysisResource {
   @ExceptionMetered
   @ApiOperation(value = "get short term history for a data source config", nickname = "getShortTermHistory")
   public RestResponse<Map<String, Map<String, List<Double>>>> getShortTermHistory(
-      @QueryParam("cvConfigId") String cvConfigId) {
-    return new RestResponse<>(timeSeriesAnalysisService.getShortTermHistory(cvConfigId));
+      @QueryParam("verificationTaskId") String verificationTaskId) {
+    return new RestResponse<>(timeSeriesAnalysisService.getShortTermHistory(verificationTaskId));
   }
 
   @Produces({"application/json", "application/v1+json"})
@@ -109,7 +110,7 @@ public class TimeSeriesAnalysisResource {
   @ApiOperation(
       value = "save time series analysis for a data source config", nickname = "saveServiceGuardTimeseriesAnalysis")
   public RestResponse<Boolean>
-  saveServiceGuardAnalysis(@QueryParam("taskId") String taskId, ServiceGuardMetricAnalysisDTO analysisBody) {
+  saveServiceGuardAnalysis(@QueryParam("taskId") String taskId, ServiceGuardTimeSeriesAnalysisDTO analysisBody) {
     timeSeriesAnalysisService.saveAnalysis(taskId, analysisBody);
     return new RestResponse<>(true);
   }

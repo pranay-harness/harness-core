@@ -27,7 +27,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class ServiceGuardTrendAnalysisStateTest extends CvNextGenTest {
-  private String cvConfigId;
+  private String verificationTaskId;
   private Instant startTime;
   private Instant endTime;
   @Mock private TrendAnalysisService trendAnalysisService;
@@ -38,11 +38,12 @@ public class ServiceGuardTrendAnalysisStateTest extends CvNextGenTest {
   public void setup() {
     MockitoAnnotations.initMocks(this);
 
-    cvConfigId = generateUuid();
+    verificationTaskId = generateUuid();
     startTime = Instant.now().minus(10, ChronoUnit.MINUTES).truncatedTo(ChronoUnit.MINUTES);
     endTime = startTime.plus(5, ChronoUnit.MINUTES);
 
-    AnalysisInput input = AnalysisInput.builder().cvConfigId(cvConfigId).startTime(startTime).endTime(endTime).build();
+    AnalysisInput input =
+        AnalysisInput.builder().verificationTaskId(verificationTaskId).startTime(startTime).endTime(endTime).build();
 
     trendAnalysisState = ServiceGuardTrendAnalysisState.builder().build();
     trendAnalysisState.setInputs(input);

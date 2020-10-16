@@ -10,7 +10,7 @@ import com.google.inject.Inject;
 
 import io.harness.CvNextGenTest;
 import io.harness.category.element.UnitTests;
-import io.harness.cvng.analysis.beans.ServiceGuardMetricAnalysisDTO;
+import io.harness.cvng.analysis.beans.ServiceGuardTimeSeriesAnalysisDTO;
 import io.harness.cvng.analysis.beans.ServiceGuardTxnMetricAnalysisDataDTO;
 import io.harness.cvng.analysis.beans.TimeSeriesAnomalies;
 import io.harness.cvng.analysis.beans.TimeSeriesRecordDTO;
@@ -120,13 +120,15 @@ public class TrendAnalysisServiceImplTest extends CvNextGenTest {
     trendAnalysisService.saveAnalysis(learningEngineTaskId, buildServiceGuardMetricAnalysisDTO(start, end));
 
     TimeSeriesCumulativeSums cumulativeSums =
-        hPersistence.createQuery(TimeSeriesCumulativeSums.class).filter("cvConfigId", cvConfigId).get();
+        hPersistence.createQuery(TimeSeriesCumulativeSums.class).filter("verificationTaskId", verificationTaskId).get();
     assertThat(cumulativeSums).isNotNull();
-    TimeSeriesAnomalousPatterns anomalousPatterns =
-        hPersistence.createQuery(TimeSeriesAnomalousPatterns.class).filter("cvConfigId", cvConfigId).get();
+    TimeSeriesAnomalousPatterns anomalousPatterns = hPersistence.createQuery(TimeSeriesAnomalousPatterns.class)
+                                                        .filter("verificationTaskId", verificationTaskId)
+                                                        .get();
     assertThat(anomalousPatterns).isNotNull();
-    TimeSeriesShortTermHistory shortTermHistory =
-        hPersistence.createQuery(TimeSeriesShortTermHistory.class).filter("cvConfigId", cvConfigId).get();
+    TimeSeriesShortTermHistory shortTermHistory = hPersistence.createQuery(TimeSeriesShortTermHistory.class)
+                                                      .filter("verificationTaskId", verificationTaskId)
+                                                      .get();
     assertThat(shortTermHistory).isNotNull();
 
     List<LogAnalysisCluster> savedClusters =
@@ -163,7 +165,7 @@ public class TrendAnalysisServiceImplTest extends CvNextGenTest {
     return learningEngineTaskService.createLearningEngineTask(timeSeriesLearningEngineTask);
   }
 
-  private ServiceGuardMetricAnalysisDTO buildServiceGuardMetricAnalysisDTO(Instant start, Instant end) {
+  private ServiceGuardTimeSeriesAnalysisDTO buildServiceGuardMetricAnalysisDTO(Instant start, Instant end) {
     Map<String, Double> overallMetricScores = new HashMap<>();
     overallMetricScores.put(TREND_METRIC_NAME, 0.872);
 
@@ -192,8 +194,8 @@ public class TrendAnalysisServiceImplTest extends CvNextGenTest {
       metricMap.put(TREND_METRIC_NAME, txnMetricData);
     });
 
-    return ServiceGuardMetricAnalysisDTO.builder()
-        .cvConfigId(cvConfigId)
+    return ServiceGuardTimeSeriesAnalysisDTO.builder()
+        .verificationTaskId(verificationTaskId)
         .analysisStartTime(start)
         .analysisEndTime(end)
         .overallMetricScores(overallMetricScores)
@@ -205,14 +207,12 @@ public class TrendAnalysisServiceImplTest extends CvNextGenTest {
     List<LogAnalysisCluster> logRecords = new ArrayList<>();
 
     LogAnalysisCluster record1 = LogAnalysisCluster.builder()
-                                     .cvConfigId(verificationTaskId)
                                      .verificationTaskId(verificationTaskId)
                                      .label(1)
                                      .frequencyTrend(new ArrayList<>())
                                      .isEvicted(false)
                                      .build();
     LogAnalysisCluster record2 = LogAnalysisCluster.builder()
-                                     .cvConfigId(verificationTaskId)
                                      .verificationTaskId(verificationTaskId)
                                      .label(2)
                                      .frequencyTrend(new ArrayList<>())

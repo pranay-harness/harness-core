@@ -29,6 +29,7 @@ import io.harness.cvng.analysis.entities.LogAnalysisCluster.LogAnalysisClusterKe
 import io.harness.cvng.analysis.entities.LogAnalysisResult;
 import io.harness.cvng.analysis.entities.LogAnalysisResult.AnalysisResult;
 import io.harness.cvng.analysis.entities.LogAnalysisResult.LogAnalysisResultKeys;
+import io.harness.cvng.analysis.entities.ServiceGuardLogAnalysisTask;
 import io.harness.cvng.analysis.entities.TestLogAnalysisLearningEngineTask;
 import io.harness.cvng.analysis.services.api.DeploymentLogAnalysisService;
 import io.harness.cvng.analysis.services.api.LearningEngineTaskService;
@@ -136,7 +137,7 @@ public class LogAnalysisServiceImplTest extends CvNextGenTest {
   public void getFrequencyPattern_firstAnalysis() {
     Instant start = Instant.now().minus(10, ChronoUnit.MINUTES).truncatedTo(ChronoUnit.MINUTES);
     Instant end = start.plus(5, ChronoUnit.MINUTES);
-    List<LogAnalysisCluster> patterns = logAnalysisService.getPreviousAnalysis(cvConfigId, start, end);
+    List<LogAnalysisCluster> patterns = logAnalysisService.getPreviousAnalysis(verificationTaskId, start, end);
 
     assertThat(patterns).isNotNull();
     assertThat(patterns.isEmpty()).isTrue();
@@ -151,13 +152,13 @@ public class LogAnalysisServiceImplTest extends CvNextGenTest {
     List<LogAnalysisCluster> analysisClusters = buildAnalysisClusters(12345l);
 
     analysisClusters.forEach(cluster -> {
-      cluster.setCvConfigId(cvConfigId);
+      cluster.setVerificationTaskId(verificationTaskId);
       cluster.setAnalysisStartTime(start);
       cluster.setAnalysisEndTime(end);
     });
     hPersistence.save(analysisClusters);
 
-    List<LogAnalysisCluster> patterns = logAnalysisService.getPreviousAnalysis(cvConfigId, start, end);
+    List<LogAnalysisCluster> patterns = logAnalysisService.getPreviousAnalysis(verificationTaskId, start, end);
 
     assertThat(patterns).isNotNull();
     assertThat(patterns.size()).isEqualTo(1);
@@ -167,34 +168,35 @@ public class LogAnalysisServiceImplTest extends CvNextGenTest {
   @Owner(developers = PRAVEEN)
   @Category(UnitTests.class)
   public void testSaveAnalysis_serviceGuard() throws Exception {
-    LearningEngineTaskService learningEngineTaskService = mock(LearningEngineTaskService.class);
-    FieldUtils.writeField(logAnalysisService, "learningEngineTaskService", learningEngineTaskService, true);
+    ServiceGuardLogAnalysisTask task = ServiceGuardLogAnalysisTask.builder().build();
+    task.setTestDataUrl("testData");
+    fillCommon(task, LearningEngineTaskType.SERVICE_GUARD_LOG_ANALYSIS);
+    learningEngineTaskService.createLearningEngineTask(task);
     Instant start = Instant.now().minus(10, ChronoUnit.MINUTES).truncatedTo(ChronoUnit.MINUTES);
     Instant end = start.plus(5, ChronoUnit.MINUTES);
     LogAnalysisDTO analysisDTO = createAnalysisDTO(end);
 
-    LogAnalysisCluster frequencyPattern =
-        hPersistence.createQuery(LogAnalysisCluster.class).filter(LogAnalysisClusterKeys.cvConfigId, cvConfigId).get();
+    LogAnalysisCluster frequencyPattern = hPersistence.createQuery(LogAnalysisCluster.class)
+                                              .filter(LogAnalysisClusterKeys.verificationTaskId, verificationTaskId)
+                                              .get();
     assertThat(frequencyPattern).isNull();
 
-    LogAnalysisResult result =
-        hPersistence.createQuery(LogAnalysisResult.class).filter(LogAnalysisResultKeys.cvConfigId, cvConfigId).get();
-
+    LogAnalysisResult result = hPersistence.createQuery(LogAnalysisResult.class)
+                                   .filter(LogAnalysisResultKeys.verificationTaskId, verificationTaskId)
+                                   .get();
     assertThat(result).isNull();
-
-    logAnalysisService.saveAnalysis(cvConfigId, "taskId", start, end, analysisDTO);
-
-    Mockito.verify(learningEngineTaskService).markCompleted("taskId");
-
-    List<LogAnalysisCluster> analysisClusters = hPersistence.createQuery(LogAnalysisCluster.class)
-                                                    .filter(LogAnalysisClusterKeys.cvConfigId, cvConfigId)
-                                                    .asList();
+    logAnalysisService.saveAnalysis(task.getUuid(), analysisDTO);
+    LearningEngineTask updated = learningEngineTaskService.get(task.getUuid());
+    assertThat(updated.getTaskStatus()).isEqualTo(ExecutionStatus.SUCCESS);
+    List<LogAnalysisCluster> analysisClusters =
+        hPersistence.createQuery(LogAnalysisCluster.class)
+            .filter(LogAnalysisClusterKeys.verificationTaskId, verificationTaskId)
+            .asList();
     assertThat(analysisClusters).isNotNull();
     assertThat(analysisClusters.size()).isEqualTo(2);
-
-    result =
-        hPersistence.createQuery(LogAnalysisResult.class).filter(LogAnalysisResultKeys.cvConfigId, cvConfigId).get();
-
+    result = hPersistence.createQuery(LogAnalysisResult.class)
+                 .filter(LogAnalysisResultKeys.verificationTaskId, verificationTaskId)
+                 .get();
     assertThat(result).isNotNull();
     assertThat(result.getLogAnalysisResults().size()).isEqualTo(2);
   }
@@ -236,11 +238,11 @@ public class LogAnalysisServiceImplTest extends CvNextGenTest {
   @Category(UnitTests.class)
   public void testGetAnalysisClusters() {
     List<LogAnalysisCluster> clusters = buildAnalysisClusters(1234l, 23456l);
-    clusters.forEach(cluster -> cluster.setCvConfigId(cvConfigId));
+    clusters.forEach(cluster -> cluster.setVerificationTaskId(verificationTaskId));
     hPersistence.save(clusters);
 
     List<LogAnalysisCluster> clustersReturned =
-        logAnalysisService.getAnalysisClusters(cvConfigId, new HashSet<>(Arrays.asList(1234l, 23456l)));
+        logAnalysisService.getAnalysisClusters(verificationTaskId, new HashSet<>(Arrays.asList(1234l, 23456l)));
 
     assertThat(clustersReturned).containsExactlyInAnyOrderElementsOf(clusters);
   }
@@ -252,14 +254,14 @@ public class LogAnalysisServiceImplTest extends CvNextGenTest {
     Instant start = Instant.now().minus(10, ChronoUnit.MINUTES).truncatedTo(ChronoUnit.MINUTES);
     Instant end = start.plus(5, ChronoUnit.MINUTES);
     LogAnalysisResult result = LogAnalysisResult.builder()
-                                   .cvConfigId(cvConfigId)
+                                   .verificationTaskId(verificationTaskId)
                                    .logAnalysisResults(getResults(1234l, 23456l))
                                    .analysisStartTime(start)
                                    .analysisEndTime(end)
                                    .build();
     hPersistence.save(result);
     LogAnalysisResult result2 = LogAnalysisResult.builder()
-                                    .cvConfigId(cvConfigId)
+                                    .verificationTaskId(verificationTaskId)
                                     .logAnalysisResults(getResults(1234l, 23456l))
                                     .analysisStartTime(end)
                                     .analysisEndTime(end.plus(5, ChronoUnit.MINUTES))
@@ -279,14 +281,14 @@ public class LogAnalysisServiceImplTest extends CvNextGenTest {
     Instant start = Instant.now().minus(10, ChronoUnit.MINUTES).truncatedTo(ChronoUnit.MINUTES);
     Instant end = start.plus(5, ChronoUnit.MINUTES);
     LogAnalysisResult result = LogAnalysisResult.builder()
-                                   .cvConfigId(cvConfigId)
+                                   .verificationTaskId(cvConfigId)
                                    .logAnalysisResults(getResults(1235l))
                                    .analysisStartTime(start)
                                    .analysisEndTime(end)
                                    .build();
     hPersistence.save(result);
     LogAnalysisResult result2 = LogAnalysisResult.builder()
-                                    .cvConfigId(cvConfigId)
+                                    .verificationTaskId(cvConfigId)
                                     .logAnalysisResults(getResults(1234l, 23456l))
                                     .analysisStartTime(start)
                                     .analysisEndTime(end)
@@ -385,7 +387,7 @@ public class LogAnalysisServiceImplTest extends CvNextGenTest {
     List<LogAnalysisCluster> clusters = buildAnalysisClusters(1234l, 23456l);
     LogAnalysisResult result = LogAnalysisResult.builder().logAnalysisResults(getResults(12345l, 23456l)).build();
     return LogAnalysisDTO.builder()
-        .cvConfigId(cvConfigId)
+        .verificationTaskId(cvConfigId)
         .logClusters(clusters)
         .logAnalysisResults(result.getLogAnalysisResults())
         .analysisMinute(endTime.getEpochSecond() / 60)

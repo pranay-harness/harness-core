@@ -55,7 +55,7 @@ public class TimeSeriesCumulativeSumsTest extends CategoryTest {
   @Category(UnitTests.class)
   public void testConvertToMap() {
     TimeSeriesCumulativeSums timeSeriesCumulativeSums = TimeSeriesCumulativeSums.builder()
-                                                            .cvConfigId(generateUuid())
+                                                            .verificationTaskId(generateUuid())
                                                             .transactionMetricSums(buildTransactionMetricSums())
                                                             .build();
 
@@ -83,7 +83,7 @@ public class TimeSeriesCumulativeSumsTest extends CategoryTest {
   @Category(UnitTests.class)
   public void testConvertToMap_nullSums() {
     TimeSeriesCumulativeSums timeSeriesCumulativeSums =
-        TimeSeriesCumulativeSums.builder().cvConfigId(generateUuid()).transactionMetricSums(null).build();
+        TimeSeriesCumulativeSums.builder().verificationTaskId(generateUuid()).transactionMetricSums(null).build();
 
     Map<String, Map<String, MetricSum>> txnMetricMap = timeSeriesCumulativeSums.convertToMap();
     assertThat(txnMetricMap).isNotNull();

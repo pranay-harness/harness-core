@@ -97,7 +97,7 @@ public class DataCollectionTaskServiceImplTest extends CvNextGenTest {
     assertThat(dataCollectionTask.getStatus()).isEqualTo(DataCollectionExecutionStatus.QUEUED);
     DataCollectionTask updatedDataCollectionTask = getDataCollectionTask(dataCollectionTask.getUuid());
     assertThat(updatedDataCollectionTask.getStatus()).isEqualTo(DataCollectionExecutionStatus.QUEUED);
-    assertThat(updatedDataCollectionTask.getVerificationTaskId()).isEqualTo(dataCollectionTask.getCvConfigId());
+    assertThat(updatedDataCollectionTask.getVerificationTaskId()).isEqualTo(dataCollectionTask.getVerificationTaskId());
     assertThat(updatedDataCollectionTask.shouldQueueAnalysis()).isTrue();
   }
 
@@ -318,7 +318,7 @@ public class DataCollectionTaskServiceImplTest extends CvNextGenTest {
     dataCollectionTaskService.updateTaskStatus(result);
     DataCollectionTask nextTask = hPersistence.createQuery(DataCollectionTask.class)
                                       .filter(DataCollectionTaskKeys.accountId, accountId)
-                                      .filter(DataCollectionTaskKeys.cvConfigId, cvConfigId)
+                                      .filter(DataCollectionTaskKeys.verificationTaskId, verificationTaskId)
                                       .filter(DataCollectionTaskKeys.status, DataCollectionExecutionStatus.QUEUED)
                                       .order(DataCollectionTaskKeys.lastUpdatedAt)
                                       .get();
@@ -396,8 +396,9 @@ public class DataCollectionTaskServiceImplTest extends CvNextGenTest {
     AppDynamicsCVConfig cvConfig = getCVConfig();
 
     String taskIdFromApi = dataCollectionTaskService.enqueueFirstTask(cvConfig);
-    DataCollectionTask savedTask =
-        hPersistence.createQuery(DataCollectionTask.class).filter(DataCollectionTaskKeys.cvConfigId, cvConfigId).get();
+    DataCollectionTask savedTask = hPersistence.createQuery(DataCollectionTask.class)
+                                       .filter(DataCollectionTaskKeys.verificationTaskId, verificationTaskId)
+                                       .get();
     assertThat(savedTask.getStatus()).isEqualTo(DataCollectionExecutionStatus.QUEUED);
     assertThat(savedTask.getDataCollectionInfo()).isInstanceOf(AppDynamicsDataCollectionInfo.class);
     assertThat(taskIdFromApi).isEqualTo(taskId);
@@ -432,8 +433,9 @@ public class DataCollectionTaskServiceImplTest extends CvNextGenTest {
     SplunkCVConfig cvConfig = getSplunkCVConfig();
 
     String taskIdFromApi = dataCollectionTaskService.enqueueFirstTask(cvConfig);
-    DataCollectionTask savedTask =
-        hPersistence.createQuery(DataCollectionTask.class).filter(DataCollectionTaskKeys.cvConfigId, cvConfigId).get();
+    DataCollectionTask savedTask = hPersistence.createQuery(DataCollectionTask.class)
+                                       .filter(DataCollectionTaskKeys.verificationTaskId, verificationTaskId)
+                                       .get();
     assertThat(savedTask.getStatus()).isEqualTo(DataCollectionExecutionStatus.QUEUED);
     assertThat(savedTask.getDataCollectionInfo()).isInstanceOf(SplunkDataCollectionInfo.class);
     assertThat(taskIdFromApi).isEqualTo(taskId);
@@ -516,7 +518,6 @@ public class DataCollectionTaskServiceImplTest extends CvNextGenTest {
 
   private DataCollectionTask create(DataCollectionExecutionStatus executionStatus) {
     return DataCollectionTask.builder()
-        .cvConfigId(cvConfigId)
         .verificationTaskId(verificationTaskId)
         .dataCollectionWorkerId(dataCollectionWorkerId)
         .accountId(accountId)

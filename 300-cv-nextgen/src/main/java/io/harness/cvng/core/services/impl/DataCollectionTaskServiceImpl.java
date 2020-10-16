@@ -89,7 +89,6 @@ public class DataCollectionTaskServiceImpl implements DataCollectionTaskService 
       return Optional.of(DataCollectionTaskDTO.builder()
                              .uuid(task.getUuid())
                              .accountId(task.getAccountId())
-                             .cvConfigId(task.getCvConfigId())
                              .verificationTaskId(task.getVerificationTaskId())
                              .dataCollectionInfo(task.getDataCollectionInfo())
                              .startTime(task.getStartTime())
@@ -189,9 +188,9 @@ public class DataCollectionTaskServiceImpl implements DataCollectionTaskService 
   }
 
   private void createNextTask(DataCollectionTask prevTask) {
-    CVConfig cvConfig = cvConfigService.get(prevTask.getCvConfigId());
+    CVConfig cvConfig = cvConfigService.get(verificationTaskService.getCVConfigId(prevTask.getVerificationTaskId()));
     if (cvConfig == null) {
-      logger.info("CVConfig no longer exists {}", prevTask.getCvConfigId());
+      logger.info("CVConfig no longer exists for verificationTaskId {}", prevTask.getVerificationTaskId());
       return;
     }
     populateMetricPack(cvConfig);
@@ -220,7 +219,7 @@ public class DataCollectionTaskServiceImpl implements DataCollectionTaskService 
     dataCollectionTask.setDataCollectionWorkerId(cvConfig.getUuid());
     Map<String, String> params = new HashMap<>();
     params.put(DataCollectionTaskKeys.dataCollectionWorkerId, cvConfig.getUuid());
-    params.put(DataCollectionTaskKeys.cvConfigId, cvConfig.getUuid());
+    params.put(DataCollectionTaskKeys.verificationTaskId, dataCollectionTask.getVerificationTaskId());
     params.put(CVConfigKeys.connectorIdentifier, cvConfig.getConnectorIdentifier());
 
     String dataCollectionTaskId = verificationManagerService.createDataCollectionTask(cvConfig.getAccountId(),
@@ -253,7 +252,6 @@ public class DataCollectionTaskServiceImpl implements DataCollectionTaskService 
     return DataCollectionTask.builder()
         .accountId(cvConfig.getAccountId())
         .dataCollectionWorkerId(cvConfig.getUuid())
-        .cvConfigId(cvConfig.getUuid())
         .status(DataCollectionExecutionStatus.QUEUED)
         .startTime(startTime)
         .endTime(endTime)

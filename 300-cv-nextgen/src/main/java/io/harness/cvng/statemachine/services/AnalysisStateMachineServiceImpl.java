@@ -49,25 +49,25 @@ public class AnalysisStateMachineServiceImpl implements AnalysisStateMachineServ
   @Inject private VerificationJobService verificationJobService;
 
   @Override
-  public void initiateStateMachine(String cvConfigId, AnalysisStateMachine stateMachine) {
-    Preconditions.checkNotNull(stateMachine, "Cannot initiate an empty state machine for config %s", cvConfigId);
+  public void initiateStateMachine(String verificationTaskId, AnalysisStateMachine stateMachine) {
     Preconditions.checkNotNull(
-        stateMachine.getCurrentState(), "No start state available in state machine for %s", cvConfigId);
+        stateMachine, "Cannot initiate an empty state machine for config %s", verificationTaskId);
+    Preconditions.checkNotNull(
+        stateMachine.getCurrentState(), "No start state available in state machine for %s", verificationTaskId);
 
     Preconditions.checkNotNull(stateMachine.getCurrentState(),
         "The start state is null for a state machine"
             + "for config %s",
-        cvConfigId);
+        verificationTaskId);
 
-    AnalysisStateMachine executingStateMachine = getExecutingStateMachine(cvConfigId);
+    AnalysisStateMachine executingStateMachine = getExecutingStateMachine(verificationTaskId);
     if (executingStateMachine != null) {
       if (executingStateMachine.getStatus() != AnalysisStatus.SUCCESS) {
         throw new AnalysisStateMachineException(
-            "There can be only one statemachine execution at a time for cvConfig: " + cvConfigId);
+            "There can be only one statemachine execution at a time for cvConfig: " + verificationTaskId);
       }
     }
-    stateMachine.setCvConfigId(cvConfigId);
-    stateMachine.setVerificationTaskId(cvConfigId);
+    stateMachine.setVerificationTaskId(verificationTaskId);
     stateMachine.setStatus(AnalysisStatus.RUNNING);
     injector.injectMembers(stateMachine.getCurrentState());
     stateMachine.getCurrentState().execute();
@@ -75,18 +75,19 @@ public class AnalysisStateMachineServiceImpl implements AnalysisStateMachineServ
   }
 
   @Override
-  public void executeStateMachine(String cvConfigId) {
-    if (isEmpty(cvConfigId)) {
+  public void executeStateMachine(String verificationTaskId) {
+    if (isEmpty(verificationTaskId)) {
       logger.error("Empty cvConfigId in executeStateMachine");
       throw new AnalysisStateMachineException("Empty cvConfigId in executeStateMachine");
     }
-    AnalysisStateMachine analysisStateMachine = hPersistence.createQuery(AnalysisStateMachine.class)
-                                                    .filter(AnalysisStateMachineKeys.cvConfigId, cvConfigId)
-                                                    .filter(AnalysisStateMachineKeys.status, AnalysisStatus.RUNNING)
-                                                    .get();
+    AnalysisStateMachine analysisStateMachine =
+        hPersistence.createQuery(AnalysisStateMachine.class)
+            .filter(AnalysisStateMachineKeys.verificationTaskId, verificationTaskId)
+            .filter(AnalysisStateMachineKeys.status, AnalysisStatus.RUNNING)
+            .get();
 
     if (analysisStateMachine == null) {
-      logger.info("There is currently no analysis running for cvConfigId: {}", cvConfigId);
+      logger.info("There is currently no analysis running for cvConfigId: {}", verificationTaskId);
     } else {
       executeStateMachine(analysisStateMachine);
     }
@@ -189,7 +190,7 @@ public class AnalysisStateMachineServiceImpl implements AnalysisStateMachineServ
           analysisStateMachine.getUuid(), analysisStateMachine.getNextAttemptTime());
       return;
     }
-    logger.info("Retrying state machine for cvConfig {}", analysisStateMachine.getCvConfigId());
+    logger.info("Retrying state machine for cvConfig {}", analysisStateMachine.getVerificationTaskId());
     AnalysisState currentState = analysisStateMachine.getCurrentState();
     injector.injectMembers(currentState);
     if (currentState.getStatus() == AnalysisStatus.FAILED || currentState.getStatus() == AnalysisStatus.TIMEOUT) {
@@ -206,10 +207,11 @@ public class AnalysisStateMachineServiceImpl implements AnalysisStateMachineServ
   }
 
   @Override
-  public AnalysisStateMachine getExecutingStateMachine(String cvConfigId) {
-    Preconditions.checkNotNull(cvConfigId, "cvConfigId is null when trying to query for executing state machine");
+  public AnalysisStateMachine getExecutingStateMachine(String verificationTaskId) {
+    Preconditions.checkNotNull(
+        verificationTaskId, "verificationTaskId is null when trying to query for executing state machine");
     return hPersistence.createQuery(AnalysisStateMachine.class)
-        .filter(AnalysisStateMachineKeys.cvConfigId, cvConfigId)
+        .filter(AnalysisStateMachineKeys.verificationTaskId, verificationTaskId)
         .order(Sort.descending(AnalysisStateMachineKeys.createdAt))
         .get();
   }

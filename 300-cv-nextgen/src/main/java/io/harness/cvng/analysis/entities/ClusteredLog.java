@@ -37,10 +37,6 @@ public class ClusteredLog implements PersistentEntity, CreatedAtAware, UpdatedAt
   @Id private String uuid;
   private long createdAt;
   private long lastUpdatedAt;
-  /**
-   * Use verificationTaskId instead
-   */
-  @Deprecated @FdIndex private String cvConfigId;
   @FdIndex private String verificationTaskId;
   private LogClusterLevel clusterLevel;
   private String log;
@@ -57,7 +53,7 @@ public class ClusteredLog implements PersistentEntity, CreatedAtAware, UpdatedAt
 
   public LogClusterDTO toDTO() {
     return LogClusterDTO.builder()
-        .cvConfigId(cvConfigId)
+        .verificationTaskId(verificationTaskId)
         .clusterCount(clusterCount)
         .clusterLabel(clusterLabel)
         .host(host)

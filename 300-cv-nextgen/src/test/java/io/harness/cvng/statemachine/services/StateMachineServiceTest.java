@@ -47,6 +47,7 @@ import java.util.concurrent.TimeUnit;
 
 public class StateMachineServiceTest extends CvNextGenTest {
   private String cvConfigId;
+  private String verificationTaskId;
   private CVConfig cvConfig;
   // TODO: Why do we have these test with mocks?
   //  Probably investigate and need to rewrite these test with actual services. These test are unmaintainable and using
@@ -66,6 +67,7 @@ public class StateMachineServiceTest extends CvNextGenTest {
   @Before
   public void setup() {
     cvConfigId = generateUuid();
+    verificationTaskId = generateUuid();
     cvConfig = new AppDynamicsCVConfig();
     cvConfig.setVerificationType(VerificationType.TIME_SERIES);
     cvConfig.setUuid(cvConfigId);
@@ -90,8 +92,7 @@ public class StateMachineServiceTest extends CvNextGenTest {
   public void testCreateStateMachine_forServiceGuard() {
     when(cvConfigService.get(cvConfigId)).thenReturn(cvConfig);
     AnalysisInput inputs = AnalysisInput.builder()
-                               .cvConfigId(cvConfigId)
-                               .verificationTaskId(cvConfigId)
+                               .verificationTaskId(verificationTaskId)
                                .startTime(Instant.now().minus(5, ChronoUnit.MINUTES))
                                .endTime(Instant.now())
                                .build();
@@ -131,7 +132,7 @@ public class StateMachineServiceTest extends CvNextGenTest {
     int analysisMinute = (int) TimeUnit.MILLISECONDS.toMinutes(Instant.now().toEpochMilli());
     AnalysisStateMachine stateMachine = buildStateMachine(AnalysisStatus.CREATED);
 
-    stateMachineService.initiateStateMachine(cvConfigId, stateMachine);
+    stateMachineService.initiateStateMachine(verificationTaskId, stateMachine);
 
     // verify
     ArgumentCaptor<AnalysisStateMachine> stateMachineArgumentCaptor =
@@ -142,7 +143,7 @@ public class StateMachineServiceTest extends CvNextGenTest {
     AnalysisStateMachine savedStateMachine = stateMachineArgumentCaptor.getValue();
 
     assertThat(savedStateMachine).isNotNull();
-    assertThat(savedStateMachine.getCvConfigId()).isEqualTo(cvConfigId);
+    assertThat(savedStateMachine.getVerificationTaskId()).isEqualTo(verificationTaskId);
     assertThat(savedStateMachine.getStatus().name()).isEqualTo(AnalysisStatus.RUNNING.name());
   }
 
@@ -152,13 +153,13 @@ public class StateMachineServiceTest extends CvNextGenTest {
   public void testInitiateStatemachine_badStateMachine() {
     int analysisMinute = (int) TimeUnit.MILLISECONDS.toMinutes(Instant.now().toEpochMilli());
     AnalysisStateMachine stateMachine = AnalysisStateMachine.builder()
-                                            .cvConfigId(cvConfigId)
+                                            .verificationTaskId(verificationTaskId)
                                             .analysisStartTime(Instant.now().minus(5, ChronoUnit.MINUTES))
                                             .analysisEndTime(Instant.now())
                                             .build();
     TimeSeriesAnalysisState timeSeriesAnalysisState = ServiceGuardTimeSeriesAnalysisState.builder().build();
     timeSeriesAnalysisState.setInputs(AnalysisInput.builder()
-                                          .cvConfigId(cvConfigId)
+                                          .verificationTaskId(verificationTaskId)
                                           .startTime(Instant.now().minus(5, ChronoUnit.MINUTES))
                                           .endTime(Instant.now())
                                           .build());
@@ -174,12 +175,12 @@ public class StateMachineServiceTest extends CvNextGenTest {
   public void testInitiateStatemachine_badStateMachineNoFirstState() {
     int analysisMinute = (int) TimeUnit.MILLISECONDS.toMinutes(Instant.now().toEpochMilli());
     AnalysisStateMachine stateMachine = AnalysisStateMachine.builder()
-                                            .cvConfigId(cvConfigId)
+                                            .verificationTaskId(verificationTaskId)
                                             .analysisStartTime(Instant.now().minus(5, ChronoUnit.MINUTES))
                                             .analysisEndTime(Instant.now())
                                             .build();
 
-    stateMachineService.initiateStateMachine(cvConfigId, stateMachine);
+    stateMachineService.initiateStateMachine(verificationTaskId, stateMachine);
   }
 
   @Test(expected = AnalysisStateMachineException.class)
@@ -188,13 +189,13 @@ public class StateMachineServiceTest extends CvNextGenTest {
   public void testInitiateStatemachine_alreadyRunningStateMachine() {
     int analysisMinute = (int) TimeUnit.MILLISECONDS.toMinutes(Instant.now().toEpochMilli());
     AnalysisStateMachine stateMachine = AnalysisStateMachine.builder()
-                                            .cvConfigId(cvConfigId)
+                                            .verificationTaskId(verificationTaskId)
                                             .analysisStartTime(Instant.now().minus(5, ChronoUnit.MINUTES))
                                             .analysisEndTime(Instant.now())
                                             .build();
     TimeSeriesAnalysisState timeSeriesAnalysisState = ServiceGuardTimeSeriesAnalysisState.builder().build();
     timeSeriesAnalysisState.setInputs(AnalysisInput.builder()
-                                          .cvConfigId(cvConfigId)
+                                          .verificationTaskId(verificationTaskId)
                                           .startTime(Instant.now().minus(5, ChronoUnit.MINUTES))
                                           .endTime(Instant.now())
                                           .build());
@@ -206,7 +207,7 @@ public class StateMachineServiceTest extends CvNextGenTest {
     AnalysisStateMachine anotherStateMachine = AnalysisStateMachine.builder()
                                                    .analysisStartTime(Instant.now())
                                                    .analysisEndTime(Instant.now().plus(5, ChronoUnit.MINUTES))
-                                                   .cvConfigId(cvConfigId)
+                                                   .verificationTaskId(verificationTaskId)
                                                    .build();
     timeSeriesAnalysisState.getInputs().setStartTime(Instant.now());
     timeSeriesAnalysisState.getInputs().setStartTime(Instant.now().plus(5, ChronoUnit.MINUTES));
@@ -390,7 +391,7 @@ public class StateMachineServiceTest extends CvNextGenTest {
   private AnalysisStateMachine buildStateMachine(AnalysisStatus status) {
     int analysisMinute = (int) TimeUnit.MILLISECONDS.toMinutes(Instant.now().toEpochMilli());
     AnalysisStateMachine stateMachine = AnalysisStateMachine.builder()
-                                            .cvConfigId(cvConfigId)
+                                            .verificationTaskId(verificationTaskId)
                                             .analysisStartTime(Instant.now().minus(5, ChronoUnit.MINUTES))
                                             .analysisEndTime(Instant.now())
                                             .build();

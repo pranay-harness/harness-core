@@ -38,7 +38,6 @@ public class AnalysisStateMachine implements PersistentEntity, UuidAware, Create
   private long lastUpdatedAt;
   private Instant analysisStartTime;
   private Instant analysisEndTime;
-  @FdIndex private String cvConfigId;
   @FdIndex private String verificationTaskId;
   private AnalysisState currentState;
   private List<AnalysisState> completedStates;

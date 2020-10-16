@@ -62,7 +62,7 @@ public class LearningEngineTaskServiceImplTest extends CvNextGenTest {
     LearningEngineTask taskToSave = TimeSeriesLearningEngineTask.builder().build();
     taskToSave.setUuid("leTaskId1");
     taskToSave.setTaskStatus(ExecutionStatus.QUEUED);
-    taskToSave.setCvConfigId(generateUuid());
+    taskToSave.setVerificationTaskId(generateUuid());
     hPersistence.save(taskToSave);
 
     task = learningEngineTaskService.getNextAnalysisTask();
@@ -77,13 +77,13 @@ public class LearningEngineTaskServiceImplTest extends CvNextGenTest {
     LearningEngineTask taskToSave = TimeSeriesLearningEngineTask.builder().build();
     taskToSave.setUuid("leTaskId1");
     taskToSave.setTaskStatus(ExecutionStatus.QUEUED);
-    taskToSave.setCvConfigId(generateUuid());
+    taskToSave.setVerificationTaskId(generateUuid());
     taskToSave.setAnalysisType(SERVICE_GUARD_LOG_ANALYSIS);
     hPersistence.save(taskToSave);
 
     taskToSave.setUuid("leTaskId2");
     taskToSave.setTaskStatus(ExecutionStatus.QUEUED);
-    taskToSave.setCvConfigId(generateUuid());
+    taskToSave.setVerificationTaskId(generateUuid());
     taskToSave.setAnalysisType(SERVICE_GUARD_TIME_SERIES);
     hPersistence.save(taskToSave);
 
@@ -101,7 +101,7 @@ public class LearningEngineTaskServiceImplTest extends CvNextGenTest {
 
     taskToSave.setUuid("leTaskId2");
     taskToSave.setTaskStatus(ExecutionStatus.QUEUED);
-    taskToSave.setCvConfigId(generateUuid());
+    taskToSave.setVerificationTaskId(generateUuid());
     taskToSave.setAnalysisType(SERVICE_GUARD_TIME_SERIES);
     hPersistence.save(taskToSave);
 
@@ -216,7 +216,7 @@ public class LearningEngineTaskServiceImplTest extends CvNextGenTest {
     LearningEngineTask taskToSave = TimeSeriesLearningEngineTask.builder().build();
     taskToSave.setUuid("leTaskId1");
     taskToSave.setTaskStatus(taskStatus);
-    taskToSave.setCvConfigId(generateUuid());
+    taskToSave.setVerificationTaskId(generateUuid());
     taskToSave.setAnalysisType(SERVICE_GUARD_LOG_ANALYSIS);
     return taskToSave;
   }

@@ -7,7 +7,6 @@ import lombok.Value;
 @Builder
 public class LogRecordDTO {
   String accountId;
-  @Deprecated String cvConfigId;
   String verificationTaskId;
   String host;
   long timestamp;

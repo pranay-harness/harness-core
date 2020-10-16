@@ -39,7 +39,6 @@ public class DataCollectionTask implements PersistentEntity, UuidAware, CreatedA
   @Id private String uuid;
 
   @NonNull @FdIndex private String accountId;
-  @FdIndex private String cvConfigId;
   @FdIndex private String verificationTaskId;
   @FdIndex private String dataCollectionWorkerId;
   @Getter(AccessLevel.NONE) @Builder.Default private boolean queueAnalysis = true;

@@ -24,6 +24,7 @@ import io.harness.cvng.beans.CVMonitoringCategory;
 import io.harness.cvng.core.entities.CVConfig;
 import io.harness.cvng.core.entities.SplunkCVConfig;
 import io.harness.cvng.core.services.api.CVConfigService;
+import io.harness.cvng.core.services.api.VerificationTaskService;
 import io.harness.cvng.dashboard.beans.AnalyzedLogDataDTO;
 import io.harness.cvng.dashboard.beans.LogDataByTag;
 import io.harness.cvng.dashboard.services.api.LogDashboardService;
@@ -57,6 +58,7 @@ public class LogDashboardServiceImplTest extends CvNextGenTest {
 
   @Mock private LogAnalysisService mockLogAnalysisService;
   @Mock private CVConfigService mockCvConfigService;
+  @Inject private VerificationTaskService verificationTaskService;
 
   @Before
   public void setUp() throws Exception {
@@ -304,7 +306,7 @@ public class LogDashboardServiceImplTest extends CvNextGenTest {
       });
 
       returnList.add(LogAnalysisResult.builder()
-                         .cvConfigId(cvConfigId)
+                         .verificationTaskId(cvConfigId)
                          .analysisStartTime(startTime)
                          .analysisEndTime(endTime.minus(1, ChronoUnit.MINUTES))
                          .logAnalysisResults(resultList)
@@ -329,6 +331,7 @@ public class LogDashboardServiceImplTest extends CvNextGenTest {
     return clusterList;
   }
   private CVConfig createCvConfig(String cvConfigId, String serviceIdentifier) {
+    verificationTaskService.create(accountId, cvConfigId);
     SplunkCVConfig splunkCVConfig = new SplunkCVConfig();
     splunkCVConfig.setUuid(cvConfigId);
     splunkCVConfig.setServiceIdentifier(serviceIdentifier);

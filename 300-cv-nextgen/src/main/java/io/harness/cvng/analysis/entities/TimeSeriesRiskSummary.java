@@ -29,8 +29,7 @@ import java.util.List;
 @HarnessEntity(exportable = false)
 public class TimeSeriesRiskSummary implements PersistentEntity, UuidAware {
   @Id private String uuid;
-  @NotEmpty @FdIndex private String cvConfigId;
-  @FdIndex private String verificationTaskId;
+  @NotEmpty @FdIndex private String verificationTaskId;
   @NotEmpty @FdIndex private Instant analysisStartTime;
   @NotEmpty @FdIndex private Instant analysisEndTime;
   private List<TransactionMetricRisk> transactionMetricRiskList;
