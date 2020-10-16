@@ -16,7 +16,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 
 @Slf4j
-public class NGCommonsComponentTest extends NGCommonsBaseTest {
+public class NGCommonsComponentTest extends NGCommonsTestBase {
   @Inject private Map<String, TestExecution> tests;
 
   @Test

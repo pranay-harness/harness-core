@@ -1,6 +1,7 @@
 package io.harness;
 
 import static io.harness.rule.OwnerRule.GEORGE;
+import static io.harness.rule.OwnerRule.KAMAL;
 import static org.assertj.core.api.Assertions.assertThatCode;
 
 import com.google.inject.Inject;
@@ -20,7 +21,7 @@ public class CvNextGenCommonsComponentTest extends CvNextGenCommonsTestBase {
   @Inject private Map<String, TestExecution> tests;
 
   @Test
-  @Owner(developers = GEORGE)
+  @Owner(developers = KAMAL)
   @Category(UnitTests.class)
   public void componentCvNextGenCommonsTests() {
     for (Entry<String, TestExecution> test : tests.entrySet()) {
