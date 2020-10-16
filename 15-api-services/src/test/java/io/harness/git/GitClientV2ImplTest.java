@@ -4,8 +4,7 @@ import static io.harness.git.model.ChangeType.ADD;
 import static io.harness.git.model.ChangeType.DELETE;
 import static io.harness.git.model.ChangeType.RENAME;
 import static io.harness.git.model.PushResultGit.pushResultBuilder;
-import static io.harness.rule.OwnerRule.ABHINAV;
-import static io.harness.rule.OwnerRule.ARVIND;
+import static io.harness.rule.OwnerRule.*;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -479,7 +478,7 @@ public class GitClientV2ImplTest extends CategoryTest {
   }
 
   @Test
-  @Owner(developers = ABHINAV)
+  @Owner(developers = YOGESH)
   @Category(UnitTests.class)
   public void testApplyChangeSetOnFileSystem() throws Exception {
     CommitAndPushRequest gitCommitAndPushRequest =
@@ -528,9 +527,7 @@ public class GitClientV2ImplTest extends CategoryTest {
     doGitCommit(git);
 
     // Test Rename
-    Path anyExistingFile = Files.list(Paths.get(repoPath)).findFirst().orElse(null);
-    assertThat(anyExistingFile).isNotNull();
-    String anyExistingFileName = anyExistingFile.getFileName().toString();
+    String anyExistingFileName = buildFileName(5);
     String newFileName = anyExistingFileName + "-new";
     GitFileChange renameGitFileChange =
         GitFileChange.builder().changeType(RENAME).oldFilePath(anyExistingFileName).filePath(newFileName).build();
@@ -557,15 +554,19 @@ public class GitClientV2ImplTest extends CategoryTest {
     for (int i = 0; i < 10; i++) {
       gitFileChanges.add(GitFileChange.builder()
                              .changeType(ADD)
-                             .filePath(i + ".txt")
+                             .filePath(buildFileName(i))
                              .fileContent(i + " " + System.currentTimeMillis())
                              .build());
     }
     for (int i = 0; i < 10; i += 3) {
-      gitFileChanges.add(GitFileChange.builder().changeType(DELETE).filePath(i + ".txt").build());
+      gitFileChanges.add(GitFileChange.builder().changeType(DELETE).filePath(buildFileName(i)).build());
     }
     logger.info(gitFileChanges.toString());
     return gitFileChanges;
+  }
+
+  private String buildFileName(int i) {
+    return i + ".txt";
   }
 
   @Test

@@ -69,7 +69,6 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.charset.Charset;
 import java.nio.file.Files;
-import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
@@ -359,7 +358,7 @@ public class GitClientImplTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = YOGESH, intermittent = true)
+  @Owner(developers = YOGESH)
   @Category(UnitTests.class)
   public void testApplyChangeSetOnFileSystem() throws Exception {
     GitConfig gitConfig = GitConfig.builder().accountId(ACCOUNT_ID).gitRepoType(GitRepositoryType.YAML).build();
@@ -409,9 +408,7 @@ public class GitClientImplTest extends WingsBaseTest {
     doGitCommit(git);
 
     // Test Rename
-    Path anyExistingFile = Files.list(Paths.get(repoPath)).findFirst().orElse(null);
-    assertThat(anyExistingFile).isNotNull();
-    String anyExistingFileName = anyExistingFile.getFileName().toString();
+    String anyExistingFileName = buildFileName(5);
     String newFileName = anyExistingFileName + "-new";
     GitFileChange renameGitFileChange = GitFileChange.Builder.aGitFileChange()
                                             .withChangeType(RENAME)
@@ -437,15 +434,19 @@ public class GitClientImplTest extends WingsBaseTest {
     for (int i = 0; i < 10; i++) {
       gitFileChanges.add(aGitFileChange()
                              .withChangeType(ChangeType.ADD)
-                             .withFilePath(i + ".txt")
+                             .withFilePath(buildFileName(i))
                              .withFileContent(i + " " + System.currentTimeMillis())
                              .build());
     }
     for (int i = 0; i < 10; i += 3) {
-      gitFileChanges.add(aGitFileChange().withChangeType(ChangeType.DELETE).withFilePath(i + ".txt").build());
+      gitFileChanges.add(aGitFileChange().withChangeType(ChangeType.DELETE).withFilePath(buildFileName(i)).build());
     }
     logger.info(gitFileChanges.toString());
     return gitFileChanges;
+  }
+
+  private String buildFileName(int i) {
+    return i + ".txt";
   }
 
   private void createLocalRepo(String repoPath) {
