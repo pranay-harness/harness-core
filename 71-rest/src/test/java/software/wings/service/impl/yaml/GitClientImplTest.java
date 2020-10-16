@@ -359,7 +359,7 @@ public class GitClientImplTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = YOGESH)
+  @Owner(developers = YOGESH, intermittent = true)
   @Category(UnitTests.class)
   public void testApplyChangeSetOnFileSystem() throws Exception {
     GitConfig gitConfig = GitConfig.builder().accountId(ACCOUNT_ID).gitRepoType(GitRepositoryType.YAML).build();
