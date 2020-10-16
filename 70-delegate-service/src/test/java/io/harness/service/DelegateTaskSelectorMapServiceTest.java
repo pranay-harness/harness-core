@@ -64,23 +64,6 @@ public class DelegateTaskSelectorMapServiceTest extends DelegateServiceTestBase 
   @Test
   @Owner(developers = SANJA)
   @Category(UnitTests.class)
-  public void shouldAddAlsoUpdate() {
-    TaskSelectorMap taskSelectorMap =
-        TaskSelectorMap.builder().taskGroup(HELM_TASK_GROUP).accountId(ACCOUNT_ID).selectors(singleton("a")).build();
-    hPersistence.save(taskSelectorMap);
-    TaskSelectorMap taskSelectorMapToAdd = TaskSelectorMap.builder()
-                                               .accountId(ACCOUNT_ID)
-                                               .taskGroup(HELM_TASK_GROUP)
-                                               .selectors(new HashSet(asList("a", "b", "c")))
-                                               .build();
-    TaskSelectorMap updated = taskSelectorMapService.add(taskSelectorMapToAdd);
-    taskSelectorMap.setSelectors(taskSelectorMapToAdd.getSelectors());
-    assertThat(updated).isEqualToIgnoringGivenFields(taskSelectorMap, "lastUpdatedAt");
-  }
-
-  @Test
-  @Owner(developers = SANJA)
-  @Category(UnitTests.class)
   public void shouldUpdate() {
     TaskSelectorMap taskSelectorMap =
         TaskSelectorMap.builder().taskGroup(HELM_TASK_GROUP).accountId(ACCOUNT_ID).selectors(singleton("a")).build();
