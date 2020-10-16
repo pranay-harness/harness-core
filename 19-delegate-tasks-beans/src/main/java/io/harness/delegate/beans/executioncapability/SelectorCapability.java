@@ -9,6 +9,7 @@ import java.util.Set;
 @Builder
 public class SelectorCapability implements ExecutionCapability {
   private Set<String> selectors;
+  private String selectorOrigin;
 
   @Builder.Default private final CapabilityType capabilityType = CapabilityType.SELECTORS;
 
