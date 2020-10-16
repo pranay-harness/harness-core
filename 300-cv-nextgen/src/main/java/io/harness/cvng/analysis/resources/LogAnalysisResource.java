@@ -56,14 +56,14 @@ public class LogAnalysisResource {
   @ExceptionMetered
   @LearningEngineAuth
   @ApiOperation(value = "get previous log analysis for a data source config", nickname = "getPreviousLogAnalysis")
-  public RestResponse<List<LogAnalysisCluster>> getPreviousAnalysis(@QueryParam("cvConfigId") String cvConfigId,
+  public RestResponse<List<LogAnalysisCluster>> getPreviousAnalysis(
+      @QueryParam("verificationTaskId") String verificationTaskId,
       @QueryParam("analysisStartTime") String analysisStartTime,
       @QueryParam("analysisEndTime") String analysisEndTime) {
     return new RestResponse<>(logAnalysisService.getPreviousAnalysis(
-        cvConfigId, Instant.parse(analysisStartTime), Instant.parse(analysisEndTime)));
+        verificationTaskId, Instant.parse(analysisStartTime), Instant.parse(analysisEndTime)));
   }
 
-  // TODO: make this api similar to saveDeploymentAnalysis
   @Produces({"application/json", "application/v1+json"})
   @POST
   @Path("/" + LOG_ANALYSIS_SAVE_PATH)
@@ -71,11 +71,9 @@ public class LogAnalysisResource {
   @LearningEngineAuth
   @ExceptionMetered
   @ApiOperation(value = "saves log risk analysis for a data source config", nickname = "saveServiceGuardLogAnalysis")
-  public RestResponse<Boolean> saveServiceGuardAnalysis(@QueryParam("taskId") String taskId,
-      @QueryParam("cvConfigId") String cvConfigId, @QueryParam("analysisStartTime") String analysisStartTime,
-      @QueryParam("analysisEndTime") String analysisEndTime, LogAnalysisDTO analysisBody) {
-    logAnalysisService.saveAnalysis(
-        cvConfigId, taskId, Instant.parse(analysisStartTime), Instant.parse(analysisEndTime), analysisBody);
+  public RestResponse<Boolean> saveServiceGuardAnalysis(
+      @QueryParam("taskId") String taskId, LogAnalysisDTO analysisBody) {
+    logAnalysisService.saveAnalysis(taskId, analysisBody);
     return new RestResponse<>(true);
   }
 

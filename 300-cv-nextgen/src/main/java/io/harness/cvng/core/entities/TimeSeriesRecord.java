@@ -17,7 +17,6 @@ import lombok.experimental.FieldNameConstants;
 import org.jetbrains.annotations.NotNull;
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Id;
-import org.mongodb.morphia.annotations.PrePersist;
 
 import java.time.Instant;
 import java.time.OffsetDateTime;
@@ -72,15 +71,6 @@ public class TimeSeriesRecord implements CreatedAtAware, AccountAccess, Persiste
     @Override
     public int compareTo(TimeSeriesGroupValue other) {
       return timeStamp.compareTo(other.getTimeStamp());
-    }
-  }
-  @PrePersist
-  private void prePersist() {
-    // TODO: temp migration code. Remove this.
-    if (verificationTaskId == null) {
-      if (cvConfigId != null) {
-        verificationTaskId = cvConfigId;
-      }
     }
   }
 }

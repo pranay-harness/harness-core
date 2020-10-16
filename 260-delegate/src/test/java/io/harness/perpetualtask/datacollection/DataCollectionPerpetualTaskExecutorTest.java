@@ -67,7 +67,6 @@ public class DataCollectionPerpetualTaskExecutorTest extends DelegateTest {
   @Mock private CVNextGenServiceClient cvNextGenServiceClient;
   private AppDynamicsConnectorDTO appDynamicsConnectorDTO;
   private String accountId;
-  private String cvConfigId;
   private DataCollectionTaskDTO dataCollectionTaskDTO;
   private AppDynamicsDataCollectionInfo dataCollectionInfo;
 
@@ -79,8 +78,6 @@ public class DataCollectionPerpetualTaskExecutorTest extends DelegateTest {
   public void setup() throws IllegalAccessException, IOException {
     on(dataCollector).set("kryoSerializer", kryoSerializer);
     accountId = generateUuid();
-    cvConfigId = generateUuid();
-
     SecretRefData secretRefData = SecretRefData.builder()
                                       .scope(Scope.ACCOUNT)
                                       .identifier("secret")
@@ -138,7 +135,6 @@ public class DataCollectionPerpetualTaskExecutorTest extends DelegateTest {
     perpetualTaskParams = PerpetualTaskExecutionParams.newBuilder()
                               .setCustomizedParams(Any.pack(DataCollectionPerpetualTaskParams.newBuilder()
                                                                 .setAccountId(accountId)
-                                                                .setCvConfigId(cvConfigId)
                                                                 .setDataCollectionInfo(bytes)
                                                                 .build()))
                               .build();

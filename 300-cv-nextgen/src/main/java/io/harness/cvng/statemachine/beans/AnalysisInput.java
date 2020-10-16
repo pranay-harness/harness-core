@@ -13,11 +13,6 @@ import java.time.Instant;
 public class AnalysisInput {
   private Instant startTime;
   private Instant endTime;
-  @Deprecated
-  /**
-   * Use verificationTaskId instead
-   */
-  private String cvConfigId;
   private String verificationTaskId;
 
   public TimeRange getTimeRange() {

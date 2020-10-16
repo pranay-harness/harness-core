@@ -228,9 +228,10 @@ public class LogClusterServiceImplTest extends CvNextGenTest {
                               .build();
     logClusterService.scheduleServiceGuardL2ClusteringTask(input);
 
-    List<LearningEngineTask> tasks = hPersistence.createQuery(LearningEngineTask.class, excludeAuthority)
-                                         .filter(LearningEngineTaskKeys.cvConfigId, serviceGuardVerificationTaskId)
-                                         .asList();
+    List<LearningEngineTask> tasks =
+        hPersistence.createQuery(LearningEngineTask.class, excludeAuthority)
+            .filter(LearningEngineTaskKeys.verificationTaskId, serviceGuardVerificationTaskId)
+            .asList();
     assertThat(tasks.size()).isEqualTo(0);
   }
 
@@ -285,9 +286,10 @@ public class LogClusterServiceImplTest extends CvNextGenTest {
     List<LogClusterDTO> clusterDTOList = buildLogClusterDtos(5, start, end);
     logClusterService.saveClusteredData(
         clusterDTOList, serviceGuardVerificationTaskId, end, "taskId1", LogClusterLevel.L2);
-    List<ClusteredLog> clusteredLogList = hPersistence.createQuery(ClusteredLog.class)
-                                              .filter(ClusteredLogKeys.cvConfigId, serviceGuardVerificationTaskId)
-                                              .asList();
+    List<ClusteredLog> clusteredLogList =
+        hPersistence.createQuery(ClusteredLog.class)
+            .filter(ClusteredLogKeys.verificationTaskId, serviceGuardVerificationTaskId)
+            .asList();
     assertThat(clusteredLogList).isNotNull();
   }
   @Test

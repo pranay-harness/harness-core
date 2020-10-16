@@ -1,6 +1,6 @@
 package io.harness.cvng.analysis.services.api;
 
-import io.harness.cvng.analysis.beans.ServiceGuardMetricAnalysisDTO;
+import io.harness.cvng.analysis.beans.ServiceGuardTimeSeriesAnalysisDTO;
 import io.harness.cvng.analysis.beans.TimeSeriesRecordDTO;
 import io.harness.cvng.analysis.entities.LearningEngineTask.ExecutionStatus;
 import io.harness.cvng.core.beans.TimeSeriesMetricDefinition;
@@ -17,7 +17,7 @@ public interface TrendAnalysisService {
 
   List<TimeSeriesRecordDTO> getTestData(String verificationTaskId, Instant startTime, Instant endTime);
 
-  void saveAnalysis(String taskId, ServiceGuardMetricAnalysisDTO analysis);
+  void saveAnalysis(String taskId, ServiceGuardTimeSeriesAnalysisDTO analysis);
 
   List<TimeSeriesMetricDefinition> getTimeSeriesMetricDefinitions();
 }

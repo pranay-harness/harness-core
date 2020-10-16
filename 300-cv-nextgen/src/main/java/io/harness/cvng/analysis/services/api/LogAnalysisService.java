@@ -20,15 +20,12 @@ public interface LogAnalysisService {
   String scheduleDeploymentLogAnalysisTask(AnalysisInput analysisInput);
   Map<String, ExecutionStatus> getTaskStatus(List<String> taskIds);
   List<LogClusterDTO> getTestData(String verificationTaskId, Instant analysisStartTime, Instant analysisEndTime);
-  List<LogAnalysisCluster> getPreviousAnalysis(String cvConfigId, Instant analysisStartTime, Instant analysisEndTime);
-  void saveAnalysis(String cvConfigId, String taskId, Instant analysisStartTime, Instant analysisEndTime,
-      LogAnalysisDTO analysisBody);
-
-  List<LogAnalysisCluster> getAnalysisClusters(String cvConfigId, Set<Long> labels);
+  List<LogAnalysisCluster> getPreviousAnalysis(
+      String verificationTaskId, Instant analysisStartTime, Instant analysisEndTime);
+  void saveAnalysis(String taskId, LogAnalysisDTO analysisBody);
+  List<LogAnalysisCluster> getAnalysisClusters(String verificationTaskId, Set<Long> labels);
   List<LogAnalysisResult> getAnalysisResults(
-      String cvConfigId, List<LogAnalysisTag> tags, Instant startTime, Instant endTime);
-
+      String verificationTaskId, List<LogAnalysisTag> tags, Instant startTime, Instant endTime);
   void saveAnalysis(String learningEngineTaskId, DeploymentLogAnalysisDTO deploymentLogAnalysisDTO);
-
   void logDeploymentVerificationProgress(AnalysisInput inputs, AnalysisStatus finalStatus);
 }

@@ -35,7 +35,6 @@ import java.util.Date;
 public class LogRecord implements PersistentEntity, UuidAware, CreatedAtAware, AccountAccess {
   @Id private String uuid;
   @FdIndex private String accountId;
-  @FdIndex private String cvConfigId;
   @FdIndex private String verificationTaskId;
   @NotEmpty private Instant timestamp;
   private String host;
@@ -49,7 +48,6 @@ public class LogRecord implements PersistentEntity, UuidAware, CreatedAtAware, A
 
   public LogClusterDTO toLogClusterDTO() {
     return LogClusterDTO.builder()
-        .cvConfigId(this.getCvConfigId())
         .host(this.getHost())
         .epochMinute(instantToEpochMinute(this.getTimestamp()))
         .log(this.getLog())

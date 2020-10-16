@@ -18,7 +18,6 @@ import lombok.experimental.FieldNameConstants;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Id;
-import org.mongodb.morphia.annotations.PrePersist;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -38,9 +37,7 @@ public class TimeSeriesShortTermHistory implements PersistentEntity, UuidAware, 
   @Id private String uuid;
   private long createdAt;
   private long lastUpdatedAt;
-
-  @NotEmpty @FdIndex private String cvConfigId;
-  @FdIndex private String verificationTaskId;
+  @NotEmpty @FdIndex private String verificationTaskId;
   List<TransactionMetricHistory> transactionMetricHistories;
 
   @Data
@@ -100,12 +97,5 @@ public class TimeSeriesShortTermHistory implements PersistentEntity, UuidAware, 
       }
     });
     return txnMetricHistoryMap;
-  }
-
-  @PrePersist
-  private void prePersist() {
-    if (cvConfigId != null) {
-      verificationTaskId = cvConfigId;
-    }
   }
 }

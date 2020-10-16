@@ -38,7 +38,6 @@ public class LogRecordServiceImpl implements LogRecordService {
   private LogRecord toLogRecord(LogRecordDTO logRecordDTO) {
     return LogRecord.builder()
         .accountId(logRecordDTO.getAccountId())
-        .cvConfigId(logRecordDTO.getCvConfigId())
         .verificationTaskId(logRecordDTO.getVerificationTaskId())
         .host(logRecordDTO.getHost())
         .log(logRecordDTO.getLog())

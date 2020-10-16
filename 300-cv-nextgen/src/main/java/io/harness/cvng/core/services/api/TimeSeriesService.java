@@ -13,11 +13,11 @@ import java.util.List;
 public interface TimeSeriesService {
   boolean save(List<TimeSeriesDataCollectionRecord> dataRecords);
 
-  boolean updateRiskScores(String cvConfigId, TimeSeriesRiskSummary riskSummary);
+  boolean updateRiskScores(String verificationTaskId, TimeSeriesRiskSummary riskSummary);
 
   List<TimeSeriesMetricDefinition> getTimeSeriesMetricDefinitions(String cvConfigId);
   TimeSeriesTestDataDTO getTxnMetricDataForRange(
-      String cvConfigId, Instant startTime, Instant endTime, String metricName, String txnName);
+      String verificationTaskId, Instant startTime, Instant endTime, String metricName, String txnName);
 
   /**
    * startTime is inclusive and endTime is exclusive.
@@ -28,8 +28,8 @@ public interface TimeSeriesService {
    */
   List<TimeSeriesRecordDTO> getTimeSeriesRecordDTOs(String verificationTaskId, Instant startTime, Instant endTime);
   TimeSeriesTestDataDTO getMetricGroupDataForRange(
-      String cvConfigId, Instant startTime, Instant endTime, String metricName, List<String> groupNames);
+      String verificationTaskId, Instant startTime, Instant endTime, String metricName, List<String> groupNames);
 
   List<TimeSeriesRecord> getTimeSeriesRecordsForConfigs(
-      List<String> cvConfigIds, Instant startTime, Instant endTime, boolean anomalousOnly);
+      List<String> verificationTaskIds, Instant startTime, Instant endTime, boolean anomalousOnly);
 }

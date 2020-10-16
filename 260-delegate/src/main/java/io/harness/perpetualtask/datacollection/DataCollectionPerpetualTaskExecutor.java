@@ -59,7 +59,7 @@ public class DataCollectionPerpetualTaskExecutor implements PerpetualTaskExecuto
       PerpetualTaskId taskId, PerpetualTaskExecutionParams params, Instant heartbeatTime) {
     DataCollectionPerpetualTaskParams taskParams =
         AnyUtils.unpack(params.getCustomizedParams(), DataCollectionPerpetualTaskParams.class);
-    logger.info("Executing for !! verificationTaskId: {}", taskParams.getDataCollectionWorkerId());
+    logger.info("Executing for !! dataCollectionWorkerId: {}", taskParams.getDataCollectionWorkerId());
     CVDataCollectionInfo dataCollectionInfo =
         (CVDataCollectionInfo) kryoSerializer.asObject(taskParams.getDataCollectionInfo().toByteArray());
     logger.info("DataCollectionInfo {} ", dataCollectionInfo);
@@ -101,7 +101,6 @@ public class DataCollectionPerpetualTaskExecutor implements PerpetualTaskExecuto
   private void run(DataCollectionPerpetualTaskParams taskParams, ConnectorConfigDTO connectorConfigDTO,
       DataCollectionTaskDTO dataCollectionTask) throws IOException {
     try {
-      final String cvConfigId = dataCollectionTask.getCvConfigId();
       DataCollectionInfo dataCollectionInfo = dataCollectionTask.getDataCollectionInfo();
       final RuntimeParameters runtimeParameters =
           RuntimeParameters.builder()
@@ -118,8 +117,8 @@ public class DataCollectionPerpetualTaskExecutor implements PerpetualTaskExecuto
               dataCollectionInfo.getDataCollectionDsl(), runtimeParameters,
               new ThirdPartyCallHandler(
                   dataCollectionTask.getAccountId(), dataCollectionTask.getVerificationTaskId(), delegateLogService));
-          timeSeriesDataStoreService.saveTimeSeriesDataRecords(dataCollectionTask.getAccountId(), cvConfigId,
-              dataCollectionTask.getVerificationTaskId(), timeSeriesRecords);
+          timeSeriesDataStoreService.saveTimeSeriesDataRecords(
+              dataCollectionTask.getAccountId(), dataCollectionTask.getVerificationTaskId(), timeSeriesRecords);
 
           break;
         case LOG:
@@ -127,9 +126,8 @@ public class DataCollectionPerpetualTaskExecutor implements PerpetualTaskExecuto
               dataCollectionInfo.getDataCollectionDsl(), runtimeParameters,
               new ThirdPartyCallHandler(
                   dataCollectionTask.getAccountId(), dataCollectionTask.getVerificationTaskId(), delegateLogService));
-          // TODO: merge these 2 IDs into a single concepts and use it everywhere in the data collection using models.
-          logRecordDataStoreService.save(dataCollectionTask.getAccountId(), dataCollectionTask.getCvConfigId(),
-              dataCollectionTask.getVerificationTaskId(), logDataRecords);
+          logRecordDataStoreService.save(
+              dataCollectionTask.getAccountId(), dataCollectionTask.getVerificationTaskId(), logDataRecords);
           if (dataCollectionInfo.isCollectHostData()) {
             LogDataCollectionInfo logDataCollectionInfo = (LogDataCollectionInfo) dataCollectionInfo;
             Set<String> hosts = new HashSet<>((Collection<String>) dataCollectionDSLService.execute(

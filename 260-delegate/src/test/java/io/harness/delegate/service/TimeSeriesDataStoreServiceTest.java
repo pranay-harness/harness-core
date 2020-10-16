@@ -27,7 +27,7 @@ public class TimeSeriesDataStoreServiceTest extends CategoryTest {
   @Category(UnitTests.class)
   public void testConvertToCollectionRecords() {
     String accountId = generateUuid();
-    String cvConfigId = generateUuid();
+    String verificationTaskId = generateUuid();
     int numOfMins = 10;
     int numOfMetrics = 5;
     int numOfTxns = 15;
@@ -50,7 +50,7 @@ public class TimeSeriesDataStoreServiceTest extends CategoryTest {
     }
 
     List<TimeSeriesDataCollectionRecord> dataCollectionRecords =
-        new TimeSeriesDataStoreService().convertToCollectionRecords(accountId, null, cvConfigId, timeSeriesRecords);
+        new TimeSeriesDataStoreService().convertToCollectionRecords(accountId, verificationTaskId, timeSeriesRecords);
     System.out.println(dataCollectionRecords);
     assertThat(dataCollectionRecords.size()).isEqualTo(numOfMins);
     Collections.sort(dataCollectionRecords, Comparator.comparingLong(TimeSeriesDataCollectionRecord::getTimeStamp));

@@ -86,7 +86,8 @@ public class LearningEngineTaskServiceImpl implements LearningEngineTaskService 
       if (tasks != null) {
         tasks.forEach(task -> {
           if (hasTaskTimedOut(task)) {
-            logger.info("LearningEngineTask {} for cvConfig {} has TIMEDOUT", task.getUuid(), task.getCvConfigId());
+            logger.info("LearningEngineTask {} for verificationTaskId {} has TIMEDOUT", task.getUuid(),
+                task.getVerificationTaskId());
             task.setTaskStatus(ExecutionStatus.TIMEOUT);
             timedOutTaskIds.add(task.getUuid());
           }

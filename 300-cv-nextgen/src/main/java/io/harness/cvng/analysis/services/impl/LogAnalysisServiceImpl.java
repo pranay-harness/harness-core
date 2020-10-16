@@ -7,7 +7,6 @@ import static io.harness.cvng.analysis.CVAnalysisConstants.LOG_ANALYSIS_RESOURCE
 import static io.harness.cvng.analysis.CVAnalysisConstants.LOG_ANALYSIS_SAVE_PATH;
 import static io.harness.cvng.analysis.CVAnalysisConstants.PREVIOUS_LOG_ANALYSIS_PATH;
 import static io.harness.cvng.analysis.CVAnalysisConstants.TEST_DATA_PATH;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.persistence.HQuery.excludeAuthority;
 
@@ -60,7 +59,6 @@ import org.mongodb.morphia.query.FindOptions;
 import java.net.URISyntaxException;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
-import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -102,7 +100,6 @@ public class LogAnalysisServiceImpl implements LogAnalysisService {
     }
     task.setAnalysisType(LearningEngineTaskType.SERVICE_GUARD_LOG_ANALYSIS);
     task.setAnalysisStartTime(input.getStartTime());
-    task.setCvConfigId(input.getCvConfigId());
     task.setVerificationTaskId(input.getVerificationTaskId());
     task.setFailureUrl(learningEngineTaskService.createFailureUrl(taskId));
     task.setAnalysisEndTime(input.getEndTime());
@@ -182,49 +179,49 @@ public class LogAnalysisServiceImpl implements LogAnalysisService {
 
   @Override
   public List<LogAnalysisCluster> getPreviousAnalysis(
-      String cvConfigId, Instant analysisStartTime, Instant analysisEndTime) {
-    List<LogAnalysisCluster> analysisClusters =
-        hPersistence.createQuery(LogAnalysisCluster.class, excludeAuthority)
-            .filter(LogAnalysisClusterKeys.cvConfigId, cvConfigId)
-            .filter(LogAnalysisClusterKeys.isEvicted, false)
-            .project(LogAnalysisClusterKeys.cvConfigId, true)
-            .project(LogAnalysisClusterKeys.analysisMinute, true)
-            .project(LogAnalysisClusterKeys.label, true)
-            .project(LogAnalysisClusterKeys.text, true)
-            .project(LogAnalysisClusterKeys.frequencyTrend, true)
-            .asList(new FindOptions().maxTime(MONGO_QUERY_TIMEOUT_SEC, TimeUnit.SECONDS));
-    if (isNotEmpty(analysisClusters)) {
-      return analysisClusters;
-    }
-    return new ArrayList<>();
+      String verificationTaskId, Instant analysisStartTime, Instant analysisEndTime) {
+    return hPersistence.createQuery(LogAnalysisCluster.class, excludeAuthority)
+        .filter(LogAnalysisClusterKeys.verificationTaskId, verificationTaskId)
+        .filter(LogAnalysisClusterKeys.isEvicted, false)
+        .project(LogAnalysisClusterKeys.analysisMinute, true)
+        .project(LogAnalysisClusterKeys.label, true)
+        .project(LogAnalysisClusterKeys.text, true)
+        .project(LogAnalysisClusterKeys.frequencyTrend, true)
+        .asList(new FindOptions().maxTime(MONGO_QUERY_TIMEOUT_SEC, TimeUnit.SECONDS));
   }
 
   @Override
-  public void saveAnalysis(String cvConfigId, String taskId, Instant analysisStartTime, Instant analysisEndTime,
-      LogAnalysisDTO analysisBody) {
-    logger.info("Saving service guard log analysis for config {} and taskId {}", cvConfigId, taskId);
-
+  public void saveAnalysis(String taskId, LogAnalysisDTO analysisBody) {
+    LearningEngineTask learningEngineTask = learningEngineTaskService.get(taskId);
+    Preconditions.checkNotNull(learningEngineTask, "Needs to be a valid LE task.");
+    logger.info("Saving service guard log analysis for verificationTaskid {} and taskId {}",
+        learningEngineTask.getVerificationTaskId(), taskId);
+    analysisBody.setVerificationTaskId(learningEngineTask.getVerificationTaskId());
+    analysisBody.setAnalysisStartTime(learningEngineTask.getAnalysisStartTime());
+    analysisBody.setAnalysisEndTime(learningEngineTask.getAnalysisEndTime());
     List<LogAnalysisCluster> analysisClusters =
-        analysisBody.toAnalysisClusters(cvConfigId, analysisStartTime, analysisEndTime);
-    LogAnalysisResult analysisResult = analysisBody.toAnalysisResult(cvConfigId, analysisStartTime, analysisEndTime);
-    logger.info("Saving {} analyzed log clusters for config {}, start time {} and end time {}", analysisClusters.size(),
-        cvConfigId, analysisStartTime, analysisEndTime);
+        analysisBody.toAnalysisClusters(learningEngineTask.getVerificationTaskId(),
+            learningEngineTask.getAnalysisStartTime(), learningEngineTask.getAnalysisEndTime());
+    LogAnalysisResult analysisResult = analysisBody.toAnalysisResult(learningEngineTask.getVerificationTaskId(),
+        learningEngineTask.getAnalysisStartTime(), learningEngineTask.getAnalysisEndTime());
+    logger.info("Saving {} analyzed log clusters for LETask", learningEngineTask);
     // first delete the existing records which have not been evicted.
-    hPersistence.delete(hPersistence.createQuery(LogAnalysisCluster.class)
-                            .filter(LogAnalysisClusterKeys.cvConfigId, cvConfigId)
-                            .filter(LogAnalysisClusterKeys.isEvicted, false));
+    hPersistence.delete(
+        hPersistence.createQuery(LogAnalysisCluster.class)
+            .filter(LogAnalysisClusterKeys.verificationTaskId, learningEngineTask.getVerificationTaskId())
+            .filter(LogAnalysisClusterKeys.isEvicted, false));
     // next, save the new records.
+    // TODO: move this to LogAnalysisClusterService
     hPersistence.save(analysisClusters);
-
+    // TODO: move this to LogAnalysisResultService
     hPersistence.save(analysisResult);
-
     learningEngineTaskService.markCompleted(taskId);
-
-    CVConfig cvConfig = cvConfigService.get(cvConfigId);
+    CVConfig cvConfig =
+        cvConfigService.get(verificationTaskService.getCVConfigId(learningEngineTask.getVerificationTaskId()));
 
     heatMapService.updateRiskScore(cvConfig.getAccountId(), cvConfig.getProjectIdentifier(),
         cvConfig.getServiceIdentifier(), cvConfig.getEnvIdentifier(), cvConfig, cvConfig.getCategory(),
-        analysisStartTime, analysisBody.getScore());
+        learningEngineTask.getAnalysisStartTime(), analysisBody.getScore());
   }
 
   @Override
@@ -270,16 +267,13 @@ public class LogAnalysisServiceImpl implements LogAnalysisService {
     URIBuilder uriBuilder = new URIBuilder();
     uriBuilder.setPath(SERVICE_BASE_URL + "/" + LOG_ANALYSIS_RESOURCE + "/" + LOG_ANALYSIS_SAVE_PATH);
     uriBuilder.addParameter("taskId", taskId);
-    uriBuilder.addParameter(LogAnalysisRecordKeys.cvConfigId, input.getCvConfigId());
-    uriBuilder.addParameter(LogAnalysisRecordKeys.analysisStartTime, input.getStartTime().toString());
-    uriBuilder.addParameter(LogAnalysisRecordKeys.analysisEndTime, input.getEndTime().toString());
     return getUriString(uriBuilder);
   }
 
   private String createFrequencyPatternUrl(AnalysisInput input) {
     URIBuilder uriBuilder = new URIBuilder();
     uriBuilder.setPath(SERVICE_BASE_URL + "/" + LOG_ANALYSIS_RESOURCE + "/" + PREVIOUS_LOG_ANALYSIS_PATH);
-    uriBuilder.addParameter(LogAnalysisRecordKeys.cvConfigId, input.getCvConfigId());
+    uriBuilder.addParameter(LogAnalysisRecordKeys.verificationTaskId, input.getVerificationTaskId());
     uriBuilder.addParameter(
         LogAnalysisRecordKeys.analysisStartTime, input.getStartTime().minus(5, ChronoUnit.MINUTES).toString());
     uriBuilder.addParameter(
@@ -311,9 +305,9 @@ public class LogAnalysisServiceImpl implements LogAnalysisService {
   }
 
   @Override
-  public List<LogAnalysisCluster> getAnalysisClusters(String cvConfigId, Set<Long> labels) {
+  public List<LogAnalysisCluster> getAnalysisClusters(String verificationTaskId, Set<Long> labels) {
     return hPersistence.createQuery(LogAnalysisCluster.class, excludeAuthority)
-        .filter(LogAnalysisClusterKeys.cvConfigId, cvConfigId)
+        .filter(LogAnalysisClusterKeys.verificationTaskId, verificationTaskId)
         .field(LogAnalysisClusterKeys.label)
         .in(labels)
         .asList(new FindOptions().maxTime(MONGO_QUERY_TIMEOUT_SEC, TimeUnit.SECONDS));
@@ -321,9 +315,9 @@ public class LogAnalysisServiceImpl implements LogAnalysisService {
 
   @Override
   public List<LogAnalysisResult> getAnalysisResults(
-      String cvConfigId, List<LogAnalysisTag> tags, Instant startTime, Instant endTime) {
+      String verificationTaskId, List<LogAnalysisTag> tags, Instant startTime, Instant endTime) {
     return hPersistence.createQuery(LogAnalysisResult.class, excludeAuthority)
-        .filter(LogAnalysisResultKeys.cvConfigId, cvConfigId)
+        .filter(LogAnalysisResultKeys.verificationTaskId, verificationTaskId)
         .field(LogAnalysisResultKeys.analysisStartTime)
         .greaterThanOrEq(startTime)
         .field(LogAnalysisResultKeys.analysisEndTime)

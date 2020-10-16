@@ -65,12 +65,8 @@ public class TimeSeriesServiceImpl implements TimeSeriesService {
           hPersistence.createQuery(TimeSeriesRecord.class)
               .filter(
                   TimeSeriesRecordKeys.bucketStartTime, Instant.ofEpochMilli(timeSeriesRecordBucketKey.getTimestamp()))
-              .filter(TimeSeriesRecordKeys.metricName, timeSeriesRecordBucketKey.getMetricName());
-      if (timeSeriesRecord.getCvConfigId() != null) {
-        query = query.filter(TimeSeriesRecordKeys.cvConfigId, timeSeriesRecord.getCvConfigId());
-      }
-      query = query.filter(TimeSeriesRecordKeys.verificationTaskId, timeSeriesRecord.getVerificationTaskId());
-
+              .filter(TimeSeriesRecordKeys.metricName, timeSeriesRecordBucketKey.getMetricName())
+              .filter(TimeSeriesRecordKeys.verificationTaskId, timeSeriesRecord.getVerificationTaskId());
       if (timeSeriesRecord.getHost() != null) {
         query = query.filter(TimeSeriesRecordKeys.host, timeSeriesRecord.getHost());
       }
@@ -144,7 +140,6 @@ public class TimeSeriesServiceImpl implements TimeSeriesService {
           rv.put(timeSeriesRecordBucketKey,
               TimeSeriesRecord.builder()
                   .accountId(dataRecord.getAccountId())
-                  .cvConfigId(dataRecord.getCvConfigId())
                   .verificationTaskId(dataRecord.getVerificationTaskId())
                   .host(dataRecord.getHost())
                   .accountId(dataRecord.getAccountId())
@@ -167,14 +162,14 @@ public class TimeSeriesServiceImpl implements TimeSeriesService {
   }
 
   @Override
-  public boolean updateRiskScores(String cvConfigId, TimeSeriesRiskSummary riskSummary) {
+  public boolean updateRiskScores(String verificationTaskId, TimeSeriesRiskSummary riskSummary) {
     Set<String> metricNames = riskSummary.getTransactionMetricRiskList()
                                   .stream()
                                   .map(TimeSeriesRiskSummary.TransactionMetricRisk::getMetricName)
                                   .collect(Collectors.toSet());
     List<TimeSeriesRecord> records =
         hPersistence.createQuery(TimeSeriesRecord.class, excludeAuthority)
-            .filter(TimeSeriesRecordKeys.cvConfigId, riskSummary.getCvConfigId())
+            .filter(TimeSeriesRecordKeys.verificationTaskId, riskSummary.getVerificationTaskId())
             .filter(TimeSeriesRecordKeys.bucketStartTime, riskSummary.getAnalysisStartTime())
             .field(TimeSeriesRecordKeys.metricName)
             .in(metricNames)
@@ -421,11 +416,10 @@ public class TimeSeriesServiceImpl implements TimeSeriesService {
 
   @Override
   public List<TimeSeriesRecord> getTimeSeriesRecordsForConfigs(
-      List<String> cvConfigIds, Instant startTime, Instant endTime, boolean anomalousOnly) {
+      List<String> verificationTaskIds, Instant startTime, Instant endTime, boolean anomalousOnly) {
     Query<TimeSeriesRecord> timeSeriesRecordQuery = hPersistence.createQuery(TimeSeriesRecord.class, excludeAuthority)
-                                                        .field(TimeSeriesRecordKeys.cvConfigId)
-                                                        .in(cvConfigIds)
-
+                                                        .field(TimeSeriesRecordKeys.verificationTaskId)
+                                                        .in(verificationTaskIds)
                                                         .field(TimeSeriesRecordKeys.bucketStartTime)
                                                         .greaterThanOrEq(startTime)
                                                         .field(TimeSeriesRecordKeys.bucketStartTime)

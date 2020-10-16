@@ -14,6 +14,7 @@ import io.harness.CvNextGenTest;
 import io.harness.category.element.UnitTests;
 import io.harness.cvng.core.entities.AppDynamicsCVConfig;
 import io.harness.cvng.core.entities.CVConfig;
+import io.harness.cvng.core.services.api.VerificationTaskService;
 import io.harness.cvng.models.VerificationType;
 import io.harness.cvng.statemachine.beans.AnalysisStatus;
 import io.harness.cvng.statemachine.entities.AnalysisOrchestrator;
@@ -38,17 +39,22 @@ public class OrchestrationServiceTest extends CvNextGenTest {
   @Inject HPersistence hPersistence;
 
   @Mock AnalysisStateMachineService mockStateMachineService;
+  @Inject private VerificationTaskService verificationTaskService;
   @Inject OrchestrationService orchestrationService;
   private String cvConfigId;
+  private String verificationTaskId;
+  private String accountId;
 
   @Before
   public void setup() throws Exception {
     cvConfigId = generateUuid();
+    accountId = generateUuid();
     CVConfig cvConfig = new AppDynamicsCVConfig();
     cvConfig.setVerificationType(VerificationType.TIME_SERIES);
     cvConfig.setUuid(cvConfigId);
     hPersistence.save(cvConfig);
     MockitoAnnotations.initMocks(this);
+    verificationTaskId = verificationTaskService.create(accountId, cvConfigId);
     FieldUtils.writeField(orchestrationService, "stateMachineService", mockStateMachineService, true);
   }
 
@@ -99,7 +105,7 @@ public class OrchestrationServiceTest extends CvNextGenTest {
 
     AnalysisStateMachine stateMachine = AnalysisStateMachine.builder()
                                             .status(AnalysisStatus.SUCCESS)
-                                            .cvConfigId(cvConfigId)
+                                            .verificationTaskId(verificationTaskId)
                                             .nextAttemptTime(Instant.now().toEpochMilli())
                                             .build();
     when(mockStateMachineService.getExecutingStateMachine(cvConfigId)).thenReturn(stateMachine);
@@ -122,11 +128,11 @@ public class OrchestrationServiceTest extends CvNextGenTest {
                                             .build();
 
     AnalysisStateMachine stateMachine =
-        AnalysisStateMachine.builder().status(AnalysisStatus.SUCCESS).cvConfigId(cvConfigId).build();
+        AnalysisStateMachine.builder().status(AnalysisStatus.SUCCESS).verificationTaskId(verificationTaskId).build();
 
     AnalysisStateMachine nextStateMachine = AnalysisStateMachine.builder()
                                                 .status(AnalysisStatus.CREATED)
-                                                .cvConfigId(cvConfigId)
+                                                .verificationTaskId(verificationTaskId)
                                                 .analysisStartTime(Instant.now().minus(5, ChronoUnit.MINUTES))
                                                 .analysisEndTime(Instant.now())
                                                 .build();
@@ -157,7 +163,7 @@ public class OrchestrationServiceTest extends CvNextGenTest {
 
     AnalysisStateMachine stateMachine = AnalysisStateMachine.builder()
                                             .status(AnalysisStatus.RUNNING)
-                                            .cvConfigId(cvConfigId)
+                                            .verificationTaskId(verificationTaskId)
                                             .nextAttemptTime(Instant.now().toEpochMilli())
                                             .build();
     when(mockStateMachineService.getExecutingStateMachine(cvConfigId)).thenReturn(stateMachine);
@@ -183,7 +189,7 @@ public class OrchestrationServiceTest extends CvNextGenTest {
 
     AnalysisStateMachine stateMachine = AnalysisStateMachine.builder()
                                             .status(AnalysisStatus.FAILED)
-                                            .cvConfigId(cvConfigId)
+                                            .verificationTaskId(verificationTaskId)
                                             .nextAttemptTime(Instant.now().toEpochMilli())
                                             .build();
     when(mockStateMachineService.getExecutingStateMachine(cvConfigId)).thenReturn(stateMachine);
@@ -209,7 +215,7 @@ public class OrchestrationServiceTest extends CvNextGenTest {
 
     AnalysisStateMachine stateMachine = AnalysisStateMachine.builder()
                                             .status(AnalysisStatus.TIMEOUT)
-                                            .cvConfigId(cvConfigId)
+                                            .verificationTaskId(verificationTaskId)
                                             .nextAttemptTime(Instant.now().toEpochMilli())
                                             .build();
     when(mockStateMachineService.getExecutingStateMachine(cvConfigId)).thenReturn(stateMachine);

@@ -11,7 +11,7 @@ import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
 
 import io.harness.cvng.analysis.beans.DeploymentTimeSeriesAnalysisDTO;
-import io.harness.cvng.analysis.beans.ServiceGuardMetricAnalysisDTO;
+import io.harness.cvng.analysis.beans.ServiceGuardTimeSeriesAnalysisDTO;
 import io.harness.cvng.analysis.beans.TimeSeriesAnomalies;
 import io.harness.cvng.analysis.beans.TimeSeriesRecordDTO;
 import io.harness.cvng.analysis.entities.DeploymentTimeSeriesAnalysis;
@@ -210,8 +210,6 @@ public class TimeSeriesAnalysisServiceImpl implements TimeSeriesAnalysisService 
             .previousAnomaliesUrl(createAnomaliesUrl(input))
             .testDataUrl(createTestDataUrl(input))
             .build();
-
-    timeSeriesLearningEngineTask.setCvConfigId(input.getCvConfigId());
     timeSeriesLearningEngineTask.setVerificationTaskId(input.getVerificationTaskId());
     timeSeriesLearningEngineTask.setAnalysisType(LearningEngineTaskType.SERVICE_GUARD_TIME_SERIES);
     timeSeriesLearningEngineTask.setAnalysisStartTime(input.getStartTime());
@@ -235,7 +233,6 @@ public class TimeSeriesAnalysisServiceImpl implements TimeSeriesAnalysisService 
     URIBuilder uriBuilder = new URIBuilder();
     uriBuilder.setPath(
         SERVICE_BASE_URL + "/" + TIMESERIES_ANALYSIS_RESOURCE + "/timeseries-serviceguard-shortterm-history");
-    uriBuilder.addParameter("cvConfigId", input.getCvConfigId());
     uriBuilder.addParameter("verificationTaskId", input.getVerificationTaskId());
     return getUriString(uriBuilder);
   }
@@ -244,7 +241,6 @@ public class TimeSeriesAnalysisServiceImpl implements TimeSeriesAnalysisService 
     URIBuilder uriBuilder = new URIBuilder();
     uriBuilder.setPath(
         SERVICE_BASE_URL + "/" + TIMESERIES_ANALYSIS_RESOURCE + "/timeseries-serviceguard-cumulative-sums");
-    uriBuilder.addParameter("cvConfigId", input.getCvConfigId());
     uriBuilder.addParameter("verificationTaskId", input.getVerificationTaskId());
     uriBuilder.addParameter("analysisStartTime", input.getStartTime().toString());
     uriBuilder.addParameter("analysisEndTime", input.getEndTime().toString());
@@ -289,7 +285,6 @@ public class TimeSeriesAnalysisServiceImpl implements TimeSeriesAnalysisService 
     URIBuilder uriBuilder = new URIBuilder();
     uriBuilder.setPath(
         SERVICE_BASE_URL + "/" + TIMESERIES_ANALYSIS_RESOURCE + "/timeseries-serviceguard-previous-anomalies");
-    uriBuilder.addParameter("cvConfigId", input.getCvConfigId());
     uriBuilder.addParameter("verificationTaskId", input.getVerificationTaskId());
     return getUriString(uriBuilder);
   }
@@ -326,13 +321,15 @@ public class TimeSeriesAnalysisServiceImpl implements TimeSeriesAnalysisService 
 
   @Override
   public Map<String, Map<String, TimeSeriesCumulativeSums.MetricSum>> getCumulativeSums(
-      String cvConfigId, Instant startTime, Instant endTime) {
-    logger.info("Fetching cumulative sums for config: {}, startTime: {}, endTime: {}", cvConfigId, startTime, endTime);
-    TimeSeriesCumulativeSums cumulativeSums = hPersistence.createQuery(TimeSeriesCumulativeSums.class)
-                                                  .filter(TimeSeriesCumulativeSumsKeys.cvConfigId, cvConfigId)
-                                                  .filter(TimeSeriesCumulativeSumsKeys.analysisStartTime, startTime)
-                                                  .filter(TimeSeriesCumulativeSumsKeys.analysisEndTime, endTime)
-                                                  .get();
+      String verificationTaskId, Instant startTime, Instant endTime) {
+    logger.info(
+        "Fetching cumulative sums for config: {}, startTime: {}, endTime: {}", verificationTaskId, startTime, endTime);
+    TimeSeriesCumulativeSums cumulativeSums =
+        hPersistence.createQuery(TimeSeriesCumulativeSums.class)
+            .filter(TimeSeriesCumulativeSumsKeys.verificationTaskId, verificationTaskId)
+            .filter(TimeSeriesCumulativeSumsKeys.analysisStartTime, startTime)
+            .filter(TimeSeriesCumulativeSumsKeys.analysisEndTime, endTime)
+            .get();
 
     if (cumulativeSums != null) {
       return cumulativeSums.convertToMap();
@@ -341,11 +338,12 @@ public class TimeSeriesAnalysisServiceImpl implements TimeSeriesAnalysisService 
   }
 
   @Override
-  public Map<String, Map<String, List<TimeSeriesAnomalies>>> getLongTermAnomalies(String cvConfigId) {
-    logger.info("Fetching longterm anomalies for config: {}", cvConfigId);
-    TimeSeriesAnomalousPatterns anomalousPatterns = hPersistence.createQuery(TimeSeriesAnomalousPatterns.class)
-                                                        .filter(TimeSeriesAnomalousPatternsKeys.cvConfigId, cvConfigId)
-                                                        .get();
+  public Map<String, Map<String, List<TimeSeriesAnomalies>>> getLongTermAnomalies(String verificationTaskId) {
+    logger.info("Fetching longterm anomalies for config: {}", verificationTaskId);
+    TimeSeriesAnomalousPatterns anomalousPatterns =
+        hPersistence.createQuery(TimeSeriesAnomalousPatterns.class)
+            .filter(TimeSeriesAnomalousPatternsKeys.verificationTaskId, verificationTaskId)
+            .get();
     if (anomalousPatterns != null) {
       return anomalousPatterns.convertToMap();
     }
@@ -353,11 +351,12 @@ public class TimeSeriesAnalysisServiceImpl implements TimeSeriesAnalysisService 
   }
 
   @Override
-  public Map<String, Map<String, List<Double>>> getShortTermHistory(String cvConfigId) {
-    logger.info("Fetching short term history for config: {}", cvConfigId);
-    TimeSeriesShortTermHistory shortTermHistory = hPersistence.createQuery(TimeSeriesShortTermHistory.class)
-                                                      .filter(TimeSeriesShortTermHistoryKeys.cvConfigId, cvConfigId)
-                                                      .get();
+  public Map<String, Map<String, List<Double>>> getShortTermHistory(String verificationTaskId) {
+    logger.info("Fetching short term history for config: {}", verificationTaskId);
+    TimeSeriesShortTermHistory shortTermHistory =
+        hPersistence.createQuery(TimeSeriesShortTermHistory.class)
+            .filter(TimeSeriesShortTermHistoryKeys.verificationTaskId, verificationTaskId)
+            .get();
     if (shortTermHistory != null) {
       return shortTermHistory.convertToMap();
     }
@@ -384,11 +383,14 @@ public class TimeSeriesAnalysisServiceImpl implements TimeSeriesAnalysisService 
   }
 
   @Override
-  public void saveAnalysis(String taskId, ServiceGuardMetricAnalysisDTO analysis) {
+  public void saveAnalysis(String taskId, ServiceGuardTimeSeriesAnalysisDTO analysis) {
     LearningEngineTask learningEngineTask = learningEngineTaskService.get(taskId);
     Preconditions.checkNotNull(learningEngineTask, "Needs to be a valid LE task.");
+    analysis.setVerificationTaskId(learningEngineTask.getVerificationTaskId());
     Instant startTime = learningEngineTask.getAnalysisStartTime();
     Instant endTime = learningEngineTask.getAnalysisEndTime();
+    analysis.setAnalysisStartTime(startTime);
+    analysis.setAnalysisEndTime(endTime);
     String cvConfigId = verificationTaskService.getCVConfigId(learningEngineTask.getVerificationTaskId());
     TimeSeriesShortTermHistory shortTermHistory = buildShortTermHistory(analysis);
     TimeSeriesCumulativeSums cumulativeSums = buildCumulativeSums(analysis, startTime, endTime);
@@ -434,7 +436,7 @@ public class TimeSeriesAnalysisServiceImpl implements TimeSeriesAnalysisService 
     }
   }
 
-  private void saveAnomalousPatterns(ServiceGuardMetricAnalysisDTO analysis, String verificationTaskId) {
+  private void saveAnomalousPatterns(ServiceGuardTimeSeriesAnalysisDTO analysis, String verificationTaskId) {
     TimeSeriesAnomalousPatterns patternsToSave = buildAnomalies(analysis);
     // change the filter to verificationTaskId
     TimeSeriesAnomalousPatterns patternsFromDB =
@@ -471,7 +473,7 @@ public class TimeSeriesAnalysisServiceImpl implements TimeSeriesAnalysisService 
   }
 
   private TimeSeriesRiskSummary buildRiskSummary(
-      ServiceGuardMetricAnalysisDTO analysisDTO, Instant startTime, Instant endTime) {
+      ServiceGuardTimeSeriesAnalysisDTO analysisDTO, Instant startTime, Instant endTime) {
     List<TransactionMetricRisk> metricRiskList = new ArrayList<>();
     analysisDTO.getTxnMetricAnalysisData().forEach((txnName, metricMap) -> {
       metricMap.forEach((metricName, metricData) -> {
@@ -487,7 +489,6 @@ public class TimeSeriesAnalysisServiceImpl implements TimeSeriesAnalysisService 
       });
     });
     return TimeSeriesRiskSummary.builder()
-        .cvConfigId(analysisDTO.getCvConfigId())
         .verificationTaskId(analysisDTO.getVerificationTaskId())
         .analysisStartTime(startTime)
         .analysisEndTime(endTime)
@@ -495,7 +496,7 @@ public class TimeSeriesAnalysisServiceImpl implements TimeSeriesAnalysisService 
         .build();
   }
   private TimeSeriesCumulativeSums buildCumulativeSums(
-      ServiceGuardMetricAnalysisDTO analysisDTO, Instant startTime, Instant endTime) {
+      ServiceGuardTimeSeriesAnalysisDTO analysisDTO, Instant startTime, Instant endTime) {
     Map<String, Map<String, TimeSeriesCumulativeSums.MetricSum>> cumulativeSumsMap = new HashMap<>();
     analysisDTO.getTxnMetricAnalysisData().forEach((txnName, metricMap) -> {
       cumulativeSumsMap.put(txnName, new HashMap<>());
@@ -510,7 +511,6 @@ public class TimeSeriesAnalysisServiceImpl implements TimeSeriesAnalysisService 
         TimeSeriesCumulativeSums.convertMapToTransactionMetricSums(cumulativeSumsMap);
 
     return TimeSeriesCumulativeSums.builder()
-        .cvConfigId(analysisDTO.getCvConfigId())
         .verificationTaskId(analysisDTO.getVerificationTaskId())
         .transactionMetricSums(transactionMetricSums)
         .analysisStartTime(startTime)
@@ -518,7 +518,7 @@ public class TimeSeriesAnalysisServiceImpl implements TimeSeriesAnalysisService 
         .build();
   }
 
-  private TimeSeriesShortTermHistory buildShortTermHistory(ServiceGuardMetricAnalysisDTO analysisDTO) {
+  private TimeSeriesShortTermHistory buildShortTermHistory(ServiceGuardTimeSeriesAnalysisDTO analysisDTO) {
     Map<String, Map<String, List<Double>>> shortTermHistoryMap = new HashMap<>();
     analysisDTO.getTxnMetricAnalysisData().forEach((txnName, metricMap) -> {
       shortTermHistoryMap.put(txnName, new HashMap<>());
@@ -528,13 +528,12 @@ public class TimeSeriesAnalysisServiceImpl implements TimeSeriesAnalysisService 
     });
 
     return TimeSeriesShortTermHistory.builder()
-        .cvConfigId(analysisDTO.getCvConfigId())
         .verificationTaskId(analysisDTO.getVerificationTaskId())
         .transactionMetricHistories(TimeSeriesShortTermHistory.convertFromMap(shortTermHistoryMap))
         .build();
   }
 
-  private TimeSeriesAnomalousPatterns buildAnomalies(ServiceGuardMetricAnalysisDTO analysisDTO) {
+  private TimeSeriesAnomalousPatterns buildAnomalies(ServiceGuardTimeSeriesAnalysisDTO analysisDTO) {
     Map<String, Map<String, List<TimeSeriesAnomalies>>> anomaliesMap = new HashMap<>();
     analysisDTO.getTxnMetricAnalysisData().forEach((txnName, metricMap) -> {
       anomaliesMap.put(txnName, new HashMap<>());
@@ -544,7 +543,7 @@ public class TimeSeriesAnalysisServiceImpl implements TimeSeriesAnalysisService 
     });
 
     return TimeSeriesAnomalousPatterns.builder()
-        .cvConfigId(analysisDTO.getCvConfigId())
+        .verificationTaskId(analysisDTO.getVerificationTaskId())
         .anomalies(TimeSeriesAnomalousPatterns.convertFromMap(anomaliesMap))
         .build();
   }

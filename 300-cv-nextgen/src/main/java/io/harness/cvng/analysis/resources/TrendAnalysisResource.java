@@ -9,7 +9,7 @@ import com.google.inject.Inject;
 
 import com.codahale.metrics.annotation.ExceptionMetered;
 import com.codahale.metrics.annotation.Timed;
-import io.harness.cvng.analysis.beans.ServiceGuardMetricAnalysisDTO;
+import io.harness.cvng.analysis.beans.ServiceGuardTimeSeriesAnalysisDTO;
 import io.harness.cvng.analysis.beans.TimeSeriesRecordDTO;
 import io.harness.cvng.analysis.services.api.TrendAnalysisService;
 import io.harness.cvng.core.beans.TimeSeriesMetricDefinition;
@@ -57,7 +57,7 @@ public class TrendAnalysisResource {
   @ExceptionMetered
   @ApiOperation(value = "save time series analysis", nickname = "saveServiceGuardTrendAnalysis")
   public RestResponse<Void> saveServiceGuardAnalysis(
-      @NotNull @QueryParam("taskId") String taskId, ServiceGuardMetricAnalysisDTO analysisBody) {
+      @NotNull @QueryParam("taskId") String taskId, ServiceGuardTimeSeriesAnalysisDTO analysisBody) {
     trendAnalysisService.saveAnalysis(taskId, analysisBody);
     return new RestResponse<>(null);
   }

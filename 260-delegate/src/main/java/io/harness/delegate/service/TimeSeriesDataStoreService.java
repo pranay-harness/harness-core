@@ -35,7 +35,7 @@ public class TimeSeriesDataStoreService {
 
   @VisibleForTesting
   List<TimeSeriesDataCollectionRecord> convertToCollectionRecords(
-      String accountId, String cvConfigId, String verificationTaskId, List<TimeSeriesRecord> timeSeriesRecords) {
+      String accountId, String verificationTaskId, List<TimeSeriesRecord> timeSeriesRecords) {
     Map<TimeSeriesRecordBucketKey, List<TimeSeriesRecord>> groupByHostAndTimestamp =
         timeSeriesRecords.stream().collect(groupingBy(timeSeriesRecord
             -> TimeSeriesRecordBucketKey.builder()
@@ -48,7 +48,6 @@ public class TimeSeriesDataStoreService {
       TimeSeriesDataCollectionRecord timeSeriesDataCollectionRecord =
           TimeSeriesDataCollectionRecord.builder()
               .accountId(accountId)
-              .cvConfigId(cvConfigId)
               .verificationTaskId(verificationTaskId)
               .timeStamp(timeSeriesRecordBucketKey.getTimestamp())
               .host(timeSeriesRecordBucketKey.getHost())
@@ -81,13 +80,14 @@ public class TimeSeriesDataStoreService {
   }
 
   public boolean saveTimeSeriesDataRecords(
-      String accountId, String cvConfigId, String verificationTaskId, List<TimeSeriesRecord> timeSeriesRecords) {
+      String accountId, String verificationTaskId, List<TimeSeriesRecord> timeSeriesRecords) {
     if (timeSeriesRecords.isEmpty()) {
-      logger.info("TimeseriesRecords is empty. So we will not be saving anything from the delegate for {}", cvConfigId);
+      logger.info(
+          "TimeseriesRecords is empty. So we will not be saving anything from the delegate for {}", verificationTaskId);
       return true;
     }
     List<TimeSeriesDataCollectionRecord> dataCollectionRecords =
-        convertToCollectionRecords(accountId, cvConfigId, verificationTaskId, timeSeriesRecords);
+        convertToCollectionRecords(accountId, verificationTaskId, timeSeriesRecords);
     try {
       RestResponse<Boolean> restResponse = timeLimiter.callWithTimeout(
           ()

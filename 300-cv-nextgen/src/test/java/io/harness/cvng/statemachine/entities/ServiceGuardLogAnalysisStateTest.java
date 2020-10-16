@@ -26,7 +26,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class ServiceGuardLogAnalysisStateTest {
-  private String cvConfigId;
+  private String verificationTaskId;
   private Instant startTime;
   private Instant endTime;
   @Mock private LogAnalysisService logAnalysisService;
@@ -37,11 +37,12 @@ public class ServiceGuardLogAnalysisStateTest {
   public void setup() throws Exception {
     MockitoAnnotations.initMocks(this);
 
-    cvConfigId = generateUuid();
+    verificationTaskId = generateUuid();
     startTime = Instant.now().minus(10, ChronoUnit.MINUTES).truncatedTo(ChronoUnit.MINUTES);
     endTime = startTime.plus(5, ChronoUnit.MINUTES);
 
-    AnalysisInput input = AnalysisInput.builder().cvConfigId(cvConfigId).startTime(startTime).endTime(endTime).build();
+    AnalysisInput input =
+        AnalysisInput.builder().verificationTaskId(verificationTaskId).startTime(startTime).endTime(endTime).build();
 
     logAnalysisState = ServiceGuardLogAnalysisState.builder().build();
     logAnalysisState.setInputs(input);

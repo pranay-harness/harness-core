@@ -14,7 +14,7 @@ import java.util.concurrent.TimeUnit;
 @AllArgsConstructor
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class LogClusterDTO {
-  String cvConfigId;
+  String verificationTaskId;
   long epochMinute;
   String host;
   String log;
@@ -23,7 +23,7 @@ public class LogClusterDTO {
 
   public ClusteredLog toClusteredLog() {
     return ClusteredLog.builder()
-        .cvConfigId(cvConfigId)
+        .verificationTaskId(verificationTaskId)
         .host(host)
         .clusterCount(clusterCount)
         .clusterLabel(clusterLabel)

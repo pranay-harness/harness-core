@@ -11,7 +11,6 @@ import static io.harness.cvng.analysis.CVAnalysisConstants.TREND_ANALYSIS_SAVE_P
 import static io.harness.cvng.analysis.CVAnalysisConstants.TREND_ANALYSIS_TEST_DATA;
 import static io.harness.cvng.analysis.CVAnalysisConstants.TREND_METRIC_NAME;
 import static io.harness.cvng.analysis.CVAnalysisConstants.TREND_METRIC_TEMPLATE;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.persistence.HQuery.excludeAuthority;
 
@@ -19,7 +18,7 @@ import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
 
 import com.fasterxml.jackson.core.type.TypeReference;
-import io.harness.cvng.analysis.beans.ServiceGuardMetricAnalysisDTO;
+import io.harness.cvng.analysis.beans.ServiceGuardTimeSeriesAnalysisDTO;
 import io.harness.cvng.analysis.beans.ServiceGuardTxnMetricAnalysisDataDTO;
 import io.harness.cvng.analysis.beans.TimeSeriesAnomalies;
 import io.harness.cvng.analysis.beans.TimeSeriesRecordDTO;
@@ -174,14 +173,11 @@ public class TrendAnalysisServiceImpl implements TrendAnalysisService {
 
   @Override
   public List<TimeSeriesRecordDTO> getTestData(String verificationTaskId, Instant startTime, Instant endTime) {
-    List<LogAnalysisCluster> logAnalysisClusters = hPersistence.createQuery(LogAnalysisCluster.class, excludeAuthority)
-                                                       .filter(LogAnalysisClusterKeys.cvConfigId, verificationTaskId)
-                                                       .filter(LogAnalysisClusterKeys.isEvicted, Boolean.FALSE)
-                                                       .asList();
-    if (isEmpty(logAnalysisClusters)) {
-      return new ArrayList<>();
-    }
-
+    List<LogAnalysisCluster> logAnalysisClusters =
+        hPersistence.createQuery(LogAnalysisCluster.class, excludeAuthority)
+            .filter(LogAnalysisClusterKeys.verificationTaskId, verificationTaskId)
+            .filter(LogAnalysisClusterKeys.isEvicted, Boolean.FALSE)
+            .asList();
     List<TimeSeriesRecordDTO> testData = new ArrayList<>();
     logAnalysisClusters.forEach(logAnalysisCluster -> {
       String groupName = String.valueOf(logAnalysisCluster.getLabel());
@@ -216,12 +212,14 @@ public class TrendAnalysisServiceImpl implements TrendAnalysisService {
   }
 
   @Override
-  public void saveAnalysis(String taskId, ServiceGuardMetricAnalysisDTO analysis) {
+  public void saveAnalysis(String taskId, ServiceGuardTimeSeriesAnalysisDTO analysis) {
     LearningEngineTask learningEngineTask = learningEngineTaskService.get(taskId);
     Preconditions.checkNotNull(learningEngineTask, "Needs to be a valid LE task.");
     Instant startTime = learningEngineTask.getAnalysisStartTime();
     Instant endTime = learningEngineTask.getAnalysisEndTime();
-
+    analysis.setVerificationTaskId(learningEngineTask.getVerificationTaskId());
+    analysis.setAnalysisStartTime(startTime);
+    analysis.setAnalysisEndTime(endTime);
     TimeSeriesShortTermHistory shortTermHistory = buildShortTermHistory(analysis);
     TimeSeriesCumulativeSums cumulativeSums = buildCumulativeSums(analysis, startTime, endTime);
     TimeSeriesRiskSummary riskSummary = buildRiskSummary(analysis, startTime, endTime);
@@ -236,11 +234,12 @@ public class TrendAnalysisServiceImpl implements TrendAnalysisService {
   }
 
   private void saveRisk(
-      ServiceGuardMetricAnalysisDTO analysis, Instant startTime, Instant endTime, String verificationTaskId) {
-    List<LogAnalysisCluster> logAnalysisClusters = hPersistence.createQuery(LogAnalysisCluster.class, excludeAuthority)
-                                                       .filter(LogAnalysisClusterKeys.cvConfigId, verificationTaskId)
-                                                       .filter(LogAnalysisClusterKeys.isEvicted, Boolean.FALSE)
-                                                       .asList();
+      ServiceGuardTimeSeriesAnalysisDTO analysis, Instant startTime, Instant endTime, String verificationTaskId) {
+    List<LogAnalysisCluster> logAnalysisClusters =
+        hPersistence.createQuery(LogAnalysisCluster.class, excludeAuthority)
+            .filter(LogAnalysisClusterKeys.verificationTaskId, verificationTaskId)
+            .filter(LogAnalysisClusterKeys.isEvicted, Boolean.FALSE)
+            .asList();
     Map<Long, LogAnalysisCluster> logAnalysisClusterMap =
         logAnalysisClusters.stream().collect(Collectors.toMap(LogAnalysisCluster::getLabel, cluster -> cluster));
     for (Map.Entry<String, Map<String, ServiceGuardTxnMetricAnalysisDataDTO>> txnMetricAnalysis :
@@ -266,7 +265,7 @@ public class TrendAnalysisServiceImpl implements TrendAnalysisService {
   }
 
   private TimeSeriesRiskSummary buildRiskSummary(
-      ServiceGuardMetricAnalysisDTO analysisDTO, Instant startTime, Instant endTime) {
+      ServiceGuardTimeSeriesAnalysisDTO analysisDTO, Instant startTime, Instant endTime) {
     List<TimeSeriesRiskSummary.TransactionMetricRisk> metricRiskList = new ArrayList<>();
     analysisDTO.getTxnMetricAnalysisData().forEach(
         (txnName, metricMap) -> metricMap.forEach((metricName, metricData) -> {
@@ -281,7 +280,6 @@ public class TrendAnalysisServiceImpl implements TrendAnalysisService {
           metricRiskList.add(metricRisk);
         }));
     return TimeSeriesRiskSummary.builder()
-        .cvConfigId(analysisDTO.getCvConfigId())
         .verificationTaskId(analysisDTO.getVerificationTaskId())
         .analysisStartTime(startTime)
         .analysisEndTime(endTime)
@@ -289,7 +287,7 @@ public class TrendAnalysisServiceImpl implements TrendAnalysisService {
         .build();
   }
 
-  private void saveAnomalousPatterns(ServiceGuardMetricAnalysisDTO analysis, String verificationTaskId) {
+  private void saveAnomalousPatterns(ServiceGuardTimeSeriesAnalysisDTO analysis, String verificationTaskId) {
     TimeSeriesAnomalousPatterns patternsToSave = buildAnomalies(analysis);
     // change the filter to verificationTaskId
     TimeSeriesAnomalousPatterns patternsFromDB =
@@ -315,7 +313,7 @@ public class TrendAnalysisServiceImpl implements TrendAnalysisService {
   }
 
   private TimeSeriesCumulativeSums buildCumulativeSums(
-      ServiceGuardMetricAnalysisDTO analysisDTO, Instant startTime, Instant endTime) {
+      ServiceGuardTimeSeriesAnalysisDTO analysisDTO, Instant startTime, Instant endTime) {
     Map<String, Map<String, MetricSum>> cumulativeSumsMap = new HashMap<>();
     analysisDTO.getTxnMetricAnalysisData().forEach((txnName, metricMap) -> {
       cumulativeSumsMap.put(txnName, new HashMap<>());
@@ -330,7 +328,6 @@ public class TrendAnalysisServiceImpl implements TrendAnalysisService {
         TimeSeriesCumulativeSums.convertMapToTransactionMetricSums(cumulativeSumsMap);
 
     return TimeSeriesCumulativeSums.builder()
-        .cvConfigId(analysisDTO.getCvConfigId())
         .verificationTaskId(analysisDTO.getVerificationTaskId())
         .transactionMetricSums(transactionMetricSums)
         .analysisStartTime(startTime)
@@ -338,7 +335,7 @@ public class TrendAnalysisServiceImpl implements TrendAnalysisService {
         .build();
   }
 
-  private TimeSeriesShortTermHistory buildShortTermHistory(ServiceGuardMetricAnalysisDTO analysisDTO) {
+  private TimeSeriesShortTermHistory buildShortTermHistory(ServiceGuardTimeSeriesAnalysisDTO analysisDTO) {
     Map<String, Map<String, List<Double>>> shortTermHistoryMap = new HashMap<>();
     analysisDTO.getTxnMetricAnalysisData().forEach((txnName, metricMap) -> {
       shortTermHistoryMap.put(txnName, new HashMap<>());
@@ -348,13 +345,12 @@ public class TrendAnalysisServiceImpl implements TrendAnalysisService {
     });
 
     return TimeSeriesShortTermHistory.builder()
-        .cvConfigId(analysisDTO.getCvConfigId())
         .verificationTaskId(analysisDTO.getVerificationTaskId())
         .transactionMetricHistories(TimeSeriesShortTermHistory.convertFromMap(shortTermHistoryMap))
         .build();
   }
 
-  private TimeSeriesAnomalousPatterns buildAnomalies(ServiceGuardMetricAnalysisDTO analysisDTO) {
+  private TimeSeriesAnomalousPatterns buildAnomalies(ServiceGuardTimeSeriesAnalysisDTO analysisDTO) {
     Map<String, Map<String, List<TimeSeriesAnomalies>>> anomaliesMap = new HashMap<>();
     analysisDTO.getTxnMetricAnalysisData().forEach((txnName, metricMap) -> {
       anomaliesMap.put(txnName, new HashMap<>());
@@ -364,7 +360,7 @@ public class TrendAnalysisServiceImpl implements TrendAnalysisService {
     });
 
     return TimeSeriesAnomalousPatterns.builder()
-        .cvConfigId(analysisDTO.getCvConfigId())
+        .verificationTaskId(analysisDTO.getVerificationTaskId())
         .anomalies(TimeSeriesAnomalousPatterns.convertFromMap(anomaliesMap))
         .build();
   }

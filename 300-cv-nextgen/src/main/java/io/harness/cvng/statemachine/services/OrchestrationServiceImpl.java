@@ -28,19 +28,15 @@ public class OrchestrationServiceImpl implements OrchestrationService {
   @Override
   public void queueAnalysis(String verificationTaskId, Instant startTime, Instant endTime) {
     boolean isFirstAnalysis = false;
-    AnalysisInput inputForAnalysis = AnalysisInput.builder()
-                                         .cvConfigId(verificationTaskId)
-                                         .verificationTaskId(verificationTaskId)
-                                         .startTime(startTime)
-                                         .endTime(endTime)
-                                         .build();
+    AnalysisInput inputForAnalysis =
+        AnalysisInput.builder().verificationTaskId(verificationTaskId).startTime(startTime).endTime(endTime).build();
     validateAnalysisInputs(inputForAnalysis);
 
     AnalysisOrchestrator orchestrator = getOrchestrator(verificationTaskId);
 
     if (orchestrator == null) {
       orchestrator = AnalysisOrchestrator.builder()
-                         .verificationTaskId(inputForAnalysis.getCvConfigId())
+                         .verificationTaskId(inputForAnalysis.getVerificationTaskId())
                          .status(AnalysisStatus.CREATED)
                          .build();
       isFirstAnalysis = true;
