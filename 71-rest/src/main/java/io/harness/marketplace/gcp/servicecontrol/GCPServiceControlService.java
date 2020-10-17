@@ -1,5 +1,7 @@
 package io.harness.marketplace.gcp.servicecontrol;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
+
 import com.google.api.services.servicecontrol.v1.ServiceControl;
 import com.google.api.services.servicecontrol.v1.model.CheckRequest;
 import com.google.api.services.servicecontrol.v1.model.CheckResponse;
@@ -11,6 +13,7 @@ import com.google.api.services.servicecontrol.v1.model.ReportResponse;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.marketplace.gcp.GcpMarketPlaceConstants;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.util.CollectionUtils;
@@ -21,6 +24,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Optional;
 
+@OwnedBy(PL)
 @Singleton
 @Slf4j
 public class GCPServiceControlService {

@@ -1,6 +1,10 @@
 package io.harness.marketplace.gcp.procurement;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
+
+import com.google.api.client.googleapis.json.GoogleJsonResponseException;
 import com.google.cloudcommerceprocurement.v1.CloudCommercePartnerProcurementService;
+import com.google.cloudcommerceprocurement.v1.model.Account;
 import com.google.cloudcommerceprocurement.v1.model.ApproveAccountRequest;
 import com.google.cloudcommerceprocurement.v1.model.ApproveEntitlementPlanChangeRequest;
 import com.google.cloudcommerceprocurement.v1.model.ApproveEntitlementRequest;
@@ -10,28 +14,22 @@ import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
-import io.harness.exception.GcpMarketplaceProcurementException;
-import io.harness.exception.GeneralException;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.exception.UnexpectedException;
 import io.harness.marketplace.gcp.GcpMarketPlaceConstants;
-import io.harness.marketplace.gcp.procurement.pubsub.ProcurementPubsubMessage.EntitlementMessage;
 import lombok.extern.slf4j.Slf4j;
-import net.jodah.failsafe.Failsafe;
-import net.jodah.failsafe.RetryPolicy;
-import net.jodah.failsafe.function.CheckedSupplier;
 import org.slf4j.helpers.MessageFormatter;
-import org.springframework.web.client.HttpServerErrorException;
-import software.wings.beans.MarketPlace;
+import software.wings.beans.marketplace.gcp.GCPMarketplaceCustomer;
 
 import java.io.IOException;
 import java.time.Duration;
-import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
+@OwnedBy(PL)
 @Slf4j
 @Singleton
 public class GcpProcurementService {
@@ -56,49 +54,34 @@ public class GcpProcurementService {
     }
   }
 
-  public void approveAccount(MarketPlace marketPlace) {
-    String gcpAccountId = marketPlace.getCustomerIdentificationCode();
-
+  public void approveAccount(String gcpAccountId) {
     String accountName =
         MessageFormatter.format(ACCOUNT_NAME_PATTERN, GcpMarketPlaceConstants.PROJECT_ID, gcpAccountId).getMessage();
 
     ApproveAccountRequest approvalRequest = new ApproveAccountRequest();
     approvalRequest.setApprovalName(GcpMarketPlaceConstants.APPROVAL_SIGNUP_NAME);
-    approvalRequest.setProperties(props(marketPlace));
     try {
       getProcurementService().providers().accounts().approve(accountName, approvalRequest).execute();
-      logger.info("Account approved. GCP Account ID: {}, Harness AccountId:{}. Request: {}",
-          marketPlace.getCustomerIdentificationCode(), marketPlace.getAccountId(), approvalRequest);
+      logger.info("Account approved. GCP Account ID: {}", gcpAccountId);
     } catch (IOException e) {
-      logger.error("Exception while approving GCP Marketplace Account: {}", marketPlace, e);
+      logger.error("Exception occurred while approving GCP Marketplace Account: {}", gcpAccountId, e);
     }
   }
 
-  public void approveEntitlement(MarketPlace marketPlace, String entitlementId) {
+  public void approveEntitlement(String id) throws IOException {
     String entitlementName =
-        MessageFormatter.format(ENTITLEMENT_NAME_PATTERN, GcpMarketPlaceConstants.PROJECT_ID, entitlementId)
-            .getMessage();
-    ApproveEntitlementRequest approveEntitlementRequest = new ApproveEntitlementRequest();
-    approveEntitlementRequest.setProperties(props(marketPlace));
-    callProcurementServiceWithRetry(
-        ()
-            -> getProcurementService().providers().entitlements().approve(entitlementName, approveEntitlementRequest),
-        entitlementId);
+        MessageFormatter.format(ENTITLEMENT_NAME_PATTERN, GcpMarketPlaceConstants.PROJECT_ID, id).getMessage();
+    ApproveEntitlementRequest request = new ApproveEntitlementRequest();
+    getProcurementService().providers().entitlements().approve(entitlementName, request).execute();
   }
 
-  /** Approves a plan change for an Entitlement resource. */
-  public void approveEntitlementPlanChange(EntitlementMessage entitlementMessage) {
+  public void approveEntitlementPlanChange(String id, String newPlan) throws IOException {
     String entitlementName =
-        MessageFormatter
-            .format(ENTITLEMENT_NAME_PATTERN, GcpMarketPlaceConstants.PROJECT_ID, entitlementMessage.getId())
-            .getMessage();
+        MessageFormatter.format(ENTITLEMENT_NAME_PATTERN, GcpMarketPlaceConstants.PROJECT_ID, id).getMessage();
     ApproveEntitlementPlanChangeRequest request = new ApproveEntitlementPlanChangeRequest();
-    request.setPendingPlanName(entitlementMessage.getNewPlan());
+    request.setPendingPlanName(newPlan);
 
-    callProcurementServiceWithRetry(
-        ()
-            -> getProcurementService().providers().entitlements().approvePlanChange(entitlementName, request).execute(),
-        entitlementMessage.getId());
+    getProcurementService().providers().entitlements().approvePlanChange(entitlementName, request);
   }
 
   public List<Entitlement> listEntitlementsForGcpAccountId(String gcpAccountId) {
@@ -123,66 +106,44 @@ public class GcpProcurementService {
     return accountEntitlement;
   }
 
-  public List<Entitlement> listAllEntitlements() {
-    List<Entitlement> entitlements = new ArrayList<>();
-    String providerName =
-        MessageFormatter.format(PROVIDER_NAME_PATTERN, GcpMarketPlaceConstants.PROJECT_ID).getMessage();
-    try {
-      ListEntitlementsResponse listEntitlementsResponse =
-          getProcurementService().providers().entitlements().list(providerName).execute();
-      entitlements = listEntitlementsResponse.getEntitlements();
-    } catch (IOException e) {
-      logger.error("Exception while listing all entitlements", e);
-    }
-    return entitlements;
+  private static Map<String, String> props(GCPMarketplaceCustomer marketPlace) {
+    String gcpAccountId = marketPlace.getGcpAccountId();
+    return ImmutableMap.of("gcpAccountId", gcpAccountId, "harnessAccountId", marketPlace.getHarnessAccountId());
   }
 
-  public Entitlement getEntitlementById(String entitlementId) {
-    String entitlementName =
-        MessageFormatter.format(ENTITLEMENT_NAME_PATTERN, GcpMarketPlaceConstants.PROJECT_ID, entitlementId)
-            .getMessage();
+  public Account getAccount(String id) throws IOException {
+    String accountName = getAccountName(id);
     try {
-      Entitlement entitlement = getProcurementService().providers().entitlements().get(entitlementName).execute();
-      if (null != entitlement) {
-        return entitlement;
-      } else {
-        throw new GeneralException("Couldn't get GCP Entitlement with id: " + entitlementId);
+      return getProcurementService().providers().accounts().get(accountName).execute();
+    } catch (GoogleJsonResponseException e) {
+      if (e.getDetails().getCode() == 404) {
+        return null;
       }
-    } catch (IOException e) {
-      throw new GeneralException("Exception while getting entitlement with Id: " + entitlementId, e);
+      throw e;
     }
   }
 
-  private static Map<String, String> props(MarketPlace marketPlace) {
-    String gcpAccountId = marketPlace.getCustomerIdentificationCode();
-    return ImmutableMap.of("gcpAccountId", gcpAccountId, "harnessAccountId", marketPlace.getAccountId());
+  private static String getAccountName(String id) {
+    return MessageFormatter.format(ACCOUNT_NAME_PATTERN, GcpMarketPlaceConstants.PROJECT_ID, id).getMessage();
   }
 
-  private <T> T callProcurementServiceWithRetry(final CheckedSupplier<T> supplier, String entitlementId) {
-    final int[] retryCount = {0};
-
-    RetryPolicy<Object> retryPolicy =
-        new RetryPolicy<>()
-            .handle(Exception.class)
-            .withBackoff(INITIAL_DELAY_MS, MAX_DELAY_MS, ChronoUnit.MILLIS, DELAY_FACTOR)
-            .withMaxAttempts(MAX_ATTEMPTS)
-            .withJitter(JITTER_MS)
-            .abortOn(HttpServerErrorException.InternalServerError.class)
-            .onFailedAttempt(event -> {
-              retryCount[0]++;
-              logger.warn("[Retrying] Error while calling GCP Procurement Service for request {}, retryCount: {}",
-                  entitlementId, retryCount[0], event.getLastFailure());
-            })
-            .onFailure(event
-                -> logger.error("Error while calling GCP Procurement Service for entitlementId {} after {} retries",
-                    entitlementId, MAX_ATTEMPTS, event.getFailure()));
+  public Entitlement getEntitlement(String id) throws IOException {
+    String entitlementName = getEntitlementName(id);
     try {
-      return Failsafe.with(retryPolicy).get(supplier);
-    } catch (Exception e) {
-      throw new GcpMarketplaceProcurementException(
-          "Exception occurred while calling GCP Procurement Service. Entitlement:" + entitlementId
-              + "Exception: " + e.getMessage(),
-          e);
+      return getProcurementService().providers().entitlements().get(entitlementName).execute();
+    } catch (GoogleJsonResponseException e) {
+      if (e.getDetails().getCode() == 404) {
+        return null;
+      }
+      throw e;
     }
+  }
+
+  private String getEntitlementName(String id) {
+    return MessageFormatter.format(ENTITLEMENT_NAME_PATTERN, GcpMarketPlaceConstants.PROJECT_ID, id).getMessage();
+  }
+
+  public static String getAccountId(String name) {
+    return name.substring(name.lastIndexOf("//") + 1);
   }
 }

@@ -63,7 +63,7 @@ public class GCPBillingHandler implements Handler<GCPBillingJobEntity> {
   public void handle(GCPBillingJobEntity entity) {
     logger.info("Inside GCP billing handler ! {} ", entity.toString());
     try {
-      gcpMarketPlaceService.createUsageReport(entity.getAccountId(), entity.getGcpAccountId());
+      gcpMarketPlaceService.createUsageReport(entity.getAccountId());
     } catch (Exception ex) {
       logger.error("GCP_MKT_PLACE exception in handling request : ", ex);
     }

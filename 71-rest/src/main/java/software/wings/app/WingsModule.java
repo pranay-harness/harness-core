@@ -94,6 +94,8 @@ import io.harness.limits.defaults.service.DefaultLimitsServiceImpl;
 import io.harness.lock.DistributedLockImplementation;
 import io.harness.lock.PersistentLockModule;
 import io.harness.lock.PersistentLocker;
+import io.harness.marketplace.gcp.procurement.CDProductHandler;
+import io.harness.marketplace.gcp.procurement.GcpProductHandler;
 import io.harness.mongo.MongoConfig;
 import io.harness.notifications.AlertNotificationRuleChecker;
 import io.harness.notifications.AlertNotificationRuleCheckerImpl;
@@ -1158,6 +1160,7 @@ public class WingsModule extends AbstractModule implements ServersModule {
     }
     bind(DeploymentReconService.class).to(DeploymentReconServiceImpl.class);
     bindFeatures();
+    bindGcpMarketplaceProductHandlers();
 
     bind(FeatureService.class).to(FeatureServiceImpl.class);
     bind(ServerlessInstanceService.class).to(ServerlessInstanceServiceImpl.class);
@@ -1358,6 +1361,13 @@ public class WingsModule extends AbstractModule implements ServersModule {
         .bind(SecretSetupUsageBuilder.class)
         .annotatedWith(Names.named(SecretSetupUsageBuilders.SECRET_MANAGER_CONFIG_SETUP_USAGE_BUILDER.getName()))
         .to(SecretManagerSetupUsageBuilder.class);
+  }
+
+  private void bindGcpMarketplaceProductHandlers() {
+    MapBinder<String, GcpProductHandler> binder =
+        MapBinder.newMapBinder(binder(), String.class, GcpProductHandler.class);
+
+    binder.addBinding("harness-continuous-delivery").to(CDProductHandler.class).in(Singleton.class);
   }
 
   @Provides

@@ -12,11 +12,11 @@ import io.harness.marketplace.gcp.GcpMarketPlaceConstants;
 import io.harness.marketplace.gcp.procurement.GcpProcurementService;
 import io.harness.marketplace.gcp.servicecontrol.GCPServiceControlService;
 import lombok.extern.slf4j.Slf4j;
-import software.wings.beans.MarketPlace;
-import software.wings.beans.marketplace.MarketPlaceType;
+import software.wings.beans.marketplace.gcp.GCPMarketplaceCustomer;
+import software.wings.beans.marketplace.gcp.GCPMarketplaceCustomer.GCPMarketplaceCustomerKeys;
 import software.wings.beans.marketplace.gcp.GCPUsageReport;
+import software.wings.dl.WingsPersistence;
 import software.wings.service.intfc.instance.stats.InstanceStatService;
-import software.wings.service.intfc.marketplace.MarketPlaceService;
 import software.wings.service.intfc.marketplace.gcp.GCPMarketPlaceService;
 import software.wings.service.intfc.marketplace.gcp.GCPUsageReportService;
 
@@ -40,11 +40,11 @@ public class GCPMarketPlaceServiceImpl implements GCPMarketPlaceService {
   @Inject private GCPUsageReportService gcpUsageReportService;
   @Inject private GCPServiceControlService gcpServiceControlService;
   @Inject private GcpProcurementService gcpProcurementService;
-  @Inject private MarketPlaceService marketPlaceService;
+  @Inject private WingsPersistence wingsPersistence;
 
   @Override
-  public void createUsageReport(String accountId, String gcpAccountId) {
-    Optional<Entitlement> entitlementMaybe = fetchActiveEntitlement(gcpAccountId);
+  public void createUsageReport(String accountId) {
+    Optional<Entitlement> entitlementMaybe = fetchActiveEntitlement(accountId);
     if (entitlementMaybe.isPresent()) {
       Entitlement entitlement = entitlementMaybe.get();
       Instant usageReportStartTime = this.usageReportStartTime(accountId, entitlement);
@@ -122,16 +122,18 @@ public class GCPMarketPlaceServiceImpl implements GCPMarketPlaceService {
     }
   }
 
-  private Optional<Entitlement> fetchActiveEntitlement(String gcpAccountId) {
-    Optional<MarketPlace> marketPlaceMaybe =
-        this.marketPlaceService.fetchMarketplace(gcpAccountId, MarketPlaceType.GCP);
-    if (!marketPlaceMaybe.isPresent()) {
-      logger.error("GCP_MKT_PLACE Error marketplace entity not present {} ", gcpAccountId);
+  private Optional<Entitlement> fetchActiveEntitlement(String accountId) {
+    Optional<GCPMarketplaceCustomer> gcpMarketplaceCustomer =
+        Optional.ofNullable(wingsPersistence.createQuery(GCPMarketplaceCustomer.class)
+                                .filter(GCPMarketplaceCustomerKeys.harnessAccountId, accountId)
+                                .get());
+    if (!gcpMarketplaceCustomer.isPresent()) {
+      logger.error("GCP_MKT_PLACE Error marketplace entity not present {} ", accountId);
       return Optional.empty();
     } else {
-      MarketPlace marketPlace = marketPlaceMaybe.get();
+      GCPMarketplaceCustomer marketPlace = gcpMarketplaceCustomer.get();
       List<Entitlement> entitlements =
-          this.gcpProcurementService.listEntitlementsForGcpAccountId(marketPlace.getCustomerIdentificationCode());
+          this.gcpProcurementService.listEntitlementsForGcpAccountId(marketPlace.getGcpAccountId());
       List<Entitlement> activeEntitlement =
           entitlements.stream()
               .filter(entitlement -> entitlement.getState().equals(GcpMarketPlaceConstants.ENTITLEMENT_ACTIVATED))
