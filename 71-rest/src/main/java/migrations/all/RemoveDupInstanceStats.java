@@ -5,9 +5,8 @@ import com.google.inject.Inject;
 import io.harness.persistence.HIterator;
 import lombok.AllArgsConstructor;
 import lombok.Value;
+import lombok.extern.slf4j.Slf4j;
 import migrations.Migration;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import software.wings.beans.infrastructure.instance.stats.InstanceStatsSnapshot;
 import software.wings.dl.WingsPersistence;
 
@@ -18,9 +17,8 @@ import java.util.Set;
 /**
  * remove duplicate entries from `instanceStats` collection.
  */
+@Slf4j
 public class RemoveDupInstanceStats implements Migration {
-  private static final Logger log = LoggerFactory.getLogger(RemoveDupInstanceStats.class);
-
   @Inject private WingsPersistence persistence;
 
   @Value
@@ -32,7 +30,7 @@ public class RemoveDupInstanceStats implements Migration {
 
   @Override
   public void migrate() {
-    log.info("Running migration - remove duplicate entries from `instanceStats` collection");
+    logger.info("Running migration - remove duplicate entries from `instanceStats` collection");
 
     try (HIterator<InstanceStatsSnapshot> stats =
              new HIterator<>(persistence.createQuery(InstanceStatsSnapshot.class).fetch())) {
@@ -43,15 +41,15 @@ public class RemoveDupInstanceStats implements Migration {
         boolean added = statsSnapshotSet.add(new UniqueKey(stat.getTimestamp(), stat.getAccountId()));
         if (!added) {
           persistence.delete(stat);
-          log.info("Deleted: {}", stat.getUuid());
+          logger.info("Deleted: {}", stat.getUuid());
           deleteCount++;
         }
       }
 
-      log.info("Finished RemoveDupInstanceStats Migration. Deleted entries: {}", deleteCount);
+      logger.info("Finished RemoveDupInstanceStats Migration. Deleted entries: {}", deleteCount);
 
     } catch (Exception e) {
-      log.error("Error running RemoveDupInstanceStats migration. ", e);
+      logger.error("Error running RemoveDupInstanceStats migration. ", e);
     }
   }
 }

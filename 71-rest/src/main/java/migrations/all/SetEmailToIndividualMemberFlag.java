@@ -2,9 +2,8 @@ package migrations.all;
 
 import com.google.inject.Inject;
 
+import lombok.extern.slf4j.Slf4j;
 import migrations.Migration;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import software.wings.beans.Account;
 import software.wings.beans.notification.NotificationSettings;
 import software.wings.beans.security.UserGroup;
@@ -18,9 +17,8 @@ import java.util.List;
 /**
  * Refer to https://harness.atlassian.net/browse/PL-1296 for context.
  */
+@Slf4j
 public class SetEmailToIndividualMemberFlag implements Migration {
-  private static final Logger log = LoggerFactory.getLogger(SetEmailToIndividualMemberFlag.class);
-
   @Inject private UserGroupService userGroupService;
   @Inject private AccountService accountService;
   @Inject private WingsPersistence wingsPersistence;
@@ -28,7 +26,7 @@ public class SetEmailToIndividualMemberFlag implements Migration {
   @Override
   public void migrate() {
     try {
-      log.info("Running Migration: {}", SetEmailToIndividualMemberFlag.class.getSimpleName());
+      logger.info("Running Migration: {}", SetEmailToIndividualMemberFlag.class.getSimpleName());
 
       List<Account> accounts = accountService.listAllAccounts();
 
@@ -40,11 +38,11 @@ public class SetEmailToIndividualMemberFlag implements Migration {
 
         UserGroup userGroup = userGroupService.getDefaultUserGroup(accountId);
         if (null == userGroup) {
-          log.info("No default user group present. accountId={}", accountId);
+          logger.info("No default user group present. accountId={}", accountId);
           continue;
         }
 
-        log.info(
+        logger.info(
             "Setting useIndividualEmails flag to true. accountId={} userGroupId={}", accountId, userGroup.getUuid());
         NotificationSettings existing = userGroup.getNotificationSettings();
         NotificationSettings updatedSetting;
@@ -61,7 +59,7 @@ public class SetEmailToIndividualMemberFlag implements Migration {
       }
 
     } catch (Exception e) {
-      log.error("Error running SetEmailToIndividualMemberFlag migration", e);
+      logger.error("Error running SetEmailToIndividualMemberFlag migration", e);
     }
   }
 }

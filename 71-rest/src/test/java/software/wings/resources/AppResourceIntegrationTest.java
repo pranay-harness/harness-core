@@ -15,6 +15,7 @@ import io.harness.limits.configuration.LimitConfigurationService;
 import io.harness.limits.impl.model.StaticLimit;
 import io.harness.rule.Owner;
 import io.harness.rule.Repeat;
+import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 import migrations.InitializeAppCounters;
 import org.apache.commons.lang3.RandomStringUtils;
@@ -24,8 +25,6 @@ import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mongodb.morphia.query.Query;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import software.wings.beans.Application;
 import software.wings.beans.Application.ApplicationKeys;
 import software.wings.dl.WingsPersistence;
@@ -44,9 +43,8 @@ import java.util.concurrent.TimeUnit;
 import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.Response.Status;
 
+@Slf4j
 public class AppResourceIntegrationTest extends BaseIntegrationTest {
-  private static final Logger log = LoggerFactory.getLogger(AppResourceIntegrationTest.class);
-
   @Inject private LimitConfigurationService limitConfigurationService;
   @Inject private WingsPersistence persistence;
   @Inject private InitializeAppCounters initializeAppCounters;
@@ -84,7 +82,7 @@ public class AppResourceIntegrationTest extends BaseIntegrationTest {
 
     val url = IntegrationTestUtils.buildAbsoluteUrl(
         "/api/apps", ImmutableMap.of("accountId", WingsIntegrationTestConstants.INTEGRATION_TEST_ACCOUNT_ID));
-    log.debug("Create URL to hit: {}", url);
+    logger.debug("Create URL to hit: {}", url);
     WebTarget target = client.target(url);
 
     Application app = null;
@@ -100,7 +98,7 @@ public class AppResourceIntegrationTest extends BaseIntegrationTest {
     // delete an app
     String deleteUrl = IntegrationTestUtils.buildAbsoluteUrl("/api/apps/" + app.getAppId(), new HashMap<>());
     WebTarget deleteTarget = client.target(deleteUrl);
-    log.debug("Delete URL to hit: {}", deleteUrl);
+    logger.debug("Delete URL to hit: {}", deleteUrl);
 
     status = getRequestBuilderWithAuthHeader(deleteTarget).delete().getStatus();
     assertThat(Status.OK.getStatusCode()).isEqualTo(status);
@@ -130,7 +128,7 @@ public class AppResourceIntegrationTest extends BaseIntegrationTest {
 
     val url = IntegrationTestUtils.buildAbsoluteUrl(
         "/api/apps", ImmutableMap.of("accountId", WingsIntegrationTestConstants.INTEGRATION_TEST_ACCOUNT_ID));
-    log.debug("Create URL to hit: {}", url);
+    logger.debug("Create URL to hit: {}", url);
     WebTarget target = client.target(url);
 
     concurrentConsume(target, maxApps - appCount);
@@ -142,7 +140,7 @@ public class AppResourceIntegrationTest extends BaseIntegrationTest {
     Application appToDelete = fetchAppsQuery().get();
     String deleteUrl = IntegrationTestUtils.buildAbsoluteUrl("/api/apps/" + appToDelete.getAppId(), new HashMap<>());
     WebTarget deleteTarget = client.target(deleteUrl);
-    log.debug("Delete URL to hit: {}", deleteUrl);
+    logger.debug("Delete URL to hit: {}", deleteUrl);
 
     status = getRequestBuilderWithAuthHeader(deleteTarget).delete().getStatus();
     assertThat(Status.OK.getStatusCode()).isEqualTo(status);

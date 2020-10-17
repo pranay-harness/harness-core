@@ -2,7 +2,6 @@ package migrations.seedata;
 
 import static io.harness.exception.WingsException.ExecutionContext.MANAGER;
 import static java.util.Arrays.asList;
-import static org.slf4j.LoggerFactory.getLogger;
 import static software.wings.beans.Account.GLOBAL_ACCOUNT_ID;
 import static software.wings.beans.Variable.VariableBuilder.aVariable;
 import static software.wings.common.TemplateConstants.HARNESS_GALLERY;
@@ -11,8 +10,8 @@ import com.google.inject.Inject;
 
 import io.harness.exception.WingsException;
 import io.harness.logging.ExceptionLogger;
+import lombok.extern.slf4j.Slf4j;
 import migrations.SeedDataMigration;
-import org.slf4j.Logger;
 import software.wings.beans.Variable;
 import software.wings.beans.VariableType;
 import software.wings.beans.command.Command;
@@ -27,9 +26,8 @@ import software.wings.service.intfc.template.TemplateService;
 import java.util.HashSet;
 import java.util.List;
 
+@Slf4j
 public class TomcatInstallCommandMigration implements SeedDataMigration {
-  private static final Logger logger = getLogger(TomcatInstallCommandMigration.class);
-
   @Inject private TemplateService templateService;
   @Inject private TemplateGalleryService templateGalleryService;
 

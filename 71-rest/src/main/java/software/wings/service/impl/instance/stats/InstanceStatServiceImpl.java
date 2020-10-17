@@ -11,12 +11,11 @@ import io.harness.eraro.ErrorCode;
 import io.harness.exception.WingsException;
 import io.harness.persistence.HIterator;
 import io.harness.persistence.HQuery;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
 import org.mongodb.morphia.query.FindOptions;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.Sort;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import software.wings.beans.Account;
 import software.wings.beans.User;
 import software.wings.beans.infrastructure.instance.stats.InstanceStatsSnapshot;
@@ -47,9 +46,8 @@ import javax.annotation.ParametersAreNonnullByDefault;
  */
 @Singleton
 @ParametersAreNonnullByDefault
+@Slf4j
 public class InstanceStatServiceImpl implements InstanceStatService {
-  private static final Logger log = LoggerFactory.getLogger(InstanceStatServiceImpl.class);
-
   @Inject private WingsPersistence persistence;
   @Inject private AppService appService;
   @Inject private UserService userService;
@@ -60,11 +58,11 @@ public class InstanceStatServiceImpl implements InstanceStatService {
     String id = persistence.save(stats);
 
     if (null == id) {
-      log.error("Could not save instance stats. Stats: {}", stats);
+      logger.error("Could not save instance stats. Stats: {}", stats);
       return false;
     }
 
-    log.info("Saved stats. Time: {}, Account: {}, ID: {} ", stats.getTimestamp(), stats.getAccountId(), id);
+    logger.info("Saved stats. Time: {}, Account: {}, ID: {} ", stats.getTimestamp(), stats.getAccountId(), id);
     return true;
   }
 
@@ -93,20 +91,20 @@ public class InstanceStatServiceImpl implements InstanceStatService {
     Stopwatch stopwatch = Stopwatch.createStarted();
 
     List<InstanceStatsSnapshot> stats = aggregate(accountId, from, to);
-    log.info("Aggregate Time: {} ms, accountId={}, from={} to={}", stopwatch.elapsed(TimeUnit.MILLISECONDS), accountId,
-        from, to);
+    logger.info("Aggregate Time: {} ms, accountId={}, from={} to={}", stopwatch.elapsed(TimeUnit.MILLISECONDS),
+        accountId, from, to);
     Set<String> deletedAppIds = dashboardStatsService.getDeletedAppIds(accountId, fromTsMillis, toTsMillis);
-    log.info("Get Deleted App Time: {} ms, accountId={}", stopwatch.elapsed(TimeUnit.MILLISECONDS), accountId);
+    logger.info("Get Deleted App Time: {} ms, accountId={}", stopwatch.elapsed(TimeUnit.MILLISECONDS), accountId);
 
     User user = UserThreadLocal.get();
     if (null != user) {
       TimelineRbacFilters rbacFilters = new TimelineRbacFilters(user, accountId, appService, userService);
       List<InstanceStatsSnapshot> filteredStats = rbacFilters.filter(stats, deletedAppIds);
-      log.info("Stats before and after filtering. Before: {}, After: {}", stats.size(), filteredStats.size());
-      log.info("Time till RBAC filters: {} ms, accountId={}", stopwatch.elapsed(TimeUnit.MILLISECONDS), accountId);
+      logger.info("Stats before and after filtering. Before: {}, After: {}", stats.size(), filteredStats.size());
+      logger.info("Time till RBAC filters: {} ms, accountId={}", stopwatch.elapsed(TimeUnit.MILLISECONDS), accountId);
       InstanceTimeline timeline = new InstanceTimeline(filteredStats, deletedAppIds);
       InstanceTimeline top = top(timeline, 5);
-      log.info("Total time taken: {} ms, accountId={}", stopwatch.elapsed(TimeUnit.MILLISECONDS), accountId);
+      logger.info("Total time taken: {} ms, accountId={}", stopwatch.elapsed(TimeUnit.MILLISECONDS), accountId);
       return top;
     } else {
       throw new WingsException(ErrorCode.USER_DOES_NOT_EXIST);

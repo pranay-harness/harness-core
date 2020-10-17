@@ -13,8 +13,6 @@ import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -22,12 +20,7 @@ import java.util.Objects;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 
-/**
- * Created by rishi on 10/30/16.
- */
 public class NotificationRule {
-  private static final Logger log = LoggerFactory.getLogger(NotificationRule.class);
-
   private String uuid = generateUuid();
   private List<ExecutionStatus> conditions = new ArrayList<>();
   private ExecutionScope executionScope;

@@ -13,9 +13,8 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import io.harness.annotations.dev.OwnedBy;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.text.StrSubstitutor;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import software.wings.beans.FeatureName;
 import software.wings.beans.Notification;
 import software.wings.beans.SettingAttribute;
@@ -34,9 +33,8 @@ import java.util.List;
 
 @OwnedBy(CDC)
 @Singleton
+@Slf4j
 public class SlackMessageDispatcher {
-  private static final Logger log = LoggerFactory.getLogger(SlackMessageDispatcher.class);
-
   @Inject private SettingsService settingsService;
   @Inject private NotificationMessageResolver notificationMessageResolver;
   @Inject private SlackNotificationService slackNotificationService;
@@ -60,7 +58,7 @@ public class SlackMessageDispatcher {
     List<SettingAttribute> settingAttributes =
         settingsService.getGlobalSettingAttributesByType(accountId, SettingVariableTypes.SLACK.name());
     if (isEmpty(settingAttributes)) {
-      log.warn("No slack configuration found ");
+      logger.warn("No slack configuration found ");
       return;
     }
     SettingAttribute settingAttribute = settingAttributes.iterator().next();
@@ -71,7 +69,7 @@ public class SlackMessageDispatcher {
     notifications.forEach(notification -> {
       String slackTemplate = notificationMessageResolver.getSlackTemplate(notification.getNotificationTemplateId());
       if (slackTemplate == null) {
-        log.error("No slack template found for templateId {}", notification.getNotificationTemplateId());
+        logger.error("No slack template found for templateId {}", notification.getNotificationTemplateId());
         return;
       }
       messages.add(getDecoratedNotificationMessage(slackTemplate, notification.getNotificationTemplateVariables()));
@@ -143,7 +141,7 @@ public class SlackMessageDispatcher {
 
       String slackTemplate = notificationMessageResolver.getSlackTemplate(notification.getNotificationTemplateId());
       if (slackTemplate == null) {
-        log.error("No slack template found for templateId {}", notification.getNotificationTemplateId());
+        logger.error("No slack template found for templateId {}", notification.getNotificationTemplateId());
         continue;
       }
       messages.add(getDecoratedNotificationMessage(slackTemplate, notification.getNotificationTemplateVariables()));

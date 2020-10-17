@@ -8,9 +8,8 @@ import static java.util.Collections.emptySet;
 import com.google.common.collect.Sets;
 
 import io.harness.annotations.dev.OwnedBy;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.SetUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import software.wings.beans.EntityType;
 import software.wings.beans.User;
 import software.wings.beans.infrastructure.instance.stats.InstanceStatsSnapshot;
@@ -33,9 +32,8 @@ import java.util.stream.Collectors;
 import javax.annotation.Nonnull;
 
 @OwnedBy(PL)
+@Slf4j
 public class TimelineRbacFilters {
-  private static final Logger log = LoggerFactory.getLogger(TimelineRbacFilters.class);
-
   @Nonnull private User currentUser;
   @Nonnull private String accountId;
   private AppService appService;
@@ -67,12 +65,12 @@ public class TimelineRbacFilters {
     }
 
     final Set<String> allowedAppIds = getAssignedApps(currentUser);
-    log.info("Allowed App Ids. Account: {} User: {} Ids: {}, includeDeletedAppIds: {}", accountId,
+    logger.info("Allowed App Ids. Account: {} User: {} Ids: {}, includeDeletedAppIds: {}", accountId,
         currentUser.getEmail(), allowedAppIds, includeDeletedAppIds);
     final Set<String> allowedAppIdsFinal = Sets.newHashSet(allowedAppIds);
     if (includeDeletedAppIds) {
       allowedAppIdsFinal.addAll(deletedAppIds);
-      log.info("Deleted App Ids. Account: {} User: {} Ids: {}", accountId, currentUser.getEmail(), deletedAppIds);
+      logger.info("Deleted App Ids. Account: {} User: {} Ids: {}", accountId, currentUser.getEmail(), deletedAppIds);
     }
 
     return stats.stream()
@@ -92,9 +90,9 @@ public class TimelineRbacFilters {
     }
 
     final Set<String> allowedAppIds = getAssignedApps(currentUser);
-    log.info("Allowed App Ids. Account: {} User: {} Ids: {}, includeDeletedAppIds: {}", accountId,
+    logger.info("Allowed App Ids. Account: {} User: {} Ids: {}, includeDeletedAppIds: {}", accountId,
         currentUser.getEmail(), allowedAppIds, includeDeletedAppIds);
-    log.info("Deleted App Ids. Account: {} User: {} Ids: {}", accountId, currentUser.getEmail(), deletedAppIds);
+    logger.info("Deleted App Ids. Account: {} User: {} Ids: {}", accountId, currentUser.getEmail(), deletedAppIds);
 
     final Set<String> allowedAppIdsFinal =
         union(allowedAppIds, includeDeletedAppIds ? SetUtils.emptyIfNull(deletedAppIds) : emptySet());
@@ -165,7 +163,7 @@ public class TimelineRbacFilters {
 
     Set<String> allowedAppIds = userRequestContext.getAppIds();
     if (isEmpty(allowedAppIds)) {
-      log.info("No apps assigned for user. User: {}, Account: {}", user.getEmail(), accountId);
+      logger.info("No apps assigned for user. User: {}, Account: {}", user.getEmail(), accountId);
       return emptySet();
     }
 

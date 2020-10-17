@@ -9,8 +9,6 @@ import io.harness.limits.Action;
 import io.harness.limits.ActionType;
 import io.harness.limits.Counter;
 import io.harness.limits.counter.service.CounterService;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.slf4j.helpers.MessageFormatter;
 import software.wings.beans.alert.AlertData;
 import software.wings.beans.alert.AlertType;
@@ -20,8 +18,6 @@ import software.wings.service.intfc.instance.licensing.InstanceUsageLimitChecker
 import software.wings.service.intfc.instance.licensing.InstanceUsageLimitExcessHandler;
 
 public class InstanceUsageLimitExcessHandlerImpl implements InstanceUsageLimitExcessHandler {
-  private static final Logger log = LoggerFactory.getLogger(InstanceUsageLimitExcessHandlerImpl.class);
-
   private InstanceUsageLimitChecker limitChecker;
   private AlertService alertService;
   private CounterService counterService;

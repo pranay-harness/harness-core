@@ -11,8 +11,7 @@ import com.google.inject.Singleton;
 
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.WingsException;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import software.wings.app.MainConfiguration;
 import software.wings.helpers.ext.url.SubdomainUrlHelperIntfc;
 
@@ -23,10 +22,10 @@ import java.security.Signature;
 import java.security.spec.PKCS8EncodedKeySpec;
 
 @Singleton
+@Slf4j
 public class GcsUtils {
   @Inject private MainConfiguration configuration;
   @Inject private SubdomainUrlHelperIntfc subdomainUrlHelper;
-  private static final Logger log = LoggerFactory.getLogger(GcsUtils.class);
   private static final String downloadPathPattern = "/storage/harness-download";
 
   private String getSignedUrlUsingPrivateKey(
@@ -44,7 +43,7 @@ public class GcsUtils {
   public String getSignedUrlForServiceAccount(
       String objectPath, String serviceAccountJsonFile, long durationInSeconds, String accountId) throws Exception {
     if (isEmpty(serviceAccountJsonFile)) {
-      log.warn(
+      logger.warn(
           "ServiceAccount json file not found,cannot generate signedUrl for {}, returning empty string", objectPath);
       throw new WingsException(ErrorCode.INVALID_INFRA_CONFIGURATION);
     }

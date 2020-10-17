@@ -1,20 +1,19 @@
 package migrations.seedata;
 
 import static io.harness.exception.WingsException.ExecutionContext.MANAGER;
-import static org.slf4j.LoggerFactory.getLogger;
 
 import com.google.inject.Inject;
 
 import io.harness.exception.WingsException;
 import io.harness.logging.ExceptionLogger;
+import lombok.extern.slf4j.Slf4j;
 import migrations.SeedDataMigration;
-import org.slf4j.Logger;
 import software.wings.beans.Account;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.intfc.template.TemplateGalleryService;
 
+@Slf4j
 public class ReImportTemplatesMigration implements SeedDataMigration {
-  private static final Logger logger = getLogger(ReImportTemplatesMigration.class);
   private static final String ACCOUNT_ID = "-czOfo4UTPumhprgLZkDYg"; // Bitcentral Inc.
   @Inject private TemplateGalleryService templateGalleryService;
   @Inject private WingsPersistence wingsPersistence;

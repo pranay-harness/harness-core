@@ -2,14 +2,12 @@ package software.wings.service.impl.instance.limits;
 
 import io.harness.limits.ActionType;
 import lombok.experimental.UtilityClass;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import org.slf4j.helpers.MessageFormatter;
 
 @UtilityClass
+@Slf4j
 public class ApproachingLimitsMessage {
-  private static final Logger log = LoggerFactory.getLogger(ApproachingLimitsMessage.class);
-
   public static String warningMessage(int percent, ActionType actionType) {
     String template = null;
     switch (actionType) {
@@ -38,7 +36,7 @@ public class ApproachingLimitsMessage {
             "You have consumed {}% of allowed Infrastructure Provisioner creation limits. Please contact Harness Support to avoid any interruptions.";
         break;
       default:
-        log.error(
+        logger.error(
             "No warning message configured. Please configure one or default message will be shown. ActionType: {}",
             actionType);
         return "Approaching resource usage limits. Please contact Harness Support to avoid any interruptions.";

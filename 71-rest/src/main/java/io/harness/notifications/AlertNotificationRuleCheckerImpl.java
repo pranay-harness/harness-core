@@ -2,25 +2,23 @@ package io.harness.notifications;
 
 import io.harness.notifications.conditions.CVFilterMatcher;
 import io.harness.notifications.conditions.ManualInterventionFilterMatcher;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import software.wings.beans.alert.Alert;
 import software.wings.beans.alert.AlertFilter;
 import software.wings.beans.alert.AlertNotificationRule;
 
+@Slf4j
 public class AlertNotificationRuleCheckerImpl implements AlertNotificationRuleChecker {
-  private static final Logger log = LoggerFactory.getLogger(AlertNotificationRuleCheckerImpl.class);
-
   @Override
   public boolean doesAlertSatisfyRule(Alert alert, AlertNotificationRule rule) {
     if (rule.getAlertCategory() != alert.getCategory()) {
-      log.debug("Alert category and rule category don't match. Alert does not satisfy rule. Alert: {}, Rule: {}", alert,
-          rule);
+      logger.debug("Alert category and rule category don't match. Alert does not satisfy rule. Alert: {}, Rule: {}",
+          alert, rule);
       return false;
     }
 
     if (null == rule.getAlertFilter()) {
-      log.debug(
+      logger.debug(
           "[Missing Alert Filter] Alert matched the rule because rule category and alert category are same and no additional filters are present. Rule: {}, Alert: {}",
           alert, rule);
       return rule.getAlertCategory() == alert.getCategory();

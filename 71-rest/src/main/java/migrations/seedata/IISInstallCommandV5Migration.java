@@ -1,7 +1,6 @@
 package migrations.seedata;
 
 import static io.harness.exception.WingsException.ExecutionContext.MANAGER;
-import static org.slf4j.LoggerFactory.getLogger;
 import static software.wings.beans.Account.GLOBAL_ACCOUNT_ID;
 import static software.wings.beans.Application.GLOBAL_APP_ID;
 import static software.wings.common.TemplateConstants.HARNESS_GALLERY;
@@ -13,8 +12,8 @@ import com.google.inject.Inject;
 
 import io.harness.exception.WingsException;
 import io.harness.logging.ExceptionLogger;
+import lombok.extern.slf4j.Slf4j;
 import migrations.Migration;
-import org.slf4j.Logger;
 import software.wings.beans.template.Template;
 import software.wings.beans.template.TemplateFolder;
 import software.wings.beans.template.TemplateGallery;
@@ -24,8 +23,8 @@ import software.wings.service.intfc.template.TemplateService;
 
 import java.io.IOException;
 
+@Slf4j
 public class IISInstallCommandV5Migration implements Migration {
-  private static final Logger logger = getLogger(IISInstallCommandV5Migration.class);
   @Inject private TemplateService templateService;
   @Inject private TemplateFolderService templateFolderService;
   @Inject private TemplateGalleryService templateGalleryService;

@@ -14,9 +14,8 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import io.harness.annotations.dev.OwnedBy;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import software.wings.beans.Notification;
 import software.wings.common.NotificationMessageResolver;
 import software.wings.common.NotificationMessageResolver.ChannelTemplate.EmailTemplate;
@@ -31,9 +30,8 @@ import java.util.Optional;
 
 @OwnedBy(CDC)
 @Singleton
+@Slf4j
 public class EmailDispatcher {
-  private static final Logger log = LoggerFactory.getLogger(EmailDispatcher.class);
-
   private static final String LINK_COLOR = "#1A89BF";
 
   @Inject private NotificationMessageResolver notificationMessageResolver;
@@ -52,7 +50,7 @@ public class EmailDispatcher {
     }
 
     if (isEmpty(validToAddresses)) {
-      log.info("No valid email addresses in: {}", toAddress);
+      logger.info("No valid email addresses in: {}", toAddress);
       return;
     }
 
@@ -62,7 +60,7 @@ public class EmailDispatcher {
       EmailTemplate emailTemplate =
           notificationMessageResolver.getEmailTemplate(notification.getNotificationTemplateId());
       if (emailTemplate == null) {
-        log.error("No email template found for templateId {}", notification.getNotificationTemplateId());
+        logger.error("No email template found for templateId {}", notification.getNotificationTemplateId());
         return;
       }
       emailBodyList.add(
@@ -72,7 +70,7 @@ public class EmailDispatcher {
     });
 
     if (emailBodyList.isEmpty() || emailSubjectList.isEmpty()) {
-      log.info("Email body/subject is empty. destination-emails: {}", toAddress);
+      logger.info("Email body/subject is empty. destination-emails: {}", toAddress);
       return;
     }
 
@@ -90,7 +88,7 @@ public class EmailDispatcher {
     }
     emailData.setRetries(2);
     emailData.setCc(Collections.emptyList());
-    log.info("Trying to send email to: {}", validToAddresses);
+    logger.info("Trying to send email to: {}", validToAddresses);
     emailNotificationService.sendAsync(emailData);
   }
 

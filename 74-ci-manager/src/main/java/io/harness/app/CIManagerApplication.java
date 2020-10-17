@@ -55,12 +55,12 @@ import io.harness.waiter.NotifyEvent;
 import io.harness.waiter.NotifyQueuePublisherRegister;
 import io.harness.waiter.NotifyResponseCleaner;
 import io.harness.waiter.OrchestrationNotifyEventListener;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.log4j.LogManager;
 import org.glassfish.jersey.server.model.Resource;
 import org.hibernate.validator.parameternameprovider.ReflectionParameterNameProvider;
 import org.mongodb.morphia.converters.TypeConverter;
 import org.reflections.Reflections;
-import org.slf4j.Logger;
 import ru.vyarus.guice.validator.ValidationModule;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.impl.ci.CIServiceAuthSecretKey;
@@ -77,10 +77,10 @@ import javax.validation.Validation;
 import javax.validation.ValidatorFactory;
 import javax.ws.rs.Path;
 
+@Slf4j
 public class CIManagerApplication extends Application<CIManagerConfiguration> {
   private static final SecureRandom random = new SecureRandom();
   public static final Store HARNESS_STORE = Store.builder().name("harness").build();
-  private static final Logger logger = org.slf4j.LoggerFactory.getLogger(CIManagerApplication.class);
   private static final String APP_NAME = "CI Manager Service Application";
   public static final String BASE_PACKAGE = "io.harness.app.resources";
   public static final String NG_PIPELINE_PACKAGE = "io.harness.ng.pipeline.resources";

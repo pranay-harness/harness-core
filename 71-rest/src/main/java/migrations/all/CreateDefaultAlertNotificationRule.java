@@ -4,9 +4,8 @@ import static software.wings.beans.Account.GLOBAL_ACCOUNT_ID;
 
 import com.google.inject.Inject;
 
+import lombok.extern.slf4j.Slf4j;
 import migrations.Migration;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import software.wings.beans.Account;
 import software.wings.beans.alert.AlertNotificationRule;
 import software.wings.service.intfc.AccountService;
@@ -14,15 +13,14 @@ import software.wings.service.intfc.AlertNotificationRuleService;
 
 import java.util.List;
 
+@Slf4j
 public class CreateDefaultAlertNotificationRule implements Migration {
-  private static final Logger log = LoggerFactory.getLogger(CreateDefaultAlertNotificationRule.class);
-
   @Inject private AccountService accountService;
   @Inject private AlertNotificationRuleService alertNotificationRuleService;
 
   @Override
   public void migrate() {
-    log.info("Creating default alert notification rules for all accounts.");
+    logger.info("Creating default alert notification rules for all accounts.");
 
     try {
       List<Account> accounts = accountService.listAllAccounts();
@@ -35,11 +33,11 @@ public class CreateDefaultAlertNotificationRule implements Migration {
 
         AlertNotificationRule rule = alertNotificationRuleService.createDefaultRule(accountId);
         if (null == rule) {
-          log.error("No default notification rule create. accountId={}", accountId);
+          logger.error("No default notification rule create. accountId={}", accountId);
         }
       }
     } catch (Exception e) {
-      log.error("Error creating default notification rules", e);
+      logger.error("Error creating default notification rules", e);
     }
   }
 }

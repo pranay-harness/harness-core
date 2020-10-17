@@ -9,8 +9,6 @@ import com.codahale.metrics.annotation.Timed;
 import io.harness.beans.PageResponse;
 import io.harness.rest.RestResponse;
 import io.swagger.annotations.Api;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import software.wings.beans.infrastructure.instance.Instance;
 import software.wings.beans.instance.dashboard.InstanceStatsByEnvironment;
 import software.wings.beans.instance.dashboard.InstanceStatsByService;
@@ -52,8 +50,6 @@ import javax.ws.rs.QueryParam;
 @Produces("application/json")
 @Scope(ResourceType.APPLICATION)
 public class DashboardStatisticsResource {
-  private static final Logger log = LoggerFactory.getLogger(DashboardStatisticsResource.class);
-
   public static final double DEFAULT_PERCENTILE = 95.0D;
 
   @Inject private DashboardStatisticsService dashboardStatsService;

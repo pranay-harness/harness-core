@@ -14,10 +14,9 @@ import io.harness.persistence.HPersistence;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.Value;
+import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import software.wings.dl.WingsPersistence;
 
 import javax.annotation.Nonnull;
@@ -27,9 +26,8 @@ import javax.annotation.ParametersAreNonnullByDefault;
  * MongoDB backed implementation of static limit checker
  */
 @ParametersAreNonnullByDefault
+@Slf4j
 public class MongoStaticLimitChecker implements StaticLimitCheckerWithDecrement {
-  private static final Logger log = LoggerFactory.getLogger(MongoStaticLimitChecker.class);
-
   @Getter private final StaticLimit limit;
   private final WingsPersistence persistence;
   @Getter private Action action;
@@ -67,7 +65,7 @@ public class MongoStaticLimitChecker implements StaticLimitCheckerWithDecrement 
     Counter counter = incrementAndGet(key, 1);
     boolean underLimit = counter.getValue() <= limit.getCount();
     if (!underLimit) {
-      log.info("Counter above limit. Counter: {} Limit: {}, Action: {}", counter, limit, action);
+      logger.info("Counter above limit. Counter: {} Limit: {}, Action: {}", counter, limit, action);
     }
     return underLimit;
   }
@@ -90,7 +88,7 @@ public class MongoStaticLimitChecker implements StaticLimitCheckerWithDecrement 
     Counter counter = response.counter;
 
     if (response.changed && counter.getValue() < 0) {
-      log.info("Illegal State: count should never go below zero. Resetting value to zero. Key: {}", key);
+      logger.info("Illegal State: count should never go below zero. Resetting value to zero. Key: {}", key);
       Query<Counter> query = persistence.createQuery(Counter.class).field("key").equal(key);
       UpdateOperations<Counter> update = persistence.createUpdateOperations(Counter.class).set("value", 0);
       persistence.update(query, update);
@@ -116,7 +114,7 @@ public class MongoStaticLimitChecker implements StaticLimitCheckerWithDecrement 
       return persistence.upsert(q, updateOp, upsertReturnNewOptions);
     } catch (MongoCommandException e) {
       if (e.getErrorCode() == MongoError.DUPLICATE_KEY.getErrorCode()) {
-        log.info(
+        logger.info(
             "Duplicate key exception while trying to increment counter. Can happen when counter is already at max, and it tries to upsert");
 
         return new Counter(key, limit.getCount() + 1);
@@ -137,7 +135,7 @@ public class MongoStaticLimitChecker implements StaticLimitCheckerWithDecrement 
     Counter counter = persistence.findAndModify(q, updateOp, HPersistence.returnNewOptions);
 
     if (counter == null) {
-      log.info("new counter is null. "
+      logger.info("new counter is null. "
               + "Can happen when counter is at 0, or key is absent. Key should always be present. Key: {}",
           key);
       return new UpdateResponse(new Counter(key, -1), false);

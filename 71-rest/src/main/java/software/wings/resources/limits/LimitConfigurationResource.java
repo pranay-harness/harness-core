@@ -18,8 +18,7 @@ import io.harness.logging.AccountLogContext;
 import io.harness.logging.AutoLogContext;
 import io.harness.rest.RestResponse;
 import io.swagger.annotations.Api;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import retrofit2.http.Body;
 import software.wings.beans.User;
 import software.wings.security.PermissionAttribute.ResourceType;
@@ -36,9 +35,8 @@ import javax.ws.rs.QueryParam;
 @Path("/limits")
 @Produces("application/json")
 @Scope(ResourceType.LIMIT)
+@Slf4j
 public class LimitConfigurationResource {
-  private static final Logger log = LoggerFactory.getLogger(LimitConfigurationResource.class);
-
   @Inject private LimitConfigurationService limitsService;
   @Inject private HarnessUserGroupService harnessUserGroupService;
 

@@ -8,14 +8,13 @@ import io.harness.limits.ActionType;
 import io.harness.limits.ConfiguredLimit;
 import io.harness.limits.impl.model.RateLimit;
 import io.harness.limits.impl.model.StaticLimit;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.util.concurrent.TimeUnit;
 
+@Slf4j
 public class InvalidLimitConfigurationException extends RuntimeException {
-  private static final Logger log = LoggerFactory.getLogger(InvalidLimitConfigurationException.class);
   private ObjectMapper mapper = new ObjectMapper();
   private ConfiguredLimit configuredLimit;
   private String reason;
@@ -33,7 +32,7 @@ public class InvalidLimitConfigurationException extends RuntimeException {
       invalidLimit = mapper.writerWithDefaultPrettyPrinter().writeValueAsString(configuredLimit);
     } catch (JsonProcessingException e) {
       invalidLimit = configuredLimit.toString();
-      log.error("Could not convert configured limit to JSON: {}", invalidLimit);
+      logger.error("Could not convert configured limit to JSON: {}", invalidLimit);
     }
 
     String reasonLine = "REASON: " + reason;

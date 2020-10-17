@@ -2,14 +2,12 @@ package software.wings.service.impl.instance.licensing;
 
 import com.google.inject.Inject;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import software.wings.service.intfc.instance.licensing.InstanceLimitProvider;
 import software.wings.service.intfc.instance.licensing.InstanceUsageLimitChecker;
 
+@Slf4j
 public class InstanceUsageLimitCheckerImpl implements InstanceUsageLimitChecker {
-  private static final Logger log = LoggerFactory.getLogger(InstanceUsageLimitCheckerImpl.class);
-
   private InstanceLimitProvider instanceLimitProvider;
 
   @Inject
@@ -22,7 +20,7 @@ public class InstanceUsageLimitCheckerImpl implements InstanceUsageLimitChecker 
     long allowedUsage = instanceLimitProvider.getAllowedInstances(accountId);
     boolean withinLimit = isWithinLimit(actualUsage, percentLimit, allowedUsage);
 
-    log.info("[Instance Usage] Allowed: {}, Used: {}, percentLimit: {}, Within Limit: {}", allowedUsage, actualUsage,
+    logger.info("[Instance Usage] Allowed: {}, Used: {}, percentLimit: {}, Within Limit: {}", allowedUsage, actualUsage,
         percentLimit, withinLimit);
     return withinLimit;
   }

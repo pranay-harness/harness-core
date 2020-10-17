@@ -20,8 +20,6 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import software.wings.dl.WingsPersistence;
 import software.wings.integration.BaseIntegrationTest;
 import software.wings.integration.IntegrationTestUtils;
@@ -36,8 +34,6 @@ import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.TimeUnit;
 
 public class MongoSlidingWindowRateLimitCheckerIntegrationTest extends BaseIntegrationTest {
-  private static final Logger log = LoggerFactory.getLogger(MongoSlidingWindowRateLimitCheckerIntegrationTest.class);
-
   @Inject private WingsPersistence persistence;
 
   private boolean indexesEnsured;
