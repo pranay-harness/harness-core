@@ -10,16 +10,14 @@ import io.harness.limits.checker.UsageLimitExceededException;
 import io.harness.logging.AccountLogContext;
 import io.harness.logging.AutoLogContext;
 import lombok.experimental.UtilityClass;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import software.wings.service.impl.StaticLimitActionTypeLogContext;
 
 import java.util.function.Supplier;
 
 @UtilityClass
+@Slf4j
 public class LimitEnforcementUtils {
-  private static final Logger log = LoggerFactory.getLogger(LimitEnforcementUtils.class);
-
   /**
    * execute the given function while enforcing usage limits.
    * Consumes a permit if the function is successful, decrements in case any error is thrown in function execution.
@@ -35,7 +33,7 @@ public class LimitEnforcementUtils {
              new StaticLimitActionTypeLogContext(checker.getAction().getActionType().name(), OVERRIDE_ERROR)) {
       boolean allowed = checker.checkAndConsume();
       if (!allowed) {
-        log.info("Resource Usage Limit Reached. Limit: {}", checker.getLimit());
+        logger.info("Resource Usage Limit Reached. Limit: {}", checker.getLimit());
         throw new UsageLimitExceededException(ErrorCode.USAGE_LIMITS_EXCEEDED, Level.ERROR, WingsException.USER,
             checker.getLimit(), checker.getAction().getAccountId());
       }

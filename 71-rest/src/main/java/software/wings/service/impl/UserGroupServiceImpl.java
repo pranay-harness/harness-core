@@ -62,8 +62,6 @@ import org.hibernate.validator.constraints.NotBlank;
 import org.mongodb.morphia.query.FindOptions;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import software.wings.beans.Account;
 import software.wings.beans.EntityType;
 import software.wings.beans.Event.Type;
@@ -111,16 +109,11 @@ import javax.annotation.Nullable;
 import javax.validation.constraints.NotNull;
 import javax.validation.executable.ValidateOnExecution;
 
-/**
- * Created by rishi
- */
 @OwnedBy(PL)
 @ValidateOnExecution
 @Singleton
 @Slf4j
 public class UserGroupServiceImpl implements UserGroupService {
-  private static final Logger log = LoggerFactory.getLogger(UserGroupServiceImpl.class);
-
   public static final String DEFAULT_USER_GROUP_DESCRIPTION = "Default account admin user group";
 
   private static final Pattern userGroupNamePattern = Pattern.compile("^[a-zA-Z0-9 -._]*$");
@@ -417,7 +410,7 @@ public class UserGroupServiceImpl implements UserGroupService {
 
     UserGroup updatedGroup = wingsPersistence.findAndModify(query, update, HPersistence.returnNewOptions);
     if (null == updatedGroup) {
-      log.error("No user group found. groupId={}, accountId={}", groupId, accountId);
+      logger.error("No user group found. groupId={}, accountId={}", groupId, accountId);
       throw new WingsException(ErrorCode.INVALID_ARGUMENT, "No user group found");
     }
     auditServiceHelper.reportForAuditingUsingAccountId(accountId, null, updatedGroup, Type.UPDATE_NOTIFICATION_SETTING);

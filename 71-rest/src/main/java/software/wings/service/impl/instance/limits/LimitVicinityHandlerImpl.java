@@ -15,8 +15,7 @@ import io.harness.limits.lib.LimitChecker;
 import io.harness.limits.lib.LimitType;
 import io.harness.limits.lib.StaticLimit;
 import io.harness.limits.lib.StaticLimitChecker;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import software.wings.beans.alert.AlertData;
 import software.wings.beans.alert.AlertType;
 import software.wings.beans.alert.ResourceUsageApproachingLimitAlert;
@@ -26,9 +25,8 @@ import software.wings.service.intfc.limits.LimitVicinityHandler;
 
 import java.util.Arrays;
 
+@Slf4j
 public class LimitVicinityHandlerImpl implements LimitVicinityHandler {
-  private static final Logger log = LoggerFactory.getLogger(LimitVicinityHandlerImpl.class);
-
   @Inject private LimitCheckerFactory limitCheckerFactory;
   @Inject private WingsPersistence persistence;
   @Inject private AlertService alertService;
@@ -55,7 +53,7 @@ public class LimitVicinityHandlerImpl implements LimitVicinityHandler {
     try {
       limitChecker = limitCheckerFactory.getInstance(action);
     } catch (NoLimitConfiguredException e) {
-      log.error(
+      logger.error(
           "No limit configured. No check will be done. Configure a default limit in DefaultLimitsServiceImpl. Action: {}",
           action);
       return;
@@ -75,7 +73,7 @@ public class LimitVicinityHandlerImpl implements LimitVicinityHandler {
         alertService.closeAlert(accountId, GLOBAL_APP_ID, AlertType.RESOURCE_USAGE_APPROACHING_LIMIT, alertData);
       }
     } else {
-      log.error("Unhandled type of limit checker. Either alert for it, or explicitly exclude it. Class: {}",
+      logger.error("Unhandled type of limit checker. Either alert for it, or explicitly exclude it. Class: {}",
           limitChecker.getClass().getSimpleName());
     }
   }
@@ -86,7 +84,7 @@ public class LimitVicinityHandlerImpl implements LimitVicinityHandler {
       try {
         return Integer.parseInt(percent);
       } catch (NumberFormatException e) {
-        log.error("Error reading RESOURCE_LIMIT_USAGE_WARN_PERCENTAGE from env variables. Found Value: {}", percent);
+        logger.error("Error reading RESOURCE_LIMIT_USAGE_WARN_PERCENTAGE from env variables. Found Value: {}", percent);
         return PERCENT_TO_WARN_ON_DEFAULT;
       }
     }

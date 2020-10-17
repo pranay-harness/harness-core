@@ -9,9 +9,9 @@ import com.google.inject.Inject;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.beans.SearchFilter.Operator;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
 import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import software.wings.beans.Notification;
 import software.wings.beans.NotificationGroup;
 import software.wings.beans.User;
@@ -21,9 +21,8 @@ import software.wings.service.intfc.UserService;
 
 import java.util.List;
 
+@Slf4j
 public class NotificationGroupBasedDispatcher implements NotificationDispatcher<NotificationGroup> {
-  private static final Logger log = LoggerFactory.getLogger(NotificationGroupBasedDispatcher.class);
-
   @Inject private NotificationSetupService notificationSetupService;
   @Inject private EmailDispatcher emailDispatcher;
   @Inject private SlackMessageDispatcher slackMessageDispatcher;
@@ -37,7 +36,7 @@ public class NotificationGroupBasedDispatcher implements NotificationDispatcher<
     }
 
     if (!notificationProcessingController.canProcessAccount(notificationGroup.getAccountId())) {
-      log.info("Notification Group's {} account {} is disabled. Notifications cannot be dispatched",
+      logger.info("Notification Group's {} account {} is disabled. Notifications cannot be dispatched",
           notificationGroup.getUuid(), notificationGroup.getAccountId());
       return;
     }
@@ -60,7 +59,7 @@ public class NotificationGroupBasedDispatcher implements NotificationDispatcher<
 
   @Override
   public Logger logger() {
-    return log;
+    return logger;
   }
 
   private void handleNotificationGroupRoles(NotificationGroup notificationGroup, List<Notification> notifications) {
@@ -78,7 +77,7 @@ public class NotificationGroupBasedDispatcher implements NotificationDispatcher<
 
       PageResponse<User> users = userService.list(request, false);
       List<String> toAddresses = users.stream().filter(User::isEmailVerified).map(User::getEmail).collect(toList());
-      log.info("Dispatching notifications to all the users of role {}", role.getRoleType().getDisplayName());
+      logger.info("Dispatching notifications to all the users of role {}", role.getRoleType().getDisplayName());
       emailDispatcher.dispatch(notifications, toAddresses);
     });
   }

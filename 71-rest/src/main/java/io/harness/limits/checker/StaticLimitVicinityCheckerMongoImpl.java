@@ -3,14 +3,12 @@ package io.harness.limits.checker;
 import io.harness.limits.Counter;
 import io.harness.limits.lib.StaticLimit;
 import lombok.AllArgsConstructor;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import software.wings.dl.WingsPersistence;
 
 @AllArgsConstructor
+@Slf4j
 public class StaticLimitVicinityCheckerMongoImpl implements StaticLimitVicinityChecker {
-  private static final Logger log = LoggerFactory.getLogger(StaticLimitVicinityCheckerMongoImpl.class);
-
   private final StaticLimit limit;
   private final String key;
   private final WingsPersistence persistence;
@@ -22,7 +20,7 @@ public class StaticLimitVicinityCheckerMongoImpl implements StaticLimitVicinityC
     long allowed = limit.getCount();
 
     boolean crossed = used > (percentage / 100.0) * allowed;
-    log.info("Static Limit Check. Used: {} , Allowed: {}, Percent: {}, Crossed Percent Limit?: {}", used, allowed,
+    logger.info("Static Limit Check. Used: {} , Allowed: {}, Percent: {}, Crossed Percent Limit?: {}", used, allowed,
         percentage, crossed);
 
     return crossed;

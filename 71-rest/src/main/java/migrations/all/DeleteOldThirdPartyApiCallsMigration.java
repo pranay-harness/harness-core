@@ -1,16 +1,14 @@
 package migrations.all;
 
-import static org.slf4j.LoggerFactory.getLogger;
-
 import com.google.inject.Inject;
 
+import lombok.extern.slf4j.Slf4j;
 import migrations.Migration;
-import org.slf4j.Logger;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.impl.ThirdPartyApiCallLog;
 
+@Slf4j
 public class DeleteOldThirdPartyApiCallsMigration implements Migration {
-  private static final Logger logger = getLogger(DeleteOldThirdPartyApiCallsMigration.class);
   @Inject private WingsPersistence wingsPersistence;
 
   @Override

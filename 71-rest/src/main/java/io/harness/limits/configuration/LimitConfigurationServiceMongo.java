@@ -19,14 +19,13 @@ import io.harness.limits.impl.model.StaticLimit;
 import io.harness.limits.lib.Limit;
 import io.harness.logging.AccountLogContext;
 import io.harness.logging.AutoLogContext;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.mongodb.morphia.Datastore;
 import org.mongodb.morphia.UpdateOptions;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
 import org.mongodb.morphia.query.UpdateResults;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import software.wings.beans.Account;
 import software.wings.beans.AccountType;
 import software.wings.dl.WingsPersistence;
@@ -43,9 +42,8 @@ import javax.annotation.ParametersAreNonnullByDefault;
 
 @Singleton
 @ParametersAreNonnullByDefault
+@Slf4j
 public class LimitConfigurationServiceMongo implements LimitConfigurationService {
-  private static final Logger log = LoggerFactory.getLogger(LimitConfigurationServiceMongo.class);
-
   @Inject private WingsPersistence dao;
   @Inject private AccountService accountService;
   @Inject private DefaultLimitsService defaultLimits;
@@ -112,7 +110,7 @@ public class LimitConfigurationServiceMongo implements LimitConfigurationService
 
     Limit limit = defaultLimits.get(actionType, accountType.toUpperCase());
     if (null == limit) {
-      log.error(
+      logger.error(
           "Default limit is null. Action Type: {}, Account Type: {}. Please configure the same in DefaultLimitsImpl class",
           actionType, accountType);
       return null;
@@ -160,13 +158,13 @@ public class LimitConfigurationServiceMongo implements LimitConfigurationService
 
     UpdateResults results = ds.update(query, updateOp, options);
     if (results.getUpdatedCount() < 1 && results.getInsertedCount() < 1) {
-      log.error(
+      logger.error(
           "Both inserted and updated count are less than 1. UpdateCount: {}, InsertCount: {}, Account ID: {}, actionType: {}, Limit: {}",
           results.getUpdatedCount(), results.getInsertedCount(), accountId, actionType, limit);
       return false;
     }
 
-    log.info("Set the new limit for account: {}, action type: {}, limit: {}", accountId, actionType.name(),
+    logger.info("Set the new limit for account: {}, action type: {}, limit: {}", accountId, actionType.name(),
         limit.getLimitType().name());
     return true;
   }
@@ -175,7 +173,7 @@ public class LimitConfigurationServiceMongo implements LimitConfigurationService
   public void deleteByAccountId(String accountId) {
     try (AutoLogContext ignore1 = new AccountLogContext(accountId, OVERRIDE_ERROR)) {
       dao.delete(dao.createQuery(ConfiguredLimit.class).filter(ConfiguredLimitKeys.accountId, accountId));
-      log.info("deleted limits for account {}", accountId);
+      logger.info("deleted limits for account {}", accountId);
     }
   }
 }

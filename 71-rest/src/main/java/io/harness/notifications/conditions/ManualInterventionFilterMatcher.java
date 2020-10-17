@@ -5,8 +5,7 @@ import io.harness.notifications.beans.Conditions;
 import io.harness.notifications.beans.Conditions.Operator;
 import io.harness.notifications.beans.ManualInterventionAlertFilters;
 import lombok.Value;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import software.wings.beans.alert.Alert;
 import software.wings.beans.alert.AlertFilter;
 import software.wings.beans.alert.ManualInterventionNeededAlert;
@@ -16,9 +15,8 @@ import java.util.List;
 import java.util.function.Supplier;
 
 @Value
+@Slf4j
 public class ManualInterventionFilterMatcher implements FilterMatcher {
-  private static final Logger log = LoggerFactory.getLogger(ManualInterventionFilterMatcher.class);
-
   private AlertFilter alertFilter;
   private Alert alert;
 
@@ -29,7 +27,7 @@ public class ManualInterventionFilterMatcher implements FilterMatcher {
 
     ManualInterventionAlertFilters manualInterventionAlertFilters = filterConditions.getManualInterventionFilters();
     if (null == manualInterventionAlertFilters) {
-      log.error("No manualInterventionFilters specified. Alert will be considered to not match filter.");
+      logger.error("No manualInterventionFilters specified. Alert will be considered to not match filter.");
       return false;
     }
 
@@ -44,7 +42,7 @@ public class ManualInterventionFilterMatcher implements FilterMatcher {
     conditions.add(() -> {
       ManualInterventionNeededAlert alertData = (ManualInterventionNeededAlert) alert.getAlertData();
       if (null == alertData) {
-        log.error("Manual Intervention Alert data is null. Alert: {}", alert);
+        logger.error("Manual Intervention Alert data is null. Alert: {}", alert);
         return false;
       }
       return envIds.contains(alertData.getEnvId());

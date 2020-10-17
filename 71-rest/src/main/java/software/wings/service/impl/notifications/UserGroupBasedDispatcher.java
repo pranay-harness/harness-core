@@ -10,12 +10,12 @@ import com.google.inject.Inject;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.data.structure.EmptyPredicate;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
 import org.mongodb.morphia.query.Criteria;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.Sort;
 import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import software.wings.beans.FailureNotification;
 import software.wings.beans.Notification;
 import software.wings.beans.User;
@@ -36,9 +36,8 @@ import java.util.List;
 import java.util.Map;
 
 @OwnedBy(CDC)
+@Slf4j
 public class UserGroupBasedDispatcher implements NotificationDispatcher<UserGroup> {
-  private static final Logger log = LoggerFactory.getLogger(UserGroupBasedDispatcher.class);
-
   @Inject private NotificationSetupService notificationSetupService;
   @Inject private EmailDispatcher emailDispatcher;
   @Inject private SlackMessageDispatcher slackMessageDispatcher;
@@ -56,18 +55,18 @@ public class UserGroupBasedDispatcher implements NotificationDispatcher<UserGrou
     }
 
     if (!notificationProcessingController.canProcessAccount(userGroup.getAccountId())) {
-      log.info("User Group's {} account {} is disabled. Notifications cannot be dispatched", userGroup.getUuid(),
+      logger.info("User Group's {} account {} is disabled. Notifications cannot be dispatched", userGroup.getUuid(),
           userGroup.getAccountId());
       return;
     }
 
     if (null == userGroup.getNotificationSettings()) {
-      log.info("Notification Settings is null for User Group. No message will be sent. userGroup={} accountId={}",
+      logger.info("Notification Settings is null for User Group. No message will be sent. userGroup={} accountId={}",
           userGroup.getName(), userGroup.getAccountId());
       return;
     }
 
-    log.info("User group to notify. id={} name={}", userGroup.getUuid(), userGroup.getName());
+    logger.info("User group to notify. id={} name={}", userGroup.getUuid(), userGroup.getName());
     NotificationSettings notificationSettings = userGroup.getNotificationSettings();
     String accountId = notifications.get(0).getAccountId();
 
@@ -76,7 +75,8 @@ public class UserGroupBasedDispatcher implements NotificationDispatcher<UserGrou
       List<String> emails =
           userGroup.getMembers().stream().filter(User::isEmailVerified).map(User::getEmail).collect(toList());
 
-      log.info("[isUseIndividualEmails=true] Dispatching notifications to all the users of userGroup. uuid={} name={}",
+      logger.info(
+          "[isUseIndividualEmails=true] Dispatching notifications to all the users of userGroup. uuid={} name={}",
           userGroup.getUuid(), userGroup.getName());
       emailDispatcher.dispatch(notifications, emails);
     }
@@ -84,10 +84,10 @@ public class UserGroupBasedDispatcher implements NotificationDispatcher<UserGrou
     List<String> emailAddresses = userGroup.getEmailAddresses();
     if (CollectionUtils.isNotEmpty(emailAddresses)) {
       try {
-        log.info("Sending emails to these addresses: {}", emailAddresses);
+        logger.info("Sending emails to these addresses: {}", emailAddresses);
         emailDispatcher.dispatch(notifications, emailAddresses);
       } catch (Exception e) {
-        log.error("Error sending emails to these addresses: {}", emailAddresses, e);
+        logger.error("Error sending emails to these addresses: {}", emailAddresses, e);
       }
     }
 
@@ -102,36 +102,36 @@ public class UserGroupBasedDispatcher implements NotificationDispatcher<UserGrou
       }
 
       try {
-        log.info("Trying to send slack message. slack configuration: {}", userGroup.getSlackConfig());
+        logger.info("Trying to send slack message. slack configuration: {}", userGroup.getSlackConfig());
         slackMessageDispatcher.dispatch(notifications, userGroup.getSlackConfig());
       } catch (Exception e) {
-        log.error("Error sending slack message. Slack Config: {}", userGroup.getSlackConfig(), e);
+        logger.error("Error sending slack message. Slack Config: {}", userGroup.getSlackConfig(), e);
       }
     }
 
     if (EmptyPredicate.isNotEmpty(userGroup.getMicrosoftTeamsWebhookUrl())) {
       try {
-        log.info(
+        logger.info(
             "Trying to send message to Microsoft Teams. userGroupId={} accountId={}", userGroup.getUuid(), accountId);
         microsoftTeamsMessageDispatcher.dispatch(notifications, userGroup.getMicrosoftTeamsWebhookUrl());
       } catch (Exception e) {
-        log.error(
+        logger.error(
             "Error sending message to Microsoft Teams. userGroupId={} accountId={}", userGroup.getUuid(), accountId, e);
       }
     }
 
     boolean isCommunityAccount = accountService.isCommunityAccount(accountId);
     if (isCommunityAccount) {
-      log.info("Pager duty Configuration will be ignored since it's a community account. accountId={}", accountId);
+      logger.info("Pager duty Configuration will be ignored since it's a community account. accountId={}", accountId);
       return;
     }
 
     if (EmptyPredicate.isNotEmpty(userGroup.getPagerDutyIntegrationKey())) {
       try {
-        log.info("Trying to send pager duty event. userGroupId={} accountId={}", userGroup.getUuid(), accountId);
+        logger.info("Trying to send pager duty event. userGroupId={} accountId={}", userGroup.getUuid(), accountId);
         pagerDutyEventDispatcher.dispatch(accountId, notifications, userGroup.getPagerDutyIntegrationKey());
       } catch (Exception e) {
-        log.error("Error sending pager duty event. userGroupId={} accountId={}", userGroup.getUuid(), accountId, e);
+        logger.error("Error sending pager duty event. userGroupId={} accountId={}", userGroup.getUuid(), accountId, e);
       }
     }
   }
@@ -210,6 +210,6 @@ public class UserGroupBasedDispatcher implements NotificationDispatcher<UserGrou
 
   @Override
   public Logger logger() {
-    return log;
+    return logger;
   }
 }

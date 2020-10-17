@@ -1,7 +1,6 @@
 package migrations.seedata;
 
 import static java.util.Arrays.asList;
-import static org.slf4j.LoggerFactory.getLogger;
 import static software.wings.beans.Account.GLOBAL_ACCOUNT_ID;
 import static software.wings.common.TemplateConstants.HARNESS_GALLERY;
 import static software.wings.common.TemplateConstants.POWER_SHELL_COMMANDS;
@@ -11,14 +10,14 @@ import static software.wings.common.TemplateConstants.POWER_SHELL_IIS_WEBSITE_IN
 import com.google.inject.Inject;
 
 import io.harness.exception.WingsException;
+import lombok.extern.slf4j.Slf4j;
 import migrations.SeedDataMigration;
-import org.slf4j.Logger;
 import software.wings.beans.template.TemplateType;
 import software.wings.service.intfc.template.TemplateGalleryService;
 import software.wings.service.intfc.template.TemplateService;
 
+@Slf4j
 public class IISInstallCommandMigration implements SeedDataMigration {
-  private static final Logger logger = getLogger(IISInstallCommandMigration.class);
   private static final String INSTALL_IIS_APPLICATION_TEMPLATE_NAME = "Install IIS Application";
   private static final String INSTALL_IIS_WEBSITE_TEMPLATE_NAME = "Install IIS Website";
   @Inject private TemplateService templateService;

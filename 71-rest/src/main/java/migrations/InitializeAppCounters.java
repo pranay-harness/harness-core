@@ -7,9 +7,8 @@ import com.google.inject.Inject;
 import io.harness.limits.Action;
 import io.harness.limits.ActionType;
 import io.harness.limits.Counter;
+import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.Datastore;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import software.wings.beans.Account;
 import software.wings.beans.Application;
 import software.wings.dl.WingsPersistence;
@@ -20,15 +19,14 @@ import java.util.List;
 /**
  * Populate `limitCounters` collection with current value of applications an account has.
  */
+@Slf4j
 public class InitializeAppCounters implements Migration {
-  private static final Logger log = LoggerFactory.getLogger(InitializeAppCounters.class);
-
   @Inject AccountService accountService;
   @Inject WingsPersistence wingsPersistence;
 
   @Override
   public void migrate() {
-    log.info("Initializing Counters");
+    logger.info("Initializing Counters");
     Datastore ds = wingsPersistence.getDatastore(Counter.class);
 
     try {
@@ -45,12 +43,12 @@ public class InitializeAppCounters implements Migration {
         long appCount =
             ds.getCount(wingsPersistence.createQuery(Application.class).field("accountId").equal(accountId));
 
-        log.info("Initializing Counter. Account Id: {} , AppCount: {}", accountId, appCount);
+        logger.info("Initializing Counter. Account Id: {} , AppCount: {}", accountId, appCount);
         Counter counter = new Counter(action.key(), appCount);
         wingsPersistence.save(counter);
       }
     } catch (Exception e) {
-      log.error("Error initializing app counters", e);
+      logger.error("Error initializing app counters", e);
     }
   }
 }
