@@ -33,7 +33,6 @@ import io.harness.k8s.model.KubernetesConfig;
 import io.harness.rule.Owner;
 import io.kubernetes.client.openapi.ApiClient;
 import io.kubernetes.client.openapi.ApiException;
-import io.kubernetes.client.openapi.models.V1ResourceAttributes;
 import io.kubernetes.client.openapi.models.V1SubjectAccessReviewStatus;
 import org.junit.Before;
 import org.junit.Rule;
@@ -69,7 +68,6 @@ public class KubernetesContainerServiceTest extends CategoryTest {
   private KubernetesClient client;
   private ApiClient apiClient;
 
-  List<V1ResourceAttributes> resourceList;
   List<V1SubjectAccessReviewStatus> response;
 
   private final String RESULT = "watch not granted on pods.apps, ";
@@ -80,9 +78,7 @@ public class KubernetesContainerServiceTest extends CategoryTest {
     when(kubernetesHelperService.getKubernetesClient(KUBERNETES_CONFIG)).thenReturn(client);
     apiClient = ApiClientFactoryImpl.fromKubernetesConfig(KUBERNETES_CONFIG, null);
 
-    resourceList = Arrays.asList(new V1ResourceAttributes().verb("verb").resource("resource").group("group"));
     response = Arrays.asList(new V1SubjectAccessReviewStatus());
-    doReturn(resourceList).when(k8sResourceValidator).v1ResourceAttributesListBuilder(any(), any(), any());
   }
 
   @Test
