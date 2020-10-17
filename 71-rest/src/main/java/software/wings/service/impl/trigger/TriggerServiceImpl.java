@@ -32,6 +32,8 @@ import static software.wings.beans.trigger.TriggerConditionType.NEW_MANIFEST;
 import static software.wings.beans.trigger.TriggerConditionType.SCHEDULED;
 import static software.wings.beans.trigger.TriggerConditionType.WEBHOOK;
 import static software.wings.beans.trigger.WebhookSource.BITBUCKET;
+import static software.wings.beans.trigger.WebhookSource.GITHUB;
+import static software.wings.beans.trigger.WebhookSource.GITLAB;
 import static software.wings.service.impl.trigger.TriggerServiceHelper.notNullCheckWorkflow;
 import static software.wings.service.impl.trigger.TriggerServiceHelper.overrideTriggerVariables;
 import static software.wings.service.impl.trigger.TriggerServiceHelper.validateAndSetCronExpression;
@@ -1232,6 +1234,13 @@ public class TriggerServiceImpl implements TriggerService {
     }
   }
 
+  private boolean needValidationForWebHook(WebHookTriggerCondition webhookTriggerCondition) {
+    return (webhookTriggerCondition.getEventTypes() != null
+               && webhookTriggerCondition.getEventTypes().contains(WebhookEventType.PUSH))
+        && ((webhookTriggerCondition.getWebhookSource() == GITHUB)
+               || (webhookTriggerCondition.getWebhookSource() == GITLAB));
+  }
+
   private boolean validateWebhookTriggerCondition(Trigger trigger, Trigger existingTrigger) {
     if (existingTrigger == null) {
       return true;
@@ -1246,23 +1255,28 @@ public class TriggerServiceImpl implements TriggerService {
 
     WebHookTriggerCondition existingWebHookTriggerCondition = (WebHookTriggerCondition) existingTrigger.getCondition();
 
-    boolean isRepoNameSame = true;
-    boolean isCheckFileContentChangedSame = webHookTriggerCondition.isCheckFileContentChanged()
-        == existingWebHookTriggerCondition.isCheckFileContentChanged();
+    if (needValidationForWebHook(webHookTriggerCondition)) {
+      boolean isRepoNameSame = true;
+      boolean isCheckFileContentChangedSame = webHookTriggerCondition.isCheckFileContentChanged()
+          == existingWebHookTriggerCondition.isCheckFileContentChanged();
 
-    if (isCheckFileContentChangedSame) {
-      GitConfig gitConfig = settingsService.fetchGitConfigFromConnectorId(webHookTriggerCondition.getGitConnectorId());
-      if (GitConfig.UrlType.ACCOUNT == gitConfig.getUrlType()) {
-        isRepoNameSame =
-            Objects.equals(webHookTriggerCondition.getRepoName(), existingWebHookTriggerCondition.getRepoName());
+      if (isCheckFileContentChangedSame) {
+        GitConfig gitConfig =
+            settingsService.fetchGitConfigFromConnectorId(webHookTriggerCondition.getGitConnectorId());
+        if (gitConfig != null && GitConfig.UrlType.ACCOUNT == gitConfig.getUrlType()) {
+          isRepoNameSame =
+              Objects.equals(webHookTriggerCondition.getRepoName(), existingWebHookTriggerCondition.getRepoName());
+        }
       }
+
+      return isCheckFileContentChangedSame && isRepoNameSame
+          && Objects.equals(
+                 webHookTriggerCondition.getGitConnectorId(), existingWebHookTriggerCondition.getGitConnectorId())
+          && Objects.equals(webHookTriggerCondition.getBranchName(), existingWebHookTriggerCondition.getBranchName())
+          && Objects.equals(webHookTriggerCondition.getFilePaths(), existingWebHookTriggerCondition.getFilePaths());
     }
 
-    return isCheckFileContentChangedSame && isRepoNameSame
-        && Objects.equals(
-               webHookTriggerCondition.getGitConnectorId(), existingWebHookTriggerCondition.getGitConnectorId())
-        && Objects.equals(webHookTriggerCondition.getBranchName(), existingWebHookTriggerCondition.getBranchName())
-        && Objects.equals(webHookTriggerCondition.getFilePaths(), existingWebHookTriggerCondition.getFilePaths());
+    return true;
   }
 
   private void validateAndSetTriggerCondition(Trigger trigger, Trigger existingTrigger) {
