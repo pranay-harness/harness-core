@@ -19,7 +19,7 @@ public class NGPipelineRegistrars {
       ImmutableSet.<Class<? extends KryoRegistrar>>builder()
           .addAll(OrchestrationRegistrars.kryoRegistrars)
           .addAll(OrchestrationVisualizationModuleRegistrars.kryoRegistrars)
-          .addAll(NGCoreBeansRegistrars.kryoRegistrars)
+          .addAll(NGCoreRegistrars.kryoRegistrars)
           .add(NGPipelineKryoRegistrar.class)
           .add(ProjectAndOrgKryoRegistrar.class)
           .add(YamlKryoRegistrar.class)
@@ -34,6 +34,7 @@ public class NGPipelineRegistrars {
   public final ImmutableSet<Class<? extends MorphiaRegistrar>> morphiaRegistrars =
       ImmutableSet.<Class<? extends MorphiaRegistrar>>builder()
           .addAll(OrchestrationRegistrars.morphiaRegistrars)
+          .addAll(NGCoreRegistrars.morphiaRegistrars)
           .add(InvitesMorphiaRegistrar.class)
           .add(ProjectAndOrgMorphiaRegistrar.class)
           .add(NGPipelineMorphiaRegistrar.class)
