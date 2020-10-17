@@ -418,6 +418,7 @@ import software.wings.beans.infrastructure.instance.stats.InstanceStatsSnapshot;
 import software.wings.beans.infrastructure.instance.stats.ServerlessInstanceStats;
 import software.wings.beans.loginSettings.LoginSettings;
 import software.wings.beans.marketplace.gcp.GCPBillingJobEntity;
+import software.wings.beans.marketplace.gcp.GCPMarketplaceCustomer;
 import software.wings.beans.marketplace.gcp.GCPUsageReport;
 import software.wings.beans.peronalization.Personalization;
 import software.wings.beans.security.HarnessUserGroup;
@@ -1075,6 +1076,7 @@ public class ManagerMorphiaRegistrar implements MorphiaRegistrar {
     set.add(YamlVersion.class);
     set.add(SecretManagerRuntimeParameters.class);
     set.add(HelmChart.class);
+    set.add(GCPMarketplaceCustomer.class);
     set.add(DeletedEntity.class);
   }
 

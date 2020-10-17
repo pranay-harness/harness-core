@@ -7,6 +7,7 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.exception.WingsException.ReportTarget.REST_API;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
+import static java.nio.charset.StandardCharsets.UTF_8;
 import static software.wings.beans.Application.GLOBAL_APP_ID;
 import static software.wings.security.PermissionAttribute.PermissionType.LOGGED_IN;
 import static software.wings.security.PermissionAttribute.PermissionType.MANAGE_AUTHENTICATION_SETTINGS;
@@ -86,7 +87,6 @@ import software.wings.utils.AccountPermissionUtils;
 import java.io.UnsupportedEncodingException;
 import java.net.URISyntaxException;
 import java.net.URLDecoder;
-import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -1074,17 +1074,17 @@ public class UserResource {
       @QueryParam("company") @NotEmpty String companyName,
       @QueryParam("marketPlaceType") MarketPlaceType marketPlaceType, @PathParam("inviteId") @NotEmpty String inviteId,
       @NotNull UserInvite userInvite) {
+    // Only AWS / GCP marketplaces are supported
     try (AutoLogContext ignore1 = new MarketplaceTypeLogContext(marketPlaceType, OVERRIDE_ERROR)) {
-      // only AWS / GCP marketplaces are supported
-      logger.info("Marketplace Signup. marketPlaceType= {}", marketPlaceType);
+      logger.info("Marketplace sign-up. MarketPlaceType= {}", marketPlaceType);
 
       try {
-        companyName = URLDecoder.decode(companyName, StandardCharsets.UTF_8.displayName());
-        accountName = URLDecoder.decode(accountName, StandardCharsets.UTF_8.displayName());
+        companyName = URLDecoder.decode(companyName, UTF_8.displayName());
+        accountName = URLDecoder.decode(accountName, UTF_8.displayName());
       } catch (UnsupportedEncodingException e) {
-        logger.info("Account Name and Company Name must be UTF-8 compliant. accountName: {} companyName: {} Error: {}",
-            accountName, companyName, e.getMessage());
-        throw new WingsException(ErrorCode.INVALID_ARGUMENT, "Account Name and Company Name must be UTF-8 compliant.");
+        logger.info("Account Name and Company Name must be UTF-8 compliant. accountName: {} companyName: {}",
+            accountName, companyName);
+        throw new InvalidRequestException("Account Name and Company Name must be UTF-8 compliant.", e);
       }
 
       userInvite.setUuid(inviteId);

@@ -136,6 +136,7 @@ import software.wings.beans.loginSettings.PasswordStrengthViolations;
 import software.wings.beans.loginSettings.UserLockoutInfo;
 import software.wings.beans.marketplace.MarketPlaceConstants;
 import software.wings.beans.marketplace.MarketPlaceType;
+import software.wings.beans.marketplace.gcp.GCPMarketplaceCustomer;
 import software.wings.beans.notification.NotificationSettings;
 import software.wings.beans.security.AccountPermissions;
 import software.wings.beans.security.UserGroup;
@@ -1328,7 +1329,6 @@ public class UserServiceImpl implements UserService {
     if (existingInvite == null) {
       throw new UnauthorizedException(EXC_MSG_USER_INVITE_INVALID, USER);
     }
-
     if (existingInvite.isCompleted()) {
       logger.error("Unexpected state: Existing invite is already completed. ID = {}", userInvite.getUuid());
       return;
@@ -1342,33 +1342,33 @@ public class UserServiceImpl implements UserService {
 
     if (userInvite.getMarketPlaceToken() == null) {
       throw new GeneralException(
-          String.format("Marketplace token not found for userInviteID:[{%s}]", userInvite.getUuid()));
+          String.format("Marketplace token not found for User Invite Id : [{%s}]", userInvite.getUuid()));
     }
 
     Map<String, Claim> claims =
         secretManager.verifyJWTToken(userInvite.getMarketPlaceToken(), JWT_CATEGORY.MARKETPLACE_SIGNUP);
     String userInviteID = claims.get(MarketPlaceConstants.USERINVITE_ID_CLAIM_KEY).asString();
     if (!userInviteID.equals(userInvite.getUuid())) {
-      throw new GeneralException(String.format(
-          "UserInviteID in claim:[{%s}] does not match the userInviteID:[{%s}]", userInviteID, userInvite.getUuid()));
+      throw new GeneralException(
+          String.format("User Invite Id in claim: [{%s}] does not match the User Invite Id : [{%s}]", userInviteID,
+              userInvite.getUuid()));
     }
 
     LicenseInfo licenseInfo;
     MarketPlace marketPlace;
     if (marketPlaceType == MarketPlaceType.GCP) {
-      String token = claims.get(MarketPlaceConstants.GCP_MARKETPLACE_TOKEN).asString();
-      marketPlace = MarketPlace.builder()
-                        .type(MarketPlaceType.GCP)
-                        .customerIdentificationCode(JWT.decode(token).getSubject())
-                        .token(token)
-                        .build();
-
+      String gcpAccountId = JWT.decode(claims.get(MarketPlaceConstants.GCP_MARKETPLACE_TOKEN).asString()).getSubject();
       licenseInfo = LicenseInfo.builder()
                         .accountType(AccountType.PAID)
                         .licenseUnits(50)
                         .expiryTime(LicenseUtils.getDefaultPaidExpiryTime())
                         .accountStatus(AccountStatus.INACTIVE)
                         .build();
+      wingsPersistence.save(GCPMarketplaceCustomer.builder()
+                                .gcpAccountId(gcpAccountId)
+                                .harnessAccountId(setupAccountForUser(user, userInvite, licenseInfo))
+                                .build());
+      gcpProcurementService.approveAccount(gcpAccountId);
     } else {
       String marketPlaceID = claims.get(MarketPlaceConstants.MARKETPLACE_ID_CLAIM_KEY).asString();
       marketPlace = wingsPersistence.get(MarketPlace.class, marketPlaceID);
@@ -1381,8 +1381,14 @@ public class UserServiceImpl implements UserService {
                         .expiryTime(marketPlace.getExpirationDate().getTime())
                         .accountStatus(AccountStatus.ACTIVE)
                         .build();
-    }
+      String accountId = setupAccountForUser(user, userInvite, licenseInfo);
 
+      marketPlace.setAccountId(accountId);
+      wingsPersistence.save(marketPlace);
+    }
+  }
+
+  private String setupAccountForUser(User user, UserInvite userInvite, LicenseInfo licenseInfo) {
     Account account = Account.Builder.anAccount()
                           .withAccountName(user.getAccountName())
                           .withCompanyName(user.getCompanyName())
@@ -1396,13 +1402,7 @@ public class UserServiceImpl implements UserService {
     saveUserAndUserGroups(user, account, accountAdminGroups);
 
     completeUserInviteForSignup(userInvite, accountId);
-
-    marketPlace.setAccountId(accountId);
-    wingsPersistence.save(marketPlace);
-
-    if (marketPlaceType == MarketPlaceType.GCP) {
-      gcpProcurementService.approveAccount(marketPlace);
-    }
+    return accountId;
   }
 
   private void saveUserAndUserGroups(User user, Account account, List<UserGroup> accountAdminGroups) {

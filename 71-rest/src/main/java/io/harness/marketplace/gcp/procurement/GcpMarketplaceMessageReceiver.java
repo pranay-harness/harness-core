@@ -1,178 +1,220 @@
 package io.harness.marketplace.gcp.procurement;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
+
 import com.google.cloud.pubsub.v1.AckReplyConsumer;
 import com.google.cloud.pubsub.v1.MessageReceiver;
+import com.google.cloudcommerceprocurement.v1.model.Account;
+import com.google.cloudcommerceprocurement.v1.model.Entitlement;
+import com.google.gson.Gson;
 import com.google.inject.Singleton;
 import com.google.pubsub.v1.PubsubMessage;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.exception.GcpMarketplaceException;
-import io.harness.govern.Switch;
-import io.harness.marketplace.gcp.procurement.pubsub.GcpAccountsHandler;
-import io.harness.marketplace.gcp.procurement.pubsub.GcpEntitlementsHandler;
 import io.harness.marketplace.gcp.procurement.pubsub.ProcurementPubsubMessage;
 import lombok.extern.slf4j.Slf4j;
-import software.wings.beans.MarketPlace;
-import software.wings.beans.marketplace.MarketPlaceType;
-import software.wings.service.intfc.marketplace.MarketPlaceService;
+import org.apache.commons.lang3.StringUtils;
+import software.wings.beans.AccountStatus;
+import software.wings.beans.marketplace.gcp.GCPMarketplaceCustomer;
+import software.wings.beans.marketplace.gcp.GCPMarketplaceCustomer.GCPMarketplaceCustomerKeys;
+import software.wings.beans.marketplace.gcp.GCPMarketplaceProduct;
+import software.wings.beans.marketplace.gcp.GCPMarketplaceProduct.GCPMarketplaceProductBuilder;
+import software.wings.dl.WingsPersistence;
+import software.wings.service.intfc.AccountService;
 
 import java.io.IOException;
+import java.time.Instant;
 import java.util.Optional;
 
+@OwnedBy(PL)
 @Slf4j
 @Singleton
 public class GcpMarketplaceMessageReceiver implements MessageReceiver {
-  private static final ObjectMapper JSON_MAPPER = new ObjectMapper();
-  private final GcpAccountsHandler gcpAccountsHandler;
+  private final WingsPersistence wingsPersistence;
+  private final AccountService accountService;
   private final GcpProcurementService gcpProcurementService;
-  private final GcpEntitlementsHandler gcpEntitlementsHandler;
-  private final MarketPlaceService marketPlaceService;
+  private final GcpProductsRegistry gcpProductsRegistry;
+  private final Gson gson = new Gson();
 
-  public GcpMarketplaceMessageReceiver(GcpAccountsHandler gcpAccountsHandler,
-      GcpProcurementService gcpProcurementService, GcpEntitlementsHandler gcpEntitlementsHandler,
-      MarketPlaceService marketPlaceService) {
-    this.gcpAccountsHandler = gcpAccountsHandler;
+  public GcpMarketplaceMessageReceiver(GcpProcurementService gcpProcurementService, WingsPersistence wingsPersistence,
+      AccountService accountService, GcpProductsRegistry gcpProductsRegistry) {
     this.gcpProcurementService = gcpProcurementService;
-    this.gcpEntitlementsHandler = gcpEntitlementsHandler;
-    this.marketPlaceService = marketPlaceService;
+    this.wingsPersistence = wingsPersistence;
+    this.accountService = accountService;
+    this.gcpProductsRegistry = gcpProductsRegistry;
   }
 
   @Override
   public void receiveMessage(PubsubMessage message, AckReplyConsumer consumer) {
+    logger.info("Received GCP marketplace message: {}", message.getData().toStringUtf8());
+
+    boolean ack;
     try {
-      ProcurementPubsubMessage procurementPubsubMessage = getProcurementPubSubMessage(message);
-      Optional<MarketPlace> marketPlaceOptional = getMarketPlace(procurementPubsubMessage);
-      if (!marketPlaceOptional.isPresent()) {
-        logger.info("Received Event for GCP Account that doesn't map to any Harness Account");
-        return;
+      ack = processPubsubMessage(parseMessage(message));
+    } catch (IOException e) {
+      throw new GcpMarketplaceException(
+          String.format("Failed to handle GCP marketplace message %s.", message.getMessageId()), e);
+    }
+
+    if (ack) {
+      consumer.ack();
+    }
+  }
+
+  private ProcurementPubsubMessage parseMessage(PubsubMessage message) {
+    String data = message.getData().toStringUtf8();
+
+    if (StringUtils.isNotBlank(data)) {
+      return gson.fromJson(data, ProcurementPubsubMessage.class);
+    }
+    return null;
+  }
+
+  public boolean processPubsubMessage(ProcurementPubsubMessage message) throws IOException {
+    if (message == null) {
+      return true;
+    }
+
+    if (message.getAccount() != null && StringUtils.isNotBlank(message.getAccount().getId())) {
+      return processAccount(message.getAccount());
+    }
+
+    if (message.getEntitlement() != null && StringUtils.isNotBlank(message.getEntitlement().getId())) {
+      return processEntitlement(message.getEntitlement(), message.getEventType());
+    }
+
+    return false;
+  }
+
+  public boolean processAccount(ProcurementPubsubMessage.AccountMessage accountMessage) throws IOException {
+    String gcpAccountId = accountMessage.getId();
+    GCPMarketplaceCustomer gcpMarketplaceCustomer = getCustomer(gcpAccountId);
+    Account account = gcpProcurementService.getAccount(gcpAccountId);
+    if (account == null) {
+      if (gcpMarketplaceCustomer != null) {
+        logger.info("Deleting Account provisioned through GCP Marketplace with accountId: {} and GCP AccountId: {}.",
+            gcpMarketplaceCustomer.getHarnessAccountId(), gcpAccountId);
+        accountService.deleteAccount(gcpMarketplaceCustomer.getHarnessAccountId());
+        wingsPersistence.delete(GCPMarketplaceCustomer.class, gcpMarketplaceCustomer.getUuid());
+        return true;
       } else {
-        handleMessage(procurementPubsubMessage, marketPlaceOptional.get());
+        return false;
       }
-    } catch (Exception e) {
-      logger.error("Failed to process GCP marketplace message: {}. Error: {}", message, e.getMessage(), e);
     }
-    consumer.ack();
+    return true;
   }
 
-  private ProcurementPubsubMessage getProcurementPubSubMessage(PubsubMessage pubsubMessage) {
-    String messageData = pubsubMessage.getData().toStringUtf8();
-    String massageId = pubsubMessage.getMessageId();
-    logger.info("Got GCP marketplace message. ID: {}, Data: {}", massageId, messageData);
-    try {
-      return parseMessage(pubsubMessage);
-    } catch (IOException ioException) {
-      throw new GcpMarketplaceException("Failed to parse GCP marketplace message.", ioException);
-    }
-  }
+  public boolean processEntitlement(ProcurementPubsubMessage.EntitlementMessage entitlementMessage,
+      ProcurementEventType eventType) throws IOException {
+    String entitlementId = entitlementMessage.getId();
 
-  private Optional<MarketPlace> getMarketPlace(ProcurementPubsubMessage message) {
-    String gcpAccountId;
-    if (message.getAccount() != null) {
-      gcpAccountId = message.getAccount().getId();
-    } else if (message.getEntitlement() != null) {
-      // TODO: Handle delete entitlement (special) case
-      gcpAccountId = gcpProcurementService.getEntitlementById(message.getEntitlement().getId()).getAccount();
-    } else {
-      throw new GcpMarketplaceException("Received GCP Marketplace event but couldn't determine GCP AccountId");
-    }
-    return marketPlaceService.fetchMarketplace(gcpAccountId, MarketPlaceType.GCP);
-  }
+    Entitlement entitlement = gcpProcurementService.getEntitlement(entitlementId);
 
-  private void handleMessage(ProcurementPubsubMessage message, MarketPlace marketPlace) {
-    if (message.getAccount() != null) {
-      processAccount(message, marketPlace);
-      return;
+    if (entitlement == null) {
+      logger.warn(
+          "Received '{}' event from GCP marketplace for entitlement that doesn't exists anymore, entitlementId: {}",
+          eventType, entitlementId);
+      return true;
     }
-    if (message.getEntitlement() != null) {
-      processEntitlement(message, marketPlace);
-    }
-  }
 
-  public void processAccount(ProcurementPubsubMessage message, MarketPlace marketPlace) {
-    ProcurementEventType eventType = message.getEventType();
-    switch (eventType) {
-      case ACCOUNT_ACTIVE:
-        Switch.noop();
-        break;
-      case ACCOUNT_DELETED:
-        handleAccountDeleted(marketPlace);
-        break;
-      default:
-        logger.error("No handler for eventType: {}", eventType);
-    }
-  }
+    String gcpAccountId = GcpProcurementService.getAccountId(entitlement.getAccount());
+    GCPMarketplaceCustomer customer = getCustomer(gcpAccountId);
 
-  public void processEntitlement(ProcurementPubsubMessage message, MarketPlace marketPlace) {
-    ProcurementEventType eventType = message.getEventType();
+    if (customer == null) {
+      return false;
+    }
+
     switch (eventType) {
       case ENTITLEMENT_CREATION_REQUESTED:
-        handleEntitlementCreation(message, marketPlace);
+        if (entitlement.getState().equals("ENTITLEMENT_ACTIVATION_REQUESTED")) {
+          gcpProcurementService.approveEntitlement(entitlementId);
+          return true;
+        }
         break;
       case ENTITLEMENT_ACTIVE:
-        handleEntitlementActive(marketPlace);
+      case ENTITLEMENT_PLAN_CHANGED:
+        if (entitlement.getState().equals("ENTITLEMENT_ACTIVE")) {
+          updateCustomer(customer, entitlement);
+          return true;
+        }
         break;
       case ENTITLEMENT_PLAN_CHANGE_REQUESTED:
-        handleEntitlementPlanChangeRequested(message);
-        break;
-      case ENTITLEMENT_PLAN_CHANGED:
-        handleEntitlementPlanChanged(message, marketPlace);
-        break;
-      case ENTITLEMENT_PLAN_CHANGE_CANCELLED:
-        Switch.noop();
-        break;
-      case ENTITLEMENT_PENDING_CANCELLATION:
-        Switch.noop();
-        break;
-      case ENTITLEMENT_CANCELLATION_REVERTED:
-        Switch.noop();
+        if (entitlement.getState().equals("ENTITLEMENT_PENDING_PLAN_CHANGE_APPROVAL")) {
+          gcpProcurementService.approveEntitlementPlanChange(entitlementId, entitlement.getNewPendingPlan());
+          return true;
+        }
         break;
       case ENTITLEMENT_CANCELLED:
-        handleEntitlementCancelled(message, marketPlace);
+        if (entitlement.getState().equals("ENTITLEMENT_CANCELLED")) {
+          cancelCustomer(customer, entitlement);
+          return true;
+        }
         break;
+      case ENTITLEMENT_PLAN_CHANGE_CANCELLED:
+      case ENTITLEMENT_PENDING_CANCELLATION:
+      case ENTITLEMENT_CANCELLATION_REVERTED:
       case ENTITLEMENT_CANCELLING:
-        Switch.noop();
-        break;
       case ENTITLEMENT_DELETED:
-        handleEntitlementDeleted(message, marketPlace);
-        break;
+        return true;
       default:
-        logger.error("No handler for eventType: {}", eventType);
+        throw new IllegalStateException("Unexpected value for GCP marketplace eventType: " + eventType);
     }
+
+    return false;
   }
 
-  private ProcurementPubsubMessage parseMessage(PubsubMessage message) throws IOException {
-    return JSON_MAPPER.readValue(message.getData().toStringUtf8(), ProcurementPubsubMessage.class);
+  private GCPMarketplaceCustomer getCustomer(String gcpAccountId) {
+    return wingsPersistence.createQuery(GCPMarketplaceCustomer.class)
+        .filter(GCPMarketplaceCustomerKeys.gcpAccountId, gcpAccountId)
+        .get();
   }
 
-  private void handleAccountDeleted(MarketPlace marketPlace) {
-    gcpAccountsHandler.handleAccountDeleteEvent(marketPlace);
+  private void updateCustomer(GCPMarketplaceCustomer customer, Entitlement entitlement) {
+    GCPMarketplaceProductBuilder product = GCPMarketplaceProduct.builder();
+    product.product(entitlement.getProduct());
+    product.plan(entitlement.getPlan());
+    product.startTime(Instant.parse(entitlement.getCreateTime()));
+    String usageReportingId = entitlement.getUsageReportingId();
+    if (StringUtils.isNotBlank(usageReportingId)) {
+      product.usageReportingId(usageReportingId);
+    }
+
+    Optional<GCPMarketplaceProduct> gcpMarketplaceProduct = getProduct(customer, entitlement.getProduct());
+    if (gcpMarketplaceProduct.isPresent()) {
+      getGcpProductHandler(entitlement).handlePlanChange(customer.getHarnessAccountId(), entitlement.getPlan());
+      customer.getProducts().remove(gcpMarketplaceProduct.get());
+    } else {
+      getGcpProductHandler(entitlement).handleNewSubscription(customer.getHarnessAccountId(), entitlement.getPlan());
+    }
+    customer.getProducts().add(product.build());
+    wingsPersistence.save(customer);
   }
 
-  private void handleEntitlementCreation(ProcurementPubsubMessage message, MarketPlace marketPlace) {
-    gcpEntitlementsHandler.handleEntitlementCreation(marketPlace, message);
+  private GcpProductHandler getGcpProductHandler(Entitlement entitlement) {
+    return gcpProductsRegistry.getGcpProductHandler(entitlement.getProduct());
   }
 
-  private void handleEntitlementActive(MarketPlace marketPlace) {
-    gcpEntitlementsHandler.handleEntitlementActive(marketPlace);
+  private Optional<GCPMarketplaceProduct> getProduct(GCPMarketplaceCustomer customer, String product) {
+    for (GCPMarketplaceProduct subscribedProduct : customer.getProducts()) {
+      if (subscribedProduct.getProduct().equals(product)) {
+        return Optional.of(subscribedProduct);
+      }
+    }
+
+    return Optional.empty();
   }
 
-  private void handleEntitlementPlanChangeRequested(ProcurementPubsubMessage pubsubMessage) {
-    gcpEntitlementsHandler.handleEntitlementPlanChangeRequested(pubsubMessage);
-  }
+  private void cancelCustomer(GCPMarketplaceCustomer customer, Entitlement entitlement) {
+    getGcpProductHandler(entitlement).handleSubscriptionCancellation(customer.getHarnessAccountId());
 
-  private void handleEntitlementPlanChanged(ProcurementPubsubMessage pubsubMessage, MarketPlace marketPlace) {
-    logger.info(
-        "GCP marketplace ENTITLEMENT_PLAN_CHANGED message received for GCP Account: {}, Harness Account: {} and entitlementId: {}.",
-        marketPlace.getCustomerIdentificationCode(), marketPlace.getAccountId(),
-        pubsubMessage.getEntitlement().getId());
-    gcpEntitlementsHandler.handleEntitlementPlanChange(marketPlace, pubsubMessage);
-  }
+    Optional<GCPMarketplaceProduct> productToCancel = getProduct(customer, entitlement.getProduct());
+    productToCancel.ifPresent(gcpMarketplaceProduct -> customer.getProducts().remove(gcpMarketplaceProduct));
 
-  private void handleEntitlementCancelled(ProcurementPubsubMessage pubsubMessage, MarketPlace marketPlace) {
-    gcpEntitlementsHandler.handleEntitlementCancelled(marketPlace, pubsubMessage);
-  }
-
-  private void handleEntitlementDeleted(ProcurementPubsubMessage pubsubMessage, MarketPlace marketPlace) {
-    gcpEntitlementsHandler.handleEntitlementDeleted(marketPlace, pubsubMessage);
+    if (customer.getProducts().isEmpty()) {
+      // deactivate Harness account if there is no active products left
+      accountService.updateAccountStatus(customer.getHarnessAccountId(), AccountStatus.INACTIVE);
+    }
+    wingsPersistence.save(customer);
   }
 }

@@ -1,5 +1,6 @@
 package io.harness.marketplace.gcp;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.marketplace.gcp.GcpMarketPlaceConstants.SERVICE_ACCOUNT_INTEGRATION_PATH;
 
 import com.google.api.gax.core.FixedCredentialsProvider;
@@ -14,13 +15,14 @@ import com.google.inject.Singleton;
 import com.google.pubsub.v1.ProjectSubscriptionName;
 import com.google.pubsub.v1.Subscription;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.marketplace.gcp.procurement.GcpMarketplaceMessageReceiver;
 import io.harness.marketplace.gcp.procurement.GcpProcurementService;
-import io.harness.marketplace.gcp.procurement.pubsub.GcpAccountsHandler;
-import io.harness.marketplace.gcp.procurement.pubsub.GcpEntitlementsHandler;
+import io.harness.marketplace.gcp.procurement.GcpProductsRegistry;
 import lombok.extern.slf4j.Slf4j;
 import org.slf4j.helpers.MessageFormatter;
-import software.wings.service.intfc.marketplace.MarketPlaceService;
+import software.wings.dl.WingsPersistence;
+import software.wings.service.intfc.AccountService;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -29,6 +31,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
 
+@OwnedBy(PL)
 @Slf4j
 @Singleton
 public class GcpMarketplaceTopicSubscriber {
@@ -41,10 +44,10 @@ public class GcpMarketplaceTopicSubscriber {
       MessageFormatter.format(FULL_SUBSCRIPTION_FORMAT, GCP_PROJECT_ID, GCP_SUBSCRIPTION_NAME).getMessage();
 
   private Subscriber subscriber;
-  @Inject private GcpAccountsHandler gcpAccountsHandler;
   @Inject private GcpProcurementService gcpProcurementService;
-  @Inject private GcpEntitlementsHandler gcpEntitlementsHandler;
-  @Inject private MarketPlaceService marketPlaceService;
+  @Inject private WingsPersistence wingsPersistence;
+  @Inject private AccountService accountService;
+  @Inject private GcpProductsRegistry gcpProductsRegistry;
 
   public void subscribeAsync() throws IOException {
     FixedCredentialsProvider credentialsProvider = FixedCredentialsProvider.create(credentials());
@@ -56,15 +59,15 @@ public class GcpMarketplaceTopicSubscriber {
       try {
         subscriptionAdminClient.createSubscription(sub);
       } catch (AlreadyExistsException e) {
-        logger.info(
-            "Subscription Already Exists. Subscription Name: {} Message: {}", FULL_SUBSCRIPTION_NAME, e.getMessage());
+        logger.info("Subscription Already Exists. Subscription Name: {} Exception: {}", FULL_SUBSCRIPTION_NAME, e);
       }
     }
+
     ProjectSubscriptionName projectSubscriptionName = ProjectSubscriptionName.of(GCP_PROJECT_ID, GCP_SUBSCRIPTION_NAME);
     subscriber = Subscriber
                      .newBuilder(projectSubscriptionName,
                          new GcpMarketplaceMessageReceiver(
-                             gcpAccountsHandler, gcpProcurementService, gcpEntitlementsHandler, marketPlaceService))
+                             gcpProcurementService, wingsPersistence, accountService, gcpProductsRegistry))
                      .setCredentialsProvider(credentialsProvider)
                      .build();
 

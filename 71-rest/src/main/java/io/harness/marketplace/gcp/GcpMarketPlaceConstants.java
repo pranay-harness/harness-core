@@ -11,6 +11,8 @@ public interface GcpMarketPlaceConstants {
   String SERVICE_NAME = "harness-continuous-delivery.gcpmarketplace.harness.io";
   String SERVICE_CONTROL_API_END_POINT = "https://servicecontrol.googleapis.com";
   String ENTITLEMENT_ACTIVATED = "ENTITLEMENT_ACTIVE";
-  String ISSUER = "https://www.googleapis.com/robot/v1/metadata/x509/cloud-commerce-partner@system.gserviceaccount.com";
+  String TOKEN_ISSUER =
+      "https://www.googleapis.com/robot/v1/metadata/x509/cloud-commerce-partner@system.gserviceaccount.com";
+  String TOKEN_AUDIENCE = "app.harness.io";
   int DEFAULT_LICENCE_UNITS = 50;
 }

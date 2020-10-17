@@ -1,5 +1,7 @@
 package io.harness.marketplace.gcp.procurement;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
+
 import com.google.api.client.googleapis.auth.oauth2.GoogleCredential;
 import com.google.api.client.googleapis.util.Utils;
 import com.google.api.client.http.HttpTransport;
@@ -8,6 +10,7 @@ import com.google.cloudcommerceprocurement.v1.CloudCommercePartnerProcurementSer
 import com.google.cloudcommerceprocurement.v1.CloudCommercePartnerProcurementServiceScopes;
 import com.google.inject.Singleton;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.marketplace.gcp.GcpMarketPlaceConstants;
 import lombok.extern.slf4j.Slf4j;
 
@@ -19,6 +22,7 @@ import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
 import java.util.Optional;
 
+@OwnedBy(PL)
 @Slf4j
 @Singleton
 public class ProcurementAPIClientBuilder {

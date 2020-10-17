@@ -49,6 +49,10 @@ public class GCPBillingJobEntity implements PersistentRegularIterable, CreatedAt
     this.lastUpdatedAt = currentMillis;
   }
 
+  public GCPBillingJobEntity(String accountId, Long nextIteration) {
+    this(accountId, null, nextIteration);
+  }
+
   @Override
   public Long obtainNextIteration(String fieldName) {
     return nextIteration;

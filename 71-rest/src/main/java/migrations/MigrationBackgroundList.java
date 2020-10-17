@@ -64,6 +64,7 @@ import migrations.all.ExplodeLogMLFeedbackRecordsMigration;
 import migrations.all.FetchAndSaveAccounts;
 import migrations.all.FetchAndSaveAccounts2;
 import migrations.all.FixDuplicatedHarnessGroups;
+import migrations.all.GCPMarketplaceCustomerMigration;
 import migrations.all.HelmStateTimeoutMigration;
 import migrations.all.InfraMappingToDefinitionMigration;
 import migrations.all.InitInfraProvisionerCounters;
@@ -294,6 +295,7 @@ public class MigrationBackgroundList {
         .add(Pair.of(177, AddAccountIdToStateMachine.class))
         .add(Pair.of(178, DeletedAccountStatusMigration.class))
         .add(Pair.of(179, LicenseExpiryReminderTimeMigration.class))
+        .add(Pair.of(180, GCPMarketplaceCustomerMigration.class))
         .build();
   }
 }
