@@ -92,6 +92,20 @@ public class MetricPack implements PersistentEntity, UuidAware, CreatedAtAware, 
     private String validationPath;
     private boolean included;
     @Builder.Default private List<TimeSeriesThreshold> thresholds = new ArrayList<>();
+    @JsonIgnore
+    public String getPath() {
+      return path;
+    }
+
+    @JsonIgnore
+    public String getValidationPath() {
+      return validationPath;
+    }
+
+    @JsonIgnore
+    public TimeSeriesMetricType getType() {
+      return type;
+    }
 
     public MetricDefinitionDTO toDTO() {
       return MetricDefinitionDTO.builder()

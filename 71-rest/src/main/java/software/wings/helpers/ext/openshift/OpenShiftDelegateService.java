@@ -7,6 +7,8 @@ import static java.lang.String.format;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
+import com.fasterxml.jackson.dataformat.yaml.snakeyaml.DumperOptions;
+import com.fasterxml.jackson.dataformat.yaml.snakeyaml.Yaml;
 import io.harness.beans.FileData;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
@@ -14,8 +16,6 @@ import io.harness.filesystem.FileIo;
 import io.harness.logging.CommandExecutionStatus;
 import lombok.extern.slf4j.Slf4j;
 import org.hibernate.validator.constraints.NotEmpty;
-import org.yaml.snakeyaml.DumperOptions;
-import org.yaml.snakeyaml.Yaml;
 import software.wings.beans.command.ExecutionLogCallback;
 import software.wings.helpers.ext.cli.CliResponse;
 

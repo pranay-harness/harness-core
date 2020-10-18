@@ -88,7 +88,6 @@ java_library(
         "@maven//:org_projectlombok_lombok",
         "@maven//:org_reflections_reflections",
         "@maven//:org_slf4j_slf4j_api",
-        "@maven//:org_yaml_snakeyaml",
         "@maven//:org_zeroturnaround_zt_exec",
     ],
 )
