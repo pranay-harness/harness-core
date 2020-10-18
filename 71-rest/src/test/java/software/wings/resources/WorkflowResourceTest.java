@@ -26,6 +26,7 @@ import io.harness.category.element.UnitTests;
 import io.harness.rest.RestResponse;
 import io.harness.rule.Owner;
 import io.harness.serializer.JsonUtils;
+import lombok.extern.slf4j.Slf4j;
 import org.junit.ClassRule;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -45,6 +46,7 @@ import javax.ws.rs.core.MediaType;
 /**
  * Created by rishi on 12/28/16.
  */
+@Slf4j
 public class WorkflowResourceTest extends WingsBaseTest {
   private static final WorkflowService WORKFLOW_SERVICE = mock(WorkflowService.class);
   private static final AuthService AUTH_SERVICE = mock(AuthService.class);
@@ -133,7 +135,7 @@ public class WorkflowResourceTest extends WingsBaseTest {
             .request()
             .get(new GenericType<RestResponse<PageResponse<Workflow>>>() {});
 
-    log().info(JsonUtils.asJson(restResponse));
+    logger.info(JsonUtils.asJson(restResponse));
     verify(WORKFLOW_SERVICE).listWorkflows(pageRequestArgumentCaptor.capture(), eq(2), eq(false), eq(null));
     assertThat(pageRequestArgumentCaptor.getValue()).isNotNull();
     assertThat(restResponse).isNotNull().hasFieldOrPropertyWithValue("resource", pageResponse);

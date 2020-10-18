@@ -24,6 +24,7 @@ import io.harness.mongo.queue.MongoQueuePublisher;
 import io.harness.persistence.HPersistence;
 import io.harness.queue.QueueConsumer.Filter;
 import io.harness.rule.Owner;
+import lombok.extern.slf4j.Slf4j;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -35,6 +36,7 @@ import java.io.IOException;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
+@Slf4j
 public class QueueListenerTest extends PersistenceTestBase {
   private MongoQueuePublisher<TestTopicQueuableObject> producer;
   private MongoQueueConsumer<TestTopicQueuableObject> consumer;
@@ -115,9 +117,9 @@ public class QueueListenerTest extends PersistenceTestBase {
       consumer.setHeartbeat(ofSeconds(1));
 
       doAnswer(invocation -> {
-        log().info("In mock executor");
+        logger.info("In mock executor");
         Thread.sleep(1500);
-        log().info("Done with mock");
+        logger.info("Done with mock");
         return invocation.callRealMethod();
       })
           .when(listener)

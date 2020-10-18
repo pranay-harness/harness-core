@@ -79,8 +79,6 @@ import org.junit.rules.MethodRule;
 import org.junit.runners.model.FrameworkMethod;
 import org.junit.runners.model.Statement;
 import org.mongodb.morphia.converters.TypeConverter;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import ru.vyarus.guice.validator.ValidationModule;
 import software.wings.WingsTestModule;
 import software.wings.app.AuthModule;
@@ -394,40 +392,36 @@ public class WingsRule implements MethodRule, InjectorRuleMixin, MongoRuleMixin 
    */
   protected void after(List<Annotation> annotations) {
     try {
-      log().info("Stopping executorService...");
+      logger.info("Stopping executorService...");
       executorService.shutdownNow();
-      log().info("Stopped executorService...");
+      logger.info("Stopped executorService...");
     } catch (Exception ex) {
       logger.error("", ex);
     }
 
     try {
-      log().info("Stopping notifier...");
+      logger.info("Stopping notifier...");
       ((Managed) injector.getInstance(NotifierScheduledExecutorService.class)).stop();
-      log().info("Stopped notifier...");
+      logger.info("Stopped notifier...");
     } catch (Exception ex) {
       logger.error("", ex);
     }
 
     try {
-      log().info("Stopping queue listener controller...");
+      logger.info("Stopping queue listener controller...");
       injector.getInstance(QueueListenerController.class).stop();
-      log().info("Stopped queue listener controller...");
+      logger.info("Stopped queue listener controller...");
     } catch (Exception ex) {
       logger.error("", ex);
     }
 
-    log().info("Stopping servers...");
+    logger.info("Stopping servers...");
     closingFactory.stopServers();
   }
 
   protected void registerScheduledJobs(Injector injector) {
-    log().info("Initializing scheduledJobs...");
+    logger.info("Initializing scheduledJobs...");
     injector.getInstance(NotifierScheduledExecutorService.class)
         .scheduleWithFixedDelay(injector.getInstance(NotifyResponseCleaner.class), 0L, 1000L, TimeUnit.MILLISECONDS);
-  }
-
-  protected Logger log() {
-    return LoggerFactory.getLogger(getClass());
   }
 }

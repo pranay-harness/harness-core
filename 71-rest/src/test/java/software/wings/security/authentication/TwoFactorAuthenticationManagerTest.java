@@ -34,6 +34,7 @@ import io.harness.eraro.ErrorCode;
 import io.harness.exception.WingsException;
 import io.harness.rule.Owner;
 import io.harness.rule.Repeat;
+import lombok.extern.slf4j.Slf4j;
 import org.joda.time.DateTimeUtils;
 import org.junit.Assert;
 import org.junit.Test;
@@ -63,6 +64,7 @@ import java.util.Collections;
 import java.util.Date;
 import java.util.UUID;
 
+@Slf4j
 public class TwoFactorAuthenticationManagerTest extends WingsBaseTest {
   @Mock UserService userService;
   @Mock AuthService authService;
@@ -96,7 +98,7 @@ public class TwoFactorAuthenticationManagerTest extends WingsBaseTest {
         while (i < 6000) {
           long currentTime = DateTimeUtils.currentTimeMillis();
           long timeWithLag = currentTime + i;
-          log().info("Running test with time lag: [{}],currentTime=[{}],timeWithLag=[{}]", i, new Date(currentTime),
+          logger.info("Running test with time lag: [{}],currentTime=[{}],timeWithLag=[{}]", i, new Date(currentTime),
               new Date(timeWithLag));
           String code = TimeBasedOneTimePasswordUtil.generateNumberString(totpSecretKey, timeWithLag, 30);
           User authenticatedUser = spy(new User());

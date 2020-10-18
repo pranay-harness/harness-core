@@ -121,7 +121,7 @@ public class StatsCollectorImplIntegrationTest extends BaseIntegrationTest {
         ImmutableMap.of("accountId", accountId, "fromTsMillis", String.valueOf(start.toEpochMilli()), "toTsMillis",
             String.valueOf(end.toEpochMilli())));
 
-    log().info("Timeline Url: {}", url);
+    logger.info("Timeline Url: {}", url);
     WebTarget target = client.target(url);
 
     RestResponse<InstanceTimeline> restResponse =

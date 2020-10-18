@@ -13,6 +13,7 @@ import io.harness.eraro.ErrorCode;
 import io.harness.exception.WingsException;
 import io.harness.rest.RestResponse;
 import io.harness.rule.Owner;
+import lombok.extern.slf4j.Slf4j;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -34,6 +35,7 @@ import javax.ws.rs.core.Response.Status;
 /**
  * @author marklu on 2018-12-26
  */
+@Slf4j
 public class AccountResourceIntegrationTest extends BaseIntegrationTest {
   @Override
   @Before
@@ -97,7 +99,7 @@ public class AccountResourceIntegrationTest extends BaseIntegrationTest {
     WebTarget target = client.target(API_BASE + "/users/account");
     Response response = getRequestBuilderWithAuthHeader(target).post(entity(account, APPLICATION_JSON));
     if (response.getStatus() != Status.OK.getStatusCode()) {
-      log().error("Non-ok-status. Headers: {}", response.getHeaders());
+      logger.error("Non-ok-status. Headers: {}", response.getHeaders());
     }
     assertThat(response.getStatus()).isEqualTo(Status.OK.getStatusCode());
     RestResponse<Account> restResponse = response.readEntity(new GenericType<RestResponse<Account>>() {});
@@ -108,7 +110,7 @@ public class AccountResourceIntegrationTest extends BaseIntegrationTest {
     getRequestBuilderWithAuthHeader(target).delete(new GenericType<RestResponse>() {});
     assertThat(response).isNotNull();
     if (response.getStatus() != Status.OK.getStatusCode()) {
-      log().error("Non-ok-status. Headers: {}", response.getHeaders());
+      logger.error("Non-ok-status. Headers: {}", response.getHeaders());
     }
 
     thrown.expect(WingsException.class);
@@ -133,7 +135,7 @@ public class AccountResourceIntegrationTest extends BaseIntegrationTest {
     WebTarget target = client.target(API_BASE + "/account/cloudcost/enable?accountId=" + accountId);
     Response response = getRequestBuilderWithAuthHeader(target).post(entity(account, APPLICATION_JSON));
     if (response.getStatus() != Status.OK.getStatusCode()) {
-      log().error("Non-ok-status. Headers: {}", response.getHeaders());
+      logger.error("Non-ok-status. Headers: {}", response.getHeaders());
     }
     assertThat(response.getStatus()).isEqualTo(Status.OK.getStatusCode());
 
@@ -143,7 +145,7 @@ public class AccountResourceIntegrationTest extends BaseIntegrationTest {
     target = client.target(API_BASE + "/account/cloudcost/disable?accountId=" + accountId);
     response = getRequestBuilderWithAuthHeader(target).post(entity(account, APPLICATION_JSON));
     if (response.getStatus() != Status.OK.getStatusCode()) {
-      log().error("Non-ok-status. Headers: {}", response.getHeaders());
+      logger.error("Non-ok-status. Headers: {}", response.getHeaders());
     }
     assertThat(response.getStatus()).isEqualTo(Status.OK.getStatusCode());
   }

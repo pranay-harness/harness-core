@@ -212,7 +212,7 @@ public abstract class VerificationBaseIntegrationTest
     Application app = anApplication().name(appName).description(appName).accountId(accountId).build();
     Response response = getRequestBuilderWithAuthHeader(target).post(entity(app, APPLICATION_JSON));
     if (response.getStatus() != Status.OK.getStatusCode()) {
-      log().error("Non-ok-status. Headers: {}", response.getHeaders());
+      logger.error("Non-ok-status. Headers: {}", response.getHeaders());
     }
     assertThat(response.getStatus()).isEqualTo(Status.OK.getStatusCode());
     RestResponse<Application> restResponse = response.readEntity(new GenericType<RestResponse<Application>>() {});

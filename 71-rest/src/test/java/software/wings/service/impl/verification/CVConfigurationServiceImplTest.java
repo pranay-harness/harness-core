@@ -36,6 +36,7 @@ import io.harness.exception.VerificationOperationException;
 import io.harness.limits.impl.model.StaticLimit;
 import io.harness.rule.Owner;
 import io.harness.serializer.YamlUtils;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.reflect.FieldUtils;
 import org.junit.Before;
 import org.junit.Test;
@@ -113,6 +114,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
+@Slf4j
 public class CVConfigurationServiceImplTest extends WingsBaseTest {
   @Mock private FeatureFlagService featureFlagService;
   @Inject private CVConfigurationService cvConfigurationService;
@@ -1369,7 +1371,7 @@ public class CVConfigurationServiceImplTest extends WingsBaseTest {
                             .filter(AlertKeys.status, AlertStatus.Open)
                             .count();
       numOfTrials++;
-      log().info("trial: {} numOfAlerts: {}", numOfTrials, numOfOpenAlerts);
+      logger.info("trial: {} numOfAlerts: {}", numOfTrials, numOfOpenAlerts);
       sleep(ofMillis(100));
     } while (numOfTrials < 50 && numOfOpenAlerts != numOfExpectedAlerts);
     return numOfOpenAlerts;
