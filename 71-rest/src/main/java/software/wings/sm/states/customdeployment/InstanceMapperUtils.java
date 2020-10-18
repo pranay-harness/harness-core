@@ -6,8 +6,6 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.inject.Singleton;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.DeserializationFeature;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import io.harness.serializer.JsonUtils;
 import lombok.Builder;
 import lombok.Data;
@@ -26,11 +24,6 @@ import javax.validation.constraints.NotNull;
 @UtilityClass
 public class InstanceMapperUtils {
   public static final String hostname = "hostname";
-  private static final ObjectMapper mapper = new ObjectMapper();
-
-  static {
-    mapper.disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES);
-  }
 
   @VisibleForTesting
   @NotNull
@@ -55,12 +48,12 @@ public class InstanceMapperUtils {
   private Function<Map<String, Object>, HostProperties> getMapHostPropertiesFunction(
       Map<String, String> hostAttributes, String hostNameKey) {
     return instance -> {
-      final String hostJson = JsonUtils.asJson(instance, mapper);
+      final String hostJson = JsonUtils.asJson(instance);
       Map<String, Object> otherHostProperties = hostAttributes.keySet().stream().collect(
           HashMap::new, (m, v) -> m.put(v, JsonUtils.jsonPath(hostJson, hostAttributes.get(v))), HashMap::putAll);
 
       return HostProperties.builder()
-          .hostName(JsonUtils.jsonPath(JsonUtils.asJson(instance, mapper), hostNameKey))
+          .hostName(JsonUtils.jsonPath(JsonUtils.asJson(instance), hostNameKey))
           .otherPropeties(otherHostProperties)
           .build();
     };

@@ -8,6 +8,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
 
+import com.fasterxml.jackson.dataformat.yaml.snakeyaml.Yaml;
 import io.harness.beans.ExecutionStatus;
 import io.harness.category.element.CliFunctionalTests;
 import io.harness.functional.AbstractFunctionalTest;
@@ -32,7 +33,6 @@ import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
-import org.yaml.snakeyaml.Yaml;
 import software.wings.beans.EntityType;
 import software.wings.beans.Environment;
 import software.wings.beans.Pipeline;
