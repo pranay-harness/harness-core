@@ -90,6 +90,7 @@ import io.harness.k8s.model.ImageDetails;
 import io.harness.logging.CommandExecutionStatus;
 import io.harness.rule.Owner;
 import io.harness.rule.OwnerRule;
+import io.harness.tasks.Cd1SetupFields;
 import io.harness.tasks.ResponseData;
 import org.junit.Before;
 import org.junit.Test;
@@ -361,6 +362,7 @@ public class HelmDeployStateTest extends WingsBaseTest {
         .thenReturn(singletonList(new Key<>(ServiceTemplate.class, "serviceTemplate", TEMPLATE_ID)));
 
     when(serviceTemplateService.get(APP_ID, TEMPLATE_ID)).thenReturn(aServiceTemplate().withUuid(TEMPLATE_ID).build());
+    when(serviceTemplateHelper.fetchServiceTemplateId(any())).thenReturn(SERVICE_TEMPLATE_ID);
     when(serviceTemplateService.computeServiceVariables(APP_ID, ENV_ID, TEMPLATE_ID, null, OBTAIN_VALUE))
         .thenReturn(emptyList());
     when(workflowExecutionService.getExecutionDetails(anyString(), anyString(), anyBoolean()))
@@ -496,6 +498,9 @@ public class HelmDeployStateTest extends WingsBaseTest {
   private void assertExecutedDelegateTask(DelegateTask delegateTask) {
     HelmInstallCommandRequest helmInstallCommandRequest =
         (HelmInstallCommandRequest) delegateTask.getData().getParameters()[0];
+    assertThat(delegateTask.getSetupAbstractions()).containsKey(Cd1SetupFields.SERVICE_TEMPLATE_ID_FIELD);
+    assertThat(delegateTask.getSetupAbstractions().get(Cd1SetupFields.SERVICE_TEMPLATE_ID_FIELD))
+        .isEqualTo(SERVICE_TEMPLATE_ID);
     assertThat(delegateTask.getData().getTimeout()).isEqualTo(300000);
     assertThat(helmInstallCommandRequest.getHelmCommandType()).isEqualTo(HelmCommandType.INSTALL);
     assertThat(helmInstallCommandRequest.getReleaseName()).isEqualTo(HELM_RELEASE_NAME_PREFIX);
