@@ -38,6 +38,7 @@ import software.wings.service.intfc.EmailNotificationService;
 import software.wings.service.intfc.UserGroupService;
 import software.wings.service.intfc.UserService;
 
+import java.text.SimpleDateFormat;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.ArrayList;
@@ -48,6 +49,7 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.TimeZone;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
@@ -187,7 +189,7 @@ public class LicenseServiceImpl implements LicenseService {
       if (templateName != null) {
         logger.info("Sending trial account expiration email with template name {} to account {}", templateName,
             account.getUuid());
-        boolean emailSent = sendEmailToAccountAdmin(account.getUuid(), templateName);
+        boolean emailSent = sendEmailToAccountAdmin(account, templateName);
         if (emailSent) {
           updateLastLicenseExpiryReminderSentAt(account.getUuid(), System.currentTimeMillis());
         } else {
@@ -307,13 +309,19 @@ public class LicenseServiceImpl implements LicenseService {
    * @return
    */
   @VisibleForTesting
-  boolean sendEmailToAccountAdmin(String accountId, String templateName) {
-    List<User> users = getUsersToSendTrialExpirationReminderTo(accountId);
+  boolean sendEmailToAccountAdmin(Account account, String templateName) {
+    List<User> users = getUsersToSendTrialExpirationReminderTo(account.getUuid());
+    String accountId = account.getUuid();
     boolean emailSent = users.isEmpty();
     for (User user : users) {
       String name = !user.getName().isEmpty() ? user.getName() : "there";
       Map<String, String> templateModel = new HashMap<>();
       templateModel.put("name", name);
+      templateModel.put("accountName", account.getAccountName());
+      templateModel.put("accountId", account.getUuid());
+      String createdAt = getCreationDateForAccount(account);
+      templateModel.put("accountCreationDate", createdAt);
+      templateModel.put("accountType", "Trial");
       EmailData emailData = EmailData.builder()
                                 .to(Collections.singletonList(user.getEmail()))
                                 .templateName(templateName)
@@ -330,6 +338,14 @@ public class LicenseServiceImpl implements LicenseService {
     }
     logger.info("Trial account expiration email with template name {} sent successfully {}", templateName, emailSent);
     return emailSent;
+  }
+
+  private String getCreationDateForAccount(Account account) {
+    Date createdAt = new Date(account.getCreatedAt());
+    String dateFormat = "dd-MMM-yyyy";
+    final SimpleDateFormat sdf = new SimpleDateFormat(dateFormat);
+    sdf.setTimeZone(TimeZone.getTimeZone("UTC"));
+    return sdf.format(createdAt);
   }
 
   private List<User> getUsersToSendTrialExpirationReminderTo(String accountId) {
