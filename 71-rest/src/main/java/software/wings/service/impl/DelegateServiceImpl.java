@@ -28,7 +28,6 @@ import static io.harness.delegate.message.ManagerMessageConstants.USE_CDN;
 import static io.harness.delegate.message.ManagerMessageConstants.USE_STORAGE_PROXY;
 import static io.harness.eraro.ErrorCode.USAGE_LIMITS_EXCEEDED;
 import static io.harness.exception.WingsException.USER;
-import static io.harness.expression.Expression.SecretsMode.DISALLOW_SECRETS;
 import static io.harness.govern.Switch.noop;
 import static io.harness.k8s.KubernetesConvention.getAccountIdentifier;
 import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
@@ -60,7 +59,6 @@ import static software.wings.beans.Event.Builder.anEvent;
 import static software.wings.beans.FeatureName.DISABLE_DELEGATE_CAPABILITY_FRAMEWORK;
 import static software.wings.beans.FeatureName.USE_CDN_FOR_STORAGE_FILES;
 import static software.wings.beans.alert.AlertType.NoEligibleDelegates;
-import static software.wings.expression.SecretManagerFunctor.Mode.CHECK_FOR_SECRETS;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Charsets;
@@ -2170,8 +2168,8 @@ public class DelegateServiceImpl implements DelegateService {
 
     checkTaskRankRateLimit(task.getRank());
 
-    // Make this call to make sure there are no secrets in disallowed expressions
-    resolvePreAssignmentExpressions(task, CHECK_FOR_SECRETS);
+    // TODO: Make this call to make sure there are no secrets in disallowed expressions
+    // resolvePreAssignmentExpressions(task, CHECK_FOR_SECRETS);
 
     wingsPersistence.save(task);
   }
@@ -2622,12 +2620,14 @@ public class DelegateServiceImpl implements DelegateService {
         if (value == null) {
           return null;
         }
-        String substituted = managerPreExecutionExpressionEvaluator.substitute(value, new HashMap<>());
-        if (secretManagerFunctor != null && secretMode == DISALLOW_SECRETS
-            && secretManagerFunctor.getEvaluatedSecrets().size() > 0) {
-          throw new InvalidRequestException(format("Expression %s is not allowed to have secrets.", substituted));
-        }
-        return mode == CHECK_FOR_SECRETS ? value : substituted;
+        return managerPreExecutionExpressionEvaluator.substitute(value, new HashMap<>());
+        // TODO: this code is causing the second issue in DEL-1167
+        //        if (secretManagerFunctor != null && secretMode == DISALLOW_SECRETS
+        //            && secretManagerFunctor.getEvaluatedSecrets().size() > 0) {
+        //          throw new InvalidRequestException(format("Expression %s is not allowed to have secrets.",
+        //          substituted));
+        //        }
+        //        return mode == CHECK_FOR_SECRETS ? value : substituted;
       });
 
       if (secretManagerFunctor == null) {
