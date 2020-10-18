@@ -1,1 +1,1 @@
-Your Harness account has been deleted
+Your Harness trial account [${(accountName)}] has been deleted

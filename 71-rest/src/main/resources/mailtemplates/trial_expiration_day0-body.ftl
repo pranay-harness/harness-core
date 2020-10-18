@@ -39,6 +39,14 @@
                                 Hi ${(name)},
                                 <br><br> Your Harness trial has expired. To continue using Harness free forever you can switch to <a href="https://app.harness.io">Community Edition</a>
                                 <br><br> If you don&#39;t convert your account to Community Edition, it will be permanently deleted in 90 days.  We will also remove any Harness delegates from your infrastructure in the coming days.
+                                <br> <br>
+
+                                                                Account Name: ${(accountName)} <br>
+                                                                Account Id: ${(accountId)} <br>
+                                                                Account Type: ${(accountType)}<br>
+                                                                Account Creation Date: ${(accountCreationDate)} <br>
+
+
                                 <tr>
                                     <td align="center" valign="top" style="-webkit-font-smoothing: antialiased; text-size-adjust: 100%; -ms-text-size-adjust: 100%; -webkit-text-size-adjust: 100%; line-height: 100%; mso-table-lspace: 0pt; mso-table-rspace: 0pt; border-spacing: 0; margin: 0; padding: 0; padding-left: 6.25%; padding-right: 6.25%; width: 87.5%; padding-top: 0px; height: 70px; border-collapse: collapse;" height="70" class="button" width="87.5%">
                                         <a href="https://app.harness.io" target="_blank" style="-webkit-font-smoothing: antialiased; text-size-adjust: 100%; -ms-text-size-adjust: 100%; -webkit-text-size-adjust: 100%; padding: 12px 24px; text-decoration: none; background-color: #000000; color: #FFFFFF; font-family: 'Source Sans Pro', Tahoma, Verdana, Segoe, sans-serif; font-size: 16px; font-weight: bold; line-height: 120%; border-radius: 4px; -webkit-border-radius: 4px; -moz-border-radius: 4px; -khtml-border-radius: 4px;">

@@ -1,1 +1,1 @@
-Your Harness account will be deleted after tomorrow
+Your Harness trial account [${(accountName)}] will be deleted after tomorrow

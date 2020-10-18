@@ -37,8 +37,14 @@
                             <div style="width: 450px;">
                               <p style="font-size:24px;color:#77787b;line-height:30px;font-weight:normal;margin-left: 12px;">
                                 Hi ${(name)},
-                                <br><br> Your Harness trial account and all associated data have been permanently deleted from our systems.
+                                <br><br> Your Harness trial account ${(accountName)} and all associated data have been permanently deleted from our systems.
                                 <br><br> To try Harness again in the future, you can create a new account on our <a href="https://app.harness.io">website</a>
+                                  <br> <br>
+
+                                                                Account Name: ${(accountName)} <br>
+                                                                Account Id: ${(accountId)} <br>
+                                                                Account Type: ${(accountType)}<br>
+                                                                Account Creation Date: ${(accountCreationDate)} <br>
                               </p>
                             </div>
                         </td>
