@@ -893,9 +893,13 @@ public class HelmDeployState extends State {
         DelegateTask.builder()
             .accountId(app.getAccountId())
             .description("Helm Command Execution")
-            .setupAbstraction(Cd1SetupFields.APP_ID_FIELD, app.getUuid())
             .waitId(activityId)
             .tags(tags)
+            .setupAbstraction(Cd1SetupFields.APP_ID_FIELD, app.getUuid())
+            .setupAbstraction(Cd1SetupFields.ENV_ID_FIELD, env.getUuid())
+            .setupAbstraction(Cd1SetupFields.INFRASTRUCTURE_MAPPING_ID_FIELD, containerInfraMapping.getUuid())
+            .setupAbstraction(Cd1SetupFields.SERVICE_TEMPLATE_ID_FIELD,
+                serviceTemplateHelper.fetchServiceTemplateId(containerInfraMapping))
             .data(TaskData.builder()
                       .async(true)
                       .taskType(HELM_COMMAND_TASK.name())
@@ -903,8 +907,6 @@ public class HelmDeployState extends State {
                       .timeout(getSafeTimeoutInMillis(getTimeoutMillis()))
                       .expressionFunctorToken(expressionFunctorToken)
                       .build())
-            .setupAbstraction(Cd1SetupFields.ENV_ID_FIELD, env.getUuid())
-            .setupAbstraction(Cd1SetupFields.INFRASTRUCTURE_MAPPING_ID_FIELD, containerInfraMapping.getUuid())
             .selectionLogsTrackingEnabled(isSelectionLogsTrackingForTasksEnabled())
             .build();
 
