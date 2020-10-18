@@ -12,8 +12,8 @@ import com.google.inject.Singleton;
 import com.google.inject.TypeLiteral;
 
 import io.harness.callback.DelegateCallbackToken;
-import io.harness.entityreferenceclient.EntityReferenceClientModule;
-import io.harness.entityreferenceclient.NGManagerClientConfig;
+import io.harness.entitysetupusageclient.EntitySetupUsageClientModule;
+import io.harness.entitysetupusageclient.NGManagerClientConfig;
 import io.harness.factory.ClosingFactory;
 import io.harness.govern.ProviderModule;
 import io.harness.govern.ServersModule;
@@ -69,7 +69,7 @@ public class ConnectorTestRule implements InjectorRuleMixin, MethodRule, MongoRu
     modules.add(new ConnectorPersistenceTestModule());
     modules.add(new ConnectorModule());
     modules.add(KryoModule.getInstance());
-    modules.add(new EntityReferenceClientModule(
+    modules.add(new EntitySetupUsageClientModule(
         NGManagerClientConfig.builder().baseUrl("http://localhost:7457/").build(), "test_secret", "ng-manager"));
     modules.add(new ProviderModule() {
       @Provides

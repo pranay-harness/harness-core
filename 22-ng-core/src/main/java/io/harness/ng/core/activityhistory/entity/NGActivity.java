@@ -1,6 +1,9 @@
 package io.harness.ng.core.activityhistory.entity;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import io.harness.ModuleType;
+import io.harness.common.EntityReference;
+import io.harness.ng.core.EntityDetail;
 import io.harness.ng.core.NGAccountAccess;
 import io.harness.persistence.PersistentEntity;
 import lombok.Data;
@@ -22,10 +25,7 @@ import javax.validation.constraints.NotNull;
 public abstract class NGActivity implements PersistentEntity, NGAccountAccess {
   @Id @org.mongodb.morphia.annotations.Id String id;
   @NotBlank String accountIdentifier;
-  String referredEntityOrgIdentifier;
-  String referredEntityProjectIdentifier;
-  @NotBlank String referredEntityIdentifier;
-  @NotNull String referredEntityScope;
+  @NotNull EntityDetail referredEntity;
   String referredEntityFQN;
   @NotNull String referredEntityType;
   @NotNull String type;

@@ -24,11 +24,11 @@ import io.harness.connector.validator.ConnectionValidator;
 import io.harness.delegate.beans.connector.ConnectorCategory;
 import io.harness.delegate.beans.connector.ConnectorType;
 import io.harness.delegate.beans.connector.ConnectorValidationResult;
-import io.harness.entityreferenceclient.remote.EntityReferenceClient;
+import io.harness.entitysetupusageclient.remote.EntitySetupUsageClient;
 import io.harness.exception.DuplicateFieldException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.UnexpectedException;
-import io.harness.ng.core.entityReference.EntityReferenceHelper;
+import io.harness.entitysetupusageclient.EntitySetupUsageHelper;
 import io.harness.utils.FullyQualifiedIdentifierHelper;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -51,8 +51,8 @@ public class DefaultConnectorServiceImpl implements ConnectorService {
   private final ConnectorRepository connectorRepository;
   private final ConnectorFilterHelper connectorFilterHelper;
   private Map<String, ConnectionValidator> connectionValidatorMap;
-  EntityReferenceClient entityReferenceClient;
-  EntityReferenceHelper entityReferenceHelper;
+  EntitySetupUsageClient entitySetupUsageClient;
+  EntitySetupUsageHelper entitySetupUsageHelper;
 
   @Override
   public Optional<ConnectorResponseDTO> get(
@@ -148,7 +148,7 @@ public class DefaultConnectorServiceImpl implements ConnectorService {
   private void checkThatTheConnectorIsNotUsedByOthers(Connector connector) {
     boolean isEntityReferenced = false;
     try {
-      isEntityReferenced = execute(entityReferenceClient.isEntityReferenced(connector.getAccountIdentifier(),
+      isEntityReferenced = execute(entitySetupUsageClient.isEntityReferenced(connector.getAccountIdentifier(),
           connector.getOrgIdentifier(), connector.getProjectIdentifier(), connector.getIdentifier()));
     } catch (Exception ex) {
       logger.info("Encountered exception while requesting the Entity Reference records of [{}], with exception",

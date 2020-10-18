@@ -1,10 +1,14 @@
 package io.harness.ng.core.activityhistory;
 
-import static io.harness.encryption.Scope.PROJECT;
+import static io.harness.EntityType.CONNECTORS;
+import static io.harness.EntityType.PIPELINES;
 
-import io.harness.EntityType;
+import io.harness.common.EntityReference;
+import io.harness.ng.core.EntityDetail;
 import io.harness.ng.core.activityhistory.dto.EntityUsageActivityDetailDTO;
 import io.harness.ng.core.activityhistory.dto.NGActivityDTO;
+import io.harness.utils.FullyQualifiedIdentifierHelper;
+import io.harness.utils.IdentifierRefHelper;
 import lombok.experimental.UtilityClass;
 import lombok.extern.slf4j.Slf4j;
 
@@ -13,23 +17,24 @@ import lombok.extern.slf4j.Slf4j;
 public class ActivityHistoryTestHelper {
   public NGActivityDTO createActivityHistoryDTO(
       String accountIdentfier, String orgIdentifier, String projectIdentifier, String identifier) {
+    String identifier1 = "identifier1";
+    String referredEntityFQN = FullyQualifiedIdentifierHelper.getFullyQualifiedIdentifier(
+        accountIdentfier, orgIdentifier, projectIdentifier, identifier);
+    EntityReference referredEntityRef =
+        IdentifierRefHelper.getIdentifierRef(identifier, accountIdentfier, orgIdentifier, projectIdentifier);
+    EntityReference referredByEntityRef =
+        IdentifierRefHelper.getIdentifierRef(identifier1, accountIdentfier, orgIdentifier, projectIdentifier);
+    EntityDetail referredEntity = EntityDetail.builder().entityRef(referredEntityRef).type(CONNECTORS).build();
+    EntityDetail referredByEntity = EntityDetail.builder().entityRef(referredByEntityRef).type(PIPELINES).build();
     return NGActivityDTO.builder()
         .description("description")
         .accountIdentifier(accountIdentfier)
-        .referredEntityOrgIdentifier(orgIdentifier)
-        .referredEntityProjectIdentifier(projectIdentifier)
-        .referredEntityIdentifier(identifier)
         .activityTime(System.currentTimeMillis())
-        .referredEntityScope(PROJECT)
         .activityStatus(NGActivityStatus.SUCCESS)
         .type(NGActivityType.ENTITY_USAGE)
         .accountIdentifier("accountIdentifier")
-        .referredEntityType(EntityType.CONNECTORS)
-        .detail(EntityUsageActivityDetailDTO.builder()
-                    .referredByEntityIdentifier("identifier")
-                    .referredByEntityType(EntityType.PIPELINES)
-                    .referredByEntityScope(PROJECT)
-                    .build())
+        .referredEntity(referredEntity)
+        .detail(EntityUsageActivityDetailDTO.builder().referredByEntity(referredByEntity).build())
         .build();
   }
 }

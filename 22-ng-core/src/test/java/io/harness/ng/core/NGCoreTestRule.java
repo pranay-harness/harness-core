@@ -20,6 +20,7 @@ import io.harness.testlib.module.TestMongoModule;
 import io.harness.threading.CurrentThreadExecutor;
 import io.harness.threading.ExecutorModule;
 import io.harness.time.TimeModule;
+import io.serializer.registrars.NGCommonsRegistrars;
 import org.junit.rules.MethodRule;
 import org.junit.runners.model.FrameworkMethod;
 import org.junit.runners.model.Statement;
@@ -41,13 +42,17 @@ public class NGCoreTestRule implements InjectorRuleMixin, MethodRule, MongoRuleM
       @Provides
       @Singleton
       Set<Class<? extends KryoRegistrar>> kryoRegistrars() {
-        return ImmutableSet.<Class<? extends KryoRegistrar>>builder().addAll(NGCoreRegistrars.kryoRegistrars).build();
+        return ImmutableSet.<Class<? extends KryoRegistrar>>builder()
+            .addAll(NGCommonsRegistrars.kryoRegistrars)
+            .addAll(NGCoreRegistrars.kryoRegistrars)
+            .build();
       }
 
       @Provides
       @Singleton
       Set<Class<? extends MorphiaRegistrar>> morphiaRegistrars() {
         return ImmutableSet.<Class<? extends MorphiaRegistrar>>builder()
+            .addAll(NGCommonsRegistrars.morphiaRegistrars)
             .addAll(NGCoreRegistrars.morphiaRegistrars)
             .build();
       }

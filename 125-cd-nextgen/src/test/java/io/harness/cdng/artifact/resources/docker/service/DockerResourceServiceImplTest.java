@@ -74,7 +74,7 @@ public class DockerResourceServiceImplTest extends CategoryTest {
   @Category(UnitTests.class)
   public void testGetBuildDetails() {
     IdentifierRef identifierRef = IdentifierRef.builder()
-                                      .accountId(ACCOUNT_ID)
+                                      .accountIdentifier(ACCOUNT_ID)
                                       .identifier("identifier")
                                       .projectIdentifier(PROJECT_IDENTIFIER)
                                       .orgIdentifier(ORG_IDENTIFIER)
@@ -111,7 +111,7 @@ public class DockerResourceServiceImplTest extends CategoryTest {
   @Category(UnitTests.class)
   public void testGetLabels() {
     IdentifierRef identifierRef = IdentifierRef.builder()
-                                      .accountId(ACCOUNT_ID)
+                                      .accountIdentifier(ACCOUNT_ID)
                                       .identifier("identifier")
                                       .projectIdentifier(PROJECT_IDENTIFIER)
                                       .orgIdentifier(ORG_IDENTIFIER)
@@ -149,7 +149,7 @@ public class DockerResourceServiceImplTest extends CategoryTest {
   @Category(UnitTests.class)
   public void testGetSuccessfulBuild() {
     IdentifierRef identifierRef = IdentifierRef.builder()
-                                      .accountId(ACCOUNT_ID)
+                                      .accountIdentifier(ACCOUNT_ID)
                                       .identifier("identifier")
                                       .projectIdentifier(PROJECT_IDENTIFIER)
                                       .orgIdentifier(ORG_IDENTIFIER)
@@ -191,7 +191,7 @@ public class DockerResourceServiceImplTest extends CategoryTest {
   @Category(UnitTests.class)
   public void testValidateArtifactServer() {
     IdentifierRef identifierRef = IdentifierRef.builder()
-                                      .accountId(ACCOUNT_ID)
+                                      .accountIdentifier(ACCOUNT_ID)
                                       .identifier("identifier")
                                       .projectIdentifier(PROJECT_IDENTIFIER)
                                       .orgIdentifier(ORG_IDENTIFIER)
@@ -231,7 +231,7 @@ public class DockerResourceServiceImplTest extends CategoryTest {
   @Category(UnitTests.class)
   public void testValidateArtifactSource() {
     IdentifierRef identifierRef = IdentifierRef.builder()
-                                      .accountId(ACCOUNT_ID)
+                                      .accountIdentifier(ACCOUNT_ID)
                                       .identifier("identifier")
                                       .projectIdentifier(PROJECT_IDENTIFIER)
                                       .orgIdentifier(ORG_IDENTIFIER)

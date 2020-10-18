@@ -13,8 +13,8 @@ import com.google.inject.Singleton;
 
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
-import io.harness.entityreferenceclient.EntityReferenceClientModule;
-import io.harness.entityreferenceclient.NGManagerClientConfig;
+import io.harness.entitysetupusageclient.EntitySetupUsageClientModule;
+import io.harness.entitysetupusageclient.NGManagerClientConfig;
 import io.harness.govern.ProviderModule;
 import io.harness.ng.core.api.NGSecretManagerService;
 import io.harness.ng.core.api.NGSecretService;
@@ -41,7 +41,7 @@ import java.util.Set;
 public class SecretManagementModuleTest extends CategoryTest {
   private SecretManagementModule secretManagementModule;
   private SecretManagementClientModule secretManagementClientModule;
-  private EntityReferenceClientModule entityReferenceClientModule;
+  private EntitySetupUsageClientModule entityReferenceClientModule;
   @Mock private SecretRepository secretRepository;
 
   @Before
@@ -60,7 +60,7 @@ public class SecretManagementModuleTest extends CategoryTest {
     String serviceSecret = "test_secret";
     secretManagementModule = new SecretManagementModule();
     secretManagementClientModule = new SecretManagementClientModule(secretManagerClientConfig, serviceSecret);
-    entityReferenceClientModule = new EntityReferenceClientModule(ngManagerClientConfig, serviceSecret, "ng-manager");
+    entityReferenceClientModule = new EntitySetupUsageClientModule(ngManagerClientConfig, serviceSecret, "ng-manager");
 
     List<Module> modules = new ArrayList<>();
     modules.add(new ProviderModule() {

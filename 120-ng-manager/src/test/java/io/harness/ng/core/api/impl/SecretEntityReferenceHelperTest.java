@@ -3,6 +3,7 @@ package io.harness.ng.core.api.impl;
 import static io.harness.EntityType.CONNECTORS;
 import static io.harness.EntityType.SECRETS;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -10,9 +11,9 @@ import static org.mockito.Mockito.when;
 
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
-import io.harness.entityreferenceclient.remote.EntityReferenceClient;
-import io.harness.ng.core.entityReference.EntityReferenceHelper;
-import io.harness.ng.core.entityreference.dto.EntityReferenceDTO;
+import io.harness.entitysetupusageclient.EntitySetupUsageHelper;
+import io.harness.entitysetupusageclient.remote.EntitySetupUsageClient;
+import io.harness.ng.core.entitysetupusage.dto.EntitySetupUsageDTO;
 import io.harness.rule.Owner;
 import io.harness.rule.OwnerRule;
 import io.harness.secretmanagerclient.dto.EncryptedDataDTO;
@@ -22,7 +23,6 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
-import org.mockito.Matchers;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
@@ -30,8 +30,8 @@ import java.util.List;
 
 public class SecretEntityReferenceHelperTest extends CategoryTest {
   @InjectMocks SecretEntityReferenceHelper secretEntityReferenceHelper;
-  @Mock EntityReferenceClient entityReferenceClient;
-  @Mock EntityReferenceHelper entityReferenceHelper;
+  @Mock EntitySetupUsageClient entityReferenceClient;
+  @Mock EntitySetupUsageHelper entityReferenceHelper;
 
   @Before
   public void setup() {
@@ -58,21 +58,19 @@ public class SecretEntityReferenceHelperTest extends CategoryTest {
                                             .secretManager(secretManager)
                                             .secretManagerName(secretManagerName)
                                             .build();
-    when(entityReferenceHelper.createEntityReference(
-             anyString(), anyString(), Matchers.any(), anyString(), anyString(), anyString(), Matchers.any()))
-        .thenCallRealMethod();
+    when(entityReferenceHelper.createEntityReference(anyString(), any(), any())).thenCallRealMethod();
     secretEntityReferenceHelper.createEntityReferenceForSecret(encryptedDataDTO);
-    ArgumentCaptor<EntityReferenceDTO> argumentCaptor = ArgumentCaptor.forClass(EntityReferenceDTO.class);
+    ArgumentCaptor<EntitySetupUsageDTO> argumentCaptor = ArgumentCaptor.forClass(EntitySetupUsageDTO.class);
     verify(entityReferenceClient, times(1)).save(argumentCaptor.capture());
-    EntityReferenceDTO entityReferenceDTO = argumentCaptor.getValue();
-    assertThat(entityReferenceDTO.getReferredEntityName()).isEqualTo(secretManagerName);
-    assertThat(entityReferenceDTO.getReferredEntityType()).isEqualTo(CONNECTORS);
-    assertThat(entityReferenceDTO.getReferredEntityFQN())
+    EntitySetupUsageDTO entityReferenceDTO = argumentCaptor.getValue();
+    assertThat(entityReferenceDTO.getReferredEntity().getName()).isEqualTo(secretManagerName);
+    assertThat(entityReferenceDTO.getReferredEntity().getType()).isEqualTo(CONNECTORS);
+    assertThat(entityReferenceDTO.getReferredEntity().getEntityRef().getFullyQualifiedName())
         .isEqualTo(FullyQualifiedIdentifierHelper.getFullyQualifiedIdentifier(account, org, project, secretManager));
     assertThat(entityReferenceDTO.getAccountIdentifier()).isEqualTo(account);
-    assertThat(entityReferenceDTO.getReferredByEntityName()).isEqualTo(secretName);
-    assertThat(entityReferenceDTO.getReferredByEntityType()).isEqualTo(SECRETS);
-    assertThat(entityReferenceDTO.getReferredByEntityFQN())
+    assertThat(entityReferenceDTO.getReferredByEntity().getName()).isEqualTo(secretName);
+    assertThat(entityReferenceDTO.getReferredByEntity().getType()).isEqualTo(SECRETS);
+    assertThat(entityReferenceDTO.getReferredByEntity().getEntityRef().getFullyQualifiedName())
         .isEqualTo(FullyQualifiedIdentifierHelper.getFullyQualifiedIdentifier(account, org, project, identifier));
   }
 
@@ -97,12 +95,16 @@ public class SecretEntityReferenceHelperTest extends CategoryTest {
                                             .secretManagerName(secretManagerName)
                                             .build();
     ArgumentCaptor<String> argumentCaptor = ArgumentCaptor.forClass(String.class);
+    ArgumentCaptor<Boolean> booleanArgumentCaptor = ArgumentCaptor.forClass(Boolean.class);
     secretEntityReferenceHelper.deleteSecretEntityReferenceWhenSecretGetsDeleted(encryptedDataDTO);
-    verify(entityReferenceClient, times(1)).delete(argumentCaptor.capture(), argumentCaptor.capture());
+    verify(entityReferenceClient, times(1))
+        .delete(argumentCaptor.capture(), argumentCaptor.capture(), argumentCaptor.capture(), argumentCaptor.capture(),
+            booleanArgumentCaptor.capture());
     List<String> stringArguments = argumentCaptor.getAllValues();
-    assertThat(stringArguments.get(0))
-        .isEqualTo(FullyQualifiedIdentifierHelper.getFullyQualifiedIdentifier(account, org, project, secretManager));
-    assertThat(stringArguments.get(1))
-        .isEqualTo(FullyQualifiedIdentifierHelper.getFullyQualifiedIdentifier(account, org, project, identifier));
+    assertThat(stringArguments.get(0)).isEqualTo(account);
+    assertThat(stringArguments.get(1)).isEqualTo(org);
+    assertThat(stringArguments.get(2)).isEqualTo(project);
+    assertThat(stringArguments.get(3)).isEqualTo(identifier);
+    assertThat(booleanArgumentCaptor.getAllValues().get(0)).isEqualTo(false);
   }
 }

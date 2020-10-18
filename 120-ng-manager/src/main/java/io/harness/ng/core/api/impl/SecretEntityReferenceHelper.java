@@ -7,11 +7,14 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import io.harness.EntityType;
-import io.harness.entityreferenceclient.remote.EntityReferenceClient;
-import io.harness.ng.core.entityReference.EntityReferenceHelper;
-import io.harness.ng.core.entityreference.dto.EntityReferenceDTO;
+import io.harness.common.EntityReference;
+import io.harness.entitysetupusageclient.EntitySetupUsageHelper;
+import io.harness.entitysetupusageclient.remote.EntitySetupUsageClient;
+import io.harness.ng.core.EntityDetail;
+import io.harness.ng.core.entitysetupusage.dto.EntitySetupUsageDTO;
 import io.harness.secretmanagerclient.dto.EncryptedDataDTO;
 import io.harness.utils.FullyQualifiedIdentifierHelper;
+import io.harness.utils.IdentifierRefHelper;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -20,19 +23,36 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @Singleton
 public class SecretEntityReferenceHelper {
-  EntityReferenceHelper entityReferenceHelper;
-  EntityReferenceClient entityReferenceClient;
+  EntitySetupUsageHelper entityReferenceHelper;
+  EntitySetupUsageClient entitySetupUsageClient;
 
   public void createEntityReferenceForSecret(EncryptedDataDTO encryptedDataDTO) {
     String secretMangerFQN = FullyQualifiedIdentifierHelper.getFullyQualifiedIdentifier(encryptedDataDTO.getAccount(),
         encryptedDataDTO.getOrg(), encryptedDataDTO.getProject(), encryptedDataDTO.getSecretManager());
     String secretFQN = FullyQualifiedIdentifierHelper.getFullyQualifiedIdentifier(encryptedDataDTO.getAccount(),
         encryptedDataDTO.getOrg(), encryptedDataDTO.getProject(), encryptedDataDTO.getIdentifier());
-    EntityReferenceDTO entityReferenceDTO = entityReferenceHelper.createEntityReference(encryptedDataDTO.getAccount(),
-        encryptedDataDTO.getSecretManagerName(), EntityType.CONNECTORS, secretMangerFQN, secretFQN,
-        encryptedDataDTO.getName(), EntityType.SECRETS);
+    EntityReference secretReference =
+        IdentifierRefHelper.getIdentifierRefFromEntityIdentifiers(encryptedDataDTO.getIdentifier(),
+            encryptedDataDTO.getAccount(), encryptedDataDTO.getOrg(), encryptedDataDTO.getProject());
+
+    EntityReference secretManagerReference =
+        IdentifierRefHelper.getIdentifierRefFromEntityIdentifiers(encryptedDataDTO.getSecretManager(),
+            encryptedDataDTO.getAccount(), encryptedDataDTO.getOrg(), encryptedDataDTO.getProject());
+
+    EntityDetail secretDetails = EntityDetail.builder()
+                                     .entityRef(secretReference)
+                                     .type(EntityType.SECRETS)
+                                     .name(encryptedDataDTO.getName())
+                                     .build();
+    EntityDetail secretManagerDetails = EntityDetail.builder()
+                                            .entityRef(secretManagerReference)
+                                            .type(EntityType.CONNECTORS)
+                                            .name(encryptedDataDTO.getSecretManagerName())
+                                            .build();
+    EntitySetupUsageDTO entityReferenceDTO =
+        entityReferenceHelper.createEntityReference(encryptedDataDTO.getAccount(), secretManagerDetails, secretDetails);
     try {
-      execute(entityReferenceClient.save(entityReferenceDTO));
+      execute(entitySetupUsageClient.save(entityReferenceDTO));
     } catch (Exception ex) {
       logger.info(ENTITY_REFERENCE_LOG_PREFIX
               + "The entity reference was not created when the secret [{}] was created from the secret manager [{}]",
@@ -47,7 +67,8 @@ public class SecretEntityReferenceHelper {
         encryptedDataDTO.getOrg(), encryptedDataDTO.getProject(), encryptedDataDTO.getIdentifier());
     boolean entityReferenceDeleted = false;
     try {
-      entityReferenceDeleted = execute(entityReferenceClient.delete(secretMangerFQN, secretFQN));
+      entityReferenceDeleted = execute(entitySetupUsageClient.delete(encryptedDataDTO.getAccount(),
+          encryptedDataDTO.getOrg(), encryptedDataDTO.getProject(), encryptedDataDTO.getIdentifier(), false));
     } catch (Exception ex) {
       logger.info(ENTITY_REFERENCE_LOG_PREFIX
               + "The entity reference was not deleted when the secret [{}] was deleted from the secret manager [{}] with the exception [{}]",

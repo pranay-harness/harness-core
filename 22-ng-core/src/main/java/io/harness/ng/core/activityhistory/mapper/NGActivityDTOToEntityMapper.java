@@ -3,13 +3,13 @@ package io.harness.ng.core.activityhistory.mapper;
 import com.google.inject.Singleton;
 
 import io.harness.exception.UnknownEnumTypeException;
+import io.harness.ng.core.EntityDetail;
 import io.harness.ng.core.activityhistory.dto.EntityUsageActivityDetailDTO;
 import io.harness.ng.core.activityhistory.dto.NGActivityDTO;
 import io.harness.ng.core.activityhistory.entity.ConnectivityCheckDetail;
 import io.harness.ng.core.activityhistory.entity.EntityUsageActivityDetail;
 import io.harness.ng.core.activityhistory.entity.NGActivity;
 import io.harness.ng.core.activityhistory.entity.NGActivity.NGActivityBuilder;
-import io.harness.utils.FullyQualifiedIdentifierHelper;
 
 @Singleton
 public class NGActivityDTOToEntityMapper {
@@ -35,34 +35,25 @@ public class NGActivityDTOToEntityMapper {
   }
 
   private void populateCommonActivityProperties(NGActivityBuilder activityBuilder, NGActivityDTO activityDTO) {
+    EntityDetail referredEntity = activityDTO.getReferredEntity();
     activityBuilder.accountIdentifier(activityDTO.getAccountIdentifier())
-        .referredEntityOrgIdentifier(activityDTO.getReferredEntityOrgIdentifier())
-        .referredEntityProjectIdentifier(activityDTO.getReferredEntityProjectIdentifier())
-        .referredEntityIdentifier(activityDTO.getReferredEntityIdentifier())
+        .referredEntityFQN(referredEntity.getEntityRef().getFullyQualifiedName())
         .activityStatus(String.valueOf(activityDTO.getActivityStatus()))
         .activityTime(activityDTO.getActivityTime())
         .description(activityDTO.getDescription())
         .errorMessage(activityDTO.getErrorMessage())
-        .referredEntityFQN(FullyQualifiedIdentifierHelper.getFullyQualifiedIdentifier(
-            activityDTO.getAccountIdentifier(), activityDTO.getReferredEntityOrgIdentifier(),
-            activityDTO.getReferredEntityProjectIdentifier(), activityDTO.getReferredEntityIdentifier()))
-        .referredEntityType(String.valueOf(activityDTO.getReferredEntityType()))
-        .type(String.valueOf(activityDTO.getType()))
-        .referredEntityScope(String.valueOf(activityDTO.getReferredEntityScope()));
+        .referredEntityType(String.valueOf(activityDTO.getReferredEntity().getType()))
+        .referredEntity(referredEntity)
+        .type(String.valueOf(activityDTO.getType()));
   }
 
   private NGActivity getActivityForEntityUsage(NGActivityDTO activityDTO) {
     EntityUsageActivityDetailDTO entityUsageDTO = (EntityUsageActivityDetailDTO) activityDTO.getDetail();
-    NGActivityBuilder builder =
-        EntityUsageActivityDetail.builder()
-            .referredByEntityOrgIdentifier(entityUsageDTO.getReferredByEntityOrgIdentifier())
-            .referredByEntityProjectIdentifier(entityUsageDTO.getReferredByEntityProjectIdentifier())
-            .referredByEntityIdentifier(entityUsageDTO.getReferredByEntityIdentifier())
-            .referredByEntityScope(String.valueOf(entityUsageDTO.getReferredByEntityScope()))
-            .referredByEntityFQN(FullyQualifiedIdentifierHelper.getFullyQualifiedIdentifier(
-                activityDTO.getAccountIdentifier(), entityUsageDTO.getReferredByEntityOrgIdentifier(),
-                entityUsageDTO.getReferredByEntityProjectIdentifier(), entityUsageDTO.getReferredByEntityIdentifier()))
-            .referredByEntityType(String.valueOf(entityUsageDTO.getReferredByEntityType()));
+    EntityDetail referredByEntity = entityUsageDTO.getReferredByEntity();
+    NGActivityBuilder builder = EntityUsageActivityDetail.builder()
+                                    .referredByEntityFQN(referredByEntity.getEntityRef().getFullyQualifiedName())
+                                    .referredByEntityType(String.valueOf(referredByEntity.getType()))
+                                    .referredByEntity(referredByEntity);
     populateCommonActivityProperties(builder, activityDTO);
     return builder.build();
   }

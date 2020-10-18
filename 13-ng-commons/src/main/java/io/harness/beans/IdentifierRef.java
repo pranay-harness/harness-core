@@ -1,15 +1,25 @@
 package io.harness.beans;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import io.harness.common.EntityReference;
 import io.harness.encryption.Scope;
+import io.harness.utils.FullyQualifiedIdentifierHelper;
 import lombok.Builder;
-import lombok.Value;
+import lombok.Data;
 
-@Value
+@Data
 @Builder
-public class IdentifierRef {
+public class IdentifierRef implements EntityReference {
   Scope scope;
   String identifier;
-  String accountId;
+  String accountIdentifier;
   String orgIdentifier;
   String projectIdentifier;
+
+  @Override
+  @JsonIgnore
+  public String getFullyQualifiedName() {
+    return FullyQualifiedIdentifierHelper.getFullyQualifiedIdentifier(
+        accountIdentifier, orgIdentifier, projectIdentifier, identifier);
+  }
 }

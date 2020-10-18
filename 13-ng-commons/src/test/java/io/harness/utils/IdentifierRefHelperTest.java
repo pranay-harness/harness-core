@@ -27,7 +27,7 @@ public class IdentifierRefHelperTest extends CategoryTest {
 
     IdentifierRef expected = IdentifierRef.builder()
                                  .scope(Scope.PROJECT)
-                                 .accountId(accountIdentifier)
+                                 .accountIdentifier(accountIdentifier)
                                  .orgIdentifier(orgIdentifier)
                                  .projectIdentifier(projectIdentifier)
                                  .identifier(identifier)
@@ -49,7 +49,7 @@ public class IdentifierRefHelperTest extends CategoryTest {
 
     IdentifierRef expected = IdentifierRef.builder()
                                  .scope(Scope.ORG)
-                                 .accountId(accountIdentifier)
+                                 .accountIdentifier(accountIdentifier)
                                  .orgIdentifier(orgIdentifier)
                                  .identifier(identifier)
                                  .build();
@@ -70,7 +70,7 @@ public class IdentifierRefHelperTest extends CategoryTest {
 
     IdentifierRef expected = IdentifierRef.builder()
                                  .scope(Scope.ACCOUNT)
-                                 .accountId(accountIdentifier)
+                                 .accountIdentifier(accountIdentifier)
                                  .orgIdentifier(orgIdentifier)
                                  .projectIdentifier(projectIdentifier)
                                  .identifier(identifier)
@@ -103,7 +103,7 @@ public class IdentifierRefHelperTest extends CategoryTest {
     String identifier = "identifier";
     IdentifierRef identifierRef = IdentifierRef.builder()
                                       .scope(Scope.PROJECT)
-                                      .accountId(accountIdentifier)
+                                      .accountIdentifier(accountIdentifier)
                                       .orgIdentifier(orgIdentifier)
                                       .projectIdentifier(projectIdentifier)
                                       .identifier(identifier)
@@ -122,7 +122,7 @@ public class IdentifierRefHelperTest extends CategoryTest {
     String identifier = "identifier";
     IdentifierRef identifierRef = IdentifierRef.builder()
                                       .scope(Scope.PROJECT)
-                                      .accountId(accountIdentifier)
+                                      .accountIdentifier(accountIdentifier)
                                       .orgIdentifier(orgIdentifier)
                                       .identifier(identifier)
                                       .build();
@@ -137,8 +137,11 @@ public class IdentifierRefHelperTest extends CategoryTest {
   public void testGetFullyQualifiedIdentifierRefStringAccountLevel() {
     String accountIdentifier = "accountIdentifier";
     String identifier = "identifier";
-    IdentifierRef identifierRef =
-        IdentifierRef.builder().scope(Scope.PROJECT).accountId(accountIdentifier).identifier(identifier).build();
+    IdentifierRef identifierRef = IdentifierRef.builder()
+                                      .scope(Scope.PROJECT)
+                                      .accountIdentifier(accountIdentifier)
+                                      .identifier(identifier)
+                                      .build();
 
     String fullyQualifiedIdentifier = IdentifierRefHelper.getFullyQualifiedIdentifierRefString(identifierRef);
     assertThat(fullyQualifiedIdentifier).isEqualTo("accountIdentifier/identifier");
