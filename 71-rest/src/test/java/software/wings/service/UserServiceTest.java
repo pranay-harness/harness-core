@@ -99,6 +99,7 @@ import io.harness.exception.WingsException;
 import io.harness.limits.LimitCheckerFactory;
 import io.harness.persistence.PersistentEntity;
 import io.harness.rule.Owner;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.mail.EmailException;
@@ -188,6 +189,7 @@ import javax.cache.Cache;
 /**
  * Created by anubhaw on 3/9/16.
  */
+@Slf4j
 public class UserServiceTest extends WingsBaseTest {
   private final User.Builder userBuilder = anUser().appId(APP_ID).email(USER_EMAIL).name(USER_NAME).password(PASSWORD);
 
@@ -335,7 +337,7 @@ public class UserServiceTest extends WingsBaseTest {
       userService.completeMarketPlaceSignup(savedUser, testInvite, MarketPlaceType.AWS);
       fail("");
     } catch (Exception e) {
-      log().info("Expected error " + e.getMessage());
+      logger.info("Expected error " + e.getMessage());
       assertThat(e).isInstanceOf(UnauthorizedException.class);
     }
 
@@ -345,7 +347,7 @@ public class UserServiceTest extends WingsBaseTest {
       userService.completeMarketPlaceSignup(savedUser, testInvite, MarketPlaceType.AWS);
       fail("");
     } catch (WingsException e) {
-      log().info("Expected error " + e.getCode());
+      logger.info("Expected error " + e.getCode());
       assertThat(e).isInstanceOf(UserRegistrationException.class);
     }
 
@@ -354,7 +356,7 @@ public class UserServiceTest extends WingsBaseTest {
       userService.completeMarketPlaceSignup(savedUser, testInvite, MarketPlaceType.AWS);
       fail("");
     } catch (WingsException e) {
-      log().info("Expected error " + e.getCode());
+      logger.info("Expected error " + e.getCode());
       assertThat(e).isInstanceOf(GeneralException.class);
     }
 
@@ -364,7 +366,7 @@ public class UserServiceTest extends WingsBaseTest {
       userService.completeMarketPlaceSignup(savedUser, testInvite, MarketPlaceType.AWS);
       fail("");
     } catch (WingsException e) {
-      log().info("Expected error " + e.getCode());
+      logger.info("Expected error " + e.getCode());
       assertThat(e.getCode()).isEqualTo(INVALID_CREDENTIAL);
     }
 

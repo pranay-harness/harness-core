@@ -22,6 +22,7 @@ import io.harness.category.element.UnitTests;
 import io.harness.rest.RestResponse;
 import io.harness.rule.Owner;
 import io.harness.serializer.JsonUtils;
+import lombok.extern.slf4j.Slf4j;
 import org.junit.ClassRule;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -45,6 +46,7 @@ import javax.ws.rs.core.MediaType;
 /**
  * @author vardanb
  */
+@Slf4j
 public class GitSyncResourceTest extends WingsBaseTest {
   private static final GitSyncService GIT_SYNC_SERVICE = mock(GitSyncService.class);
   private static final GitSyncErrorService GIT_SYNC_ERROR_SERVICE = mock(GitSyncErrorService.class);
@@ -85,7 +87,7 @@ public class GitSyncResourceTest extends WingsBaseTest {
             .request()
             .get(new GenericType<RestResponse<PageResponse<GitSyncError>>>() {});
 
-    log().info(JsonUtils.asJson(restResponse));
+    logger.info(JsonUtils.asJson(restResponse));
     verify(GIT_SYNC_ERROR_SERVICE).fetchErrors(pageRequestArgumentCaptor.capture());
     assertThat(pageRequestArgumentCaptor.getValue()).isNotNull();
     assertThat(restResponse).isNotNull().hasFieldOrPropertyWithValue("resource", pageResponse);

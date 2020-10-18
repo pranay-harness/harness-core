@@ -120,6 +120,7 @@ import io.harness.limits.LimitCheckerFactory;
 import io.harness.persistence.HQuery;
 import io.harness.rule.Owner;
 import io.harness.stream.BoundedInputStream;
+import lombok.extern.slf4j.Slf4j;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Rule;
@@ -231,6 +232,7 @@ import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import javax.validation.ConstraintViolationException;
 
+@Slf4j
 public class ServiceResourceServiceTest extends WingsBaseTest {
   private static final Command.Builder commandBuilder = aCommand().withName("START").addCommandUnits(
       anExecCommandUnit().withCommandPath("/home/xxx/tomcat").withCommandString("bin/startup.sh").build());
@@ -2055,7 +2057,7 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
       srs.updateLambdaSpecification(lambdaSpecification);
       fail("Should have thrown a wingsException");
     } catch (WingsException e) {
-      log().info("Expected exception");
+      logger.info("Expected exception");
     }
 
     FunctionSpecification functionSpecification2 = FunctionSpecification.builder()

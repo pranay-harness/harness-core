@@ -22,6 +22,7 @@ import io.harness.exception.UnauthorizedException;
 import io.harness.rule.Owner;
 import lombok.AccessLevel;
 import lombok.experimental.FieldDefaults;
+import lombok.extern.slf4j.Slf4j;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -43,6 +44,7 @@ import java.util.Collections;
 import java.util.List;
 
 @FieldDefaults(level = AccessLevel.PRIVATE)
+@Slf4j
 public class ScimGroupServiceTest extends WingsBaseTest {
   private static final String USER_ID_1 = "id1";
   private static final String USER_ID_2 = "id2";
@@ -453,7 +455,7 @@ public class ScimGroupServiceTest extends WingsBaseTest {
       OktaReplaceOperation replaceOperation = new OktaReplaceOperation(MEMBERS, jsonNode);
       return new PatchRequest(Collections.singletonList(replaceOperation));
     } catch (IOException ioe) {
-      log().error("IO Exception while creating okta replace operation in SCIM", ioe);
+      logger.error("IO Exception while creating okta replace operation in SCIM", ioe);
     }
     return null;
   }

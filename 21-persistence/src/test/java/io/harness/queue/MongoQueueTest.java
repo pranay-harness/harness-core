@@ -23,6 +23,7 @@ import io.harness.persistence.HPersistence;
 import io.harness.queue.Queuable.QueuableKeys;
 import io.harness.queue.QueueConsumer.Filter;
 import io.harness.rule.Owner;
+import lombok.extern.slf4j.Slf4j;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -31,6 +32,7 @@ import java.net.UnknownHostException;
 import java.time.Duration;
 import java.util.Date;
 
+@Slf4j
 public class MongoQueueTest extends PersistenceTestBase {
   private final Duration DEFAULT_WAIT = ofSeconds(3);
   private final Duration DEFAULT_POLL = ofSeconds(1);
@@ -192,7 +194,7 @@ public class MongoQueueTest extends PersistenceTestBase {
     queue.updateHeartbeat(message);
 
     TestTopicQueuableObject actual = persistence.get(TestTopicQueuableObject.class, message.getId());
-    log().info("Actual Timestamp of message = {}", actual.getEarliestGet());
+    logger.info("Actual Timestamp of message = {}", actual.getEarliestGet());
 
     assertThat(actual.getEarliestGet()).isAfter(messageEarliestGet);
 
@@ -235,7 +237,7 @@ public class MongoQueueTest extends PersistenceTestBase {
 
     persistence.createQuery(TestTopicQueuableObject.class)
         .fetch()
-        .forEach(dbObject -> log().debug("TestQueueable = {}", dbObject));
+        .forEach(dbObject -> logger.debug("TestQueueable = {}", dbObject));
     queue.ack(result);
     assertThat(persistence.createQuery(TestTopicQueuableObject.class).count()).isEqualTo(1);
   }

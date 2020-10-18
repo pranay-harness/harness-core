@@ -604,12 +604,12 @@ public class WingsPersistenceTest extends WingsBaseTest {
     entityB.setFieldB("fieldB1");
     wingsPersistence.save(entityB);
 
-    log().debug("Done with TestEntityB save");
+    logger.debug("Done with TestEntityB save");
     TestEntity entity = new TestEntity();
     entity.setFieldA("fieldA1");
     entity.setTestEntityB(entityB);
     wingsPersistence.save(entity);
-    log().debug("Done with TestInternalEntity save");
+    logger.debug("Done with TestInternalEntity save");
     assertThat(entity)
         .isNotNull()
         .hasFieldOrPropertyWithValue("fieldA", "fieldA1")
@@ -620,7 +620,7 @@ public class WingsPersistenceTest extends WingsBaseTest {
         .isNotNull()
         .hasFieldOrPropertyWithValue("fieldA", "fieldA1")
         .hasFieldOrPropertyWithValue("testEntityB", entityB);
-    log().debug("Done with TestInternalEntity get");
+    logger.debug("Done with TestInternalEntity get");
   }
 
   /**

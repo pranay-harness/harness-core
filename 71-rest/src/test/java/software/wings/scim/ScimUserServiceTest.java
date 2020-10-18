@@ -17,6 +17,7 @@ import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
 import lombok.AccessLevel;
 import lombok.experimental.FieldDefaults;
+import lombok.extern.slf4j.Slf4j;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -39,6 +40,7 @@ import java.util.Collections;
 import javax.ws.rs.core.Response;
 
 @FieldDefaults(level = AccessLevel.PRIVATE)
+@Slf4j
 public class ScimUserServiceTest extends WingsBaseTest {
   private static final String USER_ID = generateUuid();
   private static final String MEMBERS = "members";
@@ -423,7 +425,7 @@ public class ScimUserServiceTest extends WingsBaseTest {
       OktaReplaceOperation replaceOperation = new OktaReplaceOperation(MEMBERS, jsonNode);
       return new PatchRequest(Collections.singletonList(replaceOperation));
     } catch (IOException ioe) {
-      log().error("IO Exception while creating okta replace operation in SCIM", ioe);
+      logger.error("IO Exception while creating okta replace operation in SCIM", ioe);
     }
     return null;
   }
@@ -439,7 +441,7 @@ public class ScimUserServiceTest extends WingsBaseTest {
       jsonNode = mapper.readTree(jsonObject.toString());
       scimUser.setName(jsonNode);
     } catch (IOException ioe) {
-      log().error("IO Exception while creating okta replace operation in SCIM", ioe);
+      logger.error("IO Exception while creating okta replace operation in SCIM", ioe);
     }
   }
 }

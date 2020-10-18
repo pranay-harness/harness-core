@@ -21,6 +21,7 @@ import io.harness.category.element.UnitTests;
 import io.harness.rest.RestResponse;
 import io.harness.rule.Owner;
 import io.harness.serializer.JsonUtils;
+import lombok.extern.slf4j.Slf4j;
 import org.junit.ClassRule;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -39,6 +40,7 @@ import javax.ws.rs.core.MediaType;
 /**
  * @author rktummala on 04/11/18
  */
+@Slf4j
 public class WhitelistResourceTest extends WingsBaseTest {
   private static final WhitelistService WHITELIST_SERVICE = mock(WhitelistService.class);
 
@@ -145,7 +147,7 @@ public class WhitelistResourceTest extends WingsBaseTest {
             .request()
             .get(new GenericType<RestResponse<PageResponse<Whitelist>>>() {});
 
-    log().info(JsonUtils.asJson(restResponse));
+    logger.info(JsonUtils.asJson(restResponse));
     verify(WHITELIST_SERVICE).list(anyString(), pageRequestArgumentCaptor.capture());
     assertThat(pageRequestArgumentCaptor.getValue()).isNotNull();
     assertThat(restResponse).isNotNull().hasFieldOrPropertyWithValue("resource", pageResponse);

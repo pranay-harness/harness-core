@@ -11,6 +11,7 @@ import io.harness.commandlibrary.server.beans.TagConfig;
 import io.harness.factory.ClosingFactoryModule;
 import io.harness.mongo.MongoConfig;
 import io.harness.testlib.module.TestMongoModule;
+import lombok.extern.slf4j.Slf4j;
 import software.wings.app.CommandLibrarySharedModule;
 import software.wings.rules.WingsRule;
 
@@ -18,6 +19,7 @@ import java.lang.annotation.Annotation;
 import java.util.ArrayList;
 import java.util.List;
 
+@Slf4j
 public class CommandLibraryServerTestRule extends WingsRule {
   @Override
   protected Configuration getConfiguration(List<Annotation> annotations, String dbName) {
@@ -59,7 +61,7 @@ public class CommandLibraryServerTestRule extends WingsRule {
 
   @Override
   protected void after(List<Annotation> annotations) {
-    log().info("Stopping servers...");
+    logger.info("Stopping servers...");
     closingFactory.stopServers();
   }
 }

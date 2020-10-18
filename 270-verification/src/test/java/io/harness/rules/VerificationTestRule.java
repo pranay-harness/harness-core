@@ -19,6 +19,7 @@ import io.harness.serializer.VerificationRegistrars;
 import io.harness.serializer.morphia.VerificationMorphiaRegistrar;
 import io.harness.testlib.RealMongo;
 import io.harness.testlib.module.TestMongoModule;
+import lombok.extern.slf4j.Slf4j;
 import software.wings.rules.SetupScheduler;
 import software.wings.rules.WingsRule;
 
@@ -27,6 +28,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 
+@Slf4j
 public class VerificationTestRule extends WingsRule {
   @Override
   protected Configuration getConfiguration(List<Annotation> annotations, String dbName) {
@@ -92,7 +94,7 @@ public class VerificationTestRule extends WingsRule {
 
   @Override
   protected void after(List<Annotation> annotations) {
-    log().info("Stopping servers...");
+    logger.info("Stopping servers...");
     closingFactory.stopServers();
   }
 

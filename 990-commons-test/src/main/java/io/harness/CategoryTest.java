@@ -14,8 +14,6 @@ import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.rules.TestName;
 import org.junit.rules.TestRule;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 @Slf4j
 public class CategoryTest {
@@ -42,14 +40,5 @@ public class CategoryTest {
       sb.append(" - ").append(repetition);
     }
     logger.info(sb.toString());
-  }
-
-  /**
-   * Log.
-   *
-   * @return the logger
-   */
-  protected Logger log() {
-    return LoggerFactory.getLogger(getClass());
   }
 }

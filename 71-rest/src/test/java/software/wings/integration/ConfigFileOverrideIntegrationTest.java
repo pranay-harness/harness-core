@@ -21,6 +21,7 @@ import io.harness.beans.PageRequest;
 import io.harness.category.element.DeprecatedIntegrationTests;
 import io.harness.rule.Owner;
 import io.harness.stream.BoundedInputStream;
+import lombok.extern.slf4j.Slf4j;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Rule;
@@ -80,6 +81,7 @@ import java.util.List;
  * |    |    |...Host9
  * |
  */
+@Slf4j
 public class ConfigFileOverrideIntegrationTest extends WingsBaseTest {
   /**
    * The Test folder.
@@ -220,7 +222,7 @@ public class ConfigFileOverrideIntegrationTest extends WingsBaseTest {
     FileInputStream fileInputStream = new FileInputStream(createRandomFile());
     configService.save(appConfigFile, new BoundedInputStream(fileInputStream));
     fileInputStream.close();
-    log().info("Attached config file [{}, {}] to entity uuid = {}", appConfigFile.getUuid(), appConfigFile.getName(),
+    logger.info("Attached config file [{}, {}] to entity uuid = {}", appConfigFile.getUuid(), appConfigFile.getName(),
         entityId);
   }
 

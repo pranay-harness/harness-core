@@ -17,7 +17,6 @@ import static software.wings.security.encryption.migration.EncryptedDataAwsToGcp
 
 import com.google.inject.Inject;
 
-import groovy.util.logging.Slf4j;
 import io.harness.beans.EncryptedData;
 import io.harness.category.element.UnitTests;
 import io.harness.data.structure.UUIDGenerator;
@@ -28,6 +27,7 @@ import io.harness.rule.Owner;
 import io.harness.security.encryption.EncryptionType;
 import lombok.AccessLevel;
 import lombok.experimental.FieldDefaults;
+import lombok.extern.slf4j.Slf4j;
 import org.junit.Before;
 import org.junit.FixMethodOrder;
 import org.junit.Test;
@@ -349,10 +349,11 @@ public class EncryptedDataAwsToGcpKmsMigrationHandlerTest extends WingsBaseTest 
       out.write(content);
       out.close();
     } catch (IOException e) {
-      log().warn("IOException occured while creating temp file");
+      logger.warn("IOException occured while creating temp file");
     }
     return file;
   }
+
   private void assertThatOldAndUpdatedRecordAreSame(
       EncryptedData oldEncryptedDataInDB, EncryptedData updatedEncryptedDataInDB) {
     assertThat(updatedEncryptedDataInDB).isNotNull();
