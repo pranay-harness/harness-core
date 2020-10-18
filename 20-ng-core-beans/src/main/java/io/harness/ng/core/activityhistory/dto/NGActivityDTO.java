@@ -2,9 +2,8 @@ package io.harness.ng.core.activityhistory.dto;
 
 import static io.harness.annotations.dev.HarnessTeam.DX;
 
-import io.harness.EntityType;
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.encryption.Scope;
+import io.harness.ng.core.EntityDetail;
 import io.harness.ng.core.activityhistory.NGActivityStatus;
 import io.harness.ng.core.activityhistory.NGActivityType;
 import io.swagger.annotations.ApiModel;
@@ -23,11 +22,7 @@ import javax.validation.constraints.NotNull;
 @ApiModel("Activity")
 public class NGActivityDTO {
   @NotBlank String accountIdentifier;
-  String referredEntityOrgIdentifier;
-  String referredEntityProjectIdentifier;
-  @NotBlank String referredEntityIdentifier;
-  @NotNull Scope referredEntityScope;
-  @NotNull EntityType referredEntityType;
+  EntityDetail referredEntity;
   @NotNull NGActivityType type;
   @NotNull NGActivityStatus activityStatus;
   ActivityDetail detail;

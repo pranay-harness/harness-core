@@ -26,7 +26,7 @@ import io.harness.connector.ConnectorModule;
 import io.harness.connector.services.ConnectorService;
 import io.harness.delegate.beans.DelegateAsyncTaskResponse;
 import io.harness.delegate.beans.DelegateSyncTaskResponse;
-import io.harness.entityreferenceclient.EntityReferenceClientModule;
+import io.harness.entitysetupusageclient.EntitySetupUsageClientModule;
 import io.harness.executionplan.ExecutionPlanModule;
 import io.harness.gitsync.GitSyncModule;
 import io.harness.gitsync.core.impl.GitSyncManagerInterfaceImpl;
@@ -162,7 +162,7 @@ public class NextGenModule extends AbstractModule {
         this.appConfig.getServiceHttpClientConfig(), this.appConfig.getNextGenConfig().getManagerServiceSecret()));
     install(new DelegateServiceDriverGrpcClientModule(this.appConfig.getNextGenConfig().getManagerServiceSecret(),
         this.appConfig.getGrpcClientConfig().getTarget(), this.appConfig.getGrpcClientConfig().getAuthority()));
-    install(new EntityReferenceClientModule(this.appConfig.getNgManagerClientConfig(),
+    install(new EntitySetupUsageClientModule(this.appConfig.getNgManagerClientConfig(),
         this.appConfig.getNextGenConfig().getNgManagerServiceSecret(), NextGenConfiguration.SERVICE_ID));
     install(new ProviderModule() {
       @Provides

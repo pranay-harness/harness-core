@@ -4,6 +4,7 @@ import io.harness.beans.IdentifierRef;
 import io.harness.beans.IdentifierRef.IdentifierRefBuilder;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.encryption.Scope;
+import io.harness.encryption.ScopeHelper;
 import io.harness.exception.InvalidRequestException;
 import lombok.experimental.UtilityClass;
 
@@ -15,7 +16,7 @@ public class IdentifierRefHelper {
       String scopedIdentifierConfig, String accountId, String orgIdentifier, String projectIdentifier) {
     Scope scope;
     String identifier;
-    IdentifierRefBuilder identifierRefBuilder = IdentifierRef.builder().accountId(accountId);
+    IdentifierRefBuilder identifierRefBuilder = IdentifierRef.builder().accountIdentifier(accountId);
 
     if (EmptyPredicate.isEmpty(scopedIdentifierConfig)) {
       throw new InvalidRequestException("scopedIdentifierConfig is null");
@@ -45,6 +46,17 @@ public class IdentifierRefHelper {
     }
   }
 
+  public IdentifierRef getIdentifierRefFromEntityIdentifiers(
+      String entityIdentifier, String accountId, String orgIdentifier, String projectIdentifier) {
+    return IdentifierRef.builder()
+        .accountIdentifier(accountId)
+        .orgIdentifier(orgIdentifier)
+        .projectIdentifier(projectIdentifier)
+        .identifier(entityIdentifier)
+        .scope(ScopeHelper.getScope(accountId, orgIdentifier, projectIdentifier))
+        .build();
+  }
+
   public Scope getScope(String identifierScopeString) {
     if (EmptyPredicate.isEmpty(identifierScopeString)) {
       return null;
@@ -57,7 +69,7 @@ public class IdentifierRefHelper {
       return null;
     }
 
-    return FullyQualifiedIdentifierHelper.getFullyQualifiedIdentifier(identifierRef.getAccountId(),
+    return FullyQualifiedIdentifierHelper.getFullyQualifiedIdentifier(identifierRef.getAccountIdentifier(),
         identifierRef.getOrgIdentifier(), identifierRef.getProjectIdentifier(), identifierRef.getIdentifier());
   }
 }

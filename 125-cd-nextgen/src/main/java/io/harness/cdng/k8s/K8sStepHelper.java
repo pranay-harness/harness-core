@@ -71,7 +71,7 @@ public class K8sStepHelper {
     NGAccess ngAccess = AmbianceHelper.getNgAccess(ambiance);
     IdentifierRef identifierRef = IdentifierRefHelper.getIdentifierRef(
         connectorId, ngAccess.getAccountIdentifier(), ngAccess.getOrgIdentifier(), ngAccess.getProjectIdentifier());
-    Optional<ConnectorResponseDTO> connectorDTO = connectorService.get(identifierRef.getAccountId(),
+    Optional<ConnectorResponseDTO> connectorDTO = connectorService.get(identifierRef.getAccountIdentifier(),
         identifierRef.getOrgIdentifier(), identifierRef.getProjectIdentifier(), identifierRef.getIdentifier());
     if (!connectorDTO.isPresent()) {
       throw new InvalidRequestException(

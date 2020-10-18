@@ -63,7 +63,8 @@ public class DockerResourceServiceImpl implements DockerResourceService {
   public DockerResponseDTO getBuildDetails(
       IdentifierRef dockerConnectorRef, String imagePath, String orgIdentifier, String projectIdentifier) {
     DockerConnectorDTO connector = getConnector(dockerConnectorRef);
-    BaseNGAccess baseNGAccess = getBaseNGAccess(dockerConnectorRef.getAccountId(), orgIdentifier, projectIdentifier);
+    BaseNGAccess baseNGAccess =
+        getBaseNGAccess(dockerConnectorRef.getAccountIdentifier(), orgIdentifier, projectIdentifier);
     List<EncryptedDataDetail> encryptionDetails = getEncryptionDetails(connector, baseNGAccess);
     DockerArtifactDelegateRequest dockerRequest = DockerArtifactDelegateRequest.builder()
                                                       .dockerConnectorDTO(connector)
@@ -80,7 +81,8 @@ public class DockerResourceServiceImpl implements DockerResourceService {
   public DockerResponseDTO getLabels(IdentifierRef dockerConnectorRef, String imagePath,
       DockerRequestDTO dockerRequestDTO, String orgIdentifier, String projectIdentifier) {
     DockerConnectorDTO connector = getConnector(dockerConnectorRef);
-    BaseNGAccess baseNGAccess = getBaseNGAccess(dockerConnectorRef.getAccountId(), orgIdentifier, projectIdentifier);
+    BaseNGAccess baseNGAccess =
+        getBaseNGAccess(dockerConnectorRef.getAccountIdentifier(), orgIdentifier, projectIdentifier);
     List<EncryptedDataDetail> encryptionDetails = getEncryptionDetails(connector, baseNGAccess);
     DockerArtifactDelegateRequest dockerRequest = DockerArtifactDelegateRequest.builder()
                                                       .dockerConnectorDTO(connector)
@@ -98,7 +100,8 @@ public class DockerResourceServiceImpl implements DockerResourceService {
   public DockerBuildDetailsDTO getSuccessfulBuild(IdentifierRef dockerConnectorRef, String imagePath,
       DockerRequestDTO dockerRequestDTO, String orgIdentifier, String projectIdentifier) {
     DockerConnectorDTO connector = getConnector(dockerConnectorRef);
-    BaseNGAccess baseNGAccess = getBaseNGAccess(dockerConnectorRef.getAccountId(), orgIdentifier, projectIdentifier);
+    BaseNGAccess baseNGAccess =
+        getBaseNGAccess(dockerConnectorRef.getAccountIdentifier(), orgIdentifier, projectIdentifier);
     List<EncryptedDataDetail> encryptionDetails = getEncryptionDetails(connector, baseNGAccess);
     DockerArtifactDelegateRequest dockerRequest = DockerArtifactDelegateRequest.builder()
                                                       .dockerConnectorDTO(connector)
@@ -122,7 +125,8 @@ public class DockerResourceServiceImpl implements DockerResourceService {
   public boolean validateArtifactServer(
       IdentifierRef dockerConnectorRef, String orgIdentifier, String projectIdentifier) {
     DockerConnectorDTO connector = getConnector(dockerConnectorRef);
-    BaseNGAccess baseNGAccess = getBaseNGAccess(dockerConnectorRef.getAccountId(), orgIdentifier, projectIdentifier);
+    BaseNGAccess baseNGAccess =
+        getBaseNGAccess(dockerConnectorRef.getAccountIdentifier(), orgIdentifier, projectIdentifier);
     List<EncryptedDataDetail> encryptionDetails = getEncryptionDetails(connector, baseNGAccess);
     DockerArtifactDelegateRequest dockerRequest = DockerArtifactDelegateRequest.builder()
                                                       .dockerConnectorDTO(connector)
@@ -139,7 +143,8 @@ public class DockerResourceServiceImpl implements DockerResourceService {
   public boolean validateArtifactSource(
       String imagePath, IdentifierRef dockerConnectorRef, String orgIdentifier, String projectIdentifier) {
     DockerConnectorDTO connector = getConnector(dockerConnectorRef);
-    BaseNGAccess baseNGAccess = getBaseNGAccess(dockerConnectorRef.getAccountId(), orgIdentifier, projectIdentifier);
+    BaseNGAccess baseNGAccess =
+        getBaseNGAccess(dockerConnectorRef.getAccountIdentifier(), orgIdentifier, projectIdentifier);
     List<EncryptedDataDetail> encryptionDetails = getEncryptionDetails(connector, baseNGAccess);
     DockerArtifactDelegateRequest dockerRequest = DockerArtifactDelegateRequest.builder()
                                                       .dockerConnectorDTO(connector)
@@ -155,7 +160,7 @@ public class DockerResourceServiceImpl implements DockerResourceService {
 
   private DockerConnectorDTO getConnector(IdentifierRef dockerConnectorRef) {
     Optional<ConnectorResponseDTO> connectorDTO =
-        connectorService.get(dockerConnectorRef.getAccountId(), dockerConnectorRef.getOrgIdentifier(),
+        connectorService.get(dockerConnectorRef.getAccountIdentifier(), dockerConnectorRef.getOrgIdentifier(),
             dockerConnectorRef.getProjectIdentifier(), dockerConnectorRef.getIdentifier());
 
     if (!connectorDTO.isPresent() || !isADockerConnector(connectorDTO.get())) {

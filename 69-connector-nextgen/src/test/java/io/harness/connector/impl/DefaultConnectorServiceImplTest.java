@@ -3,7 +3,6 @@ package io.harness.connector.impl;
 import static io.harness.delegate.beans.connector.ConnectorCategory.CLOUD_PROVIDER;
 import static io.harness.delegate.beans.connector.ConnectorType.KUBERNETES_CLUSTER;
 import static io.harness.delegate.beans.connector.k8Connector.KubernetesCredentialType.MANUAL_CREDENTIALS;
-import static io.harness.encryption.SecretRefData.SECRET_DELIMINITER;
 import static io.harness.rule.OwnerRule.DEEPAK;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
@@ -33,7 +32,7 @@ import io.harness.delegate.beans.connector.k8Connector.KubernetesCredentialDTO;
 import io.harness.delegate.beans.connector.k8Connector.KubernetesUserNamePasswordDTO;
 import io.harness.encryption.Scope;
 import io.harness.encryption.SecretRefData;
-import io.harness.entityreferenceclient.remote.EntityReferenceClient;
+import io.harness.entitysetupusageclient.remote.EntitySetupUsageClient;
 import io.harness.exception.InvalidRequestException;
 import io.harness.ng.core.dto.ResponseDTO;
 import io.harness.rule.Owner;
@@ -63,7 +62,7 @@ public class DefaultConnectorServiceImplTest extends ConnectorsTestBase {
   @Mock KubernetesConnectionValidator kubernetesConnectionValidator;
   @Mock ConnectorRepository connectorRepository;
   @Mock private Map<String, ConnectionValidator> connectionValidatorMap;
-  @Mock EntityReferenceClient entityReferenceClient;
+  @Mock EntitySetupUsageClient entitySetupUsageClient;
   @Inject @InjectMocks DefaultConnectorServiceImpl connectorService;
 
   String userName = "userName";
@@ -251,9 +250,9 @@ public class DefaultConnectorServiceImplTest extends ConnectorsTestBase {
     } catch (IOException ex) {
       logger.info("Encountered exception ", ex);
     }
-    when(entityReferenceClient.isEntityReferenced(any(), any(), any(), any())).thenReturn(request);
+    when(entitySetupUsageClient.isEntityReferenced(any(), any(), any(), any())).thenReturn(request);
     boolean deleted = connectorService.delete(accountIdentifier, null, null, identifier);
-    verify(entityReferenceClient, times(1)).isEntityReferenced(anyString(), anyString(), anyString(), anyString());
+    verify(entitySetupUsageClient, times(1)).isEntityReferenced(anyString(), anyString(), anyString(), anyString());
     assertThat(deleted).isTrue();
   }
 

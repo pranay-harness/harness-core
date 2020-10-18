@@ -56,7 +56,7 @@ public class ArtifactStepHelper {
     NGAccess ngAccess = AmbianceHelper.getNgAccess(ambiance);
     IdentifierRef connectorRef = IdentifierRefHelper.getIdentifierRef(connectorIdentifierRef,
         ngAccess.getAccountIdentifier(), ngAccess.getOrgIdentifier(), ngAccess.getProjectIdentifier());
-    Optional<ConnectorResponseDTO> connectorDTO = connectorService.get(connectorRef.getAccountId(),
+    Optional<ConnectorResponseDTO> connectorDTO = connectorService.get(connectorRef.getAccountIdentifier(),
         connectorRef.getOrgIdentifier(), connectorRef.getProjectIdentifier(), connectorRef.getIdentifier());
     if (!connectorDTO.isPresent()) {
       throw new InvalidRequestException(
