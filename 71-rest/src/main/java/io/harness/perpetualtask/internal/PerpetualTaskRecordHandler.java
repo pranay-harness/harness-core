@@ -35,6 +35,7 @@ import io.harness.logging.ExceptionLogger;
 import io.harness.mongo.iterator.MongoPersistenceIterator;
 import io.harness.mongo.iterator.filter.MorphiaFilterExpander;
 import io.harness.mongo.iterator.provider.MorphiaPersistenceProvider;
+import io.harness.mongo.iterator.provider.MorphiaPersistenceRequiredProvider;
 import io.harness.perpetualtask.PerpetualTaskExecutionBundle;
 import io.harness.perpetualtask.PerpetualTaskService;
 import io.harness.perpetualtask.PerpetualTaskServiceClient;
@@ -81,6 +82,7 @@ public class PerpetualTaskRecordHandler implements PerpetualTaskCrudObserver {
   @Inject private PerpetualTaskService perpetualTaskService;
   @Inject private PerpetualTaskServiceClientRegistry clientRegistry;
   @Inject private MorphiaPersistenceProvider<PerpetualTaskRecord> persistenceProvider;
+  @Inject private MorphiaPersistenceRequiredProvider<PerpetualTaskRecord> persistenceRequiredProvider;
   @Inject private transient AlertService alertService;
   @Inject private AccountService accountService;
   @Inject private KryoSerializer kryoSerializer;
@@ -126,7 +128,7 @@ public class PerpetualTaskRecordHandler implements PerpetualTaskCrudObserver {
             .filterExpander(query -> query.filter(PerpetualTaskRecordKeys.state, PerpetualTaskState.TASK_TO_REBALANCE))
             .entityProcessController(new AccountStatusBasedEntityProcessController<>(accountService))
             .schedulingType(REGULAR)
-            .persistenceProvider(persistenceProvider)
+            .persistenceProvider(persistenceRequiredProvider)
             .redistribute(true));
   }
 
