@@ -125,6 +125,7 @@ import migrations.all.OauthEnabledFieldMigration;
 import migrations.all.OverrideDefaultLimits;
 import migrations.all.PcfServiceDeploymentMigration;
 import migrations.all.PcfServiceSpecificationToManifestFileMigration;
+import migrations.all.PerpetualTaskIteratorMigration;
 import migrations.all.PerpetualTaskMigration;
 import migrations.all.PipelineWorkflowExecutionActionMigration;
 import migrations.all.PipelineWorkflowExecutionActionQlMigration;
@@ -402,6 +403,7 @@ public class MigrationList {
         .add(Pair.of(345, ManageConfigAsCodePermissionMigration.class))
         .add(Pair.of(346, AddManageTagsPermission.class))
         .add(Pair.of(347, BaseMigration.class))
+        .add(Pair.of(348, PerpetualTaskIteratorMigration.class))
         .build();
   }
 }
