@@ -22,6 +22,7 @@ import io.harness.delegate.task.docker.DockerTestConnectionDelegateTask;
 import io.harness.delegate.task.gcp.GcpTask;
 import io.harness.delegate.task.git.GitFetchTaskNG;
 import io.harness.delegate.task.git.NGGitCommandTask;
+import io.harness.delegate.task.jira.JiraTaskNG;
 import io.harness.delegate.task.k8s.K8sTaskNG;
 import io.harness.delegate.task.stepstatus.StepStatusTask;
 import io.harness.perpetualtask.internal.AssignmentTask;
@@ -465,7 +466,8 @@ public enum TaskType {
   NG_SSH_VALIDATION(
       TaskGroup.CONNECTIVITY_VALIDATION, SSHConfigValidationDelegateTask.class, AlwaysTrueValidation.class),
   DOCKER_CONNECTIVITY_TEST_TASK(TaskGroup.DOCKER, DockerTestConnectionDelegateTask.class, NGDockerValidation.class),
-  NG_AWS_TASK(TaskGroup.AWS, AwsDelegateTask.class, AlwaysTrueValidation.class);
+  NG_AWS_TASK(TaskGroup.AWS, AwsDelegateTask.class, AlwaysTrueValidation.class),
+  JIRA_TASK_NG(TaskGroup.JIRA_NG, JiraTaskNG.class, AlwaysTrueValidation.class);
 
   private final TaskGroup taskGroup;
   private final Class<? extends DelegateRunnableTask> delegateRunnableTaskClass;

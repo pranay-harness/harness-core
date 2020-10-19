@@ -1,4 +1,4 @@
-package software.wings.api.jira;
+package io.harness.jira;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 

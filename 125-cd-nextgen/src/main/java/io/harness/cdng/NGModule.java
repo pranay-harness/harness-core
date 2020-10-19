@@ -11,6 +11,8 @@ import io.harness.cdng.artifact.service.ArtifactSourceService;
 import io.harness.cdng.artifact.service.impl.ArtifactSourceServiceImpl;
 import io.harness.cdng.inputset.services.InputSetEntityService;
 import io.harness.cdng.inputset.services.impl.InputSetEntityServiceImpl;
+import io.harness.cdng.jira.resources.service.JiraResourceService;
+import io.harness.cdng.jira.resources.service.JiraResourceServiceImpl;
 import io.harness.cdng.pipeline.executions.registries.StageTypeToStageExecutionMapperRegistryModule;
 import io.harness.cdng.pipeline.executions.service.NgPipelineExecutionService;
 import io.harness.cdng.pipeline.executions.service.NgPipelineExecutionServiceImpl;
@@ -46,6 +48,7 @@ public class NGModule extends AbstractModule {
     bind(NgPipelineExecutionService.class).to(NgPipelineExecutionServiceImpl.class);
     bind(DockerResourceService.class).to(DockerResourceServiceImpl.class);
     bind(InputSetEntityService.class).to(InputSetEntityServiceImpl.class);
+    bind(JiraResourceService.class).to(JiraResourceServiceImpl.class);
 
     MapBinder<String, OrchestrationEventHandlerRegistrar> orchestrationEventHandlerRegistrarMapBinder =
         MapBinder.newMapBinder(binder(), String.class, OrchestrationEventHandlerRegistrar.class);

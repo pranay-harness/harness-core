@@ -63,4 +63,5 @@ public enum TaskGroup {
   ARTIFACT_COLLECT_NG,
   K8S_NG,
   CAPABILITY_VALIDATION,
+  JIRA_NG,
 }
