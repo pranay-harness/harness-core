@@ -1,4 +1,4 @@
-package io.harness.cvng.core.activity.entities;
+package io.harness.cvng.activity.entities;
 
 import static io.harness.cvng.core.services.CVNextGenConstants.DATA_COLLECTION_DELAY;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
@@ -17,6 +17,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
+import lombok.experimental.FieldNameConstants;
 
 import java.time.Duration;
 import java.time.Instant;
@@ -24,6 +25,7 @@ import java.util.Set;
 import javax.validation.constraints.NotNull;
 
 @JsonTypeName("DEPLOYMENT")
+@FieldNameConstants(innerTypeName = "DeploymentActivityKeys")
 @Data
 @Builder
 @AllArgsConstructor

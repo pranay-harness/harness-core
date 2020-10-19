@@ -1,4 +1,4 @@
-package io.harness.cvng.core.activity.resources;
+package io.harness.cvng.activity.resources;
 
 import static io.harness.cvng.core.services.CVNextGenConstants.ACTIVITY_RESOURCE;
 
@@ -6,13 +6,15 @@ import com.google.inject.Inject;
 
 import com.codahale.metrics.annotation.ExceptionMetered;
 import com.codahale.metrics.annotation.Timed;
+import io.harness.annotations.ExposeInternalException;
+import io.harness.cvng.activity.beans.DeploymentActivityPopoverResultDTO;
+import io.harness.cvng.activity.beans.DeploymentActivityResultDTO;
+import io.harness.cvng.activity.beans.DeploymentActivityVerificationResultDTO;
+import io.harness.cvng.activity.beans.KubernetesActivitySourceDTO;
+import io.harness.cvng.activity.services.api.ActivityService;
+import io.harness.cvng.activity.services.api.KubernetesActivitySourceService;
 import io.harness.cvng.beans.ActivityDTO;
 import io.harness.cvng.beans.KubernetesActivityDTO;
-import io.harness.cvng.core.activity.beans.KubernetesActivitySourceDTO;
-import io.harness.cvng.core.activity.services.api.KubernetesActivitySourceService;
-import io.harness.cvng.core.beans.DeploymentActivityResultDTO;
-import io.harness.cvng.core.beans.DeploymentActivityVerificationResultDTO;
-import io.harness.cvng.core.services.api.ActivityService;
 import io.harness.rest.RestResponse;
 import io.harness.security.annotations.DelegateAuth;
 import io.harness.security.annotations.PublicApi;
@@ -33,7 +35,7 @@ import javax.ws.rs.QueryParam;
 @Api(ACTIVITY_RESOURCE)
 @Path(ACTIVITY_RESOURCE)
 @Produces("application/json")
-@PublicApi
+@ExposeInternalException
 public class ActivityResource {
   @Inject private ActivityService activityService;
   @Inject private KubernetesActivitySourceService kubernetesActivitySourceService;
@@ -41,10 +43,11 @@ public class ActivityResource {
   @POST
   @Timed
   @ExceptionMetered
+  @PublicApi
   @Path("{webHookToken}")
   @ApiOperation(value = "registers an activity", nickname = "registerActivity")
-  public void registerActivity(@PathParam("webHookToken") String webHookToken,
-      @QueryParam("accountId") @Valid final String accountId, @Body ActivityDTO activityDTO) {
+  public void registerActivity(@NotNull @PathParam("webHookToken") String webHookToken,
+      @NotNull @QueryParam("accountId") @Valid final String accountId, @Body ActivityDTO activityDTO) {
     activityService.register(accountId, webHookToken, activityDTO);
   }
 
@@ -53,9 +56,11 @@ public class ActivityResource {
   @ApiOperation(
       value = "get recent deployment activity verification", nickname = "getRecentDeploymentActivityVerifications")
   public RestResponse<List<DeploymentActivityVerificationResultDTO>>
-  getRecentDeploymentActivityVerifications(
-      @QueryParam("accountId") String accountId, @QueryParam("projectIdentifier") String projectIdentifier) {
-    return new RestResponse<>(activityService.getRecentDeploymentActivityVerifications(accountId, projectIdentifier));
+  getRecentDeploymentActivityVerifications(@NotNull @QueryParam("accountId") String accountId,
+      @NotNull @QueryParam("orgIdentifier") String orgIdentifier,
+      @NotNull @QueryParam("projectIdentifier") String projectIdentifier) {
+    return new RestResponse<>(
+        activityService.getRecentDeploymentActivityVerifications(accountId, orgIdentifier, projectIdentifier));
   }
 
   @GET
@@ -63,10 +68,27 @@ public class ActivityResource {
   @ApiOperation(
       value = "get deployment activities for given build tag", nickname = "getDeploymentActivityVerificationsByTag")
   public RestResponse<DeploymentActivityResultDTO>
-  getDeploymentActivityVerificationsByTag(@QueryParam("accountId") String accountId,
-      @QueryParam("projectIdentifier") String projectIdentifier, @PathParam("deploymentTag") String deploymentTag) {
-    return new RestResponse(
-        activityService.getDeploymentActivityVerificationsByTag(accountId, projectIdentifier, deploymentTag));
+  getDeploymentActivityVerificationsByTag(@NotNull @QueryParam("accountId") String accountId,
+      @NotNull @QueryParam("orgIdentifier") String orgIdentifier,
+      @NotNull @QueryParam("projectIdentifier") String projectIdentifier,
+      @NotNull @QueryParam("serviceIdentifier") String serviceIdentifier,
+      @NotNull @PathParam("deploymentTag") String deploymentTag) {
+    return new RestResponse(activityService.getDeploymentActivityVerificationsByTag(
+        accountId, orgIdentifier, projectIdentifier, serviceIdentifier, deploymentTag));
+  }
+
+  @GET
+  @Path("deployment-activity-verifications-popover-summary/{deploymentTag}")
+  @ApiOperation(value = "get deployment activities summary for given build tag",
+      nickname = "getDeploymentActivityVerificationsPopoverSummaryByTag")
+  public RestResponse<DeploymentActivityPopoverResultDTO>
+  getDeploymentActivityVerificationsPopoverSummary(@NotNull @QueryParam("accountId") String accountId,
+      @NotNull @QueryParam("orgIdentifier") String orgIdentifier,
+      @NotNull @QueryParam("projectIdentifier") String projectIdentifier,
+      @NotNull @QueryParam("serviceIdentifier") String serviceIdentifier,
+      @NotNull @PathParam("deploymentTag") String deploymentTag) {
+    return new RestResponse(activityService.getDeploymentActivityVerificationsPopoverSummary(
+        accountId, orgIdentifier, projectIdentifier, serviceIdentifier, deploymentTag));
   }
 
   @POST

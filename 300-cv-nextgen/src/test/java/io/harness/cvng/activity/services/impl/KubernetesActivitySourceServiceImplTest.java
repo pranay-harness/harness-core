@@ -1,4 +1,4 @@
-package io.harness.cvng.core.activity.services.impl;
+package io.harness.cvng.activity.services.impl;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.persistence.HQuery.excludeAuthority;
@@ -13,14 +13,14 @@ import com.google.inject.Inject;
 
 import io.harness.CvNextGenTest;
 import io.harness.category.element.UnitTests;
+import io.harness.cvng.activity.beans.KubernetesActivitySourceDTO;
+import io.harness.cvng.activity.entities.KubernetesActivity;
+import io.harness.cvng.activity.entities.KubernetesActivitySource;
+import io.harness.cvng.activity.services.api.KubernetesActivitySourceService;
 import io.harness.cvng.beans.ActivityType;
 import io.harness.cvng.beans.DataCollectionType;
 import io.harness.cvng.beans.KubernetesActivityDTO;
 import io.harness.cvng.client.VerificationManagerService;
-import io.harness.cvng.core.activity.beans.KubernetesActivitySourceDTO;
-import io.harness.cvng.core.activity.entities.KubernetesActivity;
-import io.harness.cvng.core.activity.entities.KubernetesActivitySource;
-import io.harness.cvng.core.activity.services.api.KubernetesActivitySourceService;
 import io.harness.persistence.HPersistence;
 import io.harness.rule.Owner;
 import org.apache.commons.lang3.reflect.FieldUtils;

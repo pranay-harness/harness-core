@@ -1,4 +1,4 @@
-package io.harness.cvng.core.beans;
+package io.harness.cvng.activity.beans;
 
 import io.harness.cvng.verificationjob.beans.AdditionalInfo;
 import lombok.Builder;
@@ -36,13 +36,5 @@ public class DeploymentActivityResultDTO {
     List<DeploymentVerificationJobInstanceSummary> preProductionDeploymentVerificationJobInstanceSummaries;
     List<DeploymentVerificationJobInstanceSummary> productionDeploymentVerificationJobInstanceSummaries;
     List<DeploymentVerificationJobInstanceSummary> postDeploymentVerificationJobInstanceSummaries;
-  }
-
-  public enum DeploymentVerificationStatus {
-    NOT_STARTED,
-    PASSED,
-    ERROR,
-    SUCCESS,
-    IN_PROGRESS;
   }
 }

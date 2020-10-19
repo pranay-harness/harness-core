@@ -1,23 +1,26 @@
-package io.harness.cvng.core.services.impl;
+package io.harness.cvng.activity.services.impl;
 
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.persistence.HQuery.excludeAuthority;
 
 import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
 
+import io.harness.cvng.activity.beans.DeploymentActivityPopoverResultDTO;
+import io.harness.cvng.activity.beans.DeploymentActivityResultDTO;
+import io.harness.cvng.activity.beans.DeploymentActivityResultDTO.DeploymentResultSummary;
+import io.harness.cvng.activity.beans.DeploymentActivityVerificationResultDTO;
+import io.harness.cvng.activity.entities.Activity;
+import io.harness.cvng.activity.entities.Activity.ActivityKeys;
+import io.harness.cvng.activity.entities.CustomActivity;
+import io.harness.cvng.activity.entities.DeploymentActivity;
+import io.harness.cvng.activity.entities.DeploymentActivity.DeploymentActivityKeys;
+import io.harness.cvng.activity.entities.KubernetesActivity;
+import io.harness.cvng.activity.services.api.ActivityService;
+import io.harness.cvng.activity.services.api.KubernetesActivitySourceService;
 import io.harness.cvng.beans.ActivityDTO;
 import io.harness.cvng.beans.ActivityType;
 import io.harness.cvng.client.NextGenService;
-import io.harness.cvng.core.activity.entities.Activity;
-import io.harness.cvng.core.activity.entities.Activity.ActivityKeys;
-import io.harness.cvng.core.activity.entities.CustomActivity;
-import io.harness.cvng.core.activity.entities.DeploymentActivity;
-import io.harness.cvng.core.activity.entities.KubernetesActivity;
-import io.harness.cvng.core.activity.services.api.KubernetesActivitySourceService;
-import io.harness.cvng.core.beans.DeploymentActivityResultDTO;
-import io.harness.cvng.core.beans.DeploymentActivityResultDTO.DeploymentResultSummary;
-import io.harness.cvng.core.beans.DeploymentActivityVerificationResultDTO;
-import io.harness.cvng.core.services.api.ActivityService;
 import io.harness.cvng.core.services.api.WebhookService;
 import io.harness.cvng.verificationjob.entities.VerificationJob;
 import io.harness.cvng.verificationjob.entities.VerificationJobInstance;
@@ -25,6 +28,7 @@ import io.harness.cvng.verificationjob.entities.VerificationJobInstance.Executio
 import io.harness.cvng.verificationjob.services.api.VerificationJobInstanceService;
 import io.harness.cvng.verificationjob.services.api.VerificationJobService;
 import io.harness.persistence.HPersistence;
+import io.harness.persistence.HQuery;
 import lombok.Builder;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
@@ -33,13 +37,13 @@ import org.mongodb.morphia.query.Sort;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
-import javax.ws.rs.NotFoundException;
 
 @Slf4j
 public class ActivityServiceImpl implements ActivityService {
@@ -71,8 +75,9 @@ public class ActivityServiceImpl implements ActivityService {
 
   @Override
   public List<DeploymentActivityVerificationResultDTO> getRecentDeploymentActivityVerifications(
-      String accountId, String projectIdentifier) {
-    List<DeploymentGroupByTag> recentDeploymentActivities = getRecentDeploymentActivities(accountId, projectIdentifier);
+      String accountId, String orgIdentifier, String projectIdentifier) {
+    List<DeploymentGroupByTag> recentDeploymentActivities =
+        getRecentDeploymentActivities(accountId, orgIdentifier, projectIdentifier);
     List<DeploymentActivityVerificationResultDTO> results = new ArrayList<>();
     recentDeploymentActivities.forEach(deploymentGroupByTag -> {
       List<String> verificationJobInstanceIds =
@@ -91,31 +96,21 @@ public class ActivityServiceImpl implements ActivityService {
   }
 
   @Override
-  public DeploymentActivityResultDTO getDeploymentActivityVerificationsByTag(
-      String accountId, String projectIdentifier, String deploymentTag) {
-    List<DeploymentGroupByTag> deploymentActivities =
-        getRecentDeploymentActivities(accountId, projectIdentifier)
-            .stream()
-            .filter(deploymentGroupByTag -> deploymentGroupByTag.getDeploymentTag().equals(deploymentTag))
-            .collect(Collectors.toList());
-
-    if (deploymentActivities.isEmpty()) {
-      throw new NotFoundException("No Deployment Activities were found for deployment tag: " + deploymentTag);
-    }
-
+  public DeploymentActivityResultDTO getDeploymentActivityVerificationsByTag(String accountId, String orgIdentifier,
+      String projectIdentifier, String serviceIdentifier, String deploymentTag) {
+    List<DeploymentActivity> deploymentActivities =
+        getDeploymentActivitiesByTag(accountId, orgIdentifier, projectIdentifier, serviceIdentifier, deploymentTag);
     DeploymentResultSummary deploymentResultSummary =
         DeploymentResultSummary.builder()
             .preProductionDeploymentVerificationJobInstanceSummaries(new ArrayList<>())
             .productionDeploymentVerificationJobInstanceSummaries(new ArrayList<>())
             .postDeploymentVerificationJobInstanceSummaries(new ArrayList<>())
             .build();
-    deploymentActivities.forEach(deploymentGroupByTag -> {
-      List<String> verificationJobInstanceIds =
-          getVerificationJobInstanceIds(deploymentGroupByTag.getDeploymentActivities());
-      verificationJobInstanceService.addResultsToDeploymentResultSummary(
-          accountId, verificationJobInstanceIds, deploymentResultSummary);
-    });
-    String serviceName = getServiceNameFromActivity(deploymentActivities.get(0).deploymentActivities.get(0));
+    List<String> verificationJobInstanceIds = getVerificationJobInstanceIds(deploymentActivities);
+    verificationJobInstanceService.addResultsToDeploymentResultSummary(
+        accountId, verificationJobInstanceIds, deploymentResultSummary);
+
+    String serviceName = getServiceNameFromActivity(deploymentActivities.get(0));
 
     DeploymentActivityResultDTO deploymentActivityResultDTO = DeploymentActivityResultDTO.builder()
                                                                   .deploymentTag(deploymentTag)
@@ -127,6 +122,20 @@ public class ActivityServiceImpl implements ActivityService {
     deploymentActivityResultDTO.setEnvironments(environments);
 
     return deploymentActivityResultDTO;
+  }
+
+  @Override
+  public DeploymentActivityPopoverResultDTO getDeploymentActivityVerificationsPopoverSummary(String accountId,
+      String orgIdentifier, String projectIdentifier, String serviceIdentifier, String deploymentTag) {
+    List<DeploymentActivity> deploymentActivities =
+        getDeploymentActivitiesByTag(accountId, orgIdentifier, projectIdentifier, serviceIdentifier, deploymentTag);
+    List<String> verificationJobInstanceIds = getVerificationJobInstanceIds(deploymentActivities);
+    DeploymentActivityPopoverResultDTO deploymentActivityPopoverResultDTO =
+        verificationJobInstanceService.getDeploymentVerificationPopoverResult(verificationJobInstanceIds);
+    deploymentActivityPopoverResultDTO.setTag(deploymentTag);
+    deploymentActivityPopoverResultDTO.setServiceName(deploymentTag);
+    deploymentActivityPopoverResultDTO.setServiceName(getServiceNameFromActivity(deploymentActivities.get(0)));
+    return deploymentActivityPopoverResultDTO;
   }
 
   private Set<String> collectAllEnvironments(DeploymentActivityResultDTO deploymentActivityResultDTO) {
@@ -155,10 +164,30 @@ public class ActivityServiceImpl implements ActivityService {
         .flatMap(Collection::stream)
         .collect(Collectors.toList());
   }
-  private List<DeploymentGroupByTag> getRecentDeploymentActivities(String accountId, String projectIdentifier) {
+  private List<DeploymentActivity> getDeploymentActivitiesByTag(String accountId, String orgIdentifier,
+      String projectIdentifier, String serviceIdentifier, String deploymentTag) {
+    List<DeploymentActivity> deploymentActivities =
+        (List<DeploymentActivity>) (List<?>) hPersistence
+            .createQuery(Activity.class, Collections.singleton(HQuery.QueryChecks.COUNT))
+            .filter(ActivityKeys.accountIdentifier, accountId)
+            .filter(ActivityKeys.orgIdentifier, orgIdentifier)
+            .filter(ActivityKeys.projectIdentifier, projectIdentifier)
+            .filter(ActivityKeys.orgIdentifier, orgIdentifier)
+            .filter(ActivityKeys.serviceIdentifier, serviceIdentifier)
+            .filter(ActivityKeys.type, ActivityType.DEPLOYMENT)
+            .filter(DeploymentActivityKeys.deploymentTag, deploymentTag)
+            .asList();
+    Preconditions.checkState(
+        isNotEmpty(deploymentActivities), "No Deployment Activities were found for deployment tag: %s", deploymentTag);
+    return deploymentActivities;
+  }
+
+  private List<DeploymentGroupByTag> getRecentDeploymentActivities(
+      String accountId, String orgIdentifier, String projectIdentifier) {
     List<DeploymentActivity> activities =
         (List<DeploymentActivity>) (List<?>) hPersistence.createQuery(Activity.class, excludeAuthority)
             .filter(ActivityKeys.accountIdentifier, accountId)
+            .filter(ActivityKeys.orgIdentifier, orgIdentifier)
             .filter(ActivityKeys.projectIdentifier, projectIdentifier)
             .filter(ActivityKeys.type, ActivityType.DEPLOYMENT)
             .order(Sort.descending(ActivityKeys.createdAt))

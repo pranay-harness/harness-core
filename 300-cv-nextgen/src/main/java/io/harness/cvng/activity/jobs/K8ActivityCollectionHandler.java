@@ -1,9 +1,9 @@
-package io.harness.cvng.core.activity.jobs;
+package io.harness.cvng.activity.jobs;
 
 import com.google.inject.Inject;
 
-import io.harness.cvng.core.activity.entities.KubernetesActivitySource;
-import io.harness.cvng.core.activity.services.api.KubernetesActivitySourceService;
+import io.harness.cvng.activity.entities.KubernetesActivitySource;
+import io.harness.cvng.activity.services.api.KubernetesActivitySourceService;
 import io.harness.mongo.iterator.MongoPersistenceIterator;
 import lombok.extern.slf4j.Slf4j;
 

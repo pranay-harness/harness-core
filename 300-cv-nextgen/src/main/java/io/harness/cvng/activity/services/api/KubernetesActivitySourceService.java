@@ -1,8 +1,8 @@
-package io.harness.cvng.core.activity.services.api;
+package io.harness.cvng.activity.services.api;
 
+import io.harness.cvng.activity.beans.KubernetesActivitySourceDTO;
+import io.harness.cvng.activity.entities.KubernetesActivitySource;
 import io.harness.cvng.beans.KubernetesActivityDTO;
-import io.harness.cvng.core.activity.beans.KubernetesActivitySourceDTO;
-import io.harness.cvng.core.activity.entities.KubernetesActivitySource;
 
 import java.util.List;
 import javax.validation.constraints.NotNull;

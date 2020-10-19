@@ -2,6 +2,7 @@ package io.harness.cvng.analysis.services.impl;
 
 import com.google.inject.Inject;
 
+import io.harness.cvng.activity.services.api.ActivityService;
 import io.harness.cvng.analysis.beans.CanaryDeploymentAdditionalInfo;
 import io.harness.cvng.analysis.beans.CanaryDeploymentAdditionalInfo.HostSummaryInfo;
 import io.harness.cvng.analysis.beans.CanaryDeploymentAdditionalInfo.TrafficSplitPercentage;
@@ -13,7 +14,6 @@ import io.harness.cvng.analysis.services.api.DeploymentTimeSeriesAnalysisService
 import io.harness.cvng.core.beans.LoadTestAdditionalInfo;
 import io.harness.cvng.core.beans.LoadTestAdditionalInfo.LoadTestAdditionalInfoBuilder;
 import io.harness.cvng.core.beans.TimeRange;
-import io.harness.cvng.core.services.api.ActivityService;
 import io.harness.cvng.core.services.api.HostRecordService;
 import io.harness.cvng.core.services.api.VerificationTaskService;
 import io.harness.cvng.dashboard.beans.TimeSeriesMetricDataDTO.TimeSeriesRisk;

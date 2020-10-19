@@ -1,4 +1,4 @@
-package io.harness.cvng.core.beans;
+package io.harness.cvng.activity.beans;
 
 import lombok.Builder;
 import lombok.Data;
@@ -20,7 +20,7 @@ public class DeploymentActivityVerificationResultDTO {
     int errors;
     int progress;
     int notStarted;
-    long timeRemainingMs;
+    long remainingTimeMs;
     int progressPercentage;
     Long startTime;
     Long durationMs;

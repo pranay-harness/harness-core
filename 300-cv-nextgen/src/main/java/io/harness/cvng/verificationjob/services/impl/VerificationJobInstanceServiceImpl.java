@@ -16,17 +16,18 @@ import com.google.inject.Injector;
 import com.google.inject.Key;
 import com.google.inject.name.Names;
 
+import io.harness.cvng.activity.beans.DeploymentActivityPopoverResultDTO;
+import io.harness.cvng.activity.beans.DeploymentActivityResultDTO.DeploymentResultSummary;
+import io.harness.cvng.activity.beans.DeploymentActivityResultDTO.DeploymentVerificationJobInstanceSummary;
+import io.harness.cvng.activity.beans.DeploymentActivityResultDTO.DeploymentVerificationJobInstanceSummary.DeploymentVerificationJobInstanceSummaryBuilder;
+import io.harness.cvng.activity.beans.DeploymentActivityVerificationResultDTO;
+import io.harness.cvng.activity.beans.DeploymentActivityVerificationResultDTO.DeploymentSummary;
+import io.harness.cvng.activity.beans.DeploymentVerificationStatus;
 import io.harness.cvng.analysis.services.api.DeploymentAnalysisService;
 import io.harness.cvng.beans.DataCollectionInfo;
 import io.harness.cvng.beans.DataCollectionType;
 import io.harness.cvng.client.NextGenService;
 import io.harness.cvng.client.VerificationManagerService;
-import io.harness.cvng.core.beans.DeploymentActivityResultDTO.DeploymentResultSummary;
-import io.harness.cvng.core.beans.DeploymentActivityResultDTO.DeploymentVerificationJobInstanceSummary;
-import io.harness.cvng.core.beans.DeploymentActivityResultDTO.DeploymentVerificationJobInstanceSummary.DeploymentVerificationJobInstanceSummaryBuilder;
-import io.harness.cvng.core.beans.DeploymentActivityResultDTO.DeploymentVerificationStatus;
-import io.harness.cvng.core.beans.DeploymentActivityVerificationResultDTO;
-import io.harness.cvng.core.beans.DeploymentActivityVerificationResultDTO.DeploymentSummary;
 import io.harness.cvng.core.beans.TimeRange;
 import io.harness.cvng.core.entities.CVConfig;
 import io.harness.cvng.core.entities.CVConfig.CVConfigKeys;
@@ -239,6 +240,26 @@ public class VerificationJobInstanceServiceImpl implements VerificationJobInstan
         deploymentResultSummary.getPostDeploymentVerificationJobInstanceSummaries());
   }
 
+  @Override
+  public DeploymentActivityPopoverResultDTO getDeploymentVerificationPopoverResult(
+      List<String> verificationJobInstanceIds) {
+    List<VerificationJobInstance> verificationJobInstances = get(verificationJobInstanceIds);
+    Preconditions.checkState(isNotEmpty(verificationJobInstances), "No VerificationJobInstance found with IDs %s",
+        verificationJobInstanceIds.toString());
+    List<VerificationJobInstance> postDeploymentVerificationJobInstances =
+        getPostDeploymentVerificationJobInstances(verificationJobInstances);
+    Map<EnvironmentType, List<VerificationJobInstance>> preAndProductionDeploymentGroup =
+        getPreAndProductionDeploymentGroup(verificationJobInstances);
+
+    return DeploymentActivityPopoverResultDTO.builder()
+        .preProductionDeploymentSummary(
+            deploymentPopoverSummary(preAndProductionDeploymentGroup.get(EnvironmentType.PreProduction)))
+        .productionDeploymentSummary(
+            deploymentPopoverSummary(preAndProductionDeploymentGroup.get(EnvironmentType.Production)))
+        .postDeploymentSummary(deploymentPopoverSummary(postDeploymentVerificationJobInstances))
+        .build();
+  }
+
   private List<VerificationJobInstance> getPostDeploymentVerificationJobInstances(
       List<VerificationJobInstance> verificationJobInstances) {
     return verificationJobInstances.stream()
@@ -308,12 +329,12 @@ public class VerificationJobInstanceServiceImpl implements VerificationJobInstan
             verificationJobInstance.getAccountId(), verificationJobInstance.getUuid());
         if (riskScore.isPresent()) {
           if (riskScore.get() < DEPLOYMENT_RISK_SCORE_FAILURE_THRESHOLD) {
-            return DeploymentVerificationStatus.SUCCESS;
+            return DeploymentVerificationStatus.VERIFICATION_PASSED;
           } else {
-            return DeploymentVerificationStatus.ERROR;
+            return DeploymentVerificationStatus.VERIFICATION_FAILED;
           }
         }
-        return DeploymentVerificationStatus.ERROR;
+        return DeploymentVerificationStatus.IN_PROGRESS;
       default:
         throw new IllegalStateException(verificationJobInstance.getExecutionStatus() + " not supported");
     }
@@ -387,7 +408,7 @@ public class VerificationJobInstanceServiceImpl implements VerificationJobInstan
     return DeploymentSummary.builder()
         .startTime(minVerificationInstanceJob.getStartTime().toEpochMilli())
         .durationMs(maxDuration.getResolvedJob().getDuration().toMillis())
-        .timeRemainingMs(timeRemainingMs)
+        .remainingTimeMs(timeRemainingMs)
         .progressPercentage(progressPercentage)
         .riskScore(maxRiskScore)
         .total(total)
@@ -396,6 +417,34 @@ public class VerificationJobInstanceServiceImpl implements VerificationJobInstan
         .passed(passed)
         .progress(progress)
         .notStarted(notStarted)
+        .build();
+  }
+
+  @Nullable
+  private DeploymentActivityPopoverResultDTO.DeploymentPopoverSummary deploymentPopoverSummary(
+      List<VerificationJobInstance> verificationJobInstances) {
+    if (isEmpty(verificationJobInstances)) {
+      return null;
+    }
+
+    List<DeploymentActivityPopoverResultDTO.VerificationResult> verificationResults =
+        verificationJobInstances.stream()
+            .map(verificationJobInstance
+                -> DeploymentActivityPopoverResultDTO.VerificationResult.builder()
+                       .status(getDeploymentVerificationStatus(verificationJobInstance))
+                       .jobName(verificationJobInstance.getResolvedJob().getJobName())
+                       .progressPercentage(verificationJobInstance.getProgressPercentage())
+                       .remainingTimeMs(verificationJobInstance.getTimeRemainingMs(clock.instant()).toMillis())
+                       .startTime(verificationJobInstance.getStartTime().toEpochMilli())
+                       .riskScore(deploymentAnalysisService
+                                      .getLatestRiskScore(
+                                          verificationJobInstance.getAccountId(), verificationJobInstance.getUuid())
+                                      .orElse(null))
+                       .build())
+            .collect(Collectors.toList());
+    return DeploymentActivityPopoverResultDTO.DeploymentPopoverSummary.builder()
+        .total(verificationJobInstances.size())
+        .verificationResults(verificationResults)
         .build();
   }
 
