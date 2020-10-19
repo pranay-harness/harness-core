@@ -13,4 +13,8 @@ public interface ViewCustomFieldService {
   List<ViewField> getCustomFieldsPerView(String viewId);
 
   ViewCustomField get(String uuid);
+
+  ViewCustomField update(ViewCustomField viewCustomField);
+
+  boolean delete(String uuid, String accountId);
 }

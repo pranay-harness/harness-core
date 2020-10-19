@@ -7,6 +7,8 @@ import io.harness.ccm.views.entities.ViewCustomField;
 import io.harness.ccm.views.entities.ViewCustomField.ViewCustomFieldKeys;
 import io.harness.persistence.HPersistence;
 import lombok.extern.slf4j.Slf4j;
+import org.mongodb.morphia.query.Query;
+import org.mongodb.morphia.query.UpdateOperations;
 
 import java.util.List;
 
@@ -37,5 +39,32 @@ public class ViewCustomFieldDao {
 
   public ViewCustomField getById(String uuid) {
     return hPersistence.createQuery(ViewCustomField.class).field(ViewCustomFieldKeys.uuid).equal(uuid).get();
+  }
+
+  public boolean delete(String uuid, String accountId) {
+    Query query = hPersistence.createQuery(ViewCustomField.class)
+                      .field(ViewCustomFieldKeys.accountId)
+                      .equal(accountId)
+                      .field(ViewCustomFieldKeys.uuid)
+                      .equal(uuid);
+    return hPersistence.delete(query);
+  }
+
+  public ViewCustomField update(ViewCustomField viewCustomField) {
+    Query query = hPersistence.createQuery(ViewCustomField.class)
+                      .field(ViewCustomFieldKeys.accountId)
+                      .equal(viewCustomField.getAccountId())
+                      .field(ViewCustomFieldKeys.uuid)
+                      .equal(viewCustomField.getUuid());
+    UpdateOperations<ViewCustomField> updateOperations =
+        hPersistence.createUpdateOperations(ViewCustomField.class)
+            .set(ViewCustomFieldKeys.name, viewCustomField.getName())
+            .set(ViewCustomFieldKeys.viewFields, viewCustomField.getViewFields())
+            .set(ViewCustomFieldKeys.sqlFormula, viewCustomField.getSqlFormula())
+            .set(ViewCustomFieldKeys.description, viewCustomField.getDescription())
+            .set(ViewCustomFieldKeys.userDefinedExpression, viewCustomField.getUserDefinedExpression());
+    hPersistence.update(query, updateOperations);
+    logger.info(query.toString());
+    return (ViewCustomField) query.asList().get(0);
   }
 }
