@@ -2,8 +2,8 @@ package io.harness.batch.processing.tasklet.util;
 
 import static java.util.Optional.ofNullable;
 
-import io.harness.batch.processing.ccm.Resource;
-import io.harness.batch.processing.ccm.StorageResource;
+import io.harness.ccm.commons.beans.Resource;
+import io.harness.ccm.commons.beans.StorageResource;
 import io.harness.perpetualtask.k8s.watch.Quantity;
 import lombok.experimental.UtilityClass;
 import lombok.extern.slf4j.Slf4j;

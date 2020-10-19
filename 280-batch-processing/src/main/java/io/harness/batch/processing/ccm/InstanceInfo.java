@@ -1,8 +1,13 @@
 package io.harness.batch.processing.ccm;
 
+import io.harness.ccm.commons.beans.Container;
+import io.harness.ccm.commons.beans.HarnessServiceInfo;
+import io.harness.ccm.commons.beans.InstanceState;
+import io.harness.ccm.commons.beans.InstanceType;
+import io.harness.ccm.commons.beans.Resource;
+import io.harness.ccm.commons.beans.StorageResource;
 import lombok.Builder;
 import lombok.Data;
-import software.wings.beans.instance.HarnessServiceInfo;
 
 import java.util.List;
 import java.util.Map;

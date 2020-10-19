@@ -1,4 +1,4 @@
-package software.wings.beans.instance;
+package io.harness.ccm.commons.beans;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;

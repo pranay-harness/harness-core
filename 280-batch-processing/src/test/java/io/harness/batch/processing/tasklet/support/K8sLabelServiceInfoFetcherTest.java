@@ -12,6 +12,7 @@ import com.google.common.collect.ImmutableMap;
 import io.harness.CategoryTest;
 import io.harness.batch.processing.writer.constants.K8sCCMConstants;
 import io.harness.category.element.UnitTests;
+import io.harness.ccm.commons.beans.HarnessServiceInfo;
 import io.harness.rule.Owner;
 import org.junit.Before;
 import org.junit.Test;
@@ -20,7 +21,6 @@ import org.mockito.ArgumentCaptor;
 import software.wings.api.DeploymentSummary;
 import software.wings.api.K8sDeploymentInfo;
 import software.wings.beans.container.Label;
-import software.wings.beans.instance.HarnessServiceInfo;
 import software.wings.service.intfc.instance.CloudToHarnessMappingService;
 
 import java.util.Arrays;

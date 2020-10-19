@@ -1,14 +1,14 @@
 package io.harness.batch.processing.billing.service;
 
-import static io.harness.batch.processing.ccm.InstanceType.K8S_NODE;
+import static io.harness.ccm.commons.beans.InstanceType.K8S_NODE;
 
 import io.harness.batch.processing.billing.service.intfc.InstancePricingStrategy;
 import io.harness.batch.processing.ccm.ClusterType;
-import io.harness.batch.processing.ccm.CostAttribution;
-import io.harness.batch.processing.ccm.InstanceType;
 import io.harness.batch.processing.ccm.PricingSource;
-import io.harness.batch.processing.entities.InstanceData;
 import io.harness.batch.processing.writer.constants.InstanceMetaDataConstants;
+import io.harness.ccm.commons.beans.CostAttribution;
+import io.harness.ccm.commons.beans.InstanceType;
+import io.harness.ccm.commons.entities.InstanceData;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;

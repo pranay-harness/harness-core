@@ -26,9 +26,6 @@ import io.harness.batch.processing.billing.timeseries.service.impl.UtilizationDa
 import io.harness.batch.processing.ccm.CCMJobConstants;
 import io.harness.batch.processing.ccm.ClusterType;
 import io.harness.batch.processing.ccm.InstanceCategory;
-import io.harness.batch.processing.ccm.InstanceState;
-import io.harness.batch.processing.ccm.InstanceType;
-import io.harness.batch.processing.ccm.Resource;
 import io.harness.batch.processing.cloudevents.aws.ecs.service.CEClusterDao;
 import io.harness.batch.processing.cloudevents.aws.ecs.service.support.intfc.AwsEC2HelperService;
 import io.harness.batch.processing.cloudevents.aws.ecs.service.support.intfc.AwsECSHelperService;
@@ -36,12 +33,16 @@ import io.harness.batch.processing.cloudevents.aws.ecs.service.tasklet.support.E
 import io.harness.batch.processing.cloudevents.aws.ecs.service.tasklet.support.response.EcsUtilizationData;
 import io.harness.batch.processing.cloudevents.aws.ecs.service.tasklet.support.response.MetricValue;
 import io.harness.batch.processing.dao.intfc.InstanceDataDao;
-import io.harness.batch.processing.entities.InstanceData;
 import io.harness.batch.processing.pricing.data.CloudProvider;
 import io.harness.batch.processing.service.intfc.InstanceDataService;
 import io.harness.batch.processing.service.intfc.InstanceResourceService;
 import io.harness.batch.processing.tasklet.util.InstanceMetaDataUtils;
 import io.harness.batch.processing.writer.constants.InstanceMetaDataConstants;
+import io.harness.ccm.commons.beans.HarnessServiceInfo;
+import io.harness.ccm.commons.beans.InstanceState;
+import io.harness.ccm.commons.beans.InstanceType;
+import io.harness.ccm.commons.beans.Resource;
+import io.harness.ccm.commons.entities.InstanceData;
 import io.harness.ccm.health.LastReceivedPublishedMessageDao;
 import io.harness.ccm.setup.CECloudAccountDao;
 import io.harness.exception.InvalidRequestException;
@@ -61,7 +62,6 @@ import software.wings.beans.ce.CEAwsConfig;
 import software.wings.beans.ce.CECloudAccount;
 import software.wings.beans.ce.CECluster;
 import software.wings.beans.infrastructure.instance.key.deployment.ContainerDeploymentKey;
-import software.wings.beans.instance.HarnessServiceInfo;
 import software.wings.service.intfc.instance.CloudToHarnessMappingService;
 
 import java.time.Duration;

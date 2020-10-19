@@ -6,9 +6,9 @@ import com.google.inject.Singleton;
 
 import io.harness.batch.processing.billing.service.UtilizationData;
 import io.harness.batch.processing.billing.timeseries.data.InstanceUtilizationData;
-import io.harness.batch.processing.ccm.InstanceType;
-import io.harness.batch.processing.entities.InstanceData;
 import io.harness.batch.processing.writer.constants.InstanceMetaDataConstants;
+import io.harness.ccm.commons.beans.InstanceType;
+import io.harness.ccm.commons.entities.InstanceData;
 import io.harness.exception.InvalidRequestException;
 import io.harness.timescaledb.DBUtils;
 import io.harness.timescaledb.TimeScaleDBService;

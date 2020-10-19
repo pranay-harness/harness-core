@@ -2,8 +2,6 @@ package io.harness.batch.processing.pricing.service.impl;
 
 import com.github.benmanes.caffeine.cache.Cache;
 import com.github.benmanes.caffeine.cache.Caffeine;
-import io.harness.batch.processing.ccm.InstanceType;
-import io.harness.batch.processing.entities.InstanceData;
 import io.harness.batch.processing.pricing.data.EcsFargatePricingInfo;
 import io.harness.batch.processing.pricing.data.VMInstanceBillingData;
 import io.harness.batch.processing.pricing.gcp.bigquery.BigQueryHelperService;
@@ -11,6 +9,8 @@ import io.harness.batch.processing.pricing.service.intfc.AwsCustomBillingService
 import io.harness.batch.processing.service.intfc.InstanceDataService;
 import io.harness.batch.processing.tasklet.util.InstanceMetaDataUtils;
 import io.harness.batch.processing.writer.constants.InstanceMetaDataConstants;
+import io.harness.ccm.commons.beans.InstanceType;
+import io.harness.ccm.commons.entities.InstanceData;
 import lombok.Value;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;

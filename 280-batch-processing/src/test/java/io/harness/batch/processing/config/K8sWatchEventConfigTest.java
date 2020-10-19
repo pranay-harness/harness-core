@@ -24,6 +24,7 @@ import io.harness.batch.processing.tasklet.support.K8sLabelServiceInfoFetcher;
 import io.harness.category.element.UnitTests;
 import io.harness.ccm.cluster.dao.K8sYamlDao;
 import io.harness.ccm.cluster.entities.K8sWorkload;
+import io.harness.ccm.commons.beans.HarnessServiceInfo;
 import io.harness.event.grpc.PublishedMessage;
 import io.harness.perpetualtask.k8s.watch.K8sObjectReference;
 import io.harness.perpetualtask.k8s.watch.K8sWatchEvent;
@@ -35,7 +36,6 @@ import org.junit.experimental.categories.Category;
 import org.mockito.ArgumentCaptor;
 import org.springframework.batch.item.ItemProcessor;
 import org.springframework.batch.item.ItemWriter;
-import software.wings.beans.instance.HarnessServiceInfo;
 
 import java.math.BigDecimal;
 import java.time.Instant;

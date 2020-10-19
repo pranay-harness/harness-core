@@ -23,6 +23,7 @@ import io.harness.batch.processing.tasklet.support.K8sLabelServiceInfoFetcher;
 import io.harness.batch.processing.writer.constants.EventTypeConstants;
 import io.harness.ccm.cluster.dao.K8sYamlDao;
 import io.harness.ccm.cluster.entities.K8sWorkload;
+import io.harness.ccm.commons.beans.HarnessServiceInfo;
 import io.harness.event.grpc.PublishedMessage;
 import io.harness.govern.Switch;
 import io.harness.perpetualtask.k8s.watch.K8sWatchEvent;
@@ -43,7 +44,6 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import software.wings.beans.instance.HarnessServiceInfo;
 
 import java.math.BigDecimal;
 import java.time.Instant;

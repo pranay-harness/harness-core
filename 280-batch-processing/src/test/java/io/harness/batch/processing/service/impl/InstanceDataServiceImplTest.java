@@ -5,10 +5,10 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.when;
 
 import io.harness.batch.processing.billing.timeseries.data.PrunedInstanceData;
-import io.harness.batch.processing.ccm.Resource;
 import io.harness.batch.processing.dao.intfc.InstanceDataDao;
-import io.harness.batch.processing.entities.InstanceData;
 import io.harness.category.element.UnitTests;
+import io.harness.ccm.commons.beans.Resource;
+import io.harness.ccm.commons.entities.InstanceData;
 import io.harness.rule.Owner;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;

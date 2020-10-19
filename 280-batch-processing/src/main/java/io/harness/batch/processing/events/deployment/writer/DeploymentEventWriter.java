@@ -7,6 +7,7 @@ import io.harness.batch.processing.ccm.CostEventSource;
 import io.harness.batch.processing.ccm.CostEventType;
 import io.harness.batch.processing.events.timeseries.data.CostEventData;
 import io.harness.batch.processing.events.timeseries.service.intfc.CostEventService;
+import io.harness.ccm.commons.beans.HarnessServiceInfo;
 import io.harness.persistence.HPersistence;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.batch.core.JobParameters;
@@ -15,7 +16,6 @@ import org.springframework.batch.core.annotation.BeforeStep;
 import org.springframework.batch.item.ItemWriter;
 import org.springframework.beans.factory.annotation.Autowired;
 import software.wings.api.DeploymentSummary;
-import software.wings.beans.instance.HarnessServiceInfo;
 import software.wings.service.intfc.instance.CloudToHarnessMappingService;
 
 import java.time.Instant;

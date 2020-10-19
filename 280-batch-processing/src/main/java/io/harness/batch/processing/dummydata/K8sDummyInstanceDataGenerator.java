@@ -1,16 +1,16 @@
 package io.harness.batch.processing.dummydata;
 
 import io.harness.batch.processing.ccm.ClusterType;
-import io.harness.batch.processing.ccm.InstanceType;
-import io.harness.batch.processing.ccm.Resource;
 import io.harness.batch.processing.dao.intfc.InstanceDataDao;
-import io.harness.batch.processing.entities.InstanceData;
 import io.harness.batch.processing.pricing.data.CloudProvider;
 import io.harness.batch.processing.writer.constants.InstanceMetaDataConstants;
+import io.harness.ccm.commons.beans.HarnessServiceInfo;
+import io.harness.ccm.commons.beans.InstanceType;
+import io.harness.ccm.commons.beans.Resource;
+import io.harness.ccm.commons.entities.InstanceData;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
-import software.wings.beans.instance.HarnessServiceInfo;
 
 import java.security.SecureRandom;
 import java.time.Instant;

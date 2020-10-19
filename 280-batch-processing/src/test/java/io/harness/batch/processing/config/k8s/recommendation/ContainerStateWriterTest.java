@@ -10,9 +10,9 @@ import com.google.common.collect.ImmutableMap;
 
 import io.harness.CategoryTest;
 import io.harness.batch.processing.dao.intfc.InstanceDataDao;
-import io.harness.batch.processing.entities.InstanceData;
 import io.harness.batch.processing.writer.constants.InstanceMetaDataConstants;
 import io.harness.category.element.UnitTests;
+import io.harness.ccm.commons.entities.InstanceData;
 import io.harness.ccm.recommender.k8sworkload.RecommenderUtils;
 import io.harness.event.grpc.PublishedMessage;
 import io.harness.event.payloads.ContainerStateProto;

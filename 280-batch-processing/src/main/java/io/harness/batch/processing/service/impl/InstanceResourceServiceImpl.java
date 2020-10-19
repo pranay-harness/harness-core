@@ -1,12 +1,12 @@
 package io.harness.batch.processing.service.impl;
 
-import io.harness.batch.processing.ccm.Resource;
 import io.harness.batch.processing.pricing.data.CloudProvider;
 import io.harness.batch.processing.pricing.data.VMComputePricingInfo;
 import io.harness.batch.processing.pricing.service.intfc.VMPricingService;
 import io.harness.batch.processing.pricing.service.support.GCPCustomInstanceDetailProvider;
 import io.harness.batch.processing.service.intfc.InstanceResourceService;
 import io.harness.batch.processing.tasklet.util.K8sResourceUtils;
+import io.harness.ccm.commons.beans.Resource;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;

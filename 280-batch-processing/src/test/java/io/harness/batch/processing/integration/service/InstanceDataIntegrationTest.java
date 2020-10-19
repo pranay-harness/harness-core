@@ -4,12 +4,12 @@ import static io.harness.rule.OwnerRule.HITESH;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.CategoryTest;
-import io.harness.batch.processing.ccm.InstanceState;
-import io.harness.batch.processing.ccm.InstanceType;
-import io.harness.batch.processing.entities.InstanceData;
-import io.harness.batch.processing.entities.InstanceData.InstanceDataKeys;
 import io.harness.batch.processing.service.intfc.InstanceDataService;
 import io.harness.category.element.UnitTests;
+import io.harness.ccm.commons.beans.InstanceState;
+import io.harness.ccm.commons.beans.InstanceType;
+import io.harness.ccm.commons.entities.InstanceData;
+import io.harness.ccm.commons.entities.InstanceData.InstanceDataKeys;
 import io.harness.persistence.HPersistence;
 import io.harness.rule.Owner;
 import lombok.val;

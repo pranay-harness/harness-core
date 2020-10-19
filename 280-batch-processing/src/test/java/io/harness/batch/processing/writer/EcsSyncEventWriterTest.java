@@ -10,11 +10,12 @@ import com.google.common.collect.ImmutableSet;
 import com.google.protobuf.Timestamp;
 
 import io.harness.CategoryTest;
-import io.harness.batch.processing.ccm.InstanceState;
-import io.harness.batch.processing.entities.InstanceData;
 import io.harness.batch.processing.integration.EcsEventGenerator;
 import io.harness.batch.processing.service.intfc.InstanceDataService;
 import io.harness.category.element.UnitTests;
+import io.harness.ccm.commons.beans.HarnessServiceInfo;
+import io.harness.ccm.commons.beans.InstanceState;
+import io.harness.ccm.commons.entities.InstanceData;
 import io.harness.event.grpc.PublishedMessage;
 import io.harness.grpc.utils.HTimestamps;
 import io.harness.rule.Owner;
@@ -27,7 +28,6 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.mockito.runners.MockitoJUnitRunner;
-import software.wings.beans.instance.HarnessServiceInfo;
 
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;

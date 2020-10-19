@@ -8,7 +8,7 @@ import io.harness.batch.processing.ccm.ActualIdleCostData;
 import io.harness.batch.processing.ccm.ActualIdleCostWriterData;
 import io.harness.batch.processing.ccm.BatchJobType;
 import io.harness.batch.processing.ccm.CCMJobConstants;
-import io.harness.batch.processing.entities.InstanceData;
+import io.harness.ccm.commons.entities.InstanceData;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.batch.core.JobParameters;
 import org.springframework.batch.core.StepExecution;

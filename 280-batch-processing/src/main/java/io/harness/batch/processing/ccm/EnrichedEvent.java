@@ -1,7 +1,7 @@
 package io.harness.batch.processing.ccm;
 
+import io.harness.ccm.commons.beans.HarnessServiceInfo;
 import lombok.Value;
-import software.wings.beans.instance.HarnessServiceInfo;
 
 import javax.annotation.Nullable;
 

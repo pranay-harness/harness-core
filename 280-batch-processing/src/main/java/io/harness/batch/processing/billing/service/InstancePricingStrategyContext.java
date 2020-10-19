@@ -1,8 +1,8 @@
 package io.harness.batch.processing.billing.service;
 
 import io.harness.batch.processing.billing.service.intfc.InstancePricingStrategy;
-import io.harness.batch.processing.ccm.InstanceType;
-import io.harness.batch.processing.ccm.PricingGroup;
+import io.harness.ccm.commons.beans.InstanceType;
+import io.harness.ccm.commons.beans.PricingGroup;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 

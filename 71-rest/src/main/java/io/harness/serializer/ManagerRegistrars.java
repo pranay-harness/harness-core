@@ -2,6 +2,7 @@ package io.harness.serializer;
 
 import com.google.common.collect.ImmutableSet;
 
+import io.harness.ccm.serializer.morphia.CECommonsMorphiaRegistrar;
 import io.harness.morphia.MorphiaRegistrar;
 import io.harness.serializer.kryo.CvNextGenCommonsBeansKryoRegistrar;
 import io.harness.serializer.kryo.DelegateAgentBeansKryoRegister;
@@ -73,6 +74,7 @@ public class ManagerRegistrars {
           .add(EventMorphiaRegistrar.class)
           .add(DelegateServiceMorphiaRegistrar.class)
           .add(ViewsMorphiaRegistrar.class)
+          .add(CECommonsMorphiaRegistrar.class)
           .build();
 
   public static final ImmutableSet<Class<? extends AliasRegistrar>> aliasRegistrars =

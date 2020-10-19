@@ -14,6 +14,7 @@ import io.harness.batch.processing.ccm.CostEventType;
 import io.harness.batch.processing.events.timeseries.data.CostEventData;
 import io.harness.batch.processing.events.timeseries.service.intfc.CostEventService;
 import io.harness.category.element.UnitTests;
+import io.harness.ccm.commons.beans.HarnessServiceInfo;
 import io.harness.rule.Owner;
 import org.junit.Before;
 import org.junit.Test;
@@ -28,7 +29,6 @@ import org.springframework.batch.core.JobParameter;
 import org.springframework.batch.core.JobParameters;
 import org.springframework.batch.core.StepExecution;
 import software.wings.api.DeploymentSummary;
-import software.wings.beans.instance.HarnessServiceInfo;
 import software.wings.service.intfc.instance.CloudToHarnessMappingService;
 
 import java.time.Instant;

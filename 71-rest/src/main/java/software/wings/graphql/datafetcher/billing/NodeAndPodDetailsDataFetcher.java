@@ -6,7 +6,7 @@ import com.google.inject.Inject;
 
 import graphql.schema.DataFetchingEnvironment;
 import io.harness.ccm.cluster.InstanceDataServiceImpl;
-import io.harness.ccm.cluster.entities.InstanceData;
+import io.harness.ccm.commons.entities.InstanceData;
 import io.harness.exception.InvalidRequestException;
 import io.harness.timescaledb.DBUtils;
 import io.harness.timescaledb.TimeScaleDBService;

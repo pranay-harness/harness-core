@@ -6,13 +6,13 @@ import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.when;
 
 import io.harness.CategoryTest;
-import io.harness.batch.processing.ccm.InstanceType;
-import io.harness.batch.processing.entities.InstanceData;
 import io.harness.batch.processing.pricing.data.VMInstanceBillingData;
 import io.harness.batch.processing.pricing.gcp.bigquery.BigQueryHelperService;
 import io.harness.batch.processing.service.intfc.InstanceDataService;
 import io.harness.batch.processing.writer.constants.InstanceMetaDataConstants;
 import io.harness.category.element.UnitTests;
+import io.harness.ccm.commons.beans.InstanceType;
+import io.harness.ccm.commons.entities.InstanceData;
 import io.harness.rule.Owner;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.Test;

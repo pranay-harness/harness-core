@@ -15,11 +15,11 @@ import com.google.common.collect.ImmutableMap;
 
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
+import io.harness.ccm.commons.beans.HarnessServiceInfo;
 import io.harness.rule.Owner;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
-import software.wings.beans.instance.HarnessServiceInfo;
 import software.wings.service.intfc.instance.CloudToHarnessMappingService;
 
 import java.util.Optional;

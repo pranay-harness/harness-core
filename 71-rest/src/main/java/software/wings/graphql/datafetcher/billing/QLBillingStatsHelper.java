@@ -13,7 +13,7 @@ import io.harness.ccm.cluster.InstanceDataServiceImpl;
 import io.harness.ccm.cluster.entities.Cluster;
 import io.harness.ccm.cluster.entities.DirectKubernetesCluster;
 import io.harness.ccm.cluster.entities.EcsCluster;
-import io.harness.ccm.cluster.entities.InstanceData;
+import io.harness.ccm.commons.entities.InstanceData;
 import io.harness.ccm.health.CEClusterDao;
 import io.harness.exception.InvalidRequestException;
 import lombok.Value;

@@ -2,10 +2,10 @@ package io.harness.batch.processing.dao.intfc;
 
 import io.harness.batch.processing.ccm.InstanceEvent;
 import io.harness.batch.processing.ccm.InstanceInfo;
-import io.harness.batch.processing.ccm.InstanceState;
-import io.harness.batch.processing.ccm.InstanceType;
-import io.harness.batch.processing.entities.InstanceData;
 import io.harness.batch.processing.pricing.data.CloudProvider;
+import io.harness.ccm.commons.beans.InstanceState;
+import io.harness.ccm.commons.beans.InstanceType;
+import io.harness.ccm.commons.entities.InstanceData;
 
 import java.time.Instant;
 import java.util.List;

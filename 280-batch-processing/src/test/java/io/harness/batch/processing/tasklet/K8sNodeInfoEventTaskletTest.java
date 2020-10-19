@@ -21,12 +21,9 @@ import io.harness.batch.processing.ccm.CCMJobConstants;
 import io.harness.batch.processing.ccm.InstanceCategory;
 import io.harness.batch.processing.ccm.InstanceEvent;
 import io.harness.batch.processing.ccm.InstanceInfo;
-import io.harness.batch.processing.ccm.InstanceType;
-import io.harness.batch.processing.ccm.Resource;
 import io.harness.batch.processing.config.BatchMainConfig;
 import io.harness.batch.processing.dao.intfc.InstanceDataDao;
 import io.harness.batch.processing.dao.intfc.PublishedMessageDao;
-import io.harness.batch.processing.entities.InstanceData;
 import io.harness.batch.processing.pricing.data.CloudProvider;
 import io.harness.batch.processing.service.intfc.CloudProviderService;
 import io.harness.batch.processing.service.intfc.InstanceDataService;
@@ -34,6 +31,9 @@ import io.harness.batch.processing.service.intfc.InstanceResourceService;
 import io.harness.batch.processing.writer.constants.InstanceMetaDataConstants;
 import io.harness.batch.processing.writer.constants.K8sCCMConstants;
 import io.harness.category.element.UnitTests;
+import io.harness.ccm.commons.beans.InstanceType;
+import io.harness.ccm.commons.beans.Resource;
+import io.harness.ccm.commons.entities.InstanceData;
 import io.harness.event.grpc.PublishedMessage;
 import io.harness.grpc.utils.HTimestamps;
 import io.harness.perpetualtask.k8s.watch.NodeEvent;
@@ -222,8 +222,8 @@ public class K8sNodeInfoEventTaskletTest extends CategoryTest {
     PublishedMessage k8sNodeEventMessage = getK8sNodeInfoMessage(NODE_UID, NODE_NAME, CLOUD_PROVIDER_ID, ACCOUNT_ID,
         CLUSTER_NAME, CLUSTER_ID, label, requestQuantity, START_TIMESTAMP);
     InstanceInfo instanceInfo = k8sNodeInfoTasklet.process(k8sNodeEventMessage);
-    io.harness.batch.processing.ccm.Resource infoResource = instanceInfo.getResource();
-    io.harness.batch.processing.ccm.Resource infoAllocatableResource = instanceInfo.getAllocatableResource();
+    Resource infoResource = instanceInfo.getResource();
+    Resource infoAllocatableResource = instanceInfo.getAllocatableResource();
     Map<String, String> metaData = instanceInfo.getMetaData();
     assertThat(instanceInfo).isNotNull();
     assertThat(instanceInfo.getAccountId()).isEqualTo(ACCOUNT_ID);
@@ -260,7 +260,7 @@ public class K8sNodeInfoEventTaskletTest extends CategoryTest {
     PublishedMessage k8sNodeEventMessage = getK8sNodeInfoMessage(NODE_UID, NODE_NAME, CLOUD_PROVIDER_ID, ACCOUNT_ID,
         CLUSTER_NAME, CLUSTER_ID, label, requestQuantity, START_TIMESTAMP);
     InstanceInfo instanceInfo = k8sNodeInfoTasklet.process(k8sNodeEventMessage);
-    io.harness.batch.processing.ccm.Resource infoResource = instanceInfo.getResource();
+    Resource infoResource = instanceInfo.getResource();
     Map<String, String> metaData = instanceInfo.getMetaData();
     assertThat(instanceInfo).isNotNull();
     assertThat(instanceInfo.getAccountId()).isEqualTo(ACCOUNT_ID);

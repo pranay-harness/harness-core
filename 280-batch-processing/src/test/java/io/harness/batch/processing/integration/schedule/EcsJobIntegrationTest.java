@@ -8,15 +8,15 @@ import static org.assertj.core.api.Assertions.assertThat;
 import com.google.protobuf.Timestamp;
 
 import io.harness.CategoryTest;
-import io.harness.batch.processing.ccm.InstanceState;
-import io.harness.batch.processing.entities.InstanceData;
-import io.harness.batch.processing.entities.InstanceData.InstanceDataKeys;
 import io.harness.batch.processing.integration.EcsEventGenerator;
 import io.harness.batch.processing.schedule.BatchJobRunner;
 import io.harness.batch.processing.service.intfc.InstanceDataService;
 import io.harness.category.element.UnitTests;
 import io.harness.ccm.cluster.entities.BatchJobScheduledData;
 import io.harness.ccm.cluster.entities.LastReceivedPublishedMessage;
+import io.harness.ccm.commons.beans.InstanceState;
+import io.harness.ccm.commons.entities.InstanceData;
+import io.harness.ccm.commons.entities.InstanceData.InstanceDataKeys;
 import io.harness.event.grpc.PublishedMessage;
 import io.harness.event.grpc.PublishedMessage.PublishedMessageKeys;
 import io.harness.grpc.utils.HTimestamps;

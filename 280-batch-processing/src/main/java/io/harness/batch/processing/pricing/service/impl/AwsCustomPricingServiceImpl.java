@@ -5,7 +5,6 @@ import static org.apache.commons.codec.digest.DigestUtils.md5Hex;
 
 import com.github.benmanes.caffeine.cache.Cache;
 import com.github.benmanes.caffeine.cache.Caffeine;
-import io.harness.batch.processing.entities.InstanceData;
 import io.harness.batch.processing.pricing.aws.athena.AwsAthenaQueryHelperService;
 import io.harness.batch.processing.pricing.data.AccountComputePricingData;
 import io.harness.batch.processing.pricing.data.AccountFargatePricingData;
@@ -15,6 +14,7 @@ import io.harness.batch.processing.pricing.data.VMComputePricingInfo;
 import io.harness.batch.processing.pricing.service.intfc.AwsCustomPricingService;
 import io.harness.batch.processing.service.impl.SettingValueServiceImpl;
 import io.harness.batch.processing.writer.constants.InstanceMetaDataConstants;
+import io.harness.ccm.commons.entities.InstanceData;
 import io.harness.persistence.HPersistence;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;

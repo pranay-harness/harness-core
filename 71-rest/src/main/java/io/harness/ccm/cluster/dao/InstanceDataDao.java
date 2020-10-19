@@ -5,8 +5,8 @@ import static io.harness.persistence.HQuery.excludeAuthority;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
-import io.harness.ccm.cluster.entities.InstanceData;
-import io.harness.ccm.cluster.entities.InstanceData.InstanceDataKeys;
+import io.harness.ccm.commons.entities.InstanceData;
+import io.harness.ccm.commons.entities.InstanceData.InstanceDataKeys;
 import io.harness.persistence.HPersistence;
 import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.query.Query;

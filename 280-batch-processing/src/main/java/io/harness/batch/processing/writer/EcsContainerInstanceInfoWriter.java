@@ -3,13 +3,13 @@ package io.harness.batch.processing.writer;
 import com.google.inject.Singleton;
 
 import io.harness.batch.processing.ccm.ClusterType;
-import io.harness.batch.processing.ccm.InstanceState;
-import io.harness.batch.processing.ccm.InstanceType;
-import io.harness.batch.processing.ccm.Resource;
-import io.harness.batch.processing.entities.InstanceData;
 import io.harness.batch.processing.pricing.data.CloudProvider;
 import io.harness.batch.processing.writer.constants.EventTypeConstants;
 import io.harness.batch.processing.writer.constants.InstanceMetaDataConstants;
+import io.harness.ccm.commons.beans.InstanceState;
+import io.harness.ccm.commons.beans.InstanceType;
+import io.harness.ccm.commons.beans.Resource;
+import io.harness.ccm.commons.entities.InstanceData;
 import io.harness.event.grpc.PublishedMessage;
 import io.harness.event.payloads.EcsContainerInstanceDescription;
 import io.harness.event.payloads.EcsContainerInstanceInfo;

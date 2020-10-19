@@ -4,11 +4,11 @@ import com.google.protobuf.Any;
 import com.google.protobuf.Message;
 import com.google.protobuf.Timestamp;
 
-import io.harness.batch.processing.ccm.InstanceType;
-import io.harness.batch.processing.ccm.Resource;
-import io.harness.batch.processing.entities.InstanceData;
 import io.harness.batch.processing.pricing.data.CloudProvider;
 import io.harness.batch.processing.writer.constants.InstanceMetaDataConstants;
+import io.harness.ccm.commons.beans.InstanceType;
+import io.harness.ccm.commons.beans.Resource;
+import io.harness.ccm.commons.entities.InstanceData;
 import io.harness.event.grpc.PublishedMessage;
 import io.harness.event.payloads.Ec2InstanceInfo;
 import io.harness.event.payloads.Ec2Lifecycle;
@@ -199,7 +199,7 @@ public interface EcsEventGenerator {
   }
 
   default InstanceData createEc2InstanceData(
-      String instanceId, String accountId, io.harness.batch.processing.ccm.InstanceState instanceState) {
+      String instanceId, String accountId, io.harness.ccm.commons.beans.InstanceState instanceState) {
     Map<String, String> metaData = new HashMap<>();
     metaData.put(InstanceMetaDataConstants.CLOUD_PROVIDER, CloudProvider.AWS.name());
     metaData.put(InstanceMetaDataConstants.INSTANCE_FAMILY, INSTANCE_TYPE);
@@ -214,7 +214,7 @@ public interface EcsEventGenerator {
   }
 
   default InstanceData createContainerInstanceData(
-      String instanceId, String accountId, io.harness.batch.processing.ccm.InstanceState instanceState) {
+      String instanceId, String accountId, io.harness.ccm.commons.beans.InstanceState instanceState) {
     Map<String, String> metaData = new HashMap<>();
     metaData.put(InstanceMetaDataConstants.CLOUD_PROVIDER, CloudProvider.AWS.name());
     metaData.put(InstanceMetaDataConstants.INSTANCE_FAMILY, INSTANCE_TYPE);
@@ -230,7 +230,7 @@ public interface EcsEventGenerator {
   }
 
   default InstanceData createTaskInstanceData(
-      String instanceId, String accountId, io.harness.batch.processing.ccm.InstanceState instanceState) {
+      String instanceId, String accountId, io.harness.ccm.commons.beans.InstanceState instanceState) {
     Map<String, String> metaData = new HashMap<>();
     metaData.put(InstanceMetaDataConstants.REGION, DEFAULT_AWS_REGION);
     metaData.put(InstanceMetaDataConstants.CLOUD_PROVIDER, CloudProvider.AWS.name());
@@ -258,12 +258,12 @@ public interface EcsEventGenerator {
     return Collections.singletonList(publishedMessage);
   }
 
-  default List<io.harness.batch.processing.ccm.InstanceState> getActiveInstanceState() {
-    return new ArrayList<>(Arrays.asList(io.harness.batch.processing.ccm.InstanceState.INITIALIZING,
-        io.harness.batch.processing.ccm.InstanceState.RUNNING));
+  default List<io.harness.ccm.commons.beans.InstanceState> getActiveInstanceState() {
+    return new ArrayList<>(Arrays.asList(
+        io.harness.ccm.commons.beans.InstanceState.INITIALIZING, io.harness.ccm.commons.beans.InstanceState.RUNNING));
   }
 
-  default List<io.harness.batch.processing.ccm.InstanceState> getStoppedInstanceState() {
-    return Collections.singletonList(io.harness.batch.processing.ccm.InstanceState.STOPPED);
+  default List<io.harness.ccm.commons.beans.InstanceState> getStoppedInstanceState() {
+    return Collections.singletonList(io.harness.ccm.commons.beans.InstanceState.STOPPED);
   }
 }
