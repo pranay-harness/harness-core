@@ -8,6 +8,7 @@ import io.harness.cdng.infra.steps.InfrastructureStep;
 import io.harness.cdng.k8s.K8sRollingRollbackStep;
 import io.harness.cdng.k8s.K8sRollingStep;
 import io.harness.cdng.pipeline.steps.DeploymentStageStep;
+import io.harness.cdng.pipeline.steps.HttpStep;
 import io.harness.cdng.pipeline.steps.NGSectionStep;
 import io.harness.cdng.pipeline.steps.PipelineSetupStep;
 import io.harness.cdng.pipeline.steps.RollbackOptionalChildChainStep;
@@ -15,7 +16,6 @@ import io.harness.cdng.pipeline.steps.RollbackOptionalChildrenStep;
 import io.harness.cdng.service.steps.ServiceStep;
 import io.harness.cdng.tasks.manifestFetch.step.ManifestFetchStep;
 import io.harness.redesign.states.email.EmailStep;
-import io.harness.redesign.states.http.BasicHttpStep;
 import io.harness.redesign.states.http.chain.BasicHttpChainStep;
 import io.harness.redesign.states.shell.ShellScriptStep;
 import io.harness.redesign.states.wait.WaitStep;
@@ -30,7 +30,6 @@ import java.util.Set;
 public class NgStepRegistrar implements StepRegistrar {
   @Override
   public void register(Set<Pair<StepType, Class<? extends Step>>> stateClasses) {
-    stateClasses.add(Pair.of(BasicHttpStep.STEP_TYPE, BasicHttpStep.class));
     stateClasses.add(Pair.of(WaitStep.STEP_TYPE, WaitStep.class));
     stateClasses.add(Pair.of(ShellScriptStep.STEP_TYPE, ShellScriptStep.class));
     stateClasses.add(Pair.of(EmailStep.STEP_TYPE, EmailStep.class));
@@ -48,5 +47,6 @@ public class NgStepRegistrar implements StepRegistrar {
     stateClasses.add(Pair.of(ServiceStep.STEP_TYPE, ServiceStep.class));
     stateClasses.add(Pair.of(K8sRollingStep.STEP_TYPE, K8sRollingStep.class));
     stateClasses.add(Pair.of(K8sRollingRollbackStep.STEP_TYPE, K8sRollingRollbackStep.class));
+    stateClasses.add(Pair.of(HttpStep.STEP_TYPE, HttpStep.class));
   }
 }

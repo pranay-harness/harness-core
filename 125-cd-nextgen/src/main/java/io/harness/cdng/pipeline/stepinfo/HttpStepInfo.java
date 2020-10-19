@@ -2,12 +2,12 @@ package io.harness.cdng.pipeline.stepinfo;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonTypeName;
-import io.harness.cdng.executionplan.utils.PlanCreatorFacilitatorUtils;
 import io.harness.cdng.pipeline.CDStepInfo;
+import io.harness.cdng.pipeline.steps.HttpStep;
 import io.harness.cdng.visitor.YamlTypes;
 import io.harness.cdng.visitor.helpers.cdstepinfo.HttpStepInfoVisitorHelper;
 import io.harness.executions.steps.StepSpecTypeConstants;
-import io.harness.redesign.states.http.BasicHttpStep;
+import io.harness.facilitator.FacilitatorType;
 import io.harness.redesign.states.http.BasicHttpStepParameters;
 import io.harness.state.StepType;
 import io.harness.walktree.beans.LevelNode;
@@ -47,13 +47,13 @@ public class HttpStepInfo extends BasicHttpStepParameters implements CDStepInfo,
   @Override
   @JsonIgnore
   public StepType getStepType() {
-    return BasicHttpStep.STEP_TYPE;
+    return HttpStep.STEP_TYPE;
   }
 
   @Override
   @JsonIgnore
   public String getFacilitatorType() {
-    return PlanCreatorFacilitatorUtils.decideTaskFacilitatorType();
+    return FacilitatorType.TASK_V3;
   }
 
   @Override

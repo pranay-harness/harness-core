@@ -10,4 +10,7 @@ public class PlanCreatorConstants {
   public final String EXECUTION_ROLLBACK_NODE_IDENTIFIER = "executionRollback";
   public final String STEP_GROUPS_ROLLBACK_NODE_IDENTIFIER = "stepGroupsRollback";
   public final String PARALLEL_STEP_GROUPS_ROLLBACK_NODE_IDENTIFIER = "parallelStepGroupsRollback";
+  public final String SERVICE_NODE_NAME = "Service";
+  public final String INFRA_NODE_NAME = "Infrastructure";
+  public final String EXECUTION_NODE_NAME = "Execution";
 }
