@@ -381,9 +381,10 @@ public class AssignDelegateServiceImpl implements AssignDelegateService {
         if (isNotBlank(criteria)) {
           Optional<DelegateConnectionResult> result =
               delegateConnectionResultCache.get(ImmutablePair.of(delegateId, criteria));
-          if (!result.isPresent() || result.get().isValidated()
+          if (!result.isPresent() || !result.get().isValidated()
               || clock.millis() - result.get().getLastUpdatedAt() > BLACKLIST_TTL
-              || isEmpty(connectedWhitelistedDelegates(task))) {
+              || (!retrieveActiveDelegates(task.getAccountId(), null).contains(delegateId)
+                     && isEmpty(connectedWhitelistedDelegates(task)))) {
             return true;
           }
         } else {
