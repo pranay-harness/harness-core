@@ -10,6 +10,7 @@ import com.google.inject.Inject;
 import io.harness.CategoryTest;
 import io.harness.batch.processing.dao.intfc.InstanceDataDao;
 import io.harness.category.element.UnitTests;
+import io.harness.ccm.commons.beans.HarnessServiceInfo;
 import io.harness.rule.Owner;
 import org.junit.Before;
 import org.junit.Test;
@@ -17,7 +18,6 @@ import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
-import software.wings.beans.instance.HarnessServiceInfo;
 
 import java.util.Arrays;
 import java.util.List;

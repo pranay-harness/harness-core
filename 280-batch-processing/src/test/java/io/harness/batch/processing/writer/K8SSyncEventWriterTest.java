@@ -13,13 +13,13 @@ import com.google.protobuf.Any;
 
 import io.harness.CategoryTest;
 import io.harness.batch.processing.ccm.CCMJobConstants;
-import io.harness.batch.processing.ccm.InstanceState;
 import io.harness.batch.processing.config.BatchMainConfig;
 import io.harness.batch.processing.dao.intfc.PublishedMessageDao;
-import io.harness.batch.processing.entities.InstanceData;
 import io.harness.batch.processing.service.intfc.InstanceDataService;
 import io.harness.batch.processing.tasklet.K8SSyncEventTasklet;
 import io.harness.category.element.UnitTests;
+import io.harness.ccm.commons.beans.InstanceState;
+import io.harness.ccm.commons.entities.InstanceData;
 import io.harness.event.grpc.PublishedMessage;
 import io.harness.grpc.utils.HTimestamps;
 import io.harness.perpetualtask.k8s.watch.K8SClusterSyncEvent;

@@ -24,7 +24,6 @@ import io.harness.CategoryTest;
 import io.harness.batch.processing.billing.timeseries.data.InstanceUtilizationData;
 import io.harness.batch.processing.billing.timeseries.service.impl.UtilizationDataServiceImpl;
 import io.harness.batch.processing.ccm.CCMJobConstants;
-import io.harness.batch.processing.ccm.InstanceType;
 import io.harness.batch.processing.cloudevents.aws.ecs.service.CEClusterDao;
 import io.harness.batch.processing.cloudevents.aws.ecs.service.intfc.AwsECSClusterService;
 import io.harness.batch.processing.cloudevents.aws.ecs.service.support.intfc.AwsEC2HelperService;
@@ -33,11 +32,13 @@ import io.harness.batch.processing.cloudevents.aws.ecs.service.tasklet.support.E
 import io.harness.batch.processing.cloudevents.aws.ecs.service.tasklet.support.response.EcsUtilizationData;
 import io.harness.batch.processing.cloudevents.aws.ecs.service.tasklet.support.response.MetricValue;
 import io.harness.batch.processing.dao.intfc.InstanceDataDao;
-import io.harness.batch.processing.entities.InstanceData;
 import io.harness.batch.processing.service.intfc.InstanceDataService;
 import io.harness.batch.processing.service.intfc.InstanceResourceService;
 import io.harness.batch.processing.writer.constants.InstanceMetaDataConstants;
 import io.harness.category.element.UnitTests;
+import io.harness.ccm.commons.beans.HarnessServiceInfo;
+import io.harness.ccm.commons.beans.InstanceType;
+import io.harness.ccm.commons.entities.InstanceData;
 import io.harness.ccm.health.LastReceivedPublishedMessageDao;
 import io.harness.ccm.setup.CECloudAccountDao;
 import io.harness.rule.Owner;
@@ -62,7 +63,6 @@ import software.wings.beans.SettingAttribute;
 import software.wings.beans.ce.CEAwsConfig;
 import software.wings.beans.ce.CECloudAccount;
 import software.wings.beans.ce.CECluster;
-import software.wings.beans.instance.HarnessServiceInfo;
 import software.wings.service.intfc.instance.CloudToHarnessMappingService;
 import software.wings.settings.SettingValue;
 
@@ -245,7 +245,7 @@ public class AwsECSClusterDataSyncTaskletTest extends CategoryTest {
     assertThat(instanceData.getInstanceId()).isEqualTo("ce-ecs-ec2-test");
     assertThat(instanceData.getInstanceType()).isEqualTo(InstanceType.ECS_CONTAINER_INSTANCE);
     assertThat(instanceData.getAllocatableResource())
-        .isEqualTo(io.harness.batch.processing.ccm.Resource.builder().cpuUnits(1.0).memoryMb(1024.0).build());
+        .isEqualTo(io.harness.ccm.commons.beans.Resource.builder().cpuUnits(1.0).memoryMb(1024.0).build());
     assertThat(instanceData.getUsageStartTime()).isEqualTo(instant);
   }
 
@@ -267,7 +267,7 @@ public class AwsECSClusterDataSyncTaskletTest extends CategoryTest {
     assertThat(instanceData.getInstanceId()).isEqualTo("0fcd0a44-b82f-4f23-84ee-3ad8b40625a2");
     assertThat(instanceData.getInstanceType()).isEqualTo(InstanceType.ECS_TASK_EC2);
     assertThat(instanceData.getAllocatableResource())
-        .isEqualTo(io.harness.batch.processing.ccm.Resource.builder().cpuUnits(1.0).memoryMb(512.0).build());
+        .isEqualTo(io.harness.ccm.commons.beans.Resource.builder().cpuUnits(1.0).memoryMb(512.0).build());
     assertThat(instanceData.getUsageStartTime()).isEqualTo(instant);
     assertThat(instanceDataMetaData.get(InstanceMetaDataConstants.INSTANCE_FAMILY))
         .isEqualTo(InstanceMetaDataConstants.INSTANCE_FAMILY);
@@ -285,7 +285,7 @@ public class AwsECSClusterDataSyncTaskletTest extends CategoryTest {
     return InstanceData.builder()
         .instanceId("ce-ecs-ec2-test")
         .metaData(metaData)
-        .totalResource(io.harness.batch.processing.ccm.Resource.builder().cpuUnits(1024.0).memoryMb(1024.0).build())
+        .totalResource(io.harness.ccm.commons.beans.Resource.builder().cpuUnits(1024.0).memoryMb(1024.0).build())
         .build();
   }
 

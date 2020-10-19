@@ -3,6 +3,7 @@ package io.harness.batch.processing.entities;
 import com.google.common.collect.ImmutableSet;
 
 import io.harness.ccm.cluster.entities.BatchJobScheduledData;
+import io.harness.ccm.commons.entities.InstanceData;
 import io.harness.event.grpc.PublishedMessage;
 
 import java.util.Set;

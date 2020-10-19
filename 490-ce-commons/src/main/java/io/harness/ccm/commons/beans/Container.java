@@ -1,4 +1,4 @@
-package io.harness.batch.processing.ccm;
+package io.harness.ccm.commons.beans;
 
 public class Container {
   String name;

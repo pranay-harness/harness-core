@@ -8,6 +8,7 @@ import com.google.inject.Inject;
 import com.github.benmanes.caffeine.cache.Caffeine;
 import com.github.benmanes.caffeine.cache.LoadingCache;
 import io.harness.batch.processing.tasklet.util.CacheUtils;
+import io.harness.ccm.commons.beans.HarnessServiceInfo;
 import lombok.Value;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
@@ -17,7 +18,6 @@ import software.wings.api.K8sDeploymentInfo;
 import software.wings.beans.container.Label;
 import software.wings.beans.infrastructure.instance.key.deployment.ContainerDeploymentKey;
 import software.wings.beans.infrastructure.instance.key.deployment.K8sDeploymentKey;
-import software.wings.beans.instance.HarnessServiceInfo;
 import software.wings.service.intfc.instance.CloudToHarnessMappingService;
 
 import java.util.Arrays;

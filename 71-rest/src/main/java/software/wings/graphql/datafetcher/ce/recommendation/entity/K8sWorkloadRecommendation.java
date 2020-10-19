@@ -3,6 +3,7 @@ package software.wings.graphql.datafetcher.ce.recommendation.entity;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 
 import io.harness.annotation.StoreIn;
+import io.harness.ccm.commons.beans.HarnessServiceInfo;
 import io.harness.data.structure.MongoMapSanitizer;
 import io.harness.mongo.index.FdIndex;
 import io.harness.mongo.index.FdTtlIndex;
@@ -25,7 +26,6 @@ import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Id;
 import org.mongodb.morphia.annotations.PostLoad;
 import org.mongodb.morphia.annotations.PrePersist;
-import software.wings.beans.instance.HarnessServiceInfo;
 
 import java.math.BigDecimal;
 import java.time.Instant;

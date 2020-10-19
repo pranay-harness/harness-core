@@ -1,6 +1,6 @@
 package io.harness.batch.processing.billing.timeseries.data;
 
-import io.harness.batch.processing.ccm.Resource;
+import io.harness.ccm.commons.beans.Resource;
 import lombok.Builder;
 import lombok.Value;
 

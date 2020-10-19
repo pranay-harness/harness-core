@@ -6,9 +6,9 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 import io.harness.CategoryTest;
-import io.harness.batch.processing.ccm.InstanceType;
 import io.harness.batch.processing.events.timeseries.data.CostEventData;
 import io.harness.category.element.UnitTests;
+import io.harness.ccm.commons.beans.InstanceType;
 import io.harness.rule.Owner;
 import io.harness.timescaledb.TimeScaleDBService;
 import org.junit.Before;

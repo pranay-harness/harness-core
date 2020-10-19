@@ -20,9 +20,9 @@ import io.harness.batch.processing.billing.timeseries.service.impl.UnallocatedBi
 import io.harness.batch.processing.ccm.BatchJobType;
 import io.harness.batch.processing.ccm.CCMJobConstants;
 import io.harness.batch.processing.ccm.ClusterType;
-import io.harness.batch.processing.ccm.InstanceType;
 import io.harness.batch.processing.ccm.UnallocatedCostData;
 import io.harness.category.element.UnitTests;
+import io.harness.ccm.commons.beans.InstanceType;
 import io.harness.rule.Owner;
 import org.junit.Before;
 import org.junit.Test;

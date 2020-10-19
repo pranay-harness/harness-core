@@ -1,3 +1,3 @@
-package io.harness.batch.processing.ccm;
+package io.harness.ccm.commons.beans;
 
 public enum InstanceState { INITIALIZING, RUNNING, STOPPED }

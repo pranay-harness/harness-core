@@ -7,8 +7,8 @@ import com.google.inject.Inject;
 
 import io.harness.category.element.UnitTests;
 import io.harness.ccm.cluster.dao.InstanceDataDao;
-import io.harness.ccm.cluster.entities.InstanceData;
-import io.harness.ccm.cluster.entities.Resource;
+import io.harness.ccm.commons.beans.Resource;
+import io.harness.ccm.commons.entities.InstanceData;
 import io.harness.rule.Owner;
 import org.junit.Before;
 import org.junit.Test;

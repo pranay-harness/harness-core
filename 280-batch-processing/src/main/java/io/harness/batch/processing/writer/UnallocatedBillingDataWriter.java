@@ -1,9 +1,9 @@
 package io.harness.batch.processing.writer;
 
 import static io.harness.batch.processing.ccm.ClusterType.INVALID;
-import static io.harness.batch.processing.ccm.InstanceType.CLUSTER_UNALLOCATED;
 import static io.harness.batch.processing.writer.constants.K8sCCMConstants.DEFAULT_DEPLOYMENT_TYPE;
 import static io.harness.batch.processing.writer.constants.K8sCCMConstants.UNALLOCATED;
+import static io.harness.ccm.commons.beans.InstanceType.CLUSTER_UNALLOCATED;
 
 import com.google.common.base.Enums;
 import com.google.inject.Singleton;
@@ -16,8 +16,8 @@ import io.harness.batch.processing.ccm.BatchJobType;
 import io.harness.batch.processing.ccm.CCMJobConstants;
 import io.harness.batch.processing.ccm.ClusterCostData;
 import io.harness.batch.processing.ccm.ClusterType;
-import io.harness.batch.processing.ccm.InstanceType;
 import io.harness.batch.processing.ccm.UnallocatedCostData;
+import io.harness.ccm.commons.beans.InstanceType;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.batch.core.JobParameters;
 import org.springframework.batch.core.StepExecution;

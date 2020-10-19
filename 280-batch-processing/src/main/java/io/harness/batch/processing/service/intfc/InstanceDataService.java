@@ -2,9 +2,9 @@ package io.harness.batch.processing.service.intfc;
 
 import io.harness.batch.processing.billing.timeseries.data.InstanceLifecycleInfo;
 import io.harness.batch.processing.billing.timeseries.data.PrunedInstanceData;
-import io.harness.batch.processing.ccm.InstanceState;
-import io.harness.batch.processing.entities.InstanceData;
 import io.harness.batch.processing.pricing.data.CloudProvider;
+import io.harness.ccm.commons.beans.InstanceState;
+import io.harness.ccm.commons.entities.InstanceData;
 
 import java.time.Instant;
 import java.util.List;

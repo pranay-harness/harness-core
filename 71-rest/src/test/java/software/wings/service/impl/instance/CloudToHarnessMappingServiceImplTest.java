@@ -8,6 +8,7 @@ import static org.mockito.Mockito.when;
 import com.google.inject.Inject;
 
 import io.harness.category.element.UnitTests;
+import io.harness.ccm.commons.beans.HarnessServiceInfo;
 import io.harness.rule.Owner;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -19,7 +20,6 @@ import software.wings.api.DeploymentSummary;
 import software.wings.beans.Account;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.infrastructure.instance.key.deployment.ContainerDeploymentKey;
-import software.wings.beans.instance.HarnessServiceInfo;
 import software.wings.service.intfc.instance.DeploymentService;
 import software.wings.settings.SettingVariableTypes;
 

@@ -1,7 +1,13 @@
-package io.harness.ccm.cluster.entities;
+package io.harness.ccm.commons.entities;
 
 import io.harness.annotation.StoreIn;
-import io.harness.ccm.cluster.entities.InstanceData.InstanceDataKeys;
+import io.harness.ccm.commons.beans.Container;
+import io.harness.ccm.commons.beans.HarnessServiceInfo;
+import io.harness.ccm.commons.beans.InstanceState;
+import io.harness.ccm.commons.beans.InstanceType;
+import io.harness.ccm.commons.beans.Resource;
+import io.harness.ccm.commons.beans.StorageResource;
+import io.harness.ccm.commons.entities.InstanceData.InstanceDataKeys;
 import io.harness.mongo.index.CdIndex;
 import io.harness.mongo.index.FdIndex;
 import io.harness.mongo.index.Field;
@@ -18,9 +24,9 @@ import lombok.experimental.FieldDefaults;
 import lombok.experimental.FieldNameConstants;
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Id;
-import software.wings.beans.instance.HarnessServiceInfo;
 
 import java.time.Instant;
+import java.util.List;
 import java.util.Map;
 
 @Data
@@ -53,7 +59,6 @@ import java.util.Map;
       @Field(InstanceDataKeys.accountId)
       , @Field(value = InstanceDataKeys.usageStartTime), @Field(value = InstanceDataKeys.usageStopTime)
     })
-
 @FieldNameConstants(innerTypeName = "InstanceDataKeys")
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @StoreIn("events")
@@ -65,16 +70,27 @@ public class InstanceData implements PersistentEntity, UuidAware, CreatedAtAware
   String instanceName;
   String clusterName;
   String clusterId;
+  String cloudProviderInstanceId;
+  InstanceType instanceType;
   Resource totalResource;
+  Resource limitResource;
   Resource allocatableResource;
+  StorageResource storageResource;
+  List<Container> containerList;
   Map<String, String> labels;
+  Map<String, String> namespaceLabels;
   Map<String, String> metaData;
   Instant usageStartTime;
   Instant usageStopTime;
-  String instanceState;
+  InstanceState instanceState;
 
   long createdAt;
   long lastUpdatedAt;
 
   HarnessServiceInfo harnessServiceInfo;
+
+  public static final class InstanceDataKeys {
+    private InstanceDataKeys() {}
+    public static final String CLOUD_PROVIDER = "metaData.cloud_provider";
+  }
 }

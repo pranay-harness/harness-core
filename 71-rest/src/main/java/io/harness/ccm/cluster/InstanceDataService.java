@@ -1,6 +1,6 @@
 package io.harness.ccm.cluster;
 
-import io.harness.ccm.cluster.entities.InstanceData;
+import io.harness.ccm.commons.entities.InstanceData;
 
 import java.util.List;
 

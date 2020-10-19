@@ -20,17 +20,18 @@ import io.harness.batch.processing.billing.writer.support.ClusterDataGenerationV
 import io.harness.batch.processing.ccm.CCMJobConstants;
 import io.harness.batch.processing.ccm.InstanceEvent;
 import io.harness.batch.processing.ccm.InstanceInfo;
-import io.harness.batch.processing.ccm.InstanceType;
 import io.harness.batch.processing.config.BatchMainConfig;
 import io.harness.batch.processing.dao.intfc.InstanceDataDao;
 import io.harness.batch.processing.dao.intfc.PublishedMessageDao;
-import io.harness.batch.processing.entities.InstanceData;
 import io.harness.batch.processing.service.intfc.InstanceDataService;
 import io.harness.batch.processing.service.intfc.WorkloadRepository;
 import io.harness.batch.processing.tasklet.support.HarnessServiceInfoFetcher;
 import io.harness.batch.processing.writer.constants.InstanceMetaDataConstants;
 import io.harness.batch.processing.writer.constants.K8sCCMConstants;
 import io.harness.category.element.UnitTests;
+import io.harness.ccm.commons.beans.HarnessServiceInfo;
+import io.harness.ccm.commons.beans.InstanceType;
+import io.harness.ccm.commons.entities.InstanceData;
 import io.harness.event.grpc.PublishedMessage;
 import io.harness.grpc.utils.HTimestamps;
 import io.harness.perpetualtask.k8s.watch.PodEvent;
@@ -53,7 +54,6 @@ import org.springframework.batch.core.StepExecution;
 import org.springframework.batch.core.scope.context.ChunkContext;
 import org.springframework.batch.core.scope.context.StepContext;
 import org.springframework.batch.repeat.RepeatStatus;
-import software.wings.beans.instance.HarnessServiceInfo;
 import software.wings.security.authentication.BatchQueryConfig;
 
 import java.time.Instant;
@@ -248,8 +248,8 @@ public class K8sPodInfoEventTaskletTest extends CategoryTest {
         getK8sPodInfoMessage(POD_UID, POD_NAME, NODE_NAME, CLOUD_PROVIDER_ID, ACCOUNT_ID, CLUSTER_ID, CLUSTER_NAME,
             NAMESPACE, label, NAMESPACE_LABELS, resource, START_TIMESTAMP, WORKLOAD_NAME, WORKLOAD_TYPE, WORKLOAD_ID);
     InstanceInfo instanceInfo = k8sPodInfoTasklet.process(k8sPodInfoMessage);
-    io.harness.batch.processing.ccm.Resource infoResource = instanceInfo.getResource();
-    io.harness.batch.processing.ccm.Resource limitResource = instanceInfo.getResourceLimit();
+    io.harness.ccm.commons.beans.Resource infoResource = instanceInfo.getResource();
+    io.harness.ccm.commons.beans.Resource limitResource = instanceInfo.getResourceLimit();
     Map<String, String> metaData = instanceInfo.getMetaData();
     assertThat(instanceInfo).isNotNull();
     assertThat(instanceInfo.getAccountId()).isEqualTo(ACCOUNT_ID);
@@ -294,8 +294,8 @@ public class K8sPodInfoEventTaskletTest extends CategoryTest {
         getK8sPodInfoMessage(POD_UID, KUBE_PROXY_POD_NAME, NODE_NAME, CLOUD_PROVIDER_ID, ACCOUNT_ID, CLUSTER_ID,
             CLUSTER_NAME, KUBE_SYSTEM_NAMESPACE, label, NAMESPACE_LABELS, resource, START_TIMESTAMP, "", "", "");
     InstanceInfo instanceInfo = k8sPodInfoTasklet.process(k8sPodInfoMessage);
-    io.harness.batch.processing.ccm.Resource infoResource = instanceInfo.getResource();
-    io.harness.batch.processing.ccm.Resource limitResource = instanceInfo.getResourceLimit();
+    io.harness.ccm.commons.beans.Resource infoResource = instanceInfo.getResource();
+    io.harness.ccm.commons.beans.Resource limitResource = instanceInfo.getResourceLimit();
 
     Map<String, String> metaData = instanceInfo.getMetaData();
     assertThat(instanceInfo).isNotNull();
@@ -321,10 +321,10 @@ public class K8sPodInfoEventTaskletTest extends CategoryTest {
     nodeMetaData.put(InstanceMetaDataConstants.INSTANCE_FAMILY, InstanceMetaDataConstants.INSTANCE_FAMILY);
     nodeMetaData.put(InstanceMetaDataConstants.OPERATING_SYSTEM, InstanceMetaDataConstants.OPERATING_SYSTEM);
     nodeMetaData.put(K8sCCMConstants.GKE_NODE_POOL_KEY, NODE_POOL_NAME);
-    io.harness.batch.processing.ccm.Resource instanceResource = io.harness.batch.processing.ccm.Resource.builder()
-                                                                    .cpuUnits((double) CPU_AMOUNT)
-                                                                    .memoryMb((double) MEMORY_AMOUNT)
-                                                                    .build();
+    io.harness.ccm.commons.beans.Resource instanceResource = io.harness.ccm.commons.beans.Resource.builder()
+                                                                 .cpuUnits((double) CPU_AMOUNT)
+                                                                 .memoryMb((double) MEMORY_AMOUNT)
+                                                                 .build();
     return PrunedInstanceData.builder()
         .instanceId(NODE_NAME)
         .cloudProviderInstanceId(CLOUD_PROVIDER_INSTANCE_ID)

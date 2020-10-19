@@ -3,10 +3,10 @@ package io.harness.batch.processing.writer;
 import static io.harness.event.payloads.Lifecycle.EventType.EVENT_TYPE_START;
 import static io.harness.event.payloads.Lifecycle.EventType.EVENT_TYPE_STOP;
 
-import io.harness.batch.processing.ccm.InstanceState;
-import io.harness.batch.processing.entities.InstanceData;
 import io.harness.batch.processing.service.intfc.InstanceDataService;
 import io.harness.batch.processing.service.intfc.InstanceResourceService;
+import io.harness.ccm.commons.beans.InstanceState;
+import io.harness.ccm.commons.entities.InstanceData;
 import io.harness.event.payloads.Lifecycle;
 import io.harness.exception.InvalidRequestException;
 import io.harness.grpc.utils.HTimestamps;
