@@ -174,6 +174,7 @@ public abstract class AbstractMetricAnalysisState extends AbstractAnalysisState 
         Map<String, String> canaryNewHostNames = analysisContext.getTestNodes();
         if (isAwsLambdaState(context)) {
           canaryNewHostNames.put(LAMBDA_HOST_NAME, DEFAULT_GROUP_NAME);
+          analysisContext.setTestNodes(canaryNewHostNames);
         }
 
         if (isAwsECSState(context)) {
@@ -182,6 +183,7 @@ public abstract class AbstractMetricAnalysisState extends AbstractAnalysisState 
             for (String clusterName : cloudWatchState.fetchEcsMetrics().keySet()) {
               canaryNewHostNames.put(clusterName, DEFAULT_GROUP_NAME);
             }
+            analysisContext.setTestNodes(canaryNewHostNames);
           }
         }
         if (getStateType().equals(StateType.CLOUD_WATCH.name())) {
@@ -190,6 +192,7 @@ public abstract class AbstractMetricAnalysisState extends AbstractAnalysisState 
             for (String lbName : cloudWatchState.fetchLoadBalancerMetrics().keySet()) {
               canaryNewHostNames.put(lbName, DEFAULT_GROUP_NAME);
             }
+            analysisContext.setTestNodes(canaryNewHostNames);
           }
         }
 
