@@ -564,7 +564,7 @@ public class AssignDelegateServiceImplTest extends WingsBaseTest {
       verify(delegateSelectionLogsService, Mockito.times(test.getNumOfMissingAllSelectorsInvocations()))
           .logMissingAllSelectors(batch, ACCOUNT_ID, DELEGATE_ID);
       verify(delegateSelectionLogsService, Mockito.times(test.getNumOfMissingSelectorInvocations()))
-          .logMissingSelector(eq(batch), eq(ACCOUNT_ID), eq(DELEGATE_ID), anyString());
+          .logMissingSelector(eq(batch), eq(ACCOUNT_ID), eq(DELEGATE_ID), anyString(), anyString());
     }
 
     delegateTaskBuilder.setupAbstraction(Cd1SetupFields.ENV_ID_FIELD, ENV_ID);

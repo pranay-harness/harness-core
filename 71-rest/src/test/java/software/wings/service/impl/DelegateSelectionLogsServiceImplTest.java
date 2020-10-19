@@ -411,7 +411,7 @@ public class DelegateSelectionLogsServiceImplTest extends WingsBaseTest {
   @Owner(developers = VUK)
   @Category(UnitTests.class)
   public void shouldNotLogMissingSelector() {
-    assertThatCode(() -> delegateSelectionLogsService.logMissingSelector(null, null, null, null))
+    assertThatCode(() -> delegateSelectionLogsService.logMissingSelector(null, null, null, null, null))
         .doesNotThrowAnyException();
   }
 
@@ -424,28 +424,31 @@ public class DelegateSelectionLogsServiceImplTest extends WingsBaseTest {
     String delegate1Id = generateUuid();
     String delegate2Id = generateUuid();
     String selector = generateUuid();
+    String selectorOrigin = generateUuid();
 
     BatchDelegateSelectionLog batch = BatchDelegateSelectionLog.builder().taskId(taskId).build();
 
-    delegateSelectionLogsService.logMissingSelector(batch, accountId, delegate1Id, selector);
+    delegateSelectionLogsService.logMissingSelector(batch, accountId, delegate1Id, selector, selectorOrigin);
 
     assertThat(batch.getDelegateSelectionLogs()).isNotEmpty();
     assertThat(batch.getDelegateSelectionLogs().get(0).getDelegateIds().size()).isEqualTo(1);
     assertThat(batch.getDelegateSelectionLogs().get(0).getAccountId()).isEqualTo(accountId);
     assertThat(batch.getDelegateSelectionLogs().get(0).getTaskId()).isEqualTo(taskId);
     assertThat(batch.getDelegateSelectionLogs().get(0).getConclusion()).isEqualTo(REJECTED);
-    assertThat(batch.getDelegateSelectionLogs().get(0).getMessage()).isEqualTo("Missing selector " + selector);
+    assertThat(batch.getDelegateSelectionLogs().get(0).getMessage())
+        .isEqualTo("Missing selector " + selector + " with origin " + selectorOrigin);
     assertThat(batch.getDelegateSelectionLogs().get(0).getEventTimestamp()).isNotNull();
     assertThat(batch.getDelegateSelectionLogs().get(0).getGroupId()).isEqualTo(MISSING_SELECTOR_GROUP_ID);
 
-    delegateSelectionLogsService.logMissingSelector(batch, accountId, delegate2Id, selector);
+    delegateSelectionLogsService.logMissingSelector(batch, accountId, delegate2Id, selector, selectorOrigin);
 
     assertThat(batch.getDelegateSelectionLogs()).isNotEmpty();
     assertThat(batch.getDelegateSelectionLogs().get(0).getDelegateIds().size()).isEqualTo(2);
     assertThat(batch.getDelegateSelectionLogs().get(0).getAccountId()).isEqualTo(accountId);
     assertThat(batch.getDelegateSelectionLogs().get(0).getTaskId()).isEqualTo(taskId);
     assertThat(batch.getDelegateSelectionLogs().get(0).getConclusion()).isEqualTo(REJECTED);
-    assertThat(batch.getDelegateSelectionLogs().get(0).getMessage()).isEqualTo("Missing selector " + selector);
+    assertThat(batch.getDelegateSelectionLogs().get(0).getMessage())
+        .isEqualTo("Missing selector " + selector + " with origin " + selectorOrigin);
     assertThat(batch.getDelegateSelectionLogs().get(0).getEventTimestamp()).isNotNull();
     assertThat(batch.getDelegateSelectionLogs().get(0).getGroupId()).isEqualTo(MISSING_SELECTOR_GROUP_ID);
   }

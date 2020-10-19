@@ -187,7 +187,7 @@ public class DelegateSelectionLogsServiceImpl implements DelegateSelectionLogsSe
 
   @Override
   public void logMissingSelector(
-      BatchDelegateSelectionLog batch, String accountId, String delegateId, String selector) {
+      BatchDelegateSelectionLog batch, String accountId, String delegateId, String selector, String selectorOrigin) {
     if (batch == null) {
       return;
     }
@@ -198,7 +198,7 @@ public class DelegateSelectionLogsServiceImpl implements DelegateSelectionLogsSe
         retrieveDelegateSelectionLogBuilder(accountId, batch.getTaskId(), delegateIds);
 
     batch.append(delegateSelectionLogBuilder.conclusion(REJECTED)
-                     .message("Missing selector " + selector)
+                     .message("Missing selector " + selector + " with origin " + selectorOrigin)
                      .eventTimestamp(System.currentTimeMillis())
                      .groupId(MISSING_SELECTOR_GROUP_ID)
                      .build());
