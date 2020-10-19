@@ -14,5 +14,6 @@ public class ScopingRuleDetails {
 
   private String applicationId;
   private Set<String> serviceIds;
+  private String environmentTypeId;
   private Set<String> environmentIds;
 }

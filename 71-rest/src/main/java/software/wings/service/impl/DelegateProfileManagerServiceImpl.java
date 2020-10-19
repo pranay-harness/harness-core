@@ -201,6 +201,11 @@ public class DelegateProfileManagerServiceImpl implements DelegateProfileManager
           ScopingValues.newBuilder().addValue(scopingRule.getApplicationId()).build());
     }
 
+    if (isNotBlank(scopingRule.getEnvironmentTypeId())) {
+      scopingEntities.put(ScopingRuleDetailsKeys.environmentTypeId,
+          ScopingValues.newBuilder().addValue(scopingRule.getEnvironmentTypeId()).build());
+    }
+
     if (isNotEmpty(scopingRule.getEnvironmentIds())) {
       scopingEntities.put(ScopingRuleDetailsKeys.environmentIds,
           ScopingValues.newBuilder().addAllValue(scopingRule.getEnvironmentIds()).build());
@@ -241,6 +246,8 @@ public class DelegateProfileManagerServiceImpl implements DelegateProfileManager
                          .description(grpcScopingRule.getDescription())
                          .applicationId(extractScopingEntityId(
                              grpcScopingRule.getScopingEntitiesMap(), ScopingRuleDetailsKeys.applicationId))
+                         .environmentTypeId(extractScopingEntityId(
+                             grpcScopingRule.getScopingEntitiesMap(), ScopingRuleDetailsKeys.environmentTypeId))
                          .environmentIds(extractScopingEntityIds(
                              grpcScopingRule.getScopingEntitiesMap(), ScopingRuleDetailsKeys.environmentIds))
                          .serviceIds(extractScopingEntityIds(
@@ -253,12 +260,25 @@ public class DelegateProfileManagerServiceImpl implements DelegateProfileManager
   }
 
   private PageRequestGrpc convert(PageRequest pageRequest) {
-    return PageRequestGrpc.newBuilder()
-        .setLimit(pageRequest.getLimit())
-        .addAllFieldsExcluded(pageRequest.getFieldsExcluded())
-        .addAllFieldsIncluded(pageRequest.getFieldsIncluded())
-        .setOffset(pageRequest.getOffset())
-        .build();
+    PageRequestGrpc.Builder pageRequestGrpcBuilder = PageRequestGrpc.newBuilder();
+
+    if (isNotBlank(pageRequest.getLimit())) {
+      pageRequestGrpcBuilder.setLimit(pageRequest.getLimit());
+    }
+
+    if (!isEmpty(pageRequest.getFieldsExcluded())) {
+      pageRequestGrpcBuilder.addAllFieldsExcluded(pageRequest.getFieldsExcluded());
+    }
+
+    if (!isEmpty(pageRequest.getFieldsIncluded())) {
+      pageRequestGrpcBuilder.addAllFieldsIncluded(pageRequest.getFieldsIncluded());
+    }
+
+    if (isNotBlank(pageRequest.getOffset())) {
+      pageRequestGrpcBuilder.setOffset(pageRequest.getOffset());
+    }
+
+    return pageRequestGrpcBuilder.build();
   }
 
   private PageResponse<DelegateProfileDetails> convert(DelegateProfilePageResponseGrpc pageResponse) {
