@@ -3,6 +3,7 @@ package io.harness.cvng.analysis.services.impl;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.rule.OwnerRule.KAMAL;
 import static io.harness.rule.OwnerRule.PRAVEEN;
+import static io.harness.rule.OwnerRule.SOWMYA;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.when;
 
@@ -262,6 +263,28 @@ public class TimeSeriesAnalysisServiceImplTest extends CvNextGenTest {
   }
 
   @Test
+  @Owner(developers = SOWMYA)
+  @Category(UnitTests.class)
+  public void testSaveAnalysis_serviceGuard_withoutCumulativeSums() {
+    when(cvConfigService.get(cvConfigId)).thenReturn(null);
+    timeSeriesAnalysisService.saveAnalysis(
+        learningEngineTaskId, buildServiceGuardMetricAnalysisDTO_emptyCumulativeSums());
+
+    TimeSeriesCumulativeSums cumulativeSums =
+        hPersistence.createQuery(TimeSeriesCumulativeSums.class).filter("verificationTaskId", verificationTaskId).get();
+    assertThat(cumulativeSums).isNotNull();
+    assertThat(cumulativeSums.convertToMap()).isEmpty();
+    TimeSeriesAnomalousPatterns anomalousPatterns = hPersistence.createQuery(TimeSeriesAnomalousPatterns.class)
+                                                        .filter("verificationTaskId", verificationTaskId)
+                                                        .get();
+    assertThat(anomalousPatterns).isNotNull();
+    TimeSeriesShortTermHistory shortTermHistory = hPersistence.createQuery(TimeSeriesShortTermHistory.class)
+                                                      .filter("verificationTaskId", verificationTaskId)
+                                                      .get();
+    assertThat(shortTermHistory).isNotNull();
+  }
+
+  @Test
   @Owner(developers = KAMAL)
   @Category(UnitTests.class)
   public void testSaveAnalysis_deploymentVerification() {
@@ -289,6 +312,46 @@ public class TimeSeriesAnalysisServiceImplTest extends CvNextGenTest {
             ServiceGuardTxnMetricAnalysisDataDTO.builder()
                 .isKeyTransaction(false)
                 .cumulativeSums(TimeSeriesCumulativeSums.MetricSum.builder().risk(0.5).sum(0.9).build())
+                .shortTermHistory(Arrays.asList(0.1, 0.2, 0.3, 0.4))
+                .anomalousPatterns(Arrays.asList(TimeSeriesAnomalies.builder()
+                                                     .transactionName(txn)
+                                                     .metricName(metric)
+                                                     .testData(Arrays.asList(0.1, 0.2, 0.3, 0.4))
+                                                     .anomalousTimestamps(Arrays.asList(12345l, 12346l, 12347l))
+                                                     .build()))
+                .lastSeenTime(0)
+                .metricType(TimeSeriesMetricType.ERROR)
+                .risk(1)
+                .build();
+        metricMap.put(metric, txnMetricData);
+      });
+    });
+
+    return ServiceGuardTimeSeriesAnalysisDTO.builder()
+        .verificationTaskId(verificationTaskId)
+        .analysisStartTime(Instant.now().minus(10, ChronoUnit.MINUTES))
+        .analysisEndTime(Instant.now().minus(5, ChronoUnit.MINUTES))
+        .overallMetricScores(overallMetricScores)
+        .txnMetricAnalysisData(txnMetricMap)
+        .build();
+  }
+
+  private ServiceGuardTimeSeriesAnalysisDTO buildServiceGuardMetricAnalysisDTO_emptyCumulativeSums() {
+    Map<String, Double> overallMetricScores = new HashMap<>();
+    overallMetricScores.put("Errors per Minute", 0.872);
+    overallMetricScores.put("Average Response Time", 0.212);
+    overallMetricScores.put("Calls Per Minute", 0.0);
+
+    List<String> transactions = Arrays.asList("txn1", "txn2", "txn3");
+    List<String> metricList = Arrays.asList("metric1", "metric2", "metric3");
+    Map<String, Map<String, ServiceGuardTxnMetricAnalysisDataDTO>> txnMetricMap = new HashMap<>();
+    transactions.forEach(txn -> {
+      txnMetricMap.put(txn, new HashMap<>());
+      metricList.forEach(metric -> {
+        Map<String, ServiceGuardTxnMetricAnalysisDataDTO> metricMap = txnMetricMap.get(txn);
+        ServiceGuardTxnMetricAnalysisDataDTO txnMetricData =
+            ServiceGuardTxnMetricAnalysisDataDTO.builder()
+                .isKeyTransaction(false)
                 .shortTermHistory(Arrays.asList(0.1, 0.2, 0.3, 0.4))
                 .anomalousPatterns(Arrays.asList(TimeSeriesAnomalies.builder()
                                                      .transactionName(txn)

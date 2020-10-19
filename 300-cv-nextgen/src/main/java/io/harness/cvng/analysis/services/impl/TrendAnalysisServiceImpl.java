@@ -319,8 +319,10 @@ public class TrendAnalysisServiceImpl implements TrendAnalysisService {
       cumulativeSumsMap.put(txnName, new HashMap<>());
       metricMap.forEach((metricName, metricSums) -> {
         TimeSeriesCumulativeSums.MetricSum sums = metricSums.getCumulativeSums();
-        sums.setMetricName(metricName);
-        cumulativeSumsMap.get(txnName).put(metricName, sums);
+        if (sums != null) {
+          sums.setMetricName(metricName);
+          cumulativeSumsMap.get(txnName).put(metricName, sums);
+        }
       });
     });
 

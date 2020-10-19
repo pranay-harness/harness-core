@@ -180,12 +180,14 @@ public class TimeSeriesServiceImpl implements TimeSeriesService {
 
     riskSummary.getTransactionMetricRiskList().forEach(metricRisk -> {
       TimeSeriesRecord record = metricNameRecordMap.get(metricRisk.getMetricName());
-      String groupName = metricRisk.getTransactionName();
-      record.getTimeSeriesGroupValues().forEach(groupValue -> {
-        if (groupName.equals(groupValue.getGroupName())) {
-          groupValue.setRiskScore(metricRisk.getMetricRisk());
-        }
-      });
+      if (record != null) {
+        String groupName = metricRisk.getTransactionName();
+        record.getTimeSeriesGroupValues().forEach(groupValue -> {
+          if (groupName.equals(groupValue.getGroupName())) {
+            groupValue.setRiskScore(metricRisk.getMetricRisk());
+          }
+        });
+      }
     });
     logger.info("Updating the risk in {} timeseries records", records.size());
     hPersistence.save(records);

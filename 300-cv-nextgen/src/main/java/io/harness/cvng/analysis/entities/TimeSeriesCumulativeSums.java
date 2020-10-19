@@ -1,5 +1,7 @@
 package io.harness.cvng.analysis.entities;
 
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import io.harness.annotation.HarnessEntity;
 import io.harness.mongo.index.CdIndex;
@@ -69,14 +71,16 @@ public class TimeSeriesCumulativeSums implements PersistentEntity, UuidAware {
       return null;
     }
     txnMetricMap.forEach((txnName, metricMap) -> {
-      TransactionMetricSums txnMetricSums = TransactionMetricSums.builder().transactionName(txnName).build();
-      List<MetricSum> metricSumsList = new ArrayList<>();
-      metricMap.forEach((metricName, metricSums) -> {
-        metricSums.setMetricName(metricName);
-        metricSumsList.add(metricSums);
-      });
-      txnMetricSums.setMetricSums(metricSumsList);
-      txnMetricSumList.add(txnMetricSums);
+      if (isNotEmpty(metricMap)) {
+        TransactionMetricSums txnMetricSums = TransactionMetricSums.builder().transactionName(txnName).build();
+        List<MetricSum> metricSumsList = new ArrayList<>();
+        metricMap.forEach((metricName, metricSums) -> {
+          metricSums.setMetricName(metricName);
+          metricSumsList.add(metricSums);
+        });
+        txnMetricSums.setMetricSums(metricSumsList);
+        txnMetricSumList.add(txnMetricSums);
+      }
     });
     return txnMetricSumList;
   }
