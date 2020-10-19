@@ -109,10 +109,12 @@ public interface NexusService {
    * @return list of versions
    */
   List<BuildDetails> getVersions(NexusConfig nexusConfig, List<EncryptedDataDetail> encryptionDetails, String repoId,
-      String groupId, String artifactName, String extension, String classifier);
+      String groupId, String artifactName, String extension, String classifier,
+      boolean supportForNexusGroupReposEnabled);
 
   List<BuildDetails> getVersions(String repositoryFormat, NexusConfig nexusConfig,
-      List<EncryptedDataDetail> encryptionDetails, String repoId, String packageName);
+      List<EncryptedDataDetail> encryptionDetails, String repoId, String packageName,
+      boolean supportForNexusGroupReposEnabled);
 
   @SuppressWarnings("squid:S00107")
   List<BuildDetails> getVersion(NexusConfig nexusConfig, List<EncryptedDataDetail> encryptionDetails, String repoId,

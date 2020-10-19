@@ -646,6 +646,11 @@ public class ArtifactCollectionUtils {
     String appId = artifactStream.fetchAppId();
     boolean multiArtifact = multiArtifactEnabled(settingAttribute.getAccountId());
     ArtifactStreamAttributes artifactStreamAttributes = getArtifactStreamAttributes(artifactStream, multiArtifact);
+
+    if (featureFlagService.isEnabled(FeatureName.SUPPORT_NEXUS_GROUP_REPOS, settingAttribute.getAccountId())) {
+      artifactStreamAttributes.setSupportForNexusGroupReposEnabled(true);
+    }
+
     BuildSourceRequestType requestType =
         getBuildSourceRequestType(artifactStream, multiArtifact, artifactStreamAttributes);
 
