@@ -1352,7 +1352,7 @@ public class SecretManagerImpl implements SecretManager {
   public EncryptedData getSecretById(String accountId, String id) {
     return wingsPersistence.createQuery(EncryptedData.class)
         .filter(EncryptedDataKeys.accountId, accountId)
-        .filter(EncryptedDataKeys.ID_KEY, id)
+        .filter(EncryptedDataKeys.uuid, id)
         .get();
   }
 

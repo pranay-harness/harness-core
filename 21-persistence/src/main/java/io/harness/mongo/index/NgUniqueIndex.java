@@ -10,6 +10,7 @@ import java.lang.annotation.RetentionPolicy;
 @Inherited
 @Retention(RetentionPolicy.RUNTIME)
 @Repeatable(NgUniqueIndexes.class)
+@Deprecated
 public @interface NgUniqueIndex {
   String name();
   Field[] fields();

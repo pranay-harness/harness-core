@@ -11,6 +11,7 @@ import java.lang.annotation.Target;
 @Inherited
 @Retention(RetentionPolicy.RUNTIME)
 @Target({ElementType.ANNOTATION_TYPE})
+@Deprecated
 public @interface Field {
   IndexType type() default IndexType.ASC;
   String value();

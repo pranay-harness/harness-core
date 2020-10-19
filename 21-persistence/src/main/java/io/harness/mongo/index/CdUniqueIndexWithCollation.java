@@ -16,6 +16,7 @@ import java.lang.annotation.RetentionPolicy;
 @Inherited
 @Retention(RetentionPolicy.RUNTIME)
 @Repeatable(CdUniqueIndexesWithCollation.class)
+@Deprecated
 public @interface CdUniqueIndexWithCollation {
   String name();
   Field[] fields();
