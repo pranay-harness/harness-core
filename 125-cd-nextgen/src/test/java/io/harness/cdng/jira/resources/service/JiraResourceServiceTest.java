@@ -55,7 +55,7 @@ public class JiraResourceServiceTest extends CategoryTest {
   @Category(UnitTests.class)
   public void shouldTestValidateCredentials() {
     IdentifierRef identifierRef = IdentifierRef.builder()
-                                      .accountId(ACCOUNT_ID)
+                                      .accountIdentifier(ACCOUNT_ID)
                                       .identifier("identifier")
                                       .projectIdentifier(PROJECT_IDENTIFIER)
                                       .orgIdentifier(ORG_IDENTIFIER)
@@ -76,7 +76,7 @@ public class JiraResourceServiceTest extends CategoryTest {
   @Category(UnitTests.class)
   public void shouldTestValidateCredentialsDelegateError() {
     IdentifierRef identifierRef = IdentifierRef.builder()
-                                      .accountId(ACCOUNT_ID)
+                                      .accountIdentifier(ACCOUNT_ID)
                                       .identifier("identifier")
                                       .projectIdentifier(PROJECT_IDENTIFIER)
                                       .orgIdentifier(ORG_IDENTIFIER)
@@ -97,7 +97,7 @@ public class JiraResourceServiceTest extends CategoryTest {
   @Category(UnitTests.class)
   public void shouldTestValidateCredentialsNotSuccessStatus() {
     IdentifierRef identifierRef = IdentifierRef.builder()
-                                      .accountId(ACCOUNT_ID)
+                                      .accountIdentifier(ACCOUNT_ID)
                                       .identifier("identifier")
                                       .projectIdentifier(PROJECT_IDENTIFIER)
                                       .orgIdentifier(ORG_IDENTIFIER)

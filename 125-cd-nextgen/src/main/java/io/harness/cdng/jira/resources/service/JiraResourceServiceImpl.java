@@ -56,10 +56,11 @@ public class JiraResourceServiceImpl implements JiraResourceService {
   @Override
   public boolean validateCredentials(IdentifierRef jiraConnectionRef, String orgIdentifier, String projectIdentifier) {
     JiraConnectorDTO connector = getConnector(jiraConnectionRef);
-    BaseNGAccess baseNGAccess = getBaseNGAccess(jiraConnectionRef.getAccountId(), orgIdentifier, projectIdentifier);
+    BaseNGAccess baseNGAccess =
+        getBaseNGAccess(jiraConnectionRef.getAccountIdentifier(), orgIdentifier, projectIdentifier);
 
     JiraTaskNGParameters taskParameters = JiraTaskNGParameters.builder()
-                                              .accountId(jiraConnectionRef.getAccountId())
+                                              .accountId(jiraConnectionRef.getAccountIdentifier())
                                               .jiraAction(JiraAction.AUTH)
                                               .encryptionDetails(getEncryptionDetails(connector, baseNGAccess))
                                               .jiraConnectorDTO(connector)
@@ -90,7 +91,7 @@ public class JiraResourceServiceImpl implements JiraResourceService {
   }
 
   private JiraConnectorDTO getConnector(IdentifierRef jiraConnectorRef) {
-    Optional<ConnectorResponseDTO> connectorDTO = connectorService.get(jiraConnectorRef.getAccountId(),
+    Optional<ConnectorResponseDTO> connectorDTO = connectorService.get(jiraConnectorRef.getAccountIdentifier(),
         jiraConnectorRef.getOrgIdentifier(), jiraConnectorRef.getProjectIdentifier(), jiraConnectorRef.getIdentifier());
 
     if (!connectorDTO.isPresent() || !isJiraConnector(connectorDTO.get())) {
