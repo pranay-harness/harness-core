@@ -16,6 +16,7 @@ import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Id;
 
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.List;
 
 @Data
@@ -33,6 +34,13 @@ public class TimeSeriesRiskSummary implements PersistentEntity, UuidAware {
   @NotEmpty @FdIndex private Instant analysisStartTime;
   @NotEmpty @FdIndex private Instant analysisEndTime;
   private List<TransactionMetricRisk> transactionMetricRiskList;
+
+  public List<TransactionMetricRisk> getTransactionMetricRiskList() {
+    if (transactionMetricRiskList == null) {
+      return new ArrayList<>();
+    }
+    return transactionMetricRiskList;
+  }
 
   @Data
   @Builder
