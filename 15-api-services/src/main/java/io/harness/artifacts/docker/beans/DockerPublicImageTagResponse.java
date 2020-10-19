@@ -33,7 +33,6 @@ public class DockerPublicImageTagResponse {
     private int repository;
     private int creator;
     private boolean v2;
-    @JsonProperty("image_id") private int imageId;
     @JsonProperty("last_updater") private int lastUpdater;
     @JsonProperty("full_size") private String fullSize;
     @JsonProperty("last_updated") private String lastUpdated;
