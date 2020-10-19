@@ -489,7 +489,7 @@ public class AccountResource {
   }
 
   @PUT
-  @Path("set-service-guard-count/{accountId}")
+  @Path("{accountId}/set-service-guard-count")
   @Timed
   @ExceptionMetered
   public RestResponse<String> setServiceGuardAccountLimit(@PathParam("accountId") @NotEmpty String accountId,
