@@ -287,9 +287,11 @@ public class AssignDelegateServiceImpl implements AssignDelegateService {
 
     for (SelectorCapability selectorCapability : selectorsCapabilityList) {
       Set<String> selectors = selectorCapability.getSelectors();
+      String selectorOrigin = selectorCapability.getSelectorOrigin();
       for (String selector : trimmedLowercaseSet(selectors)) {
         if (!delegateSelectors.contains(selector)) {
-          delegateSelectionLogsService.logMissingSelector(batch, delegate.getAccountId(), delegate.getUuid(), selector);
+          delegateSelectionLogsService.logMissingSelector(
+              batch, delegate.getAccountId(), delegate.getUuid(), selector, selectorOrigin);
           canAssignSelector = false;
         }
       }

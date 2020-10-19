@@ -19,7 +19,8 @@ public interface DelegateSelectionLogsService {
   void logExcludeScopeMatched(
       BatchDelegateSelectionLog batch, String accountId, String delegateId, DelegateScope scope);
 
-  void logMissingSelector(BatchDelegateSelectionLog batch, String accountId, String delegateId, String selector);
+  void logMissingSelector(
+      BatchDelegateSelectionLog batch, String accountId, String delegateId, String selector, String selectorOrigin);
 
   void logMissingAllSelectors(BatchDelegateSelectionLog batch, String accountId, String delegateId);
 
