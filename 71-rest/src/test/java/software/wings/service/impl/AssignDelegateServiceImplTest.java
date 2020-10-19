@@ -40,6 +40,7 @@ import static software.wings.utils.WingsTestConstants.DELEGATE_ID;
 import static software.wings.utils.WingsTestConstants.ENV_ID;
 import static software.wings.utils.WingsTestConstants.INFRA_DEFINITION_ID;
 
+import com.google.common.cache.LoadingCache;
 import com.google.common.collect.ImmutableList;
 import com.google.inject.Inject;
 
@@ -59,6 +60,7 @@ import io.harness.selection.log.BatchDelegateSelectionLog;
 import io.harness.tasks.Cd1SetupFields;
 import lombok.Builder;
 import lombok.Value;
+import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -74,6 +76,7 @@ import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.InfrastructureMappingType;
 import software.wings.beans.TaskType;
 import software.wings.delegatetasks.validation.DelegateConnectionResult;
+import software.wings.delegatetasks.validation.DelegateConnectionResult.DelegateConnectionResultBuilder;
 import software.wings.delegatetasks.validation.DelegateConnectionResult.DelegateConnectionResultKeys;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.impl.instance.InstanceSyncTestConstants;
@@ -88,11 +91,16 @@ import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -102,6 +110,9 @@ public class AssignDelegateServiceImplTest extends WingsBaseTest {
   @Mock private InfrastructureMappingService infrastructureMappingService;
   @Mock private FeatureFlagService featureFlagService;
   @Mock private DelegateSelectionLogsService delegateSelectionLogsService;
+  @Mock
+  private LoadingCache<ImmutablePair<String, String>, Optional<DelegateConnectionResult>> delegateConnectionResultCache;
+  @Mock private LoadingCache<String, List<Delegate>> accountDelegatesCache;
 
   @Inject @InjectMocks private AssignDelegateServiceImpl assignDelegateService;
 
@@ -111,9 +122,11 @@ public class AssignDelegateServiceImplTest extends WingsBaseTest {
   private static final String WRONG_INFRA_MAPPING_ID = "WRONG_INFRA_MAPPING_ID";
 
   @Before
-  public void setUp() {
+  public void setUp() throws IllegalAccessException, ExecutionException {
     Environment environment = anEnvironment().uuid(ENV_ID).appId(APP_ID).environmentType(PROD).build();
     when(environmentService.get(APP_ID, ENV_ID, false)).thenReturn(environment);
+    when(delegateConnectionResultCache.get(any(ImmutablePair.class))).thenReturn(Optional.empty());
+    when(accountDelegatesCache.get(anyString())).thenReturn(Collections.emptyList());
   }
 
   private DelegateBuilder createDelegateBuilder() {
@@ -732,7 +745,7 @@ public class AssignDelegateServiceImplTest extends WingsBaseTest {
   @Test
   @Owner(developers = BRETT)
   @Category(UnitTests.class)
-  public void shouldNotBeWhitelistedDiffCriteria() {
+  public void shouldNotBeWhitelistedDiffCriteria() throws ExecutionException {
     DelegateTask delegateTask = createDelegateTask(true, NOT_MATCHING_CRITERIA);
     assertThat(assignDelegateService.isWhitelisted(delegateTask, DELEGATE_ID)).isFalse();
   }
@@ -740,7 +753,7 @@ public class AssignDelegateServiceImplTest extends WingsBaseTest {
   @Test
   @Owner(developers = BRETT)
   @Category(UnitTests.class)
-  public void shouldNotBeWhitelistedWhenNotValidated() {
+  public void shouldNotBeWhitelistedWhenNotValidated() throws ExecutionException {
     DelegateTask delegateTask = createDelegateTask(false, MATCHING_CRITERIA);
     assertThat(assignDelegateService.isWhitelisted(delegateTask, DELEGATE_ID)).isFalse();
   }
@@ -748,7 +761,7 @@ public class AssignDelegateServiceImplTest extends WingsBaseTest {
   @Test
   @Owner(developers = BRETT)
   @Category(UnitTests.class)
-  public void shouldGetConnectedWhitelistedDelegates() {
+  public void shouldGetConnectedWhitelistedDelegates() throws ExecutionException {
     DelegateTask delegateTask = createDelegateTask(true, MATCHING_CRITERIA);
     List<String> delegateIds = assignDelegateService.connectedWhitelistedDelegates(delegateTask);
 
@@ -758,24 +771,29 @@ public class AssignDelegateServiceImplTest extends WingsBaseTest {
 
   enum CriteriaType { MATCHING_CRITERIA, NOT_MATCHING_CRITERIA }
 
-  private DelegateTask createDelegateTask(boolean validated, CriteriaType criteria) {
+  private DelegateTask createDelegateTask(boolean validated, CriteriaType criteria) throws ExecutionException {
     Delegate delegate = Delegate.builder()
                             .accountId(ACCOUNT_ID)
                             .uuid(DELEGATE_ID)
                             .status(ENABLED)
                             .lastHeartBeat(clock.millis())
                             .build();
-    wingsPersistence.save(delegate);
+
+    when(accountDelegatesCache.get(ACCOUNT_ID)).thenReturn(asList(delegate));
 
     HttpConnectionExecutionCapability matchingExecutionCapability =
         buildHttpConnectionExecutionCapability("http//www.matching.com");
 
-    wingsPersistence.save(DelegateConnectionResult.builder()
-                              .accountId(ACCOUNT_ID)
-                              .delegateId(DELEGATE_ID)
-                              .criteria(matchingExecutionCapability.fetchCapabilityBasis())
-                              .validated(validated)
-                              .build());
+    DelegateConnectionResult connectionResult = DelegateConnectionResult.builder()
+                                                    .accountId(ACCOUNT_ID)
+                                                    .delegateId(DELEGATE_ID)
+                                                    .criteria(matchingExecutionCapability.fetchCapabilityBasis())
+                                                    .validated(validated)
+                                                    .build();
+
+    when(delegateConnectionResultCache.get(ImmutablePair.of(delegate.getUuid(), connectionResult.getCriteria())))
+        .thenReturn(Optional.of(connectionResult));
+
     when(delegateService.get(ACCOUNT_ID, DELEGATE_ID, false)).thenReturn(delegate);
 
     HttpConnectionExecutionCapability executionCapability = criteria == MATCHING_CRITERIA
@@ -799,7 +817,7 @@ public class AssignDelegateServiceImplTest extends WingsBaseTest {
   @Test
   @Owner(developers = BRETT)
   @Category(UnitTests.class)
-  public void shouldNotGetConnectedWhitelistedDelegatesNotValidated() {
+  public void shouldNotGetConnectedWhitelistedDelegatesNotValidated() throws ExecutionException {
     DelegateTask delegateTask = createDelegateTask(false, MATCHING_CRITERIA);
 
     List<String> delegateIds = assignDelegateService.connectedWhitelistedDelegates(delegateTask);
@@ -845,7 +863,7 @@ public class AssignDelegateServiceImplTest extends WingsBaseTest {
   @Test
   @Owner(developers = BRETT)
   @Category(UnitTests.class)
-  public void shouldNotGetConnectedWhitelistedDelegatesOtherCriteria() {
+  public void shouldNotGetConnectedWhitelistedDelegatesOtherCriteria() throws ExecutionException {
     DelegateTask delegateTask = createDelegateTask(true, NOT_MATCHING_CRITERIA);
 
     List<String> delegateIds = assignDelegateService.connectedWhitelistedDelegates(delegateTask);
@@ -856,7 +874,7 @@ public class AssignDelegateServiceImplTest extends WingsBaseTest {
   @Test
   @Owner(developers = SANJA)
   @Category(UnitTests.class)
-  public void shouldGetWhitelistedDelegatesWithoutCriteriaCapabilityFramework() {
+  public void shouldGetWhitelistedDelegatesWithoutCriteriaCapabilityFramework() throws ExecutionException {
     when(featureFlagService.isEnabled(DISABLE_DELEGATE_CAPABILITY_FRAMEWORK, ACCOUNT_ID)).thenReturn(false);
     TaskData taskData = TaskData.builder().taskType(TaskType.SPOTINST_COMMAND_TASK.name()).build();
     DelegateTask delegateTask =
@@ -867,7 +885,7 @@ public class AssignDelegateServiceImplTest extends WingsBaseTest {
                             .status(ENABLED)
                             .lastHeartBeat(clock.millis())
                             .build();
-    wingsPersistence.save(delegate);
+    when(accountDelegatesCache.get(ACCOUNT_ID)).thenReturn(asList(delegate));
     when(delegateService.get(ACCOUNT_ID, DELEGATE_ID, false)).thenReturn(delegate);
     List<String> delegateIds = assignDelegateService.connectedWhitelistedDelegates(delegateTask);
     assertThat(delegateIds).containsExactly(delegate.getUuid());
@@ -896,7 +914,7 @@ public class AssignDelegateServiceImplTest extends WingsBaseTest {
   @Test
   @Owner(developers = PUNEET)
   @Category(UnitTests.class)
-  public void shouldGetFirstAttemptDelegate() {
+  public void shouldGetFirstAttemptDelegate() throws ExecutionException {
     DelegateTask delegateTask = createDelegateTask(true, MATCHING_CRITERIA);
 
     String delegateId = assignDelegateService.pickFirstAttemptDelegate(delegateTask);
@@ -1130,11 +1148,11 @@ public class AssignDelegateServiceImplTest extends WingsBaseTest {
   @Test
   @Owner(developers = SANJA)
   @Category(UnitTests.class)
-  public void shouldReturnInstalledDelegates() {
+  public void shouldReturnInstalledDelegates() throws ExecutionException {
     String accountId = generateUuid();
     String activeDelegateId = generateUuid();
     Delegate activeDelegate = createDelegateBuilder().accountId(accountId).uuid(activeDelegateId).build();
-    wingsPersistence.save(activeDelegate);
+    when(accountDelegatesCache.get(accountId)).thenReturn(asList(activeDelegate));
     boolean noInstalledDelegates = assignDelegateService.noInstalledDelegates(accountId);
     assertThat(noInstalledDelegates).isFalse();
   }
@@ -1142,7 +1160,7 @@ public class AssignDelegateServiceImplTest extends WingsBaseTest {
   @Test
   @Owner(developers = MARKO)
   @Category(UnitTests.class)
-  public void shouldRetrieveActiveDelegates() {
+  public void shouldRetrieveActiveDelegates() throws ExecutionException {
     String accountId = generateUuid();
     String activeDelegate1Id = generateUuid();
     String activeDelegate2Id = generateUuid();
@@ -1165,8 +1183,8 @@ public class AssignDelegateServiceImplTest extends WingsBaseTest {
     Delegate deletedDelegate =
         createDelegateBuilder().accountId(accountId).uuid(generateUuid()).status(Delegate.Status.DELETED).build();
 
-    wingsPersistence.save(
-        asList(activeDelegate1, activeDelegate2, disconnectedDelegate, wapprDelegate, deletedDelegate));
+    when(accountDelegatesCache.get(accountId))
+        .thenReturn(asList(activeDelegate1, activeDelegate2, disconnectedDelegate, wapprDelegate, deletedDelegate));
 
     BatchDelegateSelectionLog batch = BatchDelegateSelectionLog.builder().taskId(generateUuid()).build();
 
@@ -1272,5 +1290,102 @@ public class AssignDelegateServiceImplTest extends WingsBaseTest {
 
     assertThat(errorMessage).isNotNull();
     assertThat(errorMessage).isEqualTo(expectedErrorMessage);
+  }
+
+  @Test
+  @Owner(developers = MARKO)
+  @Category(UnitTests.class)
+  public void testShouldValidate() throws ExecutionException {
+    String accountId = generateUuid();
+
+    DelegateTaskBuilder taskBuilder = DelegateTask.builder()
+                                          .accountId(accountId)
+                                          .description("HTTP task")
+                                          .data(TaskData.builder().taskType(TaskType.HTTP.name()).build());
+
+    DelegateConnectionResultBuilder connectionResultBuilder =
+        DelegateConnectionResult.builder().accountId(accountId).criteria("https://google.com");
+
+    // test case: no criteria
+    assertThat(assignDelegateService.shouldValidate(taskBuilder.build(), null)).isFalse();
+
+    // test case: empty criteria
+    HttpConnectionExecutionCapability httpCapability = HttpConnectionExecutionCapability.builder().build();
+    DelegateTask task = taskBuilder.build();
+    task.setExecutionCapabilities(Arrays.asList(httpCapability));
+    assertThat(assignDelegateService.shouldValidate(task, null)).isTrue();
+
+    // test case: no connection result
+    httpCapability = HttpConnectionExecutionCapability.builder().url("https://google.com").build();
+    task.setExecutionCapabilities(Arrays.asList(httpCapability));
+    assertThat(assignDelegateService.shouldValidate(task, null)).isTrue();
+
+    // test case: connection result present, but not validated
+    String delegateId = generateUuid();
+    DelegateConnectionResult connectionResult = connectionResultBuilder.build();
+    connectionResult.setDelegateId(delegateId);
+    connectionResult.setValidated(false);
+    wingsPersistence.save(connectionResult);
+    assertThat(assignDelegateService.shouldValidate(task, delegateId)).isTrue();
+
+    // test case: connection result present, and validated, but expired
+    delegateId = generateUuid();
+    connectionResult = connectionResultBuilder.build();
+    connectionResult.setDelegateId(delegateId);
+    connectionResult.setValidated(true);
+    connectionResult.setLastUpdatedAt(clock.millis() - TimeUnit.MINUTES.toMillis(6));
+    when(delegateConnectionResultCache.get(ImmutablePair.of(delegateId, connectionResult.getCriteria())))
+        .thenReturn(Optional.of(connectionResult));
+    assertThat(assignDelegateService.shouldValidate(task, delegateId)).isTrue();
+
+    // test case: connection result present, validated, not expired, delegate disconnected and no other connected
+    // whitelisted ones
+    delegateId = generateUuid();
+    connectionResult = connectionResultBuilder.build();
+    connectionResult.setDelegateId(delegateId);
+    connectionResult.setValidated(true);
+    connectionResult.setLastUpdatedAt(clock.millis());
+    when(delegateConnectionResultCache.get(ImmutablePair.of(delegateId, connectionResult.getCriteria())))
+        .thenReturn(Optional.of(connectionResult));
+    assertThat(assignDelegateService.shouldValidate(task, delegateId)).isTrue();
+
+    // test case: connection result present, validated, not expired, delegate disconnected, but there are other
+    // connected whitelisted ones
+    delegateId = generateUuid();
+    connectionResult = connectionResultBuilder.build();
+    connectionResult.setDelegateId(delegateId);
+    connectionResult.setValidated(true);
+    connectionResult.setLastUpdatedAt(clock.millis());
+
+    Delegate delegate2 = Delegate.builder().uuid(generateUuid()).status(ENABLED).lastHeartBeat(clock.millis()).build();
+
+    DelegateConnectionResult connectionResult2 = connectionResultBuilder.build();
+    connectionResult2.setDelegateId(delegate2.getUuid());
+    connectionResult2.setValidated(true);
+    connectionResult2.setLastUpdatedAt(clock.millis());
+
+    when(delegateConnectionResultCache.get(ImmutablePair.of(delegateId, connectionResult.getCriteria())))
+        .thenReturn(Optional.of(connectionResult));
+
+    when(delegateConnectionResultCache.get(ImmutablePair.of(delegate2.getUuid(), connectionResult.getCriteria())))
+        .thenReturn(Optional.of(connectionResult2));
+
+    when(accountDelegatesCache.get(accountId)).thenReturn(Collections.emptyList()).thenReturn(Arrays.asList(delegate2));
+    when(delegateService.get(task.getAccountId(), delegate2.getUuid(), false))
+        .thenReturn(Delegate.builder().uuid(delegateId).build());
+    assertThat(assignDelegateService.shouldValidate(task, delegateId)).isFalse();
+
+    // test case: connection result present, validated, not expired, delegate connected
+    delegateId = generateUuid();
+    connectionResult = connectionResultBuilder.build();
+    connectionResult.setDelegateId(delegateId);
+    connectionResult.setValidated(true);
+    connectionResult.setLastUpdatedAt(clock.millis());
+    when(delegateConnectionResultCache.get(ImmutablePair.of(delegateId, connectionResult.getCriteria())))
+        .thenReturn(Optional.of(connectionResult));
+    when(accountDelegatesCache.get(accountId))
+        .thenReturn(
+            Arrays.asList(Delegate.builder().uuid(delegateId).status(ENABLED).lastHeartBeat(clock.millis()).build()));
+    assertThat(assignDelegateService.shouldValidate(task, delegateId)).isFalse();
   }
 }
