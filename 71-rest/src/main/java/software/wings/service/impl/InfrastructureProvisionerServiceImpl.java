@@ -867,7 +867,7 @@ public class InfrastructureProvisionerServiceImpl implements InfrastructureProvi
         .collect(toMap(NameValuePair::getName, entry -> {
           final EncryptedData encryptedData = wingsPersistence.createQuery(EncryptedData.class)
                                                   .filter(EncryptedDataKeys.accountId, accountId)
-                                                  .filter(EncryptedDataKeys.ID_KEY, entry.getValue())
+                                                  .filter(EncryptedDataKeys.uuid, entry.getValue())
                                                   .get();
 
           if (encryptedData == null) {

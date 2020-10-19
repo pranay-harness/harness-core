@@ -5,7 +5,7 @@ import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import com.google.inject.Inject;
 
 import io.harness.beans.SweepingOutputInstance;
-import io.harness.beans.SweepingOutputInstance.SweepingOutputKeys;
+import io.harness.beans.SweepingOutputInstance.SweepingOutputInstanceKeys;
 import io.harness.persistence.HIterator;
 import migrations.Migration;
 import org.mongodb.morphia.query.UpdateOperations;
@@ -18,13 +18,13 @@ public class SweepingStateMigration implements Migration {
   public void migrate() {
     try (HIterator<SweepingOutputInstance> iterator =
              new HIterator<SweepingOutputInstance>(wingsPersistence.createQuery(SweepingOutputInstance.class)
-                                                       .field(SweepingOutputKeys.stateExecutionId)
+                                                       .field(SweepingOutputInstanceKeys.stateExecutionId)
                                                        .doesNotExist()
                                                        .fetch())) {
       for (SweepingOutputInstance sweepingOutputInstance : iterator) {
         final UpdateOperations<SweepingOutputInstance> updateOperations =
             wingsPersistence.createUpdateOperations(SweepingOutputInstance.class)
-                .set(SweepingOutputKeys.stateExecutionId, generateUuid());
+                .set(SweepingOutputInstanceKeys.stateExecutionId, generateUuid());
         wingsPersistence.update(sweepingOutputInstance, updateOperations);
       }
     }

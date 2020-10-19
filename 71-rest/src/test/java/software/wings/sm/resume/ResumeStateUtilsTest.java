@@ -15,6 +15,7 @@ import com.google.inject.Inject;
 
 import io.harness.beans.ExecutionStatus;
 import io.harness.beans.SweepingOutputInstance;
+import io.harness.beans.SweepingOutputInstance.SweepingOutputInstanceKeys;
 import io.harness.category.element.UnitTests;
 import io.harness.context.ContextElementType;
 import io.harness.rule.Owner;
@@ -205,8 +206,8 @@ public class ResumeStateUtilsTest extends WingsBaseTest {
 
   private List<SweepingOutputInstance> listPipelineInstances(String pipelineExecutionUuid) {
     return wingsPersistence.createQuery(SweepingOutputInstance.class)
-        .filter(SweepingOutputInstance.SweepingOutputKeys.appId, appId)
-        .filter(SweepingOutputInstance.SweepingOutputKeys.pipelineExecutionId, pipelineExecutionUuid)
+        .filter(SweepingOutputInstanceKeys.appId, appId)
+        .filter(SweepingOutputInstanceKeys.pipelineExecutionId, pipelineExecutionUuid)
         .asList();
   }
 

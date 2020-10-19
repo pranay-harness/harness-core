@@ -10,6 +10,7 @@ import java.lang.annotation.RetentionPolicy;
 @Inherited
 @Retention(RetentionPolicy.RUNTIME)
 @Repeatable(CdSparseIndexes.class)
+@Deprecated
 public @interface CdSparseIndex {
   String name();
   Field[] fields();

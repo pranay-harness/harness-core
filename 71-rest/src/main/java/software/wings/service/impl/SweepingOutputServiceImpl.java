@@ -12,7 +12,7 @@ import com.mongodb.DuplicateKeyException;
 import io.harness.beans.SweepingOutputInstance;
 import io.harness.beans.SweepingOutputInstance.Scope;
 import io.harness.beans.SweepingOutputInstance.SweepingOutputInstanceBuilder;
-import io.harness.beans.SweepingOutputInstance.SweepingOutputKeys;
+import io.harness.beans.SweepingOutputInstance.SweepingOutputInstanceKeys;
 import io.harness.data.SweepingOutput;
 import io.harness.deployment.InstanceDetails;
 import io.harness.exception.InvalidRequestException;
@@ -65,16 +65,16 @@ public class SweepingOutputServiceImpl implements SweepingOutputService {
         SweepingOutputInquiryController.obtainFromStateExecutionInstanceWithoutName(stateExecutionInstance);
     final Query<SweepingOutputInstance> query =
         wingsPersistence.createQuery(SweepingOutputInstance.class)
-            .filter(SweepingOutputKeys.appId, sweepingOutputInquiry.getAppId())
-            .filter(SweepingOutputKeys.stateExecutionId, stateExecutionInstance.getUuid());
+            .filter(SweepingOutputInstanceKeys.appId, sweepingOutputInquiry.getAppId())
+            .filter(SweepingOutputInstanceKeys.stateExecutionId, stateExecutionInstance.getUuid());
     wingsPersistence.delete(query);
   }
 
   @Override
   public void deleteById(String appId, String uuid) {
     final Query<SweepingOutputInstance> query = wingsPersistence.createQuery(SweepingOutputInstance.class)
-                                                    .filter(SweepingOutputKeys.appId, appId)
-                                                    .filter(SweepingOutputKeys.uuid, uuid);
+                                                    .filter(SweepingOutputInstanceKeys.appId, appId)
+                                                    .filter(SweepingOutputInstanceKeys.uuid, uuid);
     wingsPersistence.delete(query);
   }
 
@@ -86,12 +86,12 @@ public class SweepingOutputServiceImpl implements SweepingOutputService {
     }
     final Query<SweepingOutputInstance> query =
         wingsPersistence.createQuery(SweepingOutputInstance.class)
-            .filter(SweepingOutputKeys.appId, appId)
-            .filter(SweepingOutputKeys.workflowExecutionIds, fromWorkflowExecutionId);
+            .filter(SweepingOutputInstanceKeys.appId, appId)
+            .filter(SweepingOutputInstanceKeys.workflowExecutionIds, fromWorkflowExecutionId);
 
     UpdateOperations<SweepingOutputInstance> ops =
         wingsPersistence.createUpdateOperations(SweepingOutputInstance.class);
-    ops.addToSet(SweepingOutputKeys.workflowExecutionIds, toWorkflowExecutionId);
+    ops.addToSet(SweepingOutputInstanceKeys.workflowExecutionIds, toWorkflowExecutionId);
     wingsPersistence.update(query, ops);
   }
 
@@ -99,18 +99,18 @@ public class SweepingOutputServiceImpl implements SweepingOutputService {
   public Query<SweepingOutputInstance> prepareApprovalStateOutputsQuery(
       String appId, String fromPipelineExecutionId, String fromStateExecutionId) {
     return wingsPersistence.createQuery(SweepingOutputInstance.class)
-        .filter(SweepingOutputKeys.appId, appId)
-        .filter(SweepingOutputKeys.pipelineExecutionId, fromPipelineExecutionId)
-        .filter(SweepingOutputKeys.stateExecutionId, fromStateExecutionId);
+        .filter(SweepingOutputInstanceKeys.appId, appId)
+        .filter(SweepingOutputInstanceKeys.pipelineExecutionId, fromPipelineExecutionId)
+        .filter(SweepingOutputInstanceKeys.stateExecutionId, fromStateExecutionId);
   }
 
   @Override
   public Query<SweepingOutputInstance> prepareEnvStateOutputsQuery(
       String appId, String fromPipelineExecutionId, String fromWorkflowExecutionId) {
     return wingsPersistence.createQuery(SweepingOutputInstance.class)
-        .filter(SweepingOutputKeys.appId, appId)
-        .filter(SweepingOutputKeys.pipelineExecutionId, fromPipelineExecutionId)
-        .filter(SweepingOutputKeys.workflowExecutionIds, fromWorkflowExecutionId);
+        .filter(SweepingOutputInstanceKeys.appId, appId)
+        .filter(SweepingOutputInstanceKeys.pipelineExecutionId, fromPipelineExecutionId)
+        .filter(SweepingOutputInstanceKeys.workflowExecutionIds, fromWorkflowExecutionId);
   }
 
   @Override
@@ -201,9 +201,10 @@ public class SweepingOutputServiceImpl implements SweepingOutputService {
 
   @Override
   public SweepingOutputInstance find(SweepingOutputInquiry sweepingOutputInquiry) {
-    final Query<SweepingOutputInstance> query = wingsPersistence.createQuery(SweepingOutputInstance.class)
-                                                    .filter(SweepingOutputKeys.appId, sweepingOutputInquiry.getAppId())
-                                                    .filter(SweepingOutputKeys.name, sweepingOutputInquiry.getName());
+    final Query<SweepingOutputInstance> query =
+        wingsPersistence.createQuery(SweepingOutputInstance.class)
+            .filter(SweepingOutputInstanceKeys.appId, sweepingOutputInquiry.getAppId())
+            .filter(SweepingOutputInstanceKeys.name, sweepingOutputInquiry.getName());
 
     addFilters(sweepingOutputInquiry, query);
     return query.get();
@@ -211,11 +212,12 @@ public class SweepingOutputServiceImpl implements SweepingOutputService {
 
   @Override
   public List<SweepingOutputInstance> findManyWithNamePrefix(SweepingOutputInquiry sweepingOutputInquiry, Scope scope) {
-    final Query<SweepingOutputInstance> query = wingsPersistence.createQuery(SweepingOutputInstance.class)
-                                                    .filter(SweepingOutputKeys.appId, sweepingOutputInquiry.getAppId())
-                                                    .field(SweepingOutputKeys.name)
-                                                    .startsWith(sweepingOutputInquiry.getName())
-                                                    .order(Sort.ascending(SweepingOutputKeys.createdAt));
+    final Query<SweepingOutputInstance> query =
+        wingsPersistence.createQuery(SweepingOutputInstance.class)
+            .filter(SweepingOutputInstanceKeys.appId, sweepingOutputInquiry.getAppId())
+            .field(SweepingOutputInstanceKeys.name)
+            .startsWith(sweepingOutputInquiry.getName())
+            .order(Sort.ascending(SweepingOutputInstanceKeys.createdAt));
 
     addFiltersWithScope(sweepingOutputInquiry, query, scope);
     return query.asList();
@@ -227,21 +229,21 @@ public class SweepingOutputServiceImpl implements SweepingOutputService {
     switch (scope) {
       case PIPELINE:
         if (sweepingOutputInquiry.getPipelineExecutionId() != null) {
-          criteria = query.criteria(SweepingOutputKeys.pipelineExecutionId)
+          criteria = query.criteria(SweepingOutputInstanceKeys.pipelineExecutionId)
                          .equal(sweepingOutputInquiry.getPipelineExecutionId());
         }
         break;
       case WORKFLOW:
-        criteria = query.criteria(SweepingOutputKeys.workflowExecutionIds)
+        criteria = query.criteria(SweepingOutputInstanceKeys.workflowExecutionIds)
                        .equal(sweepingOutputInquiry.getWorkflowExecutionId());
         break;
       case PHASE:
-        criteria =
-            query.criteria(SweepingOutputKeys.phaseExecutionId).equal(sweepingOutputInquiry.getPhaseExecutionId());
+        criteria = query.criteria(SweepingOutputInstanceKeys.phaseExecutionId)
+                       .equal(sweepingOutputInquiry.getPhaseExecutionId());
         break;
       case STATE:
-        criteria =
-            query.criteria(SweepingOutputKeys.stateExecutionId).equal(sweepingOutputInquiry.getStateExecutionId());
+        criteria = query.criteria(SweepingOutputInstanceKeys.stateExecutionId)
+                       .equal(sweepingOutputInquiry.getStateExecutionId());
         break;
       default:
         logger.error("Invalid scope", scope);
@@ -252,16 +254,16 @@ public class SweepingOutputServiceImpl implements SweepingOutputService {
   }
 
   private void addFilters(SweepingOutputInquiry sweepingOutputInquiry, Query<SweepingOutputInstance> query) {
-    final CriteriaContainerImpl workflowCriteria =
-        query.criteria(SweepingOutputKeys.workflowExecutionIds).equal(sweepingOutputInquiry.getWorkflowExecutionId());
+    final CriteriaContainerImpl workflowCriteria = query.criteria(SweepingOutputInstanceKeys.workflowExecutionIds)
+                                                       .equal(sweepingOutputInquiry.getWorkflowExecutionId());
     final CriteriaContainerImpl phaseCriteria =
-        query.criteria(SweepingOutputKeys.phaseExecutionId).equal(sweepingOutputInquiry.getPhaseExecutionId());
+        query.criteria(SweepingOutputInstanceKeys.phaseExecutionId).equal(sweepingOutputInquiry.getPhaseExecutionId());
     final CriteriaContainerImpl stateCriteria =
-        query.criteria(SweepingOutputKeys.stateExecutionId).equal(sweepingOutputInquiry.getStateExecutionId());
+        query.criteria(SweepingOutputInstanceKeys.stateExecutionId).equal(sweepingOutputInquiry.getStateExecutionId());
 
     if (sweepingOutputInquiry.getPipelineExecutionId() != null) {
-      final CriteriaContainerImpl pipelineCriteria =
-          query.criteria(SweepingOutputKeys.pipelineExecutionId).equal(sweepingOutputInquiry.getPipelineExecutionId());
+      final CriteriaContainerImpl pipelineCriteria = query.criteria(SweepingOutputInstanceKeys.pipelineExecutionId)
+                                                         .equal(sweepingOutputInquiry.getPipelineExecutionId());
       query.or(pipelineCriteria, workflowCriteria, phaseCriteria, stateCriteria);
     } else {
       query.or(workflowCriteria, phaseCriteria, stateCriteria);

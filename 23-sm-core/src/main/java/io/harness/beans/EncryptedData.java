@@ -39,7 +39,6 @@ import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import lombok.ToString;
 import lombok.experimental.FieldNameConstants;
-import lombok.experimental.UtilityClass;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Id;
@@ -337,15 +336,5 @@ public class EncryptedData
   @JsonIgnore
   public String getProjectIdentifier() {
     return Optional.ofNullable(ngMetadata).map(NGEncryptedDataMetadata::getProjectIdentifier).orElse(null);
-  }
-
-  @UtilityClass
-  public static final class EncryptedDataKeys {
-    // Temporary
-    public static final String ID_KEY = "_id";
-    public static final String createdAt = "createdAt";
-    public static final String uuid = "uuid";
-    public static final String name = "name";
-    public static final String accountId = "accountId";
   }
 }
