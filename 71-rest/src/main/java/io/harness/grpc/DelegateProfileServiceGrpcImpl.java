@@ -250,13 +250,16 @@ public class DelegateProfileServiceGrpcImpl extends DelegateProfileServiceImplBa
 
   private DelegateProfile convert(DelegateProfileGrpc delegateProfileGrpc) {
     DelegateProfileBuilder delegateProfileBuilder = DelegateProfile.builder()
-                                                        .uuid(delegateProfileGrpc.getProfileId().getId())
                                                         .accountId(delegateProfileGrpc.getAccountId().getId())
                                                         .name(delegateProfileGrpc.getName())
                                                         .description(delegateProfileGrpc.getDescription())
                                                         .primary(delegateProfileGrpc.getPrimary())
                                                         .approvalRequired(delegateProfileGrpc.getApprovalRequired())
                                                         .startupScript(delegateProfileGrpc.getStartupScript());
+
+    if (delegateProfileGrpc.getProfileId() != null && isNotBlank(delegateProfileGrpc.getProfileId().getId())) {
+      delegateProfileBuilder.uuid(delegateProfileGrpc.getProfileId().getId());
+    }
 
     if (isNotEmpty(delegateProfileGrpc.getSelectorsList())) {
       delegateProfileBuilder.selectors(delegateProfileGrpc.getSelectorsList()

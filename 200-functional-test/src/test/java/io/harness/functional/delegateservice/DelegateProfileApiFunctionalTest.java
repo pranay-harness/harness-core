@@ -51,6 +51,7 @@ public class DelegateProfileApiFunctionalTest extends AbstractFunctionalTest {
                     .scopingRuleDetails(Arrays.asList(ScopingRuleDetails.builder()
                                                           .description("desc")
                                                           .applicationId("appId")
+                                                          .environmentTypeId("envType1")
                                                           .environmentIds(new HashSet<>(Arrays.asList("env1", "env2")))
                                                           .serviceIds(new HashSet<>(Arrays.asList("srv1", "srv2")))
                                                           .build()))
@@ -67,6 +68,8 @@ public class DelegateProfileApiFunctionalTest extends AbstractFunctionalTest {
         .isEqualTo("desc");
     assertThat(updateScopingRulesRestResponse.getResource().getScopingRules().get(0).getApplicationId())
         .isEqualTo("appId");
+    assertThat(updateScopingRulesRestResponse.getResource().getScopingRules().get(0).getEnvironmentTypeId())
+        .isEqualTo("envType1");
     assertThat(updateScopingRulesRestResponse.getResource().getScopingRules().get(0).getEnvironmentIds()).isNotEmpty();
     assertThat(updateScopingRulesRestResponse.getResource().getScopingRules().get(0).getEnvironmentIds())
         .containsExactlyInAnyOrder("env1", "env2");
@@ -110,6 +113,7 @@ public class DelegateProfileApiFunctionalTest extends AbstractFunctionalTest {
         Arrays.asList(ScopingRuleDetails.builder()
                           .description("desc")
                           .applicationId("appId")
+                          .environmentTypeId("envTypeId")
                           .environmentIds(new HashSet<>(Arrays.asList("env1", "env2")))
                           .serviceIds(new HashSet<>(Arrays.asList("srv1", "srv2")))
                           .build()));
@@ -126,12 +130,14 @@ public class DelegateProfileApiFunctionalTest extends AbstractFunctionalTest {
             .as(new GenericType<RestResponse<DelegateProfileDetails>>() {}.getType());
 
     assertThat(updateProfileRestResponse.getResource()).isNotNull();
-    assertThat(updateProfileRestResponse.getResource().getUuid()).isNotNull();
+    assertThat(updateProfileRestResponse.getResource().getUuid()).isEqualTo(delegateProfileId);
     assertThat(updateProfileRestResponse.getResource().getAccountId()).isEqualTo(getAccount().getUuid());
     assertThat(updateProfileRestResponse.getResource().getScopingRules()).isNotEmpty();
     assertThat(updateProfileRestResponse.getResource().getScopingRules().get(0)).isNotNull();
     assertThat(updateProfileRestResponse.getResource().getScopingRules().get(0).getDescription()).isEqualTo("desc");
     assertThat(updateProfileRestResponse.getResource().getScopingRules().get(0).getApplicationId()).isEqualTo("appId");
+    assertThat(updateProfileRestResponse.getResource().getScopingRules().get(0).getEnvironmentTypeId())
+        .isEqualTo("envTypeId");
     assertThat(updateProfileRestResponse.getResource().getScopingRules().get(0).getEnvironmentIds()).isNotEmpty();
     assertThat(updateProfileRestResponse.getResource().getScopingRules().get(0).getEnvironmentIds())
         .containsExactlyInAnyOrder("env1", "env2");
@@ -145,12 +151,16 @@ public class DelegateProfileApiFunctionalTest extends AbstractFunctionalTest {
   @Owner(developers = SANJA)
   @Category(FunctionalTests.class)
   public void testAddDelegateProfile() {
-    DelegateProfileDetails delegateProfileDetails =
-        DelegateProfileDetails.builder().accountId(getAccount().getUuid()).name(generateUuid()).build();
+    DelegateProfileDetails delegateProfileDetails = DelegateProfileDetails.builder()
+                                                        .uuid(generateUuid())
+                                                        .accountId(getAccount().getUuid())
+                                                        .name(generateUuid())
+                                                        .build();
     delegateProfileDetails.setScopingRules(
         Arrays.asList(ScopingRuleDetails.builder()
                           .description("desc")
                           .applicationId("appId")
+                          .environmentTypeId("envTypeId")
                           .environmentIds(new HashSet<>(Arrays.asList("env1", "env2")))
                           .serviceIds(new HashSet<>(Arrays.asList("srv1", "srv2")))
                           .build()));
@@ -166,12 +176,14 @@ public class DelegateProfileApiFunctionalTest extends AbstractFunctionalTest {
             .as(new GenericType<RestResponse<DelegateProfileDetails>>() {}.getType());
 
     assertThat(addProfileRestResponse.getResource()).isNotNull();
-    assertThat(addProfileRestResponse.getResource().getUuid()).isNotNull();
+    assertThat(addProfileRestResponse.getResource().getUuid()).isNotBlank();
     assertThat(addProfileRestResponse.getResource().getAccountId()).isEqualTo(getAccount().getUuid());
     assertThat(addProfileRestResponse.getResource().getScopingRules()).isNotEmpty();
     assertThat(addProfileRestResponse.getResource().getScopingRules().get(0)).isNotNull();
     assertThat(addProfileRestResponse.getResource().getScopingRules().get(0).getDescription()).isEqualTo("desc");
     assertThat(addProfileRestResponse.getResource().getScopingRules().get(0).getApplicationId()).isEqualTo("appId");
+    assertThat(addProfileRestResponse.getResource().getScopingRules().get(0).getEnvironmentTypeId())
+        .isEqualTo("envTypeId");
     assertThat(addProfileRestResponse.getResource().getScopingRules().get(0).getEnvironmentIds()).isNotEmpty();
     assertThat(addProfileRestResponse.getResource().getScopingRules().get(0).getEnvironmentIds())
         .containsExactlyInAnyOrder("env1", "env2");
@@ -253,5 +265,30 @@ public class DelegateProfileApiFunctionalTest extends AbstractFunctionalTest {
     assertThat(listRestResponse.getResource().getResponse().get(0).getName()).isEmpty();
     assertThat(listRestResponse.getResource().getResponse().get(1).getDescription()).isEqualTo("test2");
     assertThat(listRestResponse.getResource().getResponse().get(1).getName()).isEmpty();
+
+    // Get profile list with accountId only
+    listRestResponse = Setup.portal()
+                           .auth()
+                           .oauth2(bearerToken)
+                           .queryParam(DelegateKeys.accountId, getAccount().getUuid())
+                           .get("/delegate-profiles/v2")
+                           .as(new GenericType<RestResponse<PageResponse<DelegateProfileDetails>>>() {}.getType());
+
+    assertThat(listRestResponse.getResource()).isNotNull();
+    assertThat(listRestResponse.getResource().getLimit()).isBlank();
+    assertThat(listRestResponse.getResource().getFieldsIncluded()).isNullOrEmpty();
+    assertThat(listRestResponse.getResource().getResponse().size()).isGreaterThanOrEqualTo(3);
+    assertThat(listRestResponse.getResource().getResponse().get(0).getUuid()).isNotBlank();
+    assertThat(listRestResponse.getResource().getResponse().get(0).getAccountId()).isNotBlank();
+    assertThat(listRestResponse.getResource().getResponse().get(0).getDescription()).isNotBlank();
+    assertThat(listRestResponse.getResource().getResponse().get(0).getName()).isNotBlank();
+    assertThat(listRestResponse.getResource().getResponse().get(1).getUuid()).isNotBlank();
+    assertThat(listRestResponse.getResource().getResponse().get(1).getAccountId()).isNotBlank();
+    assertThat(listRestResponse.getResource().getResponse().get(1).getDescription()).isNotBlank();
+    assertThat(listRestResponse.getResource().getResponse().get(1).getName()).isNotBlank();
+    assertThat(listRestResponse.getResource().getResponse().get(2).getUuid()).isNotBlank();
+    assertThat(listRestResponse.getResource().getResponse().get(2).getAccountId()).isNotBlank();
+    assertThat(listRestResponse.getResource().getResponse().get(2).getDescription()).isNotBlank();
+    assertThat(listRestResponse.getResource().getResponse().get(2).getName()).isNotBlank();
   }
 }
