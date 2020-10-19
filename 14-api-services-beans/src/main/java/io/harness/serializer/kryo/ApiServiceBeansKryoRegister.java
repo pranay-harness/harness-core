@@ -68,6 +68,10 @@ import io.harness.globalcontex.AuditGlobalContextData;
 import io.harness.globalcontex.PurgeGlobalContextData;
 import io.harness.jira.JiraAction;
 import io.harness.jira.JiraCustomFieldValue;
+import io.harness.jira.JiraProjectData;
+import io.harness.jira.JiraIssueType;
+import io.harness.jira.JiraField;
+import io.harness.jira.JiraCreateMetaResponse;
 import io.harness.k8s.model.HelmVersion;
 import io.harness.k8s.model.ImageDetails;
 import io.harness.k8s.model.IstioDestinationWeight;
@@ -195,6 +199,10 @@ public class ApiServiceBeansKryoRegister implements KryoRegistrar {
 
     kryo.register(JiraAction.class, 5580);
     kryo.register(JiraCustomFieldValue.class, 7177);
+    kryo.register(JiraProjectData.class, 7198);
+    kryo.register(JiraIssueType.class, 7199);
+    kryo.register(JiraField.class, 7200);
+    kryo.register(JiraCreateMetaResponse.class, 7201);
 
     kryo.register(AwsConfig.class, 1428);
     kryo.register(CrossAccountAccess.class, 1429);

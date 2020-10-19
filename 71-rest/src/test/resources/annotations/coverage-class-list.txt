@@ -4,7 +4,11 @@
 12-commons/src/main/java/io/harness/expression/ResolveObjectResponse.java
 12-commons/src/main/java/io/harness/registries/exceptions/DuplicateRegistryException.java
 12-commons/src/main/java/io/harness/registries/exceptions/UnregisteredKeyAccessException.java
+14-api-services-beans/src/main/java/io/harness/jira/JiraCreateMetaResponse.java
 14-api-services-beans/src/main/java/io/harness/jira/JiraCustomFieldValue.java
+14-api-services-beans/src/main/java/io/harness/jira/JiraField.java
+14-api-services-beans/src/main/java/io/harness/jira/JiraIssueType.java
+14-api-services-beans/src/main/java/io/harness/jira/JiraProjectData.java
 15-api-services/src/main/java/io/harness/artifacts/docker/beans/DockerImageManifestResponse.java
 15-api-services/src/main/java/io/harness/artifacts/docker/beans/DockerPublicImageTagResponse.java
 15-api-services/src/main/java/io/harness/artifacts/docker/client/DockerRestClientFactoryImpl.java
@@ -351,11 +355,7 @@
 71-rest/src/main/java/software/wings/api/ShellScriptApprovalExecutionData.java
 71-rest/src/main/java/software/wings/api/SkipStateExecutionData.java
 71-rest/src/main/java/software/wings/api/WaitStateExecutionData.java
-71-rest/src/main/java/software/wings/api/jira/JiraCreateMetaResponse.java
 71-rest/src/main/java/software/wings/api/jira/JiraExecutionData.java
-71-rest/src/main/java/software/wings/api/jira/JiraField.java
-71-rest/src/main/java/software/wings/api/jira/JiraIssueType.java
-71-rest/src/main/java/software/wings/api/jira/JiraProjectData.java
 71-rest/src/main/java/software/wings/api/ondemandrollback/OnDemandRollbackInfo.java
 71-rest/src/main/java/software/wings/beans/AWSTemporaryCredentials.java
 71-rest/src/main/java/software/wings/beans/ArtifactStreamMetadata.java

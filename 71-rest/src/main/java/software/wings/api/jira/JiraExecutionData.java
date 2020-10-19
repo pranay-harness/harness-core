@@ -6,6 +6,7 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.ExecutionStatus;
 import io.harness.delegate.beans.DelegateTaskNotifyResponseData;
 import io.harness.jira.JiraAction;
+import io.harness.jira.JiraCreateMetaResponse;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
