@@ -2243,24 +2243,14 @@ public class UserServiceImpl implements UserService {
   public User getUserFromCacheOrDB(String userId) {
     User user = null;
     try {
-      if (userCache == null) {
-        return get(userId);
-      }
       user = userCache.get(userId);
-
-      if (user == null) {
-        logger.info("User [{}] not found in Cache. Load it from DB", userId);
-        user = get(userId);
-        userCache.put(user.getUuid(), user);
-      }
-      return user;
     } catch (Exception ex) {
-      // If there was any exception, remove that entry from cache
-      if (userCache != null) {
-        userCache.remove(userId);
-        user = get(userId);
-        userCache.put(user.getUuid(), user);
-      }
+      logger.error("Exception occurred while loading User from DB", ex);
+    }
+    if (user == null) {
+      logger.info("User [{}] not found in Cache. Load it from DB", userId);
+      user = get(userId);
+      userCache.put(user.getUuid(), user);
     }
 
     return user;
