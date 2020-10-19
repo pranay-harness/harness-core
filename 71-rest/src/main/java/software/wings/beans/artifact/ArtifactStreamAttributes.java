@@ -75,7 +75,7 @@ public class ArtifactStreamAttributes implements ExecutionCapabilityDemander {
   private String azureResourceGroup;
   private String azureImageDefinition;
   private boolean dockerBasedDeployment;
-
+  private boolean supportForNexusGroupReposEnabled;
   // These fields are used only during artifact collection and cleanup.
   private boolean isCollection;
   private Set<String> savedBuildDetailsKeys;

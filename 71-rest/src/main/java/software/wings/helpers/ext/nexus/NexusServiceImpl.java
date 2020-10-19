@@ -336,15 +336,16 @@ public class NexusServiceImpl implements NexusService {
 
   @Override
   public List<BuildDetails> getVersions(NexusConfig nexusConfig, List<EncryptedDataDetail> encryptionDetails,
-      String repoId, String groupId, String artifactName, String extension, String classifier) {
+      String repoId, String groupId, String artifactName, String extension, String classifier,
+      boolean supportForNexusGroupReposEnabled) {
     try {
       boolean isNexusTwo = nexusConfig.getVersion() == null || nexusConfig.getVersion().equalsIgnoreCase("2.x");
       if (isNexusTwo) {
         return nexusTwoService.getVersions(
             nexusConfig, encryptionDetails, repoId, groupId, artifactName, extension, classifier);
       } else {
-        return nexusThreeService.getVersions(
-            nexusConfig, encryptionDetails, repoId, groupId, artifactName, extension, classifier);
+        return nexusThreeService.getVersions(nexusConfig, encryptionDetails, repoId, groupId, artifactName, extension,
+            classifier, supportForNexusGroupReposEnabled);
       }
     } catch (final IOException e) {
       logger.error(
@@ -385,13 +386,15 @@ public class NexusServiceImpl implements NexusService {
 
   @Override
   public List<BuildDetails> getVersions(String repositoryFormat, NexusConfig nexusConfig,
-      List<EncryptedDataDetail> encryptionDetails, String repoId, String packageName) {
+      List<EncryptedDataDetail> encryptionDetails, String repoId, String packageName,
+      boolean supportForNexusGroupReposEnabled) {
     try {
       boolean isNexusTwo = nexusConfig.getVersion() == null || nexusConfig.getVersion().equalsIgnoreCase("2.x");
       if (isNexusTwo) {
         return nexusTwoService.getVersions(repositoryFormat, nexusConfig, encryptionDetails, repoId, packageName);
       } else {
-        return nexusThreeService.getPackageVersions(nexusConfig, encryptionDetails, repoId, packageName);
+        return nexusThreeService.getPackageVersions(
+            nexusConfig, encryptionDetails, repoId, packageName, supportForNexusGroupReposEnabled);
       }
     } catch (final IOException e) {
       logger.error(

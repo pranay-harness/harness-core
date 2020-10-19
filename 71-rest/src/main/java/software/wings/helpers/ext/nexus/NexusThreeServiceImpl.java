@@ -17,6 +17,7 @@ import static software.wings.helpers.ext.nexus.NexusServiceImpl.isSuccessful;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
+import io.fabric8.utils.Strings;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.artifact.ArtifactUtilities;
 import io.harness.delegate.beans.artifact.ArtifactFileMetadata;
@@ -403,7 +404,7 @@ public class NexusThreeServiceImpl {
   }
 
   public List<BuildDetails> getPackageVersions(NexusConfig nexusConfig, List<EncryptedDataDetail> encryptionDetails,
-      String repositoryName, String packageName) throws IOException {
+      String repositoryName, String packageName, boolean supportForNexusGroupReposEnabled) throws IOException {
     logger.info("Retrieving package versions for repository {} package {} ", repositoryName, packageName);
     List<String> versions = new ArrayList<>();
     Map<String, Asset> versionToArtifactUrls = new HashMap<>();
@@ -431,8 +432,28 @@ public class NexusThreeServiceImpl {
             for (Nexus3ComponentResponse.Component component : response.body().getItems()) {
               String version = component.getVersion();
               versions.add(version); // todo: add limit if results are returned in descending order of lastUpdatedTs
+
               if (isNotEmpty(component.getAssets())) {
-                versionToArtifactUrls.put(version, component.getAssets().get(0));
+                Asset asset = component.getAssets().get(0);
+                String artifactUrl = asset.getDownloadUrl();
+                if (supportForNexusGroupReposEnabled && !artifactUrl.contains(repositoryName)) {
+                  String arr[] = artifactUrl.split("/");
+                  // Extract the repo id in the url. URL is like {repoId}/{packagename}/{version}
+                  // Eg. repository/nuget-hosted-group-repo/NuGet.Sample.Package/1.0.0.0
+                  if (asset.getFormat().equals("nuget")) {
+                    arr[arr.length - 3] = repositoryName;
+                  }
+                  // Extract the repo id in the url. URL is like {repoId}/{packagename}/-/{filename}
+                  // Eg. repository/harness-npm-group/npm-app1/-/npm-app1-1.0.0.tgz
+                  else if (asset.getFormat().equals("npm")) {
+                    arr[arr.length - 4] = repositoryName;
+                  }
+                  artifactUrl = Strings.join("/", arr);
+
+                  // Update the asset with modified URL
+                  asset.setDownloadUrl(artifactUrl);
+                }
+                versionToArtifactUrls.put(version, asset);
               }
               // for each version - get all assets and store download urls in metadata
               versionToArtifactDownloadUrls.put(version, getDownloadUrlsForPackageVersion(component));
@@ -481,17 +502,17 @@ public class NexusThreeServiceImpl {
     List<ArtifactFileMetadata> artifactFileMetadata = new ArrayList<>();
     if (isNotEmpty(assets)) {
       for (Asset asset : assets) {
-        String url = asset.getDownloadUrl();
+        String artifactUrl = asset.getDownloadUrl();
         String artifactName;
         if (RepositoryFormat.nuget.name().equals(component.getFormat())) {
           artifactName = component.getName() + "-" + component.getVersion() + ".nupkg";
         } else {
-          artifactName = url.substring(url.lastIndexOf('/') + 1);
+          artifactName = artifactUrl.substring(artifactUrl.lastIndexOf('/') + 1);
         }
         if (artifactName.endsWith("pom") || artifactName.endsWith("md5") || artifactName.endsWith("sha1")) {
           continue;
         }
-        artifactFileMetadata.add(ArtifactFileMetadata.builder().fileName(artifactName).url(url).build());
+        artifactFileMetadata.add(ArtifactFileMetadata.builder().fileName(artifactName).url(artifactUrl).build());
       }
     }
     return artifactFileMetadata;
@@ -739,7 +760,8 @@ public class NexusThreeServiceImpl {
   }
 
   public List<BuildDetails> getVersions(NexusConfig nexusConfig, List<EncryptedDataDetail> encryptionDetails,
-      String repoId, String groupId, String artifactName, String extension, String classifier) throws IOException {
+      String repoId, String groupId, String artifactName, String extension, String classifier,
+      boolean supportForNexusGroupReposEnabled) throws IOException {
     logger.info("Retrieving versions for repoId {} groupId {} and artifactName {}", repoId, groupId, artifactName);
     List<String> versions = new ArrayList<>();
     Map<String, String> versionToArtifactUrls = new HashMap<>();
@@ -764,6 +786,7 @@ public class NexusThreeServiceImpl {
           if (isNotEmpty(response.body().getItems())) {
             for (Nexus3ComponentResponse.Component component : response.body().getItems()) {
               String version = component.getVersion();
+              String artifactUrl;
               versions.add(version); // todo: add limit if results are returned in descending order of lastUpdatedTs
               // get artifact urls for each version
               Response<Nexus3AssetResponse> versionResponse = getNexus3MavenAssets(
@@ -771,7 +794,19 @@ public class NexusThreeServiceImpl {
               List<ArtifactFileMetadata> artifactFileMetadata = getDownloadUrlsForMaven(versionResponse);
 
               if (isNotEmpty(artifactFileMetadata)) {
-                versionToArtifactUrls.put(version, artifactFileMetadata.get(0).getUrl());
+                artifactUrl = artifactFileMetadata.get(0).getUrl();
+                // FeatureFlag SUPPORT_NEXUS_GROUP_REPOS
+                // Replacing the repository name in url with group repo name if the repotype is group
+                // This ok because artifacts in repos that are member of group repo can be accessed via group repo.
+                if (supportForNexusGroupReposEnabled && !artifactUrl.contains(repoId)) {
+                  String arr[] = artifactUrl.split("/");
+                  // Extract the repo id in the url. URL is like {repoId}/{groupId}/{artifactId}/{version}/{filename}
+                  arr[arr.length - 5] = repoId;
+                  artifactUrl = Strings.join("/", arr);
+                  // Update artifactFileMetadata
+                  artifactFileMetadata.get(0).setUrl(artifactUrl);
+                }
+                versionToArtifactUrls.put(version, artifactUrl);
               }
               versionToArtifactDownloadUrls.put(version, artifactFileMetadata);
             }
