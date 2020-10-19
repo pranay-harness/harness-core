@@ -37,6 +37,7 @@ import javax.validation.constraints.NotNull;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DefaultValue;
 import javax.ws.rs.GET;
+import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
@@ -118,11 +119,12 @@ public class CDNGExecutionResource {
   @ExceptionMetered
   @ApiOperation(value = "Gets Step Types to Yaml Type Mapping", nickname = "getStepTypesToYamlTypeMapping")
   @Path("/step-types")
-  public ResponseDTO<Map<ExecutionNodeType, String>> getStepTypeToYamlTypeMapping() {
+  public ResponseDTO<Map<ExecutionNodeType, String>> getStepTypeToYamlTypeMapping(
+      @QueryParam("executionNodeType") ExecutionNodeType executionNodeType) {
     return ResponseDTO.newResponse(executionService.getStepTypeToYamlTypeMapping());
   }
 
-  @GET
+  @PUT
   @Timed
   @ExceptionMetered
   @ApiOperation(value = "pause, resume or stop the pipeline executions", nickname = "handleInterrupt")

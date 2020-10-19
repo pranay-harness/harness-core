@@ -24,6 +24,7 @@ import io.harness.executionplan.core.ExecutionPlanCreationContext;
 import io.harness.executionplan.core.ExecutionPlanCreatorResponse;
 import io.harness.executionplan.core.PlanCreatorSearchContext;
 import io.harness.executionplan.core.SupportDefinedExecutorPlanCreator;
+import io.harness.executionplan.plancreator.beans.PlanCreatorConstants;
 import io.harness.executionplan.stepsdependency.StepDependencyService;
 import io.harness.executionplan.stepsdependency.instructors.OutcomeRefStepDependencyInstructor;
 import io.harness.facilitator.FacilitatorObtainment;
@@ -78,7 +79,7 @@ public class ServiceStepPlanCreator
     PlanNodeBuilder planNodeBuilder =
         PlanNode.builder()
             .uuid(serviceNodeUid)
-            .name(serviceIdentifier)
+            .name(PlanCreatorConstants.SERVICE_NODE_NAME)
             .identifier(serviceIdentifier)
             .stepType(ServiceStep.STEP_TYPE)
             .stepParameters(

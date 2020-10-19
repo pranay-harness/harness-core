@@ -26,6 +26,7 @@ import io.harness.facilitator.FacilitatorObtainment;
 import io.harness.facilitator.FacilitatorType;
 import io.harness.plan.PlanNode;
 import io.harness.plan.PlanNode.PlanNodeBuilder;
+import io.harness.skip.SkipType;
 import io.harness.steps.section.chain.SectionChainStepParameters;
 
 import java.util.Collections;
@@ -55,7 +56,7 @@ public class InfraPlanCreator implements SupportDefinedExecutorPlanCreator<Pipel
     PlanNodeBuilder planNodeBuilder =
         PlanNode.builder()
             .uuid(infraNodeId)
-            .name(infraIdentifier)
+            .name(PlanCreatorConstants.INFRA_NODE_NAME)
             .identifier(infraIdentifier)
             .stepType(InfrastructureStep.STEP_TYPE)
             .skipExpressionChain(true)
@@ -86,6 +87,7 @@ public class InfraPlanCreator implements SupportDefinedExecutorPlanCreator<Pipel
         .facilitatorObtainment(FacilitatorObtainment.builder()
                                    .type(FacilitatorType.builder().type(FacilitatorType.CHILD_CHAIN).build())
                                    .build())
+        .skipGraphType(SkipType.SKIP_NODE)
         .build();
   }
 

@@ -17,6 +17,7 @@ import io.harness.executionplan.core.ExecutionPlanCreatorResponse;
 import io.harness.executionplan.core.PlanCreatorSearchContext;
 import io.harness.executionplan.core.SupportDefinedExecutorPlanCreator;
 import io.harness.executionplan.core.impl.ExecutionPlanCreatorResponseImpl.ExecutionPlanCreatorResponseImplBuilder;
+import io.harness.executionplan.plancreator.beans.PlanCreatorConstants;
 import io.harness.executionplan.plancreator.beans.PlanNodeType;
 import io.harness.executionplan.plancreator.beans.StepOutcomeGroup;
 import io.harness.executionplan.service.ExecutionPlanCreatorHelper;
@@ -88,7 +89,7 @@ public class CDExecutionPlanCreator extends AbstractPlanCreatorWithChildren<Exec
     final String nodeId = generateUuid();
     return PlanNode.builder()
         .uuid(nodeId)
-        .name(EXECUTION_NODE_IDENTIFIER)
+        .name(PlanCreatorConstants.EXECUTION_NODE_NAME)
         .identifier(EXECUTION_NODE_IDENTIFIER)
         .stepType(NGSectionStep.STEP_TYPE)
         .group(StepOutcomeGroup.EXECUTION.name())

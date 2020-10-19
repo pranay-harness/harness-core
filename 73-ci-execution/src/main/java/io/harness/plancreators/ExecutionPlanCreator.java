@@ -76,7 +76,7 @@ public class ExecutionPlanCreator implements SupportDefinedExecutorPlanCreator<E
     final String EXECUTION = "EXECUTION";
     return PlanNode.builder()
         .uuid(nodeId)
-        .name(EXECUTION)
+        .name("Execution")
         .identifier(EXECUTION)
         .stepType(SectionChainStep.STEP_TYPE)
         .stepParameters(SectionChainStepParameters.builder()

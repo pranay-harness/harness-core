@@ -12,7 +12,8 @@ public enum ExecutionNodeType {
   K8S_ROLLING("K8S_ROLLING", YamlTypes.K8S_ROLLING_DEPLOY),
   K8S_ROLLBACK_ROLLING("K8S_ROLLBACK_ROLLING", YamlTypes.K8S_ROLLING_ROLLBACK),
   ROLLBACK_SECTION("ROLLBACK_SECTION", "rollback"),
-  GENERIC_SECTION("GENERIC_SECTION", "genericSection");
+  GENERIC_SECTION("GENERIC_SECTION", "genericSection"),
+  HTTP("HTTP", YamlTypes.HTTP_STEP);
 
   private final String name;
   private final String yamlType;
