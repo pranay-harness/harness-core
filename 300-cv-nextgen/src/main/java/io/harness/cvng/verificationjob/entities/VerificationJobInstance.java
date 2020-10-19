@@ -158,7 +158,7 @@ public class VerificationJobInstance
   }
 
   public Duration getTimeRemainingMs(Instant currentTime) {
-    if (ExecutionStatus.finalStatuses().contains(executionStatus)) {
+    if (isFinalStatus()) {
       return Duration.ZERO;
     } else if (executionStatus == ExecutionStatus.QUEUED) {
       return getResolvedJob().getDuration().plus(Duration.ofMinutes(5));
@@ -172,5 +172,9 @@ public class VerificationJobInstance
       Duration durationFor1Percent = Duration.ofMillis(durationTillNow.toMillis() / percentage);
       return Duration.ofMillis((100 - percentage) * durationFor1Percent.toMillis());
     }
+  }
+
+  private boolean isFinalStatus() {
+    return ExecutionStatus.finalStatuses().contains(executionStatus);
   }
 }

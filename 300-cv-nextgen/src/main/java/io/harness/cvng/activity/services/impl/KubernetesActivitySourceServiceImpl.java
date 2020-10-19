@@ -1,20 +1,20 @@
-package io.harness.cvng.core.activity.services.impl;
+package io.harness.cvng.activity.services.impl;
 
 import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
 
+import io.harness.cvng.activity.beans.KubernetesActivitySourceDTO;
+import io.harness.cvng.activity.entities.Activity;
+import io.harness.cvng.activity.entities.KubernetesActivitySource;
+import io.harness.cvng.activity.entities.KubernetesActivitySource.KubernetesActivitySourceKeys;
+import io.harness.cvng.activity.services.api.ActivityService;
+import io.harness.cvng.activity.services.api.KubernetesActivitySourceService;
 import io.harness.cvng.beans.DataCollectionType;
 import io.harness.cvng.beans.KubernetesActivityDTO;
 import io.harness.cvng.beans.KubernetesActivitySourceDTO.KubernetesActivitySourceDTOKeys;
 import io.harness.cvng.client.VerificationManagerService;
-import io.harness.cvng.core.activity.beans.KubernetesActivitySourceDTO;
-import io.harness.cvng.core.activity.entities.Activity;
-import io.harness.cvng.core.activity.entities.KubernetesActivitySource;
-import io.harness.cvng.core.activity.entities.KubernetesActivitySource.KubernetesActivitySourceKeys;
-import io.harness.cvng.core.activity.services.api.KubernetesActivitySourceService;
 import io.harness.cvng.core.entities.CVConfig.CVConfigKeys;
 import io.harness.cvng.core.entities.DataCollectionTask.DataCollectionTaskKeys;
-import io.harness.cvng.core.services.api.ActivityService;
 import io.harness.persistence.HPersistence;
 import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.query.Query;

@@ -9,6 +9,9 @@ import com.google.inject.Inject;
 
 import io.harness.CvNextGenTest;
 import io.harness.category.element.UnitTests;
+import io.harness.cvng.activity.entities.Activity;
+import io.harness.cvng.activity.entities.DeploymentActivity;
+import io.harness.cvng.activity.services.api.ActivityService;
 import io.harness.cvng.analysis.beans.CanaryDeploymentAdditionalInfo;
 import io.harness.cvng.analysis.beans.CanaryDeploymentAdditionalInfo.HostSummaryInfo;
 import io.harness.cvng.analysis.beans.DeploymentLogAnalysisDTO.Cluster;
@@ -26,10 +29,7 @@ import io.harness.cvng.analysis.services.api.DeploymentTimeSeriesAnalysisService
 import io.harness.cvng.beans.ActivityType;
 import io.harness.cvng.beans.DataSourceType;
 import io.harness.cvng.beans.HostRecordDTO;
-import io.harness.cvng.core.activity.entities.Activity;
-import io.harness.cvng.core.activity.entities.DeploymentActivity;
 import io.harness.cvng.core.beans.LoadTestAdditionalInfo;
-import io.harness.cvng.core.services.api.ActivityService;
 import io.harness.cvng.core.services.api.HostRecordService;
 import io.harness.cvng.core.services.api.VerificationTaskService;
 import io.harness.cvng.dashboard.beans.TimeSeriesMetricDataDTO.TimeSeriesRisk;

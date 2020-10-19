@@ -1,4 +1,4 @@
-package io.harness.cvng.core.activity.entities;
+package io.harness.cvng.activity.entities;
 
 import static io.harness.cvng.core.utils.ErrorMessageUtils.generateErrorMessageFromParam;
 

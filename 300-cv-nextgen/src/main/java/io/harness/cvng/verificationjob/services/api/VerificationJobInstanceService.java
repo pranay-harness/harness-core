@@ -1,7 +1,8 @@
 package io.harness.cvng.verificationjob.services.api;
 
-import io.harness.cvng.core.beans.DeploymentActivityResultDTO.DeploymentResultSummary;
-import io.harness.cvng.core.beans.DeploymentActivityVerificationResultDTO;
+import io.harness.cvng.activity.beans.DeploymentActivityPopoverResultDTO;
+import io.harness.cvng.activity.beans.DeploymentActivityResultDTO.DeploymentResultSummary;
+import io.harness.cvng.activity.beans.DeploymentActivityVerificationResultDTO;
 import io.harness.cvng.core.beans.TimeRange;
 import io.harness.cvng.verificationjob.beans.VerificationJobInstanceDTO;
 import io.harness.cvng.verificationjob.entities.VerificationJobInstance;
@@ -24,4 +25,5 @@ public interface VerificationJobInstanceService {
   DeploymentActivityVerificationResultDTO getAggregatedVerificationResult(List<String> verificationJobInstanceIds);
   void addResultsToDeploymentResultSummary(
       String accountId, List<String> verificationJobInstanceIds, DeploymentResultSummary deploymentResultSummary);
+  DeploymentActivityPopoverResultDTO getDeploymentVerificationPopoverResult(List<String> verificationJobInstanceIds);
 }

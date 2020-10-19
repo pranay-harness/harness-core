@@ -19,13 +19,16 @@ import com.google.inject.Inject;
 
 import io.harness.CvNextGenTest;
 import io.harness.category.element.UnitTests;
+import io.harness.cvng.activity.beans.DeploymentActivityPopoverResultDTO;
+import io.harness.cvng.activity.beans.DeploymentActivityPopoverResultDTO.DeploymentPopoverSummary;
+import io.harness.cvng.activity.beans.DeploymentActivityResultDTO.DeploymentResultSummary;
+import io.harness.cvng.activity.beans.DeploymentActivityVerificationResultDTO;
+import io.harness.cvng.activity.beans.DeploymentVerificationStatus;
 import io.harness.cvng.beans.CVMonitoringCategory;
 import io.harness.cvng.beans.DataCollectionType;
 import io.harness.cvng.beans.DataSourceType;
 import io.harness.cvng.client.NextGenService;
 import io.harness.cvng.client.VerificationManagerService;
-import io.harness.cvng.core.beans.DeploymentActivityResultDTO.DeploymentResultSummary;
-import io.harness.cvng.core.beans.DeploymentActivityVerificationResultDTO;
 import io.harness.cvng.core.entities.CVConfig;
 import io.harness.cvng.core.entities.CVConfig.CVConfigKeys;
 import io.harness.cvng.core.entities.DataCollectionTask;
@@ -57,8 +60,10 @@ import org.junit.experimental.categories.Category;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
+import java.time.Clock;
 import java.time.Duration;
 import java.time.Instant;
+import java.time.ZoneOffset;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -76,6 +81,8 @@ public class VerificationJobInstanceServiceImplTest extends CvNextGenTest {
   @Inject private HPersistence hPersistence;
   @Mock private NextGenService nextGenService;
   @Inject private VerificationTaskService verificationTaskService;
+  @Mock private Clock clock;
+  private Instant fakeNow;
   private String accountId;
   private String verificationJobIdentifier;
   private long deploymentStartTimeMs;
@@ -96,6 +103,9 @@ public class VerificationJobInstanceServiceImplTest extends CvNextGenTest {
     deploymentStartTimeMs = Instant.parse("2020-07-27T10:44:06.390Z").toEpochMilli();
     connectorId = generateUuid();
     perpetualTaskId = generateUuid();
+    fakeNow = Instant.parse("2020-07-27T10:50:00.390Z");
+    clock = Clock.fixed(fakeNow, ZoneOffset.UTC);
+    FieldUtils.writeField(verificationJobInstanceService, "clock", clock, true);
     FieldUtils.writeField(
         verificationJobInstanceService, "verificationManagerService", verificationManagerService, true);
     FieldUtils.writeField(verificationJobInstanceService, "nextGenService", nextGenService, true);
@@ -397,7 +407,7 @@ public class VerificationJobInstanceServiceImplTest extends CvNextGenTest {
                        .riskScore(null)
                        .notStarted(1)
                        .durationMs(Duration.ofMinutes(15).toMillis())
-                       .timeRemainingMs(1200000)
+                       .remainingTimeMs(1200000)
                        .build());
   }
 
@@ -431,6 +441,110 @@ public class VerificationJobInstanceServiceImplTest extends CvNextGenTest {
     assertThat(
         deploymentResultSummary.getProductionDeploymentVerificationJobInstanceSummaries().get(0).getEnvironmentName())
         .isEqualTo("Harness prod");
+  }
+
+  @Test
+  @Owner(developers = KAMAL)
+  @Category(UnitTests.class)
+  public void testGetDeploymentVerificationPopoverResult_verificationJobInstanceDoesNotExist() {
+    String verificationJobInstanceId = generateUuid();
+    assertThatThrownBy(()
+                           -> verificationJobInstanceService.getDeploymentVerificationPopoverResult(
+                               Arrays.asList(verificationJobInstanceId)))
+        .isInstanceOf(IllegalStateException.class)
+        .hasMessage("No VerificationJobInstance found with IDs " + Arrays.asList(verificationJobInstanceId).toString());
+  }
+
+  @Test
+  @Owner(developers = KAMAL)
+  @Category(UnitTests.class)
+  public void testGetDeploymentVerificationPopoverResult_validVerificationJobInstancesWithFailedInstance() {
+    VerificationJobInstance devVerificationJobInstance =
+        createVerificationJobInstance("devVerificationJobInstance", "dev");
+    VerificationJobInstance prodVerificationJobInstance =
+        createVerificationJobInstance("prodVerificationJobInstance", "prod");
+    verificationJobInstanceService.logProgress(prodVerificationJobInstance.getUuid(),
+        ProgressLog.builder()
+            .analysisStatus(AnalysisStatus.FAILED)
+            .startTime(prodVerificationJobInstance.getStartTime())
+            .endTime(prodVerificationJobInstance.getStartTime().plus(Duration.ofMinutes(1)))
+            .isFinalState(true)
+            .log("Time series")
+            .build());
+    DeploymentActivityPopoverResultDTO deploymentActivityPopoverResultDTO =
+        verificationJobInstanceService.getDeploymentVerificationPopoverResult(
+            Arrays.asList(devVerificationJobInstance.getUuid(), prodVerificationJobInstance.getUuid()));
+    assertThat(deploymentActivityPopoverResultDTO.getPreProductionDeploymentSummary())
+        .isEqualTo(DeploymentPopoverSummary.builder()
+                       .total(1)
+                       .verificationResults(Collections.singletonList(
+                           DeploymentActivityPopoverResultDTO.VerificationResult.builder()
+                               .jobName(devVerificationJobInstance.getResolvedJob().getJobName())
+                               .progressPercentage(0)
+                               .remainingTimeMs(1200000L)
+                               .status(DeploymentVerificationStatus.NOT_STARTED)
+                               .startTime(devVerificationJobInstance.getStartTime().toEpochMilli())
+                               .build()))
+                       .build());
+    assertThat(deploymentActivityPopoverResultDTO.getProductionDeploymentSummary())
+        .isEqualTo(DeploymentPopoverSummary.builder()
+                       .total(1)
+                       .verificationResults(Collections.singletonList(
+                           DeploymentActivityPopoverResultDTO.VerificationResult.builder()
+                               .jobName(prodVerificationJobInstance.getResolvedJob().getJobName())
+                               .progressPercentage(6)
+                               .remainingTimeMs(0L)
+                               .status(DeploymentVerificationStatus.ERROR)
+                               .startTime(prodVerificationJobInstance.getStartTime().toEpochMilli())
+                               .build()))
+                       .build());
+    assertThat(deploymentActivityPopoverResultDTO.getPostDeploymentSummary()).isEqualTo(null);
+  }
+
+  @Test
+  @Owner(developers = KAMAL)
+  @Category(UnitTests.class)
+  public void testGetDeploymentVerificationPopoverResult_validVerificationJobInstancesWithInProgressInstance() {
+    VerificationJobInstance devVerificationJobInstance =
+        createVerificationJobInstance("devVerificationJobInstance", "dev", ExecutionStatus.RUNNING);
+    VerificationJobInstance prodVerificationJobInstance =
+        createVerificationJobInstance("prodVerificationJobInstance", "prod", ExecutionStatus.RUNNING);
+    verificationJobInstanceService.logProgress(prodVerificationJobInstance.getUuid(),
+        ProgressLog.builder()
+            .analysisStatus(AnalysisStatus.SUCCESS)
+            .startTime(prodVerificationJobInstance.getStartTime())
+            .endTime(prodVerificationJobInstance.getStartTime().plus(Duration.ofMinutes(1)))
+            .isFinalState(true)
+            .log("Time series")
+            .build());
+    DeploymentActivityPopoverResultDTO deploymentActivityPopoverResultDTO =
+        verificationJobInstanceService.getDeploymentVerificationPopoverResult(
+            Arrays.asList(devVerificationJobInstance.getUuid(), prodVerificationJobInstance.getUuid()));
+    assertThat(deploymentActivityPopoverResultDTO.getPreProductionDeploymentSummary())
+        .isEqualTo(DeploymentPopoverSummary.builder()
+                       .total(1)
+                       .verificationResults(Collections.singletonList(
+                           DeploymentActivityPopoverResultDTO.VerificationResult.builder()
+                               .jobName(devVerificationJobInstance.getResolvedJob().getJobName())
+                               .progressPercentage(0)
+                               .remainingTimeMs(1200000L)
+                               .status(DeploymentVerificationStatus.IN_PROGRESS)
+                               .startTime(devVerificationJobInstance.getStartTime().toEpochMilli())
+                               .build()))
+                       .build());
+    assertThat(deploymentActivityPopoverResultDTO.getProductionDeploymentSummary())
+        .isEqualTo(DeploymentPopoverSummary.builder()
+                       .total(1)
+                       .verificationResults(Collections.singletonList(
+                           DeploymentActivityPopoverResultDTO.VerificationResult.builder()
+                               .jobName(prodVerificationJobInstance.getResolvedJob().getJobName())
+                               .progressPercentage(6)
+                               .remainingTimeMs(3666000L)
+                               .status(DeploymentVerificationStatus.IN_PROGRESS)
+                               .startTime(prodVerificationJobInstance.getStartTime().toEpochMilli())
+                               .build()))
+                       .build());
+    assertThat(deploymentActivityPopoverResultDTO.getPostDeploymentSummary()).isEqualTo(null);
   }
 
   private String getDataCollectionWorkerId(String verificationTaskId, String connectorId) {
@@ -494,21 +608,26 @@ public class VerificationJobInstanceServiceImplTest extends CvNextGenTest {
   }
 
   private VerificationJobInstance createVerificationJobInstance(
-      String verificationJobIdentifier, String envIdentifier) {
+      String verificationJobIdentifier, String envIdentifier, ExecutionStatus executionStatus) {
     verificationJobService.upsert(accountId, newVerificationJobDTO(verificationJobIdentifier, envIdentifier));
     VerificationJob verificationJob = verificationJobService.getVerificationJob(accountId, verificationJobIdentifier);
     VerificationJobInstance verificationJobInstance =
         VerificationJobInstance.builder()
             .accountId(accountId)
-            .executionStatus(ExecutionStatus.QUEUED)
+            .executionStatus(executionStatus)
             .verificationJobIdentifier(verificationJobIdentifier)
             .deploymentStartTime(Instant.ofEpochMilli(deploymentStartTimeMs))
             .resolvedJob(verificationJob)
+            .createdAt(deploymentStartTimeMs + Duration.ofMinutes(2).toMillis())
             .startTime(Instant.ofEpochMilli(deploymentStartTimeMs + Duration.ofMinutes(2).toMillis()))
             .build();
     verificationJobInstanceService.create(verificationJobInstance);
     verificationTaskService.create(accountId, cvConfigId, verificationJobInstance.getUuid());
     return verificationJobInstance;
+  }
+  private VerificationJobInstance createVerificationJobInstance(
+      String verificationJobIdentifier, String envIdentifier) {
+    return createVerificationJobInstance(verificationJobIdentifier, envIdentifier, ExecutionStatus.QUEUED);
   }
 
   private VerificationJobDTO newVerificationJobDTO(String verificationJobIdentifier, String envIdentifier) {

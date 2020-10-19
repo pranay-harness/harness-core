@@ -1,4 +1,4 @@
-package io.harness.cvng.core.activity.entities;
+package io.harness.cvng.activity.entities;
 
 import io.harness.cvng.beans.ActivityDTO;
 import io.harness.cvng.beans.ActivityType;
