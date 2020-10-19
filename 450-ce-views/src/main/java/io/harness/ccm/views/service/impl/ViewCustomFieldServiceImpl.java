@@ -61,6 +61,16 @@ public class ViewCustomFieldServiceImpl implements ViewCustomFieldService {
     return viewFieldList;
   }
 
+  @Override
+  public ViewCustomField update(ViewCustomField viewCustomField) {
+    return viewCustomFieldDao.update(viewCustomField);
+  }
+
+  @Override
+  public boolean delete(String uuid, String accountId) {
+    return viewCustomFieldDao.delete(uuid, accountId);
+  }
+
   public boolean validateViewCustomField(ViewCustomField viewCustomField) {
     ViewCustomField savedCustomField = viewCustomFieldDao.findByName(
         viewCustomField.getAccountId(), viewCustomField.getViewId(), viewCustomField.getName());

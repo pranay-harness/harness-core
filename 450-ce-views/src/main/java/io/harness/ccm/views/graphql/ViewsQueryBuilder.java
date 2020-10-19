@@ -99,6 +99,7 @@ public class ViewsQueryBuilder {
       decorateQueryWithSortCriteria(selectQuery, sortCriteriaList);
     }
 
+    logger.info("Query for view {}", selectQuery.toString());
     return selectQuery;
   }
 
