@@ -115,6 +115,7 @@ build_bazel_module 23-delegate-service-driver
 build_bazel_module 23-sm-core
 build_bazel_module 24-common-entities
 build_bazel_module 27-orchestration-persistence
+build_bazel_module 28-pms-beans
 build_bazel_module 29-orchestration-beans
 build_bazel_module 31-orchestration
 build_bazel_module 32-orchestration-steps
@@ -137,7 +138,6 @@ build_java_proto_module 19-delegate-tasks-beans
 build_java_proto_module 20-delegate-beans
 build_java_proto_module 21-delegate-agent-beans
 build_java_proto_module 22-delegate-service-beans
-build_java_proto_module 28-pms-beans
 build_java_proto_module 50-delegate-task-grpc-service proto
 
 build_proto_module 16-expression-service 16-expression-service/src/main/proto/io/harness/expression/service
