@@ -10,12 +10,12 @@ import (
 	"github.com/pkg/errors"
 	"github.com/wings-software/portal/commons/go/lib/exec"
 	"github.com/wings-software/portal/commons/go/lib/utils"
-	"github.com/wings-software/portal/product/ci/addon/entrypoint"
+	"github.com/wings-software/portal/product/ci/addon/images"
 	pb "github.com/wings-software/portal/product/ci/engine/proto"
 	"go.uber.org/zap"
 )
 
-//go:generate mockgen -source plugin.go -package=steps -destination mocks/plugin_mock.go PluginTask
+//go:generate mockgen -source plugin.go -package=tasks -destination mocks/plugin_mock.go PluginTask
 
 const (
 	defaultPluginTimeout    int64         = 14400 // 4 hour
@@ -24,8 +24,8 @@ const (
 )
 
 var (
-	getPublicEntrypoint  = entrypoint.PublicImage
-	getPrivateEntrypoint = entrypoint.PrivateImage
+	getPublicImgMetadata  = images.PublicMetadata
+	getPrivateImgMetadata = images.PrivateMetadata
 )
 
 // PluginTask represents interface to execute a plugin step
@@ -70,7 +70,7 @@ func NewPluginTask(step *pb.UnitStep, log *zap.SugaredLogger, w io.Writer) Plugi
 	}
 }
 
-// Executes customer provided run step commands with retries and timeout handling
+// Executes customer provided plugin with retries and timeout handling
 func (e *pluginTask) Run(ctx context.Context) (int32, error) {
 	var err error
 	for i := int32(1); i <= e.numRetries; i++ {
@@ -121,7 +121,7 @@ func (e *pluginTask) execute(ctx context.Context, retryCount int32) error {
 
 func (e *pluginTask) getEntrypoint() ([]string, error) {
 	if e.imageSecretEnv == "" {
-		return getPublicEntrypoint(e.image)
+		return e.combinedEntrypoint(getPublicImgMetadata(e.image))
 	}
 
 	imageSecretEnv, ok := os.LookupEnv(e.imageSecretEnv)
@@ -130,7 +130,14 @@ func (e *pluginTask) getEntrypoint() ([]string, error) {
 			fmt.Sprintf("%s environment variable storing image secret is not set", e.imageSecretEnv))
 	}
 
-	return getPrivateEntrypoint(e.image, imageSecretEnv)
+	return e.combinedEntrypoint(getPrivateImgMetadata(e.image, imageSecretEnv))
+}
+
+func (e *pluginTask) combinedEntrypoint(ep, cmds []string, err error) ([]string, error) {
+	if err != nil {
+		return nil, err
+	}
+	return images.CombinedEntrypoint(ep, cmds), nil
 }
 
 func logPluginErr(log *zap.SugaredLogger, errMsg, stepID string, cmds []string, retryCount int32, startTime time.Time, err error) {

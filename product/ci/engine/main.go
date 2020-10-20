@@ -4,7 +4,6 @@ package main
 	CI lite engine executes steps of stage provided as an input.
 */
 import (
-	"fmt"
 	"os"
 
 	"github.com/alexflint/go-arg"
@@ -24,9 +23,10 @@ var (
 
 // schema for executing a stage
 type stageSchema struct {
-	Input       string `arg:"--input, required" help:"base64 format of stage to execute"`
-	TmpFilePath string `arg:"--tmppath, required" help:"relative file path to store temporary files"`
-	Debug       bool   `arg:"--debug" help:"Enables debug mode for checking run step logs by not exitting CI-addon"`
+	Input        string `arg:"--input, required" help:"base64 format of stage to execute"`
+	TmpFilePath  string `arg:"--tmppath, required" help:"relative file path to store temporary files"`
+	ServicePorts []uint `arg:"--svc_ports" help:"grpc service ports of integration service containers"`
+	Debug        bool   `arg:"--debug" help:"Enables debug mode for checking run step logs by not exitting CI-addon"`
 }
 
 var args struct {
@@ -52,10 +52,8 @@ func init() {
 func main() {
 	parseArgs()
 
-	// Build initial log
-	// Lite engine logs that are not part of any step are logged with ID engine_state_logs-engineID
-	engineID := "main"
-	key := fmt.Sprintf("engine_stage_logs-%s", engineID)
+	// Lite engine logs that are not part of any step are logged with ID engine_state_logs-main
+	key := "engine_stage_logs-main"
 	remoteLogger, err := newRemoteLogger(key)
 	if err != nil {
 		// Could not create a logger
@@ -68,7 +66,7 @@ func main() {
 
 	switch {
 	case args.Stage != nil:
-		err := executeStage(args.Stage.Input, args.Stage.TmpFilePath, args.Stage.Debug, log)
+		err := executeStage(args.Stage.Input, args.Stage.TmpFilePath, args.Stage.ServicePorts, args.Stage.Debug, log)
 		if err != nil {
 			remoteLogger.Writer.Close()
 			os.Exit(1) // Exit the lite engine with status code of 1

@@ -6,6 +6,8 @@ import (
 	"fmt"
 
 	"github.com/golang/protobuf/proto"
+	"github.com/pkg/errors"
+	addonpb "github.com/wings-software/portal/product/ci/addon/proto"
 	"github.com/wings-software/portal/product/ci/engine/output"
 	pb "github.com/wings-software/portal/product/ci/engine/proto"
 	"go.uber.org/zap"
@@ -17,7 +19,7 @@ type StageExecutor interface {
 }
 
 // NewStageExecutor creates a stage executor
-func NewStageExecutor(encodedStage, tmpFilePath string, debug bool,
+func NewStageExecutor(encodedStage, tmpFilePath string, svcPorts []uint, debug bool,
 	log *zap.SugaredLogger) StageExecutor {
 	o := make(output.StageOutput)
 	unitExecutor := NewUnitExecutor(tmpFilePath, log)
@@ -25,6 +27,7 @@ func NewStageExecutor(encodedStage, tmpFilePath string, debug bool,
 	return &stageExecutor{
 		encodedStage:     encodedStage,
 		tmpFilePath:      tmpFilePath,
+		svcPorts:         svcPorts,
 		debug:            debug,
 		stageOutput:      o,
 		unitExecutor:     unitExecutor,
@@ -37,6 +40,7 @@ type stageExecutor struct {
 	log              *zap.SugaredLogger
 	tmpFilePath      string             // File path to store generated temporary files
 	encodedStage     string             // Stage in base64 encoded format
+	svcPorts         []uint             // grpc service ports of integration service containers
 	debug            bool               // If true, enables debug mode for checking run step logs by not exiting lite-engine
 	stageOutput      output.StageOutput // Stage output will store the output of steps in a stage
 	unitExecutor     UnitExecutor
@@ -49,6 +53,13 @@ func (e *stageExecutor) Run() error {
 	if e.debug == true {
 		defer func() { select {} }()
 	}
+
+	// Cleanup all the integration service resources at the end
+	defer func() {
+		for _, port := range e.svcPorts {
+			e.stopIntegrationSvc(ctx, port)
+		}
+	}()
 
 	execution, err := e.decodeStage(e.encodedStage)
 	if err != nil {
@@ -107,6 +118,25 @@ func (e *stageExecutor) cleanupStep(ctx context.Context, step *pb.Step) error {
 	return err
 }
 
+// Stops CI-Addon GRPC server running on integration service container
+func (e *stageExecutor) stopIntegrationSvc(ctx context.Context, port uint) error {
+	addonClient, err := newAddonClient(port, e.log)
+	if err != nil {
+		e.log.Errorw("Could not create CI Addon client running integration service",
+			"port", port, zap.Error(err))
+		return errors.Wrap(err, "Could not create CI Addon client")
+	}
+	defer addonClient.CloseConn()
+
+	_, err = addonClient.Client().SignalStop(ctx, &addonpb.SignalStopRequest{})
+	if err != nil {
+		e.log.Errorw("Unable to send Stop server request to addon running integration service",
+			"port", port, zap.Error(err))
+		return errors.Wrap(err, "Could not send stop server request")
+	}
+	return nil
+}
+
 func (e *stageExecutor) decodeStage(encodedStage string) (*pb.Execution, error) {
 	decodedStage, err := base64.StdEncoding.DecodeString(e.encodedStage)
 	if err != nil {
@@ -126,8 +156,8 @@ func (e *stageExecutor) decodeStage(encodedStage string) (*pb.Execution, error) 
 }
 
 // ExecuteStage executes a stage of the pipeline
-func ExecuteStage(input, tmpFilePath string, debug bool, log *zap.SugaredLogger) error {
-	executor := NewStageExecutor(input, tmpFilePath, debug, log)
+func ExecuteStage(input, tmpFilePath string, svcPorts []uint, debug bool, log *zap.SugaredLogger) error {
+	executor := NewStageExecutor(input, tmpFilePath, svcPorts, debug, log)
 	if err := executor.Run(); err != nil {
 		log.Errorw(
 			"error while executing steps in a stage",

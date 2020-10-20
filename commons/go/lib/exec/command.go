@@ -75,6 +75,13 @@ var osCommand CommandFactory = CommandFactoryFunc(func(name string, args ...stri
 	return &osCmd{exec.Command(name, args...)}
 })
 
+//OsCommand returns CommandFactory that creates an os/exec.Cmd
+func OsCommand() CommandFactory {
+	return CommandFactoryFunc(func(name string, args ...string) Command {
+		return &osCmd{exec.Command(name, args...)}
+	})
+}
+
 func (o *osCmd) Pid() int {
 	if o.Process == nil {
 		return -1

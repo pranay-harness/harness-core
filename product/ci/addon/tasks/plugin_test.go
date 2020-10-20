@@ -36,11 +36,11 @@ func TestPluginSuccess(t *testing.T) {
 		procWriter:        &buf,
 	}
 
-	oldImgEntrypoint := getPublicEntrypoint
-	getPublicEntrypoint = func(image string) ([]string, error) {
-		return commands, nil
+	oldImgMetadata := getPublicImgMetadata
+	getPublicImgMetadata = func(image string) ([]string, []string, error) {
+		return commands, nil, nil
 	}
-	defer func() { getPublicEntrypoint = oldImgEntrypoint }()
+	defer func() { getPublicImgMetadata = oldImgMetadata }()
 
 	cmdFactory.EXPECT().CmdContextWithSleep(gomock.Any(), cmdExitWaitTime, gomock.Any()).Return(cmd)
 	cmd.EXPECT().WithStdout(&buf).Return(cmd)
@@ -73,11 +73,11 @@ func TestPluginNonZeroStatus(t *testing.T) {
 		procWriter:        &buf,
 	}
 
-	oldImgEntrypoint := getPublicEntrypoint
-	getPublicEntrypoint = func(image string) ([]string, error) {
-		return commands, nil
+	oldImgMetadata := getPublicImgMetadata
+	getPublicImgMetadata = func(image string) ([]string, []string, error) {
+		return commands, nil, nil
 	}
-	defer func() { getPublicEntrypoint = oldImgEntrypoint }()
+	defer func() { getPublicImgMetadata = oldImgMetadata }()
 
 	cmdFactory.EXPECT().CmdContextWithSleep(gomock.Any(), cmdExitWaitTime, gomock.Any()).Return(cmd)
 	cmd.EXPECT().WithStdout(&buf).Return(cmd)
@@ -123,11 +123,11 @@ func TestPluginEntrypointErr(t *testing.T) {
 		},
 	}
 
-	oldImgEntrypoint := getPublicEntrypoint
-	getPublicEntrypoint = func(image string) ([]string, error) {
-		return nil, fmt.Errorf("entrypoint not found")
+	oldImgMetadata := getPublicImgMetadata
+	getPublicImgMetadata = func(image string) ([]string, []string, error) {
+		return nil, nil, fmt.Errorf("entrypoint not found")
 	}
-	defer func() { getPublicEntrypoint = oldImgEntrypoint }()
+	defer func() { getPublicImgMetadata = oldImgMetadata }()
 
 	var buf bytes.Buffer
 	executor := NewPluginTask(step, log.Sugar(), &buf)
@@ -149,11 +149,11 @@ func TestPluginEmptyEntrypointErr(t *testing.T) {
 		},
 	}
 
-	oldImgEntrypoint := getPublicEntrypoint
-	getPublicEntrypoint = func(image string) ([]string, error) {
-		return nil, nil
+	oldImgMetadata := getPublicImgMetadata
+	getPublicImgMetadata = func(image string) ([]string, []string, error) {
+		return nil, nil, nil
 	}
-	defer func() { getPublicEntrypoint = oldImgEntrypoint }()
+	defer func() { getPublicImgMetadata = oldImgMetadata }()
 
 	var buf bytes.Buffer
 	executor := NewPluginTask(step, log.Sugar(), &buf)

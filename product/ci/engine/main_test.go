@@ -37,7 +37,7 @@ func TestMainEmptyStage(t *testing.T) {
 
 	oldExecuteStage := executeStage
 	defer func() { executeStage = oldExecuteStage }()
-	executeStage = func(input, tmpFilePath string, debug bool, log *zap.SugaredLogger) error {
+	executeStage = func(input, tmpFilePath string, svcPorts []uint, debug bool, log *zap.SugaredLogger) error {
 		return nil
 	}
 
@@ -70,7 +70,7 @@ func TestMainEmptyStageMultiWorkers(t *testing.T) {
 
 	oldExecuteStage := executeStage
 	defer func() { executeStage = oldExecuteStage }()
-	executeStage = func(input, tmpFilePath string, debug bool, log *zap.SugaredLogger) error {
+	executeStage = func(input, tmpFilePath string, svcPorts []uint, debug bool, log *zap.SugaredLogger) error {
 		return nil
 	}
 
