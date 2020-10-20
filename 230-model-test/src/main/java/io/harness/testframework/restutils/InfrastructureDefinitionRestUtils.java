@@ -135,6 +135,31 @@ public class InfrastructureDefinitionRestUtils {
         .collect(Collectors.toList());
   }
 
+  public List<String> listVirtualMachineScaleSets(
+      String bearerToken, String appId, String subscriptionId, String resourceGroup, String cloudProviderId) {
+    GenericType<RestResponse<PageResponse<InfrastructureDefinition>>> restResponseGenericType =
+        new GenericType<RestResponse<PageResponse<InfrastructureDefinition>>>() {};
+    RestResponse<PageResponse<InfrastructureDefinition>> restResponse =
+        Setup.portal()
+            .auth()
+            .oauth2(bearerToken)
+            .contentType(ContentType.JSON)
+            .queryParam("appId", appId)
+            .queryParam("subscriptionId", subscriptionId)
+            .queryParam("resourceGroupName", resourceGroup)
+            .get("/infrastructure-definitions/" + cloudProviderId + "/vm-scale-sets")
+            .as(restResponseGenericType.getType());
+    if (restResponse.getResource() == null) {
+      throw new EmptyRestResponseException(
+          "/infrastructure-definitions", String.valueOf(restResponse.getResponseMessages()));
+    }
+    return restResponse.getResource()
+        .getResponse()
+        .stream()
+        .map(InfrastructureDefinition::getUuid)
+        .collect(Collectors.toList());
+  }
+
   public static List<String> listAutoScalingGroups(
       String bearerToken, String accountId, String appId, String cloudProviderId, String region) {
     GenericType<RestResponse<List<String>>> restResponseGenericType = new GenericType<RestResponse<List<String>>>() {};
