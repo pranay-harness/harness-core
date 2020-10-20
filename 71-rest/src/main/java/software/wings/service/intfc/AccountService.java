@@ -5,6 +5,7 @@ import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.cvng.beans.ServiceGuardLimitDTO;
 import io.harness.delegate.beans.DelegateConfiguration;
+import io.harness.managerclient.HttpsCertRequirement.CertRequirement;
 import io.harness.validation.Create;
 import io.harness.validation.Update;
 import org.hibernate.validator.constraints.NotBlank;
@@ -189,4 +190,6 @@ public interface AccountService {
   void setServiceGuardAccount(String accountId, ServiceGuardLimitDTO serviceGuardLimitDTO);
 
   void updateBackgroundJobsDisabled(String accountId, boolean isDisabled);
+
+  CertRequirement getHttpsCertificateRequirement(String accountId);
 }

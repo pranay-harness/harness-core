@@ -65,6 +65,7 @@ import io.harness.exception.UnauthorizedException;
 import io.harness.exception.WingsException;
 import io.harness.logging.AccountLogContext;
 import io.harness.logging.AutoLogContext;
+import io.harness.managerclient.HttpsCertRequirement.CertRequirement;
 import io.harness.network.Http;
 import io.harness.ng.core.dto.OrganizationDTO;
 import io.harness.observer.Subject;
@@ -1602,5 +1603,15 @@ public class AccountServiceImpl implements AccountService {
   public void setServiceGuardAccount(String accountId, ServiceGuardLimitDTO serviceGuardLimitDTO) {
     wingsPersistence.updateField(
         Account.class, accountId, AccountKeys.serviceGuardLimit, serviceGuardLimitDTO.getServiceGuardLimit());
+  }
+
+  @Override
+  public CertRequirement getHttpsCertificateRequirement(String accountId) {
+    // TODO: write an actual implementation
+    if (accountId.isEmpty()) {
+      return CertRequirement.UNKNOWN_REQUIREMENT;
+    } else {
+      return CertRequirement.CERTIFICATE_REQUIRED;
+    }
   }
 }

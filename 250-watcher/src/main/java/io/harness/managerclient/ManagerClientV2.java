@@ -17,11 +17,6 @@ public interface ManagerClientV2 {
   @GET("agent/delegates/configuration")
   Call<RestResponse<DelegateConfiguration>> getDelegateConfiguration(@Query("accountId") String accountId);
 
-  // Query for a specific set of delegate properties for a given account.
-  // Request: GetDelegatePropertiesRequest
-  // Response: GetDelegatePropertiesResponse
-  @GET("agent/delegates/properties") Call<RestResponse<String>> getDelegateProperties(@Query("request") String request);
-
   @GET("agent/infra-download/delegate-auth/delegate/{version}")
   Call<RestResponse<String>> getDelegateDownloadUrl(
       @Path("version") String version, @Query("accountId") String accountId);
