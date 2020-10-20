@@ -26,7 +26,7 @@ public class BatchConfiguration {
   @Bean
   public ThreadPoolTaskScheduler threadPoolTaskScheduler() {
     ThreadPoolTaskScheduler threadPoolTaskScheduler = new ThreadPoolTaskScheduler();
-    threadPoolTaskScheduler.setPoolSize(4);
+    threadPoolTaskScheduler.setPoolSize(5);
     return threadPoolTaskScheduler;
   }
 }

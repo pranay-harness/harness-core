@@ -65,7 +65,7 @@ public class ActualIdleBillingDataWriter extends EventWriter implements ItemWrit
           if (unallocatedCostForNode.compareTo(BigDecimal.ZERO) == -1
               || cpuUnallocatedCostForNode.compareTo(BigDecimal.ZERO) == -1
               || memoryUnallocatedCostForNode.compareTo(BigDecimal.ZERO) == -1) {
-            logger.warn(
+            logger.debug(
                 "Unallocated billing amount -ve for node account {} cluster {} instance {} startdate {} total {} cpu {} memory {}",
                 nodeData.getAccountId(), nodeData.getClusterId(), nodeData.getInstanceId(), nodeData.getStartTime(),
                 unallocatedCostForNode, cpuUnallocatedCostForNode, memoryUnallocatedCostForNode);
@@ -83,7 +83,7 @@ public class ActualIdleBillingDataWriter extends EventWriter implements ItemWrit
 
         if (actualIdleCost.compareTo(BigDecimal.ZERO) == -1 || cpuActualIdleCost.compareTo(BigDecimal.ZERO) == -1
             || memoryActualIdleCost.compareTo(BigDecimal.ZERO) == -1) {
-          logger.warn(
+          logger.debug(
               "Unallocated idle cost -ve for node account {} cluster {} instance {} startdate {} total {} cpu {} memory {}",
               nodeData.getAccountId(), nodeData.getClusterId(), nodeData.getInstanceId(), nodeData.getStartTime(),
               actualIdleCost, cpuActualIdleCost, memoryActualIdleCost);
