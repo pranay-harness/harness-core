@@ -62,7 +62,15 @@ public class MongoDataStoreServiceImpl implements DataStoreService {
 
   @Override
   public void delete(Class<? extends GoogleDataStoreAware> clazz, String id) {
-    Query<? extends GoogleDataStoreAware> query = wingsPersistence.createQuery(clazz).filter("_id", id);
+    Query<? extends GoogleDataStoreAware> query =
+        wingsPersistence.createQuery(clazz, excludeAuthority).filter("_id", id);
+    wingsPersistence.delete(query);
+  }
+
+  @Override
+  public void delete(Class<? extends GoogleDataStoreAware> clazz, String fieldName, String fieldValue) {
+    Query<? extends GoogleDataStoreAware> query =
+        wingsPersistence.createQuery(clazz, excludeAuthority).filter(fieldName, fieldValue);
     wingsPersistence.delete(query);
   }
 
@@ -106,8 +114,9 @@ public class MongoDataStoreServiceImpl implements DataStoreService {
 
   @Override
   public void purgeByActivity(String appId, String activityId) {
-    wingsPersistence.delete(
-        wingsPersistence.createQuery(Log.class).filter("appId", appId).filter(LogKeys.activityId, activityId));
+    wingsPersistence.delete(wingsPersistence.createQuery(Log.class, excludeAuthority)
+                                .filter("appId", appId)
+                                .filter(LogKeys.activityId, activityId));
   }
 
   @Override

@@ -56,14 +56,12 @@ public interface VerificationManagerClient {
   @GET(CV_NEXTGEN_RESOURCE_PREFIX + "/auth/validate-token")
   Call<RestResponse<Boolean>> authenticateUser(
       @Query("containerRequestContext") ContainerRequestContext containerRequestContext);
-  @POST("appdynamics"
-      + "/metric-data")
 
-  Call<RestResponse<Set<AppdynamicsValidationResponse>>>
-  getAppDynamicsMetricData(@Query("accountId") String accountId, @Query("orgIdentifier") String orgIdentifier,
-      @Query("projectIdentifier") String projectIdentifier, @Query("appdAppId") long appdAppId,
-      @Query("appdTierId") long appdTierId, @Query("requestGuid") String requestGuid,
-      @Body AppdynamicsMetricPackDataValidationRequest validationRequest);
+  @POST("appdynamics/metric-data")
+  Call<RestResponse<Set<AppdynamicsValidationResponse>>> getAppDynamicsMetricData(@Query("accountId") String accountId,
+      @Query("orgIdentifier") String orgIdentifier, @Query("projectIdentifier") String projectIdentifier,
+      @Query("appdAppId") long appdAppId, @Query("appdTierId") long appdTierId,
+      @Query("requestGuid") String requestGuid, @Body AppdynamicsMetricPackDataValidationRequest validationRequest);
 
   @POST("appdynamics/applications-ng")
   Call<RestResponse<List<AppDynamicsApplication>>> getAppDynamicsApplications(@Query("accountId") String accountId,
