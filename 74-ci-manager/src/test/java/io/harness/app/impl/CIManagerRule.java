@@ -123,7 +123,7 @@ public class CIManagerRule implements MethodRule, InjectorRuleMixin, MongoRuleMi
     });
     modules.add(TestMongoModule.getInstance());
     modules.add(new CIManagerPersistenceTestModule());
-    modules.add(new CIManagerServiceModule(configuration, null));
+    modules.add(new CIManagerServiceModule(configuration));
     return modules;
   }
 

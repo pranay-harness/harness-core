@@ -14,8 +14,8 @@ import io.fabric8.kubernetes.api.model.PodFluent;
 import io.fabric8.kubernetes.api.model.Volume;
 import io.harness.exception.InvalidRequestException;
 import lombok.extern.slf4j.Slf4j;
-import software.wings.beans.GitFetchFilesConfig;
 import software.wings.beans.ci.pod.CIK8PodParams;
+import software.wings.beans.ci.pod.ConnectorDetails;
 import software.wings.beans.ci.pod.ContainerParams;
 import software.wings.beans.ci.pod.PodParams;
 import software.wings.delegatetasks.citasks.cik8handler.container.ContainerSpecBuilderResponse;
@@ -37,7 +37,7 @@ public class CIK8PodSpecBuilder extends BasePodSpecBuilder {
   @Override
   protected void decorateSpec(
       PodParams<ContainerParams> podParams, PodFluent.SpecNested<PodBuilder> podBuilderSpecNested) {
-    CIK8PodParams cik8PodParams = null;
+    CIK8PodParams cik8PodParams;
 
     if (podParams.getType() == PodParams.Type.K8) {
       cik8PodParams = (CIK8PodParams) podParams;
@@ -46,8 +46,9 @@ public class CIK8PodSpecBuilder extends BasePodSpecBuilder {
       throw new InvalidRequestException("Type miss matched");
     }
 
-    ContainerSpecBuilderResponse initCtrSpecBuilderResponse = getInitContainer(cik8PodParams.getGitFetchFilesConfig(),
-        cik8PodParams.getStepExecVolumeName(), cik8PodParams.getStepExecWorkingDir());
+    ContainerSpecBuilderResponse initCtrSpecBuilderResponse =
+        getInitContainer(cik8PodParams.getGitConnector(), cik8PodParams.getBranchName(), cik8PodParams.getCommitId(),
+            cik8PodParams.getStepExecVolumeName(), cik8PodParams.getStepExecWorkingDir());
 
     List<Container> initContainers = new ArrayList<>();
     List<Volume> volumes = new ArrayList<>();
@@ -71,9 +72,11 @@ public class CIK8PodSpecBuilder extends BasePodSpecBuilder {
    * Returns container spec to clone repository as part of init-container in K8.
    */
   private ContainerSpecBuilderResponse getInitContainer(
-      GitFetchFilesConfig gitFetchFilesConfig, String stepExecVolumeName, String workingDir) {
+      ConnectorDetails gitConnector, String branchName, String commitId, String stepExecVolumeName, String workingDir) {
     GitCloneContainerParams gitCloneContainerParams = GitCloneContainerParams.builder()
-                                                          .gitFetchFilesConfig(gitFetchFilesConfig)
+                                                          .gitConnectorDetails(gitConnector)
+                                                          .branchName(branchName)
+                                                          .commitId(commitId)
                                                           .stepExecVolumeName(stepExecVolumeName)
                                                           .workingDir(workingDir)
                                                           .build();

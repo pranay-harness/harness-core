@@ -43,7 +43,9 @@ import io.harness.beans.steps.stepinfo.TestStepInfo;
 import io.harness.beans.steps.stepinfo.publish.artifact.DockerFileArtifact;
 import io.harness.beans.steps.stepinfo.publish.artifact.connectors.EcrConnector;
 import io.harness.beans.steps.stepinfo.publish.artifact.connectors.GcrConnector;
-import io.harness.beans.yaml.extended.CustomVariables;
+import io.harness.beans.yaml.extended.CustomSecretVariable;
+import io.harness.beans.yaml.extended.CustomTextVariable;
+import io.harness.beans.yaml.extended.CustomVariable;
 import io.harness.beans.yaml.extended.connector.GitConnectorYaml;
 import io.harness.beans.yaml.extended.container.Container;
 import io.harness.beans.yaml.extended.container.ContainerResource;
@@ -52,8 +54,29 @@ import io.harness.cdng.pipeline.NgPipeline;
 import io.harness.cdng.pipeline.beans.entities.NgPipelineEntity;
 import io.harness.ci.beans.entities.BuildNumber;
 import io.harness.common.CIExecutionConstants;
+import io.harness.connector.apis.dto.ConnectorDTO;
+import io.harness.connector.apis.dto.ConnectorInfoDTO;
+import io.harness.delegate.beans.connector.ConnectorType;
+import io.harness.delegate.beans.connector.docker.DockerAuthType;
+import io.harness.delegate.beans.connector.docker.DockerAuthenticationDTO;
+import io.harness.delegate.beans.connector.docker.DockerConnectorDTO;
+import io.harness.delegate.beans.connector.docker.DockerUserNamePasswordDTO;
+import io.harness.delegate.beans.connector.gitconnector.GitAuthType;
+import io.harness.delegate.beans.connector.gitconnector.GitConfigDTO;
+import io.harness.delegate.beans.connector.gitconnector.GitHTTPAuthenticationDTO;
+import io.harness.delegate.beans.connector.k8Connector.KubernetesAuthDTO;
+import io.harness.delegate.beans.connector.k8Connector.KubernetesAuthType;
+import io.harness.delegate.beans.connector.k8Connector.KubernetesClusterConfigDTO;
+import io.harness.delegate.beans.connector.k8Connector.KubernetesClusterDetailsDTO;
+import io.harness.delegate.beans.connector.k8Connector.KubernetesCredentialDTO;
+import io.harness.delegate.beans.connector.k8Connector.KubernetesCredentialType;
+import io.harness.delegate.beans.connector.k8Connector.KubernetesDelegateDetailsDTO;
+import io.harness.delegate.beans.connector.k8Connector.KubernetesUserNamePasswordDTO;
+import io.harness.encryption.Scope;
+import io.harness.encryption.SecretRefData;
 import io.harness.executionplan.core.impl.ExecutionPlanCreationContextImpl;
 import io.harness.k8s.model.ImageDetails;
+import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.yaml.core.ExecutionElement;
 import io.harness.yaml.core.ParallelStepElement;
 import io.harness.yaml.core.StageElement;
@@ -64,10 +87,12 @@ import io.harness.yaml.core.intfc.Connector;
 import io.harness.yaml.core.intfc.Infrastructure;
 import software.wings.beans.ci.pod.CIK8ContainerParams;
 import software.wings.beans.ci.pod.CIK8ContainerParams.CIK8ContainerParamsBuilder;
+import software.wings.beans.ci.pod.ConnectorDetails;
 import software.wings.beans.ci.pod.ContainerResourceParams;
-import software.wings.beans.ci.pod.EncryptedVariableWithType;
 import software.wings.beans.ci.pod.ImageDetailsWithConnector;
 import software.wings.beans.ci.pod.PVCParams;
+import software.wings.beans.ci.pod.SecretVariableDTO;
+import software.wings.beans.ci.pod.SecretVariableDetails;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -270,16 +295,18 @@ public class CIExecutionPlanTestHelper {
                                      .resourceLimitMilliCpu(DEFAULT_STEP_LIMIT_MILLI_CPU)
                                      .resourceLimitMemoryMiB(DEFAULT_STEP_LIMIT_MEMORY_MIB)
                                      .build())
-        .envVars(getEnvVars())
-        .encryptedSecrets(getEncryptedSecrets())
+        .envVars(getEnvVariables())
+        .secretVariables(getCustomSecretVariable())
         .build();
   }
 
   public CIK8ContainerParamsBuilder getRunStepCIK8Container() {
     Integer port = PORT_STARTING_RANGE;
     return CIK8ContainerParams.builder()
-        .imageDetailsWithConnector(
-            ImageDetailsWithConnector.builder().imageDetails(imageDetails).connectorName(RUN_STEP_CONNECTOR).build())
+        .imageDetailsWithConnector(ImageDetailsWithConnector.builder()
+                                       .imageDetails(imageDetails)
+                                       .imageConnectorDetails(ConnectorDetails.builder().build())
+                                       .build())
         .name(RUN_STEP_ID)
         .containerType(RUN)
         .args(asList(PORT_PREFIX, port.toString()))
@@ -291,7 +318,7 @@ public class CIExecutionPlanTestHelper {
                                      .resourceLimitMilliCpu(DEFAULT_STEP_LIMIT_MILLI_CPU)
                                      .resourceLimitMemoryMiB(DEFAULT_STEP_LIMIT_MEMORY_MIB)
                                      .build())
-        .envVars(getEnvVars());
+        .envVars(getEnvVariables());
   }
 
   private StepElement getPluginStepElement() {
@@ -351,13 +378,14 @@ public class CIExecutionPlanTestHelper {
     Integer port = PORT_STARTING_RANGE + 1;
     return CIK8ContainerParams.builder()
         .imageDetailsWithConnector(ImageDetailsWithConnector.builder()
+                                       .imageConnectorDetails(ConnectorDetails.builder().build())
                                        .imageDetails(ImageDetails.builder().name(PLUGIN_STEP_IMAGE).build())
                                        .build())
         .name(PLUGIN_STEP_ID)
         .containerType(PLUGIN)
-        .args(Arrays.asList(PORT_PREFIX, port.toString()))
-        .commands(Arrays.asList(STEP_COMMAND))
-        .ports(Arrays.asList(port))
+        .args(asList(PORT_PREFIX, port.toString()))
+        .commands(asList(STEP_COMMAND))
+        .ports(asList(port))
         .containerResourceParams(ContainerResourceParams.builder()
                                      .resourceRequestMilliCpu(STEP_REQUEST_MILLI_CPU)
                                      .resourceRequestMemoryMiB(STEP_REQUEST_MEMORY_MIB)
@@ -496,15 +524,21 @@ public class CIExecutionPlanTestHelper {
         .build();
   }
 
-  private List<CustomVariables> getCustomVariables() {
-    CustomVariables var1 = CustomVariables.builder().name("VAR1").type("secret").build();
-    CustomVariables var2 = CustomVariables.builder().name("VAR2").type("secret").build();
-    CustomVariables var3 = CustomVariables.builder().name("VAR3").type("text").value("value3").build();
-    CustomVariables var4 = CustomVariables.builder().name("VAR4").type("text").value("value4").build();
+  private List<CustomVariable> getCustomVariables() {
+    CustomVariable var1 = CustomSecretVariable.builder()
+                              .name("VAR1")
+                              .value(SecretRefData.builder().identifier("VAR1_secret").scope(Scope.ACCOUNT).build())
+                              .build();
+    CustomVariable var2 = CustomSecretVariable.builder()
+                              .name("VAR2")
+                              .value(SecretRefData.builder().identifier("VAR2_secret").scope(Scope.ACCOUNT).build())
+                              .build();
+    CustomVariable var3 = CustomTextVariable.builder().name("VAR3").value("value3").build();
+    CustomVariable var4 = CustomTextVariable.builder().name("VAR4").value("value4").build();
     return asList(var1, var2, var3, var4);
   }
 
-  public Map<String, String> getEnvVars() {
+  public Map<String, String> getEnvVariables() {
     Map<String, String> envVars = new HashMap<>();
     envVars.put("VAR3", "value3");
     envVars.put("VAR4", "value4");
@@ -512,11 +546,137 @@ public class CIExecutionPlanTestHelper {
     return envVars;
   }
 
-  public Map<String, EncryptedVariableWithType> getEncryptedSecrets() {
-    Map<String, EncryptedVariableWithType> envVars = new HashMap<>();
-    envVars.put("VAR1", EncryptedVariableWithType.builder().build());
-    envVars.put("VAR2", EncryptedVariableWithType.builder().build());
-    return envVars;
+  public List<CustomSecretVariable> getCustomSecretVariable() {
+    List<CustomSecretVariable> secretVariables = new ArrayList<>();
+    secretVariables.add(CustomSecretVariable.builder()
+                            .name("VAR1")
+                            .value(SecretRefData.builder().identifier("VAR1_secret").scope(Scope.ACCOUNT).build())
+                            .build());
+    secretVariables.add(CustomSecretVariable.builder()
+                            .name("VAR2")
+                            .value(SecretRefData.builder().identifier("VAR2_secret").scope(Scope.ACCOUNT).build())
+                            .build());
+    return secretVariables;
+  }
+
+  public List<SecretVariableDetails> getSecretVariableDetails() {
+    List<SecretVariableDetails> secretVariableDetails = new ArrayList<>();
+    secretVariableDetails.add(
+        SecretVariableDetails.builder()
+            .secretVariableDTO(
+                SecretVariableDTO.builder()
+                    .name("VAR1")
+                    .type(SecretVariableDTO.Type.TEXT)
+                    .secret(SecretRefData.builder().identifier("VAR1_secret").scope(Scope.ACCOUNT).build())
+                    .build())
+            .encryptedDataDetailList(singletonList(EncryptedDataDetail.builder().build()))
+            .build());
+    secretVariableDetails.add(
+        SecretVariableDetails.builder()
+            .secretVariableDTO(
+                SecretVariableDTO.builder()
+                    .name("VAR2")
+                    .type(SecretVariableDTO.Type.TEXT)
+                    .secret(SecretRefData.builder().identifier("VAR2_secret").scope(Scope.ACCOUNT).build())
+                    .build())
+            .encryptedDataDetailList(singletonList(EncryptedDataDetail.builder().build()))
+            .build());
+    return secretVariableDetails;
+  }
+  public ConnectorDTO getK8sConnectorDTO() {
+    return ConnectorDTO.builder()
+        .connectorInfo(
+            ConnectorInfoDTO.builder()
+                .name("k8sConnector")
+                .identifier("k8sConnector")
+                .connectorType(ConnectorType.KUBERNETES_CLUSTER)
+                .connectorConfig(
+                    KubernetesClusterConfigDTO.builder()
+                        .credential(
+                            KubernetesCredentialDTO.builder()
+                                .kubernetesCredentialType(KubernetesCredentialType.MANUAL_CREDENTIALS)
+                                .config(KubernetesClusterDetailsDTO.builder()
+                                            .masterUrl("10.10.10.10")
+                                            .auth(KubernetesAuthDTO.builder()
+                                                      .authType(KubernetesAuthType.USER_PASSWORD)
+                                                      .credentials(
+                                                          KubernetesUserNamePasswordDTO.builder()
+                                                              .username("username")
+                                                              .passwordRef(SecretRefData.builder()
+                                                                               .identifier("k8sPassword")
+                                                                               .scope(Scope.ACCOUNT)
+                                                                               .decryptedValue("password".toCharArray())
+                                                                               .build())
+                                                              .build())
+                                                      .build())
+                                            .build())
+                                .build())
+                        .build())
+                .build())
+        .build();
+  }
+  public ConnectorDTO getK8sConnectorFromDelegateDTO() {
+    return ConnectorDTO.builder()
+        .connectorInfo(
+            ConnectorInfoDTO.builder()
+                .name("k8sConnector")
+                .identifier("k8sConnector")
+                .connectorType(ConnectorType.KUBERNETES_CLUSTER)
+                .connectorConfig(
+                    KubernetesClusterConfigDTO.builder()
+                        .credential(KubernetesCredentialDTO.builder()
+                                        .kubernetesCredentialType(KubernetesCredentialType.INHERIT_FROM_DELEGATE)
+                                        .config(KubernetesDelegateDetailsDTO.builder().delegateName("delegate").build())
+                                        .build())
+                        .build())
+                .build())
+        .build();
+  }
+  public ConnectorDTO getDockerConnectorDTO() {
+    return ConnectorDTO.builder()
+        .connectorInfo(
+            ConnectorInfoDTO.builder()
+                .name("dockerConnector")
+                .identifier("dockerConnector")
+                .connectorType(ConnectorType.DOCKER)
+                .connectorConfig(
+                    DockerConnectorDTO.builder()
+                        .dockerRegistryUrl("https://index.docker.io/v1/")
+                        .auth(DockerAuthenticationDTO.builder()
+                                  .authType(DockerAuthType.USER_PASSWORD)
+                                  .credentials(
+                                      DockerUserNamePasswordDTO.builder()
+                                          .username("uName")
+                                          .passwordRef(
+                                              SecretRefData.builder().decryptedValue("pWord".toCharArray()).build())
+                                          .build())
+                                  .build())
+                        .build())
+                .build())
+        .build();
+  }
+
+  public ConnectorDTO getGitConnectorDTO() {
+    return ConnectorDTO.builder()
+        .connectorInfo(ConnectorInfoDTO.builder()
+                           .name("gitConnector")
+                           .identifier("gitConnector")
+                           .connectorType(ConnectorType.GIT)
+                           .connectorConfig(GitConfigDTO.builder()
+                                                .url("https://github.com/wings-software/portal.git")
+                                                .branchName("master")
+                                                .gitAuthType(GitAuthType.HTTP)
+                                                .gitAuth(GitHTTPAuthenticationDTO.builder()
+                                                             .username("username")
+                                                             .passwordRef(SecretRefData.builder()
+                                                                              .identifier("gitPassword")
+                                                                              .scope(Scope.ACCOUNT)
+                                                                              .decryptedValue("password".toCharArray())
+                                                                              .build())
+                                                             .build())
+                                                .build())
+                           .build())
+        .build();
   }
 
   public CIExecutionArgs getCIExecutionArgs() {

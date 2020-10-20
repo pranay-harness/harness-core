@@ -13,12 +13,16 @@ import io.harness.beans.steps.stepinfo.PublishStepInfo;
 import io.harness.beans.steps.stepinfo.RunStepInfo;
 import io.harness.beans.steps.stepinfo.publish.artifact.DockerFileArtifact;
 import io.harness.beans.steps.stepinfo.publish.artifact.connectors.GcrConnector;
-import io.harness.beans.yaml.extended.CustomVariables;
+import io.harness.beans.yaml.extended.CustomSecretVariable;
+import io.harness.beans.yaml.extended.CustomTextVariable;
+import io.harness.beans.yaml.extended.CustomVariable;
 import io.harness.beans.yaml.extended.connector.GitConnectorYaml;
 import io.harness.beans.yaml.extended.container.Container;
 import io.harness.beans.yaml.extended.infrastrucutre.K8sDirectInfraYaml;
 import io.harness.category.element.UnitTests;
 import io.harness.cdng.pipeline.NgPipeline;
+import io.harness.encryption.Scope;
+import io.harness.encryption.SecretRefData;
 import io.harness.rule.Owner;
 import io.harness.yaml.core.ExecutionElement;
 import io.harness.yaml.core.ParallelStepElement;
@@ -74,9 +78,13 @@ public class CIPipelineYamlTest extends CIBeansTest {
                                            .connector("npquotecenter")
                                            .imagePath("us.gcr.io/platform-205701/jenkins-slave-portal-oracle-8u191:12")
                                            .build())
-                            .customVariables(
-                                asList(CustomVariables.builder().name("internalPath").value("{input}").build(),
-                                    CustomVariables.builder().name("runTimeVal").type("secret").build()))
+                            .customVariables(asList(
+                                CustomTextVariable.builder().name("internalPath").value("{input}").build(),
+                                CustomSecretVariable.builder()
+                                    .name("runTimeVal")
+                                    .type(CustomVariable.Type.SECRET)
+                                    .value(SecretRefData.builder().scope(Scope.ACCOUNT).identifier("secret").build())
+                                    .build()))
                             .execution(
                                 ExecutionElement.builder()
                                     .steps(asList(StepElement.builder()

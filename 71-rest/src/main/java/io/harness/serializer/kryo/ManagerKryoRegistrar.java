@@ -268,6 +268,7 @@ import software.wings.beans.ci.pod.CIContainerType;
 import software.wings.beans.ci.pod.CIK8ContainerParams;
 import software.wings.beans.ci.pod.CIK8PodParams;
 import software.wings.beans.ci.pod.CIK8ServicePodParams;
+import software.wings.beans.ci.pod.ConnectorDetails;
 import software.wings.beans.ci.pod.ContainerParams;
 import software.wings.beans.ci.pod.ContainerResourceParams;
 import software.wings.beans.ci.pod.ContainerSecrets;
@@ -276,6 +277,8 @@ import software.wings.beans.ci.pod.HostAliasParams;
 import software.wings.beans.ci.pod.ImageDetailsWithConnector;
 import software.wings.beans.ci.pod.PVCParams;
 import software.wings.beans.ci.pod.PodParams;
+import software.wings.beans.ci.pod.SecretVariableDTO;
+import software.wings.beans.ci.pod.SecretVariableDetails;
 import software.wings.beans.command.AbstractCommandUnit;
 import software.wings.beans.command.CleanupPowerShellCommandUnit;
 import software.wings.beans.command.CleanupSshCommandUnit;
@@ -520,6 +523,7 @@ import software.wings.helpers.ext.k8s.response.K8sScaleResponse;
 import software.wings.helpers.ext.k8s.response.K8sTaskExecutionResponse;
 import software.wings.helpers.ext.k8s.response.K8sTaskResponse;
 import software.wings.helpers.ext.k8s.response.K8sTrafficSplitResponse;
+import software.wings.helpers.ext.k8s.response.PodStatus;
 import software.wings.helpers.ext.kustomize.KustomizeConfig;
 import software.wings.helpers.ext.ldap.LdapResponse;
 import software.wings.helpers.ext.mail.EmailData;
@@ -1726,6 +1730,10 @@ public class ManagerKryoRegistrar implements KryoRegistrar {
     kryo.register(SetupTestNodeData.Instance.class, 7470);
     kryo.register(InstanceFetchStateExecutionData.class, 7471);
     kryo.register(InstanceFetchStateExecutionSummary.class, 7472);
+    kryo.register(SecretVariableDTO.class, 7474);
+    kryo.register(SecretVariableDTO.Type.class, 7475);
+    kryo.register(SecretVariableDetails.class, 7476);
+    kryo.register(ConnectorDetails.class, 7477);
 
     kryo.register(ListNotifyResponseData.class, 5133);
     kryo.register(CIK8ServicePodParams.class, 8056);
@@ -1741,5 +1749,7 @@ public class ManagerKryoRegistrar implements KryoRegistrar {
     kryo.register(TerraformOutputVariables.class, 8063);
     kryo.register(PipelineStageExecutionAdvisor.class, 8072);
     kryo.register(ContinuePipelineResponseData.class, 8073);
+    kryo.register(PodStatus.class, 8090);
+    kryo.register(PodStatus.Status.class, 8091);
   }
 }

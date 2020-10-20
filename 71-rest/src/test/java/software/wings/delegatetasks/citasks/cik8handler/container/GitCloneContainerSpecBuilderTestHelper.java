@@ -25,12 +25,18 @@ import io.fabric8.kubernetes.api.model.Volume;
 import io.fabric8.kubernetes.api.model.VolumeBuilder;
 import io.fabric8.kubernetes.api.model.VolumeMount;
 import io.fabric8.kubernetes.api.model.VolumeMountBuilder;
-import software.wings.beans.GitConfig;
-import software.wings.beans.GitFetchFilesConfig;
-import software.wings.beans.GitFileConfig;
-import software.wings.beans.HostConnectionAttributes;
+import io.harness.connector.apis.dto.ConnectorDTO;
+import io.harness.connector.apis.dto.ConnectorInfoDTO;
+import io.harness.delegate.beans.connector.ConnectorType;
+import io.harness.delegate.beans.connector.gitconnector.GitAuthType;
+import io.harness.delegate.beans.connector.gitconnector.GitConfigDTO;
+import io.harness.delegate.beans.connector.gitconnector.GitHTTPAuthenticationDTO;
+import io.harness.delegate.beans.connector.gitconnector.GitSSHAuthenticationDTO;
+import io.harness.encryption.SecretRefData;
+import software.wings.beans.ci.pod.ConnectorDetails;
 import software.wings.delegatetasks.citasks.cik8handler.SecretSpecBuilder;
 import software.wings.delegatetasks.citasks.cik8handler.params.GitCloneContainerParams;
+import software.wings.delegatetasks.citasks.cik8handler.params.GitCloneContainerParams.GitCloneContainerParamsBuilder;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -46,6 +52,10 @@ public class GitCloneContainerSpecBuilderTestHelper {
   private static final String gitRepoInCmd = "github.com/wings-software/portal.git";
   private static final String gitSshRepoUrl = "git@github.com:wings-software/portal.git";
 
+  private static final String gitUsername = "username";
+  private static final String gitPasswordRefId = "git_password";
+  private static final String gitSshKey = "git_ssh_key";
+
   private static final String gitBranch = "master";
   private static final String gitCommitId = "commit";
   private static final String gitSecretName = "hs-wings-software-portal-hs";
@@ -57,95 +67,167 @@ public class GitCloneContainerSpecBuilderTestHelper {
   }
 
   public static GitCloneContainerParams gitCloneParamsWithUnsetGitConfigParams() {
-    return GitCloneContainerParams.builder().gitFetchFilesConfig(GitFetchFilesConfig.builder().build()).build();
+    return GitCloneContainerParams.builder().gitConnectorDetails(ConnectorDetails.builder().build()).build();
+  }
+
+  private static GitCloneContainerParamsBuilder getCompleteGitParamsBuilder() {
+    return GitCloneContainerParams.builder()
+        .workingDir(stepExecWorkingDir)
+        .branchName(gitBranch)
+        .stepExecVolumeName(stepExecVolumeName)
+        .gitConnectorDetails(
+            ConnectorDetails.builder()
+                .connectorDTO(
+                    ConnectorDTO.builder()
+                        .connectorInfo(
+                            ConnectorInfoDTO.builder()
+                                .connectorType(ConnectorType.GIT)
+                                .connectorConfig(
+                                    GitConfigDTO.builder()
+                                        .gitAuthType(GitAuthType.HTTP)
+                                        .gitAuth(GitHTTPAuthenticationDTO.builder()
+                                                     .username(gitUsername)
+                                                     .passwordRef(
+                                                         SecretRefData.builder().identifier(gitPasswordRefId).build())
+                                                     .build())
+                                        .branchName(gitBranch)
+                                        .url(gitPwdRepoUrl)
+                                        .build())
+                                .build())
+                        .build())
+                .build());
   }
 
   public static GitCloneContainerParams gitCloneParamsWithUnsetGitRepoUrl() {
-    GitConfig gitConfig = GitConfig.builder().build();
-    return GitCloneContainerParams.builder()
-        .gitFetchFilesConfig(GitFetchFilesConfig.builder().gitConfig(gitConfig).build())
+    return getCompleteGitParamsBuilder()
+        .gitConnectorDetails(
+            ConnectorDetails.builder()
+                .connectorDTO(
+                    ConnectorDTO.builder()
+                        .connectorInfo(
+                            ConnectorInfoDTO.builder()
+                                .connectorType(ConnectorType.GIT)
+                                .connectorConfig(
+                                    GitConfigDTO.builder()
+                                        .gitAuthType(GitAuthType.HTTP)
+                                        .gitAuth(GitHTTPAuthenticationDTO.builder()
+                                                     .username(gitUsername)
+                                                     .passwordRef(
+                                                         SecretRefData.builder().identifier(gitPasswordRefId).build())
+                                                     .build())
+                                        .branchName(gitBranch)
+                                        .build())
+                                .build())
+                        .build())
+                .build())
         .build();
   }
 
   public static GitCloneContainerParams gitCloneParamsWithUnsetBranch() {
-    GitConfig gitConfig = GitConfig.builder().repoUrl(gitPwdRepoUrl).build();
-    return GitCloneContainerParams.builder()
-        .gitFetchFilesConfig(
-            GitFetchFilesConfig.builder().gitConfig(gitConfig).gitFileConfig(GitFileConfig.builder().build()).build())
-        .build();
-  }
-
-  public static GitCloneContainerParams gitCloneParamsWithUnsetGitFileConfig() {
-    GitConfig gitConfig = GitConfig.builder().repoUrl(gitPwdRepoUrl).build();
-    GitFileConfig gitFileConfig = GitFileConfig.builder().branch(gitBranch).build();
-    return GitCloneContainerParams.builder()
-        .gitFetchFilesConfig(GitFetchFilesConfig.builder().gitConfig(gitConfig).build())
+    return getCompleteGitParamsBuilder()
+        .branchName(null)
+        .gitConnectorDetails(
+            ConnectorDetails.builder()
+                .connectorDTO(
+                    ConnectorDTO.builder()
+                        .connectorInfo(
+                            ConnectorInfoDTO.builder()
+                                .connectorType(ConnectorType.GIT)
+                                .connectorConfig(
+                                    GitConfigDTO.builder()
+                                        .gitAuthType(GitAuthType.SSH)
+                                        .gitAuth(GitSSHAuthenticationDTO.builder().encryptedSshKey(gitSshKey).build())
+                                        .url(gitSshRepoUrl)
+                                        .build())
+                                .build())
+                        .build())
+                .build())
         .build();
   }
 
   public static GitCloneContainerParams gitCloneParamsWithUnsetWorkDir() {
-    GitConfig gitConfig = GitConfig.builder().repoUrl(gitPwdRepoUrl).build();
-    GitFileConfig gitFileConfig = GitFileConfig.builder().branch(gitBranch).build();
-    return GitCloneContainerParams.builder()
-        .gitFetchFilesConfig(GitFetchFilesConfig.builder().gitConfig(gitConfig).gitFileConfig(gitFileConfig).build())
-        .build();
+    return getCompleteGitParamsBuilder().workingDir(null).build();
   }
 
   public static GitCloneContainerParams gitCloneParamsWithUnsetVolume() {
-    GitConfig gitConfig = GitConfig.builder().repoUrl(gitPwdRepoUrl).build();
-    GitFileConfig gitFileConfig = GitFileConfig.builder().branch(gitBranch).build();
-    return GitCloneContainerParams.builder()
-        .gitFetchFilesConfig(GitFetchFilesConfig.builder().gitConfig(gitConfig).gitFileConfig(gitFileConfig).build())
-        .workingDir(stepExecWorkingDir)
-        .build();
+    return getCompleteGitParamsBuilder().stepExecVolumeName(null).build();
   }
 
   public static GitCloneContainerParams gitCloneParamsWithInvalidAuth() {
-    GitConfig gitConfig = GitConfig.builder().repoUrl(gitInvalidRepoUrl).build();
-    GitFileConfig gitFileConfig = GitFileConfig.builder().branch(gitBranch).build();
-    return GitCloneContainerParams.builder()
-        .gitFetchFilesConfig(GitFetchFilesConfig.builder().gitConfig(gitConfig).gitFileConfig(gitFileConfig).build())
-        .workingDir(stepExecWorkingDir)
-        .stepExecVolumeName(stepExecVolumeName)
+    return getCompleteGitParamsBuilder()
+        .gitConnectorDetails(
+            ConnectorDetails.builder()
+                .connectorDTO(
+                    ConnectorDTO.builder()
+                        .connectorInfo(
+                            ConnectorInfoDTO.builder()
+                                .connectorType(ConnectorType.GIT)
+                                .connectorConfig(
+                                    GitConfigDTO.builder()
+                                        .gitAuthType(GitAuthType.HTTP)
+                                        .gitAuth(GitHTTPAuthenticationDTO.builder()
+                                                     .username(gitUsername)
+                                                     .passwordRef(
+                                                         SecretRefData.builder().identifier(gitPasswordRefId).build())
+                                                     .build())
+                                        .branchName(gitBranch)
+                                        .url(gitInvalidRepoUrl)
+                                        .build())
+                                .build())
+                        .build())
+                .build())
         .build();
   }
 
   public static GitCloneContainerParams gitCloneParamsWithPassword() {
-    GitConfig gitConfig = GitConfig.builder()
-                              .repoUrl(gitPwdRepoUrl)
-                              .authenticationScheme(HostConnectionAttributes.AuthenticationScheme.HTTP_PASSWORD)
-                              .build();
-    GitFileConfig gitFileConfig = GitFileConfig.builder().branch(gitBranch).build();
-    return GitCloneContainerParams.builder()
-        .gitFetchFilesConfig(GitFetchFilesConfig.builder().gitConfig(gitConfig).gitFileConfig(gitFileConfig).build())
-        .workingDir(stepExecWorkingDir)
-        .stepExecVolumeName(stepExecVolumeName)
-        .build();
+    return getCompleteGitParamsBuilder().build();
   }
 
   public static GitCloneContainerParams gitCloneParamsWithSsh() {
-    GitConfig gitConfig = GitConfig.builder()
-                              .repoUrl(gitSshRepoUrl)
-                              .authenticationScheme(HostConnectionAttributes.AuthenticationScheme.SSH_KEY)
-                              .build();
-    GitFileConfig gitFileConfig = GitFileConfig.builder().branch(gitBranch).build();
     return GitCloneContainerParams.builder()
-        .gitFetchFilesConfig(GitFetchFilesConfig.builder().gitConfig(gitConfig).gitFileConfig(gitFileConfig).build())
         .workingDir(stepExecWorkingDir)
+        .branchName(gitBranch)
         .stepExecVolumeName(stepExecVolumeName)
+        .gitConnectorDetails(
+            ConnectorDetails.builder()
+                .connectorDTO(
+                    ConnectorDTO.builder()
+                        .connectorInfo(
+                            ConnectorInfoDTO.builder()
+                                .connectorType(ConnectorType.GIT)
+                                .connectorConfig(
+                                    GitConfigDTO.builder()
+                                        .gitAuthType(GitAuthType.SSH)
+                                        .gitAuth(GitSSHAuthenticationDTO.builder().encryptedSshKey(gitSshKey).build())
+                                        .branchName(gitBranch)
+                                        .url(gitSshRepoUrl)
+                                        .build())
+                                .build())
+                        .build())
+                .build())
         .build();
   }
 
   public static GitCloneContainerParams gitCloneParamsWithSshAndCommit() {
-    GitConfig gitConfig = GitConfig.builder()
-                              .repoUrl(gitSshRepoUrl)
-                              .authenticationScheme(HostConnectionAttributes.AuthenticationScheme.SSH_KEY)
-                              .build();
-    GitFileConfig gitFileConfig = GitFileConfig.builder().branch(gitBranch).commitId(gitCommitId).build();
-    return GitCloneContainerParams.builder()
-        .gitFetchFilesConfig(GitFetchFilesConfig.builder().gitConfig(gitConfig).gitFileConfig(gitFileConfig).build())
-        .workingDir(stepExecWorkingDir)
-        .stepExecVolumeName(stepExecVolumeName)
+    return getCompleteGitParamsBuilder()
+        .commitId(gitCommitId)
+        .gitConnectorDetails(
+            ConnectorDetails.builder()
+                .connectorDTO(
+                    ConnectorDTO.builder()
+                        .connectorInfo(
+                            ConnectorInfoDTO.builder()
+                                .connectorType(ConnectorType.GIT)
+                                .connectorConfig(
+                                    GitConfigDTO.builder()
+                                        .gitAuthType(GitAuthType.SSH)
+                                        .gitAuth(GitSSHAuthenticationDTO.builder().encryptedSshKey(gitSshKey).build())
+                                        .branchName(gitBranch)
+                                        .url(gitSshRepoUrl)
+                                        .build())
+                                .build())
+                        .build())
+                .build())
         .build();
   }
 
