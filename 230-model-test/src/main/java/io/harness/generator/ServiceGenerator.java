@@ -465,6 +465,17 @@ public class ServiceGenerator {
     return service;
   }
 
+  public Service ensureAzureVMSSService(Seed seed, Owners owners, String serviceName) {
+    owners.obtainApplication(() -> applicationGenerator.ensurePredefined(seed, owners, Applications.GENERIC_TEST));
+    owners.add(ensureService(
+        seed, owners, builder().name(serviceName).artifactType(ArtifactType.AZURE_MACHINE_IMAGE).build()));
+    ArtifactStream artifactStream =
+        artifactStreamManager.ensurePredefined(seed, owners, ArtifactStreams.AZURE_MACHINE_IMAGE);
+    Service service = owners.obtainService();
+    service.setArtifactStreams(Collections.singletonList(artifactStream));
+    return service;
+  }
+
   public Service ensureRandom(Randomizer.Seed seed, Owners owners) {
     EnhancedRandom random = Randomizer.instance(seed);
     Services predefined = random.nextObject(Services.class);
