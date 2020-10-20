@@ -1,12 +1,17 @@
 package io.harness.batch.processing.schedule;
 
+import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
+
 import io.harness.batch.processing.ccm.BatchJobType;
 import io.harness.batch.processing.ccm.CCMJobConstants;
+import io.harness.batch.processing.service.impl.BatchJobBucketLogContext;
 import io.harness.batch.processing.service.intfc.BatchJobIntervalService;
 import io.harness.batch.processing.service.intfc.BatchJobScheduledDataService;
 import io.harness.batch.processing.service.intfc.CustomBillingMetaDataService;
 import io.harness.ccm.commons.entities.LatestClusterInfo;
 import io.harness.ccm.health.LastReceivedPublishedMessageDao;
+import io.harness.logging.AccountLogContext;
+import io.harness.logging.AutoLogContext;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.batch.core.BatchStatus;
 import org.springframework.batch.core.Job;
@@ -37,9 +42,13 @@ public class RecentlyAddedAccountJobRunner {
   public void runJobForRecentlyAddedAccounts() {
     List<LatestClusterInfo> latestClusterInfos = lastReceivedPublishedMessageDao.fetchLatestClusterInfo();
     for (LatestClusterInfo latestClusterInfo : latestClusterInfos) {
-      logger.info("Running recently added account job for {}", latestClusterInfo);
-      runJob(latestClusterInfo);
-      lastReceivedPublishedMessageDao.deleteLatestClusterInfo(latestClusterInfo);
+      try (AutoLogContext ignore = new AccountLogContext(latestClusterInfo.getAccountId(), OVERRIDE_ERROR);
+           AutoLogContext ignore3 = new BatchJobBucketLogContext("RECENTLY_ADDED", OVERRIDE_ERROR)) {
+        logger.info("Running recently added account job for {}", latestClusterInfo);
+        runJob(latestClusterInfo);
+        logger.info("Deleting now latest cluster info {}", latestClusterInfo);
+        lastReceivedPublishedMessageDao.deleteLatestClusterInfo(latestClusterInfo);
+      }
     }
   }
 
@@ -86,7 +95,7 @@ public class RecentlyAddedAccountJobRunner {
             latestClusterInfo, BatchJobType.ACTUAL_IDLE_COST_BILLING, dailyBillingJobEndTime, dailyBillingStartTime);
       }
     } catch (Exception ex) {
-      logger.error("Exception while running job", ex);
+      logger.error("Exception while running job for recently added account", ex);
     }
   }
 
