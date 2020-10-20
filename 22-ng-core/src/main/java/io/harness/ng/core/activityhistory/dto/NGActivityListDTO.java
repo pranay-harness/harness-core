@@ -10,6 +10,6 @@ import java.util.List;
 @Builder
 @ApiModel("ActivityList")
 public class NGActivityListDTO {
-  List<NGActivityDTO> activityHistoryForEntityUsage;
-  List<ConnectivityCheckSummaryDTO> connectivityCheckSummaries;
+  List<NGActivityDTO> activityHistoriesForEntityUsage;
+  ConnectivityCheckSummaryDTO connectivityCheckSummary;
 }

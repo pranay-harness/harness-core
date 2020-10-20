@@ -7,6 +7,6 @@ import lombok.Value;
 @Value
 @Builder
 @ApiModel("ConnectivityCheckSummary")
-public class ConnectivityCheckSummaryDTO implements ActivityDetail {
+public class ConnectivityCheckSummaryDTO {
   long failureCount;
 }

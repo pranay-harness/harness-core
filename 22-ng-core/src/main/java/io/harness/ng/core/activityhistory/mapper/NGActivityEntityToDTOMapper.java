@@ -8,7 +8,7 @@ import io.harness.ng.core.EntityDetail;
 import io.harness.ng.core.activityhistory.NGActivityStatus;
 import io.harness.ng.core.activityhistory.NGActivityType;
 import io.harness.ng.core.activityhistory.dto.ActivityDetail;
-import io.harness.ng.core.activityhistory.dto.ConnectivityCheckSummaryDTO;
+import io.harness.ng.core.activityhistory.dto.ConnectivityCheckActivityDetailDTO;
 import io.harness.ng.core.activityhistory.dto.EntityUsageActivityDetailDTO;
 import io.harness.ng.core.activityhistory.dto.NGActivityDTO;
 import io.harness.ng.core.activityhistory.entity.EntityUsageActivityDetail;
@@ -34,7 +34,7 @@ public class NGActivityEntityToDTOMapper {
   private ActivityDetail getActivityDetail(NGActivity activity) {
     switch (NGActivityType.valueOf(activity.getType())) {
       case CONNECTIVITY_CHECK:
-        return ConnectivityCheckSummaryDTO.builder().build();
+        return ConnectivityCheckActivityDetailDTO.builder().build();
       case ENTITY_USAGE:
         EntityUsageActivityDetail entityUsageActivity = (EntityUsageActivityDetail) activity;
         EntityDetail referredByEntity = entityUsageActivity.getReferredByEntity();

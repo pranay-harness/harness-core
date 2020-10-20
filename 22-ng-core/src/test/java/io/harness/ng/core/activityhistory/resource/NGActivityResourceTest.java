@@ -35,9 +35,10 @@ public class NGActivityResourceTest extends CategoryTest {
     String orgIdentifier = "orgIdentifier";
     String projectIdentifier = "projectIdentifier";
     String identifier = "identifier";
-    ngActivityResource.list(100, 100, accountIdentifier, orgIdentifier, projectIdentifier, identifier);
+    ngActivityResource.list(100, 100, accountIdentifier, orgIdentifier, projectIdentifier, identifier, 0L, 100L);
     Mockito.verify(activityService, times(1))
-        .list(eq(100), eq(100), eq(accountIdentifier), eq(orgIdentifier), eq(projectIdentifier), eq(identifier));
+        .list(eq(100), eq(100), eq(accountIdentifier), eq(orgIdentifier), eq(projectIdentifier), eq(identifier), eq(0L),
+            eq(100L));
   }
 
   @Test
