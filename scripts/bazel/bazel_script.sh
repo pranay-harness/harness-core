@@ -124,7 +124,7 @@ build_bazel_module 34-walktree-visitor
 build_bazel_module 35-yaml-beans
 build_bazel_module 38-execution-plan
 build_bazel_module 39-ng-pipeline-commons
-build_bazel_module 40-pipeline-service
+build_bazel_module 47-pipeline-service
 build_bazel_module 50-delegate-task-grpc-service
 build_bazel_module 57-command-library-common
 build_bazel_module 64-events-framework
