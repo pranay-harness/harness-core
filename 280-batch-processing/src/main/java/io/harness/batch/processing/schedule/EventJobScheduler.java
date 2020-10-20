@@ -44,6 +44,7 @@ import javax.annotation.PostConstruct;
 public class EventJobScheduler {
   @Autowired private List<Job> jobs;
   @Autowired private BatchJobRunner batchJobRunner;
+  @Autowired private RecentlyAddedAccountJobRunner recentlyAddedAccountJobRunner;
   @Autowired private AccountShardService accountShardService;
   @Autowired private CloudToHarnessMappingService cloudToHarnessMappingService;
   @Autowired private K8sUtilizationGranularDataServiceImpl k8sUtilizationGranularDataService;
@@ -68,6 +69,18 @@ public class EventJobScheduler {
   @Scheduled(cron = "0 */20 * * * ?")
   public void runCloudEfficiencyInClusterJobs() {
     runCloudEfficiencyEventJobs(BatchJobBucket.IN_CLUSTER, true);
+  }
+
+  @Scheduled(cron = "0 */1 * * * ?")
+  public void runRecentlyAddedAccountJob() {
+    boolean masterPod = accountShardService.isMasterPod();
+    if (masterPod) {
+      try {
+        recentlyAddedAccountJobRunner.runJobForRecentlyAddedAccounts();
+      } catch (Exception ex) {
+        logger.error("Exception while running runRecentlyAddedAccountJob Job", ex);
+      }
+    }
   }
 
   @Scheduled(cron = "0 */15 * * * ?")

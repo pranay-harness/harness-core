@@ -5,6 +5,8 @@ import com.google.inject.Singleton;
 
 import com.github.benmanes.caffeine.cache.Cache;
 import com.github.benmanes.caffeine.cache.Caffeine;
+import io.harness.ccm.cluster.entities.LastReceivedPublishedMessage;
+import io.harness.ccm.commons.entities.LatestClusterInfo;
 import io.harness.ccm.health.LastReceivedPublishedMessageDao;
 import io.harness.event.grpc.PublishedMessage;
 import io.harness.event.service.intfc.LastReceivedPublishedMessageRepository;
@@ -54,6 +56,16 @@ public class LastReceivedPublishedMessageRepositoryImpl implements LastReceivedP
   private void updateLastReceivedPublishedMessage(String accountId, String identifier) {
     CacheKey cacheKey = new CacheKey(accountId, identifier);
     lastReceivedPublishedMessageCache.get(
-        cacheKey, key -> lastReceivedPublishedMessageDao.upsert(key.getAccountId(), key.getIdentifier()) != null);
+        cacheKey, key -> updateLatestClusterEvents(key.getAccountId(), key.getIdentifier()));
+  }
+
+  private boolean updateLatestClusterEvents(String accountId, String identifier) {
+    LastReceivedPublishedMessage lastReceivedPublishedMessage = lastReceivedPublishedMessageDao.get(accountId);
+    if (null == lastReceivedPublishedMessage) {
+      LatestClusterInfo latestClusterInfo =
+          LatestClusterInfo.builder().accountId(accountId).identifier(identifier).build();
+      lastReceivedPublishedMessageDao.saveLatestClusterInfo(latestClusterInfo);
+    }
+    return lastReceivedPublishedMessageDao.upsert(accountId, identifier) != null;
   }
 }
