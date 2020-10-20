@@ -149,6 +149,8 @@ public class ViewsQueryBuilder {
       }
       fields.add(filter.getField());
     }
+    logger.info("Query for view filter {}", query.toString());
+
     return ViewsQueryMetadata.builder().query(query).fields(fields).build();
   }
 
