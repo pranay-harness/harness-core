@@ -8,7 +8,9 @@ import io.harness.ccm.views.service.CEReportScheduleService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.support.CronSequenceGenerator;
 
+import java.util.Arrays;
 import java.util.Date;
+import java.util.HashSet;
 import java.util.List;
 
 @Slf4j
@@ -40,6 +42,9 @@ public class CEReportScheduleServiceImpl implements CEReportScheduleService {
       schedule.setNextExecution(next);
       schedule.setAccountId(accountId);
       schedule.setEnabled(true);
+      // Remove dupes from these lists
+      schedule.setRecipients(new HashSet<>(Arrays.asList(schedule.getRecipients())).toArray(new String[0]));
+      schedule.setViewsId(new HashSet<>(Arrays.asList(schedule.getViewsId())).toArray(new String[0]));
       return ceReportScheduleDao.save(accountId, schedule);
     }
     return null;
@@ -51,6 +56,9 @@ public class CEReportScheduleServiceImpl implements CEReportScheduleService {
     Date next = cronTrigger.next(new Date());
     logger.info("Updated next Execution Time: " + next);
     schedule.setNextExecution(next);
+    // Remove dupes from these lists
+    schedule.setRecipients(new HashSet<>(Arrays.asList(schedule.getRecipients())).toArray(new String[0]));
+    schedule.setViewsId(new HashSet<>(Arrays.asList(schedule.getViewsId())).toArray(new String[0]));
     return ceReportScheduleDao.update(accountId, schedule);
   }
 
