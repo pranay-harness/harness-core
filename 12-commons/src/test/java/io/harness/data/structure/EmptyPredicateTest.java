@@ -7,7 +7,7 @@ import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.CategoryTest;
-import io.harness.category.FastUnitTests;
+import io.harness.category.element.UnitTests;
 import io.harness.data.structure.EmptyPredicate.IsEmpty;
 import io.harness.rule.Owner;
 import lombok.Builder;
@@ -29,7 +29,7 @@ public class EmptyPredicateTest extends CategoryTest {
 
   @Test
   @Owner(developers = GEORGE)
-  @Category({FastUnitTests.class})
+  @Category(UnitTests.class)
   public void testNull() {
     Custom custom = null;
     assertThat(isEmpty(custom)).isTrue();
@@ -94,7 +94,7 @@ public class EmptyPredicateTest extends CategoryTest {
 
   @Test
   @Owner(developers = GEORGE)
-  @Category({FastUnitTests.class})
+  @Category(UnitTests.class)
   public void testEmpty() {
     Custom custom = Custom.builder().empty(true).build();
     assertThat(isEmpty(custom)).isTrue();
@@ -159,7 +159,7 @@ public class EmptyPredicateTest extends CategoryTest {
 
   @Test
   @Owner(developers = GEORGE)
-  @Category({FastUnitTests.class})
+  @Category(UnitTests.class)
   public void testNotEmpty() {
     Custom custom = Custom.builder().empty(false).build();
     assertThat(isEmpty(custom)).isFalse();
