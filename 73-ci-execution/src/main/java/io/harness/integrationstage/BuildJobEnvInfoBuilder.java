@@ -27,9 +27,7 @@ import io.harness.beans.steps.stepinfo.PluginStepInfo;
 import io.harness.beans.steps.stepinfo.PublishStepInfo;
 import io.harness.beans.steps.stepinfo.RunStepInfo;
 import io.harness.beans.steps.stepinfo.publish.artifact.Artifact;
-import io.harness.beans.yaml.extended.CustomSecretVariable;
-import io.harness.beans.yaml.extended.CustomTextVariable;
-import io.harness.beans.yaml.extended.CustomVariable;
+import io.harness.beans.yaml.extended.CustomVariables;
 import io.harness.beans.yaml.extended.container.ContainerResource;
 import io.harness.exception.InvalidRequestException;
 import io.harness.k8s.model.ImageDetails;
@@ -40,6 +38,7 @@ import io.harness.yaml.core.StepElement;
 import io.harness.yaml.core.auxiliary.intfc.ExecutionWrapper;
 import software.wings.beans.ci.pod.CIContainerType;
 import software.wings.beans.ci.pod.ContainerResourceParams;
+import software.wings.beans.ci.pod.EncryptedVariableWithType;
 import software.wings.beans.ci.pod.PVCParams;
 
 import java.security.SecureRandom;
@@ -168,7 +167,7 @@ public class BuildJobEnvInfoBuilder {
         .commands(StepContainerUtils.getCommand())
         .args(StepContainerUtils.getArguments(port))
         .envVars(stepEnvVars)
-        .secretVariables(getSecretVariables(integrationStage))
+        .encryptedSecrets(getSecretVariables(integrationStage))
         .containerImageDetails(ContainerImageDetails.builder()
                                    .imageDetails(getImageInfo(runStepInfo.getImage()))
                                    .connectorIdentifier(runStepInfo.getConnector())
@@ -220,16 +219,20 @@ public class BuildJobEnvInfoBuilder {
     return POD_NAME + "-" + integrationStage.getIdentifier() + random.nextInt(100000000);
   }
 
-  private List<CustomSecretVariable> getSecretVariables(IntegrationStage integrationStage) {
+  private Map<String, EncryptedVariableWithType> getSecretVariables(IntegrationStage integrationStage) {
     if (isEmpty(integrationStage.getCustomVariables())) {
-      return Collections.emptyList();
+      return Collections.emptyMap();
     }
 
     return integrationStage.getCustomVariables()
         .stream()
-        .filter(customVariables -> customVariables.getType().equals(CustomVariable.Type.SECRET))
-        .map(customVariable -> (CustomSecretVariable) customVariable)
-        .collect(Collectors.toList());
+        .filter(customVariables
+            -> customVariables.getType().equals(
+                "secret")) // Todo instead of hard coded secret use variable type once we have type in cdng
+        .collect(toMap(CustomVariables::getName,
+            customVariables -> EncryptedVariableWithType.builder().build())); // Todo Empty EncryptedDataDetail has to
+    // be replaced with
+    // encrypted values once cdng secret apis are ready
   }
 
   private Set<String> getPublishStepConnectorIdentifier(IntegrationStage integrationStage) {
@@ -273,9 +276,10 @@ public class BuildJobEnvInfoBuilder {
 
     return integrationStage.getCustomVariables()
         .stream()
-        .filter(customVariables -> customVariables.getType().equals(CustomVariable.Type.TEXT))
-        .map(customVariable -> (CustomTextVariable) customVariable)
-        .collect(toMap(CustomTextVariable::getName, CustomTextVariable::getValue));
+        .filter(customVariables
+            -> customVariables.getType().equals(
+                "text")) // Todo instead of hard coded text use variable type once we have type in cdng
+        .collect(toMap(CustomVariables::getName, CustomVariables::getValue));
   }
 
   private ImageDetails getImageInfo(String image) {

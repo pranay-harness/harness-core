@@ -8,31 +8,31 @@ import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
-import io.fabric8.kubernetes.client.DefaultKubernetesClient;
+import io.fabric8.kubernetes.client.Config;
+import io.fabric8.kubernetes.client.ConfigBuilder;
 import io.fabric8.kubernetes.client.KubernetesClientException;
+import io.fabric8.kubernetes.client.utils.HttpClientUtils;
 import io.harness.category.element.UnitTests;
-import io.harness.connector.apis.dto.ConnectorDTO;
-import io.harness.connector.apis.dto.ConnectorInfoDTO;
-import io.harness.delegate.beans.connector.k8Connector.KubernetesAuthDTO;
-import io.harness.delegate.beans.connector.k8Connector.KubernetesAuthType;
-import io.harness.delegate.beans.connector.k8Connector.KubernetesClusterConfigDTO;
-import io.harness.delegate.beans.connector.k8Connector.KubernetesClusterDetailsDTO;
-import io.harness.delegate.beans.connector.k8Connector.KubernetesCredentialDTO;
-import io.harness.delegate.beans.connector.k8Connector.KubernetesOpenIdConnectDTO;
+import io.harness.k8s.KubernetesHelperService;
+import io.harness.k8s.model.KubernetesClusterAuthType;
+import io.harness.k8s.model.KubernetesConfig;
 import io.harness.logging.CommandExecutionStatus;
 import io.harness.rule.Owner;
 import io.harness.security.encryption.EncryptedDataDetail;
+import okhttp3.OkHttpClient;
+import org.apache.commons.lang3.StringUtils;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import software.wings.WingsBaseTest;
+import software.wings.beans.KubernetesClusterConfig;
 import software.wings.beans.ci.K8ExecCommandParams;
 import software.wings.beans.ci.K8ExecuteCommandTaskParams;
 import software.wings.beans.ci.ShellScriptType;
-import software.wings.beans.ci.pod.ConnectorDetails;
 import software.wings.delegatetasks.citasks.ExecuteCommandTaskHandler;
 import software.wings.helpers.ext.k8s.response.K8sTaskExecutionResponse;
+import software.wings.service.intfc.security.EncryptionService;
 
 import java.io.UnsupportedEncodingException;
 import java.util.Arrays;
@@ -40,8 +40,9 @@ import java.util.List;
 import java.util.concurrent.TimeoutException;
 
 public class K8ExecuteCommandTaskHandlerTest extends WingsBaseTest {
-  @Mock private K8sConnectorHelper k8sConnectorHelper;
+  @Mock private KubernetesHelperService kubernetesHelperService;
   @Mock private K8CommandExecutor k8CommandExecutor;
+  @Mock private EncryptionService encryptionService;
 
   @InjectMocks private K8ExecuteCommandTaskHandler k8ExecuteCommandTaskHandler;
 
@@ -56,30 +57,9 @@ public class K8ExecuteCommandTaskHandlerTest extends WingsBaseTest {
   private static final Integer cmdTimeoutSecs = 3600;
 
   public K8ExecuteCommandTaskParams getExecCmdTaskParams() {
+    KubernetesClusterConfig kubernetesClusterConfig =
+        KubernetesClusterConfig.builder().masterUrl(MASTER_URL).authType(KubernetesClusterAuthType.OIDC).build();
     List<EncryptedDataDetail> encryptionDetails = mock(List.class);
-    ConnectorDTO connectorDTO =
-        ConnectorDTO.builder()
-            .connectorInfo(
-                ConnectorInfoDTO.builder()
-                    .connectorConfig(
-                        KubernetesClusterConfigDTO.builder()
-                            .credential(
-                                KubernetesCredentialDTO.builder()
-                                    .config(KubernetesClusterDetailsDTO.builder()
-                                                .masterUrl(MASTER_URL)
-                                                .auth(KubernetesAuthDTO.builder()
-                                                          .authType(KubernetesAuthType.OPEN_ID_CONNECT)
-                                                          .credentials(KubernetesOpenIdConnectDTO.builder().build())
-                                                          .build())
-                                                .build())
-                                    .build())
-
-                            .build())
-                    .build())
-            .build();
-
-    ConnectorDetails k8sConnector =
-        ConnectorDetails.builder().connectorDTO(connectorDTO).encryptedDataDetails(encryptionDetails).build();
     K8ExecCommandParams k8ExecCommandParams = K8ExecCommandParams.builder()
                                                   .podName(podName)
                                                   .commands(commands)
@@ -92,7 +72,8 @@ public class K8ExecuteCommandTaskHandlerTest extends WingsBaseTest {
                                                   .scriptType(ShellScriptType.DASH)
                                                   .build();
     return K8ExecuteCommandTaskParams.builder()
-        .k8sConnector(k8sConnector)
+        .encryptionDetails(encryptionDetails)
+        .kubernetesClusterConfig(kubernetesClusterConfig)
         .k8ExecCommandParams(k8ExecCommandParams)
         .build();
   }
@@ -103,8 +84,12 @@ public class K8ExecuteCommandTaskHandlerTest extends WingsBaseTest {
   public void executeTaskInternalWithK8Error()
       throws TimeoutException, InterruptedException, UnsupportedEncodingException {
     K8ExecuteCommandTaskParams params = getExecCmdTaskParams();
-    DefaultKubernetesClient kubernetesClient = mock(DefaultKubernetesClient.class);
-    when(k8sConnectorHelper.getDefaultKubernetesClient(eq(params.getK8sConnector()))).thenReturn(kubernetesClient);
+    Config config = new ConfigBuilder().withMasterUrl(MASTER_URL).withNamespace(namespace).build();
+    OkHttpClient okHttpClient = HttpClientUtils.createHttpClient(config);
+
+    when(kubernetesHelperService.getConfig(any(KubernetesConfig.class), eq(StringUtils.EMPTY))).thenReturn(config);
+
+    when(kubernetesHelperService.createHttpClientWithProxySetting(config)).thenReturn(okHttpClient);
     doThrow(KubernetesClientException.class)
         .when(k8CommandExecutor)
         .executeCommand(any(), eq(params.getK8ExecCommandParams()));
@@ -119,8 +104,11 @@ public class K8ExecuteCommandTaskHandlerTest extends WingsBaseTest {
   public void executeTaskInternalWithTimeoutError()
       throws TimeoutException, InterruptedException, UnsupportedEncodingException {
     K8ExecuteCommandTaskParams params = getExecCmdTaskParams();
-    DefaultKubernetesClient kubernetesClient = mock(DefaultKubernetesClient.class);
-    when(k8sConnectorHelper.getDefaultKubernetesClient(eq(params.getK8sConnector()))).thenReturn(kubernetesClient);
+    Config config = new ConfigBuilder().withMasterUrl(MASTER_URL).withNamespace(namespace).build();
+    OkHttpClient okHttpClient = HttpClientUtils.createHttpClient(config);
+
+    when(kubernetesHelperService.getConfig(any(KubernetesConfig.class), eq(StringUtils.EMPTY))).thenReturn(config);
+    when(kubernetesHelperService.createHttpClientWithProxySetting(config)).thenReturn(okHttpClient);
     doThrow(TimeoutException.class).when(k8CommandExecutor).executeCommand(any(), eq(params.getK8ExecCommandParams()));
 
     K8sTaskExecutionResponse response = k8ExecuteCommandTaskHandler.executeTaskInternal(params);
@@ -133,8 +121,11 @@ public class K8ExecuteCommandTaskHandlerTest extends WingsBaseTest {
   public void executeTaskInternalWithInterruptedError()
       throws TimeoutException, InterruptedException, UnsupportedEncodingException {
     K8ExecuteCommandTaskParams params = getExecCmdTaskParams();
-    DefaultKubernetesClient kubernetesClient = mock(DefaultKubernetesClient.class);
-    when(k8sConnectorHelper.getDefaultKubernetesClient(eq(params.getK8sConnector()))).thenReturn(kubernetesClient);
+    Config config = new ConfigBuilder().withMasterUrl(MASTER_URL).withNamespace(namespace).build();
+    OkHttpClient okHttpClient = HttpClientUtils.createHttpClient(config);
+
+    when(kubernetesHelperService.getConfig(any(KubernetesConfig.class), eq(StringUtils.EMPTY))).thenReturn(config);
+    when(kubernetesHelperService.createHttpClientWithProxySetting(config)).thenReturn(okHttpClient);
     doThrow(InterruptedException.class)
         .when(k8CommandExecutor)
         .executeCommand(any(), eq(params.getK8ExecCommandParams()));
@@ -148,8 +139,11 @@ public class K8ExecuteCommandTaskHandlerTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void executeTaskInternalSuccess() throws TimeoutException, InterruptedException, UnsupportedEncodingException {
     K8ExecuteCommandTaskParams params = getExecCmdTaskParams();
-    DefaultKubernetesClient kubernetesClient = mock(DefaultKubernetesClient.class);
-    when(k8sConnectorHelper.getDefaultKubernetesClient(eq(params.getK8sConnector()))).thenReturn(kubernetesClient);
+    Config config = new ConfigBuilder().withMasterUrl(MASTER_URL).withNamespace(namespace).build();
+    OkHttpClient okHttpClient = HttpClientUtils.createHttpClient(config);
+
+    when(kubernetesHelperService.getConfig(any(KubernetesConfig.class), eq(StringUtils.EMPTY))).thenReturn(config);
+    when(kubernetesHelperService.createHttpClientWithProxySetting(config)).thenReturn(okHttpClient);
     when(k8CommandExecutor.executeCommand(any(), eq(params.getK8ExecCommandParams())))
         .thenReturn(ExecCommandStatus.SUCCESS);
 
@@ -162,8 +156,11 @@ public class K8ExecuteCommandTaskHandlerTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void executeTaskInternalFailure() throws TimeoutException, InterruptedException, UnsupportedEncodingException {
     K8ExecuteCommandTaskParams params = getExecCmdTaskParams();
-    DefaultKubernetesClient kubernetesClient = mock(DefaultKubernetesClient.class);
-    when(k8sConnectorHelper.getDefaultKubernetesClient(eq(params.getK8sConnector()))).thenReturn(kubernetesClient);
+    Config config = new ConfigBuilder().withMasterUrl(MASTER_URL).withNamespace(namespace).build();
+    OkHttpClient okHttpClient = HttpClientUtils.createHttpClient(config);
+
+    when(kubernetesHelperService.getConfig(any(KubernetesConfig.class), eq(StringUtils.EMPTY))).thenReturn(config);
+    when(kubernetesHelperService.createHttpClientWithProxySetting(config)).thenReturn(okHttpClient);
     when(k8CommandExecutor.executeCommand(any(), eq(params.getK8ExecCommandParams())))
         .thenReturn(ExecCommandStatus.FAILURE);
 

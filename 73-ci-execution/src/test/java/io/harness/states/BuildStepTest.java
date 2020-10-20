@@ -2,7 +2,9 @@ package io.harness.states;
 
 import static io.harness.rule.OwnerRule.ALEKSANDAR;
 import static io.harness.rule.OwnerRule.HARSH;
+import static org.joor.Reflect.on;
 import static org.mockito.Matchers.any;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -16,59 +18,65 @@ import io.harness.category.element.UnitTests;
 import io.harness.engine.outputs.ExecutionSweepingOutputService;
 import io.harness.executionplan.CIExecutionPlanTestHelper;
 import io.harness.executionplan.CIExecutionTest;
+import io.harness.managerclient.ManagerCIResource;
+import io.harness.rest.RestResponse;
 import io.harness.rule.Owner;
-import io.harness.service.DelegateGrpcClientWrapper;
-import io.harness.stateutils.buildstate.ConnectorUtils;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
-import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import software.wings.beans.ci.pod.ConnectorDetails;
+import retrofit2.Call;
+import retrofit2.Response;
 import software.wings.helpers.ext.k8s.response.K8sTaskExecutionResponse;
 
 import java.io.IOException;
 
 public class BuildStepTest extends CIExecutionTest {
+  @Inject private BuildStep buildStep;
   @Inject private CIExecutionPlanTestHelper ciExecutionPlanTestHelper;
+  @Mock private ManagerCIResource managerCIResource;
   @Mock private Ambiance ambiance;
   @Mock private ExecutionSweepingOutputService executionSweepingOutputResolver;
-  @Mock private ConnectorUtils connectorUtils;
-  @Mock private DelegateGrpcClientWrapper delegateGrpcClientWrapper;
-
-  @InjectMocks private BuildStep buildStep;
 
   @Before
-  public void setUp() {}
+  public void setUp() {
+    on(buildStep).set("managerCIResource", managerCIResource);
+    on(buildStep).set("executionSweepingOutputResolver", executionSweepingOutputResolver);
+  }
 
   @Test
   @Owner(developers = HARSH)
   @Category(UnitTests.class)
   public void shouldExecuteCIBuildTask() throws IOException {
-    when(delegateGrpcClientWrapper.executeSyncTask(any())).thenReturn(K8sTaskExecutionResponse.builder().build());
+    Call<RestResponse<K8sTaskExecutionResponse>> requestCall = mock(Call.class);
+
+    when(requestCall.execute())
+        .thenReturn(Response.success(new RestResponse<>(K8sTaskExecutionResponse.builder().build())));
+    when(managerCIResource.podCommandExecutionTask(any(), any())).thenReturn(requestCall);
     when(executionSweepingOutputResolver.resolve(any(), any()))
         .thenReturn(K8PodDetails.builder().clusterName("cluster").namespace("namespace").build());
-    when(connectorUtils.getConnectorDetails(any(), any())).thenReturn(ConnectorDetails.builder().build());
 
     buildStep.executeSync(ambiance,
         BuildStepInfo.builder().scriptInfos(ciExecutionPlanTestHelper.getBuildCommandSteps()).build(), null, null);
 
-    verify(delegateGrpcClientWrapper, times(1)).executeSyncTask(any());
+    verify(managerCIResource, times(1)).podCommandExecutionTask(any(), any());
   }
 
   @Test
   @Owner(developers = ALEKSANDAR)
   @Category(UnitTests.class)
   public void shouldNotExecuteCIBuildTask() throws IOException {
-    when(delegateGrpcClientWrapper.executeSyncTask(any())).thenReturn(K8sTaskExecutionResponse.builder().build());
-    when(delegateGrpcClientWrapper.executeSyncTask(any())).thenThrow(new RuntimeException());
+    Call<RestResponse<K8sTaskExecutionResponse>> requestCall = mock(Call.class);
+
+    when(requestCall.execute())
+        .thenReturn(Response.success(new RestResponse<>(K8sTaskExecutionResponse.builder().build())));
+    when(managerCIResource.podCommandExecutionTask(any(), any())).thenThrow(new RuntimeException());
     when(executionSweepingOutputResolver.resolve(any(), any()))
         .thenReturn(K8PodDetails.builder().clusterName("cluster").namespace("namespace").build());
-    when(connectorUtils.getConnectorDetails(any(), any())).thenReturn(ConnectorDetails.builder().build());
 
     buildStep.executeSync(ambiance,
         BuildStepInfo.builder().scriptInfos(ciExecutionPlanTestHelper.getBuildCommandSteps()).build(), null, null);
 
-    verify(delegateGrpcClientWrapper, times(1)).executeSyncTask(any());
+    verify(managerCIResource, times(1)).podCommandExecutionTask(any(), any());
   }
 }

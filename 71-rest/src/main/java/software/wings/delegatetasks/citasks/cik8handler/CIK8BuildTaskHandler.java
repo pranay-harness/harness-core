@@ -21,34 +21,36 @@ import com.google.inject.Singleton;
 
 import io.fabric8.kubernetes.api.model.Pod;
 import io.fabric8.kubernetes.client.KubernetesClient;
-import io.harness.delegate.beans.connector.ConnectorType;
-import io.harness.delegate.beans.connector.docker.DockerConnectorDTO;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
+import io.harness.k8s.KubernetesHelperService;
 import io.harness.k8s.model.ImageDetails;
+import io.harness.k8s.model.KubernetesConfig;
 import io.harness.logging.AutoLogContext;
 import io.harness.logging.CommandExecutionStatus;
+import io.harness.security.encryption.EncryptableSettingWithEncryptionDetails;
 import lombok.extern.slf4j.Slf4j;
+import software.wings.beans.GitFetchFilesConfig;
 import software.wings.beans.ci.CIBuildSetupTaskParams;
 import software.wings.beans.ci.CIK8BuildTaskParams;
 import software.wings.beans.ci.pod.CIContainerType;
 import software.wings.beans.ci.pod.CIK8ContainerParams;
 import software.wings.beans.ci.pod.CIK8PodParams;
 import software.wings.beans.ci.pod.CIK8ServicePodParams;
-import software.wings.beans.ci.pod.ConnectorDetails;
 import software.wings.beans.ci.pod.ContainerParams;
+import software.wings.beans.ci.pod.EncryptedVariableWithType;
 import software.wings.beans.ci.pod.ImageDetailsWithConnector;
 import software.wings.beans.ci.pod.PVCParams;
 import software.wings.beans.ci.pod.PodParams;
 import software.wings.beans.ci.pod.SecretParams;
 import software.wings.beans.ci.pod.SecretVarParams;
-import software.wings.beans.ci.pod.SecretVariableDetails;
 import software.wings.beans.ci.pod.SecretVolumeParams;
 import software.wings.delegatetasks.citasks.CIBuildTaskHandler;
 import software.wings.delegatetasks.citasks.cik8handler.pod.CIK8PodSpecBuilder;
 import software.wings.helpers.ext.k8s.response.CiK8sTaskResponse;
 import software.wings.helpers.ext.k8s.response.K8sTaskExecutionResponse;
 import software.wings.helpers.ext.k8s.response.PodStatus;
+import software.wings.service.intfc.security.EncryptionService;
 
 import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
@@ -64,13 +66,13 @@ import javax.validation.constraints.NotNull;
 @Slf4j
 @Singleton
 public class CIK8BuildTaskHandler implements CIBuildTaskHandler {
+  @Inject private KubernetesHelperService kubernetesHelperService;
   @Inject private CIK8CtlHandler kubeCtlHandler;
   @Inject private CIK8PodSpecBuilder podSpecBuilder;
-  @Inject private K8sConnectorHelper k8sConnectorHelper;
-
+  @Inject private EncryptionService encryptionService;
   @NotNull private Type type = CIBuildTaskHandler.Type.GCP_K8;
 
-  private static final String IMAGE_ID_FORMAT = "%s-%s";
+  private static final String imageIdFormat = "%s-%s";
 
   @Override
   public Type getType() {
@@ -80,7 +82,7 @@ public class CIK8BuildTaskHandler implements CIBuildTaskHandler {
   public K8sTaskExecutionResponse executeTaskInternal(CIBuildSetupTaskParams ciBuildSetupTaskParams) {
     CiK8sTaskResponse k8sTaskResponse = null;
     CIK8BuildTaskParams cik8BuildTaskParams = (CIK8BuildTaskParams) ciBuildSetupTaskParams;
-    ConnectorDetails gitConnectorDetails = cik8BuildTaskParams.getCik8PodParams().getGitConnector();
+    GitFetchFilesConfig gitFetchFilesConfig = cik8BuildTaskParams.getGitFetchFilesConfig();
 
     PodParams podParams = cik8BuildTaskParams.getCik8PodParams();
     String namespace = podParams.getNamespace();
@@ -89,9 +91,8 @@ public class CIK8BuildTaskHandler implements CIBuildTaskHandler {
     K8sTaskExecutionResponse result;
     try (AutoLogContext ignore1 = new K8LogContext(podParams.getName(), null, OVERRIDE_ERROR)) {
       try {
-        KubernetesClient kubernetesClient =
-            k8sConnectorHelper.createKubernetesClient(cik8BuildTaskParams.getK8sConnector());
-        createGitSecret(kubernetesClient, namespace, gitConnectorDetails);
+        KubernetesClient kubernetesClient = createKubernetesClient(cik8BuildTaskParams);
+        createGitSecret(kubernetesClient, namespace, gitFetchFilesConfig);
         createImageSecrets(kubernetesClient, namespace, (CIK8PodParams<CIK8ContainerParams>) podParams);
         createEnvVariablesSecrets(kubernetesClient, namespace, (CIK8PodParams<CIK8ContainerParams>) podParams);
         createPVCs(kubernetesClient, namespace, (CIK8PodParams<CIK8ContainerParams>) podParams);
@@ -141,6 +142,13 @@ public class CIK8BuildTaskHandler implements CIBuildTaskHandler {
     return result;
   }
 
+  private KubernetesClient createKubernetesClient(CIK8BuildTaskParams cik8BuildTaskParams) {
+    encryptionService.decrypt(
+        cik8BuildTaskParams.getKubernetesClusterConfig(), cik8BuildTaskParams.getEncryptionDetails());
+    KubernetesConfig kubernetesConfig = cik8BuildTaskParams.getKubernetesClusterConfig().createKubernetesConfig(null);
+    return kubernetesHelperService.getKubernetesClient(kubernetesConfig);
+  }
+
   private void createServicePod(
       KubernetesClient kubernetesClient, String namespace, CIK8ServicePodParams servicePodParams) {
     Pod pod = podSpecBuilder.createSpec((PodParams) servicePodParams.getCik8PodParams()).build();
@@ -151,14 +159,16 @@ public class CIK8BuildTaskHandler implements CIBuildTaskHandler {
         servicePodParams.getSelectorMap(), servicePodParams.getPorts());
   }
 
-  private void createGitSecret(KubernetesClient kubernetesClient, String namespace, ConnectorDetails gitConnector) {
-    if (gitConnector == null) {
+  private void createGitSecret(
+      KubernetesClient kubernetesClient, String namespace, GitFetchFilesConfig gitFetchFilesConfig) {
+    if (gitFetchFilesConfig == null) {
       return;
     }
-    logger.info("Creating git secret in namespace: {} for connectorId: {}, ", namespace,
-        gitConnector.getConnectorDTO().getConnectorInfo().getIdentifier());
+    logger.info("Creating git secret in namespace: {} for accountId: {}, ", namespace,
+        gitFetchFilesConfig.getGitConfig().getAccountId());
     try {
-      kubeCtlHandler.createGitSecret(kubernetesClient, namespace, gitConnector);
+      kubeCtlHandler.createGitSecret(kubernetesClient, namespace, gitFetchFilesConfig.getGitConfig(),
+          gitFetchFilesConfig.getEncryptedDataDetails());
     } catch (UnsupportedEncodingException e) {
       String errMsg = format("Unknown format for GIT password %s", e.getMessage());
       logger.error(errMsg);
@@ -191,17 +201,8 @@ public class CIK8BuildTaskHandler implements CIBuildTaskHandler {
     Map<String, ImageDetailsWithConnector> imageDetailsById = new HashMap<>();
     for (CIK8ContainerParams containerParams : containerParamsList) {
       ImageDetails imageDetails = containerParams.getImageDetailsWithConnector().getImageDetails();
-      ConnectorDetails connectorDetails = containerParams.getImageDetailsWithConnector().getImageConnectorDetails();
-      String registryUrl = null;
-      if (connectorDetails != null) {
-        if (connectorDetails.getConnectorDTO().getConnectorInfo().getConnectorType() == ConnectorType.DOCKER) {
-          DockerConnectorDTO dockerConnectorDTO =
-              (DockerConnectorDTO) connectorDetails.getConnectorDTO().getConnectorInfo().getConnectorConfig();
-          registryUrl = dockerConnectorDTO.getDockerRegistryUrl();
-        }
-      }
-      if (isNotBlank(registryUrl)) {
-        imageDetailsById.put(format(IMAGE_ID_FORMAT, imageDetails.getName(), imageDetails.getRegistryUrl()),
+      if (isNotBlank(imageDetails.getRegistryUrl())) {
+        imageDetailsById.put(format(imageIdFormat, imageDetails.getName(), imageDetails.getRegistryUrl()),
             containerParams.getImageDetailsWithConnector());
       }
     }
@@ -221,21 +222,21 @@ public class CIK8BuildTaskHandler implements CIBuildTaskHandler {
         continue;
       }
 
-      List<SecretVariableDetails> secretVariableDetails =
-          containerParams.getContainerSecrets().getSecretVariableDetails();
-      Map<String, ConnectorDetails> publishArtifactConnectors =
-          containerParams.getContainerSecrets().getPublishArtifactConnectors();
+      Map<String, EncryptedVariableWithType> encryptedSecrets =
+          containerParams.getContainerSecrets().getEncryptedSecrets();
+      Map<String, EncryptableSettingWithEncryptionDetails> publishArtifactEncryptedValues =
+          containerParams.getContainerSecrets().getPublishArtifactEncryptedValues();
 
-      if (isNotEmpty(secretVariableDetails)) {
+      if (isNotEmpty(encryptedSecrets)) {
         Map<String, String> customVarSecretData =
-            getAndUpdateCustomVariableSecretData(secretVariableDetails, containerParams, secretName);
+            getAndUpdateCustomVariableSecretData(encryptedSecrets, containerParams, secretName);
         secretData.putAll(customVarSecretData);
       }
 
-      if (isNotEmpty(containerParams.getContainerSecrets().getPublishArtifactConnectors())
+      if (isNotEmpty(containerParams.getContainerSecrets().getPublishArtifactEncryptedValues())
           && containerParams.getContainerType() == CIContainerType.LITE_ENGINE) {
         Map<String, String> publishArtifactSecretData =
-            getAndUpdatePublishArtifactSecretData(publishArtifactConnectors, containerParams, secretName);
+            getAndUpdatePublishArtifactSecretData(publishArtifactEncryptedValues, containerParams, secretName);
         secretData.putAll(publishArtifactSecretData);
       }
     }
@@ -244,9 +245,8 @@ public class CIK8BuildTaskHandler implements CIBuildTaskHandler {
   }
 
   private Map<String, String> getAndUpdateCustomVariableSecretData(
-      List<SecretVariableDetails> secretVariableDetails, CIK8ContainerParams containerParams, String secretName) {
-    Map<String, SecretParams> customVarSecretData =
-        kubeCtlHandler.fetchCustomVariableSecretKeyMap(secretVariableDetails);
+      Map<String, EncryptedVariableWithType> encryptedSecrets, CIK8ContainerParams containerParams, String secretName) {
+    Map<String, SecretParams> customVarSecretData = kubeCtlHandler.fetchCustomVariableSecretKeyMap(encryptedSecrets);
     if (!isEmpty(customVarSecretData)) {
       updateContainer(containerParams, secretName, customVarSecretData);
       return customVarSecretData.values().stream().collect(
@@ -257,8 +257,8 @@ public class CIK8BuildTaskHandler implements CIBuildTaskHandler {
   }
 
   private Map<String, String> getAndUpdatePublishArtifactSecretData(
-      Map<String, ConnectorDetails> publishArtifactEncryptedValues, CIK8ContainerParams containerParams,
-      String secretName) {
+      Map<String, EncryptableSettingWithEncryptionDetails> publishArtifactEncryptedValues,
+      CIK8ContainerParams containerParams, String secretName) {
     Map<String, SecretParams> secretData =
         kubeCtlHandler.fetchPublishArtifactSecretKeyMap(publishArtifactEncryptedValues);
     if (!isEmpty(secretData)) {

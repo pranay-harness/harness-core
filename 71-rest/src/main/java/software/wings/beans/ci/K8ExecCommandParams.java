@@ -3,7 +3,6 @@ package software.wings.beans.ci;
 import lombok.Builder;
 import lombok.Data;
 import lombok.Value;
-import software.wings.beans.ci.pod.ConnectorDetails;
 
 import java.util.List;
 import javax.validation.constraints.NotNull;
@@ -21,5 +20,4 @@ public class K8ExecCommandParams {
   @NotNull private String relStderrFilePath; // Stderr file path relative to mount path
   @NotNull private String relStdoutFilePath; // Stdout file path relative to mount path
   @NotNull private Integer commandTimeoutSecs;
-  @NotNull private ConnectorDetails k8Connector;
 }
