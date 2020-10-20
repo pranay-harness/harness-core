@@ -21,8 +21,6 @@ import com.sumologic.client.SumoException;
 import io.harness.ccm.config.CCMConfig;
 import io.harness.ccm.license.CeLicenseInfo;
 import io.harness.ccm.license.CeLicenseType;
-import io.harness.cdng.manifest.yaml.GitStore;
-import io.harness.cdng.manifest.yaml.StoreConfig;
 import io.harness.delegate.beans.executioncapability.KustomizeCapability;
 import io.harness.delegate.task.ListNotifyResponseData;
 import io.harness.perpetualtask.internal.AssignmentTaskResponse;
@@ -1711,8 +1709,6 @@ public class ManagerKryoRegistrar implements KryoRegistrar {
     kryo.register(EncryptedVariableWithType.Type.class, 7455);
     kryo.register(ContainerSecrets.class, 7456);
 
-    kryo.register(StoreConfig.class, 8022);
-    kryo.register(GitStore.class, 8023);
     kryo.register(TemplatizedSecretManagerStateExecutionData.class, 7457);
     kryo.register(TerraformPlanParam.class, 7458);
     kryo.register(AzureVMSSCommandRequest.class, 8035);
