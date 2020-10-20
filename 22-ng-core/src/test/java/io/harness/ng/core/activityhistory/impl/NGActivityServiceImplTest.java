@@ -9,11 +9,11 @@ import io.harness.category.element.UnitTests;
 import io.harness.ng.core.NGCoreTestBase;
 import io.harness.ng.core.activityhistory.ActivityHistoryTestHelper;
 import io.harness.ng.core.activityhistory.dto.NGActivityDTO;
+import io.harness.ng.core.activityhistory.dto.NGActivityListDTO;
 import io.harness.rule.Owner;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
-import org.springframework.data.domain.Page;
 
 public class NGActivityServiceImplTest extends NGCoreTestBase {
   @Inject @InjectMocks NGActivityServiceImpl activityHistoryService;
@@ -29,9 +29,9 @@ public class NGActivityServiceImplTest extends NGCoreTestBase {
           ActivityHistoryTestHelper.createActivityHistoryDTO(accountIdentifier, null, null, referredEntityIdentifier);
       activityHistoryService.save(activityHistory);
     }
-    Page<NGActivityDTO> activityHistories =
-        activityHistoryService.list(0, 20, accountIdentifier, null, null, referredEntityIdentifier);
-    assertThat(activityHistories.getTotalElements()).isEqualTo(10);
+    NGActivityListDTO activityHistories =
+        activityHistoryService.list(0, 20, accountIdentifier, null, null, referredEntityIdentifier, 0L, 100L);
+    assertThat(activityHistories.getActivityHistoriesForEntityUsage().size()).isEqualTo(10);
   }
 
   @Test
@@ -46,9 +46,9 @@ public class NGActivityServiceImplTest extends NGCoreTestBase {
           accountIdentifier, orgIdentifier, null, referredEntityIdentifier);
       activityHistoryService.save(activityHistory);
     }
-    Page<NGActivityDTO> activityHistories =
-        activityHistoryService.list(0, 20, accountIdentifier, orgIdentifier, null, referredEntityIdentifier);
-    assertThat(activityHistories.getTotalElements()).isEqualTo(10);
+    NGActivityListDTO activityHistories =
+        activityHistoryService.list(0, 20, accountIdentifier, orgIdentifier, null, referredEntityIdentifier, 0L, 100L);
+    assertThat(activityHistories.getActivityHistoriesForEntityUsage().size()).isEqualTo(10);
   }
 
   @Test
@@ -64,9 +64,9 @@ public class NGActivityServiceImplTest extends NGCoreTestBase {
           accountIdentifier, orgIdentifier, projectIdentifier, referredEntityIdentifier);
       activityHistoryService.save(activityHistory);
     }
-    Page<NGActivityDTO> activityHistories = activityHistoryService.list(
-        0, 20, accountIdentifier, orgIdentifier, projectIdentifier, referredEntityIdentifier);
-    assertThat(activityHistories.getTotalElements()).isEqualTo(10);
+    NGActivityListDTO activityHistories = activityHistoryService.list(
+        0, 20, accountIdentifier, orgIdentifier, projectIdentifier, referredEntityIdentifier, 0L, 100L);
+    assertThat(activityHistories.getActivityHistoriesForEntityUsage().size()).isEqualTo(10);
   }
 
   @Test
