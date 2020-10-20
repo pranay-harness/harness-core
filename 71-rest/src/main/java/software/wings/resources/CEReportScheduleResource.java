@@ -1,13 +1,16 @@
 package software.wings.resources;
 
+import static software.wings.graphql.datafetcher.billing.CloudBillingHelper.unified;
 import static software.wings.security.PermissionAttribute.ResourceType.USER;
 
 import com.google.inject.Inject;
 
 import com.codahale.metrics.annotation.ExceptionMetered;
 import com.codahale.metrics.annotation.Timed;
+import io.harness.ccm.billing.bigquery.BigQueryService;
 import io.harness.ccm.views.entities.CEReportSchedule;
 import io.harness.ccm.views.service.CEReportScheduleService;
+import io.harness.ccm.views.service.CEReportTemplateBuilderService;
 import io.harness.eraro.ErrorCode;
 import io.harness.eraro.Level;
 import io.harness.eraro.ResponseMessage;
@@ -16,10 +19,15 @@ import io.swagger.annotations.Api;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.support.CronSequenceGenerator;
 import org.springframework.web.bind.annotation.RequestBody;
+import software.wings.graphql.datafetcher.billing.CloudBillingHelper;
+import software.wings.helpers.ext.mail.EmailData;
 import software.wings.security.annotations.Scope;
+import software.wings.service.impl.EmailNotificationServiceImpl;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import javax.validation.Valid;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
@@ -39,6 +47,10 @@ import javax.ws.rs.core.Response;
 @Slf4j
 public class CEReportScheduleResource {
   private CEReportScheduleService ceReportScheduleService;
+  @Inject private CEReportTemplateBuilderService ceReportTemplateBuilderService;
+  @Inject private EmailNotificationServiceImpl emailNotificationService;
+  @Inject private CloudBillingHelper cloudBillingHelper;
+  @Inject private BigQueryService bigQueryService;
 
   @Inject
   public CEReportScheduleResource(CEReportScheduleService ceReportScheduleService) {
@@ -132,6 +144,39 @@ public class CEReportScheduleResource {
           rr, ErrorCode.INVALID_REQUEST, Level.ERROR, "ERROR: Invalid request. Schedule provided is invalid");
       return prepareResponse(rr, Response.Status.BAD_REQUEST);
     }
+  }
+
+  @POST
+  @Path("{accountId}/sendReport")
+  @Timed
+  @ExceptionMetered
+  public Response sendReport(
+      @PathParam("accountId") String accountId, @QueryParam("viewId") String viewId, List<String> emails) {
+    RestResponse rr = new RestResponse();
+    if (viewId == null) {
+      addResponseMessage(rr, ErrorCode.INVALID_REQUEST, Level.ERROR, "ERROR: Invalid request. ViewId is invalid");
+      return prepareResponse(rr, Response.Status.BAD_REQUEST);
+    } else if (emails.isEmpty()) {
+      addResponseMessage(rr, ErrorCode.INVALID_REQUEST, Level.ERROR, "ERROR: Invalid request. No Recipients Provided");
+      return prepareResponse(rr, Response.Status.BAD_REQUEST);
+    }
+    logger.info("Valid viewId and recipients list");
+    Map<String, String> templatePlaceholders = ceReportTemplateBuilderService.getTemplatePlaceholders(
+        accountId, viewId, bigQueryService.get(), cloudBillingHelper.getCloudProviderTableName(accountId, unified));
+
+    EmailData emailData = EmailData.builder()
+                              .templateName("ce_scheduled_report")
+                              .templateModel(templatePlaceholders)
+                              .accountId(accountId)
+                              .bcc(emails)
+                              .build();
+    emailData.setCc(Collections.emptyList());
+    emailData.setTo(Collections.emptyList());
+    emailData.setRetries(2);
+
+    emailNotificationService.sendCeMail(emailData, true);
+    rr = new RestResponse("Successfully sent the report");
+    return prepareResponse(rr, Response.Status.OK);
   }
 
   private static void addResponseMessage(RestResponse rr, ErrorCode errorCode, Level level, String message) {

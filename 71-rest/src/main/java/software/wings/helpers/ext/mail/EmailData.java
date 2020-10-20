@@ -23,6 +23,7 @@ public class EmailData extends Queuable {
   private String accountId;
   @Builder.Default private List<String> to = new ArrayList<>();
   @Builder.Default private List<String> cc = new ArrayList<>();
+  @Builder.Default private List<String> bcc = new ArrayList<>();
   private String subject;
   private String body;
   private String templateName;

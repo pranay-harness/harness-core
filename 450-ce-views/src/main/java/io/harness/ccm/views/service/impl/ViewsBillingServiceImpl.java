@@ -208,6 +208,7 @@ public class ViewsBillingServiceImpl implements ViewsBillingService {
         .statsValue(totalCostValue)
         .statsTrend(
             viewsQueryHelper.getBillingTrend(costData.getCost(), forecastCost, prevCostData, trendFilterStartTime))
+        .value(costData.getCost())
         .build();
   }
 

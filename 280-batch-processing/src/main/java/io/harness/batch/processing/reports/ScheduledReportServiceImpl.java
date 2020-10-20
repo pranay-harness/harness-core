@@ -1,5 +1,6 @@
 package io.harness.batch.processing.reports;
 
+import static software.wings.graphql.datafetcher.billing.CloudBillingHelper.unified;
 import static software.wings.security.UserThreadLocal.userGuard;
 
 import com.google.inject.Singleton;
@@ -8,22 +9,23 @@ import io.harness.batch.processing.config.BatchMainConfig;
 import io.harness.batch.processing.mail.CEMailNotificationService;
 import io.harness.batch.processing.shard.AccountShardService;
 import io.harness.beans.EmbeddedUser;
+import io.harness.ccm.billing.bigquery.BigQueryService;
 import io.harness.ccm.views.entities.CEReportSchedule;
 import io.harness.ccm.views.service.impl.CEReportScheduleServiceImpl;
+import io.harness.ccm.views.service.impl.CEReportTemplateBuilderServiceImpl;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import software.wings.beans.Account;
 import software.wings.beans.User;
+import software.wings.graphql.datafetcher.billing.CloudBillingHelper;
 import software.wings.helpers.ext.mail.EmailData;
 import software.wings.security.UserThreadLocal;
 import software.wings.service.intfc.instance.CloudToHarnessMappingService;
 
-import java.net.URISyntaxException;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Date;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -33,10 +35,13 @@ import java.util.stream.Collectors;
 @Slf4j
 public class ScheduledReportServiceImpl {
   @Autowired private CEReportScheduleServiceImpl ceReportScheduleService;
+  @Autowired private CEReportTemplateBuilderServiceImpl ceReportTemplateBuilderService;
   @Autowired private AccountShardService accountShardService;
   @Autowired private BatchMainConfig config;
   @Autowired private CEMailNotificationService emailNotificationService;
   @Autowired private CloudToHarnessMappingService cloudToHarnessMappingService;
+  @Autowired private BigQueryService bigQueryService;
+  @Autowired private CloudBillingHelper cloudBillingHelper;
 
   // TODO: CE_VIEW_URL, MAIL_SUBJECT to be finalized
   private static final String CE_VIEW_URL = "/account/%s/continuous-efficiency/views/%s";
@@ -61,12 +66,12 @@ public class ScheduledReportServiceImpl {
       logger.info("Found schedules(total {}) : {} for account {}", schedules.size(), schedules, accountId);
       scheduleCount += schedules.size();
       schedules.forEach(schedule -> {
-        try {
-          generateReport(schedule.getViewsId(), accountId, schedule.getRecipients());
-          sendMail(accountId, schedule.getRecipients(), schedule.getViewsId());
-        } catch (Exception e) {
-          logger.error("Error in generateAndSendScheduledReport {}", String.valueOf(e));
-          return;
+        for (String viewId : schedule.getViewsId()) {
+          try {
+            sendMail(accountId, schedule.getRecipients(), viewId, schedule.getUuid());
+          } catch (Exception e) {
+            logger.error("Error in generateAndSendScheduledReport {}", String.valueOf(e));
+          }
         }
         setNextExecution(accountId, schedule);
       });
@@ -74,21 +79,9 @@ public class ScheduledReportServiceImpl {
     logger.info("A total of {} reportSchedules were processed", scheduleCount);
   }
 
-  public Map<String, String> generateReport(String[] viewsId, String accountId, String[] recipients) {
-    // TODO: To be integrated later
-    return null;
-  }
-
-  private void sendMail(String accountId, String[] recipients, String[] viewId) {
-    Map<String, String> templateModel = new HashMap<>();
-    try {
-      templateModel.put(
-          "EXPLORER_URL", emailNotificationService.buildAbsoluteUrl(String.format(CE_VIEW_URL, accountId, viewId[0])));
-    } catch (URISyntaxException e) {
-      logger.error("Can't build explorer url : ", e);
-    }
-    templateModel.put("USER", "");
-    templateModel.put("CLUSTERS", "");
+  private void sendMail(String accountId, String[] recipients, String viewId, String reportId) {
+    Map<String, String> templateModel = ceReportTemplateBuilderService.getTemplatePlaceholders(accountId, viewId,
+        reportId, bigQueryService.get(), cloudBillingHelper.getCloudProviderTableName(accountId, unified));
     EmailData emailData = EmailData.builder()
                               .to(Arrays.asList(recipients))
                               .templateName(config.getReportScheduleConfig().getTemplateName())

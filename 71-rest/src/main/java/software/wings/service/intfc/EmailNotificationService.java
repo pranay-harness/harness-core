@@ -19,4 +19,7 @@ public interface EmailNotificationService {
    * @param emailData the email data
    */
   void sendAsync(EmailData emailData);
+
+  // For CE team
+  boolean sendCeMail(EmailData emailData, boolean isCeMail);
 }

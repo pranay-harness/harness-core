@@ -1,5 +1,7 @@
 package io.harness.ccm.views.dao;
 
+import static io.harness.persistence.HQuery.excludeValidate;
+
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
@@ -51,7 +53,7 @@ public class CEViewDao {
   }
 
   public CEView get(String uuid) {
-    return hPersistence.createQuery(CEView.class).filter(CEViewKeys.uuid, uuid).get();
+    return hPersistence.createQuery(CEView.class, excludeValidate).filter(CEViewKeys.uuid, uuid).get();
   }
 
   public CEView findByName(String accountId, String name) {
