@@ -87,6 +87,12 @@ public class Mailer {
         }
       }
 
+      if (emailData.getBcc() != null) {
+        for (String bcc : emailData.getBcc()) {
+          email.addBcc(bcc);
+        }
+      }
+
       String subject = emailData.getSubject();
       String body = emailData.getBody();
       if (isNotBlank(emailData.getTemplateName())) {

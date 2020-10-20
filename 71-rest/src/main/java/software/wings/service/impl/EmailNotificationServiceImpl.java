@@ -51,46 +51,23 @@ public class EmailNotificationServiceImpl implements EmailNotificationService {
   @Inject private EmailUtils emailUtils;
   @Inject private AlertService alertService;
 
+  private static final String CE_MAIL_FROM_ADDRESS = "ce-noreply@harness.io";
+
   @Override
   public boolean send(EmailData emailData) {
-    SmtpConfig defaultSMTPConfig;
-    SmtpConfig fallBackSMTPConfig;
-
-    if (emailData.isSystem()) {
-      defaultSMTPConfig = mainConfiguration.getSmtpConfig();
-      fallBackSMTPConfig = emailHelperUtils.getSmtpConfig(emailData.getAccountId());
-    } else {
-      defaultSMTPConfig = emailHelperUtils.getSmtpConfig(emailData.getAccountId());
-      fallBackSMTPConfig = mainConfiguration.getSmtpConfig();
-    }
-
-    boolean isDefaultSMTPConfigValid = emailHelperUtils.isSmtpConfigValid(defaultSMTPConfig);
-    boolean isFallBackSMTPConfigValid = emailHelperUtils.isSmtpConfigValid(fallBackSMTPConfig);
-
-    boolean mailSentSuccessFully = false;
-    if (!isDefaultSMTPConfigValid && !isFallBackSMTPConfigValid) {
-      sendEmailNotSentAlert(emailData);
-    } else if (isDefaultSMTPConfigValid) {
-      mailSentSuccessFully = true;
-      if (!sendMail(defaultSMTPConfig, emailData)
-          && (!isFallBackSMTPConfigValid || !sendMail(fallBackSMTPConfig, emailData))) {
-        sendEmailNotSentAlert(emailData);
-        mailSentSuccessFully = false;
-      }
-    } else if (isFallBackSMTPConfigValid) {
-      mailSentSuccessFully = sendMail(fallBackSMTPConfig, emailData);
-    }
-
-    return mailSentSuccessFully;
+    return sendCeMail(emailData, false);
   }
 
-  private boolean sendMail(SmtpConfig config, EmailData emailData) {
+  private boolean sendMail(SmtpConfig config, EmailData emailData, boolean isCeMail) {
     List<EncryptedDataDetail> encryptionDetails = config.equals(mainConfiguration.getSmtpConfig())
         ? Collections.emptyList()
         : secretManager.getEncryptionDetails(config, emailData.getAppId(), emailData.getWorkflowExecutionId());
 
     if (config.equals(mainConfiguration.getSmtpConfig())) {
       try {
+        if (isCeMail) {
+          config.setFromAddress(CE_MAIL_FROM_ADDRESS);
+        }
         mailer.send(config, encryptionDetails, emailData);
         closeEmailNotSentAlert(emailData);
         return true;
@@ -144,5 +121,38 @@ public class EmailNotificationServiceImpl implements EmailNotificationService {
   @Override
   public void sendAsync(EmailData emailData) {
     emailEventQueue.send(emailData);
+  }
+
+  @Override
+  public boolean sendCeMail(EmailData emailData, boolean isCeMail) {
+    SmtpConfig defaultSMTPConfig;
+    SmtpConfig fallBackSMTPConfig;
+
+    if (emailData.isSystem()) {
+      defaultSMTPConfig = mainConfiguration.getSmtpConfig();
+      fallBackSMTPConfig = emailHelperUtils.getSmtpConfig(emailData.getAccountId());
+    } else {
+      defaultSMTPConfig = emailHelperUtils.getSmtpConfig(emailData.getAccountId());
+      fallBackSMTPConfig = mainConfiguration.getSmtpConfig();
+    }
+
+    boolean isDefaultSMTPConfigValid = emailHelperUtils.isSmtpConfigValid(defaultSMTPConfig);
+    boolean isFallBackSMTPConfigValid = emailHelperUtils.isSmtpConfigValid(fallBackSMTPConfig);
+
+    boolean mailSentSuccessFully = false;
+    if (!isDefaultSMTPConfigValid && !isFallBackSMTPConfigValid) {
+      sendEmailNotSentAlert(emailData);
+    } else if (isDefaultSMTPConfigValid) {
+      mailSentSuccessFully = true;
+      if (!sendMail(defaultSMTPConfig, emailData, isCeMail)
+          && (!isFallBackSMTPConfigValid || !sendMail(fallBackSMTPConfig, emailData, isCeMail))) {
+        sendEmailNotSentAlert(emailData);
+        mailSentSuccessFully = false;
+      }
+    } else if (isFallBackSMTPConfigValid) {
+      mailSentSuccessFully = sendMail(fallBackSMTPConfig, emailData, isCeMail);
+    }
+
+    return mailSentSuccessFully;
   }
 }

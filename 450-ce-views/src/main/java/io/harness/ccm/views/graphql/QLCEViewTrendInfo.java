@@ -10,4 +10,5 @@ public class QLCEViewTrendInfo {
   String statsDescription;
   String statsValue;
   Number statsTrend;
+  Number value;
 }
