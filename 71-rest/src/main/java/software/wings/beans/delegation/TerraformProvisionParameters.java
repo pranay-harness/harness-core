@@ -51,6 +51,9 @@ public class TerraformProvisionParameters implements TaskParameters, ActivityAcc
   private final Map<String, String> backendConfigs;
   private final Map<String, EncryptedDataDetail> encryptedBackendConfigs;
 
+  @Expression(ALLOW_SECRETS) private final Map<String, String> environmentVariables;
+  private final Map<String, EncryptedDataDetail> encryptedEnvironmentVariables;
+
   private final TerraformCommand command;
   private final TerraformCommandUnit commandUnit;
   @Builder.Default private long timeoutInMillis = TimeUnit.MINUTES.toMillis(TIMEOUT_IN_MINUTES);

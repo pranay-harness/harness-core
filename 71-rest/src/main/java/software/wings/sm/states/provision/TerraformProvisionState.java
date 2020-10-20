@@ -10,7 +10,9 @@ import static io.harness.delegate.service.DelegateAgentFileService.FileBucket.TE
 import static io.harness.exception.WingsException.USER;
 import static io.harness.provision.TerraformConstants.BACKEND_CONFIGS_KEY;
 import static io.harness.provision.TerraformConstants.ENCRYPTED_BACKEND_CONFIGS_KEY;
+import static io.harness.provision.TerraformConstants.ENCRYPTED_ENVIRONMENT_VARS_KEY;
 import static io.harness.provision.TerraformConstants.ENCRYPTED_VARIABLES_KEY;
+import static io.harness.provision.TerraformConstants.ENVIRONMENT_VARS_KEY;
 import static io.harness.provision.TerraformConstants.QUALIFIER_APPLY;
 import static io.harness.provision.TerraformConstants.TARGETS_KEY;
 import static io.harness.provision.TerraformConstants.TF_APPLY_VAR_NAME;
@@ -151,6 +153,7 @@ public abstract class TerraformProvisionState extends State {
 
   @Attributes(title = "Variables") @Getter @Setter private List<NameValuePair> variables;
   @Attributes(title = "Backend Configs") @Getter @Setter private List<NameValuePair> backendConfigs;
+  @Getter @Setter private List<NameValuePair> environmentVariables;
   @Getter @Setter private List<String> targets;
 
   @Getter @Setter private List<String> tfVarFiles;
@@ -240,6 +243,7 @@ public abstract class TerraformProvisionState extends State {
             .sourceRepoReference(terraformExecutionData.getSourceRepoReference())
             .variables(terraformExecutionData.getVariables())
             .backendConfigs(terraformExecutionData.getBackendConfigs())
+            .environmentVariables(terraformExecutionData.getEnvironmentVariables())
             .workspace(terraformExecutionData.getWorkspace())
             .build();
 
@@ -404,36 +408,14 @@ public abstract class TerraformProvisionState extends State {
     Map<String, Object> others = new HashMap<>();
     if (!(this instanceof DestroyTerraformProvisionState)) {
       others.put("qualifier", QUALIFIER_APPLY);
-      List<NameValuePair> variables = terraformExecutionData.getVariables();
-      List<NameValuePair> backendConfigs = terraformExecutionData.getBackendConfigs();
+      collectVariables(others, terraformExecutionData.getVariables(), VARIABLES_KEY, ENCRYPTED_VARIABLES_KEY, true);
+      collectVariables(others, terraformExecutionData.getBackendConfigs(), BACKEND_CONFIGS_KEY,
+          ENCRYPTED_BACKEND_CONFIGS_KEY, false);
+      collectVariables(others, terraformExecutionData.getEnvironmentVariables(), ENVIRONMENT_VARS_KEY,
+          ENCRYPTED_ENVIRONMENT_VARS_KEY, false);
+
       List<String> tfVarFiles = terraformExecutionData.getTfVarFiles();
       List<String> targets = terraformExecutionData.getTargets();
-
-      if (isNotEmpty(variables)) {
-        others.put(VARIABLES_KEY,
-            variables.stream()
-                .filter(item -> item.getValue() != null)
-                .filter(item -> item.getValueType() == null || "TEXT".equals(item.getValueType()))
-                .collect(toMap(NameValuePair::getName, NameValuePair::getValue)));
-        others.put(ENCRYPTED_VARIABLES_KEY,
-            variables.stream()
-                .filter(item -> item.getValue() != null)
-                .filter(item -> "ENCRYPTED_TEXT".equals(item.getValueType()))
-                .collect(toMap(NameValuePair::getName, NameValuePair::getValue)));
-      }
-
-      if (isNotEmpty(backendConfigs)) {
-        others.put(BACKEND_CONFIGS_KEY,
-            backendConfigs.stream()
-                .filter(item -> item.getValue() != null)
-                .filter(item -> "TEXT".equals(item.getValueType()))
-                .collect(toMap(NameValuePair::getName, NameValuePair::getValue)));
-        others.put(ENCRYPTED_BACKEND_CONFIGS_KEY,
-            backendConfigs.stream()
-                .filter(item -> item.getValue() != null)
-                .filter(item -> "ENCRYPTED_TEXT".equals(item.getValueType()))
-                .collect(toMap(NameValuePair::getName, NameValuePair::getValue)));
-      }
 
       if (isNotEmpty(targets)) {
         others.put(TARGETS_KEY, targets);
@@ -467,6 +449,22 @@ public abstract class TerraformProvisionState extends State {
         terraformExecutionData.getStateFileId(), others, FileBucket.TERRAFORM_STATE);
     if (isNotEmpty(workspace)) {
       updateProvisionerWorkspaces(terraformProvisioner, workspace);
+    }
+  }
+
+  private void collectVariables(Map<String, Object> others, List<NameValuePair> nameValuePairList, String varsKey,
+      String encyptedVarsKey, boolean valueTypeCanBeNull) {
+    if (isNotEmpty(nameValuePairList)) {
+      others.put(varsKey,
+          nameValuePairList.stream()
+              .filter(item -> item.getValue() != null)
+              .filter(item -> (valueTypeCanBeNull && item.getValueType() == null) || "TEXT".equals(item.getValueType()))
+              .collect(toMap(NameValuePair::getName, NameValuePair::getValue)));
+      others.put(encyptedVarsKey,
+          nameValuePairList.stream()
+              .filter(item -> item.getValue() != null)
+              .filter(item -> "ENCRYPTED_TEXT".equals(item.getValueType()))
+              .collect(toMap(NameValuePair::getName, NameValuePair::getValue)));
     }
   }
 
@@ -564,6 +562,14 @@ public abstract class TerraformProvisionState extends State {
           infrastructureProvisionerService.extractEncryptedTextVariables(allVariables, context.getAppId());
     }
 
+    List<NameValuePair> allEnvVars = element.getEnvironmentVariables();
+    Map<String, String> envVars = null;
+    Map<String, EncryptedDataDetail> encryptedEnvVars = null;
+    if (isNotEmpty(allEnvVars)) {
+      envVars = infrastructureProvisionerService.extractUnresolvedTextVariables(allEnvVars);
+      encryptedEnvVars = infrastructureProvisionerService.extractEncryptedTextVariables(allEnvVars, context.getAppId());
+    }
+
     List<String> targets = element.getTargets();
     targets = resolveTargets(targets, context);
 
@@ -591,6 +597,8 @@ public abstract class TerraformProvisionState extends State {
             .encryptedVariables(encryptedTextVariables)
             .backendConfigs(backendConfigs)
             .encryptedBackendConfigs(encryptedBackendConfigs)
+            .environmentVariables(envVars)
+            .encryptedEnvironmentVariables(encryptedEnvVars)
             .targets(targets)
             .tfVarFiles(element.getTfVarFiles())
             .runPlanOnly(false)
@@ -671,9 +679,11 @@ public abstract class TerraformProvisionState extends State {
     Map<String, EncryptedDataDetail> encryptedVariables = null;
     Map<String, String> backendConfigs = null;
     Map<String, EncryptedDataDetail> encryptedBackendConfigs = null;
+    Map<String, String> environmentVars = null;
+    Map<String, EncryptedDataDetail> encryptedEnvironmentVars = null;
     List<NameValuePair> rawVariablesList = new ArrayList<>();
 
-    if (isNotEmpty(this.variables) || isNotEmpty(this.backendConfigs)) {
+    if (isNotEmpty(this.variables) || isNotEmpty(this.backendConfigs) || isNotEmpty(this.environmentVariables)) {
       List<NameValuePair> validVariables =
           validateAndFilterVariables(getAllVariables(), terraformProvisioner.getVariables());
       rawVariablesList.addAll(validVariables);
@@ -687,19 +697,40 @@ public abstract class TerraformProvisionState extends State {
         encryptedBackendConfigs =
             infrastructureProvisionerService.extractEncryptedTextVariables(this.backendConfigs, context.getAppId());
       }
+
+      if (this.environmentVariables != null) {
+        List<NameValuePair> validEnvironmentVariables =
+            validateAndFilterVariables(this.environmentVariables, terraformProvisioner.getEnvironmentVariables());
+        environmentVars = infrastructureProvisionerService.extractUnresolvedTextVariables(validEnvironmentVariables);
+        encryptedEnvironmentVars = infrastructureProvisionerService.extractEncryptedTextVariables(
+            validEnvironmentVariables, context.getAppId());
+      }
+
     } else if (this instanceof DestroyTerraformProvisionState) {
       fileId = fileService.getLatestFileIdByQualifier(entityId, TERRAFORM_STATE, QUALIFIER_APPLY);
       if (fileId != null) {
         FileMetadata fileMetadata = fileService.getFileMetadata(fileId, FileBucket.TERRAFORM_STATE);
 
         if (fileMetadata != null && fileMetadata.getMetadata() != null) {
-          variables = extractRawVariables(variables, rawVariablesList, fileMetadata);
+          variables = extractData(fileMetadata, VARIABLES_KEY);
+          Map<String, Object> rawVariables = (Map<String, Object>) fileMetadata.getMetadata().get(VARIABLES_KEY);
+          if (isNotEmpty(rawVariables)) {
+            rawVariablesList.addAll(extractVariables(rawVariables, "TEXT"));
+          }
 
-          backendConfigs = extractBackendConfigs(context, backendConfigs, fileMetadata);
+          backendConfigs = extractBackendConfigs(context, fileMetadata);
 
-          encryptedVariables = extractEncryptedVariables(context, encryptedVariables, rawVariablesList, fileMetadata);
+          encryptedVariables = extractEncryptedData(context, fileMetadata, ENCRYPTED_VARIABLES_KEY);
+          Map<String, Object> rawEncryptedVariables =
+              (Map<String, Object>) fileMetadata.getMetadata().get(ENCRYPTED_VARIABLES_KEY);
+          if (isNotEmpty(rawEncryptedVariables)) {
+            rawVariablesList.addAll(extractVariables(rawEncryptedVariables, "ENCRYPTED_TEXT"));
+          }
 
-          encryptedBackendConfigs = extractEncryptedBackendConfigs(context, encryptedBackendConfigs, fileMetadata);
+          encryptedBackendConfigs = extractEncryptedData(context, fileMetadata, ENCRYPTED_BACKEND_CONFIGS_KEY);
+
+          environmentVars = extractData(fileMetadata, ENVIRONMENT_VARS_KEY);
+          encryptedEnvironmentVars = extractEncryptedData(context, fileMetadata, ENCRYPTED_ENVIRONMENT_VARS_KEY);
 
           List<String> targets = (List<String>) fileMetadata.getMetadata().get(TARGETS_KEY);
           if (isNotEmpty(targets)) {
@@ -742,6 +773,8 @@ public abstract class TerraformProvisionState extends State {
             .encryptedVariables(encryptedVariables)
             .backendConfigs(backendConfigs)
             .encryptedBackendConfigs(encryptedBackendConfigs)
+            .environmentVariables(environmentVars)
+            .encryptedEnvironmentVariables(encryptedEnvironmentVars)
             .targets(targets)
             .runPlanOnly(runPlanOnly)
             .exportPlanToApplyStep(exportPlanToApplyStep)
@@ -755,84 +788,44 @@ public abstract class TerraformProvisionState extends State {
     return createAndRunTask(activityId, executionContext, parameters, delegateTag);
   }
 
-  private Map<String, EncryptedDataDetail> extractEncryptedBackendConfigs(
-      ExecutionContext context, Map<String, EncryptedDataDetail> encryptedBackendConfigs, FileMetadata fileMetadata) {
-    Map<String, Object> rawEncryptedBackendConfigs =
-        (Map<String, Object>) fileMetadata.getMetadata().get(ENCRYPTED_BACKEND_CONFIGS_KEY);
-    if (isNotEmpty(rawEncryptedBackendConfigs)) {
-      encryptedBackendConfigs = infrastructureProvisionerService.extractEncryptedTextVariables(
-          rawEncryptedBackendConfigs.entrySet()
-              .stream()
-              .map(entry
-                  -> NameValuePair.builder()
-                         .valueType("ENCRYPTED_TEXT")
-                         .name(entry.getKey())
-                         .value((String) entry.getValue())
-                         .build())
-              .collect(toList()),
-          context.getAppId());
+  private Map<String, String> extractData(FileMetadata fileMetadata, String dataKey) {
+    Map<String, Object> rawData = (Map<String, Object>) fileMetadata.getMetadata().get(dataKey);
+    if (isNotEmpty(rawData)) {
+      return infrastructureProvisionerService.extractUnresolvedTextVariables(extractVariables(rawData, "TEXT"));
     }
-    return encryptedBackendConfigs;
+    return null;
   }
 
-  private Map<String, EncryptedDataDetail> extractEncryptedVariables(ExecutionContext context,
-      Map<String, EncryptedDataDetail> encryptedVariables, List<NameValuePair> rawVariablesList,
-      FileMetadata fileMetadata) {
-    Map<String, Object> rawEncryptedVariables =
-        (Map<String, Object>) fileMetadata.getMetadata().get(ENCRYPTED_VARIABLES_KEY);
-    if (isNotEmpty(rawEncryptedVariables)) {
-      List<NameValuePair> rawVariablesListEncryptedText = rawEncryptedVariables.entrySet()
-                                                              .stream()
-                                                              .map(entry
-                                                                  -> NameValuePair.builder()
-                                                                         .valueType("ENCRYPTED_TEXT")
-                                                                         .name(entry.getKey())
-                                                                         .value((String) entry.getValue())
-                                                                         .build())
-                                                              .collect(toList());
-      rawVariablesList.addAll(rawVariablesListEncryptedText);
-      encryptedVariables = infrastructureProvisionerService.extractEncryptedTextVariables(
-          rawVariablesListEncryptedText, context.getAppId());
+  private Map<String, EncryptedDataDetail> extractEncryptedData(
+      ExecutionContext context, FileMetadata fileMetadata, String encryptedDataKey) {
+    Map<String, Object> rawData = (Map<String, Object>) fileMetadata.getMetadata().get(encryptedDataKey);
+    Map<String, EncryptedDataDetail> encryptedData = null;
+    if (isNotEmpty(rawData)) {
+      encryptedData = infrastructureProvisionerService.extractEncryptedTextVariables(
+          extractVariables(rawData, "ENCRYPTED_TEXT"), context.getAppId());
     }
-    return encryptedVariables;
+    return encryptedData;
   }
 
-  private Map<String, String> extractBackendConfigs(
-      ExecutionContext context, Map<String, String> backendConfigs, FileMetadata fileMetadata) {
+  private Map<String, String> extractBackendConfigs(ExecutionContext context, FileMetadata fileMetadata) {
     Map<String, Object> rawBackendConfigs = (Map<String, Object>) fileMetadata.getMetadata().get(BACKEND_CONFIGS_KEY);
     if (isNotEmpty(rawBackendConfigs)) {
-      backendConfigs =
-          infrastructureProvisionerService.extractTextVariables(rawBackendConfigs.entrySet()
-                                                                    .stream()
-                                                                    .map(entry
-                                                                        -> NameValuePair.builder()
-                                                                               .valueType("TEXT")
-                                                                               .name(entry.getKey())
-                                                                               .value((String) entry.getValue())
-                                                                               .build())
-                                                                    .collect(toList()),
-              context);
+      return infrastructureProvisionerService.extractTextVariables(
+          extractVariables(rawBackendConfigs, "TEXT"), context);
     }
-    return backendConfigs;
+    return null;
   }
 
-  private Map<String, String> extractRawVariables(
-      Map<String, String> variables, List<NameValuePair> rawVariablesList, FileMetadata fileMetadata) {
-    Map<String, Object> rawVariables = (Map<String, Object>) fileMetadata.getMetadata().get(VARIABLES_KEY);
-    if (isNotEmpty(rawVariables)) {
-      List<NameValuePair> rawVariablesListText = rawVariables.entrySet()
-                                                     .stream()
-                                                     .map(entry
-                                                         -> NameValuePair.builder()
-                                                                .valueType("TEXT")
-                                                                .name(entry.getKey())
-                                                                .value((String) entry.getValue())
-                                                                .build())
-                                                     .collect(toList());
-      rawVariablesList.addAll(rawVariablesListText);
-      variables = infrastructureProvisionerService.extractUnresolvedTextVariables(rawVariablesListText);
-    }
-    return variables;
+  private List<NameValuePair> extractVariables(Map<String, Object> variables, String valueType) {
+    return variables.entrySet()
+        .stream()
+        .map(entry
+            -> NameValuePair.builder()
+                   .valueType(valueType)
+                   .name(entry.getKey())
+                   .value((String) entry.getValue())
+                   .build())
+        .collect(toList());
   }
 
   protected String handleDefaultWorkspace(String workspace) {
@@ -872,6 +865,7 @@ public abstract class TerraformProvisionState extends State {
                                           .variables(executionData.getVariables())
                                           .delegateTag(executionData.getDelegateTag())
                                           .backendConfigs(executionData.getBackendConfigs())
+                                          .environmentVariables(executionData.getEnvironmentVariables())
                                           .tfVarFiles(executionData.getTfVarFiles())
                                           .workflowExecutionId(context.getWorkflowExecutionId())
                                           .targets(executionData.getTargets())

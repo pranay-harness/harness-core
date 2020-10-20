@@ -372,6 +372,8 @@ public class TerraformProvisionStateTest extends WingsBaseTest {
                     .put("encrypted_variables", ImmutableMap.of("access_key", "access_key", "secret_key", "secret_key"))
                     .put("backend_configs", ImmutableMap.of("bucket", "tf-remote-state", "key", "terraform.tfstate"))
                     .put("encrypted_backend_configs", ImmutableMap.of("access_token", "access_token"))
+                    .put("environment_variables", ImmutableMap.of("TF_LOG", "TRACE"))
+                    .put("encrypted_environment_variables", ImmutableMap.of("access_token", "access_token"))
                     .put("targets", asList("target1", "target2"))
                     .put("tf_var_files", asList("file1", "file2"))
                     .build())
@@ -401,8 +403,10 @@ public class TerraformProvisionStateTest extends WingsBaseTest {
     TerraformProvisionParameters parameters = (TerraformProvisionParameters) createdTask.getData().getParameters()[0];
     assertThat(parameters.getVariables()).isNotEmpty();
     assertThat(parameters.getBackendConfigs()).isNotEmpty();
+    assertThat(parameters.getEnvironmentVariables()).isNotEmpty();
     assertParametersVariables(parameters);
     assertParametersBackendConfigs(parameters);
+    assertParametersEnvironmentVariables(parameters);
     assertThat(parameters.getTfVarFiles()).containsExactlyInAnyOrder("file1-rendered", "file2-rendered");
     assertThat(parameters.getTargets()).containsExactlyInAnyOrder("target1-rendered", "target2-rendered");
   }
@@ -452,6 +456,7 @@ public class TerraformProvisionStateTest extends WingsBaseTest {
             .workspace("workspace")
             .sourceRepoReference("sourceRepoReference")
             .backendConfigs(getTerraformBackendConfigs())
+            .environmentVariables(getTerraformEnvironmentVariables())
             .targets(Arrays.asList("target1"))
             .variables(getTerraformVariables())
             .build();
@@ -483,8 +488,10 @@ public class TerraformProvisionStateTest extends WingsBaseTest {
     verify(fileService, times(1)).getLatestFileId(anyString(), any(FileBucket.class));
     verify(gitUtilsManager, times(1)).getGitConfig(anyString());
     verify(infrastructureProvisionerService, times(1)).extractTextVariables(anyList(), any(ExecutionContext.class));
-    verify(infrastructureProvisionerService, times(2)).extractEncryptedTextVariables(anyList(), eq(APP_ID));
-    verify(infrastructureProvisionerService, times(1)).extractUnresolvedTextVariables(anyList());
+    // once for environment variables, once for variables, once for backend configs
+    verify(infrastructureProvisionerService, times(3)).extractEncryptedTextVariables(anyList(), eq(APP_ID));
+    // once for environment variables, once for variables
+    verify(infrastructureProvisionerService, times(2)).extractUnresolvedTextVariables(anyList());
     verify(secretManager, times(1)).getEncryptionDetails(any(GitConfig.class), anyString(), anyString());
     assertThat(executionResponse.getCorrelationIds().get(0)).isEqualTo("uuid");
     assertThat(((ScriptStateExecutionData) executionResponse.getStateExecutionData()).getActivityId())
@@ -651,6 +658,41 @@ public class TerraformProvisionStateTest extends WingsBaseTest {
   @Test
   @Owner(developers = BOJANA)
   @Category(UnitTests.class)
+  public void testExecuteRegularWithEnvironmentVariables() {
+    state.setProvisionerId(PROVISIONER_ID);
+    List<NameValuePair> nameValuePairList =
+        asList(NameValuePair.builder().name("TF_LOG").value("TRACE").valueType("TEXT").build(),
+            NameValuePair.builder().name("access_token").value("access_token").valueType("ENCRYPTED_TEXT").build(),
+            NameValuePair.builder().name("nil").valueType("TEXT").build(),
+            NameValuePair.builder().name("noValueType").value("value").valueType(null).build());
+    state.setEnvironmentVariables(nameValuePairList);
+    TerraformInfrastructureProvisioner provisioner = TerraformInfrastructureProvisioner.builder()
+                                                         .appId(APP_ID)
+                                                         .path("current/working/directory")
+                                                         .environmentVariables(getTerraformEnvironmentVariables())
+                                                         .build();
+    GitConfig gitConfig = GitConfig.builder().branch("master").build();
+
+    doReturn(provisioner).when(infrastructureProvisionerService).get(APP_ID, PROVISIONER_ID);
+    doReturn("taskId").when(delegateService).queueTask(any(DelegateTask.class));
+    doReturn(gitConfig).when(gitUtilsManager).getGitConfig(anyString());
+    ExecutionResponse response = state.execute(executionContext);
+
+    ArgumentCaptor<DelegateTask> taskCaptor = ArgumentCaptor.forClass(DelegateTask.class);
+    verify(delegateService).queueTask(taskCaptor.capture());
+    DelegateTask createdTask = taskCaptor.getValue();
+    verify(gitConfigHelperService).convertToRepoGitConfig(any(GitConfig.class), anyString());
+
+    assertThat(response.isAsync()).isTrue();
+    assertThat(createdTask.getData().getParameters()).isNotEmpty();
+    TerraformProvisionParameters parameters = (TerraformProvisionParameters) createdTask.getData().getParameters()[0];
+    assertThat(parameters.getEnvironmentVariables()).isNotEmpty();
+    assertParametersEnvironmentVariables(parameters);
+  }
+
+  @Test
+  @Owner(developers = BOJANA)
+  @Category(UnitTests.class)
   public void testHandleAsyncResponseInternalRegularDestroy() {
     TerraformProvisionState destroyProvisionStateSpy = spy(destroyProvisionState);
     destroyProvisionStateSpy.setProvisionerId(PROVISIONER_ID);
@@ -727,6 +769,12 @@ public class TerraformProvisionStateTest extends WingsBaseTest {
     assertThat(parameters.getEncryptedBackendConfigs().keySet()).containsExactlyInAnyOrder("access_token");
   }
 
+  private void assertParametersEnvironmentVariables(TerraformProvisionParameters parameters) {
+    assertThat(parameters.getEnvironmentVariables().keySet()).containsOnly("TF_LOG");
+    assertThat(parameters.getEnvironmentVariables().values()).containsOnly("TRACE");
+    assertThat(parameters.getEncryptedEnvironmentVariables().keySet()).containsExactlyInAnyOrder("access_token");
+  }
+
   private List<NameValuePair> getTerraformVariables() {
     return asList(NameValuePair.builder().name("region").value("us-east").valueType("TEXT").build(),
         NameValuePair.builder().name("vpc_id").value("vpc-id").valueType("TEXT").build(),
@@ -737,6 +785,11 @@ public class TerraformProvisionStateTest extends WingsBaseTest {
   private List<NameValuePair> getTerraformBackendConfigs() {
     return asList(NameValuePair.builder().name("key").value("terraform.tfstate").valueType("TEXT").build(),
         NameValuePair.builder().name("bucket").value("tf-remote-state").valueType("TEXT").build(),
+        NameValuePair.builder().name("access_token").value("access_token").valueType("ENCRYPTED_TEXT").build());
+  }
+
+  private List<NameValuePair> getTerraformEnvironmentVariables() {
+    return asList(NameValuePair.builder().name("TF_LOG").value("TRACE").valueType("TEXT").build(),
         NameValuePair.builder().name("access_token").value("access_token").valueType("ENCRYPTED_TEXT").build());
   }
 
@@ -792,6 +845,40 @@ public class TerraformProvisionStateTest extends WingsBaseTest {
     responseData.setExecutionStatus(ExecutionStatus.FAILED);
     state.handleAsyncResponse(executionContext, responseMap);
     verify(wingsPersistence, never()).save(any(TerraformConfig.class));
+  }
+
+  @Test
+  @Owner(developers = BOJANA)
+  @Category(UnitTests.class)
+  public void testHandleAsyncResponseSaveEnvironmentVariables() {
+    List<NameValuePair> nameValuePairList =
+        asList(NameValuePair.builder().name("key").value("value").valueType("TEXT").build(),
+            NameValuePair.builder().name("password").value("password").valueType("ENCRYPTED_TEXT").build(),
+            NameValuePair.builder().name("nil").valueType("TEXT").build(),
+            NameValuePair.builder().name("noValueType").value("value").valueType(null).build());
+
+    TerraformExecutionData responseData = TerraformExecutionData.builder()
+                                              .executionStatus(ExecutionStatus.SUCCESS)
+                                              .environmentVariables(nameValuePairList)
+                                              .build();
+
+    TerraformInfrastructureProvisioner provisioner = TerraformInfrastructureProvisioner.builder().appId(APP_ID).build();
+    Map<String, ResponseData> responseMap = ImmutableMap.of(ACTIVITY_ID, responseData);
+    state.setRunPlanOnly(false);
+    state.setProvisionerId(PROVISIONER_ID);
+    doReturn(provisioner).when(infrastructureProvisionerService).get(APP_ID, PROVISIONER_ID);
+
+    state.handleAsyncResponse(executionContext, responseMap);
+    ArgumentCaptor<Map> othersArgumentCaptor = ArgumentCaptor.forClass(Map.class);
+    verify(wingsPersistence, times(1)).save(any(TerraformConfig.class));
+    verify(fileService, times(1))
+        .updateParentEntityIdAndVersion(eq(PhaseStep.class), isNull(String.class), isNull(Integer.class),
+            isNull(String.class), othersArgumentCaptor.capture(), eq(FileBucket.TERRAFORM_STATE));
+    Map<String, Object> storeOthersMap = (Map<String, Object>) othersArgumentCaptor.getValue();
+
+    Map<String, String> expectedEncryptedNameValuePair = ImmutableMap.of("password", "password");
+    assertThat(storeOthersMap.get("environment_variables")).isEqualTo(ImmutableMap.of("key", "value"));
+    assertThat(storeOthersMap.get("encrypted_environment_variables")).isEqualTo(expectedEncryptedNameValuePair);
   }
 
   @Test

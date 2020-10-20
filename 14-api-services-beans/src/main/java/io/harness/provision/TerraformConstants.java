@@ -9,11 +9,13 @@ public final class TerraformConstants {
 
   public static final String VARIABLES_KEY = "variables";
   public static final String BACKEND_CONFIGS_KEY = "backend_configs";
+  public static final String ENVIRONMENT_VARS_KEY = "environment_variables";
   public static final String TARGETS_KEY = "targets";
   public static final String TF_VAR_FILES_KEY = "tf_var_files";
   public static final String WORKSPACE_KEY = "tf_workspace";
   public static final String ENCRYPTED_VARIABLES_KEY = "encrypted_variables";
   public static final String ENCRYPTED_BACKEND_CONFIGS_KEY = "encrypted_backend_configs";
+  public static final String ENCRYPTED_ENVIRONMENT_VARS_KEY = "encrypted_environment_variables";
   public static final String TF_NAME_PREFIX = "tfPlan_%s";
   public static final String TF_DESTROY_NAME_PREFIX = "tfDestroyPlan_%s";
   public static final String TF_APPLY_VAR_NAME = "terraformApply";

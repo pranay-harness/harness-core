@@ -226,6 +226,7 @@ public class TerraformRollbackStateTest extends WingsBaseTest {
             .sourceRepoReference("sourceRepoReference")
             .backendConfigs(setVarsAndBackendConfigs ? getTerraformBackendConfigs() : null)
             .variables(setVarsAndBackendConfigs ? getTerraformVariables() : null)
+            .environmentVariables(setVarsAndBackendConfigs ? getTerraformEnvironmentVariables() : null)
             .build();
 
     MorphiaIterator<TerraformConfig, TerraformConfig> morphiaIterator = mock(MorphiaIterator.class);
@@ -260,11 +261,15 @@ public class TerraformRollbackStateTest extends WingsBaseTest {
       assertThat(parameters.getEncryptedVariables()).containsOnlyKeys("access_key", "secret_key");
       assertThat(parameters.getEncryptedBackendConfigs()).containsOnlyKeys("access_token");
       assertThat(parameters.getBackendConfigs()).containsOnlyKeys("bucket", "key");
+      assertThat(parameters.getEnvironmentVariables()).containsOnlyKeys("TF_LOG");
+      assertThat(parameters.getEncryptedEnvironmentVariables()).containsOnlyKeys("secret_key");
     } else {
       assertThat(parameters.getVariables()).isNull();
       assertThat(parameters.getEncryptedVariables()).isNull();
       assertThat(parameters.getBackendConfigs()).isNull();
       assertThat(parameters.getEncryptedBackendConfigs()).isNull();
+      assertThat(parameters.getEnvironmentVariables()).isNull();
+      assertThat(parameters.getEncryptedEnvironmentVariables()).isNull();
     }
     GitConfig gitConfig = parameters.getSourceRepo();
     assertThat(gitConfig.getBranch()).isEqualTo(branch);
@@ -354,6 +359,11 @@ public class TerraformRollbackStateTest extends WingsBaseTest {
     return Arrays.asList(NameValuePair.builder().name("region").value("us-east").valueType("TEXT").build(),
         NameValuePair.builder().name("vpc_id").value("vpc-id").valueType("TEXT").build(),
         NameValuePair.builder().name("access_key").value("access_key").valueType("ENCRYPTED_TEXT").build(),
+        NameValuePair.builder().name("secret_key").value("secret_key").valueType("ENCRYPTED_TEXT").build());
+  }
+
+  private List<NameValuePair> getTerraformEnvironmentVariables() {
+    return Arrays.asList(NameValuePair.builder().name("TF_LOG").value("TRACE").valueType("TEXT").build(),
         NameValuePair.builder().name("secret_key").value("secret_key").valueType("ENCRYPTED_TEXT").build());
   }
 

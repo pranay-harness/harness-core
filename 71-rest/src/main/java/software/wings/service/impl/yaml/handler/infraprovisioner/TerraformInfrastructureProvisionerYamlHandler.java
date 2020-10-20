@@ -52,16 +52,22 @@ public class TerraformInfrastructureProvisionerYamlHandler
     yaml.setSourceRepoBranch(bean.getSourceRepoBranch());
     yaml.setRepoName(bean.getRepoName());
     if (isNotEmpty(bean.getBackendConfigs())) {
-      NameValuePairYamlHandler nameValuePairYamlHandler = getNameValuePairYamlHandler();
-      List<NameValuePair.Yaml> nvpYamlList =
-          bean.getBackendConfigs()
-              .stream()
-              .map(nameValuePair -> nameValuePairYamlHandler.toYaml(nameValuePair, bean.getAppId()))
-              .collect(toList());
-
-      yaml.setBackendConfigs(Utils.getSortedNameValuePairYamlList(nvpYamlList));
+      yaml.setBackendConfigs(getSortedNameValuePairYamlList(bean.getBackendConfigs(), bean.getAppId()));
+    }
+    if (isNotEmpty(bean.getEnvironmentVariables())) {
+      yaml.setEnvironmentVariables(getSortedNameValuePairYamlList(bean.getEnvironmentVariables(), bean.getAppId()));
     }
     return yaml;
+  }
+
+  private List<software.wings.beans.NameValuePair.Yaml> getSortedNameValuePairYamlList(
+      List<NameValuePair> nameValuePairList, String appId) {
+    NameValuePairYamlHandler nameValuePairYamlHandler = getNameValuePairYamlHandler();
+    List<NameValuePair.Yaml> nvpYamlList =
+        nameValuePairList.stream()
+            .map(nameValuePair -> nameValuePairYamlHandler.toYaml(nameValuePair, appId))
+            .collect(toList());
+    return Utils.getSortedNameValuePairYamlList(nvpYamlList);
   }
 
   @Override
@@ -102,18 +108,22 @@ public class TerraformInfrastructureProvisionerYamlHandler
     bean.setRepoName(yaml.getRepoName());
 
     if (isNotEmpty(yaml.getBackendConfigs())) {
-      List<NameValuePair> nameValuePairList = yaml.getBackendConfigs()
-                                                  .stream()
-                                                  .map(nvpYaml
-                                                      -> NameValuePair.builder()
-                                                             .name(nvpYaml.getName())
-                                                             .value(nvpYaml.getValue())
-                                                             .valueType(nvpYaml.getValueType())
-                                                             .build())
-                                                  .collect(toList());
-
-      bean.setBackendConfigs(nameValuePairList);
+      bean.setBackendConfigs(getNameValuePairList(yaml.getBackendConfigs()));
     }
+    if (isNotEmpty(yaml.getEnvironmentVariables())) {
+      bean.setEnvironmentVariables(getNameValuePairList(yaml.getEnvironmentVariables()));
+    }
+  }
+
+  private List<NameValuePair> getNameValuePairList(List<NameValuePair.Yaml> nameValuePairList) {
+    return nameValuePairList.stream()
+        .map(nvpYaml
+            -> NameValuePair.builder()
+                   .name(nvpYaml.getName())
+                   .value(nvpYaml.getValue())
+                   .valueType(nvpYaml.getValueType())
+                   .build())
+        .collect(toList());
   }
 
   @Override

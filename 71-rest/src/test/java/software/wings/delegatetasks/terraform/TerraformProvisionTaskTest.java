@@ -8,6 +8,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.joor.Reflect.on;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyLong;
+import static org.mockito.Matchers.anyMap;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.spy;
@@ -74,6 +75,7 @@ public class TerraformProvisionTaskTest extends WingsBaseTest {
 
   private GitConfig gitConfig;
   private Map<String, EncryptedDataDetail> encryptedBackendConfigs;
+  private Map<String, EncryptedDataDetail> encryptedEnvironmentVariables;
   private EncryptedDataDetail encryptedDataDetail;
   private List<EncryptedDataDetail> sourceRepoEncryptyonDetails;
 
@@ -103,6 +105,9 @@ public class TerraformProvisionTaskTest extends WingsBaseTest {
                               .build();
     encryptedBackendConfigs.put("var2", encryptedDataDetail);
 
+    encryptedEnvironmentVariables = new HashMap<>();
+    encryptedEnvironmentVariables.put("key", encryptedDataDetail);
+
     sourceRepoEncryptyonDetails = new ArrayList<>();
     sourceRepoEncryptyonDetails.add(EncryptedDataDetail.builder().build());
 
@@ -113,7 +118,7 @@ public class TerraformProvisionTaskTest extends WingsBaseTest {
     doReturn(0)
         .when(terraformProvisionTaskSpy)
         .executeShellCommand(
-            anyString(), anyString(), any(TerraformProvisionParameters.class), any(LogOutputStream.class));
+            anyString(), anyString(), any(TerraformProvisionParameters.class), anyMap(), any(LogOutputStream.class));
     doReturn("latestCommit")
         .when(terraformProvisionTaskSpy)
         .getLatestCommitSHAFromLocalRepo(any(GitOperationContext.class));
@@ -293,6 +298,9 @@ public class TerraformProvisionTaskTest extends WingsBaseTest {
     Map<String, String> variables = new HashMap<>();
     variables.put("var3", "val3");
 
+    Map<String, String> environmentVariables = new HashMap<>();
+    environmentVariables.put("TF_LOG", "TRACE");
+
     List<String> tfVarFiles = Arrays.asList("tfVarFile");
 
     return TerraformProvisionParameters.builder()
@@ -311,6 +319,8 @@ public class TerraformProvisionTaskTest extends WingsBaseTest {
         .runPlanOnly(runPlanOnly)
         .exportPlanToApplyStep(exportPlanToApplyStep)
         .variables(variables)
+        .environmentVariables(environmentVariables)
+        .encryptedEnvironmentVariables(encryptedEnvironmentVariables)
         .tfVarFiles(tfVarFiles)
         .saveTerraformJson(saveTerraformJson)
         .build();

@@ -35,6 +35,7 @@ public class TerraformInfrastructureProvisioner extends InfrastructureProvisione
   @NotNull private String path;
   private String normalizedPath;
   private List<NameValuePair> backendConfigs;
+  private List<NameValuePair> environmentVariables;
   private boolean templatized;
   private List<String> workspaces;
 
@@ -52,7 +53,7 @@ public class TerraformInfrastructureProvisioner extends InfrastructureProvisione
       String sourceRepoBranch, String path, List<NameValuePair> variables,
       List<InfrastructureMappingBlueprint> mappingBlueprints, String accountId, String description,
       EmbeddedUser createdBy, long createdAt, EmbeddedUser lastUpdatedBy, long lastUpdatedAt, String entityYamlPath,
-      List<NameValuePair> backendConfigs, String repoName) {
+      List<NameValuePair> backendConfigs, String repoName, List<NameValuePair> environmentVariables) {
     super(name, description, TERRAFORM.name(), variables, mappingBlueprints, accountId, uuid, appId, createdBy,
         createdAt, lastUpdatedBy, lastUpdatedAt, entityYamlPath);
     setSourceRepoSettingId(sourceRepoSettingId);
@@ -61,6 +62,7 @@ public class TerraformInfrastructureProvisioner extends InfrastructureProvisione
     setNormalizedPath(FilenameUtils.normalize(path));
     this.backendConfigs = backendConfigs;
     setRepoName(repoName);
+    this.environmentVariables = environmentVariables;
   }
 
   /**
@@ -76,13 +78,14 @@ public class TerraformInfrastructureProvisioner extends InfrastructureProvisione
     private String path;
     private String normalizedPath;
     private List<NameValuePair.Yaml> backendConfigs;
+    private List<NameValuePair.Yaml> environmentVariables;
     private String repoName;
 
     @Builder
     public Yaml(String type, String harnessApiVersion, String description, String infrastructureProvisionerType,
         List<NameValuePair.Yaml> variables, List<InfrastructureMappingBlueprint.Yaml> mappingBlueprints,
         String sourceRepoSettingName, String sourceRepoBranch, String path, List<NameValuePair.Yaml> backendConfigs,
-        String repoName) {
+        String repoName, List<NameValuePair.Yaml> environmentVariables) {
       super(type, harnessApiVersion, description, infrastructureProvisionerType, variables, mappingBlueprints);
       this.sourceRepoSettingName = sourceRepoSettingName;
       this.sourceRepoBranch = sourceRepoBranch;
@@ -90,6 +93,7 @@ public class TerraformInfrastructureProvisioner extends InfrastructureProvisione
       this.normalizedPath = FilenameUtils.normalize(path);
       this.backendConfigs = backendConfigs;
       this.repoName = repoName;
+      this.environmentVariables = environmentVariables;
     }
   }
 }

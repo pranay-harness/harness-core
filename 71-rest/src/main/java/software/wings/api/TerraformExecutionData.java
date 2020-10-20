@@ -28,6 +28,7 @@ public class TerraformExecutionData extends StateExecutionData implements Delega
   private TerraformCommand commandExecuted;
   private List<NameValuePair> variables;
   private List<NameValuePair> backendConfigs;
+  private List<NameValuePair> environmentVariables;
 
   private String sourceRepoReference;
   private List<String> targets;

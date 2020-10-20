@@ -33,6 +33,7 @@ import static software.wings.beans.delegation.TerraformProvisionParameters.Terra
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Charsets;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.util.concurrent.UncheckedTimeoutException;
 import com.google.inject.Inject;
 
@@ -93,12 +94,14 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.Map.Entry;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.function.BooleanSupplier;
 import java.util.function.Consumer;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 @Slf4j
 public class TerraformProvisionTask extends AbstractDelegateRunnableTask {
@@ -142,7 +145,7 @@ public class TerraformProvisionTask extends AbstractDelegateRunnableTask {
       return;
     }
 
-    writer.write(format("%s = \"%s\"%n", key, value.replaceAll("\"", "\\\"")));
+    writer.write(format("%s = \"%s\" %n", key, value.replaceAll("\"", "\\\"")));
   }
 
   private String getAllTfVarFilesArgument(String userDir, String gitDir, List<String> tfVarFiles) {
@@ -206,6 +209,9 @@ public class TerraformProvisionTask extends AbstractDelegateRunnableTask {
          PlanJsonLogOutputStream planJsonLogOutputStream = new PlanJsonLogOutputStream();) {
       ensureLocalCleanup(scriptDirectory);
       String sourceRepoReference = getLatestCommitSHAFromLocalRepo(gitOperationContext);
+      final Map<String, String> envVars = getEnvironmentVariables(parameters);
+      saveExecutionLog(parameters, format("Environment variables: [%s]", collectEnvVarKeys(envVars)),
+          CommandExecutionStatus.RUNNING, INFO);
 
       tfVariablesFile =
           Paths.get(scriptDirectory, format(TERRAFORM_VARIABLES_FILE_NAME, parameters.getEntityId())).toFile();
@@ -259,7 +265,7 @@ public class TerraformProvisionTask extends AbstractDelegateRunnableTask {
            */
           saveExecutionLog(parameters, commandToLog, CommandExecutionStatus.RUNNING, INFO);
           code = executeShellCommand(
-              format("echo \"no\" | %s", command), scriptDirectory, parameters, activityLogOutputStream);
+              format("echo \"no\" | %s", command), scriptDirectory, parameters, envVars, activityLogOutputStream);
 
           if (isNotEmpty(parameters.getWorkspace())) {
             WorkspaceCommand workspaceCommand =
@@ -267,23 +273,23 @@ public class TerraformProvisionTask extends AbstractDelegateRunnableTask {
             command = format("terraform workspace %s %s", workspaceCommand.command, parameters.getWorkspace());
             commandToLog = command;
             saveExecutionLog(parameters, commandToLog, CommandExecutionStatus.RUNNING, INFO);
-            code = executeShellCommand(command, scriptDirectory, parameters, activityLogOutputStream);
+            code = executeShellCommand(command, scriptDirectory, parameters, envVars, activityLogOutputStream);
           }
           if (code == 0) {
             command = format("terraform refresh -input=false %s %s ", targetArgs, varParams);
             commandToLog = format("terraform refresh -input=false %s %s ", targetArgs, uiLogs);
             saveExecutionLog(parameters, commandToLog, CommandExecutionStatus.RUNNING, INFO);
-            code = executeShellCommand(command, scriptDirectory, parameters, activityLogOutputStream);
+            code = executeShellCommand(command, scriptDirectory, parameters, envVars, activityLogOutputStream);
           }
           // if the plan exists we should use the approved plan, instead create a plan
           if (code == 0 && parameters.getTerraformPlan() == null) {
             command = format("terraform plan -out=tfplan -input=false %s %s ", targetArgs, varParams);
             commandToLog = format("terraform plan -out=tfplan -input=false %s %s ", targetArgs, uiLogs);
             saveExecutionLog(parameters, commandToLog, CommandExecutionStatus.RUNNING, INFO);
-            code = executeShellCommand(command, scriptDirectory, parameters, planLogOutputStream);
+            code = executeShellCommand(command, scriptDirectory, parameters, envVars, planLogOutputStream);
 
             if (code == 0 && parameters.isSaveTerraformJson()) {
-              code = executeTerraformShowCommand(parameters, scriptDirectory, APPLY, planJsonLogOutputStream);
+              code = executeTerraformShowCommand(parameters, scriptDirectory, APPLY, envVars, planJsonLogOutputStream);
             }
           } else if (code == 0 && parameters.getTerraformPlan() != null) {
             // case when we are inheriting the approved  plan
@@ -294,13 +300,13 @@ public class TerraformProvisionTask extends AbstractDelegateRunnableTask {
             command = "terraform apply -input=false tfplan";
             commandToLog = command;
             saveExecutionLog(parameters, commandToLog, CommandExecutionStatus.RUNNING, INFO);
-            code = executeShellCommand(command, scriptDirectory, parameters, activityLogOutputStream);
+            code = executeShellCommand(command, scriptDirectory, parameters, envVars, activityLogOutputStream);
           }
           if (code == 0 && !parameters.isRunPlanOnly()) {
             command = format("terraform output --json > %s", tfOutputsFile.toString());
             commandToLog = command;
             saveExecutionLog(parameters, commandToLog, CommandExecutionStatus.RUNNING, INFO);
-            code = executeShellCommand(command, scriptDirectory, parameters, activityLogOutputStream);
+            code = executeShellCommand(command, scriptDirectory, parameters, envVars, activityLogOutputStream);
           }
 
           break;
@@ -311,7 +317,7 @@ public class TerraformProvisionTask extends AbstractDelegateRunnableTask {
                                             : "");
           String commandToLog = command;
           saveExecutionLog(parameters, commandToLog, CommandExecutionStatus.RUNNING, INFO);
-          code = executeShellCommand(command, scriptDirectory, parameters, activityLogOutputStream);
+          code = executeShellCommand(command, scriptDirectory, parameters, envVars, activityLogOutputStream);
 
           if (isNotEmpty(parameters.getWorkspace())) {
             WorkspaceCommand workspaceCommand =
@@ -319,14 +325,14 @@ public class TerraformProvisionTask extends AbstractDelegateRunnableTask {
             command = format("terraform workspace %s %s", workspaceCommand.command, parameters.getWorkspace());
             commandToLog = command;
             saveExecutionLog(parameters, commandToLog, CommandExecutionStatus.RUNNING, INFO);
-            code = executeShellCommand(command, scriptDirectory, parameters, activityLogOutputStream);
+            code = executeShellCommand(command, scriptDirectory, parameters, envVars, activityLogOutputStream);
           }
 
           if (code == 0) {
             command = format("terraform refresh -input=false %s %s", targetArgs, varParams);
             commandToLog = format("terraform refresh -input=false %s %s", targetArgs, uiLogs);
             saveExecutionLog(parameters, commandToLog, CommandExecutionStatus.RUNNING, INFO);
-            code = executeShellCommand(command, scriptDirectory, parameters, activityLogOutputStream);
+            code = executeShellCommand(command, scriptDirectory, parameters, envVars, activityLogOutputStream);
           }
           if (code == 0) {
             if (parameters.isRunPlanOnly()) {
@@ -334,17 +340,18 @@ public class TerraformProvisionTask extends AbstractDelegateRunnableTask {
               commandToLog =
                   format("terraform plan -destroy -out=tfdestroyplan -input=false %s %s ", targetArgs, uiLogs);
               saveExecutionLog(parameters, commandToLog, CommandExecutionStatus.RUNNING, INFO);
-              code = executeShellCommand(command, scriptDirectory, parameters, planLogOutputStream);
+              code = executeShellCommand(command, scriptDirectory, parameters, envVars, planLogOutputStream);
 
               if (code == 0 && parameters.isSaveTerraformJson()) {
-                code = executeTerraformShowCommand(parameters, scriptDirectory, DESTROY, planJsonLogOutputStream);
+                code =
+                    executeTerraformShowCommand(parameters, scriptDirectory, DESTROY, envVars, planJsonLogOutputStream);
               }
             } else {
               if (parameters.getTerraformPlan() == null) {
                 command = format("terraform destroy -force %s %s", targetArgs, varParams);
                 commandToLog = format("terraform destroy -force %s %s", targetArgs, uiLogs);
                 saveExecutionLog(parameters, commandToLog, CommandExecutionStatus.RUNNING, INFO);
-                code = executeShellCommand(command, scriptDirectory, parameters, activityLogOutputStream);
+                code = executeShellCommand(command, scriptDirectory, parameters, envVars, activityLogOutputStream);
               } else {
                 // case when we are inheriting the approved destroy plan
                 saveTerraformPlanContentToFile(parameters, scriptDirectory);
@@ -354,7 +361,7 @@ public class TerraformProvisionTask extends AbstractDelegateRunnableTask {
                 command = "terraform apply -input=false tfdestroyplan";
                 commandToLog = command;
                 saveExecutionLog(parameters, commandToLog, CommandExecutionStatus.RUNNING, INFO);
-                code = executeShellCommand(command, scriptDirectory, parameters, activityLogOutputStream);
+                code = executeShellCommand(command, scriptDirectory, parameters, envVars, activityLogOutputStream);
               }
             }
           }
@@ -412,19 +419,10 @@ public class TerraformProvisionTask extends AbstractDelegateRunnableTask {
             planLogFile, new ByteArrayInputStream(planLogOutputStream.getPlanLog().getBytes(StandardCharsets.UTF_8)));
       }
 
-      List<NameValuePair> backendConfigs = new ArrayList<>();
-      if (isNotEmpty(parameters.getBackendConfigs())) {
-        for (Entry<String, String> entry : parameters.getBackendConfigs().entrySet()) {
-          backendConfigs.add(new NameValuePair(entry.getKey(), entry.getValue(), Type.TEXT.name()));
-        }
-      }
-
-      if (isNotEmpty(parameters.getEncryptedBackendConfigs())) {
-        for (Entry<String, EncryptedDataDetail> entry : parameters.getEncryptedBackendConfigs().entrySet()) {
-          backendConfigs.add(new NameValuePair(
-              entry.getKey(), entry.getValue().getEncryptedData().getUuid(), Type.ENCRYPTED_TEXT.name()));
-        }
-      }
+      List<NameValuePair> backendConfigs =
+          getAllVariables(parameters.getBackendConfigs(), parameters.getEncryptedBackendConfigs());
+      List<NameValuePair> environmentVars =
+          getAllVariables(parameters.getEnvironmentVariables(), parameters.getEncryptedEnvironmentVariables());
 
       byte[] terraformPlan = parameters.isRunPlanOnly() && parameters.isExportPlanToApplyStep()
           ? getTerraformPlanFile(scriptDirectory, parameters)
@@ -441,6 +439,7 @@ public class TerraformProvisionTask extends AbstractDelegateRunnableTask {
               .sourceRepoReference(sourceRepoReference)
               .variables(parameters.getRawVariables())
               .backendConfigs(backendConfigs)
+              .environmentVariables(environmentVars)
               .targets(parameters.getTargets())
               .tfVarFiles(parameters.getTfVarFiles())
               .delegateTag(parameters.getDelegateTag())
@@ -472,16 +471,41 @@ public class TerraformProvisionTask extends AbstractDelegateRunnableTask {
     }
   }
 
+  private String collectEnvVarKeys(Map<String, String> envVars) {
+    if (isNotEmpty(envVars)) {
+      return envVars.keySet().stream().collect(Collectors.joining(", "));
+    }
+    return "";
+  }
+
+  private List<NameValuePair> getAllVariables(
+      Map<String, String> variables, Map<String, EncryptedDataDetail> encryptedVariables) {
+    List<NameValuePair> allVars = new ArrayList<>();
+    if (isNotEmpty(variables)) {
+      for (Entry<String, String> entry : variables.entrySet()) {
+        allVars.add(new NameValuePair(entry.getKey(), entry.getValue(), Type.TEXT.name()));
+      }
+    }
+
+    if (isNotEmpty(encryptedVariables)) {
+      for (Entry<String, EncryptedDataDetail> entry : encryptedVariables.entrySet()) {
+        allVars.add(new NameValuePair(
+            entry.getKey(), entry.getValue().getEncryptedData().getUuid(), Type.ENCRYPTED_TEXT.name()));
+      }
+    }
+    return allVars;
+  }
+
   private int executeTerraformShowCommand(TerraformProvisionParameters parameters, String scriptDirectory,
-      TerraformProvisionParameters.TerraformCommand terraformCommand, PlanJsonLogOutputStream planJsonLogOutputStream)
-      throws IOException, InterruptedException, TimeoutException {
+      TerraformProvisionParameters.TerraformCommand terraformCommand, Map<String, String> envVars,
+      PlanJsonLogOutputStream planJsonLogOutputStream) throws IOException, InterruptedException, TimeoutException {
     String planName =
         terraformCommand == APPLY ? TERRAFORM_PLAN_FILE_OUTPUT_NAME : TERRAFORM_DESTROY_PLAN_FILE_OUTPUT_NAME;
     saveExecutionLog(parameters, format("%nGenerating json representation of %s %n", planName),
         CommandExecutionStatus.RUNNING, INFO);
     String command = format("terraform show -json %s", planName);
     saveExecutionLog(parameters, command, CommandExecutionStatus.RUNNING, INFO);
-    int code = executeShellCommand(command, scriptDirectory, parameters, planJsonLogOutputStream);
+    int code = executeShellCommand(command, scriptDirectory, parameters, envVars, planJsonLogOutputStream);
     if (code == 0) {
       saveExecutionLog(parameters,
           format("%nJson representation of %s is exported as a variable %s %n", planName,
@@ -489,6 +513,21 @@ public class TerraformProvisionTask extends AbstractDelegateRunnableTask {
           CommandExecutionStatus.RUNNING, INFO);
     }
     return code;
+  }
+
+  private ImmutableMap<String, String> getEnvironmentVariables(TerraformProvisionParameters parameters)
+      throws IOException {
+    ImmutableMap.Builder<String, String> envVars = ImmutableMap.builder();
+    if (isNotEmpty(parameters.getEnvironmentVariables())) {
+      envVars.putAll(parameters.getEnvironmentVariables());
+    }
+    if (isNotEmpty(parameters.getEncryptedEnvironmentVariables())) {
+      for (Entry<String, EncryptedDataDetail> entry : parameters.getEncryptedEnvironmentVariables().entrySet()) {
+        String value = String.valueOf(encryptionService.getDecryptedValue(entry.getValue()));
+        envVars.put(entry.getKey(), value);
+      }
+    }
+    return envVars.build();
   }
 
   private TerraformExecutionData logErrorAndGetFailureResponse(
@@ -594,12 +633,14 @@ public class TerraformProvisionTask extends AbstractDelegateRunnableTask {
   }
 
   public int executeShellCommand(String command, String directory, TerraformProvisionParameters parameters,
-      LogOutputStream logOutputStream) throws RuntimeException, IOException, InterruptedException, TimeoutException {
+      Map<String, String> envVars, LogOutputStream logOutputStream)
+      throws RuntimeException, IOException, InterruptedException, TimeoutException {
     String joinedCommands = format("cd \"%s\" && %s", directory, command);
     ProcessExecutor processExecutor = new ProcessExecutor()
                                           .timeout(parameters.getTimeoutInMillis(), TimeUnit.MILLISECONDS)
                                           .command("/bin/sh", "-c", joinedCommands)
                                           .readOutput(true)
+                                          .environment(envVars)
                                           .redirectOutput(logOutputStream);
 
     ProcessResult processResult = processExecutor.execute();

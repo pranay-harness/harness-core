@@ -200,6 +200,10 @@ public class InfrastructureProvisionerServiceImpl implements InfrastructureProvi
 
   void restrictDuplicateVariables(InfrastructureProvisioner infrastructureProvisioner) {
     List<NameValuePair> variables = infrastructureProvisioner.getVariables();
+    ensureNoDuplicateVars(variables);
+  }
+
+  private void ensureNoDuplicateVars(List<NameValuePair> variables) {
     if (isEmpty(variables)) {
       return;
     }
@@ -207,7 +211,7 @@ public class InfrastructureProvisionerServiceImpl implements InfrastructureProvi
     HashSet<String> distinctVariableNames = new HashSet<>();
     Set<String> duplicateVariableNames = new HashSet<>();
     for (NameValuePair variable : variables) {
-      if (!distinctVariableNames.contains(variable.getName())) {
+      if (!distinctVariableNames.contains(variable.getName().trim())) {
         distinctVariableNames.add(variable.getName());
       } else {
         duplicateVariableNames.add(variable.getName());
@@ -773,8 +777,11 @@ public class InfrastructureProvisionerServiceImpl implements InfrastructureProvi
       throw new InvalidRequestException("Repo name cannot be empty for account level git connector");
     }
 
-    boolean areVariablesValid =
-        areKeysMongoCompliant(terraformProvisioner.getVariables(), terraformProvisioner.getBackendConfigs());
+    ensureNoDuplicateVars(terraformProvisioner.getBackendConfigs());
+    ensureNoDuplicateVars(terraformProvisioner.getEnvironmentVariables());
+
+    boolean areVariablesValid = areKeysMongoCompliant(terraformProvisioner.getVariables(),
+        terraformProvisioner.getBackendConfigs(), terraformProvisioner.getEnvironmentVariables());
     if (!areVariablesValid) {
       throw new InvalidRequestException("The following characters are not allowed in terraform "
           + "variable names: . and $");
