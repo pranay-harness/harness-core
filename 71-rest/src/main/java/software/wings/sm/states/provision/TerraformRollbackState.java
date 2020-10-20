@@ -163,6 +163,15 @@ public class TerraformRollbackState extends TerraformProvisionState {
             infrastructureProvisionerService.extractEncryptedTextVariables(allBackendConfigs, context.getAppId());
       }
 
+      List<NameValuePair> allEnvironmentVariables = configParameter.getEnvironmentVariables();
+      Map<String, String> envVars = null;
+      Map<String, EncryptedDataDetail> encryptedEnvVars = null;
+      if (allEnvironmentVariables != null) {
+        envVars = infrastructureProvisionerService.extractUnresolvedTextVariables(allEnvironmentVariables);
+        encryptedEnvVars =
+            infrastructureProvisionerService.extractEncryptedTextVariables(allEnvironmentVariables, context.getAppId());
+      }
+
       List<String> targets = configParameter.getTargets();
       targets = resolveTargets(targets, context);
       gitConfigHelperService.convertToRepoGitConfig(
@@ -192,6 +201,8 @@ public class TerraformRollbackState extends TerraformProvisionState {
               .encryptedVariables(encryptedTextVariables)
               .backendConfigs(backendConfigs)
               .encryptedBackendConfigs(encryptedBackendConfigs)
+              .environmentVariables(envVars)
+              .encryptedEnvironmentVariables(encryptedEnvVars)
               .targets(targets)
               .runPlanOnly(false)
               .tfVarFiles(configParameter.getTfVarFiles())
