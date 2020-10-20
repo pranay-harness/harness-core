@@ -16,6 +16,7 @@ import okhttp3.Protocol;
 import okhttp3.Request;
 import okhttp3.Response;
 import okhttp3.ResponseBody;
+import okhttp3.internal.http.RealResponseBody;
 import okio.BufferedSource;
 import okio.Okio;
 import org.apache.commons.lang3.reflect.FieldUtils;
@@ -53,7 +54,7 @@ public class PwnedPasswordCheckerTest extends WingsBaseTest {
     OkHttpClient mockHttpClient = mock(OkHttpClient.class);
     Call call = mock(Call.class);
     Request request = new Request.Builder().url("https://dummyurl.com").method("GET", null).build();
-    ResponseBody responseBody = null; // new RealResponseBody("text/plain", mockResponseBytes.length, bufferedSource);
+    ResponseBody responseBody = new RealResponseBody("text/plain", mockResponseBytes.length, bufferedSource);
     Response response = new Response.Builder()
                             .code(200)
                             .body(responseBody)

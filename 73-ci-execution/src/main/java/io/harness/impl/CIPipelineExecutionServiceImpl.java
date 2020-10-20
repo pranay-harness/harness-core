@@ -36,11 +36,9 @@ public class CIPipelineExecutionServiceImpl implements CIPipelineExecutionServic
     // User user = UserThreadLocal.get()
     Map<String, String> setupAbstractions = new HashMap<>();
     setupAbstractions.put("accountId", ngPipelineEntity.getAccountId());
-    setupAbstractions.put("orgIdentifier", ngPipelineEntity.getOrgIdentifier());
-    setupAbstractions.put("projectIdentifier", ngPipelineEntity.getProjectIdentifier());
-    setupAbstractions.put("userEmail", "harsh.jain@harness.io");
     setupAbstractions.put("userId", "harsh");
     setupAbstractions.put("userName", "harsh jain");
+    setupAbstractions.put("userEmail", "harsh.jain@harness.io");
 
     PlanExecution planExecution = orchestrationService.startExecution(plan, setupAbstractions);
     createCIBuild(ngPipelineEntity, ciExecutionArgs, planExecution, buildNumber);

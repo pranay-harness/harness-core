@@ -20,7 +20,6 @@ import io.harness.callback.DelegateCallbackToken;
 import io.harness.callback.MongoDatabase;
 import io.harness.cdng.pipeline.service.NGPipelineService;
 import io.harness.cdng.pipeline.service.NGPipelineServiceImpl;
-import io.harness.connector.apis.client.ConnectorResourceClientModule;
 import io.harness.core.ci.services.BuildNumberService;
 import io.harness.core.ci.services.BuildNumberServiceImpl;
 import io.harness.delegate.task.HDelegateTask;
@@ -28,9 +27,11 @@ import io.harness.grpc.DelegateServiceDriverGrpcClientModule;
 import io.harness.grpc.DelegateServiceGrpcClient;
 import io.harness.grpc.client.ManagerGrpcClientModule;
 import io.harness.manage.ManagedScheduledExecutorService;
+import io.harness.managerclient.ManagerCIResource;
+import io.harness.managerclient.ManagerClientFactory;
 import io.harness.persistence.HPersistence;
-import io.harness.secretmanagerclient.SecretManagementClientModule;
-import io.harness.secrets.SecretNGManagerClientModule;
+import io.harness.security.ServiceTokenGenerator;
+import io.harness.serializer.kryo.KryoConverterFactory;
 import io.harness.service.DelegateServiceDriverModule;
 import io.harness.states.CIDelegateTaskExecutor;
 import io.harness.tasks.TaskExecutor;
@@ -48,10 +49,18 @@ import java.util.function.Supplier;
 
 @Slf4j
 public class CIManagerServiceModule extends AbstractModule {
+  private final String managerBaseUrl;
   private final CIManagerConfiguration ciManagerConfiguration;
 
-  public CIManagerServiceModule(CIManagerConfiguration ciManagerConfiguration) {
+  public CIManagerServiceModule(CIManagerConfiguration ciManagerConfiguration, String managerBaseUrl) {
     this.ciManagerConfiguration = ciManagerConfiguration;
+    this.managerBaseUrl = managerBaseUrl;
+  }
+
+  @Provides
+  @Singleton
+  ManagerClientFactory managerClientFactory(KryoConverterFactory kryoConverterFactory) {
+    return new ManagerClientFactory(managerBaseUrl, new ServiceTokenGenerator(), kryoConverterFactory);
   }
 
   @Provides
@@ -91,6 +100,7 @@ public class CIManagerServiceModule extends AbstractModule {
     bind(SecretManager.class).to(NoOpSecretManagerImpl.class);
     bind(NGPipelineService.class).to(NGPipelineServiceImpl.class);
     bind(CIBuildInfoService.class).to(CIBuildInfoServiceImpl.class);
+    bind(ManagerCIResource.class).toProvider(ManagerClientFactory.class);
     bind(CIServiceAuthSecretKey.class).to(CIServiceAuthSecretKeyImpl.class);
     bind(BuildNumberService.class).to(BuildNumberServiceImpl.class);
     bind(ScheduledExecutorService.class)
@@ -110,12 +120,5 @@ public class CIManagerServiceModule extends AbstractModule {
                                             .target(ciManagerConfiguration.getManagerTarget())
                                             .authority(ciManagerConfiguration.getManagerAuthority())
                                             .build()));
-
-    install(new SecretManagementClientModule(
-        ciManagerConfiguration.getManagerClientConfig(), ciManagerConfiguration.getNgManagerServiceSecret()));
-    install(new ConnectorResourceClientModule(
-        ciManagerConfiguration.getNgManagerClientConfig(), ciManagerConfiguration.getNgManagerServiceSecret()));
-    install(new SecretNGManagerClientModule(
-        ciManagerConfiguration.getNgManagerClientConfig(), ciManagerConfiguration.getNgManagerServiceSecret()));
   }
 }

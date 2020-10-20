@@ -5,7 +5,6 @@ package software.wings.delegatetasks.citasks.cik8handler.container;
  * private git repositories using basic auth and SSH keys.
  */
 
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.k8s.KubernetesConvention.getKubernetesGitSecretName;
 import static io.harness.validation.Validator.notNullCheck;
 import static software.wings.delegatetasks.citasks.cik8handler.params.CIGitConstants.GIT_CLONE_CONTAINER_NAME;
@@ -34,15 +33,14 @@ import io.fabric8.kubernetes.api.model.Volume;
 import io.fabric8.kubernetes.api.model.VolumeBuilder;
 import io.fabric8.kubernetes.api.model.VolumeMount;
 import io.fabric8.kubernetes.api.model.VolumeMountBuilder;
-import io.harness.delegate.beans.connector.ConnectorType;
-import io.harness.delegate.beans.connector.gitconnector.GitAuthType;
-import io.harness.delegate.beans.connector.gitconnector.GitConfigDTO;
 import io.harness.exception.InvalidArgumentsException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.k8s.model.ImageDetails;
 import lombok.extern.slf4j.Slf4j;
-import software.wings.beans.ci.pod.ConnectorDetails;
+import software.wings.beans.GitConfig;
+import software.wings.beans.GitFetchFilesConfig;
+import software.wings.beans.GitFileConfig;
 import software.wings.beans.ci.pod.ContainerParams;
 import software.wings.beans.ci.pod.ImageDetailsWithConnector;
 import software.wings.delegatetasks.citasks.cik8handler.SecretSpecBuilder;
@@ -61,6 +59,8 @@ import java.util.Map;
 public class GitCloneContainerSpecBuilder extends BaseContainerSpecBuilder {
   private static final List<String> CONTAINER_BASH_EXEC_CMD = Arrays.asList("/bin/sh", "-c", "--");
   private static final Boolean GIT_CLONE_CONTAINER_PRIVILEGE = Boolean.FALSE;
+  private static final String GIT_REPO_HTTP_PREFIX = "http";
+  private static final String GIT_REPO_SSH_PREFIX = "git";
 
   private static final String BASIC_AUTH_CONTAINER_ARG_FORMAT =
       "git clone -b %s --single-branch -- https://$(%s):$(%s)@%s %s/%s";
@@ -72,36 +72,30 @@ public class GitCloneContainerSpecBuilder extends BaseContainerSpecBuilder {
    * Returns container spec to clone a git repository using basic auth or SSH keys.
    */
   public ContainerSpecBuilderResponse createGitCloneSpec(GitCloneContainerParams gitCloneContainerParams) {
-    ConnectorDetails gitConnectorDetails = gitCloneContainerParams.getGitConnectorDetails();
-    if (gitConnectorDetails == null || gitConnectorDetails.getConnectorDTO() == null
-        || gitConnectorDetails.getConnectorDTO().getConnectorInfo().getConnectorType() != ConnectorType.GIT) {
+    GitFetchFilesConfig gitFetchFilesConfig = gitCloneContainerParams.getGitFetchFilesConfig();
+    if (gitFetchFilesConfig == null || gitFetchFilesConfig.getGitConfig() == null
+        || gitFetchFilesConfig.getGitConfig().getRepoUrl() == null) {
       logger.info("Git repository information not provided. Skipping git clone container.");
       return null;
     }
 
-    String branchName = gitCloneContainerParams.getBranchName();
-    String commitId = gitCloneContainerParams.getCommitId();
     String workingDir = gitCloneContainerParams.getWorkingDir();
     String stepExecVolumeName = gitCloneContainerParams.getStepExecVolumeName();
-    return createGitCloneSpecInternal(gitConnectorDetails, branchName, commitId, workingDir, stepExecVolumeName);
+    return createGitCloneSpecInternal(gitFetchFilesConfig, workingDir, stepExecVolumeName);
   }
 
-  private ContainerSpecBuilderResponse createGitCloneSpecInternal(ConnectorDetails gitConnectorDetails,
-      String branchName, String commitId, String workingDir, String stepExecVolumeName) {
-    notNullCheck("gitConnectorDetails has to be specified for Remote", gitConnectorDetails);
+  private ContainerSpecBuilderResponse createGitCloneSpecInternal(
+      GitFetchFilesConfig gitFetchFilesConfig, String workingDir, String stepExecVolumeName) {
+    notNullCheck("gitFetchFileConfig has to be specified for Remote", gitFetchFilesConfig);
 
-    GitConfigDTO gitConfigDTO =
-        (GitConfigDTO) gitConnectorDetails.getConnectorDTO().getConnectorInfo().getConnectorConfig();
-    if (isEmpty(branchName)) {
-      branchName = gitConfigDTO.getBranchName();
-    }
-
-    notNullCheck("gitConfigDTO has to be specified", gitConfigDTO);
-    notNullCheck("git repo url has to be specified", gitConfigDTO.getUrl());
-    notNullCheck("branch has to be specified", branchName);
-    notNullCheck("working directory has to be specified", workingDir);
-    notNullCheck("step executor volume name has to be specified", stepExecVolumeName);
-    List<String> containerArgs = getContainerArgs(gitConfigDTO, commitId, branchName, workingDir);
+    GitConfig gitConfig = gitFetchFilesConfig.getGitConfig();
+    GitFileConfig gitFileConfig = gitFetchFilesConfig.getGitFileConfig();
+    notNullCheck("gitConfig has to be specified", gitConfig);
+    notNullCheck("gitFileConfig has to be specified", gitFileConfig);
+    notNullCheck("branch has to be specified", gitFileConfig.getBranch());
+    notNullCheck("Working director has to be specified", workingDir);
+    notNullCheck("Step executor volume name has to be specified", stepExecVolumeName);
+    List<String> containerArgs = getContainerArgs(gitFileConfig, gitConfig, workingDir);
 
     Map<String, String> volumeToMountPath = new HashMap<>();
     volumeToMountPath.put(stepExecVolumeName, CIGitConstants.STEP_EXEC_VOLUME_MOUNT_PATH);
@@ -115,7 +109,7 @@ public class GitCloneContainerSpecBuilder extends BaseContainerSpecBuilder {
             .volumeToMountPath(volumeToMountPath)
             .commands(CONTAINER_BASH_EXEC_CMD)
             .args(containerArgs)
-            .gitConnectorDetails(gitConnectorDetails)
+            .gitFetchFilesConfig(gitFetchFilesConfig)
             .stepExecWorkingDir(workingDir)
             .stepExecVolumeName(stepExecVolumeName)
             .build();
@@ -129,7 +123,7 @@ public class GitCloneContainerSpecBuilder extends BaseContainerSpecBuilder {
    */
   protected void decorateSpec(
       ContainerParams containerParams, ContainerSpecBuilderResponse containerSpecBuilderResponse) {
-    GitCloneContainerParams gitCloneContainerParams;
+    GitCloneContainerParams gitCloneContainerParams = null;
     if (containerParams.getType() == ContainerParams.Type.K8_GIT_CLONE) {
       gitCloneContainerParams = (GitCloneContainerParams) containerParams;
     } else {
@@ -138,10 +132,9 @@ public class GitCloneContainerSpecBuilder extends BaseContainerSpecBuilder {
     }
 
     ContainerBuilder containerBuilder = containerSpecBuilderResponse.getContainerBuilder();
-    ConnectorDetails gitConnectorDetails = gitCloneContainerParams.getGitConnectorDetails();
-    GitConfigDTO gitConfig =
-        (GitConfigDTO) gitConnectorDetails.getConnectorDTO().getConnectorInfo().getConnectorConfig();
-    String gitSecret = getKubernetesGitSecretName(gitConfig.getUrl());
+    GitFetchFilesConfig gitFetchFilesConfig = gitCloneContainerParams.getGitFetchFilesConfig();
+    GitConfig gitConfig = gitFetchFilesConfig.getGitConfig();
+    String gitSecret = getKubernetesGitSecretName(gitConfig.getRepoUrl());
 
     ArrayList<EnvVar> envVars = getEnvVars(gitConfig, gitSecret);
     containerBuilder.withEnv(envVars);
@@ -169,10 +162,10 @@ public class GitCloneContainerSpecBuilder extends BaseContainerSpecBuilder {
   /**
    * Returns environment variables for git clone container spec.
    */
-  private ArrayList<EnvVar> getEnvVars(GitConfigDTO gitConfig, String gitSecret) {
+  private ArrayList<EnvVar> getEnvVars(GitConfig gitConfig, String gitSecret) {
     ArrayList<EnvVar> envVars = new ArrayList<>();
 
-    if (gitConfig.getGitAuthType() == GitAuthType.HTTP) {
+    if (gitConfig.getRepoUrl().toLowerCase().startsWith(GIT_REPO_HTTP_PREFIX)) {
       EnvVarSource userNameSource = new EnvVarSourceBuilder()
                                         .withSecretKeyRef(new SecretKeySelectorBuilder()
                                                               .withName(gitSecret)
@@ -201,22 +194,23 @@ public class GitCloneContainerSpecBuilder extends BaseContainerSpecBuilder {
   /**
    * Returns container arguments to clone a git repository using either basic auth or SSH keys.
    */
-  private List<String> getContainerArgs(
-      GitConfigDTO gitConfigDTO, String commitId, String branchName, String workingDir) {
-    String repoUrl = gitConfigDTO.getUrl();
+  private List<String> getContainerArgs(GitFileConfig gitFileConfig, GitConfig gitConfig, String workingDir) {
+    String branchName = gitFileConfig.getBranch();
+    String commitId = gitFileConfig.getCommitId();
     String volMountPath = CIGitConstants.STEP_EXEC_VOLUME_MOUNT_PATH;
     List<String> containerArgs = new ArrayList<>();
     String containerArg;
-    if (gitConfigDTO.getGitAuthType() == GitAuthType.HTTP) {
-      String gitUrl = repoUrl.substring(repoUrl.indexOf("://") + 3);
+    if (gitConfig.getRepoUrl().toLowerCase().startsWith(GIT_REPO_HTTP_PREFIX)) {
+      String gitUrl = gitConfig.getRepoUrl().substring(gitConfig.getRepoUrl().indexOf("://") + 3);
       containerArg = String.format(BASIC_AUTH_CONTAINER_ARG_FORMAT, branchName, GIT_USERNAME_ENV_VAR, GIT_PASS_ENV_VAR,
           gitUrl, volMountPath, workingDir);
-    } else if (gitConfigDTO.getGitAuthType() == GitAuthType.SSH) {
+    } else if (gitConfig.getRepoUrl().toLowerCase().startsWith(GIT_REPO_SSH_PREFIX)) {
       String sshKeyPath = String.format("%s/%s", GIT_SSH_VOL_MOUNT_PATH, SecretSpecBuilder.GIT_SECRET_SSH_KEY);
-      containerArg = String.format(SSH_CONTAINER_ARG_FORMAT, sshKeyPath, branchName, repoUrl, volMountPath, workingDir);
+      containerArg = String.format(
+          SSH_CONTAINER_ARG_FORMAT, sshKeyPath, branchName, gitConfig.getRepoUrl(), volMountPath, workingDir);
     } else {
-      String errMsg =
-          String.format("Invalid GIT authentication scheme %s for repo %s", gitConfigDTO.getGitAuthType(), repoUrl);
+      String errMsg = String.format("Invalid GIT authentication scheme %s for repo %s",
+          gitConfig.getAuthenticationScheme(), gitConfig.getRepoUrl());
       logger.error(errMsg);
       throw new InvalidArgumentsException(errMsg, WingsException.USER);
     }
@@ -232,8 +226,8 @@ public class GitCloneContainerSpecBuilder extends BaseContainerSpecBuilder {
    * Creates a volume with GIT SSH keys secret and returns it. Git clone container will mount this volume to access the
    * SSH key required to clone a git repository.
    */
-  private CIVolumeResponse getGitSecretVolume(GitConfigDTO gitConfig, String gitSecret) {
-    if (gitConfig.getGitAuthType() == GitAuthType.SSH) {
+  private CIVolumeResponse getGitSecretVolume(GitConfig gitConfig, String gitSecret) {
+    if (gitConfig.getRepoUrl().toLowerCase().startsWith(GIT_REPO_SSH_PREFIX)) {
       VolumeMount volumeMount =
           new VolumeMountBuilder().withName(GIT_SSH_VOL_NAME).withMountPath(GIT_SSH_VOL_MOUNT_PATH).build();
       Volume volume = new VolumeBuilder()

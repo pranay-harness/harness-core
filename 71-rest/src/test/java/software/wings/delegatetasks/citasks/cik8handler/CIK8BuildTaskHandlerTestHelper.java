@@ -6,36 +6,27 @@ import static software.wings.beans.ci.pod.SecretParams.Type.FILE;
 import static software.wings.beans.ci.pod.SecretParams.Type.TEXT;
 import static software.wings.delegatetasks.citasks.cik8handler.SecretSpecBuilder.SECRET_KEY;
 
-import io.harness.connector.apis.dto.ConnectorDTO;
-import io.harness.connector.apis.dto.ConnectorInfoDTO;
-import io.harness.delegate.beans.connector.ConnectorType;
-import io.harness.delegate.beans.connector.docker.DockerAuthType;
-import io.harness.delegate.beans.connector.docker.DockerAuthenticationDTO;
-import io.harness.delegate.beans.connector.docker.DockerConnectorDTO;
-import io.harness.delegate.beans.connector.docker.DockerUserNamePasswordDTO;
-import io.harness.delegate.beans.connector.gitconnector.GitAuthType;
-import io.harness.delegate.beans.connector.gitconnector.GitConfigDTO;
-import io.harness.delegate.beans.connector.gitconnector.GitSSHAuthenticationDTO;
-import io.harness.delegate.beans.connector.k8Connector.KubernetesClusterConfigDTO;
-import io.harness.encryption.Scope;
-import io.harness.encryption.SecretRefData;
 import io.harness.k8s.model.ImageDetails;
+import io.harness.security.encryption.EncryptableSettingWithEncryptionDetails;
 import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.security.encryption.EncryptedRecordData;
 import io.harness.security.encryption.EncryptionType;
+import software.wings.beans.DockerConfig;
+import software.wings.beans.GcpConfig;
+import software.wings.beans.GitConfig;
+import software.wings.beans.GitFetchFilesConfig;
 import software.wings.beans.KmsConfig;
+import software.wings.beans.KubernetesClusterConfig;
 import software.wings.beans.ci.CIK8BuildTaskParams;
 import software.wings.beans.ci.pod.CIContainerType;
 import software.wings.beans.ci.pod.CIK8ContainerParams;
 import software.wings.beans.ci.pod.CIK8PodParams;
 import software.wings.beans.ci.pod.CIK8ServicePodParams;
-import software.wings.beans.ci.pod.ConnectorDetails;
 import software.wings.beans.ci.pod.ContainerSecrets;
+import software.wings.beans.ci.pod.EncryptedVariableWithType;
 import software.wings.beans.ci.pod.ImageDetailsWithConnector;
 import software.wings.beans.ci.pod.PVCParams;
 import software.wings.beans.ci.pod.SecretParams;
-import software.wings.beans.ci.pod.SecretVariableDTO;
-import software.wings.beans.ci.pod.SecretVariableDetails;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -54,10 +45,6 @@ public class CIK8BuildTaskHandlerTestHelper {
   private static final String tag = "TAG";
   private static final String registryUrl = "https://index.docker.io/v1/";
   private static final String svcName = "service";
-  public static final String commitId = "050ec93c9767b8759a07b7a99312974b7acb5d54";
-  public static final String branch_name = "master";
-  private static final String gitSshRepoUrl = "git@github.com:wings-software/portal.git";
-  private static final String gitSshKey = "git_ssh_key";
 
   private static String storageClass = "test-storage";
   private static Integer storageMib = 100;
@@ -65,15 +52,28 @@ public class CIK8BuildTaskHandlerTestHelper {
   private static String volume1 = "volume1";
 
   public static CIK8BuildTaskParams buildGitSecretErrorTaskParams() {
-    CIK8PodParams<CIK8ContainerParams> cik8PodParams = CIK8PodParams.<CIK8ContainerParams>builder()
-                                                           .name(podName)
-                                                           .namespace(namespace)
-                                                           .gitConnector(ConnectorDetails.builder().build())
-                                                           .build();
-    return CIK8BuildTaskParams.builder().cik8PodParams(cik8PodParams).build();
+    KubernetesClusterConfig kubernetesClusterConfig = KubernetesClusterConfig.builder().build();
+    List<EncryptedDataDetail> encryptionDetails = mock(List.class);
+    GitConfig gitConfig = GitConfig.builder().build();
+
+    GitFetchFilesConfig gitFetchFilesConfig =
+        GitFetchFilesConfig.builder().gitConfig(gitConfig).encryptedDataDetails(encryptionDetails).build();
+    CIK8PodParams<CIK8ContainerParams> cik8PodParams =
+        CIK8PodParams.<CIK8ContainerParams>builder().name(podName).namespace(namespace).build();
+    return CIK8BuildTaskParams.builder()
+        .kubernetesClusterConfig(kubernetesClusterConfig)
+        .encryptionDetails(encryptionDetails)
+        .gitFetchFilesConfig(gitFetchFilesConfig)
+        .cik8PodParams(cik8PodParams)
+        .build();
   }
 
   public static CIK8BuildTaskParams buildImageSecretErrorTaskParams() {
+    KubernetesClusterConfig kubernetesClusterConfig = KubernetesClusterConfig.builder().build();
+    List<EncryptedDataDetail> encryptionDetails = mock(List.class);
+    GitConfig gitConfig = GitConfig.builder().build();
+    GitFetchFilesConfig gitFetchFilesConfig =
+        GitFetchFilesConfig.builder().gitConfig(gitConfig).encryptedDataDetails(encryptionDetails).build();
     ImageDetails imageDetails = ImageDetails.builder().name(imageName).tag(tag).registryUrl(registryUrl).build();
     ImageDetails imageDetailsWithoutRegistry = ImageDetails.builder().name(imageName).tag(tag).build();
 
@@ -91,106 +91,57 @@ public class CIK8BuildTaskHandlerTestHelper {
     CIK8PodParams<CIK8ContainerParams> cik8PodParams = CIK8PodParams.<CIK8ContainerParams>builder()
                                                            .name(podName)
                                                            .namespace(namespace)
-                                                           .gitConnector(ConnectorDetails.builder().build())
-                                                           .containerParamsList(containerParamsList)
-                                                           .build();
-
-    return CIK8BuildTaskParams.builder().cik8PodParams(cik8PodParams).build();
-  }
-
-  public static CIK8BuildTaskParams buildPodCreateErrorTaskParams() {
-    ImageDetails imageDetails = ImageDetails.builder().name(imageName).tag(tag).registryUrl(registryUrl).build();
-    ImageDetails imageDetailsWithoutRegistry = ImageDetails.builder().name(imageName).tag(tag).build();
-
-    List<CIK8ContainerParams> containerParamsList = new ArrayList<>();
-    containerParamsList.add(
-        CIK8ContainerParams.builder()
-            .imageDetailsWithConnector(ImageDetailsWithConnector.builder().imageDetails(imageDetails).build())
-            .build());
-    containerParamsList.add(
-        CIK8ContainerParams.builder()
-            .imageDetailsWithConnector(
-                ImageDetailsWithConnector.builder().imageDetails(imageDetailsWithoutRegistry).build())
-            .build());
-
-    CIK8PodParams<CIK8ContainerParams> cik8PodParams = CIK8PodParams.<CIK8ContainerParams>builder()
-                                                           .name(podName)
-                                                           .namespace(namespace)
-                                                           .gitConnector(ConnectorDetails.builder().build())
                                                            .containerParamsList(containerParamsList)
                                                            .build();
 
     return CIK8BuildTaskParams.builder()
-        .k8sConnector(ConnectorDetails.builder().build())
+        .kubernetesClusterConfig(kubernetesClusterConfig)
+        .encryptionDetails(encryptionDetails)
+        .gitFetchFilesConfig(gitFetchFilesConfig)
+        .cik8PodParams(cik8PodParams)
+        .build();
+  }
+
+  public static CIK8BuildTaskParams buildPodCreateErrorTaskParams() {
+    KubernetesClusterConfig kubernetesClusterConfig = KubernetesClusterConfig.builder().build();
+    List<EncryptedDataDetail> encryptionDetails = mock(List.class);
+    GitConfig gitConfig = GitConfig.builder().build();
+    GitFetchFilesConfig gitFetchFilesConfig =
+        GitFetchFilesConfig.builder().gitConfig(gitConfig).encryptedDataDetails(encryptionDetails).build();
+    ImageDetails imageDetails = ImageDetails.builder().name(imageName).tag(tag).registryUrl(registryUrl).build();
+    ImageDetails imageDetailsWithoutRegistry = ImageDetails.builder().name(imageName).tag(tag).build();
+
+    List<CIK8ContainerParams> containerParamsList = new ArrayList<>();
+    containerParamsList.add(
+        CIK8ContainerParams.builder()
+            .imageDetailsWithConnector(ImageDetailsWithConnector.builder().imageDetails(imageDetails).build())
+            .build());
+    containerParamsList.add(
+        CIK8ContainerParams.builder()
+            .imageDetailsWithConnector(
+                ImageDetailsWithConnector.builder().imageDetails(imageDetailsWithoutRegistry).build())
+            .build());
+
+    CIK8PodParams<CIK8ContainerParams> cik8PodParams = CIK8PodParams.<CIK8ContainerParams>builder()
+                                                           .name(podName)
+                                                           .namespace(namespace)
+                                                           .containerParamsList(containerParamsList)
+                                                           .build();
+
+    return CIK8BuildTaskParams.builder()
+        .kubernetesClusterConfig(kubernetesClusterConfig)
+        .encryptionDetails(encryptionDetails)
+        .gitFetchFilesConfig(gitFetchFilesConfig)
         .cik8PodParams(cik8PodParams)
         .build();
   }
 
   public static CIK8BuildTaskParams buildTaskParams() {
-    ImageDetails imageDetails = ImageDetails.builder().name(imageName).tag(tag).registryUrl(registryUrl).build();
-    ImageDetails imageDetailsWithoutRegistry = ImageDetails.builder().name(imageName).tag(tag).build();
-
-    List<CIK8ContainerParams> containerParamsList = new ArrayList<>();
-    containerParamsList.add(
-        CIK8ContainerParams.builder()
-            .name(containerName1)
-            .containerType(CIContainerType.ADD_ON)
-            .imageDetailsWithConnector(ImageDetailsWithConnector.builder()
-                                           .imageConnectorDetails(getDockerConnectorDetails())
-                                           .imageDetails(imageDetails)
-                                           .build())
-            .containerSecrets(
-                ContainerSecrets.builder().publishArtifactConnectors(getPublishArtifactConnectorDetails()).build())
-            .build());
-    containerParamsList.add(
-        CIK8ContainerParams.builder()
-            .containerSecrets(ContainerSecrets.builder().secretVariableDetails(getSecretVariableDetails()).build())
-            .name(containerName2)
-            .containerType(CIContainerType.STEP_EXECUTOR)
-            .imageDetailsWithConnector(
-                ImageDetailsWithConnector.builder().imageDetails(imageDetailsWithoutRegistry).build())
-            .build());
-
-    CIK8PodParams<CIK8ContainerParams> cik8PodParams = CIK8PodParams.<CIK8ContainerParams>builder()
-                                                           .name(podName)
-                                                           .namespace(namespace)
-                                                           .gitConnector(getGitConnector())
-                                                           .containerParamsList(containerParamsList)
-                                                           .build();
-
-    return CIK8BuildTaskParams.builder().k8sConnector(getK8sConnector()).cik8PodParams(cik8PodParams).build();
-  }
-
-  private static ConnectorDetails getGitConnector() {
-    return ConnectorDetails.builder()
-        .connectorDTO(ConnectorDTO.builder()
-                          .connectorInfo(
-                              ConnectorInfoDTO.builder()
-                                  .connectorType(ConnectorType.GIT)
-                                  .connectorConfig(
-                                      GitConfigDTO.builder()
-                                          .gitAuthType(GitAuthType.SSH)
-                                          .gitAuth(GitSSHAuthenticationDTO.builder().encryptedSshKey(gitSshKey).build())
-                                          .url(gitSshRepoUrl)
-                                          .build())
-                                  .build())
-                          .build())
-        .build();
-  }
-
-  private static ConnectorDetails getK8sConnector() {
-    return ConnectorDetails.builder()
-        .connectorDTO(
-            ConnectorDTO.builder()
-                .connectorInfo(
-                    ConnectorInfoDTO.builder().connectorConfig(KubernetesClusterConfigDTO.builder().build()).build())
-                .build())
-        .encryptedDataDetails(Collections.singletonList(EncryptedDataDetail.builder().build()))
-        .build();
-  }
-
-  public static CIK8BuildTaskParams buildTaskParamsWithPodSvc() {
+    KubernetesClusterConfig kubernetesClusterConfig = KubernetesClusterConfig.builder().build();
     List<EncryptedDataDetail> encryptionDetails = mock(List.class);
+    GitConfig gitConfig = GitConfig.builder().build();
+    GitFetchFilesConfig gitFetchFilesConfig =
+        GitFetchFilesConfig.builder().gitConfig(gitConfig).encryptedDataDetails(encryptionDetails).build();
     ImageDetails imageDetails = ImageDetails.builder().name(imageName).tag(tag).registryUrl(registryUrl).build();
     ImageDetails imageDetailsWithoutRegistry = ImageDetails.builder().name(imageName).tag(tag).build();
 
@@ -201,11 +152,11 @@ public class CIK8BuildTaskHandlerTestHelper {
             .containerType(CIContainerType.ADD_ON)
             .imageDetailsWithConnector(ImageDetailsWithConnector.builder().imageDetails(imageDetails).build())
             .containerSecrets(
-                ContainerSecrets.builder().publishArtifactConnectors(getPublishArtifactConnectorDetails()).build())
+                ContainerSecrets.builder().publishArtifactEncryptedValues(getPublishArtifactSettings()).build())
             .build());
     containerParamsList.add(
         CIK8ContainerParams.builder()
-            .containerSecrets(ContainerSecrets.builder().secretVariableDetails(getSecretVariableDetails()).build())
+            .containerSecrets(ContainerSecrets.builder().encryptedSecrets(getEncryptedDetails()).build())
             .name(containerName2)
             .containerType(CIContainerType.STEP_EXECUTOR)
             .imageDetailsWithConnector(
@@ -213,9 +164,47 @@ public class CIK8BuildTaskHandlerTestHelper {
             .build());
 
     CIK8PodParams<CIK8ContainerParams> cik8PodParams = CIK8PodParams.<CIK8ContainerParams>builder()
-                                                           .gitConnector(getGitConnector())
-                                                           .branchName(branch_name)
-                                                           .commitId(commitId)
+                                                           .name(podName)
+                                                           .namespace(namespace)
+                                                           .containerParamsList(containerParamsList)
+                                                           .build();
+
+    return CIK8BuildTaskParams.builder()
+        .kubernetesClusterConfig(kubernetesClusterConfig)
+        .encryptionDetails(encryptionDetails)
+        .gitFetchFilesConfig(gitFetchFilesConfig)
+        .cik8PodParams(cik8PodParams)
+        .build();
+  }
+
+  public static CIK8BuildTaskParams buildTaskParamsWithPodSvc() {
+    KubernetesClusterConfig kubernetesClusterConfig = KubernetesClusterConfig.builder().build();
+    List<EncryptedDataDetail> encryptionDetails = mock(List.class);
+    GitConfig gitConfig = GitConfig.builder().build();
+    GitFetchFilesConfig gitFetchFilesConfig =
+        GitFetchFilesConfig.builder().gitConfig(gitConfig).encryptedDataDetails(encryptionDetails).build();
+    ImageDetails imageDetails = ImageDetails.builder().name(imageName).tag(tag).registryUrl(registryUrl).build();
+    ImageDetails imageDetailsWithoutRegistry = ImageDetails.builder().name(imageName).tag(tag).build();
+
+    List<CIK8ContainerParams> containerParamsList = new ArrayList<>();
+    containerParamsList.add(
+        CIK8ContainerParams.builder()
+            .name(containerName1)
+            .containerType(CIContainerType.ADD_ON)
+            .imageDetailsWithConnector(ImageDetailsWithConnector.builder().imageDetails(imageDetails).build())
+            .containerSecrets(
+                ContainerSecrets.builder().publishArtifactEncryptedValues(getPublishArtifactSettings()).build())
+            .build());
+    containerParamsList.add(
+        CIK8ContainerParams.builder()
+            .containerSecrets(ContainerSecrets.builder().encryptedSecrets(getEncryptedDetails()).build())
+            .name(containerName2)
+            .containerType(CIContainerType.STEP_EXECUTOR)
+            .imageDetailsWithConnector(
+                ImageDetailsWithConnector.builder().imageDetails(imageDetailsWithoutRegistry).build())
+            .build());
+
+    CIK8PodParams<CIK8ContainerParams> cik8PodParams = CIK8PodParams.<CIK8ContainerParams>builder()
                                                            .name(podName)
                                                            .namespace(namespace)
                                                            .containerParamsList(containerParamsList)
@@ -238,13 +227,16 @@ public class CIK8BuildTaskHandlerTestHelper {
                                                     .build();
 
     return CIK8BuildTaskParams.builder()
-        .k8sConnector(getK8sConnector())
+        .kubernetesClusterConfig(kubernetesClusterConfig)
+        .encryptionDetails(encryptionDetails)
+        .gitFetchFilesConfig(gitFetchFilesConfig)
         .cik8PodParams(cik8PodParams)
         .servicePodParams(Arrays.asList(cik8ServicePodParams))
         .build();
   }
 
   public static CIK8BuildTaskParams buildTaskParamsWithPVC() {
+    KubernetesClusterConfig kubernetesClusterConfig = KubernetesClusterConfig.builder().build();
     ImageDetails imageDetails = ImageDetails.builder().name(imageName).tag(tag).registryUrl(registryUrl).build();
     ImageDetails imageDetailsWithoutRegistry = ImageDetails.builder().name(imageName).tag(tag).build();
 
@@ -255,11 +247,11 @@ public class CIK8BuildTaskHandlerTestHelper {
             .containerType(CIContainerType.ADD_ON)
             .imageDetailsWithConnector(ImageDetailsWithConnector.builder().imageDetails(imageDetails).build())
             .containerSecrets(
-                ContainerSecrets.builder().publishArtifactConnectors(getPublishArtifactConnectorDetails()).build())
+                ContainerSecrets.builder().publishArtifactEncryptedValues(getPublishArtifactSettings()).build())
             .build());
     containerParamsList.add(
         CIK8ContainerParams.builder()
-            .containerSecrets(ContainerSecrets.builder().secretVariableDetails(getSecretVariableDetails()).build())
+            .containerSecrets(ContainerSecrets.builder().encryptedSecrets(getEncryptedDetails()).build())
             .name(containerName2)
             .containerType(CIContainerType.STEP_EXECUTOR)
             .imageDetailsWithConnector(
@@ -269,7 +261,6 @@ public class CIK8BuildTaskHandlerTestHelper {
     CIK8PodParams<CIK8ContainerParams> cik8PodParams = CIK8PodParams.<CIK8ContainerParams>builder()
                                                            .name(podName)
                                                            .namespace(namespace)
-                                                           .gitConnector(ConnectorDetails.builder().build())
                                                            .containerParamsList(containerParamsList)
                                                            .pvcParamList(Arrays.asList(PVCParams.builder()
                                                                                            .volumeName(volume1)
@@ -281,61 +272,24 @@ public class CIK8BuildTaskHandlerTestHelper {
                                                            .build();
 
     return CIK8BuildTaskParams.builder()
-        .k8sConnector(ConnectorDetails.builder().build())
+        .kubernetesClusterConfig(kubernetesClusterConfig)
         .cik8PodParams(cik8PodParams)
         .build();
   }
 
-  public static Map<String, ConnectorDetails> getPublishArtifactConnectorDetails() {
-    return Collections.singletonMap("docker", getDockerConnectorDetails());
+  public static Map<String, EncryptableSettingWithEncryptionDetails> getPublishArtifactSettings() {
+    Map<String, EncryptableSettingWithEncryptionDetails> map = new HashMap<>();
+    map.putAll(getDockerSettingWithEncryptionDetails());
+    map.putAll(getGCPSettingWithEncryptionDetails());
+    return map;
   }
 
-  public static ConnectorDetails getDockerConnectorDetails() {
-    return ConnectorDetails.builder()
-        .encryptedDataDetails(Collections.singletonList(
-            EncryptedDataDetail.builder()
-                .encryptedData(EncryptedRecordData.builder().encryptionType(EncryptionType.KMS).build())
-                .encryptionConfig(KmsConfig.builder()
-                                      .accessKey("accessKey")
-                                      .region("us-east-1")
-                                      .secretKey("secretKey")
-                                      .kmsArn("kmsArn")
-                                      .build())
-                .build()))
-        .connectorDTO(
-            ConnectorDTO.builder()
-                .connectorInfo(
-                    ConnectorInfoDTO.builder()
-                        .connectorType(ConnectorType.DOCKER)
-                        .connectorConfig(
-                            DockerConnectorDTO.builder()
-                                .dockerRegistryUrl("https://index.docker.io/v1/")
-                                .auth(DockerAuthenticationDTO.builder()
-                                          .authType(DockerAuthType.USER_PASSWORD)
-                                          .credentials(DockerUserNamePasswordDTO.builder()
-                                                           .username("uName")
-                                                           .passwordRef(SecretRefData.builder()
-                                                                            .decryptedValue("pWord".toCharArray())
-                                                                            .build())
-                                                           .build())
-                                          .build())
-                                .build())
-                        .build())
-                .build())
-        .build();
-  }
+  public static Map<String, EncryptableSettingWithEncryptionDetails> getDockerSettingWithEncryptionDetails() {
+    Map<String, EncryptableSettingWithEncryptionDetails> encryptedSettings = new HashMap<>();
 
-  public static List<SecretVariableDetails> getSecretVariableDetails() {
-    List<SecretVariableDetails> secretVariableDetailsList = new ArrayList<>();
-
-    SecretVariableDetails secretVariableDetails =
-        SecretVariableDetails.builder()
-            .secretVariableDTO(SecretVariableDTO.builder()
-                                   .type(SecretVariableDTO.Type.TEXT)
-                                   .name("abc")
-                                   .secret(SecretRefData.builder().scope(Scope.ACCOUNT).identifier("secretId").build())
-                                   .build())
-            .encryptedDataDetailList(Collections.singletonList(
+    EncryptableSettingWithEncryptionDetails encryptedDataDetail =
+        EncryptableSettingWithEncryptionDetails.builder()
+            .encryptedDataDetails(Collections.singletonList(
                 EncryptedDataDetail.builder()
                     .encryptedData(EncryptedRecordData.builder().encryptionType(EncryptionType.KMS).build())
                     .encryptionConfig(KmsConfig.builder()
@@ -345,10 +299,61 @@ public class CIK8BuildTaskHandlerTestHelper {
                                           .kmsArn("kmsArn")
                                           .build())
                     .build()))
+            .encryptableSetting(DockerConfig.builder()
+                                    .dockerRegistryUrl("https://index.docker.io/v1/")
+                                    .username("uName")
+                                    .password("pWord".toCharArray())
+                                    .encryptedPassword("*****")
+                                    .accountId("acctId")
+                                    .build())
             .build();
 
-    secretVariableDetailsList.add(secretVariableDetails);
-    return secretVariableDetailsList;
+    encryptedSettings.put("docker", encryptedDataDetail);
+    return encryptedSettings;
+  }
+
+  public static Map<String, EncryptableSettingWithEncryptionDetails> getGCPSettingWithEncryptionDetails() {
+    Map<String, EncryptableSettingWithEncryptionDetails> encryptedSettings = new HashMap<>();
+
+    EncryptableSettingWithEncryptionDetails encryptedDataDetail =
+        EncryptableSettingWithEncryptionDetails.builder()
+            .encryptedDataDetails(Collections.singletonList(
+                EncryptedDataDetail.builder()
+                    .encryptedData(EncryptedRecordData.builder().encryptionType(EncryptionType.KMS).build())
+                    .encryptionConfig(KmsConfig.builder()
+                                          .accessKey("accessKey")
+                                          .region("us-east-1")
+                                          .secretKey("secretKey")
+                                          .kmsArn("kmsArn")
+                                          .build())
+                    .build()))
+            .encryptableSetting(GcpConfig.builder().encryptedServiceAccountKeyFileContent("****").build())
+            .build();
+
+    encryptedSettings.put("gcp", encryptedDataDetail);
+    return encryptedSettings;
+  }
+
+  public static Map<String, EncryptedVariableWithType> getEncryptedDetails() {
+    Map<String, EncryptedVariableWithType> encryptedVariables = new HashMap<>();
+
+    EncryptedVariableWithType encryptedVariableWithType =
+        EncryptedVariableWithType.builder()
+            .type(EncryptedVariableWithType.Type.TEXT)
+            .encryptedDataDetail(
+                EncryptedDataDetail.builder()
+                    .encryptedData(EncryptedRecordData.builder().encryptionType(EncryptionType.KMS).build())
+                    .encryptionConfig(KmsConfig.builder()
+                                          .accessKey("accessKey")
+                                          .region("us-east-1")
+                                          .secretKey("secretKey")
+                                          .kmsArn("kmsArn")
+                                          .build())
+                    .build())
+            .build();
+
+    encryptedVariables.put("abc", encryptedVariableWithType);
+    return encryptedVariables;
   }
 
   public static Map<String, SecretParams> getCustomVarSecret() {

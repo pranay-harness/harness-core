@@ -1,7 +1,5 @@
 package io.harness.stateutils.buildstate.providers;
 
-import static io.harness.common.CIExecutionConstants.ADDON_IMAGE_NAME;
-import static io.harness.common.CIExecutionConstants.ADDON_IMAGE_TAG;
 import static io.harness.common.CIExecutionConstants.BUCKET_MINIO_VARIABLE;
 import static io.harness.common.CIExecutionConstants.BUCKET_MINIO_VARIABLE_VALUE;
 import static io.harness.common.CIExecutionConstants.DELEGATE_SERVICE_ENDPOINT_VARIABLE;
@@ -21,8 +19,6 @@ import static io.harness.common.CIExecutionConstants.LITE_ENGINE_ARGS;
 import static io.harness.common.CIExecutionConstants.LITE_ENGINE_CONTAINER_CPU;
 import static io.harness.common.CIExecutionConstants.LITE_ENGINE_CONTAINER_MEM;
 import static io.harness.common.CIExecutionConstants.LITE_ENGINE_CONTAINER_NAME;
-import static io.harness.common.CIExecutionConstants.LITE_ENGINE_IMAGE_NAME;
-import static io.harness.common.CIExecutionConstants.LITE_ENGINE_IMAGE_TAG;
 import static io.harness.common.CIExecutionConstants.LITE_ENGINE_JFROG_PATH;
 import static io.harness.common.CIExecutionConstants.LITE_ENGINE_JFROG_VARIABLE;
 import static io.harness.common.CIExecutionConstants.LITE_ENGINE_PATH;
@@ -35,19 +31,18 @@ import static io.harness.common.CIExecutionConstants.SH_COMMAND;
 import static io.harness.common.CIExecutionConstants.STAGE_ARG_COMMAND;
 import static io.harness.common.CIExecutionConstants.TMP_PATH;
 import static io.harness.common.CIExecutionConstants.TMP_PATH_ARG_PREFIX;
+import static io.harness.stateutils.buildstate.providers.InternalImageDetailsProvider.ImageKind.ADDON_IMAGE;
+import static io.harness.stateutils.buildstate.providers.InternalImageDetailsProvider.ImageKind.LITE_ENGINE_IMAGE;
 import static software.wings.common.CICommonPodConstants.MOUNT_PATH;
 import static software.wings.common.CICommonPodConstants.STEP_EXEC;
 
-import com.google.inject.Singleton;
-
 import io.harness.beans.sweepingoutputs.K8PodDetails;
-import io.harness.k8s.model.ImageDetails;
+import lombok.experimental.UtilityClass;
 import software.wings.beans.ci.pod.CIContainerType;
 import software.wings.beans.ci.pod.CIK8ContainerParams;
-import software.wings.beans.ci.pod.ConnectorDetails;
+import software.wings.beans.ci.pod.CIK8ContainerParams.CIK8ContainerParamsBuilder;
 import software.wings.beans.ci.pod.ContainerResourceParams;
 import software.wings.beans.ci.pod.ContainerSecrets;
-import software.wings.beans.ci.pod.ImageDetailsWithConnector;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -58,30 +53,24 @@ import java.util.Map;
 /**
  * Provides container parameters for internally used containers
  */
-@Singleton
+@UtilityClass
 // TODO: fetch constants from config file.
 public class InternalContainerParamsProvider {
-  public CIK8ContainerParams getSetupAddonContainerParams(ConnectorDetails containerImageConnectorDetails) {
+  public CIK8ContainerParamsBuilder getSetupAddonContainerParams() {
     Map<String, String> map = new HashMap<>();
     map.put(STEP_EXEC, MOUNT_PATH);
     List<String> args = new ArrayList<>(Collections.singletonList(SETUP_ADDON_ARGS));
     return CIK8ContainerParams.builder()
         .name(SETUP_ADDON_CONTAINER_NAME)
         .containerType(CIContainerType.ADD_ON)
-        .imageDetailsWithConnector(
-            ImageDetailsWithConnector.builder()
-                .imageDetails(ImageDetails.builder().name(ADDON_IMAGE_NAME).tag(ADDON_IMAGE_TAG).build())
-                .imageConnectorDetails(containerImageConnectorDetails)
-                .build())
+        .imageDetailsWithConnector(InternalImageDetailsProvider.getImageDetails(ADDON_IMAGE))
         .containerSecrets(ContainerSecrets.builder().build())
         .volumeToMountPath(map)
         .commands(SH_COMMAND)
-        .args(args)
-        .build();
+        .args(args);
   }
 
-  public CIK8ContainerParams getLiteEngineContainerParams(ConnectorDetails containerImageConnectorDetails,
-      Map<String, ConnectorDetails> publishArtifactConnectors, K8PodDetails k8PodDetails,
+  public CIK8ContainerParamsBuilder getLiteEngineContainerParams(K8PodDetails k8PodDetails,
       String serializedLiteEngineTaskStepInfo, String serviceToken, Integer stageCpuRequest,
       Integer stageMemoryRequest) {
     Map<String, String> map = new HashMap<>();
@@ -96,16 +85,10 @@ public class InternalContainerParamsProvider {
         .containerResourceParams(getLiteEngineResourceParams(stageCpuRequest, stageMemoryRequest))
         .envVars(getLiteEngineEnvVars(k8PodDetails, serviceToken))
         .containerType(CIContainerType.LITE_ENGINE)
-        .containerSecrets(ContainerSecrets.builder().publishArtifactConnectors(publishArtifactConnectors).build())
-        .imageDetailsWithConnector(
-            ImageDetailsWithConnector.builder()
-                .imageDetails(ImageDetails.builder().name(LITE_ENGINE_IMAGE_NAME).tag(LITE_ENGINE_IMAGE_TAG).build())
-                .imageConnectorDetails(containerImageConnectorDetails)
-                .build())
+        .imageDetailsWithConnector(InternalImageDetailsProvider.getImageDetails(LITE_ENGINE_IMAGE))
         .volumeToMountPath(map)
         .commands(SH_COMMAND)
-        .args(args)
-        .build();
+        .args(args);
   }
 
   private Map<String, String> getLiteEngineEnvVars(K8PodDetails k8PodDetails, String serviceToken) {

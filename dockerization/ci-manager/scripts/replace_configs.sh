@@ -25,12 +25,9 @@ else
 fi
 
 if [[ "" != "$MANAGER_URL" ]]; then
-  yq write -i $CONFIG_FILE managerClientConfig.baseUrl "$MANAGER_URL"
+  yq write -i $CONFIG_FILE managerUrl "$MANAGER_URL"
 fi
 
-if [[ "" != "$NG_MANAGER_URL" ]]; then
-  yq write -i $CONFIG_FILE ngManagerClientConfig.baseUrl "$NG_MANAGER_URL"
-fi
 if [[ "" != "$SERVER_MAX_THREADS" ]]; then
   yq write -i $CONFIG_FILE server.maxThreads "$SERVER_MAX_THREADS"
 fi
