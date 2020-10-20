@@ -17,8 +17,8 @@ public class EntitySetupUsageFilterHelper {
         .is(FullyQualifiedIdentifierHelper.getFullyQualifiedIdentifier(
             accountIdentifier, orgIdentifier, projectIdentifier, referredEntityIdentifier));
     if (isNotBlank(searchTerm)) {
-      criteria.orOperator(Criteria.where(EntitySetupUsageKeys.referredByEntityName).regex(searchTerm),
-          Criteria.where(EntitySetupUsageKeys.referredEntityName).regex(searchTerm));
+      criteria.orOperator(Criteria.where(EntitySetupUsageKeys.referredByEntity).regex(searchTerm),
+          Criteria.where(EntitySetupUsageKeys.referredEntity).regex(searchTerm));
     }
     return criteria;
   }

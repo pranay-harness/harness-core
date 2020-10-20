@@ -31,10 +31,8 @@ public class EntitySetupUsage implements PersistentEntity, NGAccountAccess {
   @NotBlank String accountIdentifier;
   @NotNull EntityDetail referredEntity;
   @NotNull EntityDetail referredByEntity;
-  @NotBlank String referredEntityName;
   @NotBlank String referredEntityFQN;
   @NotBlank String referredEntityType;
-  @NotBlank String referredByEntityName;
   @NotBlank String referredByEntityFQN;
   @NotBlank String referredByEntityType;
   // todo @deepak: Add the support for activity
