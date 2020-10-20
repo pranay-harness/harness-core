@@ -25,7 +25,6 @@ import static software.wings.beans.Delegate.Status.ENABLED;
 import static software.wings.beans.Environment.Builder.anEnvironment;
 import static software.wings.beans.Environment.EnvironmentType.NON_PROD;
 import static software.wings.beans.Environment.EnvironmentType.PROD;
-import static software.wings.beans.FeatureName.DISABLE_DELEGATE_CAPABILITY_FRAMEWORK;
 import static software.wings.beans.GcpKubernetesInfrastructureMapping.Builder.aGcpKubernetesInfrastructureMapping;
 import static software.wings.service.impl.AssignDelegateServiceImpl.ERROR_MESSAGE;
 import static software.wings.service.impl.AssignDelegateServiceImpl.MAX_DELEGATE_LAST_HEARTBEAT;
@@ -809,7 +808,6 @@ public class AssignDelegateServiceImplTest extends WingsBaseTest {
                   .parameters(params)
                   .timeout(DEFAULT_ASYNC_CALL_TIMEOUT)
                   .build())
-        .capabilityFrameworkEnabled(true)
         .executionCapabilities(asList(executionCapability))
         .build();
   }
@@ -875,7 +873,6 @@ public class AssignDelegateServiceImplTest extends WingsBaseTest {
   @Owner(developers = SANJA)
   @Category(UnitTests.class)
   public void shouldGetWhitelistedDelegatesWithoutCriteriaCapabilityFramework() throws ExecutionException {
-    when(featureFlagService.isEnabled(DISABLE_DELEGATE_CAPABILITY_FRAMEWORK, ACCOUNT_ID)).thenReturn(false);
     TaskData taskData = TaskData.builder().taskType(TaskType.SPOTINST_COMMAND_TASK.name()).build();
     DelegateTask delegateTask =
         DelegateTask.builder().accountId(ACCOUNT_ID).data(taskData).executionCapabilities(emptyList()).build();
@@ -1217,22 +1214,6 @@ public class AssignDelegateServiceImplTest extends WingsBaseTest {
     DelegateTask delegateTask =
         DelegateTask.builder().accountId(ACCOUNT_ID).executionCapabilities(executionCapabilityList).build();
 
-    when(featureFlagService.isEnabled(DISABLE_DELEGATE_CAPABILITY_FRAMEWORK, ACCOUNT_ID)).thenReturn(false);
-    List<String> criteria = assignDelegateService.fetchCriteria(delegateTask);
-
-    assertThat(criteria).containsExactly("localhost");
-  }
-
-  @Test
-  @Owner(developers = SANJA)
-  @Category(UnitTests.class)
-  public void shouldFetchCriteria() {
-    HttpTaskParameters parameters = HttpTaskParameters.builder().url("localhost").build();
-    TaskData taskData = TaskData.builder().taskType(TaskType.HTTP.name()).parameters(new Object[] {parameters}).build();
-    DelegateTask delegateTask =
-        DelegateTask.builder().accountId(ACCOUNT_ID).data(taskData).tags(asList("a", "b")).build();
-
-    when(featureFlagService.isEnabled(DISABLE_DELEGATE_CAPABILITY_FRAMEWORK, ACCOUNT_ID)).thenReturn(true);
     List<String> criteria = assignDelegateService.fetchCriteria(delegateTask);
 
     assertThat(criteria).containsExactly("localhost");

@@ -2,7 +2,9 @@ package software.wings.utils;
 
 import io.harness.beans.DelegateTask;
 import io.harness.delegate.beans.DelegateTaskPackage;
+import lombok.experimental.UtilityClass;
 
+@UtilityClass
 public class DelegateTaskUtils {
   public static DelegateTaskPackage getDelegateTaskPackage(DelegateTask task) {
     return DelegateTaskPackage.builder()
@@ -10,10 +12,7 @@ public class DelegateTaskUtils {
         .delegateId(task.getDelegateId())
         .delegateTaskId(task.getUuid())
         .data(task.getData())
-        .capabilityFrameworkEnabled(task.isCapabilityFrameworkEnabled())
         .executionCapabilities(task.getExecutionCapabilities())
         .build();
   }
-
-  private DelegateTaskUtils() {}
 }

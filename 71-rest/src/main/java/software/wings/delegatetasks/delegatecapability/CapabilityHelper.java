@@ -183,7 +183,8 @@ public class CapabilityHelper {
   }
 
   public static boolean isTaskParameterType(TaskData taskData) {
-    return taskData.getParameters().length == 1 && taskData.getParameters()[0] instanceof TaskParameters;
+    return taskData.getParameters() == null
+        || taskData.getParameters().length == 1 && taskData.getParameters()[0] instanceof TaskParameters;
   }
 
   private static boolean isEncryptionDetailsList(Object argument) {

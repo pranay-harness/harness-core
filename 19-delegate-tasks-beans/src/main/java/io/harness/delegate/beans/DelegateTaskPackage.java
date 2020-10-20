@@ -27,7 +27,5 @@ public class DelegateTaskPackage {
   @Default private Map<String, SecretDetail> secretDetails = new HashMap<>();
   @Default private Set<String> secrets = new HashSet<>();
 
-  // TODO: this is temporary to propagate if the compatibility framework is enabled for particular task
-  private boolean capabilityFrameworkEnabled;
   private List<ExecutionCapability> executionCapabilities;
 }

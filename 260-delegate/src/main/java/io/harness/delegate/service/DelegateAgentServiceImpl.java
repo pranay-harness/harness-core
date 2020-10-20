@@ -1742,15 +1742,8 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
     Consumer<List<DelegateConnectionResult>> postValidationFunction =
         getPostValidationFunction(delegateTaskEvent, delegateTaskPackage.getDelegateTaskId());
 
-    if (delegateTaskPackage.isCapabilityFrameworkEnabled()) {
-      return TaskType.valueOf(delegateTaskPackage.getData().getTaskType())
-          .getDelegateValidateTaskVersionForCapabilityFramework(
-              delegateId, delegateTaskPackage, postValidationFunction);
-
-    } else {
-      return TaskType.valueOf(delegateTaskPackage.getData().getTaskType())
-          .getDelegateValidateTask(delegateId, delegateTaskPackage, postValidationFunction);
-    }
+    return TaskType.valueOf(delegateTaskPackage.getData().getTaskType())
+        .getDelegateValidateTaskVersionForCapabilityFramework(delegateId, delegateTaskPackage, postValidationFunction);
   }
 
   private Consumer<List<DelegateConnectionResult>> getPostValidationFunction(
