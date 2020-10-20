@@ -36,13 +36,17 @@ public class CEReportSchedule implements PersistentEntity, UuidAware, CreatedAtA
                                          CreatedByAware, UpdatedByAware {
   @Id String uuid;
   @NotEmpty(message = "Name for report schedule must not be empty")
-  @Size(min = 1, max = 32, message = "for report schedule must be between 1 and 32 characters long")
+  @Size(min = 1, max = 32, message = ": for report schedule must be between 1 and 32 characters long")
   String name;
   @Builder.Default boolean enabled = true;
   String description;
-  @NotEmpty(message = "At least one ce viewId must be provided") String[] viewsId;
+  @Size(max = 1, message = ": for report schedule maximum 1 viewId is allowed")
+  @NotEmpty(message = "At least one ce viewId must be provided")
+  String[] viewsId;
   @NotEmpty(message = "report schedule cron must not be empty") String userCron;
-  @NotEmpty(message = "At least one email recipient must be provided") String[] recipients;
+  @Size(max = 50, message = ": for report schedule maximum 50 recipients are allowed")
+  @NotEmpty(message = "At least one email recipient must be provided")
+  String[] recipients;
   String accountId;
   long createdAt;
   long lastUpdatedAt;
