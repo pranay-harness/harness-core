@@ -2,7 +2,7 @@ load("@rules_proto//proto:defs.bzl", "proto_library")
 load("@rules_proto_grpc//java:defs.bzl", "java_grpc_library")
 
 proto_library(
-    name = "28_pms_beans_proto",
+    name = "26_pms_contracts_proto",
     srcs = glob(["**/*.proto"]),
     strip_import_prefix = "",
     visibility = ["//visibility:public"],
@@ -14,9 +14,9 @@ proto_library(
 )
 
 java_grpc_library(
-    name = "28_pms_beans_java_proto",
+    name = "26_pms_contracts_java_proto",
     visibility = ["//visibility:public"],
     deps = [
-        ":28_pms_beans_proto",
+        ":26_pms_contracts_proto",
     ],
 )

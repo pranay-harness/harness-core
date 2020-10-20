@@ -23,6 +23,7 @@ directories:
   23-delegate-service-driver
   23-sm-core
   24-common-entities
+  26-pms-contracts
   27-orchestration-persistence
   28-pms-beans
   29-orchestration-beans
