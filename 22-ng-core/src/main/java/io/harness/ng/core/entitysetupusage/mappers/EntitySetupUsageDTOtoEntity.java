@@ -18,8 +18,6 @@ public class EntitySetupUsageDTOtoEntity {
         .referredByEntityType(referredByEntity.getType().toString())
         .referredEntityFQN(referredEntity.getEntityRef().getFullyQualifiedName())
         .referredEntityType(referredEntity.getType().toString())
-        .referredEntityName(referredEntity.getName())
-        .referredByEntityName(referredByEntity.getName())
         .referredEntity(referredEntity)
         .build();
   }

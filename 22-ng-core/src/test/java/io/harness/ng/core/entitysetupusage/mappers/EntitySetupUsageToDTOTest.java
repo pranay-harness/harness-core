@@ -44,8 +44,6 @@ public class EntitySetupUsageToDTOTest extends CategoryTest {
             .referredByEntityType(referredByEntityType.toString())
             .referredEntityFQN(referredEntityFQN)
             .referredEntityType(referredEntityType.toString())
-            .referredEntityName(referredEntityName)
-            .referredByEntityName(referredByEntityName)
             .referredEntity(EntityDetail.builder().type(CONNECTORS).name(referredEntityName).build())
             .referredByEntity(EntityDetail.builder().type(SECRETS).name(referredByEntityName).build())
             .build();
@@ -56,7 +54,7 @@ public class EntitySetupUsageToDTOTest extends CategoryTest {
     assertThat(entitySetupUsageDTO.getReferredEntity()).isNotNull();
     assertThat(entitySetupUsageDTO.getReferredByEntity().getType()).isEqualTo(referredByEntityType);
     assertThat(entitySetupUsageDTO.getReferredEntity().getType()).isEqualTo(referredEntityType);
-    assertThat(entitySetupUsage.getReferredByEntityName()).isEqualTo(referredByEntityName);
-    assertThat(entitySetupUsage.getReferredEntityName()).isEqualTo(referredEntityName);
+    assertThat(entitySetupUsage.getReferredByEntity().getName()).isEqualTo(referredByEntityName);
+    assertThat(entitySetupUsage.getReferredEntity().getName()).isEqualTo(referredEntityName);
   }
 }

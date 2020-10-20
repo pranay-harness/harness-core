@@ -60,7 +60,5 @@ public class EntitySetupUsageDTOtoEntityTest extends CategoryTest {
     assertThat(entitySetupUsage.getReferredEntityFQN()).isEqualTo(referredEntityRef.getFullyQualifiedName());
     assertThat(entitySetupUsage.getReferredByEntityType()).isEqualTo(referredByEntityType.toString());
     assertThat(entitySetupUsage.getReferredEntityType()).isEqualTo(referredEntityType.toString());
-    assertThat(entitySetupUsage.getReferredByEntityName()).isEqualTo(referredByEntityName);
-    assertThat(entitySetupUsage.getReferredEntityName()).isEqualTo(referredEntityName);
   }
 }
