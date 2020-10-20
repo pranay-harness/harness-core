@@ -1,0 +1,102 @@
+package io.harness.ngpipeline.pipeline.mappers;
+
+import io.harness.ngpipeline.pipeline.beans.yaml.NgPipeline;
+import io.harness.ngpipeline.pipeline.beans.resources.NGPipelineResponseDTO;
+import io.harness.ngpipeline.pipeline.beans.resources.NGPipelineSummaryResponseDTO;
+import io.harness.ngpipeline.pipeline.beans.entities.NgPipelineEntity;
+import io.harness.exception.InvalidRequestException;
+import io.harness.yaml.core.ParallelStageElement;
+import io.harness.yaml.core.StageElement;
+import io.harness.yaml.core.auxiliary.intfc.StageElementWrapper;
+import io.harness.yaml.utils.YamlPipelineUtils;
+import lombok.experimental.UtilityClass;
+
+import java.io.IOException;
+import java.security.SecureRandom;
+import java.util.ArrayList;
+import java.util.List;
+
+@UtilityClass
+public class PipelineDtoMapper {
+  public NgPipelineEntity toPipelineEntity(String accountId, String orgId, String projectId, String yaml) {
+    try {
+      NgPipeline ngPipeline = YamlPipelineUtils.read(yaml, NgPipeline.class);
+      return NgPipelineEntity.builder()
+          .ngPipeline(ngPipeline)
+          .yamlPipeline(yaml)
+          .accountId(accountId)
+          .orgIdentifier(orgId)
+          .projectIdentifier(projectId)
+          .identifier(ngPipeline.getIdentifier())
+          .build();
+    } catch (IOException e) {
+      throw new InvalidRequestException("Cannot create inputSet entity due to " + e.getMessage());
+    }
+  }
+
+  public NgPipelineEntity toPipelineEntity(
+      String accountId, String orgId, String projectId, String yaml, NgPipeline ngPipeline) {
+    return NgPipelineEntity.builder()
+        .ngPipeline(ngPipeline)
+        .yamlPipeline(yaml)
+        .accountId(accountId)
+        .orgIdentifier(orgId)
+        .projectIdentifier(projectId)
+        .identifier(ngPipeline.getIdentifier())
+        .build();
+  }
+
+  public NGPipelineResponseDTO writePipelineDto(NgPipelineEntity ngPipelineEntity) {
+    return NGPipelineResponseDTO.builder()
+        .ngPipeline(ngPipelineEntity.getNgPipeline())
+        .yamlPipeline(ngPipelineEntity.getYamlPipeline())
+        .executionsPlaceHolder(new ArrayList<>())
+        .build();
+  }
+
+  public NGPipelineSummaryResponseDTO preparePipelineSummary(NgPipelineEntity ngPipelineEntity) {
+    return NGPipelineSummaryResponseDTO.builder()
+        .identifier(ngPipelineEntity.getIdentifier())
+        .description((String) ngPipelineEntity.getNgPipeline().getDescription().getJsonFieldValue())
+        .name(ngPipelineEntity.getNgPipeline().getName())
+        .tags(ngPipelineEntity.getNgPipeline().getTags())
+        .numOfStages(getNumberOfStages(ngPipelineEntity.getNgPipeline()))
+        .numOfErrors(getNumberOfErrorsLast10Days(ngPipelineEntity.getNgPipeline()))
+        .deployments(getNumberOfDeployments(ngPipelineEntity.getNgPipeline()))
+        .build();
+  }
+
+  private int getNumberOfStages(NgPipeline pipeline) {
+    List<StageElementWrapper> stages = pipeline.getStages();
+    int count = 0;
+    for (StageElementWrapper wrapper : stages) {
+      if (wrapper.getClass() == StageElement.class) {
+        count++;
+      } else {
+        ParallelStageElement parallelStageElement = (ParallelStageElement) wrapper;
+        count += parallelStageElement.getSections().size();
+      }
+    }
+    return count;
+  }
+
+  // TODO: @Sahil for proper implementation
+  private int getNumberOfErrorsLast10Days(NgPipeline pipeline) {
+    int min = 0;
+    int maxPlusOne = 3;
+    SecureRandom r = new SecureRandom();
+    return r.ints(min, maxPlusOne).findFirst().getAsInt();
+  }
+
+  // TODO: @Sahil for proper implementation
+  private List<Integer> getNumberOfDeployments(NgPipeline pipeline) {
+    int min = 0;
+    int maxPlusOne = 6;
+    SecureRandom r = new SecureRandom();
+    List<Integer> deployments = new ArrayList<>();
+    for (int i = 0; i < 10; i++) {
+      deployments.add(r.ints(min, maxPlusOne).findFirst().getAsInt());
+    }
+    return deployments;
+  }
+}

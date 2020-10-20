@@ -1,7 +1,7 @@
 package io.harness.ngpipeline.pipeline.repository.spring;
 
 import io.harness.annotation.HarnessRepo;
-import io.harness.cdng.pipeline.beans.entities.NgPipelineEntity;
+import io.harness.ngpipeline.pipeline.beans.entities.NgPipelineEntity;
 import io.harness.ngpipeline.pipeline.repository.custom.NgPipelineRepositoryCustom;
 import org.springframework.data.repository.PagingAndSortingRepository;
 

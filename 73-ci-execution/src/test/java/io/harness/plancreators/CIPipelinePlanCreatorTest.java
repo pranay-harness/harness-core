@@ -8,14 +8,14 @@ import static org.mockito.Mockito.when;
 import com.google.inject.Inject;
 
 import io.harness.category.element.UnitTests;
-import io.harness.cdng.pipeline.NgPipeline;
-import io.harness.cdng.pipeline.beans.entities.NgPipelineEntity;
 import io.harness.executionplan.CIExecutionPlanCreatorRegistrar;
 import io.harness.executionplan.CIExecutionPlanTestHelper;
 import io.harness.executionplan.CIExecutionTest;
 import io.harness.executionplan.core.ExecutionPlanCreatorResponse;
 import io.harness.executionplan.core.PlanCreatorSearchContext;
 import io.harness.executionplan.core.impl.ExecutionPlanCreationContextImpl;
+import io.harness.ngpipeline.pipeline.beans.entities.NgPipelineEntity;
+import io.harness.ngpipeline.pipeline.beans.yaml.NgPipeline;
 import io.harness.plan.PlanNode;
 import io.harness.rule.Owner;
 import org.junit.Before;

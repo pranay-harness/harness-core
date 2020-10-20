@@ -18,7 +18,7 @@ import io.harness.beans.yaml.extended.connector.GitConnectorYaml;
 import io.harness.beans.yaml.extended.container.Container;
 import io.harness.beans.yaml.extended.infrastrucutre.K8sDirectInfraYaml;
 import io.harness.category.element.UnitTests;
-import io.harness.cdng.pipeline.NgPipeline;
+import io.harness.ngpipeline.pipeline.beans.yaml.NgPipeline;
 import io.harness.rule.Owner;
 import io.harness.yaml.core.ExecutionElement;
 import io.harness.yaml.core.ParallelStepElement;

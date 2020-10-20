@@ -1,6 +1,6 @@
 package io.harness.states;
 
-import static io.harness.cdng.orchestration.StepUtils.createStepResponseFromChildResponse;
+import static io.harness.ngpipeline.orchestration.StepUtils.createStepResponseFromChildResponse;
 
 import com.google.inject.Inject;
 

@@ -1,7 +1,7 @@
 package io.harness.serializer.kryo;
 
 import com.esotericsoftware.kryo.Kryo;
-import io.harness.cdng.pipeline.NgPipeline;
+import io.harness.ngpipeline.pipeline.beans.yaml.NgPipeline;
 import io.harness.serializer.KryoRegistrar;
 
 public class NGPipelineKryoRegistrar implements KryoRegistrar {

@@ -4,7 +4,7 @@ import com.google.inject.Singleton;
 
 import io.harness.cdng.pipeline.DeploymentStage;
 import io.harness.cdng.pipeline.DeploymentStageTypeToStageExecutionSummaryMapper;
-import io.harness.cdng.pipeline.StageTypeToStageExecutionSummaryMapper;
+import io.harness.ngpipeline.pipeline.StageTypeToStageExecutionSummaryMapper;
 import io.harness.pipeline.executions.NGStageType;
 import org.apache.commons.lang3.tuple.Pair;
 

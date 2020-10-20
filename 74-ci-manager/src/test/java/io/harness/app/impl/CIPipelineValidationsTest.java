@@ -7,8 +7,8 @@ import com.google.inject.Inject;
 
 import io.harness.beans.ParameterField;
 import io.harness.category.element.UnitTests;
-import io.harness.cdng.pipeline.NgPipeline;
-import io.harness.cdng.pipeline.beans.entities.NgPipelineEntity;
+import io.harness.ngpipeline.pipeline.beans.entities.NgPipelineEntity;
+import io.harness.ngpipeline.pipeline.beans.yaml.NgPipeline;
 import io.harness.rule.Owner;
 import org.junit.Ignore;
 import org.junit.Test;

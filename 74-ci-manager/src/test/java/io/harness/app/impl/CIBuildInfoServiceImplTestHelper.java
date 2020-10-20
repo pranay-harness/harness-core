@@ -3,9 +3,9 @@ package io.harness.app.impl;
 import io.harness.app.beans.dto.CIBuildFilterDTO;
 import io.harness.app.beans.dto.CIBuildResponseDTO;
 import io.harness.app.beans.entities.CIBuildPipeline;
-import io.harness.cdng.pipeline.NgPipeline;
-import io.harness.cdng.pipeline.beans.entities.NgPipelineEntity;
 import io.harness.ci.beans.entities.CIBuild;
+import io.harness.ngpipeline.pipeline.beans.entities.NgPipelineEntity;
+import io.harness.ngpipeline.pipeline.beans.yaml.NgPipeline;
 
 import java.util.Arrays;
 

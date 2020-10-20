@@ -2,8 +2,8 @@ package io.harness.cdng.executionplan.utils;
 
 import io.harness.cdng.pipeline.CDStage;
 import io.harness.cdng.pipeline.DeploymentStage;
-import io.harness.cdng.pipeline.NgPipeline;
 import io.harness.executionplan.core.ExecutionPlanCreationContext;
+import io.harness.ngpipeline.pipeline.beans.yaml.NgPipeline;
 import io.harness.yaml.core.ParallelStageElement;
 import io.harness.yaml.core.StageElement;
 import io.harness.yaml.core.auxiliary.intfc.StageElementWrapper;

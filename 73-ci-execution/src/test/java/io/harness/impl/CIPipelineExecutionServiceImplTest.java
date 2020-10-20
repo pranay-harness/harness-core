@@ -12,12 +12,12 @@ import static org.mockito.Mockito.when;
 import com.google.inject.Inject;
 
 import io.harness.category.element.UnitTests;
-import io.harness.cdng.pipeline.beans.entities.NgPipelineEntity;
 import io.harness.engine.OrchestrationService;
 import io.harness.execution.PlanExecution;
 import io.harness.executionplan.CIExecutionPlanCreatorRegistrar;
 import io.harness.executionplan.CIExecutionPlanTestHelper;
 import io.harness.executionplan.CIExecutionTest;
+import io.harness.ngpipeline.pipeline.beans.entities.NgPipelineEntity;
 import io.harness.rule.Owner;
 import org.junit.Before;
 import org.junit.Test;

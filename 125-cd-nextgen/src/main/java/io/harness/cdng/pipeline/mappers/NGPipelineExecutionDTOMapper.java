@@ -1,13 +1,13 @@
 package io.harness.cdng.pipeline.mappers;
 
-import io.harness.cdng.inputset.beans.entities.MergeInputSetResponse;
-import io.harness.cdng.pipeline.beans.resources.NGPipelineErrorDTO;
-import io.harness.cdng.pipeline.beans.resources.NGPipelineErrorResponseDTO;
-import io.harness.cdng.pipeline.beans.resources.NGPipelineErrorWrapperDTO;
-import io.harness.cdng.pipeline.beans.resources.NGPipelineExecutionResponseDTO;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.exception.InvalidRequestException;
 import io.harness.execution.PlanExecution;
+import io.harness.ngpipeline.inputset.beans.entities.MergeInputSetResponse;
+import io.harness.ngpipeline.pipeline.beans.resources.NGPipelineErrorDTO;
+import io.harness.ngpipeline.pipeline.beans.resources.NGPipelineErrorResponseDTO;
+import io.harness.ngpipeline.pipeline.beans.resources.NGPipelineErrorWrapperDTO;
+import io.harness.ngpipeline.pipeline.beans.resources.NGPipelineExecutionResponseDTO;
 import io.harness.walktree.visitor.mergeinputset.beans.MergeInputSetErrorResponse;
 import io.harness.walktree.visitor.response.VisitorErrorResponseWrapper;
 import io.harness.yaml.utils.JsonPipelineUtils;

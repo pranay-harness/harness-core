@@ -83,7 +83,7 @@ public class CIManagerApplication extends Application<CIManagerConfiguration> {
   public static final Store HARNESS_STORE = Store.builder().name("harness").build();
   private static final String APP_NAME = "CI Manager Service Application";
   public static final String BASE_PACKAGE = "io.harness.app.resources";
-  public static final String NG_PIPELINE_PACKAGE = "io.harness.ng.pipeline.resources";
+  public static final String NG_PIPELINE_PACKAGE = "io.harness.ngpipeline";
 
   public static void main(String[] args) throws Exception {
     Runtime.getRuntime().addShutdownHook(new Thread(() -> {

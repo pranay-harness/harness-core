@@ -2,7 +2,7 @@ package io.harness.ngpipeline.pipeline.repository.custom;
 
 import com.google.inject.Inject;
 import com.mongodb.client.result.UpdateResult;
-import io.harness.cdng.pipeline.beans.entities.NgPipelineEntity;
+import io.harness.ngpipeline.pipeline.beans.entities.NgPipelineEntity;
 import io.harness.ngpipeline.pipeline.mappers.NgPipelineFilterHelper;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;

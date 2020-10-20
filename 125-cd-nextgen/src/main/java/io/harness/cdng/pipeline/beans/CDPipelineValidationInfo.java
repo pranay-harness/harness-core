@@ -1,6 +1,6 @@
 package io.harness.cdng.pipeline.beans;
 
-import io.harness.cdng.pipeline.NgPipeline;
+import io.harness.ngpipeline.pipeline.beans.yaml.NgPipeline;
 import io.harness.walktree.visitor.response.VisitorErrorResponseWrapper;
 import lombok.Builder;
 import lombok.Data;

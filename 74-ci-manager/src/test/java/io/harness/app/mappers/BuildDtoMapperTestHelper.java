@@ -5,11 +5,11 @@ import io.harness.beans.execution.CommitDetails;
 import io.harness.beans.execution.PRWebhookEvent;
 import io.harness.beans.execution.WebhookExecutionSource;
 import io.harness.beans.execution.WebhookGitUser;
-import io.harness.cdng.pipeline.NgPipeline;
-import io.harness.cdng.pipeline.beans.entities.NgPipelineEntity;
 import io.harness.ci.beans.entities.CIBuild;
 import io.harness.dto.OrchestrationGraphDTO;
 import io.harness.execution.status.Status;
+import io.harness.ngpipeline.pipeline.beans.entities.NgPipelineEntity;
+import io.harness.ngpipeline.pipeline.beans.yaml.NgPipeline;
 
 import java.util.Arrays;
 

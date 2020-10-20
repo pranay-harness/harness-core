@@ -29,7 +29,6 @@ import io.harness.cdng.manifest.yaml.StoreConfigWrapper;
 import io.harness.cdng.manifest.yaml.kinds.K8sManifest;
 import io.harness.cdng.manifest.yaml.kinds.ValuesManifest;
 import io.harness.cdng.pipeline.DeploymentStage;
-import io.harness.cdng.pipeline.NgPipeline;
 import io.harness.cdng.pipeline.PipelineInfrastructure;
 import io.harness.cdng.pipeline.beans.CDPipelineSetupParameters;
 import io.harness.cdng.pipeline.beans.DeploymentStageStepParameters;
@@ -75,7 +74,6 @@ public class NgAliasRegistrar implements AliasRegistrar {
     orchestrationElements.put("shellScriptStepInfo", ShellScriptStepInfo.class);
     orchestrationElements.put("stageOverridesConfig", StageOverridesConfig.class);
     orchestrationElements.put("kubernetesServiceSpec", KubernetesServiceSpec.class);
-    orchestrationElements.put("io.harness.cdng.pipeline.beans.entities.pipelinesNG", NgPipeline.class);
     orchestrationElements.put("k8sManifest", K8sManifest.class);
     orchestrationElements.put("infrastructureDef", InfrastructureDef.class);
     orchestrationElements.put("serviceOutcome_artifactsOutcome", ServiceOutcome.ArtifactsOutcome.class);

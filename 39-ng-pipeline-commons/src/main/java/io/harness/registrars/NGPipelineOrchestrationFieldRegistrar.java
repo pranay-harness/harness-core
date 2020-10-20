@@ -3,7 +3,7 @@ package io.harness.registrars;
 import io.harness.beans.ParameterField;
 import io.harness.expression.field.OrchestrationFieldProcessor;
 import io.harness.expression.field.OrchestrationFieldType;
-import io.harness.expressions.ParameterFieldProcessor;
+import io.harness.ngpipeline.expressions.ParameterFieldProcessor;
 import io.harness.registries.registrar.OrchestrationFieldRegistrar;
 import org.apache.commons.lang3.tuple.Pair;
 
