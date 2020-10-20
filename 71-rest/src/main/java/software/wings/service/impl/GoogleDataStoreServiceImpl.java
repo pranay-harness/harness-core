@@ -173,6 +173,23 @@ public class GoogleDataStoreServiceImpl implements DataStoreService {
     });
   }
 
+  @Override
+  public void delete(Class<? extends GoogleDataStoreAware> clazz, String fieldName, String fieldValue) {
+    String collectionName = clazz.getAnnotation(org.mongodb.morphia.annotations.Entity.class).value();
+    logger.info("deleting records from {} for {} = {}", collectionName, fieldName, fieldValue);
+    Query<Key> query =
+        Query.newKeyQueryBuilder().setKind(collectionName).setFilter(PropertyFilter.eq(fieldName, fieldValue)).build();
+    List<Key> keysToDelete = new ArrayList<>();
+    datastore.run(query).forEachRemaining(keysToDelete::add);
+    logger.info("Total keys to delete in {} are {} for condition {} = {}", collectionName, keysToDelete.size(),
+        fieldName, fieldValue);
+    final List<List<Key>> keyBatches = Lists.partition(keysToDelete, DATA_STORE_BATCH_SIZE);
+    keyBatches.forEach(keys -> {
+      logger.info("purging {} records from {}", keys.size(), collectionName);
+      datastore.delete(keys.stream().toArray(Key[] ::new));
+    });
+  }
+
   private <T extends GoogleDataStoreAware> QueryResults<Entity> readResults(
       Class<T> clazz, PageRequest<T> pageRequest) {
     final Builder queryBuilder = Query.newEntityQueryBuilder()

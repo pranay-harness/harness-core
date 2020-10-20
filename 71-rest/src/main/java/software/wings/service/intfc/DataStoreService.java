@@ -22,4 +22,6 @@ public interface DataStoreService {
   void purgeOlderRecords();
 
   boolean supportsInOperator();
+
+  void delete(Class<? extends GoogleDataStoreAware> clazz, String fieldName, String fieldValue);
 }

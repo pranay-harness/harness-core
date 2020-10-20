@@ -1035,41 +1035,44 @@ public class MetricDataAnalysisServiceImpl implements MetricDataAnalysisService 
   @Override
   public void cleanUpForMetricRetry(String stateExecutionId) {
     // delete the metric templates
-    wingsPersistence.delete(wingsPersistence.createQuery(TimeSeriesMetricTemplates.class)
+    wingsPersistence.delete(wingsPersistence.createQuery(TimeSeriesMetricTemplates.class, excludeAuthority)
                                 .filter(TimeSeriesMetricTemplatesKeys.stateExecutionId, stateExecutionId));
 
     // delete new relic metric records
-    wingsPersistence.delete(wingsPersistence.createQuery(NewRelicMetricDataRecord.class)
+    wingsPersistence.delete(wingsPersistence.createQuery(NewRelicMetricDataRecord.class, excludeAuthority)
                                 .filter(NewRelicMetricDataRecordKeys.stateExecutionId, stateExecutionId));
 
     // delete new relic analysis records
-    wingsPersistence.delete(
-        wingsPersistence.createQuery(NewRelicMetricAnalysisRecord.class).filter("stateExecutionId", stateExecutionId));
+    wingsPersistence.delete(wingsPersistence.createQuery(NewRelicMetricAnalysisRecord.class, excludeAuthority)
+                                .filter("stateExecutionId", stateExecutionId));
 
     // delete time series analysis records
-    wingsPersistence.delete(wingsPersistence.createQuery(TimeSeriesMLAnalysisRecord.class)
+    wingsPersistence.delete(wingsPersistence.createQuery(TimeSeriesMLAnalysisRecord.class, excludeAuthority)
                                 .filter(MetricAnalysisRecordKeys.stateExecutionId, stateExecutionId));
 
     // delete time series scores records
-    wingsPersistence.delete(wingsPersistence.createQuery(TimeSeriesMLScores.class)
+    wingsPersistence.delete(wingsPersistence.createQuery(TimeSeriesMLScores.class, excludeAuthority)
                                 .filter(TimeSeriesMLScoresKeys.stateExecutionId, stateExecutionId));
 
     // delete cv dashboard execution data
     wingsPersistence.delete(
-        wingsPersistence.createQuery(ContinuousVerificationExecutionMetaData.class)
+        wingsPersistence.createQuery(ContinuousVerificationExecutionMetaData.class, excludeAuthority)
             .filter(ContinuousVerificationExecutionMetaDataKeys.stateExecutionId, stateExecutionId));
 
     // delete learning engine tasks
-    wingsPersistence.delete(
-        wingsPersistence.createQuery(LearningEngineAnalysisTask.class).filter("state_execution_id", stateExecutionId));
+    wingsPersistence.delete(wingsPersistence.createQuery(LearningEngineAnalysisTask.class, excludeAuthority)
+                                .filter("state_execution_id", stateExecutionId));
 
     // delete the metric groups
-    wingsPersistence.delete(
-        wingsPersistence.createQuery(TimeSeriesMetricGroup.class).filter("stateExecutionId", stateExecutionId));
+    wingsPersistence.delete(wingsPersistence.createQuery(TimeSeriesMetricGroup.class, excludeAuthority)
+                                .filter("stateExecutionId", stateExecutionId));
 
     // delete verification service tasks
-    wingsPersistence.delete(wingsPersistence.createQuery(AnalysisContext.class)
+    wingsPersistence.delete(wingsPersistence.createQuery(AnalysisContext.class, excludeAuthority)
                                 .filter(AnalysisContextKeys.stateExecutionId, stateExecutionId));
+
+    // delete collected records
+    dataStoreService.delete(TimeSeriesDataRecord.class, TimeSeriesMetricRecordKeys.stateExecutionId, stateExecutionId);
   }
 
   @Override

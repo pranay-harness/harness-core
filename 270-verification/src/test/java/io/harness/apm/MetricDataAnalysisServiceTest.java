@@ -57,6 +57,7 @@ import software.wings.beans.alert.Alert;
 import software.wings.beans.alert.cv.ContinuousVerificationAlertData;
 import software.wings.dl.WingsPersistence;
 import software.wings.metrics.RiskLevel;
+import software.wings.metrics.TimeSeriesDataRecord;
 import software.wings.service.impl.SettingsServiceImpl;
 import software.wings.service.impl.analysis.AnalysisContext;
 import software.wings.service.impl.analysis.ContinuousVerificationExecutionMetaData;
@@ -76,6 +77,7 @@ import software.wings.service.impl.newrelic.NewRelicMetricAnalysisRecord.NewReli
 import software.wings.service.impl.newrelic.NewRelicMetricAnalysisRecord.NewRelicMetricHostAnalysisValue;
 import software.wings.service.impl.newrelic.NewRelicMetricDataRecord;
 import software.wings.service.intfc.AppService;
+import software.wings.service.intfc.DataStoreService;
 import software.wings.service.intfc.MetricDataAnalysisService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.sm.StateExecutionData;
@@ -119,6 +121,7 @@ public class MetricDataAnalysisServiceTest extends VerificationBaseTest {
   @Mock private AppService appService;
   @Mock private VerificationManagerClient verificationManagerClient;
 
+  @Inject private DataStoreService dataStoreService;
   @Inject private WingsPersistence wingsPersistence;
   @Inject @InjectMocks private TimeSeriesAnalysisService metricDataAnalysisService;
   @Inject @InjectMocks private ContinuousVerificationService continuousVerificationService;
@@ -146,6 +149,7 @@ public class MetricDataAnalysisServiceTest extends VerificationBaseTest {
     FieldUtils.writeField(
         metricDataAnalysisService, "continuousVerificationService", continuousVerificationService, true);
     FieldUtils.writeField(managerAnalysisService, "appService", appService, true);
+    FieldUtils.writeField(managerAnalysisService, "dataStoreService", dataStoreService, true);
 
     wingsPersistence.save(StateExecutionInstance.Builder.aStateExecutionInstance()
                               .uuid(stateExecutionId)
@@ -883,6 +887,7 @@ public class MetricDataAnalysisServiceTest extends VerificationBaseTest {
           TimeSeriesMetricGroup.builder().stateExecutionId(stateExecutionId).stateType(StateType.values()[i]).build());
       wingsPersistence.save(
           AnalysisContext.builder().stateExecutionId(stateExecutionId).serviceId("service-" + i).build());
+      wingsPersistence.save(TimeSeriesDataRecord.builder().stateExecutionId(stateExecutionId).build());
     }
 
     assertThat(wingsPersistence.createQuery(TimeSeriesMetricTemplates.class).count()).isEqualTo(numOfRecords);
@@ -895,6 +900,7 @@ public class MetricDataAnalysisServiceTest extends VerificationBaseTest {
     assertThat(wingsPersistence.createQuery(LearningEngineAnalysisTask.class).count()).isEqualTo(numOfRecords);
     assertThat(wingsPersistence.createQuery(TimeSeriesMetricGroup.class).count()).isEqualTo(numOfRecords);
     assertThat(wingsPersistence.createQuery(AnalysisContext.class).count()).isEqualTo(numOfRecords);
+    assertThat(wingsPersistence.createQuery(TimeSeriesDataRecord.class).count()).isEqualTo(numOfRecords);
 
     managerAnalysisService.cleanUpForMetricRetry(stateExecutionId);
     assertThat(wingsPersistence.createQuery(TimeSeriesMetricTemplates.class).count()).isEqualTo(0);
@@ -906,6 +912,7 @@ public class MetricDataAnalysisServiceTest extends VerificationBaseTest {
     assertThat(wingsPersistence.createQuery(LearningEngineAnalysisTask.class).count()).isEqualTo(0);
     assertThat(wingsPersistence.createQuery(TimeSeriesMetricGroup.class).count()).isEqualTo(0);
     assertThat(wingsPersistence.createQuery(AnalysisContext.class).count()).isEqualTo(0);
+    assertThat(wingsPersistence.createQuery(TimeSeriesDataRecord.class).count()).isEqualTo(0);
   }
 
   private Application mockApplication() {
