@@ -19,3 +19,15 @@ message DelegateVersionsQuery {
 message DelegateVersions {
   repeated string delegate_version = 2;
 }
+
+message HttpsCertRequirementQuery {
+}
+
+message HttpsCertRequirement {
+  enum CertRequirement {
+    UNKNOWN_REQUIREMENT = 0;
+
+    CERTIFICATE_REQUIRED = 1;
+  }
+  CertRequirement cert_requirement = 1;
+}

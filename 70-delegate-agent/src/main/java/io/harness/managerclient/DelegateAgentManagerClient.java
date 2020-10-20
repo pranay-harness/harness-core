@@ -93,4 +93,9 @@ public interface DelegateAgentManagerClient {
   @POST("agent/delegates/instance-sync/{perpetualTaskId}")
   Call<RestResponse<Boolean>> publishInstanceSyncResult(@Path("perpetualTaskId") String perpetualTaskId,
       @Query("accountId") String accountId, @Body DelegateResponseData responseData);
+
+  // Query for a specific set of delegate properties for a given account.
+  // Request: GetDelegatePropertiesRequest
+  // Response: GetDelegatePropertiesResponse
+  @GET("agent/delegates/properties") Call<RestResponse<String>> getDelegateProperties(@Query("request") String request);
 }

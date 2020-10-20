@@ -32,6 +32,7 @@ import io.harness.logging.AutoLogContext;
 import io.harness.managerclient.DelegateVersions;
 import io.harness.managerclient.GetDelegatePropertiesRequest;
 import io.harness.managerclient.GetDelegatePropertiesResponse;
+import io.harness.managerclient.HttpsCertRequirement;
 import io.harness.managerclient.WatcherVersion;
 import io.harness.manifest.ManifestCollectionResponseHandler;
 import io.harness.perpetualtask.PerpetualTaskLogContext;
@@ -137,6 +138,11 @@ public class DelegateAgentResource {
                                 DelegateVersions.newBuilder()
                                     .addAllDelegateVersion(
                                         accountService.getDelegateConfiguration(accountId).getDelegateVersions())
+                                    .build());
+                          case "io.harness.managerclient.HttpsCertRequirementQuery":
+                            return Any.pack(
+                                HttpsCertRequirement.newBuilder()
+                                    .setCertRequirement(accountService.getHttpsCertificateRequirement(accountId))
                                     .build());
                           default:
                             throw new WingsException("invalid type: " + requestEntry.getTypeUrl());

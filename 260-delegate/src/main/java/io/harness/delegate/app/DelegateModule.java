@@ -41,6 +41,8 @@ import io.harness.delegate.service.DelegateCVTaskServiceImpl;
 import io.harness.delegate.service.DelegateConfigServiceImpl;
 import io.harness.delegate.service.DelegateFileManagerImpl;
 import io.harness.delegate.service.DelegateLogServiceImpl;
+import io.harness.delegate.service.DelegatePropertyService;
+import io.harness.delegate.service.DelegatePropertyServiceImpl;
 import io.harness.delegate.service.K8sGlobalConfigServiceImpl;
 import io.harness.delegate.service.LogAnalysisStoreServiceImpl;
 import io.harness.delegate.service.MetricDataStoreServiceImpl;
@@ -500,6 +502,7 @@ public class DelegateModule extends AbstractModule {
     install(NGDelegateModule.getInstance());
 
     bind(DelegateAgentService.class).to(DelegateAgentServiceImpl.class);
+    bind(DelegatePropertyService.class).to(DelegatePropertyServiceImpl.class);
     install(new FactoryModuleBuilder().implement(Jenkins.class, JenkinsImpl.class).build(JenkinsFactory.class));
     bind(DelegateFileManager.class).to(DelegateFileManagerImpl.class).asEagerSingleton();
     bind(ServiceCommandExecutorService.class).to(ServiceCommandExecutorServiceImpl.class);
