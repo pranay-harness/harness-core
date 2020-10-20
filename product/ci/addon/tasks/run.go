@@ -15,7 +15,7 @@ import (
 	"go.uber.org/zap"
 )
 
-//go:generate mockgen -source run.go -package=steps -destination mocks/run_mock.go RunTask
+//go:generate mockgen -source run.go -package=tasks -destination mocks/run_mock.go RunTask
 
 const (
 	defaultTimeoutSecs int64         = 14400 // 4 hour

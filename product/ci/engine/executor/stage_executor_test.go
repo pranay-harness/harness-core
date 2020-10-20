@@ -13,11 +13,26 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/wings-software/portal/commons/go/lib/logs"
 	caddon "github.com/wings-software/portal/product/ci/addon/grpc/client"
+	amgrpc "github.com/wings-software/portal/product/ci/addon/grpc/client/mocks"
+	addonpb "github.com/wings-software/portal/product/ci/addon/proto"
 	mexecutor "github.com/wings-software/portal/product/ci/engine/executor/mocks"
 	"github.com/wings-software/portal/product/ci/engine/output"
 	pb "github.com/wings-software/portal/product/ci/engine/proto"
 	"go.uber.org/zap"
+	"google.golang.org/grpc"
 )
+
+type mockSvcClient struct {
+	err error
+}
+
+func (c *mockSvcClient) ExecuteStep(ctx context.Context, in *addonpb.ExecuteStepRequest, opts ...grpc.CallOption) (*addonpb.ExecuteStepResponse, error) {
+	return nil, nil
+}
+
+func (c *mockSvcClient) SignalStop(ctx context.Context, in *addonpb.SignalStopRequest, opts ...grpc.CallOption) (*addonpb.SignalStopResponse, error) {
+	return nil, c.err
+}
 
 func getEncodedStageProto(t *testing.T, execution *pb.Execution) string {
 	data, err := proto.Marshal(execution)
@@ -144,7 +159,7 @@ func TestStageRun(t *testing.T) {
 	}
 
 	for _, tc := range tests {
-		e := NewStageExecutor(tc.encodedStage, tmpFilePath, false, log.Sugar())
+		e := NewStageExecutor(tc.encodedStage, tmpFilePath, nil, false, log.Sugar())
 		got := e.Run()
 		if tc.expectedErr == (got == nil) {
 			t.Fatalf("%s: expected error: %v, got: %v", tc.name, tc.expectedErr, got)
@@ -222,5 +237,81 @@ func TestExecuteStage(t *testing.T) {
 	emptyStage := ""
 	log, _ := logs.GetObservedLogger(zap.InfoLevel)
 
-	ExecuteStage(emptyStage, tmpFilePath, false, log.Sugar())
+	ExecuteStage(emptyStage, tmpFilePath, nil, false, log.Sugar())
+}
+
+// Client creation failing
+func TestStopIntegrationSvcClientErr(t *testing.T) {
+	ctrl, ctx := gomock.WithContext(context.Background(), t)
+	defer ctrl.Finish()
+
+	port := uint(8000)
+	log, _ := logs.GetObservedLogger(zap.InfoLevel)
+
+	oldClient := newAddonClient
+	defer func() { newAddonClient = oldClient }()
+	newAddonClient = func(port uint, log *zap.SugaredLogger) (caddon.AddonClient, error) {
+		return nil, errors.New("client create error")
+	}
+
+	e := &stageExecutor{
+		log: log.Sugar(),
+	}
+	err := e.stopIntegrationSvc(ctx, port)
+	assert.NotNil(t, err)
+}
+
+// Failed to send GRPC request
+func TestStopIntegrationSvcErr(t *testing.T) {
+	ctrl, ctx := gomock.WithContext(context.Background(), t)
+	defer ctrl.Finish()
+
+	port := uint(8000)
+	log, _ := logs.GetObservedLogger(zap.InfoLevel)
+
+	c := &mockSvcClient{
+		err: errors.New("server not running"),
+	}
+	mClient := amgrpc.NewMockAddonClient(ctrl)
+	mClient.EXPECT().CloseConn().Return(nil)
+	mClient.EXPECT().Client().Return(c)
+
+	oldClient := newAddonClient
+	defer func() { newAddonClient = oldClient }()
+	newAddonClient = func(port uint, log *zap.SugaredLogger) (caddon.AddonClient, error) {
+		return mClient, nil
+	}
+
+	e := &stageExecutor{
+		log: log.Sugar(),
+	}
+	err := e.stopIntegrationSvc(ctx, port)
+	assert.NotNil(t, err)
+}
+
+func TestStopIntegrationSvcSuccess(t *testing.T) {
+	ctrl, ctx := gomock.WithContext(context.Background(), t)
+	defer ctrl.Finish()
+
+	port := uint(8000)
+	log, _ := logs.GetObservedLogger(zap.InfoLevel)
+
+	c := &mockSvcClient{
+		err: nil,
+	}
+	mClient := amgrpc.NewMockAddonClient(ctrl)
+	mClient.EXPECT().CloseConn().Return(nil)
+	mClient.EXPECT().Client().Return(c)
+
+	oldClient := newAddonClient
+	defer func() { newAddonClient = oldClient }()
+	newAddonClient = func(port uint, log *zap.SugaredLogger) (caddon.AddonClient, error) {
+		return mClient, nil
+	}
+
+	e := &stageExecutor{
+		log: log.Sugar(),
+	}
+	err := e.stopIntegrationSvc(ctx, port)
+	assert.Nil(t, err)
 }

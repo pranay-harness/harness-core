@@ -1,4 +1,4 @@
-package entrypoint
+package images
 
 import (
 	"fmt"
@@ -7,24 +7,25 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestPublicImage(t *testing.T) {
-	image := "plugins/git"
-	cmds, err := PublicImage(image)
+func TestPublicMetadata(t *testing.T) {
+	image := "redis"
+	ep, cmds, err := PublicMetadata(image)
+	fmt.Println(ep)
 	fmt.Println(cmds)
 	assert.Nil(t, err)
 	assert.NotEqual(t, len(cmds), 0)
 }
 
-func TestPublicImageNameErr(t *testing.T) {
+func TestPublicNameErr(t *testing.T) {
 	image := "plugins:g:it"
-	_, err := PublicImage(image)
+	_, _, err := PublicMetadata(image)
 	assert.NotNil(t, err)
 }
 
 func TestPrivateImageInvalidDockerCfg(t *testing.T) {
 	image := "harness/ci-lite-engine:v0.7-alpha"
 	cfg := "hello"
-	_, err := PrivateImage(image, cfg)
+	_, _, err := PrivateMetadata(image, cfg)
 	fmt.Println(err)
 	assert.NotNil(t, err)
 }
@@ -32,7 +33,7 @@ func TestPrivateImageInvalidDockerCfg(t *testing.T) {
 func TestPrivateImageKeyChainErr(t *testing.T) {
 	image := "harness/ci-lite-engine:v0.7-alpha"
 	cfg := "Zm9vLWJhcg=="
-	_, err := PrivateImage(image, cfg)
+	_, _, err := PrivateMetadata(image, cfg)
 	fmt.Println(err)
 	assert.NotNil(t, err)
 }
@@ -40,7 +41,7 @@ func TestPrivateImageKeyChainErr(t *testing.T) {
 func TestPrivateImageInvalidSecret(t *testing.T) {
 	image := "harness/ci-lite-engine:v0.7-alpha"
 	cfg := "eyJodHRwczovL2luZGV4LmRvY2tlci5pby92MS8iOnsidXNlcm5hbWUiOiJmb28iLCJwYXNzd29yZCI6ImJhciJ9fQ=="
-	_, err := PrivateImage(image, cfg)
+	_, _, err := PrivateMetadata(image, cfg)
 	fmt.Println(err)
 	assert.NotNil(t, err)
 }
