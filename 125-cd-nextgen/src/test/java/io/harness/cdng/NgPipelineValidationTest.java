@@ -7,7 +7,7 @@ import com.google.inject.Inject;
 import com.google.inject.Injector;
 
 import io.harness.category.element.UnitTests;
-import io.harness.cdng.pipeline.NgPipeline;
+import io.harness.ngpipeline.pipeline.beans.yaml.NgPipeline;
 import io.harness.rule.Owner;
 import io.harness.walktree.visitor.validation.ValidationVisitor;
 import io.harness.walktree.visitor.validation.modes.ModeType;

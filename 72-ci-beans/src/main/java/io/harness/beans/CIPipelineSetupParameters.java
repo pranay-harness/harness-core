@@ -1,7 +1,7 @@
 package io.harness.beans;
 
 import io.harness.beans.executionargs.CIExecutionArgs;
-import io.harness.cdng.pipeline.NgPipeline;
+import io.harness.ngpipeline.pipeline.beans.yaml.NgPipeline;
 import io.harness.state.io.StepParameters;
 import lombok.Builder;
 import lombok.Data;

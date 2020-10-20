@@ -14,11 +14,11 @@ import com.google.inject.Inject;
 
 import io.harness.app.resources.CIWebhookTriggerResource;
 import io.harness.category.element.UnitTests;
-import io.harness.cdng.pipeline.beans.entities.NgPipelineEntity;
-import io.harness.cdng.pipeline.service.NGPipelineService;
 import io.harness.core.trigger.WebhookTriggerProcessor;
 import io.harness.core.trigger.WebhookTriggerProcessorUtils;
 import io.harness.impl.CIPipelineExecutionService;
+import io.harness.ngpipeline.pipeline.beans.entities.NgPipelineEntity;
+import io.harness.ngpipeline.pipeline.service.NGPipelineService;
 import io.harness.rule.Owner;
 import org.apache.commons.io.FileUtils;
 import org.junit.Before;

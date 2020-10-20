@@ -1,7 +1,7 @@
 package io.harness.cdng.pipeline.executions.repositories;
 
 import io.harness.annotation.HarnessRepo;
-import io.harness.cdng.pipeline.executions.beans.PipelineExecutionSummary;
+import io.harness.ngpipeline.pipeline.executions.beans.PipelineExecutionSummary;
 import org.springframework.data.repository.PagingAndSortingRepository;
 
 import java.util.Optional;

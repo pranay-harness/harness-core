@@ -1,8 +1,8 @@
 package io.harness.cdng.k8s;
 
-import static io.harness.cdng.orchestration.StepUtils.prepareDelegateTaskInput;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.ngpipeline.orchestration.StepUtils.prepareDelegateTaskInput;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.inject.Inject;
@@ -21,7 +21,6 @@ import io.harness.cdng.manifest.yaml.kinds.ValuesManifest;
 import io.harness.cdng.service.beans.ServiceOutcome;
 import io.harness.cdng.stepsdependency.constants.OutcomeExpressionConstants;
 import io.harness.cdng.stepsdependency.utils.CDStepDependencyUtils;
-import io.harness.common.AmbianceHelper;
 import io.harness.connector.apis.dto.ConnectorInfoDTO;
 import io.harness.delegate.beans.TaskData;
 import io.harness.delegate.beans.connector.gitconnector.GitConfigDTO;
@@ -47,6 +46,7 @@ import io.harness.facilitator.modes.chain.task.TaskChainResponse;
 import io.harness.git.model.FetchFilesResult;
 import io.harness.git.model.GitFile;
 import io.harness.logging.CommandExecutionStatus;
+import io.harness.ngpipeline.common.AmbianceHelper;
 import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.state.Step;
 import io.harness.state.StepType;

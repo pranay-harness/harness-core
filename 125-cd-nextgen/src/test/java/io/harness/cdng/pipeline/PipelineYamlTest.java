@@ -25,6 +25,7 @@ import io.harness.cdng.service.beans.ServiceConfig;
 import io.harness.cdng.service.beans.StageOverridesConfig;
 import io.harness.cdng.variables.beans.NGVariableOverrideSets;
 import io.harness.ng.core.common.beans.Tag;
+import io.harness.ngpipeline.pipeline.beans.yaml.NgPipeline;
 import io.harness.rule.Owner;
 import io.harness.yaml.core.ParallelStepElement;
 import io.harness.yaml.core.StageElement;

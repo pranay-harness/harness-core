@@ -6,12 +6,12 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import io.harness.beans.executionargs.CIExecutionArgs;
-import io.harness.cdng.pipeline.beans.entities.NgPipelineEntity;
 import io.harness.ci.beans.entities.CIBuild;
 import io.harness.core.ci.services.CIBuildServiceImpl;
 import io.harness.engine.OrchestrationService;
 import io.harness.execution.PlanExecution;
 import io.harness.executionplan.service.ExecutionPlanCreatorService;
+import io.harness.ngpipeline.pipeline.beans.entities.NgPipelineEntity;
 import io.harness.plan.Plan;
 import lombok.extern.slf4j.Slf4j;
 

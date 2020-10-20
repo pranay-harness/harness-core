@@ -2,7 +2,7 @@ package io.harness.cdng.pipeline.executions.repositories;
 
 import com.google.inject.Inject;
 
-import io.harness.cdng.pipeline.executions.beans.PipelineExecutionSummary;
+import io.harness.ngpipeline.pipeline.executions.beans.PipelineExecutionSummary;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import org.springframework.data.domain.Page;

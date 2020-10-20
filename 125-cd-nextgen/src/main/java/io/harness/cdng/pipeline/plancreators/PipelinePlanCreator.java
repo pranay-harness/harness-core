@@ -10,7 +10,6 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import io.harness.cdng.executionplan.utils.PlanCreatorConfigUtils;
-import io.harness.cdng.pipeline.NgPipeline;
 import io.harness.cdng.pipeline.beans.CDPipelineSetupParameters;
 import io.harness.cdng.pipeline.steps.PipelineSetupStep;
 import io.harness.executionplan.core.AbstractPlanCreatorWithChildren;
@@ -24,6 +23,7 @@ import io.harness.executionplan.plancreator.beans.StepOutcomeGroup;
 import io.harness.executionplan.service.ExecutionPlanCreatorHelper;
 import io.harness.facilitator.FacilitatorObtainment;
 import io.harness.facilitator.FacilitatorType;
+import io.harness.ngpipeline.pipeline.beans.yaml.NgPipeline;
 import io.harness.plan.PlanNode;
 import io.harness.yaml.core.auxiliary.intfc.StageElementWrapper;
 import lombok.extern.slf4j.Slf4j;

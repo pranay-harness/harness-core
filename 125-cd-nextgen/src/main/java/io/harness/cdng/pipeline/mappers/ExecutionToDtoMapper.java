@@ -1,14 +1,14 @@
 package io.harness.cdng.pipeline.mappers;
 
-import io.harness.cdng.pipeline.executions.ExecutionStatus;
-import io.harness.cdng.pipeline.executions.beans.CDStageExecutionSummary;
-import io.harness.cdng.pipeline.executions.beans.ParallelStageExecutionSummary;
-import io.harness.cdng.pipeline.executions.beans.PipelineExecutionSummary;
-import io.harness.cdng.pipeline.executions.beans.StageExecutionSummary;
-import io.harness.cdng.pipeline.executions.beans.dto.CDStageExecutionSummaryDTO;
-import io.harness.cdng.pipeline.executions.beans.dto.ParallelStageExecutionSummaryDTO;
-import io.harness.cdng.pipeline.executions.beans.dto.PipelineExecutionSummaryDTO;
-import io.harness.cdng.pipeline.executions.beans.dto.StageExecutionSummaryDTO;
+import io.harness.ngpipeline.pipeline.executions.ExecutionStatus;
+import io.harness.ngpipeline.pipeline.executions.beans.CDStageExecutionSummary;
+import io.harness.ngpipeline.pipeline.executions.beans.ParallelStageExecutionSummary;
+import io.harness.ngpipeline.pipeline.executions.beans.PipelineExecutionSummary;
+import io.harness.ngpipeline.pipeline.executions.beans.StageExecutionSummary;
+import io.harness.ngpipeline.pipeline.executions.beans.dto.CDStageExecutionSummaryDTO;
+import io.harness.ngpipeline.pipeline.executions.beans.dto.ParallelStageExecutionSummaryDTO;
+import io.harness.ngpipeline.pipeline.executions.beans.dto.PipelineExecutionSummaryDTO;
+import io.harness.ngpipeline.pipeline.executions.beans.dto.StageExecutionSummaryDTO;
 import lombok.experimental.UtilityClass;
 
 import java.util.List;

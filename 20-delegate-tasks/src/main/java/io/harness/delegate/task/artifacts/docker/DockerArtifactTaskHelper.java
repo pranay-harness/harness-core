@@ -2,7 +2,6 @@ package io.harness.delegate.task.artifacts.docker;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
-
 import io.harness.delegate.task.artifacts.request.ArtifactTaskParameters;
 import io.harness.delegate.task.artifacts.response.ArtifactTaskExecutionResponse;
 import io.harness.delegate.task.artifacts.response.ArtifactTaskResponse;
@@ -70,7 +69,9 @@ public class DockerArtifactTaskHelper {
   }
 
   private void decryptRequestDTOs(DockerArtifactDelegateRequest dockerRequest) {
-    secretDecryptionService.decrypt(
-        dockerRequest.getDockerConnectorDTO().getAuth().getCredentials(), dockerRequest.getEncryptedDataDetails());
+    if (dockerRequest.getDockerConnectorDTO().getAuth() != null) {
+      secretDecryptionService.decrypt(
+          dockerRequest.getDockerConnectorDTO().getAuth().getCredentials(), dockerRequest.getEncryptedDataDetails());
+    }
   }
 }

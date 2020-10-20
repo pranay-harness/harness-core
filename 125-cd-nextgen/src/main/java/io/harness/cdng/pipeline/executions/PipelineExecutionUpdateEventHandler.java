@@ -6,7 +6,6 @@ import io.harness.ambiance.Ambiance;
 import io.harness.cdng.pipeline.executions.service.NgPipelineExecutionService;
 import io.harness.cdng.service.beans.ServiceOutcome;
 import io.harness.cdng.service.steps.ServiceStep;
-import io.harness.common.AmbianceHelper;
 import io.harness.engine.executions.node.NodeExecutionServiceImpl;
 import io.harness.engine.outcomes.OutcomeService;
 import io.harness.execution.NodeExecution;
@@ -14,6 +13,7 @@ import io.harness.execution.events.OrchestrationEvent;
 import io.harness.execution.events.SyncOrchestrationEventHandler;
 import io.harness.execution.status.Status;
 import io.harness.executionplan.plancreator.beans.StepOutcomeGroup;
+import io.harness.ngpipeline.common.AmbianceHelper;
 import io.harness.plan.PlanNode;
 
 import java.util.Objects;

@@ -1,7 +1,7 @@
 package io.harness.ngpipeline.pipeline.repository.custom;
 
 import com.mongodb.client.result.UpdateResult;
-import io.harness.cdng.pipeline.beans.entities.NgPipelineEntity;
+import io.harness.ngpipeline.pipeline.beans.entities.NgPipelineEntity;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;

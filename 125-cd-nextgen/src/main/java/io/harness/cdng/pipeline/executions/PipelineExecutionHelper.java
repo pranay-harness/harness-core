@@ -1,24 +1,25 @@
 package io.harness.cdng.pipeline.executions;
 
-import static io.harness.cdng.pipeline.executions.ExecutionStatus.getExecutionStatus;
+import static io.harness.ngpipeline.pipeline.executions.ExecutionStatus.getExecutionStatus;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import io.harness.cdng.artifact.bean.ArtifactOutcome;
-import io.harness.cdng.pipeline.NgPipeline;
-import io.harness.cdng.pipeline.StageTypeToStageExecutionSummaryMapper;
-import io.harness.cdng.pipeline.executions.beans.CDStageExecutionSummary;
-import io.harness.cdng.pipeline.executions.beans.ExecutionErrorInfo;
-import io.harness.cdng.pipeline.executions.beans.ParallelStageExecutionSummary;
-import io.harness.cdng.pipeline.executions.beans.PipelineExecutionSummary;
-import io.harness.cdng.pipeline.executions.beans.ServiceExecutionSummary;
-import io.harness.cdng.pipeline.executions.beans.StageExecutionSummary;
-import io.harness.cdng.pipeline.executions.registries.StageTypeToStageExecutionMapperHelperRegistry;
 import io.harness.cdng.service.beans.ServiceOutcome;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.exception.UnknownStageElementWrapperException;
 import io.harness.execution.NodeExecution;
+import io.harness.ngpipeline.pipeline.StageTypeToStageExecutionSummaryMapper;
+import io.harness.ngpipeline.pipeline.beans.yaml.NgPipeline;
+import io.harness.ngpipeline.pipeline.executions.ExecutionStatus;
+import io.harness.ngpipeline.pipeline.executions.beans.CDStageExecutionSummary;
+import io.harness.ngpipeline.pipeline.executions.beans.ExecutionErrorInfo;
+import io.harness.ngpipeline.pipeline.executions.beans.ParallelStageExecutionSummary;
+import io.harness.ngpipeline.pipeline.executions.beans.PipelineExecutionSummary;
+import io.harness.ngpipeline.pipeline.executions.beans.ServiceExecutionSummary;
+import io.harness.ngpipeline.pipeline.executions.beans.StageExecutionSummary;
+import io.harness.ngpipeline.pipeline.executions.registries.StageTypeToStageExecutionMapperHelperRegistry;
 import io.harness.yaml.core.ParallelStageElement;
 import io.harness.yaml.core.StageElement;
 import io.harness.yaml.core.auxiliary.intfc.StageElementWrapper;

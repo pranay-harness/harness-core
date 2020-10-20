@@ -1,8 +1,8 @@
 package io.harness.ngpipeline.pipeline.mappers;
 
 import io.harness.NGResourceFilterConstants;
-import io.harness.cdng.pipeline.beans.entities.NgPipelineEntity;
-import io.harness.cdng.pipeline.beans.entities.NgPipelineEntity.PipelineNGKeys;
+import io.harness.ngpipeline.pipeline.beans.entities.NgPipelineEntity;
+import io.harness.ngpipeline.pipeline.beans.entities.NgPipelineEntity.PipelineNGKeys;
 import io.harness.data.structure.EmptyPredicate;
 import lombok.experimental.UtilityClass;
 import org.springframework.data.mongodb.core.query.Criteria;
