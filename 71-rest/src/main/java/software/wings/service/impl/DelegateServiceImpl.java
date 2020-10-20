@@ -56,7 +56,6 @@ import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 import static software.wings.beans.Application.GLOBAL_APP_ID;
 import static software.wings.beans.DelegateSequenceConfig.Builder.aDelegateSequenceBuilder;
 import static software.wings.beans.Event.Builder.anEvent;
-import static software.wings.beans.FeatureName.DISABLE_DELEGATE_CAPABILITY_FRAMEWORK;
 import static software.wings.beans.FeatureName.USE_CDN_FOR_STORAGE_FILES;
 import static software.wings.beans.alert.AlertType.NoEligibleDelegates;
 
@@ -238,7 +237,6 @@ import software.wings.service.intfc.ServiceTemplateService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.security.ManagerDecryptionService;
 import software.wings.service.intfc.security.SecretManager;
-import software.wings.utils.DelegateTaskUtils;
 
 import java.io.ByteArrayOutputStream;
 import java.io.File;
@@ -2207,31 +2205,17 @@ public class DelegateServiceImpl implements DelegateService {
     return delegateTaskResultsProvider.getDelegateTaskResults(taskId);
   }
 
-  // TODO: Required right now, as at delegateSide based on capabilities are present or not,
-  // TODO: either new CapabilityCheckController or existing ValidationClass is used.
   private void generateCapabilitiesForTaskIfFeatureEnabled(DelegateTask task) {
-    boolean enabled = !featureFlagService.isEnabled(DISABLE_DELEGATE_CAPABILITY_FRAMEWORK, task.getAccountId());
+    addMergedParamsForCapabilityCheck(task);
 
-    if (!enabled) {
-      return;
-    }
+    DelegateTaskPackage delegateTaskPackage = getDelegatePackageWithEncryptionConfig(task);
+    CapabilityHelper.embedCapabilitiesInDelegateTask(task,
+        delegateTaskPackage == null || isEmpty(delegateTaskPackage.getEncryptionConfigs())
+            ? emptyList()
+            : delegateTaskPackage.getEncryptionConfigs().values());
 
-    try {
-      addMergedParamsForCapabilityCheck(task);
-
-      DelegateTaskPackage delegateTaskPackage = getDelegatePackageWithEncryptionConfig(task);
-      CapabilityHelper.embedCapabilitiesInDelegateTask(task,
-          delegateTaskPackage == null || isEmpty(delegateTaskPackage.getEncryptionConfigs())
-              ? emptyList()
-              : delegateTaskPackage.getEncryptionConfigs().values());
-
-      if (isNotEmpty(task.getExecutionCapabilities())) {
-        logger.info(CapabilityHelper.generateLogStringWithCapabilitiesGenerated(task));
-      }
-
-      task.setCapabilityFrameworkEnabled(enabled);
-    } catch (RuntimeException exception) {
-      logger.error("Exception while preparing the task capabilities", exception);
+    if (isNotEmpty(task.getExecutionCapabilities())) {
+      logger.info(CapabilityHelper.generateLogStringWithCapabilitiesGenerated(task));
     }
   }
 
@@ -2360,9 +2344,9 @@ public class DelegateServiceImpl implements DelegateService {
                                           .filter(e -> e.evaluationMode() == ExecutionCapability.EvaluationMode.AGENT)
                                           .count();
       }
+
       // If all delegate task capabilities were evaluated and they were ok, we can assign the task
-      if ((featureFlagService.isEnabled(DISABLE_DELEGATE_CAPABILITY_FRAMEWORK, delegateTask.getAccountId())
-              || requiredDelegateCapabilites == size(results))
+      if (requiredDelegateCapabilites == size(results)
           && results.stream().allMatch(DelegateConnectionResult::isValidated)) {
         return assignTask(delegateId, taskId, delegateTask);
       }
@@ -2457,7 +2441,7 @@ public class DelegateServiceImpl implements DelegateService {
   }
 
   private String generateValidationError(DelegateTask delegateTask) {
-    String capabilities;
+    String capabilities = "";
     List<ExecutionCapability> executionCapabilities = delegateTask.getExecutionCapabilities();
     if (isNotEmpty(executionCapabilities)) {
       capabilities = (executionCapabilities.size() > 4 ? executionCapabilities.subList(0, 4) : executionCapabilities)
@@ -2467,10 +2451,6 @@ public class DelegateServiceImpl implements DelegateService {
       if (executionCapabilities.size() > 4) {
         capabilities += ", and " + (executionCapabilities.size() - 4) + " more...";
       }
-    } else {
-      DelegateTaskPackage delegateTaskPackage = DelegateTaskUtils.getDelegateTaskPackage(delegateTask);
-      capabilities =
-          join(", ", TaskType.valueOf(delegateTask.getData().getTaskType()).getCriteria(delegateTaskPackage, injector));
     }
 
     String delegates = null, timedoutDelegates = null;
@@ -2599,14 +2579,12 @@ public class DelegateServiceImpl implements DelegateService {
                                       .collect(toList());
       }
 
-      DelegateTaskPackageBuilder delegateTaskPackageBuilder =
-          DelegateTaskPackage.builder()
-              .accountId(delegateTask.getAccountId())
-              .delegateId(delegateTask.getDelegateId())
-              .delegateTaskId(delegateTask.getUuid())
-              .data(delegateTask.getData())
-              .capabilityFrameworkEnabled(delegateTask.isCapabilityFrameworkEnabled())
-              .executionCapabilities(executionCapabilityList);
+      DelegateTaskPackageBuilder delegateTaskPackageBuilder = DelegateTaskPackage.builder()
+                                                                  .accountId(delegateTask.getAccountId())
+                                                                  .delegateId(delegateTask.getDelegateId())
+                                                                  .delegateTaskId(delegateTask.getUuid())
+                                                                  .data(delegateTask.getData())
+                                                                  .executionCapabilities(executionCapabilityList);
 
       if (delegateTask.getData().getParameters() == null || delegateTask.getData().getParameters().length != 1
           || !(delegateTask.getData().getParameters()[0] instanceof TaskParameters)) {

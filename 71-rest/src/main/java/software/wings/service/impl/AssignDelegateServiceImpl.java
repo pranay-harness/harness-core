@@ -6,7 +6,6 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static java.util.Collections.emptyList;
 import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
-import static software.wings.beans.FeatureName.DISABLE_DELEGATE_CAPABILITY_FRAMEWORK;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.cache.CacheBuilder;
@@ -437,19 +436,15 @@ public class AssignDelegateServiceImpl implements AssignDelegateService {
 
   protected List<String> fetchCriteria(DelegateTask task) {
     DelegateTaskPackage delegateTaskPackage = DelegateTaskUtils.getDelegateTaskPackage(task);
-    if (!featureFlagService.isEnabled(DISABLE_DELEGATE_CAPABILITY_FRAMEWORK, task.getAccountId())) {
-      if (isEmpty(delegateTaskPackage.getExecutionCapabilities())) {
-        return emptyList();
-      }
-
-      return delegateTaskPackage.getExecutionCapabilities()
-          .stream()
-          .filter(e -> e.evaluationMode() == ExecutionCapability.EvaluationMode.AGENT)
-          .map(ExecutionCapability::fetchCapabilityBasis)
-          .collect(toList());
-    } else {
-      return TaskType.valueOf(task.getData().getTaskType()).getCriteria(delegateTaskPackage, injector);
+    if (isEmpty(delegateTaskPackage.getExecutionCapabilities())) {
+      return emptyList();
     }
+
+    return delegateTaskPackage.getExecutionCapabilities()
+        .stream()
+        .filter(e -> e.evaluationMode() == ExecutionCapability.EvaluationMode.AGENT)
+        .map(ExecutionCapability::fetchCapabilityBasis)
+        .collect(toList());
   }
 
   @Override

@@ -70,9 +70,6 @@ public class DelegateTask
         .build();
   }
 
-  // TODO: this is temporary to propagate if the compatibility framework is enabled for particular task
-  private boolean capabilityFrameworkEnabled;
-
   @NotNull private TaskData data;
   private List<ExecutionCapability> executionCapabilities;
 
