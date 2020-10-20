@@ -3,7 +3,6 @@ package software.wings.beans.ci.pod;
 import lombok.Builder;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
-import software.wings.beans.GitFetchFilesConfig;
 
 import java.util.List;
 import java.util.Map;
@@ -11,16 +10,20 @@ import java.util.Map;
 @Getter
 @EqualsAndHashCode(callSuper = true)
 public class CIK8PodParams<T extends ContainerParams> extends PodParams<T> {
-  private GitFetchFilesConfig gitFetchFilesConfig;
-  private String stepExecVolumeName;
-  private String stepExecWorkingDir;
+  private final ConnectorDetails gitConnector;
+  private final String branchName;
+  private final String commitId;
+  private final String stepExecVolumeName;
+  private final String stepExecWorkingDir;
 
   @Builder
-  public CIK8PodParams(GitFetchFilesConfig gitFetchFilesConfig, String stepExecVolumeName, String stepExecWorkingDir,
-      String name, String namespace, Map<String, String> labels, List<T> containerParamsList,
+  public CIK8PodParams(ConnectorDetails gitConnector, String branchName, String commitId, String stepExecVolumeName,
+      String stepExecWorkingDir, String name, String namespace, Map<String, String> labels, List<T> containerParamsList,
       List<T> initContainerParamsList, List<PVCParams> pvcParamList, List<HostAliasParams> hostAliasParamsList) {
     super(name, namespace, labels, containerParamsList, initContainerParamsList, pvcParamList, hostAliasParamsList);
-    this.gitFetchFilesConfig = gitFetchFilesConfig;
+    this.gitConnector = gitConnector;
+    this.branchName = branchName;
+    this.commitId = commitId;
     this.stepExecVolumeName = stepExecVolumeName;
     this.stepExecWorkingDir = stepExecWorkingDir;
   }

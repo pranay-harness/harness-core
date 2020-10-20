@@ -1,0 +1,252 @@
+package io.harness.stateutils.buildstate;
+
+import static io.harness.rule.OwnerRule.ALEKSANDAR;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.Mockito.any;
+import static org.mockito.Mockito.eq;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+
+import com.google.inject.Inject;
+
+import io.harness.beans.DecryptableEntity;
+import io.harness.category.element.UnitTests;
+import io.harness.connector.apis.client.ConnectorResourceClient;
+import io.harness.connector.apis.dto.ConnectorDTO;
+import io.harness.connector.apis.dto.ConnectorInfoDTO;
+import io.harness.delegate.beans.connector.ConnectorType;
+import io.harness.delegate.beans.connector.docker.DockerAuthCredentialsDTO;
+import io.harness.delegate.beans.connector.gitconnector.GitAuthenticationDTO;
+import io.harness.delegate.beans.connector.k8Connector.KubernetesAuthCredentialDTO;
+import io.harness.exception.InvalidArgumentsException;
+import io.harness.exception.InvalidRequestException;
+import io.harness.exception.UnexpectedException;
+import io.harness.executionplan.CIExecutionPlanTestHelper;
+import io.harness.executionplan.CIExecutionTest;
+import io.harness.ng.core.BaseNGAccess;
+import io.harness.ng.core.NGAccess;
+import io.harness.ng.core.dto.ResponseDTO;
+import io.harness.rule.Owner;
+import io.harness.secretmanagerclient.services.api.SecretManagerClientService;
+import io.harness.security.encryption.EncryptedDataDetail;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import retrofit2.Call;
+import retrofit2.Response;
+import software.wings.beans.ci.pod.ConnectorDetails;
+
+import java.io.IOException;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
+
+public class ConnectorUtilsTest extends CIExecutionTest {
+  @Inject CIExecutionPlanTestHelper ciExecutionPlanTestHelper;
+
+  @Mock private ConnectorResourceClient connectorResourceClient;
+  @Mock private SecretManagerClientService secretManagerClientService;
+  @InjectMocks ConnectorUtils connectorUtils;
+
+  private NGAccess ngAccess;
+  private ConnectorDTO gitConnectorDto;
+  private ConnectorDTO dockerConnectorDto;
+  private ConnectorDTO k8sConnectorDto;
+  private ConnectorDTO k8sConnectorFromDelegate;
+  private static final String PROJ_ID = "projectId";
+  private static final String ORG_ID = "orgId";
+  private static final String ACCOUNT_ID = "accountId";
+
+  private static final String connectorId01 = "gitConnector";
+  private static final String connectorId02 = "dockerConnector";
+  private static final String connectorId03 = "k8sConnector";
+  private static final String connectorId04 = "k8sConnectorFromDelegate";
+  private static final String unsupportedConnectorId = "k8sConnectorFromDelegate";
+  private static final Set<String> connectorIdSet =
+      new HashSet<>(Arrays.asList(connectorId01, connectorId02, connectorId03));
+
+  @Before
+  public void setUp() {
+    ngAccess =
+        BaseNGAccess.builder().projectIdentifier(PROJ_ID).orgIdentifier(ORG_ID).accountIdentifier(ACCOUNT_ID).build();
+    gitConnectorDto = ciExecutionPlanTestHelper.getGitConnectorDTO();
+    dockerConnectorDto = ciExecutionPlanTestHelper.getDockerConnectorDTO();
+    k8sConnectorDto = ciExecutionPlanTestHelper.getK8sConnectorDTO();
+    k8sConnectorFromDelegate = ciExecutionPlanTestHelper.getK8sConnectorFromDelegateDTO();
+  }
+
+  @Test
+  @Owner(developers = ALEKSANDAR)
+  @Category(UnitTests.class)
+  public void testGetGitConnector() throws IOException {
+    Call<ResponseDTO<Optional<ConnectorDTO>>> getConnectorResourceCall = mock(Call.class);
+    ResponseDTO<Optional<ConnectorDTO>> responseDTO = ResponseDTO.newResponse(Optional.of(gitConnectorDto));
+    when(getConnectorResourceCall.execute()).thenReturn(Response.success(responseDTO));
+
+    when(connectorResourceClient.get(eq(connectorId01), eq(ACCOUNT_ID), eq(ORG_ID), eq(PROJ_ID)))
+        .thenReturn(getConnectorResourceCall);
+    when(secretManagerClientService.getEncryptionDetails(eq(ngAccess), any(GitAuthenticationDTO.class)))
+        .thenReturn(Collections.singletonList(EncryptedDataDetail.builder().build()))
+        .thenReturn(null);
+
+    ConnectorDetails connectorDetails = connectorUtils.getConnectorDetails(ngAccess, connectorId01);
+    assertThat(connectorDetails.getConnectorDTO()).isEqualTo(gitConnectorDto);
+    verify(connectorResourceClient, times(1)).get(eq(connectorId01), eq(ACCOUNT_ID), eq(ORG_ID), eq(PROJ_ID));
+    verify(secretManagerClientService, times(1)).getEncryptionDetails(eq(ngAccess), any(GitAuthenticationDTO.class));
+
+    assertThatThrownBy(() -> connectorUtils.getConnectorDetails(ngAccess, connectorId01))
+        .isInstanceOf(InvalidArgumentsException.class);
+  }
+
+  @Test
+  @Owner(developers = ALEKSANDAR)
+  @Category(UnitTests.class)
+  public void testGetDockerConnector() throws IOException {
+    Call<ResponseDTO<Optional<ConnectorDTO>>> getConnectorResourceCall = mock(Call.class);
+    ResponseDTO<Optional<ConnectorDTO>> responseDTO = ResponseDTO.newResponse(Optional.of(dockerConnectorDto));
+    when(getConnectorResourceCall.execute()).thenReturn(Response.success(responseDTO));
+
+    when(connectorResourceClient.get(eq(connectorId02), eq(ACCOUNT_ID), eq(ORG_ID), eq(PROJ_ID)))
+        .thenReturn(getConnectorResourceCall);
+    when(secretManagerClientService.getEncryptionDetails(eq(ngAccess), any(DockerAuthCredentialsDTO.class)))
+        .thenReturn(Collections.singletonList(EncryptedDataDetail.builder().build()))
+        .thenReturn(null);
+
+    ConnectorDetails connectorDetails = connectorUtils.getConnectorDetails(ngAccess, connectorId02);
+    assertThat(connectorDetails.getConnectorDTO()).isEqualTo(dockerConnectorDto);
+    verify(connectorResourceClient, times(1)).get(eq(connectorId02), eq(ACCOUNT_ID), eq(ORG_ID), eq(PROJ_ID));
+    verify(secretManagerClientService, times(1))
+        .getEncryptionDetails(eq(ngAccess), any(DockerAuthCredentialsDTO.class));
+
+    assertThatThrownBy(() -> connectorUtils.getConnectorDetails(ngAccess, connectorId02))
+        .isInstanceOf(InvalidArgumentsException.class);
+  }
+
+  @Test
+  @Owner(developers = ALEKSANDAR)
+  @Category(UnitTests.class)
+  public void testK8sDockerConnector() throws IOException {
+    Call<ResponseDTO<Optional<ConnectorDTO>>> getConnectorResourceCall = mock(Call.class);
+    ResponseDTO<Optional<ConnectorDTO>> responseDTO = ResponseDTO.newResponse(Optional.of(k8sConnectorDto));
+    when(getConnectorResourceCall.execute()).thenReturn(Response.success(responseDTO));
+
+    when(connectorResourceClient.get(eq(connectorId03), eq(ACCOUNT_ID), eq(ORG_ID), eq(PROJ_ID)))
+        .thenReturn(getConnectorResourceCall);
+
+    when(secretManagerClientService.getEncryptionDetails(eq(ngAccess), any(KubernetesAuthCredentialDTO.class)))
+        .thenReturn(Collections.singletonList(EncryptedDataDetail.builder().build()))
+        .thenReturn(null);
+
+    ConnectorDetails connectorDetails = connectorUtils.getConnectorDetails(ngAccess, connectorId03);
+
+    assertThat(connectorDetails.getConnectorDTO()).isEqualTo(k8sConnectorDto);
+    verify(connectorResourceClient, times(1)).get(eq(connectorId03), eq(ACCOUNT_ID), eq(ORG_ID), eq(PROJ_ID));
+    verify(secretManagerClientService, times(1))
+        .getEncryptionDetails(eq(ngAccess), any(KubernetesAuthCredentialDTO.class));
+    assertThatThrownBy(() -> connectorUtils.getConnectorDetails(ngAccess, connectorId03))
+        .isInstanceOf(InvalidArgumentsException.class);
+  }
+
+  @Test
+  @Owner(developers = ALEKSANDAR)
+  @Category(UnitTests.class)
+  public void testK8sDockerConnectorInheritedFromDelegate() throws IOException {
+    Call<ResponseDTO<Optional<ConnectorDTO>>> getConnectorResourceCall = mock(Call.class);
+    ResponseDTO<Optional<ConnectorDTO>> responseDTO = ResponseDTO.newResponse(Optional.of(k8sConnectorFromDelegate));
+    when(getConnectorResourceCall.execute()).thenReturn(Response.success(responseDTO));
+
+    when(connectorResourceClient.get(eq(connectorId04), eq(ACCOUNT_ID), eq(ORG_ID), eq(PROJ_ID)))
+        .thenReturn(getConnectorResourceCall);
+    when(secretManagerClientService.getEncryptionDetails(eq(ngAccess), any(KubernetesAuthCredentialDTO.class)))
+        .thenReturn(Collections.singletonList(EncryptedDataDetail.builder().build()));
+
+    ConnectorDetails connectorDetails = connectorUtils.getConnectorDetails(ngAccess, connectorId04);
+
+    assertThat(connectorDetails.getConnectorDTO()).isEqualTo(k8sConnectorFromDelegate);
+    verify(connectorResourceClient, times(1)).get(eq(connectorId04), eq(ACCOUNT_ID), eq(ORG_ID), eq(PROJ_ID));
+  }
+
+  @Test
+  @Owner(developers = ALEKSANDAR)
+  @Category(UnitTests.class)
+  public void testGetConnectorMap() throws IOException {
+    Call<ResponseDTO<Optional<ConnectorDTO>>> getConnectorResourceCall01 = mock(Call.class);
+    Call<ResponseDTO<Optional<ConnectorDTO>>> getConnectorResourceCall02 = mock(Call.class);
+    Call<ResponseDTO<Optional<ConnectorDTO>>> getConnectorResourceCall03 = mock(Call.class);
+
+    when(getConnectorResourceCall01.execute())
+        .thenReturn(Response.success(ResponseDTO.newResponse(Optional.of(gitConnectorDto))));
+    when(getConnectorResourceCall02.execute())
+        .thenReturn(Response.success(ResponseDTO.newResponse(Optional.of(dockerConnectorDto))));
+    when(getConnectorResourceCall03.execute())
+        .thenReturn(Response.success(ResponseDTO.newResponse(Optional.of(k8sConnectorDto))));
+
+    when(connectorResourceClient.get(eq(connectorId01), eq(ACCOUNT_ID), eq(ORG_ID), eq(PROJ_ID)))
+        .thenReturn(getConnectorResourceCall01);
+    when(connectorResourceClient.get(eq(connectorId02), eq(ACCOUNT_ID), eq(ORG_ID), eq(PROJ_ID)))
+        .thenReturn(getConnectorResourceCall02);
+    when(connectorResourceClient.get(eq(connectorId03), eq(ACCOUNT_ID), eq(ORG_ID), eq(PROJ_ID)))
+        .thenReturn(getConnectorResourceCall03);
+
+    when(secretManagerClientService.getEncryptionDetails(eq(ngAccess), any(DecryptableEntity.class)))
+        .thenReturn(Collections.singletonList(EncryptedDataDetail.builder().build()));
+
+    Map<String, ConnectorDetails> connectorDetailsMap = connectorUtils.getConnectorDetailsMap(ngAccess, connectorIdSet);
+
+    assertThat(connectorDetailsMap).hasSize(3);
+    assertThat(connectorDetailsMap.keySet()).isEqualTo(connectorIdSet);
+  }
+
+  @Test
+  @Owner(developers = ALEKSANDAR)
+  @Category(UnitTests.class)
+  public void testGetConnector() throws IOException {
+    Call<ResponseDTO<Optional<ConnectorDTO>>> getConnectorResourceCall = mock(Call.class);
+    ResponseDTO<Optional<ConnectorDTO>> emptyResponseDTO = ResponseDTO.newResponse(Optional.empty());
+    when(getConnectorResourceCall.execute())
+        .thenReturn(Response.success(emptyResponseDTO))
+        .thenThrow(new IOException("Error getting connector"));
+
+    when(connectorResourceClient.get(eq(connectorId01), eq(ACCOUNT_ID), eq(ORG_ID), eq(PROJ_ID)))
+        .thenReturn(getConnectorResourceCall);
+    when(secretManagerClientService.getEncryptionDetails(eq(ngAccess), any(GitAuthenticationDTO.class)))
+        .thenReturn(Collections.singletonList(EncryptedDataDetail.builder().build()));
+
+    assertThatThrownBy(() -> connectorUtils.getConnectorDetails(ngAccess, connectorId01))
+        .isInstanceOf(InvalidRequestException.class);
+    assertThatThrownBy(() -> connectorUtils.getConnectorDetails(ngAccess, connectorId01))
+        .isInstanceOf(UnexpectedException.class);
+  }
+
+  @Test
+  @Owner(developers = ALEKSANDAR)
+  @Category(UnitTests.class)
+  public void testUnsupported() throws IOException {
+    ConnectorDTO connectorDTO = ConnectorDTO.builder()
+                                    .connectorInfo(ConnectorInfoDTO.builder()
+                                                       .identifier(unsupportedConnectorId)
+                                                       .connectorType(ConnectorType.VAULT)
+                                                       .build())
+                                    .build();
+    Call<ResponseDTO<Optional<ConnectorDTO>>> getConnectorResourceCall = mock(Call.class);
+
+    ResponseDTO<Optional<ConnectorDTO>> responseDTO = ResponseDTO.newResponse(Optional.of(connectorDTO));
+    when(getConnectorResourceCall.execute()).thenReturn(Response.success(responseDTO));
+
+    when(connectorResourceClient.get(eq(unsupportedConnectorId), eq(ACCOUNT_ID), eq(ORG_ID), eq(PROJ_ID)))
+        .thenReturn(getConnectorResourceCall);
+    when(secretManagerClientService.getEncryptionDetails(eq(ngAccess), any(GitAuthenticationDTO.class)))
+        .thenReturn(Collections.singletonList(EncryptedDataDetail.builder().build()));
+
+    assertThatThrownBy(() -> connectorUtils.getConnectorDetails(ngAccess, unsupportedConnectorId))
+        .isInstanceOf(InvalidArgumentsException.class);
+  }
+}

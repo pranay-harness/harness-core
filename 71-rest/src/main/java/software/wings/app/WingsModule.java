@@ -380,8 +380,6 @@ import software.wings.service.impl.aws.manager.AwsLambdaHelperServiceManagerImpl
 import software.wings.service.impl.aws.manager.AwsRoute53HelperServiceManagerImpl;
 import software.wings.service.impl.aws.manager.AwsS3HelperServiceManagerImpl;
 import software.wings.service.impl.azure.manager.AzureVMSSHelperServiceManagerImpl;
-import software.wings.service.impl.ci.CIDelegateTaskHelperService;
-import software.wings.service.impl.ci.CIDelegateTaskHelperServiceImpl;
 import software.wings.service.impl.compliance.GovernanceConfigServiceImpl;
 import software.wings.service.impl.customdeployment.CustomDeploymentTypeServiceImpl;
 import software.wings.service.impl.datadog.DatadogServiceImpl;
@@ -869,7 +867,6 @@ public class WingsModule extends AbstractModule implements ServersModule {
     bind(AnalysisService.class).to(AnalysisServiceImpl.class);
     bind(ExperimentalAnalysisService.class).to(ExperimentalAnalysisServiceImpl.class);
     bind(ContinuousVerificationService.class).to(ContinuousVerificationServiceImpl.class);
-    bind(CIDelegateTaskHelperService.class).to(CIDelegateTaskHelperServiceImpl.class);
     bind(CV24x7DashboardService.class).to(CV24x7DashboardServiceImpl.class);
     bind(ElkAnalysisService.class).to(ElkAnalysisServiceImpl.class);
     bind(PrometheusAnalysisService.class).to(PrometheusAnalysisServiceImpl.class);
