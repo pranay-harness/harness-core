@@ -349,12 +349,12 @@ public class LogDataCollectionTask extends AbstractDelegateDataCollectionTask {
 
             int i = 0;
 
-            for (LogElement log : logs) {
-              log.setLogCollectionMinute(logCollectionMinute);
-              log.setClusterLabel(String.valueOf(i++));
-              log.setQuery(dataCollectionInfo.getQuery());
-              if (log.getHost() == null) {
-                log.setHost(tempHost);
+            for (LogElement logObject : logs) {
+              logObject.setLogCollectionMinute(logCollectionMinute);
+              logObject.setClusterLabel(String.valueOf(i++));
+              logObject.setQuery(dataCollectionInfo.getQuery());
+              if (logObject.getHost() == null) {
+                logObject.setHost(tempHost);
               }
             }
 
@@ -362,10 +362,10 @@ public class LogDataCollectionTask extends AbstractDelegateDataCollectionTask {
             Set<String> allHosts = new HashSet<>(dataCollectionInfo.getHosts());
             if (dataCollectionInfo.isShouldDoHostBasedFiltering()) {
               filteredLogs = logs.stream()
-                                 .filter(log -> dataCollectionInfo.getHosts().contains(log.getHost()))
+                                 .filter(logObject -> dataCollectionInfo.getHosts().contains(logObject.getHost()))
                                  .collect(Collectors.toList());
             }
-            filteredLogs.forEach(log -> allHosts.add(log.getHost()));
+            filteredLogs.forEach(logObject -> allHosts.add(logObject.getHost()));
             for (String host : allHosts) {
               addHeartbeat(host, dataCollectionInfo, logCollectionMinute, filteredLogs);
             }

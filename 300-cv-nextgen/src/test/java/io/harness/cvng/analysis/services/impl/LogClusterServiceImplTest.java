@@ -331,7 +331,7 @@ public class LogClusterServiceImplTest extends CvNextGenTest {
     List<ClusteredLog> clusteredLogs =
         createClusteredLogRecords(serviceGuardVerificationTaskId, numHosts, startTime, endTime);
     List<LogClusterDTO> clusterDTOList = new ArrayList<>();
-    clusteredLogs.forEach(log -> clusterDTOList.add(log.toDTO()));
+    clusteredLogs.forEach(logObject -> clusterDTOList.add(logObject.toDTO()));
     return clusterDTOList;
   }
 

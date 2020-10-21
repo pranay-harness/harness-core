@@ -42,21 +42,22 @@ public class CleanUpDatadogCallLogMigration implements Migration {
                                                      .equal(instance.getUuid())
                                                      .asList();
 
-        for (ThirdPartyApiCallLog log : callLogList) {
-          if (log.getTitle().contains(API_KEY)) {
-            log.setTitle(replaceApiAndAppKey(log.getTitle()));
+        for (ThirdPartyApiCallLog logObject : callLogList) {
+          if (logObject.getTitle().contains(API_KEY)) {
+            logObject.setTitle(replaceApiAndAppKey(logObject.getTitle()));
           }
-          for (ThirdPartyApiCallField callLogFields : log.getRequest()) {
+          for (ThirdPartyApiCallField callLogFields : logObject.getRequest()) {
             if (callLogFields.getValue().contains(API_KEY)) {
               callLogFields.setValue(replaceApiAndAppKey(callLogFields.getValue()));
             }
           }
           UpdateOperations<ThirdPartyApiCallLog> op =
               wingsPersistence.createUpdateOperations(ThirdPartyApiCallLog.class);
-          setUnset(op, "request", log.getRequest());
-          setUnset(op, "title", log.getTitle());
-          wingsPersistence.update(wingsPersistence.createQuery(ThirdPartyApiCallLog.class)
-                                      .filter(ThirdPartyApiCallLogKeys.stateExecutionId, log.getStateExecutionId()),
+          setUnset(op, "request", logObject.getRequest());
+          setUnset(op, "title", logObject.getTitle());
+          wingsPersistence.update(
+              wingsPersistence.createQuery(ThirdPartyApiCallLog.class)
+                  .filter(ThirdPartyApiCallLogKeys.stateExecutionId, logObject.getStateExecutionId()),
               op);
         }
       }

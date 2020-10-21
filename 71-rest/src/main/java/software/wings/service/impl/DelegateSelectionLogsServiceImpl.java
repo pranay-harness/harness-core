@@ -231,18 +231,18 @@ public class DelegateSelectionLogsServiceImpl implements DelegateSelectionLogsSe
 
     List<DelegateSelectionLogParams> delegateSelectionLogs = new ArrayList<>();
 
-    for (DelegateSelectionLog log : delegateSelectionLogsList) {
-      delegateSelectionLogs.addAll(buildDelegateSelectionLogParamsList(log));
+    for (DelegateSelectionLog logObject : delegateSelectionLogsList) {
+      delegateSelectionLogs.addAll(buildDelegateSelectionLogParamsList(logObject));
     }
 
     return delegateSelectionLogs;
   }
 
-  private List<DelegateSelectionLogParams> buildDelegateSelectionLogParamsList(DelegateSelectionLog log) {
+  private List<DelegateSelectionLogParams> buildDelegateSelectionLogParamsList(DelegateSelectionLog selectionLog) {
     List<DelegateSelectionLogParams> delegateSelectionLogParamsList = new ArrayList<>();
 
-    for (String delegateId : log.getDelegateIds()) {
-      Delegate delegate = delegateService.get(log.getAccountId(), delegateId, false);
+    for (String delegateId : selectionLog.getDelegateIds()) {
+      Delegate delegate = delegateService.get(selectionLog.getAccountId(), delegateId, false);
       String delegateName = Optional.ofNullable(delegate).map(delegateService::obtainDelegateName).orElse(delegateId);
       String delegateHostName = Optional.ofNullable(delegate).map(Delegate::getHostName).orElse("");
 
@@ -257,9 +257,9 @@ public class DelegateSelectionLogsServiceImpl implements DelegateSelectionLogsSe
                                              .delegateName(delegateName)
                                              .delegateHostName(delegateHostName)
                                              .delegateProfileName(delegateProfileName)
-                                             .conclusion(log.getConclusion())
-                                             .message(log.getMessage())
-                                             .eventTimestamp(log.getEventTimestamp())
+                                             .conclusion(selectionLog.getConclusion())
+                                             .message(selectionLog.getMessage())
+                                             .eventTimestamp(selectionLog.getEventTimestamp())
                                              .build());
     }
 

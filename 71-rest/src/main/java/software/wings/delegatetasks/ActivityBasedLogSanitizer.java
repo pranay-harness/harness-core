@@ -23,17 +23,17 @@ public class ActivityBasedLogSanitizer extends LogSanitizer {
   /**
    * Replace secret values in {@code log} with mask for safe display
    * @param activityId The id to match to the set of secrets for this sanitizer
-   * @param log The text that may contain secret values
+   * @param message The text that may contain secret values
    * @return text with secrets replaced by a mask
    */
   @Override
-  public String sanitizeLog(String activityId, String log) {
+  public String sanitizeLog(String activityId, String message) {
     if (StringUtils.equals(activityId, this.activityId)) {
       if (isEmpty(secrets)) {
-        return log;
+        return message;
       }
-      return sanitizeLogInternal(log, secrets);
+      return sanitizeLogInternal(message, secrets);
     }
-    return log;
+    return message;
   }
 }

@@ -140,28 +140,28 @@ public class Log implements GoogleDataStoreAware, PersistentEntity, UuidAware, C
 
   @Override
   public GoogleDataStoreAware readFromCloudStorageEntity(com.google.cloud.datastore.Entity entity) {
-    final Log log = aLog()
-                        .uuid(entity.getKey().getName())
-                        .activityId(readString(entity, LogKeys.activityId))
-                        .logLevel(LogLevel.valueOf(readString(entity, LogKeys.logLevel)))
-                        .createdAt(readLong(entity, LogKeys.createdAt))
-                        .hostName(readString(entity, LogKeys.hostName))
-                        .appId(readString(entity, LogKeys.appId))
-                        .commandUnitName(readString(entity, LogKeys.commandUnitName))
-                        .accountId(readString(entity, LogKeys.accountId))
-                        .build();
+    final Log logObject = aLog()
+                              .uuid(entity.getKey().getName())
+                              .activityId(readString(entity, LogKeys.activityId))
+                              .logLevel(LogLevel.valueOf(readString(entity, LogKeys.logLevel)))
+                              .createdAt(readLong(entity, LogKeys.createdAt))
+                              .hostName(readString(entity, LogKeys.hostName))
+                              .appId(readString(entity, LogKeys.appId))
+                              .commandUnitName(readString(entity, LogKeys.commandUnitName))
+                              .accountId(readString(entity, LogKeys.accountId))
+                              .build();
     try {
       byte[] compressedLogLine = readBlob(entity, LogKeys.compressedLogLine);
       if (isNotEmpty(compressedLogLine)) {
-        log.setLogLine(deCompressString(compressedLogLine));
+        logObject.setLogLine(deCompressString(compressedLogLine));
       } else {
-        log.setLogLine(readString(entity, LogKeys.logLine));
+        logObject.setLogLine(readString(entity, LogKeys.logLine));
       }
     } catch (IOException e) {
       throw new WingsException(e);
     }
 
-    return log;
+    return logObject;
   }
 
   /**
@@ -364,21 +364,21 @@ public class Log implements GoogleDataStoreAware, PersistentEntity, UuidAware, C
      * @return the log
      */
     public Log build() {
-      Log log = new Log();
-      log.setActivityId(activityId);
-      log.setHostName(hostName);
-      log.setCommandUnitName(commandUnitName);
-      log.setLogLine(logLine);
-      log.setLogLevel(logLevel);
-      log.setCommandExecutionStatus(commandExecutionStatus);
-      log.setUuid(uuid);
-      log.setAppId(appId);
-      log.setCreatedBy(createdBy);
-      log.setCreatedAt(createdAt);
-      log.setLastUpdatedBy(lastUpdatedBy);
-      log.setLastUpdatedAt(lastUpdatedAt);
-      log.setAccountId(accountId);
-      return log;
+      Log logObject = new Log();
+      logObject.setActivityId(activityId);
+      logObject.setHostName(hostName);
+      logObject.setCommandUnitName(commandUnitName);
+      logObject.setLogLine(logLine);
+      logObject.setLogLevel(logLevel);
+      logObject.setCommandExecutionStatus(commandExecutionStatus);
+      logObject.setUuid(uuid);
+      logObject.setAppId(appId);
+      logObject.setCreatedBy(createdBy);
+      logObject.setCreatedAt(createdAt);
+      logObject.setLastUpdatedBy(lastUpdatedBy);
+      logObject.setLastUpdatedAt(lastUpdatedAt);
+      logObject.setAccountId(accountId);
+      return logObject;
     }
   }
 

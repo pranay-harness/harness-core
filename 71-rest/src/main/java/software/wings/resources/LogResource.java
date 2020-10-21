@@ -44,8 +44,8 @@ public class LogResource {
   @Timed
   @ExceptionMetered
   public RestResponse<Boolean> batchSave(
-      @PathParam("activityId") String activityId, @PathParam("unitName") String unitName, Log log) {
-    return new RestResponse<>(logService.batchedSaveCommandUnitLogs(activityId, unitName, log));
+      @PathParam("activityId") String activityId, @PathParam("unitName") String unitName, Log logObject) {
+    return new RestResponse<>(logService.batchedSaveCommandUnitLogs(activityId, unitName, logObject));
   }
 
   @POST

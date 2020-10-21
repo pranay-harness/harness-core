@@ -276,7 +276,7 @@ public class ActivityServiceImpl implements ActivityService {
   private void updateActivityCommandUnitStatus(String activityId, Map<String, Log> commandUnitLastLogMap) {
     String appId = commandUnitLastLogMap.values().iterator().next().getAppId();
 
-    commandUnitLastLogMap.forEach((unitName, log) -> {
+    commandUnitLastLogMap.forEach((unitName, logObject) -> {
       Query<Activity> query = wingsPersistence.createQuery(Activity.class)
                                   .filter(Mapper.ID_KEY, activityId)
                                   .filter(ActivityKeys.appId, appId)
@@ -286,7 +286,7 @@ public class ActivityServiceImpl implements ActivityService {
       UpdateOperations<Activity> updateOperations =
           wingsPersistence.createUpdateOperations(Activity.class)
               .disableValidation()
-              .set("commandUnits.$.commandExecutionStatus", log.getCommandExecutionStatus());
+              .set("commandUnits.$.commandExecutionStatus", logObject.getCommandExecutionStatus());
       wingsPersistence.update(query, updateOperations);
     });
   }

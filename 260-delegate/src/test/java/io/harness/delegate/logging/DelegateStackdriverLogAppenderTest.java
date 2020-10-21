@@ -78,7 +78,7 @@ public class DelegateStackdriverLogAppenderTest extends CategoryTest {
   @Category(UnitTests.class)
   public void shouldAppend() {
     String message = "my log message";
-    log(INFO, message);
+    appendLog(INFO, message);
     waitForMessage(INFO, message);
   }
 
@@ -88,18 +88,18 @@ public class DelegateStackdriverLogAppenderTest extends CategoryTest {
   public void shouldSubmit() {
     String message1 = "my log message1";
     for (int i = 0; i < MIN_BATCH_SIZE; ++i) {
-      log(INFO, message1);
+      appendLog(INFO, message1);
     }
     waitForMessage(INFO, message1);
 
     String message2 = "my log message2";
     for (int i = 0; i < MIN_BATCH_SIZE; ++i) {
-      log(INFO, message2);
+      appendLog(INFO, message2);
     }
     waitForMessage(INFO, message2);
   }
 
-  private void log(Level level, String message) {
+  private void appendLog(Level level, String message) {
     appender.doAppend(new LoggingEvent("a.b.class", logger, level, message, null, null));
   }
 

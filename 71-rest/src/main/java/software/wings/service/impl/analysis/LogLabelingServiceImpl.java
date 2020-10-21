@@ -403,7 +403,7 @@ public class LogLabelingServiceImpl implements LogLabelingService {
 
     List<LogDataRecord> logs = dataStoreService.list(LogDataRecord.class, logDataRecordPageRequest);
     if (isNotEmpty(logs)) {
-      logs = logs.stream().filter(log -> log.getTimesLabeled() == 0).collect(Collectors.toList());
+      logs = logs.stream().filter(logObject -> logObject.getTimesLabeled() == 0).collect(Collectors.toList());
       List<LogDataRecord> logsToReturn = new ArrayList<>();
       while (logsToReturn.size() < 5) {
         logsToReturn.add(logs.get(random.nextInt(logs.size())));

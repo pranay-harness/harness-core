@@ -41,11 +41,11 @@ public class DelegateDataCollectionResourceTest extends VerificationBaseIntegrat
     List<CVActivityLog> logs = IntStream.range(0, 10).mapToObj(i -> getActivityLog()).collect(Collectors.toList());
     Response response = getDelegateRequestBuilderWithAuthHeader(target).post(entity(logs, APPLICATION_JSON));
     assertThat(response.getStatus()).isEqualTo(200);
-    logs.forEach(log -> {
-      CVActivityLog cvActivityLog = cvActivityLogService.findByStateExecutionId(log.getStateExecutionId()).get(0);
-      assertThat(cvActivityLog.getStateExecutionId()).isEqualTo(log.getStateExecutionId());
-      assertThat(cvActivityLog.getLog()).isEqualTo(log.getLog());
-      assertThat(cvActivityLog.getLogLevel()).isEqualTo(log.getLogLevel());
+    logs.forEach(logObject -> {
+      CVActivityLog cvActivityLog = cvActivityLogService.findByStateExecutionId(logObject.getStateExecutionId()).get(0);
+      assertThat(cvActivityLog.getStateExecutionId()).isEqualTo(logObject.getStateExecutionId());
+      assertThat(cvActivityLog.getLog()).isEqualTo(logObject.getLog());
+      assertThat(cvActivityLog.getLogLevel()).isEqualTo(logObject.getLogLevel());
     });
   }
 

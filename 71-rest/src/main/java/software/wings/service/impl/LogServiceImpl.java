@@ -79,9 +79,9 @@ public class LogServiceImpl implements LogService {
                                       .addOrder(Log.CREATED_AT_KEY, OrderType.ASC)
                                       .build())
                               .getResponse();
-      for (Log log : logList) {
-        fileWriter.write(format(
-            "%s   %s   %s%n", log.getLogLevel(), dateFormatter.format(new Date(log.getCreatedAt())), log.getLogLine()));
+      for (Log logObject : logList) {
+        fileWriter.write(format("%s   %s   %s%n", logObject.getLogLevel(),
+            dateFormatter.format(new Date(logObject.getCreatedAt())), logObject.getLogLine()));
       }
       return file;
     } catch (IOException ex) {
@@ -115,9 +115,10 @@ public class LogServiceImpl implements LogService {
   }
 
   @Override
-  public boolean batchedSaveCommandUnitLogs(String activityId, String unitName, Log log) {
-    dataStoreService.save(Log.class, Lists.newArrayList(log), false);
-    activityService.updateCommandUnitStatus(log.getAppId(), activityId, unitName, log.getCommandExecutionStatus());
+  public boolean batchedSaveCommandUnitLogs(String activityId, String unitName, Log logObject) {
+    dataStoreService.save(Log.class, Lists.newArrayList(logObject), false);
+    activityService.updateCommandUnitStatus(
+        logObject.getAppId(), activityId, unitName, logObject.getCommandExecutionStatus());
     return true;
   }
 }

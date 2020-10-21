@@ -41,15 +41,16 @@ public class MongoDataStoreServiceImpl implements DataStoreService {
       return;
     }
     if (records.get(0) instanceof Log) {
-      Log log = (Log) records.get(0);
+      Log logObject = (Log) records.get(0);
       long count = wingsPersistence.createQuery(Log.class)
-                       .filter(LogKeys.appId, log.getAppId())
-                       .filter(LogKeys.activityId, log.getActivityId())
+                       .filter(LogKeys.appId, logObject.getAppId())
+                       .filter(LogKeys.activityId, logObject.getActivityId())
                        .count();
       if (count >= MAX_LOG_ROWS_PER_ACTIVITY) {
         logger.warn(
-            "Number of log rows per activity threshold [{}] crossed. [{}] log lines truncated for activityId: [{}], commandUnitName: [{}]",
-            MAX_LOG_ROWS_PER_ACTIVITY, log.getLinesCount(), log.getActivityId(), log.getCommandUnitName());
+            "Number of logObject rows per activity threshold [{}] crossed. [{}] logObject lines truncated for activityId: [{}], commandUnitName: [{}]",
+            MAX_LOG_ROWS_PER_ACTIVITY, logObject.getLinesCount(), logObject.getActivityId(),
+            logObject.getCommandUnitName());
         return;
       }
     }
