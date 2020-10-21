@@ -30,6 +30,7 @@ public class EcsCommandRequest implements ExecutionCapabilityDemander {
     LISTENER_UPDATE_BG,
     BG_SERVICE_SETUP,
     SERVICE_SETUP,
+    ECS_RUN_TASK_DEPLOY,
     ROUTE53_BG_SERVICE_SETUP,
     ROUTE53_DNS_WEIGHT_UPDATE,
     SERVICE_DEPLOY

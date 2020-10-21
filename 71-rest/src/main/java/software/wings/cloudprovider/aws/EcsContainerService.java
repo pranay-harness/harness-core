@@ -2,6 +2,8 @@ package software.wings.cloudprovider.aws;
 
 import com.amazonaws.services.ecs.model.CreateServiceRequest;
 import com.amazonaws.services.ecs.model.RegisterTaskDefinitionRequest;
+import com.amazonaws.services.ecs.model.RunTaskRequest;
+import com.amazonaws.services.ecs.model.RunTaskResult;
 import com.amazonaws.services.ecs.model.Service;
 import com.amazonaws.services.ecs.model.ServiceEvent;
 import com.amazonaws.services.ecs.model.Task;
@@ -65,6 +67,9 @@ public interface EcsContainerService {
    */
   TaskDefinition createTask(String region, SettingAttribute settingAttribute,
       List<EncryptedDataDetail> encryptedDataDetails, RegisterTaskDefinitionRequest registerTaskDefinitionRequest);
+
+  RunTaskResult triggerRunTask(String region, SettingAttribute settingAttribute,
+      List<EncryptedDataDetail> encryptedDataDetails, RunTaskRequest runTaskRequest);
 
   /**
    * Gets services.

@@ -27,6 +27,7 @@ public interface AwsConstants {
   // ECS Sweeping output constants
   String ECS_SERVICE_SETUP_SWEEPING_OUTPUT_NAME = "setupSweepingOutputEcs";
   String ECS_SERVICE_DEPLOY_SWEEPING_OUTPUT_NAME = "deploySweepingOutputEcs";
+  String ECS_RUN_TASK_DEPLOY_SWEEPING_OUTPUT_NAME = "runTaskDeploySweepingOutputEcs";
 
   String MIN_INSTANCES = "minInstancesExpr";
   String MAX_INSTANCES = "maxInstancesExpr";
@@ -45,6 +46,7 @@ public interface AwsConstants {
 
   int LAMBDA_SLEEP_SECS = 5;
   String ECS_STEADY_STATE_CHECK = "ECS Steady State Check";
+  String ECS_RUN_TASK = "ECS Run Task";
 
   String PROD_LISTENER = "Prod Listener";
   String STAGE_LISTENER = "Stage Listener";

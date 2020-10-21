@@ -28,6 +28,7 @@ import static software.wings.service.impl.workflow.WorkflowServiceHelper.SETUP;
 import static software.wings.service.impl.workflow.WorkflowServiceHelper.VERIFY_SERVICE;
 import static software.wings.sm.StateType.AWS_NODE_SELECT;
 import static software.wings.sm.StateType.COMMAND;
+import static software.wings.sm.StateType.ECS_RUN_TASK;
 import static software.wings.sm.StateType.ECS_SERVICE_DEPLOY;
 import static software.wings.sm.StateType.ECS_SERVICE_SETUP;
 
@@ -82,6 +83,7 @@ public class WorkflowUtils {
   static final String POST_DEPLOYMENT_CONSTANT = "Post-Deployment";
   static final String WRAP_UP_CONSTANT = "Wrap Up";
   static final String ECS_SERVICE_SETUP_CONSTANT = "ECS Service Setup";
+  static final String ECS_RUN_TASK_SETUP_CONSTANT = "ECS Run Task Setup";
   static final String UPGRADE_CONTAINERS_CONSTANT = "Upgrade Containers";
   static final String DEPLOY_CONTAINERS_CONSTANT = "Deploy Containers";
   static final String SELECT_NODES_CONSTANT = "Select Node";
@@ -213,6 +215,21 @@ public class WorkflowUtils {
                                      .put("ecsServiceName", "${app.name}__${service.name}__BASIC")
                                      .put("desiredInstanceCount", "fixedInstances")
                                      .put("resizeStrategy", ResizeStrategy.DOWNSIZE_OLD_FIRST)
+                                     .put("serviceSteadyStateTimeout", 10)
+                                     .build())
+                     .build())
+        .build();
+  }
+
+  public PhaseStep ecsRunTaskPhaseStep() {
+    return aPhaseStep(CONTAINER_SETUP, SETUP_CONTAINER_CONSTANT)
+        .addStep(GraphNode.builder()
+                     .id(generateUuid())
+                     .type(ECS_RUN_TASK.name())
+                     .name(ECS_RUN_TASK_SETUP_CONSTANT)
+                     .properties(ImmutableMap.<String, Object>builder()
+                                     .put("addTaskDefinition", "inline")
+                                     .put("inlineTaskDefintion", "")
                                      .put("serviceSteadyStateTimeout", 10)
                                      .build())
                      .build())

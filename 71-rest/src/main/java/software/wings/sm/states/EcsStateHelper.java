@@ -5,6 +5,7 @@ import static io.harness.beans.ExecutionStatus.FAILED;
 import static io.harness.beans.ExecutionStatus.SUCCESS;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.deployment.InstanceDetails.InstanceType.AWS;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.logging.LogLevel.INFO;
@@ -17,16 +18,17 @@ import static java.util.concurrent.TimeUnit.MINUTES;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toMap;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
-import static software.wings.api.CommandStateExecutionData.Builder.aCommandStateExecutionData;
 import static software.wings.beans.FeatureName.DISABLE_ADDING_SERVICE_VARS_TO_ECS_SPEC;
 import static software.wings.beans.ResizeStrategy.RESIZE_NEW_FIRST;
 import static software.wings.beans.TaskType.ECS_COMMAND_TASK;
-import static software.wings.beans.command.EcsSetupParams.EcsSetupParamsBuilder.anEcsSetupParams;
 import static software.wings.service.impl.aws.model.AwsConstants.ECS_SERVICE_DEPLOY_SWEEPING_OUTPUT_NAME;
 import static software.wings.service.impl.aws.model.AwsConstants.ECS_SERVICE_SETUP_SWEEPING_OUTPUT_NAME;
 import static software.wings.sm.states.ContainerServiceSetup.DEFAULT_MAX;
+import static software.wings.sm.states.EcsRunTaskDeploy.ECS_RUN_TASK_COMMAND;
+import static software.wings.sm.states.EcsRunTaskDeploy.GIT_FETCH_FILES_TASK_NAME;
 
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.collect.ImmutableList;
 import com.google.common.primitives.Ints;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -86,10 +88,13 @@ import software.wings.beans.TaskType;
 import software.wings.beans.appmanifest.ApplicationManifest;
 import software.wings.beans.appmanifest.StoreType;
 import software.wings.beans.artifact.Artifact;
+import software.wings.beans.command.CommandUnit;
 import software.wings.beans.command.CommandUnitDetails.CommandUnitType;
 import software.wings.beans.command.ContainerSetupCommandUnitExecutionData;
 import software.wings.beans.command.ContainerSetupParams;
 import software.wings.beans.command.EcsSetupParams;
+import software.wings.beans.command.EcsSetupParams.EcsSetupParamsBuilder;
+import software.wings.beans.command.PcfDummyCommandUnit;
 import software.wings.beans.container.AwsAutoScalarConfig;
 import software.wings.beans.container.ContainerTask;
 import software.wings.beans.container.EcsContainerTask;
@@ -98,6 +103,7 @@ import software.wings.helpers.ext.container.ContainerDeploymentManagerHelper;
 import software.wings.helpers.ext.ecs.request.EcsBGListenerUpdateRequest;
 import software.wings.helpers.ext.ecs.request.EcsCommandRequest;
 import software.wings.helpers.ext.ecs.request.EcsListenerUpdateRequestConfigData;
+import software.wings.helpers.ext.ecs.request.EcsRunTaskDeployRequest;
 import software.wings.helpers.ext.ecs.request.EcsServiceDeployRequest;
 import software.wings.helpers.ext.ecs.response.EcsCommandExecutionResponse;
 import software.wings.helpers.ext.ecs.response.EcsServiceDeployResponse;
@@ -166,7 +172,7 @@ public class EcsStateHelper {
     EcsInfrastructureMapping ecsInfrastructureMapping =
         (EcsInfrastructureMapping) ecsSetupStateConfig.getInfrastructureMapping();
 
-    return anEcsSetupParams()
+    return EcsSetupParamsBuilder.anEcsSetupParams()
         .withAppName(app.getName())
         .withEnvName(env.getName())
         .withServiceName(ecsSetupStateConfig.getServiceName())
@@ -325,6 +331,17 @@ public class EcsStateHelper {
   }
 
   public Activity createActivity(ExecutionContext executionContext, String commandName, String stateType,
+      CommandUnitType commandUnitType, String addTaskDefinition, ActivityService activityService) {
+    Application app = ((ExecutionContextImpl) executionContext).fetchRequiredApp();
+    Environment env = ((ExecutionContextImpl) executionContext).getEnv();
+
+    List<CommandUnit> commandUnitList = createCommandUnitList("Remote".equalsIgnoreCase(addTaskDefinition));
+    ActivityBuilder activityBuilder = getActivityBuilder(
+        app.getName(), app.getUuid(), commandName, Type.Command, executionContext, stateType, commandUnitType, env);
+    return activityService.save(activityBuilder.commandUnits(commandUnitList).build());
+  }
+
+  public Activity createActivity(ExecutionContext executionContext, String commandName, String stateType,
       CommandUnitType commandUnitType, ActivityService activityService) {
     Application app = ((ExecutionContextImpl) executionContext).fetchRequiredApp();
     Environment env = ((ExecutionContextImpl) executionContext).getEnv();
@@ -332,6 +349,16 @@ public class EcsStateHelper {
     ActivityBuilder activityBuilder = getActivityBuilder(
         app.getName(), app.getUuid(), commandName, Type.Command, executionContext, stateType, commandUnitType, env);
     return activityService.save(activityBuilder.build());
+  }
+
+  List<CommandUnit> createCommandUnitList(boolean remoteStoreType) {
+    final ImmutableList.Builder<CommandUnit> commandUnitBuilder = ImmutableList.builder();
+
+    if (remoteStoreType) {
+      commandUnitBuilder.add(new PcfDummyCommandUnit(GIT_FETCH_FILES_TASK_NAME));
+    }
+    commandUnitBuilder.add(new PcfDummyCommandUnit(ECS_RUN_TASK_COMMAND));
+    return commandUnitBuilder.build();
   }
 
   public EcsCommandRequest getEcsCommandListenerUpdateRequest(String commandName, String appId, String accountId,
@@ -440,6 +467,60 @@ public class EcsStateHelper {
 
     containerServiceElementBuilder.newServiceAutoScalarConfig(setupParams.getNewAwsAutoScalarConfigList());
     return containerServiceElementBuilder.build();
+  }
+
+  public EcsInfrastructureMapping getInfrastructureMappingFromInfraMappingService(
+      InfrastructureMappingService infrastructureMappingService, String appUuid, String infraMappingId) {
+    InfrastructureMapping infrastructureMapping = infrastructureMappingService.get(appUuid, infraMappingId);
+    if (!(infrastructureMapping instanceof EcsInfrastructureMapping)) {
+      throw new InvalidRequestException("Invalid infrastructure type");
+    }
+    return (EcsInfrastructureMapping) infrastructureMapping;
+  }
+
+  public Application getApplicationFromExecutionContext(ExecutionContext executionContext) {
+    WorkflowStandardParams workflowStandardParams = executionContext.getContextElement(ContextElementType.STANDARD);
+    return workflowStandardParams.fetchRequiredApp();
+  }
+
+  public Environment getEnvironmentFromExecutionContext(ExecutionContext executionContext) {
+    WorkflowStandardParams workflowStandardParams = executionContext.getContextElement(ContextElementType.STANDARD);
+    return workflowStandardParams.getEnv();
+  }
+
+  public EcsRunTaskDataBag prepareBagForEcsRunTask(ExecutionContext executionContext, Long timeout,
+      boolean skipSteadyStateCheck, InfrastructureMappingService infrastructureMappingService,
+      SettingsService settingsService, List<String> listTaskDefinitionJson, SecretManager secretManager,
+      String runTaskFamilyName) {
+    Application app = getApplicationFromExecutionContext(executionContext);
+    Environment env = getEnvironmentFromExecutionContext(executionContext);
+
+    EcsInfrastructureMapping ecsInfrastructureMapping = getInfrastructureMappingFromInfraMappingService(
+        infrastructureMappingService, app.getUuid(), executionContext.fetchInfraMappingId());
+
+    SettingAttribute settingAttribute = settingsService.get(ecsInfrastructureMapping.getComputeProviderSettingId());
+    if (settingAttribute == null) {
+      throw new InvalidArgumentsException(Pair.of("Cloud Provider", "Missing, check service infrastructure"));
+    }
+    SettingValue settingValue = settingAttribute.getValue();
+    if (!(settingValue instanceof AwsConfig)) {
+      throw new InvalidArgumentsException(Pair.of("Cloud Provider", "Must be of type Aws Config"));
+    }
+    AwsConfig awsConfig = (AwsConfig) settingValue;
+    List<EncryptedDataDetail> encryptedDataDetails = secretManager.getEncryptionDetails(
+        awsConfig, executionContext.getAppId(), executionContext.getWorkflowExecutionId());
+
+    return EcsRunTaskDataBag.builder()
+        .applicationAccountId(app.getAccountId())
+        .applicationUuid(app.getUuid())
+        .applicationAppId(app.getAppId())
+        .envUuid(env.getUuid())
+        .awsConfig(awsConfig)
+        .listTaskDefinitionJson(listTaskDefinitionJson)
+        .ecsRunTaskFamilyName(runTaskFamilyName)
+        .serviceSteadyStateTimeout(timeout)
+        .skipSteadyStateCheck(skipSteadyStateCheck)
+        .build();
   }
 
   public EcsSetUpDataBag prepareBagForEcsSetUp(ExecutionContext context, int timeout,
@@ -573,7 +654,7 @@ public class EcsStateHelper {
 
   public CommandStateExecutionData getStateExecutionData(
       EcsSetUpDataBag ecsSetUpDataBag, String commandName, EcsSetupParams ecsSetupParams, String activityId) {
-    return aCommandStateExecutionData()
+    return CommandStateExecutionData.Builder.aCommandStateExecutionData()
         .withServiceId(ecsSetUpDataBag.getService().getUuid())
         .withServiceName(ecsSetUpDataBag.getService().getName())
         .withAppId(ecsSetUpDataBag.getApplication().getUuid())
@@ -865,6 +946,43 @@ public class EcsStateHelper {
                                 deployDataBag.getEcsInfrastructureMapping().getUuid())
                             .build();
     return delegateService.queueTask(task);
+  }
+
+  public DelegateTask createAndQueueDelegateTaskForEcsRunTaskDeploy(EcsRunTaskDataBag ecsRunTaskDataBag,
+      InfrastructureMappingService infrastructureMappingService, SecretManager secretManager, Application application,
+      ExecutionContext executionContext, EcsRunTaskDeployRequest request, String activityId,
+      DelegateService delegateService) {
+    String waitId = generateUuid();
+
+    EcsInfrastructureMapping ecsInfrastructureMapping = getInfrastructureMappingFromInfraMappingService(
+        infrastructureMappingService, application.getUuid(), executionContext.fetchInfraMappingId());
+
+    List<EncryptedDataDetail> encryptedDataDetails = secretManager.getEncryptionDetails(
+        ecsRunTaskDataBag.getAwsConfig(), executionContext.getAppId(), executionContext.getWorkflowExecutionId());
+
+    DelegateTask task =
+        DelegateTask.builder()
+            .accountId(ecsRunTaskDataBag.getApplicationAccountId())
+            .setupAbstraction(Cd1SetupFields.APP_ID_FIELD, ecsRunTaskDataBag.getApplicationAccountId())
+            .waitId(waitId)
+            .tags(isNotEmpty(ecsRunTaskDataBag.getAwsConfig().getTag())
+                    ? singletonList(ecsRunTaskDataBag.getAwsConfig().getTag())
+                    : null)
+            .data(TaskData.builder()
+                      .async(true)
+                      .taskType(TaskType.ECS_COMMAND_TASK.name())
+                      .parameters(new Object[] {request, encryptedDataDetails})
+                      .timeout(MINUTES.toMillis(getTimeout(ecsRunTaskDataBag)))
+                      .build())
+            .setupAbstraction(Cd1SetupFields.ENV_ID_FIELD, ecsRunTaskDataBag.getEnvUuid())
+            .setupAbstraction(Cd1SetupFields.INFRASTRUCTURE_MAPPING_ID_FIELD, ecsInfrastructureMapping.getUuid())
+            .build();
+    delegateService.queueTask(task);
+    return task;
+  }
+
+  long getTimeout(EcsRunTaskDataBag deployDataBag) {
+    return deployDataBag.getServiceSteadyStateTimeout() + 30l;
   }
 
   long getTimeout(EcsDeployDataBag deployDataBag) {

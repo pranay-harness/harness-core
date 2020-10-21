@@ -158,6 +158,7 @@ import software.wings.sm.states.EcsBGUpdateRoute53DNSWeightState;
 import software.wings.sm.states.EcsBlueGreenServiceSetup;
 import software.wings.sm.states.EcsBlueGreenServiceSetupRoute53DNS;
 import software.wings.sm.states.EcsDaemonServiceSetup;
+import software.wings.sm.states.EcsRunTaskDeploy;
 import software.wings.sm.states.EcsServiceDeploy;
 import software.wings.sm.states.EcsServiceRollback;
 import software.wings.sm.states.EcsServiceSetup;
@@ -345,6 +346,10 @@ public enum StepType {
   ECS_SERVICE_SETUP(EcsServiceSetup.class, WorkflowServiceHelper.ECS_SERVICE_SETUP, asList(WorkflowStepType.ECS),
       asList(CONTAINER_SETUP), Lists.newArrayList(DeploymentType.ECS), asList(PhaseType.NON_ROLLBACK),
       asList(BASIC, CANARY)),
+  ECS_RUN_TASK(EcsRunTaskDeploy.class, WorkflowServiceHelper.ECS_RUN_TASK, asList(WorkflowStepType.ECS),
+      asList(PRE_DEPLOYMENT, POST_DEPLOYMENT, CONTAINER_SETUP, CONTAINER_DEPLOY, ECS_UPDATE_LISTENER_BG,
+          ECS_UPDATE_ROUTE_53_DNS_WEIGHT, VERIFY_SERVICE, WRAP_UP),
+      Lists.newArrayList(DeploymentType.ECS), asList(PhaseType.NON_ROLLBACK), asList(BASIC, CANARY, BLUE_GREEN)),
   ECS_DAEMON_SERVICE_SETUP(EcsDaemonServiceSetup.class, WorkflowServiceHelper.ECS_DAEMON_SERVICE_SETUP,
       asList(WorkflowStepType.ECS), asList(CONTAINER_SETUP), Lists.newArrayList(DeploymentType.ECS),
       asList(PhaseType.NON_ROLLBACK), asList(BASIC)),

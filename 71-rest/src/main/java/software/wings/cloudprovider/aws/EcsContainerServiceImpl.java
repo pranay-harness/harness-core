@@ -52,6 +52,8 @@ import com.amazonaws.services.ecs.model.ListServicesResult;
 import com.amazonaws.services.ecs.model.ListTasksRequest;
 import com.amazonaws.services.ecs.model.NetworkInterface;
 import com.amazonaws.services.ecs.model.RegisterTaskDefinitionRequest;
+import com.amazonaws.services.ecs.model.RunTaskRequest;
+import com.amazonaws.services.ecs.model.RunTaskResult;
 import com.amazonaws.services.ecs.model.Service;
 import com.amazonaws.services.ecs.model.ServiceEvent;
 import com.amazonaws.services.ecs.model.Tag;
@@ -1493,6 +1495,16 @@ public class EcsContainerServiceImpl implements EcsContainerService {
     return awsHelperService
         .registerTaskDefinition(region, awsConfig, encryptedDataDetails, registerTaskDefinitionRequest)
         .getTaskDefinition();
+  }
+
+  @Override
+  public RunTaskResult triggerRunTask(String region, SettingAttribute settingAttribute,
+      List<EncryptedDataDetail> encryptedDataDetails, RunTaskRequest runTaskRequest) {
+    AwsConfig awsConfig = awsHelperService.validateAndGetAwsConfig(settingAttribute, encryptedDataDetails);
+    RunTaskResult runTaskResult =
+        awsHelperService.triggerEcsRunTask(region, awsConfig, encryptedDataDetails, runTaskRequest);
+    logger.info("Ecs Run Task with task definition %s Triggered", runTaskRequest.getTaskDefinition());
+    return runTaskResult;
   }
 
   @Override

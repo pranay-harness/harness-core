@@ -189,6 +189,7 @@ import static software.wings.sm.StepType.BAMBOO;
 import static software.wings.sm.StepType.BARRIER;
 import static software.wings.sm.StepType.CLOUD_FORMATION_CREATE_STACK;
 import static software.wings.sm.StepType.CLOUD_FORMATION_DELETE_STACK;
+import static software.wings.sm.StepType.ECS_RUN_TASK;
 import static software.wings.sm.StepType.ECS_STEADY_STATE_CHECK;
 import static software.wings.sm.StepType.EMAIL;
 import static software.wings.sm.StepType.GCB;
@@ -4422,7 +4423,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
         .extracting(
             WorkflowCategoryStepsMeta::getId, WorkflowCategoryStepsMeta::getName, WorkflowCategoryStepsMeta::getStepIds)
         .contains(tuple(WorkflowStepType.ECS.name(), WorkflowStepType.ECS.getDisplayName(),
-            asList(ECS_SERVICE_DEPLOY.name(), ECS_STEADY_STATE_CHECK.name())));
+            asList(ECS_RUN_TASK.name(), ECS_SERVICE_DEPLOY.name(), ECS_STEADY_STATE_CHECK.name())));
 
     validateCommonCategories(workflowCategorySteps);
 

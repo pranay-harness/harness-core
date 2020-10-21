@@ -12,6 +12,8 @@ import com.google.inject.Singleton;
 import com.amazonaws.services.ecs.model.ContainerDefinition;
 import com.amazonaws.services.ecs.model.CreateServiceRequest;
 import com.amazonaws.services.ecs.model.RegisterTaskDefinitionRequest;
+import com.amazonaws.services.ecs.model.RunTaskRequest;
+import com.amazonaws.services.ecs.model.RunTaskResult;
 import com.amazonaws.services.ecs.model.Service;
 import com.amazonaws.services.ecs.model.TaskDefinition;
 import com.amazonaws.services.elasticloadbalancingv2.model.TargetGroup;
@@ -105,6 +107,12 @@ public class AwsClusterServiceImpl implements AwsClusterService {
       List<EncryptedDataDetail> encryptedDataDetails, RegisterTaskDefinitionRequest registerTaskDefinitionRequest) {
     return ecsContainerService.createTask(
         region, settingAttribute, encryptedDataDetails, registerTaskDefinitionRequest);
+  }
+
+  @Override
+  public RunTaskResult triggerRunTask(String region, SettingAttribute settingAttribute,
+      List<EncryptedDataDetail> encryptedDataDetails, RunTaskRequest runTaskRequest) {
+    return ecsContainerService.triggerRunTask(region, settingAttribute, encryptedDataDetails, runTaskRequest);
   }
 
   @Override

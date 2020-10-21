@@ -120,6 +120,8 @@ import com.amazonaws.services.ecs.model.CreateServiceRequest;
 import com.amazonaws.services.ecs.model.CreateServiceResult;
 import com.amazonaws.services.ecs.model.DeleteServiceRequest;
 import com.amazonaws.services.ecs.model.DeleteServiceResult;
+import com.amazonaws.services.ecs.model.DeregisterTaskDefinitionRequest;
+import com.amazonaws.services.ecs.model.DeregisterTaskDefinitionResult;
 import com.amazonaws.services.ecs.model.DescribeClustersRequest;
 import com.amazonaws.services.ecs.model.DescribeClustersResult;
 import com.amazonaws.services.ecs.model.DescribeContainerInstancesRequest;
@@ -138,6 +140,8 @@ import com.amazonaws.services.ecs.model.ListTasksRequest;
 import com.amazonaws.services.ecs.model.ListTasksResult;
 import com.amazonaws.services.ecs.model.RegisterTaskDefinitionRequest;
 import com.amazonaws.services.ecs.model.RegisterTaskDefinitionResult;
+import com.amazonaws.services.ecs.model.RunTaskRequest;
+import com.amazonaws.services.ecs.model.RunTaskResult;
 import com.amazonaws.services.ecs.model.Service;
 import com.amazonaws.services.ecs.model.ServiceField;
 import com.amazonaws.services.ecs.model.ServiceNotFoundException;
@@ -861,6 +865,13 @@ public class AwsHelperService {
     return getAmazonEcsClient(region, awsConfig).createService(createServiceRequest);
   }
 
+  public RunTaskResult triggerEcsRunTask(
+      String region, AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails, RunTaskRequest runTaskRequest) {
+    encryptionService.decrypt(awsConfig, encryptionDetails);
+    tracker.trackECSCall("Ecs Run Task Request");
+    return getAmazonEcsClient(region, awsConfig).runTask(runTaskRequest);
+  }
+
   public UpdateServiceResult updateService(String region, AwsConfig awsConfig,
       List<EncryptedDataDetail> encryptionDetails, UpdateServiceRequest updateServiceRequest) {
     try {
@@ -889,12 +900,30 @@ public class AwsHelperService {
     return new DeleteServiceResult();
   }
 
+  public DeregisterTaskDefinitionResult deregisterTaskDefinitions(String region, AwsConfig awsConfig,
+      List<EncryptedDataDetail> encryptionDetails, DeregisterTaskDefinitionRequest deregisterTaskDefinitionRequest) {
+    try {
+      encryptionService.decrypt(awsConfig, encryptionDetails);
+      tracker.trackECSCall("List Tasks");
+      return getAmazonEcsClient(region, awsConfig).deregisterTaskDefinition(deregisterTaskDefinitionRequest);
+    } catch (ClusterNotFoundException ex) {
+      throw new WingsException(ErrorCode.AWS_CLUSTER_NOT_FOUND).addParam("message", ExceptionUtils.getMessage(ex));
+    } catch (ServiceNotFoundException ex) {
+      throw new WingsException(ErrorCode.AWS_SERVICE_NOT_FOUND).addParam("message", ExceptionUtils.getMessage(ex));
+    } catch (AmazonServiceException amazonServiceException) {
+      handleAmazonServiceException(amazonServiceException);
+    } catch (AmazonClientException amazonClientException) {
+      handleAmazonClientException(amazonClientException);
+    }
+    return new DeregisterTaskDefinitionResult();
+  }
+
   public ListTasksResult listTasks(String region, AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails,
       ListTasksRequest listTasksRequest) {
     try {
       encryptionService.decrypt(awsConfig, encryptionDetails);
       tracker.trackECSCall("List Tasks");
-      return getAmazonEcsClient(region, awsConfig).listTasks(listTasksRequest);
+      return getAmazonEcsClient(region, awsConfig).listTasks(listTasksRequest.withMaxResults(100));
     } catch (ClusterNotFoundException ex) {
       throw new WingsException(ErrorCode.AWS_CLUSTER_NOT_FOUND).addParam("message", ExceptionUtils.getMessage(ex));
     } catch (ServiceNotFoundException ex) {
