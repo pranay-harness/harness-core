@@ -53,6 +53,7 @@ public abstract class AbstractStatsDataFetcherWithAggregationListAndLimit<A, F, 
 
   @Inject protected WingsPersistence wingsPersistence;
   @Inject protected DataFetcherUtils utils;
+
   public static final int MAX_RETRY = 3;
 
   protected abstract QLData fetch(String accountId, List<A> aggregateFunction, List<F> filters, List<G> groupBy,
@@ -85,7 +86,9 @@ public abstract class AbstractStatsDataFetcherWithAggregationListAndLimit<A, F, 
       final Integer limit = fetchLimit(dataFetchingEnvironment, LIMIT);
       final Integer offset = fetchOffset(dataFetchingEnvironment, OFFSET);
       final boolean includeOthers = fetchIncludeOthers(dataFetchingEnvironment);
+
       String accountId = utils.getAccountId(dataFetchingEnvironment);
+      final String accountIdDataToFetch = utils.fetchSampleAccountIdIfNoClusterData(accountId);
 
       try (AutoLogContext ignore1 =
                new AggregateFunctionLogContext(aggregationFunctionClass.getSimpleName(), OVERRIDE_ERROR);
@@ -94,9 +97,9 @@ public abstract class AbstractStatsDataFetcherWithAggregationListAndLimit<A, F, 
            AutoLogContext ignore3 = new GroupByLogContext(groupByClass.getSimpleName(), OVERRIDE_ERROR);
            AutoLogContext ignore4 = new FilterLogContext(filterClass.getSimpleName(), OVERRIDE_ERROR)) {
         QLData qlData = fetchSelectedFields(
-            accountId, aggregateFunctions, filters, groupBy, sort, limit, offset, dataFetchingEnvironment);
+            accountIdDataToFetch, aggregateFunctions, filters, groupBy, sort, limit, offset, dataFetchingEnvironment);
         if (qlData == null) {
-          qlData = fetch(accountId, aggregateFunctions, filters, groupBy, sort, limit, offset);
+          qlData = fetch(accountIdDataToFetch, aggregateFunctions, filters, groupBy, sort, limit, offset);
         }
         QLData postFetchResult = postFetch(accountId, groupBy, aggregateFunctions, sort, qlData, limit, includeOthers);
         result = qlData;
