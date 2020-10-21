@@ -50,6 +50,7 @@ import io.harness.connector.validator.ConnectionValidator;
 import io.harness.connector.validator.DockerConnectionValidator;
 import io.harness.connector.validator.GcpConnectorValidator;
 import io.harness.connector.validator.GitConnectorValidator;
+import io.harness.connector.validator.JiraConnectorValidator;
 import io.harness.connector.validator.KubernetesConnectionValidator;
 import io.harness.connector.validator.NexusConnectorValidator;
 import io.harness.connector.validator.SplunkConnectionValidator;
@@ -77,6 +78,7 @@ public class ConnectorModule extends AbstractModule {
     connectorValidatorMapBinder.addBinding(ConnectorType.ARTIFACTORY.getDisplayName())
         .to(ArtifactoryConnectionValidator.class);
     connectorValidatorMapBinder.addBinding(ConnectorType.NEXUS.getDisplayName()).to(NexusConnectorValidator.class);
+    connectorValidatorMapBinder.addBinding(ConnectorType.JIRA.getDisplayName()).to(JiraConnectorValidator.class);
 
     MapBinder<String, ConnectorDTOToEntityMapper> connectorDTOToEntityMapBinder =
         MapBinder.newMapBinder(binder(), String.class, ConnectorDTOToEntityMapper.class);
