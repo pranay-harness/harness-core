@@ -1507,6 +1507,29 @@ public class HelmDeployStateTest extends WingsBaseTest {
   @Test
   @Owner(developers = ABOSII)
   @Category(UnitTests.class)
+  public void testExecuteHelmTaskWithPollForChangesEnabled() throws Exception {
+    HelmChartSpecification helmChartSpec = HelmChartSpecification.builder().chartName("name").build();
+    ApplicationManifest appManifest = ApplicationManifest.builder()
+                                          .pollForChanges(true)
+                                          .storeType(StoreType.HelmChartRepo)
+                                          .helmChartConfig(HelmChartConfig.builder().chartName("name").build())
+                                          .build();
+
+    doReturn(helmChartSpec).when(serviceResourceService).getHelmChartSpecification(anyString(), anyString());
+    doReturn(true).when(featureFlagService).isEnabled(FeatureName.HELM_CHART_AS_ARTIFACT, null);
+    doReturn(true).when(applicationManifestUtils).isPollForChangesEnabled(appManifest);
+    doReturn(appManifest)
+        .when(applicationManifestService)
+        .getAppManifest(app.getUuid(), null, serviceElement.getUuid(), AppManifestKind.K8S_MANIFEST);
+
+    helmDeployState.executeHelmTask(context, ACTIVITY_ID, emptyMap(), emptyMap());
+    verify(applicationManifestUtils, times(1))
+        .applyHelmChartFromExecutionContext(appManifest, context, serviceElement.getUuid());
+  }
+
+  @Test
+  @Owner(developers = ABOSII)
+  @Category(UnitTests.class)
   public void testGetValuesYamlOverridesWithoutImageDetails() {
     String yamlFileContent = "tag: ${DOCKER_IMAGE_TAG}\nimage: ${DOCKER_IMAGE_NAME}";
     //    ImageDetails imageDetails = ImageDetails.builder().tag("Tag").name("Image").domainName("domain").build();

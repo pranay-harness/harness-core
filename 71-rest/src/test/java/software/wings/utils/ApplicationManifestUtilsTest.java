@@ -15,6 +15,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.assertj.core.api.Assertions.fail;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -31,6 +32,7 @@ import static software.wings.beans.appmanifest.StoreType.Remote;
 import static software.wings.helpers.ext.k8s.request.K8sValuesLocation.Environment;
 import static software.wings.helpers.ext.k8s.request.K8sValuesLocation.EnvironmentGlobal;
 import static software.wings.helpers.ext.k8s.request.K8sValuesLocation.ServiceOverride;
+import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 import static software.wings.utils.WingsTestConstants.APP_ID;
 import static software.wings.utils.WingsTestConstants.ENV_ID;
 import static software.wings.utils.WingsTestConstants.INFRA_MAPPING_ID;
@@ -41,6 +43,7 @@ import com.google.inject.Inject;
 
 import io.harness.category.element.UnitTests;
 import io.harness.context.ContextElementType;
+import io.harness.exception.InvalidArgumentsException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.git.model.GitFile;
 import io.harness.rule.Owner;
@@ -53,6 +56,8 @@ import org.mockito.Mockito;
 import software.wings.WingsBaseTest;
 import software.wings.api.PhaseElement;
 import software.wings.api.ServiceElement;
+import software.wings.beans.DeploymentExecutionContext;
+import software.wings.beans.FeatureName;
 import software.wings.beans.GcpKubernetesInfrastructureMapping;
 import software.wings.beans.GitFetchFilesConfig;
 import software.wings.beans.GitFetchFilesTaskParams;
@@ -60,6 +65,8 @@ import software.wings.beans.GitFileConfig;
 import software.wings.beans.HelmChartConfig;
 import software.wings.beans.Service;
 import software.wings.beans.appmanifest.ApplicationManifest;
+import software.wings.beans.appmanifest.ApplicationManifest.ApplicationManifestBuilder;
+import software.wings.beans.appmanifest.HelmChart;
 import software.wings.beans.appmanifest.ManifestFile;
 import software.wings.beans.yaml.GitCommandExecutionResponse;
 import software.wings.beans.yaml.GitFetchFilesFromMultipleRepoResult;
@@ -68,6 +75,7 @@ import software.wings.helpers.ext.k8s.request.K8sValuesLocation;
 import software.wings.service.impl.GitFileConfigHelperService;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ApplicationManifestService;
+import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.sm.ExecutionContext;
@@ -80,12 +88,13 @@ import java.util.List;
 import java.util.Map;
 
 public final class ApplicationManifestUtilsTest extends WingsBaseTest {
-  @Mock private ExecutionContext context;
+  @Mock private DeploymentExecutionContext context;
   @Mock private ApplicationManifestService applicationManifestService;
   @Mock private InfrastructureMappingService infrastructureMappingService;
   @Mock private AppService appService;
   @Mock private ServiceResourceService serviceResourceService;
   @Mock private GitFileConfigHelperService gitFileConfigHelperService;
+  @Mock private FeatureFlagService featureFlagService;
 
   @Inject @InjectMocks private ApplicationManifestUtils applicationManifestUtils;
   private ApplicationManifestUtils applicationManifestUtilsSpy = spy(new ApplicationManifestUtils());
@@ -96,6 +105,7 @@ public final class ApplicationManifestUtilsTest extends WingsBaseTest {
         .thenReturn(PhaseElement.builder().serviceElement(ServiceElement.builder().uuid(SERVICE_ID).build()).build());
     when(context.getAppId()).thenReturn(APP_ID);
     when(context.fetchInfraMappingId()).thenReturn(INFRA_MAPPING_ID);
+    when(context.getAccountId()).thenReturn(ACCOUNT_ID);
     when(infrastructureMappingService.get(APP_ID, INFRA_MAPPING_ID))
         .thenReturn(GcpKubernetesInfrastructureMapping.builder().envId(ENV_ID).build());
     when(appService.get(APP_ID)).thenReturn(anApplication().uuid(APP_ID).build());
@@ -867,5 +877,80 @@ public final class ApplicationManifestUtilsTest extends WingsBaseTest {
 
     applicationManifestUtils.renderGitConfigForApplicationManifest(context, appManifestMap);
     verify(gitFileConfigHelperService, times(3)).renderGitFileConfig(context, toBeRendered);
+  }
+
+  @Test
+  @Owner(developers = ABOSII)
+  @Category(UnitTests.class)
+  public void testGetApplicationManifestWithPollForChangesEnabled() {
+    HelmChartConfig chartConfig = HelmChartConfig.builder().chartName("chartName").chartUrl("chartUrl").build();
+    ApplicationManifest serviceApplicationManifest = ApplicationManifest.builder()
+                                                         .storeType(HelmChartRepo)
+                                                         .pollForChanges(true)
+                                                         .helmChartConfig(chartConfig)
+                                                         .build();
+    HelmChart helmChartInContextForService = HelmChart.builder().version("contextChartVersion").build();
+
+    doReturn(true).when(featureFlagService).isEnabled(FeatureName.HELM_CHART_AS_ARTIFACT, ACCOUNT_ID);
+    doReturn(serviceApplicationManifest).when(applicationManifestService).getManifestByServiceId(APP_ID, SERVICE_ID);
+    doReturn(helmChartInContextForService).when(context).getHelmChartForService(SERVICE_ID);
+
+    ApplicationManifest applicationManifest = applicationManifestUtils.getApplicationManifestForService(context);
+    assertThat(applicationManifest.getHelmChartConfig().getChartVersion()).isEqualTo("contextChartVersion");
+  }
+
+  @Test
+  @Owner(developers = ABOSII)
+  @Category(UnitTests.class)
+  public void testGetApplicationManifestWithPollForChangesDisabled() {
+    HelmChartConfig chartConfig =
+        HelmChartConfig.builder().chartName("chartName").chartVersion("chartVersion").chartUrl("chartUrl").build();
+    ApplicationManifest serviceApplicationManifest = ApplicationManifest.builder()
+                                                         .storeType(HelmChartRepo)
+                                                         .pollForChanges(false)
+                                                         .helmChartConfig(chartConfig)
+                                                         .build();
+
+    doReturn(true).when(featureFlagService).isEnabled(FeatureName.HELM_CHART_AS_ARTIFACT, ACCOUNT_ID);
+    doReturn(serviceApplicationManifest).when(applicationManifestService).getManifestByServiceId(APP_ID, SERVICE_ID);
+
+    ApplicationManifest applicationManifest = applicationManifestUtils.getApplicationManifestForService(context);
+
+    verify(context, never()).getHelmChartForService(SERVICE_ID);
+    assertThat(applicationManifest.getHelmChartConfig().getChartVersion()).isEqualTo("chartVersion");
+  }
+
+  @Test
+  @Owner(developers = ABOSII)
+  @Category(UnitTests.class)
+  public void testGetApplicationManifestWithPollForChangesMissingHelmChart() {
+    HelmChartConfig chartConfig = HelmChartConfig.builder().chartName("chartName").chartUrl("chartUrl").build();
+    ApplicationManifest serviceApplicationManifest = ApplicationManifest.builder()
+                                                         .storeType(HelmChartRepo)
+                                                         .pollForChanges(true)
+                                                         .helmChartConfig(chartConfig)
+                                                         .build();
+
+    doReturn(true).when(featureFlagService).isEnabled(FeatureName.HELM_CHART_AS_ARTIFACT, ACCOUNT_ID);
+    doReturn(serviceApplicationManifest).when(applicationManifestService).getManifestByServiceId(APP_ID, SERVICE_ID);
+
+    assertThatThrownBy(() -> applicationManifestUtils.getApplicationManifestForService(context))
+        .isInstanceOf(InvalidArgumentsException.class)
+        .hasMessageContaining("INVALID_ARGUMENT");
+  }
+
+  @Test
+  @Owner(developers = ABOSII)
+  @Category(UnitTests.class)
+  public void testIsPollForChangesEnabled() {
+    ApplicationManifestBuilder builder = ApplicationManifest.builder().storeType(HelmChartRepo);
+    ApplicationManifest appManifestNullPollForChanges = builder.pollForChanges(null).build();
+    ApplicationManifest appManifestFalsePollForChanges = builder.pollForChanges(false).build();
+    ApplicationManifest appManifestTruePollForChanges = builder.pollForChanges(true).build();
+
+    assertThat(applicationManifestUtils.isPollForChangesEnabled(null)).isFalse();
+    assertThat(applicationManifestUtils.isPollForChangesEnabled(appManifestNullPollForChanges)).isFalse();
+    assertThat(applicationManifestUtils.isPollForChangesEnabled(appManifestFalsePollForChanges)).isFalse();
+    assertThat(applicationManifestUtils.isPollForChangesEnabled(appManifestTruePollForChanges)).isTrue();
   }
 }
