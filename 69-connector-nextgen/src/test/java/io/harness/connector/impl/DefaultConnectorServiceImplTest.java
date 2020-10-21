@@ -250,9 +250,9 @@ public class DefaultConnectorServiceImplTest extends ConnectorsTestBase {
     } catch (IOException ex) {
       logger.info("Encountered exception ", ex);
     }
-    when(entitySetupUsageClient.isEntityReferenced(any(), any(), any(), any())).thenReturn(request);
+    when(entitySetupUsageClient.isEntityReferenced(any(), any())).thenReturn(request);
     boolean deleted = connectorService.delete(accountIdentifier, null, null, identifier);
-    verify(entitySetupUsageClient, times(1)).isEntityReferenced(anyString(), anyString(), anyString(), anyString());
+    verify(entitySetupUsageClient, times(1)).isEntityReferenced(anyString(), anyString());
     assertThat(deleted).isTrue();
   }
 

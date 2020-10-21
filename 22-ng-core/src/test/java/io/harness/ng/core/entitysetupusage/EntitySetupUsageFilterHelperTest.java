@@ -7,7 +7,6 @@ import io.harness.category.element.UnitTests;
 import io.harness.ng.core.entitysetupusage.entity.EntitySetupUsage.EntitySetupUsageKeys;
 import io.harness.rule.Owner;
 import io.harness.rule.OwnerRule;
-import io.harness.utils.FullyQualifiedIdentifierHelper;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -30,14 +29,12 @@ public class EntitySetupUsageFilterHelperTest extends CategoryTest {
     String accountIdentifier = "accountIdentifier";
     String orgIdentifier = "orgIdentifier";
     String projectIdentifier = "projectIdentifier";
-    String referredEntityIdentifier = "referredEntityIdentifier";
+    String referredEntityFQN = "referredEntityFQN";
     String searchTerm = "searchTerm";
 
-    Criteria criteria = entitySetupUsageFilterHelper.createCriteriaFromEntityFilter(
-        accountIdentifier, orgIdentifier, projectIdentifier, referredEntityIdentifier, searchTerm);
-    assertThat(criteria.getCriteriaObject().size()).isEqualTo(2);
-    assertThat(criteria.getCriteriaObject().get(EntitySetupUsageKeys.referredEntityFQN))
-        .isEqualTo(FullyQualifiedIdentifierHelper.getFullyQualifiedIdentifier(
-            accountIdentifier, orgIdentifier, projectIdentifier, referredEntityIdentifier));
+    Criteria criteria =
+        entitySetupUsageFilterHelper.createCriteriaFromEntityFilter(accountIdentifier, referredEntityFQN, searchTerm);
+    assertThat(criteria.getCriteriaObject().size()).isEqualTo(3);
+    assertThat(criteria.getCriteriaObject().get(EntitySetupUsageKeys.referredEntityFQN)).isEqualTo(referredEntityFQN);
   }
 }

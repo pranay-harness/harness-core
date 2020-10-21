@@ -67,8 +67,8 @@ public class SecretEntityReferenceHelper {
         encryptedDataDTO.getOrg(), encryptedDataDTO.getProject(), encryptedDataDTO.getIdentifier());
     boolean entityReferenceDeleted = false;
     try {
-      entityReferenceDeleted = execute(entitySetupUsageClient.delete(encryptedDataDTO.getAccount(),
-          encryptedDataDTO.getOrg(), encryptedDataDTO.getProject(), encryptedDataDTO.getIdentifier(), false));
+      entityReferenceDeleted =
+          execute(entitySetupUsageClient.deleteAllReferredByEntityRecords(encryptedDataDTO.getAccount(), secretFQN));
     } catch (Exception ex) {
       logger.info(ENTITY_REFERENCE_LOG_PREFIX
               + "The entity reference was not deleted when the secret [{}] was deleted from the secret manager [{}] with the exception [{}]",
