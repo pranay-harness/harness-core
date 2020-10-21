@@ -28,7 +28,8 @@ fi
 
 if [ "${RUN_BAZEL_TESTS}" == "true" ]
 then
-  bazel ${bazelrc} test --keep_going ${GCP} ${BAZEL_ARGUMENTS} -- //... -//product/... -//commons/... || true
+  bazel ${bazelrc} test --keep_going ${GCP} ${BAZEL_ARGUMENTS} -- //... -//product/... -//commons/... -//71-rest/... -//260-delegate/... || true
+  # 71-rest and 260-delegate modules are excluded.
 fi
 
 build_bazel_module() {
@@ -133,6 +134,7 @@ build_bazel_module 70-cv-nextgen-commons
 build_bazel_module 70-delegate-agent
 build_bazel_module 70-delegate-service
 build_bazel_module 450-ce-views
+build_bazel_module 490-ce-commons
 build_java_proto_module 13-grpc-api
 build_java_proto_module 19-delegate-tasks-beans
 build_java_proto_module 20-delegate-beans

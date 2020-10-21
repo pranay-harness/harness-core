@@ -20,7 +20,7 @@ Download OpenJDK 1.8-242 JRE Installer from [Java archive downloads](https://ado
 #####4. Install npm (used for front-end):
    `brew install npm`
 
-#####5. **Set up JAVA_HOME: create or add this to your bash profile `~/.bash_profile` file and add following line:**
+#####5. **Set up JAVA_HOME: create or add this to your bash profile `~/.bashrc` file and add following line:**
 
 ```
    ulimit -u 8192
@@ -81,6 +81,11 @@ import bazelrc.local
 build --define=ABSOLUTE_JAVABASE=/Library/Java/JavaVirtualMachines/jdk1.8.0_202.jdk/Contents/Home
 ```
 
+#####9. Download the data-collection-dsl username and password from [vault](https://vault-internal.harness.io:8200/ui/vault/secrets/secret/show/cv/datacollection-artifactory) and add following lines in your `~/.bashrc` file
+```
+export JFROG_USERNAME=<username-here>
+export JFROG_PASSWORD=<password-here>
+```
 ### Github setup
 
 1. Create harness dedicated github account. Use your harness email.

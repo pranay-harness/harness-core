@@ -1,6 +1,7 @@
 # Add properties that are shared between developers and ci build system
 
 build --action_env=HARNESS_GENERATION_PASSPHRASE
+build --action_env=JAVA_HOME
 
 # TODO: enable remote cache for developers
 # build --remote_cache=https://storage.googleapis.com/harness-bazel-cache
