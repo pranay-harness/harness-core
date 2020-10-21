@@ -191,16 +191,16 @@ MANUAL_INTERVENTION_NEEDED_NOTIFICATION:
           text: ${WORKFLOW_NAME} - Started ${START_DATE}
 
 NEEDS_RUNTIME_INPUTS:
-  web: Needs Inputs for variables - ${WORKFLOW_NAME} in ${APP_NAME} requires inputs for variables
-  slack: Needs Inputs for variables - \*<${WORKFLOW_URL}|${WORKFLOW_NAME}>\* requires inputs for variables \*${ARTIFACT}\* in \*${ENV}\*, triggered by \*${USER_NAME}\* in \*${APP_NAME}\* application||_Started<!date^${START_TS_SECS}^ {date_short_pretty} at {time}| ${START_DATE}> and ${VERB} at <!date^${END_TS_SECS}^{time}|${END_DATE}>_||${DURATION}||${VERB}
+  web: Runtime Inputs Required - ${PIPELINE_STEP_NAME} in ${PIPELINE_NAME} is waiting for inputs in ${APP_NAME}.
+  slack:  Runtime Inputs Required \n || ${PIPELINE_STEP}\n${PIPELINE}\n${APPLICATION}\n _Started<!date^${START_TS_SECS}^ {date_short_pretty} at {time}| ${START_DATE}> and ${VERB} at <!date^${END_TS_SECS}^{time}|${END_DATE}>_||${DURATION}||${VERB}
   email:
-    subject: Needs Inputs for variables for ${WORKFLOW_NAME}
-    body: <<top-div>><b><<a>>href="${WORKFLOW_URL}" target="_blank">${WORKFLOW_NAME}</a></b> requires manual intervention for <b>${ARTIFACT}</b> in <b>${ENV}</b>, triggered by <b>${USER_NAME}</b> in <b>${APP_NAME}</b> application</div> <<bottom-div>><<${VERB}-color>><i> Started ${START_DATE} and ${VERB} at ${END_DATE}</i><<img-path>>${VERB}<<img-suffix>>${DURATION}</span></div></div>
+    subject: Runtime Inputs Required for ${PIPELINE_STEP_NAME} in ${PIPELINE_NAME}
+    body: <<top-div>>${PIPELINE_STEP}<b><<a>>href="${PIPELINE_URL}" target="_blank">${PIPELINE}</a></b> is waiting for runtime inputs, triggered by <b>${USER_NAME}</b>${PIPELINE} in <b>${APP_NAME}</b> application</div><<bottom-div>><<${VERB}-color>><i>Started ${START_DATE} and ${VERB} at ${END_DATE}</i><<img-path>>${VERB}<<img-suffix>>${DURATION}</span></div></div>
   pagerDuty:
-    summary: Needs Inputs for variables - ${WORKFLOW_NAME}> requires manual intervention for ${ARTIFACT} in ${ENV}, triggered by ${USER_NAME} in ${APP_NAME} application Started ${START_DATE} and ${VERB} at ${END_DATE} duration ${DURATION}
+    summary: Runtime inputs required for ${PIPELINE_STEP_NAME} in ${PIPELINE_NAME}, triggered by ${USER_NAME}, in ${APP_NAME} application Started ${START_DATE} and will expire at at ${END_DATE}
     link:
-      href: ${WORKFLOW_URL}
-      text: ${WORKFLOW_NAME} - Started ${START_DATE}
+      href: ${PIPELINE_URL}
+      text: ${PIPELINE} - Started ${START_DATE}
 
 RESOURCE_CONSTRAINT_BLOCKED_NOTIFICATION:
       web: Resource constraint ${RESOURCE_CONSTRAINT_NAME} is in use and it is blocking ${WORKFLOW_NAME}> in ${APP_NAME}.

@@ -79,6 +79,11 @@ public class PipelineServiceValidator {
         if (workflowVar != null) {
           EntityType entityType = workflowVar.obtainEntityType();
 
+          if (workflowVar.isFixed()) {
+            throw new InvalidRequestException(
+                String.format("Variable %s is a fixed Variable, Cannot be marked runtime", variableName));
+          }
+
           if (!matchesVariablePattern(variable.getValue())) {
             throw new InvalidRequestException(
                 String.format("Variable %s is marked runtime but the value isnt a valid expression", variableName));

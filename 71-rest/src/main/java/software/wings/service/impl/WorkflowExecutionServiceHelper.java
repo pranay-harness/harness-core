@@ -7,6 +7,7 @@ import static io.harness.beans.WorkflowType.PIPELINE;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.exception.WingsException.USER;
+import static io.harness.expression.ExpressionEvaluator.matchesVariablePattern;
 import static io.harness.validation.Validator.notNullCheck;
 import static java.util.Arrays.asList;
 import static java.util.stream.Collectors.toList;
@@ -389,10 +390,22 @@ public class WorkflowExecutionServiceHelper {
         }
 
         List<String> runtimeVarNames = runtimeInputsConfig.getRuntimeInputVariables();
-        return variables.stream().filter(t -> runtimeVarNames.contains(t.getName())).collect(toList());
+        List<Variable> runtimeVariables =
+            variables.stream().filter(t -> runtimeVarNames.contains(t.getName())).collect(toList());
+        for (Variable variable : runtimeVariables) {
+          String defaultValuePresent = resolvedVariablesValues.get(variable.getName());
+          if (isNotEmpty(defaultValuePresent) && isNotNewVar(defaultValuePresent)) {
+            variable.setValue(defaultValuePresent);
+          }
+        }
+        return runtimeVariables;
       }
     }
     throw new InvalidRequestException(
         " No PipelineStage found for given PipelineStageElementId: " + pipelineStageElementId);
+  }
+
+  private boolean isNotNewVar(String defaultValuePresent) {
+    return !(matchesVariablePattern(defaultValuePresent) && !defaultValuePresent.contains("."));
   }
 }
