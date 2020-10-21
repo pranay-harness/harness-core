@@ -92,6 +92,7 @@ public class GcpMarketplaceMessageReceiver implements MessageReceiver {
     GCPMarketplaceCustomer gcpMarketplaceCustomer = getCustomer(gcpAccountId);
     Account account = gcpProcurementService.getAccount(gcpAccountId);
     if (account == null) {
+      // GCP account doesn't exist anymore so we should delete Harness account mapped to this GCP account
       if (gcpMarketplaceCustomer != null) {
         logger.info("Deleting Account provisioned through GCP Marketplace with accountId: {} and GCP AccountId: {}.",
             gcpMarketplaceCustomer.getHarnessAccountId(), gcpAccountId);
@@ -170,9 +171,10 @@ public class GcpMarketplaceMessageReceiver implements MessageReceiver {
         .get();
   }
 
-  private void updateCustomer(GCPMarketplaceCustomer customer, Entitlement entitlement) {
+  private void updateCustomer(GCPMarketplaceCustomer customer, Entitlement entitlement) throws IOException {
     GCPMarketplaceProductBuilder product = GCPMarketplaceProduct.builder();
-    product.product(entitlement.getProduct());
+    String productName = gcpProcurementService.getProductNameFromEntitlement(entitlement.getName());
+    product.product(productName);
     product.plan(entitlement.getPlan());
     product.startTime(Instant.parse(entitlement.getCreateTime()));
     String usageReportingId = entitlement.getUsageReportingId();
@@ -180,24 +182,24 @@ public class GcpMarketplaceMessageReceiver implements MessageReceiver {
       product.usageReportingId(usageReportingId);
     }
 
-    Optional<GCPMarketplaceProduct> gcpMarketplaceProduct = getProduct(customer, entitlement.getProduct());
+    Optional<GCPMarketplaceProduct> gcpMarketplaceProduct = getProduct(customer, productName);
     if (gcpMarketplaceProduct.isPresent()) {
-      getGcpProductHandler(entitlement).handlePlanChange(customer.getHarnessAccountId(), entitlement.getPlan());
+      getGcpProductHandler(productName).handlePlanChange(customer.getHarnessAccountId(), entitlement.getPlan());
       customer.getProducts().remove(gcpMarketplaceProduct.get());
     } else {
-      getGcpProductHandler(entitlement).handleNewSubscription(customer.getHarnessAccountId(), entitlement.getPlan());
+      getGcpProductHandler(productName).handleNewSubscription(customer.getHarnessAccountId(), entitlement.getPlan());
     }
     customer.getProducts().add(product.build());
     wingsPersistence.save(customer);
   }
 
-  private GcpProductHandler getGcpProductHandler(Entitlement entitlement) {
-    return gcpProductsRegistry.getGcpProductHandler(entitlement.getProduct());
+  private GcpProductHandler getGcpProductHandler(String productName) {
+    return gcpProductsRegistry.getGcpProductHandler(productName);
   }
 
-  private Optional<GCPMarketplaceProduct> getProduct(GCPMarketplaceCustomer customer, String product) {
+  private Optional<GCPMarketplaceProduct> getProduct(GCPMarketplaceCustomer customer, String productName) {
     for (GCPMarketplaceProduct subscribedProduct : customer.getProducts()) {
-      if (subscribedProduct.getProduct().equals(product)) {
+      if (subscribedProduct.getProduct().equals(productName)) {
         return Optional.of(subscribedProduct);
       }
     }
@@ -205,10 +207,11 @@ public class GcpMarketplaceMessageReceiver implements MessageReceiver {
     return Optional.empty();
   }
 
-  private void cancelCustomer(GCPMarketplaceCustomer customer, Entitlement entitlement) {
-    getGcpProductHandler(entitlement).handleSubscriptionCancellation(customer.getHarnessAccountId());
+  private void cancelCustomer(GCPMarketplaceCustomer customer, Entitlement entitlement) throws IOException {
+    String productName = gcpProcurementService.getProductNameFromEntitlement(entitlement.getName());
+    getGcpProductHandler(productName).handleSubscriptionCancellation(customer.getHarnessAccountId());
 
-    Optional<GCPMarketplaceProduct> productToCancel = getProduct(customer, entitlement.getProduct());
+    Optional<GCPMarketplaceProduct> productToCancel = getProduct(customer, productName);
     productToCancel.ifPresent(gcpMarketplaceProduct -> customer.getProducts().remove(gcpMarketplaceProduct));
 
     if (customer.getProducts().isEmpty()) {
