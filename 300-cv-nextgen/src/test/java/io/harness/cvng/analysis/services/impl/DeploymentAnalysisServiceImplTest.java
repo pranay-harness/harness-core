@@ -15,7 +15,9 @@ import io.harness.cvng.activity.services.api.ActivityService;
 import io.harness.cvng.analysis.beans.CanaryDeploymentAdditionalInfo;
 import io.harness.cvng.analysis.beans.CanaryDeploymentAdditionalInfo.HostSummaryInfo;
 import io.harness.cvng.analysis.beans.DeploymentLogAnalysisDTO.Cluster;
+import io.harness.cvng.analysis.beans.DeploymentLogAnalysisDTO.ClusterCoordinates;
 import io.harness.cvng.analysis.beans.DeploymentLogAnalysisDTO.ClusterSummary;
+import io.harness.cvng.analysis.beans.DeploymentLogAnalysisDTO.ClusterType;
 import io.harness.cvng.analysis.beans.DeploymentLogAnalysisDTO.HostSummary;
 import io.harness.cvng.analysis.beans.DeploymentLogAnalysisDTO.ResultSummary;
 import io.harness.cvng.analysis.beans.DeploymentTimeSeriesAnalysisDTO.HostData;
@@ -443,7 +445,7 @@ public class DeploymentAnalysisServiceImplTest extends CvNextGenTest {
 
     assertThat(loadTestAdditionalInfo).isNotNull();
     assertThat(loadTestAdditionalInfo.getBaselineDeploymentTag()).isNull();
-    assertThat(loadTestAdditionalInfo.getBaselineStartTime()).isEqualTo(0);
+    assertThat(loadTestAdditionalInfo.getBaselineStartTime()).isEqualTo(null);
     assertThat(loadTestAdditionalInfo.getCurrentDeploymentTag()).isEqualTo("Build1");
     assertThat(loadTestAdditionalInfo.getCurrentStartTime()).isEqualTo(currentTime.toEpochMilli());
   }
@@ -493,15 +495,8 @@ public class DeploymentAnalysisServiceImplTest extends CvNextGenTest {
         .build();
   }
 
-  private HostInfo createHostInfo(
-      String hostName, int risk, Double score, boolean presentBeforeDeployment, boolean presentAfterDeploymeent) {
-    return HostInfo.builder()
-        .hostName(hostName)
-        .risk(risk)
-        .score(score)
-        .presentBeforeDeployment(presentBeforeDeployment)
-        .presentAfterDeployment(presentAfterDeploymeent)
-        .build();
+  private HostInfo createHostInfo(String hostName, int risk, Double score, boolean primary, boolean canary) {
+    return HostInfo.builder().hostName(hostName).risk(risk).score(score).primary(primary).canary(canary).build();
   }
 
   private HostData createHostData(
@@ -553,21 +548,33 @@ public class DeploymentAnalysisServiceImplTest extends CvNextGenTest {
   }
 
   private DeploymentLogAnalysis createDeploymentLogAnalysis(String verificationTaskId) {
-    Cluster cluster1 = createCluster("Error in cluster 1", 1, 0.6464, 0.717171);
-    Cluster cluster2 = createCluster("Error in cluster 2", 2, 0.4525, 0.542524);
-    Cluster cluster3 = createCluster("Error in cluster 3", 3, 0.4525, 0.542524);
+    Cluster cluster1 = createCluster("Error in cluster 1", 1);
+    Cluster cluster2 = createCluster("Error in cluster 2", 2);
+    Cluster cluster3 = createCluster("Error in cluster 3", 3);
     List<Cluster> clusters = Arrays.asList(cluster1, cluster2, cluster3);
 
-    ClusterSummary clusterSummary1 = createClusterSummary(1, 0.7, 36, 1, Arrays.asList(1D), Arrays.asList(2D));
-    ClusterSummary clusterSummary2 = createClusterSummary(0, 0, 3, 2, Arrays.asList(5D), Arrays.asList(2D));
-    ClusterSummary clusterSummary3 = createClusterSummary(2, 2.2, 55, 3, Arrays.asList(3D), Arrays.asList(4D));
+    ClusterCoordinates clusterCoordinates1 = createClusterCoordinates("node1", 1, 0.6464, 0.717171);
+    ClusterCoordinates clusterCoordinates2 = createClusterCoordinates("node2", 2, 0.4525, 0.542524);
+    ClusterCoordinates clusterCoordinates3 = createClusterCoordinates("node3", 3, 0.4525, 0.542524);
+    List<ClusterCoordinates> clusterCoordinatesList =
+        Arrays.asList(clusterCoordinates1, clusterCoordinates2, clusterCoordinates3);
+
+    ClusterSummary clusterSummary1 =
+        createClusterSummary(1, 0.7, 36, 1, Arrays.asList(1D), Arrays.asList(2D), ClusterType.KNOWN_EVENT);
+    ClusterSummary clusterSummary2 =
+        createClusterSummary(0, 0, 3, 2, Arrays.asList(5D), Arrays.asList(2D), ClusterType.KNOWN_EVENT);
+    ClusterSummary clusterSummary3 =
+        createClusterSummary(2, 2.2, 55, 3, Arrays.asList(3D), Arrays.asList(4D), ClusterType.KNOWN_EVENT);
 
     ResultSummary resultSummary = createResultSummary(
         1, 1, Arrays.asList(1, 2), Arrays.asList(clusterSummary1, clusterSummary2, clusterSummary3));
 
-    ClusterSummary clusterSummary4 = createClusterSummary(2, 0.7, 36, 1, Arrays.asList(1D), Arrays.asList(2D));
-    ClusterSummary clusterSummary5 = createClusterSummary(2, 0, 3, 2, Arrays.asList(5D), Arrays.asList(2D));
-    ClusterSummary clusterSummary6 = createClusterSummary(2, 2.2, 55, 3, Arrays.asList(3D), Arrays.asList(4D));
+    ClusterSummary clusterSummary4 =
+        createClusterSummary(2, 0.7, 36, 1, Arrays.asList(1D), Arrays.asList(2D), ClusterType.KNOWN_EVENT);
+    ClusterSummary clusterSummary5 =
+        createClusterSummary(2, 0, 3, 2, Arrays.asList(5D), Arrays.asList(2D), ClusterType.KNOWN_EVENT);
+    ClusterSummary clusterSummary6 =
+        createClusterSummary(2, 2.2, 55, 3, Arrays.asList(3D), Arrays.asList(4D), ClusterType.KNOWN_EVENT);
 
     ResultSummary resultSummary2 = createResultSummary(
         2, 1, Arrays.asList(1, 2), Arrays.asList(clusterSummary4, clusterSummary5, clusterSummary6));
@@ -577,6 +584,7 @@ public class DeploymentAnalysisServiceImplTest extends CvNextGenTest {
     return DeploymentLogAnalysis.builder()
         .accountId(accountId)
         .clusters(clusters)
+        .clusterCoordinates(clusterCoordinatesList)
         .verificationTaskId(verificationTaskId)
         .resultSummary(resultSummary)
         .hostSummaries(Arrays.asList(hostSummary1, hostSummary2))
@@ -595,14 +603,19 @@ public class DeploymentAnalysisServiceImplTest extends CvNextGenTest {
         .build();
   }
 
-  private Cluster createCluster(String text, int label, double x, double y) {
-    return Cluster.builder().text(text).label(label).x(x).y(y).build();
+  private ClusterCoordinates createClusterCoordinates(String hostName, int label, double x, double y) {
+    return ClusterCoordinates.builder().host(hostName).label(label).x(x).y(y).build();
   }
 
-  private ClusterSummary createClusterSummary(
-      int risk, double score, int count, int label, List<Double> controlFrequencyData, List<Double> testFrequencyData) {
+  private Cluster createCluster(String text, int label) {
+    return Cluster.builder().text(text).label(label).build();
+  }
+
+  private ClusterSummary createClusterSummary(int risk, double score, int count, int label,
+      List<Double> controlFrequencyData, List<Double> testFrequencyData, ClusterType clusterType) {
     return ClusterSummary.builder()
         .risk(risk)
+        .clusterType(clusterType)
         .score(score)
         .count(count)
         .label(label)

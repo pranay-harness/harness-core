@@ -13,10 +13,11 @@ public interface DeploymentLogAnalysisService {
 
   List<DeploymentLogAnalysis> getAnalysisResults(String verificationTaskId);
 
-  List<LogAnalysisClusterChartDTO> getLogAnalysisClusters(String accountId, String verificationJobInstanceId);
+  List<LogAnalysisClusterChartDTO> getLogAnalysisClusters(
+      String accountId, String verificationJobInstanceId, String hostName);
 
   PageResponse<LogAnalysisClusterDTO> getLogAnalysisResult(
-      String accountId, String verificationJobInstanceId, Integer label, int pageNumber);
+      String accountId, String verificationJobInstanceId, Integer label, int pageNumber, String hostName);
 
   Optional<Double> getLatestRiskScore(String accountId, String verificationJobInstanceId);
 

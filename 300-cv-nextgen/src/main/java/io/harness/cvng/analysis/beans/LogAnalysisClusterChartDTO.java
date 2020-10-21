@@ -1,13 +1,14 @@
 package io.harness.cvng.analysis.beans;
 
 import lombok.Builder;
-import lombok.Value;
+import lombok.Data;
 
-@Value
+@Data
 @Builder
 public class LogAnalysisClusterChartDTO {
   private int label;
   String text;
+  String hostName;
   int risk;
   double x;
   double y;

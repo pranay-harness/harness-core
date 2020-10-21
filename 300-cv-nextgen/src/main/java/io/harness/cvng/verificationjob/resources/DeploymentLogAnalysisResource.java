@@ -35,8 +35,9 @@ public class DeploymentLogAnalysisResource {
   @ApiOperation(value = "get logs for given verificationJob", nickname = "getLogAnalysisClusters")
   public RestResponse<List<LogAnalysisClusterChartDTO>> getLogAnalysisClusters(
       @PathParam("verificationJobInstanceId") String verificationJobInstanceId,
-      @QueryParam("accountId") String accountId) {
-    return new RestResponse(deploymentLogAnalysisService.getLogAnalysisClusters(accountId, verificationJobInstanceId));
+      @QueryParam("accountId") String accountId, @QueryParam("hostName") String hostName) {
+    return new RestResponse(
+        deploymentLogAnalysisService.getLogAnalysisClusters(accountId, verificationJobInstanceId, hostName));
   }
 
   @Path("/{verificationJobInstanceId}")
@@ -47,8 +48,8 @@ public class DeploymentLogAnalysisResource {
   public RestResponse<PageResponse<LogAnalysisClusterDTO>> getLogAnalysisResult(
       @PathParam("verificationJobInstanceId") String verificationJobInstanceId,
       @QueryParam("accountId") String accountId, @QueryParam("label") Integer label,
-      @QueryParam("pageNumber") int pageNumber) {
-    return new RestResponse(
-        deploymentLogAnalysisService.getLogAnalysisResult(accountId, verificationJobInstanceId, label, pageNumber));
+      @QueryParam("pageNumber") int pageNumber, @QueryParam("hostName") String hostName) {
+    return new RestResponse(deploymentLogAnalysisService.getLogAnalysisResult(
+        accountId, verificationJobInstanceId, label, pageNumber, hostName));
   }
 }

@@ -3,6 +3,7 @@ package io.harness.cvng.analysis.entities;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import io.harness.annotation.HarnessEntity;
 import io.harness.cvng.analysis.beans.DeploymentLogAnalysisDTO.Cluster;
+import io.harness.cvng.analysis.beans.DeploymentLogAnalysisDTO.ClusterCoordinates;
 import io.harness.cvng.analysis.beans.DeploymentLogAnalysisDTO.HostSummary;
 import io.harness.cvng.analysis.beans.DeploymentLogAnalysisDTO.ResultSummary;
 import io.harness.persistence.AccountAccess;
@@ -40,8 +41,9 @@ public class DeploymentLogAnalysis
   private Instant startTime;
   private Instant endTime;
   private List<Cluster> clusters;
-  private ResultSummary resultSummary;
-  private List<HostSummary> hostSummaries;
+  List<ClusterCoordinates> clusterCoordinates;
+  ResultSummary resultSummary;
+  List<HostSummary> hostSummaries;
 
   public List<Cluster> getClusters() {
     if (this.clusters == null) {

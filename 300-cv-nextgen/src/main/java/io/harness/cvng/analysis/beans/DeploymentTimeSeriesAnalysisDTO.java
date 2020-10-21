@@ -34,8 +34,8 @@ public class DeploymentTimeSeriesAnalysisDTO {
   @Builder
   public static class HostInfo {
     String hostName;
-    boolean presentBeforeDeployment;
-    boolean presentAfterDeployment;
+    boolean primary;
+    boolean canary;
     int risk;
     Double score;
   }
