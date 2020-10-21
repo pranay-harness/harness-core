@@ -5,7 +5,6 @@ import static io.harness.exception.WingsException.USER_SRE;
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
-
 import com.mongodb.client.result.UpdateResult;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.exception.DuplicateFieldException;
@@ -21,12 +20,12 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.mongodb.core.query.Criteria;
 
+import javax.validation.Valid;
+import javax.validation.constraints.NotNull;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
-import javax.validation.Valid;
-import javax.validation.constraints.NotNull;
 
 @Singleton
 @AllArgsConstructor(onConstructor = @__({ @Inject }))
@@ -115,6 +114,25 @@ public class InputSetEntityServiceImpl implements InputSetEntityService {
     return inputSetRepository
         .findByAccountIdAndOrgIdentifierAndProjectIdentifierAndPipelineIdentifierAndDeletedNotAndIdentifierIn(
             accountId, orgIdentifier, projectIdentifier, pipelineIdentifier, true, inputSetIdentifiersList);
+  }
+
+  @Override
+  public void deleteInputSetsOfPipeline(
+      String accountId, String orgIdentifier, String projectIdentifier, String pipelineIdentifier) {
+    Criteria criteria = Criteria.where(BaseInputSetEntityKeys.accountId)
+                            .is(accountId)
+                            .and(BaseInputSetEntityKeys.orgIdentifier)
+                            .is(orgIdentifier)
+                            .and(BaseInputSetEntityKeys.projectIdentifier)
+                            .is(projectIdentifier)
+                            .and(BaseInputSetEntityKeys.pipelineIdentifier)
+                            .is(pipelineIdentifier);
+    UpdateResult updateResult = inputSetRepository.delete(criteria);
+    if (!updateResult.wasAcknowledged()) {
+      throw new InvalidRequestException(
+          String.format("InputSets under Project[%s], Organization [%s] for Pipeline [%s] couldn't be deleted.",
+              projectIdentifier, orgIdentifier, pipelineIdentifier));
+    }
   }
 
   private void setName(BaseInputSetEntity baseInputSetEntity) {
