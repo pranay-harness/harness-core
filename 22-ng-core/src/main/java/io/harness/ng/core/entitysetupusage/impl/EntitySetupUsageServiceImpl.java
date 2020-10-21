@@ -36,20 +36,25 @@ public class EntitySetupUsageServiceImpl implements EntitySetupUsageService {
 
   @Override
   public Page<EntitySetupUsageDTO> list(int page, int size, String accountIdentifier, String orgIdentifier,
-      String projectIdentifier, String referredEntityIdentifier, String searchTerm) {
-    Criteria criteria = entitySetupUsageFilterHelper.createCriteriaFromEntityFilter(
-        accountIdentifier, orgIdentifier, projectIdentifier, referredEntityIdentifier, searchTerm);
+      String projectIdentifier, String identifier, String searchTerm) {
+    String referredEntityFQN = FullyQualifiedIdentifierHelper.getFullyQualifiedIdentifier(
+        accountIdentifier, orgIdentifier, projectIdentifier, identifier);
+    return listAllEntityUsage(page, size, accountIdentifier, referredEntityFQN, searchTerm);
+  }
+
+  @Override
+  public Page<EntitySetupUsageDTO> listAllEntityUsage(
+      int page, int size, String accountIdentifier, String referredEntityFQN, String searchTerm) {
+    Criteria criteria =
+        entitySetupUsageFilterHelper.createCriteriaFromEntityFilter(accountIdentifier, referredEntityFQN, searchTerm);
     Pageable pageable = getPageRequest(page, size, Sort.by(Sort.Direction.DESC, EntitySetupUsageKeys.createdAt));
     Page<EntitySetupUsage> entityReferences = entityReferenceRepository.findAll(criteria, pageable);
     return entityReferences.map(entityReference -> setupUsageEntityToDTO.createEntityReferenceDTO(entityReference));
   }
 
   @Override
-  public Boolean isEntityReferenced(
-      String accountIdentifier, String orgIdentifier, String projectIdentifier, String identifier) {
-    String referrerdEntityFQN = FullyQualifiedIdentifierHelper.getFullyQualifiedIdentifier(
-        accountIdentifier, orgIdentifier, projectIdentifier, identifier);
-    return entityReferenceRepository.existsByReferredEntityFQN(referrerdEntityFQN);
+  public Boolean isEntityReferenced(String accountIdentifier, String referredEntityFQN) {
+    return entityReferenceRepository.existsByReferredEntityFQN(referredEntityFQN);
   }
 
   @Override
@@ -67,17 +72,19 @@ public class EntitySetupUsageServiceImpl implements EntitySetupUsageService {
   }
 
   @Override
-  public Boolean delete(String accountIdentifier, String orgIdentifier, String projectIdentifier, String identifier,
-      Boolean isReferredEntity) {
+  public Boolean delete(String accountIdentifier, String referredEntityFQN, String referredByEntityFQN) {
     long numberOfRecordsDeleted = 0;
-    String entityFQN = FullyQualifiedIdentifierHelper.getFullyQualifiedIdentifier(
-        accountIdentifier, orgIdentifier, projectIdentifier, identifier);
-    if (isReferredEntity) {
-      numberOfRecordsDeleted = entityReferenceRepository.deleteByReferredEntityFQN(entityFQN);
-    } else {
-      numberOfRecordsDeleted = entityReferenceRepository.deleteByReferredByEntityFQN(entityFQN);
-    }
-    logger.info("Deleted {} records for the entity {}", numberOfRecordsDeleted, entityFQN);
+    numberOfRecordsDeleted = entityReferenceRepository.deleteByReferredEntityFQNAndReferredByEntityFQN(
+        referredEntityFQN, referredByEntityFQN);
+    logger.info("Deleted {} records for the referred entity {}, referredBy {}", numberOfRecordsDeleted,
+        referredEntityFQN, referredByEntityFQN);
+    return numberOfRecordsDeleted > 0;
+  }
+
+  @Override
+  public Boolean deleteAllReferredByEntityRecords(String accountIdentifier, String referredByEntityFQN) {
+    long numberOfRecordsDeleted = 0;
+    numberOfRecordsDeleted = entityReferenceRepository.deleteByReferredByEntityFQN(referredByEntityFQN);
     return numberOfRecordsDeleted > 0;
   }
 

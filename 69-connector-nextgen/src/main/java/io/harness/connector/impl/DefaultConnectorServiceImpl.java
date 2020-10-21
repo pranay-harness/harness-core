@@ -24,11 +24,11 @@ import io.harness.connector.validator.ConnectionValidator;
 import io.harness.delegate.beans.connector.ConnectorCategory;
 import io.harness.delegate.beans.connector.ConnectorType;
 import io.harness.delegate.beans.connector.ConnectorValidationResult;
+import io.harness.entitysetupusageclient.EntitySetupUsageHelper;
 import io.harness.entitysetupusageclient.remote.EntitySetupUsageClient;
 import io.harness.exception.DuplicateFieldException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.UnexpectedException;
-import io.harness.entitysetupusageclient.EntitySetupUsageHelper;
 import io.harness.utils.FullyQualifiedIdentifierHelper;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -147,9 +147,12 @@ public class DefaultConnectorServiceImpl implements ConnectorService {
 
   private void checkThatTheConnectorIsNotUsedByOthers(Connector connector) {
     boolean isEntityReferenced = false;
+    String referredEntityFQN =
+        FullyQualifiedIdentifierHelper.getFullyQualifiedIdentifier(connector.getAccountIdentifier(),
+            connector.getOrgIdentifier(), connector.getProjectIdentifier(), connector.getIdentifier());
     try {
-      isEntityReferenced = execute(entitySetupUsageClient.isEntityReferenced(connector.getAccountIdentifier(),
-          connector.getOrgIdentifier(), connector.getProjectIdentifier(), connector.getIdentifier()));
+      isEntityReferenced =
+          execute(entitySetupUsageClient.isEntityReferenced(connector.getAccountIdentifier(), referredEntityFQN));
     } catch (Exception ex) {
       logger.info("Encountered exception while requesting the Entity Reference records of [{}], with exception",
           connector.getIdentifier(), ex);

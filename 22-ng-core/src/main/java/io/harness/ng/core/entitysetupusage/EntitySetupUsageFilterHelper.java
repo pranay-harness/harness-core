@@ -5,17 +5,15 @@ import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import com.google.inject.Singleton;
 
 import io.harness.ng.core.entitysetupusage.entity.EntitySetupUsage.EntitySetupUsageKeys;
-import io.harness.utils.FullyQualifiedIdentifierHelper;
 import org.springframework.data.mongodb.core.query.Criteria;
 
 @Singleton
 public class EntitySetupUsageFilterHelper {
-  public Criteria createCriteriaFromEntityFilter(String accountIdentifier, String orgIdentifier,
-      String projectIdentifier, String referredEntityIdentifier, String searchTerm) {
+  public Criteria createCriteriaFromEntityFilter(
+      String accountIdentifier, String referredEntityFQN, String searchTerm) {
     Criteria criteria = new Criteria();
-    criteria.and(EntitySetupUsageKeys.referredEntityFQN)
-        .is(FullyQualifiedIdentifierHelper.getFullyQualifiedIdentifier(
-            accountIdentifier, orgIdentifier, projectIdentifier, referredEntityIdentifier));
+    criteria.and(EntitySetupUsageKeys.accountIdentifier).is(accountIdentifier);
+    criteria.and(EntitySetupUsageKeys.referredEntityFQN).is(referredEntityFQN);
     if (isNotBlank(searchTerm)) {
       criteria.orOperator(Criteria.where(EntitySetupUsageKeys.referredByEntity).regex(searchTerm),
           Criteria.where(EntitySetupUsageKeys.referredEntity).regex(searchTerm));

@@ -95,16 +95,12 @@ public class SecretEntityReferenceHelperTest extends CategoryTest {
                                             .secretManagerName(secretManagerName)
                                             .build();
     ArgumentCaptor<String> argumentCaptor = ArgumentCaptor.forClass(String.class);
-    ArgumentCaptor<Boolean> booleanArgumentCaptor = ArgumentCaptor.forClass(Boolean.class);
     secretEntityReferenceHelper.deleteSecretEntityReferenceWhenSecretGetsDeleted(encryptedDataDTO);
     verify(entityReferenceClient, times(1))
-        .delete(argumentCaptor.capture(), argumentCaptor.capture(), argumentCaptor.capture(), argumentCaptor.capture(),
-            booleanArgumentCaptor.capture());
+        .deleteAllReferredByEntityRecords(argumentCaptor.capture(), argumentCaptor.capture());
     List<String> stringArguments = argumentCaptor.getAllValues();
     assertThat(stringArguments.get(0)).isEqualTo(account);
-    assertThat(stringArguments.get(1)).isEqualTo(org);
-    assertThat(stringArguments.get(2)).isEqualTo(project);
-    assertThat(stringArguments.get(3)).isEqualTo(identifier);
-    assertThat(booleanArgumentCaptor.getAllValues().get(0)).isEqualTo(false);
+    String secretFQN = FullyQualifiedIdentifierHelper.getFullyQualifiedIdentifier(account, org, project, identifier);
+    assertThat(stringArguments.get(1)).isEqualTo(secretFQN);
   }
 }

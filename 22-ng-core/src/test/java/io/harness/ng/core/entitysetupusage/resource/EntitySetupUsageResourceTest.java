@@ -34,11 +34,10 @@ public class EntitySetupUsageResourceTest {
     String projectIdentifier = "projectIdentifier";
     String identifier = "identifier";
     String searchTerm = "searchTerm";
-    entitySetupUsageResource.list(
-        100, 100, accountIdentifier, orgIdentifier, projectIdentifier, identifier, searchTerm);
+    String referredEntityFQN = "referredEntityFQN";
+    entitySetupUsageResource.listAllEntityUsage(100, 100, accountIdentifier, referredEntityFQN, searchTerm);
     Mockito.verify(entitySetupUsageService, times(1))
-        .list(eq(100), eq(100), eq(accountIdentifier), eq(orgIdentifier), eq(projectIdentifier), eq(identifier),
-            eq(searchTerm));
+        .listAllEntityUsage(eq(100), eq(100), eq(accountIdentifier), eq(referredEntityFQN), eq(searchTerm));
   }
 
   @Test
@@ -49,9 +48,9 @@ public class EntitySetupUsageResourceTest {
     String orgIdentifier = "orgIdentifier";
     String projectIdentifier = "projectIdentifier";
     String identifier = "identifier";
-    entitySetupUsageResource.isEntityReferenced(accountIdentifier, orgIdentifier, projectIdentifier, identifier);
-    Mockito.verify(entitySetupUsageService, times(1))
-        .isEntityReferenced(eq(accountIdentifier), eq(orgIdentifier), eq(projectIdentifier), eq(identifier));
+    String referredEntityFQN = "referredEntityFQN";
+    entitySetupUsageResource.isEntityReferenced(accountIdentifier, referredEntityFQN);
+    Mockito.verify(entitySetupUsageService, times(1)).isEntityReferenced(eq(accountIdentifier), eq(referredEntityFQN));
   }
 
   @Test
@@ -76,8 +75,10 @@ public class EntitySetupUsageResourceTest {
     String orgIdentifier = "orgIdentifier";
     String projectIdentifier = "projectIdentifier";
     String identifier = "identifier";
-    entitySetupUsageResource.delete(accountIdentifier, orgIdentifier, projectIdentifier, identifier, true);
+    String referredEntityFQN = "referredEntityFQN";
+    String referredByEntityFQN = "referredByEntityFQN";
+    entitySetupUsageResource.delete(accountIdentifier, referredEntityFQN, referredEntityFQN);
     Mockito.verify(entitySetupUsageService, times(1))
-        .delete(eq(accountIdentifier), eq(orgIdentifier), eq(projectIdentifier), eq(identifier), eq(true));
+        .delete(eq(accountIdentifier), eq(referredEntityFQN), eq(referredEntityFQN));
   }
 }
