@@ -11,6 +11,7 @@ import io.harness.beans.IdentifierRef;
 import io.harness.cdng.artifact.bean.ArtifactConfig;
 import io.harness.cdng.artifact.bean.yaml.DockerHubArtifactConfig;
 import io.harness.cdng.artifact.mappers.ArtifactConfigToDelegateReqMapper;
+import io.harness.common.NGTaskType;
 import io.harness.connector.apis.dto.ConnectorInfoDTO;
 import io.harness.connector.apis.dto.ConnectorResponseDTO;
 import io.harness.connector.services.ConnectorService;
@@ -23,7 +24,6 @@ import io.harness.ngpipeline.common.AmbianceHelper;
 import io.harness.secretmanagerclient.services.api.SecretManagerClientService;
 import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.utils.IdentifierRefHelper;
-import software.wings.beans.TaskType;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -71,7 +71,7 @@ public class ArtifactStepHelper {
   public String getArtifactStepTaskType(ArtifactConfig artifactConfig) {
     switch (artifactConfig.getSourceType()) {
       case DOCKER_HUB:
-        return TaskType.DOCKER_ARTIFACT_TASK_NG.name();
+        return NGTaskType.DOCKER_ARTIFACT_TASK_NG.name();
       default:
         throw new UnsupportedOperationException(
             String.format("Unknown Artifact Config type: [%s]", artifactConfig.getSourceType()));

@@ -13,7 +13,6 @@ import io.harness.cdng.artifact.repository.ArtifactSourceDao;
 import io.harness.rule.Owner;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
-import software.wings.utils.WingsTestConstants;
 
 public class ArtifactSourceDaoTest extends CDNGBaseTest {
   @Inject ArtifactSourceDao artifactSourceDao;
@@ -21,7 +20,7 @@ public class ArtifactSourceDaoTest extends CDNGBaseTest {
   DockerArtifactSource dockerArtifactSource = DockerArtifactSource.builder()
                                                   .connectorRef("DOCKER_CONNECTOR")
                                                   .imagePath("imagePath")
-                                                  .accountId(WingsTestConstants.ACCOUNT_ID)
+                                                  .accountId("ACCOUNT_ID")
                                                   .uniqueHash("DOCKER_UNIQUE_HASH")
                                                   .build();
 
@@ -35,14 +34,13 @@ public class ArtifactSourceDaoTest extends CDNGBaseTest {
     assertThat(artifactSourceResult.getImagePath()).isEqualTo(dockerArtifactSource.getImagePath());
     assertThat(artifactSourceResult.getAccountId()).isEqualTo(dockerArtifactSource.getAccountId());
     assertThat(artifactSourceResult.getUniqueHash()).isEqualTo(dockerArtifactSource.getUniqueHash());
-    ArtifactSource nextSourceResult = artifactSourceDao.get(WingsTestConstants.ACCOUNT_ID, artifactSource.getUuid());
+    ArtifactSource nextSourceResult = artifactSourceDao.get("ACCOUNT_ID", artifactSource.getUuid());
     assertThat(nextSourceResult).isInstanceOf(DockerArtifactSource.class);
     DockerArtifactSource nextDockerSourceResult = (DockerArtifactSource) nextSourceResult;
     assertThat(nextDockerSourceResult.getUniqueHash()).isEqualTo(dockerArtifactSource.getUniqueHash());
     assertThat(nextDockerSourceResult.getImagePath()).isEqualTo(dockerArtifactSource.getImagePath());
 
-    nextSourceResult =
-        artifactSourceDao.getArtifactStreamByHash(WingsTestConstants.ACCOUNT_ID, artifactSource.getUniqueHash());
+    nextSourceResult = artifactSourceDao.getArtifactStreamByHash("ACCOUNT_ID", artifactSource.getUniqueHash());
     assertThat(nextSourceResult).isInstanceOf(DockerArtifactSource.class);
     nextDockerSourceResult = (DockerArtifactSource) nextSourceResult;
     assertThat(nextDockerSourceResult.getUniqueHash()).isEqualTo(dockerArtifactSource.getUniqueHash());

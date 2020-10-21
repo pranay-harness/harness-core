@@ -21,6 +21,7 @@ import io.harness.cdng.manifest.yaml.kinds.ValuesManifest;
 import io.harness.cdng.service.beans.ServiceOutcome;
 import io.harness.cdng.stepsdependency.constants.OutcomeExpressionConstants;
 import io.harness.cdng.stepsdependency.utils.CDStepDependencyUtils;
+import io.harness.common.NGTaskType;
 import io.harness.connector.apis.dto.ConnectorInfoDTO;
 import io.harness.delegate.beans.TaskData;
 import io.harness.delegate.beans.connector.gitconnector.GitConfigDTO;
@@ -58,7 +59,6 @@ import io.harness.tasks.Task;
 import io.harness.validation.Validator;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.jetbrains.annotations.NotNull;
-import software.wings.beans.TaskType;
 import software.wings.sm.states.k8s.K8sRollingDeploy;
 
 import java.util.ArrayList;
@@ -138,7 +138,7 @@ public class K8sRollingStep implements Step, TaskChainExecutable<K8sRollingStepP
     final TaskData taskData = TaskData.builder()
                                   .async(true)
                                   .timeout(600000 /*k8sRollingStepParameters.getTimeout().getValue()*/)
-                                  .taskType(TaskType.GIT_FETCH_NEXT_GEN_TASK.name())
+                                  .taskType(NGTaskType.GIT_FETCH_NEXT_GEN_TASK.name())
                                   .parameters(new Object[] {gitFetchRequest})
                                   .build();
 
@@ -186,7 +186,7 @@ public class K8sRollingStep implements Step, TaskChainExecutable<K8sRollingStepP
 
     TaskData taskData = TaskData.builder()
                             .parameters(new Object[] {k8sRollingDeployRequest})
-                            .taskType(TaskType.K8S_COMMAND_TASK_NG.name())
+                            .taskType(NGTaskType.K8S_COMMAND_TASK_NG.name())
                             .timeout(600000 /*stepParameters.getTimeout().getValue()*/)
                             .async(true)
                             .build();

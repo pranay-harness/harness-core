@@ -13,6 +13,7 @@ import io.harness.cdng.jira.resources.service.JiraResourceService;
 import io.harness.cdng.jira.resources.service.JiraResourceServiceImpl;
 import io.harness.cdng.pipeline.executions.service.NgPipelineExecutionService;
 import io.harness.cdng.pipeline.executions.service.NgPipelineExecutionServiceImpl;
+import io.harness.executionplan.ExecutionPlanModule;
 import io.harness.ng.core.NGCoreModule;
 import io.harness.ngpipeline.inputset.services.InputSetEntityService;
 import io.harness.ngpipeline.inputset.services.impl.InputSetEntityServiceImpl;
@@ -40,6 +41,7 @@ public class NGModule extends AbstractModule {
   protected void configure() {
     install(NGCoreModule.getInstance());
     install(WalkTreeModule.getInstance());
+    install(ExecutionPlanModule.getInstance());
     install(NGPipelineCommonsModule.getInstance());
     install(StageTypeToStageExecutionMapperRegistryModule.getInstance());
 

@@ -14,16 +14,15 @@ import lombok.experimental.UtilityClass;
 public class NGRegistrars {
   public final ImmutableSet<Class<? extends KryoRegistrar>> kryoRegistrars =
       ImmutableSet.<Class<? extends KryoRegistrar>>builder()
-          .addAll(ManagerRegistrars.kryoRegistrars)
           .addAll(NGCommonsRegistrars.kryoRegistrars)
           .addAll(NGCoreRegistrars.kryoRegistrars)
+          .addAll(ExecutionPlanModuleRegistrars.kryoRegistrars)
           .addAll(NGPipelineRegistrars.kryoRegistrars)
           .add(NGKryoRegistrar.class)
           .build();
 
   public final ImmutableSet<Class<? extends MorphiaRegistrar>> morphiaRegistrars =
       ImmutableSet.<Class<? extends MorphiaRegistrar>>builder()
-          .addAll(ManagerRegistrars.morphiaRegistrars)
           .addAll(NGCommonsRegistrars.morphiaRegistrars)
           .addAll(NGCoreRegistrars.morphiaRegistrars)
           .addAll(NGPipelineRegistrars.morphiaRegistrars)
@@ -32,7 +31,7 @@ public class NGRegistrars {
 
   public static final ImmutableSet<Class<? extends AliasRegistrar>> aliasRegistrars =
       ImmutableSet.<Class<? extends AliasRegistrar>>builder()
-          .addAll(ManagerRegistrars.aliasRegistrars)
+          .addAll(ExecutionPlanModuleRegistrars.aliasRegistrars)
           .addAll(NGPipelineRegistrars.aliasRegistrars)
           .add(NgAliasRegistrar.class)
           .build();

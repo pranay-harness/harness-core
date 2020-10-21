@@ -6,6 +6,7 @@ import io.harness.ambiance.Ambiance;
 import io.harness.cdng.executionplan.CDStepDependencyKey;
 import io.harness.cdng.infra.beans.InfrastructureOutcome;
 import io.harness.cdng.stepsdependency.utils.CDStepDependencyUtils;
+import io.harness.common.NGTaskType;
 import io.harness.data.structure.UUIDGenerator;
 import io.harness.delegate.beans.TaskData;
 import io.harness.delegate.task.k8s.K8sTaskType;
@@ -23,7 +24,6 @@ import io.harness.state.io.StepInputPackage;
 import io.harness.state.io.StepResponse;
 import io.harness.tasks.ResponseData;
 import io.harness.tasks.Task;
-import software.wings.beans.TaskType;
 import software.wings.helpers.ext.k8s.request.K8sRollingDeployRollbackTaskParameters;
 import software.wings.helpers.ext.k8s.response.K8sTaskExecutionResponse;
 import software.wings.sm.states.k8s.K8sRollingDeployRollback;
@@ -66,7 +66,7 @@ public class K8sRollingRollbackStep implements Step, TaskExecutable<K8sRollingRo
         TaskData.builder()
             .async(true)
             .timeout(600000 /*stepParameters.getTimeout().getValue()*/)
-            .taskType(TaskType.K8S_COMMAND_TASK.name())
+            .taskType(NGTaskType.K8S_COMMAND_TASK.name())
             .parameters(new Object[] {taskParameters})
             .build(),
         ambiance.getSetupAbstractions());

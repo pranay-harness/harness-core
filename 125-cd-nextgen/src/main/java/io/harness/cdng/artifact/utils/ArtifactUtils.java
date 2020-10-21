@@ -1,10 +1,10 @@
 package io.harness.cdng.artifact.utils;
 
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
-import static software.wings.common.VerificationConstants.CONNECTOR;
 
 import com.google.common.hash.Hashing;
 
+import io.harness.NGConstants;
 import io.harness.cdng.artifact.bean.ArtifactConfig;
 import io.harness.cdng.artifact.bean.SidecarArtifactWrapper;
 import io.harness.cdng.artifact.bean.yaml.ArtifactListConfig;
@@ -50,7 +50,7 @@ public class ArtifactUtils {
       throw new InvalidRequestException("Key string builder cannot be null");
     }
     if (isNotEmpty(value)) {
-      keyBuilder.append(CONNECTOR).append(value);
+      keyBuilder.append(NGConstants.STRING_CONNECTOR).append(value);
     }
   }
 

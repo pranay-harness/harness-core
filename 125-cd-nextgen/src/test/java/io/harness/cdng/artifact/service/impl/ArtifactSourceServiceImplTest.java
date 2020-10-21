@@ -18,7 +18,6 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnit;
 import org.mockito.junit.MockitoRule;
-import software.wings.utils.WingsTestConstants;
 
 public class ArtifactSourceServiceImplTest extends CategoryTest {
   @Rule public MockitoRule mockitoRule = MockitoJUnit.rule();
@@ -28,7 +27,7 @@ public class ArtifactSourceServiceImplTest extends CategoryTest {
 
   @Before
   public void setUp() throws Exception {
-    doReturn(WingsTestConstants.ACCOUNT_ID).when(artifactSource).getAccountId();
+    doReturn("ACCOUNT_ID").when(artifactSource).getAccountId();
     doReturn("UNIQUE_HASH").when(artifactSource).getUniqueHash();
     doReturn("UUID").when(artifactSource).getUuid();
   }
@@ -37,20 +36,18 @@ public class ArtifactSourceServiceImplTest extends CategoryTest {
   @Owner(developers = ARCHIT)
   @Category(UnitTests.class)
   public void shouldSaveAndGetArtifactSource() {
-    doReturn(null).when(artifactSourceDao).getArtifactStreamByHash(WingsTestConstants.ACCOUNT_ID, "UNIQUE_HASH");
+    doReturn(null).when(artifactSourceDao).getArtifactStreamByHash("ACCOUNT_ID", "UNIQUE_HASH");
     doReturn(artifactSource).when(artifactSourceDao).create(artifactSource);
     ArtifactSource artifactSourceResult = artifactSourceService.saveOrGetArtifactStream(artifactSource);
     verify(artifactSourceDao).create(artifactSource);
     assertThat(artifactSourceResult).isEqualTo(artifactSource);
 
-    doReturn(artifactSource)
-        .when(artifactSourceDao)
-        .getArtifactStreamByHash(WingsTestConstants.ACCOUNT_ID, "UNIQUE_HASH");
-    artifactSourceResult = artifactSourceService.getArtifactStreamByHash(WingsTestConstants.ACCOUNT_ID, "UNIQUE_HASH");
+    doReturn(artifactSource).when(artifactSourceDao).getArtifactStreamByHash("ACCOUNT_ID", "UNIQUE_HASH");
+    artifactSourceResult = artifactSourceService.getArtifactStreamByHash("ACCOUNT_ID", "UNIQUE_HASH");
     assertThat(artifactSourceResult).isEqualTo(artifactSource);
 
-    doReturn(artifactSource).when(artifactSourceDao).get(WingsTestConstants.ACCOUNT_ID, "UUID");
-    artifactSourceResult = artifactSourceService.get(WingsTestConstants.ACCOUNT_ID, "UUID");
+    doReturn(artifactSource).when(artifactSourceDao).get("ACCOUNT_ID", "UUID");
+    artifactSourceResult = artifactSourceService.get("ACCOUNT_ID", "UUID");
     assertThat(artifactSourceResult).isEqualTo(artifactSource);
   }
 }
