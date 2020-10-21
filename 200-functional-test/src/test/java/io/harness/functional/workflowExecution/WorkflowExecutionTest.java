@@ -2,6 +2,8 @@ package io.harness.functional.workflowExecution;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.rule.OwnerRule.GEORGE;
+import static io.harness.threading.Morpheus.sleep;
+import static java.time.Duration.ofMillis;
 import static org.assertj.core.api.Assertions.assertThat;
 import static software.wings.beans.CanaryOrchestrationWorkflow.CanaryOrchestrationWorkflowBuilder.aCanaryOrchestrationWorkflow;
 import static software.wings.beans.PhaseStep.PhaseStepBuilder.aPhaseStep;
@@ -74,6 +76,8 @@ public class WorkflowExecutionTest extends AbstractFunctionalTest {
     // Test running the workflow
 
     WorkflowExecution workflowExecution1 = executeWorkflow(workflow, application, environment);
+    // Make sure the two workflows have at least one millisecond difference in the creation time.
+    sleep(ofMillis(2));
     WorkflowExecution workflowExecution2 = executeWorkflow(workflow, application, environment);
 
     {
