@@ -11,6 +11,7 @@ import com.google.common.collect.Lists;
 import io.harness.CategoryTest;
 import io.harness.beans.IdentifierRef;
 import io.harness.category.element.UnitTests;
+import io.harness.cdng.jira.resources.request.CreateJiraTicketRequest;
 import io.harness.connector.apis.dto.ConnectorInfoDTO;
 import io.harness.connector.apis.dto.ConnectorResponseDTO;
 import io.harness.connector.services.ConnectorService;
@@ -38,6 +39,7 @@ public class JiraResourceServiceTest extends CategoryTest {
   private static final String ACCOUNT_ID = "accountId";
   private static final String ORG_IDENTIFIER = "orgIdentifier";
   private static final String PROJECT_IDENTIFIER = "projectIdentifier";
+  private static final String IDENTIFIER = "identifier";
 
   @Mock ConnectorService connectorService;
   @Mock SecretManagerClientService secretManagerClientService;
@@ -54,12 +56,7 @@ public class JiraResourceServiceTest extends CategoryTest {
   @Owner(developers = ALEXEI)
   @Category(UnitTests.class)
   public void shouldTestValidateCredentials() {
-    IdentifierRef identifierRef = IdentifierRef.builder()
-                                      .accountIdentifier(ACCOUNT_ID)
-                                      .identifier("identifier")
-                                      .projectIdentifier(PROJECT_IDENTIFIER)
-                                      .orgIdentifier(ORG_IDENTIFIER)
-                                      .build();
+    IdentifierRef identifierRef = createIdentifier();
 
     when(connectorService.get(any(), any(), any(), any())).thenReturn(Optional.of(getConnector()));
     when(secretManagerClientService.getEncryptionDetails(any(), any()))
@@ -75,12 +72,7 @@ public class JiraResourceServiceTest extends CategoryTest {
   @Owner(developers = ALEXEI)
   @Category(UnitTests.class)
   public void shouldTestValidateCredentialsDelegateError() {
-    IdentifierRef identifierRef = IdentifierRef.builder()
-                                      .accountIdentifier(ACCOUNT_ID)
-                                      .identifier("identifier")
-                                      .projectIdentifier(PROJECT_IDENTIFIER)
-                                      .orgIdentifier(ORG_IDENTIFIER)
-                                      .build();
+    IdentifierRef identifierRef = createIdentifier();
 
     when(connectorService.get(any(), any(), any(), any())).thenReturn(Optional.of(getConnector()));
     when(secretManagerClientService.getEncryptionDetails(any(), any()))
@@ -96,12 +88,7 @@ public class JiraResourceServiceTest extends CategoryTest {
   @Owner(developers = ALEXEI)
   @Category(UnitTests.class)
   public void shouldTestValidateCredentialsNotSuccessStatus() {
-    IdentifierRef identifierRef = IdentifierRef.builder()
-                                      .accountIdentifier(ACCOUNT_ID)
-                                      .identifier("identifier")
-                                      .projectIdentifier(PROJECT_IDENTIFIER)
-                                      .orgIdentifier(ORG_IDENTIFIER)
-                                      .build();
+    IdentifierRef identifierRef = createIdentifier();
 
     when(connectorService.get(any(), any(), any(), any())).thenReturn(Optional.of(getConnector()));
     when(secretManagerClientService.getEncryptionDetails(any(), any()))
@@ -111,6 +98,62 @@ public class JiraResourceServiceTest extends CategoryTest {
             JiraTaskNGResponse.builder().executionStatus(CommandExecutionStatus.FAILURE).errorMessage("Error").build());
 
     assertThatThrownBy(() -> jiraResourceService.validateCredentials(identifierRef, ORG_IDENTIFIER, PROJECT_IDENTIFIER))
+        .isInstanceOf(HarnessJiraException.class);
+  }
+
+  @Test
+  @Owner(developers = ALEXEI)
+  @Category(UnitTests.class)
+  public void shouldTestCreateTicket() {
+    final String issueKey = "CDNG-0000";
+    IdentifierRef identifierRef = createIdentifier();
+
+    when(connectorService.get(any(), any(), any(), any())).thenReturn(Optional.of(getConnector()));
+    when(secretManagerClientService.getEncryptionDetails(any(), any()))
+        .thenReturn(Lists.newArrayList(EncryptedDataDetail.builder().build()));
+    when(delegateGrpcClientWrapper.executeSyncTask(any()))
+        .thenReturn(
+            JiraTaskNGResponse.builder().executionStatus(CommandExecutionStatus.SUCCESS).issueKey(issueKey).build());
+
+    String response = jiraResourceService.createTicket(
+        identifierRef, ORG_IDENTIFIER, PROJECT_IDENTIFIER, CreateJiraTicketRequest.builder().build());
+    assertThat(response).isEqualTo(issueKey);
+  }
+
+  @Test
+  @Owner(developers = ALEXEI)
+  @Category(UnitTests.class)
+  public void shouldTestCreateTicketDelegateError() {
+    IdentifierRef identifierRef = createIdentifier();
+
+    when(connectorService.get(any(), any(), any(), any())).thenReturn(Optional.of(getConnector()));
+    when(secretManagerClientService.getEncryptionDetails(any(), any()))
+        .thenReturn(Lists.newArrayList(EncryptedDataDetail.builder().build()));
+    when(delegateGrpcClientWrapper.executeSyncTask(any()))
+        .thenReturn(ErrorNotifyResponseData.builder().errorMessage("Error").build());
+
+    assertThatThrownBy(()
+                           -> jiraResourceService.createTicket(identifierRef, ORG_IDENTIFIER, PROJECT_IDENTIFIER,
+                               CreateJiraTicketRequest.builder().build()))
+        .isInstanceOf(HarnessJiraException.class);
+  }
+
+  @Test
+  @Owner(developers = ALEXEI)
+  @Category(UnitTests.class)
+  public void shouldTestCreateTicketNotSuccessStatus() {
+    IdentifierRef identifierRef = createIdentifier();
+
+    when(connectorService.get(any(), any(), any(), any())).thenReturn(Optional.of(getConnector()));
+    when(secretManagerClientService.getEncryptionDetails(any(), any()))
+        .thenReturn(Lists.newArrayList(EncryptedDataDetail.builder().build()));
+    when(delegateGrpcClientWrapper.executeSyncTask(any()))
+        .thenReturn(
+            JiraTaskNGResponse.builder().executionStatus(CommandExecutionStatus.FAILURE).errorMessage("Error").build());
+
+    assertThatThrownBy(()
+                           -> jiraResourceService.createTicket(identifierRef, ORG_IDENTIFIER, PROJECT_IDENTIFIER,
+                               CreateJiraTicketRequest.builder().build()))
         .isInstanceOf(HarnessJiraException.class);
   }
 
@@ -124,5 +167,14 @@ public class JiraResourceServiceTest extends CategoryTest {
                                                                  .build())
                                             .build();
     return ConnectorResponseDTO.builder().connector(connectorInfoDTO).build();
+  }
+
+  private IdentifierRef createIdentifier() {
+    return IdentifierRef.builder()
+        .accountIdentifier(ACCOUNT_ID)
+        .identifier(IDENTIFIER)
+        .projectIdentifier(PROJECT_IDENTIFIER)
+        .orgIdentifier(ORG_IDENTIFIER)
+        .build();
   }
 }

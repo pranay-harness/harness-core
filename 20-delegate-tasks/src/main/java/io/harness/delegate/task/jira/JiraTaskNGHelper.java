@@ -7,7 +7,6 @@ import io.harness.security.encryption.SecretDecryptionService;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.NotImplementedException;
 
 import static io.harness.logging.CommandExecutionStatus.FAILURE;
 
@@ -26,7 +25,8 @@ public class JiraTaskNGHelper {
         responseData = jiraTaskNGHandler.validateCredentials(taskParameters);
         break;
       case CREATE_TICKET:
-        throw new NotImplementedException(taskParameters.getJiraAction().toString() + " is not implemented");
+        responseData = jiraTaskNGHandler.createTicket(taskParameters);
+        break;
       default:
         logger.error("No corresponding Docker artifact task type [{}]", taskParameters.toString());
         return JiraTaskNGResponse.builder()

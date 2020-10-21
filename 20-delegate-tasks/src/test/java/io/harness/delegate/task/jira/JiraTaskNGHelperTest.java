@@ -6,7 +6,6 @@ import io.harness.jira.JiraAction;
 import io.harness.logging.CommandExecutionStatus;
 import io.harness.rule.Owner;
 import io.harness.security.encryption.SecretDecryptionService;
-import org.apache.commons.lang3.NotImplementedException;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -16,7 +15,6 @@ import org.mockito.MockitoAnnotations;
 
 import static io.harness.rule.OwnerRule.ALEXEI;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.when;
 
@@ -51,11 +49,23 @@ public class JiraTaskNGHelperTest {
   @Owner(developers = ALEXEI)
   @Category(UnitTests.class)
   public void shouldTestGetJiraTaskResponseCreateTicket() {
+    final String issueId = "issueID";
+    final String issueType = "Bug";
+    JiraTaskNGResponse mockedResponse =
+        JiraTaskNGResponse.builder().executionStatus(CommandExecutionStatus.SUCCESS).build();
+    JiraTaskNGParameters jiraTaskNGParameters = JiraTaskNGParameters.builder()
+                                                    .jiraAction(JiraAction.CREATE_TICKET)
+                                                    .issueId(issueId)
+                                                    .issueType(issueType)
+                                                    .build();
     when(secretDecryptionService.decrypt(any(), any())).thenReturn(null);
-    assertThatThrownBy(()
-                           -> jiraTaskNGHelper.getJiraTaskResponse(
-                               JiraTaskNGParameters.builder().jiraAction(JiraAction.CREATE_TICKET).build()))
-        .isInstanceOf(NotImplementedException.class);
+    when(secretDecryptionService.decrypt(any(), any())).thenReturn(null);
+    when(jiraTaskNGHandler.createTicket(jiraTaskNGParameters)).thenReturn(mockedResponse);
+
+    JiraTaskNGResponse jiraTaskResponse = jiraTaskNGHelper.getJiraTaskResponse(jiraTaskNGParameters);
+
+    assertThat(jiraTaskResponse).isNotNull();
+    assertThat(jiraTaskResponse.getExecutionStatus()).isEqualTo(CommandExecutionStatus.SUCCESS);
   }
 
   @Test

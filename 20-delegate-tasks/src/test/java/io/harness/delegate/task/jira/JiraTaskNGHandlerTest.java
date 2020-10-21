@@ -1,59 +1,180 @@
 package io.harness.delegate.task.jira;
 
-import com.github.tomakehurst.wiremock.client.WireMock;
-import com.github.tomakehurst.wiremock.junit.WireMockRule;
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.beans.connector.jira.JiraConnectorDTO;
+import io.harness.delegate.task.jira.JiraTaskNGParameters.JiraTaskNGParametersBuilder;
 import io.harness.delegate.task.jira.response.JiraTaskNGResponse;
 import io.harness.encryption.SecretRefData;
+import io.harness.jira.JiraCustomFieldValue;
 import io.harness.logging.CommandExecutionStatus;
 import io.harness.rule.Owner;
-import net.rcarz.jiraclient.Resource;
-import org.junit.Rule;
+import net.rcarz.jiraclient.*;
+import net.rcarz.jiraclient.Issue.FluentCreate;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
+import org.junit.runner.RunWith;
+import org.mockito.ArgumentCaptor;
+import org.mockito.Captor;
+import org.mockito.Mockito;
+import org.powermock.api.mockito.PowerMockito;
+import org.powermock.core.classloader.annotations.PowerMockIgnore;
+import org.powermock.core.classloader.annotations.PrepareForTest;
+import org.powermock.modules.junit4.PowerMockRunner;
 
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import static io.harness.delegate.task.jira.JiraTaskNGHandler.ORIGINAL_ESTIMATE;
+import static io.harness.delegate.task.jira.JiraTaskNGHandler.REMAINING_ESTIMATE;
+import static io.harness.rule.OwnerRule.AGORODETKI;
 import static io.harness.rule.OwnerRule.ALEXEI;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Matchers.any;
+import static org.mockito.Mockito.when;
+import static org.powermock.api.mockito.PowerMockito.mock;
 
+@RunWith(PowerMockRunner.class)
+@PrepareForTest({JiraClient.class, FluentCreate.class, Issue.class, JiraTaskNGHandler.class})
+@PowerMockIgnore({"javax.net.ssl.*"})
 public class JiraTaskNGHandlerTest extends CategoryTest {
-  @Rule public WireMockRule wireMockRule = new WireMockRule(6565);
-
   private final JiraTaskNGHandler jiraTaskNGHandler = new JiraTaskNGHandler();
+
+  @Captor ArgumentCaptor<String> fieldArgumentCaptor;
+  @Captor ArgumentCaptor<TimeTracking> timeTrackingArgumentCaptor;
+  @Captor ArgumentCaptor<Object> valuesArgumentCaptor;
 
   @Test
   @Owner(developers = ALEXEI)
   @Category(UnitTests.class)
-  public void testValidateCredentials() {
-    final String validUrl = "http://localhost:6565";
-    wireMockRule.stubFor(
-        WireMock.get(WireMock.urlEqualTo(Resource.getBaseUri() + "project"))
-            .willReturn(WireMock.aResponse().withBody("[]").withHeader("Content-type", "application/json")));
-    JiraTaskNGResponse jiraTaskNGResponse = jiraTaskNGHandler.validateCredentials(createJiraTaskParameters(validUrl));
+  public void testValidateCredentials() throws Exception {
+    JiraClient jiraClient = Mockito.mock(JiraClient.class);
+    when(jiraClient.getProjects()).thenReturn(new ArrayList<>());
+    PowerMockito.whenNew(JiraClient.class).withAnyArguments().thenReturn(jiraClient);
+
+    JiraTaskNGResponse jiraTaskNGResponse =
+        jiraTaskNGHandler.validateCredentials(createJiraTaskParametersBuilder().build());
     assertThat(jiraTaskNGResponse.getExecutionStatus()).isEqualTo(CommandExecutionStatus.SUCCESS);
   }
 
   @Test
   @Owner(developers = ALEXEI)
   @Category(UnitTests.class)
-  public void testValidateCredentialsError() {
-    final String wrongUrl = "localhost:6565";
-    wireMockRule.stubFor(
-        WireMock.get(WireMock.urlEqualTo(Resource.getBaseUri() + "project"))
-            .willReturn(WireMock.aResponse().withBody("[]").withHeader("Content-type", "application/json")));
-    JiraTaskNGResponse jiraTaskNGResponse = jiraTaskNGHandler.validateCredentials(createJiraTaskParameters(wrongUrl));
+  public void testValidateCredentialsError() throws Exception {
+    JiraClient jiraClient = Mockito.mock(JiraClient.class);
+    when(jiraClient.getProjects()).thenThrow(new JiraException("Exception"));
+    PowerMockito.whenNew(JiraClient.class).withAnyArguments().thenReturn(jiraClient);
+
+    JiraTaskNGResponse jiraTaskNGResponse =
+        jiraTaskNGHandler.validateCredentials(createJiraTaskParametersBuilder().build());
     assertThat(jiraTaskNGResponse.getExecutionStatus()).isEqualTo(CommandExecutionStatus.FAILURE);
   }
 
-  private JiraTaskNGParameters createJiraTaskParameters(String url) {
+  @Test
+  @Owner(developers = ALEXEI)
+  @Category(UnitTests.class)
+  public void testCreateTicket() throws Exception {
+    final JiraTaskNGParameters jiraTaskNGParameters = createJiraTaskParametersBuilder()
+                                                          .summary("Summary")
+                                                          .priority("Prioity")
+                                                          .description("Description")
+                                                          .project("project")
+                                                          .issueType("Bug")
+                                                          .labels(new ArrayList<>())
+                                                          .build();
+
+    JiraClient jiraClient = Mockito.mock(JiraClient.class);
+    FluentCreate fluentCreate = Mockito.mock(FluentCreate.class);
+    Issue issue = Mockito.mock(Issue.class);
+    when(jiraClient.createIssue(any(), any())).thenReturn(fluentCreate);
+    when(fluentCreate.field(any(), any())).thenReturn(fluentCreate);
+    when(fluentCreate.execute()).thenReturn(issue);
+    PowerMockito.whenNew(JiraClient.class).withAnyArguments().thenReturn(jiraClient);
+
+    JiraTaskNGResponse jiraTaskNGResponse = jiraTaskNGHandler.createTicket(jiraTaskNGParameters);
+    assertThat(jiraTaskNGResponse.getExecutionStatus()).isEqualTo(CommandExecutionStatus.SUCCESS);
+  }
+
+  @Test
+  @Owner(developers = ALEXEI)
+  @Category(UnitTests.class)
+  public void testCreateTicketThrowJiraException() throws Exception {
+    final JiraTaskNGParameters jiraTaskNGParameters = createJiraTaskParametersBuilder()
+                                                          .summary("Summary")
+                                                          .priority("Prioity")
+                                                          .description("Description")
+                                                          .project("project")
+                                                          .issueType("Bug")
+                                                          .labels(new ArrayList<>())
+                                                          .build();
+
+    JiraClient jiraClient = Mockito.mock(JiraClient.class);
+    FluentCreate fluentCreate = Mockito.mock(FluentCreate.class);
+    when(jiraClient.createIssue(any(), any())).thenReturn(fluentCreate);
+    when(fluentCreate.field(any(), any())).thenReturn(fluentCreate);
+    when(fluentCreate.execute()).thenThrow(new JiraException("Exception"));
+    PowerMockito.whenNew(JiraClient.class).withAnyArguments().thenReturn(jiraClient);
+
+    JiraTaskNGResponse jiraTaskNGResponse = jiraTaskNGHandler.createTicket(jiraTaskNGParameters);
+    assertThat(jiraTaskNGResponse.getExecutionStatus()).isEqualTo(CommandExecutionStatus.FAILURE);
+  }
+
+  @Test
+  @Owner(developers = AGORODETKI)
+  @Category(UnitTests.class)
+  public void shouldSetTimeTrackingPropertiesOnTicketCreate() {
+    FluentCreate fluentCreate = mock(FluentCreate.class);
+    Map<String, JiraCustomFieldValue> customFields = new HashMap<>();
+    customFields.put(ORIGINAL_ESTIMATE, new JiraCustomFieldValue(Field.TIME_TRACKING, "1d 2h"));
+    customFields.put(REMAINING_ESTIMATE, new JiraCustomFieldValue(Field.TIME_TRACKING, "4h"));
+    JiraTaskNGParameters parameters = JiraTaskNGParameters.builder().customFields(customFields).build();
+
+    jiraTaskNGHandler.setCustomFieldsOnCreate(parameters, fluentCreate);
+    Mockito.verify(fluentCreate).field(fieldArgumentCaptor.capture(), timeTrackingArgumentCaptor.capture());
+
+    String capturedField = fieldArgumentCaptor.getValue();
+    TimeTracking capturedTimeTracking = timeTrackingArgumentCaptor.getValue();
+
+    assertThat(capturedField).isEqualTo(Field.TIME_TRACKING);
+    assertThat(capturedTimeTracking.getOriginalEstimate())
+        .isEqualTo(customFields.get(ORIGINAL_ESTIMATE).getFieldValue());
+    assertThat(capturedTimeTracking.getRemainingEstimate())
+        .isEqualTo(customFields.get(REMAINING_ESTIMATE).getFieldValue());
+  }
+
+  @Test
+  @Owner(developers = AGORODETKI)
+  @Category(UnitTests.class)
+  public void shouldSetAllCustomFieldsOnTicketCreate() {
+    FluentCreate fluentCreate = mock(FluentCreate.class);
+    Map<String, JiraCustomFieldValue> customFields = new HashMap<>();
+    customFields.put(ORIGINAL_ESTIMATE, new JiraCustomFieldValue(Field.TIME_TRACKING, "1d 2h"));
+    customFields.put(REMAINING_ESTIMATE, new JiraCustomFieldValue(Field.TIME_TRACKING, "4h"));
+    customFields.put("someCustomField", new JiraCustomFieldValue("multiselect", "first,second"));
+    customFields.put("otherCustomField", new JiraCustomFieldValue("any", "value"));
+
+    JiraTaskNGParameters parameters = JiraTaskNGParameters.builder().customFields(customFields).build();
+
+    jiraTaskNGHandler.setCustomFieldsOnCreate(parameters, fluentCreate);
+    Mockito.verify(fluentCreate, Mockito.times(3)).field(fieldArgumentCaptor.capture(), valuesArgumentCaptor.capture());
+
+    List<String> capturedFields = fieldArgumentCaptor.getAllValues();
+    List<Object> capturedValues = valuesArgumentCaptor.getAllValues();
+
+    assertThat(capturedFields).containsExactlyInAnyOrder(Field.TIME_TRACKING, "someCustomField", "otherCustomField");
+    assertThat(capturedValues.size()).isEqualTo(3);
+  }
+
+  private JiraTaskNGParametersBuilder createJiraTaskParametersBuilder() {
     JiraConnectorDTO jiraConnectorDTO =
         JiraConnectorDTO.builder()
-            .jiraUrl(url)
+            .jiraUrl("https://harness.atlassian.net/")
             .username("username")
             .passwordRef(SecretRefData.builder().decryptedValue(new char[] {'3', '4', 'f', '5', '1'}).build())
             .build();
 
-    return JiraTaskNGParameters.builder().jiraConnectorDTO(jiraConnectorDTO).build();
+    return JiraTaskNGParameters.builder().jiraConnectorDTO(jiraConnectorDTO);
   }
 }

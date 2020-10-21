@@ -11,6 +11,8 @@ import com.google.inject.name.Named;
 
 import io.harness.beans.DelegateTaskRequest;
 import io.harness.beans.IdentifierRef;
+import io.harness.cdng.jira.resources.converter.JiraTaskNgParametersBuilderConverter;
+import io.harness.cdng.jira.resources.request.CreateJiraTicketRequest;
 import io.harness.connector.apis.dto.ConnectorInfoDTO;
 import io.harness.connector.apis.dto.ConnectorResponseDTO;
 import io.harness.connector.services.ConnectorService;
@@ -31,6 +33,7 @@ import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.service.DelegateGrpcClientWrapper;
 import software.wings.beans.TaskType;
 
+import java.time.Duration;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.Optional;
@@ -66,15 +69,7 @@ public class JiraResourceServiceImpl implements JiraResourceService {
                                               .jiraConnectorDTO(connector)
                                               .build();
 
-    final DelegateTaskRequest delegateTaskRequest =
-        DelegateTaskRequest.builder()
-            .accountId(baseNGAccess.getAccountIdentifier())
-            .taskType(TaskType.JIRA_TASK_NG.name())
-            .taskParameters(taskParameters)
-            .executionTimeout(java.time.Duration.ofSeconds(timeoutInSecs))
-            .taskSetupAbstraction("orgIdentifier", baseNGAccess.getOrgIdentifier())
-            .taskSetupAbstraction("projectIdentifier", baseNGAccess.getProjectIdentifier())
-            .build();
+    final DelegateTaskRequest delegateTaskRequest = createDelegateTaskRequest(baseNGAccess, taskParameters);
 
     DelegateResponseData responseData = delegateGrpcClientWrapper.executeSyncTask(delegateTaskRequest);
 
@@ -88,6 +83,37 @@ public class JiraResourceServiceImpl implements JiraResourceService {
     }
 
     return true;
+  }
+
+  @Override
+  public String createTicket(
+      IdentifierRef jiraConnectorRef, String orgIdentifier, String projectIdentifier, CreateJiraTicketRequest request) {
+    JiraConnectorDTO connector = getConnector(jiraConnectorRef);
+    BaseNGAccess baseNGAccess =
+        getBaseNGAccess(jiraConnectorRef.getAccountIdentifier(), orgIdentifier, projectIdentifier);
+
+    JiraTaskNGParameters taskParameters = JiraTaskNgParametersBuilderConverter.toJiraTaskNGParametersBuilder()
+                                              .apply(request)
+                                              .accountId(jiraConnectorRef.getAccountIdentifier())
+                                              .jiraAction(JiraAction.CREATE_TICKET)
+                                              .encryptionDetails(getEncryptionDetails(connector, baseNGAccess))
+                                              .jiraConnectorDTO(connector)
+                                              .build();
+
+    final DelegateTaskRequest delegateTaskRequest = createDelegateTaskRequest(baseNGAccess, taskParameters);
+
+    DelegateResponseData responseData = delegateGrpcClientWrapper.executeSyncTask(delegateTaskRequest);
+
+    if (responseData instanceof ErrorNotifyResponseData) {
+      ErrorNotifyResponseData errorNotifyResponseData = (ErrorNotifyResponseData) responseData;
+      throw new HarnessJiraException(errorNotifyResponseData.getErrorMessage(), EnumSet.of(REST_API));
+    }
+    JiraTaskNGResponse jiraTaskResponse = (JiraTaskNGResponse) responseData;
+    if (jiraTaskResponse.getExecutionStatus() != SUCCESS) {
+      throw new HarnessJiraException(jiraTaskResponse.getErrorMessage(), EnumSet.of(REST_API));
+    }
+
+    return jiraTaskResponse.getIssueKey();
   }
 
   private JiraConnectorDTO getConnector(IdentifierRef jiraConnectorRef) {
@@ -118,5 +144,17 @@ public class JiraResourceServiceImpl implements JiraResourceService {
   private List<EncryptedDataDetail> getEncryptionDetails(
       @Nonnull JiraConnectorDTO jiraConnectorDTO, @Nonnull NGAccess ngAccess) {
     return secretManagerClientService.getEncryptionDetails(ngAccess, jiraConnectorDTO);
+  }
+
+  private DelegateTaskRequest createDelegateTaskRequest(
+      BaseNGAccess baseNGAccess, JiraTaskNGParameters taskNGParameters) {
+    return DelegateTaskRequest.builder()
+        .accountId(baseNGAccess.getAccountIdentifier())
+        .taskType(TaskType.JIRA_TASK_NG.name())
+        .taskParameters(taskNGParameters)
+        .executionTimeout(Duration.ofSeconds(timeoutInSecs))
+        .taskSetupAbstraction("orgIdentifier", baseNGAccess.getOrgIdentifier())
+        .taskSetupAbstraction("projectIdentifier", baseNGAccess.getProjectIdentifier())
+        .build();
   }
 }
