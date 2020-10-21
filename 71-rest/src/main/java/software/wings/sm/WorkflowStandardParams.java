@@ -199,7 +199,7 @@ public class WorkflowStandardParams implements ExecutionContextAware, ContextEle
     return map;
   }
 
-  private HelmChart getHelmChartForService(String serviceId) {
+  public HelmChart getHelmChartForService(String serviceId) {
     getHelmCharts();
     if (isEmpty(helmCharts)) {
       return null;

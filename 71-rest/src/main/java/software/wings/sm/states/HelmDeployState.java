@@ -765,6 +765,11 @@ public class HelmDeployState extends State {
         app.getUuid(), null, serviceElement.getUuid(), AppManifestKind.K8S_MANIFEST);
 
     if (appManifest != null) {
+      if (featureFlagService.isEnabled(FeatureName.HELM_CHART_AS_ARTIFACT, context.getAccountId())
+          && applicationManifestUtils.isPollForChangesEnabled(appManifest)) {
+        applicationManifestUtils.applyHelmChartFromExecutionContext(appManifest, context, serviceElement.getUuid());
+      }
+
       switch (appManifest.getStoreType()) {
         case HelmSourceRepo:
           GitFileConfig sourceRepoGitFileConfig =

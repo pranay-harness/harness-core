@@ -23,4 +23,6 @@ public interface DeploymentExecutionContext extends ExecutionContext {
   Artifact getDefaultArtifactForService(String serviceId);
 
   List<HelmChart> getHelmCharts();
+
+  HelmChart getHelmChartForService(String serviceId);
 }

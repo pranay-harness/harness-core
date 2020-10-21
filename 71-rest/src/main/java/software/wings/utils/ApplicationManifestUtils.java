@@ -24,14 +24,17 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import io.harness.context.ContextElementType;
+import io.harness.exception.InvalidArgumentsException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.git.model.GitFile;
 import io.harness.security.encryption.EncryptedDataDetail;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.tuple.Pair;
 import software.wings.api.PhaseElement;
 import software.wings.api.ServiceElement;
 import software.wings.beans.Application;
 import software.wings.beans.ContainerInfrastructureMapping;
+import software.wings.beans.DeploymentExecutionContext;
 import software.wings.beans.FeatureName;
 import software.wings.beans.GitConfig;
 import software.wings.beans.GitFetchFilesConfig;
@@ -42,6 +45,7 @@ import software.wings.beans.Service;
 import software.wings.beans.ServiceTemplate;
 import software.wings.beans.appmanifest.AppManifestKind;
 import software.wings.beans.appmanifest.ApplicationManifest;
+import software.wings.beans.appmanifest.HelmChart;
 import software.wings.beans.appmanifest.ManifestFile;
 import software.wings.beans.appmanifest.StoreType;
 import software.wings.beans.yaml.GitCommandExecutionResponse;
@@ -441,6 +445,11 @@ public class ApplicationManifestUtils {
       throw new InvalidRequestException("Manifests not found for service.");
     }
 
+    if (featureFlagService.isEnabled(FeatureName.HELM_CHART_AS_ARTIFACT, context.getAccountId())
+        && isPollForChangesEnabled(applicationManifest)) {
+      applyHelmChartFromExecutionContext(applicationManifest, context, service.getUuid());
+    }
+
     return applicationManifest;
   }
 
@@ -516,5 +525,22 @@ public class ApplicationManifestUtils {
         gitFileConfigHelperService.renderGitFileConfig(context, gitFileConfig);
       }
     });
+  }
+
+  public void applyHelmChartFromExecutionContext(
+      ApplicationManifest applicationManifest, ExecutionContext context, String serviceId) {
+    if (HelmChartRepo == applicationManifest.getStoreType()) {
+      HelmChart helmChart = ((DeploymentExecutionContext) context).getHelmChartForService(serviceId);
+      if (helmChart == null) {
+        throw new InvalidArgumentsException(Pair.of("helmChart", "required when poll for changes enabled"));
+      }
+
+      applicationManifest.getHelmChartConfig().setChartVersion(helmChart.getVersion());
+    }
+  }
+
+  public boolean isPollForChangesEnabled(ApplicationManifest applicationManifest) {
+    return applicationManifest != null && applicationManifest.getPollForChanges() != null
+        && applicationManifest.getPollForChanges();
   }
 }

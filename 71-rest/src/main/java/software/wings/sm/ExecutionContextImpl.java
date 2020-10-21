@@ -628,6 +628,12 @@ public class ExecutionContextImpl implements DeploymentExecutionContext {
   }
 
   @Override
+  public HelmChart getHelmChartForService(String serviceId) {
+    WorkflowStandardParams workflowStandardParams = fetchWorkflowStandardParamsFromContext();
+    return workflowStandardParams.getHelmChartForService(serviceId);
+  }
+
+  @Override
   public Application getApp() {
     WorkflowStandardParams stdParam = getContextElement(ContextElementType.STANDARD);
     if (stdParam != null) {
