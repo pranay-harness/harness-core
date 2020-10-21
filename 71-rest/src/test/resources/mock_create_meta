@@ -60,6 +60,14 @@
           ],
           "custom" : "true"
         },
+        "timetracking" : {
+          "key": "timetracking",
+          "name": "Timetracking",
+          "required": "true",
+          "schema": {
+            "type": "timetracking"
+          }
+        },
         "priority": {
           "required": false,
           "schema": {
