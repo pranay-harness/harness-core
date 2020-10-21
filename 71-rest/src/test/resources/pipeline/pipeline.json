@@ -1,0 +1,115 @@
+{
+  "_id" : "nYTmfZAITqeRj67IUo7vxw",
+  "name" : "template-pipe",
+  "keywords" : [
+    "pipeline",
+    "template-rolling-k8s-wf",
+    "template-pipe"
+  ],
+  "accountId" : "kmpySmUISimoRrJL6NL73w",
+  "sample" : false,
+  "appId" : "nCLN8c84SqWPr44sqg65JQ",
+  "createdBy" : {
+    "uuid" : "lv0euRhKRCyiXWzS7pOg6g",
+    "name" : "Admin",
+    "email" : "admin@harness.io"
+  },
+  "createdAt" : 1598928200572,
+  "lastUpdatedAt" : 1603068601174,
+  "pipelineStages" : [
+    {
+      "name" : "STAGE 2",
+      "parallel" : false,
+      "pipelineStageElements" : [
+        {
+          "uuid" : "KZPqXENuRbKqkuISe07JAQ",
+          "name" : "template-wf",
+          "type" : "ENV_STATE",
+          "parallelIndex" : 1,
+          "properties" : {
+            "workflowVariables" : {
+              "Environment" : "${pipelineEnv}",
+              "InfraDefinition_KUBERNETES" : "${pipelineInfra}",
+              "buildNumber" : "${pipelineBuildNumber}",
+              "ServiceId" : "${pipelineService}"
+            },
+            "pipelineStageElementId" : "KZPqXENuRbKqkuISe07JAQ",
+            "timeoutAction" : "END_EXECUTION",
+            "envId" : "imRBOGz2ReyY89dr4K-vrQ",
+            "pipelineStageParallelIndex" : 1,
+            "userGroupIds" : [
+              "8u4n0jVISS2zv8LFRuj2uw"
+            ],
+            "timeout" : 86400000,
+            "pipelineId" : "nYTmfZAITqeRj67IUo7vxw",
+            "runtimeInputVariables" : [
+              "ServiceId",
+              "message",
+              "buildNumber"
+            ],
+            "stageName" : "STAGE 2",
+            "disable" : false,
+            "disableAssertion" : null,
+            "workflowId" : "9zhGmY7FTlSnj2ALPvPTOQ"
+          },
+          "workflowVariables" : {
+            "Environment" : "${pipelineEnv}",
+            "InfraDefinition_KUBERNETES" : "${pipelineInfra}",
+            "buildNumber" : "${pipelineBuildNumber}",
+            "ServiceId" : "${pipelineService}"
+          },
+          "runtimeInputsConfig" : {
+            "runtimeInputVariables" : [
+              "ServiceId",
+              "message",
+              "buildNumber"
+            ],
+            "timeout" : 86400000,
+            "userGroupIds" : [
+              "8u4n0jVISS2zv8LFRuj2uw"
+            ],
+            "timeoutAction" : "END_EXECUTION"
+          }
+        }
+      ]
+    },
+    {
+      "name" : "STAGE 2",
+      "parallel" : false,
+      "pipelineStageElements" : [
+        {
+          "uuid" : "QI17tOeqQA2okKqcIkPMjg",
+          "name" : "Approval 1",
+          "type" : "APPROVAL",
+          "parallelIndex" : 2,
+          "properties" : {
+            "userGroups" : [
+              "8u4n0jVISS2zv8LFRuj2uw"
+            ],
+            "workflowVariables" : null,
+            "stageName" : "STAGE 2",
+            "pipelineStageElementId" : "QI17tOeqQA2okKqcIkPMjg",
+            "disable" : false,
+            "timeoutMillis" : 86400000,
+            "disableAssertion" : null,
+            "pipelineStageParallelIndex" : 2,
+            "approvalStateType" : "USER_GROUP",
+            "sweepingOutputName" : "",
+            "pipelineId" : "nYTmfZAITqeRj67IUo7vxw"
+          }
+        }
+      ]
+    }
+  ],
+  "stateEtaMap" : {
+    "QI17tOeqQA2okKqcIkPMjg" : 194970,
+    "KZPqXENuRbKqkuISe07JAQ" : 23738,
+    "gsM4BgJITN6RreJ3zzS5rg" : 133428
+  },
+  "failureStrategies" : null,
+  "lastUpdatedBy" : {
+    "uuid" : "lv0euRhKRCyiXWzS7pOg6g",
+    "name" : "Admin",
+    "email" : "admin@harness.io"
+  }
+}

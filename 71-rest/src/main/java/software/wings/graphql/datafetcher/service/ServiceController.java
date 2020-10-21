@@ -6,6 +6,7 @@ import io.harness.annotations.dev.OwnedBy;
 import lombok.experimental.UtilityClass;
 import software.wings.beans.Service;
 import software.wings.graphql.datafetcher.user.UserController;
+import software.wings.graphql.schema.type.QLService;
 import software.wings.graphql.schema.type.QLService.QLServiceBuilder;
 
 @OwnedBy(CDC)
@@ -20,5 +21,11 @@ public class ServiceController {
         .deploymentType(service.getDeploymentType())
         .createdAt(service.getCreatedAt())
         .createdBy(UserController.populateUser(service.getCreatedBy()));
+  }
+
+  public static QLService buildQLService(Service service) {
+    QLServiceBuilder builder = QLService.builder();
+    populateService(service, builder);
+    return builder.build();
   }
 }

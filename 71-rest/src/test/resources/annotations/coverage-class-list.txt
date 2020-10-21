@@ -562,6 +562,8 @@
 71-rest/src/main/java/software/wings/graphql/datafetcher/execution/ExportExecutionsDataFetcher.java
 71-rest/src/main/java/software/wings/graphql/datafetcher/execution/PipelineExecutionController.java
 71-rest/src/main/java/software/wings/graphql/datafetcher/execution/QLExecutionFilter.java
+71-rest/src/main/java/software/wings/graphql/datafetcher/execution/RuntimeExecutionInputsToResumePipelineDataFetcher.java
+71-rest/src/main/java/software/wings/graphql/datafetcher/execution/RuntimeInputExecutionInputsController.java
 71-rest/src/main/java/software/wings/graphql/datafetcher/execution/StartExecutionDataFetcher.java
 71-rest/src/main/java/software/wings/graphql/datafetcher/execution/WorkflowExecutionController.java
 71-rest/src/main/java/software/wings/graphql/datafetcher/outcome/OutcomeConnectionDataFetcher.java
@@ -569,6 +571,7 @@
 71-rest/src/main/java/software/wings/graphql/datafetcher/pipeline/PipelineController.java
 71-rest/src/main/java/software/wings/graphql/datafetcher/pipeline/PipelineDataFetcher.java
 71-rest/src/main/java/software/wings/graphql/datafetcher/pipeline/PipelineVariableConnectionDataFetcher.java
+71-rest/src/main/java/software/wings/graphql/datafetcher/pipeline/RuntimeInputExecutionInputsControllerTest.java
 71-rest/src/main/java/software/wings/graphql/datafetcher/service/ServiceConnectionDataFetcher.java
 71-rest/src/main/java/software/wings/graphql/datafetcher/service/ServiceController.java
 71-rest/src/main/java/software/wings/graphql/datafetcher/service/ServiceDataFetcher.java
@@ -598,6 +601,7 @@
 71-rest/src/main/java/software/wings/graphql/schema/mutation/execution/input/QLVariableValue.java
 71-rest/src/main/java/software/wings/graphql/schema/mutation/execution/input/QLVariableValueType.java
 71-rest/src/main/java/software/wings/graphql/schema/mutation/execution/payload/QLStartExecutionPayload.java
+71-rest/src/main/java/software/wings/graphql/schema/mutation/pipeline/payload/QLContinueExecutionPayload.java
 71-rest/src/main/java/software/wings/graphql/schema/type/QLAzureImageDefinition.java
 71-rest/src/main/java/software/wings/graphql/schema/type/QLKeyValuePair.java
 71-rest/src/main/java/software/wings/graphql/schema/type/QLPipeline.java
