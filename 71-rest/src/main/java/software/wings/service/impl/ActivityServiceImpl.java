@@ -165,6 +165,7 @@ public class ActivityServiceImpl implements ActivityService {
         case AWS_AMI_SWITCH_ROUTES:
         case SPOTINST_SETUP:
         case SPOTINST_DEPLOY:
+        case AWS_ECS_RUN_TASK_DEPLOY:
         case SPOTINST_UPDATE_LISTENER:
           List<CommandUnit> commandUnits = activity.getCommandUnits();
           for (CommandUnit commandUnit : commandUnits) {

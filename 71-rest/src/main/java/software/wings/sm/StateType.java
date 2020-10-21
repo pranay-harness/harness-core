@@ -133,6 +133,7 @@ import software.wings.sm.states.EcsBGUpdateRoute53DNSWeightState;
 import software.wings.sm.states.EcsBlueGreenServiceSetup;
 import software.wings.sm.states.EcsBlueGreenServiceSetupRoute53DNS;
 import software.wings.sm.states.EcsDaemonServiceSetup;
+import software.wings.sm.states.EcsRunTaskDeploy;
 import software.wings.sm.states.EcsServiceDeploy;
 import software.wings.sm.states.EcsServiceRollback;
 import software.wings.sm.states.EcsServiceSetup;
@@ -648,6 +649,10 @@ public enum StateType implements StateTypeDescriptor {
 
   ECS_STEADY_STATE_CHECK(EcsSteadyStateCheck.class, ECS, AwsConstants.ECS_STEADY_STATE_CHECK,
       Lists.newArrayList(AWS_ECS), asList(CONTAINER_DEPLOY), ORCHESTRATION_STENCILS),
+
+  ECS_RUN_TASK(EcsRunTaskDeploy.class, ECS, AwsConstants.ECS_RUN_TASK, Lists.newArrayList(AWS_ECS),
+      asList(CONTAINER_DEPLOY, CONTAINER_SETUP, ECS_UPDATE_LISTENER_BG, ECS_UPDATE_ROUTE_53_DNS_WEIGHT),
+      ORCHESTRATION_STENCILS),
 
   GCP_CLUSTER_SETUP(GcpClusterSetup.class, CLOUD,
       Lists.newArrayList(InfrastructureMappingType.GCP_KUBERNETES, InfrastructureMappingType.AZURE_KUBERNETES),

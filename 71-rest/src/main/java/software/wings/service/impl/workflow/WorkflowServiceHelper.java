@@ -190,6 +190,7 @@ public class WorkflowServiceHelper {
   public static final String SETUP_CONTAINER = "Set up Container";
   public static final String SETUP_CLUSTER = "Setup Cluster";
   public static final String ECS_SERVICE_SETUP = "ECS Service Setup";
+  public static final String ECS_RUN_TASK = "ECS Run Task";
   public static final String ECS_DAEMON_SERVICE_SETUP = "ECS Daemon Service Setup";
   public static final String ECS_BG_SERVICE_SETUP_ELB = "Setup Load Balancer";
   public static final String ECS_BG_SERVICE_SETUP_ROUTE_53 = "Setup Route 53";

@@ -106,6 +106,7 @@ import software.wings.delegatetasks.aws.ecs.ecstaskhandler.EcsCommandTaskHandler
 import software.wings.delegatetasks.aws.ecs.ecstaskhandler.EcsListenerUpdateBGTaskHandler;
 import software.wings.delegatetasks.aws.ecs.ecstaskhandler.EcsSetupCommandHandler;
 import software.wings.delegatetasks.aws.ecs.ecstaskhandler.deploy.EcsDeployCommandHandler;
+import software.wings.delegatetasks.aws.ecs.ecstaskhandler.deploy.EcsRunTaskDeployCommandHandler;
 import software.wings.delegatetasks.k8s.taskhandler.K8sApplyTaskHandler;
 import software.wings.delegatetasks.k8s.taskhandler.K8sBlueGreenDeployTaskHandler;
 import software.wings.delegatetasks.k8s.taskhandler.K8sCanaryDeployTaskHandler;
@@ -676,6 +677,8 @@ public class DelegateModule extends AbstractModule {
     ecsCommandTaskTypeToTaskHandlerMap.addBinding(EcsCommandType.SERVICE_SETUP.name()).to(EcsSetupCommandHandler.class);
     ecsCommandTaskTypeToTaskHandlerMap.addBinding(EcsCommandType.SERVICE_DEPLOY.name())
         .to(EcsDeployCommandHandler.class);
+    ecsCommandTaskTypeToTaskHandlerMap.addBinding(EcsCommandType.ECS_RUN_TASK_DEPLOY.name())
+        .to(EcsRunTaskDeployCommandHandler.class);
 
     MapBinder<String, K8sTaskHandler> k8sCommandTaskTypeToTaskHandlerMap =
         MapBinder.newMapBinder(binder(), String.class, K8sTaskHandler.class);

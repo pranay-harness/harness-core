@@ -2,6 +2,7 @@ package software.wings.delegatetasks.aws.ecs.ecstaskhandler.deploy;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static java.lang.String.format;
 import static org.apache.commons.lang3.StringUtils.substringBefore;
 import static software.wings.beans.InstanceUnitType.PERCENTAGE;
 
@@ -14,21 +15,43 @@ import com.amazonaws.services.applicationautoscaling.model.DescribeScalableTarge
 import com.amazonaws.services.applicationautoscaling.model.DescribeScalableTargetsResult;
 import com.amazonaws.services.applicationautoscaling.model.ScalableTarget;
 import com.amazonaws.services.applicationautoscaling.model.ServiceNamespace;
+import com.amazonaws.services.ecs.model.AssignPublicIp;
+import com.amazonaws.services.ecs.model.AwsVpcConfiguration;
+import com.amazonaws.services.ecs.model.DeregisterTaskDefinitionRequest;
+import com.amazonaws.services.ecs.model.DeregisterTaskDefinitionResult;
+import com.amazonaws.services.ecs.model.DescribeTasksRequest;
+import com.amazonaws.services.ecs.model.DesiredStatus;
+import com.amazonaws.services.ecs.model.LaunchType;
+import com.amazonaws.services.ecs.model.ListTasksRequest;
+import com.amazonaws.services.ecs.model.NetworkConfiguration;
+import com.amazonaws.services.ecs.model.NetworkMode;
+import com.amazonaws.services.ecs.model.RegisterTaskDefinitionRequest;
+import com.amazonaws.services.ecs.model.RunTaskRequest;
+import com.amazonaws.services.ecs.model.RunTaskResult;
 import com.amazonaws.services.ecs.model.Service;
+import com.amazonaws.services.ecs.model.Task;
+import com.amazonaws.services.ecs.model.TaskDefinition;
 import io.harness.container.ContainerInfo;
+import io.harness.data.structure.EmptyPredicate;
 import io.harness.exception.InvalidRequestException;
 import io.harness.logging.CommandExecutionStatus;
+import io.harness.logging.LogLevel;
 import io.harness.logging.Misc;
+import io.harness.security.encryption.EncryptedDataDetail;
+import io.harness.serializer.JsonUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import software.wings.api.ContainerServiceData;
 import software.wings.beans.AwsConfig;
+import software.wings.beans.SettingAttribute;
 import software.wings.beans.command.EcsResizeParams;
 import software.wings.beans.command.ExecutionLogCallback;
 import software.wings.beans.container.AwsAutoScalarConfig;
 import software.wings.cloudprovider.aws.AwsClusterService;
 import software.wings.cloudprovider.aws.EcsContainerService;
 import software.wings.delegatetasks.aws.ecs.ecstaskhandler.EcsCommandTaskHelper;
+import software.wings.helpers.ext.ecs.request.EcsRunTaskDeployRequest;
+import software.wings.helpers.ext.ecs.response.EcsRunTaskDeployResponse;
 import software.wings.helpers.ext.ecs.response.EcsServiceDeployResponse;
 import software.wings.service.impl.AwsHelperService;
 import software.wings.service.intfc.aws.delegate.AwsAppAutoScalingHelperServiceDelegate;
@@ -36,6 +59,7 @@ import software.wings.service.intfc.aws.delegate.AwsEcsHelperServiceDelegate;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
@@ -224,6 +248,83 @@ public class EcsDeployCommandTaskHelper {
     });
   }
 
+  public TaskDefinition createRunTaskDefinition(String taskDefinitionJson, String ecsServiceName) {
+    TaskDefinition ecsRunTaskDefinition = JsonUtils.asObject(taskDefinitionJson, TaskDefinition.class);
+    if (ecsRunTaskDefinition.getFamily() == null) {
+      ecsRunTaskDefinition.setFamily(ecsServiceName);
+    }
+    return ecsRunTaskDefinition;
+  }
+
+  public RunTaskRequest createAwsRunTaskRequest(
+      TaskDefinition registeredRunTaskDefinition, EcsRunTaskDeployRequest ecsRunTaskDeployRequest) {
+    RunTaskRequest runTaskRequest = new RunTaskRequest();
+    runTaskRequest.withCluster(ecsRunTaskDeployRequest.getCluster());
+    runTaskRequest.withLaunchType(ecsRunTaskDeployRequest.getLaunchType());
+
+    // For Awsvpc Network mode (Fargate / ECS Ec2 deployment with awsvpc mode), we need to setup
+    // NetworkConfig, as it will be used by aws to create ENI
+    if (isFargateTaskLauchType(ecsRunTaskDeployRequest.getLaunchType())
+        || NetworkMode.Awsvpc.name().equalsIgnoreCase(registeredRunTaskDefinition.getNetworkMode())) {
+      AssignPublicIp assignPublicIp = AssignPublicIp.DISABLED;
+
+      if (isFargateTaskLauchType(ecsRunTaskDeployRequest.getLaunchType())) {
+        assignPublicIp = ecsRunTaskDeployRequest.isAssignPublicIps() ? AssignPublicIp.ENABLED : AssignPublicIp.DISABLED;
+      }
+
+      runTaskRequest.withNetworkConfiguration(new NetworkConfiguration().withAwsvpcConfiguration(
+          new AwsVpcConfiguration()
+              .withSecurityGroups(ecsRunTaskDeployRequest.getSecurityGroupIds())
+              .withSubnets(ecsRunTaskDeployRequest.getSubnetIds())
+              .withAssignPublicIp(assignPublicIp)));
+    }
+
+    runTaskRequest.withPropagateTags("TASK_DEFINITION");
+    runTaskRequest.withTaskDefinition(registeredRunTaskDefinition.getTaskDefinitionArn());
+
+    return runTaskRequest;
+  }
+
+  public TaskDefinition registerRunTaskDefinition(SettingAttribute cloudProviderSetting,
+      TaskDefinition runTaskDefinition, String launchType, String region,
+      List<EncryptedDataDetail> encryptedDataDetails, ExecutionLogCallback executionLogCallback) {
+    RegisterTaskDefinitionRequest registerTaskDefinitionRequest =
+        new RegisterTaskDefinitionRequest()
+            .withContainerDefinitions(runTaskDefinition.getContainerDefinitions())
+            .withFamily(runTaskDefinition.getFamily())
+            .withTaskRoleArn(runTaskDefinition.getTaskRoleArn())
+            .withNetworkMode(runTaskDefinition.getNetworkMode())
+            .withPlacementConstraints(runTaskDefinition.getPlacementConstraints())
+            .withVolumes(runTaskDefinition.getVolumes());
+
+    if (isNotEmpty(runTaskDefinition.getExecutionRoleArn())) {
+      registerTaskDefinitionRequest.withExecutionRoleArn(runTaskDefinition.getExecutionRoleArn());
+    }
+
+    // Add extra parameters for Fargate launch type
+    if (isFargateTaskLauchType(launchType)) {
+      registerTaskDefinitionRequest.withNetworkMode(NetworkMode.Awsvpc);
+      registerTaskDefinitionRequest.setRequiresCompatibilities(Collections.singletonList(LaunchType.FARGATE.name()));
+      registerTaskDefinitionRequest.withCpu(runTaskDefinition.getCpu());
+      registerTaskDefinitionRequest.withMemory(runTaskDefinition.getMemory());
+    }
+
+    executionLogCallback.saveExecutionLog(
+        format("Registering task definition with family => %s", runTaskDefinition.getFamily()), LogLevel.INFO);
+
+    return awsClusterService.createTask(
+        region, cloudProviderSetting, encryptedDataDetails, registerTaskDefinitionRequest);
+  }
+
+  public RunTaskResult triggerRunTask(String region, SettingAttribute cloudProviderSetting,
+      List<EncryptedDataDetail> encryptedDataDetails, RunTaskRequest runTaskRequest) {
+    return awsClusterService.triggerRunTask(region, cloudProviderSetting, encryptedDataDetails, runTaskRequest);
+  }
+
+  private boolean isFargateTaskLauchType(String launchType) {
+    return LaunchType.FARGATE.name().equals(launchType);
+  }
+
   public boolean getDeployingToHundredPercent(EcsResizeParams resizeParams) {
     boolean deployingToHundredPercent;
     if (!resizeParams.isRollback()) {
@@ -357,6 +458,64 @@ public class EcsDeployCommandTaskHelper {
         .collect(Collectors.toMap(item -> item[0], item -> Integer.valueOf(item[1])));
   }
 
+  public List<Task> getTasksFromTaskArn(AwsConfig awsConfig, String clusterName, String region,
+      List<String> taskDefinitionArns, List<EncryptedDataDetail> encryptedDataDetails,
+      ExecutionLogCallback executionLogCallback) {
+    if (EmptyPredicate.isNotEmpty(taskDefinitionArns)) {
+      return awsHelperService
+          .describeTasks(region, awsConfig, encryptedDataDetails,
+              new DescribeTasksRequest().withCluster(clusterName).withTasks(taskDefinitionArns))
+          .getTasks();
+    }
+    return Collections.emptyList();
+  }
+
+  public List<String> deregisterTaskDefinitions(AwsConfig awsConfig, String region,
+      List<String> taskDefinitionArnsToDeregister, List<EncryptedDataDetail> encryptedDataDetails,
+      ExecutionLogCallback executionLogCallback) {
+    taskDefinitionArnsToDeregister.forEach(t -> {
+      executionLogCallback.saveExecutionLog(format("De-registering task definition arn => %s", t));
+      DeregisterTaskDefinitionResult deregisterTaskDefinitionResult = awsHelperService.deregisterTaskDefinitions(
+          region, awsConfig, encryptedDataDetails, new DeregisterTaskDefinitionRequest().withTaskDefinition(t));
+      executionLogCallback.saveExecutionLog(format(
+          "Task de-registered => %s", deregisterTaskDefinitionResult.getTaskDefinition().getTaskDefinitionArn()));
+    });
+    return taskDefinitionArnsToDeregister;
+  }
+
+  public List<Task> getExistingTasks(AwsConfig awsConfig, String clusterName, String region, String runTaskFamilyName,
+      List<EncryptedDataDetail> encryptedDataDetails, ExecutionLogCallback executionLogCallback) {
+    List<String> runningTaskArns = awsHelperService
+                                       .listTasks(region, awsConfig, encryptedDataDetails,
+                                           new ListTasksRequest()
+                                               .withCluster(clusterName)
+                                               .withFamily(runTaskFamilyName)
+                                               .withDesiredStatus(DesiredStatus.RUNNING))
+                                       .getTaskArns();
+    List<String> stoppedTaskArns = awsHelperService
+                                       .listTasks(region, awsConfig, encryptedDataDetails,
+                                           new ListTasksRequest()
+                                               .withCluster(clusterName)
+                                               .withFamily(runTaskFamilyName)
+                                               .withDesiredStatus(DesiredStatus.STOPPED))
+                                       .getTaskArns();
+    List<String> taskArns = new ArrayList<>();
+    taskArns.addAll(runningTaskArns);
+    taskArns.addAll(stoppedTaskArns);
+
+    if (EmptyPredicate.isNotEmpty(taskArns)) {
+      executionLogCallback.saveExecutionLog(
+          format("%d tasks were found in task family %s, %d are stopped and %d are running", taskArns.size(),
+              runTaskFamilyName, stoppedTaskArns.size(), runningTaskArns.size()));
+      return awsHelperService
+          .describeTasks(region, awsConfig, encryptedDataDetails,
+              new DescribeTasksRequest().withCluster(clusterName).withTasks(taskArns))
+          .getTasks();
+    }
+    executionLogCallback.saveExecutionLog(format("No tasks were found in task family %s", runTaskFamilyName));
+    return Collections.emptyList();
+  }
+
   public void setDesiredToOriginal(
       List<ContainerServiceData> newInstanceDataList, Map<String, Integer> originalServiceCounts) {
     for (ContainerServiceData containerServiceData : newInstanceDataList) {
@@ -383,6 +542,13 @@ public class EcsDeployCommandTaskHelper {
     } catch (Exception e) {
       Misc.logAllMessages(e, executionLogCallback);
     }
+  }
+
+  public EcsRunTaskDeployResponse getEmptyRunTaskDeployResponse() {
+    EcsRunTaskDeployResponse ecsRunTaskDeployResponse = EcsRunTaskDeployResponse.builder().build();
+    ecsRunTaskDeployResponse.setCommandExecutionStatus(CommandExecutionStatus.SUCCESS);
+    ecsRunTaskDeployResponse.setOutput(StringUtils.EMPTY);
+    return ecsRunTaskDeployResponse;
   }
 
   public EcsServiceDeployResponse getEmptyEcsServiceDeployResponse() {

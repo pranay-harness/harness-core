@@ -6,6 +6,7 @@ import static software.wings.sm.states.EcsBGUpdateRoute53DNSWeightState.UPDATE_R
 import static software.wings.sm.states.EcsBlueGreenServiceSetup.ECS_SERVICE_SETUP_COMMAND_ELB;
 import static software.wings.sm.states.EcsBlueGreenServiceSetupRoute53DNS.ECS_SERVICE_SETUP_COMMAND_ROUTE53;
 import static software.wings.sm.states.EcsDaemonServiceSetup.ECS_DAEMON_SERVICE_SETUP_COMMAND;
+import static software.wings.sm.states.EcsRunTaskDeploy.ECS_RUN_TASK_COMMAND;
 import static software.wings.sm.states.EcsServiceDeploy.ECS_SERVICE_DEPLOY;
 import static software.wings.sm.states.EcsServiceSetup.ECS_SERVICE_SETUP_COMMAND;
 import static software.wings.sm.states.EcsSetupRollback.ECS_DAEMON_SERVICE_ROLLBACK_COMMAND;
@@ -72,6 +73,7 @@ public class CommandUnitDetails {
     AWS_ECS_UPDATE_LISTENER_BG(ECS_UPDATE_LISTENER_COMMAND),
     AWS_ECS_UPDATE_ROUTE_53_DNS_WEIGHT(UPDATE_ROUTE_53_DNS_WEIGHTS),
     AWS_ECS_SERVICE_SETUP(ECS_SERVICE_SETUP_COMMAND),
+    AWS_ECS_RUN_TASK_DEPLOY(ECS_RUN_TASK_COMMAND),
     AWS_ECS_SERVICE_SETUP_ROUTE53(ECS_SERVICE_SETUP_COMMAND_ROUTE53),
     AWS_ECS_SERVICE_SETUP_ELB(ECS_SERVICE_SETUP_COMMAND_ELB),
     AWS_ECS_SERVICE_SETUP_DAEMON(ECS_DAEMON_SERVICE_SETUP_COMMAND),

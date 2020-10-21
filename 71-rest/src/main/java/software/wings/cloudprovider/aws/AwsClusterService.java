@@ -2,6 +2,8 @@ package software.wings.cloudprovider.aws;
 
 import com.amazonaws.services.ecs.model.CreateServiceRequest;
 import com.amazonaws.services.ecs.model.RegisterTaskDefinitionRequest;
+import com.amazonaws.services.ecs.model.RunTaskRequest;
+import com.amazonaws.services.ecs.model.RunTaskResult;
 import com.amazonaws.services.ecs.model.Service;
 import com.amazonaws.services.ecs.model.TaskDefinition;
 import com.amazonaws.services.elasticloadbalancingv2.model.TargetGroup;
@@ -54,6 +56,12 @@ public interface AwsClusterService {
    */
   void createService(String region, SettingAttribute cloudProviderSetting,
       List<EncryptedDataDetail> encryptedDataDetails, CreateServiceRequest clusterConfiguration);
+
+  /**
+   * Trigger run task
+   */
+  RunTaskResult triggerRunTask(String region, SettingAttribute cloudProviderSetting,
+      List<EncryptedDataDetail> encryptedDataDetails, RunTaskRequest runTaskRequest);
 
   /**
    * Create task task definition.
