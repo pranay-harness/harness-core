@@ -3,6 +3,7 @@ package io.harness.ng.jira.resources;
 import com.google.inject.Inject;
 
 import io.harness.beans.IdentifierRef;
+import io.harness.cdng.jira.resources.request.CreateJiraTicketRequest;
 import io.harness.cdng.jira.resources.service.JiraResourceService;
 import io.harness.ng.core.dto.ErrorDTO;
 import io.harness.ng.core.dto.FailureDTO;
@@ -17,6 +18,7 @@ import lombok.AllArgsConstructor;
 
 import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
+import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
@@ -44,5 +46,17 @@ public class JiraResource {
         IdentifierRefHelper.getIdentifierRef(jiraConnectorIdentifier, accountId, orgIdentifier, projectIdentifier);
     boolean isValid = jiraResourceService.validateCredentials(connectorRef, orgIdentifier, projectIdentifier);
     return ResponseDTO.newResponse(isValid);
+  }
+
+  @POST
+  @Path("create-ticket")
+  @ApiOperation(value = "Create jira ticket", nickname = "createJiraTicket")
+  public ResponseDTO<String> createTicket(@QueryParam("connectorRef") String jiraConnectorIdentifier,
+      @QueryParam("accountId") String accountId, @QueryParam("orgIdentifier") String orgIdentifier,
+      @QueryParam("projectIdentifier") String projectIdentifier, CreateJiraTicketRequest request) {
+    IdentifierRef connectorRef =
+        IdentifierRefHelper.getIdentifierRef(jiraConnectorIdentifier, accountId, orgIdentifier, projectIdentifier);
+    String ticketKey = jiraResourceService.createTicket(connectorRef, orgIdentifier, projectIdentifier, request);
+    return ResponseDTO.newResponse(ticketKey);
   }
 }

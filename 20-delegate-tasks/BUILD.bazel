@@ -36,6 +36,7 @@ java_library(
         "@maven//:me_snowdrop_istio_model",
         "@maven//:net_rcarz_jira_client",
         "@maven//:org_apache_commons_commons_lang3",
+        "@maven//:org_json_json_20160810",
         "@maven//:org_slf4j_slf4j_api",
         "@maven//:org_zeroturnaround_zt_exec",
     ],
@@ -66,12 +67,14 @@ java_library(
         "//15-api-services:module",
         "//19-delegate-tasks-beans:module",
         "//990-commons-test:module",
-        "@maven//:com_github_tomakehurst_wiremock",
         "@maven//:com_google_guava_guava",
         "@maven//:com_google_inject_guice",
         "@maven//:junit_junit",
         "@maven//:org_assertj_assertj_core",
         "@maven//:org_mockito_mockito_core",
+        "@maven//:org_powermock_powermock_api_mockito",
+        "@maven//:org_powermock_powermock_core",
+        "@maven//:org_powermock_powermock_module_junit4",
     ],
 )
 
