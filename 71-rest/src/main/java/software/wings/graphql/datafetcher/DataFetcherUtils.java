@@ -3,19 +3,26 @@ package software.wings.graphql.datafetcher;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static java.lang.String.format;
 
+import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
+import com.github.benmanes.caffeine.cache.Caffeine;
+import com.github.benmanes.caffeine.cache.LoadingCache;
 import graphql.GraphQLContext;
 import graphql.schema.DataFetchingEnvironment;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.persistence.HIterator;
+import io.harness.timescaledb.DBUtils;
+import io.harness.timescaledb.TimeScaleDBService;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.beanutils.PropertyUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.jetbrains.annotations.NotNull;
 import org.mongodb.morphia.query.FieldEnd;
 import org.mongodb.morphia.query.FindOptions;
 import org.mongodb.morphia.query.Query;
+import software.wings.beans.FeatureName;
 import software.wings.beans.SettingAttribute.SettingAttributeKeys;
 import software.wings.dl.WingsPersistence;
 import software.wings.graphql.directive.DataFetcherDirective.DataFetcherDirectiveAttributes;
@@ -34,21 +41,88 @@ import software.wings.graphql.schema.type.aggregation.QLStringOperator;
 import software.wings.graphql.schema.type.aggregation.QLTimeFilter;
 import software.wings.graphql.schema.type.aggregation.QLTimeOperator;
 import software.wings.resources.graphql.TriggeredByType;
+import software.wings.service.intfc.FeatureFlagService;
 
 import java.lang.reflect.InvocationTargetException;
+import java.sql.Connection;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
 import java.util.Arrays;
 import java.util.Calendar;
 import java.util.List;
 import java.util.Map;
 import java.util.TimeZone;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
+@Slf4j
 @Singleton
 public class DataFetcherUtils {
   public static final String GENERIC_EXCEPTION_MSG = "An error has occurred. Please contact the Harness support team.";
   public static final String NEGATIVE_LIMIT_ARG_MSG = "Limit argument accepts only non negative values";
   public static final String NEGATIVE_OFFSET_ARG_MSG = "Offset argument accepts only non negative values";
   public static final String EXCEPTION_MSG_DELIMITER = ";; ";
+
+  private static final String queryTemplate =
+      "SELECT * FROM BILLING_DATA_HOURLY WHERE accountid = '%s' AND clusterid IS NOT NULL LIMIT 1";
+  private static final String queryTemplateDaily =
+      "SELECT * FROM BILLING_DATA WHERE accountid = '%s' AND clusterid IS NOT NULL LIMIT 1";
+
+  @Inject private TimeScaleDBService timeScaleDBService;
+  @Inject protected FeatureFlagService featureFlagService;
+  private final LoadingCache<String, Boolean> isClusterDataPresentCache =
+      Caffeine.newBuilder().expireAfterAccess(1, TimeUnit.MINUTES).build(this ::isAnyClusterDataPresent);
+
+  public static String SAMPLE_ACCOUNT_ID =
+      "Sy3KVuK1SZy2Z7OLhbKlNg"; // Sy3KVuK1SZy2Z7OLhbKlNg belongs to "harness-demo" in Free Cluster
+
+  static {
+    String clusterType = System.getenv("CLUSTER_TYPE");
+    if (StringUtils.equals(clusterType, "premium")) {
+      SAMPLE_ACCOUNT_ID = "jDOmhrFmSOGZJ1C91UC_hg"; // "jDOmhrFmSOGZJ1C91UC_hg" belongs to "Harness-CS" in Paid Cluster
+    }
+  }
+
+  public String fetchSampleAccountIdIfNoClusterData(@NotNull String accountId) {
+    if (featureFlagService.isEnabledReloadCache(FeatureName.CE_SAMPLE_DATA_GENERATION, accountId)) {
+      logger.debug("feature flag CE_SAMPLE_DATA_GENERATION enabled: true");
+      if (Boolean.FALSE.equals(isClusterDataPresentCache.get(accountId))) {
+        return SAMPLE_ACCOUNT_ID;
+      }
+    }
+    logger.debug("feature flag CE_SAMPLE_DATA_GENERATION enabled: false");
+    return accountId;
+  }
+
+  public boolean isAnyClusterDataPresent(String accountId) {
+    String clusterQuery = String.format(queryTemplate, accountId);
+    String clusterDailyQuery = String.format(queryTemplateDaily, accountId);
+    boolean isPresent = getCount(clusterQuery, accountId) != 0 || getCount(clusterDailyQuery, accountId) != 0;
+    logger.debug("Clusterdata for accountId:{} is present {}", accountId, isPresent);
+    return isPresent;
+  }
+
+  private Integer getCount(String query, String accountId) {
+    int count = 0;
+    if (timeScaleDBService.isValid()) {
+      ResultSet resultSet = null;
+      try (Connection connection = timeScaleDBService.getDBConnection();
+           Statement statement = connection.createStatement()) {
+        resultSet = statement.executeQuery(query);
+        while (resultSet != null && resultSet.next()) {
+          count = 1;
+        }
+      } catch (SQLException e) {
+        logger.warn("Failed to execute query in DataFetcherUtils, query=[{}], accountId=[{}], {}", query, accountId, e);
+      } finally {
+        DBUtils.close(resultSet);
+      }
+    } else {
+      throw new InvalidRequestException("Cannot process request in DataFetcherUtils");
+    }
+    return count;
+  }
 
   @NotNull
   public Query populateAccountFilter(WingsPersistence wingsPersistence, String accountId, Class entityClass) {

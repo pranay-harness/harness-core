@@ -3,6 +3,7 @@ package io.harness.ccm.setup.graphql;
 import static io.harness.ccm.billing.preaggregated.PreAggregateConstants.countStringValueConstant;
 import static io.harness.ccm.billing.preaggregated.PreAggregateConstants.entityCloudProviderConst;
 import static io.harness.persistence.HQuery.excludeValidate;
+import static software.wings.graphql.datafetcher.DataFetcherUtils.SAMPLE_ACCOUNT_ID;
 
 import com.google.cloud.bigquery.BigQuery;
 import com.google.cloud.bigquery.FieldValueList;
@@ -21,13 +22,16 @@ import io.harness.timescaledb.DBUtils;
 import io.harness.timescaledb.TimeScaleDBService;
 import lombok.extern.slf4j.Slf4j;
 import software.wings.app.MainConfiguration;
+import software.wings.beans.FeatureName;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.SettingAttribute.SettingAttributeKeys;
 import software.wings.beans.SettingAttribute.SettingCategory;
 import software.wings.graphql.datafetcher.AbstractObjectDataFetcher;
+import software.wings.graphql.datafetcher.DataFetcherUtils;
 import software.wings.graphql.schema.query.QLNoOpQueryParameters;
 import software.wings.security.PermissionAttribute;
 import software.wings.security.annotations.AuthRule;
+import software.wings.service.intfc.FeatureFlagService;
 import software.wings.settings.SettingVariableTypes;
 
 import java.sql.Connection;
@@ -46,6 +50,8 @@ public class OverviewPageStatsDataFetcher
   @Inject private BigQueryService bigQueryService;
   @Inject private MainConfiguration mainConfiguration;
   @Inject private TimeScaleDBService timeScaleDBService;
+  @Inject protected DataFetcherUtils utils;
+  @Inject protected FeatureFlagService featureFlagService;
 
   private static final String DATA_SET_NAME_TEMPLATE = "BillingReport_%s";
   private static final String PRE_AGG_TABLE_NAME_VALUE = "preAggregated";
@@ -91,7 +97,9 @@ public class OverviewPageStatsDataFetcher
       isApplicationDataPresent = true;
     }
 
-    if (getCount(clusterQuery, accountId) != 0 || getCount(clusterDailyQuery, accountId) != 0) {
+    if (getCount(clusterQuery, accountId) != 0 || getCount(clusterDailyQuery, accountId) != 0
+        || (featureFlagService.isEnabledReloadCache(FeatureName.CE_SAMPLE_DATA_GENERATION, accountId)
+               && utils.isAnyClusterDataPresent(SAMPLE_ACCOUNT_ID))) {
       isClusterDataPresent = true;
     }
     overviewStatsDataBuilder.clusterDataPresent(isClusterDataPresent).applicationDataPresent(isApplicationDataPresent);

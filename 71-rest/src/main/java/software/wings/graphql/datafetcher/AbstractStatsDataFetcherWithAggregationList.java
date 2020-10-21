@@ -48,6 +48,7 @@ public abstract class AbstractStatsDataFetcherWithAggregationList<A, F, G, S>
 
   @Inject protected DataFetcherUtils utils;
   @Inject protected WingsPersistence wingsPersistence;
+
   public static final int MAX_RETRY = 3;
 
   protected abstract QLData fetch(
@@ -75,14 +76,16 @@ public abstract class AbstractStatsDataFetcherWithAggregationList<A, F, G, S>
 
       final List<G> groupBy = fetchObject(dataFetchingEnvironment, GROUP_BY, groupByClass);
       final List<S> sort = fetchObject(dataFetchingEnvironment, SORT_CRITERIA, sortClass);
+
       String accountId = utils.getAccountId(dataFetchingEnvironment);
+      final String accountIdDataToFetch = utils.fetchSampleAccountIdIfNoClusterData(accountId);
 
       try (AutoLogContext ignore1 = new AccountLogContext(accountId, OVERRIDE_ERROR);
            AutoLogContext ignore2 =
                new AggregateFunctionLogContext(aggregationFunctionClass.getSimpleName(), OVERRIDE_ERROR);
            AutoLogContext ignore3 = new FilterLogContext(filterClass.getSimpleName(), OVERRIDE_ERROR);
            AutoLogContext ignore4 = new GroupByLogContext(groupByClass.getSimpleName(), OVERRIDE_ERROR)) {
-        QLData qlData = fetch(accountId, aggregateFunctions, filters, groupBy, sort);
+        QLData qlData = fetch(accountIdDataToFetch, aggregateFunctions, filters, groupBy, sort);
         QLData postFetchResult = postFetch(accountId, groupBy, aggregateFunctions, sort, qlData);
         result = qlData;
         if (postFetchResult != null) {
