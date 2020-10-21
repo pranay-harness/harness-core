@@ -15,6 +15,6 @@ import software.wings.security.annotations.Scope;
 @FieldNameConstants(innerTypeName = "QLVariableInputKeys")
 @Scope(PermissionAttribute.ResourceType.DEPLOYMENT)
 public class QLVariableInput {
-  String name;
-  QLVariableValue variableValue;
+  private String name;
+  private QLVariableValue variableValue;
 }

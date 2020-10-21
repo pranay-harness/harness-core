@@ -107,6 +107,8 @@ import software.wings.graphql.datafetcher.execution.ExecutionConnectionDataFetch
 import software.wings.graphql.datafetcher.execution.ExecutionDataFetcher;
 import software.wings.graphql.datafetcher.execution.ExecutionInputsDataFetcher;
 import software.wings.graphql.datafetcher.execution.ExportExecutionsDataFetcher;
+import software.wings.graphql.datafetcher.execution.PipelineResumeRuntimeDataFetcher;
+import software.wings.graphql.datafetcher.execution.RuntimeExecutionInputsToResumePipelineDataFetcher;
 import software.wings.graphql.datafetcher.execution.StartExecutionDataFetcher;
 import software.wings.graphql.datafetcher.instance.InstanceConnectionDataFetcher;
 import software.wings.graphql.datafetcher.instance.InstanceCountDataFetcher;
@@ -370,6 +372,8 @@ public class GraphQLModule extends AbstractModule {
     bindDataFetcherWithAnnotation(ViewTimeSeriesStatsDataFetcher.class);
     bindDataFetcherWithAnnotation(ViewTrendStatsDataFetcher.class);
     bindDataFetcherWithAnnotation(ViewFilterStatsDataFetcher.class);
+    bindDataFetcherWithAnnotation(PipelineResumeRuntimeDataFetcher.class);
+    bindDataFetcherWithAnnotation(RuntimeExecutionInputsToResumePipelineDataFetcher.class);
   }
 
   @NotNull

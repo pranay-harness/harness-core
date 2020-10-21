@@ -236,19 +236,18 @@ public class PipelineExecutionController {
     }
 
     List<Artifact> artifacts = new ArrayList<>();
+    // TODO
     executionController.getArtifactsFromServiceInputs(
         serviceInputs, pipeline.getAppId(), artifactNeededServiceIds, artifacts);
     return artifacts;
   }
 
-  public Map<String, String> validateAndResolvePipelineVariables(Pipeline pipeline,
-      List<QLVariableInput> variableInputs, String envId, List<String> extraVariables, boolean isTriggerFlow) {
+  public Map<String, String> resolvePipelineVariables(Pipeline pipeline, List<QLVariableInput> variableInputs,
+      String envId, List<String> extraVariables, boolean isTriggerFlow) {
     List<Variable> pipelineVariables = pipeline.getPipelineVariables();
     if (isEmpty(pipelineVariables)) {
       return new HashMap<>();
     }
-
-    validateRequiredVarsPresent(variableInputs, pipelineVariables);
 
     Map<String, String> pipelineVariableValues = new HashMap<>();
     for (QLVariableInput variableInput : variableInputs) {
@@ -280,8 +279,17 @@ public class PipelineExecutionController {
         extraVariables.add(variableInput.getName());
       }
     }
-
     return pipelineVariableValues;
+  }
+
+  public Map<String, String> validateAndResolvePipelineVariables(Pipeline pipeline,
+      List<QLVariableInput> variableInputs, String envId, List<String> extraVariables, boolean isTriggerFlow) {
+    List<Variable> pipelineVariables = pipeline.getPipelineVariables();
+    if (isEmpty(pipelineVariables)) {
+      return new HashMap<>();
+    }
+    validateRequiredVarsPresent(variableInputs, pipelineVariables);
+    return resolvePipelineVariables(pipeline, variableInputs, envId, extraVariables, isTriggerFlow);
   }
 
   private String resolveVariableValue(String appId, String value, Variable variable, Pipeline pipeline, String envId) {
@@ -354,6 +362,15 @@ public class PipelineExecutionController {
     }
   }
 
+  public void handleAuthentication(String appId, Pipeline pipeline) {
+    String pipelineId = pipeline.getUuid();
+    notNullCheck("Pipeline " + pipelineId + " doesn't exist in the specified application " + appId, pipeline, USER);
+    PermissionAttribute permissionAttribute =
+        new PermissionAttribute(PermissionAttribute.PermissionType.PIPELINE, PermissionAttribute.Action.READ);
+    List<PermissionAttribute> permissionAttributeList = Collections.singletonList(permissionAttribute);
+    authHandler.authorize(permissionAttributeList, Collections.singletonList(appId), pipelineId);
+  }
+
   List<String> getArtifactNeededServices(QLServiceInputsForExecutionParams parameters) {
     String appId = parameters.getApplicationId();
     try (AutoLogContext ignore = new AppLogContext(appId, AutoLogContext.OverrideBehavior.OVERRIDE_ERROR)) {
@@ -364,11 +381,7 @@ public class PipelineExecutionController {
       }
 
       Pipeline pipeline = pipelineService.readPipeline(appId, pipelineId, true);
-      notNullCheck("Pipeline " + pipelineId + " doesn't exist in the specified application " + appId, pipeline, USER);
-      PermissionAttribute permissionAttribute =
-          new PermissionAttribute(PermissionAttribute.PermissionType.PIPELINE, PermissionAttribute.Action.READ);
-      List<PermissionAttribute> permissionAttributeList = Collections.singletonList(permissionAttribute);
-      authHandler.authorize(permissionAttributeList, Collections.singletonList(appId), pipelineId);
+      handleAuthentication(appId, pipeline);
       try (
           AutoLogContext ignore1 = new WorkflowLogContext(pipelineId, AutoLogContext.OverrideBehavior.OVERRIDE_ERROR)) {
         String envId = resolveEnvId(pipeline, variableInputs);

@@ -126,4 +126,6 @@ enum DataFetcherEnum {
   viewEntityStats
   viewTimeSeriesStats
   viewTrendStats
+  runtimeExecutionInputsToResumePipeline
+  pipelineResumeRuntime
 }

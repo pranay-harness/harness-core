@@ -248,6 +248,7 @@ public class TypeResolverManager {
     public static final String LAST_DEPLOYED_FROM_PIPELINE = "LastDeployedFromPipeline";
     public static final String FROM_TRIGGERING_PIPELINE = "FromTriggeringPipeline";
     public static final String FROM_WEBHOOK_PAYLOAD = "FromWebhookPayload";
+    public static final String EXECUTION_INPUTS_TO_RESUME_PIPELINE = "ExecutionInputsToResumePipeline";
   }
 
   /**
