@@ -1,5 +1,6 @@
 package software.wings.service.impl.yaml.handler.infraprovisioner;
 
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.validation.Validator.notNullCheck;
@@ -8,6 +9,7 @@ import static software.wings.beans.Application.GLOBAL_APP_ID;
 
 import com.google.inject.Inject;
 
+import io.harness.exception.InvalidRequestException;
 import software.wings.beans.Application;
 import software.wings.beans.InfrastructureProvisionerType;
 import software.wings.beans.NameValuePair;
@@ -50,6 +52,7 @@ public class TerraformInfrastructureProvisionerYamlHandler
     yaml.setPath(bean.getPath());
     yaml.setSourceRepoSettingName(getSourceRepoSettingName(appId, bean.getSourceRepoSettingId()));
     yaml.setSourceRepoBranch(bean.getSourceRepoBranch());
+    yaml.setCommitId(bean.getCommitId());
     yaml.setRepoName(bean.getRepoName());
     if (isNotEmpty(bean.getBackendConfigs())) {
       yaml.setBackendConfigs(getSortedNameValuePairYamlList(bean.getBackendConfigs(), bean.getAppId()));
@@ -104,7 +107,9 @@ public class TerraformInfrastructureProvisionerYamlHandler
     super.toBean(changeContext, bean, appId, yamlFilePath);
     bean.setPath(yaml.getPath());
     bean.setSourceRepoSettingId(getSourceRepoSettingId(appId, yaml.getSourceRepoSettingName()));
+    validateBranchCommitId(yaml.getSourceRepoBranch(), yaml.getCommitId());
     bean.setSourceRepoBranch(yaml.getSourceRepoBranch());
+    bean.setCommitId(yaml.getCommitId());
     bean.setRepoName(yaml.getRepoName());
 
     if (isNotEmpty(yaml.getBackendConfigs())) {
@@ -124,6 +129,15 @@ public class TerraformInfrastructureProvisionerYamlHandler
                    .valueType(nvpYaml.getValueType())
                    .build())
         .collect(toList());
+  }
+
+  private void validateBranchCommitId(String sourceRepoBranch, String commitId) {
+    if (isEmpty(sourceRepoBranch) && isEmpty(commitId)) {
+      throw new InvalidRequestException("Either sourceRepoBranch or commitId should be specified", USER);
+    }
+    if (isNotEmpty(sourceRepoBranch) && isNotEmpty(commitId)) {
+      throw new InvalidRequestException("Cannot specify both sourceRepoBranch and commitId", USER);
+    }
   }
 
   @Override

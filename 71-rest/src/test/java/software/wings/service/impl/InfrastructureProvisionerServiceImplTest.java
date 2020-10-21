@@ -2,6 +2,7 @@ package software.wings.service.impl;
 
 import static io.harness.rule.OwnerRule.ANSHUL;
 import static io.harness.rule.OwnerRule.ARVIND;
+import static io.harness.rule.OwnerRule.BOJANA;
 import static io.harness.rule.OwnerRule.RIHAZ;
 import static io.harness.rule.OwnerRule.SATYAM;
 import static io.harness.rule.OwnerRule.TATHAGAT;
@@ -280,7 +281,7 @@ public class InfrastructureProvisionerServiceImplTest extends WingsBaseTest {
 
     provisionerService.validateProvisioner(terraformProvisioner);
 
-    shouldValidateRepoBranch(terraformProvisioner, provisionerService);
+    shouldValidateRepoBranchAndCommitId(terraformProvisioner, provisionerService);
     provisionerService.validateProvisioner(terraformProvisioner);
 
     shouldValidatePath(terraformProvisioner, provisionerService);
@@ -396,12 +397,14 @@ public class InfrastructureProvisionerServiceImplTest extends WingsBaseTest {
     terraformProvisioner.setPath("module/main.tf");
   }
 
-  private void shouldValidateRepoBranch(TerraformInfrastructureProvisioner terraformProvisioner,
+  private void shouldValidateRepoBranchAndCommitId(TerraformInfrastructureProvisioner terraformProvisioner,
       InfrastructureProvisionerServiceImpl provisionerService) {
     terraformProvisioner.setSourceRepoBranch("");
+    terraformProvisioner.setCommitId("");
     assertThatExceptionOfType(InvalidRequestException.class)
         .isThrownBy(() -> provisionerService.validateProvisioner(terraformProvisioner));
     terraformProvisioner.setSourceRepoBranch(null);
+    terraformProvisioner.setCommitId(null);
     assertThatExceptionOfType(InvalidRequestException.class)
         .isThrownBy(() -> provisionerService.validateProvisioner(terraformProvisioner));
     terraformProvisioner.setSourceRepoBranch("master");
@@ -795,8 +798,33 @@ public class InfrastructureProvisionerServiceImplTest extends WingsBaseTest {
     doReturn(attribute).when(settingService).get(SETTING_ID);
     assertThatThrownBy(()
                            -> infrastructureProvisionerService.getTerraformVariables(
-                               APP_ID, SETTING_ID, ".", ACCOUNT_ID, "branch", "repo"))
+                               APP_ID, SETTING_ID, ".", ACCOUNT_ID, "branch", null, "repo"))
         .isInstanceOf(InvalidRequestException.class);
+  }
+
+  @Test
+  @Owner(developers = BOJANA)
+  @Category(UnitTests.class)
+  public void getTerraformVariablesBranchCommitIdTest() {
+    SettingAttribute attribute = aSettingAttribute().build();
+    doReturn(attribute).when(settingService).get(SETTING_ID);
+    assertThatThrownBy(()
+                           -> infrastructureProvisionerService.getTerraformVariables(
+                               APP_ID, SETTING_ID, ".", ACCOUNT_ID, null, null, "repo"))
+        .isInstanceOf(InvalidRequestException.class);
+    assertThatThrownBy(()
+                           -> infrastructureProvisionerService.getTerraformVariables(
+                               APP_ID, SETTING_ID, ".", ACCOUNT_ID, null, null, "repo"))
+        .hasMessage("Either sourceRepoBranch or commitId should be specified");
+
+    assertThatThrownBy(()
+                           -> infrastructureProvisionerService.getTerraformVariables(
+                               APP_ID, SETTING_ID, ".", ACCOUNT_ID, "branch", "commitId", "repo"))
+        .isInstanceOf(InvalidRequestException.class);
+    assertThatThrownBy(()
+                           -> infrastructureProvisionerService.getTerraformVariables(
+                               APP_ID, SETTING_ID, ".", ACCOUNT_ID, "branch", "commitId", "repo"))
+        .hasMessage("Cannot specify both sourceRepoBranch and commitId");
   }
 
   @Test
@@ -821,8 +849,8 @@ public class InfrastructureProvisionerServiceImplTest extends WingsBaseTest {
             .variablesList(expectedVariables)
             .build();
     doReturn(response).when(delegateService).executeTask(any(DelegateTask.class));
-    List<NameValuePair> variables =
-        infrastructureProvisionerService.getTerraformVariables(APP_ID, SETTING_ID, ".", ACCOUNT_ID, "branch", repoName);
+    List<NameValuePair> variables = infrastructureProvisionerService.getTerraformVariables(
+        APP_ID, SETTING_ID, ".", ACCOUNT_ID, "branch", null, repoName);
 
     assertThat(gitConfigArgumentCaptor.getValue()).isEqualTo(gitConfig);
     assertThat(repoNameArgumentCaptor.getValue()).isEqualTo(repoName);
@@ -833,7 +861,7 @@ public class InfrastructureProvisionerServiceImplTest extends WingsBaseTest {
     response.getTerraformExecutionData().setErrorMessage("error");
     assertThatThrownBy(()
                            -> infrastructureProvisionerService.getTerraformVariables(
-                               APP_ID, SETTING_ID, ".", ACCOUNT_ID, "branch", repoName))
+                               APP_ID, SETTING_ID, ".", ACCOUNT_ID, "branch", null, repoName))
         .isInstanceOf(WingsException.class);
   }
 

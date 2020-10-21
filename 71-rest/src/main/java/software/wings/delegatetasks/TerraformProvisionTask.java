@@ -162,18 +162,19 @@ public class TerraformProvisionTask extends AbstractDelegateRunnableTask {
   private TerraformExecutionData run(TerraformProvisionParameters parameters) {
     GitConfig gitConfig = parameters.getSourceRepo();
     String sourceRepoSettingId = parameters.getSourceRepoSettingId();
-    String tfPlanJson = null;
 
     GitOperationContext gitOperationContext =
         GitOperationContext.builder().gitConfig(gitConfig).gitConnectorId(sourceRepoSettingId).build();
 
-    saveExecutionLog(parameters,
-        "Branch: " + gitConfig.getBranch() + "\nNormalized Path: " + parameters.getScriptPath(),
-        CommandExecutionStatus.RUNNING, INFO);
+    if (isNotEmpty(gitConfig.getBranch())) {
+      saveExecutionLog(parameters, "Branch: " + gitConfig.getBranch(), CommandExecutionStatus.RUNNING, INFO);
+    }
+    saveExecutionLog(
+        parameters, "\nNormalized Path: " + parameters.getScriptPath(), CommandExecutionStatus.RUNNING, INFO);
     gitConfig.setGitRepoType(GitRepositoryType.TERRAFORM);
 
     if (isNotEmpty(gitConfig.getReference())) {
-      saveExecutionLog(parameters, format("Inheriting git state at commit id: [%s]", gitConfig.getReference()),
+      saveExecutionLog(parameters, format("%nInheriting git state at commit id: [%s]", gitConfig.getReference()),
           CommandExecutionStatus.RUNNING, INFO);
     }
 
@@ -208,7 +209,9 @@ public class TerraformProvisionTask extends AbstractDelegateRunnableTask {
          PlanLogOutputStream planLogOutputStream = new PlanLogOutputStream(parameters, new ArrayList<>());
          PlanJsonLogOutputStream planJsonLogOutputStream = new PlanJsonLogOutputStream();) {
       ensureLocalCleanup(scriptDirectory);
-      String sourceRepoReference = getLatestCommitSHAFromLocalRepo(gitOperationContext);
+      String sourceRepoReference = parameters.getCommitId() != null
+          ? parameters.getCommitId()
+          : getLatestCommitSHAFromLocalRepo(gitOperationContext);
       final Map<String, String> envVars = getEnvironmentVariables(parameters);
       saveExecutionLog(parameters, format("Environment variables: [%s]", collectEnvVarKeys(envVars)),
           CommandExecutionStatus.RUNNING, INFO);

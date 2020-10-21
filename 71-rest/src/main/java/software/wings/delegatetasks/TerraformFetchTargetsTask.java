@@ -58,8 +58,12 @@ public class TerraformFetchTargetsTask extends AbstractDelegateRunnableTask {
   private TerraformExecutionData run(TerraformProvisionParameters parameters) {
     try {
       GitConfig gitConfig = parameters.getSourceRepo();
+
       if (isNotEmpty(parameters.getSourceRepoBranch())) {
         gitConfig.setBranch(parameters.getSourceRepoBranch());
+      }
+      if (isNotEmpty(parameters.getCommitId())) {
+        gitConfig.setReference(parameters.getCommitId());
       }
       GitOperationContext gitOperationContext = null;
       try {
