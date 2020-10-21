@@ -173,9 +173,10 @@ public class InfrastructureProvisionerResource {
   public RestResponse<List<NameValuePair>> getTerraformVariables(@QueryParam("appId") String appId,
       @QueryParam("sourceRepoSettingId") @NotNull String scmSettingId,
       @QueryParam("path") @NotNull String terraformDirectory, @QueryParam("accountId") String accountId,
-      @QueryParam("branch") String sourceRepoBranch, @QueryParam("repoName") String repoName) {
+      @QueryParam("branch") String sourceRepoBranch, @QueryParam("commitId") String commitId,
+      @QueryParam("repoName") String repoName) {
     return new RestResponse<>(infrastructureProvisionerService.getTerraformVariables(
-        appId, scmSettingId, terraformDirectory, accountId, sourceRepoBranch, repoName));
+        appId, scmSettingId, terraformDirectory, accountId, sourceRepoBranch, commitId, repoName));
   }
 
   @GET

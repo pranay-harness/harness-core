@@ -30,7 +30,8 @@ public class TerraformInfrastructureProvisioner extends InfrastructureProvisione
    * This could be either a branch or a commit id or any other reference which
    * can be checked out.
    */
-  @NotEmpty private String sourceRepoBranch;
+  private String sourceRepoBranch;
+  private String commitId;
   @Trimmed(message = "repoName should not contain leading and trailing spaces") @Nullable private String repoName;
   @NotNull private String path;
   private String normalizedPath;
@@ -50,7 +51,7 @@ public class TerraformInfrastructureProvisioner extends InfrastructureProvisione
 
   @Builder
   private TerraformInfrastructureProvisioner(String uuid, String appId, String name, String sourceRepoSettingId,
-      String sourceRepoBranch, String path, List<NameValuePair> variables,
+      String sourceRepoBranch, String commitId, String path, List<NameValuePair> variables,
       List<InfrastructureMappingBlueprint> mappingBlueprints, String accountId, String description,
       EmbeddedUser createdBy, long createdAt, EmbeddedUser lastUpdatedBy, long lastUpdatedAt, String entityYamlPath,
       List<NameValuePair> backendConfigs, String repoName, List<NameValuePair> environmentVariables) {
@@ -58,6 +59,7 @@ public class TerraformInfrastructureProvisioner extends InfrastructureProvisione
         createdAt, lastUpdatedBy, lastUpdatedAt, entityYamlPath);
     setSourceRepoSettingId(sourceRepoSettingId);
     setSourceRepoBranch(sourceRepoBranch);
+    setCommitId(commitId);
     setPath(path);
     setNormalizedPath(FilenameUtils.normalize(path));
     this.backendConfigs = backendConfigs;
@@ -75,6 +77,7 @@ public class TerraformInfrastructureProvisioner extends InfrastructureProvisione
   public static final class Yaml extends InfraProvisionerYaml {
     private String sourceRepoSettingName;
     private String sourceRepoBranch;
+    private String commitId;
     private String path;
     private String normalizedPath;
     private List<NameValuePair.Yaml> backendConfigs;
@@ -85,10 +88,11 @@ public class TerraformInfrastructureProvisioner extends InfrastructureProvisione
     public Yaml(String type, String harnessApiVersion, String description, String infrastructureProvisionerType,
         List<NameValuePair.Yaml> variables, List<InfrastructureMappingBlueprint.Yaml> mappingBlueprints,
         String sourceRepoSettingName, String sourceRepoBranch, String path, List<NameValuePair.Yaml> backendConfigs,
-        String repoName, List<NameValuePair.Yaml> environmentVariables) {
+        String repoName, List<NameValuePair.Yaml> environmentVariables, String commitId) {
       super(type, harnessApiVersion, description, infrastructureProvisionerType, variables, mappingBlueprints);
       this.sourceRepoSettingName = sourceRepoSettingName;
       this.sourceRepoBranch = sourceRepoBranch;
+      this.commitId = commitId;
       this.path = path;
       this.normalizedPath = FilenameUtils.normalize(path);
       this.backendConfigs = backendConfigs;

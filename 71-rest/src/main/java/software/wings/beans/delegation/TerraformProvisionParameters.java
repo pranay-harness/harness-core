@@ -42,6 +42,7 @@ public class TerraformProvisionParameters implements TaskParameters, ActivityAcc
   private final String sourceRepoSettingId;
   private final GitConfig sourceRepo;
   private final String sourceRepoBranch;
+  private final String commitId;
   List<EncryptedDataDetail> sourceRepoEncryptionDetails;
   private final String scriptPath;
   private final List<NameValuePair> rawVariables;

@@ -67,6 +67,9 @@ public class TerraformInputVariablesObtainTask extends AbstractDelegateRunnableT
       if (isNotEmpty(parameters.getSourceRepoBranch())) {
         gitConfig.setBranch(parameters.getSourceRepoBranch());
       }
+      if (isNotEmpty(parameters.getCommitId())) {
+        gitConfig.setReference(parameters.getCommitId());
+      }
 
       GitOperationContext gitOperationContext = null;
       try {

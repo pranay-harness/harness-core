@@ -640,9 +640,10 @@ public class InfrastructureProvisionerServiceImpl implements InfrastructureProvi
 
   @Override
   public List<NameValuePair> getTerraformVariables(String appId, String scmSettingId, String terraformDirectory,
-      String accountId, String sourceRepoBranch, String repoName) {
+      String accountId, String sourceRepoBranch, String commitId, String repoName) {
     SettingAttribute gitSettingAttribute = settingService.get(scmSettingId);
     notNullCheck("Source repo provided is not Valid", gitSettingAttribute);
+    validateBranchCommitId(sourceRepoBranch, commitId);
     if (!(gitSettingAttribute.getValue() instanceof GitConfig)) {
       throw new InvalidRequestException("Source repo provided is not Valid");
     }
@@ -666,6 +667,7 @@ public class InfrastructureProvisionerServiceImpl implements InfrastructureProvi
                               .sourceRepo(gitConfig)
                               .sourceRepoEncryptionDetails(secretManager.getEncryptionDetails(gitConfig, appId, null))
                               .sourceRepoBranch(sourceRepoBranch)
+                              .commitId(commitId)
                               .build()})
                       .timeout(TaskData.DEFAULT_SYNC_CALL_TIMEOUT)
                       .build())
@@ -695,6 +697,15 @@ public class InfrastructureProvisionerServiceImpl implements InfrastructureProvi
     } else {
       throw new WingsException(ErrorCode.GENERAL_ERROR)
           .addParam("message", taskResponse.getTerraformExecutionData().getErrorMessage());
+    }
+  }
+
+  private void validateBranchCommitId(String sourceRepoBranch, String commitId) {
+    if (isEmpty(sourceRepoBranch) && isEmpty(commitId)) {
+      throw new InvalidRequestException("Either sourceRepoBranch or commitId should be specified", USER);
+    }
+    if (isNotEmpty(sourceRepoBranch) && isNotEmpty(commitId)) {
+      throw new InvalidRequestException("Cannot specify both sourceRepoBranch and commitId", USER);
     }
   }
 
@@ -733,6 +744,8 @@ public class InfrastructureProvisionerServiceImpl implements InfrastructureProvi
                               .sourceRepoSettingId(settingAttribute.getUuid())
                               .sourceRepo(gitConfig)
                               .sourceRepoBranch(terraformInfrastructureProvisioner.getSourceRepoBranch())
+                              .commitId(terraformInfrastructureProvisioner.getCommitId())
+
                               .scriptPath(normalizeScriptPath(terraformInfrastructureProvisioner.getPath()))
                               .sourceRepoEncryptionDetails(secretManager.getEncryptionDetails(gitConfig, appId, null))
                               .build()})
@@ -765,9 +778,8 @@ public class InfrastructureProvisionerServiceImpl implements InfrastructureProvi
   }
 
   private void validateTerraformProvisioner(TerraformInfrastructureProvisioner terraformProvisioner) {
-    if (isEmpty(terraformProvisioner.getSourceRepoBranch())) {
-      throw new InvalidRequestException("Provisioner Branch cannot be empty");
-    } else if (terraformProvisioner.getPath() == null) {
+    validateBranchCommitId(terraformProvisioner.getSourceRepoBranch(), terraformProvisioner.getCommitId());
+    if (terraformProvisioner.getPath() == null) {
       throw new InvalidRequestException("Provisioner path cannot be null");
     } else if (isEmpty(terraformProvisioner.getSourceRepoSettingId())) {
       throw new InvalidRequestException("Provisioner should have a source repo");

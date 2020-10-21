@@ -662,6 +662,12 @@ public abstract class TerraformProvisionState extends State {
     if (isNotEmpty(branch)) {
       gitConfig.setBranch(branch);
     }
+    if (isNotEmpty(terraformProvisioner.getCommitId())) {
+      String commitId = context.renderExpression(terraformProvisioner.getCommitId());
+      if (isNotEmpty(commitId)) {
+        gitConfig.setReference(commitId);
+      }
+    }
     String path = context.renderExpression(terraformProvisioner.getNormalizedPath());
     if (path == null) {
       path = context.renderExpression(FilenameUtils.normalize(terraformProvisioner.getPath()));
