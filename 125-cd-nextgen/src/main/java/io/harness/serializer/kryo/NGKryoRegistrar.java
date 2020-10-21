@@ -34,6 +34,7 @@ import io.harness.cdng.pipeline.DeploymentStage;
 import io.harness.cdng.pipeline.PipelineInfrastructure;
 import io.harness.cdng.pipeline.beans.CDPipelineSetupParameters;
 import io.harness.cdng.pipeline.beans.DeploymentStageStepParameters;
+import io.harness.cdng.pipeline.beans.RollbackNode;
 import io.harness.cdng.pipeline.beans.RollbackOptionalChildChainStepParameters;
 import io.harness.cdng.pipeline.stepinfo.HttpStepInfo;
 import io.harness.cdng.pipeline.stepinfo.ShellScriptStepInfo;
@@ -103,5 +104,6 @@ public class NGKryoRegistrar implements KryoRegistrar {
     kryo.register(ArtifactSpecWrapper.class, 8106);
     kryo.register(EnvironmentOutcome.class, 8107);
     kryo.register(RollbackOptionalChildChainStepParameters.class, 8108);
+    kryo.register(RollbackNode.class, 8109);
   }
 }

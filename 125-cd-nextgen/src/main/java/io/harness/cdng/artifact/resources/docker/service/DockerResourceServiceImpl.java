@@ -14,6 +14,7 @@ import io.harness.cdng.artifact.resources.docker.dtos.DockerBuildDetailsDTO;
 import io.harness.cdng.artifact.resources.docker.dtos.DockerRequestDTO;
 import io.harness.cdng.artifact.resources.docker.dtos.DockerResponseDTO;
 import io.harness.cdng.artifact.resources.docker.mappers.DockerResourceMapper;
+import io.harness.common.NGTaskType;
 import io.harness.connector.apis.dto.ConnectorInfoDTO;
 import io.harness.connector.apis.dto.ConnectorResponseDTO;
 import io.harness.connector.services.ConnectorService;
@@ -36,7 +37,6 @@ import io.harness.ng.core.NGAccess;
 import io.harness.secretmanagerclient.services.api.SecretManagerClientService;
 import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.service.DelegateGrpcClientWrapper;
-import software.wings.beans.TaskType;
 
 import java.util.List;
 import java.util.Optional;
@@ -205,7 +205,7 @@ public class DockerResourceServiceImpl implements DockerResourceService {
     final DelegateTaskRequest delegateTaskRequest =
         DelegateTaskRequest.builder()
             .accountId(ngAccess.getAccountIdentifier())
-            .taskType(TaskType.DOCKER_ARTIFACT_TASK_NG.name())
+            .taskType(NGTaskType.DOCKER_ARTIFACT_TASK_NG.name())
             .taskParameters(artifactTaskParameters)
             .executionTimeout(java.time.Duration.ofSeconds(timeoutInSecs))
             .taskSetupAbstraction("orgIdentifier", ngAccess.getOrgIdentifier())

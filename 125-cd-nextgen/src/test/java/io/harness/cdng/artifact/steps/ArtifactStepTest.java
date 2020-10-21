@@ -4,7 +4,6 @@ import static io.harness.rule.OwnerRule.ARCHIT;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.when;
-import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 
 import io.harness.CategoryTest;
 import io.harness.ambiance.Ambiance;
@@ -55,7 +54,7 @@ public class ArtifactStepTest extends CategoryTest {
   @Before
   public void beforeClass() {
     responseDataMap = new HashMap<>();
-    when(ambiance.getSetupAbstractions().get("accountId")).thenReturn(ACCOUNT_ID);
+    when(ambiance.getSetupAbstractions().get("accountId")).thenReturn("ACCOUNT_ID");
   }
 
   @Test
@@ -70,7 +69,7 @@ public class ArtifactStepTest extends CategoryTest {
     Task task = artifactStep.getTask(ambiance, stepParameters);
     assertThat(task).isInstanceOf(SimpleHDelegateTask.class);
     SimpleHDelegateTask delegateTask = (SimpleHDelegateTask) task;
-    assertThat(delegateTask.getAccountId()).isEqualTo(ACCOUNT_ID);
+    assertThat(delegateTask.getAccountId()).isEqualTo("ACCOUNT_ID");
     assertThat(delegateTask.getData().getTaskType()).isEqualTo(TaskType.DOCKER_ARTIFACT_TASK_NG.name());
     assertThat(delegateTask.getData().getParameters()[0]).isInstanceOf(ArtifactTaskParameters.class);
     ArtifactTaskParameters taskParams = (ArtifactTaskParameters) delegateTask.getData().getParameters()[0];

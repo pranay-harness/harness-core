@@ -24,7 +24,6 @@ import io.harness.yaml.utils.YamlPipelineUtils;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
-import software.wings.utils.WingsTestConstants;
 
 import java.io.IOException;
 import java.net.URL;
@@ -52,7 +51,7 @@ public class PipelinePlanTest extends CDNGBaseTest {
     final URL testFile = classLoader.getResource("cdng/multiStagePipeline.yml");
     NgPipeline ngPipeline = YamlPipelineUtils.read(testFile, NgPipeline.class);
     final Plan planForPipeline =
-        executionPlanCreatorService.createPlanForPipeline(ngPipeline, WingsTestConstants.ACCOUNT_ID, contextAttributes);
+        executionPlanCreatorService.createPlanForPipeline(ngPipeline, "ACCOUNT_ID", contextAttributes);
     List<PlanNode> planNodes = planForPipeline.getNodes();
     List<PlanNode> pipelinePlanNodeList = getNodesByIdentifier(planNodes, "managerServiceDeployment");
     assertThat(pipelinePlanNodeList.size()).isEqualTo(1);
@@ -94,7 +93,7 @@ public class PipelinePlanTest extends CDNGBaseTest {
     final URL testFile = classLoader.getResource("cdng/rollbackPipeline.yaml");
     NgPipeline ngPipeline = YamlPipelineUtils.read(testFile, NgPipeline.class);
     final Plan planForPipeline =
-        executionPlanCreatorService.createPlanForPipeline(ngPipeline, WingsTestConstants.ACCOUNT_ID, contextAttributes);
+        executionPlanCreatorService.createPlanForPipeline(ngPipeline, "ACCOUNT_ID", contextAttributes);
     List<PlanNode> planNodes = planForPipeline.getNodes();
 
     // Stage1Node

@@ -14,7 +14,6 @@ import io.harness.engine.OrchestrationService;
 import io.harness.engine.interrupts.InterruptManager;
 import io.harness.engine.interrupts.InterruptPackage;
 import io.harness.execution.PlanExecution;
-import io.harness.executionplan.service.ExecutionPlanCreatorService;
 import io.harness.facilitator.FacilitatorType;
 import io.harness.generator.GraphVisualizer;
 import io.harness.interrupts.Interrupt;
@@ -33,7 +32,6 @@ import java.util.Map;
 public class CustomExecutionServiceImpl implements CustomExecutionService {
   @Inject private OrchestrationService orchestrationService;
   @Inject private InterruptManager interruptManager;
-  @Inject private ExecutionPlanCreatorService executionPlanCreatorService;
   @Inject private GraphGenerationService graphGenerationService;
   @Inject private GraphVisualizer graphVisualizer;
   @Inject private CustomExecutionProvider customExecutionProvider;
