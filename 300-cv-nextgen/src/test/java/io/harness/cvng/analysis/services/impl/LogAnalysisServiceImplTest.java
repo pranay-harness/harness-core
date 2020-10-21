@@ -396,8 +396,7 @@ public class LogAnalysisServiceImplTest extends CvNextGenTest {
 
   private DeploymentLogAnalysisDTO createDeploymentAnalysisDTO() {
     return DeploymentLogAnalysisDTO.builder()
-        .clusters(Collections.singletonList(
-            DeploymentLogAnalysisDTO.Cluster.builder().label(1).text("text").x(2).y(3).build()))
+        .clusters(Collections.singletonList(DeploymentLogAnalysisDTO.Cluster.builder().label(1).text("text").build()))
         .resultSummary(DeploymentLogAnalysisDTO.ResultSummary.builder()
                            .controlClusterLabels(Collections.singletonList(1))
                            .risk(2)

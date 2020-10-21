@@ -230,14 +230,16 @@ public class LogAnalysisServiceImpl implements LogAnalysisService {
     Preconditions.checkNotNull(learningEngineTask, "Needs to be a valid LE task.");
     learningEngineTaskService.markCompleted(learningEngineTaskId);
 
-    DeploymentLogAnalysis deploymentLogAnalysis = DeploymentLogAnalysis.builder()
-                                                      .startTime(learningEngineTask.getAnalysisStartTime())
-                                                      .endTime(learningEngineTask.getAnalysisEndTime())
-                                                      .verificationTaskId(learningEngineTask.getVerificationTaskId())
-                                                      .hostSummaries(deploymentLogAnalysisDTO.getHostSummaries())
-                                                      .resultSummary(deploymentLogAnalysisDTO.getResultSummary())
-                                                      .clusters(deploymentLogAnalysisDTO.getClusters())
-                                                      .build();
+    DeploymentLogAnalysis deploymentLogAnalysis =
+        DeploymentLogAnalysis.builder()
+            .startTime(learningEngineTask.getAnalysisStartTime())
+            .endTime(learningEngineTask.getAnalysisEndTime())
+            .verificationTaskId(learningEngineTask.getVerificationTaskId())
+            .hostSummaries(deploymentLogAnalysisDTO.getHostSummaries())
+            .resultSummary(deploymentLogAnalysisDTO.getResultSummary())
+            .clusters(deploymentLogAnalysisDTO.getClusters())
+            .clusterCoordinates(deploymentLogAnalysisDTO.getClusterCoordinates())
+            .build();
     deploymentLogAnalysisService.save(deploymentLogAnalysis);
   }
 

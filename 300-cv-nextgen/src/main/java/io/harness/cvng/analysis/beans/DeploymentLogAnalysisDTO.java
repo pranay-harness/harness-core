@@ -11,8 +11,12 @@ import java.util.List;
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class DeploymentLogAnalysisDTO {
   List<Cluster> clusters;
+  List<ClusterCoordinates> clusterCoordinates;
   ResultSummary resultSummary;
   List<HostSummary> hostSummaries;
+
+  public enum ClusterType { KNOWN_EVENT, UNKNOWN_EVENT, UNEXPECTED_FREQUENCY }
+
   public List<Cluster> getClusters() {
     if (this.clusters == null) {
       return Collections.emptyList();
@@ -26,14 +30,23 @@ public class DeploymentLogAnalysisDTO {
     }
     return hostSummaries;
   }
+
   @Value
   @Builder
   public static class Cluster {
     String text;
     int label;
-    double x, y;
   }
-  enum ClusterType { KNOWN_EVENT, UNKNOWN_EVENT, UNEXPECTED_FREQUENCY }
+
+  @Value
+  @Builder
+  public static class ClusterCoordinates {
+    double x;
+    double y;
+    int label;
+    String host;
+  }
+
   @Value
   @Builder
   public static class ClusterSummary {
@@ -44,6 +57,7 @@ public class DeploymentLogAnalysisDTO {
     int count;
     List<Double> controlFrequencyData;
     List<Double> testFrequencyData;
+
     public List<Double> getControlFrequencyData() {
       if (this.controlFrequencyData == null) {
         return Collections.emptyList();
@@ -58,6 +72,7 @@ public class DeploymentLogAnalysisDTO {
       return testFrequencyData;
     }
   }
+
   @Value
   @Builder
   public static class ResultSummary {
@@ -80,6 +95,7 @@ public class DeploymentLogAnalysisDTO {
       return testClusterSummaries;
     }
   }
+
   @Value
   @Builder
   public static class HostSummary {

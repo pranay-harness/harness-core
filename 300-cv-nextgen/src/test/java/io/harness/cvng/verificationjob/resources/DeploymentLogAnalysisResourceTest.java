@@ -9,7 +9,10 @@ import com.google.inject.Injector;
 
 import io.harness.CvNextGenTest;
 import io.harness.category.element.UnitTests;
-import io.harness.cvng.analysis.beans.DeploymentLogAnalysisDTO;
+import io.harness.cvng.analysis.beans.DeploymentLogAnalysisDTO.Cluster;
+import io.harness.cvng.analysis.beans.DeploymentLogAnalysisDTO.ClusterSummary;
+import io.harness.cvng.analysis.beans.DeploymentLogAnalysisDTO.HostSummary;
+import io.harness.cvng.analysis.beans.DeploymentLogAnalysisDTO.ResultSummary;
 import io.harness.cvng.analysis.beans.LogAnalysisClusterDTO;
 import io.harness.cvng.analysis.entities.DeploymentLogAnalysis;
 import io.harness.cvng.analysis.services.api.DeploymentLogAnalysisService;
@@ -148,7 +151,7 @@ public class DeploymentLogAnalysisResourceTest extends CvNextGenTest {
     DeploymentLogAnalysis deploymentLogAnalysis2 = createDeploymentLogAnalysis(verificationTaskId);
     deploymentLogAnalysis2.setStartTime(Instant.now().plus(1, ChronoUnit.HOURS));
     deploymentLogAnalysis2.setClusters(Arrays.asList(createCluster("Error in cluster 4", 4, 0.2671, 0.971)));
-    DeploymentLogAnalysisDTO.ClusterSummary clusterSummary = createClusterSummary(0, 0, 0, 4, null, null);
+    ClusterSummary clusterSummary = createClusterSummary(0, 0, 0, 4, null, null);
     deploymentLogAnalysis2.setResultSummary(createResultSummary(0, 0, Arrays.asList(4), Arrays.asList(clusterSummary)));
     deploymentLogAnalysisService.save(deploymentLogAnalysis);
     deploymentLogAnalysisService.save(deploymentLogAnalysis2);
@@ -179,8 +182,8 @@ public class DeploymentLogAnalysisResourceTest extends CvNextGenTest {
     String verificationTaskId = verificationTaskService.create(accountId, cvConfigId, verificationJobInstanceId);
 
     DeploymentLogAnalysis deploymentLogAnalysis = createDeploymentLogAnalysis(verificationTaskId);
-    List<DeploymentLogAnalysisDTO.Cluster> clusters = new ArrayList();
-    List<DeploymentLogAnalysisDTO.ClusterSummary> clusterSummaries = new ArrayList();
+    List<Cluster> clusters = new ArrayList();
+    List<ClusterSummary> clusterSummaries = new ArrayList();
     for (int i = 0; i < 25; i++) {
       clusters.add(createCluster("Cluster " + i, i, 0, 0));
       clusterSummaries.add(createClusterSummary(0, 0, 0, i, null, null));
@@ -265,24 +268,21 @@ public class DeploymentLogAnalysisResourceTest extends CvNextGenTest {
   }
 
   private DeploymentLogAnalysis createDeploymentLogAnalysis(String verificationTaskId) {
-    DeploymentLogAnalysisDTO.Cluster cluster1 = createCluster("Error in cluster 1", 1, 0.6464, 0.717171);
-    DeploymentLogAnalysisDTO.Cluster cluster2 = createCluster("Error in cluster 2", 2, 0.4525, 0.542524);
-    DeploymentLogAnalysisDTO.Cluster cluster3 = createCluster("Error in cluster 3", 3, 0.4525, 0.542524);
-    List<DeploymentLogAnalysisDTO.Cluster> clusters = Arrays.asList(cluster1, cluster2, cluster3);
+    Cluster cluster1 = createCluster("Error in cluster 1", 1, 0.6464, 0.717171);
+    Cluster cluster2 = createCluster("Error in cluster 2", 2, 0.4525, 0.542524);
+    Cluster cluster3 = createCluster("Error in cluster 3", 3, 0.4525, 0.542524);
+    List<Cluster> clusters = Arrays.asList(cluster1, cluster2, cluster3);
 
-    DeploymentLogAnalysisDTO.ClusterSummary clusterSummary1 =
-        createClusterSummary(1, 0.7, 36, 1, Arrays.asList(1D), Arrays.asList(2D));
+    ClusterSummary clusterSummary1 = createClusterSummary(1, 0.7, 36, 1, Arrays.asList(1D), Arrays.asList(2D));
 
-    DeploymentLogAnalysisDTO.ClusterSummary clusterSummary2 =
-        createClusterSummary(0, 0, 3, 2, Arrays.asList(5D), Arrays.asList(2D));
+    ClusterSummary clusterSummary2 = createClusterSummary(0, 0, 3, 2, Arrays.asList(5D), Arrays.asList(2D));
 
-    DeploymentLogAnalysisDTO.ClusterSummary clusterSummary3 =
-        createClusterSummary(2, 2.2, 55, 3, Arrays.asList(3D), Arrays.asList(4D));
+    ClusterSummary clusterSummary3 = createClusterSummary(2, 2.2, 55, 3, Arrays.asList(3D), Arrays.asList(4D));
 
-    DeploymentLogAnalysisDTO.ResultSummary resultSummary = createResultSummary(
+    ResultSummary resultSummary = createResultSummary(
         1, 1, Arrays.asList(1, 2), Arrays.asList(clusterSummary1, clusterSummary2, clusterSummary3));
 
-    DeploymentLogAnalysisDTO.HostSummary hostSummary = createHostSummary("host1", resultSummary);
+    HostSummary hostSummary = createHostSummary("host1", resultSummary);
 
     return DeploymentLogAnalysis.builder()
         .accountId(accountId)
@@ -295,9 +295,9 @@ public class DeploymentLogAnalysisResourceTest extends CvNextGenTest {
         .build();
   }
 
-  private DeploymentLogAnalysisDTO.ResultSummary createResultSummary(int risk, double score,
-      List<Integer> controlClusterLabels, List<DeploymentLogAnalysisDTO.ClusterSummary> testClusterSummaries) {
-    return DeploymentLogAnalysisDTO.ResultSummary.builder()
+  private ResultSummary createResultSummary(
+      int risk, double score, List<Integer> controlClusterLabels, List<ClusterSummary> testClusterSummaries) {
+    return ResultSummary.builder()
         .risk(risk)
         .score(score)
         .controlClusterLabels(controlClusterLabels)
@@ -305,13 +305,13 @@ public class DeploymentLogAnalysisResourceTest extends CvNextGenTest {
         .build();
   }
 
-  private DeploymentLogAnalysisDTO.Cluster createCluster(String text, int label, double x, double y) {
-    return DeploymentLogAnalysisDTO.Cluster.builder().text(text).label(label).x(x).y(y).build();
+  private Cluster createCluster(String text, int label, double x, double y) {
+    return Cluster.builder().text(text).label(label).build();
   }
 
-  private DeploymentLogAnalysisDTO.ClusterSummary createClusterSummary(
+  private ClusterSummary createClusterSummary(
       int risk, double score, int count, int label, List<Double> controlFrequencyData, List<Double> testFrequencyData) {
-    return DeploymentLogAnalysisDTO.ClusterSummary.builder()
+    return ClusterSummary.builder()
         .risk(risk)
         .score(score)
         .count(count)
@@ -321,8 +321,7 @@ public class DeploymentLogAnalysisResourceTest extends CvNextGenTest {
         .build();
   }
 
-  private DeploymentLogAnalysisDTO.HostSummary createHostSummary(
-      String host, DeploymentLogAnalysisDTO.ResultSummary resultSummary) {
-    return DeploymentLogAnalysisDTO.HostSummary.builder().host(host).resultSummary(resultSummary).build();
+  private HostSummary createHostSummary(String host, ResultSummary resultSummary) {
+    return HostSummary.builder().host(host).resultSummary(resultSummary).build();
   }
 }

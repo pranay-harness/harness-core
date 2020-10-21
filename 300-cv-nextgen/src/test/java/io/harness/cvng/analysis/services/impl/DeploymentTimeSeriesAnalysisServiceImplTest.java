@@ -342,13 +342,13 @@ public class DeploymentTimeSeriesAnalysisServiceImplTest extends CvNextGenTest {
   }
 
   private DeploymentTimeSeriesAnalysisDTO.HostInfo createHostInfo(
-      String hostName, int risk, Double score, boolean presentBeforeDeployment, boolean presentAfterDeploymeent) {
+      String hostName, int risk, Double score, boolean primary, boolean canary) {
     return DeploymentTimeSeriesAnalysisDTO.HostInfo.builder()
         .hostName(hostName)
         .risk(risk)
         .score(score)
-        .presentAfterDeployment(presentBeforeDeployment)
-        .presentAfterDeployment(presentAfterDeploymeent)
+        .primary(primary)
+        .canary(canary)
         .build();
   }
 

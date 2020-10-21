@@ -125,9 +125,11 @@ public class DeploymentAnalysisServiceImpl implements DeploymentAnalysisService 
                                               .hostName(hostInfo.getHostName())
                                               .riskScore(TimeSeriesRisk.getRiskFromScore(hostInfo.getRisk()))
                                               .build();
-        if (hostInfo.isPresentBeforeDeployment()) {
+
+        if (hostInfo.isPrimary()) {
           primary.add(hostSummaryInfo);
-        } else if (hostInfo.isPresentAfterDeployment()) {
+        }
+        if (hostInfo.isCanary()) {
           canary.add(hostSummaryInfo);
         }
       });
