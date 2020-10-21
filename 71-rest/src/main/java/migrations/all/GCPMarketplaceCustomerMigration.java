@@ -36,45 +36,57 @@ public class GCPMarketplaceCustomerMigration implements Migration {
   public void migrate() {
     try {
       logger.info("Starting migration of all GCP marketplace entities");
+
+      // We first need to do cleanup. NOTE: This should be done only once!
+      deleteAllGcpMarketplaceCustomers();
+
       List<MarketPlace> gcpMarketplaces =
           wingsPersistence.createQuery(MarketPlace.class).filter("type", "GCP").asList();
       for (MarketPlace marketPlace : gcpMarketplaces) {
         migrateGcpMarketplace(marketPlace);
       }
-      logger.info("GCPMarketplaceCustomerMigration has completed");
     } catch (Exception e) {
       logger.error("Failure occurred in GCPMarketplaceCustomerMigration", e);
     }
+    logger.info("GCPMarketplaceCustomerMigration has completed");
+  }
+
+  private void deleteAllGcpMarketplaceCustomers() {
+    wingsPersistence.delete(wingsPersistence.createQuery(GCPMarketplaceCustomer.class));
   }
 
   private void migrateGcpMarketplace(MarketPlace marketPlace) {
     logger.info("Migrating GCP marketPlace : {}", marketPlace.getUuid());
-    if (marketPlace.getAccountId() == null) {
-      return;
+    try {
+      if (marketPlace.getAccountId() == null) {
+        return;
+      }
+
+      Optional<Entitlement> activeEntitlement =
+          gcpProcurementService.listEntitlementsForGcpAccountId(marketPlace.getCustomerIdentificationCode())
+              .stream()
+              .filter(entitlement -> ENTITLEMENT_ACTIVATED.equals(entitlement.getState()))
+              .findFirst();
+
+      List<GCPMarketplaceProduct> products = new ArrayList<>();
+      if (activeEntitlement.isPresent()) {
+        Entitlement entitlement = activeEntitlement.get();
+        products.add(GCPMarketplaceProduct.builder()
+                         .plan(entitlement.getPlan())
+                         .product(gcpProcurementService.getProductNameFromEntitlement(entitlement.getName()))
+                         .startTime(Instant.parse(entitlement.getCreateTime()))
+                         .usageReportingId(entitlement.getUsageReportingId())
+                         .build());
+      }
+
+      GCPMarketplaceCustomer gcpMarketplaceCustomer = GCPMarketplaceCustomer.builder()
+                                                          .gcpAccountId(marketPlace.getCustomerIdentificationCode())
+                                                          .harnessAccountId(marketPlace.getAccountId())
+                                                          .products(products)
+                                                          .build();
+      wingsPersistence.save(gcpMarketplaceCustomer);
+    } catch (Exception e) {
+      logger.error("Error occurred while migrating marketPlace: {} ", marketPlace.getUuid(), e);
     }
-
-    Optional<Entitlement> activeEntitlement =
-        gcpProcurementService.listEntitlementsForGcpAccountId(marketPlace.getCustomerIdentificationCode())
-            .stream()
-            .filter(entitlement -> ENTITLEMENT_ACTIVATED.equals(entitlement.getState()))
-            .findFirst();
-
-    List<GCPMarketplaceProduct> products = new ArrayList<>();
-    if (activeEntitlement.isPresent()) {
-      Entitlement entitlement = activeEntitlement.get();
-      products.add(GCPMarketplaceProduct.builder()
-                       .plan(entitlement.getPlan())
-                       .product(entitlement.getProduct())
-                       .startTime(Instant.parse(entitlement.getCreateTime()))
-                       .usageReportingId(entitlement.getUsageReportingId())
-                       .build());
-    }
-
-    GCPMarketplaceCustomer gcpMarketplaceCustomer = GCPMarketplaceCustomer.builder()
-                                                        .gcpAccountId(marketPlace.getCustomerIdentificationCode())
-                                                        .harnessAccountId(marketPlace.getAccountId())
-                                                        .products(products)
-                                                        .build();
-    wingsPersistence.save(gcpMarketplaceCustomer);
   }
 }

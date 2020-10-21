@@ -295,7 +295,8 @@ public class MigrationBackgroundList {
         .add(Pair.of(177, AddAccountIdToStateMachine.class))
         .add(Pair.of(178, DeletedAccountStatusMigration.class))
         .add(Pair.of(179, LicenseExpiryReminderTimeMigration.class))
-        .add(Pair.of(180, GCPMarketplaceCustomerMigration.class))
+        .add(Pair.of(180, BaseMigration.class))
+        .add(Pair.of(181, GCPMarketplaceCustomerMigration.class))
         .build();
   }
 }

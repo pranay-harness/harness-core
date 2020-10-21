@@ -3,6 +3,7 @@ package io.harness.marketplace.gcp.procurement;
 import static io.harness.annotations.dev.HarnessTeam.PL;
 
 import com.google.api.client.googleapis.json.GoogleJsonResponseException;
+import com.google.api.client.json.GenericJson;
 import com.google.cloudcommerceprocurement.v1.CloudCommercePartnerProcurementService;
 import com.google.cloudcommerceprocurement.v1.model.Account;
 import com.google.cloudcommerceprocurement.v1.model.ApproveAccountRequest;
@@ -22,7 +23,6 @@ import org.slf4j.helpers.MessageFormatter;
 import software.wings.beans.marketplace.gcp.GCPMarketplaceCustomer;
 
 import java.io.IOException;
-import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -36,12 +36,7 @@ public class GcpProcurementService {
   private static final String ACCOUNT_NAME_PATTERN = "providers/{}/accounts/{}";
   private static final String ENTITLEMENT_NAME_PATTERN = "providers/{}/entitlements/{}";
   private static final String PROVIDER_NAME_PATTERN = "providers/{}";
-
-  private static final long INITIAL_DELAY_MS = 500;
-  private static final long MAX_DELAY_MS = 5000;
-  private static final double DELAY_FACTOR = 2;
-  private static final Duration JITTER_MS = Duration.ofMillis(100);
-  private static final int MAX_ATTEMPTS = 3;
+  private static final String PRODUCT_NAME_FIELD = "productExternalName";
 
   @Inject private static ProcurementAPIClientBuilder procurementAPIClientBuilder = new ProcurementAPIClientBuilder();
 
@@ -131,6 +126,18 @@ public class GcpProcurementService {
     String entitlementName = getEntitlementName(id);
     try {
       return getProcurementService().providers().entitlements().get(entitlementName).execute();
+    } catch (GoogleJsonResponseException e) {
+      if (e.getDetails().getCode() == 404) {
+        return null;
+      }
+      throw e;
+    }
+  }
+
+  public String getProductNameFromEntitlement(String entitlementName) throws IOException {
+    try {
+      GenericJson response = getProcurementService().providers().entitlements().get(entitlementName).execute();
+      return (String) response.get(PRODUCT_NAME_FIELD);
     } catch (GoogleJsonResponseException e) {
       if (e.getDetails().getCode() == 404) {
         return null;
