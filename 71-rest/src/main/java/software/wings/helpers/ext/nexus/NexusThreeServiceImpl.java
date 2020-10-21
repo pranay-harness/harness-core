@@ -798,14 +798,17 @@ public class NexusThreeServiceImpl {
                 // FeatureFlag SUPPORT_NEXUS_GROUP_REPOS
                 // Replacing the repository name in url with group repo name if the repotype is group
                 // This ok because artifacts in repos that are member of group repo can be accessed via group repo.
-                if (supportForNexusGroupReposEnabled && !artifactUrl.contains(repoId)) {
+                if (supportForNexusGroupReposEnabled) {
                   String arr[] = artifactUrl.split("/");
                   // Extract the repo id in the url. URL is like {repoId}/{groupId}/{artifactId}/{version}/{filename}
-                  arr[arr.length - 5] = repoId;
-                  artifactUrl = Strings.join("/", arr);
-                  // Update artifactFileMetadata
-                  artifactFileMetadata.get(0).setUrl(artifactUrl);
+                  if (!arr[arr.length - 5].equalsIgnoreCase(repoId)) {
+                    arr[arr.length - 5] = repoId;
+                    artifactUrl = Strings.join("/", arr);
+                  }
                 }
+                // Update artifactFileMetadata
+                artifactFileMetadata.get(0).setUrl(artifactUrl);
+
                 versionToArtifactUrls.put(version, artifactUrl);
               }
               versionToArtifactDownloadUrls.put(version, artifactFileMetadata);
