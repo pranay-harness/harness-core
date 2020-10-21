@@ -91,6 +91,7 @@ modules = [
     "//70-delegate-agent",
     "//70-delegate-service",
     "//450-ce-views",
+    "//490-ce-commons",
 ]
 
 filegroup(
@@ -143,4 +144,14 @@ filegroup(
         "manual",
         "no-ide",
     ],
+)
+
+filegroup(
+    name = "resource",
+    srcs = [
+        "cert.pem",
+        "key.pem",
+        "keystore.jks",
+    ],
+    visibility = ["//visibility:public"],
 )

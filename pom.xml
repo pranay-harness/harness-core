@@ -68,7 +68,7 @@
         <module>280-batch-processing</module>
         <module>300-cv-nextgen</module>
         <!--<module>450-ce-views</module>-->
-        <module>490-ce-commons</module>
+        <!--<module>490-ce-commons</module>-->
         <!--<module>990-commons-test</module>-->
     </modules>
     <scm>
@@ -2181,7 +2181,18 @@
                         </configuration>
                     </execution>
                     <execution>
-                        <id>2.bazel build</id>
+                        <id>2.generate bazel credentials</id>
+                        <goals>
+                            <goal>exec</goal>
+                        </goals>
+                        <phase>generate-sources</phase>
+                        <configuration>
+                            <executable>bash</executable>
+                            <commandlineArgs>${basedir}/scripts/bazel/generate_credentials.sh</commandlineArgs>
+                        </configuration>
+                    </execution>
+                    <execution>
+                        <id>3.bazel build</id>
                         <goals>
                             <goal>exec</goal>
                         </goals>
