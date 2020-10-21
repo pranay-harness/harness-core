@@ -40,6 +40,7 @@ import lombok.extern.slf4j.Slf4j;
 import net.sf.json.JSONArray;
 import net.sf.json.JSONObject;
 import org.apache.commons.lang3.StringUtils;
+import org.atteo.evo.inflector.English;
 import org.mongodb.morphia.annotations.Transient;
 import software.wings.api.jira.JiraExecutionData;
 import software.wings.beans.Activity;
@@ -91,19 +92,22 @@ public class JiraCreateUpdate extends State implements SweepingOutputStateMixin 
   private static final String JIRA_ISSUE_ID = "issueId";
   private static final String JIRA_ISSUE_KEY = "issueKey";
   private static final String JIRA_ISSUE = "issue";
-  public static final String DATETIME_ISO_FORMAT = "yyyy-MM-dd'T'HH:mm:ssXX";
-  public static final String MULTISELECT = "multiselect";
-  public static final String ARRAY = "array";
-  public static final String OPTION = "option";
-  public static final String INVALID_VALUES_ERROR_MESSAGE =
+  private static final String DATETIME_ISO_FORMAT = "yyyy-MM-dd'T'HH:mm:ssXX";
+  private static final String MULTISELECT = "multiselect";
+  private static final String ARRAY = "array";
+  private static final String OPTION = "option";
+  private static final String INVALID_VALUES_ERROR_MESSAGE =
       "Invalid values %s provided for custom field: %s. Please, check out allowed values: %s.";
-  public static final String INVALID_VALUE_ERROR_MESSAGE =
+  private static final String INVALID_VALUE_ERROR_MESSAGE =
       "Invalid value [%s] provided for custom field: %s. Please, check out allowed values: %s.";
-  public static final String RESOLUTION = "resolution";
-  public static final String INVALID_FIELD_NAME_ERROR_MESSAGE =
-      "The following custom field names %s are invalid. Please, check out allowed names: %s.";
-  public static final String VALUE = "value";
-  public static final String FAILING_JIRA_STEP_DUE_TO = "Failing Jira step due to: ";
+  private static final String RESOLUTION = "resolution";
+  private static final String INVALID_FIELD_NAME_ERROR_MESSAGE =
+      "Invalid custom field %s %s. Please, check out allowed names: %s.";
+  private static final String VALUE = "value";
+  private static final String FAILING_JIRA_STEP_DUE_TO = "Failing Jira step due to: ";
+  private static final String TIMETRACKING = "timetracking";
+  private static final String TIME_TRACKING_ORIGINAL_ESTIMATE = "TimeTracking:OriginalEstimate";
+  private static final String TIME_TRACKING_REMAINING_ESTIMATE = "TimeTracking:RemainingEstimate";
 
   @Inject private transient ActivityService activityService;
   @Inject @Transient private LogService logService;
@@ -277,41 +281,48 @@ public class JiraCreateUpdate extends State implements SweepingOutputStateMixin 
   }
 
   private void validateProject(ExecutionContext context) {
-    List<String> projects =
+    Map<String, String> projects =
         Arrays
             .stream(
                 jiraHelperService.getProjects(jiraConnectorId, context.getAccountId(), context.getAppId()).toArray())
             .map(ob -> (JSONObject) ob)
             .map(existingProjects -> (String) existingProjects.get("key"))
-            .collect(Collectors.toList());
-    if (!projects.contains(project)) {
+            .collect(Collectors.toMap(String::toLowerCase, projectKey -> projectKey));
+    if (!projects.containsKey(project.toLowerCase())) {
       throw new HarnessJiraException(
-          String.format("Invalid project key [%s]. Please, check out allowed values: %s", project, projects), null);
+          String.format("Invalid project key [%s]. Please, check out allowed values: %s", project, projects.values()),
+          null);
+    } else {
+      setProject(projects.get(project.toLowerCase()));
     }
   }
 
   private void validateStatus(ExecutionContext context) {
     if (StringUtils.isNotBlank(status)) {
-      List<String> allowedStatuses = Arrays
-                                         .stream(((JSONArray) jiraHelperService.getStatuses(jiraConnectorId, project,
-                                                      context.getAccountId(), context.getAppId()))
-                                                     .toArray())
-                                         .map(ob -> (JSONObject) ob)
-                                         .filter(issue -> issue.get("name").equals(issueType))
-                                         .flatMap(issue -> Arrays.stream(((JSONArray) issue.get("statuses")).toArray()))
-                                         .map(ob -> (JSONObject) ob)
-                                         .map(statuses -> (String) statuses.get("name"))
-                                         .collect(Collectors.toList());
-      if (!allowedStatuses.contains(status)) {
+      Map<String, String> allowedStatuses =
+          Arrays
+              .stream(((JSONArray) jiraHelperService.getStatuses(
+                           jiraConnectorId, project, context.getAccountId(), context.getAppId()))
+                          .toArray())
+              .map(ob -> (JSONObject) ob)
+              .filter(issue -> issue.get("name").equals(issueType))
+              .flatMap(issue -> Arrays.stream(((JSONArray) issue.get("statuses")).toArray()))
+              .map(ob -> (JSONObject) ob)
+              .map(statuses -> (String) statuses.get("name"))
+              .collect(Collectors.toMap(String::toLowerCase, statusValue -> statusValue));
+      if (!allowedStatuses.containsKey(status.toLowerCase())) {
         throw new HarnessJiraException(
-            String.format("Invalid status [%s]. Please, check out allowed values %s", status, allowedStatuses), null);
+            String.format("Invalid status [%s]. Please, check out allowed values %s", status, allowedStatuses.values()),
+            null);
+      } else {
+        setStatus(allowedStatuses.get(status.toLowerCase()));
       }
     }
   }
 
   private void validatePriority(JiraCreateMetaResponse createMetadata) {
     if (StringUtils.isNotBlank(priority)) {
-      List<String> priorities =
+      Map<String, String> priorities =
           createMetadata.getProjects()
               .stream()
               .filter(jiraProjectData -> jiraProjectData.getKey().equals(project))
@@ -324,25 +335,37 @@ public class JiraCreateUpdate extends State implements SweepingOutputStateMixin 
               .flatMap(jiraField -> Arrays.stream(jiraField.getAllowedValues().toArray()))
               .map(json -> (JSONObject) json)
               .map(ob -> ob.get(VALUE) != null ? ((String) ob.get(VALUE)) : ((String) ob.get("name")))
-              .collect(Collectors.toList());
-      if (!priorities.contains(priority)) {
+              .collect(Collectors.toMap(String::toLowerCase, priorityValue -> priorityValue));
+      if (priorities.isEmpty()) {
         throw new HarnessJiraException(
-            String.format("Invalid priority: [%s]. Please check out allowed values: %s", priority, priorities), null);
+            String.format(
+                "[%s] issue type does not support [priority] field. Please, remove provided value.", issueType),
+            null);
+      }
+      if (!priorities.containsKey(priority.toLowerCase())) {
+        throw new HarnessJiraException(
+            String.format("Invalid priority: [%s]. Please check out allowed values: %s", priority, priorities.values()),
+            null);
+      } else {
+        setPriority(priorities.get(priority.toLowerCase()));
       }
     }
   }
 
   private void validateIssueType(JiraCreateMetaResponse createMetadata) {
-    List<String> issueTypes = createMetadata.getProjects()
-                                  .stream()
-                                  .filter(jiraProjectData -> jiraProjectData.getKey().equals(project))
-                                  .flatMap(jiraProjectData -> jiraProjectData.getIssueTypes().stream())
-                                  .map(JiraIssueType::getName)
-                                  .collect(Collectors.toList());
-    if (!issueTypes.contains(issueType)) {
+    Map<String, String> issueTypes = createMetadata.getProjects()
+                                         .stream()
+                                         .filter(jiraProjectData -> jiraProjectData.getKey().equals(project))
+                                         .flatMap(jiraProjectData -> jiraProjectData.getIssueTypes().stream())
+                                         .map(JiraIssueType::getName)
+                                         .collect(toMap(String::toLowerCase, name -> name));
+    if (!issueTypes.containsKey(issueType.toLowerCase())) {
       throw new HarnessJiraException(
-          String.format("Invalid issue type: [%s]. Please, check out existing issue types: %s", issueType, issueType),
+          String.format(
+              "Invalid issue type: [%s]. Please, check out existing issue types: %s", issueType, issueTypes.values()),
           null);
+    } else {
+      setIssueType(issueTypes.get(issueType.toLowerCase()));
     }
   }
 
@@ -364,11 +387,17 @@ public class JiraCreateUpdate extends State implements SweepingOutputStateMixin 
             .filter(jiraField -> !jiraField.getSchema().get("type").equals("priority"))
             .collect(toMap(JiraField::getKey, JiraField::getName));
 
+    if (allCustomFieldsIdToNameMap.containsKey(TIMETRACKING)) {
+      allCustomFieldsIdToNameMap.remove(TIMETRACKING);
+      allCustomFieldsIdToNameMap.put(TIME_TRACKING_ORIGINAL_ESTIMATE, TIME_TRACKING_ORIGINAL_ESTIMATE);
+      allCustomFieldsIdToNameMap.put(TIME_TRACKING_REMAINING_ESTIMATE, TIME_TRACKING_REMAINING_ESTIMATE);
+    }
+
     validateCustomFieldsNames(allCustomFieldsIdToNameMap);
     replaceCustomFieldNameWithId(allCustomFieldsIdToNameMap);
     Map<String, String> fieldIdToTypeMap = mapCustomFieldIdsToTypes(createMetaResponse);
-    fieldIdToTypeMap.put("TimeTracking:OriginalEstimate", "timetracking");
-    fieldIdToTypeMap.put("TimeTracking:RemainingEstimate", "timetracking");
+    fieldIdToTypeMap.put(TIME_TRACKING_ORIGINAL_ESTIMATE, TIMETRACKING);
+    fieldIdToTypeMap.put(TIME_TRACKING_REMAINING_ESTIMATE, TIMETRACKING);
     setCustomFieldTypes(fieldIdToTypeMap);
   }
 
@@ -420,13 +449,15 @@ public class JiraCreateUpdate extends State implements SweepingOutputStateMixin 
     Set<String> invalidCustomFieldNames = new HashSet<>();
     Collection<String> allowedCustomFieldNames = customFieldsIdToNamesMap.values();
     for (String fieldName : customFields.keySet()) {
-      if (!allowedCustomFieldNames.contains(fieldName) && !fieldName.startsWith("TimeTracking:")) {
+      if (!allowedCustomFieldNames.contains(fieldName)) {
         invalidCustomFieldNames.add(fieldName);
       }
     }
     if (!invalidCustomFieldNames.isEmpty()) {
       throw new HarnessJiraException(
-          String.format(INVALID_FIELD_NAME_ERROR_MESSAGE, invalidCustomFieldNames, allowedCustomFieldNames), null);
+          String.format(INVALID_FIELD_NAME_ERROR_MESSAGE, English.plural("name", invalidCustomFieldNames.size()),
+              invalidCustomFieldNames, allowedCustomFieldNames),
+          null);
     }
   }
 
@@ -604,7 +635,9 @@ public class JiraCreateUpdate extends State implements SweepingOutputStateMixin 
         }
       }
     }
-    throw new InvalidRequestException("Cannot parse date value from " + fieldValue, USER);
+    throw new InvalidRequestException("Cannot parse date value from " + fieldValue
+            + ". Update the value to match the following format: " + DATE_ISO_FORMAT,
+        USER);
   }
 
   private String getDateValue(Matcher matcher, Long val1) {
