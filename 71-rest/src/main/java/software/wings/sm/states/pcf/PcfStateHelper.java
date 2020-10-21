@@ -38,6 +38,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import io.harness.beans.DelegateTask;
 import io.harness.beans.ExecutionStatus;
+import io.harness.beans.SweepingOutputInstance;
 import io.harness.beans.SweepingOutputInstance.Scope;
 import io.harness.beans.TriggeredBy;
 import io.harness.context.ContextElementType;
@@ -660,7 +661,6 @@ public class PcfStateHelper {
                       : SetupSweepingOutputPcf.SWEEPING_OUTPUT_NAME + phaseElement.getPhaseName().trim();
   }
 
-  @NotNull
   String obtainSwapRouteSweepingOutputName(ExecutionContext context, boolean isRollback) {
     PhaseElement phaseElement = context.getContextElement(ContextElementType.PARAM, PhaseElement.PHASE_PARAM);
     return isRollback
@@ -672,6 +672,21 @@ public class PcfStateHelper {
     SweepingOutputInquiry sweepingOutputInquiry =
         context.prepareSweepingOutputInquiryBuilder().name(obtainSetupSweepingOutputName(context, isRollback)).build();
     return findSetupSweepingOutput(sweepingOutputInquiry);
+  }
+
+  public void updateInfoVariables(ExecutionContext context, PcfRouteUpdateStateExecutionData stateExecutionData) {
+    SweepingOutputInstance sweepingOutputInstance = sweepingOutputService.find(
+        context.prepareSweepingOutputInquiryBuilder().name(InfoVariables.SWEEPING_OUTPUT_NAME).build());
+
+    if (sweepingOutputInstance != null) {
+      InfoVariables infoVariables = (InfoVariables) sweepingOutputInstance.getValue();
+      sweepingOutputService.deleteById(context.getAppId(), sweepingOutputInstance.getUuid());
+      infoVariables.setNewAppRoutes(stateExecutionData.getPcfRouteUpdateRequestConfigData().getFinalRoutes());
+      sweepingOutputService.ensure(context.prepareSweepingOutputBuilder(getSweepingOutputScope(context))
+                                       .name(InfoVariables.SWEEPING_OUTPUT_NAME)
+                                       .value(infoVariables)
+                                       .build());
+    }
   }
 
   private SetupSweepingOutputPcf findSetupSweepingOutput(SweepingOutputInquiry sweepingOutputInquiry) {
@@ -722,14 +737,18 @@ public class PcfStateHelper {
     InfoVariables infoVariables = sweepingOutputService.findSweepingOutput(
         context.prepareSweepingOutputInquiryBuilder().name(InfoVariables.SWEEPING_OUTPUT_NAME).build());
     if (infoVariables == null) {
-      Scope outputScope = workflowExecutionService.isMultiService(context.getAppId(), context.getWorkflowExecutionId())
-          ? Scope.PHASE
-          : Scope.WORKFLOW;
+      Scope outputScope = getSweepingOutputScope(context);
       sweepingOutputService.save(context.prepareSweepingOutputBuilder(outputScope)
                                      .name(InfoVariables.SWEEPING_OUTPUT_NAME)
                                      .value(setupSweepingOutputPcf.fetchPcfVariableInfo())
                                      .build());
     }
+  }
+
+  private Scope getSweepingOutputScope(ExecutionContext context) {
+    return workflowExecutionService.isMultiService(context.getAppId(), context.getWorkflowExecutionId())
+        ? Scope.PHASE
+        : Scope.WORKFLOW;
   }
 
   @VisibleForTesting
@@ -752,6 +771,8 @@ public class PcfStateHelper {
     return pcfInstanceElements.stream()
         .map(pcfInstanceElement
             -> InstanceElement.Builder.anInstanceElement()
+                   .displayName(pcfInstanceElement.getDisplayName())
+                   .uuid(pcfInstanceElement.getUuid())
                    .hostName(pcfInstanceElement.getDisplayName() + ":" + pcfInstanceElement.getInstanceIndex())
                    .newInstance(pcfInstanceElement.isNewInstance())
                    .host(
