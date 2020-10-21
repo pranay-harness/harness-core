@@ -420,11 +420,12 @@ public class PcfDeployState extends State {
                                      .build());
     }
 
-    InstanceElementListParam instanceElementListParam = InstanceElementListParam.builder()
-                                                            .instanceElements(emptyList())
-                                                            .pcfInstanceElements(pcfInstanceElements)
-                                                            .pcfOldInstanceElements(pcfOldInstanceElements)
-                                                            .build();
+    InstanceElementListParam instanceElementListParam =
+        InstanceElementListParam.builder()
+            .instanceElements(pcfStateHelper.generateInstanceElement(pcfInstanceElements))
+            .pcfInstanceElements(pcfInstanceElements)
+            .pcfOldInstanceElements(pcfOldInstanceElements)
+            .build();
 
     return ExecutionResponse.builder()
         .executionStatus(executionStatus)

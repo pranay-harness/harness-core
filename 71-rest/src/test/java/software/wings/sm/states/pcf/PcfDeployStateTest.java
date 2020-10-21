@@ -385,6 +385,7 @@ public class PcfDeployStateTest extends WingsBaseTest {
 
     assertThat(instanceElementListParam.getPcfInstanceElements().size()).isEqualTo(1);
     assertThat(instanceElementListParam.getPcfOldInstanceElements().size()).isEqualTo(1);
+    assertThat(instanceElementListParam.getInstanceElements().size()).isEqualTo(1);
 
     PcfInstanceElement pcfInstanceElementOld = instanceElementListParam.getPcfOldInstanceElements().get(0);
     assertThat(pcfInstanceElementOld.getApplicationId()).isEqualTo("0");

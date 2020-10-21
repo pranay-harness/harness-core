@@ -17,6 +17,8 @@ import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.spy;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static software.wings.beans.Application.Builder.anApplication;
 import static software.wings.beans.Environment.Builder.anEnvironment;
@@ -48,6 +50,7 @@ import com.google.inject.Inject;
 import io.harness.beans.DelegateTask;
 import io.harness.beans.EmbeddedUser;
 import io.harness.beans.ExecutionStatus;
+import io.harness.beans.SweepingOutputInstance;
 import io.harness.category.element.UnitTests;
 import io.harness.context.ContextElementType;
 import io.harness.delegate.beans.TaskData;
@@ -59,16 +62,20 @@ import io.harness.rule.Owner;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
+import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
 import software.wings.WingsBaseTest;
+import software.wings.api.InstanceElement;
+import software.wings.api.PcfInstanceElement;
 import software.wings.api.PhaseElement;
 import software.wings.api.PhaseExecutionData;
 import software.wings.api.PhaseExecutionData.PhaseExecutionDataBuilder;
 import software.wings.api.ServiceElement;
 import software.wings.api.pcf.DeploySweepingOutputPcf;
+import software.wings.api.pcf.InfoVariables;
 import software.wings.api.pcf.PcfDeployStateExecutionData;
 import software.wings.api.pcf.PcfRouteUpdateStateExecutionData;
 import software.wings.api.pcf.PcfSetupStateExecutionData;
@@ -113,6 +120,7 @@ import software.wings.sm.StateType;
 import software.wings.sm.WorkflowStandardParams;
 
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -1040,5 +1048,67 @@ public class PcfStateHelperTest extends WingsBaseTest {
         .when(pcfStateHelper)
         .findSetupSweepingOutputPcf(context, false);
     assertThat(pcfStateHelper.getStateTimeoutMillis(context, 5, false)).isEqualTo(5 * 60 * 1000);
+  }
+
+  @Test
+  @Owner(developers = TMACARI)
+  @Category(UnitTests.class)
+  public void testGenerateInstanceElement() {
+    PcfStateHelper pcfStateHelper = spy(PcfStateHelper.class);
+    PcfInstanceElement app1 = PcfInstanceElement.builder()
+                                  .uuid("1")
+                                  .applicationId("1")
+                                  .displayName("app1")
+                                  .isUpsize(true)
+                                  .instanceIndex("4")
+                                  .build();
+    PcfInstanceElement app0 = PcfInstanceElement.builder()
+                                  .uuid("0")
+                                  .isUpsize(false)
+                                  .displayName("app0")
+                                  .applicationId("0")
+                                  .instanceIndex("2")
+                                  .build();
+    List<PcfInstanceElement> pcfInstanceElements = Arrays.asList(app1, app0);
+
+    List<InstanceElement> instanceElements = pcfStateHelper.generateInstanceElement(pcfInstanceElements);
+
+    assertThat(instanceElements.size()).isEqualTo(2);
+    assertThat(instanceElements.get(0).getUuid()).isEqualTo("1");
+    assertThat(instanceElements.get(0).getDisplayName()).isEqualTo("app1");
+    assertThat(instanceElements.get(0).getHostName()).isEqualTo("app1:4");
+    assertThat(instanceElements.get(0).getHost().getPcfElement()).isEqualTo(app1);
+
+    assertThat(instanceElements.get(1).getUuid()).isEqualTo("0");
+    assertThat(instanceElements.get(1).getDisplayName()).isEqualTo("app0");
+    assertThat(instanceElements.get(1).getHostName()).isEqualTo("app0:2");
+    assertThat(instanceElements.get(1).getHost().getPcfElement()).isEqualTo(app0);
+  }
+
+  @Test
+  @Owner(developers = TMACARI)
+  @Category(UnitTests.class)
+  public void testUpdateInfoVariables() {
+    PcfRouteUpdateStateExecutionData stateExecutionData =
+        PcfRouteUpdateStateExecutionData.builder()
+            .pcfRouteUpdateRequestConfigData(
+                PcfRouteUpdateRequestConfigData.builder().finalRoutes(Collections.singletonList("NEW_ROUTE")).build())
+            .build();
+    InfoVariables infoVariables = InfoVariables.builder().newAppRoutes(Collections.singletonList("TEMP_ROUTE")).build();
+    doReturn(SweepingOutputInstance.builder().uuid("1").value(infoVariables).build())
+        .when(sweepingOutputService)
+        .find(any());
+    doReturn(APP_ID).when(context).getAppId();
+    doReturn(SweepingOutputInquiry.builder()).when(context).prepareSweepingOutputInquiryBuilder();
+    doReturn(SweepingOutputInstance.builder()).when(context).prepareSweepingOutputBuilder(any());
+    ArgumentCaptor<SweepingOutputInstance> captor = ArgumentCaptor.forClass(SweepingOutputInstance.class);
+
+    pcfStateHelper.updateInfoVariables(context, stateExecutionData);
+
+    verify(sweepingOutputService, times(1)).deleteById(APP_ID, "1");
+    verify(sweepingOutputService, times(1)).ensure(captor.capture());
+    SweepingOutputInstance sweepingOutputInstance = captor.getValue();
+    InfoVariables savedInfoVariables = (InfoVariables) sweepingOutputInstance.getValue();
+    assertThat(savedInfoVariables.getNewAppRoutes().get(0)).isEqualTo("NEW_ROUTE");
   }
 }

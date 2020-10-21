@@ -216,6 +216,10 @@ public class PcfSwitchBlueGreenRoutes extends State {
           (PcfRouteUpdateStateExecutionData) context.getStateExecutionData();
       stateExecutionData.setStatus(executionStatus);
       stateExecutionData.setErrorMsg(executionResponse.getErrorMessage());
+      if (executionStatus == ExecutionStatus.SUCCESS) {
+        pcfStateHelper.updateInfoVariables(context, stateExecutionData);
+      }
+
       if (!isRollback()) {
         sweepingOutputService.save(
             context.prepareSweepingOutputBuilder(Scope.WORKFLOW)
