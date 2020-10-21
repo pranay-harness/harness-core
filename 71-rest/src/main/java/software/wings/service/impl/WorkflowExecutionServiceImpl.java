@@ -2962,16 +2962,42 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
           "Cannot override value for variables: " + extraVars.toString() + " These are not marked runtime in stage");
     }
 
-    validateRequiredVariables(workflowVariables, runtimeVariableValues);
+    validateRequiredVariables(workflowVariables, runtimeVariableValues, runtimeVarsInStage);
 
     List<Artifact> existingArtifacts = pipelineExecution.getArtifacts();
     List<Artifact> newArtifacts = executionArgs.getArtifacts();
     validateArtifactOverrides(existingArtifacts, newArtifacts);
   }
 
-  private void validateArtifactOverrides(List<Artifact> existingArtifacts, List<Artifact> newArtifacts) {}
+  private void validateArtifactOverrides(List<Artifact> existingArtifacts, List<Artifact> newArtifacts) {
+    if (isEmpty(existingArtifacts) || isEmpty(newArtifacts)) {
+      return;
+    }
+    for (Artifact newArtifact : newArtifacts) {
+      if (existingArtifacts.stream().anyMatch(
+              t -> t.getServiceIds().get(0).equals(newArtifact.getServiceIds().get(0)))) {
+        throw new InvalidRequestException(format(
+            "Cannot override artifact %s for service, artifact for this service is already present in the pipeline",
+            newArtifact.getBuildNo()));
+      }
+    }
+  }
 
-  private void validateRequiredVariables(List<Variable> workflowVariables, Map<String, String> runtimeVariableValues) {}
+  private void validateRequiredVariables(
+      List<Variable> workflowVariables, Map<String, String> runtimeVariableValues, List<String> runtimeVarsInStage) {
+    List<Variable> requiredRuntimeWorkflowVars = workflowVariables.stream()
+                                                     .filter(Variable::isMandatory)
+                                                     .filter(t -> runtimeVarsInStage.contains(t.getName()))
+                                                     .collect(toList());
+    List<String> missingVars = requiredRuntimeWorkflowVars.stream()
+                                   .filter(t -> !runtimeVariableValues.keySet().contains(t))
+                                   .map(t -> t.getName())
+                                   .collect(toList());
+    if (isNotEmpty(missingVars)) {
+      throw new InvalidRequestException(
+          "Please provide value for required runtime variables: " + missingVars.toString());
+    }
+  }
 
   private void validateRBAC(String appId, String pipelineId, Pipeline pipeline) {
     User user = UserThreadLocal.get();

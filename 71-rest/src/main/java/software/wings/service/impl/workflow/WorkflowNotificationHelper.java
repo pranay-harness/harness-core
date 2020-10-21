@@ -464,6 +464,26 @@ public class WorkflowNotificationHelper {
     return pipelineDetails.build();
   }
 
+  public WorkflowNotificationDetails calculatePipelineDetailsPipelineExecution(
+      Application app, WorkflowExecution workflowExecution, ExecutionContext context) {
+    WorkflowNotificationDetailsBuilder pipelineDetails = WorkflowNotificationDetails.builder();
+    if (workflowExecution.getPipelineExecution() != null) {
+      String pipelineName = workflowExecution.getPipelineExecution().getPipeline().getName();
+      if (isNotBlank(pipelineName)) {
+        String baseUrl = subdomainUrlHelper.getPortalBaseUrl(context.getAccountId());
+        String pipelineUrl = NotificationMessageResolver.buildAbsoluteUrl(configuration,
+            format("/account/%s/app/%s/pipeline-execution/%s/workflow-execution/%s/details", app.getAccountId(),
+                app.getUuid(), workflowExecution.getUuid(), "undefined"),
+            baseUrl);
+        String pipelineMsg = format("*Pipeline:* <<<%s|-|%s>>>", pipelineUrl, pipelineName);
+        pipelineDetails.message(pipelineMsg);
+        pipelineDetails.name(pipelineName);
+        pipelineDetails.url(pipelineUrl);
+      }
+    }
+    return pipelineDetails.build();
+  }
+
   public WorkflowNotificationDetails calculateServiceDetailsForAllServices(String accountId, String appId,
       ExecutionContext context, WorkflowExecution workflowExecution, ExecutionScope scope,
       PhaseSubWorkflow phaseSubWorkflow) {

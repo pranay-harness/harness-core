@@ -110,6 +110,7 @@ import software.wings.common.NotificationMessageResolver;
 import software.wings.dl.WingsPersistence;
 import software.wings.exception.StateMachineIssueException;
 import software.wings.expression.ManagerPreviewExpressionEvaluator;
+import software.wings.service.impl.workflow.WorkflowNotificationDetails;
 import software.wings.service.impl.workflow.WorkflowNotificationHelper;
 import software.wings.service.intfc.AlertService;
 import software.wings.service.intfc.AppService;
@@ -159,6 +160,14 @@ import javax.validation.constraints.NotNull;
 public class StateMachineExecutor implements StateInspectionListener {
   private static final int DEFAULT_STATE_TIMEOUT_MILLIS = 4 * 60 * 60 * 1000; // 4 hours
   private static final int ABORT_EXPIRY_BUFFER_MILLIS = 10 * 60 * 1000; // 5 min
+  public static final String PIPELINE_STEP_NAME = "PIPELINE_STEP_NAME";
+  public static final String PIPELINE_STEP = "PIPELINE_STEP";
+  public static final String PIPELINE_NAME = "PIPELINE_NAME";
+  public static final String PIPELINE_URL = "PIPELINE_URL";
+  public static final String PIPELINE = "PIPELINE";
+  public static final String APPLICATION = "APPLICATION";
+  public static final String APPLICATION_NAME = "APPLICATION_NAME";
+  public static final String APPLICATION_URL = "APPLICATION_URL";
 
   @Getter private Subject<StateStatusUpdate> statusUpdateSubject = new Subject<>();
 
@@ -832,7 +841,8 @@ public class StateMachineExecutor implements StateInspectionListener {
 
         // Open an alert
         openAnAlert(context, stateExecutionInstance);
-        sendRuntimeInputNeededNotification(context, executionEventAdvice.getUserGroupIdsToNotify());
+        sendRuntimeInputNeededNotification(
+            context, executionEventAdvice.getUserGroupIdsToNotify(), stateExecutionInstance);
         break;
       }
       case NEXT_STEP:
@@ -957,13 +967,14 @@ public class StateMachineExecutor implements StateInspectionListener {
         notificationRules);
   }
 
-  protected void sendRuntimeInputNeededNotification(ExecutionContextImpl context, List<String> userGroupIds) {
+  protected void sendRuntimeInputNeededNotification(
+      ExecutionContextImpl context, List<String> userGroupIds, StateExecutionInstance stateExecutionInstance) {
     Application app = context.getApp();
     notNullCheck("app", app);
     Pipeline pipeline = pipelineService.readPipeline(app.getAppId(), context.getWorkflowId(), false);
     notNullCheck("Pipeline does not exist for given Id: " + context.getWorkflowId(), pipeline);
 
-    Map<String, String> placeholderValues = getManualInterventionPlaceholderValues(context);
+    Map<String, String> placeholderValues = getRuntimeInputsPlaceholderValues(context, stateExecutionInstance);
     NotificationRule rule = aNotificationRule().withUserGroupIds(userGroupIds).build();
 
     notificationService.sendNotificationAsync(InformationNotification.builder()
@@ -973,6 +984,34 @@ public class StateMachineExecutor implements StateInspectionListener {
                                                   .notificationTemplateVariables(placeholderValues)
                                                   .build(),
         Collections.singletonList(rule));
+  }
+
+  private Map<String, String> getRuntimeInputsPlaceholderValues(
+      ExecutionContextImpl context, StateExecutionInstance stateExecutionInstance) {
+    notNullCheck("context.getApp()", context.getApp());
+    WorkflowExecution pipelineExecution = workflowExecutionService.getExecutionDetails(
+        context.getApp().getUuid(), context.getWorkflowExecutionId(), false);
+
+    WorkflowNotificationDetails pipelineDetails = workflowNotificationHelper.calculatePipelineDetailsPipelineExecution(
+        context.getApp(), pipelineExecution, context);
+
+    final WorkflowNotificationDetails applicationDetails = workflowNotificationHelper.calculateApplicationDetails(
+        context.getAccountId(), context.getAppId(), context.getApp());
+
+    Map<String, String> placeholderValues = notificationMessageResolver.getPlaceholderValues(context,
+        pipelineExecution.getTriggeredBy().getName(), pipelineExecution.getStartTs(), System.currentTimeMillis(), "",
+        "", "", ExecutionStatus.PAUSED, AlertType.ManualInterventionNeeded);
+    String pipelineStepMessage = format("*Pipeline Step:* %s", stateExecutionInstance.getStateName());
+    placeholderValues.put(PIPELINE_STEP_NAME, stateExecutionInstance.getStateName());
+    placeholderValues.put(PIPELINE_STEP, pipelineStepMessage);
+    placeholderValues.put(PIPELINE_NAME, pipelineDetails.getName());
+    placeholderValues.put(PIPELINE_URL, pipelineDetails.getUrl());
+    placeholderValues.put(PIPELINE, pipelineDetails.getMessage());
+    placeholderValues.put(APPLICATION, applicationDetails.getMessage());
+    placeholderValues.put(APPLICATION_NAME, applicationDetails.getName());
+    placeholderValues.put(APPLICATION_URL, applicationDetails.getUrl());
+
+    return placeholderValues;
   }
 
   private void openAnAlert(ExecutionContextImpl context, StateExecutionInstance stateExecutionInstance) {
