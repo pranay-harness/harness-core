@@ -4,7 +4,9 @@ import static io.harness.git.model.ChangeType.ADD;
 import static io.harness.git.model.ChangeType.DELETE;
 import static io.harness.git.model.ChangeType.RENAME;
 import static io.harness.git.model.PushResultGit.pushResultBuilder;
-import static io.harness.rule.OwnerRule.*;
+import static io.harness.rule.OwnerRule.ABHINAV;
+import static io.harness.rule.OwnerRule.ARVIND;
+import static io.harness.rule.OwnerRule.YOGESH;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -435,6 +437,8 @@ public class GitClientV2ImplTest extends CategoryTest {
                          .append("git init " + (bare ? "--bare" : "") + ";")
                          .append("git config user.email 'someone@someplace.com';")
                          .append("git config user.name 'someone';")
+                         .append("git config gc.auto '0';")
+                         .append("git config gc.autopacklimit '0';")
                          .toString();
 
     executeCommand(command);
