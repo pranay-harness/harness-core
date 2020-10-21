@@ -42,7 +42,6 @@ import io.harness.exception.AzureServiceException;
 import io.harness.exception.ClusterNotFoundException;
 import io.harness.exception.ExceptionUtils;
 import io.harness.exception.InvalidArgumentsException;
-import io.harness.exception.InvalidCredentialsException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.k8s.KubeConfigHelper;
 import io.harness.k8s.model.KubernetesConfig;
@@ -129,7 +128,7 @@ public class AzureHelperService {
       Azure.configure().withLogLevel(LogLevel.NONE).authenticate(credentials).withDefaultSubscription();
 
     } catch (Exception e) {
-      HandleAzureAuthenticationException(e);
+      handleAzureAuthenticationException(e);
     }
   }
 
@@ -377,7 +376,7 @@ public class AzureHelperService {
         throw new AzureServiceException(response.message(), AZURE_SERVICE_EXCEPTION, USER);
       }
     } catch (Exception e) {
-      HandleAzureAuthenticationException(e);
+      handleAzureAuthenticationException(e);
       return null;
     }
   }
@@ -398,7 +397,7 @@ public class AzureHelperService {
         throw new AzureServiceException(response.message(), AZURE_SERVICE_EXCEPTION, USER);
       }
     } catch (Exception e) {
-      HandleAzureAuthenticationException(e);
+      handleAzureAuthenticationException(e);
       return null;
     }
   }
@@ -413,7 +412,7 @@ public class AzureHelperService {
       List<ResourceGroup> resourceGroupList = azure.resourceGroups().list();
       return resourceGroupList.stream().map(HasName::name).collect(Collectors.toSet());
     } catch (Exception e) {
-      HandleAzureAuthenticationException(e);
+      handleAzureAuthenticationException(e);
     }
     return Collections.EMPTY_SET;
   }
@@ -606,7 +605,7 @@ public class AzureHelperService {
         }
       }
     } catch (Exception e) {
-      HandleAzureAuthenticationException(e);
+      handleAzureAuthenticationException(e);
     }
     return null;
   }
@@ -644,7 +643,7 @@ public class AzureHelperService {
       String token = credentials.getToken(azureEnvironment.managementEndpoint());
       return "Bearer " + token;
     } catch (Exception e) {
-      HandleAzureAuthenticationException(e);
+      handleAzureAuthenticationException(e);
     }
     return null;
   }
@@ -658,7 +657,7 @@ public class AzureHelperService {
 
       return Azure.configure().withLogLevel(LogLevel.NONE).authenticate(credentials).withDefaultSubscription();
     } catch (Exception e) {
-      HandleAzureAuthenticationException(e);
+      handleAzureAuthenticationException(e);
     }
     return null;
   }
@@ -672,7 +671,7 @@ public class AzureHelperService {
 
       return Azure.configure().withLogLevel(LogLevel.NONE).authenticate(credentials).withSubscription(subscriptionId);
     } catch (Exception e) {
-      HandleAzureAuthenticationException(e);
+      handleAzureAuthenticationException(e);
     }
     return null;
   }
@@ -718,14 +717,14 @@ public class AzureHelperService {
     return "https://" + acrHostName + (acrHostName.endsWith("/") ? "" : "/");
   }
 
-  private void HandleAzureAuthenticationException(Exception e) {
+  private void handleAzureAuthenticationException(Exception e) {
     logger.error("HandleAzureAuthenticationException: Exception:" + e);
 
     Throwable e1 = e;
     while (e1.getCause() != null) {
       e1 = e1.getCause();
       if (e1 instanceof AuthenticationException) {
-        throw new InvalidCredentialsException("Invalid Azure credentials." + e1.getMessage(), USER);
+        throw new InvalidRequestException("Invalid Azure credentials.", USER);
       }
     }
 

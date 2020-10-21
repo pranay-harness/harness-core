@@ -4,12 +4,14 @@ import static io.harness.beans.AzureEnvironmentType.AZURE;
 import static io.harness.beans.AzureEnvironmentType.AZURE_US_GOVERNMENT;
 import static io.harness.data.encoding.EncodingUtils.encodeBase64;
 import static io.harness.rule.OwnerRule.ABOSII;
+import static io.harness.rule.OwnerRule.AGORODETKI;
 import static io.harness.rule.OwnerRule.ANSHUL;
 import static io.harness.rule.OwnerRule.DEEPAK_PUTHRAYA;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.emptyMap;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.joor.Reflect.on;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
@@ -22,6 +24,7 @@ import static org.powermock.api.mockito.PowerMockito.when;
 import static org.powermock.api.mockito.PowerMockito.whenNew;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 
+import com.microsoft.aad.adal4j.AuthenticationException;
 import com.microsoft.azure.Page;
 import com.microsoft.azure.PagedList;
 import com.microsoft.azure.credentials.ApplicationTokenCredentials;
@@ -63,6 +66,7 @@ import com.microsoft.rest.LogLevel;
 import com.microsoft.rest.RestException;
 import io.harness.beans.AzureEnvironmentType;
 import io.harness.category.element.UnitTests;
+import io.harness.exception.InvalidRequestException;
 import io.harness.k8s.model.KubernetesConfig;
 import io.harness.network.Http;
 import io.harness.rule.Owner;
@@ -898,5 +902,22 @@ public class AzureHelperServiceTest extends WingsBaseTest {
     assertThat(azureHelperService.listImageDefinitionVersions(azureConfig, emptyList(), "someSubscriptionId",
                    "someResourceGroupName", "someGalleryName", "someImageDefinitionName"))
         .hasSize(1);
+  }
+
+  @Test
+  @Owner(developers = AGORODETKI)
+  @Category(UnitTests.class)
+  public void shouldRethrowInvalidRequestExceptionWhenInvalidCredentialsExceptionIsThrown() {
+    PowerMockito.mockStatic(Azure.class);
+    when(Azure.configure()).thenReturn(configurable);
+    when(configurable.withLogLevel(any(LogLevel.class))).thenReturn(configurable);
+    when(configurable.authenticate(any(ApplicationTokenCredentials.class)))
+        .thenThrow(new AuthenticationException(new AuthenticationException("Failed to authenticate")));
+    AzureConfig azureConfig =
+        AzureConfig.builder().clientId("clientId").tenantId("tenantId").key("key".toCharArray()).build();
+
+    assertThatThrownBy(() -> { azureHelperService.getAzureClient(azureConfig); })
+        .isInstanceOf(InvalidRequestException.class)
+        .hasMessageContaining("Invalid Azure credentials.");
   }
 }
