@@ -331,11 +331,11 @@ public class JenkinsTaskTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void shouldPassAppIdForLoggingScopeTroughJenkinsTaskParams() {
     JenkinsTaskParams jenkinsTaskParams = buildJenkinsTaskParams();
-    Log log =
+    Log logObject =
         constructLog(jenkinsTaskParams.getActivityId(), jenkinsTaskParams.getUnitName(), jenkinsTaskParams.getAppId(),
             LogLevel.INFO, "Triggering Jenkins Job : " + jenkinsTaskParams.getJobName(), RUNNING);
 
-    logService.save(jenkinsTaskParams.getActivityId(), log);
+    logService.save(jenkinsTaskParams.getActivityId(), logObject);
     verify(logService).save(activityCaptor.capture(), logsCaptor.capture());
     assertThat(logsCaptor.getValue().getAppId()).isEqualTo(appId);
   }

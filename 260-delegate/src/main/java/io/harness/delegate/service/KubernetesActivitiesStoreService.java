@@ -80,7 +80,7 @@ public class KubernetesActivitiesStoreService {
           } catch (Exception e) {
             logger.error(
                 "Dispatch activities failed for {}. printing lost activities[{}]", accountId, activities.size(), e);
-            activities.forEach(log -> logger.error(log.toString()));
+            activities.forEach(logObject -> logger.error(logObject.toString()));
             logger.error("Finished printing lost activities");
           }
         });

@@ -20,14 +20,14 @@ public class GenericLogSanitizer extends LogSanitizer {
   /**
    * Replace secret values in {@code log} with mask for safe display (Done for all lines coming here)
    * @param activityId This activity is ignored
-   * @param log The text that may contain secret values
+   * @param message The text that may contain secret values
    * @return text with secrets replaced by a mask
    */
   @Override
-  public String sanitizeLog(String activityId, String log) {
+  public String sanitizeLog(String activityId, String message) {
     if (isEmpty(secrets)) {
-      return log;
+      return message;
     }
-    return sanitizeLogInternal(log, secrets);
+    return sanitizeLogInternal(message, secrets);
   }
 }

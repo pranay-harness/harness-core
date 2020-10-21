@@ -165,8 +165,8 @@ public class ActivityLogsProcessor implements ExportExecutionsProcessor {
 
     Map<String, ActivityCommandUnitMetadata> commandUnitMap =
         commandUnits.stream().collect(toMap(ActivityCommandUnitMetadata::getName, Function.identity()));
-    for (Log log : logs) {
-      ActivityCommandUnitMetadata commandUnit = commandUnitMap.getOrDefault(log.getCommandUnitName(), null);
+    for (Log logObject : logs) {
+      ActivityCommandUnitMetadata commandUnit = commandUnitMap.getOrDefault(logObject.getCommandUnitName(), null);
       if (commandUnit == null) {
         continue;
       }
@@ -174,7 +174,7 @@ public class ActivityLogsProcessor implements ExportExecutionsProcessor {
       if (commandUnit.getExecutionLogFile() == null) {
         commandUnit.setExecutionLogFile(prepareLogFileName(executionDetailsMetadata, commandUnit));
       }
-      addLogLine(commandUnit, log);
+      addLogLine(commandUnit, logObject);
     }
 
     for (ActivityCommandUnitMetadata commandUnit : commandUnits) {
@@ -263,9 +263,9 @@ public class ActivityLogsProcessor implements ExportExecutionsProcessor {
     return logs;
   }
 
-  private void addLogLine(ActivityCommandUnitMetadata commandUnit, Log log) {
-    String newLogLine =
-        format("%s   %s   %s%n", log.getLogLevel(), dateFormat.format(new Date(log.getCreatedAt())), log.getLogLine());
+  private void addLogLine(ActivityCommandUnitMetadata commandUnit, Log logObject) {
+    String newLogLine = format("%s   %s   %s%n", logObject.getLogLevel(),
+        dateFormat.format(new Date(logObject.getCreatedAt())), logObject.getLogLine());
     if (commandUnit.getExecutionLogFileContent() == null) {
       commandUnit.setExecutionLogFileContent(newLogLine);
     } else {

@@ -97,25 +97,26 @@ public class DelegateLogServiceImpl implements DelegateLogService {
   }
 
   @Override
-  public synchronized void save(String accountId, Log log) {
+  public synchronized void save(String accountId, Log logObject) {
     if (isNotEmpty(accountId)) {
-      log.setAccountId(accountId);
+      logObject.setAccountId(accountId);
     }
 
-    if (isBlank(log.getActivityId()) || isBlank(log.getCommandUnitName())) {
-      logger.info("Logging stack while saving the execution log ", new Exception(""));
+    if (isBlank(logObject.getActivityId()) || isBlank(logObject.getCommandUnitName())) {
+      logger.info("Logging stack while saving the execution logObject ", new Exception(""));
     }
 
-    String line = logSanitizerSubject.fireProcess(LogSanitizer::sanitizeLog, log.getActivityId(), log.getLogLine());
-    if (log.getLogLevel() == LogLevel.ERROR) {
+    String line =
+        logSanitizerSubject.fireProcess(LogSanitizer::sanitizeLog, logObject.getActivityId(), logObject.getLogLine());
+    if (logObject.getLogLevel() == LogLevel.ERROR) {
       line = color(line, Red, Bold);
-    } else if (log.getLogLevel() == LogLevel.WARN) {
+    } else if (logObject.getLogLevel() == LogLevel.WARN) {
       line = color(line, Yellow, Bold);
     }
     line = doneColoring(line);
-    log.setLogLine(line);
+    logObject.setLogLine(line);
 
-    Optional.ofNullable(cache.get(accountId, s -> new ArrayList<>())).ifPresent(logs -> logs.add(log));
+    Optional.ofNullable(cache.get(accountId, s -> new ArrayList<>())).ifPresent(logs -> logs.add(logObject));
   }
 
   @Override
@@ -161,15 +162,15 @@ public class DelegateLogServiceImpl implements DelegateLogService {
     List<Log> batch = new ArrayList<>();
     LogLevel batchLogLevel = LogLevel.INFO;
 
-    for (Log log : commandLogs) {
-      if (log.getLogLevel() != batchLogLevel) {
+    for (Log logObject : commandLogs) {
+      if (logObject.getLogLevel() != batchLogLevel) {
         if (isNotEmpty(batch)) {
           batchedLogs.add(batch);
           batch = new ArrayList<>();
         }
-        batchLogLevel = log.getLogLevel();
+        batchLogLevel = logObject.getLogLevel();
       }
-      batch.add(log);
+      batch.add(logObject);
     }
     if (isNotEmpty(batch)) {
       batchedLogs.add(batch);
@@ -185,19 +186,20 @@ public class DelegateLogServiceImpl implements DelegateLogService {
                                                        .orElse(RUNNING);
 
         String logText = logBatch.stream().map(Log::getLogLine).collect(joining("\n"));
-        Log log = logBatch.get(0);
-        log.setLogLine(logText);
-        log.setLinesCount(logBatch.size());
-        log.setCommandExecutionStatus(commandUnitStatus);
-        log.setCreatedAt(System.currentTimeMillis());
-        logger.info("Dispatched log status- [{}] [{}]", log.getCommandUnitName(), log.getCommandExecutionStatus());
+        Log logObject = logBatch.get(0);
+        logObject.setLogLine(logText);
+        logObject.setLinesCount(logBatch.size());
+        logObject.setCommandExecutionStatus(commandUnitStatus);
+        logObject.setCreatedAt(System.currentTimeMillis());
+        logger.info("Dispatched logObject status- [{}] [{}]", logObject.getCommandUnitName(),
+            logObject.getCommandExecutionStatus());
         RestResponse restResponse = execute(managerClient.saveCommandUnitLogs(
-            activityId, URLEncoder.encode(unitName, StandardCharsets.UTF_8.toString()), accountId, log));
-        logger.info("{} log lines dispatched for accountId: {}",
+            activityId, URLEncoder.encode(unitName, StandardCharsets.UTF_8.toString()), accountId, logObject));
+        logger.info("{} logObject lines dispatched for accountId: {}",
             restResponse.getResource() != null ? logBatch.size() : 0, accountId);
       } catch (Exception e) {
         logger.error("Dispatch log failed. printing lost logs[{}]", logBatch.size(), e);
-        logBatch.forEach(log -> logger.error(log.toString()));
+        logBatch.forEach(logObject -> logger.error(logObject.toString()));
         logger.error("Finished printing lost logs");
       }
     }
@@ -216,7 +218,7 @@ public class DelegateLogServiceImpl implements DelegateLogService {
           }
           String stateExecutionId = logsList.get(0).getStateExecutionId();
           String delegateId = getDelegateId().orElse(null);
-          logsList.forEach(log -> log.setDelegateId(delegateId));
+          logsList.forEach(logObject -> logObject.setDelegateId(delegateId));
           try {
             logger.info("Dispatching {} api call logs for [{}] [{}]", logsList.size(), stateExecutionId, accountId);
             RestResponse restResponse = execute(managerClient.saveApiCallLogs(delegateId, accountId, logsList));
@@ -225,7 +227,7 @@ public class DelegateLogServiceImpl implements DelegateLogService {
                 accountId);
           } catch (IOException e) {
             logger.error("Dispatch log failed for {}. printing lost logs[{}]", stateExecutionId, logsList.size(), e);
-            logsList.forEach(log -> logger.error(log.toString()));
+            logsList.forEach(logObject -> logger.error(logObject.toString()));
             logger.error("Finished printing lost logs");
           }
         });
@@ -242,7 +244,7 @@ public class DelegateLogServiceImpl implements DelegateLogService {
         logger.info("Dispatched {} cv activity logs [{}]", batch.size(), accountId);
       } catch (Exception e) {
         logger.error("Dispatch log failed. printing lost activity logs[{}]", batch.size(), e);
-        batch.forEach(log -> logger.error(log.toString()));
+        batch.forEach(logObject -> logger.error(logObject.toString()));
         logger.error("Finished printing lost activity logs");
       }
     });

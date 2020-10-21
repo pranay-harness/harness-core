@@ -32,11 +32,11 @@ public interface ManagerClient {
 
   @POST("logs/activity/{activityId}/unit/{unitName}/batched")
   Call<RestResponse> saveCommandUnitLogs(@Path("activityId") String activityId, @Path("unitName") String unitName,
-      @Query("accountId") String accountId, @Body Log log);
+      @Query("accountId") String accountId, @Body Log logObject);
 
   @POST("agent/delegates/{delegateId}/state-executions")
   Call<RestResponse> saveApiCallLogs(@Path("delegateId") String delegateId, @Query("accountId") String accountId,
-      @Body List<ThirdPartyApiCallLog> log);
+      @Body List<ThirdPartyApiCallLog> logObject);
 
   @POST(LogAnalysisResource.LOG_ANALYSIS + LogAnalysisResource.ANALYSIS_STATE_SAVE_LOG_URL)
   Call<RestResponse<Boolean>> saveLogs(@Query("accountId") String accountId, @Query("appId") String appId,

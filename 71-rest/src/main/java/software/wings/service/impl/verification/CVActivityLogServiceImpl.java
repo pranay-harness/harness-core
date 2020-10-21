@@ -128,7 +128,7 @@ public class CVActivityLogServiceImpl implements CVActivityLogService {
     }
 
     @Override
-    public void log(LogLevel logLevel, String log, long... timestampParams) {
+    public void appendLog(LogLevel logLevel, String log, long... timestampParams) {
       CVActivityLog cvActivityLog =
           CVActivityLog.builder()
               .cvConfigId(cvConfigId)

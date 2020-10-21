@@ -39,7 +39,7 @@ public class DelegateCVActivityLogServiceImpl implements DelegateCVActivityLogSe
     }
 
     @Override
-    public void log(LogLevel logLevel, String log, long... timestampParams) {
+    public void appendLog(LogLevel logLevel, String log, long... timestampParams) {
       List<Long> timestampParamList = new ArrayList<>();
       timestampParamList.addAll(prefixTimestampParams);
       timestampParamList.addAll(Arrays.stream(timestampParams).boxed().collect(Collectors.toList()));

@@ -318,8 +318,8 @@ public class JenkinsTask extends AbstractDelegateRunnableTask {
                      .logLine(line)
                      .executionResult(commandExecutionStatus)
                      .build())
-          .forEachOrdered(log -> {
-            logService.save(getAccountId(), log);
+          .forEachOrdered(logObject -> {
+            logService.save(getAccountId(), logObject);
             consoleLogsAlreadySent.incrementAndGet();
           });
     }

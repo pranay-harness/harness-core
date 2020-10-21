@@ -17,13 +17,13 @@ public interface CVActivityLogService {
 
   interface Logger {
     default void info(String log, long... timestampParams) {
-      this.log(LogLevel.INFO, log, timestampParams);
+      this.appendLog(LogLevel.INFO, log, timestampParams);
     }
     default void warn(String log, long... timestampParams) {
-      this.log(LogLevel.WARN, log, timestampParams);
+      this.appendLog(LogLevel.WARN, log, timestampParams);
     }
     default void error(String error, long... timestampParams) {
-      this.log(LogLevel.ERROR, error, timestampParams);
+      this.appendLog(LogLevel.ERROR, error, timestampParams);
     }
 
     /**
@@ -32,6 +32,6 @@ public interface CVActivityLogService {
      * @param log
      * @param timestampParams epoch timestamp in millis
      */
-    void log(LogLevel logLevel, String log, long... timestampParams);
+    void appendLog(LogLevel logLevel, String log, long... timestampParams);
   }
 }

@@ -81,23 +81,23 @@ public class WorkflowLogClusterJob implements MongoPersistenceIterator.Handler<A
           }
           analysisService
               .getHearbeatRecordForL0(context.getAppId(), context.getStateExecutionId(), context.getStateType(), node)
-              .map(log -> {
+              .map(logObject -> {
                 // ***
                 // *** Process L0 records. ***
                 // ***
-                boolean hasDataRecords = analysisService.hasDataRecords(log.getQuery(), context.getAppId(),
-                    context.getStateExecutionId(), context.getStateType(), Sets.newHashSet(log.getHost()),
-                    ClusterLevel.L0, log.getLogCollectionMinute());
+                boolean hasDataRecords = analysisService.hasDataRecords(logObject.getQuery(), context.getAppId(),
+                    context.getStateExecutionId(), context.getStateType(), Sets.newHashSet(logObject.getHost()),
+                    ClusterLevel.L0, logObject.getLogCollectionMinute());
                 logger.info("In WorkflowLogClusterJob For {} hasDataRecords is {}", context.getStateExecutionId(),
                     hasDataRecords);
                 LogRequest logRequest = LogRequest.builder()
-                                            .query(log.getQuery())
+                                            .query(logObject.getQuery())
                                             .applicationId(context.getAppId())
                                             .stateExecutionId(context.getStateExecutionId())
                                             .workflowId(context.getWorkflowId())
                                             .serviceId(context.getServiceId())
-                                            .nodes(Collections.singleton(log.getHost()))
-                                            .logCollectionMinute(log.getLogCollectionMinute())
+                                            .nodes(Collections.singleton(logObject.getHost()))
+                                            .logCollectionMinute(logObject.getLogCollectionMinute())
                                             .build();
 
                 if (hasDataRecords) {

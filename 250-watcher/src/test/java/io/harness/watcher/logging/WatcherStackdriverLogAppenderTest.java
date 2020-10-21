@@ -78,7 +78,7 @@ public class WatcherStackdriverLogAppenderTest extends CategoryTest {
   @Category(UnitTests.class)
   public void shouldAppend() {
     String message = "my log message";
-    log(INFO, message);
+    appendLog(INFO, message);
     waitForMessage(INFO, message);
   }
 
@@ -88,14 +88,14 @@ public class WatcherStackdriverLogAppenderTest extends CategoryTest {
   public void shouldSubmit() {
     String message = "my log message";
     for (int i = 0; i < MIN_BATCH_SIZE; ++i) {
-      log(INFO, message);
+      appendLog(INFO, message);
     }
     waitForMessage(INFO, message);
     BlockingQueue<LogEntry> logQueue = appender.getLogQueue();
     await().atMost(30L, TimeUnit.SECONDS).until(logQueue::isEmpty);
   }
 
-  private void log(Level level, String message) {
+  private void appendLog(Level level, String message) {
     appender.doAppend(new LoggingEvent("a.b.class", logger, level, message, null, null));
   }
 

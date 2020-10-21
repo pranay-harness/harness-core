@@ -206,15 +206,15 @@ public class GcbTask extends AbstractDelegateRunnableTask {
       String[] consoleLines = consoleOutput.split("\r?\n");
       int offset = alreadyLogged.get();
       for (int i = offset; i < consoleLines.length; i++) {
-        Log log = aLog()
-                      .activityId(activityId)
-                      .commandUnitName(stateName)
-                      .appId(appId)
-                      .logLevel(INFO)
-                      .logLine(consoleLines[i])
-                      .executionResult(commandExecutionStatus)
-                      .build();
-        logService.save(getAccountId(), log);
+        Log logObject = aLog()
+                            .activityId(activityId)
+                            .commandUnitName(stateName)
+                            .appId(appId)
+                            .logLevel(INFO)
+                            .logLine(consoleLines[i])
+                            .executionResult(commandExecutionStatus)
+                            .build();
+        logService.save(getAccountId(), logObject);
         logsCount.incrementAndGet();
       }
     }
