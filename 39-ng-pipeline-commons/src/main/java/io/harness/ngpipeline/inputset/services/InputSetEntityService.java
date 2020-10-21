@@ -21,6 +21,8 @@ public interface InputSetEntityService {
 
   boolean delete(String accountId, String orgIdentifier, String projectIdentifier, String pipelineIdentifier,
       String inputSetIdentifier);
+  void deleteInputSetsOfPipeline(
+      String accountId, String orgIdentifier, String projectIdentifier, String pipelineIdentifier);
 
   List<BaseInputSetEntity> getGivenInputSetList(String accountId, String orgIdentifier, String projectIdentifier,
       String pipelineIdentifier, Set<String> inputSetIdentifiersList);

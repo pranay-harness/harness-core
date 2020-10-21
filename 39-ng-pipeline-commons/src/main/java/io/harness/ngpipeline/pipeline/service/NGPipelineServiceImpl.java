@@ -3,15 +3,16 @@ package io.harness.ngpipeline.pipeline.service;
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import com.google.inject.name.Named;
 import com.mongodb.client.result.UpdateResult;
 import io.harness.NGResourceFilterConstants;
-import io.harness.ngpipeline.pipeline.beans.entities.NgPipelineEntity;
-import io.harness.ngpipeline.pipeline.beans.entities.NgPipelineEntity.PipelineNGKeys;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.exception.DuplicateFieldException;
 import io.harness.exception.InvalidRequestException;
+import io.harness.ngpipeline.inputset.services.InputSetEntityService;
+import io.harness.ngpipeline.pipeline.beans.entities.NgPipelineEntity;
+import io.harness.ngpipeline.pipeline.beans.entities.NgPipelineEntity.PipelineNGKeys;
 import io.harness.ngpipeline.pipeline.repository.spring.NgPipelineRepository;
-import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.data.domain.Page;
@@ -20,6 +21,7 @@ import org.springframework.data.mongodb.core.query.Criteria;
 
 import javax.validation.Valid;
 import java.util.*;
+import java.util.concurrent.ExecutorService;
 import java.util.stream.Collectors;
 
 import static io.harness.exception.WingsException.USER_SRE;
@@ -27,10 +29,11 @@ import static java.lang.String.format;
 import static org.springframework.data.mongodb.core.query.Criteria.where;
 
 @Singleton
-@AllArgsConstructor(onConstructor = @__({ @Inject }))
 @Slf4j
 public class NGPipelineServiceImpl implements NGPipelineService {
-  private final NgPipelineRepository ngPipelineRepository;
+  @Inject private NgPipelineRepository ngPipelineRepository;
+  @Inject private InputSetEntityService inputSetEntityService;
+  @Inject @Named("NgPipelineCommonsExecutor") private ExecutorService executorService;
 
   private static final String DUP_KEY_EXP_FORMAT_STRING =
       "Pipeline [%s] under Project[%s], Organization [%s] already exists";
@@ -86,6 +89,9 @@ public class NGPipelineServiceImpl implements NGPipelineService {
 
   @Override
   public boolean delete(String accountId, String orgIdentifier, String projectIdentifier, String pipelineIdentifier) {
+    executorService.submit(() -> {
+      inputSetEntityService.deleteInputSetsOfPipeline(accountId, orgIdentifier, projectIdentifier, pipelineIdentifier);
+    });
     Criteria criteria =
         getPipelineEqualityCriteria(accountId, orgIdentifier, projectIdentifier, pipelineIdentifier, false);
     UpdateResult updateResult = ngPipelineRepository.delete(criteria);

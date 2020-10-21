@@ -18,6 +18,7 @@ import io.harness.factory.ClosingFactoryModule;
 import io.harness.govern.ProviderModule;
 import io.harness.govern.ServersModule;
 import io.harness.morphia.MorphiaRegistrar;
+import io.harness.ngpipeline.inputset.repository.spring.InputSetRepository;
 import io.harness.ngpipeline.pipeline.repository.spring.NgPipelineRepository;
 import io.harness.queue.QueueController;
 import io.harness.rule.InjectorRuleMixin;
@@ -108,6 +109,7 @@ public class CIManagerRule implements MethodRule, InjectorRuleMixin, MongoRuleMi
       @Override
       protected void configure() {
         bind(NgPipelineRepository.class).toInstance(mock(NgPipelineRepository.class));
+        bind(InputSetRepository.class).toInstance(mock(InputSetRepository.class));
         bind(QueueController.class).toInstance(new QueueController() {
           @Override
           public boolean isPrimary() {

@@ -1,5 +1,7 @@
 package io.harness.executionplan.rule;
 
+import static org.mockito.Mockito.mock;
+
 import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableSet;
 import com.google.inject.AbstractModule;
@@ -16,6 +18,8 @@ import io.harness.factory.ClosingFactory;
 import io.harness.factory.ClosingFactoryModule;
 import io.harness.govern.ServersModule;
 import io.harness.mongo.MongoPersistence;
+import io.harness.ngpipeline.inputset.repository.spring.InputSetRepository;
+import io.harness.ngpipeline.pipeline.repository.spring.NgPipelineRepository;
 import io.harness.persistence.HPersistence;
 import io.harness.queue.QueueController;
 import io.harness.rule.InjectorRuleMixin;
@@ -65,6 +69,8 @@ public class CIExecutionRule implements MethodRule, InjectorRuleMixin, MongoRule
     modules.add(new AbstractModule() {
       @Override
       protected void configure() {
+        bind(NgPipelineRepository.class).toInstance(mock(NgPipelineRepository.class));
+        bind(InputSetRepository.class).toInstance(mock(InputSetRepository.class));
         bind(QueueController.class).toInstance(new QueueController() {
           @Override
           public boolean isPrimary() {
