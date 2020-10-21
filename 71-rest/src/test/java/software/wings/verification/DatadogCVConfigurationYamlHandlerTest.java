@@ -1,24 +1,31 @@
 package software.wings.verification;
 
 import static io.harness.rule.OwnerRule.PRAVEEN;
+import static io.harness.rule.OwnerRule.SOWMYA;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.when;
 
 import com.google.common.base.Charsets;
 import com.google.common.io.Resources;
+import com.google.inject.Inject;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import io.harness.category.element.UnitTests;
+import io.harness.exception.VerificationOperationException;
 import io.harness.exception.WingsException;
 import io.harness.rule.Owner;
 import io.harness.serializer.YamlUtils;
+import org.apache.commons.lang3.reflect.FieldUtils;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.MockitoAnnotations;
 import software.wings.beans.yaml.Change;
 import software.wings.beans.yaml.ChangeContext;
+import software.wings.metrics.MetricType;
+import software.wings.service.intfc.datadog.DatadogService;
 import software.wings.sm.StateType;
 import software.wings.sm.states.DatadogState.Metric;
 import software.wings.verification.datadog.DatadogCVServiceConfiguration;
@@ -31,12 +38,14 @@ import java.util.Map;
 import java.util.Set;
 
 public class DatadogCVConfigurationYamlHandlerTest extends CVConfigurationYamlHandlerTestBase {
+  @Inject private DatadogService datadogService;
   DatadogCvConfigurationYamlHandler yamlHandler = new DatadogCvConfigurationYamlHandler();
 
   @Before
   public void setup() throws IllegalAccessException {
     MockitoAnnotations.initMocks(this);
     setupTests(yamlHandler);
+    FieldUtils.writeField(yamlHandler, "datadogService", datadogService, true);
   }
 
   private void setBasicInfo(DatadogCVServiceConfiguration cvServiceConfiguration) {
@@ -124,6 +133,28 @@ public class DatadogCVConfigurationYamlHandlerTest extends CVConfigurationYamlHa
     assertThat(bean.getCustomMetrics().values().size()).isEqualTo(1);
     Set<Metric> metrics = bean.getCustomMetrics().values().iterator().next();
     assertThat(metrics.iterator().next().getMetricName()).isIn(Arrays.asList("testMetric.test2", "testMetric.test"));
+  }
+
+  @Test
+  @Owner(developers = SOWMYA)
+  @Category(UnitTests.class)
+  public void testUpsertDDCustomMetric_invalidMetrics() throws Exception {
+    URL yamlPath = getClass().getClassLoader().getResource("./verification/datadogCVConfigCustomYaml.yaml");
+    String yamlString = Resources.toString(yamlPath, Charsets.UTF_8);
+    when(yamlHelper.getAppId(anyString(), anyString())).thenReturn(appId);
+    when(yamlHelper.getEnvironmentId(anyString(), anyString())).thenReturn(envId);
+    when(yamlHelper.getNameFromYamlFilePath("TestDDC\nonfig.yaml")).thenReturn("TestDDConfig");
+
+    ChangeContext<DatadogCVConfigurationYaml> changeContext = new ChangeContext<>();
+    Change c = Change.Builder.aFileChange().withAccountId(accountId).withFilePath("TestDDConfig.yaml").build();
+    changeContext.setChange(c);
+    YamlUtils yamlUtils = new YamlUtils();
+    DatadogCVConfigurationYaml yaml = yamlUtils.read(yamlString, new TypeReference<DatadogCVConfigurationYaml>() {});
+    buildYaml(yaml);
+    yaml.getCustomMetrics().get("service:test").get(0).setMlMetricType(MetricType.ERROR.name());
+    changeContext.setYaml(yaml);
+    assertThatThrownBy(() -> yamlHandler.upsertFromYaml(changeContext, null))
+        .isInstanceOf(VerificationOperationException.class);
   }
 
   @Test(expected = WingsException.class)

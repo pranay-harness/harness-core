@@ -4,9 +4,13 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 
+import com.google.inject.Inject;
+
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.VerificationOperationException;
 import software.wings.beans.yaml.ChangeContext;
+import software.wings.service.impl.datadog.DatadogServiceImpl;
+import software.wings.service.intfc.datadog.DatadogService;
 import software.wings.sm.StateType;
 import software.wings.sm.states.DatadogState;
 import software.wings.sm.states.DatadogState.Metric;
@@ -25,6 +29,7 @@ import java.util.Set;
 
 public class DatadogCvConfigurationYamlHandler
     extends CVConfigurationYamlHandler<DatadogCVConfigurationYaml, DatadogCVServiceConfiguration> {
+  @Inject private DatadogService datadogService;
   @Override
   public DatadogCVConfigurationYaml toYaml(DatadogCVServiceConfiguration bean, String appId) {
     DatadogCVConfigurationYaml yaml = DatadogCVConfigurationYaml.builder().build();
@@ -103,6 +108,18 @@ public class DatadogCvConfigurationYamlHandler
 
     bean.setDatadogServiceName(yaml.getDatadogServiceName() == null ? "" : yaml.getDatadogServiceName());
     bean.setStateType(StateType.DATA_DOG);
+
+    if (isNotEmpty(bean.getCustomMetrics())) {
+      final Map<String, String> ddInvalidFields = DatadogState.validateDatadogCustomMetrics(bean.getCustomMetrics());
+      String metricsString = datadogService.getConcatenatedListOfMetricsForValidation(
+          null, bean.getDockerMetrics(), null, bean.getEcsMetrics());
+      ddInvalidFields.putAll(
+          DatadogServiceImpl.validateNameClashInCustomMetrics(bean.getCustomMetrics(), metricsString));
+      if (isNotEmpty(ddInvalidFields)) {
+        throw new VerificationOperationException(
+            ErrorCode.DATA_DOG_CONFIGURATION_ERROR, "Invalid configuration, reason: " + ddInvalidFields);
+      }
+    }
   }
 
   private Map<String, Set<Metric>> convertToBeanCustomMetrics(Map<String, List<YamlMetric>> yamlCustomMetrics) {

@@ -611,7 +611,7 @@ public class DatadogState extends AbstractMetricAnalysisState {
       return invalidFields;
     }
 
-    return null;
+    return new HashMap<>();
   }
 
   @Data
