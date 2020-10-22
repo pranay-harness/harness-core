@@ -130,7 +130,7 @@ public class ServiceNowServiceImpl implements ServiceNowService {
       ServiceNowTicketType ticketType, String accountId, String connectorId, String appId) {
     ServiceNowConfig serviceNowConfig;
     try {
-      serviceNowConfig = (ServiceNowConfig) settingService.get(connectorId).getValue();
+      serviceNowConfig = getServiceNowConfig(accountId, connectorId);
     } catch (Exception e) {
       logger.error("Error getting ServiceNow connector for ID: {}", connectorId);
       throw new ServiceNowException(
@@ -150,7 +150,7 @@ public class ServiceNowServiceImpl implements ServiceNowService {
       ServiceNowTicketType ticketType, String accountId, String connectorId, String appId) {
     ServiceNowConfig serviceNowConfig;
     try {
-      serviceNowConfig = (ServiceNowConfig) settingService.get(connectorId).getValue();
+      serviceNowConfig = getServiceNowConfig(accountId, connectorId);
     } catch (Exception e) {
       logger.error("Error getting ServiceNow connector for ID: {}", connectorId);
       throw new ServiceNowException(ExceptionUtils.getMessage(e), SERVICENOW_ERROR, USER, e);
@@ -173,7 +173,7 @@ public class ServiceNowServiceImpl implements ServiceNowService {
       String connectorId, String appId, ServiceNowFieldType typeFilter) {
     ServiceNowConfig serviceNowConfig;
     try {
-      serviceNowConfig = (ServiceNowConfig) settingService.get(connectorId).getValue();
+      serviceNowConfig = getServiceNowConfig(accountId, connectorId);
     } catch (Exception e) {
       logger.error("Error getting ServiceNow connector for ID: {}", connectorId);
       throw new ServiceNowException(ExceptionUtils.getMessage(e), SERVICENOW_ERROR, USER, e);
@@ -197,9 +197,7 @@ public class ServiceNowServiceImpl implements ServiceNowService {
   public ServiceNowExecutionData getIssueUrl(String appId, String accountId, ServiceNowApprovalParams approvalParams) {
     ServiceNowConfig serviceNowConfig;
     try {
-      SettingAttribute settingAttribute = settingService.get(approvalParams.getSnowConnectorId());
-      notNullCheck("Service Now connector may be deleted.", settingAttribute, USER);
-      serviceNowConfig = (ServiceNowConfig) settingAttribute.getValue();
+      serviceNowConfig = getServiceNowConfig(accountId, approvalParams.getSnowConnectorId());
     } catch (Exception e) {
       logger.error("Error getting ServiceNow connector for ID: {}", approvalParams.getSnowConnectorId());
       throw new ServiceNowException(ExceptionUtils.getMessage(e), SERVICENOW_ERROR, USER, e);
@@ -220,11 +218,19 @@ public class ServiceNowServiceImpl implements ServiceNowService {
         .getIssueUrl(taskParameters, approvalParams);
   }
 
+  private ServiceNowConfig getServiceNowConfig(String accountId, String connectorId) {
+    SettingAttribute settingAttribute = settingService.getByAccountAndId(accountId, connectorId);
+    notNullCheck("Service Now connector may be deleted.", settingAttribute, USER);
+    ServiceNowConfig serviceNowConfig = (ServiceNowConfig) settingAttribute.getValue();
+    return serviceNowConfig;
+  }
+
   @Override
   public ServiceNowExecutionData getApprovalStatus(ApprovalPollingJobEntity approvalPollingJobEntity) {
     ServiceNowConfig serviceNowConfig;
     try {
-      serviceNowConfig = (ServiceNowConfig) settingService.get(approvalPollingJobEntity.getConnectorId()).getValue();
+      serviceNowConfig =
+          getServiceNowConfig(approvalPollingJobEntity.getAccountId(), approvalPollingJobEntity.getConnectorId());
     } catch (Exception e) {
       logger.error("Error getting ServiceNow connector for ID: {}", approvalPollingJobEntity.getConnectorId());
       throw new ServiceNowException(ExceptionUtils.getMessage(e), SERVICENOW_ERROR, USER, e);
