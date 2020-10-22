@@ -7,7 +7,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.data.domain.Sort.Direction;
 import static org.springframework.data.mongodb.core.query.Criteria.where;
 import static org.springframework.data.mongodb.core.query.Query.query;
-import static software.wings.beans.infrastructure.instance.Instance.InstanceKeys;
 import static software.wings.sm.StateExecutionInstance.StateExecutionInstanceKeys;
 
 import com.google.inject.Inject;
@@ -51,9 +50,11 @@ import org.junit.Rule;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.query.Query;
+import software.wings.api.DeploymentType;
 import software.wings.api.PhaseStepExecutionData;
 import software.wings.beans.Account;
 import software.wings.beans.ExecutionArgs;
+import software.wings.beans.ExecutionCredential;
 import software.wings.beans.ExecutionCredential.ExecutionType;
 import software.wings.beans.FeatureName;
 import software.wings.beans.SSHExecutionCredential;
@@ -61,7 +62,6 @@ import software.wings.beans.User;
 import software.wings.beans.Workflow;
 import software.wings.beans.WorkflowExecution;
 import software.wings.beans.artifact.Artifact;
-import software.wings.beans.infrastructure.instance.Instance;
 import software.wings.beans.security.UserGroup;
 import software.wings.dl.WingsPersistence;
 import software.wings.graphql.datafetcher.DataLoaderRegistryHelper;
@@ -70,9 +70,12 @@ import software.wings.service.impl.analysis.AnalysisContext;
 import software.wings.service.impl.analysis.AnalysisContext.AnalysisContextKeys;
 import software.wings.service.impl.security.auth.AuthHandler;
 import software.wings.service.intfc.FeatureFlagService;
+import software.wings.service.intfc.InfrastructureDefinitionService;
+import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.UserService;
 import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.service.intfc.instance.InstanceService;
+import software.wings.service.intfc.instance.ServerlessInstanceService;
 import software.wings.sm.PhaseStepExecutionSummary;
 import software.wings.sm.StateExecutionInstance;
 
@@ -101,6 +104,9 @@ public abstract class AbstractFunctionalTest extends CategoryTest implements Gra
   @Inject CommandLibraryServiceExecutor commandLibraryServiceExecutor;
   @Inject FeatureFlagService featureFlagService;
   @Inject private InstanceService instanceService;
+  @Inject InfrastructureMappingService infrastructureMappingService;
+  @Inject ServerlessInstanceService serverlessInstanceService;
+  @Inject InfrastructureDefinitionService infrastructureDefinitionService;
 
   @Override
   public DataLoaderRegistry getDataLoaderRegistry() {
@@ -374,8 +380,9 @@ public abstract class AbstractFunctionalTest extends CategoryTest implements Gra
 
     executionArgs.setArtifacts(Arrays.asList(artifact));
     executionArgs.setOrchestrationId(savedWorkflow.getUuid());
-    executionArgs.setExecutionCredential(
-        SSHExecutionCredential.Builder.aSSHExecutionCredential().withExecutionType(ExecutionType.SSH).build());
+    executionArgs.setExecutionCredential(SSHExecutionCredential.Builder.aSSHExecutionCredential()
+                                             .withExecutionType(ExecutionCredential.ExecutionType.SSH)
+                                             .build());
 
     logger.info("Invoking workflow execution");
 
@@ -383,37 +390,34 @@ public abstract class AbstractFunctionalTest extends CategoryTest implements Gra
     logStateExecutionInstanceErrors(workflowExecution);
     assertThat(workflowExecution).isNotNull();
     logger.info("Waiting for execution to finish");
-    assertInstanceCount(workflowExecution.getStatus(), appId, savedWorkflow.getServiceId(),
-        workflowExecution.getInfraMappingIds().get(0));
+    assertInstanceCount(workflowExecution.getStatus(), appId, workflowExecution.getInfraMappingIds().get(0),
+        workflowExecution.getInfraDefinitionIds().get(0));
+
     logger.info("ECs Execution status: " + workflowExecution.getStatus());
     assertThat(workflowExecution.getStatus()).isEqualTo(ExecutionStatus.SUCCESS);
   }
 
   protected void assertInstanceCount(
-      ExecutionStatus workflowExecutionStatus, String appId, String serviceId, String infraMappingId) {
+      ExecutionStatus workflowExecutionStatus, String appId, String infraMappingId, String infraDefinitionId) {
     if (workflowExecutionStatus != ExecutionStatus.SUCCESS) {
       return;
     }
-
-    List<Instance> instances = getActiveInstancesConditional(appId, serviceId, infraMappingId);
-    assertThat(instances.size()).isGreaterThanOrEqualTo(1);
+    DeploymentType deploymentType = infrastructureDefinitionService.get(appId, infraDefinitionId).getDeploymentType();
+    assertThat(getActiveInstancesConditional(appId, infraMappingId, deploymentType)).isGreaterThanOrEqualTo(1);
   }
 
-  private List<Instance> getActiveInstancesConditional(String appId, String serviceId, String infraMappingId) {
+  private long getActiveInstancesConditional(String appId, String infraMappingId, DeploymentType deploymentType) {
     Awaitility.await().atMost(5, TimeUnit.MINUTES).pollInterval(5, TimeUnit.SECONDS).until(() -> {
-      List<Instance> instances = getActiveInstances(appId, serviceId, infraMappingId);
-      return instances != null && instances.size() >= 1;
+      if (deploymentType == DeploymentType.AWS_LAMBDA) {
+        return serverlessInstanceService.list(infraMappingId, appId).size() >= 1;
+      } else {
+        return instanceService.getInstanceCount(appId, infraMappingId) >= 1;
+      }
     });
-
-    return getActiveInstances(appId, serviceId, infraMappingId);
-  }
-
-  private List<Instance> getActiveInstances(String appId, String serviceId, String infraMappingId) {
-    return wingsPersistence.createQuery(Instance.class)
-        .filter(InstanceKeys.appId, appId)
-        .filter(InstanceKeys.infraMappingId, infraMappingId)
-        .filter(InstanceKeys.serviceId, serviceId)
-        .filter(InstanceKeys.isDeleted, Boolean.FALSE)
-        .asList();
+    if (deploymentType == DeploymentType.AWS_LAMBDA) {
+      return serverlessInstanceService.list(infraMappingId, appId).size();
+    } else {
+      return instanceService.getInstanceCount(appId, infraMappingId);
+    }
   }
 }

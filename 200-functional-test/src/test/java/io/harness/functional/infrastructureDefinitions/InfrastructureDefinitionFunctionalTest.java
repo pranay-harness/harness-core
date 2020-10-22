@@ -319,9 +319,9 @@ public class InfrastructureDefinitionFunctionalTest extends AbstractFunctionalTe
     resetCache(this.service.getAccountId());
     ExecutionArgs executionArgs = prepareExecutionArgs(workflow, artifacts, workflowVariables);
     WorkflowExecution workflowExecution = WorkflowRestUtils.startWorkflow(bearerToken, appId, envId, executionArgs);
-    workflowUtils.checkForWorkflowSuccess(workflowExecution);
-    assertInstanceCount(
-        workflowExecution.getStatus(), appId, workflow.getServiceId(), workflowExecution.getInfraMappingIds().get(0));
+    WorkflowExecution finalWorkflowExecution = workflowUtils.checkForWorkflowSuccess(workflowExecution);
+    assertInstanceCount(finalWorkflowExecution.getStatus(), appId, finalWorkflowExecution.getInfraMappingIds().get(0),
+        finalWorkflowExecution.getInfraDefinitionIds().get(0));
   }
 
   private Artifact getArtifact(Service service, String appId) {

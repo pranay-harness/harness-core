@@ -117,8 +117,8 @@ public class K8sFunctionalTest extends AbstractFunctionalTest {
     WorkflowExecution workflowExecution = runWorkflow(bearerToken, application.getUuid(), savedEnvironment.getUuid(),
         getExecutionArgs(savedWorkflow, savedEnvironment.getUuid(), savedService.getUuid()));
 
-    assertInstanceCount(workflowExecution.getStatus(), application.getUuid(), savedService.getUuid(),
-        workflowExecution.getInfraMappingIds().get(0));
+    assertInstanceCount(workflowExecution.getStatus(), application.getUuid(),
+        workflowExecution.getInfraMappingIds().get(0), workflowExecution.getInfraDefinitionIds().get(0));
 
     // create clean up workflow
     Workflow cleanupWorkflow =

@@ -173,8 +173,8 @@ public class CustomDeploymentFunctionalTest extends AbstractFunctionalTest {
 
     logger.info("Custom Deployment's Execution status: " + workflowExecution.getStatus());
     logStateExecutionInstanceErrors(workflowExecution);
-    assertInstanceCount(workflowExecution.getStatus(), application.getUuid(), service.getUuid(),
-        workflowExecution.getInfraMappingIds().get(0));
+    assertInstanceCount(workflowExecution.getStatus(), application.getUuid(),
+        workflowExecution.getInfraMappingIds().get(0), workflowExecution.getInfraDefinitionIds().get(0));
 
     assertThat(workflowExecution.getStatus()).isEqualTo(ExecutionStatus.SUCCESS);
     assertThat(workflowExecution.getServiceExecutionSummaries().get(0).getInstancesCount()).isEqualTo(2);
