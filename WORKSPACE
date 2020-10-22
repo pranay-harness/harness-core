@@ -1636,6 +1636,7 @@ maven_install(
         "xml-apis:xml-apis:1.4.01",
         "xml-resolver:xml-resolver:1.2",
         "xpp3:xpp3:1.1.3.3",
+        "io.netty:netty-all:4.1.51.Final",
     ],
     excluded_artifacts = [
         "org.clojure:clojure",
@@ -1650,6 +1651,7 @@ maven_install(
         "com.jayway.jsonpath:json-path",
         "net.sf.jopt-simple:jopt-simple",
         "com.sun.mail:javax.mail",
+        "io.netty:netty-all",
     ],
     maven_install_json = "//:maven_install.json",
     override_targets = {

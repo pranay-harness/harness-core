@@ -31,13 +31,13 @@ java_library(
         "//22-delegate-service-beans:module",
         "//22-delegate-service-beans/src/main/proto:22_delegate_service_beans_java_proto",
         "//22-ng-core:module",
-        "//22-ng-core-clients:module",
         "//22-ng-delegate-service-beans:module",
         "//22-ng-project-n-orgs:module",
         "//22-secret-manager-client:module",
         "//22-timeout-engine:module",
         "//22-wait-engine:module",
         "//23-delegate-service-driver:module",
+        "//23-ng-core-clients:module",
         "//23-sm-core:module",
         "//24-common-entities:module",
         "//29-orchestration-beans:module",
@@ -696,6 +696,8 @@ java_binary(
     ],
     deps = [
         "@maven//:com_google_guava_guava",
+        # keeping guava on top of maven_deps for right version resoulution
+        "@maven//:io_netty_netty_all",
         # keeping guava on top of maven_deps for right version resoulution
         "maven_deps",
         "//:lombok",
