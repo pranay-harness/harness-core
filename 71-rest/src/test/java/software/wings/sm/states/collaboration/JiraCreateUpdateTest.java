@@ -2,12 +2,21 @@ package software.wings.sm.states.collaboration;
 
 import static io.harness.rule.OwnerRule.AGORODETKI;
 import static io.harness.rule.OwnerRule.POOJA;
+import static io.harness.rule.OwnerRule.PRABU;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.when;
+import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
+import static software.wings.utils.WingsTestConstants.ACTIVITY_ID;
+import static software.wings.utils.WingsTestConstants.APP_ID;
+import static software.wings.utils.WingsTestConstants.APP_NAME;
+import static software.wings.utils.WingsTestConstants.JIRA_CONNECTOR_ID;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.harness.category.element.UnitTests;
+import io.harness.exception.GeneralException;
 import io.harness.exception.HarnessJiraException;
 import io.harness.jira.JiraCreateMetaResponse;
 import io.harness.jira.JiraCustomFieldValue;
@@ -21,9 +30,13 @@ import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import software.wings.WingsBaseTest;
+import software.wings.beans.Activity;
+import software.wings.beans.Application;
+import software.wings.beans.Environment;
 import software.wings.service.impl.JiraHelperService;
+import software.wings.service.intfc.ActivityService;
+import software.wings.service.intfc.SettingsService;
 import software.wings.sm.ExecutionContextImpl;
-import software.wings.utils.WingsTestConstants;
 
 import java.io.File;
 import java.io.IOException;
@@ -35,6 +48,8 @@ import java.util.Map;
 public class JiraCreateUpdateTest extends WingsBaseTest {
   @Mock private ExecutionContextImpl context;
   @Mock private JiraHelperService jiraHelperService;
+  @Mock private SettingsService settingsService;
+  @Mock private ActivityService activityService;
   @InjectMocks JiraCreateUpdate jiraCreateUpdateState = new JiraCreateUpdate("Jira");
   private static JiraCreateMetaResponse createMetaResponse;
   private static JSONArray projects;
@@ -51,8 +66,8 @@ public class JiraCreateUpdateTest extends WingsBaseTest {
 
   @Before
   public void setUpMocks() {
-    when(context.getAccountId()).thenReturn(WingsTestConstants.ACCOUNT_ID);
-    when(context.getAppId()).thenReturn(WingsTestConstants.APP_ID);
+    when(context.getAccountId()).thenReturn(ACCOUNT_ID);
+    when(context.getAppId()).thenReturn(APP_ID);
     when(jiraHelperService.getProjects(anyString(), anyString(), anyString())).thenReturn(projects);
     when(jiraHelperService.getStatuses(anyString(), anyString(), anyString(), anyString())).thenReturn(statuses);
   }
@@ -447,5 +462,21 @@ public class JiraCreateUpdateTest extends WingsBaseTest {
     jiraCreateUpdateState.setCustomFields(customFields);
 
     jiraCreateUpdateState.inferCustomFieldsTypes(createMetaResponse);
+  }
+
+  @Test
+  @Owner(developers = PRABU)
+  @Category(UnitTests.class)
+  public void shouldThrowExceptionIfConnectorIsOutOfAccountScope() {
+    jiraCreateUpdateState.setJiraConnectorId(JIRA_CONNECTOR_ID);
+    jiraCreateUpdateState.setIssueType("Issue Type");
+
+    when(context.fetchRequiredApp()).thenReturn(Application.Builder.anApplication().name(APP_NAME).build());
+    when(context.fetchRequiredEnvironment()).thenReturn(Environment.Builder.anEnvironment().build());
+    when(settingsService.getByAccountAndId(ACCOUNT_ID, JIRA_CONNECTOR_ID)).thenReturn(null);
+    when(activityService.save(any())).thenReturn(Activity.builder().uuid(ACTIVITY_ID).build());
+    assertThatThrownBy(() -> jiraCreateUpdateState.execute(context))
+        .isInstanceOf(GeneralException.class)
+        .hasMessage("Jira connector doesn't exist");
   }
 }

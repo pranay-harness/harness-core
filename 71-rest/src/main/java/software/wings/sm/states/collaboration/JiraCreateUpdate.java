@@ -56,6 +56,7 @@ import software.wings.service.impl.DelegateServiceImpl;
 import software.wings.service.impl.JiraHelperService;
 import software.wings.service.intfc.ActivityService;
 import software.wings.service.intfc.LogService;
+import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.security.SecretManager;
 import software.wings.service.intfc.sweepingoutput.SweepingOutputService;
 import software.wings.sm.ExecutionContext;
@@ -117,6 +118,7 @@ public class JiraCreateUpdate extends State implements SweepingOutputStateMixin 
   @Inject @Transient private DelegateServiceImpl delegateService;
   @Inject @Transient private transient SecretManager secretManager;
   @Inject @Transient private SweepingOutputService sweepingOutputService;
+  @Inject @Transient private SettingsService settingsService;
   @Transient @Inject KryoSerializer kryoSerializer;
 
   @Getter @Setter @NotNull private JiraAction jiraAction;
@@ -167,13 +169,13 @@ public class JiraCreateUpdate extends State implements SweepingOutputStateMixin 
   private ExecutionResponse executeInternal(ExecutionContext context, String activityId) {
     ExecutionContextImpl executionContext = (ExecutionContextImpl) context;
     boolean areRequiredFieldsTemplatized = checkIfRequiredFieldsAreTemplatized();
-    JiraConfig jiraConfig = getJiraConfig(jiraConnectorId);
+    String accountId = context.getAccountId();
+    JiraConfig jiraConfig = getJiraConfig(jiraConnectorId, accountId);
     JiraCreateMetaResponse createMeta = null;
     renderExpressions(context);
 
     if (areRequiredFieldsTemplatized) {
-      createMeta = jiraHelperService.getCreateMetadata(
-          jiraConnectorId, null, project, context.getAccountId(), context.getAppId());
+      createMeta = jiraHelperService.getCreateMetadata(jiraConnectorId, null, project, accountId, context.getAppId());
       try {
         validateRequiredFields(createMeta, context);
       } catch (HarnessJiraException e) {
@@ -184,8 +186,7 @@ public class JiraCreateUpdate extends State implements SweepingOutputStateMixin 
 
     if (EmptyPredicate.isNotEmpty(customFields)) {
       JiraCreateMetaResponse createMetadata = createMeta == null
-          ? jiraHelperService.getCreateMetadata(
-                jiraConnectorId, null, project, context.getAccountId(), context.getAppId())
+          ? jiraHelperService.getCreateMetadata(jiraConnectorId, null, project, accountId, context.getAppId())
           : createMeta;
 
       Map<String, Map<Object, Object>> customFieldsValueToIdMap = mapCustomFieldsValuesToId(createMetadata);
@@ -684,9 +685,9 @@ public class JiraCreateUpdate extends State implements SweepingOutputStateMixin 
     }
   }
 
-  private JiraConfig getJiraConfig(String jiraConnectorId) {
-    SettingAttribute jiraSettingAttribute = wingsPersistence.get(SettingAttribute.class, jiraConnectorId);
-    notNullCheck("jiraSettingAttribute", jiraSettingAttribute);
+  private JiraConfig getJiraConfig(String jiraConnectorId, String accountId) {
+    SettingAttribute jiraSettingAttribute = settingsService.getByAccountAndId(accountId, jiraConnectorId);
+    notNullCheck("Jira connector doesn't exist", jiraSettingAttribute);
 
     if (!(jiraSettingAttribute.getValue() instanceof JiraConfig)) {
       throw new InvalidRequestException("Type of Setting Attribute Value is not JiraConfig");

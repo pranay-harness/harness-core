@@ -211,7 +211,7 @@ public class JiraHelperService {
 
   private JiraExecutionData runTask(
       String accountId, String appId, String connectorId, JiraTaskParameters jiraTaskParameters) {
-    SettingAttribute settingAttribute = settingService.get(connectorId);
+    SettingAttribute settingAttribute = settingService.getByAccountAndId(accountId, connectorId);
     notNullCheck("Jira connector may be deleted.", settingAttribute, USER);
     JiraConfig jiraConfig = (JiraConfig) settingAttribute.getValue();
     jiraTaskParameters.setJiraConfig(jiraConfig);

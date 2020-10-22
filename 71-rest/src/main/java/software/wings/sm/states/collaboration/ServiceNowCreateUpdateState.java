@@ -37,6 +37,7 @@ import software.wings.service.impl.ActivityHelperService;
 import software.wings.service.impl.servicenow.ServiceNowServiceImpl.ServiceNowTicketType;
 import software.wings.service.intfc.ActivityService;
 import software.wings.service.intfc.DelegateService;
+import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.security.SecretManager;
 import software.wings.service.intfc.sweepingoutput.SweepingOutputService;
 import software.wings.sm.ExecutionContext;
@@ -64,6 +65,7 @@ public class ServiceNowCreateUpdateState extends State implements SweepingOutput
   @Inject private transient DelegateService delegateService;
   @Inject private transient SweepingOutputService sweepingOutputService;
   @Inject private transient ActivityHelperService activityHelperService;
+  @Inject private transient SettingsService settingsService;
   @Transient @Inject KryoSerializer kryoSerializer;
 
   private static final long ASYNC_TASK_TIMEOUT_MILLIS = 60 * 1000;
@@ -112,10 +114,10 @@ public class ServiceNowCreateUpdateState extends State implements SweepingOutput
 
   private ExecutionResponse executeInternal(ExecutionContext context, String activityId) {
     ExecutionContextImpl executionContext = (ExecutionContextImpl) context;
-    ServiceNowConfig config = getSnowConfig(serviceNowCreateUpdateParams.getSnowConnectorId());
+    String accountId = executionContext.fetchRequiredApp().getAccountId();
+    ServiceNowConfig config = getSnowConfig(serviceNowCreateUpdateParams.getSnowConnectorId(), accountId);
     renderExpressions(context, serviceNowCreateUpdateParams);
 
-    String accountId = executionContext.fetchRequiredApp().getAccountId();
     ServiceNowTaskParameters serviceNowTaskParameters;
     if (serviceNowCreateUpdateParams.getAction() == ServiceNowAction.IMPORT_SET) {
       if (!isJSONValid(serviceNowCreateUpdateParams.getJsonBody())) {
@@ -190,8 +192,8 @@ public class ServiceNowCreateUpdateState extends State implements SweepingOutput
     params.setAdditionalFields(renderedAdditionalFields);
   }
 
-  private ServiceNowConfig getSnowConfig(String snowConnectorId) {
-    SettingAttribute snowSettingAttribute = wingsPersistence.get(SettingAttribute.class, snowConnectorId);
+  private ServiceNowConfig getSnowConfig(String snowConnectorId, String accountId) {
+    SettingAttribute snowSettingAttribute = settingsService.getByAccountAndId(accountId, snowConnectorId);
     notNullCheck("Service Now connector may be deleted.", snowSettingAttribute);
 
     if (!(snowSettingAttribute.getValue() instanceof ServiceNowConfig)) {
