@@ -7,13 +7,13 @@ import io.harness.batch.processing.billing.timeseries.data.PodCountData;
 import io.harness.batch.processing.billing.timeseries.data.UsageTimeInfo;
 import io.harness.batch.processing.service.intfc.InstanceDataService;
 import io.harness.batch.processing.shard.AccountShardService;
+import io.harness.ccm.commons.utils.DataUtils;
 import io.harness.exception.InvalidRequestException;
 import io.harness.timescaledb.DBUtils;
 import io.harness.timescaledb.TimeScaleDBService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import software.wings.graphql.datafetcher.DataFetcherUtils;
 import software.wings.service.impl.instance.CloudToHarnessMappingServiceImpl;
 
 import java.sql.Connection;
@@ -38,7 +38,7 @@ public class PodCountComputationServiceImpl {
   @Autowired private CloudToHarnessMappingServiceImpl cloudToHarnessMappingService;
   @Autowired private AccountShardService accountShardService;
   @Autowired private InstanceDataService instanceDataService;
-  @Autowired private DataFetcherUtils utils;
+  @Autowired private DataUtils utils;
 
   static final String GET_NODE_QUERY =
       "SELECT INSTANCEID, CLUSTERID FROM billing_data where INSTANCETYPE = 'K8S_NODE' AND ACCOUNTID = '%s' AND STARTTIME >= '%s' AND STARTTIME < '%s' GROUP BY INSTANCEID, CLUSTERID";
