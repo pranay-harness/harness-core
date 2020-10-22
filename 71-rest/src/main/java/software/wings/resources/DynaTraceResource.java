@@ -50,6 +50,6 @@ public class DynaTraceResource {
   @AuthRule(permissionType = LOGGED_IN)
   @ExceptionMetered
   public RestResponse<List<DynaTraceApplication>> getDynatraceServices(@QueryParam("settingId") String settingId) {
-    return new RestResponse<>(dynatraceService.getServices(settingId));
+    return new RestResponse<>(dynatraceService.getServices(settingId, false));
   }
 }

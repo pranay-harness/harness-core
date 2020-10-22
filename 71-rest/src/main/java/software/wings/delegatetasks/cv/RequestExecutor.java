@@ -39,10 +39,14 @@ public class RequestExecutor {
   @Inject private DelegateLogService delegateLogService;
 
   public <U> U executeRequest(Call<U> request) {
+    return executeRequestGetResponse(request).body();
+  }
+
+  public <U> Response<U> executeRequestGetResponse(Call<U> request) {
     try {
       Response<U> response = request.clone().execute();
       if (response.isSuccessful()) {
-        return response.body();
+        return response;
       } else {
         throw new DataCollectionException("Response code: " + response.code() + ", Message: " + response.message()
             + ", Error: " + response.errorBody().string());

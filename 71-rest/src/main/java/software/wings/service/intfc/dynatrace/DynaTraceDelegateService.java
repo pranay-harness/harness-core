@@ -5,6 +5,7 @@ import software.wings.beans.DynaTraceConfig;
 import software.wings.beans.TaskType;
 import software.wings.delegatetasks.DelegateTaskType;
 import software.wings.service.impl.ThirdPartyApiCallLog;
+import software.wings.service.impl.dynatrace.DynaTraceApplication;
 import software.wings.service.impl.dynatrace.DynaTraceMetricDataRequest;
 import software.wings.service.impl.dynatrace.DynaTraceMetricDataResponse;
 import software.wings.service.impl.dynatrace.DynaTraceSetupTestNodeData;
@@ -27,4 +28,8 @@ public interface DynaTraceDelegateService {
   List<DynaTraceMetricDataResponse> getMetricsWithDataForNode(DynaTraceConfig value,
       List<EncryptedDataDetail> encryptionDetails, DynaTraceSetupTestNodeData setupTestNodeData,
       ThirdPartyApiCallLog thirdPartyApiCallLog);
+
+  @DelegateTaskType(TaskType.DYNA_TRACE_GET_SERVICES)
+  List<DynaTraceApplication> getServices(DynaTraceConfig value, List<EncryptedDataDetail> encryptionDetails,
+      ThirdPartyApiCallLog thirdPartyApiCallLog, Boolean shouldResolveAllServices);
 }

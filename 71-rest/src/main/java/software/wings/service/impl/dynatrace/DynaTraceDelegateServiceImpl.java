@@ -10,7 +10,9 @@ import com.google.inject.Singleton;
 import io.harness.delegate.task.DataCollectionExecutorService;
 import io.harness.security.encryption.EncryptedDataDetail;
 import lombok.extern.slf4j.Slf4j;
+import okhttp3.Headers;
 import retrofit2.Call;
+import retrofit2.Response;
 import retrofit2.Retrofit;
 import retrofit2.converter.jackson.JacksonConverterFactory;
 import software.wings.beans.DynaTraceConfig;
@@ -35,6 +37,8 @@ import java.util.concurrent.Callable;
 @Singleton
 @Slf4j
 public class DynaTraceDelegateServiceImpl implements DynaTraceDelegateService {
+  private static final int PAGE_SIZE = 500;
+  private static final int MAX_SERVICES_SIZE = 500;
   @Inject private EncryptionService encryptionService;
   @Inject private DelegateLogService delegateLogService;
   @Inject private DataCollectionExecutorService dataCollectionService;
@@ -87,6 +91,42 @@ public class DynaTraceDelegateServiceImpl implements DynaTraceDelegateService {
     });
 
     return metricDataResponses;
+  }
+
+  @Override
+  public List<DynaTraceApplication> getServices(DynaTraceConfig config, List<EncryptedDataDetail> encryptionDetails,
+      ThirdPartyApiCallLog thirdPartyApiCallLog, Boolean shouldResolveAllServices) {
+    boolean isLastPage = false;
+    List<DynaTraceApplication> serviceList = new ArrayList<>();
+    String nextPageKey = null;
+    int numPages = 0;
+    while (!isLastPage) {
+      Call<List<DynaTraceApplication>> servicesRequest = getDynaTraceRestClient(config).getServices(
+          getHeaderWithCredentials(config, encryptionDetails), PAGE_SIZE, nextPageKey);
+      Response<List<DynaTraceApplication>> response =
+          requestExecutor.executeRequestGetResponse(servicesRequest.clone());
+      Headers headers = response.headers();
+      int totalCount = Integer.parseInt(headers.get("total-Count"));
+      if (!shouldResolveAllServices && totalCount > MAX_SERVICES_SIZE) {
+        return prepareAndReturnTooManyServicesResponse();
+      }
+      nextPageKey = headers.get("next-page-key");
+      serviceList.addAll(response.body());
+      if (nextPageKey == null) {
+        isLastPage = true;
+      }
+    }
+
+    return serviceList;
+  }
+
+  private List<DynaTraceApplication> prepareAndReturnTooManyServicesResponse() {
+    DynaTraceApplication application =
+        DynaTraceApplication.builder()
+            .displayName("Too many services to list. Please type in your Service Entity ID")
+            .entityId("-1")
+            .build();
+    return Arrays.asList(application);
   }
 
   private List<Callable<DynaTraceMetricDataResponse>> getCallablesForTestButton(String entityId, DynaTraceConfig config,

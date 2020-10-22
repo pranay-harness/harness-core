@@ -8,7 +8,6 @@ import static org.mockito.Mockito.when;
 
 import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
-import io.harness.serializer.JsonUtils;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -19,8 +18,8 @@ import software.wings.beans.DynaTraceConfig;
 import software.wings.beans.SettingAttribute;
 import software.wings.delegatetasks.DelegateProxyFactory;
 import software.wings.delegatetasks.cv.DataCollectionException;
-import software.wings.service.impl.analysis.APMDelegateService;
 import software.wings.service.intfc.SettingsService;
+import software.wings.service.intfc.dynatrace.DynaTraceDelegateService;
 import software.wings.service.intfc.dynatrace.DynaTraceService;
 import software.wings.service.intfc.security.SecretManager;
 
@@ -33,7 +32,7 @@ import java.util.List;
 public class DynatraceServiceTest {
   @Mock private SettingsService mockSettingsService;
   @Mock private DelegateProxyFactory mockDelegateProxyFactory;
-  @Mock private APMDelegateService apmDelegateService;
+  @Mock private DynaTraceDelegateService dynatraceDelegateService;
   @Mock private SecretManager mockSecretManager;
 
   @InjectMocks DynaTraceService service = new DynaTraceServiceImpl();
@@ -51,8 +50,8 @@ public class DynatraceServiceTest {
     attribute.setValue(dynaTraceConfig);
 
     when(mockSettingsService.get(dynatraceSettingId)).thenReturn(attribute);
-    when(mockDelegateProxyFactory.get(any(), any())).thenReturn(apmDelegateService);
-    when(apmDelegateService.fetch(any(), any())).thenReturn(JsonUtils.asJson(getDynatraceServiceList()));
+    when(mockDelegateProxyFactory.get(any(), any())).thenReturn(dynatraceDelegateService);
+    when(dynatraceDelegateService.getServices(any(), any(), any(), any())).thenReturn(getDynatraceServiceList());
   }
 
   private List<DynaTraceApplication> getDynatraceServiceList() {
@@ -67,7 +66,7 @@ public class DynatraceServiceTest {
   @Owner(developers = PRAVEEN)
   @Category(UnitTests.class)
   public void testGetServices_happyCase() {
-    List<DynaTraceApplication> serviceList = service.getServices(dynatraceSettingId);
+    List<DynaTraceApplication> serviceList = service.getServices(dynatraceSettingId, true);
     assertThat(serviceList).isNotEmpty();
     assertThat(serviceList.containsAll(getDynatraceServiceList())).isTrue();
   }
@@ -76,7 +75,7 @@ public class DynatraceServiceTest {
   @Owner(developers = PRAVEEN)
   @Category(UnitTests.class)
   public void testGetServices_emptySettingId() {
-    List<DynaTraceApplication> serviceList = service.getServices(null);
+    List<DynaTraceApplication> serviceList = service.getServices(null, true);
     assertThat(serviceList).isNull();
   }
 

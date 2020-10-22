@@ -18,7 +18,7 @@ public interface DynaTraceService {
    */
   VerificationNodeDataSetupResponse getMetricsWithDataForNode(DynaTraceSetupTestNodeData setupTestNodeData);
 
-  List<DynaTraceApplication> getServices(String settingId);
+  List<DynaTraceApplication> getServices(String settingId, boolean shouldResolveAllServices);
 
   String resolveDynatraceServiceNameToId(String settingId, String serviceName);
 
