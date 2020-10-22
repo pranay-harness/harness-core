@@ -140,7 +140,7 @@ public class AzureVMSSFunctionalTest extends AbstractFunctionalTest {
     String appId = workflowExecution.getAppId();
     String serviceId = workflowExecution.getServiceIds().get(0);
     String infraMappingId = workflowExecution.getInfraMappingIds().get(0);
-    assertInstanceCount(status, appId, serviceId, infraMappingId);
+    assertInstanceCount(status, appId, infraMappingId, workflowExecution.getInfraDefinitionIds().get(0));
   }
 
   @NotNull
