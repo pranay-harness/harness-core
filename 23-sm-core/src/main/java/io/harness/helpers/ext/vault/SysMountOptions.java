@@ -1,17 +1,18 @@
 package io.harness.helpers.ext.vault;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
+
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import io.harness.annotations.dev.OwnedBy;
 import lombok.Builder;
 import lombok.Data;
 import lombok.ToString;
 
-/**
- * @author marklu on 9/3/19
- */
 @JsonIgnoreProperties(ignoreUnknown = true)
 @Data
 @Builder
 @ToString
+@OwnedBy(PL)
 public class SysMountOptions {
   private int version;
 }

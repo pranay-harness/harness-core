@@ -1,6 +1,9 @@
 package io.harness.helpers.ext.vault;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
+
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import io.harness.annotations.dev.OwnedBy;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Builder.Default;
@@ -11,8 +14,6 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
- * @author marklu on 9/3/19
- *
  * Parsing the /secret/option/version integer value of the of full sys mounts output JSON from the
  * Vault /v1/secret/sys/mounts REST API call. Sample snippet of the output call is:
  * <p>
@@ -40,6 +41,7 @@ import java.util.Map;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
+@OwnedBy(PL)
 public class SysMountsResponse {
   @Default private Map<String, SysMount> data = new HashMap<>();
 }

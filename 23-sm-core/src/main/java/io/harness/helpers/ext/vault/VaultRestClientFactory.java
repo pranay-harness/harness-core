@@ -1,9 +1,11 @@
 package io.harness.helpers.ext.vault;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.network.Http;
 import lombok.experimental.UtilityClass;
 import lombok.extern.slf4j.Slf4j;
@@ -24,10 +26,11 @@ import java.util.Map;
 /**
  * A Factory class that's capable of constructing a REST client to talked to V1 or V2 secret engine backed
  * Vault server.
- * @author mark.lu on 10/11/18
  */
+
 @UtilityClass
 @Slf4j
+@OwnedBy(PL)
 public class VaultRestClientFactory {
   private static final String PATH_SEPARATOR = "/";
   private static final String KEY_NAME_SEPARATOR = "#";

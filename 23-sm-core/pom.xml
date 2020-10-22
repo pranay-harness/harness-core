@@ -9,6 +9,16 @@
     <artifactId>23-sm-core</artifactId>
     <dependencies>
         <dependency>
+            <groupId>com.microsoft.azure</groupId>
+            <artifactId>adal4j</artifactId>
+            <version>1.6.4</version>
+        </dependency>
+        <dependency>
+            <groupId>com.microsoft.azure</groupId>
+            <artifactId>azure-keyvault</artifactId>
+            <version>1.2.4</version>
+        </dependency>
+        <dependency>
             <groupId>org.projectlombok</groupId>
             <artifactId>lombok</artifactId>
         </dependency>
@@ -29,12 +39,12 @@
         </dependency>
         <dependency>
             <groupId>software.wings</groupId>
-            <artifactId>22-rbac-core</artifactId>
+            <artifactId>22-ng-project-n-orgs</artifactId>
             <version>${project.parent.version}</version>
         </dependency>
         <dependency>
             <groupId>software.wings</groupId>
-            <artifactId>22-ng-project-n-orgs</artifactId>
+            <artifactId>22-rbac-core</artifactId>
             <version>${project.parent.version}</version>
         </dependency>
         <dependency>
