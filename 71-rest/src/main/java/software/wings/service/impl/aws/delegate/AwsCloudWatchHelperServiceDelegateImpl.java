@@ -77,7 +77,7 @@ public class AwsCloudWatchHelperServiceDelegateImpl
   private GetMetricStatisticsResult getMetricStatistics(GetMetricStatisticsRequest request, final AwsConfig awsConfig,
       List<EncryptedDataDetail> encryptionDetails, String region) {
     try {
-      encryptionService.decrypt(awsConfig, encryptionDetails);
+      encryptionService.decrypt(awsConfig, encryptionDetails, false);
       AmazonCloudWatchClient cloudWatchClient = getAwsCloudWatchClient(region, awsConfig);
       tracker.trackCloudWatchCall("Get Metric Statistics");
       return cloudWatchClient.getMetricStatistics(request);
@@ -92,7 +92,7 @@ public class AwsCloudWatchHelperServiceDelegateImpl
   private GetMetricDataResult getMetricData(
       GetMetricDataRequest request, AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails, String region) {
     try {
-      encryptionService.decrypt(awsConfig, encryptionDetails);
+      encryptionService.decrypt(awsConfig, encryptionDetails, false);
       AmazonCloudWatchClient cloudWatchClient = getAwsCloudWatchClient(region, awsConfig);
       return cloudWatchClient.getMetricData(request);
     } catch (AmazonServiceException amazonServiceException) {

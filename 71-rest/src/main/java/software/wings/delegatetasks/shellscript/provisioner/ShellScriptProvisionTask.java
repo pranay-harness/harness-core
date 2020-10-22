@@ -124,7 +124,7 @@ public class ShellScriptProvisionTask extends AbstractDelegateRunnableTask {
       for (Entry<String, EncryptedDataDetail> encryptedVariable : encryptedVariables.entrySet()) {
         try {
           envMap.put(encryptedVariable.getKey(),
-              String.valueOf(encryptionService.getDecryptedValue(encryptedVariable.getValue())));
+              String.valueOf(encryptionService.getDecryptedValue(encryptedVariable.getValue(), false)));
         } catch (IOException e) {
           throw new WingsException("Error occurred while decrypting encrypted variables", e);
         }

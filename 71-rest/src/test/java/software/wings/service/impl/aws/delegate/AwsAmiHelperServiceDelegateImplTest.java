@@ -118,7 +118,7 @@ public class AwsAmiHelperServiceDelegateImplTest extends WingsBaseTest {
   @Before
   public void setup() {
     doNothing().when(mockCallback).saveExecutionLog(anyString());
-    doReturn(null).when(mockEncryptionService).decrypt(any(), anyList());
+    doReturn(null).when(mockEncryptionService).decrypt(any(), anyList(), eq(false));
   }
   @Test
   @Owner(developers = SATYAM)
@@ -173,7 +173,7 @@ public class AwsAmiHelperServiceDelegateImplTest extends WingsBaseTest {
   public void testRollbackSwitchAmiRoutes() {
     ExecutionLogCallback mockCallback = mock(ExecutionLogCallback.class);
     doNothing().when(mockCallback).saveExecutionLog(anyString());
-    doReturn(null).when(mockEncryptionService).decrypt(any(), anyList());
+    doReturn(null).when(mockEncryptionService).decrypt(any(), anyList(), eq(false));
     String newAsgName = "Old_Asg";
     String oldAsgName = "New_Asg";
     AwsAmiPreDeploymentData preDeploymentData =

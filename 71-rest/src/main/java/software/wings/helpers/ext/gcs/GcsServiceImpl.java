@@ -244,7 +244,7 @@ public class GcsServiceImpl implements GcsService {
       GcpConfig gcpConfig, List<EncryptedDataDetail> encryptionDetails, String bucketName) {
     boolean versioningEnabled = false;
     try {
-      encryptionService.decrypt(gcpConfig, encryptionDetails);
+      encryptionService.decrypt(gcpConfig, encryptionDetails, false);
       // Get versioning info for given bucket
       Storage gcsStorageService = gcpHelperService.getGcsStorageService(gcpConfig, encryptionDetails);
       Storage.Buckets.Get request = gcsStorageService.buckets().get(bucketName);
@@ -262,7 +262,7 @@ public class GcsServiceImpl implements GcsService {
   @Override
   public String getProject(GcpConfig gcpConfig, List<EncryptedDataDetail> encryptedDataDetails) {
     if (isNotEmpty(encryptedDataDetails)) {
-      encryptionService.decrypt(gcpConfig, encryptedDataDetails);
+      encryptionService.decrypt(gcpConfig, encryptedDataDetails, false);
     }
     return new JSONObject(new String(gcpConfig.getServiceAccountKeyFileContent())).get("project_id").toString();
   }
@@ -274,7 +274,7 @@ public class GcsServiceImpl implements GcsService {
     Buckets listOfBuckets;
     Map<String, String> bucketList = new HashMap<>();
     if (isNotEmpty(encryptedDataDetails)) {
-      encryptionService.decrypt(gcpConfig, encryptedDataDetails);
+      encryptionService.decrypt(gcpConfig, encryptedDataDetails, false);
     }
 
     // List buckets for current project in service account if project is empty

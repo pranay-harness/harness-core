@@ -5,6 +5,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyBoolean;
 import static org.mockito.Matchers.anyLong;
+import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -90,7 +91,7 @@ public class StackDriverLogDataCollectionTaskTest extends WingsBaseTest {
 
     dataCollectionTask = new StackDriverLogDataCollectionTask(
         DelegateTaskPackage.builder().delegateId(delegateId).data(taskData).build(), null, null);
-    when(encryptionService.decrypt(any(), any())).thenReturn(null);
+    when(encryptionService.decrypt(any(), any(), eq(false))).thenReturn(null);
     setupFields();
   }
 

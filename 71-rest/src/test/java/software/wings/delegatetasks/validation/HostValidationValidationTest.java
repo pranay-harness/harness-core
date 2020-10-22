@@ -7,6 +7,7 @@ import static io.harness.rule.OwnerRule.ROHIT_KUMAR;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyListOf;
+import static org.mockito.Matchers.eq;
 import static software.wings.delegatetasks.validation.HostValidationValidation.BATCH_HOST_VALIDATION;
 
 import com.google.common.collect.Lists;
@@ -45,7 +46,7 @@ public class HostValidationValidationTest extends CategoryTest {
     MockitoAnnotations.initMocks(this);
     Mockito.doReturn(null)
         .when(encryptionService)
-        .decrypt(any(EncryptableSetting.class), anyListOf(EncryptedDataDetail.class));
+        .decrypt(any(EncryptableSetting.class), anyListOf(EncryptedDataDetail.class), eq(false));
   }
 
   @Test

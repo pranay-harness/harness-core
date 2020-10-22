@@ -97,7 +97,7 @@ public class HelmCommandValidation extends AbstractDelegateValidateTask {
     }
 
     try {
-      encryptionService.decrypt(gitConfig, encryptionDetails);
+      encryptionService.decrypt(gitConfig, encryptionDetails, false);
     } catch (Exception e) {
       String errorMsg = "Failed to Decrypt gitConfig, RepoUrl: " + gitConfig.getRepoUrl();
       logger.error(errorMsg, e);

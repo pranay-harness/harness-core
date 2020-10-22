@@ -938,7 +938,7 @@ public class K8sTaskHelperTest extends WingsBaseTest {
 
     verify(mockGitService, times(1))
         .downloadFiles(eq(GitConfig.builder().repoUrl("helm-url").build()), any(GitFileConfig.class), eq("./dir"));
-    verify(mockEncryptionService, times(1)).decrypt(any(), anyList());
+    verify(mockEncryptionService, times(1)).decrypt(any(), anyList(), eq(false));
 
     // handle exception
     doThrow(new RuntimeException())

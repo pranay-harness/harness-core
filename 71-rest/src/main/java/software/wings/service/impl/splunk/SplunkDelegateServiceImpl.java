@@ -96,7 +96,7 @@ public class SplunkDelegateServiceImpl implements SplunkDelegateService {
   @Override
   public boolean validateConfig(SplunkConfig splunkConfig, List<EncryptedDataDetail> encryptedDataDetails) {
     try {
-      encryptionService.decrypt(splunkConfig, encryptedDataDetails);
+      encryptionService.decrypt(splunkConfig, encryptedDataDetails, false);
       logger.info("Validating splunk, url {}, for user {} ", splunkConfig.getSplunkUrl(), splunkConfig.getUsername());
       Service splunkService = initSplunkService(splunkConfig, encryptedDataDetails);
       createSearchJob(splunkService, getQuery("*exception*", null, null, false),
@@ -451,7 +451,7 @@ public class SplunkDelegateServiceImpl implements SplunkDelegateService {
 
   @Override
   public Service initSplunkService(SplunkConfig splunkConfig, List<EncryptedDataDetail> encryptedDataDetails) {
-    encryptionService.decrypt(splunkConfig, encryptedDataDetails);
+    encryptionService.decrypt(splunkConfig, encryptedDataDetails, false);
 
     try {
       return initSplunkServiceWithToken(

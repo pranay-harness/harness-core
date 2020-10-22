@@ -47,7 +47,7 @@ public class AwsCFHelperServiceDelegateImpl extends AwsHelperServiceDelegateBase
       String region, String data, String type, GitFileConfig gitFileConfig, GitConfig gitConfig,
       List<EncryptedDataDetail> sourceRepoEncryptedDetail) {
     try {
-      encryptionService.decrypt(awsConfig, encryptionDetails);
+      encryptionService.decrypt(awsConfig, encryptionDetails, false);
       AmazonCloudFormationClient client = getAmazonCloudFormationClient(Regions.fromName(region), awsConfig);
       GetTemplateSummaryRequest request = new GetTemplateSummaryRequest();
       if ("s3".equalsIgnoreCase(type)) {

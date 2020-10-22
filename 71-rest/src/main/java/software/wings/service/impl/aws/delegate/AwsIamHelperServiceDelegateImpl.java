@@ -42,7 +42,7 @@ public class AwsIamHelperServiceDelegateImpl
     try {
       Map<String, String> result = new HashMap<>();
       String nextMarker = null;
-      encryptionService.decrypt(awsConfig, encryptionDetails);
+      encryptionService.decrypt(awsConfig, encryptionDetails, false);
       do {
         AmazonIdentityManagementClient amazonIdentityManagementClient = getAmazonIdentityManagementClient(awsConfig);
         ListRolesRequest listRolesRequest = new ListRolesRequest().withMaxItems(400).withMarker(nextMarker);
@@ -67,7 +67,7 @@ public class AwsIamHelperServiceDelegateImpl
       String nextMarker = null;
       ListInstanceProfilesRequest listInstanceProfilesRequest;
       ListInstanceProfilesResult listInstanceProfilesResult;
-      encryptionService.decrypt(awsConfig, encryptionDetails);
+      encryptionService.decrypt(awsConfig, encryptionDetails, false);
       do {
         listInstanceProfilesRequest = new ListInstanceProfilesRequest().withMarker(nextMarker);
         tracker.trackIAMCall("List Instance Profiles");

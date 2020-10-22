@@ -1108,7 +1108,7 @@ public class PcfCommandTaskHandlerTest extends WingsBaseTest {
     PcfCommandRequest pcfCommandRequest = mock(PcfCommandDeployRequest.class);
     when(pcfCommandRequest.getActivityId()).thenReturn(ACTIVITY_ID);
     List<EncryptedDataDetail> encryptedDataDetails = Arrays.asList(EncryptedDataDetail.builder().build());
-    when(encryptionService.getDecryptedValue(any())).thenReturn("decryptedValue".toCharArray());
+    when(encryptionService.getDecryptedValue(any(), eq(false))).thenReturn("decryptedValue".toCharArray());
     try {
       pcfApplicationDetailsCommandTaskHandler.executeTask(pcfCommandRequest, encryptedDataDetails);
     } catch (Exception e) {

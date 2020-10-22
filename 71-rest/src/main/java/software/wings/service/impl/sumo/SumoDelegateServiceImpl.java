@@ -200,7 +200,7 @@ public class SumoDelegateServiceImpl implements SumoDelegateService {
    */
   public static SumoLogicClient getSumoClient(
       SumoConfig sumoConfig, List<EncryptedDataDetail> encryptedDataDetails, EncryptionService encryptionService) {
-    encryptionService.decrypt(sumoConfig, encryptedDataDetails);
+    encryptionService.decrypt(sumoConfig, encryptedDataDetails, false);
     final Credentials credentials =
         new Credentials(new String(sumoConfig.getAccessId()), new String(sumoConfig.getAccessKey()));
     SumoLogicClient sumoLogicClient = new SumoLogicClient(credentials);

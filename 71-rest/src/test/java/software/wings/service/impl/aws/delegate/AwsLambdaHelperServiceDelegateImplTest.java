@@ -10,6 +10,7 @@ import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyList;
 import static org.mockito.Matchers.anyString;
+import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.doThrow;
@@ -95,7 +96,7 @@ public class AwsLambdaHelperServiceDelegateImplTest extends WingsBaseTest {
   public void testExecuteFunction() {
     AWSLambdaClient mockClient = mock(AWSLambdaClient.class);
     doReturn(mockClient).when(awsLambdaHelperServiceDelegate).getAmazonLambdaClient(anyString(), any());
-    doReturn(null).when(mockEncryptionService).decrypt(any(), anyList());
+    doReturn(null).when(mockEncryptionService).decrypt(any(), anyList(), eq(false));
     doReturn(new InvokeResult().withStatusCode(1).withFunctionError("err").withLogResult("log").withPayload(
                  StandardCharsets.UTF_8.encode("payload")))
         .when(mockClient)
@@ -118,7 +119,7 @@ public class AwsLambdaHelperServiceDelegateImplTest extends WingsBaseTest {
   public void testExecuteWf_FxDoesNotExistS3() {
     AWSLambdaClient mockClient = mock(AWSLambdaClient.class);
     doReturn(mockClient).when(awsLambdaHelperServiceDelegate).getAmazonLambdaClient(anyString(), any());
-    doReturn(null).when(mockEncryptionService).decrypt(any(), anyList());
+    doReturn(null).when(mockEncryptionService).decrypt(any(), anyList(), eq(false));
     ExecutionLogCallback mockCallBack = mock(ExecutionLogCallback.class);
     doNothing().when(mockCallBack).saveExecutionLog(anyString(), any());
     doReturn(null).when(mockClient).getFunction(any());
@@ -167,7 +168,7 @@ public class AwsLambdaHelperServiceDelegateImplTest extends WingsBaseTest {
   public void testExecuteWf_FxDoesNotExistNonS3() {
     AWSLambdaClient mockClient = mock(AWSLambdaClient.class);
     doReturn(mockClient).when(awsLambdaHelperServiceDelegate).getAmazonLambdaClient(anyString(), any());
-    doReturn(null).when(mockEncryptionService).decrypt(any(), anyList());
+    doReturn(null).when(mockEncryptionService).decrypt(any(), anyList(), eq(false));
     ExecutionLogCallback mockCallBack = mock(ExecutionLogCallback.class);
     doNothing().when(mockCallBack).saveExecutionLog(anyString(), any());
     doReturn(null).when(mockClient).getFunction(any());
@@ -219,7 +220,7 @@ public class AwsLambdaHelperServiceDelegateImplTest extends WingsBaseTest {
   public void testExecuteWf_FxExistsS3() {
     AWSLambdaClient mockClient = mock(AWSLambdaClient.class);
     doReturn(mockClient).when(awsLambdaHelperServiceDelegate).getAmazonLambdaClient(anyString(), any());
-    doReturn(null).when(mockEncryptionService).decrypt(any(), anyList());
+    doReturn(null).when(mockEncryptionService).decrypt(any(), anyList(), eq(false));
     ExecutionLogCallback mockCallBack = mock(ExecutionLogCallback.class);
     doNothing().when(mockCallBack).saveExecutionLog(anyString(), any());
     doReturn(new GetFunctionResult().withConfiguration(new FunctionConfiguration().withCodeSha256("sha256_old")))
@@ -275,7 +276,7 @@ public class AwsLambdaHelperServiceDelegateImplTest extends WingsBaseTest {
   public void testExecuteWf_FxExistsNonS3() {
     AWSLambdaClient mockClient = mock(AWSLambdaClient.class);
     doReturn(mockClient).when(awsLambdaHelperServiceDelegate).getAmazonLambdaClient(anyString(), any());
-    doReturn(null).when(mockEncryptionService).decrypt(any(), anyList());
+    doReturn(null).when(mockEncryptionService).decrypt(any(), anyList(), eq(false));
     ExecutionLogCallback mockCallBack = mock(ExecutionLogCallback.class);
     doNothing().when(mockCallBack).saveExecutionLog(anyString(), any());
     doReturn(new GetFunctionResult().withConfiguration(new FunctionConfiguration().withCodeSha256("sha256_old")))
@@ -359,7 +360,7 @@ public class AwsLambdaHelperServiceDelegateImplTest extends WingsBaseTest {
   @Owner(developers = ROHIT_KUMAR)
   @Category(UnitTests.class)
   public void test_getFunctionDetails() {
-    doReturn(null).when(mockEncryptionService).decrypt(any(), anyList());
+    doReturn(null).when(mockEncryptionService).decrypt(any(), anyList(), eq(false));
     AWSLambdaClient mockClient = mock(AWSLambdaClient.class);
     final GetFunctionResult getFunctionResult =
         new GetFunctionResult()
@@ -390,7 +391,7 @@ public class AwsLambdaHelperServiceDelegateImplTest extends WingsBaseTest {
     AWSLambdaClient mockClient = mock(AWSLambdaClient.class);
     doReturn(mockClient).when(awsLambdaHelperServiceDelegate).getAmazonLambdaClient(anyString(), any());
 
-    doReturn(null).when(mockEncryptionService).decrypt(any(), anyList());
+    doReturn(null).when(mockEncryptionService).decrypt(any(), anyList(), eq(false));
     doThrow(new AmazonServiceException("service exception"))
         .when(mockClient)
         .getFunction(any(GetFunctionRequest.class));

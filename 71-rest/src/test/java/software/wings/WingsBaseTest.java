@@ -303,7 +303,8 @@ public abstract class WingsBaseTest extends CategoryTest implements MockableTest
       AppDynamicsConfig appDynamicsConfig = (AppDynamicsConfig) settingAttributes.get(i).getValue();
       assertThat(appDynamicsConfig.getPassword()).isNull();
 
-      encryptionService.decrypt(appDynamicsConfig, secretManager.getEncryptionDetails(appDynamicsConfig, null, appId));
+      encryptionService.decrypt(
+          appDynamicsConfig, secretManager.getEncryptionDetails(appDynamicsConfig, null, appId), false);
       assertThat(new String(appDynamicsConfig.getPassword())).isEqualTo("password_" + i);
 
       wingsPersistence.delete(SettingAttribute.class, settingAttribute.getAppId(), settingAttribute.getUuid());

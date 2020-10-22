@@ -18,12 +18,13 @@ import java.util.List;
 @OwnedBy(PL)
 public interface EncryptionService {
   @DelegateTaskType(TaskType.SECRET_DECRYPT)
-  EncryptableSetting decrypt(EncryptableSetting object, List<EncryptedDataDetail> encryptedDataDetails);
+  EncryptableSetting decrypt(
+      EncryptableSetting object, List<EncryptedDataDetail> encryptedDataDetails, boolean fromCache);
 
   @DelegateTaskType(TaskType.BATCH_SECRET_DECRYPT)
   List<EncryptableSettingWithEncryptionDetails> decrypt(
-      List<EncryptableSettingWithEncryptionDetails> encryptableSettingWithEncryptionDetailsList);
+      List<EncryptableSettingWithEncryptionDetails> encryptableSettingWithEncryptionDetailsList, boolean fromCache);
 
   @DelegateTaskType(TaskType.SECRET_DECRYPT_REF)
-  char[] getDecryptedValue(EncryptedDataDetail encryptedDataDetail) throws IOException;
+  char[] getDecryptedValue(EncryptedDataDetail encryptedDataDetail, boolean fromCache) throws IOException;
 }

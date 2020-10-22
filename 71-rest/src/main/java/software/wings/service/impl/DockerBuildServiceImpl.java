@@ -43,7 +43,7 @@ public class DockerBuildServiceImpl implements DockerBuildService {
   public List<BuildDetails> getBuilds(String appId, ArtifactStreamAttributes artifactStreamAttributes,
       DockerConfig dockerConfig, List<EncryptedDataDetail> encryptionDetails) {
     equalCheck(artifactStreamAttributes.getArtifactStreamType(), DOCKER.name());
-    encryptionService.decrypt(dockerConfig, encryptionDetails);
+    encryptionService.decrypt(dockerConfig, encryptionDetails, false);
     List<BuildDetailsInternal> builds =
         dockerRegistryService.getBuilds(DockerConfigToInternalMapper.toDockerInternalConfig(dockerConfig),
             artifactStreamAttributes.getImageName(), 250);
@@ -88,14 +88,14 @@ public class DockerBuildServiceImpl implements DockerBuildService {
 
   @Override
   public boolean validateArtifactServer(DockerConfig config, List<EncryptedDataDetail> encryptedDataDetails) {
-    encryptionService.decrypt(config, encryptedDataDetails);
+    encryptionService.decrypt(config, encryptedDataDetails, false);
     return dockerRegistryService.validateCredentials(DockerConfigToInternalMapper.toDockerInternalConfig(config));
   }
 
   @Override
   public boolean validateArtifactSource(DockerConfig config, List<EncryptedDataDetail> encryptionDetails,
       ArtifactStreamAttributes artifactStreamAttributes) {
-    encryptionService.decrypt(config, encryptionDetails);
+    encryptionService.decrypt(config, encryptionDetails, false);
     return dockerRegistryService.verifyImageName(
         DockerConfigToInternalMapper.toDockerInternalConfig(config), artifactStreamAttributes.getImageName());
   }
@@ -120,7 +120,7 @@ public class DockerBuildServiceImpl implements DockerBuildService {
   @Override
   public List<Map<String, String>> getLabels(ArtifactStreamAttributes artifactStreamAttributes, List<String> buildNos,
       DockerConfig dockerConfig, List<EncryptedDataDetail> encryptionDetails) {
-    encryptionService.decrypt(dockerConfig, encryptionDetails);
+    encryptionService.decrypt(dockerConfig, encryptionDetails, false);
     return dockerRegistryService.getLabels(DockerConfigToInternalMapper.toDockerInternalConfig(dockerConfig),
         artifactStreamAttributes.getImageName(), buildNos);
   }

@@ -27,7 +27,7 @@ public class GitConnectionCapabilityCheck implements CapabilityCheck {
     GitConfig gitConfig = capability.getGitConfig();
     List<EncryptedDataDetail> encryptedDataDetails = capability.getEncryptedDataDetails();
     try {
-      encryptionService.decrypt(gitConfig, encryptedDataDetails);
+      encryptionService.decrypt(gitConfig, encryptedDataDetails, false);
     } catch (Exception e) {
       logger.info("Failed to decrypt " + capability.getGitConfig(), e);
       return CapabilityResponse.builder().delegateCapability(capability).validated(false).build();

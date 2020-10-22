@@ -112,7 +112,7 @@ public class AwsAmiHelperServiceDelegateImpl
     try {
       AwsConfig awsConfig = request.getAwsConfig();
       List<EncryptedDataDetail> encryptionDetails = request.getEncryptionDetails();
-      encryptionService.decrypt(awsConfig, encryptionDetails);
+      encryptionService.decrypt(awsConfig, encryptionDetails, false);
       String region = request.getRegion();
       logCallback.saveExecutionLog("Starting to switch routes in AMI Deploy", INFO);
       List<String> primaryClassicLBs = request.getPrimaryClassicLBs();
@@ -241,7 +241,7 @@ public class AwsAmiHelperServiceDelegateImpl
     try {
       AwsConfig awsConfig = request.getAwsConfig();
       List<EncryptedDataDetail> encryptionDetails = request.getEncryptionDetails();
-      encryptionService.decrypt(awsConfig, encryptionDetails);
+      encryptionService.decrypt(awsConfig, encryptionDetails, false);
       String region = request.getRegion();
       logCallback.saveExecutionLog("Starting to switch routes in AMI Deploy", INFO);
       List<String> primaryClassicLBs = request.getPrimaryClassicLBs();
@@ -358,7 +358,7 @@ public class AwsAmiHelperServiceDelegateImpl
     try {
       AwsConfig awsConfig = request.getAwsConfig();
       List<EncryptedDataDetail> encryptionDetails = request.getEncryptionDetails();
-      encryptionService.decrypt(awsConfig, encryptionDetails);
+      encryptionService.decrypt(awsConfig, encryptionDetails, false);
       logCallback.saveExecutionLog("Starting AWS AMI Deploy", INFO);
 
       logCallback.saveExecutionLog("Getting existing instance Ids");
@@ -933,7 +933,7 @@ public class AwsAmiHelperServiceDelegateImpl
     try {
       AwsConfig awsConfig = request.getAwsConfig();
       List<EncryptedDataDetail> encryptionDetails = request.getEncryptionDetails();
-      encryptionService.decrypt(awsConfig, encryptionDetails);
+      encryptionService.decrypt(awsConfig, encryptionDetails, false);
       logCallback.saveExecutionLog("Starting AWS AMI Setup", INFO);
 
       logCallback.saveExecutionLog("Getting base auto scaling group");

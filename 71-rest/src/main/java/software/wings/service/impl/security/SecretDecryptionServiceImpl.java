@@ -63,6 +63,6 @@ public class SecretDecryptionServiceImpl implements SecretDecryptionService {
 
   @Override
   public char[] getDecryptedValue(EncryptedDataDetail encryptedDataDetail) throws IOException {
-    return encryptionService.getDecryptedValue(encryptedDataDetail);
+    return encryptionService.getDecryptedValue(encryptedDataDetail, false);
   }
 }

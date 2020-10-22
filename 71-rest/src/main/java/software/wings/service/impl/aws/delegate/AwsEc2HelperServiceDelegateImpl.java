@@ -73,7 +73,7 @@ public class AwsEc2HelperServiceDelegateImpl
   public AwsEc2ValidateCredentialsResponse validateAwsAccountCredential(
       AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails) {
     try {
-      encryptionService.decrypt(awsConfig, encryptionDetails);
+      encryptionService.decrypt(awsConfig, encryptionDetails, false);
       tracker.trackEC2Call("Get Ec2 client");
       getAmazonEc2Client(Regions.US_EAST_1.getName(), awsConfig).describeRegions();
     } catch (AmazonEC2Exception amazonEC2Exception) {
@@ -100,7 +100,7 @@ public class AwsEc2HelperServiceDelegateImpl
   @Override
   public List<String> listRegions(AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails) {
     try {
-      encryptionService.decrypt(awsConfig, encryptionDetails);
+      encryptionService.decrypt(awsConfig, encryptionDetails, false);
       AmazonEC2Client amazonEC2Client = getAmazonEc2Client(Regions.US_EAST_1.getName(), awsConfig);
       tracker.trackEC2Call("List Ec2 regions");
       return amazonEC2Client.describeRegions().getRegions().stream().map(Region::getRegionName).collect(toList());
@@ -115,7 +115,7 @@ public class AwsEc2HelperServiceDelegateImpl
   @Override
   public List<AwsVPC> listVPCs(AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails, String region) {
     try {
-      encryptionService.decrypt(awsConfig, encryptionDetails);
+      encryptionService.decrypt(awsConfig, encryptionDetails, false);
       AmazonEC2Client amazonEC2Client = getAmazonEc2Client(region, awsConfig);
       tracker.trackEC2Call("List VPCs");
       return amazonEC2Client
@@ -145,7 +145,7 @@ public class AwsEc2HelperServiceDelegateImpl
   public List<AwsSubnet> listSubnets(
       AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails, String region, List<String> vpcIds) {
     try {
-      encryptionService.decrypt(awsConfig, encryptionDetails);
+      encryptionService.decrypt(awsConfig, encryptionDetails, false);
       AmazonEC2Client amazonEC2Client = getAmazonEc2Client(region, awsConfig);
       List<Filter> filters = new ArrayList<>();
       if (isNotEmpty(vpcIds)) {
@@ -180,7 +180,7 @@ public class AwsEc2HelperServiceDelegateImpl
       AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails, String region, List<String> vpcIds) {
     List<AwsSecurityGroup> result = new ArrayList<>();
     try {
-      encryptionService.decrypt(awsConfig, encryptionDetails);
+      encryptionService.decrypt(awsConfig, encryptionDetails, false);
       String nextToken = null;
       do {
         AmazonEC2Client amazonEC2Client = getAmazonEc2Client(region, awsConfig);
@@ -215,7 +215,7 @@ public class AwsEc2HelperServiceDelegateImpl
     String nextToken = null;
     Set<String> tags = new HashSet<>();
     try {
-      encryptionService.decrypt(awsConfig, encryptionDetails);
+      encryptionService.decrypt(awsConfig, encryptionDetails, false);
       do {
         AmazonEC2Client amazonEC2Client = getAmazonEc2Client(region, awsConfig);
         tracker.trackEC2Call("List Tags");
@@ -239,7 +239,7 @@ public class AwsEc2HelperServiceDelegateImpl
   public List<Instance> listEc2Instances(
       AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails, String region, List<Filter> filters) {
     try {
-      encryptionService.decrypt(awsConfig, encryptionDetails);
+      encryptionService.decrypt(awsConfig, encryptionDetails, false);
       List<Instance> result = new ArrayList<>();
       String nextToken = null;
       do {
@@ -267,7 +267,7 @@ public class AwsEc2HelperServiceDelegateImpl
       if (instanceIds.isEmpty()) {
         return emptyList();
       }
-      encryptionService.decrypt(awsConfig, encryptionDetails);
+      encryptionService.decrypt(awsConfig, encryptionDetails, false);
       List<Instance> result = new ArrayList<>();
       String nextToken = null;
       do {
@@ -295,7 +295,7 @@ public class AwsEc2HelperServiceDelegateImpl
       if (isEmpty(amiId)) {
         return emptySet();
       }
-      encryptionService.decrypt(awsConfig, encryptionDetails);
+      encryptionService.decrypt(awsConfig, encryptionDetails, false);
       AmazonEC2Client amazonEC2Client = getAmazonEc2Client(region, awsConfig);
       DescribeImagesRequest request = new DescribeImagesRequest().withImageIds(amiId);
       tracker.trackEC2Call("List Images");
@@ -322,7 +322,7 @@ public class AwsEc2HelperServiceDelegateImpl
   public LaunchTemplateVersion getLaunchTemplateVersion(AwsConfig awsConfig,
       List<EncryptedDataDetail> encryptionDetails, String region, String launchTemplateId, String version) {
     try {
-      encryptionService.decrypt(awsConfig, encryptionDetails);
+      encryptionService.decrypt(awsConfig, encryptionDetails, false);
       final AmazonEC2Client amazonEc2Client = getAmazonEc2Client(region, awsConfig);
       tracker.trackEC2Call("Get Launch Template Version");
       final DescribeLaunchTemplateVersionsResult describeLaunchTemplateVersionsResult =
@@ -347,7 +347,7 @@ public class AwsEc2HelperServiceDelegateImpl
       CreateLaunchTemplateVersionRequest createLaunchTemplateVersionRequest, AwsConfig awsConfig,
       List<EncryptedDataDetail> encryptionDetails, String region) {
     try {
-      encryptionService.decrypt(awsConfig, encryptionDetails);
+      encryptionService.decrypt(awsConfig, encryptionDetails, false);
       final AmazonEC2Client amazonEc2Client = getAmazonEc2Client(region, awsConfig);
       tracker.trackEC2Call("Create Launch Template Version");
       return amazonEc2Client.createLaunchTemplateVersion(createLaunchTemplateVersionRequest);

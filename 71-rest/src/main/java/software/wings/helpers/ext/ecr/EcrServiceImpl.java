@@ -48,7 +48,7 @@ public class EcrServiceImpl implements EcrService {
       String imageName, int maxNumberOfBuilds) {
     List<BuildDetails> buildDetails = new ArrayList<>();
     try {
-      encryptionService.decrypt(awsConfig, encryptionDetails);
+      encryptionService.decrypt(awsConfig, encryptionDetails, false);
       String imageUrl = ecrServiceDelegate.getEcrImageUrl(awsConfig, encryptionDetails, region, imageName);
 
       ListImagesResult listImagesResult;
@@ -112,7 +112,7 @@ public class EcrServiceImpl implements EcrService {
   @Override
   public List<Map<String, String>> getLabels(AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails,
       ArtifactStreamAttributes artifactStreamAttributes, List<String> tags) {
-    encryptionService.decrypt(awsConfig, encryptionDetails);
+    encryptionService.decrypt(awsConfig, encryptionDetails, false);
     return Collections.singletonList(awsHelperService.fetchLabels(awsConfig, artifactStreamAttributes, tags));
   }
 }

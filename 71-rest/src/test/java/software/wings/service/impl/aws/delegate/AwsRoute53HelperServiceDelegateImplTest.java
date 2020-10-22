@@ -6,6 +6,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyList;
 import static org.mockito.Matchers.anyString;
+import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
@@ -40,7 +41,7 @@ public class AwsRoute53HelperServiceDelegateImplTest extends WingsBaseTest {
   public void testListHostedZones() {
     AmazonRoute53 mockClient = mock(AmazonRoute53.class);
     doReturn(mockClient).when(awsRoute53HelperServiceDelegate).getAmazonRoute53Client(anyString(), any());
-    doReturn(null).when(mockEncryptionService).decrypt(any(), anyList());
+    doReturn(null).when(mockEncryptionService).decrypt(any(), anyList(), eq(false));
     doReturn(new ListHostedZonesResult().withHostedZones(new HostedZone().withId("id").withName("name")))
         .when(mockClient)
         .listHostedZones();
@@ -59,7 +60,7 @@ public class AwsRoute53HelperServiceDelegateImplTest extends WingsBaseTest {
   public void testUpsertRoute53ParentRecord() {
     AmazonRoute53 mockClient = mock(AmazonRoute53.class);
     doReturn(mockClient).when(awsRoute53HelperServiceDelegate).getAmazonRoute53Client(anyString(), any());
-    doReturn(null).when(mockEncryptionService).decrypt(any(), anyList());
+    doReturn(null).when(mockEncryptionService).decrypt(any(), anyList(), eq(false));
     doNothing().when(mockTracker).trackR53Call(anyString());
     awsRoute53HelperServiceDelegate.upsertRoute53ParentRecord(
         AwsConfig.builder().build(), emptyList(), "us-east-1", "parent", "id", 100, "blue", 0, "green", 60);

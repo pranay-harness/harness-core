@@ -6,6 +6,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyList;
 import static org.mockito.Matchers.anyString;
+import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
@@ -38,7 +39,7 @@ public class AwsS3HelperServiceDelegateImplTest extends WingsBaseTest {
   public void testListBucketNames() {
     AmazonS3Client mockClient = mock(AmazonS3Client.class);
     doReturn(mockClient).when(s3HelperServiceDelegate).getAmazonS3Client(any());
-    doReturn(null).when(mockEncryptionService).decrypt(any(), anyList());
+    doReturn(null).when(mockEncryptionService).decrypt(any(), anyList(), eq(false));
     doNothing().when(mockTracker).trackS3Call(anyString());
     Bucket b_00 = new Bucket();
     b_00.setName("name_00");

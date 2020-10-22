@@ -89,7 +89,7 @@ public class JenkinsTask extends AbstractDelegateRunnableTask {
     ExecutionStatus executionStatus = ExecutionStatus.SUCCESS;
 
     JenkinsConfig jenkinsConfig = jenkinsTaskParams.getJenkinsConfig();
-    encryptionService.decrypt(jenkinsConfig, jenkinsTaskParams.getEncryptedDataDetails());
+    encryptionService.decrypt(jenkinsConfig, jenkinsTaskParams.getEncryptedDataDetails(), false);
     Jenkins jenkins = jenkinsUtil.getJenkins(jenkinsConfig);
     String msg = "Error occurred while starting Jenkins task\n";
 

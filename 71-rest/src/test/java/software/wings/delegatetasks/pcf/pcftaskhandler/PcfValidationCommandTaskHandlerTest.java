@@ -38,6 +38,6 @@ public class PcfValidationCommandTaskHandlerTest extends WingsBaseTest {
     pcfValidationCommandTaskHandler.executeTaskInternal(
         PcfInfraMappingDataRequest.builder().pcfConfig(pcfConfig).build(), encryptedDataDetails, null);
 
-    verify(encryptionService).decrypt(pcfConfig, encryptedDataDetails);
+    verify(encryptionService).decrypt(pcfConfig, encryptedDataDetails, false);
   }
 }

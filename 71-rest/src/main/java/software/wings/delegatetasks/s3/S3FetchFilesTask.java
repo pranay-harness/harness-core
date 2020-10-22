@@ -63,7 +63,7 @@ public class S3FetchFilesTask extends AbstractDelegateRunnableTask {
     ExecutionLogCallback executionLogCallback = new ExecutionLogCallback(delegateLogService, taskParams.getAccountId(),
         taskParams.getAppId(), taskParams.getActivityId(), taskParams.getExecutionLogName());
     try {
-      encryptionService.decrypt(taskParams.getAwsConfig(), taskParams.getEncryptionDetails());
+      encryptionService.decrypt(taskParams.getAwsConfig(), taskParams.getEncryptionDetails(), false);
       S3FetchFileResult result = getContentFromFromS3Bucket(taskParams.getS3FileRequests(), taskParams.getAwsConfig(),
           taskParams.getEncryptionDetails(), executionLogCallback);
 

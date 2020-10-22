@@ -15,6 +15,7 @@ import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyMap;
 import static org.mockito.Matchers.anyObject;
 import static org.mockito.Matchers.anyString;
+import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
@@ -250,7 +251,7 @@ public class PcfDeployStateTest extends WingsBaseTest {
     when(variableProcessor.getVariables(any(), any())).thenReturn(emptyMap());
     when(evaluator.substitute(anyString(), anyMap(), any(VariableResolverTracker.class), anyString()))
         .thenAnswer(i -> i.getArguments()[0]);
-    doReturn(null).when(encryptionService).decrypt(any(), any());
+    doReturn(null).when(encryptionService).decrypt(any(), any(), eq(false));
     when(sweepingOutputService.find(context.prepareSweepingOutputInquiryBuilder().name(outputName).build()))
         .thenReturn(sweepingOutputInstance);
     when(sweepingOutputService.findSweepingOutput(context.prepareSweepingOutputInquiryBuilder()

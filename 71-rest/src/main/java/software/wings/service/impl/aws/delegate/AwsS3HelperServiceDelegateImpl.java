@@ -32,7 +32,7 @@ public class AwsS3HelperServiceDelegateImpl extends AwsHelperServiceDelegateBase
   @Override
   public List<String> listBucketNames(AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails) {
     try {
-      encryptionService.decrypt(awsConfig, encryptionDetails);
+      encryptionService.decrypt(awsConfig, encryptionDetails, false);
       tracker.trackS3Call("List Buckets");
       AmazonS3Client client = getAmazonS3Client(awsConfig);
       List<Bucket> buckets = client.listBuckets();

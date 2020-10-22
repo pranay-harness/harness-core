@@ -83,7 +83,7 @@ public class EmailHandler implements CollaborationHandler {
             props.setProperty("mail.smtp.auth", "true");
           }
           SmtpConfig config = kryoSerializer.clone(smtpConfig);
-          encryptionService.decrypt(config, encryptionDetails);
+          encryptionService.decrypt(config, encryptionDetails, false);
           if (config.isUseSSL()) {
             props.put("mail.smtp.socketFactory.class", "javax.net.ssl.SSLSocketFactory");
             props.put("mail.smtp.starttls.enable", "true");

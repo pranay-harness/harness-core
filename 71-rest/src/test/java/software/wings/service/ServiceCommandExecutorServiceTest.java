@@ -233,7 +233,7 @@ public class ServiceCommandExecutorServiceTest extends WingsBaseTest {
 
     CommandExecutionStatus commandExecutionStatus = cmdExecutorService.execute(nestedCommand, context);
 
-    verify(encryptionService, times(4)).decrypt(any(), any());
+    verify(encryptionService, times(4)).decrypt(any(), any(), eq(false));
     verify(commandUnitExecutorServiceMap).get(DeploymentType.ECS.name());
     verify(sshCommandUnitExecutorService).execute(any(AbstractCommandUnit.class), eq(context));
   }

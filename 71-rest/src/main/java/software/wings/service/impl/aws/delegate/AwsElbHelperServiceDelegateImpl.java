@@ -121,7 +121,7 @@ public class AwsElbHelperServiceDelegateImpl
   public List<String> listClassicLoadBalancers(
       AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails, String region) {
     try {
-      encryptionService.decrypt(awsConfig, encryptionDetails);
+      encryptionService.decrypt(awsConfig, encryptionDetails, false);
       List<String> result = new ArrayList<>();
       String nextMarker = null;
       do {
@@ -169,7 +169,7 @@ public class AwsElbHelperServiceDelegateImpl
   private List<AwsLoadBalancerDetails> generateLoadBalancersList(
       AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails, String region, Set<String> neededTypes) {
     try {
-      encryptionService.decrypt(awsConfig, encryptionDetails);
+      encryptionService.decrypt(awsConfig, encryptionDetails, false);
       List<AwsLoadBalancerDetails> result = new ArrayList<>();
       String nextMarker = null;
       do {
@@ -214,7 +214,7 @@ public class AwsElbHelperServiceDelegateImpl
   public Map<String, String> listTargetGroupsForAlb(
       AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails, String region, String loadBalancerName) {
     try {
-      encryptionService.decrypt(awsConfig, encryptionDetails);
+      encryptionService.decrypt(awsConfig, encryptionDetails, false);
       AmazonElasticLoadBalancingClient amazonElasticLoadBalancingClient =
           getAmazonElasticLoadBalancingClientV2(Regions.fromName(region), awsConfig);
       String loadBalancerArn = null;
@@ -255,7 +255,7 @@ public class AwsElbHelperServiceDelegateImpl
   public Optional<TargetGroup> getTargetGroup(
       AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails, String region, String targetGroupArn) {
     try {
-      encryptionService.decrypt(awsConfig, encryptionDetails);
+      encryptionService.decrypt(awsConfig, encryptionDetails, false);
       AmazonElasticLoadBalancingClient amazonElasticLoadBalancingClient =
           getAmazonElasticLoadBalancingClientV2(Regions.fromName(region), awsConfig);
       DescribeTargetGroupsRequest describeTargetGroupsRequest =
@@ -282,7 +282,7 @@ public class AwsElbHelperServiceDelegateImpl
   public Optional<TargetGroup> getTargetGroupByName(
       AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails, String region, String targetGroupName) {
     try {
-      encryptionService.decrypt(awsConfig, encryptionDetails);
+      encryptionService.decrypt(awsConfig, encryptionDetails, false);
       AmazonElasticLoadBalancingClient amazonElasticLoadBalancingClient =
           getAmazonElasticLoadBalancingClientV2(Regions.fromName(region), awsConfig);
       DescribeTargetGroupsRequest describeTargetGroupsRequest =
@@ -311,7 +311,7 @@ public class AwsElbHelperServiceDelegateImpl
   public Optional<LoadBalancer> getLoadBalancer(
       AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails, String region, String loadBalancerName) {
     try {
-      encryptionService.decrypt(awsConfig, encryptionDetails);
+      encryptionService.decrypt(awsConfig, encryptionDetails, false);
       AmazonElasticLoadBalancingClient amazonElasticLoadBalancingClient =
           getAmazonElasticLoadBalancingClientV2(Regions.fromName(region), awsConfig);
       DescribeLoadBalancersRequest describeLoadBalancersRequest =
@@ -565,7 +565,7 @@ public class AwsElbHelperServiceDelegateImpl
   @Override
   public List<Rule> getListenerRuleFromListenerRuleArn(AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails,
       String region, String listenerRuleArn, ExecutionLogCallback logCallback) {
-    encryptionService.decrypt(awsConfig, encryptionDetails);
+    encryptionService.decrypt(awsConfig, encryptionDetails, false);
 
     AmazonElasticLoadBalancingClient amazonElasticLoadBalancingClient =
         getAmazonElasticLoadBalancingClientV2(Regions.fromName(region), awsConfig);
@@ -591,7 +591,7 @@ public class AwsElbHelperServiceDelegateImpl
   @Override
   public List<Rule> getListenerRulesFromListenerArn(AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails,
       String region, String listenerArn, ExecutionLogCallback logCallback) {
-    encryptionService.decrypt(awsConfig, encryptionDetails);
+    encryptionService.decrypt(awsConfig, encryptionDetails, false);
 
     AmazonElasticLoadBalancingClient amazonElasticLoadBalancingClient =
         getAmazonElasticLoadBalancingClientV2(Regions.fromName(region), awsConfig);
@@ -617,7 +617,7 @@ public class AwsElbHelperServiceDelegateImpl
   @Override
   public List<AwsElbListener> getElbListenersForLoadBalaner(
       AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails, String region, String loadBalancerName) {
-    encryptionService.decrypt(awsConfig, encryptionDetails);
+    encryptionService.decrypt(awsConfig, encryptionDetails, false);
 
     AmazonElasticLoadBalancingClient amazonElasticLoadBalancingClient =
         getAmazonElasticLoadBalancingClientV2(Regions.fromName(region), awsConfig);
@@ -691,7 +691,7 @@ public class AwsElbHelperServiceDelegateImpl
   @Override
   public Listener getElbListener(
       AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails, String region, String listenerArn) {
-    encryptionService.decrypt(awsConfig, encryptionDetails);
+    encryptionService.decrypt(awsConfig, encryptionDetails, false);
 
     AmazonElasticLoadBalancing client = getAmazonElasticLoadBalancingClientV2(Regions.fromName(region), awsConfig);
     tracker.trackELBCall("Describe Listener");
@@ -715,7 +715,7 @@ public class AwsElbHelperServiceDelegateImpl
             ErrorCode.INVALID_ARGUMENT, "TargetGroupArn to be cloned from can not be empty", WingsException.USER)
             .addParam("message", "TargetGroupArn to be cloned from can not be empty");
       }
-      encryptionService.decrypt(awsConfig, encryptionDetails);
+      encryptionService.decrypt(awsConfig, encryptionDetails, false);
       AmazonElasticLoadBalancingClient client =
           getAmazonElasticLoadBalancingClientV2(Regions.fromName(region), awsConfig);
       tracker.trackELBCall("Describe Target Groups");
@@ -771,7 +771,7 @@ public class AwsElbHelperServiceDelegateImpl
 
     createListenerRequest.withDefaultActions(new Action().withType(Forward).withTargetGroupArn(targetGroupArn));
 
-    encryptionService.decrypt(awsConfig, encryptionDetails);
+    encryptionService.decrypt(awsConfig, encryptionDetails, false);
 
     AmazonElasticLoadBalancing client = getAmazonElasticLoadBalancingClientV2(Regions.fromName(region), awsConfig);
     tracker.trackELBCall("Create Listener");
@@ -797,7 +797,7 @@ public class AwsElbHelperServiceDelegateImpl
       boolean isUseSpecificRules, String prodListenerArn, String stageListenerArn, String prodListenerRuleArn,
       String stageListenerRuleArn, String targetGroupArn1, String targetGroupArn2, String region,
       ExecutionLogCallback logCallback) {
-    encryptionService.decrypt(awsConfig, encryptionDetails);
+    encryptionService.decrypt(awsConfig, encryptionDetails, false);
     AmazonElasticLoadBalancing client = getAmazonElasticLoadBalancingClientV2(Regions.fromName(region), awsConfig);
 
     if (isUseSpecificRules) {
@@ -859,7 +859,7 @@ public class AwsElbHelperServiceDelegateImpl
   @Override
   public void updateListenersForEcsBG(AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails,
       String prodListenerArn, String stageListenerArn, String region) {
-    encryptionService.decrypt(awsConfig, encryptionDetails);
+    encryptionService.decrypt(awsConfig, encryptionDetails, false);
 
     AmazonElasticLoadBalancing client = getAmazonElasticLoadBalancingClientV2(Regions.fromName(region), awsConfig);
     tracker.trackELBCall("Describe Listeners");
@@ -884,7 +884,7 @@ public class AwsElbHelperServiceDelegateImpl
   public void updateListenersForBGDeployment(AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails,
       List<LoadBalancerDetailsForBGDeployment> lbDetailsForBGDeployments, String region,
       ExecutionLogCallback logCallback) {
-    encryptionService.decrypt(awsConfig, encryptionDetails);
+    encryptionService.decrypt(awsConfig, encryptionDetails, false);
     AmazonElasticLoadBalancing client = getAmazonElasticLoadBalancingClientV2(Regions.fromName(region), awsConfig);
 
     lbDetailsForBGDeployments.forEach(lbDetailsForBGDeployment -> {
@@ -925,7 +925,7 @@ public class AwsElbHelperServiceDelegateImpl
   @Override
   public DescribeListenersResult describeListenerResult(
       AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails, String listenerArn, String region) {
-    encryptionService.decrypt(awsConfig, encryptionDetails);
+    encryptionService.decrypt(awsConfig, encryptionDetails, false);
     AmazonElasticLoadBalancing client = getAmazonElasticLoadBalancingClientV2(Regions.fromName(region), awsConfig);
     tracker.trackELBCall("Describe Listeners");
     return client.describeListeners(new DescribeListenersRequest().withListenerArns(listenerArn));
@@ -980,7 +980,7 @@ public class AwsElbHelperServiceDelegateImpl
   public void modifySpecificRule(AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails, String region,
       String ruleArn, String targetGroupArn, ExecutionLogCallback logCallback) {
     try {
-      encryptionService.decrypt(awsConfig, encryptionDetails);
+      encryptionService.decrypt(awsConfig, encryptionDetails, false);
       AmazonElasticLoadBalancing client = getAmazonElasticLoadBalancingClientV2(Regions.fromName(region), awsConfig);
       modifySpecificRule(client, ruleArn, targetGroupArn, logCallback);
     } catch (AmazonServiceException amazonServiceException) {
@@ -995,7 +995,7 @@ public class AwsElbHelperServiceDelegateImpl
       ExecutionLogCallback logCallback, AwsConfig awsConfig, String region,
       List<EncryptedDataDetail> encryptionDetails) {
     try {
-      encryptionService.decrypt(awsConfig, encryptionDetails);
+      encryptionService.decrypt(awsConfig, encryptionDetails, false);
       List<AwsElbListenerRuleData> rules = listener.getRules();
       if (isEmpty(rules)) {
         String errorMessage = format("Did not find any rules for Listener: [%s]", listener.getListenerArn());
@@ -1101,7 +1101,7 @@ public class AwsElbHelperServiceDelegateImpl
       List<EncryptedDataDetail> encryptionDetails, LbDetailsForAlbTrafficShift originalLbDetails,
       ExecutionLogCallback logCallback) {
     try {
-      encryptionService.decrypt(awsConfig, encryptionDetails);
+      encryptionService.decrypt(awsConfig, encryptionDetails, false);
       AmazonElasticLoadBalancing client = getAmazonElasticLoadBalancingClientV2(Regions.fromName(region), awsConfig);
       logCallback.saveExecutionLog(format("Loading Target group data for Listener: [%s] of Load Balancer: [%s]",
           originalLbDetails.getListenerArn(), originalLbDetails.getLoadBalancerArn()));
@@ -1162,7 +1162,7 @@ public class AwsElbHelperServiceDelegateImpl
       List<EncryptedDataDetail> encryptionDetails, List<LbDetailsForAlbTrafficShift> details,
       ExecutionLogCallback logCallback, int newServiceTrafficWeight, String groupType) {
     try {
-      encryptionService.decrypt(awsConfig, encryptionDetails);
+      encryptionService.decrypt(awsConfig, encryptionDetails, false);
       AmazonElasticLoadBalancing client = getAmazonElasticLoadBalancingClientV2(Regions.fromName(region), awsConfig);
       if (newServiceTrafficWeight < MIN_TRAFFIC_SHIFT_WEIGHT) {
         newServiceTrafficWeight = MIN_TRAFFIC_SHIFT_WEIGHT;

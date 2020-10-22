@@ -7,8 +7,11 @@ import static org.joor.Reflect.on;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyListOf;
 import static org.mockito.Matchers.anyString;
+import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+import static org.mockito.MockitoAnnotations.initMocks;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 import static software.wings.utils.WingsTestConstants.ACTIVITY_ID;
 import static software.wings.utils.WingsTestConstants.APP_ID;
@@ -70,9 +73,11 @@ public class CloudFormationCommandTaskHandlerTest extends WingsBaseTest {
 
   @Before
   public void setUp() throws Exception {
+    initMocks(this);
     on(createStackHandler).set("awsCFHelperServiceDelegate", mockAwsCFHelperServiceDelegate);
     on(listStacksHandler).set("awsCFHelperServiceDelegate", mockAwsCFHelperServiceDelegate);
     on(deleteStackHandler).set("awsCFHelperServiceDelegate", mockAwsCFHelperServiceDelegate);
+    when(mockEncryptionService.decrypt(any(), any(), eq(false))).thenReturn(null);
   }
 
   @Test
@@ -113,7 +118,6 @@ public class CloudFormationCommandTaskHandlerTest extends WingsBaseTest {
             .data(templateBody)
             .stackNameSuffix(stackNameSuffix)
             .build();
-    doReturn(null).when(mockEncryptionService).decrypt(any(), any());
     CreateStackRequest createStackRequest = new CreateStackRequest()
                                                 .withStackName("HarnessStack-" + stackNameSuffix)
                                                 .withTemplateBody(templateBody)
@@ -174,8 +178,6 @@ public class CloudFormationCommandTaskHandlerTest extends WingsBaseTest {
             .createType(CloudFormationCreateStackRequest.CLOUD_FORMATION_STACK_CREATE_GIT)
             .stackNameSuffix(stackNameSuffix)
             .build();
-
-    doReturn(null).when(mockEncryptionService).decrypt(any(), any());
     doReturn(gitOperationContext)
         .when(gitUtilsDelegate)
         .cloneRepo(any(GitConfig.class), any(GitFileConfig.class), anyListOf(EncryptedDataDetail.class));
@@ -243,7 +245,6 @@ public class CloudFormationCommandTaskHandlerTest extends WingsBaseTest {
             .data(templateBody)
             .stackNameSuffix(stackNameSuffix)
             .build();
-    doReturn(null).when(mockEncryptionService).decrypt(any(), any());
     List<Stack> exitingList =
         singletonList(new Stack().withStackStatus("CREATE_COMPLETE").withStackName("HarnessStack-" + stackNameSuffix));
     List<Stack> updateProgressList = singletonList(new Stack().withStackStatus("UPDATE_IN_PROGRESS"));
@@ -289,7 +290,6 @@ public class CloudFormationCommandTaskHandlerTest extends WingsBaseTest {
             .timeoutInMs(10 * 60 * 1000)
             .stackNameSuffix(stackNameSuffix)
             .build();
-    doReturn(null).when(mockEncryptionService).decrypt(any(), any());
     String stackId = "Stack Id 01";
 
     List<Stack> existingStackList =
@@ -324,7 +324,6 @@ public class CloudFormationCommandTaskHandlerTest extends WingsBaseTest {
             .awsConfig(AwsConfig.builder().accessKey(accessKey).accountId(ACCOUNT_ID).secretKey(secretKey).build())
             .timeoutInMs(10 * 60 * 1000)
             .build();
-    doReturn(null).when(mockEncryptionService).decrypt(any(), any());
     DescribeStacksRequest describeStacksRequest = new DescribeStacksRequest();
     List<Stack> stacks = Arrays.asList(new Stack()
                                            .withStackId("sId1")

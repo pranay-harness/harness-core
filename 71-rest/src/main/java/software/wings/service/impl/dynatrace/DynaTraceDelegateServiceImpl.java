@@ -124,7 +124,7 @@ public class DynaTraceDelegateServiceImpl implements DynaTraceDelegateService {
 
   private String getHeaderWithCredentials(
       DynaTraceConfig dynaTraceConfig, List<EncryptedDataDetail> encryptionDetails) {
-    encryptionService.decrypt(dynaTraceConfig, encryptionDetails);
+    encryptionService.decrypt(dynaTraceConfig, encryptionDetails, false);
     return "Api-Token " + new String(dynaTraceConfig.getApiToken());
   }
 }

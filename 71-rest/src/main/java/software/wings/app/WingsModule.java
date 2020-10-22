@@ -116,6 +116,8 @@ import io.harness.registries.registrar.StepRegistrar;
 import io.harness.scheduler.PersistentScheduler;
 import io.harness.scheduler.SchedulerConfig;
 import io.harness.secretmanagers.SecretManagerConfigService;
+import io.harness.secrets.SecretsDelegateCacheService;
+import io.harness.secrets.SecretsDelegateCacheServiceImpl;
 import io.harness.security.encryption.SecretDecryptionService;
 import io.harness.seeddata.SampleDataProviderService;
 import io.harness.seeddata.SampleDataProviderServiceImpl;
@@ -912,6 +914,7 @@ public class WingsModule extends AbstractModule implements ServersModule {
     bind(EncryptionService.class).to(EncryptionServiceImpl.class);
     bind(ManagerDecryptionService.class).to(ManagerDecryptionServiceImpl.class);
     bind(SecretManagementDelegateService.class).to(SecretManagementDelegateServiceImpl.class);
+    bind(SecretsDelegateCacheService.class).to(SecretsDelegateCacheServiceImpl.class);
     bind(RuntimeCredentialsInjector.class).annotatedWith(Names.named(hashicorpvault)).to(VaultServiceImpl.class);
     bind(SecretManager.class).to(SecretManagerImpl.class);
     bind(NGSecretManagerService.class).to(NGSecretManagerServiceImpl.class);

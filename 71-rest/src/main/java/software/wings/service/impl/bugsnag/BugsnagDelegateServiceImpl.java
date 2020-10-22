@@ -137,7 +137,7 @@ public class BugsnagDelegateServiceImpl implements BugsnagDelegateService {
   }
 
   private APMRestClient getAPMRestClient(final BugsnagConfig config, List<EncryptedDataDetail> encryptedDataDetails) {
-    encryptionService.decrypt(config, encryptedDataDetails);
+    encryptionService.decrypt(config, encryptedDataDetails, false);
     final Retrofit retrofit =
         new Retrofit.Builder()
             .baseUrl(config.getUrl())

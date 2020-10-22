@@ -110,7 +110,7 @@ public class CloudWatchDataCollectionTask extends AbstractDelegateDataCollection
     @Override
     @SuppressWarnings("PMD")
     public void run() {
-      encryptionService.decrypt(dataCollectionInfo.getAwsConfig(), dataCollectionInfo.getEncryptedDataDetails());
+      encryptionService.decrypt(dataCollectionInfo.getAwsConfig(), dataCollectionInfo.getEncryptedDataDetails(), false);
       int retry = 0;
       while (!completed.get() && retry < RETRIES) {
         try {

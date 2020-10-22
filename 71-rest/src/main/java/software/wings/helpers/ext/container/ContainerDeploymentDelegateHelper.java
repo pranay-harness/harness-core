@@ -106,7 +106,7 @@ public class ContainerDeploymentDelegateHelper {
     KubernetesConfig kubernetesConfig;
     if (settingAttribute.getValue() instanceof KubernetesClusterConfig) {
       KubernetesClusterConfig kubernetesClusterConfig = (KubernetesClusterConfig) settingAttribute.getValue();
-      encryptionService.decrypt(kubernetesClusterConfig, encryptedDataDetails);
+      encryptionService.decrypt(kubernetesClusterConfig, encryptedDataDetails, false);
       kubernetesConfig = kubernetesClusterConfig.createKubernetesConfig(namespace);
     } else if (settingAttribute.getValue() instanceof GcpConfig) {
       kubernetesConfig = gkeClusterService.getCluster(settingAttribute, encryptedDataDetails, clusterName, namespace);
@@ -131,7 +131,7 @@ public class ContainerDeploymentDelegateHelper {
     KubernetesConfig kubernetesConfig;
     if (cloudProvider instanceof KubernetesClusterConfig) {
       KubernetesClusterConfig kubernetesClusterConfig = (KubernetesClusterConfig) cloudProvider;
-      encryptionService.decrypt(kubernetesClusterConfig, encryptedDataDetails);
+      encryptionService.decrypt(kubernetesClusterConfig, encryptedDataDetails, false);
       kubernetesConfig = kubernetesClusterConfig.createKubernetesConfig(namespace);
     } else if (cloudProvider instanceof GcpConfig) {
       kubernetesConfig = gkeClusterService.getCluster((GcpConfig) cloudProvider, encryptedDataDetails,

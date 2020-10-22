@@ -112,12 +112,12 @@ public class HelmTaskHelper {
 
   public void decryptConnectorConfig(HelmChartConfigParams helmChartConfigParams) {
     encryptionService.decrypt(
-        helmChartConfigParams.getHelmRepoConfig(), helmChartConfigParams.getEncryptedDataDetails());
+        helmChartConfigParams.getHelmRepoConfig(), helmChartConfigParams.getEncryptedDataDetails(), false);
 
     SettingValue connectorConfig = helmChartConfigParams.getConnectorConfig();
     if (connectorConfig != null) {
       encryptionService.decrypt(
-          (EncryptableSetting) connectorConfig, helmChartConfigParams.getConnectorEncryptedDataDetails());
+          (EncryptableSetting) connectorConfig, helmChartConfigParams.getConnectorEncryptedDataDetails(), false);
     }
   }
 

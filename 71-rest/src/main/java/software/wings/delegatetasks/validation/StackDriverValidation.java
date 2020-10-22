@@ -60,7 +60,7 @@ public class StackDriverValidation extends AbstractSecretManagerValidation {
         encryptionDetails = (List<EncryptedDataDetail>) getParameters()[3];
       }
       try {
-        encryptionService.decrypt(gcpConfig, encryptionDetails);
+        encryptionService.decrypt(gcpConfig, encryptionDetails, false);
       } catch (Exception e) {
         logger.info("Failed to decrypt " + gcpConfig, e);
         return singletonList(

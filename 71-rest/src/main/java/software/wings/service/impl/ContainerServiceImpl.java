@@ -102,7 +102,7 @@ public class ContainerServiceImpl implements ContainerService {
     } else {
       KubernetesClusterConfig kubernetesClusterConfig =
           (KubernetesClusterConfig) containerServiceParams.getSettingAttribute().getValue();
-      encryptionService.decrypt(kubernetesClusterConfig, containerServiceParams.getEncryptionDetails());
+      encryptionService.decrypt(kubernetesClusterConfig, containerServiceParams.getEncryptionDetails(), false);
       kubernetesConfig = kubernetesClusterConfig.createKubernetesConfig(containerServiceParams.getNamespace());
     }
 
@@ -281,7 +281,7 @@ public class ContainerServiceImpl implements ContainerService {
       }
     } else if (value instanceof KubernetesClusterConfig) {
       KubernetesClusterConfig kubernetesClusterConfig = (KubernetesClusterConfig) value;
-      encryptionService.decrypt(kubernetesClusterConfig, containerServiceParams.getEncryptionDetails());
+      encryptionService.decrypt(kubernetesClusterConfig, containerServiceParams.getEncryptionDetails(), false);
 
       KubernetesConfig kubernetesConfig = kubernetesClusterConfig.createKubernetesConfig(namespace);
       kubernetesContainerService.validate(kubernetesConfig);

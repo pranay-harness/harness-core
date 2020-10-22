@@ -5,6 +5,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyBoolean;
 import static org.mockito.Matchers.anyString;
+import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -90,7 +91,7 @@ public class LogDataCollectionTaskTest extends CategoryTest {
     FieldUtils.writeField(dataCollectionTask, "encryptionService", encryptionService, true);
     FieldUtils.writeField(dataCollectionTask, "requestExecutor", requestExecutor, true);
 
-    when(encryptionService.getDecryptedValue(any())).thenReturn("decryptedApiKey".toCharArray());
+    when(encryptionService.getDecryptedValue(any(), eq(false))).thenReturn("decryptedApiKey".toCharArray());
   }
 
   private CustomLogDataCollectionInfo getDataCollectionInfo(
@@ -265,9 +266,9 @@ public class LogDataCollectionTaskTest extends CategoryTest {
     EncryptedDataDetail encryptedDataDetail = EncryptedDataDetail.builder().fieldName("client_id").build();
     EncryptedDataDetail encryptedDataDetail2 = EncryptedDataDetail.builder().fieldName("client_secret").build();
     EncryptedDataDetail encryptedDataDetail3 = EncryptedDataDetail.builder().fieldName("tenant_id").build();
-    when(encryptionService.getDecryptedValue(encryptedDataDetail)).thenReturn("clientId".toCharArray());
-    when(encryptionService.getDecryptedValue(encryptedDataDetail2)).thenReturn("clientSecret".toCharArray());
-    when(encryptionService.getDecryptedValue(encryptedDataDetail3)).thenReturn("tenantId".toCharArray());
+    when(encryptionService.getDecryptedValue(encryptedDataDetail, false)).thenReturn("clientId".toCharArray());
+    when(encryptionService.getDecryptedValue(encryptedDataDetail2, false)).thenReturn("clientSecret".toCharArray());
+    when(encryptionService.getDecryptedValue(encryptedDataDetail3, false)).thenReturn("tenantId".toCharArray());
 
     dataCollectionInfo.setEncryptedDataDetails(
         Arrays.asList(encryptedDataDetail, encryptedDataDetail2, encryptedDataDetail3));

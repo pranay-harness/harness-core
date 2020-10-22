@@ -91,7 +91,7 @@ public class LdapDelegateServiceImpl implements LdapDelegateService {
     settings.decryptFields(settingsEncryptedDataDetail, encryptionService);
     String password;
     try {
-      password = new String(encryptionService.getDecryptedValue(passwordEncryptedDataDetail));
+      password = new String(encryptionService.getDecryptedValue(passwordEncryptedDataDetail, false));
     } catch (IOException e) {
       throw new GeneralException("Failed to decrypt the password.");
     }

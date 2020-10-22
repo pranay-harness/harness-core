@@ -45,7 +45,7 @@ public class PcfApplicationDetailsCommandTaskHandler extends PcfCommandTaskHandl
     pcfCommandExecutionResponse.setPcfCommandResponse(pcfInstanceSyncResponse);
     try {
       PcfConfig pcfConfig = pcfCommandRequest.getPcfConfig();
-      encryptionService.decrypt(pcfConfig, encryptedDataDetails);
+      encryptionService.decrypt(pcfConfig, encryptedDataDetails, false);
 
       PcfInstanceSyncRequest pcfInstanceSyncRequest = (PcfInstanceSyncRequest) pcfCommandRequest;
       PcfRequestConfig pcfRequestConfig = PcfRequestConfig.builder()

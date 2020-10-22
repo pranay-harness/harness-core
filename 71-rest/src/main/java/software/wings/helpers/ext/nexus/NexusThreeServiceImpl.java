@@ -570,7 +570,7 @@ public class NexusThreeServiceImpl {
   private NexusThreeRestClient getNexusThreeClient(
       final NexusConfig nexusConfig, List<EncryptedDataDetail> encryptionDetails) {
     if (nexusConfig.hasCredentials()) {
-      encryptionService.decrypt(nexusConfig, encryptionDetails);
+      encryptionService.decrypt(nexusConfig, encryptionDetails, false);
     }
     return getRetrofit(getBaseUrl(nexusConfig), JacksonConverterFactory.create()).create(NexusThreeRestClient.class);
   }
@@ -912,7 +912,7 @@ public class NexusThreeServiceImpl {
       NexusConfig nexusConfig, List<EncryptedDataDetail> encryptionDetails, String artifactName, String artifactUrl) {
     try {
       if (nexusConfig.hasCredentials()) {
-        encryptionService.decrypt(nexusConfig, encryptionDetails);
+        encryptionService.decrypt(nexusConfig, encryptionDetails, false);
         Authenticator.setDefault(new NexusThreeServiceImpl.MyAuthenticator(
             nexusConfig.getUsername(), new String(nexusConfig.getPassword())));
       }

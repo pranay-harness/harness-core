@@ -8,6 +8,7 @@ import static junit.framework.TestCase.assertEquals;
 import static junit.framework.TestCase.assertNull;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 import static software.wings.beans.HostConnectionAttributes.AccessType.KEY;
@@ -127,7 +128,7 @@ public class SecretSpecBuilderTest extends WingsBaseTest {
                     .build())
             .build();
     encryptedVariables.put("abc", encryptedVariableWithType);
-    when(encryptionService.getDecryptedValue(encryptedVariableWithType.getEncryptedDataDetail()))
+    when(encryptionService.getDecryptedValue(encryptedVariableWithType.getEncryptedDataDetail(), false))
         .thenReturn("pass".toCharArray());
     Map<String, SecretParams> decryptedSecrets = secretSpecBuilder.decryptCustomSecretVariables(encryptedVariables);
     assertThat(decryptedSecrets.get("abc").getValue()).isEqualTo(encodeBase64("pass"));
@@ -156,7 +157,7 @@ public class SecretSpecBuilderTest extends WingsBaseTest {
                     .build())
             .build();
     encryptedVariables.put("abc", encryptedVariableWithType);
-    when(encryptionService.getDecryptedValue(encryptedVariableWithType.getEncryptedDataDetail()))
+    when(encryptionService.getDecryptedValue(encryptedVariableWithType.getEncryptedDataDetail(), false))
         .thenReturn("pass".toCharArray());
     Map<String, SecretParams> decryptedSecrets = secretSpecBuilder.decryptCustomSecretVariables(encryptedVariables);
     assertThat(decryptedSecrets.get("abc").getValue()).isEqualTo(encodeBase64("pass"));
@@ -210,7 +211,7 @@ public class SecretSpecBuilderTest extends WingsBaseTest {
                                      .password(password)
                                      .build();
 
-    when(encryptionService.decrypt(dockerConfig, dockerConfigEncryptedDataDetails)).thenReturn(dockerConfig);
+    when(encryptionService.decrypt(dockerConfig, dockerConfigEncryptedDataDetails, false)).thenReturn(dockerConfig);
 
     ImageDetailsWithConnector imageDetailsWithConnector1 = ImageDetailsWithConnector.builder()
                                                                .imageDetails(imageDetails1)
@@ -254,7 +255,7 @@ public class SecretSpecBuilderTest extends WingsBaseTest {
                               .build();
     List<EncryptedDataDetail> gitEncryptedDataDetails = mock(List.class);
 
-    when(encryptionService.decrypt(gitConfig, gitEncryptedDataDetails)).thenReturn(null);
+    when(encryptionService.decrypt(gitConfig, gitEncryptedDataDetails, false)).thenReturn(null);
     gitConfig.setPassword(password.toCharArray());
 
     Secret secret = secretSpecBuilder.getGitSecretSpec(gitConfig, gitEncryptedDataDetails, namespace);
@@ -269,7 +270,7 @@ public class SecretSpecBuilderTest extends WingsBaseTest {
     GitConfig gitConfig = getGitConfigWithSshKeys();
     List<EncryptedDataDetail> gitEncryptedDataDetails = mock(List.class);
 
-    when(encryptionService.decrypt(gitConfig, gitEncryptedDataDetails)).thenReturn(null);
+    when(encryptionService.decrypt(gitConfig, gitEncryptedDataDetails, false)).thenReturn(null);
     gitConfig.setPassword(password.toCharArray());
 
     Secret secret = secretSpecBuilder.getGitSecretSpec(gitConfig, gitEncryptedDataDetails, namespace);
@@ -284,7 +285,7 @@ public class SecretSpecBuilderTest extends WingsBaseTest {
     GitConfig gitConfig = getGitConfigWithSshKeysInvalidArg();
     List<EncryptedDataDetail> gitEncryptedDataDetails = mock(List.class);
 
-    when(encryptionService.decrypt(gitConfig, gitEncryptedDataDetails)).thenReturn(null);
+    when(encryptionService.decrypt(gitConfig, gitEncryptedDataDetails, false)).thenReturn(null);
     gitConfig.setPassword(password.toCharArray());
 
     secretSpecBuilder.getGitSecretSpec(gitConfig, gitEncryptedDataDetails, namespace);
@@ -304,7 +305,7 @@ public class SecretSpecBuilderTest extends WingsBaseTest {
                                     .build())
             .build();
     map.put("docker", setting);
-    when(encryptionService.decrypt(any())).thenReturn(Collections.singletonList(setting));
+    when(encryptionService.decrypt(any(), eq(false))).thenReturn(Collections.singletonList(setting));
     Map<String, String> data = secretSpecBuilder.decryptPublishArtifactSecretVariables(map).values().stream().collect(
         Collectors.toMap(SecretParams::getSecretKey, SecretParams::getValue));
     assertThat(data).containsKeys("USERNAME_docker", "PASSWORD_docker", "ENDPOINT_docker");
@@ -324,7 +325,7 @@ public class SecretSpecBuilderTest extends WingsBaseTest {
                 AwsConfig.builder().accessKey("access-key".toCharArray()).secretKey("secret-key".toCharArray()).build())
             .build();
     map.put("aws", setting);
-    when(encryptionService.decrypt(any())).thenReturn(Collections.singletonList(setting));
+    when(encryptionService.decrypt(any(), eq(false))).thenReturn(Collections.singletonList(setting));
     Map<String, String> data = secretSpecBuilder.decryptPublishArtifactSecretVariables(map).values().stream().collect(
         Collectors.toMap(SecretParams::getSecretKey, SecretParams::getValue));
     assertThat(data).containsKeys("ACCESS_KEY_aws", "SECRET_KEY_aws");
@@ -343,7 +344,7 @@ public class SecretSpecBuilderTest extends WingsBaseTest {
                 ArtifactoryConfig.builder().username("username").password("password".toCharArray()).build())
             .build();
     map.put("artifactory", setting);
-    when(encryptionService.decrypt(any())).thenReturn(Collections.singletonList(setting));
+    when(encryptionService.decrypt(any(), eq(false))).thenReturn(Collections.singletonList(setting));
     Map<String, SecretParams> data = secretSpecBuilder.decryptPublishArtifactSecretVariables(map);
     assertThat(data).containsKeys("USERNAME_artifactory", "PASSWORD_artifactory");
     assertThat(data.get("USERNAME_artifactory"))
@@ -370,7 +371,7 @@ public class SecretSpecBuilderTest extends WingsBaseTest {
             .encryptableSetting(GcpConfig.builder().serviceAccountKeyFileContent("fileContent".toCharArray()).build())
             .build();
     map.put("gcp", setting);
-    when(encryptionService.decrypt(any())).thenReturn(Collections.singletonList(setting));
+    when(encryptionService.decrypt(any(), eq(false))).thenReturn(Collections.singletonList(setting));
     Map<String, SecretParams> secretParams = secretSpecBuilder.decryptPublishArtifactSecretVariables(map);
     assertThat(secretParams).containsKeys("SECRET_PATH_gcp");
     assertThat(secretParams.get("SECRET_PATH_gcp"))

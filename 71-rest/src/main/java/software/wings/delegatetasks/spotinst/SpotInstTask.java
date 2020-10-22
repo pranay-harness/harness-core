@@ -62,11 +62,11 @@ public class SpotInstTask extends AbstractDelegateRunnableTask {
 
     if (spotInstCommandRequest.getAwsConfig() != null) {
       encryptionService.decrypt(
-          spotInstCommandRequest.getAwsConfig(), spotInstCommandRequest.getAwsEncryptionDetails());
+          spotInstCommandRequest.getAwsConfig(), spotInstCommandRequest.getAwsEncryptionDetails(), false);
     }
 
     encryptionService.decrypt(
-        spotInstCommandRequest.getSpotInstConfig(), spotInstCommandRequest.getSpotinstEncryptionDetails());
+        spotInstCommandRequest.getSpotInstConfig(), spotInstCommandRequest.getSpotinstEncryptionDetails(), false);
 
     SpotInstTaskHandler handler;
     if (spotInstTaskParameters.isSyncTask()) {

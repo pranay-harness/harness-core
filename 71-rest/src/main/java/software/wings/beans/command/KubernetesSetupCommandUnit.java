@@ -220,7 +220,7 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
       KubernetesConfig kubernetesConfig;
       if (cloudProviderSetting.getValue() instanceof KubernetesClusterConfig) {
         KubernetesClusterConfig config = (KubernetesClusterConfig) cloudProviderSetting.getValue();
-        encryptionService.decrypt(config, edd);
+        encryptionService.decrypt(config, edd, false);
         String delegateName = System.getenv().get("DELEGATE_NAME");
         if (config.isUseKubernetesDelegate() && !config.getDelegateName().equals(delegateName)) {
           throw new InvalidRequestException(format("Kubernetes delegate name [%s] doesn't match "

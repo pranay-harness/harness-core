@@ -80,7 +80,7 @@ public class PcfDeployCommandTaskHandler extends PcfCommandTaskHandler {
       executionLogCallback.saveExecutionLog(color("\n---------- Starting PCF Resize Command\n", White, Bold));
 
       PcfConfig pcfConfig = pcfCommandRequest.getPcfConfig();
-      encryptionService.decrypt(pcfConfig, encryptedDataDetails);
+      encryptionService.decrypt(pcfConfig, encryptedDataDetails, false);
 
       PcfRequestConfig pcfRequestConfig = PcfRequestConfig.builder()
                                               .userName(String.valueOf(pcfConfig.getUsername()))

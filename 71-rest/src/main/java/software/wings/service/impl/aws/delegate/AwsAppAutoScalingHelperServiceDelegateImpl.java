@@ -65,7 +65,7 @@ public class AwsAppAutoScalingHelperServiceDelegateImpl
   public RegisterScalableTargetResult registerScalableTarget(String region, AwsConfig awsConfig,
       List<EncryptedDataDetail> encryptionDetails, RegisterScalableTargetRequest scalableTargetRequest) {
     tracker.trackAPPASGCall("Register Scalable Target");
-    encryptionService.decrypt(awsConfig, encryptionDetails);
+    encryptionService.decrypt(awsConfig, encryptionDetails, false);
     return getAWSApplicationAutoScalingClient(region, awsConfig).registerScalableTarget(scalableTargetRequest);
   }
 
@@ -73,7 +73,7 @@ public class AwsAppAutoScalingHelperServiceDelegateImpl
   public DeregisterScalableTargetResult deregisterScalableTarget(String region, AwsConfig awsConfig,
       List<EncryptedDataDetail> encryptionDetails, DeregisterScalableTargetRequest deregisterTargetRequest) {
     tracker.trackAPPASGCall("Deregister Scalable Target");
-    encryptionService.decrypt(awsConfig, encryptionDetails);
+    encryptionService.decrypt(awsConfig, encryptionDetails, false);
     return getAWSApplicationAutoScalingClient(region, awsConfig).deregisterScalableTarget(deregisterTargetRequest);
   }
 
@@ -81,7 +81,7 @@ public class AwsAppAutoScalingHelperServiceDelegateImpl
   public DescribeScalableTargetsResult listScalableTargets(String region, AwsConfig awsConfig,
       List<EncryptedDataDetail> encryptionDetails, DescribeScalableTargetsRequest request) {
     tracker.trackAPPASGCall("List Scalable Targets");
-    encryptionService.decrypt(awsConfig, encryptionDetails);
+    encryptionService.decrypt(awsConfig, encryptionDetails, false);
     return getAWSApplicationAutoScalingClient(region, awsConfig).describeScalableTargets(request);
   }
 
@@ -89,7 +89,7 @@ public class AwsAppAutoScalingHelperServiceDelegateImpl
   public DescribeScalingPoliciesResult listScalingPolicies(String region, AwsConfig awsConfig,
       List<EncryptedDataDetail> encryptionDetails, DescribeScalingPoliciesRequest request) {
     tracker.trackAPPASGCall("List Scaling Policies");
-    encryptionService.decrypt(awsConfig, encryptionDetails);
+    encryptionService.decrypt(awsConfig, encryptionDetails, false);
     return getAWSApplicationAutoScalingClient(region, awsConfig).describeScalingPolicies(request);
   }
 
@@ -97,7 +97,7 @@ public class AwsAppAutoScalingHelperServiceDelegateImpl
   public PutScalingPolicyResult upsertScalingPolicy(String region, AwsConfig awsConfig,
       List<EncryptedDataDetail> encryptionDetails, PutScalingPolicyRequest putScalingPolicyRequest) {
     tracker.trackAPPASGCall("Put Scaling Policy");
-    encryptionService.decrypt(awsConfig, encryptionDetails);
+    encryptionService.decrypt(awsConfig, encryptionDetails, false);
     return getAWSApplicationAutoScalingClient(region, awsConfig).putScalingPolicy(putScalingPolicyRequest);
   }
 
@@ -109,7 +109,7 @@ public class AwsAppAutoScalingHelperServiceDelegateImpl
     }
 
     tracker.trackCloudWatchCall("Fetch Alarm by Name");
-    encryptionService.decrypt(awsConfig, encryptionDetails);
+    encryptionService.decrypt(awsConfig, encryptionDetails, false);
     AmazonCloudWatchClient amazonCloudWatchClient = getAmazonCloudWatchClient(region, awsConfig);
 
     DescribeAlarmsResult describeAlarmsResult = amazonCloudWatchClient.describeAlarms(
@@ -126,7 +126,7 @@ public class AwsAppAutoScalingHelperServiceDelegateImpl
     }
 
     tracker.trackCloudWatchCall("Put Metric Alarm");
-    encryptionService.decrypt(awsConfig, encryptionDetails);
+    encryptionService.decrypt(awsConfig, encryptionDetails, false);
     AmazonCloudWatchClient amazonCloudWatchClient = getAmazonCloudWatchClient(region, awsConfig);
 
     return amazonCloudWatchClient.putMetricAlarm(
@@ -157,7 +157,7 @@ public class AwsAppAutoScalingHelperServiceDelegateImpl
   public DeleteScalingPolicyResult deleteScalingPolicy(String region, AwsConfig awsConfig,
       List<EncryptedDataDetail> encryptionDetails, DeleteScalingPolicyRequest deleteScalingPolicyRequest) {
     tracker.trackAPPASGCall("Delete Scaling Policy");
-    encryptionService.decrypt(awsConfig, encryptionDetails);
+    encryptionService.decrypt(awsConfig, encryptionDetails, false);
     return getAWSApplicationAutoScalingClient(region, awsConfig).deleteScalingPolicy(deleteScalingPolicyRequest);
   }
 

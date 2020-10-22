@@ -681,7 +681,7 @@ public class NewRelicDelgateServiceImpl implements NewRelicDelegateService {
   }
 
   private String getApiKey(NewRelicConfig newRelicConfig, List<EncryptedDataDetail> encryptedDataDetails) {
-    encryptionService.decrypt(newRelicConfig, encryptedDataDetails);
+    encryptionService.decrypt(newRelicConfig, encryptedDataDetails, false);
     return String.valueOf(newRelicConfig.getApiKey());
   }
 }

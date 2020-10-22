@@ -73,7 +73,7 @@ public class HostValidationValidation extends AbstractDelegateValidateTask {
   private List<DelegateConnectionResult> validateHosts(List<String> hostNames, SettingAttribute connectionSetting,
       List<EncryptedDataDetail> encryptionDetails, ExecutionCredential executionCredential) {
     List<DelegateConnectionResult> results = new ArrayList<>();
-    encryptionService.decrypt((EncryptableSetting) connectionSetting.getValue(), encryptionDetails);
+    encryptionService.decrypt((EncryptableSetting) connectionSetting.getValue(), encryptionDetails, false);
     try {
       timeLimiter.callWithTimeout(() -> {
         for (String hostName : hostNames) {

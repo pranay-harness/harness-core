@@ -166,7 +166,7 @@ public class ContainerServiceTest extends WingsBaseTest {
         .thenReturn(Optional.of(2));
     when(kubernetesContainerService.getControllerPodCount(any(ReplicationController.class))).thenReturn(2);
     when(kubernetesContainerService.getPodTemplateSpec(replicationController)).thenReturn(podTemplateSpec);
-    doReturn(null).when(encryptionService).decrypt(eq(kubernetesClusterConfig), anyObject());
+    doReturn(null).when(encryptionService).decrypt(eq(kubernetesClusterConfig), anyObject(), eq(false));
 
     Service ecsService = new Service();
     ecsService.setServiceName(ECS_SERVICE_NAME);

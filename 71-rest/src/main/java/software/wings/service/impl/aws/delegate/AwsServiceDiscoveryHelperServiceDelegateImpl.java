@@ -35,7 +35,7 @@ public class AwsServiceDiscoveryHelperServiceDelegateImpl
   public String getRecordValueForService(
       AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails, String region, String serviceId) {
     try {
-      encryptionService.decrypt(awsConfig, encryptionDetails);
+      encryptionService.decrypt(awsConfig, encryptionDetails, false);
       AWSServiceDiscovery client = getAmazonServiceDiscoveryClient(region, awsConfig);
       tracker.trackSDSCall("Get Service");
       GetServiceResult getServiceResult = client.getService(new GetServiceRequest().withId(serviceId));

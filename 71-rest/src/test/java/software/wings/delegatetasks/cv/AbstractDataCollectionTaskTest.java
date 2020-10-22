@@ -99,7 +99,7 @@ public class AbstractDataCollectionTaskTest extends CategoryTest {
     when(dataCollectionInfo.getEncryptableSetting()).thenReturn(Optional.of(encryptableSetting));
     when(dataCollectionInfo.getEncryptedDataDetails()).thenReturn(encryptedDataDetails);
     abstractDataCollectionTask.run(dataCollectionInfo);
-    verify(encryptionService, times(1)).decrypt(eq(encryptableSetting), eq(encryptedDataDetails));
+    verify(encryptionService, times(1)).decrypt(eq(encryptableSetting), eq(encryptedDataDetails), eq(false));
   }
 
   @Test

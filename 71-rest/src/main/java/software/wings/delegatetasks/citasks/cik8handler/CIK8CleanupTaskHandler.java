@@ -89,8 +89,8 @@ public class CIK8CleanupTaskHandler implements CICleanupTaskHandler {
   }
 
   private KubernetesClient createKubernetesClient(CIK8CleanupTaskParams cik8DeleteSetupTaskParams) {
-    encryptionService.decrypt(
-        cik8DeleteSetupTaskParams.getKubernetesClusterConfig(), cik8DeleteSetupTaskParams.getEncryptionDetails());
+    encryptionService.decrypt(cik8DeleteSetupTaskParams.getKubernetesClusterConfig(),
+        cik8DeleteSetupTaskParams.getEncryptionDetails(), false);
     KubernetesConfig kubernetesConfig =
         cik8DeleteSetupTaskParams.getKubernetesClusterConfig().createKubernetesConfig(null);
 

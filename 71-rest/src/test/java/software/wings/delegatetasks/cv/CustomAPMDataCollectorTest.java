@@ -4,6 +4,7 @@ import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.rule.OwnerRule.PRAVEEN;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.when;
@@ -51,7 +52,7 @@ public class CustomAPMDataCollectorTest extends WingsBaseTest {
   public void setup() throws Exception {
     dataCollector = spy(new CustomAPMDataCollector());
     FieldUtils.writeField(dataCollector, "encryptionService", mockEncryptionService, true);
-    when(mockEncryptionService.getDecryptedValue(any()))
+    when(mockEncryptionService.getDecryptedValue(any(), eq(false)))
         .thenReturn(new char[] {'a', 'p', 'i'})
         .thenReturn(new char[] {'a', 'p', 'p'});
     MockitoAnnotations.initMocks(this);

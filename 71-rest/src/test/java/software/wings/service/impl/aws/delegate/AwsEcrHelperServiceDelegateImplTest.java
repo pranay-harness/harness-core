@@ -5,6 +5,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyList;
 import static org.mockito.Matchers.anyString;
+import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
@@ -39,7 +40,7 @@ public class AwsEcrHelperServiceDelegateImplTest extends WingsBaseTest {
   public void testGetEcrImageUrl() {
     AmazonECRClient mockClient = mock(AmazonECRClient.class);
     doReturn(mockClient).when(awsEcrHelperServiceDelegate).getAmazonEcrClient(any(), anyString());
-    doReturn(null).when(mockEncryptionService).decrypt(any(), anyList());
+    doReturn(null).when(mockEncryptionService).decrypt(any(), anyList(), eq(false));
     doReturn(new DescribeRepositoriesResult().withRepositories(new Repository().withRepositoryUri("uri")))
         .when(mockClient)
         .describeRepositories(any());
@@ -55,7 +56,7 @@ public class AwsEcrHelperServiceDelegateImplTest extends WingsBaseTest {
   public void testGetAmazonEcrAuthToken() {
     AmazonECRClient mockClient = mock(AmazonECRClient.class);
     doReturn(mockClient).when(awsEcrHelperServiceDelegate).getAmazonEcrClient(any(), anyString());
-    doReturn(null).when(mockEncryptionService).decrypt(any(), anyList());
+    doReturn(null).when(mockEncryptionService).decrypt(any(), anyList(), eq(false));
     doReturn(new GetAuthorizationTokenResult().withAuthorizationData(
                  new AuthorizationData().withAuthorizationToken("token")))
         .when(mockClient)

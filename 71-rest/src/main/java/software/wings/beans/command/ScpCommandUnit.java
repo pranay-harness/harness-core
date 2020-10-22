@@ -171,7 +171,8 @@ public class ScpCommandUnit extends SshCommandUnit {
                   "No metadata found for artifact stream. Cannot proceed with copy artifact");
             }
             JenkinsConfig jenkinsConfig = (JenkinsConfig) artifactStreamAttributes.getServerSetting().getValue();
-            encryptionService.decrypt(jenkinsConfig, artifactStreamAttributes.getArtifactServerEncryptedDataDetails());
+            encryptionService.decrypt(
+                jenkinsConfig, artifactStreamAttributes.getArtifactServerEncryptedDataDetails(), false);
             Jenkins jenkins = jenkinsUtil.getJenkins(jenkinsConfig);
 
             for (ArtifactFileMetadata artifactFileMetadata : artifactStreamAttributes.getArtifactFileMetadata()) {

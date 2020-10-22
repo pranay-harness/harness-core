@@ -125,7 +125,7 @@ public class GitFetchFilesTask extends AbstractDelegateRunnableTask {
 
   private GitFetchFilesResult fetchFilesFromRepo(GitFileConfig gitFileConfig, GitConfig gitConfig,
       List<EncryptedDataDetail> encryptedDataDetails, ExecutionLogCallback executionLogCallback) {
-    encryptionService.decrypt(gitConfig, encryptedDataDetails);
+    encryptionService.decrypt(gitConfig, encryptedDataDetails, false);
 
     executionLogCallback.saveExecutionLog("Git connector Url: " + gitConfig.getRepoUrl());
     if (gitFileConfig.isUseBranch()) {

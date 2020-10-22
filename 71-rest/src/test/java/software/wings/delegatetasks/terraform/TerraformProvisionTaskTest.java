@@ -10,6 +10,7 @@ import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyLong;
 import static org.mockito.Matchers.anyMap;
 import static org.mockito.Matchers.anyString;
+import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.times;
@@ -123,7 +124,7 @@ public class TerraformProvisionTaskTest extends WingsBaseTest {
         .when(terraformProvisionTaskSpy)
         .getLatestCommitSHAFromLocalRepo(any(GitOperationContext.class));
     doReturn(new ArrayList<String>()).when(terraformProvisionTaskSpy).getWorkspacesList(anyString(), anyLong());
-    doReturn(new char[] {'v', 'a', 'l', '2'}).when(mockEncryptionService).getDecryptedValue(encryptedDataDetail);
+    doReturn(new char[] {'v', 'a', 'l', '2'}).when(mockEncryptionService).getDecryptedValue(encryptedDataDetail, false);
 
     when(delegateFileManager.upload(any(DelegateFile.class), any(InputStream.class))).thenReturn(new DelegateFile());
   }
@@ -153,7 +154,7 @@ public class TerraformProvisionTaskTest extends WingsBaseTest {
   @Owner(developers = SATYAM)
   @Category(UnitTests.class)
   public void testGenerateInlineCommandVars() throws Exception {
-    doReturn(new char[] {'v', '2'}).when(mockEncryptionService).getDecryptedValue(any());
+    doReturn(new char[] {'v', '2'}).when(mockEncryptionService).getDecryptedValue(any(), eq(false));
     TerraformProvisionParameters parameters =
         TerraformProvisionParameters.builder()
             .variables(ImmutableMap.of("k1", "v1"))
@@ -275,7 +276,7 @@ public class TerraformProvisionTaskTest extends WingsBaseTest {
 
   private void verify(
       TerraformExecutionData terraformExecutionData, TerraformProvisionParameters.TerraformCommand command, int i) {
-    Mockito.verify(mockEncryptionService, times(i)).decrypt(gitConfig, sourceRepoEncryptyonDetails);
+    Mockito.verify(mockEncryptionService, times(i)).decrypt(gitConfig, sourceRepoEncryptyonDetails, false);
     Mockito.verify(gitClient, times(i)).ensureRepoLocallyClonedAndUpdated(any(GitOperationContext.class));
     Mockito.verify(gitClientHelper, times(i)).getRepoDirectory(any(GitOperationContext.class));
     int uploadTimes = TerraformProvisionParameters.TerraformCommand.DESTROY.equals(command) ? i : i * 2;

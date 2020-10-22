@@ -58,7 +58,7 @@ public class AwsCodeDeployHelperServiceDelegateImpl
   public List<String> listApplications(
       AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails, String region) {
     try {
-      encryptionService.decrypt(awsConfig, encryptionDetails);
+      encryptionService.decrypt(awsConfig, encryptionDetails, false);
       List<String> applications = new ArrayList<>();
       String nextToken = null;
       ListApplicationsResult listApplicationsResult;
@@ -84,7 +84,7 @@ public class AwsCodeDeployHelperServiceDelegateImpl
   public List<String> listDeploymentConfiguration(
       AwsConfig awsConfig, List<EncryptedDataDetail> encryptedDataDetails, String region) {
     try {
-      encryptionService.decrypt(awsConfig, encryptedDataDetails);
+      encryptionService.decrypt(awsConfig, encryptedDataDetails, false);
       String nextToken = null;
       List<String> deploymentConfigurations = new ArrayList<>();
       ListDeploymentConfigsResult listDeploymentConfigsResult;
@@ -110,7 +110,7 @@ public class AwsCodeDeployHelperServiceDelegateImpl
   public List<String> listDeploymentGroups(
       AwsConfig awsConfig, List<EncryptedDataDetail> encryptedDataDetails, String region, String appName) {
     try {
-      encryptionService.decrypt(awsConfig, encryptedDataDetails);
+      encryptionService.decrypt(awsConfig, encryptedDataDetails, false);
       String nextToken = null;
       List<String> deploymentGroups = new ArrayList<>();
       ListDeploymentGroupsResult listDeploymentGroupsResult;
@@ -137,7 +137,7 @@ public class AwsCodeDeployHelperServiceDelegateImpl
   public List<Instance> listDeploymentInstances(
       AwsConfig awsConfig, List<EncryptedDataDetail> encryptedDataDetails, String region, String deploymentId) {
     try {
-      encryptionService.decrypt(awsConfig, encryptedDataDetails);
+      encryptionService.decrypt(awsConfig, encryptedDataDetails, false);
       String nextToken = null;
       List<String> instanceIds = new ArrayList<>();
       ListDeploymentInstancesRequest listDeploymentInstancesRequest;
@@ -178,7 +178,7 @@ public class AwsCodeDeployHelperServiceDelegateImpl
   public AwsCodeDeployS3LocationData listAppRevision(AwsConfig awsConfig,
       List<EncryptedDataDetail> encryptedDataDetails, String region, String appName, String deploymentGroupName) {
     try {
-      encryptionService.decrypt(awsConfig, encryptedDataDetails);
+      encryptionService.decrypt(awsConfig, encryptedDataDetails, false);
       GetDeploymentGroupRequest getDeploymentGroupRequest =
           new GetDeploymentGroupRequest().withApplicationName(appName).withDeploymentGroupName(deploymentGroupName);
       tracker.trackCDCall("Get Deployment Group");

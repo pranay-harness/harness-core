@@ -158,7 +158,7 @@ public class HelmDeployServiceImplTest extends WingsBaseTest {
     gitFileConfig.setFilePath(HelmTestConstants.FILE_PATH_KEY);
     executionLogCallback = mock(ExecutionLogCallback.class);
     doNothing().when(executionLogCallback).saveExecutionLog(anyString());
-    when(encryptionService.decrypt(any(), any())).thenReturn(null);
+    when(encryptionService.decrypt(any(), any(), eq(false))).thenReturn(null);
     when(gitService.fetchFilesByPath(any(), any(), any(), any(), any(), anyBoolean()))
         .thenReturn(GitFetchFilesResult.builder()
                         .files(asList(GitFile.builder().fileContent(HelmTestConstants.GIT_FILE_CONTENT_1_KEY).build(),
@@ -839,7 +839,7 @@ public class HelmDeployServiceImplTest extends WingsBaseTest {
 
     helmDeployService.fetchSourceRepo(request);
 
-    verify(encryptionService, times(1)).decrypt(argumentCaptor.capture(), anyList());
+    verify(encryptionService, times(1)).decrypt(argumentCaptor.capture(), anyList(), eq(false));
     verify(gitService, times(1)).downloadFiles(any(GitConfig.class), any(GitFileConfig.class), anyString());
 
     GitConfig gitConfig = argumentCaptor.getValue();
@@ -874,7 +874,7 @@ public class HelmDeployServiceImplTest extends WingsBaseTest {
 
     helmDeployService.fetchSourceRepo(request);
 
-    verify(encryptionService, never()).decrypt(any(), anyList());
+    verify(encryptionService, never()).decrypt(any(), anyList(), eq(false));
   }
 
   @Test

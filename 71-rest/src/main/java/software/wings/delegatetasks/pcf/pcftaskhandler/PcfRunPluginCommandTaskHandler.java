@@ -66,7 +66,7 @@ public class PcfRunPluginCommandTaskHandler extends PcfCommandTaskHandler {
 
     executionLogCallback.saveExecutionLog(color("---------- Starting PCF Run Plugin Command Execution", White, Bold));
     PcfConfig pcfConfig = pcfCommandRequest.getPcfConfig();
-    encryptionService.decrypt(pcfConfig, encryptedDataDetails);
+    encryptionService.decrypt(pcfConfig, encryptedDataDetails, false);
     File workingDirectory = null;
     try {
       workingDirectory = createWorkingDirectory();

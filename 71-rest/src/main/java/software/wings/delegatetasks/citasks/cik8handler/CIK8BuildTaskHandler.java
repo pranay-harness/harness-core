@@ -144,7 +144,7 @@ public class CIK8BuildTaskHandler implements CIBuildTaskHandler {
 
   private KubernetesClient createKubernetesClient(CIK8BuildTaskParams cik8BuildTaskParams) {
     encryptionService.decrypt(
-        cik8BuildTaskParams.getKubernetesClusterConfig(), cik8BuildTaskParams.getEncryptionDetails());
+        cik8BuildTaskParams.getKubernetesClusterConfig(), cik8BuildTaskParams.getEncryptionDetails(), false);
     KubernetesConfig kubernetesConfig = cik8BuildTaskParams.getKubernetesClusterConfig().createKubernetesConfig(null);
     return kubernetesHelperService.getKubernetesClient(kubernetesConfig);
   }

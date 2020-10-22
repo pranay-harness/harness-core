@@ -97,7 +97,7 @@ public class LdapSettings extends SSOSettings implements ExecutionCapabilityDema
       @NotNull EncryptedDataDetail encryptedDataDetail, @NotNull EncryptionService encryptionService) {
     if (connectionSettings.getBindPassword().equals(LdapConstants.MASKED_STRING)) {
       try {
-        String bindPassword = new String(encryptionService.getDecryptedValue(encryptedDataDetail));
+        String bindPassword = new String(encryptionService.getDecryptedValue(encryptedDataDetail, false));
         connectionSettings.setBindPassword(bindPassword);
       } catch (IOException e) {
         throw new WingsException("Unable to decrypt the field bindPassword");

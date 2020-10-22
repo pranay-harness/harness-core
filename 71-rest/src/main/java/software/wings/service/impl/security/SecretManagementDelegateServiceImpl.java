@@ -60,6 +60,8 @@ import io.harness.helpers.ext.vault.VaultRestClientFactory;
 import io.harness.helpers.ext.vault.VaultSecretMetadata;
 import io.harness.helpers.ext.vault.VaultSecretMetadata.VersionMetadata;
 import io.harness.helpers.ext.vault.VaultSysAuthRestClient;
+import io.harness.secrets.SecretsDelegateCacheService;
+import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.security.encryption.EncryptedRecord;
 import io.harness.security.encryption.EncryptionType;
 import lombok.ToString;
@@ -80,6 +82,7 @@ import software.wings.service.impl.security.gcpkms.GcpKmsEncryptDecryptClient;
 import software.wings.service.impl.security.kms.KmsEncryptDecryptClient;
 import software.wings.service.intfc.security.CustomSecretsManagerDelegateService;
 import software.wings.service.intfc.security.SecretManagementDelegateService;
+import software.wings.service.intfc.security.SecretManager;
 import software.wings.settings.SettingVariableTypes;
 
 import java.io.IOException;
@@ -99,6 +102,7 @@ public class SecretManagementDelegateServiceImpl implements SecretManagementDele
   private static final JsonParser JSON_PARSER = new JsonParser();
 
   private TimeLimiter timeLimiter;
+  private SecretsDelegateCacheService secretsDelegateCacheService;
   private KmsEncryptDecryptClient kmsEncryptDecryptClient;
   private GcpKmsEncryptDecryptClient gcpKmsEncryptDecryptClient;
   private CustomSecretsManagerDelegateService customSecretsManagerDelegateService;
@@ -106,11 +110,13 @@ public class SecretManagementDelegateServiceImpl implements SecretManagementDele
   @Inject
   public SecretManagementDelegateServiceImpl(TimeLimiter timeLimiter, KmsEncryptDecryptClient kmsEncryptDecryptClient,
       GcpKmsEncryptDecryptClient gcpKmsEncryptDecryptClient,
-      CustomSecretsManagerDelegateService customSecretsManagerDelegateService) {
+      CustomSecretsManagerDelegateService customSecretsManagerDelegateService,
+      SecretsDelegateCacheService secretsDelegateCacheService) {
     this.timeLimiter = timeLimiter;
     this.kmsEncryptDecryptClient = kmsEncryptDecryptClient;
     this.gcpKmsEncryptDecryptClient = gcpKmsEncryptDecryptClient;
     this.customSecretsManagerDelegateService = customSecretsManagerDelegateService;
+    this.secretsDelegateCacheService = secretsDelegateCacheService;
   }
 
   public static boolean isRetryable(Exception e) {
@@ -538,6 +544,11 @@ public class SecretManagementDelegateServiceImpl implements SecretManagementDele
       encryptedData.setEncryptionKey(fullSecretName);
       encryptedData.setEncryptedValue(updateSecretResult.getARN().toCharArray());
     }
+    secretsDelegateCacheService.remove(EncryptedDataDetail.builder()
+                                           .encryptedData(SecretManager.buildRecordData(encryptedData))
+                                           .encryptionConfig(secretsManagerConfig)
+                                           .build()
+                                           .getIdentifier());
 
     logger.info("Done saving secret {} into AWS Secrets Manager for {} in {}ms", fullSecretName,
         encryptedData.getUuid(), System.currentTimeMillis() - startTime);
@@ -641,6 +652,11 @@ public class SecretManagementDelegateServiceImpl implements SecretManagementDele
       logger.info("Done saving vault secret {} for {}", keyUrl, encryptedData.getUuid());
       encryptedData.setEncryptionKey(keyUrl);
       encryptedData.setEncryptedValue(encryptedValue);
+      secretsDelegateCacheService.remove(EncryptedDataDetail.builder()
+                                             .encryptedData(SecretManager.buildRecordData(encryptedData))
+                                             .encryptionConfig(vaultConfig)
+                                             .build()
+                                             .getIdentifier());
       return encryptedData;
     } else {
       String errorMsg = "Encryption request for " + name + " was not successful.";
@@ -790,7 +806,11 @@ public class SecretManagementDelegateServiceImpl implements SecretManagementDele
     }
     encryptedData.setEncryptedValue(secretBundle.id().toCharArray());
     encryptedData.setEncryptionKey(fullSecretName);
-
+    secretsDelegateCacheService.remove(EncryptedDataDetail.builder()
+                                           .encryptedData(SecretManager.buildRecordData(encryptedData))
+                                           .encryptionConfig(secretsManagerConfig)
+                                           .build()
+                                           .getIdentifier());
     logger.info("Done saving secret {} into Azure Secrets Manager for {} in {} ms", fullSecretName,
         encryptedData.getUuid(), System.currentTimeMillis() - startTime);
     return encryptedData;

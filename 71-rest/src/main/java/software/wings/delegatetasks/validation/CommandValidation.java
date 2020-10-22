@@ -149,15 +149,15 @@ public class CommandValidation extends AbstractDelegateValidateTask {
   private void decryptCredentials(CommandExecutionContext context) {
     if (context.getHostConnectionAttributes() != null) {
       encryptionService.decrypt((EncryptableSetting) context.getHostConnectionAttributes().getValue(),
-          context.getHostConnectionCredentials());
+          context.getHostConnectionCredentials(), false);
     }
     if (context.getBastionConnectionAttributes() != null) {
       encryptionService.decrypt((EncryptableSetting) context.getBastionConnectionAttributes().getValue(),
-          context.getBastionConnectionCredentials());
+          context.getBastionConnectionCredentials(), false);
     }
     if (context.getWinrmConnectionAttributes() != null) {
       encryptionService.decrypt(
-          context.getWinrmConnectionAttributes(), context.getWinrmConnectionEncryptedDataDetails());
+          context.getWinrmConnectionAttributes(), context.getWinrmConnectionEncryptedDataDetails(), false);
     }
   }
 

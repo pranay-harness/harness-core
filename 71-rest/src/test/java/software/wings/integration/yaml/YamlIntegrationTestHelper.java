@@ -134,7 +134,7 @@ public class YamlIntegrationTestHelper {
     try {
       List<EncryptedDataDetail> encryptionDetails = secretManager.getEncryptionDetails(gitConfig, GLOBAL_APP_ID, null);
 
-      encryptionService.decrypt(gitConfig, encryptionDetails);
+      encryptionService.decrypt(gitConfig, encryptionDetails, false);
     } catch (Exception ex) {
       throw new GitConnectionDelegateException(GIT_CONNECTION_ERROR, null, null, USER_ADMIN);
     }

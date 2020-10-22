@@ -89,7 +89,7 @@ public class StackDriverDelegateServiceImpl implements StackDriverDelegateServic
       throws IOException {
     GcpConfig gcpConfig = taskParams.getGcpConfig();
     List<EncryptedDataDetail> encryptionDetails = taskParams.getEncryptedDataDetails();
-    encryptionService.decrypt(gcpConfig, encryptionDetails);
+    encryptionService.decrypt(gcpConfig, encryptionDetails, false);
     String projectId = getProjectId(gcpConfig);
     Monitoring monitoring = gcpHelperService.getMonitoringService(gcpConfig, encryptionDetails, projectId);
     String projectResource = "projects/" + projectId;
@@ -123,7 +123,7 @@ public class StackDriverDelegateServiceImpl implements StackDriverDelegateServic
   public List<String> listRegions(StackdriverGcpConfigTaskParams taskParams) {
     GcpConfig gcpConfig = taskParams.getGcpConfig();
     List<EncryptedDataDetail> encryptionDetails = taskParams.getEncryptedDataDetails();
-    encryptionService.decrypt(gcpConfig, encryptionDetails);
+    encryptionService.decrypt(gcpConfig, encryptionDetails, false);
     String projectId = getProjectId(gcpConfig);
     try {
       List<Region> regions = gcpHelperService.getGCEService(gcpConfig, encryptionDetails, projectId)
@@ -144,7 +144,7 @@ public class StackDriverDelegateServiceImpl implements StackDriverDelegateServic
   public Map<String, String> listForwardingRules(StackdriverGcpConfigTaskParams taskParams, String region) {
     GcpConfig gcpConfig = taskParams.getGcpConfig();
     List<EncryptedDataDetail> encryptionDetails = taskParams.getEncryptedDataDetails();
-    encryptionService.decrypt(gcpConfig, encryptionDetails);
+    encryptionService.decrypt(gcpConfig, encryptionDetails, false);
     String projectId = getProjectId(gcpConfig);
     try {
       List<ForwardingRule> forwardingRulesByRegion =
@@ -349,7 +349,7 @@ public class StackDriverDelegateServiceImpl implements StackDriverDelegateServic
       boolean is24x7Task, boolean fetchNextPage) {
     final GcpConfig gcpConfig = dataCollectionInfo.getGcpConfig();
     final List<EncryptedDataDetail> encryptionDetails = dataCollectionInfo.getEncryptedDataDetails();
-    encryptionService.decrypt(gcpConfig, encryptionDetails);
+    encryptionService.decrypt(gcpConfig, encryptionDetails, false);
     String projectId = getProjectId(gcpConfig);
     Logging logging = gcpHelperService.getLoggingResource(gcpConfig, encryptionDetails, projectId);
 

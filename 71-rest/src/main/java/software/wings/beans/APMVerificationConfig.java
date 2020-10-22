@@ -130,11 +130,13 @@ public class APMVerificationConfig extends SettingValue implements EncryptableSe
             if (!encryptedDataDetail.isPresent()) {
               throw new IllegalStateException("could not find record " + keyValue.value + " for " + keyValue.key);
             }
-            headers.put(keyValue.getKey(), new String(encryptionService.getDecryptedValue(encryptedDataDetail.get())));
+            headers.put(
+                keyValue.getKey(), new String(encryptionService.getDecryptedValue(encryptedDataDetail.get(), false)));
           } else if (keyValue.encrypted && MASKED_STRING.equals(keyValue.value)) {
             headers.put(keyValue.getKey(),
                 new String(encryptionService.getDecryptedValue(
-                    secretManager.encryptedDataDetails(accountId, keyValue.key, keyValue.encryptedValue, null).get())));
+                    secretManager.encryptedDataDetails(accountId, keyValue.key, keyValue.encryptedValue, null).get(),
+                    false)));
           } else {
             headers.put(keyValue.getKey(), keyValue.getValue());
           }
@@ -150,11 +152,13 @@ public class APMVerificationConfig extends SettingValue implements EncryptableSe
             if (!encryptedDataDetail.isPresent()) {
               throw new IllegalStateException("could not find record " + keyValue.value + " for " + keyValue.key);
             }
-            options.put(keyValue.getKey(), new String(encryptionService.getDecryptedValue(encryptedDataDetail.get())));
+            options.put(
+                keyValue.getKey(), new String(encryptionService.getDecryptedValue(encryptedDataDetail.get(), false)));
           } else if (keyValue.encrypted && MASKED_STRING.equals(keyValue.value)) {
             options.put(keyValue.getKey(),
                 new String(encryptionService.getDecryptedValue(
-                    secretManager.encryptedDataDetails(accountId, keyValue.key, keyValue.encryptedValue, null).get())));
+                    secretManager.encryptedDataDetails(accountId, keyValue.key, keyValue.encryptedValue, null).get(),
+                    false)));
           } else {
             options.put(keyValue.getKey(), keyValue.getValue());
           }

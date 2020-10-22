@@ -6,6 +6,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyList;
 import static org.mockito.Matchers.anyString;
+import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
@@ -39,7 +40,7 @@ public class AwsCFHelperServiceDelegateImplTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void testGetParamsData() {
     AmazonCloudFormationClient mockClient = mock(AmazonCloudFormationClient.class);
-    doReturn(null).when(mockEncryptionService).decrypt(any(), anyList());
+    doReturn(null).when(mockEncryptionService).decrypt(any(), anyList(), eq(false));
     doReturn(mockClient).when(awsCFHelperServiceDelegate).getAmazonCloudFormationClient(any(), any());
     doReturn(new GetTemplateSummaryResult().withParameters(
                  new ParameterDeclaration().withParameterKey("k1").withParameterType("t1").withDefaultValue("d1"),

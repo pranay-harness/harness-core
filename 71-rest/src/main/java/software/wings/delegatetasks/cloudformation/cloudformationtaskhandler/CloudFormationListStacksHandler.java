@@ -33,7 +33,7 @@ public class CloudFormationListStacksHandler extends CloudFormationCommandTaskHa
     CloudFormationListStacksRequest cloudFormationListStacksRequest = (CloudFormationListStacksRequest) request;
     CloudFormationCommandExecutionResponseBuilder builder = CloudFormationCommandExecutionResponse.builder();
     AwsConfig awsConfig = cloudFormationListStacksRequest.getAwsConfig();
-    encryptionService.decrypt(awsConfig, details);
+    encryptionService.decrypt(awsConfig, details, false);
     try {
       DescribeStacksRequest describeStacksRequest = new DescribeStacksRequest();
       String stackId = cloudFormationListStacksRequest.getStackId();

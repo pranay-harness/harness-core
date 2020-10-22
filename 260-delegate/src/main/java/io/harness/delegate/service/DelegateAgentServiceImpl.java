@@ -1842,7 +1842,7 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
         if (isNotEmpty(encryptedVariables)) {
           for (Entry<String, EncryptedDataDetail> encryptedVariable : encryptedVariables.entrySet()) {
             try {
-              secrets.add(String.valueOf(encryptionService.getDecryptedValue(encryptedVariable.getValue())));
+              secrets.add(String.valueOf(encryptionService.getDecryptedValue(encryptedVariable.getValue(), false)));
             } catch (IOException e) {
               throw new WingsException("Error occurred while decrypting encrypted variables", e);
             }

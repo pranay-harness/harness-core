@@ -12,6 +12,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.joor.Reflect.on;
 import static org.mockito.Matchers.anyString;
+import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.any;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.doNothing;
@@ -328,7 +329,7 @@ public class AwsHelperServiceTest extends WingsBaseTest {
 
     EncryptionService mockEncryptionService = mock(EncryptionService.class);
     EncryptableSetting encryptableSetting = mock(EncryptableSetting.class);
-    doReturn(encryptableSetting).when(mockEncryptionService).decrypt(any(), any());
+    doReturn(encryptableSetting).when(mockEncryptionService).decrypt(any(), any(), eq(false));
 
     AwsHelperService service = spy(new AwsHelperService());
     doReturn(mockClient).when(service).getAmazonAutoScalingClient(any(), any());

@@ -123,7 +123,7 @@ public class AppdynamicsDataCollectionTask extends AbstractDelegateDataCollectio
       this.dataCollectionMinute = dataCollectionInfo.getDataCollectionMinute();
       this.taskResult = taskResult;
       appDynamicsConfig = dataCollectionInfo.getAppDynamicsConfig();
-      encryptionService.decrypt(appDynamicsConfig, dataCollectionInfo.getEncryptedDataDetails());
+      encryptionService.decrypt(appDynamicsConfig, dataCollectionInfo.getEncryptedDataDetails(), false);
       this.is247Task = is247Task;
     }
 

@@ -388,7 +388,7 @@ public class HelmDeployServiceImpl implements HelmDeployService {
 
     String workingDirectory = Paths.get(getWorkingDirectory(commandRequest), gitFileConfig.getFilePath()).toString();
 
-    encryptionService.decrypt(gitConfig, sourceRepoConfig.getEncryptedDataDetails());
+    encryptionService.decrypt(gitConfig, sourceRepoConfig.getEncryptedDataDetails(), false);
     gitService.downloadFiles(gitConfig, gitFileConfig, workingDirectory);
 
     commandRequest.setWorkingDir(workingDirectory);
@@ -825,7 +825,7 @@ public class HelmDeployServiceImpl implements HelmDeployService {
     }
 
     try {
-      encryptionService.decrypt(gitConfig, commandRequest.getEncryptedDataDetails());
+      encryptionService.decrypt(gitConfig, commandRequest.getEncryptedDataDetails(), false);
       GitFileConfig gitFileConfig = commandRequest.getGitFileConfig();
       String repoUrl = gitConfig.getRepoUrl();
 

@@ -74,7 +74,7 @@ public class BambooServiceImpl implements BambooService {
 
   private BambooRestClient getBambooClient(BambooConfig bambooConfig, List<EncryptedDataDetail> encryptionDetails) {
     try {
-      encryptionService.decrypt(bambooConfig, encryptionDetails);
+      encryptionService.decrypt(bambooConfig, encryptionDetails, false);
       String bambooUrl = bambooConfig.getBambooUrl();
       if (bambooUrl == null) {
         throw new InvalidArtifactServerException("Invalid Bamboo Server URL");
@@ -177,7 +177,7 @@ public class BambooServiceImpl implements BambooService {
    * @return the basic auth credentials
    */
   private String getBasicAuthCredentials(BambooConfig bambooConfig, List<EncryptedDataDetail> encryptionDetails) {
-    encryptionService.decrypt(bambooConfig, encryptionDetails);
+    encryptionService.decrypt(bambooConfig, encryptionDetails, false);
     return Credentials.basic(bambooConfig.getUsername(), new String(bambooConfig.getPassword()));
   }
 

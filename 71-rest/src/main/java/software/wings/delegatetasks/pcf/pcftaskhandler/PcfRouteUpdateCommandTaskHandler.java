@@ -63,7 +63,7 @@ public class PcfRouteUpdateCommandTaskHandler extends PcfCommandTaskHandler {
       executionLogCallback.saveExecutionLog(color("--------- Starting PCF Route Update\n", White, Bold));
       PcfCommandRouteUpdateRequest pcfCommandRouteUpdateRequest = (PcfCommandRouteUpdateRequest) pcfCommandRequest;
       PcfConfig pcfConfig = pcfCommandRouteUpdateRequest.getPcfConfig();
-      encryptionService.decrypt(pcfConfig, encryptedDataDetails);
+      encryptionService.decrypt(pcfConfig, encryptedDataDetails, false);
 
       PcfRequestConfig pcfRequestConfig =
           PcfRequestConfig.builder()

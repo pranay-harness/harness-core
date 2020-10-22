@@ -89,7 +89,8 @@ public class SpotinstAmiInstanceSyncDelegateExecutorTest extends DelegateTest {
     PerpetualTaskResponse perpetualTaskResponse = executor.runOnce(
         PerpetualTaskId.newBuilder().setId("task-id").build(), getPerpetualTaskParams(), Instant.now());
 
-    verify(encryptionService, times(2)).decrypt(any(EncryptableSetting.class), anyListOf(EncryptedDataDetail.class));
+    verify(encryptionService, times(2))
+        .decrypt(any(EncryptableSetting.class), anyListOf(EncryptedDataDetail.class), eq(false));
     verify(taskHandler, times(1))
         .executeTask(any(SpotInstTaskParameters.class), any(SpotInstConfig.class), any(AwsConfig.class));
     verify(delegateAgentManagerClient, times(1))
@@ -123,7 +124,8 @@ public class SpotinstAmiInstanceSyncDelegateExecutorTest extends DelegateTest {
     PerpetualTaskResponse perpetualTaskResponse = executor.runOnce(
         PerpetualTaskId.newBuilder().setId("task-id").build(), getPerpetualTaskParams(), Instant.now());
 
-    verify(encryptionService, times(2)).decrypt(any(EncryptableSetting.class), anyListOf(EncryptedDataDetail.class));
+    verify(encryptionService, times(2))
+        .decrypt(any(EncryptableSetting.class), anyListOf(EncryptedDataDetail.class), eq(false));
     verify(taskHandler, times(1))
         .executeTask(any(SpotInstTaskParameters.class), any(SpotInstConfig.class), any(AwsConfig.class));
     verify(delegateAgentManagerClient, times(1))
@@ -148,7 +150,8 @@ public class SpotinstAmiInstanceSyncDelegateExecutorTest extends DelegateTest {
     PerpetualTaskResponse perpetualTaskResponse = executor.runOnce(
         PerpetualTaskId.newBuilder().setId("task-id").build(), getPerpetualTaskParams(), Instant.now());
 
-    verify(encryptionService, times(2)).decrypt(any(EncryptableSetting.class), anyListOf(EncryptedDataDetail.class));
+    verify(encryptionService, times(2))
+        .decrypt(any(EncryptableSetting.class), anyListOf(EncryptedDataDetail.class), eq(false));
     verify(taskHandler, times(1))
         .executeTask(any(SpotInstTaskParameters.class), any(SpotInstConfig.class), any(AwsConfig.class));
     verify(delegateAgentManagerClient, times(1))
