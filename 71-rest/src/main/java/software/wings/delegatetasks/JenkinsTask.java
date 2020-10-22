@@ -41,6 +41,7 @@ import software.wings.beans.JenkinsSubTaskType;
 import software.wings.beans.Log;
 import software.wings.beans.command.JenkinsTaskParams;
 import software.wings.helpers.ext.jenkins.Jenkins;
+import software.wings.helpers.ext.jenkins.model.CustomBuildWithDetails;
 import software.wings.service.impl.jenkins.JenkinsUtils;
 import software.wings.service.intfc.security.EncryptionService;
 import software.wings.sm.states.JenkinsState.JenkinsExecutionResponse;
@@ -102,29 +103,35 @@ public class JenkinsTask extends AbstractDelegateRunnableTask {
                   jenkinsTaskParams.getAppId(), LogLevel.INFO,
                   "Triggering Jenkins Job : " + jenkinsTaskParams.getJobName(), RUNNING));
 
-          QueueReference queueItem = jenkins.trigger(jenkinsTaskParams.getJobName(), jenkinsTaskParams);
-          logger.info("Triggered Job successfully and queued Build  URL {} ",
-              queueItem == null ? null : queueItem.getQueueItemUrlPart());
+          QueueReference queueReference = jenkins.trigger(jenkinsTaskParams.getJobName(), jenkinsTaskParams);
+          String queueItemUrl = queueReference != null ? queueReference.getQueueItemUrlPart() : null;
 
-          // Check if start jenkins is success
-          if (queueItem != null && isNotEmpty(queueItem.getQueueItemUrlPart())) {
-            jenkinsExecutionResponse.setQueuedBuildUrl(queueItem.getQueueItemUrlPart());
+          // Check if jenkins job start is successful
+          if (queueReference != null && isNotEmpty(queueItemUrl)) {
+            if (jenkinsConfig.isUseConnectorUrlForJobExecution()) {
+              queueItemUrl = updateQueueItemUrl(queueItemUrl, jenkinsConfig.getJenkinsUrl());
+              queueReference = createQueueReference(queueItemUrl);
+            }
+
+            logger.info("Triggered Job successfully with queued Build URL {} ", queueItemUrl);
+
+            jenkinsExecutionResponse.setQueuedBuildUrl(queueItemUrl);
 
             logService.save(getAccountId(),
                 constructLog(jenkinsTaskParams.getActivityId(), jenkinsTaskParams.getUnitName(),
                     jenkinsTaskParams.getAppId(), LogLevel.INFO,
-                    "Triggered Job successfully and queued Build  URL : " + queueItem.getQueueItemUrlPart()
-                        + " and remaining Time (sec): "
+                    "Triggered Job successfully with queued Build URL : " + queueItemUrl + " and remaining Time (sec): "
                         + (jenkinsTaskParams.getTimeout()
                               - (System.currentTimeMillis() - jenkinsTaskParams.getStartTs()))
                             / 1000,
                     RUNNING));
           } else {
+            logger.error("The Job was not triggered successfully with queued Build URL {} ", queueItemUrl);
             executionStatus = ExecutionStatus.FAILED;
             jenkinsExecutionResponse.setErrorMessage(msg);
           }
 
-          Build jenkinsBuild = waitForJobToStartExecution(jenkins, queueItem, jenkinsConfig);
+          Build jenkinsBuild = waitForJobToStartExecution(jenkins, queueReference, jenkinsConfig);
           jenkinsExecutionResponse.setBuildNumber(String.valueOf(jenkinsBuild.getNumber()));
           jenkinsExecutionResponse.setJobUrl(jenkinsBuild.getUrl());
 
@@ -153,18 +160,21 @@ public class JenkinsTask extends AbstractDelegateRunnableTask {
         jenkinsExecutionResponse.setActivityId(jenkinsTaskParams.getActivityId());
         try {
           // Get jenkins build from queued URL
-          logger.info(
-              "The Jenkins queued url {} and retrieving build information", jenkinsTaskParams.getQueuedBuildUrl());
-          Build jenkinsBuild =
-              jenkins.getBuild(new QueueReference(jenkinsTaskParams.getQueuedBuildUrl()), jenkinsConfig);
+          String queuedBuildUrl = jenkinsTaskParams.getQueuedBuildUrl();
+
+          if (jenkinsConfig.isUseConnectorUrlForJobExecution()) {
+            queuedBuildUrl = updateQueueItemUrl(queuedBuildUrl, jenkinsConfig.getJenkinsUrl());
+          }
+
+          logger.info("The Jenkins queued url {} and retrieving build information", queuedBuildUrl);
+          Build jenkinsBuild = jenkins.getBuild(new QueueReference(queuedBuildUrl), jenkinsConfig);
           if (jenkinsBuild == null) {
             logger.error(
                 "Error occurred while retrieving the build {} status.  Job might have been deleted between poll intervals",
-                jenkinsTaskParams.getQueuedBuildUrl());
+                queuedBuildUrl);
             logService.save(getAccountId(),
                 constructLog(jenkinsTaskParams.getActivityId(), jenkinsTaskParams.getUnitName(),
-                    jenkinsTaskParams.getAppId(), LogLevel.INFO,
-                    "Failed to get the build status " + jenkinsTaskParams.getQueuedBuildUrl(),
+                    jenkinsTaskParams.getAppId(), LogLevel.INFO, "Failed to get the build status " + queuedBuildUrl,
                     CommandExecutionStatus.FAILURE));
             jenkinsExecutionResponse.setErrorMessage(
                 "Failed to get the build status. Job might have been deleted between poll intervals.");
@@ -183,8 +193,9 @@ public class JenkinsTask extends AbstractDelegateRunnableTask {
                           / 1000,
                   RUNNING));
 
-          BuildWithDetails jenkinsBuildWithDetails = waitForJobExecutionToFinish(jenkinsBuild,
-              jenkinsTaskParams.getActivityId(), jenkinsTaskParams.getUnitName(), jenkinsTaskParams.getAppId());
+          BuildWithDetails jenkinsBuildWithDetails =
+              waitForJobExecutionToFinish(jenkinsBuild, jenkinsTaskParams.getActivityId(),
+                  jenkinsTaskParams.getUnitName(), jenkinsTaskParams.getAppId(), jenkinsConfig);
           jenkinsExecutionResponse.setJobUrl(jenkinsBuildWithDetails.getUrl());
 
           if (jenkinsTaskParams.isInjectEnvVars()) {
@@ -249,19 +260,30 @@ public class JenkinsTask extends AbstractDelegateRunnableTask {
     return jenkinsExecutionResponse;
   }
 
-  private BuildWithDetails waitForJobExecutionToFinish(
-      Build jenkinsBuild, String activityId, String unitName, String appId) throws IOException {
-    BuildWithDetails jenkinsBuildWithDetails = null;
+  private BuildWithDetails waitForJobExecutionToFinish(Build jenkinsBuild, String activityId, String unitName,
+      String appId, JenkinsConfig jenkinsConfig) throws IOException {
+    CustomBuildWithDetails jenkinsBuildWithDetails = null;
     AtomicInteger consoleLogsSent = new AtomicInteger();
+
+    CustomBuildWithDetails customBuildWithDetails = new CustomBuildWithDetails(jenkinsBuild.details());
+    String buildUrl = jenkinsBuild.getUrl();
+    customBuildWithDetails.setUrl(buildUrl);
+
     do {
-      logger.info("Waiting for Job  {} to finish execution", jenkinsBuild.getUrl());
+      logger.info("Waiting for Job {} to finish execution", buildUrl);
       sleep(Duration.ofSeconds(5));
-      Future<BuildWithDetails> jenkinsBuildWithDetailsFuture = null;
+      Future<CustomBuildWithDetails> jenkinsBuildWithDetailsFuture = null;
       Future<Void> saveConsoleLogs = null;
       try {
-        jenkinsBuildWithDetailsFuture = jenkinsExecutor.submit(jenkinsBuild::details);
+        jenkinsBuildWithDetailsFuture = jenkinsExecutor.submit(customBuildWithDetails::details);
         jenkinsBuildWithDetails = jenkinsBuildWithDetailsFuture.get(180, TimeUnit.SECONDS);
-        final BuildWithDetails finalJenkinsBuildWithDetails = jenkinsBuildWithDetails;
+
+        if (jenkinsConfig.isUseConnectorUrlForJobExecution()) {
+          jenkinsBuildWithDetails.setUrl(buildUrl);
+        }
+
+        final CustomBuildWithDetails finalJenkinsBuildWithDetails = jenkinsBuildWithDetails;
+
         saveConsoleLogs = jenkinsExecutor.submit(() -> {
           saveConsoleLogsAsync(
               jenkinsBuild, finalJenkinsBuildWithDetails, consoleLogsSent, activityId, unitName, appId);
@@ -270,11 +292,11 @@ public class JenkinsTask extends AbstractDelegateRunnableTask {
         saveConsoleLogs.get(180, TimeUnit.SECONDS);
       } catch (InterruptedException e) {
         Thread.currentThread().interrupt();
-        logger.error("Thread interrupted while waiting for Job {} to finish execution. Reason {}. Retrying.",
-            jenkinsBuild.getUrl(), ExceptionUtils.getMessage(e));
+        logger.error("Thread interrupted while waiting for Job {} to finish execution. Reason {}. Retrying.", buildUrl,
+            ExceptionUtils.getMessage(e));
       } catch (ExecutionException | TimeoutException e) {
-        logger.error("Exception occurred while waiting for Job {} to finish execution. Reason {}. Retrying.",
-            jenkinsBuild.getUrl(), ExceptionUtils.getMessage(e));
+        logger.error("Exception occurred while waiting for Job {} to finish execution. Reason {}. Retrying.", buildUrl,
+            ExceptionUtils.getMessage(e));
       } finally {
         if (jenkinsBuildWithDetailsFuture != null) {
           jenkinsBuildWithDetailsFuture.cancel(true);
@@ -346,13 +368,14 @@ public class JenkinsTask extends AbstractDelegateRunnableTask {
     }
   }
 
-  private Build waitForJobToStartExecution(Jenkins jenkins, QueueReference queueItem, JenkinsConfig jenkinsConfig) {
+  private Build waitForJobToStartExecution(
+      Jenkins jenkins, QueueReference queueReference, JenkinsConfig jenkinsConfig) {
     Build jenkinsBuild = null;
     do {
-      logger.info("Waiting for job {} to start execution", queueItem);
+      logger.info("Waiting for job {} to start execution", queueReference);
       sleep(Duration.ofSeconds(1));
       try {
-        jenkinsBuild = jenkins.getBuild(queueItem, jenkinsConfig);
+        jenkinsBuild = jenkins.getBuild(queueReference, jenkinsConfig);
         if (jenkinsBuild != null) {
           logger.info("Job started and Build No {}", jenkinsBuild.getNumber());
         }
@@ -369,5 +392,17 @@ public class JenkinsTask extends AbstractDelegateRunnableTask {
       }
     } while (jenkinsBuild == null);
     return jenkinsBuild;
+  }
+
+  private QueueReference createQueueReference(String location) {
+    return new QueueReference(location);
+  }
+
+  private String updateQueueItemUrl(String queueItemUrl, String jenkinsUrl) {
+    if (jenkinsUrl.endsWith("/")) {
+      jenkinsUrl = jenkinsUrl.substring(0, jenkinsUrl.length() - 1);
+    }
+    String[] queueItemUrlParts = queueItemUrl.split("/queue/");
+    return jenkinsUrl.concat("/queue/").concat(queueItemUrlParts[1]);
   }
 }
