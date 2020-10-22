@@ -177,7 +177,10 @@ public class EnvironmentServiceImpl implements EnvironmentService, DataProvider 
   @Override
   public PageResponse<Environment> listWithSummary(
       PageRequest<Environment> request, boolean withTags, String tagFilter, List<String> appIds) {
+    // Time to list tags
+    long startTime = System.currentTimeMillis();
     PageResponse<Environment> pageResponse = list(request, withTags, tagFilter);
+    logger.info("Total time taken to load tags {}", System.currentTimeMillis() - startTime);
 
     if (pageResponse.getResponse() == null) {
       return pageResponse;
@@ -187,14 +190,6 @@ public class EnvironmentServiceImpl implements EnvironmentService, DataProvider 
         pageResponse.getResponse().stream().collect(Collectors.groupingBy(env -> env.getAppId()));
     map.forEach((appId, envs) -> addInfraDefDetailToEnv(appId, envs));
 
-    pageResponse.getResponse().forEach(environment -> {
-      try {
-        addServiceTemplates(environment);
-      } catch (Exception e) {
-        logger.error("Failed to add service templates to environment {}", environment.toString(), e);
-      }
-    });
-
     return pageResponse;
   }
 
@@ -203,7 +198,11 @@ public class EnvironmentServiceImpl implements EnvironmentService, DataProvider 
     for (Environment environment : environments) {
       envIds.add(environment.getUuid());
     }
+    // Time to list infradefcounts
+    long startTime = System.currentTimeMillis();
     Map<String, Integer> countForEnvironments = infrastructureDefinitionService.getCountForEnvironments(appId, envIds);
+    logger.info("Total time taken to load infra definition count {}", System.currentTimeMillis() - startTime);
+
     for (Environment environment : environments) {
       environment.setInfrastructureDefinitions(
           infrastructureDefinitionService.getNameAndIdForEnvironment(appId, environment.getUuid(), 5));
