@@ -7,12 +7,14 @@ import com.google.common.base.Preconditions;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.UnexpectedException;
-import io.harness.pipeline.plan.scratch.common.creator.PlanCreationResponse;
+import io.harness.pipeline.plan.scratch.common.creator.PlanCreationBlobResponseUtils;
 import io.harness.pipeline.plan.scratch.common.creator.PlanCreatorService;
 import io.harness.pipeline.plan.scratch.common.utils.CompletableFutures;
 import io.harness.pipeline.plan.scratch.common.yaml.YamlField;
 import io.harness.pipeline.plan.scratch.common.yaml.YamlNode;
 import io.harness.pipeline.plan.scratch.common.yaml.YamlUtils;
+import io.harness.pms.plan.PlanCreationBlobResponse;
+import io.harness.pms.plan.YamlFieldBlob;
 
 import java.io.IOException;
 import java.util.HashMap;
@@ -33,61 +35,64 @@ public class PlanCreatorMergeService {
     this.planCreatorServices = planCreatorServices;
   }
 
-  public PlanCreationResponse createPlan(@NotNull String content) throws IOException {
+  public PlanCreationBlobResponse createPlan(@NotNull String content) throws IOException {
     String finalContent = preprocessYaml(content);
     YamlField rootYamlField = YamlUtils.readTree(finalContent);
     YamlField pipelineField = extractPipelineField(rootYamlField);
-    Map<String, YamlField> dependencies = new HashMap<>();
-    dependencies.put(pipelineField.getNode().getUuid(), pipelineField);
-    PlanCreationResponse finalResponse = createPlanForDependenciesRecursive(dependencies);
-    validatePlanCreationResponse(finalResponse);
+    Map<String, YamlFieldBlob> dependencies = new HashMap<>();
+    dependencies.put(pipelineField.getNode().getUuid(), pipelineField.toFieldBlob());
+    PlanCreationBlobResponse finalResponse = createPlanForDependenciesRecursive(dependencies);
+    validatePlanCreationBlobResponse(finalResponse);
     return finalResponse;
   }
 
-  private PlanCreationResponse createPlanForDependenciesRecursive(Map<String, YamlField> initialDependencies) {
-    PlanCreationResponse finalResponse = PlanCreationResponse.builder().dependencies(initialDependencies).build();
+  private PlanCreationBlobResponse createPlanForDependenciesRecursive(Map<String, YamlFieldBlob> initialDependencies) {
+    PlanCreationBlobResponse.Builder finalResponseBuilder =
+        PlanCreationBlobResponse.newBuilder().putAllDependencies(initialDependencies);
     if (EmptyPredicate.isEmpty(planCreatorServices) || EmptyPredicate.isEmpty(initialDependencies)) {
-      return finalResponse;
+      return finalResponseBuilder.build();
     }
 
-    for (int i = 0; i < MAX_DEPTH && EmptyPredicate.isNotEmpty(finalResponse.getDependencies()); i++) {
-      PlanCreationResponse currIterationResponse = createPlanForDependencies(finalResponse.getDependencies());
-      finalResponse.addNodes(currIterationResponse.getNodes());
-      finalResponse.mergeStartingNodeId(currIterationResponse.getStartingNodeId());
-      if (EmptyPredicate.isNotEmpty(finalResponse.getDependencies())) {
+    for (int i = 0; i < MAX_DEPTH && EmptyPredicate.isNotEmpty(finalResponseBuilder.getDependenciesMap()); i++) {
+      PlanCreationBlobResponse currIterationResponse =
+          createPlanForDependencies(finalResponseBuilder.getDependenciesMap());
+      PlanCreationBlobResponseUtils.addNodes(finalResponseBuilder, currIterationResponse.getNodesMap());
+      PlanCreationBlobResponseUtils.mergeStartingNodeId(
+          finalResponseBuilder, currIterationResponse.getStartingNodeId());
+      if (EmptyPredicate.isNotEmpty(finalResponseBuilder.getDependenciesMap())) {
         throw new InvalidRequestException("Some YAML nodes could not be parsed");
       }
 
-      finalResponse.addDependencies(currIterationResponse.getDependencies());
+      PlanCreationBlobResponseUtils.addDependencies(finalResponseBuilder, currIterationResponse.getDependenciesMap());
     }
 
-    validatePlanCreationResponse(finalResponse);
-    return finalResponse;
+    return finalResponseBuilder.build();
   }
 
-  private PlanCreationResponse createPlanForDependencies(Map<String, YamlField> dependencies) {
-    PlanCreationResponse currIterationResponse = PlanCreationResponse.builder().build();
-    CompletableFutures<PlanCreationResponse> completableFutures = new CompletableFutures<>(executor);
+  private PlanCreationBlobResponse createPlanForDependencies(Map<String, YamlFieldBlob> dependencies) {
+    PlanCreationBlobResponse.Builder currIterationResponseBuilder = PlanCreationBlobResponse.newBuilder();
+    CompletableFutures<PlanCreationBlobResponse> completableFutures = new CompletableFutures<>(executor);
     for (PlanCreatorService planCreatorService : planCreatorServices) {
       completableFutures.supplyAsync(() -> planCreatorService.createPlan(dependencies));
     }
 
     try {
-      List<PlanCreationResponse> planCreationResponses = completableFutures.allOf().get(5, TimeUnit.MINUTES);
-      planCreationResponses.forEach(currIterationResponse::merge);
+      List<PlanCreationBlobResponse> planCreationBlobResponses = completableFutures.allOf().get(5, TimeUnit.MINUTES);
+      planCreationBlobResponses.forEach(
+          resp -> PlanCreationBlobResponseUtils.merge(currIterationResponseBuilder, resp));
     } catch (Exception ex) {
       throw new UnexpectedException("Error fetching plan creation response from service", ex);
     }
 
-    return currIterationResponse;
+    return currIterationResponseBuilder.build();
   }
 
-  private void validatePlanCreationResponse(PlanCreationResponse finalResponse) {
-    if (EmptyPredicate.isNotEmpty(finalResponse.getDependencies())) {
+  private void validatePlanCreationBlobResponse(PlanCreationBlobResponse finalResponse) {
+    if (EmptyPredicate.isNotEmpty(finalResponse.getDependenciesMap())) {
       throw new InvalidRequestException(
-          format("Unable to interpret nodes: %s", finalResponse.getDependencies().keySet().toString()));
+          format("Unable to interpret nodes: %s", finalResponse.getDependenciesMap().keySet().toString()));
     }
-    if (finalResponse.getStartingNodeId() == null) {
+    if (EmptyPredicate.isEmpty(finalResponse.getStartingNodeId())) {
       throw new InvalidRequestException("Unable to find out starting node");
     }
   }

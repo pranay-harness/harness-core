@@ -1,0 +1,18 @@
+syntax = "proto3";
+
+package io.harness.pms.plan;
+
+option java_multiple_files = true;
+
+import "io/harness/pms/plan/plan_node.proto";
+
+message PlanCreationBlobResponse {
+  map<string, PlanNode> nodes = 1;
+  map<string, YamlFieldBlob> dependencies = 2;
+  string startingNodeId = 3;
+}
+
+message YamlFieldBlob {
+  string name = 1;
+  bytes blob = 2;
+}

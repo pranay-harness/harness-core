@@ -2,16 +2,16 @@ package io.harness.pipeline.plan.scratch.cd;
 
 import com.google.common.base.Preconditions;
 
-import io.harness.facilitator.FacilitatorObtainment;
-import io.harness.facilitator.FacilitatorType;
-import io.harness.pipeline.plan.scratch.lib.creator.ParallelChildrenPlanCreator;
+import io.harness.pipeline.plan.scratch.common.creator.PlanCreationContext;
 import io.harness.pipeline.plan.scratch.common.creator.PlanCreationResponse;
-import io.harness.pipeline.plan.scratch.lib.io.MapStepParameters;
 import io.harness.pipeline.plan.scratch.common.yaml.YamlField;
 import io.harness.pipeline.plan.scratch.common.yaml.YamlNode;
-import io.harness.plan.PlanNode;
-import io.harness.state.StepType;
-import io.harness.state.io.StepParameters;
+import io.harness.pipeline.plan.scratch.lib.creator.ParallelChildrenPlanCreator;
+import io.harness.pipeline.plan.scratch.lib.io.MapStepParameters;
+import io.harness.pms.facilitators.FacilitatorObtainment;
+import io.harness.pms.facilitators.FacilitatorType;
+import io.harness.pms.plan.PlanNode;
+import io.harness.pms.steps.StepType;
 
 import java.util.Collections;
 import java.util.HashMap;
@@ -28,7 +28,7 @@ public class DeploymentStagePlanCreator extends ParallelChildrenPlanCreator {
 
   @Override
   public StepType getStepType() {
-    return StepType.builder().type("stage").build();
+    return StepType.newBuilder().setType("stage").build();
   }
 
   @Override
@@ -37,28 +37,30 @@ public class DeploymentStagePlanCreator extends ParallelChildrenPlanCreator {
   }
 
   @Override
-  public Map<String, PlanCreationResponse> createPlanForChildrenNodes(YamlField field) {
+  public Map<String, PlanCreationResponse> createPlanForChildrenNodes(PlanCreationContext ctx, YamlField field) {
     YamlNode yamlNode = field.getNode();
     YamlNode specYamlNode = Preconditions.checkNotNull(yamlNode.getField("spec")).getNode();
     Map<String, PlanCreationResponse> responseMap = new HashMap<>();
-    createPlanNodeForService(responseMap, specYamlNode);
-    createPlanNodeForInfrastructure(responseMap, specYamlNode);
-    createPlanNodeForSteps(responseMap, specYamlNode);
+    createPlanNodeForService(responseMap, ctx, specYamlNode);
+    createPlanNodeForInfrastructure(responseMap, ctx, specYamlNode);
+    createPlanNodeForSteps(responseMap, ctx, specYamlNode);
     return responseMap;
   }
 
-  private void createPlanNodeForService(Map<String, PlanCreationResponse> responseMap, YamlNode yamlNode) {
+  private void createPlanNodeForService(
+      Map<String, PlanCreationResponse> responseMap, PlanCreationContext ctx, YamlNode yamlNode) {
     YamlNode serviceYamlNode = Preconditions.checkNotNull(yamlNode.getField("service")).getNode();
     if (serviceYamlNode == null) {
       return;
     }
 
     YamlNode infraSpecYamlNode = Preconditions.checkNotNull(serviceYamlNode.getField("serviceDefinition")).getNode();
-    createSyncPlanNode(responseMap, "service", serviceYamlNode,
+    createSyncPlanNode(responseMap, ctx, "service", serviceYamlNode,
         new MapStepParameters("serviceDefinition", infraSpecYamlNode.toString()));
   }
 
-  private void createPlanNodeForInfrastructure(Map<String, PlanCreationResponse> responseMap, YamlNode yamlNode) {
+  private void createPlanNodeForInfrastructure(
+      Map<String, PlanCreationResponse> responseMap, PlanCreationContext ctx, YamlNode yamlNode) {
     YamlNode infraYamlNode = Preconditions.checkNotNull(yamlNode.getField("infrastructure")).getNode();
     if (infraYamlNode == null) {
       return;
@@ -71,28 +73,27 @@ public class DeploymentStagePlanCreator extends ParallelChildrenPlanCreator {
         Preconditions.checkNotNull(infraYamlNode.getField("infrastructureDefinition")).getNode();
     YamlNode infraDefSpecYamlNode = Preconditions.checkNotNull(infraDefYamlNode.getField("spec")).getNode();
     stepParameters.put("spec", infraDefSpecYamlNode.toString());
-    createSyncPlanNode(responseMap, "infrastructure", infraDefYamlNode, stepParameters);
+    createSyncPlanNode(responseMap, ctx, "infrastructure", infraDefYamlNode, stepParameters);
   }
 
-  private void createSyncPlanNode(
-      Map<String, PlanCreationResponse> responseMap, String type, YamlNode yamlNode, StepParameters stepParameters) {
-    PlanNode node =
-        PlanNode.builder()
-            .uuid(yamlNode.getUuid())
-            .identifier(yamlNode.getIdentifier())
-            .stepType(StepType.builder().type(type).build())
-            .name(type)
-            .stepParameters(stepParameters)
-            .facilitatorObtainment(
-                FacilitatorObtainment.builder().type(FacilitatorType.builder().type("SYNC").build()).build())
-            .skipExpressionChain(false)
-            .build();
-    Map<String, PlanNode> nodes = new HashMap<>();
-    nodes.put(node.getUuid(), node);
-    responseMap.put(node.getUuid(), PlanCreationResponse.builder().nodes(nodes).build());
+  private void createSyncPlanNode(Map<String, PlanCreationResponse> responseMap, PlanCreationContext ctx, String type,
+      YamlNode yamlNode, Object stepParameters) {
+    PlanNode node = PlanNode.newBuilder()
+                        .setUuid(yamlNode.getUuid())
+                        .setIdentifier(yamlNode.getIdentifier() == null ? type : yamlNode.getIdentifier())
+                        .setStepType(StepType.newBuilder().setType(type).build())
+                        .setName(type)
+                        .setStepParameters(ctx.toByteString(stepParameters))
+                        .addFacilitatorObtainments(FacilitatorObtainment.newBuilder()
+                                                       .setType(FacilitatorType.newBuilder().setType("SYNC").build())
+                                                       .build())
+                        .setSkipExpressionChain(false)
+                        .build();
+    responseMap.put(node.getUuid(), PlanCreationResponse.builder().node(node.getUuid(), node).build());
   }
 
-  private void createPlanNodeForSteps(Map<String, PlanCreationResponse> responseMap, YamlNode yamlNode) {
+  private void createPlanNodeForSteps(
+      Map<String, PlanCreationResponse> responseMap, PlanCreationContext ctx, YamlNode yamlNode) {
     YamlNode executionYamlNode = Preconditions.checkNotNull(yamlNode.getField("execution")).getNode();
     if (executionYamlNode == null) {
       return;
@@ -110,24 +111,22 @@ public class DeploymentStagePlanCreator extends ParallelChildrenPlanCreator {
                                          .collect(Collectors.toList());
     String uuid = "steps-" + yamlNode.getUuid();
     PlanNode node =
-        PlanNode.builder()
-            .uuid(uuid)
-            .identifier("steps-" + stepsYamlNode.getIdentifier())
-            .stepType(StepType.builder().type("steps").build())
-            .name("steps")
-            .stepParameters(new MapStepParameters("childrenNodeIds",
-                stepYamlFields.stream().map(el -> el.getNode().getUuid()).collect(Collectors.toList())))
-            .facilitatorObtainment(
-                FacilitatorObtainment.builder().type(FacilitatorType.builder().type("CHILDREN").build()).build())
-            .skipExpressionChain(false)
+        PlanNode.newBuilder()
+            .setUuid(uuid)
+            .setIdentifier("steps-" + stepsYamlNode.getIdentifier())
+            .setStepType(StepType.newBuilder().setType("steps").build())
+            .setName("steps")
+            .setStepParameters(ctx.toByteString(new MapStepParameters("childrenNodeIds",
+                stepYamlFields.stream().map(el -> el.getNode().getUuid()).collect(Collectors.toList()))))
+            .addFacilitatorObtainments(FacilitatorObtainment.newBuilder()
+                                           .setType(FacilitatorType.newBuilder().setType("CHILDREN").build())
+                                           .build())
+            .setSkipExpressionChain(false)
             .build();
 
-    Map<String, YamlField> stepYamlFieldsMap = new HashMap<>();
-    stepYamlFields.forEach(stepField -> stepYamlFieldsMap.put(stepField.getNode().getUuid(), stepField));
-
-    Map<String, PlanNode> nodes = new HashMap<>();
-    nodes.put(node.getUuid(), node);
-    responseMap.put(
-        node.getUuid(), PlanCreationResponse.builder().nodes(nodes).dependencies(stepYamlFieldsMap).build());
+    Map<String, YamlField> stepYamlFieldMap = new HashMap<>();
+    stepYamlFields.forEach(stepField -> stepYamlFieldMap.put(stepField.getNode().getUuid(), stepField));
+    responseMap.put(node.getUuid(),
+        PlanCreationResponse.builder().node(node.getUuid(), node).dependencies(stepYamlFieldMap).build());
   }
 }

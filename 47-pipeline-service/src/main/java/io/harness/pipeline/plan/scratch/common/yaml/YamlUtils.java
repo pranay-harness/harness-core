@@ -37,6 +37,12 @@ public class YamlUtils {
     return new YamlField(rootYamlNode);
   }
 
+  public YamlField toByteString(String content) throws IOException {
+    JsonNode rootJsonNode = mapper.readTree(content);
+    YamlNode rootYamlNode = new YamlNode(rootJsonNode);
+    return new YamlField(rootYamlNode);
+  }
+
   public String injectUuid(String content) throws IOException {
     JsonNode rootJsonNode = mapper.readTree(content);
     if (rootJsonNode == null) {
