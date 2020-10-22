@@ -9,11 +9,9 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static java.util.Arrays.asList;
 
 import io.harness.eraro.ErrorCode;
-import io.harness.exception.ExceptionUtils;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import software.wings.api.PartitionElement;
 import software.wings.sm.ContextElement;
 
@@ -74,7 +72,7 @@ public interface PartitionProcessor {
    * @param breakdownsParams the breakdowns params
    * @return the list
    */
-  default List<PartitionElement> partitions(String... breakdownsParams) {
+  default List<PartitionElement> partitions(Logger logger, String... breakdownsParams) {
     if (isNotEmpty(breakdownsParams)) {
       setBreakdowns(asList(breakdownsParams));
     }
@@ -98,7 +96,6 @@ public interface PartitionProcessor {
             + breakdowns.toString() + "percentages:" + percentages.toString() + ", counts:" + counts.toString());
       }
     } catch (Exception e) {
-      log().error(ExceptionUtils.getMessage(e), e);
       throw new InvalidRequestException("Incorrect partition expressions- breakdowns:" + breakdowns.toString()
               + "percentages:" + percentages.toString() + ", counts:" + counts.toString(),
           e);
@@ -231,13 +228,4 @@ public interface PartitionProcessor {
    * @return the list
    */
   List<ContextElement> elements();
-
-  /**
-   * Log logger.
-   *
-   * @return the logger
-   */
-  default Logger log() {
-    return LoggerFactory.getLogger(getClass());
-  }
 }

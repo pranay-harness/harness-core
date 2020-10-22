@@ -3,6 +3,7 @@ package software.wings.rules;
 import static java.lang.String.format;
 import static java.util.Arrays.asList;
 
+import lombok.extern.slf4j.Slf4j;
 import org.apache.sshd.common.channel.PtyMode;
 import org.apache.sshd.common.util.GenericUtils;
 import org.apache.sshd.common.util.ValidateUtils;
@@ -30,6 +31,7 @@ import java.util.Map;
 /**
  * Created by peeyushaggarwal on 7/27/16.
  */
+@Slf4j
 public class FileSystemAwareProcessShell extends AbstractLoggingBean implements InvertedShell, ServerSessionHolder {
   private final List<String> command;
   private String cmdValue;
@@ -97,20 +99,20 @@ public class FileSystemAwareProcessShell extends AbstractLoggingBean implements 
         Map<String, String> procEnv = builder.environment();
         procEnv.putAll(varsMap);
       } catch (Exception e) {
-        log.warn(
+        logger.warn(
             format("start() - Failed (%s) to set environment for command=%s", e.getClass().getSimpleName(), cmdValue),
             e);
-        if (log.isDebugEnabled()) {
-          log.debug("start(" + cmdValue + ") failure details: " + e.getMessage(), e);
+        if (logger.isDebugEnabled()) {
+          logger.debug("start(" + cmdValue + ") failure details: " + e.getMessage(), e);
           for (StackTraceElement elem : e.getStackTrace()) {
-            log.debug("Trace: {}", elem);
+            logger.debug("Trace: {}", elem);
           }
         }
       }
     }
 
-    if (log.isDebugEnabled()) {
-      log.debug("Starting shell with command: '{}' and env: {}", builder.command(), builder.environment());
+    if (logger.isDebugEnabled()) {
+      logger.debug("Starting shell with command: '{}' and env: {}", builder.command(), builder.environment());
     }
 
     if (root != null) {
@@ -193,23 +195,23 @@ public class FileSystemAwareProcessShell extends AbstractLoggingBean implements 
   public void destroy() {
     // NOTE !!! DO NOT NULL-IFY THE PROCESS SINCE "exitValue" is called subsequently
     if (process != null) {
-      if (log.isDebugEnabled()) {
-        log.debug("Destroy process for " + cmdValue);
+      if (logger.isDebugEnabled()) {
+        logger.debug("Destroy process for " + cmdValue);
       }
       process.destroy();
     }
 
     IOException e = IoUtils.closeQuietly(getInputStream(), getOutputStream(), getErrorStream());
     if (e != null) {
-      if (log.isDebugEnabled()) {
-        log.debug(e.getClass().getSimpleName() + " while destroy streams of '" + this + "': " + e.getMessage());
+      if (logger.isDebugEnabled()) {
+        logger.debug(e.getClass().getSimpleName() + " while destroy streams of '" + this + "': " + e.getMessage());
       }
 
-      if (log.isTraceEnabled()) {
+      if (logger.isTraceEnabled()) {
         Throwable[] suppressed = e.getSuppressed();
         if (GenericUtils.length(suppressed) > 0) {
           for (Throwable t : suppressed) {
-            log.trace("Suppressed " + t.getClass().getSimpleName() + ") while destroy streams of '" + this
+            logger.trace("Suppressed " + t.getClass().getSimpleName() + ") while destroy streams of '" + this
                 + "': " + t.getMessage());
           }
         }
