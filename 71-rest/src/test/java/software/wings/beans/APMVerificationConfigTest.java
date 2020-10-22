@@ -265,7 +265,7 @@ public class APMVerificationConfigTest extends WingsBaseTest {
         Optional.of(EncryptedDataDetail.builder().fieldName("api_key_2").build());
 
     when(secretManager.encryptedDataDetails("111", "api_key_2", "abc", null)).thenReturn(encryptedDataDetail);
-    when(encryptionService.getDecryptedValue(encryptedDataDetail.get())).thenReturn("abc".toCharArray());
+    when(encryptionService.getDecryptedValue(encryptedDataDetail.get(), false)).thenReturn("abc".toCharArray());
     apmVerificationConfig.setHeadersList(headers);
     apmVerificationConfig.setAccountId("111");
     apmVerificationConfig.setUrl("base");
@@ -301,9 +301,9 @@ public class APMVerificationConfigTest extends WingsBaseTest {
         .thenReturn(headerEncryptedDataDetail);
     when(secretManager.encryptedDataDetails("111", "option_key", optionSecretRef, null))
         .thenReturn(optionEncryptedDataDetail);
-    when(encryptionService.getDecryptedValue(headerEncryptedDataDetail.get()))
+    when(encryptionService.getDecryptedValue(headerEncryptedDataDetail.get(), false))
         .thenReturn("decryptedHeader".toCharArray());
-    when(encryptionService.getDecryptedValue(optionEncryptedDataDetail.get()))
+    when(encryptionService.getDecryptedValue(optionEncryptedDataDetail.get(), false))
         .thenReturn("decryptedOption".toCharArray());
     apmVerificationConfig.setHeadersList(headers);
     apmVerificationConfig.setOptionsList(options);

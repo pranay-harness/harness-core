@@ -2,11 +2,13 @@ package software.wings.service.impl.security;
 
 import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.encryption.EncryptionReflectUtils.getEncryptedRefField;
 import static io.harness.eraro.ErrorCode.ENCRYPT_DECRYPT_ERROR;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.reflection.ReflectionUtils.getFieldByName;
 import static io.harness.security.SimpleEncryption.CHARSET;
+import static io.harness.security.encryption.EncryptionType.CUSTOM;
 
 import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
@@ -19,6 +21,7 @@ import io.harness.delegate.exception.DelegateRetryableException;
 import io.harness.exception.ExceptionUtils;
 import io.harness.exception.SecretManagementDelegateException;
 import io.harness.exception.SecretManagementException;
+import io.harness.secrets.SecretsDelegateCacheService;
 import io.harness.security.SimpleEncryption;
 import io.harness.security.encryption.EncryptableSettingWithEncryptionDetails;
 import io.harness.security.encryption.EncryptedDataDetail;
@@ -49,18 +52,22 @@ import java.util.concurrent.Future;
 @Singleton
 @Slf4j
 public class EncryptionServiceImpl implements EncryptionService {
-  private SecretManagementDelegateService secretManagementDelegateService;
-  private ExecutorService threadPoolExecutor;
+  private final SecretManagementDelegateService secretManagementDelegateService;
+  private final SecretsDelegateCacheService secretsDelegateCacheService;
+  private final ExecutorService threadPoolExecutor;
 
   @Inject
   public EncryptionServiceImpl(SecretManagementDelegateService secretManagementDelegateService,
+      SecretsDelegateCacheService secretsDelegateCacheService,
       @Named("asyncExecutor") ExecutorService threadPoolExecutor) {
     this.secretManagementDelegateService = secretManagementDelegateService;
+    this.secretsDelegateCacheService = secretsDelegateCacheService;
     this.threadPoolExecutor = threadPoolExecutor;
   }
 
   @Override
-  public EncryptableSetting decrypt(EncryptableSetting object, List<EncryptedDataDetail> encryptedDataDetails) {
+  public EncryptableSetting decrypt(
+      EncryptableSetting object, List<EncryptedDataDetail> encryptedDataDetails, boolean fromCache) {
     logger.debug("Decrypting a secret");
     if (object.isDecrypted() || isEmpty(encryptedDataDetails)) {
       return object;
@@ -78,7 +85,7 @@ public class EncryptionServiceImpl implements EncryptionService {
         Preconditions.checkNotNull(f, "could not find " + encryptedDataDetail.getFieldName() + " in " + object);
         f.setAccessible(true);
 
-        decryptedValue = getDecryptedValue(encryptedDataDetail);
+        decryptedValue = getDecryptedValue(encryptedDataDetail, fromCache);
         f.set(object, decryptedValue);
         Field encryptedRefField = getEncryptedRefField(f, object);
         encryptedRefField.setAccessible(true);
@@ -97,13 +104,15 @@ public class EncryptionServiceImpl implements EncryptionService {
 
   @Override
   public List<EncryptableSettingWithEncryptionDetails> decrypt(
-      List<EncryptableSettingWithEncryptionDetails> encryptableSettingWithEncryptionDetailsList) {
+      List<EncryptableSettingWithEncryptionDetails> encryptableSettingWithEncryptionDetailsList, boolean fromCache) {
     List<Future<EncryptableSetting>> futures = new ArrayList<>();
     for (EncryptableSettingWithEncryptionDetails encryptableSettingWithEncryptionDetails :
         encryptableSettingWithEncryptionDetailsList) {
       EncryptableSetting encryptableSetting = encryptableSettingWithEncryptionDetails.getEncryptableSetting();
       futures.add(threadPoolExecutor.submit(
-          () -> decrypt(encryptableSetting, encryptableSettingWithEncryptionDetails.getEncryptedDataDetails())));
+          ()
+              -> decrypt(
+                  encryptableSetting, encryptableSettingWithEncryptionDetails.getEncryptedDataDetails(), fromCache)));
     }
 
     for (int i = 0; i < encryptableSettingWithEncryptionDetailsList.size(); i++) {
@@ -126,7 +135,19 @@ public class EncryptionServiceImpl implements EncryptionService {
   }
 
   @Override
-  public char[] getDecryptedValue(EncryptedDataDetail encryptedDataDetail) {
+  public char[] getDecryptedValue(EncryptedDataDetail encryptedDataDetail, boolean fromCache) {
+    if (fromCache && encryptedDataDetail.getEncryptionConfig().getEncryptionType() == CUSTOM) {
+      return secretsDelegateCacheService.get(encryptedDataDetail.getIdentifier(),
+          secretUniqueIdentifier -> getDecryptedValueInternal(encryptedDataDetail));
+    }
+    char[] value = getDecryptedValueInternal(encryptedDataDetail);
+    if (isNotEmpty(value)) {
+      secretsDelegateCacheService.put(encryptedDataDetail.getIdentifier(), value);
+    }
+    return value;
+  }
+
+  private char[] getDecryptedValueInternal(EncryptedDataDetail encryptedDataDetail) {
     char[] decryptedValue;
     switch (encryptedDataDetail.getEncryptionConfig().getEncryptionType()) {
       case LOCAL:

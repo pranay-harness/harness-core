@@ -40,7 +40,7 @@ public class PcfCreatePcfResourceCommandTaskHandler extends PcfCommandTaskHandle
     }
     PcfInfraMappingDataRequest pcfInfraMappingDataRequest = (PcfInfraMappingDataRequest) pcfCommandRequest;
     PcfConfig pcfConfig = pcfInfraMappingDataRequest.getPcfConfig();
-    encryptionService.decrypt(pcfConfig, encryptedDataDetails);
+    encryptionService.decrypt(pcfConfig, encryptedDataDetails, false);
 
     PcfCommandExecutionResponse pcfCommandExecutionResponse = PcfCommandExecutionResponse.builder().build();
     PcfInfraMappingDataResponse pcfInfraMappingDataResponse = PcfInfraMappingDataResponse.builder().build();

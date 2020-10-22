@@ -573,7 +573,7 @@ public class ArtifactoryServiceImpl implements ArtifactoryService {
 
   private Artifactory getArtifactoryClient(
       ArtifactoryConfig artifactoryConfig, List<EncryptedDataDetail> encryptionDetails) {
-    encryptionService.decrypt(artifactoryConfig, encryptionDetails);
+    encryptionService.decrypt(artifactoryConfig, encryptionDetails, false);
     ArtifactoryClientBuilder builder = ArtifactoryClientBuilder.create();
     try {
       builder.setUrl(getBaseUrl(artifactoryConfig));

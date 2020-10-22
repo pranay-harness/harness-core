@@ -167,7 +167,8 @@ public class ArtifactCollectionTaskHelper {
                 + metadata.get(ArtifactMetadataKeys.artifactFileName) + ON_DELEGATE,
             RUNNING, accountId, appId, activityId, commandUnitName, hostName);
         JenkinsConfig jenkinsConfig = (JenkinsConfig) artifactStreamAttributes.getServerSetting().getValue();
-        encryptionService.decrypt(jenkinsConfig, artifactStreamAttributes.getArtifactServerEncryptedDataDetails());
+        encryptionService.decrypt(
+            jenkinsConfig, artifactStreamAttributes.getArtifactServerEncryptedDataDetails(), false);
         Jenkins jenkins = jenkinsUtil.getJenkins(jenkinsConfig);
 
         try {
@@ -306,7 +307,8 @@ public class ArtifactCollectionTaskHelper {
         }
         logger.info(ARTIFACT_FILE_SIZE_MESSAGE + metadata.get(ArtifactMetadataKeys.artifactFileName));
         JenkinsConfig jenkinsConfig = (JenkinsConfig) artifactStreamAttributes.getServerSetting().getValue();
-        encryptionService.decrypt(jenkinsConfig, artifactStreamAttributes.getArtifactServerEncryptedDataDetails());
+        encryptionService.decrypt(
+            jenkinsConfig, artifactStreamAttributes.getArtifactServerEncryptedDataDetails(), false);
         Jenkins jenkins = jenkinsUtil.getJenkins(jenkinsConfig);
         String artifactPathRegex =
             metadata.get(ArtifactMetadataKeys.artifactPath)

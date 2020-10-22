@@ -124,7 +124,7 @@ public class StackDriverDataCollectionTask extends AbstractDelegateDataCollectio
     @Override
     @SuppressWarnings("PMD")
     public void run() {
-      encryptionService.decrypt(dataCollectionInfo.getGcpConfig(), dataCollectionInfo.getEncryptedDataDetails());
+      encryptionService.decrypt(dataCollectionInfo.getGcpConfig(), dataCollectionInfo.getEncryptedDataDetails(), false);
       int retry = 0;
       while (!completed.get() && retry < RETRIES) {
         try {

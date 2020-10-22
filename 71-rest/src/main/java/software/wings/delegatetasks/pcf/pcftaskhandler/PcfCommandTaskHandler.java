@@ -53,7 +53,7 @@ public abstract class PcfCommandTaskHandler {
       Set<String> secrets = new HashSet<>();
       if (isNotEmpty(encryptedDataDetails)) {
         for (EncryptedDataDetail encryptedDataDetail : encryptedDataDetails) {
-          secrets.add(String.valueOf(encryptionService.getDecryptedValue(encryptedDataDetail)));
+          secrets.add(String.valueOf(encryptionService.getDecryptedValue(encryptedDataDetail, false)));
         }
       }
 

@@ -75,7 +75,7 @@ public class ShellScriptProvisionTaskTest extends WingsBaseTest {
     Map<String, EncryptedDataDetail> encryptedVariables = new HashMap<>();
     encryptedVariables.put("var2", EncryptedDataDetail.builder().build());
 
-    when(encryptionService.getDecryptedValue(any())).thenReturn(new char[] {'a', 'b'});
+    when(encryptionService.getDecryptedValue(any(), eq(false))).thenReturn(new char[] {'a', 'b'});
     Map<String, String> expectedCombinedMap = new HashMap<>();
     expectedCombinedMap.put("var1", "val1");
     expectedCombinedMap.put("var2", "ab");

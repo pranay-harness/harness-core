@@ -58,7 +58,9 @@ public class AwsCloudWatchHelperServiceDelegateImplTest extends CategoryTest {
   @Owner(developers = ROHIT_KUMAR)
   @Category(UnitTests.class)
   public void getMetricStatistics() {
-    doReturn(null).when(mockEncryptionService).decrypt(any(AwsConfig.class), anyListOf(EncryptedDataDetail.class));
+    doReturn(null)
+        .when(mockEncryptionService)
+        .decrypt(any(AwsConfig.class), anyListOf(EncryptedDataDetail.class), eq(false));
     final AmazonCloudWatchClient amazonCloudWatchClientMock = mock(AmazonCloudWatchClient.class);
     doReturn(amazonCloudWatchClientMock)
         .when(awsCloudWatchHelperServiceDelegate)
@@ -85,7 +87,9 @@ public class AwsCloudWatchHelperServiceDelegateImplTest extends CategoryTest {
   @Owner(developers = ROHIT_KUMAR)
   @Category(UnitTests.class)
   public void getMetricStatistics_error() {
-    doReturn(null).when(mockEncryptionService).decrypt(any(AwsConfig.class), anyListOf(EncryptedDataDetail.class));
+    doReturn(null)
+        .when(mockEncryptionService)
+        .decrypt(any(AwsConfig.class), anyListOf(EncryptedDataDetail.class), eq(false));
     final AmazonCloudWatchClient amazonCloudWatchClientMock = mock(AmazonCloudWatchClient.class);
     doReturn(amazonCloudWatchClientMock)
         .when(awsCloudWatchHelperServiceDelegate)

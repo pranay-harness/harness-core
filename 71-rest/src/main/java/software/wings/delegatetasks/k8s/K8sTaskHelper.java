@@ -267,7 +267,7 @@ public class K8sTaskHelper {
       GitConfig gitConfig = delegateManifestConfig.getGitConfig();
       printGitConfigInExecutionLogs(gitConfig, gitFileConfig, executionLogCallback);
 
-      encryptionService.decrypt(gitConfig, delegateManifestConfig.getEncryptedDataDetails());
+      encryptionService.decrypt(gitConfig, delegateManifestConfig.getEncryptedDataDetails(), false);
 
       gitService.downloadFiles(gitConfig, gitFileConfig, manifestFilesDirectory);
 

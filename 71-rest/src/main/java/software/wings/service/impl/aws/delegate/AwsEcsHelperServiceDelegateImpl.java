@@ -58,7 +58,7 @@ public class AwsEcsHelperServiceDelegateImpl
   @Override
   public List<String> listClusters(AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails, String region) {
     try {
-      encryptionService.decrypt(awsConfig, encryptionDetails);
+      encryptionService.decrypt(awsConfig, encryptionDetails, false);
       List<String> result = new ArrayList<>();
       String nextToken = null;
       do {
@@ -81,7 +81,7 @@ public class AwsEcsHelperServiceDelegateImpl
   public List<Service> listServicesForCluster(
       AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails, String region, String cluster) {
     try {
-      encryptionService.decrypt(awsConfig, encryptionDetails);
+      encryptionService.decrypt(awsConfig, encryptionDetails, false);
       AmazonECSClient client = getAmazonEcsClient(region, awsConfig);
       List<String> serviceArns = newArrayList();
       String nextToken = null;
@@ -125,7 +125,7 @@ public class AwsEcsHelperServiceDelegateImpl
       String region, String cluster, String service, DesiredStatus desiredStatus) {
     List<String> taskArns = newArrayList();
     try {
-      encryptionService.decrypt(awsConfig, encryptionDetails);
+      encryptionService.decrypt(awsConfig, encryptionDetails, false);
       AmazonECSClient client = getAmazonEcsClient(region, awsConfig);
       String nextToken = null;
       do {
@@ -154,7 +154,7 @@ public class AwsEcsHelperServiceDelegateImpl
   public List<Task> listTasksForService(AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails, String region,
       String cluster, String service, DesiredStatus desiredStatus) {
     try {
-      encryptionService.decrypt(awsConfig, encryptionDetails);
+      encryptionService.decrypt(awsConfig, encryptionDetails, false);
       AmazonECSClient client = getAmazonEcsClient(region, awsConfig);
       List<String> taskArns =
           listTasksArnForService(awsConfig, encryptionDetails, region, cluster, service, desiredStatus);
@@ -187,7 +187,7 @@ public class AwsEcsHelperServiceDelegateImpl
       List<EncryptedDataDetail> encryptionDetails, String region, String cluster,
       ContainerInstanceStatus containerInstanceStatus) {
     try {
-      encryptionService.decrypt(awsConfig, encryptionDetails);
+      encryptionService.decrypt(awsConfig, encryptionDetails, false);
       AmazonECSClient client = getAmazonEcsClient(region, awsConfig);
       List<String> containerInstanceArns = newArrayList();
       String nextToken = null;

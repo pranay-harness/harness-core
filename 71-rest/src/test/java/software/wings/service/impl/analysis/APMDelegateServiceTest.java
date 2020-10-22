@@ -3,6 +3,7 @@ package software.wings.service.impl.analysis;
 import static io.harness.rule.OwnerRule.PRAVEEN;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static software.wings.common.VerificationConstants.AZURE_BASE_URL;
@@ -41,7 +42,7 @@ public class APMDelegateServiceTest {
   @Before
   public void setup() throws Exception {
     MockitoAnnotations.initMocks(this);
-    when(mockEncryptionService.getDecryptedValue(any())).thenReturn("decryptedSecret".toCharArray());
+    when(mockEncryptionService.getDecryptedValue(any(), eq(false))).thenReturn("decryptedSecret".toCharArray());
 
     when(mockRequestExecutor.executeRequest(any(), any())).thenReturn("{\"test\":\"value\"}");
     Map tokenResponse = new HashMap();
@@ -78,9 +79,9 @@ public class APMDelegateServiceTest {
     EncryptedDataDetail encryptedDataDetail = EncryptedDataDetail.builder().fieldName("client_id").build();
     EncryptedDataDetail encryptedDataDetail2 = EncryptedDataDetail.builder().fieldName("client_secret").build();
     EncryptedDataDetail encryptedDataDetail3 = EncryptedDataDetail.builder().fieldName("tenant_id").build();
-    when(mockEncryptionService.getDecryptedValue(encryptedDataDetail)).thenReturn("clientId".toCharArray());
-    when(mockEncryptionService.getDecryptedValue(encryptedDataDetail2)).thenReturn("clientSecret".toCharArray());
-    when(mockEncryptionService.getDecryptedValue(encryptedDataDetail3)).thenReturn("tenantId".toCharArray());
+    when(mockEncryptionService.getDecryptedValue(encryptedDataDetail, false)).thenReturn("clientId".toCharArray());
+    when(mockEncryptionService.getDecryptedValue(encryptedDataDetail2, false)).thenReturn("clientSecret".toCharArray());
+    when(mockEncryptionService.getDecryptedValue(encryptedDataDetail3, false)).thenReturn("tenantId".toCharArray());
 
     Map<String, String> headers = new HashMap<>();
     Map<String, String> options = new HashMap<>();

@@ -42,7 +42,7 @@ public class GitUtilsDelegate {
       GitConfig gitConfig, GitFileConfig gitFileConfig, List<EncryptedDataDetail> sourceRepoEncryptionDetails) {
     GitOperationContext gitOperationContext =
         GitOperationContext.builder().gitConfig(gitConfig).gitConnectorId(gitFileConfig.getConnectorId()).build();
-    encryptionService.decrypt(gitConfig, sourceRepoEncryptionDetails);
+    encryptionService.decrypt(gitConfig, sourceRepoEncryptionDetails, false);
     gitClient.ensureRepoLocallyClonedAndUpdated(gitOperationContext);
     return gitOperationContext;
   }

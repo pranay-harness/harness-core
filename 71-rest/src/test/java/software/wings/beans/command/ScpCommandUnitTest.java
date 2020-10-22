@@ -358,7 +358,7 @@ public class ScpCommandUnitTest extends WingsBaseTest {
   @Owner(developers = AADITI)
   @Category(UnitTests.class)
   public void shouldDownloadArtifactFromJenkinsIfMetadataOnly() {
-    when(encryptionService.decrypt(any(), any())).thenReturn(null);
+    when(encryptionService.decrypt(any(), any(), eq(false))).thenReturn(null);
     when(jenkinsUtils.getJenkins(any())).thenReturn(jenkins);
     when(jenkins.getFileSize(anyString(), anyString(), eq(JENKINS_ARTIFACT_FILENAME_1))).thenReturn(123L);
     when(jenkins.getFileSize(anyString(), anyString(), eq(JENKINS_ARTIFACT_FILENAME_2))).thenReturn(2323L);

@@ -94,8 +94,8 @@ public class ManagerDecryptionServiceImpl implements ManagerDecryptionService {
                                           .timeout(DEFAULT_ASYNC_CALL_TIMEOUT)
                                           .build();
     try {
-      EncryptableSetting decrypted =
-          delegateProxyFactory.get(EncryptionService.class, syncTaskContext).decrypt(object, nonLocalEncryptedDetails);
+      EncryptableSetting decrypted = delegateProxyFactory.get(EncryptionService.class, syncTaskContext)
+                                         .decrypt(object, nonLocalEncryptedDetails, false);
       replaceEncryptedFieldsWithDecryptedValues(nonLocalEncryptedDetails, object, decrypted);
     } catch (WingsException e) {
       throw e;
@@ -117,7 +117,7 @@ public class ManagerDecryptionServiceImpl implements ManagerDecryptionService {
     try {
       List<EncryptableSettingWithEncryptionDetails> detailsList =
           delegateProxyFactory.get(EncryptionService.class, syncTaskContext)
-              .decrypt(encryptableSettingWithEncryptionDetailsList);
+              .decrypt(encryptableSettingWithEncryptionDetailsList, false);
 
       Map<String, EncryptableSetting> detailsMap =
           detailsList.stream().collect(Collectors.toMap(EncryptableSettingWithEncryptionDetails::getDetailId,
@@ -149,7 +149,8 @@ public class ManagerDecryptionServiceImpl implements ManagerDecryptionService {
     SyncTaskContext syncTaskContext =
         SyncTaskContext.builder().accountId(accountId).appId(GLOBAL_APP_ID).timeout(DEFAULT_ASYNC_CALL_TIMEOUT).build();
     try {
-      return delegateProxyFactory.get(EncryptionService.class, syncTaskContext).getDecryptedValue(encryptedDataDetail);
+      return delegateProxyFactory.get(EncryptionService.class, syncTaskContext)
+          .getDecryptedValue(encryptedDataDetail, false);
     } catch (IOException e) {
       throw new SecretManagementException(ENCRYPT_DECRYPT_ERROR, ExceptionUtils.getMessage(e), e, USER);
     }

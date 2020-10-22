@@ -92,7 +92,7 @@ public class ShellScriptParameters implements TaskParameters, ActivityAccess, Ex
   }
 
   public SshSessionConfig sshSessionConfig(EncryptionService encryptionService) throws IOException {
-    encryptionService.decrypt(hostConnectionAttributes, keyEncryptedDataDetails);
+    encryptionService.decrypt(hostConnectionAttributes, keyEncryptedDataDetails, false);
     SshSessionConfig.Builder sshSessionConfigBuilder = aSshSessionConfig();
     sshSessionConfigBuilder.withAccountId(accountId)
         .withAppId(appId)
@@ -116,7 +116,7 @@ public class ShellScriptParameters implements TaskParameters, ActivityAccess, Ex
   }
 
   public WinRmSessionConfig winrmSessionConfig(EncryptionService encryptionService) throws IOException {
-    encryptionService.decrypt(winrmConnectionAttributes, winrmConnectionEncryptedDataDetails);
+    encryptionService.decrypt(winrmConnectionAttributes, winrmConnectionEncryptedDataDetails, false);
 
     return WinRmSessionConfig.builder()
         .accountId(accountId)

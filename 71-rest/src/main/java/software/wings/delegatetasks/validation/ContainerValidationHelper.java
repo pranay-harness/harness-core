@@ -42,7 +42,7 @@ public class ContainerValidationHelper {
     if (value instanceof EncryptableSetting && !value.isDecrypted()
         && isNotEmpty(containerServiceParams.getEncryptionDetails())) {
       try {
-        encryptionService.decrypt((EncryptableSetting) value, containerServiceParams.getEncryptionDetails());
+        encryptionService.decrypt((EncryptableSetting) value, containerServiceParams.getEncryptionDetails(), false);
       } catch (Exception e) {
         logger.info("failed to decrypt " + value, e);
         return false;
@@ -92,7 +92,7 @@ public class ContainerValidationHelper {
     if (value instanceof EncryptableSetting && !value.isDecrypted()
         && isNotEmpty(containerServiceParams.getEncryptionDetails())) {
       try {
-        encryptionService.decrypt((EncryptableSetting) value, containerServiceParams.getEncryptionDetails());
+        encryptionService.decrypt((EncryptableSetting) value, containerServiceParams.getEncryptionDetails(), false);
       } catch (Exception e) {
         logger.info("failed to decrypt " + value, e);
         return null;

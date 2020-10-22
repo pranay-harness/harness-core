@@ -407,7 +407,7 @@ public class ServiceNowDelegateServiceImpl implements ServiceNowDelegateService 
 
   public ServiceNowRestClient getRestClient(ServiceNowTaskParameters taskParameters) {
     ServiceNowConfig config = taskParameters.getServiceNowConfig();
-    encryptionService.decrypt(config, taskParameters.getEncryptionDetails());
+    encryptionService.decrypt(config, taskParameters.getEncryptionDetails(), false);
     return getRetrofit(getBaseUrl(config), JacksonConverterFactory.create()).create(ServiceNowRestClient.class);
   }
 

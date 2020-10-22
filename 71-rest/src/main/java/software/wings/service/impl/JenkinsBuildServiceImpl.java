@@ -81,7 +81,7 @@ public class JenkinsBuildServiceImpl implements JenkinsBuildService {
     try {
       equalCheck(artifactStreamAttributes.getArtifactStreamType(), ArtifactStreamType.JENKINS.name());
 
-      encryptionService.decrypt(jenkinsConfig, encryptionDetails);
+      encryptionService.decrypt(jenkinsConfig, encryptionDetails, false);
       Jenkins jenkins = jenkinsUtil.getJenkins(jenkinsConfig);
       return jenkins.getBuildsForJob(
           artifactStreamAttributes.getJobName(), artifactStreamAttributes.getArtifactPaths(), limit);
@@ -97,7 +97,7 @@ public class JenkinsBuildServiceImpl implements JenkinsBuildService {
   public List<JobDetails> getJobs(
       JenkinsConfig jenkinsConfig, List<EncryptedDataDetail> encryptionDetails, Optional<String> parentJobName) {
     try {
-      encryptionService.decrypt(jenkinsConfig, encryptionDetails);
+      encryptionService.decrypt(jenkinsConfig, encryptionDetails, false);
       Jenkins jenkins = jenkinsUtil.getJenkins(jenkinsConfig);
       // Just in case, some one passes null instead of Optional.empty()
       if (parentJobName == null) {
@@ -114,7 +114,7 @@ public class JenkinsBuildServiceImpl implements JenkinsBuildService {
   @Override
   public List<String> getArtifactPaths(
       String jobName, String groupId, JenkinsConfig jenkinsConfig, List<EncryptedDataDetail> encryptionDetails) {
-    encryptionService.decrypt(jenkinsConfig, encryptionDetails);
+    encryptionService.decrypt(jenkinsConfig, encryptionDetails, false);
     Jenkins jenkins = jenkinsUtil.getJenkins(jenkinsConfig);
     try {
       JobWithDetails job = jenkins.getJobWithDetails(jobName);
@@ -137,7 +137,7 @@ public class JenkinsBuildServiceImpl implements JenkinsBuildService {
   public BuildDetails getLastSuccessfulBuild(String appId, ArtifactStreamAttributes artifactStreamAttributes,
       JenkinsConfig jenkinsConfig, List<EncryptedDataDetail> encryptionDetails) {
     equalCheck(artifactStreamAttributes.getArtifactStreamType(), ArtifactStreamType.JENKINS.name());
-    encryptionService.decrypt(jenkinsConfig, encryptionDetails);
+    encryptionService.decrypt(jenkinsConfig, encryptionDetails, false);
     Jenkins jenkins = jenkinsUtil.getJenkins(jenkinsConfig);
     try {
       return wrapLastSuccessfulBuildWithLabels(
@@ -176,7 +176,7 @@ public class JenkinsBuildServiceImpl implements JenkinsBuildService {
 
   @Override
   public boolean validateArtifactServer(JenkinsConfig jenkinsConfig, List<EncryptedDataDetail> encryptedDataDetails) {
-    encryptionService.decrypt(jenkinsConfig, encryptedDataDetails);
+    encryptionService.decrypt(jenkinsConfig, encryptedDataDetails, false);
 
     if (JenkinsUtils.TOKEN_FIELD.equals(jenkinsConfig.getAuthMechanism())) {
       if (isEmpty(new String(jenkinsConfig.getToken()))) {
@@ -201,7 +201,7 @@ public class JenkinsBuildServiceImpl implements JenkinsBuildService {
   public JobDetails getJob(String jobName, JenkinsConfig jenkinsConfig, List<EncryptedDataDetail> encryptionDetails) {
     try {
       logger.info("Retrieving Job with details for Job: {}", jobName);
-      encryptionService.decrypt(jenkinsConfig, encryptionDetails);
+      encryptionService.decrypt(jenkinsConfig, encryptionDetails, false);
       Jenkins jenkins = jenkinsUtil.getJenkins(jenkinsConfig);
       JobWithDetails jobWithDetails = jenkins.getJobWithDetails(jobName);
       List<JobParameter> parameters = new ArrayList<>();

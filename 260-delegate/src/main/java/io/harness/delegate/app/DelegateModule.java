@@ -63,6 +63,8 @@ import io.harness.k8s.KubernetesContainerService;
 import io.harness.k8s.KubernetesContainerServiceImpl;
 import io.harness.perpetualtask.manifest.HelmRepositoryService;
 import io.harness.perpetualtask.manifest.ManifestRepositoryService;
+import io.harness.secrets.SecretsDelegateCacheService;
+import io.harness.secrets.SecretsDelegateCacheServiceImpl;
 import io.harness.security.encryption.DelegateDecryptionService;
 import io.harness.security.encryption.SecretDecryptionService;
 import io.harness.shell.ShellExecutionService;
@@ -616,6 +618,7 @@ public class DelegateModule extends AbstractModule {
 
     bind(AwsCloudWatchHelperServiceDelegate.class).to(AwsCloudWatchHelperServiceDelegateImpl.class);
     bind(AzureArtifactsService.class).to(AzureArtifactsServiceImpl.class);
+    bind(SecretsDelegateCacheService.class).to(SecretsDelegateCacheServiceImpl.class);
 
     MapBinder<String, CommandUnitExecutorService> serviceCommandExecutorServiceMapBinder =
         MapBinder.newMapBinder(binder(), String.class, CommandUnitExecutorService.class);

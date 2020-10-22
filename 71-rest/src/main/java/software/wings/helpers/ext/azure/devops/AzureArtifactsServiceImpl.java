@@ -69,7 +69,7 @@ public class AzureArtifactsServiceImpl implements AzureArtifactsService {
   @Override
   public boolean validateArtifactServer(
       AzureArtifactsConfig azureArtifactsConfig, List<EncryptedDataDetail> encryptionDetails, boolean validateUrl) {
-    encryptionService.decrypt(azureArtifactsConfig, encryptionDetails);
+    encryptionService.decrypt(azureArtifactsConfig, encryptionDetails, false);
     if (validateUrl) {
       validateAzureDevopsUrl(azureArtifactsConfig.getAzureDevopsUrl());
     }
@@ -144,7 +144,7 @@ public class AzureArtifactsServiceImpl implements AzureArtifactsService {
   @Override
   public List<AzureDevopsProject> listProjects(
       AzureArtifactsConfig azureArtifactsConfig, List<EncryptedDataDetail> encryptionDetails) {
-    encryptionService.decrypt(azureArtifactsConfig, encryptionDetails);
+    encryptionService.decrypt(azureArtifactsConfig, encryptionDetails, false);
     return execute(getAzureDevopsRestClient(azureArtifactsConfig.getAzureDevopsUrl())
                        .listProjects(getAuthHeader(azureArtifactsConfig)))
         .getValue();
@@ -153,7 +153,7 @@ public class AzureArtifactsServiceImpl implements AzureArtifactsService {
   @Override
   public List<AzureArtifactsFeed> listFeeds(
       AzureArtifactsConfig azureArtifactsConfig, List<EncryptedDataDetail> encryptionDetails, String project) {
-    encryptionService.decrypt(azureArtifactsConfig, encryptionDetails);
+    encryptionService.decrypt(azureArtifactsConfig, encryptionDetails, false);
     List<AzureArtifactsFeed> azureArtifactsFeeds =
         execute(getAzureArtifactsRestClient(azureArtifactsConfig.getAzureDevopsUrl(), project)
                     .listFeeds(getAuthHeader(azureArtifactsConfig)))
@@ -169,7 +169,7 @@ public class AzureArtifactsServiceImpl implements AzureArtifactsService {
   @Override
   public List<AzureArtifactsPackage> listPackages(AzureArtifactsConfig azureArtifactsConfig,
       List<EncryptedDataDetail> encryptionDetails, String project, String feed, String protocolType) {
-    encryptionService.decrypt(azureArtifactsConfig, encryptionDetails);
+    encryptionService.decrypt(azureArtifactsConfig, encryptionDetails, false);
     return execute(getAzureArtifactsRestClient(azureArtifactsConfig.getAzureDevopsUrl(), project)
                        .listPackages(getAuthHeader(azureArtifactsConfig), feed, protocolType))
         .getValue();
@@ -179,7 +179,7 @@ public class AzureArtifactsServiceImpl implements AzureArtifactsService {
   public List<AzureArtifactsPackageFileInfo> listFiles(AzureArtifactsConfig azureArtifactsConfig,
       List<EncryptedDataDetail> encryptionDetails, ArtifactStreamAttributes artifactStreamAttributes,
       Map<String, String> artifactMetadata, boolean nameOnly) {
-    encryptionService.decrypt(azureArtifactsConfig, encryptionDetails);
+    encryptionService.decrypt(azureArtifactsConfig, encryptionDetails, false);
     String protocolType = artifactStreamAttributes.getProtocolType();
     String version = artifactMetadata.getOrDefault(ArtifactMetadataKeys.version, null);
     if (isBlank(version)) {
@@ -258,7 +258,7 @@ public class AzureArtifactsServiceImpl implements AzureArtifactsService {
       throw new InvalidRequestException(INVALID_VERSION_ID_MESSAGE);
     }
 
-    encryptionService.decrypt(azureArtifactsConfig, encryptionDetails);
+    encryptionService.decrypt(azureArtifactsConfig, encryptionDetails, false);
     try {
       String authHeader = getAuthHeader(azureArtifactsConfig);
       if (ProtocolType.maven.name().equals(protocolType)) {
@@ -305,7 +305,7 @@ public class AzureArtifactsServiceImpl implements AzureArtifactsService {
       throw new InvalidRequestException("artifactFileName is invalid");
     }
 
-    encryptionService.decrypt(azureArtifactsConfig, encryptionDetails);
+    encryptionService.decrypt(azureArtifactsConfig, encryptionDetails, false);
     try {
       if (ProtocolType.maven.name().equals(protocolType)) {
         return ImmutablePair.of(artifactFileName,
@@ -351,14 +351,14 @@ public class AzureArtifactsServiceImpl implements AzureArtifactsService {
 
   private AzureArtifactsPackage getPackage(AzureArtifactsConfig azureArtifactsConfig,
       List<EncryptedDataDetail> encryptionDetails, String project, String feed, String packageId) {
-    encryptionService.decrypt(azureArtifactsConfig, encryptionDetails);
+    encryptionService.decrypt(azureArtifactsConfig, encryptionDetails, false);
     return execute(getAzureArtifactsRestClient(azureArtifactsConfig.getAzureDevopsUrl(), project)
                        .getPackage(getAuthHeader(azureArtifactsConfig), feed, packageId));
   }
 
   private List<AzureArtifactsPackageVersion> listPackageVersions(AzureArtifactsConfig azureArtifactsConfig,
       List<EncryptedDataDetail> encryptionDetails, String project, String feed, String packageId) {
-    encryptionService.decrypt(azureArtifactsConfig, encryptionDetails);
+    encryptionService.decrypt(azureArtifactsConfig, encryptionDetails, false);
     return execute(getAzureArtifactsRestClient(azureArtifactsConfig.getAzureDevopsUrl(), project)
                        .listPackageVersions(getAuthHeader(azureArtifactsConfig), feed, packageId))
         .getValue();

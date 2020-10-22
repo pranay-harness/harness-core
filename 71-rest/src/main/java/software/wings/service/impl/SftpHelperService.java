@@ -41,7 +41,7 @@ public class SftpHelperService {
   @Inject private EncryptionService encryptionService;
 
   public List<String> getSftpPaths(SftpConfig sftpConfig, List<EncryptedDataDetail> encryptionDetails) {
-    encryptionService.decrypt(sftpConfig, encryptionDetails);
+    encryptionService.decrypt(sftpConfig, encryptionDetails, false);
     List<String> artifactPaths = new ArrayList<>();
 
     String hostKeyVerifier = "";
@@ -153,7 +153,7 @@ public class SftpHelperService {
   public List<BuildDetails> getArtifactDetails(SftpConfig sftpConfig, List<EncryptedDataDetail> encryptionDetails,
       List<String> artifactPaths) throws IOException {
     List<BuildDetails> buildDetailsList = Lists.newArrayList();
-    encryptionService.decrypt(sftpConfig, encryptionDetails);
+    encryptionService.decrypt(sftpConfig, encryptionDetails, false);
 
     String hostKeyVerifier = "";
     boolean connectionEstablished = false;

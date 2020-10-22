@@ -6,6 +6,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyList;
 import static org.mockito.Matchers.anyString;
+import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
@@ -41,7 +42,7 @@ public class AwsIamHelperServiceDelegateImplTest extends WingsBaseTest {
   public void testListIAMRoles() {
     AmazonIdentityManagementClient mockClient = mock(AmazonIdentityManagementClient.class);
     doReturn(mockClient).when(awsIamHelperServiceDelegate).getAmazonIdentityManagementClient(any());
-    doReturn(null).when(mockEncryptionService).decrypt(any(), anyList());
+    doReturn(null).when(mockEncryptionService).decrypt(any(), anyList(), eq(false));
     doReturn(new ListRolesResult().withRoles(
                  new Role().withArn("a1").withRoleName("n1"), new Role().withArn("a2").withRoleName("n2")))
         .when(mockClient)

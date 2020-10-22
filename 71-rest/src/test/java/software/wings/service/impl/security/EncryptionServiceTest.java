@@ -16,6 +16,7 @@ import io.harness.category.element.UnitTests;
 import io.harness.data.encoding.EncodingUtils;
 import io.harness.data.structure.UUIDGenerator;
 import io.harness.rule.Owner;
+import io.harness.secrets.SecretsDelegateCacheService;
 import io.harness.security.SimpleEncryption;
 import io.harness.security.encryption.EncryptableSettingWithEncryptionDetails;
 import io.harness.security.encryption.EncryptedDataDetail;
@@ -39,6 +40,7 @@ import java.util.concurrent.ScheduledThreadPoolExecutor;
  */
 public class EncryptionServiceTest extends CategoryTest {
   @Mock private SecretManagementDelegateService secretManagementDelegateService;
+  @Mock private SecretsDelegateCacheService secretsDelegateCacheService;
   @Mock private EncryptedDataDetail encryptedDataDetail1;
   @Mock private EncryptedDataDetail encryptedDataDetail2;
 
@@ -49,7 +51,8 @@ public class EncryptionServiceTest extends CategoryTest {
   public void setUp() {
     initMocks(this);
 
-    encryptionService = new EncryptionServiceImpl(secretManagementDelegateService, threadPoolExecutor);
+    encryptionService =
+        new EncryptionServiceImpl(secretManagementDelegateService, secretsDelegateCacheService, threadPoolExecutor);
 
     EncryptionConfig encryptionConfig = mock(KmsConfig.class);
     when(encryptionConfig.getEncryptionType()).thenReturn(EncryptionType.KMS);
@@ -71,7 +74,7 @@ public class EncryptionServiceTest extends CategoryTest {
             accountId, Lists.newArrayList(encryptedDataDetail1, encryptedDataDetail2));
 
     List<EncryptableSettingWithEncryptionDetails> resultDetailsList =
-        encryptionService.decrypt(encryptableSettingWithEncryptionDetails);
+        encryptionService.decrypt(encryptableSettingWithEncryptionDetails, false);
     assertThat(resultDetailsList).isNotEmpty();
     assertThat(resultDetailsList.size()).isEqualTo(encryptableSettingWithEncryptionDetails.size());
 
@@ -100,6 +103,6 @@ public class EncryptionServiceTest extends CategoryTest {
                                     .encryptedData(encryptedRecordData)
                                     .build();
 
-    assertEquals("Dummy", new String(encryptionService.getDecryptedValue(build)));
+    assertEquals("Dummy", new String(encryptionService.getDecryptedValue(build, false)));
   }
 }

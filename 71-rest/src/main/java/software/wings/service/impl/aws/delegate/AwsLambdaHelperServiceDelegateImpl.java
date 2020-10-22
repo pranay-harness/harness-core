@@ -133,7 +133,7 @@ public class AwsLambdaHelperServiceDelegateImpl
     try {
       AwsConfig awsConfig = request.getAwsConfig();
       List<EncryptedDataDetail> encryptionDetails = request.getEncryptionDetails();
-      encryptionService.decrypt(awsConfig, encryptionDetails);
+      encryptionService.decrypt(awsConfig, encryptionDetails, false);
       AWSLambdaClient lambdaClient = getAmazonLambdaClient(request.getRegion(), awsConfig);
       InvokeRequest invokeRequest = new InvokeRequest()
                                         .withFunctionName(request.getFunctionName())
@@ -175,7 +175,7 @@ public class AwsLambdaHelperServiceDelegateImpl
     try {
       AwsConfig awsConfig = request.getAwsConfig();
       List<EncryptedDataDetail> encryptionDetails = request.getEncryptionDetails();
-      encryptionService.decrypt(awsConfig, encryptionDetails);
+      encryptionService.decrypt(awsConfig, encryptionDetails, false);
       AWSLambdaClient lambdaClient = getAmazonLambdaClient(request.getRegion(), awsConfig);
       AwsLambdaFunctionResponseBuilder response = AwsLambdaFunctionResponse.builder();
       List<String> lambdaFunctions = new ArrayList<>();
@@ -210,7 +210,7 @@ public class AwsLambdaHelperServiceDelegateImpl
       responseBuilder.awsConfig(awsConfig);
       responseBuilder.region(request.getRegion());
       List<EncryptedDataDetail> encryptionDetails = request.getEncryptionDetails();
-      encryptionService.decrypt(awsConfig, encryptionDetails);
+      encryptionService.decrypt(awsConfig, encryptionDetails, false);
       AWSLambdaClient lambdaClient = getAmazonLambdaClient(request.getRegion(), awsConfig);
       String roleArn = request.getRoleArn();
       List<String> evaluatedAliases = request.getEvaluatedAliases();
@@ -712,7 +712,7 @@ public class AwsLambdaHelperServiceDelegateImpl
       GetFunctionResult getFunctionResult = null;
       final AwsConfig awsConfig = request.getAwsConfig();
       final List<EncryptedDataDetail> encryptionDetails = request.getEncryptionDetails();
-      encryptionService.decrypt(awsConfig, encryptionDetails);
+      encryptionService.decrypt(awsConfig, encryptionDetails, false);
       final AWSLambdaClient lambdaClient = getAmazonLambdaClient(request.getRegion(), awsConfig);
       try {
         tracker.trackLambdaCall("Get Function");

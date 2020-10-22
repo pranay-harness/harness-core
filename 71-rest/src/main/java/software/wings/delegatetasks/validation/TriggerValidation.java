@@ -79,7 +79,7 @@ public class TriggerValidation extends AbstractDelegateValidateTask {
     List<EncryptedDataDetail> encryptionDetails = triggerDeploymentNeededRequest.getEncryptionDetails();
 
     try {
-      encryptionService.decrypt(gitConfig, encryptionDetails);
+      encryptionService.decrypt(gitConfig, encryptionDetails, false);
     } catch (Exception e) {
       logger.info("Failed to decrypt " + gitConfig, e);
       return false;

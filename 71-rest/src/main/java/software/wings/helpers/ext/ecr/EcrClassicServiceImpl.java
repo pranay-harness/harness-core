@@ -68,7 +68,7 @@ public class EcrClassicServiceImpl implements EcrClassicService {
 
   @Override
   public boolean validateCredentials(EcrConfig ecrConfig, List<EncryptedDataDetail> encryptionDetails) {
-    encryptionService.decrypt(ecrConfig, encryptionDetails);
+    encryptionService.decrypt(ecrConfig, encryptionDetails, false);
     awsHelperService.validateAwsAccountCredential(ecrConfig.getAccessKey(), ecrConfig.getSecretKey());
     return true;
   }

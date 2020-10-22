@@ -74,7 +74,7 @@ public class CloudWatchDelegateServiceImpl implements CloudWatchDelegateService 
 
     setupTestNodeData.setFromTime(TimeUnit.SECONDS.toMillis(setupTestNodeData.getFromTime()));
     setupTestNodeData.setToTime(TimeUnit.SECONDS.toMillis(setupTestNodeData.getToTime()));
-    encryptionService.decrypt(config, encryptionDetails);
+    encryptionService.decrypt(config, encryptionDetails, false);
     AmazonCloudWatchClient cloudWatchClient =
         awsHelperService.getAwsCloudWatchClient(setupTestNodeData.getRegion(), config);
     // Fetch ELB Metrics

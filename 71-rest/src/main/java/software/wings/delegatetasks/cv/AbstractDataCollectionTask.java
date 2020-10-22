@@ -129,7 +129,7 @@ public abstract class AbstractDataCollectionTask<T extends DataCollectionInfoV2>
   private void decryptIfHasEncryptableSetting(DataCollectionInfoV2 dataCollectionInfo) {
     if (dataCollectionInfo.getEncryptableSetting().isPresent()) {
       encryptionService.decrypt(
-          dataCollectionInfo.getEncryptableSetting().get(), dataCollectionInfo.getEncryptedDataDetails());
+          dataCollectionInfo.getEncryptableSetting().get(), dataCollectionInfo.getEncryptedDataDetails(), false);
     }
   }
 

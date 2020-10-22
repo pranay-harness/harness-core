@@ -65,7 +65,7 @@ public class ManagerDecryptionServiceTest extends CategoryTest {
         SecurityTestUtils.getEncryptableSettingWithEncryptionDetailsList(
             accountId, Lists.newArrayList(encryptedDataDetail1, encryptedDataDetail2));
 
-    when(encryptionService.decrypt(encryptableSettingWithEncryptionDetails))
+    when(encryptionService.decrypt(encryptableSettingWithEncryptionDetails, false))
         .thenReturn(encryptableSettingWithEncryptionDetails);
 
     managerDecryptionService.decrypt(accountId, encryptableSettingWithEncryptionDetails);

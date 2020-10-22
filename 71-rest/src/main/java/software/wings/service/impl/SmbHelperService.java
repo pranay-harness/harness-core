@@ -44,7 +44,7 @@ public class SmbHelperService {
 
   public void checkConnection(software.wings.beans.SmbConfig smbConfig, List<EncryptedDataDetail> encryptionDetails)
       throws IOException {
-    encryptionService.decrypt(smbConfig, encryptionDetails);
+    encryptionService.decrypt(smbConfig, encryptionDetails, false);
     try (SMBClient client = new SMBClient(getSMBConnectionConfig());
          Connection connection = client.connect(getSMBConnectionHost(smbConfig.getSmbUrl()))) {
       AuthenticationContext ac =
@@ -56,7 +56,7 @@ public class SmbHelperService {
 
   public List<String> getSmbPaths(software.wings.beans.SmbConfig smbConfig, List<EncryptedDataDetail> encryptionDetails)
       throws IOException {
-    encryptionService.decrypt(smbConfig, encryptionDetails);
+    encryptionService.decrypt(smbConfig, encryptionDetails, false);
     List<String> artifactPaths = new ArrayList<>();
 
     try (SMBClient client = new SMBClient(getSMBConnectionConfig());
@@ -126,7 +126,7 @@ public class SmbHelperService {
       List<EncryptedDataDetail> encryptionDetails, String artifactPath) throws IOException {
     Map<String, String> buildNumbers = new HashMap<>();
 
-    encryptionService.decrypt(smbConfig, encryptionDetails);
+    encryptionService.decrypt(smbConfig, encryptionDetails, false);
     try (SMBClient client = new SMBClient(getSMBConnectionConfig());
          Connection connection = client.connect(getSMBConnectionHost(smbConfig.getSmbUrl()))) {
       AuthenticationContext ac =
@@ -166,7 +166,7 @@ public class SmbHelperService {
       List<EncryptedDataDetail> encryptionDetails, List<String> artifactPaths) throws IOException {
     List<BuildDetails> buildDetailsList = Lists.newArrayList();
     Map<String, String> buildNos = Collections.EMPTY_MAP;
-    encryptionService.decrypt(smbConfig, encryptionDetails);
+    encryptionService.decrypt(smbConfig, encryptionDetails, false);
     try (SMBClient client = new SMBClient(getSMBConnectionConfig());
          Connection connection = client.connect(getSMBConnectionHost(smbConfig.getSmbUrl()))) {
       AuthenticationContext ac =

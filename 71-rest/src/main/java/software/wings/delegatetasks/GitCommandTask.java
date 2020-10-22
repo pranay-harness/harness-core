@@ -193,7 +193,7 @@ public class GitCommandTask extends AbstractDelegateRunnableTask {
 
   private void decryptGitConfig(GitConfig gitConfig, List<EncryptedDataDetail> encryptionDetails) {
     try {
-      encryptionService.decrypt(gitConfig, encryptionDetails);
+      encryptionService.decrypt(gitConfig, encryptionDetails, false);
     } catch (Exception ex) {
       throw new GitConnectionDelegateException(GIT_CONNECTION_ERROR, ex.getCause(), ex.getMessage(), USER_ADMIN);
     }

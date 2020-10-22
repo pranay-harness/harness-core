@@ -111,7 +111,7 @@ public class APMDelegateServiceImpl implements APMDelegateService {
       char[] decryptedValue;
       for (EncryptedDataDetail encryptedDataDetail : encryptedDataDetails) {
         try {
-          decryptedValue = encryptionService.getDecryptedValue(encryptedDataDetail);
+          decryptedValue = encryptionService.getDecryptedValue(encryptedDataDetail, false);
           if (decryptedValue != null) {
             decryptedFields.put(encryptedDataDetail.getFieldName(), new String(decryptedValue));
           }
@@ -136,7 +136,7 @@ public class APMDelegateServiceImpl implements APMDelegateService {
       char[] decryptedValue;
       for (EncryptedDataDetail encryptedDataDetail : config.getEncryptedDataDetails()) {
         try {
-          decryptedValue = encryptionService.getDecryptedValue(encryptedDataDetail);
+          decryptedValue = encryptionService.getDecryptedValue(encryptedDataDetail, false);
           if (decryptedValue != null) {
             decryptedFields.put(encryptedDataDetail.getFieldName(), new String(decryptedValue));
           }

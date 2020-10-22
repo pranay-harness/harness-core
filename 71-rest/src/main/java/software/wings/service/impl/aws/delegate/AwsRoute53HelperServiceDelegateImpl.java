@@ -39,7 +39,7 @@ public class AwsRoute53HelperServiceDelegateImpl
   public List<AwsRoute53HostedZoneData> listHostedZones(
       AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails, String region) {
     try {
-      encryptionService.decrypt(awsConfig, encryptionDetails);
+      encryptionService.decrypt(awsConfig, encryptionDetails, false);
       AmazonRoute53 client = getAmazonRoute53Client(region, awsConfig);
       tracker.trackR53Call("List Hosted Zones");
       ListHostedZonesResult listHostedZonesResult = client.listHostedZones();
@@ -63,7 +63,7 @@ public class AwsRoute53HelperServiceDelegateImpl
       String parentRecordName, String parentRecordHostedZoneId, int blueServiceWeight, String blueServiceRecord,
       int greenServiceWeight, String greenServiceRecord, int ttl) {
     try {
-      encryptionService.decrypt(awsConfig, encryptionDetails);
+      encryptionService.decrypt(awsConfig, encryptionDetails, false);
       AmazonRoute53 client = getAmazonRoute53Client(region, awsConfig);
       ChangeResourceRecordSetsRequest changeResourceRecordSetsRequest =
           new ChangeResourceRecordSetsRequest()

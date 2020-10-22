@@ -98,7 +98,7 @@ public class LogDataCollectionTask extends AbstractDelegateDataCollectionTask {
       char[] decryptedValue;
       for (EncryptedDataDetail encryptedDataDetail : dataCollectionInfo.getEncryptedDataDetails()) {
         try {
-          decryptedValue = encryptionService.getDecryptedValue(encryptedDataDetail);
+          decryptedValue = encryptionService.getDecryptedValue(encryptedDataDetail, false);
           if (decryptedValue != null) {
             decryptedFields.put(encryptedDataDetail.getFieldName(), new String(decryptedValue));
           }

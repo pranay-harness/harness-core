@@ -634,7 +634,7 @@ public class JiraTask extends AbstractDelegateRunnableTask {
 
   private JiraClient getJiraClient(JiraTaskParameters parameters) throws JiraException {
     JiraConfig jiraConfig = parameters.getJiraConfig();
-    encryptionService.decrypt(jiraConfig, parameters.getEncryptionDetails());
+    encryptionService.decrypt(jiraConfig, parameters.getEncryptionDetails(), false);
     BasicCredentials creds = new BasicCredentials(jiraConfig.getUsername(), new String(jiraConfig.getPassword()));
     String baseUrl =
         jiraConfig.getBaseUrl().endsWith("/") ? jiraConfig.getBaseUrl() : jiraConfig.getBaseUrl().concat("/");
@@ -643,7 +643,7 @@ public class JiraTask extends AbstractDelegateRunnableTask {
 
   private DelegateResponseData fetchIssue(JiraTaskParameters parameters) {
     JiraConfig jiraConfig = parameters.getJiraConfig();
-    encryptionService.decrypt(jiraConfig, parameters.getEncryptionDetails());
+    encryptionService.decrypt(jiraConfig, parameters.getEncryptionDetails(), false);
     JiraClient jira;
     Issue issue;
     String approvalFieldValue = null;

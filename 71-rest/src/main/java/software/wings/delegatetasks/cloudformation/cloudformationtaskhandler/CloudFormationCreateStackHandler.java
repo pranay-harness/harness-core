@@ -56,7 +56,7 @@ public class CloudFormationCreateStackHandler extends CloudFormationCommandTaskH
   protected CloudFormationCommandExecutionResponse executeInternal(CloudFormationCommandRequest request,
       List<EncryptedDataDetail> details, ExecutionLogCallback executionLogCallback) {
     AwsConfig awsConfig = request.getAwsConfig();
-    encryptionService.decrypt(awsConfig, details);
+    encryptionService.decrypt(awsConfig, details, false);
 
     CloudFormationCreateStackRequest upsertRequest = (CloudFormationCreateStackRequest) request;
 
@@ -441,9 +441,10 @@ public class CloudFormationCreateStackHandler extends CloudFormationCommandTaskH
     if (isNotEmpty(cloudFormationCreateStackRequest.getEncryptedVariables())) {
       for (Map.Entry<String, EncryptedDataDetail> entry :
           cloudFormationCreateStackRequest.getEncryptedVariables().entrySet()) {
-        allParams.add(new Parameter()
-                          .withParameterKey(entry.getKey())
-                          .withParameterValue(String.valueOf(encryptionService.getDecryptedValue(entry.getValue()))));
+        allParams.add(
+            new Parameter()
+                .withParameterKey(entry.getKey())
+                .withParameterValue(String.valueOf(encryptionService.getDecryptedValue(entry.getValue(), false))));
       }
     }
     return allParams;

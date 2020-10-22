@@ -82,7 +82,7 @@ public class HelmRepoConfigValidationTask extends AbstractDelegateRunnableTask {
   private void tryAddingHelmRepo(HelmRepoConfigValidationTaskParams taskParams) throws Exception {
     HelmRepoConfig helmRepoConfig = taskParams.getHelmRepoConfig();
     List<EncryptedDataDetail> encryptedDataDetails = taskParams.getEncryptedDataDetails();
-    encryptionService.decrypt(helmRepoConfig, encryptedDataDetails);
+    encryptionService.decrypt(helmRepoConfig, encryptedDataDetails, false);
 
     String workingDirectory = helmTaskHelper.createNewDirectoryAtPath(Paths.get(WORKING_DIR_BASE).toString());
 
@@ -115,7 +115,7 @@ public class HelmRepoConfigValidationTask extends AbstractDelegateRunnableTask {
       HelmRepoConfigValidationTaskParams taskParams, String workingDirectory) throws Exception {
     GcpConfig gcpConfig = (GcpConfig) taskParams.getConnectorConfig();
     List<EncryptedDataDetail> connectorEncryptedDataDetails = taskParams.getConnectorEncryptedDataDetails();
-    encryptionService.decrypt(gcpConfig, connectorEncryptedDataDetails);
+    encryptionService.decrypt(gcpConfig, connectorEncryptedDataDetails, false);
 
     helmTaskHelper.addHelmRepo(helmRepoConfig, gcpConfig, repoName, taskParams.getRepoDisplayName(), workingDirectory,
         DUMMY_BASE_PATH, defaultHelmVersion);
@@ -134,7 +134,7 @@ public class HelmRepoConfigValidationTask extends AbstractDelegateRunnableTask {
       HelmRepoConfigValidationTaskParams taskParams, String workingDirectory) throws Exception {
     AwsConfig awsConfig = (AwsConfig) taskParams.getConnectorConfig();
     List<EncryptedDataDetail> connectorEncryptedDataDetails = taskParams.getConnectorEncryptedDataDetails();
-    encryptionService.decrypt(awsConfig, connectorEncryptedDataDetails);
+    encryptionService.decrypt(awsConfig, connectorEncryptedDataDetails, false);
 
     helmTaskHelper.addHelmRepo(helmRepoConfig, awsConfig, repoName, taskParams.getRepoDisplayName(), workingDirectory,
         DUMMY_BASE_PATH, defaultHelmVersion);

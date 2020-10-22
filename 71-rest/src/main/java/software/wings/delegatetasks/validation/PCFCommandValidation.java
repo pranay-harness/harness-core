@@ -61,7 +61,7 @@ public class PCFCommandValidation extends AbstractDelegateValidateTask {
 
     try {
       if (encryptionDetails != null) {
-        encryptionService.decrypt(pcfConfig, encryptionDetails);
+        encryptionService.decrypt(pcfConfig, encryptionDetails, false);
       }
 
       String validationErrorMsg = pcfDeploymentManager.checkConnectivity(pcfConfig, commandRequest.isLimitPcfThreads());

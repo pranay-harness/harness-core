@@ -88,7 +88,7 @@ public class TriggerTask extends AbstractDelegateRunnableTask {
         currentCommitId, oldCommitId);
 
     try {
-      encryptionService.decrypt(gitConfig, encryptionDetails);
+      encryptionService.decrypt(gitConfig, encryptionDetails, false);
 
       gitConfig.setGitRepoType(GitRepositoryType.TRIGGER);
       GitFetchFilesResult gitFetchFilesResult =

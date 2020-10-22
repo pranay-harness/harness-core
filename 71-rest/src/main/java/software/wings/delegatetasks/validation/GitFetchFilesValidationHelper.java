@@ -21,7 +21,7 @@ public class GitFetchFilesValidationHelper {
 
   public boolean validateGitConfig(GitConfig gitConfig, List<EncryptedDataDetail> encryptionDetails) {
     try {
-      encryptionService.decrypt(gitConfig, encryptionDetails);
+      encryptionService.decrypt(gitConfig, encryptionDetails, false);
     } catch (Exception e) {
       logger.info("Failed to decrypt " + gitConfig, e);
       return false;

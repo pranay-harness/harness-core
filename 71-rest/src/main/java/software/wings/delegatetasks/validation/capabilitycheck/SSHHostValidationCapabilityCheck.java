@@ -65,11 +65,11 @@ public class SSHHostValidationCapabilityCheck implements CapabilityCheck {
       List<EncryptedDataDetail> bastionConnectionCredential) {
     if (hostConnectionAttributes != null) {
       encryptionService.decrypt(
-          (HostConnectionAttributes) hostConnectionAttributes.getValue(), hostConnectionCredential);
+          (HostConnectionAttributes) hostConnectionAttributes.getValue(), hostConnectionCredential, false);
     }
     if (bastionConnectionAttributes != null) {
       encryptionService.decrypt(
-          (BastionConnectionAttributes) bastionConnectionAttributes.getValue(), bastionConnectionCredential);
+          (BastionConnectionAttributes) bastionConnectionAttributes.getValue(), bastionConnectionCredential, false);
     }
   }
 

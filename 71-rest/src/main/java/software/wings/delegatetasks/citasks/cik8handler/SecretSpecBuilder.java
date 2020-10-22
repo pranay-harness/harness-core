@@ -80,7 +80,7 @@ public class SecretSpecBuilder {
     String username = null;
     String password = null;
     encryptionService.decrypt(
-        imageDetailsWithConnector.getEncryptableSetting(), imageDetailsWithConnector.getEncryptedDataDetails());
+        imageDetailsWithConnector.getEncryptableSetting(), imageDetailsWithConnector.getEncryptedDataDetails(), false);
     if (encryptableSetting != null) {
       SettingVariableTypes settingType = encryptableSetting.getSettingType();
       switch (settingType) {
@@ -123,7 +123,7 @@ public class SecretSpecBuilder {
       for (Map.Entry<String, EncryptedVariableWithType> encryptedVariable : encryptedSecrets.entrySet()) {
         try {
           String value = String.valueOf(
-              encryptionService.getDecryptedValue(encryptedVariable.getValue().getEncryptedDataDetail()));
+              encryptionService.getDecryptedValue(encryptedVariable.getValue().getEncryptedDataDetail(), false));
           switch (encryptedVariable.getValue().getType()) {
             case FILE:
               data.put(encryptedVariable.getKey(),
@@ -160,7 +160,7 @@ public class SecretSpecBuilder {
       for (Map.Entry<String, EncryptableSettingWithEncryptionDetails> encryptedVariable :
           publishArtifactEncryptedValues.entrySet()) {
         List<EncryptableSettingWithEncryptionDetails> detailsList =
-            encryptionService.decrypt(Collections.singletonList(encryptedVariable.getValue()));
+            encryptionService.decrypt(Collections.singletonList(encryptedVariable.getValue()), false);
 
         EncryptableSettingWithEncryptionDetails encryptableSettingWithEncryptionDetails =
             detailsList.stream().findFirst().orElse(null);
@@ -246,7 +246,7 @@ public class SecretSpecBuilder {
       return null;
     }
 
-    encryptionService.decrypt(gitConfig, gitEncryptedDataDetails);
+    encryptionService.decrypt(gitConfig, gitEncryptedDataDetails, false);
     Map<String, String> data = new HashMap<>();
     if (isNotEmpty(gitConfig.getUsername()) && isNotEmpty(gitConfig.getPassword())) {
       String urlEncodedPwd = URLEncoder.encode(new String(gitConfig.getPassword()), "UTF-8");

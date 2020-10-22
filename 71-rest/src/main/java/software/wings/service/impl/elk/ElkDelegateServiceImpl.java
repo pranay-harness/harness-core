@@ -232,7 +232,7 @@ public class ElkDelegateServiceImpl implements ElkDelegateService {
   }
 
   private Retrofit createRetrofit(ElkConfig elkConfig, List<EncryptedDataDetail> encryptedDataDetails) {
-    encryptionService.decrypt(elkConfig, encryptedDataDetails);
+    encryptionService.decrypt(elkConfig, encryptedDataDetails, false);
     OkHttpClient.Builder httpClient = elkConfig.getElkUrl().startsWith("https")
         ? getUnsafeOkHttpClient().readTimeout(60, TimeUnit.SECONDS)
         : getOkHttpClientBuilderWithReadtimeOut(60, TimeUnit.SECONDS);
@@ -279,14 +279,14 @@ public class ElkDelegateServiceImpl implements ElkDelegateService {
   }
 
   private String getHeaderWithCredentials(ElkConfig elkConfig, List<EncryptedDataDetail> encryptedDataDetails) {
-    encryptionService.decrypt(elkConfig, encryptedDataDetails);
+    encryptionService.decrypt(elkConfig, encryptedDataDetails, false);
     return "Basic "
         + Base64.encodeBase64String(format("%s:%s", elkConfig.getUsername(), new String(elkConfig.getPassword()))
                                         .getBytes(StandardCharsets.UTF_8));
   }
 
   private String getAPIToken(ElkConfig elkConfig, List<EncryptedDataDetail> encryptedDataDetails) {
-    encryptionService.decrypt(elkConfig, encryptedDataDetails);
+    encryptionService.decrypt(elkConfig, encryptedDataDetails, false);
     return String.valueOf(elkConfig.getPassword());
   }
 

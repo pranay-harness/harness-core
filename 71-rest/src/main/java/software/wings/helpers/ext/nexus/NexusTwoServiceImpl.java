@@ -912,7 +912,7 @@ public class NexusTwoServiceImpl {
 
   private NexusRestClient getRestClient(final NexusConfig nexusConfig, List<EncryptedDataDetail> encryptionDetails) {
     if (nexusConfig.hasCredentials()) {
-      encryptionService.decrypt(nexusConfig, encryptionDetails);
+      encryptionService.decrypt(nexusConfig, encryptionDetails, false);
     }
     return getRetrofit(getBaseUrl(nexusConfig), SimpleXmlConverterFactory.createNonStrict())
         .create(NexusRestClient.class);
@@ -921,7 +921,7 @@ public class NexusTwoServiceImpl {
   private NexusRestClient getRestClientJacksonConverter(
       final NexusConfig nexusConfig, List<EncryptedDataDetail> encryptionDetails) {
     if (nexusConfig.hasCredentials()) {
-      encryptionService.decrypt(nexusConfig, encryptionDetails);
+      encryptionService.decrypt(nexusConfig, encryptionDetails, false);
     }
     return getRetrofit(getBaseUrl(nexusConfig), JacksonConverterFactory.create()).create(NexusRestClient.class);
   }
@@ -931,7 +931,7 @@ public class NexusTwoServiceImpl {
       NexusConfig nexusConfig, List<EncryptedDataDetail> encryptionDetails, String artifactName, String artifactUrl) {
     try {
       if (nexusConfig.hasCredentials()) {
-        encryptionService.decrypt(nexusConfig, encryptionDetails);
+        encryptionService.decrypt(nexusConfig, encryptionDetails, false);
         Authenticator.setDefault(new NexusThreeServiceImpl.MyAuthenticator(
             nexusConfig.getUsername(), new String(nexusConfig.getPassword())));
       }

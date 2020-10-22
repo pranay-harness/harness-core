@@ -58,7 +58,7 @@ public class TerraformValidation extends AbstractDelegateValidateTask {
       List<EncryptedDataDetail> encryptionDetails = terraformProvisionParameters.getSourceRepoEncryptionDetails();
 
       try {
-        encryptionService.decrypt(gitConfig, encryptionDetails);
+        encryptionService.decrypt(gitConfig, encryptionDetails, false);
       } catch (Exception e) {
         logger.info("Failed to decrypt " + gitConfig.getRepoUrl(), e);
         return false;

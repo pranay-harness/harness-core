@@ -76,7 +76,7 @@ public class PcfRollbackCommandTaskHandler extends PcfCommandTaskHandler {
       workingDirectory = pcfCommandTaskHelper.generateWorkingDirectoryForDeployment();
 
       PcfConfig pcfConfig = pcfCommandRequest.getPcfConfig();
-      encryptionService.decrypt(pcfConfig, encryptedDataDetails);
+      encryptionService.decrypt(pcfConfig, encryptedDataDetails, false);
       if (CollectionUtils.isEmpty(commandRollbackRequest.getInstanceData())) {
         commandRollbackRequest.setInstanceData(new ArrayList<>());
       }

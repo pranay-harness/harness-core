@@ -179,7 +179,7 @@ public class TerraformProvisionTask extends AbstractDelegateRunnableTask {
     }
 
     try {
-      encryptionService.decrypt(gitConfig, parameters.getSourceRepoEncryptionDetails());
+      encryptionService.decrypt(gitConfig, parameters.getSourceRepoEncryptionDetails(), false);
       gitClient.ensureRepoLocallyClonedAndUpdated(gitOperationContext);
     } catch (RuntimeException ex) {
       logger.error("Exception in processing git operation", ex);
@@ -239,7 +239,7 @@ public class TerraformProvisionTask extends AbstractDelegateRunnableTask {
           }
           if (isNotEmpty(parameters.getEncryptedBackendConfigs())) {
             for (Entry<String, EncryptedDataDetail> entry : parameters.getEncryptedBackendConfigs().entrySet()) {
-              String value = String.valueOf(encryptionService.getDecryptedValue(entry.getValue()));
+              String value = String.valueOf(encryptionService.getDecryptedValue(entry.getValue(), false));
               saveVariable(writer, entry.getKey(), value);
             }
           }
@@ -526,7 +526,7 @@ public class TerraformProvisionTask extends AbstractDelegateRunnableTask {
     }
     if (isNotEmpty(parameters.getEncryptedEnvironmentVariables())) {
       for (Entry<String, EncryptedDataDetail> entry : parameters.getEncryptedEnvironmentVariables().entrySet()) {
-        String value = String.valueOf(encryptionService.getDecryptedValue(entry.getValue()));
+        String value = String.valueOf(encryptionService.getDecryptedValue(entry.getValue(), false));
         envVars.put(entry.getKey(), value);
       }
     }
@@ -577,7 +577,7 @@ public class TerraformProvisionTask extends AbstractDelegateRunnableTask {
     if (isNotEmpty(parameters.getEncryptedVariables())) {
       for (Entry<String, EncryptedDataDetail> entry : parameters.getEncryptedVariables().entrySet()) {
         executeParams.append(format(variableFormatString, entry.getKey(),
-            String.valueOf(encryptionService.getDecryptedValue(entry.getValue()))));
+            String.valueOf(encryptionService.getDecryptedValue(entry.getValue(), false))));
         uiLogParams.append(format(variableFormatString, entry.getKey(), format("HarnessSecret:[%s]", entry.getKey())));
       }
     }

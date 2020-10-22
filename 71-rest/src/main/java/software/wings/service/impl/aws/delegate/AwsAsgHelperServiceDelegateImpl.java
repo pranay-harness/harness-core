@@ -117,7 +117,7 @@ public class AwsAsgHelperServiceDelegateImpl
   public List<String> listAutoScalingGroupInstanceIds(
       AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails, String region, String autoScalingGroupName) {
     try {
-      encryptionService.decrypt(awsConfig, encryptionDetails);
+      encryptionService.decrypt(awsConfig, encryptionDetails, false);
       DescribeAutoScalingGroupsRequest describeAutoScalingGroupsRequest =
           new DescribeAutoScalingGroupsRequest().withAutoScalingGroupNames(autoScalingGroupName);
       AmazonAutoScalingClient amazonAutoScalingClient = getAmazonAutoScalingClient(Regions.fromName(region), awsConfig);
@@ -152,7 +152,7 @@ public class AwsAsgHelperServiceDelegateImpl
   public AutoScalingGroup getAutoScalingGroup(
       AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails, String region, String autoScalingGroupName) {
     try {
-      encryptionService.decrypt(awsConfig, encryptionDetails);
+      encryptionService.decrypt(awsConfig, encryptionDetails, false);
       DescribeAutoScalingGroupsRequest describeAutoScalingGroupsRequest =
           new DescribeAutoScalingGroupsRequest().withAutoScalingGroupNames(autoScalingGroupName);
       AmazonAutoScalingClient amazonAutoScalingClient = getAmazonAutoScalingClient(Regions.fromName(region), awsConfig);
@@ -174,7 +174,7 @@ public class AwsAsgHelperServiceDelegateImpl
   public LaunchConfiguration getLaunchConfiguration(
       AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails, String region, String launchConfigName) {
     try {
-      encryptionService.decrypt(awsConfig, encryptionDetails);
+      encryptionService.decrypt(awsConfig, encryptionDetails, false);
       AmazonAutoScalingClient amazonAutoScalingClient = getAmazonAutoScalingClient(Regions.fromName(region), awsConfig);
       tracker.trackASGCall("Describe Launch Configuration");
       return amazonAutoScalingClient
@@ -196,7 +196,7 @@ public class AwsAsgHelperServiceDelegateImpl
   public List<AutoScalingGroup> listAllAsgs(
       AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails, String region) {
     try {
-      encryptionService.decrypt(awsConfig, encryptionDetails);
+      encryptionService.decrypt(awsConfig, encryptionDetails, false);
       AmazonAutoScalingClient amazonAutoScalingClient = getAmazonAutoScalingClient(Regions.fromName(region), awsConfig);
 
       DescribeAutoScalingGroupsRequest describeAutoScalingGroupsRequest;
@@ -225,7 +225,7 @@ public class AwsAsgHelperServiceDelegateImpl
   public void deleteLaunchConfig(
       AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails, String region, String autoScalingGroupName) {
     try {
-      encryptionService.decrypt(awsConfig, encryptionDetails);
+      encryptionService.decrypt(awsConfig, encryptionDetails, false);
       AmazonAutoScalingClient amazonAutoScalingClient = getAmazonAutoScalingClient(Regions.fromName(region), awsConfig);
       tracker.trackASGCall("Delete Launch Config");
       amazonAutoScalingClient.deleteLaunchConfiguration(
@@ -242,7 +242,7 @@ public class AwsAsgHelperServiceDelegateImpl
       List<EncryptedDataDetail> encryptionDetails, String region,
       CreateLaunchConfigurationRequest createLaunchConfigurationRequest) {
     try {
-      encryptionService.decrypt(awsConfig, encryptionDetails);
+      encryptionService.decrypt(awsConfig, encryptionDetails, false);
       tracker.trackASGCall("Create Launch Config");
       AmazonAutoScalingClient amazonAutoScalingClient = getAmazonAutoScalingClient(Regions.fromName(region), awsConfig);
       return amazonAutoScalingClient.createLaunchConfiguration(createLaunchConfigurationRequest);
@@ -260,7 +260,7 @@ public class AwsAsgHelperServiceDelegateImpl
       CreateAutoScalingGroupRequest createAutoScalingGroupRequest, LogCallback logCallback) {
     AmazonAutoScalingClient amazonAutoScalingClient = null;
     try {
-      encryptionService.decrypt(awsConfig, encryptionDetails);
+      encryptionService.decrypt(awsConfig, encryptionDetails, false);
       amazonAutoScalingClient = getAmazonAutoScalingClient(Regions.fromName(region), awsConfig);
       tracker.trackASGCall("Create Autoscaling Group");
       return amazonAutoScalingClient.createAutoScalingGroup(createAutoScalingGroupRequest);
@@ -281,7 +281,7 @@ public class AwsAsgHelperServiceDelegateImpl
       List<AutoScalingGroup> autoScalingGroups, LogCallback callback) {
     AmazonAutoScalingClient amazonAutoScalingClient = getAmazonAutoScalingClient(Regions.fromName(region), awsConfig);
     try {
-      encryptionService.decrypt(awsConfig, encryptionDetails);
+      encryptionService.decrypt(awsConfig, encryptionDetails, false);
       autoScalingGroups.forEach(autoScalingGroup -> {
         try {
           tracker.trackASGCall("Delete Autoscaling Group");
@@ -317,7 +317,7 @@ public class AwsAsgHelperServiceDelegateImpl
   public Map<String, Integer> getDesiredCapacitiesOfAsgs(
       AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails, String region, List<String> asgs) {
     try {
-      encryptionService.decrypt(awsConfig, encryptionDetails);
+      encryptionService.decrypt(awsConfig, encryptionDetails, false);
       Map<String, Integer> capacities = new HashMap<>();
       AmazonAutoScalingClient amazonAutoScalingClient = getAmazonAutoScalingClient(Regions.fromName(region), awsConfig);
       String nextToken = null;
@@ -344,7 +344,7 @@ public class AwsAsgHelperServiceDelegateImpl
   public void setAutoScalingGroupCapacityAndWaitForInstancesReadyState(AwsConfig awsConfig,
       List<EncryptedDataDetail> encryptionDetails, String region, String autoScalingGroupName, Integer desiredCapacity,
       ExecutionLogCallback logCallback, Integer autoScalingSteadyStateTimeout) {
-    encryptionService.decrypt(awsConfig, encryptionDetails);
+    encryptionService.decrypt(awsConfig, encryptionDetails, false);
     AmazonAutoScalingClient amazonAutoScalingClient = getAmazonAutoScalingClient(Regions.fromName(region), awsConfig);
     try {
       logCallback.saveExecutionLog(
@@ -372,7 +372,7 @@ public class AwsAsgHelperServiceDelegateImpl
       if (isEmpty(autoScalingGroupName)) {
         return;
       }
-      encryptionService.decrypt(awsConfig, encryptionDetails);
+      encryptionService.decrypt(awsConfig, encryptionDetails, false);
       AmazonAutoScalingClient amazonAutoScalingClient = getAmazonAutoScalingClient(Regions.fromName(region), awsConfig);
       tracker.trackASGCall("Describe Autoscaling Group");
       DescribeAutoScalingGroupsRequest request =
@@ -401,7 +401,7 @@ public class AwsAsgHelperServiceDelegateImpl
   public void setAutoScalingGroupLimits(AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails, String region,
       String autoScalingGroupName, Integer desiredCapacity, ExecutionLogCallback logCallback) {
     try {
-      encryptionService.decrypt(awsConfig, encryptionDetails);
+      encryptionService.decrypt(awsConfig, encryptionDetails, false);
       AmazonAutoScalingClient amazonAutoScalingClient = getAmazonAutoScalingClient(Regions.fromName(region), awsConfig);
       DescribeAutoScalingGroupsRequest request =
           new DescribeAutoScalingGroupsRequest().withAutoScalingGroupNames(autoScalingGroupName);
@@ -729,7 +729,7 @@ public class AwsAsgHelperServiceDelegateImpl
       String region, String asgName, ExecutionLogCallback logCallback) {
     try {
       logCallback.saveExecutionLog(format("Extracting scaling policy JSONs from: [%s]", asgName));
-      encryptionService.decrypt(awsConfig, encryptionDetails);
+      encryptionService.decrypt(awsConfig, encryptionDetails, false);
       AmazonAutoScalingClient amazonAutoScalingClient = getAmazonAutoScalingClient(Regions.fromName(region), awsConfig);
       List<ScalingPolicy> scalingPolicies = listAllScalingPoliciesOfAsg(amazonAutoScalingClient, asgName);
       if (isEmpty(scalingPolicies)) {
@@ -755,7 +755,7 @@ public class AwsAsgHelperServiceDelegateImpl
       String region, String asgName, ExecutionLogCallback logCallback) {
     try {
       logCallback.saveExecutionLog(format("Clearing away all scaling policies for Asg: [%s]", asgName));
-      encryptionService.decrypt(awsConfig, encryptionDetails);
+      encryptionService.decrypt(awsConfig, encryptionDetails, false);
       AmazonAutoScalingClient amazonAutoScalingClient = getAmazonAutoScalingClient(Regions.fromName(region), awsConfig);
       List<ScalingPolicy> scalingPolicies = listAllScalingPoliciesOfAsg(amazonAutoScalingClient, asgName);
       if (isEmpty(scalingPolicies)) {
@@ -794,7 +794,7 @@ public class AwsAsgHelperServiceDelegateImpl
     try {
       executionLogCallback.saveExecutionLog(
           format("Tagging ASG with name: [%s] with tag: [%s] -> [%s]", asgName, tagKey, tagValue));
-      encryptionService.decrypt(awsConfig, encryptedDataDetails);
+      encryptionService.decrypt(awsConfig, encryptedDataDetails, false);
       tracker.trackASGCall("Add Update Tags to Autoscaling group");
       AmazonAutoScalingClient amazonAutoScalingClient = getAmazonAutoScalingClient(Regions.fromName(region), awsConfig);
       CreateOrUpdateTagsRequest createOrUpdateTagsRequest = new CreateOrUpdateTagsRequest();
@@ -822,7 +822,7 @@ public class AwsAsgHelperServiceDelegateImpl
         logCallback.saveExecutionLog("No policy to attach");
         return;
       }
-      encryptionService.decrypt(awsConfig, encryptionDetails);
+      encryptionService.decrypt(awsConfig, encryptionDetails, false);
       AmazonAutoScalingClient amazonAutoScalingClient = getAmazonAutoScalingClient(Regions.fromName(region), awsConfig);
       scalingPolicyJSONs.forEach(scalingPolicyJSON -> {
         if (isNotEmpty(scalingPolicyJSON)) {

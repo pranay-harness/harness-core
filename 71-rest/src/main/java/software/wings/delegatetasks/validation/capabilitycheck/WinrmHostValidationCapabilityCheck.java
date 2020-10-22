@@ -36,7 +36,7 @@ public class WinrmHostValidationCapabilityCheck implements CapabilityCheck {
     CapabilityResponseBuilder capabilityResponseBuilder = CapabilityResponse.builder().delegateCapability(capability);
     WinRmConnectionAttributes connectionAttributes = capability.getWinRmConnectionAttributes();
     List<EncryptedDataDetail> encryptedDataDetails = capability.getWinrmConnectionEncryptedDataDetails();
-    encryptionService.decrypt(connectionAttributes, encryptedDataDetails);
+    encryptionService.decrypt(connectionAttributes, encryptedDataDetails, false);
 
     WinRmSessionConfig config =
         winrmSessionConfig(capability.getValidationInfo(), connectionAttributes, capability.getEnvVariables());

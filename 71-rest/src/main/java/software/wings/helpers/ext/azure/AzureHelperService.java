@@ -118,7 +118,7 @@ public class AzureHelperService {
   public void validateAzureAccountCredential(AzureConfig azureConfig, List<EncryptedDataDetail> encryptedDataDetails) {
     try {
       if (isNotEmpty(encryptedDataDetails)) {
-        encryptionService.decrypt(azureConfig, encryptedDataDetails);
+        encryptionService.decrypt(azureConfig, encryptedDataDetails, false);
       }
 
       ApplicationTokenCredentials credentials =
@@ -133,7 +133,7 @@ public class AzureHelperService {
   }
 
   public Map<String, String> listSubscriptions(AzureConfig azureConfig, List<EncryptedDataDetail> encryptionDetails) {
-    encryptionService.decrypt(azureConfig, encryptionDetails);
+    encryptionService.decrypt(azureConfig, encryptionDetails, false);
     Azure azure = getAzureClient(azureConfig);
     return azure.subscriptions().list().stream().collect(
         Collectors.toMap(Subscription::subscriptionId, Subscription::displayName));
@@ -141,7 +141,7 @@ public class AzureHelperService {
 
   public boolean isValidSubscription(
       AzureConfig azureConfig, List<EncryptedDataDetail> encryptionDetails, String subscriptionId) {
-    encryptionService.decrypt(azureConfig, encryptionDetails);
+    encryptionService.decrypt(azureConfig, encryptionDetails, false);
     return getAzureClient(azureConfig)
                .subscriptions()
                .list()
@@ -204,7 +204,7 @@ public class AzureHelperService {
 
   public List<AzureAvailabilitySet> listAvailabilitySets(
       AzureConfig azureConfig, List<EncryptedDataDetail> encryptionDetails, String subscriptionId) {
-    encryptionService.decrypt(azureConfig, encryptionDetails);
+    encryptionService.decrypt(azureConfig, encryptionDetails, false);
     Azure azure = getAzureClient(azureConfig, subscriptionId);
     return azure.availabilitySets()
         .list()
@@ -234,7 +234,7 @@ public class AzureHelperService {
       Map<String, String> tags, OSType osType) {
     List<VirtualMachine> matchingVMs = new ArrayList<>();
 
-    encryptionService.decrypt(azureConfig, encryptionDetails);
+    encryptionService.decrypt(azureConfig, encryptionDetails, false);
     Azure azure = getAzureClient(azureConfig, subscriptionId);
     List<VirtualMachine> listVms = azure.virtualMachines().listByResourceGroup(resourceGroupName);
 
@@ -337,7 +337,7 @@ public class AzureHelperService {
 
   public List<AzureVirtualMachineScaleSet> listVirtualMachineScaleSets(
       AzureConfig azureConfig, List<EncryptedDataDetail> encryptionDetails, String subscriptionId) {
-    encryptionService.decrypt(azureConfig, encryptionDetails);
+    encryptionService.decrypt(azureConfig, encryptionDetails, false);
     Azure azure = getAzureClient(azureConfig, subscriptionId);
     return azure.virtualMachineScaleSets()
         .list()
@@ -354,7 +354,7 @@ public class AzureHelperService {
 
   public List<AzureTagDetails> listTags(
       AzureConfig azureConfig, List<EncryptedDataDetail> encryptionDetails, String subscriptionId) {
-    encryptionService.decrypt(azureConfig, encryptionDetails);
+    encryptionService.decrypt(azureConfig, encryptionDetails, false);
     try {
       Response<AzureListTagsResponse> response = getAzureManagementRestClient(azureConfig.getAzureEnvironmentType())
                                                      .listTags(getAzureBearerAuthToken(azureConfig), subscriptionId)
@@ -383,7 +383,7 @@ public class AzureHelperService {
 
   public Set<String> listTagsBySubscription(
       String subscriptionId, AzureConfig azureConfig, List<EncryptedDataDetail> encryptionDetails) {
-    encryptionService.decrypt(azureConfig, encryptionDetails);
+    encryptionService.decrypt(azureConfig, encryptionDetails, false);
     try {
       Response<AzureListTagsResponse> response = getAzureManagementRestClient(azureConfig.getAzureEnvironmentType())
                                                      .listTags(getAzureBearerAuthToken(azureConfig), subscriptionId)
@@ -404,7 +404,7 @@ public class AzureHelperService {
 
   public Set<String> listResourceGroups(
       AzureConfig azureConfig, List<EncryptedDataDetail> encryptionDetails, String subscriptionId) {
-    encryptionService.decrypt(azureConfig, encryptionDetails);
+    encryptionService.decrypt(azureConfig, encryptionDetails, false);
 
     try {
       Azure azure = getAzureClient(azureConfig, subscriptionId);
@@ -419,7 +419,7 @@ public class AzureHelperService {
 
   public List<String> listContainerRegistryNames(
       AzureConfig azureConfig, List<EncryptedDataDetail> encryptionDetails, String subscriptionId) {
-    encryptionService.decrypt(azureConfig, encryptionDetails);
+    encryptionService.decrypt(azureConfig, encryptionDetails, false);
     Azure azure = getAzureClient(azureConfig, subscriptionId);
     List<String> registries = new ArrayList<>();
     azure.containerRegistries().list().forEach(registry -> registries.add(registry.name()));
@@ -428,7 +428,7 @@ public class AzureHelperService {
 
   public List<AzureContainerRegistry> listContainerRegistries(
       AzureConfig azureConfig, List<EncryptedDataDetail> encryptionDetails, String subscriptionId) {
-    encryptionService.decrypt(azureConfig, encryptionDetails);
+    encryptionService.decrypt(azureConfig, encryptionDetails, false);
     Azure azure = getAzureClient(azureConfig, subscriptionId);
     List<AzureContainerRegistry> registries = new ArrayList<>();
     azure.containerRegistries().list().forEach(registry
@@ -444,7 +444,7 @@ public class AzureHelperService {
 
   public boolean isValidContainerRegistry(AzureConfig azureConfig, List<EncryptedDataDetail> encryptionDetails,
       String subscriptionId, String registryName) {
-    encryptionService.decrypt(azureConfig, encryptionDetails);
+    encryptionService.decrypt(azureConfig, encryptionDetails, false);
     return getAzureClient(azureConfig, subscriptionId)
                .containerRegistries()
                .list()
@@ -456,13 +456,13 @@ public class AzureHelperService {
 
   public String getLoginServerForRegistry(AzureConfig azureConfig, List<EncryptedDataDetail> encryptionDetails,
       String subscriptionId, String registryName) {
-    encryptionService.decrypt(azureConfig, encryptionDetails);
+    encryptionService.decrypt(azureConfig, encryptionDetails, false);
     return getRegistry(azureConfig, encryptionDetails, subscriptionId, registryName).loginServerUrl();
   }
 
   private Registry getRegistry(AzureConfig azureConfig, List<EncryptedDataDetail> encryptionDetails,
       String subscriptionId, String registryName) {
-    encryptionService.decrypt(azureConfig, encryptionDetails);
+    encryptionService.decrypt(azureConfig, encryptionDetails, false);
     return getAzureClient(azureConfig, subscriptionId)
         .containerRegistries()
         .list()
@@ -474,7 +474,7 @@ public class AzureHelperService {
 
   public List<String> listRepositories(AzureConfig azureConfig, List<EncryptedDataDetail> encryptionDetails,
       String subscriptionId, String registryName) {
-    encryptionService.decrypt(azureConfig, encryptionDetails);
+    encryptionService.decrypt(azureConfig, encryptionDetails, false);
     Azure azure = getAzureClient(azureConfig, subscriptionId);
     try {
       Registry registry = azure.containerRegistries()
@@ -504,7 +504,7 @@ public class AzureHelperService {
 
   public List<String> listRepositoryTags(AzureConfig azureConfig, List<EncryptedDataDetail> encryptionDetails,
       String subscriptionId, String registryName, String repositoryName) {
-    encryptionService.decrypt(azureConfig, encryptionDetails);
+    encryptionService.decrypt(azureConfig, encryptionDetails, false);
     Azure azure = getAzureClient(azureConfig, subscriptionId);
     try {
       Registry registry = azure.containerRegistries()
@@ -531,7 +531,7 @@ public class AzureHelperService {
 
   public List<String> listRepositoryTags(AzureConfig azureConfig, List<EncryptedDataDetail> encryptionDetails,
       String registryHostName, String repositoryName) {
-    encryptionService.decrypt(azureConfig, encryptionDetails);
+    encryptionService.decrypt(azureConfig, encryptionDetails, false);
     try {
       AcrRestClient acrRestClient = getAcrRestClient(registryHostName);
       return acrRestClient
@@ -549,7 +549,7 @@ public class AzureHelperService {
 
   public List<AzureKubernetesCluster> listKubernetesClusters(
       AzureConfig azureConfig, List<EncryptedDataDetail> encryptionDetails, String subscriptionId) {
-    encryptionService.decrypt(azureConfig, encryptionDetails);
+    encryptionService.decrypt(azureConfig, encryptionDetails, false);
 
     return getAzureClient(azureConfig, subscriptionId)
         .kubernetesClusters()
@@ -567,7 +567,7 @@ public class AzureHelperService {
 
   public boolean isValidKubernetesCluster(AzureConfig azureConfig, List<EncryptedDataDetail> encryptionDetails,
       String subscriptionId, String resourceGroup, String clusterName) {
-    encryptionService.decrypt(azureConfig, encryptionDetails);
+    encryptionService.decrypt(azureConfig, encryptionDetails, false);
     KubernetesCluster cluster =
         getAzureClient(azureConfig, subscriptionId).kubernetesClusters().getByResourceGroup(resourceGroup, clusterName);
     return cluster != null;
@@ -582,7 +582,7 @@ public class AzureHelperService {
   public KubernetesConfig getKubernetesClusterConfig(AzureConfig azureConfig,
       List<EncryptedDataDetail> encryptionDetails, String subscriptionId, String resourceGroup, String clusterName,
       String namespace) {
-    encryptionService.decrypt(azureConfig, encryptionDetails);
+    encryptionService.decrypt(azureConfig, encryptionDetails, false);
     try {
       Response<AksGetCredentialsResponse> response =
           getAzureManagementRestClient(azureConfig.getAzureEnvironmentType())
@@ -742,7 +742,7 @@ public class AzureHelperService {
 
   public List<AzureImageGallery> listImageGalleries(AzureConfig azureConfig,
       List<EncryptedDataDetail> encryptionDetails, String subscriptionId, String resourceGroupName) {
-    encryptionService.decrypt(azureConfig, encryptionDetails);
+    encryptionService.decrypt(azureConfig, encryptionDetails, false);
     Azure azure = getAzureClient(azureConfig, subscriptionId);
     return azure.galleries()
         .listByResourceGroup(resourceGroupName)
@@ -760,7 +760,7 @@ public class AzureHelperService {
   public List<AzureImageDefinition> listImageDefinitions(AzureConfig azureConfig,
       List<EncryptedDataDetail> encryptionDetails, String subscriptionId, String resourceGroupName,
       String galleryName) {
-    encryptionService.decrypt(azureConfig, encryptionDetails);
+    encryptionService.decrypt(azureConfig, encryptionDetails, false);
     Azure azure = getAzureClient(azureConfig, subscriptionId);
     return azure.galleryImages()
         .listByGallery(resourceGroupName, galleryName)
@@ -780,7 +780,7 @@ public class AzureHelperService {
   public List<AzureImageVersion> listImageDefinitionVersions(AzureConfig azureConfig,
       List<EncryptedDataDetail> encryptionDetails, String subscriptionId, String resourceGroupName, String galleryName,
       String imageDefinition) {
-    encryptionService.decrypt(azureConfig, encryptionDetails);
+    encryptionService.decrypt(azureConfig, encryptionDetails, false);
     Azure azure = getAzureClient(azureConfig, subscriptionId);
     // Only fetch successful Azure Image versions
     return azure.galleryImageVersions()

@@ -50,7 +50,7 @@ public class HostValidationServiceImpl implements HostValidationService {
       List<EncryptedDataDetail> encryptionDetails, ExecutionCredential executionCredential) {
     List<HostValidationResponse> hostValidationResponses = new ArrayList<>();
 
-    encryptionService.decrypt((EncryptableSetting) connectionSetting.getValue(), encryptionDetails);
+    encryptionService.decrypt((EncryptableSetting) connectionSetting.getValue(), encryptionDetails, false);
     try {
       timeLimiter.callWithTimeout(() -> {
         hostNames.forEach(hostName -> {

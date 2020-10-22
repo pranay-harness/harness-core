@@ -395,7 +395,7 @@ public class DownloadArtifactCommandUnitTest extends WingsBaseTest {
 
   private void executeDownloadCommandUnit(ShellCommandExecutionContext context) {
     downloadArtifactCommandUnit.setCommandPath(WingsTestConstants.DESTINATION_DIR_PATH);
-    when(encryptionService.decrypt(any(EncryptableSetting.class), anyListOf(EncryptedDataDetail.class)))
+    when(encryptionService.decrypt(any(EncryptableSetting.class), anyListOf(EncryptedDataDetail.class), eq(false)))
         .thenReturn((EncryptableSetting) hostConnectionAttributes.getValue());
     when(awsHelperService.getBucketRegion(any(AwsConfig.class), anyListOf(EncryptedDataDetail.class), anyString()))
         .thenReturn("us-west-1");
@@ -439,7 +439,7 @@ public class DownloadArtifactCommandUnitTest extends WingsBaseTest {
   public void shouldDownloadFromArtifactoryAsAnonymous(ScriptType scriptType) {
     downloadArtifactCommandUnit.setScriptType(scriptType);
     downloadArtifactCommandUnit.setCommandPath(WingsTestConstants.DESTINATION_DIR_PATH);
-    when(encryptionService.decrypt(any(EncryptableSetting.class), anyListOf(EncryptedDataDetail.class)))
+    when(encryptionService.decrypt(any(EncryptableSetting.class), anyListOf(EncryptedDataDetail.class), eq(false)))
         .thenReturn((EncryptableSetting) hostConnectionAttributes.getValue());
     when(executor.executeCommandString(anyString(), anyBoolean())).thenReturn(CommandExecutionStatus.SUCCESS);
     CommandExecutionStatus status = downloadArtifactCommandUnit.executeInternal(artifactoryContextAnon);
@@ -463,7 +463,7 @@ public class DownloadArtifactCommandUnitTest extends WingsBaseTest {
     nexusContextMaven.setExecutor(executor);
     downloadArtifactCommandUnit.setScriptType(scriptType);
     downloadArtifactCommandUnit.setCommandPath(WingsTestConstants.DESTINATION_DIR_PATH);
-    when(encryptionService.decrypt(any(EncryptableSetting.class), anyListOf(EncryptedDataDetail.class)))
+    when(encryptionService.decrypt(any(EncryptableSetting.class), anyListOf(EncryptedDataDetail.class), eq(false)))
         .thenReturn((EncryptableSetting) hostConnectionAttributes.getValue());
     downloadArtifactCommandUnit.executeInternal(nexusContextMaven);
     ArgumentCaptor<String> argument = ArgumentCaptor.forClass(String.class);
@@ -479,7 +479,7 @@ public class DownloadArtifactCommandUnitTest extends WingsBaseTest {
     nexusContextMavenAnon.setExecutor(executor);
     downloadArtifactCommandUnit.setScriptType(scriptType);
     downloadArtifactCommandUnit.setCommandPath(WingsTestConstants.DESTINATION_DIR_PATH);
-    when(encryptionService.decrypt(any(EncryptableSetting.class), anyListOf(EncryptedDataDetail.class)))
+    when(encryptionService.decrypt(any(EncryptableSetting.class), anyListOf(EncryptedDataDetail.class), eq(false)))
         .thenReturn((EncryptableSetting) hostConnectionAttributes.getValue());
     downloadArtifactCommandUnit.executeInternal(nexusContextMavenAnon);
     ArgumentCaptor<String> argument = ArgumentCaptor.forClass(String.class);
@@ -495,7 +495,7 @@ public class DownloadArtifactCommandUnitTest extends WingsBaseTest {
     jenkinsContext.setExecutor(executor);
     downloadArtifactCommandUnit.setScriptType(scriptType);
     downloadArtifactCommandUnit.setCommandPath(WingsTestConstants.DESTINATION_DIR_PATH);
-    when(encryptionService.decrypt(any(EncryptableSetting.class), anyListOf(EncryptedDataDetail.class)))
+    when(encryptionService.decrypt(any(EncryptableSetting.class), anyListOf(EncryptedDataDetail.class), eq(false)))
         .thenReturn((EncryptableSetting) hostConnectionAttributes.getValue());
     downloadArtifactCommandUnit.executeInternal(jenkinsContext);
     ArgumentCaptor<String> argument = ArgumentCaptor.forClass(String.class);
@@ -511,7 +511,7 @@ public class DownloadArtifactCommandUnitTest extends WingsBaseTest {
     bambooContext.setExecutor(executor);
     downloadArtifactCommandUnit.setScriptType(scriptType);
     downloadArtifactCommandUnit.setCommandPath(WingsTestConstants.DESTINATION_DIR_PATH);
-    when(encryptionService.decrypt(any(EncryptableSetting.class), anyListOf(EncryptedDataDetail.class)))
+    when(encryptionService.decrypt(any(EncryptableSetting.class), anyListOf(EncryptedDataDetail.class), eq(false)))
         .thenReturn((EncryptableSetting) hostConnectionAttributes.getValue());
     downloadArtifactCommandUnit.executeInternal(bambooContext);
     ArgumentCaptor<String> argument = ArgumentCaptor.forClass(String.class);
@@ -527,7 +527,7 @@ public class DownloadArtifactCommandUnitTest extends WingsBaseTest {
     context.setExecutor(executor);
     downloadArtifactCommandUnit.setScriptType(ScriptType.POWERSHELL);
     downloadArtifactCommandUnit.setCommandPath(WingsTestConstants.DESTINATION_DIR_PATH);
-    when(encryptionService.decrypt(any(EncryptableSetting.class), anyListOf(EncryptedDataDetail.class)))
+    when(encryptionService.decrypt(any(EncryptableSetting.class), anyListOf(EncryptedDataDetail.class), eq(false)))
         .thenReturn((EncryptableSetting) hostConnectionAttributes.getValue());
     when(awsHelperService.getBucketRegion(any(AwsConfig.class), anyListOf(EncryptedDataDetail.class), anyString()))
         .thenReturn("us-west-1");

@@ -56,7 +56,7 @@ public class Mailer {
    */
   public void send(SmtpConfig smtpConfig, List<EncryptedDataDetail> encryptedDataDetails, EmailData emailData) {
     try {
-      encryptionService.decrypt(smtpConfig, encryptedDataDetails);
+      encryptionService.decrypt(smtpConfig, encryptedDataDetails, false);
       Email email = emailData.isHasHtml() ? new HtmlEmail() : new SimpleEmail();
       email.setHostName(smtpConfig.getHost());
       email.setSmtpPort(smtpConfig.getPort());

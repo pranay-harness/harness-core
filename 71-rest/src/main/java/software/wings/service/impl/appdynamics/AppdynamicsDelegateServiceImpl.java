@@ -507,7 +507,7 @@ public class AppdynamicsDelegateServiceImpl implements AppdynamicsDelegateServic
   }
   private String getHeaderWithCredentials(
       AppDynamicsConfig appDynamicsConfig, List<EncryptedDataDetail> encryptionDetails) {
-    encryptionService.decrypt(appDynamicsConfig, encryptionDetails);
+    encryptionService.decrypt(appDynamicsConfig, encryptionDetails, false);
     return "Basic "
         + Base64.encodeBase64String(
               String

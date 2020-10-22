@@ -75,7 +75,7 @@ public class InstanaDelegateServiceImpl implements InstanaDelegateService {
   }
 
   private String getAuthorizationHeader(InstanaConfig instanaConfig, List<EncryptedDataDetail> encryptionDetails) {
-    encryptionService.decrypt(instanaConfig, encryptionDetails);
+    encryptionService.decrypt(instanaConfig, encryptionDetails, false);
     return "apiToken " + new String(instanaConfig.getApiToken());
   }
 }

@@ -23,6 +23,7 @@ import io.harness.category.element.UnitTests;
 import io.harness.exception.CommandExecutionException;
 import io.harness.exception.SecretManagementDelegateException;
 import io.harness.rule.Owner;
+import io.harness.secrets.SecretsDelegateCacheService;
 import io.harness.security.encryption.EncryptedRecord;
 import lombok.extern.slf4j.Slf4j;
 import okhttp3.MediaType;
@@ -65,13 +66,14 @@ public class SecretManagementDelegateServiceTest extends CategoryTest {
   private TimeLimiter timeLimiter = new SimpleTimeLimiter();
   @Mock private KmsEncryptDecryptClient kmsEncryptDecryptClient;
   @Mock private GcpKmsEncryptDecryptClient gcpKmsEncryptDecryptClient;
+  @Mock private SecretsDelegateCacheService secretsDelegateCacheService;
   @Mock private CustomSecretsManagerDelegateService customSecretsManagerDelegateService;
 
   @Before
   public void setup() throws Exception {
     initMocks(this);
-    secretManagementDelegateService = spy(new SecretManagementDelegateServiceImpl(
-        timeLimiter, kmsEncryptDecryptClient, gcpKmsEncryptDecryptClient, customSecretsManagerDelegateService));
+    secretManagementDelegateService = spy(new SecretManagementDelegateServiceImpl(timeLimiter, kmsEncryptDecryptClient,
+        gcpKmsEncryptDecryptClient, customSecretsManagerDelegateService, secretsDelegateCacheService));
   }
 
   @Test

@@ -744,7 +744,8 @@ public class VaultTest extends WingsBaseTest {
     assertThat(query.count()).isEqualTo(numOfEncRecords + 1);
 
     encryptionService.decrypt((EncryptableSetting) savedAttribute.getValue(),
-        secretManager.getEncryptionDetails((EncryptableSetting) savedAttribute.getValue(), workflowExecutionId, appId));
+        secretManager.getEncryptionDetails((EncryptableSetting) savedAttribute.getValue(), workflowExecutionId, appId),
+        false);
 
     AppDynamicsConfig value = (AppDynamicsConfig) savedAttribute.getValue();
     assertThat(String.valueOf(value.getPassword())).isEqualTo(password);
@@ -1028,7 +1029,8 @@ public class VaultTest extends WingsBaseTest {
     savedAttribute = wingsPersistence.get(SettingAttribute.class, savedAttributeId);
     AppDynamicsConfig savedConfig = (AppDynamicsConfig) savedAttribute.getValue();
     assertThat(savedConfig.getPassword()).isNull();
-    encryptionService.decrypt(savedConfig, secretManager.getEncryptionDetails(savedConfig, workflowExecutionId, appId));
+    encryptionService.decrypt(
+        savedConfig, secretManager.getEncryptionDetails(savedConfig, workflowExecutionId, appId), false);
     assertThat(String.valueOf(savedConfig.getPassword())).isEqualTo(newPassWord);
   }
 
@@ -1085,7 +1087,7 @@ public class VaultTest extends WingsBaseTest {
     // decrypt and verify
     ServiceVariable savedVariable = wingsPersistence.get(ServiceVariable.class, savedAttributeId);
     encryptionService.decrypt(
-        savedVariable, secretManager.getEncryptionDetails(savedVariable, workflowExecutionId, appId));
+        savedVariable, secretManager.getEncryptionDetails(savedVariable, workflowExecutionId, appId), false);
     assertThat(String.valueOf(savedVariable.getValue())).isEqualTo(secretValue);
 
     List<SecretChangeLog> changeLogs =
@@ -1601,7 +1603,7 @@ public class VaultTest extends WingsBaseTest {
       assertThat(isBlank(savedConfig.getEncryptedPassword())).isFalse();
 
       encryptionService.decrypt(
-          savedConfig, secretManager.getEncryptionDetails(savedConfig, workflowExecutionId, appId));
+          savedConfig, secretManager.getEncryptionDetails(savedConfig, workflowExecutionId, appId), false);
       assertThat(String.valueOf(savedConfig.getPassword())).isEqualTo(password);
     }
 

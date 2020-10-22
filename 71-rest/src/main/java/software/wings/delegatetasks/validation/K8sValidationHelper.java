@@ -50,7 +50,8 @@ public class K8sValidationHelper {
     // see if we can decrypt from this delegate
     if (!value.isDecrypted() && isNotEmpty(k8sClusterConfig.getCloudProviderEncryptionDetails())) {
       try {
-        encryptionService.decrypt((EncryptableSetting) value, k8sClusterConfig.getCloudProviderEncryptionDetails());
+        encryptionService.decrypt(
+            (EncryptableSetting) value, k8sClusterConfig.getCloudProviderEncryptionDetails(), false);
       } catch (Exception e) {
         logger.info("failed to decrypt " + value, e);
         return false;

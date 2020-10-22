@@ -77,7 +77,7 @@ public class PcfSetupCommandTaskHandler extends PcfCommandTaskHandler {
     }
     PcfManifestFileData pcfManifestFileData = PcfManifestFileData.builder().varFiles(new ArrayList<>()).build();
     PcfConfig pcfConfig = pcfCommandRequest.getPcfConfig();
-    encryptionService.decrypt(pcfConfig, encryptedDataDetails);
+    encryptionService.decrypt(pcfConfig, encryptedDataDetails, false);
     PcfCommandSetupRequest pcfCommandSetupRequest = (PcfCommandSetupRequest) pcfCommandRequest;
     decryptArtifactRepositoryPassword(pcfCommandSetupRequest);
     File artifactFile = null;
@@ -232,7 +232,7 @@ public class PcfSetupCommandTaskHandler extends PcfCommandTaskHandler {
       SettingValue settingValue = artifactStreamAttributes.getServerSetting().getValue();
       List<EncryptedDataDetail> artifactServerEncryptedDataDetails =
           pcfCommandSetupRequest.getArtifactStreamAttributes().getArtifactServerEncryptedDataDetails();
-      encryptionService.decrypt((EncryptableSetting) settingValue, artifactServerEncryptedDataDetails);
+      encryptionService.decrypt((EncryptableSetting) settingValue, artifactServerEncryptedDataDetails, false);
     }
   }
 

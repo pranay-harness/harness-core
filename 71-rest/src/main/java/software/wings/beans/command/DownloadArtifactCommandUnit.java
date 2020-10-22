@@ -304,7 +304,7 @@ public class DownloadArtifactCommandUnit extends ExecCommandUnit {
   private String constructCommandStringForAmazonS3V4(ArtifactStreamAttributes artifactStreamAttributes,
       List<EncryptedDataDetail> encryptionDetails, Map<String, String> metadata) {
     AwsConfig awsConfig = (AwsConfig) artifactStreamAttributes.getServerSetting().getValue();
-    encryptionService.decrypt(awsConfig, encryptionDetails);
+    encryptionService.decrypt(awsConfig, encryptionDetails, false);
     String awsAccessKey;
     String awsSecretKey;
     String awsToken = null;
@@ -378,7 +378,7 @@ public class DownloadArtifactCommandUnit extends ExecCommandUnit {
     String artifactFileName = metadata.get(ArtifactMetadataKeys.artifactFileName);
     String artifactPath = metadata.get(ArtifactMetadataKeys.artifactPath);
     SmbConfig smbConfig = (SmbConfig) artifactStreamAttributes.getServerSetting().getValue();
-    encryptionService.decrypt(smbConfig, encryptionDetails);
+    encryptionService.decrypt(smbConfig, encryptionDetails, false);
     String command;
     switch (this.getScriptType()) {
       case POWERSHELL:
@@ -413,7 +413,7 @@ public class DownloadArtifactCommandUnit extends ExecCommandUnit {
       List<EncryptedDataDetail> encryptionDetails, Map<String, String> metadata) {
     String artifactPath = metadata.get(ArtifactMetadataKeys.artifactPath);
     SftpConfig sftpConfig = (SftpConfig) artifactStreamAttributes.getServerSetting().getValue();
-    encryptionService.decrypt(sftpConfig, encryptionDetails);
+    encryptionService.decrypt(sftpConfig, encryptionDetails, false);
     String command;
     switch (this.getScriptType()) {
       case POWERSHELL:
@@ -480,7 +480,7 @@ public class DownloadArtifactCommandUnit extends ExecCommandUnit {
       logger.info("Got filename: " + artifactFileName);
     }
     ArtifactoryConfig artifactoryConfig = (ArtifactoryConfig) artifactStreamAttributes.getServerSetting().getValue();
-    encryptionService.decrypt(artifactoryConfig, encryptionDetails);
+    encryptionService.decrypt(artifactoryConfig, encryptionDetails, false);
     String authHeader = null;
     if (artifactoryConfig.hasCredentials()) {
       String pair = artifactoryConfig.getUsername() + ":" + new String(artifactoryConfig.getPassword());
@@ -523,7 +523,7 @@ public class DownloadArtifactCommandUnit extends ExecCommandUnit {
   private String constructCommandStringForNexus(ShellCommandExecutionContext context,
       ArtifactStreamAttributes artifactStreamAttributes, List<EncryptedDataDetail> encryptionDetails) {
     NexusConfig nexusConfig = (NexusConfig) artifactStreamAttributes.getServerSetting().getValue();
-    encryptionService.decrypt(nexusConfig, encryptionDetails);
+    encryptionService.decrypt(nexusConfig, encryptionDetails, false);
     String authHeader = null;
     if (nexusConfig.hasCredentials()) {
       String pair = nexusConfig.getUsername() + ":" + new String(nexusConfig.getPassword());
@@ -618,7 +618,7 @@ public class DownloadArtifactCommandUnit extends ExecCommandUnit {
   private String constructCommandStringForJenkins(ShellCommandExecutionContext context,
       ArtifactStreamAttributes artifactStreamAttributes, List<EncryptedDataDetail> encryptionDetails) {
     JenkinsConfig jenkinsConfig = (JenkinsConfig) artifactStreamAttributes.getServerSetting().getValue();
-    encryptionService.decrypt(jenkinsConfig, encryptionDetails);
+    encryptionService.decrypt(jenkinsConfig, encryptionDetails, false);
     String pair = jenkinsConfig.getUsername() + ":" + new String(jenkinsConfig.getPassword());
     String authHeader = "Basic " + encodeBase64(pair);
 
@@ -670,7 +670,7 @@ public class DownloadArtifactCommandUnit extends ExecCommandUnit {
   private String constructCommandStringForBamboo(ShellCommandExecutionContext context,
       ArtifactStreamAttributes artifactStreamAttributes, List<EncryptedDataDetail> encryptionDetails) {
     BambooConfig bambooConfig = (BambooConfig) artifactStreamAttributes.getServerSetting().getValue();
-    encryptionService.decrypt(bambooConfig, encryptionDetails);
+    encryptionService.decrypt(bambooConfig, encryptionDetails, false);
     String pair = bambooConfig.getUsername() + ":" + new String(bambooConfig.getPassword());
     String authHeader = "Basic " + encodeBase64(pair);
 
@@ -738,7 +738,7 @@ public class DownloadArtifactCommandUnit extends ExecCommandUnit {
 
     AzureArtifactsConfig azureArtifactsConfig =
         (AzureArtifactsConfig) artifactStreamAttributes.getServerSetting().getValue();
-    encryptionService.decrypt(azureArtifactsConfig, encryptionDetails);
+    encryptionService.decrypt(azureArtifactsConfig, encryptionDetails, false);
     String authHeader = AzureArtifactsServiceHelper.getAuthHeader(azureArtifactsConfig);
     String version = metadata.getOrDefault(ArtifactMetadataKeys.version, null);
     if (isBlank(version)) {

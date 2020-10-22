@@ -4,6 +4,7 @@ import static io.harness.delegate.beans.TaskData.DEFAULT_ASYNC_CALL_TIMEOUT;
 import static io.harness.rule.OwnerRule.YOGESH;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.eq;
 import static org.mockito.MockitoAnnotations.initMocks;
 import static org.powermock.api.mockito.PowerMockito.when;
 
@@ -74,7 +75,7 @@ public class TerraformInputVariablesObtainTaskTest extends WingsBaseTest {
                      .sourceRepo(GitConfig.builder().branch("master").build())
                      .scriptPath("")
                      .build();
-    when(encryptionService.decrypt(any(), any())).thenReturn(null);
+    when(encryptionService.decrypt(any(), any(), eq(false))).thenReturn(null);
     PowerMockito.mockStatic(FileUtils.class);
   }
 

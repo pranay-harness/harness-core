@@ -58,7 +58,7 @@ public class JenkinsCollectionTask extends AbstractDelegateRunnableTask {
     ListNotifyResponseData res = new ListNotifyResponseData();
 
     try {
-      encryptionService.decrypt(jenkinsConfig, encryptionDetails);
+      encryptionService.decrypt(jenkinsConfig, encryptionDetails, false);
       Jenkins jenkins = jenkinsUtil.getJenkins(jenkinsConfig);
 
       for (String artifactPath : artifactPaths) {

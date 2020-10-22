@@ -6,6 +6,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyList;
 import static org.mockito.Matchers.anyString;
+import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
@@ -40,7 +41,7 @@ public class AwsEcsHelperServiceDelegateImplTest extends WingsBaseTest {
   public void testListClusters() {
     AmazonECSClient mockClient = mock(AmazonECSClient.class);
     doReturn(mockClient).when(awsEcsHelperServiceDelegate).getAmazonEcsClient(anyString(), any());
-    doReturn(null).when(mockEncryptionService).decrypt(any(), anyList());
+    doReturn(null).when(mockEncryptionService).decrypt(any(), anyList(), eq(false));
     doReturn(new ListClustersResult().withClusterArns("foo/bar")).when(mockClient).listClusters(any());
     doNothing().when(mockTracker).trackECSCall(anyString());
     List<String> result =
@@ -56,7 +57,7 @@ public class AwsEcsHelperServiceDelegateImplTest extends WingsBaseTest {
   public void testListServicesForCluster() {
     AmazonECSClient mockClient = mock(AmazonECSClient.class);
     doReturn(mockClient).when(awsEcsHelperServiceDelegate).getAmazonEcsClient(anyString(), any());
-    doReturn(null).when(mockEncryptionService).decrypt(any(), anyList());
+    doReturn(null).when(mockEncryptionService).decrypt(any(), anyList(), eq(false));
     doReturn(new ListServicesResult().withServiceArns("arn0", "arn1")).when(mockClient).listServices(any());
     doReturn(new DescribeServicesResult().withServices(
                  new Service().withServiceArn("arn0"), new Service().withServiceArn("arn1")))

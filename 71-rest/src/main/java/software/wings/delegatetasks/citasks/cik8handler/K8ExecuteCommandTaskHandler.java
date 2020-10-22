@@ -46,8 +46,8 @@ public class K8ExecuteCommandTaskHandler implements ExecuteCommandTaskHandler {
   public K8sTaskExecutionResponse executeTaskInternal(ExecuteCommandTaskParams executeCommandTaskParams) {
     K8ExecuteCommandTaskParams k8ExecuteCommandTaskParams = (K8ExecuteCommandTaskParams) executeCommandTaskParams;
 
-    encryptionService.decrypt(
-        k8ExecuteCommandTaskParams.getKubernetesClusterConfig(), k8ExecuteCommandTaskParams.getEncryptionDetails());
+    encryptionService.decrypt(k8ExecuteCommandTaskParams.getKubernetesClusterConfig(),
+        k8ExecuteCommandTaskParams.getEncryptionDetails(), false);
     KubernetesConfig kubernetesConfig =
         k8ExecuteCommandTaskParams.getKubernetesClusterConfig().createKubernetesConfig(null);
 

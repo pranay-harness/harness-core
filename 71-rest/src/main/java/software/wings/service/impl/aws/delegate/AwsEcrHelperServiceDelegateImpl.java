@@ -37,7 +37,7 @@ public class AwsEcrHelperServiceDelegateImpl
   private DescribeRepositoriesResult listRepositories(AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails,
       DescribeRepositoriesRequest describeRepositoriesRequest, String region) {
     try {
-      encryptionService.decrypt(awsConfig, encryptionDetails);
+      encryptionService.decrypt(awsConfig, encryptionDetails, false);
       tracker.trackECRCall("List Repositories");
       return getAmazonEcrClient(awsConfig, region).describeRepositories(describeRepositoriesRequest);
     } catch (AmazonServiceException amazonServiceException) {
@@ -71,7 +71,7 @@ public class AwsEcrHelperServiceDelegateImpl
   @Override
   public String getAmazonEcrAuthToken(
       AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails, String awsAccount, String region) {
-    encryptionService.decrypt(awsConfig, encryptionDetails);
+    encryptionService.decrypt(awsConfig, encryptionDetails, false);
     AmazonECRClient ecrClient = getAmazonEcrClient(awsConfig, region);
     tracker.trackECRCall("Get Ecr Auth Token");
     return ecrClient

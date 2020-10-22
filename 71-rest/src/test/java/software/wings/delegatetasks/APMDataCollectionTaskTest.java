@@ -4,6 +4,7 @@ import static io.harness.rule.OwnerRule.PRAVEEN;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
+import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static software.wings.beans.TaskType.APM_METRIC_DATA_COLLECTION_TASK;
@@ -97,7 +98,7 @@ public class APMDataCollectionTaskTest extends WingsBaseTest {
     FieldUtils.writeField(dataCollectionTask, "encryptionService", encryptionService, true);
     FieldUtils.writeField(dataCollectionTask, "requestExecutor", requestExecutor, true);
     FieldUtils.writeField(dataCollectionTask, "dataCollectionService", dataCollectionService, true);
-    when(encryptionService.getDecryptedValue(any())).thenReturn("decryptedApiKey".toCharArray());
+    when(encryptionService.getDecryptedValue(any(), eq(false))).thenReturn("decryptedApiKey".toCharArray());
     when(metricStoreService.saveNewRelicMetrics(any(), anyString(), any(), any(), any())).thenReturn(true);
   }
   private Method useReflectionToMakeInnerClassVisible() throws Exception {

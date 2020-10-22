@@ -146,7 +146,7 @@ public class GcpHelperService {
   public GoogleCredential getGoogleCredential(GcpConfig gcpConfig, List<EncryptedDataDetail> encryptedDataDetails)
       throws IOException {
     if (isNotEmpty(encryptedDataDetails)) {
-      encryptionService.decrypt(gcpConfig, encryptedDataDetails);
+      encryptionService.decrypt(gcpConfig, encryptedDataDetails, false);
     }
 
     validateServiceAccountKey(gcpConfig);

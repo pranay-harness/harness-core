@@ -104,7 +104,7 @@ public class StackDriverLogDataCollectionTask extends AbstractDelegateDataCollec
     @Override
     @SuppressWarnings("PMD")
     public void run() {
-      encryptionService.decrypt(dataCollectionInfo.getGcpConfig(), dataCollectionInfo.getEncryptedDataDetails());
+      encryptionService.decrypt(dataCollectionInfo.getGcpConfig(), dataCollectionInfo.getEncryptedDataDetails(), false);
       int retry = 0;
       logger.info("Initiating Stackdriver log Data collection for startTime : {} duration : {}", collectionStartTime,
           dataCollectionInfo.getCollectionTime());

@@ -34,7 +34,7 @@ public class CloudFormationDeleteStackHandler extends CloudFormationCommandTaskH
     CloudFormationDeleteStackRequest cloudFormationDeleteStackRequest = (CloudFormationDeleteStackRequest) request;
     CloudFormationCommandExecutionResponseBuilder builder = CloudFormationCommandExecutionResponse.builder();
     AwsConfig awsConfig = cloudFormationDeleteStackRequest.getAwsConfig();
-    encryptionService.decrypt(awsConfig, details);
+    encryptionService.decrypt(awsConfig, details, false);
     Optional<Stack> existingStack = getIfStackExists(cloudFormationDeleteStackRequest.getCustomStackName(),
         cloudFormationDeleteStackRequest.getStackNameSuffix(), awsConfig, request.getRegion());
     String stackId;
