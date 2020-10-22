@@ -575,10 +575,10 @@ public class WingsApplication extends Application<MainConfiguration> {
   }
 
   private void registerAtmosphereStreams(Environment environment, Injector injector) {
-    injector.getInstance(BroadcasterFactory.class);
-    injector.getInstance(MetaBroadcaster.class);
     AtmosphereServlet atmosphereServlet = injector.getInstance(AtmosphereServlet.class);
     atmosphereServlet.framework().objectFactory(new GuiceObjectFactory(injector));
+    injector.getInstance(BroadcasterFactory.class);
+    injector.getInstance(MetaBroadcaster.class);
     ServletRegistration.Dynamic dynamic = environment.servlets().addServlet("StreamServlet", atmosphereServlet);
     dynamic.setAsyncSupported(true);
     dynamic.setLoadOnStartup(0);
