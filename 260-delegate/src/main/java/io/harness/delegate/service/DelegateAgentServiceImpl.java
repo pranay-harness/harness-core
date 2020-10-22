@@ -743,10 +743,7 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
       if (StringUtils.startsWith(message, SELF_DESTRUCT + delegateId + "-")) {
         int len = (SELF_DESTRUCT + delegateId + "-").length();
         if (message.substring(len).equals(delegateConnectionId)) {
-          // TODO: there are legitimate reason for two delegates from the same version to operate at the same time
-          //       the first one goes in a draining mode. We should make sure that the delegate that goes in a draining
-          //       mode has its heartbeat to the manager suspended.
-          // initiateSelfDestruct();
+          initiateSelfDestruct();
         }
       }
     } else if (StringUtils.equals(message, USE_CDN)) {
@@ -848,8 +845,7 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
           initiateSelfDestruct();
         } else if (errorResponse.contains(
                        String.format(DUPLICATE_DELEGATE_ERROR_MESSAGE, delegateId, delegateConnectionId))) {
-          // TODO: re-enable only after additional check for the delegateConnectionId is added
-          // initiateSelfDestruct();
+          initiateSelfDestruct();
         } else if (response.code() == EXPIRED_TOKEN.getStatus().getCode()) {
           logger.warn("Delegate was not authorized to invoke manager. New token should be generated.");
         }
