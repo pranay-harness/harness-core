@@ -128,6 +128,8 @@ public class Account extends Base implements PersistentRegularIterable {
   @Getter private boolean cloudCostEnabled;
   @Getter @Setter private boolean ceAutoCollectK8sEvents;
 
+  @Getter @Setter private TrialSignupOptions trialSignupOptions;
+
   @Getter @Setter private Long serviceGuardLimit = SERVICE_GUAARD_LIMIT;
   private transient Map<String, String> defaults = new HashMap<>();
   /**

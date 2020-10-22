@@ -441,20 +441,26 @@ public class UserServiceTest extends WingsBaseTest {
   public void shouldIncludeEnvPathInTrialSignupEmailUrl() {
     when(configuration.isTrialRegistrationAllowed()).thenReturn(true);
     when(subdomainUrlHelper.getPortalBaseUrl(any())).thenReturn("https://qa.harness.io/");
+    doNothing().when(signupService).validatePassword(any());
+    when(authenticationUtils.buildAbsoluteUrl(any(), (String) any(), any())).thenCallRealMethod();
 
     String inviteId = UUIDGenerator.generateUuid();
     when(wingsPersistence.save(any(UserInvite.class))).thenReturn(inviteId);
 
-    userService.trialSignup(USER_EMAIL);
+    UserInvite userInvite = getUserInvite();
+
+    userService.trialSignup(userInvite);
 
     verify(emailDataNotificationService).send(emailDataArgumentCaptor.capture());
 
     String templateUrl = ((Map<String, String>) emailDataArgumentCaptor.getValue().getTemplateModel()).get("url");
     assertThat(templateUrl).isNotNull();
     assertThat(UrlValidator.getInstance().isValid(templateUrl)).isTrue();
-    assertThat(templateUrl.startsWith("https://qa.harness.io/#")).isTrue();
-    assertThat(templateUrl.contains("inviteId=" + inviteId)).isTrue();
-    assertThat(templateUrl.contains("email=" + USER_EMAIL)).isTrue();
+    assertThat(templateUrl.startsWith("https://qa.harness.io/")).isTrue();
+    assertThat(templateUrl.contains("userInviteId=" + inviteId)).isTrue();
+    assertThat(templateUrl.contains("email="
+                   + "user%40wings.software"))
+        .isTrue();
   }
 
   @Test
@@ -465,7 +471,9 @@ public class UserServiceTest extends WingsBaseTest {
     when(configuration.isTrialRegistrationAllowed()).thenReturn(true);
     doThrow(new SignupException("Invalid domain")).when(blackListedDomainChecker).check(Mockito.anyString());
     try {
-      userService.trialSignup(TEMPORARY_EMAIL);
+      UserInvite userInvite = getUserInvite();
+      userInvite.setEmail(TEMPORARY_EMAIL);
+      userService.trialSignup(userInvite);
       fail("Temporary is not allowed for trial signup");
     } catch (SignupException e) {
       // Exception is expected as temporary emails is not allowed.
@@ -512,7 +520,9 @@ public class UserServiceTest extends WingsBaseTest {
     for (Character illegalChar : userService.ILLEGAL_CHARACTERS) {
       try {
         String email = "test" + illegalChar + "User@abc.com";
-        userService.trialSignup(email);
+        UserInvite userInvite = getUserInvite();
+        userInvite.setEmail(email);
+        userService.trialSignup(userInvite);
         fail("Email with illegal character is not allowed for trial signup");
       } catch (WingsException e) {
         // Exception is expected as temporary emails is not allowed.
@@ -1431,5 +1441,16 @@ public class UserServiceTest extends WingsBaseTest {
     licenseInfo.setAccountStatus(accountStatus);
     licenseInfo.setAccountType(accountType);
     return anAccount().withLicenseInfo(licenseInfo).withUuid(uuid).build();
+  }
+
+  private UserInvite getUserInvite() {
+    UserInvite userInvite = anUserInvite()
+                                .withAccountName(ACCOUNT_NAME)
+                                .withCompanyName(COMPANY_NAME)
+                                .withEmail(USER_EMAIL)
+                                .withName(USER_NAME)
+                                .build();
+    userInvite.setPassword("password".toCharArray());
+    return userInvite;
   }
 }
