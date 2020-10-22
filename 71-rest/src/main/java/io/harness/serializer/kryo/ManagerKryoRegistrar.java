@@ -722,6 +722,7 @@ import software.wings.service.impl.cloudwatch.AwsNameSpace;
 import software.wings.service.impl.cloudwatch.CloudWatchDataCollectionInfo;
 import software.wings.service.impl.cloudwatch.CloudWatchMetric;
 import software.wings.service.impl.cloudwatch.CloudWatchSetupTestNodeData;
+import software.wings.service.impl.dynatrace.DynaTraceApplication;
 import software.wings.service.impl.dynatrace.DynaTraceDataCollectionInfo;
 import software.wings.service.impl.dynatrace.DynaTraceMetricDataResponse;
 import software.wings.service.impl.dynatrace.DynaTraceSetupTestNodeData;
@@ -1753,6 +1754,9 @@ public class ManagerKryoRegistrar implements KryoRegistrar {
     kryo.register(EcsRunTaskDataBag.class, 8085);
     kryo.register(PipelineStageExecutionAdvisor.class, 8072);
     kryo.register(ContinuePipelineResponseData.class, 8073);
+
+    kryo.register(DynaTraceApplication.class, 8074);
+
     kryo.register(PodStatus.class, 8090);
     kryo.register(PodStatus.Status.class, 8091);
   }

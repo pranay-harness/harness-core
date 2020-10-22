@@ -27,7 +27,7 @@ public class DynatraceCVConfigurationYamlHandler
   public DynaTraceCVConfigurationYaml toYaml(DynaTraceCVServiceConfiguration bean, String appId) {
     DynaTraceCVConfigurationYaml yaml = DynaTraceCVConfigurationYaml.builder().build();
     super.toYaml(yaml, bean);
-    List<DynaTraceApplication> serviceList = dynaTraceService.getServices(bean.getConnectorId());
+    List<DynaTraceApplication> serviceList = dynaTraceService.getServices(bean.getConnectorId(), true);
     yaml.setDynatraceServiceName("");
     yaml.setDynatraceServiceEntityId("");
     if (isEmpty(serviceList)) {
@@ -69,7 +69,7 @@ public class DynatraceCVConfigurationYamlHandler
     DynaTraceCVServiceConfiguration bean = DynaTraceCVServiceConfiguration.builder().build();
     super.toBean(changeContext, bean, appId, yamlFilePath);
     bean.setStateType(StateType.DYNA_TRACE);
-    List<DynaTraceApplication> serviceList = dynaTraceService.getServices(bean.getConnectorId());
+    List<DynaTraceApplication> serviceList = dynaTraceService.getServices(bean.getConnectorId(), true);
     if (isEmpty(serviceList)) {
       throw new DataCollectionException("No dynatrace services found for the connector " + bean.getConnectorName());
     }

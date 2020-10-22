@@ -7,8 +7,6 @@ import static io.harness.delegate.beans.TaskData.DEFAULT_SYNC_CALL_TIMEOUT;
 import static software.wings.beans.Application.GLOBAL_APP_ID;
 import static software.wings.service.impl.ThirdPartyApiCallLog.createApiCallLog;
 
-import com.google.gson.Gson;
-import com.google.gson.reflect.TypeToken;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
@@ -17,14 +15,11 @@ import io.harness.exception.VerificationOperationException;
 import io.harness.security.encryption.EncryptedDataDetail;
 import lombok.extern.slf4j.Slf4j;
 import software.wings.annotation.EncryptableSetting;
-import software.wings.beans.APMValidateCollectorConfig;
 import software.wings.beans.DynaTraceConfig;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.SyncTaskContext;
 import software.wings.delegatetasks.DelegateProxyFactory;
 import software.wings.delegatetasks.cv.DataCollectionException;
-import software.wings.service.impl.ThirdPartyApiCallLog;
-import software.wings.service.impl.analysis.APMDelegateService;
 import software.wings.service.impl.analysis.VerificationNodeDataSetupResponse;
 import software.wings.service.impl.analysis.VerificationNodeDataSetupResponse.VerificationLoadResponse;
 import software.wings.service.intfc.SettingsService;
@@ -32,7 +27,6 @@ import software.wings.service.intfc.dynatrace.DynaTraceDelegateService;
 import software.wings.service.intfc.dynatrace.DynaTraceService;
 import software.wings.service.intfc.security.SecretManager;
 
-import java.lang.reflect.Type;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
@@ -88,25 +82,24 @@ public class DynaTraceServiceImpl implements DynaTraceService {
   }
 
   @Override
-  public List<DynaTraceApplication> getServices(String settingId) {
+  public List<DynaTraceApplication> getServices(String settingId, boolean shouldResolveAllServices) {
     if (isEmpty(settingId)) {
       return null;
     }
     final SettingAttribute settingAttribute = settingsService.get(settingId);
     DynaTraceConfig dynaTraceConfig = (DynaTraceConfig) settingAttribute.getValue();
-    APMValidateCollectorConfig collectorConfig = dynaTraceConfig.createAPMValidateCollectorConfig(secretManager);
-    collectorConfig.setUrl("api/v1/entity/services");
+    List<EncryptedDataDetail> encryptionDetails =
+        secretManager.getEncryptionDetails((EncryptableSetting) settingAttribute.getValue(), null, null);
     SyncTaskContext syncTaskContext = SyncTaskContext.builder()
                                           .accountId(settingAttribute.getAccountId())
                                           .appId(GLOBAL_APP_ID)
                                           .timeout(DEFAULT_SYNC_CALL_TIMEOUT * 3)
                                           .build();
-    ThirdPartyApiCallLog apiCallLog = createApiCallLog(settingAttribute.getAccountId(), generateUuid());
-    final String validateResponseJson =
-        delegateProxyFactory.get(APMDelegateService.class, syncTaskContext).fetch(collectorConfig, apiCallLog);
-    final Gson gson = new Gson();
-    Type type = new TypeToken<List<DynaTraceApplication>>() {}.getType();
-    return gson.fromJson(validateResponseJson, type);
+    List<DynaTraceApplication> response =
+        delegateProxyFactory.get(DynaTraceDelegateService.class, syncTaskContext)
+            .getServices((DynaTraceConfig) settingAttribute.getValue(), encryptionDetails,
+                createApiCallLog(settingAttribute.getAccountId(), generateUuid()), shouldResolveAllServices);
+    return response;
   }
 
   @Override
@@ -114,7 +107,7 @@ public class DynaTraceServiceImpl implements DynaTraceService {
     if (isEmpty(settingId) || isEmpty(serviceName)) {
       throw new DataCollectionException("Invalid SettingId or ServiceName");
     }
-    List<DynaTraceApplication> dynatraceServiceList = getServices(settingId);
+    List<DynaTraceApplication> dynatraceServiceList = getServices(settingId, true);
     if (isNotEmpty(dynatraceServiceList)) {
       Optional<DynaTraceApplication> matchedService =
           dynatraceServiceList.stream().filter(service -> service.getDisplayName().equals(serviceName)).findFirst();
@@ -127,7 +120,7 @@ public class DynaTraceServiceImpl implements DynaTraceService {
 
   @Override
   public boolean validateDynatraceServiceId(String settingId, String serviceId) {
-    List<DynaTraceApplication> dynatraceServiceList = getServices(settingId);
+    List<DynaTraceApplication> dynatraceServiceList = getServices(settingId, true);
     if (isNotEmpty(dynatraceServiceList)) {
       return dynatraceServiceList.stream().anyMatch(service -> service.getEntityId().equals(serviceId));
     }

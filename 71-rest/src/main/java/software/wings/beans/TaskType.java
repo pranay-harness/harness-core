@@ -297,6 +297,7 @@ public enum TaskType {
   DYNA_TRACE_VALIDATE_CONFIGURATION_TASK(TaskGroup.DYNA_TRACE, ServiceImplDelegateTask.class),
   DYNA_TRACE_METRIC_DATA_COLLECTION_TASK(TaskGroup.DYNA_TRACE, DynaTraceDataCollectionTask.class),
   DYNA_TRACE_GET_TXNS_WITH_DATA_FOR_NODE(TaskGroup.DYNA_TRACE, ServiceImplDelegateTask.class),
+  DYNA_TRACE_GET_SERVICES(TaskGroup.DYNA_TRACE, ServiceImplDelegateTask.class),
   DYNATRACE_COLLECT_24_7_METRIC_DATA(TaskGroup.GUARD_24x7, DynaTraceDataCollectionTask.class),
   HELM_COMMAND_TASK(TaskGroup.HELM, HelmCommandTask.class),
   KUBERNETES_STEADY_STATE_CHECK_TASK(TaskGroup.CONTAINER, KubernetesSteadyStateCheckTask.class),

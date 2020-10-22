@@ -4,6 +4,7 @@ import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.rule.OwnerRule.PRAVEEN;
 import static org.apache.cxf.ws.addressing.ContextUtils.generateUUID;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Matchers.anyBoolean;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.when;
 
@@ -85,7 +86,7 @@ public class DynatraceCVConfigurationYamlHandlerTest extends WingsBaseTest {
     when(settingsService.getSettingAttributeByName(accountId, connectorName)).thenReturn(settingAttribute);
     when(settingsService.get(connectorId)).thenReturn(settingAttribute);
 
-    when(dynaTraceService.getServices(connectorId)).thenReturn(getDynatraceServiceList());
+    when(dynaTraceService.getServices(connectorId, true)).thenReturn(getDynatraceServiceList());
 
     Application app = Application.Builder.anApplication().name(generateUUID()).uuid(appId).build();
     when(appService.get(appId)).thenReturn(app);
@@ -195,7 +196,7 @@ public class DynatraceCVConfigurationYamlHandlerTest extends WingsBaseTest {
 
     List<DynaTraceApplication> services = getDynatraceServiceList();
     services.add(DynaTraceApplication.builder().displayName("serviceName2").entityId("entityID5").build());
-    when(dynaTraceService.getServices(connectorId)).thenReturn(services);
+    when(dynaTraceService.getServices(connectorId, true)).thenReturn(services);
     ChangeContext<DynaTraceCVConfigurationYaml> changeContext = new ChangeContext<>();
     Change c = Change.Builder.aFileChange().withAccountId(accountId).withFilePath("TestDynaTraceConfig.yaml").build();
     changeContext.setChange(c);
@@ -215,7 +216,7 @@ public class DynatraceCVConfigurationYamlHandlerTest extends WingsBaseTest {
     when(yamlHelper.getAppId(anyString(), anyString())).thenReturn(appId);
     when(yamlHelper.getEnvironmentId(anyString(), anyString())).thenReturn(envId);
     when(yamlHelper.getNameFromYamlFilePath("TestDynaTraceConfig.yaml")).thenReturn("TestDynaTraceConfig");
-    when(dynaTraceService.getServices(anyString())).thenReturn(null);
+    when(dynaTraceService.getServices(anyString(), anyBoolean())).thenReturn(null);
 
     ChangeContext<DynaTraceCVConfigurationYaml> changeContext = new ChangeContext<>();
     Change c = Change.Builder.aFileChange().withAccountId(accountId).withFilePath("TestDynaTraceConfig.yaml").build();
