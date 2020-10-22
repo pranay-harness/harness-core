@@ -44,38 +44,23 @@
                 <table border="0" cellpadding="0" cellspacing="0" align="center" bgcolor="#FFFFFF" width="580" style="-webkit-font-smoothing: antialiased; text-size-adjust: 100%; -ms-text-size-adjust: 100%; -webkit-text-size-adjust: 100%; line-height: 100%; mso-table-lspace: 0pt; mso-table-rspace: 0pt; border-spacing: 0; padding: 0; min-width: 580px;max-width: 580px; border-collapse: collapse;" class="container">
                     <tr>
                         <td align="center" valign="top" style="-webkit-font-smoothing: antialiased; text-size-adjust: 100%; -ms-text-size-adjust: 100%; -webkit-text-size-adjust: 100%; mso-table-lspace: 0pt; mso-table-rspace: 0pt; border-spacing: 0; margin: 0; padding: 0; padding-left: 7%; padding-right: 2%; font-size: 17px; font-weight: 400; line-height: 160%; padding-top: 25px; padding-bottom: 2px; color: #000000; font-family: 'Source Sans Pro', Tahoma, Verdana, Segoe, sans-serif; border-collapse: collapse;float: left; align-items: left;text-align: left; min-width: 50%; max-width: 50%" class="paragraph">
-                            <h1 style="font-size: 16px;font-weight: normal;line-height: 80%; color: #808080">
+                            <h1 style="font-size: 15px;font-weight: normal;line-height: 80%; color: #808080">
                                 TOTAL COST</h1>
-                                <h1 id="component1" style="font-size: 27px; font-weight: normal">
+                                <h1 id="component1" style="font-size: 26px; font-weight: normal">
                                 ${TOTAL_COST} ${TOTAL_COST_TREND}
                             </h1>
                         </td>
 
                         <td align="center" valign="top" style="-webkit-font-smoothing: antialiased; text-size-adjust: 100%; -ms-text-size-adjust: 100%; -webkit-text-size-adjust: 100%; mso-table-lspace: 0pt; mso-table-rspace: 0pt; border-spacing: 0; margin: 0; padding: 0; padding-left: 2%; padding-right: 2%;font-size: 17px; font-weight: 400; line-height: 160%; padding-top: 25px; padding-bottom: 2px; color: #000000; font-family: 'Source Sans Pro', Tahoma, Verdana, Segoe, sans-serif; border-collapse: collapse;float: left;text-align: left; min-width: 35%; max-width: 35%" class="paragraph">
-                            <h1 style="font-size: 16px;font-weight: normal;line-height: 80%;text-align: left; color: #808080">
+                            <h1 style="font-size: 15px;font-weight: normal;line-height: 80%;text-align: left; color: #808080">
                                 LAST ${PERIOD} WAS</h1>
-                                <h1 id="component2" style="font-size: 27px; font-weight: normal">
+                                <h1 id="component2" style="font-size: 26px; font-weight: normal">
                                 ${TOTAL_COST_LAST_WEEK}
                             </h1>
                         </td>
                     </tr>
                 </table>
-                <table border="0" cellpadding="0" cellspacing="0" align="center" bgcolor="#FFFFFF" width="580" style="-webkit-font-smoothing: antialiased; text-size-adjust: 100%; -ms-text-size-adjust: 100%; -webkit-text-size-adjust: 100%; line-height: 100%; mso-table-lspace: 0pt; mso-table-rspace: 0pt; border-spacing: 0; padding-left: 30% min-width: 580px;max-width: 580px; border-collapse: collapse;" class="container">
-                    <tr><td>
-                        <a class="logo" target="_blank" style="-webkit-font-smoothing: antialiased; text-size-adjust: 100%; -ms-text-size-adjust: 100%; -webkit-text-size-adjust: 100%; line-height: 100%; color: #00ade4; text-decoration: none;padding-left: 30%; align-items: center; text-align: center; " href="https://harness.io">
-                                <img border="0" vspace="0" hspace="0" src="${CHART}" width="450" height="270" alt="Visualization" title="Logo" style="line-height: 100%; color: #000000; font-size: 10px; margin: 0; outline: none; text-decoration: none; -ms-interpolation-mode: bicubic; border: none; display: block;align-items: center; text-align: center;padding-left: 10%">
-                            </a>
-
-                        </td>
-                    </tr>
-                </table>
                 <table border="0" cellpadding="0" cellspacing="0" align="center" bgcolor="#FFFFFF" width="580" style="-webkit-font-smoothing: antialiased; text-size-adjust: 100%; -ms-text-size-adjust: 100%; -webkit-text-size-adjust: 100%; line-height: 100%; mso-table-lspace: 0pt; mso-table-rspace: 0pt; border-spacing: 0; padding: 0; min-width: 580px;max-width: 580px; border-collapse: collapse;" class="container">
-                    <tr>
-                        <td align="left" valign="top" style="-webkit-font-smoothing: antialiased; text-size-adjust: 100%; -ms-text-size-adjust: 100%; -webkit-text-size-adjust: 100%; mso-table-lspace: 0pt; mso-table-rspace: 0pt; border-spacing: 0; margin: 0; padding: 0; padding-left: 7%; padding-right: 6.25%; min-width: 87.5%;max-width: 87.5%; font-size: 17px; font-weight: 400; line-height: 160%; padding-top: 5px; padding-bottom: 10px; color: #000000; font-family: 'Source Sans Pro', Tahoma, Verdana, Segoe, sans-serif; border-collapse: collapse;" class="paragraph">
-                            <h1 style="font-size: 10px;font-weight: normal;color: #808080">
-                                Showing top ${NUMBER_OF_ROWS} ${ENTITY}</h1>
-                        </td>
-                    </tr>
                     <tr>
                         <td>
                             ${TABLE}

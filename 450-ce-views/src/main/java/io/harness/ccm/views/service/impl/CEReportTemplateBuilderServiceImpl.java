@@ -18,6 +18,7 @@ import io.harness.ccm.views.graphql.QLCEViewSortType;
 import io.harness.ccm.views.graphql.QLCEViewTimeFilter;
 import io.harness.ccm.views.graphql.QLCEViewTimeFilterOperator;
 import io.harness.ccm.views.graphql.QLCEViewTrendInfo;
+import io.harness.ccm.views.graphql.ViewsQueryHelper;
 import io.harness.ccm.views.service.CEReportTemplateBuilderService;
 import io.harness.ccm.views.service.CEViewService;
 import io.harness.exception.InvalidRequestException;
@@ -37,6 +38,7 @@ import java.util.StringJoiner;
 public class CEReportTemplateBuilderServiceImpl implements CEReportTemplateBuilderService {
   @Inject CEViewService ceViewService;
   @Inject ViewsBillingServiceImpl viewsBillingService;
+  @Inject ViewsQueryHelper viewsQueryHelper;
 
   // For table construction
   private static final String TABLE_START =
@@ -48,11 +50,15 @@ public class CEReportTemplateBuilderServiceImpl implements CEReportTemplateBuild
       "<th style=\"border: 1px solid #dddddd;text-align: left;padding: 8px;background-color: #dddddd;\">Total Cost</th>";
   private static final String COLUMN3_HEADER =
       "<th style=\"border: 1px solid #dddddd;text-align: left;padding: 8px;background-color: #dddddd;\">Cost Trend</th>";
-  private static final String COLUMN = "<td style=\"border: 1px solid #dddddd;text-align: left;padding: 8px;\">%s</td>";
+  private static final String LEFT_COLUMN =
+      "<td style=\"border: 1px solid #dddddd;border-right: 0px;text-align: left;padding: 8px;color: #777777;\">%s</td>";
   private static final String MIDDLE_COLUMN =
-      "<td style=\"border: 1px solid #dddddd;text-align: left;padding: 8px;\">%s</td>";
+      "<td style=\"border: 1px solid #dddddd;border-right: 0px;border-left: 0px;text-align: left;padding: 8px;color: #777777;\">%s</td>";
+  private static final String RIGHT_COLUMN =
+      "<td style=\"border: 1px solid #dddddd;border-left: 0px;text-align: left;padding: 8px;color: %s;\">%s %s</td>";
   private static final String ROW_START = "<tr>";
   private static final String ROW_END = "</tr>";
+  private static final String COST_TREND = "<span style=\"font-size: 15px; color: %s\">( %s | %s )</span>";
 
   // Template keys
   private static final String VIEW_NAME = "VIEW_NAME";
@@ -61,9 +67,9 @@ public class CEReportTemplateBuilderServiceImpl implements CEReportTemplateBuild
   private static final String TOTAL_COST_TREND = "TOTAL_COST_TREND";
   private static final String PERIOD = "PERIOD";
   private static final String TOTAL_COST_LAST_WEEK = "TOTAL_COST_LAST_WEEK";
-  private static final String NUMBER_OF_ROWS = "NUMBER_OF_ROWS";
-  private static final String ENTITY = "ENTITY";
   private static final String TABLE = "TABLE";
+  private static final String CHART = "CHART";
+  private static final String UNSUBSCRIBE_URL = "UNSUBSCRIBE_URL";
 
   // Constants
   private static final String ZERO = "0";
@@ -73,7 +79,13 @@ public class CEReportTemplateBuilderServiceImpl implements CEReportTemplateBuild
   private static final long DAY_IN_MILLISECONDS = 86400000L;
   private static final String DEFAULT_TIMEZONE = "GMT";
   private static final String DATE_PATTERN = "MM/dd";
-  private static final String COST_TREND = "( %s | %s )";
+  private static final String GREEN_COLOR = "green";
+  private static final String RED_COLOR = "red";
+  private static final String GREY_COLOR = "#777777";
+  private static final String UPWARD_ARROW = "&uarr;";
+  private static final String DOWNWARD_ARROW = "&darr;";
+  private static final String PERCENT = "%";
+  private static final String DOLLAR = "$";
 
   @Override
   public Map<String, String> getTemplatePlaceholders(
@@ -112,7 +124,6 @@ public class CEReportTemplateBuilderServiceImpl implements CEReportTemplateBuild
 
     // Filling template placeholders
     templatePlaceholders.put(VIEW_NAME, view.getName());
-    templatePlaceholders.put(ENTITY, entity);
     templatePlaceholders.put(PERIOD, period);
     templatePlaceholders.put(DATE, getReportDateRange(period));
 
@@ -120,16 +131,30 @@ public class CEReportTemplateBuilderServiceImpl implements CEReportTemplateBuild
       throw new InvalidRequestException("Exception while generating report. No data to for cost trend");
     }
     templatePlaceholders.put(TOTAL_COST, trendData.getStatsValue());
+
+    if (trendData.getStatsTrend().doubleValue() < 0) {
+      templatePlaceholders.put(TOTAL_COST_TREND,
+          String.format(
+              COST_TREND, GREEN_COLOR, trendData.getStatsTrend().toString() + PERCENT, getTotalCostDiff(trendData)));
+    } else if (trendData.getStatsTrend().doubleValue() > 0) {
+      templatePlaceholders.put(TOTAL_COST_TREND,
+          String.format(
+              COST_TREND, RED_COLOR, trendData.getStatsTrend().toString() + PERCENT, getTotalCostDiff(trendData)));
+    } else {
+      templatePlaceholders.put(TOTAL_COST_TREND, String.format(COST_TREND, GREY_COLOR, "-", "-"));
+    }
+
     templatePlaceholders.put(
-        TOTAL_COST_TREND, String.format(COST_TREND, trendData.getStatsTrend().toString(), getTotalCostDiff(trendData)));
-    templatePlaceholders.put(TOTAL_COST_LAST_WEEK, String.valueOf(getTotalCostLastWeek(trendData)));
+        TOTAL_COST_LAST_WEEK, DOLLAR + viewsQueryHelper.formatNumber(getTotalCostLastWeek(trendData)));
 
     String numberOfRows = getNumberOfRows(tableData);
     if (numberOfRows.equals(ZERO)) {
       throw new InvalidRequestException("Exception while generating report. No data to show in table");
     }
-    templatePlaceholders.put(NUMBER_OF_ROWS, numberOfRows);
     templatePlaceholders.put(TABLE, generateTable(tableData, entity));
+
+    // Todo: Add these
+    templatePlaceholders.put(UNSUBSCRIBE_URL, "");
 
     return templatePlaceholders;
   }
@@ -175,7 +200,7 @@ public class CEReportTemplateBuilderServiceImpl implements CEReportTemplateBuild
 
   private String getTotalCostDiff(QLCEViewTrendInfo trendInfo) {
     return String.valueOf(
-        Math.round(trendInfo.getValue().doubleValue() - getTotalCostLastWeek(trendInfo) * 100D) / 100D);
+        Math.round((trendInfo.getValue().doubleValue() - getTotalCostLastWeek(trendInfo)) * 100D) / 100D);
   }
 
   private double getTotalCostLastWeek(QLCEViewTrendInfo trendInfo) {
@@ -197,9 +222,16 @@ public class CEReportTemplateBuilderServiceImpl implements CEReportTemplateBuild
 
       tableData.forEach(data -> {
         joiner.add(ROW_START);
-        joiner.add(String.format(COLUMN, data.getName()));
-        joiner.add(String.format(MIDDLE_COLUMN, data.getCost()));
-        joiner.add(String.format(COLUMN, data.getCostTrend()));
+        joiner.add(String.format(LEFT_COLUMN, data.getName()));
+        joiner.add(String.format(MIDDLE_COLUMN, DOLLAR + viewsQueryHelper.formatNumber(data.getCost().doubleValue())));
+        if (data.getCostTrend().doubleValue() < 0) {
+          joiner.add(String.format(
+              RIGHT_COLUMN, GREEN_COLOR, DOWNWARD_ARROW, Math.abs(data.getCostTrend().doubleValue()) + PERCENT));
+        } else if (data.getCostTrend().doubleValue() > 0) {
+          joiner.add(String.format(RIGHT_COLUMN, RED_COLOR, UPWARD_ARROW, data.getCostTrend().doubleValue() + PERCENT));
+        } else {
+          joiner.add(String.format(RIGHT_COLUMN, GREY_COLOR, "", "-"));
+        }
         joiner.add(ROW_END);
       });
 

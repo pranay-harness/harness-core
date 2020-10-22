@@ -57,6 +57,7 @@ public class CEReportScheduleResourceTest extends CategoryTest {
                          .accountId(ACCOUNT_ID)
                          .viewsId(VIEWS_ID)
                          .recipients(RECIPIENTS)
+                         .description("")
                          .userCron(USER_CRON)
                          .name(NAME)
                          .uuid(REPORT_ID)
@@ -64,7 +65,7 @@ public class CEReportScheduleResourceTest extends CategoryTest {
                          .build();
     tempFile = tempFolder.newFile();
     Files.write(
-        "{\"metaData\":{},\"resource\":[{\"uuid\":\"REPORT_ID\",\"name\":\"REPORT_NAME\",\"enabled\":true,\"description\":null,\"viewsId\":[\"ceviewsid123\"],\"userCron\":\"* 30 12 * * *\",\"recipients\":[\"user1@harness.io\"],\"accountId\":\"ACCOUNT_ID\",\"createdAt\":0,\"lastUpdatedAt\":0,\"createdBy\":null,\"lastUpdatedBy\":null,\"nextExecution\":null}],\"responseMessages\":[]}"
+        "{\"metaData\":{},\"resource\":[{\"uuid\":\"REPORT_ID\",\"name\":\"REPORT_NAME\",\"enabled\":true,\"description\":\"\",\"viewsId\":[\"ceviewsid123\"],\"userCron\":\"* 30 12 * * *\",\"recipients\":[\"user1@harness.io\"],\"accountId\":\"ACCOUNT_ID\",\"createdAt\":0,\"lastUpdatedAt\":0,\"createdBy\":null,\"lastUpdatedBy\":null,\"nextExecution\":null}],\"responseMessages\":[]}"
             .getBytes(),
         tempFile);
 

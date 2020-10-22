@@ -23,6 +23,7 @@ import software.wings.helpers.ext.mail.EmailData;
 import software.wings.security.UserThreadLocal;
 import software.wings.service.intfc.instance.CloudToHarnessMappingService;
 
+import java.net.URISyntaxException;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Date;
@@ -44,11 +45,13 @@ public class ScheduledReportServiceImpl {
   @Autowired private CloudBillingHelper cloudBillingHelper;
 
   // TODO: CE_VIEW_URL, MAIL_SUBJECT to be finalized
-  private static final String CE_VIEW_URL = "/account/%s/continuous-efficiency/views/%s";
+  private static final String CE_VIEW_URL = "/account/%s/continuous-efficiency/views-explorer/%s";
   private static final String MAIL_SUBJECT = "Your Continous Efficiency scheduled report is here";
-  private int scheduleCount = 0;
+  private static final String URL = "url";
+  private int scheduleCount;
 
   public void generateAndSendScheduledReport() {
+    scheduleCount = 0;
     if (!config.getReportScheduleConfig().isEnabled()) {
       logger.warn("Batch job for ce scheduled report is disabled!");
       return;
@@ -69,19 +72,31 @@ public class ScheduledReportServiceImpl {
         for (String viewId : schedule.getViewsId()) {
           try {
             sendMail(accountId, schedule.getRecipients(), viewId, schedule.getUuid());
+            setNextExecution(accountId, schedule);
           } catch (Exception e) {
-            logger.error("Error in generateAndSendScheduledReport {}", String.valueOf(e));
+            logger.info("ERROR in generateAndSendScheduledReport for viewId {}, accountId {}, reportId {}", viewId,
+                accountId, schedule.getUuid());
+            logger.error("ERROR", e);
+            continue;
           }
         }
-        setNextExecution(accountId, schedule);
       });
     });
     logger.info("A total of {} reportSchedules were processed", scheduleCount);
   }
 
   private void sendMail(String accountId, String[] recipients, String viewId, String reportId) {
-    Map<String, String> templateModel = ceReportTemplateBuilderService.getTemplatePlaceholders(accountId, viewId,
-        reportId, bigQueryService.get(), cloudBillingHelper.getCloudProviderTableName(accountId, unified));
+    Map<String, String> templateModel =
+        ceReportTemplateBuilderService.getTemplatePlaceholders(accountId, viewId, reportId, bigQueryService.get(),
+            cloudBillingHelper.getCloudProviderTableName(
+                config.getBillingDataPipelineConfig().getGcpProjectId(), accountId, unified));
+    String viewUrl = "";
+    try {
+      viewUrl = emailNotificationService.buildAbsoluteUrl(String.format(CE_VIEW_URL, accountId, viewId));
+    } catch (URISyntaxException e) {
+      logger.error("Error in forming View URL for Scheduled Report", e);
+    }
+    templateModel.put(URL, viewUrl);
     EmailData emailData = EmailData.builder()
                               .to(Arrays.asList(recipients))
                               .templateName(config.getReportScheduleConfig().getTemplateName())

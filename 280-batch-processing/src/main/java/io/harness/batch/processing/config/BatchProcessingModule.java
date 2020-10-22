@@ -12,6 +12,12 @@ import io.harness.ccm.billing.bigquery.BigQueryService;
 import io.harness.ccm.billing.bigquery.BigQueryServiceImpl;
 import io.harness.ccm.communication.CESlackWebhookService;
 import io.harness.ccm.communication.CESlackWebhookServiceImpl;
+import io.harness.ccm.views.service.CEViewService;
+import io.harness.ccm.views.service.ViewCustomFieldService;
+import io.harness.ccm.views.service.ViewsBillingService;
+import io.harness.ccm.views.service.impl.CEViewServiceImpl;
+import io.harness.ccm.views.service.impl.ViewCustomFieldServiceImpl;
+import io.harness.ccm.views.service.impl.ViewsBillingServiceImpl;
 import io.harness.mongo.MongoConfig;
 import io.harness.persistence.HPersistence;
 import lombok.extern.slf4j.Slf4j;
@@ -37,6 +43,9 @@ public class BatchProcessingModule extends AbstractModule {
     bind(CESlackWebhookService.class).to(CESlackWebhookServiceImpl.class);
     bind(BigQueryService.class).to(BigQueryServiceImpl.class);
     bind(CeCloudMetricsService.class).to(CeCloudMetricsServiceImpl.class);
+    bind(CEViewService.class).to(CEViewServiceImpl.class);
+    bind(ViewsBillingService.class).to(ViewsBillingServiceImpl.class);
+    bind(ViewCustomFieldService.class).to(ViewCustomFieldServiceImpl.class);
   }
 
   @Provides

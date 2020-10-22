@@ -86,6 +86,11 @@ public class CloudBillingHelper {
     return format("%s.%s.%s", projectId, dataSetId, tableName);
   }
 
+  public String getCloudProviderTableName(String gcpProjectId, String accountId, String tableName) {
+    String dataSetId = getDataPipelineMetadata(accountId).getDataSetId();
+    return format("%s.%s.%s", gcpProjectId, dataSetId, tableName);
+  }
+
   public String getCloudProvider(List<CloudBillingFilter> filters) {
     Optional<CloudBillingFilter> cloudProviderFilter =
         filters.stream().filter(billingFilter -> billingFilter.getCloudProvider() != null).findFirst();
