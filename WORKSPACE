@@ -993,31 +993,206 @@ maven_install(
         "ch.qos.logback:logback-access:1.2.3",
         "ch.qos.logback:logback-classic:1.2.3",
         "ch.qos.logback:logback-core:1.2.3",
-        "com.amazonaws:aws-java-sdk-applicationautoscaling:1.11.834",
-        "com.amazonaws:aws-java-sdk-autoscaling:1.11.834",
-        "com.amazonaws:aws-java-sdk-cloudformation:1.11.834",
-        "com.amazonaws:aws-java-sdk-cloudwatch:1.11.834",
-        "com.amazonaws:aws-java-sdk-codedeploy:1.11.834",
-        "com.amazonaws:aws-java-sdk-core:1.11.834",
-        "com.amazonaws:aws-java-sdk-costandusagereport:1.11.834",
-        "com.amazonaws:aws-java-sdk-ec2:1.11.834",
-        "com.amazonaws:aws-java-sdk-ecr:1.11.834",
-        "com.amazonaws:aws-java-sdk-ecs:1.11.834",
-        "com.amazonaws:aws-java-sdk-eks:1.11.834",
-        "com.amazonaws:aws-java-sdk-elasticloadbalancing:1.11.834",
-        "com.amazonaws:aws-java-sdk-elasticloadbalancingv2:1.11.834",
-        "com.amazonaws:aws-java-sdk-iam:1.11.834",
-        "com.amazonaws:aws-java-sdk-kms:1.11.834",
-        "com.amazonaws:aws-java-sdk-lambda:1.11.834",
-        "com.amazonaws:aws-java-sdk-marketplaceentitlement:1.11.834",
-        "com.amazonaws:aws-java-sdk-marketplacemeteringservice:1.11.834",
-        "com.amazonaws:aws-java-sdk-organizations:1.11.834",
-        "com.amazonaws:aws-java-sdk-route53:1.11.834",
-        "com.amazonaws:aws-java-sdk-s3:1.11.834",
-        "com.amazonaws:aws-java-sdk-secretsmanager:1.11.834",
-        "com.amazonaws:aws-java-sdk-servicediscovery:1.11.834",
-        "com.amazonaws:aws-java-sdk-sts:1.11.834",
-        "com.amazonaws:jmespath-java:1.11.834",
+        maven.artifact(
+            group = "com.amazonaws",
+            artifact = "aws-java-sdk-applicationautoscaling",
+            version = "1.11.834",
+            exclusions = [
+                "commons-logging:commons-logging",
+            ],
+        ),
+        maven.artifact(
+            group = "com.amazonaws",
+            artifact = "aws-java-sdk-autoscaling",
+            version = "1.11.834",
+            exclusions = [
+                "commons-logging:commons-logging",
+            ],
+        ),
+        maven.artifact(
+            group = "com.amazonaws",
+            artifact = "aws-java-sdk-cloudformation",
+            version = "1.11.834",
+            exclusions = [
+                "commons-logging:commons-logging",
+            ],
+        ),
+        maven.artifact(
+            group = "com.amazonaws",
+            artifact = "aws-java-sdk-cloudwatch",
+            version = "1.11.834",
+            exclusions = [
+                "commons-logging:commons-logging",
+            ],
+        ),
+        maven.artifact(
+            group = "com.amazonaws",
+            artifact = "aws-java-sdk-codedeploy",
+            version = "1.11.834",
+            exclusions = [
+                "commons-logging:commons-logging",
+            ],
+        ),
+        maven.artifact(
+            group = "com.amazonaws",
+            artifact = "aws-java-sdk-core",
+            version = "1.11.834",
+            exclusions = [
+                "commons-logging:commons-logging",
+            ],
+        ),
+        maven.artifact(
+            group = "com.amazonaws",
+            artifact = "aws-java-sdk-costandusagereport",
+            version = "1.11.834",
+            exclusions = [
+                "commons-logging:commons-logging",
+            ],
+        ),
+        maven.artifact(
+            group = "com.amazonaws",
+            artifact = "aws-java-sdk-ec2",
+            version = "1.11.834",
+            exclusions = [
+                "commons-logging:commons-logging",
+            ],
+        ),
+        maven.artifact(
+            group = "com.amazonaws",
+            artifact = "aws-java-sdk-ecr",
+            version = "1.11.834",
+            exclusions = [
+                "commons-logging:commons-logging",
+            ],
+        ),
+        maven.artifact(
+            group = "com.amazonaws",
+            artifact = "aws-java-sdk-ecs",
+            version = "1.11.834",
+            exclusions = [
+                "commons-logging:commons-logging",
+            ],
+        ),
+        maven.artifact(
+            group = "com.amazonaws",
+            artifact = "aws-java-sdk-eks",
+            version = "1.11.834",
+            exclusions = [
+                "commons-logging:commons-logging",
+            ],
+        ),
+        maven.artifact(
+            group = "com.amazonaws",
+            artifact = "aws-java-sdk-elasticloadbalancing",
+            version = "1.11.834",
+            exclusions = [
+                "commons-logging:commons-logging",
+            ],
+        ),
+        maven.artifact(
+            group = "com.amazonaws",
+            artifact = "aws-java-sdk-elasticloadbalancingv2",
+            version = "1.11.834",
+            exclusions = [
+                "commons-logging:commons-logging",
+            ],
+        ),
+        maven.artifact(
+            group = "com.amazonaws",
+            artifact = "aws-java-sdk-iam",
+            version = "1.11.834",
+            exclusions = [
+                "commons-logging:commons-logging",
+            ],
+        ),
+        maven.artifact(
+            group = "com.amazonaws",
+            artifact = "aws-java-sdk-kms",
+            version = "1.11.834",
+            exclusions = [
+                "commons-logging:commons-logging",
+            ],
+        ),
+        maven.artifact(
+            group = "com.amazonaws",
+            artifact = "aws-java-sdk-lambda",
+            version = "1.11.834",
+            exclusions = [
+                "commons-logging:commons-logging",
+            ],
+        ),
+        maven.artifact(
+            group = "com.amazonaws",
+            artifact = "aws-java-sdk-marketplaceentitlement",
+            version = "1.11.834",
+            exclusions = [
+                "commons-logging:commons-logging",
+            ],
+        ),
+        maven.artifact(
+            group = "com.amazonaws",
+            artifact = "aws-java-sdk-marketplacemeteringservice",
+            version = "1.11.834",
+            exclusions = [
+                "commons-logging:commons-logging",
+            ],
+        ),
+        maven.artifact(
+            group = "com.amazonaws",
+            artifact = "aws-java-sdk-organizations",
+            version = "1.11.834",
+            exclusions = [
+                "commons-logging:commons-logging",
+            ],
+        ),
+        maven.artifact(
+            group = "com.amazonaws",
+            artifact = "aws-java-sdk-route53",
+            version = "1.11.834",
+            exclusions = [
+                "commons-logging:commons-logging",
+            ],
+        ),
+        maven.artifact(
+            group = "com.amazonaws",
+            artifact = "aws-java-sdk-s3",
+            version = "1.11.834",
+            exclusions = [
+                "commons-logging:commons-logging",
+            ],
+        ),
+        maven.artifact(
+            group = "com.amazonaws",
+            artifact = "aws-java-sdk-secretsmanager",
+            version = "1.11.834",
+            exclusions = [
+                "commons-logging:commons-logging",
+            ],
+        ),
+        maven.artifact(
+            group = "com.amazonaws",
+            artifact = "aws-java-sdk-servicediscovery",
+            version = "1.11.834",
+            exclusions = [
+                "commons-logging:commons-logging",
+            ],
+        ),
+        maven.artifact(
+            group = "com.amazonaws",
+            artifact = "aws-java-sdk-sts",
+            version = "1.11.834",
+            exclusions = [
+                "commons-logging:commons-logging",
+            ],
+        ),
+        maven.artifact(
+            group = "com.amazonaws",
+            artifact = "jmespath-java",
+            version = "1.11.834",
+            exclusions = [
+                "commons-logging:commons-logging",
+            ],
+        ),
         "com.auth0:java-jwt:3.1.0",
         "com.bertramlabs.plugins:hcl4j:0.1.7",
         "com.bettercloud:vault-java-driver:4.0.0",
@@ -1071,8 +1246,38 @@ maven_install(
         "com.github.scribejava:scribejava-apis:6.2.0",
         "com.github.scribejava:scribejava-core:6.2.0",
         "com.github.stephenc.jcip:jcip-annotations:1.0-1",
-        "com.github.tomakehurst:wiremock-standalone:2.7.0",
-        "com.github.tomakehurst:wiremock:1.57",
+        maven.artifact(
+            group = "com.github.tomakehurst",
+            artifact = "wiremock-standalone",
+            version = "2.7.0",
+            exclusions = [
+                "com.google.guava:guava",
+                "com.fasterxml.jackson.core:jackson-core",
+                "com.fasterxml.jackson.core:jackson-annotations",
+                "com.fasterxml.jackson.core:jackson-databind",
+                "org.apache.httpcomponents:httpclient",
+                "org.skyscreamer:jsonassert",
+                "xmlunit:xmlunit",
+                "com.jayway.jsonpath:json-path",
+                "net.sf.jopt-simple:jopt-simple",
+            ],
+        ),
+        maven.artifact(
+            group = "com.github.tomakehurst",
+            artifact = "wiremock",
+            version = "1.57",
+            exclusions = [
+                "com.google.guava:guava",
+                "com.fasterxml.jackson.core:jackson-core",
+                "com.fasterxml.jackson.core:jackson-annotations",
+                "com.fasterxml.jackson.core:jackson-databind",
+                "org.apache.httpcomponents:httpclient",
+                "org.skyscreamer:jsonassert",
+                "xmlunit:xmlunit",
+                "com.jayway.jsonpath:json-path",
+                "net.sf.jopt-simple:jopt-simple",
+            ],
+        ),
         "com.github.vladimir-bukhtoyarov:bucket4j-core:4.8.0",
         "com.github.zafarkhaja:java-semver:0.9.0",
         "com.google.android:annotations:4.1.1.4",
@@ -1093,7 +1298,14 @@ maven_install(
         "com.google.apis:google-api-services-cloudcommerceprocurement:v1-rev20190531-1.25.0",
         "com.google.apis:google-api-services-cloudresourcemanager:v1-rev20200210-1.30.9",
         "com.google.apis:google-api-services-compute:v1-rev213-1.25.0",
-        "com.google.apis:google-api-services-container:v1-rev48-1.23.0",
+        maven.artifact(
+            group = "com.google.apis",
+            artifact = "google-api-services-container",
+            version = "v1-rev48-1.23.0",
+            exclusions = [
+                "com.google.guava:guava-jdk5",
+            ],
+        ),
         "com.google.apis:google-api-services-iam:v1-rev314-1.25.0",
         "com.google.apis:google-api-services-logging:v2-rev631-1.25.0",
         "com.google.apis:google-api-services-monitoring:v3-rev477-1.25.0",
@@ -1185,7 +1397,14 @@ maven_install(
         "com.microsoft.azure:azure-mgmt-storage:1.31.1",
         "com.microsoft.azure:azure-mgmt-trafficmanager:1.31.1",
         "com.microsoft.azure:azure-storage:6.1.0",
-        "com.microsoft.azure:azure:1.31.1",
+        maven.artifact(
+            group = "com.microsoft.azure",
+            artifact = "azure",
+            version = "1.31.1",
+            exclusions = [
+                "org.slf4j:slf4j-simple",
+            ],
+        ),
         "com.microsoft.rest:client-runtime:1.7.4",
         "com.nimbusds:lang-tag:1.5",
         "com.nimbusds:nimbus-jose-jwt:8.19",
@@ -1466,9 +1685,30 @@ maven_install(
         "org.bouncycastle:bcprov-jdk15on:1.61",
         "org.checkerframework:checker-compat-qual:2.5.5",
         "org.checkerframework:checker-qual:2.10.0",
-        "org.clojure:clojure:1.9.0",
-        "org.clojure:core.specs.alpha:0.1.24",
-        "org.clojure:spec.alpha:0.1.143",
+        maven.artifact(
+            group = "org.clojure",
+            artifact = "clojure",
+            version = "1.9.0",
+            exclusions = [
+                "org.clojure:clojure",
+            ],
+        ),
+        maven.artifact(
+            group = "org.clojure",
+            artifact = "core.specs.alpha",
+            version = "0.1.24",
+            exclusions = [
+                "org.clojure:clojure",
+            ],
+        ),
+        maven.artifact(
+            group = "org.clojure",
+            artifact = "spec.alpha",
+            version = "0.1.143",
+            exclusions = [
+                "org.clojure:clojure",
+            ],
+        ),
         "org.cloudfoundry:cloudfoundry-client-reactor:4.8.0.RELEASE",
         "org.cloudfoundry:cloudfoundry-client:4.8.0.RELEASE",
         "org.cloudfoundry:cloudfoundry-operations:4.8.0.RELEASE",
@@ -1639,19 +1879,6 @@ maven_install(
         "io.netty:netty-all:4.1.51.Final",
     ],
     excluded_artifacts = [
-        "org.clojure:clojure",
-        "org.slf4j:slf4j-simple",
-        "com.google.guava:guava",
-        "com.fasterxml.jackson.core:jackson-core",
-        "com.fasterxml.jackson.core:jackson-annotations",
-        "com.fasterxml.jackson.core:jackson-databind",
-        "org.apache.httpcomponents:httpclient",
-        "org.skyscreamer:jsonassert",
-        "xmlunit:xmlunit",
-        "com.jayway.jsonpath:json-path",
-        "net.sf.jopt-simple:jopt-simple",
-        "com.sun.mail:javax.mail",
-        "io.netty:netty-all",
     ],
     maven_install_json = "//:maven_install.json",
     override_targets = {
