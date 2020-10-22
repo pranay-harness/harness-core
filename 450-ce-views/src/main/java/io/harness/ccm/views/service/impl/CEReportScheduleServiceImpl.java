@@ -56,6 +56,9 @@ public class CEReportScheduleServiceImpl implements CEReportScheduleService {
     Date next = cronTrigger.next(new Date());
     logger.info("Updated next Execution Time: " + next);
     schedule.setNextExecution(next);
+    if (schedule.getDescription() == null) {
+      schedule.setDescription("");
+    }
     // Remove dupes from these lists
     schedule.setRecipients(new HashSet<>(Arrays.asList(schedule.getRecipients())).toArray(new String[0]));
     schedule.setViewsId(new HashSet<>(Arrays.asList(schedule.getViewsId())).toArray(new String[0]));

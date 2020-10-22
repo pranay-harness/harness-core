@@ -6,7 +6,11 @@ import com.google.inject.Singleton;
 import io.harness.ccm.views.dao.CEViewDao;
 import io.harness.ccm.views.entities.CEView;
 import io.harness.ccm.views.entities.ViewChartType;
+import io.harness.ccm.views.entities.ViewField;
+import io.harness.ccm.views.entities.ViewFieldIdentifier;
 import io.harness.ccm.views.entities.ViewState;
+import io.harness.ccm.views.entities.ViewTimeGranularity;
+import io.harness.ccm.views.entities.ViewVisualization;
 import io.harness.ccm.views.graphql.QLCEView;
 import io.harness.ccm.views.service.CEViewService;
 import io.harness.exception.InvalidRequestException;
@@ -21,7 +25,8 @@ public class CEViewServiceImpl implements CEViewService {
   @Inject private CEViewDao ceViewDao;
 
   private static final String VIEW_NAME_DUPLICATE_EXCEPTION = "View with given name already exists";
-
+  private static final String VIEW_LIMIT_REACHED_EXCEPTION = "Maximum allowed custom views limit(50) has been reached";
+  private static final int VIEW_COUNT = 50;
   @Override
   public CEView save(CEView ceView) {
     validateView(ceView);
@@ -35,6 +40,21 @@ public class CEViewServiceImpl implements CEViewService {
     CEView savedCEView = ceViewDao.findByName(ceView.getAccountId(), ceView.getName());
     if (null != savedCEView) {
       throw new InvalidRequestException(VIEW_NAME_DUPLICATE_EXCEPTION);
+    }
+    List<CEView> views = ceViewDao.findByAccountId(ceView.getAccountId());
+    if (views.size() >= VIEW_COUNT) {
+      throw new InvalidRequestException(VIEW_LIMIT_REACHED_EXCEPTION);
+    }
+    if (ceView.getViewVisualization() == null) {
+      ceView.setViewVisualization(ViewVisualization.builder()
+                                      .granularity(ViewTimeGranularity.DAY)
+                                      .chartType(ViewChartType.STACKED_TIME_SERIES)
+                                      .groupBy(ViewField.builder()
+                                                   .fieldId("product")
+                                                   .fieldName("Product")
+                                                   .identifier(ViewFieldIdentifier.COMMON)
+                                                   .build())
+                                      .build());
     }
     return true;
   }

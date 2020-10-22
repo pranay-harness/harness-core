@@ -21,6 +21,7 @@ import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Id;
 
 import java.util.Date;
+import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 
 @CdIndex(name = "account_enabled_type",
@@ -36,13 +37,13 @@ public class CEReportSchedule implements PersistentEntity, UuidAware, CreatedAtA
                                          CreatedByAware, UpdatedByAware {
   @Id String uuid;
   @NotEmpty(message = "Name for report schedule must not be empty")
-  @Size(min = 1, max = 32, message = ": for report schedule must be between 1 and 32 characters long")
+  @Size(min = 1, max = 32, message = ": for report schedule name must be between 1 and 32 characters long")
   String name;
   @Builder.Default boolean enabled = true;
-  String description;
-  @Size(max = 1, message = ": for report schedule maximum 1 viewId is allowed")
-  @NotEmpty(message = "At least one ce viewId must be provided")
-  String[] viewsId;
+  @Size(max = 100, message = ": for report schedule description must be between 0 and 100 characters long")
+  @Builder.Default
+  String description = "";
+  @NotNull @Size(min = 1, max = 1, message = ": for report schedule, one viewId is needed") String[] viewsId;
   @NotEmpty(message = "report schedule cron must not be empty") String userCron;
   @Size(max = 50, message = ": for report schedule maximum 50 recipients are allowed")
   @NotEmpty(message = "At least one email recipient must be provided")

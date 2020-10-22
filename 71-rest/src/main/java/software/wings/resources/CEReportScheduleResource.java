@@ -17,13 +17,16 @@ import io.harness.eraro.ResponseMessage;
 import io.harness.rest.RestResponse;
 import io.swagger.annotations.Api;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.http.client.utils.URIBuilder;
 import org.springframework.scheduling.support.CronSequenceGenerator;
 import org.springframework.web.bind.annotation.RequestBody;
+import software.wings.app.MainConfiguration;
 import software.wings.graphql.datafetcher.billing.CloudBillingHelper;
 import software.wings.helpers.ext.mail.EmailData;
 import software.wings.security.annotations.Scope;
 import software.wings.service.impl.EmailNotificationServiceImpl;
 
+import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -51,6 +54,10 @@ public class CEReportScheduleResource {
   @Inject private EmailNotificationServiceImpl emailNotificationService;
   @Inject private CloudBillingHelper cloudBillingHelper;
   @Inject private BigQueryService bigQueryService;
+  @Inject private MainConfiguration mainConfiguration;
+
+  private static final String CE_VIEW_URL = "/account/%s/continuous-efficiency/views-explorer/%s";
+  private static final String URL = "url";
 
   @Inject
   public CEReportScheduleResource(CEReportScheduleService ceReportScheduleService) {
@@ -118,7 +125,7 @@ public class CEReportScheduleResource {
       RestResponse rr = new RestResponse<List<CEReportSchedule>>(ceList);
       return prepareResponse(rr, Response.Status.OK);
     } catch (IllegalArgumentException e) {
-      logger.warn(String.valueOf(e));
+      logger.error("ERROR", e);
       RestResponse rr = new RestResponse();
       addResponseMessage(
           rr, ErrorCode.INVALID_REQUEST, Level.ERROR, "ERROR: Invalid request. Schedule provided is invalid");
@@ -164,6 +171,13 @@ public class CEReportScheduleResource {
     Map<String, String> templatePlaceholders = ceReportTemplateBuilderService.getTemplatePlaceholders(
         accountId, viewId, bigQueryService.get(), cloudBillingHelper.getCloudProviderTableName(accountId, unified));
 
+    try {
+      templatePlaceholders.put(URL, buildAbsoluteUrl(String.format(CE_VIEW_URL, accountId, viewId)));
+    } catch (URISyntaxException e) {
+      logger.error("Error in forming View URL for Scheduled Report", e);
+      templatePlaceholders.put(URL, "");
+    }
+
     EmailData emailData = EmailData.builder()
                               .templateName("ce_scheduled_report")
                               .templateModel(templatePlaceholders)
@@ -189,5 +203,12 @@ public class CEReportScheduleResource {
 
   private Response prepareResponse(RestResponse restResponse, Response.Status status) {
     return Response.status(status).entity(restResponse).type(MediaType.APPLICATION_JSON).build();
+  }
+
+  public String buildAbsoluteUrl(String fragment) throws URISyntaxException {
+    String baseUrl = mainConfiguration.getPortal().getUrl();
+    URIBuilder uriBuilder = new URIBuilder(baseUrl);
+    uriBuilder.setFragment(fragment);
+    return uriBuilder.toString();
   }
 }

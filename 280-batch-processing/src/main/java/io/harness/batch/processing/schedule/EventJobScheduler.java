@@ -170,7 +170,7 @@ public class EventJobScheduler {
     }
   }
 
-  @Scheduled(cron = "0 30 * * * *") // Run every 30 mins. Change to 0 */10 * * * * for every 10 mins for testing
+  @Scheduled(cron = "0 */10 * * * ?") // Run every 30 mins. Change to 0 */10 * * * ? for every 10 mins for testing
   public void runScheduledReportJob() {
     // In case jobs take longer time, the jobs will be queued and executed in turn
     try {

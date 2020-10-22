@@ -58,5 +58,5 @@ segmentConfig:
 baseUrl: https://localhost:8000
 
 reportScheduleConfig:
-  enabled: false
-  templateName: "ce_cluster_data_generated"
+  enabled: true
+  templateName: "ce_scheduled_report"
