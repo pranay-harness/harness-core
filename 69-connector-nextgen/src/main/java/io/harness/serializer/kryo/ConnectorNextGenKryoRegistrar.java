@@ -5,7 +5,7 @@ import io.harness.connector.apis.dto.ConnectorDTO;
 import io.harness.connector.apis.dto.ConnectorInfoDTO;
 import io.harness.serializer.KryoRegistrar;
 
-public class ConnectorNextGenRegistrar implements KryoRegistrar {
+public class ConnectorNextGenKryoRegistrar implements KryoRegistrar {
   @Override
   public void register(Kryo kryo) {
     kryo.register(ConnectorDTO.class, 26001);

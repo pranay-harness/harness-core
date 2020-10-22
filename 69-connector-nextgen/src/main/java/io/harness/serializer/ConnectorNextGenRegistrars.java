@@ -3,6 +3,7 @@ package io.harness.serializer;
 import com.google.common.collect.ImmutableSet;
 
 import io.harness.morphia.MorphiaRegistrar;
+import io.harness.serializer.kryo.*;
 import io.harness.serializer.morphia.ConnectorMorphiaClassesRegistrar;
 import io.harness.serializer.morphia.InvitesMorphiaRegistrar;
 import io.harness.serializer.morphia.ProjectAndOrgMorphiaRegistrar;
@@ -12,7 +13,17 @@ import lombok.experimental.UtilityClass;
 @UtilityClass
 public class ConnectorNextGenRegistrars {
   public static final ImmutableSet<Class<? extends KryoRegistrar>> kryoRegistrars =
-      ImmutableSet.<Class<? extends KryoRegistrar>>builder().build();
+      ImmutableSet.<Class<? extends KryoRegistrar>>builder()
+          .add(ConnectorNextGenKryoRegistrar.class)
+          .add(NGCoreKryoRegistrar.class)
+          .add(NGCoreBeansKryoRegistrar.class)
+          .add(DelegateTasksBeansKryoRegister.class)
+          .add(ProjectAndOrgKryoRegistrar.class)
+          .add(ApiServiceBeansKryoRegister.class)
+          .add(SecretManagerClientKryoRegistrar.class)
+          .add(WaitEngineKryoRegister.class)
+          .add(OrchestrationBeansKryoRegistrar.class)
+          .build();
 
   public static final ImmutableSet<Class<? extends MorphiaRegistrar>> morphiaRegistrars =
       ImmutableSet.<Class<? extends MorphiaRegistrar>>builder()

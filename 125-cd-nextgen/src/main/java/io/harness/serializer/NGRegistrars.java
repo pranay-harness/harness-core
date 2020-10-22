@@ -18,6 +18,7 @@ public class NGRegistrars {
           .addAll(NGCoreRegistrars.kryoRegistrars)
           .addAll(ExecutionPlanModuleRegistrars.kryoRegistrars)
           .addAll(NGPipelineRegistrars.kryoRegistrars)
+          .addAll(ConnectorNextGenRegistrars.kryoRegistrars)
           .add(NGKryoRegistrar.class)
           .build();
 
@@ -26,6 +27,7 @@ public class NGRegistrars {
           .addAll(NGCommonsRegistrars.morphiaRegistrars)
           .addAll(NGCoreRegistrars.morphiaRegistrars)
           .addAll(NGPipelineRegistrars.morphiaRegistrars)
+          .addAll(ConnectorNextGenRegistrars.morphiaRegistrars)
           .add(NGMorphiaRegistrar.class)
           .build();
 
