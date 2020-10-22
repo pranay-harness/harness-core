@@ -1,4 +1,4 @@
-package software.wings.service.impl.security;
+package io.harness.helpers.ext.azure;
 
 import static io.harness.annotations.dev.HarnessTeam.PL;
 
@@ -20,6 +20,7 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
+
 @OwnedBy(PL)
 @UtilityClass
 @Slf4j

@@ -1,5 +1,8 @@
 package io.harness.helpers.ext.vault;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
+
+import io.harness.annotations.dev.OwnedBy;
 import retrofit2.Call;
 import retrofit2.http.Body;
 import retrofit2.http.DELETE;
@@ -10,9 +13,7 @@ import retrofit2.http.Path;
 
 import java.util.Map;
 
-/**
- * Created by rsingh on 11/3/17.
- */
+@OwnedBy(PL)
 public interface VaultRestClientV1 {
   String BASE_VAULT_URL = "v1/";
 

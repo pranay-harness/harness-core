@@ -1,9 +1,11 @@
-package software.wings.helpers.ext.cyberark;
+package io.harness.helpers.ext.cyberark;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.eraro.ErrorCode.CYBERARK_OPERATION_ERROR;
 
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.exception.SecretManagementDelegateException;
 import io.harness.exception.WingsException;
@@ -34,11 +36,9 @@ import java.util.Base64;
 import javax.net.ssl.KeyManagerFactory;
 import javax.net.ssl.SSLContext;
 
-/**
- * @author marklu on 2019-08-01
- */
 @UtilityClass
 @Slf4j
+@OwnedBy(PL)
 public class CyberArkRestClientFactory {
   private static final String TEMPORARY_KEY_PASSWORD = "changeit";
   private static final String KEYSTORE_CLIENT_CERT = "client-cert";

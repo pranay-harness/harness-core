@@ -1,10 +1,13 @@
-package software.wings.helpers.ext.cyberark;
+package io.harness.helpers.ext.cyberark;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
+
+import io.harness.annotations.dev.OwnedBy;
 import retrofit2.Call;
 import retrofit2.http.GET;
 import retrofit2.http.Query;
-import software.wings.service.impl.security.cyberark.CyberArkReadResponse;
 
+@OwnedBy(PL)
 public interface CyberArkRestClient {
   String BASE_CYBERARK_URL = "AIMWebService/api/Accounts";
 
