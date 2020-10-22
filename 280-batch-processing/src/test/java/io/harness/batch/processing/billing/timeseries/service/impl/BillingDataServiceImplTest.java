@@ -16,6 +16,7 @@ import io.harness.batch.processing.ccm.ActualIdleCostWriterData;
 import io.harness.batch.processing.ccm.BatchJobType;
 import io.harness.category.element.UnitTests;
 import io.harness.ccm.commons.beans.InstanceType;
+import io.harness.ccm.commons.utils.DataUtils;
 import io.harness.rule.Owner;
 import io.harness.timescaledb.TimeScaleDBService;
 import jersey.repackaged.com.google.common.collect.ImmutableList;
@@ -28,7 +29,6 @@ import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.mockito.runners.MockitoJUnitRunner;
 import org.mockito.stubbing.Answer;
-import software.wings.graphql.datafetcher.DataFetcherUtils;
 
 import java.math.BigDecimal;
 import java.sql.Connection;
@@ -47,7 +47,7 @@ public class BillingDataServiceImplTest extends CategoryTest {
   @InjectMocks private BillingDataServiceImpl billingDataService;
   @Mock private TimeScaleDBService timeScaleDBService;
   @Mock private PreparedStatement statement;
-  @Mock private DataFetcherUtils utils;
+  @Mock private DataUtils utils;
   @Mock private ResultSet resultSet;
 
   private final Instant NOW = Instant.now();

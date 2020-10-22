@@ -2,11 +2,11 @@ package io.harness.batch.processing.events.timeseries.service.impl;
 
 import io.harness.batch.processing.events.timeseries.data.CostEventData;
 import io.harness.batch.processing.events.timeseries.service.intfc.CostEventService;
+import io.harness.ccm.commons.utils.DataUtils;
 import io.harness.timescaledb.TimeScaleDBService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import software.wings.graphql.datafetcher.DataFetcherUtils;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -23,7 +23,7 @@ import java.util.TimeZone;
 @Service
 public class CostEventServiceImpl implements CostEventService {
   @Autowired private TimeScaleDBService timeScaleDBService;
-  @Autowired private DataFetcherUtils utils;
+  @Autowired private DataUtils utils;
 
   private static final int BATCH_SIZE = 500;
   private static final int MAX_RETRY_COUNT = 5;

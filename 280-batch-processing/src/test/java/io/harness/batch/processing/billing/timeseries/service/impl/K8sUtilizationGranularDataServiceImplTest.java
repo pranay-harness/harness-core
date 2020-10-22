@@ -13,6 +13,7 @@ import io.harness.CategoryTest;
 import io.harness.batch.processing.billing.timeseries.data.InstanceUtilizationData;
 import io.harness.batch.processing.billing.timeseries.data.K8sGranularUtilizationData;
 import io.harness.category.element.UnitTests;
+import io.harness.ccm.commons.utils.DataUtils;
 import io.harness.rule.Owner;
 import io.harness.timescaledb.TimeScaleDBService;
 import org.junit.Before;
@@ -24,7 +25,6 @@ import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.mockito.runners.MockitoJUnitRunner;
 import org.mockito.stubbing.Answer;
-import software.wings.graphql.datafetcher.DataFetcherUtils;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -43,7 +43,7 @@ public class K8sUtilizationGranularDataServiceImplTest extends CategoryTest {
   @Inject @InjectMocks private K8sUtilizationGranularDataServiceImpl k8sUtilizationGranularDataService;
   @Mock private TimeScaleDBService timeScaleDBService;
   @Mock private PreparedStatement statement;
-  @Mock private DataFetcherUtils utils;
+  @Mock private DataUtils utils;
   @Mock ResultSet instanceIdsResultSet, aggregatedDataResultSet;
 
   private final Instant NOW = Instant.now();

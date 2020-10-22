@@ -9,13 +9,13 @@ import io.harness.batch.processing.billing.timeseries.data.InstanceUtilizationDa
 import io.harness.batch.processing.writer.constants.InstanceMetaDataConstants;
 import io.harness.ccm.commons.beans.InstanceType;
 import io.harness.ccm.commons.entities.InstanceData;
+import io.harness.ccm.commons.utils.DataUtils;
 import io.harness.exception.InvalidRequestException;
 import io.harness.timescaledb.DBUtils;
 import io.harness.timescaledb.TimeScaleDBService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import software.wings.graphql.datafetcher.DataFetcherUtils;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -34,7 +34,7 @@ import java.util.Map.Entry;
 @Slf4j
 public class UtilizationDataServiceImpl {
   @Autowired private TimeScaleDBService timeScaleDBService;
-  @Autowired private DataFetcherUtils utils;
+  @Autowired private DataUtils utils;
 
   private static final int MAX_RETRY_COUNT = 2;
   private static final int SELECT_MAX_RETRY_COUNT = 5;

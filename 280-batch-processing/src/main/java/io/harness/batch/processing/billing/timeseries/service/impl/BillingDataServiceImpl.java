@@ -6,13 +6,13 @@ import io.harness.batch.processing.billing.timeseries.data.InstanceBillingData;
 import io.harness.batch.processing.billing.timeseries.service.support.BillingDataTableNameProvider;
 import io.harness.batch.processing.ccm.ActualIdleCostWriterData;
 import io.harness.batch.processing.ccm.BatchJobType;
+import io.harness.ccm.commons.utils.DataUtils;
 import io.harness.exception.InvalidRequestException;
 import io.harness.timescaledb.DBUtils;
 import io.harness.timescaledb.TimeScaleDBService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import software.wings.graphql.datafetcher.DataFetcherUtils;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -29,7 +29,7 @@ import java.util.List;
 @Slf4j
 public class BillingDataServiceImpl {
   @Autowired private TimeScaleDBService timeScaleDBService;
-  @Autowired private DataFetcherUtils utils;
+  @Autowired private DataUtils utils;
 
   private static final int BATCH_SIZE = 500;
   private static final int MAX_RETRY_COUNT = 2;

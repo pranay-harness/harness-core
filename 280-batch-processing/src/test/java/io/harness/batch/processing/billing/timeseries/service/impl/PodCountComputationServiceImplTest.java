@@ -11,6 +11,7 @@ import io.harness.batch.processing.billing.timeseries.data.InstanceLifecycleInfo
 import io.harness.batch.processing.billing.timeseries.data.NodePodId;
 import io.harness.batch.processing.service.intfc.InstanceDataService;
 import io.harness.category.element.UnitTests;
+import io.harness.ccm.commons.utils.DataUtils;
 import io.harness.rule.Owner;
 import io.harness.timescaledb.TimeScaleDBService;
 import org.junit.Before;
@@ -23,7 +24,6 @@ import org.mockito.MockitoAnnotations;
 import org.mockito.Spy;
 import org.mockito.runners.MockitoJUnitRunner;
 import org.mockito.stubbing.Answer;
-import software.wings.graphql.datafetcher.DataFetcherUtils;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -44,7 +44,7 @@ public class PodCountComputationServiceImplTest extends CategoryTest {
   @Mock private TimeScaleDBService timeScaleDBService;
   @Mock private PreparedStatement statement;
   @Mock private InstanceDataService instanceDataService;
-  @Mock private DataFetcherUtils utils;
+  @Mock private DataUtils utils;
   @Mock ResultSet nodeIdResultSet, podDataResultSet;
 
   final int[] count = {0};

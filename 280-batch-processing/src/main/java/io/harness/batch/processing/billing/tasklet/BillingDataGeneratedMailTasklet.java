@@ -7,6 +7,7 @@ import io.harness.batch.processing.billing.tasklet.entities.DataGeneratedNotific
 import io.harness.batch.processing.ccm.CCMJobConstants;
 import io.harness.batch.processing.mail.CEMailNotificationService;
 import io.harness.ccm.cluster.entities.CEUserInfo;
+import io.harness.ccm.commons.utils.DataUtils;
 import io.harness.timescaledb.DBUtils;
 import io.harness.timescaledb.TimeScaleDBService;
 import lombok.extern.slf4j.Slf4j;
@@ -18,7 +19,6 @@ import org.springframework.batch.repeat.RepeatStatus;
 import org.springframework.beans.factory.annotation.Autowired;
 import software.wings.beans.User;
 import software.wings.beans.security.UserGroup;
-import software.wings.graphql.datafetcher.DataFetcherUtils;
 import software.wings.helpers.ext.mail.EmailData;
 import software.wings.security.PermissionAttribute.PermissionType;
 import software.wings.service.intfc.instance.CloudToHarnessMappingService;
@@ -48,7 +48,7 @@ public class BillingDataGeneratedMailTasklet implements Tasklet {
   @Autowired private CloudToHarnessMappingService cloudToHarnessMappingService;
   @Autowired private DataGeneratedNotificationDao notificationDao;
   @Autowired private TimeScaleDBService timeScaleDBService;
-  @Autowired private DataFetcherUtils utils;
+  @Autowired private DataUtils utils;
   @Autowired private CEMailNotificationService emailNotificationService;
   private JobParameters parameters;
 
