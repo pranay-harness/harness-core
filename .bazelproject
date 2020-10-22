@@ -53,3 +53,7 @@ derive_targets_from_directories: true
 
 workspace_type: java
 java_language_level: 8
+
+import_run_configurations:
+  Bazel_run_260_delegate_module.xml
+  Bazel_run_71_rest_module.xml
