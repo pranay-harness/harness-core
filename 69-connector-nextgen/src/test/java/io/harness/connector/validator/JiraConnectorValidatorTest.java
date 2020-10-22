@@ -38,7 +38,7 @@ public class JiraConnectorValidatorTest {
   }
 
   @Test
-  @Owner(developers = OwnerRule.ABHINAV)
+  @Owner(developers = OwnerRule.ALEXEI)
   @Category(UnitTests.class)
   public void shouldValidate() {
     JiraConnectorDTO jiraConnectorDTO = JiraConnectorDTO.builder()
@@ -59,7 +59,7 @@ public class JiraConnectorValidatorTest {
   }
 
   @Test
-  @Owner(developers = OwnerRule.ABHINAV)
+  @Owner(developers = OwnerRule.ALEXEI)
   @Category(UnitTests.class)
   public void shouldValidateFailed() {
     JiraConnectorDTO jiraConnectorDTO = JiraConnectorDTO.builder()

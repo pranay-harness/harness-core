@@ -26,7 +26,6 @@ import io.harness.redesign.states.shell.ShellScriptStepParameters;
 import io.harness.rule.Owner;
 import io.harness.steps.section.chain.SectionChainStep;
 import io.harness.testframework.framework.MockServerExecutor;
-import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -51,11 +50,6 @@ public class EngineFunctionalTest extends AbstractFunctionalTest {
     application = applicationGenerator.ensurePredefined(seed, owners, Applications.GENERIC_TEST);
     assertThat(application).isNotNull();
     mockServerExecutor.ensureMockServer(AbstractFunctionalTest.class);
-  }
-
-  @After
-  public void shutDown() {
-    mockServerExecutor.shutdownMockServer();
   }
 
   @Test
