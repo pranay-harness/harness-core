@@ -37,7 +37,6 @@ import io.restassured.http.ContentType;
 import io.restassured.mapper.ObjectMapperType;
 import org.awaitility.Awaitility;
 import org.awaitility.Duration;
-import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -72,11 +71,6 @@ public class GraphGenerationFunctionalTest extends AbstractFunctionalTest {
     assertThat(application).isNotNull();
 
     mockServerExecutor.ensureMockServer(AbstractFunctionalTest.class);
-  }
-
-  @After
-  public void shutDown() {
-    mockServerExecutor.shutdownMockServer();
   }
 
   @Test

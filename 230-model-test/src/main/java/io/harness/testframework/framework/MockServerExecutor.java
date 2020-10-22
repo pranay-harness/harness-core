@@ -20,7 +20,7 @@ import java.io.File;
 @Slf4j
 public class MockServerExecutor {
   private final MockServer mockServer = new MockServer();
-  private boolean failedAlready;
+  private static boolean failedAlready;
   public void ensureMockServer(Class<?> clazz) {
     if (!isHealthy()) {
       executeLocalMockServer(clazz);

@@ -33,7 +33,6 @@ import io.restassured.config.RestAssuredConfig;
 import io.restassured.config.SSLConfig;
 import io.restassured.http.ContentType;
 import io.restassured.mapper.ObjectMapperType;
-import org.junit.After;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
@@ -64,11 +63,6 @@ public class GraphVisualizerTest extends AbstractFunctionalTest {
     application = applicationGenerator.ensurePredefined(seed, owners, ApplicationGenerator.Applications.GENERIC_TEST);
     assertThat(application).isNotNull();
     mockServerExecutor.ensureMockServer(AbstractFunctionalTest.class);
-  }
-
-  @After
-  public void shutDown() {
-    mockServerExecutor.shutdownMockServer();
   }
 
   @Test
