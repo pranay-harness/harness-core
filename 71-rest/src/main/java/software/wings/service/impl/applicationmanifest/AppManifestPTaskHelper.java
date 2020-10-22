@@ -69,7 +69,7 @@ public class AppManifestPTaskHelper {
   }
 
   public void deletePerpetualTask(String perpetualTaskId, String appManifestId, String accountId) {
-    if (!applicationManifestService.detachPerpetualTask(perpetualTaskId)) {
+    if (!applicationManifestService.detachPerpetualTask(perpetualTaskId, accountId)) {
       logger.error("Unable to detach perpetual task {} for application manifest {}", perpetualTaskId, appManifestId);
     }
     if (!perpetualTaskService.deleteTask(accountId, perpetualTaskId)) {

@@ -5,7 +5,6 @@ import static io.harness.beans.SearchFilter.Operator.IN;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.exception.WingsException.USER;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
-import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
 import com.google.inject.Inject;
 
@@ -817,11 +816,7 @@ public class ServiceResource {
   @AuthRule(permissionType = PermissionType.SERVICE, action = Action.READ)
   public RestResponse<PageResponse<HelmChart>> getHelmChartVersions(@QueryParam("appId") String appId,
       @PathParam("serviceId") String serviceId, @BeanParam PageRequest<HelmChart> pageRequest) {
-    if (isNotBlank(appId)) {
-      pageRequest.addFilter("appId", EQ, appId);
-    }
-    pageRequest.addFilter("serviceId", EQ, serviceId);
-    return new RestResponse<>(helmChartService.listHelmChartsForService(pageRequest));
+    return new RestResponse<>(helmChartService.listHelmChartsForService(appId, serviceId, pageRequest));
   }
 
   @PUT

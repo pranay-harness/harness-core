@@ -308,6 +308,7 @@ helmChartSpecifications {"name": "createdAt_1", "background": true} {"createdAt"
 helmChartSpecifications {"name": "serviceId_1", "unique": true} {"serviceId": 1}
 helmCharts {"name": "accountId_1", "background": true} {"accountId": 1}
 helmCharts {"name": "account_appManifestId", "background": true} {"accountId": 1, "applicationManifestId": 1}
+helmCharts {"name": "appId_appManifestId", "background": true} {"appId": 1, "applicationManifestId": 1}
 helmCharts {"name": "appId_serviceId", "background": true} {"appId": 1, "serviceId": 1}
 helmCharts {"name": "applicationManifestId_1", "background": true} {"applicationManifestId": 1}
 hosts {"name": "appId_1", "background": true} {"appId": 1}
@@ -719,6 +720,7 @@ triggerExecutions {"name": "validUntil_1", "background": true, "expireAfterSecon
 triggers {"name": "accountId_1", "background": true} {"accountId": 1}
 triggers {"name": "appId_1", "background": true} {"appId": 1}
 triggers {"name": "artifactSelectionsArtifactStreamId", "background": true} {"artifactSelections.artifactStreamId": 1}
+triggers {"name": "conditionAppManifestId", "background": true} {"condition.conditionType": 1, "condition.appManifestId": 1}
 triggers {"name": "conditionArtifactStreamId", "background": true} {"condition.conditionType": 1, "condition.artifactStreamId": 1}
 triggers {"name": "createdAt_1", "background": true} {"createdAt": 1}
 triggers {"name": "webHookToken_1", "background": true} {"webHookToken": 1}
