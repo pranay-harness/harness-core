@@ -348,6 +348,8 @@ function setUpVerificationService(){
    echo "################################ Setting up Verification Service ################################"
    verificationServiceVersion=$(getProperty "version.properties" "VERIFICATION_SERVICE_VERSION")
    env=$(getProperty "version.properties" "ENV")
+   mkdir -p $runtime_dir/verification/logs
+   chmod -R 777 $runtime_dir/verification
    docker run -d -u 0:0    --rm --name verificationService -e MANAGER_URL=$LOAD_BALANCER_URL/api/ -e MONGO_URI="$MONGO_URI" -e ENV=$env -e VERIFICATION_PORT=$verificationport -p $verificationport:$verificationport -v $runtime_dir/verification/logs:/opt/harness/logs harness/verification-service:$verificationServiceVersion
 
     if [[ $(checkDockerImageRunning "verificationService") -eq 1 ]]; then
