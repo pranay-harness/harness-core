@@ -7,6 +7,7 @@ import static software.wings.beans.InfrastructureType.AWS_LAMBDA;
 import static software.wings.beans.InfrastructureType.AZURE_KUBERNETES;
 import static software.wings.beans.InfrastructureType.AZURE_SSH;
 import static software.wings.beans.InfrastructureType.AZURE_VMSS;
+import static software.wings.beans.InfrastructureType.AZURE_WEBAPP;
 import static software.wings.beans.InfrastructureType.CODE_DEPLOY;
 import static software.wings.beans.InfrastructureType.CUSTOM_INFRASTRUCTURE;
 import static software.wings.beans.InfrastructureType.DIRECT_KUBERNETES;
@@ -32,6 +33,7 @@ import java.util.Set;
       @JsonSubTypes.Type(value = AzureKubernetesService.class, name = AZURE_KUBERNETES),
       @JsonSubTypes.Type(value = AzureInstanceInfrastructure.class, name = AZURE_SSH),
       @JsonSubTypes.Type(value = AzureVMSSInfra.class, name = AZURE_VMSS),
+      @JsonSubTypes.Type(value = AzureVMSSInfra.class, name = AZURE_WEBAPP),
       @JsonSubTypes.Type(value = CodeDeployInfrastructure.class, name = CODE_DEPLOY),
       @JsonSubTypes.Type(value = DirectKubernetesInfrastructure.class, name = DIRECT_KUBERNETES),
       @JsonSubTypes.Type(value = GoogleKubernetesEngine.class, name = GCP_KUBERNETES_ENGINE),
