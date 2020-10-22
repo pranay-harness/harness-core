@@ -555,13 +555,14 @@ public class StateMachineExecutor implements StateInspectionListener {
   private void startStateExecution(ExecutionContextImpl context, StateExecutionInstance stateExecutionInstance) {
     ExecutionResponse executionResponse = null;
     WingsException ex = null;
-    try {
+    try (AutoLogContext ignore = context.autoLogContext()) {
       State currentState = getStateForExecution(context, stateExecutionInstance);
       executionResponse = getExecutionResponseWithAdvise(context, executionResponse, currentState);
 
       handleResponse(context, executionResponse);
     } catch (WingsException exception) {
       ex = exception;
+      logger.error("Exception occurred while starting state execution : {}", exception.getMessage());
     } catch (Exception exception) {
       ex = new WingsException(exception);
     }
@@ -659,6 +660,7 @@ public class StateMachineExecutor implements StateInspectionListener {
     for (ExecutionEventAdvisor advisor : advisors) {
       executionEventAdvice = advisor.onExecutionEvent(executionEvent);
     }
+    logger.info("Issued Execution event advice : {}", executionEventAdvice);
     return executionEventAdvice;
   }
 
@@ -724,6 +726,7 @@ public class StateMachineExecutor implements StateInspectionListener {
           executionResponse.getNotifyElements(),
           RUNNING == status ? evaluateExpiryTs(currentState, context) : expiryTs);
       if (!updated) {
+        logger.info("State Execution Instance {} update failed Retrying", stateExecutionInstance.getUuid());
         return reloadStateExecutionInstanceAndCheckStatus(stateExecutionInstance);
       }
 
@@ -732,13 +735,19 @@ public class StateMachineExecutor implements StateInspectionListener {
                                                                      .context(context)
                                                                      .state(currentState)
                                                                      .build());
+
       if (executionEventAdvice != null && !executionEventAdvice.isSkipState() && SKIPPED != status) {
+        logger.info(
+            "Execution Advise is not null. Handling Advise : {}", executionEventAdvice.getExecutionInterruptType());
         return handleExecutionEventAdvice(context, stateExecutionInstance, status, executionEventAdvice);
       } else if (isPositiveStatus(status)) {
+        logger.info("Execution Advise is null. Starting Positive Transition : {}", status);
         return successTransition(context);
       } else if (isBrokeStatus(status)) {
+        logger.info("Execution Advise is null. Starting Failed Transition : {}", status);
         return failedTransition(context, null);
       } else if (ExecutionStatus.isDiscontinueStatus(status)) {
+        logger.info("Execution Advise is null. Starting Discontinue Transition : {}", status);
         endTransition(context, stateExecutionInstance, status, null);
       }
     }
