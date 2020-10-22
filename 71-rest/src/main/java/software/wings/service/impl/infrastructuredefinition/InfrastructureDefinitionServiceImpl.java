@@ -34,6 +34,7 @@ import static software.wings.api.DeploymentType.AMI;
 import static software.wings.api.DeploymentType.AWS_CODEDEPLOY;
 import static software.wings.api.DeploymentType.AWS_LAMBDA;
 import static software.wings.api.DeploymentType.AZURE_VMSS;
+import static software.wings.api.DeploymentType.AZURE_WEBAPP;
 import static software.wings.api.DeploymentType.CUSTOM;
 import static software.wings.api.DeploymentType.ECS;
 import static software.wings.api.DeploymentType.HELM;
@@ -266,7 +267,7 @@ public class InfrastructureDefinitionServiceImpl implements InfrastructureDefini
     supportedCloudProviderDeploymentTypes.put(
         CloudProviderType.AWS, EnumSet.of(SSH, WINRM, ECS, AWS_LAMBDA, AMI, AWS_CODEDEPLOY));
     supportedCloudProviderDeploymentTypes.put(
-        CloudProviderType.AZURE, EnumSet.of(SSH, WINRM, HELM, KUBERNETES, AZURE_VMSS));
+        CloudProviderType.AZURE, EnumSet.of(SSH, WINRM, HELM, KUBERNETES, AZURE_VMSS, AZURE_WEBAPP));
     supportedCloudProviderDeploymentTypes.put(CloudProviderType.GCP, EnumSet.of(HELM, KUBERNETES));
     supportedCloudProviderDeploymentTypes.put(CloudProviderType.KUBERNETES_CLUSTER, EnumSet.of(HELM, KUBERNETES));
     supportedCloudProviderDeploymentTypes.put(CloudProviderType.PCF, EnumSet.of(PCF));
@@ -792,6 +793,7 @@ public class InfrastructureDefinitionServiceImpl implements InfrastructureDefini
     deploymentCloudProviderOptions.put(PCF, asList(SettingVariableTypes.PCF));
     deploymentCloudProviderOptions.put(SPOTINST, asList(SettingVariableTypes.SPOT_INST));
     deploymentCloudProviderOptions.put(AZURE_VMSS, asList(SettingVariableTypes.AZURE));
+    deploymentCloudProviderOptions.put(AZURE_WEBAPP, asList(SettingVariableTypes.AZURE));
     deploymentCloudProviderOptions.put(CUSTOM, emptyList());
 
     return deploymentCloudProviderOptions;
