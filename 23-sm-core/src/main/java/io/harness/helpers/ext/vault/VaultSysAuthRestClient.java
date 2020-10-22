@@ -1,8 +1,5 @@
 package io.harness.helpers.ext.vault;
 
-import io.harness.helpers.ext.vault.SysMountsResponse;
-import io.harness.helpers.ext.vault.VaultAppRoleLoginRequest;
-import io.harness.helpers.ext.vault.VaultAppRoleLoginResponse;
 import retrofit2.Call;
 import retrofit2.http.Body;
 import retrofit2.http.GET;

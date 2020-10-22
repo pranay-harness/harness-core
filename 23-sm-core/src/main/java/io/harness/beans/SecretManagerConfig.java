@@ -6,6 +6,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.annotation.HarnessEntity;
+import io.harness.delegate.beans.executioncapability.ExecutionCapabilityDemander;
 import io.harness.iterator.PersistentRegularIterable;
 import io.harness.mongo.index.FdIndex;
 import io.harness.mongo.index.Field;
@@ -22,10 +23,15 @@ import io.harness.secretmanagerclient.NGSecretManagerMetadata;
 import io.harness.secretmanagerclient.dto.NGSecretManagerConfigDTOConverter;
 import io.harness.security.encryption.EncryptionConfig;
 import io.harness.security.encryption.EncryptionType;
+import io.harness.security.encryption.SecretManagerType;
 import io.harness.validation.Update;
+import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
+import lombok.NoArgsConstructor;
 import lombok.experimental.FieldNameConstants;
+import lombok.experimental.SuperBuilder;
+import lombok.experimental.UtilityClass;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Id;
@@ -43,6 +49,9 @@ import javax.validation.constraints.NotNull;
  * @author marklu on 2019-05-31
  */
 @Data
+@SuperBuilder
+@NoArgsConstructor
+@AllArgsConstructor
 @EqualsAndHashCode(callSuper = false, exclude = {"createdBy", "createdAt", "lastUpdatedBy", "lastUpdatedAt"})
 @Entity(value = "secretManagers")
 @NgUniqueIndex(name = "uniqueIdx",
@@ -57,7 +66,8 @@ import javax.validation.constraints.NotNull;
 @FieldNameConstants(innerTypeName = "SecretManagerConfigKeys")
 public abstract class SecretManagerConfig
     implements AccountAccess, EncryptionConfig, PersistentEntity, UuidAware, CreatedAtAware, CreatedByAware,
-               UpdatedAtAware, UpdatedByAware, PersistentRegularIterable, NGAccess, NGSecretManagerConfigDTOConverter {
+               UpdatedAtAware, UpdatedByAware, PersistentRegularIterable, NGAccess, NGSecretManagerConfigDTOConverter,
+               ExecutionCapabilityDemander {
   @Id @NotNull(groups = {Update.class}) @SchemaIgnore private String uuid;
 
   private EncryptionType encryptionType;
@@ -76,7 +86,7 @@ public abstract class SecretManagerConfig
 
   @SchemaIgnore private EmbeddedUser lastUpdatedBy;
 
-  @SchemaIgnore @NotNull private long lastUpdatedAt;
+  @SchemaIgnore private long lastUpdatedAt;
 
   @FdIndex private Long nextTokenRenewIteration;
 
@@ -86,11 +96,15 @@ public abstract class SecretManagerConfig
 
   private List<String> templatizedFields;
 
-  public static boolean isTemplatized(SecretManagerConfig secretManagerConfig) {
-    return !isEmpty(secretManagerConfig.getTemplatizedFields());
+  public boolean isTemplatized() {
+    return !isEmpty(templatizedFields);
   }
 
   public abstract void maskSecrets();
+
+  @JsonIgnore public abstract SecretManagerType getType();
+
+  @JsonIgnore public abstract List<SecretManagerCapabilities> getSecretManagerCapabilities();
 
   @Override
   public void updateNextIteration(String fieldName, long nextIteration) {
@@ -142,5 +156,11 @@ public abstract class SecretManagerConfig
   @JsonIgnore
   public String getIdentifier() {
     return Optional.ofNullable(ngMetadata).map(NGSecretManagerMetadata::getIdentifier).orElse(null);
+  }
+
+  @UtilityClass
+  public static final class SecretManagerConfigKeys {
+    public static final String ID_KEY = "_id";
+    public static final String name = "name";
   }
 }

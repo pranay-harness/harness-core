@@ -1,19 +1,30 @@
 package software.wings.beans;
 
+import static io.harness.beans.AzureEnvironmentType.AZURE;
+import static io.harness.beans.SecretManagerCapabilities.CAN_BE_DEFAULT_SM;
+import static io.harness.beans.SecretManagerCapabilities.CREATE_FILE_SECRET;
+import static io.harness.beans.SecretManagerCapabilities.CREATE_INLINE_SECRET;
+import static io.harness.beans.SecretManagerCapabilities.CREATE_REFERENCE_SECRET;
+import static io.harness.beans.SecretManagerCapabilities.TRANSITION_SECRET_FROM_SM;
+import static io.harness.beans.SecretManagerCapabilities.TRANSITION_SECRET_TO_SM;
 import static io.harness.expression.SecretString.SECRET_MASK;
+import static io.harness.security.encryption.SecretManagerType.VAULT;
+
+import com.google.common.collect.Lists;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.beans.AzureEnvironmentType;
+import io.harness.beans.SecretManagerCapabilities;
 import io.harness.beans.SecretManagerConfig;
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
-import io.harness.delegate.beans.executioncapability.ExecutionCapabilityDemander;
 import io.harness.delegate.task.mixin.HttpConnectionExecutionCapabilityGenerator;
 import io.harness.encryption.Encrypted;
 import io.harness.secretmanagerclient.dto.SecretManagerConfigDTO;
 import io.harness.security.encryption.EncryptionType;
+import io.harness.security.encryption.SecretManagerType;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -21,20 +32,21 @@ import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import lombok.ToString;
 import lombok.experimental.FieldNameConstants;
+import lombok.experimental.SuperBuilder;
 import org.hibernate.validator.constraints.NotEmpty;
 
 import java.util.Arrays;
 import java.util.List;
 
 @Data
-@Builder
+@SuperBuilder
 @NoArgsConstructor
 @AllArgsConstructor
 @ToString(exclude = {"secretKey"})
 @EqualsAndHashCode(callSuper = true)
 @FieldNameConstants(innerTypeName = "AzureVaultConfigKeys")
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class AzureVaultConfig extends SecretManagerConfig implements ExecutionCapabilityDemander {
+public class AzureVaultConfig extends SecretManagerConfig {
   @Attributes(title = "Name", required = true) private String name;
 
   @Attributes(title = "Azure Client Id", required = true) @NotEmpty private String clientId;
@@ -50,7 +62,7 @@ public class AzureVaultConfig extends SecretManagerConfig implements ExecutionCa
 
   @Attributes(title = "Subscription") private String subscription;
 
-  private AzureEnvironmentType azureEnvironmentType = AzureEnvironmentType.AZURE;
+  @Builder.Default private AzureEnvironmentType azureEnvironmentType = AZURE;
 
   @Override
   public void maskSecrets() {
@@ -62,6 +74,11 @@ public class AzureVaultConfig extends SecretManagerConfig implements ExecutionCa
   @Override
   public String getValidationCriteria() {
     return obtainEncryptionServiceUrl();
+  }
+
+  @Override
+  public SecretManagerType getType() {
+    return VAULT;
   }
 
   @JsonIgnore
@@ -95,6 +112,17 @@ public class AzureVaultConfig extends SecretManagerConfig implements ExecutionCa
       default:
         return String.format("https://%s.vault.azure.net", getVaultName());
     }
+  }
+
+  @Override
+  public List<SecretManagerCapabilities> getSecretManagerCapabilities() {
+    List<SecretManagerCapabilities> secretManagerCapabilities =
+        Lists.newArrayList(CREATE_INLINE_SECRET, CREATE_REFERENCE_SECRET, CREATE_FILE_SECRET, CAN_BE_DEFAULT_SM);
+    if (!isTemplatized()) {
+      secretManagerCapabilities.add(TRANSITION_SECRET_FROM_SM);
+      secretManagerCapabilities.add(TRANSITION_SECRET_TO_SM);
+    }
+    return secretManagerCapabilities;
   }
 
   @Override

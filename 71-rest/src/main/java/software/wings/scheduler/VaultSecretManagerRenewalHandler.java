@@ -62,7 +62,7 @@ public class VaultSecretManagerRenewalHandler implements Handler<SecretManagerCo
     KmsSetupAlert kmsSetupAlert = vaultService.getRenewalAlert(vaultConfig);
     try {
       long renewalInterval = vaultConfig.getRenewalInterval();
-      if (renewalInterval <= 0 || SecretManagerConfig.isTemplatized(secretManagerConfig)) {
+      if (renewalInterval <= 0 || secretManagerConfig.isTemplatized()) {
         logger.info("Vault {} not configured for renewal.", vaultConfig.getUuid());
         return;
       }

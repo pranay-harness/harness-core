@@ -1,39 +1,41 @@
 package software.wings.beans;
 
+import static io.harness.beans.SecretManagerCapabilities.CREATE_REFERENCE_SECRET;
 import static io.harness.expression.SecretString.SECRET_MASK;
+import static io.harness.security.encryption.SecretManagerType.VAULT;
+
+import com.google.common.collect.Lists;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.github.reinert.jjschema.Attributes;
+import io.harness.beans.SecretManagerCapabilities;
 import io.harness.beans.SecretManagerConfig;
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
-import io.harness.delegate.beans.executioncapability.ExecutionCapabilityDemander;
 import io.harness.delegate.task.mixin.HttpConnectionExecutionCapabilityGenerator;
 import io.harness.encryption.Encrypted;
 import io.harness.secretmanagerclient.dto.SecretManagerConfigDTO;
 import io.harness.security.encryption.EncryptionType;
+import io.harness.security.encryption.SecretManagerType;
 import lombok.AllArgsConstructor;
-import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import lombok.ToString;
 import lombok.experimental.FieldNameConstants;
+import lombok.experimental.SuperBuilder;
 
 import java.util.Arrays;
 import java.util.List;
 
-/**
- * @author marklu on 2019-08-01
- */
 @Data
-@Builder
+@SuperBuilder
 @NoArgsConstructor
 @AllArgsConstructor
 @ToString(exclude = {"clientCertificate"})
 @EqualsAndHashCode(callSuper = false)
 @JsonIgnoreProperties(ignoreUnknown = true)
 @FieldNameConstants(innerTypeName = "CyberArkConfigKeys")
-public class CyberArkConfig extends SecretManagerConfig implements ExecutionCapabilityDemander {
+public class CyberArkConfig extends SecretManagerConfig {
   @Attributes(title = "Name", required = true) private String name;
 
   @Attributes(title = "CyberArk Url", required = true) private String cyberArkUrl;
@@ -66,8 +68,18 @@ public class CyberArkConfig extends SecretManagerConfig implements ExecutionCapa
   }
 
   @Override
+  public SecretManagerType getType() {
+    return VAULT;
+  }
+
+  @Override
   public EncryptionType getEncryptionType() {
     return EncryptionType.CYBERARK;
+  }
+
+  @Override
+  public List<SecretManagerCapabilities> getSecretManagerCapabilities() {
+    return Lists.newArrayList(CREATE_REFERENCE_SECRET);
   }
 
   @Override

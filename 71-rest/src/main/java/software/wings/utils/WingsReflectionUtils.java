@@ -7,12 +7,12 @@ import com.google.common.collect.Sets;
 
 import io.harness.beans.Encryptable;
 import io.harness.beans.EncryptedDataParent;
+import io.harness.beans.SecretParentsUpdateDetail;
 import io.harness.reflection.ReflectionUtils;
 import io.harness.security.encryption.EncryptionType;
 import lombok.NonNull;
 import lombok.experimental.UtilityClass;
 import software.wings.annotation.EncryptableSetting;
-import software.wings.security.encryption.SecretParentsUpdateDetail;
 
 import java.lang.reflect.Field;
 import java.util.Collections;

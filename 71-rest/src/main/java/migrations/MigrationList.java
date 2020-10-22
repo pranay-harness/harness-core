@@ -137,7 +137,6 @@ import migrations.all.RemoveServiceVariablesFromActivity;
 import migrations.all.RemoveUnusedLogDataRecordMigration;
 import migrations.all.ResourceLookupMigration;
 import migrations.all.ScheduleSegmentPublishJob;
-import migrations.all.SecretManagerConfigMigration;
 import migrations.all.SecretManagerPermissionMigration;
 import migrations.all.SecretTextNameKeyWordsMigration;
 import migrations.all.ServerlessInstanceChangeCollectionNameMigration;
@@ -309,7 +308,7 @@ public class MigrationList {
         .add(Pair.of(251, AddAccountIdToArtifactStreamsMigration.class))
         .add(Pair.of(252, RemoveUnusedLogDataRecordMigration.class))
         .add(Pair.of(253, DatadogCVServiceConfigurationMigration.class))
-        .add(Pair.of(254, SecretManagerConfigMigration.class))
+        .add(Pair.of(254, BaseMigration.class))
         .add(Pair.of(255, OAuthAllowedProvidersListMigration.class))
         .add(Pair.of(256, MigrateLogFeedbackRecordsToGoogle.class))
         .add(Pair.of(257, NonWorkflowCVConfigurationMigration.class))

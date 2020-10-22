@@ -6,7 +6,6 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.eraro.ErrorCode;
 import io.harness.eraro.Level;
-import io.harness.exception.WingsException;
 
 import java.util.EnumSet;
 import java.util.Map;

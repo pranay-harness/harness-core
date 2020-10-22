@@ -1,24 +1,29 @@
 package software.wings.security.encryption.secretsmanagerconfigs;
 
 import static io.harness.annotations.dev.HarnessTeam.PL;
+import static io.harness.beans.SecretManagerCapabilities.CREATE_PARAMETERIZED_SECRET;
+import static io.harness.security.encryption.SecretManagerType.CUSTOM;
 import static software.wings.security.encryption.secretsmanagerconfigs.CustomSecretsManagerShellScript.ScriptType.POWERSHELL;
 import static software.wings.service.impl.security.customsecretsmanager.CustomSecretsManagerValidationUtils.buildShellScriptParameters;
 
+import com.google.common.collect.Lists;
+
 import com.github.reinert.jjschema.Attributes;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.beans.SecretManagerCapabilities;
 import io.harness.beans.SecretManagerConfig;
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
-import io.harness.delegate.beans.executioncapability.ExecutionCapabilityDemander;
 import io.harness.delegate.task.mixin.ProcessExecutorCapabilityGenerator;
 import io.harness.secretmanagerclient.dto.SecretManagerConfigDTO;
 import io.harness.security.encryption.EncryptedDataParams;
 import io.harness.security.encryption.EncryptionType;
-import lombok.Builder;
+import io.harness.security.encryption.SecretManagerType;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NonNull;
 import lombok.ToString;
 import lombok.experimental.FieldNameConstants;
+import lombok.experimental.SuperBuilder;
 import org.hibernate.validator.constraints.NotEmpty;
 import software.wings.annotation.EncryptableSetting;
 import software.wings.delegatetasks.validation.capabilities.ShellConnectionCapability;
@@ -31,11 +36,11 @@ import java.util.Set;
 
 @OwnedBy(PL)
 @Data
-@Builder
+@SuperBuilder
 @ToString(exclude = {"customSecretsManagerShellScript", "remoteHostConnector"})
 @EqualsAndHashCode(callSuper = true)
 @FieldNameConstants(innerTypeName = "CustomSecretsManagerConfigKeys")
-public class CustomSecretsManagerConfig extends SecretManagerConfig implements ExecutionCapabilityDemander {
+public class CustomSecretsManagerConfig extends SecretManagerConfig {
   @NonNull @NotEmpty @Attributes(title = "Name") private String name;
   @NonNull @NotEmpty @Attributes(title = "Template Shell Script") private String templateId;
   @NonNull @Attributes(title = "Delegate Selectors") private List<String> delegateSelectors;
@@ -82,8 +87,18 @@ public class CustomSecretsManagerConfig extends SecretManagerConfig implements E
   }
 
   @Override
+  public SecretManagerType getType() {
+    return CUSTOM;
+  }
+
+  @Override
   public EncryptionType getEncryptionType() {
     return EncryptionType.CUSTOM;
+  }
+
+  @Override
+  public List<SecretManagerCapabilities> getSecretManagerCapabilities() {
+    return Lists.newArrayList(CREATE_PARAMETERIZED_SECRET);
   }
 
   @Override

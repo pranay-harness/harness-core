@@ -95,6 +95,7 @@ import io.harness.security.encryption.EncryptionType;
 import io.harness.serializer.JsonUtils;
 import io.harness.serializer.KryoSerializer;
 import io.harness.stream.BoundedInputStream;
+import io.harness.templatizedsm.RuntimeCredentialsInjector;
 import lombok.Builder;
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
@@ -421,7 +422,7 @@ public class SecretManagerImpl implements SecretManager {
     SecretManagerConfig encryptionConfig =
         getSecretManager(accountId, encryptedData.getKmsId(), encryptedData.getEncryptionType());
 
-    if (SecretManagerConfig.isTemplatized(encryptionConfig) && isNotEmpty(workflowExecutionId)) {
+    if (encryptionConfig.isTemplatized() && isNotEmpty(workflowExecutionId)) {
       encryptionConfig = updateRuntimeParametersAndGetConfig(workflowExecutionId, encryptionConfig);
     }
 
@@ -1046,14 +1047,14 @@ public class SecretManagerImpl implements SecretManager {
       Map<String, String> runtimeParametersForDestinationSecretManager) {
     if (!StringUtils.isEmpty(fromSecretManagerId)) {
       SecretManagerConfig sourceSecretManagerConfig = getSecretManager(accountId, fromSecretManagerId);
-      if (SecretManagerConfig.isTemplatized(sourceSecretManagerConfig)) {
+      if (sourceSecretManagerConfig.isTemplatized()) {
         throw new SecretManagementException(
             UNSUPPORTED_OPERATION_EXCEPTION, "Cannot transfer secrets from a templatized secret manager", USER);
       }
     }
     if (!StringUtils.isEmpty(toSecretManagerId)) {
       SecretManagerConfig destinationSecretManagerConfig = getSecretManager(accountId, toSecretManagerId);
-      if (SecretManagerConfig.isTemplatized(destinationSecretManagerConfig)) {
+      if (destinationSecretManagerConfig.isTemplatized()) {
         throw new SecretManagementException(
             UNSUPPORTED_OPERATION_EXCEPTION, "Cannot transfer secrets to a templatized secret manager", USER);
       }
@@ -1368,7 +1369,7 @@ public class SecretManagerImpl implements SecretManager {
   public String saveSecret(String accountId, SecretText secretText) {
     if (!StringUtils.isEmpty(secretText.getKmsId())) {
       SecretManagerConfig secretManagerConfig = getSecretManager(accountId, secretText.getKmsId());
-      if (SecretManagerConfig.isTemplatized(secretManagerConfig)) {
+      if (secretManagerConfig.isTemplatized()) {
         updateRuntimeParameters(secretManagerConfig, secretText.getRuntimeParameters(), true);
       }
     }
@@ -1675,7 +1676,7 @@ public class SecretManagerImpl implements SecretManager {
     EncryptedData encryptedData = wingsPersistence.get(EncryptedData.class, encryptedDataId);
     if (Objects.nonNull(encryptedData)) {
       SecretManagerConfig secretManagerConfig = getSecretManager(accountId, encryptedData.getKmsId());
-      if (SecretManagerConfig.isTemplatized(secretManagerConfig)) {
+      if (secretManagerConfig.isTemplatized()) {
         updateRuntimeParameters(secretManagerConfig, secretText.getRuntimeParameters(), true);
       }
     }
@@ -1832,7 +1833,7 @@ public class SecretManagerImpl implements SecretManager {
     EncryptedData encryptedData = wingsPersistence.get(EncryptedData.class, secretId);
     if (Objects.nonNull(encryptedData)) {
       SecretManagerConfig secretManagerConfig = getSecretManager(accountId, encryptedData.getKmsId());
-      if (SecretManagerConfig.isTemplatized(secretManagerConfig)) {
+      if (secretManagerConfig.isTemplatized()) {
         updateRuntimeParameters(secretManagerConfig, runtimeParameters, true);
       }
     }
@@ -1871,7 +1872,7 @@ public class SecretManagerImpl implements SecretManager {
       boolean scopedToAccount) {
     if (!StringUtils.isEmpty(kmsId)) {
       SecretManagerConfig secretManagerConfig = getSecretManager(accountId, kmsId);
-      if (SecretManagerConfig.isTemplatized(secretManagerConfig)) {
+      if (secretManagerConfig.isTemplatized()) {
         updateRuntimeParameters(secretManagerConfig, runtimeParameters, true);
       }
     }
@@ -1998,7 +1999,7 @@ public class SecretManagerImpl implements SecretManager {
     EncryptedData encryptedData = getSecretById(accountId, uuid);
     if (Objects.nonNull(encryptedData)) {
       SecretManagerConfig secretManagerConfig = getSecretManager(accountId, encryptedData.getKmsId());
-      if (SecretManagerConfig.isTemplatized(secretManagerConfig)) {
+      if (secretManagerConfig.isTemplatized()) {
         updateRuntimeParameters(secretManagerConfig, runtimeParameters, true);
       }
     }
@@ -2350,7 +2351,7 @@ public class SecretManagerImpl implements SecretManager {
     EncryptedData encryptedData = getSecretById(accountId, uuId);
     if (Objects.nonNull(encryptedData)) {
       SecretManagerConfig secretManagerConfig = getSecretManager(accountId, encryptedData.getKmsId());
-      if (SecretManagerConfig.isTemplatized(secretManagerConfig)) {
+      if (secretManagerConfig.isTemplatized()) {
         updateRuntimeParameters(secretManagerConfig, runtimeParameters, true);
       }
     }

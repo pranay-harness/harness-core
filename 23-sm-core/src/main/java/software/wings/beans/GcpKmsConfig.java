@@ -1,30 +1,40 @@
 package software.wings.beans;
 
 import static io.harness.annotations.dev.HarnessTeam.PL;
+import static io.harness.beans.SecretManagerCapabilities.CAN_BE_DEFAULT_SM;
+import static io.harness.beans.SecretManagerCapabilities.CREATE_FILE_SECRET;
+import static io.harness.beans.SecretManagerCapabilities.CREATE_INLINE_SECRET;
+import static io.harness.beans.SecretManagerCapabilities.TRANSITION_SECRET_FROM_SM;
+import static io.harness.beans.SecretManagerCapabilities.TRANSITION_SECRET_TO_SM;
 import static io.harness.expression.SecretString.SECRET_MASK;
 import static io.harness.helpers.GlobalSecretManagerUtils.GLOBAL_ACCOUNT_ID;
 import static io.harness.helpers.GlobalSecretManagerUtils.isNgHarnessSecretManager;
+import static io.harness.security.encryption.SecretManagerType.KMS;
+
+import com.google.common.collect.Lists;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.beans.SecretManagerCapabilities;
 import io.harness.beans.SecretManagerConfig;
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
-import io.harness.delegate.beans.executioncapability.ExecutionCapabilityDemander;
 import io.harness.delegate.task.mixin.HttpConnectionExecutionCapabilityGenerator;
 import io.harness.encryption.Encrypted;
 import io.harness.mappers.SecretManagerConfigMapper;
 import io.harness.secretmanagerclient.dto.GcpKmsConfigDTO;
 import io.harness.secretmanagerclient.dto.SecretManagerConfigDTO;
 import io.harness.security.encryption.EncryptionType;
+import io.harness.security.encryption.SecretManagerType;
 import lombok.AllArgsConstructor;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
 import lombok.experimental.FieldNameConstants;
+import lombok.experimental.SuperBuilder;
 
 import java.util.Arrays;
 import java.util.List;
@@ -32,12 +42,13 @@ import java.util.List;
 @OwnedBy(PL)
 @Getter
 @Setter
+@SuperBuilder
 @AllArgsConstructor
 @ToString(exclude = {"credentials"})
 @EqualsAndHashCode(callSuper = true)
 @FieldNameConstants(innerTypeName = "GcpKmsConfigKeys")
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class GcpKmsConfig extends SecretManagerConfig implements ExecutionCapabilityDemander {
+public class GcpKmsConfig extends SecretManagerConfig {
   @Attributes(title = "Name", required = true) private String name;
 
   @Attributes(title = "Project Id", required = true) private String projectId;
@@ -67,6 +78,11 @@ public class GcpKmsConfig extends SecretManagerConfig implements ExecutionCapabi
   }
 
   @Override
+  public SecretManagerType getType() {
+    return KMS;
+  }
+
+  @Override
   public List<ExecutionCapability> fetchRequiredExecutionCapabilities() {
     return Arrays.asList(
         HttpConnectionExecutionCapabilityGenerator.buildHttpConnectionExecutionCapability(getEncryptionServiceUrl()));
@@ -85,6 +101,17 @@ public class GcpKmsConfig extends SecretManagerConfig implements ExecutionCapabi
   @Override
   public boolean isGlobalKms() {
     return GLOBAL_ACCOUNT_ID.equals(getAccountId()) || isNgHarnessSecretManager(getNgMetadata());
+  }
+
+  @Override
+  public List<SecretManagerCapabilities> getSecretManagerCapabilities() {
+    List<SecretManagerCapabilities> secretManagerCapabilities =
+        Lists.newArrayList(CREATE_INLINE_SECRET, CREATE_FILE_SECRET, CAN_BE_DEFAULT_SM);
+    if (!isTemplatized()) {
+      secretManagerCapabilities.add(TRANSITION_SECRET_FROM_SM);
+      secretManagerCapabilities.add(TRANSITION_SECRET_TO_SM);
+    }
+    return secretManagerCapabilities;
   }
 
   @Override
