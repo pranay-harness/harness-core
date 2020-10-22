@@ -5,6 +5,7 @@ import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import lombok.Builder;
 import lombok.Data;
+import lombok.experimental.FieldNameConstants;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Transient;
 
@@ -12,6 +13,7 @@ import org.mongodb.morphia.annotations.Transient;
 @JsonTypeName("NEW_MANIFEST")
 @Data
 @Builder
+@FieldNameConstants(innerTypeName = "ManifestTriggerConditionKeys")
 public class ManifestTriggerCondition extends TriggerCondition {
   @NotEmpty private String appManifestId;
   private String serviceId;

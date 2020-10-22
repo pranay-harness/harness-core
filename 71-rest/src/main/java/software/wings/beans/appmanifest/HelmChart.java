@@ -26,6 +26,8 @@ import java.util.Map;
                                               , @Field("serviceId") })
 @CdIndex(name = "account_appManifestId", fields = { @Field("accountId")
                                                     , @Field("applicationManifestId") })
+@CdIndex(name = "appId_appManifestId", fields = { @Field("appId")
+                                                  , @Field("applicationManifestId") })
 @Data
 @Builder
 @Entity(value = "helmCharts", noClassnameStored = true)

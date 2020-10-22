@@ -66,7 +66,7 @@ public class AppManifestPTaskHelperTest extends CategoryTest {
     when(applicationManifestService.attachPerpetualTask(ACCOUNT_ID, MANIFEST_ID, PERPETUAL_TASK_ID)).thenReturn(false);
     appManifestPTaskHelper.createPerpetualTask(appManifest);
     verify(perpetualTaskService, times(1)).deleteTask(ACCOUNT_ID, PERPETUAL_TASK_ID);
-    verify(applicationManifestService, times(1)).detachPerpetualTask(PERPETUAL_TASK_ID);
+    verify(applicationManifestService, times(1)).detachPerpetualTask(PERPETUAL_TASK_ID, ACCOUNT_ID);
 
     appManifest.setUuid(null);
     assertThatThrownBy(() -> appManifestPTaskHelper.createPerpetualTask(appManifest))
@@ -81,7 +81,7 @@ public class AppManifestPTaskHelperTest extends CategoryTest {
     appManifestPTaskHelper.deletePerpetualTask(
         PERPETUAL_TASK_ID, applicationManifest.getUuid(), applicationManifest.getAccountId());
     verify(perpetualTaskService, times(1)).deleteTask(ACCOUNT_ID, PERPETUAL_TASK_ID);
-    verify(applicationManifestService, times(1)).detachPerpetualTask(PERPETUAL_TASK_ID);
+    verify(applicationManifestService, times(1)).detachPerpetualTask(PERPETUAL_TASK_ID, ACCOUNT_ID);
   }
 
   private ApplicationManifest buildAppManifest() {

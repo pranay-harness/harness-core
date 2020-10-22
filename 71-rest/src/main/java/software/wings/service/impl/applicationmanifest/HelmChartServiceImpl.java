@@ -11,6 +11,7 @@ import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
+import io.harness.beans.SortOrder;
 import io.harness.data.structure.EmptyPredicate;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.Sort;
@@ -40,12 +41,13 @@ public class HelmChartServiceImpl implements HelmChartService {
   @Override
   public PageResponse<HelmChart> listHelmChartsForService(
       String appId, String serviceId, PageRequest<HelmChart> pageRequest) {
-    if (isNotBlank(serviceId)) {
-      pageRequest.addFilter(HelmChartKeys.serviceId, EQ, serviceId);
-    }
     if (isNotBlank(appId)) {
       pageRequest.addFilter(HelmChartKeys.appId, EQ, appId);
     }
+    if (isNotBlank(serviceId)) {
+      pageRequest.addFilter(HelmChartKeys.serviceId, EQ, serviceId);
+    }
+    pageRequest.addOrder(HelmChartKeys.createdAt, SortOrder.OrderType.DESC);
     return listHelmChartsForService(pageRequest);
   }
 

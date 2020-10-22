@@ -343,8 +343,9 @@ public class ApplicationManifestServiceImpl implements ApplicationManifestServic
   }
 
   @Override
-  public boolean detachPerpetualTask(String perpetualTaskId) {
+  public boolean detachPerpetualTask(String perpetualTaskId, String accountId) {
     Query<ApplicationManifest> query = wingsPersistence.createQuery(ApplicationManifest.class, excludeAuthority)
+                                           .filter(ApplicationManifestKeys.accountId, accountId)
                                            .filter(ApplicationManifestKeys.perpetualTaskId, perpetualTaskId);
     UpdateOperations<ApplicationManifest> updateOperations =
         wingsPersistence.createUpdateOperations(ApplicationManifest.class)

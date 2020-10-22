@@ -88,7 +88,7 @@ public interface ApplicationManifestService extends OwnedByService, OwnedByEnvir
 
   List<ManifestFile> getOverrideManifestFilesByEnvId(String appId, String envId);
 
-  boolean detachPerpetualTask(@NotNull String perpetualTaskId);
+  boolean detachPerpetualTask(@NotNull String perpetualTaskId, String accountId);
 
   boolean attachPerpetualTask(String accountId, @NotNull String appManifestId, @NotNull String perpetualTaskId);
 

@@ -32,6 +32,7 @@ import software.wings.beans.entityinterface.ApplicationAccess;
 import software.wings.beans.entityinterface.TagAware;
 import software.wings.beans.trigger.ArtifactSelection.ArtifactSelectionKeys;
 import software.wings.beans.trigger.ArtifactTriggerCondition.ArtifactTriggerConditionKeys;
+import software.wings.beans.trigger.ManifestTriggerCondition.ManifestTriggerConditionKeys;
 import software.wings.beans.trigger.Trigger.TriggerKeys;
 import software.wings.beans.trigger.TriggerCondition.TriggerConditionKeys;
 import software.wings.yaml.BaseEntityYaml;
@@ -60,6 +61,12 @@ import javax.validation.constraints.NotNull;
     {
       @Field(TriggerKeys.condition + "." + TriggerConditionKeys.conditionType)
       , @Field(TriggerKeys.condition + "." + ArtifactTriggerConditionKeys.artifactStreamId)
+    })
+@CdIndex(name = "conditionAppManifestId",
+    fields =
+    {
+      @Field(TriggerKeys.condition + "." + TriggerConditionKeys.conditionType)
+      , @Field(TriggerKeys.condition + "." + ManifestTriggerConditionKeys.appManifestId)
     })
 @CdIndex(name = "artifactSelectionsArtifactStreamId",
     fields = { @Field(TriggerKeys.artifactSelections + "." + ArtifactSelectionKeys.artifactStreamId) })
