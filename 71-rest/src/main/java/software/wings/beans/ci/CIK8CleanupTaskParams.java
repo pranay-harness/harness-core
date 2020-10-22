@@ -1,10 +1,9 @@
 package software.wings.beans.ci;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import io.harness.security.encryption.EncryptedDataDetail;
 import lombok.Builder;
 import lombok.Data;
-import software.wings.beans.KubernetesClusterConfig;
+import software.wings.beans.ci.pod.ConnectorDetails;
 
 import java.util.List;
 import javax.validation.constraints.NotNull;
@@ -13,8 +12,7 @@ import javax.validation.constraints.NotNull;
 @Builder
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class CIK8CleanupTaskParams implements CICleanupTaskParams {
-  private KubernetesClusterConfig kubernetesClusterConfig;
-  private List<EncryptedDataDetail> encryptionDetails;
+  @NotNull private ConnectorDetails k8sConnector;
   @NotNull private List<String> podNameList;
   @NotNull private List<String> serviceNameList;
   @NotNull private String namespace;

@@ -610,7 +610,6 @@ software.wings:21-delegate-agent-beans:jar:0.0.1-SNAPSHOT
 software.wings:21-persistence:jar:0.0.1-SNAPSHOT
 software.wings:22-delegate-service-beans-proto:jar:0.0.1-SNAPSHOT
 software.wings:22-delegate-service-beans:jar:0.0.1-SNAPSHOT
-software.wings:22-ng-core-clients:jar:0.0.1-SNAPSHOT
 software.wings:22-ng-core:jar:0.0.1-SNAPSHOT
 software.wings:22-ng-delegate-service-beans:jar:0.0.1-SNAPSHOT
 software.wings:22-ng-project-n-orgs:jar:0.0.1-SNAPSHOT
@@ -619,6 +618,7 @@ software.wings:22-secret-manager-client:jar:0.0.1-SNAPSHOT
 software.wings:22-timeout-engine:jar:0.0.1-SNAPSHOT
 software.wings:22-wait-engine:jar:0.0.1-SNAPSHOT
 software.wings:23-delegate-service-driver:jar:0.0.1-SNAPSHOT
+software.wings:23-ng-core-clients:jar:0.0.1-SNAPSHOT
 software.wings:23-sm-core:jar:0.0.1-SNAPSHOT
 software.wings:24-common-entities:jar:0.0.1-SNAPSHOT
 software.wings:24-manager-delegate-service-beans:jar:0.0.1-SNAPSHOT

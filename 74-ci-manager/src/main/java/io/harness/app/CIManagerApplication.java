@@ -47,6 +47,7 @@ import io.harness.serializer.KryoRegistrar;
 import io.harness.serializer.ManagerRegistrars;
 import io.harness.serializer.YamlBeansModuleRegistrars;
 import io.harness.serializer.kryo.CIBeansKryoRegistrar;
+import io.harness.serializer.kryo.ConnectorNextGenRegistrars;
 import io.harness.service.impl.DelegateAsyncServiceImpl;
 import io.harness.service.impl.DelegateSyncServiceImpl;
 import io.harness.spring.AliasRegistrar;
@@ -126,6 +127,7 @@ public class CIManagerApplication extends Application<CIManagerConfiguration> {
             .addAll(YamlBeansModuleRegistrars.kryoRegistrars)
             .add(CIBeansKryoRegistrar.class)
             .addAll(CiExecutionRegistrars.kryoRegistrars)
+            .addAll(ConnectorNextGenRegistrars.kryoRegistrars)
             .build();
       }
 
@@ -175,7 +177,7 @@ public class CIManagerApplication extends Application<CIManagerConfiguration> {
     modules.add(MongoModule.getInstance());
     modules.add(new CIPersistenceModule());
     addGuiceValidationModule(modules);
-    modules.add(new CIManagerServiceModule(configuration, configuration.getManagerUrl()));
+    modules.add(new CIManagerServiceModule(configuration));
 
     modules.add(ExecutionPlanModule.getInstance());
 

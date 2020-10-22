@@ -15,7 +15,9 @@ import io.harness.beans.steps.stepinfo.BuildEnvSetupStepInfo;
 import io.harness.beans.steps.stepinfo.CleanupStepInfo;
 import io.harness.beans.steps.stepinfo.GitCloneStepInfo;
 import io.harness.beans.steps.stepinfo.PublishStepInfo;
-import io.harness.beans.yaml.extended.CustomVariables;
+import io.harness.beans.yaml.extended.CustomSecretVariable;
+import io.harness.beans.yaml.extended.CustomTextVariable;
+import io.harness.beans.yaml.extended.CustomVariable;
 import io.harness.beans.yaml.extended.connector.GitConnectorYaml;
 import io.harness.exception.InvalidRequestException;
 import io.harness.executionplan.core.ExecutionPlanCreationContext;
@@ -30,7 +32,6 @@ import lombok.Value;
 import lombok.extern.slf4j.Slf4j;
 import software.wings.beans.ci.pod.CIContainerType;
 import software.wings.beans.ci.pod.ContainerResourceParams;
-import software.wings.beans.ci.pod.EncryptedVariableWithType;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -150,7 +151,7 @@ public class IntegrationStageExecutionModifier implements StageExecutionModifier
                                     ContainerDefinitionInfo.builder()
                                         .containerResourceParams(getContainerResourceParams(integrationStage))
                                         .envVars(getEnvVariables(integrationStage))
-                                        .encryptedSecrets(getSecretVariables(integrationStage))
+                                        .secretVariables(getSecretVariables(integrationStage))
                                         .containerImageDetails(
                                             ContainerImageDetails.builder()
                                                 .imageDetails(getImageDetails(integrationStage))
@@ -165,20 +166,16 @@ public class IntegrationStageExecutionModifier implements StageExecutionModifier
     return K8BuildJobEnvInfo.PodsSetupInfo.builder().podSetupInfoList(pods).build();
   }
 
-  private Map<String, EncryptedVariableWithType> getSecretVariables(IntegrationStage integrationStage) {
+  private List<CustomSecretVariable> getSecretVariables(IntegrationStage integrationStage) {
     if (isEmpty(integrationStage.getCustomVariables())) {
-      return Collections.emptyMap();
+      return Collections.emptyList();
     }
 
     return integrationStage.getCustomVariables()
         .stream()
-        .filter(customVariables
-            -> customVariables.getType().equals(
-                "secret")) // Todo instead of hard coded secret use variable type once we have type in cdng
-        .collect(toMap(CustomVariables::getName,
-            customVariables
-            -> EncryptedVariableWithType.builder().build())); // Todo Empty EncryptedDataDetail has to be replaced with
-                                                              // encrypted values once cdng secret apis are ready
+        .filter(customVariables -> customVariables.getType().equals(CustomVariable.Type.SECRET))
+        .map(customVariable -> (CustomSecretVariable) customVariable)
+        .collect(Collectors.toList());
   }
 
   private Map<String, String> getEnvVariables(IntegrationStage integrationStage) {
@@ -188,10 +185,9 @@ public class IntegrationStageExecutionModifier implements StageExecutionModifier
 
     return integrationStage.getCustomVariables()
         .stream()
-        .filter(customVariables
-            -> customVariables.getType().equals(
-                "text")) // Todo instead of hard coded text use variable type once we have type in cdng
-        .collect(toMap(CustomVariables::getName, CustomVariables::getValue));
+        .filter(customVariables -> customVariables.getType().equals(CustomVariable.Type.TEXT))
+        .map(customVariable -> (CustomTextVariable) customVariable)
+        .collect(toMap(CustomTextVariable::getName, CustomTextVariable::getValue));
   }
 
   private ContainerResourceParams getContainerResourceParams(IntegrationStage integrationStage) {

@@ -2,13 +2,14 @@ package software.wings.delegatetasks.citasks.cik8handler.container;
 
 import static io.harness.rule.OwnerRule.SHUBHAM;
 import static junit.framework.TestCase.assertEquals;
+import static junit.framework.TestCase.assertNull;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static software.wings.delegatetasks.citasks.cik8handler.container.GitCloneContainerSpecBuilderTestHelper.gitCloneParamsWithInvalidAuth;
 import static software.wings.delegatetasks.citasks.cik8handler.container.GitCloneContainerSpecBuilderTestHelper.gitCloneParamsWithPassword;
 import static software.wings.delegatetasks.citasks.cik8handler.container.GitCloneContainerSpecBuilderTestHelper.gitCloneParamsWithSsh;
 import static software.wings.delegatetasks.citasks.cik8handler.container.GitCloneContainerSpecBuilderTestHelper.gitCloneParamsWithSshAndCommit;
 import static software.wings.delegatetasks.citasks.cik8handler.container.GitCloneContainerSpecBuilderTestHelper.gitCloneParamsWithUnsetBranch;
 import static software.wings.delegatetasks.citasks.cik8handler.container.GitCloneContainerSpecBuilderTestHelper.gitCloneParamsWithUnsetGitConfigParams;
-import static software.wings.delegatetasks.citasks.cik8handler.container.GitCloneContainerSpecBuilderTestHelper.gitCloneParamsWithUnsetGitFileConfig;
 import static software.wings.delegatetasks.citasks.cik8handler.container.GitCloneContainerSpecBuilderTestHelper.gitCloneParamsWithUnsetGitRepoUrl;
 import static software.wings.delegatetasks.citasks.cik8handler.container.GitCloneContainerSpecBuilderTestHelper.gitCloneParamsWithUnsetVolume;
 import static software.wings.delegatetasks.citasks.cik8handler.container.GitCloneContainerSpecBuilderTestHelper.gitCloneParamsWithUnsetWorkDir;
@@ -49,21 +50,22 @@ public class GitCloneContainerSpecBuilderTest extends WingsBaseTest {
 
   private List<String> gitCtrCommands = Arrays.asList("/bin/sh", "-c", "--");
 
-  @Test
+  @Test()
   @Owner(developers = SHUBHAM)
   @Category(UnitTests.class)
   public void createGitCloneSpecWithEmptyConfig() {
     // Test 1. Empty git clone parameters.
     GitCloneContainerParams gitCloneContainerParams1 = GitCloneContainerParams.builder().build();
-    assertEquals(null, gitCloneContainerSpecBuilder.createGitCloneSpec(gitCloneContainerParams1));
+    assertNull(gitCloneContainerSpecBuilder.createGitCloneSpec(gitCloneContainerParams1));
 
     // Test 2. Unset git config.
     GitCloneContainerParams gitCloneContainerParams2 = gitCloneParamsWithUnsetGitConfigParams();
-    assertEquals(null, gitCloneContainerSpecBuilder.createGitCloneSpec(gitCloneContainerParams2));
+    assertNull(gitCloneContainerSpecBuilder.createGitCloneSpec(gitCloneContainerParams2));
 
     // Test 3. Unset git repo URL.
     GitCloneContainerParams gitCloneContainerParams3 = gitCloneParamsWithUnsetGitRepoUrl();
-    assertEquals(null, gitCloneContainerSpecBuilder.createGitCloneSpec(gitCloneContainerParams3));
+    assertThatThrownBy(() -> gitCloneContainerSpecBuilder.createGitCloneSpec(gitCloneContainerParams3))
+        .isInstanceOf(GeneralException.class);
   }
 
   @Test(expected = GeneralException.class)
@@ -71,14 +73,6 @@ public class GitCloneContainerSpecBuilderTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void createGitCloneSpecWithUnsetBranchException() {
     GitCloneContainerParams gitCloneContainerParams = gitCloneParamsWithUnsetBranch();
-    gitCloneContainerSpecBuilder.createGitCloneSpec(gitCloneContainerParams);
-  }
-
-  @Test(expected = GeneralException.class)
-  @Owner(developers = SHUBHAM)
-  @Category(UnitTests.class)
-  public void createGitCloneSpecWithUnsetGitFileConfigException() {
-    GitCloneContainerParams gitCloneContainerParams = gitCloneParamsWithUnsetGitFileConfig();
     gitCloneContainerSpecBuilder.createGitCloneSpec(gitCloneContainerParams);
   }
 

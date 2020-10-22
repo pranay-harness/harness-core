@@ -1,7 +1,6 @@
 package software.wings.delegatetasks.citasks.cik8handler.container;
 
 import static java.lang.String.format;
-import static software.wings.beans.ci.pod.EncryptedVariableWithType.Type.TEXT;
 
 import io.fabric8.kubernetes.api.model.ContainerBuilder;
 import io.fabric8.kubernetes.api.model.ContainerPort;
@@ -19,19 +18,22 @@ import io.fabric8.kubernetes.api.model.Volume;
 import io.fabric8.kubernetes.api.model.VolumeBuilder;
 import io.fabric8.kubernetes.api.model.VolumeMount;
 import io.fabric8.kubernetes.api.model.VolumeMountBuilder;
+import io.harness.encryption.SecretRefData;
 import io.harness.k8s.model.ImageDetails;
 import io.harness.security.encryption.EncryptedDataDetail;
 import software.wings.beans.ci.pod.CIK8ContainerParams;
 import software.wings.beans.ci.pod.ContainerResourceParams;
 import software.wings.beans.ci.pod.ContainerSecrets;
-import software.wings.beans.ci.pod.EncryptedVariableWithType;
 import software.wings.beans.ci.pod.ImageDetailsWithConnector;
 import software.wings.beans.ci.pod.SecretVarParams;
+import software.wings.beans.ci.pod.SecretVariableDTO;
+import software.wings.beans.ci.pod.SecretVariableDetails;
 import software.wings.beans.ci.pod.SecretVolumeParams;
 import software.wings.delegatetasks.citasks.cik8handler.params.CIConstants;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -134,11 +136,16 @@ public class ContainerSpecBuilderTestHelper {
     envVars.put(var1, value1);
     envVars.put(var2, value2);
 
-    Map<String, EncryptedVariableWithType> encryptedEnvVars = new HashMap<>();
-    encryptedEnvVars.put(secretVar,
-        EncryptedVariableWithType.builder()
-            .type(TEXT)
-            .encryptedDataDetail(EncryptedDataDetail.builder().fieldName("abc").build())
+    List<SecretVariableDetails> secretVariableDetailsList = new ArrayList<>();
+    secretVariableDetailsList.add(
+        SecretVariableDetails.builder()
+            .encryptedDataDetailList(
+                Collections.singletonList(EncryptedDataDetail.builder().fieldName("secret").build()))
+            .secretVariableDTO(SecretVariableDTO.builder()
+                                   .type(SecretVariableDTO.Type.TEXT)
+                                   .name(secretName)
+                                   .secret(SecretRefData.builder().identifier(secretKey).build())
+                                   .build())
             .build());
 
     Map<String, SecretVarParams> secretEnvVars = new HashMap<>();
@@ -150,8 +157,8 @@ public class ContainerSpecBuilderTestHelper {
         .args(args)
         .envVars(envVars)
         .workingDir(workingDir)
-        .ports(Arrays.asList(port))
-        .containerSecrets(ContainerSecrets.builder().encryptedSecrets(encryptedEnvVars).build())
+        .ports(Collections.singletonList(port))
+        .containerSecrets(ContainerSecrets.builder().secretVariableDetails(secretVariableDetailsList).build())
         .secretEnvVars(secretEnvVars)
         .build();
   }

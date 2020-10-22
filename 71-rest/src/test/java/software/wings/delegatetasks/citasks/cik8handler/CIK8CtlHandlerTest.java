@@ -13,9 +13,9 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static software.wings.delegatetasks.citasks.cik8handler.CIK8BuildTaskHandlerTestHelper.getCustomVarSecret;
 import static software.wings.delegatetasks.citasks.cik8handler.CIK8BuildTaskHandlerTestHelper.getDockerSecret;
-import static software.wings.delegatetasks.citasks.cik8handler.CIK8BuildTaskHandlerTestHelper.getEncryptedDetails;
+import static software.wings.delegatetasks.citasks.cik8handler.CIK8BuildTaskHandlerTestHelper.getPublishArtifactConnectorDetails;
 import static software.wings.delegatetasks.citasks.cik8handler.CIK8BuildTaskHandlerTestHelper.getPublishArtifactSecrets;
-import static software.wings.delegatetasks.citasks.cik8handler.CIK8BuildTaskHandlerTestHelper.getPublishArtifactSettings;
+import static software.wings.delegatetasks.citasks.cik8handler.CIK8BuildTaskHandlerTestHelper.getSecretVariableDetails;
 import static software.wings.delegatetasks.citasks.cik8handler.params.CIConstants.POD_MAX_WAIT_UNTIL_READY_SECS;
 import static software.wings.delegatetasks.citasks.cik8handler.params.CIConstants.POD_PENDING_PHASE;
 import static software.wings.delegatetasks.citasks.cik8handler.params.CIConstants.POD_RUNNING_PHASE;
@@ -55,18 +55,16 @@ import io.harness.category.element.UnitTests;
 import io.harness.exception.PodNotFoundException;
 import io.harness.k8s.model.ImageDetails;
 import io.harness.rule.Owner;
-import io.harness.security.encryption.EncryptableSettingWithEncryptionDetails;
-import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.threading.Sleeper;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import software.wings.WingsBaseTest;
-import software.wings.beans.GitConfig;
-import software.wings.beans.ci.pod.EncryptedVariableWithType;
+import software.wings.beans.ci.pod.ConnectorDetails;
 import software.wings.beans.ci.pod.ImageDetailsWithConnector;
 import software.wings.beans.ci.pod.SecretParams;
+import software.wings.beans.ci.pod.SecretVariableDetails;
 
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -218,29 +216,27 @@ public class CIK8CtlHandlerTest extends WingsBaseTest {
   @Owner(developers = SHUBHAM)
   @Category(UnitTests.class)
   public void createGitSecretWithEmptyCreds() throws UnsupportedEncodingException {
-    List<EncryptedDataDetail> gitEncryptedDataDetails = new ArrayList<>();
-    GitConfig gitConfig = GitConfig.builder().build();
-    when(mockSecretSpecBuilder.getGitSecretSpec(gitConfig, gitEncryptedDataDetails, namespace)).thenReturn(null);
+    ConnectorDetails gitConnectorDetails = ConnectorDetails.builder().build();
+    when(mockSecretSpecBuilder.getGitSecretSpec(gitConnectorDetails, namespace)).thenReturn(null);
 
-    cik8CtlHandler.createGitSecret(mockKubernetesClient, namespace, gitConfig, gitEncryptedDataDetails);
-    verify(mockSecretSpecBuilder).getGitSecretSpec(gitConfig, gitEncryptedDataDetails, namespace);
+    cik8CtlHandler.createGitSecret(mockKubernetesClient, namespace, gitConnectorDetails);
+    verify(mockSecretSpecBuilder).getGitSecretSpec(gitConnectorDetails, namespace);
   }
 
   @Test
   @Owner(developers = SHUBHAM)
   @Category(UnitTests.class)
   public void createGitSecretWithCreds() throws UnsupportedEncodingException {
-    List<EncryptedDataDetail> gitEncryptedDataDetails = new ArrayList<>();
-    GitConfig gitConfig = GitConfig.builder().build();
+    ConnectorDetails gitConnectorDetails = ConnectorDetails.builder().build();
     Secret mockSecret = new SecretBuilder().build();
     Secret mockCreatedSecret = new SecretBuilder().build();
-    when(mockSecretSpecBuilder.getGitSecretSpec(gitConfig, gitEncryptedDataDetails, namespace)).thenReturn(mockSecret);
+    when(mockSecretSpecBuilder.getGitSecretSpec(gitConnectorDetails, namespace)).thenReturn(mockSecret);
     when(mockKubernetesClient.secrets()).thenReturn(mockKubeSecret);
     when(mockKubeSecret.inNamespace(namespace)).thenReturn(mockSecretNonNamespacedOp);
     when(mockSecretNonNamespacedOp.createOrReplace(mockSecret)).thenReturn(mockCreatedSecret);
 
-    cik8CtlHandler.createGitSecret(mockKubernetesClient, namespace, gitConfig, gitEncryptedDataDetails);
-    verify(mockSecretSpecBuilder).getGitSecretSpec(gitConfig, gitEncryptedDataDetails, namespace);
+    cik8CtlHandler.createGitSecret(mockKubernetesClient, namespace, gitConnectorDetails);
+    verify(mockSecretSpecBuilder).getGitSecretSpec(gitConnectorDetails, namespace);
     verify(mockKubernetesClient).secrets();
     verify(mockKubeSecret).inNamespace(namespace);
     verify(mockSecretNonNamespacedOp).createOrReplace(mockSecret);
@@ -250,13 +246,12 @@ public class CIK8CtlHandlerTest extends WingsBaseTest {
   @Owner(developers = SHUBHAM)
   @Category(UnitTests.class)
   public void createGitSecretWithException() throws UnsupportedEncodingException {
-    List<EncryptedDataDetail> gitEncryptedDataDetails = new ArrayList<>();
-    GitConfig gitConfig = GitConfig.builder().build();
-    when(mockSecretSpecBuilder.getGitSecretSpec(gitConfig, gitEncryptedDataDetails, namespace))
+    ConnectorDetails gitConnectorDetails = ConnectorDetails.builder().build();
+    when(mockSecretSpecBuilder.getGitSecretSpec(gitConnectorDetails, namespace))
         .thenThrow(UnsupportedEncodingException.class);
 
-    cik8CtlHandler.createGitSecret(mockKubernetesClient, namespace, gitConfig, gitEncryptedDataDetails);
-    verify(mockSecretSpecBuilder).getGitSecretSpec(gitConfig, gitEncryptedDataDetails, namespace);
+    cik8CtlHandler.createGitSecret(mockKubernetesClient, namespace, gitConnectorDetails);
+    verify(mockSecretSpecBuilder).getGitSecretSpec(gitConnectorDetails, namespace);
   }
 
   @Test()
@@ -439,9 +434,9 @@ public class CIK8CtlHandlerTest extends WingsBaseTest {
   @Owner(developers = ALEKSANDAR)
   @Category(UnitTests.class)
   public void shouldFetchCustomVariableSecretKeyMap() {
-    Map<String, EncryptedVariableWithType> encryptedDetails = getEncryptedDetails();
-    when(mockSecretSpecBuilder.decryptCustomSecretVariables(encryptedDetails)).thenReturn(getCustomVarSecret());
-    Map<String, SecretParams> secretKeyMap = cik8CtlHandler.fetchCustomVariableSecretKeyMap(encryptedDetails);
+    List<SecretVariableDetails> secretVariableDetails = getSecretVariableDetails();
+    when(mockSecretSpecBuilder.decryptCustomSecretVariables(secretVariableDetails)).thenReturn(getCustomVarSecret());
+    Map<String, SecretParams> secretKeyMap = cik8CtlHandler.fetchCustomVariableSecretKeyMap(secretVariableDetails);
     assertThat(secretKeyMap).isEqualTo(getCustomVarSecret());
   }
 
@@ -449,7 +444,7 @@ public class CIK8CtlHandlerTest extends WingsBaseTest {
   @Owner(developers = ALEKSANDAR)
   @Category(UnitTests.class)
   public void shouldFetchPublishArtifactSecretKeyMap() {
-    Map<String, EncryptableSettingWithEncryptionDetails> publishArtifactSettings = getPublishArtifactSettings();
+    Map<String, ConnectorDetails> publishArtifactSettings = getPublishArtifactConnectorDetails();
     when(mockSecretSpecBuilder.decryptPublishArtifactSecretVariables(publishArtifactSettings))
         .thenReturn(getPublishArtifactSecrets());
 

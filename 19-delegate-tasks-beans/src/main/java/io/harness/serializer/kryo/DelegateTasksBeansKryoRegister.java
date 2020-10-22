@@ -19,6 +19,7 @@ import io.harness.delegate.beans.azure.AzureMachineImageArtifactDTO.OSType;
 import io.harness.delegate.beans.azure.AzureVMAuthDTO;
 import io.harness.delegate.beans.azure.AzureVMAuthType;
 import io.harness.delegate.beans.azure.GalleryImageDefinitionDTO;
+import io.harness.delegate.beans.connector.ConnectorType;
 import io.harness.delegate.beans.connector.ConnectorValidationResult;
 import io.harness.delegate.beans.connector.appdynamicsconnector.AppDynamicsConnectionTaskParams;
 import io.harness.delegate.beans.connector.appdynamicsconnector.AppDynamicsConnectionTaskResponse;
@@ -382,5 +383,6 @@ public class DelegateTasksBeansKryoRegister implements KryoRegistrar {
     kryo.register(JiraIssueData.class, 19369);
     kryo.register(JiraConnectionTaskParams.class, 19370);
     kryo.register(JiraTestConnectionTaskNGResponse.class, 19371);
+    kryo.register(ConnectorType.class, 19372);
   }
 }
