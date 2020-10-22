@@ -23,14 +23,12 @@ import io.fabric8.kubernetes.api.model.ServicePortBuilder;
 import io.fabric8.kubernetes.client.KubernetesClient;
 import io.fabric8.kubernetes.client.dsl.ExecWatch;
 import io.harness.exception.PodNotFoundException;
-import io.harness.security.encryption.EncryptableSettingWithEncryptionDetails;
-import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.threading.Sleeper;
 import lombok.extern.slf4j.Slf4j;
-import software.wings.beans.GitConfig;
-import software.wings.beans.ci.pod.EncryptedVariableWithType;
+import software.wings.beans.ci.pod.ConnectorDetails;
 import software.wings.beans.ci.pod.ImageDetailsWithConnector;
 import software.wings.beans.ci.pod.SecretParams;
+import software.wings.beans.ci.pod.SecretVariableDetails;
 import software.wings.delegatetasks.citasks.cik8handler.params.CIConstants;
 import software.wings.helpers.ext.k8s.response.PodStatus;
 
@@ -105,14 +103,13 @@ public class CIK8CtlHandler {
     kubernetesClient.services().inNamespace(namespace).create(svc);
   }
 
-  public Map<String, SecretParams> fetchCustomVariableSecretKeyMap(
-      Map<String, EncryptedVariableWithType> encryptedSecrets) {
-    return secretSpecBuilder.decryptCustomSecretVariables(encryptedSecrets);
+  public Map<String, SecretParams> fetchCustomVariableSecretKeyMap(List<SecretVariableDetails> secretVariableDetails) {
+    return secretSpecBuilder.decryptCustomSecretVariables(secretVariableDetails);
   }
 
   public Map<String, SecretParams> fetchPublishArtifactSecretKeyMap(
-      Map<String, EncryptableSettingWithEncryptionDetails> publishArtifactEncryptedValues) {
-    return secretSpecBuilder.decryptPublishArtifactSecretVariables(publishArtifactEncryptedValues);
+      Map<String, ConnectorDetails> publishArtifactConnectors) {
+    return secretSpecBuilder.decryptPublishArtifactSecretVariables(publishArtifactConnectors);
   }
 
   public Secret createSecret(
@@ -177,9 +174,9 @@ public class CIK8CtlHandler {
     return kubernetesClient.services().inNamespace(namespace).withName(serviceName).delete();
   }
 
-  public void createGitSecret(KubernetesClient kubernetesClient, String namespace, GitConfig gitConfig,
-      List<EncryptedDataDetail> gitEncryptedDataDetails) throws UnsupportedEncodingException {
-    Secret secret = secretSpecBuilder.getGitSecretSpec(gitConfig, gitEncryptedDataDetails, namespace);
+  public void createGitSecret(KubernetesClient kubernetesClient, String namespace, ConnectorDetails gitConnector)
+      throws UnsupportedEncodingException {
+    Secret secret = secretSpecBuilder.getGitSecretSpec(gitConnector, namespace);
     if (secret != null) {
       kubernetesClient.secrets().inNamespace(namespace).createOrReplace(secret);
     }

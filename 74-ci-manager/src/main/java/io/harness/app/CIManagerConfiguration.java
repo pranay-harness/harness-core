@@ -9,6 +9,7 @@ import io.dropwizard.bundles.assets.AssetsBundleConfiguration;
 import io.dropwizard.bundles.assets.AssetsConfiguration;
 import io.federecio.dropwizard.swagger.SwaggerBundleConfiguration;
 import io.harness.mongo.MongoConfig;
+import io.harness.remote.client.ServiceHttpClientConfig;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -33,7 +34,11 @@ public class CIManagerConfiguration extends Configuration implements AssetsBundl
   @Builder.Default @JsonProperty("harness-mongo") private MongoConfig harnessMongo = MongoConfig.builder().build();
   @JsonProperty("swagger") private SwaggerBundleConfiguration swaggerBundleConfiguration;
   private ScmConnectionConfig scmConnectionConfig;
-  private String managerUrl;
+  @JsonProperty("managerClientConfig") private ServiceHttpClientConfig managerClientConfig;
+  @JsonProperty("ngManagerClientConfig") private ServiceHttpClientConfig ngManagerClientConfig;
+
+  private String ngManagerServiceSecret;
+
   private String managerServiceSecret;
   private String managerTarget;
   private String managerAuthority;

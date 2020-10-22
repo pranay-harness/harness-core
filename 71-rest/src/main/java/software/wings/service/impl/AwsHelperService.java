@@ -867,7 +867,7 @@ public class AwsHelperService {
 
   public RunTaskResult triggerEcsRunTask(
       String region, AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails, RunTaskRequest runTaskRequest) {
-    encryptionService.decrypt(awsConfig, encryptionDetails);
+    encryptionService.decrypt(awsConfig, encryptionDetails, false);
     tracker.trackECSCall("Ecs Run Task Request");
     return getAmazonEcsClient(region, awsConfig).runTask(runTaskRequest);
   }
@@ -903,7 +903,7 @@ public class AwsHelperService {
   public DeregisterTaskDefinitionResult deregisterTaskDefinitions(String region, AwsConfig awsConfig,
       List<EncryptedDataDetail> encryptionDetails, DeregisterTaskDefinitionRequest deregisterTaskDefinitionRequest) {
     try {
-      encryptionService.decrypt(awsConfig, encryptionDetails);
+      encryptionService.decrypt(awsConfig, encryptionDetails, false);
       tracker.trackECSCall("List Tasks");
       return getAmazonEcsClient(region, awsConfig).deregisterTaskDefinition(deregisterTaskDefinitionRequest);
     } catch (ClusterNotFoundException ex) {

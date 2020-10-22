@@ -9,6 +9,7 @@ import lombok.experimental.UtilityClass;
 public class ConnectorNextGenRegistrars {
   public static final ImmutableSet<Class<? extends KryoRegistrar>> kryoRegistrars =
       ImmutableSet.<Class<? extends KryoRegistrar>>builder()
+          .add(ConnectorNextGenRegistrar.class)
           .add(NGCoreKryoRegistrar.class)
           .add(NGCoreBeansKryoRegistrar.class)
           .add(DelegateTasksBeansKryoRegister.class)

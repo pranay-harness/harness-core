@@ -1,19 +1,24 @@
 package io.harness;
 
+import static org.mockito.Mockito.mock;
+
 import com.google.common.collect.ImmutableSet;
 import com.google.inject.AbstractModule;
 import com.google.inject.Provides;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
 
-import io.harness.managerclient.ManagerCIResource;
-import io.harness.managerclient.ManagerClientFactory;
+import io.harness.connector.apis.client.ConnectorResourceClientModule;
+import io.harness.grpc.DelegateServiceGrpcClient;
 import io.harness.morphia.MorphiaRegistrar;
+
+import io.harness.remote.client.ServiceHttpClientConfig;
+import io.harness.secretmanagerclient.SecretManagementClientModule;
+import io.harness.secrets.SecretNGManagerClientModule;
 import io.harness.security.ServiceTokenGenerator;
 import io.harness.serializer.CiExecutionRegistrars;
 import io.harness.serializer.KryoRegistrar;
 import io.harness.serializer.ManagerRegistrars;
-import io.harness.serializer.kryo.KryoConverterFactory;
 import org.mongodb.morphia.converters.TypeConverter;
 
 import java.util.Set;
@@ -51,15 +56,14 @@ public class CIExecutionTestModule extends AbstractModule {
     return "j6ErHMBlC2dn6WctNQKt0xfyo_PZuK7ls0Z4d6XCaBg";
   }
 
-  @Provides
-  @Singleton
-  ManagerClientFactory managerClientFactory(
-      ServiceTokenGenerator tokenGenerator, KryoConverterFactory kryoConverterFactory) {
-    return new ManagerClientFactory("https://localhost:9090/api/", tokenGenerator, kryoConverterFactory);
-  }
-
   @Override
   protected void configure() {
-    bind(ManagerCIResource.class).toProvider(ManagerClientFactory.class);
+    bind(DelegateServiceGrpcClient.class).toInstance(mock(DelegateServiceGrpcClient.class));
+    install(new ConnectorResourceClientModule(
+        ServiceHttpClientConfig.builder().baseUrl("http://localhost:3457/").build(), "test_secret"));
+    install(new SecretNGManagerClientModule(
+        ServiceHttpClientConfig.builder().baseUrl("http://localhost:7457/").build(), "test_secret"));
+    install(new SecretManagementClientModule(
+        ServiceHttpClientConfig.builder().baseUrl("http://localhost:3457/").build(), "test_secret"));
   }
 }

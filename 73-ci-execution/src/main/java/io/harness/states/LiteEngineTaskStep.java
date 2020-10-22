@@ -21,6 +21,7 @@ import io.harness.exception.InvalidRequestException;
 import io.harness.execution.status.Status;
 import io.harness.facilitator.PassThroughData;
 import io.harness.facilitator.modes.sync.SyncExecutable;
+import io.harness.logging.CommandExecutionStatus;
 import io.harness.ngpipeline.orchestration.StepUtils;
 import io.harness.plancreators.IntegrationStagePlanCreator;
 import io.harness.state.Step;
@@ -34,6 +35,7 @@ import io.harness.yaml.core.ParallelStepElement;
 import io.harness.yaml.core.StepElement;
 import io.harness.yaml.core.auxiliary.intfc.ExecutionWrapper;
 import lombok.extern.slf4j.Slf4j;
+import software.wings.helpers.ext.k8s.response.K8sTaskExecutionResponse;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -56,14 +58,21 @@ public class LiteEngineTaskStep implements Step, SyncExecutable<LiteEngineTaskSt
   public StepResponse executeSync(Ambiance ambiance, LiteEngineTaskStepInfo liteEngineTaskStepInfo,
       StepInputPackage inputPackage, PassThroughData passThroughData) {
     try {
-      // TODO Handle response and fetch cluster from input element
       addCallBackIds(liteEngineTaskStepInfo, ambiance);
-      buildSetupUtils.executeCILiteEngineTask(liteEngineTaskStepInfo, ambiance);
-      return StepResponse.builder().status(Status.SUCCEEDED).build();
+      K8sTaskExecutionResponse k8sTaskExecutionResponse =
+          buildSetupUtils.executeCILiteEngineTask(liteEngineTaskStepInfo, ambiance);
+      if (k8sTaskExecutionResponse.getCommandExecutionStatus() == CommandExecutionStatus.SUCCESS) {
+        logger.error("LiteEngineTaskStep execution succeeded");
+        return StepResponse.builder().status(Status.SUCCEEDED).build();
+      } else {
+        logger.error("LiteEngineTaskStep execution failed with status {} and message {}",
+            k8sTaskExecutionResponse.getCommandExecutionStatus(), k8sTaskExecutionResponse.getErrorMessage());
+        return StepResponse.builder().status(Status.FAILED).build();
+      }
     } catch (Exception e) {
-      logger.error("state execution failed", e);
+      logger.error("LiteEngineTaskStep execution failed", e);
+      return StepResponse.builder().status(Status.ERRORED).build();
     }
-    return StepResponse.builder().status(Status.SUCCEEDED).build();
   }
 
   private void addCallBackIds(LiteEngineTaskStepInfo liteEngineTaskStepInfo, Ambiance ambiance) {

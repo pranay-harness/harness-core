@@ -54,7 +54,7 @@
         </dependency>
         <dependency>
             <groupId>software.wings</groupId>
-            <artifactId>22-ng-core-clients</artifactId>
+            <artifactId>23-ng-core-clients</artifactId>
             <version>${project.parent.version}</version>
             <scope>compile</scope>
         </dependency>

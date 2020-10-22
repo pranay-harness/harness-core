@@ -1,6 +1,7 @@
 package software.wings.delegatetasks.citasks.cik8handler.pod;
 
-import static software.wings.beans.ci.pod.EncryptedVariableWithType.Type.TEXT;
+import static java.util.Arrays.asList;
+import static java.util.Collections.singletonList;
 
 import io.fabric8.kubernetes.api.model.ContainerBuilder;
 import io.fabric8.kubernetes.api.model.EmptyDirVolumeSourceBuilder;
@@ -12,6 +13,8 @@ import io.fabric8.kubernetes.api.model.Volume;
 import io.fabric8.kubernetes.api.model.VolumeBuilder;
 import io.fabric8.kubernetes.api.model.VolumeMount;
 import io.fabric8.kubernetes.api.model.VolumeMountBuilder;
+import io.harness.encryption.Scope;
+import io.harness.encryption.SecretRefData;
 import io.harness.k8s.model.ImageDetails;
 import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.security.encryption.EncryptedRecordData;
@@ -20,13 +23,13 @@ import software.wings.beans.KmsConfig;
 import software.wings.beans.ci.pod.CIK8ContainerParams;
 import software.wings.beans.ci.pod.CIK8PodParams;
 import software.wings.beans.ci.pod.ContainerSecrets;
-import software.wings.beans.ci.pod.EncryptedVariableWithType;
 import software.wings.beans.ci.pod.ImageDetailsWithConnector;
 import software.wings.beans.ci.pod.PVCParams;
+import software.wings.beans.ci.pod.SecretVariableDTO;
+import software.wings.beans.ci.pod.SecretVariableDetails;
 import software.wings.delegatetasks.citasks.cik8handler.params.CIConstants;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -69,11 +72,14 @@ public class CIK8PodSpecBuilderTestHelper {
   }
 
   public static CIK8ContainerParams containerParamsWithSecretEnvVar() {
-    Map<String, EncryptedVariableWithType> encryptedVariables = new HashMap<>();
-    EncryptedVariableWithType encryptedVariableWithType =
-        EncryptedVariableWithType.builder()
-            .type(TEXT)
-            .encryptedDataDetail(
+    SecretVariableDetails secretVariableDetails =
+        SecretVariableDetails.builder()
+            .secretVariableDTO(SecretVariableDTO.builder()
+                                   .name("variable_name")
+                                   .type(SecretVariableDTO.Type.TEXT)
+                                   .secret(SecretRefData.builder().identifier("secret_id").scope(Scope.ACCOUNT).build())
+                                   .build())
+            .encryptedDataDetailList(singletonList(
                 EncryptedDataDetail.builder()
                     .encryptedData(EncryptedRecordData.builder().encryptionType(EncryptionType.KMS).build())
                     .encryptionConfig(KmsConfig.builder()
@@ -82,12 +88,12 @@ public class CIK8PodSpecBuilderTestHelper {
                                           .secretKey("secretKey")
                                           .kmsArn("kmsArn")
                                           .build())
-                    .build())
+                    .build()))
             .build();
 
-    encryptedVariables.put("abc", encryptedVariableWithType);
     return CIK8ContainerParams.builder()
-        .containerSecrets(ContainerSecrets.builder().encryptedSecrets(encryptedVariables).build())
+        .containerSecrets(
+            ContainerSecrets.builder().secretVariableDetails(singletonList(secretVariableDetails)).build())
         .name(containerName1)
         .build();
   }
@@ -152,7 +158,7 @@ public class CIK8PodSpecBuilderTestHelper {
         .namespace(namespace)
         .stepExecVolumeName(stepExecVolumeName)
         .stepExecWorkingDir(stepExecWorkingDir)
-        .containerParamsList(Arrays.asList(basicContainerParamsWithoutImageCred()))
+        .containerParamsList(asList(basicContainerParamsWithoutImageCred()))
         .build();
   }
 
@@ -162,7 +168,7 @@ public class CIK8PodSpecBuilderTestHelper {
         .namespace(namespace)
         .stepExecVolumeName(stepExecVolumeName)
         .stepExecWorkingDir(stepExecWorkingDir)
-        .containerParamsList(Arrays.asList(containerParamsWithSecretEnvVar()))
+        .containerParamsList(asList(containerParamsWithSecretEnvVar()))
         .build();
   }
 
@@ -172,7 +178,7 @@ public class CIK8PodSpecBuilderTestHelper {
         .namespace(namespace)
         .stepExecVolumeName(stepExecVolumeName)
         .stepExecWorkingDir(stepExecWorkingDir)
-        .containerParamsList(Arrays.asList(basicContainerParamsWithImageCred()))
+        .containerParamsList(asList(basicContainerParamsWithImageCred()))
         .build();
   }
   public static CIK8PodParams<CIK8ContainerParams> basicInputWithVolumeMount() {
@@ -181,7 +187,7 @@ public class CIK8PodSpecBuilderTestHelper {
         .namespace(namespace)
         .stepExecVolumeName(stepExecVolumeName)
         .stepExecWorkingDir(stepExecWorkingDir)
-        .containerParamsList(Arrays.asList(containerParamsWithVoluemMount()))
+        .containerParamsList(asList(containerParamsWithVoluemMount()))
         .build();
   }
   public static CIK8PodParams<CIK8ContainerParams> basicInputWithPVC() {
@@ -190,8 +196,8 @@ public class CIK8PodSpecBuilderTestHelper {
         .namespace(namespace)
         .stepExecVolumeName(stepExecVolumeName)
         .stepExecWorkingDir(stepExecWorkingDir)
-        .containerParamsList(Arrays.asList(containerParamsWithVoluemMount()))
-        .pvcParamList(Arrays.asList(pvcParams(volume1)))
+        .containerParamsList(asList(containerParamsWithVoluemMount()))
+        .pvcParamList(asList(pvcParams(volume1)))
         .build();
   }
 
