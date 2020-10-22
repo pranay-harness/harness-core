@@ -221,8 +221,6 @@ public class EnvironmentServiceTest extends WingsBaseTest {
         envPageRequest, false, null, Collections.singletonList(environment.getAppId()));
 
     assertThat(environments).containsAll(asList(environment));
-    assertThat(environments.get(0).getServiceTemplates()).containsAll(asList(serviceTemplate));
-    verify(serviceTemplateService).list(serviceTemplatePageRequest, false, OBTAIN_VALUE);
   }
 
   /**
