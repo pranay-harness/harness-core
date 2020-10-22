@@ -16,22 +16,22 @@ public interface CVActivityLogService {
       String accountId, String stateExecutionId, String cvConfigId, long startTimeEpochMinute, long endTimeEpochMinute);
 
   interface Logger {
-    default void info(String log, long... timestampParams) {
-      this.appendLog(LogLevel.INFO, log, timestampParams);
+    default void info(String message, long... timestampParams) {
+      this.appendLog(LogLevel.INFO, message, timestampParams);
     }
-    default void warn(String log, long... timestampParams) {
-      this.appendLog(LogLevel.WARN, log, timestampParams);
+    default void warn(String message, long... timestampParams) {
+      this.appendLog(LogLevel.WARN, message, timestampParams);
     }
-    default void error(String error, long... timestampParams) {
-      this.appendLog(LogLevel.ERROR, error, timestampParams);
+    default void error(String message, long... timestampParams) {
+      this.appendLog(LogLevel.ERROR, message, timestampParams);
     }
 
     /**
      * use %t in the log message with timestamp params to localize timestamp in the UI.
      * @param logLevel
-     * @param log
+     * @param message
      * @param timestampParams epoch timestamp in millis
      */
-    void appendLog(LogLevel logLevel, String log, long... timestampParams);
+    void appendLog(LogLevel logLevel, String message, long... timestampParams);
   }
 }
