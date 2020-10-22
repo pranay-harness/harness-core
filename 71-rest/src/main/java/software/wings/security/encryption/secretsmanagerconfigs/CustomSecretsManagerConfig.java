@@ -18,8 +18,10 @@ import io.harness.secretmanagerclient.dto.SecretManagerConfigDTO;
 import io.harness.security.encryption.EncryptedDataParams;
 import io.harness.security.encryption.EncryptionType;
 import io.harness.security.encryption.SecretManagerType;
+import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
+import lombok.NoArgsConstructor;
 import lombok.NonNull;
 import lombok.ToString;
 import lombok.experimental.FieldNameConstants;
@@ -37,6 +39,8 @@ import java.util.Set;
 @OwnedBy(PL)
 @Data
 @SuperBuilder
+@NoArgsConstructor
+@AllArgsConstructor
 @ToString(exclude = {"customSecretsManagerShellScript", "remoteHostConnector"})
 @EqualsAndHashCode(callSuper = true)
 @FieldNameConstants(innerTypeName = "CustomSecretsManagerConfigKeys")
