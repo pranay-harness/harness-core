@@ -334,7 +334,7 @@ public enum ArtifactType {
      */
     private Command getInstallCommand() {
       return aCommand()
-          .withCommandType(CommandType.START)
+          .withCommandType(CommandType.INSTALL)
           .withGraph(aGraph()
                          .withGraphName("Install")
                          .addNodes(getSetupRuntimePathsNode(), getCopyArtifactNode(),
