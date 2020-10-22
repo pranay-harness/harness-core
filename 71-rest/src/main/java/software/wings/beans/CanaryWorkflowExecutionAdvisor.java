@@ -35,6 +35,7 @@ import io.harness.exception.ExceptionUtils;
 import io.harness.exception.FailureType;
 import io.harness.interrupts.ExecutionInterruptType;
 import io.harness.interrupts.RepairActionCode;
+import io.harness.logging.AutoLogContext;
 import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.annotations.Transient;
 import software.wings.api.PhaseElement;
@@ -100,11 +101,12 @@ public class CanaryWorkflowExecutionAdvisor implements ExecutionEventAdvisor {
         workflowExecutionService.getWorkflowExecution(context.getAppId(), context.getWorkflowExecutionId());
     StateExecutionInstance stateExecutionInstance = context.getStateExecutionInstance();
 
-    try {
+    try (AutoLogContext ignore = context.autoLogContext()) {
       List<ExecutionInterrupt> executionInterrupts =
           executionInterruptManager.checkForExecutionInterrupt(context.getAppId(), context.getWorkflowExecutionId());
       if (executionInterrupts != null
           && executionInterrupts.stream().anyMatch(ex -> ex.getExecutionInterruptType() == ABORT_ALL)) {
+        logger.info("Returning advise for ABORT_ALL");
         return anExecutionEventAdvice().withExecutionInterruptType(ExecutionInterruptType.END_EXECUTION).build();
       }
 
@@ -295,6 +297,9 @@ public class CanaryWorkflowExecutionAdvisor implements ExecutionEventAdvisor {
 
       return computeExecutionEventAdvice(
           orchestrationWorkflow, failureStrategy, executionEvent, phaseSubWorkflow, stateExecutionInstance);
+    } catch (Exception ex) {
+      logger.error("Error Occurred while calculating advise. This is really bad");
+      return null;
     } finally {
       try {
         if (state.getStateType().equals(StateType.PHASE_STEP.name()) && state instanceof PhaseStepSubWorkflow) {
