@@ -21,6 +21,7 @@ import static software.wings.beans.Log.Builder.aLog;
 
 import com.google.inject.Inject;
 
+import com.offbytwo.jenkins.client.JenkinsHttpConnection;
 import com.offbytwo.jenkins.model.Build;
 import com.offbytwo.jenkins.model.BuildResult;
 import com.offbytwo.jenkins.model.BuildWithDetails;
@@ -53,6 +54,7 @@ import software.wings.beans.TaskType;
 import software.wings.beans.command.JenkinsTaskParams;
 import software.wings.helpers.ext.jenkins.Jenkins;
 import software.wings.helpers.ext.jenkins.JenkinsFactory;
+import software.wings.helpers.ext.jenkins.model.CustomBuildWithDetails;
 import software.wings.service.impl.jenkins.JenkinsUtils;
 import software.wings.service.intfc.security.EncryptionService;
 import software.wings.sm.states.JenkinsState;
@@ -69,8 +71,11 @@ public class JenkinsTaskTest extends WingsBaseTest {
   @Rule public MockitoRule mockitoRule = MockitoJUnit.rule();
   @Mock private JenkinsFactory jenkinsFactory;
   @Mock private Jenkins jenkins;
+  @Mock private JenkinsHttpConnection jenkinsHttpConnection;
   @Mock private Build build;
+  @Mock private CustomBuildWithDetails customBuildWithDetails;
   @Mock private BuildWithDetails buildWithDetails;
+  @Mock private QueueReference queueReference;
   @Mock private EncryptionService encryptionService;
   @Mock private DelegateLogService logService;
   @Inject @InjectMocks JenkinsUtils jenkinsUtil;
@@ -79,6 +84,8 @@ public class JenkinsTaskTest extends WingsBaseTest {
   @Captor private ArgumentCaptor<String> activityCaptor;
 
   private String jenkinsUrl = "http://jenkins";
+  private String buildUrl = "http://jenkins/job/TestJob/job/111";
+  private String queueItemUrlPart = "http://jenkins/queue/item/111";
   private String userName = "user1";
   private char[] password = "pass1".toCharArray();
   private String jobName = "job1";
@@ -103,7 +110,11 @@ public class JenkinsTaskTest extends WingsBaseTest {
     on(jenkinsTask).set("jenkinsUtil", jenkinsUtil);
     when(jenkinsFactory.create(anyString(), anyString(), any(char[].class))).thenReturn(jenkins);
     when(jenkins.getBuild(any(QueueReference.class), any(JenkinsConfig.class))).thenReturn(build);
+    when(build.getUrl()).thenReturn(buildUrl);
     when(build.details()).thenReturn(buildWithDetails);
+    when(buildWithDetails.getClient()).thenReturn(jenkinsHttpConnection);
+    when(customBuildWithDetails.details()).thenReturn(customBuildWithDetails);
+    when(jenkinsHttpConnection.get(any(), any())).thenReturn(customBuildWithDetails);
     when(buildWithDetails.isBuilding()).thenReturn(false);
     when(buildWithDetails.getConsoleOutputText()).thenReturn("console output");
     on(jenkinsTask).set("jenkinsExecutor", jenkinsExecutor);
@@ -113,8 +124,8 @@ public class JenkinsTaskTest extends WingsBaseTest {
   @Owner(developers = BRETT)
   @Category(UnitTests.class)
   public void shouldExecuteSuccessfullyWhenBuildPasses() throws Exception {
-    when(buildWithDetails.getResult()).thenReturn(BuildResult.SUCCESS);
-    when(buildWithDetails.getDescription()).thenReturn("test-description");
+    when(customBuildWithDetails.getResult()).thenReturn(BuildResult.SUCCESS);
+    when(customBuildWithDetails.getDescription()).thenReturn("test-description");
 
     JenkinsTaskParams params = buildJenkinsTaskParams();
     params.setParameters(Collections.emptyMap());
@@ -140,7 +151,7 @@ public class JenkinsTaskTest extends WingsBaseTest {
   @Owner(developers = BRETT)
   @Category(UnitTests.class)
   public void shouldFailWhenBuildFails() throws Exception {
-    when(buildWithDetails.getResult()).thenReturn(BuildResult.FAILURE);
+    when(customBuildWithDetails.getResult()).thenReturn(BuildResult.FAILURE);
 
     JenkinsTaskParams params = buildJenkinsTaskParams();
     params.setParameters(Collections.emptyMap());
@@ -165,7 +176,7 @@ public class JenkinsTaskTest extends WingsBaseTest {
   @Owner(developers = BRETT)
   @Category(UnitTests.class)
   public void shouldFailWhenBuildUnstable() throws Exception {
-    when(buildWithDetails.getResult()).thenReturn(BuildResult.UNSTABLE);
+    when(customBuildWithDetails.getResult()).thenReturn(BuildResult.UNSTABLE);
 
     JenkinsTaskParams params = buildJenkinsTaskParams();
     params.setParameters(Collections.emptyMap());
@@ -189,12 +200,12 @@ public class JenkinsTaskTest extends WingsBaseTest {
   @Owner(developers = SRINIVAS)
   @Category(UnitTests.class)
   public void shouldFailWhenNoJobFound() throws Exception {
-    when(build.details()).thenThrow(new HttpResponseException(404, "Job Not found"));
-
     JenkinsTaskParams params = buildJenkinsTaskParams();
     params.setParameters(Collections.emptyMap());
     params.setSubTaskType(JenkinsSubTaskType.START_TASK);
     params.setQueuedBuildUrl(jenkinsUrl);
+
+    when(customBuildWithDetails.details()).thenThrow(new HttpResponseException(404, "Job Not found"));
 
     JenkinsState.JenkinsExecutionResponse response = jenkinsTask.run(params);
     verify(jenkinsFactory).create(jenkinsUrl, userName, password);
@@ -208,7 +219,7 @@ public class JenkinsTaskTest extends WingsBaseTest {
   @Owner(developers = BRETT)
   @Category(UnitTests.class)
   public void shouldPassWhenBuildUnstableAndUnstableSuccessSet() throws Exception {
-    when(buildWithDetails.getResult()).thenReturn(BuildResult.UNSTABLE);
+    when(customBuildWithDetails.getResult()).thenReturn(BuildResult.UNSTABLE);
 
     JenkinsTaskParams params = buildJenkinsTaskParams();
     params.setParameters(Collections.emptyMap());
@@ -233,8 +244,8 @@ public class JenkinsTaskTest extends WingsBaseTest {
   @Owner(developers = GARVIT)
   @Category(UnitTests.class)
   public void shouldInjectEnvVarsWhenInjectEnvVarsSet() throws Exception {
-    when(buildWithDetails.getResult()).thenReturn(BuildResult.SUCCESS);
-    when(buildWithDetails.getDescription()).thenReturn("test-description");
+    when(customBuildWithDetails.getResult()).thenReturn(BuildResult.SUCCESS);
+    when(customBuildWithDetails.getDescription()).thenReturn("test-description");
 
     JenkinsTaskParams params = buildJenkinsTaskParams();
     params.setParameters(Collections.emptyMap());
@@ -266,8 +277,8 @@ public class JenkinsTaskTest extends WingsBaseTest {
   @Owner(developers = GARVIT)
   @Category(UnitTests.class)
   public void shouldFailWhenGetEnvVarsThrows() throws Exception {
-    when(buildWithDetails.getResult()).thenReturn(BuildResult.SUCCESS);
-    when(buildWithDetails.getDescription()).thenReturn("test-description");
+    when(customBuildWithDetails.getResult()).thenReturn(BuildResult.SUCCESS);
+    when(customBuildWithDetails.getDescription()).thenReturn("test-description");
 
     JenkinsTaskParams params = buildJenkinsTaskParams();
     params.setParameters(Collections.emptyMap());
