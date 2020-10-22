@@ -20,7 +20,9 @@ public interface SignupService {
 
   void checkIfEmailIsValid(String email);
 
-  void sendPasswordSetupMailForSignup(UserInvite userInvite);
+  void sendMarketoSignupVerificationEmail(UserInvite userInvite);
+
+  void sendTrialSignupVerificationEmail(UserInvite userInvite, Map<String, String> templateModel);
 
   String createSignupTokeFromSecret(String jwtPasswordSecret, String email, int expireAfterDays)
       throws UnsupportedEncodingException;

@@ -34,7 +34,6 @@ import software.wings.dl.WingsPersistence;
 import software.wings.exception.WeakPasswordException;
 import software.wings.helpers.ext.mail.EmailData;
 import software.wings.helpers.ext.url.SubdomainUrlHelperIntfc;
-import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.EmailNotificationService;
 import software.wings.service.intfc.SignupService;
 import software.wings.service.intfc.signup.SignupException;
@@ -62,7 +61,6 @@ public class SignupServiceImpl implements SignupService {
   @Inject BlackListedDomainChecker blackListedDomainChecker;
   @Inject MainConfiguration mainConfiguration;
   @Inject private SubdomainUrlHelperIntfc subdomainUrlHelper;
-  @Inject AccountService accountService;
   @Inject PwnedPasswordChecker pwnedPasswordChecker;
 
   private static final String COM = "com";
@@ -72,8 +70,13 @@ public class SignupServiceImpl implements SignupService {
   private static final Pattern EMAIL_PATTERN = Pattern.compile("^\\s*?(.+)@(.+?)\\s*$");
   private static final Pattern NAME_PATTERN = Pattern.compile("^[a-zA-Z0-9 -._]*$");
   private static final String TRIAL_SIGNUP_COMPLETED_TEMPLATE_NAME = "trial_signup_completed";
-  private static final String SETUP_PASSWORD_FOR_SIGNUP = "setup_password_for_signup";
+
   private static final List<String> whitelistedTopLevelDomains = ImmutableList.of("inc");
+
+  private static final String CD_TRIAL_VERIFICATION_TEMPLATE = "trial_verification_cd";
+  private static final String CE_TRIAL_VERIFICATION_TEMPLATE = "trial_verification_ce";
+  private static final String CI_TRIAL_VERIFICATION_TEMPLATE = "trial_verification_ci";
+  private static final String PLATFORM_TRIAL_VERIFICATION_TEMPLATE = "trial_verification_platform";
 
   private List<Character> illegalCharacters = Collections.unmodifiableList(Arrays.asList(
       '$', '&', ',', '/', ':', ';', '=', '?', '<', '>', '#', '{', '}', '|', '^', '~', '(', ')', ']', '`', '\'', '\"'));
@@ -198,14 +201,50 @@ public class SignupServiceImpl implements SignupService {
   }
 
   @Override
-  public void sendPasswordSetupMailForSignup(UserInvite userInvite) {
+  public void sendMarketoSignupVerificationEmail(UserInvite userInvite) {
     String jwtPasswordSecret = configuration.getPortal().getJwtPasswordSecret();
     try {
       String token = createSignupTokeFromSecret(jwtPasswordSecret, userInvite.getEmail(), 30);
       String resetPasswordUrl = getResetPasswordUrl(token, userInvite);
-      sendMail(userInvite, resetPasswordUrl, SETUP_PASSWORD_FOR_SIGNUP);
+      Map<String, String> templateModel = new HashMap<>();
+      templateModel.put("url", resetPasswordUrl);
+      templateModel.put("name", userInvite.getName());
+      sendTrialSignupVerificationEmail(userInvite, templateModel);
+
     } catch (URISyntaxException | UnsupportedEncodingException e) {
-      logger.error("Password setup mail for signup could't be sent", e);
+      logger.error("Signup verification email couldn't be sent", e);
+    }
+  }
+
+  @Override
+  public void sendTrialSignupVerificationEmail(UserInvite userInvite, Map<String, String> templateModel) {
+    String templateName = getTrialSignupTemplateName(userInvite);
+
+    // for now no email should be sent for CI only flow
+    if (!templateName.equals(CI_TRIAL_VERIFICATION_TEMPLATE)) {
+      sendEmail(userInvite, templateName, templateModel);
+    }
+  }
+
+  private String getTrialSignupTemplateName(UserInvite userInvite) {
+    List<String> freemiumProducts = userInvite.getFreemiumProducts();
+
+    if (freemiumProducts == null || freemiumProducts.size() > 1) {
+      return PLATFORM_TRIAL_VERIFICATION_TEMPLATE;
+    }
+
+    String singleProduct = freemiumProducts.get(0);
+
+    switch (singleProduct) {
+      case "CD - Continuous Delivery":
+        return CD_TRIAL_VERIFICATION_TEMPLATE;
+      case "CE - Continuous Efficiency":
+        return CE_TRIAL_VERIFICATION_TEMPLATE;
+      case "CI - Continuous Integration":
+        return CI_TRIAL_VERIFICATION_TEMPLATE;
+      default:
+        logger.error("Unknown product: {}", singleProduct);
+        return PLATFORM_TRIAL_VERIFICATION_TEMPLATE;
     }
   }
 
@@ -219,21 +258,6 @@ public class SignupServiceImpl implements SignupService {
         .withExpiresAt(new Date(System.currentTimeMillis() + (long) expireAfterDays * 24 * 60 * 60 * 1000)) // 24 hrs
         .withClaim(EMAIL, email)
         .sign(algorithm);
-  }
-
-  private void sendMail(UserInvite userInvite, String resetPasswordUrl, String resetPasswordTemplateName) {
-    Map<String, String> templateModel = new HashMap<>();
-    templateModel.put("url", resetPasswordUrl);
-    templateModel.put("name", userInvite.getName());
-    templateModel.put("companyName", userInvite.getCompanyName());
-    List<String> toList = new ArrayList<>();
-    toList.add(userInvite.getEmail());
-    EmailData emailData =
-        EmailData.builder().to(toList).templateName(resetPasswordTemplateName).templateModel(templateModel).build();
-    emailData.setCc(Collections.emptyList());
-    emailData.setRetries(2);
-
-    emailNotificationService.send(emailData);
   }
 
   private String getResetPasswordUrl(String token, UserInvite userInvite) throws URISyntaxException {
