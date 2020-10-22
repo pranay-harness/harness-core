@@ -4,7 +4,6 @@ import com.google.common.collect.ImmutableSet;
 
 import io.harness.ccm.serializer.morphia.CECommonsMorphiaRegistrar;
 import io.harness.morphia.MorphiaRegistrar;
-import io.harness.serializer.kryo.ConnectorNextGenRegistrar;
 import io.harness.serializer.kryo.CvNextGenCommonsBeansKryoRegistrar;
 import io.harness.serializer.kryo.DelegateAgentBeansKryoRegister;
 import io.harness.serializer.kryo.DelegateAgentKryoRegister;
@@ -48,7 +47,7 @@ public class ManagerRegistrars {
           .addAll(RbacCoreRegistrars.kryoRegistrars)
           .addAll(SMCoreRegistrars.kryoRegistrars)
           .add(CvNextGenCommonsBeansKryoRegistrar.class)
-          .add(ConnectorNextGenRegistrar.class)
+          .addAll(ConnectorNextGenRegistrars.kryoRegistrars)
           .add(YamlKryoRegistrar.class)
           // temporary:
           .add(DelegateAgentKryoRegister.class)

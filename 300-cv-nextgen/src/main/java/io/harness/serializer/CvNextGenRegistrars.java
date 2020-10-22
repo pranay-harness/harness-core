@@ -4,7 +4,6 @@ import com.google.common.collect.ImmutableSet;
 
 import io.harness.morphia.MorphiaRegistrar;
 import io.harness.serializer.kryo.CVNGKryoRegistrar;
-import io.harness.serializer.kryo.ConnectorNextGenRegistrars;
 import io.harness.serializer.morphia.CVNextGenMorphiaRegister;
 import lombok.experimental.UtilityClass;
 import org.mongodb.morphia.converters.TypeConverter;
