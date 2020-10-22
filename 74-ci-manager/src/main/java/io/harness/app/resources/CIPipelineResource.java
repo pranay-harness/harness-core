@@ -37,7 +37,7 @@ public class CIPipelineResource {
   private BuildNumberService buildNumberService;
 
   @POST
-  @Path("/pipelines/{identifier}/run")
+  @Path("/execute/{identifier}/run")
   @Timed
   @ExceptionMetered
   @ApiOperation(value = "Execute a CI pipeline", nickname = "executePipeline")
