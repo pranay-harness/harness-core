@@ -43,6 +43,7 @@ import io.harness.helpers.ext.vault.VaultAppRoleLoginResult;
 import io.harness.persistence.HPersistence;
 import io.harness.security.encryption.EncryptionType;
 import io.harness.serializer.KryoSerializer;
+import io.harness.templatizedsm.RuntimeCredentialsInjector;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.mongodb.morphia.query.Query;
@@ -402,7 +403,7 @@ public class VaultServiceImpl extends AbstractSecretServiceImpl implements Vault
   }
 
   private void checkIfTemplatizedSecretManagerCanBeCreatedOrUpdated(VaultConfig vaultConfig) {
-    if (SecretManagerConfig.isTemplatized(vaultConfig)) {
+    if (vaultConfig.isTemplatized()) {
       if (vaultConfig.isDefault()) {
         throw new InvalidRequestException("Cannot set a templatized secret manager as default");
       }

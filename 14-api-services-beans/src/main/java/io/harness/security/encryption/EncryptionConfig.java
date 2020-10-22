@@ -53,6 +53,11 @@ public interface EncryptionConfig {
   String getValidationCriteria();
 
   /**
+   * Get the type of secret manager.
+   */
+  SecretManagerType getType();
+
+  /**
    * Return true if this secret manager is associated with __GLOBAL_ACCOUNT_ID__ is of type KMS.
    */
   boolean isGlobalKms();

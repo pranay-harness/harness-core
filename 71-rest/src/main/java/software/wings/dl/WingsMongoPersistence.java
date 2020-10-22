@@ -26,6 +26,7 @@ import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.beans.SearchFilter.Operator;
 import io.harness.beans.SecretChangeLog;
+import io.harness.beans.SecretParentsUpdateDetail;
 import io.harness.beans.SecretText;
 import io.harness.encryption.EncryptionReflectUtils;
 import io.harness.eraro.ErrorCode;
@@ -57,7 +58,6 @@ import software.wings.security.UserPermissionInfo;
 import software.wings.security.UserRequestContext;
 import software.wings.security.UserRequestContext.EntityInfo;
 import software.wings.security.UserThreadLocal;
-import software.wings.security.encryption.SecretParentsUpdateDetail;
 import software.wings.service.intfc.security.SecretManager;
 import software.wings.settings.SettingVariableTypes;
 

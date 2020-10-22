@@ -1,7 +1,5 @@
 package io.harness.helpers.ext.vault;
 
-import io.harness.helpers.ext.vault.VaultSecretMetadata;
-
 import java.io.IOException;
 
 /**

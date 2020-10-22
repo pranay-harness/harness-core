@@ -1,8 +1,5 @@
 package io.harness.helpers.ext.vault;
 
-import io.harness.helpers.ext.vault.VaultMetadataReadResponse;
-import io.harness.helpers.ext.vault.VaultReadResponseV2;
-import io.harness.helpers.ext.vault.VaultSecretValue;
 import retrofit2.Call;
 import retrofit2.http.Body;
 import retrofit2.http.DELETE;

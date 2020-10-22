@@ -1,4 +1,4 @@
-package software.wings.service.impl.security;
+package io.harness.templatizedsm;
 
 import static io.harness.annotations.dev.HarnessTeam.PL;
 

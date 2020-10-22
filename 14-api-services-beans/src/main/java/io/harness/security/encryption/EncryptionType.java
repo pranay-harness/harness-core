@@ -1,8 +1,5 @@
 package io.harness.security.encryption;
 
-/**
- * Created by rsingh on 10/18/17.
- */
 public enum EncryptionType {
   LOCAL("safeharness"),
   KMS("amazonkms"),

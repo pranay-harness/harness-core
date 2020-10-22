@@ -56,6 +56,7 @@ import io.harness.security.encryption.EncryptedRecordData;
 import io.harness.security.encryption.EncryptionConfig;
 import io.harness.security.encryption.EncryptionType;
 import io.harness.serializer.JsonUtils;
+import io.harness.templatizedsm.RuntimeCredentialsInjector;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;

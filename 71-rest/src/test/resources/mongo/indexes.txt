@@ -77,9 +77,6 @@ audits {"name": "entityRecordIndex_4", "background": true} {"accountId": 1, "ent
 authTokens {"name": "appId_1", "background": true} {"appId": 1}
 authTokens {"name": "createdAt_1", "background": true} {"createdAt": 1}
 authTokens {"name": "validUntil_1", "background": true, "expireAfterSeconds": 0} {"validUntil": 1}
-awsSecretsManagerConfig {"name": "appId_1", "background": true} {"appId": 1}
-awsSecretsManagerConfig {"name": "createdAt_1", "background": true} {"createdAt": 1}
-awsSecretsManagerConfig {"name": "uniqueIdx", "unique": true} {"name": 1, "accountId": 1}
 barrierExecutionInstances {"name": "createdAt_1", "background": true} {"createdAt": 1}
 barrierInstances {"name": "accountId_1", "background": true} {"accountId": 1}
 barrierInstances {"name": "appId_1", "background": true} {"appId": 1}
@@ -382,9 +379,6 @@ k8sWorkloadRecommendation {"name": "no_dup", "unique": true} {"accountId": 1, "c
 k8sWorkloadRecommendation {"name": "ttl_1", "background": true, "expireAfterSeconds": 0} {"ttl": 1}
 k8sYaml {"name": "accountId_hash", "background": true} {"accountId": 1, "hash": 1}
 k8sYaml {"name": "hash_1", "unique": true} {"hash": 1}
-kmsConfig {"name": "appId_1", "background": true} {"appId": 1}
-kmsConfig {"name": "createdAt_1", "background": true} {"createdAt": 1}
-kmsConfig {"name": "uniqueIdx", "unique": true} {"name": 1, "accountId": 1}
 kmsTransitionEvent2 {"name": "earliestGet_1", "background": true, "expireAfterSeconds": 86400} {"earliestGet": 1}
 kmsTransitionEvent2 {"name": "next4", "background": true} {"topic": 1, "earliestGet": 1}
 lambdaSpecifications {"name": "accountId_1", "background": true} {"accountId": 1}
@@ -750,10 +744,6 @@ users {"name": "createdAt_1", "background": true} {"createdAt": 1}
 users {"name": "email_1", "unique": true} {"email": 1}
 users {"name": "name_1", "background": true} {"name": 1}
 users {"name": "pendingAccountsIdx", "background": true} {"pendingAccounts": 1}
-vaultConfig {"name": "appId_1", "background": true} {"appId": 1}
-vaultConfig {"name": "createdAt_1", "background": true} {"createdAt": 1}
-vaultConfig {"name": "uniqueIdx", "unique": true} {"name": 1, "accountId": 1}
-vaultConfig {"name": "uniqueUrlIdx", "unique": true} {"vaultUrl": 1, "accountId": 1}
 verificationServiceConfigurations {"name": "accountId_1", "background": true} {"accountId": 1}
 verificationServiceConfigurations {"name": "appId_1", "background": true} {"appId": 1}
 verificationServiceConfigurations {"name": "createdAt_1", "background": true} {"createdAt": 1}
