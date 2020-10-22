@@ -16,19 +16,13 @@ public class YamlNode {
   public static final String NAME_FIELD_NAME = "name";
 
   @NotNull JsonNode currNode;
-  YamlNode parentNode;
-  @NotNull JsonNode rootNode;
 
   public YamlNode(JsonNode rootNode) {
     this.currNode = rootNode;
-    this.parentNode = null;
-    this.rootNode = rootNode;
   }
 
   public YamlNode(JsonNode currNode, YamlNode parentNode) {
     this.currNode = currNode;
-    this.parentNode = parentNode;
-    this.rootNode = parentNode.rootNode;
   }
 
   @Override
@@ -50,13 +44,13 @@ public class YamlNode {
 
   public List<YamlNode> asArray() {
     List<YamlNode> entries = new ArrayList<>();
-    currNode.elements().forEachRemaining(field -> entries.add(new YamlNode(field, this)));
+    currNode.elements().forEachRemaining(el -> entries.add(new YamlNode(el)));
     return entries;
   }
 
   public List<YamlField> fields() {
     List<YamlField> entries = new ArrayList<>();
-    currNode.fields().forEachRemaining(field -> entries.add(new YamlField(field, this)));
+    currNode.fields().forEachRemaining(el -> entries.add(new YamlField(el.getKey(), new YamlNode(el.getValue()))));
     return entries;
   }
 
@@ -87,7 +81,7 @@ public class YamlNode {
 
   public YamlField getField(String name) {
     JsonNode value = getValueInternal(name);
-    return value == null ? null : new YamlField(name, new YamlNode(currNode.findValue(name), this));
+    return value == null ? null : new YamlField(name, new YamlNode(currNode.findValue(name)));
   }
 
   private JsonNode getValueInternal(String key) {

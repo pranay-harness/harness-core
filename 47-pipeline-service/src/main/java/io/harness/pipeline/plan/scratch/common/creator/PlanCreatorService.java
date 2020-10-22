@@ -1,10 +1,15 @@
 package io.harness.pipeline.plan.scratch.common.creator;
 
 import io.harness.data.structure.EmptyPredicate;
+import io.harness.exception.InvalidRequestException;
 import io.harness.exception.UnexpectedException;
 import io.harness.pipeline.plan.scratch.common.utils.CompletableFutures;
 import io.harness.pipeline.plan.scratch.common.yaml.YamlField;
+import io.harness.pms.plan.PlanCreationBlobResponse;
+import io.harness.pms.plan.YamlFieldBlob;
+import io.harness.serializer.KryoSerializer;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -17,14 +22,30 @@ import javax.validation.constraints.NotNull;
 
 public abstract class PlanCreatorService {
   private final Executor executor = Executors.newFixedThreadPool(2);
+
+  private final KryoSerializer kryoSerializer;
   private final List<PartialPlanCreator> planCreators;
 
-  protected PlanCreatorService(@NotNull PlanCreatorProvider planCreatorProvider) {
+  protected PlanCreatorService(
+      @NotNull KryoSerializer kryoSerializer, @NotNull PlanCreatorProvider planCreatorProvider) {
+    this.kryoSerializer = kryoSerializer;
     this.planCreators = planCreatorProvider.getPlanCreators();
   }
 
-  public PlanCreationResponse createPlan(@NotNull Map<String, YamlField> dependencies) {
-    return createPlanForDependenciesRecursive(dependencies);
+  public PlanCreationBlobResponse createPlan(@NotNull Map<String, YamlFieldBlob> dependencyBlobs) {
+    Map<String, YamlField> initialDependencies = new HashMap<>();
+    if (EmptyPredicate.isNotEmpty(dependencyBlobs)) {
+      try {
+        for (Map.Entry<String, YamlFieldBlob> entry : dependencyBlobs.entrySet()) {
+          initialDependencies.put(entry.getKey(), YamlField.fromFieldFieldBlob(entry.getValue()));
+        }
+      } catch (IOException e) {
+        throw new InvalidRequestException("Invalid YAML found in dependency blobs");
+      }
+    }
+
+    PlanCreationResponse finalResponse = createPlanForDependenciesRecursive(initialDependencies);
+    return finalResponse.toBlobResponse();
   }
 
   private PlanCreationResponse createPlanForDependenciesRecursive(Map<String, YamlField> initialDependencies) {
@@ -34,9 +55,10 @@ public abstract class PlanCreatorService {
       return finalResponse;
     }
 
+    PlanCreationContext ctx = PlanCreationContext.builder().kryoSerializer(kryoSerializer).build();
     Map<String, YamlField> dependencies = new HashMap<>(initialDependencies);
     while (!dependencies.isEmpty()) {
-      createPlanForDependencies(finalResponse, dependencies);
+      createPlanForDependencies(ctx, finalResponse, dependencies);
       initialDependencies.keySet().forEach(dependencies::remove);
     }
 
@@ -46,7 +68,8 @@ public abstract class PlanCreatorService {
     return finalResponse;
   }
 
-  private void createPlanForDependencies(PlanCreationResponse finalResponse, Map<String, YamlField> dependencies) {
+  private void createPlanForDependencies(
+      PlanCreationContext ctx, PlanCreationResponse finalResponse, Map<String, YamlField> dependencies) {
     if (EmptyPredicate.isEmpty(dependencies)) {
       return;
     }
@@ -57,15 +80,16 @@ public abstract class PlanCreatorService {
     for (YamlField field : dependenciesList) {
       completableFutures.supplyAsync(() -> {
         Optional<PartialPlanCreator> planCreatorOptional = findPlanCreator(planCreators, field);
-        return planCreatorOptional.map(partialPlanCreator -> partialPlanCreator.createPlanForField(field)).orElse(null);
+        return planCreatorOptional.map(partialPlanCreator -> partialPlanCreator.createPlanForField(ctx, field))
+            .orElse(null);
       });
     }
 
     try {
-      List<PlanCreationResponse> planCreationResponses = completableFutures.allOf().get(1, TimeUnit.MINUTES);
+      List<PlanCreationResponse> planCreationBlobResponses = completableFutures.allOf().get(1, TimeUnit.MINUTES);
       for (int i = 0; i < dependenciesList.size(); i++) {
         YamlField field = dependenciesList.get(i);
-        PlanCreationResponse response = planCreationResponses.get(i);
+        PlanCreationResponse response = planCreationBlobResponses.get(i);
         if (response == null) {
           finalResponse.addDependency(field);
           continue;

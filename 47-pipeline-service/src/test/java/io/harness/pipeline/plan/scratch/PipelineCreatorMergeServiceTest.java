@@ -4,14 +4,16 @@ import static io.harness.rule.OwnerRule.GARVIT;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.google.common.collect.Lists;
+import com.google.inject.Inject;
 
 import io.harness.PipelineServiceTestBase;
 import io.harness.category.element.UnitTests;
 import io.harness.pipeline.plan.scratch.cd.CDPlanCreatorService;
-import io.harness.pipeline.plan.scratch.common.creator.PlanCreationResponse;
 import io.harness.pipeline.plan.scratch.cv.CVPlanCreatorService;
 import io.harness.pipeline.plan.scratch.pms.creator.PlanCreatorMergeService;
+import io.harness.pms.plan.PlanCreationBlobResponse;
 import io.harness.rule.Owner;
+import io.harness.serializer.KryoSerializer;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -25,6 +27,8 @@ import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 
 public class PipelineCreatorMergeServiceTest extends PipelineServiceTestBase {
+  @Inject private KryoSerializer kryoSerializer;
+
   private String pipelineContent = null;
 
   @Before
@@ -47,14 +51,14 @@ public class PipelineCreatorMergeServiceTest extends PipelineServiceTestBase {
   @Owner(developers = GARVIT)
   @Category(UnitTests.class)
   public void testCreatePlan() throws IOException {
-    PlanCreatorMergeService planCreatorMergeService =
-        new PlanCreatorMergeService(Lists.newArrayList(new CDPlanCreatorService(), new CVPlanCreatorService()));
+    PlanCreatorMergeService planCreatorMergeService = new PlanCreatorMergeService(
+        Lists.newArrayList(new CDPlanCreatorService(kryoSerializer), new CVPlanCreatorService(kryoSerializer)));
 
-    PlanCreationResponse planCreationResponse = planCreatorMergeService.createPlan(pipelineContent);
-    assertThat(planCreationResponse).isNotNull();
-    assertThat(planCreationResponse.getNodes().size()).isEqualTo(9);
-    assertThat(planCreationResponse.getDependencies().size()).isEqualTo(0);
-    assertThat(planCreationResponse.getStartingNodeId()).isNotNull();
-    assertThat(planCreationResponse.getNodes()).containsKey(planCreationResponse.getStartingNodeId());
+    PlanCreationBlobResponse planCreationBlobResponse = planCreatorMergeService.createPlan(pipelineContent);
+    assertThat(planCreationBlobResponse).isNotNull();
+    assertThat(planCreationBlobResponse.getNodesCount()).isEqualTo(9);
+    assertThat(planCreationBlobResponse.getDependenciesCount()).isEqualTo(0);
+    assertThat(planCreationBlobResponse.getStartingNodeId()).isNotNull();
+    assertThat(planCreationBlobResponse.containsNodes(planCreationBlobResponse.getStartingNodeId())).isTrue();
   }
 }

@@ -6,6 +6,7 @@ import com.google.common.collect.ImmutableSet;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.morphia.MorphiaRegistrar;
+import io.harness.serializer.kryo.PipelineServiceKryoRegistrar;
 import io.harness.spring.AliasRegistrar;
 import lombok.experimental.UtilityClass;
 import org.mongodb.morphia.converters.TypeConverter;
@@ -14,16 +15,19 @@ import org.mongodb.morphia.converters.TypeConverter;
 @UtilityClass
 public class PipelineServiceModuleRegistrars {
   public final ImmutableSet<Class<? extends KryoRegistrar>> kryoRegistrars =
-      ImmutableSet.<Class<? extends KryoRegistrar>>builder().addAll(OrchestrationRegistrars.kryoRegistrars).build();
+      ImmutableSet.<Class<? extends KryoRegistrar>>builder()
+          .addAll(OrchestrationRegistrars.kryoRegistrars)
+          .add(PipelineServiceKryoRegistrar.class)
+          .build();
 
   public final ImmutableSet<Class<? extends MorphiaRegistrar>> morphiaRegistrars =
       ImmutableSet.<Class<? extends MorphiaRegistrar>>builder()
           .addAll(OrchestrationRegistrars.morphiaRegistrars)
           .build();
 
-  public static final ImmutableSet<Class<? extends AliasRegistrar>> aliasRegistrars =
+  public final ImmutableSet<Class<? extends AliasRegistrar>> aliasRegistrars =
       ImmutableSet.<Class<? extends AliasRegistrar>>builder().addAll(OrchestrationRegistrars.aliasRegistrars).build();
 
-  public static final ImmutableSet<Class<? extends TypeConverter>> morphiaConverters =
+  public final ImmutableSet<Class<? extends TypeConverter>> morphiaConverters =
       ImmutableSet.<Class<? extends TypeConverter>>builder().addAll(OrchestrationRegistrars.morphiaConverters).build();
 }
