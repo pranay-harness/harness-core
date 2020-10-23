@@ -1,4 +1,4 @@
-package software.wings.security.encryption.setupusage;
+package io.harness.secrets.setupusage;
 
 import lombok.Getter;
 

@@ -1,4 +1,4 @@
-package software.wings.security.encryption.setupusage.builders;
+package io.harness.secrets.setupusage.builders;
 
 import static io.harness.annotations.dev.HarnessTeam.PL;
 
@@ -10,13 +10,13 @@ import io.harness.beans.EncryptedDataParent;
 import io.harness.beans.SecretManagerConfig;
 import io.harness.encryption.EncryptionReflectUtils;
 import io.harness.secretmanagers.SecretManagerConfigService;
+import io.harness.secrets.setupusage.EncryptionDetail;
+import io.harness.secrets.setupusage.SecretSetupUsage;
+import io.harness.secrets.setupusage.SecretSetupUsageBuilder;
 import lombok.NonNull;
-import software.wings.security.encryption.EncryptionDetail;
-import software.wings.security.encryption.setupusage.SecretSetupUsage;
-import software.wings.security.encryption.setupusage.SecretSetupUsageBuilder;
-import software.wings.service.intfc.FeatureFlagService;
 
 import java.lang.reflect.Field;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -27,7 +27,6 @@ import java.util.stream.Collectors;
 @Singleton
 public class SecretManagerSetupUsageBuilder implements SecretSetupUsageBuilder {
   @Inject private SecretManagerConfigService secretManagerConfigService;
-  @Inject private FeatureFlagService featureFlagService;
 
   public Set<SecretSetupUsage> buildSecretSetupUsages(@NonNull String accountId, String secretId,
       @NonNull Map<String, Set<EncryptedDataParent>> parentsByParentIds, @NonNull EncryptionDetail encryptionDetail) {
@@ -55,5 +54,11 @@ public class SecretManagerSetupUsageBuilder implements SecretSetupUsageBuilder {
       });
     }
     return secretSetupUsages;
+  }
+
+  @Override
+  public Map<String, Set<String>> buildAppEnvMap(
+      String accountId, String secretId, Map<String, Set<EncryptedDataParent>> parentsByParentIds) {
+    return Collections.emptyMap();
   }
 }

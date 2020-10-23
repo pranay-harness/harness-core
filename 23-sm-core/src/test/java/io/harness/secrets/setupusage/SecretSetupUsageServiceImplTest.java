@@ -1,4 +1,4 @@
-package software.wings.security.encryption.setupusage;
+package io.harness.secrets.setupusage;
 
 import static io.harness.rule.OwnerRule.UTKARSH;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -9,7 +9,6 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.mockito.MockitoAnnotations.initMocks;
-import static software.wings.service.intfc.security.SecretManager.HARNESS_DEFAULT_SECRET_MANAGER;
 import static software.wings.settings.SettingVariableTypes.AWS;
 import static software.wings.settings.SettingVariableTypes.DOCKER;
 import static software.wings.settings.SettingVariableTypes.SERVICE_VARIABLE;
@@ -17,6 +16,7 @@ import static software.wings.settings.SettingVariableTypes.SERVICE_VARIABLE;
 import com.google.common.collect.Sets;
 import com.google.inject.Inject;
 
+import io.harness.SMCoreTestBase;
 import io.harness.beans.EncryptedData;
 import io.harness.beans.EncryptedDataParent;
 import io.harness.category.element.UnitTests;
@@ -24,17 +24,14 @@ import io.harness.data.structure.UUIDGenerator;
 import io.harness.exception.InvalidArgumentsException;
 import io.harness.rule.Owner;
 import io.harness.secretmanagers.SecretManagerConfigService;
+import io.harness.secrets.SecretsDao;
 import io.harness.security.encryption.EncryptionType;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
+import org.mockito.Matchers;
 import org.mockito.Mock;
-import software.wings.WingsBaseTest;
-import software.wings.beans.Account;
-import software.wings.beans.AccountType;
-import software.wings.security.encryption.EncryptionDetail;
-import software.wings.service.intfc.FeatureFlagService;
 import software.wings.settings.SettingVariableTypes;
 
 import java.util.HashMap;
@@ -42,24 +39,23 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 
-public class SecretSetupUsageServiceImplTest extends WingsBaseTest {
+public class SecretSetupUsageServiceImplTest extends SMCoreTestBase {
   @Mock private SecretManagerConfigService secretManagerConfigService;
   @Mock private SecretSetupUsageBuilderRegistry secretSetupUsageBuilderRegistry;
-  @Inject private FeatureFlagService featureFlagService;
+  @Inject private SecretsDao secretsDao;
   @Inject @InjectMocks private SecretSetupUsageServiceImpl secretSetupUsageService;
   private SecretSetupUsageBuilder secretSetupUsageBuilder;
   private EncryptedData encryptedData;
-  private Account account;
+  private String accountId;
   private EncryptionDetail encryptionDetail;
 
   @Before
   public void setup() {
     initMocks(this);
-    account = getAccount(AccountType.PAID);
-    account.setUuid(wingsPersistence.save(account));
+    accountId = UUIDGenerator.generateUuid();
 
     encryptionDetail = EncryptionDetail.builder()
-                           .secretManagerName(HARNESS_DEFAULT_SECRET_MANAGER)
+                           .secretManagerName(UUIDGenerator.generateUuid())
                            .encryptionType(EncryptionType.LOCAL)
                            .build();
 
@@ -68,18 +64,18 @@ public class SecretSetupUsageServiceImplTest extends WingsBaseTest {
                         .encryptedValue("encryptedValue".toCharArray())
                         .encryptionType(EncryptionType.LOCAL)
                         .type(SettingVariableTypes.SECRET_TEXT)
-                        .kmsId(account.getUuid())
+                        .kmsId(accountId)
                         .enabled(true)
-                        .accountId(account.getUuid())
+                        .accountId(accountId)
                         .name("xyz")
                         .build();
 
-    encryptedData.setUuid(wingsPersistence.save(encryptedData));
+    encryptedData.setUuid(secretsDao.saveSecret(encryptedData));
 
     secretSetupUsageBuilder = mock(SecretSetupUsageBuilder.class);
 
-    when(secretManagerConfigService.getSecretManagerName(account.getUuid(), account.getUuid()))
-        .thenReturn(HARNESS_DEFAULT_SECRET_MANAGER);
+    when(secretManagerConfigService.getSecretManagerName(accountId, accountId))
+        .thenReturn(encryptionDetail.getSecretManagerName());
 
     when(secretSetupUsageBuilderRegistry.getSecretSetupUsageBuilder(any()))
         .thenReturn(Optional.of(secretSetupUsageBuilder));
@@ -89,7 +85,7 @@ public class SecretSetupUsageServiceImplTest extends WingsBaseTest {
   @Owner(developers = UTKARSH)
   @Category(UnitTests.class)
   public void testGetSecretUsage_shouldThrowError() {
-    secretSetupUsageService.getSecretUsage(account.getUuid(), UUIDGenerator.generateUuid());
+    secretSetupUsageService.getSecretUsage(accountId, UUIDGenerator.generateUuid());
   }
 
   @Test
@@ -97,7 +93,7 @@ public class SecretSetupUsageServiceImplTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void testGetSecretUsage_shouldReturnEmpty() {
     Set<SecretSetupUsage> secretSetupUsageSet =
-        secretSetupUsageService.getSecretUsage(account.getUuid(), encryptedData.getUuid());
+        secretSetupUsageService.getSecretUsage(accountId, encryptedData.getUuid());
     assertThat(secretSetupUsageSet).isEmpty();
   }
 
@@ -108,11 +104,11 @@ public class SecretSetupUsageServiceImplTest extends WingsBaseTest {
     EncryptedDataParent encryptedDataParent1 =
         new EncryptedDataParent(UUIDGenerator.generateUuid(), SERVICE_VARIABLE, null);
     encryptedData.addParent(encryptedDataParent1);
-    wingsPersistence.save(encryptedData);
+    secretsDao.saveSecret(encryptedData);
     when(secretSetupUsageBuilderRegistry.getSecretSetupUsageBuilder(any())).thenReturn(Optional.empty());
 
     Set<SecretSetupUsage> secretSetupUsageSet =
-        secretSetupUsageService.getSecretUsage(account.getUuid(), encryptedData.getUuid());
+        secretSetupUsageService.getSecretUsage(accountId, encryptedData.getUuid());
     assertThat(secretSetupUsageSet).isEmpty();
   }
 
@@ -135,7 +131,7 @@ public class SecretSetupUsageServiceImplTest extends WingsBaseTest {
     encryptedData.addParent(encryptedDataParent3);
     encryptedData.addParent(encryptedDataParent4);
     encryptedData.addParent(encryptedDataParent5);
-    wingsPersistence.save(encryptedData);
+    secretsDao.saveSecret(encryptedData);
 
     Map<String, Set<EncryptedDataParent>> parentIdByParentsMap1 = new HashMap<>();
     parentIdByParentsMap1.put(encryptedDataParent1.getId(), Sets.newHashSet(encryptedDataParent1));
@@ -157,7 +153,7 @@ public class SecretSetupUsageServiceImplTest extends WingsBaseTest {
     SecretSetupUsage mockUsage5 = SecretSetupUsage.builder().entityId(commonUuid).type(AWS).build();
 
     when(secretSetupUsageBuilder.buildSecretSetupUsages(
-             eq(account.getUuid()), eq(encryptedData.getUuid()), any(), eq(encryptionDetail)))
+             Matchers.eq(accountId), eq(encryptedData.getUuid()), any(), eq(encryptionDetail)))
         .thenReturn(Sets.newHashSet(mockUsage1, mockUsage2))
         .thenReturn(Sets.newHashSet(mockUsage3))
         .thenReturn(Sets.newHashSet(mockUsage4, mockUsage5));
@@ -166,7 +162,7 @@ public class SecretSetupUsageServiceImplTest extends WingsBaseTest {
         Sets.newHashSet(mockUsage1, mockUsage2, mockUsage3, mockUsage4, mockUsage5);
 
     Set<SecretSetupUsage> secretSetupUsages =
-        secretSetupUsageService.getSecretUsage(account.getUuid(), encryptedData.getUuid());
+        secretSetupUsageService.getSecretUsage(accountId, encryptedData.getUuid());
 
     assertThat(secretSetupUsages).isEqualTo(expectedResponse);
 
@@ -175,10 +171,10 @@ public class SecretSetupUsageServiceImplTest extends WingsBaseTest {
     verify(secretSetupUsageBuilderRegistry, times(1)).getSecretSetupUsageBuilder(DOCKER);
     verify(secretSetupUsageBuilderRegistry, times(1)).getSecretSetupUsageBuilder(AWS);
     verify(secretSetupUsageBuilder, times(1))
-        .buildSecretSetupUsages(account.getUuid(), encryptedData.getUuid(), parentIdByParentsMap1, encryptionDetail);
+        .buildSecretSetupUsages(accountId, encryptedData.getUuid(), parentIdByParentsMap1, encryptionDetail);
     verify(secretSetupUsageBuilder, times(1))
-        .buildSecretSetupUsages(account.getUuid(), encryptedData.getUuid(), parentIdByParentsMap2, encryptionDetail);
+        .buildSecretSetupUsages(accountId, encryptedData.getUuid(), parentIdByParentsMap2, encryptionDetail);
     verify(secretSetupUsageBuilder, times(1))
-        .buildSecretSetupUsages(account.getUuid(), encryptedData.getUuid(), parentIdByParentsMap3, encryptionDetail);
+        .buildSecretSetupUsages(accountId, encryptedData.getUuid(), parentIdByParentsMap3, encryptionDetail);
   }
 }

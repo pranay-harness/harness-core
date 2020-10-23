@@ -98,7 +98,7 @@ public abstract class SecretManagerConfig
 
   private UsageRestrictions usageRestrictions;
 
-  private boolean isScopedToAccount;
+  private boolean scopedToAccount;
 
   private List<String> templatizedFields;
 

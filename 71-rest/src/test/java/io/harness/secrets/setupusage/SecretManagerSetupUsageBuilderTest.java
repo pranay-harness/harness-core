@@ -1,9 +1,8 @@
-package software.wings.security.encryption.setupusage.builders;
+package io.harness.secrets.setupusage;
 
 import static io.harness.rule.OwnerRule.UTKARSH;
+import static io.harness.security.encryption.EncryptionType.KMS;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.Matchers.any;
-import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 import static org.mockito.MockitoAnnotations.initMocks;
@@ -13,12 +12,14 @@ import com.google.inject.Inject;
 
 import io.harness.beans.EncryptedData;
 import io.harness.beans.EncryptedDataParent;
-import io.harness.beans.PageResponse;
+import io.harness.beans.SecretManagerConfig;
 import io.harness.category.element.UnitTests;
 import io.harness.data.structure.UUIDGenerator;
 import io.harness.encryption.EncryptionReflectUtils;
 import io.harness.reflection.ReflectionUtils;
 import io.harness.rule.Owner;
+import io.harness.secretmanagers.SecretManagerConfigService;
+import io.harness.secrets.setupusage.builders.SecretManagerSetupUsageBuilder;
 import io.harness.security.encryption.EncryptionType;
 import org.junit.Before;
 import org.junit.Test;
@@ -28,27 +29,24 @@ import org.mockito.Mock;
 import software.wings.WingsBaseTest;
 import software.wings.beans.Account;
 import software.wings.beans.AccountType;
-import software.wings.beans.KubernetesClusterConfig;
-import software.wings.beans.SettingAttribute;
-import software.wings.security.encryption.EncryptionDetail;
-import software.wings.security.encryption.setupusage.SecretSetupUsage;
+import software.wings.beans.KmsConfig;
+import software.wings.beans.KmsConfig.KmsConfigKeys;
 import software.wings.service.intfc.FeatureFlagService;
-import software.wings.service.intfc.SettingsService;
 import software.wings.settings.SettingVariableTypes;
 
-import java.util.Collections;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
 
-public class SettingAttributeSetupUsageBuilderTest extends WingsBaseTest {
-  @Mock SettingsService settingsService;
-  @Inject @InjectMocks SettingAttributeSetupUsageBuilder settingAttributeSetupUsageBuilder;
+public class SecretManagerSetupUsageBuilderTest extends WingsBaseTest {
+  @Mock SecretManagerConfigService secretManagerConfigService;
+  @Inject @InjectMocks SecretManagerSetupUsageBuilder secretManagerSetupUsageBuilder;
   @Inject private FeatureFlagService featureFlagService;
   private Account account;
   private EncryptedData encryptedData;
-  private SettingAttribute settingAttribute;
+  private KmsConfig kmsConfig;
   private EncryptionDetail encryptionDetail;
 
   @Before
@@ -70,14 +68,12 @@ public class SettingAttributeSetupUsageBuilderTest extends WingsBaseTest {
     encryptedData.setUuid(null);
     encryptedData.setType(SettingVariableTypes.KMS);
     encryptedData.setUuid(UUIDGenerator.generateUuid());
-
-    KubernetesClusterConfig kubernetesClusterConfig =
-        KubernetesClusterConfig.builder().accountId(account.getUuid()).build();
-    settingAttribute = SettingAttribute.Builder.aSettingAttribute()
-                           .withValue(kubernetesClusterConfig)
-                           .withAccountId(account.getUuid())
-                           .build();
-    settingAttribute.setUuid(UUIDGenerator.generateUuid());
+    kmsConfig = getKmsConfig();
+    kmsConfig.setEncryptionType(KMS);
+    kmsConfig.setKmsArn(encryptedData.getUuid());
+    kmsConfig.setSecretKey(encryptedData.getUuid());
+    kmsConfig.setAccountId(account.getUuid());
+    kmsConfig.setUuid(UUIDGenerator.generateUuid());
 
     encryptionDetail =
         EncryptionDetail.builder().secretManagerName("secretManagerName").encryptionType(EncryptionType.LOCAL).build();
@@ -85,14 +81,14 @@ public class SettingAttributeSetupUsageBuilderTest extends WingsBaseTest {
 
   private Set<EncryptedDataParent> getEncryptedDataParents() {
     String fieldName1 = EncryptionReflectUtils.getEncryptedFieldTag(
-        ReflectionUtils.getFieldByName(settingAttribute.getValue().getClass(), "password"));
+        ReflectionUtils.getFieldByName(kmsConfig.getClass(), KmsConfigKeys.kmsArn));
     EncryptedDataParent encryptedDataParent1 =
-        new EncryptedDataParent(settingAttribute.getUuid(), SettingVariableTypes.KUBERNETES_CLUSTER, fieldName1);
+        new EncryptedDataParent(kmsConfig.getUuid(), SettingVariableTypes.KMS, fieldName1);
 
     String fieldName2 = EncryptionReflectUtils.getEncryptedFieldTag(
-        ReflectionUtils.getFieldByName(settingAttribute.getValue().getClass(), "caCert"));
+        ReflectionUtils.getFieldByName(kmsConfig.getClass(), KmsConfigKeys.secretKey));
     EncryptedDataParent encryptedDataParent2 =
-        new EncryptedDataParent(settingAttribute.getUuid(), SettingVariableTypes.KUBERNETES_CLUSTER, fieldName2);
+        new EncryptedDataParent(kmsConfig.getUuid(), SettingVariableTypes.KMS, fieldName2);
 
     return Sets.newHashSet(encryptedDataParent1, encryptedDataParent2);
   }
@@ -101,13 +97,15 @@ public class SettingAttributeSetupUsageBuilderTest extends WingsBaseTest {
   @Owner(developers = UTKARSH)
   @Category(UnitTests.class)
   public void testBuildSecretSetupUsage() {
-    PageResponse<SettingAttribute> settingAttributePageResponse = mock(PageResponse.class);
-    when(settingAttributePageResponse.getResponse()).thenReturn(Collections.singletonList(settingAttribute));
-    when(settingsService.list(any(), eq(null), eq(null))).thenReturn(settingAttributePageResponse);
-    Map<String, Set<EncryptedDataParent>> parentByParentIds = new HashMap<>();
-    parentByParentIds.put(settingAttribute.getUuid(), getEncryptedDataParents());
+    SecretManagerConfig secretManagerConfig = mock(SecretManagerConfig.class);
+    when(secretManagerConfig.getUuid()).thenReturn(UUIDGenerator.generateUuid());
+    when(secretManagerConfigService.listSecretManagers(account.getUuid(), true, false))
+        .thenReturn(Arrays.asList(kmsConfig, secretManagerConfig));
 
-    Set<SecretSetupUsage> returnedSetupUsages = settingAttributeSetupUsageBuilder.buildSecretSetupUsages(
+    Map<String, Set<EncryptedDataParent>> parentByParentIds = new HashMap<>();
+    parentByParentIds.put(kmsConfig.getUuid(), getEncryptedDataParents());
+
+    Set<SecretSetupUsage> returnedSetupUsages = secretManagerSetupUsageBuilder.buildSecretSetupUsages(
         account.getUuid(), encryptedData.getUuid(), parentByParentIds, encryptionDetail);
 
     assertThat(returnedSetupUsages).hasSize(2);
@@ -115,14 +113,14 @@ public class SettingAttributeSetupUsageBuilderTest extends WingsBaseTest {
     SecretSetupUsage secretSetupUsage1 = secretSetupUsageIterator.next();
     SecretSetupUsage secretSetupUsage2 = secretSetupUsageIterator.next();
 
-    assertThat(secretSetupUsage1.getEntityId()).isEqualTo(settingAttribute.getUuid());
-    assertThat(secretSetupUsage1.getType()).isEqualTo(SettingVariableTypes.KUBERNETES_CLUSTER);
-    assertThat(secretSetupUsage1.getEntity()).isEqualTo(settingAttribute);
-    assertThat(secretSetupUsage2.getEntityId()).isEqualTo(settingAttribute.getUuid());
-    assertThat(secretSetupUsage2.getType()).isEqualTo(SettingVariableTypes.KUBERNETES_CLUSTER);
-    assertThat(secretSetupUsage2.getEntity()).isEqualTo(settingAttribute);
+    assertThat(secretSetupUsage1.getEntityId()).isEqualTo(kmsConfig.getUuid());
+    assertThat(secretSetupUsage1.getType()).isEqualTo(SettingVariableTypes.KMS);
+    assertThat(secretSetupUsage1.getEntity()).isEqualTo(kmsConfig);
+    assertThat(secretSetupUsage2.getEntityId()).isEqualTo(kmsConfig.getUuid());
+    assertThat(secretSetupUsage2.getType()).isEqualTo(SettingVariableTypes.KMS);
+    assertThat(secretSetupUsage2.getEntity()).isEqualTo(kmsConfig);
 
     assertThat(Sets.newHashSet(secretSetupUsage1.getFieldName(), secretSetupUsage2.getFieldName()))
-        .isEqualTo(Sets.newHashSet("value.password", "value.caCert"));
+        .isEqualTo(Sets.newHashSet(KmsConfigKeys.secretKey, KmsConfigKeys.kmsArn));
   }
 }

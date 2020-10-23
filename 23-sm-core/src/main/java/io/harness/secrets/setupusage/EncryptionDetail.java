@@ -1,4 +1,4 @@
-package software.wings.security.encryption;
+package io.harness.secrets.setupusage;
 
 import static io.harness.annotations.dev.HarnessTeam.PL;
 

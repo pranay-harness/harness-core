@@ -1,10 +1,9 @@
-package software.wings.security.encryption.setupusage;
+package io.harness.secrets.setupusage;
 
 import static io.harness.annotations.dev.HarnessTeam.PL;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.EncryptedDataParent;
-import software.wings.security.encryption.EncryptionDetail;
 
 import java.util.Map;
 import java.util.Set;
@@ -16,4 +15,7 @@ public interface SecretSetupUsageBuilder {
 
   Set<SecretSetupUsage> buildSecretSetupUsages(String accountId, String secretId,
       Map<String, Set<EncryptedDataParent>> parentsByParentIds, EncryptionDetail encryptionDetail);
+
+  Map<String, Set<String>> buildAppEnvMap(
+      String accountId, String secretId, Map<String, Set<EncryptedDataParent>> parentsByParentIds);
 }

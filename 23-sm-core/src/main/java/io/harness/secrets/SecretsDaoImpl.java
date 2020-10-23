@@ -55,28 +55,10 @@ public class SecretsDaoImpl implements SecretsDao {
   }
 
   @Override
-  public Optional<EncryptedData> getAccountScopedSecretById(String accountId, String secretId) {
-    return Optional.ofNullable(hPersistence.createQuery(EncryptedData.class)
-                                   .filter(EncryptedDataKeys.accountId, accountId)
-                                   .filter(EncryptedDataKeys.ID_KEY, secretId)
-                                   .filter(EncryptedDataKeys.scopedToAccount, true)
-                                   .get());
-  }
-
-  @Override
   public Optional<EncryptedData> getSecretByName(String accountId, String secretName) {
     return Optional.ofNullable(hPersistence.createQuery(EncryptedData.class)
                                    .filter(EncryptedDataKeys.accountId, accountId)
                                    .filter(EncryptedDataKeys.name, secretName)
-                                   .get());
-  }
-
-  @Override
-  public Optional<EncryptedData> getAccountScopedSecretByName(String accountId, String secretName) {
-    return Optional.ofNullable(hPersistence.createQuery(EncryptedData.class)
-                                   .filter(EncryptedDataKeys.accountId, accountId)
-                                   .filter(EncryptedDataKeys.name, secretName)
-                                   .filter(EncryptedDataKeys.scopedToAccount, true)
                                    .get());
   }
 

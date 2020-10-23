@@ -1,9 +1,9 @@
-package software.wings.security.encryption;
+package io.harness.beans;
 
 import static io.harness.rule.OwnerRule.UTKARSH;
 import static org.assertj.core.api.Assertions.assertThat;
 
-import io.harness.beans.EncryptedDataParent;
+import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import io.harness.encryption.Encrypted;
 import io.harness.rule.Owner;
@@ -13,7 +13,7 @@ import org.junit.experimental.categories.Category;
 import software.wings.settings.SettingVariableTypes;
 
 @FieldNameConstants(innerTypeName = "EncryptedDataParentTestKeys")
-public class EncryptedDataParentTest {
+public class EncryptedDataParentTest extends CategoryTest {
   private static final String ANNOTATION_FIELD_NAME = "test_annotation";
   @Encrypted(fieldName = ANNOTATION_FIELD_NAME) private String value;
 

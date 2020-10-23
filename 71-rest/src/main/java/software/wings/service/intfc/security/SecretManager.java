@@ -14,6 +14,7 @@ import io.harness.beans.SecretManagerConfig;
 import io.harness.beans.SecretText;
 import io.harness.beans.SecretUsageLog;
 import io.harness.exception.SecretManagementException;
+import io.harness.secrets.setupusage.SecretSetupUsage;
 import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.security.encryption.EncryptedRecordData;
 import io.harness.security.encryption.EncryptionType;
@@ -23,7 +24,6 @@ import software.wings.beans.Base;
 import software.wings.beans.SecretManagerRuntimeParameters;
 import software.wings.beans.SettingAttribute;
 import software.wings.security.UsageRestrictions;
-import software.wings.security.encryption.setupusage.SecretSetupUsage;
 import software.wings.service.intfc.ownership.OwnedByAccount;
 import software.wings.settings.SettingVariableTypes;
 

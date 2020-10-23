@@ -1,10 +1,10 @@
-package software.wings.security.encryption.setupusage;
+package io.harness.secrets.setupusage;
 
 import static io.harness.annotations.dev.HarnessTeam.PL;
-import static software.wings.security.encryption.setupusage.SecretSetupUsageBuilders.CONFIG_FILE_SETUP_USAGE_BUILDER;
-import static software.wings.security.encryption.setupusage.SecretSetupUsageBuilders.SECRET_MANAGER_CONFIG_SETUP_USAGE_BUILDER;
-import static software.wings.security.encryption.setupusage.SecretSetupUsageBuilders.SERVICE_VARIABLE_SETUP_USAGE_BUILDER;
-import static software.wings.security.encryption.setupusage.SecretSetupUsageBuilders.SETTING_ATTRIBUTE_SETUP_USAGE_BUILDER;
+import static io.harness.secrets.setupusage.SecretSetupUsageBuilders.CONFIG_FILE_SETUP_USAGE_BUILDER;
+import static io.harness.secrets.setupusage.SecretSetupUsageBuilders.SECRET_MANAGER_CONFIG_SETUP_USAGE_BUILDER;
+import static io.harness.secrets.setupusage.SecretSetupUsageBuilders.SERVICE_VARIABLE_SETUP_USAGE_BUILDER;
+import static io.harness.secrets.setupusage.SecretSetupUsageBuilders.SETTING_ATTRIBUTE_SETUP_USAGE_BUILDER;
 
 import com.google.inject.Inject;
 import com.google.inject.Injector;

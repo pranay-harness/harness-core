@@ -1,30 +1,21 @@
-package software.wings.security.encryption.setupusage;
+package io.harness.secrets.setupusage;
 
 import static io.harness.rule.OwnerRule.UTKARSH;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.google.inject.Inject;
 
+import io.harness.SMCoreTestBase;
 import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import software.wings.WingsBaseTest;
-import software.wings.security.encryption.setupusage.builders.ConfigFileSetupUsageBuilder;
-import software.wings.security.encryption.setupusage.builders.SecretManagerSetupUsageBuilder;
-import software.wings.security.encryption.setupusage.builders.ServiceVariableSetupUsageBuilder;
-import software.wings.security.encryption.setupusage.builders.SettingAttributeSetupUsageBuilder;
 import software.wings.settings.SettingVariableTypes;
 
 import java.util.Optional;
 
-public class SecretSetupUsageBuilderRegistryTest extends WingsBaseTest {
-  @Mock private SecretManagerSetupUsageBuilder secretManagerSetupUsageBuilder;
-  @Mock private ConfigFileSetupUsageBuilder configFileSetupUsageBuilder;
-  @Mock private ServiceVariableSetupUsageBuilder serviceVariableSetupUsageBuilder;
-  @Mock private SettingAttributeSetupUsageBuilder settingAttributeSetupUsageBuilder;
+public class SecretSetupUsageBuilderRegistryTest extends SMCoreTestBase {
   @Inject @InjectMocks private SecretSetupUsageBuilderRegistry secretSetupUsageBuilderRegistry;
 
   @Test
