@@ -90,7 +90,16 @@ public enum QLAccountPermissionType implements QLEnum {
   /**
    * Manage API Keys
    */
-  MANAGE_API_KEYS;
+  MANAGE_API_KEYS,
+  /**
+   * Manage custom dashboard
+   */
+  MANAGE_CUSTOM_DASHBOARDS,
+
+  /**
+   * Create custom dashboard
+   */
+  CREATE_CUSTOM_DASHBOARDS;
 
   @Override
   public String getStringValue() {

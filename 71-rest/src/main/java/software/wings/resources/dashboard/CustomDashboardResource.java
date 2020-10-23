@@ -37,7 +37,6 @@ import software.wings.beans.Application;
 import software.wings.beans.FeatureName;
 import software.wings.beans.User;
 import software.wings.features.api.AccountId;
-import software.wings.security.PermissionAttribute.PermissionType;
 import software.wings.security.PermissionAttribute.ResourceType;
 import software.wings.security.UserThreadLocal;
 import software.wings.security.annotations.AuthRule;
@@ -95,13 +94,13 @@ public class CustomDashboardResource {
   @POST
   @Timed
   @ExceptionMetered
-  @AuthRule(permissionType = PermissionType.ACCOUNT_MANAGEMENT)
   public RestResponse<DashboardSettings> createDashboardSetting(
       @QueryParam("accountId") @NotBlank @AccountId String accountId, DashboardSettings settings) {
     try (AutoLogContext ignore1 = new AccountLogContext(accountId, OVERRIDE_ERROR)) {
       if (!featureFlagService.isEnabled(FeatureName.CUSTOM_DASHBOARD, settings.getAccountId())) {
         throw new InvalidRequestException("User not authorized", USER);
       }
+      dashboardAuthHandler.authorizeDashboardCreation(settings, accountId);
       settings.setAccountId(accountId);
       return new RestResponse<>(dashboardSettingsService.createDashboardSettings(accountId, settings));
     }

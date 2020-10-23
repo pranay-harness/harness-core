@@ -495,6 +495,16 @@ public class PermissionAttribute {
     /**
      * Manage Tags
      */
-    MANAGE_TAGS;
+    MANAGE_TAGS,
+
+    /**
+     * Manage custom dashboard
+     */
+    MANAGE_CUSTOM_DASHBOARDS,
+
+    /**
+     * Create custom dashboard
+     */
+    CREATE_CUSTOM_DASHBOARDS;
   }
 }
