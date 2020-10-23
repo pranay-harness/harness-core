@@ -28,9 +28,6 @@ import org.mongodb.morphia.annotations.Id;
 
 import javax.validation.constraints.NotNull;
 
-/**
- * Created by rsingh on 11/01/17.
- */
 @OwnedBy(PL)
 @Data
 @Builder
@@ -45,13 +42,9 @@ import javax.validation.constraints.NotNull;
 public class SecretChangeLog implements PersistentEntity, UuidAware, CreatedAtAware, CreatedByAware, UpdatedAtAware,
                                         UpdatedByAware, AccountAccess {
   @Id @NotNull(groups = {Update.class}) @SchemaIgnore private String uuid;
-
   @NotEmpty private String accountId;
-
   @NotEmpty private String encryptedDataId;
-
   @NotNull private EmbeddedUser user;
-
   @NotEmpty private String description;
   @SchemaIgnore private EmbeddedUser createdBy;
   @SchemaIgnore @FdIndex private long createdAt;

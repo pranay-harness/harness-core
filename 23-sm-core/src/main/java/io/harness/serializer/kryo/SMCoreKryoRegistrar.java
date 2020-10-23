@@ -4,6 +4,17 @@ import io.harness.beans.AzureEnvironmentType;
 import io.harness.beans.EncryptedData;
 import io.harness.beans.EncryptedDataParent;
 import io.harness.beans.SecretChangeLog;
+import io.harness.delegatetasks.DeleteSecretTaskParameters;
+import io.harness.delegatetasks.DeleteSecretTaskResponse;
+import io.harness.delegatetasks.EncryptSecretTaskParameters;
+import io.harness.delegatetasks.EncryptSecretTaskResponse;
+import io.harness.delegatetasks.FetchSecretTaskParameters;
+import io.harness.delegatetasks.FetchSecretTaskResponse;
+import io.harness.delegatetasks.UpsertSecretTaskParameters;
+import io.harness.delegatetasks.UpsertSecretTaskResponse;
+import io.harness.delegatetasks.UpsertSecretTaskType;
+import io.harness.delegatetasks.ValidateSecretReferenceTaskParameters;
+import io.harness.delegatetasks.ValidateSecretReferenceTaskResponse;
 import io.harness.exception.SecretManagementDelegateException;
 import io.harness.exception.SecretManagementException;
 import io.harness.helpers.ext.vault.SecretEngineSummary;
@@ -35,5 +46,17 @@ public class SMCoreKryoRegistrar implements KryoRegistrar {
     kryo.register(SecretManagementException.class, 5517);
     kryo.register(VaultAppRoleLoginResult.class, 7240);
     kryo.register(VaultConfig.class, 5214);
+
+    kryo.register(ValidateSecretReferenceTaskParameters.class, 150001);
+    kryo.register(UpsertSecretTaskParameters.class, 150002);
+    kryo.register(FetchSecretTaskParameters.class, 150003);
+    kryo.register(EncryptSecretTaskParameters.class, 150004);
+    kryo.register(DeleteSecretTaskParameters.class, 150005);
+    kryo.register(UpsertSecretTaskResponse.class, 150006);
+    kryo.register(FetchSecretTaskResponse.class, 150007);
+    kryo.register(EncryptSecretTaskResponse.class, 150008);
+    kryo.register(DeleteSecretTaskResponse.class, 150009);
+    kryo.register(ValidateSecretReferenceTaskResponse.class, 150010);
+    kryo.register(UpsertSecretTaskType.class, 15011);
   }
 }

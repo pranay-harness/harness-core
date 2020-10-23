@@ -1,4 +1,4 @@
-package software.wings.security.encryption;
+package io.harness;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.rule.OwnerRule.UTKARSH;
@@ -6,8 +6,6 @@ import static io.harness.rule.OwnerRule.VIKAS;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.fail;
-
-import com.google.inject.Inject;
 
 import io.harness.beans.EncryptedData;
 import io.harness.beans.EncryptedData.EncryptedDataKeys;
@@ -21,12 +19,6 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.junit.runners.Parameterized.Parameters;
 import org.powermock.reflect.Whitebox;
-import software.wings.WingsBaseTest;
-import software.wings.beans.Account;
-import software.wings.beans.AccountType;
-import software.wings.beans.KmsConfig;
-import software.wings.dl.WingsPersistence;
-import software.wings.service.intfc.FeatureFlagService;
 import software.wings.settings.SettingVariableTypes;
 
 import java.util.ArrayList;
@@ -35,9 +27,7 @@ import java.util.List;
 import java.util.Random;
 import java.util.Set;
 
-public class EncryptedDataTest extends WingsBaseTest {
-  @Inject private FeatureFlagService featureFlagService;
-  @Inject private WingsPersistence wingsPersistence;
+public class EncryptedDataTest extends SMCoreTestBase {
   private static final Random random = new Random();
   private EncryptedData encryptedData;
   private SettingVariableTypes encryptedDataType;
@@ -49,19 +39,8 @@ public class EncryptedDataTest extends WingsBaseTest {
 
   @Before
   public void setup() throws Exception {
-    Account account = getAccount(AccountType.PAID);
-    account.setUuid(wingsPersistence.save(account));
-    KmsConfig kmsConfig = KmsConfig.builder()
-                              .kmsArn("kmsArn")
-                              .accessKey("accessKey")
-                              .name("name")
-                              .region("region")
-                              .secretKey("secretKey")
-                              .build();
-
     encryptedDataType = SettingVariableTypes.AWS;
-    encryptedData = encrypt(account.getUuid(), "testValue".toCharArray(), kmsConfig);
-    encryptedData.setType(encryptedDataType);
+    encryptedData = EncryptedData.builder().accountId("accontId").name("name").type(encryptedDataType).build();
   }
 
   @Test

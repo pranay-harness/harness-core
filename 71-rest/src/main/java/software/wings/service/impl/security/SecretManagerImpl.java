@@ -67,6 +67,7 @@ import io.harness.beans.EmbeddedUser;
 import io.harness.beans.EncryptedData;
 import io.harness.beans.EncryptedData.EncryptedDataKeys;
 import io.harness.beans.EncryptedDataParent;
+import io.harness.beans.HarnessSecret.HarnessSecretKeys;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.beans.SearchFilter;
@@ -75,7 +76,6 @@ import io.harness.beans.SecretChangeLog;
 import io.harness.beans.SecretChangeLog.SecretChangeLogKeys;
 import io.harness.beans.SecretManagerConfig;
 import io.harness.beans.SecretText;
-import io.harness.beans.SecretText.SecretTextKeys;
 import io.harness.beans.SecretUsageLog;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.InvalidRequestException;
@@ -2370,15 +2370,16 @@ public class SecretManagerImpl implements SecretManager {
   }
 
   private void addFilterHideFromListing(PageRequest<EncryptedData> pageRequest) {
-    SearchFilter op1 = SearchFilter.builder().fieldName(SecretTextKeys.hideFromListing).op(Operator.NOT_EXISTS).build();
+    SearchFilter op1 =
+        SearchFilter.builder().fieldName(HarnessSecretKeys.hideFromListing).op(Operator.NOT_EXISTS).build();
 
     SearchFilter op2 = SearchFilter.builder()
-                           .fieldName(SecretTextKeys.hideFromListing)
+                           .fieldName(HarnessSecretKeys.hideFromListing)
                            .op(Operator.EQ)
                            .fieldValues(new Object[] {Boolean.FALSE})
                            .build();
 
-    pageRequest.addFilter(SecretTextKeys.hideFromListing, Operator.OR, op1, op2);
+    pageRequest.addFilter(HarnessSecretKeys.hideFromListing, Operator.OR, op1, op2);
   }
 
   @Override

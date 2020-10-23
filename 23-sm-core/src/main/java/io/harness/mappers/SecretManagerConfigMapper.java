@@ -1,5 +1,8 @@
 package io.harness.mappers;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
+
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.SecretManagerConfig;
 import io.harness.secretmanagerclient.NGSecretManagerMetadata;
 import io.harness.secretmanagerclient.dto.GcpKmsConfigDTO;
@@ -14,6 +17,7 @@ import software.wings.beans.GcpKmsConfig;
 import software.wings.beans.VaultConfig;
 
 @UtilityClass
+@OwnedBy(PL)
 public class SecretManagerConfigMapper {
   public static SecretManagerConfig fromDTO(SecretManagerConfigDTO dto) {
     switch (dto.getEncryptionType()) {
