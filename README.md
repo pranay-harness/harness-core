@@ -3,79 +3,77 @@ Portal Project Dev environment setup instructions
 ## On MacOS
 
 ### Prerequisities
-#####1. Install Homebrew:
+1. Install Homebrew:
+```
+/usr/bin/ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)"
+```
 
-   `/usr/bin/ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)"`
+2. Download and Install Java 8
 
-#####2. Install Java 8 download : 
 NOTE: Brew will download and install latest version of OpenJDK/JRE, its recommended to install OpenJDK/JRE_1.8.0_242 to be in sync with version everyone is using in the team.
 
-Download OpenJDK 1.8-242 JRE Installer from [Java archive downloads](https://adoptopenjdk.net/archive.html), unzip it, then set `JAVA_HOME`, and `PATH` accordingly.
+Download OpenJDK 1.8-242 (jdk8u242-b08) JRE Installer from [Java archive downloads](https://adoptopenjdk.net/archive.html), unzip it, then set `JAVA_HOME` and `PATH` accordingly.
 
-#####3. Install maven :
-
-   `brew install maven`
-
-
-#####4. Install npm (used for front-end):
-   `brew install npm`
-
-#####5. **Set up JAVA_HOME: create or add this to your bash profile `~/.bashrc` file and add following line:**
-
+3. Install maven
 ```
-   ulimit -u 8192
-   export JAVA_HOME=$(/usr/libexec/java_home -v1.8)
-  
+brew install maven
 ```
 
-#####6. Update /etc/hosts to reflect your hostname
+4. Install npm (used for front-end)
+```
+brew install npm
+```
+
+5. Set up JAVA_HOME: create or add this to your bash profile `~/.bashrc` or `~/.zshrc` file and add following line:
+```
+ulimit -u 8192
+export JAVA_HOME=$(/usr/libexec/java_home -v1.8)
+```
+
+6. Update /etc/hosts to reflect your hostname
 ```
 255.255.255.255	broadcasthost
 127.0.0.1  <your hostname>
 ::1        <your hostname>
 ```
 
-#####7. Download and install buf
+7. Download and install `buf`
 Complete this step only if you actively working with the protocol buffer files.
-
 ```
-    brew tap bufbuild/buf
-    brew install buf
+brew tap bufbuild/buf
+brew install buf
 ```
 
 To check if your protobuf files are according to the coding standards execute in the root of the repo
+```
+buf check lint
+```
 
+8. Bazel install
 ```
-    buf check lint
+curl -LO https://github.com/bazelbuild/bazel/releases/download/3.5.0/bazel-3.5.0-installer-darwin-x86_64.sh
+chmod +x bazel-3.5.0-installer-darwin-x86_64.sh
+./bazel-3.5.0-installer-darwin-x86_64.sh --user
 ```
-
-#####8. Bazel install
 ```
-    curl -LO https://github.com/bazelbuild/bazel/releases/download/3.5.0/bazel-3.5.0-installer-darwin-x86_64.sh
-    chmod +x bazel-3.5.0-installer-darwin-x86_64.sh
-    ./bazel-3.5.0-installer-darwin-x86_64.sh --user
-
-```
-Open .bash_profile
-```
-    open .bash_profile
+open .bash_profile
 ```
 Paste the following line in .bash_profile
 ```
-    export PATH="$PATH:$HOME/bin"
+export PATH="$PATH:$HOME/bin"
 ```
 
 Close the terminal and verify it.
 ```
-   bazel --version   
+bazel --version
 ```
 
-Create a file .bazelrc in your portal repo root with the following content
+Create a file `.bazelrc` in your portal repo root with the following content
 ```
-    import bazelrc.local
-    build --define=ABSOLUTE_JAVABASE=<Java home path>
+import bazelrc.local
+build --define=ABSOLUTE_JAVABASE=<Java home path>
 ```
-Here is a sample .bazelrc
+Here is a sample `.bazelrc`
 ```
 import bazelrc.local
 build --define=ABSOLUTE_JAVABASE=/Library/Java/JavaVirtualMachines/jdk1.8.0_202.jdk/Contents/Home
@@ -139,13 +137,13 @@ NOTE: the data from it is used for every git operation github does on you behave
 2. Update your maven settings file
     a. Download the credentials for the Datacollection artifact from here : https://vault-internal.harness.io:8200/ui/vault/secrets/secret/show/cv/datacollection-artifactory
     b. Copy the settings.xml file present under tools/build/custom-settings.xml and paste this file into ~/.m2/settings.xml (Remember to rename the file to settings.xml)
-    c. Edit the file and replace the text "${REPLACE_USERNAME_HERE}" with the username from vault secret 
+    c. Edit the file and replace the text "${REPLACE_USERNAME_HERE}" with the username from vault secret
     d. Replace "${REPLACE_PASSWORD_HERE}" with the encrypted password that was present in the vault secret
-    
+
 
 3. Go to `portal` directory and run
 
-    `mvn clean install`
+    `mvn clean install -DskipTests`
 
 4. If Global Search is not required:
 
@@ -154,7 +152,7 @@ NOTE: the data from it is used for every git operation github does on you behave
     $ docker run -p 27017:27017 -v ~/_mongodb_data:/data/db --name mongoContainer -d --rm mongo:3.6
     ```
     Verify the container is running using `docker ps`
-    
+
     Install & use [RoboMongo](https://robomongo.org/download) client to test MongoDB connection.
 
 5. If Global search has to be enabled (OPTIONAL):
@@ -163,9 +161,9 @@ NOTE: the data from it is used for every git operation github does on you behave
     ```
     $ docker run -p 9200:9200 -p 9300:9300 -v ~/_elasticsearch_data:/usr/share/elasticsearch/data -e "discovery.type=single-node" docker.elastic.co/elasticsearch/elasticsearch:7.3.0
     ```
-    
-    In portal/71-rest/config.yml set `searchEnabled` to `true`. 
-    
+
+    In portal/71-rest/config.yml set `searchEnabled` to `true`.
+
     Run mongo in replica set:
 
     ```
@@ -190,25 +188,25 @@ NOTE: the data from it is used for every git operation github does on you behave
     rs.add('mongo2:30002')
     rs.add('mongo3:30003')
     ```
-    
+
     In config.yml set `mongo.uri` to `mongodb://mongo1:30001,mongo2:30002,mongo3:30003/harness`.
     Do the same in `config-datagen.yml` and `verification-config.yml`.
 
-6. If TimeScaleDB has to be enabled (Optional for now) 
-   
+6. If TimeScaleDB has to be enabled (Optional for now)
+
    a. Start TimeScaleDB using the following docker command: `docker run -d --name harness-timescaledb -v ~/timescaledb/data:/var/lib/postgresql/data -p 5432:5432 --rm -e POSTGRES_USER=admin -e POSTGRES_DB=harness -e POSTGRES_PASSWORD=password timescale/timescaledb`
-  
+
    b. Set the TimeScaleDB config in the config.yml
-  ``` 
+  ```
   timescaledb:
     timescaledbUrl: jdbc:postgresql://localhost:5432/harness
     timescaledbUsername: admin
     timescaledbPassword: password
-  ``` 
-   
+  ```
+
 ### Run Harness without IDE (especially for the UI development)
 cd to `portal` directory
-1. Start server by running following commands : 
+1. Start server by running following commands :
 
    * `mvn clean install -DskipTests`
    * `java -Xms1024m -Xmx4096m -XX:+HeapDumpOnOutOfMemoryError -XX:+PrintGCDetails -XX:+PrintGCDateStamps -Xloggc:mygclogfilename.gc -XX:+UseParallelGC -XX:MaxGCPauseMillis=500 -Xbootclasspath/p:~/.m2/repository/org/mortbay/jetty/alpn/alpn-boot/8.1.13.v20181017/alpn-boot-8.1.13.v20181017.jar -Dfile.encoding=UTF-8 -jar 71-rest/target/rest-capsule.jar server 71-rest/config.yml > portal.log &`
@@ -218,11 +216,11 @@ cd to `portal` directory
 
    * `java -Xmx1024m -jar 160-model-gen-tool/target/model-gen-tool-capsule.jar 160-model-gen-tool/config-datagen.yml`
 
-3. Start Delegate 
+3. Start Delegate
 
    * `java -Xmx4096m -XX:+HeapDumpOnOutOfMemoryError -XX:+PrintGCDetails -XX:+PrintGCDateStamps -Xloggc:mygclogfilename.gc -XX:+UseParallelGC -XX:MaxGCPauseMillis=500 -jar 260-delegate/target/delegate-capsule.jar 81-delegate/config-delegate.yml &`
 
-4. Start Verification service (Optional) 
+4. Start Verification service (Optional)
 
    * `java -Xms1024m -Xmx4096m -XX:+HeapDumpOnOutOfMemoryError -XX:+PrintGCDetails -XX:+PrintGCDateStamps -Xloggc:mygclogfilename.gc -XX:+UseParallelGC -XX:MaxGCPauseMillis=500 -Xbootclasspath/p:~/.m2/repository/org/mortbay/jetty/alpn/alpn-boot/8.1.13.v20181017/alpn-boot-8.1.13.v20181017.jar -Dfile.encoding=UTF-8 -jar 270-verification/target/verification-capsule.jar server 79-verification/verification-config.yml > verification.log &`
 
@@ -232,11 +230,12 @@ cd to `portal` directory
 
 ### Editing setup
 
-1. Install [clang-format](https://clang.llvm.org/docs/ClangFormat.html) ( Install version 7.0.0 by running following 2 [commands](https://gist.github.com/ffeu/0460bb1349fa7e4ab4c459a6192cbb25))
-```
-curl https://gist.githubusercontent.com/ffeu/0460bb1349fa7e4ab4c459a6192cbb25/raw/4ac5c1aef6d24849b96a0d36b6417798289722fe/clang-format@7.rb -o $(brew --repo)/Library/Taps/homebrew/homebrew-core/Formula/clang-format@7.rb
+1. Install [clang-format](https://clang.llvm.org/docs/ClangFormat.html) (7.0.0)
+Download the clang 7.0.0 tar from [this page](https://releases.llvm.org/download.html)
+Untar the downloaded file and add it to your PATH in `~/.bashrc` or `~/.zshrc`
 
-brew install clang-format@7
+```
+echo "export PATH="$PATH:$HOME/<path-to-above-directory>/bin" >> ~/.zshrc
 ```
 
 helper shell scripts:
@@ -247,7 +246,7 @@ helper shell scripts:
 
 ### IntelliJ Setup
 
-1. Install IntelliJ community edition
+1. Install IntelliJ community edition 2020.1
 2. Import `portal` as maven project
 3. Install ClangFormatIJ Plugin: https://plugins.jetbrains.com/plugin/8396-clangformatij
    (use `Ctrl/Cmd-Alt-K` to format current statement or the selection)
@@ -285,7 +284,7 @@ helper shell scripts:
 ### Run from IntelliJ
 
 Run configurations for the different applications are already checked into the repo. Choose the appropriate run configuration from the menu.
-![Run configuration menu](img/run_configs.png) 
+![Run configuration menu](img/run_configs.png)
 
 
 ### Show current git branch in command prompt
@@ -311,7 +310,7 @@ Alternatively, use Fish shell: `brew install fish` then set iterms command to `/
 
 4. `rest/src/test/java/software/wings/service/impl/RoleRefreshUtil.java` to create the default users and roles.
 
-5. Run DelegateApplication: [Run > Run... > DelegateApplication]  
+5. Run DelegateApplication: [Run > Run... > DelegateApplication]
 
 The admin username and password are in BaseIntegrationTest.java.
 
@@ -357,7 +356,7 @@ portal/tools/go/go_setup.sh
 ### IDE
 Jetbrains has GoLand editor but its not free. If we continue using intelliJ for Go, then we need a plugin called Go, but it’s not supported on Community Edition(free) of intelliJ.
 * So recommendation is to use VsCode(free) which is better than intelliJ for Go development.
-* Once you install VsCode, open and install the plugin  `Microsoft Go` 
+* Once you install VsCode, open and install the plugin  `Microsoft Go`
 * Note: If your autocomplete is not working, disable `gopls`
 
 ## Documentation
@@ -491,13 +490,13 @@ bazel run //commons/go/lib/logs:go_default_test # an example
 #### Generating BUILD.bazel files
 
 BUILD.bazel files contain build rules. If you've added/removed packages or modified dependencies in the source code, or added new rules manually,
-then you should run `gazelle` to update and format your BUILD.bazel files. 
+then you should run `gazelle` to update and format your BUILD.bazel files.
 This tool will add any missing rules, update dependencies and format all BUILD.bazel files that you've touched.
 Run:
 ```lang=bash
 gazelle
 ```
-The above comand creates or updates `BUILD.bazel` 
+The above comand creates or updates `BUILD.bazel`
 
 
 We need to update the dependencies in `portal/WORKSPACE`. Run the following for your new/updated `go.mod`
@@ -514,25 +513,25 @@ go.mod and go.sum files  are needed for native go tools
 
 * To use local modules in an application
 * for eg., to use module `lib` in an application `ci-addon`, we need to perform these actions:
-```lang=bash 
+```lang=bash
 cd ci/addon #cd to the application folder where main.go is located
-```  
-```lang=bash 
+```
+```lang=bash
 go mod init <module-name>   # this generates go.mod and go.sum
 ```
 
 * update go.mod by adding the following line to point to local repository (replace module and relative path to match yours):
-```lang=bash 
+```lang=bash
 replace github.com/wings-software/portal/commons/go/lib => ../../../commons/go/lib
 ```
 * (the above replace is needed only if you are outside the module you want to import)
-```lang=bash 
+```lang=bash
 go get  # this updates go.mod
 ```
-```lang=bash 
+```lang=bash
 gazelle  # generates, updates BUILD.bazel
 ```
 * To update go_repository() at portal/WORKSPACE, run this script as:
-```lang=bash 
+```lang=bash
 portal/tools/go/update_bazel_repo.sh go.mod
 ```
