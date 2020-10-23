@@ -1,4 +1,4 @@
-package ciclient
+package client
 
 import (
 	"bytes"
@@ -10,22 +10,20 @@ import (
 	"io"
 	"io/ioutil"
 	"net/http"
-	"strings"
 	"time"
 
-	"github.com/wings-software/portal/product/log-service/client"
 	"github.com/wings-software/portal/product/log-service/logger"
 	"github.com/wings-software/portal/product/log-service/stream"
 )
 
-var _ client.Client = (*HTTPClient)(nil)
+var _ Client = (*HTTPClient)(nil)
 
 const (
-	streamEndpoint       = "/api/accounts/%s/orgs/%s/projects/%s/builds/%s/logs/%s/%s/stream"
-	blobEndpoint         = "/api/accounts/%s/orgs/%s/projects/%s/builds/%s/logs/%s/%s/blob"
-	uploadLinkEndpoint   = "/api/accounts/%s/orgs/%s/projects/%s/builds/%s/logs/%s/%s/blob/link/upload"
-	downloadLinkEndpoint = "/api/accounts/%s/orgs/%s/projects/%s/builds/%s/logs/%s/%s/blob/link/download"
-	infoEndpoint         = "/ci/streams"
+	streamEndpoint       = "/stream?accountID=%s&key=%s"
+	infoEndpoint         = "/info/stream"
+	blobEndpoint         = "/blob?accountID=%s&key=%s"
+	uploadLinkEndpoint   = "/blob/link/upload?accountID=%s&key=%s"
+	downloadLinkEndpoint = "/blob/link/download?accountID=%s&key=%s"
 )
 
 var retryTime = 10 * time.Second
@@ -38,10 +36,11 @@ var defaultClient = &http.Client{
 }
 
 // New returns a new HTTPClient.
-func NewHTTPClient(endpoint, secret string, skipverify bool) *HTTPClient {
+func NewHTTPClient(endpoint, accountID, token string, skipverify bool) *HTTPClient {
 	client := &HTTPClient{
 		Endpoint:   endpoint,
-		Secret:     secret,
+		AccountID:  accountID,
+		Token:      token,
 		SkipVerify: skipverify,
 	}
 	if skipverify {
@@ -64,41 +63,14 @@ func NewHTTPClient(endpoint, secret string, skipverify bool) *HTTPClient {
 type HTTPClient struct {
 	Client     *http.Client
 	Endpoint   string // Example: http://localhost:port
-	Secret     string
+	Token      string // Per account token to validate against
+	AccountID  string
 	SkipVerify bool
-}
-
-type CILogInfo struct {
-	AccountID string
-	OrgID     string
-	ProjectID string
-	BuildID   string
-	StageID   string
-	StepID    string
-}
-
-func ParseIDFromKey(key string) (CILogInfo, error) {
-	s := strings.Split(key, "/")
-	if len(s) != 6 {
-		return CILogInfo{},
-			errors.New("Insufficient parameters. CI requires account, org, project, build, stage & step IDs.")
-	}
-	i := CILogInfo{AccountID: s[0], OrgID: s[1], ProjectID: s[2], BuildID: s[3], StageID: s[4], StepID: s[5]}
-	return i, nil
-}
-
-func ParsePathFromInfo(endpoint string, info CILogInfo) string {
-	return fmt.Sprintf(endpoint, info.AccountID, info.OrgID, info.ProjectID, info.BuildID, info.StageID, info.StepID)
 }
 
 // Upload uploads the file to remote storage.
 func (c *HTTPClient) Upload(ctx context.Context, key string, r io.Reader) error {
-	info, err := ParseIDFromKey(key)
-	if err != nil {
-		return err
-	}
-	path := ParsePathFromInfo(blobEndpoint, info)
-
+	path := fmt.Sprintf(blobEndpoint, c.AccountID, key)
 	resp, err := c.retry(ctx, path, "POST", r, nil, true)
 	if resp != nil {
 		defer resp.Body.Close()
@@ -108,84 +80,58 @@ func (c *HTTPClient) Upload(ctx context.Context, key string, r io.Reader) error 
 
 // UploadLink returns a secure link that can be used to
 // upload a file to remote storage.
-func (c *HTTPClient) UploadLink(ctx context.Context, key string) (*client.Link, error) {
-	info, err := ParseIDFromKey(key)
-	if err != nil {
-		return nil, err
-	}
-	path := ParsePathFromInfo(uploadLinkEndpoint, info)
-	out := new(client.Link)
-	_, err = c.retry(ctx, path, "POST", nil, out, false)
+func (c *HTTPClient) UploadLink(ctx context.Context, key string) (*Link, error) {
+	path := fmt.Sprintf(uploadLinkEndpoint, c.AccountID, key)
+	out := new(Link)
+	_, err := c.retry(ctx, path, "POST", nil, out, false)
 	return out, err
 }
 
 // Download downloads the file from remote storage.
 func (c *HTTPClient) Download(ctx context.Context, key string) (io.ReadCloser, error) {
-	info, err := ParseIDFromKey(key)
-	if err != nil {
-		return nil, err
-	}
-	path := ParsePathFromInfo(blobEndpoint, info)
+	path := fmt.Sprintf(blobEndpoint, c.AccountID, key)
 	resp, err := c.open(ctx, path, "GET", nil)
 	return resp.Body, err
 }
 
 // DownloadLink returns a secure link that can be used to
 // download a file from remote storage.
-func (c *HTTPClient) DownloadLink(ctx context.Context, key string) (*client.Link, error) {
-	info, err := ParseIDFromKey(key)
-	if err != nil {
-		return nil, err
-	}
-	path := ParsePathFromInfo(downloadLinkEndpoint, info)
-	out := new(client.Link)
-	_, err = c.do(ctx, path, "POST", nil, out)
+func (c *HTTPClient) DownloadLink(ctx context.Context, key string) (*Link, error) {
+	path := fmt.Sprintf(downloadLinkEndpoint, c.AccountID, key)
+	out := new(Link)
+	_, err := c.do(ctx, path, "POST", nil, out)
 	return out, err
 }
 
 // Open opens the data stream.
 func (c *HTTPClient) Open(ctx context.Context, key string) error {
-	info, err := ParseIDFromKey(key)
-	if err != nil {
-		return err
-	}
-	path := ParsePathFromInfo(streamEndpoint, info)
-	_, err = c.retry(ctx, path, "POST", nil, nil, false)
+	path := fmt.Sprintf(streamEndpoint, c.AccountID, key)
+	_, err := c.retry(ctx, path, "POST", nil, nil, false)
 	return err
 }
 
 // Close closes the data stream.
 func (c *HTTPClient) Close(ctx context.Context, key string) error {
-	info, err := ParseIDFromKey(key)
-	if err != nil {
-		return err
-	}
-	path := ParsePathFromInfo(streamEndpoint, info)
-	_, err = c.do(ctx, path, "DELETE", nil, nil)
+	path := fmt.Sprintf(streamEndpoint, c.AccountID, key)
+	_, err := c.do(ctx, path, "DELETE", nil, nil)
 	return err
 }
 
 // Write writes logs to the data stream.
 func (c *HTTPClient) Write(ctx context.Context, key string, lines []*stream.Line) error {
-	info, err := ParseIDFromKey(key)
-	if err != nil {
-		return err
-	}
-	path := ParsePathFromInfo(streamEndpoint, info)
-	_, err = c.do(ctx, path, "PUT", &lines, nil)
+	path := fmt.Sprintf(streamEndpoint, c.AccountID, key)
+	_, err := c.do(ctx, path, "PUT", &lines, nil)
 	return err
 }
 
 // Tail tails the data stream.
+// TODO: (vistaar) This currently doesn't work since server sends back server-sent events.
+// Need to find a library which can parse server sent response. This is not used right now.
 func (c *HTTPClient) Tail(ctx context.Context, key string) (<-chan *stream.Line, <-chan error) {
 	errc := make(chan error, 1)
 	outc := make(chan *stream.Line, 100)
-	info, err := ParseIDFromKey(key)
-	if err != nil {
-		errc <- err
-		return outc, errc
-	}
-	path := ParsePathFromInfo(streamEndpoint, info)
+
+	path := fmt.Sprintf(streamEndpoint, c.AccountID, key)
 	res, err := c.open(ctx, path, "GET", nil)
 	if err != nil {
 		errc <- err
@@ -279,7 +225,7 @@ func (c *HTTPClient) do(ctx context.Context, path, method string, in, out interf
 
 	// the request should include the secret shared between
 	// the agent and server for authorization.
-	req.Header.Add("X-Harness-Token", c.Secret)
+	req.Header.Add("X-Harness-Token", c.Token)
 
 	res, err := c.client().Do(req)
 	if res != nil {
@@ -311,7 +257,7 @@ func (c *HTTPClient) do(ctx context.Context, path, method string, in, out interf
 		// if the response body includes an error message
 		// we should return the error string.
 		if len(body) != 0 {
-			out := new(client.Error)
+			out := new(Error)
 			if err := json.Unmarshal(body, out); err != nil {
 				return res, out
 			}
@@ -338,7 +284,7 @@ func (c *HTTPClient) open(ctx context.Context, path, method string, body io.Read
 	if err != nil {
 		return nil, err
 	}
-	req.Header.Add("X-Harness-Token", c.Secret)
+	req.Header.Add("X-Harness-Token", c.Token)
 	return c.client().Do(req)
 }
 

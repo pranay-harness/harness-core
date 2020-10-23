@@ -1,4 +1,4 @@
-package cistream
+package stream
 
 import (
 	"context"
@@ -10,7 +10,7 @@ var nocontext = context.Background()
 
 // Register the stream commands.
 func Register(app *kingpin.Application) {
-	cmd := app.Command("cistream", "stream commands")
+	cmd := app.Command("stream", "stream commands")
 	registerOpen(cmd)
 	registerClose(cmd)
 	registerPush(cmd)

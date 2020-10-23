@@ -47,6 +47,7 @@ public class CIPipelineResource {
     try {
       NgPipelineEntity ngPipelineEntity = ngPipelineService.getPipeline(pipelineId, accountId, orgId, projectId);
       BuildNumber buildNumber = buildNumberService.increaseBuildNumber(accountId, orgId, projectId);
+
       // TODO create manual execution source
       CIExecutionArgs ciExecutionArgs = CIExecutionArgs.builder().buildNumber(buildNumber).build();
       ciPipelineExecutionService.executePipeline(ngPipelineEntity, ciExecutionArgs, 1L);

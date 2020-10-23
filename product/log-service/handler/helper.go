@@ -1,4 +1,4 @@
-package util
+package handler
 
 import (
 	"encoding/json"
@@ -40,7 +40,7 @@ func WriteJSON(w http.ResponseWriter, v interface{}, status int) {
 // response.
 func writeError(w http.ResponseWriter, err error, status int) {
 	out := struct {
-		Message string `json:"string"`
+		Message string `json:"error_msg"`
 	}{err.Error()}
 	WriteJSON(w, &out, status)
 }

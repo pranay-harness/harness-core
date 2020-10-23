@@ -1,26 +1,24 @@
-package cihandler
+package handler
 
 import (
 	"io"
 	"net/http"
 	"time"
 
-	"github.com/wings-software/portal/product/log-service/handler/util"
 	"github.com/wings-software/portal/product/log-service/logger"
 	"github.com/wings-software/portal/product/log-service/store"
-	"github.com/wings-software/portal/product/log-service/stream"
 )
 
 // HandleUpload returns an http.HandlerFunc that uploads
 // a blob to the datastore.
-func HandleUpload(store store.Store, stream stream.Stream) http.HandlerFunc {
+func HandleUpload(store store.Store) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()
 
-		key := ParseKeyFromURL(r)
+		key := r.FormValue("key")
 
 		if err := store.Upload(ctx, key, r.Body); err != nil {
-			util.WriteInternalError(w, err)
+			WriteInternalError(w, err)
 			logger.FromRequest(r).
 				WithError(err).
 				WithField("key", key).
@@ -38,12 +36,12 @@ func HandleUploadLink(store store.Store) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()
 
-		key := ParseKeyFromURL(r)
+		key := r.FormValue("key")
 		expires := time.Hour
 
 		link, err := store.UploadLink(ctx, key, expires)
 		if err != nil {
-			util.WriteInternalError(w, err)
+			WriteInternalError(w, err)
 			logger.FromRequest(r).
 				WithError(err).
 				WithField("key", key).
@@ -51,7 +49,7 @@ func HandleUploadLink(store store.Store) http.HandlerFunc {
 			return
 		}
 
-		util.WriteJSON(w, struct {
+		WriteJSON(w, struct {
 			Link    string        `json:"link"`
 			Expires time.Duration `json:"expires"`
 		}{link, expires}, 200)
@@ -66,14 +64,14 @@ func HandleDownload(store store.Store) http.HandlerFunc {
 		h.Set("Access-Control-Allow-Origin", "*")
 		ctx := r.Context()
 
-		key := ParseKeyFromURL(r)
+		key := r.FormValue("key")
 
 		out, err := store.Download(ctx, key)
 		if out != nil {
 			defer out.Close()
 		}
 		if err != nil {
-			util.WriteNotFound(w, err)
+			WriteNotFound(w, err)
 			logger.FromRequest(r).
 				WithError(err).
 				Debugln("api: cannot download the object")
@@ -91,12 +89,12 @@ func HandleDownloadLink(store store.Store) http.HandlerFunc {
 		h.Set("Access-Control-Allow-Origin", "*")
 		ctx := r.Context()
 
-		key := ParseKeyFromURL(r)
+		key := r.FormValue("key")
 		expires := time.Hour
 
 		link, err := store.DownloadLink(ctx, key, expires)
 		if err != nil {
-			util.WriteInternalError(w, err)
+			WriteInternalError(w, err)
 			logger.FromRequest(r).
 				WithError(err).
 				WithField("key", key).
@@ -104,7 +102,7 @@ func HandleDownloadLink(store store.Store) http.HandlerFunc {
 			return
 		}
 
-		util.WriteJSON(w, struct {
+		WriteJSON(w, struct {
 			Link    string        `json:"link"`
 			Expires time.Duration `json:"expires"`
 		}{link, expires}, 200)
@@ -119,10 +117,10 @@ func HandleDelete(store store.Store) http.HandlerFunc {
 		h.Set("Access-Control-Allow-Origin", "*")
 		ctx := r.Context()
 
-		key := ParseKeyFromURL(r)
+		key := r.FormValue("key")
 
 		if err := store.Delete(ctx, key); err != nil {
-			util.WriteNotFound(w, err)
+			WriteNotFound(w, err)
 			logger.FromRequest(r).
 				WithError(err).
 				WithField("key", key).

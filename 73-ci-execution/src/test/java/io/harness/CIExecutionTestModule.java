@@ -8,10 +8,11 @@ import com.google.inject.Provides;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
 
+import io.harness.ci.beans.entities.LogServiceConfig;
 import io.harness.connector.apis.client.ConnectorResourceClientModule;
 import io.harness.grpc.DelegateServiceGrpcClient;
+import io.harness.logserviceclient.CILogServiceClientModule;
 import io.harness.morphia.MorphiaRegistrar;
-
 import io.harness.remote.client.ServiceHttpClientConfig;
 import io.harness.secretmanagerclient.SecretManagementClientModule;
 import io.harness.secrets.SecretNGManagerClientModule;
@@ -65,5 +66,7 @@ public class CIExecutionTestModule extends AbstractModule {
         ServiceHttpClientConfig.builder().baseUrl("http://localhost:7457/").build(), "test_secret"));
     install(new SecretManagementClientModule(
         ServiceHttpClientConfig.builder().baseUrl("http://localhost:3457/").build(), "test_secret"));
+    install(new CILogServiceClientModule(
+        LogServiceConfig.builder().baseUrl("http://localhost:8079").globalToken("token").build()));
   }
 }

@@ -25,6 +25,7 @@ import io.harness.delegate.task.HDelegateTask;
 import io.harness.grpc.DelegateServiceDriverGrpcClientModule;
 import io.harness.grpc.DelegateServiceGrpcClient;
 import io.harness.grpc.client.ManagerGrpcClientModule;
+import io.harness.logserviceclient.CILogServiceClientModule;
 import io.harness.manage.ManagedScheduledExecutorService;
 import io.harness.ngpipeline.pipeline.service.NGPipelineService;
 import io.harness.ngpipeline.pipeline.service.NGPipelineServiceImpl;
@@ -117,5 +118,6 @@ public class CIManagerServiceModule extends AbstractModule {
         ciManagerConfiguration.getNgManagerClientConfig(), ciManagerConfiguration.getNgManagerServiceSecret()));
     install(new SecretNGManagerClientModule(
         ciManagerConfiguration.getNgManagerClientConfig(), ciManagerConfiguration.getNgManagerServiceSecret()));
+    install(new CILogServiceClientModule(ciManagerConfiguration.getLogServiceConfig()));
   }
 }

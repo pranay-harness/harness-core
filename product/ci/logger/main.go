@@ -12,7 +12,7 @@ import (
 
 	"github.com/alexflint/go-arg"
 	"github.com/wings-software/portal/commons/go/lib/logs"
-	ciclient "github.com/wings-software/portal/product/log-service/client/ci"
+	"github.com/wings-software/portal/product/log-service/client"
 	"go.uber.org/zap"
 )
 
@@ -23,7 +23,8 @@ var args struct {
 	BuildID   string `arg:"env:HARNESS_BUILD_ID, required" help:"Build ID"`
 	StageID   string `arg:"env:HARNESS_STAGE_ID, required" help:"Stage ID"`
 	StepID    string `arg:"env:HARNESS_STEP_ID, required" help:"Step ID"`
-	Endpoint  string `arg:"env:LOG_SERVICE_ENDPOINT, required" help:"Log service endpoint"`
+	Endpoint  string `arg:"env:HARNESS_LOG_SERVICE_ENDPOINT, required" help:"Log service endpoint"`
+	Token     string `arg:"env:HARNESS_LOG_SERVICE_TOKEN, required" help:"Log service token"`
 	Command   string `arg:"--command, required" help:"Command to execute"`
 }
 
@@ -41,7 +42,7 @@ func main() {
 
 	// Create remote logger for command execution
 	key := fmt.Sprintf("%s/%s/%s/%s/%s/%s", args.AccountID, args.OrgID, args.ProjectID, args.BuildID, args.StageID, args.StepID)
-	logClient := ciclient.NewHTTPClient(args.Endpoint, "", false)
+	logClient := client.NewHTTPClient(args.Endpoint, args.AccountID, args.Token, false)
 	rl, err := logs.NewRemoteLogger(logClient, key)
 	if err != nil {
 		panic(err)

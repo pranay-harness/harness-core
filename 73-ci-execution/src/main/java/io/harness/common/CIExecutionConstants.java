@@ -58,6 +58,10 @@ public class CIExecutionConstants {
   public static final String ENDPOINT_MINIO_VARIABLE = "ENDPOINT_MINIO";
   public static final String BUCKET_MINIO_VARIABLE = "BUCKET_MINIO";
 
+  // These are environment variables to be set on the pod for talking to the log service.
+  public static final String LOG_SERVICE_TOKEN_VARIABLE = "HARNESS_LOG_SERVICE_TOKEN";
+  public static final String LOG_SERVICE_ENDPOINT_VARIABLE = "HARNESS_LOG_SERVICE_ENDPOINT";
+
   public static final String DELEGATE_SERVICE_TOKEN_VARIABLE = "DELEGATE_SERVICE_TOKEN";
   public static final String DELEGATE_SERVICE_ENDPOINT_VARIABLE = "DELEGATE_SERVICE_ENDPOINT";
   public static final String DELEGATE_SERVICE_ID_VARIABLE = "DELEGATE_SERVICE_ID";
@@ -69,13 +73,9 @@ public class CIExecutionConstants {
   public static final String HARNESS_ORG_ID_VARIABLE = "HARNESS_ORG_ID";
   public static final String HARNESS_BUILD_ID_VARIABLE = "HARNESS_BUILD_ID";
   public static final String HARNESS_STAGE_ID_VARIABLE = "HARNESS_STAGE_ID";
-  public static final String HARNESS_STEP_ID_VARIABLE = "HARNESS_STEP_ID";
 
   public static final String ENDPOINT_MINIO_VARIABLE_VALUE = "35.224.85.116:9000";
   public static final String BUCKET_MINIO_VARIABLE_VALUE = "test";
-
-  public static final String LOG_SERVICE_ENDPOINT_VARIABLE = "LOG_SERVICE_ENDPOINT";
-  public static final String LOG_SERVICE_ENDPOINT_VARIABLE_VALUE = "https://qb.harness.io/log-service";
   public static final String HOME_VARIABLE = "HOME";
 
   public static final String DEFAULT_INTERNAL_IMAGE_CONNECTOR = "harnessimage";
