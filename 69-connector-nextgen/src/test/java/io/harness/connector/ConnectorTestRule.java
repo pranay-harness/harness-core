@@ -12,6 +12,8 @@ import com.google.inject.Singleton;
 import com.google.inject.TypeLiteral;
 
 import io.harness.callback.DelegateCallbackToken;
+import io.harness.connector.impl.ConnectorActivityServiceImpl;
+import io.harness.connector.services.ConnectorActivityService;
 import io.harness.entitysetupusageclient.EntitySetupUsageClientModule;
 import io.harness.entitysetupusageclient.NGManagerClientConfig;
 import io.harness.factory.ClosingFactory;
@@ -20,6 +22,8 @@ import io.harness.govern.ServersModule;
 import io.harness.grpc.DelegateServiceGrpcClient;
 import io.harness.mongo.MongoPersistence;
 import io.harness.morphia.MorphiaRegistrar;
+import io.harness.ng.core.NGCoreModule;
+import io.harness.ng.core.activityhistory.service.NGActivityService;
 import io.harness.ng.core.services.OrganizationService;
 import io.harness.ng.core.services.ProjectService;
 import io.harness.persistence.HPersistence;
@@ -56,8 +60,10 @@ public class ConnectorTestRule implements InjectorRuleMixin, MethodRule, MongoRu
       @Override
       protected void configure() {
         bind(HPersistence.class).to(MongoPersistence.class);
+        bind(ConnectorActivityService.class).to(ConnectorActivityServiceImpl.class);
         bind(ProjectService.class).toInstance(mock(ProjectService.class));
         bind(OrganizationService.class).toInstance(mock(OrganizationService.class));
+        bind(NGActivityService.class).toInstance(mock(NGActivityService.class));
         bind(SecretManagerClientService.class).toInstance(mock(SecretManagerClientService.class));
         bind(DelegateServiceGrpcClient.class).toInstance(mock(DelegateServiceGrpcClient.class));
         bind(new TypeLiteral<Supplier<DelegateCallbackToken>>() {})

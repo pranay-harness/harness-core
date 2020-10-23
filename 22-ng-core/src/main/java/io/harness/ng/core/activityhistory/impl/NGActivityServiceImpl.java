@@ -80,4 +80,10 @@ public class NGActivityServiceImpl implements NGActivityService {
       String projectIdentifier, String referredEntityIdentifier, long start, long end) {
     return null;
   }
+
+  @Override
+  public boolean deleteAllActivitiesOfAnEntity(String accountIdentifier, String entityFQN) {
+    long numberOfRecordsDeleted = activityRepository.deleteByReferredEntityFQN(entityFQN);
+    return numberOfRecordsDeleted > 0;
+  }
 }

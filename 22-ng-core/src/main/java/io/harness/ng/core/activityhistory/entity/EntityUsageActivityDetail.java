@@ -15,7 +15,7 @@ import javax.validation.constraints.NotNull;
 @Data
 @SuperBuilder
 @NoArgsConstructor
-@Entity(value = "ngActivity", noClassnameStored = true)
+@Entity(value = "entityActivity", noClassnameStored = true)
 @Persistent
 @TypeAlias("io.harness.ng.core.activity.EntityUsageActivityDetail")
 @EqualsAndHashCode(callSuper = false)

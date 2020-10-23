@@ -21,8 +21,8 @@ import javax.validation.constraints.NotNull;
 @NoArgsConstructor
 @FieldNameConstants(innerTypeName = "ActivityHistoryEntityKeys")
 @JsonIgnoreProperties(ignoreUnknown = true)
-@Document("ngActivity")
-public abstract class NGActivity implements PersistentEntity, NGAccountAccess {
+@Document("entityActivity")
+public class NGActivity implements PersistentEntity, NGAccountAccess {
   @Id @org.mongodb.morphia.annotations.Id String id;
   @NotBlank String accountIdentifier;
   @NotNull EntityDetail referredEntity;
