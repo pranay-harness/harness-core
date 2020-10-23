@@ -3,6 +3,7 @@ package io.harness.beans;
 import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.security.encryption.EncryptionType.CUSTOM;
 import static io.harness.security.encryption.EncryptionType.LOCAL;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
@@ -39,6 +40,7 @@ import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import lombok.ToString;
 import lombok.experimental.FieldNameConstants;
+import lombok.experimental.UtilityClass;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Id;
@@ -57,9 +59,6 @@ import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
 import javax.validation.constraints.NotNull;
 
-/**
- * Created by rsingh on 9/29/17.
- */
 @OwnedBy(PL)
 @Data
 @Builder
@@ -205,6 +204,18 @@ public class EncryptedData
     throw new IllegalArgumentException("Invalid fieldName " + fieldName);
   }
 
+  public boolean isInlineSecret() {
+    return isEmpty(path) && encryptionType != CUSTOM;
+  }
+
+  public boolean isReferencedSecret() {
+    return isNotEmpty(path) && encryptionType != CUSTOM;
+  }
+
+  public boolean isParameterizedSecret() {
+    return encryptionType == CUSTOM;
+  }
+
   public void addApplication(String appId, String appName) {
     if (appIds == null) {
       appIds = new ArrayList<>();
@@ -336,5 +347,11 @@ public class EncryptedData
   @JsonIgnore
   public String getProjectIdentifier() {
     return Optional.ofNullable(ngMetadata).map(NGEncryptedDataMetadata::getProjectIdentifier).orElse(null);
+  }
+
+  @UtilityClass
+  public static final class EncryptedDataKeys {
+    // Temporary
+    public static final String ID_KEY = "_id";
   }
 }

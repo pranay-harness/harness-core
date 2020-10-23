@@ -175,6 +175,7 @@ public class SettingAttributesSecretsMigrationHandler implements Handler<Setting
     UpdateOperations<EncryptedData> updateOperations = wingsPersistence.createUpdateOperations(EncryptedData.class)
                                                            .set(EncryptedDataKeys.type, SECRET_TEXT)
                                                            .set(EncryptedDataKeys.name, secretName)
+                                                           .set(EncryptedDataKeys.hideFromListing, false)
                                                            .set(EncryptedDataKeys.parents, secret.getParents());
 
     if (settingAttribute.getUsageRestrictions() != null) {

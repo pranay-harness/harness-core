@@ -83,7 +83,7 @@ public class VaultSecretManagerRenewalHandler implements Handler<SecretManagerCo
     }
   }
 
-  private static boolean checkIfEligibleForRenewal(long renewedAt, long renewalInterval) {
+  private boolean checkIfEligibleForRenewal(long renewedAt, long renewalInterval) {
     long currentTime = System.currentTimeMillis();
     return TimeUnit.MILLISECONDS.toMinutes(currentTime - renewedAt) >= renewalInterval;
   }

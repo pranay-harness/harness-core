@@ -1,34 +1,38 @@
 package io.harness.beans;
 
 import static io.harness.annotations.dev.HarnessTeam.PL;
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.security.encryption.EncryptedDataParams;
-import lombok.Builder;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.NoArgsConstructor;
 import lombok.experimental.FieldNameConstants;
-import software.wings.security.UsageRestrictions;
+import lombok.experimental.SuperBuilder;
 
-import java.util.Map;
 import java.util.Set;
 
-/**
- * Created by rsingh on 11/15/17.
- */
 @OwnedBy(PL)
 @Data
-@Builder
+@SuperBuilder
+@NoArgsConstructor
+@EqualsAndHashCode(callSuper = true)
 @FieldNameConstants(innerTypeName = "SecretTextKeys")
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class SecretText {
-  private String name;
+public class SecretText extends HarnessSecret {
   private String value;
   private String path;
   private Set<EncryptedDataParams> parameters;
-  private UsageRestrictions usageRestrictions;
-  private String kmsId;
-  private Map<String, String> runtimeParameters;
-  private boolean scopedToAccount;
-  private boolean hideFromListing;
+  public boolean isInlineSecret() {
+    return isEmpty(path) && !isParameterizedSecret();
+  }
+  public boolean isReferencedSecret() {
+    return isNotEmpty(path);
+  }
+  public boolean isParameterizedSecret() {
+    return parameters != null;
+  }
 }

@@ -1,5 +1,8 @@
 package io.harness.mappers;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
+
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.secretmanagerclient.NGSecretManagerMetadata;
 import io.harness.secretmanagerclient.dto.GcpKmsConfigDTO;
 import io.harness.secretmanagerclient.dto.GcpKmsConfigUpdateDTO;
@@ -9,6 +12,7 @@ import software.wings.beans.GcpKmsConfig;
 import java.util.Optional;
 
 @UtilityClass
+@OwnedBy(PL)
 public class GcpKmsConfigMapper {
   public static GcpKmsConfig fromDTO(GcpKmsConfigDTO gcpKmsConfigDTO) {
     GcpKmsConfig gcpKmsConfig =

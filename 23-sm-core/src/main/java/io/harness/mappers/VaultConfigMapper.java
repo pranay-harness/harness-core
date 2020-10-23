@@ -1,7 +1,9 @@
 package io.harness.mappers;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.mappers.SecretManagerConfigMapper.ngMetaDataFromDto;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.secretmanagerclient.NGSecretManagerMetadata;
 import io.harness.secretmanagerclient.dto.VaultConfigDTO;
 import io.harness.secretmanagerclient.dto.VaultConfigUpdateDTO;
@@ -12,6 +14,7 @@ import software.wings.beans.VaultConfig;
 import java.util.Optional;
 
 @UtilityClass
+@OwnedBy(PL)
 public class VaultConfigMapper {
   public static VaultConfig fromDTO(VaultConfigDTO vaultConfigDTO) {
     VaultConfig vaultConfig = VaultConfig.builder()
