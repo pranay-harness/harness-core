@@ -233,6 +233,7 @@ public class ViewsBillingServiceImpl implements ViewsBillingService {
                    .fieldId(ViewsMetaDataFields.START_TIME.getFieldName())
                    .fieldName(ViewsMetaDataFields.START_TIME.getFieldName())
                    .identifier(ViewFieldIdentifier.COMMON)
+                   .identifierName(ViewFieldIdentifier.COMMON.getDisplayName())
                    .build())
         .operator(operator)
         .value(filterTime)

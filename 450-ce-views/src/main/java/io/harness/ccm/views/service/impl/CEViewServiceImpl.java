@@ -53,6 +53,7 @@ public class CEViewServiceImpl implements CEViewService {
                                                    .fieldId("product")
                                                    .fieldName("Product")
                                                    .identifier(ViewFieldIdentifier.COMMON)
+                                                   .identifierName(ViewFieldIdentifier.COMMON.getDisplayName())
                                                    .build())
                                       .build());
     }

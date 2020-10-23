@@ -13,4 +13,5 @@ public class QLCEViewField {
   String fieldId;
   String fieldName;
   ViewFieldIdentifier identifier;
+  String identifierName;
 }

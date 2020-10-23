@@ -47,6 +47,7 @@ public class ViewFieldsDataFetcher extends AbstractObjectDataFetcher<QLCEViewFie
                                                          .fieldId(field.getFieldId())
                                                          .fieldName(field.getFieldName())
                                                          .identifier(field.getIdentifier())
+                                                         .identifierName(field.getIdentifier().getDisplayName())
                                                          .build())
                                               .collect(Collectors.toList());
     return QLCEViewFieldIdentifierData.builder()
