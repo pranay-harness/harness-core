@@ -10,6 +10,7 @@ import static io.harness.azure.model.AzureConstants.DEPLOYMENT_ERROR;
 import static io.harness.azure.model.AzureConstants.DOWN_SCALE_COMMAND_UNIT;
 import static io.harness.azure.model.AzureConstants.DOWN_SCALE_STEADY_STATE_WAIT_COMMAND_UNIT;
 import static io.harness.azure.model.AzureConstants.SETUP_COMMAND_UNIT;
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.exception.ExceptionUtils.getMessage;
 import static java.util.Collections.singletonList;
 import static java.util.concurrent.TimeUnit.MINUTES;
@@ -58,6 +59,7 @@ import software.wings.service.intfc.DelegateService;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionResponse;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -73,7 +75,7 @@ public class AzureVMSSSetupState extends AbstractAzureState {
   @Getter @Setter private String autoScalingSteadyStateVMSSTimeout;
   @Getter @Setter private boolean useCurrentRunningCount;
   @Getter @Setter private ResizeStrategy resizeStrategy;
-
+  @Getter @Setter private boolean blueGreen;
   @Getter @Setter private AzureLoadBalancerDetailForBGDeployment azureLoadBalancerDetail;
 
   @Inject private transient DelegateService delegateService;
@@ -358,5 +360,28 @@ public class AzureVMSSSetupState extends AbstractAzureState {
         new AzureVMSSDummyCommandUnit(DOWN_SCALE_STEADY_STATE_WAIT_COMMAND_UNIT),
         new AzureVMSSDummyCommandUnit(DELETE_OLD_VIRTUAL_MACHINE_SCALE_SETS_COMMAND_UNIT),
         new AzureVMSSDummyCommandUnit(CREATE_NEW_VMSS_COMMAND_UNIT), new AzureVMSSDummyCommandUnit(DEPLOYMENT_ERROR));
+  }
+
+  @Override
+  public Map<String, String> validateFields() {
+    Map<String, String> invalidFields = new HashMap<>();
+    if (!blueGreen) {
+      return invalidFields;
+    }
+
+    if (azureLoadBalancerDetail == null) {
+      invalidFields.put("azureLoadBalancerDetail", "Azure Load balancer detail is required");
+    } else {
+      if (isEmpty(azureLoadBalancerDetail.getLoadBalancerName())) {
+        invalidFields.put("azureLoadBalancerDetail", "Load balancer name cannot be empty");
+      }
+      if (isEmpty(azureLoadBalancerDetail.getProdBackendPool())) {
+        invalidFields.put("productionBackendPool", "Production backend pool is required");
+      }
+      if (isEmpty(azureLoadBalancerDetail.getStageBackendPool())) {
+        invalidFields.put("stageBackendPool", "Stage backend pool is required");
+      }
+    }
+    return invalidFields;
   }
 }

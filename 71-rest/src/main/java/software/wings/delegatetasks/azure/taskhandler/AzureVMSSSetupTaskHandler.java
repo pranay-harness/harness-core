@@ -108,11 +108,6 @@ public class AzureVMSSSetupTaskHandler extends AzureVMSSTaskHandler {
     createVirtualMachineScaleSet(azureConfig, setupTaskParameters, newHarnessRevision, newVirtualMachineScaleSetName,
         getLogCallBack(azureVMSSTaskParameters, CREATE_NEW_VMSS_COMMAND_UNIT));
 
-    if (setupTaskParameters.isBlueGreen()) {
-      attachNewCreatedVMSSToStageBackendPool(
-          azureConfig, setupTaskParameters, newVirtualMachineScaleSetName, setupLogCallback);
-    }
-
     AzureVMSSSetupTaskResponse azureVMSSSetupTaskResponse = buildAzureVMSSSetupTaskResponse(
         azureConfig, newHarnessRevision, newVirtualMachineScaleSetName, mostRecentActiveVMSS, setupTaskParameters);
 
@@ -204,7 +199,7 @@ public class AzureVMSSSetupTaskHandler extends AzureVMSSTaskHandler {
     List<VirtualMachineScaleSet> harnessVMSSSortedByCreationTimeReverse =
         getHarnessMangedVMSSSortedByCreationTime(azureConfig, setupTaskParameters);
     setupLogCallback.saveExecutionLog(
-        format("Found [%s] Harness manged Virtual Machine Scale Sets", harnessVMSSSortedByCreationTimeReverse.size()),
+        format("Found [%s] Harness managed Virtual Machine Scale Sets", harnessVMSSSortedByCreationTimeReverse.size()),
         INFO);
     return harnessVMSSSortedByCreationTimeReverse;
   }
@@ -285,7 +280,8 @@ public class AzureVMSSSetupTaskHandler extends AzureVMSSTaskHandler {
       List<VirtualMachineScaleSet> vmssForDownsize, String subscriptionId, String resourceGroupName,
       int autoScalingSteadyStateTimeout) {
     ExecutionLogCallback downScaleSetsLogger = getLogCallBack(setupTaskParameters, DOWN_SCALE_COMMAND_UNIT);
-    downScaleSetsLogger.saveExecutionLog("Found [%s] old virtual machine scale set with non-zero capacity");
+    downScaleSetsLogger.saveExecutionLog(
+        format("Found [%d] old virtual machine scale set with non-zero capacity", vmssForDownsize.size()));
 
     vmssForDownsize.forEach(vmss -> {
       String virtualMachineScaleSetName = vmss.name();
@@ -383,6 +379,11 @@ public class AzureVMSSSetupTaskHandler extends AzureVMSSTaskHandler {
         format("Creating new Virtual Machine Scale Set: [%s]", newVirtualMachineScaleSetName), INFO);
     azureComputeClient.createVirtualMachineScaleSet(azureConfig, baseVirtualMachineScaleSet,
         newVirtualMachineScaleSetName, azureUserAuthVMInstanceData, imageArtifact, azureVMSSTagsData);
+
+    if (setupTaskParameters.isBlueGreen()) {
+      attachNewCreatedVMSSToStageBackendPool(
+          azureConfig, setupTaskParameters, newVirtualMachineScaleSetName, logCallback);
+    }
     logCallback.saveExecutionLog(
         format("New Virtual Machine Scale Set: [%s] created successfully", newVirtualMachineScaleSetName), INFO,
         SUCCESS);
@@ -480,7 +481,7 @@ public class AzureVMSSSetupTaskHandler extends AzureVMSSTaskHandler {
 
   private void attachNewCreatedVMSSToStageBackendPool(AzureConfig azureConfig,
       AzureVMSSSetupTaskParameters setupTaskParameters, String newVirtualMachineScaleSetName,
-      ExecutionLogCallback setupLogCallback) {
+      ExecutionLogCallback logCallback) {
     AzureLoadBalancerDetailForBGDeployment azureLoadBalancerDetail = setupTaskParameters.getAzureLoadBalancerDetail();
     String stageBackendPool = azureLoadBalancerDetail.getStageBackendPool();
     String loadBalancerName = azureLoadBalancerDetail.getLoadBalancerName();
@@ -489,12 +490,12 @@ public class AzureVMSSSetupTaskHandler extends AzureVMSSTaskHandler {
 
     LoadBalancer loadBalancer = getLoadBalancer(azureConfig, loadBalancerName, resourceGroupName);
 
-    setupLogCallback.saveExecutionLog(format(
+    logCallback.saveExecutionLog(format(
         "Sending request to attach Virtual Machine Scale Set:[%s] to load balancer: [%s], stage backend pool:[%s]",
         newVirtualMachineScaleSetName, loadBalancerName, stageBackendPool));
     azureComputeClient.attachVMSSToBackendPools(
         azureConfig, loadBalancer, subscriptionId, resourceGroupName, newVirtualMachineScaleSetName, stageBackendPool);
-    setupLogCallback.saveExecutionLog("Successful attached Virtual Machine Scale Set to stage backend pool");
+    logCallback.saveExecutionLog("Successful attached Virtual Machine Scale Set to stage backend pool");
   }
 
   private LoadBalancer getLoadBalancer(AzureConfig azureConfig, String loadBalancerName, String resourceGroupName) {

@@ -21,6 +21,7 @@ import com.google.inject.Inject;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.github.reinert.jjschema.Attributes;
+import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.azure.model.AzureConstants;
 import io.harness.beans.DelegateTask;
 import io.harness.beans.ExecutionStatus;
@@ -102,6 +103,7 @@ public class AzureVMSSDeployState extends AbstractAzureState {
   }
 
   @Override
+  @SchemaIgnore
   public Integer getTimeoutMillis(ExecutionContext context) {
     return azureVMSSStateHelper.getAzureVMSSStateTimeoutFromContext(context);
   }

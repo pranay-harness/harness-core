@@ -15,7 +15,6 @@ public interface AzureConstants {
   String BLUE_GREEN = "blueGreen";
   String AZURE_VMSS_SETUP_COMMAND_NAME = "Azure VMSS Setup";
   String AZURE_VMSS_DEPLOY_COMMAND_NAME = "Resize Azure Virtual Machine Scale Set";
-  String AZURE_VMSS_SWAP_BACKEND_POOL = "Swap VMSS Backend Pool";
   String ACTIVITY_ID = "activityId";
   int NUMBER_OF_LATEST_VERSIONS_TO_KEEP = 3;
   String STEADY_STATE_TIMEOUT_REGEX = "w|d|h|m|s|ms";
@@ -50,6 +49,7 @@ public interface AzureConstants {
   String DEPLOYMENT_STATUS = "Final Deployment status";
   String DEPLOYMENT_ERROR = "Failed Deployment status";
   String DELETE_NEW_VMSS = "Delete New Virtual Machine Scale Set";
+  String AZURE_VMSS_SWAP_BACKEND_POOL = "Swap VMSS Backend Pool";
   String BG_SWAP_ROUTES_COMMAND_UNIT = "Swap Routes";
   String BG_ROLLBACK_COMMAND_UNIT = "Rollback Swap Routes";
 
@@ -64,6 +64,11 @@ public interface AzureConstants {
   String NO_VMSS_FOR_DOWN_SIZING = "No old Virtual Machine Scale Set was found with non-zero capacity for down scale";
   String NO_VMSS_FOR_DELETION = "No old Virtual Machine Scale Set was found for deletion";
   String NO_SCALING_POLICY_DURING_DOWN_SIZING = "Not attaching scaling policy to VMSS: [%s] while down sizing it";
+  String CLEAR_SCALING_POLICY = "Clearing scaling policy for scale set: [%s]";
+  String START_BLUE_GREEN_SWAP = "Starting Swap Backend pool step during blue green deployment";
+  String END_BLUE_GREEN_SWAP = "Swap backend pool completed successfully";
+  String DOWNSIZING_FLAG_DISABLED = "Skipping downsizing of VMSS: [%s] as downsize was not requested";
+  String NO_VMSS_FOR_UPSCALE_DURING_ROLLBACK = "There is no old Virtual machine for up scaling during rollback";
 
   // Validation messages
   String RESOURCE_GROUP_NAME_NULL_VALIDATION_MSG = "Parameter resourceGroupName is required and cannot be null";
@@ -86,7 +91,7 @@ public interface AzureConstants {
       "Parameter baseVirtualMachineScaleSet is required and cannot be null";
   long AUTOSCALING_REQUEST_STATUS_CHECK_INTERVAL = TimeUnit.SECONDS.toSeconds(15);
   String NEW_VIRTUAL_MACHINE_SCALE_SET_NAME_IS_NULL_VALIDATION_MSG =
-      "Parameter newVirtualMachineScaleSetName is required and cannot be null";
+      "Parameter newVirtualMachineScaleSetName is required and cannot be null.";
   String HARNESS_REVISION_IS_NULL_VALIDATION_MSG = "Parameter harnessRevision is required and cannot be null";
   String VMSS_IDS_IS_NULL_VALIDATION_MSG = "Parameter vmssIds is required and cannot be null";
   String NUMBER_OF_VM_INSTANCES_VALIDATION_MSG = "Required number of VM instances can't have negative value";

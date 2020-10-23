@@ -1,7 +1,6 @@
 package software.wings.sm.states.azure;
 
 import static io.harness.azure.model.AzureConstants.AZURE_VMSS_SWAP_BACKEND_POOL;
-import static io.harness.azure.model.AzureConstants.DEPLOYMENT_STATUS;
 import static io.harness.azure.model.AzureConstants.DOWN_SCALE_COMMAND_UNIT;
 import static io.harness.azure.model.AzureConstants.DOWN_SCALE_STEADY_STATE_WAIT_COMMAND_UNIT;
 import static io.harness.azure.model.AzureConstants.SETUP_ELEMENT_NOT_FOUND;
@@ -18,6 +17,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.inject.Inject;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.azure.model.AzureConstants;
 import io.harness.beans.DelegateTask;
 import io.harness.beans.ExecutionStatus;
@@ -75,6 +75,7 @@ public class AzureVMSSSwitchRoutesState extends State {
   }
 
   @Override
+  @SchemaIgnore
   public Integer getTimeoutMillis(ExecutionContext context) {
     return azureVMSSStateHelper.getAzureVMSSStateTimeoutFromContext(context);
   }
@@ -235,8 +236,7 @@ public class AzureVMSSSwitchRoutesState extends State {
   protected List<CommandUnit> getCommandUnits() {
     return ImmutableList.of(new AzureVMSSDummyCommandUnit(AZURE_VMSS_SWAP_BACKEND_POOL),
         new AzureVMSSDummyCommandUnit(DOWN_SCALE_COMMAND_UNIT),
-        new AzureVMSSDummyCommandUnit(DOWN_SCALE_STEADY_STATE_WAIT_COMMAND_UNIT),
-        new AzureVMSSDummyCommandUnit(DEPLOYMENT_STATUS));
+        new AzureVMSSDummyCommandUnit(DOWN_SCALE_STEADY_STATE_WAIT_COMMAND_UNIT));
   }
 
   private ExecutionResponse skipResponse() {
