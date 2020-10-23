@@ -27,6 +27,7 @@ import com.google.inject.Singleton;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.DelegateTask;
 import io.harness.beans.DelegateTask.DelegateTaskBuilder;
+import io.harness.delegate.beans.DelegateTaskRank;
 import io.harness.delegate.beans.TaskData;
 import io.harness.delegate.beans.TaskData.TaskDataBuilder;
 import io.harness.exception.InvalidRequestException;
@@ -178,6 +179,7 @@ public class ArtifactCollectionServiceAsyncImpl implements ArtifactCollectionSer
       dataBuilder.parameters(new Object[] {buildSourceRequest}).timeout(DEFAULT_TIMEOUT);
       delegateTaskBuilder.tags(awsCommandHelper.getAwsConfigTagsFromSettingAttribute(settingAttribute));
       delegateTaskBuilder.accountId(accountId);
+      delegateTaskBuilder.rank(DelegateTaskRank.OPTIONAL);
       delegateTaskBuilder.data(dataBuilder.build());
     }
 
