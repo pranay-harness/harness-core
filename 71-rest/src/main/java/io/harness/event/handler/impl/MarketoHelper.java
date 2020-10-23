@@ -8,6 +8,7 @@ import static io.harness.validation.Validator.notNullCheck;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
+import io.fabric8.utils.Strings;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.event.handler.marketo.MarketoRestClient;
 import io.harness.event.model.marketo.Error;
@@ -167,11 +168,11 @@ public class MarketoHelper {
     }
 
     if (userInvite != null && isNotEmpty(userInvite.getFreemiumProducts())) {
-      leadBuilder.freemiumProducts(userInvite.getFreemiumProducts());
+      leadBuilder.Freemium_Products__c(Strings.join(userInvite.getFreemiumProducts(), ","));
     }
 
     if (userInvite != null && userInvite.getFreemiumAssistedOption() != null) {
-      leadBuilder.freemiumAssistedOption(userInvite.getFreemiumAssistedOption());
+      leadBuilder.freemiumassistedoption(userInvite.getFreemiumAssistedOption());
     }
     return leadBuilder.build();
   }

@@ -10,7 +10,6 @@ import java.util.List;
 @Builder
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class Lead {
-  private int id;
   private String email;
   private String firstName;
   private String lastName;
@@ -27,6 +26,6 @@ public class Lead {
   private String UTM_Term__c;
   private String UTM__c;
 
-  private List<String> freemiumProducts;
-  private Boolean freemiumAssistedOption;
+  private String Freemium_Products__c;
+  private boolean freemiumassistedoption;
 }
