@@ -1,10 +1,9 @@
-package io.harness;
+package io.harness.secrets;
 
 import static io.harness.SecretTestUtils.getDummyEncryptedData;
 import static io.harness.SecretTestUtils.getInlineSecretText;
 import static io.harness.SecretTestUtils.getParameterizedSecretText;
 import static io.harness.SecretTestUtils.getReferencedSecretText;
-import static io.harness.SecretTestUtils.getScopedEncryptedData;
 import static io.harness.SecretTestUtils.getSecretFile;
 import static io.harness.eraro.ErrorCode.SECRET_MANAGEMENT_ERROR;
 import static io.harness.rule.OwnerRule.UTKARSH;
@@ -13,6 +12,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import com.google.common.collect.Sets;
 import com.google.inject.Inject;
 
+import io.harness.SMCoreTestBase;
 import io.harness.beans.EncryptedData;
 import io.harness.beans.SecretFile;
 import io.harness.beans.SecretText;
@@ -22,7 +22,6 @@ import io.harness.data.structure.UUIDGenerator;
 import io.harness.exception.SecretManagementException;
 import io.harness.persistence.HIterator;
 import io.harness.rule.Owner;
-import io.harness.secrets.SecretsDaoImpl;
 import io.harness.security.encryption.EncryptedDataParams;
 import io.harness.security.encryption.EncryptedRecord;
 import org.junit.Test;
@@ -37,8 +36,8 @@ public class SecretsDaoImplTest extends SMCoreTestBase {
   @Inject private SecretsDaoImpl secretsDao;
 
   @Test
-  @Category(UnitTests.class)
   @Owner(developers = UTKARSH)
+  @Category(UnitTests.class)
   public void testGetSecretById() {
     EncryptedData encryptedData = getDummyEncryptedData();
     String configId = secretsDao.saveSecret(encryptedData);
@@ -57,28 +56,8 @@ public class SecretsDaoImplTest extends SMCoreTestBase {
   }
 
   @Test
-  @Category(UnitTests.class)
   @Owner(developers = UTKARSH)
-  public void testGetAccountScopedSecretById() {
-    EncryptedData encryptedData = getScopedEncryptedData(null, true);
-    String configId = secretsDao.saveSecret(encryptedData);
-    Optional<EncryptedData> encryptedDataOptional =
-        secretsDao.getAccountScopedSecretById(encryptedData.getAccountId(), configId);
-    assertThat(encryptedDataOptional.isPresent()).isTrue();
-    assertThat(encryptedDataOptional.get()).isEqualTo(encryptedData);
-
-    encryptedDataOptional = secretsDao.getAccountScopedSecretById(UUIDGenerator.generateUuid(), configId);
-    assertThat(encryptedDataOptional.isPresent()).isFalse();
-
-    encryptedData = getScopedEncryptedData(null, false);
-    configId = secretsDao.saveSecret(encryptedData);
-    encryptedDataOptional = secretsDao.getAccountScopedSecretById(encryptedData.getAccountId(), configId);
-    assertThat(encryptedDataOptional.isPresent()).isFalse();
-  }
-
-  @Test
   @Category(UnitTests.class)
-  @Owner(developers = UTKARSH)
   public void testGetSecretByName() {
     EncryptedData encryptedData = getDummyEncryptedData();
     String configId = secretsDao.saveSecret(encryptedData);
@@ -89,20 +68,8 @@ public class SecretsDaoImplTest extends SMCoreTestBase {
   }
 
   @Test
-  @Category(UnitTests.class)
   @Owner(developers = UTKARSH)
-  public void testAccountScopedSecretByName() {
-    EncryptedData encryptedData = getScopedEncryptedData(null, true);
-    secretsDao.saveSecret(encryptedData);
-    Optional<EncryptedData> encryptedDataOptional =
-        secretsDao.getAccountScopedSecretByName(encryptedData.getAccountId(), encryptedData.getName());
-    assertThat(encryptedDataOptional.isPresent()).isTrue();
-    assertThat(encryptedDataOptional.get()).isEqualTo(encryptedData);
-  }
-
-  @Test
   @Category(UnitTests.class)
-  @Owner(developers = UTKARSH)
   public void testGetSecretByKeyOrPath() {
     EncryptedData encryptedData = getInlineSecretText();
     secretsDao.saveSecret(encryptedData);
@@ -135,8 +102,8 @@ public class SecretsDaoImplTest extends SMCoreTestBase {
   }
 
   @Test
-  @Category(UnitTests.class)
   @Owner(developers = UTKARSH)
+  @Category(UnitTests.class)
   public void testMigrateSecret() {
     EncryptedData encryptedData = getDummyEncryptedData();
     secretsDao.saveSecret(encryptedData);
@@ -156,8 +123,8 @@ public class SecretsDaoImplTest extends SMCoreTestBase {
   }
 
   @Test
-  @Category(UnitTests.class)
   @Owner(developers = UTKARSH)
+  @Category(UnitTests.class)
   public void testUpdateSecret_InlineSecret() {
     EncryptedData encryptedData = getInlineSecretText();
     secretsDao.saveSecret(encryptedData);
@@ -189,8 +156,8 @@ public class SecretsDaoImplTest extends SMCoreTestBase {
   }
 
   @Test
-  @Category(UnitTests.class)
   @Owner(developers = UTKARSH)
+  @Category(UnitTests.class)
   public void testUpdateSecret_ReferencedSecret() {
     EncryptedData encryptedData = getReferencedSecretText();
     secretsDao.saveSecret(encryptedData);
@@ -223,8 +190,8 @@ public class SecretsDaoImplTest extends SMCoreTestBase {
   }
 
   @Test
-  @Category(UnitTests.class)
   @Owner(developers = UTKARSH)
+  @Category(UnitTests.class)
   public void testUpdateSecret_ParameterizedSecret() {
     EncryptedData encryptedData = getParameterizedSecretText();
     secretsDao.saveSecret(encryptedData);
@@ -261,8 +228,8 @@ public class SecretsDaoImplTest extends SMCoreTestBase {
   }
 
   @Test
-  @Category(UnitTests.class)
   @Owner(developers = UTKARSH)
+  @Category(UnitTests.class)
   public void testUpdateSecret_SecretFile() {
     EncryptedData encryptedData = getSecretFile();
     secretsDao.saveSecret(encryptedData);
@@ -295,8 +262,8 @@ public class SecretsDaoImplTest extends SMCoreTestBase {
   }
 
   @Test
-  @Category(UnitTests.class)
   @Owner(developers = UTKARSH)
+  @Category(UnitTests.class)
   public void testListSecretsBySecretManager() {
     String kmsId = "kmsId";
     EncryptedData encryptedData = getInlineSecretText();

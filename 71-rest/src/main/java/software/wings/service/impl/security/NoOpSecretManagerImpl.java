@@ -10,6 +10,7 @@ import io.harness.beans.SecretChangeLog;
 import io.harness.beans.SecretManagerConfig;
 import io.harness.beans.SecretText;
 import io.harness.beans.SecretUsageLog;
+import io.harness.secrets.setupusage.SecretSetupUsage;
 import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.security.encryption.EncryptionType;
 import io.harness.stream.BoundedInputStream;
@@ -19,7 +20,6 @@ import software.wings.beans.Base;
 import software.wings.beans.SecretManagerRuntimeParameters;
 import software.wings.beans.SettingAttribute;
 import software.wings.security.UsageRestrictions;
-import software.wings.security.encryption.setupusage.SecretSetupUsage;
 import software.wings.service.intfc.security.SecretManager;
 import software.wings.settings.SettingVariableTypes;
 

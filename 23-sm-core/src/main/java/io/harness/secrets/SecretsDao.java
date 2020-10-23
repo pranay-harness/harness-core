@@ -20,11 +20,7 @@ public interface SecretsDao {
 
   Optional<EncryptedData> getSecretById(@NotEmpty String accountId, @NotEmpty String secretId);
 
-  Optional<EncryptedData> getAccountScopedSecretById(@NotEmpty String accountId, @NotEmpty String secretId);
-
   Optional<EncryptedData> getSecretByName(@NotEmpty String accountId, @NotEmpty String secretName);
-
-  Optional<EncryptedData> getAccountScopedSecretByName(@NotEmpty String accountId, @NotEmpty String secretName);
 
   Optional<EncryptedData> getSecretByKeyOrPath(
       @NotEmpty String accountId, @NotEmpty EncryptionType encryptionType, String key, String path);

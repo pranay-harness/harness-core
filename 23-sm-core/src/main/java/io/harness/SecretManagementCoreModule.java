@@ -6,6 +6,8 @@ import io.harness.persistence.HPersistence;
 import io.harness.secretmanagers.SecretManagerConfigService;
 import io.harness.secrets.SecretsDao;
 import io.harness.secrets.SecretsDaoImpl;
+import io.harness.secrets.setupusage.SecretSetupUsageService;
+import io.harness.secrets.setupusage.SecretSetupUsageServiceImpl;
 
 public class SecretManagementCoreModule extends AbstractModule {
   private static SecretManagementCoreModule instance;
@@ -20,6 +22,7 @@ public class SecretManagementCoreModule extends AbstractModule {
   @Override
   protected void configure() {
     bind(SecretsDao.class).to(SecretsDaoImpl.class);
+    bind(SecretSetupUsageService.class).to(SecretSetupUsageServiceImpl.class);
     registerRequiredBindings();
   }
 

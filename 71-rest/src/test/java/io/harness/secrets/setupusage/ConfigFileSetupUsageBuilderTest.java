@@ -1,4 +1,4 @@
-package software.wings.security.encryption.setupusage.builders;
+package io.harness.secrets.setupusage;
 
 import static io.harness.rule.OwnerRule.UTKARSH;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -18,6 +18,7 @@ import io.harness.category.element.UnitTests;
 import io.harness.data.structure.UUIDGenerator;
 import io.harness.exception.InvalidArgumentsException;
 import io.harness.rule.Owner;
+import io.harness.secrets.setupusage.builders.ConfigFileSetupUsageBuilder;
 import io.harness.security.encryption.EncryptionType;
 import org.junit.Before;
 import org.junit.Test;
@@ -31,8 +32,6 @@ import software.wings.beans.ConfigFile;
 import software.wings.beans.ConfigFile.ConfigFileKeys;
 import software.wings.beans.EntityType;
 import software.wings.beans.ServiceTemplate;
-import software.wings.security.encryption.EncryptionDetail;
-import software.wings.security.encryption.setupusage.SecretSetupUsage;
 import software.wings.service.intfc.ConfigService;
 
 import java.util.ArrayList;

@@ -1,4 +1,4 @@
-package io.harness;
+package io.harness.beans;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.rule.OwnerRule.UTKARSH;
@@ -7,9 +7,8 @@ import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.fail;
 
-import io.harness.beans.EncryptedData;
+import io.harness.SMCoreTestBase;
 import io.harness.beans.EncryptedData.EncryptedDataKeys;
-import io.harness.beans.EncryptedDataParent;
 import io.harness.category.element.UnitTests;
 import io.harness.data.structure.UUIDGenerator;
 import io.harness.rule.Owner;

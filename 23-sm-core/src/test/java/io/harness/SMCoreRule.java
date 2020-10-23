@@ -6,6 +6,7 @@ import com.google.inject.Injector;
 import com.google.inject.Module;
 import com.google.inject.Provides;
 import com.google.inject.Singleton;
+import com.google.inject.name.Names;
 
 import io.harness.beans.EmbeddedUser;
 import io.harness.factory.ClosingFactory;
@@ -18,6 +19,8 @@ import io.harness.persistence.HPersistence;
 import io.harness.persistence.UserProvider;
 import io.harness.rule.InjectorRuleMixin;
 import io.harness.secretmanagers.SecretManagerConfigService;
+import io.harness.secrets.setupusage.SecretSetupUsageBuilder;
+import io.harness.secrets.setupusage.SecretSetupUsageBuilders;
 import io.harness.serializer.KryoModule;
 import io.harness.serializer.KryoRegistrar;
 import io.harness.serializer.SMCoreRegistrars;
@@ -84,6 +87,22 @@ public class SMCoreRule implements MethodRule, InjectorRuleMixin, MongoRuleMixin
       protected void configure() {
         bind(HPersistence.class).to(MongoPersistence.class);
         bind(SecretManagerConfigService.class).toInstance(Mockito.mock(SecretManagerConfigService.class));
+        binder()
+            .bind(SecretSetupUsageBuilder.class)
+            .annotatedWith(Names.named(SecretSetupUsageBuilders.SERVICE_VARIABLE_SETUP_USAGE_BUILDER.getName()))
+            .toInstance(Mockito.mock(SecretSetupUsageBuilder.class));
+        binder()
+            .bind(SecretSetupUsageBuilder.class)
+            .annotatedWith(Names.named(SecretSetupUsageBuilders.CONFIG_FILE_SETUP_USAGE_BUILDER.getName()))
+            .toInstance(Mockito.mock(SecretSetupUsageBuilder.class));
+        binder()
+            .bind(SecretSetupUsageBuilder.class)
+            .annotatedWith(Names.named(SecretSetupUsageBuilders.SETTING_ATTRIBUTE_SETUP_USAGE_BUILDER.getName()))
+            .toInstance(Mockito.mock(SecretSetupUsageBuilder.class));
+        binder()
+            .bind(SecretSetupUsageBuilder.class)
+            .annotatedWith(Names.named(SecretSetupUsageBuilders.SECRET_MANAGER_CONFIG_SETUP_USAGE_BUILDER.getName()))
+            .toInstance(Mockito.mock(SecretSetupUsageBuilder.class));
       }
     });
     modules.add(new VersionModule());
