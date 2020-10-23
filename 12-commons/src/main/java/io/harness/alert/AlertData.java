@@ -1,4 +1,4 @@
-package software.wings.beans.alert;
+package io.harness.alert;
 
 public interface AlertData {
   boolean matches(AlertData alertData);

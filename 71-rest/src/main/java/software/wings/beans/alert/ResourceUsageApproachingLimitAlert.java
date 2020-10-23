@@ -2,6 +2,7 @@ package software.wings.beans.alert;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 
+import io.harness.alert.AlertData;
 import io.harness.limits.ActionType;
 import io.harness.limits.lib.StaticLimit;
 import lombok.Value;

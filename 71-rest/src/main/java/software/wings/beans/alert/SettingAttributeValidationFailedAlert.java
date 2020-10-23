@@ -6,6 +6,7 @@ import static software.wings.beans.SettingAttribute.SettingCategory;
 import com.google.inject.Inject;
 
 import com.github.reinert.jjschema.SchemaIgnore;
+import io.harness.alert.AlertData;
 import lombok.Builder;
 import lombok.Data;
 import org.apache.commons.lang3.StringUtils;

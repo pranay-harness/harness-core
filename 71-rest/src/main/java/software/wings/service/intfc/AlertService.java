@@ -1,9 +1,9 @@
 package software.wings.service.intfc;
 
+import io.harness.alert.AlertData;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import software.wings.beans.alert.Alert;
-import software.wings.beans.alert.AlertData;
 import software.wings.beans.alert.AlertType;
 import software.wings.service.intfc.ownership.OwnedByAccount;
 import software.wings.service.intfc.ownership.OwnedByApplication;

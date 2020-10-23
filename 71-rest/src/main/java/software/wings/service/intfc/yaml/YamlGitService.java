@@ -1,5 +1,6 @@
 package software.wings.service.intfc.yaml;
 
+import io.harness.alert.AlertData;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.rest.RestResponse;
@@ -12,7 +13,6 @@ import software.wings.beans.EntityType;
 import software.wings.beans.GitCommit;
 import software.wings.beans.GitConfig;
 import software.wings.beans.SettingAttribute;
-import software.wings.beans.alert.AlertData;
 import software.wings.beans.alert.AlertType;
 import software.wings.beans.yaml.GitFileChange;
 import software.wings.exception.YamlProcessingException.ChangeWithErrorMsg;

@@ -5,6 +5,7 @@ import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
 import com.google.inject.Inject;
 
+import io.harness.alert.AlertData;
 import io.harness.annotations.dev.OwnedBy;
 import lombok.Builder;
 import lombok.Data;

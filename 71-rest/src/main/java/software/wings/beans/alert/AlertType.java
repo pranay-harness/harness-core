@@ -7,6 +7,7 @@ import static software.wings.alerts.AlertCategory.Setup;
 import static software.wings.alerts.AlertSeverity.Error;
 import static software.wings.alerts.AlertSeverity.Warning;
 
+import io.harness.alert.AlertData;
 import lombok.Getter;
 import software.wings.alerts.AlertCategory;
 import software.wings.alerts.AlertSeverity;
@@ -19,6 +20,7 @@ public enum AlertType {
   NoActiveDelegates(Setup, Error, NoActiveDelegatesAlert.class, 2),
   NoInstalledDelegates(Setup, Error, NoInstalledDelegatesAlert.class, 2),
   DelegatesDown(Setup, Error, DelegatesDownAlert.class, 2),
+  DelegatesScalingGroupDownAlert(Setup, Error, io.harness.delegate.beans.alert.DelegatesScalingGroupDownAlert.class),
   DelegateProfileError(Setup, Error, DelegateProfileErrorAlert.class),
   NoEligibleDelegates(
       Setup, Error, NoEligibleDelegatesAlert.class, 0, NoEligibleDelegatesAlertReconciliation.builder().build()),
