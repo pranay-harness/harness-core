@@ -10,14 +10,19 @@ import static io.harness.common.CIExecutionConstants.HARNESS_ORG_ID_VARIABLE;
 import static io.harness.common.CIExecutionConstants.HARNESS_PROJECT_ID_VARIABLE;
 import static io.harness.common.CIExecutionConstants.HARNESS_STAGE_ID_VARIABLE;
 import static io.harness.common.CIExecutionConstants.LOG_SERVICE_ENDPOINT_VARIABLE;
-import static io.harness.common.CIExecutionConstants.LOG_SERVICE_ENDPOINT_VARIABLE_VALUE;
+import static io.harness.common.CIExecutionConstants.LOG_SERVICE_TOKEN_VARIABLE;
 import static io.harness.common.CIExecutionConstants.SECRET_KEY_MINIO_VARIABLE;
 import static io.harness.rule.OwnerRule.HARSH;
+import static io.harness.rule.OwnerRule.VISTAAR;
 import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.joor.Reflect.on;
 import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static software.wings.common.CICommonPodConstants.MOUNT_PATH;
 import static software.wings.common.CICommonPodConstants.STEP_EXEC;
@@ -30,11 +35,14 @@ import io.harness.beans.sweepingoutputs.K8PodDetails;
 import io.harness.beans.sweepingoutputs.StepTaskDetails;
 import io.harness.category.element.UnitTests;
 import io.harness.ci.beans.entities.BuildNumber;
+import io.harness.ci.beans.entities.LogServiceConfig;
 import io.harness.encryption.Scope;
 import io.harness.encryption.SecretRefData;
 import io.harness.engine.outputs.ExecutionSweepingOutputService;
+import io.harness.exception.GeneralException;
 import io.harness.executionplan.CIExecutionPlanTestHelper;
 import io.harness.executionplan.CIExecutionTest;
+import io.harness.logserviceclient.CILogServiceUtils;
 import io.harness.ng.core.BaseNGAccess;
 import io.harness.ng.core.NGAccess;
 import io.harness.ng.core.dto.ResponseDTO;
@@ -57,7 +65,6 @@ import software.wings.beans.ci.pod.ConnectorDetails;
 import software.wings.beans.ci.pod.SecretVariableDTO;
 import software.wings.beans.ci.pod.SecretVariableDetails;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -73,6 +80,7 @@ public class K8BuildSetupUtilsTest extends CIExecutionTest {
   @Mock private SecretManagerClientService secretManagerClientService;
   @Mock private SecretNGManagerClient secretNGManagerClient;
   @Mock private ConnectorUtils connectorUtils;
+  @Mock CILogServiceUtils logServiceUtils;
 
   @Before
   public void setUp() {
@@ -81,18 +89,25 @@ public class K8BuildSetupUtilsTest extends CIExecutionTest {
     on(secretVariableUtils).set("secretManagerClientService", secretManagerClientService);
     on(k8BuildSetupUtils).set("secretVariableUtils", secretVariableUtils);
     on(k8BuildSetupUtils).set("executionSweepingOutputResolver", executionSweepingOutputResolver);
+    on(k8BuildSetupUtils).set("logServiceUtils", logServiceUtils);
   }
 
   @Test
   @Owner(developers = HARSH)
   @Category(UnitTests.class)
-  public void shouldCreatePodParameters() throws IOException {
+  public void shouldCreatePodParameters() throws Exception {
     String accountID = "account";
     String orgID = "org";
     String projectID = "project";
     Long buildID = 1L;
     String stageID = "stage";
     String namespace = "default";
+
+    String logEndpoint = "http://localhost:8080";
+    String logToken = "token";
+    LogServiceConfig logServiceConfig = LogServiceConfig.builder().baseUrl(logEndpoint).globalToken(logToken).build();
+    when(logServiceUtils.getLogServiceConfig()).thenReturn(logServiceConfig);
+    when(logServiceUtils.getLogServiceToken(eq(accountID))).thenReturn(logToken);
 
     Call<ResponseDTO<SecretResponseWrapper>> getSecretCall = mock(Call.class);
     ResponseDTO<SecretResponseWrapper> responseDTO = ResponseDTO.newResponse(
@@ -144,7 +159,8 @@ public class K8BuildSetupUtilsTest extends CIExecutionTest {
             .build());
 
     Map<String, String> stepEnvVars = new HashMap<>();
-    stepEnvVars.put(LOG_SERVICE_ENDPOINT_VARIABLE, LOG_SERVICE_ENDPOINT_VARIABLE_VALUE);
+    stepEnvVars.put(LOG_SERVICE_ENDPOINT_VARIABLE, logEndpoint);
+    stepEnvVars.put(LOG_SERVICE_TOKEN_VARIABLE, logToken);
     stepEnvVars.put(HARNESS_ACCOUNT_ID_VARIABLE, accountID);
     stepEnvVars.put(HARNESS_ORG_ID_VARIABLE, orgID);
     stepEnvVars.put(HARNESS_PROJECT_ID_VARIABLE, projectID);
@@ -169,5 +185,47 @@ public class K8BuildSetupUtilsTest extends CIExecutionTest {
         .isEqualToIgnoringGivenFields(
             ciExecutionPlanTestHelper.getPluginStepCIK8Container().volumeToMountPath(map).workingDir(workDir).build(),
             "envVars", "containerSecrets");
+
+    verify(logServiceUtils, times(1)).getLogServiceConfig();
+    verify(logServiceUtils, times(1)).getLogServiceToken(accountID);
+  }
+
+  @Test
+  @Owner(developers = VISTAAR)
+  @Category(UnitTests.class)
+  public void shouldNotCreatePodParameters() throws Exception {
+    String accountID = "account";
+    String orgID = "org";
+    String projectID = "project";
+    Long buildID = 1L;
+    String stageID = "stage";
+    String namespace = "default";
+
+    String logEndpoint = "http://localhost:8080";
+    String logToken = "token";
+    LogServiceConfig logServiceConfig = LogServiceConfig.builder().baseUrl(logEndpoint).globalToken(logToken).build();
+    when(logServiceUtils.getLogServiceConfig()).thenReturn(logServiceConfig);
+    when(logServiceUtils.getLogServiceToken(eq(accountID))).thenThrow(new GeneralException("Could not retrieve token"));
+
+    PodSetupInfo podsSetupInfo = ciExecutionPlanTestHelper.getCIPodsSetupInfoOnFirstPod().getPodSetupInfoList().get(0);
+
+    BuildNumber buildNumber = BuildNumber.builder()
+                                  .accountIdentifier(accountID)
+                                  .orgIdentifier(orgID)
+                                  .projectIdentifier(projectID)
+                                  .buildNumber(buildID)
+                                  .build();
+    NGAccess ngAccess =
+        BaseNGAccess.builder().accountIdentifier(accountID).orgIdentifier(orgID).projectIdentifier(projectID).build();
+    K8PodDetails k8PodDetails =
+        K8PodDetails.builder().namespace(namespace).buildNumber(buildNumber).stageID(stageID).build();
+
+    assertThatThrownBy(()
+                           -> k8BuildSetupUtils.getPodParams(ngAccess, podsSetupInfo, k8PodDetails,
+                               ciExecutionPlanTestHelper.getExpectedLiteEngineTaskInfoOnFirstPod(), null, true))
+        .isInstanceOf(Exception.class);
+
+    verify(logServiceUtils, times(1)).getLogServiceConfig();
+    verify(logServiceUtils, times(1)).getLogServiceToken(accountID);
   }
 }

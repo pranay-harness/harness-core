@@ -27,8 +27,6 @@ import static io.harness.common.CIExecutionConstants.LITE_ENGINE_JFROG_PATH;
 import static io.harness.common.CIExecutionConstants.LITE_ENGINE_JFROG_VARIABLE;
 import static io.harness.common.CIExecutionConstants.LITE_ENGINE_PATH;
 import static io.harness.common.CIExecutionConstants.LITE_ENGINE_VOLUME;
-import static io.harness.common.CIExecutionConstants.LOG_SERVICE_ENDPOINT_VARIABLE;
-import static io.harness.common.CIExecutionConstants.LOG_SERVICE_ENDPOINT_VARIABLE_VALUE;
 import static io.harness.common.CIExecutionConstants.SETUP_ADDON_ARGS;
 import static io.harness.common.CIExecutionConstants.SETUP_ADDON_CONTAINER_NAME;
 import static io.harness.common.CIExecutionConstants.SH_COMMAND;
@@ -58,6 +56,7 @@ import java.util.Map;
 /**
  * Provides container parameters for internally used containers
  */
+
 @Singleton
 // TODO: fetch constants from config file.
 public class InternalContainerParamsProvider {
@@ -82,8 +81,8 @@ public class InternalContainerParamsProvider {
 
   public CIK8ContainerParams getLiteEngineContainerParams(ConnectorDetails containerImageConnectorDetails,
       Map<String, ConnectorDetails> publishArtifactConnectors, K8PodDetails k8PodDetails,
-      String serializedLiteEngineTaskStepInfo, String serviceToken, Integer stageCpuRequest,
-      Integer stageMemoryRequest) {
+      String serializedLiteEngineTaskStepInfo, String serviceToken, Integer stageCpuRequest, Integer stageMemoryRequest,
+      Map<String, String> logEnvVars) {
     Map<String, String> map = new HashMap<>();
     map.put(STEP_EXEC, MOUNT_PATH);
     map.put(LITE_ENGINE_VOLUME, LITE_ENGINE_PATH);
@@ -94,7 +93,7 @@ public class InternalContainerParamsProvider {
     return CIK8ContainerParams.builder()
         .name(LITE_ENGINE_CONTAINER_NAME)
         .containerResourceParams(getLiteEngineResourceParams(stageCpuRequest, stageMemoryRequest))
-        .envVars(getLiteEngineEnvVars(k8PodDetails, serviceToken))
+        .envVars(getLiteEngineEnvVars(k8PodDetails, serviceToken, logEnvVars))
         .containerType(CIContainerType.LITE_ENGINE)
         .containerSecrets(ContainerSecrets.builder().publishArtifactConnectors(publishArtifactConnectors).build())
         .imageDetailsWithConnector(
@@ -108,13 +107,17 @@ public class InternalContainerParamsProvider {
         .build();
   }
 
-  private Map<String, String> getLiteEngineEnvVars(K8PodDetails k8PodDetails, String serviceToken) {
+  private Map<String, String> getLiteEngineEnvVars(
+      K8PodDetails k8PodDetails, String serviceToken, Map<String, String> logEnvVars) {
     Map<String, String> envVars = new HashMap<>();
     final String accountID = k8PodDetails.getBuildNumber().getAccountIdentifier();
     final String projectID = k8PodDetails.getBuildNumber().getProjectIdentifier();
     final String orgID = k8PodDetails.getBuildNumber().getOrgIdentifier();
     final Long buildNumber = k8PodDetails.getBuildNumber().getBuildNumber();
     final String stageID = k8PodDetails.getStageID();
+
+    // Add log service environment variables
+    envVars.putAll(logEnvVars);
 
     // Add environment variables that need to be used inside the lite engine container
     envVars.put(ENDPOINT_MINIO_VARIABLE, ENDPOINT_MINIO_VARIABLE_VALUE);
@@ -123,13 +126,11 @@ public class InternalContainerParamsProvider {
     envVars.put(DELEGATE_SERVICE_ENDPOINT_VARIABLE, DELEGATE_SERVICE_ENDPOINT_VARIABLE_VALUE);
     envVars.put(DELEGATE_SERVICE_ID_VARIABLE, DELEGATE_SERVICE_ID_VARIABLE_VALUE);
     envVars.put(LITE_ENGINE_JFROG_VARIABLE, LITE_ENGINE_JFROG_PATH);
-    envVars.put(LOG_SERVICE_ENDPOINT_VARIABLE, LOG_SERVICE_ENDPOINT_VARIABLE_VALUE);
     envVars.put(HARNESS_ACCOUNT_ID_VARIABLE, accountID);
     envVars.put(HARNESS_PROJECT_ID_VARIABLE, projectID);
     envVars.put(HARNESS_ORG_ID_VARIABLE, orgID);
     envVars.put(HARNESS_BUILD_ID_VARIABLE, buildNumber.toString());
     envVars.put(HARNESS_STAGE_ID_VARIABLE, stageID);
-
     return envVars;
   }
 

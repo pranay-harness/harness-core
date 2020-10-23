@@ -8,4 +8,5 @@ public class CICommonEndpointConstants {
   public static final String CI_SETUP_ENDPOINT = "/setup"; // Endpoint for env setup, git clone and launching pod
   public static final String CI_COMMAND_EXECUTION_ENDPOINT = "/command-exec";
   public static final String CI_CLEANUP_ENDPOINT = "/cleanup";
+  public static final String LOG_SERVICE_TOKEN_ENDPOINT = "/token";
 }

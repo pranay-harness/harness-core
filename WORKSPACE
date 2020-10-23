@@ -4367,3 +4367,10 @@ go_repository(
     sum = "h1:z+mqJhf6ss6BSfSM671tgKyZBFPTTJM+HLxnhPC3wu0=",
     version = "v1.1.10",
 )
+
+go_repository(
+    name = "com_github_dchest_authcookie",
+    importpath = "github.com/dchest/authcookie",
+    sum = "h1:xizeG5ksKSdyNaom2//2Bow4hLWqXkCql36nrL9iEUI=",
+    version = "v0.0.0-20190824115100-f900d2294c8e",
+)

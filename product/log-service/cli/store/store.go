@@ -1,4 +1,4 @@
-package cistore
+package store
 
 import (
 	"context"
@@ -10,7 +10,7 @@ var nocontext = context.Background()
 
 // Register the store commands.
 func Register(app *kingpin.Application) {
-	cmd := app.Command("cistore", "storage commands")
+	cmd := app.Command("store", "storage commands")
 	registerDownload(cmd)
 	registerDownloadLink(cmd)
 	registerUpload(cmd)

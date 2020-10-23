@@ -6,9 +6,9 @@ go_library(
     importpath = "github.com/wings-software/portal/product/log-service/cli",
     visibility = ["//visibility:public"],
     deps = [
-        "//product/log-service/cli/ci/store:go_default_library",
-        "//product/log-service/cli/ci/stream:go_default_library",
         "//product/log-service/cli/xxxxxxxxgo_default_library",
+        "//product/log-service/cli/store:go_default_library",
+        "//product/log-service/cli/stream:go_default_library",
         "@in_gopkg_alecthomas_kingpin_v2//:go_default_library",
     ],
 )

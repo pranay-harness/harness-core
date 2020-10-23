@@ -10,10 +10,10 @@ go_library(
         "stream.go",
         "tail.go",
     ],
-    importpath = "github.com/wings-software/portal/product/log-service/cli/ci/stream",
+    importpath = "github.com/wings-software/portal/product/log-service/cli/stream",
     visibility = ["//visibility:public"],
     deps = [
-        "//product/log-service/client/ci:go_default_library",
+        "//product/log-service/client:go_default_library",
         "//product/log-service/stream:go_default_library",
         "@in_gopkg_alecthomas_kingpin_v2//:go_default_library",
     ],

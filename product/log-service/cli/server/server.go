@@ -5,6 +5,7 @@ import (
 	"os"
 	"os/signal"
 
+	"github.com/wings-software/portal/product/log-service/config"
 	"github.com/wings-software/portal/product/log-service/handler"
 	"github.com/wings-software/portal/product/log-service/logger"
 	"github.com/wings-software/portal/product/log-service/server"
@@ -28,7 +29,7 @@ func (c *serverCommand) run(*kingpin.ParseContext) error {
 	godotenv.Load(c.envfile)
 
 	// load the system configuration from the environment.
-	config, err := Load()
+	config, err := config.Load()
 	if err != nil {
 		logrus.WithError(err).
 			Errorln("cannot load the service configuration")
@@ -80,7 +81,7 @@ func (c *serverCommand) run(*kingpin.ParseContext) error {
 	server := server.Server{
 		Acme:    config.Server.Acme,
 		Addr:    config.Server.Bind,
-		Handler: handler.Handler(stream, store),
+		Handler: handler.Handler(stream, store, config),
 	}
 
 	// trap the os signal to gracefully shutdown the
@@ -133,7 +134,7 @@ func Register(app *kingpin.Application) {
 
 // helper function configures the global logger from
 // the loaded configuration.
-func initLogging(c Config) {
+func initLogging(c config.Config) {
 	l := logrus.StandardLogger()
 	logger.L = logrus.NewEntry(l)
 	if c.Debug {

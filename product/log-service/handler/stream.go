@@ -1,4 +1,4 @@
-package cihandler
+package handler
 
 import (
 	"context"
@@ -7,7 +7,6 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/wings-software/portal/product/log-service/handler/util"
 	"github.com/wings-software/portal/product/log-service/logger"
 	"github.com/wings-software/portal/product/log-service/stream"
 )
@@ -20,10 +19,10 @@ func HandleOpen(stream stream.Stream) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()
 
-		key := ParseKeyFromURL(r)
+		key := r.FormValue("key")
 
 		if err := stream.Create(ctx, key); err != nil {
-			util.WriteInternalError(w, err)
+			WriteInternalError(w, err)
 			logger.FromRequest(r).
 				WithError(err).
 				WithField("key", key).
@@ -41,10 +40,10 @@ func HandleClose(stream stream.Stream) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()
 
-		key := ParseKeyFromURL(r)
+		key := r.FormValue("key")
 
 		if err := stream.Delete(ctx, key); err != nil {
-			util.WriteInternalError(w, err)
+			WriteInternalError(w, err)
 			logger.FromRequest(r).
 				WithError(err).
 				WithField("key", key).
@@ -62,11 +61,11 @@ func HandleWrite(s stream.Stream) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()
 
-		key := ParseKeyFromURL(r)
+		key := r.FormValue("key")
 
 		in := []*stream.Line{}
 		if err := json.NewDecoder(r.Body).Decode(&in); err != nil {
-			util.WriteBadRequest(w, err)
+			WriteBadRequest(w, err)
 			logger.FromRequest(r).
 				WithError(err).
 				WithField("key", key).
@@ -76,7 +75,7 @@ func HandleWrite(s stream.Stream) http.HandlerFunc {
 
 		if err := s.Write(ctx, key, in...); err != nil {
 			if err != nil {
-				util.WriteInternalError(w, err)
+				WriteInternalError(w, err)
 				logger.FromRequest(r).
 					WithError(err).
 					WithField("key", key).
@@ -93,7 +92,7 @@ func HandleWrite(s stream.Stream) http.HandlerFunc {
 // the live stream.
 func HandleTail(s stream.Stream) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		key := ParseKeyFromURL(r)
+		key := r.FormValue("key")
 
 		h := w.Header()
 		h.Set("Content-Type", "text/event-stream")

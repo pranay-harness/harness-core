@@ -1,4 +1,4 @@
-package server
+package config
 
 import (
 	"github.com/kelseyhightower/envconfig"
@@ -9,8 +9,13 @@ type Config struct {
 	Debug bool `envconfig:"LOG_SERVICE_DEBUG"`
 	Trace bool `envconfig:"LOG_SERVICE_TRACE"`
 
+	Secrets struct {
+		LogSecret   string `envconfig:"LOG_SERVICE_SECRET"`
+		GlobalToken string `envconfig:"LOG_SERVICE_GLOBAL_TOKEN"`
+	}
+
 	Server struct {
-		Bind  string `envconfig:"LOG_SERVICE_HTTP_BIND" default:":8080"`
+		Bind  string `envconfig:"LOG_SERVICE_HTTP_BIND" default:":8079"`
 		Proto string `envconfig:"LOG_SERVICE_HTTP_PROTO"`
 		Host  string `envconfig:"LOG_SERVICE_HTTP_HOST"`
 		Acme  bool   `envconfig:"LOG_SERVICE_HTTP_ACME"`

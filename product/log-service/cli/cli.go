@@ -4,9 +4,9 @@ import (
 	"context"
 	"os"
 
-	cistore "github.com/wings-software/portal/product/log-service/cli/ci/store"
-	cistream "github.com/wings-software/portal/product/log-service/cli/ci/stream"
 	"github.com/wings-software/portal/product/log-service/cli/server"
+	"github.com/wings-software/portal/product/log-service/cli/store"
+	"github.com/wings-software/portal/product/log-service/cli/stream"
 
 	"gopkg.in/alecthomas/kingpin.v2"
 )
@@ -23,8 +23,8 @@ func Command() {
 	app := kingpin.New("harness-logger", "harness logging service")
 
 	server.Register(app)
-	cistore.Register(app)
-	cistream.Register(app)
+	store.Register(app)
+	stream.Register(app)
 
 	kingpin.Version(version)
 	kingpin.MustParse(app.Parse(os.Args[1:]))

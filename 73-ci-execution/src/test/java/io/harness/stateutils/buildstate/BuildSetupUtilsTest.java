@@ -14,11 +14,13 @@ import io.harness.ambiance.Ambiance;
 import io.harness.beans.sweepingoutputs.K8PodDetails;
 import io.harness.category.element.UnitTests;
 import io.harness.ci.beans.entities.BuildNumber;
+import io.harness.ci.beans.entities.LogServiceConfig;
 import io.harness.connector.apis.dto.ConnectorDTO;
 import io.harness.engine.expressions.EngineExpressionService;
 import io.harness.engine.outputs.ExecutionSweepingOutputService;
 import io.harness.executionplan.CIExecutionPlanTestHelper;
 import io.harness.executionplan.CIExecutionTest;
+import io.harness.logserviceclient.CILogServiceUtils;
 import io.harness.ng.core.dto.ResponseDTO;
 import io.harness.rule.Owner;
 import io.harness.service.DelegateGrpcClientWrapper;
@@ -32,7 +34,6 @@ import software.wings.beans.ci.pod.ConnectorDetails;
 import software.wings.beans.ci.pod.SecretVariableDetails;
 import software.wings.helpers.ext.k8s.response.K8sTaskExecutionResponse;
 
-import java.io.IOException;
 import java.util.Optional;
 
 public class BuildSetupUtilsTest extends CIExecutionTest {
@@ -44,7 +45,9 @@ public class BuildSetupUtilsTest extends CIExecutionTest {
   @Mock private EngineExpressionService engineExpressionService;
   @Mock private Ambiance ambiance;
   @Mock private ExecutionSweepingOutputService executionSweepingOutputResolver;
+
   @Mock private DelegateGrpcClientWrapper delegateGrpcClientWrapper;
+  @Mock CILogServiceUtils logServiceUtils;
 
   private static final String CLUSTER_NAME = "K8";
 
@@ -55,12 +58,13 @@ public class BuildSetupUtilsTest extends CIExecutionTest {
     on(k8BuildSetupUtils).set("secretVariableUtils", secretVariableUtils);
     on(k8BuildSetupUtils).set("connectorUtils", connectorUtils);
     on(k8BuildSetupUtils).set("executionSweepingOutputResolver", executionSweepingOutputResolver);
+    on(k8BuildSetupUtils).set("logServiceUtils", logServiceUtils);
   }
 
   @Test
   @Owner(developers = HARSH)
   @Category(UnitTests.class)
-  public void shouldExecuteCILiteEngineTask() throws IOException {
+  public void shouldExecuteCILiteEngineTask() throws Exception {
     BuildNumber buildNumber = BuildNumber.builder().buildNumber(1L).build();
     Call<ResponseDTO<Optional<ConnectorDTO>>> connectorRequest = mock(Call.class);
     when(connectorRequest.execute())
@@ -71,6 +75,9 @@ public class BuildSetupUtilsTest extends CIExecutionTest {
     when(connectorUtils.getConnectorDetails(any(), any())).thenReturn(ConnectorDetails.builder().build());
     when(secretVariableUtils.getSecretVariableDetails(any(), any()))
         .thenReturn(SecretVariableDetails.builder().build());
+    LogServiceConfig logServiceConfig = LogServiceConfig.builder().baseUrl("endpoint").globalToken("token").build();
+    when(logServiceUtils.getLogServiceConfig()).thenReturn(logServiceConfig);
+    when(logServiceUtils.getLogServiceToken(any())).thenReturn("token");
     when(engineExpressionService.renderExpression(any(), any())).thenReturn(CLUSTER_NAME);
     when(executionSweepingOutputResolver.resolve(any(), any()))
         .thenReturn(
@@ -80,5 +87,7 @@ public class BuildSetupUtilsTest extends CIExecutionTest {
         ciExecutionPlanTestHelper.getExpectedLiteEngineTaskInfoOnFirstPod(), ambiance);
 
     verify(delegateGrpcClientWrapper, times(1)).executeSyncTask(any());
+    verify(logServiceUtils, times(1)).getLogServiceConfig();
+    verify(logServiceUtils, times(1)).getLogServiceToken(any());
   }
 }

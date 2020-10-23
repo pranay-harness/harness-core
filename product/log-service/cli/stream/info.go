@@ -1,10 +1,10 @@
-package cistream
+package stream
 
 import (
 	"encoding/json"
 	"os"
 
-	ciclient "github.com/wings-software/portal/product/log-service/client/ci"
+	client "github.com/wings-software/portal/product/log-service/client"
 
 	"gopkg.in/alecthomas/kingpin.v2"
 )
@@ -15,7 +15,7 @@ type infoCommand struct {
 }
 
 func (c *infoCommand) run(*kingpin.ParseContext) error {
-	client := ciclient.NewHTTPClient(c.server, c.token, false)
+	client := client.NewHTTPClient(c.server, "test", c.token, false)
 	info, err := client.Info(nocontext)
 	if err != nil {
 		return err
@@ -32,9 +32,10 @@ func registerInfo(app *kingpin.CmdClause) {
 		Action(c.run)
 
 	cmd.Flag("server", "server endpoint").
-		Default("http://localhost:8080").
+		Default("http://localhost:8079").
 		StringVar(&c.server)
 
-	cmd.Flag("token", "server token").
+	cmd.Arg("token", "server token").
+		Required().
 		StringVar(&c.token)
 }

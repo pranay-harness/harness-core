@@ -1,6 +1,8 @@
 package io.harness.stateutils.buildstate.providers;
 
 import static io.harness.common.CIExecutionConstants.LITE_ENGINE_CONTAINER_NAME;
+import static io.harness.common.CIExecutionConstants.LOG_SERVICE_ENDPOINT_VARIABLE;
+import static io.harness.common.CIExecutionConstants.LOG_SERVICE_TOKEN_VARIABLE;
 import static io.harness.common.CIExecutionConstants.SETUP_ADDON_ARGS;
 import static io.harness.common.CIExecutionConstants.SETUP_ADDON_CONTAINER_NAME;
 import static io.harness.rule.OwnerRule.ALEKSANDAR;
@@ -47,8 +49,15 @@ public class InternalContainerParamsProviderTest extends CIExecutionTest {
   public void getLiteEngineContainerParams() {
     BuildNumber buildNumber = BuildNumber.builder().buildNumber(1L).build();
     K8PodDetails k8PodDetails = K8PodDetails.builder().buildNumber(buildNumber).build();
+
     ConnectorDetails connectorDetails = ConnectorDetails.builder().connectorDTO(ConnectorDTO.builder().build()).build();
     Map<String, ConnectorDetails> publishArtifactConnectorDetailsMap = new HashMap<>();
+    String logSecret = "secret";
+    String logEndpoint = "http://localhost:8079";
+    Map<String, String> logEnvVars = new HashMap<>();
+    logEnvVars.put(LOG_SERVICE_ENDPOINT_VARIABLE, logEndpoint);
+    logEnvVars.put(LOG_SERVICE_TOKEN_VARIABLE, logSecret);
+
     String serialisedStage = "test";
     String serviceToken = "test";
     Integer stageCpuRequest = 500;
@@ -56,8 +65,14 @@ public class InternalContainerParamsProviderTest extends CIExecutionTest {
 
     CIK8ContainerParams containerParams = internalContainerParamsProvider.getLiteEngineContainerParams(connectorDetails,
         publishArtifactConnectorDetailsMap, k8PodDetails, serialisedStage, serviceToken, stageCpuRequest,
-        stageMemoryRequest);
+        stageMemoryRequest, logEnvVars);
 
+    Map<String, String> expectedEnv = new HashMap<>();
+    expectedEnv.put(LOG_SERVICE_ENDPOINT_VARIABLE, logEndpoint);
+    expectedEnv.put(LOG_SERVICE_TOKEN_VARIABLE, logSecret);
+
+    Map<String, String> gotEnv = containerParams.getEnvVars();
+    assertThat(gotEnv).containsAllEntriesOf(expectedEnv);
     assertThat(containerParams.getName()).isEqualTo(LITE_ENGINE_CONTAINER_NAME);
     assertThat(containerParams.getContainerType()).isEqualTo(CIContainerType.LITE_ENGINE);
   }
