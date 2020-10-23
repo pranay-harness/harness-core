@@ -547,7 +547,7 @@ public class AppServiceImpl implements AppService {
   private boolean hasGitSyncPermission(String accountId) {
     User user = UserThreadLocal.get();
     if (null == user) {
-      return false;
+      return true;
     }
 
     final UserPermissionInfo userPermissionInfo = authService.getUserPermissionInfo(accountId, user, false);
