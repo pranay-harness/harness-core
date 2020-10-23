@@ -33,6 +33,7 @@ import software.wings.beans.StateExecutionElement;
 import software.wings.beans.StateExecutionInterrupt;
 import software.wings.beans.Workflow;
 import software.wings.beans.WorkflowExecution;
+import software.wings.beans.appmanifest.HelmChart;
 import software.wings.beans.artifact.Artifact;
 import software.wings.beans.baseline.WorkflowExecutionBaseline;
 import software.wings.beans.concurrency.ConcurrentExecutionResponse;
@@ -273,6 +274,8 @@ public interface WorkflowExecutionService extends StateStatusUpdate {
   List<String> runningExecutionsForEnvironment(String appId, String environmentId);
 
   List<WorkflowExecution> getRunningExecutionsForInfraDef(@NotEmpty String appId, @NotEmpty String infraDefinitionId);
+
+  List<HelmChart> obtainLastGoodDeployedHelmCharts(String appId, String workflowId);
 
   boolean continuePipelineStage(
       String appId, String pipelineExecutionId, String pipelineStageElementId, ExecutionArgs executionArgs);

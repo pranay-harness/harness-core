@@ -73,6 +73,7 @@ import software.wings.service.impl.yaml.handler.tag.HarnessTagYamlHandler;
 import software.wings.service.impl.yaml.handler.template.TemplateExpressionYamlHandler;
 import software.wings.service.impl.yaml.handler.templatelibrary.TemplateLibraryYamlHandler;
 import software.wings.service.impl.yaml.handler.trigger.ArtifactSelectionYamlHandler;
+import software.wings.service.impl.yaml.handler.trigger.ManifestSelectionYamlHandler;
 import software.wings.service.impl.yaml.handler.trigger.PayloadSourceYamlHandler;
 import software.wings.service.impl.yaml.handler.trigger.TriggerConditionYamlHandler;
 import software.wings.service.impl.yaml.handler.trigger.TriggerYamlHandler;
@@ -164,6 +165,7 @@ public class YamlHandlerFactory {
   @Inject private FeatureFlagService featureFlagService;
   @Inject private HarnessTagYamlHandler harnessTagYamlHandler;
   @Inject private InfrastructureDefinitionYamlHandler infrastructureDefinitionYamlHandler;
+  @Inject private ManifestSelectionYamlHandler manifestSelectionYamlHandler;
 
   public <T extends BaseYamlHandler> T getYamlHandler(YamlType yamlType) {
     return getYamlHandler(yamlType, null);
@@ -356,6 +358,10 @@ public class YamlHandlerFactory {
 
       case TAG:
         yamlHandler = harnessTagYamlHandler;
+        break;
+
+      case MANIFEST_SELECTION:
+        yamlHandler = manifestSelectionYamlHandler;
         break;
 
       default:

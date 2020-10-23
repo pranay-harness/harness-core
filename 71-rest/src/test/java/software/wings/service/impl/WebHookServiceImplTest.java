@@ -26,6 +26,7 @@ import static software.wings.utils.WingsTestConstants.BUILD_NO;
 import static software.wings.utils.WingsTestConstants.ENV_ID;
 import static software.wings.utils.WingsTestConstants.PIPELINE_ID;
 import static software.wings.utils.WingsTestConstants.PORTAL_URL;
+import static software.wings.utils.WingsTestConstants.SERVICE_ID;
 import static software.wings.utils.WingsTestConstants.SERVICE_NAME;
 import static software.wings.utils.WingsTestConstants.TRIGGER_ID;
 import static software.wings.utils.WingsTestConstants.TRIGGER_NAME;
@@ -52,6 +53,7 @@ import org.mockito.Mock;
 import software.wings.WingsBaseTest;
 import software.wings.app.MainConfiguration;
 import software.wings.beans.Application;
+import software.wings.beans.FeatureName;
 import software.wings.beans.Service;
 import software.wings.beans.WebHookRequest;
 import software.wings.beans.WebHookResponse;
@@ -144,7 +146,7 @@ public class WebHookServiceImplTest extends WingsBaseTest {
     when(appService.getAccountIdByAppId(anyString())).thenReturn(ACCOUNT_ID);
     doReturn(execution)
         .when(triggerService)
-        .triggerExecutionByWebHook(anyString(), anyString(), anyMap(), anyMap(), any());
+        .triggerExecutionByWebHook(anyString(), anyString(), anyMap(), anyMap(), any(), anyMap());
 
     doReturn(trigger).when(triggerService).getTriggerByWebhookToken(anyString());
     when(configuration.getPortal().getUrl()).thenReturn(PORTAL_URL);
@@ -882,7 +884,7 @@ public class WebHookServiceImplTest extends WingsBaseTest {
     final String token = CryptoUtils.secureRandAlphaNumString(40);
     doReturn(execution)
         .when(triggerService)
-        .triggerExecutionByWebHook(eq(APP_ID), eq(token), anyMap(), anyMap(), any());
+        .triggerExecutionByWebHook(eq(APP_ID), eq(token), anyMap(), anyMap(), any(), anyMap());
 
     WebHookRequest request = WebHookRequest.builder().application(APP_ID).build();
     WebHookResponse response = (WebHookResponse) webHookService.execute(token, request).getEntity();
@@ -1035,5 +1037,53 @@ public class WebHookServiceImplTest extends WingsBaseTest {
     assertThat(webHookResponse.getUiUrl())
         .isEqualTo(
             "app.harness.io/#/account/ACCOUNT_ID/app/APP_ID/pipeline-execution/UUID/workflow-execution/undefined/details");
+  }
+
+  @Test
+  @Owner(developers = PRABU)
+  @Category(UnitTests.class)
+  public void shouldResolveManifestServiceMapping() {
+    WebHookServiceImpl webhookServiceImpl = (WebHookServiceImpl) webHookService;
+    WebHookRequest webHookRequest =
+        WebHookRequest.builder()
+            .manifests(Arrays.asList(ImmutableMap.of("service", SERVICE_NAME, "versionNumber", "1.0"),
+                ImmutableMap.of("service", SERVICE_NAME + 2, "versionNumber", "2.0")))
+            .build();
+
+    when(appService.getAccountIdByAppId(APP_ID)).thenReturn(ACCOUNT_ID);
+    when(featureFlagService.isEnabled(FeatureName.HELM_CHART_AS_ARTIFACT, ACCOUNT_ID)).thenReturn(true);
+    wingsPersistence.save(Service.builder().name(SERVICE_NAME).appId(APP_ID).uuid(SERVICE_ID).build());
+    wingsPersistence.save(Service.builder().name(SERVICE_NAME + 2).appId(APP_ID).uuid(SERVICE_ID + 2).build());
+
+    Map<String, String> serviceManifestMapping =
+        webhookServiceImpl.resolveServiceHelmChartVersion(APP_ID, webHookRequest);
+    assertThat(serviceManifestMapping).isNotEmpty();
+    assertThat(serviceManifestMapping).containsEntry(SERVICE_ID, "1.0");
+    assertThat(serviceManifestMapping).containsEntry(SERVICE_ID + 2, "2.0");
+  }
+
+  @Test
+  @Owner(developers = PRABU)
+  @Category(UnitTests.class)
+  public void shouldThrowErrorWhenUserProvidesWrongService() {
+    WebHookServiceImpl webhookServiceImpl = (WebHookServiceImpl) webHookService;
+    WebHookRequest webHookRequest =
+        WebHookRequest.builder()
+            .application(APP_ID)
+            .manifests(Arrays.asList(ImmutableMap.of("service", SERVICE_NAME, "versionNumber", "1.0"),
+                ImmutableMap.of("service", SERVICE_NAME + 2, "versionNumber", "2.0")))
+            .build();
+
+    when(triggerService.getTriggerByWebhookToken("TOKEN")).thenReturn(Trigger.builder().appId(APP_ID).build());
+    when(appService.get(APP_ID)).thenReturn(Application.Builder.anApplication().accountId(ACCOUNT_ID).build());
+    when(featureFlagService.isEnabled(FeatureName.HELM_CHART_AS_ARTIFACT, ACCOUNT_ID)).thenReturn(true);
+    wingsPersistence.save(Service.builder().name(SERVICE_NAME).appId(APP_ID).uuid(SERVICE_ID).build());
+
+    Response response = webhookServiceImpl.execute("TOKEN", webHookRequest);
+    assertThat(response).isNotNull();
+    assertThat(response.getStatus()).isEqualTo(400);
+    assertThat(response.getEntity()).isInstanceOf(WebHookResponse.class);
+    WebHookResponse webHookResponse = (WebHookResponse) response.getEntity();
+    assertThat(webHookResponse.getError()).isEqualTo("Service Name [" + SERVICE_NAME + 2 + "] does not exist");
   }
 }

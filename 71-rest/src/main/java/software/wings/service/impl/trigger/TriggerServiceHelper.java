@@ -19,6 +19,7 @@ import static software.wings.beans.Application.GLOBAL_APP_ID;
 import static software.wings.beans.trigger.ArtifactSelection.Type.LAST_COLLECTED;
 import static software.wings.beans.trigger.ArtifactSelection.Type.LAST_DEPLOYED;
 import static software.wings.beans.trigger.TriggerConditionType.NEW_ARTIFACT;
+import static software.wings.beans.trigger.TriggerConditionType.NEW_MANIFEST;
 import static software.wings.beans.trigger.TriggerConditionType.PIPELINE_COMPLETION;
 import static software.wings.beans.trigger.TriggerConditionType.SCHEDULED;
 import static software.wings.beans.trigger.TriggerConditionType.WEBHOOK;
@@ -41,11 +42,13 @@ import lombok.extern.slf4j.Slf4j;
 import net.redhogs.cronparser.I18nMessages;
 import org.quartz.CronScheduleBuilder;
 import software.wings.beans.ExecutionArgs;
+import software.wings.beans.FeatureName;
 import software.wings.beans.Service;
 import software.wings.beans.Variable;
 import software.wings.beans.VariableType;
 import software.wings.beans.WebHookToken;
 import software.wings.beans.Workflow;
+import software.wings.beans.appmanifest.HelmChart;
 import software.wings.beans.artifact.Artifact;
 import software.wings.beans.artifact.ArtifactFile;
 import software.wings.beans.artifact.ArtifactStream;
@@ -53,6 +56,7 @@ import software.wings.beans.trigger.ArtifactSelection;
 import software.wings.beans.trigger.ArtifactSelection.ArtifactSelectionKeys;
 import software.wings.beans.trigger.ArtifactTriggerCondition;
 import software.wings.beans.trigger.ArtifactTriggerCondition.ArtifactTriggerConditionKeys;
+import software.wings.beans.trigger.ManifestSelection.ManifestSelectionKeys;
 import software.wings.beans.trigger.PipelineTriggerCondition;
 import software.wings.beans.trigger.ScheduledTriggerCondition;
 import software.wings.beans.trigger.ServiceInfraWorkflow;
@@ -273,7 +277,7 @@ public class TriggerServiceHelper {
   }
 
   public WebHookToken constructWebhookToken(Trigger trigger, WebHookToken existingToken, List<Service> services,
-      boolean artifactNeeded, Map<String, String> parameters, List<String> templatizedServiceVars) {
+      boolean artifactOrManifestNeeded, Map<String, String> parameters, List<String> templatizedServiceVars) {
     WebHookToken webHookToken;
     if (existingToken == null || existingToken.getWebHookToken() == null) {
       webHookToken =
@@ -286,6 +290,7 @@ public class TriggerServiceHelper {
     payload.put("application", trigger.getAppId());
 
     List<Map<String, Object>> artifactList = new ArrayList<>();
+    List<Map<String, Object>> manifestList = new ArrayList<>();
     if (isNotEmpty(trigger.getArtifactSelections())) {
       if (services != null) {
         for (Service service : services) {
@@ -297,23 +302,43 @@ public class TriggerServiceHelper {
           if (isNotEmpty(parameterMap)) {
             artifacts.put("artifactVariables", parameterMap);
           }
-
           artifactList.add(artifacts);
         }
+      }
+    }
+    String placeholder = "_PLACEHOLDER";
+    boolean helmArtifactEnabled =
+        featureFlagService.isEnabled(FeatureName.HELM_CHART_AS_ARTIFACT, trigger.getAccountId());
+    if (helmArtifactEnabled && isNotEmpty(trigger.getManifestSelections()) && services != null) {
+      for (Service service : services) {
+        Map<String, Object> helmCharts = new HashMap<>();
+        helmCharts.put("service", service.getName());
+        helmCharts.put("versionNumber", service.getName() + "_VERSION_NUMBER_PLACE_HOLDER");
+        manifestList.add(helmCharts);
       }
     }
     if (isNotEmpty(templatizedServiceVars)) {
       for (String service : templatizedServiceVars) {
         Map<String, Object> artifacts = new HashMap<>();
-        artifacts.put("service", service + "_PLACEHOLDER");
+        Map<String, Object> helmCharts = new HashMap<>();
+        artifacts.put("service", service + placeholder);
+        helmCharts.put("service", service + placeholder);
         artifacts.put("buildNumber", service + "_BUILD_NUMBER_PLACE_HOLDER");
+        helmCharts.put("versionNumber", service + "_VERSION_NUMBER_PLACE_HOLDER");
         artifacts.put("artifactSourceName", service + "_ARTIFACT_SOURCE_NAME_PLACE_HOLDER");
+        manifestList.add(helmCharts);
         artifactList.add(artifacts);
       }
     }
 
-    if (!artifactList.isEmpty() && artifactNeeded) {
+    if (!artifactList.isEmpty() && artifactOrManifestNeeded) {
       payload.put("artifacts", artifactList);
+    }
+
+    if (helmArtifactEnabled) {
+      if (!manifestList.isEmpty() && artifactOrManifestNeeded) {
+        payload.put("manifests", manifestList);
+      }
     }
     if (!parameters.isEmpty()) {
       payload.put("parameters", parameters);
@@ -459,5 +484,25 @@ public class TriggerServiceHelper {
   public <T> Predicate<T> distinctByKey(Function<? super T, ?> keyExtractor) {
     Map<Object, Boolean> seen = new ConcurrentHashMap<>();
     return t -> seen.putIfAbsent(keyExtractor.apply(t), Boolean.TRUE) == null;
+  }
+
+  public List<Trigger> getNewManifestTriggers(String appId, String appManifestId) {
+    return wingsPersistence.createQuery(Trigger.class, excludeAuthority)
+        .disableValidation()
+        .filter(TriggerKeys.appId, appId)
+        .filter(TriggerKeys.condition + "." + TriggerConditionKeys.conditionType, NEW_MANIFEST)
+        .filter(TriggerKeys.condition + "." + ManifestSelectionKeys.appManifestId, appManifestId)
+        .asList();
+  }
+
+  public boolean checkManifestMatchesFilter(String triggerId, HelmChart helmChart, String versionRegex) {
+    try {
+      Pattern pattern = compile(versionRegex);
+      logger.info("Comparing artifact file name matches with the given artifact filter");
+      return pattern.matcher(helmChart.getVersion()).find();
+    } catch (PatternSyntaxException pe) {
+      logger.warn("Invalid manifest version regex {} for triggerId {}", versionRegex, triggerId, pe);
+      throw new WingsException("Invalid Manifest Version Regex", USER);
+    }
   }
 }

@@ -35,8 +35,8 @@ public class ManifestTriggerConditionHandler extends TriggerConditionYamlHandler
         yamlHelper.getAppId(changeContext.getChange().getAccountId(), changeContext.getChange().getFilePath());
     String serviceName = yaml.getServiceName();
     String versionRegex = yaml.getVersionRegex();
-    String serviceId = null;
-    String manifestId = null;
+    String serviceId;
+    String manifestId;
     if (EmptyPredicate.isNotEmpty(serviceName)) {
       Service service = yamlHelper.getServiceByName(appId, serviceName);
       notNullCheck("Service with name " + serviceName + " might be deleted", service, USER);

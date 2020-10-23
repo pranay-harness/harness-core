@@ -11,6 +11,7 @@ import static org.apache.commons.lang3.StringUtils.isBlank;
 import static software.wings.beans.EntityType.ENVIRONMENT;
 import static software.wings.beans.EntityType.INFRASTRUCTURE_DEFINITION;
 import static software.wings.beans.EntityType.INFRASTRUCTURE_MAPPING;
+import static software.wings.beans.trigger.ManifestSelection.ManifestSelectionType;
 import static software.wings.beans.yaml.YamlConstants.PATH_DELIMITER;
 
 import com.google.common.collect.Maps;
@@ -27,14 +28,17 @@ import lombok.extern.slf4j.Slf4j;
 import software.wings.beans.Application;
 import software.wings.beans.EntityType;
 import software.wings.beans.Environment;
+import software.wings.beans.FeatureName;
 import software.wings.beans.Pipeline;
 import software.wings.beans.Variable;
 import software.wings.beans.Workflow;
 import software.wings.beans.trigger.ArtifactSelection;
+import software.wings.beans.trigger.ManifestSelection;
 import software.wings.beans.trigger.Trigger;
 import software.wings.beans.trigger.Trigger.Yaml;
 import software.wings.beans.trigger.Trigger.Yaml.TriggerVariable;
 import software.wings.beans.trigger.TriggerCondition;
+import software.wings.beans.trigger.TriggerConditionType;
 import software.wings.beans.yaml.Change;
 import software.wings.beans.yaml.ChangeContext;
 import software.wings.beans.yaml.YamlType;
@@ -43,6 +47,7 @@ import software.wings.service.impl.yaml.handler.BaseYamlHandler;
 import software.wings.service.impl.yaml.handler.YamlHandlerFactory;
 import software.wings.service.impl.yaml.service.YamlHelper;
 import software.wings.service.intfc.EnvironmentService;
+import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.TriggerService;
 import software.wings.yaml.trigger.TriggerConditionYaml;
 
@@ -67,6 +72,7 @@ public class TriggerYamlHandler extends BaseYamlHandler<Yaml, Trigger> {
   @Inject YamlHandlerFactory yamlHandlerFactory;
   @Inject EnvironmentService environmentService;
   @Inject private WorkflowYAMLHelper workflowYAMLHelper;
+  @Inject private FeatureFlagService featureFlagService;
   @Override
   public void delete(ChangeContext<Yaml> changeContext) {
     String accountId = changeContext.getChange().getAccountId();
@@ -94,6 +100,9 @@ public class TriggerYamlHandler extends BaseYamlHandler<Yaml, Trigger> {
     ArtifactSelectionYamlHandler artifactSelectionYamlHandler =
         yamlHandlerFactory.getYamlHandler(YamlType.ARTIFACT_SELECTION);
 
+    ManifestSelectionYamlHandler manifestSelectionYamlHandler =
+        yamlHandlerFactory.getYamlHandler(YamlType.MANIFEST_SELECTION);
+
     String executionType = getExecutionType(bean.getWorkflowType());
     String executionName = null;
 
@@ -119,11 +128,21 @@ public class TriggerYamlHandler extends BaseYamlHandler<Yaml, Trigger> {
             .map(artifactSelection -> { return artifactSelectionYamlHandler.toYaml(artifactSelection, appId); })
             .collect(Collectors.toList());
 
-    for (ArtifactSelection.Yaml artifactSelectionYAML : artifactSelectionList) {
-      if (bean.getWorkflowType() == WorkflowType.ORCHESTRATION) {
-        artifactSelectionYAML.setPipelineName(null);
-      } else if (bean.getWorkflowType() == WorkflowType.PIPELINE) {
-        artifactSelectionYAML.setWorkflowName(null);
+    List<ManifestSelection.Yaml> manifestSelectionList =
+        featureFlagService.isEnabled(FeatureName.HELM_CHART_AS_ARTIFACT, bean.getAccountId())
+        ? bean.getManifestSelections()
+              .stream()
+              .map(artifactSelection -> manifestSelectionYamlHandler.toYaml(artifactSelection, appId))
+              .collect(Collectors.toList())
+        : null;
+
+    if (isNotEmpty(artifactSelectionList)) {
+      for (ArtifactSelection.Yaml artifactSelectionYAML : artifactSelectionList) {
+        if (bean.getWorkflowType() == WorkflowType.ORCHESTRATION) {
+          artifactSelectionYAML.setPipelineName(null);
+        } else if (bean.getWorkflowType() == WorkflowType.PIPELINE) {
+          artifactSelectionYAML.setWorkflowName(null);
+        }
       }
     }
 
@@ -135,6 +154,7 @@ public class TriggerYamlHandler extends BaseYamlHandler<Yaml, Trigger> {
                     .executionName(executionName)
                     .workflowVariables(triggerVariablesYaml)
                     .artifactSelections(artifactSelectionList)
+                    .manifestSelections(manifestSelectionList)
                     .harnessApiVersion(getHarnessApiVersion())
                     .build();
 
@@ -184,6 +204,9 @@ public class TriggerYamlHandler extends BaseYamlHandler<Yaml, Trigger> {
     ArtifactSelectionYamlHandler artifactSelectionYamlHandler =
         yamlHandlerFactory.getYamlHandler(YamlType.ARTIFACT_SELECTION);
 
+    ManifestSelectionYamlHandler manifestSelectionYamlHandler =
+        yamlHandlerFactory.getYamlHandler(YamlType.MANIFEST_SELECTION);
+
     ChangeContext.Builder clonedContext = cloneFileChangeContext(changeContext, condition);
     TriggerCondition triggerCondition = handler.upsertFromYaml(clonedContext.build(), changeSetContext);
 
@@ -212,6 +235,24 @@ public class TriggerYamlHandler extends BaseYamlHandler<Yaml, Trigger> {
       artifactSelectionList.add(artifactSelection);
     });
 
+    List<ManifestSelection> manifestSelections = new ArrayList<>();
+    boolean helmArtifactEnabled =
+        trigger == null || featureFlagService.isEnabled(FeatureName.HELM_CHART_AS_ARTIFACT, trigger.getAccountId());
+    if (helmArtifactEnabled && isNotEmpty(yaml.getManifestSelections())) {
+      yaml.getManifestSelections().forEach(manifestSelectionYaml -> {
+        if (workflowType == ORCHESTRATION) {
+          manifestSelectionYaml.setPipelineName(null);
+        } else if (workflowType == WorkflowType.PIPELINE) {
+          manifestSelectionYaml.setWorkflowName(null);
+        }
+        ChangeContext.Builder manifestClonedContext = cloneFileChangeContext(changeContext, manifestSelectionYaml);
+        ManifestSelection manifestSelection =
+            manifestSelectionYamlHandler.upsertFromYaml(manifestClonedContext.build(), changeSetContext);
+        validateManifestSelectionType(triggerCondition, manifestSelection);
+        manifestSelections.add(manifestSelection);
+      });
+    }
+
     Trigger updatedTrigger = Trigger.builder()
                                  .description(yaml.getDescription())
                                  .name(triggerName)
@@ -221,6 +262,7 @@ public class TriggerYamlHandler extends BaseYamlHandler<Yaml, Trigger> {
                                  .appId(appId)
                                  .uuid(uuid)
                                  .artifactSelections(artifactSelectionList)
+                                 .manifestSelections(manifestSelections)
                                  .build();
 
     if (workflowType == ORCHESTRATION) {
@@ -236,6 +278,21 @@ public class TriggerYamlHandler extends BaseYamlHandler<Yaml, Trigger> {
     }
 
     return updatedTrigger;
+  }
+
+  private void validateManifestSelectionType(TriggerCondition triggerCondition, ManifestSelection manifestSelection) {
+    if (manifestSelection.getType() == ManifestSelectionType.PIPELINE_SOURCE
+        && triggerCondition.getConditionType() != TriggerConditionType.PIPELINE_COMPLETION) {
+      throw new InvalidRequestException(
+          String.format("Trigger condition %s doesn't support PIPELINE_SOURCE manifest selection",
+              triggerCondition.getConditionType()));
+    }
+    if (manifestSelection.getType() == ManifestSelectionType.WEBHOOK_VARIABLE
+        && triggerCondition.getConditionType() != TriggerConditionType.WEBHOOK) {
+      throw new InvalidRequestException(
+          String.format("Trigger condition %s doesn't support WEBHOOK_VARIABLE manifest selection",
+              triggerCondition.getConditionType()));
+    }
   }
 
   private Map<String, String> convertToTriggerBeanVariablesPipeline(

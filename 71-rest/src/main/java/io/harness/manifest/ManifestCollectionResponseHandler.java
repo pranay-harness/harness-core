@@ -28,6 +28,7 @@ import software.wings.service.impl.applicationmanifest.ManifestCollectionUtils;
 import software.wings.service.intfc.AlertService;
 import software.wings.service.intfc.ApplicationManifestService;
 import software.wings.service.intfc.FeatureFlagService;
+import software.wings.service.intfc.TriggerService;
 import software.wings.service.intfc.applicationmanifest.HelmChartService;
 
 import java.util.List;
@@ -49,6 +50,7 @@ public class ManifestCollectionResponseHandler {
   @Inject private AlertService alertService;
   @Inject private ManifestCollectionUtils manifestCollectionUtils;
   @Inject private HelmChartService helmChartService;
+  @Inject private TriggerService triggerService;
 
   public void handleManifestCollectionResponse(@NotNull String accountId, @NotNull String perpetualTaskId,
       ManifestCollectionExecutionResponse executionResponse) {
@@ -127,6 +129,13 @@ public class ManifestCollectionResponseHandler {
       }
       manifestsCollected.stream().limit(MAX_LOGS).forEach(
           manifest -> logger.info("Collected new version {}", manifest.getVersion()));
+
+      if (featureFlagService.isEnabled(FeatureName.HELM_CHART_AS_ARTIFACT, accountId)) {
+        if (manifestCollectionResponse.isStable()) {
+          triggerService.triggerExecutionPostManifestCollectionAsync(
+              appManifest.getAppId(), appManifestId, manifestsCollected);
+        }
+      }
     }
   }
 }

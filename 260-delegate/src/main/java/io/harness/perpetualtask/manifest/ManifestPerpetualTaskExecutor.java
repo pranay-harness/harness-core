@@ -32,6 +32,7 @@ import software.wings.delegatetasks.manifest.ManifestCollectionExecutionResponse
 import software.wings.delegatetasks.manifest.ManifestCollectionResponse;
 
 import java.time.Instant;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -98,7 +99,10 @@ public class ManifestPerpetualTaskExecutor implements PerpetualTaskExecutor {
       return;
     }
     ImmutablePair<List<HelmChart>, Boolean> unpublishedDetails = appManifestCache.getLimitedUnpublishedBuildDetails();
-    List<HelmChart> unpublishedVersions = unpublishedDetails.getLeft();
+    List<HelmChart> unpublishedVersions = unpublishedDetails.getLeft()
+                                              .stream()
+                                              .sorted(Comparator.comparing(HelmChart::getVersion).reversed())
+                                              .collect(Collectors.toList());
     Set<String> toBeDeletedVersions = appManifestCache.getToBeDeletedArtifactKeys();
     if (isEmpty(toBeDeletedVersions) && isEmpty(unpublishedVersions)) {
       logger.info("No new manifest versions added or deleted to publish");

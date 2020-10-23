@@ -2,6 +2,7 @@ package software.wings.service.impl.applicationmanifest;
 
 import static io.harness.beans.SearchFilter.Operator.EQ;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static java.util.regex.Pattern.compile;
 import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
@@ -117,6 +118,27 @@ public class HelmChartServiceImpl implements HelmChartService {
 
     List<String> savedHelmCharts = wingsPersistence.save(newHelmCharts);
     return isNotEmpty(savedHelmCharts);
+  }
+
+  @Override
+  public HelmChart getLastCollectedManifestMatchingRegex(String accountId, String appManifestId, String versionRegex) {
+    Query<HelmChart> helmChartQuery = wingsPersistence.createQuery(HelmChart.class)
+                                          .filter(HelmChartKeys.accountId, accountId)
+                                          .filter(HelmChartKeys.applicationManifestId, appManifestId);
+
+    return helmChartQuery.filter(HelmChartKeys.version, compile(versionRegex))
+        .order("-createdAt")
+        .disableValidation()
+        .get();
+  }
+
+  @Override
+  public HelmChart getManifestByVersionNumber(String accountId, String appManifestId, String versionNumber) {
+    return wingsPersistence.createQuery(HelmChart.class)
+        .filter(HelmChartKeys.accountId, accountId)
+        .filter(HelmChartKeys.applicationManifestId, appManifestId)
+        .filter(HelmChartKeys.version, versionNumber)
+        .get();
   }
 
   @Override

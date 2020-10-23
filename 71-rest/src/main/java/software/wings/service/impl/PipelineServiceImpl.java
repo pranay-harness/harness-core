@@ -940,7 +940,7 @@ public class PipelineServiceImpl implements PipelineService {
           if (!hasBuildWorkflow) {
             hasBuildWorkflow = BUILD == workflow.getOrchestrationWorkflow().getOrchestrationWorkflowType();
           }
-          resolveArtifactNeededServicesOfWorkflowAndEnvIds(
+          resolveArtifactAndManifestNeededServicesOfWorkflowAndEnvIds(
               serviceIds, envIds, deploymentTypes, pse.getWorkflowVariables(), workflow);
 
           validateWorkflowVariables(workflow, pse, pipelineStage, invalidStages);
@@ -1550,7 +1550,7 @@ public class PipelineServiceImpl implements PipelineService {
     }
   }
 
-  private void resolveArtifactNeededServicesOfWorkflowAndEnvIds(List<String> serviceIds, List<String> envIds,
+  private void resolveArtifactAndManifestNeededServicesOfWorkflowAndEnvIds(List<String> serviceIds, List<String> envIds,
       List<DeploymentType> deploymentTypes, Map<String, String> pseWorkflowVariables, Workflow workflow) {
     DeploymentMetadata deploymentMetadata =
         workflowService.fetchDeploymentMetadata(workflow.getAppId(), workflow, pseWorkflowVariables, serviceIds, envIds,
@@ -1558,6 +1558,12 @@ public class PipelineServiceImpl implements PipelineService {
     if (deploymentMetadata != null) {
       if (deploymentMetadata.getArtifactRequiredServiceIds() != null) {
         deploymentMetadata.getArtifactRequiredServiceIds()
+            .stream()
+            .filter(serviceId -> !serviceIds.contains(serviceId))
+            .forEach(serviceIds::add);
+      }
+      if (deploymentMetadata.getManifestRequiredServiceIds() != null) {
+        deploymentMetadata.getManifestRequiredServiceIds()
             .stream()
             .filter(serviceId -> !serviceIds.contains(serviceId))
             .forEach(serviceIds::add);

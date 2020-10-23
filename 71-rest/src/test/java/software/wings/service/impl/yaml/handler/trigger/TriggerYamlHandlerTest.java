@@ -10,6 +10,7 @@ import static org.assertj.core.api.Assertions.fail;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyBoolean;
 import static org.mockito.Matchers.anyString;
+import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.reset;
 import static org.mockito.Mockito.verify;
@@ -42,6 +43,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import software.wings.beans.EntityType;
 import software.wings.beans.Environment;
+import software.wings.beans.FeatureName;
 import software.wings.beans.Pipeline;
 import software.wings.beans.Service;
 import software.wings.beans.SettingAttribute;
@@ -65,6 +67,7 @@ import software.wings.service.impl.yaml.handler.tag.HarnessTagYamlHelper;
 import software.wings.service.impl.yaml.service.YamlHelper;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.EnvironmentService;
+import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.InfrastructureDefinitionService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.SettingsService;
@@ -100,6 +103,7 @@ public class TriggerYamlHandlerTest extends YamlHandlerTestBase {
   @Mock private SettingsService settingsService;
 
   @Mock private UserGroupService userGroupService;
+  @Mock private FeatureFlagService featureFlagService;
 
   @InjectMocks @Inject private TriggerYamlHandler handler;
   @InjectMocks @Inject private ArtifactTriggerConditionHandler artifactTriggerConditionHandler;
@@ -110,6 +114,7 @@ public class TriggerYamlHandlerTest extends YamlHandlerTestBase {
 
   @InjectMocks @Inject private WebhookTriggerConditionHandler webhookTriggerConditionHandler;
   @InjectMocks @Inject private ArtifactSelectionYamlHandler artifactSelectionYamlHandler;
+  @InjectMocks @Inject private ManifestSelectionYamlHandler manifestSelectionYamlHandler;
 
   private final String yamlFilePath = "Setup/Applications/APP_NAME/Triggers/trigger.yaml";
   private final String resourcePath = "./triggers";
@@ -160,8 +165,13 @@ public class TriggerYamlHandlerTest extends YamlHandlerTestBase {
     private static final String TriggerPackageWrongAction = "triggerPackageWrongAction.yaml";
 
     private static final String TriggerRelease = "triggerRelease.yaml";
-
     private static final String TriggerReleaseWrongAction = "triggerReleaseWrongAction.yaml";
+
+    private static final String TriggerManifestSelection1 = "triggerManifestSelection1.yaml";
+    private static final String TriggerManifestSelection2 = "triggerManifestSelection2.yaml";
+    private static final String TriggerManifestSelection3 = "triggerManifestSelection3.yaml";
+    private static final String TriggerManifestSelection4 = "triggerManifestSelection4.yaml";
+    private static final String TriggerManifestSelection5 = "triggerManifestSelection5.yaml";
 
     // On new manifest with non templatised workflow
     private static final String Trigger20 = "trigger20.yaml";
@@ -202,6 +212,7 @@ public class TriggerYamlHandlerTest extends YamlHandlerTestBase {
         .when(mockYamlHandlerFactory)
         .getYamlHandler(YamlType.TRIGGER_CONDITION, "NEW_MANIFEST");
     doReturn(artifactSelectionYamlHandler).when(mockYamlHandlerFactory).getYamlHandler(YamlType.ARTIFACT_SELECTION);
+    doReturn(manifestSelectionYamlHandler).when(mockYamlHandlerFactory).getYamlHandler(YamlType.MANIFEST_SELECTION);
     Service service = Service.builder().uuid("Service-id").name("k8s").build();
     doReturn(service).when(serviceResourceService).getServiceByName(anyString(), anyString());
     doReturn(service).when(serviceResourceService).getServiceByName(anyString(), anyString(), anyBoolean());
@@ -234,6 +245,7 @@ public class TriggerYamlHandlerTest extends YamlHandlerTestBase {
         ApplicationManifest.builder().serviceId("Service-id").storeType(StoreType.HelmChartRepo).build();
     applicationManifest.setUuid("AppManifest-id");
     doReturn(applicationManifest).when(mockYamlHelper).getManifestByServiceId(anyString(), anyString());
+    doReturn(true).when(featureFlagService).isEnabled(eq(FeatureName.HELM_CHART_AS_ARTIFACT), anyString());
   }
 
   @Test
@@ -626,6 +638,75 @@ public class TriggerYamlHandlerTest extends YamlHandlerTestBase {
   }
 
   @Test
+  @Owner(developers = PRABU)
+  @Category(UnitTests.class)
+  public void testCrudTriggerManifestLastDeployed() throws IOException {
+    Pipeline pipeline = Pipeline.builder().uuid("pipeline-id").name("tp_1").build();
+    Variable variable1 = aVariable().name("srv").entityType(EntityType.SERVICE).build();
+    Variable variable2 = aVariable().name("infra").entityType(INFRASTRUCTURE_DEFINITION).build();
+    Map<String, Object> metadataEnv =
+        ImmutableMap.of(Variable.RELATED_FIELD, "infra", Variable.ENTITY_TYPE, EntityType.ENVIRONMENT);
+    Variable variable3 = aVariable().name("env").type(VariableType.ENTITY).metadata(metadataEnv).build();
+    List<Variable> pipelineVariables = new ArrayList<>();
+    pipelineVariables.add(variable1);
+    pipelineVariables.add(variable2);
+    pipelineVariables.add(variable3);
+    pipeline.setPipelineVariables(pipelineVariables);
+    doReturn(pipeline).when(mockYamlHelper).getPipelineFromName(any(), any());
+    doReturn(pipeline).when(mockYamlHelper).getPipelineFromId(any(), any());
+    testCRUD(
+        validTriggerFiles.TriggerManifestSelection1, TriggerConditionType.PIPELINE_COMPLETION, WorkflowType.PIPELINE);
+  }
+
+  @Test
+  @Owner(developers = PRABU)
+  @Category(UnitTests.class)
+  public void testCrudTriggerManifestLastCollected() throws IOException {
+    Pipeline pipeline = Pipeline.builder().uuid("pipeline-id").name("tp_1").build();
+    doReturn(pipeline).when(mockYamlHelper).getPipelineFromName(any(), any());
+    doReturn(pipeline).when(mockYamlHelper).getPipelineFromId(any(), any());
+    testCRUD(
+        validTriggerFiles.TriggerManifestSelection2, TriggerConditionType.PIPELINE_COMPLETION, WorkflowType.PIPELINE);
+  }
+
+  @Test
+  @Owner(developers = PRABU)
+  @Category(UnitTests.class)
+  public void testCrudTriggerManifestWebhookVariable() throws IOException {
+    Workflow workflow = aWorkflow().uuid("workflow-id").name("w1").envId("env-id").build();
+    workflow.setOrchestrationWorkflow(aCanaryOrchestrationWorkflow().build());
+    doReturn(workflow).when(mockYamlHelper).getWorkflowFromId(any(), any());
+    doReturn(workflow).when(mockYamlHelper).getWorkflowFromName(any(), any());
+    testCRUD(validTriggerFiles.TriggerManifestSelection3, TriggerConditionType.WEBHOOK, WorkflowType.ORCHESTRATION);
+  }
+
+  @Test
+  @Owner(developers = PRABU)
+  @Category(UnitTests.class)
+  public void testCrudInvalidTriggerManifestPipelineCompletion() {
+    Workflow workflow = aWorkflow().uuid("workflow-id").name("w1").envId("env-id").build();
+    workflow.setOrchestrationWorkflow(aCanaryOrchestrationWorkflow().build());
+    doReturn(workflow).when(mockYamlHelper).getWorkflowFromId(any(), any());
+    doReturn(workflow).when(mockYamlHelper).getWorkflowFromName(any(), any());
+    assertThatThrownBy(()
+                           -> testCRUD(validTriggerFiles.TriggerManifestSelection4, TriggerConditionType.WEBHOOK,
+                               WorkflowType.ORCHESTRATION))
+        .isInstanceOf(InvalidRequestException.class);
+  }
+
+  @Test
+  @Owner(developers = PRABU)
+  @Category(UnitTests.class)
+  public void testCrudInvalidManifestWebhook() throws IOException {
+    Pipeline pipeline = Pipeline.builder().uuid("pipeline-id").name("tp_1").build();
+    doReturn(pipeline).when(mockYamlHelper).getPipelineFromName(any(), any());
+    doReturn(pipeline).when(mockYamlHelper).getPipelineFromId(any(), any());
+    assertThatThrownBy(()
+                           -> testCRUD(validTriggerFiles.TriggerManifestSelection5, TriggerConditionType.WEBHOOK,
+                               WorkflowType.ORCHESTRATION))
+        .isInstanceOf(InvalidRequestException.class);
+  }
+
   @Owner(developers = INDER)
   @Category(UnitTests.class)
   public void testCrudTrigger20() throws IOException {

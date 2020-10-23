@@ -33,4 +33,8 @@ public interface HelmChartService extends OwnedByApplicationManifest {
   boolean deleteHelmChartsByVersions(String accountId, String appManifestId, Set<String> toBeDeletedVersions);
 
   boolean addCollectedHelmCharts(String accountId, String appManifestId, @NotNull List<HelmChart> manifestsCollected);
+
+  HelmChart getLastCollectedManifestMatchingRegex(String accountId, String appManifestId, String versionRegex);
+
+  HelmChart getManifestByVersionNumber(String accountId, String appManifestId, String versionNumber);
 }
