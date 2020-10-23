@@ -30,23 +30,23 @@ public class FeatureFlagServiceImplIntegrationTest extends BaseIntegrationTest {
 
   private void shouldEnableWhenFeatureFlagNotAlreadyPresent() {
     FeatureFlag featureFlag = wingsPersistence.createQuery(FeatureFlag.class)
-                                  .filter(FeatureFlagKeys.name, FeatureName.INFRA_MAPPING_REFACTOR.name())
+                                  .filter(FeatureFlagKeys.name, FeatureName.INLINE_SSH_COMMAND.name())
                                   .get();
     if (featureFlag != null) {
       wingsPersistence.delete(FeatureFlag.class, featureFlag.getUuid());
     }
 
-    featureFlagService.enableAccount(FeatureName.INFRA_MAPPING_REFACTOR, ACCOUNT_ID1);
+    featureFlagService.enableAccount(FeatureName.INLINE_SSH_COMMAND, ACCOUNT_ID1);
 
-    assertThat(featureFlagService.isEnabled(FeatureName.INFRA_MAPPING_REFACTOR, ACCOUNT_ID1)).isTrue();
+    assertThat(featureFlagService.isEnabled(FeatureName.INLINE_SSH_COMMAND, ACCOUNT_ID1)).isTrue();
   }
 
   private void shouldEnableWhenSomeAccountsPresent() {
-    assertThat(featureFlagService.isEnabled(FeatureName.INFRA_MAPPING_REFACTOR, ACCOUNT_ID1)).isTrue();
-    assertThat(featureFlagService.isEnabled(FeatureName.INFRA_MAPPING_REFACTOR, ACCOUNT_ID2)).isFalse();
+    assertThat(featureFlagService.isEnabled(FeatureName.INLINE_SSH_COMMAND, ACCOUNT_ID1)).isTrue();
+    assertThat(featureFlagService.isEnabled(FeatureName.INLINE_SSH_COMMAND, ACCOUNT_ID2)).isFalse();
 
-    featureFlagService.enableAccount(FeatureName.INFRA_MAPPING_REFACTOR, ACCOUNT_ID2);
+    featureFlagService.enableAccount(FeatureName.INLINE_SSH_COMMAND, ACCOUNT_ID2);
 
-    assertThat(featureFlagService.isEnabled(FeatureName.INFRA_MAPPING_REFACTOR, ACCOUNT_ID2)).isTrue();
+    assertThat(featureFlagService.isEnabled(FeatureName.INLINE_SSH_COMMAND, ACCOUNT_ID2)).isTrue();
   }
 }
