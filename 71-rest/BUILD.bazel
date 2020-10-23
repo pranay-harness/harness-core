@@ -759,7 +759,9 @@ java_library(
             "**/CommandStateTest.java",
         ],
     ),
-    data = ["//:resource"],
+    data = [
+        "//71-rest/src/test/resources:resource",
+    ],
     resources = [
         "//:resource",
         "//12-commons/src/main/resources:resource",
