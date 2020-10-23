@@ -4,6 +4,8 @@ import com.esotericsoftware.kryo.Kryo;
 import io.harness.beans.CIPipelineSetupParameters;
 import io.harness.beans.build.CIPipelineDetails;
 import io.harness.beans.build.PublishedArtifact;
+import io.harness.beans.dependencies.CIServiceInfo;
+import io.harness.beans.dependencies.DependencyElement;
 import io.harness.beans.environment.K8BuildJobEnvInfo;
 import io.harness.beans.environment.pod.PodSetupInfo;
 import io.harness.beans.environment.pod.container.ContainerDefinitionInfo;
@@ -125,5 +127,7 @@ public class CIBeansKryoRegistrar implements KryoRegistrar {
     kryo.register(CustomSecretVariable.class, 100061);
     kryo.register(CustomTextVariable.class, 100062);
     kryo.register(CustomVariable.Type.class, 100063);
+    kryo.register(DependencyElement.class, 100064);
+    kryo.register(CIServiceInfo.class, 100065);
   }
 }

@@ -240,7 +240,9 @@ public class CIK8BuildTaskHandler implements CIBuildTaskHandler {
       }
     }
 
-    kubeCtlHandler.createSecret(kubernetesClient, secretName, namespace, secretData);
+    if (!secretData.isEmpty()) {
+      kubeCtlHandler.createSecret(kubernetesClient, secretName, namespace, secretData);
+    }
   }
 
   private Map<String, String> getAndUpdateCustomVariableSecretData(

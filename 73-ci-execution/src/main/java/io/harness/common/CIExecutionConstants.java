@@ -10,20 +10,26 @@ import java.util.List;
 public class CIExecutionConstants {
   // Addon image
   public static final String ADDON_IMAGE_NAME = "harness/ci-addon";
-  public static final String ADDON_IMAGE_TAG = "v1.1-alpha";
+  public static final String ADDON_IMAGE_TAG = "v1.2-alpha";
 
   // Lite-engine image
   public static final String LITE_ENGINE_IMAGE_NAME = "harness/ci-lite-engine";
-  public static final String LITE_ENGINE_IMAGE_TAG = "v1.1-alpha";
+  public static final String LITE_ENGINE_IMAGE_TAG = "v1.2-alpha";
 
   // Constant for run/plugin step images
   public static final String STEP_COMMAND = "/step-exec/.harness/bin/ci-addon";
   public static final Integer STEP_REQUEST_MEMORY_MIB = 1;
   public static final Integer STEP_REQUEST_MILLI_CPU = 1;
-  public static final Integer DEFAULT_STEP_LIMIT_MEMORY_MIB = 200;
-  public static final Integer DEFAULT_STEP_LIMIT_MILLI_CPU = 200;
   public static final Integer PORT_STARTING_RANGE = 9000;
   public static final String PLUGIN_ENV_PREFIX = "PLUGIN_";
+
+  // Default memory & cpu
+  public static final Integer DEFAULT_LIMIT_MEMORY_MIB = 200;
+  public static final Integer DEFAULT_LIMIT_MILLI_CPU = 200;
+
+  public static final String LOCALHOST_IP = "127.0.0.1";
+  public static final String SERVICE_PREFIX = "service-";
+  public static final String STEP_PREFIX = "step-";
 
   // Container constants for setting up addon binary
   public static final String SETUP_ADDON_CONTAINER_NAME = "setup-addon";
@@ -48,6 +54,12 @@ public class CIExecutionConstants {
   public static final String PORT_PREFIX = "--port";
   public static final String TMP_PATH_ARG_PREFIX = "--tmppath";
   public static final String TMP_PATH = "/step-exec/.harness/tmp/";
+  public static final String SERVICE_ARG_COMMAND = "service";
+  public static final String IMAGE_PREFIX = "--image";
+  public static final String ID_PREFIX = "--id";
+  public static final String ENTRYPOINT_PREFIX = "--entrypoint";
+  public static final String ARGS_PREFIX = "--args";
+  public static final String GRPC_SERVICE_PORT_PREFIX = "--svc_ports";
   public static final String DEBUG_PREFIX = "--debug";
 
   // Image details
@@ -78,10 +90,11 @@ public class CIExecutionConstants {
   public static final String BUCKET_MINIO_VARIABLE_VALUE = "test";
   public static final String HOME_VARIABLE = "HOME";
 
-  public static final String DEFAULT_INTERNAL_IMAGE_CONNECTOR = "harnessimage";
+  public static final String DEFAULT_INTERNAL_IMAGE_CONNECTOR = "account.harnessimage";
   // Deprecated
   public static final List<String> SH_COMMAND = Collections.unmodifiableList(Arrays.asList("sh", "-c", "--"));
 
+  public static final String IMAGE_PATH_SPLIT_REGEX = ":";
   public static final Integer PVC_DEFAULT_STORAGE_SIZE = 25 * 1024;
   public static final String PVC_DEFAULT_STORAGE_CLASS = "faster";
 }

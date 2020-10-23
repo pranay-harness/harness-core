@@ -1,17 +1,22 @@
 package io.harness.integrationstage;
 
-import static io.harness.common.CIExecutionConstants.DEFAULT_STEP_LIMIT_MEMORY_MIB;
-import static io.harness.common.CIExecutionConstants.DEFAULT_STEP_LIMIT_MILLI_CPU;
+import static io.harness.common.CIExecutionConstants.DEFAULT_LIMIT_MEMORY_MIB;
+import static io.harness.common.CIExecutionConstants.DEFAULT_LIMIT_MILLI_CPU;
+import static io.harness.common.CIExecutionConstants.HOME_VARIABLE;
+import static io.harness.common.CIExecutionConstants.IMAGE_PATH_SPLIT_REGEX;
 import static io.harness.common.CIExecutionConstants.PLUGIN_ENV_PREFIX;
 import static io.harness.common.CIExecutionConstants.PORT_STARTING_RANGE;
 import static io.harness.common.CIExecutionConstants.PVC_DEFAULT_STORAGE_CLASS;
 import static io.harness.common.CIExecutionConstants.PVC_DEFAULT_STORAGE_SIZE;
+import static io.harness.common.CIExecutionConstants.STEP_PREFIX;
 import static io.harness.common.CIExecutionConstants.STEP_REQUEST_MEMORY_MIB;
 import static io.harness.common.CIExecutionConstants.STEP_REQUEST_MILLI_CPU;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static java.util.stream.Collectors.toMap;
+import static software.wings.common.CICommonPodConstants.MOUNT_PATH;
 import static software.wings.common.CICommonPodConstants.POD_NAME;
 import static software.wings.common.CICommonPodConstants.STEP_EXEC;
+import static software.wings.common.CICommonPodConstants.STEP_EXEC_WORKING_DIR;
 
 import com.google.inject.Singleton;
 
@@ -49,13 +54,11 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 
 @Singleton
 public class BuildJobEnvInfoBuilder {
-  private static final String IMAGE_PATH_SPLIT_REGEX = ":";
   private static final SecureRandom random = new SecureRandom();
 
   public BuildJobEnvInfo getCIBuildJobEnvInfo(IntegrationStage integrationStage, CIExecutionArgs ciExecutionArgs,
@@ -76,11 +79,22 @@ public class BuildJobEnvInfoBuilder {
       CIExecutionArgs ciExecutionArgs, List<ExecutionWrapper> steps, boolean isFirstPod, String buildNumber) {
     List<PodSetupInfo> pods = new ArrayList<>();
     String podName = generatePodName(integrationStage);
-    List<ContainerDefinitionInfo> containerDefinitionInfos =
-        createStepsContainerDefinition(steps, integrationStage, ciExecutionArgs);
+
+    Set<Integer> usedPorts = new HashSet<>();
+    PortFinder portFinder = PortFinder.builder().startingPort(PORT_STARTING_RANGE).usedPorts(usedPorts).build();
+    List<ContainerDefinitionInfo> serviceContainerDefinitionInfos =
+        CIServiceBuilder.createServicesContainerDefinition(integrationStage, portFinder);
+    List<ContainerDefinitionInfo> stepContainerDefinitionInfos =
+        createStepsContainerDefinition(steps, integrationStage, ciExecutionArgs, portFinder);
+
+    List<ContainerDefinitionInfo> containerDefinitionInfos = new ArrayList<>();
+    containerDefinitionInfos.addAll(serviceContainerDefinitionInfos);
+    containerDefinitionInfos.addAll(stepContainerDefinitionInfos);
 
     Integer stageMemoryRequest = getStageMemoryRequest(steps);
     Integer stageCpuRequest = getStageCpuRequest(steps);
+    List<String> serviceIdList = CIServiceBuilder.getServiceIdList(integrationStage);
+    List<Integer> serviceGrpcPortList = CIServiceBuilder.getServiceGrpcPortList(integrationStage);
     pods.add(PodSetupInfo.builder()
                  .podSetupParams(
                      PodSetupInfo.PodSetupParams.builder().containerDefinitionInfos(containerDefinitionInfos).build())
@@ -88,6 +102,8 @@ public class BuildJobEnvInfoBuilder {
                  .pvcParams(createPVCParams(isFirstPod, buildNumber))
                  .stageCpuRequest(stageCpuRequest)
                  .stageMemoryRequest(stageMemoryRequest)
+                 .serviceIdList(serviceIdList)
+                 .serviceGrpcPortList(serviceGrpcPortList)
                  .build());
     return K8BuildJobEnvInfo.PodsSetupInfo.builder().podSetupInfoList(pods).build();
   }
@@ -102,43 +118,45 @@ public class BuildJobEnvInfoBuilder {
         .build();
   }
 
-  private List<ContainerDefinitionInfo> createStepsContainerDefinition(
-      List<ExecutionWrapper> steps, IntegrationStage integrationStage, CIExecutionArgs ciExecutionArgs) {
+  private List<ContainerDefinitionInfo> createStepsContainerDefinition(List<ExecutionWrapper> steps,
+      IntegrationStage integrationStage, CIExecutionArgs ciExecutionArgs, PortFinder portFinder) {
     List<ContainerDefinitionInfo> containerDefinitionInfos = new ArrayList<>();
     if (steps == null) {
       return containerDefinitionInfos;
     }
 
-    Set<Integer> usedPorts = new HashSet<>();
-    PortFinder portFinder = PortFinder.builder().startingPort(PORT_STARTING_RANGE).usedPorts(usedPorts).build();
-    steps.forEach(executionWrapper -> {
+    int stepIndex = 0;
+    for (ExecutionWrapper executionWrapper : steps) {
       if (executionWrapper instanceof StepElement) {
+        stepIndex++;
         ContainerDefinitionInfo containerDefinitionInfo = createStepContainerDefinition(
-            (StepElement) executionWrapper, integrationStage, ciExecutionArgs, portFinder);
+            (StepElement) executionWrapper, integrationStage, ciExecutionArgs, portFinder, stepIndex);
         if (containerDefinitionInfo != null) {
           containerDefinitionInfos.add(containerDefinitionInfo);
         }
       } else if (executionWrapper instanceof ParallelStepElement) {
         ParallelStepElement parallel = (ParallelStepElement) executionWrapper;
         if (parallel.getSections() != null) {
-          containerDefinitionInfos.addAll(
-              parallel.getSections()
-                  .stream()
-                  .filter(executionWrapperInParallel -> executionWrapperInParallel instanceof StepElement)
-                  .map(executionWrapperInParallel -> (StepElement) executionWrapperInParallel)
-                  .map(executionWrapperInParallel
-                      -> createStepContainerDefinition(
-                          executionWrapperInParallel, integrationStage, ciExecutionArgs, portFinder))
-                  .filter(Objects::nonNull)
-                  .collect(Collectors.toList()));
+          for (ExecutionWrapper executionWrapperInParallel : parallel.getSections()) {
+            if (!(executionWrapperInParallel instanceof StepElement)) {
+              continue;
+            }
+
+            stepIndex++;
+            ContainerDefinitionInfo containerDefinitionInfo = createStepContainerDefinition(
+                (StepElement) executionWrapperInParallel, integrationStage, ciExecutionArgs, portFinder, stepIndex);
+            if (containerDefinitionInfo != null) {
+              containerDefinitionInfos.add(containerDefinitionInfo);
+            }
+          }
         }
       }
-    });
+    }
     return containerDefinitionInfos;
   }
 
   private ContainerDefinitionInfo createStepContainerDefinition(StepElement stepElement,
-      IntegrationStage integrationStage, CIExecutionArgs ciExecutionArgs, PortFinder portFinder) {
+      IntegrationStage integrationStage, CIExecutionArgs ciExecutionArgs, PortFinder portFinder, int stepIndex) {
     if (!(stepElement.getStepSpecType() instanceof CIStepInfo)) {
       return null;
     }
@@ -147,24 +165,30 @@ public class BuildJobEnvInfoBuilder {
     switch (ciStepInfo.getNonYamlInfo().getStepInfoType()) {
       case RUN:
         return createRunStepContainerDefinition(
-            (RunStepInfo) ciStepInfo, integrationStage, ciExecutionArgs, portFinder);
+            (RunStepInfo) ciStepInfo, integrationStage, ciExecutionArgs, portFinder, stepIndex);
       case PLUGIN:
-        return createPluginStepContainerDefinition((PluginStepInfo) ciStepInfo, ciExecutionArgs, portFinder);
+        return createPluginStepContainerDefinition((PluginStepInfo) ciStepInfo, ciExecutionArgs, portFinder, stepIndex);
       default:
         return null;
     }
   }
 
   private ContainerDefinitionInfo createRunStepContainerDefinition(RunStepInfo runStepInfo,
-      IntegrationStage integrationStage, CIExecutionArgs ciExecutionArgs, PortFinder portFinder) {
+      IntegrationStage integrationStage, CIExecutionArgs ciExecutionArgs, PortFinder portFinder, int stepIndex) {
     Integer port = portFinder.getNextPort();
     runStepInfo.setPort(port);
 
+    String containerName = String.format("%s%d", STEP_PREFIX, stepIndex);
+    String workingDir = getStepWorkingDirectoryPath();
     Map<String, String> stepEnvVars = new HashMap<>();
     stepEnvVars.putAll(getEnvVariables(integrationStage));
     stepEnvVars.putAll(BuildEnvironmentUtils.getBuildEnvironmentVariables(ciExecutionArgs));
+    stepEnvVars.put(HOME_VARIABLE, workingDir);
+
+    Map<String, String> volumeToMountPath = new HashMap<>();
+    volumeToMountPath.put(STEP_EXEC, MOUNT_PATH);
     return ContainerDefinitionInfo.builder()
-        .name(runStepInfo.getIdentifier())
+        .name(containerName)
         .commands(StepContainerUtils.getCommand())
         .args(StepContainerUtils.getArguments(port))
         .envVars(stepEnvVars)
@@ -176,11 +200,18 @@ public class BuildJobEnvInfoBuilder {
         .containerResourceParams(getStepContainerResource(runStepInfo.getResources()))
         .ports(Collections.singletonList(port))
         .containerType(CIContainerType.RUN)
+        .volumeToMountPath(volumeToMountPath)
+        .workingDirectory(workingDir)
         .build();
   }
 
   private ContainerDefinitionInfo createPluginStepContainerDefinition(
-      PluginStepInfo pluginStepInfo, CIExecutionArgs ciExecutionArgs, PortFinder portFinder) {
+      PluginStepInfo pluginStepInfo, CIExecutionArgs ciExecutionArgs, PortFinder portFinder, int stepIndex) {
+    Integer port = portFinder.getNextPort();
+    pluginStepInfo.setPort(port);
+
+    String containerName = String.format("%s%d", STEP_PREFIX, stepIndex);
+    String workingDir = getStepWorkingDirectoryPath();
     Map<String, String> envVarMap = new HashMap<>();
     envVarMap.putAll(BuildEnvironmentUtils.getBuildEnvironmentVariables(ciExecutionArgs));
     if (!isEmpty(pluginStepInfo.getSettings())) {
@@ -189,10 +220,12 @@ public class BuildJobEnvInfoBuilder {
         envVarMap.put(key, entry.getValue());
       }
     }
-    Integer port = portFinder.getNextPort();
-    pluginStepInfo.setPort(port);
+    envVarMap.put(HOME_VARIABLE, workingDir);
+
+    Map<String, String> volumeToMountPath = new HashMap<>();
+    volumeToMountPath.put(STEP_EXEC, MOUNT_PATH);
     return ContainerDefinitionInfo.builder()
-        .name(pluginStepInfo.getIdentifier())
+        .name(containerName)
         .commands(StepContainerUtils.getCommand())
         .args(StepContainerUtils.getArguments(port))
         .envVars(envVarMap)
@@ -203,6 +236,8 @@ public class BuildJobEnvInfoBuilder {
         .containerResourceParams(getStepContainerResource(pluginStepInfo.getResources()))
         .ports(Collections.singletonList(port))
         .containerType(CIContainerType.PLUGIN)
+        .volumeToMountPath(volumeToMountPath)
+        .workingDirectory(workingDir)
         .build();
   }
 
@@ -297,7 +332,7 @@ public class BuildJobEnvInfoBuilder {
   }
 
   private Integer getContainerMemoryLimit(ContainerResource resource) {
-    Integer memoryLimit = DEFAULT_STEP_LIMIT_MEMORY_MIB;
+    Integer memoryLimit = DEFAULT_LIMIT_MEMORY_MIB;
     if (resource != null && resource.getLimit() != null && resource.getLimit().getMemory() > 0) {
       memoryLimit = resource.getLimit().getMemory();
     }
@@ -305,7 +340,7 @@ public class BuildJobEnvInfoBuilder {
   }
 
   private Integer getContainerCpuLimit(ContainerResource resource) {
-    Integer cpuLimit = DEFAULT_STEP_LIMIT_MILLI_CPU;
+    Integer cpuLimit = DEFAULT_LIMIT_MILLI_CPU;
     if (resource != null && resource.getLimit() != null && resource.getLimit().getCpu() > 0) {
       cpuLimit = resource.getLimit().getCpu();
     }
@@ -400,5 +435,9 @@ public class BuildJobEnvInfoBuilder {
       default:
         return zeroCpu;
     }
+  }
+
+  private String getStepWorkingDirectoryPath() {
+    return String.format("/%s/%s", STEP_EXEC, STEP_EXEC_WORKING_DIR);
   }
 }

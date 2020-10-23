@@ -23,6 +23,8 @@ public class PodSetupInfo {
   @NotEmpty private String name;
   @NotNull private Integer stageMemoryRequest;
   @NotNull private Integer stageCpuRequest;
+  private List<String> serviceIdList;
+  private List<Integer> serviceGrpcPortList;
 
   @Data
   @Builder

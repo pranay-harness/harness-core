@@ -11,6 +11,7 @@ import static io.harness.common.CIExecutionConstants.DELEGATE_SERVICE_ID_VARIABL
 import static io.harness.common.CIExecutionConstants.DELEGATE_SERVICE_TOKEN_VARIABLE;
 import static io.harness.common.CIExecutionConstants.ENDPOINT_MINIO_VARIABLE;
 import static io.harness.common.CIExecutionConstants.ENDPOINT_MINIO_VARIABLE_VALUE;
+import static io.harness.common.CIExecutionConstants.GRPC_SERVICE_PORT_PREFIX;
 import static io.harness.common.CIExecutionConstants.HARNESS_ACCOUNT_ID_VARIABLE;
 import static io.harness.common.CIExecutionConstants.HARNESS_BUILD_ID_VARIABLE;
 import static io.harness.common.CIExecutionConstants.HARNESS_ORG_ID_VARIABLE;
@@ -40,6 +41,7 @@ import com.google.inject.Singleton;
 
 import io.harness.beans.sweepingoutputs.K8PodDetails;
 import io.harness.k8s.model.ImageDetails;
+import org.apache.commons.lang3.StringUtils;
 import software.wings.beans.ci.pod.CIContainerType;
 import software.wings.beans.ci.pod.CIK8ContainerParams;
 import software.wings.beans.ci.pod.ConnectorDetails;
@@ -82,12 +84,16 @@ public class InternalContainerParamsProvider {
   public CIK8ContainerParams getLiteEngineContainerParams(ConnectorDetails containerImageConnectorDetails,
       Map<String, ConnectorDetails> publishArtifactConnectors, K8PodDetails k8PodDetails,
       String serializedLiteEngineTaskStepInfo, String serviceToken, Integer stageCpuRequest, Integer stageMemoryRequest,
-      Map<String, String> logEnvVars) {
+      List<Integer> serviceGrpcPortList, Map<String, String> logEnvVars) {
     Map<String, String> map = new HashMap<>();
     map.put(STEP_EXEC, MOUNT_PATH);
     map.put(LITE_ENGINE_VOLUME, LITE_ENGINE_PATH);
     String arg = String.format("%s %s %s %s %s %s", LITE_ENGINE_ARGS, STAGE_ARG_COMMAND, INPUT_ARG_PREFIX,
         serializedLiteEngineTaskStepInfo, TMP_PATH_ARG_PREFIX, TMP_PATH);
+    if (serviceGrpcPortList != null && serviceGrpcPortList.size() > 0) {
+      arg += String.format(" %s %s", GRPC_SERVICE_PORT_PREFIX, StringUtils.join(serviceGrpcPortList, " "));
+    }
+
     List<String> args = new ArrayList<>(Collections.singletonList(arg));
     // TODO: set connector & image secret
     return CIK8ContainerParams.builder()

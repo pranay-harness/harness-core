@@ -3,6 +3,7 @@ package io.harness.beans.stages;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonTypeName;
+import io.harness.beans.dependencies.DependencyElement;
 import io.harness.beans.yaml.extended.CustomVariable;
 import io.harness.beans.yaml.extended.container.Container;
 import io.harness.data.validator.EntityIdentifier;
@@ -47,6 +48,7 @@ public class IntegrationStage implements CIStage {
   private List<CustomVariable> customVariables;
 
   @NotNull private ExecutionElement execution;
+  private List<DependencyElement> dependencies;
 
   @Override
   public CIStageType getType() {
