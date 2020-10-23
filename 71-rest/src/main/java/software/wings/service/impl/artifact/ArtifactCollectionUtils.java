@@ -41,6 +41,7 @@ import io.harness.artifact.ArtifactUtilities;
 import io.harness.beans.DelegateTask;
 import io.harness.beans.DelegateTask.DelegateTaskBuilder;
 import io.harness.data.structure.EmptyPredicate;
+import io.harness.delegate.beans.DelegateTaskRank;
 import io.harness.delegate.beans.TaskData;
 import io.harness.delegate.beans.TaskData.TaskDataBuilder;
 import io.harness.eraro.ErrorCode;
@@ -322,6 +323,7 @@ public class ArtifactCollectionUtils {
     dataBuilder.parameters(new Object[] {buildSourceParametersBuilder.build()})
         .timeout(Duration.ofSeconds(timeout).toMillis());
     delegateTaskBuilder.tags(tags);
+    delegateTaskBuilder.rank(DelegateTaskRank.OPTIONAL);
     delegateTaskBuilder.accountId(accountId);
     delegateTaskBuilder.data(dataBuilder.build());
 
@@ -738,6 +740,7 @@ public class ArtifactCollectionUtils {
 
     return DelegateTask.builder()
         .accountId(accountId)
+        .rank(DelegateTaskRank.OPTIONAL)
         .data(TaskData.builder()
                   .async(false)
                   .taskType(TaskType.BUILD_SOURCE_TASK.name())

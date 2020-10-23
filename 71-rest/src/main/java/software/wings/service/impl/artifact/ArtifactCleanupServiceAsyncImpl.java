@@ -11,6 +11,7 @@ import com.google.inject.Singleton;
 
 import io.harness.beans.DelegateTask;
 import io.harness.beans.DelegateTask.DelegateTaskBuilder;
+import io.harness.delegate.beans.DelegateTaskRank;
 import io.harness.delegate.beans.TaskData;
 import io.harness.delegate.beans.TaskData.TaskDataBuilder;
 import io.harness.tasks.Cd1SetupFields;
@@ -76,6 +77,7 @@ public class ArtifactCleanupServiceAsyncImpl implements ArtifactCleanupService {
       buildSourceRequest =
           artifactCollectionUtils.getBuildSourceParameters(artifactStream, settingAttribute, false, false);
       delegateTaskBuilder.accountId(accountId);
+      delegateTaskBuilder.rank(DelegateTaskRank.OPTIONAL);
       dataBuilder.parameters(new Object[] {buildSourceRequest}).timeout(TimeUnit.MINUTES.toMillis(1));
       delegateTaskBuilder.tags(awsCommandHelper.getAwsConfigTagsFromSettingAttribute(settingAttribute));
       delegateTaskBuilder.data(dataBuilder.build());
