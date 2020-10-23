@@ -44,6 +44,7 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.Spy;
 import rx.Observable;
 import software.wings.WingsBaseTest;
 
@@ -55,7 +56,7 @@ public class AzureVMSSDeployTaskHandlerTest extends WingsBaseTest {
   @Mock private AzureComputeClient azureComputeClient;
   @Mock private AzureAutoScaleSettingsClient azureAutoScaleSettingsClient;
   @Mock private TimeLimiter mockTimeLimiter;
-  @Inject @InjectMocks AzureVMSSDeployTaskHandler deployTaskHandler;
+  @Spy @InjectMocks AzureVMSSDeployTaskHandler deployTaskHandler;
   @Inject @InjectMocks AzureVMSSRollbackTaskHandler rollbackTaskHandler;
   private final int newInstancesSize = 5;
   private final int oldInstancesSize = 3;
@@ -95,6 +96,10 @@ public class AzureVMSSDeployTaskHandlerTest extends WingsBaseTest {
         .listVirtualMachineScaleSetVMs(any(AzureConfig.class), eq(deployTaskParameters.getSubscriptionId()),
             eq(deployTaskParameters.getResourceGroupName()),
             eq(deployTaskParameters.getOldVirtualMachineScaleSetName()));
+
+    doReturn(Collections.emptyList())
+        .when(deployTaskHandler)
+        .getExistingInstanceIds(any(AzureConfig.class), anyString(), eq(deployTaskParameters));
   }
 
   private void mockOldVirtualMachineScaleSetCapacity(VirtualMachineScaleSet oldVirtualMachineScaleSet) {

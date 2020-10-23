@@ -2077,7 +2077,7 @@ public class WorkflowServiceHelper {
         : StateType.AZURE_VMSS_ROLLBACK.name();
 
     String rollbackName =
-        (BLUE_GREEN == orchestrationWorkflowType) ? AZURE_VMSS_ROLLBACK : AZURE_VMSS_SWITCH_ROUTES_ROLLBACK;
+        (BLUE_GREEN == orchestrationWorkflowType) ? AZURE_VMSS_SWITCH_ROUTES_ROLLBACK : AZURE_VMSS_ROLLBACK;
 
     return rollbackWorkflow(workflowPhase)
         .phaseSteps(asList(aPhaseStep(azureVMSSPhaseStepRollback, rollbackName)

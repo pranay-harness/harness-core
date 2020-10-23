@@ -1,7 +1,6 @@
 package software.wings.delegatetasks.azure.taskhandler;
 
 import static io.harness.azure.model.AzureConstants.DEFAULT_AZURE_VMSS_TIMEOUT_MIN;
-import static io.harness.azure.model.AzureConstants.DEPLOYMENT_ERROR;
 import static io.harness.azure.model.AzureConstants.DEPLOYMENT_STATUS;
 import static io.harness.azure.model.AzureConstants.DOWN_SCALE_COMMAND_UNIT;
 import static io.harness.azure.model.AzureConstants.DOWN_SCALE_STEADY_STATE_WAIT_COMMAND_UNIT;
@@ -12,7 +11,6 @@ import static io.harness.azure.model.AzureConstants.UP_SCALE_STEADY_STATE_WAIT_C
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.logging.CommandExecutionStatus.FAILURE;
 import static io.harness.logging.CommandExecutionStatus.SUCCESS;
-import static io.harness.logging.LogLevel.ERROR;
 import static io.harness.logging.LogLevel.INFO;
 import static java.lang.String.format;
 import static org.apache.commons.lang3.StringUtils.EMPTY;
@@ -52,7 +50,7 @@ public class AzureVMSSDeployTaskHandler extends AzureVMSSTaskHandler {
       AzureVMSSDeployTaskResponse deployTaskResponse = resizeVirtualMachineScaleSet(azureConfig, deployTaskParameters);
       return logAndGenerateSuccessResponse(deployTaskResponse, deployTaskParameters);
     } catch (Exception ex) {
-      return logAndGenerateSFailureResponse(ex, deployTaskParameters);
+      return logAndGenerateSFailureResponse(ex);
     }
   }
 
@@ -103,6 +101,9 @@ public class AzureVMSSDeployTaskHandler extends AzureVMSSTaskHandler {
 
   private AzureVMSSDeployTaskResponse resizeVirtualMachineScaleSet(
       AzureConfig azureConfig, AzureVMSSDeployTaskParameters deployTaskParameters) {
+    List<String> existingInstanceIds = getExistingInstanceIds(
+        azureConfig, deployTaskParameters.getNewVirtualMachineScaleSetName(), deployTaskParameters);
+
     if (deployTaskParameters.isResizeNewFirst()) {
       upSizeScaleSet(azureConfig, deployTaskParameters);
       downSizeScaleSet(azureConfig, deployTaskParameters);
@@ -110,8 +111,9 @@ public class AzureVMSSDeployTaskHandler extends AzureVMSSTaskHandler {
       downSizeScaleSet(azureConfig, deployTaskParameters);
       upSizeScaleSet(azureConfig, deployTaskParameters);
     }
-    List<AzureVMInstanceData> instancesAdded =
-        getInstances(azureConfig, deployTaskParameters.getNewVirtualMachineScaleSetName(), deployTaskParameters);
+
+    List<AzureVMInstanceData> instancesAdded = getNewInstancesAdded(azureConfig,
+        deployTaskParameters.getNewVirtualMachineScaleSetName(), deployTaskParameters, existingInstanceIds);
     List<AzureVMInstanceData> existingInstancesForOldScaleSet =
         getInstances(azureConfig, deployTaskParameters.getOldVirtualMachineScaleSetName(), deployTaskParameters);
 
@@ -158,7 +160,7 @@ public class AzureVMSSDeployTaskHandler extends AzureVMSSTaskHandler {
     int desiredCount = azureVMSSResizeDetail.getDesiredCount();
     ExecutionLogCallback logCallBack = getLogCallBack(deployTaskParameters, scaleCommandUnit);
 
-    clearScalingPolicy(azureConfig, virtualMachineScaleSet, deployTaskParameters, logCallBack);
+    clearScalingPolicy(azureConfig, virtualMachineScaleSet, deployTaskParameters.getResourceGroupName(), logCallBack);
     updateScaleSetCapacity(
         azureConfig, deployTaskParameters, scaleSetName, desiredCount, scaleCommandUnit, waitCommandUnit);
     attachScalingPolicy(
@@ -169,15 +171,6 @@ public class AzureVMSSDeployTaskHandler extends AzureVMSSTaskHandler {
       String scaleCommandUnit, String waitCommandUnit, String scaleSetName) {
     String message = format(SKIP_RESIZE_SCALE_SET, isEmpty(scaleSetName) ? EMPTY : scaleSetName);
     handleExecutionLog(deployTaskParameters, message, scaleCommandUnit, waitCommandUnit);
-  }
-
-  private void clearScalingPolicy(AzureConfig azureConfig, VirtualMachineScaleSet scaleSet,
-      AzureVMSSDeployTaskParameters deployTaskParameters, ExecutionLogCallback logCallBack) {
-    String scaleSetName = scaleSet.name();
-    String scaleSetId = scaleSet.id();
-    String resourceGroupName = deployTaskParameters.getResourceGroupName();
-    logCallBack.saveExecutionLog(format("Clearing scaling policy for scale set: [%s]", scaleSetName));
-    azureAutoScaleSettingsClient.clearAutoScaleSettingOnTargetResourceId(azureConfig, resourceGroupName, scaleSetId);
   }
 
   private void updateScaleSetCapacity(AzureConfig azureConfig, AzureVMSSDeployTaskParameters deployTaskParameters,
@@ -211,7 +204,8 @@ public class AzureVMSSDeployTaskHandler extends AzureVMSSTaskHandler {
     ScaleCapacity capacity = new ScaleCapacity();
     capacity.withMinimum(minimum).withMaximum(maximum).withDefaultProperty(desired);
 
-    logCallBack.saveExecutionLog(format("Attaching scaling policy to VMSS: [%s]", scaleSet.name()), INFO, SUCCESS);
+    logCallBack.saveExecutionLog(
+        format(azureVMSSResizeDetail.getScalingPolicyMessage(), scaleSet.name()), INFO, SUCCESS);
     azureAutoScaleSettingsClient.attachAutoScaleSettingToTargetResourceId(
         azureConfig, resourceGroupName, scaleSetId, scalingPolicyJSONs, capacity);
   }
@@ -221,6 +215,21 @@ public class AzureVMSSDeployTaskHandler extends AzureVMSSTaskHandler {
     logger.warn(message);
     createAndFinishEmptyExecutionLog(deployTaskParameters, scaleCommandUnit, message);
     createAndFinishEmptyExecutionLog(deployTaskParameters, waitCommandUnit, message);
+  }
+
+  private List<AzureVMInstanceData> getNewInstancesAdded(AzureConfig azureConfig, String scaleSetName,
+      AzureVMSSDeployTaskParameters deployTaskParameters, List<String> existingInstanceIds) {
+    List<AzureVMInstanceData> allInstances = getInstances(azureConfig, scaleSetName, deployTaskParameters);
+
+    return allInstances.stream()
+        .filter(vmInstanceData -> !existingInstanceIds.contains(vmInstanceData.getInstanceId()))
+        .collect(Collectors.toList());
+  }
+
+  public List<String> getExistingInstanceIds(
+      AzureConfig azureConfig, String scaleSetName, AzureVMSSDeployTaskParameters deployTaskParameters) {
+    List<AzureVMInstanceData> existingInstances = getInstances(azureConfig, scaleSetName, deployTaskParameters);
+    return existingInstances.stream().map(AzureVMInstanceData::getInstanceId).collect(Collectors.toList());
   }
 
   private List<AzureVMInstanceData> getInstances(
@@ -284,11 +293,8 @@ public class AzureVMSSDeployTaskHandler extends AzureVMSSTaskHandler {
         .build();
   }
 
-  private AzureVMSSTaskExecutionResponse logAndGenerateSFailureResponse(
-      Exception ex, AzureVMSSDeployTaskParameters deployTaskParameters) {
-    ExecutionLogCallback logCallBack = getLogCallBack(deployTaskParameters, DEPLOYMENT_ERROR);
+  private AzureVMSSTaskExecutionResponse logAndGenerateSFailureResponse(Exception ex) {
     String errorMessage = ExceptionUtils.getMessage(ex);
-    logCallBack.saveExecutionLog(format("Exception: [%s].", errorMessage), ERROR);
     logger.error(errorMessage, ex);
     return AzureVMSSTaskExecutionResponse.builder().errorMessage(errorMessage).commandExecutionStatus(FAILURE).build();
   }

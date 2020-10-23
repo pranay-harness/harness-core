@@ -63,4 +63,10 @@ public class AzureVMSSSwitchRoutesRollbackState extends AzureVMSSSwitchRoutesSta
         new AzureVMSSDummyCommandUnit(DOWN_SCALE_STEADY_STATE_WAIT_COMMAND_UNIT),
         new AzureVMSSDummyCommandUnit(DEPLOYMENT_STATUS));
   }
+
+  @Override
+  @SchemaIgnore
+  public Integer getTimeoutMillis() {
+    return super.getTimeoutMillis();
+  }
 }

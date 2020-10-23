@@ -120,4 +120,10 @@ public class AzureVMSSRollbackState extends AzureVMSSDeployState {
   public Map<String, String> validateFields() {
     return Collections.emptyMap();
   }
+
+  @Override
+  @SchemaIgnore
+  public Integer getTimeoutMillis() {
+    return super.getTimeoutMillis();
+  }
 }

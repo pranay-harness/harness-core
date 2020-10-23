@@ -1,6 +1,7 @@
 package software.wings.delegatetasks.azure.taskhandler;
 
 import static io.harness.azure.model.AzureConstants.AUTOSCALING_REQUEST_STATUS_CHECK_INTERVAL;
+import static io.harness.azure.model.AzureConstants.CLEAR_SCALING_POLICY;
 import static io.harness.azure.model.AzureConstants.DEPLOYMENT_ERROR;
 import static io.harness.azure.model.AzureConstants.VM_PROVISIONING_SPECIALIZED_STATUS;
 import static io.harness.azure.model.AzureConstants.VM_PROVISIONING_SUCCEEDED_STATUS;
@@ -53,7 +54,12 @@ public abstract class AzureVMSSTaskHandler {
       AzureVMSSTaskExecutionResponse response = executeTaskInternal(azureVMSSTaskParameters, azureConfig);
       if (!azureVMSSTaskParameters.isSyncTask()) {
         ExecutionLogCallback logCallback = getLogCallBack(azureVMSSTaskParameters, DEPLOYMENT_ERROR);
-        logCallback.saveExecutionLog("No deployment error. Execution success", INFO, SUCCESS);
+        if (response.getCommandExecutionStatus() == FAILURE) {
+          logCallback.saveExecutionLog(
+              format("Deployment error. Exception: [%s]", response.getErrorMessage()), ERROR, FAILURE);
+        } else {
+          logCallback.saveExecutionLog("No deployment error. Execution success", INFO, SUCCESS);
+        }
       }
       return response;
     } catch (Exception ex) {
@@ -92,6 +98,14 @@ public abstract class AzureVMSSTaskHandler {
         delegateLogService, parameters.getAccountId(), parameters.getAppId(), parameters.getActivityId(), commandUnit);
   }
 
+  protected void clearScalingPolicy(AzureConfig azureConfig, VirtualMachineScaleSet scaleSet, String resourceGroupName,
+      ExecutionLogCallback logCallBack) {
+    String scaleSetName = scaleSet.name();
+    String scaleSetId = scaleSet.id();
+    logCallBack.saveExecutionLog(format(CLEAR_SCALING_POLICY, scaleSetName));
+    azureAutoScaleSettingsClient.clearAutoScaleSettingOnTargetResourceId(azureConfig, resourceGroupName, scaleSetId);
+  }
+
   protected abstract AzureVMSSTaskExecutionResponse executeTaskInternal(
       AzureVMSSTaskParameters azureVMSSTaskParameters, AzureConfig azureConfig);
 
@@ -104,15 +118,17 @@ public abstract class AzureVMSSTaskHandler {
 
     VirtualMachineScaleSet vmss =
         getVirtualMachineScaleSet(azureConfig, subscriptionId, resourceGroupName, virtualMachineScaleSetName);
-    vmss.update().withCapacity(capacity).applyAsync().subscribe();
 
+    AzureRestCallBack<VirtualMachineScaleSet> restCallBack =
+        new AzureRestCallBack<>(logCallBack, virtualMachineScaleSetName);
+    vmss.update().withCapacity(capacity).applyAsync(restCallBack);
     logCallBack.saveExecutionLog("Successfully set desired capacity", INFO, SUCCESS);
 
     logCallBack = getLogCallBack(parameters, waitCommandUnit);
-    waitForVMSSToBeDownSized(vmss, capacity, autoScalingSteadyStateTimeout, logCallBack);
+    waitForVMSSToBeDownSized(vmss, capacity, autoScalingSteadyStateTimeout, logCallBack, restCallBack);
     String message =
         "All the VM instances of VMSS: [%s] are " + (capacity == 0 ? "deleted " : "provisioned ") + "successfully";
-    logCallBack.saveExecutionLog(format(message, virtualMachineScaleSetName), INFO);
+    logCallBack.saveExecutionLog(format(message, virtualMachineScaleSetName), INFO, SUCCESS);
   }
 
   private VirtualMachineScaleSet getVirtualMachineScaleSet(
@@ -127,26 +143,32 @@ public abstract class AzureVMSSTaskHandler {
   }
 
   protected void waitForVMSSToBeDownSized(VirtualMachineScaleSet virtualMachineScaleSet, int capacity,
-      int autoScalingSteadyStateTimeout, ExecutionLogCallback logCallBack) {
+      int autoScalingSteadyStateTimeout, ExecutionLogCallback logCallBack,
+      AzureRestCallBack<VirtualMachineScaleSet> restCallBack) {
     try {
       timeLimiter.callWithTimeout(() -> {
         logCallBack.saveExecutionLog(
-            format("Checking the status of: [%s] VM instances", virtualMachineScaleSet.name()), INFO);
+            format("Checking the status of VMSS: [%s] VM instances", virtualMachineScaleSet.name()), INFO);
         while (true) {
+          if (restCallBack.updateFailed()) {
+            logCallBack.saveExecutionLog(restCallBack.failureMessage(), ERROR, FAILURE);
+            throw new InvalidRequestException(restCallBack.failureMessage());
+          }
           if (checkAllVMSSInstancesProvisioned(virtualMachineScaleSet, capacity, logCallBack)) {
             return Boolean.TRUE;
           }
           sleep(ofSeconds(AUTOSCALING_REQUEST_STATUS_CHECK_INTERVAL));
         }
       }, autoScalingSteadyStateTimeout, TimeUnit.MINUTES, true);
-    } catch (UncheckedTimeoutException e) {
-      String message = "Timed out waiting for provisioning VMSS VM instances to desired capacity";
+    } catch (InterruptedException | UncheckedTimeoutException e) {
+      String message = "Timed out waiting for provisioning VMSS VM instances to desired capacity. \n" + e.getMessage();
       logCallBack.saveExecutionLog(message, ERROR, FAILURE);
       throw new InvalidRequestException(message, e);
     } catch (WingsException e) {
       throw e;
     } catch (Exception e) {
-      String message = "Error while waiting for provisioning VMSS VM instances to desired capacity";
+      String message =
+          "Error while waiting for provisioning VMSS VM instances to desired capacity. \n" + e.getMessage();
       logCallBack.saveExecutionLog(message, ERROR, FAILURE);
       throw new InvalidRequestException(message, e);
     }
