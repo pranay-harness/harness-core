@@ -10,11 +10,11 @@ import java.util.List;
 public class CIExecutionConstants {
   // Addon image
   public static final String ADDON_IMAGE_NAME = "harness/ci-addon";
-  public static final String ADDON_IMAGE_TAG = "v1.0-alpha";
+  public static final String ADDON_IMAGE_TAG = "v1.1-alpha";
 
   // Lite-engine image
   public static final String LITE_ENGINE_IMAGE_NAME = "harness/ci-lite-engine";
-  public static final String LITE_ENGINE_IMAGE_TAG = "v1.0-alpha";
+  public static final String LITE_ENGINE_IMAGE_TAG = "v1.1-alpha";
 
   // Constant for run/plugin step images
   public static final String STEP_COMMAND = "/step-exec/.harness/bin/ci-addon";
