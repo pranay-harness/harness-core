@@ -2,6 +2,7 @@ package software.wings.beans.alert;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 
+import io.harness.alert.AlertData;
 import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Data;

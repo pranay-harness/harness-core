@@ -1,5 +1,6 @@
 package software.wings.beans.alert;
 
+import io.harness.alert.AlertData;
 import io.harness.beans.WorkflowType;
 import lombok.Builder;
 import lombok.Data;

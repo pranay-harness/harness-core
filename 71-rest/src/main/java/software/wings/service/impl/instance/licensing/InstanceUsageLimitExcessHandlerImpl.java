@@ -5,12 +5,12 @@ import static software.wings.beans.Application.GLOBAL_APP_ID;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.inject.Inject;
 
+import io.harness.alert.AlertData;
 import io.harness.limits.Action;
 import io.harness.limits.ActionType;
 import io.harness.limits.Counter;
 import io.harness.limits.counter.service.CounterService;
 import org.slf4j.helpers.MessageFormatter;
-import software.wings.beans.alert.AlertData;
 import software.wings.beans.alert.AlertType;
 import software.wings.beans.alert.InstanceUsageLimitAlert;
 import software.wings.service.intfc.AlertService;

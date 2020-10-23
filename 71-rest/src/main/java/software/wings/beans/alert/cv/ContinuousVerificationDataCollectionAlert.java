@@ -1,9 +1,9 @@
 package software.wings.beans.alert.cv;
 
+import io.harness.alert.AlertData;
 import lombok.Builder;
 import lombok.Data;
 import org.apache.commons.lang3.StringUtils;
-import software.wings.beans.alert.AlertData;
 import software.wings.verification.CVConfiguration;
 
 /**

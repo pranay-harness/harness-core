@@ -2,6 +2,7 @@ package software.wings.beans.alert;
 
 import static java.lang.String.format;
 
+import io.harness.alert.AlertData;
 import io.harness.k8s.KubernetesConvention;
 import lombok.Builder;
 import lombok.Data;

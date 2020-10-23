@@ -26,6 +26,7 @@ import static software.wings.utils.WingsTestConstants.SETTING_ID;
 
 import com.google.inject.Inject;
 
+import io.harness.alert.AlertData;
 import io.harness.beans.PageResponse;
 import io.harness.beans.SearchFilter.Operator;
 import io.harness.category.element.UnitTests;
@@ -46,7 +47,6 @@ import software.wings.beans.SettingAttribute;
 import software.wings.beans.TaskType;
 import software.wings.beans.alert.Alert;
 import software.wings.beans.alert.Alert.AlertKeys;
-import software.wings.beans.alert.AlertData;
 import software.wings.beans.alert.ApprovalNeededAlert;
 import software.wings.beans.alert.ArtifactCollectionFailedAlert;
 import software.wings.beans.alert.ManualInterventionNeededAlert;

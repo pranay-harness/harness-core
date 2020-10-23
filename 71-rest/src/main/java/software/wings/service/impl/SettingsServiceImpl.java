@@ -55,6 +55,7 @@ import com.google.inject.Singleton;
 import com.google.inject.name.Named;
 
 import com.amazonaws.arn.Arn;
+import io.harness.alert.AlertData;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.beans.SearchFilter.Operator;
@@ -111,7 +112,6 @@ import software.wings.beans.ValidationResult;
 import software.wings.beans.Variable;
 import software.wings.beans.WinRmConnectionAttributes;
 import software.wings.beans.Workflow;
-import software.wings.beans.alert.AlertData;
 import software.wings.beans.alert.AlertType;
 import software.wings.beans.alert.SettingAttributeValidationFailedAlert;
 import software.wings.beans.appmanifest.ApplicationManifest;

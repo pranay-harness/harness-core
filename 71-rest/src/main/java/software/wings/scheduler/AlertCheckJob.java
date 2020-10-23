@@ -1,6 +1,7 @@
 package software.wings.scheduler;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.obfuscate.Obfuscator.obfuscate;
 import static software.wings.beans.Application.GLOBAL_APP_ID;
 import static software.wings.common.Constants.ACCOUNT_ID_KEY;
@@ -9,6 +10,8 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
 
+import io.harness.alert.AlertData;
+import io.harness.delegate.beans.alert.DelegatesScalingGroupDownAlert;
 import io.harness.scheduler.PersistentScheduler;
 import lombok.extern.slf4j.Slf4j;
 import org.quartz.Job;
@@ -21,8 +24,6 @@ import software.wings.app.MainConfiguration;
 import software.wings.beans.Account;
 import software.wings.beans.Delegate;
 import software.wings.beans.DelegateConnection.DelegateConnectionKeys;
-import software.wings.beans.FeatureName;
-import software.wings.beans.alert.AlertData;
 import software.wings.beans.alert.AlertType;
 import software.wings.beans.alert.DelegatesDownAlert;
 import software.wings.beans.alert.InvalidSMTPConfigAlert;
@@ -37,10 +38,12 @@ import software.wings.utils.EmailHelperUtils;
 import java.security.SecureRandom;
 import java.time.Clock;
 import java.util.Date;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
 /**
  * @author brett on 10/17/17
@@ -154,11 +157,44 @@ public class AlertCheckJob implements Job {
       if (primaryConnections.contains(delegate.getUuid())) {
         alertService.closeAlert(accountId, GLOBAL_APP_ID, AlertType.DelegatesDown, alertData);
       } else {
-        if (!featureFlagService.isEnabled(FeatureName.DELEGATE_SCALING_GROUP, accountId)
-            || isEmpty(delegate.getDelegateGroupName())) {
+        if (isEmpty(delegate.getDelegateGroupName())) {
           alertService.openAlert(accountId, GLOBAL_APP_ID, AlertType.DelegatesDown, alertData);
         }
       }
     }
+
+    processDelegateWhichBelongsToGroup(accountId, delegates, primaryConnections);
+  }
+
+  @VisibleForTesting
+  protected void processDelegateWhichBelongsToGroup(
+      String accountId, List<Delegate> delegates, Set<String> primaryConnections) {
+    Set<String> connectedScalingGroups = new HashSet<>();
+    for (Delegate delegate : delegates) {
+      if (primaryConnections.contains(delegate.getUuid()) && isNotEmpty(delegate.getDelegateGroupName())) {
+        String delegateGroupName = delegate.getDelegateGroupName();
+        closeDelegateScalingGroupDownAlert(accountId, delegateGroupName);
+        connectedScalingGroups.add(delegateGroupName);
+      }
+    }
+
+    Set<String> allScalingGroups = delegates.stream()
+                                       .filter(x -> isNotEmpty(x.getDelegateGroupName()))
+                                       .map(Delegate::getDelegateGroupName)
+                                       .collect(Collectors.toSet());
+
+    allScalingGroups.removeAll(connectedScalingGroups);
+
+    for (String disconnectedScalingGroup : allScalingGroups) {
+      AlertData alertData =
+          DelegatesScalingGroupDownAlert.builder().accountId(accountId).groupName(disconnectedScalingGroup).build();
+
+      alertService.openAlert(accountId, GLOBAL_APP_ID, AlertType.DelegatesScalingGroupDownAlert, alertData);
+    }
+  }
+
+  private void closeDelegateScalingGroupDownAlert(String accountId, String groupName) {
+    AlertData alertData = DelegatesScalingGroupDownAlert.builder().accountId(accountId).groupName(groupName).build();
+    alertService.closeAlert(accountId, GLOBAL_APP_ID, AlertType.DelegatesScalingGroupDownAlert, alertData);
   }
 }

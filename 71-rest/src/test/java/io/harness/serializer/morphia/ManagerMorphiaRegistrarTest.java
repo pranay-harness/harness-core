@@ -21,7 +21,6 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import software.wings.WingsBaseTest;
 import software.wings.api.DeploymentInfo;
-import software.wings.beans.alert.AlertData;
 import software.wings.beans.command.CommandUnit;
 import software.wings.beans.infrastructure.instance.info.InstanceInfo;
 import software.wings.common.PartitionProcessorTest.SampleElement;
@@ -58,7 +57,6 @@ public class ManagerMorphiaRegistrarTest extends WingsBaseTest {
     classes.put("software.wings.service.impl.WorkflowExecutionUpdateFake", WorkflowExecutionUpdateFake.class);
 
     final Set<Class> unwanted = checkRegisteredClasses(ImmutableSet.<Class>builder()
-                                                           .add(AlertData.class)
                                                            .add(CommandUnit.class)
                                                            .add(ContextElement.class)
                                                            .add(DataCollectionInfo.class)
