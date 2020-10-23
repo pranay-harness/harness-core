@@ -42,6 +42,7 @@ import software.wings.service.impl.applicationmanifest.AppManifestPTaskHelper;
 import software.wings.service.intfc.AlertService;
 import software.wings.service.intfc.ApplicationManifestService;
 import software.wings.service.intfc.FeatureFlagService;
+import software.wings.service.intfc.TriggerService;
 import software.wings.service.intfc.applicationmanifest.HelmChartService;
 
 import java.util.Arrays;
@@ -57,6 +58,7 @@ public class ManifestCollectionResponseHandlerTest extends CategoryTest {
   @Mock FeatureFlagService featureFlagService;
   @Mock AlertService alertService;
   @Mock HelmChartService helmChartService;
+  @Mock TriggerService triggerService;
 
   @Inject @InjectMocks ManifestCollectionResponseHandler manifestCollectionResponseHandler;
 
@@ -134,6 +136,7 @@ public class ManifestCollectionResponseHandlerTest extends CategoryTest {
                                           .failedAttempts(5)
                                           .build();
     appManifest.setUuid(MANIFEST_ID);
+    appManifest.setAppId(APP_ID);
 
     doReturn(appManifest).when(applicationManifestService).getById(APP_ID, MANIFEST_ID);
     doReturn(true).when(helmChartService).deleteHelmChartsByVersions(ACCOUNT_ID, MANIFEST_ID, toBeDeletedCharts);
@@ -143,6 +146,7 @@ public class ManifestCollectionResponseHandlerTest extends CategoryTest {
     verify(applicationManifestService, times(1)).updateFailedAttempts(ACCOUNT_ID, MANIFEST_ID, 0);
     verify(helmChartService, times(1)).deleteHelmChartsByVersions(ACCOUNT_ID, MANIFEST_ID, toBeDeletedCharts);
     verify(helmChartService, times(1)).addCollectedHelmCharts(ACCOUNT_ID, MANIFEST_ID, helmCharts);
+    verify(triggerService, times(1)).triggerExecutionPostManifestCollectionAsync(eq(APP_ID), eq(MANIFEST_ID), any());
   }
 
   @Test
@@ -162,6 +166,8 @@ public class ManifestCollectionResponseHandlerTest extends CategoryTest {
                                                        .manifestCollectionResponse(manifestCollectionResponse)
                                                        .build();
     ApplicationManifest appManifest = generateApplicationManifest();
+    appManifest.setAppId(APP_ID);
+    appManifest.setUuid(MANIFEST_ID);
 
     doReturn(appManifest).when(applicationManifestService).getById(APP_ID, MANIFEST_ID);
     doReturn(true).when(helmChartService).addCollectedHelmCharts(ACCOUNT_ID, MANIFEST_ID, helmCharts);
@@ -169,6 +175,7 @@ public class ManifestCollectionResponseHandlerTest extends CategoryTest {
     manifestCollectionResponseHandler.handleManifestCollectionResponse(ACCOUNT_ID, PERPETUAL_TASK_ID, response);
     verify(helmChartService, never()).deleteHelmChartsByVersions(anyString(), anyString(), any());
     verify(helmChartService, times(1)).addCollectedHelmCharts(ACCOUNT_ID, MANIFEST_ID, helmCharts);
+    verify(triggerService, times(1)).triggerExecutionPostManifestCollectionAsync(eq(APP_ID), eq(MANIFEST_ID), any());
   }
 
   @Test
@@ -185,6 +192,8 @@ public class ManifestCollectionResponseHandlerTest extends CategoryTest {
                                                        .manifestCollectionResponse(manifestCollectionResponse)
                                                        .build();
     ApplicationManifest appManifest = generateApplicationManifest();
+    appManifest.setAppId(APP_ID);
+    appManifest.setUuid(MANIFEST_ID);
 
     doReturn(appManifest).when(applicationManifestService).getById(APP_ID, MANIFEST_ID);
     doReturn(true).when(helmChartService).deleteHelmChartsByVersions(ACCOUNT_ID, MANIFEST_ID, toBeDeletedCharts);
@@ -192,6 +201,7 @@ public class ManifestCollectionResponseHandlerTest extends CategoryTest {
     manifestCollectionResponseHandler.handleManifestCollectionResponse(ACCOUNT_ID, PERPETUAL_TASK_ID, response);
     verify(helmChartService, times(1)).deleteHelmChartsByVersions(ACCOUNT_ID, MANIFEST_ID, toBeDeletedCharts);
     verify(helmChartService, never()).addCollectedHelmCharts(anyString(), anyString(), any());
+    verify(triggerService, never()).triggerExecutionPostManifestCollectionAsync(eq(APP_ID), eq(MANIFEST_ID), any());
   }
 
   private ApplicationManifest generateApplicationManifest() {

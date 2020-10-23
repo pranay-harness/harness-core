@@ -80,6 +80,7 @@ public class Trigger extends Base implements NameAccess, TagAware, ApplicationAc
   private String workflowId;
   private String workflowName;
   private List<ArtifactSelection> artifactSelections = new ArrayList<>();
+  private List<ManifestSelection> manifestSelections = new ArrayList<>();
   @JsonIgnore @FdIndex private String webHookToken;
   private WorkflowType workflowType;
   private Map<String, String> workflowVariables;
@@ -91,12 +92,12 @@ public class Trigger extends Base implements NameAccess, TagAware, ApplicationAc
   private boolean disabled;
 
   @Builder
-  public Trigger(String uuid, String appId, EmbeddedUser createdBy, long createdAt, EmbeddedUser lastUpdatedBy,
-      long lastUpdatedAt, String entityYamlPath, String name, String description, TriggerCondition condition,
-      String pipelineId, String pipelineName, String workflowId, String workflowName,
-      List<ArtifactSelection> artifactSelections, String webHookToken, WorkflowType workflowType,
-      Map<String, String> workflowVariables, List<ServiceInfraWorkflow> serviceInfraWorkflows,
-      boolean excludeHostsWithSameArtifact) {
+  public Trigger(String uuid, String appId, String accountId, EmbeddedUser createdBy, long createdAt,
+      EmbeddedUser lastUpdatedBy, long lastUpdatedAt, String entityYamlPath, String name, String description,
+      TriggerCondition condition, String pipelineId, String pipelineName, String workflowId, String workflowName,
+      List<ArtifactSelection> artifactSelections, List<ManifestSelection> manifestSelections, String webHookToken,
+      WorkflowType workflowType, Map<String, String> workflowVariables,
+      List<ServiceInfraWorkflow> serviceInfraWorkflows, boolean excludeHostsWithSameArtifact) {
     super(uuid, appId, createdBy, createdAt, lastUpdatedBy, lastUpdatedAt, entityYamlPath);
     this.name = name;
     this.description = description;
@@ -111,6 +112,8 @@ public class Trigger extends Base implements NameAccess, TagAware, ApplicationAc
     this.workflowVariables = workflowVariables;
     this.serviceInfraWorkflows = serviceInfraWorkflows;
     this.excludeHostsWithSameArtifact = excludeHostsWithSameArtifact;
+    this.manifestSelections = manifestSelections;
+    this.accountId = accountId;
   }
 
   public void setPipelineId(String pipelineId) {
@@ -167,12 +170,13 @@ public class Trigger extends Base implements NameAccess, TagAware, ApplicationAc
     private String executionType;
     private String executionName;
     private List<ArtifactSelection.Yaml> artifactSelections = new ArrayList<>();
+    private List<ManifestSelection.Yaml> manifestSelections = new ArrayList<>();
     private List<TriggerVariable> workflowVariables = new ArrayList<>();
 
     @lombok.Builder
     public Yaml(String harnessApiVersion, String description, String executionType, String executionName,
         List<TriggerVariable> workflowVariables, List<TriggerConditionYaml> triggerCondition,
-        List<ArtifactSelection.Yaml> artifactSelections) {
+        List<ArtifactSelection.Yaml> artifactSelections, List<ManifestSelection.Yaml> manifestSelections) {
       super(EntityType.TRIGGER.name(), harnessApiVersion);
       this.setHarnessApiVersion(harnessApiVersion);
       this.description = description;
@@ -181,6 +185,7 @@ public class Trigger extends Base implements NameAccess, TagAware, ApplicationAc
       this.workflowVariables = workflowVariables;
       this.triggerCondition = triggerCondition;
       this.artifactSelections = artifactSelections;
+      this.manifestSelections = manifestSelections;
     }
 
     @Data

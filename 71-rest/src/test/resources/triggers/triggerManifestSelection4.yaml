@@ -1,0 +1,9 @@
+harnessApiVersion: '1.0'
+type: TRIGGER
+executionName: w1
+executionType: Workflow
+manifestSelections:
+- serviceName: k8s
+  type: PIPELINE_SOURCE
+triggerCondition:
+- type: WEBHOOK

@@ -170,4 +170,30 @@ public class HelmChartServiceTest extends WingsBaseTest {
     assertThat(finalHelmCharts.size()).isEqualTo(3);
     assertThat(finalHelmCharts).containsExactlyInAnyOrder(helmChart, helmChart2, helmChart3);
   }
+
+  @Test
+  @Owner(developers = PRABU)
+  @Category(UnitTests.class)
+  public void testGetHelmChartsWithVersion() {
+    helmChartService.create(helmChart);
+    HelmChart helmChart2 = generateHelmChartWithVersion("2.0");
+    helmChartService.addCollectedHelmCharts(ACCOUNT_ID, APPLICATION_MANIFEST_ID, Arrays.asList(helmChart, helmChart2));
+    HelmChart helmChartWithVersion =
+        helmChartService.getManifestByVersionNumber(ACCOUNT_ID, APPLICATION_MANIFEST_ID, "2.0");
+    assertThat(helmChartWithVersion).isEqualTo(helmChart2);
+  }
+
+  @Test
+  @Owner(developers = PRABU)
+  @Category(UnitTests.class)
+  public void testGetHelmChartsMatchingRegex() {
+    helmChartService.create(helmChart);
+    HelmChart helmChart2 = generateHelmChartWithVersion("2.1");
+    HelmChart helmChart3 = generateHelmChartWithVersion("1.1");
+    helmChartService.addCollectedHelmCharts(
+        ACCOUNT_ID, APPLICATION_MANIFEST_ID, Arrays.asList(helmChart, helmChart2, helmChart3));
+    HelmChart helmChartWithVersion =
+        helmChartService.getLastCollectedManifestMatchingRegex(ACCOUNT_ID, APPLICATION_MANIFEST_ID, "2\\.*");
+    assertThat(helmChartWithVersion).isEqualTo(helmChart2);
+  }
 }

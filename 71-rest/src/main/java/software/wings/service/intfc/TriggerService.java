@@ -12,6 +12,7 @@ import org.hibernate.validator.constraints.NotEmpty;
 import ru.vyarus.guice.validator.group.annotation.ValidationGroups;
 import software.wings.beans.WebHookToken;
 import software.wings.beans.WorkflowExecution;
+import software.wings.beans.appmanifest.HelmChart;
 import software.wings.beans.artifact.Artifact;
 import software.wings.beans.instance.dashboard.ArtifactSummary;
 import software.wings.beans.trigger.Trigger;
@@ -89,6 +90,8 @@ public interface TriggerService extends OwnedByApplication, OwnedByPipeline, Own
 
   void triggerExecutionPostArtifactCollectionAsync(String appId, String artifactStreamId, List<Artifact> artifacts);
 
+  void triggerExecutionPostManifestCollectionAsync(String appId, String appManifestId, List<HelmChart> helmChart);
+
   void triggerExecutionPostArtifactCollectionAsync(
       String accountId, String appId, String artifactStreamId, List<Artifact> artifacts);
 
@@ -108,8 +111,8 @@ public interface TriggerService extends OwnedByApplication, OwnedByPipeline, Own
   void triggerScheduledExecutionAsync(Trigger trigger, Date scheduledFireTime);
 
   WorkflowExecution triggerExecutionByWebHook(String appId, String webHookToken,
-      Map<String, ArtifactSummary> serviceBuildNumbers, Map<String, String> parameters,
-      TriggerExecution triggerExecution);
+      Map<String, ArtifactSummary> serviceBuildNumbers, Map<String, String> serviceManifestMapping,
+      TriggerExecution triggerExecution, Map<String, String> parameters);
 
   /**
    * Triggers that have actions on Pipeline

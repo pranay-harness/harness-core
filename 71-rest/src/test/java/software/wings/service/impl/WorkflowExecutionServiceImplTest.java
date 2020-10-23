@@ -1,7 +1,9 @@
 package software.wings.service.impl;
 
 import static io.harness.beans.ExecutionStatus.ABORTED;
+import static io.harness.beans.ExecutionStatus.FAILED;
 import static io.harness.beans.ExecutionStatus.PREPARING;
+import static io.harness.beans.ExecutionStatus.SUCCESS;
 import static io.harness.beans.ExecutionStatus.WAITING;
 import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
 import static io.harness.beans.SearchFilter.Operator.EQ;
@@ -12,6 +14,7 @@ import static io.harness.rule.OwnerRule.GARVIT;
 import static io.harness.rule.OwnerRule.GEORGE;
 import static io.harness.rule.OwnerRule.HARSH;
 import static io.harness.rule.OwnerRule.INDER;
+import static io.harness.rule.OwnerRule.PRABU;
 import static io.harness.rule.OwnerRule.PRASHANT;
 import static io.harness.rule.OwnerRule.RAGHU;
 import static io.harness.rule.OwnerRule.RAMA;
@@ -71,11 +74,14 @@ import static software.wings.utils.WingsTestConstants.COMPANY_NAME;
 import static software.wings.utils.WingsTestConstants.ENTITY_ID;
 import static software.wings.utils.WingsTestConstants.INFRA_DEFINITION_ID;
 import static software.wings.utils.WingsTestConstants.INFRA_MAPPING_ID;
+import static software.wings.utils.WingsTestConstants.MANIFEST_ID;
 import static software.wings.utils.WingsTestConstants.PIPELINE_ID;
 import static software.wings.utils.WingsTestConstants.PIPELINE_NAME;
 import static software.wings.utils.WingsTestConstants.SERVICE_ID;
+import static software.wings.utils.WingsTestConstants.UUID;
 import static software.wings.utils.WingsTestConstants.VARIABLE_NAME;
 import static software.wings.utils.WingsTestConstants.WORKFLOW_EXECUTION_ID;
+import static software.wings.utils.WingsTestConstants.WORKFLOW_ID;
 import static software.wings.utils.WingsTestConstants.WORKFLOW_NAME;
 
 import com.google.common.collect.ImmutableMap;
@@ -157,6 +163,7 @@ import software.wings.beans.Workflow.WorkflowBuilder;
 import software.wings.beans.WorkflowExecution;
 import software.wings.beans.WorkflowExecution.WorkflowExecutionKeys;
 import software.wings.beans.WorkflowPhase;
+import software.wings.beans.appmanifest.HelmChart;
 import software.wings.beans.artifact.Artifact;
 import software.wings.beans.artifact.ArtifactStream;
 import software.wings.beans.artifact.CustomArtifactStream;
@@ -2790,5 +2797,50 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
     WorkflowExecution workflowExecution1 = workflowExecutionService.getWorkflowExecution(APP_ID, uuid);
     assertThat(workflowExecution1).isNotNull();
     assertThat(workflowExecution1.getArtifacts().get(0).getArtifactStreamName()).isEqualTo("test");
+  }
+
+  @Test
+  @Owner(developers = PRABU)
+  @Category(UnitTests.class)
+  public void shouldObtainLastGoodDeployedHelmChart() {
+    HelmChart helmChart1 = generateHelmChartWithVersion("1.0");
+    HelmChart helmChart3 = generateHelmChartWithVersion("3.0");
+    ExecutionArgs executionArgs = new ExecutionArgs();
+    executionArgs.setHelmCharts(asList(helmChart1, helmChart3));
+    WorkflowExecution workflowExecution = WorkflowExecution.builder()
+                                              .uuid(WORKFLOW_EXECUTION_ID)
+                                              .appId(APP_ID)
+                                              .executionArgs(executionArgs)
+                                              .workflowId(WORKFLOW_ID)
+                                              .helmCharts(asList(helmChart1, helmChart3))
+                                              .status(SUCCESS)
+                                              .build();
+    wingsPersistence.save(workflowExecution);
+    HelmChart helmChart2 = generateHelmChartWithVersion("2.0");
+    ExecutionArgs executionArgs2 = new ExecutionArgs();
+    executionArgs.setHelmCharts(asList(helmChart2, helmChart3));
+    WorkflowExecution workflowExecution2 = WorkflowExecution.builder()
+                                               .uuid(WORKFLOW_EXECUTION_ID + 2)
+                                               .workflowId(WORKFLOW_ID)
+                                               .executionArgs(executionArgs2)
+                                               .helmCharts(asList(helmChart2, helmChart3))
+                                               .appId(APP_ID)
+                                               .status(FAILED)
+                                               .build();
+    wingsPersistence.save(workflowExecution2);
+    List<HelmChart> lastDeployedHelmCharts =
+        workflowExecutionService.obtainLastGoodDeployedHelmCharts(APP_ID, WORKFLOW_ID);
+    assertThat(lastDeployedHelmCharts).containsExactlyInAnyOrder(helmChart1, helmChart3);
+  }
+
+  private HelmChart generateHelmChartWithVersion(String version) {
+    return HelmChart.builder()
+        .accountId(ACCOUNT_ID)
+        .appId(APP_ID)
+        .uuid(UUID + version)
+        .applicationManifestId(MANIFEST_ID)
+        .serviceId(SERVICE_ID)
+        .version(version)
+        .build();
   }
 }

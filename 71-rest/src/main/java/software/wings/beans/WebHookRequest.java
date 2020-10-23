@@ -19,5 +19,6 @@ import java.util.Map;
 public class WebHookRequest {
   @NotEmpty private String application;
   private List<Map<String, Object>> artifacts;
+  private List<Map<String, Object>> manifests;
   private Map<String, String> parameters;
 }

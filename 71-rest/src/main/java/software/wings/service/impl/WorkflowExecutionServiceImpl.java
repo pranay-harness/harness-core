@@ -2849,6 +2849,14 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
   }
 
   @Override
+  public List<HelmChart> obtainLastGoodDeployedHelmCharts(String appId, String workflowId) {
+    WorkflowExecution workflowExecution = fetchLastSuccessDeployment(appId, workflowId);
+    if (workflowExecution != null && workflowExecution.getExecutionArgs() != null) {
+      return workflowExecution.getExecutionArgs().getHelmCharts();
+    }
+    return new ArrayList<>();
+  }
+
   public boolean continuePipelineStage(
       String appId, String pipelineExecutionId, String pipelineStageElementId, ExecutionArgs executionArgs) {
     setArtifactsFromArtifactVariables(executionArgs);

@@ -25,6 +25,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.annotations.Transient;
 import software.wings.app.MainConfiguration;
 import software.wings.beans.Application;
+import software.wings.beans.FeatureName;
 import software.wings.beans.Service;
 import software.wings.beans.WebHookRequest;
 import software.wings.beans.WebHookResponse;
@@ -158,16 +159,24 @@ public class WebHookServiceImpl implements WebHookService {
   private Response executeTriggerWebRequest(
       String appId, String token, Application app, WebHookRequest webHookRequest) {
     Map<String, ArtifactSummary> serviceBuildNumbers = new HashMap<>();
+    try {
+      Map<String, String> serviceManifestMapping =
+          featureFlagService.isEnabled(FeatureName.HELM_CHART_AS_ARTIFACT, app.getAccountId())
+          ? resolveServiceHelmChartVersion(appId, webHookRequest)
+          : new HashMap<>();
+      Response response = resolveServiceBuildNumbers(appId, webHookRequest, serviceBuildNumbers);
+      if (response != null) {
+        return response;
+      }
+      WorkflowExecution workflowExecution = triggerService.triggerExecutionByWebHook(appId, token, serviceBuildNumbers,
+          serviceManifestMapping, TriggerExecution.builder().build(), webHookRequest.getParameters());
 
-    Response response = resolveServiceBuildNumbers(appId, webHookRequest, serviceBuildNumbers);
-    if (response != null) {
-      return response;
+      return constructSuccessResponse(appId, app.getAccountId(), workflowExecution);
+    } catch (InvalidRequestException ire) {
+      return prepareResponse(WebHookResponse.builder().error(ire.getMessage()).build(), Response.Status.BAD_REQUEST);
     }
-    WorkflowExecution workflowExecution = triggerService.triggerExecutionByWebHook(
-        appId, token, serviceBuildNumbers, webHookRequest.getParameters(), TriggerExecution.builder().build());
-
-    return constructSuccessResponse(appId, app.getAccountId(), workflowExecution);
   }
+
   private boolean isGithubPingEvent(HttpHeaders httpHeaders) {
     if (httpHeaders == null) {
       return false;
@@ -294,7 +303,7 @@ public class WebHookServiceImpl implements WebHookService {
     return prepareResponse(webHookResponse, Response.Status.SERVICE_UNAVAILABLE);
   }
 
-  private Response resolveServiceBuildNumbers(
+  Response resolveServiceBuildNumbers(
       String appId, WebHookRequest webHookRequest, Map<String, ArtifactSummary> serviceArtifactMapping) {
     List<Map<String, Object>> artifacts = webHookRequest.getArtifacts();
     if (artifacts != null) {
@@ -332,6 +341,26 @@ public class WebHookServiceImpl implements WebHookService {
       }
     }
     return null;
+  }
+
+  Map<String, String> resolveServiceHelmChartVersion(String appId, WebHookRequest webHookRequest) {
+    Map<String, String> serviceManifestMapping = new HashMap<>();
+    List<Map<String, Object>> manifests = webHookRequest.getManifests();
+    if (manifests != null) {
+      for (Map<String, Object> manifest : manifests) {
+        String serviceName = (String) manifest.get("service");
+        String versionNumber = (String) manifest.get("versionNumber");
+        logger.info("WebHook params Service name {} and Versions Number {}", serviceName, versionNumber);
+        if (serviceName != null) {
+          Service service = serviceResourceService.getServiceByName(appId, serviceName, false);
+          if (service == null) {
+            throw new InvalidRequestException("Service Name [" + serviceName + "] does not exist");
+          }
+          serviceManifestMapping.put(service.getUuid(), versionNumber);
+        }
+      }
+    }
+    return serviceManifestMapping;
   }
 
   private Map<String, String> resolveWebhookParameters(
