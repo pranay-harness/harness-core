@@ -323,6 +323,8 @@ public class VaultServiceImpl extends AbstractSecretServiceImpl implements Vault
     savedVaultConfig.setVaultUrl(vaultConfig.getVaultUrl());
     savedVaultConfig.setEngineManuallyEntered(vaultConfig.isEngineManuallyEntered());
     savedVaultConfig.setTemplatizedFields(vaultConfig.getTemplatizedFields());
+    savedVaultConfig.setUsageRestrictions(vaultConfig.getUsageRestrictions());
+    savedVaultConfig.setScopedToAccount(vaultConfig.isScopedToAccount());
     // PL-3237: Audit secret manager config changes.
     if (auditChanges) {
       generateAuditForSecretManager(accountId, oldConfigForAudit, savedVaultConfig);

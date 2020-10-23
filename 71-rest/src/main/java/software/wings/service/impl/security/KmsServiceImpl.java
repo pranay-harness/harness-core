@@ -183,6 +183,8 @@ public class KmsServiceImpl extends AbstractSecretServiceImpl implements KmsServ
     if (!credentialChanged) {
       savedKmsConfig.setName(kmsConfig.getName());
       savedKmsConfig.setDefault(kmsConfig.isDefault());
+      savedKmsConfig.setScopedToAccount(kmsConfig.isScopedToAccount());
+      savedKmsConfig.setUsageRestrictions(kmsConfig.getUsageRestrictions());
 
       // PL-3237: Audit secret manager config changes.
       generateAuditForSecretManager(accountId, oldConfigForAudit, savedKmsConfig);

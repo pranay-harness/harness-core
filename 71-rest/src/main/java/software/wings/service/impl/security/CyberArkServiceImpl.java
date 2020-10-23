@@ -118,6 +118,8 @@ public class CyberArkServiceImpl extends AbstractSecretServiceImpl implements Cy
       // update without client certificate or url changes
       savedConfig.setName(cyberArkConfig.getName());
       savedConfig.setDefault(cyberArkConfig.isDefault());
+      savedConfig.setUsageRestrictions(cyberArkConfig.getUsageRestrictions());
+      savedConfig.setScopedToAccount(cyberArkConfig.isScopedToAccount());
 
       // PL-3237: Audit secret manager config changes.
       generateAuditForSecretManager(accountId, oldConfigForAudit, savedConfig);

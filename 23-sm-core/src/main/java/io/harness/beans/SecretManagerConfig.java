@@ -36,6 +36,8 @@ import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Id;
 import org.mongodb.morphia.annotations.Transient;
+import software.wings.security.ScopedEntity;
+import software.wings.security.UsageRestrictions;
 
 import java.util.List;
 import java.util.Optional;
@@ -67,7 +69,7 @@ import javax.validation.constraints.NotNull;
 public abstract class SecretManagerConfig
     implements AccountAccess, EncryptionConfig, PersistentEntity, UuidAware, CreatedAtAware, CreatedByAware,
                UpdatedAtAware, UpdatedByAware, PersistentRegularIterable, NGAccess, NGSecretManagerConfigDTOConverter,
-               ExecutionCapabilityDemander {
+               ExecutionCapabilityDemander, ScopedEntity {
   @Id @NotNull(groups = {Update.class}) @SchemaIgnore private String uuid;
 
   private EncryptionType encryptionType;
@@ -93,6 +95,10 @@ public abstract class SecretManagerConfig
   @FdIndex private Long manuallyEnteredSecretEngineMigrationIteration;
 
   @JsonIgnore private NGSecretManagerMetadata ngMetadata;
+
+  private UsageRestrictions usageRestrictions;
+
+  private boolean isScopedToAccount;
 
   private List<String> templatizedFields;
 
