@@ -23,6 +23,7 @@ import static software.wings.security.PermissionAttribute.PermissionType.ALL_APP
 import static software.wings.security.PermissionAttribute.PermissionType.AUDIT_VIEWER;
 import static software.wings.security.PermissionAttribute.PermissionType.CE_ADMIN;
 import static software.wings.security.PermissionAttribute.PermissionType.CE_VIEWER;
+import static software.wings.security.PermissionAttribute.PermissionType.CREATE_CUSTOM_DASHBOARDS;
 import static software.wings.security.PermissionAttribute.PermissionType.DEPLOYMENT;
 import static software.wings.security.PermissionAttribute.PermissionType.ENV;
 import static software.wings.security.PermissionAttribute.PermissionType.MANAGE_ALERT_NOTIFICATION_RULES;
@@ -33,6 +34,7 @@ import static software.wings.security.PermissionAttribute.PermissionType.MANAGE_
 import static software.wings.security.PermissionAttribute.PermissionType.MANAGE_CLOUD_PROVIDERS;
 import static software.wings.security.PermissionAttribute.PermissionType.MANAGE_CONFIG_AS_CODE;
 import static software.wings.security.PermissionAttribute.PermissionType.MANAGE_CONNECTORS;
+import static software.wings.security.PermissionAttribute.PermissionType.MANAGE_CUSTOM_DASHBOARDS;
 import static software.wings.security.PermissionAttribute.PermissionType.MANAGE_DELEGATES;
 import static software.wings.security.PermissionAttribute.PermissionType.MANAGE_DELEGATE_PROFILES;
 import static software.wings.security.PermissionAttribute.PermissionType.MANAGE_DEPLOYMENT_FREEZES;
@@ -188,6 +190,11 @@ public class UserGroupPermissionsController {
         return MANAGE_USER_AND_USER_GROUPS_AND_API_KEYS;
       case MANAGE_API_KEYS:
         return MANAGE_API_KEYS;
+      case CREATE_CUSTOM_DASHBOARDS:
+        return CREATE_CUSTOM_DASHBOARDS;
+      case MANAGE_CUSTOM_DASHBOARDS:
+        return MANAGE_CUSTOM_DASHBOARDS;
+
       default:
         logger.error("Invalid Account Permission Type {} given by the user", permissionType.toString());
     }
@@ -483,6 +490,10 @@ public class UserGroupPermissionsController {
         return QLAccountPermissionType.MANAGE_SECRETS;
       case MANAGE_API_KEYS:
         return QLAccountPermissionType.MANAGE_API_KEYS;
+      case MANAGE_CUSTOM_DASHBOARDS:
+        return QLAccountPermissionType.MANAGE_CUSTOM_DASHBOARDS;
+      case CREATE_CUSTOM_DASHBOARDS:
+        return QLAccountPermissionType.CREATE_CUSTOM_DASHBOARDS;
       default:
         logger.error("Invalid Account Permission Type {} given by the user", permissionType.toString());
     }

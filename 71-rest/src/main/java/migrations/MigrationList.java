@@ -6,11 +6,13 @@ import com.google.common.collect.ImmutableList;
 import lombok.experimental.UtilityClass;
 import migrations.accountpermission.AddManageTagsPermission;
 import migrations.accountpermission.AlertNotificationAccountPermissionMigration;
+import migrations.accountpermission.CreateCustomDashboardPermissionMigration;
 import migrations.accountpermission.ManageApiKeyPermissionMigration;
 import migrations.accountpermission.ManageApplicationsPermissionMigration;
 import migrations.accountpermission.ManageAuthenticationSettingsPermissionMigration;
 import migrations.accountpermission.ManageCloudProvidersAndConnectorsPermissionMigration;
 import migrations.accountpermission.ManageConfigAsCodePermissionMigration;
+import migrations.accountpermission.ManageCustomDashboardPermissionMigration;
 import migrations.accountpermission.ManageDelegatePermissionMigration;
 import migrations.accountpermission.ManageDelegateProfilesPermissionMigration;
 import migrations.accountpermission.ManageDeploymentFreezePermissionMigration;
@@ -403,6 +405,8 @@ public class MigrationList {
         .add(Pair.of(346, AddManageTagsPermission.class))
         .add(Pair.of(347, BaseMigration.class))
         .add(Pair.of(348, PerpetualTaskIteratorMigration.class))
+        .add(Pair.of(349, ManageCustomDashboardPermissionMigration.class))
+        .add(Pair.of(350, CreateCustomDashboardPermissionMigration.class))
         .build();
   }
 }

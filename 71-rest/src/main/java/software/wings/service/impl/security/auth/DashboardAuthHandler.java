@@ -12,6 +12,7 @@ import io.harness.dashboard.Action;
 import io.harness.dashboard.DashboardAccessPermissions;
 import io.harness.dashboard.DashboardSettings;
 import io.harness.eraro.ErrorCode;
+import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.persistence.HIterator;
 import org.mongodb.morphia.query.Query;
@@ -44,12 +45,12 @@ public class DashboardAuthHandler {
       return new HashMap<>();
     }
 
-    boolean accountAdmin = isAccountAdmin(userPermissionInfo);
+    boolean isDashboardAdmin = hasManageDashboardsPermissions(userPermissionInfo);
 
     Map<String, Set<Action>> dashboardActionMap = new HashMap<>();
     Query<DashboardSettings> query = wingsPersistence.createQuery(DashboardSettings.class);
     query.filter("accountId", accountId);
-    if (!accountAdmin) {
+    if (!isDashboardAdmin) {
       if (isEmpty(userGroups)) {
         query.filter("createdBy", user.getUuid());
       } else {
@@ -67,7 +68,7 @@ public class DashboardAuthHandler {
         }
 
         boolean owner = dashboardSettings.getCreatedBy().getUuid().equals(user.getUuid());
-        if (accountAdmin || owner) {
+        if (isDashboardAdmin || owner) {
           Set<Action> actions = dashboardActionMap.putIfAbsent(dashboardSettings.getUuid(), new HashSet<>());
           if (actions == null) {
             actions = dashboardActionMap.get(dashboardSettings.getUuid());
@@ -120,7 +121,7 @@ public class DashboardAuthHandler {
         dashboardSettings.setOwner(true);
       }
 
-      if (isAccountAdmin(userPermissionInfo)) {
+      if (hasManageDashboardsPermissions(userPermissionInfo)) {
         dashboardSettings.setCanUpdate(true);
         dashboardSettings.setCanDelete(true);
       }
@@ -140,7 +141,7 @@ public class DashboardAuthHandler {
     });
   }
 
-  private boolean isAccountAdmin(UserPermissionInfo userPermissionInfo) {
+  private boolean hasManageDashboardsPermissions(UserPermissionInfo userPermissionInfo) {
     AccountPermissionSummary accountPermissionSummary = userPermissionInfo.getAccountPermissionSummary();
     if (accountPermissionSummary == null) {
       return false;
@@ -151,7 +152,39 @@ public class DashboardAuthHandler {
       return false;
     }
 
-    return permissions.contains(PermissionType.ACCOUNT_MANAGEMENT);
+    return permissions.contains(PermissionType.MANAGE_CUSTOM_DASHBOARDS);
+  }
+
+  public void authorizeDashboardCreation(DashboardSettings dashboardSettings, String accountId) {
+    if (dashboardSettings == null) {
+      return;
+    }
+
+    if (!dashboardSettings.getAccountId().equals(accountId)) {
+      throw new InvalidRequestException("User not authorized", ErrorCode.USER_NOT_AUTHORIZED, USER);
+    }
+
+    User user = UserThreadLocal.get();
+
+    if (user == null) {
+      return;
+    }
+
+    UserPermissionInfo userPermissionInfo = user.getUserRequestContext().getUserPermissionInfo();
+
+    if (userPermissionInfo == null || userPermissionInfo.getAccountPermissionSummary() == null) {
+      throw new InvalidRequestException("User not authorized", ErrorCode.USER_NOT_AUTHORIZED, USER);
+    }
+
+    final Set<PermissionType> permissions = userPermissionInfo.getAccountPermissionSummary().getPermissions();
+
+    if (isEmpty(permissions)) {
+      throw new InvalidRequestException("User not authorized", ErrorCode.USER_NOT_AUTHORIZED, USER);
+    }
+    if (!(permissions.contains(PermissionType.MANAGE_CUSTOM_DASHBOARDS)
+            || permissions.contains(PermissionType.CREATE_CUSTOM_DASHBOARDS))) {
+      throw new InvalidRequestException("User not authorized", ErrorCode.USER_NOT_AUTHORIZED, USER);
+    }
   }
 
   public void authorize(DashboardSettings dashboardSettings, String accountId, Action action) {

@@ -1,8 +1,14 @@
 package software.wings.service.impl.security.auth;
 
+import static io.harness.rule.OwnerRule.ABHINAV;
 import static io.harness.rule.OwnerRule.RAMA;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatCode;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.eq;
+import static org.mockito.Mockito.when;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_NAME;
 import static software.wings.utils.WingsTestConstants.DASHBOARD1_ID;
@@ -21,17 +27,40 @@ import io.harness.rule.Owner;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
+import org.mockito.Mock;
 import software.wings.WingsBaseTest;
+import software.wings.beans.Account;
 import software.wings.beans.User;
 import software.wings.beans.security.UserGroup;
+import software.wings.events.TestUtils;
+import software.wings.security.AccountPermissionSummary;
+import software.wings.security.PermissionAttribute;
 import software.wings.security.UserPermissionInfo;
+import software.wings.security.UserRequestContext;
+import software.wings.security.UserThreadLocal;
+import software.wings.service.intfc.AccountService;
+import software.wings.service.intfc.FeatureFlagService;
+import software.wings.service.intfc.UserGroupService;
+import software.wings.service.intfc.UserService;
 
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
 public class DashboardAuthHandlerTest extends WingsBaseTest {
+  @Mock private AccountService accountService;
+  @Mock private UserGroupService userGroupService;
+  @Mock private UserService userService;
+  @Inject private TestUtils testUtils;
+  @Mock private FeatureFlagService featureFlagService;
+
+  private User user;
+  private Account account;
+
   @InjectMocks @Inject private DashboardAuthHandler authHandler;
 
   //  private List<PermissionType> accountPermissionTypes =
@@ -164,5 +193,126 @@ public class DashboardAuthHandlerTest extends WingsBaseTest {
     Map<String, Set<Action>> dashboardAccessPermissions =
         authHandler.getDashboardAccessPermissions(user, ACCOUNT_ID, userPermissionInfo, userGroupList);
     assertThat(dashboardAccessPermissions.size()).isEqualTo(0);
+  }
+
+  @Test
+  @Owner(developers = ABHINAV)
+  @Category(UnitTests.class)
+  public void shouldCreateCustomDashboardWithBothPermissions() {
+    setupUser();
+    addUserAccountPermission(Arrays.asList(PermissionAttribute.PermissionType.MANAGE_CUSTOM_DASHBOARDS));
+    UserThreadLocal.set(user);
+    try {
+      assertThatCode(()
+                         -> authHandler.authorizeDashboardCreation(
+                             DashboardSettings.builder().accountId(ACCOUNT_ID).name("abc").build(), ACCOUNT_ID))
+          .doesNotThrowAnyException();
+
+    } finally {
+      UserThreadLocal.unset();
+    }
+  }
+
+  @Test
+  @Owner(developers = ABHINAV)
+  @Category(UnitTests.class)
+  public void shouldCreateCustomDashboardWithCreatePermissions() {
+    setupUser();
+    addUserAccountPermission(Arrays.asList(PermissionAttribute.PermissionType.CREATE_CUSTOM_DASHBOARDS));
+    UserThreadLocal.set(user);
+    try {
+      assertThatCode(()
+                         -> authHandler.authorizeDashboardCreation(
+                             DashboardSettings.builder().accountId(ACCOUNT_ID).name("abc").build(), ACCOUNT_ID))
+          .doesNotThrowAnyException();
+
+    } finally {
+      UserThreadLocal.unset();
+    }
+  }
+
+  @Test
+  @Owner(developers = ABHINAV)
+  @Category(UnitTests.class)
+  public void shouldCreateCustomDashboardWithManagePermissions() {
+    setupUser();
+    addUserAccountPermission(Arrays.asList(PermissionAttribute.PermissionType.MANAGE_CUSTOM_DASHBOARDS));
+    UserThreadLocal.set(user);
+    try {
+      assertThatCode(()
+                         -> authHandler.authorizeDashboardCreation(
+                             DashboardSettings.builder().accountId(ACCOUNT_ID).name("abc").build(), ACCOUNT_ID))
+          .doesNotThrowAnyException();
+
+    } finally {
+      UserThreadLocal.unset();
+    }
+  }
+
+  @Test
+  @Owner(developers = ABHINAV)
+  @Category(UnitTests.class)
+  public void shouldNotCreateCustomDashboardWithoutDashboardPermissions() {
+    setupUser();
+    addUserAccountPermission(Collections.emptyList());
+    UserThreadLocal.set(user);
+    try {
+      assertThatThrownBy(()
+                             -> authHandler.authorizeDashboardCreation(
+                                 DashboardSettings.builder().accountId(ACCOUNT_ID).name("abc").build(), ACCOUNT_ID));
+
+    } finally {
+      UserThreadLocal.unset();
+    }
+  }
+
+  @Test
+  @Owner(developers = ABHINAV)
+  @Category(UnitTests.class)
+  public void adminShouldBeAbleToViewAllDashboards() {
+    setupUser();
+    DashboardSettings dashboard1 = DashboardSettings.builder()
+                                       .accountId(ACCOUNT_ID)
+                                       .name(ACCOUNT_NAME)
+                                       .uuid(DASHBOARD1_ID)
+                                       .createdBy(EmbeddedUser.builder().uuid(user.getUuid()).build())
+                                       .build();
+    wingsPersistence.save(dashboard1);
+    DashboardSettings dashboard = DashboardSettings.builder()
+                                      .accountId(ACCOUNT_ID)
+                                      .name(ACCOUNT_NAME)
+                                      .uuid("uuid2")
+                                      .createdBy(EmbeddedUser.builder().uuid(user.getUuid()).build())
+                                      .build();
+    wingsPersistence.save(dashboard);
+
+    addUserAccountPermission(Arrays.asList(PermissionAttribute.PermissionType.MANAGE_CUSTOM_DASHBOARDS));
+    UserThreadLocal.set(user);
+    try {
+      final Map<String, Set<Action>> dashboardAccessPermissions = authHandler.getDashboardAccessPermissions(
+          user, ACCOUNT_ID, user.getUserRequestContext().getUserPermissionInfo(), null);
+      assertThat(dashboardAccessPermissions.size()).isEqualTo(2);
+    } finally {
+      UserThreadLocal.unset();
+    }
+  }
+
+  private void addUserAccountPermission(List<PermissionAttribute.PermissionType> permissionTypeList) {
+    user.setUserRequestContext(
+        UserRequestContext.builder()
+            .userPermissionInfo(
+                UserPermissionInfo.builder()
+                    .accountPermissionSummary(
+                        AccountPermissionSummary.builder().permissions(new HashSet<>(permissionTypeList)).build())
+                    .build())
+            .build());
+  }
+
+  private void setupUser() {
+    account = testUtils.createAccount();
+    when(accountService.get(ACCOUNT_ID)).thenReturn(account);
+    when(accountService.getFromCache(ACCOUNT_ID)).thenReturn(account);
+    when(accountService.save(any(), eq(false))).thenReturn(account);
+    user = testUtils.createUser(account);
   }
 }
