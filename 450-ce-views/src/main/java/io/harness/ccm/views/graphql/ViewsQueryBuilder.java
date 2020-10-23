@@ -159,6 +159,7 @@ public class ViewsQueryBuilder {
         .field(QLCEViewFieldInput.builder()
                    .fieldId(ViewsMetaDataFields.LABEL_KEY.getFieldName())
                    .identifier(ViewFieldIdentifier.LABEL)
+                   .identifierName(ViewFieldIdentifier.LABEL.getDisplayName())
                    .build())
         .operator(QLCEViewFilterOperator.IN)
         .values(values)
@@ -357,6 +358,7 @@ public class ViewsQueryBuilder {
         .fieldId(field.getFieldId())
         .fieldName(field.getFieldName())
         .identifier(field.getIdentifier())
+        .identifierName(field.getIdentifier().getDisplayName())
         .build();
   }
 

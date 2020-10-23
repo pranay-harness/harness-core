@@ -182,6 +182,7 @@ public class CEReportTemplateBuilderServiceImpl implements CEReportTemplateBuild
                                    .fieldId("startTime")
                                    .fieldName("startTime")
                                    .identifier(ViewFieldIdentifier.COMMON)
+                                   .identifierName(ViewFieldIdentifier.COMMON.getDisplayName())
                                    .build())
                         .operator(operator)
                         .value(timestamp)

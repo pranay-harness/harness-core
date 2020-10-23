@@ -9,4 +9,5 @@ public class ViewField {
   private String fieldId;
   private String fieldName;
   private ViewFieldIdentifier identifier;
+  private String identifierName;
 }

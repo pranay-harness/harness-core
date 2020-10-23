@@ -55,7 +55,11 @@ public class ViewsBillingServiceImplTest extends CategoryTest {
     doCallRealMethod().when(viewsQueryBuilder).getFilterValuesQuery(any(), anyString(), anyInt(), anyInt());
     doReturn(resultSet).when(bigQuery).query(any());
 
-    clusterId = QLCEViewFieldInput.builder().fieldId(CLUSTER_ID).identifier(ViewFieldIdentifier.CLUSTER).build();
+    clusterId = QLCEViewFieldInput.builder()
+                    .fieldId(CLUSTER_ID)
+                    .identifier(ViewFieldIdentifier.CLUSTER)
+                    .identifierName(ViewFieldIdentifier.CLUSTER.getDisplayName())
+                    .build();
     doReturn(Collections.singletonList(CLUSTER))
         .when(viewsBillingService)
         .convertToFilterValuesData(resultSet, Collections.singletonList(clusterId));
@@ -63,6 +67,7 @@ public class ViewsBillingServiceImplTest extends CategoryTest {
     labelKey = QLCEViewFieldInput.builder()
                    .fieldId(ViewsMetaDataFields.LABEL_KEY.getFieldName())
                    .identifier(ViewFieldIdentifier.LABEL)
+                   .identifierName(ViewFieldIdentifier.LABEL.getDisplayName())
                    .build();
     doReturn(Collections.singletonList(LABEL_KEY))
         .when(viewsBillingService)
@@ -72,6 +77,7 @@ public class ViewsBillingServiceImplTest extends CategoryTest {
                      .fieldId(ViewsMetaDataFields.LABEL_VALUE.getFieldName())
                      .fieldName(LABEL_KEY_NAME)
                      .identifier(ViewFieldIdentifier.LABEL)
+                     .identifierName(ViewFieldIdentifier.LABEL.getDisplayName())
                      .build();
     doReturn(Collections.singletonList(LABEL_VALUE))
         .when(viewsBillingService)
