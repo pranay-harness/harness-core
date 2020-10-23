@@ -170,6 +170,8 @@ public class AwsSecretsManagerServiceImpl extends AbstractSecretServiceImpl impl
       savedSecretsManagerConfig.setName(secretsManagerConfig.getName());
       savedSecretsManagerConfig.setDefault(secretsManagerConfig.isDefault());
       savedSecretsManagerConfig.setSecretNamePrefix(secretsManagerConfig.getSecretNamePrefix());
+      savedSecretsManagerConfig.setScopedToAccount(secretsManagerConfig.isScopedToAccount());
+      savedSecretsManagerConfig.setUsageRestrictions(secretsManagerConfig.getUsageRestrictions());
 
       // PL-3237: Audit secret manager config changes.
       generateAuditForSecretManager(accountId, oldConfigForAudit, savedSecretsManagerConfig);
