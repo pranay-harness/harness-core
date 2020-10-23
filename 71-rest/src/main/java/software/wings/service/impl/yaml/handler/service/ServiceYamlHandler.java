@@ -151,6 +151,8 @@ public class ServiceYamlHandler extends BaseYamlHandler<Yaml, Service> {
 
     Yaml yaml = changeContext.getYaml();
 
+    filterNonUpdatablePropertiesChanges(appId, yaml, serviceName);
+
     Service currentService = new Service();
     currentService.setAppId(appId);
     currentService.setAccountId(accountId);
@@ -203,6 +205,22 @@ public class ServiceYamlHandler extends BaseYamlHandler<Yaml, Service> {
 
     changeContext.setEntity(currentService);
     return currentService;
+  }
+
+  private void filterNonUpdatablePropertiesChanges(String appId, Yaml yaml, String serviceName) {
+    Service initialService = serviceResourceService.getServiceByName(appId, serviceName);
+    String initialServiceAppStack = initialService.getAppContainer().getName();
+    String initialServiceArtifactType = initialService.getArtifactType().name();
+    String initialServiceDeploymentType = initialService.getDeploymentType().name();
+    if (!yaml.getApplicationStack().equals(initialServiceAppStack)) {
+      throw new InvalidRequestException("The 'applicationStack' can not be updated when a Service is already created.");
+    }
+    if (!yaml.getArtifactType().equals(initialServiceArtifactType)) {
+      throw new InvalidRequestException("The 'artifactType' can not be updated when a Service is already created.");
+    }
+    if (!yaml.getDeploymentType().equals(initialServiceDeploymentType)) {
+      throw new InvalidRequestException("The 'deploymentType' can not be updated when a Service is already created.");
+    }
   }
 
   void setHelmVersion(Yaml yaml, Service currentService) {
