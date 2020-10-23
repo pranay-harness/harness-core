@@ -13,4 +13,6 @@ public interface NGActivityService {
 
   Page<NGActivitySummaryDTO> listActivitySummary(String accountIdentifier, String orgIdentifier,
       String projectIdentifier, String referredEntityIdentifier, long start, long end);
+
+  boolean deleteAllActivitiesOfAnEntity(String accountIdentifier, String referredEntityFQN);
 }

@@ -1,8 +1,12 @@
 package io.harness.connector;
 
+import static jdk.nashorn.internal.objects.NativeFunction.bind;
+
 import com.google.inject.AbstractModule;
 import com.google.inject.multibindings.MapBinder;
 import com.google.inject.name.Names;
+
+import io.harness.connector.impl.ConnectorActivityServiceImpl;
 import io.harness.connector.impl.DefaultConnectorServiceImpl;
 import io.harness.connector.mappers.ConnectorConfigSummaryDTOMapper;
 import io.harness.connector.mappers.ConnectorDTOToEntityMapper;
@@ -42,6 +46,7 @@ import io.harness.connector.mappers.nexusmapper.NexusEntityToDTO;
 import io.harness.connector.mappers.splunkconnectormapper.SplunkConnectorSummaryMapper;
 import io.harness.connector.mappers.splunkconnectormapper.SplunkDTOToEntity;
 import io.harness.connector.mappers.splunkconnectormapper.SplunkEntityToDTO;
+import io.harness.connector.services.ConnectorActivityService;
 import io.harness.connector.services.ConnectorService;
 import io.harness.connector.validator.AppDynamicsConnectionValidator;
 import io.harness.connector.validator.ArtifactoryConnectionValidator;
@@ -55,7 +60,9 @@ import io.harness.connector.validator.KubernetesConnectionValidator;
 import io.harness.connector.validator.NexusConnectorValidator;
 import io.harness.connector.validator.SplunkConnectionValidator;
 import io.harness.delegate.beans.connector.ConnectorType;
+import io.harness.ng.core.NGCoreModule;
 import io.harness.persistence.HPersistence;
+import io.harness.version.VersionModule;
 
 public class ConnectorModule extends AbstractModule {
   public static final String DEFAULT_CONNECTOR_SERVICE = "defaultConnectorService";
@@ -138,6 +145,7 @@ public class ConnectorModule extends AbstractModule {
     bind(ConnectorService.class)
         .annotatedWith(Names.named(DEFAULT_CONNECTOR_SERVICE))
         .to(DefaultConnectorServiceImpl.class);
+    bind(ConnectorActivityService.class).to(ConnectorActivityServiceImpl.class);
   }
 
   private void registerRequiredBindings() {

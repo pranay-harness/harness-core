@@ -39,6 +39,9 @@ public class NGActivityEntityToDTOMapper {
         EntityUsageActivityDetail entityUsageActivity = (EntityUsageActivityDetail) activity;
         EntityDetail referredByEntity = entityUsageActivity.getReferredByEntity();
         return EntityUsageActivityDetailDTO.builder().referredByEntity(referredByEntity).build();
+      case ENTITY_UPDATE:
+      case ENTITY_CREATION:
+        return null;
       default:
         throw new UnknownEnumTypeException("NGActivity", String.valueOf(activity.getType()));
     }

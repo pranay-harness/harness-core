@@ -22,6 +22,10 @@ public class NGActivityDTOToEntityMapper {
       case ENTITY_USAGE:
         activityEntity = getActivityForEntityUsage(activityHistoryDTO);
         break;
+      case ENTITY_CREATION:
+      case ENTITY_UPDATE:
+        activityEntity = getBaseActivityObject(activityHistoryDTO);
+        break;
       default:
         throw new UnknownEnumTypeException("NGActivity", String.valueOf(activityHistoryDTO.getType()));
     }
@@ -30,6 +34,12 @@ public class NGActivityDTOToEntityMapper {
 
   private NGActivity getActivityForConnectivityCheck(NGActivityDTO activityDTO) {
     NGActivityBuilder builder = ConnectivityCheckDetail.builder();
+    populateCommonActivityProperties(builder, activityDTO);
+    return builder.build();
+  }
+
+  private NGActivity getBaseActivityObject(NGActivityDTO activityDTO) {
+    NGActivityBuilder builder = NGActivity.builder();
     populateCommonActivityProperties(builder, activityDTO);
     return builder.build();
   }

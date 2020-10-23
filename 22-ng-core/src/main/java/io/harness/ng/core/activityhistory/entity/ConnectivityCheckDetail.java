@@ -11,7 +11,7 @@ import org.springframework.data.annotation.TypeAlias;
 @Value
 @SuperBuilder
 @NoArgsConstructor
-@Entity(value = "ngActivity", noClassnameStored = true)
+@Entity(value = "entityActivity", noClassnameStored = true)
 @Persistent
 @TypeAlias("io.harness.ng.core.activity.ConnectivityCheckDetail")
 @EqualsAndHashCode(callSuper = false)
