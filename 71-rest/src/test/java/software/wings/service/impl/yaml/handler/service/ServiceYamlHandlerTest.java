@@ -1,6 +1,7 @@
 package software.wings.service.impl.yaml.handler.service;
 
 import static io.harness.rule.OwnerRule.AADITI;
+import static io.harness.rule.OwnerRule.AGORODETKI;
 import static io.harness.rule.OwnerRule.MILOS;
 import static io.harness.rule.OwnerRule.YOGESH;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -33,6 +34,7 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import software.wings.api.DeploymentType;
+import software.wings.beans.AppContainer;
 import software.wings.beans.Application;
 import software.wings.beans.Application.Builder;
 import software.wings.beans.NameValuePair;
@@ -44,6 +46,7 @@ import software.wings.beans.yaml.ChangeContext;
 import software.wings.beans.yaml.GitFileChange;
 import software.wings.service.impl.yaml.handler.tag.HarnessTagYamlHelper;
 import software.wings.service.impl.yaml.service.YamlHelper;
+import software.wings.service.intfc.AppContainerService;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.ServiceVariableService;
@@ -66,6 +69,7 @@ public class ServiceYamlHandlerTest extends YamlHandlerTestBase {
   @Mock AppService appService;
   @Mock ServiceVariableService serviceVariableService;
   @Mock CustomDeploymentTypeService customDeploymentTypeService;
+  @Mock AppContainerService appContainerService;
   @InjectMocks @Inject private ServiceYamlHandler serviceYamlHandler;
 
   private Service service;
@@ -86,6 +90,8 @@ public class ServiceYamlHandlerTest extends YamlHandlerTestBase {
                   .name(SERVICE_NAME)
                   .accountId(ACCOUNT_ID)
                   .artifactType(ArtifactType.DOCKER)
+                  .appContainer(AppContainer.Builder.anAppContainer().withName("Tomcat 8").build())
+                  .deploymentType(DeploymentType.SSH)
                   .serviceVariables(Arrays.asList(enc_1, enc_2, var_1))
                   .deploymentTypeTemplateId(WingsTestConstants.TEMPLATE_ID)
                   .build();
@@ -94,6 +100,9 @@ public class ServiceYamlHandlerTest extends YamlHandlerTestBase {
     doNothing().when(harnessTagYamlHelper).updateYamlWithHarnessTagLinks(any(), any(), any());
     when(yamlHelper.getAppId(ACCOUNT_ID, validYamlFilePath)).thenReturn(APP_ID);
     when(yamlHelper.getServiceName(validYamlFilePath)).thenReturn(SERVICE_NAME);
+    when(serviceResourceService.getServiceByName(APP_ID, SERVICE_NAME)).thenReturn(service);
+    when(appContainerService.getByName(anyString(), anyString()))
+        .thenReturn(AppContainer.Builder.anAppContainer().withName("Tomcat 7").build());
     when(serviceResourceService.save(any(), anyBoolean(), anyBoolean()))
         .thenAnswer(invocationOnMock -> invocationOnMock.getArgumentAt(0, Service.class));
     when(serviceResourceService.update(any(), anyBoolean()))
@@ -267,5 +276,56 @@ public class ServiceYamlHandlerTest extends YamlHandlerTestBase {
     assertThatThrownBy(() -> serviceYamlHandler.upsertFromYaml(changeContext, null))
         .isInstanceOf(InvalidRequestException.class)
         .hasMessageContaining("Adding variable name enc-4 with hyphens (dashes) is not allowed");
+  }
+
+  @Test
+  @Owner(developers = AGORODETKI)
+  @Category(UnitTests.class)
+  public void shouldThrowExceptionOnEditAppStack() {
+    Service initialService = Service.builder()
+                                 .appContainer(AppContainer.Builder.anAppContainer().withName("Tomcat 7").build())
+                                 .deploymentType(DeploymentType.ECS)
+                                 .artifactType(ArtifactType.TAR)
+                                 .build();
+    when(serviceResourceService.getServiceByName(APP_ID, SERVICE_NAME)).thenReturn(initialService);
+    Yaml yaml = serviceYamlHandler.toYaml(service, APP_ID);
+    ChangeContext<Yaml> changeContext = getChangeContext(yaml);
+    assertThatThrownBy(() -> serviceYamlHandler.upsertFromYaml(changeContext, null))
+        .isInstanceOf(InvalidRequestException.class)
+        .hasMessageContaining("The 'applicationStack' can not be updated when a Service is already created.");
+  }
+
+  @Test
+  @Owner(developers = AGORODETKI)
+  @Category(UnitTests.class)
+  public void shouldThrowExceptionOnEditArtifactType() {
+    Service initialService = Service.builder()
+                                 .appContainer(AppContainer.Builder.anAppContainer().withName("Tomcat 8").build())
+                                 .deploymentType(DeploymentType.ECS)
+                                 .artifactType(ArtifactType.TAR)
+                                 .build();
+    when(serviceResourceService.getServiceByName(APP_ID, SERVICE_NAME)).thenReturn(initialService);
+    Yaml yaml = serviceYamlHandler.toYaml(service, APP_ID);
+    ChangeContext<Yaml> changeContext = getChangeContext(yaml);
+    assertThatThrownBy(() -> serviceYamlHandler.upsertFromYaml(changeContext, null))
+        .isInstanceOf(InvalidRequestException.class)
+        .hasMessageContaining("The 'artifactType' can not be updated when a Service is already created.");
+  }
+
+  @Test
+  @Owner(developers = AGORODETKI)
+  @Category(UnitTests.class)
+  public void shouldThrowExceptionOnEditDeploymentType() {
+    Service initialService = Service.builder()
+                                 .appContainer(AppContainer.Builder.anAppContainer().withName("Tomcat 8").build())
+                                 .deploymentType(DeploymentType.ECS)
+                                 .artifactType(ArtifactType.DOCKER)
+                                 .build();
+    when(serviceResourceService.getServiceByName(APP_ID, SERVICE_NAME)).thenReturn(initialService);
+    Yaml yaml = serviceYamlHandler.toYaml(service, APP_ID);
+    ChangeContext<Yaml> changeContext = getChangeContext(yaml);
+    assertThatThrownBy(() -> serviceYamlHandler.upsertFromYaml(changeContext, null))
+        .isInstanceOf(InvalidRequestException.class)
+        .hasMessageContaining("The 'deploymentType' can not be updated when a Service is already created.");
   }
 }
