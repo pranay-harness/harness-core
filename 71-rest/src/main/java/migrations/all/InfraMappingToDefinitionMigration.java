@@ -26,7 +26,6 @@ import software.wings.beans.BlueprintProperty;
 import software.wings.beans.CodeDeployInfrastructureMapping;
 import software.wings.beans.DirectKubernetesInfrastructureMapping;
 import software.wings.beans.EcsInfrastructureMapping;
-import software.wings.beans.FeatureName;
 import software.wings.beans.GcpKubernetesInfrastructureMapping;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.InfrastructureMapping.InfrastructureMappingKeys;
@@ -100,24 +99,15 @@ public class InfraMappingToDefinitionMigration implements Migration {
   // "0LRUeE0IR8ax08KOXrMv3A","XtqjhVchTfOwuNqXiSzxdQ", "i3p84Q6oTXaN7JvCNLQJRA","UtTa95tnQqWxGByLkXlp6Q",
   // "wXdRHOtoSuK1Qdi6QWnGgA"
 
-  private final Set<String> accountIdsToExclude =
-      new HashSet<>(Arrays.asList("2aB3xZkET1aWYCidfxPurw", "bwBVO7N0RmKltRhTjk101A", "en9EZJ2gTCS6WeY9x-XRfg",
-          "55563ed1-bea1-456a-943d-f28bc8fb141d", "lU1_N50mRcur3e6OO2_9sg", "x2Ynq8DDwjotzB9sw6X9nl"));
+  // Accounts Excluded Previously "2aB3xZkET1aWYCidfxPurw", "bwBVO7N0RmKltRhTjk101A", "en9EZJ2gTCS6WeY9x-XRfg",
+  //          "55563ed1-bea1-456a-943d-f28bc8fb141d", "lU1_N50mRcur3e6OO2_9sg", "x2Ynq8DDwjotzB9sw6X9nl"
+
+  private final Set<String> accountIdsToIncluded = new HashSet<>();
 
   @Override
   public void migrate() {
-    List<Account> allAccounts = accountService.listAllAccountWithDefaultsWithoutLicenseInfo();
-    for (Account account : allAccounts) {
-      String accountId = account.getUuid();
-      if (accountIdsToExclude.contains(accountId)) {
-        logger.info(StringUtils.join(DEBUG_LINE, " Skipping account because opted out id:", accountId));
-        continue;
-      }
-      if (featureFlagService.isEnabled(FeatureName.INFRA_MAPPING_REFACTOR, accountId)) {
-        logger.info(StringUtils.join(
-            DEBUG_LINE, " Feature Flag is already enabled for account. Skipping migration:", accountId));
-        continue;
-      }
+    for (String accountId : accountIdsToIncluded) {
+      Account account = accountService.get(accountId);
 
       logger.info(StringUtils.join(DEBUG_LINE, "Starting Infra Definition migration for accountId:", accountId));
       List<String> appIds = appService.getAppIdsByAccountId(accountId);
@@ -197,7 +187,6 @@ public class InfraMappingToDefinitionMigration implements Migration {
       logger.info(StringUtils.join(DEBUG_LINE, "Finished Infra mapping migration for accountId ", accountId));
 
       logger.info("Enabling feature flag for accountId : [{}]", accountId);
-      featureFlagService.enableAccount(FeatureName.INFRA_MAPPING_REFACTOR, accountId);
       logger.info("Enabled feature flag for accountId : [{}]", accountId);
 
       yamlGitService.asyncFullSyncForEntireAccount(accountId);
