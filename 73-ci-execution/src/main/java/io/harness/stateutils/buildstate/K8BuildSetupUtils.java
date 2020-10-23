@@ -7,14 +7,13 @@ import static io.harness.common.CIExecutionConstants.HARNESS_BUILD_ID_VARIABLE;
 import static io.harness.common.CIExecutionConstants.HARNESS_ORG_ID_VARIABLE;
 import static io.harness.common.CIExecutionConstants.HARNESS_PROJECT_ID_VARIABLE;
 import static io.harness.common.CIExecutionConstants.HARNESS_STAGE_ID_VARIABLE;
-import static io.harness.common.CIExecutionConstants.HOME_VARIABLE;
+import static io.harness.common.CIExecutionConstants.LOCALHOST_IP;
 import static io.harness.common.CIExecutionConstants.LOG_SERVICE_ENDPOINT_VARIABLE;
 import static io.harness.common.CIExecutionConstants.LOG_SERVICE_TOKEN_VARIABLE;
 import static io.harness.common.CIExecutionConstants.SECRET_KEY_MINIO_VARIABLE;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static java.util.Collections.singletonList;
 import static java.util.stream.Collectors.toList;
-import static software.wings.common.CICommonPodConstants.MOUNT_PATH;
 import static software.wings.common.CICommonPodConstants.STEP_EXEC;
 import static software.wings.common.CICommonPodConstants.STEP_EXEC_WORKING_DIR;
 
@@ -53,7 +52,9 @@ import software.wings.beans.ci.pod.CIK8ContainerParams;
 import software.wings.beans.ci.pod.CIK8PodParams;
 import software.wings.beans.ci.pod.ConnectorDetails;
 import software.wings.beans.ci.pod.ContainerSecrets;
+import software.wings.beans.ci.pod.HostAliasParams;
 import software.wings.beans.ci.pod.ImageDetailsWithConnector;
+import software.wings.beans.ci.pod.ImageDetailsWithConnector.ImageDetailsWithConnectorBuilder;
 import software.wings.beans.ci.pod.PVCParams;
 import software.wings.beans.ci.pod.SecretVariableDetails;
 import software.wings.helpers.ext.k8s.response.K8sTaskExecutionResponse;
@@ -184,6 +185,12 @@ public class K8BuildSetupUtils {
     CIK8ContainerParams setupAddOnContainerParams =
         internalContainerParamsProvider.getSetupAddonContainerParams(harnessInternalImageRegistryConnectorDetails);
 
+    List<HostAliasParams> hostAliasParamsList = new ArrayList<>();
+    if (podSetupInfo.getServiceIdList() != null) {
+      hostAliasParamsList.add(
+          HostAliasParams.builder().ipAddress(LOCALHOST_IP).hostnameList(podSetupInfo.getServiceIdList()).build());
+    }
+
     List<PVCParams> pvcParams = new ArrayList<>();
     if (usePVC) {
       pvcParams = singletonList(podSetupInfo.getPvcParams());
@@ -198,6 +205,7 @@ public class K8BuildSetupUtils {
         .containerParamsList(containerParamsList)
         .pvcParamList(pvcParams)
         .initContainerParamsList(singletonList(setupAddOnContainerParams))
+        .hostAliasParamsList(hostAliasParamsList)
         .build();
   }
 
@@ -206,36 +214,43 @@ public class K8BuildSetupUtils {
       ConnectorDetails harnessInternalImageRegistryConnectorDetails, LiteEngineTaskStepInfo liteEngineTaskStepInfo)
       throws Exception {
     Map<String, String> logEnvVars = getLogServiceEnvVariables(k8PodDetails);
-    Map<String, String> volumeToMountPath = new HashMap<>();
-    volumeToMountPath.put(STEP_EXEC, MOUNT_PATH);
 
     // user input containers with custom entry point
-    List<CIK8ContainerParams> containerParams = podSetupInfo.getPodSetupParams()
-                                                    .getContainerDefinitionInfos()
-                                                    .stream()
-                                                    .map(containerDefinitionInfo
-                                                        -> createCIK8ContainerParams(ngAccess, containerDefinitionInfo,
-                                                            volumeToMountPath, k8PodDetails, logEnvVars))
-                                                    .collect(toList());
+    List<CIK8ContainerParams> containerParams =
+        podSetupInfo.getPodSetupParams()
+            .getContainerDefinitionInfos()
+            .stream()
+            .map(containerDefinitionInfo
+                -> createCIK8ContainerParams(ngAccess, containerDefinitionInfo, k8PodDetails, logEnvVars))
+            .collect(toList());
 
     // include lite-engine container
     Map<String, ConnectorDetails> publishArtifactConnectorDetailsMap =
         connectorUtils.getConnectorDetailsMap(ngAccess, publishStepConnectorIdentifier);
-    CIK8ContainerParams liteEngineContainerParams = createLiteEngineContainerParams(
-        harnessInternalImageRegistryConnectorDetails, publishArtifactConnectorDetailsMap, liteEngineTaskStepInfo,
-        k8PodDetails, podSetupInfo.getStageCpuRequest(), podSetupInfo.getStageMemoryRequest(), logEnvVars);
+    CIK8ContainerParams liteEngineContainerParams =
+        createLiteEngineContainerParams(harnessInternalImageRegistryConnectorDetails,
+            publishArtifactConnectorDetailsMap, liteEngineTaskStepInfo, k8PodDetails, podSetupInfo.getStageCpuRequest(),
+            podSetupInfo.getStageMemoryRequest(), podSetupInfo.getServiceGrpcPortList(), logEnvVars);
     containerParams.add(liteEngineContainerParams);
 
     return containerParams;
   }
 
   private CIK8ContainerParams createCIK8ContainerParams(NGAccess ngAccess,
-      ContainerDefinitionInfo containerDefinitionInfo, Map<String, String> volumeToMountPath, K8PodDetails k8PodDetails,
-      Map<String, String> logEnvVars) {
+      ContainerDefinitionInfo containerDefinitionInfo, K8PodDetails k8PodDetails, Map<String, String> logEnvVars) {
     Map<String, String> envVars = getCommonStepEnvVariables(k8PodDetails, logEnvVars);
     if (isNotEmpty(containerDefinitionInfo.getEnvVars())) {
       envVars.putAll(containerDefinitionInfo.getEnvVars()); // Put customer input env variables
     }
+
+    ImageDetailsWithConnectorBuilder imageDetailsWithConnectorBuilder =
+        ImageDetailsWithConnector.builder().imageDetails(
+            containerDefinitionInfo.getContainerImageDetails().getImageDetails());
+    if (containerDefinitionInfo.getContainerImageDetails().getConnectorIdentifier() != null) {
+      imageDetailsWithConnectorBuilder.imageConnectorDetails(connectorUtils.getConnectorDetails(
+          ngAccess, containerDefinitionInfo.getContainerImageDetails().getConnectorIdentifier()));
+    }
+
     return CIK8ContainerParams.builder()
         .name(containerDefinitionInfo.getName())
         .containerResourceParams(containerDefinitionInfo.getContainerResourceParams())
@@ -247,24 +262,21 @@ public class K8BuildSetupUtils {
         .commands(containerDefinitionInfo.getCommands())
         .ports(containerDefinitionInfo.getPorts())
         .args(containerDefinitionInfo.getArgs())
-        .imageDetailsWithConnector(
-            ImageDetailsWithConnector.builder()
-                .imageDetails(containerDefinitionInfo.getContainerImageDetails().getImageDetails())
-                .imageConnectorDetails(connectorUtils.getConnectorDetails(
-                    ngAccess, containerDefinitionInfo.getContainerImageDetails().getConnectorIdentifier()))
-                .build())
-        .volumeToMountPath(volumeToMountPath)
-        .workingDir(getWorkingDirectoryPath())
+        .imageDetailsWithConnector(imageDetailsWithConnectorBuilder.build())
+        .volumeToMountPath(containerDefinitionInfo.getVolumeToMountPath())
+        .workingDir(containerDefinitionInfo.getWorkingDirectory())
         .build();
   }
 
   private CIK8ContainerParams createLiteEngineContainerParams(ConnectorDetails connectorDetails,
       Map<String, ConnectorDetails> publishArtifactConnectors, LiteEngineTaskStepInfo liteEngineTaskStepInfo,
-      K8PodDetails k8PodDetails, Integer stageCpuRequest, Integer stageMemoryRequest, Map<String, String> logEnvVars) {
+      K8PodDetails k8PodDetails, Integer stageCpuRequest, Integer stageMemoryRequest, List<Integer> serviceGrpcPortList,
+      Map<String, String> logEnvVars) {
     String serializedLiteEngineStepInfo = getSerializedLiteEngineStepInfo(liteEngineTaskStepInfo);
     String serviceToken = serviceTokenUtils.getServiceToken();
     return internalContainerParamsProvider.getLiteEngineContainerParams(connectorDetails, publishArtifactConnectors,
-        k8PodDetails, serializedLiteEngineStepInfo, serviceToken, stageCpuRequest, stageMemoryRequest, logEnvVars);
+        k8PodDetails, serializedLiteEngineStepInfo, serviceToken, stageCpuRequest, stageMemoryRequest,
+        serviceGrpcPortList, logEnvVars);
   }
 
   private String getSerializedLiteEngineStepInfo(LiteEngineTaskStepInfo liteEngineTaskStepInfo) {
@@ -334,7 +346,6 @@ public class K8BuildSetupUtils {
     envVars.putAll(logEnvVars);
 
     // Add other environment variables needed in the containers
-    envVars.put(HOME_VARIABLE, getWorkingDirectoryPath());
     envVars.put(HARNESS_ACCOUNT_ID_VARIABLE, accountID);
     envVars.put(HARNESS_PROJECT_ID_VARIABLE, projectID);
     envVars.put(HARNESS_ORG_ID_VARIABLE, orgID);

@@ -28,4 +28,5 @@ public class ContainerDefinitionInfo {
   private Map<String, String> volumeToMountPath;
   Map<String, String> envVars;
   List<CustomSecretVariable> secretVariables;
+  private String workingDirectory;
 }

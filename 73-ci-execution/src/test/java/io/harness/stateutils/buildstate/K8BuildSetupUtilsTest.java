@@ -1,5 +1,3 @@
-
-
 package io.harness.stateutils.buildstate;
 
 import static io.harness.common.CIExecutionConstants.ACCESS_KEY_MINIO_VARIABLE;
@@ -171,20 +169,23 @@ public class K8BuildSetupUtilsTest extends CIExecutionTest {
     Map<String, String> map = new HashMap<>();
     map.put(STEP_EXEC, MOUNT_PATH);
     String workDir = String.format("/%s/%s", STEP_EXEC, STEP_EXEC_WORKING_DIR);
-    assertThat(podParams.getContainerParamsList().get(0))
+    assertThat(podParams.getContainerParamsList().get(1))
         .isEqualToIgnoringGivenFields(
             ciExecutionPlanTestHelper.getRunStepCIK8Container().volumeToMountPath(map).workingDir(workDir).build(),
             "envVars", "containerSecrets");
-    assertThat(podParams.getContainerParamsList().get(0).getContainerSecrets().getSecretVariableDetails())
+    assertThat(podParams.getContainerParamsList().get(1).getContainerSecrets().getSecretVariableDetails())
         .containsAnyElementsOf(secretVariableDetails);
-    assertThat(podParams.getContainerParamsList().get(0).getEnvVars()).containsAllEntriesOf(stepEnvVars);
+    assertThat(podParams.getContainerParamsList().get(1).getEnvVars()).containsAllEntriesOf(stepEnvVars);
 
     stepEnvVars.put(DELEGATE_SERVICE_TOKEN_VARIABLE,
-        podParams.getContainerParamsList().get(1).getEnvVars().get(DELEGATE_SERVICE_TOKEN_VARIABLE));
-    assertThat(podParams.getContainerParamsList().get(1))
+        podParams.getContainerParamsList().get(2).getEnvVars().get(DELEGATE_SERVICE_TOKEN_VARIABLE));
+    assertThat(podParams.getContainerParamsList().get(2))
         .isEqualToIgnoringGivenFields(
-            ciExecutionPlanTestHelper.getPluginStepCIK8Container().volumeToMountPath(map).workingDir(workDir).build(),
-            "envVars", "containerSecrets");
+            ciExecutionPlanTestHelper.getPluginStepCIK8Container().build(), "envVars", "containerSecrets");
+
+    assertThat(podParams.getContainerParamsList().get(0))
+        .isEqualToIgnoringGivenFields(
+            ciExecutionPlanTestHelper.getServiceCIK8Container(), "envVars", "containerSecrets");
 
     verify(logServiceUtils, times(1)).getLogServiceConfig();
     verify(logServiceUtils, times(1)).getLogServiceToken(accountID);

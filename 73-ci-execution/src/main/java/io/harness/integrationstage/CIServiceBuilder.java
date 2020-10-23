@@ -1,0 +1,158 @@
+package io.harness.integrationstage;
+
+import static io.harness.common.CIExecutionConstants.DEFAULT_LIMIT_MEMORY_MIB;
+import static io.harness.common.CIExecutionConstants.DEFAULT_LIMIT_MILLI_CPU;
+import static io.harness.common.CIExecutionConstants.IMAGE_PATH_SPLIT_REGEX;
+import static io.harness.common.CIExecutionConstants.SERVICE_PREFIX;
+import static software.wings.common.CICommonPodConstants.MOUNT_PATH;
+import static software.wings.common.CICommonPodConstants.STEP_EXEC;
+
+import io.harness.beans.dependencies.CIServiceInfo;
+import io.harness.beans.dependencies.DependencyElement;
+import io.harness.beans.environment.pod.container.ContainerDefinitionInfo;
+import io.harness.beans.environment.pod.container.ContainerImageDetails;
+import io.harness.beans.stages.IntegrationStage;
+import io.harness.beans.yaml.extended.container.ContainerResource;
+import io.harness.exception.InvalidRequestException;
+import io.harness.k8s.model.ImageDetails;
+import io.harness.stateutils.buildstate.providers.ServiceContainerUtils;
+import io.harness.util.PortFinder;
+import software.wings.beans.ci.pod.CIContainerType;
+import software.wings.beans.ci.pod.ContainerResourceParams;
+
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+public class CIServiceBuilder {
+  public static List<ContainerDefinitionInfo> createServicesContainerDefinition(
+      IntegrationStage integrationStage, PortFinder portFinder) {
+    List<ContainerDefinitionInfo> containerDefinitionInfos = new ArrayList<>();
+    if (integrationStage.getDependencies() == null) {
+      return containerDefinitionInfos;
+    }
+
+    int serviceIdx = 0;
+    for (DependencyElement dependencyElement : integrationStage.getDependencies()) {
+      if (dependencyElement == null) {
+        continue;
+      }
+
+      if (dependencyElement.getDependencySpecType() instanceof CIServiceInfo) {
+        ContainerDefinitionInfo containerDefinitionInfo = createServiceContainerDefinition(
+            (CIServiceInfo) dependencyElement.getDependencySpecType(), portFinder, serviceIdx);
+        if (containerDefinitionInfo != null) {
+          containerDefinitionInfos.add(containerDefinitionInfo);
+        }
+        serviceIdx++;
+      }
+    }
+    return containerDefinitionInfos;
+  }
+
+  private static ContainerDefinitionInfo createServiceContainerDefinition(
+      CIServiceInfo service, PortFinder portFinder, int serviceIdx) {
+    Integer port = portFinder.getNextPort();
+    service.setGrpcPort(port);
+
+    Map<String, String> volumeToMountPath = new HashMap<>();
+    volumeToMountPath.put(STEP_EXEC, MOUNT_PATH);
+
+    String volumeName = String.format("%s%d", SERVICE_PREFIX, serviceIdx);
+    String containerName = String.format("%s%d", SERVICE_PREFIX, serviceIdx);
+    String mountPath = "/" + volumeName;
+    volumeToMountPath.put(volumeName, mountPath);
+    return ContainerDefinitionInfo.builder()
+        .name(containerName)
+        .commands(ServiceContainerUtils.getCommand())
+        .args(ServiceContainerUtils.getArguments(
+            service.getIdentifier(), service.getImage(), service.getEntrypoint(), service.getArgs(), port))
+        .envVars(service.getEnvironment())
+        .containerImageDetails(ContainerImageDetails.builder()
+                                   .imageDetails(getImageInfo(service.getImage()))
+                                   .connectorIdentifier(service.getConnector())
+                                   .build())
+        .containerResourceParams(getServiceContainerResource(service.getResources()))
+        .ports(Collections.singletonList(port))
+        .containerType(CIContainerType.SERVICE)
+        .volumeToMountPath(volumeToMountPath)
+        .workingDirectory(mountPath)
+        .build();
+  }
+
+  private static ContainerResourceParams getServiceContainerResource(ContainerResource resource) {
+    Integer cpu = DEFAULT_LIMIT_MILLI_CPU;
+    Integer memory = DEFAULT_LIMIT_MEMORY_MIB;
+
+    if (resource != null && resource.getLimit() != null) {
+      if (resource.getLimit().getCpu() != 0) {
+        cpu = resource.getLimit().getCpu();
+      }
+      if (resource.getLimit().getMemory() != 0) {
+        memory = resource.getLimit().getMemory();
+      }
+    }
+    return ContainerResourceParams.builder()
+        .resourceRequestMilliCpu(cpu)
+        .resourceRequestMemoryMiB(memory)
+        .resourceLimitMilliCpu(cpu)
+        .resourceLimitMemoryMiB(memory)
+        .build();
+  }
+
+  public static List<String> getServiceIdList(IntegrationStage integrationStage) {
+    List<String> serviceIdList = new ArrayList<>();
+    if (integrationStage.getDependencies() == null) {
+      return serviceIdList;
+    }
+
+    for (DependencyElement dependencyElement : integrationStage.getDependencies()) {
+      if (dependencyElement == null) {
+        continue;
+      }
+
+      if (dependencyElement.getDependencySpecType() instanceof CIServiceInfo) {
+        serviceIdList.add(((CIServiceInfo) dependencyElement.getDependencySpecType()).getIdentifier());
+      }
+    }
+    return serviceIdList;
+  }
+
+  public static List<Integer> getServiceGrpcPortList(IntegrationStage integrationStage) {
+    List<Integer> grpcPortList = new ArrayList<>();
+    if (integrationStage.getDependencies() == null) {
+      return grpcPortList;
+    }
+
+    for (DependencyElement dependencyElement : integrationStage.getDependencies()) {
+      if (dependencyElement == null) {
+        continue;
+      }
+
+      if (dependencyElement.getDependencySpecType() instanceof CIServiceInfo) {
+        grpcPortList.add(((CIServiceInfo) dependencyElement.getDependencySpecType()).getGrpcPort());
+      }
+    }
+    return grpcPortList;
+  }
+
+  private static ImageDetails getImageInfo(String image) {
+    String tag = "";
+    String name = image;
+
+    if (image.contains(IMAGE_PATH_SPLIT_REGEX)) {
+      String[] subTokens = image.split(IMAGE_PATH_SPLIT_REGEX);
+      if (subTokens.length > 2) {
+        throw new InvalidRequestException("Image should not contain multiple tags");
+      }
+      if (subTokens.length == 2) {
+        name = subTokens[0];
+        tag = subTokens[1];
+      }
+    }
+
+    return ImageDetails.builder().name(name).tag(tag).build();
+  }
+}

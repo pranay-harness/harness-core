@@ -65,7 +65,7 @@ public class InternalContainerParamsProviderTest extends CIExecutionTest {
 
     CIK8ContainerParams containerParams = internalContainerParamsProvider.getLiteEngineContainerParams(connectorDetails,
         publishArtifactConnectorDetailsMap, k8PodDetails, serialisedStage, serviceToken, stageCpuRequest,
-        stageMemoryRequest, logEnvVars);
+        stageMemoryRequest, null, logEnvVars);
 
     Map<String, String> expectedEnv = new HashMap<>();
     expectedEnv.put(LOG_SERVICE_ENDPOINT_VARIABLE, logEndpoint);

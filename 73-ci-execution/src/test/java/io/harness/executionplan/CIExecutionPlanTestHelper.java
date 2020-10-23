@@ -1,10 +1,15 @@
 package io.harness.executionplan;
 
-import static io.harness.common.CIExecutionConstants.DEFAULT_STEP_LIMIT_MEMORY_MIB;
-import static io.harness.common.CIExecutionConstants.DEFAULT_STEP_LIMIT_MILLI_CPU;
+import static io.harness.common.CIExecutionConstants.ARGS_PREFIX;
+import static io.harness.common.CIExecutionConstants.DEFAULT_LIMIT_MEMORY_MIB;
+import static io.harness.common.CIExecutionConstants.DEFAULT_LIMIT_MILLI_CPU;
+import static io.harness.common.CIExecutionConstants.ENTRYPOINT_PREFIX;
+import static io.harness.common.CIExecutionConstants.ID_PREFIX;
+import static io.harness.common.CIExecutionConstants.IMAGE_PREFIX;
 import static io.harness.common.CIExecutionConstants.PLUGIN_ENV_PREFIX;
 import static io.harness.common.CIExecutionConstants.PORT_PREFIX;
 import static io.harness.common.CIExecutionConstants.PORT_STARTING_RANGE;
+import static io.harness.common.CIExecutionConstants.SERVICE_ARG_COMMAND;
 import static io.harness.common.CIExecutionConstants.STEP_COMMAND;
 import static io.harness.common.CIExecutionConstants.STEP_REQUEST_MEMORY_MIB;
 import static io.harness.common.CIExecutionConstants.STEP_REQUEST_MILLI_CPU;
@@ -12,10 +17,13 @@ import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
 import static software.wings.beans.ci.pod.CIContainerType.PLUGIN;
 import static software.wings.beans.ci.pod.CIContainerType.RUN;
+import static software.wings.beans.ci.pod.CIContainerType.SERVICE;
 
 import com.google.inject.Singleton;
 
 import graph.StepInfoGraph;
+import io.harness.beans.dependencies.CIServiceInfo;
+import io.harness.beans.dependencies.DependencyElement;
 import io.harness.beans.environment.BuildJobEnvInfo;
 import io.harness.beans.environment.K8BuildJobEnvInfo;
 import io.harness.beans.environment.pod.PodSetupInfo;
@@ -96,6 +104,7 @@ import software.wings.beans.ci.pod.SecretVariableDetails;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -111,14 +120,23 @@ public class CIExecutionPlanTestHelper {
 
   private static final String RUN_STEP_IMAGE = "maven:3.6.3-jdk-8";
   private static final String RUN_STEP_CONNECTOR = "run";
-  private static final String RUN_STEP_ID = "run";
+  private static final String RUN_STEP_ID = "step-2";
 
   private static final String PLUGIN_STEP_IMAGE = "plugins/git";
-  private static final String PLUGIN_STEP_ID = "plugin";
+  private static final String PLUGIN_STEP_ID = "step-3";
   private static final Integer PLUGIN_STEP_LIMIT_MEM = 50;
   private static final Integer PLUGIN_STEP_LIMIT_CPU = 100;
   private static final String PLUGIN_ENV_VAR = "foo";
   private static final String PLUGIN_ENV_VAL = "bar";
+
+  private static final String SERVICE_ID = "db";
+  private static final String SERVICE_CTR_NAME = "service-0";
+  private static final String SERVICE_VOLUME_NAME = "service-0";
+  private static final Integer SERVICE_LIMIT_MEM = 60;
+  private static final Integer SERVICE_LIMIT_CPU = 80;
+  private static final String SERVICE_IMAGE = "redis";
+  private static final String SERVICE_ENTRYPOINT = "redis";
+  private static final String SERVICE_ARGS = "start";
 
   private static final String REPO_NAMESPACE = "wings";
   private static final String REPO_NAME = "portal";
@@ -126,6 +144,10 @@ public class CIExecutionPlanTestHelper {
 
   private static final String COMMIT_MESSAGE = "foo=bar";
   private static final String COMMIT_LINK = "foo/bar";
+
+  private static final String MOUNT_PATH = "/step-exec";
+  private static final String VOLUME_NAME = "step-exec";
+  private static final String WORK_DIR = "/step-exec/workspace";
 
   private final ImageDetails imageDetails = ImageDetails.builder().name("maven").tag("3.6.3-jdk-8").build();
 
@@ -206,6 +228,8 @@ public class CIExecutionPlanTestHelper {
 
   public K8BuildJobEnvInfo.PodsSetupInfo getCIPodsSetupInfoOnFirstPod() {
     List<PodSetupInfo> pods = new ArrayList<>();
+    List<String> serviceIds = new ArrayList<>();
+    List<Integer> serviceGrpcPortList = new ArrayList<>();
     pods.add(PodSetupInfo.builder()
                  .name("")
                  .pvcParams(PVCParams.builder()
@@ -216,16 +240,21 @@ public class CIExecutionPlanTestHelper {
                                 .storageClass(CIExecutionConstants.PVC_DEFAULT_STORAGE_CLASS)
                                 .build())
                  .podSetupParams(PodSetupInfo.PodSetupParams.builder()
-                                     .containerDefinitionInfos(asList(getRunStepContainer(), getPluginStepContainer()))
+                                     .containerDefinitionInfos(
+                                         asList(getServiceContainer(), getRunStepContainer(), getPluginStepContainer()))
                                      .build())
                  .stageMemoryRequest(250)
                  .stageCpuRequest(300)
+                 .serviceIdList(Collections.singletonList(SERVICE_ID))
+                 .serviceGrpcPortList(Collections.singletonList(PORT_STARTING_RANGE))
                  .build());
     return K8BuildJobEnvInfo.PodsSetupInfo.builder().podSetupInfoList(pods).build();
   }
 
   public K8BuildJobEnvInfo.PodsSetupInfo getCIPodsSetupInfoOnOtherPods() {
     List<PodSetupInfo> pods = new ArrayList<>();
+    List<String> serviceIds = new ArrayList<>();
+    List<Integer> serviceGrpcPortList = new ArrayList<>();
     pods.add(PodSetupInfo.builder()
                  .name("")
                  .pvcParams(PVCParams.builder()
@@ -236,10 +265,15 @@ public class CIExecutionPlanTestHelper {
                                 .storageClass(CIExecutionConstants.PVC_DEFAULT_STORAGE_CLASS)
                                 .build())
                  .podSetupParams(PodSetupInfo.PodSetupParams.builder()
-                                     .containerDefinitionInfos(asList(getRunStepContainer(), getPluginStepContainer()))
+                                     .containerDefinitionInfos(
+                                         asList(getServiceContainer(), getRunStepContainer(), getPluginStepContainer()))
                                      .build())
                  .stageMemoryRequest(250)
                  .stageCpuRequest(300)
+                 .serviceIdList(serviceIds)
+                 .serviceGrpcPortList(serviceGrpcPortList)
+                 .serviceIdList(Collections.singletonList(SERVICE_ID))
+                 .serviceGrpcPortList(Collections.singletonList(PORT_STARTING_RANGE))
                  .build());
     return K8BuildJobEnvInfo.PodsSetupInfo.builder().podSetupInfoList(pods).build();
   }
@@ -262,6 +296,24 @@ public class CIExecutionPlanTestHelper {
     return ExecutionElement.builder().steps(executionSectionList).build();
   }
 
+  private DependencyElement getServiceDependencyElement() {
+    return DependencyElement.builder()
+        .identifier(SERVICE_ID)
+        .dependencySpecType(
+            CIServiceInfo.builder()
+                .identifier(SERVICE_ID)
+                .args(Collections.singletonList(SERVICE_ARGS))
+                .entrypoint(Collections.singletonList(SERVICE_ENTRYPOINT))
+                .image(SERVICE_IMAGE)
+                .resources(
+                    ContainerResource.builder()
+                        .limit(
+                            ContainerResource.Limit.builder().cpu(SERVICE_LIMIT_CPU).memory(SERVICE_LIMIT_MEM).build())
+                        .build())
+                .build())
+        .build();
+  }
+
   private StepElement getRunStepElement() {
     return StepElement.builder()
         .identifier(RUN_STEP_ID)
@@ -274,13 +326,73 @@ public class CIExecutionPlanTestHelper {
                           .callbackId("test-p1-callbackId")
                           .image(RUN_STEP_IMAGE)
                           .connector(RUN_STEP_CONNECTOR)
-                          .port(PORT_STARTING_RANGE)
+                          .port(PORT_STARTING_RANGE + 1)
                           .build())
         .build();
   }
 
-  private ContainerDefinitionInfo getRunStepContainer() {
+  private ContainerDefinitionInfo getServiceContainer() {
     Integer port = PORT_STARTING_RANGE;
+    Map<String, String> volumeToMountPath = new HashMap<>();
+    volumeToMountPath.put(VOLUME_NAME, MOUNT_PATH);
+    volumeToMountPath.put(SERVICE_VOLUME_NAME, "/" + SERVICE_VOLUME_NAME);
+
+    List<String> args = Arrays.asList(SERVICE_ARG_COMMAND, ID_PREFIX, SERVICE_ID, IMAGE_PREFIX, SERVICE_IMAGE,
+        ENTRYPOINT_PREFIX, SERVICE_ENTRYPOINT, ARGS_PREFIX, SERVICE_ARGS, PORT_PREFIX, port.toString());
+
+    return ContainerDefinitionInfo.builder()
+        .containerImageDetails(ContainerImageDetails.builder()
+                                   .imageDetails(ImageDetails.builder().name(SERVICE_IMAGE).tag("").build())
+                                   .build())
+        .name(SERVICE_CTR_NAME)
+        .containerType(SERVICE)
+        .args(args)
+        .commands(asList(STEP_COMMAND))
+        .ports(asList(port))
+        .containerResourceParams(ContainerResourceParams.builder()
+                                     .resourceRequestMilliCpu(SERVICE_LIMIT_CPU)
+                                     .resourceRequestMemoryMiB(SERVICE_LIMIT_MEM)
+                                     .resourceLimitMilliCpu(SERVICE_LIMIT_CPU)
+                                     .resourceLimitMemoryMiB(SERVICE_LIMIT_MEM)
+                                     .build())
+        .volumeToMountPath(volumeToMountPath)
+        .workingDirectory("/" + SERVICE_VOLUME_NAME)
+        .build();
+  }
+
+  public CIK8ContainerParams getServiceCIK8Container() {
+    Integer port = PORT_STARTING_RANGE;
+    Map<String, String> volumeToMountPath = new HashMap<>();
+    volumeToMountPath.put(VOLUME_NAME, MOUNT_PATH);
+    volumeToMountPath.put(SERVICE_VOLUME_NAME, "/" + SERVICE_VOLUME_NAME);
+
+    List<String> args = Arrays.asList(SERVICE_ARG_COMMAND, ID_PREFIX, SERVICE_ID, IMAGE_PREFIX, SERVICE_IMAGE,
+        ENTRYPOINT_PREFIX, SERVICE_ENTRYPOINT, ARGS_PREFIX, SERVICE_ARGS, PORT_PREFIX, port.toString());
+
+    return CIK8ContainerParams.builder()
+        .imageDetailsWithConnector(ImageDetailsWithConnector.builder()
+                                       .imageDetails(ImageDetails.builder().name(SERVICE_IMAGE).tag("").build())
+                                       .build())
+        .name(SERVICE_CTR_NAME)
+        .containerType(SERVICE)
+        .args(args)
+        .commands(asList(STEP_COMMAND))
+        .ports(asList(port))
+        .containerResourceParams(ContainerResourceParams.builder()
+                                     .resourceRequestMilliCpu(SERVICE_LIMIT_CPU)
+                                     .resourceRequestMemoryMiB(SERVICE_LIMIT_MEM)
+                                     .resourceLimitMilliCpu(SERVICE_LIMIT_CPU)
+                                     .resourceLimitMemoryMiB(SERVICE_LIMIT_MEM)
+                                     .build())
+        .workingDir("/" + SERVICE_VOLUME_NAME)
+        .volumeToMountPath(volumeToMountPath)
+        .build();
+  }
+
+  private ContainerDefinitionInfo getRunStepContainer() {
+    Integer port = PORT_STARTING_RANGE + 1;
+    Map<String, String> volumeToMountPath = new HashMap<>();
+    volumeToMountPath.put(VOLUME_NAME, MOUNT_PATH);
     return ContainerDefinitionInfo.builder()
         .containerImageDetails(
             ContainerImageDetails.builder().connectorIdentifier(RUN_STEP_CONNECTOR).imageDetails(imageDetails).build())
@@ -292,16 +404,18 @@ public class CIExecutionPlanTestHelper {
         .containerResourceParams(ContainerResourceParams.builder()
                                      .resourceRequestMilliCpu(STEP_REQUEST_MILLI_CPU)
                                      .resourceRequestMemoryMiB(STEP_REQUEST_MEMORY_MIB)
-                                     .resourceLimitMilliCpu(DEFAULT_STEP_LIMIT_MILLI_CPU)
-                                     .resourceLimitMemoryMiB(DEFAULT_STEP_LIMIT_MEMORY_MIB)
+                                     .resourceLimitMilliCpu(DEFAULT_LIMIT_MILLI_CPU)
+                                     .resourceLimitMemoryMiB(DEFAULT_LIMIT_MEMORY_MIB)
                                      .build())
         .envVars(getEnvVariables())
         .secretVariables(getCustomSecretVariable())
+        .workingDirectory(WORK_DIR)
+        .volumeToMountPath(volumeToMountPath)
         .build();
   }
 
   public CIK8ContainerParamsBuilder getRunStepCIK8Container() {
-    Integer port = PORT_STARTING_RANGE;
+    Integer port = PORT_STARTING_RANGE + 1;
     return CIK8ContainerParams.builder()
         .imageDetailsWithConnector(ImageDetailsWithConnector.builder()
                                        .imageDetails(imageDetails)
@@ -315,8 +429,8 @@ public class CIExecutionPlanTestHelper {
         .containerResourceParams(ContainerResourceParams.builder()
                                      .resourceRequestMilliCpu(STEP_REQUEST_MILLI_CPU)
                                      .resourceRequestMemoryMiB(STEP_REQUEST_MEMORY_MIB)
-                                     .resourceLimitMilliCpu(DEFAULT_STEP_LIMIT_MILLI_CPU)
-                                     .resourceLimitMemoryMiB(DEFAULT_STEP_LIMIT_MEMORY_MIB)
+                                     .resourceLimitMilliCpu(DEFAULT_LIMIT_MILLI_CPU)
+                                     .resourceLimitMemoryMiB(DEFAULT_LIMIT_MEMORY_MIB)
                                      .build())
         .envVars(getEnvVariables());
   }
@@ -339,7 +453,7 @@ public class CIExecutionPlanTestHelper {
                                                     .memory(PLUGIN_STEP_LIMIT_MEM)
                                                     .build())
                                          .build())
-                          .port(PORT_STARTING_RANGE + 1)
+                          .port(PORT_STARTING_RANGE + 2)
                           .settings(settings)
                           .build())
         .build();
@@ -349,11 +463,14 @@ public class CIExecutionPlanTestHelper {
     Map<String, String> envVar = new HashMap<>();
     envVar.put(PLUGIN_ENV_PREFIX + PLUGIN_ENV_VAR.toUpperCase(), PLUGIN_ENV_VAL);
     envVar.put("DRONE_BUILD_NUMBER", Long.toString(BUILD_NUMBER));
+    envVar.put("HOME", WORK_DIR);
 
-    Integer port = PORT_STARTING_RANGE + 1;
+    Map<String, String> volumeToMountPath = new HashMap<>();
+    volumeToMountPath.put(VOLUME_NAME, MOUNT_PATH);
+    Integer port = PORT_STARTING_RANGE + 2;
     return ContainerDefinitionInfo.builder()
         .containerImageDetails(ContainerImageDetails.builder()
-                                   .imageDetails(ImageDetails.builder().name(PLUGIN_STEP_IMAGE).build())
+                                   .imageDetails(ImageDetails.builder().name(PLUGIN_STEP_IMAGE).tag("").build())
                                    .build())
         .name(PLUGIN_STEP_ID)
         .containerType(PLUGIN)
@@ -367,6 +484,8 @@ public class CIExecutionPlanTestHelper {
                                      .resourceLimitMemoryMiB(PLUGIN_STEP_LIMIT_MEM)
                                      .build())
         .envVars(envVar)
+        .workingDirectory(WORK_DIR)
+        .volumeToMountPath(volumeToMountPath)
         .build();
   }
 
@@ -374,12 +493,14 @@ public class CIExecutionPlanTestHelper {
     Map<String, String> envVar = new HashMap<>();
     envVar.put(PLUGIN_ENV_PREFIX + PLUGIN_ENV_VAR.toUpperCase(), PLUGIN_ENV_VAL);
     envVar.put("DRONE_BUILD_NUMBER", Long.toString(BUILD_NUMBER));
+    envVar.put("HOME", WORK_DIR);
 
-    Integer port = PORT_STARTING_RANGE + 1;
+    Map<String, String> volumeToMountPath = new HashMap<>();
+    volumeToMountPath.put(VOLUME_NAME, MOUNT_PATH);
+    Integer port = PORT_STARTING_RANGE + 2;
     return CIK8ContainerParams.builder()
         .imageDetailsWithConnector(ImageDetailsWithConnector.builder()
-                                       .imageConnectorDetails(ConnectorDetails.builder().build())
-                                       .imageDetails(ImageDetails.builder().name(PLUGIN_STEP_IMAGE).build())
+                                       .imageDetails(ImageDetails.builder().name(PLUGIN_STEP_IMAGE).tag("").build())
                                        .build())
         .name(PLUGIN_STEP_ID)
         .containerType(PLUGIN)
@@ -392,6 +513,8 @@ public class CIExecutionPlanTestHelper {
                                      .resourceLimitMilliCpu(PLUGIN_STEP_LIMIT_CPU)
                                      .resourceLimitMemoryMiB(PLUGIN_STEP_LIMIT_MEM)
                                      .build())
+        .workingDir(WORK_DIR)
+        .volumeToMountPath(volumeToMountPath)
         .envVars(envVar);
   }
 
@@ -521,6 +644,7 @@ public class CIExecutionPlanTestHelper {
         .container(getContainer())
         .infrastructure(getInfrastructure())
         .customVariables(getCustomVariables())
+        .dependencies(Collections.singletonList(getServiceDependencyElement()))
         .build();
   }
 
@@ -543,6 +667,7 @@ public class CIExecutionPlanTestHelper {
     envVars.put("VAR3", "value3");
     envVars.put("VAR4", "value4");
     envVars.put("DRONE_BUILD_NUMBER", Long.toString(BUILD_NUMBER));
+    envVars.put("HOME", WORK_DIR);
     return envVars;
   }
 
