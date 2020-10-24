@@ -64,7 +64,7 @@ public class YAMLResourceTest extends AbstractFunctionalTest {
   }
 
   @Test
-  @Owner(developers = VARDAN_BANSAL)
+  @Owner(developers = VARDAN_BANSAL, intermittent = true)
   @Category(FunctionalTests.class)
   public void test_upsertEntities() {
     final Response response = setupTestData("SampleApp");
@@ -75,7 +75,7 @@ public class YAMLResourceTest extends AbstractFunctionalTest {
   }
 
   @Test
-  @Owner(developers = VARDAN_BANSAL)
+  @Owner(developers = VARDAN_BANSAL, intermittent = true)
   @Category(FunctionalTests.class)
   public void test_deleteEntities_allFilesDeleted() {
     setupTestData("SampleApp");
