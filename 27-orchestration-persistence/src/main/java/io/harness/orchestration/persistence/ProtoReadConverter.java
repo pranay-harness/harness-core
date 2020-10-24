@@ -1,15 +1,16 @@
-package io.harness.pms.mongo;
+package io.harness.orchestration.persistence;
 
 import com.google.inject.Inject;
 import com.google.protobuf.Message;
 import com.google.protobuf.Message.Builder;
 import com.google.protobuf.util.JsonFormat;
 
-import com.mongodb.DBObject;
 import lombok.SneakyThrows;
+import org.bson.Document;
 import org.springframework.core.convert.converter.Converter;
 
-public abstract class ProtoReadConverter<T extends Message> implements Converter<DBObject, T> {
+@SuppressWarnings("unchecked")
+public abstract class ProtoReadConverter<T extends Message> implements Converter<Document, T> {
   private final Class<T> entityClass;
 
   @Inject
@@ -19,10 +20,9 @@ public abstract class ProtoReadConverter<T extends Message> implements Converter
 
   @SneakyThrows
   @Override
-  public T convert(DBObject dbObject) {
-    Builder builder = null;
-    builder = (Builder) entityClass.getMethod("newBuilder").invoke(null);
-    JsonFormat.parser().ignoringUnknownFields().merge(dbObject.toString(), builder);
+  public T convert(Document dbObject) {
+    Builder builder = (Builder) entityClass.getMethod("newBuilder").invoke(null);
+    JsonFormat.parser().ignoringUnknownFields().merge(dbObject.toJson(), builder);
     return (T) builder.build();
   }
 }

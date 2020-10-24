@@ -18,6 +18,7 @@ java_library(
         "//21-persistence:module",
         "//22-ng-core:module",
         "//22-ng-project-n-orgs:module",
+        "//26-pms-contracts/src/main/proto:26_pms_contracts_java_proto",
         "//29-orchestration-beans:module",
         "//31-orchestration:module",
         "//33-orchestration-visualization:module",
