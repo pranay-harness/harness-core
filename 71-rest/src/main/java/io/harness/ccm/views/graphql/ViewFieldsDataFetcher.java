@@ -7,21 +7,32 @@ import io.harness.ccm.views.entities.ViewField;
 import io.harness.ccm.views.entities.ViewFieldIdentifier;
 import io.harness.ccm.views.service.ViewCustomFieldService;
 import io.harness.ccm.views.utils.ViewFieldUtils;
-import software.wings.graphql.datafetcher.AbstractObjectDataFetcher;
-import software.wings.graphql.schema.query.QLNoOpQueryParameters;
+import lombok.extern.slf4j.Slf4j;
+import software.wings.graphql.datafetcher.AbstractFieldsDataFetcher;
 import software.wings.security.PermissionAttribute;
 import software.wings.security.annotations.AuthRule;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
-public class ViewFieldsDataFetcher extends AbstractObjectDataFetcher<QLCEViewFieldsData, QLNoOpQueryParameters> {
+@Slf4j
+public class ViewFieldsDataFetcher extends AbstractFieldsDataFetcher<QLCEViewFieldsData, QLCEViewFilterWrapper> {
   @Inject private ViewCustomFieldService viewCustomFieldService;
 
   @Override
   @AuthRule(permissionType = PermissionAttribute.PermissionType.LOGGED_IN)
-  protected QLCEViewFieldsData fetch(QLNoOpQueryParameters parameters, String accountId) {
-    List<ViewField> customFields = viewCustomFieldService.getCustomFields(accountId);
+  protected QLCEViewFieldsData fetch(String accountId, List<QLCEViewFilterWrapper> filters) {
+    List<ViewField> customFields;
+    Optional<QLCEViewFilterWrapper> viewMetadataFilter = getViewMetadataFilter(filters);
+    if (viewMetadataFilter.isPresent()) {
+      QLCEViewMetadataFilter metadataFilter = viewMetadataFilter.get().getViewMetadataFilter();
+      final String viewId = metadataFilter.getViewId();
+      customFields = viewCustomFieldService.getCustomFieldsPerView(viewId);
+    } else {
+      customFields = viewCustomFieldService.getCustomFields(accountId);
+    }
+
     return QLCEViewFieldsData.builder()
         .fieldIdentifierData(ImmutableList.of(getViewField(ViewFieldUtils.getAwsFields(), ViewFieldIdentifier.AWS),
             getViewField(ViewFieldUtils.getGcpFields(), ViewFieldIdentifier.GCP),
@@ -55,5 +66,9 @@ public class ViewFieldsDataFetcher extends AbstractObjectDataFetcher<QLCEViewFie
         .identifierName(ViewFieldIdentifier.CUSTOM.getDisplayName())
         .values(ceViewFieldList)
         .build();
+  }
+
+  private static Optional<QLCEViewFilterWrapper> getViewMetadataFilter(List<QLCEViewFilterWrapper> filters) {
+    return filters.stream().filter(f -> f.getViewMetadataFilter().getViewId() != null).findFirst();
   }
 }

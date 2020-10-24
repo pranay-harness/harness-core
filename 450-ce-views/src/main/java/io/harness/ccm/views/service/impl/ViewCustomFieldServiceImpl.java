@@ -2,18 +2,16 @@ package io.harness.ccm.views.service.impl;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
-
 import io.harness.ccm.views.dao.ViewCustomFieldDao;
 import io.harness.ccm.views.entities.ViewCustomField;
 import io.harness.ccm.views.entities.ViewField;
 import io.harness.ccm.views.entities.ViewFieldIdentifier;
 import io.harness.ccm.views.service.ViewCustomFieldService;
 import io.harness.exception.InvalidRequestException;
-import lombok.extern.slf4j.Slf4j;
-
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
+import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @Singleton
@@ -43,6 +41,7 @@ public class ViewCustomFieldServiceImpl implements ViewCustomFieldService {
                    .fieldId(viewCustomField.getUuid())
                    .identifier(ViewFieldIdentifier.CUSTOM)
                    .fieldName(viewCustomField.getName())
+                   .identifierName(ViewFieldIdentifier.CUSTOM.getDisplayName())
                    .build())
         .collect(Collectors.toList());
   }
@@ -56,6 +55,7 @@ public class ViewCustomFieldServiceImpl implements ViewCustomFieldService {
                             .fieldId(field.getUuid())
                             .fieldName(field.getName())
                             .identifier(ViewFieldIdentifier.CUSTOM)
+                            .identifierName(ViewFieldIdentifier.CUSTOM.getDisplayName())
                             .build());
     }
     return viewFieldList;

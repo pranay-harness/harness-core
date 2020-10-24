@@ -1,5 +1,5 @@
 extend type Query {
-  viewFields: viewFieldData @dataFetcher(name: viewFields)
+  viewFields(filters: [CEViewFilterWrapper]): viewFieldData @dataFetcher(name: viewFields)
   viewFilterStats(limit: Int, offset: Int, filters: [CEViewFilter]): viewFiterData @dataFetcher(name: viewFilterStats)
   views: ViewsData @dataFetcher(name: views)
 
@@ -183,6 +183,7 @@ type viewField {
   fieldId: String
   fieldName: String
   identifier: ViewFieldIdentifier
+  identifierName: ViewFieldIdentifierName
 }
 
 type ViewTimeSeriesData {
