@@ -360,13 +360,15 @@ public class BillingDataPipelineServiceImpl implements BillingDataPipelineServic
                                      .build())
                              .build())
               .setDestinationDatasetId(dstDataSetId)
-              .setScheduleOptions(ScheduleOptions.newBuilder()
-                                      .setStartTime(getJobStartTimeStamp(1, numberOfHours, numberOfMinutes))
-                                      .build())
               .setDataSourceId(SCHEDULED_QUERY_DATA_SOURCE_ID);
 
+      if (!isPrevMonthQuery) {
+        transferConfigBuilder.setScheduleOptions(
+            ScheduleOptions.newBuilder().setStartTime(getJobStartTimeStamp(1, numberOfHours, numberOfMinutes)).build());
+      }
+
       if (isPrevMonthQuery) {
-        transferConfigBuilder.setSchedule("1,2,3,4,5,6,7,8,9,10 of month 05:45");
+        transferConfigBuilder.setSchedule("1,2,3,4,5,6,7,8,9,10 of month 06:15");
       }
       transferConfig = transferConfigBuilder.build();
     }
