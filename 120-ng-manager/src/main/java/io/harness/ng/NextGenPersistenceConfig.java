@@ -12,12 +12,14 @@ import org.springframework.data.mongodb.MongoDbFactory;
 import org.springframework.data.mongodb.MongoTransactionManager;
 import org.springframework.data.mongodb.repository.config.EnableMongoRepositories;
 
+import java.util.Collections;
+
 @Configuration
 @EnableMongoRepositories(basePackages = {"io.harness.ng"}, includeFilters = @ComponentScan.Filter(HarnessRepo.class))
 public class NextGenPersistenceConfig extends SpringPersistenceConfig {
   @Inject
   public NextGenPersistenceConfig(Injector injector) {
-    super(injector);
+    super(injector, Collections.emptyList());
   }
 
   @Bean

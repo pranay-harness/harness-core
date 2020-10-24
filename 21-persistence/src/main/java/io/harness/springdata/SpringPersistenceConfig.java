@@ -12,25 +12,38 @@ import org.mongodb.morphia.AdvancedDatastore;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Primary;
+import org.springframework.core.convert.converter.Converter;
+import org.springframework.data.convert.CustomConversions;
 import org.springframework.data.mongodb.config.AbstractMongoConfiguration;
 import org.springframework.data.mongodb.config.EnableMongoAuditing;
 import org.springframework.data.mongodb.core.MongoTemplate;
+import org.springframework.data.mongodb.core.convert.DbRefResolver;
+import org.springframework.data.mongodb.core.convert.DefaultDbRefResolver;
+import org.springframework.data.mongodb.core.convert.MappingMongoConverter;
+import org.springframework.data.mongodb.core.convert.MongoCustomConversions;
 import org.springframework.data.mongodb.repository.config.EnableMongoRepositories;
 import org.springframework.guice.annotation.GuiceModule;
 
 import java.util.Collection;
+import java.util.List;
+import java.util.stream.Collectors;
 
 @Configuration
 @GuiceModule
 @EnableMongoRepositories(mongoTemplateRef = "primary")
 @EnableMongoAuditing
 public abstract class SpringPersistenceConfig extends AbstractMongoConfiguration {
-  private final AdvancedDatastore advancedDatastore;
+  protected final Injector injector;
+  protected final AdvancedDatastore advancedDatastore;
+  protected final List<Class<? extends Converter>> converters;
+
   private static final Collection<String> BASE_PACKAGES = ImmutableList.of("io.harness");
 
   @Inject
-  public SpringPersistenceConfig(Injector injector) {
-    advancedDatastore = injector.getProvider(get(AdvancedDatastore.class, named("primaryDatastore"))).get();
+  public SpringPersistenceConfig(Injector injector, List<Class<? extends Converter>> converters) {
+    this.injector = injector;
+    this.advancedDatastore = injector.getProvider(get(AdvancedDatastore.class, named("primaryDatastore"))).get();
+    this.converters = converters;
   }
 
   @Override
@@ -52,6 +65,21 @@ public abstract class SpringPersistenceConfig extends AbstractMongoConfiguration
   @Primary
   @Override
   public MongoTemplate mongoTemplate() throws Exception {
+    DbRefResolver dbRefResolver = new DefaultDbRefResolver(this.mongoDbFactory());
+    MappingMongoConverter converter = new MappingMongoConverter(dbRefResolver, this.mongoMappingContext());
+    converter.setCustomConversions(collectConverters());
+    converter.setCodecRegistryProvider(this.mongoDbFactory());
+    converter.afterPropertiesSet();
     return new HMongoTemplate(mongoDbFactory(), mappingMongoConverter());
+  }
+
+  protected CustomConversions collectConverters() {
+    List<?> converterInstances = converters.stream().map(injector::getInstance).collect(Collectors.toList());
+    return new MongoCustomConversions(converterInstances);
+  }
+
+  @Override
+  public boolean autoIndexCreation() {
+    return false;
   }
 }

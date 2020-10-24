@@ -10,6 +10,7 @@ import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.data.mongodb.repository.config.EnableMongoRepositories;
 
+import java.util.Collections;
 import java.util.Set;
 
 @Configuration
@@ -18,6 +19,6 @@ import java.util.Set;
 public class OrchestrationStepsPersistenceConfig extends OrchestrationBasePersistenceConfig {
   @Inject
   public OrchestrationStepsPersistenceConfig(Injector injector, Set<Class<? extends AliasRegistrar>> aliasRegistrars) {
-    super(injector, aliasRegistrars);
+    super(injector, aliasRegistrars, Collections.emptyList());
   }
 }

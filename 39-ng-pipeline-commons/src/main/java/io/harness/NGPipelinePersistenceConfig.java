@@ -9,12 +9,14 @@ import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.data.mongodb.repository.config.EnableMongoRepositories;
 
+import java.util.Collections;
+
 @Configuration
 @EnableMongoRepositories(
     basePackages = {"io.harness.ngpipeline"}, includeFilters = @ComponentScan.Filter(HarnessRepo.class))
 public class NGPipelinePersistenceConfig extends SpringPersistenceConfig {
   @Inject
   public NGPipelinePersistenceConfig(Injector injector) {
-    super(injector);
+    super(injector, Collections.emptyList());
   }
 }

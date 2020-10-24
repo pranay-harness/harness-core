@@ -7,6 +7,7 @@ import io.harness.exception.GeneralException;
 import io.harness.spring.AliasRegistrar;
 import io.harness.springdata.SpringPersistenceConfig;
 import org.springframework.context.annotation.Bean;
+import org.springframework.core.convert.converter.Converter;
 import org.springframework.data.convert.TypeInformationMapper;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.convert.DbRefResolver;
@@ -19,19 +20,19 @@ import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.util.Collections;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
 public abstract class OrchestrationBasePersistenceConfig extends SpringPersistenceConfig {
   private static final String ORCHESTRATION_TYPE_KEY = "_orchestrationClass";
-  protected final Injector injector;
   private final Set<Class<? extends AliasRegistrar>> aliasRegistrars;
 
   @Inject
-  public OrchestrationBasePersistenceConfig(Injector injector, Set<Class<? extends AliasRegistrar>> aliasRegistrars) {
-    super(injector);
-    this.injector = injector;
+  public OrchestrationBasePersistenceConfig(Injector injector, Set<Class<? extends AliasRegistrar>> aliasRegistrars,
+      List<Class<? extends Converter>> converters) {
+    super(injector, converters);
     this.aliasRegistrars = aliasRegistrars;
   }
 
@@ -44,7 +45,7 @@ public abstract class OrchestrationBasePersistenceConfig extends SpringPersisten
         new DefaultMongoTypeMapper(ORCHESTRATION_TYPE_KEY, Collections.singletonList(typeMapper));
     MappingMongoConverter converter = new MappingMongoConverter(dbRefResolver, new MongoMappingContext());
     converter.setTypeMapper(mongoTypeMapper);
-    converter.setCustomConversions(customConversions());
+    converter.setCustomConversions(collectConverters());
     converter.setCodecRegistryProvider(mongoDbFactory());
     converter.afterPropertiesSet();
     return new OrchestrationMongoTemplate(mongoDbFactory(), converter);
