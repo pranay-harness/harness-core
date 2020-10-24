@@ -8,7 +8,6 @@ import static io.harness.execution.status.Status.flowingStatuses;
 import com.google.inject.Inject;
 
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.engine.executions.node.NodeExecutionRepository;
 import io.harness.engine.executions.node.NodeExecutionService;
 import io.harness.engine.executions.plan.PlanExecutionService;
 import io.harness.execution.NodeExecution;
@@ -20,7 +19,6 @@ import java.util.List;
 
 @OwnedBy(CDC)
 public class PausedStepStatusUpdate implements StepStatusUpdate {
-  @Inject private NodeExecutionRepository nodeExecutionRepository;
   @Inject private NodeExecutionService nodeExecutionService;
   @Inject private PlanExecutionService planExecutionService;
 
@@ -38,7 +36,7 @@ public class PausedStepStatusUpdate implements StepStatusUpdate {
       return true;
     }
     List<NodeExecution> flowingChildren =
-        nodeExecutionRepository.findByParentIdAndStatusIn(nodeExecution.getParentId(), flowingStatuses());
+        nodeExecutionService.findByParentIdAndStatusIn(nodeExecution.getParentId(), flowingStatuses());
     if (isEmpty(flowingChildren)) {
       // Update Status
       nodeExecutionService.updateStatusWithOps(nodeExecution.getParentId(), PAUSED,

@@ -21,7 +21,7 @@ import io.harness.beans.internal.OrchestrationAdjacencyListInternal;
 import io.harness.cache.SpringMongoStore;
 import io.harness.category.element.UnitTests;
 import io.harness.dto.OrchestrationGraphDTO;
-import io.harness.engine.executions.node.NodeExecutionRepository;
+import io.harness.engine.executions.node.NodeExecutionService;
 import io.harness.engine.executions.plan.PlanExecutionService;
 import io.harness.execution.NodeExecution;
 import io.harness.execution.PlanExecution;
@@ -51,7 +51,7 @@ import java.util.stream.Collectors;
  */
 public class GraphGenerationServiceImplTest extends OrchestrationVisualizationTestBase {
   @Inject private PlanExecutionService planExecutionService;
-  @Inject private NodeExecutionRepository nodeExecutionRepository;
+  @Inject private NodeExecutionService nodeExecutionService;
   @Inject private SpringMongoStore mongoStore;
   @InjectMocks @Inject private GraphGenerationService graphGenerationService;
 
@@ -75,7 +75,7 @@ public class GraphGenerationServiceImplTest extends OrchestrationVisualizationTe
                       .identifier("identifier1")
                       .build())
             .build();
-    nodeExecutionRepository.save(dummyStart);
+    nodeExecutionService.save(dummyStart);
 
     OrchestrationGraphDTO graphResponse = graphGenerationService.generateOrchestrationGraph(planExecution.getUuid());
     assertThat(graphResponse).isNotNull();
@@ -111,7 +111,7 @@ public class GraphGenerationServiceImplTest extends OrchestrationVisualizationTe
                       .identifier("identifier1")
                       .build())
             .build();
-    nodeExecutionRepository.save(dummyStart);
+    nodeExecutionService.save(dummyStart);
 
     OrchestrationAdjacencyListInternal adjacencyListInternal =
         OrchestrationAdjacencyListInternal.builder()
@@ -160,7 +160,7 @@ public class GraphGenerationServiceImplTest extends OrchestrationVisualizationTe
                       .identifier("identifier1")
                       .build())
             .build();
-    nodeExecutionRepository.save(dummyStart);
+    nodeExecutionService.save(dummyStart);
 
     NodeExecution dummyEnd =
         NodeExecution.builder()
@@ -177,7 +177,7 @@ public class GraphGenerationServiceImplTest extends OrchestrationVisualizationTe
                       .build())
             .previousId(dummyStart.getUuid())
             .build();
-    nodeExecutionRepository.save(dummyEnd);
+    nodeExecutionService.save(dummyEnd);
 
     Map<String, GraphVertex> graphVertexMap = new HashMap<>();
     graphVertexMap.put(dummyStart.getUuid(), GraphVertexConverter.convertFrom(dummyStart));

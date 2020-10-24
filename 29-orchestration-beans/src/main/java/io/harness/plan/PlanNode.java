@@ -13,6 +13,7 @@ import io.harness.state.io.StepParameters;
 import lombok.Builder;
 import lombok.Singular;
 import lombok.Value;
+import lombok.experimental.FieldNameConstants;
 
 import java.util.List;
 import javax.validation.constraints.NotNull;
@@ -21,6 +22,7 @@ import javax.validation.constraints.NotNull;
 @Builder
 @OwnedBy(CDC)
 @Redesign
+@FieldNameConstants(innerTypeName = "PlanNodeKeys")
 public class PlanNode {
   // Identifiers
   @NotNull String uuid;

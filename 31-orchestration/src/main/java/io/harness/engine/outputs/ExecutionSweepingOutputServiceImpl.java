@@ -3,10 +3,13 @@ package io.harness.engine.outputs;
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static java.lang.String.format;
+import static org.springframework.data.mongodb.core.query.Criteria.where;
+import static org.springframework.data.mongodb.core.query.Query.query;
 
 import com.google.inject.Inject;
 import com.google.inject.Injector;
 import com.google.inject.Singleton;
+import com.google.inject.name.Named;
 
 import com.mongodb.DuplicateKeyException;
 import io.harness.ambiance.Ambiance;
@@ -14,6 +17,7 @@ import io.harness.ambiance.AmbianceUtils;
 import io.harness.annotations.Redesign;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.data.ExecutionSweepingOutputInstance;
+import io.harness.data.ExecutionSweepingOutputInstance.ExecutionSweepingOutputKeys;
 import io.harness.data.SweepingOutput;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.engine.expressions.ExpressionEvaluatorProvider;
@@ -21,6 +25,8 @@ import io.harness.engine.expressions.functors.NodeExecutionEntityType;
 import io.harness.expression.EngineExpressionEvaluator;
 import io.harness.references.RefObject;
 import io.harness.resolvers.ResolverUtils;
+import org.springframework.data.mongodb.core.MongoTemplate;
+import org.springframework.data.mongodb.core.query.Query;
 
 import java.util.Comparator;
 import java.util.EnumSet;
@@ -32,7 +38,7 @@ import java.util.List;
 public class ExecutionSweepingOutputServiceImpl implements ExecutionSweepingOutputService {
   @Inject private ExpressionEvaluatorProvider expressionEvaluatorProvider;
   @Inject private Injector injector;
-  @Inject private ExecutionSweepingOutputInstanceRepository repository;
+  @Inject @Named("orchestrationMongoTemplate") private MongoTemplate mongoTemplate;
   @Inject private AmbianceUtils ambianceUtils;
 
   @Override
@@ -43,14 +49,14 @@ public class ExecutionSweepingOutputServiceImpl implements ExecutionSweepingOutp
 
     try {
       ExecutionSweepingOutputInstance instance =
-          repository.save(ExecutionSweepingOutputInstance.builder()
-                              .uuid(generateUuid())
-                              .planExecutionId(ambiance.getPlanExecutionId())
-                              .levels(ambiance.getLevels())
-                              .name(name)
-                              .value(value)
-                              .levelRuntimeIdIdx(ResolverUtils.prepareLevelRuntimeIdIdx(ambiance.getLevels()))
-                              .build());
+          mongoTemplate.insert(ExecutionSweepingOutputInstance.builder()
+                                   .uuid(generateUuid())
+                                   .planExecutionId(ambiance.getPlanExecutionId())
+                                   .levels(ambiance.getLevels())
+                                   .name(name)
+                                   .value(value)
+                                   .levelRuntimeIdIdx(ResolverUtils.prepareLevelRuntimeIdIdx(ambiance.getLevels()))
+                                   .build());
       return instance.getUuid();
     } catch (DuplicateKeyException ex) {
       throw new SweepingOutputException(format("Sweeping output with name %s is already saved", name), ex);
@@ -73,8 +79,11 @@ public class ExecutionSweepingOutputServiceImpl implements ExecutionSweepingOutp
 
   private SweepingOutput resolveUsingRuntimeId(Ambiance ambiance, RefObject refObject) {
     String name = refObject.getName();
-    List<ExecutionSweepingOutputInstance> instances = repository.findByPlanExecutionIdAndNameAndLevelRuntimeIdIdxIn(
-        ambiance.getPlanExecutionId(), name, ResolverUtils.prepareLevelRuntimeIdIndices(ambiance));
+    Query query = query(where(ExecutionSweepingOutputKeys.planExecutionId).is(ambiance.getPlanExecutionId()))
+                      .addCriteria(where(ExecutionSweepingOutputKeys.name).is(name))
+                      .addCriteria(where(ExecutionSweepingOutputKeys.levelRuntimeIdIdx)
+                                       .in(ResolverUtils.prepareLevelRuntimeIdIndices(ambiance)));
+    List<ExecutionSweepingOutputInstance> instances = mongoTemplate.find(query, ExecutionSweepingOutputInstance.class);
     // Multiple instances might be returned if the same name was saved at different levels/specificity.
     ExecutionSweepingOutputInstance instance = EmptyPredicate.isEmpty(instances)
         ? null
