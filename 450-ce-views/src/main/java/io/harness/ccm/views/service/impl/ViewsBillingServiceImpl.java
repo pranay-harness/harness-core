@@ -255,13 +255,15 @@ public class ViewsBillingServiceImpl implements ViewsBillingService {
       List<QLCEViewTimeFilter> timeFilters, List<QLCEViewAggregation> aggregateFunction, List<ViewRule> viewRuleList,
       String cloudProviderTableName) {
     Optional<QLCEViewFilterWrapper> viewMetadataFilter = getViewMetadataFilter(filters);
+    List<ViewField> customFields = new ArrayList<>();
     if (viewMetadataFilter.isPresent()) {
       final String viewId = viewMetadataFilter.get().getViewMetadataFilter().getViewId();
       CEView ceView = viewService.get(viewId);
       viewRuleList = ceView.getViewRules();
+      customFields = customFieldService.getCustomFieldsPerView(viewId);
     }
     return viewsQueryBuilder.getQuery(viewRuleList, idFilters, timeFilters, Collections.EMPTY_LIST, aggregateFunction,
-        Collections.EMPTY_LIST, Collections.EMPTY_LIST, cloudProviderTableName);
+        Collections.EMPTY_LIST, customFields, cloudProviderTableName);
   }
 
   private SelectQuery getQuery(List<QLCEViewFilterWrapper> filters, List<QLCEViewGroupBy> groupBy,
@@ -376,7 +378,10 @@ public class ViewsBillingServiceImpl implements ViewsBillingService {
     List<String> filterValues = new ArrayList<>();
     for (FieldValueList row : result.iterateAll()) {
       for (QLCEViewFieldInput field : viewFieldList) {
-        filterValues.add(fetchStringValue(row, field));
+        final String filterStringValue = fetchStringValue(row, field);
+        if (!filterStringValue.equals(nullStringValueConstant)) {
+          filterValues.add(fetchStringValue(row, field));
+        }
       }
     }
     return filterValues;
