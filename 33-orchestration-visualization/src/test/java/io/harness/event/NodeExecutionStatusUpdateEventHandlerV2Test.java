@@ -10,6 +10,7 @@ import static org.mockito.Mockito.verify;
 
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
+import com.google.inject.name.Named;
 
 import io.harness.OrchestrationVisualizationTestBase;
 import io.harness.ambiance.Ambiance;
@@ -23,7 +24,6 @@ import io.harness.category.element.UnitTests;
 import io.harness.data.OutcomeInstance;
 import io.harness.engine.executions.node.NodeExecutionService;
 import io.harness.engine.executions.plan.PlanExecutionService;
-import io.harness.engine.outcomes.OutcomeRepository;
 import io.harness.execution.NodeExecution;
 import io.harness.execution.PlanExecution;
 import io.harness.execution.events.OrchestrationEvent;
@@ -40,6 +40,7 @@ import org.awaitility.Awaitility;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.Spy;
+import org.springframework.data.mongodb.core.MongoTemplate;
 
 import java.time.Duration;
 import java.util.ArrayList;
@@ -57,7 +58,7 @@ public class NodeExecutionStatusUpdateEventHandlerV2Test extends OrchestrationVi
 
   @Inject private NodeExecutionService nodeExecutionService;
   @Inject @Spy private GraphGenerationService graphGenerationService;
-  @Inject private OutcomeRepository outcomeRepository;
+  @Inject @Named("orchestrationMongoTemplate") private MongoTemplate mongoTemplate;
   @Inject private NodeExecutionStatusUpdateEventHandlerV2 eventHandlerV2;
 
   @Test
@@ -202,7 +203,7 @@ public class NodeExecutionStatusUpdateEventHandlerV2Test extends OrchestrationVi
                                   .createdAt(System.currentTimeMillis())
                                   .outcome(dummyOutcome)
                                   .build();
-    outcomeRepository.save(outcome);
+    mongoTemplate.insert(outcome);
 
     // creating event
     OrchestrationEvent event =

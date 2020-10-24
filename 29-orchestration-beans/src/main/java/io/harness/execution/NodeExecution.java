@@ -4,7 +4,6 @@ import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 
 import io.harness.ambiance.Ambiance;
-import io.harness.ambiance.Ambiance.AmbianceKeys;
 import io.harness.annotations.Redesign;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.execution.status.Status;
@@ -15,6 +14,7 @@ import io.harness.mongo.index.FdIndex;
 import io.harness.persistence.PersistentEntity;
 import io.harness.persistence.UuidAware;
 import io.harness.plan.PlanNode;
+import io.harness.plan.PlanNode.PlanNodeKeys;
 import io.harness.state.io.FailureInfo;
 import io.harness.state.io.StepOutcomeRef;
 import io.harness.state.io.StepParameters;
@@ -114,6 +114,10 @@ public final class NodeExecution implements PersistentEntity, UuidAware {
 
   @UtilityClass
   public static class NodeExecutionKeys {
-    public final String planExecutionId = NodeExecutionKeys.ambiance + "." + AmbianceKeys.planExecutionId;
+    public static final String planExecutionId = NodeExecutionKeys.ambiance + "."
+        + "planExecutionId";
+
+    public static final String planNodeId = NodeExecutionKeys.node + "." + PlanNodeKeys.uuid;
+    public static final String planNodeIdentifier = NodeExecutionKeys.node + "." + PlanNodeKeys.identifier;
   }
 }

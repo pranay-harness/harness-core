@@ -14,6 +14,7 @@ import lombok.Builder;
 import lombok.Singular;
 import lombok.Value;
 import lombok.experimental.FieldNameConstants;
+import lombok.experimental.UtilityClass;
 import lombok.experimental.Wither;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Entity;
@@ -48,4 +49,10 @@ public class OutcomeInstance implements PersistentEntity, UuidAccess {
   Outcome outcome;
   @Wither @CreatedDate Long createdAt;
   @Wither @Version Long version;
+
+  @UtilityClass
+  public static class OutcomeInstanceKeys {
+    public final String producedBySetupId = OutcomeInstanceKeys.producedBy + ".setupId";
+    public final String producedByRuntimeId = OutcomeInstanceKeys.producedBy + ".runtimeId";
+  }
 }

@@ -54,4 +54,6 @@ public interface NodeExecutionService {
   boolean updateRelationShipsForRetryNode(String nodeExecutionId, String newNodeExecutionId);
 
   Optional<NodeExecution> getByNodeIdentifier(@NonNull String nodeIdentifier, @NonNull String planExecutionId);
+
+  List<NodeExecution> findByParentIdAndStatusIn(String parentId, EnumSet<Status> flowingStatuses);
 }

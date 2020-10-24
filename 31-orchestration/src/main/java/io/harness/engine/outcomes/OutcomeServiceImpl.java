@@ -4,10 +4,13 @@ import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static java.lang.String.format;
+import static org.springframework.data.mongodb.core.query.Criteria.where;
+import static org.springframework.data.mongodb.core.query.Query.query;
 
 import com.google.inject.Inject;
 import com.google.inject.Injector;
 import com.google.inject.Singleton;
+import com.google.inject.name.Named;
 
 import com.mongodb.DuplicateKeyException;
 import io.harness.ambiance.Ambiance;
@@ -17,6 +20,7 @@ import io.harness.annotations.Redesign;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.data.Outcome;
 import io.harness.data.OutcomeInstance;
+import io.harness.data.OutcomeInstance.OutcomeInstanceKeys;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.engine.expressions.ExpressionEvaluatorProvider;
 import io.harness.engine.expressions.functors.NodeExecutionEntityType;
@@ -24,6 +28,10 @@ import io.harness.expression.EngineExpressionEvaluator;
 import io.harness.references.RefObject;
 import io.harness.resolvers.ResolverUtils;
 import lombok.NonNull;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.domain.Sort.Direction;
+import org.springframework.data.mongodb.core.MongoTemplate;
+import org.springframework.data.mongodb.core.query.Query;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -40,7 +48,7 @@ import javax.validation.constraints.NotNull;
 public class OutcomeServiceImpl implements OutcomeService {
   @Inject private ExpressionEvaluatorProvider expressionEvaluatorProvider;
   @Inject private Injector injector;
-  @Inject private OutcomeRepository outcomeRepository;
+  @Inject @Named("orchestrationMongoTemplate") private MongoTemplate mongoTemplate;
   @Inject private AmbianceUtils ambianceUtils;
 
   @Override
@@ -52,15 +60,15 @@ public class OutcomeServiceImpl implements OutcomeService {
 
     try {
       OutcomeInstance instance =
-          outcomeRepository.save(OutcomeInstance.builder()
-                                     .uuid(generateUuid())
-                                     .planExecutionId(ambiance.getPlanExecutionId())
-                                     .levels(ambiance.getLevels())
-                                     .producedBy(producedBy)
-                                     .name(name)
-                                     .outcome(value)
-                                     .levelRuntimeIdIdx(ResolverUtils.prepareLevelRuntimeIdIdx(ambiance.getLevels()))
-                                     .build());
+          mongoTemplate.insert(OutcomeInstance.builder()
+                                   .uuid(generateUuid())
+                                   .planExecutionId(ambiance.getPlanExecutionId())
+                                   .levels(ambiance.getLevels())
+                                   .producedBy(producedBy)
+                                   .name(name)
+                                   .outcome(value)
+                                   .levelRuntimeIdIdx(ResolverUtils.prepareLevelRuntimeIdIdx(ambiance.getLevels()))
+                                   .build());
       return instance.getUuid();
     } catch (DuplicateKeyException ex) {
       throw new OutcomeException(format("Outcome with name %s is already saved", name), ex);
@@ -86,9 +94,14 @@ public class OutcomeServiceImpl implements OutcomeService {
 
   private Outcome resolveUsingProducerSetupId(@NotNull Ambiance ambiance, @NotNull RefObject refObject) {
     String name = refObject.getName();
-    List<OutcomeInstance> instances =
-        outcomeRepository.findByPlanExecutionIdAndNameAndProducedBySetupIdOrderByCreatedAtDesc(
-            ambiance.getPlanExecutionId(), name, refObject.getProducerId());
+
+    Query query = query(where(OutcomeInstanceKeys.planExecutionId).is(ambiance.getPlanExecutionId()))
+                      .addCriteria(where(OutcomeInstanceKeys.name).is(name))
+                      .addCriteria(where(OutcomeInstanceKeys.producedBySetupId).is(refObject.getProducerId()))
+                      .with(Sort.by(Direction.DESC, OutcomeInstanceKeys.createdAt));
+
+    List<OutcomeInstance> instances = mongoTemplate.find(query, OutcomeInstance.class);
+
     // Multiple instances might be returned if the same plan node executed multiple times.
     if (EmptyPredicate.isEmpty(instances)) {
       throw new OutcomeException(format("Could not resolve outcome with name '%s'", name));
@@ -98,9 +111,13 @@ public class OutcomeServiceImpl implements OutcomeService {
 
   private Outcome resolveUsingRuntimeId(@NotNull Ambiance ambiance, @NotNull RefObject refObject) {
     String name = refObject.getName();
+    Query query =
+        query(where(OutcomeInstanceKeys.planExecutionId).is(ambiance.getPlanExecutionId()))
+            .addCriteria(where(OutcomeInstanceKeys.name).is(name))
+            .addCriteria(
+                where(OutcomeInstanceKeys.levelRuntimeIdIdx).in(ResolverUtils.prepareLevelRuntimeIdIndices(ambiance)));
 
-    List<OutcomeInstance> instances = outcomeRepository.findByPlanExecutionIdAndNameAndLevelRuntimeIdIdxIn(
-        ambiance.getPlanExecutionId(), name, ResolverUtils.prepareLevelRuntimeIdIndices(ambiance));
+    List<OutcomeInstance> instances = mongoTemplate.find(query, OutcomeInstance.class);
 
     // Multiple instances might be returned if the same name was saved at different levels/specificity.
     OutcomeInstance instance = EmptyPredicate.isEmpty(instances)
@@ -118,7 +135,8 @@ public class OutcomeServiceImpl implements OutcomeService {
       return Collections.emptyList();
     }
     List<Outcome> outcomes = new ArrayList<>();
-    Iterable<OutcomeInstance> outcomesInstances = outcomeRepository.findAllById(outcomeInstanceIds);
+    Query query = query(where(OutcomeInstanceKeys.uuid).in(outcomeInstanceIds));
+    Iterable<OutcomeInstance> outcomesInstances = mongoTemplate.find(query, OutcomeInstance.class);
     for (OutcomeInstance instance : outcomesInstances) {
       outcomes.add(instance.getOutcome());
     }
@@ -127,15 +145,19 @@ public class OutcomeServiceImpl implements OutcomeService {
 
   @Override
   public Outcome fetchOutcome(@NonNull String outcomeInstanceId) {
-    Optional<OutcomeInstance> outcomeInstance = outcomeRepository.findById(outcomeInstanceId);
+    Query query = query(where(OutcomeInstanceKeys.uuid).is(outcomeInstanceId));
+    Optional<OutcomeInstance> outcomeInstance =
+        Optional.ofNullable(mongoTemplate.findOne(query, OutcomeInstance.class));
     return outcomeInstance.map(OutcomeInstance::getOutcome).orElse(null);
   }
 
   @Override
   public List<Outcome> findAllByRuntimeId(String planExecutionId, String runtimeId) {
-    List<OutcomeInstance> outcomeInstances =
-        outcomeRepository.findByPlanExecutionIdAndProducedByRuntimeIdOrderByCreatedAtDesc(planExecutionId, runtimeId);
+    Query query = query(where(OutcomeInstanceKeys.planExecutionId).is(planExecutionId))
+                      .addCriteria(where(OutcomeInstanceKeys.producedByRuntimeId).is(runtimeId))
+                      .with(Sort.by(Direction.DESC, OutcomeInstanceKeys.createdAt));
 
+    List<OutcomeInstance> outcomeInstances = mongoTemplate.find(query, OutcomeInstance.class);
     if (isEmpty(outcomeInstances)) {
       return Collections.emptyList();
     }

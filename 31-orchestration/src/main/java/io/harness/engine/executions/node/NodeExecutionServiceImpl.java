@@ -22,6 +22,8 @@ import io.harness.interrupts.ExecutionInterruptType;
 import io.harness.interrupts.InterruptEffect;
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.domain.Sort.Direction;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.query.Update;
@@ -34,52 +36,86 @@ import java.util.function.Consumer;
 @OwnedBy(CDC)
 @Slf4j
 public class NodeExecutionServiceImpl implements NodeExecutionService {
-  @Inject private NodeExecutionRepository nodeExecutionRepository;
   @Inject @Named("orchestrationMongoTemplate") private MongoTemplate mongoTemplate;
   @Inject private OrchestrationEventEmitter eventEmitter;
 
   @Override
   public NodeExecution get(String nodeExecutionId) {
-    return nodeExecutionRepository.findById(nodeExecutionId)
-        .orElseThrow(() -> new InvalidRequestException("Node Execution is null for id: " + nodeExecutionId));
+    Query query = query(where(NodeExecutionKeys.uuid).is(nodeExecutionId));
+    NodeExecution nodeExecution = mongoTemplate.findOne(query, NodeExecution.class);
+    if (nodeExecution == null) {
+      throw new InvalidRequestException("Node Execution is null for id: " + nodeExecutionId);
+    }
+    return nodeExecution;
+  }
+
+  // TODO (alexi) : Handle the case where multiple instances are returned
+  @Override
+  public NodeExecution getByPlanNodeUuid(String planNodeUuid, String planExecutionId) {
+    Query query = query(where(NodeExecutionKeys.planNodeId).is(planNodeUuid))
+                      .addCriteria(where(NodeExecutionKeys.planExecutionId).is(planExecutionId));
+    NodeExecution nodeExecution = mongoTemplate.findOne(query, NodeExecution.class);
+    if (nodeExecution == null) {
+      throw new InvalidRequestException("Node Execution is null for planNodeUuid: " + planNodeUuid);
+    }
+    return nodeExecution;
   }
 
   @Override
-  public NodeExecution getByPlanNodeUuid(String planNodeUuid, String planExecutionId) {
-    return nodeExecutionRepository.findByNodeUuidAndAmbiancePlanExecutionId(planNodeUuid, planExecutionId)
-        .orElseThrow(() -> new InvalidRequestException("Node Execution is null for planNodeUuid: " + planNodeUuid));
+  public Optional<NodeExecution> getByNodeIdentifier(String nodeIdentifier, String planExecutionId) {
+    Query query = query(where(NodeExecutionKeys.planExecutionId).is(planExecutionId))
+                      .addCriteria(where(NodeExecutionKeys.planNodeIdentifier).in(nodeIdentifier));
+    return Optional.ofNullable(mongoTemplate.findOne(query, NodeExecution.class));
+  }
+
+  @Override
+  public List<NodeExecution> findByParentIdAndStatusIn(String parentId, EnumSet<Status> flowingStatuses) {
+    Query query = query(where(NodeExecutionKeys.parentId).is(parentId))
+                      .addCriteria(where(NodeExecutionKeys.status).in(flowingStatuses));
+    return mongoTemplate.find(query, NodeExecution.class);
   }
 
   @Override
   public List<NodeExecution> fetchNodeExecutions(String planExecutionId) {
-    return nodeExecutionRepository.findByAmbiancePlanExecutionId(planExecutionId);
+    Query query = query(where(NodeExecutionKeys.planExecutionId).is(planExecutionId));
+    return mongoTemplate.find(query, NodeExecution.class);
   }
 
   @Override
   public List<NodeExecution> fetchNodeExecutionsWithoutOldRetries(String planExecutionId) {
-    return nodeExecutionRepository.findByAmbiancePlanExecutionIdAndOldRetry(planExecutionId, Boolean.FALSE);
+    Query query = query(where(NodeExecutionKeys.planExecutionId).is(planExecutionId))
+                      .addCriteria(where(NodeExecutionKeys.oldRetry).is(false));
+    return mongoTemplate.find(query, NodeExecution.class);
   }
 
   @Override
   public List<NodeExecution> fetchChildrenNodeExecutions(String planExecutionId, String parentId) {
-    return nodeExecutionRepository.findByAmbiancePlanExecutionIdAndParentIdOrderByCreatedAtDesc(
-        planExecutionId, parentId);
+    Query query = query(where(NodeExecutionKeys.planExecutionId).is(planExecutionId))
+                      .addCriteria(where(NodeExecutionKeys.parentId).is(parentId))
+                      .with(Sort.by(Direction.DESC, NodeExecutionKeys.createdAt));
+    return mongoTemplate.find(query, NodeExecution.class);
   }
 
   @Override
   public List<NodeExecution> fetchNodeExecutionsByNotifyId(String planExecutionId, String notifyId) {
-    return nodeExecutionRepository.findByAmbiancePlanExecutionIdAndNotifyIdOrderByCreatedAtDesc(
-        planExecutionId, notifyId);
+    Query query = query(where(NodeExecutionKeys.planExecutionId).is(planExecutionId))
+                      .addCriteria(where(NodeExecutionKeys.notifyId).is(notifyId))
+                      .with(Sort.by(Direction.DESC, NodeExecutionKeys.createdAt));
+    return mongoTemplate.find(query, NodeExecution.class);
   }
 
   @Override
   public List<NodeExecution> fetchNodeExecutionsByStatus(String planExecutionId, Status status) {
-    return nodeExecutionRepository.findByAmbiancePlanExecutionIdAndStatus(planExecutionId, status);
+    Query query = query(where(NodeExecutionKeys.planExecutionId).is(planExecutionId))
+                      .addCriteria(where(NodeExecutionKeys.status).is(status));
+    return mongoTemplate.find(query, NodeExecution.class);
   }
 
   @Override
   public List<NodeExecution> fetchNodeExecutionsByStatuses(String planExecutionId, EnumSet<Status> statuses) {
-    return nodeExecutionRepository.findByAmbiancePlanExecutionIdAndStatusIn(planExecutionId, statuses);
+    Query query = query(where(NodeExecutionKeys.planExecutionId).is(planExecutionId))
+                      .addCriteria(where(NodeExecutionKeys.status).in(statuses));
+    return mongoTemplate.find(query, NodeExecution.class);
   }
 
   @Override
@@ -98,13 +134,15 @@ public class NodeExecutionServiceImpl implements NodeExecutionService {
   @Override
   public List<NodeExecution> fetchChildrenNodeExecutionsByStatuses(
       String planExecutionId, List<String> parentIds, EnumSet<Status> statuses) {
-    return nodeExecutionRepository.findByAmbiancePlanExecutionIdAndParentIdInAndStatusIn(
-        planExecutionId, parentIds, statuses);
+    Query query = query(where(NodeExecutionKeys.planExecutionId).is(planExecutionId))
+                      .addCriteria(where(NodeExecutionKeys.parentId).in(parentIds))
+                      .addCriteria(where(NodeExecutionKeys.status).in(statuses));
+    return mongoTemplate.find(query, NodeExecution.class);
   }
 
   @Override
   public NodeExecution save(NodeExecution nodeExecution) {
-    return nodeExecutionRepository.save(nodeExecution);
+    return nodeExecution.getVersion() == null ? mongoTemplate.insert(nodeExecution) : mongoTemplate.save(nodeExecution);
   }
 
   /**
@@ -196,10 +234,5 @@ public class NodeExecutionServiceImpl implements NodeExecutionService {
       return false;
     }
     return true;
-  }
-
-  @Override
-  public Optional<NodeExecution> getByNodeIdentifier(String nodeIdentifier, String planExecutionId) {
-    return nodeExecutionRepository.findByNodeIdentifierAndAmbiancePlanExecutionId(nodeIdentifier, planExecutionId);
   }
 }
