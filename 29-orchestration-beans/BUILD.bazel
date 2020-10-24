@@ -14,6 +14,7 @@ java_library(
         "//12-commons:module",
         "//21-persistence:module",
         "//22-timeout-engine:module",
+        "//26-pms-contracts/src/main/proto:26_pms_contracts_java_proto",
         "//27-orchestration-persistence:module",
         "@maven//:com_esotericsoftware_kryo",
         "@maven//:com_fasterxml_jackson_core_jackson_annotations",
