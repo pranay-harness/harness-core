@@ -1,5 +1,7 @@
 package io.harness.ccm.views.dao;
 
+import static io.harness.persistence.HQuery.excludeValidate;
+
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
@@ -34,7 +36,9 @@ public class ViewCustomFieldDao {
   }
 
   public List<ViewCustomField> findByViewId(String viewId) {
-    return hPersistence.createQuery(ViewCustomField.class).filter(ViewCustomFieldKeys.viewId, viewId).asList();
+    return hPersistence.createQuery(ViewCustomField.class, excludeValidate)
+        .filter(ViewCustomFieldKeys.viewId, viewId)
+        .asList();
   }
 
   public ViewCustomField getById(String uuid) {
