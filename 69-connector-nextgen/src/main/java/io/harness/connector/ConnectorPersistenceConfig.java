@@ -34,7 +34,7 @@ import java.util.concurrent.ConcurrentHashMap;
 public class ConnectorPersistenceConfig extends SpringPersistenceConfig {
   @Inject
   public ConnectorPersistenceConfig(Injector injector) {
-    super(injector);
+    super(injector, Collections.emptyList());
   }
 
   @Bean(name = "connectorMongoTemplate")

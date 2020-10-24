@@ -9,12 +9,14 @@ import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.data.mongodb.repository.config.EnableMongoRepositories;
 
+import java.util.Collections;
+
 @Configuration
 @EnableMongoRepositories(
     basePackages = {"io.harness.ci.execution.dao"}, includeFilters = @ComponentScan.Filter(HarnessRepo.class))
 public class CIExecutionPersistenceConfig extends SpringPersistenceConfig {
   @Inject
   public CIExecutionPersistenceConfig(Injector injector) {
-    super(injector);
+    super(injector, Collections.emptyList());
   }
 }

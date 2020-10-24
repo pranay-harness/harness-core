@@ -34,7 +34,7 @@ import java.util.concurrent.ConcurrentHashMap;
 public class TimeoutEnginePersistenceConfig extends SpringPersistenceConfig {
   @Inject
   public TimeoutEnginePersistenceConfig(Injector injector) {
-    super(injector);
+    super(injector, Collections.emptyList());
   }
 
   @Bean(name = "timeoutEngineMongoTemplate")
