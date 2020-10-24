@@ -17,6 +17,7 @@ import io.harness.exception.InvalidRequestException;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 @Slf4j
@@ -62,7 +63,11 @@ public class CEViewServiceImpl implements CEViewService {
 
   @Override
   public CEView get(String uuid) {
-    return ceViewDao.get(uuid);
+    CEView view = ceViewDao.get(uuid);
+    if (view.getViewRules() == null) {
+      view.setViewRules(Collections.emptyList());
+    }
+    return view;
   }
 
   @Override
