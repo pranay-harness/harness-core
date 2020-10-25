@@ -10,7 +10,6 @@ import static org.apache.commons.lang3.StringUtils.isBlank;
 import static software.wings.common.VerificationConstants.DEFAULT_GROUP_NAME;
 import static software.wings.common.VerificationConstants.DUMMY_HOST_NAME;
 import static software.wings.common.VerificationConstants.GA_PER_MINUTE_CV_STATES;
-import static software.wings.common.VerificationConstants.PER_MINUTE_CV_STATES;
 import static software.wings.service.impl.analysis.AnalysisComparisonStrategy.COMPARE_WITH_CURRENT;
 import static software.wings.service.impl.analysis.AnalysisComparisonStrategy.COMPARE_WITH_PREVIOUS;
 import static software.wings.service.impl.analysis.AnalysisComparisonStrategy.PREDICTIVE;
@@ -32,7 +31,6 @@ import io.harness.version.VersionInfoManager;
 import org.apache.commons.io.IOUtils;
 import org.mongodb.morphia.annotations.Transient;
 import software.wings.beans.DatadogConfig;
-import software.wings.beans.FeatureName;
 import software.wings.beans.GcpConfig;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.SumoConfig;
@@ -458,14 +456,11 @@ public abstract class AbstractLogAnalysisState extends AbstractAnalysisState {
                     ? cvInstanceAPIResponse.getNewNodesTrafficShiftPercent().get()
                     : null)
             .skipVerification(cvInstanceAPIResponse.isSkipVerification())
+            .perMinCollectionFinished(!isEligibleForPerMinuteTask(accountId))
             .build();
     // Saving data collection info as part of context.
     // This will be directly used as part of delegate task
-    // todo: Pranjal: Condition will be removed once enabled for all verifiers.
-    if (getComparisonStrategy() == PREDICTIVE
-        || (featureFlagService.isEnabled(FeatureName.CV_DATA_COLLECTION_JOB, accountId)
-               && (PER_MINUTE_CV_STATES.contains(StateType.valueOf(getStateType()))))
-        || GA_PER_MINUTE_CV_STATES.contains(StateType.valueOf(getStateType()))) {
+    if (getComparisonStrategy() == PREDICTIVE || GA_PER_MINUTE_CV_STATES.contains(StateType.valueOf(getStateType()))) {
       DataCollectionInfo dataCollectionInfo = createDataCollectionInfo(analysisContext, context);
       analysisContext.setDataCollectionInfo(dataCollectionInfo);
     }

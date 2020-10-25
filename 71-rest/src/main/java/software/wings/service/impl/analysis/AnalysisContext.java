@@ -49,6 +49,8 @@ import java.util.Map;
 @CdIndex(name = "logAnalysisIterationIdx",
     fields = { @Field("analysisType")
                , @Field("executionStatus"), @Field("logAnalysisIteration") })
+@CdIndex(name = "workflowDataCollectionIdx", fields = { @Field("stateType")
+                                                        , @Field("perMinCollectionFinished") })
 @CdIndex(name = "cvTaskCreationIndex", fields = { @Field("cvTasksCreated")
                                                   , @Field("cvTaskCreationIteration") })
 @Data
@@ -106,12 +108,14 @@ public class AnalysisContext extends Base implements PersistentRegularIterable, 
   @FdIndex private Long logClusterIteration;
   @FdIndex private long cvTaskCreationIteration;
   @FdIndex private Long feedbackIteration;
+  @FdIndex private Long workflowDataCollectionIteration;
   private int initialDelaySeconds;
   private int dataCollectionIntervalMins;
   private boolean isHistoricalDataCollection;
   private boolean inspectHostsInLogs;
   @Nullable private Integer newNodesTrafficShiftPercent;
   private boolean skipVerification;
+  private boolean perMinCollectionFinished;
 
   @JsonIgnore
   @SchemaIgnore
@@ -133,7 +137,7 @@ public class AnalysisContext extends Base implements PersistentRegularIterable, 
       String hostNameField, int collectionInterval, long startDataCollectionMinute,
       DataCollectionInfo dataCollectionInfo, int initialDelaySeconds, int dataCollectionIntervalMins,
       boolean isHistoricalDataCollection, String customThresholdRefId, boolean inspectHostsInLogs,
-      Integer newNodesTrafficShiftPercent, boolean skipVerification) {
+      Integer newNodesTrafficShiftPercent, boolean skipVerification, boolean perMinCollectionFinished) {
     super(uuid, appId, createdBy, createdAt, lastUpdatedBy, lastUpdatedAt, entityYamlPath, syncFromGit);
     this.accountId = accountId;
     this.workflowId = workflowId;
@@ -179,6 +183,7 @@ public class AnalysisContext extends Base implements PersistentRegularIterable, 
     this.inspectHostsInLogs = inspectHostsInLogs;
     this.newNodesTrafficShiftPercent = newNodesTrafficShiftPercent;
     this.skipVerification = skipVerification;
+    this.perMinCollectionFinished = perMinCollectionFinished;
   }
 
   public LogClusterContext getClusterContext() {
@@ -220,6 +225,10 @@ public class AnalysisContext extends Base implements PersistentRegularIterable, 
       this.feedbackIteration = nextIteration;
       return;
     }
+    if (AnalysisContextKeys.workflowDataCollectionIteration.equals(fieldName)) {
+      this.workflowDataCollectionIteration = nextIteration;
+      return;
+    }
     throw new IllegalArgumentException("Invalid fieldName " + fieldName);
   }
 
@@ -239,6 +248,9 @@ public class AnalysisContext extends Base implements PersistentRegularIterable, 
     }
     if (AnalysisContextKeys.feedbackIteration.equals(fieldName)) {
       return this.feedbackIteration;
+    }
+    if (AnalysisContextKeys.workflowDataCollectionIteration.equals(fieldName)) {
+      return this.workflowDataCollectionIteration;
     }
     throw new IllegalArgumentException("Invalid fieldName " + fieldName);
   }

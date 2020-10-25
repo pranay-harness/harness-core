@@ -10,6 +10,7 @@ import static java.time.Duration.ofSeconds;
 import static software.wings.beans.alert.Alert.AlertKeys;
 import static software.wings.common.VerificationConstants.CV_TASK_CRON_POLL_INTERVAL_SEC;
 import static software.wings.common.VerificationConstants.DATA_COLLECTION_TASKS_PER_MINUTE;
+import static software.wings.common.VerificationConstants.GA_PER_MINUTE_CV_STATES;
 import static software.wings.common.VerificationConstants.IGNORED_ERRORS_METRIC_LABELS;
 import static software.wings.common.VerificationConstants.IGNORED_ERRORS_METRIC_NAME;
 import static software.wings.common.VerificationConstants.NUM_LOG_RECORDS;
@@ -55,6 +56,7 @@ import io.harness.jobs.sg247.logs.ServiceGuardAnalysisJob;
 import io.harness.jobs.sg247.logs.ServiceGuardCleanUpAlertsJob;
 import io.harness.jobs.workflow.WorkflowCVTaskCreationHandler;
 import io.harness.jobs.workflow.collection.CVDataCollectionJob;
+import io.harness.jobs.workflow.collection.WorkflowDataCollectionJob;
 import io.harness.jobs.workflow.logs.WorkflowFeedbackAnalysisJob;
 import io.harness.jobs.workflow.logs.WorkflowLogAnalysisJob;
 import io.harness.jobs.workflow.logs.WorkflowLogClusterJob;
@@ -360,6 +362,8 @@ public class VerificationServiceApplication extends Application<VerificationServ
         AnalysisContextKeys.logClusterIteration, MLAnalysisType.LOG_ML, ofSeconds(30), 4);
     registerWorkflowIterator(injector, workflowVerificationExecutor, new WorkflowFeedbackAnalysisJob(),
         AnalysisContextKeys.feedbackIteration, MLAnalysisType.LOG_ML, ofSeconds(30), 4);
+    registerWorkflowDataCollectionIterator(injector, workflowVerificationExecutor, new WorkflowDataCollectionJob(),
+        AnalysisContextKeys.workflowDataCollectionIteration, ofSeconds(30), 4);
 
     ScheduledThreadPoolExecutor cvTaskWorkflowExecutor = new ScheduledThreadPoolExecutor(
         5, new ThreadFactoryBuilder().setNameFormat("Iterator-cvTask-Workflow-verification").build());
@@ -387,6 +391,35 @@ public class VerificationServiceApplication extends Application<VerificationServ
                 -> query.filter(AnalysisContextKeys.analysisType, analysisType)
                        .field(AnalysisContextKeys.executionStatus)
                        .in(Lists.newArrayList(ExecutionStatus.QUEUED, ExecutionStatus.RUNNING)))
+            .redistribute(true)
+            .persistenceProvider(injector.getInstance(MorphiaPersistenceProvider.class))
+            .build();
+    injector.injectMembers(dataCollectionIterator);
+    workflowVerificationExecutor.scheduleAtFixedRate(() -> dataCollectionIterator.process(), 0, 5, TimeUnit.SECONDS);
+  }
+
+  private void registerWorkflowDataCollectionIterator(Injector injector,
+      ScheduledThreadPoolExecutor workflowVerificationExecutor, Handler<AnalysisContext> handler,
+      String iteratorFieldName, Duration interval, int maxAllowedThreads) {
+    injector.injectMembers(handler);
+    PersistenceIterator dataCollectionIterator =
+        MongoPersistenceIterator.<AnalysisContext, MorphiaFilterExpander<AnalysisContext>>builder()
+            .mode(ProcessMode.PUMP)
+            .clazz(AnalysisContext.class)
+            .fieldName(iteratorFieldName)
+            .targetInterval(interval)
+            .acceptableNoAlertDelay(ofSeconds(30))
+            .executorService(workflowVerificationExecutor)
+            .semaphore(new Semaphore(maxAllowedThreads))
+            .handler(handler)
+            .schedulingType(REGULAR)
+            .filterExpander(query
+                -> query.field(AnalysisContextKeys.stateType)
+                       .in(GA_PER_MINUTE_CV_STATES)
+                       .field(AnalysisContextKeys.perMinCollectionFinished)
+                       .exists()
+                       .field(AnalysisContextKeys.perMinCollectionFinished)
+                       .equal(false))
             .redistribute(true)
             .persistenceProvider(injector.getInstance(MorphiaPersistenceProvider.class))
             .build();

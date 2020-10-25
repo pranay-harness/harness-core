@@ -768,6 +768,8 @@ verificationServiceTask {"name": "task_Unique_Idx", "unique": true} {"stateExecu
 verificationServiceTask {"name": "timeSeriesAnalysisIterationIdx", "background": true} {"analysisType": 1, "executionStatus": 1, "timeSeriesAnalysisIteration": 1}
 verificationServiceTask {"name": "timeSeriesAnalysisIteration_1", "background": true} {"timeSeriesAnalysisIteration": 1}
 verificationServiceTask {"name": "validUntil_1", "background": true, "expireAfterSeconds": 0} {"validUntil": 1}
+verificationServiceTask {"name": "workflowDataCollectionIdx", "background": true} {"stateType": 1, "perMinCollectionFinished": 1}
+verificationServiceTask {"name": "workflowDataCollectionIteration_1", "background": true} {"workflowDataCollectionIteration": 1}
 versionedTemplate {"name": "appId_1", "background": true} {"appId": 1}
 versionedTemplate {"name": "createdAt_1", "background": true} {"createdAt": 1}
 versionedTemplate {"name": "referencedTemplates", "background": true} {"templateObject.referencedTemplateList.templateReference.templateUuid": 1}

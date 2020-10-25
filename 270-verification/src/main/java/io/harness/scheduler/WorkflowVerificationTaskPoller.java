@@ -6,7 +6,6 @@ import static software.wings.common.VerificationConstants.CV_CONFIGURATION_VALID
 import static software.wings.common.VerificationConstants.DEFAULT_DATA_COLLECTION_INTERVAL_IN_SECONDS;
 import static software.wings.common.VerificationConstants.DELAY_MINUTES;
 import static software.wings.common.VerificationConstants.GA_PER_MINUTE_CV_STATES;
-import static software.wings.common.VerificationConstants.PER_MINUTE_CV_STATES;
 import static software.wings.common.VerificationConstants.WORKFLOW_CV_COLLECTION_CRON_GROUP;
 import static software.wings.service.impl.analysis.AnalysisComparisonStrategy.PREDICTIVE;
 
@@ -15,8 +14,6 @@ import com.google.inject.Singleton;
 import com.google.inject.name.Named;
 
 import io.harness.jobs.workflow.collection.WorkflowDataCollectionJob;
-import io.harness.managerclient.VerificationManagerClient;
-import io.harness.managerclient.VerificationManagerClientHelper;
 import io.harness.serializer.JsonUtils;
 import io.harness.service.intfc.LearningEngineService;
 import io.harness.version.ServiceApiVersion;
@@ -26,7 +23,6 @@ import org.quartz.JobDetail;
 import org.quartz.SimpleScheduleBuilder;
 import org.quartz.Trigger;
 import org.quartz.TriggerBuilder;
-import software.wings.beans.FeatureName;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.impl.analysis.AnalysisContext;
 import software.wings.service.impl.analysis.AnalysisTolerance;
@@ -53,8 +49,6 @@ public class WorkflowVerificationTaskPoller {
 
   @Inject private LearningEngineService learningEngineService;
   @Inject private WingsPersistence wingsPersistence;
-  @Inject private VerificationManagerClient verificationManagerClient;
-  @Inject private VerificationManagerClientHelper verificationManagerClientHelper;
   @Inject private CVTaskService cvTaskService;
 
   @SuppressWarnings("PMD")
@@ -86,12 +80,7 @@ public class WorkflowVerificationTaskPoller {
   }
 
   private void scheduleDataCollection(AnalysisContext context) {
-    if ((verificationManagerClientHelper
-                .callManagerWithRetry(verificationManagerClient.isFeatureEnabled(
-                    FeatureName.CV_DATA_COLLECTION_JOB, context.getAccountId()))
-                .getResource()
-            && PER_MINUTE_CV_STATES.contains(context.getStateType()))
-        || GA_PER_MINUTE_CV_STATES.contains(context.getStateType())) {
+    if (GA_PER_MINUTE_CV_STATES.contains(context.getStateType())) {
       logger.info("PER MINUTE data collection will be triggered for accountId : {} and stateExecutionId : {}",
           context.getAccountId(), context.getStateExecutionId());
       // TODO: add logs here after triggering data collection.

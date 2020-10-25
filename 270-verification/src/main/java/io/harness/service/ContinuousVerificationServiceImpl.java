@@ -66,6 +66,7 @@ import software.wings.common.VerificationConstants;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.impl.VerificationLogContext;
 import software.wings.service.impl.analysis.AnalysisContext;
+import software.wings.service.impl.analysis.AnalysisContext.AnalysisContextKeys;
 import software.wings.service.impl.analysis.CVFeedbackRecord;
 import software.wings.service.impl.analysis.DataCollectionInfoV2;
 import software.wings.service.impl.analysis.FeedbackAction;
@@ -902,6 +903,15 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
           context.getStateExecutionId());
       return false;
     }
+  }
+
+  @Override
+  @Counted
+  @Timed
+  public void markWorkflowDataCollectionDone(AnalysisContext context) {
+    logger.info("for {} markig the data collection to be done", context.getStateExecutionId());
+    wingsPersistence.updateField(
+        AnalysisContext.class, context.getUuid(), AnalysisContextKeys.perMinCollectionFinished, true);
   }
 
   @Override

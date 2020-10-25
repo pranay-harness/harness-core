@@ -10,7 +10,6 @@ import static software.wings.beans.FeatureName.CV_SUCCEED_FOR_ANOMALY;
 import static software.wings.common.TemplateExpressionProcessor.checkFieldTemplatized;
 import static software.wings.common.VerificationConstants.DELAY_MINUTES;
 import static software.wings.common.VerificationConstants.GA_PER_MINUTE_CV_STATES;
-import static software.wings.common.VerificationConstants.PER_MINUTE_CV_STATES;
 import static software.wings.common.VerificationConstants.URL_STRING;
 import static software.wings.delegatetasks.AbstractDelegateDataCollectionTask.PREDECTIVE_HISTORY_MINUTES;
 import static software.wings.service.impl.ThirdPartyApiCallLog.PAYLOAD;
@@ -161,10 +160,7 @@ public abstract class AbstractAnalysisState extends State {
   }
 
   protected boolean isEligibleForPerMinuteTask(String accountId) {
-    return getComparisonStrategy() == PREDICTIVE
-        || (featureFlagService.isEnabled(FeatureName.CV_DATA_COLLECTION_JOB, accountId)
-               && (PER_MINUTE_CV_STATES.contains(StateType.valueOf(getStateType()))))
-        || GA_PER_MINUTE_CV_STATES.contains(StateType.valueOf(getStateType()));
+    return getComparisonStrategy() == PREDICTIVE || GA_PER_MINUTE_CV_STATES.contains(StateType.valueOf(getStateType()));
   }
 
   @Attributes(required = true, title = "Include nodes from previous phases")

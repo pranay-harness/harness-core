@@ -176,8 +176,6 @@ public class LogMLAnalysisServiceTest extends VerificationBaseTest {
     when(managerCall.clone()).thenReturn(managerCall);
     when(managerCall.execute()).thenReturn(Response.success(new RestResponse<>(true)));
     when(verificationManagerClient.isStateValid(appId, stateExecutionId)).thenReturn(managerCall);
-    when(verificationManagerClient.isFeatureEnabled(FeatureName.CV_DATA_COLLECTION_JOB, accountId))
-        .thenReturn(managerCall);
 
     Call<RestResponse<Boolean>> managerCallFeedbacks = mock(Call.class);
     when(managerCallFeedbacks.clone()).thenReturn(managerCallFeedbacks);

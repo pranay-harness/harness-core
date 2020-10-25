@@ -31,6 +31,8 @@ public interface ContinuousVerificationService {
 
   boolean triggerWorkflowDataCollection(AnalysisContext context);
 
+  void markWorkflowDataCollectionDone(AnalysisContext context);
+
   void triggerTimeSeriesAlertIfNecessary(String cvConfigId, double riskScore, long analysisMinute);
 
   void triggerLogAnalysisAlertIfNecessary(
