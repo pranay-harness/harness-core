@@ -53,7 +53,7 @@ public class ViewsQueryBuilder {
     List<QLCEViewFieldInput> groupByEntity = getGroupByEntity(groupByList);
     QLCEViewTimeTruncGroupBy groupByTime = getGroupByTime(groupByList);
 
-    modifyQueryWithInstanceTypeFilter(rules, filters, groupByEntity, selectQuery);
+    modifyQueryWithInstanceTypeFilter(rules, filters, groupByEntity, customFields, selectQuery);
 
     if (!customFields.isEmpty()) {
       isLabelsPresent = modifyQueryForCustomFields(selectQuery, customFields);
@@ -111,7 +111,7 @@ public class ViewsQueryBuilder {
   }
 
   private void modifyQueryWithInstanceTypeFilter(List<ViewRule> rules, List<QLCEViewFilter> filters,
-      List<QLCEViewFieldInput> groupByEntity, SelectQuery selectQuery) {
+      List<QLCEViewFieldInput> groupByEntity, List<ViewField> customFields, SelectQuery selectQuery) {
     boolean isClusterConditionOrFilterPresent = false;
     boolean isPodFilterPresent = false;
     for (ViewRule rule : rules) {
@@ -144,6 +144,19 @@ public class ViewsQueryBuilder {
         isClusterConditionOrFilterPresent = true;
         if (ImmutableSet.of("namespace", "workloadName").contains(groupBy.getFieldId())) {
           isPodFilterPresent = true;
+        }
+      }
+    }
+
+    for (ViewField field : customFields) {
+      ViewCustomField customField = viewCustomFieldDao.getById(field.getFieldId());
+      List<ViewField> customFieldViewFields = customField.getViewFields();
+      for (ViewField viewField : customFieldViewFields) {
+        if (viewField.getIdentifier().equals(ViewFieldIdentifier.CLUSTER)) {
+          isClusterConditionOrFilterPresent = true;
+          if (ImmutableSet.of("namespace", "workloadName").contains(viewField.getFieldId())) {
+            isPodFilterPresent = true;
+          }
         }
       }
     }
