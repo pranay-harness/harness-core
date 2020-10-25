@@ -480,6 +480,7 @@ public abstract class AbstractMetricAnalysisState extends AbstractAnalysisState 
                     ? cvInstanceAPIResponse.getNewNodesTrafficShiftPercent().get()
                     : null)
             .skipVerification(cvInstanceAPIResponse.isSkipVerification())
+            .perMinCollectionFinished(!isEligibleForPerMinuteTask(accountId))
             .build();
     if (getCVTaskFeatureName().isPresent()) {
       analysisContext.setFeatureFlag(

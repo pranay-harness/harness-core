@@ -4018,6 +4018,18 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
     assertThat(validateCollectorConfig.getOptions().containsKey("to")).isFalse();
   }
 
+  @Test
+  @Owner(developers = RAGHU)
+  @Category(UnitTests.class)
+  public void testMarkWorkflowDataCollectionDone() {
+    String contextId = wingsPersistence.save(AnalysisContext.builder().build());
+    assertThat(wingsPersistence.get(AnalysisContext.class, contextId).isPerMinCollectionFinished()).isFalse();
+
+    continuousVerificationService.markWorkflowDataCollectionDone(
+        wingsPersistence.get(AnalysisContext.class, contextId));
+    assertThat(wingsPersistence.get(AnalysisContext.class, contextId).isPerMinCollectionFinished()).isTrue();
+  }
+
   private Map<String, Map<String, SplunkAnalysisCluster>> getUnknownClusters(boolean setPriority) {
     SplunkAnalysisCluster splunkAnalysisCluster = new SplunkAnalysisCluster();
     splunkAnalysisCluster.setText("msg with priority P5");
