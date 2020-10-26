@@ -470,7 +470,7 @@ public class ServiceGenerator {
     owners.add(ensureService(
         seed, owners, builder().name(serviceName).artifactType(ArtifactType.AZURE_MACHINE_IMAGE).build()));
     ArtifactStream artifactStream =
-        artifactStreamManager.ensurePredefined(seed, owners, ArtifactStreams.AZURE_MACHINE_IMAGE);
+        artifactStreamManager.ensurePredefined(seed, owners, ArtifactStreams.AZURE_MACHINE_IMAGE_LINUX_GALLERY);
     Service service = owners.obtainService();
     service.setArtifactStreams(Collections.singletonList(artifactStream));
     return service;

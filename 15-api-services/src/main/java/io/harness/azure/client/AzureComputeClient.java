@@ -52,27 +52,33 @@ public interface AzureComputeClient {
 
   /**
    * Delete Virtual Machine Scale Set by Resource Group Name.
-   *  @param azureConfig
+   *
+   * @param azureConfig
+   * @param subscriptionId
    * @param resourceGroupName
    * @param virtualScaleSetName
    */
   void deleteVirtualMachineScaleSetByResourceGroupName(
-      AzureConfig azureConfig, String resourceGroupName, String virtualScaleSetName);
+      AzureConfig azureConfig, String subscriptionId, String resourceGroupName, String virtualScaleSetName);
 
   /**
    * Delete Virtual Machine Scale Set by Id.
+   *
    * @param azureConfig
+   * @param subscriptionId
    * @param virtualMachineScaleSetId
    */
-  void deleteVirtualMachineScaleSetById(AzureConfig azureConfig, String virtualMachineScaleSetId);
+  void deleteVirtualMachineScaleSetById(
+      AzureConfig azureConfig, String subscriptionId, String virtualMachineScaleSetId);
 
   /**
    * Bulk delete Virtual Machine Scale Sets by Ids.
    *
    * @param azureConfig
+   * @param subscriptionId
    * @param vmssIds
    */
-  void bulkDeleteVirtualMachineScaleSets(AzureConfig azureConfig, List<String> vmssIds);
+  void bulkDeleteVirtualMachineScaleSets(AzureConfig azureConfig, String subscriptionId, List<String> vmssIds);
 
   /**
    * List VMs of Virtual Machine Scale Set.
@@ -142,15 +148,17 @@ public interface AzureComputeClient {
   /**
    * Create a new Virtual Machine Scale Set based on base scale set.
    * @param azureConfig
+   * @param subscriptionId
    * @param baseVirtualMachineScaleSet
    * @param newVirtualMachineScaleSetName
    * @param azureUserAuthVMInstanceData
    * @param imageArtifact
    * @param tags
    */
-  void createVirtualMachineScaleSet(AzureConfig azureConfig, VirtualMachineScaleSet baseVirtualMachineScaleSet,
-      String newVirtualMachineScaleSetName, AzureUserAuthVMInstanceData azureUserAuthVMInstanceData,
-      AzureMachineImageArtifact imageArtifact, AzureVMSSTagsData tags);
+  void createVirtualMachineScaleSet(AzureConfig azureConfig, String subscriptionId,
+      VirtualMachineScaleSet baseVirtualMachineScaleSet, String newVirtualMachineScaleSetName,
+      AzureUserAuthVMInstanceData azureUserAuthVMInstanceData, AzureMachineImageArtifact imageArtifact,
+      AzureVMSSTagsData tags);
 
   /**
    * Attach virtual machine scale set to load balancer backend pools.

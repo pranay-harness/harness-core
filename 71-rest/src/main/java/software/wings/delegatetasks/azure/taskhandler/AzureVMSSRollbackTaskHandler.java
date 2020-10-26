@@ -86,10 +86,11 @@ public class AzureVMSSRollbackTaskHandler extends AzureVMSSDeployTaskHandler {
         getScaleSet(azureConfig, deployTaskParameters, deployTaskParameters.getNewVirtualMachineScaleSetName());
 
     if (scaleSet.isPresent()) {
+      String subscriptionId = deployTaskParameters.getSubscriptionId();
       VirtualMachineScaleSet virtualMachineScaleSet = scaleSet.get();
       ExecutionLogCallback logCallback = getLogCallBack(deployTaskParameters, DELETE_NEW_VMSS);
       logCallback.saveExecutionLog(format(REQUEST_DELETE_SCALE_SET, virtualMachineScaleSet.name()));
-      azureComputeClient.deleteVirtualMachineScaleSetById(azureConfig, virtualMachineScaleSet.id());
+      azureComputeClient.deleteVirtualMachineScaleSetById(azureConfig, subscriptionId, virtualMachineScaleSet.id());
       logCallback.saveExecutionLog(format(SUCCESS_DELETE_SCALE_SET, virtualMachineScaleSet.name()), INFO, SUCCESS);
     }
   }

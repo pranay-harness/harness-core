@@ -3,9 +3,11 @@ package io.harness.generator;
 import static io.harness.generator.SettingGenerator.Settings.AWS_DEPLOYMENT_FUNCTIONAL_TESTS_CLOUD_PROVIDER;
 import static io.harness.generator.SettingGenerator.Settings.AWS_SPOTINST_TEST_CLOUD_PROVIDER;
 import static io.harness.generator.SettingGenerator.Settings.AWS_TEST_CLOUD_PROVIDER;
+import static io.harness.generator.SettingGenerator.Settings.AZURE_VMSS_SSH_PUBLIC_KEY_CONNECTOR;
 import static io.harness.generator.SettingGenerator.Settings.DEV_TEST_CONNECTOR;
 import static io.harness.generator.SettingGenerator.Settings.GITHUB_TEST_CONNECTOR;
 import static io.harness.generator.SettingGenerator.Settings.PHYSICAL_DATA_CENTER;
+import static io.harness.generator.constants.InfraDefinitionGeneratorConstants.AZURE_VMSS_VM_USERNAME;
 import static io.harness.generator.constants.SettingsGeneratorConstants.PCF_END_POINT;
 import static io.harness.generator.constants.SettingsGeneratorConstants.PCF_KEY;
 import static io.harness.generator.constants.SettingsGeneratorConstants.PCF_USERNAME;
@@ -142,6 +144,7 @@ public class SettingGenerator {
     HELM_S3_CONNECTOR,
     ELK,
     ACCOUNT_LEVEL_GIT_CONNECTOR,
+    AZURE_VMSS_SSH_PUBLIC_KEY_CONNECTOR
   }
 
   public void ensureAllPredefined(Randomizer.Seed seed, Owners owners) {
@@ -220,6 +223,8 @@ public class SettingGenerator {
         return ensureElkConnector(seed, owners);
       case ACCOUNT_LEVEL_GIT_CONNECTOR:
         return ensureAccountLevelGitConnector(seed, owners);
+      case AZURE_VMSS_SSH_PUBLIC_KEY_CONNECTOR:
+        return ensureAzureVMSSSSHPublicKey(seed, owners);
       default:
         unhandled(predefined);
     }
@@ -799,6 +804,28 @@ public class SettingGenerator {
                            .build())
             .build();
 
+    return ensureSettingAttribute(seed, settingAttribute, owners);
+  }
+
+  private SettingAttribute ensureAzureVMSSSSHPublicKey(Seed seed, Owners owners) {
+    final Account account = accountGenerator.ensureRandom(seed, owners);
+
+    final SettingAttribute settingAttribute =
+        aSettingAttribute()
+            .withCategory(SETTING)
+            .withAccountId(account.getUuid())
+            .withAppId(GLOBAL_APP_ID)
+            .withEnvId(GLOBAL_ENV_ID)
+            .withName(AZURE_VMSS_SSH_PUBLIC_KEY_CONNECTOR.name())
+            .withValue(aHostConnectionAttributes()
+                           .withConnectionType(SSH)
+                           .withAccessType(KEY)
+                           .withAccountId(account.getUuid())
+                           .withUserName(AZURE_VMSS_VM_USERNAME)
+                           .withKey(scmSecret.decryptToCharArray(new SecretName("azure_new_vm_ssh_public_key")))
+                           .build())
+            .withUsageRestrictions(getAllAppAllEnvUsageRestrictions())
+            .build();
     return ensureSettingAttribute(seed, settingAttribute, owners);
   }
 

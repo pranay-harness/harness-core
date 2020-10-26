@@ -38,6 +38,7 @@ import org.junit.experimental.categories.Category;
 import org.junit.runner.RunWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.powermock.api.mockito.PowerMockito;
 import org.powermock.core.classloader.annotations.PowerMockIgnore;
 import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
@@ -64,6 +65,7 @@ public class AzureMonitorClientImplTest extends CategoryTest {
     when(configurable.withLogLevel(any(LogLevel.class))).thenReturn(configurable);
     when(configurable.authenticate(any(ApplicationTokenCredentials.class))).thenReturn(authenticated);
     when(authenticated.withDefaultSubscription()).thenReturn(azure);
+    when(authenticated.withSubscription(anyString())).thenReturn(azure);
   }
 
   @Test
@@ -72,6 +74,7 @@ public class AzureMonitorClientImplTest extends CategoryTest {
   public void testListEventDataWithAllPropertiesByResourceId() {
     DateTime endDate = DateTime.now();
     DateTime startDate = endDate.minusMinutes(1);
+    String subscriptionId = "subscriptionId";
     String resourceId = "resourceId";
     AzureConfig azureConfig =
         AzureConfig.builder().clientId("clientId").tenantId("tenantId").key("key".toCharArray()).build();
@@ -93,8 +96,8 @@ public class AzureMonitorClientImplTest extends CategoryTest {
     when(queryWithStartAndEndDateAndProperties.filterByResource(resourceId)).thenReturn(queryExecute);
     when(queryExecute.execute()).thenReturn(eventDataList);
 
-    List<EventData> response =
-        azureMonitorClient.listEventDataWithAllPropertiesByResourceId(azureConfig, startDate, endDate, resourceId);
+    List<EventData> response = azureMonitorClient.listEventDataWithAllPropertiesByResourceId(
+        azureConfig, subscriptionId, startDate, endDate, resourceId);
 
     assertThat(response).isNotNull();
     assertThat(response.size()).isEqualTo(1);
@@ -110,8 +113,9 @@ public class AzureMonitorClientImplTest extends CategoryTest {
     AzureConfig azureConfig =
         AzureConfig.builder().clientId("clientId").tenantId("tenantId").key("key".toCharArray()).build();
 
-    assertThatThrownBy(
-        () -> azureMonitorClient.listEventDataWithAllPropertiesByResourceId(azureConfig, startDate, endDate, null))
+    assertThatThrownBy(()
+                           -> azureMonitorClient.listEventDataWithAllPropertiesByResourceId(
+                               azureConfig, null, startDate, endDate, null))
         .isInstanceOf(IllegalArgumentException.class);
   }
 

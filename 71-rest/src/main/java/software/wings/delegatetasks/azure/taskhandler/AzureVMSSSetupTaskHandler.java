@@ -285,18 +285,20 @@ public class AzureVMSSSetupTaskHandler extends AzureVMSSTaskHandler {
 
     vmssForDownsize.forEach(vmss -> {
       String virtualMachineScaleSetName = vmss.name();
-      logAndClearAutoScaleSettingOnTargetResourceId(azureConfig, resourceGroupName, vmss, downScaleSetsLogger);
+      logAndClearAutoScaleSettingOnTargetResourceId(
+          azureConfig, subscriptionId, resourceGroupName, vmss, downScaleSetsLogger);
       updateVMSSCapacityAndWaitForSteadyState(azureConfig, setupTaskParameters, virtualMachineScaleSetName,
           subscriptionId, resourceGroupName, 0, autoScalingSteadyStateTimeout, DOWN_SCALE_COMMAND_UNIT,
           DOWN_SCALE_STEADY_STATE_WAIT_COMMAND_UNIT);
     });
   }
 
-  public void logAndClearAutoScaleSettingOnTargetResourceId(AzureConfig azureConfig, String resourceGroupName,
-      VirtualMachineScaleSet vmss, ExecutionLogCallback downScaleSetsLogger) {
+  public void logAndClearAutoScaleSettingOnTargetResourceId(AzureConfig azureConfig, String subscriptionId,
+      String resourceGroupName, VirtualMachineScaleSet vmss, ExecutionLogCallback downScaleSetsLogger) {
     String virtualMachineScaleSetName = vmss.name();
     downScaleSetsLogger.saveExecutionLog(format("Clear autoscale settings: [%s]", virtualMachineScaleSetName), INFO);
-    azureAutoScaleSettingsClient.clearAutoScaleSettingOnTargetResourceId(azureConfig, resourceGroupName, vmss.id());
+    azureAutoScaleSettingsClient.clearAutoScaleSettingOnTargetResourceId(
+        azureConfig, subscriptionId, resourceGroupName, vmss.id());
     downScaleSetsLogger.saveExecutionLog("Autoscale settings deleted successfully ", INFO);
   }
 
@@ -331,6 +333,7 @@ public class AzureVMSSSetupTaskHandler extends AzureVMSSTaskHandler {
     ExecutionLogCallback executionLogCallback =
         getLogCallBack(azureVMSSTaskParameters, DELETE_OLD_VIRTUAL_MACHINE_SCALE_SETS_COMMAND_UNIT);
     List<String> vmssIds = scaleSetsForDelete.stream().map(VirtualMachineScaleSet::id).collect(toList());
+    String subscriptionId = azureVMSSTaskParameters.getSubscriptionId();
 
     StringJoiner virtualMachineScaleSetNamesJoiner = new StringJoiner(",", "[", "]");
     scaleSetsForDelete.forEach(vmss -> virtualMachineScaleSetNamesJoiner.add(vmss.name()));
@@ -338,7 +341,7 @@ public class AzureVMSSSetupTaskHandler extends AzureVMSSTaskHandler {
     executionLogCallback.saveExecutionLog(
         color("# Deleting existing Virtual Machine Scale Sets: " + virtualMachineScaleSetNamesJoiner.toString(), Yellow,
             Bold));
-    azureComputeClient.bulkDeleteVirtualMachineScaleSets(azureConfig, vmssIds);
+    azureComputeClient.bulkDeleteVirtualMachineScaleSets(azureConfig, subscriptionId, vmssIds);
     executionLogCallback.saveExecutionLog("Successfully deleted Virtual Scale Sets", INFO, SUCCESS);
   }
 
@@ -377,7 +380,7 @@ public class AzureVMSSSetupTaskHandler extends AzureVMSSTaskHandler {
     // Create new VMSS based on Base VMSS configuration
     logCallback.saveExecutionLog(
         format("Creating new Virtual Machine Scale Set: [%s]", newVirtualMachineScaleSetName), INFO);
-    azureComputeClient.createVirtualMachineScaleSet(azureConfig, baseVirtualMachineScaleSet,
+    azureComputeClient.createVirtualMachineScaleSet(azureConfig, subscriptionId, baseVirtualMachineScaleSet,
         newVirtualMachineScaleSetName, azureUserAuthVMInstanceData, imageArtifact, azureVMSSTagsData);
 
     if (setupTaskParameters.isBlueGreen()) {
@@ -488,7 +491,13 @@ public class AzureVMSSSetupTaskHandler extends AzureVMSSTaskHandler {
     String subscriptionId = setupTaskParameters.getSubscriptionId();
     String resourceGroupName = setupTaskParameters.getResourceGroupName();
 
-    LoadBalancer loadBalancer = getLoadBalancer(azureConfig, loadBalancerName, resourceGroupName);
+    logCallback.saveExecutionLog(
+        format("Sending request to detach Virtual Machine Scale Set:[%s] from exiting backend pools",
+            newVirtualMachineScaleSetName));
+    azureComputeClient.detachVMSSFromBackendPools(
+        azureConfig, subscriptionId, resourceGroupName, newVirtualMachineScaleSetName, "*");
+
+    LoadBalancer loadBalancer = getLoadBalancer(azureConfig, subscriptionId, resourceGroupName, loadBalancerName);
 
     logCallback.saveExecutionLog(format(
         "Sending request to attach Virtual Machine Scale Set:[%s] to load balancer: [%s], stage backend pool:[%s]",
@@ -498,9 +507,10 @@ public class AzureVMSSSetupTaskHandler extends AzureVMSSTaskHandler {
     logCallback.saveExecutionLog("Successful attached Virtual Machine Scale Set to stage backend pool");
   }
 
-  private LoadBalancer getLoadBalancer(AzureConfig azureConfig, String loadBalancerName, String resourceGroupName) {
+  private LoadBalancer getLoadBalancer(
+      AzureConfig azureConfig, String subscriptionId, String resourceGroupName, String loadBalancerName) {
     Optional<LoadBalancer> loadBalancerOp =
-        azureNetworkClient.getLoadBalancerByName(azureConfig, resourceGroupName, loadBalancerName);
+        azureNetworkClient.getLoadBalancerByName(azureConfig, subscriptionId, resourceGroupName, loadBalancerName);
     return loadBalancerOp.orElseThrow(
         ()
             -> new InvalidRequestException(format(
@@ -524,7 +534,7 @@ public class AzureVMSSSetupTaskHandler extends AzureVMSSTaskHandler {
     List<String> baseVMSSScalingPolicyJSONs = azureAutoScaleHelper.getVMSSAutoScaleSettingsJSONs(
         azureConfig, subscriptionId, resourceGroupName, baseVirtualMachineScaleSetName);
     AzureVMSSPreDeploymentData azureVMSSPreDeploymentData =
-        populatePreDeploymentData(azureConfig, mostRecentActiveVMSS);
+        populatePreDeploymentData(azureConfig, subscriptionId, mostRecentActiveVMSS);
 
     return AzureVMSSSetupTaskResponse.builder()
         .lastDeployedVMSSName(mostRecentActiveVMSSName)
@@ -540,11 +550,11 @@ public class AzureVMSSSetupTaskHandler extends AzureVMSSTaskHandler {
   }
 
   private AzureVMSSPreDeploymentData populatePreDeploymentData(
-      AzureConfig azureConfig, VirtualMachineScaleSet mostRecentActiveVMSS) {
+      AzureConfig azureConfig, String subscriptionId, VirtualMachineScaleSet mostRecentActiveVMSS) {
     boolean isMostRecentVMSSAvailable = mostRecentActiveVMSS != null;
 
     List<String> autoScalingPoliciesJson =
-        azureAutoScaleHelper.getVMSSAutoScaleSettingsJSONs(azureConfig, mostRecentActiveVMSS);
+        azureAutoScaleHelper.getVMSSAutoScaleSettingsJSONs(azureConfig, subscriptionId, mostRecentActiveVMSS);
 
     return AzureVMSSPreDeploymentData.builder()
         .minCapacity(0)

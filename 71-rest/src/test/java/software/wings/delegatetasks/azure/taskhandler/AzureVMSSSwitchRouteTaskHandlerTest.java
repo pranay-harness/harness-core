@@ -138,7 +138,7 @@ public class AzureVMSSSwitchRouteTaskHandlerTest extends WingsBaseTest {
     when(
         azureComputeClient.getVirtualMachineScaleSetByName(azureConfig, subscriptionId, resourceGroupName, oldVMSSName))
         .thenReturn(Optional.of(oldVirtualMachineScaleSet));
-    when(azureNetworkClient.getLoadBalancerByName(azureConfig, resourceGroupName, loadBalancerName))
+    when(azureNetworkClient.getLoadBalancerByName(azureConfig, subscriptionId, resourceGroupName, loadBalancerName))
         .thenReturn(Optional.of(loadBalancer));
 
     // detachVMSSFromBackendPools()
@@ -163,11 +163,11 @@ public class AzureVMSSSwitchRouteTaskHandlerTest extends WingsBaseTest {
     doNothing().when(azureComputeClient).updateVMInstances(any(), anyString());
     doNothing()
         .when(azureAutoScaleSettingsClient)
-        .clearAutoScaleSettingOnTargetResourceId(any(), anyString(), anyString());
+        .clearAutoScaleSettingOnTargetResourceId(any(), anyString(), anyString(), anyString());
     doNothing()
         .when(azureAutoScaleSettingsClient)
-        .attachAutoScaleSettingToTargetResourceId(any(), anyString(), anyString(), anyString());
-    doNothing().when(azureComputeClient).deleteVirtualMachineScaleSetById(any(), anyString());
+        .attachAutoScaleSettingToTargetResourceId(any(), anyString(), anyString(), anyString(), anyString());
+    doNothing().when(azureComputeClient).deleteVirtualMachineScaleSetById(any(), anyString(), anyString());
 
     // newVirtualMachineScaleSet updateTags()
     WithPrimaryLoadBalancer newVMSSUpdater = mock(WithPrimaryLoadBalancer.class);

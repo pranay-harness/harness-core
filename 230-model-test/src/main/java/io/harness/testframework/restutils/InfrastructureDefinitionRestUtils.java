@@ -1,5 +1,6 @@
 package io.harness.testframework.restutils;
 
+import io.harness.azure.model.VirtualMachineScaleSetData;
 import io.harness.beans.PageResponse;
 import io.harness.exception.EmptyRestResponseException;
 import io.harness.rest.RestResponse;
@@ -135,29 +136,123 @@ public class InfrastructureDefinitionRestUtils {
         .collect(Collectors.toList());
   }
 
-  public List<String> listVirtualMachineScaleSets(
+  public Map<String, String> listVirtualMachineScaleSets(
       String bearerToken, String appId, String subscriptionId, String resourceGroup, String cloudProviderId) {
-    GenericType<RestResponse<PageResponse<InfrastructureDefinition>>> restResponseGenericType =
-        new GenericType<RestResponse<PageResponse<InfrastructureDefinition>>>() {};
-    RestResponse<PageResponse<InfrastructureDefinition>> restResponse =
-        Setup.portal()
-            .auth()
-            .oauth2(bearerToken)
-            .contentType(ContentType.JSON)
-            .queryParam("appId", appId)
-            .queryParam("subscriptionId", subscriptionId)
-            .queryParam("resourceGroupName", resourceGroup)
-            .get("/infrastructure-definitions/" + cloudProviderId + "/vm-scale-sets")
-            .as(restResponseGenericType.getType());
+    GenericType<RestResponse<Map<String, String>>> restResponseGenericType =
+        new GenericType<RestResponse<Map<String, String>>>() {};
+    String scaleSetsPath =
+        String.format("/infrastructure-definitions/compute-providers/%s/vm-scale-sets", cloudProviderId);
+    RestResponse<Map<String, String>> restResponse = Setup.portal()
+                                                         .auth()
+                                                         .oauth2(bearerToken)
+                                                         .contentType(ContentType.JSON)
+                                                         .queryParam("appId", appId)
+                                                         .queryParam("subscriptionId", subscriptionId)
+                                                         .queryParam("resourceGroupName", resourceGroup)
+                                                         .get(scaleSetsPath)
+                                                         .as(restResponseGenericType.getType());
     if (restResponse.getResource() == null) {
-      throw new EmptyRestResponseException(
-          "/infrastructure-definitions", String.valueOf(restResponse.getResponseMessages()));
+      throw new EmptyRestResponseException(scaleSetsPath, String.valueOf(restResponse.getResponseMessages()));
     }
-    return restResponse.getResource()
-        .getResponse()
-        .stream()
-        .map(InfrastructureDefinition::getUuid)
-        .collect(Collectors.toList());
+
+    return restResponse.getResource();
+  }
+
+  public List<String> getAzureLoadBalancerBackendPools(
+      String bearerToken, String appId, String infraDefinitionId, String loadBalancerName) {
+    GenericType<RestResponse<List<String>>> restResponseGenericType = new GenericType<RestResponse<List<String>>>() {};
+    String backendPoolsPath = String.format(
+        "/infrastructure-definitions/%s/azure-load-balancers/%s/backend-pools", infraDefinitionId, loadBalancerName);
+    RestResponse<List<String>> restResponse = Setup.portal()
+                                                  .auth()
+                                                  .oauth2(bearerToken)
+                                                  .contentType(ContentType.JSON)
+                                                  .queryParam("appId", appId)
+                                                  .get(backendPoolsPath)
+                                                  .as(restResponseGenericType.getType());
+    if (restResponse.getResource() == null) {
+      throw new EmptyRestResponseException(backendPoolsPath, String.valueOf(restResponse.getResponseMessages()));
+    }
+
+    return restResponse.getResource();
+  }
+
+  public List<String> listLoadBalancers(String bearerToken, String appId, String infraDefinitionId) {
+    GenericType<RestResponse<List<String>>> restResponseGenericType = new GenericType<RestResponse<List<String>>>() {};
+    String loadBalancersPath = String.format("/infrastructure-definitions/%s/azure-load-balancers", infraDefinitionId);
+    RestResponse<List<String>> restResponse = Setup.portal()
+                                                  .auth()
+                                                  .oauth2(bearerToken)
+                                                  .contentType(ContentType.JSON)
+                                                  .queryParam("appId", appId)
+                                                  .get(loadBalancersPath)
+                                                  .as(restResponseGenericType.getType());
+    if (restResponse.getResource() == null) {
+      throw new EmptyRestResponseException(loadBalancersPath, String.valueOf(restResponse.getResponseMessages()));
+    }
+
+    return restResponse.getResource();
+  }
+
+  public VirtualMachineScaleSetData getAzureVirtualMachineScaleSetByName(String bearerToken, String appId,
+      String subscriptionId, String resourceGroup, String cloudProviderId, String vmScaleSetName) {
+    GenericType<RestResponse<VirtualMachineScaleSetData>> restResponseGenericType =
+        new GenericType<RestResponse<VirtualMachineScaleSetData>>() {};
+    String scaleSetsPath = String.format(
+        "/infrastructure-definitions/compute-providers/%s/vm-scale-sets/%s", cloudProviderId, vmScaleSetName);
+    RestResponse<VirtualMachineScaleSetData> restResponse = Setup.portal()
+                                                                .auth()
+                                                                .oauth2(bearerToken)
+                                                                .contentType(ContentType.JSON)
+                                                                .queryParam("appId", appId)
+                                                                .queryParam("subscriptionId", subscriptionId)
+                                                                .queryParam("resourceGroupName", resourceGroup)
+                                                                .get(scaleSetsPath)
+                                                                .as(restResponseGenericType.getType());
+    if (restResponse.getResource() == null) {
+      throw new EmptyRestResponseException(scaleSetsPath, String.valueOf(restResponse.getResponseMessages()));
+    }
+
+    return restResponse.getResource();
+  }
+
+  public Map<String, String> getAzureSubscriptions(String bearerToken, String appId, String cloudProviderId) {
+    GenericType<RestResponse<Map<String, String>>> restResponseGenericType =
+        new GenericType<RestResponse<Map<String, String>>>() {};
+    String subscriptionsPath =
+        String.format("/infrastructure-definitions/compute-providers/%s/subscriptions", cloudProviderId);
+    RestResponse<Map<String, String>> restResponse = Setup.portal()
+                                                         .auth()
+                                                         .oauth2(bearerToken)
+                                                         .contentType(ContentType.JSON)
+                                                         .queryParam("appId", appId)
+                                                         .get(subscriptionsPath)
+                                                         .as(restResponseGenericType.getType());
+    if (restResponse.getResource() == null) {
+      throw new EmptyRestResponseException(subscriptionsPath, String.valueOf(restResponse.getResponseMessages()));
+    }
+
+    return restResponse.getResource();
+  }
+
+  public List<String> getAzureResourceGroupsNames(
+      String bearerToken, String appId, String cloudProviderId, String subscriptionId) {
+    GenericType<RestResponse<List<String>>> restResponseGenericType = new GenericType<RestResponse<List<String>>>() {};
+    String subscriptionsPath =
+        String.format("/infrastructure-definitions/compute-providers/%s/resource-groups", cloudProviderId);
+    RestResponse<List<String>> restResponse = Setup.portal()
+                                                  .auth()
+                                                  .oauth2(bearerToken)
+                                                  .contentType(ContentType.JSON)
+                                                  .queryParam("appId", appId)
+                                                  .queryParam("subscriptionId", subscriptionId)
+                                                  .get(subscriptionsPath)
+                                                  .as(restResponseGenericType.getType());
+    if (restResponse.getResource() == null) {
+      throw new EmptyRestResponseException(subscriptionsPath, String.valueOf(restResponse.getResponseMessages()));
+    }
+
+    return restResponse.getResource();
   }
 
   public static List<String> listAutoScalingGroups(

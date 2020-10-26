@@ -1,5 +1,7 @@
 package io.harness.azure.impl;
 
+import static org.mockito.Matchers.anyString;
+
 import com.google.common.util.concurrent.TimeLimiter;
 
 import com.microsoft.azure.Page;
@@ -56,11 +58,12 @@ public class AzureAutoScaleSettingsClientImplTest extends CategoryTest {
   public void before() throws Exception {
     ApplicationTokenCredentials tokenCredentials = Mockito.mock(ApplicationTokenCredentials.class);
     PowerMockito.whenNew(ApplicationTokenCredentials.class).withAnyArguments().thenReturn(tokenCredentials);
-    Mockito.when(tokenCredentials.getToken(Matchers.anyString())).thenReturn("tokenValue");
+    Mockito.when(tokenCredentials.getToken(anyString())).thenReturn("tokenValue");
     PowerMockito.mockStatic(Azure.class);
     Mockito.when(Azure.configure()).thenReturn(configurable);
     Mockito.when(configurable.withLogLevel(Matchers.any(LogLevel.class))).thenReturn(configurable);
     Mockito.when(configurable.authenticate(Matchers.any(ApplicationTokenCredentials.class))).thenReturn(authenticated);
+    Mockito.when(authenticated.withSubscription(anyString())).thenReturn(azure);
     Mockito.when(authenticated.withDefaultSubscription()).thenReturn(azure);
   }
 
@@ -68,6 +71,7 @@ public class AzureAutoScaleSettingsClientImplTest extends CategoryTest {
   @Owner(developers = OwnerRule.IVAN)
   @Category(UnitTests.class)
   public void testGetAutoScaleSettingByTargetResourceId() throws Exception {
+    String subscriptionId = "subscriptionId";
     String resourceGroupName = "resourceGroupName";
     String targetResourceId = "targetResourceId";
     String autoScaleSettingId = "autoScaleSettingId";
@@ -77,7 +81,7 @@ public class AzureAutoScaleSettingsClientImplTest extends CategoryTest {
     mockAutosScaleSettings(resourceGroupName, targetResourceId, autoScaleSettingId);
 
     Optional<AutoscaleSetting> response = azureAutoScaleSettingsClient.getAutoScaleSettingByTargetResourceId(
-        azureConfig, resourceGroupName, targetResourceId);
+        azureConfig, subscriptionId, resourceGroupName, targetResourceId);
 
     response.ifPresent(as -> Assertions.assertThat(as).isNotNull());
   }
@@ -86,6 +90,7 @@ public class AzureAutoScaleSettingsClientImplTest extends CategoryTest {
   @Owner(developers = OwnerRule.IVAN)
   @Category(UnitTests.class)
   public void testAttachAutoScaleSettingToTargetResourceId() throws Exception {
+    String subscriptionId = "subscriptionId";
     String resourceGroupName = "resourceGroupName";
     String targetResourceId = "targetResourceId";
     String autoScaleSettingId = "autoScaleSettingId";
@@ -183,11 +188,10 @@ public class AzureAutoScaleSettingsClientImplTest extends CategoryTest {
 
     Mockito.doReturn(mockAutoScaleSettingResourceInner)
         .when(mockAutoScaleSettingsInner)
-        .createOrUpdate(
-            Matchers.eq(resourceGroupName), Matchers.anyString(), autoScaleSettingResourceInnerCapture.capture());
+        .createOrUpdate(Matchers.eq(resourceGroupName), anyString(), autoScaleSettingResourceInnerCapture.capture());
 
-    azureAutoScaleSettingsClient.attachAutoScaleSettingToTargetResourceId(
-        azureConfig, resourceGroupName, targetResourceId, autoScaleSettingsJSONs, defaultProfileScalePolicy);
+    azureAutoScaleSettingsClient.attachAutoScaleSettingToTargetResourceId(azureConfig, subscriptionId,
+        resourceGroupName, targetResourceId, autoScaleSettingsJSONs, defaultProfileScalePolicy);
 
     AutoscaleSettingResourceInner autoScaleSettingResult = autoScaleSettingResourceInnerCapture.getValue();
     Assertions.assertThat(autoScaleSettingResult).isNotNull();
@@ -205,6 +209,7 @@ public class AzureAutoScaleSettingsClientImplTest extends CategoryTest {
   @Owner(developers = OwnerRule.IVAN)
   @Category(UnitTests.class)
   public void testClearAutoScaleSettingOnTargetResourceId() throws Exception {
+    String subscriptionId = "subscriptionId";
     String resourceGroupName = "resourceGroupName";
     String targetResourceId = "targetResourceId";
     String autoScaleSettingId = "autoScaleSettingId";
@@ -218,7 +223,7 @@ public class AzureAutoScaleSettingsClientImplTest extends CategoryTest {
     Mockito.doNothing().when(mockAutoScaleSettings).deleteById(autoScaleSettingIdCapture.capture());
 
     azureAutoScaleSettingsClient.clearAutoScaleSettingOnTargetResourceId(
-        azureConfig, resourceGroupName, targetResourceId);
+        azureConfig, subscriptionId, resourceGroupName, targetResourceId);
 
     String autoScaleSettingIdResult = autoScaleSettingIdCapture.getValue();
     Assertions.assertThat(autoScaleSettingIdResult).isNotNull();
@@ -229,6 +234,7 @@ public class AzureAutoScaleSettingsClientImplTest extends CategoryTest {
   @Owner(developers = OwnerRule.IVAN)
   @Category(UnitTests.class)
   public void testGetDefaultAutoScaleProfile() throws Exception {
+    String subscriptionId = "subscriptionId";
     String resourceGroupName = "resourceGroupName";
     String targetResourceId = "targetResourceId";
     String autoScaleSettingId = "autoScaleSettingId";
@@ -237,8 +243,8 @@ public class AzureAutoScaleSettingsClientImplTest extends CategoryTest {
 
     mockAutosScaleSettings(resourceGroupName, targetResourceId, autoScaleSettingId);
 
-    Optional<AutoscaleProfile> response =
-        azureAutoScaleSettingsClient.getDefaultAutoScaleProfile(azureConfig, resourceGroupName, targetResourceId);
+    Optional<AutoscaleProfile> response = azureAutoScaleSettingsClient.getDefaultAutoScaleProfile(
+        azureConfig, subscriptionId, resourceGroupName, targetResourceId);
 
     response.ifPresent(as -> Assertions.assertThat(as).isNotNull());
   }
@@ -247,6 +253,7 @@ public class AzureAutoScaleSettingsClientImplTest extends CategoryTest {
   @Owner(developers = OwnerRule.IVAN)
   @Category(UnitTests.class)
   public void testListAutoScaleProfilesByTargetResourceId() throws Exception {
+    String subscriptionId = "subscriptionId";
     String resourceGroupName = "resourceGroupName";
     String targetResourceId = "targetResourceId";
     String autoScaleSettingId = "autoScaleSettingId";
@@ -256,7 +263,7 @@ public class AzureAutoScaleSettingsClientImplTest extends CategoryTest {
     mockAutosScaleSettings(resourceGroupName, targetResourceId, autoScaleSettingId);
 
     List<AutoscaleProfile> response = azureAutoScaleSettingsClient.listAutoScaleProfilesByTargetResourceId(
-        azureConfig, resourceGroupName, targetResourceId);
+        azureConfig, subscriptionId, resourceGroupName, targetResourceId);
 
     Assertions.assertThat(response).isNotNull();
     Assertions.assertThat(response.size()).isEqualTo(1);

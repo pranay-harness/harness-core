@@ -1,29 +1,39 @@
 package io.harness.generator.artifactstream;
 
-import io.harness.generator.OwnerManager;
-import io.harness.generator.Randomizer;
+import com.google.common.base.Preconditions;
+import com.google.inject.Inject;
+
+import io.harness.generator.OwnerManager.Owners;
+import io.harness.generator.Randomizer.Seed;
+import io.harness.generator.SettingGenerator;
 import software.wings.beans.artifact.ArtifactStream;
+import software.wings.beans.artifact.AzureMachineImageArtifactStream;
 
-public class AzureMachineImageArtifactStreamGenerator implements ArtifactStreamsGenerator {
+public abstract class AzureMachineImageArtifactStreamGenerator implements ArtifactStreamsGenerator {
+  @Inject protected SettingGenerator settingGenerator;
+  @Inject private ArtifactStreamGeneratorHelper artifactStreamGeneratorHelper;
+
   @Override
-  public ArtifactStream ensureArtifactStream(Randomizer.Seed seed, OwnerManager.Owners owners) {
-    return null;
+  public ArtifactStream ensureArtifactStream(Seed seed, Owners owners) {
+    return ensureArtifactStream(seed, owners, false);
   }
 
   @Override
-  public ArtifactStream ensureArtifactStream(Randomizer.Seed seed, OwnerManager.Owners owners, boolean atConnector) {
-    return null;
+  public ArtifactStream ensureArtifactStream(Seed seed, Owners owners, boolean atConnector) {
+    return ensureArtifactStream(seed, owners, false, false);
   }
 
-  @Override
-  public ArtifactStream ensureArtifactStream(
-      Randomizer.Seed seed, OwnerManager.Owners owners, boolean atConnector, boolean metadataOnly) {
-    return null;
-  }
+  protected ArtifactStream saveArtifactStream(ArtifactStream artifactStream, Owners owners) {
+    AzureMachineImageArtifactStream azureMachineImageArtifactStream = (AzureMachineImageArtifactStream) artifactStream;
+    ArtifactStream existing = artifactStreamGeneratorHelper.exists(azureMachineImageArtifactStream);
+    if (existing != null) {
+      return existing;
+    }
 
-  @Override
-  public ArtifactStream ensureArtifactStream(
-      Randomizer.Seed seed, ArtifactStream artifactStream, OwnerManager.Owners owners) {
-    return null;
+    Preconditions.checkNotNull(artifactStream.getAppId());
+    Preconditions.checkNotNull(artifactStream.getServiceId());
+    Preconditions.checkNotNull(artifactStream.getName());
+
+    return artifactStreamGeneratorHelper.saveArtifactStream(azureMachineImageArtifactStream, owners);
   }
 }

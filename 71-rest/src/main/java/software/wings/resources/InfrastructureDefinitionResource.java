@@ -437,10 +437,10 @@ public class InfrastructureDefinitionResource {
   @Timed
   @ExceptionMetered
   @AuthRule(permissionType = ENV, action = READ, skipAuth = true)
-  public RestResponse<VirtualMachineScaleSetData> getAzureVirtualMachineScaleSetById(@QueryParam("appId") String appId,
-      @QueryParam("subscriptionId") String subscriptionId, @QueryParam("resourceGroupName") String resourceGroupName,
-      @QueryParam("deploymentType") String deploymentType, @PathParam("vmssName") String vmssName,
-      @PathParam("computeProviderId") String computeProviderId) {
+  public RestResponse<VirtualMachineScaleSetData> getAzureVirtualMachineScaleSetByName(
+      @QueryParam("appId") String appId, @QueryParam("subscriptionId") String subscriptionId,
+      @QueryParam("resourceGroupName") String resourceGroupName, @QueryParam("deploymentType") String deploymentType,
+      @PathParam("vmssName") String vmssName, @PathParam("computeProviderId") String computeProviderId) {
     return new RestResponse<>(infrastructureDefinitionService.getVirtualMachineScaleSet(
         appId, deploymentType, computeProviderId, subscriptionId, resourceGroupName, vmssName));
   }

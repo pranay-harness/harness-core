@@ -193,7 +193,7 @@ public class AzureVMSSSetupState extends AbstractAzureState {
 
     AzureVMAuthDTO azureVmAuthDTO = azureVMSSStateHelper.createVMAuthDTO(azureVMSSInfrastructureMapping);
     List<EncryptedDataDetail> vmAuthDTOEncryptionDetails =
-        azureVMSSStateHelper.getVMAuthDTOEncryptionDetails(context, azureVmAuthDTO, envId);
+        azureVMSSStateHelper.getVMAuthDTOEncryptionDetails(context, azureVmAuthDTO, accountId, envId);
     azureVMSSStateHelper.updateEncryptedDataDetailSecretFieldName(azureVmAuthDTO, vmAuthDTOEncryptionDetails);
 
     return AzureVMSSSetupTaskParameters.builder()

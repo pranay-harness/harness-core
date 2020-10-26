@@ -149,6 +149,8 @@ public class AzureVMSSDeployTaskHandler extends AzureVMSSTaskHandler {
 
   private void resizeScaleSet(AzureConfig azureConfig, AzureVMSSDeployTaskParameters deployTaskParameters,
       String scaleCommandUnit, String waitCommandUnit, AzureVMSSResizeDetail azureVMSSResizeDetail) {
+    String subscriptionId = deployTaskParameters.getSubscriptionId();
+    String resourceGroupName = deployTaskParameters.getResourceGroupName();
     String scaleSetName = azureVMSSResizeDetail.getScaleSetName();
     Optional<VirtualMachineScaleSet> scaleSet = getScaleSet(azureConfig, deployTaskParameters, scaleSetName);
     if (!scaleSet.isPresent()) {
@@ -160,7 +162,7 @@ public class AzureVMSSDeployTaskHandler extends AzureVMSSTaskHandler {
     int desiredCount = azureVMSSResizeDetail.getDesiredCount();
     ExecutionLogCallback logCallBack = getLogCallBack(deployTaskParameters, scaleCommandUnit);
 
-    clearScalingPolicy(azureConfig, virtualMachineScaleSet, deployTaskParameters.getResourceGroupName(), logCallBack);
+    clearScalingPolicy(azureConfig, subscriptionId, virtualMachineScaleSet, resourceGroupName, logCallBack);
     updateScaleSetCapacity(
         azureConfig, deployTaskParameters, scaleSetName, desiredCount, scaleCommandUnit, waitCommandUnit);
     attachScalingPolicy(
@@ -171,6 +173,17 @@ public class AzureVMSSDeployTaskHandler extends AzureVMSSTaskHandler {
       String scaleCommandUnit, String waitCommandUnit, String scaleSetName) {
     String message = format(SKIP_RESIZE_SCALE_SET, isEmpty(scaleSetName) ? EMPTY : scaleSetName);
     handleExecutionLog(deployTaskParameters, message, scaleCommandUnit, waitCommandUnit);
+  }
+
+  private void clearScalingPolicy(AzureConfig azureConfig, VirtualMachineScaleSet scaleSet,
+      AzureVMSSDeployTaskParameters deployTaskParameters, ExecutionLogCallback logCallBack) {
+    String scaleSetName = scaleSet.name();
+    String scaleSetId = scaleSet.id();
+    String resourceGroupName = deployTaskParameters.getResourceGroupName();
+    String subscriptionId = deployTaskParameters.getSubscriptionId();
+    logCallBack.saveExecutionLog(format("Clearing scaling policy for scale set: [%s]", scaleSetName));
+    azureAutoScaleSettingsClient.clearAutoScaleSettingOnTargetResourceId(
+        azureConfig, subscriptionId, resourceGroupName, scaleSetId);
   }
 
   private void updateScaleSetCapacity(AzureConfig azureConfig, AzureVMSSDeployTaskParameters deployTaskParameters,
@@ -196,6 +209,7 @@ public class AzureVMSSDeployTaskHandler extends AzureVMSSTaskHandler {
     }
 
     String scaleSetId = scaleSet.id();
+    String subscriptionId = deployTaskParameters.getSubscriptionId();
     String resourceGroupName = deployTaskParameters.getResourceGroupName();
     String minimum = String.valueOf(deployTaskParameters.getMinInstances());
     String maximum = String.valueOf(deployTaskParameters.getMaxInstances());
@@ -207,7 +221,7 @@ public class AzureVMSSDeployTaskHandler extends AzureVMSSTaskHandler {
     logCallBack.saveExecutionLog(
         format(azureVMSSResizeDetail.getScalingPolicyMessage(), scaleSet.name()), INFO, SUCCESS);
     azureAutoScaleSettingsClient.attachAutoScaleSettingToTargetResourceId(
-        azureConfig, resourceGroupName, scaleSetId, scalingPolicyJSONs, capacity);
+        azureConfig, subscriptionId, resourceGroupName, scaleSetId, scalingPolicyJSONs, capacity);
   }
 
   private void handleExecutionLog(AzureVMSSDeployTaskParameters deployTaskParameters, String message,

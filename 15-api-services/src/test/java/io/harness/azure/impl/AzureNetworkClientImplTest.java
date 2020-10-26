@@ -62,12 +62,14 @@ public class AzureNetworkClientImplTest extends CategoryTest {
     when(configurable.withLogLevel(any(LogLevel.class))).thenReturn(configurable);
     when(configurable.authenticate(any(ApplicationTokenCredentials.class))).thenReturn(authenticated);
     when(authenticated.withDefaultSubscription()).thenReturn(azure);
+    when(authenticated.withSubscription(anyString())).thenReturn(azure);
   }
 
   @Test
   @Owner(developers = IVAN)
   @Category(UnitTests.class)
   public void testListLoadBalancersByResourceGroup() {
+    String subscriptionId = "subscriptionId";
     String resourceGroupName = "resourceGroupName";
 
     LoadBalancers loadBalancers = mock(LoadBalancers.class);
@@ -79,7 +81,7 @@ public class AzureNetworkClientImplTest extends CategoryTest {
     when(loadBalancers.listByResourceGroup(resourceGroupName)).thenReturn(loadBalancersList);
 
     List<LoadBalancer> response =
-        azureNetworkClient.listLoadBalancersByResourceGroup(getAzureComputeConfig(), resourceGroupName);
+        azureNetworkClient.listLoadBalancersByResourceGroup(getAzureComputeConfig(), subscriptionId, resourceGroupName);
 
     assertThat(response).isNotNull();
     assertThat(response.size()).isEqualTo(1);
@@ -90,6 +92,7 @@ public class AzureNetworkClientImplTest extends CategoryTest {
   @Owner(developers = IVAN)
   @Category(UnitTests.class)
   public void testListLoadBalancerBackendPools() {
+    String subscriptionId = "subscriptionId";
     String resourceGroupName = "resourceGroupName";
     String loadBalancerName = "loadBalancerName";
 
@@ -103,8 +106,8 @@ public class AzureNetworkClientImplTest extends CategoryTest {
       { put("loadBalancerBackendKey", loadBalancerBackend); }
     });
 
-    List<LoadBalancerBackend> response =
-        azureNetworkClient.listLoadBalancerBackendPools(getAzureComputeConfig(), resourceGroupName, loadBalancerName);
+    List<LoadBalancerBackend> response = azureNetworkClient.listLoadBalancerBackendPools(
+        getAzureComputeConfig(), subscriptionId, resourceGroupName, loadBalancerName);
 
     assertThat(response).isNotNull();
     assertThat(response.size()).isEqualTo(1);
@@ -115,6 +118,7 @@ public class AzureNetworkClientImplTest extends CategoryTest {
   @Owner(developers = IVAN)
   @Category(UnitTests.class)
   public void testListLoadBalancerTcpProbes() {
+    String subscriptionId = "subscriptionId";
     String resourceGroupName = "resourceGroupName";
     String loadBalancerName = "loadBalancerName";
 
@@ -128,8 +132,8 @@ public class AzureNetworkClientImplTest extends CategoryTest {
       { put("loadBalancerTcpProbeKey", loadBalancerTcpProbe); }
     });
 
-    List<LoadBalancerTcpProbe> response =
-        azureNetworkClient.listLoadBalancerTcpProbes(getAzureComputeConfig(), resourceGroupName, loadBalancerName);
+    List<LoadBalancerTcpProbe> response = azureNetworkClient.listLoadBalancerTcpProbes(
+        getAzureComputeConfig(), subscriptionId, resourceGroupName, loadBalancerName);
 
     assertThat(response).isNotNull();
     assertThat(response.size()).isEqualTo(1);
@@ -140,6 +144,7 @@ public class AzureNetworkClientImplTest extends CategoryTest {
   @Owner(developers = IVAN)
   @Category(UnitTests.class)
   public void testListBackendPoolRules() {
+    String subscriptionId = "subscriptionId";
     String resourceGroupName = "resourceGroupName";
     String loadBalancerName = "loadBalancerName";
     String backendPoolName = "backendPoolName";
@@ -159,7 +164,7 @@ public class AzureNetworkClientImplTest extends CategoryTest {
     });
 
     List<LoadBalancingRule> response = azureNetworkClient.listBackendPoolRules(
-        getAzureComputeConfig(), resourceGroupName, loadBalancerName, backendPoolName);
+        getAzureComputeConfig(), subscriptionId, resourceGroupName, loadBalancerName, backendPoolName);
 
     assertThat(response).isNotNull();
     assertThat(response.size()).isEqualTo(1);
@@ -170,6 +175,7 @@ public class AzureNetworkClientImplTest extends CategoryTest {
   @Owner(developers = IVAN)
   @Category(UnitTests.class)
   public void testListBackendPoolProbes() {
+    String subscriptionId = "subscriptionId";
     String resourceGroupName = "resourceGroupName";
     String loadBalancerName = "loadBalancerName";
     String backendPoolName = "backendPoolName";
@@ -191,7 +197,7 @@ public class AzureNetworkClientImplTest extends CategoryTest {
     when(loadBalancingRule.probe()).thenReturn(loadBalancerProbe);
 
     List<LoadBalancerProbe> response = azureNetworkClient.listBackendPoolProbes(
-        getAzureComputeConfig(), resourceGroupName, loadBalancerName, backendPoolName);
+        getAzureComputeConfig(), subscriptionId, resourceGroupName, loadBalancerName, backendPoolName);
 
     assertThat(response).isNotNull();
     assertThat(response.size()).isEqualTo(1);

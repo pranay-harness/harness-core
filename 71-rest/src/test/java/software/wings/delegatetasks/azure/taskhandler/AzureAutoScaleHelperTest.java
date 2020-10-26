@@ -74,22 +74,25 @@ public class AzureAutoScaleHelperTest extends WingsBaseTest {
   public void testGetVMSSAutoScaleInstanceLimitsFromMostRecentActiveVMSS() throws Exception {
     mockExecutionLogCallbackMethods();
     AzureConfig azureConfig = AzureConfig.builder().build();
-    AzureVMSSSetupTaskParameters setupTaskParameters = AzureVMSSSetupTaskParameters.builder().build();
     String mostRecentActiveVMSSId = "id";
+    String subscriptionId = "subscriptionId";
     String resourceGroupName = "resourceGroupName";
     String mostRecentActiveVMSSName = "mostRecentActiveVMSSName";
     int minInstances = 0;
     int maxInstances = 2;
     int desiredInstances = 1;
-
+    AzureVMSSSetupTaskParameters setupTaskParameters = AzureVMSSSetupTaskParameters.builder()
+                                                           .subscriptionId(subscriptionId)
+                                                           .resourceGroupName(resourceGroupName)
+                                                           .build();
     // logic, use instance limits from most recent VMSS and most recent VMSS is not null
     boolean isUseCurrentRunningCount = true;
     VirtualMachineScaleSet mostRecentActiveVMSS = mock(VirtualMachineScaleSet.class);
     doReturn(mostRecentActiveVMSSId).when(mostRecentActiveVMSS).id();
     doReturn(resourceGroupName).when(mostRecentActiveVMSS).resourceGroupName();
-    doReturn(desiredInstances).when(mostRecentActiveVMSS).capacity();
     doReturn(mostRecentActiveVMSSName).when(mostRecentActiveVMSS).name();
-    mockAutoscaleProfile(azureConfig, mostRecentActiveVMSSId, resourceGroupName, minInstances, maxInstances);
+    mockAutoscaleProfile(azureConfig, mostRecentActiveVMSSId, subscriptionId, resourceGroupName, minInstances,
+        maxInstances, desiredInstances);
 
     AzureVMSSAutoScaleSettingsData response = azureAutoScaleHelper.getVMSSAutoScaleInstanceLimits(
         azureConfig, setupTaskParameters, mostRecentActiveVMSS, isUseCurrentRunningCount, SETUP_COMMAND_UNIT);
@@ -100,14 +103,15 @@ public class AzureAutoScaleHelperTest extends WingsBaseTest {
     assertThat(response.getDesiredInstances()).isEqualTo(desiredInstances);
   }
 
-  private void mockAutoscaleProfile(
-      AzureConfig azureConfig, String targetResourceId, String resourceGroupName, int minInstances, int maxInstances) {
+  private void mockAutoscaleProfile(AzureConfig azureConfig, String targetResourceId, String subscriptionId,
+      String resourceGroupName, int minInstances, int maxInstances, int desiredInstances) {
     AutoscaleProfile autoscaleProfile = mock(AutoscaleProfile.class);
     doReturn(minInstances).when(autoscaleProfile).minInstanceCount();
     doReturn(maxInstances).when(autoscaleProfile).maxInstanceCount();
+    doReturn(desiredInstances).when(autoscaleProfile).defaultInstanceCount();
     doReturn(Optional.of(autoscaleProfile))
         .when(mockAzureAutoScaleSettingsClient)
-        .getDefaultAutoScaleProfile(azureConfig, resourceGroupName, targetResourceId);
+        .getDefaultAutoScaleProfile(azureConfig, subscriptionId, resourceGroupName, targetResourceId);
   }
 
   @Test
@@ -141,6 +145,7 @@ public class AzureAutoScaleHelperTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void testGetVMSSAutoScaleSettingsJSONs() {
     String mostRecentActiveVMSSId = "id";
+    String subscriptionId = "subscriptionId";
     String resourceGroupName = "resourceGroupName";
     AzureConfig azureConfig = AzureConfig.builder().build();
     VirtualMachineScaleSet virtualMachineScaleSet = mock(VirtualMachineScaleSet.class);
@@ -150,9 +155,11 @@ public class AzureAutoScaleHelperTest extends WingsBaseTest {
     String autoScaleSettings = "autoScaleSetting:{...}";
     doReturn(Optional.of(autoScaleSettings))
         .when(mockAzureAutoScaleSettingsClient)
-        .getAutoScaleSettingJSONByTargetResourceId(azureConfig, resourceGroupName, mostRecentActiveVMSSId);
+        .getAutoScaleSettingJSONByTargetResourceId(
+            azureConfig, subscriptionId, resourceGroupName, mostRecentActiveVMSSId);
 
-    List<String> response = azureAutoScaleHelper.getVMSSAutoScaleSettingsJSONs(azureConfig, virtualMachineScaleSet);
+    List<String> response =
+        azureAutoScaleHelper.getVMSSAutoScaleSettingsJSONs(azureConfig, subscriptionId, virtualMachineScaleSet);
 
     assertThat(response).isNotNull();
     assertThat(response.get(0)).isNotNull();
@@ -164,9 +171,11 @@ public class AzureAutoScaleHelperTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void testGetVMSSAutoScaleSettingsJSONsWithVMSSNull() {
     AzureConfig azureConfig = AzureConfig.builder().build();
+    String subscriptionId = "subscriptionId";
     VirtualMachineScaleSet mostRecentActiveVMSS = null;
 
-    List<String> response = azureAutoScaleHelper.getVMSSAutoScaleSettingsJSONs(azureConfig, mostRecentActiveVMSS);
+    List<String> response =
+        azureAutoScaleHelper.getVMSSAutoScaleSettingsJSONs(azureConfig, subscriptionId, mostRecentActiveVMSS);
 
     assertThat(response).isNotNull();
     assertThat(response.isEmpty()).isTrue();
@@ -191,7 +200,8 @@ public class AzureAutoScaleHelperTest extends WingsBaseTest {
     String autoScaleSettings = "autoScaleSetting:{...}";
     doReturn(Optional.of(autoScaleSettings))
         .when(mockAzureAutoScaleSettingsClient)
-        .getAutoScaleSettingJSONByTargetResourceId(azureConfig, resourceGroupName, mostRecentActiveVMSSId);
+        .getAutoScaleSettingJSONByTargetResourceId(
+            azureConfig, subscriptionId, resourceGroupName, mostRecentActiveVMSSId);
 
     List<String> response = azureAutoScaleHelper.getVMSSAutoScaleSettingsJSONs(
         azureConfig, subscriptionId, resourceGroupName, virtualMachineScaleSetName);

@@ -111,7 +111,6 @@ public interface AzureConstants {
   String GALLERY_IMAGE_ID_PATTERN =
       "/subscriptions/%s/resourceGroups/%s/providers/Microsoft.Compute/galleries/%s/images/%s/versions/%s";
   String VMSS_AUTOSCALE_SUFIX = "_Autoscale";
-  String AUTO_SCALE_DEFAULT_PROFILE_PATTERN = "Auto created scale condition";
 
   // VM provisioning statuses
   String VM_PROVISIONING_SUCCEEDED_STATUS = "Provisioning succeeded";

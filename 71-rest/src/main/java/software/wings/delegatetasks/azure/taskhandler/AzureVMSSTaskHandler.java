@@ -98,12 +98,13 @@ public abstract class AzureVMSSTaskHandler {
         delegateLogService, parameters.getAccountId(), parameters.getAppId(), parameters.getActivityId(), commandUnit);
   }
 
-  protected void clearScalingPolicy(AzureConfig azureConfig, VirtualMachineScaleSet scaleSet, String resourceGroupName,
-      ExecutionLogCallback logCallBack) {
+  protected void clearScalingPolicy(AzureConfig azureConfig, String subscriptionId, VirtualMachineScaleSet scaleSet,
+      String resourceGroupName, ExecutionLogCallback logCallBack) {
     String scaleSetName = scaleSet.name();
     String scaleSetId = scaleSet.id();
     logCallBack.saveExecutionLog(format(CLEAR_SCALING_POLICY, scaleSetName));
-    azureAutoScaleSettingsClient.clearAutoScaleSettingOnTargetResourceId(azureConfig, resourceGroupName, scaleSetId);
+    azureAutoScaleSettingsClient.clearAutoScaleSettingOnTargetResourceId(
+        azureConfig, subscriptionId, resourceGroupName, scaleSetId);
   }
 
   protected abstract AzureVMSSTaskExecutionResponse executeTaskInternal(

@@ -1,6 +1,8 @@
 package io.harness.azure;
 
+import static io.harness.azure.model.AzureConstants.SUBSCRIPTION_ID_NULL_VALIDATION_MSG;
 import static io.harness.exception.WingsException.USER;
+import static org.apache.commons.lang3.StringUtils.isBlank;
 
 import com.google.inject.Singleton;
 
@@ -18,7 +20,7 @@ import lombok.extern.slf4j.Slf4j;
 @Singleton
 @Slf4j
 public class AzureClient {
-  protected Azure getAzureClient(AzureConfig azureConfig) {
+  protected Azure getAzureClientWithDefaultSubscription(AzureConfig azureConfig) {
     try {
       ApplicationTokenCredentials credentials = new ApplicationTokenCredentials(azureConfig.getClientId(),
           azureConfig.getTenantId(), String.valueOf(azureConfig.getKey()), AzureEnvironment.AZURE);
@@ -31,6 +33,10 @@ public class AzureClient {
   }
 
   protected Azure getAzureClient(AzureConfig azureConfig, String subscriptionId) {
+    if (isBlank(subscriptionId)) {
+      throw new IllegalArgumentException(SUBSCRIPTION_ID_NULL_VALIDATION_MSG);
+    }
+
     try {
       ApplicationTokenCredentials credentials = new ApplicationTokenCredentials(azureConfig.getClientId(),
           azureConfig.getTenantId(), String.valueOf(azureConfig.getKey()), AzureEnvironment.AZURE);
@@ -38,8 +44,8 @@ public class AzureClient {
       return Azure.configure().withLogLevel(LogLevel.NONE).authenticate(credentials).withSubscription(subscriptionId);
     } catch (Exception e) {
       handleAzureAuthenticationException(e);
+      throw new InvalidRequestException("Failed to connect to Azure cluster. " + ExceptionUtils.getMessage(e), USER);
     }
-    return null;
   }
 
   private void handleAzureAuthenticationException(Exception e) {
@@ -52,6 +58,5 @@ public class AzureClient {
         throw new InvalidCredentialsException("Invalid Azure credentials." + e1.getMessage(), USER);
       }
     }
-    throw new InvalidRequestException("Failed to connect to Azure cluster. " + ExceptionUtils.getMessage(e), USER);
   }
 }

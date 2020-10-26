@@ -135,11 +135,13 @@ public class AzureVMSSSyncTaskHandler extends AzureVMSSTaskHandler {
         break;
       }
       case AZURE_VMSS_LIST_LOAD_BALANCERS_NAMES: {
+        String subscriptionId =
+            ((AzureVMSSListLoadBalancersNamesParameters) azureVMSSTaskParameters).getSubscriptionId();
         String resourceGroupName =
             ((AzureVMSSListLoadBalancersNamesParameters) azureVMSSTaskParameters).getResourceGroupName();
 
         List<LoadBalancer> loadBalancers =
-            azureNetworkClient.listLoadBalancersByResourceGroup(azureConfig, resourceGroupName);
+            azureNetworkClient.listLoadBalancersByResourceGroup(azureConfig, subscriptionId, resourceGroupName);
 
         List<String> loadBalancersNames = loadBalancers.stream().map(HasName::name).collect(Collectors.toList());
 
@@ -148,13 +150,15 @@ public class AzureVMSSSyncTaskHandler extends AzureVMSSTaskHandler {
         break;
       }
       case AZURE_VMSS_LIST_LOAD_BALANCER_BACKEND_POOLS_NAMES: {
+        String subscriptionId =
+            ((AzureVMSSListLoadBalancerBackendPoolsNamesParameters) azureVMSSTaskParameters).getSubscriptionId();
         String resourceGroupName =
             ((AzureVMSSListLoadBalancerBackendPoolsNamesParameters) azureVMSSTaskParameters).getResourceGroupName();
         String loadBalancerName =
             ((AzureVMSSListLoadBalancerBackendPoolsNamesParameters) azureVMSSTaskParameters).getLoadBalancerName();
 
-        List<LoadBalancerBackend> loadBalancerBackendPools =
-            azureNetworkClient.listLoadBalancerBackendPools(azureConfig, resourceGroupName, loadBalancerName);
+        List<LoadBalancerBackend> loadBalancerBackendPools = azureNetworkClient.listLoadBalancerBackendPools(
+            azureConfig, subscriptionId, resourceGroupName, loadBalancerName);
 
         List<String> loadBalancerBackendPoolsNames =
             loadBalancerBackendPools.stream().map(HasName::name).collect(Collectors.toList());
