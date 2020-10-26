@@ -234,7 +234,8 @@ public class PerpetualTaskServiceImpl implements PerpetualTaskService, DelegateO
 
   @Override
   public void onAdded(Delegate delegate) {
-    // do nothing
+    // TODO: after we have migrated capabilities to reside on agents, implement rebalancing
+    // by moving certain tasks to the new delegate
   }
 
   @Override
