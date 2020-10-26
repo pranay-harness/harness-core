@@ -11,12 +11,7 @@ java_library(
     name = "maven_deps",
     visibility = ["//visibility:public"],
     exports = [
-        "//12-commons:module",
-        "//14-api-services-beans:module",
-        "//19-delegate-tasks-beans:module",
-        "//21-persistence:module",
         "//24-common-entities:module",
-        "//35-yaml-beans:module",
         "//69-connector-nextgen:module",
         "@maven//:com_auth0_java_jwt",
         "@maven//:com_esotericsoftware_kryo",

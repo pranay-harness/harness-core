@@ -14,16 +14,6 @@
         </dependency>
         <dependency>
             <groupId>software.wings</groupId>
-            <artifactId>12-commons</artifactId>
-            <version>${project.parent.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>software.wings</groupId>
-            <artifactId>21-persistence</artifactId>
-            <version>${project.parent.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>software.wings</groupId>
             <artifactId>24-common-entities</artifactId>
             <version>${project.parent.version}</version>
         </dependency>

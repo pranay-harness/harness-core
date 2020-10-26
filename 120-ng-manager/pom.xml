@@ -57,11 +57,6 @@
         </dependency>
         <dependency>
             <groupId>software.wings</groupId>
-            <artifactId>12-commons</artifactId>
-            <version>${project.parent.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>software.wings</groupId>
             <artifactId>125-cd-nextgen</artifactId>
             <version>${project.parent.version}</version>
         </dependency>
@@ -72,37 +67,7 @@
         </dependency>
         <dependency>
             <groupId>software.wings</groupId>
-            <artifactId>20-ng-core-beans</artifactId>
-            <version>${project.parent.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>software.wings</groupId>
-            <artifactId>21-persistence</artifactId>
-            <version>${project.parent.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>software.wings</groupId>
-            <artifactId>22-ng-core</artifactId>
-            <version>${project.parent.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>software.wings</groupId>
-            <artifactId>22-ng-project-n-orgs</artifactId>
-            <version>${project.parent.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>software.wings</groupId>
             <artifactId>22-secret-manager-client</artifactId>
-            <version>${project.parent.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>software.wings</groupId>
-            <artifactId>23-delegate-service-driver</artifactId>
-            <version>${project.parent.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>software.wings</groupId>
-            <artifactId>35-yaml-beans</artifactId>
             <version>${project.parent.version}</version>
         </dependency>
         <dependency>

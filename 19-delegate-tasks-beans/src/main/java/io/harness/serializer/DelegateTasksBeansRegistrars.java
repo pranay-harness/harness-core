@@ -24,5 +24,8 @@ public class DelegateTasksBeansRegistrars {
           .build();
 
   public static final ImmutableSet<Class<? extends AliasRegistrar>> aliasRegistrars =
-      ImmutableSet.<Class<? extends AliasRegistrar>>builder().add(DelegateTaskBeansAliasRegistrar.class).build();
+      ImmutableSet.<Class<? extends AliasRegistrar>>builder()
+          .addAll(ApiServiceBeansRegistrars.aliasRegistrars)
+          .add(DelegateTaskBeansAliasRegistrar.class)
+          .build();
 }

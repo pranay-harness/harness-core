@@ -30,10 +30,10 @@ import io.harness.persistence.HPersistence;
 import io.harness.queue.QueueController;
 import io.harness.rule.InjectorRuleMixin;
 import io.harness.secretmanagerclient.services.api.SecretManagerClientService;
+import io.harness.serializer.CDNGRegistrars;
 import io.harness.serializer.KryoModule;
 import io.harness.serializer.KryoRegistrar;
 import io.harness.serializer.ManagerRegistrars;
-import io.harness.serializer.NGRegistrars;
 import io.harness.spring.AliasRegistrar;
 import io.harness.testlib.module.MongoRuleMixin;
 import io.harness.testlib.module.TestMongoModule;
@@ -70,19 +70,21 @@ public class CDNGTestRule implements InjectorRuleMixin, MethodRule, MongoRuleMix
       @Provides
       @Singleton
       Set<Class<? extends KryoRegistrar>> kryoRegistrars() {
-        return ImmutableSet.<Class<? extends KryoRegistrar>>builder().addAll(NGRegistrars.kryoRegistrars).build();
+        return ImmutableSet.<Class<? extends KryoRegistrar>>builder().addAll(CDNGRegistrars.kryoRegistrars).build();
       }
 
       @Provides
       @Singleton
       Set<Class<? extends MorphiaRegistrar>> morphiaRegistrars() {
-        return ImmutableSet.<Class<? extends MorphiaRegistrar>>builder().addAll(NGRegistrars.morphiaRegistrars).build();
+        return ImmutableSet.<Class<? extends MorphiaRegistrar>>builder()
+            .addAll(CDNGRegistrars.morphiaRegistrars)
+            .build();
       }
 
       @Provides
       @Singleton
       Set<Class<? extends AliasRegistrar>> aliasRegistrars() {
-        return ImmutableSet.<Class<? extends AliasRegistrar>>builder().addAll(NGRegistrars.aliasRegistrars).build();
+        return ImmutableSet.<Class<? extends AliasRegistrar>>builder().addAll(CDNGRegistrars.aliasRegistrars).build();
       }
 
       @Provides

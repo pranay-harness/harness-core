@@ -11,8 +11,6 @@ java_library(
     name = "maven_deps",
     visibility = ["//visibility:public"],
     exports = [
-        "//12-commons:module",
-        "//13-ng-commons:module",
         "//29-orchestration-beans:module",
         "//34-walktree-visitor:module",
         "@maven//:com_esotericsoftware_kryo",

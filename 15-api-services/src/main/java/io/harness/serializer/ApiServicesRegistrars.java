@@ -1,27 +1,20 @@
 package io.harness.serializer;
 
 import com.google.common.collect.ImmutableSet;
-
 import io.harness.morphia.MorphiaRegistrar;
-import io.harness.serializer.kryo.RbacCoreKryoRegistrar;
-import io.harness.serializer.morphia.RbacCoreMorphiaRegistrar;
 import io.harness.spring.AliasRegistrar;
 import lombok.experimental.UtilityClass;
 
 @UtilityClass
-public class RbacCoreRegistrars {
+public class ApiServicesRegistrars {
   public static final ImmutableSet<Class<? extends KryoRegistrar>> kryoRegistrars =
-      ImmutableSet.<Class<? extends KryoRegistrar>>builder()
-          .addAll(CommonsRegistrars.kryoRegistrars)
-          .add(RbacCoreKryoRegistrar.class)
-          .build();
+      ImmutableSet.<Class<? extends KryoRegistrar>>builder().addAll(ApiServiceBeansRegistrars.kryoRegistrars).build();
 
   public static final ImmutableSet<Class<? extends MorphiaRegistrar>> morphiaRegistrars =
       ImmutableSet.<Class<? extends MorphiaRegistrar>>builder()
-          .addAll(CommonsRegistrars.morphiaRegistrars)
-          .add(RbacCoreMorphiaRegistrar.class)
+          .addAll(ApiServiceBeansRegistrars.morphiaRegistrars)
           .build();
 
   public static final ImmutableSet<Class<? extends AliasRegistrar>> aliasRegistrars =
-      ImmutableSet.<Class<? extends AliasRegistrar>>builder().build();
+      ImmutableSet.<Class<? extends AliasRegistrar>>builder().addAll(ApiServiceBeansRegistrars.aliasRegistrars).build();
 }

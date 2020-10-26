@@ -32,6 +32,8 @@ import io.harness.secretmanagerclient.dto.EncryptedDataDTO;
 import io.harness.secretmanagerclient.dto.SecretTextDTO;
 import io.harness.secretmanagerclient.remote.SecretManagerClient;
 import okhttp3.MediaType;
+import okhttp3.Protocol;
+import okhttp3.Request;
 import okhttp3.ResponseBody;
 import okio.BufferedSource;
 import org.junit.Before;
@@ -85,7 +87,7 @@ public class NGSecretServiceImplTest extends CategoryTest {
   @Owner(developers = VIKAS)
   @Category(UnitTests.class)
   public void testGetSecretById_For_FailedCall() throws IOException {
-    Response<RestResponse<EncryptedDataDTO>> response = Response.error(SC_BAD_GATEWAY, new ResponseBody() {
+    Response<RestResponse<EncryptedDataDTO>> response = errorResponse(SC_BAD_GATEWAY, new ResponseBody() {
       @Override
       public MediaType contentType() {
         return null;
@@ -154,7 +156,7 @@ public class NGSecretServiceImplTest extends CategoryTest {
   @Owner(developers = KARAN)
   @Category(UnitTests.class)
   public void testCreateSecret_For_FailedCall() throws IOException {
-    Response<RestResponse<EncryptedDataDTO>> response = Response.error(SC_BAD_GATEWAY, new ResponseBody() {
+    Response<RestResponse<EncryptedDataDTO>> response = errorResponse(SC_BAD_GATEWAY, new ResponseBody() {
       @Override
       public MediaType contentType() {
         return null;
@@ -229,7 +231,7 @@ public class NGSecretServiceImplTest extends CategoryTest {
   @Owner(developers = KARAN)
   @Category(UnitTests.class)
   public void testUpdateSecret_For_FailedCall() throws IOException {
-    Response<RestResponse<Boolean>> response = Response.error(SC_BAD_GATEWAY, new ResponseBody() {
+    Response<RestResponse<Boolean>> response = errorResponse(SC_BAD_GATEWAY, new ResponseBody() {
       @Override
       public MediaType contentType() {
         return null;
@@ -308,7 +310,7 @@ public class NGSecretServiceImplTest extends CategoryTest {
   @Owner(developers = KARAN)
   @Category(UnitTests.class)
   public void testDeleteSecret_For_FailedCall() throws IOException {
-    Response<RestResponse<Boolean>> response = Response.error(SC_BAD_GATEWAY, new ResponseBody() {
+    Response<RestResponse<Boolean>> response = errorResponse(SC_BAD_GATEWAY, new ResponseBody() {
       @Override
       public MediaType contentType() {
         return null;
@@ -425,5 +427,19 @@ public class NGSecretServiceImplTest extends CategoryTest {
     } catch (InvalidRequestException exception) {
       // ignore
     }
+  }
+
+  private <T> Response<T> errorResponse(int code, ResponseBody body) {
+    if (code < 400) {
+      throw new IllegalArgumentException("code < 400: " + code);
+    }
+    return Response.error(body,
+        new okhttp3.Response
+            .Builder() //
+            .code(code)
+            .protocol(Protocol.HTTP_1_1)
+            .request(new Request.Builder().url("http://localhost/").build())
+            .message("err")
+            .build());
   }
 }

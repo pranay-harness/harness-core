@@ -13,7 +13,6 @@ import com.google.inject.Provides;
 import com.google.inject.Singleton;
 import com.google.inject.TypeLiteral;
 
-import io.harness.WaitEngineRegistrars;
 import io.harness.config.PublisherConfiguration;
 import io.harness.factory.ClosingFactory;
 import io.harness.factory.ClosingFactoryModule;
@@ -30,6 +29,7 @@ import io.harness.queue.QueuePublisher;
 import io.harness.serializer.KryoModule;
 import io.harness.serializer.KryoRegistrar;
 import io.harness.serializer.PersistenceRegistrars;
+import io.harness.serializer.WaitEngineRegistrars;
 import io.harness.testlib.module.MongoRuleMixin;
 import io.harness.testlib.module.TestMongoModule;
 import io.harness.threading.CurrentThreadExecutor;

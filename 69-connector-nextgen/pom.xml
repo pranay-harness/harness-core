@@ -34,21 +34,6 @@
         </dependency>
         <dependency>
             <groupId>software.wings</groupId>
-            <artifactId>12-commons</artifactId>
-            <version>${project.parent.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>software.wings</groupId>
-            <artifactId>19-delegate-tasks-beans</artifactId>
-            <version>${project.parent.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>software.wings</groupId>
-            <artifactId>20-ng-core-beans</artifactId>
-            <version>${project.parent.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>software.wings</groupId>
             <artifactId>22-ng-core</artifactId>
             <version>${project.parent.version}</version>
         </dependency>
@@ -57,16 +42,6 @@
             <artifactId>23-ng-core-clients</artifactId>
             <version>${project.parent.version}</version>
             <scope>compile</scope>
-        </dependency>
-        <dependency>
-            <groupId>software.wings</groupId>
-            <artifactId>22-ng-project-n-orgs</artifactId>
-            <version>${project.parent.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>software.wings</groupId>
-            <artifactId>22-secret-manager-client</artifactId>
-            <version>${project.parent.version}</version>
         </dependency>
         <dependency>
             <groupId>software.wings</groupId>

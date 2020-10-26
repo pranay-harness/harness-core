@@ -11,10 +11,7 @@ java_library(
     name = "maven_deps",
     visibility = ["//visibility:public"],
     exports = [
-        "//12-commons:module",
-        "//13-ng-commons:module",
-        "//19-delegate-tasks-beans:module",
-        "//21-persistence:module",
+        "//13-grpc-api:module",
         "//22-delegate-service-beans:module",
         "//22-delegate-service-beans/src/main/proto:22_delegate_service_beans_java_proto",
         "//31-orchestration:module",

@@ -11,10 +11,6 @@ java_library(
     name = "maven_deps",
     visibility = ["//visibility:public"],
     exports = [
-        "//12-commons:module",
-        "//26-pms-contracts/src/main/proto:26_pms_contracts_java_proto",
-        "//29-orchestration-beans:module",
-        "//31-orchestration:module",
         "//32-orchestration-steps:module",
         "//35-yaml-beans:module",
         "@maven//:com_esotericsoftware_kryo",
