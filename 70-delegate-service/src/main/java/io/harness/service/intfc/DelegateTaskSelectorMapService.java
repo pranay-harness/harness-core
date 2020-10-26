@@ -11,7 +11,7 @@ public interface DelegateTaskSelectorMapService {
    *
    * @return the page response
    */
-  List<TaskSelectorMap> list();
+  List<TaskSelectorMap> list(String accountId);
 
   /**
    * Add task selector map.

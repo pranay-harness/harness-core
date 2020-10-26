@@ -78,7 +78,7 @@ public class DelegateTaskSelectorMapResourceTest {
                                         .taskGroup(TaskGroup.HELM)
                                         .build()));
     pageResponse.setTotal(1l);
-    when(taskSelectorMapService.list()).thenReturn(pageResponse);
+    when(taskSelectorMapService.list(ACCOUNT_ID)).thenReturn(pageResponse);
     RestResponse<PageResponse<TaskSelectorMap>> restResponse =
         RESOURCES.client()
             .target("/delegate-task-selector-map?accountId=" + ACCOUNT_ID)
@@ -86,7 +86,7 @@ public class DelegateTaskSelectorMapResourceTest {
             .get(new GenericType<RestResponse<PageResponse<TaskSelectorMap>>>() {});
     PageRequest<TaskSelectorMap> pageRequest = new PageRequest<>();
     pageRequest.setOffset("0");
-    verify(taskSelectorMapService, atLeastOnce()).list();
+    verify(taskSelectorMapService, atLeastOnce()).list(ACCOUNT_ID);
     assertThat(restResponse.getResource().getResponse().size()).isEqualTo(1);
     assertThat(restResponse.getResource().getResponse().get(0)).isNotNull();
   }
