@@ -44,7 +44,9 @@ public class DelegateTaskSelectorMapServiceTest extends DelegateServiceTestBase 
   public void shouldList() {
     TaskSelectorMap taskSelectorMap = TaskSelectorMap.builder().accountId(ACCOUNT_ID).build();
     hPersistence.save(taskSelectorMap);
-    assertThat(taskSelectorMapService.list()).hasSize(1).containsExactly(taskSelectorMap);
+    TaskSelectorMap taskSelectorMap2 = TaskSelectorMap.builder().accountId(ACCOUNT_ID + "2").build();
+    hPersistence.save(taskSelectorMap2);
+    assertThat(taskSelectorMapService.list(ACCOUNT_ID)).hasSize(1).containsExactly(taskSelectorMap);
   }
 
   @Test

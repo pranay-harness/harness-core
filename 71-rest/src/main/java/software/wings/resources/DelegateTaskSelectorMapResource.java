@@ -11,8 +11,6 @@ import io.harness.delegate.beans.TaskSelectorMap;
 import io.harness.rest.RestResponse;
 import io.harness.service.intfc.DelegateTaskSelectorMapService;
 import io.swagger.annotations.Api;
-import io.swagger.annotations.ApiImplicitParam;
-import io.swagger.annotations.ApiImplicitParams;
 import org.hibernate.validator.constraints.NotEmpty;
 import software.wings.security.annotations.AuthRule;
 import software.wings.security.annotations.Scope;
@@ -42,13 +40,10 @@ public class DelegateTaskSelectorMapResource {
   }
 
   @GET
-  @ApiImplicitParams(
-      { @ApiImplicitParam(name = "accountId", required = true, dataType = "string", paramType = "query") })
   @Timed
   @ExceptionMetered
-  public RestResponse<List<TaskSelectorMap>>
-  list() {
-    return new RestResponse<>(selectorMapService.list());
+  public RestResponse<List<TaskSelectorMap>> list(@QueryParam("accountId") @NotEmpty String accountId) {
+    return new RestResponse<>(selectorMapService.list(accountId));
   }
 
   @POST

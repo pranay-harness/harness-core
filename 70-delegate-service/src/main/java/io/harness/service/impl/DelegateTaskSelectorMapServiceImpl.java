@@ -13,7 +13,6 @@ import com.mongodb.DuplicateKeyException;
 import io.harness.delegate.beans.TaskGroup;
 import io.harness.delegate.beans.TaskSelectorMap;
 import io.harness.eraro.ErrorCode;
-import io.harness.exception.DuplicateFieldException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.NoResultFoundException;
 import io.harness.persistence.HPersistence;
@@ -30,8 +29,8 @@ public class DelegateTaskSelectorMapServiceImpl implements DelegateTaskSelectorM
   @Inject private HPersistence hPersistence;
 
   @Override
-  public List<TaskSelectorMap> list() {
-    return hPersistence.createQuery(TaskSelectorMap.class).asList();
+  public List<TaskSelectorMap> list(String accountId) {
+    return hPersistence.createQuery(TaskSelectorMap.class).filter(TaskSelectorMapKeys.accountId, accountId).asList();
   }
 
   @Override
