@@ -11,13 +11,6 @@ java_library(
     name = "maven_deps",
     visibility = ["//visibility:public"],
     exports = [
-        "//12-commons:module",
-        "//21-persistence:module",
-        "//22-timeout-engine:module",
-        "//22-wait-engine:module",
-        "//26-pms-contracts/src/main/proto:26_pms_contracts_java_proto",
-        "//27-orchestration-persistence:module",
-        "//29-orchestration-beans:module",
         "//31-orchestration:module",
         "@maven//:com_esotericsoftware_kryo",
         "@maven//:com_fasterxml_jackson_core_jackson_annotations",

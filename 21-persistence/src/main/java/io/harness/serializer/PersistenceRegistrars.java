@@ -9,6 +9,7 @@ import io.harness.serializer.kryo.PersistenceKryoRegistrar;
 import io.harness.serializer.morphia.PersistenceMorphiaRegistrar;
 import io.harness.serializer.spring.PersistenceAliasRegistrar;
 import io.harness.spring.AliasRegistrar;
+import io.serializer.registrars.NGCommonsRegistrars;
 import lombok.experimental.UtilityClass;
 import org.mongodb.morphia.converters.TypeConverter;
 
@@ -16,18 +17,21 @@ import org.mongodb.morphia.converters.TypeConverter;
 public class PersistenceRegistrars {
   public static final ImmutableSet<Class<? extends KryoRegistrar>> kryoRegistrars =
       ImmutableSet.<Class<? extends KryoRegistrar>>builder()
-          .addAll(CommonsRegistrars.kryoRegistrars)
+          .addAll(NGCommonsRegistrars.kryoRegistrars)
           .add(PersistenceKryoRegistrar.class)
           .build();
 
   public static final com.google.common.collect.ImmutableSet<Class<? extends MorphiaRegistrar>> morphiaRegistrars =
       ImmutableSet.<Class<? extends MorphiaRegistrar>>builder()
-          .addAll(CommonsRegistrars.morphiaRegistrars)
+          .addAll(NGCommonsRegistrars.morphiaRegistrars)
           .add(PersistenceMorphiaRegistrar.class)
           .build();
 
   public static final ImmutableSet<Class<? extends AliasRegistrar>> aliasRegistrars =
-      ImmutableSet.<Class<? extends AliasRegistrar>>builder().add(PersistenceAliasRegistrar.class).build();
+      ImmutableSet.<Class<? extends AliasRegistrar>>builder()
+          .addAll(NGCommonsRegistrars.aliasRegistrars)
+          .add(PersistenceAliasRegistrar.class)
+          .build();
 
   public static final ImmutableSet<Class<? extends TypeConverter>> morphiaConverters =
       ImmutableSet.<Class<? extends TypeConverter>>builder()

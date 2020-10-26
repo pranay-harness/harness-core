@@ -1,31 +1,30 @@
-package io.harness.serializer;
+package io.harness.delegate.serializer;
 
 import com.google.common.collect.ImmutableSet;
 import io.harness.morphia.MorphiaRegistrar;
-import io.harness.serializer.kryo.DelegateServiceKryoRegister;
-import io.harness.serializer.morphia.DelegateServiceMorphiaRegistrar;
+import io.harness.serializer.ApiServicesRegistrars;
+import io.harness.serializer.DelegateTasksBeansRegistrars;
+import io.harness.serializer.KryoRegistrar;
 import io.harness.spring.AliasRegistrar;
 import lombok.experimental.UtilityClass;
 
 @UtilityClass
-public class DelegateServiceRegistrars {
+public class DelegateTasksRegistrars {
   public static final ImmutableSet<Class<? extends KryoRegistrar>> kryoRegistrars =
       ImmutableSet.<Class<? extends KryoRegistrar>>builder()
-          .addAll(OrchestrationRegistrars.kryoRegistrars)
-          .addAll(DelegateServiceBeansRegistrars.kryoRegistrars)
-          .add(DelegateServiceKryoRegister.class)
+          .addAll(ApiServicesRegistrars.kryoRegistrars)
+          .addAll(DelegateTasksBeansRegistrars.kryoRegistrars)
           .build();
 
   public static final ImmutableSet<Class<? extends MorphiaRegistrar>> morphiaRegistrars =
       ImmutableSet.<Class<? extends MorphiaRegistrar>>builder()
-          .addAll(DelegateServiceBeansRegistrars.morphiaRegistrars)
-          .addAll(OrchestrationRegistrars.morphiaRegistrars)
-          .add(DelegateServiceMorphiaRegistrar.class)
+          .addAll(ApiServicesRegistrars.morphiaRegistrars)
+          .addAll(DelegateTasksBeansRegistrars.morphiaRegistrars)
           .build();
 
   public static final ImmutableSet<Class<? extends AliasRegistrar>> aliasRegistrars =
       ImmutableSet.<Class<? extends AliasRegistrar>>builder()
-          .addAll(DelegateServiceBeansRegistrars.aliasRegistrars)
-          .addAll(OrchestrationRegistrars.aliasRegistrars)
+          .addAll(ApiServicesRegistrars.aliasRegistrars)
+          .addAll(DelegateTasksBeansRegistrars.aliasRegistrars)
           .build();
 }

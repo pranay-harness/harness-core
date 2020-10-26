@@ -28,7 +28,11 @@ public class OrchestrationBeansRegistrars {
           .build();
 
   public static final ImmutableSet<Class<? extends AliasRegistrar>> aliasRegistrars =
-      ImmutableSet.<Class<? extends AliasRegistrar>>builder().add(OrchestrationBeansAliasRegistrar.class).build();
+      ImmutableSet.<Class<? extends AliasRegistrar>>builder()
+          .addAll(PersistenceRegistrars.aliasRegistrars)
+          .addAll(TimeoutEngineRegistrars.aliasRegistrars)
+          .add(OrchestrationBeansAliasRegistrar.class)
+          .build();
 
   public static final ImmutableSet<Class<? extends TypeConverter>> morphiaConverters =
       ImmutableSet.<Class<? extends TypeConverter>>builder()

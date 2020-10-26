@@ -11,12 +11,7 @@ java_library(
     name = "maven_deps",
     visibility = ["//visibility:public"],
     exports = [
-        "//12-commons:module",
-        "//14-api-services-beans:module",
-        "//19-delegate-tasks-beans:module",
         "//20-delegate-tasks:module",
-        "//21-persistence:module",
-        "//22-timeout-engine:module",
         "//22-wait-engine:module",
         "//26-pms-contracts/src/main/proto:26_pms_contracts_java_proto",
         "//27-orchestration-persistence:module",

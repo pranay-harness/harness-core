@@ -11,8 +11,6 @@ java_library(
     name = "maven_deps",
     visibility = ["//visibility:public"],
     exports = [
-        "//12-commons:module",
-        "//13-ng-commons:module",
         "//20-ng-core-beans:module",
         "//21-persistence:module",
         "//22-secret-manager-client:module",

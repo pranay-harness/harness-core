@@ -7,15 +7,14 @@ import io.harness.serializer.kryo.NGKryoRegistrar;
 import io.harness.serializer.morphia.NGMorphiaRegistrar;
 import io.harness.serializer.spring.NgAliasRegistrar;
 import io.harness.spring.AliasRegistrar;
-import io.serializer.registrars.NGCommonsRegistrars;
 import lombok.experimental.UtilityClass;
 
 @UtilityClass
-public class NGRegistrars {
+public class CDNGRegistrars {
   public final ImmutableSet<Class<? extends KryoRegistrar>> kryoRegistrars =
       ImmutableSet.<Class<? extends KryoRegistrar>>builder()
-          .addAll(NGCommonsRegistrars.kryoRegistrars)
-          .addAll(NGCoreRegistrars.kryoRegistrars)
+          .addAll(SMCoreRegistrars.kryoRegistrars)
+          .addAll(DelegateServiceDriverRegistrars.kryoRegistrars)
           .addAll(ExecutionPlanModuleRegistrars.kryoRegistrars)
           .addAll(NGPipelineRegistrars.kryoRegistrars)
           .addAll(ConnectorNextGenRegistrars.kryoRegistrars)
@@ -24,8 +23,9 @@ public class NGRegistrars {
 
   public final ImmutableSet<Class<? extends MorphiaRegistrar>> morphiaRegistrars =
       ImmutableSet.<Class<? extends MorphiaRegistrar>>builder()
-          .addAll(NGCommonsRegistrars.morphiaRegistrars)
-          .addAll(NGCoreRegistrars.morphiaRegistrars)
+          .addAll(SMCoreRegistrars.morphiaRegistrars)
+          .addAll(DelegateServiceDriverRegistrars.morphiaRegistrars)
+          .addAll(ExecutionPlanModuleRegistrars.morphiaRegistrars)
           .addAll(NGPipelineRegistrars.morphiaRegistrars)
           .addAll(ConnectorNextGenRegistrars.morphiaRegistrars)
           .add(NGMorphiaRegistrar.class)
@@ -33,8 +33,11 @@ public class NGRegistrars {
 
   public static final ImmutableSet<Class<? extends AliasRegistrar>> aliasRegistrars =
       ImmutableSet.<Class<? extends AliasRegistrar>>builder()
+          .addAll(SMCoreRegistrars.aliasRegistrars)
+          .addAll(DelegateServiceDriverRegistrars.aliasRegistrars)
           .addAll(ExecutionPlanModuleRegistrars.aliasRegistrars)
           .addAll(NGPipelineRegistrars.aliasRegistrars)
+          .addAll(ConnectorNextGenRegistrars.aliasRegistrars)
           .add(NgAliasRegistrar.class)
           .build();
 }

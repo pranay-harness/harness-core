@@ -11,8 +11,6 @@ java_library(
     name = "maven_deps",
     visibility = ["//visibility:public"],
     exports = [
-        "//12-commons:maven_deps",
-        "//12-commons:module",
         "//13-ng-commons:module",
         "//14-api-services-beans:maven_deps",
         "@maven//:com_fasterxml_jackson_core_jackson_annotations",

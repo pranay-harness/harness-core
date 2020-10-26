@@ -1,26 +1,29 @@
 package io.harness.serializer;
 
 import com.google.common.collect.ImmutableSet;
-
 import io.harness.morphia.MorphiaRegistrar;
 import io.harness.serializer.kryo.CvNextGenCommonsBeansKryoRegistrar;
-import io.harness.serializer.kryo.YamlKryoRegistrar;
-import io.harness.serializer.morphia.CommonEntitiesMorphiaRegister;
+import io.harness.spring.AliasRegistrar;
 import lombok.experimental.UtilityClass;
 
 @UtilityClass
 public class CvNextGenCommonsRegistrars {
   public static final ImmutableSet<Class<? extends KryoRegistrar>> kryoRegistrars =
       ImmutableSet.<Class<? extends KryoRegistrar>>builder()
-          .addAll(PersistenceRegistrars.kryoRegistrars)
           .add(CvNextGenCommonsBeansKryoRegistrar.class)
-          .add(YamlKryoRegistrar.class)
+          .addAll(ConnectorNextGenRegistrars.kryoRegistrars)
+          .addAll(CommonEntitiesRegistrars.kryoRegistrars)
           .build();
 
   public static final ImmutableSet<Class<? extends MorphiaRegistrar>> morphiaRegistrars =
       ImmutableSet.<Class<? extends MorphiaRegistrar>>builder()
-          .addAll(PersistenceRegistrars.morphiaRegistrars)
           .addAll(ConnectorNextGenRegistrars.morphiaRegistrars)
-          .add(CommonEntitiesMorphiaRegister.class)
+          .addAll(CommonEntitiesRegistrars.morphiaRegistrars)
+          .build();
+
+  public static final ImmutableSet<Class<? extends AliasRegistrar>> aliasRegistrars =
+      ImmutableSet.<Class<? extends AliasRegistrar>>builder()
+          .addAll(ConnectorNextGenRegistrars.aliasRegistrars)
+          .addAll(CommonEntitiesRegistrars.aliasRegistrars)
           .build();
 }

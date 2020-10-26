@@ -1,28 +1,28 @@
 package io.harness.serializer;
 
 import com.google.common.collect.ImmutableSet;
-
 import io.harness.morphia.MorphiaRegistrar;
-import io.harness.serializer.kryo.NGCoreKryoRegistrar;
-import io.harness.serializer.morphia.NGCoreMorphiaClassesRegistrar;
+import io.harness.serializer.kryo.ProjectAndOrgKryoRegistrar;
+import io.harness.serializer.morphia.InvitesMorphiaRegistrar;
+import io.harness.serializer.morphia.ProjectAndOrgMorphiaRegistrar;
 import io.harness.spring.AliasRegistrar;
-import io.serializer.registrars.NGCommonsRegistrars;
 import lombok.experimental.UtilityClass;
 
 @UtilityClass
-public class NGCoreRegistrars {
+public class ProjectAndOrgRegistrars {
   public final ImmutableSet<Class<? extends KryoRegistrar>> kryoRegistrars =
       ImmutableSet.<Class<? extends KryoRegistrar>>builder()
           .addAll(NGCoreBeansRegistrars.kryoRegistrars)
           .addAll(PersistenceRegistrars.kryoRegistrars)
-          .add(NGCoreKryoRegistrar.class)
+          .add(ProjectAndOrgKryoRegistrar.class)
           .build();
 
   public final ImmutableSet<Class<? extends MorphiaRegistrar>> morphiaRegistrars =
       ImmutableSet.<Class<? extends MorphiaRegistrar>>builder()
           .addAll(NGCoreBeansRegistrars.morphiaRegistrars)
           .addAll(PersistenceRegistrars.morphiaRegistrars)
-          .add(NGCoreMorphiaClassesRegistrar.class)
+          .add(InvitesMorphiaRegistrar.class)
+          .add(ProjectAndOrgMorphiaRegistrar.class)
           .build();
 
   public static final ImmutableSet<Class<? extends AliasRegistrar>> aliasRegistrars =
