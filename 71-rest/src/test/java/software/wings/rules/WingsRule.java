@@ -27,6 +27,7 @@ import com.codahale.metrics.MetricRegistry;
 import com.mongodb.MongoClient;
 import io.dropwizard.Configuration;
 import io.dropwizard.lifecycle.Managed;
+import io.harness.NoopStatement;
 import io.harness.cache.CacheConfig;
 import io.harness.cache.CacheConfig.CacheConfigBuilder;
 import io.harness.cache.CacheModule;
@@ -125,6 +126,9 @@ public class WingsRule implements MethodRule, InjectorRuleMixin, MongoRuleMixin 
 
   @Override
   public Statement apply(Statement statement, FrameworkMethod frameworkMethod, Object target) {
+    if (isIntegrationTest(target)) {
+      return new NoopStatement();
+    }
     Statement wingsStatement = new Statement() {
       @Override
       public void evaluate() throws Throwable {
