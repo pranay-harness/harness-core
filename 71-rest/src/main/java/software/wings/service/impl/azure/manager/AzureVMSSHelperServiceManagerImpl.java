@@ -102,20 +102,24 @@ public class AzureVMSSHelperServiceManagerImpl implements AzureVMSSHelperService
   }
 
   @Override
-  public List<String> listLoadBalancersNames(
-      AzureConfig azureConfig, String resourceGroupName, List<EncryptedDataDetail> encryptionDetails, String appId) {
+  public List<String> listLoadBalancersNames(AzureConfig azureConfig, String subscriptionId, String resourceGroupName,
+      List<EncryptedDataDetail> encryptionDetails, String appId) {
     AzureVMSSTaskResponse response = executeTask(azureConfig.getAccountId(),
-        AzureVMSSListLoadBalancersNamesParameters.builder().resourceGroupName(resourceGroupName).build(), azureConfig,
-        encryptionDetails, appId);
+        AzureVMSSListLoadBalancersNamesParameters.builder()
+            .subscriptionId(subscriptionId)
+            .resourceGroupName(resourceGroupName)
+            .build(),
+        azureConfig, encryptionDetails, appId);
 
     return ((AzureVMSSListLoadBalancersNamesResponse) response).getLoadBalancersNames();
   }
 
   @Override
-  public List<String> listLoadBalancerBackendPoolsNames(AzureConfig azureConfig, String resourceGroupName,
-      String loadBalancerName, List<EncryptedDataDetail> encryptionDetails, String appId) {
+  public List<String> listLoadBalancerBackendPoolsNames(AzureConfig azureConfig, String subscriptionId,
+      String resourceGroupName, String loadBalancerName, List<EncryptedDataDetail> encryptionDetails, String appId) {
     AzureVMSSTaskResponse response = executeTask(azureConfig.getAccountId(),
         AzureVMSSListLoadBalancerBackendPoolsNamesParameters.builder()
+            .subscriptionId(subscriptionId)
             .resourceGroupName(resourceGroupName)
             .loadBalancerName(loadBalancerName)
             .build(),

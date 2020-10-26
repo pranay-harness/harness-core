@@ -1,6 +1,5 @@
 package io.harness.azure.impl;
 
-import static io.harness.azure.model.AzureConstants.AZURE_MANAGEMENT_CLIENT_NULL_VALIDATION_MSG;
 import static io.harness.azure.model.AzureConstants.BACKEND_POOL_NAME_NULL_VALIDATION_MSG;
 import static io.harness.azure.model.AzureConstants.LOAD_BALANCER_NAME_NULL_VALIDATION_MSG;
 import static io.harness.azure.model.AzureConstants.RESOURCE_GROUP_NAME_NULL_VALIDATION_MSG;
@@ -16,7 +15,6 @@ import com.microsoft.azure.management.network.LoadBalancerBackend;
 import com.microsoft.azure.management.network.LoadBalancerProbe;
 import com.microsoft.azure.management.network.LoadBalancerTcpProbe;
 import com.microsoft.azure.management.network.LoadBalancingRule;
-import io.fabric8.utils.Objects;
 import io.harness.azure.AzureClient;
 import io.harness.azure.client.AzureNetworkClient;
 import io.harness.azure.model.AzureConfig;
@@ -33,8 +31,8 @@ import java.util.stream.Collectors;
 @Slf4j
 public class AzureNetworkClientImpl extends AzureClient implements AzureNetworkClient {
   @Override
-  public Optional<LoadBalancer> getLoadBalancerByName(
-      AzureConfig azureConfig, final String resourceGroupName, final String loadBalancerName) {
+  public Optional<LoadBalancer> getLoadBalancerByName(AzureConfig azureConfig, final String subscriptionId,
+      final String resourceGroupName, final String loadBalancerName) {
     if (isBlank(resourceGroupName)) {
       throw new IllegalArgumentException(RESOURCE_GROUP_NAME_NULL_VALIDATION_MSG);
     }
@@ -42,8 +40,7 @@ public class AzureNetworkClientImpl extends AzureClient implements AzureNetworkC
       throw new IllegalArgumentException(LOAD_BALANCER_NAME_NULL_VALIDATION_MSG);
     }
 
-    Azure azure = getAzureClient(azureConfig);
-    Objects.notNull(azure, AZURE_MANAGEMENT_CLIENT_NULL_VALIDATION_MSG);
+    Azure azure = getAzureClient(azureConfig, subscriptionId);
 
     logger.debug("Start getting load balancer by resourceGroupName: {}, loadBalancerName: {}", resourceGroupName,
         loadBalancerName);
@@ -57,13 +54,13 @@ public class AzureNetworkClientImpl extends AzureClient implements AzureNetworkC
   }
 
   @Override
-  public List<LoadBalancer> listLoadBalancersByResourceGroup(AzureConfig azureConfig, final String resourceGroupName) {
+  public List<LoadBalancer> listLoadBalancersByResourceGroup(
+      AzureConfig azureConfig, final String subscriptionId, final String resourceGroupName) {
     if (isBlank(resourceGroupName)) {
       throw new IllegalArgumentException(RESOURCE_GROUP_NAME_NULL_VALIDATION_MSG);
     }
 
-    Azure azure = getAzureClient(azureConfig);
-    Objects.notNull(azure, AZURE_MANAGEMENT_CLIENT_NULL_VALIDATION_MSG);
+    Azure azure = getAzureClient(azureConfig, subscriptionId);
 
     logger.debug("Start listing load balancers by resourceGroupName {}", resourceGroupName);
     PagedList<LoadBalancer> loadBalancers = azure.loadBalancers().listByResourceGroup(resourceGroupName);
@@ -71,8 +68,8 @@ public class AzureNetworkClientImpl extends AzureClient implements AzureNetworkC
   }
 
   @Override
-  public List<LoadBalancerBackend> listLoadBalancerBackendPools(
-      AzureConfig azureConfig, final String resourceGroupName, final String loadBalancerName) {
+  public List<LoadBalancerBackend> listLoadBalancerBackendPools(AzureConfig azureConfig, final String subscriptionId,
+      final String resourceGroupName, final String loadBalancerName) {
     if (isBlank(resourceGroupName)) {
       throw new IllegalArgumentException(RESOURCE_GROUP_NAME_NULL_VALIDATION_MSG);
     }
@@ -80,8 +77,7 @@ public class AzureNetworkClientImpl extends AzureClient implements AzureNetworkC
       throw new IllegalArgumentException(LOAD_BALANCER_NAME_NULL_VALIDATION_MSG);
     }
 
-    Azure azure = getAzureClient(azureConfig);
-    Objects.notNull(azure, AZURE_MANAGEMENT_CLIENT_NULL_VALIDATION_MSG);
+    Azure azure = getAzureClient(azureConfig, subscriptionId);
 
     logger.debug("Start listing load balancer backend pools by resourceGroupName {}, loadBalancerName: {}",
         resourceGroupName, loadBalancerName);
@@ -94,8 +90,8 @@ public class AzureNetworkClientImpl extends AzureClient implements AzureNetworkC
   }
 
   @Override
-  public List<LoadBalancerTcpProbe> listLoadBalancerTcpProbes(
-      AzureConfig azureConfig, final String resourceGroupName, final String loadBalancerName) {
+  public List<LoadBalancerTcpProbe> listLoadBalancerTcpProbes(AzureConfig azureConfig, final String subscriptionId,
+      final String resourceGroupName, final String loadBalancerName) {
     if (isBlank(resourceGroupName)) {
       throw new IllegalArgumentException(RESOURCE_GROUP_NAME_NULL_VALIDATION_MSG);
     }
@@ -103,8 +99,7 @@ public class AzureNetworkClientImpl extends AzureClient implements AzureNetworkC
       throw new IllegalArgumentException(LOAD_BALANCER_NAME_NULL_VALIDATION_MSG);
     }
 
-    Azure azure = getAzureClient(azureConfig);
-    Objects.notNull(azure, AZURE_MANAGEMENT_CLIENT_NULL_VALIDATION_MSG);
+    Azure azure = getAzureClient(azureConfig, subscriptionId);
 
     logger.debug("Start listing load balancer TCP probes for loadBalancerName {}, resourceGroupName: {}",
         loadBalancerName, resourceGroupName);
@@ -117,10 +112,10 @@ public class AzureNetworkClientImpl extends AzureClient implements AzureNetworkC
   }
 
   @Override
-  public List<LoadBalancingRule> listBackendPoolRules(AzureConfig azureConfig, final String resourceGroupName,
-      final String loadBalancerName, final String backendPoolName) {
+  public List<LoadBalancingRule> listBackendPoolRules(AzureConfig azureConfig, String subscriptionId,
+      final String resourceGroupName, final String loadBalancerName, final String backendPoolName) {
     Optional<LoadBalancerBackend> loadBalancerBackendPoolOp =
-        getLoadBalancerBackendPool(azureConfig, resourceGroupName, loadBalancerName, backendPoolName);
+        getLoadBalancerBackendPool(azureConfig, subscriptionId, resourceGroupName, loadBalancerName, backendPoolName);
 
     if (!loadBalancerBackendPoolOp.isPresent()) {
       return Collections.emptyList();
@@ -132,10 +127,10 @@ public class AzureNetworkClientImpl extends AzureClient implements AzureNetworkC
   }
 
   @Override
-  public List<LoadBalancerProbe> listBackendPoolProbes(AzureConfig azureConfig, final String resourceGroupName,
-      final String loadBalancerName, final String backendPoolName) {
+  public List<LoadBalancerProbe> listBackendPoolProbes(AzureConfig azureConfig, String subscriptionId,
+      final String resourceGroupName, final String loadBalancerName, final String backendPoolName) {
     Optional<LoadBalancerBackend> loadBalancerBackendPoolOp =
-        getLoadBalancerBackendPool(azureConfig, resourceGroupName, loadBalancerName, backendPoolName);
+        getLoadBalancerBackendPool(azureConfig, subscriptionId, resourceGroupName, loadBalancerName, backendPoolName);
 
     logger.debug("Start listing backend pool probes for backendPoolName {}, loadBalancerName {}, resourceGroupName: {}",
         backendPoolName, loadBalancerName, resourceGroupName);
@@ -151,8 +146,8 @@ public class AzureNetworkClientImpl extends AzureClient implements AzureNetworkC
         .collect(Collectors.toList());
   }
 
-  public Optional<LoadBalancerBackend> getLoadBalancerBackendPool(
-      AzureConfig azureConfig, String resourceGroupName, String loadBalancerName, String backendPoolName) {
+  public Optional<LoadBalancerBackend> getLoadBalancerBackendPool(AzureConfig azureConfig, String subscriptionId,
+      String resourceGroupName, String loadBalancerName, String backendPoolName) {
     if (isBlank(resourceGroupName)) {
       throw new IllegalArgumentException(RESOURCE_GROUP_NAME_NULL_VALIDATION_MSG);
     }
@@ -163,8 +158,7 @@ public class AzureNetworkClientImpl extends AzureClient implements AzureNetworkC
       throw new IllegalArgumentException(BACKEND_POOL_NAME_NULL_VALIDATION_MSG);
     }
 
-    Azure azure = getAzureClient(azureConfig);
-    Objects.notNull(azure, AZURE_MANAGEMENT_CLIENT_NULL_VALIDATION_MSG);
+    Azure azure = getAzureClient(azureConfig, subscriptionId);
 
     logger.debug(
         "Start getting load balancer backend pool, backendPoolName {}, loadBalancerName {}, resourceGroupName: {}",

@@ -106,14 +106,15 @@ public class AzureVMSSSwitchRouteTaskHandler extends AzureVMSSTaskHandler {
 
   private LoadBalancer getLoadBalancer(
       AzureConfig azureConfig, AzureVMSSSwitchRouteTaskParameters switchRouteTaskParameters, String loadBalancerName) {
-    String resourceGroupeName = switchRouteTaskParameters.getResourceGroupName();
+    String subscriptionId = switchRouteTaskParameters.getSubscriptionId();
+    String resourceGropeName = switchRouteTaskParameters.getResourceGroupName();
 
     Optional<LoadBalancer> loadBalancerOp =
-        azureNetworkClient.getLoadBalancerByName(azureConfig, resourceGroupeName, loadBalancerName);
+        azureNetworkClient.getLoadBalancerByName(azureConfig, subscriptionId, resourceGropeName, loadBalancerName);
     return loadBalancerOp.orElseThrow(
         ()
             -> new InvalidRequestException(format(
-                "Not found load balancer with name: %s, resourceGroupName: %s", loadBalancerName, resourceGroupeName)));
+                "Not found load balancer with name: %s, resourceGroupName: %s", loadBalancerName, resourceGropeName)));
   }
 
   private void executeSwapRoutes(AzureConfig azureConfig, AzureVMSSSwitchRouteTaskParameters switchRouteTaskParameters,
@@ -174,6 +175,7 @@ public class AzureVMSSSwitchRouteTaskHandler extends AzureVMSSTaskHandler {
 
   private void executeSwapRoutesOldVMSS(AzureConfig azureConfig, VirtualMachineScaleSet oldVMSS,
       AzureVMSSSwitchRouteTaskParameters switchRouteTaskParameters, ExecutionLogCallback bgSwapRoutesLogCallback) {
+    String subscriptionId = switchRouteTaskParameters.getSubscriptionId();
     String resourceGroupName = switchRouteTaskParameters.getResourceGroupName();
     int timeoutIntervalInMin = switchRouteTaskParameters.getTimeoutIntervalInMin();
     AzureLoadBalancerDetailForBGDeployment azureLoadBalancerDetail =
@@ -186,7 +188,7 @@ public class AzureVMSSSwitchRouteTaskHandler extends AzureVMSSTaskHandler {
 
     if (switchRouteTaskParameters.isDownscaleOldVMSS()) {
       ExecutionLogCallback logCallBack = getLogCallBack(switchRouteTaskParameters, DOWN_SCALE_COMMAND_UNIT);
-      clearScalingPolicy(azureConfig, oldVMSS, resourceGroupName, logCallBack);
+      clearScalingPolicy(azureConfig, subscriptionId, oldVMSS, resourceGroupName, logCallBack);
       scaleDownVMSSToZeroCapacityAndWait(azureConfig, switchRouteTaskParameters, oldVMSS, logCallBack);
     } else {
       createAndFinishEmptyExecutionLog(
@@ -226,6 +228,7 @@ public class AzureVMSSSwitchRouteTaskHandler extends AzureVMSSTaskHandler {
   private void executeRollbackOldVMSS(AzureConfig azureConfig,
       AzureVMSSSwitchRouteTaskParameters switchRouteTaskParameters, VirtualMachineScaleSet oldVMSS,
       LoadBalancer loadBalancer, ExecutionLogCallback logCallBack) {
+    String subscriptionId = switchRouteTaskParameters.getSubscriptionId();
     String resourceGroupName = switchRouteTaskParameters.getResourceGroupName();
     int timeoutIntervalInMin = switchRouteTaskParameters.getTimeoutIntervalInMin();
     AzureLoadBalancerDetailForBGDeployment azureLoadBalancerDetail =
@@ -236,7 +239,7 @@ public class AzureVMSSSwitchRouteTaskHandler extends AzureVMSSTaskHandler {
       oldScalingPolicyJSON = preDeploymentData.getScalingPolicyJSON().get(0);
     }
 
-    clearScalingPolicy(azureConfig, oldVMSS, resourceGroupName, logCallBack);
+    clearScalingPolicy(azureConfig, subscriptionId, oldVMSS, resourceGroupName, logCallBack);
     scaleUpVMSSToDesiredCapacityAndWait(azureConfig, switchRouteTaskParameters, oldVMSS);
     attachAutoScalePolicyToVMSS(
         azureConfig, oldVMSS, resourceGroupName, oldScalingPolicyJSON, switchRouteTaskParameters);
@@ -271,6 +274,7 @@ public class AzureVMSSSwitchRouteTaskHandler extends AzureVMSSTaskHandler {
 
   private void executeRollbackNewVMSS(AzureConfig azureConfig,
       AzureVMSSSwitchRouteTaskParameters switchRouteTaskParameters, VirtualMachineScaleSet newVMSS) {
+    String subscriptionId = switchRouteTaskParameters.getSubscriptionId();
     String resourceGroupName = switchRouteTaskParameters.getResourceGroupName();
     int timeoutIntervalInMin = switchRouteTaskParameters.getTimeoutIntervalInMin();
     AzureLoadBalancerDetailForBGDeployment azureLoadBalancerDetail =
@@ -278,12 +282,12 @@ public class AzureVMSSSwitchRouteTaskHandler extends AzureVMSSTaskHandler {
 
     ExecutionLogCallback logCallBack = getLogCallBack(switchRouteTaskParameters, AZURE_VMSS_SWAP_BACKEND_POOL);
     detachNewVMSSFromProdBackendPool(azureConfig, newVMSS, azureLoadBalancerDetail, timeoutIntervalInMin, logCallBack);
-    clearScalingPolicy(
-        azureConfig, newVMSS, resourceGroupName, getLogCallBack(switchRouteTaskParameters, DOWN_SCALE_COMMAND_UNIT));
+    clearScalingPolicy(azureConfig, subscriptionId, newVMSS, resourceGroupName,
+        getLogCallBack(switchRouteTaskParameters, DOWN_SCALE_COMMAND_UNIT));
     scaleDownVMSSToZeroCapacityAndWait(azureConfig, switchRouteTaskParameters, newVMSS,
         getLogCallBack(switchRouteTaskParameters, DOWN_SCALE_COMMAND_UNIT));
-    deleteVMSS(
-        azureConfig, newVMSS, getLogCallBack(switchRouteTaskParameters, DOWN_SCALE_STEADY_STATE_WAIT_COMMAND_UNIT));
+    deleteVMSS(azureConfig, subscriptionId, newVMSS,
+        getLogCallBack(switchRouteTaskParameters, DOWN_SCALE_STEADY_STATE_WAIT_COMMAND_UNIT));
   }
 
   private void detachNewVMSSFromProdBackendPool(AzureConfig azureConfig, VirtualMachineScaleSet newVMSS,
@@ -355,12 +359,13 @@ public class AzureVMSSSwitchRouteTaskHandler extends AzureVMSSTaskHandler {
 
   private void attachAutoScalePolicyToVMSS(AzureConfig azureConfig, VirtualMachineScaleSet vmss,
       String resourceGroupName, String scalePolicyJson, AzureVMSSSwitchRouteTaskParameters switchRouteTaskParameters) {
+    String subscriptionId = switchRouteTaskParameters.getSubscriptionId();
     ExecutionLogCallback logCallBack =
         getLogCallBack(switchRouteTaskParameters, UP_SCALE_STEADY_STATE_WAIT_COMMAND_UNIT);
     String vmssId = vmss.id();
     logCallBack.saveExecutionLog(format("Attaching scaling policy to VMSS: [%s]", vmss.name()), INFO);
     azureAutoScaleSettingsClient.attachAutoScaleSettingToTargetResourceId(
-        azureConfig, resourceGroupName, vmssId, scalePolicyJson);
+        azureConfig, subscriptionId, resourceGroupName, vmssId, scalePolicyJson);
     logCallBack.saveExecutionLog(format("Scaling policy attached to VMSS: [%s]", vmss.name()), INFO);
   }
 
@@ -370,13 +375,13 @@ public class AzureVMSSSwitchRouteTaskHandler extends AzureVMSSTaskHandler {
     logCallback.saveExecutionLog(format("Tagged successfully VMSS: [%s]", vmss.name()), INFO, SUCCESS);
   }
 
-  private void deleteVMSS(
-      AzureConfig azureConfig, VirtualMachineScaleSet vmss, ExecutionLogCallback bgRollbackLogCallback) {
+  private void deleteVMSS(AzureConfig azureConfig, String subscriptionId, VirtualMachineScaleSet vmss,
+      ExecutionLogCallback bgRollbackLogCallback) {
     String virtualMachineScaleSet = vmss.name();
     bgRollbackLogCallback.saveExecutionLog(
         format("Start deleting Virtual Machine Scale Set: [%s]", virtualMachineScaleSet));
     String vmssId = vmss.id();
-    azureComputeClient.deleteVirtualMachineScaleSetById(azureConfig, vmssId);
+    azureComputeClient.deleteVirtualMachineScaleSetById(azureConfig, subscriptionId, vmssId);
     bgRollbackLogCallback.saveExecutionLog(
         format("Successful deleted Virtual Machine Scale Set: [%s]", virtualMachineScaleSet), INFO, SUCCESS);
   }

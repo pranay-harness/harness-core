@@ -13,7 +13,6 @@ import static io.harness.azure.model.AzureConstants.NEW_VIRTUAL_MACHINE_SCALE_SE
 import static io.harness.azure.model.AzureConstants.NUMBER_OF_VM_INSTANCES_VALIDATION_MSG;
 import static io.harness.azure.model.AzureConstants.PRIMARY_INTERNET_FACING_LOAD_BALANCER_NULL_VALIDATION_MSG;
 import static io.harness.azure.model.AzureConstants.RESOURCE_GROUP_NAME_NULL_VALIDATION_MSG;
-import static io.harness.azure.model.AzureConstants.SUBSCRIPTION_ID_NULL_VALIDATION_MSG;
 import static io.harness.azure.model.AzureConstants.VIRTUAL_MACHINE_SCALE_SET_ID_NULL_VALIDATION_MSG;
 import static io.harness.azure.model.AzureConstants.VIRTUAL_MACHINE_SCALE_SET_NULL_VALIDATION_MSG;
 import static io.harness.azure.model.AzureConstants.VIRTUAL_SCALE_SET_NAME_NULL_VALIDATION_MSG;
@@ -82,12 +81,8 @@ public class AzureComputeClientImpl extends AzureClient implements AzureComputeC
     if (isBlank(resourceGroupName)) {
       throw new IllegalArgumentException(RESOURCE_GROUP_NAME_NULL_VALIDATION_MSG);
     }
-    if (isBlank(subscriptionId)) {
-      throw new IllegalArgumentException(SUBSCRIPTION_ID_NULL_VALIDATION_MSG);
-    }
 
     Azure azure = getAzureClient(azureConfig, subscriptionId);
-    Objects.notNull(azure, AZURE_MANAGEMENT_CLIENT_NULL_VALIDATION_MSG);
 
     logger.debug("Start getting Virtual Machine Scale Sets by resourceGroupName: {}, subscriptionId: {}",
         resourceGroupName, subscriptionId);
@@ -108,7 +103,7 @@ public class AzureComputeClientImpl extends AzureClient implements AzureComputeC
 
   @Override
   public void deleteVirtualMachineScaleSetByResourceGroupName(
-      AzureConfig azureConfig, String resourceGroupName, String virtualScaleSetName) {
+      AzureConfig azureConfig, String subscriptionId, String resourceGroupName, String virtualScaleSetName) {
     if (isBlank(resourceGroupName)) {
       throw new IllegalArgumentException(RESOURCE_GROUP_NAME_NULL_VALIDATION_MSG);
     }
@@ -116,8 +111,7 @@ public class AzureComputeClientImpl extends AzureClient implements AzureComputeC
       throw new IllegalArgumentException(VIRTUAL_SCALE_SET_NAME_NULL_VALIDATION_MSG);
     }
 
-    Azure azure = getAzureClient(azureConfig);
-    Objects.notNull(azure, AZURE_MANAGEMENT_CLIENT_NULL_VALIDATION_MSG);
+    Azure azure = getAzureClient(azureConfig, subscriptionId);
 
     Objects.notNull(azure.virtualMachineScaleSets().getByResourceGroup(resourceGroupName, virtualScaleSetName),
         format("There is no virtual machine scale set with name %s", virtualScaleSetName));
@@ -127,14 +121,13 @@ public class AzureComputeClientImpl extends AzureClient implements AzureComputeC
   }
 
   @Override
-  public void bulkDeleteVirtualMachineScaleSets(AzureConfig azureConfig, List<String> vmssIDs) {
+  public void bulkDeleteVirtualMachineScaleSets(AzureConfig azureConfig, String subscriptionId, List<String> vmssIDs) {
     Objects.notNull(vmssIDs, VMSS_IDS_IS_NULL_VALIDATION_MSG);
     if (vmssIDs.isEmpty()) {
       return;
     }
 
-    Azure azure = getAzureClient(azureConfig);
-    Objects.notNull(azure, AZURE_MANAGEMENT_CLIENT_NULL_VALIDATION_MSG);
+    Azure azure = getAzureClient(azureConfig, subscriptionId);
 
     logger.debug("Start bulk deleting Virtual Machine Scale Sets, ids: {}", vmssIDs);
     azure.virtualMachineScaleSets().deleteByIds(vmssIDs);
@@ -170,13 +163,13 @@ public class AzureComputeClientImpl extends AzureClient implements AzureComputeC
   }
 
   @Override
-  public void deleteVirtualMachineScaleSetById(AzureConfig azureConfig, String virtualMachineScaleSetId) {
+  public void deleteVirtualMachineScaleSetById(
+      AzureConfig azureConfig, String subscriptionId, String virtualMachineScaleSetId) {
     if (isBlank(virtualMachineScaleSetId)) {
       throw new IllegalArgumentException(VIRTUAL_MACHINE_SCALE_SET_ID_NULL_VALIDATION_MSG);
     }
 
-    Azure azure = getAzureClient(azureConfig);
-    Objects.notNull(azure, AZURE_MANAGEMENT_CLIENT_NULL_VALIDATION_MSG);
+    Azure azure = getAzureClient(azureConfig, subscriptionId);
 
     Objects.notNull(azure.virtualMachineScaleSets().getById(virtualMachineScaleSetId),
         format("There is no virtual machine scale set with virtualMachineScaleSetId %s", virtualMachineScaleSetId));
@@ -188,15 +181,11 @@ public class AzureComputeClientImpl extends AzureClient implements AzureComputeC
   @Override
   public Optional<VirtualMachineScaleSet> getVirtualMachineScaleSetsById(
       AzureConfig azureConfig, String subscriptionId, String virtualMachineScaleSetId) {
-    if (isBlank(subscriptionId)) {
-      throw new IllegalArgumentException(SUBSCRIPTION_ID_NULL_VALIDATION_MSG);
-    }
     if (isBlank(virtualMachineScaleSetId)) {
       throw new IllegalArgumentException(VIRTUAL_MACHINE_SCALE_SET_ID_NULL_VALIDATION_MSG);
     }
 
     Azure azure = getAzureClient(azureConfig, subscriptionId);
-    Objects.notNull(azure, AZURE_MANAGEMENT_CLIENT_NULL_VALIDATION_MSG);
 
     logger.debug("Start getting Virtual Machine Scale Sets by virtualMachineScaleSetId: {}, subscriptionId: {}",
         virtualMachineScaleSetId, subscriptionId);
@@ -208,9 +197,6 @@ public class AzureComputeClientImpl extends AzureClient implements AzureComputeC
   @Override
   public Optional<VirtualMachineScaleSet> getVirtualMachineScaleSetByName(
       AzureConfig azureConfig, String subscriptionId, String resourceGroupName, String virtualMachineScaleSetName) {
-    if (isBlank(subscriptionId)) {
-      throw new IllegalArgumentException(SUBSCRIPTION_ID_NULL_VALIDATION_MSG);
-    }
     if (isBlank(resourceGroupName)) {
       throw new IllegalArgumentException(RESOURCE_GROUP_NAME_NULL_VALIDATION_MSG);
     }
@@ -219,7 +205,6 @@ public class AzureComputeClientImpl extends AzureClient implements AzureComputeC
     }
 
     Azure azure = getAzureClient(azureConfig, subscriptionId);
-    Objects.notNull(azure, AZURE_MANAGEMENT_CLIENT_NULL_VALIDATION_MSG);
 
     logger.debug(
         "Start getting Virtual Machine Scale Sets name virtualMachineScaleSetName: {}, subscriptionId: {}, resourceGroupName: {}",
@@ -232,7 +217,7 @@ public class AzureComputeClientImpl extends AzureClient implements AzureComputeC
 
   @Override
   public List<Subscription> listSubscriptions(AzureConfig azureConfig) {
-    Azure azure = getAzureClient(azureConfig);
+    Azure azure = getAzureClientWithDefaultSubscription(azureConfig);
     Objects.notNull(azure, AZURE_MANAGEMENT_CLIENT_NULL_VALIDATION_MSG);
 
     logger.debug("Start listing subscriptions for tenantId {}", azureConfig.getTenantId());
@@ -242,12 +227,7 @@ public class AzureComputeClientImpl extends AzureClient implements AzureComputeC
 
   @Override
   public List<String> listResourceGroupsNamesBySubscriptionId(AzureConfig azureConfig, String subscriptionId) {
-    if (isBlank(subscriptionId)) {
-      throw new IllegalArgumentException(SUBSCRIPTION_ID_NULL_VALIDATION_MSG);
-    }
-
     Azure azure = getAzureClient(azureConfig, subscriptionId);
-    Objects.notNull(azure, AZURE_MANAGEMENT_CLIENT_NULL_VALIDATION_MSG);
 
     logger.debug("Start listing resource groups names for subscriptionId {}", subscriptionId);
     List<ResourceGroup> resourceGroupList = azure.resourceGroups().list();
@@ -257,9 +237,6 @@ public class AzureComputeClientImpl extends AzureClient implements AzureComputeC
   @Override
   public boolean checkIsRequiredNumberOfVMInstances(
       AzureConfig azureConfig, String subscriptionId, String virtualMachineScaleSetId, int numberOfVMInstances) {
-    if (isBlank(subscriptionId)) {
-      throw new IllegalArgumentException(SUBSCRIPTION_ID_NULL_VALIDATION_MSG);
-    }
     if (isBlank(virtualMachineScaleSetId)) {
       throw new IllegalArgumentException(VIRTUAL_MACHINE_SCALE_SET_ID_NULL_VALIDATION_MSG);
     }
@@ -268,7 +245,6 @@ public class AzureComputeClientImpl extends AzureClient implements AzureComputeC
     }
 
     Azure azure = getAzureClient(azureConfig, subscriptionId);
-    Objects.notNull(azure, AZURE_MANAGEMENT_CLIENT_NULL_VALIDATION_MSG);
 
     VirtualMachineScaleSet virtualMachineScaleSet = azure.virtualMachineScaleSets().getById(virtualMachineScaleSetId);
     PagedList<VirtualMachineScaleSetVM> vmssInstanceList = virtualMachineScaleSet.virtualMachines().list();
@@ -301,17 +277,17 @@ public class AzureComputeClientImpl extends AzureClient implements AzureComputeC
   }
 
   @Override
-  public void createVirtualMachineScaleSet(AzureConfig azureConfig, VirtualMachineScaleSet baseVirtualMachineScaleSet,
-      String newVirtualMachineScaleSetName, AzureUserAuthVMInstanceData azureUserAuthVMInstanceData,
-      AzureMachineImageArtifact imageArtifact, AzureVMSSTagsData tags) {
+  public void createVirtualMachineScaleSet(AzureConfig azureConfig, String subscriptionId,
+      VirtualMachineScaleSet baseVirtualMachineScaleSet, String newVirtualMachineScaleSetName,
+      AzureUserAuthVMInstanceData azureUserAuthVMInstanceData, AzureMachineImageArtifact imageArtifact,
+      AzureVMSSTagsData tags) {
     if (isBlank(newVirtualMachineScaleSetName)) {
       throw new IllegalArgumentException(NEW_VIRTUAL_MACHINE_SCALE_SET_NAME_IS_NULL_VALIDATION_MSG);
     }
 
     Objects.notNull(baseVirtualMachineScaleSet, BASE_VIRTUAL_MACHINE_SCALE_SET_IS_NULL_VALIDATION_MSG);
 
-    Azure azure = getAzureClient(azureConfig);
-    Objects.notNull(azure, AZURE_MANAGEMENT_CLIENT_NULL_VALIDATION_MSG);
+    Azure azure = getAzureClient(azureConfig, subscriptionId);
 
     Map<String, String> baseVMSSTags =
         getTagsForNewVMSS(baseVirtualMachineScaleSet, newVirtualMachineScaleSetName, tags);
@@ -438,9 +414,6 @@ public class AzureComputeClientImpl extends AzureClient implements AzureComputeC
       throw new IllegalArgumentException(BACKEND_POOLS_LIST_EMPTY_VALIDATION_MSG);
     }
 
-    Azure azure = getAzureClient(azureConfig);
-    Objects.notNull(azure, AZURE_MANAGEMENT_CLIENT_NULL_VALIDATION_MSG);
-
     logger.debug("Start attaching virtual machine scale set with name {}, to backendPools: {}",
         virtualMachineScaleSet.name(), backendPools);
     return virtualMachineScaleSet.update()
@@ -471,12 +444,11 @@ public class AzureComputeClientImpl extends AzureClient implements AzureComputeC
       throw new IllegalArgumentException(BACKEND_POOLS_LIST_EMPTY_VALIDATION_MSG);
     }
 
-    Azure azure = getAzureClient(azureConfig);
-    Objects.notNull(azure, AZURE_MANAGEMENT_CLIENT_NULL_VALIDATION_MSG);
-
     logger.debug("Start de-attaching virtual machine scale set with name {}, from backendPools: {}",
         virtualMachineScaleSet.name(), backendPools);
-    return virtualMachineScaleSet.update().withoutPrimaryInternetFacingLoadBalancerBackends(backendPools).apply();
+    return backendPools[0].equals("*")
+        ? virtualMachineScaleSet.update().withoutPrimaryInternetFacingLoadBalancerBackends().apply()
+        : virtualMachineScaleSet.update().withoutPrimaryInternetFacingLoadBalancerBackends(backendPools).apply();
   }
 
   @Override
@@ -559,9 +531,6 @@ public class AzureComputeClientImpl extends AzureClient implements AzureComputeC
   @Override
   public Optional<GalleryImage> getGalleryImage(
       AzureConfig azureConfig, String subscriptionId, String resourceGroupName, String galleryName, String imageName) {
-    if (isBlank(subscriptionId)) {
-      throw new IllegalArgumentException(SUBSCRIPTION_ID_NULL_VALIDATION_MSG);
-    }
     if (isBlank(resourceGroupName)) {
       throw new IllegalArgumentException(RESOURCE_GROUP_NAME_NULL_VALIDATION_MSG);
     }
@@ -573,7 +542,6 @@ public class AzureComputeClientImpl extends AzureClient implements AzureComputeC
     }
 
     Azure azure = getAzureClient(azureConfig, subscriptionId);
-    Objects.notNull(azure, AZURE_MANAGEMENT_CLIENT_NULL_VALIDATION_MSG);
 
     try {
       logger.debug("Start getting gallery image, imageName {}, galleryName: {}, resourceGroupName: {}", imageName,

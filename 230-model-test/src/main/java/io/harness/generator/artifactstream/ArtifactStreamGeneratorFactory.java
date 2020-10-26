@@ -17,7 +17,8 @@ public class ArtifactStreamGeneratorFactory {
   @Inject private AmazonS3ArtifactStreamStreamsGenerator amazonS3ArtifactStreamStreamsGenerator;
   @Inject private ArtifactoryArtifactStreamStreamsGenerator artifactoryArtifactStreamStreamsGenerator;
   @Inject private AmazonAmiArtifactStreamsGenerator amazonAmiArtifactStreamsGenerator;
-  @Inject private AzureMachineImageArtifactStreamGenerator azureMachineImageArtifactStreamGenerator;
+  @Inject
+  private AzureMachineImageLinuxGalleryArtifactStreamGenerator azureMachineImageLinuxGalleryArtifactStreamGenerator;
   @Inject private AmazonLambdaArtifactStreamGenerator amazonLambdaArtifactStreamGenerator;
   @Inject private SpotinstAmiArtifactStreamsGenerator spotinstAmiArtifactStreamsGenerator;
   @Inject private BambooArtifactStreamGenerator bambooArtifactStreamGenerator;
@@ -51,8 +52,8 @@ public class ArtifactStreamGeneratorFactory {
     if (ArtifactStreams.SPOTINST_AMI == artifactStreams) {
       return spotinstAmiArtifactStreamsGenerator;
     }
-    if (ArtifactStreams.AZURE_MACHINE_IMAGE == artifactStreams) {
-      return azureMachineImageArtifactStreamGenerator;
+    if (ArtifactStreams.AZURE_MACHINE_IMAGE_LINUX_GALLERY == artifactStreams) {
+      return azureMachineImageLinuxGalleryArtifactStreamGenerator;
     }
     if (ArtifactStreams.HARNESS_EXAMPLE_LAMBDA == artifactStreams) {
       return amazonLambdaArtifactStreamGenerator;

@@ -386,16 +386,32 @@ public class AzureVMSSStateHelper {
   }
 
   public List<EncryptedDataDetail> getVMAuthDTOEncryptionDetails(
-      ExecutionContext context, AzureVMAuthDTO azureVmAuthDTO, String envId) {
+      ExecutionContext context, AzureVMAuthDTO azureVmAuthDTO, String accountId, String envId) {
     AzureVMAuthType azureVmAuthType = azureVmAuthDTO.getAzureVmAuthType();
     String secretIdentifier = azureVmAuthDTO.getSecretRef().getIdentifier();
 
-    return SSH_PUBLIC_KEY == azureVmAuthType ? getEncryptedDataDetails(context, secretIdentifier)
-                                             : getServiceVariableEncryptedDataDetails(context, secretIdentifier, envId);
+    return SSH_PUBLIC_KEY == azureVmAuthType
+        ? getEncryptedDataDetailsBySettingsName(context, accountId, secretIdentifier)
+        : getServiceVariableEncryptedDataDetails(context, secretIdentifier, envId);
+  }
+
+  public List<EncryptedDataDetail> getEncryptedDataDetailsBySettingsName(
+      ExecutionContext context, final String accountId, final String settingsName) {
+    SettingAttribute settingAttribute =
+        Optional.ofNullable(settingsService.getSettingAttributeByName(accountId, settingsName))
+            .orElseThrow(
+                ()
+                    -> new InvalidRequestException(
+                        format("Unable to find setting by accountId: %s, settingsName: %s", accountId, settingsName)));
+    return secretManager.getEncryptionDetails(
+        (EncryptableSetting) settingAttribute.getValue(), context.getAppId(), context.getWorkflowExecutionId());
   }
 
   public List<EncryptedDataDetail> getEncryptedDataDetails(ExecutionContext context, final String settingId) {
-    SettingAttribute settingAttribute = settingsService.get(settingId);
+    SettingAttribute settingAttribute =
+        Optional.ofNullable(settingsService.get(settingId))
+            .orElseThrow(
+                () -> new InvalidRequestException(format("Unable to find setting by settingsId: %s", settingId)));
     return secretManager.getEncryptionDetails(
         (EncryptableSetting) settingAttribute.getValue(), context.getAppId(), context.getWorkflowExecutionId());
   }

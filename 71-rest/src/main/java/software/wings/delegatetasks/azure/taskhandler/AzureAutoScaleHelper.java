@@ -44,7 +44,8 @@ public class AzureAutoScaleHelper {
     if (isUseCurrentRunningCount) {
       if (mostRecentActiveVMSS != null) {
         Optional<AutoscaleProfile> defaultAutoScaleProfileOp = azureAutoScaleSettingsClient.getDefaultAutoScaleProfile(
-            azureConfig, mostRecentActiveVMSS.resourceGroupName(), mostRecentActiveVMSS.id());
+            azureConfig, setupTaskParameters.getSubscriptionId(), mostRecentActiveVMSS.resourceGroupName(),
+            mostRecentActiveVMSS.id());
         if (defaultAutoScaleProfileOp.isPresent()) {
           return getMostRecentActiveVMSSInstanceLimits(
               defaultAutoScaleProfileOp.get(), mostRecentActiveVMSS, logCallback);
@@ -60,7 +61,7 @@ public class AzureAutoScaleHelper {
       VirtualMachineScaleSet mostRecentActiveVMSS, ExecutionLogCallback logCallback) {
     int minInstances = defaultAutoScaleProfile.minInstanceCount();
     int maxInstances = defaultAutoScaleProfile.maxInstanceCount();
-    int desiredInstances = mostRecentActiveVMSS.capacity();
+    int desiredInstances = defaultAutoScaleProfile.defaultInstanceCount();
     String mostRecentActiveVMSSName = mostRecentActiveVMSS.name();
 
     logCallback.saveExecutionLog(format("Using currently running min: [%d], max: [%d], desired: [%d] from VMSS: [%s]",
@@ -108,13 +109,13 @@ public class AzureAutoScaleHelper {
   }
 
   public List<String> getVMSSAutoScaleSettingsJSONs(
-      AzureConfig azureConfig, VirtualMachineScaleSet mostRecentActiveVMSS) {
+      AzureConfig azureConfig, String subscriptionId, VirtualMachineScaleSet mostRecentActiveVMSS) {
     if (mostRecentActiveVMSS == null) {
       return emptyList();
     }
 
     String resourceGroupName = mostRecentActiveVMSS.resourceGroupName();
-    return getAutoScaleSettingsJSONs(azureConfig, resourceGroupName, mostRecentActiveVMSS);
+    return getAutoScaleSettingsJSONs(azureConfig, subscriptionId, resourceGroupName, mostRecentActiveVMSS);
   }
 
   public List<String> getVMSSAutoScaleSettingsJSONs(
@@ -122,14 +123,16 @@ public class AzureAutoScaleHelper {
     Optional<VirtualMachineScaleSet> virtualMachineScaleSet = azureComputeClient.getVirtualMachineScaleSetByName(
         azureConfig, subscriptionId, resourceGroupName, virtualMachineScaleSetName);
 
-    return virtualMachineScaleSet.map(vm -> getAutoScaleSettingsJSONs(azureConfig, resourceGroupName, vm))
+    return virtualMachineScaleSet
+        .map(vm -> getAutoScaleSettingsJSONs(azureConfig, subscriptionId, resourceGroupName, vm))
         .orElse(emptyList());
   }
 
-  private List<String> getAutoScaleSettingsJSONs(
-      AzureConfig azureConfig, String resourceGroupName, VirtualMachineScaleSet virtualMachineScaleSet) {
+  private List<String> getAutoScaleSettingsJSONs(AzureConfig azureConfig, String subscriptionId,
+      String resourceGroupName, VirtualMachineScaleSet virtualMachineScaleSet) {
     return azureAutoScaleSettingsClient
-        .getAutoScaleSettingJSONByTargetResourceId(azureConfig, resourceGroupName, virtualMachineScaleSet.id())
+        .getAutoScaleSettingJSONByTargetResourceId(
+            azureConfig, subscriptionId, resourceGroupName, virtualMachineScaleSet.id())
         .map(Collections::singletonList)
         .orElse(emptyList());
   }

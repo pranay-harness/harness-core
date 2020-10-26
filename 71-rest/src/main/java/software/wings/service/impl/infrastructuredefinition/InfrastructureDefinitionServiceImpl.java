@@ -1962,12 +1962,13 @@ public class InfrastructureDefinitionServiceImpl implements InfrastructureDefini
 
     String resourceGroupName = azureVMSSInfra.getResourceGroupName();
     String cloudProviderId = azureVMSSInfra.getCloudProviderId();
+    String subscriptionId = azureVMSSInfra.getSubscriptionId();
 
     AzureConfig azureConfig = validateAndGetAzureConfig(cloudProviderId);
     List<EncryptedDataDetail> encryptionDetails = secretManager.getEncryptionDetails(azureConfig, appId, null);
     try {
       return azureVMSSHelperServiceManager.listLoadBalancersNames(
-          azureConfig, resourceGroupName, encryptionDetails, appId);
+          azureConfig, subscriptionId, resourceGroupName, encryptionDetails, appId);
     } catch (Exception e) {
       logger.warn(ExceptionUtils.getMessage(e), e);
       throw new InvalidRequestException(ExceptionUtils.getMessage(e), USER);
@@ -1981,12 +1982,13 @@ public class InfrastructureDefinitionServiceImpl implements InfrastructureDefini
 
     String resourceGroupName = azureVMSSInfra.getResourceGroupName();
     String cloudProviderId = azureVMSSInfra.getCloudProviderId();
+    String subscriptionId = azureVMSSInfra.getSubscriptionId();
 
     AzureConfig azureConfig = validateAndGetAzureConfig(cloudProviderId);
     List<EncryptedDataDetail> encryptionDetails = secretManager.getEncryptionDetails(azureConfig, appId, null);
     try {
       return azureVMSSHelperServiceManager.listLoadBalancerBackendPoolsNames(
-          azureConfig, resourceGroupName, loadBalancerName, encryptionDetails, appId);
+          azureConfig, subscriptionId, resourceGroupName, loadBalancerName, encryptionDetails, appId);
     } catch (Exception e) {
       logger.warn(ExceptionUtils.getMessage(e), e);
       throw new InvalidRequestException(ExceptionUtils.getMessage(e), USER);

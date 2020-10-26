@@ -82,6 +82,8 @@ public class AzureComputeClientImplTest extends CategoryTest {
     when(Azure.configure()).thenReturn(configurable);
     when(configurable.withLogLevel(any(LogLevel.class))).thenReturn(configurable);
     when(configurable.authenticate(any(ApplicationTokenCredentials.class))).thenReturn(authenticated);
+    when(authenticated.withSubscription(anyString())).thenReturn(azure);
+    when(authenticated.withDefaultSubscription()).thenReturn(azure);
   }
 
   @Test
@@ -187,7 +189,8 @@ public class AzureComputeClientImplTest extends CategoryTest {
     when(virtualMachineScaleSets.getById("virtualMachineScaleSet")).thenReturn(virtualMachineScaleSet);
     doNothing().when(virtualMachineScaleSets).deleteById("virtualMachineScaleSet");
 
-    azureComputeClient.deleteVirtualMachineScaleSetById(getAzureComputeConfig(), "virtualMachineScaleSet");
+    azureComputeClient.deleteVirtualMachineScaleSetById(
+        getAzureComputeConfig(), "subscriptionId", "virtualMachineScaleSet");
 
     verify(azure, times(2)).virtualMachineScaleSets();
   }
@@ -207,7 +210,7 @@ public class AzureComputeClientImplTest extends CategoryTest {
     doNothing().when(virtualMachineScaleSets).deleteByResourceGroup("resourceGroupName", "virtualMachineScaleSetName");
 
     azureComputeClient.deleteVirtualMachineScaleSetByResourceGroupName(
-        getAzureComputeConfig(), "resourceGroupName", "virtualMachineScaleSetName");
+        getAzureComputeConfig(), "subscriptionId", "resourceGroupName", "virtualMachineScaleSetName");
 
     verify(azure, times(2)).virtualMachineScaleSets();
   }

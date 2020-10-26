@@ -4,12 +4,16 @@ import static io.harness.generator.SettingGenerator.Settings.AWS_DEPLOYMENT_FUNC
 import static io.harness.generator.SettingGenerator.Settings.AWS_SPOTINST_TEST_CLOUD_PROVIDER;
 import static io.harness.generator.SettingGenerator.Settings.AWS_TEST_CLOUD_PROVIDER;
 import static io.harness.generator.SettingGenerator.Settings.AZURE_TEST_CLOUD_PROVIDER;
+import static io.harness.generator.SettingGenerator.Settings.AZURE_VMSS_SSH_PUBLIC_KEY_CONNECTOR;
 import static io.harness.generator.SettingGenerator.Settings.DEV_TEST_CONNECTOR;
 import static io.harness.generator.SettingGenerator.Settings.GCP_PLAYGROUND;
 import static io.harness.generator.SettingGenerator.Settings.PHYSICAL_DATA_CENTER;
 import static io.harness.generator.SettingGenerator.Settings.SPOTINST_TEST_CLOUD_PROVIDER;
 import static io.harness.generator.SettingGenerator.Settings.WINRM_DEV_TEST_CONNECTOR;
 import static io.harness.generator.SettingGenerator.Settings.WINRM_TEST_CONNECTOR;
+import static io.harness.generator.constants.InfraDefinitionGeneratorConstants.AZURE_VMSS_BASE_SCALE_SET_NAME;
+import static io.harness.generator.constants.InfraDefinitionGeneratorConstants.AZURE_VMSS_INFRA_DEFINITION_NAME;
+import static io.harness.generator.constants.InfraDefinitionGeneratorConstants.AZURE_VMSS_VM_USERNAME;
 import static io.harness.generator.constants.InfraDefinitionGeneratorConstants.SSH_DEPLOY_HOST;
 import static io.harness.govern.Switch.unhandled;
 import static java.util.Arrays.asList;
@@ -126,29 +130,12 @@ public class InfrastructureDefinitionGenerator {
       case PCF_INFRASTRUCTURE:
         return ensurePcf(seed, owners, bearerToken);
       case AZURE_VMSS:
-        return ensureAzureVMSS(seed, owners, bearerToken);
+        return ensureAzureVMSS(seed, owners);
       case PDC:
         return ensurePDC(seed, owners, "PDC");
       default:
         return null;
     }
-  }
-
-  private InfrastructureDefinition ensureAzureVMSS(Seed seed, Owners owners, String bearerToken) {
-    Environment environment = ensureEnv(seed, owners);
-    final String appId = environment.getAppId();
-
-    final SettingAttribute azureCloudProvider =
-        settingGenerator.ensurePredefined(seed, owners, AZURE_TEST_CLOUD_PROVIDER);
-
-    // Todo - add rest call to get Resource Group & Subscription id
-    List<String> scaleSets = InfrastructureDefinitionRestUtils.listVirtualMachineScaleSets(bearerToken, appId,
-        InfraDefinitionGeneratorConstants.AZURE_SUBSCRIPTION_ID, InfraDefinitionGeneratorConstants.AZURE_RESOURCE_GROUP,
-        azureCloudProvider.getUuid());
-
-    assertThat(scaleSets).isNotEmpty();
-
-    return ensureAzureVMSSInfra(seed, owners, scaleSets.get(0));
   }
 
   public InfrastructureDefinition ensurePDC(Seed seed, Owners owners, String name) {
@@ -879,24 +866,28 @@ public class InfrastructureDefinitionGenerator {
     return ensureAwsAmi(seed, owners, "AMI-BASE-ASG-TODOLIST", "aws-ami-lt-infradef");
   }
 
-  private InfrastructureDefinition ensureAzureVMSSInfra(Seed seed, Owners owners, String baseVMSS) {
+  private InfrastructureDefinition ensureAzureVMSS(Seed seed, Owners owners) {
     Environment environment = ensureEnv(seed, owners);
 
     final SettingAttribute azureCloudProvider =
         settingGenerator.ensurePredefined(seed, owners, AZURE_TEST_CLOUD_PROVIDER);
-    AzureVMSSInfra azureVMSSInfra = AzureVMSSInfra.builder()
-                                        .cloudProviderId(azureCloudProvider.getUuid())
-                                        .baseVMSSName(baseVMSS)
-                                        .resourceGroupName(InfraDefinitionGeneratorConstants.AZURE_SUBSCRIPTION_ID)
-                                        .subscriptionId(InfraDefinitionGeneratorConstants.AZURE_RESOURCE_GROUP)
-                                        .userName("harnessUser")
-                                        .passwordSecretTextName("vmss")
-                                        .vmssAuthType(VMSSAuthType.PASSWORD)
-                                        .vmssDeploymentType(VMSSDeploymentType.NATIVE_VMSS)
-                                        .build();
+    final SettingAttribute sshPublicKeySettingAttribute =
+        settingGenerator.ensurePredefined(seed, owners, AZURE_VMSS_SSH_PUBLIC_KEY_CONNECTOR);
+
+    AzureVMSSInfra azureVMSSInfra =
+        AzureVMSSInfra.builder()
+            .cloudProviderId(azureCloudProvider.getUuid())
+            .baseVMSSName(AZURE_VMSS_BASE_SCALE_SET_NAME)
+            .resourceGroupName(InfraDefinitionGeneratorConstants.AZURE_FUNCTIONAL_TEST_RESOURCE_GROUP)
+            .subscriptionId(InfraDefinitionGeneratorConstants.AZURE_SUBSCRIPTION_ID)
+            .userName(AZURE_VMSS_VM_USERNAME)
+            .hostConnectionAttrs(sshPublicKeySettingAttribute.getName())
+            .vmssAuthType(VMSSAuthType.SSH_PUBLIC_KEY)
+            .vmssDeploymentType(VMSSDeploymentType.NATIVE_VMSS)
+            .build();
 
     InfrastructureDefinition infrastructureDefinition = InfrastructureDefinition.builder()
-                                                            .name("azure-vmss-infraDef")
+                                                            .name(AZURE_VMSS_INFRA_DEFINITION_NAME)
                                                             .cloudProviderType(CloudProviderType.AZURE)
                                                             .deploymentType(DeploymentType.AZURE_VMSS)
                                                             .appId(environment.getAppId())

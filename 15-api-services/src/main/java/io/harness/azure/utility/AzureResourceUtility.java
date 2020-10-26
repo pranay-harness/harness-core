@@ -1,6 +1,5 @@
 package io.harness.azure.utility;
 
-import static io.harness.azure.model.AzureConstants.AUTO_SCALE_DEFAULT_PROFILE_PATTERN;
 import static java.lang.String.format;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
@@ -9,13 +8,17 @@ import lombok.experimental.UtilityClass;
 import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.util.Arrays;
 import java.util.Date;
+import java.util.List;
 import java.util.SimpleTimeZone;
 
 @UtilityClass
 public class AzureResourceUtility {
   private final String DELIMITER = "__";
   private final String ISO_8601_BASIC_FORMAT = "yyyyMMdd'T'HHmmss'Z'";
+  private final List<String> AUTO_SCALE_DEFAULT_PROFILE_NAMES =
+      Arrays.asList("Profile1", "Auto created scale condition");
 
   public String dateToISO8601BasicStr(Date date) {
     SimpleDateFormat dateTimeFormat = new SimpleDateFormat(ISO_8601_BASIC_FORMAT);
@@ -55,6 +58,6 @@ public class AzureResourceUtility {
   }
 
   public boolean isDefaultAutoScaleProfile(String profileName) {
-    return isNotBlank(profileName) && profileName.equalsIgnoreCase(AUTO_SCALE_DEFAULT_PROFILE_PATTERN);
+    return isNotBlank(profileName) && AUTO_SCALE_DEFAULT_PROFILE_NAMES.contains(profileName);
   }
 }
