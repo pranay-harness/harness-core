@@ -35,7 +35,7 @@ public class UserQueryHelper {
     });
   }
 
-  public void setAccountFilter(Query query, final String accountId) {
-    query.field("accounts").equal(accountId);
+  public void setAccountFilter(Query<User> query, final String accountId) {
+    query.or(query.criteria("accounts").equal(accountId), query.criteria("pendingAccounts").equal(accountId));
   }
 }
