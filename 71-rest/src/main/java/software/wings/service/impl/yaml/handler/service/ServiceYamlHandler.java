@@ -209,16 +209,20 @@ public class ServiceYamlHandler extends BaseYamlHandler<Yaml, Service> {
 
   private void filterNonUpdatablePropertiesChanges(String appId, Yaml yaml, String serviceName) {
     Service initialService = serviceResourceService.getServiceByName(appId, serviceName);
-    String initialServiceAppStack = initialService.getAppContainer().getName();
+    String initialServiceAppStack =
+        initialService.getAppContainer() == null ? null : initialService.getAppContainer().getName();
     String initialServiceArtifactType = initialService.getArtifactType().name();
     String initialServiceDeploymentType = initialService.getDeploymentType().name();
-    if (!yaml.getApplicationStack().equals(initialServiceAppStack)) {
+    if (isNotEmpty(initialServiceAppStack) && !initialServiceAppStack.equals(yaml.getApplicationStack())) {
       throw new InvalidRequestException("The 'applicationStack' can not be updated when a Service is already created.");
     }
-    if (!yaml.getArtifactType().equals(initialServiceArtifactType)) {
+    if (isEmpty(initialServiceAppStack) && isNotEmpty(yaml.getApplicationStack())) {
+      throw new InvalidRequestException("The 'applicationStack' can not be updated when a Service is already created.");
+    }
+    if (!initialServiceArtifactType.equals(yaml.getArtifactType())) {
       throw new InvalidRequestException("The 'artifactType' can not be updated when a Service is already created.");
     }
-    if (!yaml.getDeploymentType().equals(initialServiceDeploymentType)) {
+    if (!initialServiceDeploymentType.equals(yaml.getDeploymentType())) {
       throw new InvalidRequestException("The 'deploymentType' can not be updated when a Service is already created.");
     }
   }
