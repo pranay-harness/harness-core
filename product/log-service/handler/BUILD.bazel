@@ -29,6 +29,7 @@ go_test(
     embed = [":go_default_library"],
     deps = [
         "//product/log-service/config:go_default_library",
+        "@com_github_dchest_authcookie//:go_default_library",
         "@com_github_stretchr_testify//assert:go_default_library",
     ],
 )

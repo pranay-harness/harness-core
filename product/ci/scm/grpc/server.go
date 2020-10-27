@@ -8,6 +8,8 @@ import (
 	pb "github.com/wings-software/portal/product/ci/scm/proto"
 	"go.uber.org/zap"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/health"
+	healthpb "google.golang.org/grpc/health/grpc_health_v1"
 )
 
 const (
@@ -50,6 +52,10 @@ func NewSCMServer(port uint, log *zap.SugaredLogger) (SCMServer, error) {
 
 //Start signals the GRPC server to begin serving on the configured port
 func (s *scmServer) Start() {
+	healthServer := health.NewServer()
+	healthServer.SetServingStatus("", healthpb.HealthCheckResponse_SERVING)
+
+	healthpb.RegisterHealthServer(s.grpcServer, healthServer)
 	pb.RegisterSCMServer(s.grpcServer, NewSCMHandler(s.stopCh, s.log))
 	err := s.grpcServer.Serve(s.listener)
 	if err != nil {
