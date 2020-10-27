@@ -6,7 +6,7 @@ import io.harness.data.validator.Trimmed;
 import io.harness.mongo.index.CdIndex;
 import io.harness.mongo.index.Field;
 import io.harness.mongo.index.NgUniqueIndex;
-import io.harness.ng.core.common.beans.Tag;
+import io.harness.ng.core.common.beans.NGTag;
 import io.harness.ng.core.service.entity.ServiceEntity.ServiceEntityKeys;
 import io.harness.persistence.PersistentEntity;
 import lombok.Builder;
@@ -46,7 +46,7 @@ public class ServiceEntity implements PersistentEntity {
   @NotEmpty @EntityIdentifier String identifier;
   @Trimmed @NotEmpty String orgIdentifier;
   @Trimmed @NotEmpty String projectIdentifier;
-  @Wither @Singular @Size(max = 128) private List<Tag> tags;
+  @Wither @Singular @Size(max = 128) private List<NGTag> tags;
 
   @NotEmpty @EntityName String name;
   @Size(max = 1024) String description;

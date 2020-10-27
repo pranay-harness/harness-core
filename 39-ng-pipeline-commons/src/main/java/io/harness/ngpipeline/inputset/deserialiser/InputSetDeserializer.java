@@ -10,6 +10,8 @@ import io.harness.ngpipeline.pipeline.beans.yaml.NgPipeline;
 import io.harness.yaml.utils.YamlPipelineUtils;
 
 import java.io.IOException;
+import java.util.LinkedHashMap;
+import java.util.Map;
 
 public class InputSetDeserializer extends StdDeserializer<InputSetConfig> {
   public InputSetDeserializer() {
@@ -32,13 +34,18 @@ public class InputSetDeserializer extends StdDeserializer<InputSetConfig> {
     String identifier = getValueFromJsonNode(parentJsonNode, "identifier");
     String name = getValueFromJsonNode(parentJsonNode, "name");
     String description = getValueFromJsonNode(parentJsonNode, "description");
-    // Add Tags
 
+    JsonNode tagsJsonNode = parentJsonNode.get("tags");
+    Map<String, String> tags = null;
+    if (tagsJsonNode != null) {
+      tags = YamlPipelineUtils.read(YamlPipelineUtils.writeString(tagsJsonNode), LinkedHashMap.class);
+    }
     return InputSetConfig.builder()
         .identifier(identifier)
         .description(description)
         .pipeline(ngPipeline)
         .name(name)
+        .tags(tags)
         .build();
   }
 

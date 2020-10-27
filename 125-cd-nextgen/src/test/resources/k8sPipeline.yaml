@@ -1,6 +1,8 @@
 pipeline:
   name: "Manager Service Deployment"
   identifier: k8s
+  tags:
+    company: harness
   stages:
     - stage:
         identifier: qaStage

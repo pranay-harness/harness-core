@@ -8,7 +8,7 @@ import javax.validation.constraints.NotNull;
 
 @Data
 @Builder
-public class Tag implements Serializable {
+public class NGTag implements Serializable {
   @NotNull private String key;
   @NotNull private String value;
 }

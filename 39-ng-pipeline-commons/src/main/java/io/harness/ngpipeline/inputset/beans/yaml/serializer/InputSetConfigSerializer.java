@@ -5,9 +5,9 @@ import com.fasterxml.jackson.databind.JsonSerializer;
 import com.fasterxml.jackson.databind.SerializerProvider;
 import com.fasterxml.jackson.databind.jsontype.TypeSerializer;
 import io.harness.beans.ParameterField;
+import io.harness.data.structure.EmptyPredicate;
 import io.harness.ngpipeline.inputset.beans.yaml.InputSetConfig;
 import io.harness.ngpipeline.pipeline.beans.yaml.NgPipeline;
-import io.harness.data.structure.EmptyPredicate;
 import io.harness.reflection.ReflectionUtils;
 
 import java.io.IOException;
@@ -35,6 +35,10 @@ public class InputSetConfigSerializer extends JsonSerializer<InputSetConfig> {
     }
     if (EmptyPredicate.isNotEmpty(inputSetConfig.getDescription())) {
       jsonGenerator.writeObjectField("description", inputSetConfig.getDescription());
+    }
+    if (EmptyPredicate.isNotEmpty(inputSetConfig.getTags())) {
+      jsonGenerator.writeFieldName("tags");
+      jsonGenerator.writeObject(inputSetConfig.getTags());
     }
 
     NgPipeline pipeline = inputSetConfig.getPipeline();

@@ -24,7 +24,7 @@ import io.harness.cdng.service.beans.KubernetesServiceSpec;
 import io.harness.cdng.service.beans.ServiceConfig;
 import io.harness.cdng.service.beans.StageOverridesConfig;
 import io.harness.cdng.variables.beans.NGVariableOverrideSets;
-import io.harness.ng.core.common.beans.Tag;
+import io.harness.ng.core.common.beans.NGTag;
 import io.harness.ngpipeline.pipeline.beans.yaml.NgPipeline;
 import io.harness.rule.Owner;
 import io.harness.yaml.core.ParallelStepElement;
@@ -85,7 +85,7 @@ public class PipelineYamlTest extends CategoryTest {
     ServiceConfig service = deploymentStage.getService();
 
     // Test Service Tags
-    List<Tag> tags = convertToList(service.getTags());
+    List<NGTag> tags = convertToList(service.getTags());
     assertThat(tags.size()).isEqualTo(2);
     Set<String> tagStrings = tags.stream().map(tag -> tag.getKey() + ": " + tag.getValue()).collect(toSet());
     assertThat(tagStrings).containsOnly("k1: v1", "k2: v2");

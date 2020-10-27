@@ -1,14 +1,14 @@
 package io.harness.ngpipeline.pipeline.beans.yaml;
 
 import io.harness.beans.ParameterField;
-import io.harness.ngpipeline.pipeline.beans.yaml.NgPipeline.NgPipelineKeys;
-import io.harness.ngpipeline.visitor.helpers.ngpipeline.NgPipelineVisitorHelper;
 import io.harness.common.SwaggerConstants;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.data.validator.EntityIdentifier;
 import io.harness.data.validator.EntityName;
 import io.harness.mongo.index.Field;
 import io.harness.ng.RsqlQueryable;
+import io.harness.ngpipeline.pipeline.beans.yaml.NgPipeline.NgPipelineKeys;
+import io.harness.ngpipeline.visitor.helpers.ngpipeline.NgPipelineVisitorHelper;
 import io.harness.walktree.beans.LevelNode;
 import io.harness.walktree.beans.VisitableChildren;
 import io.harness.walktree.visitor.SimpleVisitorHelper;
@@ -16,7 +16,6 @@ import io.harness.walktree.visitor.Visitable;
 import io.harness.walktree.visitor.validation.annotations.Required;
 import io.harness.walktree.visitor.validation.modes.PostInputSet;
 import io.harness.walktree.visitor.validation.modes.PreInputSet;
-import io.harness.yaml.core.Tag;
 import io.harness.yaml.core.auxiliary.intfc.StageElementWrapper;
 import io.harness.yaml.core.intfc.Pipeline;
 import io.harness.yaml.core.variables.NGVariable;
@@ -26,8 +25,9 @@ import lombok.Data;
 import lombok.Singular;
 import lombok.experimental.FieldNameConstants;
 
-import java.util.List;
 import javax.validation.constraints.NotNull;
+import java.util.List;
+import java.util.Map;
 
 @Data
 @Builder
@@ -44,7 +44,7 @@ public class NgPipeline implements Pipeline, Visitable {
   @NotNull(groups = PreInputSet.class) @Required(groups = PostInputSet.class) @EntityIdentifier String identifier;
 
   @ApiModelProperty(dataType = SwaggerConstants.STRING_CLASSPATH) ParameterField<String> description;
-  List<Tag> tags;
+  Map<String, String> tags;
 
   List<NGVariable> variables;
   @Singular List<StageElementWrapper> stages;

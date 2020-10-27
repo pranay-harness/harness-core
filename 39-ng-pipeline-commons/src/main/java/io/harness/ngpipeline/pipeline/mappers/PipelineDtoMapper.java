@@ -1,10 +1,11 @@
 package io.harness.ngpipeline.pipeline.mappers;
 
-import io.harness.ngpipeline.pipeline.beans.yaml.NgPipeline;
+import io.harness.exception.InvalidRequestException;
+import io.harness.ng.core.mapper.TagMapper;
+import io.harness.ngpipeline.pipeline.beans.entities.NgPipelineEntity;
 import io.harness.ngpipeline.pipeline.beans.resources.NGPipelineResponseDTO;
 import io.harness.ngpipeline.pipeline.beans.resources.NGPipelineSummaryResponseDTO;
-import io.harness.ngpipeline.pipeline.beans.entities.NgPipelineEntity;
-import io.harness.exception.InvalidRequestException;
+import io.harness.ngpipeline.pipeline.beans.yaml.NgPipeline;
 import io.harness.yaml.core.ParallelStageElement;
 import io.harness.yaml.core.StageElement;
 import io.harness.yaml.core.auxiliary.intfc.StageElementWrapper;
@@ -28,22 +29,11 @@ public class PipelineDtoMapper {
           .orgIdentifier(orgId)
           .projectIdentifier(projectId)
           .identifier(ngPipeline.getIdentifier())
+          .tags(TagMapper.convertToList(ngPipeline.getTags()))
           .build();
     } catch (IOException e) {
       throw new InvalidRequestException("Cannot create inputSet entity due to " + e.getMessage());
     }
-  }
-
-  public NgPipelineEntity toPipelineEntity(
-      String accountId, String orgId, String projectId, String yaml, NgPipeline ngPipeline) {
-    return NgPipelineEntity.builder()
-        .ngPipeline(ngPipeline)
-        .yamlPipeline(yaml)
-        .accountId(accountId)
-        .orgIdentifier(orgId)
-        .projectIdentifier(projectId)
-        .identifier(ngPipeline.getIdentifier())
-        .build();
   }
 
   public NGPipelineResponseDTO writePipelineDto(NgPipelineEntity ngPipelineEntity) {

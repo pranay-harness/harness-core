@@ -8,7 +8,7 @@ import static software.wings.beans.Service.ServiceKeys;
 
 import io.harness.NgManagerTest;
 import io.harness.category.element.UnitTests;
-import io.harness.ng.core.common.beans.Tag;
+import io.harness.ng.core.common.beans.NGTag;
 import io.harness.ng.core.service.dto.ServiceRequestDTO;
 import io.harness.ng.core.service.dto.ServiceResponseDTO;
 import io.harness.ng.core.service.entity.ServiceEntity;
@@ -39,11 +39,11 @@ public class ServiceResourceTest extends NgManagerTest {
   ServiceRequestDTO serviceRequestDTO;
   ServiceResponseDTO serviceResponseDTO;
   ServiceEntity serviceEntity;
-  List<Tag> tags;
+  List<NGTag> tags;
 
   @Before
   public void setUp() {
-    tags = Arrays.asList(Tag.builder().key("k1").value("v1").build());
+    tags = Arrays.asList(NGTag.builder().key("k1").value("v1").build());
     serviceRequestDTO = ServiceRequestDTO.builder()
                             .identifier("IDENTIFIER")
                             .orgIdentifier("ORG_ID")

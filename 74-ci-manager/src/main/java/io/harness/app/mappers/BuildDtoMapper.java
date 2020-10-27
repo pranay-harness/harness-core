@@ -20,6 +20,7 @@ import io.harness.beans.execution.WebhookExecutionSource;
 import io.harness.beans.execution.WebhookGitUser;
 import io.harness.ci.beans.entities.CIBuild;
 import io.harness.dto.OrchestrationGraphDTO;
+import io.harness.ng.core.mapper.TagMapper;
 import io.harness.ngpipeline.pipeline.beans.entities.NgPipelineEntity;
 import io.harness.service.GraphGenerationService;
 
@@ -93,7 +94,7 @@ public class BuildDtoMapper {
     return CIBuildPipeline.builder()
         .id(ngPipelineEntity.getIdentifier())
         .name(ngPipelineEntity.getNgPipeline().getName())
-        .tags(ngPipelineEntity.getNgPipeline().getTags())
+        .tags(TagMapper.convertToList(ngPipelineEntity.getNgPipeline().getTags()))
         .build();
   }
 

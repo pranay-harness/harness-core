@@ -1,9 +1,9 @@
 package io.harness.ngpipeline.pipeline.mappers;
 
 import io.harness.NGResourceFilterConstants;
+import io.harness.data.structure.EmptyPredicate;
 import io.harness.ngpipeline.pipeline.beans.entities.NgPipelineEntity;
 import io.harness.ngpipeline.pipeline.beans.entities.NgPipelineEntity.PipelineNGKeys;
-import io.harness.data.structure.EmptyPredicate;
 import lombok.experimental.UtilityClass;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Update;
@@ -43,6 +43,7 @@ public class NgPipelineFilterHelper {
     update.set(PipelineNGKeys.identifier, ngPipelineEntity.getIdentifier());
     update.set(PipelineNGKeys.ngPipeline, ngPipelineEntity.getNgPipeline());
     update.set(PipelineNGKeys.yamlPipeline, ngPipelineEntity.getYamlPipeline());
+    update.set(PipelineNGKeys.tags, ngPipelineEntity.getTags());
     update.set(PipelineNGKeys.deleted, false);
     return update;
   }

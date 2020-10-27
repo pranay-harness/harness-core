@@ -7,7 +7,7 @@ import com.google.common.collect.ImmutableMap;
 
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
-import io.harness.ng.core.common.beans.Tag;
+import io.harness.ng.core.common.beans.NGTag;
 import io.harness.ng.core.environment.beans.Environment;
 import io.harness.ng.core.environment.beans.EnvironmentType;
 import io.harness.ng.core.environment.dto.EnvironmentRequestDTO;
@@ -25,10 +25,10 @@ public class EnvironmentMapperTest extends CategoryTest {
   EnvironmentResponseDTO environmentResponseDTO;
   Environment requestEnvironment;
   Environment responseEnvironment;
-  List<Tag> tags;
+  List<NGTag> tags;
   @Before
   public void setUp() {
-    tags = Arrays.asList(Tag.builder().key("k1").value("v1").build(), Tag.builder().key("k2").value("v2").build());
+    tags = Arrays.asList(NGTag.builder().key("k1").value("v1").build(), NGTag.builder().key("k2").value("v2").build());
     environmentRequestDTO = EnvironmentRequestDTO.builder()
                                 .identifier("ENV")
                                 .orgIdentifier("ORG_ID")

@@ -7,7 +7,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import io.harness.CategoryTest;
 import io.harness.beans.ParameterField;
 import io.harness.category.element.UnitTests;
-import io.harness.ng.core.common.beans.Tag;
+import io.harness.ng.core.common.beans.NGTag;
 import io.harness.ng.core.environment.beans.EnvironmentType;
 import io.harness.rule.Owner;
 import org.junit.Test;
@@ -27,7 +27,7 @@ public class EnvironmentYamlTest extends CategoryTest {
                                           .type(EnvironmentType.PreProduction)
                                           .build();
 
-    Tag newTag = Tag.builder().key("new-key1").value("new-value1").build();
+    NGTag newTag = NGTag.builder().key("new-key1").value("new-value1").build();
     EnvironmentYaml overrideEnvYaml = EnvironmentYaml.builder()
                                           .identifier(ParameterField.createValueField("new-identifer"))
                                           .name(ParameterField.createValueField("new-name"))

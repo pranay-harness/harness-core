@@ -8,6 +8,8 @@ import static org.mockito.Mockito.doReturn;
 
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
+import io.harness.ng.core.common.beans.NGTag;
+import io.harness.ng.core.mapper.TagMapper;
 import io.harness.ngpipeline.common.RestQueryFilterParser;
 import io.harness.ngpipeline.pipeline.beans.entities.NgPipelineEntity;
 import io.harness.ngpipeline.pipeline.beans.entities.NgPipelineEntity.PipelineNGKeys;
@@ -53,9 +55,11 @@ public class NGPipelineResourceTest extends CategoryTest {
   private final String PROJ_IDENTIFIER = "projId";
   private final String PIPELINE_IDENTIFIER = "k8s";
   private final String PIPELINE_NAME = "Manager Service Deployment";
+  private List<NGTag> tags;
 
   @Before
   public void setUp() throws IOException {
+    tags = Collections.singletonList(NGTag.builder().key("company").value("harness").build());
     MockitoAnnotations.initMocks(this);
     ClassLoader classLoader = this.getClass().getClassLoader();
     File file = new File(classLoader.getResource("k8sPipeline.yaml").getFile());
@@ -69,11 +73,13 @@ public class NGPipelineResourceTest extends CategoryTest {
                            .orgIdentifier(ORG_IDENTIFIER)
                            .identifier(PIPELINE_IDENTIFIER)
                            .ngPipeline(ngPipeline)
+                           .tags(tags)
                            .build();
     ngPipelineSummaryResponseDTO = NGPipelineSummaryResponseDTO.builder()
                                        .identifier(PIPELINE_IDENTIFIER)
                                        .name(PIPELINE_NAME)
                                        .numOfStages(1)
+                                       .tags(TagMapper.convertToMap(tags))
                                        .build();
   }
 

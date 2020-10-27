@@ -2,22 +2,19 @@ package io.harness.ngpipeline.inputset.helpers;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
-
+import io.harness.data.structure.EmptyPredicate;
+import io.harness.exception.InvalidRequestException;
 import io.harness.ngpipeline.inputset.beans.entities.InputSetEntity;
 import io.harness.ngpipeline.inputset.beans.entities.MergeInputSetResponse;
 import io.harness.ngpipeline.inputset.services.InputSetEntityService;
-import io.harness.ngpipeline.pipeline.beans.yaml.NgPipeline;
 import io.harness.ngpipeline.overlayinputset.beans.BaseInputSetEntity;
 import io.harness.ngpipeline.overlayinputset.beans.InputSetEntityType;
 import io.harness.ngpipeline.overlayinputset.beans.entities.OverlayInputSetEntity;
+import io.harness.ngpipeline.pipeline.beans.yaml.NgPipeline;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 @Singleton
 @AllArgsConstructor(onConstructor = @__({ @Inject }))
@@ -38,6 +35,9 @@ public class InputSetEntityValidationHelper {
 
   public Map<String, String> validateOverlayInputSetEntity(OverlayInputSetEntity overlayInputSetEntity) {
     List<String> allReferencesList = overlayInputSetEntity.getInputSetReferences();
+    if (EmptyPredicate.isEmpty(allReferencesList)) {
+      throw new InvalidRequestException("Input Set References List should not be empty");
+    }
     Set<String> allReferencesInOverlaySet = new HashSet<>(allReferencesList);
     List<BaseInputSetEntity> referencesFoundInDB =
         inputSetEntityService.getGivenInputSetList(overlayInputSetEntity.getAccountId(),

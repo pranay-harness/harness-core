@@ -1,6 +1,8 @@
 inputSet:
   identifier: identifier
   description: second input set for unknown pipeline
+  tags:
+    company: harness
   pipeline:
     identifier: pipeline_identifier
     stages:
