@@ -53,7 +53,7 @@ scmConnectionConfig:
   url: localhost:8091
 
 logServiceConfig:
-  baseUrl: http://localhost:8079
+  baseUrl: http://localhost:8079/
   globalToken: "token"
 
 managerTarget: localhost:9880
