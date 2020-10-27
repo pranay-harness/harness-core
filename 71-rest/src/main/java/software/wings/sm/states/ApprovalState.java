@@ -503,11 +503,6 @@ public class ApprovalState extends State implements SweepingOutputStateMixin {
 
     Application app = context.getApp();
 
-    executionData.setApprovalField(jiraApprovalParams.getApprovalField());
-    executionData.setApprovalValue(jiraApprovalParams.getApprovalValue());
-    executionData.setRejectionField(jiraApprovalParams.getRejectionField());
-    executionData.setRejectionValue(jiraApprovalParams.getRejectionValue());
-
     if (areRequiredFieldsTemplatized) {
       try {
         validateRequiredFields(context, jiraApprovalParams);
@@ -520,6 +515,11 @@ public class ApprovalState extends State implements SweepingOutputStateMixin {
                 .stateExecutionData(executionData));
       }
     }
+
+    executionData.setApprovalField(jiraApprovalParams.getApprovalField());
+    executionData.setApprovalValue(jiraApprovalParams.getApprovalValue());
+    executionData.setRejectionField(jiraApprovalParams.getRejectionField());
+    executionData.setRejectionValue(jiraApprovalParams.getRejectionValue());
 
     JiraExecutionData jiraExecutionData = jiraHelperService.fetchIssue(
         jiraApprovalParams, app.getAccountId(), app.getAppId(), context.getWorkflowExecutionId(), approvalId);
@@ -594,7 +594,7 @@ public class ApprovalState extends State implements SweepingOutputStateMixin {
   }
 
   private void validateStatus(ExecutionContext context, JiraApprovalParams jiraApprovalParams) {
-    List<String> allowedStatuses =
+    Map<String, String> allowedStatuses =
         Arrays
             .stream(((JSONArray) jiraHelperService.getStatuses(jiraApprovalParams.getJiraConnectorId(),
                          jiraApprovalParams.getProject(), context.getAccountId(), context.getAppId()))
@@ -604,33 +604,38 @@ public class ApprovalState extends State implements SweepingOutputStateMixin {
             .map(ob -> (net.sf.json.JSONObject) ob)
             .map(statuses -> (String) statuses.get("name"))
             .distinct()
-            .collect(Collectors.toList());
-    if (!allowedStatuses.contains(jiraApprovalParams.getApprovalValue())) {
+            .collect(Collectors.toMap(String::toLowerCase, status -> status));
+    if (!allowedStatuses.containsKey(jiraApprovalParams.getApprovalValue().toLowerCase())) {
       throw new HarnessJiraException(String.format("Invalid approval status [%s]. Please, check out allowed values %s",
-                                         jiraApprovalParams.getApprovalValue(), allowedStatuses),
+                                         jiraApprovalParams.getApprovalValue(), allowedStatuses.values()),
           null);
     }
     if (StringUtils.isNotBlank(jiraApprovalParams.getRejectionValue())
-        && !allowedStatuses.contains(jiraApprovalParams.getRejectionValue())) {
+        && !allowedStatuses.containsKey(jiraApprovalParams.getRejectionValue().toLowerCase())) {
       throw new HarnessJiraException(String.format("Invalid rejection status [%s]. Please, check out allowed values %s",
-                                         jiraApprovalParams.getRejectionValue(), allowedStatuses),
+                                         jiraApprovalParams.getRejectionValue(), allowedStatuses.values()),
           null);
     }
+
+    jiraApprovalParams.setApprovalValue(allowedStatuses.get(jiraApprovalParams.getApprovalValue().toLowerCase()));
+    jiraApprovalParams.setRejectionValue(allowedStatuses.get(jiraApprovalParams.getRejectionValue().toLowerCase()));
   }
 
   private void validateProject(ExecutionContext context, JiraApprovalParams jiraApprovalParams) {
-    List<String> projects = Arrays
-                                .stream(jiraHelperService
-                                            .getProjects(jiraApprovalParams.getJiraConnectorId(),
-                                                context.getAccountId(), context.getAppId())
-                                            .toArray())
-                                .map(ob -> (net.sf.json.JSONObject) ob)
-                                .map(existingProjects -> (String) existingProjects.get("key"))
-                                .collect(Collectors.toList());
-    if (!projects.contains(jiraApprovalParams.getProject())) {
+    Map<String, String> projects = Arrays
+                                       .stream(jiraHelperService
+                                                   .getProjects(jiraApprovalParams.getJiraConnectorId(),
+                                                       context.getAccountId(), context.getAppId())
+                                                   .toArray())
+                                       .map(ob -> (net.sf.json.JSONObject) ob)
+                                       .map(existingProjects -> (String) existingProjects.get("key"))
+                                       .collect(Collectors.toMap(String::toLowerCase, projectKey -> projectKey));
+    if (!projects.containsKey(jiraApprovalParams.getProject().toLowerCase())) {
       throw new HarnessJiraException(String.format("Invalid project key [%s]. Please, check out allowed values: %s",
-                                         jiraApprovalParams.getProject(), projects),
+                                         jiraApprovalParams.getProject(), projects.values()),
           null);
+    } else {
+      jiraApprovalParams.setProject(projects.get(jiraApprovalParams.getProject().toLowerCase()));
     }
   }
 
