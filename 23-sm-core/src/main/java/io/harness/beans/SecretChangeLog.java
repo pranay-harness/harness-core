@@ -2,6 +2,7 @@ package io.harness.beans;
 
 import static io.harness.annotations.dev.HarnessTeam.PL;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.annotation.HarnessEntity;
 import io.harness.annotations.dev.OwnedBy;
@@ -29,6 +30,7 @@ import org.mongodb.morphia.annotations.Id;
 import javax.validation.constraints.NotNull;
 
 @OwnedBy(PL)
+@JsonIgnoreProperties(ignoreUnknown = true)
 @Data
 @Builder
 @NoArgsConstructor
