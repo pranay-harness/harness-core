@@ -3,7 +3,7 @@ package software.wings.graphql.datafetcher.cluster;
 import com.google.inject.Inject;
 
 import io.harness.ccm.cluster.ClusterRecordService;
-import io.harness.ccm.cluster.entities.Cluster;
+import io.harness.ccm.cluster.entities.ClusterRecord;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import software.wings.graphql.datafetcher.AbstractObjectDataFetcher;
@@ -20,16 +20,16 @@ public class ClusterDataFetcher extends AbstractObjectDataFetcher<QLCluster, QLC
   @Override
   @AuthRule(permissionType = PermissionType.LOGGED_IN)
   public QLCluster fetch(QLClusterQueryParameters qlQuery, String accountId) {
-    Cluster cluster = null;
+    ClusterRecord clusterRecord = null;
     String clusterId = qlQuery.getClusterId();
     if (clusterId != null) {
-      cluster = clusterRecordService.get(clusterId).getCluster();
+      clusterRecord = clusterRecordService.get(clusterId);
     }
-    if (cluster == null) {
+    if (clusterRecord == null || !clusterRecord.getAccountId().equals(accountId)) {
       throw new InvalidRequestException(CLUSTERRECORD_DOES_NOT_EXIST_MSG, WingsException.USER);
     }
     final QLClusterBuilder builder = QLCluster.builder();
-    ClusterController.populateCluster(cluster, clusterId, builder);
+    ClusterController.populateCluster(clusterRecord.getCluster(), clusterId, builder);
     return builder.build();
   }
 }
