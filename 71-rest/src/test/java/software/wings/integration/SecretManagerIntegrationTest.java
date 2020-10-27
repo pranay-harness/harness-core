@@ -13,6 +13,7 @@ import org.glassfish.jersey.media.multipart.FormDataBodyPart;
 import org.glassfish.jersey.media.multipart.FormDataMultiPart;
 import org.glassfish.jersey.media.multipart.MultiPart;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
@@ -36,6 +37,7 @@ public class SecretManagerIntegrationTest extends BaseIntegrationTest {
   @Test
   @Owner(developers = UTKARSH)
   @Category(DeprecatedIntegrationTests.class)
+  @Ignore("skipping the integration test")
   public void test_crudSecret_shouldSucceed() {
     // 1. Create a new secret text
     WebTarget target = client.target(API_BASE + "/secrets/add-secret?accountId=" + accountId);
@@ -66,6 +68,7 @@ public class SecretManagerIntegrationTest extends BaseIntegrationTest {
   @Test
   @Owner(developers = UTKARSH)
   @Category(DeprecatedIntegrationTests.class)
+  @Ignore("skipping the integration test")
   public void test_crudEncryptedFile_shouldSucceed() throws Exception {
     // 1. Create a new encrypted file.
     WebTarget target = client.target(API_BASE + "/secrets/add-file?accountId=" + accountId);

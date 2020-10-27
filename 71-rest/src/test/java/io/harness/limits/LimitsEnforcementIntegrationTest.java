@@ -19,6 +19,7 @@ import org.apache.commons.lang3.RandomStringUtils;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mongodb.morphia.Datastore;
@@ -64,6 +65,7 @@ public class LimitsEnforcementIntegrationTest extends BaseIntegrationTest {
   @Test
   @Owner(developers = UJJAWAL)
   @Category(DeprecatedIntegrationTests.class)
+  @Ignore("skipping the integration test")
   public void testLimitEnforcement() {
     // configure limits
     StaticLimit limit = new StaticLimit(0);
@@ -82,6 +84,7 @@ public class LimitsEnforcementIntegrationTest extends BaseIntegrationTest {
   @Test
   @Owner(developers = UJJAWAL)
   @Category(DeprecatedIntegrationTests.class)
+  @Ignore("skipping the integration test")
   public void testRateBasedLimitEnforcement() throws Exception {
     // configure limits
     RateLimit limit = new RateLimit(1, 4, TimeUnit.SECONDS);

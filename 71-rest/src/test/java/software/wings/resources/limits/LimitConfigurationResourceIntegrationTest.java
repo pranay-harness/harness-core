@@ -17,6 +17,7 @@ import io.harness.limits.lib.Limit;
 import io.harness.rest.RestResponse;
 import io.harness.rule.Owner;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import software.wings.integration.BaseIntegrationTest;
@@ -40,6 +41,7 @@ public class LimitConfigurationResourceIntegrationTest extends BaseIntegrationTe
   @Test
   @Owner(developers = UJJAWAL)
   @Category(DeprecatedIntegrationTests.class)
+  @Ignore("skipping the integration test")
   public void testConfigure() throws Exception {
     StaticLimit limit = new StaticLimit(10);
     String url = IntegrationTestUtils.buildAbsoluteUrl("/api/limits/configure/static-limit",
@@ -58,6 +60,7 @@ public class LimitConfigurationResourceIntegrationTest extends BaseIntegrationTe
   @Test
   @Owner(developers = UJJAWAL)
   @Category(DeprecatedIntegrationTests.class)
+  @Ignore("skipping the integration test")
   public void testConfigureRateLimit() throws Exception {
     RateLimit limit = new RateLimit(10, 24, TimeUnit.HOURS);
     String url = IntegrationTestUtils.buildAbsoluteUrl("/api/limits/configure/rate-limit",

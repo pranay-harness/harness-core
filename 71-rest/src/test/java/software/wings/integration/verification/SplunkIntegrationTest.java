@@ -15,6 +15,7 @@ import io.harness.scm.ScmSecret;
 import io.harness.scm.SecretName;
 import org.junit.Assert;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import software.wings.beans.SplunkConfig;
@@ -39,6 +40,7 @@ public class SplunkIntegrationTest extends BaseIntegrationTest {
   @Test
   @Owner(developers = SRIRAM)
   @Category(DeprecatedIntegrationTests.class)
+  @Ignore("skipping the integration test")
   public void initSplunkServiceWithToken()
       throws NoSuchMethodException, InvocationTargetException, IllegalAccessException {
     SplunkConfig config =
@@ -59,6 +61,7 @@ public class SplunkIntegrationTest extends BaseIntegrationTest {
   @Test
   @Owner(developers = SRIRAM)
   @Category(DeprecatedIntegrationTests.class)
+  @Ignore("skipping the integration test")
   public void initSplunkServiceWithBasicAuth()
       throws NoSuchMethodException, InvocationTargetException, IllegalAccessException {
     SplunkConfig config =
@@ -79,6 +82,7 @@ public class SplunkIntegrationTest extends BaseIntegrationTest {
   @Test
   @Owner(developers = PRAVEEN)
   @Category(DeprecatedIntegrationTests.class)
+  @Ignore("skipping the integration test")
   public void splunkLogQueryCustomHostFieldTest()
       throws NoSuchMethodException, InvocationTargetException, IllegalAccessException {
     String expectedQuery =
@@ -95,6 +99,7 @@ public class SplunkIntegrationTest extends BaseIntegrationTest {
   @Test
   @Owner(developers = PRAVEEN)
   @Category(DeprecatedIntegrationTests.class)
+  @Ignore("skipping the integration test")
   public void splunkLogQuerAdvancedQueryTest()
       throws NoSuchMethodException, InvocationTargetException, IllegalAccessException {
     String advancedQuery = "my advanced test query";
@@ -112,6 +117,7 @@ public class SplunkIntegrationTest extends BaseIntegrationTest {
   @Test
   @Owner(developers = RAGHU)
   @Category(DeprecatedIntegrationTests.class)
+  @Ignore("skipping the integration test")
   public void splunkInvalidUrl() {
     SplunkConfig config =
         SplunkConfig.builder()

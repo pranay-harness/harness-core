@@ -40,6 +40,7 @@ public class EmailHandlerIntegrationTest extends WingsBaseTest {
   @Test
   @Owner(developers = RUSHABH)
   @Category(DeprecatedIntegrationTests.class)
+  @Ignore("skipping the integration test")
   public void testHandle() {
     EmailRequest emailRequest = Mockito.mock(EmailRequest.class);
     when(emailRequest.getEmailData()).thenReturn(mock(EmailData.class));
@@ -51,6 +52,7 @@ public class EmailHandlerIntegrationTest extends WingsBaseTest {
   @Test
   @Owner(developers = RUSHABH)
   @Category(DeprecatedIntegrationTests.class)
+  @Ignore("skipping the integration test")
   public void testErrorResponse() {
     EmailRequest emailRequest = Mockito.mock(EmailRequest.class);
     EmailData emailData = Mockito.mock(EmailData.class);

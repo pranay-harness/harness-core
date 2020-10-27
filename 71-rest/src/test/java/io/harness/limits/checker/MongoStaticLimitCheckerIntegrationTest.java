@@ -13,6 +13,7 @@ import io.harness.rule.Owner;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.junit.After;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import software.wings.dl.WingsPersistence;
@@ -45,6 +46,7 @@ public class MongoStaticLimitCheckerIntegrationTest extends BaseIntegrationTest 
   @Test
   @Owner(developers = UJJAWAL)
   @Category(DeprecatedIntegrationTests.class)
+  @Ignore("skipping the integration test")
   public void testCheckAndConsume() {
     String key = NAMESPACE + "-" + RandomStringUtils.randomAlphanumeric(5) + ":" + ActionType.DEPLOY;
     String id = persistence.save(new Counter(key, 0));
@@ -76,6 +78,7 @@ public class MongoStaticLimitCheckerIntegrationTest extends BaseIntegrationTest 
   @Test
   @Owner(developers = UJJAWAL)
   @Category(DeprecatedIntegrationTests.class)
+  @Ignore("skipping the integration test")
   public void testCheckAndConsumeConcurrent() throws ExecutionException, InterruptedException {
     String key = NAMESPACE + "-" + RandomStringUtils.randomAlphanumeric(5) + ":" + ActionType.DEPLOY;
     String id = persistence.save(new Counter(key, 0));

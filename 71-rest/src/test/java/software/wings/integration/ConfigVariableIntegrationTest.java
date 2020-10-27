@@ -22,6 +22,7 @@ import io.harness.limits.LimitCheckerFactory;
 import io.harness.rule.Owner;
 import org.junit.After;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
@@ -79,6 +80,7 @@ public class ConfigVariableIntegrationTest extends BaseIntegrationTest {
   @Test
   @Owner(developers = UNKNOWN)
   @Category(DeprecatedIntegrationTests.class)
+  @Ignore("skipping the integration test")
   public void shouldOverrideServiceConfigVariable() {
     // Config variable - Entity type as Service
     serviceVariable1 = getServiceVariable(Type.TEXT);
@@ -111,6 +113,7 @@ public class ConfigVariableIntegrationTest extends BaseIntegrationTest {
   @Test
   @Owner(developers = RAGHU)
   @Category(DeprecatedIntegrationTests.class)
+  @Ignore("skipping the integration test")
   public void shouldOverrideEncryptedServiceConfigVariable() {
     String encryptedId = wingsPersistence.save(EncryptedData.builder()
                                                    .name(generateUuid())

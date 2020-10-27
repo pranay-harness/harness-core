@@ -10,6 +10,7 @@ import io.harness.category.element.DeprecatedIntegrationTests;
 import io.harness.rest.RestResponse;
 import io.harness.rule.Owner;
 import io.harness.serializer.JsonUtils;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import software.wings.integration.BaseIntegrationTest;
@@ -25,6 +26,7 @@ public class TimeSeriesResourceIntegrationTest extends BaseIntegrationTest {
   @Test
   @Owner(developers = PRAVEEN)
   @Category(DeprecatedIntegrationTests.class)
+  @Ignore("skipping the integration test")
   public void testGetKeyTransactions() {
     loginAdminUser();
     String cvConfigId = generateUuid();
@@ -47,6 +49,7 @@ public class TimeSeriesResourceIntegrationTest extends BaseIntegrationTest {
   @Test
   @Owner(developers = PRAVEEN)
   @Category(DeprecatedIntegrationTests.class)
+  @Ignore("skipping the integration test")
   public void testAddKeyTransactions() {
     loginAdminUser();
     String cvConfigId = generateUuid();
@@ -71,6 +74,7 @@ public class TimeSeriesResourceIntegrationTest extends BaseIntegrationTest {
   @Test
   @Owner(developers = PRAVEEN)
   @Category(DeprecatedIntegrationTests.class)
+  @Ignore("skipping the integration test")
   public void testRemoveKeyTransactions() {
     loginAdminUser();
     String cvConfigId = generateUuid();

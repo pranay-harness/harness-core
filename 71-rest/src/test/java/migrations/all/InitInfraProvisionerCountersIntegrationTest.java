@@ -10,6 +10,7 @@ import io.harness.limits.ActionType;
 import io.harness.limits.Counter;
 import io.harness.rule.Owner;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import software.wings.beans.InfrastructureProvisioner;
@@ -28,6 +29,7 @@ public class InitInfraProvisionerCountersIntegrationTest extends BaseIntegration
   @Test
   @Owner(developers = ANKIT)
   @Category(DeprecatedIntegrationTests.class)
+  @Ignore("skipping the integration test")
   public void testMigrate() {
     long infraProvisionerCount = wingsPersistence.createQuery(InfrastructureProvisioner.class).count();
     if (infraProvisionerCount == 0) {

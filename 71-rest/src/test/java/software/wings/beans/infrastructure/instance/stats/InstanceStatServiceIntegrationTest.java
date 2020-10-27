@@ -11,6 +11,7 @@ import io.harness.rule.Owner;
 import lombok.val;
 import org.junit.After;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mongodb.morphia.query.Query;
@@ -57,6 +58,7 @@ public class InstanceStatServiceIntegrationTest extends BaseIntegrationTest {
   @Test
   @Owner(developers = UJJAWAL)
   @Category(DeprecatedIntegrationTests.class)
+  @Ignore("skipping the integration test")
   public void testSave() {
     val stats = sampleSnapshot();
     val ds = persistence.getDatastore(InstanceStatsSnapshot.class);
@@ -77,6 +79,7 @@ public class InstanceStatServiceIntegrationTest extends BaseIntegrationTest {
   @Test
   @Owner(developers = UJJAWAL)
   @Category(DeprecatedIntegrationTests.class)
+  @Ignore("skipping the integration test")
   public void testAggregateOverPeriod() {
     val from = Instant.now();
 
@@ -115,6 +118,7 @@ public class InstanceStatServiceIntegrationTest extends BaseIntegrationTest {
   @Test
   @Owner(developers = UJJAWAL)
   @Category(DeprecatedIntegrationTests.class)
+  @Ignore("skipping the integration test")
   public void testPercentile() {
     val from = Instant.now();
 
@@ -157,6 +161,7 @@ public class InstanceStatServiceIntegrationTest extends BaseIntegrationTest {
   @Test
   @Owner(developers = UJJAWAL)
   @Category(DeprecatedIntegrationTests.class)
+  @Ignore("skipping the integration test")
   public void testGetLastSnapshotTime() {
     val before = Instant.now();
     val stat = sampleSnapshot();
@@ -178,6 +183,7 @@ public class InstanceStatServiceIntegrationTest extends BaseIntegrationTest {
   @Test
   @Owner(developers = UJJAWAL)
   @Category(DeprecatedIntegrationTests.class)
+  @Ignore("skipping the integration test")
   public void testGetCurrentCount() {
     val stat = sampleSnapshot();
 

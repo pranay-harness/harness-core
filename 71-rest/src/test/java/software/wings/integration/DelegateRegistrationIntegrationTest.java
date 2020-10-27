@@ -11,6 +11,7 @@ import io.harness.rule.Repeat;
 import lombok.extern.slf4j.Slf4j;
 import org.awaitility.Duration;
 import org.hamcrest.CoreMatchers;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import software.wings.beans.DelegateConnection;
@@ -27,6 +28,7 @@ public class DelegateRegistrationIntegrationTest extends BaseIntegrationTest {
   @Owner(developers = ANUBHAW)
   @Repeat(times = 5, successes = 1)
   @Category(DeprecatedIntegrationTests.class)
+  @Ignore("skipping the integration test")
   public void shouldWaitForADelegateToRegister() {
     // TODO: fix this method
   }
@@ -34,6 +36,7 @@ public class DelegateRegistrationIntegrationTest extends BaseIntegrationTest {
   @Test
   @Owner(developers = PUNEET)
   @Category(DeprecatedIntegrationTests.class)
+  @Ignore("skipping the integration test")
   public void shouldWaitForADelegateConnectionsToAppear() {
     await().with().pollInterval(Duration.ONE_SECOND).timeout(5, TimeUnit.MINUTES).until(() -> {
       List<DelegateConnection> delegateConnections =

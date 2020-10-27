@@ -16,6 +16,7 @@ import io.harness.scm.ScmSecret;
 import io.harness.scm.SecretName;
 import io.harness.security.encryption.EncryptedRecord;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import software.wings.beans.KmsConfig;
@@ -53,6 +54,7 @@ public class KmsEncryptDecryptClientIntegrationTest extends CategoryTest {
   @Owner(developers = UTKARSH, intermittent = true)
   @Repeat(times = 3, successes = 1)
   @Category(DeprecatedIntegrationTests.class)
+  @Ignore("skipping the integration test")
   public void test_EncryptDecryptKmsSecret_ShouldSucceed() {
     String secret = "TopSecret";
     EncryptedRecord encryptedRecord = kmsEncryptDecryptClient.encrypt(accountId, secret.toCharArray(), kmsConfig);

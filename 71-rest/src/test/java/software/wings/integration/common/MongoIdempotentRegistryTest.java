@@ -24,6 +24,7 @@ import io.harness.testlib.RealMongo;
 import io.harness.threading.Concurrent;
 import lombok.Builder;
 import lombok.Value;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import software.wings.WingsBaseTest;
@@ -93,6 +94,7 @@ public class MongoIdempotentRegistryTest extends WingsBaseTest {
   @Test
   @Owner(developers = GEORGE)
   @Category(DeprecatedIntegrationTests.class)
+  @Ignore("skipping the integration test")
   public void testMongoRegisterTentativeAssumptions() {
     Idempotent tentativeIdempotent = Idempotent.builder().uuid(id.getValue()).state(TENTATIVE).build();
     wingsPersistence.save(tentativeIdempotent);
@@ -125,6 +127,7 @@ public class MongoIdempotentRegistryTest extends WingsBaseTest {
   @Test
   @Owner(developers = GEORGE)
   @Category(DeprecatedIntegrationTests.class)
+  @Ignore("skipping the integration test")
   public void testMongoUnregisterMissingAssumptions() {
     wingsPersistence.delete(Idempotent.class, id.getValue());
     wingsPersistence.findAndModify(idempotentRegistry.query(id), idempotentRegistry.unregisterUpdateOperation(),
@@ -135,6 +138,7 @@ public class MongoIdempotentRegistryTest extends WingsBaseTest {
   @Test
   @Owner(developers = GEORGE)
   @Category(DeprecatedIntegrationTests.class)
+  @Ignore("skipping the integration test")
   public void testMongoUnregisterTentativeAssumptions() {
     Idempotent tentativeIdempotent = Idempotent.builder().uuid(id.getValue()).state(TENTATIVE).build();
     wingsPersistence.save(tentativeIdempotent);
@@ -147,6 +151,7 @@ public class MongoIdempotentRegistryTest extends WingsBaseTest {
   @Test
   @Owner(developers = GEORGE)
   @Category(DeprecatedIntegrationTests.class)
+  @Ignore("skipping the integration test")
   public void testMongoUnregisterSucceededAssumptions() {
     Idempotent doneIdempotent = Idempotent.builder().uuid(id.getValue()).state(SUCCEEDED).build();
     wingsPersistence.save(doneIdempotent);

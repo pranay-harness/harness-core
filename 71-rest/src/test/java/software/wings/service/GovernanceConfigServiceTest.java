@@ -21,6 +21,7 @@ import io.harness.governance.WeeklyFreezeConfig;
 import io.harness.rule.Owner;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
@@ -89,6 +90,7 @@ public class GovernanceConfigServiceTest extends BaseIntegrationTest {
   @Test
   @Owner(developers = RAMA)
   @Category(DeprecatedIntegrationTests.class)
+  @Ignore("skipping the integration test")
   public void testUpdateAndRead() {
     GovernanceConfig defaultConfig = GovernanceConfig.builder().accountId(accountId).deploymentFreeze(false).build();
     GovernanceConfig governanceConfig = governanceConfigService.get(accountId);

@@ -176,6 +176,7 @@ public class SettingServiceIntegrationTest extends BaseIntegrationTest {
   @Owner(developers = ANUBHAW)
   @Repeat(times = 5, successes = 1)
   @Category(DeprecatedIntegrationTests.class)
+  @Ignore("skipping the integration test")
   public void shouldSaveDockerConfig() {
     RestResponse<SettingAttribute> restResponse =
         getRequestBuilderWithAuthHeader(getListWebTarget(accountId))

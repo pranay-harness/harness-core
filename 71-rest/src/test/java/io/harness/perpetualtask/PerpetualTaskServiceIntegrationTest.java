@@ -13,6 +13,7 @@ import io.harness.perpetualtask.internal.PerpetualTaskRecordDao;
 import io.harness.rule.Owner;
 import lombok.val;
 import org.junit.After;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import software.wings.dl.WingsPersistence;
@@ -47,6 +48,7 @@ public class PerpetualTaskServiceIntegrationTest extends BaseIntegrationTest {
   @Test
   @Owner(developers = HITESH)
   @Category(DeprecatedIntegrationTests.class)
+  @Ignore("skipping the integration test")
   public void shouldCreatePerpetualTask() {
     String taskId = perpetualTaskService.createTask(
         DEFAULT_TASK_TYPE, TEST_ACCOUNT_ID, getPerpetualTaskClientContext(), TASK_SCHEDULE, false, "");
@@ -59,6 +61,7 @@ public class PerpetualTaskServiceIntegrationTest extends BaseIntegrationTest {
   @Test
   @Owner(developers = HITESH)
   @Category(DeprecatedIntegrationTests.class)
+  @Ignore("skipping the integration test")
   public void shouldCreateDuplicatePerpetualTask() {
     String taskId = perpetualTaskService.createTask(
         DEFAULT_TASK_TYPE, TEST_ACCOUNT_ID, getPerpetualTaskClientContext(), TASK_SCHEDULE, true, "");
@@ -71,6 +74,7 @@ public class PerpetualTaskServiceIntegrationTest extends BaseIntegrationTest {
   @Test
   @Owner(developers = HITESH)
   @Category(DeprecatedIntegrationTests.class)
+  @Ignore("skipping the integration test")
   public void shouldDeletePerpetualTask() {
     String taskId = perpetualTaskService.createTask(
         DEFAULT_TASK_TYPE, TEST_ACCOUNT_ID, getPerpetualTaskClientContext(), TASK_SCHEDULE, false, "");
@@ -81,6 +85,7 @@ public class PerpetualTaskServiceIntegrationTest extends BaseIntegrationTest {
   @Test
   @Owner(developers = HITESH)
   @Category(DeprecatedIntegrationTests.class)
+  @Ignore("skipping the integration test")
   public void shouldUpdateHeartbeat() {
     String taskId = perpetualTaskService.createTask(
         DEFAULT_TASK_TYPE, TEST_ACCOUNT_ID, getPerpetualTaskClientContext(), TASK_SCHEDULE, false, "");

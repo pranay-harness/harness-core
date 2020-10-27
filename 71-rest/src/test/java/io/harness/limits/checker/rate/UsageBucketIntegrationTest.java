@@ -10,6 +10,7 @@ import io.harness.limits.checker.rate.UsageBucket.UsageBucketKeys;
 import io.harness.rule.Owner;
 import org.junit.After;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import software.wings.dl.WingsPersistence;
@@ -42,6 +43,7 @@ public class UsageBucketIntegrationTest extends BaseIntegrationTest {
   @Test
   @Owner(developers = UJJAWAL)
   @Category(DeprecatedIntegrationTests.class)
+  @Ignore("skipping the integration test")
   public void testSerialization() {
     UsageBucket bucket = new UsageBucket(KEY, Arrays.asList(10L, 11L, 101L, 102L));
 
