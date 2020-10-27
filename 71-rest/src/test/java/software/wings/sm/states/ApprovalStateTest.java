@@ -1330,7 +1330,7 @@ public class ApprovalStateTest extends WingsBaseTest {
 
     assertThat(response.getExecutionStatus()).isEqualTo(FAILED);
     assertThat(response.getErrorMessage())
-        .isEqualTo("Invalid project key [UNKNOWN]. Please, check out allowed values: [PN, SPN, TPN]");
+        .isEqualTo("Invalid project key [UNKNOWN]. Please, check out allowed values: [SPN, TPN, PN]");
   }
 
   @Test
