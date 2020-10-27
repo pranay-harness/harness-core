@@ -25,6 +25,9 @@ import io.harness.persistence.HPersistence;
 import io.harness.persistence.UserProvider;
 import io.harness.rule.InjectorRuleMixin;
 import io.harness.secretmanagers.SecretManagerConfigService;
+import io.harness.secrets.SecretsAuditService;
+import io.harness.secrets.SecretsFileService;
+import io.harness.secrets.SecretsRBACService;
 import io.harness.secrets.setupusage.SecretSetupUsageBuilder;
 import io.harness.secrets.setupusage.SecretSetupUsageBuilders;
 import io.harness.serializer.KryoModule;
@@ -153,6 +156,10 @@ public class SMCoreRule implements MethodRule, InjectorRuleMixin, MongoRuleMixin
             .bind(CustomEncryptor.class)
             .annotatedWith(Names.named(Encryptors.CUSTOM_ENCRYPTOR.getName()))
             .toInstance(mock(CustomEncryptor.class));
+
+        bind(SecretsFileService.class).toInstance(mock(SecretsFileService.class));
+        bind(SecretsAuditService.class).toInstance(mock(SecretsAuditService.class));
+        bind(SecretsRBACService.class).toInstance(mock(SecretsRBACService.class));
       }
     });
     modules.add(new VersionModule());

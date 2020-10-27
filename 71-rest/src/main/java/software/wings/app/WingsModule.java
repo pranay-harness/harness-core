@@ -117,8 +117,14 @@ import io.harness.registries.registrar.StepRegistrar;
 import io.harness.scheduler.PersistentScheduler;
 import io.harness.scheduler.SchedulerConfig;
 import io.harness.secretmanagers.SecretManagerConfigService;
+import io.harness.secrets.SecretsAuditService;
+import io.harness.secrets.SecretsAuditServiceImpl;
 import io.harness.secrets.SecretsDelegateCacheService;
 import io.harness.secrets.SecretsDelegateCacheServiceImpl;
+import io.harness.secrets.SecretsFileService;
+import io.harness.secrets.SecretsFileServiceImpl;
+import io.harness.secrets.SecretsRBACService;
+import io.harness.secrets.SecretsRBACServiceImpl;
 import io.harness.secrets.setupusage.SecretSetupUsageBuilder;
 import io.harness.secrets.setupusage.SecretSetupUsageBuilders;
 import io.harness.secrets.setupusage.SecretSetupUsageService;
@@ -962,6 +968,10 @@ public class WingsModule extends AbstractModule implements ServersModule {
     bind(CustomSecretsManagerService.class).to(CustomSecretsManagerServiceImpl.class);
     bind(CustomSecretsManagerEncryptionService.class).to(CustomSecretsManagerEncryptionServiceImpl.class);
     bind(CustomSecretsManagerDelegateService.class).to(NoOpCustomSecretsManagerDelegateService.class);
+    bind(SecretsFileService.class).to(SecretsFileServiceImpl.class);
+    bind(SecretsAuditService.class).to(SecretsAuditServiceImpl.class);
+    bind(SecretsRBACService.class).to(SecretsRBACServiceImpl.class);
+
     bind(GcbService.class).to(GcbServiceImpl.class);
 
     bind(KmsEncryptDecryptClient.class);

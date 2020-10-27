@@ -1,4 +1,4 @@
-package software.wings.security.encryption.encryptors.clients;
+package io.harness.encryptors.clients;
 
 import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
