@@ -18,7 +18,8 @@ public class InfraDefinitionGeneratorConstants {
   public static final String AZURE_FUNCTIONAL_TEST_RESOURCE_GROUP = "harness-functional-test";
   public static final String AZURE_VMSS_VM_USERNAME = "testUserHarness";
   public static final String AZURE_VMSS_BASE_SCALE_SET_NAME = "baseFunTestScaleSet";
-  public static final String AZURE_VMSS_INFRA_DEFINITION_NAME = "Azure-VMSS-InfraDef";
+  public static final String AZURE_VMSS_BASIC_INFRA_DEFINITION_NAME = "Azure_VMSS_Basic_InfraDef";
+  public static final String AZURE_VMSS_BLUE_GREEN_INFRA_DEFINITION_NAME = "Azure_VMSS_Blue_Green_InfraDef";
   public static final String AZURE_VMSS_SUBSCRIPTION_QA_NAME = "Harness-QA";
   public static final String AZURE_VMSS_BASE_SCALE_SET_LOAD_BALANCER_NAME = "baseFunTestScaleSetLoadBalancer";
   public static final String AZURE_VMSS_BLUE_GREEN_BALANCER_NAME = "blueGreenStandardLoadBalancer";
