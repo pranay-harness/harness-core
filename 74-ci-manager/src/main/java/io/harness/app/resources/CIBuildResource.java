@@ -18,6 +18,7 @@ import io.swagger.annotations.ApiOperation;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
+import software.wings.security.annotations.NextGenManagerAuth;
 
 import java.util.List;
 import javax.validation.constraints.NotNull;
@@ -31,6 +32,7 @@ import javax.ws.rs.QueryParam;
 
 @Api("ci")
 @Path("/ci/builds")
+@NextGenManagerAuth
 @Produces({"application/json", "application/yaml"})
 @Consumes({"application/json", "application/yaml"})
 @AllArgsConstructor(onConstructor = @__({ @Inject }))

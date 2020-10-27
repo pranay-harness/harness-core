@@ -41,6 +41,7 @@ import io.harness.persistence.Store;
 import io.harness.queue.QueueController;
 import io.harness.queue.QueueListenerController;
 import io.harness.queue.QueuePublisher;
+import io.harness.security.JWTAuthenticationFilter;
 import io.harness.serializer.CiExecutionRegistrars;
 import io.harness.serializer.ConnectorNextGenRegistrars;
 import io.harness.serializer.KryoModule;
@@ -57,6 +58,7 @@ import io.harness.waiter.NotifyQueuePublisherRegister;
 import io.harness.waiter.NotifyResponseCleaner;
 import io.harness.waiter.OrchestrationNotifyEventListener;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.log4j.LogManager;
 import org.glassfish.jersey.server.model.Resource;
 import org.hibernate.validator.parameternameprovider.ReflectionParameterNameProvider;
@@ -64,19 +66,24 @@ import org.mongodb.morphia.converters.TypeConverter;
 import org.reflections.Reflections;
 import ru.vyarus.guice.validator.ValidationModule;
 import software.wings.dl.WingsPersistence;
+import software.wings.security.annotations.NextGenManagerAuth;
 import software.wings.service.impl.ci.CIServiceAuthSecretKey;
 
 import java.security.SecureRandom;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Predicate;
 import javax.validation.Validation;
 import javax.validation.ValidatorFactory;
 import javax.ws.rs.Path;
+import javax.ws.rs.container.ContainerRequestContext;
+import javax.ws.rs.container.ResourceInfo;
 
 @Slf4j
 public class CIManagerApplication extends Application<CIManagerConfiguration> {
@@ -202,6 +209,7 @@ public class CIManagerApplication extends Application<CIManagerConfiguration> {
     registerResources(environment, injector);
     registerWaitEnginePublishers(injector);
     registerManagedBeans(environment, injector);
+    registerAuthFilters(configuration, environment);
     registerExecutionPlanCreators(injector);
     registerQueueListeners(injector);
     registerStores(configuration, injector);
@@ -292,5 +300,16 @@ public class CIManagerApplication extends Application<CIManagerConfiguration> {
 
   private void registerExecutionPlanCreators(Injector injector) {
     injector.getInstance(CIExecutionPlanCreatorRegistrar.class).register();
+  }
+
+  private void registerAuthFilters(CIManagerConfiguration configuration, Environment environment) {
+    if (configuration.isEnableAuth()) {
+      Predicate<Pair<ResourceInfo, ContainerRequestContext>> predicate = resourceInfoAndRequest
+          -> resourceInfoAndRequest.getKey().getResourceMethod().getAnnotation(NextGenManagerAuth.class) != null
+          || resourceInfoAndRequest.getKey().getResourceClass().getAnnotation(NextGenManagerAuth.class) != null;
+      Map<String, String> serviceToSecretMapping = new HashMap<>();
+      serviceToSecretMapping.put("Bearer", configuration.getJwtAuthSecret());
+      environment.jersey().register(new JWTAuthenticationFilter(predicate, null, serviceToSecretMapping));
+    }
   }
 }
