@@ -4,7 +4,6 @@ import static io.harness.cvng.CVConstants.SERVICE_BASE_URL;
 import static io.harness.cvng.analysis.CVAnalysisConstants.TIMESERIES_ANALYSIS_RESOURCE;
 import static io.harness.cvng.analysis.CVAnalysisConstants.TIMESERIES_SAVE_ANALYSIS_PATH;
 import static io.harness.cvng.analysis.CVAnalysisConstants.TIMESERIES_VERIFICATION_TASK_SAVE_ANALYSIS_PATH;
-import static io.harness.cvng.verificationjob.entities.CanaryVerificationJob.PRE_DEPLOYMENT_DATA_COLLECTION_DURATION;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 
 import com.google.common.base.Preconditions;
@@ -33,6 +32,7 @@ import io.harness.cvng.analysis.entities.TimeSeriesShortTermHistory.TimeSeriesSh
 import io.harness.cvng.analysis.services.api.DeploymentTimeSeriesAnalysisService;
 import io.harness.cvng.analysis.services.api.LearningEngineTaskService;
 import io.harness.cvng.analysis.services.api.TimeSeriesAnalysisService;
+import io.harness.cvng.core.beans.TimeRange;
 import io.harness.cvng.core.beans.TimeSeriesMetricDefinition;
 import io.harness.cvng.core.entities.CVConfig;
 import io.harness.cvng.core.services.api.CVConfigService;
@@ -45,6 +45,7 @@ import io.harness.cvng.statemachine.beans.AnalysisInput;
 import io.harness.cvng.statemachine.beans.AnalysisStatus;
 import io.harness.cvng.verificationjob.entities.CanaryVerificationJob;
 import io.harness.cvng.verificationjob.entities.TestVerificationJob;
+import io.harness.cvng.verificationjob.entities.VerificationJob;
 import io.harness.cvng.verificationjob.entities.VerificationJobInstance;
 import io.harness.cvng.verificationjob.entities.VerificationJobInstance.ProgressLog;
 import io.harness.cvng.verificationjob.services.api.VerificationJobInstanceService;
@@ -63,6 +64,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
@@ -156,7 +158,7 @@ public class TimeSeriesAnalysisServiceImpl implements TimeSeriesAnalysisService 
     Preconditions.checkNotNull(verificationJobInstance, "verificationJobInstance can not be null");
     TimeSeriesCanaryLearningEngineTask timeSeriesLearningEngineTask =
         TimeSeriesCanaryLearningEngineTask.builder()
-            .preDeploymentDataUrl(preDeploymentDataUrl(input, verificationJobInstance))
+            .preDeploymentDataUrl(preDeploymentDataUrl(input, verificationJobInstance, verificationJob))
             .postDeploymentDataUrl(postDeploymentDataUrl(input, verificationJobInstance))
             .dataLength(
                 (int) Duration.between(verificationJobInstance.getStartTime(), input.getStartTime()).toMinutes() + 1)
@@ -176,6 +178,7 @@ public class TimeSeriesAnalysisServiceImpl implements TimeSeriesAnalysisService 
 
     DeploymentVerificationTaskInfo deploymentVerificationTaskInfo =
         DeploymentVerificationTaskInfo.builder()
+            .deploymentStartTime(verificationJobInstance.getDeploymentStartTime().toEpochMilli())
             .newHostsTrafficSplitPercentage(verificationJobInstance.getNewHostsTrafficSplitPercentage())
             .newVersionHosts(verificationJobInstance.getNewVersionHosts())
             .oldVersionHosts(verificationJobInstance.getOldVersionHosts())
@@ -267,17 +270,17 @@ public class TimeSeriesAnalysisServiceImpl implements TimeSeriesAnalysisService 
     return getUriString(uriBuilder);
   }
 
-  private String preDeploymentDataUrl(AnalysisInput input, VerificationJobInstance verificationJobInstance) {
+  private String preDeploymentDataUrl(
+      AnalysisInput input, VerificationJobInstance verificationJobInstance, VerificationJob verificationJob) {
+    Optional<TimeRange> preDeploymentTimeRange =
+        verificationJob.getPreDeploymentTimeRange(verificationJobInstance.getDeploymentStartTime());
+    Preconditions.checkState(preDeploymentTimeRange.isPresent(),
+        "Pre-deployment time range is empty for canary analysis task. This should not happen");
     URIBuilder uriBuilder = new URIBuilder();
     uriBuilder.setPath(SERVICE_BASE_URL + "/" + TIMESERIES_ANALYSIS_RESOURCE + "/time-series-data");
     uriBuilder.addParameter("verificationTaskId", input.getVerificationTaskId());
-    // TODO: rename params to startTime and endTime and the range should come from task or job.
-    //  Change it once more verification jobs are supported to find the right abstraction.
-    uriBuilder.addParameter("startTime",
-        Long.toString(verificationJobInstance.getDeploymentStartTime()
-                          .minus(PRE_DEPLOYMENT_DATA_COLLECTION_DURATION)
-                          .toEpochMilli()));
-    uriBuilder.addParameter("endTime", Long.toString(verificationJobInstance.getDeploymentStartTime().toEpochMilli()));
+    uriBuilder.addParameter("startTime", Long.toString(preDeploymentTimeRange.get().getStartTime().toEpochMilli()));
+    uriBuilder.addParameter("endTime", Long.toString(preDeploymentTimeRange.get().getEndTime().toEpochMilli()));
     return getUriString(uriBuilder);
   }
 
