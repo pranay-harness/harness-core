@@ -259,5 +259,11 @@ public enum EntityType {
 
   SECRETS_MANAGER,
 
-  HELM_CHART
+  HELM_CHART,
+
+  SECRET,
+
+  CONNECTOR,
+
+  CLOUD_PROVIDER
 }

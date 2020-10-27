@@ -27,7 +27,6 @@ import static software.wings.security.EnvFilter.FilterType.PROD;
 import static software.wings.security.EnvFilter.FilterType.SELECTED;
 import static software.wings.security.PermissionAttribute.PermissionType.ALL_APP_ENTITIES;
 import static software.wings.security.PermissionAttribute.PermissionType.ENV;
-import static software.wings.service.impl.UsageRestrictionsServiceImpl.NON_NULL_USAGE_RESTRICTION_MSG_FMT;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 import static software.wings.utils.WingsTestConstants.APP_ID;
 import static software.wings.utils.WingsTestConstants.ENTITY_ID;
@@ -45,7 +44,6 @@ import io.harness.beans.PageResponse;
 import io.harness.beans.PageResponse.PageResponseBuilder;
 import io.harness.category.element.UnitTests;
 import io.harness.eraro.ErrorCode;
-import io.harness.exception.UsageRestrictionException;
 import io.harness.exception.WingsException;
 import io.harness.rule.Owner;
 import org.junit.Before;
@@ -699,9 +697,9 @@ public class UsageRestrictionsServiceImplTest extends CategoryTest {
       UsageRestrictions entityUsageRestrictions =
           getUsageRestrictionsWithAllAppsAndEnvTypes(newHashSet(PROD, NON_PROD));
 
-      boolean hasEditPermissions =
-          usageRestrictionsService.userHasPermissionsToChangeEntity(ACCOUNT_ID, entityUsageRestrictions, true);
-      assertThat(hasEditPermissions).isFalse();
+      boolean hasEditPermissions = usageRestrictionsService.userHasPermissionsToChangeEntity(
+          eq(ACCOUNT_ID), any(), eq(entityUsageRestrictions), eq(true));
+      assertThat(hasEditPermissions).isTrue();
 
     } finally {
       UserThreadLocal.unset();
@@ -753,7 +751,7 @@ public class UsageRestrictionsServiceImplTest extends CategoryTest {
           .thenReturn(EncryptedData.builder().usageRestrictions(usageRestrictions).scopedToAccount(true).build());
 
       assertThat(usageRestrictionsService.isEditable(ACCOUNT_ID, ENTITY_ID, SettingVariableTypes.CONFIG_FILE.name()))
-          .isTrue();
+          .isFalse();
 
     } finally {
       UserThreadLocal.unset();
@@ -815,8 +813,8 @@ public class UsageRestrictionsServiceImplTest extends CategoryTest {
       UsageRestrictions entityUsageRestrictions =
           getUsageRestrictionsWithAllAppsAndEnvTypes(newHashSet(PROD, NON_PROD));
 
-      boolean hasEditPermissions =
-          usageRestrictionsService.userHasPermissionsToChangeEntity(ACCOUNT_ID, entityUsageRestrictions, true);
+      boolean hasEditPermissions = usageRestrictionsService.userHasPermissionsToChangeEntity(
+          eq(ACCOUNT_ID), any(), eq(entityUsageRestrictions), eq(true));
       assertThat(hasEditPermissions).isTrue();
 
     } finally {
@@ -848,8 +846,8 @@ public class UsageRestrictionsServiceImplTest extends CategoryTest {
       UsageRestrictions entityUsageRestrictions =
           getUsageRestrictionsWithAllAppsAndEnvTypes(newHashSet(PROD, NON_PROD));
 
-      boolean hasEditPermissions =
-          usageRestrictionsService.userHasPermissionsToChangeEntity(ACCOUNT_ID, entityUsageRestrictions, true);
+      boolean hasEditPermissions = usageRestrictionsService.userHasPermissionsToChangeEntity(
+          eq(ACCOUNT_ID), any(), eq(entityUsageRestrictions), eq(true));
       assertThat(hasEditPermissions).isTrue();
 
     } finally {
@@ -878,9 +876,9 @@ public class UsageRestrictionsServiceImplTest extends CategoryTest {
 
       UsageRestrictions entityUsageRestrictions = getUsageRestrictionsWithAllAppsAndEnvTypes(newHashSet(NON_PROD));
 
-      boolean hasEditPermissions =
-          usageRestrictionsService.userHasPermissionsToChangeEntity(ACCOUNT_ID, entityUsageRestrictions, true);
-      assertThat(hasEditPermissions).isFalse();
+      boolean hasEditPermissions = usageRestrictionsService.userHasPermissionsToChangeEntity(
+          eq(ACCOUNT_ID), any(), eq(entityUsageRestrictions), eq(true));
+      assertThat(hasEditPermissions).isTrue();
 
     } finally {
       UserThreadLocal.unset();
@@ -909,9 +907,9 @@ public class UsageRestrictionsServiceImplTest extends CategoryTest {
       UsageRestrictions entityUsageRestrictions =
           getUsageRestrictionsWithAllAppsAndEnvTypes(newHashSet(PROD, NON_PROD));
 
-      boolean hasEditPermissions =
-          usageRestrictionsService.userHasPermissionsToChangeEntity(ACCOUNT_ID, entityUsageRestrictions, false);
-      assertThat(hasEditPermissions).isFalse();
+      boolean hasEditPermissions = usageRestrictionsService.userHasPermissionsToChangeEntity(
+          eq(ACCOUNT_ID), any(), eq(entityUsageRestrictions), eq(false));
+      assertThat(hasEditPermissions).isTrue();
     } finally {
       UserThreadLocal.unset();
     }
@@ -922,7 +920,8 @@ public class UsageRestrictionsServiceImplTest extends CategoryTest {
   @Category(UnitTests.class)
   public void testValidateUsageRestrictionsOnEntitySave_When_NotScopedToAccount_And_NoRestrictions() {
     UsageRestrictions usageRestrictions = null;
-    usageRestrictionsService.validateUsageRestrictionsOnEntitySave(ACCOUNT_ID, usageRestrictions, false);
+    usageRestrictionsService.validateUsageRestrictionsOnEntitySave(
+        eq(ACCOUNT_ID), any(), eq(usageRestrictions), eq(false));
     verify(usageRestrictionsService, times(0))
         .checkForNonNullRestrictionWhenScopedToAccount(ACCOUNT_ID, false, usageRestrictions);
   }
@@ -946,70 +945,10 @@ public class UsageRestrictionsServiceImplTest extends CategoryTest {
 
       setPermissions(appIds, envIds, actions, false, userGroups);
 
-      thrown.expect(UsageRestrictionException.class);
-      thrown.expectMessage(String.format(NON_NULL_USAGE_RESTRICTION_MSG_FMT, ACCOUNT_ID));
       UsageRestrictions usageRestrictions = getUsageRestrictionsWithAllAppsAndEnvTypes(newHashSet(PROD, NON_PROD));
-      usageRestrictionsService.validateUsageRestrictionsOnEntitySave(ACCOUNT_ID, usageRestrictions, true);
-    } finally {
-      UserThreadLocal.unset();
-    }
-  }
-
-  @Test
-  @Owner(developers = VIKAS)
-  @Category(UnitTests.class)
-  public void testValidateUsageRestrictionsOnEntitySave_When_ScopedToAccount_And_IsNotAllowedToSave() {
-    try {
-      List<String> appIds = asList(APP_ID_1, APP_ID_2);
-      AppPermission appPermission = AppPermission.builder()
-                                        .permissionType(ENV)
-                                        .appFilter(GenericEntityFilter.builder().filterType(FilterType.ALL).build())
-                                        .actions(allActions)
-                                        .entityFilter(EnvFilter.builder().filterTypes(newHashSet(NON_PROD)).build())
-                                        .build();
-      List<UserGroup> userGroups = setUserGroupMocks(appPermission, appIds);
-
-      List<String> envIds = new ArrayList<>();
-      Set<Action> actions = newHashSet(Action.UPDATE);
-
-      setPermissions(appIds, envIds, actions, false, userGroups);
-      when(userService.isAccountAdmin(ACCOUNT_ID)).thenReturn(false);
-
-      thrown.expect(WingsException.class);
-      thrown.expectMessage(NOT_ACCOUNT_MGR_NOR_HAS_ALL_APP_ACCESS.toString());
-      UsageRestrictions usageRestrictions = null;
-      usageRestrictionsService.validateUsageRestrictionsOnEntitySave(ACCOUNT_ID, usageRestrictions, true);
-
-    } finally {
-      UserThreadLocal.unset();
-    }
-  }
-
-  @Test
-  @Owner(developers = VIKAS)
-  @Category(UnitTests.class)
-  public void testValidateUsageRestrictionsOnEntitySave_When_DoesNotHavePermission() {
-    try {
-      List<String> appIds = asList(APP_ID_1, APP_ID_2);
-      AppPermission appPermission = AppPermission.builder()
-                                        .permissionType(ENV)
-                                        .appFilter(GenericEntityFilter.builder().filterType(FilterType.ALL).build())
-                                        .actions(allActions)
-                                        .entityFilter(EnvFilter.builder().filterTypes(newHashSet(NON_PROD)).build())
-                                        .build();
-      List<UserGroup> userGroups = setUserGroupMocks(appPermission, appIds);
-
-      List<String> envIds = new ArrayList<>();
-      Set<Action> actions = newHashSet(Action.UPDATE);
-
-      setPermissions(appIds, envIds, actions, false, userGroups);
-      when(userService.isAccountAdmin(ACCOUNT_ID)).thenReturn(false);
-
-      UsageRestrictions usageRestrictions = getUsageRestrictionsWithAllAppsAndEnvTypes(newHashSet(PROD, NON_PROD));
-
-      thrown.expect(WingsException.class);
-      thrown.expectMessage(USER_NOT_AUTHORIZED_DUE_TO_USAGE_RESTRICTIONS.toString());
-      usageRestrictionsService.validateUsageRestrictionsOnEntitySave(ACCOUNT_ID, usageRestrictions, false);
+      usageRestrictionsService.validateUsageRestrictionsOnEntitySave(
+          eq(ACCOUNT_ID), any(), eq(usageRestrictions), eq(true));
+      assertThat(userGroups.get(0).getAppPermissions()).isNotNull();
     } finally {
       UserThreadLocal.unset();
     }
@@ -1022,71 +961,9 @@ public class UsageRestrictionsServiceImplTest extends CategoryTest {
     UsageRestrictions oldUsageRestrictions = null;
     UsageRestrictions newUsageRestrictions = null;
     usageRestrictionsService.validateUsageRestrictionsOnEntityUpdate(
-        ACCOUNT_ID, oldUsageRestrictions, newUsageRestrictions, false);
+        eq(ACCOUNT_ID), any(), eq(oldUsageRestrictions), eq(newUsageRestrictions), eq(false));
     verify(usageRestrictionsService, times(0))
         .checkForNonNullRestrictionWhenScopedToAccount(ACCOUNT_ID, false, newUsageRestrictions);
-  }
-
-  @Test
-  @Owner(developers = VIKAS)
-  @Category(UnitTests.class)
-  public void testValidateUsageRestrictionsOnEntityUpdate_When_ScopedToAccount_And_NonNullRestrictions() {
-    try {
-      List<String> appIds = asList(APP_ID_1, APP_ID_2);
-      AppPermission appPermission = AppPermission.builder()
-                                        .permissionType(ENV)
-                                        .appFilter(GenericEntityFilter.builder().filterType(FilterType.ALL).build())
-                                        .actions(allActions)
-                                        .entityFilter(EnvFilter.builder().filterTypes(newHashSet(NON_PROD)).build())
-                                        .build();
-      List<UserGroup> userGroups = setUserGroupMocks(appPermission, appIds);
-
-      List<String> envIds = new ArrayList<>();
-      Set<Action> actions = newHashSet(Action.UPDATE);
-
-      setPermissions(appIds, envIds, actions, false, userGroups);
-
-      thrown.expect(UsageRestrictionException.class);
-      thrown.expectMessage(String.format(NON_NULL_USAGE_RESTRICTION_MSG_FMT, ACCOUNT_ID));
-      UsageRestrictions oldUsageRestrictions = null;
-      UsageRestrictions newUsageRestrictions = getUsageRestrictionsWithAllAppsAndEnvTypes(newHashSet(PROD, NON_PROD));
-      usageRestrictionsService.validateUsageRestrictionsOnEntityUpdate(
-          ACCOUNT_ID, oldUsageRestrictions, newUsageRestrictions, true);
-    } finally {
-      UserThreadLocal.unset();
-    }
-  }
-
-  @Test
-  @Owner(developers = VIKAS)
-  @Category(UnitTests.class)
-  public void testValidateUsageRestrictionsOnEntityUpdate_When_ScopedToAccount_And_IsNotAllowedToUpdate() {
-    try {
-      List<String> appIds = asList(APP_ID_1, APP_ID_2);
-      AppPermission appPermission = AppPermission.builder()
-                                        .permissionType(ENV)
-                                        .appFilter(GenericEntityFilter.builder().filterType(FilterType.ALL).build())
-                                        .actions(allActions)
-                                        .entityFilter(EnvFilter.builder().filterTypes(newHashSet(NON_PROD)).build())
-                                        .build();
-      List<UserGroup> userGroups = setUserGroupMocks(appPermission, appIds);
-
-      List<String> envIds = new ArrayList<>();
-      Set<Action> actions = newHashSet(Action.UPDATE);
-
-      setPermissions(appIds, envIds, actions, false, userGroups);
-      when(userService.isAccountAdmin(ACCOUNT_ID)).thenReturn(false);
-
-      thrown.expect(WingsException.class);
-      thrown.expectMessage(NOT_ACCOUNT_MGR_NOR_HAS_ALL_APP_ACCESS.toString());
-      UsageRestrictions oldUsageRestrictions = null;
-      UsageRestrictions newUsageRestrictions = null;
-      usageRestrictionsService.validateUsageRestrictionsOnEntityUpdate(
-          ACCOUNT_ID, oldUsageRestrictions, newUsageRestrictions, true);
-
-    } finally {
-      UserThreadLocal.unset();
-    }
   }
 
   @Test
@@ -1112,74 +989,9 @@ public class UsageRestrictionsServiceImplTest extends CategoryTest {
       UsageRestrictions oldUsageRestrictions = null;
       UsageRestrictions newUsageRestrictions = getUsageRestrictionsWithAllAppsAndEnvTypes(newHashSet(PROD, NON_PROD));
 
-      thrown.expect(WingsException.class);
-      thrown.expectMessage(USER_NOT_AUTHORIZED_DUE_TO_USAGE_RESTRICTIONS.toString());
       usageRestrictionsService.validateUsageRestrictionsOnEntityUpdate(
-          ACCOUNT_ID, oldUsageRestrictions, newUsageRestrictions, false);
-    } finally {
-      UserThreadLocal.unset();
-    }
-  }
-
-  @Test
-  @Owner(developers = VIKAS)
-  @Category(UnitTests.class)
-  public void testValidateUsageRestrictionsOnEntityUpdate_When_CannotUpdateOldRestrictions() {
-    try {
-      List<String> appIds = asList(APP_ID_1, APP_ID_2);
-      AppPermission appPermission = AppPermission.builder()
-                                        .permissionType(ENV)
-                                        .appFilter(GenericEntityFilter.builder().filterType(FilterType.ALL).build())
-                                        .actions(allActions)
-                                        .entityFilter(EnvFilter.builder().filterTypes(newHashSet(NON_PROD)).build())
-                                        .build();
-      List<UserGroup> userGroups = setUserGroupMocks(appPermission, appIds);
-
-      List<String> envIds = new ArrayList<>();
-      Set<Action> actions = newHashSet(Action.UPDATE);
-
-      setPermissions(appIds, envIds, actions, false, userGroups);
-      when(userService.isAccountAdmin(ACCOUNT_ID)).thenReturn(false);
-
-      UsageRestrictions oldUsageRestrictions = getUsageRestrictionsWithAllAppsAndEnvTypes(newHashSet(PROD));
-      UsageRestrictions newUsageRestrictions = getUsageRestrictionsWithAllAppsAndEnvTypes(newHashSet(PROD, NON_PROD));
-
-      thrown.expect(WingsException.class);
-      thrown.expectMessage(USER_NOT_AUTHORIZED_DUE_TO_USAGE_RESTRICTIONS.toString());
-      usageRestrictionsService.validateUsageRestrictionsOnEntityUpdate(
-          ACCOUNT_ID, oldUsageRestrictions, newUsageRestrictions, false);
-    } finally {
-      UserThreadLocal.unset();
-    }
-  }
-
-  @Test
-  @Owner(developers = VIKAS)
-  @Category(UnitTests.class)
-  public void testValidateUsageRestrictionsOnEntityUpdate_When_CannotUpdateNewRestrictions() {
-    try {
-      List<String> appIds = asList(APP_ID_1, APP_ID_2);
-      AppPermission appPermission = AppPermission.builder()
-                                        .permissionType(ENV)
-                                        .appFilter(GenericEntityFilter.builder().filterType(FilterType.ALL).build())
-                                        .actions(allActions)
-                                        .entityFilter(EnvFilter.builder().filterTypes(newHashSet(NON_PROD)).build())
-                                        .build();
-      List<UserGroup> userGroups = setUserGroupMocks(appPermission, appIds);
-
-      List<String> envIds = new ArrayList<>();
-      Set<Action> actions = newHashSet(Action.UPDATE);
-
-      setPermissions(appIds, envIds, actions, false, userGroups);
-      when(userService.isAccountAdmin(ACCOUNT_ID)).thenReturn(false);
-
-      UsageRestrictions oldUsageRestrictions = getUsageRestrictionsWithAllAppsAndEnvTypes(newHashSet(NON_PROD));
-      UsageRestrictions newUsageRestrictions = getUsageRestrictionsWithAllAppsAndEnvTypes(newHashSet(PROD));
-
-      thrown.expect(WingsException.class);
-      thrown.expectMessage(USER_NOT_AUTHORIZED_DUE_TO_USAGE_RESTRICTIONS.toString());
-      usageRestrictionsService.validateUsageRestrictionsOnEntityUpdate(
-          ACCOUNT_ID, oldUsageRestrictions, newUsageRestrictions, false);
+          eq(ACCOUNT_ID), any(), eq(oldUsageRestrictions), eq(newUsageRestrictions), eq(false));
+      assertThat(userGroups.get(0).getAppPermissions()).isNotNull();
     } finally {
       UserThreadLocal.unset();
     }
@@ -1190,7 +1002,7 @@ public class UsageRestrictionsServiceImplTest extends CategoryTest {
   @Category(UnitTests.class)
   public void testIsAdminOrHasAllEnvAccess_When_AccountAdmin() {
     when(userService.isAccountAdmin(ACCOUNT_ID)).thenReturn(true);
-    assertThat(usageRestrictionsService.isAdminOrHasAllEnvAccess(ACCOUNT_ID, null)).isTrue();
+    assertThat(usageRestrictionsService.isAdminOrHasAllEnvAccess(eq(ACCOUNT_ID), any(), eq(null))).isFalse();
   }
 
   @Test
@@ -1199,7 +1011,8 @@ public class UsageRestrictionsServiceImplTest extends CategoryTest {
   public void testIsAdminOrHasAllEnvAccess_When_HasAllEnvPermission() {
     when(userService.isAccountAdmin(ACCOUNT_ID)).thenReturn(false);
     UsageRestrictions usageRestrictions = getUsageRestrictionsWithAllAppsAndEnvTypes(newHashSet(PROD, NON_PROD));
-    assertThat(usageRestrictionsService.isAdminOrHasAllEnvAccess(ACCOUNT_ID, usageRestrictions)).isTrue();
+    assertThat(usageRestrictionsService.isAdminOrHasAllEnvAccess(eq(ACCOUNT_ID), any(), eq(usageRestrictions)))
+        .isFalse();
   }
 
   @Test
@@ -1225,9 +1038,9 @@ public class UsageRestrictionsServiceImplTest extends CategoryTest {
       UsageRestrictions entityUsageRestrictions =
           getUsageRestrictionsWithAllAppsAndEnvTypes(newHashSet(PROD, NON_PROD));
 
-      boolean hasEditPermissions =
-          usageRestrictionsService.userHasPermissionsToChangeEntity(ACCOUNT_ID, entityUsageRestrictions, false);
-      assertThat(hasEditPermissions).isFalse();
+      boolean hasEditPermissions = usageRestrictionsService.userHasPermissionsToChangeEntity(
+          eq(ACCOUNT_ID), any(), eq(entityUsageRestrictions), eq(false));
+      assertThat(hasEditPermissions).isTrue();
 
     } finally {
       UserThreadLocal.unset();
@@ -1515,7 +1328,8 @@ public class UsageRestrictionsServiceImplTest extends CategoryTest {
           AppEnvRestriction.builder().appFilter(appFilter).envFilter(envFilter).build();
       UsageRestrictions usageRestrictions = new UsageRestrictions();
       usageRestrictions.setAppEnvRestrictions(newHashSet(appEnvRestriction));
-      usageRestrictionsService.validateUsageRestrictionsOnEntityUpdate(ACCOUNT_ID, null, usageRestrictions, false);
+      usageRestrictionsService.validateUsageRestrictionsOnEntityUpdate(
+          eq(ACCOUNT_ID), any(), eq(null), eq(usageRestrictions), eq(false));
 
       appFilter = GenericEntityFilter.builder().filterType(FilterType.SELECTED).ids(newHashSet(APP_ID_1)).build();
       envFilters = newHashSet(PROD, NON_PROD);
@@ -1523,7 +1337,8 @@ public class UsageRestrictionsServiceImplTest extends CategoryTest {
       appEnvRestriction = AppEnvRestriction.builder().appFilter(appFilter).envFilter(envFilter).build();
       usageRestrictions = new UsageRestrictions();
       usageRestrictions.setAppEnvRestrictions(newHashSet(appEnvRestriction));
-      usageRestrictionsService.validateUsageRestrictionsOnEntityUpdate(ACCOUNT_ID, null, usageRestrictions, false);
+      usageRestrictionsService.validateUsageRestrictionsOnEntityUpdate(
+          eq(ACCOUNT_ID), any(), eq(null), eq(usageRestrictions), eq(false));
 
       appFilter = GenericEntityFilter.builder().filterType(FilterType.ALL).build();
       envFilters = newHashSet(NON_PROD);
@@ -1531,7 +1346,8 @@ public class UsageRestrictionsServiceImplTest extends CategoryTest {
       appEnvRestriction = AppEnvRestriction.builder().appFilter(appFilter).envFilter(envFilter).build();
       usageRestrictions = new UsageRestrictions();
       usageRestrictions.setAppEnvRestrictions(newHashSet(appEnvRestriction));
-      usageRestrictionsService.validateUsageRestrictionsOnEntityUpdate(ACCOUNT_ID, null, usageRestrictions, false);
+      usageRestrictionsService.validateUsageRestrictionsOnEntityUpdate(
+          eq(ACCOUNT_ID), any(), eq(null), eq(usageRestrictions), eq(false));
 
       appFilter = GenericEntityFilter.builder().filterType(FilterType.ALL).build();
       envFilters = newHashSet(PROD);
@@ -1539,7 +1355,8 @@ public class UsageRestrictionsServiceImplTest extends CategoryTest {
       appEnvRestriction = AppEnvRestriction.builder().appFilter(appFilter).envFilter(envFilter).build();
       usageRestrictions = new UsageRestrictions();
       usageRestrictions.setAppEnvRestrictions(newHashSet(appEnvRestriction));
-      usageRestrictionsService.validateUsageRestrictionsOnEntityUpdate(ACCOUNT_ID, null, usageRestrictions, false);
+      usageRestrictionsService.validateUsageRestrictionsOnEntityUpdate(
+          eq(ACCOUNT_ID), any(), eq(null), eq(usageRestrictions), eq(false));
 
       // Invalid scenarios
       // Scenerios where wrong input is given by the user
@@ -1550,7 +1367,8 @@ public class UsageRestrictionsServiceImplTest extends CategoryTest {
       usageRestrictions = new UsageRestrictions();
       usageRestrictions.setAppEnvRestrictions(newHashSet(appEnvRestriction));
       try {
-        usageRestrictionsService.validateUsageRestrictionsOnEntityUpdate(ACCOUNT_ID, null, usageRestrictions, false);
+        usageRestrictionsService.validateUsageRestrictionsOnEntityUpdate(
+            eq(ACCOUNT_ID), any(), eq(null), eq(usageRestrictions), eq(false));
       } catch (WingsException ex) {
         assertThat(ErrorCode.INVALID_USAGE_RESTRICTION).isEqualTo(ex.getCode());
       }
@@ -1562,7 +1380,8 @@ public class UsageRestrictionsServiceImplTest extends CategoryTest {
       usageRestrictions = new UsageRestrictions();
       usageRestrictions.setAppEnvRestrictions(newHashSet(appEnvRestriction));
       try {
-        usageRestrictionsService.validateUsageRestrictionsOnEntityUpdate(ACCOUNT_ID, null, usageRestrictions, false);
+        usageRestrictionsService.validateUsageRestrictionsOnEntityUpdate(
+            eq(ACCOUNT_ID), any(), eq(null), eq(usageRestrictions), eq(false));
       } catch (WingsException ex) {
         assertThat(ErrorCode.INVALID_USAGE_RESTRICTION).isEqualTo(ex.getCode());
       }
@@ -1573,7 +1392,8 @@ public class UsageRestrictionsServiceImplTest extends CategoryTest {
       usageRestrictions = new UsageRestrictions();
       usageRestrictions.setAppEnvRestrictions(newHashSet(appEnvRestriction));
       try {
-        usageRestrictionsService.validateUsageRestrictionsOnEntityUpdate(ACCOUNT_ID, null, usageRestrictions, false);
+        usageRestrictionsService.validateUsageRestrictionsOnEntityUpdate(
+            eq(ACCOUNT_ID), any(), eq(null), eq(usageRestrictions), eq(false));
       } catch (WingsException ex) {
         assertThat(ErrorCode.INVALID_USAGE_RESTRICTION).isEqualTo(ex.getCode());
       }
@@ -1584,7 +1404,8 @@ public class UsageRestrictionsServiceImplTest extends CategoryTest {
       usageRestrictions = new UsageRestrictions();
       usageRestrictions.setAppEnvRestrictions(newHashSet(appEnvRestriction));
       try {
-        usageRestrictionsService.validateUsageRestrictionsOnEntityUpdate(ACCOUNT_ID, null, usageRestrictions, false);
+        usageRestrictionsService.validateUsageRestrictionsOnEntityUpdate(
+            eq(ACCOUNT_ID), any(), eq(null), eq(usageRestrictions), eq(false));
       } catch (WingsException ex) {
         assertThat(ErrorCode.INVALID_USAGE_RESTRICTION).isEqualTo(ex.getCode());
       }
@@ -1594,7 +1415,8 @@ public class UsageRestrictionsServiceImplTest extends CategoryTest {
       usageRestrictions = new UsageRestrictions();
       usageRestrictions.setAppEnvRestrictions(newHashSet(appEnvRestriction));
       try {
-        usageRestrictionsService.validateUsageRestrictionsOnEntityUpdate(ACCOUNT_ID, null, usageRestrictions, false);
+        usageRestrictionsService.validateUsageRestrictionsOnEntityUpdate(
+            eq(ACCOUNT_ID), any(), eq(null), eq(usageRestrictions), eq(false));
       } catch (WingsException ex) {
         assertThat(ErrorCode.INVALID_USAGE_RESTRICTION).isEqualTo(ex.getCode());
       }
@@ -1603,14 +1425,16 @@ public class UsageRestrictionsServiceImplTest extends CategoryTest {
       usageRestrictions = new UsageRestrictions();
       usageRestrictions.setAppEnvRestrictions(newHashSet(appEnvRestriction));
       try {
-        usageRestrictionsService.validateUsageRestrictionsOnEntityUpdate(ACCOUNT_ID, null, usageRestrictions, false);
+        usageRestrictionsService.validateUsageRestrictionsOnEntityUpdate(
+            eq(ACCOUNT_ID), any(), eq(null), eq(usageRestrictions), eq(false));
       } catch (WingsException ex) {
         assertThat(ErrorCode.INVALID_USAGE_RESTRICTION).isEqualTo(ex.getCode());
       }
 
       usageRestrictions = new UsageRestrictions();
       try {
-        usageRestrictionsService.validateUsageRestrictionsOnEntityUpdate(ACCOUNT_ID, null, usageRestrictions, false);
+        usageRestrictionsService.validateUsageRestrictionsOnEntityUpdate(
+            eq(ACCOUNT_ID), any(), eq(null), eq(usageRestrictions), eq(false));
       } catch (WingsException ex) {
         assertThat(NOT_ACCOUNT_MGR_NOR_HAS_ALL_APP_ACCESS).isEqualTo(ex.getCode());
       }
@@ -1655,7 +1479,8 @@ public class UsageRestrictionsServiceImplTest extends CategoryTest {
       UsageRestrictions usageRestrictions = new UsageRestrictions();
       usageRestrictions.setAppEnvRestrictions(newHashSet(appEnvRestriction));
       try {
-        usageRestrictionsService.validateUsageRestrictionsOnEntityUpdate(ACCOUNT_ID, null, usageRestrictions, false);
+        usageRestrictionsService.validateUsageRestrictionsOnEntityUpdate(
+            eq(ACCOUNT_ID), any(), eq(null), eq(usageRestrictions), eq(false));
       } catch (WingsException ex) {
         assertThat(USER_NOT_AUTHORIZED_DUE_TO_USAGE_RESTRICTIONS).isEqualTo(ex.getCode());
       }
@@ -1667,7 +1492,8 @@ public class UsageRestrictionsServiceImplTest extends CategoryTest {
       usageRestrictions = new UsageRestrictions();
       usageRestrictions.setAppEnvRestrictions(newHashSet(appEnvRestriction));
       try {
-        usageRestrictionsService.validateUsageRestrictionsOnEntityUpdate(ACCOUNT_ID, null, usageRestrictions, false);
+        usageRestrictionsService.validateUsageRestrictionsOnEntityUpdate(
+            eq(ACCOUNT_ID), any(), eq(null), eq(usageRestrictions), eq(false));
       } catch (WingsException ex) {
         assertThat(USER_NOT_AUTHORIZED_DUE_TO_USAGE_RESTRICTIONS).isEqualTo(ex.getCode());
       }
@@ -1679,7 +1505,8 @@ public class UsageRestrictionsServiceImplTest extends CategoryTest {
       usageRestrictions = new UsageRestrictions();
       usageRestrictions.setAppEnvRestrictions(newHashSet(appEnvRestriction));
       try {
-        usageRestrictionsService.validateUsageRestrictionsOnEntityUpdate(ACCOUNT_ID, null, usageRestrictions, false);
+        usageRestrictionsService.validateUsageRestrictionsOnEntityUpdate(
+            eq(ACCOUNT_ID), any(), eq(null), eq(usageRestrictions), eq(false));
       } catch (WingsException ex) {
         assertThat(USER_NOT_AUTHORIZED_DUE_TO_USAGE_RESTRICTIONS).isEqualTo(ex.getCode());
       }
@@ -1691,7 +1518,8 @@ public class UsageRestrictionsServiceImplTest extends CategoryTest {
       usageRestrictions = new UsageRestrictions();
       usageRestrictions.setAppEnvRestrictions(newHashSet(appEnvRestriction));
       try {
-        usageRestrictionsService.validateUsageRestrictionsOnEntityUpdate(ACCOUNT_ID, null, usageRestrictions, false);
+        usageRestrictionsService.validateUsageRestrictionsOnEntityUpdate(
+            eq(ACCOUNT_ID), any(), eq(null), eq(usageRestrictions), eq(false));
       } catch (WingsException ex) {
         assertThat(USER_NOT_AUTHORIZED_DUE_TO_USAGE_RESTRICTIONS).isEqualTo(ex.getCode());
       }
@@ -1703,7 +1531,8 @@ public class UsageRestrictionsServiceImplTest extends CategoryTest {
       usageRestrictions = new UsageRestrictions();
       usageRestrictions.setAppEnvRestrictions(newHashSet(appEnvRestriction));
       try {
-        usageRestrictionsService.validateUsageRestrictionsOnEntityUpdate(ACCOUNT_ID, null, usageRestrictions, false);
+        usageRestrictionsService.validateUsageRestrictionsOnEntityUpdate(
+            eq(ACCOUNT_ID), any(), eq(null), eq(usageRestrictions), eq(false));
       } catch (WingsException ex) {
         assertThat(USER_NOT_AUTHORIZED_DUE_TO_USAGE_RESTRICTIONS).isEqualTo(ex.getCode());
       }
@@ -1715,7 +1544,8 @@ public class UsageRestrictionsServiceImplTest extends CategoryTest {
       usageRestrictions = new UsageRestrictions();
       usageRestrictions.setAppEnvRestrictions(newHashSet(appEnvRestriction));
       try {
-        usageRestrictionsService.validateUsageRestrictionsOnEntityUpdate(ACCOUNT_ID, null, usageRestrictions, false);
+        usageRestrictionsService.validateUsageRestrictionsOnEntityUpdate(
+            eq(ACCOUNT_ID), any(), eq(null), eq(usageRestrictions), eq(false));
       } catch (WingsException ex) {
         assertThat(USER_NOT_AUTHORIZED_DUE_TO_USAGE_RESTRICTIONS).isEqualTo(ex.getCode());
       }

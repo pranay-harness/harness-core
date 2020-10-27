@@ -15,6 +15,7 @@ import static software.wings.beans.artifact.ArtifactStreamType.ECR;
 import static software.wings.beans.artifact.ArtifactStreamType.GCS;
 import static software.wings.beans.artifact.ArtifactStreamType.JENKINS;
 import static software.wings.beans.artifact.ArtifactStreamType.SMB;
+import static software.wings.security.PermissionAttribute.PermissionType.ACCOUNT_MANAGEMENT;
 
 import com.google.common.collect.Sets;
 import com.google.inject.Inject;
@@ -545,7 +546,7 @@ public class BuildSourceServiceImpl implements BuildSourceService {
     notNullCheck("Artifact Stream does not exist ", artifactStream);
     if (GLOBAL_APP_ID.equals(artifactStream.fetchAppId())) {
       usageRestrictionsService.validateUsageRestrictionsOnEntityUpdate(artifactStream.getAccountId(),
-          settingsService.getUsageRestrictionsForSettingId(artifactStream.getSettingId()),
+          ACCOUNT_MANAGEMENT, settingsService.getUsageRestrictionsForSettingId(artifactStream.getSettingId()),
           settingsService.getUsageRestrictionsForSettingId(artifactStream.getSettingId()), false);
     }
     if (buildDetails == null) {

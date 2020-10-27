@@ -4,6 +4,7 @@ import software.wings.beans.Base;
 import software.wings.beans.security.UserGroup;
 import software.wings.beans.security.restrictions.RestrictionsSummary;
 import software.wings.security.PermissionAttribute.Action;
+import software.wings.security.PermissionAttribute.PermissionType;
 import software.wings.security.UsageRestrictions;
 import software.wings.security.UsageRestrictions.AppEnvRestriction;
 import software.wings.security.UserPermissionInfo;
@@ -72,8 +73,9 @@ public interface UsageRestrictionsService {
    */
   UsageRestrictions getDefaultUsageRestrictions(String accountId, String appId, String envId);
 
-  boolean userHasPermissionsToChangeEntity(String accountId, UsageRestrictions entityUsageRestrictions,
-      UsageRestrictions restrictionsFromUserPermissions, boolean scopedToEntity);
+  boolean userHasPermissionsToChangeEntity(String accountId, PermissionType permissionType,
+      UsageRestrictions entityUsageRestrictions, UsageRestrictions restrictionsFromUserPermissions,
+      boolean scopedToEntity);
 
   /**
    * Checks if the user can update / delete entity based on the user permissions and restrictions set on the entity.
@@ -84,8 +86,9 @@ public interface UsageRestrictionsService {
    * @param scopedToAccount
    * @return boolean
    */
-  boolean userHasPermissionsToChangeEntity(String accountId, UsageRestrictions entityUsageRestrictions,
-      UsageRestrictions restrictionsFromUserPermissions, Map<String, List<Base>> appIdEnvMap, boolean scopedToAccount);
+  boolean userHasPermissionsToChangeEntity(String accountId, PermissionType permissionType,
+      UsageRestrictions entityUsageRestrictions, UsageRestrictions restrictionsFromUserPermissions,
+      Map<String, List<Base>> appIdEnvMap, boolean scopedToAccount);
 
   /**
    * Checks if the user can update / delete entity based on the user permissions and restrictions set on the entity.
@@ -94,8 +97,8 @@ public interface UsageRestrictionsService {
    * @param scopedToAccount
    * @return boolean
    */
-  boolean userHasPermissionsToChangeEntity(
-      String accountId, UsageRestrictions entityUsageRestrictions, boolean scopedToAccount);
+  boolean userHasPermissionsToChangeEntity(String accountId, PermissionType permissionType,
+      UsageRestrictions entityUsageRestrictions, boolean scopedToAccount);
 
   /**
    * Checks if the user can update / delete entity based on the user permissions and restrictions set on the entity.
@@ -105,8 +108,8 @@ public interface UsageRestrictionsService {
    * @param scopedToAccount boolean to define
    * @return boolean
    */
-  boolean userHasPermissionsToChangeEntity(String accountId, UsageRestrictions entityUsageRestrictions,
-      Map<String, List<Base>> appIdEnvMap, boolean scopedToAccount);
+  boolean userHasPermissionsToChangeEntity(String accountId, PermissionType permissionType,
+      UsageRestrictions entityUsageRestrictions, Map<String, List<Base>> appIdEnvMap, boolean scopedToAccount);
 
   /**
    * Checks if user can update an entity
@@ -115,8 +118,8 @@ public interface UsageRestrictionsService {
    * @param accountId account id
    * @param scopedToAccount boolean to define
    */
-  void validateUsageRestrictionsOnEntityUpdate(String accountId, UsageRestrictions oldUsageRestrictions,
-      UsageRestrictions newUsageRestrictions, boolean scopedToAccount);
+  void validateUsageRestrictionsOnEntityUpdate(String accountId, PermissionType permissionType,
+      UsageRestrictions oldUsageRestrictions, UsageRestrictions newUsageRestrictions, boolean scopedToAccount);
 
   /**
    * The update of usage restrictions should not leave setup entities references to be dangling. This method will
@@ -137,7 +140,7 @@ public interface UsageRestrictionsService {
    * @param scopedToAccount
    */
   void validateUsageRestrictionsOnEntitySave(
-      String accountId, UsageRestrictions newUsageRestrictions, boolean scopedToAccount);
+      String accountId, PermissionType permissionType, UsageRestrictions newUsageRestrictions, boolean scopedToAccount);
 
   boolean hasNoRestrictions(UsageRestrictions usageRestrictions);
 

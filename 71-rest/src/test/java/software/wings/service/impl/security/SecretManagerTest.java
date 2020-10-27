@@ -23,6 +23,7 @@ import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static software.wings.security.PermissionAttribute.PermissionType.MANAGE_SECRETS;
 import static software.wings.service.impl.security.SecretManagerImpl.ENCRYPTED_FIELD_MASK;
 import static software.wings.settings.SettingVariableTypes.AWS;
 import static software.wings.settings.SettingVariableTypes.SECRET_TEXT;
@@ -518,13 +519,14 @@ public class SecretManagerTest extends CategoryTest {
     UsageRestrictions usageRestrictions = mock(UsageRestrictions.class);
     when(encryptedData1.getUsageRestrictions()).thenReturn(usageRestrictions);
     when(encryptedData2.getUsageRestrictions()).thenReturn(usageRestrictions);
-    when(usageRestrictionsService.userHasPermissionsToChangeEntity(accountId, usageRestrictions, false))
+    when(usageRestrictionsService.userHasPermissionsToChangeEntity(accountId, MANAGE_SECRETS, usageRestrictions, false))
         .thenReturn(true);
 
     boolean isEditable = secretManager.hasUpdateAccessToSecrets(secretIds, accountId);
     assertThat(isEditable).isTrue();
     verify(mockMorphiaIterator, times(2)).next();
-    verify(usageRestrictionsService, times(2)).userHasPermissionsToChangeEntity(accountId, usageRestrictions, false);
+    verify(usageRestrictionsService, times(2))
+        .userHasPermissionsToChangeEntity(accountId, MANAGE_SECRETS, usageRestrictions, false);
   }
 
   @Test
@@ -540,7 +542,8 @@ public class SecretManagerTest extends CategoryTest {
     boolean isEditable = secretManager.hasUpdateAccessToSecrets(secretIds, accountId);
     assertThat(isEditable).isTrue();
     verify(mockMorphiaIterator, times(0)).next();
-    verify(usageRestrictionsService, times(0)).userHasPermissionsToChangeEntity(any(), any(), any(Boolean.class));
+    verify(usageRestrictionsService, times(0))
+        .userHasPermissionsToChangeEntity(any(), any(), any(), any(Boolean.class));
   }
 
   @Test
@@ -559,14 +562,15 @@ public class SecretManagerTest extends CategoryTest {
     UsageRestrictions usageRestrictions = mock(UsageRestrictions.class);
     when(encryptedData1.getUsageRestrictions()).thenReturn(usageRestrictions);
     when(encryptedData2.getUsageRestrictions()).thenReturn(usageRestrictions);
-    when(usageRestrictionsService.userHasPermissionsToChangeEntity(accountId, usageRestrictions, false))
+    when(usageRestrictionsService.userHasPermissionsToChangeEntity(accountId, MANAGE_SECRETS, usageRestrictions, false))
         .thenReturn(true)
         .thenReturn(false);
 
     boolean isEditable = secretManager.hasUpdateAccessToSecrets(secretIds, accountId);
     assertThat(isEditable).isFalse();
     verify(mockMorphiaIterator, times(2)).next();
-    verify(usageRestrictionsService, times(2)).userHasPermissionsToChangeEntity(accountId, usageRestrictions, false);
+    verify(usageRestrictionsService, times(2))
+        .userHasPermissionsToChangeEntity(accountId, MANAGE_SECRETS, usageRestrictions, false);
   }
 
   @Test
@@ -584,7 +588,7 @@ public class SecretManagerTest extends CategoryTest {
     when(encryptedData.getUsageRestrictions()).thenReturn(usageRestrictions);
 
     when(wingsPersistence.get(EncryptedData.class, secretId)).thenReturn(encryptedData);
-    when(usageRestrictionsService.userHasPermissionsToChangeEntity(accountId, usageRestrictions, false))
+    when(usageRestrictionsService.userHasPermissionsToChangeEntity(accountId, MANAGE_SECRETS, usageRestrictions, false))
         .thenReturn(true);
     when(secretSetupUsageService.getSecretUsage(accountId, secretId)).thenReturn(new HashSet<>());
     when(wingsPersistence.delete(EncryptedData.class, secretId)).thenReturn(false);
@@ -593,7 +597,8 @@ public class SecretManagerTest extends CategoryTest {
     assertThat(isDeleted).isFalse();
 
     verify(wingsPersistence, times(1)).get(EncryptedData.class, secretId);
-    verify(usageRestrictionsService, times(1)).userHasPermissionsToChangeEntity(accountId, usageRestrictions, false);
+    verify(usageRestrictionsService, times(1))
+        .userHasPermissionsToChangeEntity(accountId, MANAGE_SECRETS, usageRestrictions, false);
     verify(secretSetupUsageService, times(1)).getSecretUsage(accountId, secretId);
     verify(wingsPersistence, times(1)).delete(EncryptedData.class, secretId);
     verify(auditServiceHelper, times(0)).reportDeleteForAuditingUsingAccountId(accountId, encryptedData);
@@ -614,7 +619,7 @@ public class SecretManagerTest extends CategoryTest {
     when(encryptedData.getUsageRestrictions()).thenReturn(usageRestrictions);
 
     when(wingsPersistence.get(EncryptedData.class, secretId)).thenReturn(encryptedData);
-    when(usageRestrictionsService.userHasPermissionsToChangeEntity(accountId, usageRestrictions, false))
+    when(usageRestrictionsService.userHasPermissionsToChangeEntity(accountId, MANAGE_SECRETS, usageRestrictions, false))
         .thenReturn(false);
 
     try {
@@ -625,7 +630,8 @@ public class SecretManagerTest extends CategoryTest {
     }
 
     verify(wingsPersistence, times(1)).get(EncryptedData.class, secretId);
-    verify(usageRestrictionsService, times(1)).userHasPermissionsToChangeEntity(accountId, usageRestrictions, false);
+    verify(usageRestrictionsService, times(1))
+        .userHasPermissionsToChangeEntity(accountId, MANAGE_SECRETS, usageRestrictions, false);
     verify(secretSetupUsageService, times(0)).getSecretUsage(accountId, secretId);
     verify(wingsPersistence, times(0)).delete(EncryptedData.class, secretId);
     verify(auditServiceHelper, times(0)).reportDeleteForAuditingUsingAccountId(accountId, encryptedData);
@@ -646,7 +652,7 @@ public class SecretManagerTest extends CategoryTest {
     when(encryptedData.getUsageRestrictions()).thenReturn(usageRestrictions);
 
     when(wingsPersistence.get(EncryptedData.class, secretId)).thenReturn(encryptedData);
-    when(usageRestrictionsService.userHasPermissionsToChangeEntity(accountId, usageRestrictions, false))
+    when(usageRestrictionsService.userHasPermissionsToChangeEntity(accountId, MANAGE_SECRETS, usageRestrictions, false))
         .thenReturn(true);
     when(secretSetupUsageService.getSecretUsage(accountId, secretId)).thenReturn(new HashSet<>());
     when(wingsPersistence.delete(EncryptedData.class, secretId)).thenReturn(true);
@@ -655,7 +661,8 @@ public class SecretManagerTest extends CategoryTest {
     assertThat(isDeleted).isTrue();
 
     verify(wingsPersistence, times(1)).get(EncryptedData.class, secretId);
-    verify(usageRestrictionsService, times(1)).userHasPermissionsToChangeEntity(accountId, usageRestrictions, false);
+    verify(usageRestrictionsService, times(1))
+        .userHasPermissionsToChangeEntity(accountId, MANAGE_SECRETS, usageRestrictions, false);
     verify(secretSetupUsageService, times(1)).getSecretUsage(accountId, secretId);
     verify(wingsPersistence, times(1)).delete(EncryptedData.class, secretId);
     verify(auditServiceHelper, times(1)).reportDeleteForAuditingUsingAccountId(accountId, encryptedData);
@@ -677,7 +684,7 @@ public class SecretManagerTest extends CategoryTest {
 
     SecretSetupUsage secretSetupUsage = SecretSetupUsage.builder().entityId("uuid").type(AWS).build();
     when(wingsPersistence.get(EncryptedData.class, secretId)).thenReturn(encryptedData);
-    when(usageRestrictionsService.userHasPermissionsToChangeEntity(accountId, usageRestrictions, false))
+    when(usageRestrictionsService.userHasPermissionsToChangeEntity(accountId, MANAGE_SECRETS, usageRestrictions, false))
         .thenReturn(true);
     when(secretSetupUsageService.getSecretUsage(accountId, secretId)).thenReturn(Sets.newHashSet(secretSetupUsage));
 
@@ -689,7 +696,8 @@ public class SecretManagerTest extends CategoryTest {
     }
 
     verify(wingsPersistence, times(1)).get(EncryptedData.class, secretId);
-    verify(usageRestrictionsService, times(1)).userHasPermissionsToChangeEntity(accountId, usageRestrictions, false);
+    verify(usageRestrictionsService, times(1))
+        .userHasPermissionsToChangeEntity(accountId, MANAGE_SECRETS, usageRestrictions, false);
     verify(secretSetupUsageService, times(1)).getSecretUsage(accountId, secretId);
     verify(wingsPersistence, times(0)).delete(EncryptedData.class, secretId);
     verify(auditServiceHelper, times(0)).reportDeleteForAuditingUsingAccountId(accountId, encryptedData);

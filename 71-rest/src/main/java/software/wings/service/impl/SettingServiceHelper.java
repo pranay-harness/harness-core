@@ -6,6 +6,10 @@ import static io.harness.encryption.EncryptionReflectUtils.getEncryptedRefField;
 import static software.wings.beans.SettingAttribute.SettingCategory.AZURE_ARTIFACTS;
 import static software.wings.beans.SettingAttribute.SettingCategory.CONNECTOR;
 import static software.wings.beans.SettingAttribute.SettingCategory.HELM_REPO;
+import static software.wings.security.PermissionAttribute.PermissionType;
+import static software.wings.security.PermissionAttribute.PermissionType.ACCOUNT_MANAGEMENT;
+import static software.wings.security.PermissionAttribute.PermissionType.MANAGE_CLOUD_PROVIDERS;
+import static software.wings.security.PermissionAttribute.PermissionType.MANAGE_CONNECTORS;
 import static software.wings.settings.SettingVariableTypes.AMAZON_S3_HELM_REPO;
 import static software.wings.settings.SettingVariableTypes.APM_VERIFICATION;
 import static software.wings.settings.SettingVariableTypes.APP_DYNAMICS;
@@ -334,8 +338,9 @@ public class SettingServiceHelper {
       }
       return;
     }
-
-    usageRestrictionsService.validateUsageRestrictionsOnEntitySave(accountId, newUsageRestrictions, false);
+    PermissionType permissionType = getPermissionType(settingAttribute);
+    usageRestrictionsService.validateUsageRestrictionsOnEntitySave(
+        accountId, permissionType, newUsageRestrictions, false);
   }
 
   public void validateUsageRestrictionsOnEntityUpdate(SettingAttribute settingAttribute, String accountId,
@@ -347,9 +352,9 @@ public class SettingServiceHelper {
       }
       return;
     }
-
+    PermissionType permissionType = getPermissionType(settingAttribute);
     usageRestrictionsService.validateUsageRestrictionsOnEntityUpdate(
-        accountId, oldUsageRestrictions, newUsageRestrictions, false);
+        accountId, permissionType, oldUsageRestrictions, newUsageRestrictions, false);
   }
 
   public boolean userHasPermissionsToChangeEntity(
@@ -359,7 +364,9 @@ public class SettingServiceHelper {
       return secretManager.hasUpdateAccessToSecrets(usedSecretIds, accountId);
     }
 
-    return usageRestrictionsService.userHasPermissionsToChangeEntity(accountId, entityUsageRestrictions, false);
+    PermissionType permissionType = getPermissionType(settingAttribute);
+    return usageRestrictionsService.userHasPermissionsToChangeEntity(
+        accountId, permissionType, entityUsageRestrictions, false);
   }
 
   public Set<String> getUsedSecretIds(SettingAttribute settingAttribute) {
@@ -371,5 +378,24 @@ public class SettingServiceHelper {
     }
 
     return null;
+  }
+
+  public PermissionType getPermissionType(SettingAttribute settingAttribute) {
+    if (settingAttribute == null || settingAttribute.getValue() == null
+        || settingAttribute.getValue().getType() == null) {
+      return ACCOUNT_MANAGEMENT;
+    }
+    switch (SettingAttribute.SettingCategory.getCategory(
+        SettingVariableTypes.valueOf(settingAttribute.getValue().getType()))) {
+      case AZURE_ARTIFACTS:
+      case HELM_REPO:
+      case CONNECTOR: {
+        return MANAGE_CONNECTORS;
+      }
+      case CLOUD_PROVIDER: {
+        return MANAGE_CLOUD_PROVIDERS;
+      }
+      default: { return ACCOUNT_MANAGEMENT; }
+    }
   }
 }
