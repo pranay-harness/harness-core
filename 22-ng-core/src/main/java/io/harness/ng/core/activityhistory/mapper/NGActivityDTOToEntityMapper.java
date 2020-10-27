@@ -63,7 +63,8 @@ public class NGActivityDTOToEntityMapper {
     NGActivityBuilder builder = EntityUsageActivityDetail.builder()
                                     .referredByEntityFQN(referredByEntity.getEntityRef().getFullyQualifiedName())
                                     .referredByEntityType(String.valueOf(referredByEntity.getType()))
-                                    .referredByEntity(referredByEntity);
+                                    .referredByEntity(referredByEntity)
+                                    .activityStatusMessage(entityUsageDTO.getActivityStatusMessage());
     populateCommonActivityProperties(builder, activityDTO);
     return builder.build();
   }

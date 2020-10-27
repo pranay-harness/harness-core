@@ -2,7 +2,9 @@ package io.harness.ng.core;
 
 import com.google.inject.AbstractModule;
 
+import io.harness.ng.core.activityhistory.impl.EntityActivitySummaryServiceImpl;
 import io.harness.ng.core.activityhistory.impl.NGActivityServiceImpl;
+import io.harness.ng.core.activityhistory.service.EntityActivitySummaryService;
 import io.harness.ng.core.activityhistory.service.NGActivityService;
 import io.harness.ng.core.entitysetupusage.impl.EntitySetupUsageServiceImpl;
 import io.harness.ng.core.entitysetupusage.service.EntitySetupUsageService;
@@ -30,5 +32,6 @@ public class NGCoreModule extends AbstractModule {
     bind(ServiceEntityService.class).to(ServiceEntityServiceImpl.class);
     bind(EntitySetupUsageService.class).to(EntitySetupUsageServiceImpl.class);
     bind(NGActivityService.class).to(NGActivityServiceImpl.class);
+    bind(EntityActivitySummaryService.class).to(EntityActivitySummaryServiceImpl.class);
   }
 }
