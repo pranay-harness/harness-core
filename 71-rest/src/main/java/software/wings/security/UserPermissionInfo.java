@@ -1,6 +1,8 @@
 package software.wings.security;
 
 import static io.harness.annotations.dev.HarnessTeam.PL;
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static software.wings.security.PermissionAttribute.PermissionType;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import io.harness.annotations.dev.OwnedBy;
@@ -34,5 +36,10 @@ public class UserPermissionInfo {
   @JsonIgnore
   public Map<String, AppPermissionSummary> getAppPermissionMapInternal() {
     return appPermissionMapInternal;
+  }
+
+  public boolean hasAccountPermission(PermissionType permissionType) {
+    return accountPermissionSummary != null && isNotEmpty(accountPermissionSummary.getPermissions())
+        && accountPermissionSummary.getPermissions().contains(permissionType);
   }
 }

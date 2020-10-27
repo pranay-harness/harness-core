@@ -32,6 +32,7 @@ import static software.wings.beans.artifact.ArtifactStreamType.NEXUS;
 import static software.wings.beans.artifact.ArtifactStreamType.SFTP;
 import static software.wings.beans.artifact.ArtifactStreamType.SMB;
 import static software.wings.common.TemplateConstants.LATEST_TAG;
+import static software.wings.security.PermissionAttribute.PermissionType.ACCOUNT_MANAGEMENT;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
@@ -418,7 +419,7 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
     artifactStream.setAccountId(accountId);
 
     if (GLOBAL_APP_ID.equals(artifactStream.fetchAppId())) {
-      usageRestrictionsService.validateUsageRestrictionsOnEntitySave(artifactStream.getAccountId(),
+      usageRestrictionsService.validateUsageRestrictionsOnEntitySave(artifactStream.getAccountId(), ACCOUNT_MANAGEMENT,
           settingsService.getUsageRestrictionsForSettingId(artifactStream.getSettingId()), false);
     }
 
@@ -1005,8 +1006,8 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
     // TODO: check if used in triggers
     String accountId = settingsService.fetchAccountIdBySettingId(artifactStream.getSettingId());
     if (GLOBAL_APP_ID.equals(artifactStream.fetchAppId())) {
-      if (!usageRestrictionsService.userHasPermissionsToChangeEntity(
-              accountId, settingsService.getUsageRestrictionsForSettingId(artifactStream.getSettingId()), false)) {
+      if (!usageRestrictionsService.userHasPermissionsToChangeEntity(accountId, ACCOUNT_MANAGEMENT,
+              settingsService.getUsageRestrictionsForSettingId(artifactStream.getSettingId()), false)) {
         throw new UnauthorizedUsageRestrictionsException(USER);
       }
       ensureArtifactStreamSafeToDelete(GLOBAL_APP_ID, artifactStreamId, accountId);
@@ -1033,8 +1034,8 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
     } else {
       if (artifactStream.getSettingId() != null) {
         accountId = settingsService.fetchAccountIdBySettingId(artifactStream.getSettingId());
-        if (!usageRestrictionsService.userHasPermissionsToChangeEntity(
-                accountId, settingsService.getUsageRestrictionsForSettingId(artifactStream.getSettingId()), false)) {
+        if (!usageRestrictionsService.userHasPermissionsToChangeEntity(accountId, ACCOUNT_MANAGEMENT,
+                settingsService.getUsageRestrictionsForSettingId(artifactStream.getSettingId()), false)) {
           throw new UnauthorizedUsageRestrictionsException(USER);
         }
       }

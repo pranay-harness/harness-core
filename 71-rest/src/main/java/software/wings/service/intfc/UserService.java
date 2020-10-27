@@ -1,5 +1,7 @@
 package software.wings.service.intfc;
 
+import static software.wings.security.PermissionAttribute.PermissionType;
+
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.event.model.EventType;
@@ -66,6 +68,10 @@ public interface UserService extends OwnedByAccount {
   boolean trialSignup(UserInvite userInvite);
 
   UserInvite createUserInviteForMarketPlace();
+
+  boolean hasPermission(String accountId, PermissionType permissionType);
+
+  boolean userHasPermission(String accountId, User user, PermissionType permissionType);
 
   User getUserSummary(User user);
 

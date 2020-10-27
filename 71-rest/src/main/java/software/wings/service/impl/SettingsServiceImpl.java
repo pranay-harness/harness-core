@@ -130,6 +130,7 @@ import software.wings.features.CeCloudAccountFeature;
 import software.wings.features.GitOpsFeature;
 import software.wings.features.api.UsageLimitedFeature;
 import software.wings.prune.PruneEvent;
+import software.wings.security.PermissionAttribute;
 import software.wings.security.PermissionAttribute.Action;
 import software.wings.security.UsageRestrictions;
 import software.wings.service.impl.newrelic.NewRelicApplication.NewRelicApplications;
@@ -376,7 +377,7 @@ public class SettingsServiceImpl implements SettingsService {
       return Collections.emptyList();
     }
 
-    if (inputSettingAttributes.size() == 0) {
+    if (isEmpty(inputSettingAttributes)) {
       return inputSettingAttributes;
     }
 
@@ -388,14 +389,15 @@ public class SettingsServiceImpl implements SettingsService {
     Map<String, Set<String>> appEnvMapFromUserPermissions = restrictionsAndAppEnvMap.getAppEnvMap();
     UsageRestrictions restrictionsFromUserPermissions = restrictionsAndAppEnvMap.getUsageRestrictions();
 
-    boolean isAccountAdmin = userService.isAccountAdmin(accountId);
-
     Set<String> appsByAccountId = appService.getAppIdsAsSetByAccountId(accountId);
     Map<String, List<Base>> appIdEnvMap = envService.getAppIdEnvMap(appsByAccountId);
 
     Set<SettingAttribute> helmRepoSettingAttributes = new HashSet<>();
+    boolean isAccountAdmin;
 
-    inputSettingAttributes.forEach(settingAttribute -> {
+    for (SettingAttribute settingAttribute : inputSettingAttributes) {
+      PermissionAttribute.PermissionType permissionType = settingServiceHelper.getPermissionType(settingAttribute);
+      isAccountAdmin = userService.hasPermission(accountId, permissionType);
       if (isSettingAttributeReferencingCloudProvider(settingAttribute)) {
         helmRepoSettingAttributes.add(settingAttribute);
       } else {
@@ -404,11 +406,10 @@ public class SettingsServiceImpl implements SettingsService {
           filteredSettingAttributes.add(settingAttribute);
         }
       }
-    });
+    }
 
     getFilteredHelmRepoSettingAttributes(appIdFromRequest, envIdFromRequest, accountId, filteredSettingAttributes,
-        appEnvMapFromUserPermissions, restrictionsFromUserPermissions, isAccountAdmin, appIdEnvMap,
-        helmRepoSettingAttributes);
+        appEnvMapFromUserPermissions, restrictionsFromUserPermissions, appIdEnvMap, helmRepoSettingAttributes);
 
     return filteredSettingAttributes;
   }
@@ -431,7 +432,7 @@ public class SettingsServiceImpl implements SettingsService {
 
   private void getFilteredHelmRepoSettingAttributes(String appIdFromRequest, String envIdFromRequest, String accountId,
       List<SettingAttribute> filteredSettingAttributes, Map<String, Set<String>> appEnvMapFromUserPermissions,
-      UsageRestrictions restrictionsFromUserPermissions, boolean isAccountAdmin, Map<String, List<Base>> appIdEnvMap,
+      UsageRestrictions restrictionsFromUserPermissions, Map<String, List<Base>> appIdEnvMap,
       Set<SettingAttribute> helmRepoSettingAttributes) {
     if (isNotEmpty(helmRepoSettingAttributes)) {
       Set<String> cloudProviderIds = new HashSet<>();
@@ -457,13 +458,14 @@ public class SettingsServiceImpl implements SettingsService {
       }
 
       helmRepoSettingAttributes.forEach(settingAttribute -> {
+        PermissionAttribute.PermissionType permissionType = settingServiceHelper.getPermissionType(settingAttribute);
+        boolean isAccountAdmin = userService.hasPermission(accountId, permissionType);
         String cloudProviderId = ((HelmRepoConfig) settingAttribute.getValue()).getConnectorId();
-        if (isNotBlank(cloudProviderId) && cloudProvidersMap.containsKey(cloudProviderId)) {
-          if (isFilteredSettingAttribute(appIdFromRequest, envIdFromRequest, accountId, appEnvMapFromUserPermissions,
-                  restrictionsFromUserPermissions, isAccountAdmin, appIdEnvMap, settingAttribute,
-                  cloudProvidersMap.get(cloudProviderId))) {
-            filteredSettingAttributes.add(settingAttribute);
-          }
+        if (isNotBlank(cloudProviderId) && cloudProvidersMap.containsKey(cloudProviderId)
+            && isFilteredSettingAttribute(appIdFromRequest, envIdFromRequest, accountId, appEnvMapFromUserPermissions,
+                   restrictionsFromUserPermissions, isAccountAdmin, appIdEnvMap, settingAttribute,
+                   cloudProvidersMap.get(cloudProviderId))) {
+          filteredSettingAttributes.add(settingAttribute);
         }
       });
     }

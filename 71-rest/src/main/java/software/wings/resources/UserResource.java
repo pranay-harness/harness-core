@@ -746,7 +746,7 @@ public class UserResource {
   public RestResponse<Boolean> disableUser(
       @PathParam("userId") @NotEmpty String userId, @QueryParam("accountId") @NotEmpty String accountId) {
     // Only if the user the account administrator or in the Harness user group can perform the export operation.
-    if (!userService.isAccountAdmin(accountId)) {
+    if (!userService.hasPermission(accountId, USER_PERMISSION_MANAGEMENT)) {
       String errorMessage = "User is not account administrator and can't perform the export operation.";
       RestResponse<Boolean> restResponse = accountPermissionUtils.checkIfHarnessUser(errorMessage);
       if (restResponse != null) {
@@ -763,7 +763,7 @@ public class UserResource {
   public RestResponse<Boolean> enableUser(
       @PathParam("userId") @NotEmpty String userId, @QueryParam("accountId") @NotEmpty String accountId) {
     // Only if the user the account administrator or in the Harness user group can perform the export operation.
-    if (!userService.isAccountAdmin(accountId)) {
+    if (!userService.hasPermission(accountId, USER_PERMISSION_MANAGEMENT)) {
       String errorMessage = "User is not account administrator and can't perform the export operation.";
       RestResponse<Boolean> restResponse = accountPermissionUtils.checkIfHarnessUser(errorMessage);
       if (restResponse != null) {

@@ -289,13 +289,13 @@ public class SettingsServiceHelperTest extends WingsBaseTest {
     settingServiceHelper.validateUsageRestrictionsOnEntitySave(settingAttribute, ACCOUNT_ID, usageRestrictions);
     verify(secretManager, never()).hasUpdateAccessToSecrets(any(), eq(ACCOUNT_ID));
     verify(usageRestrictionsService, times(1))
-        .validateUsageRestrictionsOnEntitySave(eq(ACCOUNT_ID), eq(usageRestrictions), eq(Boolean.FALSE));
+        .validateUsageRestrictionsOnEntitySave(eq(ACCOUNT_ID), any(), eq(usageRestrictions), eq(Boolean.FALSE));
 
     settingAttribute = prepareSettingAttributeWithSecrets();
     settingServiceHelper.validateUsageRestrictionsOnEntitySave(settingAttribute, ACCOUNT_ID, usageRestrictions);
     verify(secretManager, times(1)).hasUpdateAccessToSecrets(any(), eq(ACCOUNT_ID));
     verify(usageRestrictionsService, times(1))
-        .validateUsageRestrictionsOnEntitySave(eq(ACCOUNT_ID), eq(usageRestrictions), eq(Boolean.FALSE));
+        .validateUsageRestrictionsOnEntitySave(eq(ACCOUNT_ID), any(), eq(usageRestrictions), eq(Boolean.FALSE));
 
     SettingAttribute settingAttributeFinal = settingAttribute;
     when(secretManager.hasUpdateAccessToSecrets(any(), eq(ACCOUNT_ID))).thenReturn(false);
@@ -318,7 +318,7 @@ public class SettingsServiceHelperTest extends WingsBaseTest {
     verify(secretManager, never()).hasUpdateAccessToSecrets(any(), eq(ACCOUNT_ID));
     verify(usageRestrictionsService, times(1))
         .validateUsageRestrictionsOnEntityUpdate(
-            eq(ACCOUNT_ID), eq(usageRestrictions1), eq(usageRestrictions2), eq(Boolean.FALSE));
+            eq(ACCOUNT_ID), any(), eq(usageRestrictions1), eq(usageRestrictions2), eq(Boolean.FALSE));
 
     settingAttribute = prepareSettingAttributeWithSecrets();
     settingServiceHelper.validateUsageRestrictionsOnEntityUpdate(
@@ -326,7 +326,7 @@ public class SettingsServiceHelperTest extends WingsBaseTest {
     verify(secretManager, times(1)).hasUpdateAccessToSecrets(any(), eq(ACCOUNT_ID));
     verify(usageRestrictionsService, times(1))
         .validateUsageRestrictionsOnEntityUpdate(
-            eq(ACCOUNT_ID), eq(usageRestrictions1), eq(usageRestrictions2), eq(Boolean.FALSE));
+            eq(ACCOUNT_ID), any(), eq(usageRestrictions1), eq(usageRestrictions2), eq(Boolean.FALSE));
 
     SettingAttribute settingAttributeFinal = settingAttribute;
     when(secretManager.hasUpdateAccessToSecrets(any(), eq(ACCOUNT_ID))).thenReturn(false);
@@ -345,13 +345,13 @@ public class SettingsServiceHelperTest extends WingsBaseTest {
     settingServiceHelper.userHasPermissionsToChangeEntity(settingAttribute, ACCOUNT_ID, usageRestrictions);
     verify(secretManager, never()).hasUpdateAccessToSecrets(any(), eq(ACCOUNT_ID));
     verify(usageRestrictionsService, times(1))
-        .userHasPermissionsToChangeEntity(eq(ACCOUNT_ID), eq(usageRestrictions), eq(Boolean.FALSE));
+        .userHasPermissionsToChangeEntity(eq(ACCOUNT_ID), any(), eq(usageRestrictions), eq(Boolean.FALSE));
 
     settingAttribute = prepareSettingAttributeWithSecrets();
     settingServiceHelper.userHasPermissionsToChangeEntity(settingAttribute, ACCOUNT_ID, usageRestrictions);
     verify(secretManager, times(1)).hasUpdateAccessToSecrets(any(), eq(ACCOUNT_ID));
     verify(usageRestrictionsService, times(1))
-        .userHasPermissionsToChangeEntity(eq(ACCOUNT_ID), eq(usageRestrictions), eq(Boolean.FALSE));
+        .userHasPermissionsToChangeEntity(eq(ACCOUNT_ID), any(), eq(usageRestrictions), eq(Boolean.FALSE));
   }
 
   @Test

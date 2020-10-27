@@ -42,6 +42,7 @@ import static software.wings.beans.Environment.GLOBAL_ENV_ID;
 import static software.wings.beans.ServiceVariable.ServiceVariableKeys;
 import static software.wings.security.EnvFilter.FilterType.NON_PROD;
 import static software.wings.security.EnvFilter.FilterType.PROD;
+import static software.wings.security.PermissionAttribute.PermissionType.MANAGE_SECRETS;
 import static software.wings.service.impl.security.AbstractSecretServiceImpl.checkNotNull;
 import static software.wings.service.impl.security.AbstractSecretServiceImpl.checkState;
 import static software.wings.service.impl.security.AbstractSecretServiceImpl.encryptLocal;
@@ -1567,8 +1568,8 @@ public class SecretManagerImpl implements SecretManager {
     validateSecretPath(encryptionType, secretText.getPath());
 
     // validate usage restriction.
-    usageRestrictionsService.validateUsageRestrictionsOnEntityUpdate(
-        accountId, savedData.getUsageRestrictions(), secretText.getUsageRestrictions(), secretText.isScopedToAccount());
+    usageRestrictionsService.validateUsageRestrictionsOnEntityUpdate(accountId, MANAGE_SECRETS,
+        savedData.getUsageRestrictions(), secretText.getUsageRestrictions(), secretText.isScopedToAccount());
     if (!Objects.equals(savedData.getUsageRestrictions(), secretText.getUsageRestrictions())) {
       // Validate if change of the usage scope is resulting in with dangling references in service/environments.
       validateAppEnvChangesInUsageRestrictions(savedData, secretText.getUsageRestrictions());
@@ -1691,7 +1692,7 @@ public class SecretManagerImpl implements SecretManager {
     char[] secretValue = isEmpty(secretText.getValue()) ? null : secretText.getValue().toCharArray();
     // INSERT use case
     usageRestrictionsService.validateUsageRestrictionsOnEntitySave(
-        accountId, secretText.getUsageRestrictions(), secretText.isScopedToAccount());
+        accountId, MANAGE_SECRETS, secretText.getUsageRestrictions(), secretText.isScopedToAccount());
     EncryptionType encryptionType = secretText.getKmsId() == null
         ? getEncryptionType(accountId)
         : getEncryptionBySecretManagerId(secretText.getKmsId(), accountId);
@@ -1751,7 +1752,7 @@ public class SecretManagerImpl implements SecretManager {
       return false;
     }
     usageRestrictionsService.validateUsageRestrictionsOnEntityUpdate(
-        accountId, savedData.getUsageRestrictions(), usageRestrictions, scopedToAccount);
+        accountId, MANAGE_SECRETS, savedData.getUsageRestrictions(), usageRestrictions, scopedToAccount);
     // No validation of `validateAppEnvChangesInUsageRestrictions` is performed in this method
     // because usually this update is a result of removing application/environment.
 
@@ -1784,7 +1785,7 @@ public class SecretManagerImpl implements SecretManager {
     EncryptedData encryptedData = wingsPersistence.get(EncryptedData.class, secretId);
     checkNotNull(encryptedData, "No encrypted record found with id " + secretId);
     if (!usageRestrictionsService.userHasPermissionsToChangeEntity(
-            accountId, encryptedData.getUsageRestrictions(), encryptedData.isScopedToAccount())) {
+            accountId, MANAGE_SECRETS, encryptedData.getUsageRestrictions(), encryptedData.isScopedToAccount())) {
       throw new SecretManagementException(USER_NOT_AUTHORIZED_DUE_TO_USAGE_RESTRICTIONS, USER);
     }
 
@@ -2080,12 +2081,13 @@ public class SecretManagerImpl implements SecretManager {
       } else {
         encryptionType = getEncryptionBySecretManagerId(kmsId, accountId);
       }
-      usageRestrictionsService.validateUsageRestrictionsOnEntitySave(accountId, usageRestrictions, scopedToAccount);
+      usageRestrictionsService.validateUsageRestrictionsOnEntitySave(
+          accountId, MANAGE_SECRETS, usageRestrictions, scopedToAccount);
     } else {
       // UPDATE in UPSERT case
       update = true;
       usageRestrictionsService.validateUsageRestrictionsOnEntityUpdate(
-          accountId, encryptedData.getUsageRestrictions(), usageRestrictions, scopedToAccount);
+          accountId, MANAGE_SECRETS, encryptedData.getUsageRestrictions(), usageRestrictions, scopedToAccount);
       if (!Objects.equals(encryptedData.getUsageRestrictions(), usageRestrictions)) {
         // Validate if change of the usage scope is resulting in with dangling references in service/environments.
         validateAppEnvChangesInUsageRestrictions(encryptedData, usageRestrictions);
@@ -2308,7 +2310,7 @@ public class SecretManagerImpl implements SecretManager {
 
     checkNotNull(encryptedData, "No encrypted record found with id " + uuid);
     if (!usageRestrictionsService.userHasPermissionsToChangeEntity(
-            accountId, encryptedData.getUsageRestrictions(), encryptedData.isScopedToAccount())) {
+            accountId, MANAGE_SECRETS, encryptedData.getUsageRestrictions(), encryptedData.isScopedToAccount())) {
       throw new SecretManagementException(USER_NOT_AUTHORIZED_DUE_TO_USAGE_RESTRICTIONS, USER);
     }
 
@@ -2400,7 +2402,7 @@ public class SecretManagerImpl implements SecretManager {
       batchPageSize = 2 * inputPageSize;
     }
 
-    boolean isAccountAdmin = userService.isAccountAdmin(accountId);
+    boolean isAccountAdmin = userService.hasPermission(accountId, MANAGE_SECRETS);
 
     RestrictionsAndAppEnvMap restrictionsAndAppEnvMap =
         usageRestrictionsService.getRestrictionsAndAppEnvMapFromCache(accountId, Action.READ);
@@ -2511,7 +2513,7 @@ public class SecretManagerImpl implements SecretManager {
   public PageResponse<EncryptedData> listSecretsMappedToAccount(
       String accountId, PageRequest<EncryptedData> pageRequest, boolean details) throws IllegalAccessException {
     // Also covers the case where its system originated call
-    boolean isAccountAdmin = userService.isAccountAdmin(accountId);
+    boolean isAccountAdmin = userService.hasPermission(accountId, MANAGE_SECRETS);
 
     if (!isAccountAdmin) {
       return aPageResponse().withResponse(Collections.emptyList()).build();
@@ -2688,7 +2690,7 @@ public class SecretManagerImpl implements SecretManager {
 
   public boolean canUseSecretsInAppAndEnv(
       @NonNull Set<String> secretIds, @NonNull String accountId, String appIdFromRequest, String envIdFromRequest) {
-    boolean isAccountAdmin = userService.isAccountAdmin(accountId);
+    boolean isAccountAdmin = userService.hasPermission(accountId, MANAGE_SECRETS);
     RestrictionsAndAppEnvMap restrictionsAndAppEnvMap =
         usageRestrictionsService.getRestrictionsAndAppEnvMapFromCache(accountId, Action.READ);
     Map<String, Set<String>> appEnvMapFromPermissions = restrictionsAndAppEnvMap.getAppEnvMap();
@@ -2722,7 +2724,7 @@ public class SecretManagerImpl implements SecretManager {
 
     for (EncryptedData encryptedData : encryptedDataSet) {
       if (!usageRestrictionsService.userHasPermissionsToChangeEntity(
-              accountId, encryptedData.getUsageRestrictions(), encryptedData.isScopedToAccount())) {
+              accountId, MANAGE_SECRETS, encryptedData.getUsageRestrictions(), encryptedData.isScopedToAccount())) {
         return false;
       }
     }

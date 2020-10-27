@@ -320,6 +320,30 @@ public class UserServiceImpl implements UserService {
     accountService.validateAccount(account);
   }
 
+  @Override
+  public boolean hasPermission(String accountId, PermissionType permissionType) {
+    User user = UserThreadLocal.get();
+    if (user == null) {
+      return true;
+    }
+    return userHasPermission(accountId, user, permissionType);
+  }
+
+  @Override
+  public boolean userHasPermission(String accountId, User user, PermissionType permissionType) {
+    UserRequestContext userRequestContext = user.getUserRequestContext();
+    if (userRequestContext == null) {
+      return true;
+    }
+
+    if (!accountId.equals(userRequestContext.getAccountId())) {
+      return false;
+    }
+
+    UserPermissionInfo userPermissionInfo = userRequestContext.getUserPermissionInfo();
+    return userPermissionInfo.hasAccountPermission(permissionType);
+  }
+
   /**
    * Trial/Freemium user invitation won't create account. The freemium account will be created only at time of
    * invitation completion.
