@@ -4,8 +4,11 @@ import com.google.inject.AbstractModule;
 
 import io.harness.persistence.HPersistence;
 import io.harness.secretmanagers.SecretManagerConfigService;
+import io.harness.secrets.SecretsAuditService;
 import io.harness.secrets.SecretsDao;
 import io.harness.secrets.SecretsDaoImpl;
+import io.harness.secrets.SecretsFileService;
+import io.harness.secrets.SecretsRBACService;
 import io.harness.secrets.setupusage.SecretSetupUsageService;
 import io.harness.secrets.setupusage.SecretSetupUsageServiceImpl;
 
@@ -29,5 +32,8 @@ public class SecretManagementCoreModule extends AbstractModule {
   private void registerRequiredBindings() {
     requireBinding(HPersistence.class);
     requireBinding(SecretManagerConfigService.class);
+    requireBinding(SecretsFileService.class);
+    requireBinding(SecretsAuditService.class);
+    requireBinding(SecretsRBACService.class);
   }
 }
