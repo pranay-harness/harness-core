@@ -38,6 +38,16 @@ public class AuditHelper {
   }
 
   /**
+   * set audit context with audit header
+   * @param header
+   */
+  public void setAuditContext(AuditHeader header) {
+    logger.debug("Saving auditHeader to thread local");
+    auditThreadLocal.set(header);
+    setGlobalContext(header);
+  }
+
+  /**
    * Creates a new Audit log entry in database.
    *
    * @param header AuditHeader received from request.

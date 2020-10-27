@@ -7,9 +7,15 @@ import static io.harness.rule.OwnerRule.ADWAIT;
 import static io.harness.rule.OwnerRule.ALEXEI;
 import static io.harness.rule.OwnerRule.ROHIT_KUMAR;
 import static io.harness.rule.OwnerRule.RUSHABH;
+import static io.harness.rule.OwnerRule.VARDAN_BANSAL;
 import static java.util.stream.Collectors.toList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyString;
+import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
 import static software.wings.beans.yaml.Change.Builder.aFileChange;
 import static software.wings.beans.yaml.GitFileChange.Builder.aGitFileChange;
 import static software.wings.beans.yaml.YamlConstants.APPLICATIONS_FOLDER;
@@ -34,23 +40,35 @@ import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
+import org.mockito.Spy;
 import software.wings.WingsBaseTest;
+import software.wings.audit.AuditHeader;
+import software.wings.beans.Application;
 import software.wings.beans.yaml.Change;
 import software.wings.beans.yaml.GitFileChange;
 import software.wings.beans.yaml.YamlType;
+import software.wings.common.AuditHelper;
 import software.wings.dl.WingsPersistence;
 import software.wings.exception.YamlProcessingException;
 import software.wings.service.impl.yaml.handler.YamlHandlerFactory;
+import software.wings.service.impl.yaml.handler.app.ApplicationYamlHandler;
+import software.wings.service.intfc.AuditService;
 import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.yaml.YamlGitService;
+import software.wings.yaml.YamlOperationResponse;
 import software.wings.yaml.YamlPayload;
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import javax.activity.InvalidActivityException;
 
 public class YamlServiceImplTest extends WingsBaseTest {
   @Mock private YamlHandlerFactory yamlHandlerFactory;
@@ -59,6 +77,10 @@ public class YamlServiceImplTest extends WingsBaseTest {
   @Mock private transient YamlGitService yamlGitService;
   @Mock private FeatureFlagService featureFlagService;
   @InjectMocks @Inject YamlServiceImpl yamlService = new YamlServiceImpl();
+  @Spy @InjectMocks private AuditHelper auditHelper;
+  @Mock private AuditService auditService;
+  private static final String resourcePath = "./yaml";
+  @Mock ApplicationYamlHandler applicationYamlHandler;
 
   @Before
   public void setUp() {
@@ -211,6 +233,25 @@ public class YamlServiceImplTest extends WingsBaseTest {
     shouldThrowInvalidYamlNameException(yamlPayload);
   }
 
+  @Test
+  @Owner(developers = VARDAN_BANSAL)
+  @Category(UnitTests.class)
+  public void shouldPerformYAMLOperationWithAuditsLogged() throws InvalidActivityException {
+    final AuditHeader auditHeader = AuditHeader.Builder.anAuditHeader().build();
+    final String auditId = "AUDIT_ID";
+    final String testAccountId = "TEST_ACCOUNT_ID";
+    final Application application =
+        Application.Builder.anApplication().name("Sample App").uuid("uuid").accountId(testAccountId).build();
+    doReturn(auditId).when(auditService).getAuditHeaderIdFromGlobalContext();
+    doReturn(auditHeader).when(wingsPersistence).get(AuditHeader.class, auditId);
+    doReturn(applicationYamlHandler).when(yamlHandlerFactory).getYamlHandler(any(), any());
+    doReturn(application).when(yamlHelper).getApp(anyString(), anyString());
+    InputStream zipfile = setupInputStreamFromZipFile("Setup");
+    final YamlOperationResponse yamlOperationResponse = yamlService.upsertYAMLFilesAsZip(testAccountId, zipfile);
+    assertThat(yamlOperationResponse).isNotNull();
+    verify(auditHelper, times(1)).setAuditContext(auditHeader);
+  }
+
   private void shouldThrowInvalidYamlNameException(YamlPayload yamlPayload) {
     GitFileChange change = GitFileChange.Builder.aGitFileChange()
                                .withChangeType(ChangeType.MODIFY)
@@ -223,5 +264,16 @@ public class YamlServiceImplTest extends WingsBaseTest {
     assertThatThrownBy(() -> yamlService.processChangeSet(Collections.singletonList(change)))
         .isInstanceOf(YamlProcessingException.class)
         .hasMessageEndingWith("Error while processing some yaml files in the changeset.");
+  }
+  private InputStream setupInputStreamFromZipFile(final String fileName) {
+    File file = null;
+    try {
+      file =
+          new File(getClass().getClassLoader().getResource(resourcePath + PATH_DELIMITER + fileName + ".zip").toURI());
+      return new FileInputStream(file);
+    } catch (URISyntaxException | FileNotFoundException e) {
+      assertThat(false).isTrue();
+    }
+    return null;
   }
 }
