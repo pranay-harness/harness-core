@@ -2,6 +2,7 @@ package software.wings.delegatetasks.jira;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.inject.Inject;
 
 import io.harness.annotations.dev.OwnedBy;
@@ -566,16 +567,25 @@ public class JiraTask extends AbstractDelegateRunnableTask {
     }
   }
 
-  private DelegateResponseData checkJiraApproval(JiraTaskParameters parameters) {
+  @VisibleForTesting
+  protected DelegateResponseData checkJiraApproval(JiraTaskParameters parameters) {
     Issue issue;
     logger.info("Checking approval for IssueId = {}", parameters.getIssueId());
     try {
       JiraClient jira = getJiraClient(parameters);
       issue = jira.getIssue(parameters.getIssueId());
     } catch (JiraException e) {
-      String errorMessage = "Failed to fetch jira issue for " + parameters.getIssueId();
+      String errorMessage = "Encoutered a problem while fetching Jira Issue " + parameters.getIssueId();
+      if (e.getCause() != null) {
+        errorMessage += " Reason: " + e.getCause().getMessage();
+        if (e.getCause() instanceof RestException && ((RestException) e.getCause()).getHttpStatusCode() == 404) {
+          // Fail if the jira issue is not returned
+          logger.error(errorMessage, e);
+          return JiraExecutionData.builder().executionStatus(ExecutionStatus.FAILED).errorMessage(errorMessage).build();
+        }
+      }
       logger.error(errorMessage, e);
-      return JiraExecutionData.builder().executionStatus(ExecutionStatus.FAILED).errorMessage(errorMessage).build();
+      return JiraExecutionData.builder().executionStatus(ExecutionStatus.PAUSED).errorMessage(errorMessage).build();
     }
 
     logger.info("Issue fetched successfully for {}", parameters.getIssueId());
@@ -632,7 +642,8 @@ public class JiraTask extends AbstractDelegateRunnableTask {
     return null;
   }
 
-  private JiraClient getJiraClient(JiraTaskParameters parameters) throws JiraException {
+  @VisibleForTesting
+  protected JiraClient getJiraClient(JiraTaskParameters parameters) throws JiraException {
     JiraConfig jiraConfig = parameters.getJiraConfig();
     encryptionService.decrypt(jiraConfig, parameters.getEncryptionDetails(), false);
     BasicCredentials creds = new BasicCredentials(jiraConfig.getUsername(), new String(jiraConfig.getPassword()));
